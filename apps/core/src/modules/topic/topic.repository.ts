@@ -87,7 +87,7 @@ export class TopicRepository extends BaseRepository {
   }
 
   async create(input: TopicCreateInput): Promise<TopicRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const slug = input.slug ?? slugify(input.name)
     const [row] = await this.db
       .insert(topics)

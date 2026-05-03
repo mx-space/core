@@ -27,39 +27,41 @@ export interface PaginationResult<T> {
 }
 
 /**
- * Convert a Snowflake `bigint` ID coming out of drizzle into the public
- * `EntityId` decimal-string contract. Use at every repository boundary.
+ * Validate a Snowflake text ID coming out of drizzle before it crosses the
+ * repository boundary.
  */
-export function toEntityId(value: bigint | null | undefined): EntityId | null {
+export function toEntityId(
+  value: EntityId | string | null | undefined,
+): EntityId | null {
   if (value === null || value === undefined) return null
   return serializeEntityId(value)
 }
 
 /**
- * Convert an incoming string/EntityId into the bigint that the repository
- * uses to query PostgreSQL. Throws on malformed input.
+ * Validate an incoming string/EntityId before using it in PostgreSQL queries.
+ * The database stores Snowflake IDs as text, not bigint.
  */
-export function toBigInt(value: EntityId | string): bigint {
+export function toDbId(value: EntityId | string): EntityId {
   return parseEntityId(value)
 }
 
-export function toBigIntOrNull(
+export function toDbIdOrNull(
   value: EntityId | string | null | undefined,
-): bigint | null {
+): EntityId | null {
   if (value === null || value === undefined) return null
   return parseEntityId(value)
 }
 
 /**
  * Common base for PostgreSQL-backed repositories. Subclasses receive the
- * shared drizzle handle through DI and use the helpers above to translate
- * between the bigint ↔ EntityId boundary at every method.
+ * shared drizzle handle through DI and use the helpers above to validate
+ * Snowflake text IDs at every method boundary.
  */
 export abstract class BaseRepository {
   constructor(@Inject(PG_DB_TOKEN) protected readonly db: AppDatabase) {}
 
-  protected toBigInt = toBigInt
-  protected toBigIntOrNull = toBigIntOrNull
+  protected toDbId = toDbId
+  protected toDbIdOrNull = toDbIdOrNull
   protected toEntityId = toEntityId
 
   protected paginationOf(

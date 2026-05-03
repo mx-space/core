@@ -99,7 +99,7 @@ export class RecentlyRepository extends BaseRepository {
   }
 
   async create(input: RecentlyCreateInput): Promise<RecentlyRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(recentlies)
       .values({

@@ -224,7 +224,7 @@ export class SearchRepository extends BaseRepository {
         .returning()
       return mapRow(row)
     }
-    const id = input.id ? parseEntityId(input.id) : this.snowflake.nextBigInt()
+    const id = input.id ? parseEntityId(input.id) : this.snowflake.nextId()
     const [row] = await this.db
       .insert(searchDocuments)
       .values({

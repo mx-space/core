@@ -10,12 +10,12 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
-import { createdAt, pkBigInt, refBigInt, tsCol, updatedAt } from './columns'
+import { createdAt, pkText, refText, tsCol, updatedAt } from './columns'
 
 export const categories = pgTable(
   'categories',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     name: text('name').notNull(),
     slug: text('slug').notNull(),
@@ -30,7 +30,7 @@ export const categories = pgTable(
 export const topics = pgTable(
   'topics',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     name: text('name').notNull(),
     slug: text('slug').notNull(),
@@ -47,7 +47,7 @@ export const topics = pgTable(
 export const posts = pgTable(
   'posts',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     title: text('title').notNull(),
     slug: text('slug').notNull(),
@@ -62,7 +62,7 @@ export const posts = pgTable(
       .notNull()
       .default(sql`'{}'::text[]`),
     modifiedAt: tsCol('modified_at'),
-    categoryId: refBigInt('category_id')
+    categoryId: refText('category_id')
       .notNull()
       .references(() => categories.id, { onDelete: 'restrict' }),
     copyright: boolean('copyright').notNull().default(true),
@@ -83,10 +83,10 @@ export const posts = pgTable(
 export const postRelatedPosts = pgTable(
   'post_related_posts',
   {
-    postId: refBigInt('post_id')
+    postId: refText('post_id')
       .notNull()
       .references((): AnyPgColumn => posts.id, { onDelete: 'cascade' }),
-    relatedPostId: refBigInt('related_post_id')
+    relatedPostId: refText('related_post_id')
       .notNull()
       .references((): AnyPgColumn => posts.id, { onDelete: 'cascade' }),
     position: integer('position').notNull().default(0),
@@ -100,7 +100,7 @@ export const postRelatedPosts = pgTable(
 export const notes = pgTable(
   'notes',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     nid: integer('nid').notNull(),
     title: text('title'),
@@ -123,7 +123,7 @@ export const notes = pgTable(
     location: text('location'),
     readCount: integer('read_count').notNull().default(0),
     likeCount: integer('like_count').notNull().default(0),
-    topicId: refBigInt('topic_id').references(() => topics.id, {
+    topicId: refText('topic_id').references(() => topics.id, {
       onDelete: 'set null',
     }),
     modifiedAt: tsCol('modified_at'),
@@ -143,7 +143,7 @@ export const notes = pgTable(
 export const pages = pgTable(
   'pages',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     title: text('title').notNull(),
     slug: text('slug').notNull(),
@@ -169,13 +169,13 @@ export const pages = pgTable(
 export const recentlies = pgTable(
   'recentlies',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     content: text('content').notNull().default(''),
     type: text('type').notNull(),
     metadata: jsonb('metadata').$type<Record<string, unknown> | null>(),
     refType: text('ref_type'),
-    refId: refBigInt('ref_id'),
+    refId: refText('ref_id'),
     commentsIndex: integer('comments_index').notNull().default(0),
     allowComment: boolean('allow_comment').notNull().default(true),
     modifiedAt: tsCol('modified_at'),
@@ -191,11 +191,11 @@ export const recentlies = pgTable(
 export const drafts = pgTable(
   'drafts',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     refType: text('ref_type').notNull(),
-    refId: refBigInt('ref_id'),
+    refId: refText('ref_id'),
     title: text('title').notNull().default(''),
     text: text('text').notNull().default(''),
     content: text('content'),
@@ -225,8 +225,8 @@ export const drafts = pgTable(
 export const draftHistories = pgTable(
   'draft_histories',
   {
-    id: pkBigInt(),
-    draftId: refBigInt('draft_id')
+    id: pkText(),
+    draftId: refText('draft_id')
       .notNull()
       .references(() => drafts.id, { onDelete: 'cascade' }),
     version: integer('version').notNull(),
@@ -257,20 +257,20 @@ export const draftHistories = pgTable(
 export const comments = pgTable(
   'comments',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     refType: text('ref_type').notNull(),
-    refId: refBigInt('ref_id').notNull(),
+    refId: refText('ref_id').notNull(),
     author: text('author'),
     mail: text('mail'),
     url: text('url'),
     text: text('text').notNull(),
     state: integer('state').notNull().default(0),
-    parentCommentId: refBigInt('parent_comment_id').references(
+    parentCommentId: refText('parent_comment_id').references(
       (): AnyPgColumn => comments.id,
       { onDelete: 'cascade' },
     ),
-    rootCommentId: refBigInt('root_comment_id').references(
+    rootCommentId: refText('root_comment_id').references(
       (): AnyPgColumn => comments.id,
       { onDelete: 'cascade' },
     ),

@@ -159,7 +159,7 @@ export class NoteRepository extends BaseRepository {
   }
 
   async create(input: NoteCreateInput): Promise<NoteRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(notes)
       .values({
@@ -498,11 +498,11 @@ export class NoteRepository extends BaseRepository {
       for (const row of rows) row.topic = null
       return rows
     }
-    const topicBigInts = [...topicIdSet].map((id) => BigInt(id))
+    const topicIds = [...topicIdSet]
     const topicRows = await this.db
       .select({ id: topics.id, name: topics.name, slug: topics.slug })
       .from(topics)
-      .where(inArray(topics.id, topicBigInts))
+      .where(inArray(topics.id, topicIds))
     const topicById = new Map(
       topicRows.map((t) => [
         t.id.toString(),

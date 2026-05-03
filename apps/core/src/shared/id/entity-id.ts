@@ -20,7 +20,7 @@ export function isEntityIdString(value: unknown): value is EntityId {
   return big > 0n && big <= ENTITY_ID_MAX_BIGINT
 }
 
-export function parseEntityId(input: EntityId | string): bigint {
+export function parseEntityId(input: EntityId | string): EntityId {
   if (typeof input !== 'string') {
     throw new TypeError(`EntityId must be a string, received ${typeof input}`)
   }
@@ -31,13 +31,16 @@ export function parseEntityId(input: EntityId | string): bigint {
   if (value <= 0n || value > ENTITY_ID_MAX_BIGINT) {
     throw new Error(`EntityId out of bigint range: ${input}`)
   }
-  return value
+  return input as EntityId
 }
 
-export function serializeEntityId(value: bigint): EntityId {
+export function serializeEntityId(value: bigint | string): EntityId {
+  if (typeof value === 'string') {
+    return parseEntityId(value)
+  }
   if (typeof value !== 'bigint') {
     throw new TypeError(
-      `serializeEntityId expects bigint, received ${typeof value}`,
+      `serializeEntityId expects bigint or string, received ${typeof value}`,
     )
   }
   if (value <= 0n || value > ENTITY_ID_MAX_BIGINT) {
@@ -48,13 +51,13 @@ export function serializeEntityId(value: bigint): EntityId {
 
 export function tryParseEntityId(
   input: unknown,
-): { ok: true; value: bigint } | { ok: false } {
+): { ok: true; value: EntityId } | { ok: false } {
   if (typeof input !== 'string') return { ok: false }
   if (!ENTITY_ID_REGEX.test(input)) return { ok: false }
   try {
     const value = BigInt(input)
     if (value <= 0n || value > ENTITY_ID_MAX_BIGINT) return { ok: false }
-    return { ok: true, value }
+    return { ok: true, value: input as EntityId }
   } catch {
     return { ok: false }
   }

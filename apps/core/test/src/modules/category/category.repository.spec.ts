@@ -5,10 +5,8 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Pool } from 'pg'
 
 import { posts } from '~/database/schema'
-import {
-  CategoryRepository,
-  CategoryType,
-} from '~/modules/category/category.repository'
+import { CategoryType } from '~/modules/category/category.enum'
+import { CategoryRepository } from '~/modules/category/category.repository'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 const verifyUrl = process.env.PG_VERIFY_URL
@@ -57,21 +55,20 @@ describeIfPg('CategoryRepository', () => {
     const a = await repository.create({ name: 'a', slug: 'a' })
     const b = await repository.create({ name: 'b', slug: 'b' })
 
-    const aBig = BigInt(a.id)
     await db.insert(posts).values([
       {
-        id: snowflake.nextBigInt(),
+        id: snowflake.nextId(),
         title: 'p1',
         slug: 'p1',
         contentFormat: 'markdown',
-        categoryId: aBig,
+        categoryId: a.id,
       },
       {
-        id: snowflake.nextBigInt(),
+        id: snowflake.nextId(),
         title: 'p2',
         slug: 'p2',
         contentFormat: 'markdown',
-        categoryId: aBig,
+        categoryId: a.id,
       },
     ])
 
@@ -100,11 +97,11 @@ describeIfPg('CategoryRepository', () => {
   it('deleteById fails via FK restrict when posts reference the category', async () => {
     const created = await repository.create({ name: 'has', slug: 'has' })
     await db.insert(posts).values({
-      id: snowflake.nextBigInt(),
+      id: snowflake.nextId(),
       title: 'orphan-post',
       slug: 'orphan-post',
       contentFormat: 'markdown',
-      categoryId: BigInt(created.id),
+      categoryId: created.id,
     })
     await expect(repository.deleteById(created.id)).rejects.toThrow(
       /foreign key|violates|posts/i,
@@ -113,22 +110,21 @@ describeIfPg('CategoryRepository', () => {
 
   it('sumPostTags aggregates tag distribution per category', async () => {
     const cat = await repository.create({ name: 'cat', slug: 'cat' })
-    const catBig = BigInt(cat.id)
     await db.insert(posts).values([
       {
-        id: snowflake.nextBigInt(),
+        id: snowflake.nextId(),
         title: 't1',
         slug: 't1',
         contentFormat: 'markdown',
-        categoryId: catBig,
+        categoryId: cat.id,
         tags: ['ts', 'pg'],
       },
       {
-        id: snowflake.nextBigInt(),
+        id: snowflake.nextId(),
         title: 't2',
         slug: 't2',
         contentFormat: 'markdown',
-        categoryId: catBig,
+        categoryId: cat.id,
         tags: ['ts'],
       },
     ])

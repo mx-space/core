@@ -11,12 +11,12 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
-import { createdAt, pkBigInt, refBigInt, tsCol, updatedAt } from './columns'
+import { createdAt, pkText, refText, tsCol, updatedAt } from './columns'
 
 export const options = pgTable(
   'options',
   {
-    id: pkBigInt(),
+    id: pkText(),
     name: text('name').notNull(),
     value: jsonb('value').$type<unknown>(),
   },
@@ -26,7 +26,7 @@ export const options = pgTable(
 export const metaPresets = pgTable(
   'meta_presets',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     name: text('name').notNull(),
@@ -43,7 +43,7 @@ export const metaPresets = pgTable(
 export const activities = pgTable(
   'activities',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     type: integer('type'),
     payload: jsonb('payload').$type<Record<string, unknown> | null>(),
@@ -54,7 +54,7 @@ export const activities = pgTable(
 export const analyzes = pgTable(
   'analyzes',
   {
-    id: pkBigInt(),
+    id: pkText(),
     timestamp: tsCol('timestamp').notNull(),
     ip: text('ip'),
     ua: jsonb('ua').$type<Record<string, unknown> | null>(),
@@ -73,7 +73,7 @@ export const analyzes = pgTable(
 export const links = pgTable(
   'links',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     name: text('name').notNull(),
     url: text('url').notNull(),
@@ -92,7 +92,7 @@ export const links = pgTable(
 export const projects = pgTable(
   'projects',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     name: text('name').notNull(),
     previewUrl: text('preview_url'),
@@ -109,7 +109,7 @@ export const projects = pgTable(
 export const says = pgTable(
   'says',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     text: text('text').notNull(),
     source: text('source'),
@@ -121,7 +121,7 @@ export const says = pgTable(
 export const snippets = pgTable(
   'snippets',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     type: text('type'),
@@ -151,7 +151,7 @@ export const snippets = pgTable(
 export const subscribes = pgTable(
   'subscribes',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     email: text('email').notNull(),
     cancelToken: text('cancel_token').notNull(),
@@ -167,12 +167,12 @@ export const subscribes = pgTable(
 export const fileReferences = pgTable(
   'file_references',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     fileUrl: text('file_url').notNull(),
     fileName: text('file_name').notNull(),
     status: text('status').notNull(),
-    refId: refBigInt('ref_id'),
+    refId: refText('ref_id'),
     refType: text('ref_type'),
     s3ObjectKey: text('s3_object_key'),
     readerId: text('reader_id'),
@@ -203,7 +203,7 @@ export const fileReferences = pgTable(
 export const pollVotes = pgTable(
   'poll_votes',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     pollId: text('poll_id').notNull(),
     voterFingerprint: text('voter_fingerprint').notNull(),
@@ -220,7 +220,7 @@ export const pollVotes = pgTable(
 export const pollVoteOptions = pgTable(
   'poll_vote_options',
   {
-    voteId: refBigInt('vote_id')
+    voteId: refText('vote_id')
       .notNull()
       .references(() => pollVotes.id, { onDelete: 'cascade' }),
     optionId: text('option_id').notNull(),
@@ -234,10 +234,10 @@ export const pollVoteOptions = pgTable(
 export const slugTrackers = pgTable(
   'slug_trackers',
   {
-    id: pkBigInt(),
+    id: pkText(),
     slug: text('slug').notNull(),
     type: text('type').notNull(),
-    targetId: refBigInt('target_id').notNull(),
+    targetId: refText('target_id').notNull(),
   },
   (table) => [
     index('slug_trackers_type_target_idx').on(table.type, table.targetId),
@@ -248,7 +248,7 @@ export const slugTrackers = pgTable(
 export const serverlessStorages = pgTable(
   'serverless_storages',
   {
-    id: pkBigInt(),
+    id: pkText(),
     namespace: text('namespace').notNull(),
     key: text('key').notNull(),
     value: jsonb('value').$type<unknown>().notNull(),
@@ -264,9 +264,9 @@ export const serverlessStorages = pgTable(
 export const serverlessLogs = pgTable(
   'serverless_logs',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
-    functionId: refBigInt('function_id'),
+    functionId: refText('function_id'),
     reference: text('reference').notNull(),
     name: text('name').notNull(),
     method: text('method'),
@@ -290,7 +290,7 @@ export const serverlessLogs = pgTable(
 export const webhooks = pgTable(
   'webhooks',
   {
-    id: pkBigInt(),
+    id: pkText(),
     timestamp: tsCol('timestamp'),
     payloadUrl: text('payload_url').notNull(),
     events: text('events').array().notNull(),
@@ -304,14 +304,14 @@ export const webhooks = pgTable(
 export const webhookEvents = pgTable(
   'webhook_events',
   {
-    id: pkBigInt(),
+    id: pkText(),
     timestamp: tsCol('timestamp'),
     headers: jsonb('headers').$type<Record<string, unknown> | null>(),
     payload: jsonb('payload').$type<unknown>(),
     event: text('event'),
     response: jsonb('response').$type<unknown>(),
     success: boolean('success'),
-    hookId: refBigInt('hook_id')
+    hookId: refText('hook_id')
       .notNull()
       .references(() => webhooks.id, { onDelete: 'cascade' }),
     status: integer('status').notNull().default(0),

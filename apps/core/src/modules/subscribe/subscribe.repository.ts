@@ -93,7 +93,7 @@ export class SubscribeRepository extends BaseRepository {
     subscribe: number
     verified?: boolean
   }): Promise<SubscribeRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(subscribes)
       .values({

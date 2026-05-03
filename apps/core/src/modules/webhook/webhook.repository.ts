@@ -80,7 +80,7 @@ export class WebhookRepository extends BaseRepository {
     enabled?: boolean
     scope?: number | null
   }): Promise<WebhookRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(webhooks)
       .values({
@@ -139,7 +139,7 @@ export class WebhookRepository extends BaseRepository {
     success?: boolean | null
     status?: number
   }): Promise<WebhookEventRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(webhookEvents)
       .values({

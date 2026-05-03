@@ -85,7 +85,7 @@ export class PageRepository extends BaseRepository {
   }
 
   async create(input: PageCreateInput): Promise<PageRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(pages)
       .values({

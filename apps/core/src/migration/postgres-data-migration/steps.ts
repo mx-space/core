@@ -92,17 +92,37 @@ const collectAuth = async <T>(
   return docs
 }
 
+const resolveAuthCollection = async (
+  ctx: MigrationContext,
+  collection: string,
+  aliases: string[] = [],
+): Promise<string> => {
+  const count = await ctx.mongo
+    .collection(collection)
+    .countDocuments({}, { limit: 1 })
+  if (count > 0 || aliases.length === 0) return collection
+  for (const alias of aliases) {
+    const aliasCount = await ctx.mongo
+      .collection(alias)
+      .countDocuments({}, { limit: 1 })
+    if (aliasCount > 0) return alias
+  }
+  return collection
+}
+
 const recordAuthIds = async (
   ctx: MigrationContext,
   collection: string,
-  ids: string[],
+  sourceCollection = collection,
 ) => {
-  if (ctx.mode !== 'apply' || ids.length === 0) return
+  if (ctx.mode !== 'apply') return
+  const map = ctx.idMap.get(sourceCollection)
+  if (!map || map.size === 0) return
   const now = new Date()
-  const rows = ids.map((id) => ({
+  const rows = Array.from(map.entries()).map(([mongoId, pgId]) => ({
     collection,
-    mongoId: id,
-    pgId: id,
+    mongoId,
+    pgId,
     createdAt: now,
   }))
   const chunkSize = 500
@@ -197,6 +217,34 @@ export const normalizeLegacyJsonbObject = (
   return null
 }
 
+export const resolveTranslationEntryLookupKey = (
+  ctx: MigrationContext,
+  entryResolver: ReturnType<typeof createResolver>,
+  doc: {
+    keyPath?: unknown
+    keyType?: unknown
+    lookupKey?: unknown
+  },
+): string | null => {
+  const lookupKey = String(doc.lookupKey ?? '')
+  if (!lookupKey) return null
+  if (doc.keyType !== 'entity') return lookupKey
+
+  let targetCollection: 'categories' | 'topics' | null = null
+  if (doc.keyPath === 'category.name') {
+    targetCollection = 'categories'
+  } else if (
+    doc.keyPath === 'topic.name' ||
+    doc.keyPath === 'topic.introduce' ||
+    doc.keyPath === 'topic.description'
+  ) {
+    targetCollection = 'topics'
+  }
+
+  if (!targetCollection) return lookupKey
+  return entryResolver.ref(targetCollection, lookupKey, 'lookupKey', true)
+}
+
 export const stepCategories: MigrationStep = {
   name: 'categories',
   async allocate(ctx) {
@@ -245,11 +293,11 @@ export const stepReaders: MigrationStep = {
     await allocateForCollection(ctx, 'readers')
   },
   async load(ctx) {
+    const resolver = createResolver(ctx, 'readers')
     const readerDocs = await collectAuth<any>(ctx, 'readers')
     const readerRows = readerDocs
       .map((d) => {
-        const id = mongoHexOf(d._id)
-        if (!id) return null
+        const id = resolver.self(d._id)
         return {
           id,
           email: d.email ?? null,
@@ -266,11 +314,7 @@ export const stepReaders: MigrationStep = {
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, readers, readerRows)
-    await recordAuthIds(
-      ctx,
-      'readers',
-      readerRows.map((row) => row.id),
-    )
+    await recordAuthIds(ctx, 'readers')
     recordLoad(ctx, 'readers', readerRows.length)
   },
 }
@@ -278,12 +322,16 @@ export const stepReaders: MigrationStep = {
 export const stepOwnerProfiles: MigrationStep = {
   name: 'owner_profiles',
   dependsOn: ['readers'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'owner_profiles')
+  },
   async load(ctx) {
+    const resolver = createResolver(ctx, 'owner_profiles')
     const profileDocs = await collectAuth<any>(ctx, 'owner_profiles')
     const profileRows = profileDocs
       .map((d) => {
-        const id = mongoHexOf(d._id)
-        const readerId = mongoHexOf(d.readerId)
+        const id = resolver.self(d._id)
+        const readerId = resolver.ref('readers', d.readerId, 'readerId', true)
         if (!id || !readerId) {
           ctx.reports.missingRefs.push({
             collection: 'owner_profiles',
@@ -306,11 +354,7 @@ export const stepOwnerProfiles: MigrationStep = {
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, ownerProfiles, profileRows)
-    await recordAuthIds(
-      ctx,
-      'owner_profiles',
-      profileRows.map((row) => row.id),
-    )
+    await recordAuthIds(ctx, 'owner_profiles')
     recordLoad(ctx, 'owner_profiles', profileRows.length)
   },
 }
@@ -318,12 +362,16 @@ export const stepOwnerProfiles: MigrationStep = {
 export const stepAccounts: MigrationStep = {
   name: 'accounts',
   dependsOn: ['readers'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'accounts')
+  },
   async load(ctx) {
+    const resolver = createResolver(ctx, 'accounts')
     const docs = await collectAuth<any>(ctx, 'accounts')
     const rows = docs
       .map((d) => {
-        const id = mongoHexOf(d._id)
-        const userId = mongoHexOf(d.userId)
+        const id = resolver.self(d._id)
+        const userId = resolver.ref('readers', d.userId, 'userId', true)
         if (!id || !userId) {
           ctx.reports.missingRefs.push({
             collection: 'accounts',
@@ -353,11 +401,7 @@ export const stepAccounts: MigrationStep = {
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, accounts, rows)
-    await recordAuthIds(
-      ctx,
-      'accounts',
-      rows.map((row) => row.id),
-    )
+    await recordAuthIds(ctx, 'accounts')
     recordLoad(ctx, 'accounts', rows.length)
   },
 }
@@ -365,12 +409,16 @@ export const stepAccounts: MigrationStep = {
 export const stepSessions: MigrationStep = {
   name: 'sessions',
   dependsOn: ['readers'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'sessions')
+  },
   async load(ctx) {
+    const resolver = createResolver(ctx, 'sessions')
     const docs = await collectAuth<any>(ctx, 'sessions')
     const rows = docs
       .map((d) => {
-        const id = mongoHexOf(d._id)
-        const userId = mongoHexOf(d.userId)
+        const id = resolver.self(d._id)
+        const userId = resolver.ref('readers', d.userId, 'userId', true)
         if (!id || !userId) {
           ctx.reports.missingRefs.push({
             collection: 'sessions',
@@ -393,11 +441,7 @@ export const stepSessions: MigrationStep = {
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, sessions, rows)
-    await recordAuthIds(
-      ctx,
-      'sessions',
-      rows.map((row) => row.id),
-    )
+    await recordAuthIds(ctx, 'sessions')
     recordLoad(ctx, 'sessions', rows.length)
   },
 }
@@ -405,14 +449,28 @@ export const stepSessions: MigrationStep = {
 export const stepApiKeys: MigrationStep = {
   name: 'api_keys',
   dependsOn: ['readers'],
+  async allocate(ctx) {
+    const sourceCollection = await resolveAuthCollection(ctx, 'api_keys', [
+      'apikey',
+    ])
+    await allocateForCollection(ctx, sourceCollection)
+  },
   async load(ctx) {
-    const docs = await collectAuth<any>(ctx, 'api_keys', ['apikey'])
+    const sourceCollection = await resolveAuthCollection(ctx, 'api_keys', [
+      'apikey',
+    ])
+    const resolver = createResolver(ctx, sourceCollection)
+    const docs = await collect<any>(ctx, sourceCollection)
     const rows = docs
       .map((d) => {
-        const id = mongoHexOf(d._id)
-        const userId = mongoHexOf(d.userId)
-        const referenceId = mongoHexOf(d.referenceId ?? d.userId)
-        if (!id) return null
+        const id = resolver.self(d._id)
+        const userId = resolver.ref('readers', d.userId, 'userId', false)
+        const referenceId = resolver.ref(
+          'readers',
+          d.referenceId ?? d.userId,
+          'referenceId',
+          false,
+        )
         return {
           id,
           userId,
@@ -441,11 +499,7 @@ export const stepApiKeys: MigrationStep = {
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, apiKeys, rows)
-    await recordAuthIds(
-      ctx,
-      'api_keys',
-      rows.map((row) => row.id),
-    )
+    await recordAuthIds(ctx, 'api_keys', sourceCollection)
     recordLoad(ctx, 'api_keys', rows.length)
   },
 }
@@ -453,12 +507,22 @@ export const stepApiKeys: MigrationStep = {
 export const stepPasskeys: MigrationStep = {
   name: 'passkeys',
   dependsOn: ['readers'],
+  async allocate(ctx) {
+    const sourceCollection = await resolveAuthCollection(ctx, 'passkeys', [
+      'passkey',
+    ])
+    await allocateForCollection(ctx, sourceCollection)
+  },
   async load(ctx) {
-    const docs = await collectAuth<any>(ctx, 'passkeys', ['passkey'])
+    const sourceCollection = await resolveAuthCollection(ctx, 'passkeys', [
+      'passkey',
+    ])
+    const resolver = createResolver(ctx, sourceCollection)
+    const docs = await collect<any>(ctx, sourceCollection)
     const rows = docs
       .map((d) => {
-        const id = mongoHexOf(d._id)
-        const userId = mongoHexOf(d.userId)
+        const id = resolver.self(d._id)
+        const userId = resolver.ref('readers', d.userId, 'userId', true)
         if (!id || !userId) {
           ctx.reports.missingRefs.push({
             collection: 'passkeys',
@@ -476,7 +540,7 @@ export const stepPasskeys: MigrationStep = {
           counter: d.counter ?? 0,
           deviceType: d.deviceType ?? null,
           backedUp: d.backedUp ?? false,
-          transports: d.transports ?? null,
+          transports: Array.isArray(d.transports) ? d.transports : null,
           aaguid: d.aaguid ?? null,
           createdAt: dateOrNull(d.createdAt ?? d.created) ?? new Date(),
           updatedAt: dateOrNull(d.updatedAt ?? d.updated),
@@ -484,23 +548,28 @@ export const stepPasskeys: MigrationStep = {
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, passkeys, rows)
-    await recordAuthIds(
-      ctx,
-      'passkeys',
-      rows.map((row) => row.id),
-    )
+    await recordAuthIds(ctx, 'passkeys', sourceCollection)
     recordLoad(ctx, 'passkeys', rows.length)
   },
 }
 
 export const stepVerifications: MigrationStep = {
   name: 'verifications',
+  async allocate(ctx) {
+    const sourceCollection = await resolveAuthCollection(ctx, 'verifications', [
+      'verification',
+    ])
+    await allocateForCollection(ctx, sourceCollection)
+  },
   async load(ctx) {
-    const docs = await collectAuth<any>(ctx, 'verifications', ['verification'])
+    const sourceCollection = await resolveAuthCollection(ctx, 'verifications', [
+      'verification',
+    ])
+    const resolver = createResolver(ctx, sourceCollection)
+    const docs = await collect<any>(ctx, sourceCollection)
     const rows = docs
       .map((d) => {
-        const id = mongoHexOf(d._id)
-        if (!id) return null
+        const id = resolver.self(d._id)
         return {
           id,
           identifier: d.identifier,
@@ -512,11 +581,7 @@ export const stepVerifications: MigrationStep = {
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, verifications, rows)
-    await recordAuthIds(
-      ctx,
-      'verifications',
-      rows.map((row) => row.id),
-    )
+    await recordAuthIds(ctx, 'verifications', sourceCollection)
     recordLoad(ctx, 'verifications', rows.length)
   },
 }
@@ -1033,7 +1098,7 @@ export const stepSlugTrackers: MigrationStep = {
       .map((d) => {
         // Resolve target by inspecting collection candidates
         const candidates = ['posts', 'notes', 'pages']
-        let targetId: bigint | null = null
+        let targetId: string | null = null
         for (const coll of candidates) {
           const t = resolver.ref(coll, d.targetId, 'targetId', false)
           if (t) {
@@ -1139,7 +1204,7 @@ export const stepAi: MigrationStep = {
     const resolveContentRef = (
       mongoId: any,
       sourceColl: string,
-    ): bigint | null => {
+    ): string | null => {
       for (const coll of candidates) {
         const t = ctx.idMap.get(coll)?.get(String(mongoId))
         if (t) return t
@@ -1231,22 +1296,25 @@ export const stepAi: MigrationStep = {
     recordLoad(ctx, 'ai_translations', translationRows.length)
 
     const entryDocs = await collect<any>(ctx, 'translation_entries')
-    await upsert(
-      ctx,
-      translationEntries,
-      entryDocs.map((d) => ({
-        id: entryResolver.self(d._id),
-        keyPath: d.keyPath,
-        lang: d.lang,
-        keyType: d.keyType,
-        lookupKey: d.lookupKey,
-        sourceText: d.sourceText,
-        translatedText: d.translatedText,
-        sourceUpdatedAt: dateOrNull(d.sourceUpdatedAt),
-        createdAt: dateOrNull(d.created) ?? new Date(),
-      })),
-    )
-    recordLoad(ctx, 'translation_entries', entryDocs.length)
+    const entryRows = entryDocs
+      .map((d) => {
+        const lookupKey = resolveTranslationEntryLookupKey(ctx, entryResolver, d)
+        if (!lookupKey) return null
+        return {
+          id: entryResolver.self(d._id),
+          keyPath: d.keyPath,
+          lang: d.lang,
+          keyType: d.keyType,
+          lookupKey,
+          sourceText: d.sourceText,
+          translatedText: d.translatedText,
+          sourceUpdatedAt: dateOrNull(d.sourceUpdatedAt),
+          createdAt: dateOrNull(d.created) ?? new Date(),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, translationEntries, entryRows)
+    recordLoad(ctx, 'translation_entries', entryRows.length)
 
     const agentDocs = await collect<any>(ctx, 'ai_agent_conversations')
     const agentRows = agentDocs

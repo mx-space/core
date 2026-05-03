@@ -156,7 +156,7 @@ export class DraftRepository extends BaseRepository {
   }
 
   async create(input: DraftCreateInput): Promise<DraftRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(drafts)
       .values({

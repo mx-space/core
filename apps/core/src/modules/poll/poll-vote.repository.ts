@@ -66,7 +66,7 @@ export class PollVoteRepository extends BaseRepository {
     voterFingerprint: string
     optionIds: string[]
   }): Promise<PollVoteRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     return this.db.transaction(async (tx) => {
       const [vote] = await tx
         .insert(pollVotes)

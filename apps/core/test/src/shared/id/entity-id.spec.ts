@@ -40,7 +40,7 @@ describe('entity-id', () => {
     it('round-trips bigint and decimal string', () => {
       const big = 7311432189440016384n
       expect(serializeEntityId(big)).toBe(big.toString())
-      expect(parseEntityId(big.toString())).toBe(big)
+      expect(parseEntityId(big.toString())).toBe(big.toString())
     })
 
     it('rejects non-string input on parse', () => {
@@ -59,7 +59,7 @@ describe('entity-id', () => {
     it('reports ok=true for valid input', () => {
       const res = tryParseEntityId('42')
       expect(res.ok).toBe(true)
-      if (res.ok) expect(res.value).toBe(42n)
+      if (res.ok) expect(res.value).toBe('42')
     })
 
     it('reports ok=false for invalid input without throwing', () => {

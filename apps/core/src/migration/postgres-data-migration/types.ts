@@ -1,6 +1,7 @@
 import type { Db, ObjectId } from 'mongodb'
 
 import type { AppDatabase } from '~/processors/database/postgres.provider'
+import type { EntityId } from '~/shared/id/entity-id'
 import type { SnowflakeGenerator } from '~/shared/id/snowflake.service'
 
 export type MigrationMode = 'dry-run' | 'apply'
@@ -10,8 +11,8 @@ export interface MigrationContext {
   mongo: Db
   pg: AppDatabase
   snowflake: SnowflakeGenerator
-  /** Map collection name → Mongo `_id` hex → Snowflake bigint. */
-  idMap: Map<string, Map<string, bigint>>
+  /** Map collection name → Mongo `_id` hex → Snowflake text ID. */
+  idMap: Map<string, Map<string, EntityId>>
   reports: MigrationReport
 }
 

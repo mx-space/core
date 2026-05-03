@@ -37,7 +37,7 @@ export class SlugTrackerRepository extends BaseRepository {
     type: string,
     targetId: EntityId | string,
   ): Promise<void> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     await this.db
       .insert(slugTrackers)
       .values({

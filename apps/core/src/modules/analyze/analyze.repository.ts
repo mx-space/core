@@ -40,7 +40,7 @@ export class AnalyzeRepository extends BaseRepository {
     path?: string | null
     referer?: string | null
   }): Promise<AnalyzeRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(analyzes)
       .values({
@@ -68,7 +68,7 @@ export class AnalyzeRepository extends BaseRepository {
     if (inputs.length === 0) return 0
     await this.db.insert(analyzes).values(
       inputs.map((input) => ({
-        id: this.snowflake.nextBigInt(),
+        id: this.snowflake.nextId(),
         timestamp: new Date(),
         ip: input.ip ?? null,
         ua: input.ua ?? null,

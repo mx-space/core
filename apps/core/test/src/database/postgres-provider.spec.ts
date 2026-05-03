@@ -45,10 +45,10 @@ describeIfPg('postgres provider smoke', () => {
     }
   })
 
-  it('round-trips a category and post via Snowflake bigint ids', async () => {
+  it('round-trips a category and post via Snowflake text ids', async () => {
     const generator = new SnowflakeGenerator({ workerId: 7 })
-    const categoryId = generator.nextBigInt()
-    const postId = generator.nextBigInt()
+    const categoryId = generator.nextId()
+    const postId = generator.nextId()
 
     await db.insert(categories).values({
       id: categoryId,
@@ -72,14 +72,15 @@ describeIfPg('postgres provider smoke', () => {
   })
 
   it('rejects FK violation when inserting post with unknown category', async () => {
-    const orphanId = new SnowflakeGenerator({ workerId: 8 }).nextBigInt()
+    const generator = new SnowflakeGenerator({ workerId: 8 })
+    const orphanId = generator.nextId()
     await expect(
       db.insert(posts).values({
         id: orphanId,
         title: 'orphan',
         slug: `orphan-${orphanId}`,
         contentFormat: 'markdown',
-        categoryId: 999_999_999_999n,
+        categoryId: generator.nextId(),
       }),
     ).rejects.toThrow(/foreign key|category_id/i)
   })
@@ -88,7 +89,7 @@ describeIfPg('postgres provider smoke', () => {
     const id = new SnowflakeGenerator({
       workerId: 9,
       epochMs: SNOWFLAKE_EPOCH_MS,
-    }).nextBigInt()
+    }).nextId()
     await db.insert(categories).values({
       id,
       name: `c-${id}`,

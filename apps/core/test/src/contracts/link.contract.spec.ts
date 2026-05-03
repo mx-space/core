@@ -5,12 +5,9 @@ import {
   LinkController,
   LinkControllerCrud,
 } from '~/modules/link/link.controller'
-import {
-  LinkRepository,
-  LinkState,
-  LinkType,
-} from '~/modules/link/link.repository'
+import { LinkRepository } from '~/modules/link/link.repository'
 import { LinkService } from '~/modules/link/link.service'
+import { LinkState, LinkType } from '~/modules/link/link.types'
 
 import { assertNoLegacyKeys, assertPgTimestamps } from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'

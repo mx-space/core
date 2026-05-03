@@ -98,7 +98,7 @@ export class AiAgentConversationRepository extends BaseRepository {
     reviewState?: Record<string, unknown> | null
     diffState?: Record<string, unknown> | null
   }): Promise<AiAgentConversationRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const messages = input.messages ?? []
     const [row] = await this.db
       .insert(aiAgentConversations)

@@ -113,7 +113,7 @@ export class CategoryRepository extends BaseRepository {
   }
 
   async create(input: CategoryCreateInput): Promise<CategoryRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(categories)
       .values({

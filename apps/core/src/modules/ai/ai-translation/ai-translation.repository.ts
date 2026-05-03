@@ -278,7 +278,7 @@ export class AiTranslationRepository extends BaseRepository {
         .returning()
       return mapTranslation(row)
     }
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(aiTranslations)
       .values({
@@ -509,7 +509,7 @@ export class TranslationEntryRepository extends BaseRepository {
         .returning()
       return mapEntry(row)
     }
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(translationEntries)
       .values({

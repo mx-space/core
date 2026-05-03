@@ -62,7 +62,7 @@ export class ActivityRepository extends BaseRepository {
     type?: number
     payload?: Record<string, unknown> | null
   }): Promise<ActivityRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(activities)
       .values({

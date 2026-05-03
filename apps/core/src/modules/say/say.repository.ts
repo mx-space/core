@@ -76,7 +76,7 @@ export class SayRepository extends BaseRepository {
   }
 
   async create(input: SayCreateInput): Promise<SayRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(says)
       .values({

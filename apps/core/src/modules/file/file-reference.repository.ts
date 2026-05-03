@@ -99,7 +99,7 @@ export class FileReferenceRepository extends BaseRepository {
     mimeType?: string | null
     byteSize?: number | null
   }): Promise<FileReferenceRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(fileReferences)
       .values({

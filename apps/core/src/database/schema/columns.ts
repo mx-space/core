@@ -1,17 +1,16 @@
-import { bigint, timestamp } from 'drizzle-orm/pg-core'
+import { bigint, text, timestamp } from 'drizzle-orm/pg-core'
 
 /**
- * Snowflake primary key column. Always returned as `bigint` from drizzle;
- * repositories convert to {@link EntityId} string before crossing module boundaries.
+ * Snowflake primary key column stored as text. IDs are generated as Snowflake
+ * decimal strings, but the database must treat them as opaque identifiers.
  */
-export const pkBigInt = (name = 'id') =>
-  bigint(name, { mode: 'bigint' }).primaryKey().notNull()
+export const pkText = (name = 'id') => text(name).primaryKey().notNull()
 
 /**
- * Foreign-key/reference Snowflake column. `mode: 'bigint'` avoids
- * JavaScript number precision loss outside `Number.MAX_SAFE_INTEGER`.
+ * Snowflake foreign-key/reference column stored as text. Direct PostgreSQL
+ * foreign keys are still allowed when both sides use this helper.
  */
-export const refBigInt = (name: string) => bigint(name, { mode: 'bigint' })
+export const refText = (name: string) => text(name)
 
 export const createdAt = (name = 'created_at') =>
   timestamp(name, { withTimezone: true, mode: 'date' }).defaultNow().notNull()

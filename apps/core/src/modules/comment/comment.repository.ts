@@ -261,7 +261,7 @@ export class CommentRepository extends BaseRepository {
   }
 
   async create(input: CommentCreateInput): Promise<CommentRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(comments)
       .values({
@@ -310,7 +310,7 @@ export class CommentRepository extends BaseRepository {
         .limit(1)
       if (!parent) throw new Error('parent comment not found')
       const rootBig = parent.rootCommentId ?? parent.id
-      const id = this.snowflake.nextBigInt()
+      const id = this.snowflake.nextId()
       const now = new Date()
       const [reply] = await tx
         .insert(comments)
@@ -631,8 +631,8 @@ export class CommentRepository extends BaseRepository {
     sort: CommentRootSort,
     filters: SQL[],
   ): Promise<number | null> {
-    let refIdBig: bigint
-    let commentIdBig: bigint
+    let refIdBig: EntityId
+    let commentIdBig: EntityId
     try {
       refIdBig = parseEntityId(refId)
       commentIdBig = parseEntityId(commentId)

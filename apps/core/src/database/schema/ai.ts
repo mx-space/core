@@ -10,15 +10,15 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
-import { createdAt, pkBigInt, refBigInt, tsCol, updatedAt } from './columns'
+import { createdAt, pkText, refText, tsCol, updatedAt } from './columns'
 
 export const aiTranslations = pgTable(
   'ai_translations',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     hash: text('hash').notNull(),
-    refId: refBigInt('ref_id').notNull(),
+    refId: refText('ref_id').notNull(),
     refType: text('ref_type').notNull(),
     lang: text('lang').notNull(),
     sourceLang: text('source_lang').notNull(),
@@ -51,7 +51,7 @@ export const aiTranslations = pgTable(
 export const translationEntries = pgTable(
   'translation_entries',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     keyPath: text('key_path').notNull(),
     lang: text('lang').notNull(),
@@ -76,11 +76,11 @@ export const translationEntries = pgTable(
 export const aiSummaries = pgTable(
   'ai_summaries',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     hash: text('hash').notNull(),
     summary: text('summary').notNull(),
-    refId: refBigInt('ref_id').notNull(),
+    refId: refText('ref_id').notNull(),
     lang: text('lang'),
   },
   (table) => [index('ai_summaries_ref_id_idx').on(table.refId)],
@@ -89,14 +89,14 @@ export const aiSummaries = pgTable(
 export const aiInsights = pgTable(
   'ai_insights',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
-    refId: refBigInt('ref_id').notNull(),
+    refId: refText('ref_id').notNull(),
     lang: text('lang').notNull(),
     hash: text('hash').notNull(),
     content: text('content').notNull(),
     isTranslation: boolean('is_translation').notNull().default(false),
-    sourceInsightsId: refBigInt('source_insights_id').references(
+    sourceInsightsId: refText('source_insights_id').references(
       (): AnyPgColumn => aiInsights.id,
       { onDelete: 'set null' },
     ),
@@ -111,10 +111,10 @@ export const aiInsights = pgTable(
 export const aiAgentConversations = pgTable(
   'ai_agent_conversations',
   {
-    id: pkBigInt(),
+    id: pkText(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
-    refId: refBigInt('ref_id').notNull(),
+    refId: refText('ref_id').notNull(),
     refType: text('ref_type').notNull(),
     title: text('title'),
     messages: jsonb('messages').$type<unknown[]>().notNull(),
@@ -133,9 +133,9 @@ export const aiAgentConversations = pgTable(
 export const searchDocuments = pgTable(
   'search_documents',
   {
-    id: pkBigInt(),
+    id: pkText(),
     refType: text('ref_type').notNull(),
-    refId: refBigInt('ref_id').notNull(),
+    refId: refText('ref_id').notNull(),
     title: text('title').notNull(),
     searchText: text('search_text').notNull(),
     terms: text('terms')

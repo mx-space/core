@@ -91,7 +91,7 @@ export class ServerlessStorageRepository extends BaseRepository {
         .returning()
       return mapStorage(row)
     }
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(serverlessStorages)
       .values({ id, namespace, key, value })
@@ -185,7 +185,7 @@ export class ServerlessLogRepository extends BaseRepository {
     logs?: unknown[] | null
     error?: Record<string, unknown> | null
   }): Promise<ServerlessLogRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(serverlessLogs)
       .values({

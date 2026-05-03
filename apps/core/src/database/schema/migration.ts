@@ -1,12 +1,6 @@
-import {
-  bigint,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-} from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
-import { createdAt, pkBigInt, tsCol } from './columns'
+import { createdAt, pkText, tsCol } from './columns'
 
 /**
  * Tracks which one-time data migration scripts have run. Distinct from the
@@ -20,15 +14,15 @@ export const schemaMigrations = pgTable('schema_migrations', {
 })
 
 /**
- * Maps source MongoDB ObjectId values to allocated Snowflake IDs so the data
- * migration tool can deterministically rewrite cross-collection references.
+ * Migration-only audit map from source MongoDB ObjectId values to allocated
+ * Snowflake text IDs. Business runtime code must not query this table.
  */
 export const mongoIdMap = pgTable(
   'mongo_id_map',
   {
     collection: text('collection').notNull(),
     mongoId: text('mongo_id').notNull(),
-    snowflakeId: bigint('snowflake_id', { mode: 'bigint' }).notNull(),
+    snowflakeId: text('snowflake_id').notNull(),
   },
   (table) => [
     uniqueIndex('mongo_id_map_pk').on(table.collection, table.mongoId),
@@ -57,7 +51,7 @@ export const authIdMap = pgTable(
 )
 
 export const dataMigrationRuns = pgTable('data_migration_runs', {
-  id: pkBigInt(),
+  id: pkText(),
   name: text('name').notNull(),
   startedAt: createdAt('started_at'),
   finishedAt: tsCol('finished_at'),

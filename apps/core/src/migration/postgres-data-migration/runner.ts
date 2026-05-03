@@ -59,7 +59,7 @@ export async function runMigration(input: {
     await input.pg
       .insert(dataMigrationRuns)
       .values({
-        id: ctx.snowflake.nextBigInt(),
+        id: ctx.snowflake.nextId(),
         name: `mongo-to-pg-${ctx.reports.startedAt.toISOString()}`,
         startedAt: ctx.reports.startedAt,
         finishedAt: ctx.reports.finishedAt,

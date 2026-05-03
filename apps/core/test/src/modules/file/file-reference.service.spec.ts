@@ -8,7 +8,7 @@ import type {
 import {
   FileReferenceStatus,
   FileUploadedBy,
-} from '~/modules/file/file-reference.repository'
+} from '~/modules/file/file-reference.types'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 
 const createRef = (

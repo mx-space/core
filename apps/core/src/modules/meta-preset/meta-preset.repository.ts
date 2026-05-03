@@ -119,7 +119,7 @@ export class MetaPresetRepository extends BaseRepository {
   }
 
   async create(input: Partial<MetaPresetModel>): Promise<MetaPresetRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(metaPresets)
       .values({

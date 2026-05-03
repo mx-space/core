@@ -106,7 +106,7 @@ export class LinkRepository extends BaseRepository {
   }
 
   async create(input: LinkCreateInput): Promise<LinkRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(links)
       .values({

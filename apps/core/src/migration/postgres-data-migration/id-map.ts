@@ -2,13 +2,14 @@ import { eq } from 'drizzle-orm'
 import type { ObjectId } from 'mongodb'
 
 import { mongoIdMap } from '~/database/schema'
+import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 
 import type { MigrationContext } from './types'
 
 const ensureCollectionMap = (
   ctx: MigrationContext,
   collection: string,
-): Map<string, bigint> => {
+): Map<string, EntityId> => {
   let map = ctx.idMap.get(collection)
   if (!map) {
     map = new Map()
@@ -42,7 +43,7 @@ export async function allocateForCollection(
     const hex = mongoHexOf(doc._id as ObjectId)
     if (!hex) continue
     if (map.has(hex)) continue
-    map.set(hex, ctx.snowflake.nextBigInt())
+    map.set(hex, ctx.snowflake.nextId())
     allocated++
   }
   ctx.reports.rowsRead[collection] =
@@ -69,13 +70,13 @@ export async function persistIdMap(ctx: MigrationContext): Promise<void> {
   }
 }
 
-/** Resolve a Mongo `_id` reference into the allocated Snowflake bigint. */
+/** Resolve a Mongo `_id` reference into the allocated Snowflake text ID. */
 export function resolveRef(
   ctx: MigrationContext,
   collection: string,
   mongoId: ObjectId | string | null | undefined,
   options: { field: string; required: boolean; sourceCollection: string },
-): bigint | null {
+): EntityId | null {
   const hex = mongoHexOf(mongoId)
   if (!hex) {
     if (options.required) {
@@ -110,7 +111,7 @@ export async function loadPersistedMap(
     .where(eq(mongoIdMap.collection, collection))
   const map = ensureCollectionMap(ctx, collection)
   for (const row of rows) {
-    map.set(row.mongoId, row.snowflakeId)
+    map.set(row.mongoId, parseEntityId(row.snowflakeId))
   }
   return rows.length
 }
@@ -122,7 +123,10 @@ export async function loadPersistedMaps(
   if (ctx.mode !== 'apply') return 0
   const rows = await ctx.pg.select().from(mongoIdMap)
   for (const row of rows) {
-    ensureCollectionMap(ctx, row.collection).set(row.mongoId, row.snowflakeId)
+    ensureCollectionMap(ctx, row.collection).set(
+      row.mongoId,
+      parseEntityId(row.snowflakeId),
+    )
   }
   return rows.length
 }
@@ -134,7 +138,7 @@ export function createResolver(
   sourceCollection: string,
 ) {
   return {
-    self(mongoId: ObjectId | string): bigint {
+    self(mongoId: ObjectId | string): EntityId {
       const hex = mongoHexOf(mongoId)!
       const target = ctx.idMap.get(sourceCollection)?.get(hex)
       if (!target) {
@@ -149,7 +153,7 @@ export function createResolver(
       mongoId: ObjectId | string | null | undefined,
       field: string,
       required = false,
-    ): bigint | null {
+    ): EntityId | null {
       return resolveRef(ctx, collection, mongoId, {
         field,
         required,

@@ -293,7 +293,7 @@ export class SnippetRepository extends BaseRepository {
     builtIn?: boolean
     compiledCode?: string | null
   }): Promise<SnippetRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(snippets)
       .values({

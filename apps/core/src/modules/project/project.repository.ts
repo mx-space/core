@@ -78,7 +78,7 @@ export class ProjectRepository extends BaseRepository {
   }
 
   async create(input: ProjectCreateInput): Promise<ProjectRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(projects)
       .values({

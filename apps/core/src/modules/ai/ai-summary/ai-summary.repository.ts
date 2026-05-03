@@ -197,7 +197,7 @@ export class AiSummaryRepository extends BaseRepository {
         .returning()
       return mapRow(row)
     }
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(aiSummaries)
       .values({

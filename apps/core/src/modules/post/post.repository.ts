@@ -158,7 +158,7 @@ export class PostRepository extends BaseRepository {
   }
 
   async create(input: PostCreateInput): Promise<PostRow> {
-    const id = this.snowflake.nextBigInt()
+    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(posts)
       .values({
@@ -546,7 +546,7 @@ export class PostRepository extends BaseRepository {
 
   private async attachRelated(rows: PostRow[]): Promise<PostRow[]> {
     if (rows.length === 0) return rows
-    const postIdBigs = rows.map((row) => parseEntityId(row.id))
+    const postIds = rows.map((row) => parseEntityId(row.id))
     const links = await this.db
       .select({
         postId: postRelatedPosts.postId,
@@ -554,7 +554,7 @@ export class PostRepository extends BaseRepository {
         position: postRelatedPosts.position,
       })
       .from(postRelatedPosts)
-      .where(inArray(postRelatedPosts.postId, postIdBigs))
+      .where(inArray(postRelatedPosts.postId, postIds))
       .orderBy(postRelatedPosts.position)
 
     if (links.length === 0) {
@@ -562,10 +562,7 @@ export class PostRepository extends BaseRepository {
       return rows
     }
 
-    const relatedIdSet = new Set(
-      links.map((link) => link.relatedPostId.toString()),
-    )
-    const relatedBigInts = [...relatedIdSet].map((id) => BigInt(id))
+    const relatedIds = [...new Set(links.map((link) => link.relatedPostId))]
     const relatedRows = await this.db
       .select({
         id: posts.id,
@@ -577,17 +574,14 @@ export class PostRepository extends BaseRepository {
         modifiedAt: posts.modifiedAt,
       })
       .from(posts)
-      .where(inArray(posts.id, relatedBigInts))
+      .where(inArray(posts.id, relatedIds))
 
-    const categoryIdSet = new Set(
-      relatedRows.map((row) => row.categoryId.toString()),
-    )
-    const categoryBigInts = [...categoryIdSet].map((id) => BigInt(id))
-    const categoryRows = categoryBigInts.length
+    const categoryIds = [...new Set(relatedRows.map((row) => row.categoryId))]
+    const categoryRows = categoryIds.length
       ? await this.db
           .select()
           .from(categories)
-          .where(inArray(categories.id, categoryBigInts))
+          .where(inArray(categories.id, categoryIds))
       : []
     const categoryById = new Map(
       categoryRows.map((cat) => [
