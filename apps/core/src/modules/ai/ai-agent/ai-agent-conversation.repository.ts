@@ -12,20 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface AiAgentConversationRow {
-  id: EntityId
-  refId: EntityId
-  refType: string
-  title: string | null
-  messages: unknown[]
-  model: string
-  providerId: string
-  reviewState: Record<string, unknown> | null
-  diffState: Record<string, unknown> | null
-  messageCount: number
-  createdAt: Date
-  updatedAt: Date | null
-}
+import type { AiAgentConversationRow } from './ai-agent-conversation.types'
 
 const mapRow = (
   row: typeof aiAgentConversations.$inferSelect,

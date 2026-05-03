@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { and, desc, eq, gt, inArray, lt, type SQL, sql } from 'drizzle-orm'
 
-import { CollectionRefTypes } from '~/constants/db.constant'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { recentlies } from '~/database/schema'
 import {
@@ -13,38 +12,12 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export type RecentlyRefType = `${CollectionRefTypes}` | null
-
-export interface RecentlyRow {
-  id: EntityId
-  content: string
-  type: string
-  metadata: Record<string, unknown> | null
-  refType: RecentlyRefType
-  refId: EntityId | null
-  commentsIndex: number
-  allowComment: boolean
-  up: number
-  down: number
-  createdAt: Date
-  modifiedAt: Date | null
-}
-
-export interface RecentlyCreateInput {
-  content?: string
-  type: string
-  metadata?: Record<string, unknown> | null
-  refType?: RecentlyRefType
-  refId?: EntityId | string | null
-  allowComment?: boolean
-}
-
-export type RecentlyPatchInput = Partial<RecentlyCreateInput> & {
-  modifiedAt?: Date | null
-  up?: number
-  down?: number
-  commentsIndex?: number
-}
+import type {
+  RecentlyCreateInput,
+  RecentlyPatchInput,
+  RecentlyRefType,
+  RecentlyRow,
+} from './recently.types'
 
 const mapRow = (row: typeof recentlies.$inferSelect): RecentlyRow => ({
   id: toEntityId(row.id) as EntityId,

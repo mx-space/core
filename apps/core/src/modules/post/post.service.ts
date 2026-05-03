@@ -32,8 +32,12 @@ import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.enum'
 import type { DraftService } from '../draft/draft.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
-import { type PostListParams, PostRepository } from './post.repository'
-import { POST_PROTECTED_KEYS, type PostModel } from './post.types'
+import { PostRepository } from './post.repository'
+import {
+  POST_PROTECTED_KEYS,
+  type PostListParams,
+  type PostModel,
+} from './post.types'
 
 @Injectable()
 export class PostService implements OnApplicationBootstrap {

@@ -12,34 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface PageRow {
-  id: EntityId
-  title: string
-  slug: string
-  subtitle: string | null
-  text: string
-  content: string | null
-  contentFormat: string
-  images: unknown[] | null
-  meta: Record<string, unknown> | null
-  order: number
-  createdAt: Date
-  modifiedAt: Date | null
-}
-
-export interface PageCreateInput {
-  title: string
-  slug: string
-  subtitle?: string | null
-  text?: string | null
-  content?: string | null
-  contentFormat: string
-  images?: unknown[] | null
-  meta?: Record<string, unknown> | null
-  order?: number
-}
-
-export type PagePatchInput = Partial<PageCreateInput>
+import type { PageCreateInput, PagePatchInput, PageRow } from './page.types'
 
 const mapRow = (row: typeof pages.$inferSelect): PageRow => ({
   id: toEntityId(row.id) as EntityId,

@@ -2,10 +2,20 @@ import { Injectable } from '@nestjs/common'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { NoteRepository } from '~/modules/note/note.repository'
+import type { NoteRow } from '~/modules/note/note.types'
 import { PageRepository } from '~/modules/page/page.repository'
+import type { PageRow } from '~/modules/page/page.types'
 import { PostRepository } from '~/modules/post/post.repository'
+import type { PostRow } from '~/modules/post/post.types'
 import { RecentlyRepository } from '~/modules/recently/recently.repository'
-import { parseEntityId } from '~/shared/id/entity-id'
+import type { RecentlyRow } from '~/modules/recently/recently.types'
+import { isEntityIdString, parseEntityId } from '~/shared/id/entity-id'
+
+type GlobalDocumentResult =
+  | { document: PostRow; type: CollectionRefTypes.Post }
+  | { document: NoteRow; type: CollectionRefTypes.Note }
+  | { document: PageRow; type: CollectionRefTypes.Page }
+  | { document: RecentlyRow; type: CollectionRefTypes.Recently }
 
 @Injectable()
 export class DatabaseService {
@@ -16,7 +26,9 @@ export class DatabaseService {
     private readonly recentlyRepository: RecentlyRepository,
   ) {}
 
-  public async findGlobalById(id: string): Promise<any> {
+  public async findGlobalById(
+    id: string,
+  ): Promise<GlobalDocumentResult | null> {
     parseEntityId(id)
     const doc = await Promise.all([
       this.postRepository.findById(id),
@@ -27,28 +39,29 @@ export class DatabaseService {
     const index = doc.findIndex(Boolean)
     if (index === -1) return null
     return {
-      document: doc[index],
+      document: doc[index]!,
       type: [
         CollectionRefTypes.Post,
         CollectionRefTypes.Note,
         CollectionRefTypes.Page,
         CollectionRefTypes.Recently,
       ][index],
-    }
+    } as GlobalDocumentResult
   }
 
   public async findGlobalByIds(ids: string[]): Promise<IdsCollection> {
+    const validIds = ids.filter(isEntityIdString)
     const [posts, notes, pages, recentlies] = await Promise.all([
-      this.postRepository.findManyByIds(ids),
-      this.noteRepository.findManyByIds(ids),
-      this.pageRepository.findManyByIds(ids),
-      this.recentlyRepository.findManyByIds(ids),
+      this.postRepository.findManyByIds(validIds),
+      this.noteRepository.findManyByIds(validIds),
+      this.pageRepository.findManyByIds(validIds),
+      this.recentlyRepository.findManyByIds(validIds),
     ])
     return {
-      posts: posts as any[],
-      notes: notes as any[],
-      pages: pages as any[],
-      recentlies: recentlies as any[],
+      posts,
+      notes,
+      pages,
+      recentlies,
     }
   }
 
@@ -63,7 +76,7 @@ export class DatabaseService {
   }
 
   flatCollectionToMap(combinedCollection: IdsCollection) {
-    const all = {} as Record<string, any>
+    const all = {} as Record<string, PostRow | NoteRow | PageRow | RecentlyRow>
     for (const key in combinedCollection) {
       const collection = combinedCollection[key]
       for (const item of collection) {
@@ -75,8 +88,8 @@ export class DatabaseService {
 }
 
 type IdsCollection = {
-  posts: any[]
-  notes: any[]
-  pages: any[]
-  recentlies: any[]
+  posts: PostRow[]
+  notes: NoteRow[]
+  pages: PageRow[]
+  recentlies: RecentlyRow[]
 }

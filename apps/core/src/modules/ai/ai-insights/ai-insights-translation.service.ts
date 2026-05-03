@@ -26,10 +26,8 @@ import {
   AITaskType,
   type InsightsTranslationTaskPayload,
 } from '../ai-task/ai-task.types'
-import {
-  AiInsightsRepository,
-  type AiInsightsRow,
-} from './ai-insights.repository'
+import { AiInsightsRepository } from './ai-insights.repository'
+import type { AiInsightsRow } from './ai-insights.types'
 import { AIInsightsModel } from './ai-insights.types'
 import { stripTopLevelCodeFence } from './insights.util'
 

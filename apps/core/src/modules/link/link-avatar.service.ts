@@ -13,7 +13,8 @@ import { validateImageBuffer } from '~/utils/image.util'
 import { ConfigsService } from '../configs/configs.service'
 import { FileService } from '../file/file.service'
 import type { FileType } from '../file/file.type'
-import { LinkRepository, type LinkRow, LinkState } from './link.repository'
+import { LinkRepository } from './link.repository'
+import { type LinkRow, LinkState } from './link.types'
 
 const AVATAR_TYPE: FileType = 'avatar'
 

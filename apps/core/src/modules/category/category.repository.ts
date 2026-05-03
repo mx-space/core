@@ -11,34 +11,13 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export enum CategoryType {
-  Category = 0,
-  Tag = 1,
-}
-
-export interface CategoryRow {
-  id: EntityId
-  name: string
-  slug: string
-  type: CategoryType
-  createdAt: Date
-}
-
-export interface CategoryWithCount extends CategoryRow {
-  count: number
-}
-
-export interface CategoryCreateInput {
-  name: string
-  slug: string
-  type?: CategoryType
-}
-
-export interface CategoryPatchInput {
-  name?: string
-  slug?: string
-  type?: CategoryType
-}
+import {
+  type CategoryCreateInput,
+  type CategoryPatchInput,
+  type CategoryRow,
+  CategoryType,
+  type CategoryWithCount,
+} from './category.types'
 
 const mapRow = (row: typeof categories.$inferSelect): CategoryRow => ({
   id: toEntityId(row.id) as EntityId,

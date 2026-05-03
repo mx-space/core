@@ -41,11 +41,9 @@ import {
   RenameFileQueryDto,
 } from './file.schema'
 import { FileService } from './file.service'
-import {
-  FileDeletionReason,
-  FileReferenceStatus,
-} from './file-reference.repository'
+import { FileReferenceStatus } from './file-reference.enum'
 import { FileReferenceService } from './file-reference.service'
+import { FileDeletionReason } from './file-reference.types'
 
 @ApiController(['objects', 'files'])
 export class FileController {

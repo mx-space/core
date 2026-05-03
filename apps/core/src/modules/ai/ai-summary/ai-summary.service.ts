@@ -32,8 +32,9 @@ import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
-import { AiSummaryRepository, type AiSummaryRow } from './ai-summary.repository'
+import { AiSummaryRepository } from './ai-summary.repository'
 import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
+import type { AiSummaryRow } from './ai-summary.types'
 import { AISummaryModel } from './ai-summary.types'
 
 @Injectable()

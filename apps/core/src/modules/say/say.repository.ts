@@ -12,21 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface SayRow {
-  id: EntityId
-  text: string
-  source: string | null
-  author: string | null
-  createdAt: Date
-}
-
-export interface SayCreateInput {
-  text: string
-  source?: string | null
-  author?: string | null
-}
-
-export type SayPatchInput = Partial<SayCreateInput>
+import type { SayCreateInput, SayPatchInput, SayRow } from './say.types'
 
 const mapRow = (row: typeof says.$inferSelect): SayRow => ({
   id: toEntityId(row.id) as EntityId,

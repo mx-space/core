@@ -30,11 +30,9 @@ import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
-import {
-  AiInsightsRepository,
-  type AiInsightsRow,
-} from './ai-insights.repository'
+import { AiInsightsRepository } from './ai-insights.repository'
 import type { GetInsightsGroupedQueryInput } from './ai-insights.schema'
+import type { AiInsightsRow } from './ai-insights.types'
 import { AIInsightsModel } from './ai-insights.types'
 import { stripTopLevelCodeFence } from './insights.util'
 

@@ -1,6 +1,7 @@
 export enum FileReferenceStatus {
   Pending = 'pending',
   Active = 'active',
+  Detached = 'detached',
 }
 
 export enum FileReferenceType {
@@ -8,4 +9,5 @@ export enum FileReferenceType {
   Note = 'note',
   Page = 'page',
   Draft = 'draft',
+  Comment = 'comment',
 }

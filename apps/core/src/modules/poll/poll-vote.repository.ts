@@ -11,13 +11,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface PollVoteRow {
-  id: EntityId
-  pollId: string
-  voterFingerprint: string
-  optionIds: string[]
-  createdAt: Date
-}
+import type { PollVoteRow } from './poll-vote.types'
 
 @Injectable()
 export class PollVoteRepository extends BaseRepository {

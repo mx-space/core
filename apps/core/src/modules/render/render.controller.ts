@@ -18,6 +18,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils/time.util'
@@ -71,15 +72,15 @@ export class RenderEjsController {
 
     const relativePath = (() => {
       switch (type) {
-        case 'posts': {
+        case CollectionRefTypes.Post: {
           return `/posts/${((document as PostModel).category as any).slug}/${
             (document as PostModel).slug
           }`
         }
-        case 'notes': {
+        case CollectionRefTypes.Note: {
           return `/notes/${(document as NoteModel).nid}`
         }
-        case 'pages': {
+        case CollectionRefTypes.Page: {
           return `/${(document as PageModel).slug}`
         }
       }

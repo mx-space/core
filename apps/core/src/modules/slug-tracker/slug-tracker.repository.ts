@@ -11,12 +11,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface SlugTrackerRow {
-  id: EntityId
-  slug: string
-  type: string
-  targetId: EntityId
-}
+import type { SlugTrackerRow } from './slug-tracker.types'
 
 const mapRow = (row: typeof slugTrackers.$inferSelect): SlugTrackerRow => ({
   id: toEntityId(row.id) as EntityId,

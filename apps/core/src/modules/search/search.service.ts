@@ -20,10 +20,11 @@ import {
   SEARCH_MAX_CANDIDATES,
   SEARCH_PREFIX_TITLE_BONUS,
 } from './search.constants'
-import { type SearchDocumentRow, SearchRepository } from './search.repository'
+import { SearchRepository } from './search.repository'
 import {
   SearchDocumentModel,
   type SearchDocumentRefType,
+  type SearchDocumentRow,
 } from './search-document.types'
 import {
   buildSearchDocument,

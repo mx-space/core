@@ -12,48 +12,12 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export enum FileReferenceStatus {
-  Pending = 'pending',
-  Active = 'active',
-  Detached = 'detached',
-}
-
-export enum FileUploadedBy {
-  Owner = 'owner',
-  Reader = 'reader',
-}
-
-export enum FileDeletionReason {
-  PendingTtl = 'pending_ttl',
-  DetachedTtl = 'detached_ttl',
-  CommentDeleted = 'comment_deleted',
-  CommentSpam = 'comment_spam',
-  CascadePostDeleted = 'cascade_post_deleted',
-  Manual = 'manual',
-}
-
-export type FileReferenceType =
-  | 'post'
-  | 'note'
-  | 'page'
-  | 'draft'
-  | 'comment'
-
-export interface FileReferenceRow {
-  id: EntityId
-  fileUrl: string
-  fileName: string
-  status: FileReferenceStatus
-  refId: EntityId | null
-  refType: FileReferenceType | null
-  s3ObjectKey: string | null
-  readerId: string | null
-  uploadedBy: FileUploadedBy | null
-  mimeType: string | null
-  byteSize: number | null
-  detachedAt: Date | null
-  createdAt: Date
-}
+import {
+  type FileReferenceRow,
+  FileReferenceStatus,
+  FileReferenceType,
+  FileUploadedBy,
+} from './file-reference.types'
 
 const mapRow = (row: typeof fileReferences.$inferSelect): FileReferenceRow => ({
   id: toEntityId(row.id) as EntityId,
@@ -305,7 +269,7 @@ export class FileReferenceRepository extends BaseRepository {
       .from(fileReferences)
       .where(
         and(
-          eq(fileReferences.refType, 'comment'),
+          eq(fileReferences.refType, FileReferenceType.Comment),
           eq(fileReferences.refId, parseEntityId(commentId)),
           inArray(fileReferences.status, [
             FileReferenceStatus.Active,
@@ -340,9 +304,7 @@ export class FileReferenceRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
-  async markDetached(
-    id: EntityId | string,
-  ): Promise<FileReferenceRow | null> {
+  async markDetached(id: EntityId | string): Promise<FileReferenceRow | null> {
     const idBig = parseEntityId(id)
     const [row] = await this.db
       .update(fileReferences)
@@ -431,7 +393,7 @@ export class FileReferenceRepository extends BaseRepository {
       .from(fileReferences)
       .where(
         and(
-          eq(fileReferences.refType, 'comment'),
+          eq(fileReferences.refType, FileReferenceType.Comment),
           eq(fileReferences.refId, parseEntityId(commentId)),
         )!,
       )

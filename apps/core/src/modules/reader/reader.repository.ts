@@ -2,26 +2,14 @@ import { Inject, Injectable } from '@nestjs/common'
 import { and, asc, eq, inArray, ne, or, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { readers } from '~/database/schema'
+import { mongoIdMap, readers } from '~/database/schema'
 import {
   BaseRepository,
   type PaginationResult,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 
-export interface ReaderRow {
-  id: string
-  email: string | null
-  emailVerified: boolean
-  name: string | null
-  handle: string | null
-  username: string | null
-  displayUsername: string | null
-  image: string | null
-  role: string
-  createdAt: Date
-  updatedAt: Date | null
-}
+import type { ReaderRow } from './reader.types'
 
 const mapRow = (row: typeof readers.$inferSelect): ReaderRow => ({
   id: row.id,
@@ -143,11 +131,52 @@ export class ReaderRepository extends BaseRepository {
 
   async findByIds(ids: string[]): Promise<ReaderRow[]> {
     if (ids.length === 0) return []
-    const rows = await this.db
+
+    // Direct lookup first (hex IDs).
+    const directRows = await this.db
       .select()
       .from(readers)
       .where(inArray(readers.id, ids))
-    return rows.map(mapRow)
+
+    if (directRows.length === ids.length) {
+      return directRows.map(mapRow)
+    }
+
+    // Some IDs may be Snowflake bigint strings; resolve via mongo_id_map.
+    const foundIds = new Set(directRows.map((r) => r.id))
+    const missingIds = ids.filter((id) => !foundIds.has(id))
+
+    const snowflakeBigInts = missingIds
+      .map((id) => {
+        try {
+          return BigInt(id)
+        } catch {
+          return null
+        }
+      })
+      .filter((b): b is bigint => b !== null)
+
+    if (snowflakeBigInts.length > 0) {
+      const mapRows = await this.db
+        .select()
+        .from(mongoIdMap)
+        .where(
+          and(
+            eq(mongoIdMap.collection, 'readers'),
+            inArray(mongoIdMap.snowflakeId, snowflakeBigInts),
+          ),
+        )
+      const mappedIds = mapRows.map((r) => r.mongoId)
+      if (mappedIds.length > 0) {
+        const mappedRows = await this.db
+          .select()
+          .from(readers)
+          .where(inArray(readers.id, mappedIds))
+        return [...directRows, ...mappedRows].map(mapRow)
+      }
+    }
+
+    return directRows.map(mapRow)
   }
 
   async list(page = 1, size = 20): Promise<PaginationResult<ReaderRow>> {

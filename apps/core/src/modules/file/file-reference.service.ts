@@ -12,14 +12,14 @@ import { extractImagesFromContent } from '~/utils/content.util'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
 import { S3Uploader } from '~/utils/s3.util'
 
+import { FileReferenceRepository } from './file-reference.repository'
 import {
   FileDeletionReason,
-  FileReferenceRepository,
   type FileReferenceRow,
   FileReferenceStatus,
-  type FileReferenceType,
+  FileReferenceType,
   FileUploadedBy,
-} from './file-reference.repository'
+} from './file-reference.types'
 
 interface ContentLike {
   text: string | null
@@ -214,7 +214,7 @@ export class FileReferenceService {
       } else if (
         ref.status === FileReferenceStatus.Active &&
         ref.refId === commentId &&
-        ref.refType === 'comment'
+        ref.refType === FileReferenceType.Comment
       ) {
         toDetach.push(ref)
       }
@@ -274,7 +274,10 @@ export class FileReferenceService {
 
     for (const ref of candidates) {
       if (ref.status !== FileReferenceStatus.Active) continue
-      if (ref.refType === 'comment' && ref.refId === commentId) {
+      if (
+        ref.refType === FileReferenceType.Comment &&
+        ref.refId === commentId
+      ) {
         continue
       }
       throw new BizException(ErrorCodeEnum.CommentUploadFileAlreadyBound)
@@ -296,7 +299,7 @@ export class FileReferenceService {
       await this.fileReferenceRepository.markActive(
         ref.id,
         commentId,
-        'comment',
+        FileReferenceType.Comment,
       )
       attachedCount++
     }
@@ -304,7 +307,7 @@ export class FileReferenceService {
       await this.fileReferenceRepository.markActive(
         ref.id,
         commentId,
-        'comment',
+        FileReferenceType.Comment,
       )
       attachedCount++
     }

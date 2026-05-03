@@ -12,41 +12,11 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
+import type {
+  AiTranslationRow,
+  TranslationEntryRow,
+} from './ai-translation.types'
 import type { TranslationEntryKeyPath } from './translation-entry.types'
-
-export interface AiTranslationRow {
-  id: EntityId
-  hash: string
-  refId: EntityId
-  refType: string
-  lang: string
-  sourceLang: string
-  title: string
-  text: string
-  subtitle: string | null
-  summary: string | null
-  tags: string[]
-  sourceModifiedAt: Date | null
-  aiModel: string | null
-  aiProvider: string | null
-  contentFormat: string | null
-  content: string | null
-  sourceBlockSnapshots: unknown
-  sourceMetaHashes: unknown
-  createdAt: Date
-}
-
-export interface TranslationEntryRow {
-  id: EntityId
-  keyPath: TranslationEntryKeyPath
-  lang: string
-  keyType: string
-  lookupKey: string
-  sourceText: string
-  translatedText: string
-  sourceUpdatedAt: Date | null
-  createdAt: Date
-}
 
 const mapTranslation = (
   row: typeof aiTranslations.$inferSelect,

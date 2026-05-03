@@ -12,18 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface AiInsightsRow {
-  id: EntityId
-  refId: EntityId
-  lang: string
-  hash: string
-  content: string
-  isTranslation: boolean
-  sourceInsightsId: EntityId | null
-  sourceLang: string | null
-  modelInfo: Record<string, unknown> | null
-  createdAt: Date
-}
+import type { AiInsightsRow } from './ai-insights.types'
 
 const mapRow = (row: typeof aiInsights.$inferSelect): AiInsightsRow => ({
   id: toEntityId(row.id) as EntityId,

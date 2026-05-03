@@ -7,9 +7,10 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getAvatar } from '~/utils/tool.util'
 
-import { ReaderRepository, type ReaderRow } from '../reader/reader.repository'
-import { type OwnerProfileRow, OwnerRepository } from './owner.repository'
-import type { OwnerDocument } from './owner.types'
+import { ReaderRepository } from '../reader/reader.repository'
+import type { ReaderRow } from '../reader/reader.types'
+import { OwnerRepository } from './owner.repository'
+import type { OwnerDocument, OwnerProfileRow } from './owner.types'
 import { OwnerModel } from './owner.types'
 
 @Injectable()

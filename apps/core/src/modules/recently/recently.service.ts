@@ -13,9 +13,9 @@ import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { CommentService } from '../comment/comment.service'
-import { RecentlyRepository, type RecentlyRow } from './recently.repository'
+import { RecentlyRepository } from './recently.repository'
 import { RecentlyAttitudeEnum } from './recently.schema'
-import { RecentlyModel } from './recently.types'
+import { RecentlyModel, type RecentlyRow } from './recently.types'
 
 /**
  * Minimal hydrated reference returned alongside a recently row when its

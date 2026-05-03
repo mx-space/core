@@ -12,27 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface WebhookRow {
-  id: EntityId
-  payloadUrl: string
-  events: string[]
-  enabled: boolean
-  scope: number | null
-  /** Timestamp recorded at creation; named `timestamp` in the legacy schema. */
-  timestamp: Date | null
-}
-
-export interface WebhookEventRow {
-  id: EntityId
-  hookId: EntityId
-  event: string | null
-  headers: Record<string, unknown> | null
-  payload: unknown
-  response: unknown
-  success: boolean | null
-  status: number
-  timestamp: Date | null
-}
+import type { WebhookEventRow, WebhookRow } from './webhook.types'
 
 const mapHook = (row: typeof webhooks.$inferSelect): WebhookRow => ({
   id: toEntityId(row.id) as EntityId,

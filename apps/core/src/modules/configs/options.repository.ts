@@ -11,11 +11,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface OptionRow {
-  id: EntityId
-  name: string
-  value: unknown
-}
+import type { OptionRow } from './options.types'
 
 const mapRow = (row: typeof options.$inferSelect): OptionRow => ({
   id: toEntityId(row.id) as EntityId,

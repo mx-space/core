@@ -30,15 +30,13 @@ import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.enum'
 import { DraftService } from '../draft/draft.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
-import {
-  NoteRepository,
-  type NoteRow,
-  type NoteSortOptions,
-} from './note.repository'
+import { NoteRepository } from './note.repository'
 import {
   type Coordinate,
   NOTE_PROTECTED_KEYS,
   type NoteModel,
+  type NoteRow,
+  type NoteSortOptions,
 } from './note.types'
 
 @Injectable()

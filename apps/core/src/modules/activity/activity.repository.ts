@@ -12,12 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface ActivityRow {
-  id: EntityId
-  type: number | null
-  payload: Record<string, unknown> | null
-  createdAt: Date
-}
+import type { ActivityRow } from './activity.types'
 
 const mapRow = (row: typeof activities.$inferSelect): ActivityRow => ({
   id: toEntityId(row.id) as EntityId,

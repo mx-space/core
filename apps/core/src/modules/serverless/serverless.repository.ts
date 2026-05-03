@@ -12,26 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface ServerlessStorageRow {
-  id: EntityId
-  namespace: string
-  key: string
-  value: unknown
-}
-
-export interface ServerlessLogRow {
-  id: EntityId
-  functionId: EntityId | null
-  reference: string
-  name: string
-  method: string | null
-  ip: string | null
-  status: string
-  executionTime: number
-  logs: unknown[] | null
-  error: Record<string, unknown> | null
-  createdAt: Date
-}
+import type { ServerlessLogRow, ServerlessStorageRow } from './serverless.types'
 
 const mapStorage = (
   row: typeof serverlessStorages.$inferSelect,

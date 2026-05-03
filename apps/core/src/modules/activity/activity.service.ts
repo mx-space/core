@@ -32,8 +32,9 @@ import type {
   ActivityLikeSupportType,
   ActivityPresence,
 } from './activity.interface'
-import { ActivityRepository, type ActivityRow } from './activity.repository'
+import { ActivityRepository } from './activity.repository'
 import type { UpdatePresenceDto } from './activity.schema'
+import type { ActivityRow } from './activity.types'
 import {
   extractArticleIdFromRoomName,
   isValidRoomName,

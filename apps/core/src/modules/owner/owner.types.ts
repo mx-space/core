@@ -19,6 +19,18 @@ export interface OwnerModel {
 export type OwnerDocument = OwnerModel
 export type OwnerModelSecurityKeys = (typeof securityKeys)[number]
 
+export interface OwnerProfileRow {
+  id: string
+  readerId: string
+  mail: string | null
+  url: string | null
+  introduce: string | null
+  lastLoginIp: string | null
+  lastLoginTime: Date | null
+  socialIds: Record<string, unknown> | null
+  createdAt: Date
+}
+
 export const OwnerModel = {
   securityKeys,
   serialize(doc: OwnerModel) {

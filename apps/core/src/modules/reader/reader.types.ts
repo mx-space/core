@@ -10,3 +10,17 @@ export interface ReaderModel extends BaseModel {
   image?: string | null
   role?: string
 }
+
+export interface ReaderRow {
+  id: string
+  email: string | null
+  emailVerified: boolean
+  name: string | null
+  handle: string | null
+  username: string | null
+  displayUsername: string | null
+  image: string | null
+  role: string
+  createdAt: Date
+  updatedAt: Date | null
+}

@@ -10,8 +10,8 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
-import type { SnippetRow } from './snippet.repository'
 import { SnippetService } from './snippet.service'
+import type { SnippetRow } from './snippet.types'
 
 const MAX_PREFIX_DEPTH = 10
 

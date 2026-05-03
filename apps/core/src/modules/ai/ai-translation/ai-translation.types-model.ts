@@ -1,4 +1,4 @@
-import type { AiTranslationRow } from './ai-translation.repository'
+import type { AiTranslationRow } from './ai-translation.types'
 
 /**
  * Plain row shape for AI translations. Mirrors `AiTranslationRow` from the

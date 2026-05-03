@@ -12,43 +12,13 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export enum LinkType {
-  Friend = 0,
-  Collection = 1,
-}
-
-export enum LinkState {
-  Pass = 0,
-  Audit = 1,
-  Outdate = 2,
-  Banned = 3,
-  Reject = 4,
-}
-
-export interface LinkRow {
-  id: EntityId
-  name: string
-  url: string
-  avatar: string | null
-  description: string | null
-  type: LinkType
-  state: LinkState
-  email: string | null
-  hide: boolean
-  createdAt: Date
-}
-
-export interface LinkCreateInput {
-  name: string
-  url: string
-  avatar?: string | null
-  description?: string | null
-  type?: LinkType
-  state?: LinkState
-  email?: string | null
-}
-
-export type LinkPatchInput = Partial<LinkCreateInput>
+import {
+  type LinkCreateInput,
+  type LinkPatchInput,
+  type LinkRow,
+  LinkState,
+  LinkType,
+} from './link.types'
 
 const mapRow = (row: typeof links.$inferSelect): LinkRow => ({
   id: toEntityId(row.id) as EntityId,

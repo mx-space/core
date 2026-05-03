@@ -22,34 +22,18 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export type SearchDocumentRefType = 'post' | 'note' | 'page'
-
-export interface SearchDocumentRow {
-  id: EntityId
-  refType: SearchDocumentRefType
-  refId: EntityId
-  title: string
-  searchText: string
-  terms: string[]
-  titleTermFreq: Record<string, number>
-  bodyTermFreq: Record<string, number>
-  titleLength: number
-  bodyLength: number
-  slug: string | null
-  nid: number | null
-  isPublished: boolean
-  publicAt: Date | null
-  hasPassword: boolean
-  createdAt: Date
-  modifiedAt: Date | null
-}
+import type {
+  SearchDocumentRefType,
+  SearchDocumentRow,
+  SearchDocumentUpsertInput,
+} from './search-document.types'
 
 const mapRow = (
   row: typeof searchDocuments.$inferSelect,
 ): SearchDocumentRow => ({
-  id: toEntityId(row.id) as EntityId,
+  id: toEntityId(row.id) as string,
   refType: row.refType as SearchDocumentRefType,
-  refId: toEntityId(row.refId) as EntityId,
+  refId: toEntityId(row.refId) as string,
   title: row.title,
   searchText: row.searchText,
   terms: row.terms ?? [],
@@ -65,13 +49,6 @@ const mapRow = (
   createdAt: row.createdAt,
   modifiedAt: row.modifiedAt,
 })
-
-export interface SearchDocumentUpsertInput extends Omit<
-  SearchDocumentRow,
-  'id' | 'createdAt'
-> {
-  id?: EntityId | string
-}
 
 @Injectable()
 export class SearchRepository extends BaseRepository {

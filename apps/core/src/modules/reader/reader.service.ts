@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 
 import { AuthService } from '../auth/auth.service'
-import { ReaderRepository, type ReaderRow } from './reader.repository'
-import type { ReaderModel } from './reader.types'
+import { ReaderRepository } from './reader.repository'
+import type { ReaderModel, ReaderRow } from './reader.types'
 
 type ReaderShape = ReaderModel & {
   id: string

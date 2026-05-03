@@ -12,14 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface SubscribeRow {
-  id: EntityId
-  email: string
-  cancelToken: string
-  subscribe: number
-  verified: boolean
-  createdAt: Date
-}
+import type { SubscribeRow } from './subscribe.types'
 
 const mapRow = (row: typeof subscribes.$inferSelect): SubscribeRow => ({
   id: toEntityId(row.id) as EntityId,

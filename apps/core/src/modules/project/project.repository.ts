@@ -12,31 +12,11 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface ProjectRow {
-  id: EntityId
-  name: string
-  description: string
-  previewUrl: string | null
-  docUrl: string | null
-  projectUrl: string | null
-  images: string[] | null
-  avatar: string | null
-  text: string | null
-  createdAt: Date
-}
-
-export interface ProjectCreateInput {
-  name: string
-  description: string
-  previewUrl?: string | null
-  docUrl?: string | null
-  projectUrl?: string | null
-  images?: string[] | null
-  avatar?: string | null
-  text?: string | null
-}
-
-export type ProjectPatchInput = Partial<ProjectCreateInput>
+import type {
+  ProjectCreateInput,
+  ProjectPatchInput,
+  ProjectRow,
+} from './project.types'
 
 const mapRow = (row: typeof projects.$inferSelect): ProjectRow => ({
   id: toEntityId(row.id) as EntityId,

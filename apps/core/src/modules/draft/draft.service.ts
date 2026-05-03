@@ -7,9 +7,9 @@ import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 import { DraftRefType } from './draft.enum'
-import { DraftRepository, type DraftRow } from './draft.repository'
+import { DraftRepository } from './draft.repository'
 import type { CreateDraftDto, UpdateDraftDto } from './draft.schema'
-import type { DraftHistoryModel } from './draft.types'
+import type { DraftHistoryModel, DraftRow } from './draft.types'
 import { DraftHistoryService } from './draft-history.service'
 
 @Injectable()

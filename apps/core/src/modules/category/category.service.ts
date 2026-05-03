@@ -16,10 +16,8 @@ import { scheduleManager } from '~/utils/schedule.util'
 import type { PostService } from '../post/post.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { CategoryType } from './category.enum'
-import {
-  type CategoryPatchInput,
-  CategoryRepository,
-} from './category.repository'
+import { CategoryRepository } from './category.repository'
+import type { CategoryPatchInput } from './category.types'
 
 type TagDetailMapped = {
   id: string

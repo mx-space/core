@@ -32,3 +32,11 @@ export interface MetaPresetModel extends BaseModel {
   enabled: boolean
   updated?: Date
 }
+
+export type MetaPresetRow = MetaPresetModel & {
+  id: string
+  createdAt: Date
+  created: Date
+  updatedAt: Date | null
+  updated?: Date | null
+}

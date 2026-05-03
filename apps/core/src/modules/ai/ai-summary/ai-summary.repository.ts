@@ -12,14 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface AiSummaryRow {
-  id: EntityId
-  hash: string
-  summary: string
-  refId: EntityId
-  lang: string | null
-  createdAt: Date
-}
+import type { AiSummaryRow } from './ai-summary.types'
 
 const mapRow = (row: typeof aiSummaries.$inferSelect): AiSummaryRow => ({
   id: toEntityId(row.id) as EntityId,

@@ -12,30 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface SnippetRow {
-  id: EntityId
-  type: string | null
-  private: boolean
-  raw: string
-  name: string
-  reference: string
-  comment: string | null
-  metatype: string | null
-  schema: string | null
-  method: string | null
-  customPath: string | null
-  secret: string | null
-  enable: boolean
-  builtIn: boolean
-  compiledCode: string | null
-  createdAt: Date
-  updatedAt: Date | null
-}
-
-export interface SnippetGroupRow {
-  reference: string
-  count: number
-}
+import type { SnippetGroupRow, SnippetRow } from './snippet.types'
 
 const mapRow = (row: typeof snippets.$inferSelect): SnippetRow => ({
   id: toEntityId(row.id) as EntityId,

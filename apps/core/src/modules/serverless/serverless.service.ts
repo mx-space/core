@@ -33,9 +33,9 @@ import { safePathJoin } from '~/utils/tool.util'
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerRepository } from '../owner/owner.repository'
 import { ReaderRepository } from '../reader/reader.repository'
-import type { SnippetRow } from '../snippet/snippet.repository'
 import { SnippetRepository } from '../snippet/snippet.repository'
 import { SnippetType } from '../snippet/snippet.schema'
+import type { SnippetRow } from '../snippet/snippet.types'
 import type {
   BuiltInFunctionObject,
   FunctionContextRequest,

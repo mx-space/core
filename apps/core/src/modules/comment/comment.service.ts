@@ -12,19 +12,19 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getAvatar } from '~/utils/tool.util'
 
-import { FileDeletionReason } from '../file/file-reference.repository'
 import { FileReferenceService } from '../file/file-reference.service'
+import { FileDeletionReason } from '../file/file-reference.types'
 import { OwnerService } from '../owner/owner.service'
 import { ReaderService } from '../reader/reader.service'
 import { ReaderModel } from '../reader/reader.types'
 import { CommentState } from './comment.enum'
-import {
-  type CommentFindFilter,
-  type CommentRefType,
-  CommentRepository,
-  type CommentRow,
-} from './comment.repository'
-import type { CommentModel } from './comment.types'
+import { CommentRepository } from './comment.repository'
+import type {
+  CommentFindFilter,
+  CommentModel,
+  CommentRefType,
+  CommentRow,
+} from './comment.types'
 
 /**
  * Minimal hydrated reference attached to a comment when its `refType`/`refId`

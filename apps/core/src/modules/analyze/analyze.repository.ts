@@ -12,15 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface AnalyzeRow {
-  id: EntityId
-  timestamp: Date
-  ip: string | null
-  ua: Record<string, unknown> | null
-  country: string | null
-  path: string | null
-  referer: string | null
-}
+import type { AnalyzeRow } from './analyze.types'
 
 const mapRow = (row: typeof analyzes.$inferSelect): AnalyzeRow => ({
   id: toEntityId(row.id) as EntityId,

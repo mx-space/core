@@ -15,9 +15,9 @@ import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { ServerlessService } from '../serverless/serverless.service'
-import type { SnippetRow } from './snippet.repository'
 import { SnippetRepository } from './snippet.repository'
 import { SnippetType } from './snippet.schema'
+import type { SnippetRow } from './snippet.types'
 
 export interface SnippetCreateInput {
   type?: SnippetType

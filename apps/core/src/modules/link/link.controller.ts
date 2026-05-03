@@ -11,9 +11,10 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import { BasePgCrudFactory } from '~/transformers/crud-factor.pg.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 
-import { LinkRepository, LinkState } from './link.repository'
+import { LinkRepository } from './link.repository'
 import { AuditReasonDto, LinkDto } from './link.schema'
 import { LinkService } from './link.service'
+import { LinkState } from './link.types'
 
 const paths = ['links', 'friends']
 

@@ -13,12 +13,8 @@ import { scheduleManager } from '~/utils/schedule.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerService } from '../owner/owner.service'
-import {
-  LinkRepository,
-  type LinkRow,
-  LinkState,
-  LinkType,
-} from './link.repository'
+import { LinkRepository } from './link.repository'
+import { type LinkRow, LinkState, LinkType } from './link.types'
 import { LinkAvatarService } from './link-avatar.service'
 import { LinkApplyEmailType } from './link-mail.enum'
 

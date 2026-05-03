@@ -13,25 +13,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export interface TopicRow {
-  id: EntityId
-  name: string
-  slug: string
-  description: string
-  introduce: string | null
-  icon: string | null
-  createdAt: Date
-}
-
-export interface TopicCreateInput {
-  name: string
-  slug?: string
-  description?: string
-  introduce?: string | null
-  icon?: string | null
-}
-
-export type TopicPatchInput = Partial<TopicCreateInput>
+import type { TopicCreateInput, TopicPatchInput, TopicRow } from './topic.types'
 
 const mapRow = (row: typeof topics.$inferSelect): TopicRow => ({
   id: toEntityId(row.id) as EntityId,

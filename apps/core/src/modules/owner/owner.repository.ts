@@ -6,17 +6,7 @@ import { ownerProfiles } from '~/database/schema'
 import { BaseRepository } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 
-export interface OwnerProfileRow {
-  id: string
-  readerId: string
-  mail: string | null
-  url: string | null
-  introduce: string | null
-  lastLoginIp: string | null
-  lastLoginTime: Date | null
-  socialIds: Record<string, unknown> | null
-  createdAt: Date
-}
+import type { OwnerProfileRow } from './owner.types'
 
 const mapRow = (row: typeof ownerProfiles.$inferSelect): OwnerProfileRow => ({
   id: row.id,
