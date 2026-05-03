@@ -228,7 +228,7 @@ CREATE TABLE "comments" (
 	"avatar" text,
 	"auth_provider" text,
 	"meta" text,
-	"reader_id" bigint,
+	"reader_id" text,
 	"edited_at" timestamp with time zone,
 	"anchor" jsonb
 );

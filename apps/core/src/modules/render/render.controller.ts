@@ -19,7 +19,7 @@ import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils/time.util'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -43,7 +43,7 @@ export class RenderEjsController {
   @Header('content-type', 'text/html')
   @CacheTTL(60 * 60)
   async renderArticle(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query('theme') theme: string,
   ) {
     const { id } = params

@@ -10,7 +10,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import type { CategoryModel } from '../category/category.types'
 import type { MarkdownYAMLProperty } from './markdown.interface'
@@ -156,7 +156,7 @@ export class MarkdownController {
 
   @Get('/render/structure/:id')
   @CacheTTL(60 * 60)
-  async getRenderedMarkdownHtmlStructure(@Param() params: MongoIdDto) {
+  async getRenderedMarkdownHtmlStructure(@Param() params: EntityIdDto) {
     const { id } = params
     const { html, document } = await this.service.renderArticle(id)
 

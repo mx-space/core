@@ -429,10 +429,31 @@ export class AiSummaryService implements OnModuleInit {
   }
 
   async getAllSummariesGrouped(query: GetSummariesGroupedQueryInput) {
-    const { page, size, search: _search } = query
+    const { page, size } = query
+    const search = query.search?.trim()
+    const searchableRefIds = search
+      ? await this.databaseService.findPostAndNoteIdsByTitle(search)
+      : undefined
 
-    // TODO: wave 3 — wire `_search` into the repository to filter grouped refs
-    const grouped = await this.aiSummaryRepository.groupedByRef(page, size)
+    if (search && searchableRefIds?.length === 0) {
+      return {
+        data: [],
+        pagination: {
+          total: 0,
+          currentPage: page,
+          totalPage: 0,
+          size,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      }
+    }
+
+    const grouped = await this.aiSummaryRepository.groupedByRef(
+      page,
+      size,
+      searchableRefIds,
+    )
     const groupedRefIds = grouped.data
     const total = grouped.pagination.total
 

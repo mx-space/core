@@ -286,7 +286,7 @@ export const comments = pgTable(
     avatar: text('avatar'),
     authProvider: text('auth_provider'),
     meta: text('meta'),
-    readerId: refBigInt('reader_id'),
+    readerId: text('reader_id'),
     editedAt: tsCol('edited_at'),
     anchor: jsonb('anchor').$type<Record<string, unknown> | null>(),
   },

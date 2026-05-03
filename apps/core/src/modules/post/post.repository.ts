@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, asc, desc, eq, inArray, type SQL, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, inArray, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { categories, postRelatedPosts, posts } from '~/database/schema'
@@ -339,6 +339,14 @@ export class PostRepository extends BaseRepository {
       .from(posts)
       .where(inArray(posts.id, bigInts))
     return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+  }
+
+  async findIdsByTitle(search: string): Promise<EntityId[]> {
+    const rows = await this.db
+      .select({ id: posts.id })
+      .from(posts)
+      .where(ilike(posts.title, `%${search}%`))
+    return rows.map((row) => toEntityId(row.id) as EntityId)
   }
 
   async aggregateAllTagCounts(): Promise<PostTagCount[]> {

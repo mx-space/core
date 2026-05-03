@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { zCoerceBoolean, zMongoId, zNonEmptyString } from '~/common/zod'
+import { zCoerceBoolean, zEntityId, zNonEmptyString } from '~/common/zod'
 
 import { CategoryType } from './category.enum'
 
@@ -56,19 +56,12 @@ export class MultiQueryTagAndCategoryDto extends createZodDto(
  */
 export const MultiCategoriesQuerySchema = z.object({
   ids: z
-    .preprocess(
-      (val) => {
-        if (typeof val === 'string') {
-          return [...new Set(val.split(','))]
-        }
-        return val
-      },
-      z
-        .array(zMongoId)
-        .refine((arr) => arr.every((id) => /^[\da-f]{24}$/i.test(id)), {
-          message: '多分类查询使用逗号分隔，应为 mongoID',
-        }),
-    )
+    .preprocess((val) => {
+      if (typeof val === 'string') {
+        return [...new Set(val.split(','))]
+      }
+      return val
+    }, z.array(zEntityId))
     .optional(),
   joint: zCoerceBoolean.optional(),
   type: z

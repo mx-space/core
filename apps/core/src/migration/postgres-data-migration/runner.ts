@@ -4,7 +4,7 @@ import { dataMigrationRuns } from '~/database/schema'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { SnowflakeGenerator } from '~/shared/id/snowflake.service'
 
-import { persistIdMap } from './id-map'
+import { loadPersistedMaps, persistIdMap } from './id-map'
 import { ALL_STEPS } from './steps'
 import type { MigrationContext, MigrationMode, MigrationReport } from './types'
 
@@ -30,6 +30,10 @@ export async function runMigration(input: {
       warnings: [],
       startedAt: new Date(),
     },
+  }
+
+  if (input.mode === 'apply') {
+    await loadPersistedMaps(ctx)
   }
 
   // Phase 1: allocate Snowflake IDs for every collection.

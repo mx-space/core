@@ -45,7 +45,7 @@ export interface CommentRow {
   avatar: string | null
   authProvider: string | null
   meta: string | null
-  readerId: EntityId | null
+  readerId: string | null
   editedAt: Date | null
   anchor: Record<string, unknown> | null
   ip: string | null
@@ -71,7 +71,7 @@ export interface CommentCreateInput {
   avatar?: string | null
   authProvider?: string | null
   meta?: string | null
-  readerId?: EntityId | string | null
+  readerId?: string | null
   anchor?: Record<string, unknown> | null
   ip?: string | null
   agent?: string | null
@@ -112,7 +112,7 @@ const mapBase = (row: typeof comments.$inferSelect): CommentRow => ({
   avatar: row.avatar,
   authProvider: row.authProvider,
   meta: row.meta,
-  readerId: row.readerId ? (toEntityId(row.readerId) as EntityId) : null,
+  readerId: row.readerId,
   editedAt: row.editedAt,
   anchor: row.anchor,
   ip: row.ip,
@@ -262,7 +262,7 @@ export class CommentRepository extends BaseRepository {
         avatar: input.avatar ?? null,
         authProvider: input.authProvider ?? null,
         meta: input.meta ?? null,
-        readerId: input.readerId ? parseEntityId(input.readerId) : null,
+        readerId: input.readerId ?? null,
         anchor: input.anchor ?? null,
         ip: input.ip ?? null,
         agent: input.agent ?? null,
@@ -307,7 +307,7 @@ export class CommentRepository extends BaseRepository {
           avatar: input.avatar ?? null,
           authProvider: input.authProvider ?? null,
           meta: input.meta ?? null,
-          readerId: input.readerId ? parseEntityId(input.readerId) : null,
+          readerId: input.readerId ?? null,
           anchor: input.anchor ?? null,
           ip: input.ip ?? null,
           agent: input.agent ?? null,
@@ -430,7 +430,7 @@ export class CommentRepository extends BaseRepository {
       .from(comments)
       .where(
         and(
-          eq(comments.readerId, parseEntityId(readerId)),
+          eq(comments.readerId, readerId),
           eq(comments.isDeleted, false),
           ne(comments.state, 2),
         )!,

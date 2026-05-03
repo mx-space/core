@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   gt,
+  ilike,
   inArray,
   lt,
   lte,
@@ -339,6 +340,14 @@ export class NoteRepository extends BaseRepository {
       .from(notes)
       .where(inArray(notes.id, bigInts))
     return Promise.all(rows.map((r) => this.attachTopic(mapBase(r))))
+  }
+
+  async findIdsByTitle(search: string): Promise<EntityId[]> {
+    const rows = await this.db
+      .select({ id: notes.id })
+      .from(notes)
+      .where(ilike(notes.title, `%${search}%`))
+    return rows.map((row) => toEntityId(row.id) as EntityId)
   }
 
   async findAdjacent(

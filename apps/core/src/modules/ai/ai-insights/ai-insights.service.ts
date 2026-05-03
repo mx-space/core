@@ -398,8 +398,30 @@ export class AiInsightsService implements OnModuleInit {
 
   async getAllInsightsGrouped(query: GetInsightsGroupedQueryInput) {
     const { page, size } = query
+    const search = query.search?.trim()
+    const searchableRefIds = search
+      ? await this.databaseService.findPostAndNoteIdsByTitle(search)
+      : undefined
 
-    const grouped = await this.aiInsightsRepository.groupedByRef(page, size)
+    if (search && searchableRefIds?.length === 0) {
+      return {
+        data: [],
+        pagination: {
+          total: 0,
+          currentPage: page,
+          totalPage: 0,
+          size,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      }
+    }
+
+    const grouped = await this.aiInsightsRepository.groupedByRef(
+      page,
+      size,
+      searchableRefIds,
+    )
     const groupedRefIds = grouped.data
     const total = grouped.pagination.total
     if (!groupedRefIds.length) {

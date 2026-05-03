@@ -1921,7 +1921,7 @@
         },
         "reader_id": {
           "name": "reader_id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },

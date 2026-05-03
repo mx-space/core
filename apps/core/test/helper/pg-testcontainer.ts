@@ -17,6 +17,8 @@ export async function startPgTestContainer() {
     .start()
 
   const connectionUri = container.getConnectionUri()
+  process.env.PG_URL = connectionUri
+  process.env.PG_CONNECTION_STRING = connectionUri
   process.env.PG_VERIFY_URL = connectionUri
   process.env.POSTGRES_URL = connectionUri
 

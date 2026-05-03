@@ -14,7 +14,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
@@ -71,7 +71,7 @@ export class AiInsightsController {
 
   @Get('/ref/:id')
   @Auth()
-  async getInsightsByRefId(@Param() params: MongoIdDto) {
+  async getInsightsByRefId(@Param() params: EntityIdDto) {
     return this.service.getInsightsByRefId(params.id)
   }
 
@@ -90,7 +90,7 @@ export class AiInsightsController {
   @Patch('/:id')
   @Auth()
   async updateInsights(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: UpdateInsightsDto,
   ) {
     return this.service.updateInsightsInDb(params.id, body.content)
@@ -98,13 +98,13 @@ export class AiInsightsController {
 
   @Delete('/:id')
   @Auth()
-  async deleteInsights(@Param() params: MongoIdDto) {
+  async deleteInsights(@Param() params: EntityIdDto) {
     return this.service.deleteInsightsInDb(params.id)
   }
 
   @Get('/article/:id')
   async getArticleInsights(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query() query: GetInsightsQueryDto,
   ) {
     return this.service.getOrGenerateInsightsForArticle(params.id, {
@@ -115,7 +115,7 @@ export class AiInsightsController {
 
   @Get('/article/:id/generate')
   async generateArticleInsights(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query() query: GetInsightsStreamQueryDto,
     @Res() reply: FastifyReply,
   ) {

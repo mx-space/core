@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { zCoerceBoolean, zMongoId, zNonEmptyString } from '~/common/zod'
+import { zCoerceBoolean, zEntityId, zNonEmptyString } from '~/common/zod'
 
 import { MetaFieldType, MetaPresetScope } from './meta-preset.enum'
 
@@ -48,7 +48,7 @@ export const QueryMetaPresetSchema = z.object({
 export class QueryMetaPresetDto extends createZodDto(QueryMetaPresetSchema) {}
 
 export const UpdateOrderSchema = z.object({
-  ids: z.array(zMongoId),
+  ids: z.array(zEntityId),
 })
 
 export class UpdateOrderDto extends createZodDto(UpdateOrderSchema) {}

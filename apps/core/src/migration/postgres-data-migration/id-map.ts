@@ -115,6 +115,18 @@ export async function loadPersistedMap(
   return rows.length
 }
 
+/** Hydrate every persisted Mongo-to-PostgreSQL id mapping before allocation. */
+export async function loadPersistedMaps(
+  ctx: MigrationContext,
+): Promise<number> {
+  if (ctx.mode !== 'apply') return 0
+  const rows = await ctx.pg.select().from(mongoIdMap)
+  for (const row of rows) {
+    ensureCollectionMap(ctx, row.collection).set(row.mongoId, row.snowflakeId)
+  }
+  return rows.length
+}
+
 export type IdMapResolver = ReturnType<typeof createResolver>
 
 export function createResolver(

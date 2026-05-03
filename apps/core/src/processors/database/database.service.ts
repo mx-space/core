@@ -52,6 +52,16 @@ export class DatabaseService {
     }
   }
 
+  public async findPostAndNoteIdsByTitle(search: string): Promise<string[]> {
+    const normalizedSearch = search.trim()
+    if (!normalizedSearch) return []
+    const [posts, notes] = await Promise.all([
+      this.postRepository.findIdsByTitle(normalizedSearch),
+      this.noteRepository.findIdsByTitle(normalizedSearch),
+    ])
+    return [...new Set([...posts, ...notes])]
+  }
+
   flatCollectionToMap(combinedCollection: IdsCollection) {
     const all = {} as Record<string, any>
     for (const key in combinedCollection) {

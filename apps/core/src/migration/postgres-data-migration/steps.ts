@@ -1,3 +1,4 @@
+import { CollectionRefTypes } from '~/constants/db.constant'
 import {
   accounts,
   activities,
@@ -113,22 +114,36 @@ const recordAuthIds = async (
   }
 }
 
-const CONTENT_REF_TYPE_ALIASES: Record<string, string> = {
-  posts: 'posts',
-  post: 'posts',
-  Post: 'posts',
-  notes: 'notes',
-  note: 'notes',
-  Note: 'notes',
-  pages: 'pages',
-  page: 'pages',
-  Page: 'pages',
-  recentlies: 'recentlies',
-  recently: 'recentlies',
-  Recently: 'recentlies',
+type ContentRefTarget = {
+  collection: 'posts' | 'notes' | 'pages' | 'recentlies'
+  refType: CollectionRefTypes
 }
 
-const normalizeContentRefType = (value: unknown): string | null => {
+const CONTENT_REF_TYPE_ALIASES: Record<string, ContentRefTarget> = {
+  posts: { collection: 'posts', refType: CollectionRefTypes.Post },
+  post: { collection: 'posts', refType: CollectionRefTypes.Post },
+  Post: { collection: 'posts', refType: CollectionRefTypes.Post },
+  notes: { collection: 'notes', refType: CollectionRefTypes.Note },
+  note: { collection: 'notes', refType: CollectionRefTypes.Note },
+  Note: { collection: 'notes', refType: CollectionRefTypes.Note },
+  pages: { collection: 'pages', refType: CollectionRefTypes.Page },
+  page: { collection: 'pages', refType: CollectionRefTypes.Page },
+  Page: { collection: 'pages', refType: CollectionRefTypes.Page },
+  recentlies: {
+    collection: 'recentlies',
+    refType: CollectionRefTypes.Recently,
+  },
+  recently: {
+    collection: 'recentlies',
+    refType: CollectionRefTypes.Recently,
+  },
+  Recently: {
+    collection: 'recentlies',
+    refType: CollectionRefTypes.Recently,
+  },
+}
+
+const normalizeContentRefType = (value: unknown): ContentRefTarget | null => {
   if (typeof value !== 'string') return null
   return CONTENT_REF_TYPE_ALIASES[value] ?? null
 }
@@ -588,16 +603,16 @@ export const stepRecentlies: MigrationStep = {
     const resolver = createResolver(ctx, 'recentlies')
     const docs = await collect<any>(ctx, 'recentlies')
     const rows = docs.map((d) => {
-      const refCollection = normalizeContentRefType(d.refType)
-      const refId = refCollection
-        ? resolver.ref(refCollection, d.ref ?? d.refId, 'refId', false)
+      const refTarget = normalizeContentRefType(d.refType)
+      const refId = refTarget
+        ? resolver.ref(refTarget.collection, d.ref ?? d.refId, 'refId', false)
         : null
       return {
         id: resolver.self(d._id),
         content: d.content ?? '',
         type: d.type ?? 'text',
         metadata: d.metadata ?? null,
-        refType: refCollection ?? null,
+        refType: refTarget?.refType ?? null,
         refId,
         commentsIndex: d.commentsIndex ?? 0,
         allowComment: d.allowComment ?? true,
@@ -623,8 +638,8 @@ export const stepComments: MigrationStep = {
     const docs = await collect<any>(ctx, 'comments')
     const rows = docs
       .map((d) => {
-        const refColl = normalizeContentRefType(d.refType)
-        if (!refColl) {
+        const refTarget = normalizeContentRefType(d.refType)
+        if (!refTarget) {
           ctx.reports.warnings.push({
             collection: 'comments',
             mongoId: String(d._id),
@@ -632,11 +647,16 @@ export const stepComments: MigrationStep = {
           })
           return null
         }
-        const refId = resolver.ref(refColl, d.ref ?? d.refId, 'refId', true)
+        const refId = resolver.ref(
+          refTarget.collection,
+          d.ref ?? d.refId,
+          'refId',
+          true,
+        )
         if (!refId) return null
         return {
           id: resolver.self(d._id),
-          refType: refColl,
+          refType: refTarget.refType,
           refId,
           author: d.author ?? null,
           mail: d.mail ?? null,
@@ -667,7 +687,7 @@ export const stepComments: MigrationStep = {
           avatar: d.avatar ?? null,
           authProvider: d.authProvider ?? null,
           meta: d.meta ?? null,
-          readerId: resolver.ref('readers', d.readerId, 'readerId', false),
+          readerId: mongoHexOf(d.readerId),
           editedAt: dateOrNull(d.editedAt),
           anchor: d.anchor ?? null,
           createdAt: dateOrNull(d.created) ?? new Date(),
@@ -689,12 +709,13 @@ export const stepDrafts: MigrationStep = {
     const resolver = createResolver(ctx, 'drafts')
     const docs = await collect<any>(ctx, 'drafts')
     const rows = docs.map((d) => {
-      const refType =
-        normalizeContentRefType(d.refType) ?? (d.refType as string)
-      const refId = resolver.ref(refType, d.refId, 'refId', false)
+      const refTarget = normalizeContentRefType(d.refType)
+      const refCollection = refTarget?.collection ?? (d.refType as string)
+      const refType = refTarget?.refType ?? (d.refType as string)
+      const refId = resolver.ref(refCollection, d.refId, 'refId', false)
       return {
         id: resolver.self(d._id),
-        refType: refType as 'posts' | 'notes' | 'pages',
+        refType: refType as CollectionRefTypes,
         refId,
         title: d.title ?? '',
         text: d.text ?? '',
@@ -900,28 +921,30 @@ export const stepFileReferences: MigrationStep = {
   async load(ctx) {
     const resolver = createResolver(ctx, 'file_references')
     const docs = await collect<any>(ctx, 'file_references')
-    const refMap: Record<string, string> = {
-      post: 'posts',
-      posts: 'posts',
-      note: 'notes',
-      notes: 'notes',
-      page: 'pages',
-      pages: 'pages',
-      draft: 'drafts',
-      drafts: 'drafts',
-      comment: 'comments',
-      comments: 'comments',
+    const refMap: Record<string, { collection: string; refType: string }> = {
+      post: { collection: 'posts', refType: 'post' },
+      posts: { collection: 'posts', refType: 'post' },
+      note: { collection: 'notes', refType: 'note' },
+      notes: { collection: 'notes', refType: 'note' },
+      page: { collection: 'pages', refType: 'page' },
+      pages: { collection: 'pages', refType: 'page' },
+      draft: { collection: 'drafts', refType: 'draft' },
+      drafts: { collection: 'drafts', refType: 'draft' },
+      comment: { collection: 'comments', refType: 'comment' },
+      comments: { collection: 'comments', refType: 'comment' },
     }
     const rows = docs.map((d) => {
-      const coll = d.refType ? refMap[d.refType] : null
-      const refId = coll ? resolver.ref(coll, d.refId, 'refId', false) : null
+      const refTarget = d.refType ? refMap[d.refType] : null
+      const refId = refTarget
+        ? resolver.ref(refTarget.collection, d.refId, 'refId', false)
+        : null
       return {
         id: resolver.self(d._id),
         fileUrl: d.fileUrl,
         fileName: d.fileName,
         status: d.status ?? 'pending',
         refId,
-        refType: coll ?? d.refType ?? null,
+        refType: refTarget?.refType ?? d.refType ?? null,
         s3ObjectKey: d.s3ObjectKey ?? null,
         createdAt: dateOrNull(d.created) ?? new Date(),
       }
@@ -1146,7 +1169,7 @@ export const stepAi: MigrationStep = {
           id: translationResolver.self(d._id),
           hash: d.hash,
           refId,
-          refType: normalizeContentRefType(d.refType) ?? d.refType,
+          refType: normalizeContentRefType(d.refType)?.refType ?? d.refType,
           lang: d.lang,
           sourceLang: d.sourceLang,
           title: d.title,
@@ -1194,7 +1217,7 @@ export const stepAi: MigrationStep = {
         return {
           id: agentResolver.self(d._id),
           refId,
-          refType: normalizeContentRefType(d.refType) ?? d.refType,
+          refType: normalizeContentRefType(d.refType)?.refType ?? d.refType,
           title: d.title ?? null,
           messages: d.messages ?? [],
           model: d.model,
@@ -1228,11 +1251,11 @@ export const stepSearchDocuments: MigrationStep = {
     }
     const rows = docs
       .map((d) => {
-        const coll = normalizeContentRefType(d.refType)
-        if (!coll) return null
-        const singular = SINGULAR[coll]
+        const refTarget = normalizeContentRefType(d.refType)
+        if (!refTarget) return null
+        const singular = SINGULAR[refTarget.collection]
         if (!singular) return null
-        const refId = resolver.ref(coll, d.refId, 'refId', true)
+        const refId = resolver.ref(refTarget.collection, d.refId, 'refId', true)
         if (!refId) return null
         return {
           id: resolver.self(d._id),
