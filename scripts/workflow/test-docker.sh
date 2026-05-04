@@ -18,6 +18,10 @@ fi
 
 docker images
 
+# Ensure the locally built image is tagged as latest so docker compose uses it
+# instead of pulling an older remote image
+docker tag innei/mx-server innei/mx-server:latest 2>/dev/null || true
+
 (docker compose up &)
 
 if [[ $? -ne 0 ]]; then
@@ -57,6 +61,22 @@ elif [[ $request_exit_code -ne 0 ]]; then
 
 else
   echo -e "\nSuccessfully acquire homepage, passing"
-  kill -9 $p
+
+  # Verify backup tools exist in the app container
+  echo -e "\n=== Checking backup tools in mx-server container ==="
+  docker exec mx-server sh -c "command -v pg_dump >/dev/null 2>&1 && echo 'pg_dump: OK' || echo 'pg_dump: MISSING'"
+  docker exec mx-server sh -c "command -v pg_restore >/dev/null 2>&1 && echo 'pg_restore: OK' || echo 'pg_restore: MISSING'"
+  docker exec mx-server sh -c "command -v zip >/dev/null 2>&1 && echo 'zip: OK' || echo 'zip: MISSING'"
+  docker exec mx-server sh -c "command -v unzip >/dev/null 2>&1 && echo 'unzip: OK' || echo 'unzip: MISSING'"
+  docker exec mx-server sh -c "command -v rsync >/dev/null 2>&1 && echo 'rsync: OK' || echo 'rsync: MISSING'"
+
+  # Fail if critical backup tools are missing
+  if ! docker exec mx-server sh -c "command -v pg_dump >/dev/null 2>&1 && command -v pg_restore >/dev/null 2>&1"; then
+    echo -e "\nERROR: pg_dump or pg_restore is missing in the container. Backup/restore will not work."
+    docker compose down
+    exit 1
+  fi
+
+  docker compose down
   exit 0
 fi
