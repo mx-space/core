@@ -28,7 +28,7 @@ services:
 
   mongo:
     container_name: mongo
-    image: mongo:7
+    image: mongo:8
     volumes:
       - ./data/db:/data/db
     networks:
