@@ -6,7 +6,6 @@ import {
   aiInsights,
   aiSummaries,
   aiTranslations,
-  analyzes,
   apiKeys,
   authIdMap,
   categories,
@@ -27,7 +26,6 @@ import {
   recentlies,
   says,
   searchDocuments,
-  serverlessLogs,
   serverlessStorages,
   sessions,
   slugTrackers,
@@ -36,7 +34,6 @@ import {
   topics,
   translationEntries,
   verifications,
-  webhookEvents,
   webhooks,
 } from '~/database/schema'
 
@@ -1039,27 +1036,6 @@ export const stepSimpleCollections: MigrationStep[] = [
       recordLoad(ctx, 'activities', rows.length)
     },
   },
-  {
-    name: 'analyzes',
-    async allocate(ctx) {
-      await allocateForCollection(ctx, 'analyzes')
-    },
-    async load(ctx) {
-      const resolver = createResolver(ctx, 'analyzes')
-      const docs = await collect<any>(ctx, 'analyzes')
-      const rows = docs.map((d) => ({
-        id: resolver.self(d._id),
-        timestamp: dateOrNull(d.timestamp ?? d.created) ?? new Date(),
-        ip: d.ip ?? null,
-        ua: d.ua ?? null,
-        country: d.country ?? null,
-        path: d.path ?? null,
-        referer: d.referer ?? null,
-      }))
-      await upsert(ctx, analyzes, rows)
-      recordLoad(ctx, 'analyzes', rows.length)
-    },
-  },
 ]
 
 export const stepFileReferences: MigrationStep = {
@@ -1182,11 +1158,9 @@ export const stepWebhooks: MigrationStep = {
   name: 'webhooks',
   async allocate(ctx) {
     await allocateForCollection(ctx, 'webhooks')
-    await allocateForCollection(ctx, 'webhook_events')
   },
   async load(ctx) {
     const hookResolver = createResolver(ctx, 'webhooks')
-    const eventResolver = createResolver(ctx, 'webhook_events')
 
     const hookDocs = await collect<any>(ctx, 'webhooks')
     await upsert(
@@ -1203,32 +1177,6 @@ export const stepWebhooks: MigrationStep = {
       })),
     )
     recordLoad(ctx, 'webhooks', hookDocs.length)
-
-    const eventDocs = await collect<any>(ctx, 'webhook_events')
-    const eventRows = eventDocs
-      .map((d) => {
-        const hookId = eventResolver.ref(
-          'webhooks',
-          d.hookId ?? d.webhookId,
-          'hookId',
-          true,
-        )
-        if (!hookId) return null
-        return {
-          id: eventResolver.self(d._id),
-          timestamp: dateOrNull(d.timestamp ?? d.created),
-          headers: d.headers ?? null,
-          payload: d.payload ?? null,
-          event: d.event ?? null,
-          response: d.response ?? null,
-          success: d.success ?? null,
-          hookId,
-          status: d.status ?? 0,
-        }
-      })
-      .filter((r): r is NonNullable<typeof r> => r !== null)
-    await upsert(ctx, webhookEvents, eventRows)
-    recordLoad(ctx, 'webhook_events', eventRows.length)
   },
 }
 
@@ -1449,11 +1397,9 @@ export const stepServerless: MigrationStep = {
   name: 'serverless',
   async allocate(ctx) {
     await allocateForCollection(ctx, 'serverless_storages')
-    await allocateForCollection(ctx, 'serverless_logs')
   },
   async load(ctx) {
     const storageResolver = createResolver(ctx, 'serverless_storages')
-    const logResolver = createResolver(ctx, 'serverless_logs')
 
     const storageDocs = await collect<any>(ctx, 'serverless_storages')
     await upsert(
@@ -1467,26 +1413,6 @@ export const stepServerless: MigrationStep = {
       })),
     )
     recordLoad(ctx, 'serverless_storages', storageDocs.length)
-
-    const logDocs = await collect<any>(ctx, 'serverless_logs')
-    await upsert(
-      ctx,
-      serverlessLogs,
-      logDocs.map((d) => ({
-        id: logResolver.self(d._id),
-        functionId: null,
-        reference: d.reference,
-        name: d.name,
-        method: d.method ?? null,
-        ip: d.ip ?? null,
-        status: d.status ?? 'success',
-        executionTime: d.executionTime ?? 0,
-        logs: d.logs ?? null,
-        error: d.error ?? null,
-        createdAt: dateOrNull(d.created) ?? new Date(),
-      })),
-    )
-    recordLoad(ctx, 'serverless_logs', logDocs.length)
   },
 }
 
