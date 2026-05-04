@@ -1,7214 +1,6220 @@
 # CHANGELOG
 
-## [11.5.1](https://github.com/mx-space/core/compare/v11.5.0...v11.5.1) (2026-05-02)
 
+## 12.0.0 (2026-05-04)
 
-### Bug Fixes
+* release: v12.0.0 ([fa94ec4](https://github.com/mx-space/core/commit/fa94ec4))
+* fix(deps): update dependency lru-cache to v11.3.6 (#2664) ([05ff63f](https://github.com/mx-space/core/commit/05ff63f)), closes [#2664](https://github.com/mx-space/core/issues/2664)
+* fix(migration): skip transient collections (analyzes, webhook_events, serverless_logs) ([b3286c9](https://github.com/mx-space/core/commit/b3286c9))
+* refactor: remove unused paginator decorator and related code ([f06222b](https://github.com/mx-space/core/commit/f06222b))
+* feat(v12): migrate backend from MongoDB to PostgreSQL + Snowflake IDs (#2659) ([3dd35b0](https://github.com/mx-space/core/commit/3dd35b0)), closes [#2659](https://github.com/mx-space/core/issues/2659)
+* chore(deps): update dependency @swc/core to v1.15.33 (#2657) ([e5c2011](https://github.com/mx-space/core/commit/e5c2011)), closes [#2657](https://github.com/mx-space/core/issues/2657)
+* chore(deps): update dependency axios to v1.16.0 (#2658) ([f834dc2](https://github.com/mx-space/core/commit/f834dc2)), closes [#2658](https://github.com/mx-space/core/issues/2658)
+* chore(deps): update dependency eslint to v10.3.0 (#2655) ([3f4c86b](https://github.com/mx-space/core/commit/3f4c86b)), closes [#2655](https://github.com/mx-space/core/issues/2655)
+* chore(deps): update pnpm to v11.0.4 (#2662) ([7c34ce6](https://github.com/mx-space/core/commit/7c34ce6)), closes [#2662](https://github.com/mx-space/core/issues/2662)
 
-* **deps:** update dependency marked to v18.0.3 ([#2654](https://github.com/mx-space/core/issues/2654)) ([3c86d7e](https://github.com/mx-space/core/commit/3c86d7e9fa0318759d6f13ba1a80e5f98deb9ed4))
-
-
-
-# [11.5.0](https://github.com/mx-space/core/compare/v11.4.8...v11.5.0) (2026-05-01)
-
-
-### Bug Fixes
-
-* **deps:** update dependency nanoid to v5.1.11 ([#2651](https://github.com/mx-space/core/issues/2651)) ([02fd3ec](https://github.com/mx-space/core/commit/02fd3ecf8b924a84660862a6575b182317c21d6e))
-
-
-### Features
-
-* **comment:** reader image upload, quotas, ttl cleanup, admin mgmt ([bce602f](https://github.com/mx-space/core/commit/bce602fc2b6f9fe78cd13d67410f75e31c196b01))
-
-
-
-## [11.4.8](https://github.com/mx-space/core/compare/v11.4.7...v11.4.8) (2026-04-30)
-
-
-### Bug Fixes
-
-* **post:** surface hasInsightsInLocale on detail response ([78d142c](https://github.com/mx-space/core/commit/78d142cacff32c59634bcb031f29d85673a058da))
-
-
-
-## [11.4.7](https://github.com/mx-space/core/compare/v11.4.6...v11.4.7) (2026-04-30)
-
-
-### Bug Fixes
-
-* **category:** include category total post count in detail response ([82e4aa9](https://github.com/mx-space/core/commit/82e4aa9fa87b3c451ce21d4810acdd0dd0d71ef2))
-
-
-### Features
-
-* **category:** enrich detail responses with summary/tags/pin/count and tagsSum ([ff7d9cd](https://github.com/mx-space/core/commit/ff7d9cd55651f17f89225e7773422838cf996231))
-
-
-
-## [11.4.6](https://github.com/mx-space/core/compare/v11.4.5...v11.4.6) (2026-04-29)
-
-
-### Bug Fixes
-
-* **post,slug-tracker:** correct ObjectId vs string comparisons ([e86be85](https://github.com/mx-space/core/commit/e86be8563c48b1a6ad0d204b0866f741b62b4eec))
-
-
-### Features
-
-* **ai-translation:** add topic.description as translatable field ([27734a9](https://github.com/mx-space/core/commit/27734a9044e1726ab5734ec2e188dbd2394609d6))
-* **poll:** add poll vote module backing [@haklex](https://github.com/haklex) poll node ([3aa1848](https://github.com/mx-space/core/commit/3aa18487e8eb3a5d0df40ad9a39ec046002c9cd1))
-
-
-
-## [11.4.5](https://github.com/mx-space/core/compare/v11.4.4...v11.4.5) (2026-04-29)
-
-
-### Features
-
-* **note:** add topic recent-update endpoint and api-client method ([d72cb29](https://github.com/mx-space/core/commit/d72cb29f82a009697af59469fb339382a9df218e))
-
-
-
-## [11.4.4](https://github.com/mx-space/core/compare/v11.4.3...v11.4.4) (2026-04-29)
-
-
-
-## [11.4.3](https://github.com/mx-space/core/compare/v11.4.2...v11.4.3) (2026-04-28)
-
-
-### Features
-
-* **ai:** add min text length threshold for auto summary/insights ([b2444ad](https://github.com/mx-space/core/commit/b2444ad41940006a5c3b167bd842ced092569005))
-
-
-
-## [11.4.2](https://github.com/mx-space/core/compare/v11.4.1...v11.4.2) (2026-04-26)
-
-
-### Features
-
-* **translation:** expose sourceLang in article responses regardless of translation match ([54ae846](https://github.com/mx-space/core/commit/54ae8460f5ed2f669175a6f5ee6e129cd241a6de))
-
-
-
-## [11.4.1](https://github.com/mx-space/core/compare/v11.4.0...v11.4.1) (2026-04-25)
-
-
-
-# [11.4.0](https://github.com/mx-space/core/compare/v11.3.1...v11.4.0) (2026-04-21)
-
-
-### Features
-
-* **ai-summary:** split auto-generate flag into create/update ([097d27d](https://github.com/mx-space/core/commit/097d27db4f10a5f7015c51796a1e48760c3a97be))
-
-
-
-## [11.3.1](https://github.com/mx-space/core/compare/v11.3.0...v11.3.1) (2026-04-21)
-
-
-### Bug Fixes
-
-* **ai-insights:** use plain markdown output for translation ([2da0060](https://github.com/mx-space/core/commit/2da006078a7bb13dc54afdb708069cf68f2f6e26))
-
-
-
-# [11.3.0](https://github.com/mx-space/core/compare/v11.2.1...v11.3.0) (2026-04-21)
-
-
-### Bug Fixes
-
-* **ai-insights:** upsert source row and reject same-lang translation ([2c7b2b1](https://github.com/mx-space/core/commit/2c7b2b1baa3e2310e8906ecdaf05b1ad2b37d938))
-* **test:** add AiInsightsService mock to note e2e tests ([9f30506](https://github.com/mx-space/core/commit/9f3050622791e846ba7ae0aa1d0ac46f5cd1dd70))
-* **test:** mock findOneAndUpdate instead of create in ai-insights spec ([7bfbe85](https://github.com/mx-space/core/commit/7bfbe852bb3b0c214c0a72f60759f836a5272ba8))
-
-
-### Features
-
-* **ai-insights:** add AIInsightsModel with indexes ([6d7df91](https://github.com/mx-space/core/commit/6d7df9132b96cdeff635db281976ecc01006a8bc))
-* **ai-insights:** add collection constant and business events ([c04f437](https://github.com/mx-space/core/commit/c04f437da0ee5490fc4296a149b10eeaff870936))
-* **ai-insights:** add config fields and defaults ([a907d06](https://github.com/mx-space/core/commit/a907d060c578221e5c705a854c4ede4af71bf112))
-* **ai-insights:** add insights DTOs ([039c551](https://github.com/mx-space/core/commit/039c551cb728464e187655a5224853afb21c44f4))
-* **ai-insights:** add insights system prompt and builders ([c2497bc](https://github.com/mx-space/core/commit/c2497bc1f0907e884390e4d2ddddacfcd40e167b))
-* **ai-insights:** add insights task types and service helpers ([2a832af](https://github.com/mx-space/core/commit/2a832af4f90275510fede85206aef51189a09510))
-* **ai-insights:** add service skeleton with cache lookup ([a2f6681](https://github.com/mx-space/core/commit/a2f66817afe95267de218a8834d3a31d543ba685))
-* **ai-insights:** admin listing, CRUD, and event hooks ([5627da9](https://github.com/mx-space/core/commit/5627da9654ebeb962908fb70e5edf56277e446f0))
-* **ai-insights:** HTTP and SSE controller ([3686cf4](https://github.com/mx-space/core/commit/3686cf449a2a51b81deb72d4da729eba747a187e))
-* **ai-insights:** implement streaming generation and public getters ([cf954f8](https://github.com/mx-space/core/commit/cf954f81fb461460c33eed509fcb2c4ab16e824f))
-* **ai-insights:** register services and controller in AiModule ([58a1b8a](https://github.com/mx-space/core/commit/58a1b8a1420bc2716b3b6a8223b5c05fc6a1bb6d))
-* **ai-insights:** translation service with auto-dispatch ([19e4d5c](https://github.com/mx-space/core/commit/19e4d5c80caff505e1667f63bc82f59046e7a09d))
-* **ai-insights:** wire AiService model getters ([39a7053](https://github.com/mx-space/core/commit/39a70531bb87500e3e97888e7e4b9e9b0c72a2d1))
-* **api-client:** add AIInsightsModel and stream event types ([12226e5](https://github.com/mx-space/core/commit/12226e575e78a16b275836a271a63e576f97048b))
-* **api-client:** add getInsights + SSE helpers ([a2e9c1e](https://github.com/mx-space/core/commit/a2e9c1effe8ae3b9a23ae06c7ad7074630373e24))
-* **email:** add in-memory send queue with configurable rate limit ([#2640](https://github.com/mx-space/core/issues/2640)) ([f77ae20](https://github.com/mx-space/core/commit/f77ae20131ccb8bda843dc3701e5b5ca7c184d8b))
-* **note:** expose hasInsightsInLocale on public note responses ([c279c31](https://github.com/mx-space/core/commit/c279c3146c5f6b4af486c48d48174f6062bd0073))
-
-
-
-## [11.2.1](https://github.com/mx-space/core/compare/v11.2.0...v11.2.1) (2026-04-19)
-
-
-
-# [11.2.0](https://github.com/mx-space/core/compare/v11.1.4...v11.2.0) (2026-04-18)
-
-
-### Features
-
-* add comment sort ([9726f45](https://github.com/mx-space/core/commit/9726f45f72416710bd94b50e8fc48d2628f321a4))
-
-
-
-## [11.1.4](https://github.com/mx-space/core/compare/v11.1.3...v11.1.4) (2026-04-17)
-
-
-### Bug Fixes
-
-* **ai-summary:** allow on-demand generation when auto-generate is disabled ([#2639](https://github.com/mx-space/core/issues/2639)) ([db53f0f](https://github.com/mx-space/core/commit/db53f0fa115c1b1163f7e88b37bd2e6456ffe495)), closes [#2627](https://github.com/mx-space/core/issues/2627)
-* related post transltion ([0094dda](https://github.com/mx-space/core/commit/0094ddaf773d45f1b54d5e82db636a6cf41aed2a))
-
-
-
-## [11.1.3](https://github.com/mx-space/core/compare/v11.1.2...v11.1.3) (2026-04-17)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @fastify/static to v9.1.1 [security] ([#2633](https://github.com/mx-space/core/issues/2633)) ([0a4027a](https://github.com/mx-space/core/commit/0a4027a9b422f5c3abb40c79f6775e119fc9ea10))
-* **note:** translate adjacent note titles via cached translations ([a53a2b6](https://github.com/mx-space/core/commit/a53a2b6d89497450d210259ee6729b08b1b8f09e))
-
-
-
-## [11.1.2](https://github.com/mx-space/core/compare/v11.1.1...v11.1.2) (2026-04-07)
-
-
-### Bug Fixes
-
-* **comment:** only mark owner comments as read on creation ([eaea177](https://github.com/mx-space/core/commit/eaea177777d42be644cd0fdb3b90041d8d54d698))
-
-
-### Features
-
-* add AI image generation service and controller ([fd3c0b0](https://github.com/mx-space/core/commit/fd3c0b0b425dc84c7d3b941e2f8db6b94625767c))
-
-
-
-## [11.1.1](https://github.com/mx-space/core/compare/v11.1.0...v11.1.1) (2026-04-07)
-
-
-### Bug Fixes
-
-* bug ([9976922](https://github.com/mx-space/core/commit/9976922d092c02d9242b713a7a504ef2b087d819))
-
-
-### Features
-
-* **aggregate:** support i18n for theme config via lang suffix snippets ([7e89b46](https://github.com/mx-space/core/commit/7e89b46c528151be90707947f9719ef923f77bfc))
-
-
-
-# [11.1.0](https://github.com/mx-space/core/compare/v11.0.14...v11.1.0) (2026-04-05)
-
-
-### Bug Fixes
-
-* MongooseModel is global type, z.record needs key+value args for Zod v4 ([4efc0e2](https://github.com/mx-space/core/commit/4efc0e2ed062bdc530c919d9cc7a62d021590730))
-
-
-### Features
-
-* **ai-agent:** add multi-session support with metadata fields and endpoints ([6dbee13](https://github.com/mx-space/core/commit/6dbee13c8583386e54c691019354bc215e3f2400))
-* **ai:** add agent chat proxy service with format transformation ([645a534](https://github.com/mx-space/core/commit/645a534f5793105619fade36d1bad692cccc82cd))
-* **ai:** add agent controller and register in AI module ([96d314f](https://github.com/mx-space/core/commit/96d314f420ab1aa63a04b37c96b67204ea6dd833))
-* **ai:** add agent conversation and chat proxy DTOs ([902be67](https://github.com/mx-space/core/commit/902be6745e791995a0a8a4df004159698d77797b))
-* **ai:** add agent conversation CRUD service ([31c8756](https://github.com/mx-space/core/commit/31c875686c6c1eea9572398d48b88c3dae3db030))
-* **ai:** add agent conversation model and collection constant ([60a4374](https://github.com/mx-space/core/commit/60a4374e592e7bfb898d30429ea4d19e2271c778))
-
-
-
-## [11.0.14](https://github.com/mx-space/core/compare/v11.0.13...v11.0.14) (2026-04-02)
-
-
-### Bug Fixes
-
-* **page:** translate page titles even when text field is not selected ([2182452](https://github.com/mx-space/core/commit/218245219ed47cff4b3f3a73f707b008b2f380f4))
-
-
-
-## [11.0.13](https://github.com/mx-space/core/compare/v11.0.12...v11.0.13) (2026-04-02)
-
-
-### Bug Fixes
-
-* key verfiy ([1a34088](https://github.com/mx-space/core/commit/1a3408894c5e6c7f30e2525ff15c172240a7cd3e))
-
-
-
-## [11.0.12](https://github.com/mx-space/core/compare/v11.0.11...v11.0.12) (2026-04-02)
-
-
-### Bug Fixes
-
-* **comment:** dedupe bark notifications ([9bf08e8](https://github.com/mx-space/core/commit/9bf08e835fe2c8fe9b3717e7db8408e5c0b7120d)), closes [#2624](https://github.com/mx-space/core/issues/2624)
-
-
-### Features
-
-* **auth:** implement createAccessToken method and enhance API key handling ([34c1f0d](https://github.com/mx-space/core/commit/34c1f0d4491f8cd8420435643f0f753625435925))
-
-
-
-## [11.0.11](https://github.com/mx-space/core/compare/v11.0.10...v11.0.11) (2026-04-01)
-
-
-### Bug Fixes
-
-* **activity:** filter null refs in getRecentComment ([f6ed0c8](https://github.com/mx-space/core/commit/f6ed0c8733e50acc82448b4971c656177da7cfdb))
-
-
-
-## [11.0.10](https://github.com/mx-space/core/compare/v11.0.9...v11.0.10) (2026-04-01)
-
-
-### Features
-
-* add owner-reply endpoint for comment replies with API key auth ([f2ef0cb](https://github.com/mx-space/core/commit/f2ef0cb2e480dfb0748abf50a6cbf867df535db2))
-
-
-
-## [11.0.9](https://github.com/mx-space/core/compare/v11.0.8...v11.0.9) (2026-04-01)
-
-
-### Bug Fixes
-
-* **test:** update translation interceptor test to match plain object conversion behavior ([990d83b](https://github.com/mx-space/core/commit/990d83b3af1dd9d1fd3dd232da4b7c39d6416715))
-
-
-
-## [11.0.8](https://github.com/mx-space/core/compare/v11.0.7...v11.0.8) (2026-04-01)
-
-
-
-## [11.0.7](https://github.com/mx-space/core/compare/v11.0.6...v11.0.7) (2026-03-31)
-
-
-### Bug Fixes
-
-* comment api ([2153077](https://github.com/mx-space/core/commit/21530770ea09550b8d023847e311b5c47ed0a7de))
-* update scripe ([25fdde6](https://github.com/mx-space/core/commit/25fdde6020d72fcc07780167ae2c425276da728c))
-
-
-
-## [11.0.6](https://github.com/mx-space/core/compare/v11.0.5...v11.0.6) (2026-03-28)
-
-
-### Bug Fixes
-
-* **deps:** update dependency nodemailer to v8.0.4 [security] ([#2622](https://github.com/mx-space/core/issues/2622)) ([29bf581](https://github.com/mx-space/core/commit/29bf58191d43473adc6c603f5ac73acacbed7155))
-* **file:** fallback image upload to local storage when S3 is disabled ([32ce773](https://github.com/mx-space/core/commit/32ce77320061f14c9c07e60c9e0c43ba0a258aaf))
-
-
-
-## [11.0.5](https://github.com/mx-space/core/compare/v11.0.4...v11.0.5) (2026-03-26)
-
-
-### Features
-
-* **event:** add AGGREGATE_UPDATE event and enhance config update notifications ([26896fe](https://github.com/mx-space/core/commit/26896fe6860c37a01eb76f678c1570cdfb296ff1))
-
-
-
-## [11.0.4](https://github.com/mx-space/core/compare/v11.0.3...v11.0.4) (2026-03-24)
-
-
-### Bug Fixes
-
-* **activity:** add strictPopulate false for polymorphic ref category populate ([bf20aa5](https://github.com/mx-space/core/commit/bf20aa5c727608fb18613480731e925a1e85e149))
-* **activity:** enrich recent posts with category in getRecentPublish ([e60169a](https://github.com/mx-space/core/commit/e60169a57405d3ea87379fd3c3d2bd5f86e10081))
-* **activity:** manually look up category for post refs in getRecentComment ([2961214](https://github.com/mx-space/core/commit/29612141a90e6f21e4524c281627ae8aef729e61))
-
-
-
-## [11.0.3](https://github.com/mx-space/core/compare/v11.0.2...v11.0.3) (2026-03-24)
-
-
-### Bug Fixes
-
-* **activity:** populate category in getRecentComment and expose in response ([7dadc81](https://github.com/mx-space/core/commit/7dadc8167f257f41ed4a3b306a449a778568c83c))
-
-
-### Features
-
-* **ai:** harden lexical translation structured output ([25ca95d](https://github.com/mx-space/core/commit/25ca95dfb9944fbdd424e805c8d689981dc4c34c))
-* **ai:** implement Vercel AI Gateway prompt caching in OpenAICompatibleRuntime ([8c2afef](https://github.com/mx-space/core/commit/8c2afefa7a71d8ce3c30dcd00078b4a26855cbdc))
-
-
-
-## [11.0.2](https://github.com/mx-space/core/compare/v11.0.1...v11.0.2) (2026-03-23)
-
-
-### Bug Fixes
-
-* **webhook:** enrich comment payload author and avatar ([2833c38](https://github.com/mx-space/core/commit/2833c38957c670b494065f863b3f21867623a28d))
-
-
-
-## [11.0.1](https://github.com/mx-space/core/compare/v11.0.0...v11.0.1) (2026-03-22)
-
-
-### Bug Fixes
-
-* **file:** orphan cleanup idempotency; remove orphan cleanup cron ([2b4e946](https://github.com/mx-space/core/commit/2b4e946a49b46b24e97af6f737c9969add130cac))
-
-
-
-# [11.0.0](https://github.com/mx-space/core/compare/v11.0.0-alpha.1...v11.0.0) (2026-03-22)
-
-
-### Bug Fixes
-
-* **category:** handle null category in category service ([71f4f91](https://github.com/mx-space/core/commit/71f4f91f41fe662003f22325fef80dccad723d39))
-* **deps:** update dependency @nestjs/platform-fastify to v11.1.16 [security] ([#2620](https://github.com/mx-space/core/issues/2620)) ([1d3da45](https://github.com/mx-space/core/commit/1d3da453debe5c64bf8acacd843d84de5c7b6788))
-* **post:** add Types import from mongoose ([9cdb244](https://github.com/mx-space/core/commit/9cdb244e600ba08d52fed6652a922ed3504e956a))
-
-
-### Features
-
-* replace Algolia with local CJK search ([#2621](https://github.com/mx-space/core/issues/2621)) ([2095087](https://github.com/mx-space/core/commit/209508791dd0c71af3845583560ae414110b276f))
-
-
-
-# [11.0.0-alpha.1](https://github.com/mx-space/core/compare/v11.0.0-alpha.0...v11.0.0-alpha.1) (2026-03-16)
-
-
-### Bug Fixes
-
-* **gateway:** send online count directly to connecting socket ([386b8c3](https://github.com/mx-space/core/commit/386b8c3ca42a4836086dbd8cbd8b51786b0662c1))
-
-
-
-# [11.0.0-alpha.0](https://github.com/mx-space/core/compare/v10.5.3...v11.0.0-alpha.0) (2026-03-15)
-
-
-
-## [10.5.3](https://github.com/mx-space/core/compare/v10.5.2...v10.5.3) (2026-03-15)
-
-
-### Bug Fixes
-
-* **ai-translation:** translate page subtitles ([c20bf6e](https://github.com/mx-space/core/commit/c20bf6ee6627f07ebe142e63914953fb79b4f9ef))
-* **core:** prevent slugged notes from breaking url builder ([6731c88](https://github.com/mx-space/core/commit/6731c88de6e2c3004ad1666752fa42020dd8c38b))
-
-
-
-## [10.5.2](https://github.com/mx-space/core/compare/v10.5.1...v10.5.2) (2026-03-15)
-
-
-### Features
-
-* **aggregate:** add comment options to aggregate response ([a31db1f](https://github.com/mx-space/core/commit/a31db1f8622b5bdd8345a388c8898676c5e4eed9))
-* **aggregate:** add public /aggregate/site_info endpoint ([88bd758](https://github.com/mx-space/core/commit/88bd75860d1f5b669ed92b4a3b7bb15cb6e6feaf))
-* **aggregate:** update aggregate service and models to include summary and mood/weather fields ([ab426b1](https://github.com/mx-space/core/commit/ab426b107a7672f3c9aacc1ca8d7533e7f03c293))
-* **comment:** add disableComment option to CommentOptionsModel ([cc31bbd](https://github.com/mx-space/core/commit/cc31bbd74dae969ec46cd69601db60cbd2a3bcc8))
-* **comment:** use authProvider for comment auth channel ([0b9da3b](https://github.com/mx-space/core/commit/0b9da3b724578288cc848f6634ac84afd7da8d28))
-
-
-
-## [10.5.1](https://github.com/mx-space/core/compare/v10.5.0...v10.5.1) (2026-03-14)
-
-
-### Bug Fixes
-
-* **ai-translation:** normalize tags in translation events ([61d9fb5](https://github.com/mx-space/core/commit/61d9fb5c5d8641d59aeb3f78f6b1e04d82a19eb7))
-* **recently:** resolve type compatibility issue in RecentlyDto ([3566ac6](https://github.com/mx-space/core/commit/3566ac6f6dadad991b42fb08bd2e9fea02bc507a))
-
-
-### Features
-
-* **api-client:** add RecentlyTypeEnum and metadata interfaces ([4339332](https://github.com/mx-space/core/commit/4339332eb94f56e78cbec262a5347ed366745f8c))
-* **comment:** add reader ref support and migration ([135868b](https://github.com/mx-space/core/commit/135868b3562a89d4ba3929e83a3132c69ca2c4c1))
-* **recently:** add typed metadata schema and model fields ([46a8ae5](https://github.com/mx-space/core/commit/46a8ae562e2e413f56783b0571b9b786ddf10fd8))
-* **recently:** pass type/metadata in service create/update ([c6c8b2b](https://github.com/mx-space/core/commit/c6c8b2bb56ed662fb759bded881ae3d67170025b))
-
-
-
-# [10.5.0](https://github.com/mx-space/core/compare/v10.4.0...v10.5.0) (2026-03-14)
-
-
-### Bug Fixes
-
-* **note:** translate list results by request locale ([5c44178](https://github.com/mx-space/core/commit/5c44178386ff0817b82c78921d1c1d2aa8688bd0))
-
-
-### Features
-
-* **ai:** add slug backfill task for notes without slug ([0835863](https://github.com/mx-space/core/commit/083586358adcb4d32321b68d0ca9f38486fb6960))
-* flatten comment threads ([70385d9](https://github.com/mx-space/core/commit/70385d9e104106cb20ca8bc54f2f750e5ae0f121))
-* **note:** add withSummary option to note list API ([6e56df9](https://github.com/mx-space/core/commit/6e56df901b17f38cb7788844d3abc9f71304bb0f))
-* **note:** enhance note pagination with summary retrieval ([855ef99](https://github.com/mx-space/core/commit/855ef99e8591d340d1d1c8efb7093f27b955e27a))
-
-
-
-# [10.4.0](https://github.com/mx-space/core/compare/v10.3.3...v10.4.0) (2026-03-13)
-
-
-### Bug Fixes
-
-* **note:** expose slug in note timeline list ([5b2f7b5](https://github.com/mx-space/core/commit/5b2f7b5fd6c60f585600c0229265bbcd3cfc1f07))
-* **topic:** validate slug params with zod ([2de6b2b](https://github.com/mx-space/core/commit/2de6b2b6baa152e28dffef3ce5e185cf29da8c51))
-
-
-### Features
-
-* **note:** add seo slug route and sdk updates ([0203692](https://github.com/mx-space/core/commit/02036928760e3d4093fa93ee2d547a896b1dce95))
-
-
-
-## [10.3.3](https://github.com/mx-space/core/compare/v10.3.2...v10.3.3) (2026-03-13)
-
-
-### Bug Fixes
-
-* **core:** degrade redis bootstrap paths ([976b6cb](https://github.com/mx-space/core/commit/976b6cb5d3fa746ab191e4c5f581a1797bc706e2))
-
-
-
-## [10.3.2](https://github.com/mx-space/core/compare/v10.3.1...v10.3.2) (2026-03-10)
-
-
-### Bug Fixes
-
-* add Redis timeout and error handling to prevent request hanging ([46206e8](https://github.com/mx-space/core/commit/46206e88a79e167bfaa6654095c980c927c163eb))
-
-
-### Features
-
-* enhance admin asset update process and introduce event broadcasting ([e2868c2](https://github.com/mx-space/core/commit/e2868c25f33a0d9d389a3978b1f76c164e7f412a))
-* enhance feed content rendering with lexical format support ([a6bbd75](https://github.com/mx-space/core/commit/a6bbd7573da20f3eab5bc0054ca8ad73ce8662e0))
-* refactor webhook package structure and add model extraction script ([1f189d7](https://github.com/mx-space/core/commit/1f189d7fcd1a267924ff562c4d4766717ccdcc94))
-* translate text within excalidraw nodes during AI translation ([4b2c938](https://github.com/mx-space/core/commit/4b2c9380d0b5c598abe32f4a9ef27fc6135f28fb))
-
-
-
-## [10.3.1](https://github.com/mx-space/core/compare/v10.3.0...v10.3.1) (2026-03-09)
-
-
-### Bug Fixes
-
-* include lang in cache key and support NEXT_LOCALE cookie for request context ([bcef061](https://github.com/mx-space/core/commit/bcef0612ba27177c733ff6d9cfcfd5fb1b8dd26a))
-* translation entry interceptor ([ac8009d](https://github.com/mx-space/core/commit/ac8009d0056ae76d9c17c82fa3448f8f12fbf10c))
-
-
-### Features
-
-* translation entry interceptor, topic controller e2e, object-scan types, image/tool utils ([c33157c](https://github.com/mx-space/core/commit/c33157c25ee37b1bfb60b81f03f25ccd2c59ab90))
-
-
-
-# [10.3.0](https://github.com/mx-space/core/compare/v10.2.0...v10.3.0) (2026-03-08)
-
-
-### Bug Fixes
-
-* **ai-summary:** normalize lang query param with parseLanguageCode ([3dc7492](https://github.com/mx-space/core/commit/3dc74923ecff10255fc03fe6772c330b2842d144))
-
-
-### Features
-
-* **ai:** add auto-generation of translation entries for categories, topics, and notes ([65711aa](https://github.com/mx-space/core/commit/65711aa64380eb011f3f8faa9819bc312acb7b50))
-* **ai:** translation entry model, service, controller and translate-fields interceptor ([a55fc7a](https://github.com/mx-space/core/commit/a55fc7a654c8f1e8610b24a71ad8e671231d4168))
-* **schema:** enhance partial schemas for notes, pages, and posts with new fields ([f66c9ed](https://github.com/mx-space/core/commit/f66c9ed9cca1091730985813334adccb9462affd))
-* 更新文件上传前缀支持模板占位符，增强灵活性 ([#2584](https://github.com/mx-space/core/issues/2584)) ([2b5354a](https://github.com/mx-space/core/commit/2b5354a6f907947993dda64733e8bbd62c6cc62d))
-
-
-
-# [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
-
-
-
-# [0.7.0](https://github.com/mx-space/core/compare/v0.6.0...v0.7.0) (2026-03-08)
-
-
-### Bug Fixes
-
-* **webhook:** correct dist output paths for tsdown esm/cjs ([5fc8a03](https://github.com/mx-space/core/commit/5fc8a039088a70d0c29d5c914e7fa6d89868c34e))
-
-
-
-# [0.6.0](https://github.com/mx-space/core/compare/v10.1.10...v0.6.0) (2026-03-08)
-
-
-### Features
-
-* **webhook:** add X-Webhook-Source header to indicate event origin ([899a5f1](https://github.com/mx-space/core/commit/899a5f16495eb88ed9181f344a3956cfa9dc8bee))
-
-
-
-## [10.1.10](https://github.com/mx-space/core/compare/v10.1.9...v10.1.10) (2026-03-07)
-
-
-
-## [10.1.9](https://github.com/mx-space/core/compare/v10.1.8...v10.1.9) (2026-03-03)
-
-
-### Bug Fixes
-
-* **telemetry:** harden telemetry module robustness and security ([515c0e7](https://github.com/mx-space/core/commit/515c0e7dbe9ee1c1bc5a5d16a7ad4883d7e83437))
-
-
-
-## [10.1.8](https://github.com/mx-space/core/compare/v10.1.7...v10.1.8) (2026-03-03)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @haklex/rich-headless to v0.0.50 ([#2608](https://github.com/mx-space/core/issues/2608)) ([4258242](https://github.com/mx-space/core/commit/42582429982db7fe108a8a0db3a4bdf1e2c281e9))
-* **deps:** update dependency @haklex/rich-headless to v0.0.54 ([#2610](https://github.com/mx-space/core/issues/2610)) ([027f62f](https://github.com/mx-space/core/commit/027f62f126d55fa812ff066907764ccf832a2959))
-* **deps:** update dependency @nestjs/schedule to v6.1.1 ([#2604](https://github.com/mx-space/core/issues/2604)) ([45a297a](https://github.com/mx-space/core/commit/45a297a95788b7c563a9e075ce1c8444142d5cd7))
-
-
-
-## [10.1.7](https://github.com/mx-space/core/compare/v10.1.6...v10.1.7) (2026-03-02)
-
-
-### Features
-
-* **gateway:** implement broadcast method for admin events ([ff3cf68](https://github.com/mx-space/core/commit/ff3cf68c742e2928bf249e641bfb9584f0c6956e))
-
-
-
-## [10.1.6](https://github.com/mx-space/core/compare/v10.1.5...v10.1.6) (2026-03-02)
-
-
-### Features
-
-* **webhook:** introduce EventPayloadEnricherService for payload enrichment ([a5a2b79](https://github.com/mx-space/core/commit/a5a2b79bd6e406375c04aeb0d259907d131fa4d5))
-
-
-
-## [10.1.5](https://github.com/mx-space/core/compare/v10.1.4...v10.1.5) (2026-03-02)
-
-
-### Bug Fixes
-
-* **webhook:** update pagination logic in getEventsByHookId method ([2450f9d](https://github.com/mx-space/core/commit/2450f9d08b2b36e8c71dd12c20ccc5983542e10c))
-
-
-
-## [10.1.4](https://github.com/mx-space/core/compare/v10.1.3...v10.1.4) (2026-03-01)
-
-
-### Features
-
-* **translation:** introduce TranslationConsistencyService for improved translation validation ([341cfd2](https://github.com/mx-space/core/commit/341cfd2f3829505b75df421a375a29348c3fbea5))
-
-
-
-## [10.1.3](https://github.com/mx-space/core/compare/v10.1.2...v10.1.3) (2026-03-01)
-
-
-### Features
-
-* **socket:** optimize socket fetching and configuration ([13eb074](https://github.com/mx-space/core/commit/13eb0747f19a0bb957cfb90e0fafd7a0af1221f1))
-* **translation:** add content fields to translation and controller services ([6526893](https://github.com/mx-space/core/commit/6526893f0c0db0a7607053d5ebe2e67a605201b8))
-
-
-
-## [10.1.2](https://github.com/mx-space/core/compare/v10.1.1...v10.1.2) (2026-03-01)
-
-
-### Features
-
-* **content:** enhance content hashing for Lexical format ([3b5e177](https://github.com/mx-space/core/commit/3b5e17726c8002ca42e4516578fb4ebc0460ac91))
-
-
-
-## [10.1.1](https://github.com/mx-space/core/compare/v10.1.0...v10.1.1) (2026-03-01)
-
-
-### Bug Fixes
-
-* **ai:** improve error handling and cleanup in AiInFlightService ([2267810](https://github.com/mx-space/core/commit/22678104ec185b73fc47bb5fbc487e75ba332150))
-
-
-### Features
-
-* **ai-task:** add smart retry for partial-failed translation tasks ([ecdbf50](https://github.com/mx-space/core/commit/ecdbf50879f8313b739172d54fc1a71b16b6d24f))
-* **ai:** enhance JSON extraction utilities and update translation strategy ([f673630](https://github.com/mx-space/core/commit/f67363036c6da979ac71ffe16bfd8c8a7ff3412e))
-* **visitor-event:** enhance visitor event dispatch with additional content fields ([74d9398](https://github.com/mx-space/core/commit/74d939820195a7fdfb608c61c37c749284a23c89))
-
-
-
-# [10.1.0](https://github.com/mx-space/core/compare/v10.0.4...v10.1.0) (2026-02-28)
-
-
-### Bug Fixes
-
-* **release:** update Dokploy webhook handling in release workflow ([328013a](https://github.com/mx-space/core/commit/328013af093f1fc274ca179d7ade81d8cd118c0e))
-* **test:** add missing scheduleRegenerationForStaleTranslations mock in translation service spec ([4e701a2](https://github.com/mx-space/core/commit/4e701a2580f4cd389fac72b88a080b2d76da0db5))
-* **test:** remove unnecessary whitespace in lexical-translation-e2e.spec.ts ([c623a20](https://github.com/mx-space/core/commit/c623a20097aa0b09564b872c125b9bac931738e3))
-* update @lexical/code patch to improve syntax highlighting support ([3bf4873](https://github.com/mx-space/core/commit/3bf4873e58fce0bef810c60f4377bd0de0fdd4c6))
-
-
-### Features
-
-* add patch for @lexical/code@0.41.0 and remove outdated patch ([e2c1492](https://github.com/mx-space/core/commit/e2c14928854af53b915cbf62f28aaf11a7ca1d9f))
-* add v10.0.5 migration for Lexical root block ID backfill ([66c3650](https://github.com/mx-space/core/commit/66c365061364fa64a2792cb9950aadfcb8350a33))
-* **aggregate:** add /latest endpoint for top content per type ([563a716](https://github.com/mx-space/core/commit/563a716ac8fe7d584a182f5dc94d74edd753d653))
-* **ai:** enhance translation service with new lexical features and dependencies ([534b0f7](https://github.com/mx-space/core/commit/534b0f71c697f96216bf6c61c19173cdc9367cd4))
-* **ai:** enhance translation strategies and introduce new event handler ([426dc07](https://github.com/mx-space/core/commit/426dc07cc4d9ff24f9cfc09d626d6234a7d45619))
-* **ai:** improve lexical translation and update utilities ([7475a8d](https://github.com/mx-space/core/commit/7475a8d49ec95c0105f111af047c86d8fc52419f))
-* **ai:** refine AI translation, runtime, and add json util ([481beeb](https://github.com/mx-space/core/commit/481beeb49b44c0891194b2461bbe1d89903d3d10))
-* **ai:** update translation prompts with enhanced safety and structure rules ([4f035f2](https://github.com/mx-space/core/commit/4f035f2bbbb9095dae35702d28210c7c9f8a0ea6))
-* **comment:** add language support for comment anchors and enhance anchor resolution ([2218ae2](https://github.com/mx-space/core/commit/2218ae2bc5cdddfc0afd7220ef88e66af1be81c5))
-* **content:** introduce content preference handling for notes and pages ([14ed55b](https://github.com/mx-space/core/commit/14ed55b9a4c61fdf4f3fa47d18f3824e86ff006d))
-* **draft:** implement draft history service with diff strategies ([5171707](https://github.com/mx-space/core/commit/5171707e6b32a7d0d115f0624a9860d5814ca2a9))
-* **patch:** add patch for @lexical/code@0.40.0 and update workspace configuration ([066171f](https://github.com/mx-space/core/commit/066171fe6d1001403f646dcd85be2f23390340bb))
-
-
-
-## [10.0.4](https://github.com/mx-space/core/compare/v10.0.3...v10.0.4) (2026-02-18)
-
-
-### Bug Fixes
-
-* **auth:** allow hyphen in better-auth username validation ([6ae65a8](https://github.com/mx-space/core/commit/6ae65a8234625ea6b4f7eed4b186d96e8c2768df))
-
-
-### Features
-
-* **comment:** auto-approve owner comments and enhance spam check ([63b62dc](https://github.com/mx-space/core/commit/63b62dc0d9e368a6d71d5b8e1d68e9f729a3065f))
-* **dokploy:** add workflow step to trigger Dokploy redeploy on release ([2e071ba](https://github.com/mx-space/core/commit/2e071bae37691dfe39f02ad6c4307d1d7ca3fa29))
-* **update:** add Redis-based multi-instance sync and split into modules ([a742698](https://github.com/mx-space/core/commit/a74269843da8d6da1ed9235565635ddc086bfe43))
-* **visitor-events:** implement visitor event dispatch service and related decorators ([165b74d](https://github.com/mx-space/core/commit/165b74df0fce79392339be1b38ac19aaf5c17ef2))
-
-
-
-## [10.0.3](https://github.com/mx-space/core/compare/v10.0.2...v10.0.3) (2026-02-15)
-
-
-
-## [10.0.2](https://github.com/mx-space/core/compare/v10.0.1...v10.0.2) (2026-02-14)
-
-
-### Bug Fixes
-
-* **zod:** zLang should convert 'original' to undefined instead of passing through ([2b58461](https://github.com/mx-space/core/commit/2b584615ab32c2cab68f44289ff2b51501b754c7))
-
-
-
-## [10.0.1](https://github.com/mx-space/core/compare/v10.0.0...v10.0.1) (2026-02-14)
-
-
-### Bug Fixes
-
-* **deps:** update dependency qs to v6.14.2 [security] ([#2581](https://github.com/mx-space/core/issues/2581)) ([868f0eb](https://github.com/mx-space/core/commit/868f0eb3995845b8ba3f3336b8e4b928524362e8))
-* **lang.decorator:** handle 'original' language query parameter ([91be732](https://github.com/mx-space/core/commit/91be73254d084aec8d0b99ba5dcc55a348b31937))
-
-
-### Features
-
-* **translation:** implement lexical content translation support ([dd8bdde](https://github.com/mx-space/core/commit/dd8bdde5b65232d82af73aac4a210e33c1e10c57))
-
-
-
-# [10.0.0](https://github.com/mx-space/core/compare/v10.0.0-alpha.3...v10.0.0) (2026-02-08)
-
-
-
-# [10.0.0-alpha.3](https://github.com/mx-space/core/compare/v10.0.0-alpha.2...v10.0.0-alpha.3) (2026-02-08)
-
-
-### Bug Fixes
-
-* add missing imports for HeadingNode, QuoteNode, TRANSFORMERS in LexicalService ([5072036](https://github.com/mx-space/core/commit/50720360ee067b68d6d82d1de505670c53cb9c04))
-* remove CodeHighlightNode to eliminate PrismJS dependency in server bundle ([d3289f6](https://github.com/mx-space/core/commit/d3289f6a3624fe42227c4b9570c1923dddba1b71))
-* replace @lexical/code and @lexical/markdown with custom nodes to eliminate PrismJS ([3e791d6](https://github.com/mx-space/core/commit/3e791d6aa78d23861b608059012b325f7a2a1aaf))
-
-
-### Features
-
-* add Lexical block editor content format support ([8fe2508](https://github.com/mx-space/core/commit/8fe2508605ed3658c56ca13079366b6f1b0373e8))
-* **cron:** add syncPublishedImagesToS3 functionality and scheduling ([5be2dfa](https://github.com/mx-space/core/commit/5be2dfa4c37d07738dd662649c079a35655d1aea))
-* **snippet:** add custom path support for snippets ([04a1bfc](https://github.com/mx-space/core/commit/04a1bfcb433275207cc626b680b1884a28facd70))
-
-
-
-# [10.0.0-alpha.2](https://github.com/mx-space/core/compare/v10.0.0-alpha.1...v10.0.0-alpha.2) (2026-02-07)
-
-
-### Bug Fixes
-
-* **auth:** add role validation in CreateAuth middleware ([1aa9549](https://github.com/mx-space/core/commit/1aa954962a72e0b198fe4c1f3a106c934f110bd1))
-
-
-### Features
-
-* **serverless:** implement logging for serverless function invocations ([59e9d4d](https://github.com/mx-space/core/commit/59e9d4d031cb497cb1ad38d821e53738272ee50a))
-
-
-
-# [10.0.0-alpha.1](https://github.com/mx-space/core/compare/v10.0.0-alpha.0...v10.0.0-alpha.1) (2026-02-06)
-
-
-### Features
-
-* **i18n:** add translation support to activity, aggregate, and category controllers ([e33d214](https://github.com/mx-space/core/commit/e33d2142eb03f7c32ff531ffd59ccb9cefff33ef))
-
-
-
-# [10.0.0-alpha.0](https://github.com/mx-space/core/compare/v9.7.0...v10.0.0-alpha.0) (2026-02-06)
-
-
-### Bug Fixes
-
-* **ip-query:** update IP API endpoint and response handling ([fa641a5](https://github.com/mx-space/core/commit/fa641a5e31d59a9bfbf6fdaac354ba010dd422c1))
-* **migration:** skip v9.7.5 migration when readers collection does not exist ([db4de1f](https://github.com/mx-space/core/commit/db4de1ff04f02f945b85723095d859ad5588c7ad))
-
-
-### Features
-
-* add lightweight /reading/top endpoint and optimize /reading/rank ([50fb01d](https://github.com/mx-space/core/commit/50fb01d69e72224dcc1e3e37de65752ae5168f46))
-
-
-
-# [9.7.0](https://github.com/mx-space/core/compare/v9.6.3...v9.7.0) (2026-02-04)
-
-
-### Features
-
-* **cron-task:** implement cron task module with business logic and scheduling ([6926e77](https://github.com/mx-space/core/commit/6926e7745c8ec9d470d7a6fd17990cf35be96e34))
-
-
-
-## [9.6.3](https://github.com/mx-space/core/compare/v9.6.2...v9.6.3) (2026-02-03)
-
-
-### Bug Fixes
-
-* **ai:** use Tool Calling instead of response_format for structured output ([3c09a82](https://github.com/mx-space/core/commit/3c09a82e118ad1c4a8b4623627e90f7b5c95f76f)), closes [#2575](https://github.com/mx-space/core/issues/2575)
-
-
-### Features
-
-* **ai-translation:** extend article handling to include PageModel ([e8166b6](https://github.com/mx-space/core/commit/e8166b6f1d812f96f8f306124b88ae1cb5cd1395))
-* **ai:** add comment review endpoint and enhance AI configuration options ([6101bc9](https://github.com/mx-space/core/commit/6101bc944fa092c224dffd84e55596a698020a19))
-* **migration:** add v9.6.3 migration and enhance SMTP options handling ([a1a0b30](https://github.com/mx-space/core/commit/a1a0b302a2906ef79d82ea96aa9bafd7586304cb))
-* **page:** enhance language handling and translation integration in PageController ([5a749ba](https://github.com/mx-space/core/commit/5a749ba51b19cab058df589e15abf6b1131daf44))
-
-
-
-## [9.6.2](https://github.com/mx-space/core/compare/v9.6.1...v9.6.2) (2026-02-02)
-
-
-### Bug Fixes
-
-* **entrypoint:** improve Redis connection string handling and logging ([23abde6](https://github.com/mx-space/core/commit/23abde69111c1a38699f6bb3d506e80dcfb74e04))
-
-
-### Features
-
-* **mongo:** enhance custom MongoDB connection string handling ([e0e4f24](https://github.com/mx-space/core/commit/e0e4f2498e793b8716424608ed6f49de3c8f0261))
-
-
-
-## [9.6.1](https://github.com/mx-space/core/compare/v9.6.0...v9.6.1) (2026-02-02)
-
-
-
-# [9.6.0](https://github.com/mx-space/core/compare/v9.5.0...v9.6.0) (2026-02-02)
-
-
-### Features
-
-* **ai:** update translation prompts to enforce strict JSON output requirements ([810aaac](https://github.com/mx-space/core/commit/810aaac8ce530fff598c61bc70b0553540a14b6d))
-* **redis:** enhance Redis configuration and email service integration ([634297c](https://github.com/mx-space/core/commit/634297cb2a14ee651e3a254c0454a5ed99315a17))
-
-
-
-# [9.5.0](https://github.com/mx-space/core/compare/v9.4.0...v9.5.0) (2026-02-01)
-
-
-### Bug Fixes
-
-* **tests:** update snapshots for NoteController e2e tests to reflect published status ([49d08e6](https://github.com/mx-space/core/commit/49d08e683076d97d6102196f2a9219f4b29f18c7))
-
-
-### Features
-
-* **ai:** add retry functionality for AI tasks and enhance error handling ([5770839](https://github.com/mx-space/core/commit/577083925cec434ca9fbb516762670a3f7175ff1))
-* **ai:** add task cancellation and deletion endpoints in AiTaskController ([1975b58](https://github.com/mx-space/core/commit/1975b58c68fab94aa0be2a91dcdefe3685bca0cb))
-* **lang:** implement language handling in request context and enhance translation capabilities ([9ca8291](https://github.com/mx-space/core/commit/9ca82919f16c0f3ab04d4a8064e85aa26d73abbf))
-
-
-
-# [9.4.0](https://github.com/mx-space/core/compare/v9.3.4...v9.4.0) (2026-01-31)
-
-
-### Features
-
-* **ai:** implement language utilities for AI processing ([82ed676](https://github.com/mx-space/core/commit/82ed676edda8fbd734bb0bd4d3a2a7bb1de16e9c))
-* **ai:** introduce task queue for AI operations and enhance streaming capabilities ([2005c3d](https://github.com/mx-space/core/commit/2005c3d911fdfbe782ed44cfb2695c236c81298e))
-
-
-
-## [9.3.4](https://github.com/mx-space/core/compare/v9.3.3...v9.3.4) (2026-01-30)
-
-
-
-## [9.3.3](https://github.com/mx-space/core/compare/v9.3.2...v9.3.3) (2026-01-30)
-
-
-### Features
-
-* **note:** enhance note retrieval with translation support ([a378cd3](https://github.com/mx-space/core/commit/a378cd35c178792e97832e4c045ebd81e12042ed))
-
-
-
-## [9.3.2](https://github.com/mx-space/core/compare/v9.3.1...v9.3.2) (2026-01-30)
-
-
-### Bug Fixes
-
-* **deps:** update dependency ai to v6.0.62 ([#2569](https://github.com/mx-space/core/issues/2569)) ([1cdac56](https://github.com/mx-space/core/commit/1cdac56f6a940b7993d1b3de8dc03de788941ed8))
-* **deps:** update dependency better-auth to v1.4.18 ([#2570](https://github.com/mx-space/core/issues/2570)) ([ea0070a](https://github.com/mx-space/core/commit/ea0070a39312058ab14ae66464a639e1187b3e51))
-
-
-### Features
-
-* **translation:** enhance translation capabilities for articles ([038d728](https://github.com/mx-space/core/commit/038d72840534c15a5c3ea8bee9a3b04035a6a6a3))
-
-
-
-## [9.3.1](https://github.com/mx-space/core/compare/v9.3.0...v9.3.1) (2026-01-29)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @ai-sdk/openai to v3.0.21 ([#2566](https://github.com/mx-space/core/issues/2566)) ([2be3e07](https://github.com/mx-space/core/commit/2be3e07d64f5b4c978dc48ac06d305bb955fa6e2))
-* **migration:** better auth login issue ([f19a49b](https://github.com/mx-space/core/commit/f19a49bb2c227874f558587cdabda29ef50addc4))
-
-
-
-# [9.3.0](https://github.com/mx-space/core/compare/v9.2.0...v9.3.0) (2026-01-28)
-
-
-### Features
-
-* **ai-summary, ai-translation:** enhance summary and translation functionalities ([c15cc55](https://github.com/mx-space/core/commit/c15cc5544d59b248ec6772d762e709135ef5cf37))
-* **deps, ai:** update dependencies and enhance AI functionalities ([f32f744](https://github.com/mx-space/core/commit/f32f744431e85fd6ffec1a0b2cc78398ea464c9a))
-
-
-
-# [9.2.0](https://github.com/mx-space/core/compare/v9.1.1...v9.2.0) (2026-01-28)
-
-
-### Features
-
-* **ai-translation:** implement AI translation module with controller, service, model, and schema; add translation error codes and prompts ([19652ae](https://github.com/mx-space/core/commit/19652ae5b0011ab426efa7f2d4040d356bca489c))
-* **draft:** enhance draft history management with refVersion and baseVersion properties; implement deleteByRef method for draft cleanup ([924dd3b](https://github.com/mx-space/core/commit/924dd3b4bcd98fba6c6a426a83ffce3da6f771fc))
-* **draft:** improve draft history trimming logic and add canTrimHistory method for better snapshot management ([3a1487d](https://github.com/mx-space/core/commit/3a1487d12a408b4a236d767b2e9987582836c6c3))
-* **translation:** add translation event handling and enhance note/post retrieval with translation support ([ab78738](https://github.com/mx-space/core/commit/ab7873873df4b7886bf4c6ae9b0161559f08505b))
-
-
-
-## [9.1.1](https://github.com/mx-space/core/compare/v9.1.0...v9.1.1) (2026-01-27)
-
-
-### Bug Fixes
-
-* api build ([410bf69](https://github.com/mx-space/core/commit/410bf69dbaeec6af9851b6510c4be2c510088132))
-
-
-### Features
-
-* add ai config in aggregation ([f814267](https://github.com/mx-space/core/commit/f81426799ffe21f9cfc3b2dcab8799317618a101))
-
-
-
-# [9.1.0](https://github.com/mx-space/core/compare/v9.0.7...v9.1.0) (2026-01-27)
-
-
-### Bug Fixes
-
-* **draft:** migrate and simplify full snapshot handling ([c8c226f](https://github.com/mx-space/core/commit/c8c226ff63a97bc678d3086362785ace59e3e40c))
-* tsdown config ([e95962e](https://github.com/mx-space/core/commit/e95962e1313372fe0d36d950488e91706a0b03a1))
-
-
-### Features
-
-* **analyze:** implement caching for analysis endpoints and enhance data aggregation ([74e910b](https://github.com/mx-space/core/commit/74e910b27c7565e7d9147eb578ab79de8705fec2))
-* **telemetry:** implement telemetry data collection and dashboard ([871705f](https://github.com/mx-space/core/commit/871705fe64a35556824841552d8dce142377f707))
-
-
-
-## [9.0.7](https://github.com/mx-space/core/compare/v9.0.6...v9.0.7) (2026-01-26)
-
-
-
-## [9.0.6](https://github.com/mx-space/core/compare/v9.0.5...v9.0.6) (2026-01-25)
-
-
-
-## [9.0.5](https://github.com/mx-space/core/compare/v9.0.4...v9.0.5) (2026-01-25)
-
-
-### Bug Fixes
-
-* **config:** restore encryption logic for sensitive config fields ([043d7aa](https://github.com/mx-space/core/commit/043d7aa36da832f1e291e15456c9e92593a1da8e)), closes [#2556](https://github.com/mx-space/core/issues/2556)
-
-
-
-## [9.0.4](https://github.com/mx-space/core/compare/v9.0.3...v9.0.4) (2026-01-25)
-
-
-### Features
-
-* **config:** enhance encryption utilities and schema integration ([817ec74](https://github.com/mx-space/core/commit/817ec7468405580d7db1b75f5e62fe99b8be08fc))
-
-
-
-## [9.0.3](https://github.com/mx-space/core/compare/v9.0.2...v9.0.3) (2026-01-25)
-
-
-### Features
-
-* **comment:** add batch update and delete functionality for comments ([deeb057](https://github.com/mx-space/core/commit/deeb05777e26d7156098b9bfdf4fbc27eaa81180))
-* **file:** add batch delete and S3 upload functionality ([9e6cfe5](https://github.com/mx-space/core/commit/9e6cfe5fac617faebe07d33aacf5fa954476a21f))
-
-
-
-## [9.0.2](https://github.com/mx-space/core/compare/v9.0.1...v9.0.2) (2026-01-24)
-
-
-### Bug Fixes
-
-* **file.type:** update FileTypeEnum to replace 'photo' with 'image' ([9d1be6c](https://github.com/mx-space/core/commit/9d1be6cae2753fd1841c067a3f36b93b36001a36))
-* **file:** add type: String for enum props in FileReferenceModel ([35cdbdd](https://github.com/mx-space/core/commit/35cdbdd2b9bc0ebc726517b73aa6ee9eeb4a6d8a))
-* **file:** remove duplicate index on fileUrl field ([bd6eec6](https://github.com/mx-space/core/commit/bd6eec679f12357a075ae07d4d7dba26ee4b9747))
-
-
-### Features
-
-* **file:** implement file reference management and image migration service ([7b22129](https://github.com/mx-space/core/commit/7b22129b0890a1875ff73564034cf5ae74628ace))
-
-
-
-## [9.0.1](https://github.com/mx-space/core/compare/v9.0.0...v9.0.1) (2026-01-23)
-
-
-### Bug Fixes
-
-* **aggregate:** rename wordCount field from length to count ([9c883c9](https://github.com/mx-space/core/commit/9c883c9cbea94d82b2822c4b3534e2a7c7e0504d))
-* **note.schema:** allow nullable fields and set default for images ([74f0aed](https://github.com/mx-space/core/commit/74f0aedc4f13a28627a2a0d5597c2f8454159bff))
-
-
-
-# [9.0.0](https://github.com/mx-space/core/compare/v9.0.0-alpha.9...v9.0.0) (2026-01-22)
-
-
-### Features
-
-* add analyze apis ([3f51a95](https://github.com/mx-space/core/commit/3f51a95ad0d9dc85e624056fa9d871d432b0cf38))
-
-
-
-# [9.0.0-alpha.9](https://github.com/mx-space/core/compare/v9.0.0-alpha.8...v9.0.0-alpha.9) (2026-01-22)
-
-
-
-# [9.0.0-alpha.8](https://github.com/mx-space/core/compare/v9.0.0-alpha.7...v9.0.0-alpha.8) (2026-01-22)
-
-
-
-# [9.0.0-alpha.7](https://github.com/mx-space/core/compare/v9.0.0-alpha.6...v9.0.0-alpha.7) (2026-01-22)
-
-
-
-# [9.0.0-alpha.6](https://github.com/mx-space/core/compare/v9.0.0-alpha.5...v9.0.0-alpha.6) (2026-01-22)
-
-
-
-# [9.0.0-alpha.5](https://github.com/mx-space/core/compare/v9.0.0-alpha.4...v9.0.0-alpha.5) (2026-01-22)
-
-
-
-# [9.0.0-alpha.4](https://github.com/mx-space/core/compare/v9.0.0-alpha.3...v9.0.0-alpha.4) (2026-01-22)
-
-
-
-# [9.0.0-alpha.3](https://github.com/mx-space/core/compare/v9.0.0-alpha.2...v9.0.0-alpha.3) (2026-01-21)
-
-
-
-# [9.0.0-alpha.2](https://github.com/mx-space/core/compare/v9.0.0-alpha.1...v9.0.0-alpha.2) (2026-01-21)
-
-
-### Bug Fixes
-
-* enhance OpenAI-compatible provider handling ([fab4d9d](https://github.com/mx-space/core/commit/fab4d9dfda1b5e976ac505001630b09d82b4ca2b))
-
-
-
-# [9.0.0-alpha.1](https://github.com/mx-space/core/compare/v9.0.0-alpha.0...v9.0.0-alpha.1) (2026-01-21)
-
-
-### Features
-
-* add Docker Compose and Docker Stack configurations for mx-core and Redis services ([f83ab46](https://github.com/mx-space/core/commit/f83ab463ad7d6a51e44865529c656cd4132a5505))
-
-
-
-# [9.0.0-alpha.0](https://github.com/mx-space/core/compare/v8.8.0...v9.0.0-alpha.0) (2026-01-21)
-
-
-### Bug Fixes
-
-* **comment:** 邮件通知速记跳转前端路由 ([#2541](https://github.com/mx-space/core/issues/2541)) ([3c12235](https://github.com/mx-space/core/commit/3c1223569ef9caf3480183eb4e922d2719b27925))
-* **deps:** update dependency @ai-sdk/openai to v3.0.13 ([#2546](https://github.com/mx-space/core/issues/2546)) ([7213840](https://github.com/mx-space/core/commit/721384031a02b951958debc14b3fdf6d0131f95a))
-* **deps:** update dependency @keyv/redis to v5.1.6 ([#2547](https://github.com/mx-space/core/issues/2547)) ([5a00a9b](https://github.com/mx-space/core/commit/5a00a9b0272faede2c082eebb978fb4572d56cc4))
-* replace zx with native Node.js APIs in download script ([b93d6d9](https://github.com/mx-space/core/commit/b93d6d9959f7b79ec7611191f016c93f7da3657e))
-
-
-
-# [8.8.0](https://github.com/mx-space/core/compare/v8.7.1...v8.8.0) (2026-01-20)
-
-
-### Features
-
-* **meta-preset:** add MetaPreset module with CRUD operations and built-in presets ([d03a881](https://github.com/mx-space/core/commit/d03a8818da546b8fffa1771e856cf4207255e67e))
-
-
-
-## [8.7.1](https://github.com/mx-space/core/compare/v8.7.0...v8.7.1) (2026-01-19)
-
-
-
-# [8.7.0](https://github.com/mx-space/core/compare/v8.6.0...v8.7.0) (2026-01-18)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.28.6 ([#2527](https://github.com/mx-space/core/issues/2527)) ([7711eb9](https://github.com/mx-space/core/commit/7711eb9b0a89589a1737b1a036a39f86aab36d72))
-* **deps:** update dependency @ai-sdk/openai to v3.0.12 ([#2532](https://github.com/mx-space/core/issues/2532)) ([d3e1a32](https://github.com/mx-space/core/commit/d3e1a32eec9e5d86032214468fc987d33035fad6))
-* **deps:** update dependency ai to v6.0.39 ([#2534](https://github.com/mx-space/core/issues/2534)) ([6a2db5f](https://github.com/mx-space/core/commit/6a2db5fa5327150d6fe0871f698c9044892fa861))
-* **deps:** update dependency cache-manager to v7.2.8 ([#2535](https://github.com/mx-space/core/issues/2535)) ([cb8c287](https://github.com/mx-space/core/commit/cb8c28760601748e0e24421cfe273a21a82347c9))
-* **deps:** update dependency remove-markdown to v0.6.3 ([#2536](https://github.com/mx-space/core/issues/2536)) ([222d8f2](https://github.com/mx-space/core/commit/222d8f2a4ff3398ed0f75608511e5c506a21cb81))
-* **deps:** update nest monorepo ([#2538](https://github.com/mx-space/core/issues/2538)) ([8ceae42](https://github.com/mx-space/core/commit/8ceae42162c54f59870334472b7de625c71fd4bb))
-
-
-### Features
-
-* **aggregate:** add new statistical endpoints for category distribution, tag cloud, publication trend, top articles, comment activity, and traffic source ([1eb5dd7](https://github.com/mx-space/core/commit/1eb5dd7090bdc080535edef443a371f5610c96f2))
-* **draft:** implement draft module with CRUD operations and history management ([8adf43e](https://github.com/mx-space/core/commit/8adf43e702213638b1de45febecfdd29dd495b57))
-
-
-
-# [8.6.0](https://github.com/mx-space/core/compare/v8.5.1...v8.6.0) (2026-01-15)
-
-
-### Bug Fixes
-
-* **backup:** 修复 S3 备份上传错误 ([#2524](https://github.com/mx-space/core/issues/2524)) ([43cbdc8](https://github.com/mx-space/core/commit/43cbdc8729083778f70321d69bcbb2839f0f746b))
-* **render:** 修复渲染预览类型路由匹配 ([#2523](https://github.com/mx-space/core/issues/2523)) ([d82f8ff](https://github.com/mx-space/core/commit/d82f8ff8f4d67577b025eff7304f3f06a7b8f96d))
-* update mongo image to version 7 in docker-compose.yml ([#2474](https://github.com/mx-space/core/issues/2474)) ([03b5105](https://github.com/mx-space/core/commit/03b51056ac15358c33e4f78a3a9fae7345319615))
-
-
-### Features
-
-* **core:** refactor admin asset download logic with multi-mirror support and improved reliability ([d77a152](https://github.com/mx-space/core/commit/d77a152bc8a60a185ab8a1f2ad2269bfc03ce986))
-
-
-
-## [8.5.1](https://github.com/mx-space/core/compare/v8.5.0...v8.5.1) (2026-01-14)
-
-
-### Bug Fixes
-
-* build mod script ([800c0cb](https://github.com/mx-space/core/commit/800c0cb5f3924b91ce02c0e29f2c3ec47f1addba))
-* **deps:** update dependency ua-parser-js to v2.0.7 ([#2509](https://github.com/mx-space/core/issues/2509)) ([d021823](https://github.com/mx-space/core/commit/d021823d0700f5a9e58b3d893bc28fc546ac0adf))
-
-
-### Features
-
-* **auth:** add profile mapping function to GitHub authentication ([f7d96c3](https://github.com/mx-space/core/commit/f7d96c3152074507f0d4da4704d38c5ceda7caf4))
-* **recently:** 新增速记编辑功能 ([#2521](https://github.com/mx-space/core/issues/2521)) ([99043bd](https://github.com/mx-space/core/commit/99043bd94c07a7a1c1b96dbad21b1f8f4e58a430))
-
-
-
-# [8.5.0](https://github.com/mx-space/core/compare/v8.4.5...v8.5.0) (2026-01-12)
-
-
-### Bug Fixes
-
-* **deps:** update dependency ai to v5.0.118 ([#2511](https://github.com/mx-space/core/issues/2511)) ([2b4f31e](https://github.com/mx-space/core/commit/2b4f31e1e533b9ecb9bd956d3e87534256d5b51b))
-
-
-### Features
-
-* **ai:** implement multi-provider support and migration for AI configuration ([b55916d](https://github.com/mx-space/core/commit/b55916d9d03ada0447f7671ca6058764b9c89728))
-
-
-
-## [8.4.5](https://github.com/mx-space/core/compare/v8.4.4...v8.4.5) (2026-01-08)
-
-
-### Bug Fixes
-
-* ignore eslint rule ([bac4736](https://github.com/mx-space/core/commit/bac473693252a8cbc20807545205a27222b1fe91))
-
-
-
-## [8.4.4](https://github.com/mx-space/core/compare/v8.4.3...v8.4.4) (2026-01-08)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @ai-sdk/openai to v2.0.89 ([#2506](https://github.com/mx-space/core/issues/2506)) ([d71bd54](https://github.com/mx-space/core/commit/d71bd545a995d26ea12a78a6fc178c741db09974))
-* **deps:** update dependency @typegoose/typegoose to v12.20.1 ([#2500](https://github.com/mx-space/core/issues/2500)) ([d84a71f](https://github.com/mx-space/core/commit/d84a71fae68c035cfd2e633cc60492d4d67fccc5))
-* **deps:** update dependency ai to v5.0.117 ([#2501](https://github.com/mx-space/core/issues/2501)) ([b47a482](https://github.com/mx-space/core/commit/b47a482429f6ccce4c449049bbd05bba54790a28))
-* **deps:** update dependency mongoose to v8.19.4 ([#2507](https://github.com/mx-space/core/issues/2507)) ([7f56be4](https://github.com/mx-space/core/commit/7f56be4684a094bdd298a66e0b4011f07724ba86))
-* **deps:** update dependency openai to v5.23.2 ([#2508](https://github.com/mx-space/core/issues/2508)) ([d2ae37d](https://github.com/mx-space/core/commit/d2ae37d3a8e331b1050dcd5ddbdc413afc554e44))
-* **deps:** update dependency qs to v6.14.1 [security] ([#2504](https://github.com/mx-space/core/issues/2504)) ([6cb3d36](https://github.com/mx-space/core/commit/6cb3d3603611ec9fdbf49a25d64b3c6e432f49ca))
-* **markdown:** export markdown permalink ([3bc74e7](https://github.com/mx-space/core/commit/3bc74e76a2935ccfb30b3357052ddfafb29d26cc))
-
-
-
-## [8.4.3](https://github.com/mx-space/core/compare/v8.4.2...v8.4.3) (2025-12-27)
-
-
-### Bug Fixes
-
-* **aggregate:** update post query to only retrieve published posts ([c65eead](https://github.com/mx-space/core/commit/c65eeadfb6b946c8ce19fd8ab1c2d9db775e6c50))
-* **deps:** update dependency @ai-sdk/openai to v2.0.88 ([#2498](https://github.com/mx-space/core/issues/2498)) ([378f68b](https://github.com/mx-space/core/commit/378f68b1ba417e35b294f2096661c18a3a56497d))
-* **deps:** update dependency @typegoose/auto-increment to v4.13.2 ([#2499](https://github.com/mx-space/core/issues/2499)) ([9e6872a](https://github.com/mx-space/core/commit/9e6872af0b86e84b790982875e68005965eb895a))
-* **deps:** update dependency nodemailer to v7.0.11 [security] ([#2487](https://github.com/mx-space/core/issues/2487)) ([9329cbd](https://github.com/mx-space/core/commit/9329cbd716d1a2ff81a4392c15f1e54771f774d2))
-
-
-### Features
-
-* **markdown:** 为Markdown 导入导出添加标签字段 ([5ca66b6](https://github.com/mx-space/core/commit/5ca66b6912c953a1ade1a1ccfeef2131359b9e42))
-* **note:** add validation for note updates to check for existing documents and track field changes ([70fb1b2](https://github.com/mx-space/core/commit/70fb1b2ad34a6a0a6001d93099703b47fc0f58b4))
-
-
-
-## [8.4.2](https://github.com/mx-space/core/compare/v8.4.1...v8.4.2) (2025-11-30)
-
-
-### Bug Fixes
-
-* **ai-summary:** log error details in AI summary service ([049e6a5](https://github.com/mx-space/core/commit/049e6a5cb6d6187f7f703bd4d2b2f9e024cf57fb))
-
-
-
-## [8.4.1](https://github.com/mx-space/core/compare/v8.4.0...v8.4.1) (2025-11-24)
-
-
-### Bug Fixes
-
-* **deps:** downgrade semver from v7.7.3 to v7.7.2 in pnpm-lock.yaml ([ba0501e](https://github.com/mx-space/core/commit/ba0501e0f890f77339beb0e172a6126152104c76))
-* **deps:** update dependency @ai-sdk/openai to v2.0.42 ([#2464](https://github.com/mx-space/core/issues/2464)) ([9c0ac35](https://github.com/mx-space/core/commit/9c0ac355643bd6b654efb817aa168007bab947c8))
-* **deps:** update dependency ai to v5.0.52 [security] ([#2470](https://github.com/mx-space/core/issues/2470)) ([5cdc4f6](https://github.com/mx-space/core/commit/5cdc4f6b4954ead231dedb4cbf9ce008fc26bd8f))
-* **deps:** update dependency dayjs to v1.11.18 ([#2459](https://github.com/mx-space/core/issues/2459)) ([2afa730](https://github.com/mx-space/core/commit/2afa730d5845a86d10a8fb56fbdb0555ce6497a4))
-* **deps:** update dependency form-data to v4.0.4 [security] ([#2454](https://github.com/mx-space/core/issues/2454)) ([81b875d](https://github.com/mx-space/core/commit/81b875d9c99969162bd0b5105a84452286522552))
-* **deps:** update dependency nodemailer to v7.0.7 [security] ([#2467](https://github.com/mx-space/core/issues/2467)) ([2d10df6](https://github.com/mx-space/core/commit/2d10df66026a0aab637e27ef6f93662867984f2c))
-
-
-### Features
-
-* **link:** convert external friend avatar links to internal links ([#2480](https://github.com/mx-space/core/issues/2480)) ([ca1e328](https://github.com/mx-space/core/commit/ca1e3285db298e4a9eb4b9efd1c4ec316d9c7308))
-
-
-
-# [8.4.0](https://github.com/mx-space/core/compare/v8.3.2...v8.4.0) (2025-07-10)
-
-
-### Bug Fixes
-
-* remove patch ([14fe84c](https://github.com/mx-space/core/commit/14fe84c0bf20209d0a05f3d8f68903c67ca3b690))
-
-
-### Features
-
-* **ai:** integrate new AI SDK and refactor AI services ([3e12044](https://github.com/mx-space/core/commit/3e12044fcebdf8b13aa6a7d28f7b4ba3037d7353))
-* **core:** 实现文章的发布/取消发布功能 ([#2443](https://github.com/mx-space/core/issues/2443)) ([00b66be](https://github.com/mx-space/core/commit/00b66bef7ea49d7fa7097362dabfcc12cc2db6e9))
-* **server-time:** enhance middleware configuration and import context ([a463551](https://github.com/mx-space/core/commit/a4635519b8846bc32d42611835c40d6d9ddc4819))
-
-
-
-## [8.3.2](https://github.com/mx-space/core/compare/v8.3.1...v8.3.2) (2025-05-26)
-
-
-### Bug Fixes
-
-* **auth:** enhance CORS support in CreateAuth handler ([bf6021a](https://github.com/mx-space/core/commit/bf6021a0b4e9d55e85a44eedf2b2cb8c5e07eec6))
-
-
-
-## [8.3.1](https://github.com/mx-space/core/compare/v8.3.0...v8.3.1) (2025-05-20)
-
-
-### Bug Fixes
-
-* **ai:** ensure proper task cleanup in AiDeepReadingService ([f7cd8c7](https://github.com/mx-space/core/commit/f7cd8c7035b00ab0fc338c3f8f7947dccb1ff6bd))
-* bundle ([7e616ee](https://github.com/mx-space/core/commit/7e616eeb8873587a76235f254d6b9b998268bac9))
-* **deps:** complie `@antfu/install-pkg` ([89013ed](https://github.com/mx-space/core/commit/89013ed3482c7e8f0faabcfe61cccbf856b77bab))
-* **markdown:** refine tokenizer and code handling in markdown utility ([e80b776](https://github.com/mx-space/core/commit/e80b77662b3ecf7b7b5e75bbb7566612781920c7))
-* **tinyexec:** replace require statements to support cjs ([75e153c](https://github.com/mx-space/core/commit/75e153c3556e2815f241fa11b1eeba73e5cf7c4b))
-
-
-### Features
-
-* **ai:** enhance OpenAI configuration with additional headers ([9b46a60](https://github.com/mx-space/core/commit/9b46a6075048ec870edc814ee159c9847b1d1b11))
-* **s3:** implement S3Uploader for file uploads ([c527591](https://github.com/mx-space/core/commit/c52759181ba04d0286d4dbbc6d67f12953865ded))
-
-
-### Reverts
-
-* Revert "chore(deps): update TypeScript and related dependencies" ([3a8d1ed](https://github.com/mx-space/core/commit/3a8d1ede77d85e36fcd459efac461509c57f5c42))
-
-
-
-# [8.3.0](https://github.com/mx-space/core/compare/v8.2.0...v8.3.0) (2025-05-06)
-
-
-### Features
-
-* **ai:** add deep reading model and controller method ([8a5048f](https://github.com/mx-space/core/commit/8a5048f06797e6aebfada3c9e8d592a86051aedd))
-* **ai:** introduce deep reading functionality and refactor AI module ([c385c58](https://github.com/mx-space/core/commit/c385c5894357bde8ee1083526ef74dacdb4eb811))
-* **ci:** add custom action for MongoDB and Redis setup ([c657e9a](https://github.com/mx-space/core/commit/c657e9a80aa8eb49b54482c82ff70a869385386a))
-* **ci:** add custom Node.js and pnpm setup action ([5077535](https://github.com/mx-space/core/commit/5077535eda3b832757e25c5c66e9b6dde09541c3))
-
-
-
-# [8.2.0](https://github.com/mx-space/core/compare/v8.1.2...v8.2.0) (2025-05-05)
-
-
-### Bug Fixes
-
-* **comment:** refine AI evaluation method and update comment options ([f855521](https://github.com/mx-space/core/commit/f8555216b6bc2260b913328821511e0688fbede3))
-
-
-### Features
-
-* implement AI-based comment evaluation in CommentService ([d2956f3](https://github.com/mx-space/core/commit/d2956f33981ca58659f153393c1b304548233b31))
-* update ai integration ([#2422](https://github.com/mx-space/core/issues/2422)) ([46704d2](https://github.com/mx-space/core/commit/46704d24986181009271c8fda5fb93e4b21ac01c))
-
-
-
-## [8.1.2](https://github.com/mx-space/core/compare/v8.1.1...v8.1.2) (2025-05-05)
-
-
-
-## [8.1.1](https://github.com/mx-space/core/compare/v8.1.0...v8.1.1) (2025-04-06)
-
-
-### Bug Fixes
-
-* deploy script ([#2409](https://github.com/mx-space/core/issues/2409)) ([577d5c5](https://github.com/mx-space/core/commit/577d5c540143f9e8616e25af79a9a025cf76143f))
-* **gateway/auth:** broadcast failure ([#2413](https://github.com/mx-space/core/issues/2413)) ([128b92c](https://github.com/mx-space/core/commit/128b92cbee08e0d1d6797ad185057665cc814e4b))
-* lint and fix cache service ([9626378](https://github.com/mx-space/core/commit/96263782d0997f3e6f86f88f9d61854cebf5a1b7))
-* mask custom connection string passwords (CLI & env) ([#2410](https://github.com/mx-space/core/issues/2410)) ([e0f5116](https://github.com/mx-space/core/commit/e0f511668aa918a7cfd5b56c34f874a91e532558))
-
-
-
-# [8.1.0](https://github.com/mx-space/core/compare/v8.0.3...v8.1.0) (2025-03-25)
-
-
-### Features
-
-* AI antispam ([#2406](https://github.com/mx-space/core/issues/2406)) ([4ec4814](https://github.com/mx-space/core/commit/4ec4814959ee9034381910e06b6cd84fd2899768))
-
-
-
-## [8.0.3](https://github.com/mx-space/core/compare/v8.0.2...v8.0.3) (2025-03-23)
-
-
-### Bug Fixes
-
-* ai summary prompt ([5b9952c](https://github.com/mx-space/core/commit/5b9952c18ab45b949bc86067ed05406109dedab2))
-* **deps:** update dependency @langchain/openai to v0.4.5 ([#2395](https://github.com/mx-space/core/issues/2395)) ([fc028a4](https://github.com/mx-space/core/commit/fc028a4989620e9e15950c35d54dd43b2ad1d069))
-* **deps:** update dependency axios to v1.8.4 ([#2399](https://github.com/mx-space/core/issues/2399)) ([ad41ec4](https://github.com/mx-space/core/commit/ad41ec42bf740d54291b3e01d07b6f5f2d7322b6))
-* **deps:** update dependency openai to v4.87.4 ([#2396](https://github.com/mx-space/core/issues/2396)) ([f6d7f0b](https://github.com/mx-space/core/commit/f6d7f0b6d83340a7264ba85f10f72ff8886ed0f4))
-* **deps:** update nest monorepo to v11.0.12 ([#2397](https://github.com/mx-space/core/issues/2397)) ([511587a](https://github.com/mx-space/core/commit/511587a617aad507e3965619c8c60a310f042184))
-
-
-
-## [8.0.2](https://github.com/mx-space/core/compare/v8.0.1...v8.0.2) (2025-03-17)
-
-
-### Bug Fixes
-
-* cravatar frontend cannot be displayed ([#2385](https://github.com/mx-space/core/issues/2385)) ([490320e](https://github.com/mx-space/core/commit/490320ee4f0cdf958335c8c805796f641a7e41ae))
-
-
-### Features
-
-* 添加推送到Bing支持 ([#2379](https://github.com/mx-space/core/issues/2379)) ([400d217](https://github.com/mx-space/core/commit/400d217aac2872f75ee84bf83f4c2988801b9c7f))
-
-
-
-## [8.0.1](https://github.com/mx-space/core/compare/v8.0.0...v8.0.1) (2025-02-19)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.26.8 ([#2340](https://github.com/mx-space/core/issues/2340)) ([3b64af7](https://github.com/mx-space/core/commit/3b64af70d274aa62aba00c4c39a56d4cf5816917))
-* **deps:** update babel monorepo to v7.26.9 ([#2362](https://github.com/mx-space/core/issues/2362)) ([feacfaf](https://github.com/mx-space/core/commit/feacfaf12077311e878edb579d593b9ed08aa644))
-* **deps:** update dependency @fastify/static to v8.1.1 ([#2364](https://github.com/mx-space/core/issues/2364)) ([28cc927](https://github.com/mx-space/core/commit/28cc927d3316e6534768e5f4cc640f0f45583e41))
-* **deps:** update dependency @langchain/openai to v0.4.3 ([#2341](https://github.com/mx-space/core/issues/2341)) ([0d6eda2](https://github.com/mx-space/core/commit/0d6eda23e640aaad1cae54c3029c29d2b00af29f))
-* **deps:** update dependency @langchain/openai to v0.4.4 ([#2349](https://github.com/mx-space/core/issues/2349)) ([38d1a31](https://github.com/mx-space/core/commit/38d1a317e62e9d72a82739200af3fbdfb9b3c287))
-* **deps:** update dependency @typegoose/auto-increment to v4.9.1 ([#2342](https://github.com/mx-space/core/issues/2342)) ([71c3ef8](https://github.com/mx-space/core/commit/71c3ef8ed6941221d31df144b560aa8c20e1c988))
-* **deps:** update dependency form-data to v4.0.2 ([#2365](https://github.com/mx-space/core/issues/2365)) ([f4e9fad](https://github.com/mx-space/core/commit/f4e9fad753dfe55c133313932b538f5f373acb12))
-* **deps:** update dependency langchain to v0.3.18 ([#2366](https://github.com/mx-space/core/issues/2366)) ([72b1488](https://github.com/mx-space/core/commit/72b1488a390c42be061c9075f570324037e78e0f))
-* **deps:** update dependency linkedom to v0.18.9 ([#2343](https://github.com/mx-space/core/issues/2343)) ([46b6b8e](https://github.com/mx-space/core/commit/46b6b8e4388c565a319afd224e0de44d32e151d6))
-* **deps:** update dependency marked to v15.0.7 ([#2350](https://github.com/mx-space/core/issues/2350)) ([347ea08](https://github.com/mx-space/core/commit/347ea08ef097d493d13063df9273710b966700c9))
-* **deps:** update dependency mongoose-aggregate-paginate-v2 to v1.1.4 ([#2367](https://github.com/mx-space/core/issues/2367)) ([b2b4233](https://github.com/mx-space/core/commit/b2b423361fa78ca7b4e6589160a009d09a3b75cb))
-* **deps:** update dependency ua-parser-js to v2.0.2 ([#2346](https://github.com/mx-space/core/issues/2346)) ([3203b4a](https://github.com/mx-space/core/commit/3203b4a392c1f3027a788e0763b6a02fcfd42cf3))
-* **deps:** update nest monorepo to v11.0.9 ([#2344](https://github.com/mx-space/core/issues/2344)) ([58947c0](https://github.com/mx-space/core/commit/58947c0c832619363a4709c8bddc56b0ca17c89a))
-
-
-
-# [8.0.0](https://github.com/mx-space/core/compare/v7.2.8...v8.0.0) (2025-02-08)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @fastify/static to v8.0.4 ([#2318](https://github.com/mx-space/core/issues/2318)) ([02c98e1](https://github.com/mx-space/core/commit/02c98e1aae88807af39f8b3a85eec723316424ef))
-* **deps:** update dependency @langchain/openai to v0.3.17 ([#2319](https://github.com/mx-space/core/issues/2319)) ([d846a6c](https://github.com/mx-space/core/commit/d846a6ce39b55600e2d19d5d30c58dfcd7f17c87))
-* **deps:** update dependency langchain to v0.3.12 ([#2322](https://github.com/mx-space/core/issues/2322)) ([bba535c](https://github.com/mx-space/core/commit/bba535c7ce6361804c86237a379a120331298a7f))
-
-
-
-## [7.2.8](https://github.com/mx-space/core/compare/v7.2.7...v7.2.8) (2025-01-19)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.26.5 ([#2307](https://github.com/mx-space/core/issues/2307)) ([ac3f16b](https://github.com/mx-space/core/commit/ac3f16b9944b911bb1eaf6887b35f1cd5d4b62cc))
-* **deps:** update dependency @aws-sdk/client-s3 to v3.731.1 ([#2303](https://github.com/mx-space/core/issues/2303)) ([f5abb1a](https://github.com/mx-space/core/commit/f5abb1a428ce7d7cb1dcad01ab76285fde536a6f))
-* **deps:** update dependency isbot to v5.1.21 ([#2298](https://github.com/mx-space/core/issues/2298)) ([b1ea871](https://github.com/mx-space/core/commit/b1ea87194eec04e65431a69ed7066df4ee22981f))
-* **deps:** update dependency langchain to v0.3.10 ([#2299](https://github.com/mx-space/core/issues/2299)) ([7182cb2](https://github.com/mx-space/core/commit/7182cb21faa96ede55fe4b4741ce88ca048fc3ee))
-* **deps:** update dependency langchain to v0.3.11 ([#2310](https://github.com/mx-space/core/issues/2310)) ([a542807](https://github.com/mx-space/core/commit/a542807fa8fa539ce4f3b8a8890e8fd457031dbb))
-* **deps:** update dependency mongoose-paginate-v2 to v1.9.0 ([#2306](https://github.com/mx-space/core/issues/2306)) ([7834acb](https://github.com/mx-space/core/commit/7834acb0dac5925294592e9e7368a546aff467c7))
-* **deps:** update dependency openai to v4.77.4 ([#2300](https://github.com/mx-space/core/issues/2300)) ([eb3a568](https://github.com/mx-space/core/commit/eb3a5686bdf21e5cb681244759435fe300932b43))
-* **deps:** update dependency openai to v4.79.1 ([#2308](https://github.com/mx-space/core/issues/2308)) ([69481df](https://github.com/mx-space/core/commit/69481df6691ade4026034b3fec13102ed2ef9481))
-
-
-
-## [7.2.7](https://github.com/mx-space/core/compare/v7.2.6...v7.2.7) (2025-01-09)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @aws-sdk/client-s3 to v3.723.0 ([#2258](https://github.com/mx-space/core/issues/2258)) ([d0e7832](https://github.com/mx-space/core/commit/d0e7832be34780e7953499d402b90c739e5d6505))
-* **deps:** update dependency @langchain/openai to v0.3.16 ([#2269](https://github.com/mx-space/core/issues/2269)) ([5342665](https://github.com/mx-space/core/commit/5342665bad184c43545ef19275a10904e8371f3d))
-* **deps:** update dependency @typegoose/auto-increment to v4.9.0 ([#2250](https://github.com/mx-space/core/issues/2250)) ([a278685](https://github.com/mx-space/core/commit/a278685b402380f77f5a13179d7ad3fc7e3ddf3a))
-* **deps:** update dependency isbot to v5.1.19 ([#2286](https://github.com/mx-space/core/issues/2286)) ([c4e871d](https://github.com/mx-space/core/commit/c4e871d198fcc6e05c65925128f851dbed6b885f))
-* **deps:** update dependency langchain to v0.3.8 ([#2277](https://github.com/mx-space/core/issues/2277)) ([793dee2](https://github.com/mx-space/core/commit/793dee294230bc10af7c534cd5fdf6557c8e33fd))
-* **deps:** update dependency remove-markdown to v0.6.0 ([#2278](https://github.com/mx-space/core/issues/2278)) ([b3f2d50](https://github.com/mx-space/core/commit/b3f2d5042d68342656fe6ca1be0ebd46f73829d8))
-* **deps:** update dependency ua-parser-js to v1.0.40 ([#2274](https://github.com/mx-space/core/issues/2274)) ([85cccd2](https://github.com/mx-space/core/commit/85cccd261548dd9f791bb03ebe77a721c0380b9c))
-
-
-
-## [7.2.6](https://github.com/mx-space/core/compare/v7.2.5...v7.2.6) (2024-12-21)
-
-
-### Bug Fixes
-
-* init project ([58acb5a](https://github.com/mx-space/core/commit/58acb5a33df1daaabfd237c3ce1ce15ed5852731))
-
-
-
-## [7.2.5](https://github.com/mx-space/core/compare/v7.2.4...v7.2.5) (2024-12-20)
-
-
-### Bug Fixes
-
-* dockerfile ([838b5b3](https://github.com/mx-space/core/commit/838b5b33a05724c776d6d19adc4784dc75679daa))
-
-
-### Features
-
-* support algolia search custom truncate size, closed [#2271](https://github.com/mx-space/core/issues/2271) ([6da1c13](https://github.com/mx-space/core/commit/6da1c13799174e746708844d0b149b4607e8f276))
-
-
-
-## [7.2.4](https://github.com/mx-space/core/compare/v7.2.3...v7.2.4) (2024-12-03)
-
-
-### Bug Fixes
-
-* add auth baseURL ([635e27d](https://github.com/mx-space/core/commit/635e27df8da51cae33e5f0abf35ad491998b3de6))
-* complied better auth typing export ([49cc5b6](https://github.com/mx-space/core/commit/49cc5b628fd6e4b8cd5c2adf35c40bf982621b28))
-* lockfile ([584af40](https://github.com/mx-space/core/commit/584af40c963b5b638c666dd1721cff01b81094ab))
-* remove baseURL ([b3e10d4](https://github.com/mx-space/core/commit/b3e10d417b7a125367efd8ff9a5e124d84e97895))
-* reset oauth instance when app url changed ([54d9021](https://github.com/mx-space/core/commit/54d90214ec18e754c0e6a78f32d9eedf23056b2d))
-
-
-### Features
-
-* Add cloudflared service to the docker image ([#2252](https://github.com/mx-space/core/issues/2252)) ([1bcb434](https://github.com/mx-space/core/commit/1bcb434a27d5b6e73759f833f01171be04d002e2))
-
-
-
-## [7.2.3](https://github.com/mx-space/core/compare/v7.2.2...v7.2.3) (2024-11-29)
-
-
-### Bug Fixes
-
-* get sessionId ([ca18882](https://github.com/mx-space/core/commit/ca18882c87066ac05db76c27aae74e82079e2576))
-
-
-
-## [7.2.2](https://github.com/mx-space/core/compare/v7.2.1...v7.2.2) (2024-11-28)
-
-
-### Bug Fixes
-
-* table migration ([84ddd7c](https://github.com/mx-space/core/commit/84ddd7c432c1bc027ddfcded9ac0debdf0cc3ddd))
-* update migration ([ec43ff2](https://github.com/mx-space/core/commit/ec43ff2965c0f800da4a1a7aaa52ac5b419a03be))
-
-
-### Features
-
-* add accountId to session ([1e674bd](https://github.com/mx-space/core/commit/1e674bdd2d2008e5804a142f3eab4d0e8dedc266))
-* add provider on session ([a031c32](https://github.com/mx-space/core/commit/a031c325327bd7eff3e7cda819eee1e6ee5ffc82))
-
-
-
-## [7.2.1](https://github.com/mx-space/core/compare/v7.2.0...v7.2.1) (2024-11-26)
-
-
-### Bug Fixes
-
-* userId ([2143a8c](https://github.com/mx-space/core/commit/2143a8c6fc3b44fbcd94362fe34a15cb1612d6b0))
-
-
-
-# [7.2.0](https://github.com/mx-space/core/compare/v7.1.9...v7.2.0) (2024-11-26)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @aws-sdk/client-s3 to v3.685.0 ([#2157](https://github.com/mx-space/core/issues/2157)) ([fad4464](https://github.com/mx-space/core/commit/fad44647417624a6dc71b0d62eba6981ae2c87f8))
-* **deps:** update dependency @fastify/static to v8.0.3 ([#2228](https://github.com/mx-space/core/issues/2228)) ([bb11879](https://github.com/mx-space/core/commit/bb118796debe6115fa595d2b5750b69012ebe29f))
-* **deps:** update dependency @langchain/openai to v0.3.11 ([835ba5a](https://github.com/mx-space/core/commit/835ba5a1892478763b0a548481feca6afcd586ba))
-* **deps:** update dependency @langchain/openai to v0.3.12 ([c7056d6](https://github.com/mx-space/core/commit/c7056d6559e03b7535b3b671557929cc32c2d2cd))
-* **deps:** update dependency @langchain/openai to v0.3.14 ([#2229](https://github.com/mx-space/core/issues/2229)) ([3692c40](https://github.com/mx-space/core/commit/3692c40366f9e4cbe56245ab4cf7c322ef5537dd))
-* **deps:** update dependency @nestjs/event-emitter to v2.1.1 ([#2203](https://github.com/mx-space/core/issues/2203)) ([abe3a95](https://github.com/mx-space/core/commit/abe3a95034a6d6488a845348b600052e890e28e1))
-* **deps:** update dependency @nestjs/mapped-types to v2.0.6 ([#2230](https://github.com/mx-space/core/issues/2230)) ([e0d8927](https://github.com/mx-space/core/commit/e0d89275eafff8add56fab8b92f0f16125e84c8c))
-* **deps:** update dependency langchain to v0.3.5 ([#2215](https://github.com/mx-space/core/issues/2215)) ([e6ef191](https://github.com/mx-space/core/commit/e6ef191523e6c2f3af157b79c648b0b6604dabf2))
-* **deps:** update dependency langchain to v0.3.6 ([#2231](https://github.com/mx-space/core/issues/2231)) ([17ce3e8](https://github.com/mx-space/core/commit/17ce3e8f864ad2074804f7142a65e7fbebcfa7bb))
-* **deps:** update dependency marked to v14.1.4 ([#2232](https://github.com/mx-space/core/issues/2232)) ([c3ab2ce](https://github.com/mx-space/core/commit/c3ab2ce3a5a5d02cb33dac157f1185b8a6d6d8af))
-* **deps:** update dependency openai to v4.68.1 ([7d96211](https://github.com/mx-space/core/commit/7d96211b06332263564571d0e4ebf8d555c4010e))
-* **deps:** update dependency qs to v6.13.1 ([#2234](https://github.com/mx-space/core/issues/2234)) ([69403ca](https://github.com/mx-space/core/commit/69403cac2e57839e02683ad52770ef950a74264a))
-* **deps:** update nest monorepo to v10.4.9 ([#2237](https://github.com/mx-space/core/issues/2237)) ([43a4488](https://github.com/mx-space/core/commit/43a44881a174e0034ce0f422f363a974cd7e0e60))
-
-
-
-## [7.1.9](https://github.com/mx-space/core/compare/v7.1.8...v7.1.9) (2024-10-18)
-
-
-### Bug Fixes
-
-* downgrade mongoose ([70301af](https://github.com/mx-space/core/commit/70301af599a0cd9591ba78e952b1224c7ea28844))
-* lockfile ([d7cbd80](https://github.com/mx-space/core/commit/d7cbd805d7a75395b9b450706c32f7d4e41ef330))
-
-
-
-## [7.1.8](https://github.com/mx-space/core/compare/v7.1.7...v7.1.8) (2024-10-07)
-
-
-### Bug Fixes
-
-* allow cors interceptor ([fa207ea](https://github.com/mx-space/core/commit/fa207ea4e3a92ff5c93d05ff1632965efbef9c83))
-* **deps:** update babel monorepo to v7.25.7 ([9249adb](https://github.com/mx-space/core/commit/9249adbf66fdfc419cece0d243d680635c4808e2))
-* **deps:** update dependency @aws-sdk/client-s3 to v3.657.0 ([#2154](https://github.com/mx-space/core/issues/2154)) ([e29b356](https://github.com/mx-space/core/commit/e29b356f87a60fa30ef35eece1a7dc32fc450fb3))
-* **deps:** update dependency @fastify/static to v8 ([#2142](https://github.com/mx-space/core/issues/2142)) ([e2c8bdc](https://github.com/mx-space/core/commit/e2c8bdcc42080da5b4c624c57b1fae6cf0817ef1))
-* **deps:** update dependency @langchain/openai to v0.3.1 ([57b8200](https://github.com/mx-space/core/commit/57b8200f228227f10450f42edc04b94f3220da69))
-* **deps:** update dependency @langchain/openai to v0.3.2 ([6bf8aa5](https://github.com/mx-space/core/commit/6bf8aa5a3b39ac5018f0091c21c47764cb88f18f))
-* **deps:** update dependency @langchain/openai to v0.3.4 ([5fd7f14](https://github.com/mx-space/core/commit/5fd7f14ac4f572dc8c3edac6fb65cc7f12822317))
-* **deps:** update dependency @langchain/openai to v0.3.5 ([#2181](https://github.com/mx-space/core/issues/2181)) ([5487e2c](https://github.com/mx-space/core/commit/5487e2c48d28c4d95730b23668af660229d5576d))
-* **deps:** update dependency @typegoose/auto-increment to v4.7.0 ([#2172](https://github.com/mx-space/core/issues/2172)) ([384e2e2](https://github.com/mx-space/core/commit/384e2e2f28b46c7dbbc5e6dd34958d7dd55eabf6))
-* **deps:** update dependency cache-manager-ioredis-yet to v2.1.2 ([8bb15c3](https://github.com/mx-space/core/commit/8bb15c378a8e6a8412987cd34428595ed0cbbc83))
-* **deps:** update dependency mongoose to v8.6.4 ([e70d70b](https://github.com/mx-space/core/commit/e70d70ba51b9d53a8e3cba7bc8b0133fb7a4bb32))
-* **deps:** update dependency mongoose to v8.7.0 ([#2171](https://github.com/mx-space/core/issues/2171)) ([c1bb5e6](https://github.com/mx-space/core/commit/c1bb5e6d53aa9b91b2f455d2fec30924db1a6042))
-* **deps:** update dependency mongoose-paginate-v2 to v1.8.4 ([a659ed2](https://github.com/mx-space/core/commit/a659ed2f793cdbe0370d96adaf137341e1acf186))
-* **deps:** update dependency mongoose-paginate-v2 to v1.8.5 ([1ac42ef](https://github.com/mx-space/core/commit/1ac42ef0fe39cdf00b23f945bb4c48bf238bf9f6))
-* **deps:** update dependency openai to v4.63.0 ([#2097](https://github.com/mx-space/core/issues/2097)) ([a1f84dc](https://github.com/mx-space/core/commit/a1f84dc40762f37753539c148d94e4342fbe2eff))
-* **deps:** update dependency openai to v4.65.0 ([#2163](https://github.com/mx-space/core/issues/2163)) ([e450946](https://github.com/mx-space/core/commit/e450946de58b70904ab42dceb821661b01b3bd2c))
-* **deps:** update nest monorepo to v10.4.4 ([bbdef0c](https://github.com/mx-space/core/commit/bbdef0c2745643436bdb21d68947c53863320a32))
-
-
-
-## [7.1.7](https://github.com/mx-space/core/compare/v7.1.6...v7.1.7) (2024-09-19)
-
-
-### Bug Fixes
-
-* add `sharp` globally in docker image ([519ba0b](https://github.com/mx-space/core/commit/519ba0babe641a309501b621b1daef8e4efa970e))
-* **deps:** update dependency @aws-sdk/client-s3 to v3.654.0 ([#2109](https://github.com/mx-space/core/issues/2109)) ([f5dfe67](https://github.com/mx-space/core/commit/f5dfe6745c336e55507fdebfccf707fc0f7aabfa))
-* **deps:** update dependency @types/jsonwebtoken to v9.0.7 ([171491e](https://github.com/mx-space/core/commit/171491e47d7eae6a7ae88fb6737fe3a184553cc3))
-* **deps:** update dependency langchain to v0.2.20 ([b7aaa91](https://github.com/mx-space/core/commit/b7aaa91d983038d66a4db6e5d945bfb24903ede6))
-* **deps:** update dependency linkedom to v0.18.5 ([fa4138f](https://github.com/mx-space/core/commit/fa4138fbf669ab0811704249e721753b04ab2cd2))
-* **deps:** update dependency mongoose to v8.6.3 ([25f2905](https://github.com/mx-space/core/commit/25f290537513eb4813dca503539680423586198c))
-* **deps:** update nest monorepo to v10.4.3 ([3187b98](https://github.com/mx-space/core/commit/3187b98d3314878bb369dcf5b5fd538548118eca))
-
-
-
-## [7.1.6](https://github.com/mx-space/core/compare/v7.1.5...v7.1.6) (2024-09-17)
-
-
-### Features
-
-* add comment `editedAt` ([2f1a973](https://github.com/mx-space/core/commit/2f1a973e5e374fbe456bfd62f38897448fe003af))
-
-
-
-## [7.1.5](https://github.com/mx-space/core/compare/v7.1.4...v7.1.5) (2024-09-17)
-
-
-### Bug Fixes
-
-* reader assgin ([a0e37aa](https://github.com/mx-space/core/commit/a0e37aa41729faf3edd9fd6c6923ba6c30ed54b9))
-
-
-### Features
-
-* edit comment ([ed7b33e](https://github.com/mx-space/core/commit/ed7b33e3a90c782bb7c3092140645fd4390f620a))
-
-
-
-## [7.1.4](https://github.com/mx-space/core/compare/v7.1.3...v7.1.4) (2024-09-16)
-
-
-### Bug Fixes
-
-* **reader:** assign to comment dto ([764e30f](https://github.com/mx-space/core/commit/764e30fb948a5fb94deab740fdc702f96003e4a0))
-
-
-
-## [7.1.3](https://github.com/mx-space/core/compare/v7.1.2...v7.1.3) (2024-09-16)
-
-
-### Bug Fixes
-
-* reader handle projection ([c8b2eab](https://github.com/mx-space/core/commit/c8b2eabe1f97f33cb7042d2394c6bbf659161710))
-
-
-
-## [7.1.2](https://github.com/mx-space/core/compare/v7.1.1...v7.1.2) (2024-09-16)
-
-
-### Bug Fixes
-
-* **deps:** update dependency ua-parser-js to v1.0.39 ([f54f721](https://github.com/mx-space/core/commit/f54f721c1f8f2caf11e8ce36a6251f7dc3e6edc3))
-* disable cache for auth session ([6a7a7c8](https://github.com/mx-space/core/commit/6a7a7c831c8b5ef5dbe533d2d52cf5b433c5d78f))
-
-
-
-## [7.1.1](https://github.com/mx-space/core/compare/v7.1.0...v7.1.1) (2024-09-14)
-
-
-### Bug Fixes
-
-* add `handle` to query ([85d4a14](https://github.com/mx-space/core/commit/85d4a140220fe0163a2efd8267a87836a4fb6df5))
-
-
-
-# [7.1.0](https://github.com/mx-space/core/compare/v7.0.7...v7.1.0) (2024-09-14)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @langchain/openai to v0.2.11 ([3e9e36a](https://github.com/mx-space/core/commit/3e9e36a248ca607979a56270602c8193fef6fedd))
-* **deps:** update dependency langchain to v0.2.19 ([0285b93](https://github.com/mx-space/core/commit/0285b935ff6a46a072b7deffade2427ab22c44c5))
-* **deps:** update dependency marked to v14.1.2 ([77af705](https://github.com/mx-space/core/commit/77af70590dd4a4c7cccf79995cebed7cc8f54013))
-* **deps:** update dependency mongoose to v8.6.2 ([25b16cf](https://github.com/mx-space/core/commit/25b16cf2ad0c4cd866eb9ea1bf596834ea35c649))
-
-
-### Features
-
-* reader for comment and like action ([#2122](https://github.com/mx-space/core/issues/2122)) ([26b2b4f](https://github.com/mx-space/core/commit/26b2b4f13451b22d3e242f5ef52b31e4fa95a60a))
-
-
-
-## [7.0.7](https://github.com/mx-space/core/compare/v7.0.6...v7.0.7) (2024-09-07)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @aws-sdk/client-s3 to v3.645.0 ([#2091](https://github.com/mx-space/core/issues/2091)) ([aec8694](https://github.com/mx-space/core/commit/aec869457334b7fca271d5d112480c29c88755ca))
-* **deps:** update dependency @langchain/openai to v0.2.10 ([6f038e1](https://github.com/mx-space/core/commit/6f038e196221cfb3ab89abd491d5d54bcf52a52b))
-* **deps:** update dependency langchain to v0.2.18 ([fbd7436](https://github.com/mx-space/core/commit/fbd743648a99364fd41ee22b8e03305d7fbec182))
-* **deps:** update dependency lru-cache to v11.0.1 ([26d3fd3](https://github.com/mx-space/core/commit/26d3fd3039afa9ddeb788d4d529ae76e9224e530))
-* **deps:** update dependency mongoose-lean-virtuals to v1 ([#2085](https://github.com/mx-space/core/issues/2085)) ([26e2385](https://github.com/mx-space/core/commit/26e23852191f9fe270021accec63cf25abde12b1))
-* **deps:** update dependency openai to v4.57.3 ([7984436](https://github.com/mx-space/core/commit/7984436d4dcd90c8be36e789892923871fc1d873))
-* **oauth:** can not disable oauth ([8fc72f1](https://github.com/mx-space/core/commit/8fc72f1795390187d0437d6db1e9ba05eb862fe5))
-
-
-
-## [7.0.6](https://github.com/mx-space/core/compare/v7.0.5...v7.0.6) (2024-09-05)
-
-
-### Bug Fixes
-
-* bark service push ([daa499e](https://github.com/mx-space/core/commit/daa499e6920d22ed008457f97e1ec36bc5896135))
-* **deps:** update dependency openai to v4.57.2 ([ebeed58](https://github.com/mx-space/core/commit/ebeed58cb55b3e78c81476740d71feecbf06b9df))
-* ip query function ([06a1963](https://github.com/mx-space/core/commit/06a196360f61aba89e02c6f2e93b62cf5bd2c9b4))
-
-
-
-## [7.0.5](https://github.com/mx-space/core/compare/v7.0.4...v7.0.5) (2024-09-04)
-
-
-### Bug Fixes
-
-* **auth:** append user id for session ([b41a35f](https://github.com/mx-space/core/commit/b41a35f67542d700d384460f1e5ab23acca76296))
-
-
-
-## [7.0.4](https://github.com/mx-space/core/compare/v7.0.3...v7.0.4) (2024-09-04)
-
-
-### Bug Fixes
-
-* auth jwt ([bba36c2](https://github.com/mx-space/core/commit/bba36c2d1aa532a5f4ccc8401f565fb89f8691c6))
-
-
-
-## [7.0.3](https://github.com/mx-space/core/compare/v7.0.2...v7.0.3) (2024-09-04)
-
-
-### Bug Fixes
-
-* auth ([311f2de](https://github.com/mx-space/core/commit/311f2de80cc56aa7a55963a86217fb65bf405528))
-
-
-
-## [7.0.2](https://github.com/mx-space/core/compare/v7.0.2-alpha.0...v7.0.2) (2024-09-04)
-
-
-### Bug Fixes
-
-* 0day auth ([3451d2f](https://github.com/mx-space/core/commit/3451d2f0652e24e0d58f1ff2742be35985fcbc7f))
-* **deps:** update dependency marked to v14.1.1 ([54307a0](https://github.com/mx-space/core/commit/54307a0897e0238d0dffd91a1fa27fe49094135f))
-* **deps:** update dependency mongoose to v8.6.1 ([cd391a4](https://github.com/mx-space/core/commit/cd391a4195b38173818a092a07d7c9a0bcab118a))
-* **deps:** update dependency nodemailer to v6.9.15 ([2a7fa37](https://github.com/mx-space/core/commit/2a7fa3726175eace801d58de85c730fac41dc2ad))
-* **deps:** update dependency openai to v4.57.1 ([74d2cd8](https://github.com/mx-space/core/commit/74d2cd8fb6b95517282b5689bd585dea871d25b7))
-
-
-
-## [7.0.2-alpha.0](https://github.com/mx-space/core/compare/v7.0.1...v7.0.2-alpha.0) (2024-09-03)
-
-
-### Bug Fixes
-
-* try debug fn error ([df9a164](https://github.com/mx-space/core/commit/df9a1646e6e02bedd4d9deb9dc1a7d8ea9c41602))
-
-
-
-## [7.0.1](https://github.com/mx-space/core/compare/v7.0.0...v7.0.1) (2024-09-03)
-
-
-### Bug Fixes
-
-* merge oauth and google support ([23f6acb](https://github.com/mx-space/core/commit/23f6acb1f01122264f18b049faca86903615b444))
-* server time cors ([ca63592](https://github.com/mx-space/core/commit/ca63592bd81c65e9d775e861dabaf1ceb7b8ab06))
-
-
-
-# [7.0.0](https://github.com/mx-space/core/compare/v7.0.0-alpha.3...v7.0.0) (2024-09-02)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @typegoose/auto-increment to v4.6.0 ([#2073](https://github.com/mx-space/core/issues/2073)) ([504f9eb](https://github.com/mx-space/core/commit/504f9ebfce9e890780e6e92046d3d7a1abcd2f27))
-* **deps:** update dependency @typegoose/typegoose to v12.7.0 ([#2074](https://github.com/mx-space/core/issues/2074)) ([d900c52](https://github.com/mx-space/core/commit/d900c52e54b0b794d1f0ee42c353f8b641ca0a5b))
-* **deps:** update dependency marked to v14.1.0 ([#2048](https://github.com/mx-space/core/issues/2048)) ([159ee56](https://github.com/mx-space/core/commit/159ee56b59a3f94626d9bbb81900023fa0f1cc73))
-* **deps:** update dependency mongoose to v8.6.0 ([#2064](https://github.com/mx-space/core/issues/2064)) ([778b706](https://github.com/mx-space/core/commit/778b70677490f9d92072f169344409f4319f8a8b))
-* **deps:** update dependency openai to v4.57.0 ([#2067](https://github.com/mx-space/core/issues/2067)) ([b4930db](https://github.com/mx-space/core/commit/b4930db778769ac742995710bbc2675d8bb76c9c))
-* **deps:** update dependency remove-markdown to v0.5.5 ([#2079](https://github.com/mx-space/core/issues/2079)) ([7726449](https://github.com/mx-space/core/commit/77264496e887375876619e0f8440229cb041f54e))
-
-
-
-# [7.0.0-alpha.3](https://github.com/mx-space/core/compare/v7.0.0-alpha.2...v7.0.0-alpha.3) (2024-09-02)
-
-
-### Bug Fixes
-
-* server time cors ([34613e5](https://github.com/mx-space/core/commit/34613e5dff745e6f59674e72dfc308d2ad5a3a6b))
-
-
-
-# [7.0.0-alpha.2](https://github.com/mx-space/core/compare/v7.0.0-alpha.1...v7.0.0-alpha.2) (2024-09-02)
-
-
-### Bug Fixes
-
-* trust host for auth ([d4c4337](https://github.com/mx-space/core/commit/d4c43375d9a0d3676d1ff6a87b402f39c0695d5e))
-
-
-
-# [7.0.0-alpha.1](https://github.com/mx-space/core/compare/v7.0.0-alpha.0...v7.0.0-alpha.1) (2024-09-02)
-
-
-
-# [7.0.0-alpha.0](https://github.com/mx-space/core/compare/v6.1.5...v7.0.0-alpha.0) (2024-09-02)
-
-
-### Bug Fixes
-
-* `localhost` for dev ([4b756f2](https://github.com/mx-space/core/commit/4b756f2b1ad27de102bf906699e1df6d2232ef86))
-* add handle for reader query ([02c213a](https://github.com/mx-space/core/commit/02c213a1761c48d309073774deb8e017b22aef70))
-* add missing field ([58917f6](https://github.com/mx-space/core/commit/58917f673e9feb2c8347e433483bc4c0e742feb6))
-* **auth:** add account for session ([29661e7](https://github.com/mx-space/core/commit/29661e75e64fa1e6ff6e1720e4991e780f08e2fa))
-* camcasekey ([5038c4d](https://github.com/mx-space/core/commit/5038c4d0423839b8a918dc61d1d2bbb01716eade))
-* **deps:** update dependency @babel/types to v7.25.6 ([519f573](https://github.com/mx-space/core/commit/519f573b1166c478fbcd36edda7abf7d3311696c))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.32 ([9dd3999](https://github.com/mx-space/core/commit/9dd3999ca9feead34601f60108819b4ea68a4675))
-* **deps:** update dependency mongoose to v8.5.5 ([46c04e8](https://github.com/mx-space/core/commit/46c04e841da7755c0c84c10e78ae6b8e75955bc6))
-* **deps:** update dependency openai to v4.56.2 ([c4df9c5](https://github.com/mx-space/core/commit/c4df9c59978e68371215566df7d94a8072d2b56b))
-* **deps:** update dependency remove-markdown to v0.5.3 ([e27e27b](https://github.com/mx-space/core/commit/e27e27b3b5a34209085895ea45cd500b0148c77d))
-* mongo agg query ([da283b4](https://github.com/mx-space/core/commit/da283b4730bf067b0ec2ede615e0197f844cca7a))
-* oauth profile for github ([19d1030](https://github.com/mx-space/core/commit/19d10300d11e6926e7d7279db0d8a29a2f1e4907))
-* transform case and export client type ([f7bce02](https://github.com/mx-space/core/commit/f7bce0279a01f5173f2c09c2624d883124db4b76))
-
-
-### Features
-
-* add reader id for presence ([33c48f7](https://github.com/mx-space/core/commit/33c48f743f8c0ddb2ddfa249d39c08eec3e3416c))
-* Auth.js integration ([#2054](https://github.com/mx-space/core/issues/2054)) ([6e50bee](https://github.com/mx-space/core/commit/6e50bee8dafbd7e56742b711d01a167c70f96f9a))
-
-
-
-## [6.1.5](https://github.com/mx-space/core/compare/v6.1.4...v6.1.5) (2024-08-28)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @antfu/install-pkg to v0.4.1 ([fc9eef9](https://github.com/mx-space/core/commit/fc9eef989e26d6f7574fafbbfc5054beb024a0eb))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.30 ([79b9c84](https://github.com/mx-space/core/commit/79b9c84797f23635e9fca26f46f3b96fea00a99b))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.31 ([0f8ae33](https://github.com/mx-space/core/commit/0f8ae3341baf39d319a92acfcec79278aa3426f7))
-* **deps:** update dependency @langchain/openai to v0.2.8 ([f2d247b](https://github.com/mx-space/core/commit/f2d247ba8c8d7118b1d23b52697963dcb41c0269))
-* **deps:** update dependency mongoose to v8.5.4 ([3b19040](https://github.com/mx-space/core/commit/3b190405652741d35c4b741a1df21eac08ef3cf0))
-* **deps:** update dependency openai to v4.56.1 ([b935ee5](https://github.com/mx-space/core/commit/b935ee5fe5211d36eb48db0d5e5008818acfb0cc))
-
-
-### Features
-
-* add ai target language ([638deb3](https://github.com/mx-space/core/commit/638deb30100c79ecb023a5e586f2960ed620e51c))
-
-
-
-## [6.1.4](https://github.com/mx-space/core/compare/v6.1.3...v6.1.4) (2024-08-23)
-
-
-### Bug Fixes
-
-* deps pin ([443e085](https://github.com/mx-space/core/commit/443e085dbda827f934b68e4bf32798a541a59fdd))
-* **deps:** update dependency @babel/types to v7.25.4 ([f2787fb](https://github.com/mx-space/core/commit/f2787fb23bf9c17b34b8f5e12defca9ccf18c11f))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.28 ([6bfe818](https://github.com/mx-space/core/commit/6bfe8181981c5510b3a9861b4af2cd3705f1a58b))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.29 ([845fea5](https://github.com/mx-space/core/commit/845fea599e6672fe6eb6508cc81e49840ef3a42f))
-* **deps:** update dependency @langchain/openai to v0.2.7 ([34383a9](https://github.com/mx-space/core/commit/34383a99cdc5444f4c8283e6e58a12f633c1137a))
-* **deps:** update dependency dayjs to v1.11.13 ([5c6fef3](https://github.com/mx-space/core/commit/5c6fef3d0bd70e82bbc7efbb417cd68a0e84c9b7))
-* **deps:** update dependency isbot to v5.1.17 ([4d86f4c](https://github.com/mx-space/core/commit/4d86f4c52ed14ff6240bd2c0046ba4e2e4fc7a40))
-* **deps:** update dependency langchain to v0.2.17 ([cddd3d9](https://github.com/mx-space/core/commit/cddd3d91c847ecaeccfb7c71470a738b0fdbe862))
-* **deps:** update dependency openai to v4.56.0 ([#2013](https://github.com/mx-space/core/issues/2013)) ([4cc5d07](https://github.com/mx-space/core/commit/4cc5d07a41ad9f5099d4ad319def791c1b3b3f6d))
-
-
-
-## [6.1.3](https://github.com/mx-space/core/compare/v6.1.2...v6.1.3) (2024-08-16)
-
-
-### Bug Fixes
-
-* cloned object ([9a585a1](https://github.com/mx-space/core/commit/9a585a1fa0cb565958eec1b469646bcc8885f337))
-
-
-
-## [6.1.2](https://github.com/mx-space/core/compare/v6.1.1...v6.1.2) (2024-08-16)
-
-
-### Bug Fixes
-
-* create module json first ([d466036](https://github.com/mx-space/core/commit/d4660361d8c92716ffe451467e739b59201f7a01))
-
-
-
-## [6.1.1](https://github.com/mx-space/core/compare/v6.1.0...v6.1.1) (2024-08-16)
-
-
-### Bug Fixes
-
-* import type of sharp ([32954a7](https://github.com/mx-space/core/commit/32954a709d838cc82e4a3a845f1b9c6cbc7cd2de))
-
-
-
-# [6.1.0](https://github.com/mx-space/core/compare/v6.0.3...v6.1.0) (2024-08-16)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @aws-sdk/client-s3 to v3.632.0 ([#1977](https://github.com/mx-space/core/issues/1977)) ([81c6af6](https://github.com/mx-space/core/commit/81c6af6a9ca2982cb06b56de15c41c300e69beb3))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.26 ([2d78a04](https://github.com/mx-space/core/commit/2d78a042ac295153c931cd6428c1e5b1f5b309cd))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.27 ([4392ad3](https://github.com/mx-space/core/commit/4392ad39f02450358006b4d7e39c7ebcb48fbc94))
-* **deps:** update dependency isbot to v5.1.15 ([08e8f2f](https://github.com/mx-space/core/commit/08e8f2f6a59fd8aea6b1d6826946fbca8a2583fa))
-* **deps:** update dependency isbot to v5.1.16 ([423a2ab](https://github.com/mx-space/core/commit/423a2ab009be43e5af51309f0d67613de5648d13))
-* **deps:** update dependency langchain to v0.2.14 ([b1f6a3d](https://github.com/mx-space/core/commit/b1f6a3df67516f58ac55b0075cfab9f7c8e854d3))
-* **deps:** update dependency langchain to v0.2.15 ([819727c](https://github.com/mx-space/core/commit/819727c1cc813e52cefe1f1b2320361d8f2ec202))
-* **deps:** update dependency langchain to v0.2.16 ([41d6974](https://github.com/mx-space/core/commit/41d697417efb604da3c36dd4c7b777d6fc51ae90))
-* **deps:** update dependency openai to v4.55.7 ([#1968](https://github.com/mx-space/core/issues/1968)) ([831d87c](https://github.com/mx-space/core/commit/831d87c9650bb44eede74c7739f5529c464f3f54))
-* **deps:** update dependency openai to v4.55.9 ([5d335fc](https://github.com/mx-space/core/commit/5d335fcf3f1f727e5436c8dd334e715f4bae898c))
-* **deps:** update nest monorepo to v10.4.1 (minor) ([#1994](https://github.com/mx-space/core/issues/1994)) ([3ee55a7](https://github.com/mx-space/core/commit/3ee55a778e1fcee59f2881f696268501b5e82785))
-* import circular ([a8a21d9](https://github.com/mx-space/core/commit/a8a21d99d3272c634167bec65757d1d3fbdefe44))
-* migrate db first ([b923c7f](https://github.com/mx-space/core/commit/b923c7f438a28ca19e30fb44788a9a4f09c2aaa2))
-
-
-### Features
-
-* image blur hash ([#2010](https://github.com/mx-space/core/issues/2010)) ([c27ee8c](https://github.com/mx-space/core/commit/c27ee8c28d19a65f7cedcd5874eae10b9417dcdb))
-
-
-
-## [6.0.3](https://github.com/mx-space/core/compare/v6.0.2...v6.0.3) (2024-08-08)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.25.2 (minor) ([#1928](https://github.com/mx-space/core/issues/1928)) ([075365b](https://github.com/mx-space/core/commit/075365bc4c469e01906b55ecfc3b51d86c7306c9))
-* **deps:** update dependency @aws-sdk/client-s3 to v3.624.0 ([#1921](https://github.com/mx-space/core/issues/1921)) ([b8bc581](https://github.com/mx-space/core/commit/b8bc581b6d10fd85276ef073608291a35f8e4189))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.23 ([0523626](https://github.com/mx-space/core/commit/0523626b5910e3ab4c68d72181d9c4820a933ab7))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.24 ([b6e7a54](https://github.com/mx-space/core/commit/b6e7a54bde27a69849e74185871db8f39004f3c3))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.25 ([d61b5be](https://github.com/mx-space/core/commit/d61b5be060dd240c97137396feb69697645c18ae))
-* **deps:** update dependency @langchain/openai to v0.2.6 ([9afa15d](https://github.com/mx-space/core/commit/9afa15dd74e58ed173aabf107976ba6064e44cc5))
-* **deps:** update dependency axios-retry to v4.5.0 ([#1954](https://github.com/mx-space/core/issues/1954)) ([7fc6768](https://github.com/mx-space/core/commit/7fc6768d3cae5432ef9b76d7e212e8fa5b4aeac6))
-* **deps:** update dependency cache-manager to v5.7.5 ([ccbf2ea](https://github.com/mx-space/core/commit/ccbf2ea9c86950e43f1009212659b7814323fb75))
-* **deps:** update dependency cache-manager to v5.7.6 ([45bd1cc](https://github.com/mx-space/core/commit/45bd1cc055598773163340e8fe23cdb81b66f3b8))
-* **deps:** update dependency inquirer to v10.1.7 ([cb62db5](https://github.com/mx-space/core/commit/cb62db54d588fcfdedecef4fd61137b4e6ba0af7))
-* **deps:** update dependency inquirer to v10.1.8 ([1a13a7b](https://github.com/mx-space/core/commit/1a13a7bd419cf5521c7e78490b4a5399b6432a18))
-* **deps:** update dependency isbot to v5.1.14 ([313fe80](https://github.com/mx-space/core/commit/313fe8015e0d498f44530ebb435e9a9d3250479b))
-* **deps:** update dependency langchain to v0.2.13 ([32a65cf](https://github.com/mx-space/core/commit/32a65cfb4871710212e143a6709f05622e96af67))
-* **deps:** update dependency mongoose-lean-getters to v2.1.1 ([492381d](https://github.com/mx-space/core/commit/492381d3f682e8adcd2eeec8c1c295860a46e06b))
-* **deps:** update dependency openai to v4.54.0 ([#1949](https://github.com/mx-space/core/issues/1949)) ([4647155](https://github.com/mx-space/core/commit/46471552d8022ede6987f0f9a0626e5858592ffb))
-* **deps:** update dependency qs to v6.13.0 ([#1946](https://github.com/mx-space/core/issues/1946)) ([967d2e2](https://github.com/mx-space/core/commit/967d2e27e15b3dd330a122e7c3ce71906916f54f))
-* **deps:** update dependency remove-markdown to v0.5.2 ([#1948](https://github.com/mx-space/core/issues/1948)) ([8ff229f](https://github.com/mx-space/core/commit/8ff229fbee7d19307ad24f3d97263a061fb66171))
-* lint ([ccdf213](https://github.com/mx-space/core/commit/ccdf213748f2a9f49cdb7e2663c1defc1a359395))
-* lint ([c46ce87](https://github.com/mx-space/core/commit/c46ce87c8f7507889e2c0e843f6291360b5273b2))
-
-
-### Features
-
-* link allow subpath option ([327d30d](https://github.com/mx-space/core/commit/327d30d6756d6e172e4682428a1ca5b254852022))
-
-
-
-## [6.0.2](https://github.com/mx-space/core/compare/v6.0.1...v6.0.2) (2024-08-01)
-
-
-### Bug Fixes
-
-* **db:** use process.env as the default value of command option ([#1941](https://github.com/mx-space/core/issues/1941)) ([b19493a](https://github.com/mx-space/core/commit/b19493af0e16a115de7079b0ddd048e66f53746b))
-* **deps:** update babel monorepo to v7.24.8 ([d8ee22f](https://github.com/mx-space/core/commit/d8ee22ffd382dcd7217df62d5cadfcee076d827a))
-* **deps:** update babel monorepo to v7.24.9 ([a49e3b9](https://github.com/mx-space/core/commit/a49e3b980e4eba3fb1ac587cb3139b929634d151))
-* **deps:** update dependency @aws-sdk/client-s3 to v3.614.0 ([#1874](https://github.com/mx-space/core/issues/1874)) ([2039a3d](https://github.com/mx-space/core/commit/2039a3d5f0d6eed78ad8f18f15e5dfc8038ef410))
-* **deps:** update dependency @aws-sdk/client-s3 to v3.617.0 ([#1909](https://github.com/mx-space/core/issues/1909)) ([3d409e8](https://github.com/mx-space/core/commit/3d409e8acfbdf3a3f3b6e7b7324b75b0271d3bf9))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.15 ([43fdd8e](https://github.com/mx-space/core/commit/43fdd8efe9ebfaacd062ff2f232b7feac5f0cf5d))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.16 ([cdbc517](https://github.com/mx-space/core/commit/cdbc51740c760299c6efc5c90e1ec12f6062f65e))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.18 ([abcae1f](https://github.com/mx-space/core/commit/abcae1fc4bac6d9f0520cc2767ab4977716e57b5))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.20 ([e7dbd6c](https://github.com/mx-space/core/commit/e7dbd6c8edf75ce1031e891983c01b3bf0d5c02f))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.21 ([ede03ed](https://github.com/mx-space/core/commit/ede03ed281c8ef9cdac8f362e1418a513686501a))
-* **deps:** update dependency @innei/pretty-logger-nestjs to v0.3.3 ([ad67cb1](https://github.com/mx-space/core/commit/ad67cb10a4e359a56d5973934603a294bc715eca))
-* **deps:** update dependency @langchain/openai to v0.2.4 ([#1829](https://github.com/mx-space/core/issues/1829)) ([72c4120](https://github.com/mx-space/core/commit/72c412001afa51cb5f66fa61dff6a7f79ac513e2))
-* **deps:** update dependency @langchain/openai to v0.2.5 ([10ae0c5](https://github.com/mx-space/core/commit/10ae0c5d23817fb4019a75e16e990f528282c5f1))
-* **deps:** update dependency @nestjs/schedule to v4.1.0 ([#1855](https://github.com/mx-space/core/issues/1855)) ([b0603b9](https://github.com/mx-space/core/commit/b0603b95047d2b751a2874adb6000f5525710c73))
-* **deps:** update dependency @nestjs/throttler to v6 ([#1914](https://github.com/mx-space/core/issues/1914)) ([e2f0e57](https://github.com/mx-space/core/commit/e2f0e57062f696e7a591da123a3b515d576aac22))
-* **deps:** update dependency @simplewebauthn/server to v10.0.1 ([#1902](https://github.com/mx-space/core/issues/1902)) ([84dce71](https://github.com/mx-space/core/commit/84dce71f42a5c9a092e3c713cac22a74c86ce109))
-* **deps:** update dependency @typegoose/auto-increment to v4.5.0 ([#1877](https://github.com/mx-space/core/issues/1877)) ([d486ab8](https://github.com/mx-space/core/commit/d486ab85cd6b5c7ed5ab3ae2f8e2e953f1293b9c))
-* **deps:** update dependency @typegoose/typegoose to v12.6.0 ([#1878](https://github.com/mx-space/core/issues/1878)) ([06592df](https://github.com/mx-space/core/commit/06592dffd0d56fae2780b12102fd0231d1f80388))
-* **deps:** update dependency axios-retry to v4.4.2 ([#1903](https://github.com/mx-space/core/issues/1903)) ([8ca0d0f](https://github.com/mx-space/core/commit/8ca0d0fc11397b5ba35f63699de6f00ef98341b9))
-* **deps:** update dependency cache-manager to v5.7.2 ([#1856](https://github.com/mx-space/core/issues/1856)) ([3d1be30](https://github.com/mx-space/core/commit/3d1be30f8b6b0cf57b7f8c9167c6e45c459a7a00))
-* **deps:** update dependency cache-manager to v5.7.3 ([bdfe9c6](https://github.com/mx-space/core/commit/bdfe9c60cc8558f90892f0ea000c68a137608cb0))
-* **deps:** update dependency cache-manager to v5.7.4 ([5790182](https://github.com/mx-space/core/commit/5790182c74b2adcb3660299a9a32b4297a5e96e0))
-* **deps:** update dependency dayjs to v1.11.12 ([99bf0a9](https://github.com/mx-space/core/commit/99bf0a97e29f5f75905fed77acabea8fc0172a5c))
-* **deps:** update dependency inquirer to v10 ([#1861](https://github.com/mx-space/core/issues/1861)) ([1e7ab05](https://github.com/mx-space/core/commit/1e7ab055b28a393d188ac204c55364c509ee1a00))
-* **deps:** update dependency inquirer to v10.0.1 ([ac35b26](https://github.com/mx-space/core/commit/ac35b263c4e6ecc7ffad5ce78c54ef0c823600f0))
-* **deps:** update dependency inquirer to v10.0.4 ([0628932](https://github.com/mx-space/core/commit/06289328e30fba323133f71ceff8a1a93238f7df))
-* **deps:** update dependency inquirer to v10.1.2 ([#1904](https://github.com/mx-space/core/issues/1904)) ([0c163c9](https://github.com/mx-space/core/commit/0c163c990a4566f56c426a44aa60d3564427052b))
-* **deps:** update dependency inquirer to v10.1.4 ([519f5c0](https://github.com/mx-space/core/commit/519f5c08480ae3505da670a7c8549edbe501e50a))
-* **deps:** update dependency inquirer to v10.1.5 ([933aa17](https://github.com/mx-space/core/commit/933aa17d556d2c1e051c0f0140d37d3a8a9d0769))
-* **deps:** update dependency inquirer to v10.1.6 ([5e39aa1](https://github.com/mx-space/core/commit/5e39aa1d059d85a94e7e543e8d10781b7231e580))
-* **deps:** update dependency isbot to v5.1.12 ([b72b9d3](https://github.com/mx-space/core/commit/b72b9d3c1cdcc71843d6a18efc825cb1ad8ce41c))
-* **deps:** update dependency isbot to v5.1.13 ([68bbdfa](https://github.com/mx-space/core/commit/68bbdfa88486077c34ffc70b22be360f937b2a8c))
-* **deps:** update dependency langchain to v0.2.10 ([9855e24](https://github.com/mx-space/core/commit/9855e24534f606d0ccd80731223532b98b3edfe6))
-* **deps:** update dependency langchain to v0.2.11 ([d0bc8cf](https://github.com/mx-space/core/commit/d0bc8cfb6ce65da70c804f7c15efe50a624b2ccd))
-* **deps:** update dependency langchain to v0.2.12 ([36200bf](https://github.com/mx-space/core/commit/36200bf762fffae65cbf53a08ffe510335d68c8c))
-* **deps:** update dependency langchain to v0.2.9 ([84f5985](https://github.com/mx-space/core/commit/84f5985546ec7e4262a22880490695a280365f05))
-* **deps:** update dependency lru-cache to v10.4.3 ([#1858](https://github.com/mx-space/core/issues/1858)) ([14a6a5c](https://github.com/mx-space/core/commit/14a6a5ce5cccd3a95cc591548d4c19e1e7a6c6b5))
-* **deps:** update dependency lru-cache to v11 ([#1915](https://github.com/mx-space/core/issues/1915)) ([d5dbd1a](https://github.com/mx-space/core/commit/d5dbd1adfdac6a97424a9642f3b54e18cc4f736f))
-* **deps:** update dependency marked to v13.0.3 ([edd2b0c](https://github.com/mx-space/core/commit/edd2b0cd9573e601e0f0ba6eed14b9db84e76772))
-* **deps:** update dependency mongoose to v8.5.1 ([#1879](https://github.com/mx-space/core/issues/1879)) ([31ec980](https://github.com/mx-space/core/commit/31ec980cca954b87e6be7b1130f535c68d23eebb))
-* **deps:** update dependency mongoose to v8.5.2 ([9347595](https://github.com/mx-space/core/commit/93475953afd96568501fce56fbe97a7ab2d7a5b7))
-* **deps:** update dependency mongoose-aggregate-paginate-v2 to v1.1.1 ([#1859](https://github.com/mx-space/core/issues/1859)) ([0321bcd](https://github.com/mx-space/core/commit/0321bcd031b3ba842cb462f97d01db0985395385))
-* **deps:** update dependency mongoose-aggregate-paginate-v2 to v1.1.2 ([#1905](https://github.com/mx-space/core/issues/1905)) ([ee4a6e3](https://github.com/mx-space/core/commit/ee4a6e3ddf23665393666e80d25198c965b6ec06))
-* **deps:** update dependency mongoose-paginate-v2 to v1.8.3 ([#1906](https://github.com/mx-space/core/issues/1906)) ([8bfd5c8](https://github.com/mx-space/core/commit/8bfd5c817e4f726b55c916184d070cc0ba72c57f))
-* **deps:** update dependency openai to v4.52.7 ([4e42bee](https://github.com/mx-space/core/commit/4e42bee48ba37f5695a1db98142891e126f4a003))
-* **deps:** update dependency openai to v4.53.1 ([#1911](https://github.com/mx-space/core/issues/1911)) ([07061b8](https://github.com/mx-space/core/commit/07061b80ca47d327c4285c9e904b2eef8ff9bf45))
-* **deps:** update dependency openai to v4.53.2 ([ae47390](https://github.com/mx-space/core/commit/ae47390c55176979957313321a8a117d83613981))
-* **deps:** update dependency qs to v6.12.3 ([b66726d](https://github.com/mx-space/core/commit/b66726d5ed8f21bcd23b563d9fd33592a285f3f5))
-* update clerk auth ([2fd444d](https://github.com/mx-space/core/commit/2fd444d7009e1b8cd598d68bd5b3127027fd80d4))
-
-
-
-## [6.0.1](https://github.com/mx-space/core/compare/v6.0.0...v6.0.1) (2024-07-07)
-
-
-### Bug Fixes
-
-* **deps:** update algoliasearch-client-javascript monorepo to v4.24.0 ([#1853](https://github.com/mx-space/core/issues/1853)) ([7478e9d](https://github.com/mx-space/core/commit/7478e9d0fa8cb245468cb3a1e074de069927f2a8))
-* **deps:** update dependency @aws-sdk/client-s3 to v3.609.0 ([#1854](https://github.com/mx-space/core/issues/1854)) ([204f855](https://github.com/mx-space/core/commit/204f855c06a5986897595565c55fefb068caf79b))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.14 ([a383dc2](https://github.com/mx-space/core/commit/a383dc21c23f06f2b27501430f17bc6bce0b8ae9))
-* **deps:** update dependency isbot to v5.1.11 ([0fca0d3](https://github.com/mx-space/core/commit/0fca0d33bc506d7da45297c01f467a25652fe5d3))
-* **deps:** update dependency langchain to v0.2.8 ([cc155ab](https://github.com/mx-space/core/commit/cc155ab78582111b0ae2fbaa9ea551fb4739b35d))
-* **deps:** update dependency linkedom to v0.18.4 ([d7bf117](https://github.com/mx-space/core/commit/d7bf117a8b4ac6108a9dd32cedfce114dcbbaa00))
-* **deps:** update dependency marked to v13.0.2 ([#1832](https://github.com/mx-space/core/issues/1832)) ([efd3cc5](https://github.com/mx-space/core/commit/efd3cc505498d9f9d5ca2c50856a7be1ab5a4f28))
-* **deps:** update dependency mongoose to v8.4.5 ([61e1f06](https://github.com/mx-space/core/commit/61e1f06b9e12f1dff8996aa56090da135d4243b3))
-* **deps:** update dependency mongoose-aggregate-paginate-v2 to v1.0.42 ([6a4e502](https://github.com/mx-space/core/commit/6a4e5027c4ad6af26628702cc191645913f26628))
-* **deps:** update dependency openai to v4.52.3 ([1febace](https://github.com/mx-space/core/commit/1febace72501f917c648731766e683506fb1458c))
-* **deps:** update dependency qs to v6.12.2 ([4f737a9](https://github.com/mx-space/core/commit/4f737a983490dca874d0b3f546b05f8c8da25313))
-* **deps:** update nest monorepo ([c30b6c1](https://github.com/mx-space/core/commit/c30b6c1486a8734e26054372ab5a3d29c154227d))
-* **update:** bad credentials when requesting with empty github token ([#1847](https://github.com/mx-space/core/issues/1847)) ([63f4551](https://github.com/mx-space/core/commit/63f4551da9c5a2b25c2db102a70e988ff3808a1e))
-
-
-
-# [6.0.0](https://github.com/mx-space/core/compare/v5.8.4...v6.0.0) (2024-06-22)
-
-
-### Bug Fixes
-
-* cleanTempDirectory not remake trash directory ([#1824](https://github.com/mx-space/core/issues/1824)) ([4877459](https://github.com/mx-space/core/commit/4877459edbdeba975ddd57874856f8a869001d28))
-* crypto compatible ([503f079](https://github.com/mx-space/core/commit/503f0798e6a6ba44b11d0826b2886565c7944c19))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.12 ([772f6f7](https://github.com/mx-space/core/commit/772f6f79653272ba19608cc765c48c27c8b4209b))
-* **deps:** update dependency @nestjs/throttler to v5.2.0 ([#1806](https://github.com/mx-space/core/issues/1806)) ([bfa25c0](https://github.com/mx-space/core/commit/bfa25c0d06e084a413990d4400e1b8e6121ded32))
-* **deps:** update dependency axios-retry to v4.4.1 ([#1825](https://github.com/mx-space/core/issues/1825)) ([0585033](https://github.com/mx-space/core/commit/05850331effd5d5e0341db8c507bed3c269cf7f8))
-* **deps:** update dependency mongoose to v8.4.3 ([79c7585](https://github.com/mx-space/core/commit/79c7585ba7b5c156af0ba94024572f68e18d7a6e))
-* **deps:** update dependency nodemailer to v6.9.14 ([416f933](https://github.com/mx-space/core/commit/416f9331621ac92169acd11459f35cb975306225))
-
-
-
-## [5.8.4](https://github.com/mx-space/core/compare/v5.8.3...v5.8.4) (2024-06-14)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.11 ([b88b7bf](https://github.com/mx-space/core/commit/b88b7bf8a1df9081e3a1db0e042a424c7e917753))
-* **deps:** update dependency openai to v4.51.0 ([#1791](https://github.com/mx-space/core/issues/1791)) ([78c03e3](https://github.com/mx-space/core/commit/78c03e3a76c0419c79c4da0bd81be84cfc052f2e))
-
-
-### Features
-
-* support `gh_token` closes 1758 ([39e10ef](https://github.com/mx-space/core/commit/39e10efcd1113e475b03cb055321a1b58f9306b3))
-
-
-
-## [5.8.3](https://github.com/mx-space/core/compare/v5.8.2...v5.8.3) (2024-06-12)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.24.7 ([37e1a83](https://github.com/mx-space/core/commit/37e1a83d98c50f0dbe7d66f415097e2458a8f857))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.10 ([f2eb9c9](https://github.com/mx-space/core/commit/f2eb9c93f453dddb7f0c4371e80edfccf27b88f4))
-* **deps:** update dependency @fastify/multipart to v8.3.0 ([#1786](https://github.com/mx-space/core/issues/1786)) ([0c40479](https://github.com/mx-space/core/commit/0c40479502e89085ad67dbf720aef2c5f016452a))
-* **deps:** update dependency @langchain/openai to v0.1.2 ([#1754](https://github.com/mx-space/core/issues/1754)) ([e0a6fcf](https://github.com/mx-space/core/commit/e0a6fcf309b6183f3a1c72e718ad805e53641569))
-* **deps:** update dependency @langchain/openai to v0.1.3 ([ca985b9](https://github.com/mx-space/core/commit/ca985b9cf2bb1886885f68957bb3ec91a1cf96b6))
-* **deps:** update dependency axios-retry to v4.4.0 ([#1772](https://github.com/mx-space/core/issues/1772)) ([66bbe14](https://github.com/mx-space/core/commit/66bbe14da48eee6dd7ac8b6a0f7e21618639a85f))
-* **deps:** update dependency cache-manager to v5.6.1 ([#1784](https://github.com/mx-space/core/issues/1784)) ([c90dafa](https://github.com/mx-space/core/commit/c90dafae12d1cc452947cabdf538c789326cd9b2))
-* **deps:** update dependency cache-manager-ioredis-yet to v2.1.1 ([#1785](https://github.com/mx-space/core/issues/1785)) ([462a6a8](https://github.com/mx-space/core/commit/462a6a87fcbd63e44cb0d5b57bac7723be59a266))
-* **deps:** update dependency isbot to v5.1.9 ([514bb52](https://github.com/mx-space/core/commit/514bb52f352d32b4b133cee98679b59f691bee1a))
-* **deps:** update dependency langchain to v0.2.5 ([2930d0c](https://github.com/mx-space/core/commit/2930d0c812a4df67d05c6df9655b376c85d33398))
-* **deps:** update dependency linkedom to v0.18.3 ([098d726](https://github.com/mx-space/core/commit/098d72640e52dc7a79187294581a5e0bc95d8a8d))
-* **deps:** update dependency openai to v4.49.0 ([#1774](https://github.com/mx-space/core/issues/1774)) ([89b034b](https://github.com/mx-space/core/commit/89b034b8d2091fd49e89896ddaf091d2ff1f2c5e))
-* **deps:** update dependency openai to v4.49.1 ([e8f66d2](https://github.com/mx-space/core/commit/e8f66d28f2a618d0ffa6e483300e17942a620c62))
-* master avatar in recent activity comments cannot be displayed ([#1794](https://github.com/mx-space/core/issues/1794)) ([1750340](https://github.com/mx-space/core/commit/175034031f00591631ffae0edcabedddeddfea2d))
-
-
-
-## [5.8.2](https://github.com/mx-space/core/compare/v5.8.1...v5.8.2) (2024-06-04)
-
-
-### Bug Fixes
-
-* delete file with EXDEV issue ([#1770](https://github.com/mx-space/core/issues/1770)) ([b3dfbdf](https://github.com/mx-space/core/commit/b3dfbdf99628ae685855ecf20cf1782ddc8d9b25))
-* **deps:** update nest monorepo to v10.3.9 ([#1768](https://github.com/mx-space/core/issues/1768)) ([d627d38](https://github.com/mx-space/core/commit/d627d38b69cb4d88d3497c05c50602c4b8f9dfa2))
-
-
-
-## [5.8.1](https://github.com/mx-space/core/compare/v5.8.0...v5.8.1) (2024-06-02)
-
-
-### Bug Fixes
-
-* ai summary language detect ([8764815](https://github.com/mx-space/core/commit/876481529b2badf0adeb192c6c69b5a3216ea072))
-* check slug length ([6a58262](https://github.com/mx-space/core/commit/6a5826248caff1458e7cb09b933d28d5f798fc55))
-* **deps:** update dependency inquirer to v9.2.23 ([eae2f50](https://github.com/mx-space/core/commit/eae2f5000705a0cf16ad50b70b7bc88ef9173f7e))
-* **deps:** update dependency langchain to v0.2.4 ([08f30b5](https://github.com/mx-space/core/commit/08f30b53ac4e7807c43c3ba2f2ef668dd8119ae9))
-* **deps:** update dependency linkedom to v0.18.2 ([d24818a](https://github.com/mx-space/core/commit/d24818a62c8c96c15181639be446011c7a9205d6))
-* **deps:** update dependency mongoose to v8.4.1 ([e37c986](https://github.com/mx-space/core/commit/e37c9869ee91ccecbee4b406bd837a8ec5ab5736))
-* **deps:** update dependency openai to v4.47.3 ([7996928](https://github.com/mx-space/core/commit/79969280277f91b493f86d6eab365b95bd1a987f))
-
-
-
-# [5.8.0](https://github.com/mx-space/core/compare/v5.7.12...v5.8.0) (2024-05-30)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @langchain/openai to v0.0.34 ([#1734](https://github.com/mx-space/core/issues/1734)) ([98ac7c0](https://github.com/mx-space/core/commit/98ac7c04130d15464dd394bb025db4e8430818be))
-* **deps:** update dependency isbot to v5.1.8 ([d83ad94](https://github.com/mx-space/core/commit/d83ad9473c3fabac3664c55ff14a8e3ce41af871))
-* **deps:** update dependency langchain to v0.2.2 ([f9e1f57](https://github.com/mx-space/core/commit/f9e1f57041ae0d06f73c574c99acc2d32c896f25))
-* **deps:** update dependency langchain to v0.2.3 ([a574cb0](https://github.com/mx-space/core/commit/a574cb00af73ae688bb261aeeb811e71f332bc49))
-* **deps:** update dependency mongoose-paginate-v2 to v1.8.2 ([e2f1e49](https://github.com/mx-space/core/commit/e2f1e4957f125c797591b18e29368f53210fdf93))
-* **deps:** update dependency openai to v4.47.2 ([b4f7857](https://github.com/mx-space/core/commit/b4f785722b74e7fff50e12b2f0190afc9f9d0022))
-* **deps:** update dependency ua-parser-js to v1.0.38 ([254ee4c](https://github.com/mx-space/core/commit/254ee4cb4791964ee4d3a65bb8f0ebc7fcbf48fb))
-
-
-
-## [5.7.12](https://github.com/mx-space/core/compare/v5.7.11...v5.7.12) (2024-05-28)
-
-
-### Bug Fixes
-
-* cache aggregate query with querykey ([32230bc](https://github.com/mx-space/core/commit/32230bc7da296ccf539c34e4a66d083ca2cf6a3b))
-* **deps:** update babel monorepo to v7.24.6 ([6881179](https://github.com/mx-space/core/commit/68811793186dc13e99229ae50dec3bb8576cc38f))
-* **deps:** update dependency @aws-sdk/client-s3 to v3.583.0 ([#1727](https://github.com/mx-space/core/issues/1727)) ([2874eca](https://github.com/mx-space/core/commit/2874eca3ef4091597fe1e5877c95a588ca4b17e5))
-
-
-
-## [5.7.11](https://github.com/mx-space/core/compare/v5.7.10...v5.7.11) (2024-05-24)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @aws-sdk/client-s3 to v3.582.0 ([#1723](https://github.com/mx-space/core/issues/1723)) ([2efcbe8](https://github.com/mx-space/core/commit/2efcbe85f0bac5ae61b8458cd8116dd983d3ac74))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.8 ([fc0d978](https://github.com/mx-space/core/commit/fc0d978e2dd76a53e0f4354937054de7495d9704))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.9 ([4cc19c2](https://github.com/mx-space/core/commit/4cc19c2f36b927161263f5888b3061b2f55b6ac2))
-* **deps:** update dependency cache-manager to v5.5.3 ([d1b0097](https://github.com/mx-space/core/commit/d1b00977d2ec1c3e6c9468bee09d50c34ba3a395))
-* **deps:** update dependency isbot to v5.1.7 ([b6efc7b](https://github.com/mx-space/core/commit/b6efc7ba26f48fd965afd16448eb1e3d6181c874))
-* get all link ([dbf7c24](https://github.com/mx-space/core/commit/dbf7c2460706919c9282a54744ec4d42bdb479e2))
-
-
-
-## [5.7.10](https://github.com/mx-space/core/compare/v5.7.9...v5.7.10) (2024-05-22)
-
-
-### Bug Fixes
-
-* asset push script ([f433ae7](https://github.com/mx-space/core/commit/f433ae7a455d517e7317e2545d51118198740ce3))
-* **deps:** update dependency axios-retry to v4.3.0 ([#1718](https://github.com/mx-space/core/issues/1718)) ([df4fc28](https://github.com/mx-space/core/commit/df4fc280a98e6b1cf64eaecdc7a5acf5d79fcd04))
-
-
-
-## [5.7.9](https://github.com/mx-space/core/compare/v5.7.8...v5.7.9) (2024-05-21)
-
-
-### Bug Fixes
-
-* comment model url setter ([16b919c](https://github.com/mx-space/core/commit/16b919cf900f708280e1fe9c806aa054d5a11268))
-
-
-
-## [5.7.8](https://github.com/mx-space/core/compare/v5.7.7...v5.7.8) (2024-05-20)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @typegoose/auto-increment to v4.4.0 ([#1714](https://github.com/mx-space/core/issues/1714)) ([a10dd5b](https://github.com/mx-space/core/commit/a10dd5b7e85f756b7691355f964ff709118831cf))
-* downgrade snakecase deps ([66a07e6](https://github.com/mx-space/core/commit/66a07e625210fdd30f6f217b9bb530861660454c))
-
-
-
-## [5.7.7](https://github.com/mx-space/core/compare/v5.7.6...v5.7.7) (2024-05-20)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @aws-sdk/client-s3 to v3.577.0 ([#1688](https://github.com/mx-space/core/issues/1688)) ([4d883ee](https://github.com/mx-space/core/commit/4d883ee3e439bdde131ebab09139046be8e4105e))
-* **deps:** update dependency commander to v12.1.0 ([#1713](https://github.com/mx-space/core/issues/1713)) ([3c30c1f](https://github.com/mx-space/core/commit/3c30c1f82be2f764c43f8257a0600b214026d22c))
-* **deps:** update dependency inquirer to v9.2.22 ([43e6331](https://github.com/mx-space/core/commit/43e6331d6eff538f641c2c4275290bf85f75aa27))
-* **deps:** update dependency linkedom to v0.18.0 ([#1696](https://github.com/mx-space/core/issues/1696)) ([1d4ced1](https://github.com/mx-space/core/commit/1d4ced10429d4c739fd84e2b7589dab1182dab91))
-* **deps:** update dependency mongoose to v8.4.0 ([#1709](https://github.com/mx-space/core/issues/1709)) ([abb912b](https://github.com/mx-space/core/commit/abb912b22ed8c42b4c26ae119236cfb86906e0fc))
-* throw error when delete file exception ([5da084d](https://github.com/mx-space/core/commit/5da084d6a0ead1ef4ecddf6a24c06cd10e923a07))
-
-
-
-## [5.7.6](https://github.com/mx-space/core/compare/v5.7.5...v5.7.6) (2024-05-17)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.6 ([289e3cd](https://github.com/mx-space/core/commit/289e3cd673c973da018dfcba802d79f0810cb93d))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.7 ([06c0050](https://github.com/mx-space/core/commit/06c00502d3e4642daee86bdade84d007bd3fabd3))
-* **deps:** update dependency axios-retry to v4.2.0 ([#1705](https://github.com/mx-space/core/issues/1705)) ([9f20ba2](https://github.com/mx-space/core/commit/9f20ba2ff10629ee28a3c44726416b644da8473f))
-* **deps:** update dependency inquirer to v9.2.21 ([57ece57](https://github.com/mx-space/core/commit/57ece57c1395529792d76479f2a9148e8f4d1387))
-* **deps:** update dependency mongoose to v8.3.5 ([eea7608](https://github.com/mx-space/core/commit/eea7608102df46131a507de9409d3da1076cb489))
-* **deps:** update dependency mongoose-paginate-v2 to v1.8.1 ([#1708](https://github.com/mx-space/core/issues/1708)) ([0aef6e0](https://github.com/mx-space/core/commit/0aef6e025a886a1ab1cd8a9f84f35fcfee5a8191))
-* **deps:** update dependency openai to v4.47.1 ([#1676](https://github.com/mx-space/core/issues/1676)) ([8892442](https://github.com/mx-space/core/commit/88924422a85945c33a6b68f2af51b28cf5611e8a))
-
-
-
-## [5.7.5](https://github.com/mx-space/core/compare/v5.7.4...v5.7.5) (2024-05-13)
-
-
-### Bug Fixes
-
-* docker test in CI failed ([#1695](https://github.com/mx-space/core/issues/1695)) ([33e86c8](https://github.com/mx-space/core/commit/33e86c8669b5cb51cec3b86dc16d690170f6f770))
-
-
-
-## [5.7.4](https://github.com/mx-space/core/compare/v5.7.3...v5.7.4) (2024-05-11)
-
-
-### Bug Fixes
-
-* jud is array or object ([5fd79a8](https://github.com/mx-space/core/commit/5fd79a892ba49da3119f2fec94d7002e2d0f43b2))
-* passkey origin ([b2fc18d](https://github.com/mx-space/core/commit/b2fc18d91b7fd6873694a34ce3ae6d94562a067e))
-
-
-
-## [5.7.3](https://github.com/mx-space/core/compare/v5.7.2...v5.7.3) (2024-05-11)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.4 ([0e69856](https://github.com/mx-space/core/commit/0e698569b3ad4225f048a4967cf0b3ac877a21ea))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.5 ([30a8548](https://github.com/mx-space/core/commit/30a8548705514c3981ad29f7c9091abd6b28c237))
-* **deps:** update dependency @fastify/static to v7.0.4 ([30e72f1](https://github.com/mx-space/core/commit/30e72f1043c7c7dad18a2377d01eb510125b364d))
-* **deps:** update dependency mongoose to v8.3.4 ([b50e7ef](https://github.com/mx-space/core/commit/b50e7efa217b6537c3109d4bc31c6a85e2242287))
-* lru cache set ([6125030](https://github.com/mx-space/core/commit/61250304c7348a453e745dc2bdef770ddd1f2157))
-
-
-### Features
-
-* add bark push settings ([784c6cd](https://github.com/mx-space/core/commit/784c6cd780f366bc60182c5c3eca0069f80d7b7a))
-* add prod to dump memory ([5fc7fcd](https://github.com/mx-space/core/commit/5fc7fcdf648dd51a211314e63f88880d1eebc8be))
-
-
-
-## [5.7.2](https://github.com/mx-space/core/compare/v5.7.1...v5.7.2) (2024-05-07)
-
-
-### Bug Fixes
-
-* bypass `OPTIONS` ([1a85d54](https://github.com/mx-space/core/commit/1a85d5400aca266f3d542f12fc735f6a23b9ccf5))
-* **deps:** update dependency @aws-sdk/client-s3 to v3.569.0 ([#1651](https://github.com/mx-space/core/issues/1651)) ([7c56488](https://github.com/mx-space/core/commit/7c564886aa77b384057beb688a61ce60e7215f5f))
-* **deps:** update dependency openai to v4.40.2 ([#1667](https://github.com/mx-space/core/issues/1667)) ([ed153a8](https://github.com/mx-space/core/commit/ed153a80ce7886ae8161f26f8502edc81939bb04))
-
-
-
-## [5.7.1](https://github.com/mx-space/core/compare/v5.7.0...v5.7.1) (2024-05-04)
-
-
-### Bug Fixes
-
-* need auth to generate ai content ([ef85afe](https://github.com/mx-space/core/commit/ef85afed522589bf8b3d9b9ae1792ec1dd4483f5))
-
-
-
-# [5.7.0](https://github.com/mx-space/core/compare/v5.6.7...v5.7.0) (2024-05-04)
-
-
-### Features
-
-* ai writer helper module ([f8909bd](https://github.com/mx-space/core/commit/f8909bd8c95eb90d995f848210c784be18ce9053))
-
-
-
-## [5.6.7](https://github.com/mx-space/core/compare/v5.6.6...v5.6.7) (2024-05-03)
-
-
-### Bug Fixes
-
-* handle deleted content in get like data ([911640b](https://github.com/mx-space/core/commit/911640b32b26711670b68fd0b87bd0884c53df2a))
-
-
-
-## [5.6.6](https://github.com/mx-space/core/compare/v5.6.5...v5.6.6) (2024-05-03)
-
-
-### Bug Fixes
-
-* add logger info ([bed1997](https://github.com/mx-space/core/commit/bed19977ed433b5661d2123615c2a1b51c471654))
-* ai summarize ([1707c01](https://github.com/mx-space/core/commit/1707c019de028078905d93737fa13c89fb7e51b3))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.3 ([0b63c0b](https://github.com/mx-space/core/commit/0b63c0bb1babe7b545f8609927f07c1cdbac488b))
-
-
-
-## [5.6.5](https://github.com/mx-space/core/compare/v5.6.4...v5.6.5) (2024-05-01)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cache-manager to v5.5.2 ([#1659](https://github.com/mx-space/core/issues/1659)) ([88a80b0](https://github.com/mx-space/core/commit/88a80b024e41c7a36e64d31c37cd83d6cb0891c9))
-* **deps:** update dependency mongoose-lean-getters to v2.1.0 ([#1656](https://github.com/mx-space/core/issues/1656)) ([f1190e2](https://github.com/mx-space/core/commit/f1190e2ae4d7357723e8c720607acebea0c0d236))
-* **deps:** update dependency openai to v4.39.1 ([7bc272e](https://github.com/mx-space/core/commit/7bc272ead03c3f9c3d184b0fd7413204930c6f6c))
-* make throttle config ([4543459](https://github.com/mx-space/core/commit/4543459336dff68510637d624c7b8bfece56eb28))
-* summary language detect logic ([90e5a6b](https://github.com/mx-space/core/commit/90e5a6b594cc8101f6417b735c35a7008b0d34ea))
-
-
-
-## [5.6.4](https://github.com/mx-space/core/compare/v5.6.3...v5.6.4) (2024-04-30)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.24.5 ([#1661](https://github.com/mx-space/core/issues/1661)) ([6a4a2dc](https://github.com/mx-space/core/commit/6a4a2dc0e80d767b210f4e217ea60a6c4debce53))
-* **deps:** update dependency cache-manager-ioredis-yet to v2.0.4 ([#1660](https://github.com/mx-space/core/issues/1660)) ([cb4d2f0](https://github.com/mx-space/core/commit/cb4d2f057a9d075148ec28b9925e36126a2f1b59))
-* **deps:** update dependency dayjs to v1.11.11 ([bd6cec5](https://github.com/mx-space/core/commit/bd6cec573c71c9b83318e9afb731f8ed89f3e014))
-* **deps:** update dependency isbot to v5.1.6 ([#1662](https://github.com/mx-space/core/issues/1662)) ([2b5a901](https://github.com/mx-space/core/commit/2b5a901755b7f7000ae9a6f56092edcb7ebaedc2))
-* **deps:** update dependency lru-cache to v10.2.2 ([0adbd37](https://github.com/mx-space/core/commit/0adbd37b661eb455a5cb62270c0556f6c52faf23))
-* **deps:** update dependency mongoose to v8.3.3 ([#1663](https://github.com/mx-space/core/issues/1663)) ([dcff2bd](https://github.com/mx-space/core/commit/dcff2bd483629dfb9ae8ba40dd4fd8cc23f4614c))
-* **deps:** update dependency openai to v4.39.0 ([#1664](https://github.com/mx-space/core/issues/1664)) ([13c26c1](https://github.com/mx-space/core/commit/13c26c194a8ba4cd3486b518f07ca41b6b247a35))
-* download asset script ([ee92d48](https://github.com/mx-space/core/commit/ee92d486cad2ee4b65008c31c8495ec5f9f52eeb))
-* increase throttler ([eb95be1](https://github.com/mx-space/core/commit/eb95be1c69c30af30388180f6da1811d8f12616c))
-* lint ([1ff8015](https://github.com/mx-space/core/commit/1ff80156f0cf66eb9997a49875bfc31ce2c2cb13))
-* lint ([358a5e6](https://github.com/mx-space/core/commit/358a5e613546d004b8c0cde1ad954a38ea5a62d0))
-* lint error ([c6980f9](https://github.com/mx-space/core/commit/c6980f98c2f32f6b9ab8d9ab60d07f1e07b8ced6))
-* testing ([f74ef93](https://github.com/mx-space/core/commit/f74ef93dc3f58bc7490cc33bd2b6a7a4cda21a89))
-
-
-
-## [5.6.3](https://github.com/mx-space/core/compare/v5.6.2...v5.6.3) (2024-04-27)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.2 ([608e470](https://github.com/mx-space/core/commit/608e470a3c6cf799a06e845a9ed5cb676ee6deb9))
-* **deps:** update dependency inquirer to v9.2.20 ([3fd3070](https://github.com/mx-space/core/commit/3fd3070a23984686baa7d385711dab54db484eae))
-* **deps:** update dependency isbot to v5.1.5 ([0e741f6](https://github.com/mx-space/core/commit/0e741f670cd5e2be3b90e901218b68ffe4588bcf))
-* **deps:** update dependency lru-cache to v10.2.1 ([53fef99](https://github.com/mx-space/core/commit/53fef99df78b35798012e5dfd580498823e799d1))
-
-
-### Features
-
-* add `getLastYearPublication` api ([5a028c8](https://github.com/mx-space/core/commit/5a028c82e37f910320e1c33a63e52045986d580f))
-
-
-
-## [5.6.2](https://github.com/mx-space/core/compare/v5.6.1...v5.6.2) (2024-04-26)
-
-
-### Bug Fixes
-
-* ai throw ([afdb6b7](https://github.com/mx-space/core/commit/afdb6b71d094326ff9be72a2a6efbf11274ae750))
-
-
-
-## [5.6.1](https://github.com/mx-space/core/compare/v5.6.0...v5.6.1) (2024-04-26)
-
-
-
-# [5.6.0](https://github.com/mx-space/core/compare/v5.5.7...v5.6.0) (2024-04-26)
-
-
-### Bug Fixes
-
-* pass `truncate` ([924e7e4](https://github.com/mx-space/core/commit/924e7e4b5bff22b4bb129eeda642d114de419aba))
-* throw error when ai disabled ([786a399](https://github.com/mx-space/core/commit/786a3994cd98f3840bcfbca46ebe9723b0e564f8))
-
-
-### Features
-
-* ai module ([#1649](https://github.com/mx-space/core/issues/1649)) ([c989a2a](https://github.com/mx-space/core/commit/c989a2a7b0977d3ebbdc72771f4965e7927ffb96))
-
-
-
-## [5.5.7](https://github.com/mx-space/core/compare/v5.5.6...v5.5.7) (2024-04-25)
-
-
-### Bug Fixes
-
-* custom mongo connection string ([62243e8](https://github.com/mx-space/core/commit/62243e8482f8327e511c1a86cdd60f3e3cd2d771))
-* delete regexp cache key ([f25f618](https://github.com/mx-space/core/commit/f25f6185caeadb50616c42437fe7f05cb21ecf95))
-* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.1 ([03c5bab](https://github.com/mx-space/core/commit/03c5bab11d763447723b422688ce6da405d5ca34))
-* extends parent `isWhispers` ([d11382b](https://github.com/mx-space/core/commit/d11382b5533f03d01d9e57bfb05598f7d45bd694))
-* file trash ([9c3394c](https://github.com/mx-space/core/commit/9c3394c6c8b31538fbb780966f65173574c146a2))
-* filter markdown video href ([52c344d](https://github.com/mx-space/core/commit/52c344d132a81c725378cb46cf86bf29f2a3abd7))
-* update docker-run.sh ([#1643](https://github.com/mx-space/core/issues/1643)) ([21e84b1](https://github.com/mx-space/core/commit/21e84b1b2e3c5e4ef8bc1a78aca01834ec5a115b))
-
-
-### Features
-
-* add `truncate` for post list ([45e7cf8](https://github.com/mx-space/core/commit/45e7cf83a8084ba34f62370a7c176cb761616eee))
-
-
-
-## [5.5.6](https://github.com/mx-space/core/compare/v5.5.5...v5.5.6) (2024-04-22)
-
-
-### Bug Fixes
-
-* bypass options preflight ([845b307](https://github.com/mx-space/core/commit/845b3074437a042f6b1d0c0d2bcddf20e759d71d))
-* comment email link url ([0fd8fbf](https://github.com/mx-space/core/commit/0fd8fbf4f5d2a0f0200a0b22e4dd9d83f1f04121))
-
-
-
-## [5.5.5](https://github.com/mx-space/core/compare/v5.5.4...v5.5.5) (2024-04-20)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @typegoose/auto-increment to v4.3.0 ([#1614](https://github.com/mx-space/core/issues/1614)) ([ab4cf31](https://github.com/mx-space/core/commit/ab4cf3123981d6f1c7709710131e644042adde67))
-* logger ([e66e49a](https://github.com/mx-space/core/commit/e66e49a72fe02b4344d7dc107ec82c57e526e184))
-* s3 region ([e18ce0d](https://github.com/mx-space/core/commit/e18ce0d5a597bc835b5716bf499f087ff8e86c52))
-
-
-### Features
-
-* backup support s3 ([9dc3fbd](https://github.com/mx-space/core/commit/9dc3fbd15a338a0ff7166b81c702cf33cfa72dcc))
-
-
-
-## [5.5.4](https://github.com/mx-space/core/compare/v5.5.3...v5.5.4) (2024-04-20)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.15 ([c9971a9](https://github.com/mx-space/core/commit/c9971a990a1ec9c9460f9458011b588e27422c92))
-* **deps:** update dependency marked to v12.0.2 ([abe48df](https://github.com/mx-space/core/commit/abe48dfb6c4dc76dd0c85e5895f5d65970650686))
-* **deps:** update nest monorepo to v10.3.8 ([8e56dcd](https://github.com/mx-space/core/commit/8e56dcd8e96af30b325db64be2ad710adaf16fd3))
-* setup route jump [#1619](https://github.com/mx-space/core/issues/1619) ([e24b70d](https://github.com/mx-space/core/commit/e24b70dd04b8f85d9492526d53c293a35a0258e1))
-
-
-
-## [5.5.3](https://github.com/mx-space/core/compare/v5.5.2...v5.5.3) (2024-04-17)
-
-
-### Bug Fixes
-
-* **activity:** filter comment state ([73abe9c](https://github.com/mx-space/core/commit/73abe9c1afec625605a227c614e55cff5cdee6d3))
-* check activity ref type ([9c89987](https://github.com/mx-space/core/commit/9c899870fd81aa2041019d91e52eaf6bf210e25a))
-* comment filter ([ec58221](https://github.com/mx-space/core/commit/ec58221ee66d8b2595c5dd9b1c65fbc8cd75782d))
-
-
-
-## [5.5.2](https://github.com/mx-space/core/compare/v5.5.1...v5.5.2) (2024-04-17)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/schedule to v4.0.2 ([debacce](https://github.com/mx-space/core/commit/debacce20abf941341ac6b1b680b1d97da31236b))
-* **deps:** update dependency @typegoose/typegoose to v12.3.1 ([fb39902](https://github.com/mx-space/core/commit/fb39902096d509484e72e96578ad7de65d799b39))
-* **deps:** update dependency inquirer to v9.2.19 ([7cff84f](https://github.com/mx-space/core/commit/7cff84f38648e6e5e5de78b33a5655c3109c4093))
-* **deps:** update dependency mongoose to v8.3.2 ([17e796f](https://github.com/mx-space/core/commit/17e796f7bafb41008735458c820df035d900f4c7))
-* filter hide note ([29e3ba5](https://github.com/mx-space/core/commit/29e3ba595256b9676e7fe3ade8be406e6dacd203))
-* user collection name ([85ca2f6](https://github.com/mx-space/core/commit/85ca2f64b4deccc7f2ac86e6e69c6a6d49b864fc))
-
-
-
-## [5.5.1](https://github.com/mx-space/core/compare/v5.5.0...v5.5.1) (2024-04-14)
-
-
-### Features
-
-* add recent notification api ([1111b96](https://github.com/mx-space/core/commit/1111b96013124d637d3e5c9524f2dc2b19032675))
-
-
-
-# [5.5.0](https://github.com/mx-space/core/compare/v5.4.10...v5.5.0) (2024-04-13)
-
-
-### Bug Fixes
-
-* add some field ([903aa30](https://github.com/mx-space/core/commit/903aa3012231b9445692688ac259e9d4ec5f02c6))
-* **deps:** update dependency ejs to v3.1.10 ([0963d50](https://github.com/mx-space/core/commit/0963d50b9ec5fdf814866913cd3ad8874fc55b37))
-* **deps:** update dependency inquirer to v9.2.18 ([064ec68](https://github.com/mx-space/core/commit/064ec68b3a8d4762d42a862b0b67056fe76a923d))
-* **deps:** update dependency qs to v6.12.1 ([8d170ed](https://github.com/mx-space/core/commit/8d170ed13e393766c10ec22fdf66bb22b6a6c6bb))
-
-
-### Features
-
-* add recent activity api ([b4726ad](https://github.com/mx-space/core/commit/b4726adfd80a9b229d48d027bc0a1ba3b69c80ee))
-
-
-
-## [5.4.10](https://github.com/mx-space/core/compare/v5.4.9...v5.4.10) (2024-04-11)
-
-
-### Bug Fixes
-
-* add `hide` for note list api ([5a2b2de](https://github.com/mx-space/core/commit/5a2b2debc433051ad7b9d646b368450bdee59560))
-
-
-
-## [5.4.9](https://github.com/mx-space/core/compare/v5.4.8...v5.4.9) (2024-04-11)
-
-
-### Bug Fixes
-
-* **deps:** update algoliasearch-client-javascript monorepo to v4.23.3 ([39bb8ce](https://github.com/mx-space/core/commit/39bb8ce5b90bb44b43fa07a5fb390b1c2d5c691c))
-* **deps:** update dependency @typegoose/typegoose to v12.3.0 ([#1601](https://github.com/mx-space/core/issues/1601)) ([a77bb04](https://github.com/mx-space/core/commit/a77bb045c665c264202395f6d8c0871f68fc7aa8))
-* skip cache if request is authenticated ([70d9b69](https://github.com/mx-space/core/commit/70d9b6916b53f613a1f639e6b40b819594c4dc41))
-
-
-
-## [5.4.8](https://github.com/mx-space/core/compare/v5.4.7...v5.4.8) (2024-04-11)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.14 ([70b76c7](https://github.com/mx-space/core/commit/70b76c7c6f7f61a2adceb4501f3daca41cb15854))
-* **deps:** update dependency mongoose to v8.3.1 ([a433fc5](https://github.com/mx-space/core/commit/a433fc5ec8d1c5cc1bb3c285935ef5a769f793a2))
-* server time response ([ac918dc](https://github.com/mx-space/core/commit/ac918dc8e71b677c02aa804d49cb75e634556004))
-
-
-
-## [5.4.7](https://github.com/mx-space/core/compare/v5.4.6...v5.4.7) (2024-04-06)
-
-
-### Bug Fixes
-
-* downgrade snakecase ([64e2dbf](https://github.com/mx-space/core/commit/64e2dbfb7836b3c577b1c07a751a25f342a3e3df))
-* downgrade snakecase ([f3a0d06](https://github.com/mx-space/core/commit/f3a0d063ad4ed44e5fb443aa8d5f52a6450652d2))
-
-
-
-## [5.4.6](https://github.com/mx-space/core/compare/v5.4.5...v5.4.6) (2024-04-06)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.24.4 ([6a9e78b](https://github.com/mx-space/core/commit/6a9e78b6e63e90cb6bf5d5ad074833541dc5333b))
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.13 ([0288c79](https://github.com/mx-space/core/commit/0288c79d2afac1ada8646abfa6c979e6f379a1ed))
-* **deps:** update dependency @fastify/static to v7.0.3 ([12da98f](https://github.com/mx-space/core/commit/12da98f55ed3dbc53ec6e4b87926154a548e2710))
-* **deps:** update dependency cache-manager to v5.5.0 ([#1594](https://github.com/mx-space/core/issues/1594)) ([e1e6cdb](https://github.com/mx-space/core/commit/e1e6cdb38b929daaa91fceeb6a4b83128dd8fa08))
-* **deps:** update dependency cache-manager to v5.5.1 ([9bdce4b](https://github.com/mx-space/core/commit/9bdce4b7721665cad56f7649fc5fb1808693fa05))
-* **deps:** update dependency cache-manager-ioredis-yet to v2.0.3 ([0e41674](https://github.com/mx-space/core/commit/0e416743fa6535fdf7c2316477df1c53a494bb35))
-* **deps:** update dependency mongoose to v8.3.0 ([#1588](https://github.com/mx-space/core/issues/1588)) ([2207510](https://github.com/mx-space/core/commit/2207510590b34a3156d4f92222579e8f9e3b54fb))
-* **deps:** update dependency snakecase-keys to v7 ([#1566](https://github.com/mx-space/core/issues/1566)) ([69cd144](https://github.com/mx-space/core/commit/69cd144b1d09c7abd8c574d007df2623954a814f))
-* update test snap ([45ae1f8](https://github.com/mx-space/core/commit/45ae1f88e86a547619cd8b2743ac1b6e9a5248f7))
-
-
-### Features
-
-* **markdown:** export with meta json ([ef4d639](https://github.com/mx-space/core/commit/ef4d639d2fcd62fc050ce0c021f18bb4bc50cfca))
-
-
-
-## [5.4.5](https://github.com/mx-space/core/compare/v5.4.4...v5.4.5) (2024-04-03)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.12 ([f2e9a5b](https://github.com/mx-space/core/commit/f2e9a5b9f8a404b93c4f5b401f63ce34811db552))
-* **deps:** update dependency @fastify/static to v7.0.2 ([0ad5a14](https://github.com/mx-space/core/commit/0ad5a1437699a66686e96ffa9fbbf06b91da79e1))
-* **deps:** update dependency inquirer to v9.2.17 ([3fb381a](https://github.com/mx-space/core/commit/3fb381a141b2b2027d3d8447803a2db2eefcf302))
-* **deps:** update dependency isbot to v5.1.3 ([d9f92b8](https://github.com/mx-space/core/commit/d9f92b85dea7044b81aad6118a27e8f6902bcf6a))
-* **deps:** update dependency isbot to v5.1.4 ([ec8c62a](https://github.com/mx-space/core/commit/ec8c62ad35863451408ddcd46714bcdda14ff4f6))
-
-
-### Features
-
-* add get one recently api ([97f10b4](https://github.com/mx-space/core/commit/97f10b4a1d1e4cd5072cd4529afbec56f8fdba27))
-
-
-
-## [5.4.4](https://github.com/mx-space/core/compare/v5.4.3...v5.4.4) (2024-03-29)
-
-
-### Bug Fixes
-
-* **api-client:** bypass ts property ([d0f7c2d](https://github.com/mx-space/core/commit/d0f7c2d5afe0ae6f1f9a63e8991ee1c121d11f4a))
-* server time cors ([fd121cc](https://github.com/mx-space/core/commit/fd121cccc6743275f4aa541c05f85824cca95263))
-
-
-
-## [5.4.3](https://github.com/mx-space/core/compare/v5.4.2...v5.4.3) (2024-03-29)
-
-
-### Bug Fixes
-
-* **deps:** update dependency mongoose to v8.2.4 ([ef58bcf](https://github.com/mx-space/core/commit/ef58bcfd93ea7b6d1369bc588e622d0dbbdbfd8a))
-* **deps:** update dependency reflect-metadata to v0.2.2 ([6c174f5](https://github.com/mx-space/core/commit/6c174f5da6fd4ae9c6a1905db62eed1e1e4afe33))
-
-
-
-## [5.4.2](https://github.com/mx-space/core/compare/v5.4.1...v5.4.2) (2024-03-28)
-
-
-### Bug Fixes
-
-* bypass presence data morph ([04264c1](https://github.com/mx-space/core/commit/04264c13f25f11eeb31a6de6431b2e0ae896a838))
-* **deps:** update algoliasearch-client-javascript monorepo to v4.23.2 ([#1568](https://github.com/mx-space/core/issues/1568)) ([0b06eb6](https://github.com/mx-space/core/commit/0b06eb6ad576afc0046b7cf05f3d8946a46ec225))
-* **deps:** update nest monorepo to v10.3.6 (patch) ([#1569](https://github.com/mx-space/core/issues/1569)) ([9d602ce](https://github.com/mx-space/core/commit/9d602ce13023e731eeb905bd3343312e85b11ba0))
-* **deps:** update nest monorepo to v10.3.7 (patch) ([#1570](https://github.com/mx-space/core/issues/1570)) ([91693d1](https://github.com/mx-space/core/commit/91693d15c56f79f45d06e277fe08d54e450a1709))
-
-
-
-## [5.4.1](https://github.com/mx-space/core/compare/v5.4.0...v5.4.1) (2024-03-27)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/cache-manager to v2.2.2 ([ba0c673](https://github.com/mx-space/core/commit/ba0c673aa23bcf04be3f00b1d0aa699631bb78b8))
-* **deps:** update dependency linkedom to v0.16.11 ([30a425e](https://github.com/mx-space/core/commit/30a425e135ba37718b958ec5ce17b641fca00024))
-* join room at ([4917076](https://github.com/mx-space/core/commit/49170766ad4969bae33d6ead3a01fbb4f20172a8))
-
-
-
-# [5.4.0](https://github.com/mx-space/core/compare/v5.3.4...v5.4.0) (2024-03-24)
-
-
-### Features
-
-* pass `isAuthenticated` to function call ([74ddc15](https://github.com/mx-space/core/commit/74ddc1504e99c107eb167dce259ba843d0a061cf))
-
-
-
-## [5.3.4](https://github.com/mx-space/core/compare/v5.3.3...v5.3.4) (2024-03-24)
-
-
-
-## [5.3.3](https://github.com/mx-space/core/compare/v5.3.2...v5.3.3) (2024-03-23)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @babel/core to v7.24.3 ([05c5736](https://github.com/mx-space/core/commit/05c5736345a2825c5f7257eaa91efbe95596f0a1))
-* **deps:** update dependency @fastify/multipart to v8.2.0 ([#1556](https://github.com/mx-space/core/issues/1556)) ([cae212f](https://github.com/mx-space/core/commit/cae212f24a9f271792df5ac02a0aa681bf75eac6))
-* **deps:** update dependency axios-retry to v4.1.0 ([#1550](https://github.com/mx-space/core/issues/1550)) ([a25e02a](https://github.com/mx-space/core/commit/a25e02ac6ae5aa933750c94a343ce7d66bfa7b70))
-* **deps:** update dependency mongoose to v8.2.3 ([9537402](https://github.com/mx-space/core/commit/953740202a8cb339e75a6d056ae353271f2d98cc))
-* **deps:** update dependency nodemailer to v6.9.13 ([fddb6e8](https://github.com/mx-space/core/commit/fddb6e89a542dd7830b6cd8c111cab0a8d7decaa))
-* **deps:** update nest monorepo to v10.3.5 ([3f0a330](https://github.com/mx-space/core/commit/3f0a3301124362af4c829626a14bb340caf93820))
-* serverless update ([4776de6](https://github.com/mx-space/core/commit/4776de6bbea13debfa87f5ba16b25550fddd333f))
-
-
-### Features
-
-* add other filed for search service ([8cc2d8f](https://github.com/mx-space/core/commit/8cc2d8fdf50251dee15a3a4c7a04edb18bca54db))
-* custom get response data ([1d1e3c5](https://github.com/mx-space/core/commit/1d1e3c580ffc6a5d99c72148a40756a1d405fa75))
-
-
-
-## [5.3.2](https://github.com/mx-space/core/compare/v5.3.1...v5.3.2) (2024-03-19)
-
-
-### Bug Fixes
-
-* **deps:** update dependency isbot to v5.1.2 ([10aed09](https://github.com/mx-space/core/commit/10aed095bae17bea0f8e45762a911a29c151fbd9))
-* **deps:** update nest monorepo to v10.3.4 (patch) ([#1544](https://github.com/mx-space/core/issues/1544)) ([c37ca86](https://github.com/mx-space/core/commit/c37ca86e9ae477d712843bb7fb2713860d6c3ab7))
-* remove only boardcast gateway room in post and note ([2e0c919](https://github.com/mx-space/core/commit/2e0c919de4e8fd6d8de664ed951c27d7680fe133))
-
-
-
-## [5.3.1](https://github.com/mx-space/core/compare/v5.3.0...v5.3.1) (2024-03-18)
-
-
-### Bug Fixes
-
-* downgrade vitest ([46a098c](https://github.com/mx-space/core/commit/46a098c7bff09780b4da323004624b372198d981))
-
-
-
-# [5.3.0](https://github.com/mx-space/core/compare/v5.2.2...v5.3.0) (2024-03-18)
-
-
-### Bug Fixes
-
-* **deps:** update dependency inquirer to v9.2.16 ([fe4fbd7](https://github.com/mx-space/core/commit/fe4fbd7022bab8c77d5a578647205956c2194d78))
-* **deps:** update dependency linkedom to v0.16.10 ([50a9ca1](https://github.com/mx-space/core/commit/50a9ca1f0a902d4a88273a81d8be3f58afe56292))
-* **deps:** update dependency mongoose to v8.2.2 ([6795295](https://github.com/mx-space/core/commit/6795295fec14522589dcc2154d6be6fd2bae4fa1))
-
-
-### Features
-
-* ws type read cunt ([310480f](https://github.com/mx-space/core/commit/310480f7b48d6460728a12a847575edd350c10c5))
-
-
-
-## [5.2.2](https://github.com/mx-space/core/compare/v5.2.1...v5.2.2) (2024-03-14)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cache-manager-ioredis-yet to v2.0.2 ([52066c1](https://github.com/mx-space/core/commit/52066c1c6d518dd6e69560995088da2a497e8183))
-* **deps:** update dependency linkedom to v0.16.9 ([11b74be](https://github.com/mx-space/core/commit/11b74be56a847c4fa55105a28bcaf6dc5a7444d5))
-
-
-
-## [5.2.1](https://github.com/mx-space/core/compare/v5.2.0...v5.2.1) (2024-03-12)
-
-
-### Bug Fixes
-
-* docker run script ([e08ddd3](https://github.com/mx-space/core/commit/e08ddd35d55ef5998e3120949a56ff784d369470))
-
-
-
-# [5.2.0](https://github.com/mx-space/core/compare/v5.1.6...v5.2.0) (2024-03-10)
-
-
-### Bug Fixes
-
-* add cache header ([f0640cd](https://github.com/mx-space/core/commit/f0640cd97157004f17e35fa4c341596be314739d))
-* **deps:** update dependency cache-manager-ioredis-yet to v2.0.1 ([747a12a](https://github.com/mx-space/core/commit/747a12a8796964ee815cb6750ae5caf2f74793d6))
-* **deps:** update dependency marked to v12.0.1 ([12bd435](https://github.com/mx-space/core/commit/12bd4355c17b06366cf48694d1b8815f83396ffb))
-* **deps:** update dependency mongoose-lean-getters to v2 ([#1517](https://github.com/mx-space/core/issues/1517)) ([34db0a6](https://github.com/mx-space/core/commit/34db0a6abba6e425bf3e83d62639843ff3756a3a))
-* **deps:** update dependency nodemailer to v6.9.12 ([4d4df4c](https://github.com/mx-space/core/commit/4d4df4ccceb7652567b368e0c7637622ca568771))
-* **deps:** update dependency qs to v6.12.0 ([#1514](https://github.com/mx-space/core/issues/1514)) ([401f650](https://github.com/mx-space/core/commit/401f650288e1a22b8b021121d4cb2135e86827e4))
-
-
-
-## [5.1.6](https://github.com/mx-space/core/compare/v5.1.5...v5.1.6) (2024-03-05)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.11 ([dcdfb59](https://github.com/mx-space/core/commit/dcdfb595d86b8f84ce1506bbc8fab696d3149897))
-* **deps:** update dependency @typegoose/auto-increment to v4.2.0 ([#1484](https://github.com/mx-space/core/issues/1484)) ([40b2100](https://github.com/mx-space/core/commit/40b2100befbd9a87dc29472dd28964b03f39a139))
-* **deps:** update dependency @typegoose/typegoose to v12.2.0 ([#1485](https://github.com/mx-space/core/issues/1485)) ([e3334ef](https://github.com/mx-space/core/commit/e3334ef674eb10067a5acd2332cbea964b135eab))
-* **deps:** update dependency cache-manager-ioredis-yet to v2 ([#1504](https://github.com/mx-space/core/issues/1504)) ([f64dff0](https://github.com/mx-space/core/commit/f64dff013a98f1b48db063bce0ce161a04583c60))
-* **deps:** update dependency mongoose to v8.2.1 ([ca344a8](https://github.com/mx-space/core/commit/ca344a8f5288807525e1c605cc413555a71eb033))
-* **deps:** update dependency nodemailer to v6.9.11 ([dae4ef7](https://github.com/mx-space/core/commit/dae4ef7cc1423dc9d5aa76aca8e865355661fd14))
-* **deps:** update dependency xss to v1.0.15 ([959c4aa](https://github.com/mx-space/core/commit/959c4aa75c0805786c6133d21a2d7899aa7753f4))
-
-
-
-## [5.1.5](https://github.com/mx-space/core/compare/v5.1.4...v5.1.5) (2024-02-29)
-
-
-### Bug Fixes
-
-* deps ([1c54ddd](https://github.com/mx-space/core/commit/1c54ddd7b86601a52f84f7847030640920834f00))
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.10 ([e55797c](https://github.com/mx-space/core/commit/e55797c9819dc678dee4d8f7c1834e4e360808f5))
-* **deps:** update dependency @types/jsonwebtoken to v9.0.6 ([3481b50](https://github.com/mx-space/core/commit/3481b5008ee9e0bcd1da179c908f23e3ba3dd92a))
-* **deps:** update dependency isbot to v5.1.1 ([db3ab52](https://github.com/mx-space/core/commit/db3ab5204c6a78eaeac0c078aea8f2375cb695f8))
-* **deps:** update dependency mongoose to v8.2.0 ([#1483](https://github.com/mx-space/core/issues/1483)) ([62c6855](https://github.com/mx-space/core/commit/62c6855a2a180a0731819fde90357f2c3216fd7e))
-* **deps:** update dependency nodemailer to v6.9.10 ([b9b5119](https://github.com/mx-space/core/commit/b9b511919ba17350e05ce2cd770c0a84603ee61a))
-* **deps:** update dependency wildcard-match to v5.1.3 ([1218d7a](https://github.com/mx-space/core/commit/1218d7ab131aee1f0e638bbeee884ac11f0cfaee))
-* log ([a142e8b](https://github.com/mx-space/core/commit/a142e8b2011c1e097cefd76f92f11d1a3242d183))
-* script ([c9deddd](https://github.com/mx-space/core/commit/c9deddda87db23d9b6fb96d9e8825b2868b68737))
-* type ([6389731](https://github.com/mx-space/core/commit/638973197781a0303bc25a6ed56b6d908e8d56d3))
-
-
-
-## [5.1.4](https://github.com/mx-space/core/compare/v5.1.3...v5.1.4) (2024-02-22)
-
-
-### Bug Fixes
-
-* remove ws guard ([147441c](https://github.com/mx-space/core/commit/147441c2c99b163106c5fd02f0433510d1cea1b9))
-
-
-
-## [5.1.3](https://github.com/mx-space/core/compare/v5.1.2...v5.1.3) (2024-02-22)
-
-
-### Bug Fixes
-
-* activity ref type transform to lower case ([6342257](https://github.com/mx-space/core/commit/634225775bcdb8ae7281be2ca6005f2a2e6efa63))
-
-
-
-## [5.1.2](https://github.com/mx-space/core/compare/v5.1.1...v5.1.2) (2024-02-21)
-
-
-### Bug Fixes
-
-* api injection ([9d095fb](https://github.com/mx-space/core/commit/9d095fbbd1b6f16faf8fa54c7832a1daa6fe1bbe))
-* throttle ip tracker ([c82cb8f](https://github.com/mx-space/core/commit/c82cb8ff54dc7b98bc411e03de81ede932aa612b))
-
-
-
-## [5.1.1](https://github.com/mx-space/core/compare/v5.1.0...v5.1.1) (2024-02-21)
-
-
-### Bug Fixes
-
-* refType of recentlies fixes [#1478](https://github.com/mx-space/core/issues/1478) ([b487b3a](https://github.com/mx-space/core/commit/b487b3af87dc5ed06ba2958a94d52be728671a93))
-
-
-
-# [5.1.0](https://github.com/mx-space/core/compare/v5.0.1...v5.1.0) (2024-02-20)
-
-
-### Bug Fixes
-
-* **deps:** update dependency mongoose to v8.1.3 ([e84be0c](https://github.com/mx-space/core/commit/e84be0c6f764246ba041b3a9a470e1abe084102f))
-* remove wating if 427 and add query parameters to getReadingRangeRank ([2ce68aa](https://github.com/mx-space/core/commit/2ce68aa99d995814efec1b7eadf4bbddcd5cae37))
-* test ([4b3c858](https://github.com/mx-space/core/commit/4b3c858739e80d51fb01eb05737fbd68bccfda97))
-* test case ([6ed5e40](https://github.com/mx-space/core/commit/6ed5e40fa197c74dc4c8295cd5afb08cf32fb1c8))
-* un-limit upload size for backup service ([601a3dd](https://github.com/mx-space/core/commit/601a3dd69151336f715ab05e5948d4fe5dfc6b3f))
-
-
-### Features
-
-* reading rank ([029b47c](https://github.com/mx-space/core/commit/029b47c988e77941937d336a751ec8be4ee8520b))
-
-
-
-## [5.0.1](https://github.com/mx-space/core/compare/v5.0.0...v5.0.1) (2024-02-17)
-
-
-### Bug Fixes
-
-* comment model with ip fixes [#1473](https://github.com/mx-space/core/issues/1473) ([f11ccb9](https://github.com/mx-space/core/commit/f11ccb9a3694fcbb511f88d7061da46f06de87e5))
-* **deps:** update dependency @simplewebauthn/server to v9.0.3 ([84f9b2b](https://github.com/mx-space/core/commit/84f9b2b477ccea7124f1305b1fcda0a90197782d))
-
-
-
-# [5.0.0](https://github.com/mx-space/core/compare/v5.0.0-beta.2...v5.0.0) (2024-02-16)
-
-
-
-# [5.0.0-beta.2](https://github.com/mx-space/core/compare/v5.0.0-beta.1...v5.0.0-beta.2) (2024-02-16)
-
-
-### Bug Fixes
-
-* activity duration calculation ([ced3852](https://github.com/mx-space/core/commit/ced3852d3e0a25df6d78b0454f4c1ad542c34c87))
-* broadcast event add `joinedAt` ([d1704d8](https://github.com/mx-space/core/commit/d1704d8450462ef9645c6f4f19a4f69d9e5d5cd0))
-* update model ([8bfa464](https://github.com/mx-space/core/commit/8bfa46461519516b0310aa8aa4f1a9cf0f89cc03))
-
-
-
-# [5.0.0-beta.1](https://github.com/mx-space/core/compare/v5.0.0-beta.0...v5.0.0-beta.1) (2024-02-15)
-
-
-
-# [5.0.0-beta.0](https://github.com/mx-space/core/compare/v5.0.0-alpha.4...v5.0.0-beta.0) (2024-02-15)
-
-
-### Bug Fixes
-
-* ipv6 ([3dff3df](https://github.com/mx-space/core/commit/3dff3df74b8c3e15b6766b5fab3ba929cefff786))
-* migration ([6d4254d](https://github.com/mx-space/core/commit/6d4254dd5bdfa56c350a39eda580711e106fa5c0))
-
-
-
-# [5.0.0-alpha.4](https://github.com/mx-space/core/compare/v5.0.0-alpha.3...v5.0.0-alpha.4) (2024-02-14)
-
-
-### Bug Fixes
-
-* api model ([c639c57](https://github.com/mx-space/core/commit/c639c57f488e924a93a1d2b5228e3b5f86dcaac4))
-
-
-### Features
-
-* add api sdk for this ([4683b69](https://github.com/mx-space/core/commit/4683b697ce41c287736b007d653f1b13dd783e7f))
-* add get rooms ([cf71fc4](https://github.com/mx-space/core/commit/cf71fc4f43d75557109c7672d801e4eb0602e5b6))
-
-
-
-# [5.0.0-alpha.3](https://github.com/mx-space/core/compare/v5.0.0-alpha.2...v5.0.0-alpha.3) (2024-02-13)
-
-
-### Bug Fixes
-
-* add real ip for cf ([057a232](https://github.com/mx-space/core/commit/057a23291580dd895d32a1155052c42e34e6a8b4))
-
-
-
-# [5.0.0-alpha.2](https://github.com/mx-space/core/compare/v5.0.0-alpha.1...v5.0.0-alpha.2) (2024-02-13)
-
-
-### Bug Fixes
-
-* **deps:** update dependency mongoose to v8.1.2 ([6844bd7](https://github.com/mx-space/core/commit/6844bd78276e3cf1c29c3cf77d79d8f1ca5b77bc))
-* **deps:** update nest monorepo to v10.3.3 ([a913599](https://github.com/mx-space/core/commit/a9135993e1634d06ace5f99212ba64d54bf0d224))
-* post model type ([db87454](https://github.com/mx-space/core/commit/db8745485fa09598e2389f194dbf55fb49562218))
-
-
-### Features
-
-* add bark push for cc ([76002c3](https://github.com/mx-space/core/commit/76002c3f24a396faa035128e92fcee122d62f261))
-
-
-
-# [5.0.0-alpha.1](https://github.com/mx-space/core/compare/v5.0.0-alpha.0...v5.0.0-alpha.1) (2024-02-12)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.9 ([10865eb](https://github.com/mx-space/core/commit/10865ebc0d1b5fe0b587e0d3f31e0c9e209afa46))
-* **deps:** update dependency @fastify/static to v7.0.1 ([6c4d182](https://github.com/mx-space/core/commit/6c4d182b580ca31f123ce322ee8166de3d2fd86a))
-* **deps:** update dependency @nestjs/cache-manager to v2.2.1 ([d84282a](https://github.com/mx-space/core/commit/d84282adfe7dcff846ccecce455df2f9b9eec7fb))
-* **deps:** update dependency @nestjs/event-emitter to v2.0.4 ([5af713b](https://github.com/mx-space/core/commit/5af713b8fd6cadd4d56a9021e8dab2af9c30db46))
-* **deps:** update dependency @nestjs/schedule to v4.0.1 ([f7d5ed6](https://github.com/mx-space/core/commit/f7d5ed617537ff059ffe8dca8e488afae0b5a3c7))
-* **deps:** update dependency @nestjs/throttler to v5.1.2 ([6812c20](https://github.com/mx-space/core/commit/6812c205a84c47126cac5ebc544daf777daa2dbc))
-* **deps:** update dependency @simplewebauthn/server to v9.0.2 ([dc169f1](https://github.com/mx-space/core/commit/dc169f15b1bd4dac0ded887bc8b6f1c8c52a8639))
-* **deps:** update nest monorepo ([6f32af9](https://github.com/mx-space/core/commit/6f32af9ba4a69e41c2cd7a445ed0a66f5ef144d0))
-* docker build workflow ([#1451](https://github.com/mx-space/core/issues/1451)) ([d32ede3](https://github.com/mx-space/core/commit/d32ede3fd519f41bc79781f078bc2395566b7894))
-* init project script ([83441f1](https://github.com/mx-space/core/commit/83441f1d3ea330235814f08376b15fd1446d1980))
-* script clone ([c334f45](https://github.com/mx-space/core/commit/c334f453b24c26da04e3480763a33958d695b754))
-
-
-### Features
-
-* add activity type ([0cd84e7](https://github.com/mx-space/core/commit/0cd84e7f9c5d314bedcaa64d3c7bb391f7734828))
-* file trash ([ed6eeb2](https://github.com/mx-space/core/commit/ed6eeb2b3762a59872b6a1f128a55d9d4137a5a3))
-* support socket room and add activity presence ([#1445](https://github.com/mx-space/core/issues/1445)) ([267632b](https://github.com/mx-space/core/commit/267632be94df24a07c0b64dbcd85a53569866225))
-
-
-
-# [5.0.0-alpha.0](https://github.com/mx-space/core/compare/v4.11.8...v5.0.0-alpha.0) (2024-02-07)
-
-
-### Bug Fixes
-
-* **deps:** update dependency nestjs-pretty-logger to v0.2.1 ([9addf45](https://github.com/mx-space/core/commit/9addf450c4d91a7e3236580bbe5956992a4a6984))
-
-
-### Performance Improvements
-
-* reduce memory usage ([#1436](https://github.com/mx-space/core/issues/1436)) ([ed11374](https://github.com/mx-space/core/commit/ed11374a975d26bb680eb9a8069cd97c1f6325a1))
-
-
-
-## [4.11.8](https://github.com/mx-space/core/compare/v4.11.7...v4.11.8) (2024-02-06)
-
-
-### Bug Fixes
-
-* remove `env` expose ([a36d488](https://github.com/mx-space/core/commit/a36d4885c60b9b2a03a09fe1769b59bda4f32177))
-
-
-
-## [4.11.7](https://github.com/mx-space/core/compare/v4.11.6...v4.11.7) (2024-02-06)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.8 ([#1428](https://github.com/mx-space/core/issues/1428)) ([9d3fe47](https://github.com/mx-space/core/commit/9d3fe47da5fcba1f2eb2af7076f33d9fb0c9e846))
-* secret getter ([351cbfd](https://github.com/mx-space/core/commit/351cbfdb098a667f8ddce73ba5a34eb3de8af422))
-* skip throttler guard if authed ([0dbe9c2](https://github.com/mx-space/core/commit/0dbe9c25d6449361084d8107fb7b227c25fe72f3))
-
-
-
-## [4.11.6](https://github.com/mx-space/core/compare/v4.11.5...v4.11.6) (2024-02-04)
-
-
-### Bug Fixes
-
-* compress search index data size keep less than 100K ([6718f8e](https://github.com/mx-space/core/commit/6718f8edd0d3e0f99f7225cb1972b2586e93d11b))
-* update ([f055fea](https://github.com/mx-space/core/commit/f055fea95704f1127447ace832f9aab31d532202))
-
-
-### Features
-
-* adjustObjectSizeEfficiently function to accept a generic type ([8491ebd](https://github.com/mx-space/core/commit/8491ebdab1f019fd6364c4d4136c27c259f13cca))
-* use EJS rendering for local-dev page ([bbb0e22](https://github.com/mx-space/core/commit/bbb0e22ca89180e7268dd9f5631c480fae1557f0))
-
-
-
-## [4.11.5](https://github.com/mx-space/core/compare/v4.11.4...v4.11.5) (2024-02-04)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @fastify/static to v7 ([#1422](https://github.com/mx-space/core/issues/1422)) ([b0a65ca](https://github.com/mx-space/core/commit/b0a65cac22c303782569f95bddd9ff59c4dbf79f))
-* **deps:** update dependency marked to v12 ([#1424](https://github.com/mx-space/core/issues/1424)) ([97c1e6e](https://github.com/mx-space/core/commit/97c1e6eae2734a3e01d4085c02c288c4e6fd52c1))
-
-
-### Features
-
-* Add SlugTrackerModule to support if the post slug changes, redirect to original data to keep their permalink ([#1425](https://github.com/mx-space/core/issues/1425)) ([00e7508](https://github.com/mx-space/core/commit/00e7508fe51e171d15001075f815f0807c93ab12))
-
-
-
-## [4.11.4](https://github.com/mx-space/core/compare/v4.11.3...v4.11.4) (2024-02-03)
-
-
-### Features
-
-* manually trigger algolia search index update ([d094272](https://github.com/mx-space/core/commit/d0942725bdab9fd8d5ddbdc29ddaa19501d25518))
-
-
-
-## [4.11.3](https://github.com/mx-space/core/compare/v4.11.2...v4.11.3) (2024-02-02)
-
-
-
-## [4.11.2](https://github.com/mx-space/core/compare/v4.11.1...v4.11.2) (2024-02-02)
-
-
-### Bug Fixes
-
-* add validation for encrypt key length ([ed40949](https://github.com/mx-space/core/commit/ed40949e3c3e45002967672c7e067ce30f4ea163))
-* **deps:** update dependency nodemailer to v6.9.9 ([0eb09ef](https://github.com/mx-space/core/commit/0eb09efa2d1d6897fb7b726daaa1c04e341a6569))
-
-
-### Features
-
-* add Algolia search functionality and event listeners ([31b1ba8](https://github.com/mx-space/core/commit/31b1ba8a678e5015a934efcfff2c4bcbc91918ae))
-* add local dev dashboard debug option ([64cddf1](https://github.com/mx-space/core/commit/64cddf127a0180ce31977c7fadc2967adb499344))
-
-
-
-## [4.11.1](https://github.com/mx-space/core/compare/v4.11.0...v4.11.1) (2024-01-31)
-
-
-### Bug Fixes
-
-* add Logger instance to the global scope ([c4a27cc](https://github.com/mx-space/core/commit/c4a27cc25a9126cfc74b11a49e539cae9b469880))
-* search service to use replaceAllObjects method ([00964c3](https://github.com/mx-space/core/commit/00964c3822daef29de5a97f0ed0a43e639735dc8))
-
-
-
-# [4.11.0](https://github.com/mx-space/core/compare/v4.10.9...v4.11.0) (2024-01-31)
-
-
-### Bug Fixes
-
-* Remove unused code and update create method in PostController ([5f9e69f](https://github.com/mx-space/core/commit/5f9e69fabbdf5fb20a2027f9e9fbb38ff55f1ef2))
-* session revoke ([2bfc745](https://github.com/mx-space/core/commit/2bfc745bf5f2e07f74d59b58f0ca136ec7ea49a1))
-
-
-
-## [4.10.9](https://github.com/mx-space/core/compare/v4.10.8...v4.10.9) (2024-01-29)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.23.9 ([e61459f](https://github.com/mx-space/core/commit/e61459f7655153facc2a29965e27131dfef3ea05))
-* **deps:** update dependency @simplewebauthn/server to v9 ([#1387](https://github.com/mx-space/core/issues/1387)) ([54fbfe1](https://github.com/mx-space/core/commit/54fbfe15018b0f4914c2891353f96dc942c4e3dc))
-* **deps:** update dependency linkedom to v0.16.8 ([130d110](https://github.com/mx-space/core/commit/130d110aa221247e46c01720967dd5c6aef3ecbb))
-* **deps:** update dependency lru-cache to v10.2.0 ([#1397](https://github.com/mx-space/core/issues/1397)) ([6ae866d](https://github.com/mx-space/core/commit/6ae866dcf648b70d9ae3f5993e1647e74e076be4))
-* **deps:** update dependency marked to v11.2.0 ([#1399](https://github.com/mx-space/core/issues/1399)) ([ea6e60e](https://github.com/mx-space/core/commit/ea6e60e8bf2e41ef1a382bc8a326211f06ba5a14))
-* **deps:** update dependency mongoose to v8.1.1 ([73cf344](https://github.com/mx-space/core/commit/73cf344c8dae6bb98b0a8c2046bd4fce18baada6))
-* **deps:** update nest monorepo to v10.3.1 ([c33941e](https://github.com/mx-space/core/commit/c33941e7fceace1c10a748053ba78656a72e56d8))
-* set `CBOR_NATIVE_ACCELERATION_DISABLED` to `true` ([e1163cd](https://github.com/mx-space/core/commit/e1163cdac0e2a56e7b9b9886c60e3a7b069d1c2e))
-
-
-
-## [4.10.8](https://github.com/mx-space/core/compare/v4.10.7...v4.10.8) (2024-01-21)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @simplewebauthn/server to v8.3.7 ([63f7978](https://github.com/mx-space/core/commit/63f797877fced35872fc188b44e2996102379f45))
-* **deps:** update dependency cache-manager to v5.4.0 ([#1382](https://github.com/mx-space/core/issues/1382)) ([5eb49de](https://github.com/mx-space/core/commit/5eb49de19a888d3dadabd9e788561e2184a65b59))
-* ip function error "[object Object]" ([#1385](https://github.com/mx-space/core/issues/1385)) ([28d3239](https://github.com/mx-space/core/commit/28d3239bf2570e8f81420e44bff25b3c567af1a1))
-
-
-
-## [4.10.7](https://github.com/mx-space/core/compare/v4.10.6...v4.10.7) (2024-01-19)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.7 ([8a544b9](https://github.com/mx-space/core/commit/8a544b9bdb7e53baee4f3d49653f89d46fc0ca64))
-* **deps:** update dependency @fastify/cookie to v9.3.1 ([550d4ec](https://github.com/mx-space/core/commit/550d4ec3da5071cbb13d31afffebababaea2ebd7))
-* **deps:** update dependency @typegoose/auto-increment to v4.1.0 ([#1373](https://github.com/mx-space/core/issues/1373)) ([b5c5520](https://github.com/mx-space/core/commit/b5c552086a96a599e08a305d656e1feb334a7443))
-* **deps:** update dependency snakecase-keys to v6 ([#1377](https://github.com/mx-space/core/issues/1377)) ([9af88a3](https://github.com/mx-space/core/commit/9af88a38b141f3e2e32befc55304448ed6e0d8c3))
-
-
-
-## [4.10.6](https://github.com/mx-space/core/compare/v4.10.5...v4.10.6) (2024-01-18)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @fastify/cookie to v9.3.0 ([#1363](https://github.com/mx-space/core/issues/1363)) ([2b100cd](https://github.com/mx-space/core/commit/2b100cd0379a74ce97a93fdb67ae4ab49a3c70b1))
-* sitemap data ([c10f089](https://github.com/mx-space/core/commit/c10f0899f96ddf61e4614ae3bfa97e600961191c))
-
-
-### Features
-
-* unsubscribe header for mail ([b28de23](https://github.com/mx-space/core/commit/b28de239739369c1d4475ba7df8235e900bbf31a))
-
-
-
-## [4.10.5](https://github.com/mx-space/core/compare/v4.10.4...v4.10.5) (2024-01-14)
-
-
-
-## [4.10.4](https://github.com/mx-space/core/compare/v4.10.3...v4.10.4) (2024-01-14)
-
-
-### Bug Fixes
-
-* axios http ([0c18317](https://github.com/mx-space/core/commit/0c18317fc1ed6bc9ae2623081d8b68ee4e314f52))
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.6 ([cd61cdb](https://github.com/mx-space/core/commit/cd61cdbbf6afa81efe3538cd4631edfc4aaeda36))
-* **deps:** update dependency @nestjs/cache-manager to v2.2.0 ([#1351](https://github.com/mx-space/core/issues/1351)) ([b91263a](https://github.com/mx-space/core/commit/b91263a1fb1f6bd245cb4f2297579cc3539775b6))
-
-
-
-## [4.10.3](https://github.com/mx-space/core/compare/v4.10.2...v4.10.3) (2024-01-10)
-
-
-### Bug Fixes
-
-* add 301 status when redirect ([775835f](https://github.com/mx-space/core/commit/775835f20bbad491245a5e63b9eedfc168e4c11b))
-
-
-
-## [4.10.2](https://github.com/mx-space/core/compare/v4.10.1...v4.10.2) (2024-01-10)
-
-
-### Bug Fixes
-
-* ci pipeline ([85750b9](https://github.com/mx-space/core/commit/85750b9825ad839bfe24dfc553dd8f3edbfb3b50))
-* **deps:** update algoliasearch-client-javascript monorepo to v4.22.1 ([b5040da](https://github.com/mx-space/core/commit/b5040daa38de7ee1325e9f2ebd1274d6473ae363))
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.5 ([ef6e04b](https://github.com/mx-space/core/commit/ef6e04b7169479a623c5418360418ffa4dd5461a))
-* **deps:** update dependency mongoose to v8.0.4 ([#1355](https://github.com/mx-space/core/issues/1355)) ([d03f413](https://github.com/mx-space/core/commit/d03f413f5b7283dba884ad0da48e2c08e84d082c))
-
-
-### Features
-
-* add `redirect` on url builder ([bdd6de5](https://github.com/mx-space/core/commit/bdd6de5913eae1cefc439c56f17b9714ff96324a))
-
-
-
-## [4.10.1](https://github.com/mx-space/core/compare/v4.10.0...v4.10.1) (2024-01-07)
-
-
-### Bug Fixes
-
-* ci ([c988594](https://github.com/mx-space/core/commit/c988594f8c36ab008acb0089e62959270f83dd71))
-* **deps:** update dependency @fastify/multipart to v8.1.0 ([#1343](https://github.com/mx-space/core/issues/1343)) ([17d3286](https://github.com/mx-space/core/commit/17d32862d32a9311f1891032bdc768ed0c8a1c1a))
-* **deps:** update dependency isbot to v3.8.0 ([#1338](https://github.com/mx-space/core/issues/1338)) ([2e5d13d](https://github.com/mx-space/core/commit/2e5d13da7558919056b9de491cf85a4ba803a8ed))
-* **deps:** update dependency mongoose-paginate-v2 to v1.8.0 ([#1341](https://github.com/mx-space/core/issues/1341)) ([3e1d065](https://github.com/mx-space/core/commit/3e1d065629bf5716e27163402f22ad581d99662a))
-
-
-
-# [4.10.0](https://github.com/mx-space/core/compare/v4.9.1...v4.10.0) (2024-01-07)
-
-
-### Bug Fixes
-
-* always create new require instance ([97526ce](https://github.com/mx-space/core/commit/97526ce6301836cd2e2bf153f1042dbb5fef0e63))
-* bark url desc ([92651b1](https://github.com/mx-space/core/commit/92651b1e7b89720140964f14d2ea4501a8edc46b))
-* ci scp ([#1319](https://github.com/mx-space/core/issues/1319)) ([be5e4a1](https://github.com/mx-space/core/commit/be5e4a1860016e3b6f03a85c4d62919998a875fb))
-* **comment:** add type guard on `source` ([e31b98a](https://github.com/mx-space/core/commit/e31b98a37f5d4123186d7a57b2b16e877b87f294))
-* **deps:** update dependency @babel/core to v7.23.7 ([03368c5](https://github.com/mx-space/core/commit/03368c5292cdd119641b80252c872a5ff3d9ef77))
-* **deps:** update dependency @simplewebauthn/server to v8.3.6 ([97d1ab7](https://github.com/mx-space/core/commit/97d1ab79bbdee90f98bd91483189a4c69a96f18f))
-* **deps:** update dependency image-size to v1.1.0 ([#1321](https://github.com/mx-space/core/issues/1321)) ([2fb8cec](https://github.com/mx-space/core/commit/2fb8cecac096b4fd45bbe10d87271df7d38ce446))
-* **deps:** update dependency image-size to v1.1.1 ([5e52b80](https://github.com/mx-space/core/commit/5e52b80cc06861dfb1d8d87d516b1fa2f1fe09df))
-* **deps:** update dependency linkedom to v0.16.6 ([668a9af](https://github.com/mx-space/core/commit/668a9af136345808562c3535da1d90cb9fed1c92))
-* **deps:** update dependency marked to v11.1.1 ([c0788f1](https://github.com/mx-space/core/commit/c0788f1f9fc98658b32bddae140e2d545560df2d))
-* **deps:** update dependency mongoose-aggregate-paginate-v2 to v1.0.7 ([#1326](https://github.com/mx-space/core/issues/1326)) ([9f51058](https://github.com/mx-space/core/commit/9f510585040c04522880230b5f6b90e86e350f58))
-* **deps:** update dependency nodemailer to v6.9.8 ([03c0eab](https://github.com/mx-space/core/commit/03c0eab13851e746b0227266e186b3735010eac7))
-* event type handling and update file paths ([c29be51](https://github.com/mx-space/core/commit/c29be5177e21224b17f9204adde4ed919d156a7a))
-* event variable in `readDataFromRequest` function ([bbd1a67](https://github.com/mx-space/core/commit/bbd1a67f1ca83cf64a71cf233aad0d1ea175c8da))
-* ingore migration collection backup ([813aa35](https://github.com/mx-space/core/commit/813aa351b1fc98e30cb2f21e908851f6655c6320))
-* lock file ([696b5aa](https://github.com/mx-space/core/commit/696b5aab56705e3853479e71aef4c5696972ce80))
-* remove uptime in info ([f3e46e7](https://github.com/mx-space/core/commit/f3e46e7f56105d21db7e57349016b22e2fcc4aeb))
-* remove xlog api proxy ([91aa771](https://github.com/mx-space/core/commit/91aa77181a17cb99e4380ef02b3adbc57717bc3f))
-* **sdk:** ref type ([e2accf4](https://github.com/mx-space/core/commit/e2accf4865e9358d42598ea7a3e733bbfcbb3223))
-* should export a enum value ([5ec2c29](https://github.com/mx-space/core/commit/5ec2c29842fa62b2c6dd0a08feea7de6c5af518f))
-* ts ds happy ([9297b36](https://github.com/mx-space/core/commit/9297b36158032505c1f6c9a461c2e1e71aa94b00))
-* typo ([19bb8cc](https://github.com/mx-space/core/commit/19bb8cce8ffea21736ddcfbc80409a2d919a0553))
-* update import statement in handler.ts ([1dd8099](https://github.com/mx-space/core/commit/1dd8099d0b72c5ca6d3fa81126ddb280ec835006))
-
-
-### Features
-
-* add clearDispatchEvents method to WebhookController and WebhookService ([bf2e753](https://github.com/mx-space/core/commit/bf2e7530114734195387fa3af063e2157aab793a))
-
-
-
-## [4.9.1](https://github.com/mx-space/core/compare/v4.9.0...v4.9.1) (2023-12-25)
-
-
-### Bug Fixes
-
-* webhok scope filter ([6176065](https://github.com/mx-space/core/commit/6176065c60e20ac6b754e2a1c9098b09e8dbfeb5))
-* **webhook:** add health check ([2621304](https://github.com/mx-space/core/commit/2621304f433368ba279985109d7e5fd378969307))
-
-
-### Features
-
-* add health_check ([889b0b0](https://github.com/mx-space/core/commit/889b0b0b7db13483dfe35af87ecd4a1fde04e9a9))
-
-
-
-# [4.9.0](https://github.com/mx-space/core/compare/v4.8.6...v4.9.0) (2023-12-24)
-
-
-### Bug Fixes
-
-* add field for algolia search ([c613bf7](https://github.com/mx-space/core/commit/c613bf77f52521ae2820d7aa7c46aa37a1216e53))
-* ci ([d947eee](https://github.com/mx-space/core/commit/d947eeeb3d87ae71c9e4be24d71e0513ea20baca))
-* **deps:** update dependency @algolia/client-search to v4.22.0 ([#1308](https://github.com/mx-space/core/issues/1308)) ([4bf5f79](https://github.com/mx-space/core/commit/4bf5f795f89c81129536776f44808c47e5d19ac0))
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.3 ([84645c1](https://github.com/mx-space/core/commit/84645c1a984e763ece068b84b9e5fe55873cb9f6))
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.4 ([309184c](https://github.com/mx-space/core/commit/309184c5c6a4a19e82b072a5321a730fc93e1994))
-* **deps:** update dependency @nestjs/throttler to v5.1.1 ([76e5422](https://github.com/mx-space/core/commit/76e542270fe0b486a1759b5c3205b424893ca7e9))
-* **deps:** update dependency cache-manager to v5.3.2 ([6efb1ef](https://github.com/mx-space/core/commit/6efb1ef17eae0caa001cbf6e5d22215652e7f948))
-* emitter type ([08b58e5](https://github.com/mx-space/core/commit/08b58e549fc84eeec0f12f21d02bb279cefa5e13))
-* variant rename to `type` ([d255493](https://github.com/mx-space/core/commit/d255493f6985d2aec120c89de24d7c0ac18b9bc7))
-* webhook lib build script ([ee370bc](https://github.com/mx-space/core/commit/ee370bc3851870d8268bdc586c4780a37f718e13))
-
-
-### Features
-
-* support webhook ([#1298](https://github.com/mx-space/core/issues/1298)) ([c6d037d](https://github.com/mx-space/core/commit/c6d037db1d0aabb445672c518b6a82e6beb58956))
-* **webhook:** generic type for event emitter ([cfc3513](https://github.com/mx-space/core/commit/cfc3513b92bddef87b738d852ff0a76097ca9525))
-
-
-
-## [4.8.6](https://github.com/mx-space/core/compare/v4.8.4...v4.8.6) (2023-12-18)
-
-
-### Bug Fixes
-
-* bundle build ci ([99f4f4c](https://github.com/mx-space/core/commit/99f4f4caa6bb13d6643881775fc29dd1ce72195d))
-* **deps:** update algoliasearch-client-javascript monorepo to v4.22.0 ([#1294](https://github.com/mx-space/core/issues/1294)) ([e4fbeae](https://github.com/mx-space/core/commit/e4fbeae2bfad0174402c517274ede13ee33aaf18))
-* **deps:** update babel monorepo to v7.23.6 ([68e603b](https://github.com/mx-space/core/commit/68e603b4e90d0725aa5aee1b033cae473297ac1f))
-* **deps:** update dependency @algolia/client-search to v4.22.0 ([#1304](https://github.com/mx-space/core/issues/1304)) ([58c7f02](https://github.com/mx-space/core/commit/58c7f02cafa4bf513b2d075bfb619f1926a50930))
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.2 ([62b7fef](https://github.com/mx-space/core/commit/62b7fef9f26d01c9cdaecffab87fe555413daafd))
-* **deps:** update dependency algoliasearch to v4.21.1 ([3b7b98b](https://github.com/mx-space/core/commit/3b7b98bf19188fe8ae3ac6b42a524889bf5590e8))
-* **deps:** update dependency linkedom to v0.16.5 ([97a9435](https://github.com/mx-space/core/commit/97a9435a1d014a0092bdc36f9602483649835738))
-* **deps:** update dependency reflect-metadata to v0.2.1 ([#1300](https://github.com/mx-space/core/issues/1300)) ([cc20933](https://github.com/mx-space/core/commit/cc2093300de4ce23d3409d68b1b34785bbbe8153))
-* **deps:** update nest monorepo to v10.3.0 (minor) ([#1307](https://github.com/mx-space/core/issues/1307)) ([3cbb081](https://github.com/mx-space/core/commit/3cbb081e000708602334d21369a20bf827232123))
-* run prebuild before test ([1ce1824](https://github.com/mx-space/core/commit/1ce1824ef0ee69b8016e89ec0c6b41e200978c7b))
-* some `env` move to runtime inject ([a3510d2](https://github.com/mx-space/core/commit/a3510d252626048c0c3cd271ca366e5b689833e5))
-* test ci ([25bb57e](https://github.com/mx-space/core/commit/25bb57e9d740bd9a72b61a3a6e221a5011177e7e))
-
-
-### Features
-
-* request context ([c643094](https://github.com/mx-space/core/commit/c64309446e83df911e65da796cecca22f8d2c6c8))
-
-
-
-## [4.8.4](https://github.com/mx-space/core/compare/v4.8.3...v4.8.4) (2023-12-12)
-
-
-### Bug Fixes
-
-* **deps:** update algoliasearch-client-javascript monorepo to v4.21.0 (minor) ([#1288](https://github.com/mx-space/core/issues/1288)) ([46c2d1f](https://github.com/mx-space/core/commit/46c2d1fe18733d7dc42844bd1774d3044f9dd32a))
-* **deps:** update babel monorepo to v7.23.6 (patch) ([#1287](https://github.com/mx-space/core/issues/1287)) ([237adc5](https://github.com/mx-space/core/commit/237adc51a4ddc5cc22f28b40f260284f0b7d688d))
-* remove swift ([ab204b8](https://github.com/mx-space/core/commit/ab204b87dea061ffbe4bba184ffb0841c1ab2812))
-* test case ([09db9c9](https://github.com/mx-space/core/commit/09db9c9133cac095fbac53e5942f1ea86ad16640))
-
-
-
-## [4.8.3](https://github.com/mx-space/core/compare/v4.8.2...v4.8.3) (2023-12-11)
-
-
-### Bug Fixes
-
-* test case ([ec37bd1](https://github.com/mx-space/core/commit/ec37bd111b17177cff611f188ef921df79c9226c))
-
-
-
-## [4.8.2](https://github.com/mx-space/core/compare/v4.8.1...v4.8.2) (2023-12-10)
-
-
-### Bug Fixes
-
-* disable pre requirement validation for auth security ([2444e39](https://github.com/mx-space/core/commit/2444e393b37027be0c3915fc7bd755be618cfef8))
-* guard if not passkey ([1cc940d](https://github.com/mx-space/core/commit/1cc940deeddf8200d78e103be350b8f6062907b9))
-* update dockerfile ([593c9bc](https://github.com/mx-space/core/commit/593c9bc55e6f20a579622370cfbb91f5404819d7))
-
-
-
-## [4.8.1](https://github.com/mx-space/core/compare/v4.8.0...v4.8.1) (2023-12-10)
-
-
-### Bug Fixes
-
-* remove hard code ([956d2d6](https://github.com/mx-space/core/commit/956d2d66e667b6a23a1171756be856f5338e9daa))
-
-
-
-# [4.8.0](https://github.com/mx-space/core/compare/v4.8.0-alpha.2...v4.8.0) (2023-12-10)
-
-
-
-# [4.8.0-alpha.2](https://github.com/mx-space/core/compare/v4.8.0-alpha.1...v4.8.0-alpha.2) (2023-12-10)
-
-
-### Bug Fixes
-
-* add env ([6a7cfbd](https://github.com/mx-space/core/commit/6a7cfbd2497c868378e5a6220ab0073bccb33294))
-
-
-
-# [4.8.0-alpha.1](https://github.com/mx-space/core/compare/v4.8.0-alpha.0...v4.8.0-alpha.1) (2023-12-10)
-
-
-### Bug Fixes
-
-* logger module ([b49faaf](https://github.com/mx-space/core/commit/b49faaff0b58e5484380dc7b725a8c25267df752))
-
-
-
-# [4.8.0-alpha.0](https://github.com/mx-space/core/compare/v4.7.2...v4.8.0-alpha.0) (2023-12-10)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.12.23 ([6d213ee](https://github.com/mx-space/core/commit/6d213ee29b65749afbc81efdf49509281fb8ed0b))
-* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.0 ([#1278](https://github.com/mx-space/core/issues/1278)) ([20142ea](https://github.com/mx-space/core/commit/20142eace0beb6a33dce8794f486c1432a24a17c))
-* **deps:** update dependency mongoose to v8.0.3 ([74e5c83](https://github.com/mx-space/core/commit/74e5c83efe1fffde7f6b537cef256d8785c8a0f1))
-* **deps:** update dependency reflect-metadata to v0.1.14 ([b7d5811](https://github.com/mx-space/core/commit/b7d58111b0e48d47e34a1c132de0db57a7689a1b))
-
-
-### Features
-
-* support user login by passkey ([#1285](https://github.com/mx-space/core/issues/1285)) ([03cc449](https://github.com/mx-space/core/commit/03cc449bd6761371357d6b86f2e8d592d15c9a5b))
-
-
-
-## [4.7.2](https://github.com/mx-space/core/compare/v4.7.1...v4.7.2) (2023-12-03)
-
-
-### Bug Fixes
-
-* lockfile ([a7e3cd7](https://github.com/mx-space/core/commit/a7e3cd72832a67851da8b4b6160a41d1ce44561e))
-* windows zip minetype detection ([1e9105a](https://github.com/mx-space/core/commit/1e9105a481ba670683d041695ab82bdaa246b44d))
-
-
-
-## [4.7.1](https://github.com/mx-space/core/compare/v4.7.0...v4.7.1) (2023-12-02)
-
-
-### Bug Fixes
-
-* change clerk auth verify ([1c10b47](https://github.com/mx-space/core/commit/1c10b47e6c956aa1f6e069326de09e4a05c372d6))
-
-
-
-# [4.7.0](https://github.com/mx-space/core/compare/v4.6.3...v4.7.0) (2023-12-02)
-
-
-### Bug Fixes
-
-* pass test case ([0e5eb09](https://github.com/mx-space/core/commit/0e5eb09f483d71f81604147b4bc63c81ac243509))
-* release ci ([d82f913](https://github.com/mx-space/core/commit/d82f9132e05ab7ec13eafa224719a7b27cbf6845))
-
-
-### Features
-
-* support clerk auth ([18b9cbb](https://github.com/mx-space/core/commit/18b9cbb90fb5f6c6e0813cabff7a49ba9df07f43))
-
-
-
-## [4.6.3](https://github.com/mx-space/core/compare/v4.6.2...v4.6.3) (2023-11-30)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.23.5 ([64f6bb5](https://github.com/mx-space/core/commit/64f6bb5267034d8bc14229f1d2e364efeb2899ba))
-* **deps:** update dependency @typegoose/auto-increment to v4 ([#1255](https://github.com/mx-space/core/issues/1255)) ([4dff159](https://github.com/mx-space/core/commit/4dff1597934fadfb8ca016bcac19668dd74c8d47))
-* **deps:** update dependency @typegoose/typegoose to v12 ([#1254](https://github.com/mx-space/core/issues/1254)) ([033395a](https://github.com/mx-space/core/commit/033395a43092d4d68479c74287cfe6fa6b0315f9))
-* **deps:** update dependency axios-retry to v4 ([#1253](https://github.com/mx-space/core/issues/1253)) ([8d63c76](https://github.com/mx-space/core/commit/8d63c763279396153ff4ba03b94d9100839c1fc7))
-* **deps:** update dependency lru-cache to v10.1.0 ([#1247](https://github.com/mx-space/core/issues/1247)) ([c0b193e](https://github.com/mx-space/core/commit/c0b193e29c5dda0f3a3fa9185c1dbc9612df5c21))
-* **deps:** update dependency nestjs-pretty-logger to v0.1.1 ([90ac17e](https://github.com/mx-space/core/commit/90ac17ebe541dd41cc7e4e793d5465c76c0996c0))
-* **deps:** update dependency nestjs-pretty-logger to v0.2.0 ([#1257](https://github.com/mx-space/core/issues/1257)) ([4dee3b2](https://github.com/mx-space/core/commit/4dee3b2792e7f03da1ec6788e5a5ab1ad65411eb))
-* in test ([69b1c5f](https://github.com/mx-space/core/commit/69b1c5fab9bbe084d52f373a33993184decd1276))
-* typings ([221bf5f](https://github.com/mx-space/core/commit/221bf5f5b5a766a9e5a243fbd56baf3399986334))
-* update error throw ([2a97fbe](https://github.com/mx-space/core/commit/2a97fbe24adce37643d3baa112e3f38c18d2d692))
-
-
-
-## [4.6.2](https://github.com/mx-space/core/compare/v4.6.1...v4.6.2) (2023-11-21)
-
-
-### Bug Fixes
-
-* ci ([557c3ce](https://github.com/mx-space/core/commit/557c3ce58430b5bb1dd2c502bed5e7c86aef7232))
-* comment model `refType` type ([1ad151a](https://github.com/mx-space/core/commit/1ad151af09d1fd4b3d1ebe8277a83eb67824861b))
-* comment ref not found statud code ([3a0f67a](https://github.com/mx-space/core/commit/3a0f67ad40bbb2f21240952fc307362ac3e7cdf4))
-* comment refType ([c8039ed](https://github.com/mx-space/core/commit/c8039ed32ec5f426416a532c24f9e1221e6c3c62))
-* **deps:** update babel monorepo to v7.23.4 ([1e8859f](https://github.com/mx-space/core/commit/1e8859ff78cc62f76650f17d5795aa140654bb65))
-* **deps:** update dependency lru-cache to v10.0.3 ([083c427](https://github.com/mx-space/core/commit/083c4276de673280a8c5a6993777d16dcd303e60))
-* **deps:** update nest monorepo to v10.2.10 ([07600f3](https://github.com/mx-space/core/commit/07600f3a848cb4146c67d9be253f8a6b1e5e80ce))
-* guard init module ([6236de7](https://github.com/mx-space/core/commit/6236de73b20786d0f3ae997c18ada3c8505ce609))
-
-
-
-## [4.6.1](https://github.com/mx-space/core/compare/v4.6.0...v4.6.1) (2023-11-19)
-
-
-### Bug Fixes
-
-* comment populate `ref_type`, closes [#1232](https://github.com/mx-space/core/issues/1232) ([c9758a4](https://github.com/mx-space/core/commit/c9758a4d51bcb15541207a1359e72775875c904e))
-* **deps:** update dependency @typegoose/typegoose to v11.7.1 ([57e565b](https://github.com/mx-space/core/commit/57e565be995d4ee203d67701b7f744a0382edb1e))
-* **deps:** update dependency axios-retry to v3.9.1 ([70fd41b](https://github.com/mx-space/core/commit/70fd41beb438796e55675a6563f725e2e86b0809))
-* **deps:** update dependency mongoose to v8.0.1 ([#1221](https://github.com/mx-space/core/issues/1221)) ([2c3a218](https://github.com/mx-space/core/commit/2c3a2188c384d762c67b54bb34de99ab271eab45))
-* **deps:** update nest monorepo to v10.2.9 ([0f26ffb](https://github.com/mx-space/core/commit/0f26ffb114403021cf07df8b4d344f92ab975817))
-* remove cdn download url ([795ab13](https://github.com/mx-space/core/commit/795ab13f13d944dfa8c856562b368cc7752075c3))
-
-
-
-# [4.6.0](https://github.com/mx-space/core/compare/v4.5.3...v4.6.0) (2023-11-16)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.23.3 ([b8adf44](https://github.com/mx-space/core/commit/b8adf44f9c4863065a6108de11196089acc72b66))
-* **deps:** update dependency @nestjs/event-emitter to v2.0.3 ([9f2c47d](https://github.com/mx-space/core/commit/9f2c47d730c311b4321c467bcc2bf1e616ee276b))
-* **deps:** update dependency linkedom to v0.16.4 ([8aa1696](https://github.com/mx-space/core/commit/8aa1696bf5062fad8596884e1534a6fe9da8110b))
-* **deps:** update dependency lru-cache to v10.0.2 ([538c3ae](https://github.com/mx-space/core/commit/538c3ae7c442b409805162a13535c1232ecfd95e))
-* **deps:** update dependency marked to v10 ([#1214](https://github.com/mx-space/core/issues/1214)) ([428bece](https://github.com/mx-space/core/commit/428bece4e76e5ee254238b5a1c9e1069914845dc))
-* **deps:** update dependency marked to v9.1.6 ([d8a0d8a](https://github.com/mx-space/core/commit/d8a0d8ae8412517f84a41b2729343e6845222353))
-* migrate db ([aee6f63](https://github.com/mx-space/core/commit/aee6f6327b73abae89f0e7f9e2bf1d2d3d3ba4c0))
-
-
-### Features
-
-* Sync system ([#1208](https://github.com/mx-space/core/issues/1208)) ([255e05c](https://github.com/mx-space/core/commit/255e05c0d101d487fac97525e8b7bde10a2790e0))
-
-
-
-## [4.5.3](https://github.com/mx-space/core/compare/v4.5.2...v4.5.3) (2023-11-07)
-
-
-### Bug Fixes
-
-* release pipe install ([9070e96](https://github.com/mx-space/core/commit/9070e96213a672ca85b2f0d3723a37c42a5b1f70))
-
-
-
-## [4.5.2](https://github.com/mx-space/core/compare/v4.5.1...v4.5.2) (2023-11-07)
-
-
-### Reverts
-
-* "chore: Refine CI" ([#1196](https://github.com/mx-space/core/issues/1196)) ([affedbb](https://github.com/mx-space/core/commit/affedbb6ff96a3829a31794cbca1bcad45bb9f05))
-
-
-
-## [4.5.1](https://github.com/mx-space/core/compare/v4.5.0...v4.5.1) (2023-11-07)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/cache-manager to v2.1.1 ([0b7352d](https://github.com/mx-space/core/commit/0b7352d471882231ea0af6c50a19d60e12632efd))
-* **deps:** update dependency inquirer to v9 ([#1102](https://github.com/mx-space/core/issues/1102)) ([d7d5f49](https://github.com/mx-space/core/commit/d7d5f49ed46003cfec54acc3bddf4b2529d165f2))
-* **deps:** update dependency marked to v9.1.5 ([274ca23](https://github.com/mx-space/core/commit/274ca237593ca10100ca23e47cb1801740bee606))
-* **deps:** update dependency mongoose to v8 ([#1179](https://github.com/mx-space/core/issues/1179)) ([e5ca485](https://github.com/mx-space/core/commit/e5ca4855c66b69a7fe3f363543da8f50091c5078))
-* **deps:** update nest monorepo to v10.2.8 ([0f3b48c](https://github.com/mx-space/core/commit/0f3b48ca69def2cbd0f3a63df0fb2c33dfe11d0a))
-* link exists check ([b58dc2f](https://github.com/mx-space/core/commit/b58dc2fe044c52dd7f1e71029ddd6c68c692f09f))
-
-
-
-# [4.5.0](https://github.com/mx-space/core/compare/v4.4.1...v4.5.0) (2023-10-31)
-
-
-### Bug Fixes
-
-* **deps:** update dependency marked to v9.1.4 ([3eabdb2](https://github.com/mx-space/core/commit/3eabdb29cb1824fef63f9d94512fa95623d4eeba))
-* **deps:** update dependency mongoose to v7.6.4 ([148f281](https://github.com/mx-space/core/commit/148f281a157fad4d324a1b4d3ddaaea440544803))
-
-
-### Features
-
-* add count apis ([f90772d](https://github.com/mx-space/core/commit/f90772d06cc0aca8fd3e9f9547451e34d7e656bd))
-
-
-
-## [4.4.1](https://github.com/mx-space/core/compare/v4.4.0...v4.4.1) (2023-10-29)
-
-
-### Bug Fixes
-
-* ack path ([05eda82](https://github.com/mx-space/core/commit/05eda82e3b5d5ad6dc105085ef6120c0da360e55))
-* **deps:** update dependency @nestjs/throttler to v5.0.1 ([126c075](https://github.com/mx-space/core/commit/126c075d26d7c562f60b0fb92548b57b97e740ca))
-* **deps:** update dependency axios-retry to v3.8.1 ([d74db15](https://github.com/mx-space/core/commit/d74db15fee1bbaaccbaa63fefcda0de808085f12))
-* **deps:** update dependency linkedom to v0.16.1 ([#1161](https://github.com/mx-space/core/issues/1161)) ([dbd7f1d](https://github.com/mx-space/core/commit/dbd7f1dabc80a7e5c5a341d921d312d701d478a5))
-* **deps:** update dependency marked to v9.1.3 ([dc0799c](https://github.com/mx-space/core/commit/dc0799c74aab81837e825b52f35fbb4d689aa800))
-* **deps:** update dependency nodemailer to v6.9.7 ([#1160](https://github.com/mx-space/core/issues/1160)) ([e6ae312](https://github.com/mx-space/core/commit/e6ae312e5cb7b0408837728a1a58a60ed7ce2f40))
-* **deps:** update dependency ua-parser-js to v1.0.37 ([77f384f](https://github.com/mx-space/core/commit/77f384f1d76d52ad58cebe433bbff9b2b21c8f9c))
-
-
-### Features
-
-* upgrade deps ([a126bbd](https://github.com/mx-space/core/commit/a126bbdf68926ac473cd3c67992469b016c96358))
-
-
-
-# [4.4.0](https://github.com/mx-space/core/compare/v4.3.12...v4.4.0) (2023-10-21)
-
-
-### Features
-
-* **api-client:** add ack controller ([08dc741](https://github.com/mx-space/core/commit/08dc741c6ccc6b32dbb172557634a67a5dd54944))
-
-
-
-## [4.3.12](https://github.com/mx-space/core/compare/v4.3.11...v4.3.12) (2023-10-18)
-
-
-### Bug Fixes
-
-* **deps:** update dependency ua-parser-js to v1.0.36 ([#1132](https://github.com/mx-space/core/issues/1132)) ([badd8e8](https://github.com/mx-space/core/commit/badd8e87a9af1d24b923be75af3a73db18786cc2))
-* disable api cache if query with ts ([b6796b4](https://github.com/mx-space/core/commit/b6796b4c99368c76c299a3642c9f79ccba27f755))
-* judge  is master ([25870cd](https://github.com/mx-space/core/commit/25870cdfadde847e79087de8ab25a6c03ab55779))
-* lint ([a2e351c](https://github.com/mx-space/core/commit/a2e351cc252dd9372d4831b3a30e121d3ffa23c7))
-* typo ([bbc1821](https://github.com/mx-space/core/commit/bbc18216b28dd8dfa2aa20652727865dfcd7eae6))
-
-
-
-## [4.3.11](https://github.com/mx-space/core/compare/v4.3.10...v4.3.11) (2023-09-24)
-
-
-### Bug Fixes
-
-* skip throttler for proxy controller ([62cd807](https://github.com/mx-space/core/commit/62cd80743be73a5bc47ab618062c167bf8a8fd58))
-
-
-
-## [4.3.10](https://github.com/mx-space/core/compare/v4.3.9...v4.3.10) (2023-09-13)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.22.17 (patch) ([#1131](https://github.com/mx-space/core/issues/1131)) ([2f12db6](https://github.com/mx-space/core/commit/2f12db6762baef6b525b1fc87065fd1a41aa60ee))
-* server time middleware apply ([a4e1bc4](https://github.com/mx-space/core/commit/a4e1bc468ef67a53769b7763f62030c47826be44))
-
-
-
-## [4.3.9](https://github.com/mx-space/core/compare/v4.3.8...v4.3.9) (2023-09-07)
-
-
-### Features
-
-* add server time ([30aeaa7](https://github.com/mx-space/core/commit/30aeaa773cd53c6bd5b89bc2b8f5f839f8cba21f))
-
-
-
-## [4.3.8](https://github.com/mx-space/core/compare/v4.3.7...v4.3.8) (2023-09-05)
-
-
-### Bug Fixes
-
-* rss description ([d3c65b2](https://github.com/mx-space/core/commit/d3c65b275dab529421219f3753d93d96decc21cd))
-
-
-
-## [4.3.7](https://github.com/mx-space/core/compare/v4.3.6...v4.3.7) (2023-09-05)
-
-
-### Bug Fixes
-
-* only use swc in dev ([2bd87e9](https://github.com/mx-space/core/commit/2bd87e9a52fc0d37f0e9cc6caa104a2f5b148e15))
-* rss 2.0 field ([8a39eaf](https://github.com/mx-space/core/commit/8a39eafbc709837c9dc00bea664dbb86cf5bbea6))
-
-
-### Features
-
-* add swc to complie ([d23f71a](https://github.com/mx-space/core/commit/d23f71ade0a798fe64cae828b2eaeeffb05910d6))
-
-
-
-## [4.3.6](https://github.com/mx-space/core/compare/v4.3.5...v4.3.6) (2023-09-05)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.22.11 (patch) ([#1120](https://github.com/mx-space/core/issues/1120)) ([637c02c](https://github.com/mx-space/core/commit/637c02cb98d10083670901312df3367fbf44bbcc))
-* feed xml content ([a9913cb](https://github.com/mx-space/core/commit/a9913cb74a8109699ceec7ff85183d090e3b2137))
-* typo ([8e1fe79](https://github.com/mx-space/core/commit/8e1fe79b572c8d292ca746b5991363109502924d))
-
-
-### Features
-
-* upgrade throttle ([a981f14](https://github.com/mx-space/core/commit/a981f14053bcbb78cb29867e9e1037205b9453c3))
-
-
-
-## [4.3.5](https://github.com/mx-space/core/compare/v4.3.4...v4.3.5) (2023-08-23)
-
-
-### Bug Fixes
-
-* remove lean for popluate ([d4d64a2](https://github.com/mx-space/core/commit/d4d64a2f37853d7232da05649287377e863d4a36))
-
-
-
-## [4.3.4](https://github.com/mx-space/core/compare/v4.3.3...v4.3.4) (2023-08-22)
-
-
-### Bug Fixes
-
-* docker-compose command ([#1111](https://github.com/mx-space/core/issues/1111)) ([4495304](https://github.com/mx-space/core/commit/4495304ee02deec6ab16508dc6aae195d72fa17d))
-* redis password auth ([0c1655e](https://github.com/mx-space/core/commit/0c1655e2bb4f18c0e97374119e5076b5e23f531f))
-
-
-
-## [4.3.3](https://github.com/mx-space/core/compare/v4.3.2...v4.3.3) (2023-08-10)
-
-
-### Bug Fixes
-
-* bind port only local ([4993076](https://github.com/mx-space/core/commit/4993076868c373f28b396d5de7a595587a18cf27))
-* build ([a44842a](https://github.com/mx-space/core/commit/a44842a9b0e301c5fcd2ed046a26f4f91e5700bd))
-* remove webshell ([2b36d9a](https://github.com/mx-space/core/commit/2b36d9a301fe5550cb6e694c5d50c7679afcdb86))
-
-
-
-## [4.3.2](https://github.com/mx-space/core/compare/v4.3.1...v4.3.2) (2023-08-10)
-
-
-### Bug Fixes
-
-* typo ([9c3f48a](https://github.com/mx-space/core/commit/9c3f48a819e9d056ad54f7f6b5ee8aaa9a2ae545))
-
-
-
-## [4.3.1](https://github.com/mx-space/core/compare/v4.3.0...v4.3.1) (2023-08-10)
-
-
-### Bug Fixes
-
-* **deps:** update dependency marked to v7 ([#1107](https://github.com/mx-space/core/issues/1107)) ([a6d186a](https://github.com/mx-space/core/commit/a6d186a8c66a3c19560cdf58d8c285c70108bd78))
-* post data wrapped ([4132bab](https://github.com/mx-space/core/commit/4132babb4f731ba9418ae6759152107e7e8c5c00))
-* remove default noe ([e3e49c0](https://github.com/mx-space/core/commit/e3e49c04061bab33ff8a476b43a5bdb91515f272))
-
-
-### Features
-
-* allow disabling SSL/TLS for SMTP ([#1108](https://github.com/mx-space/core/issues/1108)) ([42f2f83](https://github.com/mx-space/core/commit/42f2f83805224ad7b4c62d781d9f8ac962abba0a))
-
-
-
-# [4.3.0](https://github.com/mx-space/core/compare/v4.2.14...v4.3.0) (2023-08-06)
-
-
-### Bug Fixes
-
-* **deps:** update all non-major dependencies ([#1100](https://github.com/mx-space/core/issues/1100)) ([6d781ac](https://github.com/mx-space/core/commit/6d781ac67e7e48b840981d74b8955166336d1358))
-* like list query ([03ca5c6](https://github.com/mx-space/core/commit/03ca5c65921bc42d7e04de0ebb8af09cdaed157b))
-
-
-### Features
-
-* activity controller ([61b4fb3](https://github.com/mx-space/core/commit/61b4fb3db6998676a066b05b7938fe63e2f20f21))
-* add api client for activity controller ([44ab9dc](https://github.com/mx-space/core/commit/44ab9dc2730189ad7c90d0a2e9daa583912e2c1a))
-
-
-
-## [4.2.14](https://github.com/mx-space/core/compare/v4.2.13...v4.2.14) (2023-07-30)
-
-
-### Bug Fixes
-
-* create post error when related post ([72f78a2](https://github.com/mx-space/core/commit/72f78a2004eb6a664ceedbcc561d672c284b7b45))
-* deps version ([c14e8bf](https://github.com/mx-space/core/commit/c14e8bfdc6146c4c587c13ccaa676759f5784adc))
-
-
-
-## [4.2.13](https://github.com/mx-space/core/compare/v4.2.12...v4.2.13) (2023-07-27)
-
-
-### Bug Fixes
-
-* **deps:** update all non-major dependencies (minor) ([#1097](https://github.com/mx-space/core/issues/1097)) ([33b14d8](https://github.com/mx-space/core/commit/33b14d89111a91a76384aa9efeff644135236a1a))
-* **deps:** update all non-major dependencies (patch) ([#1081](https://github.com/mx-space/core/issues/1081)) ([80218f0](https://github.com/mx-space/core/commit/80218f0b0d6451abf288f17a8e1c91e084de69cb))
-* distinguish between the types of comments ([e4ce8cd](https://github.com/mx-space/core/commit/e4ce8cd71997bdd942595b716527fe10c1c81690))
-* leanid ([b30565d](https://github.com/mx-space/core/commit/b30565dc1c847c200bd2912f91fbd3cc416936e5))
-* typo ([7054c79](https://github.com/mx-space/core/commit/7054c799bc70897d03589587e75e6e90bedfe317))
-
-
-
-## [4.2.12](https://github.com/mx-space/core/compare/v4.2.11...v4.2.12) (2023-07-07)
-
-
-### Bug Fixes
-
-* related ([9c16544](https://github.com/mx-space/core/commit/9c165441853fc00c07f56ca83e2167e65a1fcac9))
-
-
-
-## [4.2.11](https://github.com/mx-space/core/compare/v4.2.10...v4.2.11) (2023-07-05)
-
-
-### Bug Fixes
-
-* throw ([950dc8c](https://github.com/mx-space/core/commit/950dc8c9eac3232c6d2f054f1ef1615ccf46b1ea))
-
-
-### Features
-
-* add extra field for `/top` ([a7b4513](https://github.com/mx-space/core/commit/a7b45132996061aef23f96facab18b4b396aef25))
-
-
-
-## [4.2.10](https://github.com/mx-space/core/compare/v4.2.9...v4.2.10) (2023-07-04)
-
-
-### Features
-
-* fn support broardcast ([dadd3c8](https://github.com/mx-space/core/commit/dadd3c8d9a285edf3b3824b60b73cc2e32f1b016))
-
-
-
-## [4.2.9](https://github.com/mx-space/core/compare/v4.2.8...v4.2.9) (2023-07-03)
-
-
-### Bug Fixes
-
-* adjust module seq ([d24dc6e](https://github.com/mx-space/core/commit/d24dc6e89f58787fd54c7a8c76d169acbb9edf20))
-* timeline lean query ([313b8d0](https://github.com/mx-space/core/commit/313b8d075783d5ad13a1f554ce4f32f082931f4a))
-
-
-
-## [4.2.8](https://github.com/mx-space/core/compare/v4.2.7...v4.2.8) (2023-06-28)
-
-
-### Bug Fixes
-
-* add types in comment ([34d8d3f](https://github.com/mx-space/core/commit/34d8d3f41bacd2c152e7e6f08e1f5b347df777a5))
-* nest comment children nested and limit max depth ([ccc5b54](https://github.com/mx-space/core/commit/ccc5b54f241da7ce7493a3ec0018d6a7a463ddb6))
-* omit data if patch post data ([904c31b](https://github.com/mx-space/core/commit/904c31b98ec926ad0bad8589c91beaf85e3e7861))
-* populate comment avatar ([591ae33](https://github.com/mx-space/core/commit/591ae33bce83bc7c194c458edf1496c627d7a352))
-* test port cmd ([f78ede7](https://github.com/mx-space/core/commit/f78ede78e7c6e126d5a5b91a9b4999ef2c10fb51))
-
-
-### Features
-
-* post related each other ([c822398](https://github.com/mx-space/core/commit/c82239807b36f6a94848f5704f1a69a649f515df))
-
-
-
-## [4.2.7](https://github.com/mx-space/core/compare/v4.2.6...v4.2.7) (2023-06-27)
-
-
-### Bug Fixes
-
-* comment mail props ([26f23cb](https://github.com/mx-space/core/commit/26f23cbfe82d722a29b88e93a498643b82bb0c15))
-
-
-### Features
-
-* comment modal add `avatar` and `source` ([cf98260](https://github.com/mx-space/core/commit/cf982603aafdfe36bd124f20049ecfb949353fc5))
-* serverless cache ttl ([0c4849c](https://github.com/mx-space/core/commit/0c4849c945f949be1bd359b2731fb929fbb70a35))
-
-
-
-## [4.2.6](https://github.com/mx-space/core/compare/v4.2.5...v4.2.6) (2023-06-23)
-
-
-### Bug Fixes
-
-* enum uppercase ([33539aa](https://github.com/mx-space/core/commit/33539aa69674d75d002e09532c4080ef01801930))
-* re-sign token ([719a49c](https://github.com/mx-space/core/commit/719a49ca7782fdd44a1ea689f24f4633d1f8bde1))
-
-
-
-## [4.2.5](https://github.com/mx-space/core/compare/v4.2.4...v4.2.5) (2023-06-23)
-
-
-### Bug Fixes
-
-* cache manger ttl ([adbb000](https://github.com/mx-space/core/commit/adbb000bb4ee4d92cf378de8e1f8bcecc1e66423))
-* test ([38f4d3b](https://github.com/mx-space/core/commit/38f4d3b235e96a96c18f446990144f9d4c3be96a))
-
-
-### Features
-
-* add process reporter ([6744f03](https://github.com/mx-space/core/commit/6744f032cf48dbb6ddaf0ec3931c0e45a043df93))
-
-
-
-## [4.2.4](https://github.com/mx-space/core/compare/v4.2.3...v4.2.4) (2023-06-23)
-
-
-### Bug Fixes
-
-* re-sign jwt delay ([7536dd1](https://github.com/mx-space/core/commit/7536dd17cf226ac9f5bd7382d065e276018fc43b))
-
-
-
-## [4.2.3](https://github.com/mx-space/core/compare/v4.2.2...v4.2.3) (2023-06-20)
-
-
-### Bug Fixes
-
-* **note:** remove password field ([b49711c](https://github.com/mx-space/core/commit/b49711c24c9d69cfb8d055d3c69963079862b58e))
-* release script ([f190634](https://github.com/mx-space/core/commit/f1906349463e92572393d73fbcf0f3fb4d290a8e))
-* type error ([45eba0e](https://github.com/mx-space/core/commit/45eba0e327f9f760c92d0e544c174d2a2a7bb365))
-
-
-
-## [4.2.2](https://github.com/mx-space/core/compare/v4.2.1...v4.2.2) (2023-06-17)
-
-
-### Bug Fixes
-
-* test case ([fbcf2cc](https://github.com/mx-space/core/commit/fbcf2cc53f98d4cf4bef2d8e7b48341100d381fb))
-
-
-
-## [4.2.1](https://github.com/mx-space/core/compare/v4.2.0...v4.2.1) (2023-06-16)
-
-
-### Features
-
-* add debug logging ([b5a2b7f](https://github.com/mx-space/core/commit/b5a2b7fdd6d642bb44c692a692ef575fc2be17d1))
-
-
-
-# [4.2.0](https://github.com/mx-space/core/compare/v4.1.0...v4.2.0) (2023-06-16)
-
-
-### Bug Fixes
-
-* **client:** add `$serialized` for response object ([3a9e257](https://github.com/mx-space/core/commit/3a9e25763ef67c54918f2ee34cccac816eb7bf3c))
-* cp .env in docker ci ([3e48439](https://github.com/mx-space/core/commit/3e484394c41aab0e817ee28a0e19f184a2e54c14))
-* docker build ([944c571](https://github.com/mx-space/core/commit/944c5712103db7535db6ab3f8b1633af1b489848))
-
-
-
-# [4.1.0](https://github.com/mx-space/core/compare/v4.1.0-beta.1...v4.1.0) (2023-06-08)
-
-
-### Bug Fixes
-
-* escapeXml for feed ([5821c04](https://github.com/mx-space/core/commit/5821c04640a813a243ca42d8248d930cf5645941))
-
-
-
-# [4.1.0-beta.1](https://github.com/mx-space/core/compare/v4.1.0-beta.0...v4.1.0-beta.1) (2023-06-07)
-
-
-### Bug Fixes
-
-* add config encrypt args to dockerfile ([2f455dc](https://github.com/mx-space/core/commit/2f455dc9b9bdf0f9fa8398c4c7ab66a801c57f48))
-* init proj script ([bec063f](https://github.com/mx-space/core/commit/bec063f8b13e47ae943d525c6899ebb2298fcbaf))
-* remove marked warning ([f3f47ef](https://github.com/mx-space/core/commit/f3f47efa46dd55ebd157c1a963060cb87df0803b))
-
-
-### Features
-
-* add some info on comment render ([a120498](https://github.com/mx-space/core/commit/a120498252f354432df3067ddef40db7652940ec))
-
-
-### Performance Improvements
-
-* cache get subscribe email template ([1b602ea](https://github.com/mx-space/core/commit/1b602eac4b4f3e838adc04a47529e63b05673046))
-
-
-
-# [4.1.0-beta.0](https://github.com/mx-space/core/compare/v4.1.0-alpha.0...v4.1.0-beta.0) (2023-06-06)
-
-
-### Bug Fixes
-
-* bypass if not init system ([99b7a03](https://github.com/mx-space/core/commit/99b7a036b07542274bcc4fdbecf2e3cf6a66bf35))
-* update test case ([771d6c5](https://github.com/mx-space/core/commit/771d6c5cd59933c9d95a6e25fc4ad1d0fcd722b0))
-
-
-### Features
-
-* update email template ([a874c66](https://github.com/mx-space/core/commit/a874c66b729c87b2bb63c91f2bb1b43f6d26d853))
-
-
-
-# [4.1.0-alpha.0](https://github.com/mx-space/core/compare/v4.0.2...v4.1.0-alpha.0) (2023-06-04)
-
-
-### Bug Fixes
-
-* **deps:** update all non-major dependencies (patch) ([#1079](https://github.com/mx-space/core/issues/1079)) ([4203077](https://github.com/mx-space/core/commit/420307711470c9cb08655e8d74d32249a3e23b0c))
-* push script ([754f560](https://github.com/mx-space/core/commit/754f56071202719c265d8facbae79309c51cfeae))
-
-
-
-## [4.0.2](https://github.com/mx-space/core/compare/v4.0.1...v4.0.2) (2023-05-25)
-
-
-### Bug Fixes
-
-* **deps:** update all non-major dependencies (patch) ([#1072](https://github.com/mx-space/core/issues/1072)) ([316ad0b](https://github.com/mx-space/core/commit/316ad0b25cef55a4da2206a659d4e34c9b4ba4fd))
-* **deps:** update all non-major dependencies (patch) ([#1076](https://github.com/mx-space/core/issues/1076)) ([96604b6](https://github.com/mx-space/core/commit/96604b6e705ea1756339c7d4281e5a016c19aac2))
-* **serverless:** delete stale built-in function ([83d8eed](https://github.com/mx-space/core/commit/83d8eed681c9d9bfa7223751d5c1e133da3ce6a6))
-
-
-
-## [4.0.1](https://github.com/mx-space/core/compare/v4.0.0...v4.0.1) (2023-05-11)
-
-
-### Bug Fixes
-
-* update xlog get_page_id ([3c3a4f7](https://github.com/mx-space/core/commit/3c3a4f7bb47cb68755549bbd32db3374d1cb1502))
-
-
-
-# [4.0.0](https://github.com/mx-space/core/compare/v3.43.7...v4.0.0) (2023-05-02)
-
-
-
-## [3.43.7](https://github.com/mx-space/core/compare/v3.43.6...v3.43.7) (2023-04-30)
-
-
-### Bug Fixes
-
-* image record filter ([fa2f72a](https://github.com/mx-space/core/commit/fa2f72a229a1baf9494350a060691b9f91942566))
-* images uniq ([9f62272](https://github.com/mx-space/core/commit/9f6227273df305f10f840e472b31ffd235a8251f))
-
-
-### Features
-
-* support page reorder ([e577109](https://github.com/mx-space/core/commit/e577109b862154b784ef295d58f4dc39d59b098c))
-
-
-
-## [3.43.6](https://github.com/mx-space/core/compare/v3.43.5...v3.43.6) (2023-04-30)
-
-
-### Bug Fixes
-
-* search posts with category ([71f20e3](https://github.com/mx-space/core/commit/71f20e3c7aef8c289fbdbcd10ac84bb54e6cca85))
-
-
-
-## [3.43.5](https://github.com/mx-space/core/compare/v3.43.4...v3.43.5) (2023-04-29)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @types/jsonwebtoken to v9.0.2 ([#1064](https://github.com/mx-space/core/issues/1064)) ([c89f4cf](https://github.com/mx-space/core/commit/c89f4cf22e08e897d000af91b8ef1752c2af9d66))
-* **deps:** update dependency mongoose to v7.1.0 ([#1065](https://github.com/mx-space/core/issues/1065)) ([291a2f4](https://github.com/mx-space/core/commit/291a2f4312e293aa530807ef109921251df8aee8))
-* **deps:** update dependency mongoose-lean-getters to v1 ([#1066](https://github.com/mx-space/core/issues/1066)) ([617d929](https://github.com/mx-space/core/commit/617d929773af9a78e290aa3a18dcd57e3b81be57))
-* **deps:** update dependency rxjs to v7.8.1 ([#1062](https://github.com/mx-space/core/issues/1062)) ([910b037](https://github.com/mx-space/core/commit/910b0373ec698a4aabc395a30ebf64f7d2739ec7))
-* remove require cache after install deps ([bda1322](https://github.com/mx-space/core/commit/bda13226d71ab65bbdbfab6553a10eb3da41f97c))
-
-
-### Features
-
-* select `meta` and `images` for top ([cd4c898](https://github.com/mx-space/core/commit/cd4c89857a0a2843b1caed2b60fc53eb6c2e6d21))
-
-
-
-## [3.43.4](https://github.com/mx-space/core/compare/v3.43.3...v3.43.4) (2023-04-25)
-
-
-### Bug Fixes
-
-* autopopulate ([dd0ca23](https://github.com/mx-space/core/commit/dd0ca238854219bef6714d7c5cf5c3436214ef12))
-* autopopulate note ([040856e](https://github.com/mx-space/core/commit/040856e57b5464778edc46ac75c42ae00134abc1))
-* batch to schedule ([ccd570d](https://github.com/mx-space/core/commit/ccd570dac3a35625a2b54b4b7b8d8b83c944d179))
-* **deps:** update dependency @typegoose/typegoose to v11.0.2 ([#1048](https://github.com/mx-space/core/issues/1048)) ([b16260b](https://github.com/mx-space/core/commit/b16260bd9d952f1a7185cdd9fe49ecc14535d009))
-* **deps:** update dependency commander to v10 ([#984](https://github.com/mx-space/core/issues/984)) ([4aee684](https://github.com/mx-space/core/commit/4aee6846fb3e40d0c3f8fd69481efaffb9aea984))
-* **deps:** update dependency isbot to v3.6.10 ([#1055](https://github.com/mx-space/core/issues/1055)) ([5580aae](https://github.com/mx-space/core/commit/5580aae3ca5722e7228b615a5b29b74f0440ea3e))
-* **deps:** update dependency mongoose to v7.0.4 ([#1053](https://github.com/mx-space/core/issues/1053)) ([d366d78](https://github.com/mx-space/core/commit/d366d7890d871c9d95d8a754b6871346d3676260))
-* lean of autopopulate ([cb72911](https://github.com/mx-space/core/commit/cb72911b181550e018dbe6679d385277a101c9e2))
-* limit comment max deep of 10 ([9fa805a](https://github.com/mx-space/core/commit/9fa805a5d69c4d8df6a81c0b4384888c8d5a4149))
-
-
-
-## [3.43.3](https://github.com/mx-space/core/compare/v3.43.2...v3.43.3) (2023-04-19)
-
-
-### Bug Fixes
-
-* check note is not public ([df2c541](https://github.com/mx-space/core/commit/df2c5414d19535362b222a584535e9d74f432516))
-* **deps:** update dependency @fastify/multipart to v7.6.0 ([#1043](https://github.com/mx-space/core/issues/1043)) ([057d83d](https://github.com/mx-space/core/commit/057d83d587385e6b0b6077138b84200595bedc86))
-* **deps:** update dependency @fastify/static to v6.10.1 ([#1032](https://github.com/mx-space/core/issues/1032)) ([a5eb45f](https://github.com/mx-space/core/commit/a5eb45f0a355cf428f3e4327ef6e4d6a6600b8b3))
-* **deps:** update dependency @nestjs/schedule to v2.2.1 ([#1038](https://github.com/mx-space/core/issues/1038)) ([5d66f02](https://github.com/mx-space/core/commit/5d66f02ca3a78c452b0eba11e5f2ae91075335d8))
-* **deps:** update dependency algoliasearch to v4.17.0 ([#1033](https://github.com/mx-space/core/issues/1033)) ([9bf7fda](https://github.com/mx-space/core/commit/9bf7fdab3f66b6e70cb66f33949ccc9404c168eb))
-* **deps:** update dependency lru-cache to v8.0.5 ([#1039](https://github.com/mx-space/core/issues/1039)) ([cb791f1](https://github.com/mx-space/core/commit/cb791f1f2c8314792a057f163f69cbb6b1972df0))
-* **deps:** update dependency ua-parser-js to v1.0.35 ([#1031](https://github.com/mx-space/core/issues/1031)) ([9e8695d](https://github.com/mx-space/core/commit/9e8695d23ebcb90fdf7a6081c6ebe46277cab4a9))
-* **deps:** update dependency vm2 to v3.9.16 ([#1040](https://github.com/mx-space/core/issues/1040)) ([da6f397](https://github.com/mx-space/core/commit/da6f39793230cf9e30db8ab0c49f91698f28c2ed))
-* **deps:** update nest monorepo to v9.4.0 (minor) ([#1044](https://github.com/mx-space/core/issues/1044)) ([ab80510](https://github.com/mx-space/core/commit/ab805109fbfa7aa78a0c31a9f05f7fbde492643d))
-* secret note should shown when logged ([c72d921](https://github.com/mx-space/core/commit/c72d9216d45d601542e0243f2e540f3f1d8c89eb))
-
-
-
-## [3.43.2](https://github.com/mx-space/core/compare/v3.43.1...v3.43.2) (2023-04-08)
-
-
-### Bug Fixes
-
-* getconfig max retry count and encrypt key ([fd56106](https://github.com/mx-space/core/commit/fd5610650f13e140e5e57579df8a7f47cb5b3d33))
-
-
-### Features
-
-* add api for get full url by id ([974cd17](https://github.com/mx-space/core/commit/974cd1751cffcf9a8cf9c9b328434e85e51946ae))
-
-
-
-## [3.43.1](https://github.com/mx-space/core/compare/v3.43.0...v3.43.1) (2023-04-05)
-
-
-### Bug Fixes
-
-* **posts:** get post paginate should parse `meta` as json ([f7b1d0d](https://github.com/mx-space/core/commit/f7b1d0d280dd8371c94a137be75dba3a5bd93957))
-
-
-### Features
-
-* add snippet for xlog summary ([710c083](https://github.com/mx-space/core/commit/710c083c4f5352dfb3c7829cb992533cd205658d))
-
-
-
-# [3.43.0](https://github.com/mx-space/core/compare/v3.42.7...v3.43.0) (2023-04-05)
-
-
-### Bug Fixes
-
-* built-in snippets reference missing ([9ca58db](https://github.com/mx-space/core/commit/9ca58db10ea1b1f184b5430175f14b355c35c7fb))
-* make ts happy ([3f852a7](https://github.com/mx-space/core/commit/3f852a73b8e3a8748afd022181026fbeb6e26f4c))
-
-
-
-## [3.42.7](https://github.com/mx-space/core/compare/v3.42.6...v3.42.7) (2023-03-29)
-
-
-
-## [3.42.6](https://github.com/mx-space/core/compare/v3.42.5...v3.42.6) (2023-03-28)
-
-
-### Bug Fixes
-
-* comment `pin` default ([4f63b48](https://github.com/mx-space/core/commit/4f63b48de670a99ef3df448326c2a5b26db0462c))
-
-
-
-## [3.42.5](https://github.com/mx-space/core/compare/v3.42.4...v3.42.5) (2023-03-26)
-
-
-### Bug Fixes
-
-* **api-client:** add missing property `location` ([e6fd545](https://github.com/mx-space/core/commit/e6fd545c3b51a0f594608b38740f08d842385d40))
-* change getter of mongoose `_id` ([8dc1197](https://github.com/mx-space/core/commit/8dc1197a56979437938aa9338e50f4d17b9e6e8a))
-* **deps:** update babel monorepo to v7.21.3 ([#1015](https://github.com/mx-space/core/issues/1015)) ([ef16942](https://github.com/mx-space/core/commit/ef1694258fa97c7920b2c8a07d872b2ee005be2e))
-* **deps:** update dependency @babel/plugin-transform-modules-commonjs to v7.21.2 ([#992](https://github.com/mx-space/core/issues/992)) ([050030d](https://github.com/mx-space/core/commit/050030dfdbc5e90c279f86cc3fdf0f1439772df7))
-* **deps:** update dependency @fastify/multipart to v7.4.2 ([#1000](https://github.com/mx-space/core/issues/1000)) ([55b329d](https://github.com/mx-space/core/commit/55b329da11dc4780ce0fbe636cb75826460a8232))
-* **deps:** update dependency @typegoose/auto-increment to v2.2.0 ([#993](https://github.com/mx-space/core/issues/993)) ([bdec391](https://github.com/mx-space/core/commit/bdec391f27c27536aa08d4aa80c88496ed243942))
-* **deps:** update dependency algoliasearch to v4.15.0 ([#1004](https://github.com/mx-space/core/issues/1004)) ([093fe6f](https://github.com/mx-space/core/commit/093fe6f68b330ba07e71aba53de8ae39c4e55de3))
-* **deps:** update dependency ejs to v3.1.9 ([#1016](https://github.com/mx-space/core/issues/1016)) ([ea2cb8f](https://github.com/mx-space/core/commit/ea2cb8f5145ea0b6ff563e6f4d872318c10161f7))
-* **deps:** update dependency linkedom to v0.14.24 ([#1002](https://github.com/mx-space/core/issues/1002)) ([b7c0dc8](https://github.com/mx-space/core/commit/b7c0dc8b9eeb160e001d34acce97c0971283d389))
-* **deps:** update dependency lru-cache to v7.17.0 ([#985](https://github.com/mx-space/core/issues/985)) ([311bbaa](https://github.com/mx-space/core/commit/311bbaa29f510234eb2885595163a99d9a8fa911))
-* **deps:** update dependency lru-cache to v7.17.2 ([#996](https://github.com/mx-space/core/issues/996)) ([c11d68e](https://github.com/mx-space/core/commit/c11d68e68c8fb6345cf102f94cfaf117739178a4))
-* **deps:** update dependency lru-cache to v7.18.3 ([#1006](https://github.com/mx-space/core/issues/1006)) ([7fb2087](https://github.com/mx-space/core/commit/7fb20873e2289aef24e2c697ccdede2d2c11d23c))
-* **deps:** update dependency mongoose to v6.10.3 ([#1007](https://github.com/mx-space/core/issues/1007)) ([9d8eb9d](https://github.com/mx-space/core/commit/9d8eb9d64fae81adf36d737c509e8d7b63944366))
-* **deps:** update dependency mongoose to v6.9.3 ([#986](https://github.com/mx-space/core/issues/986)) ([2e8bc4a](https://github.com/mx-space/core/commit/2e8bc4a25b3346d31ac1c964a19c4608c373b9fc))
-* **deps:** update dependency qs to v6.11.1 ([#1001](https://github.com/mx-space/core/issues/1001)) ([e96a9b9](https://github.com/mx-space/core/commit/e96a9b953aa56ad2886aa5bf4ce9015ad6f6afdf))
-* **deps:** update dependency ua-parser-js to v1.0.34 ([#999](https://github.com/mx-space/core/issues/999)) ([a678403](https://github.com/mx-space/core/commit/a6784036a58b76e6cf1495f8d83b3f58997582d0))
-
-
-### Features
-
-* auto download admin ([#1005](https://github.com/mx-space/core/issues/1005) ([f57b23e](https://github.com/mx-space/core/commit/f57b23e5153dbd03cafd3b0281ee187dac0b3ed2))
-
-
-
-## [3.42.4](https://github.com/mx-space/core/compare/v3.42.3...v3.42.4) (2023-02-21)
-
-
-### Bug Fixes
-
-* **deps:** update nest monorepo to v9.3.9 ([#979](https://github.com/mx-space/core/issues/979)) ([792f2d5](https://github.com/mx-space/core/commit/792f2d55eb3a13478b152b16c934b0f6fdd85afd))
-
-
-
-## [3.42.3](https://github.com/mx-space/core/compare/v3.42.2...v3.42.3) (2023-02-14)
-
-
-### Bug Fixes
-
-* **fn:** cached context ([145355f](https://github.com/mx-space/core/commit/145355fd4fe1266b8ac3dd333e12bdc62c79bd3b))
-
-
-
-## [3.42.2](https://github.com/mx-space/core/compare/v3.42.1...v3.42.2) (2023-02-14)
-
-
-### Bug Fixes
-
-* **api-client:** subscribe post body instend of params ([8f028a9](https://github.com/mx-space/core/commit/8f028a9ac26d80f96a06c929dadaa452f59a1bbb))
-* **deps:** update dependency mongoose-lean-getters to v0.4.0 ([#974](https://github.com/mx-space/core/issues/974)) ([a62fe1c](https://github.com/mx-space/core/commit/a62fe1cbef880188c31aeb6b4e381fb68704bca4))
-* **fn:** ip default function ([4b6f303](https://github.com/mx-space/core/commit/4b6f303829d9e6f2bb1220254f0425f9ff3a80bb))
-* **subscribe:** add guard for subscribe ([2ab6861](https://github.com/mx-space/core/commit/2ab6861d37a8d6d34b22a798485357d1ce57f1d8))
-
-
-
-## [3.42.1](https://github.com/mx-space/core/compare/v3.42.0...v3.42.1) (2023-02-14)
-
-
-### Bug Fixes
-
-* **api-client:** remove export adaptor source file ([d7c5c80](https://github.com/mx-space/core/commit/d7c5c80e47d8c4a90052c206714fbe4e77a77d99))
-* zip asset script ([7f97a77](https://github.com/mx-space/core/commit/7f97a775c52a73de24bceff4d9224f057ea71139))
-
-
-
-# [3.42.0](https://github.com/mx-space/core/compare/v3.41.4...v3.42.0) (2023-02-14)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/schedule to v2.2.0 ([#959](https://github.com/mx-space/core/issues/959)) ([623e8b0](https://github.com/mx-space/core/commit/623e8b0e6c6227f96efd29e9c1dce2fe6ee314de))
-* **deps:** update dependency commander to v9.5.0 ([#960](https://github.com/mx-space/core/issues/960)) ([aeed31e](https://github.com/mx-space/core/commit/aeed31ef83b2861a36641284a78fc771c9dca024))
-* **deps:** update dependency mongoose to v6.9.1 ([#971](https://github.com/mx-space/core/issues/971)) ([41b401d](https://github.com/mx-space/core/commit/41b401d9ef11411b20a325f6d748c257c33d8799))
-* **deps:** update dependency rxjs to v7.8.0 ([#920](https://github.com/mx-space/core/issues/920)) ([f910789](https://github.com/mx-space/core/commit/f910789527d260cf60dd5bd723897dba7b493dc0))
-* email enable then can subscribe ([2aa46d0](https://github.com/mx-space/core/commit/2aa46d07e94dca64530aa18588d9f264829ec876))
-* init project script ([bfc2e25](https://github.com/mx-space/core/commit/bfc2e25fabaf863d89aa25c10865bf602ccc0811))
-* **subscribe:** provide toC `allow_type` ([35e1864](https://github.com/mx-space/core/commit/35e18646e5bfb4a367dff39cc56aa5d04b59c57a))
-
-
-### Features
-
-* **fn:** support built-in fnnctions ([#967](https://github.com/mx-space/core/issues/967)) ([80526ba](https://github.com/mx-space/core/commit/80526baaf146ccafa43ff7ff0500c2dcd0c31b1e))
-* newsletter subscribe ([#968](https://github.com/mx-space/core/issues/968)) ([c8667ec](https://github.com/mx-space/core/commit/c8667ec5e296bf8fe4054010515145661f617c1d))
-* **subscribe:** add feature list toggle ([1b80adb](https://github.com/mx-space/core/commit/1b80adb02c4c93a7d754f9b0065a8e0bed496e5a))
-
-
-
-## [3.41.4](https://github.com/mx-space/core/compare/v3.41.3...v3.41.4) (2023-02-10)
-
-
-### Bug Fixes
-
-* asset push script ([7a1ccdf](https://github.com/mx-space/core/commit/7a1ccdf9d95770661ef6f68554fb0403217f565b))
-* docker compose ([#961](https://github.com/mx-space/core/issues/961)) ([9b6e1ff](https://github.com/mx-space/core/commit/9b6e1ffebc021a041c655beee19edf7174228c8f))
-* **tool:** ipv6 query, closes [#962](https://github.com/mx-space/core/issues/962) ([aabed05](https://github.com/mx-space/core/commit/aabed05b607f4e016d062246c55c587d3c319c42))
-
-
-
-## [3.41.3](https://github.com/mx-space/core/compare/v3.41.2...v3.41.3) (2023-02-03)
-
-
-### Bug Fixes
-
-* add pure fetch adaptor ([7d96c26](https://github.com/mx-space/core/commit/7d96c2671b147be9c6c295d559fa364f44c0ac58))
-* **deps:** update dependency @babel/plugin-transform-typescript to v7.20.13 ([0fc6a92](https://github.com/mx-space/core/commit/0fc6a9287ad3660cf6532fa123d0657ac4ca3032))
-* **deps:** update dependency nodemailer to v6.9.1 ([982cae3](https://github.com/mx-space/core/commit/982cae341cac9a603caceda86c40a5c73a9d7041))
-* **deps:** update dependency ua-parser-js to v1.0.33 ([940c22a](https://github.com/mx-space/core/commit/940c22af8bd2f1fe00ffe317f4905fd200e6e537))
-* resolutions ([3c7ce43](https://github.com/mx-space/core/commit/3c7ce4347fdbdea9c230fc96d9c9d36a55207a43))
-
-
-### Features
-
-* upgrade mongoose ([42e8037](https://github.com/mx-space/core/commit/42e803775363d0bcff2d5c4436e7171aca41c1df))
-
-
-
-## [3.41.2](https://github.com/mx-space/core/compare/v3.41.1...v3.41.2) (2023-01-20)
-
-
-### Bug Fixes
-
-* **deps:** update dependency mongoose to v6.8.4 ([1f024c2](https://github.com/mx-space/core/commit/1f024c266a27ee3352605994b4e7623f4dc4b5b7))
-* replace ip endpoint ([5af255f](https://github.com/mx-space/core/commit/5af255ffa231f155cd7d4f10452d31657328b08e))
-
-
-
-## [3.41.1](https://github.com/mx-space/core/compare/v3.41.0...v3.41.1) (2023-01-17)
-
-
-### Bug Fixes
-
-* apply link ignore outdate ([b014abc](https://github.com/mx-space/core/commit/b014abc66dc69d2baa43e9bc1f89d1cbab9c58c3))
-* **ci:** remove invalid variable ([#934](https://github.com/mx-space/core/issues/934)) ([40faa35](https://github.com/mx-space/core/commit/40faa3502cc703f753c2c07eef32f8d67a5a9499))
-* **deps:** update dependency @typegoose/auto-increment to v2 ([#919](https://github.com/mx-space/core/issues/919)) ([82c9d20](https://github.com/mx-space/core/commit/82c9d206d14a96482a3e2b61163bc23d62c0fefd))
-
-
-
-# [3.41.0](https://github.com/mx-space/core/compare/v3.40.0...v3.41.0) (2022-12-25)
-
-
-### Bug Fixes
-
-* **api-client:** add enum to exports ([9e82b8f](https://github.com/mx-space/core/commit/9e82b8fc280dc06379f860b4df60053639a4b4b3))
-* argv of `encrypt_key` ([36ffaa4](https://github.com/mx-space/core/commit/36ffaa4fae2105485e73469fe4e1c632dd2cc077))
-* delete backup use body params ([19f7556](https://github.com/mx-space/core/commit/19f755658953e021cce1a797bdeebc697283db49))
-* **feed:** hide note secret in rss ([bad4661](https://github.com/mx-space/core/commit/bad4661b268fd1daf418a3d3b083e1578d112443))
-* hide note secret text ([82451b8](https://github.com/mx-space/core/commit/82451b8cb7a5a273afc2b1f4d6e167f736f911be))
-
-
-### Features
-
-* add custom encrypt algorithm ([3636172](https://github.com/mx-space/core/commit/3636172b0566eca6298a17914ee0269edac37315))
-* support encrypt secret and configs ([#931](https://github.com/mx-space/core/issues/931)) ([9ed8b32](https://github.com/mx-space/core/commit/9ed8b32f9e3aeda306349d5a8199a02b7430c41a))
-
-
-
-# [3.40.0](https://github.com/mx-space/core/compare/v3.39.7...v3.40.0) (2022-12-23)
-
-
-### Bug Fixes
-
-* comment ref should select `content` ([d90efeb](https://github.com/mx-space/core/commit/d90efebb8c0223bc5e73e5298f249f87069b1df3))
-* missing api-client types ([4c603dc](https://github.com/mx-space/core/commit/4c603dcba11239d450fff8bd0d94b0e1f3610cee))
-* mongo query use objectId ([205b98e](https://github.com/mx-space/core/commit/205b98e27e3b5740b54ea057f309685dffe7270b))
-* **recently:** delete with ref comments ([7fe8bf6](https://github.com/mx-space/core/commit/7fe8bf6290a265327c0646999fb895392a366728))
-
-
-### Features
-
-* add `liked` for post and note model ([1073c67](https://github.com/mx-space/core/commit/1073c6764612a6a3c46e13d32807d3d72a1662d5))
-* **api-client:** add `attitude` method ([b44bb41](https://github.com/mx-space/core/commit/b44bb411f0ccf1a9499e4300deaf2570df9e4bf6))
-* recently response add `comments` ([d25ba45](https://github.com/mx-space/core/commit/d25ba45853877af051ffa0a27e06665f04d9a666))
-* **recently:** add attitude ([963b07a](https://github.com/mx-space/core/commit/963b07a510412f5afc5359351f23fabeb7c94d62))
-
-
-
-## [3.39.7](https://github.com/mx-space/core/compare/v3.39.6...v3.39.7) (2022-12-22)
-
-
-
-## [3.39.6](https://github.com/mx-space/core/compare/v3.39.5...v3.39.6) (2022-12-21)
-
-
-### Bug Fixes
-
-* downgrade class-validator to 0.13.2 ([38b6c21](https://github.com/mx-space/core/commit/38b6c217cf15d911e85b2a79553b313983ac2a6d))
-
-
-
-## [3.39.5](https://github.com/mx-space/core/compare/v3.39.4...v3.39.5) (2022-12-21)
-
-
-
-## [3.39.4](https://github.com/mx-space/core/compare/v3.39.3...v3.39.4) (2022-12-21)
-
-
-### Bug Fixes
-
-* build ci ([3160ced](https://github.com/mx-space/core/commit/3160cedfd11fa93bc1c13519bf833c362e8b830e))
-* **deps:** update dependency algoliasearch to v4.14.3 ([7a71762](https://github.com/mx-space/core/commit/7a71762f48f484e2c75a978ca05aae042500e9b1))
-* **deps:** update dependency mongoose to v6.8.1 ([06ab476](https://github.com/mx-space/core/commit/06ab476c8af5dd6b017e8738e52927d392adffbf))
-* revert update service ([659d2bc](https://github.com/mx-space/core/commit/659d2bc9b488a0436b27731c5a7968275e225f0b))
-
-
-### Features
-
-* add `liked` on article response ([190596f](https://github.com/mx-space/core/commit/190596f318f49ef09aa3e37b566420c81c43c436))
-* move api-client as core's monorepo ([a281f45](https://github.com/mx-space/core/commit/a281f45ab49d2d83ba5a054438e061f2e23ddd35))
-* use ghproxy to speed up update admin ([00d34c9](https://github.com/mx-space/core/commit/00d34c90af64458695fc8fb4691bc2208961295e))
-
-
-
-## [3.39.3](https://github.com/mx-space/core/compare/v3.39.2...v3.39.3) (2022-12-18)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @fastify/static to v6.6.0 ([#892](https://github.com/mx-space/core/issues/892)) ([79ca6cb](https://github.com/mx-space/core/commit/79ca6cb6baff9ac47092cf862e5dff77bf834071))
-* **deps:** update dependency @nestjs/swagger to v6.1.4 ([f69b4d2](https://github.com/mx-space/core/commit/f69b4d2bf253dbdc4159db854475f6f25bb5d797))
-* **deps:** update dependency @typegoose/auto-increment to v1.9.0 ([#908](https://github.com/mx-space/core/issues/908)) ([7b52ae6](https://github.com/mx-space/core/commit/7b52ae6d4159684e541659d5b9b14bfdbc4e656f))
-* **deps:** update dependency class-validator to v0.14.0 ([#909](https://github.com/mx-space/core/issues/909)) ([51f0967](https://github.com/mx-space/core/commit/51f09678bb0f82f49fa3026cacf5359e28dc0363))
-* **deps:** update dependency dayjs to v1.11.7 ([b0fe725](https://github.com/mx-space/core/commit/b0fe725657dff279f689856bb973be3e8f02f037))
-* **deps:** update dependency json5 to v2.2.2 ([48df514](https://github.com/mx-space/core/commit/48df51415db5a1f50506d55982e93564e24d3b09))
-* **deps:** update dependency marked to v4.2.4 ([c88016d](https://github.com/mx-space/core/commit/c88016d5b0115eb5857f990c57eba4b5ae4aeb61))
-* **deps:** update dependency mongoose to v6.8.0 ([#895](https://github.com/mx-space/core/issues/895)) ([49ca2e8](https://github.com/mx-space/core/commit/49ca2e85ab4557947ec4e7b3c4eb0545dc162b07))
-* **deps:** update dependency vm2 to v3.9.13 ([a5ea6ef](https://github.com/mx-space/core/commit/a5ea6ef4bdac71240efec66ae06a60cee88e2611))
-* download progress of update admin ([da6336b](https://github.com/mx-space/core/commit/da6336b6f5ae5f1ad41a4ea9a7831392c2a5725e))
-
-
-
-## [3.39.2](https://github.com/mx-space/core/compare/v3.39.1...v3.39.2) (2022-12-04)
-
-
-### Bug Fixes
-
-* clear scope require cache only ([f1fe50e](https://github.com/mx-space/core/commit/f1fe50e161b75c78ec8eac5244fc602959146b08))
-* **deps:** update dependency @babel/core to v7.20.5 ([e00745b](https://github.com/mx-space/core/commit/e00745be47d0c0547f70f95407331cceec8fa77d))
-* **deps:** update dependency @typegoose/typegoose to v9.13.2 ([#874](https://github.com/mx-space/core/issues/874)) ([54ab234](https://github.com/mx-space/core/commit/54ab2346c48e223cd3e3596bb893ab3697a1afe1))
-* **deps:** update dependency mongoose to v6.7.4 ([d9404ff](https://github.com/mx-space/core/commit/d9404ffaf0c01e0639871e2cd5843b130c106857))
-* **deps:** update dependency mongoose to v6.7.5 ([3529335](https://github.com/mx-space/core/commit/35293356efec7904dc1aac1928da3df15909b331))
-* **deps:** update dependency rxjs to v7.6.0 ([#890](https://github.com/mx-space/core/issues/890)) ([f368016](https://github.com/mx-space/core/commit/f368016417c2fab6369d16d60ea219f73ae608fd))
-* **deps:** update dependency vm2 to v3.9.12 ([fda8c44](https://github.com/mx-space/core/commit/fda8c44d8e98a8780b99f2078ff9774417cae900))
-* **deps:** update nest monorepo to v9.2.1 ([b044457](https://github.com/mx-space/core/commit/b04445745383a4a92abb50db9b95479e9aad654a))
-* set select false for `secret` ([7beeab3](https://github.com/mx-space/core/commit/7beeab3e1508ca68ff666294f467bd3ab911e5b0))
-
-
-
-## [3.39.1](https://github.com/mx-space/core/compare/v3.39.0...v3.39.1) (2022-11-25)
-
-
-### Bug Fixes
-
-* update admin version ([990457d](https://github.com/mx-space/core/commit/990457ddee8bc09849e632949bc0ef400b81a668))
-
-
-
-# [3.39.0](https://github.com/mx-space/core/compare/v3.38.6...v3.39.0) (2022-11-25)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @fastify/static to v6.5.1 ([dd88cac](https://github.com/mx-space/core/commit/dd88cac2b72dfaf984e0b85a820bed577fc44bd4))
-* **deps:** update dependency linkedom to v0.14.20 ([eada716](https://github.com/mx-space/core/commit/eada716edba4c2d2d558c178c376bd52a3028714))
-* **deps:** update dependency linkedom to v0.14.21 ([0839361](https://github.com/mx-space/core/commit/0839361e1e25eec6f734da9ab48939f86799f300))
-* **deps:** update dependency marked to v4.2.3 ([1441b79](https://github.com/mx-space/core/commit/1441b79a2e2c8ec0e8b6710fc01460282f4b1bad))
-* **deps:** update dependency mongoose to v6.7.3 ([830836b](https://github.com/mx-space/core/commit/830836b9204f7aac545ff7bc7b7478d0499ffc2a))
-
-
-### Features
-
-* add secret for function ([#881](https://github.com/mx-space/core/issues/881)) ([432e747](https://github.com/mx-space/core/commit/432e7471aabbe6b73fdd26b6fcb6e07f2d038083))
-
-
-
-## [3.38.6](https://github.com/mx-space/core/compare/v3.38.5...v3.38.6) (2022-11-12)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @babel/core to v7.20.2 ([#854](https://github.com/mx-space/core/issues/854)) ([01331b7](https://github.com/mx-space/core/commit/01331b7877d0106bbfc0a05b8f772c8486c6c0e8))
-* **deps:** update dependency @babel/plugin-transform-typescript to v7.20.2 ([d1cbf63](https://github.com/mx-space/core/commit/d1cbf63dbc9e946fa8734f14fa634655efbf7c53))
-* **deps:** update dependency isbot to v3.6.3 ([538ec70](https://github.com/mx-space/core/commit/538ec7097641b4dca5bea7c93aeaefe3b74d54f7))
-* **deps:** update dependency isbot to v3.6.5 ([5fb5647](https://github.com/mx-space/core/commit/5fb56478cfb7c93ada32dd9cf21ca527e52921e6))
-* **deps:** update dependency lru-cache to v7.14.1 ([f443b69](https://github.com/mx-space/core/commit/f443b6953d20dbbf4ef656f5effaf37bbcdc1e7a))
-* **deps:** update dependency marked to v4.2.0 ([#843](https://github.com/mx-space/core/issues/843)) ([920dbb3](https://github.com/mx-space/core/commit/920dbb3a7f25ca58a9617583195d7745823c91fb))
-* **deps:** update dependency marked to v4.2.1 ([195eb78](https://github.com/mx-space/core/commit/195eb78cfb651adccb07e9dce98a4e63b32170b4))
-* **deps:** update dependency marked to v4.2.2 ([ef4ce06](https://github.com/mx-space/core/commit/ef4ce068801a026cc4f8df36057847619af884a6))
-* **deps:** update dependency mongoose to v6.7.1 ([fb224bb](https://github.com/mx-space/core/commit/fb224bb9784ab641fdda21c74ea2b54bc66d2949))
-* **deps:** update dependency mongoose to v6.7.2 ([7cfc060](https://github.com/mx-space/core/commit/7cfc0603d2fad50b4e1171909797238919c47765))
-* **deps:** update nest monorepo to v9.2.0 (minor) ([#857](https://github.com/mx-space/core/issues/857)) ([e7f9e96](https://github.com/mx-space/core/commit/e7f9e964c743889f118a50b9067f2f2e3973a1b0))
-
-
-
-## [3.38.5](https://github.com/mx-space/core/compare/v3.38.4...v3.38.5) (2022-10-30)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @babel/core to v7.19.6 ([10788e9](https://github.com/mx-space/core/commit/10788e98be21a368338b0c2e4d15df313aeb1301))
-* **deps:** update dependency @babel/plugin-transform-modules-commonjs to v7.19.6 ([#814](https://github.com/mx-space/core/issues/814)) ([13ff05a](https://github.com/mx-space/core/commit/13ff05a6dc2702e46c9beb69d4399ccfd86f963d))
-* **deps:** update dependency @babel/plugin-transform-typescript to v7.20.0 ([#835](https://github.com/mx-space/core/issues/835)) ([a3c23da](https://github.com/mx-space/core/commit/a3c23da603f688305d6e90cbe6b8503cd94e46cf))
-* **deps:** update dependency @fastify/multipart to v7.3.0 ([#830](https://github.com/mx-space/core/issues/830)) ([a0d32b6](https://github.com/mx-space/core/commit/a0d32b61e517dc617804409186279f9c1b9be343))
-* **deps:** update dependency @nestjs/swagger to v6.1.3 ([500b494](https://github.com/mx-space/core/commit/500b494c8423c3b3a948b6df90ce8fa467f5c13f))
-* **deps:** update dependency dayjs to v1.11.6 ([288c64f](https://github.com/mx-space/core/commit/288c64fa256315c34d4a311efaa011b14d5e109c))
-* **deps:** update dependency isbot to v3.6.2 ([418040b](https://github.com/mx-space/core/commit/418040bf381659a41130044fc7f7b2a0832bb56e))
-* **deps:** update dependency linkedom to v0.14.18 ([c79c5e0](https://github.com/mx-space/core/commit/c79c5e012d046715f2b327a63abc79c51978ce4f))
-* **deps:** update dependency linkedom to v0.14.19 ([8dad005](https://github.com/mx-space/core/commit/8dad005ced00abd13a725ab169a175369d6b9ec1))
-* **deps:** update dependency mongoose to v6.6.6 ([48104cf](https://github.com/mx-space/core/commit/48104cfb3a02fea0ea5e11a2f903f9f75e9d27c7))
-* **deps:** update dependency mongoose to v6.6.7 ([985ed34](https://github.com/mx-space/core/commit/985ed340ba622f30d73416bd46e24adfb38ba57c))
-* **deps:** update dependency mongoose to v6.7.0 ([#825](https://github.com/mx-space/core/issues/825)) ([880fddd](https://github.com/mx-space/core/commit/880fdddfa7efbceb11caf3352039074fd2b43092))
-* **deps:** update nest monorepo to v9.1.5 ([df05b2a](https://github.com/mx-space/core/commit/df05b2a48ba983009e9ab0309a60ecad2d16e8e9))
-* **deps:** update nest monorepo to v9.1.6 ([c955653](https://github.com/mx-space/core/commit/c955653f3f83a1bfc7c6d902a3ee51ab9a1acdcf))
-
-
-
-## [3.38.4](https://github.com/mx-space/core/compare/v3.38.3...v3.38.4) (2022-10-20)
-
-
-### Bug Fixes
-
-* pm2 argv ([bb35026](https://github.com/mx-space/core/commit/bb35026fc545165bf7ac372b67a00f425cf67620))
-
-
-
-## [3.38.3](https://github.com/mx-space/core/compare/v3.38.1...v3.38.3) (2022-10-20)
-
-
-### Bug Fixes
-
-* update admin version ([6f8aaa2](https://github.com/mx-space/core/commit/6f8aaa2b251339a6bc9a0fd75d2beaad6c26aa58))
-
-
-### Features
-
-* support load yaml config ([380a88a](https://github.com/mx-space/core/commit/380a88a1bf2594a9e69b990fa849c4bca39e7aa8))
-
-
-
-## [3.38.1](https://github.com/mx-space/core/compare/v3.38.0...v3.38.1) (2022-10-19)
-
-
-### Bug Fixes
-
-* downgard emitter ([9296468](https://github.com/mx-space/core/commit/92964685ca59f156c3e1382562e4335dc40fab53))
-
-
-
-# [3.38.0](https://github.com/mx-space/core/compare/v3.37.4...v3.38.0) (2022-10-16)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/throttler to v3.1.0 ([#802](https://github.com/mx-space/core/issues/802)) ([d110eff](https://github.com/mx-space/core/commit/d110effa53f52316144efdb1602a65256cbba8dc))
-* **deps:** update dependency bcrypt to v5.1.0 ([#796](https://github.com/mx-space/core/issues/796)) ([3094b80](https://github.com/mx-space/core/commit/3094b80e3c6af040e25521eeacd0c063803eb766))
-* **deps:** update dependency ua-parser-js to v1.0.32 ([#805](https://github.com/mx-space/core/issues/805)) ([c74c3e7](https://github.com/mx-space/core/commit/c74c3e72b580322a0f86e7a0d4093306886590c6))
-
-
-### Features
-
-* **link:** support send link audit result email ([e5e3428](https://github.com/mx-space/core/commit/e5e3428b44e03916f5b43a7076b8387d3892ee82))
-* support mongo connection with user and password ([#806](https://github.com/mx-space/core/issues/806)) ([5a20c55](https://github.com/mx-space/core/commit/5a20c55dc021087ebbb2a5d1b116d69297774995))
-
-
-
-## [3.37.4](https://github.com/mx-space/core/compare/v3.37.3...v3.37.4) (2022-10-13)
-
-
-### Bug Fixes
-
-* **deps:** update dependency isbot to v3.6.1 ([c7f96da](https://github.com/mx-space/core/commit/c7f96dac051229d390f9d464d629dfd23b98ec3b))
-* **deps:** update dependency linkedom to v0.14.17 ([cb21e79](https://github.com/mx-space/core/commit/cb21e793b4888f4243eeb258525596c0dd05e79a))
-* **deps:** update dependency mongoose to v6.6.4 ([69a363a](https://github.com/mx-space/core/commit/69a363adbc5cec0b4b1842b7a7260dcbb879ddf7))
-* **deps:** update dependency mongoose to v6.6.5 ([6754bb4](https://github.com/mx-space/core/commit/6754bb4909cde331b611ccf1863302d620c8c666))
-* **deps:** update nest monorepo to v9.1.4 ([445cc13](https://github.com/mx-space/core/commit/445cc136c87a1ac5832281d66dbcc4d4e0051654))
-* **link:** hide email if not master ([cd3faff](https://github.com/mx-space/core/commit/cd3faffa76f404c684e72d21e9d2b7995f9d8fe5))
-
-
-
-## [3.37.3](https://github.com/mx-space/core/compare/v3.37.2...v3.37.3) (2022-10-02)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.19.3 ([81071b6](https://github.com/mx-space/core/commit/81071b6d225e9a04c1908c1988474a248c67bcff))
-* **deps:** update dependency marked to v4.1.1 ([21fd2fd](https://github.com/mx-space/core/commit/21fd2fd25ab3a113f02b695b9059d2f78617a099))
-* **deps:** update dependency mongoose to v6.6.3 ([f8a1258](https://github.com/mx-space/core/commit/f8a12586b942e183cc6c0d0a62a3fc4f2d573300))
-
-
-### Features
-
-* **render:** add info ([4d3e361](https://github.com/mx-space/core/commit/4d3e361b024d3b672d38f37f21dd1bd0663800ce))
-
-
-
-## [3.37.2](https://github.com/mx-space/core/compare/v3.37.1...v3.37.2) (2022-09-27)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @typegoose/typegoose to v9.12.1 ([9eed663](https://github.com/mx-space/core/commit/9eed6634f899f782e6d48cbc7110ee004def5921))
-* **deps:** update dependency mongoose to v6.6.2 ([6e2c5a1](https://github.com/mx-space/core/commit/6e2c5a12a0b4c02e0c85b4f4a46ced2f705dacf7))
-* **deps:** update dependency rxjs to v7.5.7 ([8a95d5a](https://github.com/mx-space/core/commit/8a95d5a09857ecfd2f44d0f30288f9faeff57b2f))
-
-
-### Features
-
-* add disable comment for site ([9b97a15](https://github.com/mx-space/core/commit/9b97a15e6623113defc3760f37c651847360f555))
-
-
-
-## [3.37.1](https://github.com/mx-space/core/compare/v3.37.0...v3.37.1) (2022-09-25)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @fastify/cookie to v8.2.0 ([#759](https://github.com/mx-space/core/issues/759)) ([8476962](https://github.com/mx-space/core/commit/8476962a31063e972f0a19c7161b0080884e971c))
-* **deps:** update dependency @fastify/multipart to v7.2.0 ([#753](https://github.com/mx-space/core/issues/753)) ([2cdceb9](https://github.com/mx-space/core/commit/2cdceb9a33ed17181abd9417f1a9dccf5ee226f5))
-* **deps:** update dependency @typegoose/auto-increment to v1.8.0 ([#764](https://github.com/mx-space/core/issues/764)) ([361ca29](https://github.com/mx-space/core/commit/361ca29315f857169621a57b982f772728f7b255))
-* **deps:** update dependency isbot to v3.5.4 ([7b1d8b7](https://github.com/mx-space/core/commit/7b1d8b7aa63d44afb45f4df802217ddc67acf74b))
-* **deps:** update dependency linkedom to v0.14.15 ([a891549](https://github.com/mx-space/core/commit/a89154937c0a848701d91ac405bb7d55634868d3))
-* **deps:** update dependency linkedom to v0.14.16 ([e6ff510](https://github.com/mx-space/core/commit/e6ff5107520928c6ebd99d1ba0147bfd54652319))
-* **deps:** update nest monorepo to v9.1.2 (minor) ([#758](https://github.com/mx-space/core/issues/758)) ([2ec94c8](https://github.com/mx-space/core/commit/2ec94c81df4b7a91c13789218d785a48b22aa655))
-
-
-
-# [3.37.0](https://github.com/mx-space/core/compare/v3.36.5...v3.37.0) (2022-09-18)
-
-
-
-## [3.36.5](https://github.com/mx-space/core/compare/v3.36.4...v3.36.5) (2022-09-16)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.19.0 ([#730](https://github.com/mx-space/core/issues/730)) ([a021b8d](https://github.com/mx-space/core/commit/a021b8de8643b8e3cafd9f0b3832d4c35c6de876))
-* **deps:** update babel monorepo to v7.19.1 ([de981ed](https://github.com/mx-space/core/commit/de981ede1116810c303583d283165637d83c1b5d))
-* **deps:** update dependency @fastify/multipart to v7.1.2 ([63f8d1e](https://github.com/mx-space/core/commit/63f8d1e64577fa687fc22770e05bab33222db2a6))
-* **deps:** update dependency @nestjs/swagger to v6.1.2 ([c8597d9](https://github.com/mx-space/core/commit/c8597d976e0e75156764ada4e37d30715a600e94))
-* **deps:** update dependency @typegoose/auto-increment to v1.7.0 ([#745](https://github.com/mx-space/core/issues/745)) ([6724fa8](https://github.com/mx-space/core/commit/6724fa8370338106d6d93b9bf1bfef15c44d0f8d))
-* **deps:** update dependency @typegoose/typegoose to v9.12.0 ([#746](https://github.com/mx-space/core/issues/746)) ([c7e2e23](https://github.com/mx-space/core/commit/c7e2e23d51d347748775fc13b22ac379637655f9))
-* **deps:** update dependency isbot to v3.5.3 ([7766b21](https://github.com/mx-space/core/commit/7766b21e15d2877cae0613f45f093e0a5810d93b))
-* **deps:** update dependency linkedom to v0.14.14 ([7f499c4](https://github.com/mx-space/core/commit/7f499c459b28f36ef45e97e0ae28f4f350c98c13))
-* **deps:** update dependency mongoose to v6.5.5 ([29271ed](https://github.com/mx-space/core/commit/29271edb33dc44091f38ade967a0a8e625b5b2a9))
-* **deps:** update dependency mongoose to v6.6.1 ([#738](https://github.com/mx-space/core/issues/738)) ([7835c9f](https://github.com/mx-space/core/commit/7835c9f94026f9c2af298e13af690420b3adb893))
-* **deps:** update dependency mongoose-paginate-v2 to v1.7.1 ([93b0f67](https://github.com/mx-space/core/commit/93b0f678b4a653e492b5df46621f28728f6a8edd))
-* do not emit unhandledreject event ([88feacb](https://github.com/mx-space/core/commit/88feacb4e5f8455c577c14921206877c30ec5213))
-* use cravatar ([015d6eb](https://github.com/mx-space/core/commit/015d6eb22349a0223d3a9069ae50c32d379412df))
-* watch test ([4cd97e9](https://github.com/mx-space/core/commit/4cd97e9c95bf5ed3980c25c21a0dfe5f4c3cc63d))
-
-
-### Features
-
-* replace master avatar in comments if exist ([10a36fd](https://github.com/mx-space/core/commit/10a36fd5f01fecae7924945c547eda0d3916b93e))
-
-
-
-## [3.36.4](https://github.com/mx-space/core/compare/v3.36.3...v3.36.4) (2022-09-03)
-
-
-### Bug Fixes
-
-* allow across version update in dev ([9dba4a7](https://github.com/mx-space/core/commit/9dba4a72c0ad555b4b135b80ea42b15aefc76f0e))
-* **deps:** update dependency @nestjs/swagger to v6.1.1 ([2a9e54c](https://github.com/mx-space/core/commit/2a9e54cb555c9d1bbc0cbd3ff7934e6100edc5db))
-* **deps:** update dependency marked to v4.1.0 ([#718](https://github.com/mx-space/core/issues/718)) ([4f47393](https://github.com/mx-space/core/commit/4f473931d3f56de86c9a546052722a7ea0a3e509))
-* **deps:** update dependency mongoose to v6.5.4 ([4b52eb3](https://github.com/mx-space/core/commit/4b52eb311297727068435545d1d8cad576baf335))
-* **deps:** update dependency snakecase-keys to v5.4.4 ([8a4f8ec](https://github.com/mx-space/core/commit/8a4f8ecf1a71aaa86b14f572eb10e7b73e8ca34f))
-* unhandled reject message emit ([e3bb320](https://github.com/mx-space/core/commit/e3bb320224e4538975ab282cd9fa9dbf70c93955))
-
-
-
-## [3.36.3](https://github.com/mx-space/core/compare/v3.36.2...v3.36.3) (2022-08-29)
-
-
-### Bug Fixes
-
-* catch system uncaught exception ([90bfc62](https://github.com/mx-space/core/commit/90bfc624f39130f7ecb4cdae8a19972e58137aa5))
-* **deps:** update dependency @fastify/cookie to v8.1.0 ([#715](https://github.com/mx-space/core/issues/715)) ([73a2f8b](https://github.com/mx-space/core/commit/73a2f8b9dcc50430d3e7ab344be2f3a3d93c41ae))
-* **deps:** update dependency snakecase-keys to v5.4.3 ([bc484f5](https://github.com/mx-space/core/commit/bc484f55a395ca3663d3e3369e657f93ecf89439))
-* **deps:** update dependency vm2 to v3.9.11 ([75891ea](https://github.com/mx-space/core/commit/75891ea2ed5bc2e1bcee8458d70ea8b80a0f7782))
-
-
-
-## [3.36.2](https://github.com/mx-space/core/compare/v3.36.1...v3.36.2) (2022-08-27)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @fastify/cookie to v8 ([#683](https://github.com/mx-space/core/issues/683)) ([a714957](https://github.com/mx-space/core/commit/a714957e7d9664ac055ab1018ee7a434021119df))
-* **deps:** update dependency @nestjs/swagger to v6.1.0 ([#708](https://github.com/mx-space/core/issues/708)) ([c28f482](https://github.com/mx-space/core/commit/c28f4823c8e0756913a9dacad21efc6e4b5148d0))
-* **deps:** update dependency @typegoose/typegoose to v9.11.2 ([d2eda95](https://github.com/mx-space/core/commit/d2eda95b9a50f919c227403e8b6ac77e2a4fa0a0))
-* **deps:** update dependency @types/jsonwebtoken to v8.5.9 ([2f548f7](https://github.com/mx-space/core/commit/2f548f7ee15c9758b5afe61c197deea5780d67ff))
-* **deps:** update dependency isbot to v3.5.2 ([15ad2df](https://github.com/mx-space/core/commit/15ad2df269c7a4d7d5d98f523bacd20c16dd38bf))
-* **deps:** update dependency mongoose to v6.5.3 ([8fa6823](https://github.com/mx-space/core/commit/8fa6823dadeeb7603f42c0bbb33736a849c394ab))
-* downgrade ts version ([9f086cd](https://github.com/mx-space/core/commit/9f086cd1461b93bdc62e4d2488cfc974683e7e56))
-
-
-### Features
-
-* **post & note:** custom created time ([842ff7e](https://github.com/mx-space/core/commit/842ff7e0292d55c5219f849f443c8e7f8a9e033a))
-* test email is working ([a2f2be3](https://github.com/mx-space/core/commit/a2f2be346ba913cbcfcbfc00354accc1609b7a8f))
-
-
-### Performance Improvements
-
-* ncc pack speed ([a4410ec](https://github.com/mx-space/core/commit/a4410ec9287db7e7852d760e0a8a04d0cd4f6a58))
-
-
-
-## [3.36.1](https://github.com/mx-space/core/compare/v3.36.0...v3.36.1) (2022-08-24)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @babel/core to v7.18.13 ([6354adc](https://github.com/mx-space/core/commit/6354adc359f7f1fb9d291a2769a66f451ed8cfc4))
-* socket boardcast not working ([fa68556](https://github.com/mx-space/core/commit/fa685562c419e5a67f93076168dd47b0508369ce))
-* unit test ([15cfe1e](https://github.com/mx-space/core/commit/15cfe1eed1f6481f8f7109e78cf2c277543021df))
-
-
-### Features
-
-* add new macro ([fb9dc4e](https://github.com/mx-space/core/commit/fb9dc4e169d0e3e2a30b1a85833849c49e063da8))
-
-
-### Reverts
-
-* durable of provider ([d775fd4](https://github.com/mx-space/core/commit/d775fd49a4528e8098caa1be7fccbf75b83a302e))
-
-
-
-# [3.36.0](https://github.com/mx-space/core/compare/v3.35.9...v3.36.0) (2022-08-21)
-
-
-### Bug Fixes
-
-* **comment:** cast of `url` ([c0fbcc4](https://github.com/mx-space/core/commit/c0fbcc419385564f3744b3424f8f4be32990af07))
-* **deps:** update dependency class-validator-jsonschema to v3.1.2 ([76d2965](https://github.com/mx-space/core/commit/76d2965792278ab464295426d518c7e01639e8af))
-* **deps:** update dependency isbot to v3.5.1 ([a8dfff0](https://github.com/mx-space/core/commit/a8dfff0a672bcfe087869d826a4cc414611b26d0))
-* **deps:** update dependency xss to v1.0.14 ([35869c4](https://github.com/mx-space/core/commit/35869c47cd343ab94f8e649394baf5ecfd04cae8))
-* **deps:** update nest monorepo to v9.0.11 ([d420333](https://github.com/mx-space/core/commit/d420333af2a7de0e107bbcf89839ec68ec0b2612))
-* markdown render of image ([03a7207](https://github.com/mx-space/core/commit/03a72079133ec651e87d2db87dace76ba412dffd))
-
-
-### Features
-
-* lru cache for complie typescript code ([05bfbe2](https://github.com/mx-space/core/commit/05bfbe22c5b6d4a18eacc155f3172127097b0b89))
-* snippet and function refactor ([#692](https://github.com/mx-space/core/issues/692)) ([095ccd7](https://github.com/mx-space/core/commit/095ccd711c17d251b03f112355e4a2a9c962dddb))
-* sort of log file list ([12037aa](https://github.com/mx-space/core/commit/12037aaa541e1f38224d45b366e993f461f73bd2))
-
-
-
-## [3.35.9](https://github.com/mx-space/core/compare/v3.35.8...v3.35.9) (2022-08-13)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/event-emitter to v1.3.1 ([00c5a9c](https://github.com/mx-space/core/commit/00c5a9c0e637eae69dd96829cf831a668dacf3c2))
-* **deps:** update dependency dayjs to v1.11.5 ([4880667](https://github.com/mx-space/core/commit/48806673a227f3dafe3d197f32df54203605265b))
-* **deps:** update dependency mongoose to v6.5.2 ([0588149](https://github.com/mx-space/core/commit/05881497420b2783860e380144fdca98c392a015))
-* **deps:** update dependency nodemailer to v6.7.8 ([e6dddd4](https://github.com/mx-space/core/commit/e6dddd45e515238ee8e2c506b44d9c53c50f874c))
-* **deps:** update nest monorepo to v9.0.9 ([7629c04](https://github.com/mx-space/core/commit/7629c041433b0ccb4d9a4416fa4e9f958d981753))
-
-
-### Features
-
-* make some compatibility with Kami Markdown syntax ([eb33352](https://github.com/mx-space/core/commit/eb33352399bb075c89b58f106dfbbb1efd2a67a3))
-
-
-
-## [3.35.8](https://github.com/mx-space/core/compare/v3.35.7...v3.35.8) (2022-08-07)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.18.10 ([da94036](https://github.com/mx-space/core/commit/da94036af7c8dce6115a33cb3801e52bd426f5d6))
-* **deps:** update dependency @babel/plugin-transform-typescript to v7.18.12 ([34f6d51](https://github.com/mx-space/core/commit/34f6d51fd169df460078ebb93dbd469a9e89b4e4))
-* **deps:** update dependency @nestjs/swagger to v6.0.5 ([d940be0](https://github.com/mx-space/core/commit/d940be0a27fe2fdb48e966479376a7b09e7d9e99))
-* **deps:** update dependency @typegoose/auto-increment to v1.6.0 ([#660](https://github.com/mx-space/core/issues/660)) ([bbc5c32](https://github.com/mx-space/core/commit/bbc5c329eaf5408961c4c5912a4a8e7c6059ad04))
-* **deps:** update dependency @typegoose/typegoose to v9.11.0 ([#658](https://github.com/mx-space/core/issues/658)) ([21e26d2](https://github.com/mx-space/core/commit/21e26d2f953fe2de6f189801de244f2e85ff926d))
-* **deps:** update dependency jszip to v3.10.1 ([20d0a99](https://github.com/mx-space/core/commit/20d0a99f5e5678d7dbaffc75118cb7d3ab49fd70))
-* **deps:** update nest monorepo to v9.0.7 ([a796042](https://github.com/mx-space/core/commit/a79604217b9808c860472126767e931551954435))
-* **deps:** update nest monorepo to v9.0.8 ([ae944e7](https://github.com/mx-space/core/commit/ae944e71452d841cb1ab145cf41c8e82d30f35bc))
-* upgrade mongoose and refactor ([6defdd6](https://github.com/mx-space/core/commit/6defdd6ddd9d21c311c9b07425d005456dfdce80))
-
-
-### Features
-
-* emit download progress ([1f44ca7](https://github.com/mx-space/core/commit/1f44ca772bf95104844c59436c7363e93b27d875))
-
-
-
-## [3.35.7](https://github.com/mx-space/core/compare/v3.35.6...v3.35.7) (2022-07-28)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @fastify/cookie to v7.3.1 ([#647](https://github.com/mx-space/core/issues/647)) ([f53226c](https://github.com/mx-space/core/commit/f53226cde384a4b0f37c6a18ef926bb813214e0b))
-* **deps:** update dependency algoliasearch to v4.14.2 ([64c757a](https://github.com/mx-space/core/commit/64c757a0d686b42ae9d1347c9cdda4105fdba414))
-* **deps:** update nest monorepo to v9.0.6 (patch) ([#657](https://github.com/mx-space/core/issues/657)) ([782c7ef](https://github.com/mx-space/core/commit/782c7effc2d0bc96b78184da22d58274fb6043c3))
-* pick env instead of inject whole env ([6735006](https://github.com/mx-space/core/commit/67350061bf7f80426c0d38a6e53ba3de3acb540b))
-
-
-
-## [3.35.6](https://github.com/mx-space/core/compare/v3.35.5...v3.35.6) (2022-07-27)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @fastify/static to v6.4.1 ([2b93e91](https://github.com/mx-space/core/commit/2b93e913bdadec0ed4356c8ff37dcc187bd75f91))
-* **deps:** update dependency algoliasearch to v4.14.1 ([24a56f2](https://github.com/mx-space/core/commit/24a56f2188fa00d0a15a212537adcb471b169925))
-* **deps:** update dependency mongoose to v6.4.6 ([1224548](https://github.com/mx-space/core/commit/1224548351b2b6c82779d191635a0793529f3f74))
-* **deps:** update dependency mongoose to v6.4.7 ([086b128](https://github.com/mx-space/core/commit/086b1285da8d28256b9d3a2607e063311e2497dd))
-* **deps:** update dependency mongoose to v6.5.0 ([#654](https://github.com/mx-space/core/issues/654)) ([53451e2](https://github.com/mx-space/core/commit/53451e2054f5b0471289073741d98ec4b8417598))
-* **deps:** update dependency mongoose-lean-getters to v0.3.5 ([5c921c5](https://github.com/mx-space/core/commit/5c921c521329e123a497cad3bf15ab50a32839e0))
-
-
-### Features
-
-* table scan to delete outdate token ([19791bb](https://github.com/mx-space/core/commit/19791bbae852416820ae97a3cd2edbcd94b3b770))
-
-
-
-## [3.35.5](https://github.com/mx-space/core/compare/v3.35.4...v3.35.5) (2022-07-20)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @babel/core to v7.18.9 ([#638](https://github.com/mx-space/core/issues/638)) ([8bebb17](https://github.com/mx-space/core/commit/8bebb17c1f596f52734d9cf14e9bfdc673bc96d3))
-* **deps:** update dependency @fastify/cookie to v7.2.0 ([#560](https://github.com/mx-space/core/issues/560)) ([da8ece4](https://github.com/mx-space/core/commit/da8ece47f64ffa43d01d74f77d82e66de3ae7e3d))
-* **deps:** update dependency algoliasearch to v4.14.0 ([#640](https://github.com/mx-space/core/issues/640)) ([29ef236](https://github.com/mx-space/core/commit/29ef236f063e16f587031e23fcd9099b0ce1cec2))
-* **deps:** update dependency dayjs to v1.11.4 ([c286a19](https://github.com/mx-space/core/commit/c286a1987c95c084fbccd921d336b18fe5b166df))
-* **deps:** update dependency mongoose to v6.4.5 ([0b9de53](https://github.com/mx-space/core/commit/0b9de5333426241a3a118f25ea21e4811514dcb7))
-* **deps:** update nest monorepo to v9.0.4 (patch) ([#639](https://github.com/mx-space/core/issues/639)) ([88ac5d5](https://github.com/mx-space/core/commit/88ac5d5aa74e6a72ab31871a644005c7c55d3841))
-* **deps:** update nest monorepo to v9.0.5 ([62db6c9](https://github.com/mx-space/core/commit/62db6c92e67ef73df4abf16b9c1312fa71177c65))
-* file is not exist and throw ([d21cdc5](https://github.com/mx-space/core/commit/d21cdc5525195f0224b11b2ac90261cef56cf7cb))
-
-
-### Features
-
-* comment whispers ([#643](https://github.com/mx-space/core/issues/643)) ([3bc265d](https://github.com/mx-space/core/commit/3bc265dcb8807e29bc45b5cb7709988972e70ece))
-
-
-
-## [3.35.4](https://github.com/mx-space/core/compare/v3.35.3...v3.35.4) (2022-07-16)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/swagger to v6.0.4 ([a00c195](https://github.com/mx-space/core/commit/a00c1959ccf948f2641014cda9a8c89e6993d924))
-* **post:** flat lookup `$category` ([d23daf1](https://github.com/mx-space/core/commit/d23daf14b3da47b99b05c5ab423788e874e33aa5))
-
-
-
-## [3.35.3](https://github.com/mx-space/core/compare/v3.35.2...v3.35.3) (2022-07-14)
-
-
-
-## [3.35.2](https://github.com/mx-space/core/compare/v3.35.1...v3.35.2) (2022-07-14)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/event-emitter to v1.3.0 ([#616](https://github.com/mx-space/core/issues/616)) ([dfdec53](https://github.com/mx-space/core/commit/dfdec53a196c121b42f6fca15276bfe1e25ff290))
-* **deps:** update dependency @nestjs/swagger to v6.0.3 ([5eec4e3](https://github.com/mx-space/core/commit/5eec4e3250cf6e0c9de68912ee91e3769d603540))
-* **deps:** update dependency image-size to v1.0.2 ([6f24cf9](https://github.com/mx-space/core/commit/6f24cf9cf93e5e4c0b0a4be4de23b5b1d432db79))
-* **deps:** update dependency marked to v4.0.18 ([9e62ce8](https://github.com/mx-space/core/commit/9e62ce8b291a4a8ad8b21460c2a256a0acd09f3b))
-* **deps:** update dependency rxjs to v7.5.6 ([0ae4c15](https://github.com/mx-space/core/commit/0ae4c15546081e1f606bd585b6e0c8b566898bef))
-* **deps:** update nest monorepo to v9.0.3 ([3daafc2](https://github.com/mx-space/core/commit/3daafc20119cb52906e0fdf894fbd8ca4edb339c))
-* search decorator ([16d07a0](https://github.com/mx-space/core/commit/16d07a0cd61fc0dee18a7987e7fad56df4556123))
-* test docker on pr ([b86e95a](https://github.com/mx-space/core/commit/b86e95a8e9b78dff240031d0886310f6707dd646))
-* **update:** shell output ([f3da1ea](https://github.com/mx-space/core/commit/f3da1eaaca4d20f950813fb8833adc4627512fab))
-
-
-### Reverts
-
-* docker permission ([d4cf346](https://github.com/mx-space/core/commit/d4cf34666a01a5f4ce0544a976449a0908615bd7))
-
-
-
-## [3.35.1](https://github.com/mx-space/core/compare/v3.35.0...v3.35.1) (2022-07-11)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @babel/plugin-transform-typescript to v7.18.8 ([0bcef78](https://github.com/mx-space/core/commit/0bcef78949a57ee543792aabde1f5c561b752e98))
-* **deps:** update dependency mongoose to v6.4.4 ([23c8330](https://github.com/mx-space/core/commit/23c833025fa6740ef6835909323c919e93137310))
-* pin value when update posts ([20b03d1](https://github.com/mx-space/core/commit/20b03d1079ee8a7e84ca606bfab5ea23f46e7fe4))
-
-
-### Performance Improvements
-
-* use read stream to transfer data ([37e4297](https://github.com/mx-space/core/commit/37e42972af3449273e0f219b112ee051fd353225))
-
-
-
-# [3.35.0](https://github.com/mx-space/core/compare/v3.34.0...v3.35.0) (2022-07-08)
-
-
-### Bug Fixes
-
-* create `package.json` ([7faed81](https://github.com/mx-space/core/commit/7faed810fe7f7bb497673794a840b6257c55d478))
-* **deps:** update dependency @typegoose/auto-increment to v1.4.1 ([#606](https://github.com/mx-space/core/issues/606)) ([8bc125d](https://github.com/mx-space/core/commit/8bc125dd676b22e82d903bb7c5fc7e95b062ae1a))
-* **deps:** update dependency axios-retry to v3.3.1 ([#597](https://github.com/mx-space/core/issues/597)) ([055e4ab](https://github.com/mx-space/core/commit/055e4abf9a5e506d558090497694bd3d314b917f))
-* **deps:** update dependency mongoose-paginate-v2 to v1.7.0 ([#607](https://github.com/mx-space/core/issues/607)) ([a16e580](https://github.com/mx-space/core/commit/a16e5800d168a44ad85f1f0c871ea5ef8622d781))
-* **deps:** update dependency nodemailer to v6.7.7 ([57835fe](https://github.com/mx-space/core/commit/57835fe2ce93d97213544d964213274dcfeb76d2))
-* make jest happy ([d2b42b6](https://github.com/mx-space/core/commit/d2b42b698c8e7b1c9879c5517557c38da6663839))
-
-
-### Features
-
-* support upgrage admin dashboard ([#612](https://github.com/mx-space/core/issues/612)) ([18a304e](https://github.com/mx-space/core/commit/18a304e49f12278e3a462cad4a4afac57a077ca1))
-
-
-
-# [3.34.0](https://github.com/mx-space/core/compare/v3.33.1...v3.34.0) (2022-07-04)
-
-
-### Bug Fixes
-
-* **fn:** replace directly access code define file ([4a5c6de](https://github.com/mx-space/core/commit/4a5c6dedd94e2cca84e0a97a46d8a01d9a7457bc))
-* record error log throwed in serverless fn ([74d6d7e](https://github.com/mx-space/core/commit/74d6d7e843a03874285609621fe497796b5dcf93))
-
-
-### Features
-
-* pkg graph ([6a1a592](https://github.com/mx-space/core/commit/6a1a59224c651e06ace5026f93ba5797086f9ecd))
-* use sse to pipe install deps output ([9c399a0](https://github.com/mx-space/core/commit/9c399a0b8baf8e48d560ffc4592b265f3cde6d4c))
-
-
-
-## [3.33.1](https://github.com/mx-space/core/compare/v3.33.0...v3.33.1) (2022-07-02)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.18.6 ([e3718e9](https://github.com/mx-space/core/commit/e3718e96c22d8faac2f607f5b280123a90460294))
-* **deps:** update dependency axios-retry to v3.2.6 ([7c617ea](https://github.com/mx-space/core/commit/7c617ea29476593bd11fb8d9a8ea7105bc5134d5))
-* **deps:** update dependency nodemailer to v6.7.6 ([19d341d](https://github.com/mx-space/core/commit/19d341d0858cd050fe98107f5b66cce73c984982))
-* **deps:** update dependency qs to v6.11.0 ([#594](https://github.com/mx-space/core/issues/594)) ([260ce43](https://github.com/mx-space/core/commit/260ce43db40162d858a9dd4b5f09daf08456f57f))
-* post pin sort order ([4aa9b79](https://github.com/mx-space/core/commit/4aa9b7952facdb25e6ad346582fb6afd1373db39))
-
-
-### Features
-
-* add process title ([a242918](https://github.com/mx-space/core/commit/a2429187c4aded9942a0c7b1f1b53bd8cc7b424d))
-
-
-
-# [3.33.0](https://github.com/mx-space/core/compare/v3.33.0-alpha.0...v3.33.0) (2022-06-27)
-
-
-### Bug Fixes
-
-* post event emit twice when create ([6e47cc6](https://github.com/mx-space/core/commit/6e47cc6c0beb9cf21b6514090e7a26be903783c4))
-
-
-
-# [3.33.0-alpha.0](https://github.com/mx-space/core/compare/v3.32.0...v3.33.0-alpha.0) (2022-06-26)
-
-
-### Bug Fixes
-
-* login success status code ([b4d20d4](https://github.com/mx-space/core/commit/b4d20d45ffe6c333794a40cb4371793cb599a127))
-
-
-
-# [3.32.0](https://github.com/mx-space/core/compare/v3.31.1...v3.32.0) (2022-06-26)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.12 ([5e9621e](https://github.com/mx-space/core/commit/5e9621e7044990198b924ac98da8b72f4b00284f))
-* hardcode origin ([5e599cd](https://github.com/mx-space/core/commit/5e599cd9cb5dbf0a946463262871a658acb85e31))
-* host wildcard ([382d55f](https://github.com/mx-space/core/commit/382d55ffcc4631c88ada0ebce147c69281223852))
-* local ip cors ([ed767b9](https://github.com/mx-space/core/commit/ed767b92efdfb6b3084873f63f2e1db076bc104b))
-* pin is undefine ([cae7d23](https://github.com/mx-space/core/commit/cae7d23ae224e1b5963e7bfaa83d5cc8f00987aa))
-* popluate category for related post ([eb79152](https://github.com/mx-space/core/commit/eb7915234e36411347808c8136a735c37c0698ec))
-* realtime log gatewway ([d7867f3](https://github.com/mx-space/core/commit/d7867f3087f8f4a345df64ba25ef7d7f2ba74da5))
-
-
-### Features
-
-* related post ([df07623](https://github.com/mx-space/core/commit/df076237f2a3ef4e23d957a79f2236902fb07a27))
-
-
-
-## [3.31.1](https://github.com/mx-space/core/compare/v3.31.0...v3.31.1) (2022-06-22)
-
-
-### Bug Fixes
-
-* **deps:** update dependency linkedom to v0.14.12 ([f7e83d6](https://github.com/mx-space/core/commit/f7e83d68c7a5f8b90350205667ec5487c54e3229))
-* **deps:** update dependency mongoose-lean-getters to v0.3.4 ([a1452c8](https://github.com/mx-space/core/commit/a1452c88da734415781fb3cf6ac787b4b244e87a))
-* remove serverless fn comment and close [#585](https://github.com/mx-space/core/issues/585) ([3769898](https://github.com/mx-space/core/commit/37698981dac3ba16f8c30b3e3a4f9f50f5fc94fa))
-
-
-
-# [3.31.0](https://github.com/mx-space/core/compare/v3.31.0-alpha.1...v3.31.0) (2022-06-19)
-
-
-### Features
-
-* support json5 for snippet ([f359a17](https://github.com/mx-space/core/commit/f359a178aa7bf643ea7133ee2e510722db391c6f))
-
-
-
-# [3.31.0-alpha.1](https://github.com/mx-space/core/compare/v3.31.0-alpha.0...v3.31.0-alpha.1) (2022-06-18)
-
-
-### Bug Fixes
-
-* remove designated refType ([b046eee](https://github.com/mx-space/core/commit/b046eee9e4fdd65b635e2afdcf7b56cc6a85ea5f))
-
-
-
-# [3.31.0-alpha.0](https://github.com/mx-space/core/compare/v3.30.2...v3.31.0-alpha.0) (2022-06-18)
-
-
-### Bug Fixes
-
-* **deps:** update dependency mongoose to v6.3.9 ([671df49](https://github.com/mx-space/core/commit/671df497dbf3ce7a5c7d664588d8864fabe92bd1))
-* idepotence ttl ([1c7ba43](https://github.com/mx-space/core/commit/1c7ba43bb6951a8c2d43c4f368c3b899a0798144))
-* recenly ref ([c5fbd40](https://github.com/mx-space/core/commit/c5fbd40734f7ffed1e20e7ef28afb5809ea43062))
-
-
-### Features
-
-* url builder ([07f9c6b](https://github.com/mx-space/core/commit/07f9c6bbf894e4b30595d06622fd838b5328b60e))
-
-
-
-## [3.30.2](https://github.com/mx-space/core/compare/v3.30.1...v3.30.2) (2022-06-16)
-
-
-### Bug Fixes
-
-* comment pin only once ([a1792da](https://github.com/mx-space/core/commit/a1792da39fd7d649d16873373af5440e8c5d41ea))
-* comment pin sort ([89d73b1](https://github.com/mx-space/core/commit/89d73b1248f407fbdcf8a43c07f585c0d98626c5))
-* **deps:** update dependency @babel/core to v7.18.5 ([5723a58](https://github.com/mx-space/core/commit/5723a589a77ae1e19ef3e3a7ca22cc28d8990951))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.11 ([fdea024](https://github.com/mx-space/core/commit/fdea024e17afb38aecf0063125de83bb3c6e3322))
-* **deps:** update dependency marked to v4.0.17 ([de42510](https://github.com/mx-space/core/commit/de425106feae4b73578fe805b5fc0d3f28d8d63b))
-* **deps:** update dependency mongoose to v6.3.8 ([3367e26](https://github.com/mx-space/core/commit/3367e268e9f43547ebf276817b8b3ceeb8126204))
-* **deps:** update nest monorepo to v8.4.7 ([cfea925](https://github.com/mx-space/core/commit/cfea925b16533b3f57f7dd3092dc0a4f4cc71bb2))
-* docker add health check ([f6db675](https://github.com/mx-space/core/commit/f6db675c95af70888c54ffb20ab2019334027ecf))
-
-
-### Features
-
-* comment pin ([d78f60b](https://github.com/mx-space/core/commit/d78f60b61b18c4613ac6c915ad466d366b6a7c77))
-
-
-
-## [3.30.1](https://github.com/mx-space/core/compare/v3.30.0...v3.30.1) (2022-06-13)
-
-
-### Bug Fixes
-
-* custom token validate ([9764920](https://github.com/mx-space/core/commit/97649203c07e8b5e36799cc665ad630902eec5db))
-* use inspect object ([5def2ca](https://github.com/mx-space/core/commit/5def2ca78628b9ae7c6db9209ba47c5e4d6a7660))
-
-
-
-# [3.30.0](https://github.com/mx-space/core/compare/v3.30.0-alpha.1...v3.30.0) (2022-06-12)
-
-
-### Bug Fixes
-
-* jwt verfiy ([102b072](https://github.com/mx-space/core/commit/102b0723a57cd75d37fb63037fee9b8252e5f9e4))
-* pin order ([ae8ed8a](https://github.com/mx-space/core/commit/ae8ed8ad6fc0f6b2344ae5efa692e03e99874b43))
-* pin sort ([61cc473](https://github.com/mx-space/core/commit/61cc4732f77ae6ec6e7dd8c94973e1fa0b3109f0))
-
-
-### Features
-
-* post pin ([2a1d59f](https://github.com/mx-space/core/commit/2a1d59f8dafe7123eb528c3ef392f4d2c463f92f))
-
-
-
-# [3.30.0-alpha.1](https://github.com/mx-space/core/compare/v3.30.0-alpha.0...v3.30.0-alpha.1) (2022-06-11)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.10 ([1be687f](https://github.com/mx-space/core/commit/1be687f9d1c508c4e913f2375e665d3d9d245012))
-* idempotence pending status ([#566](https://github.com/mx-space/core/issues/566)) ([602be61](https://github.com/mx-space/core/commit/602be61b56e07192893460f9153604b37b03f2c0))
-* resolution dependency to reduce size ([fcb4faa](https://github.com/mx-space/core/commit/fcb4faa63e6d9b635d51c3aa40165cb90e8a086f))
-
-
-### Features
-
-* add access db instance in function ([698656e](https://github.com/mx-space/core/commit/698656e39437d0eb76faacdc6bf049f993710aca))
-* add jwt service ([0d67b0b](https://github.com/mx-space/core/commit/0d67b0be4a9b7a6b0852e6a7781c05297262ccd3))
-* add signout ([136734a](https://github.com/mx-space/core/commit/136734a55b6d2d341ce2e67bf5344dec84e3afa0))
-
-
-
-# [3.30.0-alpha.0](https://github.com/mx-space/core/compare/v3.29.2...v3.30.0-alpha.0) (2022-06-09)
-
-
-### Bug Fixes
-
-* **deps:** update dependency dayjs to v1.11.3 ([9498aff](https://github.com/mx-space/core/commit/9498affd38a8f7f5ef7acfc0365c14b296403aca))
-* **deps:** update dependency linkedom to v0.14.11 ([8f98908](https://github.com/mx-space/core/commit/8f9890872d522680d15d45e8dab688f11f4b5e86))
-* **deps:** update dependency mongoose to v6.3.6 ([423055f](https://github.com/mx-space/core/commit/423055fd39df587e5961a269b17ab5835553ed1b))
-* **deps:** update dependency qs to v6.10.5 ([5fc1124](https://github.com/mx-space/core/commit/5fc1124fc176c298f92cc5ae7c1aa62963310fa2))
-* **deps:** update dependency xss to v1.0.13 ([a4de831](https://github.com/mx-space/core/commit/a4de83112c9a1bfac08db2944c9439c09485ed43))
-* performance import ([27b85ef](https://github.com/mx-space/core/commit/27b85ef3964864dcae2d3928465535dd744ec275))
-* remove python2 builder ([213d7ee](https://github.com/mx-space/core/commit/213d7eedbe5ca341755c177dd552599831d307d8))
-* remove python2 in dockerfile ([#557](https://github.com/mx-space/core/issues/557)) ([4c061ec](https://github.com/mx-space/core/commit/4c061ec5acbf304cb055ba8721721b64fc852f7a))
-
-
-### Features
-
-* bark support ([#563](https://github.com/mx-space/core/issues/563)) ([1642026](https://github.com/mx-space/core/commit/164202672d0b3f5fb03bd0cd275b4050654873c1))
-
-
-
-## [3.29.2](https://github.com/mx-space/core/compare/v3.29.1...v3.29.2) (2022-06-04)
-
-
-### Bug Fixes
-
-* config patch ([92500ed](https://github.com/mx-space/core/commit/92500edd6e2c37593e3632f61f3bb1b71fefecc4))
-* **deps:** update dependency cache-manager to v4.0.1 ([d4fb889](https://github.com/mx-space/core/commit/d4fb889968c5561220d63cdac7d4ef7428eee211))
-* **deps:** update dependency xss to v1.0.12 ([e96f368](https://github.com/mx-space/core/commit/e96f36807aa58bb32bf574c5054e3f9479a7ae20))
-* jsonschema ([5c60368](https://github.com/mx-space/core/commit/5c60368816909e61921b01995d419e0bb61b8caa))
-
-
-### Features
-
-* add comment option for ip record ([454d5b0](https://github.com/mx-space/core/commit/454d5b074ff11bdea46de8093bd0feee1ec1b63c))
-
-
-
-## [3.29.1](https://github.com/mx-space/core/compare/v3.29.0...v3.29.1) (2022-06-03)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @babel/plugin-transform-typescript to v7.18.4 ([3d73cc9](https://github.com/mx-space/core/commit/3d73cc92272419d05905110ba8b128a969ab4022))
-* **deps:** update dependency @typegoose/typegoose to v9.9.0 ([d6b9e4e](https://github.com/mx-space/core/commit/d6b9e4e6529a410997037d2cac64b35aa70d3ba8))
-* **deps:** update dependency cache-manager to v4 ([2c2263a](https://github.com/mx-space/core/commit/2c2263ae37ad9b10c1ab33f3fc519a182e931a5a))
-* **deps:** update dependency mongoose to v6.3.5 ([dbfb15e](https://github.com/mx-space/core/commit/dbfb15e1773a897e6306952940f943007a138185))
-* **deps:** update dependency mongoose-lean-getters to v0.3.3 ([c64b083](https://github.com/mx-space/core/commit/c64b083b822c705165e0e2bdb10277371fa7860e))
-* **deps:** update nest monorepo to v8.4.6 ([0ceaec4](https://github.com/mx-space/core/commit/0ceaec4a23c4f9ae9e9ad4d7131a34a27e5abf64))
-* jsonschema ([cb78f77](https://github.com/mx-space/core/commit/cb78f77f5da2b19bb42045cfa5239a1050d116ca))
-
-
-
-# [3.29.0](https://github.com/mx-space/core/compare/v3.28.3...v3.29.0) (2022-05-28)
-
-
-### Bug Fixes
-
-* note create event scope ([e6c5745](https://github.com/mx-space/core/commit/e6c5745dcacc78f2e725ead7169c505f3aa74090))
-
-
-### Features
-
-* add idempotence interceptor ([d19c726](https://github.com/mx-space/core/commit/d19c7264fe9cca027a8c16dee6e8992f7d21e783))
-
-
-
-## [3.28.3](https://github.com/mx-space/core/compare/v3.28.2...v3.28.3) (2022-05-27)
-
-
-### Bug Fixes
-
-* comment event ([6209aca](https://github.com/mx-space/core/commit/6209acac849c39de4194574cc62343e55cc9e7b9))
-* query ip timeout ([55c90d0](https://github.com/mx-space/core/commit/55c90d00e335b09c546819536b3a212255c30c09))
-
-
-
-## [3.28.2](https://github.com/mx-space/core/compare/v3.28.1...v3.28.2) (2022-05-26)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.18.2 ([127d909](https://github.com/mx-space/core/commit/127d90960976f8f47024c1b9e4ef5e035d825293))
-* install pkg when restore data ([e3a6d4b](https://github.com/mx-space/core/commit/e3a6d4b18ab909bf6746e6dc76f87b69da7f3949))
-* skip proxy route when record analyze ([4a26a00](https://github.com/mx-space/core/commit/4a26a000441bb98403da99d6ef9d11e04dd2d94a))
-
-
-
-## [3.28.1](https://github.com/mx-space/core/compare/v3.28.0...v3.28.1) (2022-05-25)
-
-
-### Bug Fixes
-
-* demo cache key prefix ([2c237b7](https://github.com/mx-space/core/commit/2c237b7a8dc2032ac3926f736574b11008c8249d))
-
-
-### Features
-
-* demo mode ([ad1b5f6](https://github.com/mx-space/core/commit/ad1b5f6df34ed735c37df5ea627640f66dd0ce60))
-
-
-
-# [3.28.0](https://github.com/mx-space/core/compare/v3.28.0-alpha.1...v3.28.0) (2022-05-24)
-
-
-### Bug Fixes
-
-* **deps:** update dependency jszip to v3.10.0 ([ae5436b](https://github.com/mx-space/core/commit/ae5436bb92141d454e56861aed96e17d4b8f1c03))
-* **deps:** update dependency passport to v0.6.0 ([60c4c46](https://github.com/mx-space/core/commit/60c4c46a132392a4d455bd4c1afa393773fbe78e))
-
-
-### Features
-
-* add cache header for file ([0a26299](https://github.com/mx-space/core/commit/0a2629908361f4fdabfbffa28cd29166c66eeade))
-
-
-
-# [3.28.0-alpha.1](https://github.com/mx-space/core/compare/v3.28.0-alpha.0...v3.28.0-alpha.1) (2022-05-22)
-
-
-### Bug Fixes
-
-* file name hash ([158629f](https://github.com/mx-space/core/commit/158629f204e9669566bf85610a07bf3eb8c39d1b))
-* resolve file url ([bca11de](https://github.com/mx-space/core/commit/bca11de18585cb6e2dcaa81fbc49aa8cd8e6a964))
-
-
-
-# [3.28.0-alpha.0](https://github.com/mx-space/core/compare/v3.27.2...v3.28.0-alpha.0) (2022-05-22)
-
-
-### Bug Fixes
-
-* file response ([62ffd6f](https://github.com/mx-space/core/commit/62ffd6f28be9315fa17ff699db52a0f34a16aebc))
-
-
-### Features
-
-* add throttle ([59c50a4](https://github.com/mx-space/core/commit/59c50a4670ee7ed19b33eeaa5391af75325dd2e2))
-* file module ([110d9ca](https://github.com/mx-space/core/commit/110d9ca0101a50e9efe08bf699acc9ec4beb6e9b))
-
-
-
-## [3.27.2](https://github.com/mx-space/core/compare/v3.27.1...v3.27.2) (2022-05-21)
-
-
-### Bug Fixes
-
-* pager dto and sort query ([43813df](https://github.com/mx-space/core/commit/43813df4c29ac1afed7355fced5a5a665aba3f3a))
-
-
-
-## [3.27.1](https://github.com/mx-space/core/compare/v3.27.0...v3.27.1) (2022-05-21)
-
-
-
-# [3.27.0](https://github.com/mx-space/core/compare/v3.27.0-alpha.0...v3.27.0) (2022-05-21)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/schedule to v2.0.1 ([48589f6](https://github.com/mx-space/core/commit/48589f6409aaacd58b001286f8499f7175f8c06a))
-* **deps:** update dependency cache-manager to v3.6.3 ([7d05e7c](https://github.com/mx-space/core/commit/7d05e7ca63daf3dce26bd3e0e36f1f752037da01))
-* script to fetch ([6125c4f](https://github.com/mx-space/core/commit/6125c4f3ab476ffe17234b2507e2490e51c8d3af))
-
-
-
-# [3.27.0-alpha.0](https://github.com/mx-space/core/compare/v3.26.7...v3.27.0-alpha.0) (2022-05-20)
-
-
-### Bug Fixes
-
-* change `fn` route ([357a635](https://github.com/mx-space/core/commit/357a6354a025575e42ede8f2be9a228feb0ef164))
-* **deps:** update babel monorepo ([6a39511](https://github.com/mx-space/core/commit/6a39511c1919deb3d00bebd9404ef788f1f83d4f))
-* **deps:** update babel monorepo to v7.17.12 ([2928598](https://github.com/mx-space/core/commit/2928598e0f9cdd2b16549fec312db2a64244a5db))
-* **deps:** update dependency @babel/plugin-transform-typescript to v7.17.12 ([e01ba83](https://github.com/mx-space/core/commit/e01ba83b5a16ddeb762f201062fb23c90b743369))
-* **deps:** update dependency @nestjs/jwt to v8.0.1 ([8dd2c0a](https://github.com/mx-space/core/commit/8dd2c0aaac75b8296ff7aba63aa5c83b1b2eebe1))
-* **deps:** update dependency algoliasearch to v4.13.1 ([dafacb6](https://github.com/mx-space/core/commit/dafacb6cb5778281670f59ce5411e24a888bd5f5))
-* **deps:** update dependency cache-manager to v3.6.2 ([fbceb24](https://github.com/mx-space/core/commit/fbceb2443f13eccc4065a596024a3d506da4e7d4))
-* **deps:** update dependency isbot to v3.4.8 ([537cbec](https://github.com/mx-space/core/commit/537cbec4a254fcd97ede913b339d80b0cf9ceea8))
-* **deps:** update dependency isbot to v3.5.0 ([7b16997](https://github.com/mx-space/core/commit/7b16997f37593ec4c38ce6ed365b6e920fbcaf62))
-* **deps:** update dependency marked to v4.0.16 ([267b4a7](https://github.com/mx-space/core/commit/267b4a7c2520ebb05752628e18dbaf9f7f2e119c))
-* **deps:** update dependency mongoose to v6.3.4 ([7a348b9](https://github.com/mx-space/core/commit/7a348b974fc0fab4c92a2e55b3e604fa6a63e766))
-* **deps:** update dependency passport to v0.5.3 ([a7fc893](https://github.com/mx-space/core/commit/a7fc8939d0c2e025140ca9a48fef2e7cb33cb601))
-* link dto description can be empty ([bfa6af3](https://github.com/mx-space/core/commit/bfa6af30e1b838cc92fb1063ed247d5244a7e80e))
-* note model relationship ([ba2c8bb](https://github.com/mx-space/core/commit/ba2c8bbe92d4b4636c5218e381c55f669e334bfd))
-* note topic paginator ([cdced95](https://github.com/mx-space/core/commit/cdced9568daf0efc8ccdcc61efcab6422340c792))
-* note update lean ([e06c76c](https://github.com/mx-space/core/commit/e06c76cb567dba02771e958b0647d5c143f3004f))
-* **topic:** add vaildation ([6f79df9](https://github.com/mx-space/core/commit/6f79df9ad682b795487b3aa6c532f538151ce4c5))
-* **topic:** limit of intro ([b7c6310](https://github.com/mx-space/core/commit/b7c63100542cf037a4fe200aef8520ea8c967eb4))
-
-
-### Features
-
-* add topic model ([2ebabec](https://github.com/mx-space/core/commit/2ebabec6a013d433018c8fcf25ce2ea81f800c15))
-* note topic init ([46fe004](https://github.com/mx-space/core/commit/46fe0049c7761896e416cb3a1611dd65af3ecbc5))
-
-
-
-## [3.26.7](https://github.com/mx-space/core/compare/v3.26.6...v3.26.7) (2022-05-16)
-
-
-### Bug Fixes
-
-* delete article with delete comment ([4e39690](https://github.com/mx-space/core/commit/4e39690fda2885cb9eb91350d960fff8d6bc46db))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.9 ([d9de63d](https://github.com/mx-space/core/commit/d9de63de5a817652c95c61520e417d54beb0d8f4))
-* **deps:** update dependency ejs to v3.1.8 ([a46e990](https://github.com/mx-space/core/commit/a46e99001c804d75d58b576bb81fc9d0b2a3b661))
-* **deps:** update dependency isbot to v3.4.7 ([b0456df](https://github.com/mx-space/core/commit/b0456df27679f324774dea87688d0be45fc8fa6c))
-* **deps:** update dependency snakecase-keys to v5.4.2 ([9c27f3d](https://github.com/mx-space/core/commit/9c27f3d32c621d461d6d00d6dd5e7d10358cbc7b))
-* **deps:** update nest monorepo to v8.4.5 ([c3566d2](https://github.com/mx-space/core/commit/c3566d2b21e1f3320f073ffe4cc695cad8124bfe))
-* nest module deps ([f552b62](https://github.com/mx-space/core/commit/f552b625f559db0ce7d8b4e3a4c6e13059a77c27))
-* **serverless:** add route entry ([dc7b0d7](https://github.com/mx-space/core/commit/dc7b0d7af72889b8e7da20767df8905d9cc8d801))
-* worker url ([66e882b](https://github.com/mx-space/core/commit/66e882b2dded6361fb2a845510f75ed6ac0a9afd))
-
-
-
-## [3.26.6](https://github.com/mx-space/core/compare/v3.26.5...v3.26.6) (2022-05-10)
-
-
-### Bug Fixes
-
-* **deps:** update dependency mongoose to v6.3.3 ([b8328f7](https://github.com/mx-space/core/commit/b8328f7ae83e3171c706686b78c550eacd066bf2))
-
-
-
-## [3.26.5](https://github.com/mx-space/core/compare/v3.26.4...v3.26.5) (2022-05-08)
-
-
-### Bug Fixes
-
-* snippet private data leak ([513d9e0](https://github.com/mx-space/core/commit/513d9e0a164072a4cc1ab567051fe1e02aa97550))
-
-
-
-## [3.26.4](https://github.com/mx-space/core/compare/v3.26.3...v3.26.4) (2022-05-08)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.8 ([32da143](https://github.com/mx-space/core/commit/32da143ccbf1823e02519aefe51f6b7615c9445b))
-* **deps:** update dependency dayjs to v1.11.2 ([fcbc1e5](https://github.com/mx-space/core/commit/fcbc1e5064fa2d0fc4bbda3b8c38957525d76cca))
-* **deps:** update dependency linkedom to v0.14.9 ([e406550](https://github.com/mx-space/core/commit/e4065505d41900dbb83e2a219a3caeae2cffa238))
-* disable pnpm 7 strict peer deps ([75cc9f5](https://github.com/mx-space/core/commit/75cc9f56cfdef3d20f4f5ccd8bf0d01b2b9900a5))
-
-
-
-## [3.26.3](https://github.com/mx-space/core/compare/v3.26.2...v3.26.3) (2022-05-03)
-
-
-### Bug Fixes
-
-* exchange location order ([454159e](https://github.com/mx-space/core/commit/454159e88f2ec83938f853295d66899e98b047be))
-* remove comment location duplicated name ([8acb7fd](https://github.com/mx-space/core/commit/8acb7fdd450ea3038e87f9594d380ef210309303))
-
-
-
-## [3.26.2](https://github.com/mx-space/core/compare/v3.26.1...v3.26.2) (2022-05-02)
-
-
-### Bug Fixes
-
-* comment emit event scope ([ed424e0](https://github.com/mx-space/core/commit/ed424e09d33c3f356dc51c5f9cf7ec6b862d172c))
-
-
-
-## [3.26.1](https://github.com/mx-space/core/compare/v3.26.0...v3.26.1) (2022-05-01)
-
-
-### Bug Fixes
-
-* comment lost avatar ([2346ce5](https://github.com/mx-space/core/commit/2346ce51321191a222d5b0dcfc33746d304a1b86))
-
-
-
-# [3.26.0](https://github.com/mx-space/core/compare/v3.25.3...v3.26.0) (2022-04-30)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @babel/core to v7.17.10 ([c2709d1](https://github.com/mx-space/core/commit/c2709d1e3f4bf9d4174b962e7b1b936939707366))
-* **deps:** update dependency axios-retry to v3.2.5 ([1e9f203](https://github.com/mx-space/core/commit/1e9f2038a3cb6b61dff171315429709abe33233a))
-* **deps:** update dependency nodemailer to v6.7.4 ([d6be01a](https://github.com/mx-space/core/commit/d6be01a638c9ebac9fe004ff709d34043b1c60bb))
-
-
-### Features
-
-* add styling and typography method for macors ([80bb68e](https://github.com/mx-space/core/commit/80bb68e0aa489f2e3bbb70c7fd2fa8104fc52dce))
-
-
-
-## [3.25.3](https://github.com/mx-space/core/compare/v3.25.2...v3.25.3) (2022-04-29)
-
-
-### Bug Fixes
-
-* **deps:** update dependency mongoose-lean-virtuals to v0.9.1 ([baf103a](https://github.com/mx-space/core/commit/baf103a7b2a81cbad6c6f2f84c763f35f992b203))
-* remove master role vaild in category ([1b913f0](https://github.com/mx-space/core/commit/1b913f07018946d0dbe82dd65bb68b4bca9e43d9))
-
-
-### Features
-
-* add comment location expose ([06089dd](https://github.com/mx-space/core/commit/06089ddc0856be2cf5e9e9845587293ba2306946))
-
-
-
-## [3.25.2](https://github.com/mx-space/core/compare/v3.25.1...v3.25.2) (2022-04-26)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.7 ([dded729](https://github.com/mx-space/core/commit/dded729f5e442f45e29ba405c210cc081660bf5f))
-* note dto update ([0bb62e8](https://github.com/mx-space/core/commit/0bb62e867d1674c5bbd19153ff8342f99a068e18))
-
-
-
-## [3.25.1](https://github.com/mx-space/core/compare/v3.25.0...v3.25.1) (2022-04-25)
-
-
-### Bug Fixes
-
-* slug unique ([1b614e9](https://github.com/mx-space/core/commit/1b614e91f4570043ae5901d55bcd37826863a262))
-
-
-
-# [3.25.0](https://github.com/mx-space/core/compare/v3.25.0-alpha.4...v3.25.0) (2022-04-25)
-
-
-### Bug Fixes
-
-* slug validate ([debd1b7](https://github.com/mx-space/core/commit/debd1b773d61513c4b80689d3c4002bf463ab26d))
-
-
-
-# [3.25.0-alpha.4](https://github.com/mx-space/core/compare/v3.25.0-alpha.3...v3.25.0-alpha.4) (2022-04-24)
-
-
-
-# [3.25.0-alpha.3](https://github.com/mx-space/core/compare/v3.25.0-alpha.2...v3.25.0-alpha.3) (2022-04-24)
-
-
-### Bug Fixes
-
-* **deps:** update dependency mongoose to v6.3.1 ([a4415c6](https://github.com/mx-space/core/commit/a4415c6e3d215a43fe780b1a4ce923c6cc38e430))
-* test failed ([a5c1afb](https://github.com/mx-space/core/commit/a5c1afbcb48eeca28ac7c33ac5f8279d5148985e))
-
-
-### Features
-
-* serverless access db support ([2dbca32](https://github.com/mx-space/core/commit/2dbca3252d9face69f5be5ecd2709f117a1e4d97))
-
-
-
-# [3.25.0-alpha.2](https://github.com/mx-space/core/compare/v3.25.0-alpha.1...v3.25.0-alpha.2) (2022-04-23)
-
-
-### Bug Fixes
-
-* catch all error in text macro replace ([a571fac](https://github.com/mx-space/core/commit/a571facd2b2fb666e07dcd3f313de3366c88c5b9))
-* json type make ts-jest happy ([9b4633b](https://github.com/mx-space/core/commit/9b4633bf0e3e5c9058f97b466310ce84a43590c4))
-* meta lean ([112b34c](https://github.com/mx-space/core/commit/112b34ca622a892ecf3c69ea2ae46c99a3610cba))
-
-
-### Features
-
-* add meta for write model ([20a788c](https://github.com/mx-space/core/commit/20a788c1a2ac51779e92d19df153e9e21e9feaf3))
-
-
-
-# [3.25.0-alpha.1](https://github.com/mx-space/core/compare/v3.25.0-alpha.0...v3.25.0-alpha.1) (2022-04-22)
-
-
-### Bug Fixes
-
-* page macor ([22c9730](https://github.com/mx-space/core/commit/22c9730efc508fe7ad1c330b9067331b0ecca21b))
-
-
-
-# [3.25.0-alpha.0](https://github.com/mx-space/core/compare/v3.24.5...v3.25.0-alpha.0) (2022-04-22)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @typegoose/typegoose to v9.8.1 ([e7690c3](https://github.com/mx-space/core/commit/e7690c3a34fdb3d53e1280833e9eb457947b5db0))
-* **deps:** update dependency ejs to v3.1.7 ([b35f228](https://github.com/mx-space/core/commit/b35f228752ece64e37a2776843bddded5b216f81))
-* remove only flag to run test ([947813f](https://github.com/mx-space/core/commit/947813f6f4067bbdd79d563728e61bc8018a5c77))
-
-
-### Features
-
-* function eval marco ([5c33536](https://github.com/mx-space/core/commit/5c335363cbae620821019af74e16367d58f1d494))
-* page controller support macro ([bbc7607](https://github.com/mx-space/core/commit/bbc760766199bc9c21f532a23001a52dacde6dae))
-* text macros ([b09f231](https://github.com/mx-space/core/commit/b09f2319f0239763d7f8670dba7dea50c23c9ca7))
-
-
-
-## [3.24.5](https://github.com/mx-space/core/compare/v3.24.4...v3.24.5) (2022-04-20)
-
-
-### Bug Fixes
-
-* **deps:** update dependency isbot to v3.4.6 ([5689520](https://github.com/mx-space/core/commit/5689520ab9482ef7fab7f904cff8f0776669fe47))
-
-
-### Features
-
-* boardcast error event ([835295e](https://github.com/mx-space/core/commit/835295eb9fe920c2b7f35e3513fac16924d6972f))
-
-
-
-## [3.24.4](https://github.com/mx-space/core/compare/v3.24.3...v3.24.4) (2022-04-19)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @typegoose/auto-increment to v1.3.0 ([#439](https://github.com/mx-space/core/issues/439)) ([a80eb8e](https://github.com/mx-space/core/commit/a80eb8e10963c23aac555529d1d0f8bd7ab7dd46))
-* **deps:** update dependency fastify-cookie to v5.6.1 ([21e1230](https://github.com/mx-space/core/commit/21e123022e4ebffe6de7dc68c1ae656ce0898682))
-* **deps:** update dependency nanoid to v3.3.3 ([38effeb](https://github.com/mx-space/core/commit/38effeb1f36cc38c7e9a091b4df78edd45c0c29f))
-* **deps:** update dependency zx-cjs to v6.1.0 ([#437](https://github.com/mx-space/core/issues/437)) ([412ad64](https://github.com/mx-space/core/commit/412ad64bf5d8df1daa9bd63426ae155497c896ae))
-* eslint type style ([a9a8c3a](https://github.com/mx-space/core/commit/a9a8c3ad9037e84e5cdbe620c565862eb91dc0ae))
-* make ts happy ([5f45822](https://github.com/mx-space/core/commit/5f458224a446a0d85b1d880c991b5e668f7484cf))
-
-
-
-## [3.24.3](https://github.com/mx-space/core/compare/v3.24.2...v3.24.3) (2022-04-17)
-
-
-### Bug Fixes
-
-* add page slug validate ([deef809](https://github.com/mx-space/core/commit/deef8098eadb33f11ce47223c9e297ff3103bd41))
-* **deps:** update dependency dayjs to v1.11.1 ([33bd11e](https://github.com/mx-space/core/commit/33bd11e7a3867ea8b271368b82e954f4b58a0c57))
-* **deps:** update dependency fastify-swagger to v5.1.1 ([7c9a057](https://github.com/mx-space/core/commit/7c9a057291f052de4ad091c3e4d373026bdd114b))
-* **deps:** update dependency linkedom to v0.14.6 ([2078aaa](https://github.com/mx-space/core/commit/2078aaa5d241bbedb0d7f2c3d8ae30ff6b30800a))
-* **deps:** update dependency linkedom to v0.14.7 ([d9e3a69](https://github.com/mx-space/core/commit/d9e3a697be3f2db045cf8a7290492c9ee56cf39e))
-* **deps:** update dependency snakecase-keys to v5.4.1 ([5cfad42](https://github.com/mx-space/core/commit/5cfad426978258ae6169f2024cbf47259d6eacfa))
-* slugify ([f6c2456](https://github.com/mx-space/core/commit/f6c2456316db1685339cccdda9b88bd48a49e845))
-
-
-
-## [3.24.2](https://github.com/mx-space/core/compare/v3.24.1...v3.24.2) (2022-04-12)
-
-
-### Bug Fixes
-
-* link apply dto ([94b5df6](https://github.com/mx-space/core/commit/94b5df67bb92cf3084bdf33ad50e8a6e0aeb3a31))
-
-
-
-## [3.24.1](https://github.com/mx-space/core/compare/v3.24.0...v3.24.1) (2022-04-11)
-
-
-### Bug Fixes
-
-* **deps:** update dependency marked to v4.0.14 ([#423](https://github.com/mx-space/core/issues/423)) ([9e1d5c5](https://github.com/mx-space/core/commit/9e1d5c509d24a50d79e4bb4b616ece7802034e83))
-* **deps:** update dependency snakecase-keys to v5.4.0 ([#414](https://github.com/mx-space/core/issues/414)) ([e2fa729](https://github.com/mx-space/core/commit/e2fa729ecc02aab7e02a85f4c7a01ec4d6dcb865))
-
-
-
-# [3.24.0](https://github.com/mx-space/core/compare/v3.24.0-alpha.3...v3.24.0) (2022-04-10)
-
-
-
-# [3.24.0-alpha.3](https://github.com/mx-space/core/compare/v3.24.0-alpha.2...v3.24.0-alpha.3) (2022-04-10)
-
-
-### Bug Fixes
-
-* serverless module found ([f48c3a9](https://github.com/mx-space/core/commit/f48c3a999a8a639054a0f1dc4076b6f0bfced3b0))
-
-
-
-# [3.24.0-alpha.2](https://github.com/mx-space/core/compare/v3.24.0-alpha.1...v3.24.0-alpha.2) (2022-04-10)
-
-
-### Bug Fixes
-
-* pm2 cluster instance count ([981270b](https://github.com/mx-space/core/commit/981270b0790aa41b5d70d955800adac77fa25ae5))
-* shared gateway boardcast ([a32299e](https://github.com/mx-space/core/commit/a32299ee74a5bdcd1fd73de5624065d7263c81b1))
-* test config ([1bc6b61](https://github.com/mx-space/core/commit/1bc6b61e37d6b3fa7b82a7a7f10a74fc1387755b))
-* token auth and base curl event name ([0107909](https://github.com/mx-space/core/commit/01079097fe5d9b966ed8b9601796cefd3b4f40d1))
-
-
-
-# [3.24.0-alpha.1](https://github.com/mx-space/core/compare/v3.24.0-alpha.0...v3.24.0-alpha.1) (2022-04-09)
-
-
-### Bug Fixes
-
-* comment send email ([d532888](https://github.com/mx-space/core/commit/d5328881bdeae617042dc952e4df256a6e537fff))
-
-
-
-# [3.24.0-alpha.0](https://github.com/mx-space/core/compare/v3.23.5...v3.24.0-alpha.0) (2022-04-09)
-
-
-### Bug Fixes
-
-* **deps:** update babel monorepo to v7.17.9 ([4ae2542](https://github.com/mx-space/core/commit/4ae254291c02042170e5b60dd5b12fafb2e6a526))
-* **deps:** update dependency cache-manager to v3.6.1 ([89225ba](https://github.com/mx-space/core/commit/89225ba9c1922276aaa21fe2cb9419ecfacf6651))
-* **deps:** update dependency jszip to v3.9.1 ([aa72dbc](https://github.com/mx-space/core/commit/aa72dbc66f88d8e404e8fc7d00e8ce271ff42742))
-* **deps:** update dependency marked to v4.0.13 ([f46cdec](https://github.com/mx-space/core/commit/f46cdec7653c7bb432f37b3d17d8c9bc67f5ad7f))
-* tsconfig ([d27b46f](https://github.com/mx-space/core/commit/d27b46f4285995eea4f062ffd1138ad55515e184))
-
-
-
-## [3.23.5](https://github.com/mx-space/core/compare/v3.23.3...v3.23.5) (2022-04-05)
-
-
-### Bug Fixes
-
-* manager install command ([b67db72](https://github.com/mx-space/core/commit/b67db722c088c0b2ced1c441372a3722c12a74b5))
-
-
-
-## [3.23.3](https://github.com/mx-space/core/compare/v3.23.2...v3.23.3) (2022-04-05)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/schedule to v1.1.0 ([#406](https://github.com/mx-space/core/issues/406)) ([b2e0773](https://github.com/mx-space/core/commit/b2e0773d96c7c3345140f46a11e6ca10939ec27f))
-* **deps:** update dependency jszip to v3.9.0 ([#413](https://github.com/mx-space/core/issues/413)) ([49073bb](https://github.com/mx-space/core/commit/49073bbdc71d5146080031bbdff445a5580927d7))
-
-
-
-## [3.23.2](https://github.com/mx-space/core/compare/v3.23.1...v3.23.2) (2022-04-05)
-
-
-### Features
-
-* import snippets ([c86df4a](https://github.com/mx-space/core/commit/c86df4a34e4cd44d4ce5c4baa426a703ec3393e1))
-
-
-
-## [3.23.1](https://github.com/mx-space/core/compare/v3.23.0...v3.23.1) (2022-04-04)
-
-
-### Bug Fixes
-
-* **deps:** update dependency fastify-swagger to v5.1.0 ([#402](https://github.com/mx-space/core/issues/402)) ([08b214c](https://github.com/mx-space/core/commit/08b214c10d943e92c406722ddf19c09d31308f4b))
-* **deps:** update dependency jszip to v3.8.0 ([#409](https://github.com/mx-space/core/issues/409)) ([fc4bbb0](https://github.com/mx-space/core/commit/fc4bbb05a61a1131bb0f72ffae2aea26081dfacf))
-* url allowed for validator ([00b6e3b](https://github.com/mx-space/core/commit/00b6e3be2c813dd9634031c9c704a62ab323298b))
-
-
-### Features
-
-* webpack build ([7638f2b](https://github.com/mx-space/core/commit/7638f2b7b2ab8ffff3bc2b48d8bfbf9f398b2e43))
-
-
-
-# [3.23.0](https://github.com/mx-space/core/compare/v3.23.0-alpha.0...v3.23.0) (2022-03-28)
-
-
-### Bug Fixes
-
-* **deps:** update dependency nanoid to v3.3.2 ([f1bfecf](https://github.com/mx-space/core/commit/f1bfecf55db1d60ba057b3010fdbf672126f407e))
-
-
-
-# [3.23.0-alpha.0](https://github.com/mx-space/core/compare/v3.22.3...v3.23.0-alpha.0) (2022-03-27)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/swagger to v5.2.1 ([441db06](https://github.com/mx-space/core/commit/441db06af6191c0ab5432ad3153cc1d8579a005c))
-* **deps:** update nest monorepo to v8.4.3 (patch) ([#401](https://github.com/mx-space/core/issues/401)) ([c8d9572](https://github.com/mx-space/core/commit/c8d957271f3124dd1533ef85155bc3233c68e4e9))
-
-
-
-## [3.22.3](https://github.com/mx-space/core/compare/v3.22.2...v3.22.3) (2022-03-25)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @typegoose/typegoose to v9.7.1 ([fb41336](https://github.com/mx-space/core/commit/fb413368358ed54478322cbd6d6e9cd805d9183f))
-* lost rsync command ([6994b3e](https://github.com/mx-space/core/commit/6994b3e62749573b34adec4d71e6665d2f095cf8))
-
-
-
-## [3.22.2](https://github.com/mx-space/core/compare/v3.22.1...v3.22.2) (2022-03-23)
-
-
-### Bug Fixes
-
-* admin editor ([867663d](https://github.com/mx-space/core/commit/867663d4e3161519fa7a3581abc21041a54333b1))
-
-
-
-## [3.22.1](https://github.com/mx-space/core/compare/v3.22.0...v3.22.1) (2022-03-23)
-
-
-### Bug Fixes
-
-* **deps:** update dependency nodemailer to v6.7.3 ([c738182](https://github.com/mx-space/core/commit/c738182a011dfa8daec6fd1193fb5e66c98ac089))
-* **deps:** update nest monorepo to v8.4.2 ([0e5f545](https://github.com/mx-space/core/commit/0e5f5458d83c2dbb65929c303de6f0d530577da3))
-* lodash can not clone a function ([201afc9](https://github.com/mx-space/core/commit/201afc92e148280884f17cb2ccb2df52e02238d4))
-* test error ([812f94e](https://github.com/mx-space/core/commit/812f94e254ae01dadc9c34effc664b4ba0125bf1))
-
-
-### Features
-
-* support esm import statement ([cf57a14](https://github.com/mx-space/core/commit/cf57a1410247f235d430e1291d1d787fe23e75c1))
-* update docs ([facd5f6](https://github.com/mx-space/core/commit/facd5f618215a36feaab528546c299b546ad9705))
-
-
-
-# [3.22.0](https://github.com/mx-space/core/compare/v3.21.0...v3.22.0) (2022-03-20)
-
-
-
-# [3.21.0](https://github.com/mx-space/core/compare/v3.20.11...v3.21.0) (2022-03-19)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @babel/core to v7.17.8 ([452ab8b](https://github.com/mx-space/core/commit/452ab8b7dab9b3ff0739809a11d256223111ea9e))
-* docker env ([0774ce2](https://github.com/mx-space/core/commit/0774ce24b420f5a22a3d4dbcc41c25e15ca7c0e5))
-* if no snippet match throw error ([29a0301](https://github.com/mx-space/core/commit/29a03011489c5f1b822f87c68d7c877d592a54f0))
-* **link:** filter pass link in get all api ([9ae87c5](https://github.com/mx-space/core/commit/9ae87c5059618de5b93eba9845b3628cab37c2ca))
-
-
-### Features
-
-* friend link options ([eecb51a](https://github.com/mx-space/core/commit/eecb51ac008ad7c8d554444e151697c415d00a42))
-
-
-
-## [3.20.11](https://github.com/mx-space/core/compare/v3.20.9...v3.20.11) (2022-03-17)
-
-
-### Bug Fixes
-
-* add allowed thrid lib ([fe75275](https://github.com/mx-space/core/commit/fe75275b08c866aed68e052c76f5b338f8f9b9df))
-* **deps:** update dependency @babel/core to v7.17.7 ([b7ff531](https://github.com/mx-space/core/commit/b7ff53158a770b0ccbd9bb69ecb6aecdbde54e63))
-
-
-
-## [3.20.9](https://github.com/mx-space/core/compare/v3.20.8...v3.20.9) (2022-03-14)
-
-
-### Bug Fixes
-
-* make ts happy ([d228c5d](https://github.com/mx-space/core/commit/d228c5dd6528760a7dda79426eb4f9d489312c15))
-* serverless vm2 safe-eval ([c20cc59](https://github.com/mx-space/core/commit/c20cc595e2c23eac6e12024c239e477b79d50a63))
-
-
-### Features
-
-* add redis storage for serverless ([7d0b71a](https://github.com/mx-space/core/commit/7d0b71a6340549bddb60015953f3c000a7819010))
-* **serverless:** support typescript ([8c74a53](https://github.com/mx-space/core/commit/8c74a53771ef88f82478b74ac67f0775bf834135))
-
-
-
-## [3.20.8](https://github.com/mx-space/core/compare/v3.20.7...v3.20.8) (2022-03-13)
-
-
-### Bug Fixes
-
-* **serverless:** add condition on query ([d98e3fb](https://github.com/mx-space/core/commit/d98e3fb23f7013069b7c8fc7d637797e8a400a0c))
-
-
-### Features
-
-* cache snippet ([f408129](https://github.com/mx-space/core/commit/f408129be9f37a4079a7d0f69d811310f3f2ec5a))
-
-
-
-## [3.20.7](https://github.com/mx-space/core/compare/v3.20.6...v3.20.7) (2022-03-13)
-
-
-### Bug Fixes
-
-* add create field index ([088966f](https://github.com/mx-space/core/commit/088966fe7bdebff53cbf7cd6e237eb4b7539d405))
-
-
-
-## [3.20.6](https://github.com/mx-space/core/compare/v3.20.5...v3.20.6) (2022-03-12)
-
-
-### Bug Fixes
-
-* snippet not found throw ([cf91ff8](https://github.com/mx-space/core/commit/cf91ff81ba8b0ba7e7bffc3bb6e81b7e7f17f7ca))
-
-
-### Features
-
-* add serverless wildcard match ([9bc4b14](https://github.com/mx-space/core/commit/9bc4b14c47584c039022e59ea036f49e4ec761b3))
-
-
-
-## [3.20.5](https://github.com/mx-space/core/compare/v3.20.4...v3.20.5) (2022-03-12)
-
-
-### Bug Fixes
-
-* add schema field for snippet ([5ded8e1](https://github.com/mx-space/core/commit/5ded8e17de443abb074e80d349d6032ad4d97f3f))
-* **deps:** update dependency isbot to v3.4.5 ([4b74c55](https://github.com/mx-space/core/commit/4b74c55619642c6416459011a241f101f8554952))
-
-
-### Features
-
-* add snippet aggregate api ([faa651c](https://github.com/mx-space/core/commit/faa651ccd0d1f7d963a10b64fa9c15be63a12b2b))
-* **serverless:** add `getMaster` ([d81c2dc](https://github.com/mx-space/core/commit/d81c2dc1d72c7da8e5e36bbd579ae6d54e210184))
-
-
-### Reverts
-
-* Revert "chore: submodule" ([44d929c](https://github.com/mx-space/core/commit/44d929c5b94a2352249323b3fb9428c20bfa60a0))
-
-
-
-## [3.20.4](https://github.com/mx-space/core/compare/v3.20.3...v3.20.4) (2022-03-11)
-
-
-### Bug Fixes
-
-* after test db close ([782c128](https://github.com/mx-space/core/commit/782c128d7875cb87c0e9f17bf35aa68731deb2e2))
-* **deps:** update dependency fastify-swagger to v5 ([a0a1188](https://github.com/mx-space/core/commit/a0a11883ca481089b1022c4e35101979615c9d68))
-* ncc pack error ([d9ac794](https://github.com/mx-space/core/commit/d9ac794c071e2f7443827afee39096953d9368b1))
-
-
-### Features
-
-* cron to clean require cache ([5bbdd8b](https://github.com/mx-space/core/commit/5bbdd8b2b4d69c3fb08027ad45d18c6373306e26))
-* **serverless:** add res object on func ([bc5de61](https://github.com/mx-space/core/commit/bc5de61602e4e6d54298b5ae86f54150c99fc92a))
-
-
-
-## [3.20.3](https://github.com/mx-space/core/compare/v3.20.2...v3.20.3) (2022-03-10)
-
-
-### Bug Fixes
-
-* can disable require cache ([86a4b49](https://github.com/mx-space/core/commit/86a4b497d937a58bb8b89b885624e3e7c361b170))
-
-
-### Features
-
-* **func:** add require.resolve on mock require ([b255e6e](https://github.com/mx-space/core/commit/b255e6eff990de2316ad77abb8d7e3bdd312aacc))
-
-
-
-## [3.20.2](https://github.com/mx-space/core/compare/v3.20.1...v3.20.2) (2022-03-10)
-
-
-### Bug Fixes
-
-* **deps:** update dependency rxjs to v7.5.5 ([370e75f](https://github.com/mx-space/core/commit/370e75f8008b7c0f3d6d410cc78157b795668fb2))
-
-
-### Features
-
-* add `throws` on function ([a4b3340](https://github.com/mx-space/core/commit/a4b33409bb64483f553432699b8104ba2a85972e))
-* add function scope req res ([a62bcf3](https://github.com/mx-space/core/commit/a62bcf3859591e9c31a5e2aa0949fc9f550f48c0))
-
-
-
-## [3.20.1](https://github.com/mx-space/core/compare/v3.20.0...v3.20.1) (2022-03-09)
-
-
-### Bug Fixes
-
-* expose global modules ([93335fe](https://github.com/mx-space/core/commit/93335fe1f0cb5f81104bed48c63f2ae348cc91ca))
-* **function:** allow prefix `[@mx-space](https://github.com/mx-space)` lib ([cec8334](https://github.com/mx-space/core/commit/cec8334d44e5dca468de79689302f9d97c147f06))
-* hard code node path ([814d82b](https://github.com/mx-space/core/commit/814d82b2a72ab625bd6c41828c6046f0827e7b2f))
-
-
-
-# [3.20.0](https://github.com/mx-space/core/compare/v3.19.1...v3.20.0) (2022-03-09)
-
-
-### Bug Fixes
-
-* **deps:** update dependency fastify-swagger to v4.17.1 ([425c8d0](https://github.com/mx-space/core/commit/425c8d05bb64c951241e71e47efd5ad948e0878f))
-* safe path join ([13b1021](https://github.com/mx-space/core/commit/13b1021748b3459954d49edccf80c9acbf666b35))
-* test case ([be3c650](https://github.com/mx-space/core/commit/be3c65025222747f94ba89640ff55a9239606387))
-* test case for snippet ([474da8a](https://github.com/mx-space/core/commit/474da8acf0dc8499ea3431aad63aae62ed1f1e10))
-
-
-### Features
-
-* function require mock and clonedeep ([ee8e98e](https://github.com/mx-space/core/commit/ee8e98ed42ff7d0b3028eb34140ac07e3438b779))
-* http cache ([7d63d2e](https://github.com/mx-space/core/commit/7d63d2ebb68f4911f0252c96f7845e4145564b11))
-* init serverless function ([b701428](https://github.com/mx-space/core/commit/b701428b02efe2212f464ea5f84bc119c3609a61))
-* inject mock require and ctx to serverless fun ([d0e680a](https://github.com/mx-space/core/commit/d0e680a2a2f524c641496249cdbf4e0b2cf32a1a))
-* run function ([b6d6101](https://github.com/mx-space/core/commit/b6d6101fa0800e08122b1053000a324d56368b5b))
-
-
-
-## [3.19.1](https://github.com/mx-space/core/compare/v3.19.0...v3.19.1) (2022-03-06)
-
-
-### Bug Fixes
-
-* add ApiName for link controller ([29c60cc](https://github.com/mx-space/core/commit/29c60ccc468a4e639df61adb2633b3dd3cadb945))
-* **deps:** update dependency xss to v1.0.11 ([331c192](https://github.com/mx-space/core/commit/331c192e12726ca48c3ca1b37d20c5c63f6f1c0b))
-
-
-### Features
-
-* add admin db query ([d9cadc8](https://github.com/mx-space/core/commit/d9cadc896f8b49c6daffc7b7d26b538632f6dce3))
-
-
-
-# [3.19.0](https://github.com/mx-space/core/compare/v3.18.12...v3.19.0) (2022-03-03)
-
-
-### Bug Fixes
-
-* query with password post in timeline ([bf370c1](https://github.com/mx-space/core/commit/bf370c12d0638f0532eea285bce1679556249a89))
-* remove post model `hide` field ([20f0b4d](https://github.com/mx-space/core/commit/20f0b4d8f8372361b4cee96ebed4f239a3b8f495))
-
-
-
-## [3.18.12](https://github.com/mx-space/core/compare/v3.18.11...v3.18.12) (2022-03-02)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/event-emitter to v1.1.0 ([d2561c6](https://github.com/mx-space/core/commit/d2561c69c861786fb834906b68ca7139166de2ae))
-* **deps:** update dependency @typegoose/auto-increment to v1.2.0 ([eb0ac32](https://github.com/mx-space/core/commit/eb0ac3221c763aa71fc83e244c380aecd8750dba))
-* **deps:** update dependency algoliasearch to v4.12.2 ([bd553b4](https://github.com/mx-space/core/commit/bd553b43bceb9932b7bafa67482aa4f396e36202))
-* **deps:** update dependency dayjs to v1.10.8 ([4a9b36b](https://github.com/mx-space/core/commit/4a9b36bd40bc30a47d90a440faf945aa2625ad8c))
-* **deps:** update dependency fastify-cookie to v5.6.0 ([24cbb7c](https://github.com/mx-space/core/commit/24cbb7c9e9252e011dd253573b880064e2c8224d))
-* **deps:** update dependency mongoose-paginate-v2 to v1.6.3 ([3cd6a56](https://github.com/mx-space/core/commit/3cd6a56a9297b65f452a5933c0969aebc73791b4))
-* **deps:** update nest monorepo to v8.4.0 ([399cfc1](https://github.com/mx-space/core/commit/399cfc1d5f27858d48af34e0ec52864a8eb12fe7))
-* remove now releatival ([4e3d9ec](https://github.com/mx-space/core/commit/4e3d9ec8df67580cfab86493424e3173b2dcc0a8))
-* shanghai tz for docker ([f8c900c](https://github.com/mx-space/core/commit/f8c900c9c74de21c5bbc7604b7e2b9ad13069096))
-
-
-
-## [3.18.11](https://github.com/mx-space/core/compare/v3.18.10...v3.18.11) (2022-02-25)
-
-
-### Bug Fixes
-
-* **deps:** pin dependency jsdom to 19.0.0 ([cc34b8d](https://github.com/mx-space/core/commit/cc34b8dc536cac60f5bcd094b051cccd8b79cf0e))
-* gateway ([3e271d0](https://github.com/mx-space/core/commit/3e271d02e062465473e0160fbc9b4933ce0fd20a))
-* pageproxy inject env in local proxy ([130f6f0](https://github.com/mx-space/core/commit/130f6f0d2f0233d20c4f6bc32f91e2e446d02e72))
-
-
-
-## [3.18.10](https://github.com/mx-space/core/compare/v3.18.9...v3.18.10) (2022-02-24)
-
-
-### Bug Fixes
-
-* docker script ([ae4a660](https://github.com/mx-space/core/commit/ae4a660141e60a2a82f7a2187fff9da842582056))
-* write file sync ([6d9694e](https://github.com/mx-space/core/commit/6d9694e29d59eac3c3b5ab7230b49adbeaded03f))
-
-
-
-## [3.18.9](https://github.com/mx-space/core/compare/v3.18.8...v3.18.9) (2022-02-24)
-
-
-### Bug Fixes
-
-* stop when error ([f9147fb](https://github.com/mx-space/core/commit/f9147fbc11f838ed7560a7519ee76c3477d21cf3))
-
-
-
-## [3.18.8](https://github.com/mx-space/core/compare/v3.18.7...v3.18.8) (2022-02-24)
-
-
-### Bug Fixes
-
-* ci build script ([eeea74e](https://github.com/mx-space/core/commit/eeea74e0aeb2e9ad46d7bac954fa3fe059ea6207))
-* ignore global prefix for proxy route ([93d37f3](https://github.com/mx-space/core/commit/93d37f34836a931069f95fac4b12332f1ea4f706))
-* path base ([d575bde](https://github.com/mx-space/core/commit/d575bde3fe00fd8de9aa670ac056801615095b51))
-* remove windows build ([768ef59](https://github.com/mx-space/core/commit/768ef595a5387c7a363103e9a9ea5d71f0d010db))
-
-
-### Features
-
-* add bundled local admin asset and entry ([786201d](https://github.com/mx-space/core/commit/786201dd40957a956612a34d737c837d883b2d5b))
-
-
-
-## [3.18.7](https://github.com/mx-space/core/compare/v3.18.6...v3.18.7) (2022-02-23)
-
-
-### Bug Fixes
-
-* **ci:** windows shell ([106e318](https://github.com/mx-space/core/commit/106e3184e53da2fe7aad5877e633d009db12ab92))
-
-
-### Features
-
-* add shebang ([a973fbb](https://github.com/mx-space/core/commit/a973fbb964bb267b443ac76ffca51ea2d181ea21))
-
-
-
-## [3.18.6](https://github.com/mx-space/core/compare/v3.18.5...v3.18.6) (2022-02-23)
-
-
-### Bug Fixes
-
-* deploy script ([74a546b](https://github.com/mx-space/core/commit/74a546baeec9280f8dd6788a655c68128e516753))
-* matrix build ci ([b261350](https://github.com/mx-space/core/commit/b261350eba232328800664fb87ec0fc19db8a2ff))
-
-
-
-## [3.18.5](https://github.com/mx-space/core/compare/v3.18.4...v3.18.5) (2022-02-23)
-
-
-### Bug Fixes
-
-* build ci action ([703cd1c](https://github.com/mx-space/core/commit/703cd1c3800fb66a9d626bc3f60fc90b9bcf8218))
-* **deps:** update dependency @nestjs/passport to v8.2.0 ([#331](https://github.com/mx-space/core/issues/331)) ([d10efca](https://github.com/mx-space/core/commit/d10efca26f58155942ecb2202f0e7e1e845ebea3))
-* **deps:** update dependency @nestjs/passport to v8.2.1 ([71d8d90](https://github.com/mx-space/core/commit/71d8d90c68a77bc239a35e92040a33b26ac0150a))
-* **deps:** update dependency @typegoose/typegoose to v9.7.0 ([0a2a19d](https://github.com/mx-space/core/commit/0a2a19d7c5df816ecace8d0a418c1fcf0f860615))
-* **deps:** update dependency isbot to v3.4.3 ([d1c5194](https://github.com/mx-space/core/commit/d1c5194258ff71ec29198367eb224e256ba9cd7e))
-* **deps:** update dependency nanoid to v3.3.0 ([#330](https://github.com/mx-space/core/issues/330)) ([253eab9](https://github.com/mx-space/core/commit/253eab987fdcea3ed0830e36239f68d7412ccfc2))
-* **deps:** update dependency nanoid to v3.3.1 ([c5658d1](https://github.com/mx-space/core/commit/c5658d1d2601d276bfc334bedd9e93ab6a2d6704))
-* **deps:** update nest monorepo to v8.3.0 ([#328](https://github.com/mx-space/core/issues/328)) ([10f7d1f](https://github.com/mx-space/core/commit/10f7d1f226f7d0f2318134c6d66e8f27c3f6fa1d))
-* **deps:** update nest monorepo to v8.3.1 ([888886e](https://github.com/mx-space/core/commit/888886e34dd92f8bdc14d020cee0ed9e5fdd8911))
-* update mongoose ([19b5740](https://github.com/mx-space/core/commit/19b57403400388a56fd1b1cf81d129a7387ffabd))
-
-
-### Features
-
-* config jsonschema ([477b78c](https://github.com/mx-space/core/commit/477b78cbd1eb5168b45842035a8bc22df7610357))
-
-
-### Reverts
-
-* Revert "release: v3.18.5" ([b2e0bf1](https://github.com/mx-space/core/commit/b2e0bf160cd42b7c6192328de9feeb50d89fc226))
-
-
-
-## [3.18.4](https://github.com/mx-space/core/compare/v3.18.3...v3.18.4) (2022-02-15)
-
-
-### Bug Fixes
-
-* instance up to cpus ([6ec245b](https://github.com/mx-space/core/commit/6ec245b1e76b8799009034beb5b50fc296d70161))
-
-
-### Features
-
-* add log for php request ([5252e76](https://github.com/mx-space/core/commit/5252e76a8c2a663b76228bb5866827b9d8a7a696))
-* fancy report for normal term but hack in vpty ([6aacb9c](https://github.com/mx-space/core/commit/6aacb9c2e4d326f178da9a644231cfed7a7468dc))
-
-
-
-## [3.18.3](https://github.com/mx-space/core/compare/v3.18.2...v3.18.3) (2022-02-13)
-
-
-### Bug Fixes
-
-* ban php request, fuck you ([bf280d2](https://github.com/mx-space/core/commit/bf280d2c1092e5182107676bbf80576de6088948))
-* cron start once ([b90ce6c](https://github.com/mx-space/core/commit/b90ce6c70f35daddf17214ea0649773cbe218011))
-* error loger ([4a35231](https://github.com/mx-space/core/commit/4a352317dd422871bf310bc81251f5c6f4c9aeea))
-* get real socket ip ([b11f269](https://github.com/mx-space/core/commit/b11f269f4415aac622e585b21ef69e5f32b0ee95))
-
-
-
-## [3.18.2](https://github.com/mx-space/core/compare/v3.18.1...v3.18.2) (2022-02-13)
-
-
-### Bug Fixes
-
-* add bash for docker alpine ([3d3e204](https://github.com/mx-space/core/commit/3d3e2042dc2b1cf0363bde0f403ac51feef5460c))
-* mkdir first ([00e2c20](https://github.com/mx-space/core/commit/00e2c20b5295b8f8721bf46d99ae92358c77bcdc))
-
-
-### Features
-
-* pty session record ([0928299](https://github.com/mx-space/core/commit/09282997f99bff12926130b6c3f1bd94d567b9b8))
-
-
-
-## [3.18.1](https://github.com/mx-space/core/compare/v3.18.0...v3.18.1) (2022-02-12)
-
-
-### Bug Fixes
-
-* **deps:** update dependency fastify-multipart to v5.3.1 ([1c9fdc9](https://github.com/mx-space/core/commit/1c9fdc939335b37adce54caf3e207b0e56dab56b))
-* **deps:** update dependency mongoose-paginate-v2 to v1.6.2 ([66537cf](https://github.com/mx-space/core/commit/66537cf6632d653147d51bbab677ea0d918c4155))
-* log clean cron ([9f8c369](https://github.com/mx-space/core/commit/9f8c369a870037a56f0a9d0abf772f9185c74b1c))
-* pm2 cluster mode dup run cron ([f6cc468](https://github.com/mx-space/core/commit/f6cc4688d802231fc76ac49687c82931f0a0ab84))
-
-
-
-# [3.18.0](https://github.com/mx-space/core/compare/v3.17.1...v3.18.0) (2022-02-11)
-
-
-### Bug Fixes
-
-* **deps:** update dependency fastify-swagger to v4.15.0 ([#307](https://github.com/mx-space/core/issues/307)) ([96ea8db](https://github.com/mx-space/core/commit/96ea8db0a960871aba694c1c633c565ec9596a48))
-
-
-
-## [3.17.1](https://github.com/mx-space/core/compare/v3.17.0...v3.17.1) (2022-02-11)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @typegoose/typegoose to v9.6.2 ([cf18e76](https://github.com/mx-space/core/commit/cf18e765d0eb78078abdb906e5e3edfb0e09898a))
-* **deps:** update dependency apollo-server-fastify to v3.6.3 ([99a2426](https://github.com/mx-space/core/commit/99a2426d4d635359e05ac3017923f4d932382a90))
-* **deps:** update dependency rxjs to v7.5.4 ([0da14aa](https://github.com/mx-space/core/commit/0da14aac24a5759731320c5cb21e4798d4a48566))
-* docker script ([af56dc4](https://github.com/mx-space/core/commit/af56dc47e666b56a9c8225e4705c2c4109b79a51))
-* log & ws-log improve ([08c5311](https://github.com/mx-space/core/commit/08c5311347a5f29e297a88b712151ab6be6608d1))
-
-
-
-# [3.17.0](https://github.com/mx-space/core/compare/v3.16.1...v3.17.0) (2022-02-10)
-
-
-### Bug Fixes
-
-* rename all symbols ([46bbf18](https://github.com/mx-space/core/commit/46bbf18ad2ebf5a5b702c8864df1b1391206a703))
-
-
-### Features
-
-* add terminal password ([64ba198](https://github.com/mx-space/core/commit/64ba19851d73ea9d4608e9b248ff5cfd61418b63))
-* pre-run command support ([8ef6ec3](https://github.com/mx-space/core/commit/8ef6ec3c8e71777776db6c56509806d21913dc63))
-* pty support ([f04ac9e](https://github.com/mx-space/core/commit/f04ac9e5a16d4ebafa8e0e23a66c134625c01a5e))
-* terminal password support ([f20945c](https://github.com/mx-space/core/commit/f20945c27e995519a811216b2941b61f53b8758e))
-
-
-
-## [3.16.1](https://github.com/mx-space/core/compare/v3.16.0...v3.16.1) (2022-02-09)
-
-
-### Bug Fixes
-
-* rename admin repo name ([bae0f9f](https://github.com/mx-space/core/commit/bae0f9f29450325094f08eb62e41f99faeb7de13))
-* rename repo name ([3144784](https://github.com/mx-space/core/commit/3144784383f4912c6acf6db64b48d158eb5f704c))
-* replace version prefix `v` ([e48be83](https://github.com/mx-space/core/commit/e48be8383bcc0eadb04ba5a177c1e3f30b48b5f2))
-
-
-
-# [3.16.0](https://github.com/mx-space/core/compare/v3.15.8...v3.16.0) (2022-02-09)
-
-
-### Bug Fixes
-
-* admin gateway singleton ([8f73e61](https://github.com/mx-space/core/commit/8f73e61c4f75a44ac99c7c9d54a02625e57b93ad))
-* ci test & search options ([35baef1](https://github.com/mx-space/core/commit/35baef120f7425a5a8a005896e1d860ad82f986c))
-* guard and error pipe ([280f852](https://github.com/mx-space/core/commit/280f852c099417bc83b7deec41055605e27233d3))
-* redis sub channel ([0e2f520](https://github.com/mx-space/core/commit/0e2f520e1ecedfe7b55dedfcb0903e8fa652d59f))
-
-
-### Features
-
-* add delete log ([22b6ca1](https://github.com/mx-space/core/commit/22b6ca109408b56d0e0a24758d99bc8ea238ddf5))
-* native log ([da42721](https://github.com/mx-space/core/commit/da427212bf8c676a699592a81b52f158b4696478))
-
-
-
-## [3.15.8](https://github.com/mx-space/core/compare/v3.15.7...v3.15.8) (2022-02-03)
-
-
-
-## [3.15.7](https://github.com/mx-space/core/compare/v3.15.6...v3.15.7) (2022-02-03)
-
-
-### Bug Fixes
-
-* algolia search page ([3a9aea6](https://github.com/mx-space/core/commit/3a9aea6daa5e774b9f23afdf534576a6df8cf90b))
-
-
-
-## [3.15.6](https://github.com/mx-space/core/compare/v3.15.5...v3.15.6) (2022-02-03)
-
-
-### Bug Fixes
-
-* jest test global env ([fe55bbc](https://github.com/mx-space/core/commit/fe55bbc8c431009250023cf53ab352a65aa54e5f))
-* search by algolia populate data ([955a112](https://github.com/mx-space/core/commit/955a112d666e753e685d4a3031d130a430e54b66))
-
-
-
-## [3.15.5](https://github.com/mx-space/core/compare/v3.15.4...v3.15.5) (2022-01-31)
-
-
-### Bug Fixes
-
-* check health retry and timeout ([5c4b58a](https://github.com/mx-space/core/commit/5c4b58a2faaeb6f164e2ceb74ecb1ee9758be745))
-* limit apply link char length ([6c0cac1](https://github.com/mx-space/core/commit/6c0cac107fdeecf658aaed2746b7cc44dac328cd))
-
-
-
-## [3.15.4](https://github.com/mx-space/core/compare/v3.15.3...v3.15.4) (2022-01-31)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/swagger to v5.2.0 ([#292](https://github.com/mx-space/core/issues/292)) ([b8fa295](https://github.com/mx-space/core/commit/b8fa295244c5d944b8e0d168b76fff0b5d714bd4))
-* **deps:** update dependency fastify-multipart to v5.3.0 ([#291](https://github.com/mx-space/core/issues/291)) ([f524a5a](https://github.com/mx-space/core/commit/f524a5a9fd97dc60cad5e0b7396f431f76492c54))
-* **deps:** update dependency graphql to v15.8.0 ([#219](https://github.com/mx-space/core/issues/219)) ([220bdb7](https://github.com/mx-space/core/commit/220bdb75b61034005a4f82d26d9d0ddc775af45c))
-
-
-### Features
-
-* link check ([5edb959](https://github.com/mx-space/core/commit/5edb959552ef5644cfa9f86b77f880590738c487))
-
-
-
-## [3.15.3](https://github.com/mx-space/core/compare/v3.15.2...v3.15.3) (2022-01-30)
-
-
-### Bug Fixes
-
-* add image prop to valid body ([911b82e](https://github.com/mx-space/core/commit/911b82e5608a86bed2aaa0f9276de476337de87c))
-* **deps:** update dependency algoliasearch to v4.12.1 ([43bb657](https://github.com/mx-space/core/commit/43bb657c1b789ef55c3c2c7bcfa08efd6b213743))
-* **deps:** update dependency marked to v4.0.11 ([205d837](https://github.com/mx-space/core/commit/205d83707ca021832fbb200dda0f70155fa25b60))
-* **deps:** update dependency marked to v4.0.12 ([311d5cc](https://github.com/mx-space/core/commit/311d5cc4619b4254792ce014241a7ece7daf6959))
-* **util:** embed-in require vibrant ([668379a](https://github.com/mx-space/core/commit/668379a64b61538d6e8deabea0d496cdc9aaee6f))
-
-
-
-## [3.15.2](https://github.com/mx-space/core/compare/v3.15.1...v3.15.2) (2022-01-21)
-
-
-### Bug Fixes
-
-* script ([85f658f](https://github.com/mx-space/core/commit/85f658f465d1a0fd4f200fb9408021b9d1e315d8))
-
-
-
-## [3.15.1](https://github.com/mx-space/core/compare/v3.15.0...v3.15.1) (2022-01-21)
-
-
-### Bug Fixes
-
-* **deps:** update dependency apollo-server-fastify to v3.6.2 ([f30a79e](https://github.com/mx-space/core/commit/f30a79e31769fcd5c4c224de79b44cedfec033ba))
-* **deps:** update nest monorepo to v8.2.6 ([30df4df](https://github.com/mx-space/core/commit/30df4dfb90f8c63a285fabb72a7a29ecc305a93a))
-* project vaildation ([ceb8b75](https://github.com/mx-space/core/commit/ceb8b75c4fc27235c5a2e9c6c00cff4d2c7acfb1))
-
-
-
-# [3.15.0](https://github.com/mx-space/core/compare/v3.14.1...v3.15.0) (2022-01-18)
-
-
-### Bug Fixes
-
-* test ([a53a0c3](https://github.com/mx-space/core/commit/a53a0c3542ac73427cc3dde98020aa23a6013524))
-* test disable redis subpub ([72006a1](https://github.com/mx-space/core/commit/72006a170f0acafdf30e43d022965b6070fed467))
-
-
-
-## [3.14.1](https://github.com/mx-space/core/compare/v3.14.0...v3.14.1) (2022-01-18)
-
-
-### Bug Fixes
-
-* worker event bus emit ([bcc90f9](https://github.com/mx-space/core/commit/bcc90f90b9308369b614efb5c0ca4bfe0d547391))
-
-
-
-# [3.14.0](https://github.com/mx-space/core/compare/v3.13.6...v3.14.0) (2022-01-18)
-
-
-### Bug Fixes
-
-* docker build ([9f89522](https://github.com/mx-space/core/commit/9f89522b1a5e3780bf3f5897a9db93e489515c1e))
-
-
-### Features
-
-* make app clustering ([61f8ab9](https://github.com/mx-space/core/commit/61f8ab9b483c4b2dae146b799d4dab6d127fe95a))
-
-
-
-## [3.13.6](https://github.com/mx-space/core/compare/v3.13.4...v3.13.6) (2022-01-16)
-
-
-### Bug Fixes
-
-* **deps:** update dependency marked to v4.0.10 ([b381b47](https://github.com/mx-space/core/commit/b381b47d52958901b57a3d70f7e0affefc1c67af))
-
-
-
-## [3.13.4](https://github.com/mx-space/core/compare/v3.13.3...v3.13.4) (2022-01-13)
-
-
-### Bug Fixes
-
-* **deps:** update dependency nanoid to v3.1.31 ([ccb248a](https://github.com/mx-space/core/commit/ccb248a9632fe8aeefa9b37f268166b0ad8af2e6))
-* **deps:** update dependency nanoid to v3.1.32 ([#275](https://github.com/mx-space/core/issues/275)) ([bb59143](https://github.com/mx-space/core/commit/bb5914348265dfec238a65cbea58398d17d6a8e6))
-* test script ([ecbce84](https://github.com/mx-space/core/commit/ecbce848fa588a2efa782014acd1a2e66ec46fc5))
-
-
-### Features
-
-* update mongoose to v6 ([409a5e1](https://github.com/mx-space/core/commit/409a5e1faccac95ea9afaa6a72976625a5cd2009))
-
-
-
-## [3.13.3](https://github.com/mx-space/core/compare/v3.13.2...v3.13.3) (2022-01-11)
-
-
-### Bug Fixes
-
-* universal curl sort on getAll ([ab6847e](https://github.com/mx-space/core/commit/ab6847e9432483dc3df5df7958580d04f4356c39))
-
-
-
-## [3.13.2](https://github.com/mx-space/core/compare/v3.13.1...v3.13.2) (2022-01-11)
-
-
-### Bug Fixes
-
-* request scope lead to analyze error ([90d902c](https://github.com/mx-space/core/commit/90d902c048706373b65d434d1b61d674e2059a33))
-
-
-
-## [3.13.1](https://github.com/mx-space/core/compare/v3.13.0...v3.13.1) (2022-01-11)
-
-
-### Bug Fixes
-
-* backup cron ([66829b5](https://github.com/mx-space/core/commit/66829b58618f9494e8c5d97aa17d125326ef552f))
-* **deps:** update dependency image-size to v1.0.1 ([0a79b6c](https://github.com/mx-space/core/commit/0a79b6c6cb36ec34f5e5e1f2019ab1f33c2e0b75))
-* missing deps injection ([31876a7](https://github.com/mx-space/core/commit/31876a709b87fea50c9216e0c90f24466269454e))
-
-
-
-# [3.13.0](https://github.com/mx-space/core/compare/v3.12.11...v3.13.0) (2022-01-10)
-
-
-### Features
-
-* add debug for dev ([3243d29](https://github.com/mx-space/core/commit/3243d29ebf99747a8508de9b0fbdd88032f12daa))
-* add retry on axios req ([2af891d](https://github.com/mx-space/core/commit/2af891dcb58206083eb2643282c8d8fd7c4a84ef))
-
-
-
-## [3.12.11](https://github.com/mx-space/core/compare/v3.12.10...v3.12.11) (2022-01-10)
-
-
-### Bug Fixes
-
-* **snippet:** delete field when update ([e3a182f](https://github.com/mx-space/core/commit/e3a182f09ed7e815a2e91c3b5141e0e2f46e55a7))
-
-
-
-## [3.12.10](https://github.com/mx-space/core/compare/v3.12.9...v3.12.10) (2022-01-09)
-
-
-### Bug Fixes
-
-* add reset email template api ([395f237](https://github.com/mx-space/core/commit/395f237006d6a0b44f118284fc2b207eb2f844f5))
-* **deps:** update dependency fastify-swagger to v4.13.1 ([0ecd731](https://github.com/mx-space/core/commit/0ecd731bbbcfe6ca94856b61aed258c0385f3f01))
-* ignore analyzes collection in backup ([8b47aac](https://github.com/mx-space/core/commit/8b47aac02ef49cb5a56a42f9edadecfca4adc69b))
-
-
-
-## [3.12.9](https://github.com/mx-space/core/compare/v3.12.8...v3.12.9) (2022-01-08)
-
-
-### Bug Fixes
-
-* **deps:** update dependency marked to v4.0.9 ([89cb51a](https://github.com/mx-space/core/commit/89cb51a333455d55515bce648c767a0576fb51df))
-* **deps:** update dependency mongoose-paginate-v2 to v1.4.3 ([57c22db](https://github.com/mx-space/core/commit/57c22db828b40eb3965e67747c6864f82af60a57))
-
-
-
-## [3.12.8](https://github.com/mx-space/core/compare/v3.12.7...v3.12.8) (2022-01-06)
-
-
-### Bug Fixes
-
-* delete note password field after compare ([8f6c644](https://github.com/mx-space/core/commit/8f6c6441c8ee9adcb350dc18292f06ad6c93b658))
-* get note timeline on with password note ([9826adc](https://github.com/mx-space/core/commit/9826adc156744a1e0f839b056581d10a1a3fd88e))
-
-
-
-## [3.12.7](https://github.com/mx-space/core/compare/v3.12.6...v3.12.7) (2022-01-06)
-
-
-### Bug Fixes
-
-* **deps:** update dependency fastify-cookie to v5.5.0 ([#254](https://github.com/mx-space/core/issues/254)) ([58a5572](https://github.com/mx-space/core/commit/58a557298611c2ed23388b876827f6dc05000c4b))
-* **deps:** update dependency fastify-swagger to v4.13.0 ([#236](https://github.com/mx-space/core/issues/236)) ([eb8959a](https://github.com/mx-space/core/commit/eb8959a0018169f5187448d87466033b6e46d70c))
-
-
-
-## [3.12.6](https://github.com/mx-space/core/compare/v3.12.5...v3.12.6) (2022-01-04)
-
-
-### Bug Fixes
-
-* update deps yaml ([bdad503](https://github.com/mx-space/core/commit/bdad5038018a6c5b9566da50589f15537031859d))
-
-
-
-## [3.12.5](https://github.com/mx-space/core/compare/v3.12.4...v3.12.5) (2022-01-04)
-
-
-
-## [3.12.4](https://github.com/mx-space/core/compare/v3.12.3...v3.12.4) (2021-12-31)
-
-
-### Bug Fixes
-
-* change return payload on snippet api ([9573f47](https://github.com/mx-space/core/commit/9573f474797f95937d92a0fea2d786b5dbf3711e))
-
-
-
-## [3.12.3](https://github.com/mx-space/core/compare/v3.12.2...v3.12.3) (2021-12-30)
-
-
-
-## [3.12.2](https://github.com/mx-space/core/compare/v3.12.1...v3.12.2) (2021-12-28)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.5 ([b07bd66](https://github.com/mx-space/core/commit/b07bd66e7b57b3e064e9347c02e2953bbf950e92))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.6 ([36d675f](https://github.com/mx-space/core/commit/36d675f8d4e5b123c3651cca70a16a856e091b3e))
-* **search:** search cron lead judge ([1c601e2](https://github.com/mx-space/core/commit/1c601e25a9efcc380931715e13d70984dcaf27a4))
-
-
-### Features
-
-* add error message output in dev ([759c807](https://github.com/mx-space/core/commit/759c807a207bbe7f214d72b41e906a701a503b56))
-* **aggregate:** add `url` ([497796f](https://github.com/mx-space/core/commit/497796f33792175ff22e3fd0c5def1e58513dbc3))
-
-
-
-## [3.12.1](https://github.com/mx-space/core/compare/v3.12.0...v3.12.1) (2021-12-23)
-
-
-### Bug Fixes
-
-* page order ([fa66448](https://github.com/mx-space/core/commit/fa66448cb205e92da1b650b9f7cad9e6ad1fd311))
-
-
-
-# [3.12.0](https://github.com/mx-space/core/compare/v3.11.9...v3.12.0) (2021-12-23)
-
-
-### Bug Fixes
-
-* **algolia:** repush if config enable ([4681da9](https://github.com/mx-space/core/commit/4681da94e4f8aaa7c5091b1c4f6663d4d38bc033))
-
-
-### Features
-
-* **snippet:** yaml support ([99a2ef0](https://github.com/mx-space/core/commit/99a2ef0dcf7afd1d5a46a28e2e6ee5c3e59ab671))
-
-
-
-## [3.11.9](https://github.com/mx-space/core/compare/v3.11.8...v3.11.9) (2021-12-21)
-
-
-### Bug Fixes
-
-* **render:** forhidden no access to see post ([cc72bad](https://github.com/mx-space/core/commit/cc72bad121bfa60135c4a772db32a8ce76c4d42c))
-
-
-### Features
-
-* allow root controller method allow all cors ([4d4eaeb](https://github.com/mx-space/core/commit/4d4eaeb2b166114fa8103d350020d6722dde5776))
-
-
-
-## [3.11.8](https://github.com/mx-space/core/compare/v3.11.7...v3.11.8) (2021-12-19)
-
-
-### Bug Fixes
-
-* **deps:** update dependency marked to v4.0.8 ([1bfc76b](https://github.com/mx-space/core/commit/1bfc76b0ba48e7f3282b0f5fbb259a5274314481))
-* **deps:** update dependency passport to v0.5.1 ([e9488bd](https://github.com/mx-space/core/commit/e9488bd159d4f2963870b0a42a873b24c2037fca))
-* **deps:** update dependency passport to v0.5.2 ([d7d5194](https://github.com/mx-space/core/commit/d7d5194426aa0be5fe4bd6439b99ceeeb2b8f3ce))
-* **deps:** update nest monorepo to v8.2.4 ([71cfa93](https://github.com/mx-space/core/commit/71cfa93d8500849b92bf903829e0cec753c4a8a6))
-* note password compare ([dddd7f3](https://github.com/mx-space/core/commit/dddd7f3aa28ae4ba08687cb6646869e65dd26a87))
-
-
-
-## [3.11.7](https://github.com/mx-space/core/compare/v3.11.6...v3.11.7) (2021-12-16)
-
-
-### Bug Fixes
-
-* **deps:** update dependency fastify-multipart to v5.2.1 ([#216](https://github.com/mx-space/core/issues/216)) ([723374a](https://github.com/mx-space/core/commit/723374a3477a3b418857a2d93973a696b4fbecaa))
-* fastify resolution ([39580d9](https://github.com/mx-space/core/commit/39580d9fae3a808fc0b3d94f3685823061e64dbc))
-
-
-
-## [3.11.6](https://github.com/mx-space/core/compare/v3.11.5...v3.11.6) (2021-12-10)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.4 ([00a3680](https://github.com/mx-space/core/commit/00a3680a46e9755f6dd554d4787e8587d3d16bef))
-* **deps:** update dependency marked to v4.0.6 ([230d0b2](https://github.com/mx-space/core/commit/230d0b2400f845a59ac6ee81070af8f46b2166dc))
-* **deps:** update dependency marked to v4.0.7 ([1e3949c](https://github.com/mx-space/core/commit/1e3949c413d46838bfd63312e68b3ed3dd763409))
-* **deps:** update dependency nodemailer to v6.7.2 ([4f8bed3](https://github.com/mx-space/core/commit/4f8bed30f4238c2668461d241e25810e29df004c))
-* poplaute `category` field in comment list ([4c16b26](https://github.com/mx-space/core/commit/4c16b26657d974c3ffce35a1caddebb1bf2a35e9))
-
-
-
-## [3.11.5](https://github.com/mx-space/core/compare/v3.11.4...v3.11.5) (2021-11-26)
-
-
-
-## [3.11.4](https://github.com/mx-space/core/compare/v3.11.3...v3.11.4) (2021-11-26)
-
-
-### Bug Fixes
-
-* **auth:** !!!accidentally bypassing authentication ([89d36a8](https://github.com/mx-space/core/commit/89d36a89a6d4a0355829c91535760782fd7717af))
-* **deps:** update dependency class-transformer to v0.5.1 ([#193](https://github.com/mx-space/core/issues/193)) ([6fff33d](https://github.com/mx-space/core/commit/6fff33d83d8563d31838a3c7b807b1821a13fcf5))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.3 ([2b7a333](https://github.com/mx-space/core/commit/2b7a3336c537999d829c2a035ffa822cafb37998))
-* **deps:** update dependency fastify-cookie to v5.4.0 ([#197](https://github.com/mx-space/core/issues/197)) ([6c415cf](https://github.com/mx-space/core/commit/6c415cfb50e36fd21993aff798a2317ae9abff55))
-* **deps:** update dependency marked to v4.0.5 ([e86d5d8](https://github.com/mx-space/core/commit/e86d5d898ceafdd37d58c44af3c42359c12274a9))
-* **search:** poplute truely field `category` ([c65ef2d](https://github.com/mx-space/core/commit/c65ef2ded85f9de6d50c72600253f3d1d5ccf252))
-
-
-
-## [3.11.3](https://github.com/mx-space/core/compare/v3.11.2...v3.11.3) (2021-11-24)
-
-
-### Bug Fixes
-
-* add auth on `tool` controller ([1bd29b7](https://github.com/mx-space/core/commit/1bd29b72e70f082a62171fabc29fc3e10b73df8d))
-* change typo ([49db94c](https://github.com/mx-space/core/commit/49db94ca6179f6ae6e991dfba84129dba21cdb72))
-* **deps:** update dependency @nestjs/graphql to v9.1.2 ([e423f92](https://github.com/mx-space/core/commit/e423f92558dcbab6e17abec47b3de35a0701778f))
-* **deps:** update dependency class-validator to v0.13.2 ([d739bb3](https://github.com/mx-space/core/commit/d739bb3ac4a022ba865054ae7ee1eec1c66bba79))
-* **deps:** update nest monorepo to v8.2.3 ([7438fef](https://github.com/mx-space/core/commit/7438feff25a4d10026645cb5c6f9365918330d70))
-* **recently:** multi-choice `before` and `after` ([be4ebd3](https://github.com/mx-space/core/commit/be4ebd30c4af872b90dbdad551dd8c825ebfa9c2))
-* update lock file ([c76af4e](https://github.com/mx-space/core/commit/c76af4ea11c3fc6db022c35814f201eeee854abd))
-
-
-
-## [3.11.2](https://github.com/mx-space/core/compare/v3.11.1...v3.11.2) (2021-11-20)
-
-
-### Bug Fixes
-
-* config merge ([cf0b3aa](https://github.com/mx-space/core/commit/cf0b3aae18b4b04f00a2b5b8ca7139691a06745c))
-* **deps:** update dependency marked to v4.0.4 ([#190](https://github.com/mx-space/core/issues/190)) ([e4467f3](https://github.com/mx-space/core/commit/e4467f3943be9deadc6029f98cc155ea850fb5c6))
-
-
-
-## [3.11.1](https://github.com/mx-space/core/compare/v3.11.0...v3.11.1) (2021-11-19)
-
-
-### Bug Fixes
-
-* add `id` on login  payload ([4803a4d](https://github.com/mx-space/core/commit/4803a4dc56c164788a24301dc9edad46056bb3f2))
-* **deps:** update dependency @nestjs/schedule to v1.0.2 ([74eed91](https://github.com/mx-space/core/commit/74eed91d3c9d9901e40238f23fd7ca04b2a92029))
-* **deps:** update dependency @nestjs/swagger to v5.1.5 ([75f485f](https://github.com/mx-space/core/commit/75f485f0f8e35d356174f14a32c3dfe97c40ce7b))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.1 ([dc967d5](https://github.com/mx-space/core/commit/dc967d5f4843a1575aad17830e87e67e9a19db05))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.2 ([654a5aa](https://github.com/mx-space/core/commit/654a5aa65a1ac0d7536d99d289d5412b20f582ba))
-
-
-
-# [3.11.0](https://github.com/mx-space/core/compare/v3.10.3...v3.11.0) (2021-11-17)
-
-
-
-## [3.10.3](https://github.com/mx-space/core/compare/v3.10.2...v3.10.3) (2021-11-17)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cache-manager to v3.6.0 ([#168](https://github.com/mx-space/core/issues/168)) ([e6b506e](https://github.com/mx-space/core/commit/e6b506e65b91055d75a9a40c4676a99b53a04ede))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.10 ([200ab81](https://github.com/mx-space/core/commit/200ab815b627fde2f0275ae17a195ff89eaad7fd))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.0 ([#179](https://github.com/mx-space/core/issues/179)) ([43c6250](https://github.com/mx-space/core/commit/43c6250b7b18922999c133343a6c514771874397))
-* **deps:** update dependency marked to v4.0.3 ([b078f2d](https://github.com/mx-space/core/commit/b078f2de2f3aa1cd4b6bc7994ae136b6c3071974))
-* **deps:** update dependency nodemailer to v6.7.1 ([b27e122](https://github.com/mx-space/core/commit/b27e122b8a06234bb3071e7f03687451af46e9ef))
-* **deps:** update dependency snakecase-keys to v5.1.2 ([79db46e](https://github.com/mx-space/core/commit/79db46e7d780925a271b17369595bb063359a1a7))
-* **deps:** update nest monorepo to v8.2.1 ([e757b86](https://github.com/mx-space/core/commit/e757b86bbf3f1fd449450c71e70a1444d16245ea))
-* **tag:** return correct tag name ([64e31b9](https://github.com/mx-space/core/commit/64e31b92eeb95f0bb836ff1b3555a63c4531aee8))
-
-
-
-## [3.10.2](https://github.com/mx-space/core/compare/v3.10.1...v3.10.2) (2021-11-16)
-
-
-### Bug Fixes
-
-* **category:** return origial enum if truely type ([856b06f](https://github.com/mx-space/core/commit/856b06f6ffab1cb0a4b78561d77bad6e869b2381))
-* **comment:** return new comment after reply ([4dfdae6](https://github.com/mx-space/core/commit/4dfdae632b178a5a956e401ec40bc472b5c7a7cc))
-* **deps:** update dependency apollo-server-fastify to v3.4.1 ([cb987d8](https://github.com/mx-space/core/commit/cb987d821ee87d2b52679aea8ef16ec3b612098c))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.7 ([fe7363f](https://github.com/mx-space/core/commit/fe7363f47832f7cf8f0f7732aa2a360306557d51))
-* **deps:** update dependency fastify-cookie to v5.3.2 ([bf7ba52](https://github.com/mx-space/core/commit/bf7ba523d99f060bd441c3dfd5fde2a8a0333847))
-* lint error ([137d723](https://github.com/mx-space/core/commit/137d723c864edc08d57baf741e004a0dafa7320f))
-
-
-
-## [3.10.1](https://github.com/mx-space/core/compare/v3.10.0...v3.10.1) (2021-10-30)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/graphql to v9.1.1 ([#131](https://github.com/mx-space/core/issues/131)) ([e5c6618](https://github.com/mx-space/core/commit/e5c661882b8c2662ef87ab8ca81608911007653c))
-* **deps:** update dependency algoliasearch to v4.11.0 ([#132](https://github.com/mx-space/core/issues/132)) ([e741f69](https://github.com/mx-space/core/commit/e741f697bcc71ec51ff3017eebc0ffa2d3d62e18))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.6 ([25c1576](https://github.com/mx-space/core/commit/25c157699541dfaf5b7acfbaf46920a179487eb3))
-* **deps:** update dependency fastify-swagger to v4.12.6 ([54a9fa7](https://github.com/mx-space/core/commit/54a9fa7a6fc7008bb6ee1b7546e8d39ce32979e8))
-* **deps:** update dependency graphql to v15.7.2 ([#151](https://github.com/mx-space/core/issues/151)) ([b26cb48](https://github.com/mx-space/core/commit/b26cb48fac973062869d003a385777d9185ed8ee))
-* **deps:** update dependency marked to v3.0.8 ([7b07846](https://github.com/mx-space/core/commit/7b078461b87c2efbfd0208c05fc79195229f1492))
-* **deps:** update dependency ua-parser-js to v0.7.30 ([8b2fac2](https://github.com/mx-space/core/commit/8b2fac224b60efd86b8491990748a85cd9bf5391))
-* **deps:** update dependency ua-parser-js to v0.7.31 ([cdf2835](https://github.com/mx-space/core/commit/cdf28351899194fbb130e84564a61a69daf1c692))
-* **deps:** update dependency ua-parser-js to v1 ([#142](https://github.com/mx-space/core/issues/142)) ([4aa6874](https://github.com/mx-space/core/commit/4aa6874357486ffcd7730419967096edfd2bf1a5))
-* **deps:** update nest monorepo to v8.1.2 ([70e5726](https://github.com/mx-space/core/commit/70e57264fafb56a4f8308467f6f726ebd70f3091))
-
-
-
-# [3.10.0](https://github.com/mx-space/core/compare/v3.9.5...v3.10.0) (2021-10-22)
-
-
-### Bug Fixes
-
-* create-tag script ([6548555](https://github.com/mx-space/core/commit/6548555416ea899ed4df4152b18c477e7e9cef96))
-* **deps:** update dependency @nestjs/swagger to v5.1.1 ([1cc7fdf](https://github.com/mx-space/core/commit/1cc7fdf7763daee080d13827f831ae2039ee4563))
-* **deps:** update dependency @nestjs/swagger to v5.1.3 ([6097c54](https://github.com/mx-space/core/commit/6097c54241b86e506fa8fb64fbb5c6ae26a76bb3))
-* **deps:** update dependency @nestjs/swagger to v5.1.4 ([b3f9adb](https://github.com/mx-space/core/commit/b3f9adba7f0b8f22f5d199bafd197e61a95adbf6))
-* **deps:** update dependency fastify-swagger to v4.12.5 ([0800654](https://github.com/mx-space/core/commit/08006544b76fc58b8270c65f6c04d9bf74bbe4d1))
-* **deps:** update dependency mongoose-lean-virtuals to v0.9.0 ([#122](https://github.com/mx-space/core/issues/122)) ([3f70923](https://github.com/mx-space/core/commit/3f709236488fd51d3f2cf662cc74bb8081017e3d))
-
-
-
-## [3.9.5](https://github.com/mx-space/core/compare/v3.9.4...v3.9.5) (2021-10-14)
-
-
-### Bug Fixes
-
-* downgrade eslint to v7 ([8928574](https://github.com/mx-space/core/commit/8928574b7f53495754f242b7cba89513966a23e4))
-
-
-
-## [3.9.4](https://github.com/mx-space/core/compare/v3.9.3...v3.9.4) (2021-10-14)
-
-
-### Bug Fixes
-
-* **deps:** update dependency nanoid to v3.1.30 ([7fe753c](https://github.com/mx-space/core/commit/7fe753c37b6bab9662a2688a5388fad060fcf05d))
-
-
-
-## [3.9.3](https://github.com/mx-space/core/compare/v3.9.2...v3.9.3) (2021-10-13)
-
-
-### Bug Fixes
-
-* argv import ([46fc667](https://github.com/mx-space/core/commit/46fc667b966795214833c7555bcb36b3f94ebd93))
-
-
-
-## [3.9.2](https://github.com/mx-space/core/compare/v3.9.1...v3.9.2) (2021-10-13)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/graphql to v9.0.6 ([def3691](https://github.com/mx-space/core/commit/def3691ecbcb464e4e6c25ceb1fa4715789c8a86))
-* **deps:** update dependency apollo-server-fastify to v3.4.0 ([#117](https://github.com/mx-space/core/issues/117)) ([98c30fa](https://github.com/mx-space/core/commit/98c30fa5996ded3ba6b18bbcca8c92b1cf9d8a80))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.5 ([7405202](https://github.com/mx-space/core/commit/74052028751f8f9a096c6da42aa3292274b649bc))
-* **deps:** update dependency fastify-multipart to v5.0.2 ([af9bfbc](https://github.com/mx-space/core/commit/af9bfbca4dd4bfeb0133f33394a5b9cf6eb2b2e3))
-* **deps:** update dependency marked to v3.0.7 ([ff188c5](https://github.com/mx-space/core/commit/ff188c5c6879eb7f865f0a2cf966847fa3978fff))
-* **deps:** update dependency nodemailer to v6.7.0 ([#115](https://github.com/mx-space/core/issues/115)) ([413df05](https://github.com/mx-space/core/commit/413df055462cb2c5eaa3d0f9b478630aa75bd044))
-* **deps:** update dependency xss to v1.0.10 ([6d355e0](https://github.com/mx-space/core/commit/6d355e056dba96da0e19c2e6a333e8cd25aa559f))
-
-
-### Features
-
-* update admin versiob ([24fa8c0](https://github.com/mx-space/core/commit/24fa8c004691614332676b5fc08bff35a5cbbef0))
-
-
-
-## [3.9.1](https://github.com/mx-space/core/compare/v3.9.0...v3.9.1) (2021-10-07)
-
-
-### Bug Fixes
-
-* backup default option and update admin version ([cf4323b](https://github.com/mx-space/core/commit/cf4323bfb58cbc7062da6851204f3405658375e5))
-* **deps:** update dependency camelcase-keys to v7.0.1 ([#96](https://github.com/mx-space/core/issues/96)) ([eb931e5](https://github.com/mx-space/core/commit/eb931e50cdebabfd70be9ce84c44f8db8349b8ed))
-* **deps:** update dependency graphql to v15.6.1 ([#101](https://github.com/mx-space/core/issues/101)) ([8675623](https://github.com/mx-space/core/commit/8675623bfa639e3a3758882da1b7810f4677663c))
-* **deps:** update dependency marked to v3.0.6 ([95fbb58](https://github.com/mx-space/core/commit/95fbb58c6e1377657fba87cf03b49f75c60b1e2b))
-* **deps:** update dependency nanoid to v3.1.29 ([#102](https://github.com/mx-space/core/issues/102)) ([0450161](https://github.com/mx-space/core/commit/04501612999261626eccd0404e62e54c7a0b7ada))
-* **deps:** update dependency snakecase-keys to v5.1.0 ([#100](https://github.com/mx-space/core/issues/100)) ([2983c06](https://github.com/mx-space/core/commit/2983c069e2879dd88791ff0f789955928866bdae))
-* **deps:** update nest monorepo to v8.0.10 (patch) ([#87](https://github.com/mx-space/core/issues/87)) ([f8f4f89](https://github.com/mx-space/core/commit/f8f4f89b135631d737d91367ebcb7fc6d1059931))
-
-
-
-# [3.9.0](https://github.com/mx-space/core/compare/v3.8.2...v3.9.0) (2021-10-04)
-
-
-### Features
-
-* pageproxy can assign version ([5c6d929](https://github.com/mx-space/core/commit/5c6d92952aad1f8a29e5ba191262ac9a9bfc3b14))
-
-
-
-## [3.8.2](https://github.com/mx-space/core/compare/v3.8.1...v3.8.2) (2021-10-04)
-
-
-### Bug Fixes
-
-* apply link email mark optional ([523702f](https://github.com/mx-space/core/commit/523702f779c3658d1bd82bcd6a6969059c94ff62))
-
-
-### Features
-
-* add pageproxy page source ([aa7e322](https://github.com/mx-space/core/commit/aa7e322baae733e8ab6442b82bdb5eeb6c036f7e))
-
-
-
-## [3.8.1](https://github.com/mx-space/core/compare/v3.8.0...v3.8.1) (2021-10-04)
-
-
-### Bug Fixes
-
-* markdown import logic ([bb108e4](https://github.com/mx-space/core/commit/bb108e47b22de37401e9aad4ce3a6baee1d02f60))
-
-
-
-# [3.8.0](https://github.com/mx-space/core/compare/v3.7.10...v3.8.0) (2021-10-03)
-
-
-### Bug Fixes
-
-* use logger after listen ([b410e71](https://github.com/mx-space/core/commit/b410e71ce114c2e136130d43cd435ba57fdc24b9))
-
-
-
-## [3.7.10](https://github.com/mx-space/core/compare/v3.7.9...v3.7.10) (2021-10-03)
-
-
-### Features
-
-* use custom logger ([0ce61f6](https://github.com/mx-space/core/commit/0ce61f62d5ef3e60fa5706eb763341af4d31b21a))
-
-
-
-## [3.7.9](https://github.com/mx-space/core/compare/v3.7.8...v3.7.9) (2021-10-03)
-
-
-### Bug Fixes
-
-* **deps:** update dependency fastify-swagger to v4.12.4 ([cc9ad63](https://github.com/mx-space/core/commit/cc9ad63ca639d90c76eaa483ec45a17a5c27b16b))
-* Import user module repeatedly ([#92](https://github.com/mx-space/core/issues/92)) ([f7c4b42](https://github.com/mx-space/core/commit/f7c4b420a8bb924642ba1691d671a7dcbfcaae27))
-
-
-
-## [3.7.8](https://github.com/mx-space/core/compare/v3.7.7...v3.7.8) (2021-10-02)
-
-
-### Bug Fixes
-
-* docker script ([fd7f9c8](https://github.com/mx-space/core/commit/fd7f9c870e53a8f96e5ae76e1454917d97c65c7a))
-
-
-### Features
-
-* add env for docker-compose ([9cef745](https://github.com/mx-space/core/commit/9cef745dc85017274cc5190c032fdc60fd4ed805))
-
-
-
-## [3.7.7](https://github.com/mx-space/core/compare/v3.7.6...v3.7.7) (2021-10-02)
-
-
-### Bug Fixes
-
-* app config shared ([b7db64e](https://github.com/mx-space/core/commit/b7db64e3ae3df1ecc945badece9e3e00533a11a1))
-* **deps:** update dependency rxjs to v7.3.1 ([bd55864](https://github.com/mx-space/core/commit/bd558641abe5aabd84727a3d357be039699a7857))
-* node patch ([1ea8ab2](https://github.com/mx-space/core/commit/1ea8ab211db1f00d69a2a9b81321e28e58f15a24))
-
-
-
-## [3.7.6](https://github.com/mx-space/core/compare/v3.7.5...v3.7.6) (2021-10-01)
-
-
-### Bug Fixes
-
-* mongorestore argv ([10d6d02](https://github.com/mx-space/core/commit/10d6d0219fbe455a4df2d820c58b93fd360b4d3a))
-
-
-
-## [3.7.5](https://github.com/mx-space/core/compare/v3.7.4...v3.7.5) (2021-10-01)
-
-
-### Bug Fixes
-
-* illegal operation on a directory ([8a27d4b](https://github.com/mx-space/core/commit/8a27d4bf76f4ebe01b7dae84379c9fa3b330bd4d))
-
-
-
-## [3.7.4](https://github.com/mx-space/core/compare/v3.7.3...v3.7.4) (2021-10-01)
-
-
-### Bug Fixes
-
-* backup cmd ([855492e](https://github.com/mx-space/core/commit/855492e476162e42b76eff04c216a5075b3c1e5e))
-* nestjs middleware bug, use interceptor ([57f04aa](https://github.com/mx-space/core/commit/57f04aa669de9136e8e0e2712a50aaeefefc1adc))
-* remove unnessary app info field ([c4cf9b3](https://github.com/mx-space/core/commit/c4cf9b3eb00d044dccaa260d015ef1c86c04d588))
-
-
-
-## [3.7.3](https://github.com/mx-space/core/compare/v3.7.2...v3.7.3) (2021-09-30)
-
-
-### Bug Fixes
-
-* package lock update ([fc341d5](https://github.com/mx-space/core/commit/fc341d53182c9604f2ec461ef44d4388c1d4ec93))
-
-
-
-## [3.7.2](https://github.com/mx-space/core/compare/v3.7.1...v3.7.2) (2021-09-30)
-
-
-### Bug Fixes
-
-* **deps:** update dependency fastify-swagger to v4.12.3 ([97b8652](https://github.com/mx-space/core/commit/97b865227133cddc91689d0f468d454cea058073))
-
-
-### Features
-
-* markdown template ([990ffb5](https://github.com/mx-space/core/commit/990ffb5a44ce8c58922d206047823c9a8d030c7c))
-
-
-
-## [3.7.1](https://github.com/mx-space/core/compare/v3.7.0...v3.7.1) (2021-09-29)
-
-
-### Bug Fixes
-
-* backup after force remove temp ([53cdf9a](https://github.com/mx-space/core/commit/53cdf9a36ce7e1df84774e44613838ec16cf3080))
-* **deps:** update dependency fastify-swagger to v4.12.2 ([1adf30d](https://github.com/mx-space/core/commit/1adf30dfa3943d9f721594daddf3798aef9def37))
-
-
-
-# [3.7.0](https://github.com/mx-space/core/compare/v3.6.21...v3.7.0) (2021-09-28)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @nestjs/graphql to v9.0.5 ([b7b3271](https://github.com/mx-space/core/commit/b7b32715806c94895e5964d4fccc472474311e5f))
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.4 ([#83](https://github.com/mx-space/core/issues/83)) ([64d1b32](https://github.com/mx-space/core/commit/64d1b3217eaaead59ffa7a41efc6cfe6cc89d1c6))
-* **deps:** update dependency fastify-multipart to v5.0.1 ([396233a](https://github.com/mx-space/core/commit/396233a29d2a62cdfbd8b2a70402688bddd59733))
-* **deps:** update dependency passport to v0.5.0 ([#74](https://github.com/mx-space/core/issues/74)) ([3022736](https://github.com/mx-space/core/commit/3022736badde8a0bb08100994682d2291706cced))
-
-
-### Features
-
-* page sort support ([8537b05](https://github.com/mx-space/core/commit/8537b050b40996c19b2a0b63bd6e52b60090befb))
-
-
-
-## [3.6.21](https://github.com/mx-space/core/compare/v3.6.20...v3.6.21) (2021-09-27)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @typegoose/auto-increment to v1 ([#73](https://github.com/mx-space/core/issues/73)) ([66715d0](https://github.com/mx-space/core/commit/66715d00610133bc6957599ac9ee8fa9cd4dea03))
-* **deps:** update dependency graphql to v15.6.0 ([#66](https://github.com/mx-space/core/issues/66)) ([db8db82](https://github.com/mx-space/core/commit/db8db822cc5f820eb8952984135f8e3630edffbd))
-
-
-### Features
-
-* add author and created to markdown render ([af90344](https://github.com/mx-space/core/commit/af9034424c11cdbc642ad42afb1813d37cd986e8))
-
-
-
-## [3.6.20](https://github.com/mx-space/core/compare/v3.6.19...v3.6.20) (2021-09-27)
-
-
-### Bug Fixes
-
-* **deps:** update dependency fastify-swagger to v4.12.1 ([08a4753](https://github.com/mx-space/core/commit/08a4753c24589b246f8ae2ea76c4ad06454fb3aa))
-* **deps:** update dependency nanoid to v3.1.28 ([28ec5ae](https://github.com/mx-space/core/commit/28ec5ae177bf7ef1f75883aad388a2d17b4fd9cb))
-
-
-
-## [3.6.19](https://github.com/mx-space/core/compare/v3.6.18...v3.6.19) (2021-09-26)
-
-
-### Bug Fixes
-
-* **deps:** pin dependency fastify-cookie to 5.3.1 ([cb7ec6e](https://github.com/mx-space/core/commit/cb7ec6eca09421867dceaa6f274ebf1e178f0bfc))
-* dont npm install in bump stage ([f2b7786](https://github.com/mx-space/core/commit/f2b7786bca03c1f44859e5de4108f12d79b5cfb3))
-* sequence of note list ([9abd9c2](https://github.com/mx-space/core/commit/9abd9c22c076d254d1197a38dc182caa7e27e0b2))
-
-
-### Features
-
-* add created on api `top` ([242c0e7](https://github.com/mx-space/core/commit/242c0e7407b1b52a29677ed7ab6f2e478a071631))
-
-
-
-## [3.6.18](https://github.com/mx-space/core/compare/v3.6.17...v3.6.18) (2021-09-25)
-
-
-### Bug Fixes
-
-* script bump use zx ([556bde9](https://github.com/mx-space/core/commit/556bde9119cd6fe844fb40a8b50f511cd0aa2629))
-
-
-
-## [3.6.17](https://github.com/mx-space/core/compare/v3.6.16...v3.6.17) (2021-09-25)
-
-
-### Bug Fixes
-
-* comment email mooogse type ([c5277e7](https://github.com/mx-space/core/commit/c5277e79581fd354f8cbb9b38be7824a1a127e69))
-
-
-
-## [3.6.16](https://github.com/mx-space/core/compare/v3.6.15...v3.6.16) (2021-09-25)
-
-
-### Bug Fixes
-
-* **deps:** update dependency nodemailer to v6.6.4 ([af581b2](https://github.com/mx-space/core/commit/af581b22f09409f45821dafe6247696f426664a9))
-* **deps:** update dependency nodemailer to v6.6.5 ([d6c19b8](https://github.com/mx-space/core/commit/d6c19b8f3660cbc89c3cf3fab2f75bee30c25348))
-* **deps:** update nest monorepo to v8.0.7 ([fa2d52c](https://github.com/mx-space/core/commit/fa2d52ca5bf7d1a79e129aa572fde139210e35c1))
-* hide email public for guest ([e319014](https://github.com/mx-space/core/commit/e319014fb6129104ac0d3cd470cf401ee628229e))
-
-
-
-## [3.6.15](https://github.com/mx-space/core/compare/v3.6.14...v3.6.15) (2021-09-23)
-
-
-### Bug Fixes
-
-* rss & sitemap cache ([a6d0812](https://github.com/mx-space/core/commit/a6d08122ae8f308cb249211e8ff3b9705e8983bc))
-
-
-
-## [3.6.14](https://github.com/mx-space/core/compare/v3.6.13...v3.6.14) (2021-09-23)
-
-
-### Bug Fixes
-
-* build in docker compose ([ce9f4bc](https://github.com/mx-space/core/commit/ce9f4bc86ccfbe85849e6672cc8b1fd7f6a0e825))
-* node type error ([4ebc77e](https://github.com/mx-space/core/commit/4ebc77e3f99edbe8ec6636655f352214de31edcb))
-
-
-### Features
-
-* docker compose ([6e89b97](https://github.com/mx-space/core/commit/6e89b97ee6b6d0a64ea9e95da31930f20a2143de))
-
-
-
-## [3.6.13](https://github.com/mx-space/core/compare/v3.6.12...v3.6.13) (2021-09-22)
-
-
-
-## [3.6.12](https://github.com/mx-space/core/compare/v3.6.10...v3.6.12) (2021-09-22)
-
-
-### Bug Fixes
-
-* bump script ([3a4663a](https://github.com/mx-space/core/commit/3a4663ab7819ac8aaf61d8611c0921afa06102cb))
-* recently & remove sync config ([3f10589](https://github.com/mx-space/core/commit/3f10589ad9928d986609972f76d3a4beae6389b5))
-* script again ([d9ea155](https://github.com/mx-space/core/commit/d9ea155d106069491dc6c89f634d89083d4d82bb))
-* unqi ip and spam keyword ([a86ebf9](https://github.com/mx-space/core/commit/a86ebf9d9f370fd177239750245ae2da09f40a74))
-
-
-
-## [3.6.10](https://github.com/mx-space/core/compare/v3.6.9...v3.6.10) (2021-09-22)
-
-
-### Bug Fixes
-
-* mkdir first ([a1d5666](https://github.com/mx-space/core/commit/a1d5666a8de5c0c9f11276cb94819fec017c1d92))
-
-
-
-## [3.6.9](https://github.com/mx-space/core/compare/v3.6.8...v3.6.9) (2021-09-20)
-
-
-### Bug Fixes
-
-* counting interceptor error in gql request ([bc65a2e](https://github.com/mx-space/core/commit/bc65a2ef136ada8aecd646ff8937a31690ad713e))
-* **deps:** pin dependency fastify-secure-session to 2.3.1 ([8d463b2](https://github.com/mx-space/core/commit/8d463b2f1994a852c89ea9992c95d94f3e1ffe75))
-
-
-
-## [3.6.8](https://github.com/mx-space/core/compare/v3.6.7...v3.6.8) (2021-09-20)
-
-
-### Features
-
-* pageproxy debug mode ([8b7532d](https://github.com/mx-space/core/commit/8b7532dc3d28fb7d9f9f0cdcb22b8f408fe7f19f))
-
-
-
-## [3.6.7](https://github.com/mx-space/core/compare/v3.6.6...v3.6.7) (2021-09-20)
-
-
-### Bug Fixes
-
-* jest parse json error ([997d84c](https://github.com/mx-space/core/commit/997d84cf150b9a3e08fafacd56f3ba6adc5b463b))
-* pageproxy cache entty ([b36badc](https://github.com/mx-space/core/commit/b36badc081576d32a6aa59e3d1d966c295708a55))
-
-
-
-## [3.6.6](https://github.com/mx-space/core/compare/v3.6.5...v3.6.6) (2021-09-20)
-
-
-### Bug Fixes
-
-* add tslib 2021 ([76c5eb2](https://github.com/mx-space/core/commit/76c5eb2498eec5c8d64f33a214c1cc1472f355ee))
-
-
-
-## [3.6.5](https://github.com/mx-space/core/compare/v3.6.4...v3.6.5) (2021-09-20)
-
-
-### Bug Fixes
-
-* empty data compatibility ([581ca9e](https://github.com/mx-space/core/commit/581ca9e95a966bceb8727895946e3b07406c86b9))
-
-
-### Features
-
-* pageproxy enable in dev mode ([0391607](https://github.com/mx-space/core/commit/03916079b9be78dbcfef2fe11671befe5d3d4621))
-
-
-
-## [3.6.4](https://github.com/mx-space/core/compare/v3.6.3...v3.6.4) (2021-09-19)
-
-
-### Features
-
-* init module ([ad1ca18](https://github.com/mx-space/core/commit/ad1ca186957fcd5f325dbd6d997e43b007b4b8f4))
-
-
-
-## [3.6.3](https://github.com/mx-space/core/compare/v3.6.2...v3.6.3) (2021-09-19)
-
-
-### Bug Fixes
-
-* destruct nullable ([9ae39c4](https://github.com/mx-space/core/commit/9ae39c461d2d9e61b1f12c1c677371f20e011ea3))
-
-
-
-## [3.6.2](https://github.com/mx-space/core/compare/v3.6.1...v3.6.2) (2021-09-19)
-
-
-### Features
-
-* taskqueue ([2dea189](https://github.com/mx-space/core/commit/2dea189ac52a2e140b0f30d80328aa0c616eaf73))
-
-
-
-## [3.6.1](https://github.com/mx-space/core/compare/v3.6.0...v3.6.1) (2021-09-19)
-
-
-### Bug Fixes
-
-* wrong entry ([c731662](https://github.com/mx-space/core/commit/c731662c6a3fb0f58929fe1b100744bc5676c5d4))
-
-
-
-# [3.6.0](https://github.com/mx-space/core/compare/v3.5.5...v3.6.0) (2021-09-19)
-
-
-### Features
-
-* admin page proxy ([e1e28ed](https://github.com/mx-space/core/commit/e1e28edfb39e6780125b2f7970d2998eabef16a5))
-
-
-
-## [3.5.5](https://github.com/mx-space/core/compare/v3.5.4...v3.5.5) (2021-09-19)
-
-
-### Bug Fixes
-
-* **deps:** update dependency mongoose-lean-virtuals to v0.8.1 ([654b470](https://github.com/mx-space/core/commit/654b47068b1820b831d82512859334ebcc0a9682))
-
-
-### Features
-
-* geoapi init ([d81e539](https://github.com/mx-space/core/commit/d81e53924b33cc483c9ad44fc32e6024926c7c28))
-* page proxy init ([4871871](https://github.com/mx-space/core/commit/4871871454be0dd4d99ca76b1d8d64329a2595cd))
-
-
-
-## [3.5.4](https://github.com/mx-space/core/compare/v3.5.2...v3.5.4) (2021-09-18)
-
-
-### Bug Fixes
-
-* search route ([aedd189](https://github.com/mx-space/core/commit/aedd1894847935e26ed0c0022a40f57f94d3bb6b))
-
-
-
-## [3.5.2](https://github.com/mx-space/core/compare/v3.5.1...v3.5.2) (2021-09-18)
-
-
-### Bug Fixes
-
-* remove rss `,` ([c778a09](https://github.com/mx-space/core/commit/c778a09c1b203594f6af4f1abc8c4475ea9d3017))
-
-
-
-## [3.5.1](https://github.com/mx-space/core/compare/v3.5.0...v3.5.1) (2021-09-18)
-
-
-### Bug Fixes
-
-* cache key and cron cache clean ([14e2d20](https://github.com/mx-space/core/commit/14e2d20bc416ab33f2e1d0a11c7cf75d56ab7425))
-
-
-
-# [3.5.0](https://github.com/mx-space/core/compare/v3.4.5...v3.5.0) (2021-09-18)
-
-
-### Bug Fixes
-
-* **deps:** pin dependency camelcase-keys to 7.0.0 ([043dc9d](https://github.com/mx-space/core/commit/043dc9d9ab922f8c72c1d3ba0a6959e49d65a4ed))
-* nullable of modified ([09f33da](https://github.com/mx-space/core/commit/09f33da0c714f70026ddc28428276447dc471136))
-
-
-### Features
-
-* search module & algolia ([6fc3108](https://github.com/mx-space/core/commit/6fc310804ec09fd05406d6be5f8d5b71f90a456b))
-
-
-
-## [3.4.5](https://github.com/mx-space/core/compare/v3.4.4...v3.4.5) (2021-09-18)
-
-
-### Bug Fixes
-
-* comment guest secure field `mail` ([cd55c9e](https://github.com/mx-space/core/commit/cd55c9ec565521f3e2e56a9315a67e45a57c9df9))
-* gql payload type ([990c496](https://github.com/mx-space/core/commit/990c4969de9a11f15167cb1a50b34b4b9cdeba31))
-
-
-
-## [3.4.4](https://github.com/mx-space/core/compare/v3.4.3...v3.4.4) (2021-09-18)
-
-
-### Bug Fixes
-
-* config readonly & clone deep ([9563ff3](https://github.com/mx-space/core/commit/9563ff3c6a7dba9628e1ba04ef7381b816039722))
-
-
-
-## [3.4.3](https://github.com/mx-space/core/compare/v3.4.2...v3.4.3) (2021-09-16)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.3 ([d857435](https://github.com/mx-space/core/commit/d8574355180d148e5a8e0178f57545cbb33a56c2))
-* patch link data ([639904f](https://github.com/mx-space/core/commit/639904f89bfa9f187fbe7407f3e88bbcb085b403))
-
-
-
-## [3.4.2](https://github.com/mx-space/core/compare/v3.4.1...v3.4.2) (2021-09-16)
-
-
-### Bug Fixes
-
-* cos setting camcelcase ([c5d60ea](https://github.com/mx-space/core/commit/c5d60eaece605e9ae74cf582fe9e9210f7589951))
-
-
-
-## [3.4.1](https://github.com/mx-space/core/compare/v3.4.0...v3.4.1) (2021-09-16)
-
-
-### Bug Fixes
-
-* wait for config load ([d786bf9](https://github.com/mx-space/core/commit/d786bf961992ca3182bf12ef11003bec1cdc1c79))
-
-
-
-# [3.4.0](https://github.com/mx-space/core/compare/v3.3.3...v3.4.0) (2021-09-16)
-
-
-### Bug Fixes
-
-* **deps:** update dependency @typegoose/typegoose to v8.3.0 ([#45](https://github.com/mx-space/core/issues/45)) ([8d3c482](https://github.com/mx-space/core/commit/8d3c48279536a6555f5114444702bf8de4c80155))
-* **deps:** update dependency marked to v3.0.4 ([411a538](https://github.com/mx-space/core/commit/411a5381f7f053d87016937838025338522a88e3))
-* typo ([af4ccf9](https://github.com/mx-space/core/commit/af4ccf96dd93f0b20e1c515aa165a9506d5fa6fb))
-* zx global register ([90e3d14](https://github.com/mx-space/core/commit/90e3d141a5b5fb7a63b9e8d6fd03e39065c7cbaa))
-
-
-### Features
-
-* log module ([bb910d4](https://github.com/mx-space/core/commit/bb910d4b557724fabea3ad66fd8ebd44d80726a6))
-
-
-
-## [3.3.3](https://github.com/mx-space/core/compare/v3.3.2...v3.3.3) (2021-09-13)
-
-
-### Bug Fixes
-
-* nest header & render cache ([013cdef](https://github.com/mx-space/core/commit/013cdef514cb9cae9abe71dba58a0069cba6df93))
-
-
-
-## [3.3.2](https://github.com/mx-space/core/compare/v3.3.1...v3.3.2) (2021-09-13)
-
-
-### Bug Fixes
-
-* minify html mermaid parse error ([c353f4b](https://github.com/mx-space/core/commit/c353f4b1e41776a7170b9cc8a38c898bb9364f4e))
-
-
-
-## [3.3.1](https://github.com/mx-space/core/compare/v3.3.0...v3.3.1) (2021-09-13)
-
-
-### Bug Fixes
-
-* ignore minify js ([0489920](https://github.com/mx-space/core/commit/04899206cdc61b2995a8a7d9e5c441cf917021c8))
-
-
-
-# [3.3.0](https://github.com/mx-space/core/compare/v3.2.1...v3.3.0) (2021-09-13)
-
-
-### Features
-
-* gen sitemap ([0866e17](https://github.com/mx-space/core/commit/0866e17d3d1b05e4af33abe069a5ec5fb63c7d56))
-* minify html & improve render ([8600048](https://github.com/mx-space/core/commit/86000481893c2fa7947a3540cbf997f68d9c7c38))
-
-
-
-## [3.2.1](https://github.com/mx-space/core/compare/v3.2.0...v3.2.1) (2021-09-13)
-
-
-### Bug Fixes
-
-* new a date ([7921dd8](https://github.com/mx-space/core/commit/7921dd89d47600cc8e15cc20e6d36e6f5db4879a))
-
-
-
-# [3.2.0](https://github.com/mx-space/core/compare/v3.1.0...v3.2.0) (2021-09-13)
-
-
-### Features
-
-* marked parse ([b1785c2](https://github.com/mx-space/core/commit/b1785c2c8fa01024ffb6ac23802e58b1ff2a1793))
-* server build rss ([058c9c2](https://github.com/mx-space/core/commit/058c9c2201a70efc38e0f69a526426220dc5995e))
-
-
-
-# [3.1.0](https://github.com/mx-space/core/compare/v3.0.6...v3.1.0) (2021-09-12)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.2 ([850601f](https://github.com/mx-space/core/commit/850601f24a90abbcb23e71e49998cd451e1e17a5))
-* ecosysyem config ([5b6c207](https://github.com/mx-space/core/commit/5b6c207367332e0c6733b650ab2d6cfc3e74e880))
-
-
-### Features
-
-* markdown render & asset helper ([fcf4261](https://github.com/mx-space/core/commit/fcf426165aebb673c2f94b0f01af1e3db1098bf2))
-
-
-
-## [3.0.6](https://github.com/mx-space/core/compare/v3.0.5...v3.0.6) (2021-09-11)
-
-
-### Features
-
-* add email ejs template route ([3861162](https://github.com/mx-space/core/commit/3861162772bebc222985cd5ae69a2be3d469ba5b))
-
-
-
-## [3.0.5](https://github.com/mx-space/core/compare/v3.0.4...v3.0.5) (2021-09-11)
-
-
-### Bug Fixes
-
-* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.1 ([e941840](https://github.com/mx-space/core/commit/e94184007e4faf04bc9ac3b17182f27b0727c1de))
-
-
-
-## [3.0.4](https://github.com/mx-space/core/compare/v3.0.2...v3.0.4) (2021-09-10)
-
-
-### Bug Fixes
-
-* **deps:** pin dependencies ([#38](https://github.com/mx-space/core/issues/38)) ([88dbd58](https://github.com/mx-space/core/commit/88dbd58d175ffd779bf281c06ffd572806bc95e2))
-* email from field ([7bf0041](https://github.com/mx-space/core/commit/7bf004166aaec546a7a371faf7ed9ce4c4243c2e))
-
-
-
-## [3.0.2](https://github.com/mx-space/core/compare/v3.0.1...v3.0.2) (2021-09-10)
-
-
-
-## [3.0.1](https://github.com/mx-space/core/compare/v3.0.0...v3.0.1) (2021-09-10)
-
-
-### Features
-
-* pass argv ([c712250](https://github.com/mx-space/core/commit/c7122500f4fa746a2d3f83b47f09a75cc1dc6c98))
-
-
-
-# [3.0.0](https://github.com/mx-space/core/compare/v3.0.0-canary.5...v3.0.0) (2021-09-10)
-
-
-### Bug Fixes
-
-* **deps:** pin dependency algoliasearch to 4.10.5 ([#36](https://github.com/mx-space/core/issues/36)) ([ab40f56](https://github.com/mx-space/core/commit/ab40f56f199c107ec3a6539682f6547b60011111))
-* **deps:** pin dependency apollo-server-fastify to 3.3.0 ([#37](https://github.com/mx-space/core/issues/37)) ([7f5b81e](https://github.com/mx-space/core/commit/7f5b81ea4d715ccb3522ade6bd6fb4f8b38605f8))
-
-
-
-# [3.0.0-canary.5](https://github.com/mx-space/core/compare/v3.0.0-canary.4...v3.0.0-canary.5) (2021-09-10)
-
-
-
-# [3.0.0-canary.4](https://github.com/mx-space/core/compare/v3.0.0-canary.3.2...v3.0.0-canary.4) (2021-09-10)
-
-
-
-# [3.0.0-canary.3.2](https://github.com/mx-space/core/compare/v3.0.0-canary.3.1...v3.0.0-canary.3.2) (2021-09-10)
-
-
-### Bug Fixes
-
-* test action ([559a48f](https://github.com/mx-space/core/commit/559a48f0248bfaa8423e38f9e40b4c76a06659f0))
-
-
-
-# [3.0.0-canary.3.1](https://github.com/mx-space/core/compare/v3.0.0-canary.3...v3.0.0-canary.3.1) (2021-09-10)
-
-
-
-# [3.0.0-canary.3](https://github.com/mx-space/core/compare/v3.0.0-canary.2.1...v3.0.0-canary.3) (2021-09-10)
-
-
-
-# [3.0.0-canary.2.1](https://github.com/mx-space/core/compare/v3.0.0-canary.2...v3.0.0-canary.2.1) (2021-09-10)
-
-
-### Bug Fixes
-
-* ci asset ([548068a](https://github.com/mx-space/core/commit/548068a25f21f54b8c1ea5a22bc10436cb92ad5b))
-* deploy workdir ([08817c2](https://github.com/mx-space/core/commit/08817c2208afdd073b43907154f3f7b0e941c853))
-
-
-
-# [3.0.0-canary.2](https://github.com/mx-space/core/compare/v3.0.0-canary.1...v3.0.0-canary.2) (2021-09-10)
-
-
-### Features
-
-* note gql ([37a8f66](https://github.com/mx-space/core/commit/37a8f662b535bb2a3a864e018bc4b80c151cfadc))
-
-
-
-# [3.0.0-canary.1](https://github.com/mx-space/core/compare/v3.0.0-canary.0...v3.0.0-canary.1) (2021-09-10)
-
-
-### Bug Fixes
-
-* crud bug & other ([970b928](https://github.com/mx-space/core/commit/970b92825f4036cd2d600f599e7f69f34bf330e5))
-
-
-
-# [3.0.0-canary.0](https://github.com/mx-space/core/compare/v3.0.0-beta.1...v3.0.0-canary.0) (2021-09-09)
-
-
-### Bug Fixes
-
-* cache clean ([d12c086](https://github.com/mx-space/core/commit/d12c086ba8e36b714e609e0a6100aca6ca4bc116))
-* field compatibility ([25b98b2](https://github.com/mx-space/core/commit/25b98b2384f6fa4fdfaab2b7c348f6862b3baafa))
-* interceptor response transfrom ([3821160](https://github.com/mx-space/core/commit/3821160dac593da04d4e7cd208d4b970920f735f))
-
-
-### Features
-
-* algoliasearch ([95c4b58](https://github.com/mx-space/core/commit/95c4b5840f715e5abcf43c1d666cb1725d285fc0))
-
-
-
-# [3.0.0-beta.1](https://github.com/mx-space/core/compare/v3.0.0-beta.0...v3.0.0-beta.1) (2021-09-09)
-
-
-### Features
-
-* init recently module ([80af238](https://github.com/mx-space/core/commit/80af2382994fcebb9d151c7521ff8d8dac4b390f))
-
-
-
-# [3.0.0-beta.0](https://github.com/mx-space/core/compare/v3.0.0-alpha.3...v3.0.0-beta.0) (2021-09-08)
-
-
-### Bug Fixes
-
-* yargs ([03e95fe](https://github.com/mx-space/core/commit/03e95fea2576b47ca1d5da80f0fbf4d1dae9f04a))
-
-
-
-# [3.0.0-alpha.3](https://github.com/mx-space/core/compare/v3.0.0-alpha.2...v3.0.0-alpha.3) (2021-09-08)
-
-
-
-# [3.0.0-alpha.2](https://github.com/mx-space/core/compare/v3.0.0-alpha.1...v3.0.0-alpha.2) (2021-09-08)
-
-
-### Bug Fixes
-
-* GQL guard ([7da83fd](https://github.com/mx-space/core/commit/7da83fd200a9776bb92552c5967c06197b8a05f1))
-
-
-### Features
-
-* gql init ([0ff9cc0](https://github.com/mx-space/core/commit/0ff9cc07b51147eedd67d3bd5aa9888c61e9592c))
-
-
-
-# [3.0.0-alpha.1](https://github.com/mx-space/core/compare/b6766589c9e95bf33d9fefc63daf9b0758e50815...v3.0.0-alpha.1) (2021-09-07)
-
-
-### Bug Fixes
-
-* app config ([6635fee](https://github.com/mx-space/core/commit/6635feef7eff1916765d8f6278fbff2bf5141d96))
-* cache interceptor & 204 content ([7c65bf6](https://github.com/mx-space/core/commit/7c65bf637da93226ce5a94804debd64ebd4d4a82))
-* cache interecptor ([c4ab247](https://github.com/mx-space/core/commit/c4ab247ca6f85de990cc73a561d7e1b9d8570c06))
-* exception filter ([a17afd0](https://github.com/mx-space/core/commit/a17afd068fe0c737cb7071f51ee8a22cfd00543b))
-* filter logger ([7a0fc37](https://github.com/mx-space/core/commit/7a0fc37852339504ea35404ecf7b6faef328b53f))
-* swagger property ([7fec9c8](https://github.com/mx-space/core/commit/7fec9c8857b9767f8a831f61980b11c1316f2765))
-
-
-### Features
-
-* add encypt paw doc ([ce71fb6](https://github.com/mx-space/core/commit/ce71fb66f625c94cc7866b725684a108051186b4))
-* aggregate module ([b22878d](https://github.com/mx-space/core/commit/b22878d2e8aa4672e6a177f1ae810588d09fd131))
-* analyze middleware ([9a294fa](https://github.com/mx-space/core/commit/9a294fa6307b86e368cc4064dc6f5251cc24b7c7))
-* anayzle module ([6bb6bf0](https://github.com/mx-space/core/commit/6bb6bf054b6fe951b87e210379da836fa56e5711))
-* backup module ([bad54a2](https://github.com/mx-space/core/commit/bad54a2129e5e919afb1a9b7f71f5a712a759bab))
-* base crud ([54e6e8e](https://github.com/mx-space/core/commit/54e6e8ee02bc7e6b57a78186df8d7320f59b047c))
-* category module done ([f75e7ed](https://github.com/mx-space/core/commit/f75e7eda6c9fba0fe51f6515ecca28b2d24939ef))
-* comment module init ([11abc68](https://github.com/mx-space/core/commit/11abc689b472a2500810248ab4502bf6c7c81751))
-* comment service init ([4fcb0df](https://github.com/mx-space/core/commit/4fcb0dfb5d7d73d1d6549458a79e7eaff152e1ea))
-* cron task ([34e421a](https://github.com/mx-space/core/commit/34e421a1bc15d3cce63e41b8bfc40692bce3b7b6))
-* docker init ([c92d723](https://github.com/mx-space/core/commit/c92d723ea13e6a7868668db5d08064dc007f4be8))
-* image & http service, migration more ([3515851](https://github.com/mx-space/core/commit/3515851a70ee273c77490685a2c5ffc1b8cfabc8))
-* init ([b676658](https://github.com/mx-space/core/commit/b6766589c9e95bf33d9fefc63daf9b0758e50815))
-* init again ([8a15554](https://github.com/mx-space/core/commit/8a155548c7f64698f29ae8733190bdc62a5b09d9))
-* init category module ([07f4f19](https://github.com/mx-space/core/commit/07f4f19a86832f0e13808279f3844183e7c050c4))
-* init configs module ([deca66e](https://github.com/mx-space/core/commit/deca66e471b2808d29b720fb3de1029c777301ee))
-* init email service ([df9f544](https://github.com/mx-space/core/commit/df9f54494cb041d9f86837722a032382c19a5d9f))
-* init model & add counting interecptor ([e99d975](https://github.com/mx-space/core/commit/e99d9754af534f92a5a20e1b5cadf17a828475c2))
-* init page module ([988cf60](https://github.com/mx-space/core/commit/988cf609eecf8a2f8fdb7ff0d5082e12aacf7fec))
-* markdown helper ([89d1647](https://github.com/mx-space/core/commit/89d1647e8de9be9d6e6461376bfde53bbf0883ed))
-* middleware & user module init ([44b835d](https://github.com/mx-space/core/commit/44b835d177e7beb8b6198475afc1a1bebf1f5d57))
-* model init ([b02e2cf](https://github.com/mx-space/core/commit/b02e2cf29659ee1346ed834a3e91b16f2c597f56))
-* note module ([fd1921a](https://github.com/mx-space/core/commit/fd1921a2b07077a28656d6051e6206e11dfc3513))
-* note module done ([8ce7532](https://github.com/mx-space/core/commit/8ce75322613cd2bfceaa910ea0668d1cf00747d6))
-* openapi decorator ([f4f147b](https://github.com/mx-space/core/commit/f4f147b48893618bb42a7aae8ce65f0c54c7eca4))
-* option module init ([94e5052](https://github.com/mx-space/core/commit/94e5052f5747b753e2317835e0db1315f767b96b))
-* paginator ([5a86ddc](https://github.com/mx-space/core/commit/5a86ddc8d230482f4f592fd469300dfac6be055e))
-
-
-
+## <small>11.5.1 (2026-05-02)</small>
+
+* release: v11.5.1 ([6bb2a11](https://github.com/mx-space/core/commit/6bb2a11))
+* refactor: comment module and related services (#2656) ([58983ae](https://github.com/mx-space/core/commit/58983ae)), closes [#2656](https://github.com/mx-space/core/issues/2656)
+* chore: update lock ([10e2763](https://github.com/mx-space/core/commit/10e2763))
+* chore(deps): update dependency eslint-plugin-react-compiler>zod to v3.25.76 (#2653) ([5f1294b](https://github.com/mx-space/core/commit/5f1294b)), closes [#2653](https://github.com/mx-space/core/issues/2653)
+* fix(deps): update dependency marked to v18.0.3 (#2654) ([3c86d7e](https://github.com/mx-space/core/commit/3c86d7e)), closes [#2654](https://github.com/mx-space/core/issues/2654)
+
+## 11.5.0 (2026-05-01)
+
+* release: v11.5.0 ([172919a](https://github.com/mx-space/core/commit/172919a))
+* chore: update lock ([bc2b543](https://github.com/mx-space/core/commit/bc2b543))
+* chore(deps): update dependency es-toolkit to v1.46.1 (#2647) ([e7b522c](https://github.com/mx-space/core/commit/e7b522c)), closes [#2647](https://github.com/mx-space/core/issues/2647)
+* chore(deps): update dependency es-toolkit to v1.46.1 (#2648) ([3a55fe7](https://github.com/mx-space/core/commit/3a55fe7)), closes [#2648](https://github.com/mx-space/core/issues/2648)
+* chore(deps): update dependency rolldown to v1.0.0-rc.18 (#2649) ([d3a8a83](https://github.com/mx-space/core/commit/d3a8a83)), closes [#2649](https://github.com/mx-space/core/issues/2649)
+* chore(deps): update pnpm to v11.0.3 (#2650) ([c36af71](https://github.com/mx-space/core/commit/c36af71)), closes [#2650](https://github.com/mx-space/core/issues/2650)
+* feat(comment): reader image upload, quotas, ttl cleanup, admin mgmt ([bce602f](https://github.com/mx-space/core/commit/bce602f))
+* fix(deps): update dependency nanoid to v5.1.11 (#2651) ([02fd3ec](https://github.com/mx-space/core/commit/02fd3ec)), closes [#2651](https://github.com/mx-space/core/issues/2651)
+* docs(skills): correct release-core hook ordering and cwd note ([01ca868](https://github.com/mx-space/core/commit/01ca868))
+* docs(skills): rewrite release-core for agent-native operation ([a185c84](https://github.com/mx-space/core/commit/a185c84))
+
+## <small>11.4.8 (2026-04-30)</small>
+
+* release: v11.4.8 ([d35ec07](https://github.com/mx-space/core/commit/d35ec07))
+* docs(skills): add release-core skill ([429fb15](https://github.com/mx-space/core/commit/429fb15))
+* fix(post): surface hasInsightsInLocale on detail response ([78d142c](https://github.com/mx-space/core/commit/78d142c))
+
+## <small>11.4.7 (2026-04-30)</small>
+
+* release: v11.4.7 ([89d56c0](https://github.com/mx-space/core/commit/89d56c0))
+* chore(deps): bump @haklex/rich-headless to 0.4.0 ([b449ee1](https://github.com/mx-space/core/commit/b449ee1))
+* chore(deps): update dependency eslint-plugin-react-compiler>zod to v3.24.4 (#2645) ([bb383ea](https://github.com/mx-space/core/commit/bb383ea)), closes [#2645](https://github.com/mx-space/core/issues/2645)
+* chore(release): bump @mx-space/api-client to v3.7.0 ([277f5e8](https://github.com/mx-space/core/commit/277f5e8))
+* chore(release): bump @mx-space/api-client to v3.7.1 ([6a80424](https://github.com/mx-space/core/commit/6a80424))
+* fix(category): include category total post count in detail response ([82e4aa9](https://github.com/mx-space/core/commit/82e4aa9))
+* feat(category): enrich detail responses with summary/tags/pin/count and tagsSum ([ff7d9cd](https://github.com/mx-space/core/commit/ff7d9cd))
+
+## <small>11.4.6 (2026-04-29)</small>
+
+* release: v11.4.6 ([80d22dd](https://github.com/mx-space/core/commit/80d22dd))
+* chore: add rename spec ([c556272](https://github.com/mx-space/core/commit/c556272))
+* chore(deps): bump @haklex/* to 0.3.1 ([3ee50fd](https://github.com/mx-space/core/commit/3ee50fd))
+* chore(deps): bump @haklex/* to 0.3.3 ([e87028e](https://github.com/mx-space/core/commit/e87028e))
+* chore(deps): bump @haklex/* to 0.3.4 ([165dc86](https://github.com/mx-space/core/commit/165dc86))
+* chore(deps): bump @haklex/rich-headless to 0.3.0 ([79eea7f](https://github.com/mx-space/core/commit/79eea7f))
+* fix(post,slug-tracker): correct ObjectId vs string comparisons ([e86be85](https://github.com/mx-space/core/commit/e86be85))
+* feat(ai-translation): add topic.description as translatable field ([27734a9](https://github.com/mx-space/core/commit/27734a9))
+* feat(poll): add poll vote module backing @haklex poll node ([3aa1848](https://github.com/mx-space/core/commit/3aa1848))
+* test(topic): cover topic.description in translation e2e ([33abdb0](https://github.com/mx-space/core/commit/33abdb0))
+
+## <small>11.4.5 (2026-04-29)</small>
+
+* release: v11.4.5 ([20a0a06](https://github.com/mx-space/core/commit/20a0a06))
+* chore(deps): bump @haklex/* to 0.2.0 and lexical to 0.44 ([a6c3c0a](https://github.com/mx-space/core/commit/a6c3c0a))
+* chore(deps): bump dependencies and pin mongodb override ([6857b7a](https://github.com/mx-space/core/commit/6857b7a))
+* chore(release): bump @mx-space/api-client to v3.6.0 ([9de3ace](https://github.com/mx-space/core/commit/9de3ace))
+* feat(note): add topic recent-update endpoint and api-client method ([d72cb29](https://github.com/mx-space/core/commit/d72cb29))
+
+## <small>11.4.4 (2026-04-29)</small>
+
+* release: v11.4.4 ([2b84665](https://github.com/mx-space/core/commit/2b84665))
+* refactor(ai): tighten insights prompt and expand component library ([09dbb4d](https://github.com/mx-space/core/commit/09dbb4d))
+* chore: bump pnpm to 11.0.0 and migrate config ([a780ed4](https://github.com/mx-space/core/commit/a780ed4))
+* chore(deps): bump @haklex/* to 0.1.1 ([720642f](https://github.com/mx-space/core/commit/720642f))
+
+## <small>11.4.3 (2026-04-28)</small>
+
+* release: v11.4.3 ([1e12eef](https://github.com/mx-space/core/commit/1e12eef))
+* feat(ai): add min text length threshold for auto summary/insights ([b2444ad](https://github.com/mx-space/core/commit/b2444ad))
+
+## <small>11.4.2 (2026-04-26)</small>
+
+* release: v11.4.2 ([7c44207](https://github.com/mx-space/core/commit/7c44207))
+* feat(translation): expose sourceLang in article responses regardless of translation match ([54ae846](https://github.com/mx-space/core/commit/54ae846))
+
+## <small>11.4.1 (2026-04-25)</small>
+
+* release: v11.4.1 ([4458766](https://github.com/mx-space/core/commit/4458766))
+* chore(deps): bump @haklex/* to 0.0.110 ([1b8917a](https://github.com/mx-space/core/commit/1b8917a))
+* chore(deps): bump @haklex/rich-headless to 0.1.0 ([05fb110](https://github.com/mx-space/core/commit/05fb110))
+
+## 11.4.0 (2026-04-21)
+
+* release: v11.4.0 ([ee7931e](https://github.com/mx-space/core/commit/ee7931e))
+* feat(ai-summary): split auto-generate flag into create/update ([097d27d](https://github.com/mx-space/core/commit/097d27d))
+* chore(deps): upgrade all deps to latest ([2bb24e9](https://github.com/mx-space/core/commit/2bb24e9))
+
+## <small>11.3.1 (2026-04-21)</small>
+
+* release: v11.3.1 ([6eebc3d](https://github.com/mx-space/core/commit/6eebc3d))
+* fix(ai-insights): use plain markdown output for translation ([2da0060](https://github.com/mx-space/core/commit/2da0060))
+
+## 11.3.0 (2026-04-21)
+
+* release: v11.3.0 ([fd9877d](https://github.com/mx-space/core/commit/fd9877d))
+* fix(ai-insights): upsert source row and reject same-lang translation ([2c7b2b1](https://github.com/mx-space/core/commit/2c7b2b1))
+* fix(test): add AiInsightsService mock to note e2e tests ([9f30506](https://github.com/mx-space/core/commit/9f30506))
+* fix(test): mock findOneAndUpdate instead of create in ai-insights spec ([7bfbe85](https://github.com/mx-space/core/commit/7bfbe85))
+* chore(api-client): bump minor version for insights ([ed57010](https://github.com/mx-space/core/commit/ed57010))
+* chore(deps): bump @haklex/rich-headless to 0.0.109 ([c81d201](https://github.com/mx-space/core/commit/c81d201))
+* chore(release): bump @mx-space/api-client to v3.5.0 ([3959bfa](https://github.com/mx-space/core/commit/3959bfa))
+* chore(release): bump @mx-space/api-client to v3.5.1 ([21e2ab6](https://github.com/mx-space/core/commit/21e2ab6))
+* feat(ai-insights): add AIInsightsModel with indexes ([6d7df91](https://github.com/mx-space/core/commit/6d7df91))
+* feat(ai-insights): add collection constant and business events ([c04f437](https://github.com/mx-space/core/commit/c04f437))
+* feat(ai-insights): add config fields and defaults ([a907d06](https://github.com/mx-space/core/commit/a907d06))
+* feat(ai-insights): add insights DTOs ([039c551](https://github.com/mx-space/core/commit/039c551))
+* feat(ai-insights): add insights system prompt and builders ([c2497bc](https://github.com/mx-space/core/commit/c2497bc))
+* feat(ai-insights): add insights task types and service helpers ([2a832af](https://github.com/mx-space/core/commit/2a832af))
+* feat(ai-insights): add service skeleton with cache lookup ([a2f6681](https://github.com/mx-space/core/commit/a2f6681))
+* feat(ai-insights): admin listing, CRUD, and event hooks ([5627da9](https://github.com/mx-space/core/commit/5627da9))
+* feat(ai-insights): HTTP and SSE controller ([3686cf4](https://github.com/mx-space/core/commit/3686cf4))
+* feat(ai-insights): implement streaming generation and public getters ([cf954f8](https://github.com/mx-space/core/commit/cf954f8))
+* feat(ai-insights): register services and controller in AiModule ([58a1b8a](https://github.com/mx-space/core/commit/58a1b8a))
+* feat(ai-insights): translation service with auto-dispatch ([19e4d5c](https://github.com/mx-space/core/commit/19e4d5c))
+* feat(ai-insights): wire AiService model getters ([39a7053](https://github.com/mx-space/core/commit/39a7053))
+* feat(api-client): add AIInsightsModel and stream event types ([12226e5](https://github.com/mx-space/core/commit/12226e5))
+* feat(api-client): add getInsights + SSE helpers ([a2e9c1e](https://github.com/mx-space/core/commit/a2e9c1e))
+* feat(email): add in-memory send queue with configurable rate limit (#2640) ([f77ae20](https://github.com/mx-space/core/commit/f77ae20)), closes [#2640](https://github.com/mx-space/core/issues/2640)
+* feat(note): expose hasInsightsInLocale on public note responses ([c279c31](https://github.com/mx-space/core/commit/c279c31))
+* update ([670ee46](https://github.com/mx-space/core/commit/670ee46))
+* update ([d1b85b0](https://github.com/mx-space/core/commit/d1b85b0))
+* docs: add AI Insights design spec ([f7a20dd](https://github.com/mx-space/core/commit/f7a20dd))
+* docs: add AI Insights implementation plan ([1bc8999](https://github.com/mx-space/core/commit/1bc8999))
+
+## <small>11.2.1 (2026-04-19)</small>
+
+* release: v11.2.1 ([a717d94](https://github.com/mx-space/core/commit/a717d94))
+* test: mock translation title cache in post specs ([272e8a1](https://github.com/mx-space/core/commit/272e8a1))
+
+## 11.2.0 (2026-04-18)
+
+* release: v11.2.0 ([ca70079](https://github.com/mx-space/core/commit/ca70079))
+* chore(release): bump @mx-space/api-client to v3.3.0 ([246333d](https://github.com/mx-space/core/commit/246333d))
+* feat: add comment sort ([9726f45](https://github.com/mx-space/core/commit/9726f45))
+
+## <small>11.1.4 (2026-04-17)</small>
+
+* release: v11.1.4 ([12e054a](https://github.com/mx-space/core/commit/12e054a))
+* fix: related post transltion ([0094dda](https://github.com/mx-space/core/commit/0094dda))
+* fix(ai-summary): allow on-demand generation when auto-generate is disabled (#2639) ([db53f0f](https://github.com/mx-space/core/commit/db53f0f)), closes [#2639](https://github.com/mx-space/core/issues/2639) [#2627](https://github.com/mx-space/core/issues/2627)
+* chore(deps): bump @haklex/* to 0.0.107 ([774eacc](https://github.com/mx-space/core/commit/774eacc))
+* chore(deps): bump @haklex/* to 0.0.108 ([176de3c](https://github.com/mx-space/core/commit/176de3c))
+
+## <small>11.1.3 (2026-04-17)</small>
+
+* release: v11.1.3 ([39e79c0](https://github.com/mx-space/core/commit/39e79c0))
+* chore: update deps ([e497dec](https://github.com/mx-space/core/commit/e497dec))
+* chore(deps): align @lexical packages to 0.43.0 ([bd9302b](https://github.com/mx-space/core/commit/bd9302b))
+* chore(deps): align lexical to 0.43.0 ([79a439b](https://github.com/mx-space/core/commit/79a439b))
+* chore(deps): bump @haklex/* to 0.0.105 ([e30382b](https://github.com/mx-space/core/commit/e30382b))
+* chore(deps): bump @haklex/* to 0.0.106 ([598b481](https://github.com/mx-space/core/commit/598b481))
+* chore(deps): sync lockfile for @haklex 0.0.105 ([133cc32](https://github.com/mx-space/core/commit/133cc32))
+* chore(deps): update dependency @better-auth/api-key to v1.5.6 (#2629) ([073d3f7](https://github.com/mx-space/core/commit/073d3f7)), closes [#2629](https://github.com/mx-space/core/issues/2629)
+* chore(deps): update dependency @better-auth/passkey to v1.5.6 (#2630) ([dcb5f27](https://github.com/mx-space/core/commit/dcb5f27)), closes [#2630](https://github.com/mx-space/core/issues/2630)
+* chore(deps): update dependency @swc/core to v1.15.26 (#2631) ([beff21c](https://github.com/mx-space/core/commit/beff21c)), closes [#2631](https://github.com/mx-space/core/issues/2631)
+* chore(deps): update dependency @types/node to v25.3.5 (#2632) ([48e2f12](https://github.com/mx-space/core/commit/48e2f12)), closes [#2632](https://github.com/mx-space/core/issues/2632)
+* chore(deps): upgrade monorepo packages ([2eef5c8](https://github.com/mx-space/core/commit/2eef5c8))
+* fix(deps): update dependency @fastify/static to v9.1.1 [security] (#2633) ([0a4027a](https://github.com/mx-space/core/commit/0a4027a)), closes [#2633](https://github.com/mx-space/core/issues/2633)
+* fix(note): translate adjacent note titles via cached translations ([a53a2b6](https://github.com/mx-space/core/commit/a53a2b6))
+
+## <small>11.1.2 (2026-04-07)</small>
+
+* release: v11.1.2 ([a7689e6](https://github.com/mx-space/core/commit/a7689e6))
+* chore: remove ai-image files from master ([25fe233](https://github.com/mx-space/core/commit/25fe233))
+* fix(comment): only mark owner comments as read on creation ([eaea177](https://github.com/mx-space/core/commit/eaea177))
+* feat: add AI image generation service and controller ([fd3c0b0](https://github.com/mx-space/core/commit/fd3c0b0))
+
+## <small>11.1.1 (2026-04-07)</small>
+
+* release: v11.1.1 ([94c0cd8](https://github.com/mx-space/core/commit/94c0cd8))
+* feat(aggregate): support i18n for theme config via lang suffix snippets ([7e89b46](https://github.com/mx-space/core/commit/7e89b46))
+* refactor(ai): centralize Lexical translatable property extraction ([7e25b66](https://github.com/mx-space/core/commit/7e25b66))
+* fix: bug ([9976922](https://github.com/mx-space/core/commit/9976922))
+
+## 11.1.0 (2026-04-05)
+
+* release: v11.1.0 ([625de30](https://github.com/mx-space/core/commit/625de30))
+* test(ai-translation): spy schedule in stale-path cases to silence mock chain errors ([6848c02](https://github.com/mx-space/core/commit/6848c02))
+* refactor: replace deprecated `new: true` with `returnDocument: 'after'` ([3261ac4](https://github.com/mx-space/core/commit/3261ac4))
+* feat(ai-agent): add multi-session support with metadata fields and endpoints ([6dbee13](https://github.com/mx-space/core/commit/6dbee13))
+* feat(ai): add agent chat proxy service with format transformation ([645a534](https://github.com/mx-space/core/commit/645a534))
+* feat(ai): add agent controller and register in AI module ([96d314f](https://github.com/mx-space/core/commit/96d314f))
+* feat(ai): add agent conversation and chat proxy DTOs ([902be67](https://github.com/mx-space/core/commit/902be67))
+* feat(ai): add agent conversation CRUD service ([31c8756](https://github.com/mx-space/core/commit/31c8756))
+* feat(ai): add agent conversation model and collection constant ([60a4374](https://github.com/mx-space/core/commit/60a4374))
+* chore(deps): bump @haklex/* to 0.0.100 ([45d7d09](https://github.com/mx-space/core/commit/45d7d09))
+* chore(deps): bump @haklex/* to 0.0.101 ([1435b4a](https://github.com/mx-space/core/commit/1435b4a))
+* chore(deps): bump @haklex/* to 0.0.97 ([c678225](https://github.com/mx-space/core/commit/c678225))
+* chore(deps): bump @haklex/* to 0.0.98 ([55701a7](https://github.com/mx-space/core/commit/55701a7))
+* fix: MongooseModel is global type, z.record needs key+value args for Zod v4 ([4efc0e2](https://github.com/mx-space/core/commit/4efc0e2))
+
+## <small>11.0.14 (2026-04-02)</small>
+
+* release: v11.0.14 ([c35785c](https://github.com/mx-space/core/commit/c35785c))
+* fix(page): translate page titles even when text field is not selected ([2182452](https://github.com/mx-space/core/commit/2182452))
+
+## <small>11.0.13 (2026-04-02)</small>
+
+* release: v11.0.13 ([36818a7](https://github.com/mx-space/core/commit/36818a7))
+* fix: key verfiy ([1a34088](https://github.com/mx-space/core/commit/1a34088))
+
+## <small>11.0.12 (2026-04-02)</small>
+
+* release: v11.0.12 ([d9c2b80](https://github.com/mx-space/core/commit/d9c2b80))
+* feat(auth): implement createAccessToken method and enhance API key handling ([34c1f0d](https://github.com/mx-space/core/commit/34c1f0d))
+* fix(comment): dedupe bark notifications ([9bf08e8](https://github.com/mx-space/core/commit/9bf08e8)), closes [#2624](https://github.com/mx-space/core/issues/2624)
+* Fix batch translation fallback for timeline lists ([6053496](https://github.com/mx-space/core/commit/6053496))
+
+## <small>11.0.11 (2026-04-01)</small>
+
+* release: v11.0.11 ([1781f05](https://github.com/mx-space/core/commit/1781f05))
+* fix(activity): filter null refs in getRecentComment ([f6ed0c8](https://github.com/mx-space/core/commit/f6ed0c8))
+
+## <small>11.0.10 (2026-04-01)</small>
+
+* release: v11.0.10 ([faa7273](https://github.com/mx-space/core/commit/faa7273))
+* feat: add owner-reply endpoint for comment replies with API key auth ([f2ef0cb](https://github.com/mx-space/core/commit/f2ef0cb))
+
+## <small>11.0.9 (2026-04-01)</small>
+
+* release: v11.0.9 ([cb6d30f](https://github.com/mx-space/core/commit/cb6d30f))
+* fix(test): update translation interceptor test to match plain object conversion behavior ([990d83b](https://github.com/mx-space/core/commit/990d83b))
+
+## <small>11.0.8 (2026-04-01)</small>
+
+* release: v11.0.8 ([d6c504d](https://github.com/mx-space/core/commit/d6c504d))
+* refactor(auth): split admin access from reader identity ([89e31d8](https://github.com/mx-space/core/commit/89e31d8))
+* refactor(interceptors): simplify translation entry handling and ensure plain object conversion ([d04e0f5](https://github.com/mx-space/core/commit/d04e0f5))
+
+## <small>11.0.7 (2026-03-31)</small>
+
+* release: v11.0.7 ([d8845ae](https://github.com/mx-space/core/commit/d8845ae))
+* fix: comment api ([2153077](https://github.com/mx-space/core/commit/2153077))
+* fix: update scripe ([25fdde6](https://github.com/mx-space/core/commit/25fdde6))
+* chore(deps): bump @haklex/* to 0.0.91 ([062ebc3](https://github.com/mx-space/core/commit/062ebc3))
+* chore(deps): bump @haklex/* to 0.0.93 ([6beadb4](https://github.com/mx-space/core/commit/6beadb4))
+* chore(deps): bump @haklex/* to 0.0.94 ([ec357e1](https://github.com/mx-space/core/commit/ec357e1))
+
+## <small>11.0.6 (2026-03-28)</small>
+
+* release: v11.0.6 ([ba50ef3](https://github.com/mx-space/core/commit/ba50ef3))
+* chore(deps): bump @haklex/* to 0.0.90 ([3421060](https://github.com/mx-space/core/commit/3421060))
+* fix(deps): update dependency nodemailer to v8.0.4 [security] (#2622) ([29bf581](https://github.com/mx-space/core/commit/29bf581)), closes [#2622](https://github.com/mx-space/core/issues/2622)
+* fix(file): fallback image upload to local storage when S3 is disabled ([32ce773](https://github.com/mx-space/core/commit/32ce773))
+
+## <small>11.0.5 (2026-03-26)</small>
+
+* release: v11.0.5 ([3cbb7bb](https://github.com/mx-space/core/commit/3cbb7bb))
+* chore(release): bump @mx-space/webhook to v0.8.1 ([df347cb](https://github.com/mx-space/core/commit/df347cb))
+* feat(event): add AGGREGATE_UPDATE event and enhance config update notifications ([26896fe](https://github.com/mx-space/core/commit/26896fe))
+
+## <small>11.0.4 (2026-03-24)</small>
+
+* release: v11.0.4 ([1d7e836](https://github.com/mx-space/core/commit/1d7e836))
+* fix(activity): add strictPopulate false for polymorphic ref category populate ([bf20aa5](https://github.com/mx-space/core/commit/bf20aa5))
+* fix(activity): enrich recent posts with category in getRecentPublish ([e60169a](https://github.com/mx-space/core/commit/e60169a))
+* fix(activity): manually look up category for post refs in getRecentComment ([2961214](https://github.com/mx-space/core/commit/2961214))
+
+## <small>11.0.3 (2026-03-24)</small>
+
+* release: v11.0.3 ([408f292](https://github.com/mx-space/core/commit/408f292))
+* fix(activity): populate category in getRecentComment and expose in response ([7dadc81](https://github.com/mx-space/core/commit/7dadc81))
+* feat(ai): harden lexical translation structured output ([25ca95d](https://github.com/mx-space/core/commit/25ca95d))
+* feat(ai): implement Vercel AI Gateway prompt caching in OpenAICompatibleRuntime ([8c2afef](https://github.com/mx-space/core/commit/8c2afef))
+* chore(deps): bump @haklex/* to 0.0.88 ([15e9b29](https://github.com/mx-space/core/commit/15e9b29))
+* fix redis test mock readiness interface ([89fa7d4](https://github.com/mx-space/core/commit/89fa7d4))
+
+## <small>11.0.2 (2026-03-23)</small>
+
+* release: v11.0.2 ([b43adb0](https://github.com/mx-space/core/commit/b43adb0))
+* refactor redis config sync and api client transforms ([a7933b8](https://github.com/mx-space/core/commit/a7933b8))
+* fix(webhook): enrich comment payload author and avatar ([2833c38](https://github.com/mx-space/core/commit/2833c38))
+
+## <small>11.0.1 (2026-03-22)</small>
+
+* release: v11.0.1 ([4267473](https://github.com/mx-space/core/commit/4267473))
+* Add emoji preservation rule ([7c6d75a](https://github.com/mx-space/core/commit/7c6d75a))
+* fix(file): orphan cleanup idempotency; remove orphan cleanup cron ([2b4e946](https://github.com/mx-space/core/commit/2b4e946))
+* chore(deps): bump @haklex/* to 0.0.87 ([96805c9](https://github.com/mx-space/core/commit/96805c9))
+
+## 11.0.0 (2026-03-22)
+
+* release: v11.0.0 ([28b6f46](https://github.com/mx-space/core/commit/28b6f46))
+* fix(category): handle null category in category service ([71f4f91](https://github.com/mx-space/core/commit/71f4f91))
+* fix(deps): update dependency @nestjs/platform-fastify to v11.1.16 [security] (#2620) ([1d3da45](https://github.com/mx-space/core/commit/1d3da45)), closes [#2620](https://github.com/mx-space/core/issues/2620)
+* fix(post): add Types import from mongoose ([9cdb244](https://github.com/mx-space/core/commit/9cdb244))
+* chore(deps): bump @haklex/* to 0.0.86 ([7d23e74](https://github.com/mx-space/core/commit/7d23e74))
+* chore(deps): update dependencies and remove patch for @lexical/code ([e7c068c](https://github.com/mx-space/core/commit/e7c068c))
+* chore(release): bump @mx-space/api-client to v3.1.0 ([1969808](https://github.com/mx-space/core/commit/1969808))
+* feat: replace Algolia with local CJK search (#2621) ([2095087](https://github.com/mx-space/core/commit/2095087)), closes [#2621](https://github.com/mx-space/core/issues/2621)
+
+## 11.0.0-alpha.1 (2026-03-16)
+
+* release: v11.0.0-alpha.1 ([109952d](https://github.com/mx-space/core/commit/109952d))
+* fix(gateway): send online count directly to connecting socket ([386b8c3](https://github.com/mx-space/core/commit/386b8c3))
+* chore(release): bump @mx-space/api-client to v3.0.0 ([7fba2fd](https://github.com/mx-space/core/commit/7fba2fd))
+
+## 11.0.0-alpha.0 (2026-03-15)
+
+* release: v11.0.0-alpha.0 ([087844f](https://github.com/mx-space/core/commit/087844f))
+* feat(aggregate)!: refactor Aggregate API and add site metadata endpoint ([e20a006](https://github.com/mx-space/core/commit/e20a006))
+
+## <small>10.5.3 (2026-03-15)</small>
+
+* release: v10.5.3 ([f2ce6f6](https://github.com/mx-space/core/commit/f2ce6f6))
+* fix(ai-translation): translate page subtitles ([c20bf6e](https://github.com/mx-space/core/commit/c20bf6e))
+* fix(core): prevent slugged notes from breaking url builder ([6731c88](https://github.com/mx-space/core/commit/6731c88))
+
+## <small>10.5.2 (2026-03-15)</small>
+
+* release: v10.5.2 ([f1601f4](https://github.com/mx-space/core/commit/f1601f4))
+* feat(aggregate): add comment options to aggregate response ([a31db1f](https://github.com/mx-space/core/commit/a31db1f))
+* feat(aggregate): add public /aggregate/site_info endpoint ([88bd758](https://github.com/mx-space/core/commit/88bd758))
+* feat(aggregate): update aggregate service and models to include summary and mood/weather fields ([ab426b1](https://github.com/mx-space/core/commit/ab426b1))
+* feat(comment): add disableComment option to CommentOptionsModel ([cc31bbd](https://github.com/mx-space/core/commit/cc31bbd))
+* feat(comment): use authProvider for comment auth channel ([0b9da3b](https://github.com/mx-space/core/commit/0b9da3b))
+* chore(release): bump @mx-space/api-client to v2.4.1 ([d18f58e](https://github.com/mx-space/core/commit/d18f58e))
+* chore(release): bump @mx-space/api-client to v2.4.2 ([b6475fc](https://github.com/mx-space/core/commit/b6475fc))
+
+## <small>10.5.1 (2026-03-14)</small>
+
+* release: v10.5.1 ([750f9d8](https://github.com/mx-space/core/commit/750f9d8))
+* chore(release): bump @mx-space/api-client to v2.3.0 ([4dd838a](https://github.com/mx-space/core/commit/4dd838a))
+* chore(release): bump @mx-space/api-client to v2.4.0 ([7079cef](https://github.com/mx-space/core/commit/7079cef))
+* chore(release): bump @mx-space/webhook to v0.8.0 ([509172a](https://github.com/mx-space/core/commit/509172a))
+* feat(api-client): add RecentlyTypeEnum and metadata interfaces ([4339332](https://github.com/mx-space/core/commit/4339332))
+* feat(comment): add reader ref support and migration ([135868b](https://github.com/mx-space/core/commit/135868b))
+* feat(recently): add typed metadata schema and model fields ([46a8ae5](https://github.com/mx-space/core/commit/46a8ae5))
+* feat(recently): pass type/metadata in service create/update ([c6c8b2b](https://github.com/mx-space/core/commit/c6c8b2b))
+* test(note): stub ai slug backfill in e2e ([479ee8f](https://github.com/mx-space/core/commit/479ee8f))
+* test(recently): add E2E tests for typed metadata CRUD ([e4532c1](https://github.com/mx-space/core/commit/e4532c1))
+* fix(ai-translation): normalize tags in translation events ([61d9fb5](https://github.com/mx-space/core/commit/61d9fb5))
+* fix(recently): resolve type compatibility issue in RecentlyDto ([3566ac6](https://github.com/mx-space/core/commit/3566ac6))
+* refactor(note): enqueue ai slug backfill tasks ([8c119bb](https://github.com/mx-space/core/commit/8c119bb))
+* docs: add comment reader ref design ([c49b5f1](https://github.com/mx-space/core/commit/c49b5f1))
+* docs: update comment route design ([a251608](https://github.com/mx-space/core/commit/a251608))
+
+## 10.5.0 (2026-03-14)
+
+* release: v10.5.0 ([c001c21](https://github.com/mx-space/core/commit/c001c21))
+* feat: flatten comment threads ([70385d9](https://github.com/mx-space/core/commit/70385d9))
+* feat(ai): add slug backfill task for notes without slug ([0835863](https://github.com/mx-space/core/commit/0835863))
+* feat(note): add withSummary option to note list API ([6e56df9](https://github.com/mx-space/core/commit/6e56df9))
+* feat(note): enhance note pagination with summary retrieval ([855ef99](https://github.com/mx-space/core/commit/855ef99))
+* chore(release): bump @mx-space/api-client to v2.2.0 ([c24d637](https://github.com/mx-space/core/commit/c24d637))
+* fix translation field handling for paginated responses ([fc24fee](https://github.com/mx-space/core/commit/fc24fee))
+* fix(note): translate list results by request locale ([5c44178](https://github.com/mx-space/core/commit/5c44178))
+
+## 10.4.0 (2026-03-13)
+
+* release: v10.4.0 ([0325476](https://github.com/mx-space/core/commit/0325476))
+* fix(note): expose slug in note timeline list ([5b2f7b5](https://github.com/mx-space/core/commit/5b2f7b5))
+* fix(topic): validate slug params with zod ([2de6b2b](https://github.com/mx-space/core/commit/2de6b2b))
+* chore: update ([524544a](https://github.com/mx-space/core/commit/524544a))
+* docs: add note seo slug design spec ([354b915](https://github.com/mx-space/core/commit/354b915))
+* docs: add shiroi note slug route design spec ([f3be3b3](https://github.com/mx-space/core/commit/f3be3b3))
+* feat(note): add seo slug route and sdk updates ([0203692](https://github.com/mx-space/core/commit/0203692))
+
+## <small>10.3.3 (2026-03-13)</small>
+
+* release: v10.3.3 ([70c789e](https://github.com/mx-space/core/commit/70c789e))
+* chore(deps): bump @haklex/* to 0.0.77 ([9fc30a8](https://github.com/mx-space/core/commit/9fc30a8))
+* chore(deps): bump @haklex/* to 0.0.78 ([810a939](https://github.com/mx-space/core/commit/810a939))
+* chore(deps): bump @haklex/* to 0.0.79 ([872ccc6](https://github.com/mx-space/core/commit/872ccc6))
+* chore(deps): bump @haklex/* to 0.0.80 ([666ef97](https://github.com/mx-space/core/commit/666ef97))
+* chore(deps): bump @haklex/* to 0.0.81 ([fbf9256](https://github.com/mx-space/core/commit/fbf9256))
+* chore(deps): bump @haklex/* to 0.0.82 ([174e9f2](https://github.com/mx-space/core/commit/174e9f2))
+* chore(deps): bump @haklex/* to 0.0.83 ([52a8ffc](https://github.com/mx-space/core/commit/52a8ffc))
+* chore(deps): bump @haklex/* to 0.0.84 ([ed2e947](https://github.com/mx-space/core/commit/ed2e947))
+* chore(deps): bump @haklex/* to 0.0.85 ([ea85d92](https://github.com/mx-space/core/commit/ea85d92))
+* fix(core): degrade redis bootstrap paths ([976b6cb](https://github.com/mx-space/core/commit/976b6cb))
+
+## <small>10.3.2 (2026-03-10)</small>
+
+* release: v10.3.2 ([e981f70](https://github.com/mx-space/core/commit/e981f70))
+* feat: enhance admin asset update process and introduce event broadcasting ([e2868c2](https://github.com/mx-space/core/commit/e2868c2))
+* feat: enhance feed content rendering with lexical format support ([a6bbd75](https://github.com/mx-space/core/commit/a6bbd75))
+* feat: refactor webhook package structure and add model extraction script ([1f189d7](https://github.com/mx-space/core/commit/1f189d7))
+* feat: translate text within excalidraw nodes during AI translation ([4b2c938](https://github.com/mx-space/core/commit/4b2c938))
+* fix: add Redis timeout and error handling to prevent request hanging ([46206e8](https://github.com/mx-space/core/commit/46206e8))
+* chore(deps): bump @haklex/* to 0.0.75 ([f8c30a0](https://github.com/mx-space/core/commit/f8c30a0))
+* chore(deps): bump @haklex/* to 0.0.76 ([0c9a1cb](https://github.com/mx-space/core/commit/0c9a1cb))
+* chore(release): bump @mx-space/webhook to v0.7.1 ([10f3542](https://github.com/mx-space/core/commit/10f3542))
+
+## <small>10.3.1 (2026-03-09)</small>
+
+* release: v10.3.1 ([7d6f453](https://github.com/mx-space/core/commit/7d6f453))
+* fix: include lang in cache key and support NEXT_LOCALE cookie for request context ([bcef061](https://github.com/mx-space/core/commit/bcef061))
+* fix: translation entry interceptor ([ac8009d](https://github.com/mx-space/core/commit/ac8009d))
+* chore(deps): bump @haklex/* to 0.0.71 ([769c0c1](https://github.com/mx-space/core/commit/769c0c1))
+* chore(deps): bump @haklex/* to 0.0.72 ([6e4ce0a](https://github.com/mx-space/core/commit/6e4ce0a))
+* chore(deps): bump @haklex/* to 0.0.73 ([8a6c581](https://github.com/mx-space/core/commit/8a6c581))
+* chore(deps): bump @haklex/* to 0.0.74 ([173760a](https://github.com/mx-space/core/commit/173760a))
+* feat: translation entry interceptor, topic controller e2e, object-scan types, image/tool utils ([c33157c](https://github.com/mx-space/core/commit/c33157c))
+
+## 10.3.0 (2026-03-08)
+
+* release: v10.3.0 ([75a1a0e](https://github.com/mx-space/core/commit/75a1a0e))
+* feat: 更新文件上传前缀支持模板占位符，增强灵活性 (#2584) ([2b5354a](https://github.com/mx-space/core/commit/2b5354a)), closes [#2584](https://github.com/mx-space/core/issues/2584)
+* feat(ai): add auto-generation of translation entries for categories, topics, and notes ([65711aa](https://github.com/mx-space/core/commit/65711aa))
+* feat(ai): translation entry model, service, controller and translate-fields interceptor ([a55fc7a](https://github.com/mx-space/core/commit/a55fc7a))
+* feat(schema): enhance partial schemas for notes, pages, and posts with new fields ([f66c9ed](https://github.com/mx-space/core/commit/f66c9ed))
+* fix(ai-summary): normalize lang query param with parseLanguageCode ([3dc7492](https://github.com/mx-space/core/commit/3dc7492))
+* refactor(docs): update README and package readmes for clarity and consistency ([f9026ef](https://github.com/mx-space/core/commit/f9026ef))
+
+## 10.2.0 (2026-03-08)
+
+* release: v10.2.0 ([51248e0](https://github.com/mx-space/core/commit/51248e0))
+* refactor(ai-summary): unify summary settings with translation multi-language pattern ([6e1f350](https://github.com/mx-space/core/commit/6e1f350))
+* refactor(comment): extract lifecycle and spam filter into dedicated services ([8813db1](https://github.com/mx-space/core/commit/8813db1))
+* enhance(ai.prompts): add targeted-person rule for harassment detection ([1f62df9](https://github.com/mx-space/core/commit/1f62df9))
+* docs: enhance README.md with updated project overview, key features, and quick start guide ([3c2d326](https://github.com/mx-space/core/commit/3c2d326))
+
+## 0.7.0 (2026-03-08)
+
+* chore: release v0.7.0 ([3f479be](https://github.com/mx-space/core/commit/3f479be))
+* fix(webhook): correct dist output paths for tsdown esm/cjs ([5fc8a03](https://github.com/mx-space/core/commit/5fc8a03))
+
+## 0.6.0 (2026-03-08)
+
+* chore: release v0.6.0 ([2c38da2](https://github.com/mx-space/core/commit/2c38da2))
+* feat(webhook): add X-Webhook-Source header to indicate event origin ([899a5f1](https://github.com/mx-space/core/commit/899a5f1))
+
+## <small>10.1.10 (2026-03-07)</small>
+
+* release: v10.1.10 ([0d52052](https://github.com/mx-space/core/commit/0d52052))
+* chore(deps): bump @haklex packages to 0.0.64 ([11969cb](https://github.com/mx-space/core/commit/11969cb))
+* chore(deps): bump @haklex/* to 0.0.65 ([a357534](https://github.com/mx-space/core/commit/a357534))
+* chore(deps): bump @haklex/* to 0.0.66 ([ae47ae9](https://github.com/mx-space/core/commit/ae47ae9))
+* chore(deps): bump @haklex/* to 0.0.67 ([772eb64](https://github.com/mx-space/core/commit/772eb64))
+* chore(deps): bump @haklex/* to 0.0.68 ([c9c7327](https://github.com/mx-space/core/commit/c9c7327))
+* chore(deps): bump @haklex/* to 0.0.70 ([80fd5dc](https://github.com/mx-space/core/commit/80fd5dc))
+* chore(deps): bump @haklex/rich-headless to 0.0.62 ([53fd99d](https://github.com/mx-space/core/commit/53fd99d))
+* chore(deps): bump @haklex/rich-headless to 0.0.63 ([06d3a7c](https://github.com/mx-space/core/commit/06d3a7c))
+* docs: Revise README to position repository as AI-powered CMS for blogs and creators ([93c0648](https://github.com/mx-space/core/commit/93c0648))
+* docs: update CLAUDE.md ([326e304](https://github.com/mx-space/core/commit/326e304))
+
+## <small>10.1.9 (2026-03-03)</small>
+
+* release: v10.1.9 ([9634eac](https://github.com/mx-space/core/commit/9634eac))
+* refactor(ai-translation): enhance translation retrieval and consistency checks ([c3d2456](https://github.com/mx-space/core/commit/c3d2456))
+* fix(telemetry): harden telemetry module robustness and security ([515c0e7](https://github.com/mx-space/core/commit/515c0e7))
+
+## <small>10.1.8 (2026-03-03)</small>
+
+* release: v10.1.8 ([7a5ed06](https://github.com/mx-space/core/commit/7a5ed06))
+* fix(deps): update dependency @haklex/rich-headless to v0.0.50 (#2608) ([4258242](https://github.com/mx-space/core/commit/4258242)), closes [#2608](https://github.com/mx-space/core/issues/2608)
+* fix(deps): update dependency @haklex/rich-headless to v0.0.54 (#2610) ([027f62f](https://github.com/mx-space/core/commit/027f62f)), closes [#2610](https://github.com/mx-space/core/issues/2610)
+* fix(deps): update dependency @nestjs/schedule to v6.1.1 (#2604) ([45a297a](https://github.com/mx-space/core/commit/45a297a)), closes [#2604](https://github.com/mx-space/core/issues/2604)
+* chore(deps): update @haklex/rich-headless to v0.0.53 and add file update functionality ([6a831e0](https://github.com/mx-space/core/commit/6a831e0))
+* chore(deps): update dependencies and refactor auth logic ([ce38de1](https://github.com/mx-space/core/commit/ce38de1))
+* chore(deps): update dependency @better-auth/passkey to v1.4.21 (#2607) ([80cb44b](https://github.com/mx-space/core/commit/80cb44b)), closes [#2607](https://github.com/mx-space/core/issues/2607)
+* chore(deps): update dependency semver to v7.7.4 (#2612) ([def251f](https://github.com/mx-space/core/commit/def251f)), closes [#2612](https://github.com/mx-space/core/issues/2612)
+
+## <small>10.1.7 (2026-03-02)</small>
+
+* release: v10.1.7 ([aa1055b](https://github.com/mx-space/core/commit/aa1055b))
+* feat(gateway): implement broadcast method for admin events ([ff3cf68](https://github.com/mx-space/core/commit/ff3cf68))
+
+## <small>10.1.6 (2026-03-02)</small>
+
+* release: v10.1.6 ([091f373](https://github.com/mx-space/core/commit/091f373))
+* feat(webhook): introduce EventPayloadEnricherService for payload enrichment ([a5a2b79](https://github.com/mx-space/core/commit/a5a2b79))
+
+## <small>10.1.5 (2026-03-02)</small>
+
+* release: v10.1.5 ([fb7efac](https://github.com/mx-space/core/commit/fb7efac))
+* fix(webhook): update pagination logic in getEventsByHookId method ([2450f9d](https://github.com/mx-space/core/commit/2450f9d))
+* chore(deps): update dependency @swc/core to v1.15.18 (#2605) ([cb33039](https://github.com/mx-space/core/commit/cb33039)), closes [#2605](https://github.com/mx-space/core/issues/2605)
+* refactor: improve webhook and backup service structure ([d05b097](https://github.com/mx-space/core/commit/d05b097))
+
+## <small>10.1.4 (2026-03-01)</small>
+
+* release: v10.1.4 ([4020daa](https://github.com/mx-space/core/commit/4020daa))
+* feat(translation): introduce TranslationConsistencyService for improved translation validation ([341cfd2](https://github.com/mx-space/core/commit/341cfd2))
+* refactor: extract SERVERLESS_EVENT_PREFIX constant ([f0821d7](https://github.com/mx-space/core/commit/f0821d7)), closes [#2606](https://github.com/mx-space/core/issues/2606)
+
+## <small>10.1.3 (2026-03-01)</small>
+
+* release: v10.1.3 ([739daae](https://github.com/mx-space/core/commit/739daae))
+* feat(socket): optimize socket fetching and configuration ([13eb074](https://github.com/mx-space/core/commit/13eb074))
+* feat(translation): add content fields to translation and controller services ([6526893](https://github.com/mx-space/core/commit/6526893))
+
+## <small>10.1.2 (2026-03-01)</small>
+
+* release: v10.1.2 ([6794b49](https://github.com/mx-space/core/commit/6794b49))
+* feat(content): enhance content hashing for Lexical format ([3b5e177](https://github.com/mx-space/core/commit/3b5e177))
+
+## <small>10.1.1 (2026-03-01)</small>
+
+* release: v10.1.1 ([dd54717](https://github.com/mx-space/core/commit/dd54717))
+* feat(ai-task): add smart retry for partial-failed translation tasks ([ecdbf50](https://github.com/mx-space/core/commit/ecdbf50))
+* feat(ai): enhance JSON extraction utilities and update translation strategy ([f673630](https://github.com/mx-space/core/commit/f673630))
+* feat(visitor-event): enhance visitor event dispatch with additional content fields ([74d9398](https://github.com/mx-space/core/commit/74d9398))
+* refactor(ai-translation): streamline translation service and enhance event handler ([3bb943f](https://github.com/mx-space/core/commit/3bb943f))
+* chore: remove deploy job from GitHub Actions workflow ([b15f309](https://github.com/mx-space/core/commit/b15f309))
+* chore(deps): update dependency resend to v6.9.3 (#2602) ([b964f73](https://github.com/mx-space/core/commit/b964f73)), closes [#2602](https://github.com/mx-space/core/issues/2602)
+* chore(deps): update dependency tsdown to v0.20.3 (#2603) ([07382ea](https://github.com/mx-space/core/commit/07382ea)), closes [#2603](https://github.com/mx-space/core/issues/2603)
+* fix(ai): improve error handling and cleanup in AiInFlightService ([2267810](https://github.com/mx-space/core/commit/2267810))
+
+## 10.1.0 (2026-02-28)
+
+* release: v10.1.0 ([575cfc2](https://github.com/mx-space/core/commit/575cfc2))
+* feat: add patch for @lexical/code@0.41.0 and remove outdated patch ([e2c1492](https://github.com/mx-space/core/commit/e2c1492))
+* feat: add v10.0.5 migration for Lexical root block ID backfill ([66c3650](https://github.com/mx-space/core/commit/66c3650))
+* feat(aggregate): add /latest endpoint for top content per type ([563a716](https://github.com/mx-space/core/commit/563a716))
+* feat(ai): enhance translation service with new lexical features and dependencies ([534b0f7](https://github.com/mx-space/core/commit/534b0f7))
+* feat(ai): enhance translation strategies and introduce new event handler ([426dc07](https://github.com/mx-space/core/commit/426dc07))
+* feat(ai): improve lexical translation and update utilities ([7475a8d](https://github.com/mx-space/core/commit/7475a8d))
+* feat(ai): refine AI translation, runtime, and add json util ([481beeb](https://github.com/mx-space/core/commit/481beeb))
+* feat(ai): update translation prompts with enhanced safety and structure rules ([4f035f2](https://github.com/mx-space/core/commit/4f035f2))
+* feat(comment): add language support for comment anchors and enhance anchor resolution ([2218ae2](https://github.com/mx-space/core/commit/2218ae2))
+* feat(content): introduce content preference handling for notes and pages ([14ed55b](https://github.com/mx-space/core/commit/14ed55b))
+* feat(draft): implement draft history service with diff strategies ([5171707](https://github.com/mx-space/core/commit/5171707))
+* feat(patch): add patch for @lexical/code@0.40.0 and update workspace configuration ([066171f](https://github.com/mx-space/core/commit/066171f))
+* fix: update @lexical/code patch to improve syntax highlighting support ([3bf4873](https://github.com/mx-space/core/commit/3bf4873))
+* fix(release): update Dokploy webhook handling in release workflow ([328013a](https://github.com/mx-space/core/commit/328013a))
+* fix(test): add missing scheduleRegenerationForStaleTranslations mock in translation service spec ([4e701a2](https://github.com/mx-space/core/commit/4e701a2))
+* fix(test): remove unnecessary whitespace in lexical-translation-e2e.spec.ts ([c623a20](https://github.com/mx-space/core/commit/c623a20))
+* test(ai): fix lexical-translation-e2e to use strategy tokens and lexicalStrategy ([871aa96](https://github.com/mx-space/core/commit/871aa96))
+* test(ai): update lexical-translation-e2e and helper.lexical.service tests ([d1162c0](https://github.com/mx-space/core/commit/d1162c0))
+* chore: remove outdated patch for @lexical/code@0.41.0 and update pnpm workspace configuration ([bbce13a](https://github.com/mx-space/core/commit/bbce13a))
+* chore: update patch hash for @lexical/code@0.41.0 in pnpm-lock.yaml ([2e936d9](https://github.com/mx-space/core/commit/2e936d9))
+* chore(deps): update dependency @better-auth/passkey to v1.4.19 (#2594) ([4c0e80e](https://github.com/mx-space/core/commit/4c0e80e)), closes [#2594](https://github.com/mx-space/core/issues/2594)
+* chore(deps): update dependency @better-auth/passkey to v1.4.20 (#2601) ([4a929bc](https://github.com/mx-space/core/commit/4a929bc)), closes [#2601](https://github.com/mx-space/core/issues/2601)
+* chore(deps): update dependency @swc/core to v1.15.13 (#2595) ([590513c](https://github.com/mx-space/core/commit/590513c)), closes [#2595](https://github.com/mx-space/core/issues/2595)
+* chore(deps): update dependency @swc/core to v1.15.17 (#2598) ([9ae2461](https://github.com/mx-space/core/commit/9ae2461)), closes [#2598](https://github.com/mx-space/core/issues/2598)
+* chore(deps): update dependency axios to v1.13.6 (#2600) ([f646150](https://github.com/mx-space/core/commit/f646150)), closes [#2600](https://github.com/mx-space/core/issues/2600)
+* chore(deps): update dependency eslint to v10.0.2 (#2596) ([59b3ebb](https://github.com/mx-space/core/commit/59b3ebb)), closes [#2596](https://github.com/mx-space/core/issues/2596)
+* chore(deps): update dependency inquirer to v13.2.5 (#2591) ([1181bc5](https://github.com/mx-space/core/commit/1181bc5)), closes [#2591](https://github.com/mx-space/core/issues/2591)
+* chore(deps): update dependency rimraf to v6.1.3 (#2597) ([b830c55](https://github.com/mx-space/core/commit/b830c55)), closes [#2597](https://github.com/mx-space/core/issues/2597)
+* chore(deps): update dependency rolldown to v1.0.0-rc.6 (#2599) ([fe50035](https://github.com/mx-space/core/commit/fe50035)), closes [#2599](https://github.com/mx-space/core/issues/2599)
+* chore(release): bump @mx-space/api-client to v2.1.0 ([c512656](https://github.com/mx-space/core/commit/c512656))
+* chore(release): bump @mx-space/api-client to v2.1.1 ([27d305a](https://github.com/mx-space/core/commit/27d305a))
+* refactor: isolate image update and cleanup logic ([70e05f3](https://github.com/mx-space/core/commit/70e05f3))
+* refactor: update block ID generation to use 8-character IDs ([e2bd5a4](https://github.com/mx-space/core/commit/e2bd5a4))
+
+## <small>10.0.4 (2026-02-18)</small>
+
+* release: v10.0.4 ([c072ec7](https://github.com/mx-space/core/commit/c072ec7))
+* refactor(comment): remove redundant state assignment from body ([7032029](https://github.com/mx-space/core/commit/7032029))
+* feat(comment): auto-approve owner comments and enhance spam check ([63b62dc](https://github.com/mx-space/core/commit/63b62dc))
+* feat(dokploy): add workflow step to trigger Dokploy redeploy on release ([2e071ba](https://github.com/mx-space/core/commit/2e071ba))
+* feat(update): add Redis-based multi-instance sync and split into modules ([a742698](https://github.com/mx-space/core/commit/a742698))
+* feat(visitor-events): implement visitor event dispatch service and related decorators ([165b74d](https://github.com/mx-space/core/commit/165b74d))
+* chore: lint ([539e7d1](https://github.com/mx-space/core/commit/539e7d1))
+* chore: remove unused lint dependency and clean up pnpm-lock.yaml ([d1f279d](https://github.com/mx-space/core/commit/d1f279d))
+* chore(deps): update dependency @ianvs/prettier-plugin-sort-imports to v4.7.1 (#2582) ([755a642](https://github.com/mx-space/core/commit/755a642)), closes [#2582](https://github.com/mx-space/core/issues/2582)
+* chore(deps): update dependency @typegoose/auto-increment to v5.0.1 (#2583) ([5afca7e](https://github.com/mx-space/core/commit/5afca7e)), closes [#2583](https://github.com/mx-space/core/issues/2583)
+* chore(deps): update dependency dotenv to v17.2.4 (#2585) ([6a7c26b](https://github.com/mx-space/core/commit/6a7c26b)), closes [#2585](https://github.com/mx-space/core/issues/2585)
+* chore(deps): update dependency inquirer to v13.2.4 (#2586) ([b36935e](https://github.com/mx-space/core/commit/b36935e)), closes [#2586](https://github.com/mx-space/core/issues/2586)
+* chore(deps): update dependency ioredis to v5.9.3 (#2587) ([81faec7](https://github.com/mx-space/core/commit/81faec7)), closes [#2587](https://github.com/mx-space/core/issues/2587)
+* chore(deps): update dependency mongoose to v9.1.6 (#2588) ([12cc336](https://github.com/mx-space/core/commit/12cc336)), closes [#2588](https://github.com/mx-space/core/issues/2588)
+* chore(deps): update dependency resend to v6.9.2 (#2589) ([473e0f8](https://github.com/mx-space/core/commit/473e0f8)), closes [#2589](https://github.com/mx-space/core/issues/2589)
+* fix(auth): allow hyphen in better-auth username validation ([6ae65a8](https://github.com/mx-space/core/commit/6ae65a8))
+
+## <small>10.0.3 (2026-02-15)</small>
+
+* release: v10.0.3 ([86c817f](https://github.com/mx-space/core/commit/86c817f))
+* refactor(task-queue): add scope isolation and abstract base task controller ([cb6ba74](https://github.com/mx-space/core/commit/cb6ba74))
+
+## <small>10.0.2 (2026-02-14)</small>
+
+* release: v10.0.2 ([d9fc9e2](https://github.com/mx-space/core/commit/d9fc9e2))
+* fix(zod): zLang should convert 'original' to undefined instead of passing through ([2b58461](https://github.com/mx-space/core/commit/2b58461))
+* refactor(zod): extract reusable zLang validator supporting 'original' keyword ([83339c1](https://github.com/mx-space/core/commit/83339c1))
+
+## <small>10.0.1 (2026-02-14)</small>
+
+* release: v10.0.1 ([0a8930d](https://github.com/mx-space/core/commit/0a8930d))
+* fix(deps): update dependency qs to v6.14.2 [security] (#2581) ([868f0eb](https://github.com/mx-space/core/commit/868f0eb)), closes [#2581](https://github.com/mx-space/core/issues/2581)
+* fix(lang.decorator): handle 'original' language query parameter ([91be732](https://github.com/mx-space/core/commit/91be732))
+* refactor(ai): route event-driven AI tasks through task queue ([b85f4d0](https://github.com/mx-space/core/commit/b85f4d0))
+* chore(deps): update dependency axios to v1.13.5 [security] (#2578) ([f0c1498](https://github.com/mx-space/core/commit/f0c1498)), closes [#2578](https://github.com/mx-space/core/issues/2578)
+* feat(translation): implement lexical content translation support ([dd8bdde](https://github.com/mx-space/core/commit/dd8bdde))
+
+## 10.0.0 (2026-02-08)
+
+* release: v10.0.0 ([2c02a0c](https://github.com/mx-space/core/commit/2c02a0c))
+* chore(release): bump @mx-space/api-client to v2.0.0 ([69b3057](https://github.com/mx-space/core/commit/69b3057))
+* refactor!: sdk v2 ([f45f117](https://github.com/mx-space/core/commit/f45f117))
+
+## 10.0.0-alpha.3 (2026-02-08)
+
+* release: v10.0.0-alpha.3 ([2b41f94](https://github.com/mx-space/core/commit/2b41f94))
+* feat: add Lexical block editor content format support ([8fe2508](https://github.com/mx-space/core/commit/8fe2508))
+* feat(cron): add syncPublishedImagesToS3 functionality and scheduling ([5be2dfa](https://github.com/mx-space/core/commit/5be2dfa))
+* feat(snippet): add custom path support for snippets ([04a1bfc](https://github.com/mx-space/core/commit/04a1bfc))
+* fix: add missing imports for HeadingNode, QuoteNode, TRANSFORMERS in LexicalService ([5072036](https://github.com/mx-space/core/commit/5072036))
+* fix: remove CodeHighlightNode to eliminate PrismJS dependency in server bundle ([d3289f6](https://github.com/mx-space/core/commit/d3289f6))
+* fix: replace @lexical/code and @lexical/markdown with custom nodes to eliminate PrismJS ([3e791d6](https://github.com/mx-space/core/commit/3e791d6))
+* refactor: remove TextMacroService and textOptions config ([36bd3dd](https://github.com/mx-space/core/commit/36bd3dd))
+* refactor(cron): define MigrationDoc and MigrationSource types for clarity ([73b79ef](https://github.com/mx-space/core/commit/73b79ef))
+* refactor(serverless): simplify getCodeDefined method and remove unused asset service ([1e8fdb6](https://github.com/mx-space/core/commit/1e8fdb6))
+
+## 10.0.0-alpha.2 (2026-02-07)
+
+* release: v10.0.0-alpha.2 ([cf80bd8](https://github.com/mx-space/core/commit/cf80bd8))
+* feat(serverless): implement logging for serverless function invocations ([59e9d4d](https://github.com/mx-space/core/commit/59e9d4d))
+* fix(auth): add role validation in CreateAuth middleware ([1aa9549](https://github.com/mx-space/core/commit/1aa9549))
+
+## 10.0.0-alpha.1 (2026-02-06)
+
+* release: v10.0.0-alpha.1 ([bc830ee](https://github.com/mx-space/core/commit/bc830ee))
+* feat(i18n): add translation support to activity, aggregate, and category controllers ([e33d214](https://github.com/mx-space/core/commit/e33d214))
+
+## 10.0.0-alpha.0 (2026-02-06)
+
+* release: v10.0.0-alpha.0 ([b759ef6](https://github.com/mx-space/core/commit/b759ef6))
+* refactor: remove authn module ([5c3f3ab](https://github.com/mx-space/core/commit/5c3f3ab))
+* refactor: simplify and fix bugs across core modules ([e4726b9](https://github.com/mx-space/core/commit/e4726b9))
+* refactor: use @HttpCache with force option instead of manual cache ([8253442](https://github.com/mx-space/core/commit/8253442))
+* refactor(db): centralize collection name constants and fix snake_case naming ([a0bb407](https://github.com/mx-space/core/commit/a0bb407))
+* test(auth): update test suite for better-auth migration ([fa812c9](https://github.com/mx-space/core/commit/fa812c9))
+* fix(ip-query): update IP API endpoint and response handling ([fa641a5](https://github.com/mx-space/core/commit/fa641a5))
+* fix(migration): skip v9.7.5 migration when readers collection does not exist ([db4de1f](https://github.com/mx-space/core/commit/db4de1f))
+* feat: add lightweight /reading/top endpoint and optimize /reading/rank ([50fb01d](https://github.com/mx-space/core/commit/50fb01d))
+* refactor(auth)!: replace legacy auth system with better auth ([fa82f2c](https://github.com/mx-space/core/commit/fa82f2c))
+
+## 9.7.0 (2026-02-04)
+
+* release: v9.7.0 ([583ea80](https://github.com/mx-space/core/commit/583ea80))
+* refactor(ai): update JSON escaping rules and simplify text serialization ([24215e8](https://github.com/mx-space/core/commit/24215e8))
+* feat(cron-task): implement cron task module with business logic and scheduling ([6926e77](https://github.com/mx-space/core/commit/6926e77))
+
+## <small>9.6.3 (2026-02-03)</small>
+
+* release: v9.6.3 ([772a082](https://github.com/mx-space/core/commit/772a082))
+* feat(ai-translation): extend article handling to include PageModel ([e8166b6](https://github.com/mx-space/core/commit/e8166b6))
+* feat(ai): add comment review endpoint and enhance AI configuration options ([6101bc9](https://github.com/mx-space/core/commit/6101bc9))
+* feat(migration): add v9.6.3 migration and enhance SMTP options handling ([a1a0b30](https://github.com/mx-space/core/commit/a1a0b30))
+* feat(page): enhance language handling and translation integration in PageController ([5a749ba](https://github.com/mx-space/core/commit/5a749ba))
+* fix(ai): use Tool Calling instead of response_format for structured output ([3c09a82](https://github.com/mx-space/core/commit/3c09a82)), closes [#2575](https://github.com/mx-space/core/issues/2575)
+
+## <small>9.6.2 (2026-02-02)</small>
+
+* release: v9.6.2 ([b991f3e](https://github.com/mx-space/core/commit/b991f3e))
+* feat(mongo): enhance custom MongoDB connection string handling ([e0e4f24](https://github.com/mx-space/core/commit/e0e4f24))
+* fix(entrypoint): improve Redis connection string handling and logging ([23abde6](https://github.com/mx-space/core/commit/23abde6))
+
+## <small>9.6.1 (2026-02-02)</small>
+
+* release: v9.6.1 ([729924d](https://github.com/mx-space/core/commit/729924d))
+* refactor(entrypoint): streamline environment variable handling and enhance logging ([102180e](https://github.com/mx-space/core/commit/102180e))
+
+## 9.6.0 (2026-02-02)
+
+* release: v9.6.0 ([7e90df0](https://github.com/mx-space/core/commit/7e90df0))
+* feat(ai): update translation prompts to enforce strict JSON output requirements ([810aaac](https://github.com/mx-space/core/commit/810aaac))
+* feat(redis): enhance Redis configuration and email service integration ([634297c](https://github.com/mx-space/core/commit/634297c))
+
+## 9.5.0 (2026-02-01)
+
+* release: v9.5.0 ([413df16](https://github.com/mx-space/core/commit/413df16))
+* fix(tests): update snapshots for NoteController e2e tests to reflect published status ([49d08e6](https://github.com/mx-space/core/commit/49d08e6))
+* feat(ai): add retry functionality for AI tasks and enhance error handling ([5770839](https://github.com/mx-space/core/commit/5770839))
+* feat(ai): add task cancellation and deletion endpoints in AiTaskController ([1975b58](https://github.com/mx-space/core/commit/1975b58))
+* feat(lang): implement language handling in request context and enhance translation capabilities ([9ca8291](https://github.com/mx-space/core/commit/9ca8291))
+
+## 9.4.0 (2026-01-31)
+
+* release: v9.4.0 ([d21af7e](https://github.com/mx-space/core/commit/d21af7e))
+* feat(ai): implement language utilities for AI processing ([82ed676](https://github.com/mx-space/core/commit/82ed676))
+* feat(ai): introduce task queue for AI operations and enhance streaming capabilities ([2005c3d](https://github.com/mx-space/core/commit/2005c3d))
+* test(ai): enhance AiInFlightService tests with Redis lock handling ([921c933](https://github.com/mx-space/core/commit/921c933))
+* refactor(ai): update AI provider integration and enhance runtime structure ([25694f3](https://github.com/mx-space/core/commit/25694f3))
+
+## <small>9.3.4 (2026-01-30)</small>
+
+* release: v9.3.4 ([fc2d527](https://github.com/mx-space/core/commit/fc2d527))
+* refactor(ai.prompts): simplify prompt structure and enhance readability ([26bde5a](https://github.com/mx-space/core/commit/26bde5a))
+
+## <small>9.3.3 (2026-01-30)</small>
+
+* release: v9.3.3 ([5e74d47](https://github.com/mx-space/core/commit/5e74d47))
+* feat(note): enhance note retrieval with translation support ([a378cd3](https://github.com/mx-space/core/commit/a378cd3))
+
+## <small>9.3.2 (2026-01-30)</small>
+
+* release: v9.3.2 ([f4efc48](https://github.com/mx-space/core/commit/f4efc48))
+* feat(translation): enhance translation capabilities for articles ([038d728](https://github.com/mx-space/core/commit/038d728))
+* fix(deps): update dependency ai to v6.0.62 (#2569) ([1cdac56](https://github.com/mx-space/core/commit/1cdac56)), closes [#2569](https://github.com/mx-space/core/issues/2569)
+* fix(deps): update dependency better-auth to v1.4.18 (#2570) ([ea0070a](https://github.com/mx-space/core/commit/ea0070a)), closes [#2570](https://github.com/mx-space/core/issues/2570)
+* chore(deps): update dependency @ai-sdk/anthropic to v3.0.31 (#2571) ([620d69e](https://github.com/mx-space/core/commit/620d69e)), closes [#2571](https://github.com/mx-space/core/issues/2571)
+
+## <small>9.3.1 (2026-01-29)</small>
+
+* release: v9.3.1 ([41aaf38](https://github.com/mx-space/core/commit/41aaf38))
+* fix(deps): update dependency @ai-sdk/openai to v3.0.21 (#2566) ([2be3e07](https://github.com/mx-space/core/commit/2be3e07)), closes [#2566](https://github.com/mx-space/core/issues/2566)
+* fix(migration): better auth login issue ([f19a49b](https://github.com/mx-space/core/commit/f19a49b))
+* chore(deps): update dependency @ai-sdk/anthropic to v3.0.29 (#2567) ([1770ae6](https://github.com/mx-space/core/commit/1770ae6)), closes [#2567](https://github.com/mx-space/core/issues/2567)
+* chore(deps): update dependency inquirer to v13.2.2 (#2568) ([17c37c1](https://github.com/mx-space/core/commit/17c37c1)), closes [#2568](https://github.com/mx-space/core/issues/2568)
+* chore(deps): update dependency rolldown to v1.0.0-rc.2 (#2565) ([05c02b6](https://github.com/mx-space/core/commit/05c02b6)), closes [#2565](https://github.com/mx-space/core/issues/2565)
+* chore(deps): update dependency zod to v4.3.6 (#2564) ([f06efd7](https://github.com/mx-space/core/commit/f06efd7)), closes [#2564](https://github.com/mx-space/core/issues/2564)
+
+## 9.3.0 (2026-01-28)
+
+* release: v9.3.0 ([afda670](https://github.com/mx-space/core/commit/afda670))
+* feat(ai-summary, ai-translation): enhance summary and translation functionalities ([c15cc55](https://github.com/mx-space/core/commit/c15cc55))
+* feat(deps, ai): update dependencies and enhance AI functionalities ([f32f744](https://github.com/mx-space/core/commit/f32f744))
+* chore(deps): update dependency axios to v1.13.4 (#2561) ([6a2c69e](https://github.com/mx-space/core/commit/6a2c69e)), closes [#2561](https://github.com/mx-space/core/issues/2561)
+
+## 9.2.0 (2026-01-28)
+
+* release: v9.2.0 ([8053978](https://github.com/mx-space/core/commit/8053978))
+* chore(api-client): bump version to 1.20.0 ([c057735](https://github.com/mx-space/core/commit/c057735))
+* chore(deps): update dependency @ai-sdk/anthropic to v3.0.28 (#2560) ([c9e6dbc](https://github.com/mx-space/core/commit/c9e6dbc)), closes [#2560](https://github.com/mx-space/core/issues/2560)
+* chore(deps): update dependency @swc/core to v1.15.11 (#2562) ([b294c40](https://github.com/mx-space/core/commit/b294c40)), closes [#2562](https://github.com/mx-space/core/issues/2562)
+* chore(deps): update dependency rolldown to v1.0.0-rc.1 (#2558) ([d7a1379](https://github.com/mx-space/core/commit/d7a1379)), closes [#2558](https://github.com/mx-space/core/issues/2558)
+* feat(ai-translation): implement AI translation module with controller, service, model, and schema; a ([19652ae](https://github.com/mx-space/core/commit/19652ae))
+* feat(draft): enhance draft history management with refVersion and baseVersion properties; implement  ([924dd3b](https://github.com/mx-space/core/commit/924dd3b))
+* feat(draft): improve draft history trimming logic and add canTrimHistory method for better snapshot  ([3a1487d](https://github.com/mx-space/core/commit/3a1487d))
+* feat(translation): add translation event handling and enhance note/post retrieval with translation s ([ab78738](https://github.com/mx-space/core/commit/ab78738))
+
+## <small>9.1.1 (2026-01-27)</small>
+
+* release: v9.1.1 ([8941d71](https://github.com/mx-space/core/commit/8941d71))
+* chore: update client version ([6ff5e8e](https://github.com/mx-space/core/commit/6ff5e8e))
+* chore: update corepack ([fe30ec9](https://github.com/mx-space/core/commit/fe30ec9))
+* chore: update packages ([a02bad8](https://github.com/mx-space/core/commit/a02bad8))
+* fix: api build ([410bf69](https://github.com/mx-space/core/commit/410bf69))
+* feat: add ai config in aggregation ([f814267](https://github.com/mx-space/core/commit/f814267))
+
+## 9.1.0 (2026-01-27)
+
+* release: v9.1.0 ([f421d3d](https://github.com/mx-space/core/commit/f421d3d))
+* chore: fix lockfile ([8cf33da](https://github.com/mx-space/core/commit/8cf33da))
+* fix: tsdown config ([e95962e](https://github.com/mx-space/core/commit/e95962e))
+* fix(draft): migrate and simplify full snapshot handling ([c8c226f](https://github.com/mx-space/core/commit/c8c226f))
+* refactor(telemetry): remove authentication checks for telemetry endpoints ([beaaff6](https://github.com/mx-space/core/commit/beaaff6))
+* feat(analyze): implement caching for analysis endpoints and enhance data aggregation ([74e910b](https://github.com/mx-space/core/commit/74e910b))
+* feat(telemetry): implement telemetry data collection and dashboard ([871705f](https://github.com/mx-space/core/commit/871705f))
+
+## <small>9.0.7 (2026-01-26)</small>
+
+* release: v9.0.7 ([ea97def](https://github.com/mx-space/core/commit/ea97def))
+* chore: update dependencies across multiple packages ([e9ac681](https://github.com/mx-space/core/commit/e9ac681))
+
+## <small>9.0.6 (2026-01-25)</small>
+
+* release: v9.0.6 ([f6852af](https://github.com/mx-space/core/commit/f6852af))
+
+## <small>9.0.5 (2026-01-25)</small>
+
+* release: v9.0.5 ([a6df075](https://github.com/mx-space/core/commit/a6df075))
+* chore: rework some scripts (#2557) ([69ded2f](https://github.com/mx-space/core/commit/69ded2f)), closes [#2557](https://github.com/mx-space/core/issues/2557)
+* fix(config): restore encryption logic for sensitive config fields ([043d7aa](https://github.com/mx-space/core/commit/043d7aa)), closes [#2556](https://github.com/mx-space/core/issues/2556)
+
+## <small>9.0.4 (2026-01-25)</small>
+
+* release: v9.0.4 ([4048ecc](https://github.com/mx-space/core/commit/4048ecc))
+* feat(config): enhance encryption utilities and schema integration ([817ec74](https://github.com/mx-space/core/commit/817ec74))
+
+## <small>9.0.3 (2026-01-25)</small>
+
+* release: v9.0.3 ([28005dd](https://github.com/mx-space/core/commit/28005dd))
+* chore: update dependencies and improve logging ([73c299d](https://github.com/mx-space/core/commit/73c299d))
+* feat(comment): add batch update and delete functionality for comments ([deeb057](https://github.com/mx-space/core/commit/deeb057))
+* feat(file): add batch delete and S3 upload functionality ([9e6cfe5](https://github.com/mx-space/core/commit/9e6cfe5))
+* refactor: biz excpetion ([d3656a7](https://github.com/mx-space/core/commit/d3656a7))
+* refactor(config): update configuration structure and remove unused fields ([faf8e3f](https://github.com/mx-space/core/commit/faf8e3f))
+
+## <small>9.0.2 (2026-01-24)</small>
+
+* release: v9.0.2 ([9543f3d](https://github.com/mx-space/core/commit/9543f3d))
+* fix(file.type): update FileTypeEnum to replace 'photo' with 'image' ([9d1be6c](https://github.com/mx-space/core/commit/9d1be6c))
+* fix(file): add type: String for enum props in FileReferenceModel ([35cdbdd](https://github.com/mx-space/core/commit/35cdbdd))
+* fix(file): remove duplicate index on fileUrl field ([bd6eec6](https://github.com/mx-space/core/commit/bd6eec6))
+* feat(file): implement file reference management and image migration service ([7b22129](https://github.com/mx-space/core/commit/7b22129))
+
+## <small>9.0.1 (2026-01-23)</small>
+
+* release: v9.0.1 ([015cc88](https://github.com/mx-space/core/commit/015cc88))
+* fix(aggregate): rename wordCount field from length to count ([9c883c9](https://github.com/mx-space/core/commit/9c883c9))
+* fix(note.schema): allow nullable fields and set default for images ([74f0aed](https://github.com/mx-space/core/commit/74f0aed))
+* refactor: remove LOG_DIR setup from test configuration ([5a79d26](https://github.com/mx-space/core/commit/5a79d26))
+* refactor!: remove logging functionality and related constants ([5e4f062](https://github.com/mx-space/core/commit/5e4f062))
+
+## 9.0.0 (2026-01-22)
+
+* release: v9.0.0 ([b3c8137](https://github.com/mx-space/core/commit/b3c8137))
+* feat: add analyze apis ([3f51a95](https://github.com/mx-space/core/commit/3f51a95))
+* chore: update deployment workflow to copy environment file ([dfeb65c](https://github.com/mx-space/core/commit/dfeb65c))
+
+## 9.0.0-alpha.9 (2026-01-22)
+
+* release: v9.0.0-alpha.9 ([00425d6](https://github.com/mx-space/core/commit/00425d6))
+* chore: update deployment scripts and workflow configuration ([b2a6bb0](https://github.com/mx-space/core/commit/b2a6bb0))
+
+## 9.0.0-alpha.8 (2026-01-22)
+
+* release: v9.0.0-alpha.8 ([c05c133](https://github.com/mx-space/core/commit/c05c133))
+* chore: remove zx dependency and refactor scripts to use native Node.js modules ([d4bc710](https://github.com/mx-space/core/commit/d4bc710))
+
+## 9.0.0-alpha.7 (2026-01-22)
+
+* release: v9.0.0-alpha.7 ([3254734](https://github.com/mx-space/core/commit/3254734))
+* chore: update deployment script and workflow configuration ([0494325](https://github.com/mx-space/core/commit/0494325))
+
+## 9.0.0-alpha.6 (2026-01-22)
+
+* release: v9.0.0-alpha.6 ([b2216bc](https://github.com/mx-space/core/commit/b2216bc))
+* chore: enhance deployment process and configuration management ([39bdecd](https://github.com/mx-space/core/commit/39bdecd))
+* chore: remove Cloudflared integration from Docker entrypoint and Dockerfile ([bdaedd3](https://github.com/mx-space/core/commit/bdaedd3))
+
+## 9.0.0-alpha.5 (2026-01-22)
+
+* release: v9.0.0-alpha.5 ([1203091](https://github.com/mx-space/core/commit/1203091))
+* chore: update GitHub Actions workflow for release process ([e231f36](https://github.com/mx-space/core/commit/e231f36))
+
+## 9.0.0-alpha.4 (2026-01-22)
+
+* release: v9.0.0-alpha.4 ([040f4b3](https://github.com/mx-space/core/commit/040f4b3))
+* chore: refine Docker stack and GitHub Actions configurations ([97b7cef](https://github.com/mx-space/core/commit/97b7cef))
+
+## 9.0.0-alpha.3 (2026-01-21)
+
+* release: v9.0.0-alpha.3 ([10baaae](https://github.com/mx-space/core/commit/10baaae))
+* chore: simplify environment variable definitions in Docker configurations ([e7c2e24](https://github.com/mx-space/core/commit/e7c2e24))
+
+## 9.0.0-alpha.2 (2026-01-21)
+
+* release: v9.0.0-alpha.2 ([87f02e0](https://github.com/mx-space/core/commit/87f02e0))
+* chore: update Docker configurations for MongoDB integration ([0690882](https://github.com/mx-space/core/commit/0690882))
+* chore: update Docker stack configuration for service names and networking ([de1fc11](https://github.com/mx-space/core/commit/de1fc11))
+* fix: enhance OpenAI-compatible provider handling ([fab4d9d](https://github.com/mx-space/core/commit/fab4d9d))
+
+## 9.0.0-alpha.1 (2026-01-21)
+
+* release: v9.0.0-alpha.1 ([278b7ea](https://github.com/mx-space/core/commit/278b7ea))
+* feat: add Docker Compose and Docker Stack configurations for mx-core and Redis services ([f83ab46](https://github.com/mx-space/core/commit/f83ab46))
+
+## 9.0.0-alpha.0 (2026-01-21)
+
+* release: v9.0.0-alpha.0 ([481f483](https://github.com/mx-space/core/commit/481f483))
+* chore: update dependencies and refactor Algolia integration ([76147d6](https://github.com/mx-space/core/commit/76147d6))
+* chore: update dependencies in package.json and pnpm-lock.yaml ([eb5b9d6](https://github.com/mx-space/core/commit/eb5b9d6))
+* chore: update Node.js engine requirements and enhance documentation ([7381843](https://github.com/mx-space/core/commit/7381843))
+* chore(deps): update dependencies and refactor code ([1e4dce6](https://github.com/mx-space/core/commit/1e4dce6))
+* chore(deps): update dependency @ai-sdk/anthropic to v3.0.17 (#2545) ([c82ac4f](https://github.com/mx-space/core/commit/c82ac4f)), closes [#2545](https://github.com/mx-space/core/issues/2545)
+* chore(deps): update dependency prettier to v3.8.0 (#2543) ([2705efc](https://github.com/mx-space/core/commit/2705efc)), closes [#2543](https://github.com/mx-space/core/issues/2543)
+* chore(deps): update package dependencies ([f4b1e89](https://github.com/mx-space/core/commit/f4b1e89))
+* chore(deps): upgrade mongoose and typegoose dependencies ([8d029ae](https://github.com/mx-space/core/commit/8d029ae))
+* fix: replace zx with native Node.js APIs in download script ([b93d6d9](https://github.com/mx-space/core/commit/b93d6d9))
+* fix(comment): 邮件通知速记跳转前端路由 (#2541) ([3c12235](https://github.com/mx-space/core/commit/3c12235)), closes [#2541](https://github.com/mx-space/core/issues/2541)
+* fix(deps): update dependency @ai-sdk/openai to v3.0.13 (#2546) ([7213840](https://github.com/mx-space/core/commit/7213840)), closes [#2546](https://github.com/mx-space/core/issues/2546)
+* fix(deps): update dependency @keyv/redis to v5.1.6 (#2547) ([5a00a9b](https://github.com/mx-space/core/commit/5a00a9b)), closes [#2547](https://github.com/mx-space/core/issues/2547)
+* refactor: serverless functionality with sandbox service ([867014c](https://github.com/mx-space/core/commit/867014c))
+* refactor: to esm ([9abe071](https://github.com/mx-space/core/commit/9abe071))
+
+## 8.8.0 (2026-01-20)
+
+* release: v8.8.0 ([91b163a](https://github.com/mx-space/core/commit/91b163a))
+* refactor: migrate DTOs from class-validator to Zod (#2542) ([8d87b53](https://github.com/mx-space/core/commit/8d87b53)), closes [#2542](https://github.com/mx-space/core/issues/2542)
+* feat(meta-preset): add MetaPreset module with CRUD operations and built-in presets ([d03a881](https://github.com/mx-space/core/commit/d03a881))
+
+## <small>8.7.1 (2026-01-19)</small>
+
+* release: v8.7.1 ([7285929](https://github.com/mx-space/core/commit/7285929))
+* chore(auth): disable telemetry in CreateAuth function ([59b9f26](https://github.com/mx-space/core/commit/59b9f26))
+* refactor(draft): remove redundant index annotation in DraftHistoryModel ([53db46d](https://github.com/mx-space/core/commit/53db46d))
+
+## 8.7.0 (2026-01-18)
+
+* release: v8.7.0 ([9658b4b](https://github.com/mx-space/core/commit/9658b4b))
+* docs: add API response rules and transformation details to CLAUDE.md ([3e93699](https://github.com/mx-space/core/commit/3e93699))
+* feat(aggregate): add new statistical endpoints for category distribution, tag cloud, publication tre ([1eb5dd7](https://github.com/mx-space/core/commit/1eb5dd7))
+* feat(draft): implement draft module with CRUD operations and history management ([8adf43e](https://github.com/mx-space/core/commit/8adf43e))
+* fix(deps): update babel monorepo to v7.28.6 (#2527) ([7711eb9](https://github.com/mx-space/core/commit/7711eb9)), closes [#2527](https://github.com/mx-space/core/issues/2527)
+* fix(deps): update dependency @ai-sdk/openai to v3.0.12 (#2532) ([d3e1a32](https://github.com/mx-space/core/commit/d3e1a32)), closes [#2532](https://github.com/mx-space/core/issues/2532)
+* fix(deps): update dependency ai to v6.0.39 (#2534) ([6a2db5f](https://github.com/mx-space/core/commit/6a2db5f)), closes [#2534](https://github.com/mx-space/core/issues/2534)
+* fix(deps): update dependency cache-manager to v7.2.8 (#2535) ([cb8c287](https://github.com/mx-space/core/commit/cb8c287)), closes [#2535](https://github.com/mx-space/core/issues/2535)
+* fix(deps): update dependency remove-markdown to v0.6.3 (#2536) ([222d8f2](https://github.com/mx-space/core/commit/222d8f2)), closes [#2536](https://github.com/mx-space/core/issues/2536)
+* fix(deps): update nest monorepo (#2538) ([8ceae42](https://github.com/mx-space/core/commit/8ceae42)), closes [#2538](https://github.com/mx-space/core/issues/2538)
+* chore(deps): update dependency @ai-sdk/anthropic to v3.0.14 (#2529) ([2daf995](https://github.com/mx-space/core/commit/2daf995)), closes [#2529](https://github.com/mx-space/core/issues/2529)
+* chore(deps): update dependency @ai-sdk/anthropic to v3.0.15 (#2533) ([a5e2e01](https://github.com/mx-space/core/commit/a5e2e01)), closes [#2533](https://github.com/mx-space/core/issues/2533)
+* chore(deps): update dependency @types/node to v25.0.9 (#2530) ([c211787](https://github.com/mx-space/core/commit/c211787)), closes [#2530](https://github.com/mx-space/core/issues/2530)
+* chore(deps): update dependency ioredis to v5.9.2 (#2531) ([48c95a0](https://github.com/mx-space/core/commit/48c95a0)), closes [#2531](https://github.com/mx-space/core/issues/2531)
+* chore(deps): update dependency rolldown to v1.0.0-beta.60 (#2526) ([b12a990](https://github.com/mx-space/core/commit/b12a990)), closes [#2526](https://github.com/mx-space/core/issues/2526)
+* chore(deps): update dependency tsdown to v0.18.4 (#2505) ([453d300](https://github.com/mx-space/core/commit/453d300)), closes [#2505](https://github.com/mx-space/core/issues/2505)
+
+## 8.6.0 (2026-01-15)
+
+* release: v8.6.0 ([a104539](https://github.com/mx-space/core/commit/a104539))
+* fix: update mongo image to version 7 in docker-compose.yml (#2474) ([03b5105](https://github.com/mx-space/core/commit/03b5105)), closes [#2474](https://github.com/mx-space/core/issues/2474)
+* fix(backup): 修复 S3 备份上传错误 (#2524) ([43cbdc8](https://github.com/mx-space/core/commit/43cbdc8)), closes [#2524](https://github.com/mx-space/core/issues/2524)
+* fix(render): 修复渲染预览类型路由匹配 (#2523) ([d82f8ff](https://github.com/mx-space/core/commit/d82f8ff)), closes [#2523](https://github.com/mx-space/core/issues/2523)
+* refactor(core): remove download-admin.ejs and streamline download logic in PageProxyController ([74c51a6](https://github.com/mx-space/core/commit/74c51a6))
+* Delete .trae/documents directory ([25ba732](https://github.com/mx-space/core/commit/25ba732))
+* feat(core): refactor admin asset download logic with multi-mirror support and improved reliability ([d77a152](https://github.com/mx-space/core/commit/d77a152))
+* chore: update test case ([0d4942e](https://github.com/mx-space/core/commit/0d4942e))
+* chore(deps): update dependency @ai-sdk/anthropic to v3.0.13 (#2525) ([715b5bf](https://github.com/mx-space/core/commit/715b5bf)), closes [#2525](https://github.com/mx-space/core/issues/2525)
+* chore(deps): update dependency @types/lodash to v4.17.23 (#2519) ([7d8f48d](https://github.com/mx-space/core/commit/7d8f48d)), closes [#2519](https://github.com/mx-space/core/issues/2519)
+* chore(deps): update dependency @types/node to v25.0.8 (#2520) ([24d13d9](https://github.com/mx-space/core/commit/24d13d9)), closes [#2520](https://github.com/mx-space/core/issues/2520)
+
+## <small>8.5.1 (2026-01-14)</small>
+
+* release: v8.5.1 ([eb04540](https://github.com/mx-space/core/commit/eb04540))
+* feat(auth): add profile mapping function to GitHub authentication ([f7d96c3](https://github.com/mx-space/core/commit/f7d96c3))
+* feat(recently): 新增速记编辑功能 (#2521) ([99043bd](https://github.com/mx-space/core/commit/99043bd)), closes [#2521](https://github.com/mx-space/core/issues/2521)
+* chore: fix build ([c2cb943](https://github.com/mx-space/core/commit/c2cb943))
+* chore: update ([142569a](https://github.com/mx-space/core/commit/142569a))
+* chore(api-client): bump version to 1.18.1 ([e3d034b](https://github.com/mx-space/core/commit/e3d034b))
+* chore(api-client): update module exports to use .mjs and .mts extensions ([5a10573](https://github.com/mx-space/core/commit/5a10573))
+* fix: build mod script ([800c0cb](https://github.com/mx-space/core/commit/800c0cb))
+* fix(deps): update dependency ua-parser-js to v2.0.7 (#2509) ([d021823](https://github.com/mx-space/core/commit/d021823)), closes [#2509](https://github.com/mx-space/core/issues/2509)
+
+## 8.5.0 (2026-01-12)
+
+* release: v8.5.0 ([0510137](https://github.com/mx-space/core/commit/0510137))
+* feat(ai): implement multi-provider support and migration for AI configuration ([b55916d](https://github.com/mx-space/core/commit/b55916d))
+* chore(deps): update dependency @types/node to v25.0.5 (#2518) ([49fd5cf](https://github.com/mx-space/core/commit/49fd5cf)), closes [#2518](https://github.com/mx-space/core/issues/2518)
+* chore(deps): update dependency ioredis to v5.9.1 (#2516) ([baa76e1](https://github.com/mx-space/core/commit/baa76e1)), closes [#2516](https://github.com/mx-space/core/issues/2516)
+* chore(deps): update dependency vite-tsconfig-paths to v6.0.4 (#2517) ([b716201](https://github.com/mx-space/core/commit/b716201)), closes [#2517](https://github.com/mx-space/core/issues/2517)
+* chore(workflow): update (#2513) ([ff44b9c](https://github.com/mx-space/core/commit/ff44b9c)), closes [#2513](https://github.com/mx-space/core/issues/2513)
+* fix(deps): update dependency ai to v5.0.118 (#2511) ([2b4f31e](https://github.com/mx-space/core/commit/2b4f31e)), closes [#2511](https://github.com/mx-space/core/issues/2511)
+
+## <small>8.4.5 (2026-01-08)</small>
+
+* release: v8.4.5 ([f4d8e73](https://github.com/mx-space/core/commit/f4d8e73))
+* fix: ignore eslint rule ([bac4736](https://github.com/mx-space/core/commit/bac4736))
+
+## <small>8.4.4 (2026-01-08)</small>
+
+* release: v8.4.4 ([bf2039d](https://github.com/mx-space/core/commit/bf2039d))
+* fix(deps): update dependency @ai-sdk/openai to v2.0.89 (#2506) ([d71bd54](https://github.com/mx-space/core/commit/d71bd54)), closes [#2506](https://github.com/mx-space/core/issues/2506)
+* fix(deps): update dependency @typegoose/typegoose to v12.20.1 (#2500) ([d84a71f](https://github.com/mx-space/core/commit/d84a71f)), closes [#2500](https://github.com/mx-space/core/issues/2500)
+* fix(deps): update dependency ai to v5.0.117 (#2501) ([b47a482](https://github.com/mx-space/core/commit/b47a482)), closes [#2501](https://github.com/mx-space/core/issues/2501)
+* fix(deps): update dependency mongoose to v8.19.4 (#2507) ([7f56be4](https://github.com/mx-space/core/commit/7f56be4)), closes [#2507](https://github.com/mx-space/core/issues/2507)
+* fix(deps): update dependency openai to v5.23.2 (#2508) ([d2ae37d](https://github.com/mx-space/core/commit/d2ae37d)), closes [#2508](https://github.com/mx-space/core/issues/2508)
+* fix(deps): update dependency qs to v6.14.1 [security] (#2504) ([6cb3d36](https://github.com/mx-space/core/commit/6cb3d36)), closes [#2504](https://github.com/mx-space/core/issues/2504)
+* fix(markdown): export markdown permalink ([3bc74e7](https://github.com/mx-space/core/commit/3bc74e7))
+* chore(deps): update dependency @swc/core to v1.15.8 (#2503) ([dc9dfb2](https://github.com/mx-space/core/commit/dc9dfb2)), closes [#2503](https://github.com/mx-space/core/issues/2503)
+* chore(deps): update dependency rolldown to v1.0.0-beta.59 (#2496) ([8bb068b](https://github.com/mx-space/core/commit/8bb068b)), closes [#2496](https://github.com/mx-space/core/issues/2496)
+
+## <small>8.4.3 (2025-12-27)</small>
+
+* release: v8.4.3 ([09baaf9](https://github.com/mx-space/core/commit/09baaf9))
+* fix(aggregate): update post query to only retrieve published posts ([c65eead](https://github.com/mx-space/core/commit/c65eead))
+* fix(deps): update dependency @ai-sdk/openai to v2.0.88 (#2498) ([378f68b](https://github.com/mx-space/core/commit/378f68b)), closes [#2498](https://github.com/mx-space/core/issues/2498)
+* fix(deps): update dependency @typegoose/auto-increment to v4.13.2 (#2499) ([9e6872a](https://github.com/mx-space/core/commit/9e6872a)), closes [#2499](https://github.com/mx-space/core/issues/2499)
+* fix(deps): update dependency nodemailer to v7.0.11 [security] (#2487) ([9329cbd](https://github.com/mx-space/core/commit/9329cbd)), closes [#2487](https://github.com/mx-space/core/issues/2487)
+* chore(deps): update dependencies across multiple packages including @nestjs, dayjs, jsonwebtoken, an ([1527405](https://github.com/mx-space/core/commit/1527405))
+* chore(deps): update dependency @types/node to v24.10.4 (#2494) ([1fd32c3](https://github.com/mx-space/core/commit/1fd32c3)), closes [#2494](https://github.com/mx-space/core/issues/2494)
+* chore(deps): update dependency eslint to v9.39.2 (#2495) ([4b036e5](https://github.com/mx-space/core/commit/4b036e5)), closes [#2495](https://github.com/mx-space/core/issues/2495)
+* chore(deps): update dependency prettier-plugin-ember-template-tag to v2.1.2 (#2489) ([3481fa9](https://github.com/mx-space/core/commit/3481fa9)), closes [#2489](https://github.com/mx-space/core/issues/2489)
+* chore(deps): update dependency typescript to v5.9.3 (#2490) ([4fe87f6](https://github.com/mx-space/core/commit/4fe87f6)), closes [#2490](https://github.com/mx-space/core/issues/2490)
+* chore(deps): update dependency unplugin-swc to v1.5.9 (#2491) ([b9ad484](https://github.com/mx-space/core/commit/b9ad484)), closes [#2491](https://github.com/mx-space/core/issues/2491)
+* chore(deps): update dependency zod to v3.25.76 (#2450) ([9d748e1](https://github.com/mx-space/core/commit/9d748e1)), closes [#2450](https://github.com/mx-space/core/issues/2450)
+* chore(deps): update rolldown to version 1.0.0-beta.53 in package.json and pnpm-lock.yaml ([748f03c](https://github.com/mx-space/core/commit/748f03c))
+* chore(deps): update supercharge/mongodb-github-action action to v1.12.1 (#2492) ([5ad4547](https://github.com/mx-space/core/commit/5ad4547)), closes [#2492](https://github.com/mx-space/core/issues/2492)
+* feat(markdown): 为Markdown 导入导出添加标签字段 ([5ca66b6](https://github.com/mx-space/core/commit/5ca66b6))
+* feat(note): add validation for note updates to check for existing documents and track field changes ([70fb1b2](https://github.com/mx-space/core/commit/70fb1b2))
+* refactor(hash): split variable initialization for clarity ([690ed5e](https://github.com/mx-space/core/commit/690ed5e))
+
+## <small>8.4.2 (2025-11-30)</small>
+
+* release: v8.4.2 ([d839edb](https://github.com/mx-space/core/commit/d839edb))
+* fix(ai-summary): log error details in AI summary service ([049e6a5](https://github.com/mx-space/core/commit/049e6a5))
+
+## <small>8.4.1 (2025-11-24)</small>
+
+* release: v8.4.1 ([c1a1f5c](https://github.com/mx-space/core/commit/c1a1f5c))
+* feat(link): convert external friend avatar links to internal links (#2480) ([ca1e328](https://github.com/mx-space/core/commit/ca1e328)), closes [#2480](https://github.com/mx-space/core/issues/2480)
+* chore: move to tsdown ([9979ebc](https://github.com/mx-space/core/commit/9979ebc))
+* chore: update deps ([ec77c38](https://github.com/mx-space/core/commit/ec77c38))
+* chore: update deps ([1825b5d](https://github.com/mx-space/core/commit/1825b5d))
+* chore(deps): update dependencies and add Git LFS hooks ([27588ea](https://github.com/mx-space/core/commit/27588ea))
+* chore(deps): update dependencies for improved functionality and compatibility ([a78325c](https://github.com/mx-space/core/commit/a78325c))
+* chore(deps): update dependency @swc/core to v1.13.21 (#2472) ([2b07a1f](https://github.com/mx-space/core/commit/2b07a1f)), closes [#2472](https://github.com/mx-space/core/issues/2472)
+* chore(deps): update dependency @sxzz/eslint-config to v7.1.4 (#2462) ([d2840a5](https://github.com/mx-space/core/commit/d2840a5)), closes [#2462](https://github.com/mx-space/core/issues/2462)
+* chore(deps): update dependency @types/nodemailer to v6.4.19 (#2457) ([e7f858d](https://github.com/mx-space/core/commit/e7f858d)), closes [#2457](https://github.com/mx-space/core/issues/2457)
+* chore(deps): update dependency @types/nodemailer to v6.4.20 (#2463) ([8142d7e](https://github.com/mx-space/core/commit/8142d7e)), closes [#2463](https://github.com/mx-space/core/issues/2463)
+* chore(deps): update dependency @types/nodemailer to v6.4.21 (#2475) ([b67ec98](https://github.com/mx-space/core/commit/b67ec98)), closes [#2475](https://github.com/mx-space/core/issues/2475)
+* chore(deps): update dependency @types/validator to v13.15.10 (#2476) ([efac88d](https://github.com/mx-space/core/commit/efac88d)), closes [#2476](https://github.com/mx-space/core/issues/2476)
+* chore(deps): update dependency ioredis to v5.8.2 (#2477) ([d31efb2](https://github.com/mx-space/core/commit/d31efb2)), closes [#2477](https://github.com/mx-space/core/issues/2477)
+* chore(deps): update dependency lint-staged to v16.2.7 (#2478) ([f9ff7f8](https://github.com/mx-space/core/commit/f9ff7f8)), closes [#2478](https://github.com/mx-space/core/issues/2478)
+* chore(deps): update dependency mime-types to v3.0.2 (#2479) ([b4e605e](https://github.com/mx-space/core/commit/b4e605e)), closes [#2479](https://github.com/mx-space/core/issues/2479)
+* chore(deps): update dependency mongodb-memory-server to v10.2.3 (#2481) ([478120b](https://github.com/mx-space/core/commit/478120b)), closes [#2481](https://github.com/mx-space/core/issues/2481)
+* chore(deps): update dependency semver to v7.7.3 (#2482) ([bc1380e](https://github.com/mx-space/core/commit/bc1380e)), closes [#2482](https://github.com/mx-space/core/issues/2482)
+* chore(deps): update dependency semver to v7.7.3 (#2483) ([3c65069](https://github.com/mx-space/core/commit/3c65069)), closes [#2483](https://github.com/mx-space/core/issues/2483)
+* chore(deps): update eslint-config and remove unused dependencies ([04ffe7d](https://github.com/mx-space/core/commit/04ffe7d))
+* fix(deps): downgrade semver from v7.7.3 to v7.7.2 in pnpm-lock.yaml ([ba0501e](https://github.com/mx-space/core/commit/ba0501e))
+* fix(deps): update dependency @ai-sdk/openai to v2.0.42 (#2464) ([9c0ac35](https://github.com/mx-space/core/commit/9c0ac35)), closes [#2464](https://github.com/mx-space/core/issues/2464)
+* fix(deps): update dependency ai to v5.0.52 [security] (#2470) ([5cdc4f6](https://github.com/mx-space/core/commit/5cdc4f6)), closes [#2470](https://github.com/mx-space/core/issues/2470)
+* fix(deps): update dependency dayjs to v1.11.18 (#2459) ([2afa730](https://github.com/mx-space/core/commit/2afa730)), closes [#2459](https://github.com/mx-space/core/issues/2459)
+* fix(deps): update dependency form-data to v4.0.4 [security] (#2454) ([81b875d](https://github.com/mx-space/core/commit/81b875d)), closes [#2454](https://github.com/mx-space/core/issues/2454)
+* fix(deps): update dependency nodemailer to v7.0.7 [security] (#2467) ([2d10df6](https://github.com/mx-space/core/commit/2d10df6)), closes [#2467](https://github.com/mx-space/core/issues/2467)
+* refactor(ai): update AI module and dependencies ([3f5f9f5](https://github.com/mx-space/core/commit/3f5f9f5))
+* refactor(auth): enhance OAuth provider configuration with redirect URIs ([3d733c2](https://github.com/mx-space/core/commit/3d733c2))
+
+## 8.4.0 (2025-07-10)
+
+* release: v8.4.0 ([02ffa8f](https://github.com/mx-space/core/commit/02ffa8f))
+* chore(ci): skip postinstall scripts for some testing-only dependencies (#2442) ([97cd8d4](https://github.com/mx-space/core/commit/97cd8d4)), closes [#2442](https://github.com/mx-space/core/issues/2442)
+* chore(deps): update dependencies across multiple packages ([0bae393](https://github.com/mx-space/core/commit/0bae393))
+* chore(deps): update dependencies for improved compatibility and functionality ([9978184](https://github.com/mx-space/core/commit/9978184))
+* chore(deps): update package dependencies for improved stability ([f369e9c](https://github.com/mx-space/core/commit/f369e9c))
+* chore(deps): update semver to version 7.7.2 in package.json and pnpm-lock.yaml ([3e57805](https://github.com/mx-space/core/commit/3e57805))
+* chore(pnpm): remove patched dependency for tinyexec ([0a8ab1e](https://github.com/mx-space/core/commit/0a8ab1e))
+* feat(ai): integrate new AI SDK and refactor AI services ([3e12044](https://github.com/mx-space/core/commit/3e12044))
+* feat(core): 实现文章的发布/取消发布功能 (#2443) ([00b66be](https://github.com/mx-space/core/commit/00b66be)), closes [#2443](https://github.com/mx-space/core/issues/2443)
+* feat(server-time): enhance middleware configuration and import context ([a463551](https://github.com/mx-space/core/commit/a463551))
+* fix: remove patch ([14fe84c](https://github.com/mx-space/core/commit/14fe84c))
+
+## <small>8.3.2 (2025-05-26)</small>
+
+* release: v8.3.2 ([74b58f0](https://github.com/mx-space/core/commit/74b58f0))
+* fix(auth): enhance CORS support in CreateAuth handler ([bf6021a](https://github.com/mx-space/core/commit/bf6021a))
+
+## <small>8.3.1 (2025-05-20)</small>
+
+* release: v8.3.1 ([bf49873](https://github.com/mx-space/core/commit/bf49873))
+* refactor: ai agent to langgraph ([7229ccf](https://github.com/mx-space/core/commit/7229ccf))
+* refactor(image): optimize image processing with AsyncQueue ([7047b76](https://github.com/mx-space/core/commit/7047b76))
+* refactor(markdown): optimize article extraction with Promise.all ([f054fe5](https://github.com/mx-space/core/commit/f054fe5))
+* refactor(vitest): remove unused module resolutions ([40deef5](https://github.com/mx-space/core/commit/40deef5))
+* fix: bundle ([7e616ee](https://github.com/mx-space/core/commit/7e616ee))
+* fix(ai): ensure proper task cleanup in AiDeepReadingService ([f7cd8c7](https://github.com/mx-space/core/commit/f7cd8c7))
+* fix(deps): complie `@antfu/install-pkg` ([89013ed](https://github.com/mx-space/core/commit/89013ed))
+* fix(markdown): refine tokenizer and code handling in markdown utility ([e80b776](https://github.com/mx-space/core/commit/e80b776))
+* fix(tinyexec): replace require statements to support cjs ([75e153c](https://github.com/mx-space/core/commit/75e153c))
+* feat(ai): enhance OpenAI configuration with additional headers ([9b46a60](https://github.com/mx-space/core/commit/9b46a60))
+* feat(s3): implement S3Uploader for file uploads ([c527591](https://github.com/mx-space/core/commit/c527591))
+* chore(deps): update @sxzz/eslint-config and related dependencies ([e64acfa](https://github.com/mx-space/core/commit/e64acfa))
+* chore(deps): update dependencies and ESLint configuration ([441bc8a](https://github.com/mx-space/core/commit/441bc8a))
+* chore(deps): update dependencies for improved compatibility ([4336e0f](https://github.com/mx-space/core/commit/4336e0f))
+* chore(release): bump @mx-space/api-client to v1.17.0 ([f2873a5](https://github.com/mx-space/core/commit/f2873a5))
+
+## 8.3.0 (2025-05-06)
+
+* release: v8.3.0 ([991cb0a](https://github.com/mx-space/core/commit/991cb0a))
+* refactor(tests): remove zx globals import from global.d.ts and lifecycle.ts ([574f02b](https://github.com/mx-space/core/commit/574f02b))
+* chore(deps): add mongodb-memory-server and redis-memory-server to pnpm-lock.yaml ([d75dcd7](https://github.com/mx-space/core/commit/d75dcd7))
+* chore(deps): update package dependencies to use catalog references ([423cc7d](https://github.com/mx-space/core/commit/423cc7d))
+* feat(ai): add deep reading model and controller method ([8a5048f](https://github.com/mx-space/core/commit/8a5048f))
+* feat(ai): introduce deep reading functionality and refactor AI module ([c385c58](https://github.com/mx-space/core/commit/c385c58))
+* feat(ci): add custom action for MongoDB and Redis setup ([c657e9a](https://github.com/mx-space/core/commit/c657e9a))
+* feat(ci): add custom Node.js and pnpm setup action ([5077535](https://github.com/mx-space/core/commit/5077535))
+
+## 8.2.0 (2025-05-05)
+
+* release: v8.2.0 ([17f3feb](https://github.com/mx-space/core/commit/17f3feb))
+* fix(comment): refine AI evaluation method and update comment options ([f855521](https://github.com/mx-space/core/commit/f855521))
+* refactor(core): 再次延长获取配置等待时间以避免极端情况发生 ([86fdb9e](https://github.com/mx-space/core/commit/86fdb9e))
+* feat: implement AI-based comment evaluation in CommentService ([d2956f3](https://github.com/mx-space/core/commit/d2956f3))
+* feat: update ai integration (#2422) ([46704d2](https://github.com/mx-space/core/commit/46704d2)), closes [#2422](https://github.com/mx-space/core/issues/2422)
+* chore(deps): update robinraju/release-downloader action to v1.12 (#2417) ([bb7e9a3](https://github.com/mx-space/core/commit/bb7e9a3)), closes [#2417](https://github.com/mx-space/core/issues/2417)
+
+## <small>8.1.2 (2025-05-05)</small>
+
+* release: v8.1.2 ([9214609](https://github.com/mx-space/core/commit/9214609))
+* chore: enhance CORS configuration in bootstrap and auth implementation ([af67ca1](https://github.com/mx-space/core/commit/af67ca1))
+* chore: update dependencies and improve health controller ([e055f5c](https://github.com/mx-space/core/commit/e055f5c))
+* chore: update ESLint configuration ([d2e945f](https://github.com/mx-space/core/commit/d2e945f))
+
+## <small>8.1.1 (2025-04-06)</small>
+
+* release: v8.1.1 ([7a4ee66](https://github.com/mx-space/core/commit/7a4ee66))
+* chore: remove unused imports and update TypeScript version ([c26e9ef](https://github.com/mx-space/core/commit/c26e9ef))
+* chore: update dependencies and improve auth implementation ([5bf9397](https://github.com/mx-space/core/commit/5bf9397))
+* fix: deploy script (#2409) ([577d5c5](https://github.com/mx-space/core/commit/577d5c5)), closes [#2409](https://github.com/mx-space/core/issues/2409)
+* fix: lint and fix cache service ([9626378](https://github.com/mx-space/core/commit/9626378))
+* fix: mask custom connection string passwords (CLI & env) (#2410) ([e0f5116](https://github.com/mx-space/core/commit/e0f5116)), closes [#2410](https://github.com/mx-space/core/issues/2410)
+* fix(gateway/auth): broadcast failure (#2413) ([128b92c](https://github.com/mx-space/core/commit/128b92c)), closes [#2413](https://github.com/mx-space/core/issues/2413)
+
+## 8.1.0 (2025-03-25)
+
+* release: v8.1.0 ([f70faa2](https://github.com/mx-space/core/commit/f70faa2))
+* chore: update script ([ef2fa7b](https://github.com/mx-space/core/commit/ef2fa7b))
+* chore(ci): remove useless input (#2404) ([a0ad1a2](https://github.com/mx-space/core/commit/a0ad1a2)), closes [#2404](https://github.com/mx-space/core/issues/2404)
+* Init (#2405) ([5396014](https://github.com/mx-space/core/commit/5396014)), closes [#2405](https://github.com/mx-space/core/issues/2405)
+* feat: AI antispam (#2406) ([4ec4814](https://github.com/mx-space/core/commit/4ec4814)), closes [#2406](https://github.com/mx-space/core/issues/2406)
+
+## <small>8.0.3 (2025-03-23)</small>
+
+* release: v8.0.3 ([2f4600b](https://github.com/mx-space/core/commit/2f4600b))
+* fix: ai summary prompt ([5b9952c](https://github.com/mx-space/core/commit/5b9952c))
+* fix(deps): update dependency @langchain/openai to v0.4.5 (#2395) ([fc028a4](https://github.com/mx-space/core/commit/fc028a4)), closes [#2395](https://github.com/mx-space/core/issues/2395)
+* fix(deps): update dependency axios to v1.8.4 (#2399) ([ad41ec4](https://github.com/mx-space/core/commit/ad41ec4)), closes [#2399](https://github.com/mx-space/core/issues/2399)
+* fix(deps): update dependency openai to v4.87.4 (#2396) ([f6d7f0b](https://github.com/mx-space/core/commit/f6d7f0b)), closes [#2396](https://github.com/mx-space/core/issues/2396)
+* fix(deps): update nest monorepo to v11.0.12 (#2397) ([511587a](https://github.com/mx-space/core/commit/511587a)), closes [#2397](https://github.com/mx-space/core/issues/2397)
+* chore(deps): update dependency @swc/core to v1.11.11 (#2388) ([424dd2b](https://github.com/mx-space/core/commit/424dd2b)), closes [#2388](https://github.com/mx-space/core/issues/2388)
+* chore(deps): update dependency @types/express to v5.0.1 (#2398) ([3cb3100](https://github.com/mx-space/core/commit/3cb3100)), closes [#2398](https://github.com/mx-space/core/issues/2398)
+* chore(deps): update dependency @types/node to v22.13.10 (#2389) ([789b26f](https://github.com/mx-space/core/commit/789b26f)), closes [#2389](https://github.com/mx-space/core/issues/2389)
+* chore(deps): update dependency axios to v1.8.3 (#2390) ([c4e9785](https://github.com/mx-space/core/commit/c4e9785)), closes [#2390](https://github.com/mx-space/core/issues/2390)
+* chore(deps): update dependency eslint to v9.22.0 (#2401) ([a2b8e23](https://github.com/mx-space/core/commit/a2b8e23)), closes [#2401](https://github.com/mx-space/core/issues/2401)
+* chore(deps): update dependency mongodb-memory-server to v10.1.4 (#2391) ([1f25eb9](https://github.com/mx-space/core/commit/1f25eb9)), closes [#2391](https://github.com/mx-space/core/issues/2391)
+* chore(deps): update dependency nanoid to v5.1.4 (#2372) ([a313c24](https://github.com/mx-space/core/commit/a313c24)), closes [#2372](https://github.com/mx-space/core/issues/2372)
+* chore(deps): update dependency nanoid to v5.1.5 (#2392) ([0bfd90f](https://github.com/mx-space/core/commit/0bfd90f)), closes [#2392](https://github.com/mx-space/core/issues/2392)
+* chore(deps): update dependency prettier to v3.5.3 (#2393) ([7913d20](https://github.com/mx-space/core/commit/7913d20)), closes [#2393](https://github.com/mx-space/core/issues/2393)
+* chore(deps): update docker/setup-qemu-action action to v3.6.0 (#2373) ([4822c9d](https://github.com/mx-space/core/commit/4822c9d)), closes [#2373](https://github.com/mx-space/core/issues/2373)
+* chore(deps): update pnpm to v9.15.9 (#2394) ([11ea69c](https://github.com/mx-space/core/commit/11ea69c)), closes [#2394](https://github.com/mx-space/core/issues/2394)
+* chore(deps): update pnpm/action-setup action to v4.1.0 (#2356) ([af77b70](https://github.com/mx-space/core/commit/af77b70)), closes [#2356](https://github.com/mx-space/core/issues/2356)
+
+## <small>8.0.2 (2025-03-17)</small>
+
+* release: v8.0.2 ([84286ff](https://github.com/mx-space/core/commit/84286ff))
+* chore: remove server-deplpy.js deployment script ([91301a9](https://github.com/mx-space/core/commit/91301a9))
+* chore: update deps ([1d51378](https://github.com/mx-space/core/commit/1d51378))
+* chore: update deps ([7a0055d](https://github.com/mx-space/core/commit/7a0055d))
+* chore(deps): update dependency axios to v1.8.2 [security] (#2384) ([3e71774](https://github.com/mx-space/core/commit/3e71774)), closes [#2384](https://github.com/mx-space/core/issues/2384)
+* chore(deps): update dependency better-auth to v1.1.21 [security] (#2380) ([31d8341](https://github.com/mx-space/core/commit/31d8341)), closes [#2380](https://github.com/mx-space/core/issues/2380)
+* feat: 添加推送到Bing支持 (#2379) ([400d217](https://github.com/mx-space/core/commit/400d217)), closes [#2379](https://github.com/mx-space/core/issues/2379)
+* fix: cravatar frontend cannot be displayed (#2385) ([490320e](https://github.com/mx-space/core/commit/490320e)), closes [#2385](https://github.com/mx-space/core/issues/2385)
+* build(dockerfile): 更新 cloudflared 下载链接并支持多架构 (#2378) ([3061ac0](https://github.com/mx-space/core/commit/3061ac0)), closes [#2378](https://github.com/mx-space/core/issues/2378)
+
+## <small>8.0.1 (2025-02-19)</small>
+
+* release: v8.0.1 ([f12eb56](https://github.com/mx-space/core/commit/f12eb56))
+* chore(deps): bump dependencies to latest versions ([91e566f](https://github.com/mx-space/core/commit/91e566f))
+* chore(deps): update dependency @langchain/core to v0.3.39 (#2338) ([bb471df](https://github.com/mx-space/core/commit/bb471df)), closes [#2338](https://github.com/mx-space/core/issues/2338)
+* chore(deps): update dependency @langchain/core to v0.3.40 (#2355) ([7531c69](https://github.com/mx-space/core/commit/7531c69)), closes [#2355](https://github.com/mx-space/core/issues/2355)
+* chore(deps): update dependency @swc/core to v1.10.15 (#2339) ([f239432](https://github.com/mx-space/core/commit/f239432)), closes [#2339](https://github.com/mx-space/core/issues/2339)
+* chore(deps): update dependency @swc/core to v1.10.16 (#2357) ([8768ed7](https://github.com/mx-space/core/commit/8768ed7)), closes [#2357](https://github.com/mx-space/core/issues/2357)
+* chore(deps): update dependency @swc/core to v1.10.17 (#2363) ([2b1ef82](https://github.com/mx-space/core/commit/2b1ef82)), closes [#2363](https://github.com/mx-space/core/issues/2363)
+* chore(deps): update dependency @swc/core to v1.10.18 (#2369) ([26a6036](https://github.com/mx-space/core/commit/26a6036)), closes [#2369](https://github.com/mx-space/core/issues/2369)
+* chore(deps): update dependency @types/lodash to v4.17.15 (#2331) ([4d28950](https://github.com/mx-space/core/commit/4d28950)), closes [#2331](https://github.com/mx-space/core/issues/2331)
+* chore(deps): update dependency @types/node to v22.10.10 (#2332) ([a675b35](https://github.com/mx-space/core/commit/a675b35)), closes [#2332](https://github.com/mx-space/core/issues/2332)
+* chore(deps): update dependency @types/node to v22.13.1 (#2336) ([c241f36](https://github.com/mx-space/core/commit/c241f36)), closes [#2336](https://github.com/mx-space/core/issues/2336)
+* chore(deps): update dependency @types/node to v22.13.4 (#2358) ([fb3155b](https://github.com/mx-space/core/commit/fb3155b)), closes [#2358](https://github.com/mx-space/core/issues/2358)
+* chore(deps): update dependency better-auth to v1.1.16 [security] (#2337) ([32fb561](https://github.com/mx-space/core/commit/32fb561)), closes [#2337](https://github.com/mx-space/core/issues/2337)
+* chore(deps): update dependency better-auth to v1.1.17 (#2333) ([073f993](https://github.com/mx-space/core/commit/073f993)), closes [#2333](https://github.com/mx-space/core/issues/2333)
+* chore(deps): update dependency better-auth to v1.1.18 (#2360) ([628bdc8](https://github.com/mx-space/core/commit/628bdc8)), closes [#2360](https://github.com/mx-space/core/issues/2360)
+* chore(deps): update dependency eslint to v9.20.1 (#2345) ([1d7f1d4](https://github.com/mx-space/core/commit/1d7f1d4)), closes [#2345](https://github.com/mx-space/core/issues/2345)
+* chore(deps): update dependency ioredis to v5.5.0 (#2351) ([f349511](https://github.com/mx-space/core/commit/f349511)), closes [#2351](https://github.com/mx-space/core/issues/2351)
+* chore(deps): update dependency prettier to v3.5.0 (#2353) ([68f8e23](https://github.com/mx-space/core/commit/68f8e23)), closes [#2353](https://github.com/mx-space/core/issues/2353)
+* chore(deps): update dependency prettier to v3.5.1 (#2361) ([69e321c](https://github.com/mx-space/core/commit/69e321c)), closes [#2361](https://github.com/mx-space/core/issues/2361)
+* chore(deps): update dependency semver to v7.7.1 (#2354) ([c861821](https://github.com/mx-space/core/commit/c861821)), closes [#2354](https://github.com/mx-space/core/issues/2354)
+* chore(deps): update dependency tsup to v8.3.6 (#2334) ([288a03f](https://github.com/mx-space/core/commit/288a03f)), closes [#2334](https://github.com/mx-space/core/issues/2334)
+* chore(deps): update dependency whatwg-url to v14.1.1 (#2348) ([0529c69](https://github.com/mx-space/core/commit/0529c69)), closes [#2348](https://github.com/mx-space/core/issues/2348)
+* chore(deps): update pnpm to v9.15.5 (#2335) ([896c7ac](https://github.com/mx-space/core/commit/896c7ac)), closes [#2335](https://github.com/mx-space/core/issues/2335)
+* fix(deps): update babel monorepo to v7.26.8 (#2340) ([3b64af7](https://github.com/mx-space/core/commit/3b64af7)), closes [#2340](https://github.com/mx-space/core/issues/2340)
+* fix(deps): update babel monorepo to v7.26.9 (#2362) ([feacfaf](https://github.com/mx-space/core/commit/feacfaf)), closes [#2362](https://github.com/mx-space/core/issues/2362)
+* fix(deps): update dependency @fastify/static to v8.1.1 (#2364) ([28cc927](https://github.com/mx-space/core/commit/28cc927)), closes [#2364](https://github.com/mx-space/core/issues/2364)
+* fix(deps): update dependency @langchain/openai to v0.4.3 (#2341) ([0d6eda2](https://github.com/mx-space/core/commit/0d6eda2)), closes [#2341](https://github.com/mx-space/core/issues/2341)
+* fix(deps): update dependency @langchain/openai to v0.4.4 (#2349) ([38d1a31](https://github.com/mx-space/core/commit/38d1a31)), closes [#2349](https://github.com/mx-space/core/issues/2349)
+* fix(deps): update dependency @typegoose/auto-increment to v4.9.1 (#2342) ([71c3ef8](https://github.com/mx-space/core/commit/71c3ef8)), closes [#2342](https://github.com/mx-space/core/issues/2342)
+* fix(deps): update dependency form-data to v4.0.2 (#2365) ([f4e9fad](https://github.com/mx-space/core/commit/f4e9fad)), closes [#2365](https://github.com/mx-space/core/issues/2365)
+* fix(deps): update dependency langchain to v0.3.18 (#2366) ([72b1488](https://github.com/mx-space/core/commit/72b1488)), closes [#2366](https://github.com/mx-space/core/issues/2366)
+* fix(deps): update dependency linkedom to v0.18.9 (#2343) ([46b6b8e](https://github.com/mx-space/core/commit/46b6b8e)), closes [#2343](https://github.com/mx-space/core/issues/2343)
+* fix(deps): update dependency marked to v15.0.7 (#2350) ([347ea08](https://github.com/mx-space/core/commit/347ea08)), closes [#2350](https://github.com/mx-space/core/issues/2350)
+* fix(deps): update dependency mongoose-aggregate-paginate-v2 to v1.1.4 (#2367) ([b2b4233](https://github.com/mx-space/core/commit/b2b4233)), closes [#2367](https://github.com/mx-space/core/issues/2367)
+* fix(deps): update dependency ua-parser-js to v2.0.2 (#2346) ([3203b4a](https://github.com/mx-space/core/commit/3203b4a)), closes [#2346](https://github.com/mx-space/core/issues/2346)
+* fix(deps): update nest monorepo to v11.0.9 (#2344) ([58947c0](https://github.com/mx-space/core/commit/58947c0)), closes [#2344](https://github.com/mx-space/core/issues/2344)
+* ci: 修复镜像build错误 (#2320) ([b44c539](https://github.com/mx-space/core/commit/b44c539)), closes [#2320](https://github.com/mx-space/core/issues/2320)
+
+## 8.0.0 (2025-02-08)
+
+* release: v8.0.0 ([65574c6](https://github.com/mx-space/core/commit/65574c6))
+* chore: optimize dockerfile pnpm installation ([0b95576](https://github.com/mx-space/core/commit/0b95576))
+* chore: try fix docker ([a9cdd7b](https://github.com/mx-space/core/commit/a9cdd7b))
+* chore: update deps and update ai models ([4d0d85e](https://github.com/mx-space/core/commit/4d0d85e))
+* chore(deps): update dependency @langchain/core to v0.3.31 (#2312) ([4dc7b1d](https://github.com/mx-space/core/commit/4dc7b1d)), closes [#2312](https://github.com/mx-space/core/issues/2312)
+* chore(deps): update dependency @langchain/core to v0.3.32 (#2321) ([4d79012](https://github.com/mx-space/core/commit/4d79012)), closes [#2321](https://github.com/mx-space/core/issues/2321)
+* chore(deps): update dependency @swc/core to v1.10.8 (#2313) ([3df1210](https://github.com/mx-space/core/commit/3df1210)), closes [#2313](https://github.com/mx-space/core/issues/2313)
+* chore(deps): update dependency @types/node to v22.10.7 (#2314) ([854d0d5](https://github.com/mx-space/core/commit/854d0d5)), closes [#2314](https://github.com/mx-space/core/issues/2314)
+* chore(deps): update dependency @types/qs to v6.9.18 (#2315) ([82069e4](https://github.com/mx-space/core/commit/82069e4)), closes [#2315](https://github.com/mx-space/core/issues/2315)
+* chore(deps): update dependency better-auth to v1.1.14 (#2316) ([34ba324](https://github.com/mx-space/core/commit/34ba324)), closes [#2316](https://github.com/mx-space/core/issues/2316)
+* chore(deps): update dependency eslint to v9.18.0 (#2323) ([23734da](https://github.com/mx-space/core/commit/23734da)), closes [#2323](https://github.com/mx-space/core/issues/2323)
+* chore(deps): update pnpm to v9.15.4 (#2317) ([6c4d982](https://github.com/mx-space/core/commit/6c4d982)), closes [#2317](https://github.com/mx-space/core/issues/2317)
+* feat!: upgrade nest to v11 ([b1f69c7](https://github.com/mx-space/core/commit/b1f69c7))
+* fix(deps): update dependency @fastify/static to v8.0.4 (#2318) ([02c98e1](https://github.com/mx-space/core/commit/02c98e1)), closes [#2318](https://github.com/mx-space/core/issues/2318)
+* fix(deps): update dependency @langchain/openai to v0.3.17 (#2319) ([d846a6c](https://github.com/mx-space/core/commit/d846a6c)), closes [#2319](https://github.com/mx-space/core/issues/2319)
+* fix(deps): update dependency langchain to v0.3.12 (#2322) ([bba535c](https://github.com/mx-space/core/commit/bba535c)), closes [#2322](https://github.com/mx-space/core/issues/2322)
+
+## <small>7.2.8 (2025-01-19)</small>
+
+* release: v7.2.8 ([d0c7075](https://github.com/mx-space/core/commit/d0c7075))
+* chore(deps): update dependency @langchain/core to v0.3.28 (#2309) ([f4f2d01](https://github.com/mx-space/core/commit/f4f2d01)), closes [#2309](https://github.com/mx-space/core/issues/2309)
+* chore(deps): update dependency @swc/core to v1.10.7 (#2305) ([a61609c](https://github.com/mx-space/core/commit/a61609c)), closes [#2305](https://github.com/mx-space/core/issues/2305)
+* chore(deps): update dependency @sxzz/eslint-config to v4.6.0 (#2311) ([e4da2d6](https://github.com/mx-space/core/commit/e4da2d6)), closes [#2311](https://github.com/mx-space/core/issues/2311)
+* chore(deps): update dependency @types/node to v22.10.5 (#2294) ([8145edf](https://github.com/mx-space/core/commit/8145edf)), closes [#2294](https://github.com/mx-space/core/issues/2294)
+* chore(deps): update dependency better-auth to v1.1.10 (#2295) ([cb696c5](https://github.com/mx-space/core/commit/cb696c5)), closes [#2295](https://github.com/mx-space/core/issues/2295)
+* chore(deps): update dependency typescript to v5.7.3 (#2296) ([31817be](https://github.com/mx-space/core/commit/31817be)), closes [#2296](https://github.com/mx-space/core/issues/2296)
+* chore(deps): update pnpm to v9.15.3 (#2297) ([b9e3125](https://github.com/mx-space/core/commit/b9e3125)), closes [#2297](https://github.com/mx-space/core/issues/2297)
+* chore(deps): update supercharge/mongodb-github-action action to v1.12.0 (#2302) ([1908d5b](https://github.com/mx-space/core/commit/1908d5b)), closes [#2302](https://github.com/mx-space/core/issues/2302)
+* fix(deps): update babel monorepo to v7.26.5 (#2307) ([ac3f16b](https://github.com/mx-space/core/commit/ac3f16b)), closes [#2307](https://github.com/mx-space/core/issues/2307)
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.731.1 (#2303) ([f5abb1a](https://github.com/mx-space/core/commit/f5abb1a)), closes [#2303](https://github.com/mx-space/core/issues/2303)
+* fix(deps): update dependency isbot to v5.1.21 (#2298) ([b1ea871](https://github.com/mx-space/core/commit/b1ea871)), closes [#2298](https://github.com/mx-space/core/issues/2298)
+* fix(deps): update dependency langchain to v0.3.10 (#2299) ([7182cb2](https://github.com/mx-space/core/commit/7182cb2)), closes [#2299](https://github.com/mx-space/core/issues/2299)
+* fix(deps): update dependency langchain to v0.3.11 (#2310) ([a542807](https://github.com/mx-space/core/commit/a542807)), closes [#2310](https://github.com/mx-space/core/issues/2310)
+* fix(deps): update dependency mongoose-paginate-v2 to v1.9.0 (#2306) ([7834acb](https://github.com/mx-space/core/commit/7834acb)), closes [#2306](https://github.com/mx-space/core/issues/2306)
+* fix(deps): update dependency openai to v4.77.4 (#2300) ([eb3a568](https://github.com/mx-space/core/commit/eb3a568)), closes [#2300](https://github.com/mx-space/core/issues/2300)
+* fix(deps): update dependency openai to v4.79.1 (#2308) ([69481df](https://github.com/mx-space/core/commit/69481df)), closes [#2308](https://github.com/mx-space/core/issues/2308)
+* ci: 尝试增加更多系统支持 (#2289) ([fa1f947](https://github.com/mx-space/core/commit/fa1f947)), closes [#2289](https://github.com/mx-space/core/issues/2289)
+
+## <small>7.2.7 (2025-01-09)</small>
+
+* release: v7.2.7 ([0ae3002](https://github.com/mx-space/core/commit/0ae3002))
+* chore(deps): update dependency @langchain/core to v0.3.26 (#2267) ([340e0e5](https://github.com/mx-space/core/commit/340e0e5)), closes [#2267](https://github.com/mx-space/core/issues/2267)
+* chore(deps): update dependency @langchain/core to v0.3.27 (#2291) ([b63fe93](https://github.com/mx-space/core/commit/b63fe93)), closes [#2291](https://github.com/mx-space/core/issues/2291)
+* chore(deps): update dependency @swc/core to v1.10.4 (#2281) ([34b193e](https://github.com/mx-space/core/commit/34b193e)), closes [#2281](https://github.com/mx-space/core/issues/2281)
+* chore(deps): update dependency @swc/core to v1.10.6 (#2292) ([f733c81](https://github.com/mx-space/core/commit/f733c81)), closes [#2292](https://github.com/mx-space/core/issues/2292)
+* chore(deps): update dependency @types/lodash to v4.17.14 (#2293) ([358cfe3](https://github.com/mx-space/core/commit/358cfe3)), closes [#2293](https://github.com/mx-space/core/issues/2293)
+* chore(deps): update dependency better-auth to v1.1.3 (#2275) ([ae339f2](https://github.com/mx-space/core/commit/ae339f2)), closes [#2275](https://github.com/mx-space/core/issues/2275)
+* chore(deps): update dependency better-auth to v1.1.6 [security] (#2280) ([cb9c668](https://github.com/mx-space/core/commit/cb9c668)), closes [#2280](https://github.com/mx-space/core/issues/2280)
+* chore(deps): update dependency better-auth to v1.1.7 (#2282) ([ad0261c](https://github.com/mx-space/core/commit/ad0261c)), closes [#2282](https://github.com/mx-space/core/issues/2282)
+* chore(deps): update dependency cron to v3.3.2 (#2283) ([4a15a12](https://github.com/mx-space/core/commit/4a15a12)), closes [#2283](https://github.com/mx-space/core/issues/2283)
+* chore(deps): update dependency ioredis to v5.4.2 (#2272) ([d9886f3](https://github.com/mx-space/core/commit/d9886f3)), closes [#2272](https://github.com/mx-space/core/issues/2272)
+* chore(deps): update dependency lint-staged to v15.3.0 (#2288) ([9ad251d](https://github.com/mx-space/core/commit/9ad251d)), closes [#2288](https://github.com/mx-space/core/issues/2288)
+* chore(deps): update dependency mongodb to v6.12.0 (#2270) ([08af311](https://github.com/mx-space/core/commit/08af311)), closes [#2270](https://github.com/mx-space/core/issues/2270)
+* chore(deps): update dependency mongodb-memory-server to v10.1.3 (#2284) ([195e83f](https://github.com/mx-space/core/commit/195e83f)), closes [#2284](https://github.com/mx-space/core/issues/2284)
+* chore(deps): update dependency mongodb-memory-server to v10.1.3 (#2287) ([b682cc0](https://github.com/mx-space/core/commit/b682cc0)), closes [#2287](https://github.com/mx-space/core/issues/2287)
+* chore(deps): update dependency typescript to v5.7.2 (#2246) ([21872e1](https://github.com/mx-space/core/commit/21872e1)), closes [#2246](https://github.com/mx-space/core/issues/2246)
+* chore(deps): update dependency whatwg-url to v14.1.0 (#2276) ([b5d499c](https://github.com/mx-space/core/commit/b5d499c)), closes [#2276](https://github.com/mx-space/core/issues/2276)
+* chore(deps): update node.js to v22 (#2253) ([aa4daff](https://github.com/mx-space/core/commit/aa4daff)), closes [#2253](https://github.com/mx-space/core/issues/2253)
+* chore(deps): update pnpm to v9.15.1 (#2273) ([a27ea4c](https://github.com/mx-space/core/commit/a27ea4c)), closes [#2273](https://github.com/mx-space/core/issues/2273)
+* chore(deps): update pnpm to v9.15.2 (#2285) ([34f161f](https://github.com/mx-space/core/commit/34f161f)), closes [#2285](https://github.com/mx-space/core/issues/2285)
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.723.0 (#2258) ([d0e7832](https://github.com/mx-space/core/commit/d0e7832)), closes [#2258](https://github.com/mx-space/core/issues/2258)
+* fix(deps): update dependency @langchain/openai to v0.3.16 (#2269) ([5342665](https://github.com/mx-space/core/commit/5342665)), closes [#2269](https://github.com/mx-space/core/issues/2269)
+* fix(deps): update dependency @typegoose/auto-increment to v4.9.0 (#2250) ([a278685](https://github.com/mx-space/core/commit/a278685)), closes [#2250](https://github.com/mx-space/core/issues/2250)
+* fix(deps): update dependency isbot to v5.1.19 (#2286) ([c4e871d](https://github.com/mx-space/core/commit/c4e871d)), closes [#2286](https://github.com/mx-space/core/issues/2286)
+* fix(deps): update dependency langchain to v0.3.8 (#2277) ([793dee2](https://github.com/mx-space/core/commit/793dee2)), closes [#2277](https://github.com/mx-space/core/issues/2277)
+* fix(deps): update dependency remove-markdown to v0.6.0 (#2278) ([b3f2d50](https://github.com/mx-space/core/commit/b3f2d50)), closes [#2278](https://github.com/mx-space/core/issues/2278)
+* fix(deps): update dependency ua-parser-js to v1.0.40 (#2274) ([85cccd2](https://github.com/mx-space/core/commit/85cccd2)), closes [#2274](https://github.com/mx-space/core/issues/2274)
+
+## <small>7.2.6 (2024-12-21)</small>
+
+* release: v7.2.6 ([9c9032d](https://github.com/mx-space/core/commit/9c9032d))
+* chore: open ai model ([e51adca](https://github.com/mx-space/core/commit/e51adca))
+* fix: init project ([58acb5a](https://github.com/mx-space/core/commit/58acb5a))
+
+## <small>7.2.5 (2024-12-20)</small>
+
+* release: v7.2.5 ([77703e4](https://github.com/mx-space/core/commit/77703e4))
+* feat: support algolia search custom truncate size, closed #2271 ([6da1c13](https://github.com/mx-space/core/commit/6da1c13)), closes [#2271](https://github.com/mx-space/core/issues/2271)
+* fix: dockerfile ([838b5b3](https://github.com/mx-space/core/commit/838b5b3))
+* chore: fix sharp ([e9e7699](https://github.com/mx-space/core/commit/e9e7699))
+* chore: fix typo #2266 ([f60c1c2](https://github.com/mx-space/core/commit/f60c1c2)), closes [#2266](https://github.com/mx-space/core/issues/2266)
+* chore: remove husky ([398c5dc](https://github.com/mx-space/core/commit/398c5dc))
+* chore: update deps ([9b6b2d5](https://github.com/mx-space/core/commit/9b6b2d5))
+* chore(deps): replace husky with simple-git-hooks ([431e57f](https://github.com/mx-space/core/commit/431e57f))
+* chore(deps): update dependency @langchain/core to v0.3.20 (#2256) ([1ac0b0b](https://github.com/mx-space/core/commit/1ac0b0b)), closes [#2256](https://github.com/mx-space/core/issues/2256)
+* chore(deps): update dependency axios to v1.7.9 (#2261) ([20a1eef](https://github.com/mx-space/core/commit/20a1eef)), closes [#2261](https://github.com/mx-space/core/issues/2261)
+* chore(deps): update dependency better-auth to v1.0.10 (#2257) ([b2edf60](https://github.com/mx-space/core/commit/b2edf60)), closes [#2257](https://github.com/mx-space/core/issues/2257)
+
+## <small>7.2.4 (2024-12-03)</small>
+
+* release: v7.2.4 ([4ef5af4](https://github.com/mx-space/core/commit/4ef5af4))
+* fix: add auth baseURL ([635e27d](https://github.com/mx-space/core/commit/635e27d))
+* fix: complied better auth typing export ([49cc5b6](https://github.com/mx-space/core/commit/49cc5b6))
+* fix: lockfile ([584af40](https://github.com/mx-space/core/commit/584af40))
+* fix: remove baseURL ([b3e10d4](https://github.com/mx-space/core/commit/b3e10d4))
+* fix: reset oauth instance when app url changed ([54d9021](https://github.com/mx-space/core/commit/54d9021))
+* chore: update deps ([3db591f](https://github.com/mx-space/core/commit/3db591f))
+* chore(deps): update dependency better-auth to v1.0.7 (#2249) ([8603f21](https://github.com/mx-space/core/commit/8603f21)), closes [#2249](https://github.com/mx-space/core/issues/2249)
+* feat: Add cloudflared service to the docker image (#2252) ([1bcb434](https://github.com/mx-space/core/commit/1bcb434)), closes [#2252](https://github.com/mx-space/core/issues/2252)
+
+## <small>7.2.3 (2024-11-29)</small>
+
+* release: v7.2.3 ([fca4936](https://github.com/mx-space/core/commit/fca4936))
+* chore: update deps ([9ffb3ea](https://github.com/mx-space/core/commit/9ffb3ea))
+* fix: get sessionId ([ca18882](https://github.com/mx-space/core/commit/ca18882))
+
+## <small>7.2.2 (2024-11-28)</small>
+
+* release: v7.2.2 ([293608d](https://github.com/mx-space/core/commit/293608d))
+* fix: table migration ([84ddd7c](https://github.com/mx-space/core/commit/84ddd7c))
+* fix: update migration ([ec43ff2](https://github.com/mx-space/core/commit/ec43ff2))
+* feat: add accountId to session ([1e674bd](https://github.com/mx-space/core/commit/1e674bd))
+* feat: add provider on session ([a031c32](https://github.com/mx-space/core/commit/a031c32))
+* chore(deps): update dependency better-auth to v1.0.5 (#2241) ([1168a36](https://github.com/mx-space/core/commit/1168a36)), closes [#2241](https://github.com/mx-space/core/issues/2241)
+* chore(deps): update dependency eslint to v9.15.0 (#2242) ([69a2985](https://github.com/mx-space/core/commit/69a2985)), closes [#2242](https://github.com/mx-space/core/issues/2242)
+* chore(deps): update dependency nanoid to v5.0.9 (#2244) ([52104d2](https://github.com/mx-space/core/commit/52104d2)), closes [#2244](https://github.com/mx-space/core/issues/2244)
+* chore(deps): update dependency prettier to v3.4.1 (#2245) ([571888f](https://github.com/mx-space/core/commit/571888f)), closes [#2245](https://github.com/mx-space/core/issues/2245)
+
+## <small>7.2.1 (2024-11-26)</small>
+
+* release: v7.2.1 ([a2739ac](https://github.com/mx-space/core/commit/a2739ac))
+* fix: userId ([2143a8c](https://github.com/mx-space/core/commit/2143a8c))
+
+## 7.2.0 (2024-11-26)
+
+* release: v7.2.0 ([5c936b5](https://github.com/mx-space/core/commit/5c936b5))
+* refactor(oauth): to better auth (#2239) ([b9fc2d5](https://github.com/mx-space/core/commit/b9fc2d5)), closes [#2239](https://github.com/mx-space/core/issues/2239)
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.685.0 (#2157) ([fad4464](https://github.com/mx-space/core/commit/fad4464)), closes [#2157](https://github.com/mx-space/core/issues/2157)
+* fix(deps): update dependency @fastify/static to v8.0.3 (#2228) ([bb11879](https://github.com/mx-space/core/commit/bb11879)), closes [#2228](https://github.com/mx-space/core/issues/2228)
+* fix(deps): update dependency @langchain/openai to v0.3.11 ([835ba5a](https://github.com/mx-space/core/commit/835ba5a))
+* fix(deps): update dependency @langchain/openai to v0.3.12 ([c7056d6](https://github.com/mx-space/core/commit/c7056d6))
+* fix(deps): update dependency @langchain/openai to v0.3.14 (#2229) ([3692c40](https://github.com/mx-space/core/commit/3692c40)), closes [#2229](https://github.com/mx-space/core/issues/2229)
+* fix(deps): update dependency @nestjs/event-emitter to v2.1.1 (#2203) ([abe3a95](https://github.com/mx-space/core/commit/abe3a95)), closes [#2203](https://github.com/mx-space/core/issues/2203)
+* fix(deps): update dependency @nestjs/mapped-types to v2.0.6 (#2230) ([e0d8927](https://github.com/mx-space/core/commit/e0d8927)), closes [#2230](https://github.com/mx-space/core/issues/2230)
+* fix(deps): update dependency langchain to v0.3.5 (#2215) ([e6ef191](https://github.com/mx-space/core/commit/e6ef191)), closes [#2215](https://github.com/mx-space/core/issues/2215)
+* fix(deps): update dependency langchain to v0.3.6 (#2231) ([17ce3e8](https://github.com/mx-space/core/commit/17ce3e8)), closes [#2231](https://github.com/mx-space/core/issues/2231)
+* fix(deps): update dependency marked to v14.1.4 (#2232) ([c3ab2ce](https://github.com/mx-space/core/commit/c3ab2ce)), closes [#2232](https://github.com/mx-space/core/issues/2232)
+* fix(deps): update dependency openai to v4.68.1 ([7d96211](https://github.com/mx-space/core/commit/7d96211))
+* fix(deps): update dependency qs to v6.13.1 (#2234) ([69403ca](https://github.com/mx-space/core/commit/69403ca)), closes [#2234](https://github.com/mx-space/core/issues/2234)
+* fix(deps): update nest monorepo to v10.4.9 (#2237) ([43a4488](https://github.com/mx-space/core/commit/43a4488)), closes [#2237](https://github.com/mx-space/core/issues/2237)
+* chore: update deps ([2fbdea6](https://github.com/mx-space/core/commit/2fbdea6))
+* chore(deps): update dependency @langchain/core to v0.3.15 ([ce77dda](https://github.com/mx-space/core/commit/ce77dda))
+* chore(deps): update dependency @langchain/core to v0.3.18 (#2218) ([c363a6e](https://github.com/mx-space/core/commit/c363a6e)), closes [#2218](https://github.com/mx-space/core/issues/2218)
+* chore(deps): update dependency @langchain/core to v0.3.19 (#2233) ([f7b04b1](https://github.com/mx-space/core/commit/f7b04b1)), closes [#2233](https://github.com/mx-space/core/issues/2233)
+* chore(deps): update dependency @swc/core to v1.9.3 (#2220) ([b2c6d26](https://github.com/mx-space/core/commit/b2c6d26)), closes [#2220](https://github.com/mx-space/core/issues/2220)
+* chore(deps): update dependency @sxzz/eslint-config to v4.4.1 (#2221) ([6141094](https://github.com/mx-space/core/commit/6141094)), closes [#2221](https://github.com/mx-space/core/issues/2221)
+* chore(deps): update dependency @types/lodash to v4.17.12 ([0c71620](https://github.com/mx-space/core/commit/0c71620))
+* chore(deps): update dependency @types/lodash to v4.17.13 ([bc6b7db](https://github.com/mx-space/core/commit/bc6b7db))
+* chore(deps): update dependency @types/node to v22.7.7 ([7f51b76](https://github.com/mx-space/core/commit/7f51b76))
+* chore(deps): update dependency @types/node to v22.7.9 ([0d0fb21](https://github.com/mx-space/core/commit/0d0fb21))
+* chore(deps): update dependency @types/node to v22.9.3 (#2222) ([8ed3c20](https://github.com/mx-space/core/commit/8ed3c20)), closes [#2222](https://github.com/mx-space/core/issues/2222)
+* chore(deps): update dependency @types/node to v22.9.4 (#2235) ([227561d](https://github.com/mx-space/core/commit/227561d)), closes [#2235](https://github.com/mx-space/core/issues/2235)
+* chore(deps): update dependency @types/nodemailer to v6.4.17 (#2223) ([dd69e90](https://github.com/mx-space/core/commit/dd69e90)), closes [#2223](https://github.com/mx-space/core/issues/2223)
+* chore(deps): update dependency @vercel/ncc to v0.38.3 (#2224) ([26d8f97](https://github.com/mx-space/core/commit/26d8f97)), closes [#2224](https://github.com/mx-space/core/issues/2224)
+* chore(deps): update dependency axios to v1.7.8 (#2236) ([ccd3b38](https://github.com/mx-space/core/commit/ccd3b38)), closes [#2236](https://github.com/mx-space/core/issues/2236)
+* chore(deps): update dependency eslint to v9.13.0 ([4943365](https://github.com/mx-space/core/commit/4943365))
+* chore(deps): update dependency husky to v9.1.7 (#2225) ([186d230](https://github.com/mx-space/core/commit/186d230)), closes [#2225](https://github.com/mx-space/core/issues/2225)
+* chore(deps): update dependency mongodb to v6.11.0 (#2216) ([64e232f](https://github.com/mx-space/core/commit/64e232f)), closes [#2216](https://github.com/mx-space/core/issues/2216)
+* chore(deps): update dependency nanoid to v5.0.8 ([233ce4f](https://github.com/mx-space/core/commit/233ce4f))
+* chore(deps): update dependency tsup to v8.3.5 ([e37a885](https://github.com/mx-space/core/commit/e37a885))
+* chore(deps): update dependency typescript to v5.6.3 ([dcb65ef](https://github.com/mx-space/core/commit/dcb65ef))
+* chore(deps): update dependency vite-tsconfig-paths to v5.1.3 (#2226) ([b88586c](https://github.com/mx-space/core/commit/b88586c)), closes [#2226](https://github.com/mx-space/core/issues/2226)
+* chore(deps): update nest monorepo to v10.4.8 (#2227) ([26aeaf3](https://github.com/mx-space/core/commit/26aeaf3)), closes [#2227](https://github.com/mx-space/core/issues/2227)
+* chore(deps): update pnpm to v9.12.2 ([c089380](https://github.com/mx-space/core/commit/c089380))
+* chore(deps): update pnpm to v9.12.3 ([5268670](https://github.com/mx-space/core/commit/5268670))
+
+## <small>7.1.9 (2024-10-18)</small>
+
+* release: v7.1.9 ([00fbe62](https://github.com/mx-space/core/commit/00fbe62))
+* fix: downgrade mongoose ([70301af](https://github.com/mx-space/core/commit/70301af))
+* fix: lockfile ([d7cbd80](https://github.com/mx-space/core/commit/d7cbd80))
+* chore: update deps ([1716c4d](https://github.com/mx-space/core/commit/1716c4d))
+* chore(deps): update dependency eslint to v9.12.0 ([7289f05](https://github.com/mx-space/core/commit/7289f05))
+* chore(deps): update dependency vite-tsconfig-paths to v5 (#1978) ([d59819c](https://github.com/mx-space/core/commit/d59819c)), closes [#1978](https://github.com/mx-space/core/issues/1978)
+* chore(deps): update pnpm to v9.12.1 (#2185) ([5147c79](https://github.com/mx-space/core/commit/5147c79)), closes [#2185](https://github.com/mx-space/core/issues/2185)
+
+## <small>7.1.8 (2024-10-07)</small>
+
+* release: v7.1.8 ([2bc1474](https://github.com/mx-space/core/commit/2bc1474))
+* fix: allow cors interceptor ([fa207ea](https://github.com/mx-space/core/commit/fa207ea))
+* fix(deps): update babel monorepo to v7.25.7 ([9249adb](https://github.com/mx-space/core/commit/9249adb))
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.657.0 (#2154) ([e29b356](https://github.com/mx-space/core/commit/e29b356)), closes [#2154](https://github.com/mx-space/core/issues/2154)
+* fix(deps): update dependency @fastify/static to v8 (#2142) ([e2c8bdc](https://github.com/mx-space/core/commit/e2c8bdc)), closes [#2142](https://github.com/mx-space/core/issues/2142)
+* fix(deps): update dependency @langchain/openai to v0.3.1 ([57b8200](https://github.com/mx-space/core/commit/57b8200))
+* fix(deps): update dependency @langchain/openai to v0.3.2 ([6bf8aa5](https://github.com/mx-space/core/commit/6bf8aa5))
+* fix(deps): update dependency @langchain/openai to v0.3.4 ([5fd7f14](https://github.com/mx-space/core/commit/5fd7f14))
+* fix(deps): update dependency @langchain/openai to v0.3.5 (#2181) ([5487e2c](https://github.com/mx-space/core/commit/5487e2c)), closes [#2181](https://github.com/mx-space/core/issues/2181)
+* fix(deps): update dependency @typegoose/auto-increment to v4.7.0 (#2172) ([384e2e2](https://github.com/mx-space/core/commit/384e2e2)), closes [#2172](https://github.com/mx-space/core/issues/2172)
+* fix(deps): update dependency cache-manager-ioredis-yet to v2.1.2 ([8bb15c3](https://github.com/mx-space/core/commit/8bb15c3))
+* fix(deps): update dependency mongoose to v8.6.4 ([e70d70b](https://github.com/mx-space/core/commit/e70d70b))
+* fix(deps): update dependency mongoose to v8.7.0 (#2171) ([c1bb5e6](https://github.com/mx-space/core/commit/c1bb5e6)), closes [#2171](https://github.com/mx-space/core/issues/2171)
+* fix(deps): update dependency mongoose-paginate-v2 to v1.8.4 ([a659ed2](https://github.com/mx-space/core/commit/a659ed2))
+* fix(deps): update dependency mongoose-paginate-v2 to v1.8.5 ([1ac42ef](https://github.com/mx-space/core/commit/1ac42ef))
+* fix(deps): update dependency openai to v4.63.0 (#2097) ([a1f84dc](https://github.com/mx-space/core/commit/a1f84dc)), closes [#2097](https://github.com/mx-space/core/issues/2097)
+* fix(deps): update dependency openai to v4.65.0 (#2163) ([e450946](https://github.com/mx-space/core/commit/e450946)), closes [#2163](https://github.com/mx-space/core/issues/2163)
+* fix(deps): update nest monorepo to v10.4.4 ([bbdef0c](https://github.com/mx-space/core/commit/bbdef0c))
+* chore: code style ([61fa3a1](https://github.com/mx-space/core/commit/61fa3a1))
+* chore: update deps ([3846410](https://github.com/mx-space/core/commit/3846410))
+* chore(deps): update dependency @langchain/core to v0.3.5 ([75b5a18](https://github.com/mx-space/core/commit/75b5a18))
+* chore(deps): update dependency @langchain/core to v0.3.7 ([71db1f9](https://github.com/mx-space/core/commit/71db1f9))
+* chore(deps): update dependency @swc/core to v1.7.28 ([a0ba2b9](https://github.com/mx-space/core/commit/a0ba2b9))
+* chore(deps): update dependency @sxzz/eslint-config to v4.2.1 ([f088eb1](https://github.com/mx-space/core/commit/f088eb1))
+* chore(deps): update dependency @sxzz/eslint-config to v4.4.0 (#2177) ([e64ab33](https://github.com/mx-space/core/commit/e64ab33)), closes [#2177](https://github.com/mx-space/core/issues/2177)
+* chore(deps): update dependency @types/express to v5 ([0a34e1d](https://github.com/mx-space/core/commit/0a34e1d))
+* chore(deps): update dependency @types/lodash to v4.17.10 ([6cf64d4](https://github.com/mx-space/core/commit/6cf64d4))
+* chore(deps): update dependency @types/lodash to v4.17.9 ([24101d0](https://github.com/mx-space/core/commit/24101d0))
+* chore(deps): update dependency @types/node to v22.6.1 (#2153) ([0ca1282](https://github.com/mx-space/core/commit/0ca1282)), closes [#2153](https://github.com/mx-space/core/issues/2153)
+* chore(deps): update dependency @types/node to v22.6.2 ([867a739](https://github.com/mx-space/core/commit/867a739))
+* chore(deps): update dependency @types/node to v22.7.0 ([3ea0589](https://github.com/mx-space/core/commit/3ea0589))
+* chore(deps): update dependency @types/node to v22.7.2 ([25aba83](https://github.com/mx-space/core/commit/25aba83))
+* chore(deps): update dependency @types/node to v22.7.3 ([3887233](https://github.com/mx-space/core/commit/3887233))
+* chore(deps): update dependency @types/node to v22.7.4 ([e025ecb](https://github.com/mx-space/core/commit/e025ecb))
+* chore(deps): update dependency @vercel/ncc to v0.38.2 ([1dc5177](https://github.com/mx-space/core/commit/1dc5177))
+* chore(deps): update dependency eslint to v9.11.1 ([3b45b10](https://github.com/mx-space/core/commit/3b45b10))
+* chore(deps): update dependency ubuntu to v24 (#2169) ([ae46f5a](https://github.com/mx-space/core/commit/ae46f5a)), closes [#2169](https://github.com/mx-space/core/issues/2169)
+* chore(deps): update pnpm to v9.11.0 (#2145) ([bebb3af](https://github.com/mx-space/core/commit/bebb3af)), closes [#2145](https://github.com/mx-space/core/issues/2145)
+
+## <small>7.1.7 (2024-09-19)</small>
+
+* release: v7.1.7 ([f8c45e4](https://github.com/mx-space/core/commit/f8c45e4))
+* chore(deps): update dependency @langchain/core to v0.2.33 ([93fd1c7](https://github.com/mx-space/core/commit/93fd1c7))
+* chore(deps): update dependency @langchain/core to v0.2.34 ([f49fa2a](https://github.com/mx-space/core/commit/f49fa2a))
+* chore(deps): update dependency @langchain/core to v0.3.3 (#2121) ([b28d674](https://github.com/mx-space/core/commit/b28d674)), closes [#2121](https://github.com/mx-space/core/issues/2121)
+* chore(deps): update dependency @sxzz/eslint-config to v4 (#2071) ([e78e602](https://github.com/mx-space/core/commit/e78e602)), closes [#2071](https://github.com/mx-space/core/issues/2071)
+* chore(deps): update dependency @types/nodemailer to v6.4.16 ([450d5be](https://github.com/mx-space/core/commit/450d5be))
+* chore(deps): update dependency @types/validator to v13.12.2 ([99d5f16](https://github.com/mx-space/core/commit/99d5f16))
+* chore(deps): update dependency express to v4.21.0 (#2106) ([99df94b](https://github.com/mx-space/core/commit/99df94b)), closes [#2106](https://github.com/mx-space/core/issues/2106)
+* chore(deps): update pnpm to v9.10.0 (#2105) ([6dd0672](https://github.com/mx-space/core/commit/6dd0672)), closes [#2105](https://github.com/mx-space/core/issues/2105)
+* fix: add `sharp` globally in docker image ([519ba0b](https://github.com/mx-space/core/commit/519ba0b))
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.654.0 (#2109) ([f5dfe67](https://github.com/mx-space/core/commit/f5dfe67)), closes [#2109](https://github.com/mx-space/core/issues/2109)
+* fix(deps): update dependency @types/jsonwebtoken to v9.0.7 ([171491e](https://github.com/mx-space/core/commit/171491e))
+* fix(deps): update dependency langchain to v0.2.20 ([b7aaa91](https://github.com/mx-space/core/commit/b7aaa91))
+* fix(deps): update dependency linkedom to v0.18.5 ([fa4138f](https://github.com/mx-space/core/commit/fa4138f))
+* fix(deps): update dependency mongoose to v8.6.3 ([25f2905](https://github.com/mx-space/core/commit/25f2905))
+* fix(deps): update nest monorepo to v10.4.3 ([3187b98](https://github.com/mx-space/core/commit/3187b98))
+
+## <small>7.1.6 (2024-09-17)</small>
+
+* release: v7.1.6 ([bd2896a](https://github.com/mx-space/core/commit/bd2896a))
+* chore(release): bump @mx-space/api-client to v1.16.1 ([f693486](https://github.com/mx-space/core/commit/f693486))
+* feat: add comment `editedAt` ([2f1a973](https://github.com/mx-space/core/commit/2f1a973))
+
+## <small>7.1.5 (2024-09-17)</small>
+
+* release: v7.1.5 ([8fac75c](https://github.com/mx-space/core/commit/8fac75c))
+* chore(release): bump @mx-space/webhook to v0.5.0 ([e4cf598](https://github.com/mx-space/core/commit/e4cf598))
+* feat: edit comment ([ed7b33e](https://github.com/mx-space/core/commit/ed7b33e))
+* fix: reader assgin ([a0e37aa](https://github.com/mx-space/core/commit/a0e37aa))
+
+## <small>7.1.4 (2024-09-16)</small>
+
+* release: v7.1.4 ([36b4491](https://github.com/mx-space/core/commit/36b4491))
+* fix(reader): assign to comment dto ([764e30f](https://github.com/mx-space/core/commit/764e30f))
+
+## <small>7.1.3 (2024-09-16)</small>
+
+* release: v7.1.3 ([e49f80e](https://github.com/mx-space/core/commit/e49f80e))
+* fix: reader handle projection ([c8b2eab](https://github.com/mx-space/core/commit/c8b2eab))
+
+## <small>7.1.2 (2024-09-16)</small>
+
+* release: v7.1.2 ([2de308b](https://github.com/mx-space/core/commit/2de308b))
+* chore: downgrade vite ([dc9f085](https://github.com/mx-space/core/commit/dc9f085))
+* chore: update deps ([b190629](https://github.com/mx-space/core/commit/b190629))
+* chore(deps): update dependency @types/node to v22.5.5 ([185d088](https://github.com/mx-space/core/commit/185d088))
+* chore(deps): update dependency @types/qs to v6.9.16 ([31f3306](https://github.com/mx-space/core/commit/31f3306))
+* fix: disable cache for auth session ([6a7a7c8](https://github.com/mx-space/core/commit/6a7a7c8))
+* fix(deps): update dependency ua-parser-js to v1.0.39 ([f54f721](https://github.com/mx-space/core/commit/f54f721))
+
+## <small>7.1.1 (2024-09-14)</small>
+
+* release: v7.1.1 ([3d40678](https://github.com/mx-space/core/commit/3d40678))
+* fix: add `handle` to query ([85d4a14](https://github.com/mx-space/core/commit/85d4a14))
+
+## 7.1.0 (2024-09-14)
+
+* release: v7.1.0 ([90de3d8](https://github.com/mx-space/core/commit/90de3d8))
+* chore: sort asc controller ([13f4a0c](https://github.com/mx-space/core/commit/13f4a0c))
+* chore: update webhook sdk types ([b28d6c0](https://github.com/mx-space/core/commit/b28d6c0))
+* chore(deps): update dependency @langchain/core to v0.2.32 ([327a340](https://github.com/mx-space/core/commit/327a340))
+* chore(deps): update dependency @swc/core to v1.7.24 ([051bb69](https://github.com/mx-space/core/commit/051bb69))
+* chore(deps): update dependency @swc/core to v1.7.25 ([a630acb](https://github.com/mx-space/core/commit/a630acb))
+* chore(deps): update dependency @swc/core to v1.7.26 ([9ce7308](https://github.com/mx-space/core/commit/9ce7308))
+* chore(deps): update dependency eslint-plugin-unused-imports to v4.1.4 ([ced1a20](https://github.com/mx-space/core/commit/ced1a20))
+* chore(deps): update dependency express to v4.20.0 [security] (#2111) ([7b7c053](https://github.com/mx-space/core/commit/7b7c053)), closes [#2111](https://github.com/mx-space/core/issues/2111)
+* chore(deps): update dependency husky to v9.1.6 ([7894ef4](https://github.com/mx-space/core/commit/7894ef4))
+* chore(deps): update dependency mongodb to v6.8.2 ([757e6d1](https://github.com/mx-space/core/commit/757e6d1))
+* chore(deps): update dependency mongodb to v6.9.0 (#2117) ([8fa83d7](https://github.com/mx-space/core/commit/8fa83d7)), closes [#2117](https://github.com/mx-space/core/issues/2117)
+* chore(deps): update dependency typescript to v5.6.2 (#2104) ([8c45a2d](https://github.com/mx-space/core/commit/8c45a2d)), closes [#2104](https://github.com/mx-space/core/issues/2104)
+* chore(release): bump @mx-space/api-client to v1.16.0 ([fa3e140](https://github.com/mx-space/core/commit/fa3e140))
+* chore(release): bump @mx-space/webhook to v0.4.0 ([54ecbc4](https://github.com/mx-space/core/commit/54ecbc4))
+* feat: reader for comment and like action (#2122) ([26b2b4f](https://github.com/mx-space/core/commit/26b2b4f)), closes [#2122](https://github.com/mx-space/core/issues/2122)
+* fix(deps): update dependency @langchain/openai to v0.2.11 ([3e9e36a](https://github.com/mx-space/core/commit/3e9e36a))
+* fix(deps): update dependency langchain to v0.2.19 ([0285b93](https://github.com/mx-space/core/commit/0285b93))
+* fix(deps): update dependency marked to v14.1.2 ([77af705](https://github.com/mx-space/core/commit/77af705))
+* fix(deps): update dependency mongoose to v8.6.2 ([25b16cf](https://github.com/mx-space/core/commit/25b16cf))
+
+## <small>7.0.7 (2024-09-07)</small>
+
+* release: v7.0.7 ([2c9682f](https://github.com/mx-space/core/commit/2c9682f))
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.645.0 (#2091) ([aec8694](https://github.com/mx-space/core/commit/aec8694)), closes [#2091](https://github.com/mx-space/core/issues/2091)
+* fix(deps): update dependency @langchain/openai to v0.2.10 ([6f038e1](https://github.com/mx-space/core/commit/6f038e1))
+* fix(deps): update dependency langchain to v0.2.18 ([fbd7436](https://github.com/mx-space/core/commit/fbd7436))
+* fix(deps): update dependency lru-cache to v11.0.1 ([26d3fd3](https://github.com/mx-space/core/commit/26d3fd3))
+* fix(deps): update dependency mongoose-lean-virtuals to v1 (#2085) ([26e2385](https://github.com/mx-space/core/commit/26e2385)), closes [#2085](https://github.com/mx-space/core/issues/2085)
+* fix(deps): update dependency openai to v4.57.3 ([7984436](https://github.com/mx-space/core/commit/7984436))
+* fix(oauth): can not disable oauth ([8fc72f1](https://github.com/mx-space/core/commit/8fc72f1))
+* chore(deps): update dependency @types/node to v22.5.4 ([aef340c](https://github.com/mx-space/core/commit/aef340c))
+* chore(deps): update dependency eslint to v9.10.0 ([db21f1c](https://github.com/mx-space/core/commit/db21f1c))
+* chore(deps): update dependency mongodb to v6.8.1 ([cdb4619](https://github.com/mx-space/core/commit/cdb4619))
+
+## <small>7.0.6 (2024-09-05)</small>
+
+* release: v7.0.6 ([19eab60](https://github.com/mx-space/core/commit/19eab60))
+* fix: bark service push ([daa499e](https://github.com/mx-space/core/commit/daa499e))
+* fix: ip query function ([06a1963](https://github.com/mx-space/core/commit/06a1963))
+* fix(deps): update dependency openai to v4.57.2 ([ebeed58](https://github.com/mx-space/core/commit/ebeed58))
+* chore(deps): update dependency @types/node to v20.16.4 ([485d71e](https://github.com/mx-space/core/commit/485d71e))
+* chore(deps): update dependency @types/node to v20.16.5 ([617deb6](https://github.com/mx-space/core/commit/617deb6))
+* chore(deps): update dependency @types/node to v22.5.3 ([07ad9ed](https://github.com/mx-space/core/commit/07ad9ed))
+
+## <small>7.0.5 (2024-09-04)</small>
+
+* release: v7.0.5 ([04dd406](https://github.com/mx-space/core/commit/04dd406))
+* fix(auth): append user id for session ([b41a35f](https://github.com/mx-space/core/commit/b41a35f))
+
+## <small>7.0.4 (2024-09-04)</small>
+
+* release: v7.0.4 ([92fed33](https://github.com/mx-space/core/commit/92fed33))
+* chore(release): bump @mx-space/api-client to v1.15.0 ([31b7750](https://github.com/mx-space/core/commit/31b7750))
+* fix: auth jwt ([bba36c2](https://github.com/mx-space/core/commit/bba36c2))
+
+## <small>7.0.3 (2024-09-04)</small>
+
+* release: v7.0.3 ([0327ab7](https://github.com/mx-space/core/commit/0327ab7))
+* fix: auth ([311f2de](https://github.com/mx-space/core/commit/311f2de))
+
+## <small>7.0.2 (2024-09-04)</small>
+
+* release: v7.0.2 ([682908d](https://github.com/mx-space/core/commit/682908d))
+* fix: 0day auth ([3451d2f](https://github.com/mx-space/core/commit/3451d2f))
+* fix(deps): update dependency marked to v14.1.1 ([54307a0](https://github.com/mx-space/core/commit/54307a0))
+* fix(deps): update dependency mongoose to v8.6.1 ([cd391a4](https://github.com/mx-space/core/commit/cd391a4))
+* fix(deps): update dependency nodemailer to v6.9.15 ([2a7fa37](https://github.com/mx-space/core/commit/2a7fa37))
+* fix(deps): update dependency openai to v4.57.1 ([74d2cd8](https://github.com/mx-space/core/commit/74d2cd8))
+
+## <small>7.0.2-alpha.0 (2024-09-03)</small>
+
+* release: v7.0.2-alpha.0 ([5ea76f4](https://github.com/mx-space/core/commit/5ea76f4))
+* fix: try debug fn error ([df9a164](https://github.com/mx-space/core/commit/df9a164))
+
+## <small>7.0.1 (2024-09-03)</small>
+
+* release: v7.0.1 ([2b477ba](https://github.com/mx-space/core/commit/2b477ba))
+* fix: merge oauth and google support ([23f6acb](https://github.com/mx-space/core/commit/23f6acb))
+* fix: server time cors ([ca63592](https://github.com/mx-space/core/commit/ca63592))
+* chore(deps): update dependency @swc/core to v1.7.23 ([2205f98](https://github.com/mx-space/core/commit/2205f98))
+
+## 7.0.0 (2024-09-02)
+
+* release: v7.0.0 ([c988d10](https://github.com/mx-space/core/commit/c988d10))
+* chore: fix type error ([1e1cfce](https://github.com/mx-space/core/commit/1e1cfce))
+* chore(deps): update pnpm to v9.9.0 (#2039) ([f855921](https://github.com/mx-space/core/commit/f855921)), closes [#2039](https://github.com/mx-space/core/issues/2039)
+* fix(deps): update dependency @typegoose/auto-increment to v4.6.0 (#2073) ([504f9eb](https://github.com/mx-space/core/commit/504f9eb)), closes [#2073](https://github.com/mx-space/core/issues/2073)
+* fix(deps): update dependency @typegoose/typegoose to v12.7.0 (#2074) ([d900c52](https://github.com/mx-space/core/commit/d900c52)), closes [#2074](https://github.com/mx-space/core/issues/2074)
+* fix(deps): update dependency marked to v14.1.0 (#2048) ([159ee56](https://github.com/mx-space/core/commit/159ee56)), closes [#2048](https://github.com/mx-space/core/issues/2048)
+* fix(deps): update dependency mongoose to v8.6.0 (#2064) ([778b706](https://github.com/mx-space/core/commit/778b706)), closes [#2064](https://github.com/mx-space/core/issues/2064)
+* fix(deps): update dependency openai to v4.57.0 (#2067) ([b4930db](https://github.com/mx-space/core/commit/b4930db)), closes [#2067](https://github.com/mx-space/core/issues/2067)
+* fix(deps): update dependency remove-markdown to v0.5.5 (#2079) ([7726449](https://github.com/mx-space/core/commit/7726449)), closes [#2079](https://github.com/mx-space/core/issues/2079)
+* ci: fix key ([9c175cc](https://github.com/mx-space/core/commit/9c175cc))
+
+## 7.0.0-alpha.3 (2024-09-02)
+
+* release: v7.0.0-alpha.3 ([a167c42](https://github.com/mx-space/core/commit/a167c42))
+* chore: update ([ca199dd](https://github.com/mx-space/core/commit/ca199dd))
+* fix: server time cors ([34613e5](https://github.com/mx-space/core/commit/34613e5))
+
+## 7.0.0-alpha.2 (2024-09-02)
+
+* release: v7.0.0-alpha.2 ([ea877eb](https://github.com/mx-space/core/commit/ea877eb))
+* fix: trust host for auth ([d4c4337](https://github.com/mx-space/core/commit/d4c4337))
+
+## 7.0.0-alpha.1 (2024-09-02)
+
+* release: v7.0.0-alpha.1 ([de0f2aa](https://github.com/mx-space/core/commit/de0f2aa))
+* chore: encrypt ([a906ee6](https://github.com/mx-space/core/commit/a906ee6))
+
+## 7.0.0-alpha.0 (2024-09-02)
+
+* release: v7.0.0-alpha.0 ([b48b764](https://github.com/mx-space/core/commit/b48b764))
+* fix: `localhost` for dev ([4b756f2](https://github.com/mx-space/core/commit/4b756f2))
+* fix: add handle for reader query ([02c213a](https://github.com/mx-space/core/commit/02c213a))
+* fix: add missing field ([58917f6](https://github.com/mx-space/core/commit/58917f6))
+* fix: camcasekey ([5038c4d](https://github.com/mx-space/core/commit/5038c4d))
+* fix: mongo agg query ([da283b4](https://github.com/mx-space/core/commit/da283b4))
+* fix: oauth profile for github ([19d1030](https://github.com/mx-space/core/commit/19d1030))
+* fix: transform case and export client type ([f7bce02](https://github.com/mx-space/core/commit/f7bce02))
+* fix(auth): add account for session ([29661e7](https://github.com/mx-space/core/commit/29661e7))
+* fix(deps): update dependency @babel/types to v7.25.6 ([519f573](https://github.com/mx-space/core/commit/519f573))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.32 ([9dd3999](https://github.com/mx-space/core/commit/9dd3999))
+* fix(deps): update dependency mongoose to v8.5.5 ([46c04e8](https://github.com/mx-space/core/commit/46c04e8))
+* fix(deps): update dependency openai to v4.56.2 ([c4df9c5](https://github.com/mx-space/core/commit/c4df9c5))
+* fix(deps): update dependency remove-markdown to v0.5.3 ([e27e27b](https://github.com/mx-space/core/commit/e27e27b))
+* chore(deps): update dependency @langchain/core to v0.2.31 ([704ca81](https://github.com/mx-space/core/commit/704ca81))
+* chore(deps): update dependency @nestjs/cli to v10.4.5 ([dd3fb60](https://github.com/mx-space/core/commit/dd3fb60))
+* chore(deps): update dependency @swc/core to v1.7.21 ([d2077be](https://github.com/mx-space/core/commit/d2077be))
+* chore(deps): update dependency @swc/core to v1.7.22 ([22a7c94](https://github.com/mx-space/core/commit/22a7c94))
+* chore(deps): update dependency @types/node to v20.16.3 ([7c39d9a](https://github.com/mx-space/core/commit/7c39d9a))
+* chore(deps): update dependency @types/node to v22.5.2 ([cfdee3d](https://github.com/mx-space/core/commit/cfdee3d))
+* chore(deps): update dependency axios to v1.7.6 ([9b908a2](https://github.com/mx-space/core/commit/9b908a2))
+* chore(deps): update dependency axios to v1.7.7 ([b1f6837](https://github.com/mx-space/core/commit/b1f6837))
+* chore(deps): update dependency lint-staged to v15.2.10 ([d169d51](https://github.com/mx-space/core/commit/d169d51))
+* chore(release): bump @mx-space/api-client to v1.14.0 ([50101bb](https://github.com/mx-space/core/commit/50101bb))
+* chore(release): bump @mx-space/api-client to v1.14.1 ([2e5e0b3](https://github.com/mx-space/core/commit/2e5e0b3))
+* chore(release): bump @mx-space/api-client to v1.14.2 ([c7fdb43](https://github.com/mx-space/core/commit/c7fdb43))
+* chore(release): bump @mx-space/api-client to v1.14.3 ([9e80c37](https://github.com/mx-space/core/commit/9e80c37))
+* feat: add reader id for presence ([33c48f7](https://github.com/mx-space/core/commit/33c48f7))
+* feat: Auth.js integration (#2054) ([6e50bee](https://github.com/mx-space/core/commit/6e50bee)), closes [#2054](https://github.com/mx-space/core/issues/2054)
+
+## <small>6.1.5 (2024-08-28)</small>
+
+* release: v6.1.5 ([278ecf0](https://github.com/mx-space/core/commit/278ecf0))
+* chore: add images on rss builder ([621a66a](https://github.com/mx-space/core/commit/621a66a))
+* chore: rename complied package ([e3b72d4](https://github.com/mx-space/core/commit/e3b72d4))
+* chore(deps): update dependency @langchain/core to v0.2.30 ([f4fad0d](https://github.com/mx-space/core/commit/f4fad0d))
+* chore(deps): update dependency @swc/core to v1.7.18 ([1beb28c](https://github.com/mx-space/core/commit/1beb28c))
+* chore(deps): update dependency @swc/core to v1.7.19 ([38aca6c](https://github.com/mx-space/core/commit/38aca6c))
+* chore(deps): update dependency @sxzz/eslint-config to v3.17.4 ([dcdb06f](https://github.com/mx-space/core/commit/dcdb06f))
+* chore(deps): update dependency @types/node to v20.16.2 ([d499153](https://github.com/mx-space/core/commit/d499153))
+* chore(deps): update dependency @types/node to v22.5.1 ([e807c77](https://github.com/mx-space/core/commit/e807c77))
+* chore(deps): update dependency @types/validator to v13.12.1 ([ce60045](https://github.com/mx-space/core/commit/ce60045))
+* chore(deps): update dependency axios to v1.7.5 ([74bdbe2](https://github.com/mx-space/core/commit/74bdbe2))
+* chore(deps): update dependency eslint to v9.9.1 ([5c96954](https://github.com/mx-space/core/commit/5c96954))
+* fix(deps): update dependency @antfu/install-pkg to v0.4.1 ([fc9eef9](https://github.com/mx-space/core/commit/fc9eef9))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.30 ([79b9c84](https://github.com/mx-space/core/commit/79b9c84))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.31 ([0f8ae33](https://github.com/mx-space/core/commit/0f8ae33))
+* fix(deps): update dependency @langchain/openai to v0.2.8 ([f2d247b](https://github.com/mx-space/core/commit/f2d247b))
+* fix(deps): update dependency mongoose to v8.5.4 ([3b19040](https://github.com/mx-space/core/commit/3b19040))
+* fix(deps): update dependency openai to v4.56.1 ([b935ee5](https://github.com/mx-space/core/commit/b935ee5))
+* feat: add ai target language ([638deb3](https://github.com/mx-space/core/commit/638deb3))
+
+## <small>6.1.4 (2024-08-23)</small>
+
+* release: v6.1.4 ([1e4af96](https://github.com/mx-space/core/commit/1e4af96))
+* fix: deps pin ([443e085](https://github.com/mx-space/core/commit/443e085))
+* fix(deps): update dependency @babel/types to v7.25.4 ([f2787fb](https://github.com/mx-space/core/commit/f2787fb))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.28 ([6bfe818](https://github.com/mx-space/core/commit/6bfe818))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.29 ([845fea5](https://github.com/mx-space/core/commit/845fea5))
+* fix(deps): update dependency @langchain/openai to v0.2.7 ([34383a9](https://github.com/mx-space/core/commit/34383a9))
+* fix(deps): update dependency dayjs to v1.11.13 ([5c6fef3](https://github.com/mx-space/core/commit/5c6fef3))
+* fix(deps): update dependency isbot to v5.1.17 ([4d86f4c](https://github.com/mx-space/core/commit/4d86f4c))
+* fix(deps): update dependency langchain to v0.2.17 ([cddd3d9](https://github.com/mx-space/core/commit/cddd3d9))
+* fix(deps): update dependency openai to v4.56.0 (#2013) ([4cc5d07](https://github.com/mx-space/core/commit/4cc5d07)), closes [#2013](https://github.com/mx-space/core/issues/2013)
+* chore: update deps ([78ad95c](https://github.com/mx-space/core/commit/78ad95c))
+* chore(deps): update dependency @langchain/core to v0.2.25 ([7377429](https://github.com/mx-space/core/commit/7377429))
+* chore(deps): update dependency @langchain/core to v0.2.27 ([ea9d631](https://github.com/mx-space/core/commit/ea9d631))
+* chore(deps): update dependency @langchain/core to v0.2.28 ([bc5943e](https://github.com/mx-space/core/commit/bc5943e))
+* chore(deps): update dependency @nestjs/schematics to v10.1.4 ([a49fb00](https://github.com/mx-space/core/commit/a49fb00))
+* chore(deps): update dependency @swc/core to v1.7.12 ([dcb0beb](https://github.com/mx-space/core/commit/dcb0beb))
+* chore(deps): update dependency @swc/core to v1.7.14 ([5d6c275](https://github.com/mx-space/core/commit/5d6c275))
+* chore(deps): update dependency @sxzz/eslint-config to v3.17.1 ([3d6111a](https://github.com/mx-space/core/commit/3d6111a))
+* chore(deps): update dependency @sxzz/eslint-config to v3.17.2 ([f6970d8](https://github.com/mx-space/core/commit/f6970d8))
+* chore(deps): update dependency @sxzz/eslint-config to v3.17.3 ([e70147a](https://github.com/mx-space/core/commit/e70147a))
+* chore(deps): update dependency @types/node to v20.15.0 ([02a120b](https://github.com/mx-space/core/commit/02a120b))
+* chore(deps): update dependency @types/node to v20.16.0 ([e3f7fab](https://github.com/mx-space/core/commit/e3f7fab))
+* chore(deps): update dependency @types/node to v20.16.1 ([5f24ee9](https://github.com/mx-space/core/commit/5f24ee9))
+* chore(deps): update dependency @types/node to v22.4.0 ([8b0fd18](https://github.com/mx-space/core/commit/8b0fd18))
+* chore(deps): update dependency @types/node to v22.4.1 ([844371c](https://github.com/mx-space/core/commit/844371c))
+* chore(deps): update dependency @types/node to v22.4.2 ([bf33505](https://github.com/mx-space/core/commit/bf33505))
+* chore(deps): update dependency @types/node to v22.5.0 ([91ce5a4](https://github.com/mx-space/core/commit/91ce5a4))
+* chore(deps): update dependency husky to v9.1.5 ([7755e3b](https://github.com/mx-space/core/commit/7755e3b))
+* chore(deps): update dependency sharp to v0.33.5 ([eb11b21](https://github.com/mx-space/core/commit/eb11b21))
+
+## <small>6.1.3 (2024-08-16)</small>
+
+* release: v6.1.3 ([129a522](https://github.com/mx-space/core/commit/129a522))
+* fix: cloned object ([9a585a1](https://github.com/mx-space/core/commit/9a585a1))
+* chore: add note ([940db3f](https://github.com/mx-space/core/commit/940db3f))
+
+## <small>6.1.2 (2024-08-16)</small>
+
+* release: v6.1.2 ([a5922e0](https://github.com/mx-space/core/commit/a5922e0))
+* fix: create module json first ([d466036](https://github.com/mx-space/core/commit/d466036))
+
+## <small>6.1.1 (2024-08-16)</small>
+
+* release: v6.1.1 ([3f5fcd8](https://github.com/mx-space/core/commit/3f5fcd8))
+* fix: import type of sharp ([32954a7](https://github.com/mx-space/core/commit/32954a7))
+
+## 6.1.0 (2024-08-16)
+
+* release: v6.1.0 ([8a08072](https://github.com/mx-space/core/commit/8a08072))
+* chore: downgrade deps ([fbf0ff8](https://github.com/mx-space/core/commit/fbf0ff8))
+* chore: format ([817b81a](https://github.com/mx-space/core/commit/817b81a))
+* chore: lint ([f187fc4](https://github.com/mx-space/core/commit/f187fc4))
+* chore: remove pty module ([1bb4f6a](https://github.com/mx-space/core/commit/1bb4f6a))
+* chore: update deps ([4e63cf1](https://github.com/mx-space/core/commit/4e63cf1))
+* chore: update script ([df81a67](https://github.com/mx-space/core/commit/df81a67))
+* chore(deps): update dependency @innei/prettier to v0.15.0 (#1981) ([3bb1c52](https://github.com/mx-space/core/commit/3bb1c52)), closes [#1981](https://github.com/mx-space/core/issues/1981)
+* chore(deps): update dependency @langchain/core to v0.2.22 ([36dcd45](https://github.com/mx-space/core/commit/36dcd45))
+* chore(deps): update dependency @langchain/core to v0.2.23 ([e180354](https://github.com/mx-space/core/commit/e180354))
+* chore(deps): update dependency @langchain/core to v0.2.24 ([c1ba459](https://github.com/mx-space/core/commit/c1ba459))
+* chore(deps): update dependency @nestjs/cli to v10.4.4 ([02925dd](https://github.com/mx-space/core/commit/02925dd))
+* chore(deps): update dependency @swc/core to v1.7.10 ([cd0b334](https://github.com/mx-space/core/commit/cd0b334))
+* chore(deps): update dependency @swc/core to v1.7.11 ([addcb92](https://github.com/mx-space/core/commit/addcb92))
+* chore(deps): update dependency @swc/core to v1.7.9 ([cabce7b](https://github.com/mx-space/core/commit/cabce7b))
+* chore(deps): update dependency @sxzz/eslint-config to v3.17.0 (#1976) ([81f91f4](https://github.com/mx-space/core/commit/81f91f4)), closes [#1976](https://github.com/mx-space/core/issues/1976)
+* chore(deps): update dependency @types/node to v20.14.15 ([ea5eaa9](https://github.com/mx-space/core/commit/ea5eaa9))
+* chore(deps): update dependency axios to v1.7.4 ([259969c](https://github.com/mx-space/core/commit/259969c))
+* chore(deps): update dependency eslint to v9.9.0 ([906601f](https://github.com/mx-space/core/commit/906601f))
+* chore(deps): update dependency eslint-plugin-unused-imports to v4.1.2 ([4488b81](https://github.com/mx-space/core/commit/4488b81))
+* chore(deps): update dependency eslint-plugin-unused-imports to v4.1.3 ([01e7617](https://github.com/mx-space/core/commit/01e7617))
+* chore(deps): update dependency lint-staged to v15.2.9 ([85fafa3](https://github.com/mx-space/core/commit/85fafa3))
+* chore(deps): update dependency whatwg-url to v14 (#2008) ([75fe7d6](https://github.com/mx-space/core/commit/75fe7d6)), closes [#2008](https://github.com/mx-space/core/issues/2008)
+* chore(deps): update pnpm to v9.7.0 (#1973) ([7ddbe0b](https://github.com/mx-space/core/commit/7ddbe0b)), closes [#1973](https://github.com/mx-space/core/issues/1973)
+* chore(deps): update pnpm to v9.7.1 ([23b8c64](https://github.com/mx-space/core/commit/23b8c64))
+* chore(release): bump @mx-space/api-client to v1.13.2 ([34373f9](https://github.com/mx-space/core/commit/34373f9))
+* feat: image blur hash (#2010) ([c27ee8c](https://github.com/mx-space/core/commit/c27ee8c)), closes [#2010](https://github.com/mx-space/core/issues/2010)
+* fix: import circular ([a8a21d9](https://github.com/mx-space/core/commit/a8a21d9))
+* fix: migrate db first ([b923c7f](https://github.com/mx-space/core/commit/b923c7f))
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.632.0 (#1977) ([81c6af6](https://github.com/mx-space/core/commit/81c6af6)), closes [#1977](https://github.com/mx-space/core/issues/1977)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.26 ([2d78a04](https://github.com/mx-space/core/commit/2d78a04))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.27 ([4392ad3](https://github.com/mx-space/core/commit/4392ad3))
+* fix(deps): update dependency isbot to v5.1.15 ([08e8f2f](https://github.com/mx-space/core/commit/08e8f2f))
+* fix(deps): update dependency isbot to v5.1.16 ([423a2ab](https://github.com/mx-space/core/commit/423a2ab))
+* fix(deps): update dependency langchain to v0.2.14 ([b1f6a3d](https://github.com/mx-space/core/commit/b1f6a3d))
+* fix(deps): update dependency langchain to v0.2.15 ([819727c](https://github.com/mx-space/core/commit/819727c))
+* fix(deps): update dependency langchain to v0.2.16 ([41d6974](https://github.com/mx-space/core/commit/41d6974))
+* fix(deps): update dependency openai to v4.55.7 (#1968) ([831d87c](https://github.com/mx-space/core/commit/831d87c)), closes [#1968](https://github.com/mx-space/core/issues/1968)
+* fix(deps): update dependency openai to v4.55.9 ([5d335fc](https://github.com/mx-space/core/commit/5d335fc))
+* fix(deps): update nest monorepo to v10.4.1 (minor) (#1994) ([3ee55a7](https://github.com/mx-space/core/commit/3ee55a7)), closes [#1994](https://github.com/mx-space/core/issues/1994)
+
+## <small>6.0.3 (2024-08-08)</small>
+
+* release: v6.0.3 ([8db194b](https://github.com/mx-space/core/commit/8db194b))
+* feat: link allow subpath option ([327d30d](https://github.com/mx-space/core/commit/327d30d))
+* Update FUNDING.yml ([1d806fb](https://github.com/mx-space/core/commit/1d806fb))
+* chore(deps): update dependency @langchain/core to v0.2.19 (#1947) ([67cff39](https://github.com/mx-space/core/commit/67cff39)), closes [#1947](https://github.com/mx-space/core/issues/1947)
+* chore(deps): update dependency @langchain/core to v0.2.20 ([20fbf46](https://github.com/mx-space/core/commit/20fbf46))
+* chore(deps): update dependency @langchain/core to v0.2.21 ([37ab1d4](https://github.com/mx-space/core/commit/37ab1d4))
+* chore(deps): update dependency @swc/core to v1.7.5 ([38ac5ed](https://github.com/mx-space/core/commit/38ac5ed))
+* chore(deps): update dependency @swc/core to v1.7.6 ([07430c0](https://github.com/mx-space/core/commit/07430c0))
+* chore(deps): update dependency @sxzz/eslint-config to v3.16.1 (#1923) ([2451553](https://github.com/mx-space/core/commit/2451553)), closes [#1923](https://github.com/mx-space/core/issues/1923)
+* chore(deps): update dependency @sxzz/eslint-config to v3.16.2 (#1958) ([68691ed](https://github.com/mx-space/core/commit/68691ed)), closes [#1958](https://github.com/mx-space/core/issues/1958)
+* chore(deps): update dependency @sxzz/eslint-config to v3.16.3 ([59b12f1](https://github.com/mx-space/core/commit/59b12f1))
+* chore(deps): update dependency @sxzz/eslint-config to v3.16.4 ([b5a7221](https://github.com/mx-space/core/commit/b5a7221))
+* chore(deps): update dependency @types/node to v20.14.14 ([a547303](https://github.com/mx-space/core/commit/a547303))
+* chore(deps): update dependency axios to v1.7.3 ([67ec703](https://github.com/mx-space/core/commit/67ec703))
+* chore(deps): update dependency lint-staged to v15.2.8 ([4b72046](https://github.com/mx-space/core/commit/4b72046))
+* chore(deps): update dependency tsup to v8.2.4 ([36eccda](https://github.com/mx-space/core/commit/36eccda))
+* fix: lint ([ccdf213](https://github.com/mx-space/core/commit/ccdf213))
+* fix: lint ([c46ce87](https://github.com/mx-space/core/commit/c46ce87))
+* fix(deps): update babel monorepo to v7.25.2 (minor) (#1928) ([075365b](https://github.com/mx-space/core/commit/075365b)), closes [#1928](https://github.com/mx-space/core/issues/1928)
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.624.0 (#1921) ([b8bc581](https://github.com/mx-space/core/commit/b8bc581)), closes [#1921](https://github.com/mx-space/core/issues/1921)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.23 ([0523626](https://github.com/mx-space/core/commit/0523626))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.24 ([b6e7a54](https://github.com/mx-space/core/commit/b6e7a54))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.25 ([d61b5be](https://github.com/mx-space/core/commit/d61b5be))
+* fix(deps): update dependency @langchain/openai to v0.2.6 ([9afa15d](https://github.com/mx-space/core/commit/9afa15d))
+* fix(deps): update dependency axios-retry to v4.5.0 (#1954) ([7fc6768](https://github.com/mx-space/core/commit/7fc6768)), closes [#1954](https://github.com/mx-space/core/issues/1954)
+* fix(deps): update dependency cache-manager to v5.7.5 ([ccbf2ea](https://github.com/mx-space/core/commit/ccbf2ea))
+* fix(deps): update dependency cache-manager to v5.7.6 ([45bd1cc](https://github.com/mx-space/core/commit/45bd1cc))
+* fix(deps): update dependency inquirer to v10.1.7 ([cb62db5](https://github.com/mx-space/core/commit/cb62db5))
+* fix(deps): update dependency inquirer to v10.1.8 ([1a13a7b](https://github.com/mx-space/core/commit/1a13a7b))
+* fix(deps): update dependency isbot to v5.1.14 ([313fe80](https://github.com/mx-space/core/commit/313fe80))
+* fix(deps): update dependency langchain to v0.2.13 ([32a65cf](https://github.com/mx-space/core/commit/32a65cf))
+* fix(deps): update dependency mongoose-lean-getters to v2.1.1 ([492381d](https://github.com/mx-space/core/commit/492381d))
+* fix(deps): update dependency openai to v4.54.0 (#1949) ([4647155](https://github.com/mx-space/core/commit/4647155)), closes [#1949](https://github.com/mx-space/core/issues/1949)
+* fix(deps): update dependency qs to v6.13.0 (#1946) ([967d2e2](https://github.com/mx-space/core/commit/967d2e2)), closes [#1946](https://github.com/mx-space/core/issues/1946)
+* fix(deps): update dependency remove-markdown to v0.5.2 (#1948) ([8ff229f](https://github.com/mx-space/core/commit/8ff229f)), closes [#1948](https://github.com/mx-space/core/issues/1948)
+
+## <small>6.0.2 (2024-08-01)</small>
+
+* release: v6.0.2 ([f3b15bb](https://github.com/mx-space/core/commit/f3b15bb))
+* chore: update deps ([7367934](https://github.com/mx-space/core/commit/7367934))
+* chore: update docker compose ([e56d215](https://github.com/mx-space/core/commit/e56d215))
+* chore(deps): update dependency @innei/prettier to v0.13.3 ([05acfa0](https://github.com/mx-space/core/commit/05acfa0))
+* chore(deps): update dependency @innei/prettier to v0.14.0 (#1907) ([951cc25](https://github.com/mx-space/core/commit/951cc25)), closes [#1907](https://github.com/mx-space/core/issues/1907)
+* chore(deps): update dependency @innei/prettier to v0.14.2 ([22637cf](https://github.com/mx-space/core/commit/22637cf))
+* chore(deps): update dependency @langchain/core to v0.2.15 ([fa2b257](https://github.com/mx-space/core/commit/fa2b257))
+* chore(deps): update dependency @langchain/core to v0.2.17 ([a313b87](https://github.com/mx-space/core/commit/a313b87))
+* chore(deps): update dependency @langchain/core to v0.2.18 ([829a133](https://github.com/mx-space/core/commit/829a133))
+* chore(deps): update dependency @nestjs/cli to v10.4.2 (#1846) ([ece5b83](https://github.com/mx-space/core/commit/ece5b83)), closes [#1846](https://github.com/mx-space/core/issues/1846)
+* chore(deps): update dependency @nestjs/schematics to v10.1.3 ([53f893a](https://github.com/mx-space/core/commit/53f893a))
+* chore(deps): update dependency @swc/core to v1.7.0 (#1893) ([f17f1d9](https://github.com/mx-space/core/commit/f17f1d9)), closes [#1893](https://github.com/mx-space/core/issues/1893)
+* chore(deps): update dependency @swc/core to v1.7.1 ([a0b5bc0](https://github.com/mx-space/core/commit/a0b5bc0))
+* chore(deps): update dependency @swc/core to v1.7.2 ([522015d](https://github.com/mx-space/core/commit/522015d))
+* chore(deps): update dependency @swc/core to v1.7.3 ([5b4b8ce](https://github.com/mx-space/core/commit/5b4b8ce))
+* chore(deps): update dependency @swc/core to v1.7.4 ([9bf7f69](https://github.com/mx-space/core/commit/9bf7f69))
+* chore(deps): update dependency @sxzz/eslint-config to v3.15.1 (#1894) ([ddd55c3](https://github.com/mx-space/core/commit/ddd55c3)), closes [#1894](https://github.com/mx-space/core/issues/1894)
+* chore(deps): update dependency @types/lodash to v4.17.7 ([f01cc28](https://github.com/mx-space/core/commit/f01cc28))
+* chore(deps): update dependency @types/node to v20.14.11 ([446f359](https://github.com/mx-space/core/commit/446f359))
+* chore(deps): update dependency @types/node to v20.14.12 ([ac066d8](https://github.com/mx-space/core/commit/ac066d8))
+* chore(deps): update dependency @types/node to v20.14.13 ([e7f19a4](https://github.com/mx-space/core/commit/e7f19a4))
+* chore(deps): update dependency eslint to v9.6.0 ([b34a9b2](https://github.com/mx-space/core/commit/b34a9b2))
+* chore(deps): update dependency eslint to v9.7.0 ([e7f9fde](https://github.com/mx-space/core/commit/e7f9fde))
+* chore(deps): update dependency eslint to v9.8.0 ([aefc3f0](https://github.com/mx-space/core/commit/aefc3f0))
+* chore(deps): update dependency eslint-plugin-unused-imports to v4.0.1 ([c053ff5](https://github.com/mx-space/core/commit/c053ff5))
+* chore(deps): update dependency husky to v9.1.1 (#1895) ([fc876b6](https://github.com/mx-space/core/commit/fc876b6)), closes [#1895](https://github.com/mx-space/core/issues/1895)
+* chore(deps): update dependency husky to v9.1.2 ([8382f36](https://github.com/mx-space/core/commit/8382f36))
+* chore(deps): update dependency husky to v9.1.3 ([42c160d](https://github.com/mx-space/core/commit/42c160d))
+* chore(deps): update dependency husky to v9.1.4 ([0dbe023](https://github.com/mx-space/core/commit/0dbe023))
+* chore(deps): update dependency mongodb-memory-server to v10 (#1913) ([38cf97a](https://github.com/mx-space/core/commit/38cf97a)), closes [#1913](https://github.com/mx-space/core/issues/1913)
+* chore(deps): update dependency mongodb-memory-server to v9.4.1 ([a3cf591](https://github.com/mx-space/core/commit/a3cf591))
+* chore(deps): update dependency mongodb-memory-server to v9.4.1 (#1833) ([113ab72](https://github.com/mx-space/core/commit/113ab72)), closes [#1833](https://github.com/mx-space/core/issues/1833)
+* chore(deps): update dependency prettier to v3.3.3 ([c97f119](https://github.com/mx-space/core/commit/c97f119))
+* chore(deps): update dependency rimraf to v5.0.9 ([b4debf6](https://github.com/mx-space/core/commit/b4debf6))
+* chore(deps): update dependency rimraf to v6 (#1880) ([c0284a1](https://github.com/mx-space/core/commit/c0284a1)), closes [#1880](https://github.com/mx-space/core/issues/1880)
+* chore(deps): update dependency semver to v7.6.3 ([99142c0](https://github.com/mx-space/core/commit/99142c0))
+* chore(deps): update dependency tsup to v8.1.2 ([ea41c2c](https://github.com/mx-space/core/commit/ea41c2c))
+* chore(deps): update dependency tsup to v8.2.2 (#1896) ([eba5614](https://github.com/mx-space/core/commit/eba5614)), closes [#1896](https://github.com/mx-space/core/issues/1896)
+* chore(deps): update dependency tsup to v8.2.3 ([da98e89](https://github.com/mx-space/core/commit/da98e89))
+* chore(deps): update dependency typescript to v5.5.4 ([9df5217](https://github.com/mx-space/core/commit/9df5217))
+* chore(deps): update pnpm to v9.5.0 (#1860) ([e624e28](https://github.com/mx-space/core/commit/e624e28)), closes [#1860](https://github.com/mx-space/core/issues/1860)
+* chore(deps): update pnpm to v9.6.0 (#1908) ([80e4249](https://github.com/mx-space/core/commit/80e4249)), closes [#1908](https://github.com/mx-space/core/issues/1908)
+* fix: update clerk auth ([2fd444d](https://github.com/mx-space/core/commit/2fd444d))
+* fix(db): use process.env as the default value of command option (#1941) ([b19493a](https://github.com/mx-space/core/commit/b19493a)), closes [#1941](https://github.com/mx-space/core/issues/1941)
+* fix(deps): update babel monorepo to v7.24.8 ([d8ee22f](https://github.com/mx-space/core/commit/d8ee22f))
+* fix(deps): update babel monorepo to v7.24.9 ([a49e3b9](https://github.com/mx-space/core/commit/a49e3b9))
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.614.0 (#1874) ([2039a3d](https://github.com/mx-space/core/commit/2039a3d)), closes [#1874](https://github.com/mx-space/core/issues/1874)
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.617.0 (#1909) ([3d409e8](https://github.com/mx-space/core/commit/3d409e8)), closes [#1909](https://github.com/mx-space/core/issues/1909)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.15 ([43fdd8e](https://github.com/mx-space/core/commit/43fdd8e))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.16 ([cdbc517](https://github.com/mx-space/core/commit/cdbc517))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.18 ([abcae1f](https://github.com/mx-space/core/commit/abcae1f))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.20 ([e7dbd6c](https://github.com/mx-space/core/commit/e7dbd6c))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.21 ([ede03ed](https://github.com/mx-space/core/commit/ede03ed))
+* fix(deps): update dependency @innei/pretty-logger-nestjs to v0.3.3 ([ad67cb1](https://github.com/mx-space/core/commit/ad67cb1))
+* fix(deps): update dependency @langchain/openai to v0.2.4 (#1829) ([72c4120](https://github.com/mx-space/core/commit/72c4120)), closes [#1829](https://github.com/mx-space/core/issues/1829)
+* fix(deps): update dependency @langchain/openai to v0.2.5 ([10ae0c5](https://github.com/mx-space/core/commit/10ae0c5))
+* fix(deps): update dependency @nestjs/schedule to v4.1.0 (#1855) ([b0603b9](https://github.com/mx-space/core/commit/b0603b9)), closes [#1855](https://github.com/mx-space/core/issues/1855)
+* fix(deps): update dependency @nestjs/throttler to v6 (#1914) ([e2f0e57](https://github.com/mx-space/core/commit/e2f0e57)), closes [#1914](https://github.com/mx-space/core/issues/1914)
+* fix(deps): update dependency @simplewebauthn/server to v10.0.1 (#1902) ([84dce71](https://github.com/mx-space/core/commit/84dce71)), closes [#1902](https://github.com/mx-space/core/issues/1902)
+* fix(deps): update dependency @typegoose/auto-increment to v4.5.0 (#1877) ([d486ab8](https://github.com/mx-space/core/commit/d486ab8)), closes [#1877](https://github.com/mx-space/core/issues/1877)
+* fix(deps): update dependency @typegoose/typegoose to v12.6.0 (#1878) ([06592df](https://github.com/mx-space/core/commit/06592df)), closes [#1878](https://github.com/mx-space/core/issues/1878)
+* fix(deps): update dependency axios-retry to v4.4.2 (#1903) ([8ca0d0f](https://github.com/mx-space/core/commit/8ca0d0f)), closes [#1903](https://github.com/mx-space/core/issues/1903)
+* fix(deps): update dependency cache-manager to v5.7.2 (#1856) ([3d1be30](https://github.com/mx-space/core/commit/3d1be30)), closes [#1856](https://github.com/mx-space/core/issues/1856)
+* fix(deps): update dependency cache-manager to v5.7.3 ([bdfe9c6](https://github.com/mx-space/core/commit/bdfe9c6))
+* fix(deps): update dependency cache-manager to v5.7.4 ([5790182](https://github.com/mx-space/core/commit/5790182))
+* fix(deps): update dependency dayjs to v1.11.12 ([99bf0a9](https://github.com/mx-space/core/commit/99bf0a9))
+* fix(deps): update dependency inquirer to v10 (#1861) ([1e7ab05](https://github.com/mx-space/core/commit/1e7ab05)), closes [#1861](https://github.com/mx-space/core/issues/1861)
+* fix(deps): update dependency inquirer to v10.0.1 ([ac35b26](https://github.com/mx-space/core/commit/ac35b26))
+* fix(deps): update dependency inquirer to v10.0.4 ([0628932](https://github.com/mx-space/core/commit/0628932))
+* fix(deps): update dependency inquirer to v10.1.2 (#1904) ([0c163c9](https://github.com/mx-space/core/commit/0c163c9)), closes [#1904](https://github.com/mx-space/core/issues/1904)
+* fix(deps): update dependency inquirer to v10.1.4 ([519f5c0](https://github.com/mx-space/core/commit/519f5c0))
+* fix(deps): update dependency inquirer to v10.1.5 ([933aa17](https://github.com/mx-space/core/commit/933aa17))
+* fix(deps): update dependency inquirer to v10.1.6 ([5e39aa1](https://github.com/mx-space/core/commit/5e39aa1))
+* fix(deps): update dependency isbot to v5.1.12 ([b72b9d3](https://github.com/mx-space/core/commit/b72b9d3))
+* fix(deps): update dependency isbot to v5.1.13 ([68bbdfa](https://github.com/mx-space/core/commit/68bbdfa))
+* fix(deps): update dependency langchain to v0.2.10 ([9855e24](https://github.com/mx-space/core/commit/9855e24))
+* fix(deps): update dependency langchain to v0.2.11 ([d0bc8cf](https://github.com/mx-space/core/commit/d0bc8cf))
+* fix(deps): update dependency langchain to v0.2.12 ([36200bf](https://github.com/mx-space/core/commit/36200bf))
+* fix(deps): update dependency langchain to v0.2.9 ([84f5985](https://github.com/mx-space/core/commit/84f5985))
+* fix(deps): update dependency lru-cache to v10.4.3 (#1858) ([14a6a5c](https://github.com/mx-space/core/commit/14a6a5c)), closes [#1858](https://github.com/mx-space/core/issues/1858)
+* fix(deps): update dependency lru-cache to v11 (#1915) ([d5dbd1a](https://github.com/mx-space/core/commit/d5dbd1a)), closes [#1915](https://github.com/mx-space/core/issues/1915)
+* fix(deps): update dependency marked to v13.0.3 ([edd2b0c](https://github.com/mx-space/core/commit/edd2b0c))
+* fix(deps): update dependency mongoose to v8.5.1 (#1879) ([31ec980](https://github.com/mx-space/core/commit/31ec980)), closes [#1879](https://github.com/mx-space/core/issues/1879)
+* fix(deps): update dependency mongoose to v8.5.2 ([9347595](https://github.com/mx-space/core/commit/9347595))
+* fix(deps): update dependency mongoose-aggregate-paginate-v2 to v1.1.1 (#1859) ([0321bcd](https://github.com/mx-space/core/commit/0321bcd)), closes [#1859](https://github.com/mx-space/core/issues/1859)
+* fix(deps): update dependency mongoose-aggregate-paginate-v2 to v1.1.2 (#1905) ([ee4a6e3](https://github.com/mx-space/core/commit/ee4a6e3)), closes [#1905](https://github.com/mx-space/core/issues/1905)
+* fix(deps): update dependency mongoose-paginate-v2 to v1.8.3 (#1906) ([8bfd5c8](https://github.com/mx-space/core/commit/8bfd5c8)), closes [#1906](https://github.com/mx-space/core/issues/1906)
+* fix(deps): update dependency openai to v4.52.7 ([4e42bee](https://github.com/mx-space/core/commit/4e42bee))
+* fix(deps): update dependency openai to v4.53.1 (#1911) ([07061b8](https://github.com/mx-space/core/commit/07061b8)), closes [#1911](https://github.com/mx-space/core/issues/1911)
+* fix(deps): update dependency openai to v4.53.2 ([ae47390](https://github.com/mx-space/core/commit/ae47390))
+* fix(deps): update dependency qs to v6.12.3 ([b66726d](https://github.com/mx-space/core/commit/b66726d))
+
+## <small>6.0.1 (2024-07-07)</small>
+
+* release: v6.0.1 ([0077ac1](https://github.com/mx-space/core/commit/0077ac1))
+* chore(deps): update dependency @langchain/core to v0.2.14 ([00b6381](https://github.com/mx-space/core/commit/00b6381))
+* chore(deps): update dependency @swc/core to v1.6.13 ([aeaf8f4](https://github.com/mx-space/core/commit/aeaf8f4))
+* chore(deps): update dependency @swc/core to v1.6.7 ([3fbd805](https://github.com/mx-space/core/commit/3fbd805))
+* chore(deps): update dependency @types/lodash to v4.17.6 ([edd16f5](https://github.com/mx-space/core/commit/edd16f5))
+* chore(deps): update dependency @types/node to v20.14.10 ([80e8c8f](https://github.com/mx-space/core/commit/80e8c8f))
+* chore(deps): update dependency @types/node to v20.14.9 ([a0ffeff](https://github.com/mx-space/core/commit/a0ffeff))
+* chore(deps): update dependency mongodb-memory-server to v9.4.0 (#1748) ([eda3305](https://github.com/mx-space/core/commit/eda3305)), closes [#1748](https://github.com/mx-space/core/issues/1748)
+* chore(deps): update dependency redis-memory-server to v0.11.0 (#1850) ([02ae407](https://github.com/mx-space/core/commit/02ae407)), closes [#1850](https://github.com/mx-space/core/issues/1850)
+* chore(deps): update dependency rimraf to v5.0.8 ([d09af24](https://github.com/mx-space/core/commit/d09af24))
+* chore(deps): update dependency typescript to v5.5.3 ([9d688ad](https://github.com/mx-space/core/commit/9d688ad))
+* chore(deps): update dependency unplugin-swc to v1.5.1 (#1851) ([2a7777b](https://github.com/mx-space/core/commit/2a7777b)), closes [#1851](https://github.com/mx-space/core/issues/1851)
+* chore(deps): update robinraju/release-downloader action to v1.11 (#1852) ([072e4d6](https://github.com/mx-space/core/commit/072e4d6)), closes [#1852](https://github.com/mx-space/core/issues/1852)
+* fix(deps): update algoliasearch-client-javascript monorepo to v4.24.0 (#1853) ([7478e9d](https://github.com/mx-space/core/commit/7478e9d)), closes [#1853](https://github.com/mx-space/core/issues/1853)
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.609.0 (#1854) ([204f855](https://github.com/mx-space/core/commit/204f855)), closes [#1854](https://github.com/mx-space/core/issues/1854)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.14 ([a383dc2](https://github.com/mx-space/core/commit/a383dc2))
+* fix(deps): update dependency isbot to v5.1.11 ([0fca0d3](https://github.com/mx-space/core/commit/0fca0d3))
+* fix(deps): update dependency langchain to v0.2.8 ([cc155ab](https://github.com/mx-space/core/commit/cc155ab))
+* fix(deps): update dependency linkedom to v0.18.4 ([d7bf117](https://github.com/mx-space/core/commit/d7bf117))
+* fix(deps): update dependency marked to v13.0.2 (#1832) ([efd3cc5](https://github.com/mx-space/core/commit/efd3cc5)), closes [#1832](https://github.com/mx-space/core/issues/1832)
+* fix(deps): update dependency mongoose to v8.4.5 ([61e1f06](https://github.com/mx-space/core/commit/61e1f06))
+* fix(deps): update dependency mongoose-aggregate-paginate-v2 to v1.0.42 ([6a4e502](https://github.com/mx-space/core/commit/6a4e502))
+* fix(deps): update dependency openai to v4.52.3 ([1febace](https://github.com/mx-space/core/commit/1febace))
+* fix(deps): update dependency qs to v6.12.2 ([4f737a9](https://github.com/mx-space/core/commit/4f737a9))
+* fix(deps): update nest monorepo ([c30b6c1](https://github.com/mx-space/core/commit/c30b6c1))
+* fix(update): bad credentials when requesting with empty github token (#1847) ([63f4551](https://github.com/mx-space/core/commit/63f4551)), closes [#1847](https://github.com/mx-space/core/issues/1847)
+
+## 6.0.0 (2024-06-22)
+
+* release: v6.0.0 ([f20b07a](https://github.com/mx-space/core/commit/f20b07a))
+* fix: cleanTempDirectory not remake trash directory (#1824) ([4877459](https://github.com/mx-space/core/commit/4877459)), closes [#1824](https://github.com/mx-space/core/issues/1824)
+* fix: crypto compatible ([503f079](https://github.com/mx-space/core/commit/503f079))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.12 ([772f6f7](https://github.com/mx-space/core/commit/772f6f7))
+* fix(deps): update dependency @nestjs/throttler to v5.2.0 (#1806) ([bfa25c0](https://github.com/mx-space/core/commit/bfa25c0)), closes [#1806](https://github.com/mx-space/core/issues/1806)
+* fix(deps): update dependency axios-retry to v4.4.1 (#1825) ([0585033](https://github.com/mx-space/core/commit/0585033)), closes [#1825](https://github.com/mx-space/core/issues/1825)
+* fix(deps): update dependency mongoose to v8.4.3 ([79c7585](https://github.com/mx-space/core/commit/79c7585))
+* fix(deps): update dependency nodemailer to v6.9.14 ([416f933](https://github.com/mx-space/core/commit/416f933))
+* chore: downgrade deps ([703ba11](https://github.com/mx-space/core/commit/703ba11))
+* chore: node v20 (#1648) ([f020c1f](https://github.com/mx-space/core/commit/f020c1f)), closes [#1648](https://github.com/mx-space/core/issues/1648)
+* chore: update deps, node v20 ([f5ee230](https://github.com/mx-space/core/commit/f5ee230))
+* chore(deps): update dependency @langchain/core to v0.2.7 ([a6d04a8](https://github.com/mx-space/core/commit/a6d04a8))
+* chore(deps): update dependency @langchain/core to v0.2.8 ([60c0af1](https://github.com/mx-space/core/commit/60c0af1))
+* chore(deps): update dependency @swc/core to v1.6.1 (#1808) ([f549c79](https://github.com/mx-space/core/commit/f549c79)), closes [#1808](https://github.com/mx-space/core/issues/1808)
+* chore(deps): update dependency @swc/core to v1.6.3 ([6ac4ffb](https://github.com/mx-space/core/commit/6ac4ffb))
+* chore(deps): update dependency @sxzz/eslint-config to v3.13.0 (#1805) ([047f13d](https://github.com/mx-space/core/commit/047f13d)), closes [#1805](https://github.com/mx-space/core/issues/1805)
+* chore(deps): update dependency @types/node to v20.14.4 ([547c004](https://github.com/mx-space/core/commit/547c004))
+* chore(deps): update dependency @types/node to v20.14.5 ([c6a6271](https://github.com/mx-space/core/commit/c6a6271))
+* chore(deps): update dependency @types/node to v20.14.6 ([a4bc734](https://github.com/mx-space/core/commit/a4bc734))
+* chore(deps): update dependency @types/node to v20.14.7 ([5e2c607](https://github.com/mx-space/core/commit/5e2c607))
+* chore(deps): update dependency @types/validator to v13.12.0 ([be7bd52](https://github.com/mx-space/core/commit/be7bd52))
+* chore(deps): update dependency eslint to v9.5.0 ([fbd59b9](https://github.com/mx-space/core/commit/fbd59b9))
+* chore(deps): update dependency typescript to v5.5.2 (#1822) ([e4104b5](https://github.com/mx-space/core/commit/e4104b5)), closes [#1822](https://github.com/mx-space/core/issues/1822)
+* chore(deps): update docker/build-push-action action to v6 (#1810) ([9412dd1](https://github.com/mx-space/core/commit/9412dd1)), closes [#1810](https://github.com/mx-space/core/issues/1810)
+* chore(deps): update pnpm to v9.4.0 (#1811) ([4d94ea3](https://github.com/mx-space/core/commit/4d94ea3)), closes [#1811](https://github.com/mx-space/core/issues/1811)
+
+## <small>5.8.4 (2024-06-14)</small>
+
+* release: v5.8.4 ([2bee5b6](https://github.com/mx-space/core/commit/2bee5b6))
+* feat: support `gh_token` closes 1758 ([39e10ef](https://github.com/mx-space/core/commit/39e10ef))
+* chore(deps): update dependency @swc/core to v1.5.29 ([e3849c6](https://github.com/mx-space/core/commit/e3849c6))
+* chore(deps): update dependency lint-staged to v15.2.7 ([a3078b9](https://github.com/mx-space/core/commit/a3078b9))
+* chore(deps): update pnpm to v9.3.0 (#1790) ([05e067f](https://github.com/mx-space/core/commit/05e067f)), closes [#1790](https://github.com/mx-space/core/issues/1790)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.11 ([b88b7bf](https://github.com/mx-space/core/commit/b88b7bf))
+* fix(deps): update dependency openai to v4.51.0 (#1791) ([78c03e3](https://github.com/mx-space/core/commit/78c03e3)), closes [#1791](https://github.com/mx-space/core/issues/1791)
+
+## <small>5.8.3 (2024-06-12)</small>
+
+* release: v5.8.3 ([5db204f](https://github.com/mx-space/core/commit/5db204f))
+* fix: master avatar in recent activity comments cannot be displayed (#1794) ([1750340](https://github.com/mx-space/core/commit/1750340)), closes [#1794](https://github.com/mx-space/core/issues/1794)
+* fix(deps): update babel monorepo to v7.24.7 ([37e1a83](https://github.com/mx-space/core/commit/37e1a83))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.10 ([f2eb9c9](https://github.com/mx-space/core/commit/f2eb9c9))
+* fix(deps): update dependency @fastify/multipart to v8.3.0 (#1786) ([0c40479](https://github.com/mx-space/core/commit/0c40479)), closes [#1786](https://github.com/mx-space/core/issues/1786)
+* fix(deps): update dependency @langchain/openai to v0.1.2 (#1754) ([e0a6fcf](https://github.com/mx-space/core/commit/e0a6fcf)), closes [#1754](https://github.com/mx-space/core/issues/1754)
+* fix(deps): update dependency @langchain/openai to v0.1.3 ([ca985b9](https://github.com/mx-space/core/commit/ca985b9))
+* fix(deps): update dependency axios-retry to v4.4.0 (#1772) ([66bbe14](https://github.com/mx-space/core/commit/66bbe14)), closes [#1772](https://github.com/mx-space/core/issues/1772)
+* fix(deps): update dependency cache-manager to v5.6.1 (#1784) ([c90dafa](https://github.com/mx-space/core/commit/c90dafa)), closes [#1784](https://github.com/mx-space/core/issues/1784)
+* fix(deps): update dependency cache-manager-ioredis-yet to v2.1.1 (#1785) ([462a6a8](https://github.com/mx-space/core/commit/462a6a8)), closes [#1785](https://github.com/mx-space/core/issues/1785)
+* fix(deps): update dependency isbot to v5.1.9 ([514bb52](https://github.com/mx-space/core/commit/514bb52))
+* fix(deps): update dependency langchain to v0.2.5 ([2930d0c](https://github.com/mx-space/core/commit/2930d0c))
+* fix(deps): update dependency linkedom to v0.18.3 ([098d726](https://github.com/mx-space/core/commit/098d726))
+* fix(deps): update dependency openai to v4.49.0 (#1774) ([89b034b](https://github.com/mx-space/core/commit/89b034b)), closes [#1774](https://github.com/mx-space/core/issues/1774)
+* fix(deps): update dependency openai to v4.49.1 ([e8f66d2](https://github.com/mx-space/core/commit/e8f66d2))
+* chore(deps): update dependency @langchain/core to v0.2.6 ([8456525](https://github.com/mx-space/core/commit/8456525))
+* chore(deps): update dependency @swc/core to v1.5.25 ([3c369e8](https://github.com/mx-space/core/commit/3c369e8))
+* chore(deps): update dependency @swc/core to v1.5.27 ([82c3c6f](https://github.com/mx-space/core/commit/82c3c6f))
+* chore(deps): update dependency @swc/core to v1.5.28 ([88048d8](https://github.com/mx-space/core/commit/88048d8))
+* chore(deps): update dependency @types/lodash to v4.17.5 ([e71d517](https://github.com/mx-space/core/commit/e71d517))
+* chore(deps): update dependency @types/node to v20.14.2 ([a0cb68b](https://github.com/mx-space/core/commit/a0cb68b))
+* chore(deps): update dependency lint-staged to v15.2.6 ([3e628e2](https://github.com/mx-space/core/commit/3e628e2))
+* chore(deps): update dependency prettier to v3.3.1 ([f39f373](https://github.com/mx-space/core/commit/f39f373))
+* chore(deps): update dependency prettier to v3.3.2 ([f3263bd](https://github.com/mx-space/core/commit/f3263bd))
+* chore(deps): update pnpm to v9.2.0 (#1782) ([e68148a](https://github.com/mx-space/core/commit/e68148a)), closes [#1782](https://github.com/mx-space/core/issues/1782)
+
+## <small>5.8.2 (2024-06-04)</small>
+
+* release: v5.8.2 ([20e69ea](https://github.com/mx-space/core/commit/20e69ea))
+* chore(deps): update dependency @sxzz/eslint-config to v3.12.1 (#1766) ([abcf381](https://github.com/mx-space/core/commit/abcf381)), closes [#1766](https://github.com/mx-space/core/issues/1766)
+* chore(deps): update dependency @types/node to v20.14.0 ([1105fb5](https://github.com/mx-space/core/commit/1105fb5))
+* chore(deps): update dependency @types/node to v20.14.1 ([e82511d](https://github.com/mx-space/core/commit/e82511d))
+* chore(deps): update dependency mongodb-memory-server to v9.3.0 (#1749) ([a707382](https://github.com/mx-space/core/commit/a707382)), closes [#1749](https://github.com/mx-space/core/issues/1749)
+* chore(deps): update dependency tsup to v8.1.0 (#1767) ([5dfea70](https://github.com/mx-space/core/commit/5dfea70)), closes [#1767](https://github.com/mx-space/core/issues/1767)
+* fix: delete file with EXDEV issue (#1770) ([b3dfbdf](https://github.com/mx-space/core/commit/b3dfbdf)), closes [#1770](https://github.com/mx-space/core/issues/1770)
+* fix(deps): update nest monorepo to v10.3.9 (#1768) ([d627d38](https://github.com/mx-space/core/commit/d627d38)), closes [#1768](https://github.com/mx-space/core/issues/1768)
+
+## <small>5.8.1 (2024-06-02)</small>
+
+* release: v5.8.1 ([0c5ddd4](https://github.com/mx-space/core/commit/0c5ddd4))
+* fix: ai summary language detect ([8764815](https://github.com/mx-space/core/commit/8764815))
+* fix: check slug length ([6a58262](https://github.com/mx-space/core/commit/6a58262))
+* fix(deps): update dependency inquirer to v9.2.23 ([eae2f50](https://github.com/mx-space/core/commit/eae2f50))
+* fix(deps): update dependency langchain to v0.2.4 ([08f30b5](https://github.com/mx-space/core/commit/08f30b5))
+* fix(deps): update dependency linkedom to v0.18.2 ([d24818a](https://github.com/mx-space/core/commit/d24818a))
+* fix(deps): update dependency mongoose to v8.4.1 ([e37c986](https://github.com/mx-space/core/commit/e37c986))
+* fix(deps): update dependency openai to v4.47.3 ([7996928](https://github.com/mx-space/core/commit/7996928))
+* chore(deps): update dependency @innei/prettier to v0.13.2 ([73dba57](https://github.com/mx-space/core/commit/73dba57))
+* chore(deps): update dependency @langchain/core to v0.2.4 ([4ac0929](https://github.com/mx-space/core/commit/4ac0929))
+* chore(deps): update dependency @langchain/core to v0.2.5 ([1f0b96e](https://github.com/mx-space/core/commit/1f0b96e))
+* chore(deps): update dependency @swc/core to v1.5.24 ([6595371](https://github.com/mx-space/core/commit/6595371))
+* chore(deps): update dependency @types/node to v20.12.14 ([bab8ab2](https://github.com/mx-space/core/commit/bab8ab2))
+* chore(deps): update dependency @types/node to v20.13.0 ([12d30b2](https://github.com/mx-space/core/commit/12d30b2))
+* chore(deps): update dependency eslint to v9.4.0 ([fba9a8b](https://github.com/mx-space/core/commit/fba9a8b))
+* chore(deps): update dependency prettier to v3.3.0 ([650ffab](https://github.com/mx-space/core/commit/650ffab))
+* chore(deps): update pnpm to v9.1.4 (#1745) ([5fd386a](https://github.com/mx-space/core/commit/5fd386a)), closes [#1745](https://github.com/mx-space/core/issues/1745)
+* chore(deps): update pnpm/action-setup action to v4 (#1682) ([550cf16](https://github.com/mx-space/core/commit/550cf16)), closes [#1682](https://github.com/mx-space/core/issues/1682)
+
+## 5.8.0 (2024-05-30)
+
+* release: v5.8.0 ([9e35599](https://github.com/mx-space/core/commit/9e35599))
+* chore(deps): update dependency @langchain/core to v0.2.2 ([c0ba40c](https://github.com/mx-space/core/commit/c0ba40c))
+* chore(deps): update dependency @langchain/core to v0.2.3 ([0f7c416](https://github.com/mx-space/core/commit/0f7c416))
+* chore(deps): update dependency @swc/core to v1.5.22 ([7222ddd](https://github.com/mx-space/core/commit/7222ddd))
+* chore(deps): update dependency @types/node to v20.12.13 ([07891b8](https://github.com/mx-space/core/commit/07891b8))
+* fix(deps): update dependency @langchain/openai to v0.0.34 (#1734) ([98ac7c0](https://github.com/mx-space/core/commit/98ac7c0)), closes [#1734](https://github.com/mx-space/core/issues/1734)
+* fix(deps): update dependency isbot to v5.1.8 ([d83ad94](https://github.com/mx-space/core/commit/d83ad94))
+* fix(deps): update dependency langchain to v0.2.2 ([f9e1f57](https://github.com/mx-space/core/commit/f9e1f57))
+* fix(deps): update dependency langchain to v0.2.3 ([a574cb0](https://github.com/mx-space/core/commit/a574cb0))
+* fix(deps): update dependency mongoose-paginate-v2 to v1.8.2 ([e2f1e49](https://github.com/mx-space/core/commit/e2f1e49))
+* fix(deps): update dependency openai to v4.47.2 ([b4f7857](https://github.com/mx-space/core/commit/b4f7857))
+* fix(deps): update dependency ua-parser-js to v1.0.38 ([254ee4c](https://github.com/mx-space/core/commit/254ee4c))
+* refactor: ai langchain (#1732) ([a043cfa](https://github.com/mx-space/core/commit/a043cfa)), closes [#1732](https://github.com/mx-space/core/issues/1732)
+
+## <small>5.7.12 (2024-05-28)</small>
+
+* release: v5.7.12 ([b187cac](https://github.com/mx-space/core/commit/b187cac))
+* chore: remove pnpm version ([919fe78](https://github.com/mx-space/core/commit/919fe78))
+* chore: update logger package ([01f2f04](https://github.com/mx-space/core/commit/01f2f04))
+* chore(deps): update dependency eslint-plugin-unused-imports to v4 ([4e8313a](https://github.com/mx-space/core/commit/4e8313a))
+* chore(deps): update dependency lint-staged to v15.2.5 ([9896076](https://github.com/mx-space/core/commit/9896076))
+* chore(deps): update pnpm to v9.1.3 ([fccaf36](https://github.com/mx-space/core/commit/fccaf36))
+* fix: cache aggregate query with querykey ([32230bc](https://github.com/mx-space/core/commit/32230bc))
+* fix(deps): update babel monorepo to v7.24.6 ([6881179](https://github.com/mx-space/core/commit/6881179))
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.583.0 (#1727) ([2874eca](https://github.com/mx-space/core/commit/2874eca)), closes [#1727](https://github.com/mx-space/core/issues/1727)
+* ci: fix pnpm version ([d6416e8](https://github.com/mx-space/core/commit/d6416e8))
+
+## <small>5.7.11 (2024-05-24)</small>
+
+* release: v5.7.11 ([9ea18e3](https://github.com/mx-space/core/commit/9ea18e3))
+* fix: get all link ([dbf7c24](https://github.com/mx-space/core/commit/dbf7c24))
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.582.0 (#1723) ([2efcbe8](https://github.com/mx-space/core/commit/2efcbe8)), closes [#1723](https://github.com/mx-space/core/issues/1723)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.8 ([fc0d978](https://github.com/mx-space/core/commit/fc0d978))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.9 ([4cc19c2](https://github.com/mx-space/core/commit/4cc19c2))
+* fix(deps): update dependency cache-manager to v5.5.3 ([d1b0097](https://github.com/mx-space/core/commit/d1b0097))
+* fix(deps): update dependency isbot to v5.1.7 ([b6efc7b](https://github.com/mx-space/core/commit/b6efc7b))
+* chore(deps): update dependency axios to v1.7.2 ([a5a352e](https://github.com/mx-space/core/commit/a5a352e))
+* chore(deps): update dependency lint-staged to v15.2.4 ([f5f342c](https://github.com/mx-space/core/commit/f5f342c))
+* chore(deps): update supercharge/mongodb-github-action action to v1.11.0 (#1722) ([2953873](https://github.com/mx-space/core/commit/2953873)), closes [#1722](https://github.com/mx-space/core/issues/1722)
+
+## <small>5.7.10 (2024-05-22)</small>
+
+* release: v5.7.10 ([4c66693](https://github.com/mx-space/core/commit/4c66693))
+* fix: asset push script ([f433ae7](https://github.com/mx-space/core/commit/f433ae7))
+* fix(deps): update dependency axios-retry to v4.3.0 (#1718) ([df4fc28](https://github.com/mx-space/core/commit/df4fc28)), closes [#1718](https://github.com/mx-space/core/issues/1718)
+* chore: replace innei homepage ([cc41239](https://github.com/mx-space/core/commit/cc41239))
+
+## <small>5.7.9 (2024-05-21)</small>
+
+* release: v5.7.9 ([5a522c1](https://github.com/mx-space/core/commit/5a522c1))
+* ci: remove pnpm version in action ([b268a21](https://github.com/mx-space/core/commit/b268a21))
+* chore: update pnpm ([2edbcef](https://github.com/mx-space/core/commit/2edbcef))
+* chore(deps): update dependency axios to v1.7.1 ([9fea042](https://github.com/mx-space/core/commit/9fea042))
+* fix: comment model url setter ([16b919c](https://github.com/mx-space/core/commit/16b919c))
+
+## <small>5.7.8 (2024-05-20)</small>
+
+* release: v5.7.8 ([f3f8563](https://github.com/mx-space/core/commit/f3f8563))
+* chore: add test case ([79caa5e](https://github.com/mx-space/core/commit/79caa5e))
+* chore(deps): update dependency axios to v1.7.0 (#1716) ([908e449](https://github.com/mx-space/core/commit/908e449)), closes [#1716](https://github.com/mx-space/core/issues/1716)
+* fix: downgrade snakecase deps ([66a07e6](https://github.com/mx-space/core/commit/66a07e6))
+* fix(deps): update dependency @typegoose/auto-increment to v4.4.0 (#1714) ([a10dd5b](https://github.com/mx-space/core/commit/a10dd5b)), closes [#1714](https://github.com/mx-space/core/issues/1714)
+
+## <small>5.7.7 (2024-05-20)</small>
+
+* release: v5.7.7 ([ce22763](https://github.com/mx-space/core/commit/ce22763))
+* chore: update deps ([58ff7af](https://github.com/mx-space/core/commit/58ff7af))
+* chore(deps): update dependency @types/lodash to v4.17.4 ([aa6362e](https://github.com/mx-space/core/commit/aa6362e))
+* chore(deps): update dependency eslint to v9.3.0 ([aaae31b](https://github.com/mx-space/core/commit/aaae31b))
+* fix: throw error when delete file exception ([5da084d](https://github.com/mx-space/core/commit/5da084d))
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.577.0 (#1688) ([4d883ee](https://github.com/mx-space/core/commit/4d883ee)), closes [#1688](https://github.com/mx-space/core/issues/1688)
+* fix(deps): update dependency commander to v12.1.0 (#1713) ([3c30c1f](https://github.com/mx-space/core/commit/3c30c1f)), closes [#1713](https://github.com/mx-space/core/issues/1713)
+* fix(deps): update dependency inquirer to v9.2.22 ([43e6331](https://github.com/mx-space/core/commit/43e6331))
+* fix(deps): update dependency linkedom to v0.18.0 (#1696) ([1d4ced1](https://github.com/mx-space/core/commit/1d4ced1)), closes [#1696](https://github.com/mx-space/core/issues/1696)
+* fix(deps): update dependency mongoose to v8.4.0 (#1709) ([abb912b](https://github.com/mx-space/core/commit/abb912b)), closes [#1709](https://github.com/mx-space/core/issues/1709)
+
+## <small>5.7.6 (2024-05-17)</small>
+
+* release: v5.7.6 ([e5b1982](https://github.com/mx-space/core/commit/e5b1982))
+* chore: add gpt-4o model ([47e4739](https://github.com/mx-space/core/commit/47e4739))
+* chore(deps): update dependency @swc/core to v1.5.6 ([d62feaa](https://github.com/mx-space/core/commit/d62feaa))
+* chore(deps): update dependency @swc/core to v1.5.7 ([c683753](https://github.com/mx-space/core/commit/c683753))
+* chore(deps): update dependency @types/lodash to v4.17.3 ([77b6c6d](https://github.com/mx-space/core/commit/77b6c6d))
+* chore(deps): update dependency @types/node to v20.12.12 ([e50a776](https://github.com/mx-space/core/commit/e50a776))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.6 ([289e3cd](https://github.com/mx-space/core/commit/289e3cd))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.7 ([06c0050](https://github.com/mx-space/core/commit/06c0050))
+* fix(deps): update dependency axios-retry to v4.2.0 (#1705) ([9f20ba2](https://github.com/mx-space/core/commit/9f20ba2)), closes [#1705](https://github.com/mx-space/core/issues/1705)
+* fix(deps): update dependency inquirer to v9.2.21 ([57ece57](https://github.com/mx-space/core/commit/57ece57))
+* fix(deps): update dependency mongoose to v8.3.5 ([eea7608](https://github.com/mx-space/core/commit/eea7608))
+* fix(deps): update dependency mongoose-paginate-v2 to v1.8.1 (#1708) ([0aef6e0](https://github.com/mx-space/core/commit/0aef6e0)), closes [#1708](https://github.com/mx-space/core/issues/1708)
+* fix(deps): update dependency openai to v4.47.1 (#1676) ([8892442](https://github.com/mx-space/core/commit/8892442)), closes [#1676](https://github.com/mx-space/core/issues/1676)
+
+## <small>5.7.5 (2024-05-13)</small>
+
+* release: v5.7.5 ([10b66e6](https://github.com/mx-space/core/commit/10b66e6))
+* chore: docker image improvements (#1692) ([67bf187](https://github.com/mx-space/core/commit/67bf187)), closes [#1692](https://github.com/mx-space/core/issues/1692)
+* chore(deps): update dependency @types/validator to v13.11.10 ([c5f20b5](https://github.com/mx-space/core/commit/c5f20b5))
+* chore(deps): update dependency rimraf to v5.0.7 ([cdb5b26](https://github.com/mx-space/core/commit/cdb5b26))
+* chore(deps): update pnpm to v9.1.1 ([81684fa](https://github.com/mx-space/core/commit/81684fa))
+* fix: docker test in CI failed (#1695) ([33e86c8](https://github.com/mx-space/core/commit/33e86c8)), closes [#1695](https://github.com/mx-space/core/issues/1695)
+
+## <small>5.7.4 (2024-05-11)</small>
+
+* release: v5.7.4 ([9849cfb](https://github.com/mx-space/core/commit/9849cfb))
+* fix: jud is array or object ([5fd79a8](https://github.com/mx-space/core/commit/5fd79a8))
+* fix: passkey origin ([b2fc18d](https://github.com/mx-space/core/commit/b2fc18d))
+* chore(release): bump @mx-space/api-client to v1.13.1 ([0858ba1](https://github.com/mx-space/core/commit/0858ba1))
+
+## <small>5.7.3 (2024-05-11)</small>
+
+* release: v5.7.3 ([c6bf7b7](https://github.com/mx-space/core/commit/c6bf7b7))
+* fix: lru cache set ([6125030](https://github.com/mx-space/core/commit/6125030))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.4 ([0e69856](https://github.com/mx-space/core/commit/0e69856))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.5 ([30a8548](https://github.com/mx-space/core/commit/30a8548))
+* fix(deps): update dependency @fastify/static to v7.0.4 ([30e72f1](https://github.com/mx-space/core/commit/30e72f1))
+* fix(deps): update dependency mongoose to v8.3.4 ([b50e7ef](https://github.com/mx-space/core/commit/b50e7ef))
+* chore(deps): update dependency @swc/core to v1.5.3 ([a27172f](https://github.com/mx-space/core/commit/a27172f))
+* chore(deps): update dependency @swc/core to v1.5.5 ([5e469d1](https://github.com/mx-space/core/commit/5e469d1))
+* chore(deps): update dependency @types/node to v20.12.10 ([6012dc7](https://github.com/mx-space/core/commit/6012dc7))
+* chore(deps): update dependency @types/node to v20.12.11 ([3a8a69e](https://github.com/mx-space/core/commit/3a8a69e))
+* chore(deps): update dependency rimraf to v5.0.6 ([32441e1](https://github.com/mx-space/core/commit/32441e1))
+* chore(deps): update dependency semver to v7.6.1 ([3d075ef](https://github.com/mx-space/core/commit/3d075ef))
+* chore(deps): update dependency semver to v7.6.2 ([c2d3b83](https://github.com/mx-space/core/commit/c2d3b83))
+* feat: add bark push settings ([784c6cd](https://github.com/mx-space/core/commit/784c6cd))
+* feat: add prod to dump memory ([5fc7fcd](https://github.com/mx-space/core/commit/5fc7fcd))
+
+## <small>5.7.2 (2024-05-07)</small>
+
+* release: v5.7.2 ([3f2f36a](https://github.com/mx-space/core/commit/3f2f36a))
+* chore: fix backup description (#1675) ([6dd8fda](https://github.com/mx-space/core/commit/6dd8fda)), closes [#1675](https://github.com/mx-space/core/issues/1675)
+* chore: inscrease throttle limit ([ca35668](https://github.com/mx-space/core/commit/ca35668))
+* chore: upgrade pnpm ([019b519](https://github.com/mx-space/core/commit/019b519))
+* chore(deps): update dependency @sxzz/eslint-config to v3.11.0 (#1672) ([ad8ccbf](https://github.com/mx-space/core/commit/ad8ccbf)), closes [#1672](https://github.com/mx-space/core/issues/1672)
+* fix: bypass `OPTIONS` ([1a85d54](https://github.com/mx-space/core/commit/1a85d54))
+* fix(deps): update dependency @aws-sdk/client-s3 to v3.569.0 (#1651) ([7c56488](https://github.com/mx-space/core/commit/7c56488)), closes [#1651](https://github.com/mx-space/core/issues/1651)
+* fix(deps): update dependency openai to v4.40.2 (#1667) ([ed153a8](https://github.com/mx-space/core/commit/ed153a8)), closes [#1667](https://github.com/mx-space/core/issues/1667)
+
+## <small>5.7.1 (2024-05-04)</small>
+
+* release: v5.7.1 ([15ce925](https://github.com/mx-space/core/commit/15ce925))
+* fix: need auth to generate ai content ([ef85afe](https://github.com/mx-space/core/commit/ef85afe))
+
+## 5.7.0 (2024-05-04)
+
+* release: v5.7.0 ([9933ab9](https://github.com/mx-space/core/commit/9933ab9))
+* chore: import as tye ([949853d](https://github.com/mx-space/core/commit/949853d))
+* chore(deps): update dependency @types/lodash to v4.17.1 ([d0225fe](https://github.com/mx-space/core/commit/d0225fe))
+* chore(deps): update dependency eslint to v9.2.0 ([6278fec](https://github.com/mx-space/core/commit/6278fec))
+* chore(release): bump @mx-space/api-client to v1.13.0 ([02cbd02](https://github.com/mx-space/core/commit/02cbd02))
+* feat: ai writer helper module ([f8909bd](https://github.com/mx-space/core/commit/f8909bd))
+
+## <small>5.6.7 (2024-05-03)</small>
+
+* release: v5.6.7 ([e293118](https://github.com/mx-space/core/commit/e293118))
+* fix: handle deleted content in get like data ([911640b](https://github.com/mx-space/core/commit/911640b))
+
+## <small>5.6.6 (2024-05-03)</small>
+
+* release: v5.6.6 ([0ab422b](https://github.com/mx-space/core/commit/0ab422b))
+* fix: add logger info ([bed1997](https://github.com/mx-space/core/commit/bed1997))
+* fix: ai summarize ([1707c01](https://github.com/mx-space/core/commit/1707c01))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.3 ([0b63c0b](https://github.com/mx-space/core/commit/0b63c0b))
+* chore(deps): update dependency @types/node to v20.12.8 ([768a4be](https://github.com/mx-space/core/commit/768a4be))
+* chore(deps): update dependency @types/nodemailer to v6.4.15 ([5ddabf2](https://github.com/mx-space/core/commit/5ddabf2))
+
+## <small>5.6.5 (2024-05-01)</small>
+
+* release: v5.6.5 ([4865c50](https://github.com/mx-space/core/commit/4865c50))
+* fix: make throttle config ([4543459](https://github.com/mx-space/core/commit/4543459))
+* fix: summary language detect logic ([90e5a6b](https://github.com/mx-space/core/commit/90e5a6b))
+* fix(deps): update dependency cache-manager to v5.5.2 (#1659) ([88a80b0](https://github.com/mx-space/core/commit/88a80b0)), closes [#1659](https://github.com/mx-space/core/issues/1659)
+* fix(deps): update dependency mongoose-lean-getters to v2.1.0 (#1656) ([f1190e2](https://github.com/mx-space/core/commit/f1190e2)), closes [#1656](https://github.com/mx-space/core/issues/1656)
+* fix(deps): update dependency openai to v4.39.1 ([7bc272e](https://github.com/mx-space/core/commit/7bc272e))
+* chore(deps): update dependency eslint-plugin-unused-imports to v3.2.0 ([6b0b477](https://github.com/mx-space/core/commit/6b0b477))
+
+## <small>5.6.4 (2024-04-30)</small>
+
+* release: v5.6.4 ([957ba84](https://github.com/mx-space/core/commit/957ba84))
+* fix: download asset script ([ee92d48](https://github.com/mx-space/core/commit/ee92d48))
+* fix: increase throttler ([eb95be1](https://github.com/mx-space/core/commit/eb95be1))
+* fix: lint ([1ff8015](https://github.com/mx-space/core/commit/1ff8015))
+* fix: lint ([358a5e6](https://github.com/mx-space/core/commit/358a5e6))
+* fix: lint error ([c6980f9](https://github.com/mx-space/core/commit/c6980f9))
+* fix: testing ([f74ef93](https://github.com/mx-space/core/commit/f74ef93))
+* fix(deps): update babel monorepo to v7.24.5 (#1661) ([6a4a2dc](https://github.com/mx-space/core/commit/6a4a2dc)), closes [#1661](https://github.com/mx-space/core/issues/1661)
+* fix(deps): update dependency cache-manager-ioredis-yet to v2.0.4 (#1660) ([cb4d2f0](https://github.com/mx-space/core/commit/cb4d2f0)), closes [#1660](https://github.com/mx-space/core/issues/1660)
+* fix(deps): update dependency dayjs to v1.11.11 ([bd6cec5](https://github.com/mx-space/core/commit/bd6cec5))
+* fix(deps): update dependency isbot to v5.1.6 (#1662) ([2b5a901](https://github.com/mx-space/core/commit/2b5a901)), closes [#1662](https://github.com/mx-space/core/issues/1662)
+* fix(deps): update dependency lru-cache to v10.2.2 ([0adbd37](https://github.com/mx-space/core/commit/0adbd37))
+* fix(deps): update dependency mongoose to v8.3.3 (#1663) ([dcff2bd](https://github.com/mx-space/core/commit/dcff2bd)), closes [#1663](https://github.com/mx-space/core/issues/1663)
+* fix(deps): update dependency openai to v4.39.0 (#1664) ([13c26c1](https://github.com/mx-space/core/commit/13c26c1)), closes [#1664](https://github.com/mx-space/core/issues/1664)
+* chore: lint with sxzz config ([e5ac04a](https://github.com/mx-space/core/commit/e5ac04a))
+* chore: sxzz eslint ([c12bd99](https://github.com/mx-space/core/commit/c12bd99))
+* chore(deps): update dependency @swc/core to v1.5.2 ([092aadf](https://github.com/mx-space/core/commit/092aadf))
+* chore(deps): update dependency mongodb-memory-server to v9.2.0 (#1637) ([9432f4c](https://github.com/mx-space/core/commit/9432f4c)), closes [#1637](https://github.com/mx-space/core/issues/1637)
+
+## <small>5.6.3 (2024-04-27)</small>
+
+* release: v5.6.3 ([56e7bb3](https://github.com/mx-space/core/commit/56e7bb3))
+* chore(release): bump @mx-space/api-client to v1.12.1 ([eee632c](https://github.com/mx-space/core/commit/eee632c))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.2 ([608e470](https://github.com/mx-space/core/commit/608e470))
+* fix(deps): update dependency inquirer to v9.2.20 ([3fd3070](https://github.com/mx-space/core/commit/3fd3070))
+* fix(deps): update dependency isbot to v5.1.5 ([0e741f6](https://github.com/mx-space/core/commit/0e741f6))
+* fix(deps): update dependency lru-cache to v10.2.1 ([53fef99](https://github.com/mx-space/core/commit/53fef99))
+* feat: add `getLastYearPublication` api ([5a028c8](https://github.com/mx-space/core/commit/5a028c8))
+
+## <small>5.6.2 (2024-04-26)</small>
+
+* release: v5.6.2 ([c0d1b32](https://github.com/mx-space/core/commit/c0d1b32))
+* chore: encryption and exclusion logic in configs.dto.ts ([a5483d9](https://github.com/mx-space/core/commit/a5483d9))
+* fix: ai throw ([afdb6b7](https://github.com/mx-space/core/commit/afdb6b7))
+
+## <small>5.6.1 (2024-04-26)</small>
+
+* release: v5.6.1 ([ab2d3fd](https://github.com/mx-space/core/commit/ab2d3fd))
+* chore: delete test in release ([ce397a7](https://github.com/mx-space/core/commit/ce397a7))
+
+## 5.6.0 (2024-04-26)
+
+* release: v5.6.0 ([fd3d8ec](https://github.com/mx-space/core/commit/fd3d8ec))
+* chore: try fix vitest ([467ba31](https://github.com/mx-space/core/commit/467ba31))
+* chore: upgrade pnpm ([5f94339](https://github.com/mx-space/core/commit/5f94339))
+* chore(release): bump @mx-space/api-client to v1.11.2 ([d78a359](https://github.com/mx-space/core/commit/d78a359))
+* chore(release): bump @mx-space/api-client to v1.12.0 ([cdb51e2](https://github.com/mx-space/core/commit/cdb51e2))
+* fix: pass `truncate` ([924e7e4](https://github.com/mx-space/core/commit/924e7e4))
+* fix: throw error when ai disabled ([786a399](https://github.com/mx-space/core/commit/786a399))
+* feat: ai module (#1649) ([c989a2a](https://github.com/mx-space/core/commit/c989a2a)), closes [#1649](https://github.com/mx-space/core/issues/1649)
+
+## <small>5.5.7 (2024-04-25)</small>
+
+* release: v5.5.7 ([5ea551f](https://github.com/mx-space/core/commit/5ea551f))
+* chore: update clerk ([99ecd3c](https://github.com/mx-space/core/commit/99ecd3c))
+* chore: update readme ([3cc24dd](https://github.com/mx-space/core/commit/3cc24dd))
+* chore(deps-dev): bump vite from 5.1.6 to 5.1.7 (#1586) ([0408618](https://github.com/mx-space/core/commit/0408618)), closes [#1586](https://github.com/mx-space/core/issues/1586)
+* chore(deps): update dependency @swc/core to v1.4.17 ([179267c](https://github.com/mx-space/core/commit/179267c))
+* chore(deps): update dependency @swc/core to v1.5.0 (#1642) ([dbe5d94](https://github.com/mx-space/core/commit/dbe5d94)), closes [#1642](https://github.com/mx-space/core/issues/1642)
+* chore(deps): update dependency mongodb-memory-server to v9.2.0 (#1636) ([357290c](https://github.com/mx-space/core/commit/357290c)), closes [#1636](https://github.com/mx-space/core/issues/1636)
+* chore(release): bump @mx-space/api-client to v1.11.1 ([f133c1f](https://github.com/mx-space/core/commit/f133c1f))
+* fix: custom mongo connection string ([62243e8](https://github.com/mx-space/core/commit/62243e8))
+* fix: delete regexp cache key ([f25f618](https://github.com/mx-space/core/commit/f25f618))
+* fix: extends parent `isWhispers` ([d11382b](https://github.com/mx-space/core/commit/d11382b))
+* fix: file trash ([9c3394c](https://github.com/mx-space/core/commit/9c3394c))
+* fix: filter markdown video href ([52c344d](https://github.com/mx-space/core/commit/52c344d))
+* fix: update docker-run.sh (#1643) ([21e84b1](https://github.com/mx-space/core/commit/21e84b1)), closes [#1643](https://github.com/mx-space/core/issues/1643)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v5.0.1 ([03c5bab](https://github.com/mx-space/core/commit/03c5bab))
+* feat: add `truncate` for post list ([45e7cf8](https://github.com/mx-space/core/commit/45e7cf8))
+
+## <small>5.5.6 (2024-04-22)</small>
+
+* release: v5.5.6 ([6cb518e](https://github.com/mx-space/core/commit/6cb518e))
+* fix: bypass options preflight ([845b307](https://github.com/mx-space/core/commit/845b307))
+* fix: comment email link url ([0fd8fbf](https://github.com/mx-space/core/commit/0fd8fbf))
+
+## <small>5.5.5 (2024-04-20)</small>
+
+* release: v5.5.5 ([1789354](https://github.com/mx-space/core/commit/1789354))
+* fix: logger ([e66e49a](https://github.com/mx-space/core/commit/e66e49a))
+* fix: s3 region ([e18ce0d](https://github.com/mx-space/core/commit/e18ce0d))
+* fix(deps): update dependency @typegoose/auto-increment to v4.3.0 (#1614) ([ab4cf31](https://github.com/mx-space/core/commit/ab4cf31)), closes [#1614](https://github.com/mx-space/core/issues/1614)
+* chore(deps): update dependency ioredis to v5.4.1 (#1628) ([6462d75](https://github.com/mx-space/core/commit/6462d75)), closes [#1628](https://github.com/mx-space/core/issues/1628)
+* feat: backup support s3 ([9dc3fbd](https://github.com/mx-space/core/commit/9dc3fbd))
+
+## <small>5.5.4 (2024-04-20)</small>
+
+* release: v5.5.4 ([bbfc557](https://github.com/mx-space/core/commit/bbfc557))
+* fix: setup route jump #1619 ([e24b70d](https://github.com/mx-space/core/commit/e24b70d)), closes [#1619](https://github.com/mx-space/core/issues/1619)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.15 ([c9971a9](https://github.com/mx-space/core/commit/c9971a9))
+* fix(deps): update dependency marked to v12.0.2 ([abe48df](https://github.com/mx-space/core/commit/abe48df))
+* fix(deps): update nest monorepo to v10.3.8 ([8e56dcd](https://github.com/mx-space/core/commit/8e56dcd))
+* chore(deps): update dependency @swc/core to v1.4.15 ([48f25e2](https://github.com/mx-space/core/commit/48f25e2))
+* chore(deps): update dependency @swc/core to v1.4.16 ([8d7c57b](https://github.com/mx-space/core/commit/8d7c57b))
+
+## <small>5.5.3 (2024-04-17)</small>
+
+* release: v5.5.3 ([b7037cc](https://github.com/mx-space/core/commit/b7037cc))
+* fix: check activity ref type ([9c89987](https://github.com/mx-space/core/commit/9c89987))
+* fix: comment filter ([ec58221](https://github.com/mx-space/core/commit/ec58221))
+* fix(activity): filter comment state ([73abe9c](https://github.com/mx-space/core/commit/73abe9c))
+
+## <small>5.5.2 (2024-04-17)</small>
+
+* release: v5.5.2 ([e7849c8](https://github.com/mx-space/core/commit/e7849c8))
+* chore: add 429 path info ([bff8f50](https://github.com/mx-space/core/commit/bff8f50))
+* chore: add zx to ignore deps ([528b96e](https://github.com/mx-space/core/commit/528b96e))
+* chore(deps): update dependency @swc/core to v1.4.14 ([8f9523d](https://github.com/mx-space/core/commit/8f9523d))
+* chore(deps): update dependency @types/qs to v6.9.15 ([596da7f](https://github.com/mx-space/core/commit/596da7f))
+* fix: filter hide note ([29e3ba5](https://github.com/mx-space/core/commit/29e3ba5))
+* fix: user collection name ([85ca2f6](https://github.com/mx-space/core/commit/85ca2f6))
+* fix(deps): update dependency @nestjs/schedule to v4.0.2 ([debacce](https://github.com/mx-space/core/commit/debacce))
+* fix(deps): update dependency @typegoose/typegoose to v12.3.1 ([fb39902](https://github.com/mx-space/core/commit/fb39902))
+* fix(deps): update dependency inquirer to v9.2.19 ([7cff84f](https://github.com/mx-space/core/commit/7cff84f))
+* fix(deps): update dependency mongoose to v8.3.2 ([17e796f](https://github.com/mx-space/core/commit/17e796f))
+
+## <small>5.5.1 (2024-04-14)</small>
+
+* release: v5.5.1 ([eb012f3](https://github.com/mx-space/core/commit/eb012f3))
+* chore: disable eslint upgrade ([fb6956a](https://github.com/mx-space/core/commit/fb6956a))
+* chore(deps): update dependency eslint to v9 (#1598) ([08ffd06](https://github.com/mx-space/core/commit/08ffd06)), closes [#1598](https://github.com/mx-space/core/issues/1598)
+* chore(deps): update pnpm to v8.15.7 ([14e0495](https://github.com/mx-space/core/commit/14e0495))
+* feat: add recent notification api ([1111b96](https://github.com/mx-space/core/commit/1111b96))
+
+## 5.5.0 (2024-04-13)
+
+* release: v5.5.0 ([e042ed1](https://github.com/mx-space/core/commit/e042ed1))
+* chore(deps): update dependency @innei/eslint-config-ts to v0.13.1 ([0078e18](https://github.com/mx-space/core/commit/0078e18))
+* chore(deps): update dependency @innei/prettier to v0.13.1 ([791f3b3](https://github.com/mx-space/core/commit/791f3b3))
+* chore(release): bump @mx-space/api-client to v1.11.0 ([8a4e335](https://github.com/mx-space/core/commit/8a4e335))
+* chore(release): bump @mx-space/api-client to v1.11.0-alpha.0 ([0d1a680](https://github.com/mx-space/core/commit/0d1a680))
+* fix: add some field ([903aa30](https://github.com/mx-space/core/commit/903aa30))
+* fix(deps): update dependency ejs to v3.1.10 ([0963d50](https://github.com/mx-space/core/commit/0963d50))
+* fix(deps): update dependency inquirer to v9.2.18 ([064ec68](https://github.com/mx-space/core/commit/064ec68))
+* fix(deps): update dependency qs to v6.12.1 ([8d170ed](https://github.com/mx-space/core/commit/8d170ed))
+* feat: add recent activity api ([b4726ad](https://github.com/mx-space/core/commit/b4726ad))
+
+## <small>5.4.10 (2024-04-11)</small>
+
+* release: v5.4.10 ([1ca3dc3](https://github.com/mx-space/core/commit/1ca3dc3))
+* chore(release): bump @mx-space/api-client to v1.10.1 ([4539afe](https://github.com/mx-space/core/commit/4539afe))
+* fix: add `hide` for note list api ([5a2b2de](https://github.com/mx-space/core/commit/5a2b2de))
+
+## <small>5.4.9 (2024-04-11)</small>
+
+* release: v5.4.9 ([5b4f108](https://github.com/mx-space/core/commit/5b4f108))
+* fix: skip cache if request is authenticated ([70d9b69](https://github.com/mx-space/core/commit/70d9b69))
+* fix(deps): update algoliasearch-client-javascript monorepo to v4.23.3 ([39bb8ce](https://github.com/mx-space/core/commit/39bb8ce))
+* fix(deps): update dependency @typegoose/typegoose to v12.3.0 (#1601) ([a77bb04](https://github.com/mx-space/core/commit/a77bb04)), closes [#1601](https://github.com/mx-space/core/issues/1601)
+* chore(deps): update robinraju/release-downloader action to v1.10 (#1609) ([b86dccf](https://github.com/mx-space/core/commit/b86dccf)), closes [#1609](https://github.com/mx-space/core/issues/1609)
+
+## <small>5.4.8 (2024-04-11)</small>
+
+* release: v5.4.8 ([64a34bb](https://github.com/mx-space/core/commit/64a34bb))
+* fix: server time response ([ac918dc](https://github.com/mx-space/core/commit/ac918dc))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.14 ([70b76c7](https://github.com/mx-space/core/commit/70b76c7))
+* fix(deps): update dependency mongoose to v8.3.1 ([a433fc5](https://github.com/mx-space/core/commit/a433fc5))
+* chore(deps): update dependency @swc/core to v1.4.13 ([126b154](https://github.com/mx-space/core/commit/126b154))
+* chore(deps): update dependency @types/node to v20.12.6 ([0fc6228](https://github.com/mx-space/core/commit/0fc6228))
+* chore(deps): update dependency @types/node to v20.12.7 ([083e0c9](https://github.com/mx-space/core/commit/083e0c9))
+* chore(deps): update dependency cron to v3.1.7 ([743a30a](https://github.com/mx-space/core/commit/743a30a))
+* chore(deps): update dependency nanoid to v5.0.7 ([2a9c8d7](https://github.com/mx-space/core/commit/2a9c8d7))
+* chore(deps): update dependency typescript to v5.4.5 ([59f0c88](https://github.com/mx-space/core/commit/59f0c88))
+* chore(deps): update dependency unplugin-swc to v1.4.5 ([b6ddb7c](https://github.com/mx-space/core/commit/b6ddb7c))
+
+## <small>5.4.7 (2024-04-06)</small>
+
+* release: v5.4.7 ([10b7778](https://github.com/mx-space/core/commit/10b7778))
+* fix: downgrade snakecase ([64e2dbf](https://github.com/mx-space/core/commit/64e2dbf))
+* fix: downgrade snakecase ([f3a0d06](https://github.com/mx-space/core/commit/f3a0d06))
+
+## <small>5.4.6 (2024-04-06)</small>
+
+* release: v5.4.6 ([f973413](https://github.com/mx-space/core/commit/f973413))
+* chore(deps): update dependency @innei/eslint-config-ts to v0.13.0 (#1563) ([9a0cc82](https://github.com/mx-space/core/commit/9a0cc82)), closes [#1563](https://github.com/mx-space/core/issues/1563)
+* chore(deps): update dependency @swc/core to v1.4.12 ([ca61de6](https://github.com/mx-space/core/commit/ca61de6))
+* chore(deps): update dependency @types/node to v20.12.4 ([c80ea6f](https://github.com/mx-space/core/commit/c80ea6f))
+* chore(deps): update dependency @types/node to v20.12.5 ([5e4ad8d](https://github.com/mx-space/core/commit/5e4ad8d))
+* chore(deps): update dependency typescript to v5.4.4 ([3215eac](https://github.com/mx-space/core/commit/3215eac))
+* chore(release): bump @mx-space/api-client to v1.10.0 ([9ba515c](https://github.com/mx-space/core/commit/9ba515c))
+* fix: update test snap ([45ae1f8](https://github.com/mx-space/core/commit/45ae1f8))
+* fix(deps): update babel monorepo to v7.24.4 ([6a9e78b](https://github.com/mx-space/core/commit/6a9e78b))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.13 ([0288c79](https://github.com/mx-space/core/commit/0288c79))
+* fix(deps): update dependency @fastify/static to v7.0.3 ([12da98f](https://github.com/mx-space/core/commit/12da98f))
+* fix(deps): update dependency cache-manager to v5.5.0 (#1594) ([e1e6cdb](https://github.com/mx-space/core/commit/e1e6cdb)), closes [#1594](https://github.com/mx-space/core/issues/1594)
+* fix(deps): update dependency cache-manager to v5.5.1 ([9bdce4b](https://github.com/mx-space/core/commit/9bdce4b))
+* fix(deps): update dependency cache-manager-ioredis-yet to v2.0.3 ([0e41674](https://github.com/mx-space/core/commit/0e41674))
+* fix(deps): update dependency mongoose to v8.3.0 (#1588) ([2207510](https://github.com/mx-space/core/commit/2207510)), closes [#1588](https://github.com/mx-space/core/issues/1588)
+* fix(deps): update dependency snakecase-keys to v7 (#1566) ([69cd144](https://github.com/mx-space/core/commit/69cd144)), closes [#1566](https://github.com/mx-space/core/issues/1566)
+* chore!: remove note music deprecated field ([04c749d](https://github.com/mx-space/core/commit/04c749d))
+* feat(markdown): export with meta json ([ef4d639](https://github.com/mx-space/core/commit/ef4d639))
+
+## <small>5.4.5 (2024-04-03)</small>
+
+* release: v5.4.5 ([e3beae0](https://github.com/mx-space/core/commit/e3beae0))
+* chore(deps): update dependency @types/node to v20.12.2 ([cb347db](https://github.com/mx-space/core/commit/cb347db))
+* chore(deps): update dependency @types/node to v20.12.3 ([1151021](https://github.com/mx-space/core/commit/1151021))
+* chore(deps): update pnpm to v8.15.6 ([c719880](https://github.com/mx-space/core/commit/c719880))
+* chore(release): bump @mx-space/api-client to v1.9.0 ([03a1dc6](https://github.com/mx-space/core/commit/03a1dc6))
+* feat: add get one recently api ([97f10b4](https://github.com/mx-space/core/commit/97f10b4))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.12 ([f2e9a5b](https://github.com/mx-space/core/commit/f2e9a5b))
+* fix(deps): update dependency @fastify/static to v7.0.2 ([0ad5a14](https://github.com/mx-space/core/commit/0ad5a14))
+* fix(deps): update dependency inquirer to v9.2.17 ([3fb381a](https://github.com/mx-space/core/commit/3fb381a))
+* fix(deps): update dependency isbot to v5.1.3 ([d9f92b8](https://github.com/mx-space/core/commit/d9f92b8))
+* fix(deps): update dependency isbot to v5.1.4 ([ec8c62a](https://github.com/mx-space/core/commit/ec8c62a))
+
+## <small>5.4.4 (2024-03-29)</small>
+
+* release: v5.4.4 ([8ddba09](https://github.com/mx-space/core/commit/8ddba09))
+* fix: server time cors ([fd121cc](https://github.com/mx-space/core/commit/fd121cc))
+* fix(api-client): bypass ts property ([d0f7c2d](https://github.com/mx-space/core/commit/d0f7c2d))
+* chore(release): bump @mx-space/api-client to v1.8.1 ([30afb0c](https://github.com/mx-space/core/commit/30afb0c))
+
+## <small>5.4.3 (2024-03-29)</small>
+
+* release: v5.4.3 ([6a6b3c9](https://github.com/mx-space/core/commit/6a6b3c9))
+* fix(deps): update dependency mongoose to v8.2.4 ([ef58bcf](https://github.com/mx-space/core/commit/ef58bcf))
+* fix(deps): update dependency reflect-metadata to v0.2.2 ([6c174f5](https://github.com/mx-space/core/commit/6c174f5))
+* chore(deps): update dependency mongodb-memory-server to v9.1.8 ([3aa61a0](https://github.com/mx-space/core/commit/3aa61a0))
+* chore(deps): update dependency mongodb-memory-server to v9.1.8 ([87de5c9](https://github.com/mx-space/core/commit/87de5c9))
+
+## <small>5.4.2 (2024-03-28)</small>
+
+* release: v5.4.2 ([08f5510](https://github.com/mx-space/core/commit/08f5510))
+* fix: bypass presence data morph ([04264c1](https://github.com/mx-space/core/commit/04264c1))
+* fix(deps): update algoliasearch-client-javascript monorepo to v4.23.2 (#1568) ([0b06eb6](https://github.com/mx-space/core/commit/0b06eb6)), closes [#1568](https://github.com/mx-space/core/issues/1568)
+* fix(deps): update nest monorepo to v10.3.6 (patch) (#1569) ([9d602ce](https://github.com/mx-space/core/commit/9d602ce)), closes [#1569](https://github.com/mx-space/core/issues/1569)
+* fix(deps): update nest monorepo to v10.3.7 (patch) (#1570) ([91693d1](https://github.com/mx-space/core/commit/91693d1)), closes [#1570](https://github.com/mx-space/core/issues/1570)
+* chore(deps): update dependency @innei/prettier to v0.13.0 (#1565) ([1417411](https://github.com/mx-space/core/commit/1417411)), closes [#1565](https://github.com/mx-space/core/issues/1565)
+
+## <small>5.4.1 (2024-03-27)</small>
+
+* release: v5.4.1 ([355fe62](https://github.com/mx-space/core/commit/355fe62))
+* fix: join room at ([4917076](https://github.com/mx-space/core/commit/4917076))
+* fix(deps): update dependency @nestjs/cache-manager to v2.2.2 ([ba0c673](https://github.com/mx-space/core/commit/ba0c673))
+* fix(deps): update dependency linkedom to v0.16.11 ([30a425e](https://github.com/mx-space/core/commit/30a425e))
+* chore: nginx conf ([346005c](https://github.com/mx-space/core/commit/346005c))
+* chore(deps): update dependency @swc/core to v1.4.11 ([3febafa](https://github.com/mx-space/core/commit/3febafa))
+* chore(deps): update dependency express to v4.19.2 ([ba9c1e4](https://github.com/mx-space/core/commit/ba9c1e4))
+
+## 5.4.0 (2024-03-24)
+
+* release: v5.4.0 ([befa6df](https://github.com/mx-space/core/commit/befa6df))
+* feat: pass `isAuthenticated` to function call ([74ddc15](https://github.com/mx-space/core/commit/74ddc15))
+* chore: rename a decorate ([cd491b3](https://github.com/mx-space/core/commit/cd491b3))
+
+## <small>5.3.4 (2024-03-24)</small>
+
+* release: v5.3.4 ([d8cebb0](https://github.com/mx-space/core/commit/d8cebb0))
+* chore: update readme ([7d02ad1](https://github.com/mx-space/core/commit/7d02ad1))
+
+## <small>5.3.3 (2024-03-23)</small>
+
+* release: v5.3.3 ([01e3dfd](https://github.com/mx-space/core/commit/01e3dfd))
+* feat: add other filed for search service ([8cc2d8f](https://github.com/mx-space/core/commit/8cc2d8f))
+* feat: custom get response data ([1d1e3c5](https://github.com/mx-space/core/commit/1d1e3c5))
+* fix: serverless update ([4776de6](https://github.com/mx-space/core/commit/4776de6))
+* fix(deps): update dependency @babel/core to v7.24.3 ([05c5736](https://github.com/mx-space/core/commit/05c5736))
+* fix(deps): update dependency @fastify/multipart to v8.2.0 (#1556) ([cae212f](https://github.com/mx-space/core/commit/cae212f)), closes [#1556](https://github.com/mx-space/core/issues/1556)
+* fix(deps): update dependency axios-retry to v4.1.0 (#1550) ([a25e02a](https://github.com/mx-space/core/commit/a25e02a)), closes [#1550](https://github.com/mx-space/core/issues/1550)
+* fix(deps): update dependency mongoose to v8.2.3 ([9537402](https://github.com/mx-space/core/commit/9537402))
+* fix(deps): update dependency nodemailer to v6.9.13 ([fddb6e8](https://github.com/mx-space/core/commit/fddb6e8))
+* fix(deps): update nest monorepo to v10.3.5 ([3f0a330](https://github.com/mx-space/core/commit/3f0a330))
+* chore: export typings ([a0e3aa5](https://github.com/mx-space/core/commit/a0e3aa5))
+* chore(deps): update dependency @innei/eslint-config-ts to v0.12.6 ([d1492ad](https://github.com/mx-space/core/commit/d1492ad))
+* chore(deps): update dependency @innei/prettier to v0.12.6 (#1558) ([3170335](https://github.com/mx-space/core/commit/3170335)), closes [#1558](https://github.com/mx-space/core/issues/1558)
+* chore(deps): update dependency @types/node to v20.11.30 ([b2666cc](https://github.com/mx-space/core/commit/b2666cc))
+* chore(deps): update dependency @types/qs to v6.9.14 ([8cc099c](https://github.com/mx-space/core/commit/8cc099c))
+* chore(deps): update dependency express to v4.19.1 (#1555) ([4fa8835](https://github.com/mx-space/core/commit/4fa8835)), closes [#1555](https://github.com/mx-space/core/issues/1555)
+* chore(deps): update dependency typescript to v5.4.3 ([068076b](https://github.com/mx-space/core/commit/068076b))
+* chore(release): bump @mx-space/api-client to v1.8.0 ([6a378b8](https://github.com/mx-space/core/commit/6a378b8))
+* chore(release): bump @mx-space/api-client to v1.8.1-alpha.0 ([0a19970](https://github.com/mx-space/core/commit/0a19970))
+* chore(release): bump @mx-space/webhook to v0.3.0 ([6fd5fba](https://github.com/mx-space/core/commit/6fd5fba))
+
+## <small>5.3.2 (2024-03-19)</small>
+
+* release: v5.3.2 ([cb62655](https://github.com/mx-space/core/commit/cb62655))
+* chore: update deps ([68dcd91](https://github.com/mx-space/core/commit/68dcd91))
+* chore(deps): update dependency @types/node to v20.11.29 ([6c9e3d1](https://github.com/mx-space/core/commit/6c9e3d1))
+* chore(deps): update dependency @types/qs to v6.9.13 ([043260d](https://github.com/mx-space/core/commit/043260d))
+* fix: remove only boardcast gateway room in post and note ([2e0c919](https://github.com/mx-space/core/commit/2e0c919))
+* fix(deps): update dependency isbot to v5.1.2 ([10aed09](https://github.com/mx-space/core/commit/10aed09))
+* fix(deps): update nest monorepo to v10.3.4 (patch) (#1544) ([c37ca86](https://github.com/mx-space/core/commit/c37ca86)), closes [#1544](https://github.com/mx-space/core/issues/1544)
+
+## <small>5.3.1 (2024-03-18)</small>
+
+* release: v5.3.1 ([94269b5](https://github.com/mx-space/core/commit/94269b5))
+* fix: downgrade vitest ([46a098c](https://github.com/mx-space/core/commit/46a098c))
+
+## 5.3.0 (2024-03-18)
+
+* release: v5.3.0 ([4c14818](https://github.com/mx-space/core/commit/4c14818))
+* feat: ws type read cunt ([310480f](https://github.com/mx-space/core/commit/310480f))
+* chore(deps): update dependency @swc/core to v1.4.8 ([0106399](https://github.com/mx-space/core/commit/0106399))
+* chore(deps): update dependency @types/node to v20.11.28 ([02a6c22](https://github.com/mx-space/core/commit/02a6c22))
+* chore(deps): update dependency axios to v1.6.8 ([84042a3](https://github.com/mx-space/core/commit/84042a3))
+* chore(deps): update dependency eslint to v8.57.0 ([deff9b4](https://github.com/mx-space/core/commit/deff9b4))
+* chore(deps): update dependency socket.io to v4.7.5 ([99fd29c](https://github.com/mx-space/core/commit/99fd29c))
+* chore(deps): update dependency vite to v5.1.6 ([d959053](https://github.com/mx-space/core/commit/d959053))
+* chore(deps): update dependency vitest to v1.3.1 ([c54419b](https://github.com/mx-space/core/commit/c54419b))
+* chore(deps): update dependency vitest to v1.4.0 (#1539) ([ff269f6](https://github.com/mx-space/core/commit/ff269f6)), closes [#1539](https://github.com/mx-space/core/issues/1539)
+* chore(deps): update pnpm to v8.15.5 ([c33d861](https://github.com/mx-space/core/commit/c33d861))
+* fix(deps): update dependency inquirer to v9.2.16 ([fe4fbd7](https://github.com/mx-space/core/commit/fe4fbd7))
+* fix(deps): update dependency linkedom to v0.16.10 ([50a9ca1](https://github.com/mx-space/core/commit/50a9ca1))
+* fix(deps): update dependency mongoose to v8.2.2 ([6795295](https://github.com/mx-space/core/commit/6795295))
+
+## <small>5.2.2 (2024-03-14)</small>
+
+* release: v5.2.2 ([3f0aca0](https://github.com/mx-space/core/commit/3f0aca0))
+* chore: add cf cache header ([ef997e2](https://github.com/mx-space/core/commit/ef997e2))
+* chore(deps): update dependency @swc/core to v1.4.7 ([04026d2](https://github.com/mx-space/core/commit/04026d2))
+* chore(deps): update dependency @types/lodash to v4.17.0 ([61d6312](https://github.com/mx-space/core/commit/61d6312))
+* chore(deps): update dependency @types/node to v20.11.27 ([9b91b9b](https://github.com/mx-space/core/commit/9b91b9b))
+* chore(deps): update dependency vite-tsconfig-paths to v4.3.2 ([8c63747](https://github.com/mx-space/core/commit/8c63747))
+* fix(deps): update dependency cache-manager-ioredis-yet to v2.0.2 ([52066c1](https://github.com/mx-space/core/commit/52066c1))
+* fix(deps): update dependency linkedom to v0.16.9 ([11b74be](https://github.com/mx-space/core/commit/11b74be))
+
+## <small>5.2.1 (2024-03-12)</small>
+
+* release: v5.2.1 ([a51a5f3](https://github.com/mx-space/core/commit/a51a5f3))
+* chore(deps): update dependency @types/node to v20.11.26 ([38ecc5c](https://github.com/mx-space/core/commit/38ecc5c))
+* chore(deps): update dependency mongodb-memory-server to v9.1.7 ([057b2da](https://github.com/mx-space/core/commit/057b2da))
+* chore(deps): update dependency vite to v5.1.6 ([cb20401](https://github.com/mx-space/core/commit/cb20401))
+* fix: docker run script ([e08ddd3](https://github.com/mx-space/core/commit/e08ddd3))
+
+## 5.2.0 (2024-03-10)
+
+* release: v5.2.0 ([a180020](https://github.com/mx-space/core/commit/a180020))
+* fix: add cache header ([f0640cd](https://github.com/mx-space/core/commit/f0640cd))
+* fix(deps): update dependency cache-manager-ioredis-yet to v2.0.1 ([747a12a](https://github.com/mx-space/core/commit/747a12a))
+* fix(deps): update dependency marked to v12.0.1 ([12bd435](https://github.com/mx-space/core/commit/12bd435))
+* fix(deps): update dependency mongoose-lean-getters to v2 (#1517) ([34db0a6](https://github.com/mx-space/core/commit/34db0a6)), closes [#1517](https://github.com/mx-space/core/issues/1517)
+* fix(deps): update dependency nodemailer to v6.9.12 ([4d4df4c](https://github.com/mx-space/core/commit/4d4df4c))
+* fix(deps): update dependency qs to v6.12.0 (#1514) ([401f650](https://github.com/mx-space/core/commit/401f650)), closes [#1514](https://github.com/mx-space/core/issues/1514)
+* chore: ignore all node_modules (#1521) ([9bd0f78](https://github.com/mx-space/core/commit/9bd0f78)), closes [#1521](https://github.com/mx-space/core/issues/1521)
+* chore(deps): update dependency @innei/eslint-config-ts to v0.12.4 ([bb2bfc9](https://github.com/mx-space/core/commit/bb2bfc9))
+* chore(deps): update dependency @innei/prettier to v0.12.4 ([cc68407](https://github.com/mx-space/core/commit/cc68407))
+* chore(deps): update dependency @swc/core to v1.4.4 ([242e2f3](https://github.com/mx-space/core/commit/242e2f3))
+* chore(deps): update dependency @swc/core to v1.4.5 ([d1e695f](https://github.com/mx-space/core/commit/d1e695f))
+* chore(deps): update dependency @swc/core to v1.4.6 ([4547e84](https://github.com/mx-space/core/commit/4547e84))
+* chore(deps): update dependency @types/node to v20.11.25 ([2c61ef5](https://github.com/mx-space/core/commit/2c61ef5))
+* chore(deps): update dependency typescript to v5.4.2 (#1513) ([2bfe0f4](https://github.com/mx-space/core/commit/2bfe0f4)), closes [#1513](https://github.com/mx-space/core/issues/1513)
+
+## <small>5.1.6 (2024-03-05)</small>
+
+* release: v5.1.6 ([e8a3a00](https://github.com/mx-space/core/commit/e8a3a00))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.11 ([dcdfb59](https://github.com/mx-space/core/commit/dcdfb59))
+* fix(deps): update dependency @typegoose/auto-increment to v4.2.0 (#1484) ([40b2100](https://github.com/mx-space/core/commit/40b2100)), closes [#1484](https://github.com/mx-space/core/issues/1484)
+* fix(deps): update dependency @typegoose/typegoose to v12.2.0 (#1485) ([e3334ef](https://github.com/mx-space/core/commit/e3334ef)), closes [#1485](https://github.com/mx-space/core/issues/1485)
+* fix(deps): update dependency cache-manager-ioredis-yet to v2 (#1504) ([f64dff0](https://github.com/mx-space/core/commit/f64dff0)), closes [#1504](https://github.com/mx-space/core/issues/1504)
+* fix(deps): update dependency mongoose to v8.2.1 ([ca344a8](https://github.com/mx-space/core/commit/ca344a8))
+* fix(deps): update dependency nodemailer to v6.9.11 ([dae4ef7](https://github.com/mx-space/core/commit/dae4ef7))
+* fix(deps): update dependency xss to v1.0.15 ([959c4aa](https://github.com/mx-space/core/commit/959c4aa))
+* chore(deps): update dependency @types/node to v20.11.24 ([76a6fa1](https://github.com/mx-space/core/commit/76a6fa1))
+* chore(deps): update dependency express to v4.18.3 ([297da4e](https://github.com/mx-space/core/commit/297da4e))
+* chore(deps): update dependency vite to v5.1.5 ([a6a1fb5](https://github.com/mx-space/core/commit/a6a1fb5))
+* chore(deps): update pnpm/action-setup action to v3 (#1447) ([e6a31fc](https://github.com/mx-space/core/commit/e6a31fc)), closes [#1447](https://github.com/mx-space/core/issues/1447)
+
+## <small>5.1.5 (2024-02-29)</small>
+
+* release: v5.1.5 ([89820b5](https://github.com/mx-space/core/commit/89820b5))
+* fix: deps ([1c54ddd](https://github.com/mx-space/core/commit/1c54ddd))
+* fix: log ([a142e8b](https://github.com/mx-space/core/commit/a142e8b))
+* fix: script ([c9deddd](https://github.com/mx-space/core/commit/c9deddd))
+* fix: type ([6389731](https://github.com/mx-space/core/commit/6389731))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.10 ([e55797c](https://github.com/mx-space/core/commit/e55797c))
+* fix(deps): update dependency @types/jsonwebtoken to v9.0.6 ([3481b50](https://github.com/mx-space/core/commit/3481b50))
+* fix(deps): update dependency isbot to v5.1.1 ([db3ab52](https://github.com/mx-space/core/commit/db3ab52))
+* fix(deps): update dependency mongoose to v8.2.0 (#1483) ([62c6855](https://github.com/mx-space/core/commit/62c6855)), closes [#1483](https://github.com/mx-space/core/issues/1483)
+* fix(deps): update dependency nodemailer to v6.9.10 ([b9b5119](https://github.com/mx-space/core/commit/b9b5119))
+* fix(deps): update dependency wildcard-match to v5.1.3 ([1218d7a](https://github.com/mx-space/core/commit/1218d7a))
+* chore(deps): update dependency @types/node to v20.11.20 ([1e09762](https://github.com/mx-space/core/commit/1e09762))
+* chore(deps): update dependency @types/node to v20.11.21 ([19ad0c9](https://github.com/mx-space/core/commit/19ad0c9))
+* chore(deps): update dependency @types/node to v20.11.22 ([8a59c0d](https://github.com/mx-space/core/commit/8a59c0d))
+* chore(deps): update dependency @types/qs to v6.9.12 ([c07d514](https://github.com/mx-space/core/commit/c07d514))
+* chore(deps): update dependency @types/semver to v7.5.8 ([69e7675](https://github.com/mx-space/core/commit/69e7675))
+* chore(deps): update dependency ky to v1.2.1 (#1491) ([e3f5d33](https://github.com/mx-space/core/commit/e3f5d33)), closes [#1491](https://github.com/mx-space/core/issues/1491)
+* chore(deps): update pnpm to v8.15.4 ([bbeb592](https://github.com/mx-space/core/commit/bbeb592))
+* chore(release): bump @mx-space/webhook to v0.2.3 ([43af81d](https://github.com/mx-space/core/commit/43af81d))
+* chore(release): bump @mx-space/webhook to v0.2.4 ([480ed4f](https://github.com/mx-space/core/commit/480ed4f))
+* fix!: remove ky ([f9d612f](https://github.com/mx-space/core/commit/f9d612f))
+
+## <small>5.1.4 (2024-02-22)</small>
+
+* release: v5.1.4 ([a0734f8](https://github.com/mx-space/core/commit/a0734f8))
+* fix: remove ws guard ([147441c](https://github.com/mx-space/core/commit/147441c))
+
+## <small>5.1.3 (2024-02-22)</small>
+
+* release: v5.1.3 ([7cb6eea](https://github.com/mx-space/core/commit/7cb6eea))
+* fix: activity ref type transform to lower case ([6342257](https://github.com/mx-space/core/commit/6342257))
+
+## <small>5.1.2 (2024-02-21)</small>
+
+* release: v5.1.2 ([69ba9ec](https://github.com/mx-space/core/commit/69ba9ec))
+* fix: api injection ([9d095fb](https://github.com/mx-space/core/commit/9d095fb))
+* fix: throttle ip tracker ([c82cb8f](https://github.com/mx-space/core/commit/c82cb8f))
+* fix!: page proxy inject url ([070417c](https://github.com/mx-space/core/commit/070417c))
+* chore(deps): update dependency vite to v5.1.4 ([c2e2f98](https://github.com/mx-space/core/commit/c2e2f98))
+
+## <small>5.1.1 (2024-02-21)</small>
+
+* release: v5.1.1 ([dfb1769](https://github.com/mx-space/core/commit/dfb1769))
+* fix: refType of recentlies fixes #1478 ([b487b3a](https://github.com/mx-space/core/commit/b487b3a)), closes [#1478](https://github.com/mx-space/core/issues/1478)
+* chore(deps): update dependency nanoid to v5.0.6 ([196c790](https://github.com/mx-space/core/commit/196c790))
+
+## 5.1.0 (2024-02-20)
+
+* release: v5.1.0 ([1577995](https://github.com/mx-space/core/commit/1577995))
+* fix: remove wating if 427 and add query parameters to getReadingRangeRank ([2ce68aa](https://github.com/mx-space/core/commit/2ce68aa))
+* fix: test ([4b3c858](https://github.com/mx-space/core/commit/4b3c858))
+* fix: test case ([6ed5e40](https://github.com/mx-space/core/commit/6ed5e40))
+* fix: un-limit upload size for backup service ([601a3dd](https://github.com/mx-space/core/commit/601a3dd))
+* fix(deps): update dependency mongoose to v8.1.3 ([e84be0c](https://github.com/mx-space/core/commit/e84be0c))
+* feat: reading rank ([029b47c](https://github.com/mx-space/core/commit/029b47c))
+* refactor: get database writing model ([aeb8509](https://github.com/mx-space/core/commit/aeb8509))
+* chore: readme ([b525df2](https://github.com/mx-space/core/commit/b525df2))
+* chore: update deps ([feb2abc](https://github.com/mx-space/core/commit/feb2abc))
+* chore: update docker compose ([54f1551](https://github.com/mx-space/core/commit/54f1551))
+* chore(deps): update dependency @swc/core to v1.4.2 ([4c5d097](https://github.com/mx-space/core/commit/4c5d097))
+* ci: Add linux/arm64 image for docker (#1455) ([b46c3c6](https://github.com/mx-space/core/commit/b46c3c6)), closes [#1455](https://github.com/mx-space/core/issues/1455)
+
+## <small>5.0.1 (2024-02-17)</small>
+
+* release: v5.0.1 ([959831a](https://github.com/mx-space/core/commit/959831a))
+* fix: comment model with ip fixes #1473 ([f11ccb9](https://github.com/mx-space/core/commit/f11ccb9)), closes [#1473](https://github.com/mx-space/core/issues/1473)
+* fix(deps): update dependency @simplewebauthn/server to v9.0.3 ([84f9b2b](https://github.com/mx-space/core/commit/84f9b2b))
+* chore: delete root changelog ([7bbc582](https://github.com/mx-space/core/commit/7bbc582))
+
+## 5.0.0 (2024-02-16)
+
+* release: v5.0.0 ([8718798](https://github.com/mx-space/core/commit/8718798))
+
+## 5.0.0-beta.2 (2024-02-16)
+
+* release: v5.0.0-beta.2 ([d02b137](https://github.com/mx-space/core/commit/d02b137))
+* fix: activity duration calculation ([ced3852](https://github.com/mx-space/core/commit/ced3852))
+* fix: broadcast event add `joinedAt` ([d1704d8](https://github.com/mx-space/core/commit/d1704d8))
+* fix: update model ([8bfa464](https://github.com/mx-space/core/commit/8bfa464))
+* chore(deps): update dependency @types/node to v20.11.19 ([686eee7](https://github.com/mx-space/core/commit/686eee7))
+* chore(deps): update dependency semver to v7.6.0 (#1431) ([ea403b2](https://github.com/mx-space/core/commit/ea403b2)), closes [#1431](https://github.com/mx-space/core/issues/1431)
+* chore(deps): update dependency vite to v5.1.3 (#1468) ([7777aad](https://github.com/mx-space/core/commit/7777aad)), closes [#1468](https://github.com/mx-space/core/issues/1468)
+* chore(deps): update pnpm to v8.15.3 (#1469) ([c7b6e38](https://github.com/mx-space/core/commit/c7b6e38)), closes [#1469](https://github.com/mx-space/core/issues/1469)
+* chore(release): bump @mx-space/api-client to v1.8.0-beta.1 ([9c2b19c](https://github.com/mx-space/core/commit/9c2b19c))
+
+## 5.0.0-beta.1 (2024-02-15)
+
+* release: v5.0.0-beta.1 ([e4bd13a](https://github.com/mx-space/core/commit/e4bd13a))
+* chore: update snap ([715b8ec](https://github.com/mx-space/core/commit/715b8ec))
+
+## 5.0.0-beta.0 (2024-02-15)
+
+* release: v5.0.0-beta.0 ([c10ee1b](https://github.com/mx-space/core/commit/c10ee1b))
+* chore(deps): update dependency @types/node to v20.11.18 ([722045c](https://github.com/mx-space/core/commit/722045c))
+* chore(deps): update dependency vite to v5.1.2 ([5c1a360](https://github.com/mx-space/core/commit/5c1a360))
+* chore(release): bump @mx-space/api-client to v1.8.0-beta.0 ([74aaf46](https://github.com/mx-space/core/commit/74aaf46))
+* fix: ipv6 ([3dff3df](https://github.com/mx-space/core/commit/3dff3df))
+* fix: migration ([6d4254d](https://github.com/mx-space/core/commit/6d4254d))
+* refactor!: rename note model field and fix exposure of hidden data ([6745194](https://github.com/mx-space/core/commit/6745194))
+
+## 5.0.0-alpha.4 (2024-02-14)
+
+* release: v5.0.0-alpha.4 ([a5dcb92](https://github.com/mx-space/core/commit/a5dcb92))
+* chore(deps): update dependency eslint-plugin-unused-imports to v3.1.0 ([9745da1](https://github.com/mx-space/core/commit/9745da1))
+* chore(deps): update dependency husky to v9.0.11 ([922b6c7](https://github.com/mx-space/core/commit/922b6c7))
+* chore(release): bump @mx-space/api-client to v1.8.0-alpha.5 ([e353431](https://github.com/mx-space/core/commit/e353431))
+* chore(release): bump @mx-space/api-client to v1.8.0-alpha.6 ([a6ceb22](https://github.com/mx-space/core/commit/a6ceb22))
+* fix: api model ([c639c57](https://github.com/mx-space/core/commit/c639c57))
+* feat: add api sdk for this ([4683b69](https://github.com/mx-space/core/commit/4683b69))
+* feat: add get rooms ([cf71fc4](https://github.com/mx-space/core/commit/cf71fc4))
+
+## 5.0.0-alpha.3 (2024-02-13)
+
+* release: v5.0.0-alpha.3 ([0789598](https://github.com/mx-space/core/commit/0789598))
+* fix: add real ip for cf ([057a232](https://github.com/mx-space/core/commit/057a232))
+* chore(deps): update dependency @swc/core to v1.4.1 ([d5549fe](https://github.com/mx-space/core/commit/d5549fe))
+
+## 5.0.0-alpha.2 (2024-02-13)
+
+* release: v5.0.0-alpha.2 ([b5c6525](https://github.com/mx-space/core/commit/b5c6525))
+* update ([7af97ab](https://github.com/mx-space/core/commit/7af97ab))
+* feat: add bark push for cc ([76002c3](https://github.com/mx-space/core/commit/76002c3))
+* chore(deps): update pnpm to v8.15.2 ([8a723ea](https://github.com/mx-space/core/commit/8a723ea))
+* fix: post model type ([db87454](https://github.com/mx-space/core/commit/db87454))
+* fix(deps): update dependency mongoose to v8.1.2 ([6844bd7](https://github.com/mx-space/core/commit/6844bd7))
+* fix(deps): update nest monorepo to v10.3.3 ([a913599](https://github.com/mx-space/core/commit/a913599))
+
+## 5.0.0-alpha.1 (2024-02-12)
+
+* release: v5.0.0-alpha.1 ([501bbc8](https://github.com/mx-space/core/commit/501bbc8))
+* chore: disable test workflow `node_modules` cache (#1456) ([1c5929a](https://github.com/mx-space/core/commit/1c5929a)), closes [#1456](https://github.com/mx-space/core/issues/1456)
+* chore: update script ([d4208bc](https://github.com/mx-space/core/commit/d4208bc))
+* chore(deps): update dependency @nestjs/cli to v10.3.2 ([4c38061](https://github.com/mx-space/core/commit/4c38061))
+* chore(deps): update dependency @types/node to v20.11.17 ([b8e2eb7](https://github.com/mx-space/core/commit/b8e2eb7))
+* chore(deps): update dependency @types/semver to v7.5.7 ([449b941](https://github.com/mx-space/core/commit/449b941))
+* chore(deps): update dependency nanoid to v5.0.5 ([1cd3eb4](https://github.com/mx-space/core/commit/1cd3eb4))
+* chore(deps): update dependency tsup to v8.0.2 ([1e247df](https://github.com/mx-space/core/commit/1e247df))
+* chore(deps): update dependency vite to v5.1.1 (#1446) ([96e56c2](https://github.com/mx-space/core/commit/96e56c2)), closes [#1446](https://github.com/mx-space/core/issues/1446)
+* feat: add activity type ([0cd84e7](https://github.com/mx-space/core/commit/0cd84e7))
+* feat: file trash ([ed6eeb2](https://github.com/mx-space/core/commit/ed6eeb2))
+* feat: support socket room and add activity presence (#1445) ([267632b](https://github.com/mx-space/core/commit/267632b)), closes [#1445](https://github.com/mx-space/core/issues/1445)
+* fix: docker build workflow (#1451) ([d32ede3](https://github.com/mx-space/core/commit/d32ede3)), closes [#1451](https://github.com/mx-space/core/issues/1451)
+* fix: init project script ([83441f1](https://github.com/mx-space/core/commit/83441f1))
+* fix: script clone ([c334f45](https://github.com/mx-space/core/commit/c334f45))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.9 ([10865eb](https://github.com/mx-space/core/commit/10865eb))
+* fix(deps): update dependency @fastify/static to v7.0.1 ([6c4d182](https://github.com/mx-space/core/commit/6c4d182))
+* fix(deps): update dependency @nestjs/cache-manager to v2.2.1 ([d84282a](https://github.com/mx-space/core/commit/d84282a))
+* fix(deps): update dependency @nestjs/event-emitter to v2.0.4 ([5af713b](https://github.com/mx-space/core/commit/5af713b))
+* fix(deps): update dependency @nestjs/schedule to v4.0.1 ([f7d5ed6](https://github.com/mx-space/core/commit/f7d5ed6))
+* fix(deps): update dependency @nestjs/throttler to v5.1.2 ([6812c20](https://github.com/mx-space/core/commit/6812c20))
+* fix(deps): update dependency @simplewebauthn/server to v9.0.2 ([dc169f1](https://github.com/mx-space/core/commit/dc169f1))
+* fix(deps): update nest monorepo ([6f32af9](https://github.com/mx-space/core/commit/6f32af9))
+
+## 5.0.0-alpha.0 (2024-02-07)
+
+* release: v5.0.0-alpha.0 ([5781e0b](https://github.com/mx-space/core/commit/5781e0b))
+* perf: reduce memory usage (#1436) ([ed11374](https://github.com/mx-space/core/commit/ed11374)), closes [#1436](https://github.com/mx-space/core/issues/1436)
+* fix(deps): update dependency nestjs-pretty-logger to v0.2.1 ([9addf45](https://github.com/mx-space/core/commit/9addf45))
+
+## <small>4.11.8 (2024-02-06)</small>
+
+* release: v4.11.8 ([956cd60](https://github.com/mx-space/core/commit/956cd60))
+* fix: remove `env` expose ([a36d488](https://github.com/mx-space/core/commit/a36d488))
+
+## <small>4.11.7 (2024-02-06)</small>
+
+* release: v4.11.7 ([25450df](https://github.com/mx-space/core/commit/25450df))
+* fix: secret getter ([351cbfd](https://github.com/mx-space/core/commit/351cbfd))
+* fix: skip throttler guard if authed ([0dbe9c2](https://github.com/mx-space/core/commit/0dbe9c2))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.8 (#1428) ([9d3fe47](https://github.com/mx-space/core/commit/9d3fe47)), closes [#1428](https://github.com/mx-space/core/issues/1428)
+* chore(deps): update dependency @nestjs/cli to v10.3.1 ([a5da9fd](https://github.com/mx-space/core/commit/a5da9fd))
+* chore(deps): update dependency @swc/core to v1.4.0 (#1429) ([3c02bca](https://github.com/mx-space/core/commit/3c02bca)), closes [#1429](https://github.com/mx-space/core/issues/1429)
+* chore(deps): update dependency @types/validator to v13.11.9 ([bf414a2](https://github.com/mx-space/core/commit/bf414a2))
+* chore(deps): update dependency lint-staged to v15.2.2 ([168ba2e](https://github.com/mx-space/core/commit/168ba2e))
+
+## <small>4.11.6 (2024-02-04)</small>
+
+* release: v4.11.6 ([284f050](https://github.com/mx-space/core/commit/284f050))
+* fix: compress search index data size keep less than 100K ([6718f8e](https://github.com/mx-space/core/commit/6718f8e))
+* fix: update ([f055fea](https://github.com/mx-space/core/commit/f055fea))
+* feat: adjustObjectSizeEfficiently function to accept a generic type ([8491ebd](https://github.com/mx-space/core/commit/8491ebd))
+* feat: use EJS rendering for local-dev page ([bbb0e22](https://github.com/mx-space/core/commit/bbb0e22))
+
+## <small>4.11.5 (2024-02-04)</small>
+
+* release: v4.11.5 ([aff1d80](https://github.com/mx-space/core/commit/aff1d80))
+* chore(deps): update dependency prettier to v3.2.5 (#1426) ([3af0926](https://github.com/mx-space/core/commit/3af0926)), closes [#1426](https://github.com/mx-space/core/issues/1426)
+* feat: Add SlugTrackerModule to support if the post slug changes, redirect to original data to keep t ([00e7508](https://github.com/mx-space/core/commit/00e7508)), closes [#1425](https://github.com/mx-space/core/issues/1425)
+* fix(deps): update dependency @fastify/static to v7 (#1422) ([b0a65ca](https://github.com/mx-space/core/commit/b0a65ca)), closes [#1422](https://github.com/mx-space/core/issues/1422)
+* fix(deps): update dependency marked to v12 (#1424) ([97c1e6e](https://github.com/mx-space/core/commit/97c1e6e)), closes [#1424](https://github.com/mx-space/core/issues/1424)
+
+## <small>4.11.4 (2024-02-03)</small>
+
+* release: v4.11.4 ([3debe46](https://github.com/mx-space/core/commit/3debe46))
+* feat!: disable sync module and add algolia search data export ([ccc7393](https://github.com/mx-space/core/commit/ccc7393))
+* feat: manually trigger algolia search index update ([d094272](https://github.com/mx-space/core/commit/d094272))
+
+## <small>4.11.3 (2024-02-02)</small>
+
+* release: v4.11.3 ([9cebe9e](https://github.com/mx-space/core/commit/9cebe9e))
+
+## <small>4.11.2 (2024-02-02)</small>
+
+* release: v4.11.2 ([44db2f2](https://github.com/mx-space/core/commit/44db2f2))
+* chore: update user authentication logic ([264c323](https://github.com/mx-space/core/commit/264c323))
+* chore(deps): update dependency @innei/eslint-config-ts to v0.12.2 ([94cc47d](https://github.com/mx-space/core/commit/94cc47d))
+* chore(deps): update dependency @innei/prettier to v0.12.2 ([c5f6aab](https://github.com/mx-space/core/commit/c5f6aab))
+* chore(deps): update dependency @types/node to v20.11.14 ([d4d653a](https://github.com/mx-space/core/commit/d4d653a))
+* chore(deps): update dependency @types/node to v20.11.15 ([75f59b4](https://github.com/mx-space/core/commit/75f59b4))
+* chore(deps): update dependency @types/node to v20.11.16 ([99c4f09](https://github.com/mx-space/core/commit/99c4f09))
+* chore(deps): update dependency husky to v9.0.10 ([cb0a480](https://github.com/mx-space/core/commit/cb0a480))
+* chore(deps): update dependency lint-staged to v15.2.1 ([05df1fa](https://github.com/mx-space/core/commit/05df1fa))
+* refactor: algolia search operations ([c266e2f](https://github.com/mx-space/core/commit/c266e2f))
+* feat: add Algolia search functionality and event listeners ([31b1ba8](https://github.com/mx-space/core/commit/31b1ba8))
+* feat: add local dev dashboard debug option ([64cddf1](https://github.com/mx-space/core/commit/64cddf1))
+* fix: add validation for encrypt key length ([ed40949](https://github.com/mx-space/core/commit/ed40949))
+* fix(deps): update dependency nodemailer to v6.9.9 ([0eb09ef](https://github.com/mx-space/core/commit/0eb09ef))
+* fix(aggregate):get pages counts (#1415) ([f9c8e37](https://github.com/mx-space/core/commit/f9c8e37)), closes [#1415](https://github.com/mx-space/core/issues/1415)
+
+## <small>4.11.1 (2024-01-31)</small>
+
+* release: v4.11.1 ([fc39901](https://github.com/mx-space/core/commit/fc39901))
+* fix: add Logger instance to the global scope ([c4a27cc](https://github.com/mx-space/core/commit/c4a27cc))
+* fix: search service to use replaceAllObjects method ([00964c3](https://github.com/mx-space/core/commit/00964c3))
+
+## 4.11.0 (2024-01-31)
+
+* release: v4.11.0 ([dcfc7f3](https://github.com/mx-space/core/commit/dcfc7f3))
+* fix: Remove unused code and update create method in PostController ([5f9e69f](https://github.com/mx-space/core/commit/5f9e69f))
+* fix: session revoke ([2bfc745](https://github.com/mx-space/core/commit/2bfc745))
+* chore: update deps ([2c2d299](https://github.com/mx-space/core/commit/2c2d299))
+* chore(deps): update dependency @types/node to v20.11.11 ([3d4ed21](https://github.com/mx-space/core/commit/3d4ed21))
+* chore(deps): update dependency @types/node to v20.11.13 ([4c9c5a4](https://github.com/mx-space/core/commit/4c9c5a4))
+* chore(deps): update dependency husky to v9.0.7 ([ab3598d](https://github.com/mx-space/core/commit/ab3598d))
+* chore(deps): update pnpm to v8.15.1 ([ee53418](https://github.com/mx-space/core/commit/ee53418))
+* fix:post can custom `created` fixes #1410 ([abdf931](https://github.com/mx-space/core/commit/abdf931)), closes [#1410](https://github.com/mx-space/core/issues/1410)
+
+## <small>4.10.9 (2024-01-29)</small>
+
+* release: v4.10.9 ([0b4c73a](https://github.com/mx-space/core/commit/0b4c73a))
+* fix: set `CBOR_NATIVE_ACCELERATION_DISABLED` to `true` ([e1163cd](https://github.com/mx-space/core/commit/e1163cd))
+* fix(deps): update babel monorepo to v7.23.9 ([e61459f](https://github.com/mx-space/core/commit/e61459f))
+* fix(deps): update dependency @simplewebauthn/server to v9 (#1387) ([54fbfe1](https://github.com/mx-space/core/commit/54fbfe1)), closes [#1387](https://github.com/mx-space/core/issues/1387)
+* fix(deps): update dependency linkedom to v0.16.8 ([130d110](https://github.com/mx-space/core/commit/130d110))
+* fix(deps): update dependency lru-cache to v10.2.0 (#1397) ([6ae866d](https://github.com/mx-space/core/commit/6ae866d)), closes [#1397](https://github.com/mx-space/core/issues/1397)
+* fix(deps): update dependency marked to v11.2.0 (#1399) ([ea6e60e](https://github.com/mx-space/core/commit/ea6e60e)), closes [#1399](https://github.com/mx-space/core/issues/1399)
+* fix(deps): update dependency mongoose to v8.1.1 ([73cf344](https://github.com/mx-space/core/commit/73cf344))
+* fix(deps): update nest monorepo to v10.3.1 ([c33941e](https://github.com/mx-space/core/commit/c33941e))
+* chore: update license ([731bc19](https://github.com/mx-space/core/commit/731bc19))
+* chore(deps): update dependency @swc/core to v1.3.105 ([550e77d](https://github.com/mx-space/core/commit/550e77d))
+* chore(deps): update dependency @swc/core to v1.3.106 ([133afe5](https://github.com/mx-space/core/commit/133afe5))
+* chore(deps): update dependency @swc/core to v1.3.107 ([148d7e2](https://github.com/mx-space/core/commit/148d7e2))
+* chore(deps): update dependency @types/node to v20.11.10 ([cfaa4bd](https://github.com/mx-space/core/commit/cfaa4bd))
+* chore(deps): update dependency @types/node to v20.11.6 ([0b5ee17](https://github.com/mx-space/core/commit/0b5ee17))
+* chore(deps): update dependency @types/node to v20.11.7 ([b79816b](https://github.com/mx-space/core/commit/b79816b))
+* chore(deps): update dependency @types/node to v20.11.8 ([00165bd](https://github.com/mx-space/core/commit/00165bd))
+* chore(deps): update dependency @types/node to v20.11.9 ([ce93746](https://github.com/mx-space/core/commit/ce93746))
+* chore(deps): update dependency husky to v9 (#1394) ([782f757](https://github.com/mx-space/core/commit/782f757)), closes [#1394](https://github.com/mx-space/core/issues/1394)
+* chore(deps): update pnpm to v8.14.2 ([d25280a](https://github.com/mx-space/core/commit/d25280a))
+* chore(deps): update pnpm to v8.14.3 ([8a96a45](https://github.com/mx-space/core/commit/8a96a45))
+* chore(deps): update pnpm to v8.15.0 (#1402) ([1007cd5](https://github.com/mx-space/core/commit/1007cd5)), closes [#1402](https://github.com/mx-space/core/issues/1402)
+* chore(deps): update robinraju/release-downloader action to v1.9 (#1403) ([c4cbcc2](https://github.com/mx-space/core/commit/c4cbcc2)), closes [#1403](https://github.com/mx-space/core/issues/1403)
+
+## <small>4.10.8 (2024-01-21)</small>
+
+* release: v4.10.8 ([b9166a8](https://github.com/mx-space/core/commit/b9166a8))
+* chore: update deps ([a3f7582](https://github.com/mx-space/core/commit/a3f7582))
+* chore(deps-dev): bump vite from 5.0.11 to 5.0.12 (#1381) ([3d182a8](https://github.com/mx-space/core/commit/3d182a8)), closes [#1381](https://github.com/mx-space/core/issues/1381)
+* chore(deps): update dependency vite to v5.0.12 ([6353d1d](https://github.com/mx-space/core/commit/6353d1d))
+* fix: ip function error "[object Object]" (#1385) ([28d3239](https://github.com/mx-space/core/commit/28d3239)), closes [#1385](https://github.com/mx-space/core/issues/1385)
+* fix(deps): update dependency @simplewebauthn/server to v8.3.7 ([63f7978](https://github.com/mx-space/core/commit/63f7978))
+* fix(deps): update dependency cache-manager to v5.4.0 (#1382) ([5eb49de](https://github.com/mx-space/core/commit/5eb49de)), closes [#1382](https://github.com/mx-space/core/issues/1382)
+
+## <small>4.10.7 (2024-01-19)</small>
+
+* release: v4.10.7 ([b19a618](https://github.com/mx-space/core/commit/b19a618))
+* refactor: dto decorators ([978c388](https://github.com/mx-space/core/commit/978c388))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.7 ([8a544b9](https://github.com/mx-space/core/commit/8a544b9))
+* fix(deps): update dependency @fastify/cookie to v9.3.1 ([550d4ec](https://github.com/mx-space/core/commit/550d4ec))
+* fix(deps): update dependency @typegoose/auto-increment to v4.1.0 (#1373) ([b5c5520](https://github.com/mx-space/core/commit/b5c5520)), closes [#1373](https://github.com/mx-space/core/issues/1373)
+* fix(deps): update dependency snakecase-keys to v6 (#1377) ([9af88a3](https://github.com/mx-space/core/commit/9af88a3)), closes [#1377](https://github.com/mx-space/core/issues/1377)
+* chore(deps): update actions/cache action to v4 (#1376) ([0cffdf0](https://github.com/mx-space/core/commit/0cffdf0)), closes [#1376](https://github.com/mx-space/core/issues/1376)
+
+## <small>4.10.6 (2024-01-18)</small>
+
+* release: v4.10.6 ([7ac86dc](https://github.com/mx-space/core/commit/7ac86dc))
+* fix: sitemap data ([c10f089](https://github.com/mx-space/core/commit/c10f089))
+* fix(deps): update dependency @fastify/cookie to v9.3.0 (#1363) ([2b100cd](https://github.com/mx-space/core/commit/2b100cd)), closes [#1363](https://github.com/mx-space/core/issues/1363)
+* chore(deps): update dependency @swc/core to v1.3.103 ([aabaca4](https://github.com/mx-space/core/commit/aabaca4))
+* chore(deps): update dependency @swc/core to v1.3.104 ([fb330a1](https://github.com/mx-space/core/commit/fb330a1))
+* chore(deps): update dependency @types/node to v20.11.1 ([4409f61](https://github.com/mx-space/core/commit/4409f61))
+* chore(deps): update dependency @types/node to v20.11.2 ([f747622](https://github.com/mx-space/core/commit/f747622))
+* chore(deps): update dependency @types/node to v20.11.4 ([b8ecfb8](https://github.com/mx-space/core/commit/b8ecfb8))
+* chore(deps): update dependency @types/node to v20.11.5 ([2364ded](https://github.com/mx-space/core/commit/2364ded))
+* chore(deps): update dependency mongodb-memory-server to v9.1.6 ([24781e2](https://github.com/mx-space/core/commit/24781e2))
+* chore(deps): update dependency prettier to v3.2.4 ([10c14e6](https://github.com/mx-space/core/commit/10c14e6))
+* chore(deps): update dependency vite-tsconfig-paths to v4.3.1 (#1368) ([bd69076](https://github.com/mx-space/core/commit/bd69076)), closes [#1368](https://github.com/mx-space/core/issues/1368)
+* feat: unsubscribe header for mail ([b28de23](https://github.com/mx-space/core/commit/b28de23))
+
+## <small>4.10.5 (2024-01-14)</small>
+
+* release: v4.10.5 ([563aff6](https://github.com/mx-space/core/commit/563aff6))
+* chore: update built-in ip query function ([eb19f61](https://github.com/mx-space/core/commit/eb19f61))
+
+## <small>4.10.4 (2024-01-14)</small>
+
+* release: v4.10.4 ([d1828e0](https://github.com/mx-space/core/commit/d1828e0))
+* chore: update deps ([40a5a1a](https://github.com/mx-space/core/commit/40a5a1a))
+* chore(deps): update dependency @types/node to v20.11.0 ([376c6a0](https://github.com/mx-space/core/commit/376c6a0))
+* chore(deps): update dependency mongodb-memory-server to v9.1.5 ([3455fb0](https://github.com/mx-space/core/commit/3455fb0))
+* chore(deps): update dependency prettier to v3.2.1 ([f5bb22d](https://github.com/mx-space/core/commit/f5bb22d))
+* chore(deps): update dependency prettier to v3.2.2 ([16683eb](https://github.com/mx-space/core/commit/16683eb))
+* chore(deps): update pnpm to v8.14.1 ([e84a67e](https://github.com/mx-space/core/commit/e84a67e))
+* fix: axios http ([0c18317](https://github.com/mx-space/core/commit/0c18317))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.6 ([cd61cdb](https://github.com/mx-space/core/commit/cd61cdb))
+* fix(deps): update dependency @nestjs/cache-manager to v2.2.0 (#1351) ([b91263a](https://github.com/mx-space/core/commit/b91263a)), closes [#1351](https://github.com/mx-space/core/issues/1351)
+
+## <small>4.10.3 (2024-01-10)</small>
+
+* release: v4.10.3 ([fbcf115](https://github.com/mx-space/core/commit/fbcf115))
+* fix: add 301 status when redirect ([775835f](https://github.com/mx-space/core/commit/775835f))
+
+## <small>4.10.2 (2024-01-10)</small>
+
+* release: v4.10.2 ([7dcec57](https://github.com/mx-space/core/commit/7dcec57))
+* chore: cleanup ([e6b471b](https://github.com/mx-space/core/commit/e6b471b))
+* chore(deps): update dependency @innei/eslint-config-ts to v0.12.1 ([34e06ea](https://github.com/mx-space/core/commit/34e06ea))
+* chore(deps): update dependency @innei/prettier to v0.12.1 ([ca99604](https://github.com/mx-space/core/commit/ca99604))
+* chore(deps): update dependency @nestjs/cli to v10.3.0 (#1348) ([6dca37a](https://github.com/mx-space/core/commit/6dca37a)), closes [#1348](https://github.com/mx-space/core/issues/1348)
+* chore(deps): update dependency @types/node to v20.10.7 ([de9fcd9](https://github.com/mx-space/core/commit/de9fcd9))
+* chore(deps): update dependency @types/node to v20.10.8 ([4a75121](https://github.com/mx-space/core/commit/4a75121))
+* chore(deps): update dependency @types/validator to v13.11.8 ([16bae0e](https://github.com/mx-space/core/commit/16bae0e))
+* fix: ci pipeline ([85750b9](https://github.com/mx-space/core/commit/85750b9))
+* fix(deps): update algoliasearch-client-javascript monorepo to v4.22.1 ([b5040da](https://github.com/mx-space/core/commit/b5040da))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.5 ([ef6e04b](https://github.com/mx-space/core/commit/ef6e04b))
+* fix(deps): update dependency mongoose to v8.0.4 (#1355) ([d03f413](https://github.com/mx-space/core/commit/d03f413)), closes [#1355](https://github.com/mx-space/core/issues/1355)
+* feat: add `redirect` on url builder ([bdd6de5](https://github.com/mx-space/core/commit/bdd6de5))
+
+## <small>4.10.1 (2024-01-07)</small>
+
+* release: v4.10.1 ([1c9f926](https://github.com/mx-space/core/commit/1c9f926))
+* chore: update isbot ([e7f2305](https://github.com/mx-space/core/commit/e7f2305))
+* chore(deps): update dependency ky to v1.2.0 (#1344) ([9334f39](https://github.com/mx-space/core/commit/9334f39)), closes [#1344](https://github.com/mx-space/core/issues/1344)
+* chore(deps): update pnpm to v8.14.0 (#1337) ([7930d1f](https://github.com/mx-space/core/commit/7930d1f)), closes [#1337](https://github.com/mx-space/core/issues/1337)
+* fix: ci ([c988594](https://github.com/mx-space/core/commit/c988594))
+* fix(deps): update dependency @fastify/multipart to v8.1.0 (#1343) ([17d3286](https://github.com/mx-space/core/commit/17d3286)), closes [#1343](https://github.com/mx-space/core/issues/1343)
+* fix(deps): update dependency isbot to v3.8.0 (#1338) ([2e5d13d](https://github.com/mx-space/core/commit/2e5d13d)), closes [#1338](https://github.com/mx-space/core/issues/1338)
+* fix(deps): update dependency mongoose-paginate-v2 to v1.8.0 (#1341) ([3e1d065](https://github.com/mx-space/core/commit/3e1d065)), closes [#1341](https://github.com/mx-space/core/issues/1341)
+
+## 4.10.0 (2024-01-07)
+
+* release: v4.10.0 ([a3d2d10](https://github.com/mx-space/core/commit/a3d2d10))
+* fix: always create new require instance ([97526ce](https://github.com/mx-space/core/commit/97526ce))
+* fix: bark url desc ([92651b1](https://github.com/mx-space/core/commit/92651b1))
+* fix: ci scp (#1319) ([be5e4a1](https://github.com/mx-space/core/commit/be5e4a1)), closes [#1319](https://github.com/mx-space/core/issues/1319)
+* fix: event type handling and update file paths ([c29be51](https://github.com/mx-space/core/commit/c29be51))
+* fix: event variable in `readDataFromRequest` function ([bbd1a67](https://github.com/mx-space/core/commit/bbd1a67))
+* fix: ingore migration collection backup ([813aa35](https://github.com/mx-space/core/commit/813aa35))
+* fix: lock file ([696b5aa](https://github.com/mx-space/core/commit/696b5aa))
+* fix: remove uptime in info ([f3e46e7](https://github.com/mx-space/core/commit/f3e46e7))
+* fix: remove xlog api proxy ([91aa771](https://github.com/mx-space/core/commit/91aa771))
+* fix: should export a enum value ([5ec2c29](https://github.com/mx-space/core/commit/5ec2c29))
+* fix: ts ds happy ([9297b36](https://github.com/mx-space/core/commit/9297b36))
+* fix: typo ([19bb8cc](https://github.com/mx-space/core/commit/19bb8cc))
+* fix: update import statement in handler.ts ([1dd8099](https://github.com/mx-space/core/commit/1dd8099))
+* fix(comment): add type guard on `source` ([e31b98a](https://github.com/mx-space/core/commit/e31b98a))
+* fix(deps): update dependency @babel/core to v7.23.7 ([03368c5](https://github.com/mx-space/core/commit/03368c5))
+* fix(deps): update dependency @simplewebauthn/server to v8.3.6 ([97d1ab7](https://github.com/mx-space/core/commit/97d1ab7))
+* fix(deps): update dependency image-size to v1.1.0 (#1321) ([2fb8cec](https://github.com/mx-space/core/commit/2fb8cec)), closes [#1321](https://github.com/mx-space/core/issues/1321)
+* fix(deps): update dependency image-size to v1.1.1 ([5e52b80](https://github.com/mx-space/core/commit/5e52b80))
+* fix(deps): update dependency linkedom to v0.16.6 ([668a9af](https://github.com/mx-space/core/commit/668a9af))
+* fix(deps): update dependency marked to v11.1.1 ([c0788f1](https://github.com/mx-space/core/commit/c0788f1))
+* fix(deps): update dependency mongoose-aggregate-paginate-v2 to v1.0.7 (#1326) ([9f51058](https://github.com/mx-space/core/commit/9f51058)), closes [#1326](https://github.com/mx-space/core/issues/1326)
+* fix(deps): update dependency nodemailer to v6.9.8 ([03c0eab](https://github.com/mx-space/core/commit/03c0eab))
+* fix(sdk): ref type ([e2accf4](https://github.com/mx-space/core/commit/e2accf4))
+* chore: update deps ([1bd7a7b](https://github.com/mx-space/core/commit/1bd7a7b))
+* chore: update deps ([f72f2a4](https://github.com/mx-space/core/commit/f72f2a4))
+* chore(api-client): add export for CollectionRefTypes ([3e8ee3e](https://github.com/mx-space/core/commit/3e8ee3e))
+* chore(deps): update appleboy/scp-action action to v0.1.6 (#1320) ([b600455](https://github.com/mx-space/core/commit/b600455)), closes [#1320](https://github.com/mx-space/core/issues/1320)
+* chore(deps): update appleboy/scp-action action to v0.1.7 ([fbede4c](https://github.com/mx-space/core/commit/fbede4c))
+* chore(deps): update dependency @swc/core to v1.3.102 ([9d22ef3](https://github.com/mx-space/core/commit/9d22ef3))
+* chore(deps): update dependency @types/node to v20.10.6 ([dd9cd2b](https://github.com/mx-space/core/commit/dd9cd2b))
+* chore(deps): update dependency mongodb-memory-server to v9.1.4 ([6fd436f](https://github.com/mx-space/core/commit/6fd436f))
+* chore(deps): update dependency vite to v5.0.11 ([ef2289d](https://github.com/mx-space/core/commit/ef2289d))
+* chore(deps): update dependency vite-tsconfig-paths to v4.2.3 ([c05a531](https://github.com/mx-space/core/commit/c05a531))
+* chore(deps): update pnpm to v8.13.1 (#1318) ([e16ea47](https://github.com/mx-space/core/commit/e16ea47)), closes [#1318](https://github.com/mx-space/core/issues/1318)
+* chore(release): bump @mx-space/api-client to v1.7.0 ([1ec0987](https://github.com/mx-space/core/commit/1ec0987))
+* chore(release): bump @mx-space/api-client to v1.7.1 ([919f7bf](https://github.com/mx-space/core/commit/919f7bf))
+* chore(release): bump @mx-space/api-client to v1.7.2 ([6f2beda](https://github.com/mx-space/core/commit/6f2beda))
+* chore(release): bump @mx-space/webhook to v0.2.0 ([9913994](https://github.com/mx-space/core/commit/9913994))
+* chore(release): bump @mx-space/webhook to v0.2.1 ([dccca7b](https://github.com/mx-space/core/commit/dccca7b))
+* chore(release): bump @mx-space/webhook to v0.2.2 ([c2f6a16](https://github.com/mx-space/core/commit/c2f6a16))
+* test: ignore test case ([00c0462](https://github.com/mx-space/core/commit/00c0462))
+* docs: update ([0a921bd](https://github.com/mx-space/core/commit/0a921bd))
+* docs: update link (#1339) ([3ebad48](https://github.com/mx-space/core/commit/3ebad48)), closes [#1339](https://github.com/mx-space/core/issues/1339)
+* refactor: change uptime cal ([8f5515a](https://github.com/mx-space/core/commit/8f5515a))
+* refactor: webhook handler to improve readability and error handling ([af0268e](https://github.com/mx-space/core/commit/af0268e))
+* feat: add clearDispatchEvents method to WebhookController and WebhookService ([bf2e753](https://github.com/mx-space/core/commit/bf2e753))
+
+## <small>4.9.1 (2023-12-25)</small>
+
+* release: v4.9.1 ([4a4a7a5](https://github.com/mx-space/core/commit/4a4a7a5))
+* chore(release): bump @mx-space/webhook to v0.1.4 ([0087e51](https://github.com/mx-space/core/commit/0087e51))
+* feat: add health_check ([889b0b0](https://github.com/mx-space/core/commit/889b0b0))
+* fix: webhok scope filter ([6176065](https://github.com/mx-space/core/commit/6176065))
+* fix(webhook): add health check ([2621304](https://github.com/mx-space/core/commit/2621304))
+
+## 4.9.0 (2023-12-24)
+
+* release: v4.9.0 ([9f97892](https://github.com/mx-space/core/commit/9f97892))
+* fix: add field for algolia search ([c613bf7](https://github.com/mx-space/core/commit/c613bf7))
+* fix: ci ([d947eee](https://github.com/mx-space/core/commit/d947eee))
+* fix: emitter type ([08b58e5](https://github.com/mx-space/core/commit/08b58e5))
+* fix: variant rename to `type` ([d255493](https://github.com/mx-space/core/commit/d255493))
+* fix: webhook lib build script ([ee370bc](https://github.com/mx-space/core/commit/ee370bc))
+* fix(deps): update dependency @algolia/client-search to v4.22.0 (#1308) ([4bf5f79](https://github.com/mx-space/core/commit/4bf5f79)), closes [#1308](https://github.com/mx-space/core/issues/1308)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.3 ([84645c1](https://github.com/mx-space/core/commit/84645c1))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.4 ([309184c](https://github.com/mx-space/core/commit/309184c))
+* fix(deps): update dependency @nestjs/throttler to v5.1.1 ([76e5422](https://github.com/mx-space/core/commit/76e5422))
+* fix(deps): update dependency cache-manager to v5.3.2 ([6efb1ef](https://github.com/mx-space/core/commit/6efb1ef))
+* chore: update redis adaptor ([826803c](https://github.com/mx-space/core/commit/826803c))
+* chore(deps): update dependency @types/qs to v6.9.11 ([a3fca5f](https://github.com/mx-space/core/commit/a3fca5f))
+* chore(release): bump @mx-space/webhook to v0.1.0 ([b8a8c35](https://github.com/mx-space/core/commit/b8a8c35))
+* chore(release): bump @mx-space/webhook to v0.1.1 ([6987fc3](https://github.com/mx-space/core/commit/6987fc3))
+* chore(release): bump @mx-space/webhook to v0.1.2 ([a2407eb](https://github.com/mx-space/core/commit/a2407eb))
+* chore(release): bump @mx-space/webhook to v0.1.3 ([e2b7a35](https://github.com/mx-space/core/commit/e2b7a35))
+* feat: support webhook (#1298) ([c6d037d](https://github.com/mx-space/core/commit/c6d037d)), closes [#1298](https://github.com/mx-space/core/issues/1298)
+* feat(webhook): generic type for event emitter ([cfc3513](https://github.com/mx-space/core/commit/cfc3513))
+* refactor: cron job and analyze batch ([2da44b0](https://github.com/mx-space/core/commit/2da44b0))
+
+## <small>4.8.6 (2023-12-18)</small>
+
+* release: v4.8.6 ([c14d97e](https://github.com/mx-space/core/commit/c14d97e))
+* fix: bundle build ci ([99f4f4c](https://github.com/mx-space/core/commit/99f4f4c))
+* fix: run prebuild before test ([1ce1824](https://github.com/mx-space/core/commit/1ce1824))
+* fix: some `env` move to runtime inject ([a3510d2](https://github.com/mx-space/core/commit/a3510d2))
+* fix: test ci ([25bb57e](https://github.com/mx-space/core/commit/25bb57e))
+* fix(deps): update algoliasearch-client-javascript monorepo to v4.22.0 (#1294) ([e4fbeae](https://github.com/mx-space/core/commit/e4fbeae)), closes [#1294](https://github.com/mx-space/core/issues/1294)
+* fix(deps): update babel monorepo to v7.23.6 ([68e603b](https://github.com/mx-space/core/commit/68e603b))
+* fix(deps): update dependency @algolia/client-search to v4.22.0 (#1304) ([58c7f02](https://github.com/mx-space/core/commit/58c7f02)), closes [#1304](https://github.com/mx-space/core/issues/1304)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.2 ([62b7fef](https://github.com/mx-space/core/commit/62b7fef))
+* fix(deps): update dependency algoliasearch to v4.21.1 ([3b7b98b](https://github.com/mx-space/core/commit/3b7b98b))
+* fix(deps): update dependency linkedom to v0.16.5 ([97a9435](https://github.com/mx-space/core/commit/97a9435))
+* fix(deps): update dependency reflect-metadata to v0.2.1 (#1300) ([cc20933](https://github.com/mx-space/core/commit/cc20933)), closes [#1300](https://github.com/mx-space/core/issues/1300)
+* fix(deps): update nest monorepo to v10.3.0 (minor) (#1307) ([3cbb081](https://github.com/mx-space/core/commit/3cbb081)), closes [#1307](https://github.com/mx-space/core/issues/1307)
+* chore(deps): update dependency @swc/core to v1.3.101 ([8fea1df](https://github.com/mx-space/core/commit/8fea1df))
+* chore(deps): update dependency @types/node to v20.10.5 ([330cda9](https://github.com/mx-space/core/commit/330cda9))
+* chore(deps): update dependency mongodb-memory-server to v9.1.3 ([f778c7c](https://github.com/mx-space/core/commit/f778c7c))
+* chore(deps): update dependency vite to v5.0.10 ([2e36973](https://github.com/mx-space/core/commit/2e36973))
+* chore(deps): update dependency vite to v5.0.8 ([85633eb](https://github.com/mx-space/core/commit/85633eb))
+* chore(deps): update dependency vite to v5.0.9 ([ee658b5](https://github.com/mx-space/core/commit/ee658b5))
+* chore(deps): update pnpm to v8.12.1 (#1297) ([9ec70ba](https://github.com/mx-space/core/commit/9ec70ba)), closes [#1297](https://github.com/mx-space/core/issues/1297)
+* feat: request context ([c643094](https://github.com/mx-space/core/commit/c643094))
+* ci: remove optional ([13079aa](https://github.com/mx-space/core/commit/13079aa))
+* refactor: upgrade nanoid ([deb8a85](https://github.com/mx-space/core/commit/deb8a85))
+* refactor: upgrade zx ([43b1d98](https://github.com/mx-space/core/commit/43b1d98))
+
+## <small>4.8.4 (2023-12-12)</small>
+
+* release: v4.8.4 ([46bf306](https://github.com/mx-space/core/commit/46bf306))
+* fix: remove swift ([ab204b8](https://github.com/mx-space/core/commit/ab204b8))
+* fix: test case ([09db9c9](https://github.com/mx-space/core/commit/09db9c9))
+* fix(deps): update algoliasearch-client-javascript monorepo to v4.21.0 (minor) (#1288) ([46c2d1f](https://github.com/mx-space/core/commit/46c2d1f)), closes [#1288](https://github.com/mx-space/core/issues/1288)
+* fix(deps): update babel monorepo to v7.23.6 (patch) (#1287) ([237adc5](https://github.com/mx-space/core/commit/237adc5)), closes [#1287](https://github.com/mx-space/core/issues/1287)
+* chore(deps): update supercharge/redis-github-action action to v1.8.0 (#1291) ([7a28ded](https://github.com/mx-space/core/commit/7a28ded)), closes [#1291](https://github.com/mx-space/core/issues/1291)
+
+## <small>4.8.3 (2023-12-11)</small>
+
+* release: v4.8.3 ([de08b99](https://github.com/mx-space/core/commit/de08b99))
+* fix: test case ([ec37bd1](https://github.com/mx-space/core/commit/ec37bd1))
+* chore: update deps ([cdf477c](https://github.com/mx-space/core/commit/cdf477c))
+
+## <small>4.8.2 (2023-12-10)</small>
+
+* release: v4.8.2 ([0568bce](https://github.com/mx-space/core/commit/0568bce))
+* fix: disable pre requirement validation for auth security ([2444e39](https://github.com/mx-space/core/commit/2444e39))
+* fix: guard if not passkey ([1cc940d](https://github.com/mx-space/core/commit/1cc940d))
+* fix: update dockerfile ([593c9bc](https://github.com/mx-space/core/commit/593c9bc))
+
+## <small>4.8.1 (2023-12-10)</small>
+
+* release: v4.8.1 ([4315164](https://github.com/mx-space/core/commit/4315164))
+* fix: remove hard code ([956d2d6](https://github.com/mx-space/core/commit/956d2d6))
+* chore(deps): update dependency prettier to v3.1.1 ([14d6a6a](https://github.com/mx-space/core/commit/14d6a6a))
+* chore(deps): update pnpm to v8.12.0 (#1284) ([e26a1f8](https://github.com/mx-space/core/commit/e26a1f8)), closes [#1284](https://github.com/mx-space/core/issues/1284)
+
+## 4.8.0 (2023-12-10)
+
+* release: v4.8.0 ([b1ee162](https://github.com/mx-space/core/commit/b1ee162))
+
+## 4.8.0-alpha.2 (2023-12-10)
+
+* release: v4.8.0-alpha.2 ([d0ebd45](https://github.com/mx-space/core/commit/d0ebd45))
+* fix: add env ([6a7cfbd](https://github.com/mx-space/core/commit/6a7cfbd))
+
+## 4.8.0-alpha.1 (2023-12-10)
+
+* release: v4.8.0-alpha.1 ([3eac276](https://github.com/mx-space/core/commit/3eac276))
+* chore: add source map for build ([726ba01](https://github.com/mx-space/core/commit/726ba01))
+* fix: logger module ([b49faaf](https://github.com/mx-space/core/commit/b49faaf))
+
+## 4.8.0-alpha.0 (2023-12-10)
+
+* release: v4.8.0-alpha.0 ([ddd1e6a](https://github.com/mx-space/core/commit/ddd1e6a))
+* feat: support user login by passkey (#1285) ([03cc449](https://github.com/mx-space/core/commit/03cc449)), closes [#1285](https://github.com/mx-space/core/issues/1285)
+* chore(deps): update dependency @types/node to v20.10.3 ([aef2baf](https://github.com/mx-space/core/commit/aef2baf))
+* chore(deps): update dependency @types/node to v20.10.4 ([e23aa47](https://github.com/mx-space/core/commit/e23aa47))
+* chore(deps): update dependency lint-staged to v15.2.0 (#1269) ([ebf714b](https://github.com/mx-space/core/commit/ebf714b)), closes [#1269](https://github.com/mx-space/core/issues/1269)
+* chore(deps): update dependency ts-node to v10.9.2 (#1281) ([40d2782](https://github.com/mx-space/core/commit/40d2782)), closes [#1281](https://github.com/mx-space/core/issues/1281)
+* chore(deps): update dependency typescript to v5.3.3 ([5cb1c8e](https://github.com/mx-space/core/commit/5cb1c8e))
+* chore(deps): update dependency unplugin-swc to v1.4.4 ([98f218f](https://github.com/mx-space/core/commit/98f218f))
+* chore(deps): update dependency vite to v5.0.5 ([52ae00c](https://github.com/mx-space/core/commit/52ae00c))
+* chore(deps): update dependency vite to v5.0.6 ([acea271](https://github.com/mx-space/core/commit/acea271))
+* chore(deps): update dependency vite to v5.0.7 (#1282) ([2325cad](https://github.com/mx-space/core/commit/2325cad)), closes [#1282](https://github.com/mx-space/core/issues/1282)
+* chore(deps): update dependency vite-tsconfig-paths to v4.2.2 ([eafe165](https://github.com/mx-space/core/commit/eafe165))
+* chore(deps): update node.js to v20 (#1267) ([7b66498](https://github.com/mx-space/core/commit/7b66498)), closes [#1267](https://github.com/mx-space/core/issues/1267)
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.12.23 ([6d213ee](https://github.com/mx-space/core/commit/6d213ee))
+* fix(deps): update dependency @clerk/clerk-sdk-node to v4.13.0 (#1278) ([20142ea](https://github.com/mx-space/core/commit/20142ea)), closes [#1278](https://github.com/mx-space/core/issues/1278)
+* fix(deps): update dependency mongoose to v8.0.3 ([74e5c83](https://github.com/mx-space/core/commit/74e5c83))
+* fix(deps): update dependency reflect-metadata to v0.1.14 ([b7d5811](https://github.com/mx-space/core/commit/b7d5811))
+
+## <small>4.7.2 (2023-12-03)</small>
+
+* release: v4.7.2 ([69756fb](https://github.com/mx-space/core/commit/69756fb))
+* fix: lockfile ([a7e3cd7](https://github.com/mx-space/core/commit/a7e3cd7))
+* fix: windows zip minetype detection ([1e9105a](https://github.com/mx-space/core/commit/1e9105a))
+
+## <small>4.7.1 (2023-12-02)</small>
+
+* release: v4.7.1 ([a4669cc](https://github.com/mx-space/core/commit/a4669cc))
+* ci: remove darkwin build ([1494dfc](https://github.com/mx-space/core/commit/1494dfc))
+* fix: change clerk auth verify ([1c10b47](https://github.com/mx-space/core/commit/1c10b47))
+
+## 4.7.0 (2023-12-02)
+
+* release: v4.7.0 ([eaded7c](https://github.com/mx-space/core/commit/eaded7c))
+* fix: pass test case ([0e5eb09](https://github.com/mx-space/core/commit/0e5eb09))
+* fix: release ci ([d82f913](https://github.com/mx-space/core/commit/d82f913))
+* feat: support clerk auth ([18b9cbb](https://github.com/mx-space/core/commit/18b9cbb))
+* chore(deps): update dependency @types/node to v20.10.2 ([19d262f](https://github.com/mx-space/core/commit/19d262f))
+
+## <small>4.6.3 (2023-11-30)</small>
+
+* release: v4.6.3 ([8c4ca40](https://github.com/mx-space/core/commit/8c4ca40))
+* chore: lockfile ([7f850d7](https://github.com/mx-space/core/commit/7f850d7))
+* chore: update moggose ([d5681a8](https://github.com/mx-space/core/commit/d5681a8))
+* chore(deps): update actions/setup-node action to v4 (#1166) ([7914caa](https://github.com/mx-space/core/commit/7914caa)), closes [#1166](https://github.com/mx-space/core/issues/1166)
+* chore(deps): update dependency @innei/eslint-config-ts to v0.12.0 (#1248) ([c8a8a34](https://github.com/mx-space/core/commit/c8a8a34)), closes [#1248](https://github.com/mx-space/core/issues/1248)
+* chore(deps): update dependency @innei/prettier to v0.12.0 (#1249) ([5a681f8](https://github.com/mx-space/core/commit/5a681f8)), closes [#1249](https://github.com/mx-space/core/issues/1249)
+* chore(deps): update dependency @swc/core to v1.3.100 ([4caf845](https://github.com/mx-space/core/commit/4caf845))
+* chore(deps): update dependency @types/cache-manager to v4.0.6 ([5ecf16a](https://github.com/mx-space/core/commit/5ecf16a))
+* chore(deps): update dependency @types/cors to v2.8.17 (#1242) ([cf49ad1](https://github.com/mx-space/core/commit/cf49ad1)), closes [#1242](https://github.com/mx-space/core/issues/1242)
+* chore(deps): update dependency @types/lodash to v4.14.202 (#1201) ([f3cbaa8](https://github.com/mx-space/core/commit/f3cbaa8)), closes [#1201](https://github.com/mx-space/core/issues/1201)
+* chore(deps): update dependency @types/node to v20.10.0 ([a42bde6](https://github.com/mx-space/core/commit/a42bde6))
+* chore(deps): update dependency @types/node to v20.10.1 ([df30568](https://github.com/mx-space/core/commit/df30568))
+* chore(deps): update dependency @types/node to v20.9.3 ([46bbcc3](https://github.com/mx-space/core/commit/46bbcc3))
+* chore(deps): update dependency @types/node to v20.9.4 ([cc2f243](https://github.com/mx-space/core/commit/cc2f243))
+* chore(deps): update dependency @types/node to v20.9.5 ([5937dc3](https://github.com/mx-space/core/commit/5937dc3))
+* chore(deps): update dependency @types/semver to v7.5.6 ([7434fa8](https://github.com/mx-space/core/commit/7434fa8))
+* chore(deps): update dependency tsup to v8 (#1234) ([9a0993e](https://github.com/mx-space/core/commit/9a0993e)), closes [#1234](https://github.com/mx-space/core/issues/1234)
+* chore(deps): update dependency vite to v5.0.2 ([c9ae565](https://github.com/mx-space/core/commit/c9ae565))
+* chore(deps): update dependency vite to v5.0.3 ([48eaaaa](https://github.com/mx-space/core/commit/48eaaaa))
+* chore(deps): update dependency vite to v5.0.4 ([16ad7c1](https://github.com/mx-space/core/commit/16ad7c1))
+* chore(deps): update pnpm to v8.11.0 (#1252) ([741e928](https://github.com/mx-space/core/commit/741e928)), closes [#1252](https://github.com/mx-space/core/issues/1252)
+* fix: in test ([69b1c5f](https://github.com/mx-space/core/commit/69b1c5f))
+* fix: typings ([221bf5f](https://github.com/mx-space/core/commit/221bf5f))
+* fix: update error throw ([2a97fbe](https://github.com/mx-space/core/commit/2a97fbe))
+* fix(deps): update babel monorepo to v7.23.5 ([64f6bb5](https://github.com/mx-space/core/commit/64f6bb5))
+* fix(deps): update dependency @typegoose/auto-increment to v4 (#1255) ([4dff159](https://github.com/mx-space/core/commit/4dff159)), closes [#1255](https://github.com/mx-space/core/issues/1255)
+* fix(deps): update dependency @typegoose/typegoose to v12 (#1254) ([033395a](https://github.com/mx-space/core/commit/033395a)), closes [#1254](https://github.com/mx-space/core/issues/1254)
+* fix(deps): update dependency axios-retry to v4 (#1253) ([8d63c76](https://github.com/mx-space/core/commit/8d63c76)), closes [#1253](https://github.com/mx-space/core/issues/1253)
+* fix(deps): update dependency lru-cache to v10.1.0 (#1247) ([c0b193e](https://github.com/mx-space/core/commit/c0b193e)), closes [#1247](https://github.com/mx-space/core/issues/1247)
+* fix(deps): update dependency nestjs-pretty-logger to v0.1.1 ([90ac17e](https://github.com/mx-space/core/commit/90ac17e))
+* fix(deps): update dependency nestjs-pretty-logger to v0.2.0 (#1257) ([4dee3b2](https://github.com/mx-space/core/commit/4dee3b2)), closes [#1257](https://github.com/mx-space/core/issues/1257)
+* refactor: replace logger ([6913dc9](https://github.com/mx-space/core/commit/6913dc9))
+
+## <small>4.6.2 (2023-11-21)</small>
+
+* release: v4.6.2 ([24c85c2](https://github.com/mx-space/core/commit/24c85c2))
+* fix: ci ([557c3ce](https://github.com/mx-space/core/commit/557c3ce))
+* fix: comment model `refType` type ([1ad151a](https://github.com/mx-space/core/commit/1ad151a))
+* fix: comment ref not found statud code ([3a0f67a](https://github.com/mx-space/core/commit/3a0f67a))
+* fix: comment refType ([c8039ed](https://github.com/mx-space/core/commit/c8039ed))
+* fix: guard init module ([6236de7](https://github.com/mx-space/core/commit/6236de7))
+* fix(deps): update babel monorepo to v7.23.4 ([1e8859f](https://github.com/mx-space/core/commit/1e8859f))
+* fix(deps): update dependency lru-cache to v10.0.3 ([083c427](https://github.com/mx-space/core/commit/083c427))
+* fix(deps): update nest monorepo to v10.2.10 ([07600f3](https://github.com/mx-space/core/commit/07600f3))
+* chore: log ci ([49e7c90](https://github.com/mx-space/core/commit/49e7c90))
+* chore(deps): update dependency @swc/core to v1.3.99 ([cb07283](https://github.com/mx-space/core/commit/cb07283))
+* chore(deps): update dependency @types/babel__core to v7.20.5 ([af54bac](https://github.com/mx-space/core/commit/af54bac))
+* chore(deps): update dependency @types/validator to v13.11.7 ([42ec3b9](https://github.com/mx-space/core/commit/42ec3b9))
+* chore(deps): update dependency typescript to v5.3.2 (#1237) ([14395ea](https://github.com/mx-space/core/commit/14395ea)), closes [#1237](https://github.com/mx-space/core/issues/1237)
+* refactor: collection ref type ([66c2151](https://github.com/mx-space/core/commit/66c2151))
+
+## <small>4.6.1 (2023-11-19)</small>
+
+* release: v4.6.1 ([1404e3c](https://github.com/mx-space/core/commit/1404e3c))
+* chore: update badge ([4a90597](https://github.com/mx-space/core/commit/4a90597))
+* chore: update deps ([4ca372c](https://github.com/mx-space/core/commit/4ca372c))
+* chore(deps): update dependency @types/node to v20.9.1 ([198def2](https://github.com/mx-space/core/commit/198def2))
+* chore(deps): update dependency @types/node to v20.9.2 ([a440713](https://github.com/mx-space/core/commit/a440713))
+* fix: comment populate `ref_type`, closes #1232 ([c9758a4](https://github.com/mx-space/core/commit/c9758a4)), closes [#1232](https://github.com/mx-space/core/issues/1232)
+* fix: remove cdn download url ([795ab13](https://github.com/mx-space/core/commit/795ab13))
+* fix(deps): update dependency @typegoose/typegoose to v11.7.1 ([57e565b](https://github.com/mx-space/core/commit/57e565b))
+* fix(deps): update dependency axios-retry to v3.9.1 ([70fd41b](https://github.com/mx-space/core/commit/70fd41b))
+* fix(deps): update dependency mongoose to v8.0.1 (#1221) ([2c3a218](https://github.com/mx-space/core/commit/2c3a218)), closes [#1221](https://github.com/mx-space/core/issues/1221)
+* fix(deps): update nest monorepo to v10.2.9 ([0f26ffb](https://github.com/mx-space/core/commit/0f26ffb))
+
+## 4.6.0 (2023-11-16)
+
+* release: v4.6.0 ([c076a34](https://github.com/mx-space/core/commit/c076a34))
+* fix: migrate db ([aee6f63](https://github.com/mx-space/core/commit/aee6f63))
+* fix(deps): update babel monorepo to v7.23.3 ([b8adf44](https://github.com/mx-space/core/commit/b8adf44))
+* fix(deps): update dependency @nestjs/event-emitter to v2.0.3 ([9f2c47d](https://github.com/mx-space/core/commit/9f2c47d))
+* fix(deps): update dependency linkedom to v0.16.4 ([8aa1696](https://github.com/mx-space/core/commit/8aa1696))
+* fix(deps): update dependency lru-cache to v10.0.2 ([538c3ae](https://github.com/mx-space/core/commit/538c3ae))
+* fix(deps): update dependency marked to v10 (#1214) ([428bece](https://github.com/mx-space/core/commit/428bece)), closes [#1214](https://github.com/mx-space/core/issues/1214)
+* fix(deps): update dependency marked to v9.1.6 ([d8a0d8a](https://github.com/mx-space/core/commit/d8a0d8a))
+* chore: add gh mirror ([18b395b](https://github.com/mx-space/core/commit/18b395b))
+* chore: update deps ([7767e99](https://github.com/mx-space/core/commit/7767e99))
+* chore(ci): Refine workflow file (#1204) ([6032dff](https://github.com/mx-space/core/commit/6032dff)), closes [#1204](https://github.com/mx-space/core/issues/1204)
+* chore(deps): update dependency @types/js-yaml to v4.0.9 ([2e85b5f](https://github.com/mx-space/core/commit/2e85b5f))
+* chore(deps): update dependency @types/node to v20.9.0 ([5ed26ed](https://github.com/mx-space/core/commit/5ed26ed))
+* chore(deps): update dependency @types/nodemailer to v6.4.14 ([2cbf6a8](https://github.com/mx-space/core/commit/2cbf6a8))
+* chore(deps): update dependency @types/qs to v6.9.10 ([9a8e510](https://github.com/mx-space/core/commit/9a8e510))
+* chore(deps): update dependency @types/remove-markdown to v0.3.4 ([1fe23f3](https://github.com/mx-space/core/commit/1fe23f3))
+* chore(deps): update dependency @types/semver to v7.5.5 ([e5ed8ec](https://github.com/mx-space/core/commit/e5ed8ec))
+* chore(deps): update dependency @types/ua-parser-js to v0.7.39 ([487c693](https://github.com/mx-space/core/commit/487c693))
+* chore(deps): update dependency @types/validator to v13.11.6 ([e07c591](https://github.com/mx-space/core/commit/e07c591))
+* chore(deps): update dependency prettier to v3.1.0 ([60170d1](https://github.com/mx-space/core/commit/60170d1))
+* chore(deps): update pnpm to v8.10.3 ([c805839](https://github.com/mx-space/core/commit/c805839))
+* chore(deps): update pnpm to v8.10.4 ([d721c5f](https://github.com/mx-space/core/commit/d721c5f))
+* chore(deps): update pnpm to v8.10.5 ([ddbcc66](https://github.com/mx-space/core/commit/ddbcc66))
+* feat: Sync system (#1208) ([255e05c](https://github.com/mx-space/core/commit/255e05c)), closes [#1208](https://github.com/mx-space/core/issues/1208)
+
+## <small>4.5.3 (2023-11-07)</small>
+
+* release: v4.5.3 ([2f63b16](https://github.com/mx-space/core/commit/2f63b16))
+* fix: release pipe install ([9070e96](https://github.com/mx-space/core/commit/9070e96))
+* chore: ci config ([4a378d6](https://github.com/mx-space/core/commit/4a378d6))
+
+## <small>4.5.2 (2023-11-07)</small>
+
+* release: v4.5.2 ([a93d38b](https://github.com/mx-space/core/commit/a93d38b))
+* revert: "chore: Refine CI" (#1196) ([affedbb](https://github.com/mx-space/core/commit/affedbb)), closes [#1196](https://github.com/mx-space/core/issues/1196)
+
+## <small>4.5.1 (2023-11-07)</small>
+
+* release: v4.5.1 ([dcb961a](https://github.com/mx-space/core/commit/dcb961a))
+* chore: Refine CI (#1189) ([698ed3b](https://github.com/mx-space/core/commit/698ed3b)), closes [#1189](https://github.com/mx-space/core/issues/1189)
+* chore: update deps ([b3bf995](https://github.com/mx-space/core/commit/b3bf995))
+* chore: update deps ([117153e](https://github.com/mx-space/core/commit/117153e))
+* chore(deps): update dependency @types/babel__core to v7.20.4 ([fa4f5f1](https://github.com/mx-space/core/commit/fa4f5f1))
+* chore(deps): update dependency @types/bcrypt to v5.0.2 ([491b112](https://github.com/mx-space/core/commit/491b112))
+* chore(deps): update dependency @types/cache-manager to v4.0.5 ([500587d](https://github.com/mx-space/core/commit/500587d))
+* chore(deps): update dependency redis-memory-server to v0.9.0 (#1171) ([6cae307](https://github.com/mx-space/core/commit/6cae307)), closes [#1171](https://github.com/mx-space/core/issues/1171)
+* chore(deps): update pnpm to v8.10.2 (#1172) ([34d1e23](https://github.com/mx-space/core/commit/34d1e23)), closes [#1172](https://github.com/mx-space/core/issues/1172)
+* fix: link exists check ([b58dc2f](https://github.com/mx-space/core/commit/b58dc2f))
+* fix(deps): update dependency @nestjs/cache-manager to v2.1.1 ([0b7352d](https://github.com/mx-space/core/commit/0b7352d))
+* fix(deps): update dependency inquirer to v9 (#1102) ([d7d5f49](https://github.com/mx-space/core/commit/d7d5f49)), closes [#1102](https://github.com/mx-space/core/issues/1102)
+* fix(deps): update dependency marked to v9.1.5 ([274ca23](https://github.com/mx-space/core/commit/274ca23))
+* fix(deps): update dependency mongoose to v8 (#1179) ([e5ca485](https://github.com/mx-space/core/commit/e5ca485)), closes [#1179](https://github.com/mx-space/core/issues/1179)
+* fix(deps): update nest monorepo to v10.2.8 ([0f3b48c](https://github.com/mx-space/core/commit/0f3b48c))
+* fix!: migrate maintain in db ([22da4b1](https://github.com/mx-space/core/commit/22da4b1))
+* ci: fix disable optional in release ([e7466d0](https://github.com/mx-space/core/commit/e7466d0))
+
+## 4.5.0 (2023-10-31)
+
+* release: v4.5.0 ([73e83ec](https://github.com/mx-space/core/commit/73e83ec))
+* chore: update deps ([2ce55ed](https://github.com/mx-space/core/commit/2ce55ed))
+* chore(deps): update dependency @nestjs/cli to v10.2.1 ([efbc55d](https://github.com/mx-space/core/commit/efbc55d))
+* chore(deps): update dependency @nestjs/schematics to v10.0.3 ([79d2dac](https://github.com/mx-space/core/commit/79d2dac))
+* chore(deps): update dependency @types/node to v20.8.10 ([5e4a915](https://github.com/mx-space/core/commit/5e4a915))
+* feat: add count apis ([f90772d](https://github.com/mx-space/core/commit/f90772d))
+* fix(deps): update dependency marked to v9.1.4 ([3eabdb2](https://github.com/mx-space/core/commit/3eabdb2))
+* fix(deps): update dependency mongoose to v7.6.4 ([148f281](https://github.com/mx-space/core/commit/148f281))
+
+## <small>4.4.1 (2023-10-29)</small>
+
+* release: v4.4.1 ([879f27c](https://github.com/mx-space/core/commit/879f27c))
+* feat: upgrade deps ([a126bbd](https://github.com/mx-space/core/commit/a126bbd))
+* fix: ack path ([05eda82](https://github.com/mx-space/core/commit/05eda82))
+* fix(deps): update dependency @nestjs/throttler to v5.0.1 ([126c075](https://github.com/mx-space/core/commit/126c075))
+* fix(deps): update dependency axios-retry to v3.8.1 ([d74db15](https://github.com/mx-space/core/commit/d74db15))
+* fix(deps): update dependency linkedom to v0.16.1 (#1161) ([dbd7f1d](https://github.com/mx-space/core/commit/dbd7f1d)), closes [#1161](https://github.com/mx-space/core/issues/1161)
+* fix(deps): update dependency marked to v9.1.3 ([dc0799c](https://github.com/mx-space/core/commit/dc0799c))
+* fix(deps): update dependency nodemailer to v6.9.7 (#1160) ([e6ae312](https://github.com/mx-space/core/commit/e6ae312)), closes [#1160](https://github.com/mx-space/core/issues/1160)
+* fix(deps): update dependency ua-parser-js to v1.0.37 ([77f384f](https://github.com/mx-space/core/commit/77f384f))
+* chore: remove deprecated routes ([dd9caa0](https://github.com/mx-space/core/commit/dd9caa0))
+* chore(deps): update dependency @nestjs/cli to v10.2.0 (#1162) ([bd89d75](https://github.com/mx-space/core/commit/bd89d75)), closes [#1162](https://github.com/mx-space/core/issues/1162)
+* chore(deps): update dependency @types/node to v20.8.9 ([80bb50c](https://github.com/mx-space/core/commit/80bb50c))
+* chore(deps): update docker/build-push-action action to v5 (#1154) ([53b79b5](https://github.com/mx-space/core/commit/53b79b5)), closes [#1154](https://github.com/mx-space/core/issues/1154)
+* chore(deps): update docker/login-action action to v3 (#1155) ([1c38891](https://github.com/mx-space/core/commit/1c38891)), closes [#1155](https://github.com/mx-space/core/issues/1155)
+* chore(deps): update docker/metadata-action action to v5 (#1156) ([58e63f5](https://github.com/mx-space/core/commit/58e63f5)), closes [#1156](https://github.com/mx-space/core/issues/1156)
+* chore(deps): update docker/setup-buildx-action action to v3 (#1157) ([cee6c74](https://github.com/mx-space/core/commit/cee6c74)), closes [#1157](https://github.com/mx-space/core/issues/1157)
+* chore(deps): update docker/setup-qemu-action action to v3 (#1158) ([9d86274](https://github.com/mx-space/core/commit/9d86274)), closes [#1158](https://github.com/mx-space/core/issues/1158)
+* chore(release): bump @mx-space/api-client to v1.6.1 ([1476240](https://github.com/mx-space/core/commit/1476240))
+* chore(release): bump @mx-space/api-client to v1.6.2 ([ba11fa4](https://github.com/mx-space/core/commit/ba11fa4))
+
+## 4.4.0 (2023-10-21)
+
+* release: v4.4.0 ([c65dcad](https://github.com/mx-space/core/commit/c65dcad))
+* chore: update ([127fc7e](https://github.com/mx-space/core/commit/127fc7e))
+* chore: update readme ([8990b30](https://github.com/mx-space/core/commit/8990b30))
+* chore(deps): update pnpm to v8.9.2 (#1143) ([bc6fbd2](https://github.com/mx-space/core/commit/bc6fbd2)), closes [#1143](https://github.com/mx-space/core/issues/1143)
+* chore(release): bump @mx-space/api-client to v1.6.0 ([e7f2e75](https://github.com/mx-space/core/commit/e7f2e75))
+* fix!: remove deprecated api route ([5623ee1](https://github.com/mx-space/core/commit/5623ee1))
+* feat(api-client): add ack controller ([08dc741](https://github.com/mx-space/core/commit/08dc741))
+* refactor: counting logic ([4646473](https://github.com/mx-space/core/commit/4646473))
+
+## <small>4.3.12 (2023-10-18)</small>
+
+* release: v4.3.12 ([eac9743](https://github.com/mx-space/core/commit/eac9743))
+* fix: disable api cache if query with ts ([b6796b4](https://github.com/mx-space/core/commit/b6796b4))
+* fix: judge  is master ([25870cd](https://github.com/mx-space/core/commit/25870cd))
+* fix: lint ([a2e351c](https://github.com/mx-space/core/commit/a2e351c))
+* fix: typo ([bbc1821](https://github.com/mx-space/core/commit/bbc1821))
+* fix(deps): update dependency ua-parser-js to v1.0.36 (#1132) ([badd8e8](https://github.com/mx-space/core/commit/badd8e8)), closes [#1132](https://github.com/mx-space/core/issues/1132)
+* chore: update deps ([462189d](https://github.com/mx-space/core/commit/462189d))
+* chore(deps): update dependency vite-tsconfig-paths to v4.2.1 (#1133) ([4d4ad0c](https://github.com/mx-space/core/commit/4d4ad0c)), closes [#1133](https://github.com/mx-space/core/issues/1133)
+* chore(deps): update supercharge/redis-github-action action to v1.7.0 (#1127) ([dbf0c52](https://github.com/mx-space/core/commit/dbf0c52)), closes [#1127](https://github.com/mx-space/core/issues/1127)
+
+## <small>4.3.11 (2023-09-24)</small>
+
+* release: v4.3.11 ([cc21837](https://github.com/mx-space/core/commit/cc21837))
+* chore: update deps ([ad43521](https://github.com/mx-space/core/commit/ad43521))
+* fix: skip throttler for proxy controller ([62cd807](https://github.com/mx-space/core/commit/62cd807))
+
+## <small>4.3.10 (2023-09-13)</small>
+
+* release: v4.3.10 ([4f11c14](https://github.com/mx-space/core/commit/4f11c14))
+* chore: add sitemap `changefreq` ([ef996fe](https://github.com/mx-space/core/commit/ef996fe))
+* chore: upgrade marked ([399386c](https://github.com/mx-space/core/commit/399386c))
+* chore(deps): update actions/checkout action to v4 (#1128) ([55a66d4](https://github.com/mx-space/core/commit/55a66d4)), closes [#1128](https://github.com/mx-space/core/issues/1128)
+* chore(deps): update pnpm to v8.7.4 (#1126) ([81d01bd](https://github.com/mx-space/core/commit/81d01bd)), closes [#1126](https://github.com/mx-space/core/issues/1126)
+* fix: server time middleware apply ([a4e1bc4](https://github.com/mx-space/core/commit/a4e1bc4))
+* fix(deps): update babel monorepo to v7.22.17 (patch) (#1131) ([2f12db6](https://github.com/mx-space/core/commit/2f12db6)), closes [#1131](https://github.com/mx-space/core/issues/1131)
+
+## <small>4.3.9 (2023-09-07)</small>
+
+* release: v4.3.9 ([5c845a3](https://github.com/mx-space/core/commit/5c845a3))
+* chore: update deps ([715b93b](https://github.com/mx-space/core/commit/715b93b))
+* feat: add server time ([30aeaa7](https://github.com/mx-space/core/commit/30aeaa7))
+
+## <small>4.3.8 (2023-09-05)</small>
+
+* release: v4.3.8 ([28e480f](https://github.com/mx-space/core/commit/28e480f))
+* fix: rss description ([d3c65b2](https://github.com/mx-space/core/commit/d3c65b2))
+
+## <small>4.3.7 (2023-09-05)</small>
+
+* release: v4.3.7 ([91cae2f](https://github.com/mx-space/core/commit/91cae2f))
+* fix: only use swc in dev ([2bd87e9](https://github.com/mx-space/core/commit/2bd87e9))
+* fix: rss 2.0 field ([8a39eaf](https://github.com/mx-space/core/commit/8a39eaf))
+* feat: add swc to complie ([d23f71a](https://github.com/mx-space/core/commit/d23f71a))
+* chore: update swc and vitest ([52b16b3](https://github.com/mx-space/core/commit/52b16b3))
+
+## <small>4.3.6 (2023-09-05)</small>
+
+* release: v4.3.6 ([a6cdc0a](https://github.com/mx-space/core/commit/a6cdc0a))
+* feat: upgrade throttle ([a981f14](https://github.com/mx-space/core/commit/a981f14))
+* chore: update minor deps ([15b92de](https://github.com/mx-space/core/commit/15b92de))
+* chore(deps): update dependency @nestjs/cli to v10.1.16 (#1117) ([f77f5d2](https://github.com/mx-space/core/commit/f77f5d2)), closes [#1117](https://github.com/mx-space/core/issues/1117)
+* chore(deps): update dependency prettier to v3.0.3 (#1118) ([2f62a77](https://github.com/mx-space/core/commit/2f62a77)), closes [#1118](https://github.com/mx-space/core/issues/1118)
+* chore(deps): update dependency typescript to v5.2.2 (#1121) ([beb9aea](https://github.com/mx-space/core/commit/beb9aea)), closes [#1121](https://github.com/mx-space/core/issues/1121)
+* fix: feed xml content ([a9913cb](https://github.com/mx-space/core/commit/a9913cb))
+* fix: typo ([8e1fe79](https://github.com/mx-space/core/commit/8e1fe79))
+* fix(deps): update babel monorepo to v7.22.11 (patch) (#1120) ([637c02c](https://github.com/mx-space/core/commit/637c02c)), closes [#1120](https://github.com/mx-space/core/issues/1120)
+
+## <small>4.3.5 (2023-08-23)</small>
+
+* release: v4.3.5 ([8482fdb](https://github.com/mx-space/core/commit/8482fdb))
+* fix: remove lean for popluate ([d4d64a2](https://github.com/mx-space/core/commit/d4d64a2))
+
+## <small>4.3.4 (2023-08-22)</small>
+
+* release: v4.3.4 ([7ee1a42](https://github.com/mx-space/core/commit/7ee1a42))
+* fix: docker-compose command (#1111) ([4495304](https://github.com/mx-space/core/commit/4495304)), closes [#1111](https://github.com/mx-space/core/issues/1111)
+* fix: redis password auth ([0c1655e](https://github.com/mx-space/core/commit/0c1655e))
+* chore: remove pty in readme (#1110) ([9f38660](https://github.com/mx-space/core/commit/9f38660)), closes [#1110](https://github.com/mx-space/core/issues/1110)
+* chore: renovate ([0ceb181](https://github.com/mx-space/core/commit/0ceb181))
+* chore: update deps ([87907d0](https://github.com/mx-space/core/commit/87907d0))
+* chore(deps): update all non-major dependencies (minor) (#1098) ([a53ed73](https://github.com/mx-space/core/commit/a53ed73)), closes [#1098](https://github.com/mx-space/core/issues/1098)
+* chore(deps): update all non-major dependencies (patch) (#1106) ([0e2e10f](https://github.com/mx-space/core/commit/0e2e10f)), closes [#1106](https://github.com/mx-space/core/issues/1106)
+
+## <small>4.3.3 (2023-08-10)</small>
+
+* release: v4.3.3 ([450aacd](https://github.com/mx-space/core/commit/450aacd))
+* chore(pty): just disable it and no ref ([6867a9b](https://github.com/mx-space/core/commit/6867a9b))
+* fix: bind port only local ([4993076](https://github.com/mx-space/core/commit/4993076))
+* fix: build ([a44842a](https://github.com/mx-space/core/commit/a44842a))
+* fix: remove webshell ([2b36d9a](https://github.com/mx-space/core/commit/2b36d9a))
+
+## <small>4.3.2 (2023-08-10)</small>
+
+* release: v4.3.2 ([a455b1a](https://github.com/mx-space/core/commit/a455b1a))
+* chore: update deps ([1d91c14](https://github.com/mx-space/core/commit/1d91c14))
+* fix: typo ([9c3f48a](https://github.com/mx-space/core/commit/9c3f48a))
+
+## <small>4.3.1 (2023-08-10)</small>
+
+* release: v4.3.1 ([b3e5930](https://github.com/mx-space/core/commit/b3e5930))
+* fix: post data wrapped ([4132bab](https://github.com/mx-space/core/commit/4132bab))
+* fix: remove default noe ([e3e49c0](https://github.com/mx-space/core/commit/e3e49c0))
+* fix(deps): update dependency marked to v7 (#1107) ([a6d186a](https://github.com/mx-space/core/commit/a6d186a)), closes [#1107](https://github.com/mx-space/core/issues/1107)
+* chore: remove method ([ebf9360](https://github.com/mx-space/core/commit/ebf9360))
+* chore: update deps ([6b187ff](https://github.com/mx-space/core/commit/6b187ff))
+* chore(release): bump @mx-space/api-client to v1.5.0 ([5e98ff0](https://github.com/mx-space/core/commit/5e98ff0))
+* chore(release): bump @mx-space/api-client to v1.5.1 ([ed9d29c](https://github.com/mx-space/core/commit/ed9d29c))
+* feat: allow disabling SSL/TLS for SMTP (#1108) ([42f2f83](https://github.com/mx-space/core/commit/42f2f83)), closes [#1108](https://github.com/mx-space/core/issues/1108)
+
+## 4.3.0 (2023-08-06)
+
+* release: v4.3.0 ([148667e](https://github.com/mx-space/core/commit/148667e))
+* feat: activity controller ([61b4fb3](https://github.com/mx-space/core/commit/61b4fb3))
+* feat: add api client for activity controller ([44ab9dc](https://github.com/mx-space/core/commit/44ab9dc))
+* fix: like list query ([03ca5c6](https://github.com/mx-space/core/commit/03ca5c6))
+* fix(deps): update all non-major dependencies (#1100) ([6d781ac](https://github.com/mx-space/core/commit/6d781ac)), closes [#1100](https://github.com/mx-space/core/issues/1100)
+* chore: update markedjs ([99354ca](https://github.com/mx-space/core/commit/99354ca))
+
+## <small>4.2.14 (2023-07-30)</small>
+
+* release: v4.2.14 ([9bb7808](https://github.com/mx-space/core/commit/9bb7808))
+* fix: create post error when related post ([72f78a2](https://github.com/mx-space/core/commit/72f78a2))
+* fix: deps version ([c14e8bf](https://github.com/mx-space/core/commit/c14e8bf))
+* chore: update deps ([de16dde](https://github.com/mx-space/core/commit/de16dde))
+
+## <small>4.2.13 (2023-07-27)</small>
+
+* release: v4.2.13 ([a0a5a3d](https://github.com/mx-space/core/commit/a0a5a3d))
+* fix: distinguish between the types of comments ([e4ce8cd](https://github.com/mx-space/core/commit/e4ce8cd))
+* fix: leanid ([b30565d](https://github.com/mx-space/core/commit/b30565d))
+* fix: typo ([7054c79](https://github.com/mx-space/core/commit/7054c79))
+* fix(deps): update all non-major dependencies (minor) (#1097) ([33b14d8](https://github.com/mx-space/core/commit/33b14d8)), closes [#1097](https://github.com/mx-space/core/issues/1097)
+* fix(deps): update all non-major dependencies (patch) (#1081) ([80218f0](https://github.com/mx-space/core/commit/80218f0)), closes [#1081](https://github.com/mx-space/core/issues/1081)
+* chore: code style ([805d060](https://github.com/mx-space/core/commit/805d060))
+
+## <small>4.2.12 (2023-07-07)</small>
+
+* release: v4.2.12 ([e1b4d88](https://github.com/mx-space/core/commit/e1b4d88))
+* fix: related ([9c16544](https://github.com/mx-space/core/commit/9c16544))
+
+## <small>4.2.11 (2023-07-05)</small>
+
+* release: v4.2.11 ([d8b3652](https://github.com/mx-space/core/commit/d8b3652))
+* fix: throw ([950dc8c](https://github.com/mx-space/core/commit/950dc8c))
+* feat: add extra field for `/top` ([a7b4513](https://github.com/mx-space/core/commit/a7b4513))
+* chore(deps): update all non-major dependencies (minor) (#1080) ([8fbfa81](https://github.com/mx-space/core/commit/8fbfa81)), closes [#1080](https://github.com/mx-space/core/issues/1080)
+
+## <small>4.2.10 (2023-07-04)</small>
+
+* release: v4.2.10 ([5eac636](https://github.com/mx-space/core/commit/5eac636))
+* feat: fn support broardcast ([dadd3c8](https://github.com/mx-space/core/commit/dadd3c8))
+
+## <small>4.2.9 (2023-07-03)</small>
+
+* release: v4.2.9 ([51d3249](https://github.com/mx-space/core/commit/51d3249))
+* fix: adjust module seq ([d24dc6e](https://github.com/mx-space/core/commit/d24dc6e))
+* fix: timeline lean query ([313b8d0](https://github.com/mx-space/core/commit/313b8d0))
+
+## <small>4.2.8 (2023-06-28)</small>
+
+* release: v4.2.8 ([f4beb9d](https://github.com/mx-space/core/commit/f4beb9d))
+* fix: add types in comment ([34d8d3f](https://github.com/mx-space/core/commit/34d8d3f))
+* fix: nest comment children nested and limit max depth ([ccc5b54](https://github.com/mx-space/core/commit/ccc5b54))
+* fix: omit data if patch post data ([904c31b](https://github.com/mx-space/core/commit/904c31b))
+* fix: populate comment avatar ([591ae33](https://github.com/mx-space/core/commit/591ae33))
+* fix: test port cmd ([f78ede7](https://github.com/mx-space/core/commit/f78ede7))
+* feat: post related each other ([c822398](https://github.com/mx-space/core/commit/c822398))
+* chore(release): bump @mx-space/api-client to v1.4.3 ([46103d8](https://github.com/mx-space/core/commit/46103d8))
+
+## <small>4.2.7 (2023-06-27)</small>
+
+* release: v4.2.7 ([73f5440](https://github.com/mx-space/core/commit/73f5440))
+* fix: comment mail props ([26f23cb](https://github.com/mx-space/core/commit/26f23cb))
+* feat: comment modal add `avatar` and `source` ([cf98260](https://github.com/mx-space/core/commit/cf98260))
+* feat: serverless cache ttl ([0c4849c](https://github.com/mx-space/core/commit/0c4849c))
+* chore: update deps ([d1fd000](https://github.com/mx-space/core/commit/d1fd000))
+
+## <small>4.2.6 (2023-06-23)</small>
+
+* release: v4.2.6 ([cdcb744](https://github.com/mx-space/core/commit/cdcb744))
+* fix: enum uppercase ([33539aa](https://github.com/mx-space/core/commit/33539aa))
+* fix: re-sign token ([719a49c](https://github.com/mx-space/core/commit/719a49c))
+
+## <small>4.2.5 (2023-06-23)</small>
+
+* release: v4.2.5 ([7eea2e3](https://github.com/mx-space/core/commit/7eea2e3))
+* fix:test case ([2eb81b2](https://github.com/mx-space/core/commit/2eb81b2))
+* fix: cache manger ttl ([adbb000](https://github.com/mx-space/core/commit/adbb000))
+* fix: test ([38f4d3b](https://github.com/mx-space/core/commit/38f4d3b))
+* feat: add process reporter ([6744f03](https://github.com/mx-space/core/commit/6744f03))
+
+## <small>4.2.4 (2023-06-23)</small>
+
+* release: v4.2.4 ([47a1179](https://github.com/mx-space/core/commit/47a1179))
+* chore: update deps ([4f115fb](https://github.com/mx-space/core/commit/4f115fb))
+* fix: re-sign jwt delay ([7536dd1](https://github.com/mx-space/core/commit/7536dd1))
+
+## <small>4.2.3 (2023-06-20)</small>
+
+* release: v4.2.3 ([972e2cd](https://github.com/mx-space/core/commit/972e2cd))
+* fix: release script ([f190634](https://github.com/mx-space/core/commit/f190634))
+* fix: type error ([45eba0e](https://github.com/mx-space/core/commit/45eba0e))
+* fix(note): remove password field ([b49711c](https://github.com/mx-space/core/commit/b49711c))
+* chore: add trusted domain ([5e7b5cf](https://github.com/mx-space/core/commit/5e7b5cf))
+* chore: update deps ([8fd18e2](https://github.com/mx-space/core/commit/8fd18e2))
+* chore(release): bump @mx-space/api-client to v1.4.2 ([d7e4db7](https://github.com/mx-space/core/commit/d7e4db7))
+
+## <small>4.2.2 (2023-06-17)</small>
+
+* release: v4.2.2 ([de0ed9f](https://github.com/mx-space/core/commit/de0ed9f))
+* fix: test case ([fbcf2cc](https://github.com/mx-space/core/commit/fbcf2cc))
+* refactor: cache clean and ttl ([06e21ec](https://github.com/mx-space/core/commit/06e21ec))
+
+## <small>4.2.1 (2023-06-16)</small>
+
+* release: v4.2.1 ([74ba088](https://github.com/mx-space/core/commit/74ba088))
+* feat: add debug logging ([b5a2b7f](https://github.com/mx-space/core/commit/b5a2b7f))
+
+## 4.2.0 (2023-06-16)
+
+* release: v4.2.0 ([54275be](https://github.com/mx-space/core/commit/54275be))
+* chore: lint ([b226666](https://github.com/mx-space/core/commit/b226666))
+* chore: server cache ([b1afb6e](https://github.com/mx-space/core/commit/b1afb6e))
+* chore: update deps ([0f53f86](https://github.com/mx-space/core/commit/0f53f86))
+* chore: update deps ([0761cea](https://github.com/mx-space/core/commit/0761cea))
+* chore(release): bump @mx-space/api-client to v1.4.1 ([43e7401](https://github.com/mx-space/core/commit/43e7401))
+* fix: cp .env in docker ci ([3e48439](https://github.com/mx-space/core/commit/3e48439))
+* fix: docker build ([944c571](https://github.com/mx-space/core/commit/944c571))
+* fix(client): add `$serialized` for response object ([3a9e257](https://github.com/mx-space/core/commit/3a9e257))
+
+## 4.1.0 (2023-06-08)
+
+* release: v4.1.0 ([864fb31](https://github.com/mx-space/core/commit/864fb31))
+* fix: escapeXml for feed ([5821c04](https://github.com/mx-space/core/commit/5821c04))
+
+## 4.1.0-beta.1 (2023-06-07)
+
+* release: v4.1.0-beta.1 ([b141e42](https://github.com/mx-space/core/commit/b141e42))
+* fix: add config encrypt args to dockerfile ([2f455dc](https://github.com/mx-space/core/commit/2f455dc))
+* fix: init proj script ([bec063f](https://github.com/mx-space/core/commit/bec063f))
+* fix: remove marked warning ([f3f47ef](https://github.com/mx-space/core/commit/f3f47ef))
+* feat: add some info on comment render ([a120498](https://github.com/mx-space/core/commit/a120498))
+* chore: up `max_memory_restart` to 520M ([0131e86](https://github.com/mx-space/core/commit/0131e86))
+* perf: cache get subscribe email template ([1b602ea](https://github.com/mx-space/core/commit/1b602ea))
+
+## 4.1.0-beta.0 (2023-06-06)
+
+* release: v4.1.0-beta.0 ([63213f1](https://github.com/mx-space/core/commit/63213f1))
+* feat: update email template ([a874c66](https://github.com/mx-space/core/commit/a874c66))
+* fix: bypass if not init system ([99b7a03](https://github.com/mx-space/core/commit/99b7a03))
+* fix: update test case ([771d6c5](https://github.com/mx-space/core/commit/771d6c5))
+* chore: lint ([4f2f9e3](https://github.com/mx-space/core/commit/4f2f9e3))
+* refactor: email template module ([6f94a86](https://github.com/mx-space/core/commit/6f94a86))
+
+## 4.1.0-alpha.0 (2023-06-04)
+
+* release: v4.1.0-alpha.0 ([e5553ff](https://github.com/mx-space/core/commit/e5553ff))
+* fix: push script ([754f560](https://github.com/mx-space/core/commit/754f560))
+* fix(deps): update all non-major dependencies (patch) (#1079) ([4203077](https://github.com/mx-space/core/commit/4203077)), closes [#1079](https://github.com/mx-space/core/issues/1079)
+* chore: remove swagger ([92a5460](https://github.com/mx-space/core/commit/92a5460))
+* chore: update deps ([001c179](https://github.com/mx-space/core/commit/001c179))
+* chore: update script ([8d5b366](https://github.com/mx-space/core/commit/8d5b366))
+* chore(package.json): update dependencies ([1ec0928](https://github.com/mx-space/core/commit/1ec0928))
+* refactor: monorepo structure (#1082) ([ffdc153](https://github.com/mx-space/core/commit/ffdc153)), closes [#1082](https://github.com/mx-space/core/issues/1082)
+
+## <small>4.0.2 (2023-05-25)</small>
+
+* release: v4.0.2 ([a601e1d](https://github.com/mx-space/core/commit/a601e1d))
+* fix(deps): update all non-major dependencies (patch) (#1072) ([316ad0b](https://github.com/mx-space/core/commit/316ad0b)), closes [#1072](https://github.com/mx-space/core/issues/1072)
+* fix(deps): update all non-major dependencies (patch) (#1076) ([96604b6](https://github.com/mx-space/core/commit/96604b6)), closes [#1076](https://github.com/mx-space/core/issues/1076)
+* fix(serverless): delete stale built-in function ([83d8eed](https://github.com/mx-space/core/commit/83d8eed))
+* chore(deps): update all non-major dependencies (minor) (#1073) ([9166517](https://github.com/mx-space/core/commit/9166517)), closes [#1073](https://github.com/mx-space/core/issues/1073)
+* chore(deps): update all non-major dependencies (minor) (#1077) ([ca5e1f7](https://github.com/mx-space/core/commit/ca5e1f7)), closes [#1077](https://github.com/mx-space/core/issues/1077)
+
+## <small>4.0.1 (2023-05-11)</small>
+
+* release: v4.0.1 ([d0eec9c](https://github.com/mx-space/core/commit/d0eec9c))
+* chore: update deps ([9431d88](https://github.com/mx-space/core/commit/9431d88))
+* fix: update xlog get_page_id ([3c3a4f7](https://github.com/mx-space/core/commit/3c3a4f7))
+
+## 4.0.0 (2023-05-02)
+
+* release: v4.0.0 ([9eaa3e4](https://github.com/mx-space/core/commit/9eaa3e4))
+* feat!: remove fs-extra ([99a3227](https://github.com/mx-space/core/commit/99a3227))
+* feat!: upgrade to node 18 ([c85fe14](https://github.com/mx-space/core/commit/c85fe14))
+* chore: add trusted domain ([70ff39c](https://github.com/mx-space/core/commit/70ff39c))
+* chore: remove node-fetch ([5211320](https://github.com/mx-space/core/commit/5211320))
+* ci: update renovate ([e3e18c1](https://github.com/mx-space/core/commit/e3e18c1))
+
+## <small>3.43.7 (2023-04-30)</small>
+
+* release: v3.43.7 ([307cf3a](https://github.com/mx-space/core/commit/307cf3a))
+* feat: support page reorder ([e577109](https://github.com/mx-space/core/commit/e577109))
+* fix: image record filter ([fa2f72a](https://github.com/mx-space/core/commit/fa2f72a))
+* fix: images uniq ([9f62272](https://github.com/mx-space/core/commit/9f62272))
+
+## <small>3.43.6 (2023-04-30)</small>
+
+* release: v3.43.6 ([6c86e10](https://github.com/mx-space/core/commit/6c86e10))
+* fix: search posts with category ([71f20e3](https://github.com/mx-space/core/commit/71f20e3))
+* ci: reduce run ([e31b6ea](https://github.com/mx-space/core/commit/e31b6ea))
+
+## <small>3.43.5 (2023-04-29)</small>
+
+* release: v3.43.5 ([2f0b66a](https://github.com/mx-space/core/commit/2f0b66a))
+* chore: update api-client ([fb69652](https://github.com/mx-space/core/commit/fb69652))
+* chore(deps): update dependency @nestjs/cli to v9.4.2 (#1059) ([d41d8ff](https://github.com/mx-space/core/commit/d41d8ff)), closes [#1059](https://github.com/mx-space/core/issues/1059)
+* chore(deps): update dependency @types/node to v18.16.0 (#1058) ([5bbb484](https://github.com/mx-space/core/commit/5bbb484)), closes [#1058](https://github.com/mx-space/core/issues/1058)
+* chore(deps): update dependency lint-staged to v13.2.2 (#1061) ([2917341](https://github.com/mx-space/core/commit/2917341)), closes [#1061](https://github.com/mx-space/core/issues/1061)
+* chore(release): bump @mx-space/api-client to v1.4.0 ([51dcf1f](https://github.com/mx-space/core/commit/51dcf1f))
+* feat: select `meta` and `images` for top ([cd4c898](https://github.com/mx-space/core/commit/cd4c898))
+* fix: remove require cache after install deps ([bda1322](https://github.com/mx-space/core/commit/bda1322))
+* fix(deps): update dependency @types/jsonwebtoken to v9.0.2 (#1064) ([c89f4cf](https://github.com/mx-space/core/commit/c89f4cf)), closes [#1064](https://github.com/mx-space/core/issues/1064)
+* fix(deps): update dependency mongoose to v7.1.0 (#1065) ([291a2f4](https://github.com/mx-space/core/commit/291a2f4)), closes [#1065](https://github.com/mx-space/core/issues/1065)
+* fix(deps): update dependency mongoose-lean-getters to v1 (#1066) ([617d929](https://github.com/mx-space/core/commit/617d929)), closes [#1066](https://github.com/mx-space/core/issues/1066)
+* fix(deps): update dependency rxjs to v7.8.1 (#1062) ([910b037](https://github.com/mx-space/core/commit/910b037)), closes [#1062](https://github.com/mx-space/core/issues/1062)
+
+## <small>3.43.4 (2023-04-25)</small>
+
+* release: v3.43.4 ([eaf999f](https://github.com/mx-space/core/commit/eaf999f))
+* fix: autopopulate ([dd0ca23](https://github.com/mx-space/core/commit/dd0ca23))
+* fix: autopopulate note ([040856e](https://github.com/mx-space/core/commit/040856e))
+* fix: batch to schedule ([ccd570d](https://github.com/mx-space/core/commit/ccd570d))
+* fix: lean of autopopulate ([cb72911](https://github.com/mx-space/core/commit/cb72911))
+* fix: limit comment max deep of 10 ([9fa805a](https://github.com/mx-space/core/commit/9fa805a))
+* fix(deps): update dependency @typegoose/typegoose to v11.0.2 (#1048) ([b16260b](https://github.com/mx-space/core/commit/b16260b)), closes [#1048](https://github.com/mx-space/core/issues/1048)
+* fix(deps): update dependency commander to v10 (#984) ([4aee684](https://github.com/mx-space/core/commit/4aee684)), closes [#984](https://github.com/mx-space/core/issues/984)
+* fix(deps): update dependency isbot to v3.6.10 (#1055) ([5580aae](https://github.com/mx-space/core/commit/5580aae)), closes [#1055](https://github.com/mx-space/core/issues/1055)
+* fix(deps): update dependency mongoose to v7.0.4 (#1053) ([d366d78](https://github.com/mx-space/core/commit/d366d78)), closes [#1053](https://github.com/mx-space/core/issues/1053)
+* chore: update lru ([44286f2](https://github.com/mx-space/core/commit/44286f2))
+* chore: update test snap ([1ce6322](https://github.com/mx-space/core/commit/1ce6322))
+* chore(deps): update dependency @nestjs/cli to v9.4.1 (#1056) ([aa60a97](https://github.com/mx-space/core/commit/aa60a97)), closes [#1056](https://github.com/mx-space/core/issues/1056)
+* chore(deps): update dependency @types/lodash to v4.14.194 (#1045) ([e867405](https://github.com/mx-space/core/commit/e867405)), closes [#1045](https://github.com/mx-space/core/issues/1045)
+* chore(deps): update dependency @types/node to v18.15.13 (#1054) ([1996375](https://github.com/mx-space/core/commit/1996375)), closes [#1054](https://github.com/mx-space/core/issues/1054)
+* chore(deps): update dependency ioredis to v5.3.2 (#1047) ([ea0692c](https://github.com/mx-space/core/commit/ea0692c)), closes [#1047](https://github.com/mx-space/core/issues/1047)
+* chore(deps): update dependency prettier to v2.8.8 (#1057) ([4bfd750](https://github.com/mx-space/core/commit/4bfd750)), closes [#1057](https://github.com/mx-space/core/issues/1057)
+* chore(deps): update dependency rimraf to v5 (#1050) ([e94101d](https://github.com/mx-space/core/commit/e94101d)), closes [#1050](https://github.com/mx-space/core/issues/1050)
+* chore(deps): update dependency semver to v7.5.0 (#1041) ([934a06b](https://github.com/mx-space/core/commit/934a06b)), closes [#1041](https://github.com/mx-space/core/issues/1041)
+
+## <small>3.43.3 (2023-04-19)</small>
+
+* release: v3.43.3 ([94ecad5](https://github.com/mx-space/core/commit/94ecad5))
+* chore: update deps ([5ef2e3b](https://github.com/mx-space/core/commit/5ef2e3b))
+* chore(deps): update dependency @types/lodash to v4.14.192 (#1025) ([ff45cd6](https://github.com/mx-space/core/commit/ff45cd6)), closes [#1025](https://github.com/mx-space/core/issues/1025)
+* chore(deps): update dependency ky to v0.33.3 (#1018) ([9268e6c](https://github.com/mx-space/core/commit/9268e6c)), closes [#1018](https://github.com/mx-space/core/issues/1018)
+* chore(deps): update dependency lint-staged to v13.2.1 (#1036) ([697c954](https://github.com/mx-space/core/commit/697c954)), closes [#1036](https://github.com/mx-space/core/issues/1036)
+* chore(deps): update dependency mongodb-memory-server to v8.12.2 (#1034) ([0a5331f](https://github.com/mx-space/core/commit/0a5331f)), closes [#1034](https://github.com/mx-space/core/issues/1034)
+* chore(deps): update dependency node-fetch to v3.3.1 (#1011) ([51ea221](https://github.com/mx-space/core/commit/51ea221)), closes [#1011](https://github.com/mx-space/core/issues/1011)
+* chore(deps): update dependency typescript to v5.0.4 (#1037) ([b0f3a4b](https://github.com/mx-space/core/commit/b0f3a4b)), closes [#1037](https://github.com/mx-space/core/issues/1037)
+* chore(deps): update dependency vite-tsconfig-paths to v4.0.9 (#1014) ([dbf91bc](https://github.com/mx-space/core/commit/dbf91bc)), closes [#1014](https://github.com/mx-space/core/issues/1014)
+* chore(deps): update dependency vite-tsconfig-paths to v4.2.0 (#1042) ([d803ad5](https://github.com/mx-space/core/commit/d803ad5)), closes [#1042](https://github.com/mx-space/core/issues/1042)
+* fix: check note is not public ([df2c541](https://github.com/mx-space/core/commit/df2c541))
+* fix: secret note should shown when logged ([c72d921](https://github.com/mx-space/core/commit/c72d921))
+* fix(deps): update dependency @fastify/multipart to v7.6.0 (#1043) ([057d83d](https://github.com/mx-space/core/commit/057d83d)), closes [#1043](https://github.com/mx-space/core/issues/1043)
+* fix(deps): update dependency @fastify/static to v6.10.1 (#1032) ([a5eb45f](https://github.com/mx-space/core/commit/a5eb45f)), closes [#1032](https://github.com/mx-space/core/issues/1032)
+* fix(deps): update dependency @nestjs/schedule to v2.2.1 (#1038) ([5d66f02](https://github.com/mx-space/core/commit/5d66f02)), closes [#1038](https://github.com/mx-space/core/issues/1038)
+* fix(deps): update dependency algoliasearch to v4.17.0 (#1033) ([9bf7fda](https://github.com/mx-space/core/commit/9bf7fda)), closes [#1033](https://github.com/mx-space/core/issues/1033)
+* fix(deps): update dependency lru-cache to v8.0.5 (#1039) ([cb791f1](https://github.com/mx-space/core/commit/cb791f1)), closes [#1039](https://github.com/mx-space/core/issues/1039)
+* fix(deps): update dependency ua-parser-js to v1.0.35 (#1031) ([9e8695d](https://github.com/mx-space/core/commit/9e8695d)), closes [#1031](https://github.com/mx-space/core/issues/1031)
+* fix(deps): update dependency vm2 to v3.9.16 (#1040) ([da6f397](https://github.com/mx-space/core/commit/da6f397)), closes [#1040](https://github.com/mx-space/core/issues/1040)
+* fix(deps): update nest monorepo to v9.4.0 (minor) (#1044) ([ab80510](https://github.com/mx-space/core/commit/ab80510)), closes [#1044](https://github.com/mx-space/core/issues/1044)
+
+## <small>3.43.2 (2023-04-08)</small>
+
+* release: v3.43.2 ([ca95440](https://github.com/mx-space/core/commit/ca95440))
+* feat: add api for get full url by id ([974cd17](https://github.com/mx-space/core/commit/974cd17))
+* fix: getconfig max retry count and encrypt key ([fd56106](https://github.com/mx-space/core/commit/fd56106))
+
+## <small>3.43.1 (2023-04-05)</small>
+
+* release: v3.43.1 ([d912595](https://github.com/mx-space/core/commit/d912595))
+* feat: add snippet for xlog summary ([710c083](https://github.com/mx-space/core/commit/710c083))
+* fix(posts): get post paginate should parse `meta` as json ([f7b1d0d](https://github.com/mx-space/core/commit/f7b1d0d))
+* chore: update docs ([f426816](https://github.com/mx-space/core/commit/f426816))
+
+## 3.43.0 (2023-04-05)
+
+* release: v3.43.0 ([b4847f9](https://github.com/mx-space/core/commit/b4847f9))
+* fix: built-in snippets reference missing ([9ca58db](https://github.com/mx-space/core/commit/9ca58db))
+* fix: make ts happy ([3f852a7](https://github.com/mx-space/core/commit/3f852a7))
+* feat!: add xlog fn and `builtIn` on snippets model ([ae379a4](https://github.com/mx-space/core/commit/ae379a4))
+* chore: update dependencies ([4fb5575](https://github.com/mx-space/core/commit/4fb5575))
+* chore: update pnpm version ([fb311d4](https://github.com/mx-space/core/commit/fb311d4))
+* chore(deps): update dependency tsup to v6.7.0 (#1028) ([837b679](https://github.com/mx-space/core/commit/837b679)), closes [#1028](https://github.com/mx-space/core/issues/1028)
+
+## <small>3.42.7 (2023-03-29)</small>
+
+* release: v3.42.7 ([7270ba8](https://github.com/mx-space/core/commit/7270ba8))
+* chore: update deps ([de0f72f](https://github.com/mx-space/core/commit/de0f72f))
+* ci: lock pnpm version ([dc4ffb9](https://github.com/mx-space/core/commit/dc4ffb9))
+
+## <small>3.42.6 (2023-03-28)</small>
+
+* release: v3.42.6 ([0b208d4](https://github.com/mx-space/core/commit/0b208d4))
+* fix: comment `pin` default ([4f63b48](https://github.com/mx-space/core/commit/4f63b48))
+
+## <small>3.42.5 (2023-03-26)</small>
+
+* release: v3.42.5 ([e785ce4](https://github.com/mx-space/core/commit/e785ce4))
+* fix: change getter of mongoose `_id` ([8dc1197](https://github.com/mx-space/core/commit/8dc1197))
+* fix(api-client): add missing property `location` ([e6fd545](https://github.com/mx-space/core/commit/e6fd545))
+* fix(deps): update babel monorepo to v7.21.3 (#1015) ([ef16942](https://github.com/mx-space/core/commit/ef16942)), closes [#1015](https://github.com/mx-space/core/issues/1015)
+* fix(deps): update dependency @babel/plugin-transform-modules-commonjs to v7.21.2 (#992) ([050030d](https://github.com/mx-space/core/commit/050030d)), closes [#992](https://github.com/mx-space/core/issues/992)
+* fix(deps): update dependency @fastify/multipart to v7.4.2 (#1000) ([55b329d](https://github.com/mx-space/core/commit/55b329d)), closes [#1000](https://github.com/mx-space/core/issues/1000)
+* fix(deps): update dependency @typegoose/auto-increment to v2.2.0 (#993) ([bdec391](https://github.com/mx-space/core/commit/bdec391)), closes [#993](https://github.com/mx-space/core/issues/993)
+* fix(deps): update dependency algoliasearch to v4.15.0 (#1004) ([093fe6f](https://github.com/mx-space/core/commit/093fe6f)), closes [#1004](https://github.com/mx-space/core/issues/1004)
+* fix(deps): update dependency ejs to v3.1.9 (#1016) ([ea2cb8f](https://github.com/mx-space/core/commit/ea2cb8f)), closes [#1016](https://github.com/mx-space/core/issues/1016)
+* fix(deps): update dependency linkedom to v0.14.24 (#1002) ([b7c0dc8](https://github.com/mx-space/core/commit/b7c0dc8)), closes [#1002](https://github.com/mx-space/core/issues/1002)
+* fix(deps): update dependency lru-cache to v7.17.0 (#985) ([311bbaa](https://github.com/mx-space/core/commit/311bbaa)), closes [#985](https://github.com/mx-space/core/issues/985)
+* fix(deps): update dependency lru-cache to v7.17.2 (#996) ([c11d68e](https://github.com/mx-space/core/commit/c11d68e)), closes [#996](https://github.com/mx-space/core/issues/996)
+* fix(deps): update dependency lru-cache to v7.18.3 (#1006) ([7fb2087](https://github.com/mx-space/core/commit/7fb2087)), closes [#1006](https://github.com/mx-space/core/issues/1006)
+* fix(deps): update dependency mongoose to v6.10.3 (#1007) ([9d8eb9d](https://github.com/mx-space/core/commit/9d8eb9d)), closes [#1007](https://github.com/mx-space/core/issues/1007)
+* fix(deps): update dependency mongoose to v6.9.3 (#986) ([2e8bc4a](https://github.com/mx-space/core/commit/2e8bc4a)), closes [#986](https://github.com/mx-space/core/issues/986)
+* fix(deps): update dependency qs to v6.11.1 (#1001) ([e96a9b9](https://github.com/mx-space/core/commit/e96a9b9)), closes [#1001](https://github.com/mx-space/core/issues/1001)
+* fix(deps): update dependency ua-parser-js to v1.0.34 (#999) ([a678403](https://github.com/mx-space/core/commit/a678403)), closes [#999](https://github.com/mx-space/core/issues/999)
+* chore(deps): update dependency @innei/eslint-config-ts to v0.9.8 (#1008) ([3767061](https://github.com/mx-space/core/commit/3767061)), closes [#1008](https://github.com/mx-space/core/issues/1008)
+* chore(deps): update dependency @innei/prettier to v0.9.8 (#1009) ([84c90fd](https://github.com/mx-space/core/commit/84c90fd)), closes [#1009](https://github.com/mx-space/core/issues/1009)
+* chore(deps): update dependency @types/express to v4.17.17 (#963) ([dba9388](https://github.com/mx-space/core/commit/dba9388)), closes [#963](https://github.com/mx-space/core/issues/963)
+* chore(deps): update dependency @types/fs-extra to v11 (#975) ([ab8786b](https://github.com/mx-space/core/commit/ab8786b)), closes [#975](https://github.com/mx-space/core/issues/975)
+* chore(deps): update dependency @types/node to v18.14.6 (#991) ([423f2e4](https://github.com/mx-space/core/commit/423f2e4)), closes [#991](https://github.com/mx-space/core/issues/991)
+* chore(deps): update dependency @types/validator to v13.7.14 (#998) ([e8f9437](https://github.com/mx-space/core/commit/e8f9437)), closes [#998](https://github.com/mx-space/core/issues/998)
+* chore(deps): update dependency lint-staged to v13.1.4 (#1010) ([6822b8c](https://github.com/mx-space/core/commit/6822b8c)), closes [#1010](https://github.com/mx-space/core/issues/1010)
+* chore(deps): update dependency mongodb-memory-server to v8.11.5 (#989) ([3a18d7d](https://github.com/mx-space/core/commit/3a18d7d)), closes [#989](https://github.com/mx-space/core/issues/989)
+* chore(deps): update dependency socket.io to v4.6.1 (#988) ([3063059](https://github.com/mx-space/core/commit/3063059)), closes [#988](https://github.com/mx-space/core/issues/988)
+* chore(deps): update dependency tsup to v6.6.3 (#977) ([e7098b9](https://github.com/mx-space/core/commit/e7098b9)), closes [#977](https://github.com/mx-space/core/issues/977)
+* chore(deps): update dependency zx to v7.2.0 (#995) ([8fb590a](https://github.com/mx-space/core/commit/8fb590a)), closes [#995](https://github.com/mx-space/core/issues/995)
+* chore(deps): update supercharge/mongodb-github-action action to v1.9.0 (#1003) ([d6751f6](https://github.com/mx-space/core/commit/d6751f6)), closes [#1003](https://github.com/mx-space/core/issues/1003)
+* chore(release): bump @mx-space/api-client to v1.3.5 ([761a470](https://github.com/mx-space/core/commit/761a470))
+* feat: auto download admin (#1005 ([f57b23e](https://github.com/mx-space/core/commit/f57b23e)), closes [#1005](https://github.com/mx-space/core/issues/1005)
+
+## <small>3.42.4 (2023-02-21)</small>
+
+* release: v3.42.4 ([268372c](https://github.com/mx-space/core/commit/268372c))
+* chore: renovate bot ([47daa01](https://github.com/mx-space/core/commit/47daa01))
+* chore: update deps ([64f70a3](https://github.com/mx-space/core/commit/64f70a3))
+* chore(deps): update docker/build-push-action action to v4 (#982) ([58b7e64](https://github.com/mx-space/core/commit/58b7e64)), closes [#982](https://github.com/mx-space/core/issues/982)
+* chore(deps): update supercharge/redis-github-action action to v1.5.0 (#980) ([2e555b7](https://github.com/mx-space/core/commit/2e555b7)), closes [#980](https://github.com/mx-space/core/issues/980)
+* fix(deps): update nest monorepo to v9.3.9 (#979) ([792f2d5](https://github.com/mx-space/core/commit/792f2d5)), closes [#979](https://github.com/mx-space/core/issues/979)
+
+## <small>3.42.3 (2023-02-14)</small>
+
+* release: v3.42.3 ([3df220e](https://github.com/mx-space/core/commit/3df220e))
+* fix(fn): cached context ([145355f](https://github.com/mx-space/core/commit/145355f))
+
+## <small>3.42.2 (2023-02-14)</small>
+
+* release: v3.42.2 ([213893a](https://github.com/mx-space/core/commit/213893a))
+* docs(serverless): update readme ([b8bd57c](https://github.com/mx-space/core/commit/b8bd57c))
+* fix(api-client): subscribe post body instend of params ([8f028a9](https://github.com/mx-space/core/commit/8f028a9))
+* fix(deps): update dependency mongoose-lean-getters to v0.4.0 (#974) ([a62fe1c](https://github.com/mx-space/core/commit/a62fe1c)), closes [#974](https://github.com/mx-space/core/issues/974)
+* fix(fn): ip default function ([4b6f303](https://github.com/mx-space/core/commit/4b6f303))
+* fix(subscribe): add guard for subscribe ([2ab6861](https://github.com/mx-space/core/commit/2ab6861))
+* chore(deps): update dependency tsup to v6.6.2 (#973) ([e35df92](https://github.com/mx-space/core/commit/e35df92)), closes [#973](https://github.com/mx-space/core/issues/973)
+* chore(release): bump @mx-space/api-client to v1.3.4 ([986d3ae](https://github.com/mx-space/core/commit/986d3ae))
+
+## <small>3.42.1 (2023-02-14)</small>
+
+* release: v3.42.1 ([9250018](https://github.com/mx-space/core/commit/9250018))
+* fix: zip asset script ([7f97a77](https://github.com/mx-space/core/commit/7f97a77))
+* fix(api-client): remove export adaptor source file ([d7c5c80](https://github.com/mx-space/core/commit/d7c5c80))
+* chore(release): bump @mx-space/api-client to v1.3.3 ([cc2b588](https://github.com/mx-space/core/commit/cc2b588))
+
+## 3.42.0 (2023-02-14)
+
+* release: v3.42.0 ([edd3b39](https://github.com/mx-space/core/commit/edd3b39))
+* chore: assets init script ([7ea1ba5](https://github.com/mx-space/core/commit/7ea1ba5))
+* chore: update deps ([7e99265](https://github.com/mx-space/core/commit/7e99265))
+* chore(deps): update dependency ioredis to v5.3.1 (#956) ([85de275](https://github.com/mx-space/core/commit/85de275)), closes [#956](https://github.com/mx-space/core/issues/956)
+* chore(deps): update dependency node-fetch to v3.3.0 (#943) ([fdbf856](https://github.com/mx-space/core/commit/fdbf856)), closes [#943](https://github.com/mx-space/core/issues/943)
+* chore(deps): update dependency socket.io to v4.6.0 (#972) ([6ea6690](https://github.com/mx-space/core/commit/6ea6690)), closes [#972](https://github.com/mx-space/core/issues/972)
+* chore(process): change process title ([a1b2668](https://github.com/mx-space/core/commit/a1b2668))
+* chore(release): bump @mx-space/api-client to v1.3.0 ([602f40a](https://github.com/mx-space/core/commit/602f40a))
+* chore(release): bump @mx-space/api-client to v1.3.1 ([769a014](https://github.com/mx-space/core/commit/769a014))
+* chore(release): bump @mx-space/api-client to v1.3.2 ([f03a1e5](https://github.com/mx-space/core/commit/f03a1e5))
+* fix: email enable then can subscribe ([2aa46d0](https://github.com/mx-space/core/commit/2aa46d0))
+* fix: init project script ([bfc2e25](https://github.com/mx-space/core/commit/bfc2e25))
+* fix(deps): update dependency @nestjs/schedule to v2.2.0 (#959) ([623e8b0](https://github.com/mx-space/core/commit/623e8b0)), closes [#959](https://github.com/mx-space/core/issues/959)
+* fix(deps): update dependency commander to v9.5.0 (#960) ([aeed31e](https://github.com/mx-space/core/commit/aeed31e)), closes [#960](https://github.com/mx-space/core/issues/960)
+* fix(deps): update dependency mongoose to v6.9.1 (#971) ([41b401d](https://github.com/mx-space/core/commit/41b401d)), closes [#971](https://github.com/mx-space/core/issues/971)
+* fix(deps): update dependency rxjs to v7.8.0 (#920) ([f910789](https://github.com/mx-space/core/commit/f910789)), closes [#920](https://github.com/mx-space/core/issues/920)
+* fix(subscribe): provide toC `allow_type` ([35e1864](https://github.com/mx-space/core/commit/35e1864))
+* test: fix case ([c9293d1](https://github.com/mx-space/core/commit/c9293d1))
+* feat: newsletter subscribe (#968) ([c8667ec](https://github.com/mx-space/core/commit/c8667ec)), closes [#968](https://github.com/mx-space/core/issues/968)
+* feat(fn): support built-in fnnctions (#967) ([80526ba](https://github.com/mx-space/core/commit/80526ba)), closes [#967](https://github.com/mx-space/core/issues/967)
+* feat(subscribe): add feature list toggle ([1b80adb](https://github.com/mx-space/core/commit/1b80adb))
+* pref(fn): cache context ([73eb4ed](https://github.com/mx-space/core/commit/73eb4ed))
+
+## <small>3.41.4 (2023-02-10)</small>
+
+* release: v3.41.4 ([3f011e8](https://github.com/mx-space/core/commit/3f011e8))
+* fix: asset push script ([7a1ccdf](https://github.com/mx-space/core/commit/7a1ccdf))
+* fix: docker compose (#961) ([9b6e1ff](https://github.com/mx-space/core/commit/9b6e1ff)), closes [#961](https://github.com/mx-space/core/issues/961)
+* fix(tool): ipv6 query, closes #962 ([aabed05](https://github.com/mx-space/core/commit/aabed05)), closes [#962](https://github.com/mx-space/core/issues/962)
+
+## <small>3.41.3 (2023-02-03)</small>
+
+* release: v3.41.3 ([89a7fbf](https://github.com/mx-space/core/commit/89a7fbf))
+* fix: add pure fetch adaptor ([7d96c26](https://github.com/mx-space/core/commit/7d96c26))
+* fix: resolutions ([3c7ce43](https://github.com/mx-space/core/commit/3c7ce43))
+* fix(deps): update dependency @babel/plugin-transform-typescript to v7.20.13 ([0fc6a92](https://github.com/mx-space/core/commit/0fc6a92))
+* fix(deps): update dependency nodemailer to v6.9.1 ([982cae3](https://github.com/mx-space/core/commit/982cae3))
+* fix(deps): update dependency ua-parser-js to v1.0.33 ([940c22a](https://github.com/mx-space/core/commit/940c22a))
+* feat: upgrade mongoose ([42e8037](https://github.com/mx-space/core/commit/42e8037))
+* chore: rename folder ([304dcf2](https://github.com/mx-space/core/commit/304dcf2))
+* chore(api-client): bundler to tsup (#944) ([a2e3fc3](https://github.com/mx-space/core/commit/a2e3fc3)), closes [#944](https://github.com/mx-space/core/issues/944)
+* chore(deps): update dependency @nestjs/cli to v9.1.9 ([4709f01](https://github.com/mx-space/core/commit/4709f01))
+* chore(deps): update dependency @types/babel__core to v7.20.0 ([1a6164f](https://github.com/mx-space/core/commit/1a6164f))
+* chore(deps): update dependency @types/express to v4.17.16 ([2116d02](https://github.com/mx-space/core/commit/2116d02))
+* chore(deps): update dependency @types/validator to v13.7.11 ([9b14723](https://github.com/mx-space/core/commit/9b14723))
+* chore(deps): update dependency @vercel/ncc to v0.36.1 ([4070e9c](https://github.com/mx-space/core/commit/4070e9c))
+* chore(deps): update dependency ioredis to v5.2.6 ([fd698b3](https://github.com/mx-space/core/commit/fd698b3))
+* chore(deps): update dependency mongodb-memory-server to v8.11.4 ([5faf383](https://github.com/mx-space/core/commit/5faf383))
+* chore(deps): update dependency vite-tsconfig-paths to v4.0.5 ([315fef8](https://github.com/mx-space/core/commit/315fef8))
+* chore(release): bump @mx-space/api-client to v1.1.0 ([7942b78](https://github.com/mx-space/core/commit/7942b78))
+* chore(release): bump @mx-space/api-client to v1.2.0 ([2dd4c57](https://github.com/mx-space/core/commit/2dd4c57))
+
+## <small>3.41.2 (2023-01-20)</small>
+
+* release: v3.41.2 ([84b6394](https://github.com/mx-space/core/commit/84b6394))
+* fix: replace ip endpoint ([5af255f](https://github.com/mx-space/core/commit/5af255f))
+* fix(deps): update dependency mongoose to v6.8.4 ([1f024c2](https://github.com/mx-space/core/commit/1f024c2))
+* chore(deps): update dependency ioredis to v5.2.5 ([0d4dabe](https://github.com/mx-space/core/commit/0d4dabe))
+* chore(deps): update dependency mongodb-memory-server to v8.11.2 ([8ae6aff](https://github.com/mx-space/core/commit/8ae6aff))
+* test: add some test case ([e4303d6](https://github.com/mx-space/core/commit/e4303d6))
+
+## <small>3.41.1 (2023-01-17)</small>
+
+* release: v3.41.1 ([d63ccd8](https://github.com/mx-space/core/commit/d63ccd8))
+* fix: apply link ignore outdate ([b014abc](https://github.com/mx-space/core/commit/b014abc))
+* fix(ci): remove invalid variable (#934) ([40faa35](https://github.com/mx-space/core/commit/40faa35)), closes [#934](https://github.com/mx-space/core/issues/934)
+* fix(deps): update dependency @typegoose/auto-increment to v2 (#919) ([82c9d20](https://github.com/mx-space/core/commit/82c9d20)), closes [#919](https://github.com/mx-space/core/issues/919)
+* chore: update badge ([3a3a9f9](https://github.com/mx-space/core/commit/3a3a9f9))
+* chore: update max memory restart ([ef9a10c](https://github.com/mx-space/core/commit/ef9a10c))
+* chore: update some deps and update ci (#935) ([7f1c25a](https://github.com/mx-space/core/commit/7f1c25a)), closes [#935](https://github.com/mx-space/core/issues/935)
+* chore(deps): update dependency @types/cors to v2.8.13 ([7adff99](https://github.com/mx-space/core/commit/7adff99))
+* chore(deps): update dependency vite to v4 (#910) ([09be099](https://github.com/mx-space/core/commit/09be099)), closes [#910](https://github.com/mx-space/core/issues/910)
+* test: add note controller case (#939) ([02a08ad](https://github.com/mx-space/core/commit/02a08ad)), closes [#939](https://github.com/mx-space/core/issues/939)
+* ci: build ([0162835](https://github.com/mx-space/core/commit/0162835))
+
+## 3.41.0 (2022-12-25)
+
+* release: v3.41.0 ([2b0d08c](https://github.com/mx-space/core/commit/2b0d08c))
+* feat: add custom encrypt algorithm ([3636172](https://github.com/mx-space/core/commit/3636172))
+* feat: support encrypt secret and configs (#931) ([9ed8b32](https://github.com/mx-space/core/commit/9ed8b32)), closes [#931](https://github.com/mx-space/core/issues/931)
+* test: add consola to global scope ([efdbf98](https://github.com/mx-space/core/commit/efdbf98))
+* test: add jsonschema route e2e ([82d1667](https://github.com/mx-space/core/commit/82d1667))
+* fix: argv of `encrypt_key` ([36ffaa4](https://github.com/mx-space/core/commit/36ffaa4))
+* fix: delete backup use body params ([19f7556](https://github.com/mx-space/core/commit/19f7556))
+* fix: hide note secret text ([82451b8](https://github.com/mx-space/core/commit/82451b8))
+* fix(api-client): add enum to exports ([9e82b8f](https://github.com/mx-space/core/commit/9e82b8f))
+* fix(feed): hide note secret in rss ([bad4661](https://github.com/mx-space/core/commit/bad4661))
+* chore: correct punctuation ([a7c1aa9](https://github.com/mx-space/core/commit/a7c1aa9))
+* chore(release): bump @mx-space/api-client to v1.0.3 ([381c32e](https://github.com/mx-space/core/commit/381c32e))
+
+## 3.40.0 (2022-12-23)
+
+* release: v3.40.0 ([6dde686](https://github.com/mx-space/core/commit/6dde686))
+* feat: add `liked` for post and note model ([1073c67](https://github.com/mx-space/core/commit/1073c67))
+* feat: recently response add `comments` ([d25ba45](https://github.com/mx-space/core/commit/d25ba45))
+* feat(api-client): add `attitude` method ([b44bb41](https://github.com/mx-space/core/commit/b44bb41))
+* feat(recently): add attitude ([963b07a](https://github.com/mx-space/core/commit/963b07a))
+* fix: comment ref should select `content` ([d90efeb](https://github.com/mx-space/core/commit/d90efeb))
+* fix: missing api-client types ([4c603dc](https://github.com/mx-space/core/commit/4c603dc))
+* fix: mongo query use objectId ([205b98e](https://github.com/mx-space/core/commit/205b98e))
+* fix(recently): delete with ref comments ([7fe8bf6](https://github.com/mx-space/core/commit/7fe8bf6))
+* chore(release): bump @mx-space/api-client to v1.0.0 ([213ceb1](https://github.com/mx-space/core/commit/213ceb1))
+* ci: build ubuntu latest ([f976e34](https://github.com/mx-space/core/commit/f976e34))
+
+## <small>3.39.7 (2022-12-22)</small>
+
+* release: v3.39.7 ([7480040](https://github.com/mx-space/core/commit/7480040))
+* ci: downgrade ubuntu version ([c583d33](https://github.com/mx-space/core/commit/c583d33))
+
+## <small>3.39.6 (2022-12-21)</small>
+
+* release: v3.39.6 ([dae0108](https://github.com/mx-space/core/commit/dae0108))
+* fix: downgrade class-validator to 0.13.2 ([38b6c21](https://github.com/mx-space/core/commit/38b6c21))
+
+## <small>3.39.5 (2022-12-21)</small>
+
+* release: v3.39.5 ([d1c596d](https://github.com/mx-space/core/commit/d1c596d))
+
+## <small>3.39.4 (2022-12-21)</small>
+
+* release: v3.39.4 ([ed26754](https://github.com/mx-space/core/commit/ed26754))
+* fix: build ci ([3160ced](https://github.com/mx-space/core/commit/3160ced))
+* fix: revert update service ([659d2bc](https://github.com/mx-space/core/commit/659d2bc))
+* fix(deps): update dependency algoliasearch to v4.14.3 ([7a71762](https://github.com/mx-space/core/commit/7a71762))
+* fix(deps): update dependency mongoose to v6.8.1 ([06ab476](https://github.com/mx-space/core/commit/06ab476))
+* feat: add `liked` on article response ([190596f](https://github.com/mx-space/core/commit/190596f))
+* feat: move api-client as core's monorepo ([a281f45](https://github.com/mx-space/core/commit/a281f45))
+* feat: use ghproxy to speed up update admin ([00d34c9](https://github.com/mx-space/core/commit/00d34c9))
+* chore: update deploy script ([d8a1280](https://github.com/mx-space/core/commit/d8a1280))
+
+## <small>3.39.3 (2022-12-18)</small>
+
+* release: v3.39.3 ([b4aa94f](https://github.com/mx-space/core/commit/b4aa94f))
+* chore(deps): update dependency @types/get-image-colors to v4.0.2 ([62c6633](https://github.com/mx-space/core/commit/62c6633))
+* chore(deps): update dependency @types/marked to v4.0.8 ([6d88589](https://github.com/mx-space/core/commit/6d88589))
+* chore(deps): update dependency @types/node to v18.11.11 ([58075a3](https://github.com/mx-space/core/commit/58075a3))
+* chore(deps): update dependency @types/node to v18.11.12 ([eb761a3](https://github.com/mx-space/core/commit/eb761a3))
+* chore(deps): update dependency @types/node to v18.11.13 ([4b16d50](https://github.com/mx-space/core/commit/4b16d50))
+* chore(deps): update dependency @types/node to v18.11.15 ([1046431](https://github.com/mx-space/core/commit/1046431))
+* chore(deps): update dependency @types/node to v18.11.16 ([538012b](https://github.com/mx-space/core/commit/538012b))
+* chore(deps): update dependency @types/node to v18.11.17 ([369a438](https://github.com/mx-space/core/commit/369a438))
+* chore(deps): update dependency @types/nodemailer to v6.4.7 ([ec24707](https://github.com/mx-space/core/commit/ec24707))
+* chore(deps): update dependency @vercel/ncc to v0.36.0 (#897) ([18cfa4a](https://github.com/mx-space/core/commit/18cfa4a)), closes [#897](https://github.com/mx-space/core/issues/897)
+* chore(deps): update dependency lint-staged to v13.1.0 (#891) ([222529e](https://github.com/mx-space/core/commit/222529e)), closes [#891](https://github.com/mx-space/core/issues/891)
+* chore(deps): update dependency mongodb-memory-server to v8.10.2 ([e9695ce](https://github.com/mx-space/core/commit/e9695ce))
+* chore(deps): update dependency prettier to v2.8.1 ([ed128e8](https://github.com/mx-space/core/commit/ed128e8))
+* chore(deps): update dependency typescript to v4.9.4 ([25a5fb9](https://github.com/mx-space/core/commit/25a5fb9))
+* chore(deps): update dependency vite to v3.2.5 ([6bf6717](https://github.com/mx-space/core/commit/6bf6717))
+* chore(deps): update dependency vite-tsconfig-paths to v4 (#899) ([26479a0](https://github.com/mx-space/core/commit/26479a0)), closes [#899](https://github.com/mx-space/core/issues/899)
+* fix: download progress of update admin ([da6336b](https://github.com/mx-space/core/commit/da6336b))
+* fix(deps): update dependency @fastify/static to v6.6.0 (#892) ([79ca6cb](https://github.com/mx-space/core/commit/79ca6cb)), closes [#892](https://github.com/mx-space/core/issues/892)
+* fix(deps): update dependency @nestjs/swagger to v6.1.4 ([f69b4d2](https://github.com/mx-space/core/commit/f69b4d2))
+* fix(deps): update dependency @typegoose/auto-increment to v1.9.0 (#908) ([7b52ae6](https://github.com/mx-space/core/commit/7b52ae6)), closes [#908](https://github.com/mx-space/core/issues/908)
+* fix(deps): update dependency class-validator to v0.14.0 (#909) ([51f0967](https://github.com/mx-space/core/commit/51f0967)), closes [#909](https://github.com/mx-space/core/issues/909)
+* fix(deps): update dependency dayjs to v1.11.7 ([b0fe725](https://github.com/mx-space/core/commit/b0fe725))
+* fix(deps): update dependency json5 to v2.2.2 ([48df514](https://github.com/mx-space/core/commit/48df514))
+* fix(deps): update dependency marked to v4.2.4 ([c88016d](https://github.com/mx-space/core/commit/c88016d))
+* fix(deps): update dependency mongoose to v6.8.0 (#895) ([49ca2e8](https://github.com/mx-space/core/commit/49ca2e8)), closes [#895](https://github.com/mx-space/core/issues/895)
+* fix(deps): update dependency vm2 to v3.9.13 ([a5ea6ef](https://github.com/mx-space/core/commit/a5ea6ef))
+
+## <small>3.39.2 (2022-12-04)</small>
+
+* release: v3.39.2 ([36bb9c9](https://github.com/mx-space/core/commit/36bb9c9))
+* chore(deps): update dependency @types/lodash to v4.14.191 ([dcbcec3](https://github.com/mx-space/core/commit/dcbcec3))
+* chore(deps): update dependency @types/node to v18.11.10 ([f9d84e4](https://github.com/mx-space/core/commit/f9d84e4))
+* chore(deps): update dependency mongodb-memory-server to v8.10.1 (#862) ([53195ca](https://github.com/mx-space/core/commit/53195ca)), closes [#862](https://github.com/mx-space/core/issues/862)
+* chore(deps): update dependency prettier to v2.8.0 (#877) ([884251e](https://github.com/mx-space/core/commit/884251e)), closes [#877](https://github.com/mx-space/core/issues/877)
+* chore(deps): update dependency tsconfig-paths to v4.1.1 ([8151812](https://github.com/mx-space/core/commit/8151812))
+* chore(deps): update dependency typescript to v4.9.3 (#869) ([0c1c353](https://github.com/mx-space/core/commit/0c1c353)), closes [#869](https://github.com/mx-space/core/issues/869)
+* chore(deps): update dependency vite-tsconfig-paths to v3.6.0 (#870) ([d24f056](https://github.com/mx-space/core/commit/d24f056)), closes [#870](https://github.com/mx-space/core/issues/870)
+* fix: clear scope require cache only ([f1fe50e](https://github.com/mx-space/core/commit/f1fe50e))
+* fix: set select false for `secret` ([7beeab3](https://github.com/mx-space/core/commit/7beeab3))
+* fix(deps): update dependency @babel/core to v7.20.5 ([e00745b](https://github.com/mx-space/core/commit/e00745b))
+* fix(deps): update dependency @typegoose/typegoose to v9.13.2 (#874) ([54ab234](https://github.com/mx-space/core/commit/54ab234)), closes [#874](https://github.com/mx-space/core/issues/874)
+* fix(deps): update dependency mongoose to v6.7.4 ([d9404ff](https://github.com/mx-space/core/commit/d9404ff))
+* fix(deps): update dependency mongoose to v6.7.5 ([3529335](https://github.com/mx-space/core/commit/3529335))
+* fix(deps): update dependency rxjs to v7.6.0 (#890) ([f368016](https://github.com/mx-space/core/commit/f368016)), closes [#890](https://github.com/mx-space/core/issues/890)
+* fix(deps): update dependency vm2 to v3.9.12 ([fda8c44](https://github.com/mx-space/core/commit/fda8c44))
+* fix(deps): update nest monorepo to v9.2.1 ([b044457](https://github.com/mx-space/core/commit/b044457))
+
+## <small>3.39.1 (2022-11-25)</small>
+
+* release: v3.39.1 ([d9f1728](https://github.com/mx-space/core/commit/d9f1728))
+* fix: update admin version ([990457d](https://github.com/mx-space/core/commit/990457d))
+
+## 3.39.0 (2022-11-25)
+
+* release: v3.39.0 ([37b46b5](https://github.com/mx-space/core/commit/37b46b5))
+* feat: add secret for function (#881) ([432e747](https://github.com/mx-space/core/commit/432e747)), closes [#881](https://github.com/mx-space/core/issues/881)
+* chore(deps): update dependency @types/lodash to v4.14.189 ([ac00db8](https://github.com/mx-space/core/commit/ac00db8))
+* chore(deps): update dependency @types/lodash to v4.14.190 ([2cbb280](https://github.com/mx-space/core/commit/2cbb280))
+* chore(deps): update dependency lint-staged to v13.0.4 ([3a62759](https://github.com/mx-space/core/commit/3a62759))
+* chore(deps): update dependency socket.io to v4.5.4 ([bd88c98](https://github.com/mx-space/core/commit/bd88c98))
+* chore(deps): update dependency vite to v3.2.4 ([0169286](https://github.com/mx-space/core/commit/0169286))
+* chore(deps): update dependency vitest to v0.25.2 ([68e0122](https://github.com/mx-space/core/commit/68e0122))
+* chore(deps): update dependency vitest to v0.25.3 ([80301ac](https://github.com/mx-space/core/commit/80301ac))
+* fix(deps): update dependency @fastify/static to v6.5.1 ([dd88cac](https://github.com/mx-space/core/commit/dd88cac))
+* fix(deps): update dependency linkedom to v0.14.20 ([eada716](https://github.com/mx-space/core/commit/eada716))
+* fix(deps): update dependency linkedom to v0.14.21 ([0839361](https://github.com/mx-space/core/commit/0839361))
+* fix(deps): update dependency marked to v4.2.3 ([1441b79](https://github.com/mx-space/core/commit/1441b79))
+* fix(deps): update dependency mongoose to v6.7.3 ([830836b](https://github.com/mx-space/core/commit/830836b))
+
+## <small>3.38.6 (2022-11-12)</small>
+
+* release: v3.38.6 ([59e8fc4](https://github.com/mx-space/core/commit/59e8fc4))
+* chore(deps): update dependency @types/babel__core to v7.1.20 ([c800fa2](https://github.com/mx-space/core/commit/c800fa2))
+* chore(deps): update dependency @types/lodash to v4.14.187 ([5758f73](https://github.com/mx-space/core/commit/5758f73))
+* chore(deps): update dependency @types/lodash to v4.14.188 ([885f6ac](https://github.com/mx-space/core/commit/885f6ac))
+* chore(deps): update dependency @types/node to v18.11.8 ([d2f4460](https://github.com/mx-space/core/commit/d2f4460))
+* chore(deps): update dependency @types/node to v18.11.9 ([56c67bf](https://github.com/mx-space/core/commit/56c67bf))
+* chore(deps): update dependency @types/validator to v13.7.10 ([2a3ff65](https://github.com/mx-space/core/commit/2a3ff65))
+* chore(deps): update dependency husky to v8.0.2 ([7d3fb4f](https://github.com/mx-space/core/commit/7d3fb4f))
+* chore(deps): update dependency ioredis to v5.2.4 ([c57cf54](https://github.com/mx-space/core/commit/c57cf54))
+* chore(deps): update dependency mongodb-memory-server to v8.9.5 ([f1067f3](https://github.com/mx-space/core/commit/f1067f3))
+* chore(deps): update dependency vite to v3.2.2 ([f3c304a](https://github.com/mx-space/core/commit/f3c304a))
+* chore(deps): update dependency vite to v3.2.3 ([56db864](https://github.com/mx-space/core/commit/56db864))
+* chore(deps): update dependency vitest to v0.24.4 ([33ecb5b](https://github.com/mx-space/core/commit/33ecb5b))
+* chore(deps): update dependency vitest to v0.24.5 ([b5abf42](https://github.com/mx-space/core/commit/b5abf42))
+* chore(deps): update dependency vitest to v0.25.1 (#859) ([6911377](https://github.com/mx-space/core/commit/6911377)), closes [#859](https://github.com/mx-space/core/issues/859)
+* chore(deps): update dependency webpack to v5.75.0 (#863) ([da52b1a](https://github.com/mx-space/core/commit/da52b1a)), closes [#863](https://github.com/mx-space/core/issues/863)
+* fix(deps): update dependency @babel/core to v7.20.2 (#854) ([01331b7](https://github.com/mx-space/core/commit/01331b7)), closes [#854](https://github.com/mx-space/core/issues/854)
+* fix(deps): update dependency @babel/plugin-transform-typescript to v7.20.2 ([d1cbf63](https://github.com/mx-space/core/commit/d1cbf63))
+* fix(deps): update dependency isbot to v3.6.3 ([538ec70](https://github.com/mx-space/core/commit/538ec70))
+* fix(deps): update dependency isbot to v3.6.5 ([5fb5647](https://github.com/mx-space/core/commit/5fb5647))
+* fix(deps): update dependency lru-cache to v7.14.1 ([f443b69](https://github.com/mx-space/core/commit/f443b69))
+* fix(deps): update dependency marked to v4.2.0 (#843) ([920dbb3](https://github.com/mx-space/core/commit/920dbb3)), closes [#843](https://github.com/mx-space/core/issues/843)
+* fix(deps): update dependency marked to v4.2.1 ([195eb78](https://github.com/mx-space/core/commit/195eb78))
+* fix(deps): update dependency marked to v4.2.2 ([ef4ce06](https://github.com/mx-space/core/commit/ef4ce06))
+* fix(deps): update dependency mongoose to v6.7.1 ([fb224bb](https://github.com/mx-space/core/commit/fb224bb))
+* fix(deps): update dependency mongoose to v6.7.2 ([7cfc060](https://github.com/mx-space/core/commit/7cfc060))
+* fix(deps): update nest monorepo to v9.2.0 (minor) (#857) ([e7f9e96](https://github.com/mx-space/core/commit/e7f9e96)), closes [#857](https://github.com/mx-space/core/issues/857)
+
+## <small>3.38.5 (2022-10-30)</small>
+
+* release: v3.38.5 ([0a0b2e2](https://github.com/mx-space/core/commit/0a0b2e2))
+* fix(deps): update dependency @babel/core to v7.19.6 ([10788e9](https://github.com/mx-space/core/commit/10788e9))
+* fix(deps): update dependency @babel/plugin-transform-modules-commonjs to v7.19.6 (#814) ([13ff05a](https://github.com/mx-space/core/commit/13ff05a)), closes [#814](https://github.com/mx-space/core/issues/814)
+* fix(deps): update dependency @babel/plugin-transform-typescript to v7.20.0 (#835) ([a3c23da](https://github.com/mx-space/core/commit/a3c23da)), closes [#835](https://github.com/mx-space/core/issues/835)
+* fix(deps): update dependency @fastify/multipart to v7.3.0 (#830) ([a0d32b6](https://github.com/mx-space/core/commit/a0d32b6)), closes [#830](https://github.com/mx-space/core/issues/830)
+* fix(deps): update dependency @nestjs/swagger to v6.1.3 ([500b494](https://github.com/mx-space/core/commit/500b494))
+* fix(deps): update dependency dayjs to v1.11.6 ([288c64f](https://github.com/mx-space/core/commit/288c64f))
+* fix(deps): update dependency isbot to v3.6.2 ([418040b](https://github.com/mx-space/core/commit/418040b))
+* fix(deps): update dependency linkedom to v0.14.18 ([c79c5e0](https://github.com/mx-space/core/commit/c79c5e0))
+* fix(deps): update dependency linkedom to v0.14.19 ([8dad005](https://github.com/mx-space/core/commit/8dad005))
+* fix(deps): update dependency mongoose to v6.6.6 ([48104cf](https://github.com/mx-space/core/commit/48104cf))
+* fix(deps): update dependency mongoose to v6.6.7 ([985ed34](https://github.com/mx-space/core/commit/985ed34))
+* fix(deps): update dependency mongoose to v6.7.0 (#825) ([880fddd](https://github.com/mx-space/core/commit/880fddd)), closes [#825](https://github.com/mx-space/core/issues/825)
+* fix(deps): update nest monorepo to v9.1.5 ([df05b2a](https://github.com/mx-space/core/commit/df05b2a))
+* fix(deps): update nest monorepo to v9.1.6 ([c955653](https://github.com/mx-space/core/commit/c955653))
+* chore(deps): update dependency @nestjs/cli to v9.1.5 (#834) ([dc82ec1](https://github.com/mx-space/core/commit/dc82ec1)), closes [#834](https://github.com/mx-space/core/issues/834)
+* chore(deps): update dependency @types/node to v16.18.0 ([854de06](https://github.com/mx-space/core/commit/854de06))
+* chore(deps): update dependency @types/node to v18 ([046d3dd](https://github.com/mx-space/core/commit/046d3dd))
+* chore(deps): update dependency @types/node to v18.11.6 ([fc65d98](https://github.com/mx-space/core/commit/fc65d98))
+* chore(deps): update dependency @types/node to v18.11.7 ([544069e](https://github.com/mx-space/core/commit/544069e))
+* chore(deps): update dependency @types/semver to v7.3.13 ([ce6d251](https://github.com/mx-space/core/commit/ce6d251))
+* chore(deps): update dependency @types/validator to v13.7.9 ([1817b51](https://github.com/mx-space/core/commit/1817b51))
+* chore(deps): update dependency mongodb-memory-server to v8.9.4 ([a5f9fc8](https://github.com/mx-space/core/commit/a5f9fc8))
+* chore(deps): update dependency vite to v3.2.0 (#829) ([f9ebddc](https://github.com/mx-space/core/commit/f9ebddc)), closes [#829](https://github.com/mx-space/core/issues/829)
+* chore(deps): update dependency vite to v3.2.1 ([81567fd](https://github.com/mx-space/core/commit/81567fd))
+* chore(deps): update dependency vite-tsconfig-paths to v3.5.2 ([697142a](https://github.com/mx-space/core/commit/697142a))
+* ci: add node version for build ([2de5ec2](https://github.com/mx-space/core/commit/2de5ec2))
+
+## <small>3.38.4 (2022-10-20)</small>
+
+* release: v3.38.4 ([ed259cc](https://github.com/mx-space/core/commit/ed259cc))
+* fix: pm2 argv ([bb35026](https://github.com/mx-space/core/commit/bb35026))
+
+## <small>3.38.3 (2022-10-20)</small>
+
+* release: v3.38.3 ([5ca24c8](https://github.com/mx-space/core/commit/5ca24c8))
+* feat: support load yaml config ([380a88a](https://github.com/mx-space/core/commit/380a88a))
+* fix: update admin version ([6f8aaa2](https://github.com/mx-space/core/commit/6f8aaa2))
+
+## <small>3.38.1 (2022-10-19)</small>
+
+* release: v3.38.1 ([b488994](https://github.com/mx-space/core/commit/b488994))
+* fix: downgard emitter ([9296468](https://github.com/mx-space/core/commit/9296468))
+* chore(deps): pin dependency socket.io to 4.5.3 ([d6efbd6](https://github.com/mx-space/core/commit/d6efbd6))
+* chore(deps): update dependency @types/node to v16.11.68 ([a6f0afc](https://github.com/mx-space/core/commit/a6f0afc))
+
+## 3.38.0 (2022-10-16)
+
+* release: v3.38.0 ([256d0f5](https://github.com/mx-space/core/commit/256d0f5))
+* chore(deps): update dependency @types/node to v16.11.66 ([45c84ec](https://github.com/mx-space/core/commit/45c84ec))
+* chore(deps): update dependency @types/validator to v13.7.8 ([5b78f7c](https://github.com/mx-space/core/commit/5b78f7c))
+* chore(deps): update dependency vitest to v0.24.3 ([9978414](https://github.com/mx-space/core/commit/9978414))
+* chore(deps): update dependency zx to v7.1.1 (#793) ([961673c](https://github.com/mx-space/core/commit/961673c)), closes [#793](https://github.com/mx-space/core/issues/793)
+* chore(deps): update pnpm/action-setup action to v2.2.4 ([a067c54](https://github.com/mx-space/core/commit/a067c54))
+* feat: support mongo connection with user and password (#806) ([5a20c55](https://github.com/mx-space/core/commit/5a20c55)), closes [#806](https://github.com/mx-space/core/issues/806)
+* feat(link): support send link audit result email ([e5e3428](https://github.com/mx-space/core/commit/e5e3428))
+* fix(deps): update dependency @nestjs/throttler to v3.1.0 (#802) ([d110eff](https://github.com/mx-space/core/commit/d110eff)), closes [#802](https://github.com/mx-space/core/issues/802)
+* fix(deps): update dependency bcrypt to v5.1.0 (#796) ([3094b80](https://github.com/mx-space/core/commit/3094b80)), closes [#796](https://github.com/mx-space/core/issues/796)
+* fix(deps): update dependency ua-parser-js to v1.0.32 (#805) ([c74c3e7](https://github.com/mx-space/core/commit/c74c3e7)), closes [#805](https://github.com/mx-space/core/issues/805)
+
+## <small>3.37.4 (2022-10-13)</small>
+
+* release: v3.37.4 ([6d587d0](https://github.com/mx-space/core/commit/6d587d0))
+* chore: remove script ([491a8cb](https://github.com/mx-space/core/commit/491a8cb))
+* chore(deps): update dependency @types/node to v16.11.63 ([73755b8](https://github.com/mx-space/core/commit/73755b8))
+* chore(deps): update dependency @types/node to v16.11.64 ([c0694cd](https://github.com/mx-space/core/commit/c0694cd))
+* chore(deps): update dependency @types/node to v16.11.65 ([70ffb31](https://github.com/mx-space/core/commit/70ffb31))
+* chore(deps): update dependency semver to v7.3.8 ([a6b41da](https://github.com/mx-space/core/commit/a6b41da))
+* chore(deps): update dependency vite to v3.1.6 ([a773768](https://github.com/mx-space/core/commit/a773768))
+* chore(deps): update dependency vite to v3.1.7 ([c90db41](https://github.com/mx-space/core/commit/c90db41))
+* chore(deps): update dependency vite to v3.1.8 ([2b3c569](https://github.com/mx-space/core/commit/2b3c569))
+* chore(deps): update dependency vitest to v0.24.1 (#797) ([1a7c909](https://github.com/mx-space/core/commit/1a7c909)), closes [#797](https://github.com/mx-space/core/issues/797)
+* chore(deps): update pnpm/action-setup action to v2.2.3 ([425edb5](https://github.com/mx-space/core/commit/425edb5))
+* fix(deps): update dependency isbot to v3.6.1 ([c7f96da](https://github.com/mx-space/core/commit/c7f96da))
+* fix(deps): update dependency linkedom to v0.14.17 ([cb21e79](https://github.com/mx-space/core/commit/cb21e79))
+* fix(deps): update dependency mongoose to v6.6.4 ([69a363a](https://github.com/mx-space/core/commit/69a363a))
+* fix(deps): update dependency mongoose to v6.6.5 ([6754bb4](https://github.com/mx-space/core/commit/6754bb4))
+* fix(deps): update nest monorepo to v9.1.4 ([445cc13](https://github.com/mx-space/core/commit/445cc13))
+* fix(link): hide email if not master ([cd3faff](https://github.com/mx-space/core/commit/cd3faff))
+
+## <small>3.37.3 (2022-10-02)</small>
+
+* release: v3.37.3 ([bdd4c0e](https://github.com/mx-space/core/commit/bdd4c0e))
+* chore: bump option ([376f07b](https://github.com/mx-space/core/commit/376f07b))
+* chore: update deps ([c58ed78](https://github.com/mx-space/core/commit/c58ed78))
+* chore(deps): update dependency @nestjs/cli to v9.1.4 ([96d1205](https://github.com/mx-space/core/commit/96d1205))
+* chore(deps): update dependency @swc/core to v1.3.4 ([a2a26f8](https://github.com/mx-space/core/commit/a2a26f8))
+* chore(deps): update dependency @types/lodash to v4.14.186 ([29e3962](https://github.com/mx-space/core/commit/29e3962))
+* chore(deps): update dependency typescript to v4.8.4 ([efc1979](https://github.com/mx-space/core/commit/efc1979))
+* chore(deps): update dependency vite to v3.1.4 ([845d333](https://github.com/mx-space/core/commit/845d333))
+* feat(render): add info ([4d3e361](https://github.com/mx-space/core/commit/4d3e361))
+* fix(deps): update babel monorepo to v7.19.3 ([81071b6](https://github.com/mx-space/core/commit/81071b6))
+* fix(deps): update dependency marked to v4.1.1 ([21fd2fd](https://github.com/mx-space/core/commit/21fd2fd))
+* fix(deps): update dependency mongoose to v6.6.3 ([f8a1258](https://github.com/mx-space/core/commit/f8a1258))
+* pref: log time diff ([e034469](https://github.com/mx-space/core/commit/e034469))
+
+## <small>3.37.2 (2022-09-27)</small>
+
+* release: v3.37.2 ([0263f95](https://github.com/mx-space/core/commit/0263f95))
+* feat: add disable comment for site ([9b97a15](https://github.com/mx-space/core/commit/9b97a15))
+* fix(deps): update dependency @typegoose/typegoose to v9.12.1 ([9eed663](https://github.com/mx-space/core/commit/9eed663))
+* fix(deps): update dependency mongoose to v6.6.2 ([6e2c5a1](https://github.com/mx-space/core/commit/6e2c5a1))
+* fix(deps): update dependency rxjs to v7.5.7 ([8a95d5a](https://github.com/mx-space/core/commit/8a95d5a))
+* chore(deps): update dependency @types/node to v16.11.61 ([fdeb2c0](https://github.com/mx-space/core/commit/fdeb2c0))
+* chore(deps): update dependency @types/node to v16.11.62 ([6902946](https://github.com/mx-space/core/commit/6902946))
+* chore(deps): update dependency mongodb-memory-server to v8.9.3 ([bb63408](https://github.com/mx-space/core/commit/bb63408))
+
+## <small>3.37.1 (2022-09-25)</small>
+
+* release: v3.37.1 ([fba730f](https://github.com/mx-space/core/commit/fba730f))
+* fix(deps): update dependency @fastify/cookie to v8.2.0 (#759) ([8476962](https://github.com/mx-space/core/commit/8476962)), closes [#759](https://github.com/mx-space/core/issues/759)
+* fix(deps): update dependency @fastify/multipart to v7.2.0 (#753) ([2cdceb9](https://github.com/mx-space/core/commit/2cdceb9)), closes [#753](https://github.com/mx-space/core/issues/753)
+* fix(deps): update dependency @typegoose/auto-increment to v1.8.0 (#764) ([361ca29](https://github.com/mx-space/core/commit/361ca29)), closes [#764](https://github.com/mx-space/core/issues/764)
+* fix(deps): update dependency isbot to v3.5.4 ([7b1d8b7](https://github.com/mx-space/core/commit/7b1d8b7))
+* fix(deps): update dependency linkedom to v0.14.15 ([a891549](https://github.com/mx-space/core/commit/a891549))
+* fix(deps): update dependency linkedom to v0.14.16 ([e6ff510](https://github.com/mx-space/core/commit/e6ff510))
+* fix(deps): update nest monorepo to v9.1.2 (minor) (#758) ([2ec94c8](https://github.com/mx-space/core/commit/2ec94c8)), closes [#758](https://github.com/mx-space/core/issues/758)
+* chore(deps): update dependency @swc/core to v1.3.2 (#756) ([89a61f1](https://github.com/mx-space/core/commit/89a61f1)), closes [#756](https://github.com/mx-space/core/issues/756)
+* chore(deps): update dependency @swc/core to v1.3.3 ([34f38fe](https://github.com/mx-space/core/commit/34f38fe))
+* chore(deps): update dependency @types/node to v16.11.60 ([f2ed994](https://github.com/mx-space/core/commit/f2ed994))
+* chore(deps): update dependency @types/validator to v13.7.7 ([a62d968](https://github.com/mx-space/core/commit/a62d968))
+* chore(deps): update dependency vite to v3.1.3 ([1ae3c3c](https://github.com/mx-space/core/commit/1ae3c3c))
+* chore(deps): update dependency vite-tsconfig-paths to v3.5.1 ([8368b79](https://github.com/mx-space/core/commit/8368b79))
+
+## 3.37.0 (2022-09-18)
+
+* release: v3.37.0 ([b1f610e](https://github.com/mx-space/core/commit/b1f610e))
+* chore: remove e2e test in ci ([efe8669](https://github.com/mx-space/core/commit/efe8669))
+* chore(deps): update dependency vite to v3.1.2 ([9a70df7](https://github.com/mx-space/core/commit/9a70df7))
+* chore(deps): update dependency vitest to v0.23.4 ([59c8b01](https://github.com/mx-space/core/commit/59c8b01))
+* chore!: drop compatibility ([0c2a309](https://github.com/mx-space/core/commit/0c2a309))
+
+## <small>3.36.5 (2022-09-16)</small>
+
+* release: v3.36.5 ([b42777f](https://github.com/mx-space/core/commit/b42777f))
+* chore: update emitter ([748f4e6](https://github.com/mx-space/core/commit/748f4e6))
+* chore(deps): update dependency @nestjs/cli to v9.1.3 ([b79904a](https://github.com/mx-space/core/commit/b79904a))
+* chore(deps): update dependency @swc/core to v1.3.1 ([708e800](https://github.com/mx-space/core/commit/708e800))
+* chore(deps): update dependency @types/jest to v29.0.1 ([dfb1462](https://github.com/mx-space/core/commit/dfb1462))
+* chore(deps): update dependency @types/lodash to v4.14.185 ([75d4115](https://github.com/mx-space/core/commit/75d4115))
+* chore(deps): update dependency @types/marked to v4.0.7 ([cad4f57](https://github.com/mx-space/core/commit/cad4f57))
+* chore(deps): update dependency @types/node to v16.11.57 ([81bd285](https://github.com/mx-space/core/commit/81bd285))
+* chore(deps): update dependency @types/node to v16.11.58 ([3a21927](https://github.com/mx-space/core/commit/3a21927))
+* chore(deps): update dependency @types/node to v16.11.59 ([694ebf3](https://github.com/mx-space/core/commit/694ebf3))
+* chore(deps): update dependency @types/nodemailer to v6.4.6 ([c5fe03c](https://github.com/mx-space/core/commit/c5fe03c))
+* chore(deps): update dependency jest to v29.0.2 ([932d505](https://github.com/mx-space/core/commit/932d505))
+* chore(deps): update dependency jest to v29.0.3 ([da45f97](https://github.com/mx-space/core/commit/da45f97))
+* chore(deps): update dependency mongodb-memory-server to v8.9.2 ([34a53ce](https://github.com/mx-space/core/commit/34a53ce))
+* chore(deps): update dependency typescript to v4.7.4 ([d5a2c7e](https://github.com/mx-space/core/commit/d5a2c7e))
+* chore(deps): update dependency typescript to v4.8.3 (#706) ([8708096](https://github.com/mx-space/core/commit/8708096)), closes [#706](https://github.com/mx-space/core/issues/706)
+* chore(deps): update dependency vite to v3.1.1 ([cb0107c](https://github.com/mx-space/core/commit/cb0107c))
+* chore(deps): update nest monorepo ([72c5437](https://github.com/mx-space/core/commit/72c5437))
+* fix: do not emit unhandledreject event ([88feacb](https://github.com/mx-space/core/commit/88feacb))
+* fix: use cravatar ([015d6eb](https://github.com/mx-space/core/commit/015d6eb))
+* fix: watch test ([4cd97e9](https://github.com/mx-space/core/commit/4cd97e9))
+* fix(deps): update babel monorepo to v7.19.0 (#730) ([a021b8d](https://github.com/mx-space/core/commit/a021b8d)), closes [#730](https://github.com/mx-space/core/issues/730)
+* fix(deps): update babel monorepo to v7.19.1 ([de981ed](https://github.com/mx-space/core/commit/de981ed))
+* fix(deps): update dependency @fastify/multipart to v7.1.2 ([63f8d1e](https://github.com/mx-space/core/commit/63f8d1e))
+* fix(deps): update dependency @nestjs/swagger to v6.1.2 ([c8597d9](https://github.com/mx-space/core/commit/c8597d9))
+* fix(deps): update dependency @typegoose/auto-increment to v1.7.0 (#745) ([6724fa8](https://github.com/mx-space/core/commit/6724fa8)), closes [#745](https://github.com/mx-space/core/issues/745)
+* fix(deps): update dependency @typegoose/typegoose to v9.12.0 (#746) ([c7e2e23](https://github.com/mx-space/core/commit/c7e2e23)), closes [#746](https://github.com/mx-space/core/issues/746)
+* fix(deps): update dependency isbot to v3.5.3 ([7766b21](https://github.com/mx-space/core/commit/7766b21))
+* fix(deps): update dependency linkedom to v0.14.14 ([7f499c4](https://github.com/mx-space/core/commit/7f499c4))
+* fix(deps): update dependency mongoose to v6.5.5 ([29271ed](https://github.com/mx-space/core/commit/29271ed))
+* fix(deps): update dependency mongoose to v6.6.1 (#738) ([7835c9f](https://github.com/mx-space/core/commit/7835c9f)), closes [#738](https://github.com/mx-space/core/issues/738)
+* fix(deps): update dependency mongoose-paginate-v2 to v1.7.1 ([93b0f67](https://github.com/mx-space/core/commit/93b0f67))
+* feat: replace master avatar in comments if exist ([10a36fd](https://github.com/mx-space/core/commit/10a36fd))
+* ci: remove e2e script ([efc720c](https://github.com/mx-space/core/commit/efc720c))
+* refactor: move to vitest ([2513f88](https://github.com/mx-space/core/commit/2513f88))
+* refactor: use create require instead use global require ([84099f3](https://github.com/mx-space/core/commit/84099f3))
+
+## <small>3.36.4 (2022-09-03)</small>
+
+* release: v3.36.4 ([5ab6c31](https://github.com/mx-space/core/commit/5ab6c31))
+* fix: allow across version update in dev ([9dba4a7](https://github.com/mx-space/core/commit/9dba4a7))
+* fix: unhandled reject message emit ([e3bb320](https://github.com/mx-space/core/commit/e3bb320))
+* fix(deps): update dependency @nestjs/swagger to v6.1.1 ([2a9e54c](https://github.com/mx-space/core/commit/2a9e54c))
+* fix(deps): update dependency marked to v4.1.0 (#718) ([4f47393](https://github.com/mx-space/core/commit/4f47393)), closes [#718](https://github.com/mx-space/core/issues/718)
+* fix(deps): update dependency mongoose to v6.5.4 ([4b52eb3](https://github.com/mx-space/core/commit/4b52eb3))
+* fix(deps): update dependency snakecase-keys to v5.4.4 ([8a4f8ec](https://github.com/mx-space/core/commit/8a4f8ec))
+* chore(deps): update dependency @nestjs/schematics to v9.0.2 (#721) ([c8b0ce0](https://github.com/mx-space/core/commit/c8b0ce0)), closes [#721](https://github.com/mx-space/core/issues/721)
+* chore(deps): update dependency @types/cache-manager to v4.0.2 ([4e68e81](https://github.com/mx-space/core/commit/4e68e81))
+* chore(deps): update dependency @types/jest to v29 ([882262c](https://github.com/mx-space/core/commit/882262c))
+* chore(deps): update dependency mongodb-memory-server to v8.9.1 ([73c36c9](https://github.com/mx-space/core/commit/73c36c9))
+* chore(deps): update dependency redis-memory-server to v0.6.0 (#720) ([aa7a7d0](https://github.com/mx-space/core/commit/aa7a7d0)), closes [#720](https://github.com/mx-space/core/issues/720)
+
+## <small>3.36.3 (2022-08-29)</small>
+
+* release: v3.36.3 ([2678330](https://github.com/mx-space/core/commit/2678330))
+* chore(deps): update dependency @types/validator to v13.7.6 ([ac82a7e](https://github.com/mx-space/core/commit/ac82a7e))
+* chore(deps): update supercharge/mongodb-github-action action to v1.8.0 (#711) ([522ec30](https://github.com/mx-space/core/commit/522ec30)), closes [#711](https://github.com/mx-space/core/issues/711)
+* fix: catch system uncaught exception ([90bfc62](https://github.com/mx-space/core/commit/90bfc62))
+* fix(deps): update dependency @fastify/cookie to v8.1.0 (#715) ([73a2f8b](https://github.com/mx-space/core/commit/73a2f8b)), closes [#715](https://github.com/mx-space/core/issues/715)
+* fix(deps): update dependency snakecase-keys to v5.4.3 ([bc484f5](https://github.com/mx-space/core/commit/bc484f5))
+* fix(deps): update dependency vm2 to v3.9.11 ([75891ea](https://github.com/mx-space/core/commit/75891ea))
+
+## <small>3.36.2 (2022-08-27)</small>
+
+* release: v3.36.2 ([1ae10a1](https://github.com/mx-space/core/commit/1ae10a1))
+* feat: test email is working ([a2f2be3](https://github.com/mx-space/core/commit/a2f2be3))
+* perf: ncc pack speed ([a4410ec](https://github.com/mx-space/core/commit/a4410ec))
+* refactor: remove cos-sdk ([fe5ec2b](https://github.com/mx-space/core/commit/fe5ec2b))
+* refactor: remove pino ([6cf353d](https://github.com/mx-space/core/commit/6cf353d))
+* refactor: remove request@2 ([87eb814](https://github.com/mx-space/core/commit/87eb814))
+* fix: downgrade ts version ([9f086cd](https://github.com/mx-space/core/commit/9f086cd))
+* fix(deps): update dependency @fastify/cookie to v8 (#683) ([a714957](https://github.com/mx-space/core/commit/a714957)), closes [#683](https://github.com/mx-space/core/issues/683)
+* fix(deps): update dependency @nestjs/swagger to v6.1.0 (#708) ([c28f482](https://github.com/mx-space/core/commit/c28f482)), closes [#708](https://github.com/mx-space/core/issues/708)
+* fix(deps): update dependency @typegoose/typegoose to v9.11.2 ([d2eda95](https://github.com/mx-space/core/commit/d2eda95))
+* fix(deps): update dependency @types/jsonwebtoken to v8.5.9 ([2f548f7](https://github.com/mx-space/core/commit/2f548f7))
+* fix(deps): update dependency isbot to v3.5.2 ([15ad2df](https://github.com/mx-space/core/commit/15ad2df))
+* fix(deps): update dependency mongoose to v6.5.3 ([8fa6823](https://github.com/mx-space/core/commit/8fa6823))
+* chore: update markedjs ([0c2249b](https://github.com/mx-space/core/commit/0c2249b))
+* chore(deps): update dependency @nestjs/cli to v9.1.1 (#707) ([ed14567](https://github.com/mx-space/core/commit/ed14567)), closes [#707](https://github.com/mx-space/core/issues/707)
+* chore(deps): update dependency @types/jest to v28.1.8 ([473b60b](https://github.com/mx-space/core/commit/473b60b))
+* chore(deps): update dependency @types/node to v16.11.56 ([25a7167](https://github.com/mx-space/core/commit/25a7167))
+* chore(deps): update dependency jest to v29 ([ab44e9a](https://github.com/mx-space/core/commit/ab44e9a))
+* chore(deps): update dependency mongodb-memory-server to v8.9.0 (#694) ([9d3185d](https://github.com/mx-space/core/commit/9d3185d)), closes [#694](https://github.com/mx-space/core/issues/694)
+* feat(post & note): custom created time ([842ff7e](https://github.com/mx-space/core/commit/842ff7e))
+
+## <small>3.36.1 (2022-08-24)</small>
+
+* release: v3.36.1 ([254aea5](https://github.com/mx-space/core/commit/254aea5))
+* fix: socket boardcast not working ([fa68556](https://github.com/mx-space/core/commit/fa68556))
+* fix: unit test ([15cfe1e](https://github.com/mx-space/core/commit/15cfe1e))
+* fix(deps): update dependency @babel/core to v7.18.13 ([6354adc](https://github.com/mx-space/core/commit/6354adc))
+* chore(deps): update dependency @types/node to v16.11.52 ([250e7fd](https://github.com/mx-space/core/commit/250e7fd))
+* chore(deps): update dependency @types/node to v16.11.54 ([8d576f6](https://github.com/mx-space/core/commit/8d576f6))
+* chore(deps): update dependency @types/node to v16.11.55 ([e65b25c](https://github.com/mx-space/core/commit/e65b25c))
+* chore(deps): update dependency ioredis to v5.2.3 ([18d3840](https://github.com/mx-space/core/commit/18d3840))
+* revert: durable of provider ([d775fd4](https://github.com/mx-space/core/commit/d775fd4))
+* feat: add new macro ([fb9dc4e](https://github.com/mx-space/core/commit/fb9dc4e))
+* refactor: app module ([a27b79e](https://github.com/mx-space/core/commit/a27b79e))
+
+## 3.36.0 (2022-08-21)
+
+* release: v3.36.0 ([583077a](https://github.com/mx-space/core/commit/583077a))
+* feat: lru cache for complie typescript code ([05bfbe2](https://github.com/mx-space/core/commit/05bfbe2))
+* feat: snippet and function refactor (#692) ([095ccd7](https://github.com/mx-space/core/commit/095ccd7)), closes [#692](https://github.com/mx-space/core/issues/692)
+* feat: sort of log file list ([12037aa](https://github.com/mx-space/core/commit/12037aa))
+* chore: enable cors all in dev ([41a1da8](https://github.com/mx-space/core/commit/41a1da8))
+* chore(deps): pin dependencies ([9f8e910](https://github.com/mx-space/core/commit/9f8e910))
+* chore(deps): update dependency @types/jest to v28.1.7 ([9241818](https://github.com/mx-space/core/commit/9241818))
+* chore(deps): update dependency @types/lodash to v4.14.183 ([6f04058](https://github.com/mx-space/core/commit/6f04058))
+* chore(deps): update dependency @types/lodash to v4.14.184 ([fc6f874](https://github.com/mx-space/core/commit/fc6f874))
+* chore(deps): update dependency @types/node to v16.11.49 ([1e4c51b](https://github.com/mx-space/core/commit/1e4c51b))
+* chore(deps): update dependency @types/node to v16.11.50 ([87a954c](https://github.com/mx-space/core/commit/87a954c))
+* chore(deps): update dependency @types/node to v16.11.51 ([7571cac](https://github.com/mx-space/core/commit/7571cac))
+* chore(deps): update dependency ts-jest to v28.0.8 ([7d73fa6](https://github.com/mx-space/core/commit/7d73fa6))
+* fix: markdown render of image ([03a7207](https://github.com/mx-space/core/commit/03a7207))
+* fix(comment): cast of `url` ([c0fbcc4](https://github.com/mx-space/core/commit/c0fbcc4))
+* fix(deps): update dependency class-validator-jsonschema to v3.1.2 ([76d2965](https://github.com/mx-space/core/commit/76d2965))
+* fix(deps): update dependency isbot to v3.5.1 ([a8dfff0](https://github.com/mx-space/core/commit/a8dfff0))
+* fix(deps): update dependency xss to v1.0.14 ([35869c4](https://github.com/mx-space/core/commit/35869c4))
+* fix(deps): update nest monorepo to v9.0.11 ([d420333](https://github.com/mx-space/core/commit/d420333))
+
+## <small>3.35.9 (2022-08-13)</small>
+
+* release: v3.35.9 ([00825d0](https://github.com/mx-space/core/commit/00825d0))
+* chore: add redis timeout ([78d30b5](https://github.com/mx-space/core/commit/78d30b5))
+* chore: change copy of rss tip ([1cfcd4b](https://github.com/mx-space/core/commit/1cfcd4b))
+* chore: update deps ([69ccdc1](https://github.com/mx-space/core/commit/69ccdc1))
+* chore(deps): update dependency @types/semver to v7.3.11 ([760a3c3](https://github.com/mx-space/core/commit/760a3c3))
+* chore(deps): update dependency @types/semver to v7.3.12 ([1ff1d8c](https://github.com/mx-space/core/commit/1ff1d8c))
+* feat: make some compatibility with Kami Markdown syntax ([eb33352](https://github.com/mx-space/core/commit/eb33352))
+* fix(deps): update dependency @nestjs/event-emitter to v1.3.1 ([00c5a9c](https://github.com/mx-space/core/commit/00c5a9c))
+* fix(deps): update dependency dayjs to v1.11.5 ([4880667](https://github.com/mx-space/core/commit/4880667))
+* fix(deps): update dependency mongoose to v6.5.2 ([0588149](https://github.com/mx-space/core/commit/0588149))
+* fix(deps): update dependency nodemailer to v6.7.8 ([e6dddd4](https://github.com/mx-space/core/commit/e6dddd4))
+* fix(deps): update nest monorepo to v9.0.9 ([7629c04](https://github.com/mx-space/core/commit/7629c04))
+
+## <small>3.35.8 (2022-08-07)</small>
+
+* release: v3.35.8 ([8333bcd](https://github.com/mx-space/core/commit/8333bcd))
+* feat: emit download progress ([1f44ca7](https://github.com/mx-space/core/commit/1f44ca7))
+* refactor: change throw error code if not find ([8f4533b](https://github.com/mx-space/core/commit/8f4533b))
+* fix: upgrade mongoose and refactor ([6defdd6](https://github.com/mx-space/core/commit/6defdd6))
+* fix(deps): update babel monorepo to v7.18.10 ([da94036](https://github.com/mx-space/core/commit/da94036))
+* fix(deps): update dependency @babel/plugin-transform-typescript to v7.18.12 ([34f6d51](https://github.com/mx-space/core/commit/34f6d51))
+* fix(deps): update dependency @nestjs/swagger to v6.0.5 ([d940be0](https://github.com/mx-space/core/commit/d940be0))
+* fix(deps): update dependency @typegoose/auto-increment to v1.6.0 (#660) ([bbc5c32](https://github.com/mx-space/core/commit/bbc5c32)), closes [#660](https://github.com/mx-space/core/issues/660)
+* fix(deps): update dependency @typegoose/typegoose to v9.11.0 (#658) ([21e26d2](https://github.com/mx-space/core/commit/21e26d2)), closes [#658](https://github.com/mx-space/core/issues/658)
+* fix(deps): update dependency jszip to v3.10.1 ([20d0a99](https://github.com/mx-space/core/commit/20d0a99))
+* fix(deps): update nest monorepo to v9.0.7 ([a796042](https://github.com/mx-space/core/commit/a796042))
+* fix(deps): update nest monorepo to v9.0.8 ([ae944e7](https://github.com/mx-space/core/commit/ae944e7))
+* chore(deps): update dependency @types/nodemailer to v6.4.5 ([1b5d25f](https://github.com/mx-space/core/commit/1b5d25f))
+* chore(deps): update dependency @types/validator to v13.7.5 ([49cbfa9](https://github.com/mx-space/core/commit/49cbfa9))
+* chore(deps): update dependency tsconfig-paths to v4.1.0 (#670) ([32f085b](https://github.com/mx-space/core/commit/32f085b)), closes [#670](https://github.com/mx-space/core/issues/670)
+* chore(deps): update dependency webpack to v5.74.0 (#652) ([cfceb3f](https://github.com/mx-space/core/commit/cfceb3f)), closes [#652](https://github.com/mx-space/core/issues/652)
+
+## <small>3.35.7 (2022-07-28)</small>
+
+* release: v3.35.7 ([fea5c52](https://github.com/mx-space/core/commit/fea5c52))
+* refactor: scan table cron ([ab5e547](https://github.com/mx-space/core/commit/ab5e547))
+* fix: pick env instead of inject whole env ([6735006](https://github.com/mx-space/core/commit/6735006))
+* fix(deps): update dependency @fastify/cookie to v7.3.1 (#647) ([f53226c](https://github.com/mx-space/core/commit/f53226c)), closes [#647](https://github.com/mx-space/core/issues/647)
+* fix(deps): update dependency algoliasearch to v4.14.2 ([64c757a](https://github.com/mx-space/core/commit/64c757a))
+* fix(deps): update nest monorepo to v9.0.6 (patch) (#657) ([782c7ef](https://github.com/mx-space/core/commit/782c7ef)), closes [#657](https://github.com/mx-space/core/issues/657)
+
+## <small>3.35.6 (2022-07-27)</small>
+
+* release: v3.35.6 ([5477cc8](https://github.com/mx-space/core/commit/5477cc8))
+* fix(deps): update dependency @fastify/static to v6.4.1 ([2b93e91](https://github.com/mx-space/core/commit/2b93e91))
+* fix(deps): update dependency algoliasearch to v4.14.1 ([24a56f2](https://github.com/mx-space/core/commit/24a56f2))
+* fix(deps): update dependency mongoose to v6.4.6 ([1224548](https://github.com/mx-space/core/commit/1224548))
+* fix(deps): update dependency mongoose to v6.4.7 ([086b128](https://github.com/mx-space/core/commit/086b128))
+* fix(deps): update dependency mongoose to v6.5.0 (#654) ([53451e2](https://github.com/mx-space/core/commit/53451e2)), closes [#654](https://github.com/mx-space/core/issues/654)
+* fix(deps): update dependency mongoose-lean-getters to v0.3.5 ([5c921c5](https://github.com/mx-space/core/commit/5c921c5))
+* feat: table scan to delete outdate token ([19791bb](https://github.com/mx-space/core/commit/19791bb))
+* chore(deps): update dependency ioredis to v5.2.2 ([8973d00](https://github.com/mx-space/core/commit/8973d00))
+* chore(deps): update dependency mongodb-memory-server to v8.8.0 (#651) ([34ef33f](https://github.com/mx-space/core/commit/34ef33f)), closes [#651](https://github.com/mx-space/core/issues/651)
+
+## <small>3.35.5 (2022-07-20)</small>
+
+* release: v3.35.5 ([630e575](https://github.com/mx-space/core/commit/630e575))
+* feat: comment whispers (#643) ([3bc265d](https://github.com/mx-space/core/commit/3bc265d)), closes [#643](https://github.com/mx-space/core/issues/643)
+* fix: file is not exist and throw ([d21cdc5](https://github.com/mx-space/core/commit/d21cdc5))
+* fix(deps): update dependency @babel/core to v7.18.9 (#638) ([8bebb17](https://github.com/mx-space/core/commit/8bebb17)), closes [#638](https://github.com/mx-space/core/issues/638)
+* fix(deps): update dependency @fastify/cookie to v7.2.0 (#560) ([da8ece4](https://github.com/mx-space/core/commit/da8ece4)), closes [#560](https://github.com/mx-space/core/issues/560)
+* fix(deps): update dependency algoliasearch to v4.14.0 (#640) ([29ef236](https://github.com/mx-space/core/commit/29ef236)), closes [#640](https://github.com/mx-space/core/issues/640)
+* fix(deps): update dependency dayjs to v1.11.4 ([c286a19](https://github.com/mx-space/core/commit/c286a19))
+* fix(deps): update dependency mongoose to v6.4.5 ([0b9de53](https://github.com/mx-space/core/commit/0b9de53))
+* fix(deps): update nest monorepo to v9.0.4 (patch) (#639) ([88ac5d5](https://github.com/mx-space/core/commit/88ac5d5)), closes [#639](https://github.com/mx-space/core/issues/639)
+* fix(deps): update nest monorepo to v9.0.5 ([62db6c9](https://github.com/mx-space/core/commit/62db6c9))
+* chore(deps): update dependency ioredis to v5.2.1 ([70d1142](https://github.com/mx-space/core/commit/70d1142))
+* chore(deps): update dependency ts-jest to v28.0.7 ([da61b8a](https://github.com/mx-space/core/commit/da61b8a))
+
+## <small>3.35.4 (2022-07-16)</small>
+
+* release: v3.35.4 ([ed704e4](https://github.com/mx-space/core/commit/ed704e4))
+* fix(deps): update dependency @nestjs/swagger to v6.0.4 ([a00c195](https://github.com/mx-space/core/commit/a00c195))
+* fix(post): flat lookup `$category` ([d23daf1](https://github.com/mx-space/core/commit/d23daf1))
+* chore(deps): update dependency @types/jest to v28.1.6 ([cb536f2](https://github.com/mx-space/core/commit/cb536f2))
+* chore(deps): update dependency ts-jest to v28.0.6 ([2cfc626](https://github.com/mx-space/core/commit/2cfc626))
+* chore(deps): update dependency ts-node to v10.9.1 (#632) ([83f6599](https://github.com/mx-space/core/commit/83f6599)), closes [#632](https://github.com/mx-space/core/issues/632)
+
+## <small>3.35.3 (2022-07-14)</small>
+
+* release: v3.35.3 ([567b25c](https://github.com/mx-space/core/commit/567b25c))
+
+## <small>3.35.2 (2022-07-14)</small>
+
+* release: v3.35.2 ([68c113c](https://github.com/mx-space/core/commit/68c113c))
+* chore: cleanup ([626773e](https://github.com/mx-space/core/commit/626773e))
+* chore(deps): update dependency @types/jest to v28.1.5 ([cd0d361](https://github.com/mx-space/core/commit/cd0d361))
+* chore(deps): update dependency ioredis to v5.2.0 (#627) ([48aefe0](https://github.com/mx-space/core/commit/48aefe0)), closes [#627](https://github.com/mx-space/core/issues/627)
+* chore(deps): update dependency jest to v28.1.3 ([24be0cf](https://github.com/mx-space/core/commit/24be0cf))
+* fix: search decorator ([16d07a0](https://github.com/mx-space/core/commit/16d07a0))
+* fix: test docker on pr ([b86e95a](https://github.com/mx-space/core/commit/b86e95a))
+* fix(deps): update dependency @nestjs/event-emitter to v1.3.0 (#616) ([dfdec53](https://github.com/mx-space/core/commit/dfdec53)), closes [#616](https://github.com/mx-space/core/issues/616)
+* fix(deps): update dependency @nestjs/swagger to v6.0.3 ([5eec4e3](https://github.com/mx-space/core/commit/5eec4e3))
+* fix(deps): update dependency image-size to v1.0.2 ([6f24cf9](https://github.com/mx-space/core/commit/6f24cf9))
+* fix(deps): update dependency marked to v4.0.18 ([9e62ce8](https://github.com/mx-space/core/commit/9e62ce8))
+* fix(deps): update dependency rxjs to v7.5.6 ([0ae4c15](https://github.com/mx-space/core/commit/0ae4c15))
+* fix(deps): update nest monorepo to v9.0.3 ([3daafc2](https://github.com/mx-space/core/commit/3daafc2))
+* fix(update): shell output ([f3da1ea](https://github.com/mx-space/core/commit/f3da1ea))
+* revert: docker permission ([d4cf346](https://github.com/mx-space/core/commit/d4cf346))
+* chore :  mx user home → host directory (#625) ([3d803ef](https://github.com/mx-space/core/commit/3d803ef)), closes [#625](https://github.com/mx-space/core/issues/625)
+* feat/upgrade nest v9 (#620) ([1290a78](https://github.com/mx-space/core/commit/1290a78)), closes [#620](https://github.com/mx-space/core/issues/620)
+* refactor: exec command ([ba4c25f](https://github.com/mx-space/core/commit/ba4c25f))
+
+## <small>3.35.1 (2022-07-11)</small>
+
+* release: v3.35.1 ([21a7562](https://github.com/mx-space/core/commit/21a7562))
+* fix: pin value when update posts ([20b03d1](https://github.com/mx-space/core/commit/20b03d1))
+* fix(deps): update dependency @babel/plugin-transform-typescript to v7.18.8 ([0bcef78](https://github.com/mx-space/core/commit/0bcef78))
+* fix(deps): update dependency mongoose to v6.4.4 ([23c8330](https://github.com/mx-space/core/commit/23c8330))
+* chore: docker adduser ([8b43add](https://github.com/mx-space/core/commit/8b43add))
+* perf: use read stream to transfer data ([37e4297](https://github.com/mx-space/core/commit/37e4297))
+
+## 3.35.0 (2022-07-08)
+
+* release: v3.35.0 ([0864e41](https://github.com/mx-space/core/commit/0864e41))
+* chore: remove debug ([1c5f221](https://github.com/mx-space/core/commit/1c5f221))
+* chore: update mongoose ([14200f9](https://github.com/mx-space/core/commit/14200f9))
+* feat: support upgrage admin dashboard (#612) ([18a304e](https://github.com/mx-space/core/commit/18a304e)), closes [#612](https://github.com/mx-space/core/issues/612)
+* fix: create `package.json` ([7faed81](https://github.com/mx-space/core/commit/7faed81))
+* fix: make jest happy ([d2b42b6](https://github.com/mx-space/core/commit/d2b42b6))
+* fix(deps): update dependency @typegoose/auto-increment to v1.4.1 (#606) ([8bc125d](https://github.com/mx-space/core/commit/8bc125d)), closes [#606](https://github.com/mx-space/core/issues/606)
+* fix(deps): update dependency axios-retry to v3.3.1 (#597) ([055e4ab](https://github.com/mx-space/core/commit/055e4ab)), closes [#597](https://github.com/mx-space/core/issues/597)
+* fix(deps): update dependency mongoose-paginate-v2 to v1.7.0 (#607) ([a16e580](https://github.com/mx-space/core/commit/a16e580)), closes [#607](https://github.com/mx-space/core/issues/607)
+* fix(deps): update dependency nodemailer to v6.7.7 ([57835fe](https://github.com/mx-space/core/commit/57835fe))
+* refactor: remove cron clsuter compatibility hack (#610) ([63c9e30](https://github.com/mx-space/core/commit/63c9e30)), closes [#610](https://github.com/mx-space/core/issues/610)
+* ci: add timeout ([8d7d440](https://github.com/mx-space/core/commit/8d7d440))
+
+## 3.34.0 (2022-07-04)
+
+* release: v3.34.0 ([5f756b5](https://github.com/mx-space/core/commit/5f756b5))
+* feat: pkg graph ([6a1a592](https://github.com/mx-space/core/commit/6a1a592))
+* feat: use sse to pipe install deps output ([9c399a0](https://github.com/mx-space/core/commit/9c399a0))
+* refactor: extract dependency module ([18bfc4b](https://github.com/mx-space/core/commit/18bfc4b))
+* chore(deps): update dependency @types/cache-manager to v4.0.1 ([9f4fd41](https://github.com/mx-space/core/commit/9f4fd41))
+* chore(deps): update dependency @types/validator to v13.7.4 ([a8b4a50](https://github.com/mx-space/core/commit/a8b4a50))
+* chore(deps): update dependency ts-node to v10.8.2 ([02492e1](https://github.com/mx-space/core/commit/02492e1))
+* fix: record error log throwed in serverless fn ([74d6d7e](https://github.com/mx-space/core/commit/74d6d7e))
+* fix(fn): replace directly access code define file ([4a5c6de](https://github.com/mx-space/core/commit/4a5c6de))
+
+## <small>3.33.1 (2022-07-02)</small>
+
+* release: v3.33.1 ([a307aad](https://github.com/mx-space/core/commit/a307aad))
+* fix: post pin sort order ([4aa9b79](https://github.com/mx-space/core/commit/4aa9b79))
+* fix(deps): update babel monorepo to v7.18.6 ([e3718e9](https://github.com/mx-space/core/commit/e3718e9))
+* fix(deps): update dependency axios-retry to v3.2.6 ([7c617ea](https://github.com/mx-space/core/commit/7c617ea))
+* fix(deps): update dependency nodemailer to v6.7.6 ([19d341d](https://github.com/mx-space/core/commit/19d341d))
+* fix(deps): update dependency qs to v6.11.0 (#594) ([260ce43](https://github.com/mx-space/core/commit/260ce43)), closes [#594](https://github.com/mx-space/core/issues/594)
+* chore(deps): update dependency @types/jest to v28.1.4 ([7396487](https://github.com/mx-space/core/commit/7396487))
+* chore(deps): update dependency jest to v28.1.2 ([3c4520e](https://github.com/mx-space/core/commit/3c4520e))
+* chore(deps): update dependency mongodb-memory-server to v8.7.2 ([ea96e4b](https://github.com/mx-space/core/commit/ea96e4b))
+* feat: add process title ([a242918](https://github.com/mx-space/core/commit/a242918))
+
+## 3.33.0 (2022-06-27)
+
+* release: v3.33.0 ([c4ab15c](https://github.com/mx-space/core/commit/c4ab15c))
+* fix: post event emit twice when create ([6e47cc6](https://github.com/mx-space/core/commit/6e47cc6))
+* ci: fix ([76bc6d3](https://github.com/mx-space/core/commit/76bc6d3))
+* chore: speed-up ci ([a582e88](https://github.com/mx-space/core/commit/a582e88))
+
+## 3.33.0-alpha.0 (2022-06-26)
+
+* release: v3.33.0-alpha.0 ([626b963](https://github.com/mx-space/core/commit/626b963))
+* fix: login success status code ([b4d20d4](https://github.com/mx-space/core/commit/b4d20d4))
+* refactor: login session with jwt ([8408f2e](https://github.com/mx-space/core/commit/8408f2e))
+* fix!: change markdown render into ejs controller ([e764dd5](https://github.com/mx-space/core/commit/e764dd5))
+
+## 3.32.0 (2022-06-26)
+
+* release: v3.32.0 ([f83f716](https://github.com/mx-space/core/commit/f83f716))
+* fix: hardcode origin ([5e599cd](https://github.com/mx-space/core/commit/5e599cd))
+* fix: host wildcard ([382d55f](https://github.com/mx-space/core/commit/382d55f))
+* fix: local ip cors ([ed767b9](https://github.com/mx-space/core/commit/ed767b9))
+* fix: pin is undefine ([cae7d23](https://github.com/mx-space/core/commit/cae7d23))
+* fix: popluate category for related post ([eb79152](https://github.com/mx-space/core/commit/eb79152))
+* fix: realtime log gatewway ([d7867f3](https://github.com/mx-space/core/commit/d7867f3))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.12 ([5e9621e](https://github.com/mx-space/core/commit/5e9621e))
+* feat: related post ([df07623](https://github.com/mx-space/core/commit/df07623))
+* chore: store paw ([e2ea7c3](https://github.com/mx-space/core/commit/e2ea7c3))
+* chore: upadte paw ([c6e5322](https://github.com/mx-space/core/commit/c6e5322))
+* chore(deps): update dependency @nestjs/cli to v8.2.7 ([0527636](https://github.com/mx-space/core/commit/0527636))
+* chore(deps): update dependency @nestjs/cli to v8.2.8 ([c37c4c8](https://github.com/mx-space/core/commit/c37c4c8))
+* chore(deps): update dependency ioredis to v5.1.0 (#592) ([63740ff](https://github.com/mx-space/core/commit/63740ff)), closes [#592](https://github.com/mx-space/core/issues/592)
+* chore(deps): update dependency lint-staged to v13.0.3 ([9c46b80](https://github.com/mx-space/core/commit/9c46b80))
+* chore(deps): update dependency mongodb-memory-server to v8.7.1 ([4fd24c3](https://github.com/mx-space/core/commit/4fd24c3))
+* chore(deps): update dependency ts-loader to v9.3.1 ([0947fe0](https://github.com/mx-space/core/commit/0947fe0))
+
+## <small>3.31.1 (2022-06-22)</small>
+
+* release: v3.31.1 ([23f1a5c](https://github.com/mx-space/core/commit/23f1a5c))
+* fix: remove serverless fn comment and close #585 ([3769898](https://github.com/mx-space/core/commit/3769898)), closes [#585](https://github.com/mx-space/core/issues/585)
+* fix(deps): update dependency linkedom to v0.14.12 ([f7e83d6](https://github.com/mx-space/core/commit/f7e83d6))
+* fix(deps): update dependency mongoose-lean-getters to v0.3.4 ([a1452c8](https://github.com/mx-space/core/commit/a1452c8))
+* chore(deps): update dependency @types/jest to v28.1.3 ([0c3b114](https://github.com/mx-space/core/commit/0c3b114))
+* chore(deps): update dependency mongodb-memory-server to v8.7.0 ([6de6f8b](https://github.com/mx-space/core/commit/6de6f8b))
+* refactory: global prefix routes (#583) ([c8aac34](https://github.com/mx-space/core/commit/c8aac34)), closes [#583](https://github.com/mx-space/core/issues/583)
+* ci: checkout depth ([93b864e](https://github.com/mx-space/core/commit/93b864e))
+
+## 3.31.0 (2022-06-19)
+
+* release: v3.31.0 ([0b8521f](https://github.com/mx-space/core/commit/0b8521f))
+* chore: add changelog gerenate ([f90fc84](https://github.com/mx-space/core/commit/f90fc84))
+* chore: add comment for fixme ([5835d4f](https://github.com/mx-space/core/commit/5835d4f))
+* feat: support json5 for snippet ([f359a17](https://github.com/mx-space/core/commit/f359a17))
+
+## 3.31.0-alpha.1 (2022-06-18)
+
+* release: v3.31.0-alpha.1 ([9994d4b](https://github.com/mx-space/core/commit/9994d4b))
+* fix: remove designated refType ([b046eee](https://github.com/mx-space/core/commit/b046eee))
+
+## 3.31.0-alpha.0 (2022-06-18)
+
+* release: v3.31.0-alpha.0 ([18ec4f1](https://github.com/mx-space/core/commit/18ec4f1))
+* fix: idepotence ttl ([1c7ba43](https://github.com/mx-space/core/commit/1c7ba43))
+* fix: recenly ref ([c5fbd40](https://github.com/mx-space/core/commit/c5fbd40))
+* fix(deps): update dependency mongoose to v6.3.9 ([671df49](https://github.com/mx-space/core/commit/671df49))
+* refactor: extract subpub from redis ([1da8ef9](https://github.com/mx-space/core/commit/1da8ef9))
+* refactor: remove unnessary exception ([09cca08](https://github.com/mx-space/core/commit/09cca08))
+* refactor: serverless exception ([675a932](https://github.com/mx-space/core/commit/675a932))
+* chore: ignore deps ([48a840b](https://github.com/mx-space/core/commit/48a840b))
+* chore(deps): update dependency @types/jest to v28.1.2 ([141568b](https://github.com/mx-space/core/commit/141568b))
+* chore(deps): update dependency lint-staged to v13.0.2 ([ae48efe](https://github.com/mx-space/core/commit/ae48efe))
+* chore(deps): update dependency typescript to v4.7.4 ([1ed1ce4](https://github.com/mx-space/core/commit/1ed1ce4))
+* feat: url builder ([07f9c6b](https://github.com/mx-space/core/commit/07f9c6b))
+* docs: add section for serverless fn ([7ee6346](https://github.com/mx-space/core/commit/7ee6346))
+
+## <small>3.30.2 (2022-06-16)</small>
+
+* release: v3.30.2 ([841c4a0](https://github.com/mx-space/core/commit/841c4a0))
+* fix: comment pin only once ([a1792da](https://github.com/mx-space/core/commit/a1792da))
+* fix: comment pin sort ([89d73b1](https://github.com/mx-space/core/commit/89d73b1))
+* fix: docker add health check ([f6db675](https://github.com/mx-space/core/commit/f6db675))
+* fix(deps): update dependency @babel/core to v7.18.5 ([5723a58](https://github.com/mx-space/core/commit/5723a58))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.11 ([fdea024](https://github.com/mx-space/core/commit/fdea024))
+* fix(deps): update dependency marked to v4.0.17 ([de42510](https://github.com/mx-space/core/commit/de42510))
+* fix(deps): update dependency mongoose to v6.3.8 ([3367e26](https://github.com/mx-space/core/commit/3367e26))
+* fix(deps): update nest monorepo to v8.4.7 ([cfea925](https://github.com/mx-space/core/commit/cfea925))
+* feat: comment pin ([d78f60b](https://github.com/mx-space/core/commit/d78f60b))
+* chore(deps): update dependency mongodb-memory-server to v8.6.1 ([8a06476](https://github.com/mx-space/core/commit/8a06476))
+* chore(deps): update dependency ts-jest to v28.0.5 ([5ab364f](https://github.com/mx-space/core/commit/5ab364f))
+
+## <small>3.30.1 (2022-06-13)</small>
+
+* release: v3.30.1 ([6abfc99](https://github.com/mx-space/core/commit/6abfc99))
+* fix: custom token validate ([9764920](https://github.com/mx-space/core/commit/9764920))
+* fix: use inspect object ([5def2ca](https://github.com/mx-space/core/commit/5def2ca))
+
+## 3.30.0 (2022-06-12)
+
+* release: v3.30.0 ([80197e5](https://github.com/mx-space/core/commit/80197e5))
+* fix: jwt verfiy ([102b072](https://github.com/mx-space/core/commit/102b072))
+* fix: pin order ([ae8ed8a](https://github.com/mx-space/core/commit/ae8ed8a))
+* fix: pin sort ([61cc473](https://github.com/mx-space/core/commit/61cc473))
+* feat: post pin ([2a1d59f](https://github.com/mx-space/core/commit/2a1d59f))
+* chore: cleanup ([71029fb](https://github.com/mx-space/core/commit/71029fb))
+
+## 3.30.0-alpha.1 (2022-06-11)
+
+* release: v3.30.0-alpha.1 ([aaa4daf](https://github.com/mx-space/core/commit/aaa4daf))
+* docs: update readme ([fbfe6c9](https://github.com/mx-space/core/commit/fbfe6c9))
+* chore: add uppercase header field in auth gateway ([9ec9cc6](https://github.com/mx-space/core/commit/9ec9cc6))
+* chore: clean middleware ([15a9d09](https://github.com/mx-space/core/commit/15a9d09))
+* test: add case for jwt ([36785a6](https://github.com/mx-space/core/commit/36785a6))
+* feat: add access db instance in function ([698656e](https://github.com/mx-space/core/commit/698656e))
+* feat: add jwt service ([0d67b0b](https://github.com/mx-space/core/commit/0d67b0b))
+* feat: add signout ([136734a](https://github.com/mx-space/core/commit/136734a))
+* refactor: auth jwt ([c128241](https://github.com/mx-space/core/commit/c128241))
+* refactor(event-manager): move emit into handler ([5213455](https://github.com/mx-space/core/commit/5213455))
+* fix: idempotence pending status (#566) ([602be61](https://github.com/mx-space/core/commit/602be61)), closes [#566](https://github.com/mx-space/core/issues/566)
+* fix: resolution dependency to reduce size ([fcb4faa](https://github.com/mx-space/core/commit/fcb4faa))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.10 ([1be687f](https://github.com/mx-space/core/commit/1be687f))
+
+## 3.30.0-alpha.0 (2022-06-09)
+
+* release: v3.30.0-alpha.0 ([0bdc3b1](https://github.com/mx-space/core/commit/0bdc3b1))
+* feat: bark support (#563) ([1642026](https://github.com/mx-space/core/commit/1642026)), closes [#563](https://github.com/mx-space/core/issues/563)
+* fix: performance import ([27b85ef](https://github.com/mx-space/core/commit/27b85ef))
+* fix: remove python2 builder ([213d7ee](https://github.com/mx-space/core/commit/213d7ee))
+* fix: remove python2 in dockerfile (#557) ([4c061ec](https://github.com/mx-space/core/commit/4c061ec)), closes [#557](https://github.com/mx-space/core/issues/557)
+* fix(deps): update dependency dayjs to v1.11.3 ([9498aff](https://github.com/mx-space/core/commit/9498aff))
+* fix(deps): update dependency linkedom to v0.14.11 ([8f98908](https://github.com/mx-space/core/commit/8f98908))
+* fix(deps): update dependency mongoose to v6.3.6 ([423055f](https://github.com/mx-space/core/commit/423055f))
+* fix(deps): update dependency qs to v6.10.5 ([5fc1124](https://github.com/mx-space/core/commit/5fc1124))
+* fix(deps): update dependency xss to v1.0.13 ([a4de831](https://github.com/mx-space/core/commit/a4de831))
+* refactor: axios debug mode ([c87cba2](https://github.com/mx-space/core/commit/c87cba2))
+* chore(deps): update dependency @types/cache-manager to v4 ([25558d8](https://github.com/mx-space/core/commit/25558d8))
+* chore(deps): update dependency @types/jest to v28.1.1 ([e424c98](https://github.com/mx-space/core/commit/e424c98))
+* chore(deps): update dependency @types/validator to v13.7.3 ([1d55a82](https://github.com/mx-space/core/commit/1d55a82))
+* chore(deps): update dependency jest to v28.1.1 ([ac115bd](https://github.com/mx-space/core/commit/ac115bd))
+* chore(deps): update dependency lint-staged to v13 ([9b6faa0](https://github.com/mx-space/core/commit/9b6faa0))
+* chore(deps): update dependency lint-staged to v13.0.1 ([4ab26fd](https://github.com/mx-space/core/commit/4ab26fd))
+* chore(deps): update dependency webpack to v5.73.0 ([c624e54](https://github.com/mx-space/core/commit/c624e54))
+
+## <small>3.29.2 (2022-06-04)</small>
+
+* release: v3.29.2 ([51b50ea](https://github.com/mx-space/core/commit/51b50ea))
+* feat: add comment option for ip record ([454d5b0](https://github.com/mx-space/core/commit/454d5b0))
+* fix: config patch ([92500ed](https://github.com/mx-space/core/commit/92500ed))
+* fix: jsonschema ([5c60368](https://github.com/mx-space/core/commit/5c60368))
+* fix(deps): update dependency cache-manager to v4.0.1 ([d4fb889](https://github.com/mx-space/core/commit/d4fb889))
+* fix(deps): update dependency xss to v1.0.12 ([e96f368](https://github.com/mx-space/core/commit/e96f368))
+* chore(deps): update dependency ts-node to v10.8.1 ([77a34c7](https://github.com/mx-space/core/commit/77a34c7))
+* chore(deps): update dependency typescript to v4.7.3 ([e8d1da4](https://github.com/mx-space/core/commit/e8d1da4))
+
+## <small>3.29.1 (2022-06-03)</small>
+
+* release: v3.29.1 ([51eaebe](https://github.com/mx-space/core/commit/51eaebe))
+* fix: jsonschema ([cb78f77](https://github.com/mx-space/core/commit/cb78f77))
+* fix(deps): update dependency @babel/plugin-transform-typescript to v7.18.4 ([3d73cc9](https://github.com/mx-space/core/commit/3d73cc9))
+* fix(deps): update dependency @typegoose/typegoose to v9.9.0 ([d6b9e4e](https://github.com/mx-space/core/commit/d6b9e4e))
+* fix(deps): update dependency cache-manager to v4 ([2c2263a](https://github.com/mx-space/core/commit/2c2263a))
+* fix(deps): update dependency mongoose to v6.3.5 ([dbfb15e](https://github.com/mx-space/core/commit/dbfb15e))
+* fix(deps): update dependency mongoose-lean-getters to v0.3.3 ([c64b083](https://github.com/mx-space/core/commit/c64b083))
+* fix(deps): update nest monorepo to v8.4.6 ([0ceaec4](https://github.com/mx-space/core/commit/0ceaec4))
+* chore(deps): update dependency @types/jest to v27.5.2 ([b955ee0](https://github.com/mx-space/core/commit/b955ee0))
+* chore(deps): update dependency @types/jest to v28 ([0768963](https://github.com/mx-space/core/commit/0768963))
+* chore(deps): update dependency ioredis to v5.0.6 ([05291dd](https://github.com/mx-space/core/commit/05291dd))
+* chore(deps): update dependency lint-staged to v12.4.3 ([88fd04f](https://github.com/mx-space/core/commit/88fd04f))
+* chore(deps): update dependency ts-jest to v28.0.4 ([9513c3f](https://github.com/mx-space/core/commit/9513c3f))
+* chore(deps): update pnpm/action-setup action to v2.2.2 ([b6cdf37](https://github.com/mx-space/core/commit/b6cdf37))
+* docs: readme ([a096bd1](https://github.com/mx-space/core/commit/a096bd1))
+* docs: update readme ([29ef9e1](https://github.com/mx-space/core/commit/29ef9e1))
+
+## 3.29.0 (2022-05-28)
+
+* release: v3.29.0 ([bd33d81](https://github.com/mx-space/core/commit/bd33d81))
+* chore: cleanup ([d4b503c](https://github.com/mx-space/core/commit/d4b503c))
+* chore(deps): update dependency @vercel/ncc to v0.34.0 ([a0f2b62](https://github.com/mx-space/core/commit/a0f2b62))
+* chore(deps): update dependency ts-node to v10.8.0 ([9a122e7](https://github.com/mx-space/core/commit/9a122e7))
+* chore(deps): update dependency typescript to v4.7.2 ([9c3bbfb](https://github.com/mx-space/core/commit/9c3bbfb))
+* feat: add idempotence interceptor ([d19c726](https://github.com/mx-space/core/commit/d19c726))
+* fix: note create event scope ([e6c5745](https://github.com/mx-space/core/commit/e6c5745))
+
+## <small>3.28.3 (2022-05-27)</small>
+
+* release: v3.28.3 ([6d5d664](https://github.com/mx-space/core/commit/6d5d664))
+* fix: comment event ([6209aca](https://github.com/mx-space/core/commit/6209aca))
+* fix: query ip timeout ([55c90d0](https://github.com/mx-space/core/commit/55c90d0))
+
+## <small>3.28.2 (2022-05-26)</small>
+
+* release: v3.28.2 ([8780668](https://github.com/mx-space/core/commit/8780668))
+* fix: install pkg when restore data ([e3a6d4b](https://github.com/mx-space/core/commit/e3a6d4b))
+* fix: skip proxy route when record analyze ([4a26a00](https://github.com/mx-space/core/commit/4a26a00))
+* fix(deps): update babel monorepo to v7.18.2 ([127d909](https://github.com/mx-space/core/commit/127d909))
+
+## <small>3.28.1 (2022-05-25)</small>
+
+* release: v3.28.1 ([cad51a1](https://github.com/mx-space/core/commit/cad51a1))
+* fix: demo cache key prefix ([2c237b7](https://github.com/mx-space/core/commit/2c237b7))
+* feat: demo mode ([ad1b5f6](https://github.com/mx-space/core/commit/ad1b5f6))
+* chore(deps): update dependency lint-staged to v12.4.2 ([bd274b8](https://github.com/mx-space/core/commit/bd274b8))
+* chore(deps): update dependency ts-jest to v28.0.3 ([f3f452e](https://github.com/mx-space/core/commit/f3f452e))
+
+## 3.28.0 (2022-05-24)
+
+* release: v3.28.0 ([f51954d](https://github.com/mx-space/core/commit/f51954d))
+* chore : restart for docker install ([2e722e4](https://github.com/mx-space/core/commit/2e722e4))
+* feat: add cache header for file ([0a26299](https://github.com/mx-space/core/commit/0a26299))
+* fix(deps): update dependency jszip to v3.10.0 ([ae5436b](https://github.com/mx-space/core/commit/ae5436b))
+* fix(deps): update dependency passport to v0.6.0 ([60c4c46](https://github.com/mx-space/core/commit/60c4c46))
+* chore(deps): update dependency mongodb-memory-server to v8.6.0 ([965120e](https://github.com/mx-space/core/commit/965120e))
+
+## 3.28.0-alpha.1 (2022-05-22)
+
+* release: v3.28.0-alpha.1 ([d606338](https://github.com/mx-space/core/commit/d606338))
+* fix: file name hash ([158629f](https://github.com/mx-space/core/commit/158629f))
+* fix: resolve file url ([bca11de](https://github.com/mx-space/core/commit/bca11de))
+
+## 3.28.0-alpha.0 (2022-05-22)
+
+* release: v3.28.0-alpha.0 ([f60fcfe](https://github.com/mx-space/core/commit/f60fcfe))
+* fix: file response ([62ffd6f](https://github.com/mx-space/core/commit/62ffd6f))
+* feat: add throttle ([59c50a4](https://github.com/mx-space/core/commit/59c50a4))
+* feat: file module ([110d9ca](https://github.com/mx-space/core/commit/110d9ca))
+
+## <small>3.27.2 (2022-05-21)</small>
+
+* release: v3.27.2 ([3abae4a](https://github.com/mx-space/core/commit/3abae4a))
+* fix: pager dto and sort query ([43813df](https://github.com/mx-space/core/commit/43813df))
+
+## <small>3.27.1 (2022-05-21)</small>
+
+* release: v3.27.1 ([8c12e8c](https://github.com/mx-space/core/commit/8c12e8c))
+
+## 3.27.0 (2022-05-21)
+
+* release: v3.27.0 ([256e0bb](https://github.com/mx-space/core/commit/256e0bb))
+* fix: script to fetch ([6125c4f](https://github.com/mx-space/core/commit/6125c4f))
+* fix(deps): update dependency @nestjs/schedule to v2.0.1 ([48589f6](https://github.com/mx-space/core/commit/48589f6))
+* fix(deps): update dependency cache-manager to v3.6.3 ([7d05e7c](https://github.com/mx-space/core/commit/7d05e7c))
+
+## 3.27.0-alpha.0 (2022-05-20)
+
+* release: v3.27.0-alpha.0 ([4786d8a](https://github.com/mx-space/core/commit/4786d8a))
+* fix: change `fn` route ([357a635](https://github.com/mx-space/core/commit/357a635))
+* fix: link dto description can be empty ([bfa6af3](https://github.com/mx-space/core/commit/bfa6af3))
+* fix: note model relationship ([ba2c8bb](https://github.com/mx-space/core/commit/ba2c8bb))
+* fix: note topic paginator ([cdced95](https://github.com/mx-space/core/commit/cdced95))
+* fix: note update lean ([e06c76c](https://github.com/mx-space/core/commit/e06c76c))
+* fix(deps): update babel monorepo ([6a39511](https://github.com/mx-space/core/commit/6a39511))
+* fix(deps): update babel monorepo to v7.17.12 ([2928598](https://github.com/mx-space/core/commit/2928598))
+* fix(deps): update dependency @babel/plugin-transform-typescript to v7.17.12 ([e01ba83](https://github.com/mx-space/core/commit/e01ba83))
+* fix(deps): update dependency @nestjs/jwt to v8.0.1 ([8dd2c0a](https://github.com/mx-space/core/commit/8dd2c0a))
+* fix(deps): update dependency algoliasearch to v4.13.1 ([dafacb6](https://github.com/mx-space/core/commit/dafacb6))
+* fix(deps): update dependency cache-manager to v3.6.2 ([fbceb24](https://github.com/mx-space/core/commit/fbceb24))
+* fix(deps): update dependency isbot to v3.4.8 ([537cbec](https://github.com/mx-space/core/commit/537cbec))
+* fix(deps): update dependency isbot to v3.5.0 ([7b16997](https://github.com/mx-space/core/commit/7b16997))
+* fix(deps): update dependency marked to v4.0.16 ([267b4a7](https://github.com/mx-space/core/commit/267b4a7))
+* fix(deps): update dependency mongoose to v6.3.4 ([7a348b9](https://github.com/mx-space/core/commit/7a348b9))
+* fix(deps): update dependency passport to v0.5.3 ([a7fc893](https://github.com/mx-space/core/commit/a7fc893))
+* fix(topic): add vaildation ([6f79df9](https://github.com/mx-space/core/commit/6f79df9))
+* fix(topic): limit of intro ([b7c6310](https://github.com/mx-space/core/commit/b7c6310))
+* chore: fix typo ([913cff7](https://github.com/mx-space/core/commit/913cff7))
+* chore: remove log nodepath ([59c36e0](https://github.com/mx-space/core/commit/59c36e0))
+* chore(deps): update dependency @nestjs/cli to v8.2.6 ([e8c05e1](https://github.com/mx-space/core/commit/e8c05e1))
+* chore(deps): update dependency ioredis to v5.0.5 ([8423e93](https://github.com/mx-space/core/commit/8423e93))
+* feat: add topic model ([2ebabec](https://github.com/mx-space/core/commit/2ebabec))
+* feat: note topic init ([46fe004](https://github.com/mx-space/core/commit/46fe004))
+* refactor: extract note model ([fd32568](https://github.com/mx-space/core/commit/fd32568))
+
+## <small>3.26.7 (2022-05-16)</small>
+
+* release: v3.26.7 ([fbcba6b](https://github.com/mx-space/core/commit/fbcba6b))
+* fix: delete article with delete comment ([4e39690](https://github.com/mx-space/core/commit/4e39690))
+* fix: nest module deps ([f552b62](https://github.com/mx-space/core/commit/f552b62))
+* fix: worker url ([66e882b](https://github.com/mx-space/core/commit/66e882b))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.9 ([d9de63d](https://github.com/mx-space/core/commit/d9de63d))
+* fix(deps): update dependency ejs to v3.1.8 ([a46e990](https://github.com/mx-space/core/commit/a46e990))
+* fix(deps): update dependency isbot to v3.4.7 ([b0456df](https://github.com/mx-space/core/commit/b0456df))
+* fix(deps): update dependency snakecase-keys to v5.4.2 ([9c27f3d](https://github.com/mx-space/core/commit/9c27f3d))
+* fix(deps): update nest monorepo to v8.4.5 ([c3566d2](https://github.com/mx-space/core/commit/c3566d2))
+* fix(serverless): add route entry ([dc7b0d7](https://github.com/mx-space/core/commit/dc7b0d7))
+* chore(deps): update dependency @types/cron to v2 ([4d76fce](https://github.com/mx-space/core/commit/4d76fce))
+* chore(deps): update dependency @types/ejs to v3.1.1 ([aa0c49b](https://github.com/mx-space/core/commit/aa0c49b))
+* chore(deps): update dependency @types/jest to v27.5.1 ([6320bfa](https://github.com/mx-space/core/commit/6320bfa))
+* chore(deps): update dependency webpack to v5.72.1 ([e0186c3](https://github.com/mx-space/core/commit/e0186c3))
+
+## <small>3.26.6 (2022-05-10)</small>
+
+* release: v3.26.6 ([0163bee](https://github.com/mx-space/core/commit/0163bee))
+* chore: update deps ([913cf7a](https://github.com/mx-space/core/commit/913cf7a))
+* fix(deps): update dependency mongoose to v6.3.3 ([b8328f7](https://github.com/mx-space/core/commit/b8328f7))
+
+## <small>3.26.5 (2022-05-08)</small>
+
+* release: v3.26.5 ([6ee0789](https://github.com/mx-space/core/commit/6ee0789))
+* fix: snippet private data leak ([513d9e0](https://github.com/mx-space/core/commit/513d9e0))
+
+## <small>3.26.4 (2022-05-08)</small>
+
+* release: v3.26.4 ([f076c1d](https://github.com/mx-space/core/commit/f076c1d))
+* chore: update deps ([bbfedea](https://github.com/mx-space/core/commit/bbfedea))
+* chore(deps): update dependency jest to v28.1.0 ([c865075](https://github.com/mx-space/core/commit/c865075))
+* chore(deps): update dependency ts-jest to v28.0.2 ([5e47e3e](https://github.com/mx-space/core/commit/5e47e3e))
+* chore(deps): update docker/build-push-action action to v3 ([563dd0d](https://github.com/mx-space/core/commit/563dd0d))
+* chore(deps): update docker/login-action action to v2 ([1c4696a](https://github.com/mx-space/core/commit/1c4696a))
+* chore(deps): update docker/metadata-action action to v4 ([609e0f3](https://github.com/mx-space/core/commit/609e0f3))
+* chore(deps): update docker/setup-buildx-action action to v2 ([4bada6b](https://github.com/mx-space/core/commit/4bada6b))
+* chore(deps): update docker/setup-qemu-action action to v2 ([f71c026](https://github.com/mx-space/core/commit/f71c026))
+* fix: disable pnpm 7 strict peer deps ([75cc9f5](https://github.com/mx-space/core/commit/75cc9f5))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.8 ([32da143](https://github.com/mx-space/core/commit/32da143))
+* fix(deps): update dependency dayjs to v1.11.2 ([fcbc1e5](https://github.com/mx-space/core/commit/fcbc1e5))
+* fix(deps): update dependency linkedom to v0.14.9 ([e406550](https://github.com/mx-space/core/commit/e406550))
+
+## <small>3.26.3 (2022-05-03)</small>
+
+* release: v3.26.3 ([3ed17b9](https://github.com/mx-space/core/commit/3ed17b9))
+* chore: update deps ([e85fa8d](https://github.com/mx-space/core/commit/e85fa8d))
+* fix: exchange location order ([454159e](https://github.com/mx-space/core/commit/454159e))
+* fix: remove comment location duplicated name ([8acb7fd](https://github.com/mx-space/core/commit/8acb7fd))
+
+## <small>3.26.2 (2022-05-02)</small>
+
+* release: v3.26.2 ([6767ce6](https://github.com/mx-space/core/commit/6767ce6))
+* fix: comment emit event scope ([ed424e0](https://github.com/mx-space/core/commit/ed424e0))
+* chore: update deps ([fb057e8](https://github.com/mx-space/core/commit/fb057e8))
+
+## <small>3.26.1 (2022-05-01)</small>
+
+* release: v3.26.1 ([53b2230](https://github.com/mx-space/core/commit/53b2230))
+* fix: comment lost avatar ([2346ce5](https://github.com/mx-space/core/commit/2346ce5))
+
+## 3.26.0 (2022-04-30)
+
+* release: v3.26.0 ([78d3c25](https://github.com/mx-space/core/commit/78d3c25))
+* chore: change text macro defualt flag ([220189f](https://github.com/mx-space/core/commit/220189f))
+* chore: cleanup ([a4124c0](https://github.com/mx-space/core/commit/a4124c0))
+* chore: flush after close redis ([529c166](https://github.com/mx-space/core/commit/529c166))
+* chore(deps): update dependency mongodb-memory-server to v8.5.2 ([338993f](https://github.com/mx-space/core/commit/338993f))
+* test: fix test suit ([204df21](https://github.com/mx-space/core/commit/204df21))
+* refactor: text macro ([8f786bc](https://github.com/mx-space/core/commit/8f786bc))
+* feat: add styling and typography method for macors ([80bb68e](https://github.com/mx-space/core/commit/80bb68e))
+* fix(deps): update dependency @babel/core to v7.17.10 ([c2709d1](https://github.com/mx-space/core/commit/c2709d1))
+* fix(deps): update dependency axios-retry to v3.2.5 ([1e9f203](https://github.com/mx-space/core/commit/1e9f203))
+* fix(deps): update dependency nodemailer to v6.7.4 ([d6be01a](https://github.com/mx-space/core/commit/d6be01a))
+
+## <small>3.25.3 (2022-04-29)</small>
+
+* release: v3.25.3 ([d20e018](https://github.com/mx-space/core/commit/d20e018))
+* feat: add comment location expose ([06089dd](https://github.com/mx-space/core/commit/06089dd))
+* fix: remove master role vaild in category ([1b913f0](https://github.com/mx-space/core/commit/1b913f0))
+* fix(deps): update dependency mongoose-lean-virtuals to v0.9.1 ([baf103a](https://github.com/mx-space/core/commit/baf103a))
+* chore(deps): update dependency @types/node to v16.11.31 ([06132c7](https://github.com/mx-space/core/commit/06132c7))
+* chore(deps): update dependency @types/node to v16.11.32 ([0836dab](https://github.com/mx-space/core/commit/0836dab))
+* chore(deps): update dependency lint-staged to v12.4.1 ([536a2d7](https://github.com/mx-space/core/commit/536a2d7))
+* chore(deps): update dependency ts-loader to v9.2.9 ([1655b67](https://github.com/mx-space/core/commit/1655b67))
+* chore(deps): update dependency typescript to v4.6.4 ([b926772](https://github.com/mx-space/core/commit/b926772))
+
+## <small>3.25.2 (2022-04-26)</small>
+
+* release: v3.25.2 ([9089af2](https://github.com/mx-space/core/commit/9089af2))
+* fix: note dto update ([0bb62e8](https://github.com/mx-space/core/commit/0bb62e8))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.7 ([dded729](https://github.com/mx-space/core/commit/dded729))
+* chore(deps): update dependency @types/node to v16.11.29 ([611419a](https://github.com/mx-space/core/commit/611419a))
+
+## <small>3.25.1 (2022-04-25)</small>
+
+* release: v3.25.1 ([4fb34a0](https://github.com/mx-space/core/commit/4fb34a0))
+* fix: slug unique ([1b614e9](https://github.com/mx-space/core/commit/1b614e9))
+* chore(deps): update dependency @types/node to v16.11.28 ([d64c225](https://github.com/mx-space/core/commit/d64c225))
+
+## 3.25.0 (2022-04-25)
+
+* release: v3.25.0 ([7685272](https://github.com/mx-space/core/commit/7685272))
+* fix: slug validate ([debd1b7](https://github.com/mx-space/core/commit/debd1b7))
+
+## 3.25.0-alpha.4 (2022-04-24)
+
+* release: v3.25.0-alpha.4 ([ef06585](https://github.com/mx-space/core/commit/ef06585))
+
+## 3.25.0-alpha.3 (2022-04-24)
+
+* fix: test failed ([a5c1afb](https://github.com/mx-space/core/commit/a5c1afb))
+* fix(deps): update dependency mongoose to v6.3.1 ([a4415c6](https://github.com/mx-space/core/commit/a4415c6))
+* release: v3.25.0-alpha.3 ([482b250](https://github.com/mx-space/core/commit/482b250))
+* chore: cleanup ([84c3043](https://github.com/mx-space/core/commit/84c3043))
+* chore(deps): update dependency mongodb-memory-server to v8.5.1 ([a46be17](https://github.com/mx-space/core/commit/a46be17))
+* feat: serverless access db support ([2dbca32](https://github.com/mx-space/core/commit/2dbca32))
+
+## 3.25.0-alpha.2 (2022-04-23)
+
+* release: v3.25.0-alpha.2 ([eefb627](https://github.com/mx-space/core/commit/eefb627))
+* fix: catch all error in text macro replace ([a571fac](https://github.com/mx-space/core/commit/a571fac))
+* fix: json type make ts-jest happy ([9b4633b](https://github.com/mx-space/core/commit/9b4633b))
+* fix: meta lean ([112b34c](https://github.com/mx-space/core/commit/112b34c))
+* feat: add meta for write model ([20a788c](https://github.com/mx-space/core/commit/20a788c))
+
+## 3.25.0-alpha.1 (2022-04-22)
+
+* release: v3.25.0-alpha.1 ([60290d4](https://github.com/mx-space/core/commit/60290d4))
+* fix: page macor ([22c9730](https://github.com/mx-space/core/commit/22c9730))
+
+## 3.25.0-alpha.0 (2022-04-22)
+
+* release: v3.25.0-alpha.0 ([fac86ab](https://github.com/mx-space/core/commit/fac86ab))
+* fix: remove only flag to run test ([947813f](https://github.com/mx-space/core/commit/947813f))
+* fix(deps): update dependency @typegoose/typegoose to v9.8.1 ([e7690c3](https://github.com/mx-space/core/commit/e7690c3))
+* fix(deps): update dependency ejs to v3.1.7 ([b35f228](https://github.com/mx-space/core/commit/b35f228))
+* feat: function eval marco ([5c33536](https://github.com/mx-space/core/commit/5c33536))
+* feat: page controller support macro ([bbc7607](https://github.com/mx-space/core/commit/bbc7607))
+* feat: text macros ([b09f231](https://github.com/mx-space/core/commit/b09f231))
+* chore(deps): update dependency lint-staged to v12.4.0 (#446) ([055e3c7](https://github.com/mx-space/core/commit/055e3c7)), closes [#446](https://github.com/mx-space/core/issues/446)
+* chore(deps): update dependency mongodb-memory-server to v8.5.0 (#438) ([0d481e8](https://github.com/mx-space/core/commit/0d481e8)), closes [#438](https://github.com/mx-space/core/issues/438)
+
+## <small>3.24.5 (2022-04-20)</small>
+
+* release: v3.24.5 ([275e58c](https://github.com/mx-space/core/commit/275e58c))
+* feat: boardcast error event ([835295e](https://github.com/mx-space/core/commit/835295e))
+* fix(deps): update dependency isbot to v3.4.6 ([5689520](https://github.com/mx-space/core/commit/5689520))
+
+## <small>3.24.4 (2022-04-19)</small>
+
+* release: v3.24.4 ([43f1d44](https://github.com/mx-space/core/commit/43f1d44))
+* chore: code style ([4ec23b3](https://github.com/mx-space/core/commit/4ec23b3))
+* chore(deps): update dependency @types/lodash to v4.14.182 ([c2fe0af](https://github.com/mx-space/core/commit/c2fe0af))
+* fix: eslint type style ([a9a8c3a](https://github.com/mx-space/core/commit/a9a8c3a))
+* fix: make ts happy ([5f45822](https://github.com/mx-space/core/commit/5f45822))
+* fix(deps): update dependency @typegoose/auto-increment to v1.3.0 (#439) ([a80eb8e](https://github.com/mx-space/core/commit/a80eb8e)), closes [#439](https://github.com/mx-space/core/issues/439)
+* fix(deps): update dependency fastify-cookie to v5.6.1 ([21e1230](https://github.com/mx-space/core/commit/21e1230))
+* fix(deps): update dependency nanoid to v3.3.3 ([38effeb](https://github.com/mx-space/core/commit/38effeb))
+* fix(deps): update dependency zx-cjs to v6.1.0 (#437) ([412ad64](https://github.com/mx-space/core/commit/412ad64)), closes [#437](https://github.com/mx-space/core/issues/437)
+
+## <small>3.24.3 (2022-04-17)</small>
+
+* release: v3.24.3 ([ecda18c](https://github.com/mx-space/core/commit/ecda18c))
+* fix: add page slug validate ([deef809](https://github.com/mx-space/core/commit/deef809))
+* fix: slugify ([f6c2456](https://github.com/mx-space/core/commit/f6c2456))
+* fix(deps): update dependency dayjs to v1.11.1 ([33bd11e](https://github.com/mx-space/core/commit/33bd11e))
+* fix(deps): update dependency fastify-swagger to v5.1.1 ([7c9a057](https://github.com/mx-space/core/commit/7c9a057))
+* fix(deps): update dependency linkedom to v0.14.6 ([2078aaa](https://github.com/mx-space/core/commit/2078aaa))
+* fix(deps): update dependency linkedom to v0.14.7 ([d9e3a69](https://github.com/mx-space/core/commit/d9e3a69))
+* fix(deps): update dependency snakecase-keys to v5.4.1 ([5cfad42](https://github.com/mx-space/core/commit/5cfad42))
+* chore: cleanup ([6365526](https://github.com/mx-space/core/commit/6365526))
+* chore(deps): update dependency @innei-util/eslint-config-ts to v0.8.2 (#426) ([fea0d81](https://github.com/mx-space/core/commit/fea0d81)), closes [#426](https://github.com/mx-space/core/issues/426)
+* chore(deps): update dependency @innei-util/prettier to v0.5.1 ([f2d9db7](https://github.com/mx-space/core/commit/f2d9db7))
+* chore(deps): update dependency @innei-util/prettier to v0.8.2 (#428) ([41a2fa0](https://github.com/mx-space/core/commit/41a2fa0)), closes [#428](https://github.com/mx-space/core/issues/428)
+* chore(deps): update dependency @types/mongoose-paginate-v2 to v1.6.4 ([91cf30d](https://github.com/mx-space/core/commit/91cf30d))
+* chore(deps): update dependency @types/node to v16.11.27 ([24da092](https://github.com/mx-space/core/commit/24da092))
+* chore(deps): update dependency lint-staged to v12.3.8 ([399013d](https://github.com/mx-space/core/commit/399013d))
+
+## <small>3.24.2 (2022-04-12)</small>
+
+* release: v3.24.2 ([d911e3c](https://github.com/mx-space/core/commit/d911e3c))
+* fix: link apply dto ([94b5df6](https://github.com/mx-space/core/commit/94b5df6))
+* chore(deps): update dependency @vercel/ncc to v0.33.4 ([2e9e296](https://github.com/mx-space/core/commit/2e9e296))
+
+## <small>3.24.1 (2022-04-11)</small>
+
+* release: v3.24.1 ([8fe9c42](https://github.com/mx-space/core/commit/8fe9c42))
+* chore(deps): update dependency webpack to v5.72.0 (#419) ([3710e70](https://github.com/mx-space/core/commit/3710e70)), closes [#419](https://github.com/mx-space/core/issues/419)
+* fix(deps): update dependency marked to v4.0.14 (#423) ([9e1d5c5](https://github.com/mx-space/core/commit/9e1d5c5)), closes [#423](https://github.com/mx-space/core/issues/423)
+* fix(deps): update dependency snakecase-keys to v5.4.0 (#414) ([e2fa729](https://github.com/mx-space/core/commit/e2fa729)), closes [#414](https://github.com/mx-space/core/issues/414)
+
+## 3.24.0 (2022-04-10)
+
+* release: v3.24.0 ([5475afd](https://github.com/mx-space/core/commit/5475afd))
+
+## 3.24.0-alpha.3 (2022-04-10)
+
+* release: v3.24.0-alpha.3 ([ac8e7e8](https://github.com/mx-space/core/commit/ac8e7e8))
+* fix: serverless module found ([f48c3a9](https://github.com/mx-space/core/commit/f48c3a9))
+
+## 3.24.0-alpha.2 (2022-04-10)
+
+* release: v3.24.0-alpha.2 ([20ae9f0](https://github.com/mx-space/core/commit/20ae9f0))
+* fix: pm2 cluster instance count ([981270b](https://github.com/mx-space/core/commit/981270b))
+* fix: shared gateway boardcast ([a32299e](https://github.com/mx-space/core/commit/a32299e))
+* fix: test config ([1bc6b61](https://github.com/mx-space/core/commit/1bc6b61))
+* fix: token auth and base curl event name ([0107909](https://github.com/mx-space/core/commit/0107909))
+* chore(deps): update dependency ioredis to v5.0.4 ([413160f](https://github.com/mx-space/core/commit/413160f))
+
+## 3.24.0-alpha.1 (2022-04-09)
+
+* release: v3.24.0-alpha.1 ([3851385](https://github.com/mx-space/core/commit/3851385))
+* refactor: auth gateway ([1abc929](https://github.com/mx-space/core/commit/1abc929))
+* fix: comment send email ([d532888](https://github.com/mx-space/core/commit/d532888))
+
+## 3.24.0-alpha.0 (2022-04-09)
+
+* release: v3.24.0-alpha.0 ([92df4dd](https://github.com/mx-space/core/commit/92df4dd))
+* fix: tsconfig ([d27b46f](https://github.com/mx-space/core/commit/d27b46f))
+* fix(deps): update babel monorepo to v7.17.9 ([4ae2542](https://github.com/mx-space/core/commit/4ae2542))
+* fix(deps): update dependency cache-manager to v3.6.1 ([89225ba](https://github.com/mx-space/core/commit/89225ba))
+* fix(deps): update dependency jszip to v3.9.1 ([aa72dbc](https://github.com/mx-space/core/commit/aa72dbc))
+* fix(deps): update dependency marked to v4.0.13 ([f46cdec](https://github.com/mx-space/core/commit/f46cdec))
+* pref: minify package ([cdb8018](https://github.com/mx-space/core/commit/cdb8018))
+* chore(deps): update dependency @nestjs/schematics to v8.0.10 ([92eaa35](https://github.com/mx-space/core/commit/92eaa35))
+* chore(deps): update nest monorepo ([a9ce6df](https://github.com/mx-space/core/commit/a9ce6df))
+
+## <small>3.23.5 (2022-04-05)</small>
+
+* release: v3.23.5 ([e48f957](https://github.com/mx-space/core/commit/e48f957))
+* fix: manager install command ([b67db72](https://github.com/mx-space/core/commit/b67db72))
+
+## <small>3.23.3 (2022-04-05)</small>
+
+* release: v3.23.3 ([30efcfc](https://github.com/mx-space/core/commit/30efcfc))
+* chore: update ioredis to v5 ([47c6ab8](https://github.com/mx-space/core/commit/47c6ab8))
+* chore(deps): update dependency webpack to v5.71.0 (#411) ([e7548e0](https://github.com/mx-space/core/commit/e7548e0)), closes [#411](https://github.com/mx-space/core/issues/411)
+* fix(deps): update dependency @nestjs/schedule to v1.1.0 (#406) ([b2e0773](https://github.com/mx-space/core/commit/b2e0773)), closes [#406](https://github.com/mx-space/core/issues/406)
+* fix(deps): update dependency jszip to v3.9.0 (#413) ([49073bb](https://github.com/mx-space/core/commit/49073bb)), closes [#413](https://github.com/mx-space/core/issues/413)
+
+## <small>3.23.2 (2022-04-05)</small>
+
+* release: v3.23.2 ([7475f81](https://github.com/mx-space/core/commit/7475f81))
+* chore: import order ([eec3cc8](https://github.com/mx-space/core/commit/eec3cc8))
+* feat: import snippets ([c86df4a](https://github.com/mx-space/core/commit/c86df4a))
+* refactor: move file ([3398dc0](https://github.com/mx-space/core/commit/3398dc0))
+
+## <small>3.23.1 (2022-04-04)</small>
+
+* release: v3.23.1 ([6e206b7](https://github.com/mx-space/core/commit/6e206b7))
+* feat: webpack build ([7638f2b](https://github.com/mx-space/core/commit/7638f2b))
+* fix: url allowed for validator ([00b6e3b](https://github.com/mx-space/core/commit/00b6e3b))
+* fix(deps): update dependency fastify-swagger to v5.1.0 (#402) ([08b214c](https://github.com/mx-space/core/commit/08b214c)), closes [#402](https://github.com/mx-space/core/issues/402)
+* fix(deps): update dependency jszip to v3.8.0 (#409) ([fc4bbb0](https://github.com/mx-space/core/commit/fc4bbb0)), closes [#409](https://github.com/mx-space/core/issues/409)
+* refactor: extract gateway boardcast ([e130ab0](https://github.com/mx-space/core/commit/e130ab0))
+* chore(deps): update dependency @nestjs/schematics to v8.0.9 ([b1bb9db](https://github.com/mx-space/core/commit/b1bb9db))
+* chore(deps): update dependency @types/lodash to v4.14.181 ([d9ae03d](https://github.com/mx-space/core/commit/d9ae03d))
+* chore(deps): update dependency mongodb-memory-server to v8.4.2 ([8a43f60](https://github.com/mx-space/core/commit/8a43f60))
+* chore(deps): update dependency prettier to v2.6.2 ([3ff3a37](https://github.com/mx-space/core/commit/3ff3a37))
+
+## 3.23.0 (2022-03-28)
+
+* release: v3.23.0 ([56927d5](https://github.com/mx-space/core/commit/56927d5))
+* fix(deps): update dependency nanoid to v3.3.2 ([f1bfecf](https://github.com/mx-space/core/commit/f1bfecf))
+
+## 3.23.0-alpha.0 (2022-03-27)
+
+* release: v3.23.0-alpha.0 ([0e0835a](https://github.com/mx-space/core/commit/0e0835a))
+* refactor: add cwd constant ([b89897a](https://github.com/mx-space/core/commit/b89897a))
+* refactor: fix type guard (#404) ([382d046](https://github.com/mx-space/core/commit/382d046)), closes [#404](https://github.com/mx-space/core/issues/404)
+* fix(deps): update dependency @nestjs/swagger to v5.2.1 ([441db06](https://github.com/mx-space/core/commit/441db06))
+* fix(deps): update nest monorepo to v8.4.3 (patch) (#401) ([c8d9572](https://github.com/mx-space/core/commit/c8d9572)), closes [#401](https://github.com/mx-space/core/issues/401)
+* chore: link module ([d982a97](https://github.com/mx-space/core/commit/d982a97))
+* chore(deps): update dependency @innei-util/prettier to v0.5.0 ([99ae5a9](https://github.com/mx-space/core/commit/99ae5a9))
+
+## <small>3.22.3 (2022-03-25)</small>
+
+* release: v3.22.3 ([905250d](https://github.com/mx-space/core/commit/905250d))
+* refactor: pty gateway file path ([de87672](https://github.com/mx-space/core/commit/de87672))
+* fix: lost rsync command ([6994b3e](https://github.com/mx-space/core/commit/6994b3e))
+* fix(deps): update dependency @typegoose/typegoose to v9.7.1 ([fb41336](https://github.com/mx-space/core/commit/fb41336))
+* chore(deps): update dependency @innei-util/eslint-config-ts to v0.5.1 ([1b9deb6](https://github.com/mx-space/core/commit/1b9deb6))
+* chore(deps): update dependency ts-jest to v27.1.4 ([511da86](https://github.com/mx-space/core/commit/511da86))
+* chore(deps): update dependency typescript to v4.6.3 ([634aa7c](https://github.com/mx-space/core/commit/634aa7c))
+
+## <small>3.22.2 (2022-03-23)</small>
+
+* release: v3.22.2 ([e08237a](https://github.com/mx-space/core/commit/e08237a))
+* fix: admin editor ([867663d](https://github.com/mx-space/core/commit/867663d))
+
+## <small>3.22.1 (2022-03-23)</small>
+
+* release: v3.22.1 ([fc5dd85](https://github.com/mx-space/core/commit/fc5dd85))
+* chore: cleanup ([7635b86](https://github.com/mx-space/core/commit/7635b86))
+* chore(deps): update actions/cache action to v3 ([49b9cbf](https://github.com/mx-space/core/commit/49b9cbf))
+* chore(deps): update dependency @nestjs/cli to v8.2.4 ([4570456](https://github.com/mx-space/core/commit/4570456))
+* chore(deps): update dependency @types/babel__core to v7.1.19 ([68f8082](https://github.com/mx-space/core/commit/68f8082))
+* chore(deps): update dependency @types/marked to v4.0.3 ([c82051d](https://github.com/mx-space/core/commit/c82051d))
+* chore(deps): update dependency tsconfig-paths to v3.14.1 ([a4a1292](https://github.com/mx-space/core/commit/a4a1292))
+* fix: lodash can not clone a function ([201afc9](https://github.com/mx-space/core/commit/201afc9))
+* fix: test error ([812f94e](https://github.com/mx-space/core/commit/812f94e))
+* fix(deps): update dependency nodemailer to v6.7.3 ([c738182](https://github.com/mx-space/core/commit/c738182))
+* fix(deps): update nest monorepo to v8.4.2 ([0e5f545](https://github.com/mx-space/core/commit/0e5f545))
+* feat: support esm import statement ([cf57a14](https://github.com/mx-space/core/commit/cf57a14))
+* feat: update docs ([facd5f6](https://github.com/mx-space/core/commit/facd5f6))
+* refactor: file structure ([b7525a5](https://github.com/mx-space/core/commit/b7525a5))
+* refactor: remove nestjs-typegoose ([cf8f7ea](https://github.com/mx-space/core/commit/cf8f7ea))
+
+## 3.22.0 (2022-03-20)
+
+* release: v3.22.0 ([6d0789a](https://github.com/mx-space/core/commit/6d0789a))
+* refactor(backup): restore user asset file ([a8570a5](https://github.com/mx-space/core/commit/a8570a5))
+
+## 3.21.0 (2022-03-19)
+
+* release: v3.21.0 ([ed4b4a9](https://github.com/mx-space/core/commit/ed4b4a9))
+* chore(deps): update dependency @types/ioredis to v4.28.10 ([de416fa](https://github.com/mx-space/core/commit/de416fa))
+* chore(deps): update dependency @types/ioredis to v4.28.9 ([fdab079](https://github.com/mx-space/core/commit/fdab079))
+* chore(deps): update dependency lint-staged to v12.3.7 ([04fa2da](https://github.com/mx-space/core/commit/04fa2da))
+* feat: friend link options ([eecb51a](https://github.com/mx-space/core/commit/eecb51a))
+* fix: docker env ([0774ce2](https://github.com/mx-space/core/commit/0774ce2))
+* fix: if no snippet match throw error ([29a0301](https://github.com/mx-space/core/commit/29a0301))
+* fix(deps): update dependency @babel/core to v7.17.8 ([452ab8b](https://github.com/mx-space/core/commit/452ab8b))
+* fix(link): filter pass link in get all api ([9ae87c5](https://github.com/mx-space/core/commit/9ae87c5))
+
+## <small>3.20.11 (2022-03-17)</small>
+
+* release: v3.20.10 ([5d75072](https://github.com/mx-space/core/commit/5d75072))
+* release: v3.20.11 ([99d8451](https://github.com/mx-space/core/commit/99d8451))
+* docs: add dev guide ([5fdc650](https://github.com/mx-space/core/commit/5fdc650))
+* chore: code style ([a68a223](https://github.com/mx-space/core/commit/a68a223))
+* chore(deps): update dependency @nestjs/cli to v8.2.3 ([c2f06b1](https://github.com/mx-space/core/commit/c2f06b1))
+* chore(deps): update dependency @types/lodash to v4.14.180 ([d762267](https://github.com/mx-space/core/commit/d762267))
+* chore(deps): update dependency lint-staged to v12.3.6 ([0791843](https://github.com/mx-space/core/commit/0791843))
+* chore(deps): update dependency mongodb-memory-server to v8.4.1 ([bd47e84](https://github.com/mx-space/core/commit/bd47e84))
+* chore(deps): update dependency prettier to v2.6.0 ([5fa7250](https://github.com/mx-space/core/commit/5fa7250))
+* fix: add allowed thrid lib ([fe75275](https://github.com/mx-space/core/commit/fe75275))
+* fix(deps): update dependency @babel/core to v7.17.7 ([b7ff531](https://github.com/mx-space/core/commit/b7ff531))
+* refactor: replace eval to validate valid function with ast parse ([b767d64](https://github.com/mx-space/core/commit/b767d64))
+
+## <small>3.20.9 (2022-03-14)</small>
+
+* release: v3.20.9 ([7b63e09](https://github.com/mx-space/core/commit/7b63e09))
+* fix: make ts happy ([d228c5d](https://github.com/mx-space/core/commit/d228c5d))
+* fix: serverless vm2 safe-eval ([c20cc59](https://github.com/mx-space/core/commit/c20cc59))
+* chore: update deps ([ad2c5d9](https://github.com/mx-space/core/commit/ad2c5d9))
+* feat: add redis storage for serverless ([7d0b71a](https://github.com/mx-space/core/commit/7d0b71a))
+* feat(serverless): support typescript ([8c74a53](https://github.com/mx-space/core/commit/8c74a53))
+
+## <small>3.20.8 (2022-03-13)</small>
+
+* release: v3.20.8 ([389fe6b](https://github.com/mx-space/core/commit/389fe6b))
+* refactor: use redis hash to store online count ([d42b60e](https://github.com/mx-space/core/commit/d42b60e))
+* feat: cache snippet ([f408129](https://github.com/mx-space/core/commit/f408129))
+* fix(serverless): add condition on query ([d98e3fb](https://github.com/mx-space/core/commit/d98e3fb))
+
+## <small>3.20.7 (2022-03-13)</small>
+
+* release: v3.20.7 ([ca93b3b](https://github.com/mx-space/core/commit/ca93b3b))
+* fix: add create field index ([088966f](https://github.com/mx-space/core/commit/088966f))
+
+## <small>3.20.6 (2022-03-12)</small>
+
+* release: v3.20.6 ([7e689d6](https://github.com/mx-space/core/commit/7e689d6))
+* feat: add serverless wildcard match ([9bc4b14](https://github.com/mx-space/core/commit/9bc4b14))
+* fix: snippet not found throw ([cf91ff8](https://github.com/mx-space/core/commit/cf91ff8))
+
+## <small>3.20.5 (2022-03-12)</small>
+
+* release: v3.20.5 ([29c9984](https://github.com/mx-space/core/commit/29c9984))
+* docs: add methods ([58c3e15](https://github.com/mx-space/core/commit/58c3e15))
+* docs: readme ([22c418d](https://github.com/mx-space/core/commit/22c418d))
+* chore: remove old proposal ([87232bc](https://github.com/mx-space/core/commit/87232bc))
+* fix: add schema field for snippet ([5ded8e1](https://github.com/mx-space/core/commit/5ded8e1))
+* fix(deps): update dependency isbot to v3.4.5 ([4b74c55](https://github.com/mx-space/core/commit/4b74c55))
+* feat: add snippet aggregate api ([faa651c](https://github.com/mx-space/core/commit/faa651c))
+* feat(serverless): add `getMaster` ([d81c2dc](https://github.com/mx-space/core/commit/d81c2dc))
+
+## <small>3.20.4 (2022-03-11)</small>
+
+* release: v3.20.4 ([fb8f7d5](https://github.com/mx-space/core/commit/fb8f7d5))
+* test: fix type error ([6f6a80f](https://github.com/mx-space/core/commit/6f6a80f))
+* feat: cron to clean require cache ([5bbdd8b](https://github.com/mx-space/core/commit/5bbdd8b))
+* feat(serverless): add res object on func ([bc5de61](https://github.com/mx-space/core/commit/bc5de61))
+* chore: update todo ([0443d15](https://github.com/mx-space/core/commit/0443d15))
+* chore(deps): update dependency ts-loader to v9.2.8 ([19ee9a6](https://github.com/mx-space/core/commit/19ee9a6))
+* chore(deps): update dependency ts-node to v10.7.0 ([a89a384](https://github.com/mx-space/core/commit/a89a384))
+* fix: after test db close ([782c128](https://github.com/mx-space/core/commit/782c128))
+* fix: ncc pack error ([d9ac794](https://github.com/mx-space/core/commit/d9ac794))
+* fix(deps): update dependency fastify-swagger to v5 ([a0a1188](https://github.com/mx-space/core/commit/a0a1188))
+* refactor: serverless module ([0fc0b6f](https://github.com/mx-space/core/commit/0fc0b6f))
+* docs: remove draft ([fd8bcdb](https://github.com/mx-space/core/commit/fd8bcdb))
+* docs: update serverless docs ([5d88d63](https://github.com/mx-space/core/commit/5d88d63))
+
+## <small>3.20.3 (2022-03-10)</small>
+
+* release: v3.20.3 ([a23f688](https://github.com/mx-space/core/commit/a23f688))
+* chore: add path expose for docker ([dfdde96](https://github.com/mx-space/core/commit/dfdde96))
+* chore: add serverless docs ([0c63e8e](https://github.com/mx-space/core/commit/0c63e8e))
+* fix: can disable require cache ([86a4b49](https://github.com/mx-space/core/commit/86a4b49))
+* feat(func): add require.resolve on mock require ([b255e6e](https://github.com/mx-space/core/commit/b255e6e))
+
+## <small>3.20.2 (2022-03-10)</small>
+
+* release: v3.20.2 ([ceb854a](https://github.com/mx-space/core/commit/ceb854a))
+* test: add serverless function test case ([45d0f0d](https://github.com/mx-space/core/commit/45d0f0d))
+* feat: add `throws` on function ([a4b3340](https://github.com/mx-space/core/commit/a4b3340))
+* feat: add function scope req res ([a62bcf3](https://github.com/mx-space/core/commit/a62bcf3))
+* fix(deps): update dependency rxjs to v7.5.5 ([370e75f](https://github.com/mx-space/core/commit/370e75f))
+
+## <small>3.20.1 (2022-03-09)</small>
+
+* release: v3.20.1 ([ec2006e](https://github.com/mx-space/core/commit/ec2006e))
+* fix: expose global modules ([93335fe](https://github.com/mx-space/core/commit/93335fe))
+* fix: hard code node path ([814d82b](https://github.com/mx-space/core/commit/814d82b))
+* fix(function): allow prefix `@mx-space` lib ([cec8334](https://github.com/mx-space/core/commit/cec8334))
+
+## 3.20.0 (2022-03-09)
+
+* release: v3.20.0 ([7bfb513](https://github.com/mx-space/core/commit/7bfb513))
+* chore: change copywrite ([d479890](https://github.com/mx-space/core/commit/d479890))
+* chore(deps): update dependency @nestjs/schematics to v8.0.8 ([eee7678](https://github.com/mx-space/core/commit/eee7678))
+* feat: function require mock and clonedeep ([ee8e98e](https://github.com/mx-space/core/commit/ee8e98e))
+* feat: http cache ([7d63d2e](https://github.com/mx-space/core/commit/7d63d2e))
+* feat: init serverless function ([b701428](https://github.com/mx-space/core/commit/b701428))
+* feat: inject mock require and ctx to serverless fun ([d0e680a](https://github.com/mx-space/core/commit/d0e680a))
+* feat: run function ([b6d6101](https://github.com/mx-space/core/commit/b6d6101))
+* fix: safe path join ([13b1021](https://github.com/mx-space/core/commit/13b1021))
+* fix: test case ([be3c650](https://github.com/mx-space/core/commit/be3c650))
+* fix: test case for snippet ([474da8a](https://github.com/mx-space/core/commit/474da8a))
+* fix(deps): update dependency fastify-swagger to v4.17.1 ([425c8d0](https://github.com/mx-space/core/commit/425c8d0))
+* refactor: async io handle ([d794f8c](https://github.com/mx-space/core/commit/d794f8c))
+* docs: serverless proposal ([dbb4688](https://github.com/mx-space/core/commit/dbb4688))
+
+## <small>3.19.1 (2022-03-06)</small>
+
+* release: v3.19.1 ([2478159](https://github.com/mx-space/core/commit/2478159))
+* feat: add admin db query ([d9cadc8](https://github.com/mx-space/core/commit/d9cadc8))
+* fix: add ApiName for link controller ([29c60cc](https://github.com/mx-space/core/commit/29c60cc))
+* fix(deps): update dependency xss to v1.0.11 ([331c192](https://github.com/mx-space/core/commit/331c192))
+* chore: update deps ([9c86ecc](https://github.com/mx-space/core/commit/9c86ecc))
+* chore(deps): update dependency lint-staged to v12.3.5 ([b28e723](https://github.com/mx-space/core/commit/b28e723))
+
+## 3.19.0 (2022-03-03)
+
+* release: v3.19.0 ([371f169](https://github.com/mx-space/core/commit/371f169))
+* chore(deps): update dependency @nestjs/cli to v8.2.2 ([cc592c0](https://github.com/mx-space/core/commit/cc592c0))
+* fix: query with password post in timeline ([bf370c1](https://github.com/mx-space/core/commit/bf370c1))
+* fix: remove post model `hide` field ([20f0b4d](https://github.com/mx-space/core/commit/20f0b4d))
+
+## <small>3.18.12 (2022-03-02)</small>
+
+* release: v3.18.12 ([fad4a78](https://github.com/mx-space/core/commit/fad4a78))
+* chore(deps): update actions/checkout action to v3 ([9bb9717](https://github.com/mx-space/core/commit/9bb9717))
+* chore(deps): update actions/setup-node action to v3 ([7208481](https://github.com/mx-space/core/commit/7208481))
+* chore(deps): update dependency @types/cache-manager to v3.4.3 ([8970b7c](https://github.com/mx-space/core/commit/8970b7c))
+* chore(deps): update dependency @types/lodash to v4.14.179 ([264a0fc](https://github.com/mx-space/core/commit/264a0fc))
+* chore(deps): update dependency ts-loader to v9.2.7 ([8743f96](https://github.com/mx-space/core/commit/8743f96))
+* chore(deps): update dependency ts-node to v10.6.0 ([e3bf6e4](https://github.com/mx-space/core/commit/e3bf6e4))
+* chore(deps): update dependency typescript to v4.6.2 ([4552ec8](https://github.com/mx-space/core/commit/4552ec8))
+* fix: remove now releatival ([4e3d9ec](https://github.com/mx-space/core/commit/4e3d9ec))
+* fix: shanghai tz for docker ([f8c900c](https://github.com/mx-space/core/commit/f8c900c))
+* fix(deps): update dependency @nestjs/event-emitter to v1.1.0 ([d2561c6](https://github.com/mx-space/core/commit/d2561c6))
+* fix(deps): update dependency @typegoose/auto-increment to v1.2.0 ([eb0ac32](https://github.com/mx-space/core/commit/eb0ac32))
+* fix(deps): update dependency algoliasearch to v4.12.2 ([bd553b4](https://github.com/mx-space/core/commit/bd553b4))
+* fix(deps): update dependency dayjs to v1.10.8 ([4a9b36b](https://github.com/mx-space/core/commit/4a9b36b))
+* fix(deps): update dependency fastify-cookie to v5.6.0 ([24cbb7c](https://github.com/mx-space/core/commit/24cbb7c))
+* fix(deps): update dependency mongoose-paginate-v2 to v1.6.3 ([3cd6a56](https://github.com/mx-space/core/commit/3cd6a56))
+* fix(deps): update nest monorepo to v8.4.0 ([399cfc1](https://github.com/mx-space/core/commit/399cfc1))
+
+## <small>3.18.11 (2022-02-25)</small>
+
+* release: v3.18.11 ([de5d017](https://github.com/mx-space/core/commit/de5d017))
+* fix: gateway ([3e271d0](https://github.com/mx-space/core/commit/3e271d0))
+* fix: pageproxy inject env in local proxy ([130f6f0](https://github.com/mx-space/core/commit/130f6f0))
+* fix(deps): pin dependency jsdom to 19.0.0 ([cc34b8d](https://github.com/mx-space/core/commit/cc34b8d))
+* chore(deps): update dependency @types/node to v16.11.26 ([8cf0f56](https://github.com/mx-space/core/commit/8cf0f56))
+* chore(deps): update pnpm/action-setup action to v2.2.1 ([b3a8b01](https://github.com/mx-space/core/commit/b3a8b01))
+
+## <small>3.18.10 (2022-02-24)</small>
+
+* release: v3.18.10 ([3a32ef7](https://github.com/mx-space/core/commit/3a32ef7))
+* pref: add cache for static assets ([0d31c43](https://github.com/mx-space/core/commit/0d31c43))
+* fix: docker script ([ae4a660](https://github.com/mx-space/core/commit/ae4a660))
+* fix: write file sync ([6d9694e](https://github.com/mx-space/core/commit/6d9694e))
+
+## <small>3.18.9 (2022-02-24)</small>
+
+* release: v3.18.9 ([2de994f](https://github.com/mx-space/core/commit/2de994f))
+* fix: stop when error ([f9147fb](https://github.com/mx-space/core/commit/f9147fb))
+* chore: rename step ([c26b092](https://github.com/mx-space/core/commit/c26b092))
+
+## <small>3.18.8 (2022-02-24)</small>
+
+* release: v3.18.8 ([6894da2](https://github.com/mx-space/core/commit/6894da2))
+* fix: ci build script ([eeea74e](https://github.com/mx-space/core/commit/eeea74e))
+* fix: ignore global prefix for proxy route ([93d37f3](https://github.com/mx-space/core/commit/93d37f3))
+* fix: path base ([d575bde](https://github.com/mx-space/core/commit/d575bde))
+* fix: remove windows build ([768ef59](https://github.com/mx-space/core/commit/768ef59))
+* feat: add bundled local admin asset and entry ([786201d](https://github.com/mx-space/core/commit/786201d))
+* chore(deps): update dependency @nestjs/schematics to v8.0.7 ([6fc9594](https://github.com/mx-space/core/commit/6fc9594))
+* chore(deps): update dependency @types/jest to v27.4.1 ([f308087](https://github.com/mx-space/core/commit/f308087))
+
+## <small>3.18.7 (2022-02-23)</small>
+
+* release: v3.18.7 ([b9445b5](https://github.com/mx-space/core/commit/b9445b5))
+* docs: update ([a590cbc](https://github.com/mx-space/core/commit/a590cbc))
+* feat: add shebang ([a973fbb](https://github.com/mx-space/core/commit/a973fbb))
+* fix(ci): windows shell ([106e318](https://github.com/mx-space/core/commit/106e318))
+
+## <small>3.18.6 (2022-02-23)</small>
+
+* release: v3.18.6 ([22e172a](https://github.com/mx-space/core/commit/22e172a))
+* fix: deploy script ([74a546b](https://github.com/mx-space/core/commit/74a546b))
+* fix: matrix build ci ([b261350](https://github.com/mx-space/core/commit/b261350))
+
+## <small>3.18.5 (2022-02-23)</small>
+
+* release: v3.18.5 ([273ddd7](https://github.com/mx-space/core/commit/273ddd7))
+* Revert "release: v3.18.5" ([b2e0bf1](https://github.com/mx-space/core/commit/b2e0bf1))
+* fix: build ci action ([703cd1c](https://github.com/mx-space/core/commit/703cd1c))
+* fix: update mongoose ([19b5740](https://github.com/mx-space/core/commit/19b5740))
+* fix(deps): update dependency @nestjs/passport to v8.2.0 (#331) ([d10efca](https://github.com/mx-space/core/commit/d10efca)), closes [#331](https://github.com/mx-space/core/issues/331)
+* fix(deps): update dependency @nestjs/passport to v8.2.1 ([71d8d90](https://github.com/mx-space/core/commit/71d8d90))
+* fix(deps): update dependency @typegoose/typegoose to v9.7.0 ([0a2a19d](https://github.com/mx-space/core/commit/0a2a19d))
+* fix(deps): update dependency isbot to v3.4.3 ([d1c5194](https://github.com/mx-space/core/commit/d1c5194))
+* fix(deps): update dependency nanoid to v3.3.0 (#330) ([253eab9](https://github.com/mx-space/core/commit/253eab9)), closes [#330](https://github.com/mx-space/core/issues/330)
+* fix(deps): update dependency nanoid to v3.3.1 ([c5658d1](https://github.com/mx-space/core/commit/c5658d1))
+* fix(deps): update nest monorepo to v8.3.0 (#328) ([10f7d1f](https://github.com/mx-space/core/commit/10f7d1f)), closes [#328](https://github.com/mx-space/core/issues/328)
+* fix(deps): update nest monorepo to v8.3.1 ([888886e](https://github.com/mx-space/core/commit/888886e))
+* chore: add funding ([fb1c8c6](https://github.com/mx-space/core/commit/fb1c8c6))
+* chore(deps): update dependency mongodb-memory-server to v8.4.0 (#336) ([0956b8f](https://github.com/mx-space/core/commit/0956b8f)), closes [#336](https://github.com/mx-space/core/issues/336)
+* chore(deps): update pnpm/action-setup action to v2.2.0 ([6c6622a](https://github.com/mx-space/core/commit/6c6622a))
+* ci: build matrix ([abf2332](https://github.com/mx-space/core/commit/abf2332))
+* ci: update pnpm version ([ff0d639](https://github.com/mx-space/core/commit/ff0d639))
+* refactor: extract interface ([c1efdbb](https://github.com/mx-space/core/commit/c1efdbb))
+* refactor: 分离 Option Controller ([8ce4052](https://github.com/mx-space/core/commit/8ce4052))
+* feat: config jsonschema ([477b78c](https://github.com/mx-space/core/commit/477b78c))
+* feaat: replace checkbot method to use isbot lib ([e3e9b53](https://github.com/mx-space/core/commit/e3e9b53))
+
+## <small>3.18.4 (2022-02-15)</small>
+
+* release: v3.18.4 ([460b717](https://github.com/mx-space/core/commit/460b717))
+* chore(deps): update dependency @nestjs/cli to v8.2.1 ([c843a95](https://github.com/mx-space/core/commit/c843a95))
+* chore(deps): update dependency @types/node to v16.11.25 ([b863f90](https://github.com/mx-space/core/commit/b863f90))
+* chore(deps): update dependency lint-staged to v12.3.4 ([6495934](https://github.com/mx-space/core/commit/6495934))
+* feat: add log for php request ([5252e76](https://github.com/mx-space/core/commit/5252e76))
+* feat: fancy report for normal term but hack in vpty ([6aacb9c](https://github.com/mx-space/core/commit/6aacb9c))
+* docs: update ([dae8170](https://github.com/mx-space/core/commit/dae8170))
+* fix: instance up to cpus ([6ec245b](https://github.com/mx-space/core/commit/6ec245b))
+
+## <small>3.18.3 (2022-02-13)</small>
+
+* release: v3.18.3 ([3bd225a](https://github.com/mx-space/core/commit/3bd225a))
+* refactor: logger and fix color ([570b727](https://github.com/mx-space/core/commit/570b727))
+* fix: ban php request, fuck you ([bf280d2](https://github.com/mx-space/core/commit/bf280d2))
+* fix: cron start once ([b90ce6c](https://github.com/mx-space/core/commit/b90ce6c))
+* fix: error loger ([4a35231](https://github.com/mx-space/core/commit/4a35231))
+* fix: get real socket ip ([b11f269](https://github.com/mx-space/core/commit/b11f269))
+
+## <small>3.18.2 (2022-02-13)</small>
+
+* release: v3.18.2 ([4e33e59](https://github.com/mx-space/core/commit/4e33e59))
+* chore: update readme ([b458f46](https://github.com/mx-space/core/commit/b458f46))
+* chore(deps): update dependency @vercel/ncc to v0.33.3 ([fb487bc](https://github.com/mx-space/core/commit/fb487bc))
+* fix: add bash for docker alpine ([3d3e204](https://github.com/mx-space/core/commit/3d3e204))
+* fix: mkdir first ([00e2c20](https://github.com/mx-space/core/commit/00e2c20))
+* refactor: datetime util of format ([5f3dcc8](https://github.com/mx-space/core/commit/5f3dcc8))
+* refactor: global register ([658026d](https://github.com/mx-space/core/commit/658026d))
+* refactor: pty gateway ([7718de0](https://github.com/mx-space/core/commit/7718de0))
+* feat: pty session record ([0928299](https://github.com/mx-space/core/commit/0928299))
+
+## <small>3.18.1 (2022-02-12)</small>
+
+* release: v3.18.1 ([a8238a1](https://github.com/mx-space/core/commit/a8238a1))
+* fix: log clean cron ([9f8c369](https://github.com/mx-space/core/commit/9f8c369))
+* fix: pm2 cluster mode dup run cron ([f6cc468](https://github.com/mx-space/core/commit/f6cc468))
+* fix(deps): update dependency fastify-multipart to v5.3.1 ([1c9fdc9](https://github.com/mx-space/core/commit/1c9fdc9))
+* fix(deps): update dependency mongoose-paginate-v2 to v1.6.2 ([66537cf](https://github.com/mx-space/core/commit/66537cf))
+* pref: modify pageproxy indexEntryCdnUrl (#322) ([ed08d8c](https://github.com/mx-space/core/commit/ed08d8c)), closes [#322](https://github.com/mx-space/core/issues/322)
+* chore(deps): update dependency @vercel/ncc to v0.33.2 ([5cd9e43](https://github.com/mx-space/core/commit/5cd9e43))
+
+## 3.18.0 (2022-02-11)
+
+* release: v3.18.0 ([da1470a](https://github.com/mx-space/core/commit/da1470a))
+* chore: resolve typescript version ([d30ab2f](https://github.com/mx-space/core/commit/d30ab2f))
+* chore(deps): update dependency ts-node to v10.5.0 (#310) ([da38601](https://github.com/mx-space/core/commit/da38601)), closes [#310](https://github.com/mx-space/core/issues/310)
+* chore(deps): update pnpm/action-setup action to v2.1.0 (#312) ([0ff5e8b](https://github.com/mx-space/core/commit/0ff5e8b)), closes [#312](https://github.com/mx-space/core/issues/312)
+* break: remove gql ([4c56535](https://github.com/mx-space/core/commit/4c56535))
+* fix(deps): update dependency fastify-swagger to v4.15.0 (#307) ([96ea8db](https://github.com/mx-space/core/commit/96ea8db)), closes [#307](https://github.com/mx-space/core/issues/307)
+
+## <small>3.17.1 (2022-02-11)</small>
+
+* release: v3.17.1 ([ddd21fc](https://github.com/mx-space/core/commit/ddd21fc))
+* fix: docker script ([af56dc4](https://github.com/mx-space/core/commit/af56dc4))
+* fix: log & ws-log improve ([08c5311](https://github.com/mx-space/core/commit/08c5311))
+* fix(deps): update dependency @typegoose/typegoose to v9.6.2 ([cf18e76](https://github.com/mx-space/core/commit/cf18e76))
+* fix(deps): update dependency apollo-server-fastify to v3.6.3 ([99a2426](https://github.com/mx-space/core/commit/99a2426))
+* fix(deps): update dependency rxjs to v7.5.4 ([0da14aa](https://github.com/mx-space/core/commit/0da14aa))
+* chore(deps): update dependency @innei-util/prettier to v0.2.2 ([007f84c](https://github.com/mx-space/core/commit/007f84c))
+* chore(deps): update dependency @nestjs/schematics to v8.0.6 ([76b3911](https://github.com/mx-space/core/commit/76b3911))
+* chore(deps): update dependency @types/node to v16.11.24 ([650669b](https://github.com/mx-space/core/commit/650669b))
+* chore(deps): update dependency ioredis to v4.28.5 ([061aba6](https://github.com/mx-space/core/commit/061aba6))
+* chore(deps): update dependency jest to v27.5.1 ([54908ce](https://github.com/mx-space/core/commit/54908ce))
+
+## 3.17.0 (2022-02-10)
+
+* release: v3.17.0 ([3c33a61](https://github.com/mx-space/core/commit/3c33a61))
+* feat: add terminal password ([64ba198](https://github.com/mx-space/core/commit/64ba198))
+* feat: pre-run command support ([8ef6ec3](https://github.com/mx-space/core/commit/8ef6ec3))
+* feat: pty support ([f04ac9e](https://github.com/mx-space/core/commit/f04ac9e))
+* feat: terminal password support ([f20945c](https://github.com/mx-space/core/commit/f20945c))
+* fix: rename all symbols ([46bbf18](https://github.com/mx-space/core/commit/46bbf18))
+
+## <small>3.16.1 (2022-02-09)</small>
+
+* release: v3.16.1 ([7ace6ca](https://github.com/mx-space/core/commit/7ace6ca))
+* fix: rename admin repo name ([bae0f9f](https://github.com/mx-space/core/commit/bae0f9f))
+* fix: rename repo name ([3144784](https://github.com/mx-space/core/commit/3144784))
+* fix: replace version prefix `v` ([e48be83](https://github.com/mx-space/core/commit/e48be83))
+* refactor: replce node-vibrant ([962e919](https://github.com/mx-space/core/commit/962e919))
+* docs: update readme ([6b14c69](https://github.com/mx-space/core/commit/6b14c69))
+
+## 3.16.0 (2022-02-09)
+
+* release: v3.16.0 ([df02969](https://github.com/mx-space/core/commit/df02969))
+* chore: update admin version ([b46cff6](https://github.com/mx-space/core/commit/b46cff6))
+* chore: update deps ([9fdb8cc](https://github.com/mx-space/core/commit/9fdb8cc))
+* chore(deps): update dependency @types/node to v16.11.22 (#298) ([a001921](https://github.com/mx-space/core/commit/a001921)), closes [#298](https://github.com/mx-space/core/issues/298)
+* feat: add delete log ([22b6ca1](https://github.com/mx-space/core/commit/22b6ca1))
+* feat: native log ([da42721](https://github.com/mx-space/core/commit/da42721))
+* fix: admin gateway singleton ([8f73e61](https://github.com/mx-space/core/commit/8f73e61))
+* fix: ci test & search options ([35baef1](https://github.com/mx-space/core/commit/35baef1))
+* fix: guard and error pipe ([280f852](https://github.com/mx-space/core/commit/280f852))
+* fix: redis sub channel ([0e2f520](https://github.com/mx-space/core/commit/0e2f520))
+
+## <small>3.15.8 (2022-02-03)</small>
+
+* release: v3.15.8 ([8a2c90d](https://github.com/mx-space/core/commit/8a2c90d))
+* ci: fix again ([990d811](https://github.com/mx-space/core/commit/990d811))
+
+## <small>3.15.7 (2022-02-03)</small>
+
+* release: v3.15.7 ([0198a97](https://github.com/mx-space/core/commit/0198a97))
+* fix: algolia search page ([3a9aea6](https://github.com/mx-space/core/commit/3a9aea6))
+* ci: fix secrets ([d8f9af8](https://github.com/mx-space/core/commit/d8f9af8))
+* ci: revert workflow ([2812aee](https://github.com/mx-space/core/commit/2812aee))
+
+## <small>3.15.6 (2022-02-03)</small>
+
+* release: v3.15.6 ([aa6ff5b](https://github.com/mx-space/core/commit/aa6ff5b))
+* fix: jest test global env ([fe55bbc](https://github.com/mx-space/core/commit/fe55bbc))
+* fix: search by algolia populate data ([955a112](https://github.com/mx-space/core/commit/955a112))
+* pref: improve analyze query spped ([a6f8cf8](https://github.com/mx-space/core/commit/a6f8cf8))
+* ci: workflow reusing ([c7ef462](https://github.com/mx-space/core/commit/c7ef462))
+
+## <small>3.15.5 (2022-01-31)</small>
+
+* release: v3.15.5 ([6bcd86f](https://github.com/mx-space/core/commit/6bcd86f))
+* fix: check health retry and timeout ([5c4b58a](https://github.com/mx-space/core/commit/5c4b58a))
+* fix: limit apply link char length ([6c0cac1](https://github.com/mx-space/core/commit/6c0cac1))
+
+## <small>3.15.4 (2022-01-31)</small>
+
+* release: v3.15.4 ([8cd8d3e](https://github.com/mx-space/core/commit/8cd8d3e))
+* chore: update package ([9210659](https://github.com/mx-space/core/commit/9210659))
+* chore(deps): update dependency @types/marked to v4.0.2 ([7a52e43](https://github.com/mx-space/core/commit/7a52e43))
+* chore(deps): update dependency lint-staged to v12.3.2 (#286) ([6e19fdc](https://github.com/mx-space/core/commit/6e19fdc)), closes [#286](https://github.com/mx-space/core/issues/286)
+* fix(deps): update dependency @nestjs/swagger to v5.2.0 (#292) ([b8fa295](https://github.com/mx-space/core/commit/b8fa295)), closes [#292](https://github.com/mx-space/core/issues/292)
+* fix(deps): update dependency fastify-multipart to v5.3.0 (#291) ([f524a5a](https://github.com/mx-space/core/commit/f524a5a)), closes [#291](https://github.com/mx-space/core/issues/291)
+* fix(deps): update dependency graphql to v15.8.0 (#219) ([220bdb7](https://github.com/mx-space/core/commit/220bdb7)), closes [#219](https://github.com/mx-space/core/issues/219)
+* feat: link check ([5edb959](https://github.com/mx-space/core/commit/5edb959))
+
+## <small>3.15.3 (2022-01-30)</small>
+
+* release: v3.15.3 ([5f180f4](https://github.com/mx-space/core/commit/5f180f4))
+* chore: update admin version ([56d0f20](https://github.com/mx-space/core/commit/56d0f20))
+* chore: update admin version ([d50e89a](https://github.com/mx-space/core/commit/d50e89a))
+* chore(deps): update dependency @innei-util/prettier to v0.2.0 (#296) ([0f1addc](https://github.com/mx-space/core/commit/0f1addc)), closes [#296](https://github.com/mx-space/core/issues/296)
+* fix: add image prop to valid body ([911b82e](https://github.com/mx-space/core/commit/911b82e))
+* fix(deps): update dependency algoliasearch to v4.12.1 ([43bb657](https://github.com/mx-space/core/commit/43bb657))
+* fix(deps): update dependency marked to v4.0.11 ([205d837](https://github.com/mx-space/core/commit/205d837))
+* fix(deps): update dependency marked to v4.0.12 ([311d5cc](https://github.com/mx-space/core/commit/311d5cc))
+* fix(util): embed-in require vibrant ([668379a](https://github.com/mx-space/core/commit/668379a))
+
+## <small>3.15.2 (2022-01-21)</small>
+
+* release: v3.15.2 ([569c556](https://github.com/mx-space/core/commit/569c556))
+* fix: script ([85f658f](https://github.com/mx-space/core/commit/85f658f))
+
+## <small>3.15.1 (2022-01-21)</small>
+
+* release: v3.15.1 ([e4b29f5](https://github.com/mx-space/core/commit/e4b29f5))
+* fix: project vaildation ([ceb8b75](https://github.com/mx-space/core/commit/ceb8b75))
+* fix(deps): update dependency apollo-server-fastify to v3.6.2 ([f30a79e](https://github.com/mx-space/core/commit/f30a79e))
+* fix(deps): update nest monorepo to v8.2.6 ([30df4df](https://github.com/mx-space/core/commit/30df4df))
+* chore(deps): update dependency @types/node to v16.11.21 ([23f8116](https://github.com/mx-space/core/commit/23f8116))
+* chore(deps): update dependency typescript to v4.5.5 ([466d600](https://github.com/mx-space/core/commit/466d600))
+
+## 3.15.0 (2022-01-18)
+
+* release: v3.15.0 ([adeb175](https://github.com/mx-space/core/commit/adeb175))
+* chore: update admin version ([e2d99ab](https://github.com/mx-space/core/commit/e2d99ab))
+* fix: test ([a53a0c3](https://github.com/mx-space/core/commit/a53a0c3))
+* fix: test disable redis subpub ([72006a1](https://github.com/mx-space/core/commit/72006a1))
+* refactor: clean aggregate cache to event ([ab796b7](https://github.com/mx-space/core/commit/ab796b7))
+* refactor: config to ts ([9b8c4ce](https://github.com/mx-space/core/commit/9b8c4ce))
+* refactor: tq in redis ([7320592](https://github.com/mx-space/core/commit/7320592))
+* refactor: use redis subpib instead of cluster post ([0593a0d](https://github.com/mx-space/core/commit/0593a0d))
+
+## <small>3.14.1 (2022-01-18)</small>
+
+* release: v3.14.1 ([eaa3589](https://github.com/mx-space/core/commit/eaa3589))
+* fix: worker event bus emit ([bcc90f9](https://github.com/mx-space/core/commit/bcc90f9))
+
+## 3.14.0 (2022-01-18)
+
+* release: v3.14.0 ([c80048f](https://github.com/mx-space/core/commit/c80048f))
+* chore: default enable cluster ([270e451](https://github.com/mx-space/core/commit/270e451))
+* chore(deps): update dependency @types/node to v16.11.20 ([bb304ff](https://github.com/mx-space/core/commit/bb304ff))
+* feat: make app clustering ([61f8ab9](https://github.com/mx-space/core/commit/61f8ab9))
+* fix: docker build ([9f89522](https://github.com/mx-space/core/commit/9f89522))
+
+## <small>3.13.6 (2022-01-16)</small>
+
+* release: 3.13.5 ([3e7de68](https://github.com/mx-space/core/commit/3e7de68))
+* release: v3.13.6 ([ff947c8](https://github.com/mx-space/core/commit/ff947c8))
+* refactor: config service ([70da42f](https://github.com/mx-space/core/commit/70da42f))
+* refactor: config store stateless ([286a82b](https://github.com/mx-space/core/commit/286a82b))
+* refactor: gateway socket stateless ([88e4741](https://github.com/mx-space/core/commit/88e4741))
+* chore: remove field ([966112c](https://github.com/mx-space/core/commit/966112c))
+* fix(deps): update dependency marked to v4.0.10 ([b381b47](https://github.com/mx-space/core/commit/b381b47))
+* test: add mock db test ([12a2da7](https://github.com/mx-space/core/commit/12a2da7))
+* ci: deploy script ([f4e0f71](https://github.com/mx-space/core/commit/f4e0f71))
+
+## <small>3.13.4 (2022-01-13)</small>
+
+* release: v3.13.4 ([82a7c58](https://github.com/mx-space/core/commit/82a7c58))
+* feat: update mongoose to v6 ([409a5e1](https://github.com/mx-space/core/commit/409a5e1))
+* fix: test script ([ecbce84](https://github.com/mx-space/core/commit/ecbce84))
+* fix(deps): update dependency nanoid to v3.1.31 ([ccb248a](https://github.com/mx-space/core/commit/ccb248a))
+* fix(deps): update dependency nanoid to v3.1.32 (#275) ([bb59143](https://github.com/mx-space/core/commit/bb59143)), closes [#275](https://github.com/mx-space/core/issues/275)
+
+## <small>3.13.3 (2022-01-11)</small>
+
+* release: v3.13.3 ([90596a7](https://github.com/mx-space/core/commit/90596a7))
+* chore: update admin version ([824aa37](https://github.com/mx-space/core/commit/824aa37))
+* fix: universal curl sort on getAll ([ab6847e](https://github.com/mx-space/core/commit/ab6847e))
+
+## <small>3.13.2 (2022-01-11)</small>
+
+* release: v3.13.2 ([5bccc47](https://github.com/mx-space/core/commit/5bccc47))
+* fix: request scope lead to analyze error ([90d902c](https://github.com/mx-space/core/commit/90d902c))
+
+## <small>3.13.1 (2022-01-11)</small>
+
+* release: v3.13.1 ([a2cce68](https://github.com/mx-space/core/commit/a2cce68))
+* fix: backup cron ([66829b5](https://github.com/mx-space/core/commit/66829b5))
+* fix: missing deps injection ([31876a7](https://github.com/mx-space/core/commit/31876a7))
+* fix(deps): update dependency image-size to v1.0.1 ([0a79b6c](https://github.com/mx-space/core/commit/0a79b6c))
+
+## 3.13.0 (2022-01-10)
+
+* release: v3.13.0 ([c2edefb](https://github.com/mx-space/core/commit/c2edefb))
+* feat: add debug for dev ([3243d29](https://github.com/mx-space/core/commit/3243d29))
+* feat: add retry on axios req ([2af891d](https://github.com/mx-space/core/commit/2af891d))
+* chore(deps): update dependency @nestjs/cli to v8.1.8 ([4773a4d](https://github.com/mx-space/core/commit/4773a4d))
+
+## <small>3.12.11 (2022-01-10)</small>
+
+* release: v3.12.11 ([2d61d1c](https://github.com/mx-space/core/commit/2d61d1c))
+* chore: update admin version ([40f5645](https://github.com/mx-space/core/commit/40f5645))
+* fix(snippet): delete field when update ([e3a182f](https://github.com/mx-space/core/commit/e3a182f))
+
+## <small>3.12.10 (2022-01-09)</small>
+
+* release: v3.12.10 ([23ae8f3](https://github.com/mx-space/core/commit/23ae8f3))
+* fix: add reset email template api ([395f237](https://github.com/mx-space/core/commit/395f237))
+* fix: ignore analyzes collection in backup ([8b47aac](https://github.com/mx-space/core/commit/8b47aac))
+* fix(deps): update dependency fastify-swagger to v4.13.1 ([0ecd731](https://github.com/mx-space/core/commit/0ecd731))
+
+## <small>3.12.9 (2022-01-08)</small>
+
+* release: v3.12.9 ([4924ab6](https://github.com/mx-space/core/commit/4924ab6))
+* chore: change version when dev mode ([d351681](https://github.com/mx-space/core/commit/d351681))
+* chore: update admin version ([6236809](https://github.com/mx-space/core/commit/6236809))
+* chore(deps): update dependency lint-staged to v12.1.6 ([0bd9684](https://github.com/mx-space/core/commit/0bd9684))
+* chore(deps): update dependency lint-staged to v12.1.7 ([2f2c89b](https://github.com/mx-space/core/commit/2f2c89b))
+* fix(deps): update dependency marked to v4.0.9 ([89cb51a](https://github.com/mx-space/core/commit/89cb51a))
+* fix(deps): update dependency mongoose-paginate-v2 to v1.4.3 ([57c22db](https://github.com/mx-space/core/commit/57c22db))
+
+## <small>3.12.8 (2022-01-06)</small>
+
+* release: v3.12.8 ([cb27732](https://github.com/mx-space/core/commit/cb27732))
+* fix: delete note password field after compare ([8f6c644](https://github.com/mx-space/core/commit/8f6c644))
+* fix: get note timeline on with password note ([9826adc](https://github.com/mx-space/core/commit/9826adc))
+
+## <small>3.12.7 (2022-01-06)</small>
+
+* release: v3.12.7 ([d3f7683](https://github.com/mx-space/core/commit/d3f7683))
+* chore: update cdn url ([93131ec](https://github.com/mx-space/core/commit/93131ec))
+* chore: update script ([c8b537a](https://github.com/mx-space/core/commit/c8b537a))
+* chore(deps): update dependency @types/mongoose-paginate-v2 to v1.4.3 ([f9c750b](https://github.com/mx-space/core/commit/f9c750b))
+* chore(deps): update dependency @types/node to v16.11.19 ([84304ba](https://github.com/mx-space/core/commit/84304ba))
+* chore(deps): update dependency jest to v27.4.6 ([afbd408](https://github.com/mx-space/core/commit/afbd408))
+* chore(deps): update dependency jest to v27.4.7 (#262) ([af6ec2e](https://github.com/mx-space/core/commit/af6ec2e)), closes [#262](https://github.com/mx-space/core/issues/262)
+* chore(deps): update supercharge/redis-github-action action to v1.4.0 (#248) ([dffc13c](https://github.com/mx-space/core/commit/dffc13c)), closes [#248](https://github.com/mx-space/core/issues/248)
+* fix(deps): update dependency fastify-cookie to v5.5.0 (#254) ([58a5572](https://github.com/mx-space/core/commit/58a5572)), closes [#254](https://github.com/mx-space/core/issues/254)
+* fix(deps): update dependency fastify-swagger to v4.13.0 (#236) ([eb8959a](https://github.com/mx-space/core/commit/eb8959a)), closes [#236](https://github.com/mx-space/core/issues/236)
+
+## <small>3.12.6 (2022-01-04)</small>
+
+* release: v3.12.6 ([d2ef68d](https://github.com/mx-space/core/commit/d2ef68d))
+* fix: update deps yaml ([bdad503](https://github.com/mx-space/core/commit/bdad503))
+
+## <small>3.12.5 (2022-01-04)</small>
+
+* release: v3.12.5 ([adf541d](https://github.com/mx-space/core/commit/adf541d))
+* chore: update admin version ([9dc81c8](https://github.com/mx-space/core/commit/9dc81c8))
+* chore(deps): update dependency @types/ioredis to v4.28.6 ([0b34856](https://github.com/mx-space/core/commit/0b34856))
+* chore(deps): update dependency @types/ioredis to v4.28.7 ([92e6c35](https://github.com/mx-space/core/commit/92e6c35))
+* chore(deps): update dependency @types/node to v16.11.18 ([b3956ce](https://github.com/mx-space/core/commit/b3956ce))
+* chore(deps): update dependency lint-staged to v12.1.5 ([95b4fd1](https://github.com/mx-space/core/commit/95b4fd1))
+
+## <small>3.12.4 (2021-12-31)</small>
+
+* release: v3.12.4 ([9556da7](https://github.com/mx-space/core/commit/9556da7))
+* fix: change return payload on snippet api ([9573f47](https://github.com/mx-space/core/commit/9573f47))
+* chore(deps): update dependency @types/jest to v27.4.0 ([9940e9f](https://github.com/mx-space/core/commit/9940e9f))
+
+## <small>3.12.3 (2021-12-30)</small>
+
+* release: v3.12.3 ([e518de5](https://github.com/mx-space/core/commit/e518de5))
+* Update docker.yml (#251) ([b873809](https://github.com/mx-space/core/commit/b873809)), closes [#251](https://github.com/mx-space/core/issues/251)
+
+## <small>3.12.2 (2021-12-28)</small>
+
+* release: v3.12.2 ([c77e3c7](https://github.com/mx-space/core/commit/c77e3c7))
+* feat: add error message output in dev ([759c807](https://github.com/mx-space/core/commit/759c807))
+* feat(aggregate): add `url` ([497796f](https://github.com/mx-space/core/commit/497796f))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.5 ([b07bd66](https://github.com/mx-space/core/commit/b07bd66))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.6 ([36d675f](https://github.com/mx-space/core/commit/36d675f))
+* fix(search): search cron lead judge ([1c601e2](https://github.com/mx-space/core/commit/1c601e2))
+* chore(deps): update dependency @types/html-minifier to v4.0.2 ([daa5e0e](https://github.com/mx-space/core/commit/daa5e0e))
+* chore(deps): update dependency @types/mongoose-paginate-v2 to v1.4.2 ([cbc245e](https://github.com/mx-space/core/commit/cbc245e))
+* chore(deps): update dependency @types/node to v16.11.17 ([d5f89f1](https://github.com/mx-space/core/commit/d5f89f1))
+* chore(deps): update dependency lint-staged to v12.1.4 ([65afe65](https://github.com/mx-space/core/commit/65afe65))
+
+## <small>3.12.1 (2021-12-23)</small>
+
+* release: v3.12.1 ([4057c49](https://github.com/mx-space/core/commit/4057c49))
+* fix: page order ([fa66448](https://github.com/mx-space/core/commit/fa66448))
+
+## 3.12.0 (2021-12-23)
+
+* release: v3.12.0 ([530e6fe](https://github.com/mx-space/core/commit/530e6fe))
+* chore: update admin version ([25e033a](https://github.com/mx-space/core/commit/25e033a))
+* chore(deps): update dependency @types/node to v16.11.16 ([acaded7](https://github.com/mx-space/core/commit/acaded7))
+* fix(algolia): repush if config enable ([4681da9](https://github.com/mx-space/core/commit/4681da9))
+* feat(snippet): yaml support ([99a2ef0](https://github.com/mx-space/core/commit/99a2ef0))
+
+## <small>3.11.9 (2021-12-21)</small>
+
+* release: v3.11.9 ([806ee16](https://github.com/mx-space/core/commit/806ee16))
+* chore: update admin version ([c12a879](https://github.com/mx-space/core/commit/c12a879))
+* chore(deps): update dependency @types/node to v16.11.15 ([7ef2d13](https://github.com/mx-space/core/commit/7ef2d13))
+* fix(render): forhidden no access to see post ([cc72bad](https://github.com/mx-space/core/commit/cc72bad))
+* feat: allow root controller method allow all cors ([4d4eaeb](https://github.com/mx-space/core/commit/4d4eaeb))
+
+## <small>3.11.8 (2021-12-19)</small>
+
+* release: v3.11.8 ([6538906](https://github.com/mx-space/core/commit/6538906))
+* fix: note password compare ([dddd7f3](https://github.com/mx-space/core/commit/dddd7f3))
+* fix(deps): update dependency marked to v4.0.8 ([1bfc76b](https://github.com/mx-space/core/commit/1bfc76b))
+* fix(deps): update dependency passport to v0.5.1 ([e9488bd](https://github.com/mx-space/core/commit/e9488bd))
+* fix(deps): update dependency passport to v0.5.2 ([d7d5194](https://github.com/mx-space/core/commit/d7d5194))
+* fix(deps): update nest monorepo to v8.2.4 ([71cfa93](https://github.com/mx-space/core/commit/71cfa93))
+* chore(deps): update dependency @types/ioredis to v4.28.5 ([205baf1](https://github.com/mx-space/core/commit/205baf1))
+* chore(deps): update dependency @types/node to v16.11.14 ([b4e42bc](https://github.com/mx-space/core/commit/b4e42bc))
+* chore(deps): update dependency @vercel/ncc to v0.33.1 ([6608a46](https://github.com/mx-space/core/commit/6608a46))
+* chore(deps): update dependency lint-staged to v12.1.3 ([a1aed85](https://github.com/mx-space/core/commit/a1aed85))
+* chore(deps): update dependency ts-jest to v27.1.2 ([d467ce9](https://github.com/mx-space/core/commit/d467ce9))
+
+## <small>3.11.7 (2021-12-16)</small>
+
+* release: v3.11.7 ([8ad6e0e](https://github.com/mx-space/core/commit/8ad6e0e))
+* chore: update deps ([d602913](https://github.com/mx-space/core/commit/d602913))
+* chore(deps): update dependency @nestjs/cli to v8.1.6 ([20190fd](https://github.com/mx-space/core/commit/20190fd))
+* chore(deps): update dependency @types/ioredis to v4.28.4 ([cddba32](https://github.com/mx-space/core/commit/cddba32))
+* chore(deps): update dependency jest to v27.4.4 ([6e71ab4](https://github.com/mx-space/core/commit/6e71ab4))
+* chore(deps): update dependency jest to v27.4.5 ([f4d0c34](https://github.com/mx-space/core/commit/f4d0c34))
+* chore(deps): update dependency typescript to v4.5.4 ([b4e2a72](https://github.com/mx-space/core/commit/b4e2a72))
+* fix: fastify resolution ([39580d9](https://github.com/mx-space/core/commit/39580d9))
+* fix(deps): update dependency fastify-multipart to v5.2.1 (#216) ([723374a](https://github.com/mx-space/core/commit/723374a)), closes [#216](https://github.com/mx-space/core/issues/216)
+
+## <small>3.11.6 (2021-12-10)</small>
+
+* release: v3.11.6 ([e760086](https://github.com/mx-space/core/commit/e760086))
+* chore: update admin version ([7270c70](https://github.com/mx-space/core/commit/7270c70))
+* chore(deps): update dependency @types/ioredis to v4.28.2 ([8c0940b](https://github.com/mx-space/core/commit/8c0940b))
+* chore(deps): update dependency @types/ioredis to v4.28.3 ([e043f72](https://github.com/mx-space/core/commit/e043f72))
+* chore(deps): update dependency @types/lodash to v4.14.178 ([9760706](https://github.com/mx-space/core/commit/9760706))
+* chore(deps): update dependency @types/mongoose-paginate-v2 to v1.4.1 ([a383aa8](https://github.com/mx-space/core/commit/a383aa8))
+* chore(deps): update dependency @types/node to v16.11.11 ([5234a5f](https://github.com/mx-space/core/commit/5234a5f))
+* chore(deps): update dependency @types/node to v16.11.12 ([e86e102](https://github.com/mx-space/core/commit/e86e102))
+* chore(deps): update dependency @vercel/ncc to v0.33.0 (#212) ([6280cff](https://github.com/mx-space/core/commit/6280cff)), closes [#212](https://github.com/mx-space/core/issues/212)
+* chore(deps): update dependency jest to v27.4.0 ([6f38032](https://github.com/mx-space/core/commit/6f38032))
+* chore(deps): update dependency jest to v27.4.1 ([37d5ee2](https://github.com/mx-space/core/commit/37d5ee2))
+* chore(deps): update dependency jest to v27.4.2 ([4372214](https://github.com/mx-space/core/commit/4372214))
+* chore(deps): update dependency jest to v27.4.3 ([6041084](https://github.com/mx-space/core/commit/6041084))
+* chore(deps): update dependency prettier to v2.5.1 ([5a3fba0](https://github.com/mx-space/core/commit/5a3fba0))
+* chore(deps): update dependency ts-jest to v27.1.0 ([d281bcb](https://github.com/mx-space/core/commit/d281bcb))
+* chore(deps): update dependency ts-jest to v27.1.1 ([a8e6b64](https://github.com/mx-space/core/commit/a8e6b64))
+* chore(deps): update dependency typescript to v4.5.3 ([09fcfa8](https://github.com/mx-space/core/commit/09fcfa8))
+* fix: poplaute `category` field in comment list ([4c16b26](https://github.com/mx-space/core/commit/4c16b26))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.4 ([00a3680](https://github.com/mx-space/core/commit/00a3680))
+* fix(deps): update dependency marked to v4.0.6 ([230d0b2](https://github.com/mx-space/core/commit/230d0b2))
+* fix(deps): update dependency marked to v4.0.7 ([1e3949c](https://github.com/mx-space/core/commit/1e3949c))
+* fix(deps): update dependency nodemailer to v6.7.2 ([4f8bed3](https://github.com/mx-space/core/commit/4f8bed3))
+
+## <small>3.11.5 (2021-11-26)</small>
+
+* release: v3.11.5 ([c07829e](https://github.com/mx-space/core/commit/c07829e))
+* test: skip auth in test only ([aee8253](https://github.com/mx-space/core/commit/aee8253))
+
+## <small>3.11.4 (2021-11-26)</small>
+
+* release: v3.11.4 ([4b17a9c](https://github.com/mx-space/core/commit/4b17a9c))
+* fix(auth): !!!accidentally bypassing authentication ([89d36a8](https://github.com/mx-space/core/commit/89d36a8))
+* fix(deps): update dependency class-transformer to v0.5.1 (#193) ([6fff33d](https://github.com/mx-space/core/commit/6fff33d)), closes [#193](https://github.com/mx-space/core/issues/193)
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.3 ([2b7a333](https://github.com/mx-space/core/commit/2b7a333))
+* fix(deps): update dependency fastify-cookie to v5.4.0 (#197) ([6c415cf](https://github.com/mx-space/core/commit/6c415cf)), closes [#197](https://github.com/mx-space/core/issues/197)
+* fix(deps): update dependency marked to v4.0.5 ([e86d5d8](https://github.com/mx-space/core/commit/e86d5d8))
+* fix(search): poplute truely field `category` ([c65ef2d](https://github.com/mx-space/core/commit/c65ef2d))
+* chore(deps): update dependency lint-staged to v12.1.2 (#194) ([bf11362](https://github.com/mx-space/core/commit/bf11362)), closes [#194](https://github.com/mx-space/core/issues/194)
+* chore(deps): update dependency prettier to v2.5.0 (#201) ([046e481](https://github.com/mx-space/core/commit/046e481)), closes [#201](https://github.com/mx-space/core/issues/201)
+* chore(deps): update dependency tsconfig-paths to v3.12.0 (#191) ([c50552d](https://github.com/mx-space/core/commit/c50552d)), closes [#191](https://github.com/mx-space/core/issues/191)
+
+## <small>3.11.3 (2021-11-24)</small>
+
+* release: v3.11.3 ([0a99096](https://github.com/mx-space/core/commit/0a99096))
+* chore: update admin version ([1cb4710](https://github.com/mx-space/core/commit/1cb4710))
+* chore: update admin version ([91eb025](https://github.com/mx-space/core/commit/91eb025))
+* chore(admin): merge package field ([53b95b4](https://github.com/mx-space/core/commit/53b95b4))
+* chore(deps): update dependency @types/node to v16.11.10 ([521e0b0](https://github.com/mx-space/core/commit/521e0b0))
+* fix: add auth on `tool` controller ([1bd29b7](https://github.com/mx-space/core/commit/1bd29b7))
+* fix: change typo ([49db94c](https://github.com/mx-space/core/commit/49db94c))
+* fix: update lock file ([c76af4e](https://github.com/mx-space/core/commit/c76af4e))
+* fix(deps): update dependency @nestjs/graphql to v9.1.2 ([e423f92](https://github.com/mx-space/core/commit/e423f92))
+* fix(deps): update dependency class-validator to v0.13.2 ([d739bb3](https://github.com/mx-space/core/commit/d739bb3))
+* fix(deps): update nest monorepo to v8.2.3 ([7438fef](https://github.com/mx-space/core/commit/7438fef))
+* fix(recently): multi-choice `before` and `after` ([be4ebd3](https://github.com/mx-space/core/commit/be4ebd3))
+* refactor: pageproxy ([9373cd5](https://github.com/mx-space/core/commit/9373cd5))
+
+## <small>3.11.2 (2021-11-20)</small>
+
+* release: v3.11.2 ([ad81ab7](https://github.com/mx-space/core/commit/ad81ab7))
+* chore: update dashboard version ([9a8470f](https://github.com/mx-space/core/commit/9a8470f))
+* chore(deps): update dependency typescript to v4.5.2 (#181) ([397bf85](https://github.com/mx-space/core/commit/397bf85)), closes [#181](https://github.com/mx-space/core/issues/181)
+* chore(deps): update supercharge/mongodb-github-action action to v1.7.0 (#174) ([aa22a57](https://github.com/mx-space/core/commit/aa22a57)), closes [#174](https://github.com/mx-space/core/issues/174)
+* fix: config merge ([cf0b3aa](https://github.com/mx-space/core/commit/cf0b3aa))
+* fix(deps): update dependency marked to v4.0.4 (#190) ([e4467f3](https://github.com/mx-space/core/commit/e4467f3)), closes [#190](https://github.com/mx-space/core/issues/190)
+
+## <small>3.11.1 (2021-11-19)</small>
+
+* release: v3.11.1 ([a510e1a](https://github.com/mx-space/core/commit/a510e1a))
+* fix: add `id` on login  payload ([4803a4d](https://github.com/mx-space/core/commit/4803a4d))
+* fix(deps): update dependency @nestjs/schedule to v1.0.2 ([74eed91](https://github.com/mx-space/core/commit/74eed91))
+* fix(deps): update dependency @nestjs/swagger to v5.1.5 ([75f485f](https://github.com/mx-space/core/commit/75f485f))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.1 ([dc967d5](https://github.com/mx-space/core/commit/dc967d5))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.2 ([654a5aa](https://github.com/mx-space/core/commit/654a5aa))
+* test: add attche token to header test ([9b614c0](https://github.com/mx-space/core/commit/9b614c0))
+* chore(deps): update dependency @types/jest to v27.0.3 ([00a70ec](https://github.com/mx-space/core/commit/00a70ec))
+* chore(deps): update dependency @types/marked to v4.0.1 ([f6462d8](https://github.com/mx-space/core/commit/f6462d8))
+* chore(deps): update dependency @types/node to v16.11.8 ([169f3b3](https://github.com/mx-space/core/commit/169f3b3))
+* chore(deps): update dependency @types/node to v16.11.9 ([9a1b20e](https://github.com/mx-space/core/commit/9a1b20e))
+* chore(deps): update dependency lint-staged to v12.0.3 ([587a18e](https://github.com/mx-space/core/commit/587a18e))
+* chore(deps): update nest monorepo ([916f79b](https://github.com/mx-space/core/commit/916f79b))
+
+## 3.11.0 (2021-11-17)
+
+* release: v3.11.0 ([ace91fd](https://github.com/mx-space/core/commit/ace91fd))
+* chore: update dashboard version ([63a9d15](https://github.com/mx-space/core/commit/63a9d15))
+* refactor(category): adjust aggregate multi-category ([dbbc3e2](https://github.com/mx-space/core/commit/dbbc3e2))
+
+## <small>3.10.3 (2021-11-17)</small>
+
+* release: v3.10.3 ([5e79851](https://github.com/mx-space/core/commit/5e79851))
+* fix(deps): update dependency cache-manager to v3.6.0 (#168) ([e6b506e](https://github.com/mx-space/core/commit/e6b506e)), closes [#168](https://github.com/mx-space/core/issues/168)
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.10.10 ([200ab81](https://github.com/mx-space/core/commit/200ab81))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.11.0 (#179) ([43c6250](https://github.com/mx-space/core/commit/43c6250)), closes [#179](https://github.com/mx-space/core/issues/179)
+* fix(deps): update dependency marked to v4.0.3 ([b078f2d](https://github.com/mx-space/core/commit/b078f2d))
+* fix(deps): update dependency nodemailer to v6.7.1 ([b27e122](https://github.com/mx-space/core/commit/b27e122))
+* fix(deps): update dependency snakecase-keys to v5.1.2 ([79db46e](https://github.com/mx-space/core/commit/79db46e))
+* fix(deps): update nest monorepo to v8.2.1 ([e757b86](https://github.com/mx-space/core/commit/e757b86))
+* fix(tag): return correct tag name ([64e31b9](https://github.com/mx-space/core/commit/64e31b9))
+* chore(deps): pin dependency @types/marked to 4.0.0 ([b3056f1](https://github.com/mx-space/core/commit/b3056f1))
+* chore(deps): update dependency @nestjs/schematics to v8.0.5 ([21d51c3](https://github.com/mx-space/core/commit/21d51c3))
+* chore(deps): update dependency @types/lodash to v4.14.177 ([dcb09d0](https://github.com/mx-space/core/commit/dcb09d0))
+* chore(deps): update dependency @vercel/ncc to v0.32.0 (#178) ([f0c308d](https://github.com/mx-space/core/commit/f0c308d)), closes [#178](https://github.com/mx-space/core/issues/178)
+* chore(deps): update dependency lint-staged to v12 (#171) ([34f268d](https://github.com/mx-space/core/commit/34f268d)), closes [#171](https://github.com/mx-space/core/issues/171)
+
+## <small>3.10.2 (2021-11-16)</small>
+
+* release: v3.10.2 ([d59054a](https://github.com/mx-space/core/commit/d59054a))
+* fix: lint error ([137d723](https://github.com/mx-space/core/commit/137d723))
+* fix(category): return origial enum if truely type ([856b06f](https://github.com/mx-space/core/commit/856b06f))
+* fix(comment): return new comment after reply ([4dfdae6](https://github.com/mx-space/core/commit/4dfdae6))
+* fix(deps): update dependency apollo-server-fastify to v3.4.1 ([cb987d8](https://github.com/mx-space/core/commit/cb987d8))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.10.7 ([fe7363f](https://github.com/mx-space/core/commit/fe7363f))
+* fix(deps): update dependency fastify-cookie to v5.3.2 ([bf7ba52](https://github.com/mx-space/core/commit/bf7ba52))
+* chore: update admin version ([c478538](https://github.com/mx-space/core/commit/c478538))
+* chore: update deps ([5628c33](https://github.com/mx-space/core/commit/5628c33))
+* chore: update marked ([ba700b4](https://github.com/mx-space/core/commit/ba700b4))
+* chore(deps): update dependency @types/ioredis to v4.28.0 ([3587191](https://github.com/mx-space/core/commit/3587191))
+* chore(deps): update dependency @types/ioredis to v4.28.1 ([654dd9c](https://github.com/mx-space/core/commit/654dd9c))
+* chore(deps): update dependency @types/marked to v3.0.3 ([0f5a20d](https://github.com/mx-space/core/commit/0f5a20d))
+* chore(deps): update dependency @types/node to v16.11.7 ([e16511b](https://github.com/mx-space/core/commit/e16511b))
+* test: add markdown unit test & fix typo ([40ab803](https://github.com/mx-space/core/commit/40ab803))
+
+## <small>3.10.1 (2021-10-30)</small>
+
+* release: v3.10.1 ([01db8f1](https://github.com/mx-space/core/commit/01db8f1))
+* fix(deps): update dependency @nestjs/graphql to v9.1.1 (#131) ([e5c6618](https://github.com/mx-space/core/commit/e5c6618)), closes [#131](https://github.com/mx-space/core/issues/131)
+* fix(deps): update dependency algoliasearch to v4.11.0 (#132) ([e741f69](https://github.com/mx-space/core/commit/e741f69)), closes [#132](https://github.com/mx-space/core/issues/132)
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.10.6 ([25c1576](https://github.com/mx-space/core/commit/25c1576))
+* fix(deps): update dependency fastify-swagger to v4.12.6 ([54a9fa7](https://github.com/mx-space/core/commit/54a9fa7))
+* fix(deps): update dependency graphql to v15.7.2 (#151) ([b26cb48](https://github.com/mx-space/core/commit/b26cb48)), closes [#151](https://github.com/mx-space/core/issues/151)
+* fix(deps): update dependency marked to v3.0.8 ([7b07846](https://github.com/mx-space/core/commit/7b07846))
+* fix(deps): update dependency ua-parser-js to v0.7.30 ([8b2fac2](https://github.com/mx-space/core/commit/8b2fac2))
+* fix(deps): update dependency ua-parser-js to v0.7.31 ([cdf2835](https://github.com/mx-space/core/commit/cdf2835))
+* fix(deps): update dependency ua-parser-js to v1 (#142) ([4aa6874](https://github.com/mx-space/core/commit/4aa6874)), closes [#142](https://github.com/mx-space/core/issues/142)
+* fix(deps): update nest monorepo to v8.1.2 ([70e5726](https://github.com/mx-space/core/commit/70e5726))
+* chore(deps): update dependency @types/node to v16.11.6 ([6eb2442](https://github.com/mx-space/core/commit/6eb2442))
+* chore(deps): update dependency @types/node to v16.9.6 ([6300778](https://github.com/mx-space/core/commit/6300778))
+* chore(deps): update dependency lint-staged to v11.2.4 ([2213cab](https://github.com/mx-space/core/commit/2213cab))
+* chore(deps): update dependency lint-staged to v11.2.5 ([e4eaa8a](https://github.com/mx-space/core/commit/e4eaa8a))
+* chore(deps): update dependency lint-staged to v11.2.6 ([36018b5](https://github.com/mx-space/core/commit/36018b5))
+* chore(deps): update dependency ts-node to v10.4.0 (#143) ([1a4e8c5](https://github.com/mx-space/core/commit/1a4e8c5)), closes [#143](https://github.com/mx-space/core/issues/143)
+
+## 3.10.0 (2021-10-22)
+
+* release: v3.10.0 ([d38870e](https://github.com/mx-space/core/commit/d38870e))
+* chore: move file ([80080c5](https://github.com/mx-space/core/commit/80080c5))
+* chore: update admin version ([1a48300](https://github.com/mx-space/core/commit/1a48300))
+* chore(deps): update dependency @nestjs/cli to v8.1.4 ([9c729d1](https://github.com/mx-space/core/commit/9c729d1))
+* chore(deps): update dependency @nestjs/schematics to v8.0.4 ([146dbd6](https://github.com/mx-space/core/commit/146dbd6))
+* chore(deps): update dependency @types/ioredis to v4.27.8 ([b8063f4](https://github.com/mx-space/core/commit/b8063f4))
+* chore(deps): update dependency @types/lodash to v4.14.176 ([78ac1eb](https://github.com/mx-space/core/commit/78ac1eb))
+* chore(deps): update dependency @types/marked to v3.0.2 ([0cb53bf](https://github.com/mx-space/core/commit/0cb53bf))
+* chore(deps): update dependency husky to v7.0.4 ([dec531c](https://github.com/mx-space/core/commit/dec531c))
+* chore(deps): update dependency jest to v27.3.1 (#129) ([7a74adb](https://github.com/mx-space/core/commit/7a74adb)), closes [#129](https://github.com/mx-space/core/issues/129)
+* chore(deps): update dependency ts-jest to v27.0.6 ([8d70bb4](https://github.com/mx-space/core/commit/8d70bb4))
+* chore(deps): update dependency ts-jest to v27.0.7 ([50b1247](https://github.com/mx-space/core/commit/50b1247))
+* chore(deps): update dependency ts-node to v10.3.1 ([455554a](https://github.com/mx-space/core/commit/455554a))
+* dev/snippet (#130) ([4b7378a](https://github.com/mx-space/core/commit/4b7378a)), closes [#130](https://github.com/mx-space/core/issues/130)
+* fix: create-tag script ([6548555](https://github.com/mx-space/core/commit/6548555))
+* fix(deps): update dependency @nestjs/swagger to v5.1.1 ([1cc7fdf](https://github.com/mx-space/core/commit/1cc7fdf))
+* fix(deps): update dependency @nestjs/swagger to v5.1.3 ([6097c54](https://github.com/mx-space/core/commit/6097c54))
+* fix(deps): update dependency @nestjs/swagger to v5.1.4 ([b3f9adb](https://github.com/mx-space/core/commit/b3f9adb))
+* fix(deps): update dependency fastify-swagger to v4.12.5 ([0800654](https://github.com/mx-space/core/commit/0800654))
+* fix(deps): update dependency mongoose-lean-virtuals to v0.9.0 (#122) ([3f70923](https://github.com/mx-space/core/commit/3f70923)), closes [#122](https://github.com/mx-space/core/issues/122)
+* refactor: change page type ([3e48716](https://github.com/mx-space/core/commit/3e48716))
+
+## <small>3.9.5 (2021-10-14)</small>
+
+* release: v3.9.5 ([55ce596](https://github.com/mx-space/core/commit/55ce596))
+* chore: remove debug workflow ([e1a17af](https://github.com/mx-space/core/commit/e1a17af))
+* test: docker ([453b226](https://github.com/mx-space/core/commit/453b226))
+* test: docker build ([f7e1722](https://github.com/mx-space/core/commit/f7e1722))
+* test: server ci ([6852a7a](https://github.com/mx-space/core/commit/6852a7a))
+* fix: downgrade eslint to v7 ([8928574](https://github.com/mx-space/core/commit/8928574))
+
+## <small>3.9.4 (2021-10-14)</small>
+
+* release: v3.9.4 ([19058c0](https://github.com/mx-space/core/commit/19058c0))
+* chore: update deps ([10cb574](https://github.com/mx-space/core/commit/10cb574))
+* fix(deps): update dependency nanoid to v3.1.30 ([7fe753c](https://github.com/mx-space/core/commit/7fe753c))
+
+## <small>3.9.3 (2021-10-13)</small>
+
+* release: v3.9.3 ([d188688](https://github.com/mx-space/core/commit/d188688))
+* fix: argv import ([46fc667](https://github.com/mx-space/core/commit/46fc667))
+
+## <small>3.9.2 (2021-10-13)</small>
+
+* release: v3.9.2 ([0c51cd1](https://github.com/mx-space/core/commit/0c51cd1))
+* chore: update dashboard version ([370cdd8](https://github.com/mx-space/core/commit/370cdd8))
+* chore: update deps ([c949ce3](https://github.com/mx-space/core/commit/c949ce3))
+* chore(deps): update dependency @types/ioredis to v4.27.7 ([500a18b](https://github.com/mx-space/core/commit/500a18b))
+* chore(deps): update dependency jest to v27.2.5 ([cb1ad68](https://github.com/mx-space/core/commit/cb1ad68))
+* chore(deps): update dependency lint-staged to v11.2.1 ([ae24f04](https://github.com/mx-space/core/commit/ae24f04))
+* chore(deps): update dependency lint-staged to v11.2.2 ([312afad](https://github.com/mx-space/core/commit/312afad))
+* chore(deps): update dependency lint-staged to v11.2.3 ([97fddce](https://github.com/mx-space/core/commit/97fddce))
+* chore(deps): update dependency ts-node to v10.3.0 (#116) ([76e0a52](https://github.com/mx-space/core/commit/76e0a52)), closes [#116](https://github.com/mx-space/core/issues/116)
+* chore(deps): update dependency typescript to v4.4.4 ([5e6ff52](https://github.com/mx-space/core/commit/5e6ff52))
+* fix(deps): update dependency @nestjs/graphql to v9.0.6 ([def3691](https://github.com/mx-space/core/commit/def3691))
+* fix(deps): update dependency apollo-server-fastify to v3.4.0 (#117) ([98c30fa](https://github.com/mx-space/core/commit/98c30fa)), closes [#117](https://github.com/mx-space/core/issues/117)
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.10.5 ([7405202](https://github.com/mx-space/core/commit/7405202))
+* fix(deps): update dependency fastify-multipart to v5.0.2 ([af9bfbc](https://github.com/mx-space/core/commit/af9bfbc))
+* fix(deps): update dependency marked to v3.0.7 ([ff188c5](https://github.com/mx-space/core/commit/ff188c5))
+* fix(deps): update dependency nodemailer to v6.7.0 (#115) ([413df05](https://github.com/mx-space/core/commit/413df05)), closes [#115](https://github.com/mx-space/core/issues/115)
+* fix(deps): update dependency xss to v1.0.10 ([6d355e0](https://github.com/mx-space/core/commit/6d355e0))
+* feat: update admin versiob ([24fa8c0](https://github.com/mx-space/core/commit/24fa8c0))
+
+## <small>3.9.1 (2021-10-07)</small>
+
+* release: v3.9.1 ([6195d7f](https://github.com/mx-space/core/commit/6195d7f))
+* fix: backup default option and update admin version ([cf4323b](https://github.com/mx-space/core/commit/cf4323b))
+* fix(deps): update dependency camelcase-keys to v7.0.1 (#96) ([eb931e5](https://github.com/mx-space/core/commit/eb931e5)), closes [#96](https://github.com/mx-space/core/issues/96)
+* fix(deps): update dependency graphql to v15.6.1 (#101) ([8675623](https://github.com/mx-space/core/commit/8675623)), closes [#101](https://github.com/mx-space/core/issues/101)
+* fix(deps): update dependency marked to v3.0.6 ([95fbb58](https://github.com/mx-space/core/commit/95fbb58))
+* fix(deps): update dependency nanoid to v3.1.29 (#102) ([0450161](https://github.com/mx-space/core/commit/0450161)), closes [#102](https://github.com/mx-space/core/issues/102)
+* fix(deps): update dependency snakecase-keys to v5.1.0 (#100) ([2983c06](https://github.com/mx-space/core/commit/2983c06)), closes [#100](https://github.com/mx-space/core/issues/100)
+* fix(deps): update nest monorepo to v8.0.10 (patch) (#87) ([f8f4f89](https://github.com/mx-space/core/commit/f8f4f89)), closes [#87](https://github.com/mx-space/core/issues/87)
+* chore: reduce build time ([479be86](https://github.com/mx-space/core/commit/479be86))
+* chore(deps): update dependency @types/ioredis to v4.27.6 ([7f911eb](https://github.com/mx-space/core/commit/7f911eb))
+* chore(deps): update dependency lint-staged to v11.2.0 (#99) ([3e4b12d](https://github.com/mx-space/core/commit/3e4b12d)), closes [#99](https://github.com/mx-space/core/issues/99)
+
+## 3.9.0 (2021-10-04)
+
+* release: v3.9.0 ([6c23ffa](https://github.com/mx-space/core/commit/6c23ffa))
+* feat: pageproxy can assign version ([5c6d929](https://github.com/mx-space/core/commit/5c6d929))
+
+## <small>3.8.2 (2021-10-04)</small>
+
+* release: v3.8.2 ([77fc6b4](https://github.com/mx-space/core/commit/77fc6b4))
+* fix: apply link email mark optional ([523702f](https://github.com/mx-space/core/commit/523702f))
+* feat: add pageproxy page source ([aa7e322](https://github.com/mx-space/core/commit/aa7e322))
+
+## <small>3.8.1 (2021-10-04)</small>
+
+* release: v3.8.1 ([822af93](https://github.com/mx-space/core/commit/822af93))
+* fix: markdown import logic ([bb108e4](https://github.com/mx-space/core/commit/bb108e4))
+
+## 3.8.0 (2021-10-03)
+
+* release: v3.8.0 ([d95cb98](https://github.com/mx-space/core/commit/d95cb98))
+* fix: use logger after listen ([b410e71](https://github.com/mx-space/core/commit/b410e71))
+
+## <small>3.7.10 (2021-10-03)</small>
+
+* release: v3.7.10 ([eb04d31](https://github.com/mx-space/core/commit/eb04d31))
+* feat: use custom logger ([0ce61f6](https://github.com/mx-space/core/commit/0ce61f6))
+
+## <small>3.7.9 (2021-10-03)</small>
+
+* release: v3.7.9 ([a7be95e](https://github.com/mx-space/core/commit/a7be95e))
+* refactor: change io async ([167644a](https://github.com/mx-space/core/commit/167644a))
+* refactor: markdown template theme ([c97570b](https://github.com/mx-space/core/commit/c97570b))
+* fix: Import user module repeatedly (#92) ([f7c4b42](https://github.com/mx-space/core/commit/f7c4b42)), closes [#92](https://github.com/mx-space/core/issues/92)
+* fix(deps): update dependency fastify-swagger to v4.12.4 ([cc9ad63](https://github.com/mx-space/core/commit/cc9ad63))
+
+## <small>3.7.8 (2021-10-02)</small>
+
+* release: v3.7.8 ([95ed423](https://github.com/mx-space/core/commit/95ed423))
+* fix: docker script ([fd7f9c8](https://github.com/mx-space/core/commit/fd7f9c8))
+* feat: add env for docker-compose ([9cef745](https://github.com/mx-space/core/commit/9cef745))
+
+## <small>3.7.7 (2021-10-02)</small>
+
+* release: v3.7.7 ([9103863](https://github.com/mx-space/core/commit/9103863))
+* fix: app config shared ([b7db64e](https://github.com/mx-space/core/commit/b7db64e))
+* fix: node patch ([1ea8ab2](https://github.com/mx-space/core/commit/1ea8ab2))
+* fix(deps): update dependency rxjs to v7.3.1 ([bd55864](https://github.com/mx-space/core/commit/bd55864))
+* ci: docker version ([6faf5a8](https://github.com/mx-space/core/commit/6faf5a8))
+
+## <small>3.7.6 (2021-10-01)</small>
+
+* release: v3.7.6 ([40d259d](https://github.com/mx-space/core/commit/40d259d))
+* fix: mongorestore argv ([10d6d02](https://github.com/mx-space/core/commit/10d6d02))
+
+## <small>3.7.5 (2021-10-01)</small>
+
+* release: v3.7.5 ([aca74fc](https://github.com/mx-space/core/commit/aca74fc))
+* fix: illegal operation on a directory ([8a27d4b](https://github.com/mx-space/core/commit/8a27d4b))
+
+## <small>3.7.4 (2021-10-01)</small>
+
+* release: v3.7.4 ([e0eba36](https://github.com/mx-space/core/commit/e0eba36))
+* fix: backup cmd ([855492e](https://github.com/mx-space/core/commit/855492e))
+* fix: nestjs middleware bug, use interceptor ([57f04aa](https://github.com/mx-space/core/commit/57f04aa))
+* fix: remove unnessary app info field ([c4cf9b3](https://github.com/mx-space/core/commit/c4cf9b3))
+
+## <small>3.7.3 (2021-09-30)</small>
+
+* release: v3.7.3 ([d8066e4](https://github.com/mx-space/core/commit/d8066e4))
+* fix: package lock update ([fc341d5](https://github.com/mx-space/core/commit/fc341d5))
+
+## <small>3.7.2 (2021-09-30)</small>
+
+* release: v3.7.2 ([04373c0](https://github.com/mx-space/core/commit/04373c0))
+* feat: markdown template ([990ffb5](https://github.com/mx-space/core/commit/990ffb5))
+* chore(deps): update dependency @types/ioredis to v4.27.5 ([830cab0](https://github.com/mx-space/core/commit/830cab0))
+* chore(deps): update dependency jest to v27.2.4 ([8dfd5db](https://github.com/mx-space/core/commit/8dfd5db))
+* fix(deps): update dependency fastify-swagger to v4.12.3 ([97b8652](https://github.com/mx-space/core/commit/97b8652))
+
+## <small>3.7.1 (2021-09-29)</small>
+
+* release: v3.7.1 ([beab716](https://github.com/mx-space/core/commit/beab716))
+* fix: backup after force remove temp ([53cdf9a](https://github.com/mx-space/core/commit/53cdf9a))
+* fix(deps): update dependency fastify-swagger to v4.12.2 ([1adf30d](https://github.com/mx-space/core/commit/1adf30d))
+
+## 3.7.0 (2021-09-28)
+
+* release: v3.7.0 ([9ae1f5b](https://github.com/mx-space/core/commit/9ae1f5b))
+* feat: page sort support ([8537b05](https://github.com/mx-space/core/commit/8537b05))
+* fix(deps): update dependency @nestjs/graphql to v9.0.5 ([b7b3271](https://github.com/mx-space/core/commit/b7b3271))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.10.4 (#83) ([64d1b32](https://github.com/mx-space/core/commit/64d1b32)), closes [#83](https://github.com/mx-space/core/issues/83)
+* fix(deps): update dependency fastify-multipart to v5.0.1 ([396233a](https://github.com/mx-space/core/commit/396233a))
+* fix(deps): update dependency passport to v0.5.0 (#74) ([3022736](https://github.com/mx-space/core/commit/3022736)), closes [#74](https://github.com/mx-space/core/issues/74)
+* chore(deps): update dependency @types/lodash to v4.14.175 ([d6e91ce](https://github.com/mx-space/core/commit/d6e91ce))
+* chore(deps): update dependency jest to v27.2.3 ([fd42e2e](https://github.com/mx-space/core/commit/fd42e2e))
+
+## <small>3.6.21 (2021-09-27)</small>
+
+* release: v3.6.21 ([5bdccb2](https://github.com/mx-space/core/commit/5bdccb2))
+* feat: add author and created to markdown render ([af90344](https://github.com/mx-space/core/commit/af90344))
+* fix(deps): update dependency @typegoose/auto-increment to v1 (#73) ([66715d0](https://github.com/mx-space/core/commit/66715d0)), closes [#73](https://github.com/mx-space/core/issues/73)
+* fix(deps): update dependency graphql to v15.6.0 (#66) ([db8db82](https://github.com/mx-space/core/commit/db8db82)), closes [#66](https://github.com/mx-space/core/issues/66)
+
+## <small>3.6.20 (2021-09-27)</small>
+
+* release: v3.6.20 ([5c6198d](https://github.com/mx-space/core/commit/5c6198d))
+* refactor: asset service & markdown render asset ([29618d2](https://github.com/mx-space/core/commit/29618d2))
+* fix(deps): update dependency fastify-swagger to v4.12.1 ([08a4753](https://github.com/mx-space/core/commit/08a4753))
+* fix(deps): update dependency nanoid to v3.1.28 ([28ec5ae](https://github.com/mx-space/core/commit/28ec5ae))
+
+## <small>3.6.19 (2021-09-26)</small>
+
+* release: v3.6.19 ([a6acf15](https://github.com/mx-space/core/commit/a6acf15))
+* fix: dont npm install in bump stage ([f2b7786](https://github.com/mx-space/core/commit/f2b7786))
+* fix: sequence of note list ([9abd9c2](https://github.com/mx-space/core/commit/9abd9c2))
+* fix(deps): pin dependency fastify-cookie to 5.3.1 ([cb7ec6e](https://github.com/mx-space/core/commit/cb7ec6e))
+* refactor: extract get search index method ([68d9934](https://github.com/mx-space/core/commit/68d9934))
+* docs: readme ([f657a9b](https://github.com/mx-space/core/commit/f657a9b))
+* chore: docker comment ([f0863b6](https://github.com/mx-space/core/commit/f0863b6))
+* chore(deps): update dependency jest to v27.2.2 ([5f3d134](https://github.com/mx-space/core/commit/5f3d134))
+* feat: add created on api `top` ([242c0e7](https://github.com/mx-space/core/commit/242c0e7))
+* ci: Uppercase of ci name ([7cacde6](https://github.com/mx-space/core/commit/7cacde6))
+
+## <small>3.6.18 (2021-09-25)</small>
+
+* release: v3.6.18 ([2b4a1ee](https://github.com/mx-space/core/commit/2b4a1ee))
+* fix: script bump use zx ([556bde9](https://github.com/mx-space/core/commit/556bde9))
+* refactor: remove fastify-secure-session ([bb7e5d8](https://github.com/mx-space/core/commit/bb7e5d8))
+
+## <small>3.6.17 (2021-09-25)</small>
+
+* release: v3.6.17 ([8d2a7f7](https://github.com/mx-space/core/commit/8d2a7f7))
+* fix: comment email mooogse type ([c5277e7](https://github.com/mx-space/core/commit/c5277e7))
+
+## <small>3.6.16 (2021-09-25)</small>
+
+* release: v3.6.16 ([4dd224c](https://github.com/mx-space/core/commit/4dd224c))
+* fix: hide email public for guest ([e319014](https://github.com/mx-space/core/commit/e319014))
+* fix(deps): update dependency nodemailer to v6.6.4 ([af581b2](https://github.com/mx-space/core/commit/af581b2))
+* fix(deps): update dependency nodemailer to v6.6.5 ([d6c19b8](https://github.com/mx-space/core/commit/d6c19b8))
+* fix(deps): update nest monorepo to v8.0.7 ([fa2d52c](https://github.com/mx-space/core/commit/fa2d52c))
+* chore(deps): update dependency @types/lodash to v4.14.174 ([fbd6fd9](https://github.com/mx-space/core/commit/fbd6fd9))
+
+## <small>3.6.15 (2021-09-23)</small>
+
+* release: v3.6.15 ([e3e441d](https://github.com/mx-space/core/commit/e3e441d))
+* fix: rss & sitemap cache ([a6d0812](https://github.com/mx-space/core/commit/a6d0812))
+* docs: update readme ([0238a05](https://github.com/mx-space/core/commit/0238a05))
+
+## <small>3.6.14 (2021-09-23)</small>
+
+* release: v3.6.14 ([18820ab](https://github.com/mx-space/core/commit/18820ab))
+* fix: build in docker compose ([ce9f4bc](https://github.com/mx-space/core/commit/ce9f4bc))
+* fix: node type error ([4ebc77e](https://github.com/mx-space/core/commit/4ebc77e))
+* ci: add docker ([8ec97b5](https://github.com/mx-space/core/commit/8ec97b5))
+* chore: remove unused deps ([a58dad8](https://github.com/mx-space/core/commit/a58dad8))
+* chore: update docker compose ([136345d](https://github.com/mx-space/core/commit/136345d))
+* feat: docker compose ([6e89b97](https://github.com/mx-space/core/commit/6e89b97))
+* chore:ci typo ([c5616d2](https://github.com/mx-space/core/commit/c5616d2))
+* test: add e2e ([4091339](https://github.com/mx-space/core/commit/4091339))
+
+## <small>3.6.13 (2021-09-22)</small>
+
+* release: v3.6.13 ([17ff2da](https://github.com/mx-space/core/commit/17ff2da))
+* refactor: markdown render stucture ([ab2dabb](https://github.com/mx-space/core/commit/ab2dabb))
+
+## <small>3.6.12 (2021-09-22)</small>
+
+* release: v3.6.12 ([3087c21](https://github.com/mx-space/core/commit/3087c21))
+* fix: bump script ([3a4663a](https://github.com/mx-space/core/commit/3a4663a))
+* fix: recently & remove sync config ([3f10589](https://github.com/mx-space/core/commit/3f10589))
+* fix: script again ([d9ea155](https://github.com/mx-space/core/commit/d9ea155))
+* fix: unqi ip and spam keyword ([a86ebf9](https://github.com/mx-space/core/commit/a86ebf9))
+* release: ([7d3f8b7](https://github.com/mx-space/core/commit/7d3f8b7))
+* chore: add script ([58415d6](https://github.com/mx-space/core/commit/58415d6))
+* chore: script script ([eda9837](https://github.com/mx-space/core/commit/eda9837))
+
+## <small>3.6.10 (2021-09-22)</small>
+
+* release: v3.6.10 ([36e8450](https://github.com/mx-space/core/commit/36e8450))
+* docs: add download script ([8a8b752](https://github.com/mx-space/core/commit/8a8b752))
+* docs: update ([1debe3d](https://github.com/mx-space/core/commit/1debe3d))
+* docs: update ([8b3068c](https://github.com/mx-space/core/commit/8b3068c))
+* fix: mkdir first ([a1d5666](https://github.com/mx-space/core/commit/a1d5666))
+* test: add user test ([5f9abcd](https://github.com/mx-space/core/commit/5f9abcd))
+* chore(deps): update dependency @types/jest to v27.0.2 ([24c6af3](https://github.com/mx-space/core/commit/24c6af3))
+* chore(deps): update dependency jest to v27.2.1 ([8da1c6b](https://github.com/mx-space/core/commit/8da1c6b))
+* chore(deps): update dependency ts-loader to v9.2.6 ([40eba61](https://github.com/mx-space/core/commit/40eba61))
+
+## <small>3.6.9 (2021-09-20)</small>
+
+* release: v3.6.9 ([9ab3f5d](https://github.com/mx-space/core/commit/9ab3f5d))
+* fix: counting interceptor error in gql request ([bc65a2e](https://github.com/mx-space/core/commit/bc65a2e))
+* fix(deps): pin dependency fastify-secure-session to 2.3.1 ([8d463b2](https://github.com/mx-space/core/commit/8d463b2))
+
+## <small>3.6.8 (2021-09-20)</small>
+
+* release: v3.6.8 ([1cbbe8d](https://github.com/mx-space/core/commit/1cbbe8d))
+* feat: pageproxy debug mode ([8b7532d](https://github.com/mx-space/core/commit/8b7532d))
+
+## <small>3.6.7 (2021-09-20)</small>
+
+* release: v3.6.7 ([d657994](https://github.com/mx-space/core/commit/d657994))
+* fix: jest parse json error ([997d84c](https://github.com/mx-space/core/commit/997d84c))
+* fix: pageproxy cache entty ([b36badc](https://github.com/mx-space/core/commit/b36badc))
+
+## <small>3.6.6 (2021-09-20)</small>
+
+* release: v3.6.6 ([6ed8605](https://github.com/mx-space/core/commit/6ed8605))
+* fix: add tslib 2021 ([76c5eb2](https://github.com/mx-space/core/commit/76c5eb2))
+* pref: improve something ([e5ae3f8](https://github.com/mx-space/core/commit/e5ae3f8))
+
+## <small>3.6.5 (2021-09-20)</small>
+
+* release: v3.6.5 ([64c8744](https://github.com/mx-space/core/commit/64c8744))
+* fix: empty data compatibility ([581ca9e](https://github.com/mx-space/core/commit/581ca9e))
+* feat: pageproxy enable in dev mode ([0391607](https://github.com/mx-space/core/commit/0391607))
+
+## <small>3.6.4 (2021-09-19)</small>
+
+* release: v3.6.4 ([3c45aa0](https://github.com/mx-space/core/commit/3c45aa0))
+* feat: init module ([ad1ca18](https://github.com/mx-space/core/commit/ad1ca18))
+
+## <small>3.6.3 (2021-09-19)</small>
+
+* release: v3.6.3 ([27e6e85](https://github.com/mx-space/core/commit/27e6e85))
+* docs: add changelog ([189f4cb](https://github.com/mx-space/core/commit/189f4cb))
+* fix: destruct nullable ([9ae39c4](https://github.com/mx-space/core/commit/9ae39c4))
+* chore: reduce cache ttl ([f1b608a](https://github.com/mx-space/core/commit/f1b608a))
+
+## <small>3.6.2 (2021-09-19)</small>
+
+* release: v3.6.2 ([7a4978c](https://github.com/mx-space/core/commit/7a4978c))
+* feat: taskqueue ([2dea189](https://github.com/mx-space/core/commit/2dea189))
+
+## <small>3.6.1 (2021-09-19)</small>
+
+* release: v3.6.1 ([1e9ad69](https://github.com/mx-space/core/commit/1e9ad69))
+* fix: wrong entry ([c731662](https://github.com/mx-space/core/commit/c731662))
+
+## 3.6.0 (2021-09-19)
+
+* release: v3.6.0 ([1a5f53f](https://github.com/mx-space/core/commit/1a5f53f))
+* feat: admin page proxy ([e1e28ed](https://github.com/mx-space/core/commit/e1e28ed))
+
+## <small>3.5.5 (2021-09-19)</small>
+
+* release: v3.5.5 ([e815a49](https://github.com/mx-space/core/commit/e815a49))
+* feat: geoapi init ([d81e539](https://github.com/mx-space/core/commit/d81e539))
+* feat: page proxy init ([4871871](https://github.com/mx-space/core/commit/4871871))
+* fix(deps): update dependency mongoose-lean-virtuals to v0.8.1 ([654b470](https://github.com/mx-space/core/commit/654b470))
+
+## <small>3.5.4 (2021-09-18)</small>
+
+* release: v3.5.4 ([bcaaf84](https://github.com/mx-space/core/commit/bcaaf84))
+* fix: search route ([aedd189](https://github.com/mx-space/core/commit/aedd189))
+
+## <small>3.5.2 (2021-09-18)</small>
+
+* release: v3.5.2 ([c3aed36](https://github.com/mx-space/core/commit/c3aed36))
+* fix: remove rss `,` ([c778a09](https://github.com/mx-space/core/commit/c778a09))
+
+## <small>3.5.1 (2021-09-18)</small>
+
+* release: v3.5.1 ([6da2179](https://github.com/mx-space/core/commit/6da2179))
+* fix: cache key and cron cache clean ([14e2d20](https://github.com/mx-space/core/commit/14e2d20))
+
+## 3.5.0 (2021-09-18)
+
+* release: v3.5.0 ([b65bb59](https://github.com/mx-space/core/commit/b65bb59))
+* feat: search module & algolia ([6fc3108](https://github.com/mx-space/core/commit/6fc3108))
+* fix: nullable of modified ([09f33da](https://github.com/mx-space/core/commit/09f33da))
+* fix(deps): pin dependency camelcase-keys to 7.0.0 ([043dc9d](https://github.com/mx-space/core/commit/043dc9d))
+
+## <small>3.4.5 (2021-09-18)</small>
+
+* release: v3.4.5 ([c5351ca](https://github.com/mx-space/core/commit/c5351ca))
+* fix: comment guest secure field `mail` ([cd55c9e](https://github.com/mx-space/core/commit/cd55c9e))
+* fix: gql payload type ([990c496](https://github.com/mx-space/core/commit/990c496))
+
+## <small>3.4.4 (2021-09-18)</small>
+
+* release: v3.4.4 ([5de33b0](https://github.com/mx-space/core/commit/5de33b0))
+* chore: update deps ([4b9319c](https://github.com/mx-space/core/commit/4b9319c))
+* chore(deps): update dependency @types/ioredis to v4.27.4 ([a9724b0](https://github.com/mx-space/core/commit/a9724b0))
+* fix: config readonly & clone deep ([9563ff3](https://github.com/mx-space/core/commit/9563ff3))
+
+## <small>3.4.3 (2021-09-16)</small>
+
+* release: v3.4.3 ([b1a8709](https://github.com/mx-space/core/commit/b1a8709))
+* fix: patch link data ([639904f](https://github.com/mx-space/core/commit/639904f))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.10.3 ([d857435](https://github.com/mx-space/core/commit/d857435))
+* chore(deps): update dependency @types/ioredis to v4.27.3 ([7686252](https://github.com/mx-space/core/commit/7686252))
+* chore(deps): update dependency prettier to v2.4.1 ([5605f7d](https://github.com/mx-space/core/commit/5605f7d))
+
+## <small>3.4.2 (2021-09-16)</small>
+
+* release: v3.4.2 ([07ad769](https://github.com/mx-space/core/commit/07ad769))
+* fix: cos setting camcelcase ([c5d60ea](https://github.com/mx-space/core/commit/c5d60ea))
+
+## <small>3.4.1 (2021-09-16)</small>
+
+* release: v3.4.1 ([3810c4c](https://github.com/mx-space/core/commit/3810c4c))
+* fix: wait for config load ([d786bf9](https://github.com/mx-space/core/commit/d786bf9))
+
+## 3.4.0 (2021-09-16)
+
+* release: v3.4.0 ([3534375](https://github.com/mx-space/core/commit/3534375))
+* feat: log module ([bb910d4](https://github.com/mx-space/core/commit/bb910d4))
+* chore: remove health module ([3797d63](https://github.com/mx-space/core/commit/3797d63))
+* chore(deps): pin dependencies ([24b5e02](https://github.com/mx-space/core/commit/24b5e02))
+* chore(deps): update dependency @types/lodash to v4.14.173 ([d188c7f](https://github.com/mx-space/core/commit/d188c7f))
+* chore(deps): update dependency jest to v27.2.0 ([0fbd51c](https://github.com/mx-space/core/commit/0fbd51c))
+* fix: typo ([af4ccf9](https://github.com/mx-space/core/commit/af4ccf9))
+* fix: zx global register ([90e3d14](https://github.com/mx-space/core/commit/90e3d14))
+* fix(deps): update dependency @typegoose/typegoose to v8.3.0 (#45) ([8d3c482](https://github.com/mx-space/core/commit/8d3c482)), closes [#45](https://github.com/mx-space/core/issues/45)
+* fix(deps): update dependency marked to v3.0.4 ([411a538](https://github.com/mx-space/core/commit/411a538))
+* docs: readme ([a05b226](https://github.com/mx-space/core/commit/a05b226))
+
+## <small>3.3.3 (2021-09-13)</small>
+
+* release: v3.3.3 ([863bec3](https://github.com/mx-space/core/commit/863bec3))
+* fix: nest header & render cache ([013cdef](https://github.com/mx-space/core/commit/013cdef))
+
+## <small>3.3.2 (2021-09-13)</small>
+
+* release: v3.3.2 ([1790e98](https://github.com/mx-space/core/commit/1790e98))
+* refactor: shared database service ([c0966fa](https://github.com/mx-space/core/commit/c0966fa))
+* fix: minify html mermaid parse error ([c353f4b](https://github.com/mx-space/core/commit/c353f4b))
+
+## <small>3.3.1 (2021-09-13)</small>
+
+* release: v3.3.1 ([ac9b652](https://github.com/mx-space/core/commit/ac9b652))
+* fix: ignore minify js ([0489920](https://github.com/mx-space/core/commit/0489920))
+* chore: add sourcemap ([e718dd0](https://github.com/mx-space/core/commit/e718dd0))
+
+## 3.3.0 (2021-09-13)
+
+* release: v3.3.0 ([e894182](https://github.com/mx-space/core/commit/e894182))
+* feat: gen sitemap ([0866e17](https://github.com/mx-space/core/commit/0866e17))
+* feat: minify html & improve render ([8600048](https://github.com/mx-space/core/commit/8600048))
+
+## <small>3.2.1 (2021-09-13)</small>
+
+* release: v3.2.1 ([332fb0a](https://github.com/mx-space/core/commit/332fb0a))
+* fix: new a date ([7921dd8](https://github.com/mx-space/core/commit/7921dd8))
+
+## 3.2.0 (2021-09-13)
+
+* release: v3.2.0 ([a8f7c2d](https://github.com/mx-space/core/commit/a8f7c2d))
+* refactor: use ast to parse image node ([3d04105](https://github.com/mx-space/core/commit/3d04105))
+* feat: marked parse ([b1785c2](https://github.com/mx-space/core/commit/b1785c2))
+* feat: server build rss ([058c9c2](https://github.com/mx-space/core/commit/058c9c2))
+
+## 3.1.0 (2021-09-12)
+
+* release: v3.1.0 ([a1e1682](https://github.com/mx-space/core/commit/a1e1682))
+* feat: markdown render & asset helper ([fcf4261](https://github.com/mx-space/core/commit/fcf4261))
+* chore: add gen docs script ([4c5fee4](https://github.com/mx-space/core/commit/4c5fee4))
+* chore(deps): pin dependency @types/ejs to 3.1.0 ([8ae32a8](https://github.com/mx-space/core/commit/8ae32a8))
+* fix: ecosysyem config ([5b6c207](https://github.com/mx-space/core/commit/5b6c207))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.10.2 ([850601f](https://github.com/mx-space/core/commit/850601f))
+
+## <small>3.0.6 (2021-09-11)</small>
+
+* release: v3.0.6 ([e2bd743](https://github.com/mx-space/core/commit/e2bd743))
+* feat: add email ejs template route ([3861162](https://github.com/mx-space/core/commit/3861162))
+
+## <small>3.0.5 (2021-09-11)</small>
+
+* release: v3.0.5 ([5c0be27](https://github.com/mx-space/core/commit/5c0be27))
+* chore: update script ([c8c9208](https://github.com/mx-space/core/commit/c8c9208))
+* chore(deps): update dependency jest to v27.1.1 ([21c9352](https://github.com/mx-space/core/commit/21c9352))
+* chore(deps): update dependency typescript to v4.4.3 ([3382aaa](https://github.com/mx-space/core/commit/3382aaa))
+* fix(deps): update dependency cos-nodejs-sdk-v5 to v2.10.1 ([e941840](https://github.com/mx-space/core/commit/e941840))
+
+## <small>3.0.4 (2021-09-10)</small>
+
+* release: v3.0.3 ([bbf9f46](https://github.com/mx-space/core/commit/bbf9f46))
+* release: v3.0.4 ([28e0d0b](https://github.com/mx-space/core/commit/28e0d0b))
+* fix: email from field ([7bf0041](https://github.com/mx-space/core/commit/7bf0041))
+* fix(deps): pin dependencies (#38) ([88dbd58](https://github.com/mx-space/core/commit/88dbd58)), closes [#38](https://github.com/mx-space/core/issues/38)
+* chore: deps ([3eea6d9](https://github.com/mx-space/core/commit/3eea6d9))
+* chore: remove unused deps ([6c4eb7c](https://github.com/mx-space/core/commit/6c4eb7c))
+
+## <small>3.0.2 (2021-09-10)</small>
+
+* release: v3.0.2 ([9fd09c0](https://github.com/mx-space/core/commit/9fd09c0))
+* ci: pass env ([e951652](https://github.com/mx-space/core/commit/e951652))
+
+## <small>3.0.1 (2021-09-10)</small>
+
+* release: v3.0.1 ([c94f1f3](https://github.com/mx-space/core/commit/c94f1f3))
+* feat: pass argv ([c712250](https://github.com/mx-space/core/commit/c712250))
+
+## 3.0.0 (2021-09-10)
+
+* release: v3.0.0 ([08a69ac](https://github.com/mx-space/core/commit/08a69ac))
+* fix(deps): pin dependency algoliasearch to 4.10.5 (#36) ([ab40f56](https://github.com/mx-space/core/commit/ab40f56)), closes [#36](https://github.com/mx-space/core/issues/36)
+* fix(deps): pin dependency apollo-server-fastify to 3.3.0 (#37) ([7f5b81e](https://github.com/mx-space/core/commit/7f5b81e)), closes [#37](https://github.com/mx-space/core/issues/37)
+* chore: add license ([1e24615](https://github.com/mx-space/core/commit/1e24615))
+* chore: enable bot ([91fc0c5](https://github.com/mx-space/core/commit/91fc0c5))
+* chore(deps): pin dependencies (#31) ([1dca024](https://github.com/mx-space/core/commit/1dca024)), closes [#31](https://github.com/mx-space/core/issues/31)
+
+## 3.0.0-canary.5 (2021-09-10)
+
+* release: v3.0.0-canary.5 ([6a0ff02](https://github.com/mx-space/core/commit/6a0ff02))
+* chore: remove test action ([c5cfd75](https://github.com/mx-space/core/commit/c5cfd75))
+* chore: update scripts ([070ecb2](https://github.com/mx-space/core/commit/070ecb2))
+
+## 3.0.0-canary.4 (2021-09-10)
+
+* release: v3.0.0-canary.4 ([62b6a52](https://github.com/mx-space/core/commit/62b6a52))
+* ci: re-test cd ([36234fc](https://github.com/mx-space/core/commit/36234fc))
+
+## 3.0.0-canary.3.2 (2021-09-10)
+
+* release: v3.0.0-canary.3.1 ([ed28a42](https://github.com/mx-space/core/commit/ed28a42))
+* release: v3.0.0-canary.3.2 ([9131fc1](https://github.com/mx-space/core/commit/9131fc1))
+* fix: test action ([559a48f](https://github.com/mx-space/core/commit/559a48f))
+
+## 3.0.0-canary.3.1 (2021-09-10)
+
+* release: v3.0.0-canary.3.1 ([fb28c83](https://github.com/mx-space/core/commit/fb28c83))
+
+## 3.0.0-canary.3 (2021-09-10)
+
+* release: v3.0.0-canary.3 ([9468712](https://github.com/mx-space/core/commit/9468712))
+* chore: update api version ([a0289c2](https://github.com/mx-space/core/commit/a0289c2))
+
+## 3.0.0-canary.2.1 (2021-09-10)
+
+* release: v3.0.0-canary.2.1 ([031a130](https://github.com/mx-space/core/commit/031a130))
+* fix: ci asset ([548068a](https://github.com/mx-space/core/commit/548068a))
+* fix: deploy workdir ([08817c2](https://github.com/mx-space/core/commit/08817c2))
+
+## 3.0.0-canary.2 (2021-09-10)
+
+* release: v3.0.0-canary.2 ([56573c4](https://github.com/mx-space/core/commit/56573c4))
+* feat: note gql ([37a8f66](https://github.com/mx-space/core/commit/37a8f66))
+
+## 3.0.0-canary.1 (2021-09-10)
+
+* release: v3.0.0-canary.1 ([70a1fe4](https://github.com/mx-space/core/commit/70a1fe4))
+* fix: crud bug & other ([970b928](https://github.com/mx-space/core/commit/970b928))
+
+## 3.0.0-canary.0 (2021-09-09)
+
+* release: v3.0.0-canary.0 ([add3133](https://github.com/mx-space/core/commit/add3133))
+* fix: cache clean ([d12c086](https://github.com/mx-space/core/commit/d12c086))
+* fix: field compatibility ([25b98b2](https://github.com/mx-space/core/commit/25b98b2))
+* fix: interceptor response transfrom ([3821160](https://github.com/mx-space/core/commit/3821160))
+* feat: algoliasearch ([95c4b58](https://github.com/mx-space/core/commit/95c4b58))
+
+## 3.0.0-beta.1 (2021-09-09)
+
+* release: v3.0.0-beta.1 ([584c3f3](https://github.com/mx-space/core/commit/584c3f3))
+* chore: lock typescript ([e53f17f](https://github.com/mx-space/core/commit/e53f17f))
+* chore: update eslin ([b691e32](https://github.com/mx-space/core/commit/b691e32))
+* feat: init recently module ([80af238](https://github.com/mx-space/core/commit/80af238))
+
+## 3.0.0-beta.0 (2021-09-08)
+
+* release: v3.0.0-beta.0 ([25657fc](https://github.com/mx-space/core/commit/25657fc))
+* fix: yargs ([03e95fe](https://github.com/mx-space/core/commit/03e95fe))
+
+## 3.0.0-alpha.3 (2021-09-08)
+
+* release: v3.0.0-alpha.3 ([63ce0dc](https://github.com/mx-space/core/commit/63ce0dc))
+
+## 3.0.0-alpha.2 (2021-09-08)
+
+* release: v3.0.0-alpha.2 ([9758b45](https://github.com/mx-space/core/commit/9758b45))
+* fix: GQL guard ([7da83fd](https://github.com/mx-space/core/commit/7da83fd))
+* feat: gql init ([0ff9cc0](https://github.com/mx-space/core/commit/0ff9cc0))
+* doc: readme ([4b1acd3](https://github.com/mx-space/core/commit/4b1acd3))
+
+## 3.0.0-alpha.1 (2021-09-07)
+
+* release: v3.0.0-alpha.1 ([a6e0a37](https://github.com/mx-space/core/commit/a6e0a37))
+* ci: release action ([c64c632](https://github.com/mx-space/core/commit/c64c632))
+* feat: add encypt paw doc ([ce71fb6](https://github.com/mx-space/core/commit/ce71fb6))
+* feat: aggregate module ([b22878d](https://github.com/mx-space/core/commit/b22878d))
+* feat: analyze middleware ([9a294fa](https://github.com/mx-space/core/commit/9a294fa))
+* feat: anayzle module ([6bb6bf0](https://github.com/mx-space/core/commit/6bb6bf0))
+* feat: backup module ([bad54a2](https://github.com/mx-space/core/commit/bad54a2))
+* feat: base crud ([54e6e8e](https://github.com/mx-space/core/commit/54e6e8e))
+* feat: category module done ([f75e7ed](https://github.com/mx-space/core/commit/f75e7ed))
+* feat: comment module init ([11abc68](https://github.com/mx-space/core/commit/11abc68))
+* feat: comment service init ([4fcb0df](https://github.com/mx-space/core/commit/4fcb0df))
+* feat: cron task ([34e421a](https://github.com/mx-space/core/commit/34e421a))
+* feat: docker init ([c92d723](https://github.com/mx-space/core/commit/c92d723))
+* feat: image & http service, migration more ([3515851](https://github.com/mx-space/core/commit/3515851))
+* feat: init ([b676658](https://github.com/mx-space/core/commit/b676658))
+* feat: init again ([8a15554](https://github.com/mx-space/core/commit/8a15554))
+* feat: init category module ([07f4f19](https://github.com/mx-space/core/commit/07f4f19))
+* feat: init configs module ([deca66e](https://github.com/mx-space/core/commit/deca66e))
+* feat: init email service ([df9f544](https://github.com/mx-space/core/commit/df9f544))
+* feat: init model & add counting interecptor ([e99d975](https://github.com/mx-space/core/commit/e99d975))
+* feat: init page module ([988cf60](https://github.com/mx-space/core/commit/988cf60))
+* feat: markdown helper ([89d1647](https://github.com/mx-space/core/commit/89d1647))
+* feat: middleware & user module init ([44b835d](https://github.com/mx-space/core/commit/44b835d))
+* feat: model init ([b02e2cf](https://github.com/mx-space/core/commit/b02e2cf))
+* feat: note module ([fd1921a](https://github.com/mx-space/core/commit/fd1921a))
+* feat: note module done ([8ce7532](https://github.com/mx-space/core/commit/8ce7532))
+* feat: openapi decorator ([f4f147b](https://github.com/mx-space/core/commit/f4f147b))
+* feat: option module init ([94e5052](https://github.com/mx-space/core/commit/94e5052))
+* feat: paginator ([5a86ddc](https://github.com/mx-space/core/commit/5a86ddc))
+* update: readme ([5c19ab7](https://github.com/mx-space/core/commit/5c19ab7))
+* fix: app config ([6635fee](https://github.com/mx-space/core/commit/6635fee))
+* fix: cache interceptor & 204 content ([7c65bf6](https://github.com/mx-space/core/commit/7c65bf6))
+* fix: cache interecptor ([c4ab247](https://github.com/mx-space/core/commit/c4ab247))
+* fix: exception filter ([a17afd0](https://github.com/mx-space/core/commit/a17afd0))
+* fix: filter logger ([7a0fc37](https://github.com/mx-space/core/commit/7a0fc37))
+* fix: swagger property ([7fec9c8](https://github.com/mx-space/core/commit/7fec9c8))
+* chore: clean up ([70c3065](https://github.com/mx-space/core/commit/70c3065))
+* chore: cli webpack ([98cfba2](https://github.com/mx-space/core/commit/98cfba2))
+* chore: Configure Renovate (#1) ([32a62d8](https://github.com/mx-space/core/commit/32a62d8)), closes [#1](https://github.com/mx-space/core/issues/1)
+* chore: disable renovate temp ([ff4a86c](https://github.com/mx-space/core/commit/ff4a86c))
+* chore: format ([f7d6134](https://github.com/mx-space/core/commit/f7d6134))
+* chore: format ([d13829b](https://github.com/mx-space/core/commit/d13829b))
+* chore: or ([db19461](https://github.com/mx-space/core/commit/db19461))
+* chore: Pin dependencies (#4) ([18bf2ba](https://github.com/mx-space/core/commit/18bf2ba)), closes [#4](https://github.com/mx-space/core/issues/4)
+* chore: qaq ([02f8004](https://github.com/mx-space/core/commit/02f8004))
+* chore: replace redis with ioredis ([f3fb7ec](https://github.com/mx-space/core/commit/f3fb7ec))
+* chore: update deps ([05bdda7](https://github.com/mx-space/core/commit/05bdda7))
+* init ([9285a1b](https://github.com/mx-space/core/commit/9285a1b))
+* refactor: ([eaf4a6b](https://github.com/mx-space/core/commit/eaf4a6b))
+* Update dependency @typegoose/typegoose to v8 (#12) ([08b725b](https://github.com/mx-space/core/commit/08b725b)), closes [#12](https://github.com/mx-space/core/issues/12)
