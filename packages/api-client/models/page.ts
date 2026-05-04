@@ -17,7 +17,7 @@ export interface PageModelMarkdown {
   contentFormat?: 'markdown'
   content?: undefined
   meta?: Record<string, any> | null
-  images?: Image[]
+  images?: Image[] | null
   order?: number
   type?: EnumPageType
   options?: object
@@ -34,7 +34,7 @@ export interface PageModelLexical {
   contentFormat: 'lexical'
   content: string
   meta?: Record<string, any> | null
-  images?: Image[]
+  images?: Image[] | null
   order?: number
   type?: EnumPageType
   options?: object

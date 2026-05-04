@@ -18,7 +18,7 @@ export interface PostModelMarkdown {
   slug: string
   categoryId: string
   category: CategoryModel
-  images?: Image[]
+  images?: Image[] | null
   isPublished: boolean
   readCount: number
   likeCount: number
@@ -42,7 +42,7 @@ export interface PostModelLexical {
   slug: string
   categoryId: string
   category: CategoryModel
-  images?: Image[]
+  images?: Image[] | null
   isPublished: boolean
   readCount: number
   likeCount: number
