@@ -6,30 +6,65 @@ import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteService } from '~/modules/note/note.service'
 
-import { assertNoLegacyKeys, assertPgTimestamps } from '../../helper/api-shape'
+import {
+  assertHasKeys,
+  assertNoLegacyKeys,
+  assertPgTimestamps,
+} from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
 import { countingServiceProvider } from '../../mock/processors/counting.mock'
 import { translationProvider } from '../../mock/processors/translation.mock'
+
+/**
+ * SDK `NoteModel` 之必填键（packages/api-client/models/note.ts）。
+ * `topic` 由 controller 视情形附加，不入此基线列。
+ */
+const EXPECTED_NOTE_MODEL_KEYS = [
+  'id',
+  'nid',
+  'title',
+  'slug',
+  'text',
+  'content',
+  'content_format',
+  'images',
+  'meta',
+  'is_published',
+  'has_password',
+  'public_at',
+  'mood',
+  'weather',
+  'bookmark',
+  'coordinates',
+  'location',
+  'read_count',
+  'like_count',
+  'topic_id',
+  'created_at',
+  'modified_at',
+]
 
 const fixtureNote = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000020',
   nid: 1,
   title: 'Today',
+  slug: null,
   text: 'body',
   content: null,
   contentFormat: 'markdown',
+  images: null,
+  meta: null,
+  isPublished: true,
+  hasPassword: false,
+  publicAt: null,
   mood: null,
   weather: null,
-  location: null,
+  bookmark: false,
   coordinates: null,
-  isPublished: true,
-  hide: false,
-  password: null,
-  meta: null,
-  topic: null,
-  topicId: null,
+  location: null,
   readCount: 1,
   likeCount: 0,
+  topicId: null,
   createdAt: new Date('2024-02-01T00:00:00.000Z'),
   modifiedAt: null,
   ...overrides,
@@ -171,5 +206,25 @@ describe('NoteController contract (e2e)', () => {
     const body = res.json()
     assertNoLegacyKeys(body)
     expect(body.ts).toBeTruthy()
+  })
+
+  test('SDK shape — every NoteModel key present on list rows', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/notes`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    assertHasKeys(body.data[0], EXPECTED_NOTE_MODEL_KEYS)
+  })
+
+  test('SDK shape — every NoteModel key present on detail (by nid)', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/notes/nid/1`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    assertHasKeys(body.data, EXPECTED_NOTE_MODEL_KEYS)
   })
 })

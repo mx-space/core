@@ -5,9 +5,22 @@ import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { CategoryController } from '~/modules/category/category.controller'
 import { CategoryService } from '~/modules/category/category.service'
 
-import { assertNoLegacyKeys, assertPgTimestamps } from '../../helper/api-shape'
+import {
+  assertHasKeys,
+  assertNoLegacyKeys,
+  assertPgTimestamps,
+} from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
 import { translationProvider } from '../../mock/processors/translation.mock'
+
+/** SDK `CategoryModel` 之必填键（packages/api-client/models/category.ts）。 */
+const EXPECTED_CATEGORY_MODEL_KEYS = [
+  'id',
+  'created_at',
+  'type',
+  'slug',
+  'name',
+]
 
 const fixtureCategory = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000900',
@@ -97,5 +110,15 @@ describe('CategoryController contract (e2e)', () => {
     const body = res.json()
     assertNoLegacyKeys(body)
     expect(body.entries).toBeDefined()
+  })
+
+  test('SDK shape — every CategoryModel key present on list rows', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/categories`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    assertHasKeys(body.data[0], EXPECTED_CATEGORY_MODEL_KEYS)
   })
 })

@@ -14,7 +14,6 @@ export interface NoteModel {
 
   isPublished: boolean
   hasPassword: boolean
-  password?: string | null
   publicAt?: string | Date | null
 
   mood?: string | null
