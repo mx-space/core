@@ -85,6 +85,20 @@ apply_env_alias HTTP_REQUEST_VERBOSE DEBUG
 # Redis env compatibility: keep consistent with DB's `MONGO_CONNECTION` handling.
 apply_env_alias REDIS_CONNECTION_STRING REDIS_CONNECTION
 
+# Derive SNOWFLAKE_WORKER_OFFSET from the Docker Swarm task slot when running
+# multiple replicas. Swarm sets HOSTNAME to "<service>.<slot>.<task-id>" so
+# each replica gets a distinct slot (1, 2, ...). Without this, every replica
+# inherits the same SNOWFLAKE_WORKER_ID and produces colliding ids under load.
+# Honor an explicit SNOWFLAKE_WORKER_OFFSET / NODE_APP_INSTANCE if already set.
+if [ -z "${SNOWFLAKE_WORKER_OFFSET:-}" ] && [ -z "${NODE_APP_INSTANCE:-}" ]; then
+  swarm_slot=$(echo "${HOSTNAME:-}" | awk -F. '{
+    if (NF >= 3 && $2 ~ /^[0-9]+$/) print $2
+  }')
+  if [ -n "$swarm_slot" ]; then
+    export SNOWFLAKE_WORKER_OFFSET="$swarm_slot"
+  fi
+fi
+
 echo "Starting Mix Space"
 echo "============== Entrypoint =============="
 echo "- PWD: $(pwd)"
@@ -154,6 +168,9 @@ log_kv "Encrypt Algorithm" "${ENCRYPT_ALGORITHM:-<default>}" "$(env_source ENCRY
 cluster_enable="$(parse_booleanish "${CLUSTER:-}")"
 log_kv "Cluster" "${cluster_enable:-false}" "$(env_source CLUSTER false)"
 log_kv "Cluster Workers" "${CLUSTER_WORKERS:-<auto>}" "$(env_source CLUSTER_WORKERS '<auto>')"
+
+log_kv "Snowflake Worker ID" "${SNOWFLAKE_WORKER_ID:-<unset>}" "$(env_source SNOWFLAKE_WORKER_ID '<unset>')"
+log_kv "Snowflake Worker Offset" "${SNOWFLAKE_WORKER_OFFSET:-0}" "$(env_source SNOWFLAKE_WORKER_OFFSET 0)"
 
 log_kv "Disable Cache" "$(parse_booleanish "${DISABLE_CACHE:-}")" "$(env_source DISABLE_CACHE false)"
 
