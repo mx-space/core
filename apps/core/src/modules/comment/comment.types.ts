@@ -32,8 +32,17 @@ export interface CommentRow {
   agent: string | null
   location: string | null
   createdAt: Date
-  parent?: CommentRow | null
-  children?: CommentRow[]
+}
+
+/**
+ * Repository-level extension returned by `findByIdWithRelations`. Joined data
+ * lives outside the persistence row so service- and controller-layers can
+ * project to a slimmer shape (e.g. `parent` becomes `CommentParentPreview`)
+ * without conflicting with the base row type.
+ */
+export interface CommentRowWithRelations extends CommentRow {
+  parent: CommentRow | null
+  children: CommentRow[]
 }
 
 export interface CommentCreateInput {

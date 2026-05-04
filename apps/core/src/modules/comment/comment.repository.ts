@@ -31,6 +31,7 @@ import type {
   CommentRootListOptions,
   CommentRootSort,
   CommentRow,
+  CommentRowWithRelations,
 } from './comment.types'
 
 const normalizeCommentRefType = (refType: CommentRefType): CommentRefType =>
@@ -90,7 +91,7 @@ export class CommentRepository extends BaseRepository {
 
   async findByIdWithRelations(
     id: EntityId | string,
-  ): Promise<CommentRow | null> {
+  ): Promise<CommentRowWithRelations | null> {
     const idBig = parseEntityId(id)
     const [row] = await this.db
       .select()

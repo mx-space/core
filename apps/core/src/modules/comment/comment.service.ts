@@ -41,6 +41,19 @@ export type CommentRefSummary = {
   category?: { name: string; slug: string } | null
 }
 
+/**
+ * Slim parent-comment preview attached to replies. Only the surface that the
+ * admin `comment-detail.tsx` renders (`@author`, body text, deletion state).
+ * Intentionally omits `ip`/`agent`/`mail`/etc. so the `/comments/:id` public
+ * detail endpoint does not leak parent commenter PII.
+ */
+export type CommentParentPreview = {
+  id: string
+  author: string | null
+  text: string
+  isDeleted: boolean
+}
+
 const COMMENT_REPLY_THRESHOLD = 20
 const COMMENT_REPLY_EDGE_SIZE = 3
 const COMMENT_THREAD_BATCH_SIZE = 10
@@ -119,7 +132,13 @@ export class CommentService {
     const comment = await this.commentRepository.findByIdWithRelations(id)
     if (!comment) return comment
     const [withRef] = await this.attachRef([comment])
-    return withRef
+    const parentRow = withRef.parent ?? null
+    let parent: CommentParentPreview | null = null
+    if (parentRow) {
+      await this.fillAndReplaceAvatarUrl([parentRow as CommentModel])
+      parent = this.toParentPreview(parentRow)
+    }
+    return { ...withRef, parent }
   }
 
   /**
@@ -160,6 +179,57 @@ export class CommentService {
       if (!doc || !type) return { ...row, ref: null }
       return { ...row, ref: this.buildCommentRefSummary(type, doc) }
     })
+  }
+
+  /**
+   * Resolve the `parentCommentId` on each row to a slim `parent` preview.
+   * Batched via `findManyByIds`; reader/owner identity is resolved on the
+   * parent rows so `parent.author` reflects the same name the dashboard would
+   * render for the parent itself.
+   */
+  async attachParentPreview<T extends Pick<CommentRow, 'parentCommentId'>>(
+    rows: T[],
+  ): Promise<Array<T & { parent: CommentParentPreview | null }>> {
+    if (rows.length === 0) return []
+
+    const parentIds = [
+      ...new Set(
+        rows
+          .map((r) => r.parentCommentId)
+          .filter((id): id is NonNullable<typeof id> => !!id)
+          .map((id) => String(id)),
+      ),
+    ]
+
+    if (parentIds.length === 0) {
+      return rows.map((row) => ({ ...row, parent: null }))
+    }
+
+    const parents = await this.commentRepository.findManyByIds(parentIds)
+    if (parents.length > 0) {
+      await this.fillAndReplaceAvatarUrl(parents as CommentModel[])
+    }
+    const previewMap = new Map<string, CommentParentPreview>()
+    for (const parent of parents) {
+      previewMap.set(String(parent.id), this.toParentPreview(parent))
+    }
+
+    return rows.map((row) => {
+      const pid = row.parentCommentId ? String(row.parentCommentId) : null
+      return {
+        ...row,
+        parent: pid ? (previewMap.get(pid) ?? null) : null,
+      }
+    })
+  }
+
+  private toParentPreview(row: CommentRow): CommentParentPreview {
+    return {
+      id: String(row.id),
+      author: row.author,
+      text: row.text,
+      isDeleted: row.isDeleted,
+    }
   }
 
   private buildCommentRefSummary(
@@ -361,7 +431,8 @@ export class CommentService {
     )
     await this.fillAndReplaceAvatarUrl(queryList.data)
     const dataWithRef = await this.attachRef(queryList.data)
-    return { ...queryList, data: dataWithRef }
+    const dataWithParent = await this.attachParentPreview(dataWithRef)
+    return { ...queryList, data: dataWithParent }
   }
 
   async getCommentsByRefId(

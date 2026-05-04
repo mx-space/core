@@ -40,7 +40,7 @@ import {
   webhooks,
 } from '~/database/schema'
 
-import { allocateForCollection, createResolver, mongoHexOf } from './id-map'
+import { allocateForCollection, createResolver } from './id-map'
 import type { MigrationContext, MigrationStep } from './types'
 
 const upsert = async <T extends Record<string, unknown>>(
@@ -791,7 +791,7 @@ export const stepComments: MigrationStep = {
           avatar: d.avatar ?? null,
           authProvider: d.authProvider ?? null,
           meta: d.meta ?? null,
-          readerId: mongoHexOf(d.readerId),
+          readerId: resolver.ref('readers', d.readerId, 'readerId', false),
           editedAt: dateOrNull(d.editedAt),
           anchor: d.anchor ?? null,
           createdAt: dateOrNull(d.created) ?? new Date(),
@@ -1298,7 +1298,11 @@ export const stepAi: MigrationStep = {
     const entryDocs = await collect<any>(ctx, 'translation_entries')
     const entryRows = entryDocs
       .map((d) => {
-        const lookupKey = resolveTranslationEntryLookupKey(ctx, entryResolver, d)
+        const lookupKey = resolveTranslationEntryLookupKey(
+          ctx,
+          entryResolver,
+          d,
+        )
         if (!lookupKey) return null
         return {
           id: entryResolver.self(d._id),

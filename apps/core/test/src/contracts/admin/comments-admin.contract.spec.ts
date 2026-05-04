@@ -6,8 +6,9 @@
  * `comment.created_at`, `comment.parent_comment_id`, `comment.is_whispers`,
  * `comment.is_deleted`. The detail panel (`comment-detail.tsx`) additionally
  * dereferences `mail`, `url`, `ip`, `agent`, `state`, `ref_type`, `edited_at`,
- * `reply_count`, `latest_reply_at`. Comment rows have NO `modified_at` (only
- * `edited_at`) — `assertPgTimestamps` is therefore not used here.
+ * `reply_count`, `latest_reply_at`, and — for replies — `parent.author`,
+ * `parent.text`, `parent.is_deleted`. Comment rows have NO `modified_at`
+ * (only `edited_at`) — `assertPgTimestamps` is therefore not used here.
  */
 import { describe, expect, test } from 'vitest'
 
@@ -72,6 +73,9 @@ const fixtureComment = (overrides: Record<string, unknown> = {}) => ({
   authProvider: null,
   createdAt: new Date('2024-10-01T00:00:00.000Z'),
   ref: POST_REF,
+  // Root rows still emit `parent: null` so the dashboard does not have to
+  // distinguish between "no parent" (key present, null) and "key missing".
+  parent: null,
   ...overrides,
 })
 
@@ -91,6 +95,21 @@ const fixtureCommentOrphan = () =>
     ref: null,
   })
 
+const PARENT_PREVIEW = {
+  id: '7000000000000000099',
+  author: 'parent-author',
+  text: 'parent body',
+  isDeleted: false,
+}
+
+const fixtureCommentReply = () =>
+  fixtureComment({
+    id: '7000000000000000103',
+    parentCommentId: PARENT_PREVIEW.id,
+    rootCommentId: PARENT_PREVIEW.id,
+    parent: PARENT_PREVIEW,
+  })
+
 const commentServiceProvider = {
   provide: CommentService,
   useValue: {
@@ -100,9 +119,10 @@ const commentServiceProvider = {
           fixtureComment(),
           fixtureCommentForNote(),
           fixtureCommentOrphan(),
+          fixtureCommentReply(),
         ],
         pagination: {
-          total: 3,
+          total: 4,
           currentPage: page,
           totalPage: 1,
           size,
@@ -115,7 +135,10 @@ const commentServiceProvider = {
       return rows
     },
     async findByIdWithRelations(id: string) {
-      return fixtureComment({ id })
+      // The reply path of `comment-detail.tsx` requires `parent` to be a
+      // populated preview; root comments serve `parent: null`.
+      if (id === PARENT_PREVIEW.id) return fixtureComment({ id })
+      return fixtureCommentReply()
     },
   },
 }
@@ -237,5 +260,51 @@ describe('CommentController admin contract (e2e)', () => {
     assertHasKeysDeep(body.data[1], ['ref.id', 'ref.title', 'ref.nid'])
     // orphan: server emits explicit null instead of crashing or omitting.
     expect(body.data[2].ref).toBeNull()
+  })
+
+  test('GET /comments (admin list) — parent preview hydrated for replies', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/comments`,
+      headers: authPassHeader,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    // Root comments expose an explicit `null` parent so the dashboard does
+    // not have to distinguish between "no parent" and "key missing".
+    expect(body.data[0].parent).toBeNull()
+    // Replies must carry author/text/is_deleted so the detail header can
+    // render `回复 @{parent.author}` plus the parent body preview.
+    assertHasKeysDeep(body.data[3], [
+      'parent.id',
+      'parent.author',
+      'parent.text',
+      'parent.is_deleted',
+    ])
+    expect(body.data[3].parent.author).toBe('parent-author')
+  })
+
+  test('GET /comments/:id — parent preview is slim (no PII leak)', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/comments/7000000000000000103`,
+      headers: authPassHeader,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    assertHasKeysDeep(body, [
+      'parent.id',
+      'parent.author',
+      'parent.text',
+      'parent.is_deleted',
+    ])
+    // The parent surface is slimmed to a four-key preview to avoid leaking
+    // ip/agent/mail/etc. on the public detail endpoint.
+    expect(Object.keys(body.parent).sort()).toEqual([
+      'author',
+      'id',
+      'is_deleted',
+      'text',
+    ])
   })
 })

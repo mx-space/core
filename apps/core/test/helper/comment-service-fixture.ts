@@ -70,7 +70,12 @@ export const createCommentServiceFixture = () => {
       },
     }),
   }
-  const ownerService = { isOwnerName: vi.fn().mockResolvedValue(false) }
+  const ownerService = {
+    isOwnerName: vi.fn().mockResolvedValue(false),
+    getOwner: vi
+      .fn()
+      .mockResolvedValue({ name: 'Owner', avatar: null, mail: null }),
+  }
   const eventManager = { broadcast: vi.fn() }
   const readerService = { findReaderInIds: vi.fn().mockResolvedValue([]) }
   const fileReferenceService = { hardDeleteFilesForComment: vi.fn() }
