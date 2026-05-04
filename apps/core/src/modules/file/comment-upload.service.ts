@@ -8,7 +8,6 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import {
   generateFilename,
   replaceFilenameTemplate,
@@ -16,11 +15,7 @@ import {
 import { S3Uploader } from '~/utils/s3.util'
 
 import { FileService } from './file.service'
-import {
-  FileReferenceModel,
-  FileReferenceStatus,
-  FileUploadedBy,
-} from './file-reference.model'
+import { FileReferenceService } from './file-reference.service'
 
 const DEFAULT_COMMENT_UPLOAD_PREFIX_TEMPLATE = 'comments/{readerId}/{Y}/{m}'
 
@@ -47,9 +42,6 @@ export interface PublicCommentUploadConfig {
   pendingTtlMinutes: number
 }
 
-/**
- * 通过 file-type 库识别 buffer 真型，避免攻击者借扩展名上传非图片内容。
- */
 async function detectImageMime(
   buffer: Buffer,
 ): Promise<{ mime: string; ext: string } | null> {
@@ -63,8 +55,7 @@ export class CommentUploadService {
   private readonly logger = new Logger(CommentUploadService.name)
 
   constructor(
-    @InjectModel(FileReferenceModel)
-    private readonly fileReferenceModel: MongooseModel<FileReferenceModel>,
+    private readonly fileReferenceService: FileReferenceService,
     private readonly configsService: ConfigsService,
     private readonly uploadService: UploadService,
     private readonly fileService: FileService,
@@ -194,15 +185,13 @@ export class CommentUploadService {
 
     const fileName = s3ObjectKey ?? objectKey
 
-    await this.fileReferenceModel.create({
+    await this.fileReferenceService.createReaderPendingReference({
       fileUrl: url,
       fileName,
-      status: FileReferenceStatus.Pending,
       readerId,
-      uploadedBy: FileUploadedBy.Reader,
       mimeType: detectedMime,
       byteSize: totalBytes,
-      ...(s3ObjectKey && { s3ObjectKey }),
+      s3ObjectKey: s3ObjectKey ?? null,
     })
 
     const expireAt = new Date(

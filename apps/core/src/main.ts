@@ -1,14 +1,15 @@
 #!env node
 // register global
 import 'dotenv-expand/config'
+
 import cluster from 'node:cluster'
 import { cpus } from 'node:os'
+
 import { DEBUG_MODE } from './app.config.js'
 import { registerForMemoryDump } from './dump'
 import { logger } from './global/consola.global'
-import { isMainCluster, isMainProcess } from './global/env.global'
+import { isMainCluster } from './global/env.global'
 import { initializeApp } from './global/index.global'
-import { migrateDatabase } from './migration/migrate'
 
 process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'}) - ${
   process.env.NODE_ENV
@@ -16,10 +17,6 @@ process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'}) - ${
 
 async function main() {
   initializeApp()
-
-  if (isMainProcess) {
-    await migrateDatabase()
-  }
 
   const [{ bootstrap }, { CLUSTER, ENCRYPT }, { Cluster }] = await Promise.all([
     import('./bootstrap'),

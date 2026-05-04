@@ -10,20 +10,17 @@ import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
-import { FileDeletionReason } from '../file/file-reference.model'
 import { FileReferenceService } from '../file/file-reference.service'
-import { OwnerModel } from '../owner/owner.model'
+import { FileDeletionReason } from '../file/file-reference.types'
 import { OwnerService } from '../owner/owner.service'
+import { OwnerModel } from '../owner/owner.types'
 import { ReaderService } from '../reader/reader.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
-import type { SnippetModel } from '../snippet/snippet.model'
-import { SnippetType } from '../snippet/snippet.model'
 import type {
   CommentEmailTemplateRenderProps,
   CommentModelRenderProps,
@@ -32,9 +29,10 @@ import {
   baseRenderProps,
   defaultCommentModelKeys,
 } from './comment.email.default'
-import { CommentReplyMailType } from './comment.enum'
-import { CommentModel, CommentState } from './comment.model'
+import { CommentReplyMailType, CommentState } from './comment.enum'
+import { CommentService } from './comment.service'
 import { CommentSpamFilterService } from './comment.spam-filter'
+import type { CommentModel } from './comment.types'
 
 @Injectable()
 export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
@@ -42,9 +40,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   private commentCreateListenerDisposer?: IEventManagerHandlerDisposer
 
   constructor(
-    @InjectModel(CommentModel)
-    private readonly commentModel: MongooseModel<CommentModel>,
-
+    private readonly commentService: CommentService,
     private readonly databaseService: DatabaseService,
     private readonly configsService: ConfigsService,
     private readonly ownerService: OwnerService,
@@ -111,10 +107,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   }
 
   async afterCreateComment(commentId: string, ipLocation: { ip: string }) {
-    const comment = await this.commentModel
-      .findById(commentId)
-      .lean({ getters: true })
-      .select('+ip +agent')
+    const comment = await this.commentService.findById(commentId)
 
     if (!comment) return
     const isLoggedInComment = !!comment.readerId
@@ -132,26 +125,26 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
         (await this.spamFilterService.checkSpam(comment)) &&
         !isLoggedInComment
       ) {
-        await this.commentModel.updateOne(
-          { _id: commentId },
-          { state: CommentState.Junk },
-        )
+        await this.commentService.updateComment(commentId, {
+          state: CommentState.Junk,
+        })
         await this.cascadeDeleteFilesIfSpamConfigured(commentId)
         return
       }
 
       this.sendEmail(comment, CommentReplyMailType.Owner)
 
+      const broadcastPayload = await this.enrichForBroadcast(comment)
       await this.eventManager.broadcast(
         BusinessEvents.COMMENT_CREATE,
-        comment,
+        broadcastPayload,
         { scope: EventScope.TO_SYSTEM_ADMIN },
       )
 
       if ((!commentShouldAudit || isLoggedInComment) && !comment.isWhispers) {
         await this.eventManager.broadcast(
           BusinessEvents.COMMENT_CREATE,
-          omit(comment, ['ip', 'agent']),
+          omit(broadcastPayload, ['ip', 'agent']),
           { scope: EventScope.TO_VISITOR },
         )
       }
@@ -159,7 +152,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   }
 
   async afterReplyComment(comment: CommentModel, ipLocation: { ip: string }) {
-    const commentId = comment.id ?? (comment as any)._id?.toString()
+    const commentId = comment.id ?? (comment as any).id?.toString()
     const isLoggedInComment = !!comment.readerId
 
     scheduleManager.schedule(async () => {
@@ -167,27 +160,56 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       await this.appendIpLocation(commentId, ipLocation.ip)
     })
 
+    const broadcastPayload = await this.enrichForBroadcast(comment)
+
     if (isLoggedInComment) {
       this.sendEmail(comment, CommentReplyMailType.Guest)
-      this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
-        scope: EventScope.TO_SYSTEM_VISITOR,
-      })
+      this.eventManager.broadcast(
+        BusinessEvents.COMMENT_CREATE,
+        broadcastPayload,
+        {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+        },
+      )
     } else {
       const configs = await this.configsService.get('commentOptions')
       const { commentShouldAudit } = configs
 
       if (commentShouldAudit) {
-        this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
-          scope: EventScope.TO_SYSTEM_ADMIN,
-        })
+        this.eventManager.broadcast(
+          BusinessEvents.COMMENT_CREATE,
+          broadcastPayload,
+          {
+            scope: EventScope.TO_SYSTEM_ADMIN,
+          },
+        )
         return
       }
 
       this.sendEmail(comment, CommentReplyMailType.Owner)
-      this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
-        scope: EventScope.ALL,
-      })
+      this.eventManager.broadcast(
+        BusinessEvents.COMMENT_CREATE,
+        broadcastPayload,
+        {
+          scope: EventScope.ALL,
+        },
+      )
     }
+  }
+
+  /**
+   * Replaces `author`/`avatar` with the reader-resolved values, mirroring what
+   * the comment list controllers do via `fillAndReplaceAvatarUrl`. Without
+   * this step, logged-in (reader) comments broadcast `author: null`, which
+   * the admin in-app/browser notification renders as "null: <text>".
+   */
+  private async enrichForBroadcast(
+    comment: CommentModel,
+  ): Promise<CommentModel> {
+    const [enriched] = await this.commentService.fillAndReplaceAvatarUrl([
+      { ...comment } as CommentModel,
+    ])
+    return enriched ?? comment
   }
 
   private async resolveReader(readerId?: string | null) {
@@ -195,9 +217,8 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       return null
     }
 
-    return this.readerService
-      .findReaderInIds([readerId])
-      .then((readers) => readers[0] ?? null)
+    const readers = await this.readerService.findReaderInIds([readerId])
+    return readers[0] ?? null
   }
 
   private toOwnerIdentity(
@@ -252,20 +273,21 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   }
 
   async sendEmail(comment: CommentModel, type: CommentReplyMailType) {
-    const enable = await this.configsService
-      .get('mailOptions')
-      .then((config) => config.enable)
+    const mailOptions = await this.configsService.get('mailOptions')
+    const enable = mailOptions.enable
     if (!enable) return
 
     const ownerInfo = await this.ownerService.getOwnerInfo()
 
     const refType = comment.refType
-    const refModel = this.getModelByRefType(refType)
-    const refDoc = await refModel.findById(comment.ref)
-    const time = new Date(comment.created!)
-    const parent: CommentModel | null = await this.commentModel
-      .findOne({ _id: comment.parentCommentId })
-      .lean()
+    const result = await this.databaseService.findGlobalById(
+      String(comment.refId),
+    )
+    const refDoc = result?.document as any
+    const time = new Date(comment.createdAt!)
+    const parent: CommentModel | null = comment.parentCommentId
+      ? await this.commentService.findById(String(comment.parentCommentId))
+      : null
 
     const parsedTime = `${time.getDate()}/${
       time.getMonth() + 1
@@ -314,9 +336,10 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
           type === CommentReplyMailType.Guest
             ? commentIdentity.author || ownerInfo.name
             : ownerInfo.name,
-        link: await this.resolveUrlByType(refType, refDoc).then(
-          (url) => `${url}#comments-${comment.id}`,
-        ),
+        link: `${await this.resolveUrlByType(
+          refType as CollectionRefTypes,
+          refDoc,
+        )}#comments-${comment.id}`,
         time: parsedTime,
         mail: senderMail,
         ip: comment.ip || '',
@@ -327,7 +350,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
             author: commentIdentity.author,
             avatar: commentIdentity.avatar,
             mail: senderMail,
-            created: new Date(comment.created!).toISOString(),
+            created: new Date(comment.createdAt!).toISOString(),
             isWhispers: comment.isWhispers || false,
           } as CommentModelRenderProps,
           parent: parent
@@ -340,10 +363,10 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
             : null,
           post: {
             title: refDoc.title,
-            created: new Date(refDoc.created!).toISOString(),
+            created: new Date(refDoc.createdAt!).toISOString(),
             id: refDoc.id!,
-            modified: refDoc.modified
-              ? new Date(refDoc.modified!).toISOString()
+            modified: refDoc.modifiedAt
+              ? new Date(refDoc.modifiedAt!).toISOString()
               : null,
             text: refDoc.text,
           },
@@ -358,17 +381,14 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const { recordIpLocation } = await this.configsService.get('commentOptions')
     if (!recordIpLocation) return
 
-    const model = this.commentModel.findById(id).lean()
+    const model = await this.commentService.findById(id)
     if (!model) return
 
-    const fnModel = (await this.serverlessService.model
-      .findOne({
-        name: 'ip',
-        reference: 'built-in',
-        type: SnippetType.Function,
-      })
-      .select('+secret')
-      .lean({ getters: true })) as SnippetModel
+    const fnModel =
+      await this.serverlessService.repository.findFunctionByNameReference(
+        'ip',
+        'built-in',
+      )
 
     if (!fnModel) {
       this.logger.error('[Serverless Fn] ip query function is missing.')
@@ -392,7 +412,8 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const city = result.cityName ? String(result.cityName) : ''
     const location = `${country}${region}${city}` || undefined
 
-    if (location) await this.commentModel.updateOne({ _id: id }, { location })
+    if (location)
+      await this.commentService.updateComment(id, { location } as any)
   }
 
   async pushCommentEvent(comment: CommentModel) {
@@ -411,13 +432,9 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       body: `${comment.author} 评论了你的${
         comment.refType === CollectionRefTypes.Recently ? '速记' : '文章'
       }：${comment.text}`,
-      icon: comment.avatar,
+      icon: comment.avatar ?? undefined,
       url: `${adminUrl}#/comments`,
     })
-  }
-
-  private getModelByRefType(type: CollectionRefTypes) {
-    return this.databaseService.getModelByRefType(type) as any
   }
 
   private async resolveUrlByType(type: CollectionRefTypes, model: any) {
@@ -438,7 +455,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
         ).toString()
       }
       case CollectionRefTypes.Recently: {
-        return new URL(`/thinking/${model._id}`, base).toString()
+        return new URL(`/thinking/${model.id}`, base).toString()
       }
     }
   }

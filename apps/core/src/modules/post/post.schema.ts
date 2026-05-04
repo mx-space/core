@@ -4,8 +4,8 @@ import { z } from 'zod'
 import {
   zArrayUnique,
   zCoerceInt,
+  zEntityId,
   zLang,
-  zMongoId,
   zNonEmptyString,
   zPinDate,
   zPrefer,
@@ -23,7 +23,7 @@ export const PostSchema = WriteBaseSchema.extend({
   summary: z
     .preprocess((val) => (val === '' ? null : val), z.string().nullable())
     .optional(),
-  categoryId: zMongoId,
+  categoryId: zEntityId,
   copyright: z.boolean().default(true).optional(),
   isPublished: z.boolean().default(true).optional(),
   tags: zArrayUnique(z.string().min(1)).optional(),
@@ -32,10 +32,10 @@ export const PostSchema = WriteBaseSchema.extend({
     (val) => (val === null ? undefined : val),
     zCoerceInt.min(0).optional(),
   ),
-  relatedId: z.array(zMongoId).optional(),
+  relatedId: z.array(zEntityId).optional(),
   images: z.array(ImageSchema).optional(),
   /** 关联的草稿 ID，发布时标记该草稿为已发布 */
-  draftId: zMongoId.optional(),
+  draftId: zEntityId.optional(),
 })
 
 export class PostDto extends createZodDto(PostSchema) {}
@@ -88,7 +88,7 @@ export const PostPagerSchema = PagerSchema.extend({
   categoryIds: z
     .preprocess(
       (val) => (typeof val === 'string' ? val.split(',') : val),
-      z.array(zMongoId),
+      z.array(zEntityId),
     )
     .optional(),
   lang: zLang,

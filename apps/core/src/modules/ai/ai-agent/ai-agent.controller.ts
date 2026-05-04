@@ -14,7 +14,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import {
   applyRawCorsHeaders,
   endSse,
@@ -116,14 +116,14 @@ export class AiAgentController {
 
   @Get('/conversations/:id')
   @Auth()
-  async getConversation(@Param() params: MongoIdDto) {
+  async getConversation(@Param() params: EntityIdDto) {
     return this.conversationService.getById(params.id)
   }
 
   @Patch('/conversations/:id')
   @Auth()
   async updateConversation(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: UpdateConversationDto,
   ) {
     return this.conversationService.updateById(params.id, body)
@@ -132,7 +132,7 @@ export class AiAgentController {
   @Patch('/conversations/:id/messages')
   @Auth()
   async appendMessages(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: AppendMessagesDto,
   ) {
     return this.conversationService.appendMessages(params.id, body.messages)
@@ -141,7 +141,7 @@ export class AiAgentController {
   @Put('/conversations/:id/messages')
   @Auth()
   async replaceMessages(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: ReplaceMessagesDto,
   ) {
     return this.conversationService.replaceMessages(params.id, body.messages)
@@ -149,7 +149,7 @@ export class AiAgentController {
 
   @Delete('/conversations/:id')
   @Auth()
-  async deleteConversation(@Param() params: MongoIdDto) {
+  async deleteConversation(@Param() params: EntityIdDto) {
     return this.conversationService.deleteById(params.id)
   }
 }

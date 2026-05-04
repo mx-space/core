@@ -1,15 +1,18 @@
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
+
 import { CacheTTL } from '@nestjs/cache-manager'
 import { Body, Get, Header, Param, Post, Query } from '@nestjs/common'
+import { omit } from 'es-toolkit/compat'
+import JSZip from 'jszip'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
-import { omit } from 'es-toolkit/compat'
-import JSZip from 'jszip'
-import type { CategoryModel } from '../category/category.model'
+import { EntityIdDto } from '~/shared/dto/id.dto'
+
+import type { CategoryModel } from '../category/category.types'
 import type { MarkdownYAMLProperty } from './markdown.interface'
 import { DataListDto, ExportMarkdownQueryDto } from './markdown.schema'
 import { MarkdownService } from './markdown.service'
@@ -45,21 +48,21 @@ export class MarkdownController {
     const convertor = <
       T extends {
         text: string
-        created?: Date
-        modified?: Date | null
+        createdAt?: Date
+        modifiedAt?: Date | null
         title: string
         id: string
-        slug?: string
+        slug?: string | null
       },
     >(
       item: T,
       extraMetaData: Record<string, any> = {},
     ): MarkdownYAMLProperty => {
       const meta = {
-        created: item.created!,
-        modified: item.modified,
+        createdAt: item.createdAt!,
+        modifiedAt: item.modifiedAt ?? null,
         title: item.title,
-        slug: item.slug || item.title,
+        slug: item.slug ?? item.title,
         oid: item.id,
         ...extraMetaData,
       }
@@ -153,7 +156,7 @@ export class MarkdownController {
 
   @Get('/render/structure/:id')
   @CacheTTL(60 * 60)
-  async getRenderedMarkdownHtmlStructure(@Param() params: MongoIdDto) {
+  async getRenderedMarkdownHtmlStructure(@Param() params: EntityIdDto) {
     const { id } = params
     const { html, document } = await this.service.renderArticle(id)
 

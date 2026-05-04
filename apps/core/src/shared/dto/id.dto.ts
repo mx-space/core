@@ -1,13 +1,15 @@
 import { UnprocessableEntityException } from '@nestjs/common'
-import { zMongoId } from '~/common/zod'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-export const MongoIdSchema = z.object({
-  id: zMongoId,
+import { zEntityId } from '~/common/zod'
+import { isEntityIdString } from '~/shared/id/entity-id'
+
+export const EntityIdSchema = z.object({
+  id: zEntityId,
 })
 
-export class MongoIdDto extends createZodDto(MongoIdSchema) {}
+export class EntityIdDto extends createZodDto(EntityIdSchema) {}
 
 export const StringIdSchema = z.object({
   id: z.string(),
@@ -15,11 +17,11 @@ export const StringIdSchema = z.object({
 
 export class StringIdDto extends createZodDto(StringIdSchema) {}
 
-export const IntIdOrMongoIdSchema = z.object({
+export const IntIdOrEntityIdSchema = z.object({
   id: z.preprocess(
     (value) => {
       if (typeof value === 'string') {
-        if (/^[0-9a-f]{24}$/i.test(value)) {
+        if (isEntityIdString(value)) {
           return value
         }
         const nid = Number(value)
@@ -32,11 +34,11 @@ export const IntIdOrMongoIdSchema = z.object({
       }
       throw new UnprocessableEntityException('Invalid id')
     },
-    z.union([zMongoId, z.number().int().positive()]),
+    z.union([zEntityId, z.number().int().positive()]),
   ),
 })
 
-export class IntIdOrMongoIdDto extends createZodDto(IntIdOrMongoIdSchema) {}
+export class IntIdOrEntityIdDto extends createZodDto(IntIdOrEntityIdSchema) {}
 
-export type MongoIdInput = z.infer<typeof MongoIdSchema>
-export type IntIdOrMongoIdInput = z.infer<typeof IntIdOrMongoIdSchema>
+export type EntityIdInput = z.infer<typeof EntityIdSchema>
+export type IntIdOrEntityIdInput = z.infer<typeof IntIdOrEntityIdSchema>

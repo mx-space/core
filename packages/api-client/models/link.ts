@@ -1,5 +1,3 @@
-import type { BaseModel } from './base'
-
 export enum LinkType {
   Friend,
   Collection,
@@ -13,13 +11,15 @@ export enum LinkState {
   Reject,
 }
 
-export interface LinkModel extends BaseModel {
+export interface LinkModel {
+  id: string
+  createdAt: string
   name: string
   url: string
-  avatar: string
-  description?: string
+  avatar: string | null
+  description: string | null
   type: LinkType
   state: LinkState
   hide: boolean
-  email: string
+  email: string | null
 }

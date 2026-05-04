@@ -8,9 +8,11 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
+
 import {
   CreateMetaPresetDto,
   QueryMetaPresetDto,
@@ -37,7 +39,7 @@ export class MetaPresetController {
    * 获取单个预设字段
    */
   @Get('/:id')
-  async getById(@Param() { id }: MongoIdDto) {
+  async getById(@Param() { id }: EntityIdDto) {
     return this.metaPresetService.findById(id)
   }
 
@@ -55,7 +57,7 @@ export class MetaPresetController {
    */
   @Patch('/:id')
   @Auth()
-  async update(@Param() { id }: MongoIdDto, @Body() dto: UpdateMetaPresetDto) {
+  async update(@Param() { id }: EntityIdDto, @Body() dto: UpdateMetaPresetDto) {
     return this.metaPresetService.update(id, dto)
   }
 
@@ -64,7 +66,7 @@ export class MetaPresetController {
    */
   @Delete('/:id')
   @Auth()
-  async delete(@Param() { id }: MongoIdDto) {
+  async delete(@Param() { id }: EntityIdDto) {
     return this.metaPresetService.delete(id)
   }
 

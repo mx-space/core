@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/api-client",
-  "version": "3.8.0",
+  "version": "4.0.0-next.4",
   "description": "A api client for mx-space server@next",
   "type": "module",
   "engines": {
@@ -63,5 +63,8 @@
     "umi-request": "1.4.0",
     "vite": "^8.0.10",
     "vitest": "4.1.5"
+  },
+  "dependencies": {
+    "rebuild": "^0.1.2"
   }
 }

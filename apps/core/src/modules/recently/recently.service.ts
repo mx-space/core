@@ -1,6 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
-import { mongo } from 'mongoose'
-import pluralize from 'pluralize'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -11,139 +9,152 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 
-import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
-import { ConfigsService } from '../configs/configs.service'
-import { RecentlyModel } from './recently.model'
+import { RecentlyRepository } from './recently.repository'
 import { RecentlyAttitudeEnum } from './recently.schema'
+import { RecentlyModel, type RecentlyRow } from './recently.types'
 
-const { ObjectId } = mongo
+/**
+ * Minimal hydrated reference returned alongside a recently row when its
+ * `refType`/`refId` point at a post/note/page/recently. Mirrors the small
+ * surface that admin and Yohaku consumers actually read from `item.ref`.
+ */
+export type RecentlyRefSummary = {
+  id: string
+  type: CollectionRefTypes
+  title?: string
+  slug?: string | null
+  nid?: number
+  url?: string
+}
+
+export type RecentlyWithRef = RecentlyRow & { ref?: RecentlyRefSummary | null }
 
 @Injectable()
 export class RecentlyService {
   constructor(
-    @InjectModel(RecentlyModel)
-    private readonly recentlyModel: MongooseModel<RecentlyModel>,
+    private readonly recentlyRepository: RecentlyRepository,
     private readonly eventManager: EventManagerService,
     private readonly databaseService: DatabaseService,
     private readonly redisService: RedisService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
-    private readonly configsService: ConfigsService,
   ) {}
 
-  public get model() {
-    return this.recentlyModel
+  public get repository() {
+    return this.recentlyRepository
   }
 
-  private get commentCountPipeline() {
-    return [
-      {
-        $lookup: {
-          from: 'comments',
-          as: 'comment',
-          foreignField: 'ref',
-          localField: '_id',
-        },
-      },
-      {
-        $addFields: {
-          comments: {
-            $size: '$comment',
-          },
-        },
-      },
-      {
-        $project: {
-          comment: 0,
-        },
-      },
-      {
-        $sort: {
-          created: -1,
-        },
-      },
-    ] as const
+  async findById(id: string) {
+    const row = await this.recentlyRepository.findById(id)
+    if (!row) return row
+    const withCount = await this.attachCommentCount([row])
+    const [withRef] = await this.attachRef(withCount)
+    return withRef
+  }
+
+  async findRecent(size: number) {
+    const rows = await this.recentlyRepository.findRecent(size)
+    return this.attachRef(await this.attachCommentCount(rows))
+  }
+
+  async count() {
+    return this.recentlyRepository.count()
   }
 
   async getAll() {
-    const result = (await this.model.aggregate([
-      ...this.commentCountPipeline,
-    ])) as RecentlyModel[]
-
-    await this.populateRef(result)
-
-    return result
+    const result = await this.recentlyRepository.list(1, 50)
+    return this.attachRef(await this.attachCommentCount(result.data))
   }
 
   async getOne(id: string) {
-    const result = (await this.model.aggregate([
-      ...this.commentCountPipeline,
-      {
-        $match: {
-          _id: new ObjectId(id),
-        },
-      },
-    ])) as RecentlyModel[]
-
-    await this.populateRef(result)
-
-    return result[0] || null
+    return this.findById(id)
   }
-  async populateRef(result: RecentlyModel[], omit = ['text']) {
-    const refMap: Record<
-      Exclude<CollectionRefTypes, CollectionRefTypes.Recently>,
-      string[]
-    > = {
-      [CollectionRefTypes.Post]: [],
-      [CollectionRefTypes.Page]: [],
-      [CollectionRefTypes.Note]: [],
-    }
-    for (const doc of result) {
-      if (!doc.refType) {
-        continue
-      }
-      refMap[doc.refType]?.push(doc.ref)
-    }
 
-    const foreignIdMap: Record<string, any> = {}
-
-    for (const refType in refMap) {
-      const refIds = refMap[refType as CollectionRefTypes]
-      if (refIds.length === 0) {
-        continue
-      }
-      const cursor = await this.databaseService.db
-        .collection(pluralize(refType).toLowerCase())
-        .find({
-          _id: {
-            $in: refIds,
-          },
-        })
-
-      for await (const doc of cursor) {
-        foreignIdMap[doc._id.toHexString()] = Object.assign({}, doc)
-      }
-    }
-
-    for (const doc of result) {
-      if (!doc.refType) {
-        continue
-      }
-
-      const hasRef = foreignIdMap[(doc.ref as any)?.toHexString()]
-      if (hasRef) {
-        for (const field of omit) {
-          Reflect.deleteProperty(hasRef, field)
-        }
-        doc.ref = hasRef
-      }
-    }
+  /**
+   * @deprecated kept for backward compat; ref hydration is now centralized in
+   * {@link attachRef} and applied automatically on read paths.
+   */
+  async populateRef<T extends RecentlyModel>(result: T[], _omit = ['text']) {
     return result
+  }
+
+  /**
+   * Resolve `refType`/`refId` on each row to a small joined `ref` summary.
+   * Batched via `databaseService.findGlobalByIds` to avoid N+1.
+   *
+   * Rows whose `refId` is null get `ref: null`. Rows whose ref points at a
+   * deleted entity also get `ref: null` (orphan refs must never crash the
+   * response).
+   */
+  private async attachRef<T extends RecentlyRow>(
+    rows: T[],
+  ): Promise<Array<T & { ref?: RecentlyRefSummary | null }>> {
+    if (rows.length === 0) return []
+    const refIds = [
+      ...new Set(
+        rows
+          .map((r) => r.refId)
+          .filter((id): id is NonNullable<typeof id> => !!id)
+          .map(String),
+      ),
+    ]
+    if (refIds.length === 0) {
+      return rows.map((row) => ({
+        ...row,
+        ref: row.refId ? null : undefined,
+      }))
+    }
+
+    const collection = await this.databaseService.findGlobalByIds(refIds)
+    const flat = this.databaseService.flatCollectionToMap(collection)
+    const typeMap = new Map<string, CollectionRefTypes>()
+    for (const item of collection.posts)
+      typeMap.set(item.id, CollectionRefTypes.Post)
+    for (const item of collection.notes)
+      typeMap.set(item.id, CollectionRefTypes.Note)
+    for (const item of collection.pages)
+      typeMap.set(item.id, CollectionRefTypes.Page)
+    for (const item of collection.recentlies)
+      typeMap.set(item.id, CollectionRefTypes.Recently)
+
+    return rows.map((row) => {
+      if (!row.refId) return { ...row, ref: undefined }
+      const refIdStr = String(row.refId)
+      const doc = flat[refIdStr]
+      const type = typeMap.get(refIdStr)
+      if (!doc || !type) return { ...row, ref: null }
+      return { ...row, ref: this.buildRefSummary(type, doc) }
+    })
+  }
+
+  private buildRefSummary(
+    type: CollectionRefTypes,
+    doc: any,
+  ): RecentlyRefSummary {
+    const summary: RecentlyRefSummary = {
+      id: doc.id,
+      type,
+      title: doc.title,
+    }
+    if (type === CollectionRefTypes.Note) {
+      summary.nid = doc.nid
+      summary.url = `/notes/${doc.nid}`
+    } else if (type === CollectionRefTypes.Post) {
+      summary.slug = doc.slug
+      const categorySlug = doc.category?.slug
+      if (categorySlug)
+        summary.url = `/posts/${categorySlug}/${encodeURIComponent(doc.slug)}`
+    } else if (type === CollectionRefTypes.Page) {
+      summary.slug = doc.slug
+      summary.url = `/${doc.slug}`
+    } else if (type === CollectionRefTypes.Recently) {
+      summary.url = `/thinking/${doc.id}`
+    }
+    return summary
   }
 
   async getOffset({
@@ -155,123 +166,59 @@ export class RecentlyService {
     size?: number
     after?: string
   }) {
-    size = size ?? 10
-
-    const configs = await this.configsService.get('commentOptions')
-    const { commentShouldAudit } = configs
-
-    const result = await this.recentlyModel.aggregate([
-      {
-        $match: (() => {
-          if (after) return { _id: { $gt: new ObjectId(after) } }
-          if (before) return { _id: { $lt: new ObjectId(before) } }
-          return {}
-        })(),
-      },
-
-      {
-        $lookup: {
-          from: 'comments',
-          as: 'comment',
-          foreignField: 'ref',
-          localField: '_id',
-          pipeline: [
-            {
-              $match: commentShouldAudit
-                ? {
-                    state: CommentState.Read,
-                  }
-                : {
-                    $or: [
-                      {
-                        state: CommentState.Read,
-                      },
-                      {
-                        state: CommentState.Unread,
-                      },
-                    ],
-                  },
-            },
-          ],
-        },
-      },
-
-      {
-        $addFields: {
-          comments: {
-            $size: '$comment',
-          },
-        },
-      },
-      {
-        $project: {
-          comment: 0,
-        },
-      },
-      {
-        $sort: {
-          _id: -1,
-        },
-      },
-      { $limit: size },
-    ])
-    await this.populateRef(result)
-    return result
-  }
-  async getLatestOne() {
-    const latest = await this.model
-      .findOne()
-      .sort({ created: -1 })
-      .populate([
-        {
-          path: 'ref',
-          select: '-text',
-        },
-      ])
-      .lean()
-
-    if (!latest) {
-      return null
-    }
-
-    const commentCount = await this.commentService.model.countDocuments({
-      refType: CollectionRefTypes.Recently,
-      ref: latest._id,
+    const rows = await this.recentlyRepository.findOffset({
+      before,
+      after,
+      size: size ?? 10,
     })
+    return this.attachRef(await this.attachCommentCount(rows))
+  }
 
-    return {
-      ...latest,
-      comments: commentCount,
+  async getLatestOne() {
+    const [latest] = await this.findRecent(1)
+    return latest ?? null
+  }
+
+  /**
+   * Stamp `commentsIndex` with the live comment count per row. The persistent
+   * counter column drifts (it is not incremented on comment create), so all
+   * read paths recompute it before returning. Mongo did this via a
+   * `$lookup`-driven `$addFields: { comments: { $size: ... } }` pipeline; PG
+   * does it as a single batched count grouped by `ref_id`.
+   */
+  private async attachCommentCount<T extends RecentlyRow>(
+    rows: T[],
+  ): Promise<T[]> {
+    if (rows.length === 0) return rows
+    const ids = rows.map((r) => String(r.id))
+    const map = await this.commentService.countManyByRef(
+      CollectionRefTypes.Recently,
+      ids,
+    )
+    for (const row of rows) {
+      row.commentsIndex = map.get(String(row.id)) ?? 0
     }
+    return rows
   }
 
   async create(model: RecentlyModel) {
-    if (model.refId) {
-      const existModel = await this.databaseService.findGlobalById(model.refId)
+    let refType = model.refType
+    const refId = model.refId ?? (model as any).ref
+    if (refId) {
+      const existModel = await this.databaseService.findGlobalById(refId)
       if (!existModel || !existModel.type) {
         throw new BizException(ErrorCodeEnum.RefModelNotFound)
       }
-
-      model.refType = existModel.type
+      refType = existModel.type
     }
 
-    const res = await this.model.create({
+    const withRef = await this.recentlyRepository.create({
       content: model.content,
       type: (model as any).type,
       metadata: (model as any).metadata,
-      ref: model.refId as unknown as RecentlyModel['ref'],
-      refType: model.refType,
+      refId,
+      refType: refType as any,
     })
-
-    const withRef = await this.model
-      .findById(res._id)
-      .populate([
-        {
-          path: 'ref',
-          select: '-text',
-        },
-      ])
-      .lean()
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_CREATE, withRef, {
         scope: EventScope.TO_SYSTEM_VISITOR,
@@ -281,64 +228,34 @@ export class RecentlyService {
   }
 
   async delete(id: string) {
-    const [{ deletedCount }] = await Promise.all([
-      this.model.deleteOne({
-        _id: id,
-      }),
-      // delete comment ref
-      this.commentService.model.deleteMany({
-        ref: id,
-        refType: CollectionRefTypes.Recently,
-      }),
-    ])
-    const isDeleted = deletedCount === 1
+    const deleted = await this.recentlyRepository.deleteById(id)
+    await this.commentService.deleteForRef(CollectionRefTypes.Recently, id)
+    const isDeleted = !!deleted
     scheduleManager.schedule(async () => {
       if (isDeleted) {
         await this.eventManager.emit(
           BusinessEvents.RECENTLY_DELETE,
           { id },
-          {
-            scope: EventScope.TO_SYSTEM_VISITOR,
-          },
+          { scope: EventScope.TO_SYSTEM_VISITOR },
         )
       }
     })
-
     return isDeleted
   }
 
   async update(id: string, model: Partial<RecentlyModel>) {
-    const res = await this.model.findByIdAndUpdate(
-      id,
-      {
-        content: model.content,
-        type: model.type,
-        metadata: model.metadata,
-        modified: new Date(),
-      },
-      { returnDocument: 'after' },
-    )
-
-    if (!res) {
-      return null
-    }
-
-    const withRef = await this.model
-      .findById(res._id)
-      .populate([
-        {
-          path: 'ref',
-          select: '-text',
-        },
-      ])
-      .lean()
-
+    const withRef = await this.recentlyRepository.update(id, {
+      content: model.content,
+      type: model.type,
+      metadata: model.metadata,
+      modifiedAt: new Date(),
+    })
+    if (!withRef) return null
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_UPDATE, withRef, {
         scope: EventScope.TO_SYSTEM_VISITOR,
       })
     })
-
     return withRef
   }
 
@@ -351,56 +268,59 @@ export class RecentlyService {
     attitude: RecentlyAttitudeEnum
     ip: string
   }) {
-    if (!ip) {
-      throw new BizException(ErrorCodeEnum.CannotGetIp)
-    }
-    const model = await this.model.findById(id)
-
-    if (!model) {
-      throw new CannotFindException()
-    }
-
-    const attitudePath = {
-      [RecentlyAttitudeEnum.Up]: 'up',
-      [RecentlyAttitudeEnum.Down]: 'down',
-    }
+    if (!ip) throw new BizException(ErrorCodeEnum.CannotGetIp)
+    const model = await this.recentlyRepository.findById(id)
+    if (!model) throw new CannotFindException()
 
     const redis = this.redisService.getClient()
     const key = `${id}:${ip}`
-    const currentAttitude = await redis.hget(
-      getRedisKey(RedisKeys.RecentlyAttitude),
-      key,
-    )
+    const redisKey = getRedisKey(RedisKeys.RecentlyAttitude)
+    const currentAttitude = await redis.hget(redisKey, key)
 
     if (currentAttitude) {
       const { attitude: prevAttitude } = JSON.parse(currentAttitude)
-      // 之前是点了赞，现在还是点赞，取消之前的点赞
       if (prevAttitude === attitude) {
-        model.$inc(attitudePath[prevAttitude], -1)
-        await redis.hdel(getRedisKey(RedisKeys.RecentlyAttitude), key)
-        // 之前点了赞，现在点了踩，取消之前的点赞，并且踩 +1
-      } else {
-        model.$inc(attitudePath[prevAttitude], -1)
-        model.$inc(attitudePath[attitude], 1)
-        await redis.hset(
-          getRedisKey(RedisKeys.RecentlyAttitude),
-          key,
-          JSON.stringify({ attitude, date: new Date().toISOString() }),
-        )
+        await this.adjustScore(id, prevAttitude, -1)
+        await redis.hdel(redisKey, key)
+        return -1
       }
-
-      await model.save()
-
-      return prevAttitude === attitude ? -1 : 1
+      await this.switchScore(id, prevAttitude)
+      await redis.hset(
+        redisKey,
+        key,
+        JSON.stringify({ attitude, date: new Date().toISOString() }),
+      )
+      return 1
     }
 
-    model.$inc(attitudePath[attitude], 1)
+    await this.adjustScore(id, attitude, 1)
     await redis.hset(
-      getRedisKey(RedisKeys.RecentlyAttitude),
+      redisKey,
       key,
       JSON.stringify({ attitude, date: new Date().toISOString() }),
     )
-    await model.save()
     return 1
+  }
+
+  private async adjustScore(
+    id: string,
+    attitude: RecentlyAttitudeEnum,
+    delta: number,
+  ) {
+    if (attitude === RecentlyAttitudeEnum.Up) {
+      await this.recentlyRepository.incrementUp(id, delta)
+    } else {
+      await this.recentlyRepository.incrementDown(id, delta)
+    }
+  }
+
+  private async switchScore(id: string, prevAttitude: RecentlyAttitudeEnum) {
+    if (prevAttitude === RecentlyAttitudeEnum.Up) {
+      await this.recentlyRepository.incrementUp(id, -1)
+      await this.recentlyRepository.incrementDown(id, 1)
+    } else {
+      await this.recentlyRepository.incrementDown(id, -1)
+      await this.recentlyRepository.incrementUp(id, 1)
+    }
   }
 }

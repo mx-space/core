@@ -1,7 +1,7 @@
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import type { IModelRuntime } from '../runtime'
-import type { AITranslationModel } from './ai-translation.model'
 import type { ArticleContent } from './ai-translation.types'
+import type { AITranslationModel } from './ai-translation.types-model'
 
 export const LEXICAL_TRANSLATION_STRATEGY = Symbol(
   'LEXICAL_TRANSLATION_STRATEGY',

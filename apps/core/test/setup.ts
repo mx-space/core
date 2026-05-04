@@ -1,4 +1,7 @@
 import { mkdirSync } from 'node:fs'
+
+import { RedisMemoryServer } from 'redis-memory-server'
+
 import {
   DATA_DIR,
   STATIC_FILE_DIR,
@@ -6,8 +9,11 @@ import {
   THEME_DIR,
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
-import { MongoMemoryServer } from 'mongodb-memory-server'
-import { RedisMemoryServer } from 'redis-memory-server'
+
+import {
+  startPgTestContainer,
+  stopPgTestContainer,
+} from './helper/pg-testcontainer'
 
 export async function setup() {
   mkdirSync(DATA_DIR, { recursive: true })
@@ -16,13 +22,13 @@ export async function setup() {
   mkdirSync(STATIC_FILE_DIR, { recursive: true })
   mkdirSync(THEME_DIR, { recursive: true })
 
-  // Initialize Redis and MongoDB mock server
-  await Promise.all([
-    RedisMemoryServer.create(),
-    MongoMemoryServer.create(),
-  ]).then(async ([redis, db]) => {
-    await redis.stop()
-    await db.stop()
-  })
+  // Initialize Redis and PostgreSQL test container.
+  await Promise.all([RedisMemoryServer.create(), startPgTestContainer()]).then(
+    async ([redis]) => {
+      await redis.stop()
+    },
+  )
 }
-export async function teardown() {}
+export async function teardown() {
+  await stopPgTestContainer()
+}

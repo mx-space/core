@@ -21,8 +21,6 @@ export {
   zEmptyStringToNull,
   zHexColor,
   zHttpsUrl,
-  zMongoId,
-  zMongoIdOrInt,
   zNilOrString,
   zNonEmptyString,
   zOptionalBoolean,
@@ -37,5 +35,6 @@ export {
   ExtendedZodValidationPipe,
   extendedZodValidationPipeInstance,
 } from './validation.pipe'
+export { zEntityId, zEntityIdOrInt } from '~/shared/id/entity-id'
 export { createZodDto } from 'nestjs-zod'
 export { z } from 'zod'

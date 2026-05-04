@@ -162,22 +162,15 @@ export class AiTaskService {
 
   private async getArticleInfo(
     refId: string,
-  ): Promise<{ title: string; type: string } | null> {
+  ): Promise<{ title: string; type: CollectionRefTypes } | null> {
     const article = await this.databaseService.findGlobalById(refId)
     if (!article || !article.document) {
       return null
     }
 
-    const typeMap: Record<CollectionRefTypes, string> = {
-      [CollectionRefTypes.Post]: 'Post',
-      [CollectionRefTypes.Note]: 'Note',
-      [CollectionRefTypes.Page]: 'Page',
-      [CollectionRefTypes.Recently]: 'Recently',
-    }
-
     return {
       title: (article.document as { title?: string }).title || refId,
-      type: typeMap[article.type] || 'Unknown',
+      type: article.type as CollectionRefTypes,
     }
   }
 }

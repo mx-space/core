@@ -1,11 +1,18 @@
 import { Global, Module } from '@nestjs/common'
-import { databaseModels } from './database.models'
-import { databaseProvider } from './database.provider'
+
+import { NoteModule } from '~/modules/note/note.module'
+import { PageModule } from '~/modules/page/page.module'
+import { PostModule } from '~/modules/post/post.module'
+import { RecentlyModule } from '~/modules/recently/recently.module'
+import { SnowflakeService } from '~/shared/id/snowflake.service'
+
 import { DatabaseService } from './database.service'
+import { postgresProviders } from './postgres.provider'
 
 @Module({
-  providers: [DatabaseService, databaseProvider, ...databaseModels],
-  exports: [DatabaseService, databaseProvider, ...databaseModels],
+  imports: [PostModule, NoteModule, PageModule, RecentlyModule],
+  providers: [DatabaseService, ...postgresProviders, SnowflakeService],
+  exports: [DatabaseService, ...postgresProviders, SnowflakeService],
 })
 @Global()
 export class DatabaseModule {}

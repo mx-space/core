@@ -8,25 +8,28 @@ import {
   Post,
   Query,
 } from '@nestjs/common'
-import { Auth } from '~/common/decorators/auth.decorator'
-import { HttpCache } from '~/common/decorators/cache.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { RequestContext } from '~/common/contexts/request.context'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
-import { getShortDateTime } from '~/utils/time.util'
 import dayjs from 'dayjs'
 import ejs from 'ejs'
 import { isNil } from 'es-toolkit/compat'
 import xss from 'xss'
+
+import { RequestContext } from '~/common/contexts/request.context'
+import { Auth } from '~/common/decorators/auth.decorator'
+import { HttpCache } from '~/common/decorators/cache.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { CollectionRefTypes } from '~/constants/db.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { EntityIdDto } from '~/shared/dto/id.dto'
+import { getShortDateTime } from '~/utils/time.util'
+
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownPreviewDto } from '../markdown/markdown.schema'
 import { MarkdownService } from '../markdown/markdown.service'
-import type { NoteModel } from '../note/note.model'
+import type { NoteModel } from '../note/note.types'
 import { OwnerService } from '../owner/owner.service'
-import type { PageModel } from '../page/page.model'
-import type { PostModel } from '../post/post.model'
+import type { PageModel } from '../page/page.types'
+import type { PostModel } from '../post/post.types'
 
 @Controller('/render')
 @HTTPDecorators.Bypass
@@ -41,7 +44,7 @@ export class RenderEjsController {
   @Header('content-type', 'text/html')
   @CacheTTL(60 * 60)
   async renderArticle(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query('theme') theme: string,
   ) {
     const { id } = params
@@ -69,14 +72,17 @@ export class RenderEjsController {
 
     const relativePath = (() => {
       switch (type) {
-        case 'posts':
+        case CollectionRefTypes.Post: {
           return `/posts/${((document as PostModel).category as any).slug}/${
             (document as PostModel).slug
           }`
-        case 'notes':
+        }
+        case CollectionRefTypes.Note: {
           return `/notes/${(document as NoteModel).nid}`
-        case 'pages':
+        }
+        case CollectionRefTypes.Page: {
           return `/${(document as PageModel).slug}`
+        }
       }
     })()
 
@@ -98,7 +104,7 @@ export class RenderEjsController {
       )}，由 marked.js 解析生成，用时 ${(performance.now() - now).toFixed(
         2,
       )}ms</div>
-      <div>作者：${username}，撰写于${dayjs(document.created).format(
+      <div>作者：${username}，撰写于${dayjs(document.createdAt).format(
         'llll',
       )}</div>
         <div>原文地址：<a href="${url}">${decodeURIComponent(

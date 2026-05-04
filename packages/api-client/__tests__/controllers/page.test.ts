@@ -15,12 +15,12 @@ describe('test page client', () => {
   })
 
   it('should get post list filter filed', async () => {
-    const mocked = mockResponse('/pages?page=1&size=1&select=created+title', {
+    const mocked = mockResponse('/pages?page=1&size=1&select=createdAt+title', {
       data: [{}],
     })
 
     const data = await client.page.getList(1, 1, {
-      select: ['created', 'title'],
+      select: ['createdAt', 'title'],
     })
     expect(data).toEqual(mocked)
   })

@@ -25,7 +25,7 @@ declare module '../core/client' {
 export type PostListOptions = {
   select?: SelectFields<keyof PostModel>
   year?: number
-  sortBy?: 'categoryId' | 'title' | 'created' | 'modified'
+  sortBy?: 'categoryId' | 'title' | 'createdAt' | 'modifiedAt' | 'pinAt'
   sortOrder?: 1 | -1
   truncate?: number
   /** 语言代码，用于获取翻译版本 */

@@ -1,11 +1,13 @@
 import { readFileSync } from 'node:fs'
 import https from 'node:https'
 import path from 'node:path'
+
 import { seconds } from '@nestjs/throttler'
 import type { AxiosRequestConfig } from 'axios'
 import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
 import nodeMachineId from 'node-machine-id'
+
 import { isDebugMode, isDev } from './global/env.global'
 import { parseBooleanishValue } from './utils/tool.util'
 
@@ -20,7 +22,6 @@ const {
   ENCRYPT_ENABLE: ENV_ENCRYPT_ENABLE,
   CDN_CACHE_HEADER,
   FORCE_CACHE_HEADER,
-  MONGO_CONNECTION,
   THROTTLE_TTL,
   THROTTLE_LIMIT,
   JWT_SECRET,
@@ -120,18 +121,6 @@ const commander = program
   .option('-c, --config <path>', 'load yaml config from file')
   .option('--demo', 'enable demo mode')
 
-  // db
-  .option('--collection_name <string>', 'mongodb collection name')
-  .option('--db_host <string>', 'mongodb database host')
-  .option('--db_port <number>', 'mongodb database port')
-  .option('--db_user <string>', 'mongodb database user')
-  .option('--db_password <string>', 'mongodb database password')
-  .option('--db_options <string>', 'mongodb database options')
-  .option(
-    '--db_connection_string <string>',
-    'mongodb connection string',
-    MONGO_CONNECTION,
-  )
   // redis
   .option('--redis_connection_string <string>', 'redis connection string')
   .option('--redis_host <string>', 'redis host')
@@ -191,6 +180,25 @@ const commander = program
   // telemetry
   .option('--disable_telemetry', 'disable anonymous telemetry')
 
+  // snowflake
+  .option(
+    '--snowflake_worker_id <number>',
+    'snowflake worker id (integer 0-1023). Required in production.',
+  )
+
+  // postgres
+  .option(
+    '--pg_connection_string <string>',
+    'PostgreSQL connection string (overrides individual flags)',
+  )
+  .option('--pg_host <string>', 'PostgreSQL host')
+  .option('--pg_port <number>', 'PostgreSQL port')
+  .option('--pg_user <string>', 'PostgreSQL user')
+  .option('--pg_password <string>', 'PostgreSQL password')
+  .option('--pg_database <string>', 'PostgreSQL database name')
+  .option('--pg_max_pool_size <number>', 'PostgreSQL pool size')
+  .option('--pg_ssl', 'enable PostgreSQL TLS')
+
 commander.parse()
 
 const argv = commander.opts()
@@ -231,39 +239,6 @@ export const CROSS_DOMAIN = {
       ],
 
   // allowedReferer: 'innei.ren',
-}
-
-const customConnectionString = argv.db_connection_string || MONGO_CONNECTION
-
-function buildMongoConnectionString(
-  connectionString: string,
-  dbName: string,
-): string {
-  const url = new URL(connectionString)
-  // Replace or set the pathname to the database name
-  url.pathname = `/${dbName}`
-  return url.toString()
-}
-
-export const MONGO_DB = {
-  dbName: argv.collection_name || 'mx-space',
-  host: argv.db_host || '127.0.0.1',
-  // host: argv.db_host || '10.0.0.33',
-  port: argv.db_port || 27017,
-  user: argv.db_user || '',
-  password: argv.db_password || '',
-  options: argv.db_options || '',
-  get uri() {
-    const userPassword =
-      this.user && this.password ? `${this.user}:${this.password}@` : ''
-    const dbOptions = this.options ? `?${this.options}` : ''
-    return `mongodb://${userPassword}${this.host}:${this.port}/${this.dbName}${dbOptions}`
-  },
-  get customConnectionString() {
-    return customConnectionString
-      ? buildMongoConnectionString(customConnectionString, this.dbName)
-      : undefined
-  },
 }
 
 const redisConnection = argv.redis_connection_string
@@ -349,4 +324,60 @@ if (ENCRYPT.enable && (!ENCRYPT.key || ENCRYPT.key.length !== 64))
 
 export const TELEMETRY = {
   enable: !parseBooleanishValue(argv.disable_telemetry ?? MX_DISABLE_TELEMETRY),
+}
+
+function parseSnowflakeWorkerId(): number {
+  const raw = argv.snowflake_worker_id ?? process.env.SNOWFLAKE_WORKER_ID
+  if (raw === undefined || raw === null || raw === '') {
+    if (isDev) {
+      // Dev fallback: avoid forcing every local checkout to set a worker id.
+      // Production deployments must allocate explicitly to prevent collisions.
+      return 0
+    }
+    throw new Error(
+      'SNOWFLAKE_WORKER_ID is required. Set the SNOWFLAKE_WORKER_ID env var or --snowflake_worker_id flag (integer 0-1023).',
+    )
+  }
+  const value = Number(raw)
+  if (!Number.isInteger(value) || value < 0 || value > 1023) {
+    throw new Error(
+      `SNOWFLAKE_WORKER_ID must be an integer in [0, 1023]; received "${raw}"`,
+    )
+  }
+  return value
+}
+
+export const SNOWFLAKE = {
+  workerId: parseSnowflakeWorkerId(),
+  // 2026-05-02T00:00:00.000Z
+  epochMs: 1746144000000,
+}
+
+const PG_CONNECTION_FROM_ENV =
+  argv.pg_connection_string ||
+  process.env.PG_URL ||
+  process.env.PG_CONNECTION_STRING
+
+function parseInt32(input: unknown, fallback: number): number {
+  if (input === undefined || input === null || input === '') return fallback
+  const n = Number(input)
+  if (!Number.isInteger(n) || n <= 0) return fallback
+  return n
+}
+
+export const POSTGRES = {
+  connectionString: PG_CONNECTION_FROM_ENV as string | undefined,
+  host: argv.pg_host || process.env.PG_HOST || '127.0.0.1',
+  port: parseInt32(argv.pg_port ?? process.env.PG_PORT, 5432),
+  user: argv.pg_user || process.env.PG_USER || 'mx',
+  password: argv.pg_password || process.env.PG_PASSWORD || 'mx',
+  database: argv.pg_database || process.env.PG_DATABASE || 'mx_core',
+  maxPoolSize: parseInt32(
+    argv.pg_max_pool_size ?? process.env.PG_MAX_POOL_SIZE,
+    20,
+  ),
+  ssl:
+    parseBooleanishValue(argv.pg_ssl ?? process.env.PG_SSL) === true
+      ? { rejectUnauthorized: false }
+      : false,
 }

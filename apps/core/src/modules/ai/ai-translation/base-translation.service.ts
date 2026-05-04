@@ -3,9 +3,9 @@ import dayjs from 'dayjs'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { computeContentHash as computeContentHashUtil } from '~/utils/content.util'
 
-import type { NoteModel } from '../../note/note.model'
-import type { PageModel } from '../../page/page.model'
-import type { PostModel } from '../../post/post.model'
+import type { NoteModel } from '../../note/note.types'
+import type { PageModel } from '../../page/page.types'
+import type { PostModel } from '../../post/post.types'
 import type {
   ArticleContent,
   ArticleDocument,
@@ -27,8 +27,11 @@ export abstract class BaseTranslationService {
     }
   }
 
-  getMetaLang(document: { meta?: { lang?: string } }): string | undefined {
-    return document.meta?.lang
+  getMetaLang(document: {
+    meta?: Record<string, unknown> | null
+  }): string | undefined {
+    const lang = document.meta?.lang
+    return typeof lang === 'string' ? lang : undefined
   }
 
   computeContentHash(document: ArticleContent, sourceLang: string): string {

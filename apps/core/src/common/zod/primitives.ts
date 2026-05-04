@@ -1,16 +1,5 @@
 import { z } from 'zod'
 
-// MongoDB Types
-
-export const zMongoId = z
-  .string()
-  .regex(/^[0-9a-f]{24}$/i, 'Invalid MongoDB ObjectId')
-
-export const zMongoIdOrInt = z.union([
-  zMongoId,
-  z.coerce.number().int().positive(),
-])
-
 // String Types
 
 export const zNonEmptyString = z.string().min(1)
@@ -24,7 +13,7 @@ export const zNilOrString = z.string().nullable().optional()
 
 export const zHexColor = z
   .string()
-  .regex(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i, 'Invalid hex color')
+  .regex(/^#([\da-f]{3}|[\da-f]{6})$/i, 'Invalid hex color')
 
 // URL Types
 

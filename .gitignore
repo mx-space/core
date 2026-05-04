@@ -1,6 +1,7 @@
 # compiled output
 /dist
 node_modules
+.pnpm-store/
 
 # Logs
 logs
@@ -54,3 +55,8 @@ dev/
 
 .eslintcache
 .superpowers
+
+# local docker smoke overrides — never commit
+docker-compose.smoke.yml
+
+.pnpm-store/

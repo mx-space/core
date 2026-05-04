@@ -1,5 +1,5 @@
-import type { TopicModel } from '../topic/topic.model'
-import type { NoteModel } from './note.model'
+import type { TopicModel } from '../topic/topic.types'
+import type { NoteModel } from './note.types'
 
 export type NormalizedNote = Omit<NoteModel, 'password' | 'topic'> & {
   topic: TopicModel

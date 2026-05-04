@@ -1,14 +1,26 @@
-import type { BaseCommentIndexModel } from './base'
-
 export enum RecentlyRefTypes {
-  Post = 'Post',
-  Note = 'Note',
-  Page = 'Page',
+  Post = 'post',
+  Note = 'note',
+  Page = 'page',
+  Recently = 'recently',
 }
 
 export type RecentlyRefType = {
   title: string
   url: string
+}
+
+/**
+ * 服务端 attachRef 注入：when `refType`/`refId` 指向 post/note/page/recently，
+ * 列表/详情会附此扁形 summary；orphan ref（目标已删）则为 null。
+ */
+export interface RecentlyRefSummary {
+  id: string
+  type: RecentlyRefTypes
+  title?: string
+  slug?: string | null
+  nid?: number
+  url?: string
 }
 
 export enum RecentlyTypeEnum {
@@ -91,17 +103,22 @@ export type RecentlyMetadata =
   | AcademicMetadata
   | CodeMetadata
 
-export interface RecentlyModel extends BaseCommentIndexModel {
+export interface RecentlyModel {
+  id: string
+  createdAt: string
+  modifiedAt: string | null
+
   content: string
   type: RecentlyTypeEnum
-  metadata?: RecentlyMetadata
+  metadata: RecentlyMetadata | null
 
-  ref?: RecentlyRefType & { [key: string]: any }
-  refId?: string
-  refType?: RecentlyRefTypes
+  refType: RecentlyRefTypes
+  refId: string | null
+  ref?: RecentlyRefSummary | null
 
   up: number
   down: number
 
-  modified?: string
+  commentsIndex: number
+  allowComment: boolean
 }

@@ -8,22 +8,15 @@ import {
   Logger,
 } from '@nestjs/common'
 import { CronExpression } from '@nestjs/schedule'
-import { flatten } from 'es-toolkit/compat'
 import { mkdirp } from 'mkdirp'
 
-import { MONGO_DB } from '~/app.config'
+import { POSTGRES } from '~/app.config'
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import {
-  ANALYZE_COLLECTION_NAME,
-  MIGRATE_COLLECTION_NAME,
-  WEBHOOK_EVENT_COLLECTION_NAME,
-} from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
-import { migrateDatabase } from '~/migration/migrate'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { S3Uploader } from '~/utils/s3.util'
@@ -34,11 +27,6 @@ import { getMediumDateTime } from '~/utils/time.util'
 
 import { ConfigsService } from '../configs/configs.service'
 
-const excludeCollections = [
-  ANALYZE_COLLECTION_NAME,
-  WEBHOOK_EVENT_COLLECTION_NAME,
-  MIGRATE_COLLECTION_NAME,
-]
 const excludeFolders = [
   'backup',
   'log',
@@ -76,6 +64,29 @@ export class BackupService {
   private async commandExists(command: string) {
     const res = await $(`command -v ${command} >/dev/null 2>&1`)
     return res.exitCode === 0
+  }
+
+  private shellQuote(value: string | number) {
+    return `'${String(value).replaceAll("'", `'\\''`)}'`
+  }
+
+  private pgPasswordEnv() {
+    return POSTGRES.password
+      ? `PGPASSWORD=${this.shellQuote(POSTGRES.password)} `
+      : ''
+  }
+
+  private pgConnectionArgs() {
+    if (POSTGRES.connectionString) {
+      return `--dbname ${this.shellQuote(POSTGRES.connectionString)}`
+    }
+
+    return [
+      `-h ${this.shellQuote(POSTGRES.host)}`,
+      `-p ${POSTGRES.port}`,
+      `-U ${this.shellQuote(POSTGRES.user)}`,
+      `-d ${this.shellQuote(POSTGRES.database)}`,
+    ].join(' ')
   }
 
   async list() {
@@ -127,47 +138,33 @@ export class BackupService {
     }
 
     try {
-      const excludeCollectionArgs = flatten(
-        excludeCollections.map((collection) => [
-          '--excludeCollection',
-          collection,
-        ]),
-      ).join(' ')
+      const dumpedDbDir = join(backupDirPath, 'mx-space')
+      mkdirp.sync(dumpedDbDir)
+      const dumpFilePath = join(dumpedDbDir, 'pg.dump')
 
       await runStep(
-        'mongodump',
-        `mongodump --quiet --uri "${MONGO_DB.customConnectionString || MONGO_DB.uri}" -d ${MONGO_DB.dbName} ${excludeCollectionArgs} -o ${backupDirPath}`,
+        'pg_dump',
+        `${this.pgPasswordEnv()}pg_dump --format=custom ${this.pgConnectionArgs()} -f ${this.shellQuote(dumpFilePath)}`,
       )
 
-      const dumpedDbDir = join(backupDirPath, MONGO_DB.dbName)
-      if (!existsSync(dumpedDbDir)) {
+      if (!existsSync(dumpFilePath)) {
         const error = new Error(
-          `mongodump 已执行，但未生成目录：${dumpedDbDir}（请检查 DB 名称、连接与权限）`,
+          `pg_dump 已执行，但未生成文件：${dumpFilePath}（请检查 DB 名称、连接与权限）`,
         ) as any
-        error.step = 'mongodump'
+        error.step = 'pg_dump'
         error.cwd = backupDirPath
         throw error
       }
-      const dumpedEntries = await readdir(dumpedDbDir)
-      const hasDumpFiles = dumpedEntries.some(
-        (name) => name.endsWith('.bson') || name.endsWith('.metadata.json'),
-      )
-      if (!hasDumpFiles) {
+      const dumpStat = statSync(dumpFilePath)
+      if (dumpStat.size === 0) {
         const error = new Error(
-          `mongodump 生成目录为空或没有 bson 文件：${dumpedDbDir}（zip exit code 12 常见原因）`,
+          `pg_dump 生成文件为空：${dumpFilePath}（zip exit code 12 常见原因）`,
         ) as any
-        error.step = 'mongodump'
+        error.step = 'pg_dump'
         error.cwd = backupDirPath
-        error.dirListing = dumpedEntries.slice(0, 30)
         throw error
       }
 
-      // 打包 DB
-      if (MONGO_DB.dbName !== 'mx-space') {
-        await runStep('rename-db-dir', `mv "${MONGO_DB.dbName}" mx-space`, {
-          cwd: backupDirPath,
-        })
-      }
       // 使用目录而非通配符，避免目录为空时触发 "zip error: Nothing to do" (exit code 12)
       await runStep(
         'zip-db',
@@ -205,25 +202,22 @@ export class BackupService {
       const stdout = (error as any)?.stdout
         ? `\n\nstdout:\n${(error as any).stdout}`
         : ''
-      const dirListing = (error as any)?.dirListing?.length
-        ? `\n\ndirListing(${MONGO_DB.dbName}): ${(error as any).dirListing.join(', ')}`
-        : ''
 
       // 额外诊断：命令是否存在、备份目录当前内容
-      const [hasZip, hasMongoDump, hasMongoRestore] = await Promise.all([
+      const [hasZip, hasPgDump, hasPgRestore] = await Promise.all([
         this.commandExists('zip'),
-        this.commandExists('mongodump'),
-        this.commandExists('mongorestore'),
+        this.commandExists('pg_dump'),
+        this.commandExists('pg_restore'),
       ])
       const backupDirContent = await this.safeListDir(backupDirPath)
 
       this.logger.error(
         `--> 备份失败（${[step, cwd].filter(Boolean).join(', ')}），${error.message}` +
-          `${stderr}${stdout}${dirListing}\n\n` +
+          `${stderr}${stdout}\n\n` +
           `diagnostics:\n` +
           `- zip: ${hasZip ? 'found' : 'missing'}\n` +
-          `- mongodump: ${hasMongoDump ? 'found' : 'missing'}\n` +
-          `- mongorestore: ${hasMongoRestore ? 'found' : 'missing'}\n` +
+          `- pg_dump: ${hasPgDump ? 'found' : 'missing'}\n` +
+          `- pg_restore: ${hasPgRestore ? 'found' : 'missing'}\n` +
           `- backupDir(${backupDirPath}): ${backupDirContent}`,
       )
       throw error
@@ -301,12 +295,15 @@ export class BackupService {
         throw new InternalServerErrorException('备份文件错误，目录不存在')
       }
 
+      const dumpFilePath = join(dirPath, 'mx-space', 'pg.dump')
+      if (!existsSync(dumpFilePath)) {
+        throw new InternalServerErrorException('备份文件错误，数据库备份不存在')
+      }
+
       await $throw(
-        `mongorestore --quiet --uri "${MONGO_DB.customConnectionString || MONGO_DB.uri}" -d ${MONGO_DB.dbName} ./mx-space --drop`,
+        `${this.pgPasswordEnv()}pg_restore --clean --if-exists --no-owner ${this.pgConnectionArgs()} ${this.shellQuote(dumpFilePath)}`,
         { cwd: dirPath },
       )
-
-      await migrateDatabase()
     } catch (error) {
       this.logger.error(
         `restore 失败：${(error as any)?.message || error}\n\n${

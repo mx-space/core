@@ -1,14 +1,25 @@
 import { Injectable } from '@nestjs/common'
-import { InjectModel } from '~/transformers/model.transformer'
-import { SayModel } from './say.model'
 
+import { SayRepository } from './say.repository'
+
+/**
+ * Thin façade over {@link SayRepository}. Cross-module consumers
+ * (e.g. aggregate) call the named methods below instead of touching
+ * the underlying drizzle / repository directly.
+ */
 @Injectable()
 export class SayService {
-  constructor(
-    @InjectModel(SayModel) private readonly sayModel: MongooseModel<SayModel>,
-  ) {}
+  constructor(private readonly sayRepository: SayRepository) {}
 
-  public get model() {
-    return this.sayModel
+  public get repository() {
+    return this.sayRepository
+  }
+
+  findRecent(size: number) {
+    return this.sayRepository.findRecent(size)
+  }
+
+  count() {
+    return this.sayRepository.count()
   }
 }

@@ -18,7 +18,7 @@ import {
   CreateTranslationTaskDto,
 } from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import {
@@ -58,7 +58,7 @@ export class AiTranslationController {
 
   @Get('/ref/:id')
   @Auth()
-  async getTranslationsByRefId(@Param() params: MongoIdDto) {
+  async getTranslationsByRefId(@Param() params: EntityIdDto) {
     return this.service.getTranslationsByRefId(params.id)
   }
 
@@ -71,7 +71,7 @@ export class AiTranslationController {
   @Patch('/:id')
   @Auth()
   async updateTranslation(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: UpdateTranslationDto,
   ) {
     return this.service.updateTranslation(params.id, body)
@@ -79,26 +79,26 @@ export class AiTranslationController {
 
   @Delete('/:id')
   @Auth()
-  async deleteTranslation(@Param() params: MongoIdDto) {
+  async deleteTranslation(@Param() params: EntityIdDto) {
     return this.service.deleteTranslation(params.id)
   }
 
   @Get('/article/:id')
   async getArticleTranslation(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query() query: GetTranslationQueryDto,
   ) {
     return this.service.getTranslationForArticle(params.id, query.lang)
   }
 
   @Get('/article/:id/languages')
-  async getAvailableLanguages(@Param() params: MongoIdDto) {
+  async getAvailableLanguages(@Param() params: EntityIdDto) {
     return this.service.getAvailableLanguagesForArticle(params.id)
   }
 
   @Get('/article/:id/generate')
   async streamArticleTranslation(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query() query: GetTranslationStreamQueryDto,
     @Res() reply: FastifyReply,
   ) {

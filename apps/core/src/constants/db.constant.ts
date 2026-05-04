@@ -49,8 +49,8 @@ export const TRANSLATION_ENTRY_COLLECTION_NAME = 'translation_entries'
 
 export const USER_COLLECTION_NAME = 'users'
 export enum CollectionRefTypes {
-  Post = POST_COLLECTION_NAME,
-  Note = NOTE_COLLECTION_NAME,
-  Page = PAGE_COLLECTION_NAME,
-  Recently = RECENTLY_COLLECTION_NAME,
+  Post = 'post',
+  Note = 'note',
+  Page = 'page',
+  Recently = 'recently',
 }

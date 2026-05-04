@@ -15,6 +15,7 @@ const DEFAULT_LEAK_FIELDS = [
   'images',
   'order',
 ]
+const ENTITY_ID = '1'
 
 function getLeakedDefaults(schema: any, input: Record<string, any>) {
   const result = schema.parse(input)
@@ -24,14 +25,14 @@ function getLeakedDefaults(schema: any, input: Record<string, any>) {
 describe('Partial schemas should not apply defaults for missing fields', () => {
   it('PartialNoteSchema - only topicId', () => {
     const leaked = getLeakedDefaults(PartialNoteSchema, {
-      topicId: '507f1f77bcf86cd799439011',
+      topicId: ENTITY_ID,
     })
     expect(leaked).toEqual([])
   })
 
   it('PartialPostSchema - only categoryId', () => {
     const leaked = getLeakedDefaults(PartialPostSchema, {
-      categoryId: '507f1f77bcf86cd799439011',
+      categoryId: ENTITY_ID,
     })
     expect(leaked).toEqual([])
   })
@@ -46,10 +47,10 @@ describe('Partial schemas should not apply defaults for missing fields', () => {
   it('PartialNoteSchema - provided fields should still be set', () => {
     const result = PartialNoteSchema.parse({
       title: 'my title',
-      topicId: '507f1f77bcf86cd799439011',
+      topicId: ENTITY_ID,
     })
     expect(result.title).toBe('my title')
-    expect(result.topicId).toBe('507f1f77bcf86cd799439011')
+    expect(result.topicId).toBe(ENTITY_ID)
   })
 
   it('PartialNoteSchema - empty title should transform to 无题', () => {

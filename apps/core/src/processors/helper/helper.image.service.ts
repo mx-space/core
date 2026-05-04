@@ -4,7 +4,7 @@ import { encode } from 'blurhash'
 import type { Sharp } from 'sharp'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
-import type { ImageModel } from '~/shared/model/image.model'
+import type { ImageModel } from '~/shared/types/legacy-model.type'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
 import { AsyncQueue } from '~/utils/queue.util'
 import { requireDepsWithInstall } from '~/utils/tool.util'
@@ -30,7 +30,7 @@ export class ImageService implements OnModuleInit {
 
   async saveImageDimensionsFromMarkdownText(
     text: string,
-    originImages: ImageModel[] | undefined,
+    originImages: unknown[] | null | undefined,
     onUpdate: (images: ImageModel[]) => Promise<any>,
   ) {
     const newImageSrcSet = new Set(pickImagesFromMarkdown(text))
@@ -39,7 +39,10 @@ export class ImageService implements OnModuleInit {
     const result = [] as ImageModel[]
 
     const oldImagesMap = new Map(
-      (originImages ?? []).map((image) => [image.src, { ...image }]),
+      ((originImages ?? []) as ImageModel[]).map((image) => [
+        image.src,
+        { ...image },
+      ]),
     )
 
     const queue = new AsyncQueue(2)
@@ -94,7 +97,7 @@ export class ImageService implements OnModuleInit {
 
     // 老图片不要过滤，记录到列头
     if (originImages) {
-      for (const oldImageRecord of originImages) {
+      for (const oldImageRecord of originImages as ImageModel[]) {
         const src = oldImageRecord.src
         if (src && !newImageSrcSet.has(src)) {
           result.unshift(oldImageRecord)

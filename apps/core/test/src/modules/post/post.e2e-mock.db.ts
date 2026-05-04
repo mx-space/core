@@ -1,5 +1,5 @@
-import type { CategoryModel } from '~/modules/category/category.model'
-import type { PostModel } from '~/modules/post/post.model'
+import type { CategoryModel } from '~/modules/category/category.types'
+import type { PostModel } from '~/modules/post/post.types'
 
 // @ts-expect-error
 const publishedPosts = Array.from({ length: 15 }).map((_, _i) => {

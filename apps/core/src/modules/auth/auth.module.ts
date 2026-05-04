@@ -4,11 +4,14 @@ import type {
   NestModule,
   Provider,
 } from '@nestjs/common'
+
 import { API_VERSION } from '~/app.config'
+
 import { AuthInstanceInjectKey } from './auth.constant'
 import { AuthController } from './auth.controller'
 import type { AuthInstance } from './auth.interface'
 import { AuthMiddleware } from './auth.middleware'
+import { AuthRepository } from './auth.repository'
 import { AuthService } from './auth.service'
 
 export class AuthModule implements NestModule {
@@ -30,10 +33,11 @@ export class AuthModule implements NestModule {
     return {
       controllers: [AuthController],
       exports: [AuthService, authProvider],
+      imports: [],
       module: AuthModule,
       global: true,
 
-      providers: [AuthService, authProvider],
+      providers: [AuthService, AuthRepository, authProvider],
     }
   }
 

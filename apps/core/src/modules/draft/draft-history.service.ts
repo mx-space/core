@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common'
+
 import { ContentFormat } from '~/shared/types/content-format.type'
+
 import type { DiffStrategy } from './diff'
 import { jsonDiffStrategy, textDiffStrategy } from './diff'
-import { DraftHistoryModel } from './draft.model'
+import type { DraftHistoryModel } from './draft.types'
 
 export interface DraftStateSnapshot {
   version: number

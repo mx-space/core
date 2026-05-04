@@ -1,12 +1,12 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { zMongoId } from '~/common/zod'
+import { zEntityId } from '~/common/zod'
 
 // --- Conversation CRUD ---
 
 export const CreateConversationSchema = z.object({
-  refId: zMongoId,
+  refId: zEntityId,
   refType: z.enum(['post', 'note', 'page']),
   title: z.string().optional(),
   messages: z.array(z.record(z.string(), z.unknown())).default([]),
@@ -37,7 +37,7 @@ export class UpdateConversationDto extends createZodDto(
 ) {}
 
 export const ListConversationsQuerySchema = z.object({
-  refId: zMongoId,
+  refId: zEntityId,
   refType: z.enum(['post', 'note', 'page']),
 })
 export class ListConversationsQueryDto extends createZodDto(

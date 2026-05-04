@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { zCoerceInt, zMongoId, zNonEmptyString, zPrefer } from '~/common/zod'
+import { zCoerceInt, zEntityId, zNonEmptyString, zPrefer } from '~/common/zod'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
@@ -19,7 +19,7 @@ export const PageSchema = WriteBaseSchema.extend({
   ),
   images: z.array(ImageSchema).optional(),
   /** 关联的草稿 ID，发布时标记该草稿为已发布 */
-  draftId: zMongoId.optional(),
+  draftId: zEntityId.optional(),
 })
 
 export class PageDto extends createZodDto(PageSchema) {}
@@ -46,7 +46,7 @@ export class PartialPageDto extends createZodDto(PartialPageSchema) {}
  * Page reorder sequence item schema
  */
 export const PageReorderSeqSchema = z.object({
-  id: zMongoId,
+  id: zEntityId,
   order: zCoerceInt.min(1),
 })
 

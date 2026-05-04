@@ -1,7 +1,9 @@
-import { zCoerceInt, zMongoId } from '~/common/zod'
-import { PagerSchema } from '~/shared/dto/pager.dto'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { zCoerceInt, zEntityId } from '~/common/zod'
+import { PagerSchema } from '~/shared/dto/pager.dto'
+
 import { Activity } from './activity.constant'
 import type { ActivityLikeSupportType } from './activity.interface'
 
@@ -75,7 +77,7 @@ export class ActivityNotificationDto extends createZodDto(
  * Like body schema
  */
 export const LikeBodySchema = z.object({
-  id: zMongoId,
+  id: zEntityId,
   type: z.enum([
     'Post',
     'Note',
@@ -96,7 +98,7 @@ export const UpdatePresenceSchema = z.object({
   position: z.number().min(0),
   displayName: z.string().max(50).optional(),
   sid: z.string().max(30),
-  readerId: zMongoId.optional(),
+  readerId: z.string().optional(),
 })
 
 export class UpdatePresenceDto extends createZodDto(UpdatePresenceSchema) {}

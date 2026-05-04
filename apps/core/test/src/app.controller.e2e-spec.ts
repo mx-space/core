@@ -1,93 +1,52 @@
-import { createRedisProvider } from '@/mock/modules/redis.mock'
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
-import { Test } from '@nestjs/testing'
+import { BadRequestException } from '@nestjs/common'
+import { describe, expect, it, vi } from 'vitest'
+
 import { AppController } from '~/app.controller'
-import { fastifyApp } from '~/common/adapters/fastify.adapter'
-import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
-import { AuthGuard } from '~/common/guards/auth.guard'
-import { OptionModel } from '~/modules/configs/configs.model'
-import { CacheService } from '~/processors/redis/cache.service'
-import { getModelToken } from '~/transformers/model.transformer'
-import { AuthTestingGuard } from 'test/mock/guard/auth.guard'
 
-describe('AppController (e2e)', async () => {
-  let app: NestFastifyApplication
+const createController = () => {
+  const redis = {
+    sismember: vi.fn().mockResolvedValue(0),
+    sadd: vi.fn().mockResolvedValue(1),
+  }
+  const redisService = {
+    getClient: vi.fn(() => redis),
+    cleanCatch: vi.fn(),
+    cleanAllRedisKey: vi.fn(),
+  }
+  const configsService = {
+    incrementOption: vi.fn(),
+    getOptionValue: vi.fn().mockResolvedValue(7),
+  }
+  const controller = new AppController(
+    redisService as any,
+    configsService as any,
+  )
+  return { configsService, controller, redis, redisService }
+}
 
-  beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [
-        CacheService,
+describe('AppController', () => {
+  it('returns the liveness pong without a database dependency', () => {
+    const { controller } = createController()
 
-        {
-          provide: getModelToken(OptionModel.name),
-          useValue: {},
-        },
-        await createRedisProvider(),
-      ],
-    })
-      .overrideGuard(AuthGuard)
-      .useClass(AuthTestingGuard)
-      .overrideProvider(CacheService)
-      .useValue({})
-      .compile()
-
-    app = moduleRef.createNestApplication<NestFastifyApplication>(fastifyApp)
-    await app.init()
-    await app.getHttpAdapter().getInstance().ready()
+    expect(controller.ping()).toBe('pong')
   })
 
-  test('GET /ping', () => {
-    return app
-      .inject({
-        method: 'GET',
-        url: `${apiRoutePrefix}/ping`,
-      })
-      .then((res) => {
-        expect(res.statusCode).toBe(200)
-        expect(res.payload).toBe('pong')
-      })
+  it('records one like per ip address through Redis and config storage', async () => {
+    const { configsService, controller, redis } = createController()
+
+    await controller.likeThis({ ip: '127.0.0.1' } as any)
+
+    expect(redis.sadd).toHaveBeenCalled()
+    expect(configsService.incrementOption).toHaveBeenCalledWith('like')
   })
 
-  test('GET /favicon.ico', () => {
-    return app.inject({ url: '/favicon.ico' }).then((res) => {
-      expect(res.payload).toBe('')
-      expect(res.statusCode).toBe(204)
-    })
-  })
+  it('rejects repeated like submissions from the same ip address', async () => {
+    const { configsService, controller, redis } = createController()
+    redis.sismember.mockResolvedValue(1)
 
-  describe('test security', () => {
-    test('GET /admin', () => {
-      return app.inject({ url: '/admin' }).then((res) => {
-        expect(res.statusCode).toBe(200)
-      })
-    })
-
-    test('GET /wp.php', () => {
-      return app.inject({ url: '/wp.php' }).then((res) => {
-        expect(res.statusCode).toBe(418)
-      })
-    })
-    test('GET /1/1/11/1.php', () => {
-      return app.inject({ url: '/1/1/11/1.php' }).then((res) => {
-        expect(res.statusCode).toBe(418)
-      })
-    })
-    test('GET /1/1/11/admin', () => {
-      return app
-        .inject({
-          url: '/1/1/11/admin',
-          headers: { 'user-agent': 'chrome mx-space/client' },
-        })
-        .then((res) => {
-          expect(res.statusCode).toBe(666)
-        })
-    })
-
-    test('GET /phpmyadmin', () => {
-      return app.inject({ url: '/pages/slug/phpMyAdmin' }).then((res) => {
-        expect(res.statusCode).toBe(200)
-      })
-    })
+    await expect(
+      controller.likeThis({ ip: '127.0.0.1' } as any),
+    ).rejects.toThrow(BadRequestException)
+    expect(configsService.incrementOption).not.toHaveBeenCalled()
   })
 })

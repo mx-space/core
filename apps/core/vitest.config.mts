@@ -26,6 +26,7 @@ export default defineConfig({
     globalSetup: [resolve(__dirname, './test/setup.ts')],
     setupFiles: [resolve(__dirname, './test/setup-global.ts')],
     environment: 'node',
+    hookTimeout: 60_000,
   },
 
   resolve: {

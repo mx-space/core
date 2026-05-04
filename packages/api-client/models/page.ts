@@ -1,20 +1,43 @@
-import type { TextBaseModel } from './base'
+import type { Image } from './base'
 
 export enum EnumPageType {
   'md' = 'md',
   'html' = 'html',
   'frame' = 'frame',
 }
-export type PageModel = TextBaseModel & {
-  created: string
 
+export interface PageModelMarkdown {
+  id: string
+  createdAt: string
+  modifiedAt: string | null
+  title: string
   slug: string
-
-  subtitle?: string
-
+  subtitle?: string | null
+  text: string
+  contentFormat?: 'markdown'
+  content?: undefined
+  meta?: Record<string, any> | null
+  images?: Image[] | null
   order?: number
-
   type?: EnumPageType
-
   options?: object
 }
+
+export interface PageModelLexical {
+  id: string
+  createdAt: string
+  modifiedAt: string | null
+  title: string
+  slug: string
+  subtitle?: string | null
+  text?: string
+  contentFormat: 'lexical'
+  content: string
+  meta?: Record<string, any> | null
+  images?: Image[] | null
+  order?: number
+  type?: EnumPageType
+  options?: object
+}
+
+export type PageModel = PageModelMarkdown | PageModelLexical

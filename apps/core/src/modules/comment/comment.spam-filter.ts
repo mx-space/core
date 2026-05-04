@@ -7,7 +7,7 @@ import { AiService } from '../ai/ai.service'
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerService } from '../owner/owner.service'
 import BlockedKeywords from './block-keywords.json' with { type: 'json' }
-import type { CommentModel } from './comment.model'
+import type { CommentModel } from './comment.types'
 import MeaninglessWords from './meaningless-words.json' with { type: 'json' }
 
 export interface SpamFilterContext {

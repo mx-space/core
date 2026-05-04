@@ -3,11 +3,15 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { getAvatar } from '~/utils/tool.util'
 
 import { OwnerService } from '../owner/owner.service'
-import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
-import { CommentModel } from './comment.model'
 
-type CommentWithReplies = CommentModel & { replies?: CommentModel[] }
+interface CommentLike {
+  readerId?: string | null
+  author?: string
+  avatar?: string
+  mail?: string
+  replies?: CommentLike[]
+}
 
 @Injectable()
 export class CommentReaderFillService {
@@ -17,7 +21,7 @@ export class CommentReaderFillService {
     private readonly readerService: ReaderService,
   ) {}
 
-  collectNestedReaderIds(comments: CommentWithReplies[]): string[] {
+  collectNestedReaderIds(comments: CommentLike[]): string[] {
     const readerIds = new Set<string>()
 
     for (const comment of comments) {
@@ -35,17 +39,17 @@ export class CommentReaderFillService {
     return [...readerIds]
   }
 
-  collectThreadReaderIds(comments: CommentWithReplies[]): string[] {
+  collectThreadReaderIds(comments: CommentLike[]): string[] {
     return this.collectNestedReaderIds(comments)
   }
 
-  async fillAndReplaceAvatarUrl(
-    comments: CommentModel[],
-  ): Promise<CommentModel[]> {
+  async fillAndReplaceAvatarUrl<T extends CommentLike>(
+    comments: T[],
+  ): Promise<T[]> {
     const owner = await this.ownerService.getOwner()
     const readerIds = new Set<string>()
 
-    walkComments(comments as CommentWithReplies[], (comment) => {
+    walkComments(comments, (comment) => {
       if (comment.readerId) {
         readerIds.add(comment.readerId)
       }
@@ -54,15 +58,15 @@ export class CommentReaderFillService {
     const readers = readerIds.size
       ? await this.readerService.findReaderInIds([...readerIds])
       : []
-    const readerMap = new Map<string, ReaderModel>()
-    readers.forEach((reader) => {
-      const id = (reader as any).id || (reader as any)._id?.toString?.()
+    const readerMap = new Map<string, any>()
+    readers.forEach((reader: any) => {
+      const id = reader.id || reader.id?.toString?.()
       if (id) {
         readerMap.set(id, reader)
       }
     })
 
-    walkComments(comments as CommentWithReplies[], (comment) => {
+    walkComments(comments, (comment) => {
       const reader = comment.readerId ? readerMap.get(comment.readerId) : null
       if (reader) {
         const isOwner = reader.role === 'owner'
@@ -86,9 +90,9 @@ export class CommentReaderFillService {
   }
 }
 
-function walkComments(
-  comments: CommentWithReplies[],
-  visit: (comment: CommentWithReplies) => void,
+function walkComments<T extends CommentLike>(
+  comments: T[],
+  visit: (comment: T) => void,
 ): void {
   for (const comment of comments) {
     if (typeof comment === 'string') continue
@@ -96,7 +100,7 @@ function walkComments(
 
     const replies = comment.replies
     if (replies?.length) {
-      walkComments(replies as CommentWithReplies[], visit)
+      walkComments(replies as T[], visit)
     }
   }
 }

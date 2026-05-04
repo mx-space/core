@@ -31,7 +31,6 @@
     "cross-env": "10.1.0",
     "eslint": "^10.2.1",
     "lint-staged": "16.4.0",
-    "mongodb-memory-server": "11.0.1",
     "prettier": "3.8.3",
     "prettier-package-json": "2.8.0",
     "prettier-plugin-ember-template-tag": "2.1.5",
@@ -47,7 +46,6 @@
   "resolutions": {
     "rolldown": "1.0.0-rc.18",
     "get-pixels@^3>request": "./external/request",
-    "mongodb": "~7.1.0",
     "pino": "./external/pino",
     "semver": "7.7.4",
     "typescript": "6.0.3",

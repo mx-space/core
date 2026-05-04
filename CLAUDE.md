@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MX Space is a personal blog server application built with NestJS, MongoDB, and Redis. This is a monorepo containing the core server application and related packages. The main application is located in `apps/core/`.
+MX Space is a personal blog server application (AI-powered headless CMS) built with NestJS, PostgreSQL, and Redis. This is a monorepo containing the core server application and related packages. The main application is located in `apps/core/`.
 
 ## Related Projects
 
 - **Dashboard (admin-vue3)**: `../admin-vue3` — 后台管理面板，Vue 3 项目
-- **Frontend (Shiroi)**: `../Shiroi` — 主站前端 (Next.js)
-- **haklex**: `../haklex` (standalone) / `../Shiroi/haklex` (original host) — Rich editor packages (`@haklex/*`)
+- **Frontend (Yohaku)**: `../Yohaku` — 主站前端 (Next.js)
+- **haklex**: `../haklex` (standalone) — Rich editor packages (`@haklex/*`)
 
 ### Lexical Content Processing
 
@@ -68,14 +68,14 @@ pnpm -C apps/core run test:watch
 **API Route Prefix**: The `@ApiController()` decorator adds `/api/v{version}` prefix in production but no prefix in development. This allows direct access during development.
 
 **Processors**: Infrastructure services organized in `processors/`:
-- `database/` - MongoDB connection and model registration
+- `database/` - PostgreSQL connection (Drizzle ORM), repository registry, base repository class
 - `redis/` - Redis caching and pub/sub
 - `gateway/` - WebSocket gateways for real-time features
-- `helper/` - Utility services (email, image, JWT, etc.)
+- `helper/` - Utility services (email, image, JWT, Lexical, etc.)
 
-**Database Models**: Uses Mongoose with TypeGoose. All models extend a base with `_id`, `created`, `updated` fields.
+**Database**: Uses PostgreSQL 16+ with Drizzle ORM. Schema definitions in `src/database/schema/`. Drizzle SQL migrations in `src/database/migrations/`. IDs are Snowflake `bigint` (serialized as strings at API boundaries). Repositories extend `BaseRepository` and are registered via `repository.tokens.ts`.
 
-**Authentication**: JWT-based with decorators `@Auth()` for route protection and `@CurrentUser()` for accessing the authenticated user.
+**Authentication**: Better Auth-based session management with decorators `@Auth()` for route protection and `@CurrentUser()` for accessing the authenticated user. Supports password, OAuth, Passkey, and API key (`x-api-key` header).
 
 ## API Response Rules
 
@@ -89,21 +89,17 @@ pnpm -C apps/core run test:watch
 
 ## Testing
 
-Uses Vitest with in-memory MongoDB and Redis.
+Uses Vitest with PostgreSQL testcontainers (`@testcontainers/postgresql`) and Redis memory server.
 
 ### E2E Test Pattern
-Use `createE2EApp` helper from `test/helper/create-e2e-app.ts`:
+Use `createE2EApp` helper from `test/helper/create-e2e-app.ts`. Tests requiring PostgreSQL use `startPgTestContainer()` from `test/helper/pg-testcontainer.ts`.
 ```typescript
+import { createE2EApp } from 'test/helper/create-e2e-app'
+
 const proxy = createE2EApp({
   imports: [...],
   controllers: [MyController],
   providers: [...],
-  models: [MyModel],
-  pourData: async (modelMap) => {
-    // Insert test data
-    const model = modelMap.get(MyModel)!.model
-    await model.create({ ... })
-  }
 })
 
 it('should work', async () => {
@@ -112,14 +108,17 @@ it('should work', async () => {
 })
 ```
 
-### Test Mocks
+### Test Helpers
+- `test/helper/pg-testcontainer.ts` - Ephemeral PostgreSQL 17 container per test run
+- `test/helper/pg-repository-mock.ts` - Repository mock utilities
+- `test/helper/redis-mock.helper.ts` - Redis mock
+- `test/helper/create-mock-global-module.ts` - Global module mocking
 - `test/mock/modules/` - Module-level mocks (auth, redis, gateway)
 - `test/mock/processors/` - Processor mocks (email, event)
-- `test/helper/` - Test utilities (db-mock, redis-mock)
 
 ## Database Migrations
 
-Migration scripts in `src/migration/version/` are version-based and run automatically on startup when needed.
+Database migrations use Drizzle Kit. SQL migration files live in `src/database/migrations/` (e.g. `0000_initial.sql`). Historical data migrations from the MongoDB era are in `src/migration/postgres-data-migration/`.
 
 ## Configuration
 

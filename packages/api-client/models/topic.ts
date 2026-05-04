@@ -1,9 +1,9 @@
-import type { BaseModel } from './base'
-
-export interface TopicModel extends BaseModel {
-  description?: string
-  introduce: string
+export interface TopicModel {
+  id: string
+  createdAt: string
   name: string
   slug: string
-  icon?: string
+  description: string
+  introduce: string | null
+  icon: string | null
 }

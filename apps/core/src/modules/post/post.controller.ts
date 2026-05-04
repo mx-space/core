@@ -8,7 +8,6 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
-import type { PipelineStage } from 'mongoose'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -24,14 +23,11 @@ import {
   type ArticleTranslationInput,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { MongoIdDto } from '~/shared/dto/id.dto'
-import { addYearCondition } from '~/transformers/db-query.transformer'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { applyContentPreference } from '~/utils/content.util'
 
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
-import type { CategoryModel } from '../category/category.model'
-import { PostModel } from './post.model'
 import {
   CategoryAndSlugDto,
   PartialPostDto,
@@ -41,6 +37,7 @@ import {
   SetPostPublishStatusDto,
 } from './post.schema'
 import { PostService } from './post.service'
+import { PostModel } from './post.types'
 
 @ApiController('posts')
 export class PostController {
@@ -56,7 +53,7 @@ export class PostController {
   @TranslateFields({
     path: 'docs[].category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getPaginate(
     @Query() query: PostPagerDto,
@@ -74,148 +71,84 @@ export class PostController {
       categoryIds,
     } = query
 
-    return this.postService.model
-      .aggregatePaginate(
-        this.postService.model.aggregate(
-          [
-            {
-              $match: {
-                ...addYearCondition(year),
-                // 非认证用户只能看到已发布的文章
-                ...(isAuthenticated ? {} : { isPublished: true }),
-                // 分类筛选
-                ...(categoryIds?.length
-                  ? {
-                      categoryId: {
-                        $in: categoryIds.map(
-                          (id) =>
-                            new this.postService.model.base.Types.ObjectId(id),
-                        ),
-                      },
-                    }
-                  : {}),
-              },
-            },
-            // @see https://stackoverflow.com/questions/54810712/mongodb-sort-by-field-a-if-field-b-null-otherwise-sort-by-field-c
-            {
-              $addFields: {
-                sortField: {
-                  // create a new field called "sortField"
-                  $cond: {
-                    // and assign a value that depends on
-                    if: { $ne: ['$pin', null] }, // whether "b" is not null
-                    then: '$pinOrder', // in which case our field shall hold the value of "a"
-                    else: '$$REMOVE',
-                  },
-                },
-              },
-            },
-            {
-              $sort: sortBy
-                ? {
-                    [sortBy]: sortOrder as any,
-                  }
-                : {
-                    sortField: -1, // sort by our computed field
-                    pin: -1,
-                    created: -1, // and then by the "created" field
-                  },
-            },
-            {
-              $project: {
-                sortField: 0, // remove "sort" field if needed
-              },
-            },
-            select && {
-              $project: {
-                ...select
-                  .split(' ')
-                  .map((s) => s.trim())
-                  .filter(Boolean)
-                  .reduce(
-                    (acc, field) => {
-                      acc[field] = 1
-                      return acc
-                    },
-                    {} as Record<string, 1>,
-                  ),
-              },
-            },
-            {
-              $lookup: {
-                from: 'categories',
-                localField: 'categoryId',
-                foreignField: '_id',
-                as: 'category',
-              },
-            },
-            {
-              $unwind: {
-                path: '$category',
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-          ].filter(Boolean) as PipelineStage[],
-        ),
-        {
-          limit: size,
-          page,
-        },
+    const res = await this.postService.listPaginated({
+      size,
+      page,
+      year,
+      categoryIds,
+      publishedOnly: !isAuthenticated,
+      sortBy: sortBy as any,
+      sortOrder: sortOrder as 1 | -1 | undefined,
+    })
+
+    const translationInputs: ArticleTranslationInput[] = []
+    for (const doc of res.data) {
+      const originalText = doc.text
+
+      if (lang && typeof originalText === 'string') {
+        translationInputs.push({
+          id: String(doc.id),
+          title: doc.title,
+          text: originalText,
+          summary: doc.summary,
+          tags: doc.tags,
+          meta: doc.meta as { lang?: string } | undefined,
+          contentFormat: doc.contentFormat,
+          content: doc.content,
+          modifiedAt: doc.modifiedAt,
+          createdAt: doc.createdAt,
+        })
+      }
+
+      doc.text = truncate ? doc.text.slice(0, truncate) : doc.text
+    }
+
+    if (select) {
+      // Always preserve `id` and `category` to keep response shape sound:
+      // `id` is the row key, `category` is a joined value the legacy
+      // aggregate pipeline emitted after the `$project` stage.
+      const selected = new Set(
+        select
+          .split(' ')
+          .map((s) => s.trim().replace(/^[+-]/, ''))
+          .filter(Boolean),
       )
-      .then(async (res) => {
-        const translationInputs: ArticleTranslationInput[] = []
-        for (const doc of res.docs) {
-          const originalText = doc.text
-          if (doc.meta && typeof doc.meta === 'string') {
-            doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
-          }
+      selected.add('id')
+      selected.add('category')
+      res.data = res.data.map((doc) =>
+        Object.fromEntries(
+          Object.entries(doc).filter(([key]) => selected.has(key)),
+        ),
+      ) as typeof res.data
+    }
 
-          if (lang && typeof originalText === 'string') {
-            translationInputs.push({
-              id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
-              title: doc.title,
-              text: originalText,
-              summary: doc.summary,
-              tags: doc.tags,
-              meta: doc.meta,
-              contentFormat: doc.contentFormat,
-              content: doc.content,
-              modified: doc.modified,
-              created: doc.created,
-            })
-          }
+    if (lang && translationInputs.length) {
+      const translationResults =
+        await this.translationService.translateArticleList({
+          articles: translationInputs,
+          targetLang: lang,
+        })
 
-          doc.text = truncate ? doc.text.slice(0, truncate) : doc.text
+      res.data = res.data.map((doc) => {
+        const docId = String(doc.id)
+        const translation = translationResults.get(docId)
+        if (!translation?.isTranslated) {
+          return doc
         }
 
-        if (lang && translationInputs.length) {
-          const translationResults =
-            await this.translationService.translateArticleList({
-              articles: translationInputs,
-              targetLang: lang,
-            })
-
-          res.docs = res.docs.map((doc) => {
-            const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
-            const translation = translationResults.get(docId)
-            if (!translation?.isTranslated) {
-              return doc
-            }
-
-            return {
-              ...doc,
-              title: translation.title,
-              text: translation.text,
-              summary: translation.summary,
-              tags: translation.tags,
-              isTranslated: translation.isTranslated,
-              translationMeta: translation.translationMeta,
-            }
-          })
+        return {
+          ...doc,
+          title: translation.title,
+          text: translation.text,
+          summary: translation.summary,
+          tags: translation.tags,
+          isTranslated: translation.isTranslated,
+          translationMeta: translation.translationMeta,
         }
+      }) as typeof res.data
+    }
 
-        return res
-      })
+    return res
   }
 
   @Get('/get-url/:slug')
@@ -223,13 +156,13 @@ export class PostController {
     if (typeof slug !== 'string') {
       throw new CannotFindException()
     }
-    const doc = await this.postService.model.findOne({ slug })
+    const doc = await this.postService.findBySlug(slug)
     if (!doc) {
       throw new CannotFindException()
     }
 
     return {
-      path: `/${(doc.category as CategoryModel).slug}/${doc.slug}`,
+      path: `/${doc.category?.slug}/${doc.slug}`,
     }
   }
 
@@ -237,20 +170,14 @@ export class PostController {
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getById(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
   ) {
     const { id } = params
-    const doc = await this.postService.model
-      .findById(id)
-      .populate('category')
-      .populate({
-        path: 'related',
-        select: 'title slug id _id categoryId category',
-      })
+    const doc = await this.postService.findById(id)
     if (!doc) {
       throw new CannotFindException()
     }
@@ -267,32 +194,22 @@ export class PostController {
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getLatest(
     @IpLocation() ip: IpRecord,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
-    const query: any = {}
-
-    // 非认证用户只能看到已发布的文章
-    if (!isAuthenticated) {
-      query.isPublished = true
-    }
-
-    const last = await this.postService.model
-      .findOne(query)
-      .sort({ created: -1 })
-      .lean({ getters: true, autopopulate: true })
+    const [last] = await this.postService.findRecent(1, {
+      publishedOnly: !isAuthenticated,
+    })
     if (!last) {
       throw new CannotFindException()
     }
+    if (!last.category?.slug) throw new CannotFindException()
     return this.getByCateAndSlug(
-      {
-        category: (last.category as CategoryModel).slug,
-        slug: last.slug,
-      },
+      { category: last.category.slug, slug: last.slug },
       {} as any,
       ip,
       isAuthenticated,
@@ -304,7 +221,7 @@ export class PostController {
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
@@ -333,12 +250,12 @@ export class PostController {
       ip,
     )
 
-    const baseData = postDocument.toObject()
-    const relatedList = Array.isArray(baseData.related)
-      ? (baseData.related as any[])
+    const baseData = postDocument
+    const relatedList = Array.isArray((baseData as any).related)
+      ? ((baseData as any).related as any[])
       : []
     const relatedIds = relatedList
-      .map((item) => item?._id?.toString?.() ?? item?.id)
+      .map((item) => item?.id)
       .filter((id): id is string => Boolean(id))
 
     const insightsLang = parseLanguageCode(lang)
@@ -363,7 +280,7 @@ export class PostController {
 
     const translatedRelated = relatedTitleMap.size
       ? relatedList.map((item) => {
-          const refId = item?._id?.toString?.() ?? item?.id
+          const refId = item?.id
           const translatedTitle = refId ? relatedTitleMap.get(refId) : undefined
           return translatedTitle ? { ...item, title: translatedTitle } : item
         })
@@ -398,15 +315,14 @@ export class PostController {
   async create(@Body() body: PostDto) {
     return await this.postService.create({
       ...(body as unknown as PostModel),
-      modified: null,
+      modifiedAt: null,
       slug: body.slug,
-      related: body.relatedId as any,
     })
   }
 
   @Put('/:id')
   @Auth()
-  async update(@Param() params: MongoIdDto, @Body() body: PostDto) {
+  async update(@Param() params: EntityIdDto, @Body() body: PostDto) {
     return await this.postService.updateById(
       params.id,
       body as unknown as PostModel,
@@ -415,7 +331,7 @@ export class PostController {
 
   @Patch('/:id')
   @Auth()
-  async patch(@Param() params: MongoIdDto, @Body() body: PartialPostDto) {
+  async patch(@Param() params: EntityIdDto, @Body() body: PartialPostDto) {
     await this.postService.updateById(
       params.id,
       body as unknown as Partial<PostModel>,
@@ -425,7 +341,7 @@ export class PostController {
 
   @Delete('/:id')
   @Auth()
-  async deletePost(@Param() params: MongoIdDto) {
+  async deletePost(@Param() params: EntityIdDto) {
     const { id } = params
     await this.postService.deletePost(id)
 
@@ -435,7 +351,7 @@ export class PostController {
   @Patch('/:id/publish')
   @Auth()
   async setPublishStatus(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: SetPostPublishStatusDto,
   ) {
     await this.postService.updateById(params.id, {

@@ -53,7 +53,7 @@ export class SearchController<ResponseWrapper> implements IController {
   ): Promise<
     RequestProxyResult<
       PaginateResult<
-        Pick<NoteModel, 'modified' | 'id' | 'title' | 'created' | 'nid'> &
+        Pick<NoteModel, 'modifiedAt' | 'id' | 'title' | 'createdAt' | 'nid'> &
           SearchResultHighlight
       >,
       ResponseWrapper
@@ -68,7 +68,7 @@ export class SearchController<ResponseWrapper> implements IController {
       PaginateResult<
         Pick<
           PostModel,
-          'modified' | 'id' | 'title' | 'created' | 'slug' | 'category'
+          'modifiedAt' | 'id' | 'title' | 'createdAt' | 'slug' | 'category'
         > &
           SearchResultHighlight
       >,
@@ -82,7 +82,7 @@ export class SearchController<ResponseWrapper> implements IController {
   ): Promise<
     RequestProxyResult<
       PaginateResult<
-        Pick<PageModel, 'modified' | 'id' | 'title' | 'created' | 'slug'> &
+        Pick<PageModel, 'modifiedAt' | 'id' | 'title' | 'createdAt' | 'slug'> &
           SearchResultHighlight
       >,
       ResponseWrapper
@@ -100,12 +100,18 @@ export class SearchController<ResponseWrapper> implements IController {
         PaginateResult<
           | (Pick<
               PostModel,
-              'modified' | 'id' | 'title' | 'created' | 'slug' | 'category'
+              'modifiedAt' | 'id' | 'title' | 'createdAt' | 'slug' | 'category'
             > &
               SearchResultHighlight & { type: 'post' })
-          | (Pick<NoteModel, 'id' | 'created' | 'modified' | 'title' | 'nid'> &
+          | (Pick<
+              NoteModel,
+              'id' | 'createdAt' | 'modifiedAt' | 'title' | 'nid'
+            > &
               SearchResultHighlight & { type: 'note' })
-          | (Pick<PageModel, 'id' | 'title' | 'created' | 'modified' | 'slug'> &
+          | (Pick<
+              PageModel,
+              'id' | 'title' | 'createdAt' | 'modifiedAt' | 'slug'
+            > &
               SearchResultHighlight & { type: 'page' })
         >,
         ResponseWrapper

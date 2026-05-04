@@ -4,8 +4,8 @@ import { z } from 'zod'
 import {
   zCoerceBoolean,
   zCoerceInt,
+  zEntityId,
   zLang,
-  zMongoId,
   zNonEmptyString,
   zPrefer,
   zTransformEmptyNull,
@@ -51,10 +51,10 @@ export const NoteSchema = WriteBaseSchema.extend({
   bookmark: z.boolean().default(false).optional(),
   coordinates: CoordinateSchema.optional().nullable(),
   location: z.string().optional().nullable(),
-  topicId: zMongoId.optional().nullable(),
+  topicId: zEntityId.optional().nullable(),
   images: z.array(ImageSchema).optional().default([]),
   /** 关联的草稿 ID，发布时标记该草稿为已发布 */
-  draftId: zMongoId.optional(),
+  draftId: zEntityId.optional(),
 })
 
 export class NoteDto extends createZodDto(NoteSchema) {}
@@ -84,7 +84,7 @@ export class PartialNoteDto extends createZodDto(PartialNoteSchema) {}
  */
 export const NoteQuerySchema = PagerSchema.extend({
   sortBy: z
-    .enum(['title', 'created', 'modified', 'weather', 'mood'])
+    .enum(['title', 'createdAt', 'modifiedAt', 'weather', 'mood'])
     .optional(),
   sortOrder: z.preprocess(
     (val) => (typeof val === 'string' ? Math.trunc(Number(val)) : val),

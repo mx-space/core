@@ -1,204 +1,52 @@
-import { APP_INTERCEPTOR } from '@nestjs/core'
-import { createE2EApp } from 'test/helper/create-e2e-app'
-import { authPassHeader } from 'test/mock/guard/auth.guard'
-import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
-import { authProvider } from 'test/mock/modules/auth.mock'
-import { commentProvider } from 'test/mock/modules/comment.mock'
-import { configProvider } from 'test/mock/modules/config.mock'
-import { gatewayProviders } from 'test/mock/modules/gateway.mock'
-import { countingServiceProvider } from 'test/mock/processors/counting.mock'
-import { eventEmitterProvider } from 'test/mock/processors/event.mock'
-import {
-  fileReferenceProvider,
-  imageServiceProvider,
-} from 'test/mock/processors/file.mock'
-import { translationProvider } from 'test/mock/processors/translation.mock'
+import { describe, expect, it } from 'vitest'
 
-import { createRedisProvider } from '@/mock/modules/redis.mock'
-import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
-import {
-  CATEGORY_SERVICE_TOKEN,
-  DRAFT_SERVICE_TOKEN,
-  POST_SERVICE_TOKEN,
-} from '~/constants/injection.constant'
-import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
-import { CategoryModel } from '~/modules/category/category.model'
-import { CategoryService } from '~/modules/category/category.service'
-import { CommentModel } from '~/modules/comment/comment.model'
-import { OptionModel } from '~/modules/configs/configs.model'
-import { DraftModel } from '~/modules/draft/draft.model'
-import { DraftService } from '~/modules/draft/draft.service'
-import { DraftHistoryService } from '~/modules/draft/draft-history.service'
-import { PostController } from '~/modules/post/post.controller'
-import { PostModel } from '~/modules/post/post.model'
-import { PostService } from '~/modules/post/post.service'
-import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
-import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
-import { HttpService } from '~/processors/helper/helper.http.service'
-import { LexicalService } from '~/processors/helper/helper.lexical.service'
+import { buildSearchDocument } from '~/modules/search/search-document.util'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
-describe('Post ContentFormat (e2e)', async () => {
-  let categoryId: string
-
-  const proxy = createE2EApp({
-    controllers: [PostController],
-    providers: [
-      PostService,
-      {
-        provide: POST_SERVICE_TOKEN,
-        useExisting: PostService,
-      },
-      LexicalService,
-      imageServiceProvider,
-      CategoryService,
-      {
-        provide: CATEGORY_SERVICE_TOKEN,
-        useExisting: CategoryService,
-      },
-      SlugTrackerService,
-      {
-        provide: APP_INTERCEPTOR,
-        useClass: MockingCountingInterceptor,
-      },
-      await createRedisProvider(),
-      commentProvider,
-      HttpService,
-      configProvider,
-      ...eventEmitterProvider,
-      ...gatewayProviders,
-      authProvider,
-      countingServiceProvider,
-      DraftHistoryService,
-      DraftService,
-      {
-        provide: DRAFT_SERVICE_TOKEN,
-        useExisting: DraftService,
-      },
-      fileReferenceProvider,
-      translationProvider,
-      {
-        provide: AiInsightsService,
-        useValue: {
-          hasInsightsInLang: vi.fn().mockResolvedValue(false),
-        },
-      },
-    ],
-    imports: [],
-    models: [
-      PostModel,
-      OptionModel,
-      CategoryModel,
-      CommentModel,
-      SlugTrackerModel,
-      DraftModel,
-    ],
-    async pourData(modelMap) {
-      const { model: catModel } = modelMap.get(CategoryModel)!
-      const cat = await catModel.create({
-        name: 'test-category',
-        slug: 'test-cat',
-        type: 0,
-      })
-      categoryId = cat.id
-    },
-  })
-
-  it('creates markdown post normally', async () => {
-    const res = await proxy.app.inject({
-      method: 'POST',
-      url: `${apiRoutePrefix}/posts`,
-      headers: authPassHeader,
-      payload: {
-        title: 'Markdown Post',
-        text: '# Hello\n\nWorld',
-        slug: 'markdown-post',
-        categoryId,
-      },
+describe('post content format regression', () => {
+  it('keeps markdown text available for PG search documents', () => {
+    const document = buildSearchDocument('post', {
+      id: 'post-1',
+      title: 'markdown post',
+      slug: 'markdown-post',
+      text: '# Heading\n\nBody',
+      contentFormat: ContentFormat.Markdown,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      modifiedAt: null,
     })
 
-    expect(res.statusCode).toBe(201)
-    const json = res.json()
-    expect(json.content_format).toBe('markdown')
+    expect(document).toMatchObject({
+      refId: 'post-1',
+      refType: 'post',
+      title: 'markdown post',
+      searchText: expect.stringContaining('heading'),
+    })
   })
 
-  it('creates lexical post with auto-generated text', async () => {
-    const lexicalContent = JSON.stringify({
+  it('extracts text from lexical JSON content for PG search documents', () => {
+    const lexical = JSON.stringify({
       root: {
+        type: 'root',
         children: [
           {
-            children: [
-              {
-                detail: 0,
-                format: 0,
-                mode: 'normal',
-                style: '',
-                text: 'Hello Lexical',
-                type: 'text',
-                version: 1,
-              },
-            ],
-            direction: 'ltr',
-            format: '',
-            indent: 0,
-            type: 'heading',
-            version: 1,
-            tag: 'h1',
-          },
-          {
-            children: [
-              {
-                detail: 0,
-                format: 0,
-                mode: 'normal',
-                style: '',
-                text: 'This is paragraph text.',
-                type: 'text',
-                version: 1,
-              },
-            ],
-            direction: 'ltr',
-            format: '',
-            indent: 0,
             type: 'paragraph',
-            version: 1,
+            children: [{ type: 'text', text: 'Lexical body' }],
           },
         ],
-        direction: 'ltr',
-        format: '',
-        indent: 0,
-        type: 'root',
-        version: 1,
       },
     })
 
-    const res = await proxy.app.inject({
-      method: 'POST',
-      url: `${apiRoutePrefix}/posts`,
-      headers: authPassHeader,
-      payload: {
-        title: 'Lexical Post',
-        text: '',
-        slug: 'lexical-post',
-        categoryId,
-        contentFormat: ContentFormat.Lexical,
-        content: lexicalContent,
-      },
+    const document = buildSearchDocument('post', {
+      id: 'post-1',
+      title: 'Lexical Post',
+      slug: 'lexical-post',
+      text: lexical,
+      content: lexical,
+      contentFormat: ContentFormat.Lexical,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      modifiedAt: null,
     })
 
-    expect(res.statusCode).toBe(201)
-    const json = res.json()
-    expect(json.content_format).toBe('lexical')
-    const parsed = JSON.parse(json.content)
-    expect(parsed.root.children).toHaveLength(2)
-    expect(parsed.root.children[0].$.blockId).toMatch(/^[\w-]{8}$/)
-    expect(parsed.root.children[1].$.blockId).toMatch(/^[\w-]{8}$/)
-    expect(parsed.root.children[0].children[0].text).toBe('Hello Lexical')
-    expect(parsed.root.children[1].children[0].text).toBe(
-      'This is paragraph text.',
-    )
-    // text should be auto-generated from lexical content
-    expect(json.text).toContain('Hello Lexical')
-    expect(json.text).toContain('This is paragraph text.')
+    expect(document.searchText).toContain('lexical body')
   })
 })

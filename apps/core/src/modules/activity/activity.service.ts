@@ -1,20 +1,12 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { omit, pick, uniqBy } from 'es-toolkit/compat'
-import { ObjectId } from 'mongodb'
-import type { Document } from 'mongoose'
 import type { Socket } from 'socket.io'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import {
-  CATEGORY_COLLECTION_NAME,
-  NOTE_COLLECTION_NAME,
-  POST_COLLECTION_NAME,
-  RECENTLY_COLLECTION_NAME,
-} from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -22,34 +14,46 @@ import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { InjectModel } from '~/transformers/model.transformer'
-import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { checkRefModelCollectionType } from '~/utils/biz.util'
-import { dbTransforms } from '~/utils/db-transform.util'
 import { camelcaseKeys } from '~/utils/tool.util'
 
-import { CommentState } from '../comment/comment.model'
+import { CommentState } from '../comment/comment.enum'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
-import type { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
-import type { PostModel } from '../post/post.model'
+import type { NoteModel } from '../note/note.types'
 import type { PostService } from '../post/post.service'
-import { ReaderModel } from '../reader/reader.model'
+import type { PostModel } from '../post/post.types'
 import { ReaderService } from '../reader/reader.service'
+import { ReaderModel } from '../reader/reader.types'
 import { Activity } from './activity.constant'
 import type {
   ActivityLikePayload,
   ActivityLikeSupportType,
   ActivityPresence,
 } from './activity.interface'
-import { ActivityModel } from './activity.model'
+import { ActivityRepository } from './activity.repository'
 import type { UpdatePresenceDto } from './activity.schema'
+import type { ActivityRow } from './activity.types'
 import {
   extractArticleIdFromRoomName,
   isValidRoomName,
   parseRoomName,
 } from './activity.util'
+
+interface ActivityPayloadWithRef {
+  id?: string
+  type?: string
+  readerId?: string
+  roomName?: string
+}
+
+type ActivityWithRef = ActivityRow & {
+  created: Date
+  ref?: PostModel | NoteModel
+  reader?: ReaderModel
+  refId?: string
+}
 
 declare module '~/types/socket-meta' {
   interface SocketMetadata {
@@ -65,8 +69,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     private readonly eventService: EventManagerService,
 
-    @InjectModel(ActivityModel)
-    private readonly activityModel: MongooseModel<ActivityModel>,
+    private readonly activityRepository: ActivityRepository,
 
     private readonly commentService: CommentService,
     private readonly databaseService: DatabaseService,
@@ -113,9 +116,9 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         if (duration < 10_000 || (position === 0 && duration < 60_000)) {
           return
         }
-        this.activityModel.create({
+        this.activityRepository.create({
           type: Activity.ReadDuration,
-          payload: dbTransforms.json({
+          payload: {
             connectedAt,
             operationTime,
             updatedAt,
@@ -124,7 +127,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
             displayName,
             joinedAt,
             ip,
-          }),
+          },
         })
       }
     }
@@ -150,62 +153,65 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     this.cleanupFnList = q
   }
 
-  get model() {
-    return this.activityModel
+  private toActivity(row: ActivityRow) {
+    return {
+      ...row,
+      createdAt: row.createdAt,
+    }
   }
 
-  private async loadCategoryMap(
-    categoryIds: any[],
-  ): Promise<Record<string, { slug: string; name: string }>> {
-    if (categoryIds.length === 0) {
-      return {}
+  private toPager(result: Awaited<ReturnType<ActivityRepository['list']>>) {
+    return {
+      docs: result.data.map((row) => this.toActivity(row)),
+      totalDocs: result.pagination.total,
+      page: result.pagination.currentPage,
+      totalPages: result.pagination.totalPage,
+      limit: result.pagination.size,
+      hasNextPage: result.pagination.hasNextPage,
+      hasPrevPage: result.pagination.hasPrevPage,
+      data: result.data.map((row) => this.toActivity(row)),
     }
-    const categories = await this.databaseService.db
-      .collection(CATEGORY_COLLECTION_NAME)
-      .find({ _id: { $in: categoryIds } })
-      .project({ slug: 1, name: 1 })
-      .toArray()
-    return Object.fromEntries(
-      categories.map((c: any) => [
-        c._id.toString(),
-        { slug: c.slug, name: c.name },
-      ]),
-    )
   }
 
   async getLikeActivities(page = 1, size = 10) {
-    const activities = await this.model.paginate(
-      {
-        type: Activity.Like,
+    const activities = this.toPager(
+      await this.activityRepository.list(page, size, Activity.Like),
+    )
+    const typedIdsMap = activities.data.reduce(
+      (acc, item) => {
+        if (!item.payload || typeof item.payload !== 'object') {
+          return acc
+        }
+        const { type, id } = item.payload as unknown as ActivityLikePayload
+        if (typeof type !== 'string' || typeof id !== 'string') {
+          return acc
+        }
+
+        switch (type.toLowerCase()) {
+          case 'note': {
+            acc.note.push(id)
+            break
+          }
+          case 'post': {
+            acc.post.push(id)
+
+            break
+          }
+        }
+        return acc
       },
       {
-        page,
-        limit: size,
-        sort: {
-          created: -1,
-        },
-      },
+        post: [],
+        note: [],
+      } as Record<ActivityLikeSupportType, string[]>,
     )
 
-    const transformedPager = transformDataToPaginate(activities)
-    const typedIdsMap: Record<ActivityLikeSupportType, string[]> = {
-      post: [],
-      note: [],
-    }
-    const readerIds: string[] = []
-    for (const item of transformedPager.data) {
-      const { type, id, readerId } = item.payload as ActivityLikePayload
-      switch (type.toLowerCase()) {
-        case 'note': {
-          typedIdsMap.note.push(id)
-          break
-        }
-        case 'post': {
-          typedIdsMap.post.push(id)
-          break
-        }
-      }
-      if (readerId) {
+    const readerIds = [] as string[]
+    for (const item of activities.docs) {
+      if (!item.payload || typeof item.payload !== 'object') continue
+      const payload = item.payload as unknown as ActivityPayloadWithRef
+      const readerId = payload.readerId
+      if (typeof readerId === 'string') {
         readerIds.push(readerId)
       }
     }
@@ -214,45 +220,33 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     const readerMap = new Map<string, ReaderModel>()
     for (const reader of readers) {
-      readerMap.set(reader._id.toHexString(), reader)
-    }
-
-    const type2Collection = {
-      note: this.databaseService.db.collection<NoteModel>(NOTE_COLLECTION_NAME),
-      post: this.databaseService.db.collection<PostModel>(POST_COLLECTION_NAME),
+      readerMap.set(reader.id, reader)
     }
 
     const refModelData = new Map<string, any>()
-    for (const [type, ids] of Object.entries(typedIdsMap)) {
-      const collection = type2Collection[type as ActivityLikeSupportType]
-      const docs = await collection
-        .find(
-          {
-            _id: {
-              $in: ids.map((id) => new ObjectId(id)),
-            },
-          },
-          {
-            projection: {
-              text: 0,
-            },
-          },
-        )
-        .toArray()
-
-      for (const doc of docs) {
-        refModelData.set(doc._id.toHexString(), doc)
-      }
+    const ids = Object.values(typedIdsMap).flat()
+    const collections = await this.databaseService.findGlobalByIds(ids)
+    for (const doc of [
+      ...collections.posts,
+      ...collections.notes,
+      ...collections.pages,
+      ...collections.recentlies,
+    ]) {
+      refModelData.set(doc.id, doc)
     }
 
     const docsWithRefModel = activities.docs.map((ac) => {
-      const nextAc = ac.toJSON() as any
-      const refModel = refModelData.get(ac.payload.id)
+      const nextAc = { ...ac } as ActivityWithRef
+      if (!ac.payload || typeof ac.payload !== 'object') {
+        return nextAc
+      }
+      const payload = ac.payload as unknown as ActivityPayloadWithRef
+      const refModel = payload.id ? refModelData.get(payload.id) : undefined
 
       if (refModel) {
         nextAc.ref = refModel
       }
-      const readerId = ac.payload.readerId
+      const readerId = payload.readerId
       if (readerId) {
         const reader = readerMap.get(readerId)
         if (reader) {
@@ -261,49 +255,34 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       }
 
       return nextAc
-    }) as (ActivityModel & {
-      payload: any
-      ref: PostModel | NoteModel
-    })[]
+    })
 
     return {
-      ...transformedPager,
+      ...activities,
       data: docsWithRefModel,
     }
   }
 
   async getReadDurationActivities(page = 1, size = 10) {
-    const activities = await this.model.paginate(
-      {
-        type: Activity.ReadDuration,
-      },
-      {
-        page,
-        limit: size,
-        sort: {
-          created: -1,
-        },
-      },
+    const data = this.toPager(
+      await this.activityRepository.list(page, size, Activity.ReadDuration),
     )
-    const data = transformDataToPaginate(activities)
 
-    const articleIds: string[] = []
-    const mapped = data.data.map((item) => {
-      const roomName = item.payload?.roomName
-      if (!roomName) {
-        return item
-      }
+    const articleIds = [] as string[]
+    for (let i = 0; i < data.data.length; i++) {
+      const item = data.data[i]
+      if (!item.payload || typeof item.payload !== 'object') continue
+      const payload = item.payload as unknown as ActivityPayloadWithRef
+      const roomName = payload.roomName
+      if (typeof roomName !== 'string') continue
       const refId = extractArticleIdFromRoomName(roomName)
       articleIds.push(refId)
-      const plain = (item as Document & ActivityModel).toObject()
-      ;(plain as any).refId = refId
-      return plain
-    })
+      ;(data.data[i] as ActivityWithRef).refId = refId
+    }
 
     const documentMap = await this.databaseService.findGlobalByIds(articleIds)
     return {
       ...data,
-      data: mapped,
       objects: documentMap,
     }
   }
@@ -313,33 +292,27 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     let reader: ReaderModel | null = null
     if (readerId) {
-      reader = await this.readerService
-        .findReaderInIds([readerId])
-        .then((res) => res[0])
+      const readers = await this.readerService.findReaderInIds([readerId])
+      reader = readers[0] ?? null
     }
 
-    try {
-      const mapping = {
-        post: ArticleTypeEnum.Post,
-        note: ArticleTypeEnum.Note,
-      }
-
-      // TODO 改成 reader 维度
-      const res = await this.countingService.updateLikeCountWithIp(
-        mapping[type],
-        id,
-        ip,
-      )
-      if (!res) {
-        throw new BizException(ErrorCodeEnum.AlreadySupported)
-      }
-    } catch (error: any) {
-      throw new BizException(ErrorCodeEnum.AlreadySupported, error?.message)
+    const mapping = {
+      post: ArticleTypeEnum.Post,
+      note: ArticleTypeEnum.Note,
     }
 
-    const refModel = await this.databaseService
-      .findGlobalById(id)
-      .then((res) => res?.document)
+    // TODO 改成 reader 维度
+    const res = await this.countingService.updateLikeCountWithIp(
+      mapping[type],
+      id,
+      ip,
+    )
+    if (!res) {
+      throw new BizException(ErrorCodeEnum.AlreadySupported)
+    }
+
+    const globalResult = await this.databaseService.findGlobalById(id)
+    const refModel = globalResult?.document
     this.eventService.emit(
       BusinessEvents.ACTIVITY_LIKE,
       {
@@ -348,13 +321,12 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         reader,
         ref: pick(refModel, [
           'id',
-          '_id',
           'title',
           'nid',
           'slug',
           'category',
           'categoryId',
-          'created',
+          'createdAt',
         ]),
       },
       {
@@ -362,15 +334,14 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       },
     )
 
-    await this.activityModel.create({
+    await this.activityRepository.create({
       type: Activity.Like,
-      created: new Date(),
-      payload: dbTransforms.json({
+      payload: {
         ip,
         type,
         id,
         readerId: reader ? readerId : undefined,
-      } as ActivityLikePayload),
+      },
     })
   }
 
@@ -408,8 +379,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         Object.assign(serializedPresenceData, {
           reader: camelcaseKeys({
             ...reader[0],
-            _id: undefined,
-            id: reader[0]._id.toHexString(),
+            id: reader[0].id.toString(),
           }),
         })
       }
@@ -453,16 +423,16 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   async deleteActivityByType(type: Activity, beforeDate: Date) {
-    return this.model.deleteMany({
+    const deletedCount = await this.activityRepository.deleteByTypeBefore(
       type,
-      created: {
-        $lt: beforeDate,
-      },
-    })
+      beforeDate,
+    )
+    return { deletedCount }
   }
 
   async deleteAll() {
-    return this.model.deleteMany({})
+    const deletedCount = await this.activityRepository.deleteAll()
+    return { deletedCount }
   }
 
   async getAllRoomNames() {
@@ -499,22 +469,18 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     startAt = startAt ?? new Date('2020-01-01')
     endAt = endAt ?? new Date()
 
-    const activities = await this.activityModel
-      .find({
-        created: {
-          $gte: startAt,
-          $lte: endAt,
-        },
-        type: Activity.ReadDuration,
-      })
-      .select('payload')
-      .lean({
-        getters: true,
-      })
+    const activities = await this.activityRepository.findByTypeInRange(
+      Activity.ReadDuration,
+      startAt,
+      endAt,
+    )
 
     const countMap = new Map<string, number>()
     for (const item of activities) {
-      const refId = extractArticleIdFromRoomName(item.payload.roomName)
+      if (!item.payload || typeof item.payload !== 'object') continue
+      const payload = item.payload as unknown as ActivityPayloadWithRef
+      if (typeof payload.roomName !== 'string') continue
+      const refId = extractArticleIdFromRoomName(payload.roomName)
       if (!refId) continue
       countMap.set(refId, (countMap.get(refId) || 0) + 1)
     }
@@ -545,108 +511,38 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const configs = await this.configsService.get('commentOptions')
     const { commentShouldAudit } = configs
 
-    const docs = await this.commentService.model
-      .find({
-        isWhispers: false,
-        state: commentShouldAudit
-          ? CommentState.Read
-          : {
-              $in: [CommentState.Read, CommentState.Unread],
-            },
-      })
-      .populate('ref', 'title nid slug subtitle content categoryId')
-      .lean({ getters: true })
-      .sort({
-        created: -1,
-      })
-      .limit(3)
+    const docs = await this.commentService.findRecent(3, {
+      state: commentShouldAudit ? CommentState.Read : undefined,
+      rootOnly: false,
+    })
 
     // For post refs, look up their categories separately
-    const categoryIds = docs
-      .map((doc) => (doc.ref as any)?.categoryId)
-      .filter(Boolean)
-
-    const categoryMap = await this.loadCategoryMap(categoryIds)
-
+    const refs = await this.databaseService.findGlobalByIds(
+      docs.map((doc) => doc.refId).filter(Boolean),
+    )
+    const refMap = this.databaseService.flatCollectionToMap(refs)
     await this.commentService.fillAndReplaceAvatarUrl(docs)
     return docs
-      .filter((doc) => doc.ref)
+      .filter((doc) => doc.refId)
       .map((doc) => {
-        const categoryId = (doc.ref as any)?.categoryId
+        const ref = refMap[String(doc.refId)]
         return {
-          ...pick(doc, 'created', 'author', 'text', 'avatar'),
-          ...pick(doc.ref, 'title', 'nid', 'slug', 'id'),
-          category: categoryId
-            ? (categoryMap[categoryId.toString()] ?? undefined)
-            : undefined,
-          type: checkRefModelCollectionType(doc.ref),
+          ...pick(doc, 'createdAt', 'author', 'text', 'avatar'),
+          ...pick(ref, 'title', 'nid', 'slug', 'id', 'category'),
+          type: checkRefModelCollectionType(ref),
         }
       })
   }
 
   async getRecentPublish() {
-    const [recent, post, note] = await Promise.all([
-      this.databaseService.db
-        .collection(RECENTLY_COLLECTION_NAME)
-        .find()
-        .project({
-          content: 1,
-          created: 1,
-          up: 1,
-          down: 1,
-        })
-        .sort({
-          created: -1,
-        })
-        .limit(3)
-        .toArray(),
-      this.databaseService.db
-        .collection(POST_COLLECTION_NAME)
-        .find()
-        .project({
-          title: 1,
-          slug: 1,
-          created: 1,
-          modified: 1,
-          category: 1,
-          categoryId: 1,
-        })
-        .sort({
-          created: -1,
-        })
-        .limit(3)
-        .toArray(),
-      this.databaseService.db
-        .collection(NOTE_COLLECTION_NAME)
-        .find({
-          isPublished: true,
-        })
-        .sort({
-          created: -1,
-        })
-        .project({
-          title: 1,
-          nid: 1,
-          id: 1,
-          created: 1,
-          modified: 1,
-        })
-        .limit(3)
-        .toArray(),
+    const [post, note] = await Promise.all([
+      this.postService.findRecent(3),
+      this.noteService.findRecent(3, { visibleOnly: true }),
     ])
 
-    const postCategoryIds = post.map((p: any) => p.categoryId).filter(Boolean)
-    const categoryMap = await this.loadCategoryMap(postCategoryIds)
-    const enrichedPost = post.map((p: any) => ({
-      ...p,
-      category: p.categoryId
-        ? (categoryMap[p.categoryId.toString()] ?? undefined)
-        : undefined,
-    }))
-
     return {
-      recent,
-      post: enrichedPost,
+      recent: [],
+      post,
       note,
     }
   }
@@ -656,44 +552,19 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
    */
   async getLastYearPublication() {
     const $gte = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
-    const [posts, notes] = await Promise.all([
-      this.postService.model
-        .find({
-          created: {
-            $gte,
-          },
-        })
-        .select('title created slug categoryId category')
-        .sort({ created: -1 }),
-      this.noteService.model
-        .find(
-          {
-            created: {
-              $gte,
-            },
-          },
-          {
-            title: 1,
-            created: 1,
-            nid: 1,
-            weather: 1,
-            mood: 1,
-            bookmark: 1,
-            password: 1,
-            isPublished: 1,
-          },
-        )
-        .lean(),
+    const [allPosts, allNotes] = await Promise.all([
+      this.postService.findRecent(50),
+      this.noteService.findRecent(50),
     ])
-    return {
-      posts,
-      notes: notes.map((note) => {
-        if (note.password || !note.isPublished) {
+    const posts = allPosts.filter((row) => row.createdAt >= $gte)
+    const notes = allNotes
+      .filter((row) => row.createdAt >= $gte)
+      .map((note) => {
+        if (note.hasPassword || !note.isPublished) {
           note.title = '未公开的日记'
         }
-
-        return omit(note, 'password', 'isPublished')
-      }),
-    }
+        return omit(note, 'isPublished')
+      })
+    return { posts, notes }
   }
 }

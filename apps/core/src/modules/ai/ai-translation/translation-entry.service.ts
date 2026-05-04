@@ -3,22 +3,22 @@ import { createHash } from 'node:crypto'
 import { Injectable, Logger } from '@nestjs/common'
 
 import { RedisKeys } from '~/constants/cache.constant'
-import { CategoryModel } from '~/modules/category/category.model'
-import { NoteModel } from '~/modules/note/note.model'
-import { TopicModel } from '~/modules/topic/topic.model'
+import { CategoryService } from '~/modules/category/category.service'
+import { NoteService } from '~/modules/note/note.service'
+import { TopicRepository } from '~/modules/topic/topic.repository'
 import { RedisService } from '~/processors/redis/redis.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { normalizeLanguageCode } from '~/utils/lang.util'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
+import { TranslationEntryRepository } from './ai-translation.repository'
 import {
   type TranslationEntryKeyPath,
   type TranslationEntryKeyType,
   TranslationEntryModel,
-} from './translation-entry.model'
+} from './translation-entry.types'
 
 interface CollectedValue {
   keyPath: TranslationEntryKeyPath
@@ -59,14 +59,10 @@ export class TranslationEntryService {
   private static readonly DICT_CACHE_TTL_SECONDS = 60 * 60 * 24 * 7
 
   constructor(
-    @InjectModel(TranslationEntryModel)
-    private readonly entryModel: MongooseModel<TranslationEntryModel>,
-    @InjectModel(CategoryModel)
-    private readonly categoryModel: MongooseModel<CategoryModel>,
-    @InjectModel(NoteModel)
-    private readonly noteModel: MongooseModel<NoteModel>,
-    @InjectModel(TopicModel)
-    private readonly topicModel: MongooseModel<TopicModel>,
+    private readonly entryRepository: TranslationEntryRepository,
+    private readonly categoryService: CategoryService,
+    private readonly noteService: NoteService,
+    private readonly topicRepository: TopicRepository,
     private readonly aiService: AiService,
     private readonly configService: ConfigsService,
     private readonly redisService: RedisService,
@@ -157,17 +153,14 @@ export class TranslationEntryService {
       return { entityMaps, dictMaps }
     }
 
-    const entries = await this.entryModel
-      .find({
-        lang,
-        $or: dbLookups.map((lookup) => ({
-          keyPath: lookup.keyPath,
-          keyType: lookup.keyType,
-          lookupKey: { $in: lookup.lookupKeys },
-        })),
-      })
-      .select('keyPath keyType lookupKey translatedText')
-      .lean()
+    const entries = await this.entryRepository.listByBatch(
+      lang,
+      dbLookups.map((lookup) => ({
+        keyPath: lookup.keyPath,
+        keyType: lookup.keyType,
+        lookupKeys: lookup.lookupKeys,
+      })),
+    )
 
     const dictCacheEntries: DictCacheEntry[] = []
 
@@ -209,28 +202,25 @@ export class TranslationEntryService {
   async collectSourceValues(): Promise<CollectedValue[]> {
     const values: CollectedValue[] = []
 
-    const categories = await this.categoryModel.find().select('name').lean()
+    const categories = await this.categoryService.findAllCategory()
     for (const cat of categories) {
       if (cat.name) {
         values.push({
           keyPath: 'category.name',
           keyType: 'entity',
-          lookupKey: cat._id.toString(),
+          lookupKey: cat.id,
           sourceText: cat.name,
         })
       }
     }
 
-    const topics = await this.topicModel
-      .find()
-      .select('name introduce description')
-      .lean()
+    const topics = await this.topicRepository.findAll()
     for (const topic of topics) {
       if (topic.name) {
         values.push({
           keyPath: 'topic.name',
           keyType: 'entity',
-          lookupKey: topic._id.toString(),
+          lookupKey: topic.id,
           sourceText: topic.name,
         })
       }
@@ -238,7 +228,7 @@ export class TranslationEntryService {
         values.push({
           keyPath: 'topic.introduce',
           keyType: 'entity',
-          lookupKey: topic._id.toString(),
+          lookupKey: topic.id,
           sourceText: topic.introduce,
         })
       }
@@ -246,13 +236,14 @@ export class TranslationEntryService {
         values.push({
           keyPath: 'topic.description',
           keyType: 'entity',
-          lookupKey: topic._id.toString(),
+          lookupKey: topic.id,
           sourceText: topic.description,
         })
       }
     }
 
-    const moods = await this.noteModel.distinct('mood')
+    const notes = await this.noteService.findRecent(100)
+    const moods = [...new Set(notes.map((note) => note.mood).filter(Boolean))]
     for (const mood of moods) {
       if (mood) {
         values.push({
@@ -264,7 +255,9 @@ export class TranslationEntryService {
       }
     }
 
-    const weathers = await this.noteModel.distinct('weather')
+    const weathers = [
+      ...new Set(notes.map((note) => note.weather).filter(Boolean)),
+    ]
     for (const weather of weathers) {
       if (weather) {
         values.push({
@@ -310,10 +303,9 @@ export class TranslationEntryService {
 
     for (const lang of targetLangs) {
       const dictCacheEntries: DictCacheEntry[] = []
-      const existingEntries = await this.entryModel
-        .find({ lang })
-        .select('keyPath lookupKey sourceText')
-        .lean()
+      const existingEntries = await this.entryRepository.listFiltered({
+        lang,
+      })
 
       const existingSet = new Set(
         existingEntries.map((e) => `${e.keyPath}:${e.lookupKey}`),
@@ -360,24 +352,15 @@ export class TranslationEntryService {
           const translatedText = translations[compositeKey]
           if (!translatedText) continue
 
-          await this.entryModel.updateOne(
-            {
-              keyPath: item.keyPath,
-              lang,
-              keyType: item.keyType,
-              lookupKey: item.lookupKey,
-            },
-            {
-              $set: {
-                sourceText: item.sourceText,
-                translatedText,
-                ...(item.keyType === 'entity'
-                  ? { sourceUpdatedAt: new Date() }
-                  : {}),
-              },
-            },
-            { upsert: true },
-          )
+          await this.entryRepository.upsert({
+            keyPath: item.keyPath,
+            lang,
+            keyType: item.keyType,
+            lookupKey: item.lookupKey,
+            sourceText: item.sourceText,
+            translatedText,
+            sourceUpdatedAt: item.keyType === 'entity' ? new Date() : undefined,
+          })
 
           if (item.keyType === 'dict') {
             dictCacheEntries.push({
@@ -420,16 +403,10 @@ export class TranslationEntryService {
 
     for (const lang of targetLangs) {
       const dictCacheEntries: DictCacheEntry[] = []
-      const existingEntries = await this.entryModel
-        .find({
-          lang,
-          $or: values.map((v) => ({
-            keyPath: v.keyPath,
-            lookupKey: v.lookupKey,
-          })),
-        })
-        .select('keyPath lookupKey sourceText')
-        .lean()
+      const existingEntries =
+        await this.entryRepository.listByKeyPathLookupKeys(
+          values.map((v) => ({ keyPath: v.keyPath, lookupKey: v.lookupKey })),
+        )
 
       const existingMap = new Map(
         existingEntries.map((e) => [
@@ -474,24 +451,15 @@ export class TranslationEntryService {
           const translatedText = translations[compositeKey]
           if (!translatedText) continue
 
-          await this.entryModel.updateOne(
-            {
-              keyPath: item.keyPath,
-              lang,
-              keyType: item.keyType,
-              lookupKey: item.lookupKey,
-            },
-            {
-              $set: {
-                sourceText: item.sourceText,
-                translatedText,
-                ...(item.keyType === 'entity'
-                  ? { sourceUpdatedAt: new Date() }
-                  : {}),
-              },
-            },
-            { upsert: true },
-          )
+          await this.entryRepository.upsert({
+            keyPath: item.keyPath,
+            lang,
+            keyType: item.keyType,
+            lookupKey: item.lookupKey,
+            sourceText: item.sourceText,
+            translatedText,
+            sourceUpdatedAt: item.keyType === 'entity' ? new Date() : undefined,
+          })
 
           if (item.keyType === 'dict') {
             dictCacheEntries.push({
@@ -522,13 +490,14 @@ export class TranslationEntryService {
     newSourceText: string,
   ): Promise<void> {
     if (!newSourceText) {
-      await this.entryModel.deleteMany({ keyPath, lookupKey: refId })
+      await this.entryRepository.deleteByKeyPath(keyPath, refId)
       return
     }
 
-    const existingEntries = await this.entryModel
-      .find({ keyPath, lookupKey: refId })
-      .lean()
+    const existingEntries = await this.entryRepository.listByKeyPath(
+      keyPath,
+      refId,
+    )
 
     if (!existingEntries.length) return
 
@@ -538,10 +507,10 @@ export class TranslationEntryService {
     if (!staleEntries.length) return
 
     const staleLangs = staleEntries.map((e) => e.lang)
-    await this.entryModel.deleteMany({
+    await this.entryRepository.deleteMany({
       keyPath,
       lookupKey: refId,
-      lang: { $in: staleLangs },
+      langs: staleLangs,
     })
 
     this.logger.log(
@@ -553,17 +522,15 @@ export class TranslationEntryService {
     keyPath: TranslationEntryKeyPath,
     lookupKey?: string,
   ): Promise<void> {
-    const filter: any = { keyPath }
-    if (lookupKey) filter.lookupKey = lookupKey
-
     const dictEntries = this.isDictKeyPath(keyPath)
-      ? await this.entryModel
-          .find(filter)
-          .select('keyPath lang lookupKey')
-          .lean()
+      ? await this.entryRepository.listFiltered({ keyPath, lookupKey })
       : []
 
-    await this.entryModel.deleteMany(filter)
+    if (lookupKey) {
+      await this.entryRepository.deleteByKeyPath(keyPath, lookupKey)
+    } else {
+      await this.entryRepository.deleteMany({ keyPath })
+    }
     await this.deleteCachedDictTranslations(dictEntries)
   }
 
@@ -573,31 +540,25 @@ export class TranslationEntryService {
     page?: number
     size?: number
   }) {
-    const filter: any = {}
-    if (query.keyPath) filter.keyPath = query.keyPath
-    if (query.lang) filter.lang = query.lang
-
     const page = query.page || 1
     const size = query.size || 20
 
-    const [data, total] = await Promise.all([
-      this.entryModel
-        .find(filter)
-        .sort({ created: -1 })
-        .skip((page - 1) * size)
-        .limit(size)
-        .lean(),
-      this.entryModel.countDocuments(filter),
-    ])
+    const { data, pagination } = await this.entryRepository.listPaginated(
+      {
+        keyPath: query.keyPath,
+        lang: query.lang,
+      },
+      page,
+      size,
+    )
 
-    return { data, pagination: { total, page, size } }
+    return { data, pagination: { total: pagination.total, page, size } }
   }
 
   async updateEntry(id: string, translatedText: string) {
-    const updated = await this.entryModel.findByIdAndUpdate(
+    const updated = await this.entryRepository.updateTranslatedText(
       id,
-      { $set: { translatedText } },
-      { returnDocument: 'after' },
+      translatedText,
     )
 
     if (updated?.keyType === 'dict') {
@@ -615,7 +576,7 @@ export class TranslationEntryService {
   }
 
   async deleteEntry(id: string) {
-    const deleted = await this.entryModel.findByIdAndDelete(id)
+    const deleted = await this.entryRepository.deleteById(id)
 
     if (deleted?.keyType === 'dict') {
       await this.deleteCachedDictTranslations([

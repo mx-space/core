@@ -14,8 +14,13 @@ services:
       PORT: "2333"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-localhost:*}
 
-      # MongoDB (container in this compose)
-      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING:-mongodb://mongo:27017/mx-space}
+      # PostgreSQL (container in this compose)
+      PG_HOST: postgres
+      PG_PORT: "5432"
+      PG_USER: ${PG_USER:-mx}
+      PG_PASSWORD: ${PG_PASSWORD:-mx}
+      PG_DATABASE: ${PG_DATABASE:-mx_core}
+      SNOWFLAKE_WORKER_ID: ${SNOWFLAKE_WORKER_ID:-1}
 
       # Redis (container in this compose)
       REDIS_HOST: redis
@@ -41,7 +46,7 @@ services:
       - ./data/mx-space:/root/.mx-space
 
     depends_on:
-      - mongo
+      - postgres
       - redis
 
     healthcheck:
@@ -65,11 +70,19 @@ services:
       retries: 5
       timeout: 3s
 
-  mongo:
-    image: mongo:7
-    container_name: mx-mongo
+  postgres:
+    image: postgres:16-alpine
+    container_name: mx-postgres
     restart: unless-stopped
-    command: ["mongod", "--bind_ip_all"]
+    environment:
+      POSTGRES_USER: ${PG_USER:-mx}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-mx}
+      POSTGRES_DB: ${PG_DATABASE:-mx_core}
     volumes:
-      - ./data/db:/data/db
-
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-mx} -d ${PG_DATABASE:-mx_core}"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s

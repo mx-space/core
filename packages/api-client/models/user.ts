@@ -1,18 +1,20 @@
-import type { BaseModel } from './base'
-
-export interface UserModel extends BaseModel {
-  introduce: string
-  mail: string
-  url: string
-  name: string
-  socialIds: Record<string, string>
+export interface UserModel {
+  id: string
+  createdAt: string
   username: string
-  modified: string
-  v: number
-  lastLoginTime: string
-  lastLoginIp?: string
+  name: string
   avatar: string
-  postID: string
+  mail: string
+  introduce?: string
+  url?: string
+  socialIds?: Record<string, string>
+  lastLoginTime?: string
+  lastLoginIp?: string | null
+  role?: 'owner' | 'reader'
+  email?: string
+  image?: string
+  handle?: string
+  displayUsername?: string
 }
 
 export type TLogin = {
@@ -23,7 +25,7 @@ export type TLogin = {
   lastLoginIp?: null | string
 } & Pick<
   UserModel,
-  'name' | 'username' | 'created' | 'url' | 'mail' | 'avatar' | 'id'
+  'name' | 'username' | 'createdAt' | 'url' | 'mail' | 'avatar' | 'id'
 >
 
 export type BetterAuthUserRole = 'owner' | 'reader'

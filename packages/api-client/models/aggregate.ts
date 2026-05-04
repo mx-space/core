@@ -1,3 +1,4 @@
+import type { CategoryModel } from './category'
 import type { NoteModel } from './note'
 import type { PostModel } from './post'
 import type { SayModel } from './say'
@@ -44,12 +45,12 @@ export interface Url {
 
 export interface AggregateTopNote extends Pick<
   NoteModel,
-  'id' | 'title' | 'created' | 'nid' | 'images' | 'mood' | 'weather'
+  'id' | 'title' | 'createdAt' | 'nid' | 'images' | 'mood' | 'weather'
 > {}
 
 export interface AggregateTopPost extends Pick<
   PostModel,
-  'id' | 'slug' | 'created' | 'title' | 'category' | 'images' | 'summary'
+  'id' | 'slug' | 'createdAt' | 'title' | 'category' | 'images' | 'summary'
 > {}
 
 export interface AggregateTop {
@@ -71,20 +72,20 @@ export interface TimelineData {
     | 'title'
     | 'weather'
     | 'mood'
-    | 'created'
-    | 'modified'
+    | 'createdAt'
+    | 'modifiedAt'
     | 'bookmark'
   >[]
 
   posts?: (Pick<
     PostModel,
-    'id' | 'title' | 'slug' | 'created' | 'modified' | 'category'
+    'id' | 'title' | 'slug' | 'createdAt' | 'modifiedAt' | 'category'
   > & { url: string })[]
 }
 
 export interface LatestPostItem extends Pick<
   PostModel,
-  'id' | 'title' | 'slug' | 'created' | 'modified' | 'tags'
+  'id' | 'title' | 'slug' | 'createdAt' | 'modifiedAt' | 'tags'
 > {
   category: Pick<CategoryModel, 'name' | 'slug'> | null
 }
@@ -94,8 +95,8 @@ export interface LatestNoteItem extends Pick<
   | 'id'
   | 'title'
   | 'nid'
-  | 'created'
-  | 'modified'
+  | 'createdAt'
+  | 'modifiedAt'
   | 'mood'
   | 'weather'
   | 'bookmark'

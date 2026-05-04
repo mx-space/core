@@ -1,31 +1,43 @@
-import type {
-  ModelWithLiked,
-  ModelWithTranslation,
-  TextBaseModel,
-} from './base'
+import type { Image, ModelWithLiked, ModelWithTranslation } from './base'
 import type { TopicModel } from './topic'
 
-export type NoteModel = TextBaseModel & {
-  isPublished: boolean
-  count: {
-    read: number
-    like: number
-  }
-
-  mood?: string
-  weather?: string
-  bookmark?: boolean
-
-  publicAt?: Date
-  password?: string | null
+export interface NoteModel {
+  id: string
   nid: number
-  slug?: string
+  title: string
+  slug?: string | null
+  text: string
+  content?: string | null
+  contentFormat: 'markdown' | 'lexical'
+  images?: Image[] | null
+  meta?: Record<string, any> | null
 
-  location?: string
+  isPublished: boolean
+  hasPassword: boolean
+  publicAt?: string | Date | null
 
-  coordinates?: Coordinate
-  topic?: TopicModel
-  topicId?: string
+  mood?: string | null
+  weather?: string | null
+  bookmark: boolean
+
+  coordinates?: Coordinate | null
+  location?: string | null
+
+  readCount: number
+  likeCount: number
+
+  topicId?: string | null
+  topic?: TopicModel | null
+
+  createdAt: string
+  modifiedAt: string | null
+
+  /**
+   * Server-injected only when the list endpoint is called with
+   * `?withSummary=1`. Falls back to the first 150 chars of `text` if the AI
+   * summary cache misses. Absent on detail endpoints.
+   */
+  summary?: string
 }
 
 export interface Coordinate {

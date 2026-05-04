@@ -9,7 +9,7 @@ import { ContentFormat } from '~/shared/types/content-format.type'
 import { escapeXml } from '~/utils/tool.util'
 
 import { AggregateService } from '../aggregate/aggregate.service'
-import type { CategoryModel } from '../category/category.model'
+import type { CategoryModel } from '../category/category.types'
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownService } from '../markdown/markdown.service'
 import { OwnerService } from '../owner/owner.service'
@@ -34,42 +34,28 @@ export class FeedController {
     const { title } = await this.configs.get('seo')
     const { avatar } = await this.ownerService.getOwner()
     const now = new Date()
-    const xml = `<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
-<channel>
-<atom:link href="${xss(url)}/feed" rel="self" type="application/rss+xml"/>
-<title>${title}</title>
-<link>${xss(url)}</link>
-<description>${escapeXml(description)}</description>
-<language>zh-CN</language>
-<copyright>© ${author} </copyright>
-<pubDate>${now.toUTCString()}</pubDate>
-<generator>Mix Space CMS (https://github.com/mx-space)</generator>
-<docs>https://mx-space.js.org</docs>
-<image>
-    <url>${xss(avatar || '')}</url>
-    <title>${title}</title>
-    <link>${xss(url)}</link>
-</image>
-${await Promise.all(
-  data.map(async (item) => {
-    const isLexical = item.contentFormat === ContentFormat.Lexical
-    const renderResult = await this.markdownService.renderArticle(item.id)
+    const itemRenders = await Promise.all(
+      data.map(async (item) => {
+        const isLexical = item.contentFormat === ContentFormat.Lexical
+        const renderResult = await this.markdownService.renderArticle(item.id)
 
-    const description = isLexical
-      ? '富文本内容，请前往原站查看'
-      : escapeXml(xss(RemoveMarkdown(renderResult.document.text).slice(0, 50)))
+        const description = isLexical
+          ? '富文本内容，请前往原站查看'
+          : escapeXml(
+              xss(RemoveMarkdown(renderResult.document.text).slice(0, 50)),
+            )
 
-    const contentEncoded = isLexical
-      ? `<p>前往原站查看：<a href="${xss(item.link)}">${xss(item.link)}</a></p>`
-      : `<blockquote>该渲染由 marked 生成，可能存在排版问题，最佳体验请前往：<a href='${xss(
-          item.link,
-        )}'>${xss(item.link)}</a></blockquote>
-      ${renderResult.html}
-      <p style='text-align: right'>
-      <a href='${`${xss(item.link)}#comments`}'>看完了？说点什么呢</a>
-      </p>`
+        const contentEncoded = isLexical
+          ? `<p>前往原站查看：<a href="${xss(item.link)}">${xss(item.link)}</a></p>`
+          : `<blockquote>该渲染由 marked 生成，可能存在排版问题，最佳体验请前往：<a href='${xss(
+              item.link,
+            )}'>${xss(item.link)}</a></blockquote>
+          ${renderResult.html}
+          <p style='text-align: right'>
+          <a href='${`${xss(item.link)}#comments`}'>看完了？说点什么呢</a>
+          </p>`
 
-    return `<item>
+        return `<item>
     <title>${escapeXml(item.title)}</title>
     <link>${xss(item.link)}</link>
     <pubDate>${item.created!.toUTCString()}</pubDate>
@@ -88,11 +74,28 @@ ${
 }
  </item>
   `
-  }),
-).then((res) => res.join(''))}
+      }),
+    )
+    const items = itemRenders.join('')
+
+    return `<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
+<channel>
+<atom:link href="${xss(url)}/feed" rel="self" type="application/rss+xml"/>
+<title>${title}</title>
+<link>${xss(url)}</link>
+<description>${escapeXml(description)}</description>
+<language>zh-CN</language>
+<copyright>© ${author} </copyright>
+<pubDate>${now.toUTCString()}</pubDate>
+<generator>Mix Space CMS (https://github.com/mx-space)</generator>
+<docs>https://mx-space.js.org</docs>
+<image>
+    <url>${xss(avatar || '')}</url>
+    <title>${title}</title>
+    <link>${xss(url)}</link>
+</image>
+${items}
 </channel>
 </rss>`
-
-    return xml
   }
 }

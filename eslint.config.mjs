@@ -68,6 +68,7 @@ export default defineConfig(
       'perfectionist/sort-imports': 0,
       'unicorn/import-style': 0,
       'unicorn/text-encoding-identifier-case': 0,
+      'unicorn/number-literal-case': 0,
     },
   },
   {

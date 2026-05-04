@@ -1,26 +1,29 @@
 packages:
   - packages/*
   - apps/*
+allowBuilds:
+  "@nestjs/core": true
+  "@swc/core": true
+  cpu-features: false
+  esbuild: true
+  mongodb-memory-server: true
+  protobufjs: false
+  redis-memory-server: true
+  sharp: true
+  simple-git-hooks: true
+  ssh2: false
+  unrs-resolver: true
+  workerd: true
 overrides:
-  rolldown: 1.0.0-rc.18
+  "eslint-plugin-react-compiler>zod": 3.25.76
   "get-pixels@^3>request": ./external/request
   mongodb: ~7.1.0
   pino: ./external/pino
+  rolldown: 1.0.0-rc.18
   semver: 7.7.4
   typescript: 6.0.3
   whatwg-url: 14.1.1
   zod: 4.3.6
-  "eslint-plugin-react-compiler>zod": 3.25.76
-allowBuilds:
-  "@nestjs/core": true
-  "@swc/core": true
-  esbuild: true
-  mongodb-memory-server: true
-  redis-memory-server: true
-  sharp: true
-  simple-git-hooks: true
-  unrs-resolver: true
-  workerd: true
 publicHoistPattern:
   - "*fastify*"
   - mongodb
