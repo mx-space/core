@@ -653,6 +653,7 @@ export class AiSummaryService implements OnModuleInit {
 
   @OnEvent(BusinessEvents.POST_DELETE)
   @OnEvent(BusinessEvents.NOTE_DELETE)
+  @OnEvent(BusinessEvents.PAGE_DELETE)
   async handleDeleteArticle(event: { id: string }) {
     await this.deleteSummaryByArticleId(event.id)
   }

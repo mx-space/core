@@ -188,4 +188,12 @@ export class AiAgentConversationRepository extends BaseRepository {
       .returning()
     return row ? mapRow(row) : null
   }
+
+  async deleteForRef(refId: EntityId | string): Promise<number> {
+    const result = await this.db
+      .delete(aiAgentConversations)
+      .where(eq(aiAgentConversations.refId, parseEntityId(refId)))
+      .returning({ id: aiAgentConversations.id })
+    return result.length
+  }
 }

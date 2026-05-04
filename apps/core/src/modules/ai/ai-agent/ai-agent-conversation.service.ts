@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
 
 import { BizException } from '~/common/exceptions/biz.exception'
+import { BusinessEvents } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 
 import { AiAgentChatService } from './ai-agent-chat.service'
@@ -113,6 +115,26 @@ export class AiAgentConversationService {
 
   async deleteById(id: string) {
     await this.conversationRepository.deleteById(id)
+  }
+
+  async deleteForRef(refId: string) {
+    return this.conversationRepository.deleteForRef(refId)
+  }
+
+  @OnEvent(BusinessEvents.POST_DELETE)
+  @OnEvent(BusinessEvents.NOTE_DELETE)
+  @OnEvent(BusinessEvents.PAGE_DELETE)
+  async handleDeleteArticle(event: { id: string }) {
+    if (!event?.id) return
+    try {
+      await this.deleteForRef(event.id)
+    } catch (err) {
+      this.logger.warn(
+        `cascade delete ai_agent_conversations for ${event.id} failed: ${
+          err instanceof Error ? err.message : err
+        }`,
+      )
+    }
   }
 
   private async generateTitle(
