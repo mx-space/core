@@ -22,7 +22,7 @@ overrides:
   rolldown: 1.0.0-rc.18
   semver: 7.7.4
   typescript: 6.0.3
-  whatwg-url: 14.1.1
+  whatwg-url: 14.2.0
   zod: 4.3.6
 publicHoistPattern:
   - "*fastify*"
