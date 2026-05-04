@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## <small>12.0.1 (2026-05-04)</small>
+
+### Bug Fixes
+
+* **ci:** align release smoke test with PG cutover ([82a9db2](https://github.com/mx-space/core/commit/82a9db2))
+
+
 ## 12.0.0 (2026-05-04)
 
 * release: v12.0.0 ([fa94ec4](https://github.com/mx-space/core/commit/fa94ec4))
