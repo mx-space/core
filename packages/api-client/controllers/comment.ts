@@ -6,6 +6,7 @@ import type { ReaderModel } from '~/models'
 import type { PaginateResult } from '~/models/base'
 import type {
   CommentModel,
+  CommentParentPreview,
   CommentThreadItem,
   CommentThreadReplies,
 } from '~/models/comment'
@@ -46,7 +47,7 @@ export class CommentController<ResponseWrapper> implements IController {
   getById(id: string) {
     return this.proxy(id).get<
       CommentModel & {
-        parent?: CommentModel | null
+        parent: CommentParentPreview | null
         children?: CommentModel[]
         reader?: ReaderModel
       }

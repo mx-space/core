@@ -4,6 +4,17 @@ import type { CategoryModel } from './category'
 
 export { CollectionRefTypes }
 
+/**
+ * 评论父级预览：仅暴露列表/详情中渲染父评论引用所需之最小字段。
+ * 服务端有意去 ip/mail/agent 等 PII，故不可与 CommentModel 通用。
+ */
+export interface CommentParentPreview {
+  id: string
+  author: string | null
+  text: string
+  isDeleted: boolean
+}
+
 export interface CommentModel {
   id: string
   createdAt: string
@@ -34,6 +45,9 @@ export interface CommentModel {
   readerId: string | null
   editedAt: string | null
   anchor: Record<string, unknown> | null
+
+  /** 仅 list/detail 端点附加（服务端 attachParentPreview 之结果）。 */
+  parent?: CommentParentPreview | null
 }
 
 export interface CommentReplyWindow {

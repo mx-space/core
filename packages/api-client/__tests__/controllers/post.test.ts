@@ -13,25 +13,25 @@ describe('test post client', () => {
   })
 
   it('should get post list filter filed', async () => {
-    const mocked = mockResponse('/posts?page=1&size=1&select=created+title', {
+    const mocked = mockResponse('/posts?page=1&size=1&select=createdAt+title', {
       data: [
         {
           id: '61586f7e769f07b6852f3da0',
           title: '终于可以使用 Docker 托管整个 Mix Space 了',
-          created: '2021-10-02T14:41:02.742Z',
+          createdAt: '2021-10-02T14:41:02.742Z',
           category: null,
         },
         {
           id: '614c539cfdf566c5d93a383f',
           title: '再遇 Docker，容器化 Node 应用',
-          created: '2021-09-23T10:14:52.491Z',
+          createdAt: '2021-09-23T10:14:52.491Z',
           category: null,
         },
       ],
     })
 
     const data = await client.post.getList(1, 1, {
-      select: ['created', 'title'],
+      select: ['createdAt', 'title'],
     })
     expect(data).toEqual(mocked)
   })
