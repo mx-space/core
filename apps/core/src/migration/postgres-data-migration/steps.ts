@@ -178,6 +178,17 @@ const dateOrNull = (value: unknown): Date | null => {
   return null
 }
 
+const intOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null
+  const n = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(n) ? Math.trunc(n) : null
+}
+
+const intOr = (value: unknown, fallback: number): number => {
+  const v = intOrNull(value)
+  return v === null ? fallback : v
+}
+
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
@@ -492,12 +503,12 @@ export const stepApiKeys: MigrationStep = {
           prefix: d.prefix ?? null,
           enabled: d.enabled ?? true,
           rateLimitEnabled: d.rateLimitEnabled ?? false,
-          rateLimitTimeWindow: d.rateLimitTimeWindow ?? null,
-          rateLimitMax: d.rateLimitMax ?? null,
-          requestCount: d.requestCount ?? 0,
-          remaining: d.remaining ?? null,
-          refillInterval: d.refillInterval ?? null,
-          refillAmount: d.refillAmount ?? null,
+          rateLimitTimeWindow: intOrNull(d.rateLimitTimeWindow),
+          rateLimitMax: intOrNull(d.rateLimitMax),
+          requestCount: intOr(d.requestCount, 0),
+          remaining: intOrNull(d.remaining),
+          refillInterval: intOrNull(d.refillInterval),
+          refillAmount: intOrNull(d.refillAmount),
           expiresAt: dateOrNull(d.expiresAt),
           lastRefillAt: dateOrNull(d.lastRefillAt),
           lastRequest: dateOrNull(d.lastRequest),
