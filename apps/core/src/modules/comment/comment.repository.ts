@@ -429,6 +429,32 @@ export class CommentRepository extends BaseRepository {
     return Number(row?.count ?? 0)
   }
 
+  async countManyByRef(
+    refType: CommentRefType,
+    refIds: Array<EntityId | string>,
+  ): Promise<Map<string, number>> {
+    const result = new Map<string, number>()
+    if (refIds.length === 0) return result
+    const ids = [...new Set(refIds.map((id) => parseEntityId(id)))]
+    const rows = await this.db
+      .select({
+        refId: comments.refId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(comments)
+      .where(
+        and(
+          eq(comments.refType, normalizeCommentRefType(refType)),
+          inArray(comments.refId, ids),
+        ),
+      )
+      .groupBy(comments.refId)
+    for (const r of rows) {
+      if (r.refId) result.set(r.refId.toString(), Number(r.count ?? 0))
+    }
+    return result
+  }
+
   async count(): Promise<number> {
     const [row] = await this.db
       .select({ count: sql<number>`count(*)::int` })

@@ -100,6 +100,10 @@ describe('Yohaku contract — recently list (e2e)', () => {
       'created_at',
       'modified_at',
     ])
+    // `thinking/item.tsx` feeds `commentsIndex` to NumberSmoothTransition,
+    // which performs arithmetic on it — undefined would render NaN. The
+    // server must always emit a number, even for entries with zero comments.
+    expect(typeof body.data[0].comments_index).toBe('number')
   })
 
   test('GET /recently/:id — single thinking entry', async () => {

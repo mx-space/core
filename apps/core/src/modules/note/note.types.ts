@@ -26,7 +26,15 @@ export interface NoteRow {
   readCount: number
   likeCount: number
   topicId: EntityId | null
-  topic?: { id: EntityId; name: string; slug: string } | null
+  topic?: {
+    id: EntityId
+    name: string
+    slug: string
+    description: string
+    introduce: string | null
+    icon: string | null
+    createdAt: Date
+  } | null
   createdAt: Date
   modifiedAt: Date | null
 }

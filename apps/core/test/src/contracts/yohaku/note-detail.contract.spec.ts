@@ -191,9 +191,21 @@ describe('Yohaku contract — note detail (e2e)', () => {
       'modified_at',
     ])
 
-    // Topic is consumed as an object: `data.topic?.name`, `data.topic?.icon`.
+    // Topic is consumed as an object: `data.topic?.name`, `data.topic?.icon`,
+    // `data.topic?.introduce`, `data.topic?.description` (NoteTopicDetail
+    // popup binder + series page hero), `data.topic?.created_at` (SDK
+    // TopicModel). Mongo's autopopulate returned the full topic doc; PG must
+    // not silently project to {id, name, slug}.
     if (body.data.topic) {
-      assertHasKeysDeep(body.data, ['topic.name', 'topic.slug'])
+      assertHasKeysDeep(body.data, [
+        'topic.id',
+        'topic.name',
+        'topic.slug',
+        'topic.description',
+        'topic.introduce',
+        'topic.icon',
+        'topic.created_at',
+      ])
     }
 
     // Adjacency wrappers carry partial note shape.

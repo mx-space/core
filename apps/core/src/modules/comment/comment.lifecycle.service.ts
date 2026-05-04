@@ -134,16 +134,17 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
 
       this.sendEmail(comment, CommentReplyMailType.Owner)
 
+      const broadcastPayload = await this.enrichForBroadcast(comment)
       await this.eventManager.broadcast(
         BusinessEvents.COMMENT_CREATE,
-        comment,
+        broadcastPayload,
         { scope: EventScope.TO_SYSTEM_ADMIN },
       )
 
       if ((!commentShouldAudit || isLoggedInComment) && !comment.isWhispers) {
         await this.eventManager.broadcast(
           BusinessEvents.COMMENT_CREATE,
-          omit(comment, ['ip', 'agent']),
+          omit(broadcastPayload, ['ip', 'agent']),
           { scope: EventScope.TO_VISITOR },
         )
       }
@@ -159,27 +160,56 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       await this.appendIpLocation(commentId, ipLocation.ip)
     })
 
+    const broadcastPayload = await this.enrichForBroadcast(comment)
+
     if (isLoggedInComment) {
       this.sendEmail(comment, CommentReplyMailType.Guest)
-      this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
-        scope: EventScope.TO_SYSTEM_VISITOR,
-      })
+      this.eventManager.broadcast(
+        BusinessEvents.COMMENT_CREATE,
+        broadcastPayload,
+        {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+        },
+      )
     } else {
       const configs = await this.configsService.get('commentOptions')
       const { commentShouldAudit } = configs
 
       if (commentShouldAudit) {
-        this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
-          scope: EventScope.TO_SYSTEM_ADMIN,
-        })
+        this.eventManager.broadcast(
+          BusinessEvents.COMMENT_CREATE,
+          broadcastPayload,
+          {
+            scope: EventScope.TO_SYSTEM_ADMIN,
+          },
+        )
         return
       }
 
       this.sendEmail(comment, CommentReplyMailType.Owner)
-      this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
-        scope: EventScope.ALL,
-      })
+      this.eventManager.broadcast(
+        BusinessEvents.COMMENT_CREATE,
+        broadcastPayload,
+        {
+          scope: EventScope.ALL,
+        },
+      )
     }
+  }
+
+  /**
+   * Replaces `author`/`avatar` with the reader-resolved values, mirroring what
+   * the comment list controllers do via `fillAndReplaceAvatarUrl`. Without
+   * this step, logged-in (reader) comments broadcast `author: null`, which
+   * the admin in-app/browser notification renders as "null: <text>".
+   */
+  private async enrichForBroadcast(
+    comment: CommentModel,
+  ): Promise<CommentModel> {
+    const [enriched] = await this.commentService.fillAndReplaceAvatarUrl([
+      { ...comment } as CommentModel,
+    ])
+    return enriched ?? comment
   }
 
   private async resolveReader(readerId?: string | null) {

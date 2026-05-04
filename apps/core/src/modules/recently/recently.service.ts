@@ -51,13 +51,14 @@ export class RecentlyService {
   async findById(id: string) {
     const row = await this.recentlyRepository.findById(id)
     if (!row) return row
-    const [withRef] = await this.attachRef([row])
+    const withCount = await this.attachCommentCount([row])
+    const [withRef] = await this.attachRef(withCount)
     return withRef
   }
 
   async findRecent(size: number) {
     const rows = await this.recentlyRepository.findRecent(size)
-    return this.attachRef(rows)
+    return this.attachRef(await this.attachCommentCount(rows))
   }
 
   async count() {
@@ -66,7 +67,7 @@ export class RecentlyService {
 
   async getAll() {
     const result = await this.recentlyRepository.list(1, 50)
-    return this.attachRef(result.data)
+    return this.attachRef(await this.attachCommentCount(result.data))
   }
 
   async getOne(id: string) {
@@ -170,17 +171,34 @@ export class RecentlyService {
       after,
       size: size ?? 10,
     })
-    return this.attachRef(rows)
+    return this.attachRef(await this.attachCommentCount(rows))
   }
 
   async getLatestOne() {
     const [latest] = await this.findRecent(1)
-    if (!latest) return null
-    const commentsIndex = await this.commentService.countByRef(
+    return latest ?? null
+  }
+
+  /**
+   * Stamp `commentsIndex` with the live comment count per row. The persistent
+   * counter column drifts (it is not incremented on comment create), so all
+   * read paths recompute it before returning. Mongo did this via a
+   * `$lookup`-driven `$addFields: { comments: { $size: ... } }` pipeline; PG
+   * does it as a single batched count grouped by `ref_id`.
+   */
+  private async attachCommentCount<T extends RecentlyRow>(
+    rows: T[],
+  ): Promise<T[]> {
+    if (rows.length === 0) return rows
+    const ids = rows.map((r) => String(r.id))
+    const map = await this.commentService.countManyByRef(
       CollectionRefTypes.Recently,
-      latest.id,
+      ids,
     )
-    return { ...latest, commentsIndex }
+    for (const row of rows) {
+      row.commentsIndex = map.get(String(row.id)) ?? 0
+    }
+    return rows
   }
 
   async create(model: RecentlyModel) {

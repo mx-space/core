@@ -275,6 +275,16 @@ export class CommentService {
     )
   }
 
+  async countManyByRef(
+    refType: CollectionRefTypes | CommentRefType,
+    refIds: Array<string>,
+  ): Promise<Map<string, number>> {
+    return this.commentRepository.countManyByRef(
+      this.normalizeRefType(refType),
+      refIds,
+    )
+  }
+
   async countByState(state: number, rootOnly = false) {
     return this.commentRepository.countByState(state, rootOnly)
   }
@@ -637,8 +647,19 @@ export class CommentService {
       const reader = comment.readerId ? readerMap.get(comment.readerId) : null
       if (reader) {
         const isOwner = reader.role === 'owner'
+        // Reader.name may be null (better-auth users created via OAuth without
+        // a profile name, manual signup with empty name, etc). Walk a robust
+        // fallback chain so admin notifications never render "null: <text>".
+        const readerDisplay =
+          reader.name ||
+          reader.displayUsername ||
+          reader.username ||
+          (reader as any).handle ||
+          (reader.email ? reader.email.split('@')[0] : null)
         comment.author =
-          isOwner && owner.name ? owner.name : reader.name || comment.author
+          isOwner && owner.name
+            ? owner.name
+            : readerDisplay || comment.author || 'Anonymous'
         comment.avatar =
           (isOwner ? owner.avatar : undefined) ||
           reader.image ||

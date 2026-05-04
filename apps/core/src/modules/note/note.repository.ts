@@ -610,7 +610,15 @@ export class NoteRepository extends BaseRepository {
     }
     const topicIds = [...topicIdSet]
     const topicRows = await this.db
-      .select({ id: topics.id, name: topics.name, slug: topics.slug })
+      .select({
+        id: topics.id,
+        name: topics.name,
+        slug: topics.slug,
+        description: topics.description,
+        introduce: topics.introduce,
+        icon: topics.icon,
+        createdAt: topics.createdAt,
+      })
       .from(topics)
       .where(inArray(topics.id, topicIds))
     const topicById = new Map(
@@ -620,6 +628,10 @@ export class NoteRepository extends BaseRepository {
           id: toEntityId(t.id) as EntityId,
           name: t.name,
           slug: t.slug,
+          description: t.description,
+          introduce: t.introduce,
+          icon: t.icon,
+          createdAt: t.createdAt,
         },
       ]),
     )
