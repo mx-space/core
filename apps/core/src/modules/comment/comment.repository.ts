@@ -4,8 +4,10 @@ import {
   asc,
   desc,
   eq,
+  gte,
   ilike,
   inArray,
+  lte,
   ne,
   type SQL,
   sql,
@@ -445,6 +447,31 @@ export class CommentRepository extends BaseRepository {
       .from(comments)
       .where(and(...filters))
     return Number(row?.count ?? 0)
+  }
+
+  async aggregateDailyActivity(options: {
+    from: Date
+    to: Date
+    states: number[]
+  }): Promise<Array<{ date: string; count: number }>> {
+    if (options.states.length === 0) return []
+    const dayExpr = sql<string>`to_char(${comments.createdAt}, 'YYYY-MM-DD')`
+    const filters: SQL[] = [
+      gte(comments.createdAt, options.from),
+      lte(comments.createdAt, options.to),
+      inArray(comments.state, options.states),
+      eq(comments.isDeleted, false),
+    ]
+    const rows = await this.db
+      .select({
+        date: dayExpr,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(comments)
+      .where(and(...filters))
+      .groupBy(dayExpr)
+      .orderBy(asc(dayExpr))
+    return rows.map((r) => ({ date: r.date, count: Number(r.count ?? 0) }))
   }
 
   async countActiveByReader(readerId: string): Promise<number> {

@@ -154,6 +154,15 @@ export class PageRepository extends BaseRepository {
     return Number(row?.count ?? 0)
   }
 
+  async sumTextLength(): Promise<number> {
+    const [row] = await this.db
+      .select({
+        total: sql<number>`coalesce(sum(char_length(coalesce(${pages.text}, ''))), 0)::bigint`,
+      })
+      .from(pages)
+    return Number(row?.total ?? 0)
+  }
+
   async findRecent(size: number): Promise<PageRow[]> {
     const rows = await this.db
       .select()

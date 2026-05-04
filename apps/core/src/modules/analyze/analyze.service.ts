@@ -154,6 +154,28 @@ export class AnalyzeService {
     }
   }
 
+  /**
+   * UA-based aggregate-stat traffic source kept distinct from
+   * referer-based `getTrafficSource`: dashboard `TrafficSource.tsx`
+   * reads `{os, browser}` from `/aggregate/stat/traffic-source` —
+   * referers go to `/analyze/traffic-source` which has a different shape.
+   */
+  async getUaTrafficDistribution(from?: Date, to?: Date) {
+    const fromDate = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
+    const toDate = to ?? new Date()
+    const dist = await this.analyzeRepository.aggregateDeviceDistribution(
+      fromDate,
+      toDate,
+    )
+    return {
+      os: dist.os.map((item) => ({ name: item.name, count: item.value })),
+      browser: dist.browsers.map((item) => ({
+        name: item.name,
+        count: item.value,
+      })),
+    }
+  }
+
   async getTrafficSource(from?: Date, to?: Date) {
     from = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
     to = to ?? new Date()

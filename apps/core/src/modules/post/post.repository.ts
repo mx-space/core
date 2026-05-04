@@ -1,5 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, asc, desc, eq, ilike, inArray, type SQL, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lte,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { categories, postRelatedPosts, posts } from '~/database/schema'
@@ -486,6 +497,123 @@ export class PostRepository extends BaseRepository {
       month: Number(r.month),
       count: Number(r.count ?? 0),
     }))
+  }
+
+  async aggregateReadAndLikeSums(): Promise<{
+    totalReads: number
+    totalLikes: number
+  }> {
+    const [row] = await this.db
+      .select({
+        totalReads: sql<number>`coalesce(sum(${posts.readCount}), 0)::int`,
+        totalLikes: sql<number>`coalesce(sum(${posts.likeCount}), 0)::int`,
+      })
+      .from(posts)
+    return {
+      totalReads: Number(row?.totalReads ?? 0),
+      totalLikes: Number(row?.totalLikes ?? 0),
+    }
+  }
+
+  async findFirstPublishedAt(): Promise<Date | null> {
+    const [row] = await this.db
+      .select({ createdAt: posts.createdAt })
+      .from(posts)
+      .where(eq(posts.isPublished, true))
+      .orderBy(asc(posts.createdAt))
+      .limit(1)
+    return row?.createdAt ?? null
+  }
+
+  async findTopByReadCount(limit: number): Promise<PostRow[]> {
+    const rows = await this.db
+      .select()
+      .from(posts)
+      .where(eq(posts.isPublished, true))
+      .orderBy(desc(posts.readCount), desc(posts.createdAt))
+      .limit(Math.max(1, limit))
+    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+  }
+
+  async aggregateMonthlyTrend(options: {
+    from: Date
+    to: Date
+    publishedOnly?: boolean
+  }): Promise<Array<{ date: string; count: number }>> {
+    const filters: SQL[] = [
+      gte(posts.createdAt, options.from),
+      lte(posts.createdAt, options.to),
+    ]
+    if (options.publishedOnly) filters.push(eq(posts.isPublished, true))
+    const monthExpr = sql<string>`to_char(${posts.createdAt}, 'YYYY-MM')`
+    const rows = await this.db
+      .select({
+        date: monthExpr,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(posts)
+      .where(and(...filters))
+      .groupBy(monthExpr)
+      .orderBy(asc(monthExpr))
+    return rows.map((r) => ({ date: r.date, count: Number(r.count ?? 0) }))
+  }
+
+  async aggregatePublishedByCategory(): Promise<
+    Array<{ categoryId: string; count: number }>
+  > {
+    const rows = await this.db
+      .select({
+        categoryId: posts.categoryId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(posts)
+      .where(eq(posts.isPublished, true))
+      .groupBy(posts.categoryId)
+      .orderBy(desc(sql`count(*)`))
+    return rows.map((r) => ({
+      categoryId: toEntityId(r.categoryId) as string,
+      count: Number(r.count ?? 0),
+    }))
+  }
+
+  async sumTextLength(): Promise<number> {
+    const [row] = await this.db
+      .select({
+        total: sql<number>`coalesce(sum(char_length(coalesce(${posts.text}, ''))), 0)::bigint`,
+      })
+      .from(posts)
+    return Number(row?.total ?? 0)
+  }
+
+  async findPublishedForSitemap(): Promise<PostRow[]> {
+    const rows = await this.db
+      .select()
+      .from(posts)
+      .where(eq(posts.isPublished, true))
+      .orderBy(desc(posts.createdAt))
+    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+  }
+
+  async findByYearForTimeline(options: {
+    year?: number
+    sort: 'asc' | 'desc'
+    publishedOnly?: boolean
+  }): Promise<PostRow[]> {
+    const filters: SQL[] = []
+    if (options.publishedOnly) filters.push(eq(posts.isPublished, true))
+    if (options.year !== undefined) {
+      filters.push(
+        sql`extract(year from ${posts.createdAt})::int = ${options.year}`,
+      )
+    }
+    const orderBy =
+      options.sort === 'asc' ? asc(posts.createdAt) : desc(posts.createdAt)
+    const rows = await this.db
+      .select()
+      .from(posts)
+      .where(filters.length ? and(...filters) : undefined)
+      .orderBy(orderBy)
+    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
   }
 
   async setRelatedPosts(

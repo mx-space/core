@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   gt,
+  gte,
   ilike,
   inArray,
   lt,
@@ -486,6 +487,95 @@ export class NoteRepository extends BaseRepository {
       month: Number(r.month),
       count: Number(r.count ?? 0),
     }))
+  }
+
+  async aggregateReadAndLikeSums(): Promise<{
+    totalReads: number
+    totalLikes: number
+  }> {
+    const [row] = await this.db
+      .select({
+        totalReads: sql<number>`coalesce(sum(${notes.readCount}), 0)::int`,
+        totalLikes: sql<number>`coalesce(sum(${notes.likeCount}), 0)::int`,
+      })
+      .from(notes)
+    return {
+      totalReads: Number(row?.totalReads ?? 0),
+      totalLikes: Number(row?.totalLikes ?? 0),
+    }
+  }
+
+  async findFirstCreatedAtVisible(): Promise<Date | null> {
+    const [row] = await this.db
+      .select({ createdAt: notes.createdAt })
+      .from(notes)
+      .where(this.visibleClause())
+      .orderBy(asc(notes.createdAt))
+      .limit(1)
+    return row?.createdAt ?? null
+  }
+
+  async aggregateMonthlyTrend(options: {
+    from: Date
+    to: Date
+    visibleOnly?: boolean
+  }): Promise<Array<{ date: string; count: number }>> {
+    const filters: SQL[] = [
+      gte(notes.createdAt, options.from),
+      lte(notes.createdAt, options.to),
+    ]
+    if (options.visibleOnly) filters.push(this.visibleClause())
+    const monthExpr = sql<string>`to_char(${notes.createdAt}, 'YYYY-MM')`
+    const rows = await this.db
+      .select({
+        date: monthExpr,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(notes)
+      .where(and(...filters))
+      .groupBy(monthExpr)
+      .orderBy(asc(monthExpr))
+    return rows.map((r) => ({ date: r.date, count: Number(r.count ?? 0) }))
+  }
+
+  async sumTextLength(): Promise<number> {
+    const [row] = await this.db
+      .select({
+        total: sql<number>`coalesce(sum(char_length(coalesce(${notes.text}, ''))), 0)::bigint`,
+      })
+      .from(notes)
+    return Number(row?.total ?? 0)
+  }
+
+  async findByYearForTimeline(options: {
+    year?: number
+    sort: 'asc' | 'desc'
+    visibleOnly?: boolean
+  }): Promise<NoteRow[]> {
+    const filters: SQL[] = []
+    if (options.visibleOnly) filters.push(this.visibleClause())
+    if (options.year !== undefined) {
+      filters.push(
+        sql`extract(year from ${notes.createdAt})::int = ${options.year}`,
+      )
+    }
+    const orderBy =
+      options.sort === 'asc' ? asc(notes.createdAt) : desc(notes.createdAt)
+    const rows = await this.db
+      .select()
+      .from(notes)
+      .where(filters.length ? and(...filters) : undefined)
+      .orderBy(orderBy)
+    return this.attachTopics(rows.map(mapBase))
+  }
+
+  async findVisibleForSitemap(): Promise<NoteRow[]> {
+    const rows = await this.db
+      .select()
+      .from(notes)
+      .where(this.visibleClause())
+      .orderBy(desc(notes.createdAt))
+    return this.attachTopics(rows.map(mapBase))
   }
 
   private async attachTopics(rows: NoteRow[]): Promise<NoteRow[]> {
