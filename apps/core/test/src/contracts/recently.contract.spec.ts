@@ -5,12 +5,32 @@ import { RecentlyController } from '~/modules/recently/recently.controller'
 import { RecentlyService } from '~/modules/recently/recently.service'
 
 import {
+  assertHasKeys,
   assertHasKeysDeep,
   assertLowercaseRefType,
   assertNoLegacyKeys,
   assertPgTimestamps,
 } from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
+
+/**
+ * SDK `RecentlyModel` 之必填键（packages/api-client/models/recently.ts）。
+ * 每加 SDK 字段须同更，服务端漏返必触此 spec。
+ */
+const EXPECTED_RECENTLY_MODEL_KEYS = [
+  'id',
+  'created_at',
+  'modified_at',
+  'content',
+  'type',
+  'metadata',
+  'ref_type',
+  'ref_id',
+  'up',
+  'down',
+  'comments_index',
+  'allow_comment',
+]
 
 const fixtureRecently = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000040',
@@ -20,8 +40,8 @@ const fixtureRecently = (overrides: Record<string, unknown> = {}) => ({
   // recently legitimately exposes these two — test should ALLOW them.
   commentsIndex: 0,
   allowComment: true,
-  upVotes: 1,
-  downVotes: 0,
+  up: 1,
+  down: 0,
   type: null,
   metadata: null,
   createdAt: new Date('2024-04-01T00:00:00.000Z'),
@@ -162,5 +182,25 @@ describe('RecentlyController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertHasKeysDeep(body, ['ref.id', 'ref.title', 'ref.type'])
+  })
+
+  test('SDK shape — every RecentlyModel key present on list rows', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/recently`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    assertHasKeys(body.data[0], EXPECTED_RECENTLY_MODEL_KEYS)
+  })
+
+  test('SDK shape — every RecentlyModel key present on detail', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/recently/7000000000000000041`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    assertHasKeys(body, EXPECTED_RECENTLY_MODEL_KEYS)
   })
 })

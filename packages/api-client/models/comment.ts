@@ -67,7 +67,8 @@ export interface CommentModel {
   state: number
   author: string | null
   text: string
-  mail: string | null
+  /** 仅鉴权 admin 端点附带；公开端点由 `CommentFilterEmailInterceptor` 剥离。 */
+  mail?: string | null
   url: string | null
   ip: string | null
   agent: string | null

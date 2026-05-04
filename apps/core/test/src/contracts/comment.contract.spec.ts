@@ -8,6 +8,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { ReaderService } from '~/modules/reader/reader.service'
 
 import {
+  assertHasKeys,
   assertHasKeysDeep,
   assertLowercaseRefType,
   assertNoLegacyKeys,
@@ -16,6 +17,41 @@ import {
 import { createE2EApp } from '../../helper/create-e2e-app'
 import { authPassHeader } from '../../mock/guard/auth.guard'
 import { eventEmitterProvider } from '../../mock/processors/event.mock'
+
+/**
+ * SDK `CommentModel` 之必填键（packages/api-client/models/comment.ts）。
+ * `parent`/`ref` 为 list/detail 端点附加之 optional 字段（attachParentPreview /
+ * attachRef 注入），不入此基线列；下文专测之。
+ */
+const EXPECTED_COMMENT_MODEL_KEYS = [
+  'id',
+  'created_at',
+  'ref_type',
+  'ref_id',
+  'state',
+  'author',
+  'text',
+  // `mail` is admin-only; CommentFilterEmailInterceptor strips it on
+  // unauthenticated endpoints, so SDK marks it optional. Asserted separately
+  // on the admin list test below.
+  'url',
+  'ip',
+  'agent',
+  'pin',
+  'avatar',
+  'parent_comment_id',
+  'root_comment_id',
+  'reply_count',
+  'latest_reply_at',
+  'is_deleted',
+  'deleted_at',
+  'is_whispers',
+  'location',
+  'auth_provider',
+  'reader_id',
+  'edited_at',
+  'anchor',
+]
 
 const POST_REF = {
   id: '7000000000000000010',
@@ -46,10 +82,20 @@ const fixtureComment = (overrides: Record<string, unknown> = {}) => ({
   isWhispers: false,
   refId: '7000000000000000010',
   refType: 'post',
-  parentId: null,
-  childrenIds: [],
+  parentCommentId: null,
+  rootCommentId: null,
+  replyCount: 0,
+  latestReplyAt: null,
+  isDeleted: false,
+  deletedAt: null,
+  location: null,
+  authProvider: null,
+  editedAt: null,
+  anchor: null,
+  parent: null,
   readerId: null,
   ip: null,
+  agent: null,
   createdAt: new Date('2024-10-01T00:00:00.000Z'),
   modifiedAt: null,
   ref: POST_REF,
@@ -116,7 +162,7 @@ const commentServiceProvider = {
     },
     async getThreadReplies() {
       return {
-        data: [fixtureComment({ parentId: '7000000000000000100' })],
+        data: [fixtureComment({ parentCommentId: '7000000000000000100' })],
         pagination: {
           total: 1,
           currentPage: 1,
@@ -253,5 +299,28 @@ describe('CommentController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertHasKeysDeep(body, ['ref.id', 'ref.title', 'ref.slug'])
+  })
+
+  test('SDK shape — every CommentModel key + parent + ref + mail present on admin list', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/comments`,
+      headers: authPassHeader,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    assertHasKeys(body.data[0], EXPECTED_COMMENT_MODEL_KEYS)
+    assertHasKeys(body.data[0], ['parent', 'ref', 'mail'])
+  })
+
+  test('SDK shape — every CommentModel key present on detail', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/comments/7000000000000000100`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    assertHasKeys(body, EXPECTED_COMMENT_MODEL_KEYS)
+    assertHasKeys(body, ['parent', 'ref'])
   })
 })
