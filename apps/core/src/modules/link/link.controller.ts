@@ -2,7 +2,7 @@ import { Body, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
@@ -23,7 +23,6 @@ export class LinkControllerCrud extends BasePgCrudFactory({
   repository: LinkRepository,
 }) {
   @Get('/')
-  @Paginator
   async gets(
     @Query() pager: PagerDto,
     @HasAdminAccess() hasAdminAccess: boolean,

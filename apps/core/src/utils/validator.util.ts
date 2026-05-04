@@ -17,14 +17,6 @@ export function isString(value: unknown): value is string {
 }
 
 /**
- * Check if value is a valid MongoDB ObjectId (24 hex characters)
- */
-export function isMongoId(value: unknown): boolean {
-  if (typeof value !== 'string') return false
-  return /^[\da-f]{24}$/i.test(value)
-}
-
-/**
  * Check if value is a valid URL with protocol
  */
 export function isURL(

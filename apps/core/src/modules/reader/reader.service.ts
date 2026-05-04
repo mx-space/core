@@ -41,13 +41,8 @@ export class ReaderService {
     const result = await this.readerRepository.list(page, size)
 
     return {
-      docs: result.data.map((row) => this.toReaderShape(row)),
-      totalDocs: result.pagination.total,
-      page: result.pagination.currentPage,
-      limit: result.pagination.size,
-      totalPages: result.pagination.totalPage,
-      hasNextPage: result.pagination.hasNextPage,
-      hasPrevPage: result.pagination.hasPrevPage,
+      data: result.data.map((row) => this.toReaderShape(row)),
+      pagination: result.pagination,
     }
   }
   async transferOwner(id: string) {

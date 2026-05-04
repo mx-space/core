@@ -226,13 +226,8 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
 
     const result = await this.webhookRepository.listEvents(hookId, page, size)
     return {
-      docs: result.data,
-      totalDocs: result.pagination.total,
-      page: result.pagination.currentPage,
-      totalPages: result.pagination.totalPage,
-      limit: result.pagination.size,
-      hasNextPage: result.pagination.hasNextPage,
-      hasPrevPage: result.pagination.hasPrevPage,
+      data: result.data,
+      pagination: result.pagination,
     }
   }
 

@@ -32,7 +32,6 @@ export class SubscribeController {
   }
 
   @Get('/')
-  @HTTPDecorators.Paginator
   @Auth()
   async list(@Query() query: PagerDto) {
     const { page = 1, size = 10 } = query

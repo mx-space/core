@@ -1,13 +1,14 @@
 import { Delete, Get, HttpCode, Query } from '@nestjs/common'
+import dayjs from 'dayjs'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { Paginator } from '~/common/decorators/http.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
-import dayjs from 'dayjs'
+
 import { AnalyzeDto } from './analyze.schema'
 import { AnalyzeService } from './analyze.service'
 
@@ -45,7 +46,6 @@ export class AnalyzeController {
   }
 
   @Get('/')
-  @Paginator
   async getAnalyze(@Query() query: AnalyzeDto & Partial<PagerDto>) {
     const { from, to = new Date(), page = 1, size = 50 } = query
 
@@ -56,7 +56,6 @@ export class AnalyzeController {
   }
 
   @Get('/today')
-  @Paginator
   async getAnalyzeToday(@Query() query: Partial<PagerDto>) {
     const { page = 1, size = 50 } = query
     const today = new Date()
@@ -68,7 +67,6 @@ export class AnalyzeController {
   }
 
   @Get('/week')
-  @Paginator
   async getAnalyzeWeek(@Query() query: Partial<PagerDto>) {
     const { page = 1, size = 50 } = query
     const today = new Date()

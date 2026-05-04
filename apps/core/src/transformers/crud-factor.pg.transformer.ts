@@ -15,7 +15,7 @@ import pluralize from 'pluralize'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -95,7 +95,6 @@ export function BasePgCrudFactory<TRepo extends PgCrudRepository<any>>({
     }
 
     @Get('/')
-    @Paginator
     async gets(@Query() pager: PagerDto) {
       const size = pager.size ?? 10
       const page = pager.page ?? 1

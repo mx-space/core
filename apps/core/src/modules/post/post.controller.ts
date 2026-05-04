@@ -11,7 +11,7 @@ import {
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
@@ -49,7 +49,6 @@ export class PostController {
   ) {}
 
   @Get('/')
-  @Paginator
   @TranslateFields({
     path: 'docs[].category.name',
     keyPath: 'category.name',

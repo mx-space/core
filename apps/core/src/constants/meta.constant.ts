@@ -6,7 +6,6 @@ export {
 export const HTTP_CACHE_DISABLE = 'cache_module:cache_disable'
 export const HTTP_CACHE_META_OPTIONS = 'cache_module:cache_meta_options'
 export const HTTP_REQUEST_TIME = 'http:req_time'
-export const HTTP_RES_TRANSFORM_PAGINATE = '__customHttpResTransformPagenate__'
 export const HTTP_RES_UPDATE_DOC_COUNT_TYPE = '__updateDocCount__'
 
 export const CRON_DESCRIPTION = '__cron:description__'

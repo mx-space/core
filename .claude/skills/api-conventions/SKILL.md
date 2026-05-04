@@ -38,7 +38,6 @@ ResponseInterceptor automatically handles response format:
 | `Array` | `{ data: [...] }` |
 | `Object` | Returned directly |
 | `undefined` | 204 No Content |
-| `@Paginator` | `{ data: [...], pagination: {...} }` |
 | `@Bypass` | Returned as-is, skips transformation |
 
 JSONTransformInterceptor converts all fields to snake_case:
@@ -48,26 +47,48 @@ JSONTransformInterceptor converts all fields to snake_case:
 ## Pagination
 
 ```typescript
+// Controller: return PaginationResult<T> from the repository
 @Get('/')
-@HTTPDecorators.Paginator  // Required decorator
 async list(@Query() query: PagerDto) {
-  // Must return mongoose.PaginateResult
-  return this.model.paginate({}, {
+  return this.postRepository.list({
     page: query.page,
-    limit: query.size,
-    sort: { created: -1 },
+    size: query.size,
+    sortBy: query.sortBy,
+    sortOrder: query.sortOrder,
   })
+}
+
+// Repository returns { data: T[], pagination: {...} } directly
+// The ResponseInterceptor auto-wraps this as { data: [...], pagination: {...} }
+```
+
+For CRUD boilerplate, use `BasePgCrudFactory`:
+
+```typescript
+@ApiController(paths)
+export class LinkControllerCrud extends BasePgCrudFactory({
+  repository: LinkRepository,
+}) {
+  @Get('/')
+  async gets(@Query() pager: PagerDto) {
+    const { size = 10, page = 1 } = pager
+    return this.repository.list(page, size)
+  }
 }
 ```
 
 ## Parameter Validation
 
 ```typescript
-// Path parameters
+// Path parameters — use EntityIdDto for Snowflake entity IDs
 @Get('/:id')
-async get(@Param() params: MongoIdDto) {
+async get(@Param() params: EntityIdDto) {
   return this.service.findById(params.id)
 }
+
+// For integer IDs or entity IDs (e.g. notes with nid)
+@Get('/:id')
+async get(@Param() params: IntIdOrEntityIdDto) {}
 
 // Query parameters
 @Get('/')

@@ -27,6 +27,16 @@ import { getMediumDateTime } from '~/utils/time.util'
 
 import { ConfigsService } from '../configs/configs.service'
 
+const excludeTables = [
+  'analyzes',
+  'webhook_events',
+  'serverless_logs',
+  'sessions',
+  'verifications',
+  'search_documents',
+  'activities',
+]
+
 const excludeFolders = [
   'backup',
   'log',
@@ -74,6 +84,10 @@ export class BackupService {
     return POSTGRES.password
       ? `PGPASSWORD=${this.shellQuote(POSTGRES.password)} `
       : ''
+  }
+
+  private get excludeTableArgs() {
+    return excludeTables.map((t) => `--exclude-table=${t}`).join(' ')
   }
 
   private pgConnectionArgs() {
@@ -144,7 +158,7 @@ export class BackupService {
 
       await runStep(
         'pg_dump',
-        `${this.pgPasswordEnv()}pg_dump --format=custom ${this.pgConnectionArgs()} -f ${this.shellQuote(dumpFilePath)}`,
+        `${this.pgPasswordEnv()}pg_dump --format=custom ${this.excludeTableArgs} ${this.pgConnectionArgs()} -f ${this.shellQuote(dumpFilePath)}`,
       )
 
       if (!existsSync(dumpFilePath)) {

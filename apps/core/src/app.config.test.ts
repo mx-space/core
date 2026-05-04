@@ -21,19 +21,6 @@ export const CROSS_DOMAIN = {
   // allowedReferer: 'innei.ren',
 }
 
-export const MONGO_DB = {
-  dbName: 'mx-space',
-  host: '127.0.0.1',
-  port: 27017,
-  user: '',
-  password: process.env.DB_PASSWORD || '',
-  get uri() {
-    const userPassword =
-      this.user && this.password ? `${this.user}:${this.password}@` : ''
-    return `mongodb://${userPassword}${this.host}:${this.port}/${'mx-space_unitest'}`
-  },
-}
-
 export const REDIS = {
   host: 'localhost',
   port: 6379,

@@ -11,7 +11,7 @@ import {
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
@@ -211,7 +211,6 @@ export class NoteController {
   }
 
   @Get('/')
-  @Paginator
   @TranslateFields(...NOTE_LIST_TRANSLATE_FIELDS)
   async getNotes(
     @HasAdminAccess() isAuthenticated: boolean,
@@ -659,7 +658,6 @@ export class NoteController {
   }
 
   @Get('/topics/:id')
-  @HTTPDecorators.Paginator
   @TranslateFields(
     { path: 'docs[].mood', keyPath: 'note.mood' },
     { path: 'docs[].weather', keyPath: 'note.weather' },

@@ -1,5 +1,6 @@
-// Auto-generated from core model definitions
-// Do not edit manually - run `node scripts/extract-models.js` to regenerate
+// Model type definitions for the webhook package.
+// Originally auto-generated from core TypeGoose models; now maintained manually
+// after the PostgreSQL/Drizzle ORM migration removed the source model files.
 
 export enum BusinessEvents {
   GATEWAY_CONNECT = 'GATEWAY_CONNECT',

@@ -170,10 +170,10 @@ pnpm i
 
 **From `packages/webhook`:**
 
-- **Build**: `pnpm run build` — runs `scripts/generate.js` (e.g. type generation), `tsdown`, then `scripts/post-build.cjs` (post-processes `.d.ts`).
+- **Build**: `pnpm run build` — runs `scripts/generate.js` (regenerates `GenericEvent` union type from `EventPayloadMapping`), then `tsdown`.
 - **Output**: `dist/` (CJS + ESM and type definitions).
 
-**Dependencies**: The package re-exports event enums from the core app (`@core/constants/business-event.constant`). In the monorepo, types resolve via workspace; for a published package, ensure you consume a version compatible with your core server.
+**Note**: `src/models.generated.ts` is maintained manually (it was previously auto-generated from core TypeGoose models, which have been removed in the PostgreSQL migration).
 
 **Exports:**
 

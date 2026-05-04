@@ -162,14 +162,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
   private toPager(result: Awaited<ReturnType<ActivityRepository['list']>>) {
     return {
-      docs: result.data.map((row) => this.toActivity(row)),
-      totalDocs: result.pagination.total,
-      page: result.pagination.currentPage,
-      totalPages: result.pagination.totalPage,
-      limit: result.pagination.size,
-      hasNextPage: result.pagination.hasNextPage,
-      hasPrevPage: result.pagination.hasPrevPage,
       data: result.data.map((row) => this.toActivity(row)),
+      pagination: result.pagination,
     }
   }
 
@@ -207,7 +201,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     )
 
     const readerIds = [] as string[]
-    for (const item of activities.docs) {
+    for (const item of activities.data) {
       if (!item.payload || typeof item.payload !== 'object') continue
       const payload = item.payload as unknown as ActivityPayloadWithRef
       const readerId = payload.readerId
@@ -235,7 +229,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       refModelData.set(doc.id, doc)
     }
 
-    const docsWithRefModel = activities.docs.map((ac) => {
+    const docsWithRefModel = activities.data.map((ac) => {
       const nextAc = { ...ac } as ActivityWithRef
       if (!ac.payload || typeof ac.payload !== 'object') {
         return nextAc

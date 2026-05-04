@@ -11,7 +11,7 @@ import {
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -41,7 +41,6 @@ export class PageController {
   ) {}
 
   @Get('/')
-  @Paginator
   async getPagesSummary(@Query() query: PagerDto, @Lang() lang?: string) {
     const { size, select, page } = query
 

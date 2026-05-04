@@ -46,7 +46,6 @@ export class WebhookController {
   }
 
   @Get('/:id')
-  @HTTPDecorators.Paginator
   getEventsByHookId(@Param() { id }: EntityIdDto, @Query() query: PagerDto) {
     return this.service.getEventsByHookId(id, query)
   }
