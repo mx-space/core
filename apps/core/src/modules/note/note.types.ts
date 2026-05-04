@@ -72,3 +72,7 @@ export interface NoteSortOptions {
   sortBy?: 'createdAt' | 'modifiedAt' | 'title' | 'mood' | 'weather'
   sortOrder?: 1 | -1
 }
+
+export interface NoteListFilter {
+  year?: number
+}

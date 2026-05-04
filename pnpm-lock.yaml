@@ -301,6 +301,9 @@ importers:
       qs:
         specifier: 6.15.1
         version: 6.15.1
+      rebuild:
+        specifier: ^0.1.2
+        version: 0.1.2
       reflect-metadata:
         specifier: 0.2.2
         version: 0.2.2
@@ -451,6 +454,10 @@ importers:
         version: 4.1.5(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.19.12)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
 
   apps/telemetry:
+    dependencies:
+      rebuild:
+        specifier: ^0.1.2
+        version: 0.1.2
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20260426.1
@@ -460,6 +467,10 @@ importers:
         version: 4.85.0(@cloudflare/workers-types@4.20260426.1)
 
   packages/api-client:
+    dependencies:
+      rebuild:
+        specifier: ^0.1.2
+        version: 0.1.2
     devDependencies:
       '@types/cors':
         specifier: 2.8.19
@@ -502,6 +513,10 @@ importers:
         version: 4.1.5(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.3)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
 
   packages/webhook:
+    dependencies:
+      rebuild:
+        specifier: ^0.1.2
+        version: 0.1.2
     devDependencies:
       express:
         specifier: 5.2.1
@@ -5925,6 +5940,9 @@ packages:
       zod:
         optional: true
 
+  optimist@0.3.7:
+    resolution: {integrity: sha512-TCx0dXQzVtSCg2OgY/bO9hjM9cV4XYx09TVK+s3+FhkjT6LovsLe+pPMzpWf+6yXK/hUizs2gUoTw3jHM0VaTQ==}
+
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
@@ -6242,6 +6260,11 @@ packages:
   readdirp@4.1.2:
     resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
     engines: {node: '>= 14.18.0'}
+
+  rebuild@0.1.2:
+    resolution: {integrity: sha512-EtDZ5IapND57htCrOOcfH7MzXCQKivzSZUIZIuc8H0xDHfmi9HDBZIyjT7Neh5GcUoxQ6hfsXluC+UrYLgGbZg==}
+    engines: {node: '>=0.8.8'}
+    hasBin: true
 
   redis-errors@1.2.0:
     resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
@@ -7287,6 +7310,10 @@ packages:
   word-wrap@1.2.5:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
     engines: {node: '>=0.10.0'}
+
+  wordwrap@0.0.3:
+    resolution: {integrity: sha512-1tMA907+V4QmxV7dbRvb4/8MaRALK6q9Abid3ndMYnbyo8piisCmeONVqVSXqQA3KaP4SLt5b7ud6E2sqP8TFw==}
+    engines: {node: '>=0.4.0'}
 
   workerd@1.20260424.1:
     resolution: {integrity: sha512-oKsB0Xo/mfkYMdSACoS06XZg09VUK4rXwHfF/1t3P++sMbwzf4UHQvMO57+zxpEB2nVrY/ZkW0bYFGq4GdAFSQ==}
@@ -12913,6 +12940,10 @@ snapshots:
       ws: 8.20.0
       zod: 4.3.6
 
+  optimist@0.3.7:
+    dependencies:
+      wordwrap: 0.0.3
+
   optionator@0.9.4:
     dependencies:
       deep-is: 0.1.4
@@ -13231,6 +13262,10 @@ snapshots:
       minimatch: 5.1.9
 
   readdirp@4.1.2: {}
+
+  rebuild@0.1.2:
+    dependencies:
+      optimist: 0.3.7
 
   redis-errors@1.2.0: {}
 
@@ -14526,6 +14561,8 @@ snapshots:
   wildcard-match@5.1.4: {}
 
   word-wrap@1.2.5: {}
+
+  wordwrap@0.0.3: {}
 
   workerd@1.20260424.1:
     optionalDependencies:

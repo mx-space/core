@@ -34,6 +34,7 @@ import { NoteRepository } from './note.repository'
 import {
   type Coordinate,
   NOTE_PROTECTED_KEYS,
+  type NoteListFilter,
   type NoteModel,
   type NoteRow,
   type NoteSortOptions,
@@ -170,12 +171,12 @@ export class NoteService {
   async listPaginated(
     page: number,
     size: number,
-    options: { visibleOnly?: boolean } & NoteSortOptions = {},
+    options: { visibleOnly?: boolean } & NoteSortOptions & NoteListFilter = {},
   ) {
-    const { visibleOnly, ...sort } = options
+    const { visibleOnly, ...rest } = options
     return visibleOnly
-      ? this.noteRepository.listVisible(page, size, sort)
-      : this.noteRepository.listAll(page, size, sort)
+      ? this.noteRepository.listVisible(page, size, rest)
+      : this.noteRepository.listAll(page, size, rest)
   }
 
   async count() {
@@ -246,10 +247,7 @@ export class NoteService {
     return { nid: note.nid, id: note.id }
   }
 
-  async getLatestOne(
-    condition: { isPublished?: boolean } = {},
-    _projection: any = undefined,
-  ) {
+  async getLatestOne(condition: { isPublished?: boolean } = {}) {
     const [latest] = await this.findRecent(1, {
       visibleOnly: condition.isPublished === true,
     })

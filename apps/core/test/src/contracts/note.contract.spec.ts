@@ -5,6 +5,7 @@ import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteService } from '~/modules/note/note.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 
 import {
   assertHasKeys,
@@ -70,6 +71,18 @@ const fixtureNote = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
+// Test-controlled state: per-test overrides for the published flag exposed by
+// `findByNid`, plus a captured-options ledger so we can assert that the
+// controller forwards `?year=` to `listPaginated`.
+const noteState = {
+  byNidIsPublished: true,
+  listPaginatedCalls: [] as Array<Record<string, unknown>>,
+  reset() {
+    this.byNidIsPublished = true
+    this.listPaginatedCalls = []
+  },
+}
+
 const noteServiceProvider = {
   provide: NoteService,
   useValue: {
@@ -84,9 +97,14 @@ const noteServiceProvider = {
       return fixtureNote({ id })
     },
     async findByNid(nid: number) {
-      return fixtureNote({ nid })
+      return fixtureNote({ nid, isPublished: noteState.byNidIsPublished })
     },
-    async listPaginated(page = 1, size = 10) {
+    async listPaginated(
+      page = 1,
+      size = 10,
+      options: Record<string, unknown> = {},
+    ) {
+      noteState.listPaginatedCalls.push(options)
       return {
         data: [fixtureNote()],
         pagination: {
@@ -129,6 +147,18 @@ const aiInsightsProvider = {
   },
 }
 
+const lexicalServiceProvider = {
+  provide: LexicalService,
+  useValue: {
+    extractSummaryFromLexical(
+      _content: string,
+      _maxLength = 150,
+    ): string | null {
+      return null
+    },
+  },
+}
+
 describe('NoteController contract (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [NoteController],
@@ -138,6 +168,7 @@ describe('NoteController contract (e2e)', () => {
       translationProvider,
       aiSummaryProvider,
       aiInsightsProvider,
+      lexicalServiceProvider,
     ],
   })
 
@@ -226,5 +257,77 @@ describe('NoteController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertHasKeys(body.data, EXPECTED_NOTE_MODEL_KEYS)
+  })
+
+  test('GET /notes/nid/:nid — unauthenticated + unpublished → 404', async () => {
+    noteState.byNidIsPublished = false
+    try {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `${apiRoutePrefix}/notes/nid/1`,
+      })
+      expect(res.statusCode).toBe(404)
+    } finally {
+      noteState.reset()
+    }
+  })
+
+  test('GET /notes?year=2024 — pushes year into listPaginated', async () => {
+    noteState.reset()
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/notes?year=2024`,
+    })
+    expect(res.statusCode).toBe(200)
+    expect(noteState.listPaginatedCalls.length).toBeGreaterThan(0)
+    const lastCall = noteState.listPaginatedCalls.at(-1)!
+    expect(lastCall.year).toBe(2024)
+  })
+
+  test('GET /notes/list/:id — items expose only NoteTimelineItem keys', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/notes/list/7000000000000000020`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(Array.isArray(body.data)).toBe(true)
+    expect(body.data.length).toBeGreaterThan(0)
+    const item = body.data[0]
+    // SDK NoteTimelineItem = Pick<NoteModel, 'id' | 'title' | 'nid' | 'slug'
+    //                                       | 'createdAt' | 'isPublished'>
+    assertHasKeys(item, [
+      'id',
+      'title',
+      'nid',
+      'slug',
+      'created_at',
+      'is_published',
+    ])
+    // Heavy fields must NOT leak — old impl returned the full row which on
+    // even a moderately-sized timeline blew up the payload.
+    expect(item.text).toBeUndefined()
+    expect(item.content).toBeUndefined()
+    expect(item.images).toBeUndefined()
+    expect(item.location).toBeUndefined()
+    expect(item.coordinates).toBeUndefined()
+  })
+
+  test('GET /notes?withSummary=1 — applyNoteSelect preserves injected summary', async () => {
+    noteState.reset()
+    const res = await proxy.app.inject({
+      method: 'GET',
+      // Include a `select` that omits `summary` — this is exactly Yohaku's
+      // call shape (`NoteListItemPaper` consumer). Before the fix
+      // `applyNoteSelect` stripped the summary that `enrichDocsWithSummary`
+      // had just injected.
+      url: `${apiRoutePrefix}/notes?withSummary=1&select=title%20id`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(Array.isArray(body.data)).toBe(true)
+    expect(body.data[0].summary).toBeDefined()
+    // Fixture text is 'body'; fallback is `text.slice(0,150)`.
+    expect(body.data[0].summary).toBe('body')
   })
 })

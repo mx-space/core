@@ -19,6 +19,7 @@ import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteService } from '~/modules/note/note.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 
 import {
   assertHasKeys,
@@ -135,6 +136,15 @@ const aiInsightsProvider = {
   },
 }
 
+const lexicalServiceProvider = {
+  provide: LexicalService,
+  useValue: {
+    extractSummaryFromLexical(): string | null {
+      return null
+    },
+  },
+}
+
 describe('Yohaku contract — note detail (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [NoteController],
@@ -144,6 +154,7 @@ describe('Yohaku contract — note detail (e2e)', () => {
       translationProvider,
       aiSummaryProvider,
       aiInsightsProvider,
+      lexicalServiceProvider,
     ],
   })
 

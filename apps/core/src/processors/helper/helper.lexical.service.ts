@@ -13,6 +13,7 @@ import {
 } from '~/constants/lexical.constant'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { extractLexicalTranslatableProperties } from '~/utils/lexical-translatable-property.util'
+import { truncateAtBoundary } from '~/utils/text-summary.util'
 import { md5 } from '~/utils/tool.util'
 
 const KNOWN_STRUCTURAL_PROPS = new Set([
@@ -268,6 +269,49 @@ export class LexicalService {
     })
 
     return markdown
+  }
+
+  /**
+   * Extract a clean preview/summary from a Lexical editor state. Walks the
+   * root children, picks the first paragraph (or any first block carrying
+   * meaningful text if no paragraph exists), normalizes whitespace, and
+   * truncates to `maxLength` at a locale-aware sentence/word boundary so
+   * the teaser never ends mid-word (Latin) or mid-sentence (CJK).
+   * Returns `null` when the content is unparseable or no textual block is
+   * found, so callers can fall back to a different source (e.g. the
+   * markdown-rendered `text`).
+   */
+  extractSummaryFromLexical(
+    content: string,
+    maxLength = 150,
+    locale?: string,
+  ): string | null {
+    const editorState = this.parseEditorState(content)
+    if (!editorState?.root || !Array.isArray(editorState.root.children)) {
+      return null
+    }
+
+    const pickFromBlock = (child: any): string => {
+      const text = this.extractBlockText(child)
+      return this.normalizeText(text)
+    }
+
+    let firstNonEmpty: string | null = null
+    for (const child of editorState.root.children) {
+      if (!child || typeof child !== 'object') continue
+      const type = typeof child.type === 'string' ? child.type : ''
+      const text = pickFromBlock(child)
+      if (!text) continue
+      if (firstNonEmpty === null) {
+        firstNonEmpty = text
+      }
+      if (type === 'paragraph') {
+        return truncateAtBoundary(text, maxLength, locale)
+      }
+    }
+
+    if (!firstNonEmpty) return null
+    return truncateAtBoundary(firstNonEmpty, maxLength, locale)
   }
 
   populateText<

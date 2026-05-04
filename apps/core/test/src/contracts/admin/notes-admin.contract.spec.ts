@@ -19,6 +19,7 @@ import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteService } from '~/modules/note/note.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 
 import {
   assertHasKeys,
@@ -142,6 +143,15 @@ const aiInsightsProvider = {
   },
 }
 
+const lexicalServiceProvider = {
+  provide: LexicalService,
+  useValue: {
+    extractSummaryFromLexical(): string | null {
+      return null
+    },
+  },
+}
+
 const NOTE_LIST_REQUIRED_KEYS = [
   'id',
   'nid',
@@ -180,6 +190,7 @@ describe('NoteController admin contract (e2e)', () => {
       translationProvider,
       aiSummaryProvider,
       aiInsightsProvider,
+      lexicalServiceProvider,
     ],
   })
 

@@ -31,6 +31,13 @@ export interface NoteModel {
 
   createdAt: string
   modifiedAt: string | null
+
+  /**
+   * Server-injected only when the list endpoint is called with
+   * `?withSummary=1`. Falls back to the first 150 chars of `text` if the AI
+   * summary cache misses. Absent on detail endpoints.
+   */
+  summary?: string
 }
 
 export interface Coordinate {

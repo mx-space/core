@@ -28,6 +28,7 @@ import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import type {
   NoteCreateInput,
+  NoteListFilter,
   NotePatchInput,
   NoteRow,
   NoteSortOptions,
@@ -132,12 +133,12 @@ export class NoteRepository extends BaseRepository {
   async listVisible(
     page = 1,
     size = 10,
-    options: NoteSortOptions = {},
+    options: NoteSortOptions & NoteListFilter = {},
   ): Promise<PaginationResult<NoteRow>> {
     page = Math.max(1, page)
     size = Math.min(50, Math.max(1, size))
     const offset = (page - 1) * size
-    const where = this.visibleClause()
+    const where = this.combineWhere(this.visibleClause(), options.year)
     const orderBy = this.resolveOrderBy(options)
     const [rows, [{ count }]] = await Promise.all([
       this.db
@@ -157,6 +158,20 @@ export class NoteRepository extends BaseRepository {
       data,
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
+  }
+
+  private combineWhere(
+    visibility: SQL | undefined,
+    year?: number,
+  ): SQL | undefined {
+    const filters: SQL[] = []
+    if (visibility) filters.push(visibility)
+    if (year !== undefined) {
+      filters.push(sql`extract(year from ${notes.createdAt})::int = ${year}`)
+    }
+    if (filters.length === 0) return undefined
+    if (filters.length === 1) return filters[0]
+    return and(...filters)
   }
 
   async create(input: NoteCreateInput): Promise<NoteRow> {
@@ -268,20 +283,25 @@ export class NoteRepository extends BaseRepository {
   async listAll(
     page = 1,
     size = 10,
-    options: NoteSortOptions = {},
+    options: NoteSortOptions & NoteListFilter = {},
   ): Promise<PaginationResult<NoteRow>> {
     page = Math.max(1, page)
     size = Math.min(50, Math.max(1, size))
     const offset = (page - 1) * size
+    const where = this.combineWhere(undefined, options.year)
     const orderBy = this.resolveOrderBy(options)
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
         .from(notes)
+        .where(where)
         .orderBy(...orderBy)
         .limit(size)
         .offset(offset),
-      this.db.select({ count: sql<number>`count(*)::int` }).from(notes),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(notes)
+        .where(where),
     ])
     return {
       data: await this.attachTopics(rows.map(mapBase)),

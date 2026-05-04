@@ -21,6 +21,7 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import {
   type ArticleTranslationInput,
   type TranslationMeta,
@@ -28,6 +29,7 @@ import {
 } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { applyContentPreference } from '~/utils/content.util'
+import { truncateAtBoundary } from '~/utils/text-summary.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai/ai.constants'
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
@@ -89,6 +91,7 @@ export class NoteController {
     private readonly translationService: TranslationService,
     private readonly aiSummaryService: AiSummaryService,
     private readonly aiInsightsService: AiInsightsService,
+    private readonly lexicalService: LexicalService,
   ) {}
 
   private async buildPublicNoteResponse(
@@ -215,7 +218,7 @@ export class NoteController {
     @Query() query: NoteQueryDto,
     @Lang() lang?: string,
   ) {
-    const { size, select, page, sortBy, sortOrder, withSummary } = query
+    const { size, select, page, sortBy, sortOrder, year, withSummary } = query
 
     const result = await this.noteService.listPaginated(page, size, {
       visibleOnly: !isAuthenticated,
@@ -227,6 +230,7 @@ export class NoteController {
         | 'weather'
         | undefined,
       sortOrder: sortOrder as 1 | -1 | undefined,
+      year,
     })
 
     if (!isAuthenticated) {
@@ -329,11 +333,14 @@ export class NoteController {
         .map((s) => s.trim().replace(/^[+-]/, ''))
         .filter(Boolean),
     )
-    // Always preserve `id` and `topic` to keep response shape sound:
+    // Always preserve `id`, `topic`, and `summary` to keep response shape sound:
     // `id` is the row key, `topic` is a joined value the legacy aggregate
-    // pipeline emitted after the `$project` stage.
+    // pipeline emitted after the `$project` stage, and `summary` is injected
+    // by `enrichDocsWithSummary` AFTER select runs — stripping it would erase
+    // the very field `?withSummary=1` was sent to populate.
     selected.add('id')
     selected.add('topic')
+    selected.add('summary')
     for (let i = 0; i < rows.length; i++) {
       rows[i] = Object.fromEntries(
         Object.entries(rows[i] as Record<string, unknown>).filter(([key]) =>
@@ -347,6 +354,7 @@ export class NoteController {
     result: { data: NoteModel[] },
     lang?: string,
   ) {
+    const SUMMARY_MAX_LENGTH = 150
     const ids = result.data.map((d) => d.id)
     const summaryMap = await this.aiSummaryService.batchGetSummariesByRefIds(
       ids,
@@ -355,13 +363,47 @@ export class NoteController {
 
     const enriched = result.data.map((doc) => {
       const plain = { ...doc } as Record<string, unknown>
-      plain.summary = summaryMap.get(doc.id) ?? (doc.text ?? '').slice(0, 150)
+      plain.summary =
+        summaryMap.get(doc.id) ??
+        this.fallbackSummary(doc, SUMMARY_MAX_LENGTH) ??
+        ''
       delete plain.text
       delete plain.content
       return plain
     })
 
     ;(result as unknown as { data: typeof enriched }).data = enriched
+  }
+
+  /**
+   * Fallback summary used when the AI cache misses.
+   *
+   * Truncation is delegated to `truncateAtBoundary` so the teaser never
+   * ends mid-word for Latin scripts or mid-sentence for CJK. Locale comes
+   * from `meta.lang` when authored that way; otherwise we let
+   * `Intl.Segmenter` fall back to its default rules.
+   *
+   * Lexical notes carry richer structure — the head of `text` (the
+   * markdown render of the editor state) often leads with heading hashes,
+   * list markers, or block prefixes that look messy in a teaser; pick the
+   * first paragraph block from the original editor state instead, which
+   * mirrors how a reader would see "the opening" of the note.
+   */
+  private fallbackSummary(doc: NoteModel, maxLength: number): string | null {
+    const locale =
+      typeof (doc.meta as { lang?: unknown } | undefined)?.lang === 'string'
+        ? (doc.meta as { lang: string }).lang
+        : undefined
+    if (doc.contentFormat === 'lexical' && typeof doc.content === 'string') {
+      const summary = this.lexicalService.extractSummaryFromLexical(
+        doc.content,
+        maxLength,
+        locale,
+      )
+      if (summary) return summary
+    }
+    if (typeof doc.text !== 'string' || !doc.text) return null
+    return truncateAtBoundary(doc.text, maxLength, locale)
   }
 
   @Get(':id')
@@ -436,7 +478,6 @@ export class NoteController {
     const { size = 10 } = query
     const half = size >> 1
     const { id } = params
-    void isAuthenticated
 
     // 当前文档直接找，不用加条件，反正里面的东西是看不到的
     const currentDocument = await this.noteService.findById(id)
@@ -458,17 +499,22 @@ export class NoteController {
       findAdjacent('prev', half - 1),
       findAdjacent('next', half ? half - 1 : 0),
     ])
-    let data = [...prevList, ...nextList, currentDocument] as NoteListItem[]
-    data = data.sort(
+    const merged = [...prevList, ...nextList, currentDocument].sort(
       (a, b) => (b.createdAt?.valueOf() ?? 0) - (a.createdAt?.valueOf() ?? 0),
     )
 
-    if (!isAuthenticated) {
-      for (const doc of data) {
-        doc.location = null
-        doc.coordinates = null
-      }
-    }
+    // SDK consumer (`NoteTimelineItem`) only reads id/title/nid/slug/createdAt/
+    // isPublished plus translation flags, so trim eagerly here — the legacy
+    // mongo handler used `select('nid _id title slug created isPublished
+    // modified')` for the same reason.
+    let data = merged.map((doc) => ({
+      id: doc.id,
+      title: doc.title,
+      nid: doc.nid,
+      slug: doc.slug,
+      isPublished: doc.isPublished,
+      createdAt: doc.createdAt,
+    })) as NoteListItem[]
 
     // 处理翻译
     data = await this.translationService.translateList({
@@ -532,7 +578,6 @@ export class NoteController {
   ) {
     const result = await this.noteService.getLatestOne(
       isAuthenticated ? {} : this.noteService.publicNoteQueryCondition,
-      isAuthenticated ? '+location +coordinates' : '-location -coordinates',
     )
 
     if (!result) return null
@@ -594,6 +639,13 @@ export class NoteController {
     const { nid } = params
     const current: NoteModel | null = await this.noteService.findByNid(nid)
     if (!current) {
+      throw new CannotFindException()
+    }
+
+    // Unauthenticated callers must not see unpublished (draft) notes via nid.
+    // The PG cutover dropped the `isPublished: true` filter that the mongo
+    // version applied to `findOne({ nid, ...condition })`.
+    if (!isAuthenticated && !current.isPublished) {
       throw new CannotFindException()
     }
 
