@@ -98,7 +98,7 @@
     "diff-match-patch": "^1.0.5",
     "dotenv": "^17.4.2",
     "dotenv-expand": "^13.0.0",
-    "drizzle-orm": "^0.36.4",
+    "drizzle-orm": "^0.45.0",
     "ejs": "5.0.2",
     "es-toolkit": "^1.46.0",
     "file-type": "^22.0.1",
