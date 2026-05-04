@@ -8,15 +8,13 @@
 [![wakatime](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/8afd37d1-7501-426f-824b-50aeeb96bb6f.svg)](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/8afd37d1-7501-426f-824b-50aeeb96bb6f)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/innei/mx-server)](https://hub.docker.com/repository/docker/innei/mx-server)
 
-> **Mix Space 核心服务；基于 [`nestjs`](https://github.com/nestjs/nest) (nodejs)，需安装 [`mongoDB`](https://www.mongodb.com/) 和 [`Redis`](https://redis.io/) 方可完整运行。**
-
-> v3 还是使用 [`nestjs`](https://github.com/nestjs/nest) 进行重构，之前的版本在 [此仓库](https://github.com/mx-space/server)。
+> **Mix Space 核心服务；基于 [`nestjs`](https://github.com/nestjs/nest) (Node.js)，AI-powered headless CMS。需安装 [`PostgreSQL 16+`](https://www.postgresql.org/) 和 [`Redis`](https://redis.io/) 方可完整运行。**
 
 此项目不带主站，可以使用以下项目（选一）进行部署。
 
+- [Yohaku](https://github.com/Innei/Yohaku) (Next.js，推荐)
 - [Shiro](https://github.com/innei/shiro) (纯净)
 - [Kami](https://github.com/mx-space/kami) (老二次元的风格)
-- [Yun](https://github.com/mx-space/mx-web-yun) (简洁的风格)
 
 现有的比较有意思的一些小玩意的实现：
 
@@ -30,80 +28,72 @@
 ## Docker 部署（建议）
 
 ```bash
-cd
-mkdir -p mx/server
-cd mx/server
-wget https://fastly.jsdelivr.net/gh/mx-space/mx-server@master/docker-compose.yml
-docker-compose up -d
+git clone https://github.com/mx-space/core.git mx-core
+cd mx-core
+cp docker-compose.server.yml docker-compose.prod.yml
+# 编辑 docker-compose.prod.yml，设置 JWT_SECRET、ALLOWED_ORIGINS 等
+docker compose -f docker-compose.prod.yml up -d
 ```
+
+或直接使用预构建镜像：
+
+```bash
+docker pull innei/mx-server:latest
+```
+
+镜像支持 `linux/amd64` 和 `linux/arm64`。
 
 ## 宿主部署
 
 需要以下环境：
 
 - Node.js 22+
-- MongoDB
-- Redis
+- PostgreSQL 16+
+- Redis 7.x
 
-现有 macOS(x86)、Linux(x86) 的已构建产物。使用以下脚本可免手动构建直接运行。
-
-```sh
-curl https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/scripts/download-latest-asset.js >> download.js
-node ./download.js
-cd mx-server
-node index.js
-```
-
-或者手动下载 [release](https://github.com/mx-space/mx-server/releases/latest)，之后解压然后
+从 [releases](https://github.com/mx-space/core/releases/latest) 下载产物，解压后运行：
 
 ```
 node index.js
 ```
 
-所有的依赖都打包进了产物（不再使用 ncc），无需黑洞一般的 node_modules
+所有依赖已打包进产物，无需 `node_modules`。
 
 > [!NOTE]
 > 编译之后的产物错误堆栈是被压缩过的，如果你遇到任何问题，请使用 `node index.debug.js` 启动，复现问题并提供完整堆栈，然后提交 issue。
 
 ## 开发环境
 
-```
+```bash
+corepack enable  # 启用 pnpm
 git clone https://github.com/mx-space/core mx-core
 cd mx-core
 pnpm i
+docker compose up -d postgres redis  # 启动 PostgreSQL + Redis
 pnpm dev
 ```
+
+开发模式下 API 监听 `http://localhost:2333`，路由无 `/api/v2` 前缀。
 
 ## 项目结构
 
 ```
 .
-├── app.config.ts                 # 主程序配置，数据库、程序、第三方，一切可配置项
-├── app.controller.ts             # 主程序根控制器
-├── app.module.ts                 # 主程序根模块，负责各业务模块的聚合
-├── common                        # 存放中间件
-│   ├── adapters                  # Fastify 适配器的配置
-│   ├── decorator                 # 业务装饰器
-│   ├── exceptions                # 自定义异常
-│   ├── filters                   # 异常处理器
-│   ├── guard                     # 守卫与鉴权
-│   ├── interceptors              # 拦截器, 数据过滤与响应格式化处理
-│   ├── middlewares               # 传统意义上的中间件
-│   └── pipes                     # 管道
-├── constants                     # 常量
-├── main.ts                       # 引入配置，启动主程序，引入各种全局服务
-├── modules                       # 业务逻辑模块
-├── processors                      # 核心辅助模块
-│   ├── cache                       # Redis 缓存相关
-│   ├── database                    # Mongo 数据库相关
-│   ├── gateway                     # WebSocket 相关
-│   ├── helper                      # 辅助类
-│   └── logger                      # 自定义 Logger
-├── shared                          # 通用模型
-│   ├── dto                         # 数据验证模型
-│   ├── interface                   # 接口
-│   └── model                       # 基本数据模型
-├── utils                           # 工具类
+├── common/                        # 中间件、装饰器、守卫、拦截器、管道、过滤器
+├── constants/                     # 常量（业务事件、缓存键、错误码）
+├── database/                      # 数据库层
+│   ├── schema/                    #   Drizzle 表定义
+│   └── migrations/                #   Drizzle SQL 迁移文件
+├── migration/                     # 历史数据迁移（MongoDB→PG）
+├── modules/                       # 44 业务模块（ai, auth, post, note, comment …）
+├── processors/                    # 基础设施服务
+│   ├── database/                  #   PG 连接 + 仓库注册 + BaseRepository
+│   ├── redis/                     #   缓存 / pub/sub / emitter
+│   ├── gateway/                   #   WebSocket (admin, web, shared)
+│   └── helper/                    #   Email, Image, JWT, Lexical …
+├── shared/                        # 共享 DTO、接口、Zod schema
+├── transformers/                  # 响应转换（snake_case、分页）
+└── utils/                         # 34 工具模块
 ```
 
 ## 应用结构
@@ -125,64 +115,44 @@ pnpm dev
 ResponseInterceptor -> ResponseFilterInterceptor -> JSONTransformInterceptor -> CountingInterceptor -> AnalyzeInterceptor -> HttpCacheInterceptor
 ```
 
-- [业务逻辑模块](https://github.com/mx-space/mx-server/tree/master/src/modules)
-  1. [Aggregate] 聚合
-  1. [Analyze] 数据统计
-  1. [Auth] 认证
-  1. [Backup] 备份
-  1. [Category] 分类
-  1. [Commnet] 评论
-  1. [Configs] 读取配置项
-  1. [Feed] RSS
-  1. [Health] 应用健康检查与日志相关
-  1. [Init] 初始化相关
-  1. [Link] 友链
-  1. [Markdown] Markdown 解析导入导出解析相关
-  1. [Note] 日记
-  1. [Option] 设置
-  1. [Page] 独立页面
-  1. [PageProxy] 反代管理页
-  1. [Post] 博文
-  1. [Project] 项目
-  1. [Recently] 最近
-  1. [Say] 说说
-  1. [Search] 搜索
-  1. [Sitemap] 站点地图
-  1. [User] 用户
+### 业务模块 (`modules/`)
 
-- [核心辅助模块 processors](https://github.com/mx-space/mx-server/tree/master/src/processors)
-  1. [cache] Redis 缓存相关
-  1. [database] 数据库相关
-  1. [gateway] Socket.IO 相关
-     - 用户端
-     - 管理端
-     - 实时通知
-  1. [helper] 辅助类
-  1. [CountingService] 提供更新阅读计数
-  1. [CronService] 维护管理计划任务
-     - 自动备份
-     - 推送百度搜索
-     - 推送Bing搜索
-     - 清除缓存
-     - etc.
-  1. [EmailService] 送信服务
-  1. [HttpService] 请求模块
-  1. [ImageService] 图片处理
-  1. [TqService] 任务队列
-  1. [UploadService] 上传服务
-  1. [AssetService] 获取本地资源服务
-  1. [TextMacroService] 文本宏替换服务
-  1. [JWTService] JWT 服务
-  1. [BarkPushService] Bark Push 服务
+Aggregate · Analyze · AI (summary / translation / insights / writer / moderation) · Auth (Better Auth) · Backup · Category · Comment · Configs · Draft · Feed · Health · Init · Link · Note · Option · Page · Post · Project · Recently · Say · Search · Serverless · Sitemap · Snippet · Subscribe · Topic · User · Webhook
+
+### 基础设施 (`processors/`)
+
+| 服务 | 职责 |
+|------|------|
+| database | PostgreSQL 连接 + Drizzle ORM + 仓库注册 |
+| redis | 缓存 / pub/sub / emitter |
+| gateway | Socket.IO（用户端、管理端、实时通知）|
+| helper | Email · Image · JWT · Lexical · URL Builder · BarkPush · TqService |
 
 ## 开发
 
-```
+```bash
 pnpm i
-pnpm start
+docker compose up -d postgres redis
+pnpm dev
 ```
 
-## Reference
+## 技术栈
+
+| 组件 | 技术 |
+|------|------|
+| 运行时 | Node.js >= 22 + TypeScript 5.9 |
+| 框架 | NestJS 11 + Fastify |
+| 数据库 | PostgreSQL 16 (Drizzle ORM) |
+| 缓存 | Redis (ioredis) |
+| 校验 | Zod 4 (nestjs-zod) |
+| WebSocket | Socket.IO + Redis Emitter |
+| AI | OpenAI SDK, Anthropic SDK |
+| 编辑器 | Lexical (`@haklex/rich-headless`) |
+| 认证 | Better Auth (session, passkey, API key) |
+| 测试 | Vitest + PostgreSQL testcontainers |
+| ID | Snowflake bigint |
+
+## 参考
 
 项目参考了 [nodepress](https://github.com/surmon-china/nodepress)
 

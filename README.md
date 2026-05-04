@@ -16,7 +16,7 @@
 
 ## Overview
 
-MX Space Core is a headless CMS server built with **NestJS**, **MongoDB**, and **Redis**. Beyond standard blog features (posts, pages, notes, comments, categories, feeds, search), it ships with a full AI content workflow — summary generation, multi-language translation, comment moderation, and writing assistance — powered by pluggable LLM providers.
+MX Space Core is a headless CMS server built with **NestJS**, **PostgreSQL**, and **Redis**. Beyond standard blog features (posts, pages, notes, comments, categories, feeds, search), it ships with a full AI content workflow — summary generation, multi-language translation, comment moderation, and writing assistance — powered by pluggable LLM providers.
 
 ### Key Features
 
@@ -34,14 +34,14 @@ MX Space Core is a headless CMS server built with **NestJS**, **MongoDB**, and *
 
 - **Runtime**: Node.js >= 22 + TypeScript 5.9
 - **Framework**: NestJS 11 + Fastify
-- **Database**: MongoDB 7 (Mongoose / TypeGoose)
+- **Database**: PostgreSQL 16 (Drizzle ORM)
 - **Cache**: Redis (ioredis)
 - **Validation**: Zod 4
 - **WebSocket**: Socket.IO + Redis Emitter
 - **AI**: OpenAI SDK, Anthropic SDK
 - **Editor**: Lexical (via @haklex/rich-headless)
 - **Auth**: better-auth (session, passkey, API key)
-- **Testing**: Vitest + in-memory MongoDB/Redis
+- **Testing**: Vitest + PostgreSQL testcontainers / Redis memory server
 
 ## Monorepo Structure
 
@@ -52,7 +52,7 @@ mx-core/
 ├── packages/
 │   ├── api-client/           # @mx-space/api-client — SDK for frontend & third-party clients
 │   └── webhook/              # @mx-space/webhook — Webhook integration SDK
-├── docker-compose.yml        # Development stack (Mongo + Redis)
+├── docker-compose.yml        # Development stack (PostgreSQL + Redis)
 ├── dockerfile                # Multi-stage production build
 └── docker-compose.server.yml # Production deployment template
 ```
@@ -72,7 +72,7 @@ src/
 │   ├── serverless/   #   User-defined serverless functions
 │   └── ...           #   page, draft, category, topic, feed, search, etc.
 ├── processors/       # Infrastructure services
-│   ├── database/     #   MongoDB connection + model registry
+│   ├── database/     #   PostgreSQL connection + repository registry
 │   ├── redis/        #   Cache, pub/sub, emitter
 │   ├── gateway/      #   WebSocket (admin, web, shared namespaces)
 │   ├── task-queue/   #   Distributed job queue (Redis + Lua)
@@ -80,7 +80,7 @@ src/
 ├── common/           # Guards, interceptors, decorators, filters, pipes
 ├── constants/        # Business events, cache keys, error codes
 ├── transformers/     # Response transformation (snake_case, pagination)
-├── migration/        # Versioned DB migrations (v2 → v10)
+├── migration/        # Drizzle SQL migrations + MongoDB→PG data migration CLI
 └── utils/            # 34 utility modules
 ```
 
@@ -92,7 +92,7 @@ src/
 |-----------|---------|
 | Node.js | >= 22 |
 | pnpm | Latest (via Corepack) |
-| MongoDB | 7.x |
+| PostgreSQL | 16+ |
 | Redis | 7.x |
 
 ### Local Development
@@ -104,8 +104,8 @@ corepack enable
 # Install dependencies
 pnpm install
 
-# Start MongoDB + Redis (via Docker)
-docker compose up -d mongo redis
+# Start PostgreSQL + Redis (via Docker)
+docker compose up -d postgres redis
 
 # Start dev server (port 2333)
 pnpm dev
@@ -173,11 +173,18 @@ pnpm -C apps/core run test:watch
 |----------|-------------|---------|
 | `JWT_SECRET` | Secret for JWT signing | Required |
 | `ALLOWED_ORIGINS` | CORS allowed origins (comma-separated) | — |
-| `DB_HOST` | MongoDB host | `localhost` |
+| `PG_URL` | Full PostgreSQL connection string | — |
+| `PG_HOST` | PostgreSQL host | `127.0.0.1` |
+| `PG_PORT` | PostgreSQL port | `5432` |
+| `PG_USER` | PostgreSQL user | `mx` |
+| `PG_PASSWORD` | PostgreSQL password | `mx` |
+| `PG_DATABASE` | PostgreSQL database name | `mx_core` |
+| `PG_MAX_POOL_SIZE` | PostgreSQL connection pool size | `20` |
+| `PG_SSL` | Enable PostgreSQL SSL | `false` |
 | `REDIS_HOST` | Redis host | `localhost` |
 | `REDIS_PORT` | Redis port | `6379` |
 | `REDIS_PASSWORD` | Redis password | — |
-| `MONGO_CONNECTION` | Full MongoDB connection string (overrides DB_HOST) | — |
+| `SNOWFLAKE_WORKER_ID` | Snowflake ID worker ID (0–1023) | Required |
 | `ENCRYPT_ENABLE` | Enable field encryption | `false` |
 | `ENCRYPT_KEY` | 64-char hex encryption key | — |
 | `THROTTLE_TTL` | Rate limit window (seconds) | `10` |
@@ -201,6 +208,10 @@ All response keys are converted to **snake_case** (e.g., `createdAt` → `create
 
 ## Upgrading
 
+### v11 → v12
+
+v12 migrates the database from MongoDB to PostgreSQL. This is a hard cutover: all data must be migrated through the provided CLI before starting the new version. See [Upgrading to v12](./docs/migrations/v12.md).
+
 ### v10 → v11
 
 v11 refactors the Aggregate API: `categories` and `pageMeta` are removed from `GET /aggregate`; a new `GET /aggregate/site` endpoint is added for lightweight site metadata. See [Upgrading to v11](./docs/migrations/v11.md).
@@ -213,7 +224,7 @@ v10 includes a breaking auth system refactor. See [Upgrading to v10](./docs/migr
 
 | Project | Description |
 |---------|-------------|
-| [Shiroi](https://github.com/innei-dev/Shiroi) | Next.js frontend |
+| [Yohaku](https://github.com/Innei/Yohaku) | Next.js frontend |
 | [mx-admin](https://github.com/mx-space/mx-admin) | Vue 3 admin dashboard |
 | [@mx-space/api-client](./packages/api-client) | TypeScript API client SDK |
 | [@haklex/rich-headless](https://github.com/innei/haklex) | Lexical editor (server-side) |
