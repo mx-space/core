@@ -380,11 +380,21 @@ export const stepAccounts: MigrationStep = {
           })
           return null
         }
+        const providerId = d.providerId ?? d.provider ?? 'credential'
+        // For the `credential` provider, better-auth keys the account by the
+        // user's own id. The legacy Mongo doc stores the user's ObjectId hex
+        // there — translate it to the Snowflake `userId` so the post-PG row
+        // does not leak a Mongo id. OAuth providers carry an external
+        // `accountId` (e.g. GitHub numeric id) that must be preserved as-is.
+        const accountId =
+          providerId === 'credential'
+            ? userId
+            : (d.accountId ?? d.providerAccountId ?? userId)
         return {
           id,
           userId,
-          accountId: d.accountId ?? d.providerAccountId ?? userId,
-          providerId: d.providerId ?? d.provider ?? 'credential',
+          accountId,
+          providerId,
           providerAccountId: d.providerAccountId ?? null,
           password: d.password ?? null,
           type: d.type ?? null,
