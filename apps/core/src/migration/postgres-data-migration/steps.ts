@@ -716,26 +716,38 @@ export const stepRecentlies: MigrationStep = {
   async load(ctx) {
     const resolver = createResolver(ctx, 'recentlies')
     const docs = await collect<any>(ctx, 'recentlies')
-    const rows = docs.map((d) => {
-      const refTarget = normalizeContentRefType(d.refType)
-      const refId = refTarget
-        ? resolver.ref(refTarget.collection, d.ref ?? d.refId, 'refId', false)
-        : null
-      return {
-        id: resolver.self(d._id),
-        content: d.content ?? '',
-        type: d.type ?? 'text',
-        metadata: d.metadata ?? null,
-        refType: refTarget?.refType ?? null,
-        refId,
-        commentsIndex: d.commentsIndex ?? 0,
-        allowComment: d.allowComment ?? true,
-        up: d.up ?? 0,
-        down: d.down ?? 0,
-        createdAt: dateOrNull(d.created) ?? new Date(),
-        modifiedAt: dateOrNull(d.modified),
-      }
-    })
+    const rows = docs
+      .map((d) => {
+        const refTarget = normalizeContentRefType(d.refType)
+        // Recentlies may legitimately stand alone (no refType). When a
+        // refType IS declared but its target is missing or unresolved, the
+        // row is orphan — drop it.
+        let refId: string | null = null
+        if (refTarget) {
+          refId = resolver.ref(
+            refTarget.collection,
+            d.ref ?? d.refId,
+            'refId',
+            true,
+          )
+          if (!refId) return null
+        }
+        return {
+          id: resolver.self(d._id),
+          content: d.content ?? '',
+          type: d.type ?? 'text',
+          metadata: d.metadata ?? null,
+          refType: refTarget?.refType ?? null,
+          refId,
+          commentsIndex: d.commentsIndex ?? 0,
+          allowComment: d.allowComment ?? true,
+          up: d.up ?? 0,
+          down: d.down ?? 0,
+          createdAt: dateOrNull(d.created) ?? new Date(),
+          modifiedAt: dateOrNull(d.modified),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, recentlies, rows)
     recordLoad(ctx, 'recentlies', rows.length)
   },
@@ -822,29 +834,42 @@ export const stepDrafts: MigrationStep = {
   async load(ctx) {
     const resolver = createResolver(ctx, 'drafts')
     const docs = await collect<any>(ctx, 'drafts')
-    const rows = docs.map((d) => {
-      const refTarget = normalizeContentRefType(d.refType)
-      const refCollection = refTarget?.collection ?? (d.refType as string)
-      const refType = refTarget?.refType ?? (d.refType as string)
-      const refId = resolver.ref(refCollection, d.refId, 'refId', false)
-      return {
-        id: resolver.self(d._id),
-        refType: refType as CollectionRefTypes,
-        refId,
-        title: d.title ?? '',
-        text: d.text ?? '',
-        content: d.content ?? null,
-        contentFormat: d.contentFormat ?? 'markdown',
-        images: d.images ?? null,
-        meta: normalizeLegacyJsonbObject(ctx, 'drafts', d._id, 'meta', d.meta),
-        typeSpecificData: d.typeSpecificData ?? null,
-        history: d.history ?? [],
-        version: d.version ?? 1,
-        publishedVersion: d.publishedVersion ?? null,
-        createdAt: dateOrNull(d.created) ?? new Date(),
-        updatedAt: dateOrNull(d.updated),
-      }
-    })
+    const rows = docs
+      .map((d) => {
+        const refTarget = normalizeContentRefType(d.refType)
+        const refCollection = refTarget?.collection ?? (d.refType as string)
+        const refType = refTarget?.refType ?? (d.refType as string)
+        // Drafts always carry a refType in source data; an orphan refId
+        // (parent post/note/page deleted) leaves the draft unattachable.
+        // Drop rather than persist with `ref_id = NULL` so the relation
+        // is intact end-to-end.
+        const refId = resolver.ref(refCollection, d.refId, 'refId', true)
+        if (!refId) return null
+        return {
+          id: resolver.self(d._id),
+          refType: refType as CollectionRefTypes,
+          refId,
+          title: d.title ?? '',
+          text: d.text ?? '',
+          content: d.content ?? null,
+          contentFormat: d.contentFormat ?? 'markdown',
+          images: d.images ?? null,
+          meta: normalizeLegacyJsonbObject(
+            ctx,
+            'drafts',
+            d._id,
+            'meta',
+            d.meta,
+          ),
+          typeSpecificData: d.typeSpecificData ?? null,
+          history: d.history ?? [],
+          version: d.version ?? 1,
+          publishedVersion: d.publishedVersion ?? null,
+          createdAt: dateOrNull(d.created) ?? new Date(),
+          updatedAt: dateOrNull(d.updated),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, drafts, rows)
     recordLoad(ctx, 'drafts', rows.length)
   },
@@ -1047,22 +1072,27 @@ export const stepFileReferences: MigrationStep = {
       comment: { collection: 'comments', refType: 'comment' },
       comments: { collection: 'comments', refType: 'comment' },
     }
-    const rows = docs.map((d) => {
-      const refTarget = d.refType ? refMap[d.refType] : null
-      const refId = refTarget
-        ? resolver.ref(refTarget.collection, d.refId, 'refId', false)
-        : null
-      return {
-        id: resolver.self(d._id),
-        fileUrl: d.fileUrl,
-        fileName: d.fileName,
-        status: d.status ?? 'pending',
-        refId,
-        refType: refTarget?.refType ?? d.refType ?? null,
-        s3ObjectKey: d.s3ObjectKey ?? null,
-        createdAt: dateOrNull(d.created) ?? new Date(),
-      }
-    })
+    const rows = docs
+      .map((d) => {
+        const refTarget = d.refType ? refMap[d.refType] : null
+        // Standalone files (no refType) are valid; an orphan link is not.
+        let refId: string | null = null
+        if (refTarget) {
+          refId = resolver.ref(refTarget.collection, d.refId, 'refId', true)
+          if (!refId) return null
+        }
+        return {
+          id: resolver.self(d._id),
+          fileUrl: d.fileUrl,
+          fileName: d.fileName,
+          status: d.status ?? 'pending',
+          refId,
+          refType: refTarget?.refType ?? d.refType ?? null,
+          s3ObjectKey: d.s3ObjectKey ?? null,
+          createdAt: dateOrNull(d.created) ?? new Date(),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, fileReferences, rows)
     recordLoad(ctx, 'file_references', rows.length)
   },

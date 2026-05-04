@@ -10,6 +10,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
+import { readers } from './auth'
 import { createdAt, pkText, refText, tsCol, updatedAt } from './columns'
 
 export const categories = pgTable(
@@ -286,7 +287,9 @@ export const comments = pgTable(
     avatar: text('avatar'),
     authProvider: text('auth_provider'),
     meta: text('meta'),
-    readerId: text('reader_id'),
+    readerId: text('reader_id').references((): AnyPgColumn => readers.id, {
+      onDelete: 'set null',
+    }),
     editedAt: tsCol('edited_at'),
     anchor: jsonb('anchor').$type<Record<string, unknown> | null>(),
   },

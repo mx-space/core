@@ -15,6 +15,13 @@
       "when": 1777827147946,
       "tag": "0001_even_professor_monster",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777888380921,
+      "tag": "0002_add_reader_id_fks",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm'
+import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import {
   bigint,
   boolean,
@@ -11,6 +12,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
+import { readers } from './auth'
 import { createdAt, pkText, refText, tsCol, updatedAt } from './columns'
 
 export const options = pgTable(
@@ -175,7 +177,9 @@ export const fileReferences = pgTable(
     refId: refText('ref_id'),
     refType: text('ref_type'),
     s3ObjectKey: text('s3_object_key'),
-    readerId: text('reader_id'),
+    readerId: text('reader_id').references((): AnyPgColumn => readers.id, {
+      onDelete: 'set null',
+    }),
     uploadedBy: text('uploaded_by'),
     mimeType: text('mime_type'),
     byteSize: bigint('byte_size', { mode: 'number' }),
