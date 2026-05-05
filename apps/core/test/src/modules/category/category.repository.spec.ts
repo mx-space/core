@@ -103,9 +103,15 @@ describeIfPg('CategoryRepository', () => {
       contentFormat: 'markdown',
       categoryId: created.id,
     })
-    await expect(repository.deleteById(created.id)).rejects.toThrow(
-      /foreign key|violates|posts/i,
-    )
+    let caught: any
+    try {
+      await repository.deleteById(created.id)
+    } catch (error) {
+      caught = error
+    }
+    expect(caught).toBeDefined()
+    const message = `${caught?.message ?? ''} ${caught?.cause?.message ?? ''}`
+    expect(message).toMatch(/foreign key|violates|posts/i)
   })
 
   it('sumPostTags aggregates tag distribution per category', async () => {
