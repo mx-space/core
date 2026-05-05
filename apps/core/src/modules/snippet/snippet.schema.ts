@@ -32,16 +32,18 @@ export const SnippetSchema = BaseSchema.extend({
     .nullable()
     .default('GET')
     .optional(),
-  customPath: z
-    .string()
-    .regex(/^[\w-](?:[\w/-]*[\w-])?$/)
-    .refine((val) => !val.includes('//'), {
-      message: 'customPath must not contain consecutive slashes',
-    })
-    .pipe(z.string().max(200))
-    .optional()
-    .nullable()
-    .transform((val) => val?.replaceAll(/^\/+|\/+$/g, '') || undefined),
+  customPath: z.preprocess(
+    (val) => (val === null ? undefined : val),
+    z
+      .string()
+      .regex(/^[\w-](?:[\w/-]*[\w-])?$/)
+      .refine((val) => !val.includes('//'), {
+        message: 'customPath must not contain consecutive slashes',
+      })
+      .pipe(z.string().max(200))
+      .optional()
+      .transform((val) => val?.replaceAll(/^\/+|\/+$/g, '') || undefined),
+  ),
 
   /**
    * For `Function` snippet only.
