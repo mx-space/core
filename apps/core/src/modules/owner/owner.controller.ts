@@ -1,9 +1,11 @@
 import { Body, Get, Patch } from '@nestjs/common'
+
+import { RequestContext } from '~/common/contexts/request.context'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { RequestContext } from '~/common/contexts/request.context'
+
 import { AuthService } from '../auth/auth.service'
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerPatchDto } from './owner.schema'
@@ -44,12 +46,8 @@ export class OwnerController {
     return {
       password: hasCredentialAccount && !disablePasswordLogin,
       passkey: canAuthByPasskey,
-      ...oauthProviders.reduce(
-        (acc, cur) => {
-          acc[cur.toLowerCase()] = true
-          return acc
-        },
-        {} as Record<string, boolean>,
+      ...Object.fromEntries(
+        oauthProviders.map((provider) => [provider.toLowerCase(), true]),
       ),
     }
   }

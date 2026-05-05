@@ -198,7 +198,7 @@ export class MarkdownService {
       ...omit(property.meta, ['createdAt', 'modifiedAt', 'title']),
     }
     const toYaml = dump(header, { skipInvalid: true })
-    const res = `
+    return `
 ---
 ${toYaml.trim()}
 ---
@@ -206,8 +206,6 @@ ${toYaml.trim()}
 ${showHeader ? `# ${title}\n\n` : ''}
 ${text.trim()}
 `.trim()
-
-    return res
   }
 
   /**

@@ -145,15 +145,11 @@ export class MetaPresetService implements OnModuleInit {
    * 获取所有预设字段
    */
   async findAll(scope?: MetaPresetScope, enabledOnly = false) {
-    return (await this.metaPresetRepository.findAll()).filter((preset) => {
-      if (
-        scope &&
-        scope !== MetaPresetScope.Both &&
-        ![scope, MetaPresetScope.Both].includes(preset.scope)
-      )
-        return false
+    const presets = await this.metaPresetRepository.findAll()
+    return presets.filter((preset) => {
       if (enabledOnly && !preset.enabled) return false
-      return true
+      if (!scope || scope === MetaPresetScope.Both) return true
+      return preset.scope === scope || preset.scope === MetaPresetScope.Both
     })
   }
 
@@ -203,15 +199,9 @@ export class MetaPresetService implements OnModuleInit {
 
     // 内置预设只能修改 enabled 和 order
     if (preset.isBuiltin) {
-      const allowedFields = ['enabled', 'order']
-      const updateData: Record<string, any> = {}
-
-      for (const field of allowedFields) {
-        if (dto[field as keyof UpdateMetaPresetDto] !== undefined) {
-          updateData[field] = dto[field as keyof UpdateMetaPresetDto]
-        }
-      }
-
+      const updateData: Partial<UpdateMetaPresetDto> = {}
+      if (dto.enabled !== undefined) updateData.enabled = dto.enabled
+      if (dto.order !== undefined) updateData.order = dto.order
       return this.metaPresetRepository.update(id, updateData)
     }
 

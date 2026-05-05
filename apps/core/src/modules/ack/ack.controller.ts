@@ -37,14 +37,14 @@ export class AckController {
           )
         }
 
-        const { id, type } = result.data
-        const doc = await this.countingService.updateReadCount(type, id)
+        const { id, type: articleType } = result.data
+        const doc = await this.countingService.updateReadCount(articleType, id)
 
         if (doc) {
           this.webGateway.broadcast(BusinessEvents.ARTICLE_READ_COUNT_UPDATE, {
             count: doc.readCount,
             id,
-            type,
+            type: articleType,
           })
         }
 

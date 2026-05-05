@@ -37,25 +37,13 @@ export class DebugController {
     }
     payload.date = new Date()
 
-    switch (type) {
-      case 'web': {
-        this.eventManager.broadcast(event, payload, {
-          scope: EventScope.TO_SYSTEM_VISITOR,
-        })
-        break
-      }
-      case 'admin': {
-        this.eventManager.broadcast(event, payload, {
-          scope: EventScope.TO_SYSTEM_ADMIN,
-        })
-        break
-      }
-      case 'all': {
-        this.eventManager.broadcast(event, payload, { scope: EventScope.ALL })
+    const scopeMap = {
+      web: EventScope.TO_SYSTEM_VISITOR,
+      admin: EventScope.TO_SYSTEM_ADMIN,
+      all: EventScope.ALL,
+    } as const
 
-        break
-      }
-    }
+    this.eventManager.broadcast(event, payload, { scope: scopeMap[type] })
   }
 
   @Post('/function')

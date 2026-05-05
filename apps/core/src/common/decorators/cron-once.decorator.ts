@@ -1,12 +1,15 @@
 import cluster from 'node:cluster'
+
 import { Cron } from '@nestjs/schedule'
+
 import { isMainProcess } from '~/global/env.global'
 
-export const CronOnce: typeof Cron = (...rest): MethodDecorator => {
-  if (isMainProcess || (cluster.isWorker && cluster.worker?.id === 1)) {
-    // eslint-disable-next-line no-useless-call
-    return Cron.call(null, ...rest)
-  }
+const noop: MethodDecorator = () => {}
 
-  return () => {}
+export const CronOnce: typeof Cron = (...rest): MethodDecorator => {
+  const isFirstWorker = cluster.isWorker && cluster.worker?.id === 1
+  if (isMainProcess || isFirstWorker) {
+    return Cron(...rest)
+  }
+  return noop
 }

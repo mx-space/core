@@ -16,9 +16,8 @@ export class SlugTrackerService {
     return this.slugTrackerRepository.findBySlug(slug, type)
   }
   deleteAllTracker(targetId: string, type?: ArticleTypeEnum) {
-    if (type) {
-      return this.slugTrackerRepository.deleteAllForTarget(type, targetId)
-    }
-    return this.slugTrackerRepository.deleteAllForTargetId(targetId)
+    return type
+      ? this.slugTrackerRepository.deleteAllForTarget(type, targetId)
+      : this.slugTrackerRepository.deleteAllForTargetId(targetId)
   }
 }

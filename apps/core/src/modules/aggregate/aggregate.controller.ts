@@ -26,6 +26,13 @@ import {
 } from './aggregate.schema'
 import { AggregateService } from './aggregate.service'
 
+type TitledItem = {
+  id: string
+  title: string
+  createdAt: Date
+  modifiedAt: Date | null
+} & Record<string, any>
+
 @ApiController('aggregate')
 export class AggregateController {
   constructor(
@@ -169,57 +176,17 @@ export class AggregateController {
     )
 
     if (lang) {
-      type TopItem = {
-        id: string
-        title: string
-        createdAt: Date
-        modifiedAt: Date | null
-      } & Record<string, any>
-
       if (result.posts?.length) {
-        result.posts = (await this.translationService.translateList({
-          items: result.posts as TopItem[],
-          targetLang: lang,
-          translationFields: ['title', 'translationMeta'] as const,
-          getInput: (item) => ({
-            id: item.id,
-            title: item.title ?? '',
-            createdAt: item.createdAt,
-            modifiedAt: item.modifiedAt,
-          }),
-          applyResult: (item, translation) => {
-            if (!translation?.isTranslated) return item
-            return {
-              ...item,
-              title: translation.title,
-              isTranslated: true,
-              translationMeta: translation.translationMeta,
-            }
-          },
-        })) as unknown as typeof result.posts
+        result.posts = (await this.translateTitleWithMeta(
+          result.posts as TitledItem[],
+          lang,
+        )) as unknown as typeof result.posts
       }
-
       if (result.notes?.length) {
-        result.notes = (await this.translationService.translateList({
-          items: result.notes as TopItem[],
-          targetLang: lang,
-          translationFields: ['title', 'translationMeta'] as const,
-          getInput: (item) => ({
-            id: item.id,
-            title: item.title ?? '',
-            createdAt: item.createdAt,
-            modifiedAt: item.modifiedAt,
-          }),
-          applyResult: (item, translation) => {
-            if (!translation?.isTranslated) return item
-            return {
-              ...item,
-              title: translation.title,
-              isTranslated: true,
-              translationMeta: translation.translationMeta,
-            }
-          },
-        })) as unknown as typeof result.notes
+        result.notes = (await this.translateTitleWithMeta(
+          result.notes as TitledItem[],
+          lang,
+        )) as unknown as typeof result.notes
       }
     }
 
@@ -239,45 +206,16 @@ export class AggregateController {
 
     if (!lang) return result
 
-    type LatestItem = {
-      id: string
-      title: string
-      createdAt: Date
-      modifiedAt: Date | null
-    } & Record<string, any>
-
-    const translateItems = (items: LatestItem[]) =>
-      this.translationService.translateList({
-        items,
-        targetLang: lang,
-        translationFields: ['title', 'translationMeta'] as const,
-        getInput: (item) => ({
-          id: item.id,
-          title: item.title ?? '',
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-        }),
-        applyResult: (item, translation) => {
-          if (!translation?.isTranslated) return item
-          return {
-            ...item,
-            title: translation.title,
-            isTranslated: true,
-            translationMeta: translation.translationMeta,
-          }
-        },
-      })
-
     if (combined) {
-      return translateItems(result as LatestItem[])
+      return this.translateTitleWithMeta(result as TitledItem[], lang)
     }
 
     const data = result as Record<string, any>
     if (data.posts?.length) {
-      data.posts = await translateItems(data.posts)
+      data.posts = await this.translateTitleWithMeta(data.posts, lang)
     }
     if (data.notes?.length) {
-      data.notes = await translateItems(data.notes)
+      data.notes = await this.translateTitleWithMeta(data.notes, lang)
     }
     return data
   }
@@ -295,64 +233,47 @@ export class AggregateController {
   async getTimeline(@Query() query: TimelineQueryDto, @Lang() lang?: string) {
     const { sort = 1, type, year } = query
     const data = await this.aggregateService.getTimeline(year, type, sort)
-    type TimelineItem = {
-      id: string
-      title: string
-      createdAt: Date
-      modifiedAt: Date | null
-    } & Record<string, unknown>
 
-    // 处理 posts 翻译
     if (lang && data.posts?.length) {
-      const posts = data.posts as unknown as TimelineItem[]
-      data.posts = (await this.translationService.translateList({
-        items: posts,
-        targetLang: lang,
-        translationFields: ['title', 'translationMeta'] as const,
-        getInput: (post) => ({
-          id: String(post.id),
-          title: post.title,
-          modifiedAt: post.modifiedAt,
-          createdAt: post.createdAt,
-        }),
-        applyResult: (post, translation) => {
-          if (!translation?.isTranslated) return post
-          return {
-            ...post,
-            title: translation.title,
-            isTranslated: true,
-            translationMeta: translation.translationMeta,
-          }
-        },
-      })) as unknown as typeof data.posts
+      data.posts = (await this.translateTitleWithMeta(
+        data.posts as unknown as TitledItem[],
+        lang,
+      )) as unknown as typeof data.posts
     }
-
-    // 处理 notes 翻译
     if (lang && data.notes?.length) {
-      const notes = data.notes as unknown as TimelineItem[]
-      data.notes = (await this.translationService.translateList({
-        items: notes,
-        targetLang: lang,
-        translationFields: ['title', 'translationMeta'] as const,
-        getInput: (note) => ({
-          id: String(note.id),
-          title: note.title,
-          modifiedAt: note.modifiedAt,
-          createdAt: note.createdAt,
-        }),
-        applyResult: (note, translation) => {
-          if (!translation?.isTranslated) return note
-          return {
-            ...note,
-            title: translation.title,
-            isTranslated: true,
-            translationMeta: translation.translationMeta,
-          }
-        },
-      })) as unknown as typeof data.notes
+      data.notes = (await this.translateTitleWithMeta(
+        data.notes as unknown as TitledItem[],
+        lang,
+      )) as unknown as typeof data.notes
     }
 
     return { data }
+  }
+
+  private translateTitleWithMeta<T extends TitledItem>(
+    items: T[],
+    targetLang: string,
+  ) {
+    return this.translationService.translateList({
+      items,
+      targetLang,
+      translationFields: ['title', 'translationMeta'] as const,
+      getInput: (item) => ({
+        id: String(item.id),
+        title: item.title ?? '',
+        createdAt: item.createdAt,
+        modifiedAt: item.modifiedAt,
+      }),
+      applyResult: (item, translation) => {
+        if (!translation?.isTranslated) return item
+        return {
+          ...item,
+          title: translation.title,
+          isTranslated: true,
+          translationMeta: translation.translationMeta,
+        }
+      },
+    })
   }
 
   @Get('/sitemap')

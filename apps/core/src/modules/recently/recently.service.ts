@@ -75,14 +75,6 @@ export class RecentlyService {
   }
 
   /**
-   * @deprecated kept for backward compat; ref hydration is now centralized in
-   * {@link attachRef} and applied automatically on read paths.
-   */
-  async populateRef<T extends RecentlyModel>(result: T[], _omit = ['text']) {
-    return result
-  }
-
-  /**
    * Resolve `refType`/`refId` on each row to a small joined `ref` summary.
    * Batched via `databaseService.findGlobalByIds` to avoid N+1.
    *
@@ -273,32 +265,30 @@ export class RecentlyService {
     if (!model) throw new CannotFindException()
 
     const redis = this.redisService.getClient()
-    const key = `${id}:${ip}`
     const redisKey = getRedisKey(RedisKeys.RecentlyAttitude)
+    const key = `${id}:${ip}`
     const currentAttitude = await redis.hget(redisKey, key)
-
-    if (currentAttitude) {
-      const { attitude: prevAttitude } = JSON.parse(currentAttitude)
-      if (prevAttitude === attitude) {
-        await this.adjustScore(id, prevAttitude, -1)
-        await redis.hdel(redisKey, key)
-        return -1
-      }
-      await this.switchScore(id, prevAttitude)
-      await redis.hset(
+    const persist = () =>
+      redis.hset(
         redisKey,
         key,
         JSON.stringify({ attitude, date: new Date().toISOString() }),
       )
+
+    if (!currentAttitude) {
+      await this.adjustScore(id, attitude, 1)
+      await persist()
       return 1
     }
 
-    await this.adjustScore(id, attitude, 1)
-    await redis.hset(
-      redisKey,
-      key,
-      JSON.stringify({ attitude, date: new Date().toISOString() }),
-    )
+    const { attitude: prevAttitude } = JSON.parse(currentAttitude)
+    if (prevAttitude === attitude) {
+      await this.adjustScore(id, prevAttitude, -1)
+      await redis.hdel(redisKey, key)
+      return -1
+    }
+    await this.switchScore(id, prevAttitude)
+    await persist()
     return 1
   }
 

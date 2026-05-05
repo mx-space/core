@@ -59,4 +59,6 @@ dev/
 # local docker smoke overrides — never commit
 docker-compose.smoke.yml
 
-.pnpm-store/
+.pnpm-store/.worktrees/
+---
+.worktrees/

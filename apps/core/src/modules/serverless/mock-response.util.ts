@@ -1,5 +1,6 @@
 import { HttpException } from '@nestjs/common'
 import type { FastifyReply } from 'fastify'
+
 import type { FunctionContextResponse } from './function.types'
 
 export const createMockedContextResponse = (

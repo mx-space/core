@@ -23,6 +23,22 @@ const mapRow = (row: typeof subscribes.$inferSelect): SubscribeRow => ({
   createdAt: row.createdAt,
 })
 
+type SubscribePatch = Partial<{
+  subscribe: number
+  verified: boolean
+  cancelToken: string
+}>
+
+function buildSubscribeUpdate(
+  patch: SubscribePatch,
+): Partial<typeof subscribes.$inferInsert> {
+  const update: Partial<typeof subscribes.$inferInsert> = {}
+  if (patch.subscribe !== undefined) update.subscribe = patch.subscribe
+  if (patch.verified !== undefined) update.verified = patch.verified
+  if (patch.cancelToken !== undefined) update.cancelToken = patch.cancelToken
+  return update
+}
+
 @Injectable()
 export class SubscribeRepository extends BaseRepository {
   constructor(
@@ -109,20 +125,12 @@ export class SubscribeRepository extends BaseRepository {
 
   async update(
     id: EntityId | string,
-    patch: Partial<{
-      subscribe: number
-      verified: boolean
-      cancelToken: string
-    }>,
+    patch: SubscribePatch,
   ): Promise<SubscribeRow | null> {
     const idBig = parseEntityId(id)
-    const update: Partial<typeof subscribes.$inferInsert> = {}
-    if (patch.subscribe !== undefined) update.subscribe = patch.subscribe
-    if (patch.verified !== undefined) update.verified = patch.verified
-    if (patch.cancelToken !== undefined) update.cancelToken = patch.cancelToken
     const [row] = await this.db
       .update(subscribes)
-      .set(update)
+      .set(buildSubscribeUpdate(patch))
       .where(eq(subscribes.id, idBig))
       .returning()
     return row ? mapRow(row) : null
@@ -139,19 +147,11 @@ export class SubscribeRepository extends BaseRepository {
 
   async updateByEmail(
     email: string,
-    patch: Partial<{
-      subscribe: number
-      verified: boolean
-      cancelToken: string
-    }>,
+    patch: SubscribePatch,
   ): Promise<SubscribeRow | null> {
-    const update: Partial<typeof subscribes.$inferInsert> = {}
-    if (patch.subscribe !== undefined) update.subscribe = patch.subscribe
-    if (patch.verified !== undefined) update.verified = patch.verified
-    if (patch.cancelToken !== undefined) update.cancelToken = patch.cancelToken
     const [row] = await this.db
       .update(subscribes)
-      .set(update)
+      .set(buildSubscribeUpdate(patch))
       .where(eq(subscribes.email, email))
       .returning()
     return row ? mapRow(row) : null

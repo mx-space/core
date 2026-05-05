@@ -24,9 +24,7 @@ export class MarkdownController {
   @Post('/import')
   @Auth()
   async importArticle(@Body() body: DataListDto) {
-    const type = body.type
-
-    switch (type) {
+    switch (body.type) {
       case ArticleTypeEnum.Post: {
         return await this.service.insertPostsToDb(body.data)
       }
@@ -109,8 +107,7 @@ export class MarkdownController {
       notes: convertNote,
     }
 
-    const id2DataMap = {} as Record<string, any>
-
+    const id2DataMap: Record<string, any> = {}
     for (const item of [...posts, ...notes, ...pages]) {
       id2DataMap[item.id] = item
     }

@@ -486,11 +486,13 @@ export class NoteService {
   }
 
   async findOneByIdOrNid(unique: any) {
-    if (!/^\d{15,}$/.test(String(unique))) {
+    const stringified = String(unique)
+    // Snowflake IDs are 15+ digits; shorter numeric strings are interpreted as nid.
+    if (!/^\d{15,}$/.test(stringified)) {
       const byNid = await this.noteRepository.findByNid(Number(unique))
       if (byNid) return byNid
     }
-    return this.findById(String(unique))
+    return this.findById(stringified)
   }
 
   async getNotePaginationByTopicId(

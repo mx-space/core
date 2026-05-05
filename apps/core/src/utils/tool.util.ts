@@ -130,45 +130,31 @@ export const camelcaseKeys = (obj: any) => {
 
 export const parseBooleanishValue = (value: string | boolean | undefined) => {
   if (typeof value === 'boolean') return value
-  if (typeof value === 'string') {
-    if (value === 'true') return true
-    if (value === 'false') return false
-  }
+  if (value === 'true') return true
+  if (value === 'false') return false
   if (typeof value === 'undefined') return undefined
   return false
 }
 
+const XML_ESCAPE_MAP: Record<string, string> = {
+  '<': '&lt;',
+  '>': '&gt;',
+  '&': '&amp;',
+  "'": '&apos;',
+  '"': '&quot;',
+}
+
 export function escapeXml(unsafe: string) {
-  return unsafe.replaceAll(/["&'<>]/g, (c) => {
-    switch (c) {
-      case '<': {
-        return '&lt;'
-      }
-      case '>': {
-        return '&gt;'
-      }
-      case '&': {
-        return '&amp;'
-      }
-      case "'": {
-        return '&apos;'
-      }
-      case '"': {
-        return '&quot;'
-      }
-    }
-    return c
-  })
+  return unsafe.replaceAll(/["&'<>]/g, (c) => XML_ESCAPE_MAP[c] ?? c)
 }
 
 export const requireDepsWithInstall = async (deps: string) => {
+  const require = createRequire(NODE_REQUIRE_PATH)
   try {
-    const require = createRequire(NODE_REQUIRE_PATH)
     return require(require.resolve(deps))
   } catch {
     logger.info(`Installing ${deps}...`)
     await installPackage(deps, { silent: false, cwd: NODE_REQUIRE_PATH })
-    const require = createRequire(NODE_REQUIRE_PATH)
     return require(deps)
   }
 }

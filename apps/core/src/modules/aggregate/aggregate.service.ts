@@ -108,11 +108,8 @@ export class AggregateService {
     type: TimelineType | undefined,
     sortBy: 1 | -1 = 1,
   ) {
-    const requestedType = type as TimelineType | undefined
-    const includePosts =
-      requestedType === undefined || requestedType === TimelineType.Post
-    const includeNotes =
-      requestedType === undefined || requestedType === TimelineType.Note
+    const includePosts = type === undefined || type === TimelineType.Post
+    const includeNotes = type === undefined || type === TimelineType.Note
     const sort: 'asc' | 'desc' = sortBy === 1 ? 'asc' : 'desc'
     // Year filter is pushed into SQL — old in-memory filter after a
     // 100-row LIMIT silently dropped older years. See repository
@@ -376,7 +373,7 @@ export class AggregateService {
       const existing = byDate.get(item.date) ?? { posts: 0, notes: 0 }
       byDate.set(item.date, { ...existing, notes: item.count })
     }
-    return Array.from(byDate.entries())
+    return [...byDate.entries()]
       .map(([date, counts]) => ({ date, ...counts }))
       .sort((a, b) => a.date.localeCompare(b.date))
   }

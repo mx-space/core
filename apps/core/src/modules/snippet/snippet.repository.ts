@@ -147,14 +147,14 @@ export class SnippetRepository extends BaseRepository {
     reference: string,
     method: string | null | undefined,
   ): Promise<number> {
+    const baseFilters = [
+      eq(snippets.name, name),
+      eq(snippets.reference, reference),
+    ]
     const filter =
-      method === undefined || method === null
-        ? and(eq(snippets.name, name), eq(snippets.reference, reference))!
-        : and(
-            eq(snippets.name, name),
-            eq(snippets.reference, reference),
-            eq(snippets.method, method),
-          )!
+      method == null
+        ? and(...baseFilters)!
+        : and(...baseFilters, eq(snippets.method, method))!
     const [{ count }] = await this.db
       .select({ count: sql<number>`count(*)::int` })
       .from(snippets)

@@ -10,8 +10,6 @@ export interface CategoryModel extends BaseModel {
   slug: string
 }
 
-export type CategoryDocument = CategoryModel
-
 export interface CategoryRow {
   id: string
   name: string

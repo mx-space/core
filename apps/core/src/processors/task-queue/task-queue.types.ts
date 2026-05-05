@@ -103,28 +103,30 @@ export interface TaskHandler<TPayload = Record<string, unknown>> {
   execute: (payload: TPayload, context: TaskExecuteContext) => Promise<void>
 }
 
+const optionalNumber = (raw: string): number | undefined =>
+  raw ? Number(raw) : undefined
+const optionalString = (raw: string): string | undefined => raw || undefined
+
 export function parseTask(raw: TaskRedis, logs: string[]): Task {
   return {
     id: raw.id,
     type: raw.type,
     status: raw.status as TaskStatus,
     payload: JSON.parse(raw.payload || '{}'),
-    groupId: raw.groupId || undefined,
-    scope: raw.scope || undefined,
-    progress: raw.progress ? Number(raw.progress) : undefined,
-    progressMessage: raw.progressMessage || undefined,
-    totalItems: raw.totalItems ? Number(raw.totalItems) : undefined,
-    completedItems: raw.completedItems ? Number(raw.completedItems) : undefined,
-    tokensGenerated: raw.tokensGenerated
-      ? Number(raw.tokensGenerated)
-      : undefined,
+    groupId: optionalString(raw.groupId),
+    scope: optionalString(raw.scope),
+    progress: optionalNumber(raw.progress),
+    progressMessage: optionalString(raw.progressMessage),
+    totalItems: optionalNumber(raw.totalItems),
+    completedItems: optionalNumber(raw.completedItems),
+    tokensGenerated: optionalNumber(raw.tokensGenerated),
     createdAt: Number(raw.createdAt),
-    startedAt: raw.startedAt ? Number(raw.startedAt) : undefined,
-    completedAt: raw.completedAt ? Number(raw.completedAt) : undefined,
+    startedAt: optionalNumber(raw.startedAt),
+    completedAt: optionalNumber(raw.completedAt),
     result: raw.result ? JSON.parse(raw.result) : undefined,
-    error: raw.error || undefined,
+    error: optionalString(raw.error),
     logs: logs.map((l) => JSON.parse(l) as TaskLog),
-    workerId: raw.workerId || undefined,
+    workerId: optionalString(raw.workerId),
     retryCount: Number(raw.retryCount || '0'),
   }
 }

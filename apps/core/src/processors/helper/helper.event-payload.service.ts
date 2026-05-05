@@ -54,9 +54,7 @@ export class EventPayloadEnricherService {
     if (!data?.id) return data
 
     switch (event) {
-      case BusinessEvents.POST_CREATE: {
-        return (await this.postService.findById(data.id)) ?? data
-      }
+      case BusinessEvents.POST_CREATE:
       case BusinessEvents.POST_UPDATE: {
         return (await this.postService.findById(data.id)) ?? data
       }

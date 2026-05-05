@@ -5,9 +5,12 @@
  */
 import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
-import path, { join } from 'node:path'
+import path, { dirname, join } from 'node:path'
+
 import { Injectable, Logger } from '@nestjs/common'
+
 import { USER_ASSET_DIR } from '~/constants/path.constant'
+
 import { HttpService } from './helper.http.service'
 
 // 先从 ASSET_DIR 找用户自定义的资源，没有就从默认的 ASSET_DIR 找，没有就从网上拉取，存到默认的 ASSET_DIR
@@ -27,26 +30,15 @@ export class AssetService {
     'https://cdn.jsdelivr.net/gh/mx-space/assets@master/'
 
   private checkRoot() {
-    if (!existsSync(this.embedAssetPath)) {
-      return false
-    }
-    return true
+    return existsSync(this.embedAssetPath)
   }
 
   /**
    * 找默认资源
    * @param path 资源路径
-   * @returns
    */
   private checkAssetPath(path: string) {
-    if (!this.checkRoot()) {
-      return false
-    }
-    path = join(this.embedAssetPath, path)
-    if (!existsSync(path)) {
-      return false
-    }
-    return true
+    return this.checkRoot() && existsSync(join(this.embedAssetPath, path))
   }
 
   private async getUserCustomAsset(
@@ -75,14 +67,9 @@ export class AssetService {
           this.onlineAssetPath + path,
         )
 
-        await fs.mkdir(
-          (() => {
-            const p = join(this.embedAssetPath, path).split('/')
-            return p.slice(0, -1).join('/')
-          })(),
-          { recursive: true },
-        )
-        await fs.writeFile(join(this.embedAssetPath, path), data, options)
+        const targetPath = join(this.embedAssetPath, path)
+        await fs.mkdir(dirname(targetPath), { recursive: true })
+        await fs.writeFile(targetPath, data, options)
         return data
       } catch (error) {
         this.logger.error('本地资源不存在，线上资源无法拉取')
@@ -97,14 +84,9 @@ export class AssetService {
     data: any,
     options: Parameters<typeof fs.writeFile>[2],
   ) {
-    await fs.mkdir(
-      (() => {
-        const p = join(USER_ASSET_DIR, path).split('/')
-        return p.slice(0, -1).join('/')
-      })(),
-      { recursive: true },
-    )
-    return fs.writeFile(join(USER_ASSET_DIR, path), data, options)
+    const targetPath = join(USER_ASSET_DIR, path)
+    await fs.mkdir(dirname(targetPath), { recursive: true })
+    return fs.writeFile(targetPath, data, options)
   }
 
   public removeUserCustomAsset(path: string) {

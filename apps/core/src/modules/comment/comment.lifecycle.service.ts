@@ -213,10 +213,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async resolveReader(readerId?: string | null) {
-    if (!readerId) {
-      return null
-    }
-
+    if (!readerId) return null
     const readers = await this.readerService.findReaderInIds([readerId])
     return readers[0] ?? null
   }
@@ -405,10 +402,10 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       )
 
     const country = result.countryName ? String(result.countryName) : ''
-    let region = ''
-    if (result.regionName && result.regionName !== result.cityName) {
-      region = String(result.regionName)
-    }
+    const region =
+      result.regionName && result.regionName !== result.cityName
+        ? String(result.regionName)
+        : ''
     const city = result.cityName ? String(result.cityName) : ''
     const location = `${country}${region}${city}` || undefined
 

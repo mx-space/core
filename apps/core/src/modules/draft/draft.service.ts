@@ -164,24 +164,10 @@ export class DraftService {
     return this.draftHistoryService.getHistorySummary(draft.history as any)
   }
 
-  async getHistoryVersion(
+  private async resolveHistoryVersion(
     id: string,
     version: number,
-  ): Promise<DraftHistoryModel> {
-    const draft = await this.draftRepository.findById(id)
-    if (!draft) throw new BizException(ErrorCodeEnum.DraftNotFound)
-    const historyEntry = draft.history.find((h) => h.version === version)
-    if (!historyEntry)
-      throw new BizException(ErrorCodeEnum.DraftHistoryNotFound)
-    return this.draftHistoryService.resolveHistoryEntry(
-      historyEntry as any,
-      draft.history as any,
-      draft.text ?? '',
-      draft.content ?? undefined,
-    )
-  }
-
-  async restoreVersion(id: string, version: number): Promise<DraftRow> {
+  ): Promise<{ draft: DraftRow; resolved: DraftHistoryModel }> {
     const draft = await this.draftRepository.findById(id)
     if (!draft) throw new BizException(ErrorCodeEnum.DraftNotFound)
     const historyEntry = draft.history.find((h) => h.version === version)
@@ -193,6 +179,19 @@ export class DraftService {
       draft.text ?? '',
       draft.content ?? undefined,
     )
+    return { draft, resolved }
+  }
+
+  async getHistoryVersion(
+    id: string,
+    version: number,
+  ): Promise<DraftHistoryModel> {
+    const { resolved } = await this.resolveHistoryVersion(id, version)
+    return resolved
+  }
+
+  async restoreVersion(id: string, version: number): Promise<DraftRow> {
+    const { resolved } = await this.resolveHistoryVersion(id, version)
     return this.update(id, {
       title: resolved.title,
       text: resolved.text ?? '',

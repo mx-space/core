@@ -170,29 +170,44 @@ export class TranslationService {
     return picked as TranslationResultPick<Fields>
   }
 
+  private buildUntranslatedResult(
+    article: TranslationSourceSnapshot,
+  ): TranslationResult {
+    return {
+      title: article.title,
+      text: article.text ?? '',
+      subtitle: article.subtitle,
+      summary: article.summary,
+      tags: article.tags,
+      isTranslated: false,
+    }
+  }
+
+  private static readonly TRANSLATION_SELECT_BASE = [
+    'refId',
+    'hash',
+    'sourceLang',
+    'sourceModifiedAt',
+  ]
+
+  private static readonly TRANSLATION_SELECT_BY_FIELD: Partial<
+    Record<TranslationField, readonly string[]>
+  > = {
+    title: ['title'],
+    text: ['text'],
+    subtitle: ['subtitle'],
+    summary: ['summary'],
+    tags: ['tags'],
+    content: ['content', 'contentFormat'],
+    translationMeta: ['lang', 'created', 'aiModel'],
+  }
+
   private buildTranslationSelect(fields: readonly TranslationField[]): string {
-    const selectFields = new Set([
-      'refId',
-      'hash',
-      'sourceLang',
-      'sourceModifiedAt',
-    ])
-
-    if (fields.includes('title')) selectFields.add('title')
-    if (fields.includes('text')) selectFields.add('text')
-    if (fields.includes('subtitle')) selectFields.add('subtitle')
-    if (fields.includes('summary')) selectFields.add('summary')
-    if (fields.includes('tags')) selectFields.add('tags')
-    if (fields.includes('content')) {
-      selectFields.add('content')
-      selectFields.add('contentFormat')
+    const selectFields = new Set(TranslationService.TRANSLATION_SELECT_BASE)
+    for (const field of fields) {
+      const extra = TranslationService.TRANSLATION_SELECT_BY_FIELD[field]
+      if (extra) extra.forEach((f) => selectFields.add(f))
     }
-    if (fields.includes('translationMeta')) {
-      selectFields.add('lang')
-      selectFields.add('created')
-      selectFields.add('aiModel')
-    }
-
     return [...selectFields].join(' ')
   }
 
@@ -219,23 +234,19 @@ export class TranslationService {
       translationFields as readonly TranslationField[]
     const normalizedTarget = normalizeLanguageCode(targetLang)
 
-    if (!normalizedTarget || !articles.length) {
-      return new Map(
+    const buildUntranslatedMap = () =>
+      new Map(
         articles.map((article) => [
           article.id,
           this.pickTranslationFields(
-            {
-              title: article.title,
-              text: article.text ?? '',
-              subtitle: article.subtitle,
-              summary: article.summary,
-              tags: article.tags,
-              isTranslated: false,
-            },
+            this.buildUntranslatedResult(article),
             translationFields,
           ),
         ]),
       )
+
+    if (!normalizedTarget || !articles.length) {
+      return buildUntranslatedMap()
     }
 
     try {
@@ -253,14 +264,7 @@ export class TranslationService {
             return [
               article.id,
               this.pickTranslationFields(
-                {
-                  title: article.title,
-                  text: article.text ?? '',
-                  subtitle: article.subtitle,
-                  summary: article.summary,
-                  tags: article.tags,
-                  isTranslated: false,
-                },
+                this.buildUntranslatedResult(article),
                 translationFields,
               ),
             ]
@@ -296,22 +300,7 @@ export class TranslationService {
       )
     } catch (error) {
       this.logger.error(error)
-      return new Map(
-        articles.map((article) => [
-          article.id,
-          this.pickTranslationFields(
-            {
-              title: article.title,
-              text: article.text ?? '',
-              subtitle: article.subtitle,
-              summary: article.summary,
-              tags: article.tags,
-              isTranslated: false,
-            },
-            translationFields,
-          ),
-        ]),
-      )
+      return buildUntranslatedMap()
     }
   }
 

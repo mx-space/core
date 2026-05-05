@@ -27,7 +27,6 @@ export class ReaderService {
   private toReaderShape(row: ReaderRow): ReaderShape {
     return {
       ...row,
-      id: row.id,
       role: row.role as 'reader' | 'owner',
     } as ReaderShape
   }

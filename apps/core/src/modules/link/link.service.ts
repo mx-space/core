@@ -160,7 +160,7 @@ export class LinkService {
   }
 
   async sendToOwner(authorName: string, model: LinkRow) {
-    const enable = (await this.configsService.get('mailOptions')).enable
+    const { enable } = await this.configsService.get('mailOptions')
     if (!enable || isDev) {
       console.info(`来自 ${authorName} 的友链请求：
         站点标题：${model.name}
@@ -180,6 +180,22 @@ export class LinkService {
     })
   }
 
+  private async sendLinkMail(
+    to: string,
+    subject: string,
+    text: string,
+  ): Promise<void> {
+    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
+    const senderEmail = mailOptions.from || mailOptions.smtp?.user
+    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
+    await this.emailService.send({
+      from: sendfrom,
+      to,
+      subject,
+      text,
+    })
+  }
+
   async sendLinkApplyEmail({
     to,
     model,
@@ -191,25 +207,20 @@ export class LinkService {
     model: LinkRow
     template: LinkApplyEmailType
   }) {
-    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
-    const senderEmail = mailOptions.from || mailOptions.smtp?.user
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
-    await this.emailService.send({
-      from: sendfrom,
-      to,
-      subject:
-        template === LinkApplyEmailType.ToOwner
-          ? `[${seo.title || 'Mx Space'}] 新的朋友 ${authorName}`
-          : `嘿!~, 主人已通过你的友链申请!~`,
-      text:
-        template === LinkApplyEmailType.ToOwner
-          ? `来自 ${model.name} 的友链请求：
+    const { seo } = await this.configsService.waitForConfigReady()
+    const siteTitle = seo.title || 'Mx Space'
+    const isToOwner = template === LinkApplyEmailType.ToOwner
+    const subject = isToOwner
+      ? `[${siteTitle}] 新的朋友 ${authorName}`
+      : `嘿!~, 主人已通过你的友链申请!~`
+    const text = isToOwner
+      ? `来自 ${model.name} 的友链请求：
           站点标题：${model.name}
           站点网站：${model.url}
           站点描述：${model.description}
         `
-          : `你的友链申请：${model.name}, ${model.url} 已通过`,
-    })
+      : `你的友链申请：${model.name}, ${model.url} 已通过`
+    await this.sendLinkMail(to, subject, text)
   }
 
   async checkLinkHealth() {
@@ -232,10 +243,9 @@ export class LinkService {
         }
       }),
     )
-    return results.reduce<Record<string, unknown>>((acc, cur) => {
-      acc[cur.id] = cur
-      return acc
-    }, {})
+    const map: Record<string, unknown> = {}
+    for (const result of results) map[result.id] = result
+    return map
   }
 
   async canApplyLink() {
@@ -249,22 +259,18 @@ export class LinkService {
       throw new BizException(ErrorCodeEnum.LinkNotFound)
     }
 
-    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
-    const { enable } = mailOptions
+    const { enable } = await this.configsService.get('mailOptions')
     if (!enable || isDev) {
       console.info(`友链结果通知：${reason}, 状态：${state}`)
       return
     }
     if (!updated.email) return
 
-    const senderEmail = mailOptions.from || mailOptions.smtp?.user
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
-    await this.emailService.send({
-      from: sendfrom,
-      to: updated.email,
-      subject: `嘿!~, 主人已处理你的友链申请!~`,
-      text: `申请结果：${LinkStateMap[state]}\n原因：${reason}`,
-    })
+    await this.sendLinkMail(
+      updated.email,
+      `嘿!~, 主人已处理你的友链申请!~`,
+      `申请结果：${LinkStateMap[state]}\n原因：${reason}`,
+    )
   }
 
   async migrateExternalAvatarsForPassedLinks() {

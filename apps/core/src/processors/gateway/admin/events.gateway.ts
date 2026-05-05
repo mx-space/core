@@ -63,10 +63,7 @@ export class AdminEventsGateway
     @MessageBody() payload: { sessionId?: string },
   ) {
     const sessionId = payload?.sessionId?.trim()
-    if (!sessionId) {
-      return
-    }
-    client.join(`session:${sessionId}`)
+    if (sessionId) client.join(`session:${sessionId}`)
   }
 
   @SubscribeMessage('ai-agent:leave')
@@ -75,9 +72,6 @@ export class AdminEventsGateway
     @MessageBody() payload: { sessionId?: string },
   ) {
     const sessionId = payload?.sessionId?.trim()
-    if (!sessionId) {
-      return
-    }
-    client.leave(`session:${sessionId}`)
+    if (sessionId) client.leave(`session:${sessionId}`)
   }
 }

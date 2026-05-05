@@ -10,10 +10,7 @@ export class SayController extends BasePgCrudFactory({
 }) {
   @Get('/random')
   async getRandomOne() {
-    const res = await this.repository.findAll()
-    if (res.length === 0) {
-      return { data: null }
-    }
-    return { data: sample(res) }
+    const rows = await this.repository.findAll()
+    return { data: rows.length === 0 ? null : sample(rows) }
   }
 }

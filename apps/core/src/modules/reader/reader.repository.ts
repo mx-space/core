@@ -85,34 +85,6 @@ export class ReaderRepository extends BaseRepository {
     return Number(row?.count ?? 0)
   }
 
-  async createReader(input: {
-    id: string
-    email?: string | null
-    emailVerified?: boolean
-    name?: string | null
-    handle?: string | null
-    username?: string | null
-    displayUsername?: string | null
-    image?: string | null
-    role?: string
-  }): Promise<ReaderRow> {
-    const [row] = await this.db
-      .insert(readers)
-      .values({
-        id: input.id,
-        email: input.email ?? null,
-        emailVerified: input.emailVerified ?? false,
-        name: input.name ?? null,
-        handle: input.handle ?? null,
-        username: input.username ?? null,
-        displayUsername: input.displayUsername ?? null,
-        image: input.image ?? null,
-        role: input.role ?? 'reader',
-      })
-      .returning()
-    return mapRow(row)
-  }
-
   async setRole(id: string, role: string): Promise<boolean> {
     const result = await this.db
       .update(readers)

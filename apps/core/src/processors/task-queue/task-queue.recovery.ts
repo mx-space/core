@@ -4,6 +4,7 @@ import {
   type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common'
+
 import { TASK_QUEUE_LIMITS } from './task-queue.constants'
 import { TaskQueueService } from './task-queue.service'
 
@@ -51,11 +52,8 @@ export class TaskQueueRecovery implements OnModuleInit, OnModuleDestroy {
         this.warnRedisUnavailable('Task recovery waiting for Redis connection')
         return
       }
-
-      const recovered = await this.taskService.recoverStaleTasks()
-      if (recovered > 0) {
-        this.logger.log(`Recovered ${recovered} stale tasks`)
-      }
+      // recoverStaleTasks already logs the recovered count
+      await this.taskService.recoverStaleTasks()
     } catch (error) {
       if (this.taskService.isRedisUnavailableError(error)) {
         this.warnRedisUnavailable('Task recovery waiting for Redis connection')

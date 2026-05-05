@@ -7,6 +7,12 @@ import { getRedisKey } from '~/utils/redis.util'
 import { OptionsRepository } from '../configs/options.repository'
 import { AnalyzeRepository } from './analyze.repository'
 
+const SEVEN_DAYS_MS = 7 * 24 * 3600 * 1000
+const defaultRange = (from?: Date, to?: Date) => ({
+  from: from ?? new Date(Date.now() - SEVEN_DAYS_MS),
+  to: to ?? new Date(),
+})
+
 @Injectable()
 export class AnalyzeService {
   constructor(
@@ -92,35 +98,26 @@ export class AnalyzeService {
       granularity,
     )
 
-    const records = new Map<
-      string,
-      { [key: string]: string | number | undefined }
-    >()
-
-    for (const item of result) {
-      records.set(item.key, { [keyField]: item.key, pv: item.pv, ip: item.ip })
-    }
+    const records = result.map((item) => ({
+      [keyField]: item.key,
+      pv: item.pv,
+      ip: item.ip,
+    }))
 
     if (returnObj) {
-      const obj: Record<string, { [key: string]: string | number }> = {}
-      for (const [key, value] of records) {
-        obj[key] = value as { [key: string]: string | number }
-      }
-      return obj
+      return Object.fromEntries(
+        result.map((item, idx) => [item.key, records[idx]]),
+      ) as Record<string, Record<string, string | number>>
     }
 
-    return Array.from(records.values()).sort((a, b) => {
-      const left = String(a[keyField] ?? '')
-      const right = String(b[keyField] ?? '')
-      return right.localeCompare(left)
-    })
+    return records.sort((a, b) =>
+      String(b[keyField] ?? '').localeCompare(String(a[keyField] ?? '')),
+    )
   }
 
   async getRangeOfTopPathVisitor(from?: Date, to?: Date): Promise<any[]> {
-    from = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
-    to = to ?? new Date()
-
-    return this.analyzeRepository.aggregateByPath(from, to, 50)
+    const range = defaultRange(from, to)
+    return this.analyzeRepository.aggregateByPath(range.from, range.to, 50)
   }
 
   async getTodayAccessIp(): Promise<string[]> {
@@ -129,12 +126,10 @@ export class AnalyzeService {
   }
 
   async getDeviceDistribution(from?: Date, to?: Date) {
-    from = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
-    to = to ?? new Date()
-
+    const range = defaultRange(from, to)
     const data = await this.analyzeRepository.aggregateDeviceDistribution(
-      from,
-      to,
+      range.from,
+      range.to,
     )
 
     const deviceTypeMap: Record<string, string> = {
@@ -161,75 +156,41 @@ export class AnalyzeService {
    * referers go to `/analyze/traffic-source` which has a different shape.
    */
   async getUaTrafficDistribution(from?: Date, to?: Date) {
-    const fromDate = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
-    const toDate = to ?? new Date()
+    const range = defaultRange(from, to)
     const dist = await this.analyzeRepository.aggregateDeviceDistribution(
-      fromDate,
-      toDate,
+      range.from,
+      range.to,
     )
+    const toCount = (item: { name: string; value: number }) => ({
+      name: item.name,
+      count: item.value,
+    })
     return {
-      os: dist.os.map((item) => ({ name: item.name, count: item.value })),
-      browser: dist.browsers.map((item) => ({
-        name: item.name,
-        count: item.value,
-      })),
+      os: dist.os.map(toCount),
+      browser: dist.browsers.map(toCount),
     }
   }
 
   async getTrafficSource(from?: Date, to?: Date) {
-    from = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
-    to = to ?? new Date()
+    const range = defaultRange(from, to)
+    const result = await this.analyzeRepository.aggregateReferers(
+      range.from,
+      range.to,
+    )
 
-    const result = await this.analyzeRepository.aggregateReferers(from, to)
-
-    const categories: Record<string, number> = {
-      direct: 0,
-      search: 0,
-      social: 0,
-      other: 0,
-    }
-
-    const searchEngines = [
-      'google',
-      'bing',
-      'baidu',
-      'sogou',
-      'so.com',
-      '360.cn',
-      'yahoo',
-      'duckduckgo',
-      'yandex',
-    ]
-    const socialNetworks = [
-      'twitter',
-      'x.com',
-      'facebook',
-      'weibo',
-      'zhihu',
-      'douban',
-      'reddit',
-      'linkedin',
-      'instagram',
-      'tiktok',
-      'youtube',
-      'bilibili',
-      't.me',
-      'telegram',
-      'discord',
-    ]
-
-    const details: Array<{ source: string; count: number }> = []
+    const categories = { direct: 0, search: 0, social: 0, other: 0 }
+    const detailsMap = new Map<string, number>()
 
     for (const item of result) {
       const referer = item.referer.toLowerCase()
       const count = item.count
 
-      if (!referer || referer === '') {
+      if (!referer) {
         categories.direct += count
         continue
       }
 
-      let hostname = ''
+      let hostname: string
       try {
         hostname = new URL(referer).hostname.toLowerCase()
       } catch {
@@ -237,25 +198,9 @@ export class AnalyzeService {
         continue
       }
 
-      const isSearch = searchEngines.some((engine) => hostname.includes(engine))
-      const isSocial = socialNetworks.some((network) =>
-        hostname.includes(network),
-      )
-
-      if (isSearch) {
-        categories.search += count
-      } else if (isSocial) {
-        categories.social += count
-      } else {
-        categories.other += count
-      }
-
-      const existing = details.find((d) => d.source === hostname)
-      if (existing) {
-        existing.count += count
-      } else {
-        details.push({ source: hostname, count })
-      }
+      const bucket = classifyReferer(hostname)
+      categories[bucket] += count
+      detailsMap.set(hostname, (detailsMap.get(hostname) ?? 0) + count)
     }
 
     return {
@@ -265,7 +210,50 @@ export class AnalyzeService {
         { name: '社交媒体', value: categories.social },
         { name: '其他来源', value: categories.other },
       ].filter((c) => c.value > 0),
-      details: details.sort((a, b) => b.count - a.count).slice(0, 10),
+      details: [...detailsMap.entries()]
+        .map(([source, count]) => ({ source, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10),
     }
   }
+}
+
+const SEARCH_ENGINE_HOSTS = [
+  'google',
+  'bing',
+  'baidu',
+  'sogou',
+  'so.com',
+  '360.cn',
+  'yahoo',
+  'duckduckgo',
+  'yandex',
+]
+
+const SOCIAL_NETWORK_HOSTS = [
+  'twitter',
+  'x.com',
+  'facebook',
+  'weibo',
+  'zhihu',
+  'douban',
+  'reddit',
+  'linkedin',
+  'instagram',
+  'tiktok',
+  'youtube',
+  'bilibili',
+  't.me',
+  'telegram',
+  'discord',
+]
+
+function classifyReferer(hostname: string): 'search' | 'social' | 'other' {
+  if (SEARCH_ENGINE_HOSTS.some((engine) => hostname.includes(engine))) {
+    return 'search'
+  }
+  if (SOCIAL_NETWORK_HOSTS.some((network) => hostname.includes(network))) {
+    return 'social'
+  }
+  return 'other'
 }

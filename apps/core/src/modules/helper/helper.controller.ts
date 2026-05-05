@@ -63,13 +63,15 @@ export class HelperController {
     const noteService = this.moduleRef.get(NoteService, { strict: false })
     const pageService = this.moduleRef.get(PageService, { strict: false })
     const imageService = this.moduleRef.get(ImageService, { strict: false })
-    const post = await postService.findRecent(50)
-    const notes = await noteService.findRecent(50)
-    const pages = await pageService.findRecent(50)
+    const [posts, notes, pages] = await Promise.all([
+      postService.findRecent(50),
+      noteService.findRecent(50),
+      pageService.findRecent(50),
+    ])
 
     const q = new AsyncQueue(10)
     q.addMultiple(
-      [...post, ...notes, ...pages]
+      [...posts, ...notes, ...pages]
         .filter((doc) => !isLexical(doc))
         .map(
           (doc) => () =>

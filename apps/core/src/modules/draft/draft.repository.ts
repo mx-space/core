@@ -49,37 +49,10 @@ export class DraftRepository extends BaseRepository {
   }
 
   async list(
-    page?: number,
-    size?: number,
-    filter?: DraftListFilter,
-  ): Promise<PaginationResult<DraftRow>>
-  async list(
-    refType?: DraftRefType,
-    page?: number,
-    size?: number,
-  ): Promise<PaginationResult<DraftRow>>
-  async list(
-    pageOrRefType: number | DraftRefType = 1,
-    sizeOrPage = 10,
-    filterOrSize: DraftListFilter | number = {},
+    page = 1,
+    size = 10,
+    filter: DraftListFilter = {},
   ): Promise<PaginationResult<DraftRow>> {
-    const filter: DraftListFilter = {}
-    let page: number
-    let size: number
-
-    if (typeof pageOrRefType === 'string') {
-      filter.refType = pageOrRefType
-      page = sizeOrPage
-      size = typeof filterOrSize === 'number' ? filterOrSize : 10
-    } else {
-      page = pageOrRefType
-      size = sizeOrPage
-      Object.assign(
-        filter,
-        typeof filterOrSize === 'number' ? {} : filterOrSize,
-      )
-    }
-
     page = Math.max(1, page)
     size = Math.min(50, Math.max(1, size))
     const offset = (page - 1) * size

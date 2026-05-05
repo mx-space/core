@@ -24,9 +24,8 @@ function scopeToSource(scope: EventScope): WebhookEventSource {
   const hasVisitor = (scope & EventScope.TO_VISITOR) !== 0
   const hasAdmin = (scope & EventScope.TO_ADMIN) !== 0
 
-  if (hasVisitor && !hasAdmin) return 'admin'
-  if (hasAdmin && !hasVisitor) return 'visitor'
-  if (hasVisitor && hasAdmin) return 'admin'
+  if (hasVisitor) return 'admin'
+  if (hasAdmin) return 'visitor'
   return 'system'
 }
 
@@ -74,17 +73,8 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   }
 
   transformEvents(events: string[]) {
-    let nextEvents = [] as string[]
-    for (const event of events) {
-      if (event === 'all') {
-        nextEvents = ['all']
-        break
-      }
-      if (ACCEPT_EVENTS.has(event as any)) {
-        nextEvents.push(event)
-      }
-    }
-    return nextEvents
+    if (events.includes('all')) return ['all']
+    return events.filter((event) => ACCEPT_EVENTS.has(event as any))
   }
 
   async deleteWebhook(id: string) {
@@ -104,20 +94,12 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   }
 
   async sendWebhook(event: string, rawPayload: any, scope: EventScope) {
-    const enabledWebHooks = (await this.webhookRepository.findEnabled()).filter(
+    const scopedWebhooks = (await this.webhookRepository.findEnabled()).filter(
       (webhook) =>
-        webhook.events.some((item) => item === event || item === 'all'),
+        webhook.events.some((item) => item === event || item === 'all') &&
+        webhook.scope &&
+        (webhook.scope & scope) !== 0,
     )
-
-    const scopedWebhooks: Array<WebhookRow & { secret: string }> = []
-    for (const webhook of enabledWebHooks) {
-      if (!webhook.scope) {
-        continue
-      }
-      if ((webhook.scope & scope) !== 0) {
-        scopedWebhooks.push(webhook)
-      }
-    }
 
     if (scopedWebhooks.length === 0) return
 
@@ -125,13 +107,12 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       event as BusinessEvents,
       rawPayload,
     )
-
     const source = scopeToSource(scope)
 
     await Promise.all(
-      scopedWebhooks.map((webhook) => {
-        return this.sendWebhookEvent(event, payload, webhook, source)
-      }),
+      scopedWebhooks.map((webhook) =>
+        this.sendWebhookEvent(event, payload, webhook, source),
+      ),
     )
   }
 
@@ -223,12 +204,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
 
   async getEventsByHookId(hookId: string, query: PagerDto) {
     const { page, size } = query
-
-    const result = await this.webhookRepository.listEvents(hookId, page, size)
-    return {
-      data: result.data,
-      pagination: result.pagination,
-    }
+    return this.webhookRepository.listEvents(hookId, page, size)
   }
 
   clearDispatchEvents(hookId: string) {

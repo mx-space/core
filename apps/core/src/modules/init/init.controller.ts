@@ -1,10 +1,12 @@
 import { Body, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common'
+import type { FastifyRequest } from 'fastify'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
-import type { FastifyRequest } from 'fastify'
+
 import { BackupService } from '../backup/backup.service'
 import { ConfigsService } from '../configs/configs.service'
 import { ConfigKeyDto } from '../option/option.schema'
@@ -24,6 +26,14 @@ export class InitController {
     private readonly uploadService: UploadService,
   ) {}
 
+  private async assertNotInitialized(
+    code: ErrorCodeEnum = ErrorCodeEnum.InitAlreadyCompleted,
+  ) {
+    if (await this.initService.isInit()) {
+      throw new BizException(code)
+    }
+  }
+
   @Get('/')
   async isInit() {
     return {
@@ -33,10 +43,7 @@ export class InitController {
 
   @Get('/configs/default')
   async getDefaultConfig() {
-    const { isInit } = await this.isInit()
-    if (isInit) {
-      throw new BizException(ErrorCodeEnum.InitForbidden)
-    }
+    await this.assertNotInitialized(ErrorCodeEnum.InitForbidden)
     return this.configs.defaultConfig
   }
 
@@ -45,10 +52,7 @@ export class InitController {
     @Param() params: ConfigKeyDto,
     @Body() body: Record<string, any>,
   ) {
-    const { isInit } = await this.isInit()
-    if (isInit) {
-      throw new BizException(ErrorCodeEnum.InitAlreadyCompleted)
-    }
+    await this.assertNotInitialized()
     if (typeof body !== 'object') {
       throw new BizException(ErrorCodeEnum.InvalidBody)
     }
@@ -57,11 +61,7 @@ export class InitController {
 
   @Post('/owner')
   async createOwner(@Body() body: InitOwnerCreateDto) {
-    const { isInit } = await this.isInit()
-    if (isInit) {
-      throw new BizException(ErrorCodeEnum.InitAlreadyCompleted)
-    }
-
+    await this.assertNotInitialized()
     return this.initService.createOwner(body)
   }
 

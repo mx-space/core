@@ -91,16 +91,6 @@ export class PostRepository extends BaseRepository {
     return withRelated
   }
 
-  async findByCategory(categoryId: EntityId | string): Promise<PostRow[]> {
-    const idBig = parseEntityId(categoryId)
-    const rows = await this.db
-      .select()
-      .from(posts)
-      .where(eq(posts.categoryId, idBig))
-      .orderBy(pinAtDescNullsLast, desc(posts.createdAt))
-    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
-  }
-
   async list(params: PostListParams = {}): Promise<PaginationResult<PostRow>> {
     const page = Math.max(1, params.page ?? 1)
     const size = Math.min(50, Math.max(1, params.size ?? 10))
@@ -251,17 +241,12 @@ export class PostRepository extends BaseRepository {
       .where(eq(posts.id, idBig))
   }
 
-  async countByCategory(categoryId: EntityId | string): Promise<number> {
-    const idBig = parseEntityId(categoryId)
+  async countByCategoryId(categoryId: EntityId | string): Promise<number> {
     const [row] = await this.db
       .select({ count: sql<number>`count(*)::int` })
       .from(posts)
-      .where(eq(posts.categoryId, idBig))
+      .where(eq(posts.categoryId, parseEntityId(categoryId)))
     return Number(row?.count ?? 0)
-  }
-
-  async countByCategoryId(categoryId: EntityId | string): Promise<number> {
-    return this.countByCategory(categoryId)
   }
 
   async count(): Promise<number> {
@@ -372,10 +357,6 @@ export class PostRepository extends BaseRepository {
     const mapped = rows.map(mapBase)
     if (options.includeCategory === false) return mapped
     return Promise.all(mapped.map((row) => this.attachCategory(row)))
-  }
-
-  async findByCategoryId(categoryId: EntityId | string): Promise<PostRow[]> {
-    return this.listByCategory(categoryId)
   }
 
   async findByCategoryAndSlug(

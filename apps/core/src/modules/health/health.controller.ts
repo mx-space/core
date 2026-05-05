@@ -1,4 +1,5 @@
 import { Get } from '@nestjs/common'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
@@ -11,11 +12,8 @@ export class HealthController {
 
   @Get('/')
   @HTTPDecorators.Bypass
-  @HttpCache({
-    disable: true,
-  })
+  @HttpCache({ disable: true })
   async check() {
-    // TODO
     return 'OK'
   }
 

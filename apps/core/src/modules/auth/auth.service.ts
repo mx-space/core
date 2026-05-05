@@ -252,7 +252,7 @@ export class AuthService {
     }
 
     try {
-      await this.readerRepository.createReader({
+      await this.readerRepository.create({
         id: readerId,
         name: displayName,
         email: mail,

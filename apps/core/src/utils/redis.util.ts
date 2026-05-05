@@ -8,7 +8,6 @@ export const getRedisKey = <T extends string = RedisKeys | '*'>(
   key: T,
   ...concatKeys: string[]
 ): `${Prefix}:${T}${string | ''}` => {
-  return `${prefix}:${key}${
-    concatKeys && concatKeys.length > 0 ? `:${concatKeys.join('_')}` : ''
-  }`
+  const suffix = concatKeys.length > 0 ? `:${concatKeys.join('_')}` : ''
+  return `${prefix}:${key}${suffix}`
 }
