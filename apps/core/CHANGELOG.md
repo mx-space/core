@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## <small>[12.0.3](https://github.com/mx-space/core/compare/v12.0.2...v12.0.3) (2026-05-05)</small>
+
+### Bug Fixes
+
+* **pageproxy:** bundled admin upgraded to mx-admin v7.0.1 (fixes stale `window.version` injection)
+
+
 ## <small>[12.0.2](https://github.com/mx-space/core/compare/v12.0.1...v12.0.2) (2026-05-05)</small>
 
 ### Bug Fixes
