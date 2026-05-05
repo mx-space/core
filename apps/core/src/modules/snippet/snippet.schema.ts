@@ -1,8 +1,9 @@
-import { BaseSchema } from '~/shared/schema'
 import { isNil } from 'es-toolkit/compat'
 import { createZodDto } from 'nestjs-zod'
 import qs from 'qs'
 import { z } from 'zod'
+
+import { BaseSchema } from '~/shared/schema'
 
 export enum SnippetType {
   JSON = 'json',
@@ -23,19 +24,19 @@ export const SnippetSchema = BaseSchema.extend({
     message: 'name 只能使用英文字母和数字下划线且不超过 30 个字符',
   }),
   reference: z.string().min(1).default('root').optional(),
-  comment: z.string().optional(),
+  comment: z.string().nullable().optional(),
   metatype: z.string().max(20).optional(),
   schema: z.string().optional(),
   method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'ALL']).optional(),
   customPath: z
     .string()
-    .regex(/^[\w-](?:[\w\-/]*[\w-])?$/)
+    .regex(/^[\w-](?:[\w/-]*[\w-])?$/)
     .refine((val) => !val.includes('//'), {
       message: 'customPath must not contain consecutive slashes',
     })
     .pipe(z.string().max(200))
     .optional()
-    .transform((val) => val?.replace(/^\/+|\/+$/g, '') || undefined),
+    .transform((val) => val?.replaceAll(/^\/+|\/+$/g, '') || undefined),
 
   /**
    * For `Function` snippet only.
