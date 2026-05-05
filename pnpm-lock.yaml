@@ -538,22 +538,21 @@ importers:
         version: 6.0.3
 
   packages/mongo-pg-cli:
-    dependencies:
+    devDependencies:
       '@mx-space/db-schema':
         specifier: workspace:*
         version: link:../db-schema
+      '@types/pg':
+        specifier: ^8.11.10
+        version: 8.20.0
       drizzle-orm:
-        specifier: '*'
+        specifier: ^0.45.0
         version: 0.45.2(@cloudflare/workers-types@4.20260504.1)(@types/pg@8.20.0)(gel@2.2.0)(kysely@0.28.16)(pg@8.20.0)
       mongodb:
         specifier: ~7.2.0
         version: 7.2.0(@noble/hashes@2.2.0)
       pg:
-        specifier: '*'
-        version: 8.20.0
-    devDependencies:
-      '@types/pg':
-        specifier: ^8.11.10
+        specifier: ^8.13.1
         version: 8.20.0
       tsdown:
         specifier: 0.21.10
