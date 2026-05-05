@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 ENV MONGOMS_DISABLE_POSTINSTALL=1
 ENV REDISMS_DISABLE_POSTINSTALL=1
 WORKDIR /app
@@ -12,7 +12,7 @@ RUN mv apps/core/out ./out
 RUN cp -R apps/core/src/database/migrations ./out/migrations
 RUN node apps/core/download-latest-admin-assets.js
 
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 
 RUN apk add zip unzip mongodb-tools postgresql-client bash fish rsync jq curl openrc --no-cache
 
