@@ -25,8 +25,8 @@ export const SnippetSchema = BaseSchema.extend({
   }),
   reference: z.string().min(1).default('root').optional(),
   comment: z.string().nullable().optional(),
-  metatype: z.string().max(20).optional(),
-  schema: z.string().optional(),
+  metatype: z.string().max(20).nullable().optional(),
+  schema: z.string().nullable().optional(),
   method: z
     .enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'ALL'])
     .nullable()
@@ -40,6 +40,7 @@ export const SnippetSchema = BaseSchema.extend({
     })
     .pipe(z.string().max(200))
     .optional()
+    .nullable()
     .transform((val) => val?.replaceAll(/^\/+|\/+$/g, '') || undefined),
 
   /**
@@ -49,6 +50,7 @@ export const SnippetSchema = BaseSchema.extend({
    */
   secret: z
     .union([z.string(), z.record(z.string(), z.unknown())])
+    .nullable()
     .optional()
     .transform((val) => {
       if (isNil(val)) return val
