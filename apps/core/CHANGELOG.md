@@ -1,6 +1,23 @@
 # CHANGELOG
 
 
+## [12.1.0](https://github.com/mx-space/core/compare/v12.0.3...v12.1.0) (2026-05-05)
+
+### Features
+
+* **db:** run schema migrations as a release-phase step ([b74d182](https://github.com/mx-space/core/commit/b74d182))
+
+
+### Bug Fixes
+
+* **auth:** store passkey transports as text not array ([271bbb3](https://github.com/mx-space/core/commit/271bbb3))
+* **migrate:** read PG env directly to avoid app.config snowflake check ([cca3a97](https://github.com/mx-space/core/commit/cca3a97))
+* **snippet:** allow null for metatype, schema, path, secret fields ([64297c2](https://github.com/mx-space/core/commit/64297c2))
+* **snippet:** allow null for method field, default to GET ([6a7ecdc](https://github.com/mx-space/core/commit/6a7ecdc))
+* **snippet:** allow null value for comment field in schema ([f3e6c0e](https://github.com/mx-space/core/commit/f3e6c0e))
+* **snippet:** allow null values for all nullable fields in schema ([f85400c](https://github.com/mx-space/core/commit/f85400c))
+
+
 ## <small>[12.0.3](https://github.com/mx-space/core/compare/v12.0.2...v12.0.3) (2026-05-05)</small>
 
 ### Bug Fixes
