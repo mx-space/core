@@ -33,6 +33,8 @@ jobs:
         run: pnpm run lint
       - name: Run Typecheck
         run: pnpm run typecheck
+      - name: Lint migrations (expand-contract guard)
+        run: pnpm -C apps/core run lint:migrations
 
   build:
     name: Core

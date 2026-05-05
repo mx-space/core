@@ -28,6 +28,8 @@ jobs:
         run: npm run lint
       - name: Run Typecheck
         run: npm run typecheck
+      - name: Lint migrations (expand-contract guard)
+        run: pnpm -C apps/core run lint:migrations
 
   docker:
     name: Docker build

@@ -46,8 +46,10 @@ services:
       - ./data/mx-space:/root/.mx-space
 
     depends_on:
-      - postgres
-      - redis
+      mx-migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
 
     healthcheck:
       test: [CMD, curl, -f, "http://127.0.0.1:2333/api/v2/ping"]
@@ -55,6 +57,26 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
+
+  # One-shot release-phase migration runner. Applies any pending Drizzle
+  # migrations and exits 0; mx-core waits for completion via
+  # `service_completed_successfully` before starting. See
+  # docs/superpowers/specs/2026-05-05-database-migration-release-phase-design.md.
+  mx-migrate:
+    image: ${MX_CORE_IMAGE:-mx-core:latest}
+    container_name: mx-migrate
+    command: ["node", "migrate.mjs"]
+    restart: "no"
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      PG_HOST: postgres
+      PG_PORT: "5432"
+      PG_USER: ${PG_USER:-mx}
+      PG_PASSWORD: ${PG_PASSWORD:-mx}
+      PG_DATABASE: ${PG_DATABASE:-mx_core}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   redis:
     image: redis:8-alpine

@@ -120,6 +120,10 @@ it('should work', async () => {
 
 Database migrations use Drizzle Kit. SQL migration files live in `src/database/migrations/` (e.g. `0000_initial.sql`). Historical data migrations from the MongoDB era are in `src/migration/postgres-data-migration/`.
 
+**Release-phase migration**: schema migrations run as a one-shot pre-deploy step, NOT on app startup. The app boot guard (`assertSchemaCurrent` in `processors/database/postgres.provider.ts`) refuses to start if the schema is behind. Run via `pnpm -C apps/core run migrate` locally or via the `mx-migrate` service in compose.
+
+When authoring or reviewing a migration, use the `mx-migration-author` skill — it enforces expand-contract for rolling deploys (Dokploy 2 replicas). CI runs `pnpm -C apps/core run lint:migrations` to flag dangerous patterns. Full design: `docs/superpowers/specs/2026-05-05-database-migration-release-phase-design.md`.
+
 ## Configuration
 
 Configuration via `src/app.config.ts` supports:

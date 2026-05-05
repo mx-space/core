@@ -3,7 +3,7 @@ import { defineConfig } from 'tsdown'
 export default defineConfig({
   clean: false,
   target: 'es2023',
-  entry: ['src/main.ts'],
+  entry: ['src/main.ts', 'src/migrate.ts'],
   dts: false,
   platform: 'node',
   noExternal: () => true,

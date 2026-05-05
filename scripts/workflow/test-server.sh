@@ -9,6 +9,15 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
+# Apply schema migrations as a release-phase step before booting the server.
+# The app boot guard refuses to start if the schema is behind.
+echo "Running database migrations..."
+node apps/core/out/migrate.mjs
+if [[ $? -ne 0 ]]; then
+  echo "migrate.mjs failed"
+  exit 1
+fi
+
 nohup node apps/core/out/main.mjs 1>/dev/null &
 p=$!
 echo "started server with pid $p"

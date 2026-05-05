@@ -75,6 +75,46 @@ pnpm dev
 
 开发模式下 API 监听 `http://localhost:2333`，路由无 `/api/v2` 前缀。
 
+## 数据库迁移（release-phase）
+
+Schema migrations 不在 app 启动时跑，乃作部署阶段 (release-phase) 一次性步骤。
+mx-core 启动时只**核验** schema 已至预期，否则 fail-fast 拒启。
+
+详细设计：[docs/superpowers/specs/2026-05-05-database-migration-release-phase-design.md](../../docs/superpowers/specs/2026-05-05-database-migration-release-phase-design.md)
+
+### 本地开发
+
+`pnpm dev` 自动前置 `pnpm migrate`（`predev` hook），无需手动跑。
+若纯手动：
+
+```bash
+pnpm -C apps/core run migrate          # 跑 pending migrations
+pnpm -C apps/core run lint:migrations  # 校验新迁移之安全性
+```
+
+新增 / 改动 schema 后：
+
+```bash
+pnpm -C apps/core exec drizzle-kit generate   # 生成 SQL
+pnpm -C apps/core run lint:migrations         # CI 同此校验
+```
+
+`lint:migrations` 强制 expand-contract 规则（防 rolling deploy 中老 pod 被新 schema 击破）。
+绕开须加注释 `-- migration-lint:allow=<rule> reason=<why>`，且 reason 必填。
+
+### Docker / 生产
+
+`docker-compose.yml` / `docker-compose.server.yml` 含一次性 `mx-migrate` service：
+`docker compose up` 时它先跑、退 0 后 `mx-core` 才起。无须手动操作。
+
+多副本 rolling deploy 由编排器（Dokploy / k8s）调度；compose 之
+`service_completed_successfully` 保证迁移先于任一 mx-core 实例完成。
+
+### Schema 作者
+
+写迁移前请阅 Claude skill `.claude/skills/mx-migration-author/SKILL.md`，
+其中含 expand-contract 决策树与常见操作之多 release 拆解模板。
+
 ## 项目结构
 
 ```
