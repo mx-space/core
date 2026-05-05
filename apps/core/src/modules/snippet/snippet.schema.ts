@@ -27,7 +27,11 @@ export const SnippetSchema = BaseSchema.extend({
   comment: z.string().nullable().optional(),
   metatype: z.string().max(20).optional(),
   schema: z.string().optional(),
-  method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'ALL']).optional(),
+  method: z
+    .enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'ALL'])
+    .nullable()
+    .default('GET')
+    .optional(),
   customPath: z
     .string()
     .regex(/^[\w-](?:[\w/-]*[\w-])?$/)
