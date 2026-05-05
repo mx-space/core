@@ -1,8 +1,11 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
+import semver from 'semver'
+
 import { cwd, isDev } from '~/global/env.global'
+import { PKG } from '~/utils/pkg.util'
 
 export const HOME = homedir()
 
@@ -29,12 +32,52 @@ export const BUNDLED_ADMIN_ASSET_PATH = isDev
   ? LOCAL_ADMIN_ASSET_PATH
   : join(cwd, './admin')
 
-export const resolveAdminAssetRoot = (relativePath = 'index.html') => {
-  for (const basePath of [LOCAL_ADMIN_ASSET_PATH, BUNDLED_ADMIN_ASSET_PATH]) {
-    if (existsSync(join(basePath, relativePath))) {
-      return basePath
-    }
+let localAdminVersionCache: { mtimeMs: number; version: string | null } | null =
+  null
+
+const readLocalAdminVersion = (): string | null => {
+  const versionPath = join(LOCAL_ADMIN_ASSET_PATH, 'version')
+  let mtimeMs: number
+  try {
+    mtimeMs = statSync(versionPath).mtimeMs
+  } catch {
+    localAdminVersionCache = null
+    return null
   }
+  if (localAdminVersionCache && localAdminVersionCache.mtimeMs === mtimeMs) {
+    return localAdminVersionCache.version
+  }
+  let version: string | null = null
+  try {
+    const raw = readFileSync(versionPath, 'utf8').split('\n')[0]?.trim()
+    if (raw && semver.valid(raw)) version = raw
+  } catch {
+    version = null
+  }
+  localAdminVersionCache = { mtimeMs, version }
+  return version
+}
+
+export const resolveAdminAssetRoot = (relativePath = 'index.html') => {
+  const localExists = existsSync(join(LOCAL_ADMIN_ASSET_PATH, relativePath))
+  const bundledExists =
+    LOCAL_ADMIN_ASSET_PATH !== BUNDLED_ADMIN_ASSET_PATH &&
+    existsSync(join(BUNDLED_ADMIN_ASSET_PATH, relativePath))
+
+  if (localExists && bundledExists) {
+    const bundledVersion = PKG.dashboard?.version
+    const localVersion = readLocalAdminVersion() ?? '0.0.0'
+    if (
+      bundledVersion &&
+      semver.valid(bundledVersion) &&
+      semver.lt(localVersion, bundledVersion)
+    ) {
+      return BUNDLED_ADMIN_ASSET_PATH
+    }
+    return LOCAL_ADMIN_ASSET_PATH
+  }
+  if (localExists) return LOCAL_ADMIN_ASSET_PATH
+  if (bundledExists) return BUNDLED_ADMIN_ASSET_PATH
 
   return LOCAL_ADMIN_ASSET_PATH
 }
