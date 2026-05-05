@@ -1,4 +1,4 @@
-import { CollectionRefTypes } from '~/constants/db.constant'
+import { CollectionRefTypes } from '@mx-space/db-schema'
 import {
   accounts,
   activities,
@@ -35,7 +35,7 @@ import {
   translationEntries,
   verifications,
   webhooks,
-} from '~/database/schema'
+} from '@mx-space/db-schema/schema'
 
 import { allocateForCollection, createResolver } from './id-map'
 import type { MigrationContext, MigrationStep } from './types'

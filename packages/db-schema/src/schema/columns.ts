@@ -1,4 +1,4 @@
-import { bigint, text, timestamp } from 'drizzle-orm/pg-core'
+import { text, timestamp } from 'drizzle-orm/pg-core'
 
 /**
  * Snowflake primary key column stored as text. IDs are generated as Snowflake

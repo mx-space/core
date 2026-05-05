@@ -1,3 +1,5 @@
+export { CollectionRefTypes } from '@mx-space/db-schema'
+
 export const MIGRATE_COLLECTION_NAME = 'migrations'
 export const MIGRATION_LOCK_COLLECTION_NAME = 'migration_locks'
 export const CHECKSUM_COLLECTION_NAME = 'checksum'
@@ -48,9 +50,3 @@ export const AI_AGENT_CONVERSATION_COLLECTION_NAME = 'ai_agent_conversations'
 export const TRANSLATION_ENTRY_COLLECTION_NAME = 'translation_entries'
 
 export const USER_COLLECTION_NAME = 'users'
-export enum CollectionRefTypes {
-  Post = 'post',
-  Note = 'note',
-  Page = 'page',
-  Recently = 'recently',
-}

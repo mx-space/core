@@ -1,10 +1,10 @@
-import { createResolver } from '~/migration/postgres-data-migration/id-map'
+import { parseEntityId } from '@mx-space/db-schema/id'
 import {
+  createResolver,
+  type MigrationContext,
   normalizeLegacyJsonbObject,
   resolveTranslationEntryLookupKey,
-} from '~/migration/postgres-data-migration/steps'
-import type { MigrationContext } from '~/migration/postgres-data-migration/types'
-import { parseEntityId } from '~/shared/id/entity-id'
+} from '@mx-space/mongo-pg-cli'
 
 const buildContext = (): MigrationContext =>
   ({

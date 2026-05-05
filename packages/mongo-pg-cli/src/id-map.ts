@@ -1,8 +1,7 @@
+import { type EntityId, parseEntityId } from '@mx-space/db-schema/id'
+import { mongoIdMap } from '@mx-space/db-schema/schema'
 import { eq } from 'drizzle-orm'
 import type { ObjectId } from 'mongodb'
-
-import { mongoIdMap } from '~/database/schema'
-import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 
 import type { MigrationContext } from './types'
 

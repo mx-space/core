@@ -20,6 +20,15 @@
       ],
       "~/*": [
         "./src/*"
+      ],
+      "@mx-space/db-schema": [
+        "../../packages/db-schema/src/index.ts"
+      ],
+      "@mx-space/db-schema/*": [
+        "../../packages/db-schema/src/*"
+      ],
+      "@mx-space/mongo-pg-cli": [
+        "../../packages/mongo-pg-cli/src/index.ts"
       ]
     },
     "resolveJsonModule": true,
@@ -29,6 +38,7 @@
     "declaration": false,
     "disableSizeLimit": true,
     "outDir": "./dist",
+    "rootDir": "../..",
     "removeComments": true,
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,

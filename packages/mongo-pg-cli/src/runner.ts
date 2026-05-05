@@ -1,9 +1,8 @@
+import { SnowflakeGenerator } from '@mx-space/db-schema/id'
+import { dataMigrationRuns } from '@mx-space/db-schema/schema'
 import type { Db } from 'mongodb'
 
-import { dataMigrationRuns } from '~/database/schema'
-import type { AppDatabase } from '~/processors/database/postgres.provider'
-import { SnowflakeGenerator } from '~/shared/id/snowflake.service'
-
+import type { AppDatabase } from './db'
 import { loadPersistedMaps, persistIdMap } from './id-map'
 import { ALL_STEPS } from './steps'
 import type { MigrationContext, MigrationMode, MigrationReport } from './types'
@@ -128,6 +127,4 @@ export function formatReport(report: MigrationReport): string {
   return sections.map((s) => s.join('\n')).join('\n\n')
 }
 
-// Re-export for convenience.
-export { dataMigrationRuns }
 export type { MigrationContext, MigrationMode, MigrationReport } from './types'

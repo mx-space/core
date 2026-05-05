@@ -1,8 +1,7 @@
+import type { EntityId, SnowflakeGenerator } from '@mx-space/db-schema/id'
 import type { Db, ObjectId } from 'mongodb'
 
-import type { AppDatabase } from '~/processors/database/postgres.provider'
-import type { EntityId } from '~/shared/id/entity-id'
-import type { SnowflakeGenerator } from '~/shared/id/snowflake.service'
+import type { AppDatabase } from './db'
 
 export type MigrationMode = 'dry-run' | 'apply'
 

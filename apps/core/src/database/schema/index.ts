@@ -1,5 +1,1 @@
-export * from './ai'
-export * from './auth'
-export * from './content'
-export * from './migration'
-export * from './ops'
+export * from '@mx-space/db-schema/schema'
