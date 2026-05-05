@@ -15,7 +15,7 @@ allowBuilds:
   unrs-resolver: true
   workerd: true
 overrides:
-  "eslint-plugin-react-compiler>zod": 3.25.76
+  "eslint-plugin-react-compiler>zod": 4.4.3
   "get-pixels@^3>request": ./external/request
   mongodb: ~7.2.0
   pino: ./external/pino
