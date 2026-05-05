@@ -32,6 +32,8 @@ const mapRow = (row: typeof recentlies.$inferSelect): RecentlyRow => ({
   down: row.down,
   createdAt: row.createdAt,
   modifiedAt: row.modifiedAt,
+  enrichmentProvider: row.enrichmentProvider ?? null,
+  enrichmentExternalId: row.enrichmentExternalId ?? null,
 })
 
 @Injectable()

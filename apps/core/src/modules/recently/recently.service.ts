@@ -13,6 +13,7 @@ import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { CommentService } from '../comment/comment.service'
+import { EnrichmentService } from '../enrichment/enrichment.service'
 import { RecentlyRepository } from './recently.repository'
 import { RecentlyAttitudeEnum } from './recently.schema'
 import { RecentlyModel, type RecentlyRow } from './recently.types'
@@ -42,6 +43,8 @@ export class RecentlyService {
     private readonly redisService: RedisService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
+    @Inject(forwardRef(() => EnrichmentService))
+    private readonly enrichmentService: EnrichmentService,
   ) {}
 
   public get repository() {
@@ -53,12 +56,14 @@ export class RecentlyService {
     if (!row) return row
     const withCount = await this.attachCommentCount([row])
     const [withRef] = await this.attachRef(withCount)
-    return withRef
+    const [withEnrichment] = await this.attachEnrichment([withRef])
+    return withEnrichment
   }
 
   async findRecent(size: number) {
     const rows = await this.recentlyRepository.findRecent(size)
-    return this.attachRef(await this.attachCommentCount(rows))
+    const withRef = await this.attachRef(await this.attachCommentCount(rows))
+    return this.attachEnrichment(withRef)
   }
 
   async count() {
@@ -322,5 +327,29 @@ export class RecentlyService {
       await this.recentlyRepository.incrementDown(id, -1)
       await this.recentlyRepository.incrementUp(id, 1)
     }
+  }
+
+  private async attachEnrichment<T extends RecentlyRow>(
+    rows: T[],
+  ): Promise<Array<T & { enrichment?: any }>> {
+    if (rows.length === 0) return []
+
+    return Promise.all(
+      rows.map(async (row) => {
+        if (row.enrichmentProvider && row.enrichmentExternalId) {
+          try {
+            const result = await this.enrichmentService.getOne(
+              row.enrichmentProvider,
+              row.enrichmentExternalId,
+            )
+            return { ...row, enrichment: result }
+          } catch {
+            return { ...row, enrichment: null }
+          }
+        }
+        // Fallback for old rows without enrichment reference
+        return { ...row, enrichment: null }
+      }),
+    )
   }
 }

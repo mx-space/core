@@ -1,5 +1,6 @@
 import type { CollectionRefTypes } from '~/constants/db.constant'
 import type { EntityId } from '~/shared/id/entity-id'
+import type { EnrichmentResult } from '../enrichment/enrichment.types'
 
 export type RecentlyRefType = `${CollectionRefTypes}` | null
 
@@ -16,6 +17,8 @@ export interface RecentlyRow {
   down: number
   createdAt: Date
   modifiedAt: Date | null
+  enrichmentProvider: string | null
+  enrichmentExternalId: string | null
 }
 
 export interface RecentlyCreateInput {
@@ -25,6 +28,8 @@ export interface RecentlyCreateInput {
   refType?: RecentlyRefType
   refId?: EntityId | string | null
   allowComment?: boolean
+  enrichmentProvider?: string | null
+  enrichmentExternalId?: string | null
 }
 
 export type RecentlyPatchInput = Partial<RecentlyCreateInput> & {
@@ -40,3 +45,8 @@ export type RefType = {
 }
 
 export type RecentlyModel = RecentlyRow
+
+export type RecentlyWithEnrichment = RecentlyRow & {
+  enrichment?: EnrichmentResult | null
+  ref?: any
+}
