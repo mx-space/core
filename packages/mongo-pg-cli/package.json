@@ -29,13 +29,16 @@
     "dist",
     "README.md"
   ],
-  "main": "./dist/cli.mjs",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "bin": {
     "mx-mongo-pg-migrate": "./dist/cli.mjs"
   },
   "exports": {
     ".": {
-      "import": "./dist/cli.mjs"
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     },
     "./package.json": "./package.json"
   },
@@ -45,6 +48,7 @@
     "prepackage": "rm -rf dist",
     "clean": "rm -rf dist",
     "dev": "tsx src/cli.ts",
+    "prepare": "tsdown",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "publish": "bump"
   },

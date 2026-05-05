@@ -3,9 +3,12 @@ import { defineConfig } from 'tsdown'
 export default defineConfig({
   clean: true,
   target: 'es2022',
-  entry: ['src/cli.ts'],
+  // `cli.ts` is the runnable CLI binary; `index.ts` is the library entry that
+  // re-exports helpers (createResolver, MigrationContext, …) consumed by
+  // mx-core specs.
+  entry: ['src/cli.ts', 'src/index.ts'],
   outDir: 'dist',
-  dts: false,
+  dts: true,
   format: ['esm'],
   platform: 'node',
   // Inline every dependency so the produced CLI is a single, runnable file.
