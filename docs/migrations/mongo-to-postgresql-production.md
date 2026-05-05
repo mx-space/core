@@ -15,7 +15,7 @@ switch are complete.
 | Source database | MongoDB, read-only during the migration window. |
 | Target database | PostgreSQL 16+. |
 | Schema migration | Drizzle SQL migrations under `apps/core/src/database/migrations`. |
-| Data migration | `apps/core/scripts/migrate-mongo-to-postgres.ts`. |
+| Data migration | [`@mx-space/mongo-pg-cli`](https://github.com/mx-space/core/tree/master/packages/mongo-pg-cli) (separately published npm package; ships every Drizzle migration SQL file inside its bundle). |
 | Canonical IDs | PostgreSQL `bigint` Snowflake IDs, serialized as strings at API boundaries. |
 | Mongo `_id` retention | Stored only in migration support tables such as `mongo_id_map`. |
 | Runtime rollback | Return to the pre-cutover MongoDB snapshot and previous application version. |
@@ -65,7 +65,7 @@ switch are complete.
 | Requirement | Production Rule |
 | --- | --- |
 | Maintenance window | Stop public and admin writes before the final backup. |
-| Application version | Deploy a build that contains the PostgreSQL schema, repositories, and migration CLI. |
+| Application version | Deploy a build that contains the PostgreSQL schema and repositories. The migration CLI is shipped separately as `@mx-space/mongo-pg-cli` on npm; the runtime image no longer bundles it. |
 | Node.js | Use the version required by `apps/core/package.json`; currently Node.js 22+. |
 | PostgreSQL | Use PostgreSQL 16+ and a database created for MX Space Core. |
 | MongoDB source | Use a connection string that includes the correct production database name. |
@@ -154,12 +154,17 @@ instead.
 
 ### 1. Confirm Tooling
 
-Run from the repository root:
+The migration CLI requires Node.js 22+ on whichever host (or one-shot
+container) will execute it.
 
 ```bash
-pnpm -C apps/core exec tsx --version
-pnpm -C apps/core exec tsc -p tsconfig.json --noEmit
+node --version                                      # >= v22
+npm view @mx-space/mongo-pg-cli version             # confirm registry reachable
 ```
+
+If `npm view` fails (for example on an air-gapped host), pre-fetch the
+package on a build host and copy `node_modules/@mx-space/mongo-pg-cli/dist`
+across before the maintenance window begins.
 
 ### 2. Confirm PostgreSQL Connectivity
 
@@ -193,15 +198,21 @@ The write freeze is still required even when Snowflake ranges are distinct.
 Run dry-run before the maintenance window against a recent production clone.
 Run it again during the final window after the final MongoDB backup.
 
-Important: use `pnpm -C apps/core`. The CLI resolves Drizzle migration files
-relative to the `apps/core` working directory.
+The CLI is published on npm. It ships its own bundled copy of the Drizzle
+migration SQL files, so it does **not** need to be executed from `apps/core`
+or from a checkout of the repository. Pin a version in production runbooks
+(replace `@latest` with `@x.y.z`).
 
 ```bash
 SNOWFLAKE_WORKER_ID=900 \
 MONGO_URI="$MONGO_URI" \
 PG_URL="$PG_URL" \
-pnpm -C apps/core exec tsx scripts/migrate-mongo-to-postgres.ts --mode dry-run
+npx @mx-space/mongo-pg-cli@latest --mode dry-run
 ```
+
+If the production host has no network access to the npm registry, install
+the CLI on a build host and copy `node_modules/@mx-space/mongo-pg-cli/dist`
+across, then run `node dist/cli.mjs --mode dry-run` directly.
 
 Dry-run behavior:
 
@@ -236,7 +247,7 @@ Only run apply mode after:
 SNOWFLAKE_WORKER_ID=900 \
 MONGO_URI="$MONGO_URI" \
 PG_URL="$PG_URL" \
-pnpm -C apps/core exec tsx scripts/migrate-mongo-to-postgres.ts --mode apply
+npx @mx-space/mongo-pg-cli@latest --mode apply
 ```
 
 Apply mode behavior:
@@ -408,7 +419,7 @@ or overwrite MongoDB unless the rollback owner explicitly approves it.
 | Symptom | Likely Cause | Action |
 | --- | --- | --- |
 | `unknown mode` | Incorrect `--mode` value. | Use `--mode dry-run` or `--mode apply`. |
-| Drizzle migrations folder not found | CLI was run from the repository root without `pnpm -C apps/core`. | Rerun with `pnpm -C apps/core exec tsx scripts/migrate-mongo-to-postgres.ts`. |
+| Drizzle migrations folder not found | `MIGRATIONS_DIR` is set to a path that does not exist. | Unset `MIGRATIONS_DIR`; the published CLI ships its own migrations folder next to `cli.mjs`. |
 | `Missing refs` in report | Source data references a missing Mongo document. | Inspect the listed collection, field, and Mongo ID; repair source data or explicitly accept the skipped relation. |
 | Duplicate primary keys | Snowflake worker ID collision or reused target database with conflicting rows. | Stop writers, verify worker ranges, inspect `mongo_id_map`, and reset target if necessary. |
 | `meta contains invalid JSON string` warning | Legacy content metadata is malformed. | Inspect the source document. Optional malformed `meta` is migrated as `null`. |
