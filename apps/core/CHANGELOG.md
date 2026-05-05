@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## <small>[12.1.1](https://github.com/mx-space/core/compare/v12.1.0...v12.1.1) (2026-05-05)</small>
+
+### Bug Fixes
+
+* **entrypoint:** auto-run schema migrations on container start (advisory-locked, opt-out via MX_AUTO_MIGRATE=false). Single-instance docker users and orchestrators without a release-phase hook (Dokploy, plain `docker run`) now work out of the box; multi-replica setups remain safe because the advisory lock serializes startup.
+
+
 ## [12.1.0](https://github.com/mx-space/core/compare/v12.0.3...v12.1.0) (2026-05-05)
 
 ### Features

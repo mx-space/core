@@ -191,10 +191,30 @@ log_kv "Disable Telemetry" "$(parse_booleanish "${MX_DISABLE_TELEMETRY:-}")" "$(
 
 echo "============================================"
 
-# Allow overriding the container command, e.g. `docker run ... bash`
+# Allow overriding the container command, e.g. `docker run ... bash` or
+# `docker run ... node migrate.mjs` (the dedicated mx-migrate sidecar). When
+# the command is overridden we skip auto-migrate — that path is for explicit
+# operator control.
 if [ "${1:-}" != "" ] && [[ "${1:-}" != -* ]]; then
   echo "Exec: $*"
   exec "$@"
+fi
+
+# Default path: launch main.mjs. Run pending schema migrations first so that
+# single-instance docker users and orchestrators without a release-phase hook
+# (Dokploy, plain `docker run`, swarm without dependency conditions) just
+# work. Multi-replica is safe because migrate.mjs takes a Postgres advisory
+# lock — racing replicas serialize, only the first applies, the rest no-op.
+# Set MX_AUTO_MIGRATE=false to opt out (e.g. when a dedicated mx-migrate
+# sidecar in compose owns this responsibility).
+if [ "$(parse_booleanish "${MX_AUTO_MIGRATE:-true}")" = "true" ]; then
+  echo "Running database migrations (advisory-locked)…"
+  if ! node migrate.mjs; then
+    echo "Migration failed. Aborting." >&2
+    exit 1
+  fi
+else
+  echo "Skipping auto-migrate (MX_AUTO_MIGRATE=${MX_AUTO_MIGRATE})"
 fi
 
 echo "Exec: node main.mjs ${*:-<none>}"
