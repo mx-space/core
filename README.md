@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./.github/branding/logo-icon.png" alt="mx-space" width="120" />
+</p>
+
 <h1 align="center">MX Space Core</h1>
 
 <p align="center">
@@ -10,6 +14,7 @@
   <a href="https://github.com/mx-space/core/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3%20%2B%20MIT-blue?style=flat-square" alt="License" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen?style=flat-square" alt="Node.js" /></a>
   <a href="https://hub.docker.com/r/innei/mx-server"><img src="https://img.shields.io/docker/pulls/innei/mx-server?style=flat-square" alt="Docker Pulls" /></a>
+  <a href="https://t.me/+lRRxARqVZC1mYTc9"><img src="https://img.shields.io/badge/Telegram-Join-26A5E4?style=flat-square&logo=telegram&logoColor=white" alt="Telegram" /></a>
 </p>
 
 ---
