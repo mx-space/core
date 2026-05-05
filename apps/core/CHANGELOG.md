@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## <small>[12.0.2](https://github.com/mx-space/core/compare/v12.0.1...v12.0.2) (2026-05-05)</small>
+
+### Bug Fixes
+
+* **deps:** update dependency @anthropic-ai/sdk to ^0.93.0 ([#2670](https://github.com/mx-space/core/issues/2670)) ([5a56908](https://github.com/mx-space/core/commit/5a56908))
+* **deps:** update dependency drizzle-orm to ^0.45.0 [security] ([#2663](https://github.com/mx-space/core/issues/2663)) ([d02df4c](https://github.com/mx-space/core/commit/d02df4c))
+* **deps:** update dependency openai to v6.36.0 ([#2671](https://github.com/mx-space/core/issues/2671)) ([614419c](https://github.com/mx-space/core/commit/614419c))
+* **deps:** update dependency zod to v4.4.3 ([#2672](https://github.com/mx-space/core/issues/2672)) ([14e7496](https://github.com/mx-space/core/commit/14e7496))
+* **pageproxy:** prefer bundled admin when newer than local download ([951752a](https://github.com/mx-space/core/commit/951752a))
+
+
 ## <small>12.0.1 (2026-05-04)</small>
 
 ### Bug Fixes
