@@ -403,7 +403,7 @@ export class AuthRepository extends BaseRepository {
     counter?: number
     deviceType?: string | null
     backedUp?: boolean
-    transports?: string[] | null
+    transports?: string | null
     aaguid?: string | null
   }): Promise<string> {
     await this.db.insert(passkeys).values({

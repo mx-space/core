@@ -558,7 +558,11 @@ export const stepPasskeys: MigrationStep = {
           counter: d.counter ?? 0,
           deviceType: d.deviceType ?? null,
           backedUp: d.backedUp ?? false,
-          transports: Array.isArray(d.transports) ? d.transports : null,
+          transports: Array.isArray(d.transports)
+            ? d.transports.join(',')
+            : typeof d.transports === 'string'
+              ? d.transports
+              : null,
           aaguid: d.aaguid ?? null,
           createdAt: dateOrNull(d.createdAt ?? d.created) ?? new Date(),
           updatedAt: dateOrNull(d.updatedAt ?? d.updated),

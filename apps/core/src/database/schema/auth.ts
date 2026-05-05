@@ -159,7 +159,7 @@ export const passkeys = pgTable(
     counter: integer('counter').notNull().default(0),
     deviceType: text('device_type'),
     backedUp: boolean('backed_up').notNull().default(false),
-    transports: text('transports').array(),
+    transports: text('transports'),
     aaguid: text('aaguid'),
   },
   (table) => [

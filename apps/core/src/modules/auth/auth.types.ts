@@ -82,7 +82,7 @@ export interface PasskeyRow {
   counter: number
   deviceType: string | null
   backedUp: boolean
-  transports: string[] | null
+  transports: string | null
   aaguid: string | null
   createdAt: Date
   updatedAt: Date | null
