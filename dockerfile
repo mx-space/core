@@ -8,15 +8,13 @@ RUN corepack enable
 RUN corepack prepare --activate
 RUN pnpm install
 RUN pnpm bundle
-RUN pnpm -C packages/mongo-pg-cli build
 RUN mv apps/core/out ./out
 RUN cp -R apps/core/src/database/migrations ./out/migrations
-RUN cp packages/mongo-pg-cli/dist/cli.mjs ./out/mongo-pg-cli.mjs
 RUN node apps/core/download-latest-admin-assets.js
 
 FROM node:24-alpine AS runner
 
-RUN apk add zip unzip mongodb-tools postgresql-client bash fish rsync jq curl openrc --no-cache
+RUN apk add zip unzip postgresql-client bash fish rsync jq curl openrc --no-cache
 
 WORKDIR /app
 COPY --from=builder /app/out .
