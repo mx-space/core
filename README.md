@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./.github/branding/logo-icon.png" alt="mx-space" width="120" />
+</p>
+
 <h1 align="center">MX Space Core</h1>
 
 <p align="center">
