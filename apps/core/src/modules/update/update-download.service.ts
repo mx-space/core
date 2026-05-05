@@ -63,9 +63,10 @@ export class UpdateDownloadService {
     config: AxiosRequestConfig = {},
     retries = this.MAX_RETRIES,
   ): Promise<any> {
-    const { githubToken } = await this.configService.get(
+    const thirdParty = await this.configService.get(
       'thirdPartyServiceIntegration',
     )
+    const githubToken = thirdParty.github?.token
     const token = githubToken || process.env.GITHUB_TOKEN
     const headers = {
       ...config.headers,
