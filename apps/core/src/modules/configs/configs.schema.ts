@@ -398,11 +398,53 @@ export class FeatureListDto extends createZodDto(FeatureListSchema) {}
 export type FeatureListConfig = z.infer<typeof FeatureListSchema>
 
 // ==================== Third Party Service Integration ====================
-export const ThirdPartyServiceIntegrationSchema = section('第三方服务信息', {
-  githubToken: field.password(z.string().optional(), 'GitHub Token', {
-    description:
-      '用于调用 GitHub API，获取仓库信息等；可选参数，如果没有遇到限流问题，可以不填写',
+
+const GitHubIntegrationSchema = section('GitHub', {
+  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+  token: field.password(z.string().optional(), 'Personal Access Token', {
+    description: '调用 GitHub API；遇限流则填',
   }),
+})
+
+const TmdbIntegrationSchema = section('TMDB', {
+  enabled: field.toggle(z.boolean().optional().default(false), '启用'),
+  apiKey: field.password(z.string().optional(), 'API Key'),
+})
+
+const BangumiIntegrationSchema = section('Bangumi', {
+  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+  accessToken: field.password(z.string().optional(), 'Access Token'),
+})
+
+const NeoDBIntegrationSchema = section('NeoDB', {
+  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+})
+
+const ArxivIntegrationSchema = section('Arxiv', {
+  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+})
+
+const LeetcodeIntegrationSchema = section('Leetcode', {
+  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+})
+
+const NeteaseMusicIntegrationSchema = section('网易云音乐', {
+  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+})
+
+const QQMusicIntegrationSchema = section('QQ 音乐', {
+  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+})
+
+export const ThirdPartyServiceIntegrationSchema = section('第三方服务集成', {
+  github: GitHubIntegrationSchema,
+  tmdb: TmdbIntegrationSchema,
+  bangumi: BangumiIntegrationSchema,
+  neodb: NeoDBIntegrationSchema,
+  arxiv: ArxivIntegrationSchema,
+  leetcode: LeetcodeIntegrationSchema,
+  neteaseMusic: NeteaseMusicIntegrationSchema,
+  qqMusic: QQMusicIntegrationSchema,
 })
 export class ThirdPartyServiceIntegrationDto extends createZodDto(
   ThirdPartyServiceIntegrationSchema,

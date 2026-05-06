@@ -109,7 +109,14 @@ export const generateDefaultConfig: () => IConfig = () => ({
     emailSubscribe: false,
   },
   thirdPartyServiceIntegration: {
-    githubToken: '',
+    github: { enabled: true, token: '' },
+    tmdb: { enabled: false, apiKey: '' },
+    bangumi: { enabled: true, accessToken: '' },
+    neodb: { enabled: true },
+    arxiv: { enabled: true },
+    leetcode: { enabled: true },
+    neteaseMusic: { enabled: true },
+    qqMusic: { enabled: true },
   },
 
   authSecurity: {

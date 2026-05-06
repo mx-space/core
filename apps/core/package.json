@@ -127,6 +127,7 @@
     "node-machine-id": "1.1.12",
     "nodemailer": "8.0.7",
     "object-scan": "^20.0.4",
+    "octokit": "^5.0.5",
     "openai": "6.36.0",
     "pg": "^8.13.1",
     "picocolors": "^1.1.1",

@@ -112,14 +112,14 @@ describe('encrypt.util', () => {
       expect(encrypted.enable).toBe(true)
     })
 
-    test('should encrypt thirdPartyServiceIntegration.githubToken', () => {
+    test('should encrypt thirdPartyServiceIntegration.github.token', () => {
       const config = {
-        githubToken: 'ghp_xxxxxxxxxxxx',
+        github: { token: 'ghp_xxxxxxxxxxxx' },
       }
 
       const encrypted = encryptObject(config, 'thirdPartyServiceIntegration')
 
-      expect(encrypted.githubToken).toMatch(/^\$\$\{mx\}\$\$/)
+      expect(encrypted.github.token).toMatch(/^\$\$\{mx\}\$\$/)
     })
 
     test('should encrypt adminExtra.gaodemapKey', () => {
@@ -192,7 +192,7 @@ describe('encrypt.util', () => {
           bucket: 'backup-bucket',
         },
         thirdPartyServiceIntegration: {
-          githubToken: 'ghp_xxx',
+          github: { token: 'ghp_xxx' },
         },
         seo: {
           title: 'My Site',
@@ -206,7 +206,7 @@ describe('encrypt.util', () => {
       expect(encrypted.mailOptions.resend.apiKey).toMatch(/^\$\$\{mx\}\$\$/)
       expect(encrypted.backupOptions.secretKey).toMatch(/^\$\$\{mx\}\$\$/)
       expect(encrypted.backupOptions.bucket).toBe('backup-bucket')
-      expect(encrypted.thirdPartyServiceIntegration.githubToken).toMatch(
+      expect(encrypted.thirdPartyServiceIntegration.github.token).toMatch(
         /^\$\$\{mx\}\$\$/,
       )
       expect(encrypted.seo.title).toBe('My Site')
@@ -217,7 +217,9 @@ describe('encrypt.util', () => {
       expect(decrypted.mailOptions.smtp.user).toBe('user@example.com')
       expect(decrypted.mailOptions.resend.apiKey).toBe('re_123')
       expect(decrypted.backupOptions.secretKey).toBe('s3-secret')
-      expect(decrypted.thirdPartyServiceIntegration.githubToken).toBe('ghp_xxx')
+      expect(decrypted.thirdPartyServiceIntegration.github.token).toBe(
+        'ghp_xxx',
+      )
       expect(decrypted.seo.title).toBe('My Site')
     })
   })
@@ -298,7 +300,7 @@ describe('encrypt.util', () => {
           bucket: 'backup-bucket',
         },
         thirdPartyServiceIntegration: {
-          githubToken: 'ghp_xxx',
+          github: { token: 'ghp_xxx' },
         },
         seo: {
           title: 'My Site',
@@ -312,7 +314,7 @@ describe('encrypt.util', () => {
       expect(sanitized.mailOptions.resend.apiKey).toBe('')
       expect(sanitized.backupOptions.secretKey).toBe('')
       expect(sanitized.backupOptions.bucket).toBe('backup-bucket')
-      expect(sanitized.thirdPartyServiceIntegration.githubToken).toBe('')
+      expect(sanitized.thirdPartyServiceIntegration.github.token).toBe('')
       expect(sanitized.seo.title).toBe('My Site')
     })
   })

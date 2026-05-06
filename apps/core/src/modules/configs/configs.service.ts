@@ -146,10 +146,43 @@ export class ConfigsService implements OnModuleInit {
       if (isDev && name === 'url') {
         return
       }
-      mergeStoredConfig(name, field.value)
+
+      // Backward-compat: migrate old flat thirdPartyServiceIntegration
+      if (name === 'thirdPartyServiceIntegration') {
+        const normalized = this.normalizeThirdPartyConfig(
+          field.value as Record<string, any>,
+        )
+        mergeStoredConfig(name, normalized)
+      } else {
+        mergeStoredConfig(name, field.value)
+      }
     })
 
     await this.setConfig(mergedConfig)
+  }
+
+  /**
+   * Backward-compat: migrate old flat { githubToken } to new nested
+   * { github: { enabled, token } } shape at read time.
+   */
+  private normalizeThirdPartyConfig(
+    raw: Record<string, any>,
+  ): IConfig['thirdPartyServiceIntegration'] {
+    // Already new shape
+    if (raw?.github && typeof raw.github === 'object') {
+      return raw as IConfig['thirdPartyServiceIntegration']
+    }
+    // Old flat shape — convert
+    return {
+      github: { enabled: true, token: raw.githubToken || '' },
+      tmdb: { enabled: false, apiKey: '' },
+      bangumi: { enabled: true, accessToken: '' },
+      neodb: { enabled: true },
+      arxiv: { enabled: true },
+      leetcode: { enabled: true },
+      neteaseMusic: { enabled: true },
+      qqMusic: { enabled: true },
+    } as IConfig['thirdPartyServiceIntegration']
   }
 
   public async get<T extends keyof IConfig>(

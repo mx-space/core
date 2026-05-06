@@ -30,6 +30,7 @@ import { BackupModule } from './modules/backup/backup.module'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
+import { EnrichmentModule } from './modules/enrichment/enrichment.module'
 import { CronTaskModule } from './modules/cron-task/cron-task.module'
 import { DebugModule } from './modules/debug/debug.module'
 import { DependencyModule } from './modules/dependency/dependency.module'
@@ -83,6 +84,7 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
     ActivityModule,
     AggregateModule,
     AnalyzeModule,
+    EnrichmentModule,
     AuthModule.forRoot(),
     BackupModule,
     BizHelperModule,

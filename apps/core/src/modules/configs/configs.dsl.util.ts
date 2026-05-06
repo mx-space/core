@@ -47,6 +47,7 @@ export interface FormField {
   required?: boolean
   ui: UIConfig
   fields?: FormField[]
+  subsection?: { title: string; description?: string }
 }
 
 export interface FormSection {
@@ -312,6 +313,13 @@ function extractField(key: string, schema: z.ZodTypeAny): FormField {
     const nestedFields = extractFields(unwrapped)
     if (nestedFields.length > 0) {
       field.fields = nestedFields
+      const nestedMeta = getMeta(unwrapped)
+      if (nestedMeta?.title) {
+        field.subsection = {
+          title: nestedMeta.title,
+          description: nestedMeta.description,
+        }
+      }
     }
   }
 
