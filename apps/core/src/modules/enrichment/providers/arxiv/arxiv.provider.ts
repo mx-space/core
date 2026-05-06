@@ -21,14 +21,18 @@ export class ArxivProvider implements EnrichmentProvider {
 
   isValidId(id: string): boolean { return /^[0-9.]+(?:v\d+)?$/.test(id) }
 
+  private stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, '')
+  }
+
   async fetch(id: string): Promise<EnrichmentResult> {
     const res = await fetch(`https://export.arxiv.org/api/query?id_list=${id}`)
     if (!res.ok) throw new Error(`Arxiv API ${res.status}`)
     const text = await res.text()
-    const titleMatch = text.match(/<title>([\s\S]*?)<\/title>/g)
-    const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || id
+    const titleMatch = text.match(/<title>([\s\S]*?)<\/title>/)
+    const title = this.stripHtml(titleMatch?.[1] || '').trim() || id
     const summaryMatch = text.match(/<summary>([\s\S]*?)<\/summary>/)
-    const description = summaryMatch?.[1]?.replace(/\s+/g, ' ').trim()
+    const description = this.stripHtml(summaryMatch?.[1] || '').replace(/\s+/g, ' ').trim() || undefined
 
     return {
       title, description,

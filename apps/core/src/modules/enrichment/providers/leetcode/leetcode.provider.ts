@@ -21,6 +21,10 @@ export class LeetcodeProvider implements EnrichmentProvider {
 
   isValidId(id: string): boolean { return /^[a-z0-9-]+$/.test(id) }
 
+  private stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, '')
+  }
+
   async fetch(id: string): Promise<EnrichmentResult> {
     const query = `query questionData($titleSlug: String!) { question(titleSlug: $titleSlug) { title titleSlug content difficulty topicTags { name } stats { totalAccepted totalSubmission } } }`
     const res = await fetch('https://leetcode.com/graphql', {
@@ -39,7 +43,7 @@ export class LeetcodeProvider implements EnrichmentProvider {
 
     return {
       title: q.title || id,
-      description: (q.content || '').replace(/<[^>]+>/g, '').slice(0, 300) || undefined,
+      description: this.stripHtml(q.content || '').slice(0, 300) || undefined,
       url: `https://leetcode.com/problems/${q.titleSlug || id}/`,
       category: this.category, subtype: 'problem',
       fetchedAt: '', attributes: attrs,
