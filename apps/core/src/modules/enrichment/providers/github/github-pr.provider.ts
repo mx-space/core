@@ -6,6 +6,7 @@ import type {
 } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
+import type { GitHubPullRequestApiResponse } from '../api-response.types'
 import { GitHubClient } from './github.client'
 
 @Injectable()
@@ -31,7 +32,7 @@ export class GitHubPrProvider implements EnrichmentProvider {
 
   async fetch(id: string): Promise<EnrichmentResult> {
     const repoPart = id.replace(/\/pulls\/\d+$/, '')
-    const data = await this.client.fetch(`/repos/${id}`)
+    const data = await this.client.fetch<GitHubPullRequestApiResponse>(`/repos/${id}`)
     const attrs: NonNullable<EnrichmentResult['attributes']> = []
 
     if (data.state) attrs.push({ key: 'state', value: data.state, label: 'State', format: 'text' })

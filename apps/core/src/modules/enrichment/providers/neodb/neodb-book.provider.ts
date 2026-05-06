@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common'
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
+import type { NeoDBBookApiResponse } from '../api-response.types'
 
 @Injectable()
 export class NeoDBBookProvider implements EnrichmentProvider {
@@ -31,7 +32,7 @@ export class NeoDBBookProvider implements EnrichmentProvider {
   async fetch(id: string): Promise<EnrichmentResult> {
     const res = await fetch(`https://neodb.social/api/${id}`)
     if (!res.ok) throw new Error(`NeoDB API ${res.status}`)
-    const data = await res.json()
+    const data: NeoDBBookApiResponse = await res.json()
     const attrs: NonNullable<EnrichmentResult['attributes']> = []
     if (data.rating?.value != null) attrs.push({ key: 'rating', value: data.rating.value, label: 'Rating', format: 'rating' })
     if (data.isbn) attrs.push({ key: 'isbn', value: data.isbn, label: 'ISBN', format: 'text' })

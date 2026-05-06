@@ -6,6 +6,7 @@ import type {
 } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
+import type { GitHubCommitApiResponse } from '../api-response.types'
 import { GitHubClient } from './github.client'
 
 @Injectable()
@@ -30,7 +31,7 @@ export class GitHubCommitProvider implements EnrichmentProvider {
   }
 
   async fetch(id: string): Promise<EnrichmentResult> {
-    const data = await this.client.fetch(`/repos/${id}`)
+    const data = await this.client.fetch<GitHubCommitApiResponse>(`/repos/${id}`)
     const attrs: NonNullable<EnrichmentResult['attributes']> = []
 
     if (data.author?.login) attrs.push({ key: 'author', value: data.author.login, label: 'Author', format: 'text' })

@@ -6,6 +6,7 @@ import type {
 } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
+import type { GitHubRepoApiResponse } from '../api-response.types'
 import { GitHubClient } from './github.client'
 
 @Injectable()
@@ -30,7 +31,7 @@ export class GitHubRepoProvider implements EnrichmentProvider {
   }
 
   async fetch(id: string): Promise<EnrichmentResult> {
-    const data = await this.client.fetch(`/repos/${id}`)
+    const data = await this.client.fetch<GitHubRepoApiResponse>(`/repos/${id}`)
     const attrs: NonNullable<EnrichmentResult['attributes']> = []
 
     if (data.stargazers_count != null)

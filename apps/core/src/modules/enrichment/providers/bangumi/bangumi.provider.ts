@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common'
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
+import type { BangumiSubjectApiResponse } from '../api-response.types'
 
 @Injectable()
 export class BangumiProvider implements EnrichmentProvider {
@@ -26,7 +27,7 @@ export class BangumiProvider implements EnrichmentProvider {
       headers: { 'User-Agent': 'mx-space/enrichment' },
     })
     if (!res.ok) throw new Error(`Bangumi API ${res.status}`)
-    const data = await res.json()
+    const data: BangumiSubjectApiResponse = await res.json()
     const attrs: NonNullable<EnrichmentResult['attributes']> = []
     if (data.rating?.score != null) attrs.push({ key: 'rating', value: data.rating.score, label: 'Rating', format: 'rating' })
     if (data.rating?.total != null) attrs.push({ key: 'votes', value: data.rating.total, label: 'Votes', format: 'number' })

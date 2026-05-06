@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common'
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
+import type { TMDBMovieApiResponse } from '../api-response.types'
 import { TmdbClient } from './tmdb.client'
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500'
@@ -33,7 +34,7 @@ export class TmdbProvider implements EnrichmentProvider {
   }
 
   async fetch(id: string): Promise<EnrichmentResult> {
-    const data = await this.client.fetch(`/3/${id}`)
+    const data = await this.client.fetch<TMDBMovieApiResponse>(`/3/${id}`)
     const subtype = id.startsWith('movie/') ? 'movie' : 'tv'
     const attrs: NonNullable<EnrichmentResult['attributes']> = []
 

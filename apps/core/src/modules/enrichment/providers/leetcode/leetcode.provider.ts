@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common'
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
+import type { LeetCodeGraphQLApiResponse } from '../api-response.types'
 
 @Injectable()
 export class LeetcodeProvider implements EnrichmentProvider {
@@ -33,7 +34,7 @@ export class LeetcodeProvider implements EnrichmentProvider {
       body: JSON.stringify({ query, variables: { titleSlug: id } }),
     })
     if (!res.ok) throw new Error(`LeetCode API ${res.status}`)
-    const { data } = await res.json()
+    const { data }: LeetCodeGraphQLApiResponse = await res.json()
     if (!data?.question) throw new Error(`LeetCode problem not found: ${id}`)
     const q = data.question
     const attrs: NonNullable<EnrichmentResult['attributes']> = []

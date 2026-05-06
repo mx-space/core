@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common'
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
+import type { NeteaseSongDetailApiResponse } from '../api-response.types'
 
 @Injectable()
 export class NeteaseMusicProvider implements EnrichmentProvider {
@@ -24,7 +25,7 @@ export class NeteaseMusicProvider implements EnrichmentProvider {
   async fetch(id: string): Promise<EnrichmentResult> {
     const res = await fetch(`https://music.163.com/api/song/detail/?id=${id}&ids=%5B${id}%5D`)
     if (!res.ok) throw new Error(`Netease API ${res.status}`)
-    const data = await res.json()
+    const data: NeteaseSongDetailApiResponse = await res.json()
     const song = data.songs?.[0]
     if (!song) throw new Error(`Song not found: ${id}`)
     const attrs: NonNullable<EnrichmentResult['attributes']> = []

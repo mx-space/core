@@ -6,6 +6,7 @@ import type {
 } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
+import type { GitHubDiscussionSearchApiResponse } from '../api-response.types'
 import { GitHubClient } from './github.client'
 
 @Injectable()
@@ -31,7 +32,7 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
 
   async fetch(id: string): Promise<EnrichmentResult> {
     const [owner, repo, , number] = id.split('/')
-    const searchResult = await this.client.fetch(
+    const searchResult = await this.client.fetch<GitHubDiscussionSearchApiResponse>(
       `/search/discussions?q=repo:${owner}/${repo}+number:${number}`,
     )
     const discussion = searchResult.items?.[0]
