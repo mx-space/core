@@ -1,5 +1,4 @@
 import {
-  Controller,
   Delete,
   Get,
   HttpCode,
@@ -9,10 +8,10 @@ import {
   Req,
   Res,
 } from '@nestjs/common'
-
-import { Auth } from '~/common/decorators/auth.decorator'
-import { ApiController } from '~/common/decorators/api-controller.decorator'
 import type { FastifyRequest } from 'fastify'
+
+import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
 
 import { AdminListQueryDto, ResolveQueryDto } from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
@@ -34,7 +33,7 @@ export class EnrichmentController {
     return result
   }
 
-  @Get(':provider/*id')
+  @Get(':provider/*')
   async getOne(
     @Param('provider') provider: string,
     @Req() req: FastifyRequest,
@@ -49,7 +48,7 @@ export class EnrichmentController {
     return this.enrichmentService.list(query.page, query.size)
   }
 
-  @Post('admin/refresh/:provider/*id')
+  @Post('admin/refresh/:provider/*')
   @Auth()
   @HttpCode(200)
   async refresh(
@@ -60,7 +59,7 @@ export class EnrichmentController {
     return this.enrichmentService.refresh(provider, id)
   }
 
-  @Delete('admin/cache/:provider/*id')
+  @Delete('admin/cache/:provider/*')
   @Auth()
   @HttpCode(204)
   async invalidate(
