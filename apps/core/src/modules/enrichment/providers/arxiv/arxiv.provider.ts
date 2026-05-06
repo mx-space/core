@@ -22,7 +22,8 @@ export class ArxivProvider implements EnrichmentProvider {
   isValidId(id: string): boolean { return /^[0-9.]+(?:v\d+)?$/.test(id) }
 
   private stripHtml(html: string): string {
-    return html.replace(/<[^>]*>/g, '')
+    // Also matches unclosed tags (e.g. "<script" without ">")
+    return html.replace(/<[^>]*(>|$)/g, '')
   }
 
   async fetch(id: string): Promise<EnrichmentResult> {
