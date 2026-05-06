@@ -1,16 +1,21 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { GitHubCommitApiResponse } from '~/modules/enrichment/providers/api-response.types'
-import { GitHubCommitProvider } from '~/modules/enrichment/providers/github/github-commit.provider'
 import type { GitHubClient } from '~/modules/enrichment/providers/github/github.client'
+import { GitHubCommitProvider } from '~/modules/enrichment/providers/github/github-commit.provider'
 
-const createClient = () =>
-  ({ fetch: vi.fn(), getOctokit: vi.fn() }) as unknown as GitHubClient
+const createClient = (mockData: Record<string, any>) =>
+  ({
+    getOctokit: vi.fn().mockResolvedValue({
+      rest: {
+        repos: { getCommit: vi.fn().mockResolvedValue({ data: mockData }) },
+      },
+    }),
+  }) as unknown as GitHubClient
 
 describe('GitHubCommitProvider', () => {
-  const provider = new GitHubCommitProvider(createClient())
-
   describe('matchUrl', () => {
+    const provider = new GitHubCommitProvider(createClient({}))
+
     it('matches github.com/owner/repo/commit/sha', () => {
       const result = provider.matchUrl(
         new URL('https://github.com/mx-space/core/commit/abc123def456'),
@@ -24,15 +29,16 @@ describe('GitHubCommitProvider', () => {
 
     it('rejects github.com/owner/repo/commits (plural)', () => {
       expect(
-        provider.matchUrl(new URL('https://github.com/mx-space/core/commits/main')),
+        provider.matchUrl(
+          new URL('https://github.com/mx-space/core/commits/main'),
+        ),
       ).toBeNull()
     })
   })
 
   describe('fetch', () => {
     it('splits commit message into title and description', async () => {
-      const client = createClient()
-      const mockData: GitHubCommitApiResponse = {
+      const mockData = {
         html_url: 'https://github.com/mx-space/core/commit/abc123',
         commit: {
           message: 'Fix critical bug\n\nThis fixes issue #42.',
@@ -41,8 +47,7 @@ describe('GitHubCommitProvider', () => {
         author: { avatar_url: 'https://avatar', login: 'dev' },
         stats: { additions: 10, deletions: 5 },
       }
-      vi.mocked(client.fetch).mockResolvedValue(mockData)
-      const p = new GitHubCommitProvider(client)
+      const p = new GitHubCommitProvider(createClient(mockData))
 
       const result = await p.fetch('mx-space/core/commits/abc123')
 

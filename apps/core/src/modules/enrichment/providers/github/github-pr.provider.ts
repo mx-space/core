@@ -1,12 +1,8 @@
 import { Injectable } from '@nestjs/common'
 
-import type {
-  EnrichmentResult,
-  UrlMatchResult,
-} from '../../enrichment.types'
+import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
-import type { GitHubPullRequestApiResponse } from '../api-response.types'
 import { GitHubClient } from './github.client'
 
 @Injectable()
@@ -23,7 +19,11 @@ export class GitHubPrProvider implements EnrichmentProvider {
     if (url.hostname !== 'github.com') return null
     const parts = url.pathname.split('/').filter(Boolean)
     if (parts.length !== 4 || parts[2] !== 'pull') return null
-    return { id: `${parts[0]}/${parts[1]}/pulls/${parts[3]}`, fullUrl: url.href, subtype: 'pr' }
+    return {
+      id: `${parts[0]}/${parts[1]}/pulls/${parts[3]}`,
+      fullUrl: url.href,
+      subtype: 'pr',
+    }
   }
 
   isValidId(id: string): boolean {
@@ -32,19 +32,51 @@ export class GitHubPrProvider implements EnrichmentProvider {
 
   async fetch(id: string): Promise<EnrichmentResult> {
     const repoPart = id.replace(/\/pulls\/\d+$/, '')
-    const data = await this.client.fetch<GitHubPullRequestApiResponse>(`/repos/${id}`)
+    const [owner, repo, , pull_number] = id.split('/')
+    const octokit = await this.client.getOctokit()
+    const { data } = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: Number(pull_number),
+    })
     const attrs: NonNullable<EnrichmentResult['attributes']> = []
 
-    if (data.state) attrs.push({ key: 'state', value: data.state, label: 'State', format: 'text' })
+    if (data.state)
+      attrs.push({
+        key: 'state',
+        value: data.state,
+        label: 'State',
+        format: 'text',
+      })
     if (data.merged) attrs.push({ key: 'merged', value: true, label: 'Merged' })
-    if (data.additions != null) attrs.push({ key: 'additions', value: data.additions, label: 'Additions', format: 'number' })
-    if (data.deletions != null) attrs.push({ key: 'deletions', value: data.deletions, label: 'Deletions', format: 'number' })
-    if (data.user?.login) attrs.push({ key: 'author', value: data.user.login, label: 'Author', format: 'text' })
+    if (data.additions != null)
+      attrs.push({
+        key: 'additions',
+        value: data.additions,
+        label: 'Additions',
+        format: 'number',
+      })
+    if (data.deletions != null)
+      attrs.push({
+        key: 'deletions',
+        value: data.deletions,
+        label: 'Deletions',
+        format: 'number',
+      })
+    if (data.user?.login)
+      attrs.push({
+        key: 'author',
+        value: data.user.login,
+        label: 'Author',
+        format: 'text',
+      })
 
     return {
       title: `${repoPart}#${data.number}: ${data.title}`,
       description: (data.body || '').slice(0, 300) || undefined,
-      image: data.user?.avatar_url ? { url: data.user.avatar_url, alt: data.user.login } : undefined,
+      image: data.user?.avatar_url
+        ? { url: data.user.avatar_url, alt: data.user.login }
+        : undefined,
       url: data.html_url,
       category: this.category,
       subtype: 'pr',

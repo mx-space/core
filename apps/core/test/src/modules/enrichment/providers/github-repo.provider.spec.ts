@@ -1,18 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { GitHubRepoApiResponse } from '~/modules/enrichment/providers/api-response.types'
-import { GitHubRepoProvider } from '~/modules/enrichment/providers/github/github-repo.provider'
 import type { GitHubClient } from '~/modules/enrichment/providers/github/github.client'
+import { GitHubRepoProvider } from '~/modules/enrichment/providers/github/github-repo.provider'
 
-const createClient = () =>
-  ({
-    fetch: vi.fn(),
-    getOctokit: vi.fn(),
-  }) as unknown as GitHubClient
-
-const makeRepoResponse = (
-  overrides: Partial<GitHubRepoApiResponse> = {},
-): GitHubRepoApiResponse => ({
+const makeRepoResponse = (overrides: Record<string, any> = {}) => ({
   full_name: 'mx-space/core',
   description: 'Test description',
   html_url: 'https://github.com/mx-space/core',
@@ -25,12 +16,23 @@ const makeRepoResponse = (
   ...overrides,
 })
 
-describe('GitHubRepoProvider', () => {
-  const provider = new GitHubRepoProvider(createClient())
+const createClient = (mockData: Record<string, any>) =>
+  ({
+    getOctokit: vi.fn().mockResolvedValue({
+      rest: {
+        repos: { get: vi.fn().mockResolvedValue({ data: mockData }) },
+      },
+    }),
+  }) as unknown as GitHubClient
 
+describe('GitHubRepoProvider', () => {
   describe('matchUrl', () => {
+    const provider = new GitHubRepoProvider(createClient({}))
+
     it('matches github.com/owner/repo', () => {
-      const result = provider.matchUrl(new URL('https://github.com/mx-space/core'))
+      const result = provider.matchUrl(
+        new URL('https://github.com/mx-space/core'),
+      )
       expect(result).toEqual({
         id: 'mx-space/core',
         fullUrl: 'https://github.com/mx-space/core',
@@ -39,7 +41,9 @@ describe('GitHubRepoProvider', () => {
     })
 
     it('rejects github.com/owner (single segment)', () => {
-      expect(provider.matchUrl(new URL('https://github.com/settings'))).toBeNull()
+      expect(
+        provider.matchUrl(new URL('https://github.com/settings')),
+      ).toBeNull()
     })
 
     it('rejects github.com/owner/repo/issues/1 (too many segments)', () => {
@@ -49,11 +53,15 @@ describe('GitHubRepoProvider', () => {
     })
 
     it('rejects non-github.com domains', () => {
-      expect(provider.matchUrl(new URL('https://gitlab.com/owner/repo'))).toBeNull()
+      expect(
+        provider.matchUrl(new URL('https://gitlab.com/owner/repo')),
+      ).toBeNull()
     })
   })
 
   describe('isValidId', () => {
+    const provider = new GitHubRepoProvider(createClient({}))
+
     it('accepts owner/repo format', () => {
       expect(provider.isValidId('mx-space/core')).toBe(true)
     })
@@ -67,9 +75,7 @@ describe('GitHubRepoProvider', () => {
 
   describe('fetch', () => {
     it('normalizes GitHub API response with all fields', async () => {
-      const client = createClient()
-      vi.mocked(client.fetch).mockResolvedValue(makeRepoResponse())
-      const p = new GitHubRepoProvider(client)
+      const p = new GitHubRepoProvider(createClient(makeRepoResponse()))
 
       const result = await p.fetch('mx-space/core')
 
@@ -112,18 +118,18 @@ describe('GitHubRepoProvider', () => {
     })
 
     it('handles missing optional fields gracefully', async () => {
-      const client = createClient()
-      vi.mocked(client.fetch).mockResolvedValue(
-        makeRepoResponse({
-          description: null,
-          language: null,
-          owner: null,
-          license: null,
-          stargazers_count: null,
-          forks_count: null,
-        }),
+      const p = new GitHubRepoProvider(
+        createClient(
+          makeRepoResponse({
+            description: null,
+            language: null,
+            owner: null,
+            license: null,
+            stargazers_count: null,
+            forks_count: null,
+          }),
+        ),
       )
-      const p = new GitHubRepoProvider(client)
 
       const result = await p.fetch('mx-space/core')
 

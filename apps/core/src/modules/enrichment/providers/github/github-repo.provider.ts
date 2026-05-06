@@ -1,12 +1,8 @@
 import { Injectable } from '@nestjs/common'
 
-import type {
-  EnrichmentResult,
-  UrlMatchResult,
-} from '../../enrichment.types'
+import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
-import type { GitHubRepoApiResponse } from '../api-response.types'
 import { GitHubClient } from './github.client'
 
 @Injectable()
@@ -31,17 +27,39 @@ export class GitHubRepoProvider implements EnrichmentProvider {
   }
 
   async fetch(id: string): Promise<EnrichmentResult> {
-    const data = await this.client.fetch<GitHubRepoApiResponse>(`/repos/${id}`)
+    const [owner, repo] = id.split('/')
+    const octokit = await this.client.getOctokit()
+    const { data } = await octokit.rest.repos.get({ owner, repo })
     const attrs: NonNullable<EnrichmentResult['attributes']> = []
 
     if (data.stargazers_count != null)
-      attrs.push({ key: 'stars', value: data.stargazers_count, label: 'Stars', format: 'number' })
+      attrs.push({
+        key: 'stars',
+        value: data.stargazers_count,
+        label: 'Stars',
+        format: 'number',
+      })
     if (data.forks_count != null)
-      attrs.push({ key: 'forks', value: data.forks_count, label: 'Forks', format: 'number' })
+      attrs.push({
+        key: 'forks',
+        value: data.forks_count,
+        label: 'Forks',
+        format: 'number',
+      })
     if (data.language)
-      attrs.push({ key: 'language', value: data.language, label: 'Language', format: 'text' })
+      attrs.push({
+        key: 'language',
+        value: data.language,
+        label: 'Language',
+        format: 'text',
+      })
     if (data.license?.spdx_id)
-      attrs.push({ key: 'license', value: data.license.spdx_id, label: 'License', format: 'text' })
+      attrs.push({
+        key: 'license',
+        value: data.license.spdx_id,
+        label: 'License',
+        format: 'text',
+      })
 
     return {
       title: data.full_name || id,

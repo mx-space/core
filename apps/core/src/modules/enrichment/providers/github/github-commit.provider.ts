@@ -1,12 +1,8 @@
 import { Injectable } from '@nestjs/common'
 
-import type {
-  EnrichmentResult,
-  UrlMatchResult,
-} from '../../enrichment.types'
+import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
-import type { GitHubCommitApiResponse } from '../api-response.types'
 import { GitHubClient } from './github.client'
 
 @Injectable()
@@ -23,25 +19,53 @@ export class GitHubCommitProvider implements EnrichmentProvider {
     if (url.hostname !== 'github.com') return null
     const parts = url.pathname.split('/').filter(Boolean)
     if (parts.length !== 4 || parts[2] !== 'commit') return null
-    return { id: `${parts[0]}/${parts[1]}/commits/${parts[3]}`, fullUrl: url.href, subtype: 'commit' }
+    return {
+      id: `${parts[0]}/${parts[1]}/commits/${parts[3]}`,
+      fullUrl: url.href,
+      subtype: 'commit',
+    }
   }
 
   isValidId(id: string): boolean {
-    return /^[^/]+\/[^/]+\/commits\/[0-9a-f]+$/.test(id)
+    return /^[^/]+\/[^/]+\/commits\/[\da-f]+$/.test(id)
   }
 
   async fetch(id: string): Promise<EnrichmentResult> {
-    const data = await this.client.fetch<GitHubCommitApiResponse>(`/repos/${id}`)
+    const [owner, repo, , ref] = id.split('/')
+    const octokit = await this.client.getOctokit()
+    const { data } = await octokit.rest.repos.getCommit({ owner, repo, ref })
     const attrs: NonNullable<EnrichmentResult['attributes']> = []
 
-    if (data.author?.login) attrs.push({ key: 'author', value: data.author.login, label: 'Author', format: 'text' })
-    if (data.stats?.additions != null) attrs.push({ key: 'additions', value: data.stats.additions, label: 'Additions', format: 'number' })
-    if (data.stats?.deletions != null) attrs.push({ key: 'deletions', value: data.stats.deletions, label: 'Deletions', format: 'number' })
+    if (data.author?.login)
+      attrs.push({
+        key: 'author',
+        value: data.author.login,
+        label: 'Author',
+        format: 'text',
+      })
+    if (data.stats?.additions != null)
+      attrs.push({
+        key: 'additions',
+        value: data.stats.additions,
+        label: 'Additions',
+        format: 'number',
+      })
+    if (data.stats?.deletions != null)
+      attrs.push({
+        key: 'deletions',
+        value: data.stats.deletions,
+        label: 'Deletions',
+        format: 'number',
+      })
 
     return {
       title: data.commit?.message?.split('\n')[0] || id,
-      description: data.commit?.message?.split('\n').slice(1).join('\n').trim() || undefined,
-      image: data.author?.avatar_url ? { url: data.author.avatar_url, alt: data.author.login } : undefined,
+      description:
+        data.commit?.message?.split('\n').slice(1).join('\n').trim() ||
+        undefined,
+      image: data.author?.avatar_url
+        ? { url: data.author.avatar_url, alt: data.author.login }
+        : undefined,
       url: data.html_url,
       category: this.category,
       subtype: 'commit',

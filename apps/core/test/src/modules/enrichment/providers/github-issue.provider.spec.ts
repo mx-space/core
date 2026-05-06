@@ -1,16 +1,21 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { GitHubIssueApiResponse } from '~/modules/enrichment/providers/api-response.types'
-import { GitHubIssueProvider } from '~/modules/enrichment/providers/github/github-issue.provider'
 import type { GitHubClient } from '~/modules/enrichment/providers/github/github.client'
+import { GitHubIssueProvider } from '~/modules/enrichment/providers/github/github-issue.provider'
 
-const createClient = () =>
-  ({ fetch: vi.fn(), getOctokit: vi.fn() }) as unknown as GitHubClient
+const createClient = (mockData: Record<string, any>) =>
+  ({
+    getOctokit: vi.fn().mockResolvedValue({
+      rest: {
+        issues: { get: vi.fn().mockResolvedValue({ data: mockData }) },
+      },
+    }),
+  }) as unknown as GitHubClient
 
 describe('GitHubIssueProvider', () => {
-  const provider = new GitHubIssueProvider(createClient())
-
   describe('matchUrl', () => {
+    const provider = new GitHubIssueProvider(createClient({}))
+
     it('matches github.com/owner/repo/issues/123', () => {
       const result = provider.matchUrl(
         new URL('https://github.com/mx-space/core/issues/42'),
@@ -43,8 +48,7 @@ describe('GitHubIssueProvider', () => {
 
   describe('fetch', () => {
     it('normalizes issue response', async () => {
-      const client = createClient()
-      const mockData: GitHubIssueApiResponse = {
+      const mockData = {
         number: 42,
         title: 'Bug fix',
         body: 'Body text',
@@ -54,8 +58,7 @@ describe('GitHubIssueProvider', () => {
         created_at: '2023-06-01T00:00:00Z',
         user: { avatar_url: 'https://avatar', login: 'testuser' },
       }
-      vi.mocked(client.fetch).mockResolvedValue(mockData)
-      const p = new GitHubIssueProvider(client)
+      const p = new GitHubIssueProvider(createClient(mockData))
 
       const result = await p.fetch('mx-space/core/issues/42')
 

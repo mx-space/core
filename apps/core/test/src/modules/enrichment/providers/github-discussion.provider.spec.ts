@@ -1,16 +1,19 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { GitHubDiscussionSearchApiResponse } from '~/modules/enrichment/providers/api-response.types'
-import { GitHubDiscussionProvider } from '~/modules/enrichment/providers/github/github-discussion.provider'
 import type { GitHubClient } from '~/modules/enrichment/providers/github/github.client'
+import { GitHubDiscussionProvider } from '~/modules/enrichment/providers/github/github-discussion.provider'
 
-const createClient = () =>
-  ({ fetch: vi.fn(), getOctokit: vi.fn() }) as unknown as GitHubClient
+const createClient = (mockData: Record<string, any>) =>
+  ({
+    getOctokit: vi.fn().mockResolvedValue({
+      request: vi.fn().mockResolvedValue({ data: mockData }),
+    }),
+  }) as unknown as GitHubClient
 
 describe('GitHubDiscussionProvider', () => {
-  const provider = new GitHubDiscussionProvider(createClient())
-
   describe('matchUrl', () => {
+    const provider = new GitHubDiscussionProvider(createClient({}))
+
     it('matches github.com/owner/repo/discussions/123', () => {
       const result = provider.matchUrl(
         new URL('https://github.com/mx-space/core/discussions/42'),
@@ -24,15 +27,16 @@ describe('GitHubDiscussionProvider', () => {
 
     it('rejects github.com/owner/repo/issues/123', () => {
       expect(
-        provider.matchUrl(new URL('https://github.com/mx-space/core/issues/123')),
+        provider.matchUrl(
+          new URL('https://github.com/mx-space/core/issues/123'),
+        ),
       ).toBeNull()
     })
   })
 
   describe('fetch', () => {
     it('uses search API and normalizes discussion', async () => {
-      const client = createClient()
-      const mockData: GitHubDiscussionSearchApiResponse = {
+      const mockData = {
         items: [
           {
             title: 'Feature Request',
@@ -44,8 +48,7 @@ describe('GitHubDiscussionProvider', () => {
           },
         ],
       }
-      vi.mocked(client.fetch).mockResolvedValue(mockData)
-      const p = new GitHubDiscussionProvider(client)
+      const p = new GitHubDiscussionProvider(createClient(mockData))
 
       const result = await p.fetch('mx-space/core/discussions/42')
 
@@ -60,9 +63,7 @@ describe('GitHubDiscussionProvider', () => {
     })
 
     it('throws when discussion not found', async () => {
-      const client = createClient()
-      vi.mocked(client.fetch).mockResolvedValue({ items: [] })
-      const p = new GitHubDiscussionProvider(client)
+      const p = new GitHubDiscussionProvider(createClient({ items: [] }))
 
       await expect(p.fetch('mx-space/core/discussions/999')).rejects.toThrow(
         'Discussion not found',
