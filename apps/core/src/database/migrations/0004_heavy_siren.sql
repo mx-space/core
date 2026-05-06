@@ -13,9 +13,12 @@ CREATE TABLE "enrichment_cache" (
 );
 --> statement-breakpoint
 ALTER TABLE "recentlies" ADD COLUMN "enrichment_provider" varchar(64);--> statement-breakpoint
-ALTER TABLE "recentlies" ADD COLUMN "enrichment_external_id" varchar(256);--> statement-breakpoint
-CREATE UNIQUE INDEX "enrichment_provider_external_id_uniq" ON "enrichment_cache" USING btree ("provider","external_id");--> statement-breakpoint
-CREATE INDEX "enrichment_expires_at_idx" ON "enrichment_cache" USING btree ("expires_at");--> statement-breakpoint
+ALTER TABLE "recentlies" ADD COLUMN "enrichment_external_id" varchar(256); -- migration-lint:allow=no-bare-create-index reason=enrichment_cache is new, empty at deploy time; recentlies columns are new with NULL values
+--> statement-breakpoint
+CREATE UNIQUE INDEX "enrichment_provider_external_id_uniq" ON "enrichment_cache" USING btree ("provider","external_id");
+--> statement-breakpoint
+CREATE INDEX "enrichment_expires_at_idx" ON "enrichment_cache" USING btree ("expires_at");
+--> statement-breakpoint
 CREATE INDEX "recentlies_enrichment_idx" ON "recentlies" USING btree ("enrichment_provider","enrichment_external_id");--> statement-breakpoint
 -- Migrate old flat thirdPartyServiceIntegration to new nested shape
 UPDATE options
