@@ -1,7 +1,18 @@
-import { Controller, Delete, Get, HttpCode, Param, Post, Query, Res } from '@nestjs/common'
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common'
 
 import { Auth } from '~/common/decorators/auth.decorator'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
+import type { FastifyRequest } from 'fastify'
 
 import { AdminListQueryDto, ResolveQueryDto } from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
@@ -23,12 +34,13 @@ export class EnrichmentController {
     return result
   }
 
-  @Get(':provider/:id(*)')
+  @Get(':provider/*id')
   async getOne(
     @Param('provider') provider: string,
-    @Param('id') id: string,
+    @Req() req: FastifyRequest,
   ): Promise<EnrichmentResult> {
-    return this.enrichmentService.getOne(provider, decodeURIComponent(id))
+    const id = decodeURIComponent((req.params as Record<string, string>)['*'])
+    return this.enrichmentService.getOne(provider, id)
   }
 
   @Get('admin/list')
@@ -37,24 +49,26 @@ export class EnrichmentController {
     return this.enrichmentService.list(query.page, query.size)
   }
 
-  @Post('admin/refresh/:provider/:id(*)')
+  @Post('admin/refresh/:provider/*id')
   @Auth()
   @HttpCode(200)
   async refresh(
     @Param('provider') provider: string,
-    @Param('id') id: string,
+    @Req() req: FastifyRequest,
   ): Promise<EnrichmentResult> {
-    return this.enrichmentService.refresh(provider, decodeURIComponent(id))
+    const id = decodeURIComponent((req.params as Record<string, string>)['*'])
+    return this.enrichmentService.refresh(provider, id)
   }
 
-  @Delete('admin/cache/:provider/:id(*)')
+  @Delete('admin/cache/:provider/*id')
   @Auth()
   @HttpCode(204)
   async invalidate(
     @Param('provider') provider: string,
-    @Param('id') id: string,
+    @Req() req: FastifyRequest,
   ): Promise<void> {
-    await this.enrichmentService.invalidate(provider, decodeURIComponent(id))
+    const id = decodeURIComponent((req.params as Record<string, string>)['*'])
+    await this.enrichmentService.invalidate(provider, id)
   }
 
   @Get('admin/providers')
