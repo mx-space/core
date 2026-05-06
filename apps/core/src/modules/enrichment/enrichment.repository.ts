@@ -1,14 +1,13 @@
-import { Injectable } from '@nestjs/common'
-import { eq, and, sql } from 'drizzle-orm'
+import { Inject, Injectable } from '@nestjs/common'
+import { and, eq, gt, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import type { AppDatabase } from '~/processors/database/postgres.provider'
-import { BaseRepository } from '~/processors/database/base.repository'
-import type { EnrichmentResult, EnrichmentRow } from './enrichment.types'
-
-import { Inject } from '@nestjs/common'
 import { enrichmentCache } from '~/database/schema'
+import { BaseRepository } from '~/processors/database/base.repository'
+import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
+
+import type { EnrichmentResult, EnrichmentRow } from './enrichment.types'
 
 @Injectable()
 export class EnrichmentRepository extends BaseRepository {
@@ -131,18 +130,28 @@ export class EnrichmentRepository extends BaseRepository {
       )
   }
 
-  async listPaginated(page: number, size: number) {
+  async listPaginated(
+    page: number,
+    size: number,
+    opts?: { onlyFailed?: boolean },
+  ) {
     const offset = (page - 1) * size
-    const rows = await this.db
+    const where = opts?.onlyFailed
+      ? gt(enrichmentCache.failureCount, 0)
+      : undefined
+
+    const rowsQuery = this.db
       .select()
       .from(enrichmentCache)
       .orderBy(sql`${enrichmentCache.createdAt} DESC`)
       .limit(size)
       .offset(offset)
+    const rows = where ? await rowsQuery.where(where) : await rowsQuery
 
-    const countResult = await this.db
+    const countQuery = this.db
       .select({ count: sql<number>`count(*)` })
       .from(enrichmentCache)
+    const countResult = where ? await countQuery.where(where) : await countQuery
 
     const total = Number(countResult[0].count)
     return {

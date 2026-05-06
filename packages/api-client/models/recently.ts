@@ -34,74 +34,43 @@ export enum RecentlyTypeEnum {
   Code = 'code',
 }
 
-export interface BookMetadata {
+export interface EnrichmentImage {
   url: string
-  title: string
-  author: string
-  cover?: string
-  rating?: number
-  isbn?: string
+  width?: number
+  height?: number
+  alt?: string
+  blurhash?: string
 }
 
-export interface MediaMetadata {
-  url: string
+export interface EnrichmentAttribute {
+  key: string
+  value: string | number | boolean
+  label?: string
+  format?: 'number' | 'rating' | 'date' | 'percent' | 'text' | 'duration'
+}
+
+export interface EnrichmentResult {
   title: string
-  originalTitle?: string
-  cover?: string
-  rating?: number
   description?: string
-  genre?: string
-}
-
-export interface MusicMetadata {
+  image?: EnrichmentImage
   url: string
-  title: string
-  artist: string
-  album?: string
-  cover?: string
-  source?: string
+  category: string
+  subtype?: string
+  publishedAt?: string
+  fetchedAt: string
+  attributes?: EnrichmentAttribute[]
+  color?: string
+  links?: Array<{ rel: string; url: string; label?: string }>
 }
 
-export interface GithubMetadata {
-  url: string
-  owner: string
-  repo: string
-  description?: string
-  stars?: number
-  language?: string
-  languageColor?: string
+/**
+ * 创建/更新 shorthand 时的轻量元数据。仅 url 必需，
+ * 服务端据此匹配 provider 并落地至 enrichment_cache。
+ */
+export interface RecentlyCreateMetadata {
+  url?: string
+  [key: string]: unknown
 }
-
-export interface LinkMetadata {
-  url: string
-  title?: string
-  description?: string
-  image?: string
-}
-
-export interface AcademicMetadata {
-  url: string
-  title: string
-  authors?: string[]
-  arxivId?: string
-}
-
-export interface CodeMetadata {
-  url: string
-  title: string
-  difficulty?: string
-  tags?: string[]
-  platform?: string
-}
-
-export type RecentlyMetadata =
-  | BookMetadata
-  | MediaMetadata
-  | MusicMetadata
-  | GithubMetadata
-  | LinkMetadata
-  | AcademicMetadata
-  | CodeMetadata
 
 export interface RecentlyModel {
   id: string
@@ -110,7 +79,7 @@ export interface RecentlyModel {
 
   content: string
   type: RecentlyTypeEnum
-  metadata: RecentlyMetadata | null
+  metadata: RecentlyCreateMetadata | null
 
   refType: RecentlyRefTypes
   refId: string | null
@@ -121,4 +90,8 @@ export interface RecentlyModel {
 
   commentsIndex: number
   allowComment: boolean
+
+  enrichmentProvider?: string | null
+  enrichmentExternalId?: string | null
+  enrichment?: EnrichmentResult | null
 }

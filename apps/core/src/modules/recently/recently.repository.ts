@@ -112,6 +112,8 @@ export class RecentlyRepository extends BaseRepository {
         refType: input.refType ?? null,
         refId: input.refId ? parseEntityId(input.refId) : null,
         allowComment: input.allowComment ?? true,
+        enrichmentProvider: input.enrichmentProvider ?? null,
+        enrichmentExternalId: input.enrichmentExternalId ?? null,
       })
       .returning()
     return mapRow(row)
@@ -137,6 +139,10 @@ export class RecentlyRepository extends BaseRepository {
     if (patch.down !== undefined) update.down = patch.down
     if (patch.commentsIndex !== undefined)
       update.commentsIndex = patch.commentsIndex
+    if (patch.enrichmentProvider !== undefined)
+      update.enrichmentProvider = patch.enrichmentProvider
+    if (patch.enrichmentExternalId !== undefined)
+      update.enrichmentExternalId = patch.enrichmentExternalId
     const [row] = await this.db
       .update(recentlies)
       .set(update)

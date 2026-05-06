@@ -24,7 +24,7 @@
     "dev": "npm run start",
     "predev": "npm run migrate",
     "dev:encrypt": "npm run start -- --encrypt_enable --encrypt_key=33b9405ac49f63ef4ccbf6b338aeeff8152e844d942ef22278abbec2b1f93b5e",
-    "migrate": "tsx --tsconfig tsconfig.json src/migrate.ts",
+    "migrate": "tsx --env-file-if-exists=../../.env --tsconfig tsconfig.json src/migrate.ts",
     "lint:migrations": "tsx --tsconfig tsconfig.json scripts/lint-migrations.ts",
     "repl": "npm run start -- --entryFile repl",
     "bundle": "tsdown",

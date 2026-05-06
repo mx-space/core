@@ -72,7 +72,10 @@ export class RecentlyService {
 
   async getAll() {
     const result = await this.recentlyRepository.list(1, 50)
-    return this.attachRef(await this.attachCommentCount(result.data))
+    const withRef = await this.attachRef(
+      await this.attachCommentCount(result.data),
+    )
+    return this.attachEnrichment(withRef)
   }
 
   async getOne(id: string) {
@@ -168,7 +171,8 @@ export class RecentlyService {
       after,
       size: size ?? 10,
     })
-    return this.attachRef(await this.attachCommentCount(rows))
+    const withRef = await this.attachRef(await this.attachCommentCount(rows))
+    return this.attachEnrichment(withRef)
   }
 
   async getLatestOne() {
@@ -209,13 +213,27 @@ export class RecentlyService {
       refType = existModel.type
     }
 
+    const url = (model as any).metadata?.url
+    const enrichmentRef = url ? this.enrichmentService.matchUrlToRef(url) : null
+
     const withRef = await this.recentlyRepository.create({
       content: model.content,
       type: (model as any).type,
       metadata: (model as any).metadata,
       refId,
       refType: refType as any,
+      enrichmentProvider: enrichmentRef?.provider ?? null,
+      enrichmentExternalId: enrichmentRef?.externalId ?? null,
     })
+    if (url && enrichmentRef) {
+      scheduleManager.schedule(async () => {
+        try {
+          await this.enrichmentService.resolve(url)
+        } catch {
+          // resolution failure is non-fatal; cache will fill on next read
+        }
+      })
+    }
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_CREATE, withRef, {
         scope: EventScope.TO_SYSTEM_VISITOR,
@@ -241,13 +259,29 @@ export class RecentlyService {
   }
 
   async update(id: string, model: Partial<RecentlyModel>) {
+    const url = (model as any).metadata?.url
+    const enrichmentRef = url ? this.enrichmentService.matchUrlToRef(url) : null
+
     const withRef = await this.recentlyRepository.update(id, {
       content: model.content,
       type: model.type,
       metadata: model.metadata,
       modifiedAt: new Date(),
+      ...(model.metadata !== undefined && {
+        enrichmentProvider: enrichmentRef?.provider ?? null,
+        enrichmentExternalId: enrichmentRef?.externalId ?? null,
+      }),
     })
     if (!withRef) return null
+    if (url && enrichmentRef) {
+      scheduleManager.schedule(async () => {
+        try {
+          await this.enrichmentService.resolve(url)
+        } catch {
+          // non-fatal
+        }
+      })
+    }
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_UPDATE, withRef, {
         scope: EventScope.TO_SYSTEM_VISITOR,

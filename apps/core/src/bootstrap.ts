@@ -117,13 +117,23 @@ export async function bootstrap() {
         )
         sendTelemetry('startup')
         startHeartbeat()
-
-        const shutdown = () => stopHeartbeat()
-        process.once('SIGINT', shutdown)
-        process.once('SIGTERM', shutdown)
       } else {
         logger.info('[Telemetry] Telemetry is disabled.')
       }
+
+      // process.once: second Ctrl+C falls through to Node default for force-kill.
+      const shutdown = async (signal: NodeJS.Signals) => {
+        logger.info(`Received ${signal}, shutting down...`)
+        if (TELEMETRY.enable) stopHeartbeat()
+        try {
+          await app.close()
+        } catch (e) {
+          logger.error('Error during shutdown:', e)
+        }
+        process.exit(0)
+      }
+      process.once('SIGINT', shutdown)
+      process.once('SIGTERM', shutdown)
     },
   )
 }

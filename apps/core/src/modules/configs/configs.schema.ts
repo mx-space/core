@@ -437,14 +437,14 @@ const QQMusicIntegrationSchema = section('QQ 音乐', {
 })
 
 export const ThirdPartyServiceIntegrationSchema = section('第三方服务集成', {
-  github: GitHubIntegrationSchema,
-  tmdb: TmdbIntegrationSchema,
-  bangumi: BangumiIntegrationSchema,
-  neodb: NeoDBIntegrationSchema,
-  arxiv: ArxivIntegrationSchema,
-  leetcode: LeetcodeIntegrationSchema,
-  neteaseMusic: NeteaseMusicIntegrationSchema,
-  qqMusic: QQMusicIntegrationSchema,
+  github: GitHubIntegrationSchema.optional(),
+  tmdb: TmdbIntegrationSchema.optional(),
+  bangumi: BangumiIntegrationSchema.optional(),
+  neodb: NeoDBIntegrationSchema.optional(),
+  arxiv: ArxivIntegrationSchema.optional(),
+  leetcode: LeetcodeIntegrationSchema.optional(),
+  neteaseMusic: NeteaseMusicIntegrationSchema.optional(),
+  qqMusic: QQMusicIntegrationSchema.optional(),
 })
 export class ThirdPartyServiceIntegrationDto extends createZodDto(
   ThirdPartyServiceIntegrationSchema,

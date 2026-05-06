@@ -131,11 +131,18 @@ const groupConfigs: GroupConfig[] = [
     sectionKeys: ['ai'],
   },
   {
+    key: 'integrations',
+    title: '第三方集成',
+    description: 'GitHub、TMDB、Bangumi 等',
+    icon: 'puzzle',
+    sectionKeys: ['thirdPartyServiceIntegration'],
+  },
+  {
     key: 'system',
     title: '系统',
     description: '后台设置、功能开关',
     icon: 'settings',
-    sectionKeys: ['adminExtra', 'featureList', 'thirdPartyServiceIntegration'],
+    sectionKeys: ['adminExtra', 'featureList'],
   },
 ]
 

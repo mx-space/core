@@ -1,12 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common'
 import { createHash } from 'node:crypto'
+
+import { Injectable, Logger } from '@nestjs/common'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { RedisService } from '~/processors/redis/redis.service'
 
+import { EnrichmentRepository } from './enrichment.repository'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
 import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
-import { EnrichmentRepository } from './enrichment.repository'
 import { ProviderRegistry } from './providers/provider.registry'
 
 const REDIS_KEY_PREFIX = 'enrichment:resolve:'
@@ -46,15 +47,15 @@ export class EnrichmentService {
     const { provider, match } = matched
 
     // 3. Check enabled + token
-    const config =
-      await this.configsService.get('thirdPartyServiceIntegration')
+    const config = await this.configsService.get('thirdPartyServiceIntegration')
     if (!this.isProviderEnabled(provider, config)) {
       throw new ProviderDisabledError(provider.name)
     }
-    if (provider.requiredConfigKeys?.length) {
-      if (!this.hasRequiredConfig(provider, config)) {
-        throw new TokenMissingError(provider.name)
-      }
+    if (
+      provider.requiredConfigKeys?.length &&
+      !this.hasRequiredConfig(provider, config)
+    ) {
+      throw new TokenMissingError(provider.name)
     }
 
     // 4. DB cache
@@ -114,6 +115,22 @@ export class EnrichmentService {
     }
   }
 
+  /**
+   * Pure URL → { provider, externalId } match. No I/O, no fetch. Returns null
+   * if no provider matches the URL or the URL is malformed.
+   */
+  matchUrlToRef(url: string): { provider: string; externalId: string } | null {
+    let parsedUrl: URL
+    try {
+      parsedUrl = new URL(url)
+    } catch {
+      return null
+    }
+    const matched = this.providerRegistry.match(parsedUrl)
+    if (!matched) return null
+    return { provider: matched.provider.name, externalId: matched.match.id }
+  }
+
   async getOne(providerName: string, id: string): Promise<EnrichmentResult> {
     const provider = this.providerRegistry.getByName(providerName)
     if (!provider) throw new Error(`Unknown provider: ${providerName}`)
@@ -140,10 +157,7 @@ export class EnrichmentService {
     return result
   }
 
-  async refresh(
-    providerName: string,
-    id: string,
-  ): Promise<EnrichmentResult> {
+  async refresh(providerName: string, id: string): Promise<EnrichmentResult> {
     const provider = this.providerRegistry.getByName(providerName)
     if (!provider) throw new Error(`Unknown provider: ${providerName}`)
 
@@ -175,8 +189,8 @@ export class EnrichmentService {
     }
   }
 
-  async list(page: number, size: number) {
-    return this.repository.listPaginated(page, size)
+  async list(page: number, size: number, opts?: { onlyFailed?: boolean }) {
+    return this.repository.listPaginated(page, size, opts)
   }
 
   getProviders(): ProviderMeta[] {
@@ -199,7 +213,12 @@ export class EnrichmentService {
     result: EnrichmentResult,
   ): Promise<void> {
     const client = this.redisService.getClient()
-    await client.set(this.redisKey(url), JSON.stringify(result), 'EX', REDIS_TTL)
+    await client.set(
+      this.redisKey(url),
+      JSON.stringify(result),
+      'EX',
+      REDIS_TTL,
+    )
   }
 
   private async deleteFromRedis(url: string): Promise<void> {
@@ -241,7 +260,8 @@ export class EnrichmentService {
     if (!configKey || !config[configKey]) return false
     const section = config[configKey]
     return Object.entries(section).some(
-      ([key, val]) => key !== 'enabled' && typeof val === 'string' && val.length > 0,
+      ([key, val]) =>
+        key !== 'enabled' && typeof val === 'string' && val.length > 0,
     )
   }
 }

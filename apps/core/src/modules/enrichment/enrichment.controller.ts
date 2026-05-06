@@ -45,7 +45,9 @@ export class EnrichmentController {
   @Get('admin/list')
   @Auth()
   async list(@Query() query: AdminListQueryDto) {
-    return this.enrichmentService.list(query.page, query.size)
+    return this.enrichmentService.list(query.page, query.size, {
+      onlyFailed: query.onlyFailed,
+    })
   }
 
   @Post('admin/refresh/:provider/*')
