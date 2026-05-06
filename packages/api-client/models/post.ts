@@ -1,7 +1,16 @@
 import type { Image } from './base'
 import type { CategoryModel } from './category'
+import type { EnrichmentResult } from './recently'
 
 export type PostContentFormat = 'markdown' | 'lexical'
+
+/**
+ * Server-side bulk lookup of cached enrichments for URLs found in the doc
+ * body. Keyed by the original URL string. Absent or partial when the cache
+ * does not (yet) cover every URL — frontend cold-path resolves the rest via
+ * `/enrichment/resolve`.
+ */
+export type EnrichmentMap = Record<string, EnrichmentResult>
 
 export interface PostModelMarkdown {
   id: string
@@ -25,6 +34,7 @@ export interface PostModelMarkdown {
   pinAt?: string | null
   pinOrder?: number | null
   related?: PostRelatedSummary[]
+  enrichments?: EnrichmentMap
 }
 
 export interface PostModelLexical {
@@ -49,6 +59,7 @@ export interface PostModelLexical {
   pinAt?: string | null
   pinOrder?: number | null
   related?: PostRelatedSummary[]
+  enrichments?: EnrichmentMap
 }
 
 export type PostModel = PostModelMarkdown | PostModelLexical

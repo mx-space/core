@@ -5,6 +5,7 @@ import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { AiModule } from '../ai/ai.module'
 import { CommentModule } from '../comment/comment.module'
 import { DraftModule } from '../draft/draft.module'
+import { EnrichmentModule } from '../enrichment/enrichment.module'
 import { SlugTrackerModule } from '../slug-tracker/slug-tracker.module'
 import { PostController } from './post.controller'
 import { PostRepository } from './post.repository'
@@ -16,6 +17,7 @@ import { PostService } from './post.service'
     SlugTrackerModule,
     DraftModule,
     AiModule,
+    EnrichmentModule,
     forwardRef(() => CommentModule),
   ],
   controllers: [PostController],

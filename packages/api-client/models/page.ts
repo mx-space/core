@@ -1,4 +1,7 @@
 import type { Image } from './base'
+import type { EnrichmentResult } from './recently'
+
+export type PageEnrichmentMap = Record<string, EnrichmentResult>
 
 export enum EnumPageType {
   'md' = 'md',
@@ -21,6 +24,7 @@ export interface PageModelMarkdown {
   order?: number
   type?: EnumPageType
   options?: object
+  enrichments?: PageEnrichmentMap
 }
 
 export interface PageModelLexical {
@@ -38,6 +42,7 @@ export interface PageModelLexical {
   order?: number
   type?: EnumPageType
   options?: object
+  enrichments?: PageEnrichmentMap
 }
 
 export type PageModel = PageModelMarkdown | PageModelLexical

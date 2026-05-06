@@ -194,6 +194,35 @@ export class EnrichmentService {
     return this.repository.listPaginated(page, size, opts)
   }
 
+  /**
+   * Bulk URL → cached EnrichmentResult lookup. No upstream fetch; rows that
+   * are stale (past `expiresAt`) or absent are skipped — the consumer
+   * (frontend cold path) will hit `/enrichment/resolve` to refresh.
+   */
+  async hydrateUrls(
+    urls: readonly string[],
+  ): Promise<Record<string, EnrichmentResult>> {
+    if (urls.length === 0) return {}
+    const unique = [...new Set(urls)]
+    const now = Date.now()
+    const out: Record<string, EnrichmentResult> = {}
+
+    await Promise.all(
+      unique.map(async (url) => {
+        const ref = this.matchUrlToRef(url)
+        if (!ref) return
+        const row = await this.repository.findByProviderAndExternalId(
+          ref.provider,
+          ref.externalId,
+        )
+        if (!row) return
+        if (row.expiresAt && row.expiresAt.getTime() < now) return
+        out[url] = row.normalized
+      }),
+    )
+    return out
+  }
+
   async getProviders(): Promise<ProviderMeta[]> {
     const config = await this.configsService.get('thirdPartyServiceIntegration')
     return this.providerRegistry.getProviderMetas((provider) => {

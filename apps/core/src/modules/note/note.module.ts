@@ -6,6 +6,7 @@ import { GatewayModule } from '~/processors/gateway/gateway.module'
 import { AiModule } from '../ai/ai.module'
 import { CommentModule } from '../comment/comment.module'
 import { DraftModule } from '../draft/draft.module'
+import { EnrichmentModule } from '../enrichment/enrichment.module'
 import { SlugTrackerModule } from '../slug-tracker/slug-tracker.module'
 import { TopicModule } from '../topic/topic.module'
 import { NoteController } from './note.controller'
@@ -24,6 +25,7 @@ import { NoteService } from './note.service'
     GatewayModule,
     forwardRef(() => AiModule),
     DraftModule,
+    EnrichmentModule,
     SlugTrackerModule,
     forwardRef(() => CommentModule),
     forwardRef(() => TopicModule),

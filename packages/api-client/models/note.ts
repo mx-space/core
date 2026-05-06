@@ -1,5 +1,8 @@
 import type { Image, ModelWithLiked, ModelWithTranslation } from './base'
+import type { EnrichmentResult } from './recently'
 import type { TopicModel } from './topic'
+
+export type NoteEnrichmentMap = Record<string, EnrichmentResult>
 
 export interface NoteModel {
   id: string
@@ -38,6 +41,14 @@ export interface NoteModel {
    * summary cache misses. Absent on detail endpoints.
    */
   summary?: string
+
+  /**
+   * Server-injected only on detail endpoints. Bulk pre-resolved enrichments
+   * for URLs found in the body. Frontend renders link cards inline without
+   * extra fetches when present; cache misses fall through to
+   * `/enrichment/resolve`.
+   */
+  enrichments?: NoteEnrichmentMap
 }
 
 export interface Coordinate {

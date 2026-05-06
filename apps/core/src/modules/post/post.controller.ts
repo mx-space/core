@@ -28,6 +28,8 @@ import { applyContentPreference } from '~/utils/content.util'
 
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
+import { EnrichmentService } from '../enrichment/enrichment.service'
+import { UrlExtractorService } from '../enrichment/url-extractor.service'
 import {
   CategoryAndSlugDto,
   PartialPostDto,
@@ -46,7 +48,23 @@ export class PostController {
     private readonly countingService: CountingService,
     private readonly translationService: TranslationService,
     private readonly aiInsightsService: AiInsightsService,
+    private readonly enrichmentService: EnrichmentService,
+    private readonly urlExtractor: UrlExtractorService,
   ) {}
+
+  private async attachEnrichments<
+    T extends {
+      text?: string | null
+      content?: string | null
+      contentFormat?: string | null
+    },
+  >(doc: T): Promise<T & { enrichments: Record<string, unknown> }> {
+    const urls = this.urlExtractor.extractFromDoc(doc)
+    const enrichments = urls.length
+      ? await this.enrichmentService.hydrateUrls(urls)
+      : {}
+    return { ...doc, enrichments }
+  }
 
   @Get('/')
   @TranslateFields({
@@ -186,7 +204,7 @@ export class PostController {
       throw new CannotFindException()
     }
 
-    return doc
+    return this.attachEnrichments(doc)
   }
 
   @Get('/latest')
@@ -285,7 +303,7 @@ export class PostController {
         })
       : relatedList
 
-    return applyContentPreference(
+    const finalDoc = applyContentPreference(
       {
         ...baseData,
         related: translatedRelated,
@@ -306,6 +324,7 @@ export class PostController {
       },
       query.prefer,
     )
+    return this.attachEnrichments(finalDoc)
   }
 
   @Post('/')
