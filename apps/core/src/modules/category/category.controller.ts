@@ -53,21 +53,25 @@ export class CategoryController {
     @Query() query: MultiCategoriesQueryDto,
     @Lang() lang?: string,
   ) {
-    const { ids, joint, type = CategoryType.Category } = query // categories is category's mongo id
+    const { ids, joint, type = CategoryType.Category } = query
     if (ids) {
-      const ignoreKeys = '-text -summary -isPublished -images -commentsIndex'
+      const omitKeys = [
+        'text',
+        'summary',
+        'isPublished',
+        'images',
+        'commentsIndex',
+      ]
       const map: Record<string, any> = {}
 
       await Promise.all(
         ids.map(async (id) => {
-          let posts: any[] = await this.postService.listByCategory(id, {
+          const rawPosts = await this.postService.listByCategory(id, {
             includeCategory: false,
           })
-          posts = posts.map((post) => {
+          let posts: any[] = rawPosts.map((post) => {
             const cloned = { ...post }
-            for (const field of ignoreKeys.split(' ')) {
-              delete cloned[field.replace(/^-/, '')]
-            }
+            for (const field of omitKeys) delete cloned[field]
             return cloned
           })
 
@@ -113,10 +117,10 @@ export class CategoryController {
       return { tag: query, data }
     }
 
-    const res =
-      /^\d+$/.test(query) || /^[\da-f]{24}$/i.test(query)
-        ? await this.categoryService.findById(query)
-        : await this.categoryService.findBySlug(query)
+    const isIdLike = /^\d+$/.test(query) || /^[\da-f]{24}$/i.test(query)
+    const res = isIdLike
+      ? await this.categoryService.findById(query)
+      : await this.categoryService.findBySlug(query)
 
     if (!res) {
       throw new CannotFindException()
@@ -130,8 +134,7 @@ export class CategoryController {
       this.postService.countByCategoryId(res.id),
     ])
 
-    let children: any[] = postsResult || []
-
+    let children: any[] = postsResult ?? []
     if (lang && children.length) {
       children = await this.translatePostTitles(children, lang)
     }

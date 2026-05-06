@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
-import { HttpService } from '~/processors/helper/helper.http.service'
 import axios, { AxiosRequestConfig } from 'axios'
 import pc from 'picocolors'
+
+import { HttpService } from '~/processors/helper/helper.http.service'
+
 import { ConfigsService } from '../configs/configs.service'
 
 interface DownloadMirror {

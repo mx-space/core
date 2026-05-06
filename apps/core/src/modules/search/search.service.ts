@@ -217,13 +217,13 @@ export class SearchService {
     hasAdminAccess: boolean,
     limit: number,
   ) {
-    if (!searchTerms.length) {
-      return []
-    }
-
-    return (
-      await this.searchRepository.findByTerms(searchTerms, refType, limit)
-    ).filter((doc) => this.isVisible(doc, hasAdminAccess))
+    if (!searchTerms.length) return []
+    const docs = await this.searchRepository.findByTerms(
+      searchTerms,
+      refType,
+      limit,
+    )
+    return docs.filter((doc) => this.isVisible(doc, hasAdminAccess))
   }
 
   private async searchByText(
@@ -232,13 +232,13 @@ export class SearchService {
     hasAdminAccess: boolean,
     limit: number,
   ) {
-    if (!keyword.trim()) {
-      return []
-    }
-
-    return (
-      await this.searchRepository.findByKeyword(keyword, refType, limit)
-    ).filter((doc) => this.isVisible(doc, hasAdminAccess))
+    if (!keyword.trim()) return []
+    const docs = await this.searchRepository.findByKeyword(
+      keyword,
+      refType,
+      limit,
+    )
+    return docs.filter((doc) => this.isVisible(doc, hasAdminAccess))
   }
 
   private async searchByRegex(
@@ -266,10 +266,13 @@ export class SearchService {
     const docs = (await this.searchRepository.findAll(refType)).filter((doc) =>
       this.isVisible(doc, hasAdminAccess),
     )
+    let totalTitleLength = 0
+    let totalBodyLength = 0
+    for (const doc of docs) {
+      totalTitleLength += doc.titleLength
+      totalBodyLength += doc.bodyLength
+    }
     const totalDocs = docs.length
-    const totalTitleLength = docs.reduce((sum, doc) => sum + doc.titleLength, 0)
-    const totalBodyLength = docs.reduce((sum, doc) => sum + doc.bodyLength, 0)
-
     return {
       totalDocs,
       avgTitleLength: totalDocs ? totalTitleLength / totalDocs : 1,
@@ -455,13 +458,6 @@ export class SearchService {
 
   private buildHighlightKeywordFragments(keyword: string) {
     return normalizeSearchText(keyword).split(/\s+/).filter(Boolean)
-  }
-
-  private buildRegexClauses(keywordRegexes: RegExp[]) {
-    return keywordRegexes.flatMap((regex) => [
-      { title: regex },
-      { searchText: regex },
-    ])
   }
 
   private rankSearchHits(

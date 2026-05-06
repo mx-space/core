@@ -29,7 +29,6 @@ import { ReaderModel } from '../reader/reader.types'
 import { Activity } from './activity.constant'
 import type {
   ActivityLikePayload,
-  ActivityLikeSupportType,
   ActivityPresence,
 } from './activity.interface'
 import { ActivityRepository } from './activity.repository'
@@ -46,6 +45,13 @@ interface ActivityPayloadWithRef {
   type?: string
   readerId?: string
   roomName?: string
+}
+
+function toObjectPayload(
+  payload: ActivityRow['payload'],
+): Record<string, unknown> | undefined {
+  if (!payload || typeof payload !== 'object') return undefined
+  return payload as Record<string, unknown>
 }
 
 type ActivityWithRef = ActivityRow & {
@@ -153,73 +159,35 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     this.cleanupFnList = q
   }
 
-  private toActivity(row: ActivityRow) {
-    return {
-      ...row,
-      createdAt: row.createdAt,
-    }
-  }
-
-  private toPager(result: Awaited<ReturnType<ActivityRepository['list']>>) {
-    return {
-      data: result.data.map((row) => this.toActivity(row)),
-      pagination: result.pagination,
-    }
-  }
-
   async getLikeActivities(page = 1, size = 10) {
-    const activities = this.toPager(
-      await this.activityRepository.list(page, size, Activity.Like),
-    )
-    const typedIdsMap = activities.data.reduce(
-      (acc, item) => {
-        if (!item.payload || typeof item.payload !== 'object') {
-          return acc
-        }
-        const { type, id } = item.payload as unknown as ActivityLikePayload
-        if (typeof type !== 'string' || typeof id !== 'string') {
-          return acc
-        }
-
-        switch (type.toLowerCase()) {
-          case 'note': {
-            acc.note.push(id)
-            break
-          }
-          case 'post': {
-            acc.post.push(id)
-
-            break
-          }
-        }
-        return acc
-      },
-      {
-        post: [],
-        note: [],
-      } as Record<ActivityLikeSupportType, string[]>,
+    const activities = await this.activityRepository.list(
+      page,
+      size,
+      Activity.Like,
     )
 
-    const readerIds = [] as string[]
+    const refIds: string[] = []
+    const readerIds: string[] = []
     for (const item of activities.data) {
-      if (!item.payload || typeof item.payload !== 'object') continue
-      const payload = item.payload as unknown as ActivityPayloadWithRef
-      const readerId = payload.readerId
-      if (typeof readerId === 'string') {
-        readerIds.push(readerId)
+      const payload = toObjectPayload(item.payload) as
+        | Partial<ActivityLikePayload>
+        | undefined
+      if (!payload) continue
+      const { type, id, readerId } = payload
+      if (typeof type === 'string' && typeof id === 'string') {
+        const lower = type.toLowerCase()
+        if (lower === 'note' || lower === 'post') refIds.push(id)
       }
+      if (typeof readerId === 'string') readerIds.push(readerId)
     }
 
-    const readers = await this.readerService.findReaderInIds(readerIds)
+    const [readers, collections] = await Promise.all([
+      this.readerService.findReaderInIds(readerIds),
+      this.databaseService.findGlobalByIds(refIds),
+    ])
 
-    const readerMap = new Map<string, ReaderModel>()
-    for (const reader of readers) {
-      readerMap.set(reader.id, reader)
-    }
-
+    const readerMap = new Map(readers.map((reader) => [reader.id, reader]))
     const refModelData = new Map<string, any>()
-    const ids = Object.values(typedIdsMap).flat()
-    const collections = await this.databaseService.findGlobalByIds(ids)
     for (const doc of [
       ...collections.posts,
       ...collections.notes,
@@ -231,21 +199,17 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     const docsWithRefModel = activities.data.map((ac) => {
       const nextAc = { ...ac } as ActivityWithRef
-      if (!ac.payload || typeof ac.payload !== 'object') {
-        return nextAc
-      }
-      const payload = ac.payload as unknown as ActivityPayloadWithRef
-      const refModel = payload.id ? refModelData.get(payload.id) : undefined
+      const payload = toObjectPayload(ac.payload) as
+        | ActivityPayloadWithRef
+        | undefined
+      if (!payload) return nextAc
 
-      if (refModel) {
-        nextAc.ref = refModel
-      }
-      const readerId = payload.readerId
-      if (readerId) {
-        const reader = readerMap.get(readerId)
-        if (reader) {
-          nextAc.reader = reader
-        }
+      const refModel = payload.id ? refModelData.get(payload.id) : undefined
+      if (refModel) nextAc.ref = refModel
+
+      if (payload.readerId) {
+        const reader = readerMap.get(payload.readerId)
+        if (reader) nextAc.reader = reader
       }
 
       return nextAc
@@ -258,20 +222,21 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getReadDurationActivities(page = 1, size = 10) {
-    const data = this.toPager(
-      await this.activityRepository.list(page, size, Activity.ReadDuration),
+    const data = await this.activityRepository.list(
+      page,
+      size,
+      Activity.ReadDuration,
     )
 
-    const articleIds = [] as string[]
-    for (let i = 0; i < data.data.length; i++) {
-      const item = data.data[i]
-      if (!item.payload || typeof item.payload !== 'object') continue
-      const payload = item.payload as unknown as ActivityPayloadWithRef
-      const roomName = payload.roomName
-      if (typeof roomName !== 'string') continue
-      const refId = extractArticleIdFromRoomName(roomName)
+    const articleIds: string[] = []
+    for (const item of data.data) {
+      const payload = toObjectPayload(item.payload) as
+        | ActivityPayloadWithRef
+        | undefined
+      if (!payload || typeof payload.roomName !== 'string') continue
+      const refId = extractArticleIdFromRoomName(payload.roomName)
       articleIds.push(refId)
-      ;(data.data[i] as ActivityWithRef).refId = refId
+      ;(item as ActivityWithRef).refId = refId
     }
 
     const documentMap = await this.databaseService.findGlobalByIds(articleIds)
@@ -432,30 +397,19 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   async getAllRoomNames() {
     const roomMap = await this.webGateway.getAllRooms()
     const rooms = Object.keys(roomMap)
-    const roomCount: Record<string, number> = {}
-    for (const roomName of rooms) {
-      roomCount[roomName] = roomMap[roomName].length
-    }
+    const roomCount = Object.fromEntries(
+      rooms.map((name) => [name, roomMap[name].length]),
+    ) as Record<string, number>
     return { rooms, roomCount }
   }
 
   async getRefsFromRoomNames(roomNames: string[]) {
-    const articleIds = [] as string[]
-    for (const roomName of roomNames) {
-      const parsed = parseRoomName(roomName)
-      if (!parsed) continue
-      switch (parsed.type) {
-        case 'article': {
-          const { refId } = parsed
-
-          articleIds.push(refId)
-          break
-        }
-      }
-    }
+    const articleIds = roomNames
+      .map((roomName) => parseRoomName(roomName))
+      .filter((parsed) => parsed?.type === 'article')
+      .map((parsed) => parsed!.refId)
 
     const objects = await this.databaseService.findGlobalByIds(articleIds)
-
     return { objects }
   }
 
@@ -471,9 +425,10 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     const countMap = new Map<string, number>()
     for (const item of activities) {
-      if (!item.payload || typeof item.payload !== 'object') continue
-      const payload = item.payload as unknown as ActivityPayloadWithRef
-      if (typeof payload.roomName !== 'string') continue
+      const payload = toObjectPayload(item.payload) as
+        | ActivityPayloadWithRef
+        | undefined
+      if (!payload || typeof payload.roomName !== 'string') continue
       const refId = extractArticleIdFromRoomName(payload.roomName)
       if (!refId) continue
       countMap.set(refId, (countMap.get(refId) || 0) + 1)

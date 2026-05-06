@@ -21,31 +21,26 @@ export async function getFolderSize(folderPath: string) {
   }
 }
 
+const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const
+
 export const formatByteSize = (byteSize: number) => {
-  let size: string
-  if (byteSize > 1024 * 1024 * 1024) {
-    size = `${(byteSize / 1024 / 1024 / 1024).toFixed(2)} GB`
-  } else if (byteSize > 1024 * 1024) {
-    size = `${(byteSize / 1024 / 1024).toFixed(2)} MB`
-  } else if (byteSize > 1024) {
-    size = `${(byteSize / 1024).toFixed(2)} KB`
-  } else {
-    size = `${byteSize} B`
+  let value = byteSize
+  let unitIndex = 0
+  while (value > 1024 && unitIndex < BYTE_UNITS.length - 1) {
+    value /= 1024
+    unitIndex++
   }
-  return size
+  return unitIndex === 0
+    ? `${value} ${BYTE_UNITS[unitIndex]}`
+    : `${value.toFixed(2)} ${BYTE_UNITS[unitIndex]}`
 }
 
+const BUILTIN_MODULE_INTERNAL_RE = /^_|^(?:internal|v8|node-inspect)\/|\//
+
 export const isBuiltinModule = (module: string, ignoreList: string[] = []) => {
-  return (
-    // @ts-ignore
-    (builtinModules || (Object.keys(process.binding('natives')) as string[]))
-      .filter(
-        (x) =>
-          !/^_|^(?:internal|v8|node-inspect)\/|\//.test(x) &&
-          !ignoreList.includes(x),
-      )
-      .includes(module)
-  )
+  if (ignoreList.includes(module)) return false
+  if (BUILTIN_MODULE_INTERNAL_RE.test(module)) return false
+  return builtinModules.includes(module)
 }
 
 export type PackageManager = 'pnpm' | 'yarn' | 'npm'

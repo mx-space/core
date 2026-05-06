@@ -1,17 +1,19 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { SchedulerRegistry } from '@nestjs/schedule'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import {
   ScopedTaskService,
+  type TaskExecuteContext,
   TaskQueueProcessor,
   TaskQueueService,
-  type TaskExecuteContext,
 } from '~/processors/task-queue'
+
 import { CronBusinessService } from './cron-business.service'
 import {
-  CronTaskMetas,
   type CronTaskDefinition,
+  CronTaskMetas,
   type CronTaskTypeValue,
 } from './cron-task.types'
 
@@ -72,13 +74,12 @@ export class CronTaskService implements OnModuleInit {
       const result = await method.call(this.cronBusinessService)
       await context.updateProgress(100, '完成')
 
-      if (result !== undefined && result !== null) {
-        await context.setResult(result)
-        await context.appendLog('info', `执行完成: ${JSON.stringify(result)}`)
-      } else {
-        await context.setResult({ success: true })
-        await context.appendLog('info', '执行完成')
-      }
+      const hasResult = result !== undefined && result !== null
+      await context.setResult(hasResult ? result : { success: true })
+      await context.appendLog(
+        'info',
+        hasResult ? `执行完成: ${JSON.stringify(result)}` : '执行完成',
+      )
     } catch (error) {
       await context.appendLog('error', `执行失败: ${error.message}`)
       throw error

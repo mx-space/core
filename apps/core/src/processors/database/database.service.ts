@@ -77,8 +77,7 @@ export class DatabaseService {
 
   flatCollectionToMap(combinedCollection: IdsCollection) {
     const all = {} as Record<string, PostRow | NoteRow | PageRow | RecentlyRow>
-    for (const key in combinedCollection) {
-      const collection = combinedCollection[key]
+    for (const collection of Object.values(combinedCollection)) {
       for (const item of collection) {
         all[item.id] = item
       }

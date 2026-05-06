@@ -40,7 +40,8 @@ export class LinkControllerCrud extends BasePgCrudFactory({
   @Get('/all')
   async getAll(@HasAdminAccess() hasAdminAccess: boolean) {
     const rows = await this.repository.findAvailable()
-    return hasAdminAccess ? rows : rows.map((row) => ({ ...row, email: null }))
+    if (hasAdminAccess) return rows
+    return rows.map((row) => ({ ...row, email: null }))
   }
 }
 

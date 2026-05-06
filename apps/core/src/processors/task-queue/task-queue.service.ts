@@ -29,15 +29,17 @@ import {
 
 const BATCH_TASK_TYPES = ['ai:translation:batch', 'ai:translation:all']
 
+const TERMINAL_STATUSES: ReadonlySet<TaskStatus> = new Set([
+  TaskStatus.Completed,
+  TaskStatus.PartialFailed,
+  TaskStatus.Failed,
+  TaskStatus.Cancelled,
+])
+
 type LogLevel = 'info' | 'warn' | 'error'
 
 function isTerminalStatus(status: TaskStatus): boolean {
-  return (
-    status === TaskStatus.Completed ||
-    status === TaskStatus.PartialFailed ||
-    status === TaskStatus.Failed ||
-    status === TaskStatus.Cancelled
-  )
+  return TERMINAL_STATUSES.has(status)
 }
 
 export interface CreateTaskOptions {

@@ -1,6 +1,7 @@
-import { zAllowedUrl } from '~/common/zod'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { zAllowedUrl } from '~/common/zod'
 
 export const PageProxyDebugSchema = z.object({
   __debug: z

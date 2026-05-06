@@ -1,7 +1,8 @@
-import { zStrictUrl } from '~/common/zod'
-import { EventScope } from '~/constants/business-event.constant'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { zStrictUrl } from '~/common/zod'
+import { EventScope } from '~/constants/business-event.constant'
 
 export const WebhookSchema = z.object({
   payloadUrl: zStrictUrl,

@@ -85,11 +85,10 @@ export class CategoryService implements OnApplicationBootstrap {
     const posts = await this.postService.findByTag(tag, {
       includeCategory: true,
     })
-    const filtered = posts.filter((post) =>
+    const filtered =
       condition.isPublished === undefined
-        ? true
-        : post.isPublished === condition.isPublished,
-    )
+        ? posts
+        : posts.filter((post) => post.isPublished === condition.isPublished)
     if (filtered.length === 0) throw new CannotFindException()
     return filtered.map(
       ({

@@ -32,26 +32,14 @@ export class AiTaskService {
   async createSummaryTask(
     payload: SummaryTaskPayload,
   ): Promise<{ taskId: string; created: boolean }> {
-    if (!payload.title && payload.refId) {
-      const articleInfo = await this.getArticleInfo(payload.refId)
-      if (articleInfo) {
-        payload.title = articleInfo.title
-        payload.refType = articleInfo.type
-      }
-    }
+    await this.fillArticleInfo(payload)
     return this.createTask(AITaskType.Summary, payload)
   }
 
   async createTranslationTask(
     payload: TranslationTaskPayload,
   ): Promise<{ taskId: string; created: boolean }> {
-    if (!payload.title && payload.refId) {
-      const articleInfo = await this.getArticleInfo(payload.refId)
-      if (articleInfo) {
-        payload.title = articleInfo.title
-        payload.refType = articleInfo.type
-      }
-    }
+    await this.fillArticleInfo(payload)
     return this.createTask(AITaskType.Translation, payload)
   }
 
@@ -76,26 +64,14 @@ export class AiTaskService {
   async createInsightsTask(
     payload: InsightsTaskPayload,
   ): Promise<{ taskId: string; created: boolean }> {
-    if (!payload.title && payload.refId) {
-      const articleInfo = await this.getArticleInfo(payload.refId)
-      if (articleInfo) {
-        payload.title = articleInfo.title
-        payload.refType = articleInfo.type
-      }
-    }
+    await this.fillArticleInfo(payload)
     return this.createTask(AITaskType.Insights, payload)
   }
 
   async createInsightsTranslationTask(
     payload: InsightsTranslationTaskPayload,
   ): Promise<{ taskId: string; created: boolean }> {
-    if (!payload.title && payload.refId) {
-      const articleInfo = await this.getArticleInfo(payload.refId)
-      if (articleInfo) {
-        payload.title = articleInfo.title
-        payload.refType = articleInfo.type
-      }
-    }
+    await this.fillArticleInfo(payload)
     return this.createTask(AITaskType.InsightsTranslation, payload)
   }
 
@@ -158,6 +134,19 @@ export class AiTaskService {
       payload: payload as Record<string, unknown>,
       dedupKey,
     })
+  }
+
+  private async fillArticleInfo(payload: {
+    title?: string
+    refId?: string
+    refType?: string
+  }): Promise<void> {
+    if (payload.title || !payload.refId) return
+    const articleInfo = await this.getArticleInfo(payload.refId)
+    if (articleInfo) {
+      payload.title = articleInfo.title
+      payload.refType = articleInfo.type
+    }
   }
 
   private async getArticleInfo(

@@ -412,10 +412,6 @@ export class CommentService {
     }
   }
 
-  async deleteComments(id: string) {
-    return this.softDeleteComment(id)
-  }
-
   async allowComment(id: string, _type?: CollectionRefTypes) {
     const result = await this.databaseService.findGlobalById(id)
     if (!result) throw new CannotFindException()
@@ -616,10 +612,6 @@ export class CommentService {
     }
     comments.forEach((comment) => collect(comment))
     return [...readerIds]
-  }
-
-  cleanDirtyData<T>(docs: T[]) {
-    return docs
   }
 
   async fillAndReplaceAvatarUrl(comments: CommentModel[]) {

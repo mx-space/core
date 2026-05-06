@@ -52,8 +52,7 @@ export const uploadFileToCOS = async (
     policy: Buffer.from(policy).toString('base64'),
     'q-key-time': keytime,
     'q-signature': signature,
-
-    ...tickets.reduce((acc, cur) => ({ ...acc, ...cur }), {}),
+    ...Object.assign({}, ...tickets),
   }).forEach(([key, value]) => {
     formData.append(key, value)
   })

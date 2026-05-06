@@ -4,7 +4,7 @@ import { CronExpression } from '@nestjs/schedule'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
 
 import { CronTaskService } from './cron-task.service'
-import { CronTaskType } from './cron-task.types'
+import { CronTaskType, type CronTaskTypeValue } from './cron-task.types'
 
 @Injectable()
 export class CronTaskScheduler {
@@ -12,96 +12,59 @@ export class CronTaskScheduler {
 
   constructor(private readonly cronTaskService: CronTaskService) {}
 
-  @CronOnce(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT, {
-    name: 'cleanAccessRecord',
-  })
-  async scheduleCleanAccessRecord() {
-    this.logger.log('Scheduling cleanAccessRecord task')
-    const result = await this.cronTaskService.createCronTask(
-      CronTaskType.CleanAccessRecord,
-    )
+  private async dispatch(name: string, type: CronTaskTypeValue) {
+    this.logger.log(`Scheduling ${name} task`)
+    const result = await this.cronTaskService.createCronTask(type)
     this.logger.log(
-      `cleanAccessRecord task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
+      `${name} task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
     )
   }
 
+  @CronOnce(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT, {
+    name: 'cleanAccessRecord',
+  })
+  scheduleCleanAccessRecord() {
+    return this.dispatch('cleanAccessRecord', CronTaskType.CleanAccessRecord)
+  }
+
   @CronOnce(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'resetIPAccess' })
-  async scheduleResetIPAccess() {
-    this.logger.log('Scheduling resetIPAccess task')
-    const result = await this.cronTaskService.createCronTask(
-      CronTaskType.ResetIPAccess,
-    )
-    this.logger.log(
-      `resetIPAccess task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
-    )
+  scheduleResetIPAccess() {
+    return this.dispatch('resetIPAccess', CronTaskType.ResetIPAccess)
   }
 
   @CronOnce(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
     name: 'resetLikedOrReadArticleRecord',
   })
-  async scheduleResetLikedOrReadArticleRecord() {
-    this.logger.log('Scheduling resetLikedOrReadArticleRecord task')
-    const result = await this.cronTaskService.createCronTask(
+  scheduleResetLikedOrReadArticleRecord() {
+    return this.dispatch(
+      'resetLikedOrReadArticleRecord',
       CronTaskType.ResetLikedOrReadArticleRecord,
-    )
-    this.logger.log(
-      `resetLikedOrReadArticleRecord task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
     )
   }
 
   @CronOnce(CronExpression.EVERY_DAY_AT_3AM, { name: 'cleanTempDirectory' })
-  async scheduleCleanTempDirectory() {
-    this.logger.log('Scheduling cleanTempDirectory task')
-    const result = await this.cronTaskService.createCronTask(
-      CronTaskType.CleanTempDirectory,
-    )
-    this.logger.log(
-      `cleanTempDirectory task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
-    )
+  scheduleCleanTempDirectory() {
+    return this.dispatch('cleanTempDirectory', CronTaskType.CleanTempDirectory)
   }
 
   @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'pushToBaiduSearch' })
-  async schedulePushToBaiduSearch() {
-    this.logger.log('Scheduling pushToBaiduSearch task')
-    const result = await this.cronTaskService.createCronTask(
-      CronTaskType.PushToBaiduSearch,
-    )
-    this.logger.log(
-      `pushToBaiduSearch task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
-    )
+  schedulePushToBaiduSearch() {
+    return this.dispatch('pushToBaiduSearch', CronTaskType.PushToBaiduSearch)
   }
 
   @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'pushToBingSearch' })
-  async schedulePushToBingSearch() {
-    this.logger.log('Scheduling pushToBingSearch task')
-    const result = await this.cronTaskService.createCronTask(
-      CronTaskType.PushToBingSearch,
-    )
-    this.logger.log(
-      `pushToBingSearch task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
-    )
+  schedulePushToBingSearch() {
+    return this.dispatch('pushToBingSearch', CronTaskType.PushToBingSearch)
   }
 
   @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'deleteExpiredJWT' })
-  async scheduleDeleteExpiredJWT() {
-    this.logger.log('Scheduling deleteExpiredJWT task')
-    const result = await this.cronTaskService.createCronTask(
-      CronTaskType.DeleteExpiredJWT,
-    )
-    this.logger.log(
-      `deleteExpiredJWT task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
-    )
+  scheduleDeleteExpiredJWT() {
+    return this.dispatch('deleteExpiredJWT', CronTaskType.DeleteExpiredJWT)
   }
 
   @CronOnce(CronExpression.EVERY_DAY_AT_4AM, { name: 'rebuildSearchIndex' })
-  async scheduleRebuildSearchIndex() {
-    this.logger.log('Scheduling rebuildSearchIndex task')
-    const result = await this.cronTaskService.createCronTask(
-      CronTaskType.RebuildSearchIndex,
-    )
-    this.logger.log(
-      `rebuildSearchIndex task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
-    )
+  scheduleRebuildSearchIndex() {
+    return this.dispatch('rebuildSearchIndex', CronTaskType.RebuildSearchIndex)
   }
 
   @CronOnce('*/15 * * * *', { name: 'cleanCommentUploads' })

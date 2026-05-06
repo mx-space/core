@@ -64,14 +64,17 @@ export class ConfigVersionService {
     scopes: T,
     fallback: Partial<Record<ConfigVersionScope, number>> = {},
   ) {
-    if (!this.redisService.isReady()) {
-      return scopes.reduce(
+    const fallbackMap = (): Record<T[number], number> =>
+      scopes.reduce(
         (acc, scope) => {
           acc[scope] = fallback[scope] ?? 0
           return acc
         },
         {} as Record<T[number], number>,
       )
+
+    if (!this.redisService.isReady()) {
+      return fallbackMap()
     }
 
     try {
@@ -98,13 +101,7 @@ export class ConfigVersionService {
         }),
       )
 
-      return scopes.reduce(
-        (acc, scope) => {
-          acc[scope] = fallback[scope] ?? 0
-          return acc
-        },
-        {} as Record<T[number], number>,
-      )
+      return fallbackMap()
     }
   }
 

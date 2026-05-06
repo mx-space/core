@@ -135,10 +135,19 @@ export class NoteRepository extends BaseRepository {
     size = 10,
     options: NoteSortOptions & NoteListFilter = {},
   ): Promise<PaginationResult<NoteRow>> {
+    return this.listInternal(page, size, options, this.visibleClause())
+  }
+
+  private async listInternal(
+    page: number,
+    size: number,
+    options: NoteSortOptions & NoteListFilter,
+    visibility?: SQL,
+  ): Promise<PaginationResult<NoteRow>> {
     page = Math.max(1, page)
     size = Math.min(50, Math.max(1, size))
     const offset = (page - 1) * size
-    const where = this.combineWhere(this.visibleClause(), options.year)
+    const where = this.combineWhere(visibility, options.year)
     const orderBy = this.resolveOrderBy(options)
     const [rows, [{ count }]] = await Promise.all([
       this.db
@@ -153,9 +162,8 @@ export class NoteRepository extends BaseRepository {
         .from(notes)
         .where(where),
     ])
-    const data = await this.attachTopics(rows.map(mapBase))
     return {
-      data,
+      data: await this.attachTopics(rows.map(mapBase)),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
   }
@@ -285,28 +293,7 @@ export class NoteRepository extends BaseRepository {
     size = 10,
     options: NoteSortOptions & NoteListFilter = {},
   ): Promise<PaginationResult<NoteRow>> {
-    page = Math.max(1, page)
-    size = Math.min(50, Math.max(1, size))
-    const offset = (page - 1) * size
-    const where = this.combineWhere(undefined, options.year)
-    const orderBy = this.resolveOrderBy(options)
-    const [rows, [{ count }]] = await Promise.all([
-      this.db
-        .select()
-        .from(notes)
-        .where(where)
-        .orderBy(...orderBy)
-        .limit(size)
-        .offset(offset),
-      this.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(notes)
-        .where(where),
-    ])
-    return {
-      data: await this.attachTopics(rows.map(mapBase)),
-      pagination: this.paginationOf(Number(count ?? 0), page, size),
-    }
+    return this.listInternal(page, size, options)
   }
 
   async findRecent(

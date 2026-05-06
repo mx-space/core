@@ -43,34 +43,14 @@ export class PageController {
   @Get('/')
   async getPagesSummary(@Query() query: PagerDto, @Lang() lang?: string) {
     const { size, select, page } = query
-
-    // When lang is present, ensure text/meta are fetched for translation even if not in select
-    let paginateSelect = select
-    if (lang && paginateSelect) {
-      for (const field of [
-        'text',
-        'meta',
-        'subtitle',
-        'content',
-        'contentFormat',
-        'modified',
-        'created',
-      ]) {
-        if (!paginateSelect.includes(field)) {
-          paginateSelect = `${paginateSelect} ${field}`
-        }
-      }
-    }
-
     const result = await this.pageService.listPaginated(page, size)
 
     if (!lang || !result.data.length) {
       return result
     }
 
-    const translationInputs: ArticleTranslationInput[] = []
-    for (const doc of result.data) {
-      translationInputs.push({
+    const translationInputs: ArticleTranslationInput[] = result.data.map(
+      (doc) => ({
         id: String(doc.id),
         title: doc.title,
         text: doc.text,
@@ -80,36 +60,33 @@ export class PageController {
         content: doc.content,
         modifiedAt: doc.modifiedAt,
         createdAt: doc.createdAt,
+      }),
+    )
+
+    const translationResults =
+      await this.translationService.translateArticleList({
+        articles: translationInputs,
+        targetLang: lang,
       })
-    }
 
-    if (translationInputs.length) {
-      const translationResults =
-        await this.translationService.translateArticleList({
-          articles: translationInputs,
-          targetLang: lang,
-        })
-
-      result.data = result.data.map((doc) => {
-        const docId = String(doc.id)
-        const translation = translationResults.get(docId)
-        if (!translation?.isTranslated) {
-          return doc
-        }
-        doc.title = translation.title
-        doc.text = translation.text
-        doc.subtitle = translation.subtitle ?? null
-        ;(doc as { isTranslated?: boolean }).isTranslated =
-          translation.isTranslated
-        ;(doc as { translationMeta?: unknown }).translationMeta =
-          translation.translationMeta
+    result.data = result.data.map((doc) => {
+      const translation = translationResults.get(String(doc.id))
+      if (!translation?.isTranslated) {
         return doc
-      })
-    }
+      }
+      doc.title = translation.title
+      doc.text = translation.text
+      doc.subtitle = translation.subtitle ?? null
+      ;(doc as { isTranslated?: boolean }).isTranslated =
+        translation.isTranslated
+      ;(doc as { translationMeta?: unknown }).translationMeta =
+        translation.translationMeta
+      return doc
+    })
 
-    // Strip fields that were added only for translation
+    // Strip fields fetched only for translation when caller did not request them.
     if (select) {
-      const stripFields = [
+      const TRANSLATION_FIELDS = [
         'text',
         'meta',
         'subtitle',
@@ -117,12 +94,11 @@ export class PageController {
         'contentFormat',
         'modified',
         'created',
-      ].filter((f) => !select.includes(f))
-      if (stripFields.length) {
-        for (const doc of result.data) {
-          for (const field of stripFields) {
-            delete (doc as any)[field]
-          }
+      ]
+      const stripFields = TRANSLATION_FIELDS.filter((f) => !select.includes(f))
+      for (const doc of result.data) {
+        for (const field of stripFields) {
+          delete (doc as any)[field]
         }
       }
     }

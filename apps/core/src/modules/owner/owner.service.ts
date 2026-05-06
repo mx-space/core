@@ -106,26 +106,19 @@ export class OwnerService {
       readerPatch.image = data.avatar
     }
 
+    const profilePatch: Record<string, any> = {}
+    for (const key of ['introduce', 'mail', 'url', 'socialIds'] as const) {
+      if (data[key] !== undefined) {
+        profilePatch[key] = data[key]
+      }
+    }
+
     const hasReaderPatch = Object.keys(readerPatch).length > 0
+    const hasProfilePatch = Object.keys(profilePatch).length > 0
+
     if (hasReaderPatch) {
       await this.readerRepository.update(reader.id, readerPatch)
     }
-
-    const profilePatch: Record<string, any> = {}
-    if (data.introduce !== undefined) {
-      profilePatch.introduce = data.introduce
-    }
-    if (data.mail !== undefined) {
-      profilePatch.mail = data.mail
-    }
-    if (data.url !== undefined) {
-      profilePatch.url = data.url
-    }
-    if (data.socialIds !== undefined) {
-      profilePatch.socialIds = data.socialIds
-    }
-
-    const hasProfilePatch = Object.keys(profilePatch).length > 0
     if (hasProfilePatch) {
       await this.ownerRepository.upsertByReaderId(reader.id, profilePatch)
     }

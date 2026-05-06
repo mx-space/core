@@ -23,25 +23,17 @@ export class RedisService {
   private readonly logger = new Logger(RedisService.name)
   private redisClient: IORedis
   constructor() {
-    if (REDIS.url) {
-      this.redisClient = new IORedis(REDIS.url, {
-        username: (REDIS as any).username,
-        password: REDIS.password ?? undefined,
-        db: (REDIS as any).db,
-        ...(REDIS.tls ? { tls: {} } : {}),
-        ...REDIS_CLIENT_OPTIONS,
-      })
-    } else {
-      this.redisClient = new IORedis({
-        host: REDIS.host,
-        port: REDIS.port,
-        username: (REDIS as any).username,
-        password: REDIS.password ?? undefined,
-        db: (REDIS as any).db,
-        ...(REDIS.tls ? { tls: {} } : {}),
-        ...REDIS_CLIENT_OPTIONS,
-      })
+    const sharedOptions: RedisOptions = {
+      username: (REDIS as any).username,
+      password: REDIS.password ?? undefined,
+      db: (REDIS as any).db,
+      ...(REDIS.tls ? { tls: {} } : {}),
+      ...REDIS_CLIENT_OPTIONS,
     }
+
+    this.redisClient = REDIS.url
+      ? new IORedis(REDIS.url, sharedOptions)
+      : new IORedis({ host: REDIS.host, port: REDIS.port, ...sharedOptions })
 
     this.redisClient.on('error', (err) => {
       this.logger.error(

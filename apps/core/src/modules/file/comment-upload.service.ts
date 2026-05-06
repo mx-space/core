@@ -50,6 +50,24 @@ async function detectImageMime(
   return { mime: result.mime, ext: `.${result.ext}` }
 }
 
+function resolveCommentUploadConfig(config: {
+  enable?: boolean
+  singleFileSizeMB?: number
+  commentImageMaxCount?: number
+  mimeWhitelist?: string[]
+  pendingTtlMinutes?: number
+}) {
+  return {
+    enable: config.enable ?? true,
+    singleFileSizeMB: config.singleFileSizeMB ?? 5,
+    commentImageMaxCount: config.commentImageMaxCount ?? 4,
+    mimeWhitelist: config.mimeWhitelist?.length
+      ? config.mimeWhitelist
+      : DEFAULT_MIME_WHITELIST,
+    pendingTtlMinutes: config.pendingTtlMinutes ?? 120,
+  }
+}
+
 @Injectable()
 export class CommentUploadService {
   private readonly logger = new Logger(CommentUploadService.name)
@@ -63,32 +81,24 @@ export class CommentUploadService {
 
   async getPublicConfig(): Promise<PublicCommentUploadConfig> {
     const config = await this.configsService.get('commentUploadOptions')
-    return {
-      enable: config.enable ?? true,
-      singleFileSizeMB: config.singleFileSizeMB ?? 5,
-      commentImageMaxCount: config.commentImageMaxCount ?? 4,
-      mimeWhitelist: config.mimeWhitelist?.length
-        ? config.mimeWhitelist
-        : DEFAULT_MIME_WHITELIST,
-      pendingTtlMinutes: config.pendingTtlMinutes ?? 120,
-    }
+    return resolveCommentUploadConfig(config)
   }
 
   async uploadForReader(
     req: FastifyRequest,
     readerId: string,
   ): Promise<ReaderUploadResult> {
-    const config = await this.configsService.get('commentUploadOptions')
-    if (config.enable === false) {
+    const rawConfig = await this.configsService.get('commentUploadOptions')
+    if (rawConfig.enable === false) {
       throw new BizException(ErrorCodeEnum.CommentUploadDisabled)
     }
 
-    const singleFileSizeMB = config.singleFileSizeMB ?? 5
+    const {
+      singleFileSizeMB,
+      mimeWhitelist: whitelist,
+      pendingTtlMinutes,
+    } = resolveCommentUploadConfig(rawConfig)
     const maxFileSize = singleFileSizeMB * 1024 * 1024
-    const whitelist = config.mimeWhitelist?.length
-      ? config.mimeWhitelist
-      : DEFAULT_MIME_WHITELIST
-    const pendingTtlMinutes = config.pendingTtlMinutes ?? 120
 
     const file = await this.uploadService.getAndValidMultipartField(req, {
       maxFileSize,

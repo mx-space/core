@@ -406,6 +406,25 @@ export class FileReferenceService {
     return deleted
   }
 
+  private async hardDeleteBatch(
+    files: FileReferenceRow[],
+    reason: FileDeletionReason,
+    label: string,
+  ): Promise<number> {
+    let deleted = 0
+    for (const file of files) {
+      try {
+        await this.hardDeleteFile(file, reason)
+        deleted++
+      } catch (err) {
+        this.logger.warn(
+          `${label} cleanup failed for ${file.fileName}: ${err instanceof Error ? err.message : err}`,
+        )
+      }
+    }
+    return deleted
+  }
+
   /**
    * 评论上传专用清扫：pending TTL + detached TTL 双 pass。
    */
@@ -424,33 +443,21 @@ export class FileReferenceService {
       await this.fileReferenceRepository.findReaderPendingOlderThan(
         pendingCutoff,
       )
-    let pendingDeleted = 0
-    for (const file of pendingFiles) {
-      try {
-        await this.hardDeleteFile(file, FileDeletionReason.PendingTtl)
-        pendingDeleted++
-      } catch (err) {
-        this.logger.warn(
-          `pending TTL cleanup failed for ${file.fileName}: ${err instanceof Error ? err.message : err}`,
-        )
-      }
-    }
+    const pendingDeleted = await this.hardDeleteBatch(
+      pendingFiles,
+      FileDeletionReason.PendingTtl,
+      'pending TTL',
+    )
 
     const detachedFiles =
       await this.fileReferenceRepository.findReaderDetachedOlderThan(
         detachedCutoff,
       )
-    let detachedDeleted = 0
-    for (const file of detachedFiles) {
-      try {
-        await this.hardDeleteFile(file, FileDeletionReason.DetachedTtl)
-        detachedDeleted++
-      } catch (err) {
-        this.logger.warn(
-          `detached TTL cleanup failed for ${file.fileName}: ${err instanceof Error ? err.message : err}`,
-        )
-      }
-    }
+    const detachedDeleted = await this.hardDeleteBatch(
+      detachedFiles,
+      FileDeletionReason.DetachedTtl,
+      'detached TTL',
+    )
 
     if (pendingDeleted + detachedDeleted > 0) {
       this.logger.log(

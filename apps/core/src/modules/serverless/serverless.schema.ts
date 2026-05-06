@@ -1,6 +1,7 @@
-import { zNonEmptyString } from '~/common/zod'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { zNonEmptyString } from '~/common/zod'
 
 export const ServerlessReferenceSchema = z.object({
   reference: zNonEmptyString,

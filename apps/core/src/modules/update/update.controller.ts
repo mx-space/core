@@ -32,8 +32,16 @@ export class UpdateController {
     const { force = false } = query
 
     const sseOutput$ = new Observable<string>((observer) => {
-      ;(async () => {
-        // 1. check current local admin version if exist.
+      const pipeStream = (stream$: Observable<string>) =>
+        new Promise<void>((resolve) => {
+          stream$.subscribe({
+            next: (data) => observer.next(data),
+            complete: () => resolve(),
+            error: () => resolve(),
+          })
+        })
+
+      const run = async () => {
         let { version: currentVersion } = PKG.dashboard!
 
         const adminAssetRoot = resolveAdminAssetRoot('index.html')
@@ -42,22 +50,15 @@ export class UpdateController {
         )
 
         if (!isExistLocalAdmin) {
-          const stream$ =
-            this.service.startClusterAdminAssetUpdate(currentVersion)
-          await new Promise<void>((resolve) => {
-            stream$.subscribe({
-              next: (data) => observer.next(data),
-              complete: () => resolve(),
-              error: () => resolve(),
-            })
-          })
+          await pipeStream(
+            this.service.startClusterAdminAssetUpdate(currentVersion),
+          )
           observer.complete()
           return
         }
 
         const versionPath = path.resolve(adminAssetRoot, 'version')
-        const isHasVersion = existsSync(versionPath)
-        if (isHasVersion) {
+        if (existsSync(versionPath)) {
           let versionInfo: string
           try {
             const data = await readFile(versionPath, { encoding: 'utf8' })
@@ -70,7 +71,6 @@ export class UpdateController {
           }
         }
 
-        // 3. fetch latest admin version
         let latestVersion: string
         try {
           latestVersion = await this.service.getLatestAdminVersion()
@@ -87,12 +87,10 @@ export class UpdateController {
           observer.complete()
           return
         }
-        if (
-          !force &&
-          !isDev &&
-          (minor(currentVersion) !== minor(latestVersion) ||
-            major(currentVersion) !== major(latestVersion))
-        ) {
+        const isCrossVersion =
+          minor(currentVersion) !== minor(latestVersion) ||
+          major(currentVersion) !== major(latestVersion)
+        if (!force && !isDev && isCrossVersion) {
           observer.next(
             pc.red(
               `The latest version is ${latestVersion}, current version is ${currentVersion}, can not cross-version upgrade.\n`,
@@ -102,16 +100,13 @@ export class UpdateController {
           return
         }
 
-        const stream$ = this.service.startClusterAdminAssetUpdate(latestVersion)
-        await new Promise<void>((resolve) => {
-          stream$.subscribe({
-            next: (data) => observer.next(data),
-            complete: () => resolve(),
-            error: () => resolve(),
-          })
-        })
+        await pipeStream(
+          this.service.startClusterAdminAssetUpdate(latestVersion),
+        )
         observer.complete()
-      })()
+      }
+
+      void run()
     })
 
     return sseOutput$.pipe(

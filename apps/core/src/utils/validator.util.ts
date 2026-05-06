@@ -27,19 +27,16 @@ export function isURL(
   },
 ): boolean {
   if (typeof value !== 'string') return false
+  let protocol: string
   try {
-    const url = new URL(value)
-    const protocol = url.protocol.replace(':', '')
-    if (options?.protocols && options.protocols.length > 0) {
-      return options.protocols.includes(protocol)
-    }
-    if (options?.require_protocol) {
-      return protocol === 'http' || protocol === 'https'
-    }
-    return true
+    protocol = new URL(value).protocol.replace(':', '')
   } catch {
     return false
   }
+  if (options?.protocols?.length) return options.protocols.includes(protocol)
+  if (options?.require_protocol)
+    return protocol === 'http' || protocol === 'https'
+  return true
 }
 
 /**

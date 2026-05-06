@@ -21,25 +21,14 @@ export class RequestContextMiddleware implements NestMiddleware {
   use(req: BizIncomingMessage, res: ServerResponse, next: () => any) {
     const requestContext = new RequestContext(req, res)
 
-    // Extract x-lang header and normalize
     const headerLang = req.headers['x-lang']
-    if (typeof headerLang === 'string') {
-      requestContext.lang = normalizeLanguageCode(headerLang)
-    }
-
-    if (!requestContext.lang) {
-      const cookieLang = parseCookieLocale(req.headers.cookie)
-      if (cookieLang) {
-        requestContext.lang = cookieLang
-      }
-    }
-
-    if (!requestContext.lang) {
-      const acceptLang = parseAcceptLanguage(req.headers['accept-language'])
-      if (acceptLang) {
-        requestContext.lang = acceptLang
-      }
-    }
+    requestContext.lang =
+      (typeof headerLang === 'string'
+        ? normalizeLanguageCode(headerLang)
+        : undefined) ||
+      parseCookieLocale(req.headers.cookie) ||
+      parseAcceptLanguage(req.headers['accept-language']) ||
+      undefined
 
     RequestContext.run(requestContext, () => next())
   }

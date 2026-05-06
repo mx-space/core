@@ -59,11 +59,12 @@ export class AiService {
     return this.getModelForFeature(AIFeatureKey.InsightsTranslation)
   }
 
-  private async getModelForFeature(
-    feature: AIFeatureKey,
-  ): Promise<IModelRuntime> {
+  private async resolveFeatureRuntime(feature: AIFeatureKey): Promise<{
+    runtime: IModelRuntime
+    provider: AIProviderConfig
+    assignment: AIModelAssignment | undefined
+  }> {
     const aiConfig = await this.configService.get('ai')
-
     const assignment = this.getAssignment(aiConfig, feature)
     const provider = this.resolveProvider(aiConfig, assignment?.providerId)
 
@@ -74,31 +75,31 @@ export class AiService {
       )
     }
 
-    return createModelRuntime(provider, assignment?.model)
+    return {
+      runtime: createModelRuntime(provider, assignment?.model),
+      provider,
+      assignment,
+    }
+  }
+
+  private async getModelForFeature(
+    feature: AIFeatureKey,
+  ): Promise<IModelRuntime> {
+    const { runtime } = await this.resolveFeatureRuntime(feature)
+    return runtime
   }
 
   private async getModelWithInfoForFeature(feature: AIFeatureKey): Promise<{
     runtime: IModelRuntime
     info: AIResolvedModelInfo
   }> {
-    const aiConfig = await this.configService.get('ai')
-
-    const assignment = this.getAssignment(aiConfig, feature)
-    const provider = this.resolveProvider(aiConfig, assignment?.providerId)
-
-    if (!provider) {
-      throw new BizException(
-        ErrorCodeEnum.AINotEnabled,
-        'No AI provider configured',
-      )
-    }
-
-    const modelName = assignment?.model || provider.defaultModel
+    const { runtime, provider, assignment } =
+      await this.resolveFeatureRuntime(feature)
     return {
-      runtime: createModelRuntime(provider, assignment?.model),
+      runtime,
       info: {
         provider: provider.type,
-        model: modelName,
+        model: assignment?.model || provider.defaultModel,
       },
     }
   }

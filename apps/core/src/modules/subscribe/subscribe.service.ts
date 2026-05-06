@@ -192,10 +192,9 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     if (isExist) {
       await this.subscribeRepository.updateByEmail(email, { subscribe })
     } else {
-      const token = String(this.createCancelToken(email))
       await this.subscribeRepository.create({
         email,
-        cancelToken: token,
+        cancelToken: String(this.createCancelToken(email)),
         subscribe,
       })
     }
@@ -219,14 +218,13 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       this.subscribeMap.clear()
       return count
     }
-    if (emails && emails.length > 0) {
-      const count = await this.subscribeRepository.deleteByEmails(emails)
-      for (const email of emails) {
-        this.subscribeMap.delete(email)
-      }
-      return count
+    if (!emails?.length) return 0
+
+    const count = await this.subscribeRepository.deleteByEmails(emails)
+    for (const email of emails) {
+      this.subscribeMap.delete(email)
     }
-    return 0
+    return count
   }
 
   createCancelToken(email: string) {

@@ -1,11 +1,14 @@
 import cluster from 'node:cluster'
+
 import { Injectable } from '@nestjs/common'
+import jwt from 'jsonwebtoken'
+
 import { CLUSTER, ENCRYPT, SECURITY } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { logger } from '~/global/consola.global'
 import { getRedisKey } from '~/utils/redis.util'
 import { md5 } from '~/utils/tool.util'
-import jwt from 'jsonwebtoken'
+
 import { RedisService } from '../redis/redis.service'
 
 const { sign, verify } = jwt
@@ -46,9 +49,8 @@ export class JWTService {
     try {
       verify(token, this.secret)
       return await this.isTokenInRedis(token)
-    } catch (error) {
-      console.debug('verify JWT error:', error.message, token)
-
+    } catch {
+      // Token verification failed, treat as invalid
       return false
     }
   }
@@ -76,38 +78,32 @@ export class JWTService {
   async revokeToken(token: string, delay?: number) {
     const redis = this.redisService.getClient()
     const key = getRedisKey(RedisKeys.JWTStore)
+    const field = token.startsWith('jwt-')
+      ? token.replace('jwt-', '')
+      : md5(token)
     if (delay) {
       // FIXME
-      setTimeout(() => {
-        redis.hdel(
-          key,
-          token.startsWith(`jwt-`) ? token.replace(`jwt-`, '') : md5(token),
-        )
-      }, delay)
+      setTimeout(() => redis.hdel(key, field), delay)
     } else {
-      await redis.hdel(
-        key,
-        token.startsWith(`jwt-`) ? token.replace(`jwt-`, '') : md5(token),
-      )
+      await redis.hdel(key, field)
     }
   }
 
   async revokeAll(excludeTokens?: string[]) {
-    if (Array.isArray(excludeTokens) && excludeTokens.length > 0) {
-      const redis = this.redisService.getClient()
-      const key = getRedisKey(RedisKeys.JWTStore)
-      const allMd5Tokens = await redis.hkeys(key)
+    const redis = this.redisService.getClient()
+    const key = getRedisKey(RedisKeys.JWTStore)
 
-      const excludedMd5Tokens = excludeTokens.map((t) => md5(t))
-      for (const md5Token of allMd5Tokens) {
-        if (!excludedMd5Tokens.includes(md5Token)) {
-          await redis.hdel(key, md5Token)
-        }
-      }
-    } else {
-      const redis = this.redisService.getClient()
-      const key = getRedisKey(RedisKeys.JWTStore)
+    if (!Array.isArray(excludeTokens) || excludeTokens.length === 0) {
       await redis.del(key)
+      return
+    }
+
+    const allMd5Tokens = await redis.hkeys(key)
+    const excludedMd5Tokens = new Set(excludeTokens.map((t) => md5(t)))
+    for (const md5Token of allMd5Tokens) {
+      if (!excludedMd5Tokens.has(md5Token)) {
+        await redis.hdel(key, md5Token)
+      }
     }
   }
 

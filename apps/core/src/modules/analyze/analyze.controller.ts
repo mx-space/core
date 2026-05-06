@@ -35,13 +35,17 @@ export class AnalyzeController {
           await client.del(key)
         }
       }
-    } catch {}
+    } catch {
+      // Redis unavailable, fall through to recalculate
+    }
 
     const value = await getValue()
     try {
       await client.set(key, JSON.stringify(value))
       await client.expire(key, ttlSeconds)
-    } catch {}
+    } catch {
+      // Redis write failure, return value anyway
+    }
     return value
   }
 
@@ -94,19 +98,15 @@ export class AnalyzeController {
         )
 
         const dayData = Array.from({ length: 24 }, (_, i) => {
+          const hour = i.toString().padStart(2, '0')
+          const bucket = day[hour]
+          const label = `${i}时`
           return [
-            {
-              hour: `${i}时`,
-              key: 'ip',
-              value: day[i.toString().padStart(2, '0')]?.ip || 0,
-            },
-            {
-              hour: `${i}时`,
-              key: 'pv',
-              value: day[i.toString().padStart(2, '0')]?.pv || 0,
-            },
+            { hour: label, key: 'ip', value: bucket?.ip || 0 },
+            { hour: label, key: 'pv', value: bucket?.pv || 0 },
           ]
         })
+
         const rangeStart = dayjs().subtract(29, 'day').startOf('day').toDate()
         const all = (await this.service.getIpAndPvAggregateByRange({
           from: rangeStart,
@@ -114,25 +114,14 @@ export class AnalyzeController {
           granularity: 'date',
         })) as any[]
 
+        const weekDayLabels = ['日', '一', '二', '三', '四', '五', '六']
         const weekData = all
           .slice(0, 7)
           .map((item) => {
-            const date = `周${
-              ['日', '一', '二', '三', '四', '五', '六'][
-                dayjs(item.date).get('day')
-              ]
-            }`
+            const day = `周${weekDayLabels[dayjs(item.date).get('day')]}`
             return [
-              {
-                day: date,
-                key: 'ip',
-                value: item.ip,
-              },
-              {
-                day: date,
-                key: 'pv',
-                value: item.pv,
-              },
+              { day, key: 'ip', value: item.ip },
+              { day, key: 'pv', value: item.pv },
             ]
           })
           .toReversed()
@@ -140,25 +129,15 @@ export class AnalyzeController {
         const monthData = all
           .slice(0, 30)
           .map((item) => {
+            const date = item.date.split('-').slice(1, 3).join('-')
             return [
-              {
-                date: item.date.split('-').slice(1, 3).join('-'),
-                key: 'ip',
-                value: item.ip,
-              },
-              {
-                date: item.date.split('-').slice(1, 3).join('-'),
-                key: 'pv',
-                value: item.pv,
-              },
+              { date, key: 'ip', value: item.ip },
+              { date, key: 'pv', value: item.pv },
             ]
           })
           .toReversed()
-        return {
-          dayData,
-          weekData,
-          monthData,
-        }
+
+        return { dayData, weekData, monthData }
       }
       const [paths, total, today_ips, { dayData, monthData, weekData }] =
         await Promise.all([
@@ -201,8 +180,7 @@ export class AnalyzeController {
     const { from, to } = query
     const cacheKey = getRedisKey(
       RedisKeys.AnalyzeTrafficSource,
-      String(from?.getTime() ?? 'default'),
-      String(to?.getTime() ?? 'default'),
+      ...rangeToCacheParts(from, to),
     )
     return this.getOrSetCache(cacheKey, 300, () =>
       this.service.getTrafficSource(from, to),
@@ -214,8 +192,7 @@ export class AnalyzeController {
     const { from, to } = query
     const cacheKey = getRedisKey(
       RedisKeys.AnalyzeDeviceDistribution,
-      String(from?.getTime() ?? 'default'),
-      String(to?.getTime() ?? 'default'),
+      ...rangeToCacheParts(from, to),
     )
     return this.getOrSetCache(cacheKey, 300, () =>
       this.service.getDeviceDistribution(from, to),
@@ -228,4 +205,11 @@ export class AnalyzeController {
     const { from = new Date('2020-01-01'), to = new Date() } = query
     await this.service.cleanAnalyzeRange({ from, to })
   }
+}
+
+function rangeToCacheParts(from?: Date, to?: Date): [string, string] {
+  return [
+    String(from?.getTime() ?? 'default'),
+    String(to?.getTime() ?? 'default'),
+  ]
 }

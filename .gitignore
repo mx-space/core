@@ -60,3 +60,4 @@ dev/
 docker-compose.smoke.yml
 
 .pnpm-store/
+.worktrees/

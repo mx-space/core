@@ -340,7 +340,6 @@ export class CommentController {
     const { state, pin } = body
 
     const updateResult: Record<string, any> = {}
-
     if (!isUndefined(state)) updateResult.state = state
     if (!isUndefined(pin)) updateResult.pin = pin
 
@@ -350,14 +349,12 @@ export class CommentController {
 
     try {
       await this.commentService.updateComment(id, updateResult)
-
-      if (!isUndefined(state)) {
-        await this.commentService.cascadeFilesForCommentsIfSpam([id], state)
-      }
-
-      return
     } catch {
       throw new NoContentCanBeModifiedException()
+    }
+
+    if (!isUndefined(state)) {
+      await this.commentService.cascadeFilesForCommentsIfSpam([id], state)
     }
   }
 

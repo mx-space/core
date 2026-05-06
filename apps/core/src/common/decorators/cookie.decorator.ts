@@ -3,7 +3,7 @@ import { createParamDecorator } from '@nestjs/common'
 import type { FastifyRequest } from 'fastify'
 
 export const Cookies = createParamDecorator(
-  (data: string, ctx: ExecutionContext) => {
+  (data: string | undefined, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest<FastifyRequest>()
     return data ? request.cookies?.[data] : request.cookies
   },

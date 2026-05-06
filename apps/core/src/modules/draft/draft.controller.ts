@@ -29,45 +29,25 @@ export class DraftController {
   @Get('/')
   @Auth()
   async list(@Query() query: DraftPagerDto) {
-    const { page, size, refType, hasRef, sortBy, sortOrder } = query
+    const { page, size, refType, hasRef } = query
 
     const filter: Record<string, any> = {}
-    if (refType) {
-      filter.refType = refType
-    }
-    if (hasRef !== undefined) {
-      filter.hasRef = hasRef
-    }
+    if (refType) filter.refType = refType
+    if (hasRef !== undefined) filter.hasRef = hasRef
 
-    void sortBy
-    void sortOrder
-    const [result, total] = await Promise.all([
-      this.draftService.list(page, size, filter),
-      this.draftService.count(filter),
-    ])
-    // Transform typeSpecificData for each draft
-    const transformedData = result.data.map((d) => {
-      if (d.typeSpecificData && typeof d.typeSpecificData === 'string') {
+    const result = await this.draftService.list(page, size, filter)
+    const data = result.data.map((d) => {
+      if (typeof d.typeSpecificData === 'string') {
         try {
           ;(d as any).typeSpecificData = JSON.parse(d.typeSpecificData)
         } catch {
-          // Keep as is
+          // keep raw payload when not valid JSON
         }
       }
       return d
     })
 
-    return {
-      data: transformedData,
-      pagination: {
-        total,
-        currentPage: page,
-        totalPage: Math.ceil(total / size),
-        size,
-        hasNextPage: page * size < total,
-        hasPrevPage: page > 1,
-      },
-    }
+    return { ...result, data }
   }
 
   @Get('/by-ref/:refType/new')

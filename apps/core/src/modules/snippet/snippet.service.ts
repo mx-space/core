@@ -402,9 +402,11 @@ export class SnippetService {
     return model as T & { data: any }
   }
 
-  async cacheSnippet(model: SnippetRow, value: any) {
-    const { reference, name } = model
-    const key = `${reference}:${name}:${model.private ? 'private' : ''}`
+  private snippetCacheKey(prefix: string, isPrivate: boolean) {
+    return `${prefix}:${isPrivate ? 'private' : ''}`
+  }
+
+  private async cacheRedisValue(key: string, value: any) {
     const client = this.redisService.getClient()
     await client.hset(
       getRedisKey(RedisKeys.SnippetCache),
@@ -412,30 +414,40 @@ export class SnippetService {
       typeof value !== 'string' ? JSON.stringify(value) : value,
     )
   }
+
+  private async deleteCachedKeyVariants(prefix: string) {
+    const client = this.redisService.getClient()
+    const cacheKey = getRedisKey(RedisKeys.SnippetCache)
+    await Promise.all(
+      [`${prefix}:`, `${prefix}:private`].map((key) =>
+        client.hdel(cacheKey, key),
+      ),
+    )
+  }
+
+  async cacheSnippet(model: SnippetRow, value: any) {
+    const { reference, name } = model
+    await this.cacheRedisValue(
+      this.snippetCacheKey(`${reference}:${name}`, !!model.private),
+      value,
+    )
+  }
+
   async getCachedSnippet(
     reference: string,
     name: string,
     accessType: 'public' | 'private',
   ) {
-    const key = `${reference}:${name}:${
-      accessType === 'private' ? 'private' : ''
-    }`
+    const key = this.snippetCacheKey(
+      `${reference}:${name}`,
+      accessType === 'private',
+    )
     const client = this.redisService.getClient()
-    const value = await client.hget(getRedisKey(RedisKeys.SnippetCache), key)
-    return value
+    return client.hget(getRedisKey(RedisKeys.SnippetCache), key)
   }
 
   async deleteCachedSnippet(reference: string, name: string) {
-    const keyBase = `${reference}:${name}`
-    const key1 = `${keyBase}:`
-    const key2 = `${keyBase}:private`
-
-    const client = this.redisService.getClient()
-    await Promise.all(
-      [key1, key2].map((key) => {
-        return client.hdel(getRedisKey(RedisKeys.SnippetCache), key)
-      }),
-    )
+    await this.deleteCachedKeyVariants(`${reference}:${name}`)
   }
 
   // --- customPath methods ---
@@ -469,12 +481,9 @@ export class SnippetService {
     isPrivate: boolean,
     value: any,
   ) {
-    const key = `cp:${customPath}:${isPrivate ? 'private' : ''}`
-    const client = this.redisService.getClient()
-    await client.hset(
-      getRedisKey(RedisKeys.SnippetCache),
-      key,
-      typeof value !== 'string' ? JSON.stringify(value) : value,
+    await this.cacheRedisValue(
+      this.snippetCacheKey(`cp:${customPath}`, isPrivate),
+      value,
     )
   }
 
@@ -482,19 +491,15 @@ export class SnippetService {
     customPath: string,
     accessType: 'public' | 'private',
   ) {
-    const key = `cp:${customPath}:${accessType === 'private' ? 'private' : ''}`
+    const key = this.snippetCacheKey(
+      `cp:${customPath}`,
+      accessType === 'private',
+    )
     const client = this.redisService.getClient()
     return client.hget(getRedisKey(RedisKeys.SnippetCache), key)
   }
 
   async deleteCachedSnippetByCustomPath(customPath: string) {
-    const key1 = `cp:${customPath}:`
-    const key2 = `cp:${customPath}:private`
-    const client = this.redisService.getClient()
-    await Promise.all(
-      [key1, key2].map((key) =>
-        client.hdel(getRedisKey(RedisKeys.SnippetCache), key),
-      ),
-    )
+    await this.deleteCachedKeyVariants(`cp:${customPath}`)
   }
 }

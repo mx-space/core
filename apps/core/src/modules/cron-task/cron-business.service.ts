@@ -71,11 +71,12 @@ export class CronBusinessService {
   async resetLikedOrReadArticleRecord() {
     const redis = this.redisService.getClient()
 
-    const keyGroups = await Promise.all([
-      redis.keys(getRedisKey(RedisKeys.Like, '*')),
-      redis.keys(getRedisKey(RedisKeys.Read, '*')),
-    ])
-    const allKeys = keyGroups.flat()
+    const allKeys = (
+      await Promise.all([
+        redis.keys(getRedisKey(RedisKeys.Like, '*')),
+        redis.keys(getRedisKey(RedisKeys.Read, '*')),
+      ])
+    ).flat()
     await Promise.all(allKeys.map((key) => redis.del(key)))
 
     this.logger.log('--> 清理喜欢数成功')
@@ -101,34 +102,30 @@ export class CronBusinessService {
       baiduSearchOptions: configs,
     } = await this.configs.waitForConfigReady()
 
-    if (configs.enable) {
-      const token = configs.token
-      if (!token) {
-        this.logger.error('[BaiduSearchPushTask] token 为空')
-        return { skipped: true, reason: 'token is empty' }
-      }
-
-      const pushUrls = await this.aggregateService.getSiteMapContent()
-      const urls = pushUrls.map((item) => item.url).join('\n')
-
-      try {
-        const res = await this.http.axiosRef.post(
-          `http://data.zz.baidu.com/urls?site=${webUrl}&token=${token}`,
-          urls,
-          {
-            headers: {
-              'Content-Type': 'text/plain',
-            },
-          },
-        )
-        this.logger.log(`百度站长提交结果：${JSON.stringify(res.data)}`)
-        return { response: res.data }
-      } catch (error) {
-        this.logger.error(`百度推送错误：${error.message}`)
-        throw error
-      }
+    if (!configs.enable) {
+      return { skipped: true, reason: 'Baidu search push is disabled' }
     }
-    return { skipped: true, reason: 'Baidu search push is disabled' }
+    const token = configs.token
+    if (!token) {
+      this.logger.error('[BaiduSearchPushTask] token 为空')
+      return { skipped: true, reason: 'token is empty' }
+    }
+
+    const pushUrls = await this.aggregateService.getSiteMapContent()
+    const urls = pushUrls.map((item) => item.url).join('\n')
+
+    try {
+      const res = await this.http.axiosRef.post(
+        `http://data.zz.baidu.com/urls?site=${webUrl}&token=${token}`,
+        urls,
+        { headers: { 'Content-Type': 'text/plain' } },
+      )
+      this.logger.log(`百度站长提交结果：${JSON.stringify(res.data)}`)
+      return { response: res.data }
+    } catch (error) {
+      this.logger.error(`百度推送错误：${error.message}`)
+      throw error
+    }
   }
 
   /**
@@ -184,32 +181,26 @@ export class CronBusinessService {
   async deleteExpiredJWT() {
     this.logger.log('--> 开始扫表，清除过期的 token')
     const redis = this.redisService.getClient()
-    const keys = await redis.hkeys(getRedisKey(RedisKeys.JWTStore))
+    const storeKey = getRedisKey(RedisKeys.JWTStore)
+    const keys = await redis.hkeys(storeKey)
     let deleteCount = 0
     await Promise.all(
       keys.map(async (key) => {
-        const value = await redis.hget(getRedisKey(RedisKeys.JWTStore), key)
-        if (!value) {
-          return null
-        }
+        const value = await redis.hget(storeKey, key)
+        if (!value) return
         const parsed = JSON.safeParse(value) as StoreJWTPayload
-        if (!parsed) {
-          return null
-        }
+        if (!parsed) return
 
         const date = dayjs(new Date(parsed.date))
-        if (date.add(JWTService.expiresDay, 'd').diff(new Date(), 'd') < 0) {
-          this.logger.debug(
-            `--> 删除过期的 token：${key}, 签发于 ${date.format(
-              'YYYY-MM-DD H:mm:ss',
-            )}`,
-          )
-
-          await redis.hdel(getRedisKey(RedisKeys.JWTStore), key)
-          deleteCount += 1
+        if (date.add(JWTService.expiresDay, 'd').diff(new Date(), 'd') >= 0) {
           return
         }
-        return null
+
+        this.logger.debug(
+          `--> 删除过期的 token：${key}, 签发于 ${date.format('YYYY-MM-DD H:mm:ss')}`,
+        )
+        await redis.hdel(storeKey, key)
+        deleteCount += 1
       }),
     )
 

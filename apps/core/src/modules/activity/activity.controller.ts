@@ -146,42 +146,38 @@ export class ActivityController {
     const roomInfo = await this.service.getAllRoomNames()
     const { objects } = await this.service.getRefsFromRoomNames(roomInfo.rooms)
 
-    for (const type in objects) {
-      objects[type] = objects[type].map((item) => {
-        return pick(item, ARTICLE_REF_FIELDS)
-      })
+    for (const type of Object.keys(objects)) {
+      objects[type] = objects[type].map((item) =>
+        pick(item, ARTICLE_REF_FIELDS),
+      )
     }
 
     if (lang) {
-      for (const type in objects) {
-        if (objects[type].length) {
-          objects[type] = await this.translationService.translateList({
-            items: objects[type],
-            targetLang: lang,
-            translationFields: ['title', 'translationMeta'] as const,
-            getInput: (item: any) => ({
-              id: item.id ?? '',
-              title: item.title ?? '',
-              createdAt: item.createdAt,
-            }),
-            applyResult: (item: any, translation) => {
-              if (!translation?.isTranslated) return item
-              return {
-                ...item,
-                title: translation.title,
-                isTranslated: true,
-                translationMeta: translation.translationMeta,
-              }
-            },
-          })
-        }
+      for (const type of Object.keys(objects)) {
+        if (!objects[type].length) continue
+        objects[type] = await this.translationService.translateList({
+          items: objects[type],
+          targetLang: lang,
+          translationFields: ['title', 'translationMeta'] as const,
+          getInput: (item: any) => ({
+            id: item.id ?? '',
+            title: item.title ?? '',
+            createdAt: item.createdAt,
+          }),
+          applyResult: (item: any, translation) => {
+            if (!translation?.isTranslated) return item
+            return {
+              ...item,
+              title: translation.title,
+              isTranslated: true,
+              translationMeta: translation.translationMeta,
+            }
+          },
+        })
       }
     }
 
-    return {
-      ...roomInfo,
-      objects,
-    }
+    return { ...roomInfo, objects }
   }
 
   @Get('/online-count')
@@ -191,10 +187,7 @@ export class ActivityController {
       (acc, count) => acc + count,
       0,
     )
-    return {
-      total,
-      rooms: roomInfo.roomCount,
-    }
+    return { total, rooms: roomInfo.roomCount }
   }
 
   @Auth()
@@ -207,37 +200,7 @@ export class ActivityController {
     const top = query.top ?? 5
     const days = query.days ?? 14
     const result = await this.service.getTopReadings(top, days)
-    const data = result.map((item) => ({
-      ...item,
-      ref: pick(item.ref, ARTICLE_REF_FIELDS),
-    }))
-
-    if (lang) {
-      return this.translationService.translateList({
-        items: data,
-        targetLang: lang,
-        translationFields: ['title', 'translationMeta'] as const,
-        getInput: (item) => {
-          const ref = item.ref as Record<string, any> | undefined
-          return {
-            id: item.refId,
-            title: ref?.title ?? '',
-            created: ref?.createdAt,
-          }
-        },
-        applyResult: (item, translation) => {
-          if (!translation?.isTranslated || !item.ref) return item
-          return {
-            ...item,
-            ref: { ...item.ref, title: translation.title },
-            isTranslated: true,
-            translationMeta: translation.translationMeta,
-          }
-        },
-      })
-    }
-
-    return data
+    return this.translateReadingList(result, lang)
   }
 
   @Auth()
@@ -255,37 +218,40 @@ export class ActivityController {
       endAt,
       limit,
     )
+    return this.translateReadingList(result, lang)
+  }
+
+  private async translateReadingList(
+    result: Array<{ refId: string; ref?: any; count: number }>,
+    lang?: string,
+  ) {
     const data = result.map((item) => ({
       ...item,
       ref: pick(item.ref, ARTICLE_REF_FIELDS),
     }))
-
-    if (lang) {
-      return this.translationService.translateList({
-        items: data,
-        targetLang: lang,
-        translationFields: ['title', 'translationMeta'] as const,
-        getInput: (item) => {
-          const ref = item.ref as Record<string, any> | undefined
-          return {
-            id: item.refId,
-            title: ref?.title ?? '',
-            created: ref?.createdAt,
-          }
-        },
-        applyResult: (item, translation) => {
-          if (!translation?.isTranslated || !item.ref) return item
-          return {
-            ...item,
-            ref: { ...item.ref, title: translation.title },
-            isTranslated: true,
-            translationMeta: translation.translationMeta,
-          }
-        },
-      })
-    }
-
-    return data
+    if (!lang) return data
+    return this.translationService.translateList({
+      items: data,
+      targetLang: lang,
+      translationFields: ['title', 'translationMeta'] as const,
+      getInput: (item) => {
+        const ref = item.ref as Record<string, any> | undefined
+        return {
+          id: item.refId,
+          title: ref?.title ?? '',
+          created: ref?.createdAt,
+        }
+      },
+      applyResult: (item, translation) => {
+        if (!translation?.isTranslated || !item.ref) return item
+        return {
+          ...item,
+          ref: { ...item.ref, title: translation.title },
+          isTranslated: true,
+          translationMeta: translation.translationMeta,
+        }
+      },
+    })
   }
 
   @Get('/recent')
@@ -296,77 +262,54 @@ export class ActivityController {
       this.service.getRecentPublish(),
     ])
 
-    let transformedLike = [] as any[]
-
-    for (const item of like.data) {
+    let transformedLike = like.data.map((item) => {
       const likeData = pick(item, 'createdAt', 'id') as any
-
       if (!item.ref) {
         likeData.title = '已删除的内容'
-      } else {
-        if ('nid' in item.ref) {
-          likeData.type = CollectionRefTypes.Note
-          likeData.nid = item.ref.nid
-        } else {
-          likeData.type = CollectionRefTypes.Post
-          likeData.slug = item.ref.slug
-        }
-        likeData.title = item.ref.title
-        likeData.articleId = (item.payload as { id?: string } | null)?.id
+        return likeData
       }
-
-      transformedLike.push(likeData)
-    }
+      if ('nid' in item.ref) {
+        likeData.type = CollectionRefTypes.Note
+        likeData.nid = item.ref.nid
+      } else {
+        likeData.type = CollectionRefTypes.Post
+        likeData.slug = item.ref.slug
+      }
+      likeData.title = item.ref.title
+      likeData.articleId = (item.payload as { id?: string } | null)?.id
+      return likeData
+    })
 
     let post = recentPublish.post as any[]
     let note = recentPublish.note as any[]
 
     if (lang) {
-      transformedLike = await this.translationService.translateList({
-        items: transformedLike,
-        targetLang: lang,
-        translationFields: ['title'] as const,
-        getInput: (item) => ({
-          id: item.articleId ?? '',
-          title: item.title ?? '',
-        }),
-        applyResult: (item, translation) => {
-          if (!translation?.isTranslated) return item
-          return { ...item, title: translation.title }
-        },
-      })
+      const translateTitleOnly = <T extends Record<string, any>>(
+        items: T[],
+        getId: (item: T) => string,
+      ) =>
+        this.translationService.translateList({
+          items,
+          targetLang: lang,
+          translationFields: ['title'] as const,
+          getInput: (item) => ({
+            id: getId(item),
+            title: item.title ?? '',
+            createdAt: item.createdAt,
+            modifiedAt: item.modifiedAt,
+          }),
+          applyResult: (item, translation) =>
+            translation?.isTranslated
+              ? { ...item, title: translation.title }
+              : item,
+        })
 
-      post = await this.translationService.translateList({
-        items: post,
-        targetLang: lang,
-        translationFields: ['title'] as const,
-        getInput: (item) => ({
-          id: item.id,
-          title: item.title ?? '',
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-        }),
-        applyResult: (item, translation) => {
-          if (!translation?.isTranslated) return item
-          return { ...item, title: translation.title }
-        },
-      })
-
-      note = await this.translationService.translateList({
-        items: note,
-        targetLang: lang,
-        translationFields: ['title'] as const,
-        getInput: (item) => ({
-          id: item.id,
-          title: item.title ?? '',
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-        }),
-        applyResult: (item, translation) => {
-          if (!translation?.isTranslated) return item
-          return { ...item, title: translation.title }
-        },
-      })
+      transformedLike = await translateTitleOnly(
+        transformedLike,
+        (item) => item.articleId ?? '',
+      )
+      post = await translateTitleOnly(post, (item) => item.id)
+      note = await translateTitleOnly(note, (item) => item.id)
     }
 
     for (const item of transformedLike) {
@@ -388,42 +331,23 @@ export class ActivityController {
     @Query() query: ActivityNotificationDto,
     @Lang() lang?: string,
   ) {
-    const activity = await this.getRecentActivities(lang)
+    const fromDate = new Date(query.from)
+    if (fromDate > new Date()) return []
 
-    const { from } = query
+    const { post, note } = await this.getRecentActivities(lang)
+    const isAfter = (item: any) => new Date(item.createdAt) > fromDate
 
-    const fromDate = new Date(from)
-    const now = new Date()
-
-    if (fromDate > now) {
-      return []
-    }
-
-    const { post, note } = activity
-
-    const postList = post
-      .filter((item) => {
-        return new Date(item.createdAt) > fromDate
-      })
-      .map((item) => {
-        return {
-          title: item.title,
-          type: CollectionRefTypes.Post,
-          id: item.id,
-          slug: item.slug,
-        }
-      })
-    const noteList = note
-      .filter((item) => {
-        return new Date(item.createdAt) > fromDate
-      })
-      .map((item) => {
-        return {
-          title: item.title,
-          type: CollectionRefTypes.Note,
-          id: item.nid,
-        }
-      })
+    const postList = post.filter(isAfter).map((item) => ({
+      title: item.title,
+      type: CollectionRefTypes.Post,
+      id: item.id,
+      slug: item.slug,
+    }))
+    const noteList = note.filter(isAfter).map((item) => ({
+      title: item.title,
+      type: CollectionRefTypes.Note,
+      id: item.nid,
+    }))
 
     return [...postList, ...noteList]
   }
@@ -431,53 +355,52 @@ export class ActivityController {
   @Get('/last-year/publication')
   async getLastYearPublication(@Lang() lang?: string) {
     const result = await this.service.getLastYearPublication()
+    if (!lang) return result
 
-    if (lang) {
-      if (result.posts.length) {
-        result.posts = await this.translationService.translateList({
-          items: result.posts as any[],
-          targetLang: lang,
-          translationFields: ['title', 'translationMeta'] as const,
-          getInput: (item: any) => ({
-            id: item.id,
-            title: item.title ?? '',
-            createdAt: item.createdAt,
-          }),
-          applyResult: (item: any, translation) => {
-            if (!translation?.isTranslated) return item
-            const plain =
-              typeof item.toObject === 'function' ? item.toObject() : item
-            return {
-              ...plain,
-              title: translation.title,
-              isTranslated: true,
-              translationMeta: translation.translationMeta,
-            }
-          },
-        })
-      }
+    if (result.posts.length) {
+      result.posts = await this.translationService.translateList({
+        items: result.posts as any[],
+        targetLang: lang,
+        translationFields: ['title', 'translationMeta'] as const,
+        getInput: (item: any) => ({
+          id: item.id,
+          title: item.title ?? '',
+          createdAt: item.createdAt,
+        }),
+        applyResult: (item: any, translation) => {
+          if (!translation?.isTranslated) return item
+          const plain =
+            typeof item.toObject === 'function' ? item.toObject() : item
+          return {
+            ...plain,
+            title: translation.title,
+            isTranslated: true,
+            translationMeta: translation.translationMeta,
+          }
+        },
+      })
+    }
 
-      if (result.notes.length) {
-        result.notes = await this.translationService.translateList({
-          items: result.notes as any[],
-          targetLang: lang,
-          translationFields: ['title', 'translationMeta'] as const,
-          getInput: (item: any) => ({
-            id: item.title === '未公开的日记' ? '' : item.id,
-            title: item.title ?? '',
-            createdAt: item.createdAt,
-          }),
-          applyResult: (item: any, translation) => {
-            if (!translation?.isTranslated) return item
-            return {
-              ...item,
-              title: translation.title,
-              isTranslated: true,
-              translationMeta: translation.translationMeta,
-            }
-          },
-        })
-      }
+    if (result.notes.length) {
+      result.notes = await this.translationService.translateList({
+        items: result.notes as any[],
+        targetLang: lang,
+        translationFields: ['title', 'translationMeta'] as const,
+        getInput: (item: any) => ({
+          id: item.title === '未公开的日记' ? '' : item.id,
+          title: item.title ?? '',
+          createdAt: item.createdAt,
+        }),
+        applyResult: (item: any, translation) => {
+          if (!translation?.isTranslated) return item
+          return {
+            ...item,
+            title: translation.title,
+            isTranslated: true,
+            translationMeta: translation.translationMeta,
+          }
+        },
+      })
     }
 
     return result

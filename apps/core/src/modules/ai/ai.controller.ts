@@ -1,8 +1,10 @@
 import { Body, Get, Param, Post } from '@nestjs/common'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
+
 import { ConfigsService } from '../configs/configs.service'
 import { AI_PROMPTS } from './ai.prompts'
 import { AiService } from './ai.service'
@@ -196,36 +198,34 @@ export class AiController {
           ...promptConfig,
         })
 
-        const isSpam =
-          result.output.score >= threshold ||
-          result.output.hasSensitiveContent === true
+        const { score, hasSensitiveContent } = result.output
+        const isSpam = score >= threshold || hasSensitiveContent === true
 
-        return {
-          isSpam,
-          score: result.output.score,
-          reason: result.output.hasSensitiveContent
-            ? '包含敏感内容'
-            : isSpam
-              ? `评分 ${result.output.score} 超过阈值 ${threshold}`
-              : undefined,
+        let reason: string | undefined
+        if (hasSensitiveContent) {
+          reason = '包含敏感内容'
+        } else if (isSpam) {
+          reason = `评分 ${score} 超过阈值 ${threshold}`
         }
+
+        return { isSpam, score, reason }
       } else {
         const promptConfig = AI_PROMPTS.comment.spam(text)
         const result = await runtime.generateStructured({
           ...promptConfig,
         })
 
-        const isSpam =
-          result.output.isSpam || result.output.hasSensitiveContent === true
+        const { isSpam: rawIsSpam, hasSensitiveContent } = result.output
+        const isSpam = rawIsSpam || hasSensitiveContent === true
 
-        return {
-          isSpam,
-          reason: result.output.hasSensitiveContent
-            ? '包含敏感内容'
-            : result.output.isSpam
-              ? '判定为垃圾评论'
-              : undefined,
+        let reason: string | undefined
+        if (hasSensitiveContent) {
+          reason = '包含敏感内容'
+        } else if (rawIsSpam) {
+          reason = '判定为垃圾评论'
         }
+
+        return { isSpam, reason }
       }
     } catch (error: any) {
       throw new BizException(
