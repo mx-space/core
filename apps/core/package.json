@@ -108,7 +108,7 @@
     "file-type": "^22.0.1",
     "form-data": "4.0.5",
     "inquirer": "^13.4.2",
-    "isbot": "5.1.39",
+    "isbot": "5.1.40",
     "js-yaml": "^4.1.1",
     "json5": "2.2.3",
     "jsondiffpatch": "^0.7.3",
