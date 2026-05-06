@@ -41,3 +41,13 @@ export async function withAdvisoryLock<T>(
  * only changed deliberately.
  */
 export const SCHEMA_MIGRATION_LOCK_KEY = 7607331879281575547n
+
+/**
+ * Project-specific advisory lock key for app-data migrations (data backfills,
+ * runtime transforms). Distinct from {@link SCHEMA_MIGRATION_LOCK_KEY} so the
+ * two runners can be coordinated independently.
+ *
+ * Derived from `sha256("mx-core:app-migration:v1")`, taking the first 8 bytes
+ * as a signed bigint.
+ */
+export const APP_MIGRATION_LOCK_KEY = 5183248167463294041n

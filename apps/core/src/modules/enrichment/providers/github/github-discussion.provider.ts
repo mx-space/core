@@ -12,6 +12,8 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
   readonly category = ENRICHMENT_CATEGORIES.GITHUB
   readonly priority = 6
   readonly defaultTtl = 3600
+  readonly featureGateConfigKey = 'github'
+  readonly requiredConfigKeys = ['token']
 
   constructor(private readonly client: GitHubClient) {}
 

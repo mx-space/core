@@ -11,35 +11,48 @@ export class ArxivProvider implements EnrichmentProvider {
   readonly category = ENRICHMENT_CATEGORIES.ACADEMIC
   readonly priority = 10
   readonly defaultTtl = 86400 * 7
+  readonly featureGateConfigKey = 'arxiv'
 
   matchUrl(url: URL): UrlMatchResult | null {
     if (url.hostname !== 'arxiv.org') return null
-    const match = url.pathname.match(/^\/(abs|pdf)\/([0-9.]+(?:v\d+)?)/)
+    const match = url.pathname.match(/^\/(abs|pdf)\/([\d.]+(?:v\d+)?)/)
     if (!match) return null
-    return { id: match[2], fullUrl: `https://arxiv.org/abs/${match[2]}`, subtype: 'paper' }
+    return {
+      id: match[2],
+      fullUrl: `https://arxiv.org/abs/${match[2]}`,
+      subtype: 'paper',
+    }
   }
 
-  isValidId(id: string): boolean { return /^[0-9.]+(?:v\d+)?$/.test(id) }
+  isValidId(id: string): boolean {
+    return /^[\d.]+(?:v\d+)?$/.test(id)
+  }
 
   private stripHtml(html: string): string {
     // Also matches unclosed tags (e.g. "<script" without ">")
-    return html.replace(/<[^>]*(>|$)/g, '')
+    return html.replaceAll(/<[^>]*(>|$)/g, '')
   }
 
   async fetch(id: string): Promise<EnrichmentResult> {
     const res = await fetch(`https://export.arxiv.org/api/query?id_list=${id}`)
     if (!res.ok) throw new Error(`Arxiv API ${res.status}`)
     const text = await res.text()
-    const titleMatch = text.match(/<title>([\s\S]*?)<\/title>/)
+    const titleMatch = text.match(/<title>(.*?)<\/title>/s)
     const title = this.stripHtml(titleMatch?.[1] || '').trim() || id
-    const summaryMatch = text.match(/<summary>([\s\S]*?)<\/summary>/)
-    const description = this.stripHtml(summaryMatch?.[1] || '').replace(/\s+/g, ' ').trim() || undefined
+    const summaryMatch = text.match(/<summary>(.*?)<\/summary>/s)
+    const description =
+      this.stripHtml(summaryMatch?.[1] || '')
+        .replaceAll(/\s+/g, ' ')
+        .trim() || undefined
 
     return {
-      title, description,
+      title,
+      description,
       url: `https://arxiv.org/abs/${id}`,
-      category: this.category, subtype: 'paper',
-      fetchedAt: '', attributes: [],
+      category: this.category,
+      subtype: 'paper',
+      fetchedAt: '',
+      attributes: [],
     }
   }
 }

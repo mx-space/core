@@ -12,6 +12,8 @@ export class GitHubCommitProvider implements EnrichmentProvider {
   readonly category = ENRICHMENT_CATEGORIES.GITHUB
   readonly priority = 7
   readonly defaultTtl = 7200
+  readonly featureGateConfigKey = 'github'
+  readonly requiredConfigKeys = ['token']
 
   constructor(private readonly client: GitHubClient) {}
 

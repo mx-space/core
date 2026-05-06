@@ -1,5 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, gt, inArray, lt, type SQL, sql } from 'drizzle-orm'
+import {
+  and,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNull,
+  lt,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { recentlies } from '~/database/schema'
@@ -181,6 +191,14 @@ export class RecentlyRepository extends BaseRepository {
       .select({ count: sql<number>`count(*)::int` })
       .from(recentlies)
     return Number(row?.count ?? 0)
+  }
+
+  async findWithoutEnrichment(): Promise<RecentlyRow[]> {
+    const rows = await this.db
+      .select()
+      .from(recentlies)
+      .where(isNull(recentlies.enrichmentExternalId))
+    return rows.map(mapRow)
   }
 
   async findRecent(size: number): Promise<RecentlyRow[]> {

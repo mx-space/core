@@ -11,6 +11,7 @@ export class QQMusicProvider implements EnrichmentProvider {
   readonly category = ENRICHMENT_CATEGORIES.MUSIC
   readonly priority = 9
   readonly defaultTtl = 86400
+  readonly featureGateConfigKey = 'qqMusic'
 
   matchUrl(url: URL): UrlMatchResult | null {
     if (url.hostname !== 'y.qq.com') return null
@@ -20,15 +21,19 @@ export class QQMusicProvider implements EnrichmentProvider {
     return { id: parts[songIdx + 1], fullUrl: url.href, subtype: 'song' }
   }
 
-  isValidId(id: string): boolean { return id.length > 0 }
+  isValidId(id: string): boolean {
+    return id.length > 0
+  }
 
   async fetch(id: string): Promise<EnrichmentResult> {
     return {
       title: `QQ Music: ${id}`,
       description: 'QQ音乐歌曲',
       url: `https://y.qq.com/n/ryqq/songDetail/${id}`,
-      category: this.category, subtype: 'song',
-      fetchedAt: '', attributes: [],
+      category: this.category,
+      subtype: 'song',
+      fetchedAt: '',
+      attributes: [],
     }
   }
 }

@@ -16,9 +16,12 @@ export class TmdbClient {
     if (!apiKey) throw new Error('TMDB API key not configured')
 
     const url = new URL(path, 'https://api.themoviedb.org')
-    url.searchParams.set('api_key', apiKey)
-
-    const res = await fetch(url.toString())
+    const res = await fetch(url.toString(), {
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+    })
     if (!res.ok) {
       const body = await res.text().catch(() => '')
       throw new Error(`TMDB API ${res.status}: ${body}`)

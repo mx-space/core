@@ -58,8 +58,19 @@ export interface ProviderMeta {
   name: string
   displayName: string
   category: string
+  /** Section under `thirdPartyServiceIntegration` is enabled (or unscoped). */
   enabled: boolean
+  /** All gating + credential checks pass; provider can resolve right now. */
+  ready: boolean
+  /**
+   * Required config paths (relative to {@link featureGateConfigKey} section)
+   * that are currently empty. Empty array when the provider has no required
+   * credentials. Sent to the dashboard so it can render an actionable hint.
+   */
+  missingKeys: string[]
+  /** Names of config paths that gate this provider's credentials. */
   requiredConfigKeys?: string[]
+  /** Top-level section under `thirdPartyServiceIntegration` (e.g. `tmdb`). */
   featureGateConfigKey?: string
 }
 

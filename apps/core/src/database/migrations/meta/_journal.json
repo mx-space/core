@@ -36,6 +36,13 @@
       "when": 1778026000000,
       "tag": "0004_heavy_siren",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778069140607,
+      "tag": "0005_app_migrations_ledger",
+      "breakpoints": true
     }
   ]
 }

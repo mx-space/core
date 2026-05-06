@@ -8,6 +8,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { EnrichmentRepository } from './enrichment.repository'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
 import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
+import type { EnrichmentProvider } from './providers/provider.interface'
 import { ProviderRegistry } from './providers/provider.registry'
 
 const REDIS_KEY_PREFIX = 'enrichment:resolve:'
@@ -193,8 +194,19 @@ export class EnrichmentService {
     return this.repository.listPaginated(page, size, opts)
   }
 
-  getProviders(): ProviderMeta[] {
-    return this.providerRegistry.getProviderMetas(() => true)
+  async getProviders(): Promise<ProviderMeta[]> {
+    const config = await this.configsService.get('thirdPartyServiceIntegration')
+    return this.providerRegistry.getProviderMetas((provider) => {
+      const enabled = this.isProviderEnabled(provider, config)
+      const missingKeys = enabled
+        ? this.getMissingConfigKeys(provider, config)
+        : []
+      return {
+        enabled,
+        ready: enabled && missingKeys.length === 0,
+        missingKeys,
+      }
+    })
   }
 
   private async getFromRedis(url: string): Promise<EnrichmentResult | null> {
@@ -235,33 +247,41 @@ export class EnrichmentService {
     return Math.min(BACKOFF_BASE * Math.pow(2, failureCount), BACKOFF_MAX)
   }
 
-  private isProviderEnabled(provider: any, config: any): boolean {
-    const configKeyMap: Record<string, string | undefined> = {
-      github: 'github',
-      media: 'tmdb',
-      academic: 'arxiv',
-      code: 'leetcode',
-      self: undefined,
-      music: 'neteaseMusic',
-      book: 'neodb',
-    }
-    const configKey = configKeyMap[provider.category]
-    if (!configKey || !config[configKey]) return true
-    return config[configKey].enabled !== false
+  /**
+   * Honors `provider.featureGateConfigKey`: if the provider declares no gate,
+   * it is always enabled. If the config section exists, respect its `enabled`
+   * flag; missing section is treated as enabled (matching default-on
+   * behavior) so a fresh install resolves before the dashboard is opened.
+   */
+  private isProviderEnabled(
+    provider: EnrichmentProvider,
+    config: any,
+  ): boolean {
+    const gate = provider.featureGateConfigKey
+    if (!gate) return true
+    const section = config?.[gate]
+    if (!section) return true
+    return section.enabled !== false
   }
 
-  private hasRequiredConfig(provider: any, config: any): boolean {
-    const configKeyMap: Record<string, string> = {
-      github: 'github',
-      media: 'tmdb',
-      music: 'neteaseMusic',
-    }
-    const configKey = configKeyMap[provider.category]
-    if (!configKey || !config[configKey]) return false
-    const section = config[configKey]
-    return Object.entries(section).some(
-      ([key, val]) =>
-        key !== 'enabled' && typeof val === 'string' && val.length > 0,
-    )
+  private hasRequiredConfig(
+    provider: EnrichmentProvider,
+    config: any,
+  ): boolean {
+    return this.getMissingConfigKeys(provider, config).length === 0
+  }
+
+  private getMissingConfigKeys(
+    provider: EnrichmentProvider,
+    config: any,
+  ): string[] {
+    const required = provider.requiredConfigKeys
+    if (!required?.length) return []
+    const gate = provider.featureGateConfigKey
+    const section = gate ? config?.[gate] : undefined
+    return required.filter((key) => {
+      const val = section?.[key]
+      return typeof val !== 'string' || val.length === 0
+    })
   }
 }
