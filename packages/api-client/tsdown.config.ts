@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
+
 import { defineConfig } from 'tsdown'
 
 const __dirname = new URL(import.meta.url).pathname.replace(/\/[^/]*$/, '')
@@ -13,7 +14,13 @@ export default defineConfig({
   target: 'es2020',
   entry: ['index.ts', ...adaptorNames.map((name) => `adaptors/${name}.ts`)],
   external: adaptorNames,
-  dts: true,
+  // `eager: true` runs the TypeScript compiler directly to emit declarations
+  // instead of relying on rolldown-plugin-dts's bundler. The bundler chokes
+  // on the long re-export chain `@core/constants/db.constant → @mx-space/db-schema`
+  // (see "Export 'CollectionRefTypes' is not defined" — sxzz/rolldown-plugin-dts
+  // can't follow workspace re-exports through a private package), and `eager`
+  // sidesteps the issue cleanly.
+  dts: { eager: true },
   format: ['cjs', 'esm'],
   onSuccess() {
     // Replace declare module '../core/client' with declare module '@mx-space/api-client'
