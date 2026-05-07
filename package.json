@@ -17,7 +17,7 @@
     "lexical-live": "pnpm -C apps/core exec node scripts/lexical-translation-live.mjs",
     "prepare": "simple-git-hooks && node scripts/init-project.mjs",
     "build": "pnpm -C \"apps/core\" run build",
-    "dev": "pnpm -C \"apps/core\" run start",
+    "dev": "pnpm -C \"apps/core\" run dev",
     "bundle": "pnpm -C \"apps/core\" run bundle",
     "test": "pnpm -C \"apps/core\" run test",
     "lint": "pnpm -C \"apps/core\" run lint",
