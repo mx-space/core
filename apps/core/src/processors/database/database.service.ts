@@ -65,6 +65,25 @@ export class DatabaseService {
     }
   }
 
+  public findPostBySlug(slug: string) {
+    return this.postRepository.findBySlug(slug)
+  }
+
+  public findNoteByNid(nid: number) {
+    return this.noteRepository.findByNid(nid)
+  }
+
+  public findNoteByDateAndSlug(
+    year: number,
+    month: number,
+    day: number,
+    slug: string,
+  ) {
+    const start = new Date(Date.UTC(year, month - 1, day))
+    const end = new Date(Date.UTC(year, month - 1, day + 1))
+    return this.noteRepository.findOneByDateAndSlug(start, end, slug)
+  }
+
   public async findPostAndNoteIdsByTitle(search: string): Promise<string[]> {
     const normalizedSearch = search.trim()
     if (!normalizedSearch) return []

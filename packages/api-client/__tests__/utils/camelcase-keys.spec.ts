@@ -1,5 +1,6 @@
-import { camelcase, camelcaseKeys } from '~/utils/camelcase-keys'
 import camelcaseKeysLib from 'camelcase-keys'
+
+import { camelcase, camelcaseKeys } from '~/utils/camelcase-keys'
 
 describe('test camelcase keys', () => {
   it('case 1 normal', () => {
@@ -107,5 +108,43 @@ describe('test camelcase keys', () => {
 
   it('case 7: start with underscore should not camelcase', () => {
     expect(camelcase('_id')).toBe('id')
+  })
+
+  it('case 8: shouldSkipKey hook keeps caller-decided keys verbatim', () => {
+    const obj = {
+      a_b: 1,
+      enrichments: {
+        'https://github.com/mx-space/core/pull/2659': { url_field: 'a' },
+      },
+    }
+
+    expect(
+      camelcaseKeys(obj, {
+        shouldSkipKey: (k) => /^https?:\/\//.test(k),
+      }),
+    ).toStrictEqual({
+      aB: 1,
+      enrichments: {
+        'https://github.com/mx-space/core/pull/2659': { urlField: 'a' },
+      },
+    })
+  })
+
+  it('case 9: shouldSkipKey composes (OR) with the built-in Mongo ID skip', () => {
+    const obj = {
+      a_b: 1,
+      '661bb93307d35005ba96731b': { v_v: 1 }, // mongo id (built-in skip)
+      'snow-7234567890': { x_y: 2 }, // caller-provided skip
+    }
+
+    expect(
+      camelcaseKeys(obj, {
+        shouldSkipKey: (k) => k.startsWith('snow-'),
+      }),
+    ).toStrictEqual({
+      aB: 1,
+      '661bb93307d35005ba96731b': { vV: 1 },
+      'snow-7234567890': { xY: 2 },
+    })
   })
 })
