@@ -1,6 +1,27 @@
 # CHANGELOG
 
 
+## [12.2.0](https://github.com/mx-space/core/compare/v12.1.1...v12.2.0) (2026-05-07)
+
+### Features
+
+* **enrichment:** third-party URL resolver module ([#2689](https://github.com/mx-space/core/issues/2689)) ([6a8cb8e](https://github.com/mx-space/core/commit/6a8cb8e))
+* **enrichment:** integrate URL extraction and hydration in enrichment module ([b40e50d](https://github.com/mx-space/core/commit/b40e50d))
+* **enrichment:** app migration framework + provider readiness + tmdb v4 ([b9b657d](https://github.com/mx-space/core/commit/b9b657d))
+* **enrichment:** implement refresh task handling and image metadata enrichment ([debbd2b](https://github.com/mx-space/core/commit/debbd2b))
+* **enrichment:** prefetch on doc write, preserve url keys in hydrated map ([91ccf82](https://github.com/mx-space/core/commit/91ccf82))
+* **enrichment:** integration with recently module + graceful shutdown ([c5c371a](https://github.com/mx-space/core/commit/c5c371a))
+* **mongo-pg-cli:** make package npm-publishable ([b9d50f5](https://github.com/mx-space/core/commit/b9d50f5))
+
+
+### Bug Fixes
+
+* **migrate:** force process.exit after success to unblock mx-migrate ([680944a](https://github.com/mx-space/core/commit/680944a))
+* **test:** provide EnrichmentService in contract test fixtures ([b5ead1b](https://github.com/mx-space/core/commit/b5ead1b))
+* **deps:** update dependency isbot to v5.1.40 ([#2687](https://github.com/mx-space/core/issues/2687)) ([5786b62](https://github.com/mx-space/core/commit/5786b62))
+
+
+
 ## <small>[12.1.1](https://github.com/mx-space/core/compare/v12.1.0...v12.1.1) (2026-05-05)</small>
 
 ### Bug Fixes
