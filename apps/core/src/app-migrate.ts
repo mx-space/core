@@ -99,8 +99,10 @@ function isCliEntry(): boolean {
 }
 
 if (isCliEntry()) {
-  runAppMigrations().catch((err) => {
-    console.error('[app-migrate] failed:', err)
-    process.exit(1)
-  })
+  runAppMigrations()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error('[app-migrate] failed:', err)
+      process.exit(1)
+    })
 }

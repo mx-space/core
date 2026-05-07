@@ -107,7 +107,16 @@ async function main() {
   await runAppMigrations()
 }
 
-main().catch((err) => {
-  console.error('[migrate] failed:', err)
-  process.exit(1)
-})
+main()
+  .then(() => {
+    // Force exit even if app.close() left handles open. ImageService's
+    // onModuleInit fires `requireDepsWithInstall('sharp')` which loads the
+    // sharp native binding once installed; sharp's worker pool keeps the
+    // event loop alive and migrate.mjs would otherwise hang here, blocking
+    // `service_completed_successfully` for mx-server in compose.
+    process.exit(0)
+  })
+  .catch((err) => {
+    console.error('[migrate] failed:', err)
+    process.exit(1)
+  })
