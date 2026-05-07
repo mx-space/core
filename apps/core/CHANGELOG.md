@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## <small>[12.2.1](https://github.com/mx-space/core/compare/v12.2.0...v12.2.1) (2026-05-07)</small>
+
+### Features
+
+* **enrichment:** add per-locale cache with TMDB en-US backfill ([5c68e81](https://github.com/mx-space/core/commit/5c68e81))
+
+
+
 ## [12.2.0](https://github.com/mx-space/core/compare/v12.1.1...v12.2.0) (2026-05-07)
 
 ### Features
