@@ -41,7 +41,15 @@ export class GitHubIssueProvider implements EnrichmentProvider {
       repo,
       issue_number: Number(issue_number),
     })
-    const attrs: NonNullable<EnrichmentResult['attributes']> = []
+    const attrs: NonNullable<EnrichmentResult['attributes']> = [
+      { key: 'repo', value: repoPart, label: 'Repository', format: 'text' },
+      {
+        key: 'number',
+        value: data.number,
+        label: 'Number',
+        format: 'number',
+      },
+    ]
 
     if (data.state)
       attrs.push({
@@ -66,7 +74,7 @@ export class GitHubIssueProvider implements EnrichmentProvider {
       })
 
     return {
-      title: `${repoPart}#${data.number}: ${data.title}`,
+      title: data.title,
       description: (data.body || '').slice(0, 300) || undefined,
       image: data.user?.avatar_url
         ? { url: data.user.avatar_url, alt: data.user.login }

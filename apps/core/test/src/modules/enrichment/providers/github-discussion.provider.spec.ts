@@ -55,6 +55,18 @@ describe('GitHubDiscussionProvider', () => {
       expect(result.title).toBe('Feature Request')
       expect(result.subtype).toBe('discussion')
       expect(result.attributes).toContainEqual({
+        key: 'repo',
+        value: 'mx-space/core',
+        label: 'Repository',
+        format: 'text',
+      })
+      expect(result.attributes).toContainEqual({
+        key: 'number',
+        value: 42,
+        label: 'Number',
+        format: 'number',
+      })
+      expect(result.attributes).toContainEqual({
         key: 'comments',
         value: 3,
         label: 'Comments',

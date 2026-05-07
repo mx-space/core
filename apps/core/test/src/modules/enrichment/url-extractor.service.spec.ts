@@ -130,6 +130,55 @@ describe('UrlExtractorService', () => {
       }
       expect(svc.extractFromLexical(state)).toEqual([])
     })
+
+    it('extracts single-link paragraphs (autolink child)', () => {
+      const state = {
+        root: {
+          children: [
+            {
+              type: 'paragraph',
+              children: [
+                { type: 'autolink', url: 'https://innei.in/posts/cat/slug' },
+              ],
+            },
+          ],
+        },
+      }
+      expect(svc.extractFromLexical(state)).toEqual([
+        'https://innei.in/posts/cat/slug',
+      ])
+    })
+
+    it('extracts single-link paragraphs (link child)', () => {
+      const state = {
+        root: {
+          children: [
+            {
+              type: 'paragraph',
+              children: [{ type: 'link', url: 'https://x.com/a' }],
+            },
+          ],
+        },
+      }
+      expect(svc.extractFromLexical(state)).toEqual(['https://x.com/a'])
+    })
+
+    it('skips paragraphs containing link mixed with other text', () => {
+      const state = {
+        root: {
+          children: [
+            {
+              type: 'paragraph',
+              children: [
+                { type: 'text', text: 'see ' },
+                { type: 'link', url: 'https://x.com/a' },
+              ],
+            },
+          ],
+        },
+      }
+      expect(svc.extractFromLexical(state)).toEqual([])
+    })
   })
 
   describe('extractFromDoc', () => {

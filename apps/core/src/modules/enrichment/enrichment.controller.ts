@@ -35,7 +35,10 @@ export class EnrichmentController {
         lang,
       )
       if (stale) {
-        res.setHeader('X-Enrichment-Stale', 'true')
+        // Fastify reply uses `header(name, value)`; the legacy
+        // `setHeader` shim is not exposed when accessed through Nest's
+        // `@Res({ passthrough: true })` adapter object.
+        res.header('X-Enrichment-Stale', 'true')
       }
       return result
     } catch (error) {

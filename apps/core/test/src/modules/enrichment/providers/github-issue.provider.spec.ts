@@ -62,8 +62,20 @@ describe('GitHubIssueProvider', () => {
 
       const result = await p.fetch('mx-space/core/issues/42')
 
-      expect(result.title).toBe('mx-space/core#42: Bug fix')
+      expect(result.title).toBe('Bug fix')
       expect(result.subtype).toBe('issue')
+      expect(result.attributes).toContainEqual({
+        key: 'repo',
+        value: 'mx-space/core',
+        label: 'Repository',
+        format: 'text',
+      })
+      expect(result.attributes).toContainEqual({
+        key: 'number',
+        value: 42,
+        label: 'Number',
+        format: 'number',
+      })
       expect(result.attributes).toContainEqual({
         key: 'state',
         value: 'open',

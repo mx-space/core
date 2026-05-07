@@ -54,8 +54,20 @@ describe('GitHubPrProvider', () => {
 
       const result = await p.fetch('mx-space/core/pulls/42')
 
-      expect(result.title).toBe('mx-space/core#42: Fix bug')
+      expect(result.title).toBe('Fix bug')
       expect(result.subtype).toBe('pr')
+      expect(result.attributes).toContainEqual({
+        key: 'repo',
+        value: 'mx-space/core',
+        label: 'Repository',
+        format: 'text',
+      })
+      expect(result.attributes).toContainEqual({
+        key: 'number',
+        value: 42,
+        label: 'Number',
+        format: 'number',
+      })
       expect(result.attributes).toContainEqual({
         key: 'merged',
         value: true,

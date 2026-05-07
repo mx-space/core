@@ -14,6 +14,23 @@ const POST_PATH_RE = /^\/posts\/([^/]+)\/([^/]+)$/
 const NOTE_DATE_PATH_RE = /^\/notes\/(\d{4})\/(\d{1,2})\/(\d{1,2})\/([^/]+)$/
 const NOTE_NID_PATH_RE = /^\/notes\/(\d+)$/
 
+interface SelfLabels {
+  type: string
+  post: string
+  note: string
+  noteHash: string
+}
+
+const LABELS: Record<string, SelfLabels> = {
+  zh: { type: '类型', post: '文章', note: '笔记', noteHash: '笔记 #' },
+  ja: { type: '種類', post: '記事', note: 'ノート', noteHash: 'ノート #' },
+  ko: { type: '종류', post: '글', note: '노트', noteHash: '노트 #' },
+  en: { type: 'Type', post: 'Post', note: 'Note', noteHash: 'Note #' },
+}
+
+const pickLabels = (locale?: string): SelfLabels =>
+  (locale && LABELS[locale]) || LABELS.en
+
 @Injectable()
 export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
   readonly name = 'mx-space'
@@ -21,6 +38,8 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
   readonly category = ENRICHMENT_CATEGORIES.SELF
   readonly priority = 5
   readonly defaultTtl = 300
+  readonly localeAware = true
+  readonly supportedLocales = ['zh', 'ja', 'ko', 'en'] as const
 
   private readonly logger = new Logger(MxSpaceProvider.name)
   /**
@@ -107,7 +126,8 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
     return /^(?:post|note|note-date):/.test(id)
   }
 
-  async fetch(id: string): Promise<EnrichmentResult> {
+  async fetch(id: string, locale?: string): Promise<EnrichmentResult> {
+    const labels = pickLabels(locale)
     const sepIdx = id.indexOf(':')
     const type = id.slice(0, sepIdx)
     const rest = id.slice(sepIdx + 1)
@@ -125,7 +145,12 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
         subtype: 'post',
         fetchedAt: '',
         attributes: [
-          { key: 'type', value: 'post', label: 'Type', format: 'text' },
+          {
+            key: 'type',
+            value: labels.post,
+            label: labels.type,
+            format: 'text',
+          },
         ],
       }
     }
@@ -136,14 +161,19 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
       const note = await this.databaseService.findNoteByNid(nid)
       if (!note) throw new Error(`Note not found: ${nid}`)
       return {
-        title: note.title || `Note #${note.nid || nid}`,
+        title: note.title || `${labels.noteHash}${note.nid || nid}`,
         description: (note.text || '').slice(0, 300) || undefined,
         url: id,
         category: this.category,
         subtype: 'note',
         fetchedAt: '',
         attributes: [
-          { key: 'type', value: 'note', label: 'Type', format: 'text' },
+          {
+            key: 'type',
+            value: labels.note,
+            label: labels.type,
+            format: 'text',
+          },
         ],
       }
     }
@@ -158,14 +188,19 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
       )
       if (!note) throw new Error(`Note not found: ${rest}`)
       return {
-        title: note.title || `Note ${rest}`,
+        title: note.title || `${labels.note} ${rest}`,
         description: (note.text || '').slice(0, 300) || undefined,
         url: id,
         category: this.category,
         subtype: 'note',
         fetchedAt: '',
         attributes: [
-          { key: 'type', value: 'note', label: 'Type', format: 'text' },
+          {
+            key: 'type',
+            value: labels.note,
+            label: labels.type,
+            format: 'text',
+          },
         ],
       }
     }

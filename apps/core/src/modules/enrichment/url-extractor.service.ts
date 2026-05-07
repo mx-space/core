@@ -39,12 +39,32 @@ export class UrlExtractorService {
     const root = resolveLexicalRoot(stateOrJson)
     if (!root) return []
     const urls = new Set<string>()
-    traverseLexicalNodes(root, (node: LexicalNodeRecord) => {
-      if (node?.type !== 'link-card') return
-      const url = node.url
-      if (typeof url !== 'string') return
-      const trimmed = url.trim()
+    const addUrl = (raw: unknown) => {
+      if (typeof raw !== 'string') return
+      const trimmed = raw.trim()
       if (trimmed) urls.add(trimmed)
+    }
+    traverseLexicalNodes(root, (node: LexicalNodeRecord) => {
+      // Explicit link-card nodes — author marked these for cardification.
+      if (node?.type === 'link-card') {
+        addUrl(node.url)
+        return
+      }
+      // Single-link paragraphs (mirrors markdown's "URL on its own line"
+      // promotion path). Catches `autolink` / `link` children that the
+      // editor produces for bare URLs pasted on their own line. Without
+      // this, mx-space self URLs (which the user typically paragraphs as
+      // bare lines) silently fall out of the inline enrichment map.
+      if (node?.type === 'paragraph') {
+        const children = node.children
+        if (Array.isArray(children) && children.length === 1) {
+          const sole = children[0] as LexicalNodeRecord | undefined
+          const t = sole?.type
+          if (t === 'autolink' || t === 'link') {
+            addUrl(sole?.url)
+          }
+        }
+      }
     })
     return [...urls]
   }

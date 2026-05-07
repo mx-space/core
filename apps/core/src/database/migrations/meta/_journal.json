@@ -57,6 +57,13 @@
       "when": 1778159977902,
       "tag": "0007_enrichment_locale_index_swap",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778176563246,
+      "tag": "0008_enrichment_clear_stale_errors",
+      "breakpoints": true
     }
   ]
 }

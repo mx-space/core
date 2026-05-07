@@ -55,6 +55,18 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
       fetchedAt: '',
       attributes: [
         {
+          key: 'repo',
+          value: `${owner}/${repo}`,
+          label: 'Repository',
+          format: 'text',
+        },
+        {
+          key: 'number',
+          value: Number(number),
+          label: 'Number',
+          format: 'number',
+        },
+        {
           key: 'author',
           value: discussion.user?.login || '',
           label: 'Author',
