@@ -1,9 +1,11 @@
 import { createHash } from 'node:crypto'
 
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { ImageService } from '~/processors/helper/helper.image.service'
 import { RedisService } from '~/processors/redis/redis.service'
+import { TaskQueueProcessor, TaskQueueService } from '~/processors/task-queue'
 
 import { EnrichmentRepository } from './enrichment.repository'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
@@ -16,8 +18,16 @@ const REDIS_TTL = 600
 const BACKOFF_BASE = 60
 const BACKOFF_MAX = 86400
 
+const ENRICHMENT_REFRESH_TASK_TYPE = 'enrichment-refresh'
+const ENRICHMENT_TASK_SCOPE = 'enrichment'
+
+interface EnrichmentRefreshPayload extends Record<string, unknown> {
+  provider: string
+  externalId: string
+}
+
 @Injectable()
-export class EnrichmentService {
+export class EnrichmentService implements OnModuleInit {
   private readonly logger = new Logger(EnrichmentService.name)
 
   constructor(
@@ -25,7 +35,39 @@ export class EnrichmentService {
     private readonly repository: EnrichmentRepository,
     private readonly configsService: ConfigsService,
     private readonly redisService: RedisService,
+    private readonly imageService: ImageService,
+    private readonly taskQueueService: TaskQueueService,
+    private readonly taskQueueProcessor: TaskQueueProcessor,
   ) {}
+
+  onModuleInit() {
+    this.taskQueueProcessor.registerHandler<EnrichmentRefreshPayload>({
+      type: ENRICHMENT_REFRESH_TASK_TYPE,
+      execute: async (payload: EnrichmentRefreshPayload) => {
+        try {
+          await this.refresh(payload.provider, payload.externalId)
+        } catch (error) {
+          // Record per-row failure so backoff kicks in on subsequent SWR
+          // resolves; re-throw so the task queue marks the task failed.
+          this.logger.warn(
+            `Enrichment refresh task failed for ${payload.provider}:${payload.externalId}: ${error.message}`,
+          )
+          try {
+            await this.repository.recordFailure(
+              payload.provider,
+              payload.externalId,
+              error.message,
+            )
+          } catch (recordError) {
+            this.logger.warn(
+              `recordFailure failed for ${payload.provider}:${payload.externalId}: ${recordError.message}`,
+            )
+          }
+          throw error
+        }
+      },
+    })
+  }
 
   async resolve(
     url: string,
@@ -59,7 +101,8 @@ export class EnrichmentService {
       throw new TokenMissingError(provider.name)
     }
 
-    // 4. DB cache
+    // 4. DB cache — SWR: return any existing row immediately, refresh in
+    // background when expired and not in failure backoff.
     const dbRow = await this.repository.findByProviderAndExternalId(
       provider.name,
       match.id,
@@ -67,27 +110,28 @@ export class EnrichmentService {
     const now = new Date()
 
     if (dbRow) {
-      const isExpired = dbRow.expiresAt && dbRow.expiresAt < now
-      if (!isExpired) {
-        await this.setToRedis(url, dbRow.normalized)
-        return { result: dbRow.normalized }
-      }
-      // Expired + backoff
-      const backoffSeconds = this.calculateBackoff(dbRow.failureCount)
-      const backoffUntil = new Date(
-        dbRow.fetchedAt.getTime() + backoffSeconds * 1000,
-      )
-      if (dbRow.failureCount > 0 && now < backoffUntil) {
+      const isExpired = !!dbRow.expiresAt && dbRow.expiresAt < now
+
+      if (isExpired) {
+        const inBackoff = this.isInFailureBackoff(dbRow, now)
+        if (!inBackoff) {
+          this.enqueueRefresh(provider.name, match.id)
+        }
         return { result: dbRow.normalized, stale: true }
       }
+
+      await this.setToRedis(url, dbRow.normalized)
+      return { result: dbRow.normalized }
     }
 
-    // 5. Fetch fresh
+    // 5. Cold path — synchronous fetch
     try {
       const result = await provider.fetch(match.id)
       result.fetchedAt = new Date().toISOString()
       result.category = provider.category
       if (match.subtype) result.subtype = match.subtype
+
+      await this.enrichWithImageMeta(result)
 
       const expiresAt = new Date(Date.now() + provider.defaultTtl * 1000)
       await this.repository.upsert(
@@ -104,14 +148,6 @@ export class EnrichmentService {
       this.logger.warn(
         `Provider ${provider.name} fetch failed for ${match.id}: ${error.message}`,
       )
-      if (dbRow?.normalized) {
-        await this.repository.recordFailure(
-          provider.name,
-          match.id,
-          error.message,
-        )
-        return { result: dbRow.normalized, stale: true }
-      }
       throw error
     }
   }
@@ -146,6 +182,8 @@ export class EnrichmentService {
     result.fetchedAt = new Date().toISOString()
     result.category = provider.category
 
+    await this.enrichWithImageMeta(result)
+
     const expiresAt = new Date(Date.now() + provider.defaultTtl * 1000)
     await this.repository.upsert(
       providerName,
@@ -165,6 +203,8 @@ export class EnrichmentService {
     const result = await provider.fetch(id)
     result.fetchedAt = new Date().toISOString()
     result.category = provider.category
+
+    await this.enrichWithImageMeta(result)
 
     const expiresAt = new Date(Date.now() + provider.defaultTtl * 1000)
     await this.repository.upsert(
@@ -195,16 +235,16 @@ export class EnrichmentService {
   }
 
   /**
-   * Bulk URL → cached EnrichmentResult lookup. No upstream fetch; rows that
-   * are stale (past `expiresAt`) or absent are skipped — the consumer
-   * (frontend cold path) will hit `/enrichment/resolve` to refresh.
+   * Bulk URL → cached EnrichmentResult lookup. Returns any existing row
+   * (including expired ones) so SSR hydration matches SWR semantics; for
+   * expired non-backoff rows, also enqueues a background refresh.
    */
   async hydrateUrls(
     urls: readonly string[],
   ): Promise<Record<string, EnrichmentResult>> {
     if (urls.length === 0) return {}
     const unique = [...new Set(urls)]
-    const now = Date.now()
+    const now = new Date()
     const out: Record<string, EnrichmentResult> = {}
 
     await Promise.all(
@@ -216,7 +256,12 @@ export class EnrichmentService {
           ref.externalId,
         )
         if (!row) return
-        if (row.expiresAt && row.expiresAt.getTime() < now) return
+
+        const isExpired = !!row.expiresAt && row.expiresAt < now
+        if (isExpired && !this.isInFailureBackoff(row, now)) {
+          this.enqueueRefresh(ref.provider, ref.externalId)
+        }
+
         out[url] = row.normalized
       }),
     )
@@ -236,6 +281,62 @@ export class EnrichmentService {
         missingKeys,
       }
     })
+  }
+
+  /**
+   * Best-effort enrichment of an EnrichmentResult with image-derived metadata
+   * (dominant accent color, blurhash, dimensions). Mutates `result` in place.
+   * Skipped when no image URL is set or when `color` is already populated
+   * (preserves provider-specific writes such as github-repo's language name).
+   */
+  private async enrichWithImageMeta(result: EnrichmentResult): Promise<void> {
+    if (!result.image?.url) return
+    if (result.color) return
+
+    try {
+      const { size, accent, blurHash } =
+        await this.imageService.getOnlineImageSizeAndMeta(result.image.url)
+      result.color = accent
+      result.image.blurhash = blurHash
+      if (size.width != null) result.image.width = size.width
+      if (size.height != null) result.image.height = size.height
+    } catch (error) {
+      this.logger.warn(
+        `Image meta extraction failed for ${result.url}: ${error.message}`,
+      )
+      // swallow — color/blurhash/size are optional fields
+    }
+  }
+
+  private enqueueRefresh(providerName: string, externalId: string): void {
+    const dedupKey = `${providerName}:${externalId}`
+    void this.taskQueueService
+      .createTask({
+        type: ENRICHMENT_REFRESH_TASK_TYPE,
+        scope: ENRICHMENT_TASK_SCOPE,
+        dedupKey,
+        payload: {
+          provider: providerName,
+          externalId,
+        } satisfies EnrichmentRefreshPayload,
+      })
+      .catch((error) => {
+        this.logger.warn(
+          `Failed to enqueue enrichment refresh for ${providerName}:${externalId}: ${error.message}`,
+        )
+      })
+  }
+
+  private isInFailureBackoff(
+    row: { failureCount: number; fetchedAt: Date },
+    now: Date,
+  ): boolean {
+    if (row.failureCount <= 0) return false
+    const backoffSeconds = this.calculateBackoff(row.failureCount)
+    const backoffUntil = new Date(
+      row.fetchedAt.getTime() + backoffSeconds * 1000,
+    )
+    return now < backoffUntil
   }
 
   private async getFromRedis(url: string): Promise<EnrichmentResult | null> {

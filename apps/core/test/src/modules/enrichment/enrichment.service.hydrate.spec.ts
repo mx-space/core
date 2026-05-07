@@ -36,6 +36,7 @@ describe('EnrichmentService.hydrateUrls', () => {
       url: string,
     ) => { provider: string; externalId: string } | null
     rows?: Map<string, EnrichmentRow>
+    taskQueueService?: { createTask: ReturnType<typeof vi.fn> }
   }) {
     const repository = {
       findByProviderAndExternalId: vi.fn(
@@ -48,6 +49,10 @@ describe('EnrichmentService.hydrateUrls', () => {
     const service = Object.create(EnrichmentService.prototype) as any
     service.repository = repository
     service.matchUrlToRef = stubs.matchUrlToRef ?? (() => null)
+    service.taskQueueService = stubs.taskQueueService ?? {
+      createTask: vi.fn(async () => ({ taskId: 't1', created: true })),
+    }
+    service.logger = { warn: vi.fn() }
     return service as EnrichmentService
   }
 
@@ -87,19 +92,61 @@ describe('EnrichmentService.hydrateUrls', () => {
     expect(result[url]?.title).toBe('Next.js')
   })
 
-  it('skips stale (expired) rows', async () => {
+  it('returns expired rows and enqueues a refresh task', async () => {
     const url = 'https://github.com/vercel/next.js'
     const row = makeRow({
       expiresAt: new Date(Date.now() - 1000),
     })
+    const taskQueueService = {
+      createTask: vi.fn(async () => ({ taskId: 't1', created: true })),
+    }
     const svc = makeService({
       matchUrlToRef: () => ({
         provider: 'gh-repo',
         externalId: 'vercel/next.js',
       }),
       rows: new Map([['gh-repo:vercel/next.js', row]]),
+      taskQueueService,
     })
-    expect(await svc.hydrateUrls([url])).toEqual({})
+
+    const result = await svc.hydrateUrls([url])
+    expect(result[url]).toBeDefined()
+    // wait a tick for fire-and-forget enqueue
+    await new Promise((r) => setImmediate(r))
+    expect(taskQueueService.createTask).toHaveBeenCalledTimes(1)
+    expect(taskQueueService.createTask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'enrichment-refresh',
+        dedupKey: 'gh-repo:vercel/next.js',
+        payload: { provider: 'gh-repo', externalId: 'vercel/next.js' },
+      }),
+    )
+  })
+
+  it('does not enqueue refresh for expired rows in failure backoff', async () => {
+    const url = 'https://github.com/vercel/next.js'
+    const row = makeRow({
+      expiresAt: new Date(Date.now() - 1000),
+      failureCount: 1,
+      // backoff = 60 * 2^1 = 120s. fetchedAt now → still in backoff.
+      fetchedAt: new Date(Date.now() - 1000),
+    })
+    const taskQueueService = {
+      createTask: vi.fn(async () => ({ taskId: 't1', created: true })),
+    }
+    const svc = makeService({
+      matchUrlToRef: () => ({
+        provider: 'gh-repo',
+        externalId: 'vercel/next.js',
+      }),
+      rows: new Map([['gh-repo:vercel/next.js', row]]),
+      taskQueueService,
+    })
+
+    const result = await svc.hydrateUrls([url])
+    expect(result[url]).toBeDefined()
+    await new Promise((r) => setImmediate(r))
+    expect(taskQueueService.createTask).not.toHaveBeenCalled()
   })
 
   it('keeps rows with no expiresAt', async () => {
