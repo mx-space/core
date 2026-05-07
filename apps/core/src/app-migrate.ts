@@ -7,7 +7,10 @@
  * migration's `up()` is responsible for its own row-level idempotency; the
  * runner only uses the `_app_migrations` ledger to skip work on re-runs.
  *
- * Schema migrations must run first — `migrate:all` chains the two binaries.
+ * Schema migrations must run first — `src/migrate.ts` chains both phases so
+ * `node migrate.mjs` (and `pnpm migrate`) is enough. This file remains a
+ * standalone entry as a dev escape hatch (`pnpm migrate:app`) and exposes
+ * `runAppMigrations` for the combined runner.
  *
  * Mirrors the import-order trick in `main.ts`: `initializeApp()` MUST run
  * before AppModule (and anything in its graph) evaluates ambient globals
@@ -16,13 +19,16 @@
  */
 import 'dotenv-expand/config'
 
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 import { Logger } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import type pkg from 'pg'
 
 import { initializeApp } from './global/index.global'
 
-async function main() {
+export async function runAppMigrations() {
   initializeApp()
 
   const [
@@ -82,7 +88,19 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('[app-migrate] failed:', err)
-  process.exit(1)
-})
+function isCliEntry(): boolean {
+  try {
+    const here = fileURLToPath(import.meta.url)
+    const entry = process.argv[1] ? path.resolve(process.argv[1]) : ''
+    return here === entry
+  } catch {
+    return false
+  }
+}
+
+if (isCliEntry()) {
+  runAppMigrations().catch((err) => {
+    console.error('[app-migrate] failed:', err)
+    process.exit(1)
+  })
+}

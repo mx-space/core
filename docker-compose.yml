@@ -1,19 +1,24 @@
+# Shared env block — mx-migrate boots a full Nest context (it now runs the
+# combined schema + app-data migration phases), so it must receive the same
+# config the runtime app needs (Redis, snowflake worker id, jwt secret, …).
+x-mx-env: &mx-env
+  TZ: Asia/Shanghai
+  NODE_ENV: production
+  REDIS_HOST: redis
+  PG_HOST: postgres
+  PG_PORT: "5432"
+  PG_USER: mx
+  PG_PASSWORD: mx
+  PG_DATABASE: mx_core
+  SNOWFLAKE_WORKER_ID: "1"
+  ALLOWED_ORIGINS: localhost
+  JWT_SECRET: YOUR_SUPER_SECURED_JWT_SECRET_STRING
+
 services:
   app:
     container_name: mx-server
     image: innei/mx-server:latest
-    environment:
-      - TZ=Asia/Shanghai
-      - NODE_ENV=production
-      - REDIS_HOST=redis
-      - PG_HOST=postgres
-      - PG_PORT=5432
-      - PG_USER=mx
-      - PG_PASSWORD=mx
-      - PG_DATABASE=mx_core
-      - SNOWFLAKE_WORKER_ID=1
-      - ALLOWED_ORIGINS=localhost
-      - JWT_SECRET=YOUR_SUPER_SECURED_JWT_SECRET_STRING
+    environment: *mx-env
     volumes:
       - ./data/mx-space:/root/.mx-space
     ports:
@@ -33,24 +38,20 @@ services:
       retries: 5
       start_period: 30s
 
-  # One-shot release-phase migration runner. Applies any pending Drizzle
-  # migrations and exits 0; the `app` service waits for completion via
-  # `service_completed_successfully` before starting. See
-  # docs/superpowers/specs/2026-05-05-database-migration-release-phase-design.md.
+  # One-shot release-phase migration runner. Runs schema migrations (drizzle)
+  # then app-data migrations (Nest-bootstrapped registry). Exits 0; the `app`
+  # service waits for completion via `service_completed_successfully` before
+  # starting. See docs/superpowers/specs/2026-05-05-database-migration-release-phase-design.md.
   mx-migrate:
     container_name: mx-migrate
     image: innei/mx-server:latest
     command: ['node', 'migrate.mjs']
-    environment:
-      - TZ=Asia/Shanghai
-      - PG_HOST=postgres
-      - PG_PORT=5432
-      - PG_USER=mx
-      - PG_PASSWORD=mx
-      - PG_DATABASE=mx_core
+    environment: *mx-env
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - mx-space
     restart: 'no'

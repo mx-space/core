@@ -298,7 +298,10 @@ export function applyContentPreference<
   return doc
 }
 
-function traverseLexicalNodes(node: any, visitor: (node: any) => void): void {
+export function traverseLexicalNodes(
+  node: any,
+  visitor: (node: any) => void,
+): void {
   if (!node) return
   visitor(node)
   if (Array.isArray(node.children)) {

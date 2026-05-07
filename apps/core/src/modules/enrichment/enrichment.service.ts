@@ -18,7 +18,7 @@ const REDIS_TTL = 600
 const BACKOFF_BASE = 60
 const BACKOFF_MAX = 86400
 
-const ENRICHMENT_REFRESH_TASK_TYPE = 'enrichment-refresh'
+const ENRICHMENT_REFRESH_TASK_TYPE = 'enrichment:refresh'
 const ENRICHMENT_TASK_SCOPE = 'enrichment'
 
 interface EnrichmentRefreshPayload extends Record<string, unknown> {
@@ -72,11 +72,9 @@ export class EnrichmentService implements OnModuleInit {
   async resolve(
     url: string,
   ): Promise<{ result: EnrichmentResult; stale?: boolean }> {
-    // 1. Redis cache
     const redisHit = await this.getFromRedis(url)
     if (redisHit) return { result: redisHit }
 
-    // 2. Match URL
     let parsedUrl: URL
     try {
       parsedUrl = new URL(url)
@@ -89,7 +87,6 @@ export class EnrichmentService implements OnModuleInit {
 
     const { provider, match } = matched
 
-    // 3. Check enabled + token
     const config = await this.configsService.get('thirdPartyServiceIntegration')
     if (!this.isProviderEnabled(provider, config)) {
       throw new ProviderDisabledError(provider.name)
@@ -101,8 +98,8 @@ export class EnrichmentService implements OnModuleInit {
       throw new TokenMissingError(provider.name)
     }
 
-    // 4. DB cache — SWR: return any existing row immediately, refresh in
-    // background when expired and not in failure backoff.
+    // SWR: return any existing row immediately, refresh in background when
+    // expired and not in failure backoff.
     const dbRow = await this.repository.findByProviderAndExternalId(
       provider.name,
       match.id,
@@ -124,24 +121,11 @@ export class EnrichmentService implements OnModuleInit {
       return { result: dbRow.normalized }
     }
 
-    // 5. Cold path — synchronous fetch
     try {
-      const result = await provider.fetch(match.id)
-      result.fetchedAt = new Date().toISOString()
-      result.category = provider.category
-      if (match.subtype) result.subtype = match.subtype
-
-      await this.enrichWithImageMeta(result)
-
-      const expiresAt = new Date(Date.now() + provider.defaultTtl * 1000)
-      await this.repository.upsert(
-        provider.name,
-        match.id,
-        match.fullUrl,
-        result,
-        null,
-        expiresAt,
-      )
+      const result = await this.fetchAndPersist(provider, match.id, {
+        url: match.fullUrl,
+        subtype: match.subtype,
+      })
       await this.setToRedis(url, result)
       return { result }
     } catch (error) {
@@ -178,43 +162,14 @@ export class EnrichmentService implements OnModuleInit {
     )
     if (row) return row.normalized
 
-    const result = await provider.fetch(id)
-    result.fetchedAt = new Date().toISOString()
-    result.category = provider.category
-
-    await this.enrichWithImageMeta(result)
-
-    const expiresAt = new Date(Date.now() + provider.defaultTtl * 1000)
-    await this.repository.upsert(
-      providerName,
-      id,
-      result.url,
-      result,
-      null,
-      expiresAt,
-    )
-    return result
+    return this.fetchAndPersist(provider, id)
   }
 
   async refresh(providerName: string, id: string): Promise<EnrichmentResult> {
     const provider = this.providerRegistry.getByName(providerName)
     if (!provider) throw new Error(`Unknown provider: ${providerName}`)
 
-    const result = await provider.fetch(id)
-    result.fetchedAt = new Date().toISOString()
-    result.category = provider.category
-
-    await this.enrichWithImageMeta(result)
-
-    const expiresAt = new Date(Date.now() + provider.defaultTtl * 1000)
-    await this.repository.upsert(
-      providerName,
-      id,
-      result.url,
-      result,
-      null,
-      expiresAt,
-    )
+    const result = await this.fetchAndPersist(provider, id)
     await this.deleteFromRedis(result.url)
     return result
   }
@@ -244,27 +199,30 @@ export class EnrichmentService implements OnModuleInit {
   ): Promise<Record<string, EnrichmentResult>> {
     if (urls.length === 0) return {}
     const unique = [...new Set(urls)]
+    const urlByRef = new Map<string, string>()
+    const refs: { provider: string; externalId: string }[] = []
+    for (const url of unique) {
+      const ref = this.matchUrlToRef(url)
+      if (!ref) continue
+      const key = `${ref.provider}:${ref.externalId}`
+      if (urlByRef.has(key)) continue
+      urlByRef.set(key, url)
+      refs.push(ref)
+    }
+    if (refs.length === 0) return {}
+
+    const rows = await this.repository.findManyByRefs(refs)
     const now = new Date()
     const out: Record<string, EnrichmentResult> = {}
-
-    await Promise.all(
-      unique.map(async (url) => {
-        const ref = this.matchUrlToRef(url)
-        if (!ref) return
-        const row = await this.repository.findByProviderAndExternalId(
-          ref.provider,
-          ref.externalId,
-        )
-        if (!row) return
-
-        const isExpired = !!row.expiresAt && row.expiresAt < now
-        if (isExpired && !this.isInFailureBackoff(row, now)) {
-          this.enqueueRefresh(ref.provider, ref.externalId)
-        }
-
-        out[url] = row.normalized
-      }),
-    )
+    for (const row of rows) {
+      const url = urlByRef.get(`${row.provider}:${row.externalId}`)
+      if (!url) continue
+      const isExpired = !!row.expiresAt && row.expiresAt < now
+      if (isExpired && !this.isInFailureBackoff(row, now)) {
+        this.enqueueRefresh(row.provider, row.externalId)
+      }
+      out[url] = row.normalized
+    }
     return out
   }
 
@@ -281,6 +239,35 @@ export class EnrichmentService implements OnModuleInit {
         missingKeys,
       }
     })
+  }
+
+  /**
+   * Cold-path fetch shared by `resolve`, `getOne`, and `refresh`: calls the
+   * provider, stamps category/subtype/fetchedAt, runs image-meta enrichment,
+   * upserts the row, and returns the result.
+   */
+  private async fetchAndPersist(
+    provider: EnrichmentProvider,
+    externalId: string,
+    opts?: { url?: string; subtype?: string },
+  ): Promise<EnrichmentResult> {
+    const result = await provider.fetch(externalId)
+    result.fetchedAt = new Date().toISOString()
+    result.category = provider.category
+    if (opts?.subtype) result.subtype = opts.subtype
+
+    await this.enrichWithImageMeta(result)
+
+    const expiresAt = new Date(Date.now() + provider.defaultTtl * 1000)
+    await this.repository.upsert(
+      provider.name,
+      externalId,
+      opts?.url ?? result.url,
+      result,
+      null,
+      expiresAt,
+    )
+    return result
   }
 
   /**

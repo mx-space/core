@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common'
+import type { Token, Tokens } from 'marked'
 import { marked } from 'marked'
 
 import type { ContentFormat } from '~/shared/types/content-format.type'
-import { isLexical } from '~/utils/content.util'
+import {
+  isLexical,
+  isNestedLexicalEditorState,
+  traverseLexicalNodes,
+} from '~/utils/content.util'
 
 interface ContentDoc {
   text?: string | null
@@ -10,11 +15,13 @@ interface ContentDoc {
   contentFormat?: ContentFormat | string | null
 }
 
+type LexicalNodeRecord = Record<string, unknown>
+
 @Injectable()
 export class UrlExtractorService {
   extractFromMarkdown(content: string | null | undefined): string[] {
     if (!content) return []
-    let tokens: ReturnType<typeof marked.lexer>
+    let tokens: Token[]
     try {
       tokens = marked.lexer(content)
     } catch {
@@ -32,7 +39,13 @@ export class UrlExtractorService {
     const root = resolveLexicalRoot(stateOrJson)
     if (!root) return []
     const urls = new Set<string>()
-    walkLexical(root, urls)
+    traverseLexicalNodes(root, (node: LexicalNodeRecord) => {
+      if (node?.type !== 'link-card') return
+      const url = node.url
+      if (typeof url !== 'string') return
+      const trimmed = url.trim()
+      if (trimmed) urls.add(trimmed)
+    })
     return [...urls]
   }
 
@@ -50,33 +63,23 @@ export class UrlExtractorService {
   }
 }
 
-function pickSingleLinkParagraph(token: any): string | null {
-  if (token?.type !== 'paragraph') return null
-  const inner = Array.isArray(token.tokens) ? token.tokens : []
-  if (inner.length !== 1) return null
+function pickSingleLinkParagraph(token: Token): string | null {
+  if (token.type !== 'paragraph') return null
+  const inner = (token as Tokens.Paragraph).tokens
+  if (!Array.isArray(inner) || inner.length !== 1) return null
   const sole = inner[0]
-  if (sole?.type === 'link' && typeof sole.href === 'string') {
-    return sole.href.trim() || null
-  }
-  return null
+  if (sole?.type !== 'link') return null
+  const href = (sole as Tokens.Link).href
+  if (typeof href !== 'string') return null
+  return href.trim() || null
 }
 
-function resolveLexicalRoot(input: unknown): any {
+function resolveLexicalRoot(input: unknown): LexicalNodeRecord | null {
   if (!input || typeof input !== 'object') return null
-  const node: any = input
+  if (isNestedLexicalEditorState(input)) {
+    return input.root as unknown as LexicalNodeRecord
+  }
+  const node = input as LexicalNodeRecord
   if (Array.isArray(node.children)) return node
-  if (node.root && Array.isArray(node.root.children)) return node.root
   return null
-}
-
-function walkLexical(node: any, out: Set<string>): void {
-  if (!node || typeof node !== 'object') return
-  if (node.type === 'link-card' && typeof node.url === 'string') {
-    const trimmed = node.url.trim()
-    if (trimmed) out.add(trimmed)
-  }
-  const children = node.children
-  if (Array.isArray(children)) {
-    for (const child of children) walkLexical(child, out)
-  }
 }

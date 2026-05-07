@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, eq, gt, sql } from 'drizzle-orm'
+import { and, eq, gt, inArray, or, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { enrichmentCache } from '~/database/schema'
@@ -35,6 +35,27 @@ export class EnrichmentRepository extends BaseRepository {
     return rows[0] ? this.mapRow(rows[0]) : null
   }
 
+  async findManyByRefs(
+    refs: readonly { provider: string; externalId: string }[],
+  ): Promise<EnrichmentRow[]> {
+    if (refs.length === 0) return []
+    const byProvider = new Map<string, string[]>()
+    for (const ref of refs) {
+      const ids = byProvider.get(ref.provider)
+      if (ids) ids.push(ref.externalId)
+      else byProvider.set(ref.provider, [ref.externalId])
+    }
+    const clauses = [...byProvider.entries()].map(([provider, ids]) =>
+      and(
+        eq(enrichmentCache.provider, provider),
+        inArray(enrichmentCache.externalId, ids),
+      ),
+    )
+    const where = clauses.length === 1 ? clauses[0] : or(...clauses)
+    const rows = await this.db.select().from(enrichmentCache).where(where)
+    return rows.map((r) => this.mapRow(r))
+  }
+
   async upsert(
     provider: string,
     externalId: string,
@@ -43,7 +64,7 @@ export class EnrichmentRepository extends BaseRepository {
     raw: unknown | null,
     expiresAt: Date | null,
   ): Promise<EnrichmentRow> {
-    const result = await this.db
+    const [result] = await this.db
       .insert(enrichmentCache)
       .values({
         id: await this.snowflake.nextId(),
@@ -68,7 +89,7 @@ export class EnrichmentRepository extends BaseRepository {
       })
       .returning()
 
-    return this.mapRow(result[0])
+    return this.mapRow(result)
   }
 
   async upsertIfAbsent(input: {

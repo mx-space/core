@@ -1,11 +1,20 @@
 /* eslint-disable no-console */
 /**
- * Release-phase schema migration runner.
+ * Combined migration runner.
  *
- * Intentionally avoids importing `~/app.config` so this binary stays a
- * pure pre-deploy step — it must not require SNOWFLAKE_WORKER_ID,
- * JWT_SECRET, or any other runtime config that the app expects.
+ * Phase 1 — schema migrations (drizzle-kit): pure pre-deploy, holds its own
+ *           advisory lock, no Nest boot. The schema phase intentionally avoids
+ *           importing `~/app.config` so a failure here surfaces *before* any
+ *           runtime config is touched.
+ * Phase 2 — app-data migrations (`./app-migrate`): boots Nest, distinct
+ *           advisory lock. Loaded via dynamic `import()` so its transitive
+ *           `~/app.config` evaluation only fires after schema phase logs.
+ *
+ * Both phases must succeed for the binary to exit 0. `node migrate.mjs` (in
+ * the docker image) and `pnpm migrate` (in dev) both run the chain.
  */
+import 'dotenv-expand/config'
+
 import path from 'node:path'
 
 import { drizzle } from 'drizzle-orm/node-postgres'
@@ -54,7 +63,7 @@ function resolveMigrationsFolder(): string {
     : path.resolve(process.cwd(), 'src', 'database', 'migrations')
 }
 
-async function main() {
+async function runSchemaMigrations() {
   const cfg = resolvePgConfig()
   const pool = new Pool({
     connectionString: cfg.connectionString,
@@ -77,17 +86,25 @@ async function main() {
   const target = cfg.connectionString
     ? cfg.connectionString.replace(/:[^/:@]+@/, ':***@')
     : `${cfg.host}:${cfg.port}/${cfg.database}`
-  console.log(`[migrate] target=${target}`)
-  console.log(`[migrate] folder=${migrationsFolder}`)
+  console.log(`[migrate] schema target=${target}`)
+  console.log(`[migrate] schema folder=${migrationsFolder}`)
   const start = Date.now()
   try {
     await withAdvisoryLock(pool, SCHEMA_MIGRATION_LOCK_KEY, async () => {
       await drizzleMigrate(db, { migrationsFolder })
     })
-    console.log(`[migrate] done in ${Date.now() - start}ms`)
+    console.log(`[migrate] schema done in ${Date.now() - start}ms`)
   } finally {
     await pool.end()
   }
+}
+
+async function main() {
+  await runSchemaMigrations()
+  // Defer app-migrate so its transitive `~/app.config` evaluation (which
+  // validates SNOWFLAKE_WORKER_ID etc.) only runs after schema phase.
+  const { runAppMigrations } = await import('./app-migrate')
+  await runAppMigrations()
 }
 
 main().catch((err) => {

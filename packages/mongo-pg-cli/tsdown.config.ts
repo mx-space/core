@@ -8,7 +8,7 @@ export default defineConfig({
   // mx-core specs.
   entry: ['src/cli.ts', 'src/index.ts'],
   outDir: 'dist',
-  dts: true,
+  dts: { eager: true },
   format: ['esm'],
   platform: 'node',
   // Inline every dependency so the produced CLI is a single, runnable file.
