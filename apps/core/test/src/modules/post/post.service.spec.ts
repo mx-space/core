@@ -80,6 +80,7 @@ const createService = () => {
     deleteAllTracker: vi.fn(),
   }
   const lexicalService = { populateText: vi.fn() }
+  const enrichmentService = { scheduleDocPrefetch: vi.fn() }
   const service = new PostService(
     repository as any,
     commentService as any,
@@ -88,6 +89,7 @@ const createService = () => {
     eventManager as any,
     slugTrackerService as any,
     lexicalService as any,
+    enrichmentService as any,
     moduleRef as any,
   )
   service.onApplicationBootstrap()

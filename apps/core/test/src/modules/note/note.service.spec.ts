@@ -59,6 +59,7 @@ const createService = () => {
     markAsPublished: vi.fn(),
     deleteByRef: vi.fn(),
   }
+  const enrichmentService = { scheduleDocPrefetch: vi.fn() }
   const service = new NoteService(
     repository as any,
     imageService as any,
@@ -67,6 +68,7 @@ const createService = () => {
     lexicalService as any,
     slugTrackerService as any,
     aiSlugBackfillService as any,
+    enrichmentService as any,
     commentService as any,
     draftService as any,
   )

@@ -16,6 +16,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { AdminListQueryDto, ResolveQueryDto } from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
+import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
 
 @ApiController('enrichment')
 export class EnrichmentController {
@@ -25,12 +26,26 @@ export class EnrichmentController {
   async resolve(
     @Query() query: ResolveQueryDto,
     @Res({ passthrough: true }) res: any,
-  ): Promise<EnrichmentResult> {
-    const { result, stale } = await this.enrichmentService.resolve(query.url)
-    if (stale) {
-      res.setHeader('X-Enrichment-Stale', 'true')
+  ): Promise<EnrichmentResult | undefined> {
+    try {
+      const { result, stale } = await this.enrichmentService.resolve(query.url)
+      if (stale) {
+        res.setHeader('X-Enrichment-Stale', 'true')
+      }
+      return result
+    } catch (error) {
+      // Provider not configured / token missing is a "no data" case, not an
+      // error: return 204 so frontends can render the URL as a plain link
+      // without per-card 500s polluting logs.
+      if (
+        error instanceof ProviderDisabledError ||
+        error instanceof TokenMissingError
+      ) {
+        res.status(204)
+        return
+      }
+      throw error
     }
-    return result
   }
 
   @Get(':provider/*')

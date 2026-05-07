@@ -31,6 +31,7 @@ import type { CategoryService } from '../category/category.service'
 import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.enum'
 import type { DraftService } from '../draft/draft.service'
+import { EnrichmentService } from '../enrichment/enrichment.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { PostRepository } from './post.repository'
 import {
@@ -52,6 +53,7 @@ export class PostService implements OnApplicationBootstrap {
     private readonly eventManager: EventManagerService,
     private readonly slugTrackerService: SlugTrackerService,
     private readonly lexicalService: LexicalService,
+    private readonly enrichmentService: EnrichmentService,
     private readonly moduleRef: ModuleRef,
   ) {}
 
@@ -231,6 +233,8 @@ export class PostService implements OnApplicationBootstrap {
       ])
     })
 
+    this.enrichmentService.scheduleDocPrefetch(doc)
+
     return doc
   }
 
@@ -380,6 +384,7 @@ export class PostService implements OnApplicationBootstrap {
     }
 
     scheduleManager.schedule(() => this.afterUpdatePost(id))
+    if (updated) this.enrichmentService.scheduleDocPrefetch(updated)
     return updated
   }
 

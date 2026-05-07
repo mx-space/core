@@ -5,10 +5,11 @@ import type {
 } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { RESPONSE_PASSTHROUGH_METADATA } from '~/constants/system.constant'
-import { snakecaseKeysWithCompat } from '~/utils/case.util'
 import { isObjectLike } from 'es-toolkit/compat'
 import { map, Observable } from 'rxjs'
+
+import { RESPONSE_PASSTHROUGH_METADATA } from '~/constants/system.constant'
+import { snakecaseKeysWithCompat } from '~/utils/case.util'
 
 @Injectable()
 export class JSONTransformInterceptor implements NestInterceptor {
@@ -62,6 +63,10 @@ export class JSONTransformInterceptor implements NestInterceptor {
       obj[key] = this.serialize(obj[key])
     }
 
-    return snakecaseKeysWithCompat(obj)
+    // Skip key conversion for URL-keyed maps (e.g. `enrichments`): the keys
+    // ARE the URLs and must round-trip verbatim so SSR consumers can look
+    // up entries by the original href. Inner values still get camel→snake
+    // recursion since snakecase-keys descends with deep:true by default.
+    return snakecaseKeysWithCompat(obj, { exclude: [/^https?:\/\//i] })
   }
 }

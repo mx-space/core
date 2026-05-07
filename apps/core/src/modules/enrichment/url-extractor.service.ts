@@ -9,7 +9,7 @@ import {
   traverseLexicalNodes,
 } from '~/utils/content.util'
 
-interface ContentDoc {
+export interface ContentDoc {
   text?: string | null
   content?: string | null
   contentFormat?: ContentFormat | string | null

@@ -18,6 +18,7 @@ import { isDefined } from '~/utils/validator.util'
 
 import { DraftRefType } from '../draft/draft.enum'
 import { DraftService } from '../draft/draft.service'
+import { EnrichmentService } from '../enrichment/enrichment.service'
 import { PageRepository } from './page.repository'
 import { PAGE_PROTECTED_KEYS, type PageModel } from './page.types'
 
@@ -29,6 +30,7 @@ export class PageService {
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
     private readonly lexicalService: LexicalService,
+    private readonly enrichmentService: EnrichmentService,
     @Inject(forwardRef(() => DraftService))
     private readonly draftService: DraftService,
   ) {}
@@ -130,6 +132,8 @@ export class PageService {
       { scope: EventScope.TO_SYSTEM_VISITOR },
     )
 
+    this.enrichmentService.scheduleDocPrefetch(res)
+
     return res
   }
 
@@ -195,6 +199,8 @@ export class PageService {
         ),
       ])
     })
+
+    this.enrichmentService.scheduleDocPrefetch(newDoc)
   }
 
   async updateOrder(id: string, order: number) {

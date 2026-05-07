@@ -29,6 +29,7 @@ import { AiSlugBackfillService } from '../ai/ai-writer/ai-slug-backfill.service'
 import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.enum'
 import { DraftService } from '../draft/draft.service'
+import { EnrichmentService } from '../enrichment/enrichment.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { NoteRepository } from './note.repository'
 import {
@@ -50,6 +51,7 @@ export class NoteService {
     private readonly lexicalService: LexicalService,
     private readonly slugTrackerService: SlugTrackerService,
     private readonly aiSlugBackfillService: AiSlugBackfillService,
+    private readonly enrichmentService: EnrichmentService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
     @Inject(forwardRef(() => DraftService))
@@ -345,6 +347,8 @@ export class NoteService {
       ])
     })
 
+    this.enrichmentService.scheduleDocPrefetch(note)
+
     return note
   }
 
@@ -435,6 +439,8 @@ export class NoteService {
           ),
       ])
     })
+
+    this.enrichmentService.scheduleDocPrefetch(updated)
 
     await this.broadcastNoteUpdateEvent(updated)
     return updated

@@ -2,16 +2,22 @@ import { createHash } from 'node:crypto'
 
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 
+import type { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { TaskQueueProcessor, TaskQueueService } from '~/processors/task-queue'
+import { scheduleManager } from '~/utils/schedule.util'
 
 import { EnrichmentRepository } from './enrichment.repository'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
 import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
 import type { EnrichmentProvider } from './providers/provider.interface'
 import { ProviderRegistry } from './providers/provider.registry'
+import type { ContentDoc } from './url-extractor.service'
+import { UrlExtractorService } from './url-extractor.service'
+
+type ThirdPartyConfig = IConfig['thirdPartyServiceIntegration']
 
 const REDIS_KEY_PREFIX = 'enrichment:resolve:'
 const REDIS_TTL = 600
@@ -38,6 +44,7 @@ export class EnrichmentService implements OnModuleInit {
     private readonly imageService: ImageService,
     private readonly taskQueueService: TaskQueueService,
     private readonly taskQueueProcessor: TaskQueueProcessor,
+    private readonly urlExtractor: UrlExtractorService,
   ) {}
 
   onModuleInit() {
@@ -192,7 +199,9 @@ export class EnrichmentService implements OnModuleInit {
   /**
    * Bulk URL → cached EnrichmentResult lookup. Returns any existing row
    * (including expired ones) so SSR hydration matches SWR semantics; for
-   * expired non-backoff rows, also enqueues a background refresh.
+   * expired non-backoff rows, also enqueues a background refresh. For refs
+   * with no cache row at all, enqueues a refresh when the provider is ready
+   * — first GET returns empty, subsequent GETs are warm.
    */
   async hydrateUrls(
     urls: readonly string[],
@@ -214,8 +223,11 @@ export class EnrichmentService implements OnModuleInit {
     const rows = await this.repository.findManyByRefs(refs)
     const now = new Date()
     const out: Record<string, EnrichmentResult> = {}
+    const seenKeys = new Set<string>()
     for (const row of rows) {
-      const url = urlByRef.get(`${row.provider}:${row.externalId}`)
+      const key = `${row.provider}:${row.externalId}`
+      seenKeys.add(key)
+      const url = urlByRef.get(key)
       if (!url) continue
       const isExpired = !!row.expiresAt && row.expiresAt < now
       if (isExpired && !this.isInFailureBackoff(row, now)) {
@@ -223,7 +235,76 @@ export class EnrichmentService implements OnModuleInit {
       }
       out[url] = row.normalized
     }
+
+    const missing = refs.filter(
+      (r) => !seenKeys.has(`${r.provider}:${r.externalId}`),
+    )
+    if (missing.length > 0) {
+      const config = await this.configsService.get(
+        'thirdPartyServiceIntegration',
+      )
+      for (const ref of missing) {
+        const provider = this.providerRegistry.getByName(ref.provider)
+        if (!provider) continue
+        if (!this.isProviderReady(provider, config)) continue
+        this.enqueueRefresh(ref.provider, ref.externalId)
+      }
+    }
     return out
+  }
+
+  async prefetchUrls(urls: readonly string[]): Promise<void> {
+    if (urls.length === 0) return
+    const unique = [...new Set(urls)]
+    const ready: string[] = []
+    let config: ThirdPartyConfig | undefined
+    for (const url of unique) {
+      const ref = this.matchUrlToRef(url)
+      if (!ref) continue
+      const provider = this.providerRegistry.getByName(ref.provider)
+      if (!provider) continue
+      config ??= await this.configsService.get('thirdPartyServiceIntegration')
+      if (!this.isProviderReady(provider, config)) continue
+      ready.push(url)
+    }
+    if (ready.length === 0) return
+
+    await Promise.all(
+      ready.map(async (url) => {
+        try {
+          await this.resolve(url)
+        } catch (error) {
+          this.logger.warn(`prefetch failed for ${url}: ${error.message}`)
+        }
+      }),
+    )
+  }
+
+  /**
+   * Schedule a non-blocking prefetch of every link-card URL in the doc.
+   * Owned by EnrichmentService so post/note/page services share one hook
+   * instead of triplicating the extract→prefetch wiring.
+   */
+  scheduleDocPrefetch(doc: ContentDoc): void {
+    scheduleManager.schedule(async () => {
+      const urls = this.urlExtractor.extractFromDoc(doc)
+      if (urls.length === 0) return
+      await this.prefetchUrls(urls)
+    })
+  }
+
+  private isProviderReady(
+    provider: EnrichmentProvider,
+    config: ThirdPartyConfig,
+  ): boolean {
+    if (!this.isProviderEnabled(provider, config)) return false
+    if (
+      provider.requiredConfigKeys?.length &&
+      !this.hasRequiredConfig(provider, config)
+    ) {
+      return false
+    }
+    return true
   }
 
   async getProviders(): Promise<ProviderMeta[]> {
@@ -372,7 +453,7 @@ export class EnrichmentService implements OnModuleInit {
    */
   private isProviderEnabled(
     provider: EnrichmentProvider,
-    config: any,
+    config: ThirdPartyConfig,
   ): boolean {
     const gate = provider.featureGateConfigKey
     if (!gate) return true
@@ -383,14 +464,14 @@ export class EnrichmentService implements OnModuleInit {
 
   private hasRequiredConfig(
     provider: EnrichmentProvider,
-    config: any,
+    config: ThirdPartyConfig,
   ): boolean {
     return this.getMissingConfigKeys(provider, config).length === 0
   }
 
   private getMissingConfigKeys(
     provider: EnrichmentProvider,
-    config: any,
+    config: ThirdPartyConfig,
   ): string[] {
     const required = provider.requiredConfigKeys
     if (!required?.length) return []

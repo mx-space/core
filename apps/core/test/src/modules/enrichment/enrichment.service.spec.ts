@@ -153,7 +153,7 @@ describe('EnrichmentService.resolve (SWR)', () => {
     expect(taskQueueService.createTask).toHaveBeenCalledTimes(1)
     expect(taskQueueService.createTask).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: 'enrichment-refresh',
+        type: 'enrichment:refresh',
         scope: 'enrichment',
         dedupKey: 'tmdb:movie/1',
         payload: { provider: 'tmdb', externalId: 'movie/1' },

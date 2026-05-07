@@ -39,10 +39,15 @@ describe('EnrichmentService.hydrateUrls', () => {
     taskQueueService?: { createTask: ReturnType<typeof vi.fn> }
   }) {
     const repository = {
-      findByProviderAndExternalId: vi.fn(
-        async (provider: string, externalId: string) => {
-          const key = `${provider}:${externalId}`
-          return stubs.rows?.get(key) ?? null
+      findManyByRefs: vi.fn(
+        async (refs: { provider: string; externalId: string }[]) => {
+          const out: EnrichmentRow[] = []
+          for (const ref of refs) {
+            const key = `${ref.provider}:${ref.externalId}`
+            const row = stubs.rows?.get(key)
+            if (row) out.push(row)
+          }
+          return out
         },
       ),
     }
@@ -52,6 +57,10 @@ describe('EnrichmentService.hydrateUrls', () => {
     service.taskQueueService = stubs.taskQueueService ?? {
       createTask: vi.fn(async () => ({ taskId: 't1', created: true })),
     }
+    // Cache-miss enqueue path checks provider readiness; default stubs
+    // skip the path so existing tests keep their original assertions.
+    service.providerRegistry = { getByName: () => undefined }
+    service.configsService = { get: async () => ({}) }
     service.logger = { warn: vi.fn() }
     return service as EnrichmentService
   }
@@ -116,7 +125,7 @@ describe('EnrichmentService.hydrateUrls', () => {
     expect(taskQueueService.createTask).toHaveBeenCalledTimes(1)
     expect(taskQueueService.createTask).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: 'enrichment-refresh',
+        type: 'enrichment:refresh',
         dedupKey: 'gh-repo:vercel/next.js',
         payload: { provider: 'gh-repo', externalId: 'vercel/next.js' },
       }),
@@ -166,15 +175,18 @@ describe('EnrichmentService.hydrateUrls', () => {
   it('dedupes the same URL appearing twice', async () => {
     const url = 'https://github.com/vercel/next.js'
     const row = makeRow({})
-    const repoSpy = vi.fn(async () => row)
+    const repoSpy = vi.fn(async () => [row])
     const svc = makeService({
       matchUrlToRef: () => ({
         provider: 'gh-repo',
         externalId: 'vercel/next.js',
       }),
     }) as any
-    svc.repository = { findByProviderAndExternalId: repoSpy }
+    svc.repository = { findManyByRefs: repoSpy }
     await svc.hydrateUrls([url, url, url])
     expect(repoSpy).toHaveBeenCalledTimes(1)
+    expect(repoSpy).toHaveBeenCalledWith([
+      { provider: 'gh-repo', externalId: 'vercel/next.js' },
+    ])
   })
 })
