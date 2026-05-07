@@ -1,87 +1,103 @@
 # CHANGELOG
 
 
-## <small>[12.2.1](https://github.com/mx-space/core/compare/v12.2.0...v12.2.1) (2026-05-07)</small>
+## <small>12.2.2 (2026-05-07)</small>
 
-### Features
+* release: v12.2.2 ([145a064](https://github.com/mx-space/core/commit/145a064))
+* release(api-client): publish 4.0.0 ([2cb558c](https://github.com/mx-space/core/commit/2cb558c))
+* feat: add new database constants and methods for post and note retrieval ([509de8f](https://github.com/mx-space/core/commit/509de8f))
+* feat(enrichment): localize MxSpaceProvider, fix lexical link extraction ([f4e6b18](https://github.com/mx-space/core/commit/f4e6b18))
+* chore: update script ([eb64c37](https://github.com/mx-space/core/commit/eb64c37))
 
-* **enrichment:** add per-locale cache with TMDB en-US backfill ([5c68e81](https://github.com/mx-space/core/commit/5c68e81))
+## <small>12.2.1 (2026-05-07)</small>
 
+* release: v12.2.1 ([f5bad2e](https://github.com/mx-space/core/commit/f5bad2e))
+* feat(enrichment): add per-locale cache with TMDB en-US backfill ([5c68e81](https://github.com/mx-space/core/commit/5c68e81))
 
+## 12.2.0 (2026-05-07)
 
-## [12.2.0](https://github.com/mx-space/core/compare/v12.1.1...v12.2.0) (2026-05-07)
+* release: v12.2.0 ([fe3135d](https://github.com/mx-space/core/commit/fe3135d))
+* fix(build): produce real dist for db-schema and stop emitting through tsconfig ([a62208c](https://github.com/mx-space/core/commit/a62208c))
+* fix(deps): update dependency isbot to v5.1.40 (#2687) ([5786b62](https://github.com/mx-space/core/commit/5786b62)), closes [#2687](https://github.com/mx-space/core/issues/2687)
+* fix(migrate): force process.exit after success to unblock mx-migrate ([680944a](https://github.com/mx-space/core/commit/680944a))
+* fix(test): provide EnrichmentService in contract test fixtures ([b5ead1b](https://github.com/mx-space/core/commit/b5ead1b))
+* feat: enrichment integration with recently module + graceful shutdown ([c5c371a](https://github.com/mx-space/core/commit/c5c371a))
+* feat: enrichment module — third-party URL resolver (#2689) ([6a8cb8e](https://github.com/mx-space/core/commit/6a8cb8e)), closes [#2689](https://github.com/mx-space/core/issues/2689)
+* feat(enrichment): app migration framework + provider readiness + tmdb v4 ([b9b657d](https://github.com/mx-space/core/commit/b9b657d))
+* feat(enrichment): implement enrichment refresh task handling and image metadata enrichment ([debbd2b](https://github.com/mx-space/core/commit/debbd2b))
+* feat(enrichment): integrate URL extraction and hydration in enrichment module ([b40e50d](https://github.com/mx-space/core/commit/b40e50d))
+* feat(enrichment): prefetch on doc write, preserve url keys in hydrated map ([91ccf82](https://github.com/mx-space/core/commit/91ccf82))
+* feat(mongo-pg-cli): make package npm-publishable ([b9d50f5](https://github.com/mx-space/core/commit/b9d50f5))
+* ci: shard vitest into 3 parallel jobs and bump timeout to 20min ([5b3cc01](https://github.com/mx-space/core/commit/5b3cc01))
+* refactor: code quality and lint fixes across codebase (#2685) ([6058fae](https://github.com/mx-space/core/commit/6058fae)), closes [#2685](https://github.com/mx-space/core/issues/2685)
+* refactor: streamline docker-compose environment variables and enhance migration service ([7064d83](https://github.com/mx-space/core/commit/7064d83))
+* docs(migrate): point v12 upgrade guides at @mx-space/mongo-pg-cli ([28e00ee](https://github.com/mx-space/core/commit/28e00ee))
+* docs(spec): link-card unification design (post/note/page) ([835ad60](https://github.com/mx-space/core/commit/835ad60))
+* docs(spec): thinking enrichment unification + app migration framework ([9bb9484](https://github.com/mx-space/core/commit/9bb9484))
+* chore(deps): update pnpm to v11.0.6 (#2686) ([4126355](https://github.com/mx-space/core/commit/4126355)), closes [#2686](https://github.com/mx-space/core/issues/2686)
+* chore(docker): drop bundled mongo-pg-cli and mongodb-tools from image ([8e9b030](https://github.com/mx-space/core/commit/8e9b030))
+* test(mongo-pg-cli): own package now owns its spec, dts emit re-enabled ([93b9279](https://github.com/mx-space/core/commit/93b9279))
 
-### Features
+## <small>12.1.1 (2026-05-05)</small>
 
-* **enrichment:** third-party URL resolver module ([#2689](https://github.com/mx-space/core/issues/2689)) ([6a8cb8e](https://github.com/mx-space/core/commit/6a8cb8e))
-* **enrichment:** integrate URL extraction and hydration in enrichment module ([b40e50d](https://github.com/mx-space/core/commit/b40e50d))
-* **enrichment:** app migration framework + provider readiness + tmdb v4 ([b9b657d](https://github.com/mx-space/core/commit/b9b657d))
-* **enrichment:** implement refresh task handling and image metadata enrichment ([debbd2b](https://github.com/mx-space/core/commit/debbd2b))
-* **enrichment:** prefetch on doc write, preserve url keys in hydrated map ([91ccf82](https://github.com/mx-space/core/commit/91ccf82))
-* **enrichment:** integration with recently module + graceful shutdown ([c5c371a](https://github.com/mx-space/core/commit/c5c371a))
-* **mongo-pg-cli:** make package npm-publishable ([b9d50f5](https://github.com/mx-space/core/commit/b9d50f5))
+* release: v12.1.1 ([95d609d](https://github.com/mx-space/core/commit/95d609d))
+* fix(build): produce real dist for db-schema and stop emitting through tsconfig ([aa5db1e](https://github.com/mx-space/core/commit/aa5db1e))
+* refactor: extract db schema and mongo→pg cli into workspace packages ([c56f39d](https://github.com/mx-space/core/commit/c56f39d))
 
+## 12.1.0 (2026-05-05)
 
-### Bug Fixes
+* release: v12.1.0 ([afeffde](https://github.com/mx-space/core/commit/afeffde))
+* fix(auth): store passkey transports as text not array ([271bbb3](https://github.com/mx-space/core/commit/271bbb3))
+* fix(migrate): read PG env directly to avoid app.config snowflake check ([cca3a97](https://github.com/mx-space/core/commit/cca3a97))
+* fix(snippet): allow null for metatype, schema, path, secret fields ([64297c2](https://github.com/mx-space/core/commit/64297c2))
+* fix(snippet): allow null for method field, default to GET ([6a7ecdc](https://github.com/mx-space/core/commit/6a7ecdc))
+* fix(snippet): allow null value for comment field in schema ([f3e6c0e](https://github.com/mx-space/core/commit/f3e6c0e))
+* fix(snippet): allow null values for all nullable fields in schema ([f85400c](https://github.com/mx-space/core/commit/f85400c))
+* feat(db): run schema migrations as a release-phase step ([b74d182](https://github.com/mx-space/core/commit/b74d182))
+* docs(spec): add release-phase database migration design ([03f440b](https://github.com/mx-space/core/commit/03f440b))
+* chore(deps): update docker/setup-buildx-action action to v4 (#2675) ([850c0f8](https://github.com/mx-space/core/commit/850c0f8)), closes [#2675](https://github.com/mx-space/core/issues/2675)
+* chore(deps): update docker/setup-qemu-action action to v4 (#2676) ([fbecb76](https://github.com/mx-space/core/commit/fbecb76)), closes [#2676](https://github.com/mx-space/core/issues/2676)
+* chore(deps): update node.js to v24 (#2678) ([4e1507d](https://github.com/mx-space/core/commit/4e1507d)), closes [#2678](https://github.com/mx-space/core/issues/2678)
+* chore(deps): update redis docker tag to v8 (#2680) ([4004c50](https://github.com/mx-space/core/commit/4004c50)), closes [#2680](https://github.com/mx-space/core/issues/2680)
+* chore(deps): update testcontainers-node monorepo to v11 (#2682) ([440178c](https://github.com/mx-space/core/commit/440178c)), closes [#2682](https://github.com/mx-space/core/issues/2682)
 
-* **migrate:** force process.exit after success to unblock mx-migrate ([680944a](https://github.com/mx-space/core/commit/680944a))
-* **test:** provide EnrichmentService in contract test fixtures ([b5ead1b](https://github.com/mx-space/core/commit/b5ead1b))
-* **deps:** update dependency isbot to v5.1.40 ([#2687](https://github.com/mx-space/core/issues/2687)) ([5786b62](https://github.com/mx-space/core/commit/5786b62))
+## <small>12.0.3 (2026-05-05)</small>
 
+* release: v12.0.3 ([f01b9b4](https://github.com/mx-space/core/commit/f01b9b4))
 
+## <small>12.0.2 (2026-05-05)</small>
 
-## <small>[12.1.1](https://github.com/mx-space/core/compare/v12.1.0...v12.1.1) (2026-05-05)</small>
-
-### Bug Fixes
-
-* **entrypoint:** auto-run schema migrations on container start (advisory-locked, opt-out via MX_AUTO_MIGRATE=false). Single-instance docker users and orchestrators without a release-phase hook (Dokploy, plain `docker run`) now work out of the box; multi-replica setups remain safe because the advisory lock serializes startup.
-
-
-## [12.1.0](https://github.com/mx-space/core/compare/v12.0.3...v12.1.0) (2026-05-05)
-
-### Features
-
-* **db:** run schema migrations as a release-phase step ([b74d182](https://github.com/mx-space/core/commit/b74d182))
-
-
-### Bug Fixes
-
-* **auth:** store passkey transports as text not array ([271bbb3](https://github.com/mx-space/core/commit/271bbb3))
-* **migrate:** read PG env directly to avoid app.config snowflake check ([cca3a97](https://github.com/mx-space/core/commit/cca3a97))
-* **snippet:** allow null for metatype, schema, path, secret fields ([64297c2](https://github.com/mx-space/core/commit/64297c2))
-* **snippet:** allow null for method field, default to GET ([6a7ecdc](https://github.com/mx-space/core/commit/6a7ecdc))
-* **snippet:** allow null value for comment field in schema ([f3e6c0e](https://github.com/mx-space/core/commit/f3e6c0e))
-* **snippet:** allow null values for all nullable fields in schema ([f85400c](https://github.com/mx-space/core/commit/f85400c))
-
-
-## <small>[12.0.3](https://github.com/mx-space/core/compare/v12.0.2...v12.0.3) (2026-05-05)</small>
-
-### Bug Fixes
-
-* **pageproxy:** bundled admin upgraded to mx-admin v7.0.1 (fixes stale `window.version` injection)
-
-
-## <small>[12.0.2](https://github.com/mx-space/core/compare/v12.0.1...v12.0.2) (2026-05-05)</small>
-
-### Bug Fixes
-
-* **deps:** update dependency @anthropic-ai/sdk to ^0.93.0 ([#2670](https://github.com/mx-space/core/issues/2670)) ([5a56908](https://github.com/mx-space/core/commit/5a56908))
-* **deps:** update dependency drizzle-orm to ^0.45.0 [security] ([#2663](https://github.com/mx-space/core/issues/2663)) ([d02df4c](https://github.com/mx-space/core/commit/d02df4c))
-* **deps:** update dependency openai to v6.36.0 ([#2671](https://github.com/mx-space/core/issues/2671)) ([614419c](https://github.com/mx-space/core/commit/614419c))
-* **deps:** update dependency zod to v4.4.3 ([#2672](https://github.com/mx-space/core/issues/2672)) ([14e7496](https://github.com/mx-space/core/commit/14e7496))
-* **pageproxy:** prefer bundled admin when newer than local download ([951752a](https://github.com/mx-space/core/commit/951752a))
-
+* release: v12.0.2 ([89e02fd](https://github.com/mx-space/core/commit/89e02fd))
+* fix(core): derive snowflake worker offset from swarm task slot ([6663c55](https://github.com/mx-space/core/commit/6663c55))
+* fix(deps): update dependency @anthropic-ai/sdk to ^0.93.0 (#2670) ([5a56908](https://github.com/mx-space/core/commit/5a56908)), closes [#2670](https://github.com/mx-space/core/issues/2670)
+* fix(deps): update dependency drizzle-orm to ^0.45.0 [security] (#2663) ([d02df4c](https://github.com/mx-space/core/commit/d02df4c)), closes [#2663](https://github.com/mx-space/core/issues/2663)
+* fix(deps): update dependency openai to v6.36.0 (#2671) ([614419c](https://github.com/mx-space/core/commit/614419c)), closes [#2671](https://github.com/mx-space/core/issues/2671)
+* fix(deps): update dependency zod to v4.4.3 (#2672) ([14e7496](https://github.com/mx-space/core/commit/14e7496)), closes [#2672](https://github.com/mx-space/core/issues/2672)
+* fix(pageproxy): prefer bundled admin when newer than local download ([951752a](https://github.com/mx-space/core/commit/951752a))
+* chore: add bench script ([48e4d12](https://github.com/mx-space/core/commit/48e4d12))
+* chore: add Telegram community link to README ([f0cf07e](https://github.com/mx-space/core/commit/f0cf07e))
+* chore: refresh brand logo ([42f678f](https://github.com/mx-space/core/commit/42f678f))
+* chore(deps): update dependency @cloudflare/workers-types to v4.20260504.1 (#2652) ([e50e059](https://github.com/mx-space/core/commit/e50e059)), closes [#2652](https://github.com/mx-space/core/issues/2652)
+* chore(deps): update dependency @cloudflare/workers-types to v4.20260504.1 (#2667) ([374809b](https://github.com/mx-space/core/commit/374809b)), closes [#2667](https://github.com/mx-space/core/issues/2667)
+* chore(deps): update dependency mongodb to ~7.2.0 (#2554) ([e37ec25](https://github.com/mx-space/core/commit/e37ec25)), closes [#2554](https://github.com/mx-space/core/issues/2554)
+* chore(deps): update dependency whatwg-url to v16 (#2614) ([cd0c9db](https://github.com/mx-space/core/commit/cd0c9db)), closes [#2614](https://github.com/mx-space/core/issues/2614)
+* chore(deps): update dependency wrangler to v4.87.0 (#2668) ([695df0e](https://github.com/mx-space/core/commit/695df0e)), closes [#2668](https://github.com/mx-space/core/issues/2668)
+* chore(deps): update docker/build-push-action action to v7 (#2636) ([fcea9a1](https://github.com/mx-space/core/commit/fcea9a1)), closes [#2636](https://github.com/mx-space/core/issues/2636)
+* chore(deps): update docker/login-action action to v4 (#2637) ([d7e795f](https://github.com/mx-space/core/commit/d7e795f)), closes [#2637](https://github.com/mx-space/core/issues/2637)
+* chore(deps): update docker/metadata-action action to v6 (#2638) ([b037eb3](https://github.com/mx-space/core/commit/b037eb3)), closes [#2638](https://github.com/mx-space/core/issues/2638)
+* chore(deps): update github artifact actions (major) (#2615) ([2a38ead](https://github.com/mx-space/core/commit/2a38ead)), closes [#2615](https://github.com/mx-space/core/issues/2615)
+* chore(deps): update pnpm to v11.0.5 (#2669) ([87569c9](https://github.com/mx-space/core/commit/87569c9)), closes [#2669](https://github.com/mx-space/core/issues/2669)
+* test(category): match wrapped DrizzleQueryError cause for FK assertion ([d83e566](https://github.com/mx-space/core/commit/d83e566))
+* feat: update build script to include model extraction (#2666) ([f7dbf34](https://github.com/mx-space/core/commit/f7dbf34)), closes [#2666](https://github.com/mx-space/core/issues/2666)
 
 ## <small>12.0.1 (2026-05-04)</small>
 
-### Bug Fixes
-
-* **ci:** align release smoke test with PG cutover ([82a9db2](https://github.com/mx-space/core/commit/82a9db2))
-
+* release: v12.0.1 ([657451e](https://github.com/mx-space/core/commit/657451e))
+* fix(ci): align release smoke test with PG cutover ([82a9db2](https://github.com/mx-space/core/commit/82a9db2))
 
 ## 12.0.0 (2026-05-04)
 
-* release: v12.0.0 ([fa94ec4](https://github.com/mx-space/core/commit/fa94ec4))
+* release: v12.0.0 ([d17d9a2](https://github.com/mx-space/core/commit/d17d9a2))
 * fix(deps): update dependency lru-cache to v11.3.6 (#2664) ([05ff63f](https://github.com/mx-space/core/commit/05ff63f)), closes [#2664](https://github.com/mx-space/core/issues/2664)
 * fix(migration): skip transient collections (analyzes, webhook_events, serverless_logs) ([b3286c9](https://github.com/mx-space/core/commit/b3286c9))
 * refactor: remove unused paginator decorator and related code ([f06222b](https://github.com/mx-space/core/commit/f06222b))
