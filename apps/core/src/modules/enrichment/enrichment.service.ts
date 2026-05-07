@@ -293,6 +293,19 @@ export class EnrichmentService implements OnModuleInit {
     })
   }
 
+  /**
+   * Attach a hydrated `enrichments` map to a doc for SSR. Centralized here
+   * so post/note/page controllers keep one dependency (this service) and
+   * test modules need a single mock instead of two.
+   */
+  async attachEnrichments<T extends ContentDoc>(
+    doc: T,
+  ): Promise<T & { enrichments: Record<string, EnrichmentResult> }> {
+    const urls = this.urlExtractor.extractFromDoc(doc)
+    const enrichments = urls.length ? await this.hydrateUrls(urls) : {}
+    return { ...doc, enrichments }
+  }
+
   private isProviderReady(
     provider: EnrichmentProvider,
     config: ThirdPartyConfig,

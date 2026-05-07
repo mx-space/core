@@ -19,6 +19,7 @@ import {
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { authPassHeader } from '../../../mock/guard/auth.guard'
+import { enrichmentProvider } from '../../../mock/modules/enrichment.mock'
 import { translationProvider } from '../../../mock/processors/translation.mock'
 
 const fixturePage = (overrides: Record<string, unknown> = {}) => ({
@@ -79,7 +80,7 @@ const PAGE_REQUIRED_KEYS = [
 describe('PageController admin contract (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [PageController],
-    providers: [pageServiceProvider, translationProvider],
+    providers: [pageServiceProvider, translationProvider, enrichmentProvider],
   })
 
   test('GET /pages (admin list) — required field-presence', async () => {

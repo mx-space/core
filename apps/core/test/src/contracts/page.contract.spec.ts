@@ -10,6 +10,7 @@ import {
   assertPgTimestamps,
 } from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
+import { enrichmentProvider } from '../../mock/modules/enrichment.mock'
 import { translationProvider } from '../../mock/processors/translation.mock'
 
 /**
@@ -71,7 +72,7 @@ const pageServiceProvider = {
 describe('PageController contract (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [PageController],
-    providers: [pageServiceProvider, translationProvider],
+    providers: [pageServiceProvider, translationProvider, enrichmentProvider],
   })
 
   test('GET /pages returns PG-shape items, no legacy keys', async () => {

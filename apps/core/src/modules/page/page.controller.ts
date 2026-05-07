@@ -25,7 +25,6 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import { applyContentPreference } from '~/utils/content.util'
 
 import { EnrichmentService } from '../enrichment/enrichment.service'
-import { UrlExtractorService } from '../enrichment/url-extractor.service'
 import {
   PageDetailQueryDto,
   PageDto,
@@ -41,22 +40,7 @@ export class PageController {
     private readonly pageService: PageService,
     private readonly translationService: TranslationService,
     private readonly enrichmentService: EnrichmentService,
-    private readonly urlExtractor: UrlExtractorService,
   ) {}
-
-  private async attachEnrichments<
-    T extends {
-      text?: string | null
-      content?: string | null
-      contentFormat?: string | null
-    },
-  >(doc: T): Promise<T & { enrichments: Record<string, unknown> }> {
-    const urls = this.urlExtractor.extractFromDoc(doc)
-    const enrichments = urls.length
-      ? await this.enrichmentService.hydrateUrls(urls)
-      : {}
-    return { ...doc, enrichments }
-  }
 
   @Get('/')
   async getPagesSummary(@Query() query: PagerDto, @Lang() lang?: string) {
@@ -131,7 +115,7 @@ export class PageController {
     if (!page) {
       throw new CannotFindException()
     }
-    return this.attachEnrichments(page)
+    return this.enrichmentService.attachEnrichments(page)
   }
 
   @Get('/slug/:slug')
@@ -176,7 +160,7 @@ export class PageController {
       },
       query.prefer,
     )
-    return this.attachEnrichments(finalDoc)
+    return this.enrichmentService.attachEnrichments(finalDoc)
   }
 
   @Post('/')

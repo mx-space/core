@@ -28,6 +28,7 @@ import {
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { authPassHeader } from '../../../mock/guard/auth.guard'
+import { enrichmentProvider } from '../../../mock/modules/enrichment.mock'
 import { countingServiceProvider } from '../../../mock/processors/counting.mock'
 import { translationProvider } from '../../../mock/processors/translation.mock'
 
@@ -188,6 +189,7 @@ describe('NoteController admin contract (e2e)', () => {
       noteServiceProvider,
       countingServiceProvider,
       translationProvider,
+      enrichmentProvider,
       aiSummaryProvider,
       aiInsightsProvider,
       lexicalServiceProvider,

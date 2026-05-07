@@ -19,6 +19,7 @@ import {
   assertPgTimestamps,
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
+import { enrichmentProvider } from '../../../mock/modules/enrichment.mock'
 import { translationProvider } from '../../../mock/processors/translation.mock'
 
 const fixturePage = (overrides: Record<string, unknown> = {}) => ({
@@ -62,7 +63,7 @@ const pageServiceProvider = {
 describe('Yohaku contract — page detail (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [PageController],
-    providers: [pageServiceProvider, translationProvider],
+    providers: [pageServiceProvider, translationProvider, enrichmentProvider],
   })
 
   test('GET /pages/slug/:slug — exposes every field Yohaku reads', async () => {

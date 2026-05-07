@@ -36,7 +36,6 @@ import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
 import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
 import { EnrichmentService } from '../enrichment/enrichment.service'
-import { UrlExtractorService } from '../enrichment/url-extractor.service'
 import {
   ListQueryDto,
   NidType,
@@ -95,22 +94,7 @@ export class NoteController {
     private readonly aiInsightsService: AiInsightsService,
     private readonly lexicalService: LexicalService,
     private readonly enrichmentService: EnrichmentService,
-    private readonly urlExtractor: UrlExtractorService,
   ) {}
-
-  private async attachEnrichments<
-    T extends {
-      text?: string | null
-      content?: string | null
-      contentFormat?: string | null
-    },
-  >(doc: T): Promise<T & { enrichments: Record<string, unknown> }> {
-    const urls = this.urlExtractor.extractFromDoc(doc)
-    const enrichments = urls.length
-      ? await this.enrichmentService.hydrateUrls(urls)
-      : {}
-    return { ...doc, enrichments }
-  }
 
   private async buildPublicNoteResponse(
     current: NoteModel,
@@ -178,7 +162,9 @@ export class NoteController {
     }
 
     if (isSingle) {
-      return this.attachEnrichments(applyContentPreference(currentData, prefer))
+      return this.enrichmentService.attachEnrichments(
+        applyContentPreference(currentData, prefer),
+      )
     }
 
     const [prev] = await this.noteService.findByCreatedWindow(
@@ -202,7 +188,7 @@ export class NoteController {
     }
     await this.translateAdjacentNoteTitles([prev, next], lang)
 
-    const data = await this.attachEnrichments(
+    const data = await this.enrichmentService.attachEnrichments(
       applyContentPreference(currentData, prefer),
     )
     return { data, next, prev }
@@ -452,7 +438,7 @@ export class NoteController {
       current.coordinates = null
     }
 
-    return this.attachEnrichments(current)
+    return this.enrichmentService.attachEnrichments(current)
   }
 
   @Get('/:year/:month/:day/:slug')
@@ -627,7 +613,7 @@ export class NoteController {
       .hasInsightsInLang(latest.id!, insightsLang)
       .catch(() => false)
 
-    const data = await this.attachEnrichments({
+    const data = await this.enrichmentService.attachEnrichments({
       ...latest,
       title: translationResult.title,
       text: translationResult.text,
