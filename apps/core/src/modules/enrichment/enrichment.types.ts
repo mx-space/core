@@ -39,6 +39,12 @@ export interface EnrichmentRow {
   provider: string
   externalId: string
   url: string
+  /**
+   * Cache locale tag. `''` denotes "default / locale-unaware" — used for both
+   * single-language providers and the fallback row of locale-aware providers.
+   * Non-empty values are normalized 2-letter codes (`zh`, `ja`, `ko`, `en`).
+   */
+  locale: string
   normalized: EnrichmentResult
   raw: unknown | null
   fetchedAt: Date
@@ -72,6 +78,10 @@ export interface ProviderMeta {
   requiredConfigKeys?: string[]
   /** Top-level section under `thirdPartyServiceIntegration` (e.g. `tmdb`). */
   featureGateConfigKey?: string
+  /** Whether this provider fetches per-locale variants (e.g. TMDB). */
+  localeAware: boolean
+  /** ISO-639-1 codes the provider can localize into (only when localeAware). */
+  supportedLocales?: readonly string[]
 }
 
 export class TokenMissingError extends Error {

@@ -24,6 +24,7 @@ function makeRow(overrides: Partial<EnrichmentRow> = {}): EnrichmentRow {
     provider: 'tmdb',
     externalId: 'movie/1',
     url: 'https://www.themoviedb.org/movie/1',
+    locale: '',
     normalized: makeResult(),
     raw: null,
     fetchedAt: new Date(Date.now() - 25 * 3600 * 1000),
@@ -59,6 +60,8 @@ function makeService(stubs: ServiceStubs = {}) {
     name: 'tmdb',
     category: 'media',
     defaultTtl: 86400,
+    localeAware: false as boolean,
+    supportedLocales: undefined as readonly string[] | undefined,
     fetch: vi.fn(async () => {
       if (stubs.fetchResult instanceof Error) throw stubs.fetchResult
       return stubs.fetchResult ?? makeResult()
@@ -156,7 +159,7 @@ describe('EnrichmentService.resolve (SWR)', () => {
         type: 'enrichment:refresh',
         scope: 'enrichment',
         dedupKey: 'tmdb:movie/1',
-        payload: { provider: 'tmdb', externalId: 'movie/1' },
+        payload: { provider: 'tmdb', externalId: 'movie/1', locale: '' },
       }),
     )
     // No upsert / no Redis set on stale path
@@ -209,6 +212,144 @@ describe('EnrichmentService.resolve (SWR)', () => {
     const calls = taskQueueService.createTask.mock.calls
     expect(calls[0][0].dedupKey).toBe('tmdb:movie/1')
     expect(calls[1][0].dedupKey).toBe('tmdb:movie/1')
+  })
+})
+
+describe('EnrichmentService.resolveCacheLocale', () => {
+  it('returns "" for non-locale-aware providers regardless of input', () => {
+    const { service } = makeService()
+    const provider = { localeAware: false } as any
+    expect(service.resolveCacheLocale(provider, 'zh')).toBe('')
+    expect(service.resolveCacheLocale(provider, undefined)).toBe('')
+  })
+
+  it('returns the locale when locale-aware provider supports it', () => {
+    const { service } = makeService()
+    const provider = {
+      localeAware: true,
+      supportedLocales: ['zh', 'ja', 'ko', 'en'],
+    } as any
+    expect(service.resolveCacheLocale(provider, 'zh')).toBe('zh')
+    expect(service.resolveCacheLocale(provider, 'ja')).toBe('ja')
+  })
+
+  it('falls back to "" when requested locale is unsupported', () => {
+    const { service } = makeService()
+    const provider = {
+      localeAware: true,
+      supportedLocales: ['zh', 'ja'],
+    } as any
+    expect(service.resolveCacheLocale(provider, 'fr')).toBe('')
+  })
+
+  it('falls back to "" when no requested locale', () => {
+    const { service } = makeService()
+    const provider = {
+      localeAware: true,
+      supportedLocales: ['zh'],
+    } as any
+    expect(service.resolveCacheLocale(provider, undefined)).toBe('')
+  })
+})
+
+describe('EnrichmentService.resolve (locale)', () => {
+  const url = 'https://www.themoviedb.org/movie/1'
+
+  function makeLocaleAwareService(stubs: ServiceStubs = {}) {
+    const ctx = makeService(stubs)
+    ;(ctx.provider as any).localeAware = true
+    ;(ctx.provider as any).supportedLocales = ['zh', 'ja', 'ko', 'en']
+    return ctx
+  }
+
+  it('looks up by request locale when supported', async () => {
+    const dbRow = makeRow({
+      locale: 'zh',
+      expiresAt: new Date(Date.now() + 3600_000),
+    })
+    const { service, repository } = makeLocaleAwareService({ dbRow })
+    const out = await service.resolve(url, 'zh')
+    expect(out.result).toBe(dbRow.normalized)
+    expect(repository.findByProviderAndExternalId).toHaveBeenCalledWith(
+      'tmdb',
+      'movie/1',
+      'zh',
+    )
+  })
+
+  it('falls back to empty-locale row when locale row missing, then enqueues real fetch', async () => {
+    const fallbackRow = makeRow({
+      locale: '',
+      expiresAt: new Date(Date.now() + 3600_000),
+    })
+    const repository = {
+      findByProviderAndExternalId: vi
+        .fn()
+        // first call: zh row missing
+        .mockResolvedValueOnce(null)
+        // second call: '' fallback
+        .mockResolvedValueOnce(fallbackRow),
+      upsert: vi.fn(async () => makeRow({ locale: 'zh' })),
+    }
+    const { service, taskQueueService } = makeLocaleAwareService()
+    ;(service as any).repository = repository
+    const out = await service.resolve(url, 'zh')
+    expect(out.result).toBe(fallbackRow.normalized)
+    expect(out.stale).toBe(true)
+    expect(repository.findByProviderAndExternalId).toHaveBeenCalledTimes(2)
+    expect(repository.findByProviderAndExternalId).toHaveBeenNthCalledWith(
+      1,
+      'tmdb',
+      'movie/1',
+      'zh',
+    )
+    expect(repository.findByProviderAndExternalId).toHaveBeenNthCalledWith(
+      2,
+      'tmdb',
+      'movie/1',
+      '',
+    )
+    await new Promise((r) => setImmediate(r))
+    expect(taskQueueService.createTask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dedupKey: 'tmdb:movie/1:zh',
+        payload: { provider: 'tmdb', externalId: 'movie/1', locale: 'zh' },
+      }),
+    )
+  })
+
+  it('cold-fetches with locale when no fallback row exists', async () => {
+    const { service, provider, repository } = makeLocaleAwareService({
+      dbRow: null,
+    })
+    await service.resolve(url, 'zh')
+    expect(provider.fetch).toHaveBeenCalledWith('movie/1', 'zh')
+    expect(repository.upsert).toHaveBeenCalled()
+    const upsertArgs = repository.upsert.mock.calls[0]
+    // upsert(provider, externalId, url, normalized, raw, expiresAt, locale)
+    expect(upsertArgs[6]).toBe('zh')
+  })
+
+  it('non-locale-aware provider ignores lang and uses ""', async () => {
+    const { service, provider, repository } = makeService({ dbRow: null })
+    await service.resolve(url, 'zh')
+    // fetch receives undefined locale because cacheLocale='' → fetch(id, undefined)
+    expect(provider.fetch).toHaveBeenCalledWith('movie/1', undefined)
+    expect(repository.upsert.mock.calls[0][6]).toBe('')
+  })
+
+  it('unsupported locale falls back to "" cache for locale-aware provider', async () => {
+    const dbRow = makeRow({
+      locale: '',
+      expiresAt: new Date(Date.now() + 3600_000),
+    })
+    const { service, repository } = makeLocaleAwareService({ dbRow })
+    await service.resolve(url, 'fr')
+    expect(repository.findByProviderAndExternalId).toHaveBeenCalledWith(
+      'tmdb',
+      'movie/1',
+      '',
+    )
   })
 })
 

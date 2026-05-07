@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import type { TMDBMovieApiResponse } from '../api-response.types'
@@ -8,8 +8,22 @@ import { TmdbClient } from './tmdb.client'
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500'
 
+const TMDB_LANG_MAP: Record<string, string> = {
+  zh: 'zh-CN',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  en: 'en-US',
+}
+
+const isBlank = (s?: string | null): boolean => !s || !s.trim()
+const pickNonBlank = (
+  ...vals: (string | null | undefined)[]
+): string | undefined => vals.find((v) => v && v.trim()) ?? undefined
+
 @Injectable()
 export class TmdbProvider implements EnrichmentProvider {
+  private readonly logger = new Logger(TmdbProvider.name)
+
   readonly name = 'tmdb'
   readonly displayName = 'TMDB'
   readonly category = ENRICHMENT_CATEGORIES.MEDIA
@@ -17,6 +31,8 @@ export class TmdbProvider implements EnrichmentProvider {
   readonly defaultTtl = 86400
   readonly featureGateConfigKey = 'tmdb'
   readonly requiredConfigKeys = ['apiKey']
+  readonly localeAware = true
+  readonly supportedLocales = ['zh', 'ja', 'ko', 'en'] as const
 
   constructor(private readonly client: TmdbClient) {}
 
@@ -43,9 +59,38 @@ export class TmdbProvider implements EnrichmentProvider {
     return /^(?:movie|tv)\/\d+$/.test(id)
   }
 
-  async fetch(id: string): Promise<EnrichmentResult> {
-    const data = await this.client.fetch<TMDBMovieApiResponse>(`/3/${id}`)
+  async fetch(id: string, locale?: string): Promise<EnrichmentResult> {
+    const language = locale ? TMDB_LANG_MAP[locale] : undefined
+    const data = await this.client.fetch<TMDBMovieApiResponse>(
+      `/3/${id}`,
+      language ? { language } : undefined,
+    )
     const subtype = id.startsWith('movie/') ? 'movie' : 'tv'
+
+    // TMDB returns empty `overview` (and occasionally falls back `title`/`name`
+    // to the original language) when the requested locale has no translation.
+    // For non-en requests we fetch the en-US payload as a backfill source.
+    let backfill: TMDBMovieApiResponse | undefined
+    const needsBackfill =
+      !!language &&
+      language !== 'en-US' &&
+      (isBlank(data.title || data.name) || isBlank(data.overview))
+    if (needsBackfill) {
+      try {
+        backfill = await this.client.fetch<TMDBMovieApiResponse>(`/3/${id}`, {
+          language: 'en-US',
+        })
+      } catch (error) {
+        this.logger.warn(
+          `TMDB en-US backfill failed for ${id}: ${(error as Error).message}`,
+        )
+      }
+    }
+
+    const title =
+      pickNonBlank(data.title, data.name, backfill?.title, backfill?.name) || id
+    const description = pickNonBlank(data.overview, backfill?.overview)
+
     const attrs: NonNullable<EnrichmentResult['attributes']> = []
 
     if (data.vote_average != null)
@@ -71,12 +116,12 @@ export class TmdbProvider implements EnrichmentProvider {
       })
 
     return {
-      title: data.title || data.name || id,
-      description: data.overview || undefined,
+      title,
+      description,
       image: data.poster_path
         ? {
             url: `${TMDB_IMAGE_BASE}${data.poster_path}`,
-            alt: data.title || data.name,
+            alt: title,
           }
         : undefined,
       url: `https://www.themoviedb.org/${subtype}/${data.id}`,

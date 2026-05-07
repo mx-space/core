@@ -60,6 +60,8 @@ export class ProviderRegistry {
         missingKeys,
         requiredConfigKeys: p.requiredConfigKeys,
         featureGateConfigKey: p.featureGateConfigKey,
+        localeAware: p.localeAware === true,
+        supportedLocales: p.supportedLocales,
       }
     })
   }

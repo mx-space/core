@@ -21,6 +21,7 @@ export class EnrichmentRepository extends BaseRepository {
   async findByProviderAndExternalId(
     provider: string,
     externalId: string,
+    locale = '',
   ): Promise<EnrichmentRow | null> {
     const rows = await this.db
       .select()
@@ -29,6 +30,7 @@ export class EnrichmentRepository extends BaseRepository {
         and(
           eq(enrichmentCache.provider, provider),
           eq(enrichmentCache.externalId, externalId),
+          eq(enrichmentCache.locale, locale),
         ),
       )
       .limit(1)
@@ -36,18 +38,30 @@ export class EnrichmentRepository extends BaseRepository {
   }
 
   async findManyByRefs(
-    refs: readonly { provider: string; externalId: string }[],
+    refs: readonly { provider: string; externalId: string; locale?: string }[],
   ): Promise<EnrichmentRow[]> {
     if (refs.length === 0) return []
-    const byProvider = new Map<string, string[]>()
+    // Group by (provider, locale) so each clause can use inArray on externalId.
+    const grouped = new Map<
+      string,
+      { provider: string; locale: string; ids: string[] }
+    >()
     for (const ref of refs) {
-      const ids = byProvider.get(ref.provider)
-      if (ids) ids.push(ref.externalId)
-      else byProvider.set(ref.provider, [ref.externalId])
+      const locale = ref.locale ?? ''
+      const key = `${ref.provider} ${locale}`
+      const cur = grouped.get(key)
+      if (cur) cur.ids.push(ref.externalId)
+      else
+        grouped.set(key, {
+          provider: ref.provider,
+          locale,
+          ids: [ref.externalId],
+        })
     }
-    const clauses = [...byProvider.entries()].map(([provider, ids]) =>
+    const clauses = [...grouped.values()].map(({ provider, locale, ids }) =>
       and(
         eq(enrichmentCache.provider, provider),
+        eq(enrichmentCache.locale, locale),
         inArray(enrichmentCache.externalId, ids),
       ),
     )
@@ -63,6 +77,7 @@ export class EnrichmentRepository extends BaseRepository {
     normalized: EnrichmentResult,
     raw: unknown | null,
     expiresAt: Date | null,
+    locale = '',
   ): Promise<EnrichmentRow> {
     const [result] = await this.db
       .insert(enrichmentCache)
@@ -70,13 +85,18 @@ export class EnrichmentRepository extends BaseRepository {
         id: await this.snowflake.nextId(),
         provider,
         externalId,
+        locale,
         url,
         normalized: normalized as any,
         raw,
         expiresAt,
       })
       .onConflictDoUpdate({
-        target: [enrichmentCache.provider, enrichmentCache.externalId],
+        target: [
+          enrichmentCache.provider,
+          enrichmentCache.externalId,
+          enrichmentCache.locale,
+        ],
         set: {
           normalized: normalized as any,
           raw,
@@ -100,10 +120,13 @@ export class EnrichmentRepository extends BaseRepository {
     raw: unknown | null
     fetchedAt: Date
     expiresAt: Date | null
+    locale?: string
   }): Promise<void> {
+    const locale = input.locale ?? ''
     const existing = await this.findByProviderAndExternalId(
       input.provider,
       input.externalId,
+      locale,
     )
     if (existing) return
 
@@ -111,6 +134,7 @@ export class EnrichmentRepository extends BaseRepository {
       id: await this.snowflake.nextId(),
       provider: input.provider,
       externalId: input.externalId,
+      locale,
       url: input.url,
       normalized: input.normalized as any,
       raw: input.raw,
@@ -122,6 +146,7 @@ export class EnrichmentRepository extends BaseRepository {
     provider: string,
     externalId: string,
     error: string,
+    locale = '',
   ): Promise<void> {
     await this.db
       .update(enrichmentCache)
@@ -133,33 +158,62 @@ export class EnrichmentRepository extends BaseRepository {
         and(
           eq(enrichmentCache.provider, provider),
           eq(enrichmentCache.externalId, externalId),
+          eq(enrichmentCache.locale, locale),
         ),
       )
   }
 
+  /**
+   * Delete cached rows. When `locale` is omitted, removes ALL locale variants
+   * of the (provider, externalId) tuple — admin-style purge semantics.
+   */
   async deleteByProviderAndExternalId(
     provider: string,
     externalId: string,
+    locale?: string,
   ): Promise<void> {
-    await this.db
-      .delete(enrichmentCache)
+    const conds = [
+      eq(enrichmentCache.provider, provider),
+      eq(enrichmentCache.externalId, externalId),
+    ]
+    if (locale !== undefined) {
+      conds.push(eq(enrichmentCache.locale, locale))
+    }
+    await this.db.delete(enrichmentCache).where(and(...conds))
+  }
+
+  /**
+   * Return every cached locale variant for the given (provider, externalId).
+   * Used by `invalidate` and admin "refresh all locales" flows so callers can
+   * iterate over the existing locale set without scanning the table.
+   */
+  async findAllLocalesByRef(
+    provider: string,
+    externalId: string,
+  ): Promise<EnrichmentRow[]> {
+    const rows = await this.db
+      .select()
+      .from(enrichmentCache)
       .where(
         and(
           eq(enrichmentCache.provider, provider),
           eq(enrichmentCache.externalId, externalId),
         ),
       )
+    return rows.map((r) => this.mapRow(r))
   }
 
   async listPaginated(
     page: number,
     size: number,
-    opts?: { onlyFailed?: boolean },
+    opts?: { onlyFailed?: boolean; locale?: string },
   ) {
     const offset = (page - 1) * size
-    const where = opts?.onlyFailed
-      ? gt(enrichmentCache.failureCount, 0)
-      : undefined
+    const conds = [] as any[]
+    if (opts?.onlyFailed) conds.push(gt(enrichmentCache.failureCount, 0))
+    if (opts?.locale !== undefined)
+      conds.push(eq(enrichmentCache.locale, opts.locale))
+    const where = conds.length === 0 ? undefined : and(...conds)
 
     const rowsQuery = this.db
       .select()
@@ -187,6 +241,7 @@ export class EnrichmentRepository extends BaseRepository {
       provider: row.provider,
       externalId: row.externalId,
       url: row.url,
+      locale: row.locale ?? '',
       normalized: row.normalized as EnrichmentResult,
       raw: row.raw,
       fetchedAt: row.fetchedAt,

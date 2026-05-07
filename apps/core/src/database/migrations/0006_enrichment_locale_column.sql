@@ -1,0 +1,1 @@
+ALTER TABLE "enrichment_cache" ADD COLUMN "locale" varchar(8) DEFAULT '' NOT NULL;

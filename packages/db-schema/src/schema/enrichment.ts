@@ -19,6 +19,8 @@ export const enrichmentCache = pgTable(
     externalId: varchar('external_id', { length: 256 }).notNull(),
     url: text('url').notNull(),
 
+    locale: varchar('locale', { length: 8 }).notNull().default(''),
+
     normalized: jsonb('normalized').$type<Record<string, unknown>>().notNull(),
     raw: jsonb('raw'),
 
@@ -31,9 +33,10 @@ export const enrichmentCache = pgTable(
     createdAt: createdAt(),
   },
   (table) => [
-    uniqueIndex('enrichment_provider_external_id_uniq').on(
+    uniqueIndex('enrichment_provider_external_id_locale_uniq').on(
       table.provider,
       table.externalId,
+      table.locale,
     ),
     index('enrichment_expires_at_idx').on(table.expiresAt),
   ],

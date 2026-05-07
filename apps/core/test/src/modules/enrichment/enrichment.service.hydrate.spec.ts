@@ -19,6 +19,7 @@ function makeRow(overrides: Partial<EnrichmentRow>): EnrichmentRow {
     provider: 'gh-repo',
     externalId: 'vercel/next.js',
     url: 'https://github.com/vercel/next.js',
+    locale: '',
     normalized: result,
     raw: null,
     fetchedAt: new Date('2026-01-01'),
@@ -40,12 +41,18 @@ describe('EnrichmentService.hydrateUrls', () => {
   }) {
     const repository = {
       findManyByRefs: vi.fn(
-        async (refs: { provider: string; externalId: string }[]) => {
+        async (
+          refs: {
+            provider: string
+            externalId: string
+            locale?: string
+          }[],
+        ) => {
           const out: EnrichmentRow[] = []
           for (const ref of refs) {
             const key = `${ref.provider}:${ref.externalId}`
             const row = stubs.rows?.get(key)
-            if (row) out.push(row)
+            if (row && (ref.locale ?? '') === (row.locale ?? '')) out.push(row)
           }
           return out
         },
@@ -127,7 +134,11 @@ describe('EnrichmentService.hydrateUrls', () => {
       expect.objectContaining({
         type: 'enrichment:refresh',
         dedupKey: 'gh-repo:vercel/next.js',
-        payload: { provider: 'gh-repo', externalId: 'vercel/next.js' },
+        payload: {
+          provider: 'gh-repo',
+          externalId: 'vercel/next.js',
+          locale: '',
+        },
       }),
     )
   })
@@ -186,7 +197,88 @@ describe('EnrichmentService.hydrateUrls', () => {
     await svc.hydrateUrls([url, url, url])
     expect(repoSpy).toHaveBeenCalledTimes(1)
     expect(repoSpy).toHaveBeenCalledWith([
-      { provider: 'gh-repo', externalId: 'vercel/next.js' },
+      { provider: 'gh-repo', externalId: 'vercel/next.js', locale: '' },
+    ])
+  })
+
+  it('locale-aware fallback: missing zh row + present "" row → "" is returned', async () => {
+    const url = 'https://www.themoviedb.org/movie/1'
+    const fallbackRow = makeRow({
+      provider: 'tmdb',
+      externalId: 'movie/1',
+      url,
+      locale: '',
+      normalized: { title: 'Default' } as EnrichmentResult,
+    })
+
+    const repository = {
+      // First call: zh refs → empty. Second call: '' fallback refs → fallback.
+      findManyByRefs: vi
+        .fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([fallbackRow]),
+    }
+    const taskQueueService = {
+      createTask: vi.fn(async () => ({ taskId: 't1', created: true })),
+    }
+
+    const service = Object.create(EnrichmentService.prototype) as any
+    service.repository = repository
+    service.matchUrlToRef = () => ({ provider: 'tmdb', externalId: 'movie/1' })
+    service.taskQueueService = taskQueueService
+    service.providerRegistry = {
+      getByName: () => ({
+        name: 'tmdb',
+        localeAware: true,
+        supportedLocales: ['zh', 'ja'],
+        featureGateConfigKey: undefined,
+      }),
+    }
+    service.configsService = { get: async () => ({}) }
+    service.logger = { warn: vi.fn() }
+
+    const result = await service.hydrateUrls([url], 'zh')
+    expect(result[url]).toBe(fallbackRow.normalized)
+    expect(repository.findManyByRefs).toHaveBeenCalledTimes(2)
+    expect(repository.findManyByRefs).toHaveBeenNthCalledWith(1, [
+      { provider: 'tmdb', externalId: 'movie/1', locale: 'zh' },
+    ])
+    expect(repository.findManyByRefs).toHaveBeenNthCalledWith(2, [
+      { provider: 'tmdb', externalId: 'movie/1', locale: '' },
+    ])
+    await new Promise((r) => setImmediate(r))
+    expect(taskQueueService.createTask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dedupKey: 'tmdb:movie/1:zh',
+        payload: { provider: 'tmdb', externalId: 'movie/1', locale: 'zh' },
+      }),
+    )
+  })
+
+  it('non-locale-aware provider ignores lang and looks up "" row', async () => {
+    const url = 'https://github.com/vercel/next.js'
+    const row = makeRow({})
+    const repository = {
+      findManyByRefs: vi.fn(async () => [row]),
+    }
+    const service = Object.create(EnrichmentService.prototype) as any
+    service.repository = repository
+    service.matchUrlToRef = () => ({
+      provider: 'gh-repo',
+      externalId: 'vercel/next.js',
+    })
+    service.taskQueueService = {
+      createTask: vi.fn(async () => ({ taskId: 't1', created: true })),
+    }
+    service.providerRegistry = {
+      getByName: () => ({ name: 'gh-repo', localeAware: false }),
+    }
+    service.configsService = { get: async () => ({}) }
+    service.logger = { warn: vi.fn() }
+
+    await service.hydrateUrls([url], 'zh')
+    expect(repository.findManyByRefs).toHaveBeenCalledWith([
+      { provider: 'gh-repo', externalId: 'vercel/next.js', locale: '' },
     ])
   })
 })

@@ -12,6 +12,7 @@ import type { FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { Lang } from '~/common/decorators/lang.decorator'
 
 import { AdminListQueryDto, ResolveQueryDto } from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
@@ -25,10 +26,14 @@ export class EnrichmentController {
   @Get('resolve')
   async resolve(
     @Query() query: ResolveQueryDto,
+    @Lang() lang: string | undefined,
     @Res({ passthrough: true }) res: any,
   ): Promise<EnrichmentResult | undefined> {
     try {
-      const { result, stale } = await this.enrichmentService.resolve(query.url)
+      const { result, stale } = await this.enrichmentService.resolve(
+        query.url,
+        lang,
+      )
       if (stale) {
         res.setHeader('X-Enrichment-Stale', 'true')
       }
@@ -52,9 +57,10 @@ export class EnrichmentController {
   async getOne(
     @Param('provider') provider: string,
     @Req() req: FastifyRequest,
+    @Lang() lang: string | undefined,
   ): Promise<EnrichmentResult> {
     const id = decodeURIComponent((req.params as Record<string, string>)['*'])
-    return this.enrichmentService.getOne(provider, id)
+    return this.enrichmentService.getOne(provider, id, lang)
   }
 
   @Get('admin/list')
@@ -62,6 +68,7 @@ export class EnrichmentController {
   async list(@Query() query: AdminListQueryDto) {
     return this.enrichmentService.list(query.page, query.size, {
       onlyFailed: query.onlyFailed,
+      locale: query.locale,
     })
   }
 
@@ -71,9 +78,10 @@ export class EnrichmentController {
   async refresh(
     @Param('provider') provider: string,
     @Req() req: FastifyRequest,
+    @Query('lang') lang?: string,
   ): Promise<EnrichmentResult> {
     const id = decodeURIComponent((req.params as Record<string, string>)['*'])
-    return this.enrichmentService.refresh(provider, id)
+    return this.enrichmentService.refresh(provider, id, lang)
   }
 
   @Delete('admin/cache/:provider/*')
@@ -82,9 +90,10 @@ export class EnrichmentController {
   async invalidate(
     @Param('provider') provider: string,
     @Req() req: FastifyRequest,
+    @Query('lang') lang?: string,
   ): Promise<void> {
     const id = decodeURIComponent((req.params as Record<string, string>)['*'])
-    await this.enrichmentService.invalidate(provider, id)
+    await this.enrichmentService.invalidate(provider, id, lang)
   }
 
   @Get('admin/providers')

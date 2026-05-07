@@ -11,11 +11,14 @@ export class TmdbClient {
     return config?.tmdb?.apiKey || undefined
   }
 
-  async fetch<T = any>(path: string): Promise<T> {
+  async fetch<T = any>(path: string, opts?: { language?: string }): Promise<T> {
     const apiKey = await this.getApiKey()
     if (!apiKey) throw new Error('TMDB API key not configured')
 
     const url = new URL(path, 'https://api.themoviedb.org')
+    if (opts?.language) {
+      url.searchParams.set('language', opts.language)
+    }
     const res = await fetch(url.toString(), {
       headers: {
         Accept: 'application/json',

@@ -13,5 +13,10 @@ export const AdminListQuerySchema = z.object({
     .union([z.boolean(), z.enum(['true', 'false'])])
     .optional()
     .transform((v) => v === true || v === 'true'),
+  locale: z
+    .string()
+    .max(8)
+    .optional()
+    .transform((v) => (v === undefined ? undefined : v)),
 })
 export class AdminListQueryDto extends createZodDto(AdminListQuerySchema) {}
