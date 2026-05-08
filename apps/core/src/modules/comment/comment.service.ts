@@ -364,6 +364,22 @@ export class CommentService {
       this.assignAuthProviderToComment(doc)
     }
 
+    // Owner 回复未读评论时，自动将父评论标为已读
+    if (
+      RequestContext.hasAdminAccess() &&
+      parent.state === CommentState.Unread
+    ) {
+      try {
+        await this.commentRepository.update(parent.id, {
+          state: CommentState.Read,
+        })
+      } catch (err) {
+        this.logger.warn(
+          `auto mark parent ${parent.id} as read failed: ${err instanceof Error ? err.message : err}`,
+        )
+      }
+    }
+
     const comment = await this.commentRepository.createReply({
       text: doc.text!,
       author: doc.author,
