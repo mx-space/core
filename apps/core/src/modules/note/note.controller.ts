@@ -66,6 +66,11 @@ const NOTE_LIST_TRANSLATE_FIELDS = [
     keyPath: 'topic.introduce',
     idField: 'id',
   },
+  {
+    path: 'data[].topic.description',
+    keyPath: 'topic.description',
+    idField: 'id',
+  },
 ] as const
 
 const NOTE_DETAIL_TRANSLATE_FIELDS = [
@@ -73,12 +78,44 @@ const NOTE_DETAIL_TRANSLATE_FIELDS = [
   { path: 'weather', keyPath: 'note.weather' },
   { path: 'topic.name', keyPath: 'topic.name', idField: 'id' },
   { path: 'topic.introduce', keyPath: 'topic.introduce', idField: 'id' },
+  { path: 'topic.description', keyPath: 'topic.description', idField: 'id' },
   { path: 'data.mood', keyPath: 'note.mood' },
   { path: 'data.weather', keyPath: 'note.weather' },
   { path: 'data.topic.name', keyPath: 'topic.name', idField: 'id' },
   {
     path: 'data.topic.introduce',
     keyPath: 'topic.introduce',
+    idField: 'id',
+  },
+  {
+    path: 'data.topic.description',
+    keyPath: 'topic.description',
+    idField: 'id',
+  },
+  { path: 'next.mood', keyPath: 'note.mood' },
+  { path: 'next.weather', keyPath: 'note.weather' },
+  { path: 'next.topic.name', keyPath: 'topic.name', idField: 'id' },
+  {
+    path: 'next.topic.introduce',
+    keyPath: 'topic.introduce',
+    idField: 'id',
+  },
+  {
+    path: 'next.topic.description',
+    keyPath: 'topic.description',
+    idField: 'id',
+  },
+  { path: 'prev.mood', keyPath: 'note.mood' },
+  { path: 'prev.weather', keyPath: 'note.weather' },
+  { path: 'prev.topic.name', keyPath: 'topic.name', idField: 'id' },
+  {
+    path: 'prev.topic.introduce',
+    keyPath: 'topic.introduce',
+    idField: 'id',
+  },
+  {
+    path: 'prev.topic.description',
+    keyPath: 'topic.description',
     idField: 'id',
   },
 ] as const
@@ -167,18 +204,14 @@ export class NoteController {
       )
     }
 
-    const [prev] = await this.noteService.findByCreatedWindow(
-      current.createdAt!,
-      'after',
-      1,
-      { visibleOnly },
-    )
-    const [next] = await this.noteService.findByCreatedWindow(
-      current.createdAt!,
-      'before',
-      1,
-      { visibleOnly },
-    )
+    const [[prev], [next]] = await Promise.all([
+      this.noteService.findByCreatedWindow(current.createdAt!, 'after', 1, {
+        visibleOnly,
+      }),
+      this.noteService.findByCreatedWindow(current.createdAt!, 'before', 1, {
+        visibleOnly,
+      }),
+    ])
     if (!isAuthenticated) {
       for (const adj of [prev, next]) {
         if (!adj) continue
@@ -186,34 +219,60 @@ export class NoteController {
         adj.coordinates = null
       }
     }
-    await this.translateAdjacentNoteTitles([prev, next], lang)
 
-    const data = await this.enrichmentService.attachEnrichments(
-      applyContentPreference(currentData, prefer),
-    )
-    return { data, next, prev }
+    const [, data] = await Promise.all([
+      this.translateAdjacentNotes([prev, next], lang),
+      this.enrichmentService.attachEnrichments(
+        applyContentPreference(currentData, prefer),
+      ),
+    ])
+    const adjPrev = prev ? applyContentPreference(prev, prefer) : prev
+    const adjNext = next ? applyContentPreference(next, prefer) : next
+    return { data, next: adjNext, prev: adjPrev }
   }
 
-  private async translateAdjacentNoteTitles(
+  private toArticleTranslationInput(note: NoteModel): ArticleTranslationInput {
+    return {
+      id: String(note.id),
+      title: note.title,
+      text: note.text ?? '',
+      meta: note.meta as { lang?: string } | undefined,
+      contentFormat: note.contentFormat,
+      content: note.content,
+      modifiedAt: note.modifiedAt,
+      createdAt: note.createdAt,
+    }
+  }
+
+  /**
+   * Read-only: never enqueues new translations — if a locale isn't cached, the
+   * adjacent note keeps source-language fields.
+   */
+  private async translateAdjacentNotes(
     notes: Array<NoteListItem | null>,
     lang?: string,
   ) {
     if (!lang) return
-    const idMap = new Map<NoteListItem, string>()
-    for (const note of notes) {
-      if (!note) continue
-      idMap.set(note, note.id)
-    }
-    if (!idMap.size) return
+    const items = notes.filter((note): note is NoteListItem => Boolean(note))
+    if (!items.length) return
 
-    const titleMap = await this.translationService.getCachedTitles(
-      [...idMap.values()],
-      lang,
-    )
+    const translationResults =
+      await this.translationService.translateArticleList({
+        articles: items.map((note) => this.toArticleTranslationInput(note)),
+        targetLang: lang,
+      })
 
-    for (const [note, id] of idMap) {
-      const title = titleMap.get(id)
-      if (title) note.title = title
+    for (const note of items) {
+      const translation = translationResults.get(String(note.id))
+      if (!translation?.isTranslated) continue
+      note.title = translation.title
+      note.text = translation.text
+      if (translation.content) {
+        note.content = translation.content
+        note.contentFormat = note.contentFormat ?? translation.contentFormat
+      }
+      note.isTranslated = translation.isTranslated
+      note.translationMeta = translation.translationMeta
     }
   }
 
@@ -264,16 +323,7 @@ export class NoteController {
     const translationInputs: ArticleTranslationInput[] = []
     for (const doc of result.data) {
       if (typeof doc.text === 'string') {
-        translationInputs.push({
-          id: String(doc.id),
-          title: doc.title,
-          text: doc.text,
-          meta: doc.meta as { lang?: string } | undefined,
-          contentFormat: doc.contentFormat,
-          content: doc.content,
-          modifiedAt: doc.modifiedAt,
-          createdAt: doc.createdAt,
-        })
+        translationInputs.push(this.toArticleTranslationInput(doc))
       }
     }
 

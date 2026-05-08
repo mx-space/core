@@ -6,9 +6,7 @@ import type {
   LinkModel,
   NormalizedNote,
   NormalizedPost,
-  NoteModel,
   PageModel,
-  PostModel,
   ReaderModel,
   RecentlyModel,
   SayModel,
@@ -58,9 +56,7 @@ export interface EventPayloadMapping {
 
   [BusinessEvents.LINK_APPLY]: LinkModel
 
-  [BusinessEvents.COMMENT_CREATE]: Omit<CommentModel, 'ref'> & {
-    ref: Id | PostModel | PageModel | NoteModel | RecentlyModel
-  }
+  [BusinessEvents.COMMENT_CREATE]: CommentModel
 
   [BusinessEvents.COMMENT_UPDATE]: {
     id: string
@@ -108,9 +104,7 @@ export type GenericEvent =
   | { type: BusinessEvents.LINK_APPLY; payload: LinkModel }
   | {
       type: BusinessEvents.COMMENT_CREATE
-      payload: Omit<CommentModel, 'ref'> & {
-        ref: Id | PostModel | PageModel | NoteModel | RecentlyModel
-      }
+      payload: CommentModel
     }
   | {
       type: BusinessEvents.COMMENT_UPDATE

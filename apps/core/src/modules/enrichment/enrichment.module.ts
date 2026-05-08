@@ -1,5 +1,6 @@
-import { Inject, Module, OnModuleInit } from '@nestjs/common'
+import { forwardRef, Inject, Module, OnModuleInit } from '@nestjs/common'
 
+import { AiModule } from '../ai/ai.module'
 import { ConfigsModule } from '../configs/configs.module'
 import { EnrichmentController } from './enrichment.controller'
 import { EnrichmentRepository } from './enrichment.repository'
@@ -47,7 +48,7 @@ const allProviders = [
 ]
 
 @Module({
-  imports: [ConfigsModule],
+  imports: [ConfigsModule, forwardRef(() => AiModule)],
   controllers: [EnrichmentController],
   providers: [
     EnrichmentRepository,

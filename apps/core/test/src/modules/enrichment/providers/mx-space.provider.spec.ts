@@ -6,7 +6,12 @@ describe('MxSpaceProvider', () => {
   let provider: MxSpaceProvider
 
   beforeEach(() => {
-    provider = new MxSpaceProvider(null as any, null as any)
+    provider = new MxSpaceProvider(
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+    )
     // matchUrl checks `siteHost` in non-dev mode (vitest sets NODE_ENV=test).
     // Skip the async configsService bootstrap and pin the host directly.
     ;(provider as any).siteHost = 'example.com'

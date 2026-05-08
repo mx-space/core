@@ -1,8 +1,17 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { isDev } from '~/global/env.global'
+import { DEFAULT_SUMMARY_LANG } from '~/modules/ai/ai.constants'
+import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
+import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
 
@@ -37,7 +46,15 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
   readonly displayName = 'Mix Space'
   readonly category = ENRICHMENT_CATEGORIES.SELF
   readonly priority = 5
-  readonly defaultTtl = 300
+  /**
+   * Self content lives in our own DB and changes whenever the author edits a
+   * post or note. A long TTL would surface stale titles/descriptions in link
+   * cards across the site; setting `0` makes every read mark the row expired
+   * so the SWR layer enqueues a background refresh after returning the
+   * cached value. Cost is one cheap local DB read plus a deduped task per
+   * stale access — well worth the freshness for own content.
+   */
+  readonly defaultTtl = 0
   readonly localeAware = true
   readonly supportedLocales = ['zh', 'ja', 'ko', 'en'] as const
 
@@ -53,6 +70,10 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly configsService: ConfigsService,
+    @Inject(forwardRef(() => AiSummaryService))
+    private readonly aiSummaryService: AiSummaryService,
+    @Inject(forwardRef(() => AiTranslationService))
+    private readonly aiTranslationService: AiTranslationService,
   ) {}
 
   async onModuleInit() {
@@ -134,13 +155,20 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
 
     if (type === 'post') {
       const slugIdx = rest.indexOf('/')
+      const category = slugIdx === -1 ? '' : rest.slice(0, slugIdx)
       const slug = slugIdx === -1 ? rest : rest.slice(slugIdx + 1)
       const post = await this.databaseService.findPostBySlug(slug)
       if (!post) throw new Error(`Post not found: ${rest}`)
+      const [translatedTitle, aiSummary] = await Promise.all([
+        this.lookupTitle(post.id, locale),
+        this.lookupSummary(post.id, locale),
+      ])
+      const description =
+        aiSummary || post.summary || (post.text || '').slice(0, 300) || ''
       return {
-        title: post.title || rest,
-        description: (post.text || '').slice(0, 300) || undefined,
-        url: id,
+        title: translatedTitle || post.title || rest,
+        description: description || undefined,
+        url: `/posts/${category}/${slug}`,
         category: this.category,
         subtype: 'post',
         fetchedAt: '',
@@ -160,10 +188,18 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
       if (!Number.isFinite(nid)) throw new Error(`Invalid note nid: ${rest}`)
       const note = await this.databaseService.findNoteByNid(nid)
       if (!note) throw new Error(`Note not found: ${nid}`)
+      const [translatedTitle, aiSummary] = await Promise.all([
+        this.lookupTitle(note.id, locale),
+        this.lookupSummary(note.id, locale),
+      ])
+      const description = aiSummary || (note.text || '').slice(0, 300) || ''
       return {
-        title: note.title || `${labels.noteHash}${note.nid || nid}`,
-        description: (note.text || '').slice(0, 300) || undefined,
-        url: id,
+        title:
+          translatedTitle ||
+          note.title ||
+          `${labels.noteHash}${note.nid || nid}`,
+        description: description || undefined,
+        url: `/notes/${note.nid || nid}`,
         category: this.category,
         subtype: 'note',
         fetchedAt: '',
@@ -187,10 +223,15 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
         slug,
       )
       if (!note) throw new Error(`Note not found: ${rest}`)
+      const [translatedTitle, aiSummary] = await Promise.all([
+        this.lookupTitle(note.id, locale),
+        this.lookupSummary(note.id, locale),
+      ])
+      const description = aiSummary || (note.text || '').slice(0, 300) || ''
       return {
-        title: note.title || `${labels.note} ${rest}`,
-        description: (note.text || '').slice(0, 300) || undefined,
-        url: id,
+        title: translatedTitle || note.title || `${labels.note} ${rest}`,
+        description: description || undefined,
+        url: `/notes/${year}/${month}/${day}/${slug}`,
         category: this.category,
         subtype: 'note',
         fetchedAt: '',
@@ -206,5 +247,58 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
     }
 
     throw new Error(`Unknown self content type: ${type}`)
+  }
+
+  /**
+   * Best-effort AI summary lookup keyed by article ref id. Falls back to
+   * `null` when AI summary is disabled, never generated, or any lookup error
+   * — the caller then reverts to the manual `summary` / `text` slice. Uses
+   * the cheap `batchGetSummariesByRefIds` path so we never trigger an OpenAI
+   * round-trip from a link-card render.
+   */
+  private async lookupSummary(
+    refId: string,
+    locale?: string,
+  ): Promise<string | null> {
+    try {
+      const lang = locale || DEFAULT_SUMMARY_LANG
+      const map = await this.aiSummaryService.batchGetSummariesByRefIds(
+        [refId],
+        lang,
+      )
+      return map.get(refId) ?? null
+    } catch (err) {
+      this.logger.debug(
+        `AI summary lookup failed for ${refId}: ${(err as Error)?.message ?? err}`,
+      )
+      return null
+    }
+  }
+
+  /**
+   * Best-effort cached translated-title lookup. Without this, a `/ja/` page
+   * pulling a self link card whose source post is in zh would render the
+   * Chinese title even though the rest of the article reads in Japanese.
+   * Returns `null` when no locale was negotiated, no translation exists in
+   * that locale, or the lookup throws — the caller then keeps the original
+   * `title`.
+   */
+  private async lookupTitle(
+    refId: string,
+    locale?: string,
+  ): Promise<string | null> {
+    if (!locale) return null
+    try {
+      const map = await this.aiTranslationService.findCachedTitlesByRefIds(
+        [refId],
+        locale,
+      )
+      return map.get(refId) ?? null
+    } catch (err) {
+      this.logger.debug(
+        `AI translation title lookup failed for ${refId}: ${(err as Error)?.message ?? err}`,
+      )
+      return null
+    }
   }
 }
