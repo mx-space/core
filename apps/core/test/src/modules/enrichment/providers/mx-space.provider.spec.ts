@@ -1,6 +1,16 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MxSpaceProvider } from '~/modules/enrichment/providers/self/mx-space.provider'
+
+// `pnpm test` runs vitest with `NODE_ENV=development`, which makes
+// `isDev` truthy and short-circuits `matchUrl`'s host check. Force
+// non-dev mode so the configured-host gate is exercised.
+vi.mock('~/global/env.global', async () => {
+  const actual = await vi.importActual<typeof import('~/global/env.global')>(
+    '~/global/env.global',
+  )
+  return { ...actual, isDev: false }
+})
 
 describe('MxSpaceProvider', () => {
   let provider: MxSpaceProvider
@@ -12,7 +22,6 @@ describe('MxSpaceProvider', () => {
       null as any,
       null as any,
     )
-    // matchUrl checks `siteHost` in non-dev mode (vitest sets NODE_ENV=test).
     // Skip the async configsService bootstrap and pin the host directly.
     ;(provider as any).siteHost = 'example.com'
   })

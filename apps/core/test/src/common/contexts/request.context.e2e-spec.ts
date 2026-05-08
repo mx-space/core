@@ -223,7 +223,10 @@ describe('RequestContext (e2e)', () => {
       const body = await res.json()
       expect(body.queryLang).toBe('zh')
       expect(body.lang).toBe('zh')
-      expect(body.contextLang).toBe('en')
+      // @Lang() writes the resolved query lang back into the context so
+      // downstream services (e.g. EnrichmentService.attachEnrichments) read
+      // the same locale the controller does. See lang.decorator.ts.
+      expect(body.contextLang).toBe('zh')
     })
 
     test('falls back to header lang when query lang is not provided', async () => {
