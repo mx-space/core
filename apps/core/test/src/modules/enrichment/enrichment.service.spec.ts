@@ -323,7 +323,7 @@ describe('EnrichmentService.resolve (locale)', () => {
       dbRow: null,
     })
     await service.resolve(url, 'zh')
-    expect(provider.fetch).toHaveBeenCalledWith('movie/1', 'zh')
+    expect(provider.fetch).toHaveBeenCalledWith('movie/1', 'zh', { url })
     expect(repository.upsert).toHaveBeenCalled()
     const upsertArgs = repository.upsert.mock.calls[0]
     // upsert(provider, externalId, url, normalized, raw, expiresAt, locale)
@@ -334,7 +334,8 @@ describe('EnrichmentService.resolve (locale)', () => {
     const { service, provider, repository } = makeService({ dbRow: null })
     await service.resolve(url, 'zh')
     // fetch receives undefined locale because cacheLocale='' → fetch(id, undefined)
-    expect(provider.fetch).toHaveBeenCalledWith('movie/1', undefined)
+    // ctx.url is threaded through for opaque-id providers (e.g. open-graph)
+    expect(provider.fetch).toHaveBeenCalledWith('movie/1', undefined, { url })
     expect(repository.upsert.mock.calls[0][6]).toBe('')
   })
 
