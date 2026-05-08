@@ -2,6 +2,21 @@ import type { EnrichmentResult, UrlMatchResult } from '../enrichment.types'
 
 export const ENRICHMENT_PROVIDER_TOKEN = Symbol('ENRICHMENT_PROVIDER')
 
+/**
+ * Side-channel passed to {@link EnrichmentProvider.fetch}. Providers whose
+ * `externalId` already encodes the request (TMDB id, GitHub repo, etc.) can
+ * ignore this entirely. Providers whose id is opaque (e.g. a hash of the
+ * source URL) need {@link url} to reconstruct the upstream call.
+ */
+export interface EnrichmentFetchContext {
+  /**
+   * Source URL the user originally pasted, after registry-side normalization.
+   * Available on cold paths (resolve) and on refresh paths where a cached row
+   * exists; absent only when an admin force-fetches an unseen externalId.
+   */
+  url?: string
+}
+
 export interface EnrichmentProvider<TRaw = unknown> {
   readonly name: string
   readonly displayName: string
@@ -16,9 +31,14 @@ export interface EnrichmentProvider<TRaw = unknown> {
    * (`zh`, `ja`, `ko`, `en`). Providers with `localeAware !== true` MUST ignore
    * this argument; the service layer guarantees only `''`-equivalent values
    * reach those providers, but defensive implementations should not branch on
-   * it.
+   * it. `ctx.url` is supplied for opaque-id providers (Open Graph fallback);
+   * other providers may safely ignore it.
    */
-  fetch: (id: string, locale?: string) => Promise<EnrichmentResult<TRaw>>
+  fetch: (
+    id: string,
+    locale?: string,
+    ctx?: EnrichmentFetchContext,
+  ) => Promise<EnrichmentResult<TRaw>>
 
   readonly requiredConfigKeys?: string[]
   readonly featureGateConfigKey?: string

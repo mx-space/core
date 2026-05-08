@@ -436,6 +436,31 @@ const QQMusicIntegrationSchema = section('QQ 音乐', {
   enabled: field.toggle(z.boolean().optional().default(true), '启用'),
 })
 
+const OpenGraphIntegrationSchema = section('Open Graph / oEmbed 兜底', {
+  enabled: field.toggle(z.boolean().optional().default(true), '启用', {
+    description:
+      '未命中专用 provider 之 URL 抓 Open Graph / oEmbed 元数据作链接卡兜底',
+  }),
+  timeoutMs: field.number(
+    z.preprocess(
+      (val) =>
+        val === '' || val === null || val === undefined ? val : Number(val),
+      z.number().int().min(1000).max(30000).optional(),
+    ),
+    '抓取超时（毫秒）',
+    { description: '默认 8000，区间 1000-30000' },
+  ),
+  maxBodyBytes: field.number(
+    z.preprocess(
+      (val) =>
+        val === '' || val === null || val === undefined ? val : Number(val),
+      z.number().int().min(16384).max(4_194_304).optional(),
+    ),
+    '响应大小上限（字节）',
+    { description: '默认 524288（512KB），区间 16KB-4MB；仅扫 <head>' },
+  ),
+})
+
 export const ThirdPartyServiceIntegrationSchema = section('第三方服务集成', {
   github: GitHubIntegrationSchema.optional(),
   tmdb: TmdbIntegrationSchema.optional(),
@@ -445,6 +470,7 @@ export const ThirdPartyServiceIntegrationSchema = section('第三方服务集成
   leetcode: LeetcodeIntegrationSchema.optional(),
   neteaseMusic: NeteaseMusicIntegrationSchema.optional(),
   qqMusic: QQMusicIntegrationSchema.optional(),
+  openGraph: OpenGraphIntegrationSchema.optional(),
 })
 export class ThirdPartyServiceIntegrationDto extends createZodDto(
   ThirdPartyServiceIntegrationSchema,

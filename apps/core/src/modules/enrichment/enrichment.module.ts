@@ -17,6 +17,7 @@ import { GitHubRepoProvider } from './providers/github/github-repo.provider'
 import { LeetcodeProvider } from './providers/leetcode/leetcode.provider'
 import { NeoDBBookProvider } from './providers/neodb/neodb-book.provider'
 import { NeteaseMusicProvider } from './providers/netease/netease-music.provider'
+import { OpenGraphProvider } from './providers/open-graph/open-graph.provider'
 import type { EnrichmentProvider } from './providers/provider.interface'
 import { ProviderRegistry } from './providers/provider.registry'
 import { QQMusicProvider } from './providers/qq/qq-music.provider'
@@ -45,6 +46,7 @@ const allProviders = [
   NeteaseMusicProvider,
   QQMusicProvider,
   MxSpaceProvider,
+  OpenGraphProvider,
 ]
 
 @Module({
@@ -78,6 +80,7 @@ export class EnrichmentModule implements OnModuleInit {
     private readonly netease: NeteaseMusicProvider,
     @Inject(QQMusicProvider) private readonly qq: QQMusicProvider,
     @Inject(MxSpaceProvider) private readonly mxSpace: MxSpaceProvider,
+    @Inject(OpenGraphProvider) private readonly openGraph: OpenGraphProvider,
   ) {}
 
   onModuleInit() {
@@ -95,6 +98,7 @@ export class EnrichmentModule implements OnModuleInit {
       this.netease,
       this.qq,
       this.mxSpace,
+      this.openGraph,
     ]
     for (const provider of providers) {
       this.registry.register(provider)

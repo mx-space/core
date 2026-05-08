@@ -6,4 +6,5 @@ export const ENRICHMENT_CATEGORIES = {
   SELF: 'self',
   MUSIC: 'music',
   BOOK: 'book',
+  WEB: 'web',
 } as const

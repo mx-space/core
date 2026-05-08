@@ -476,7 +476,24 @@ export class EnrichmentService implements OnModuleInit {
     opts?: { url?: string; subtype?: string; locale?: string },
   ): Promise<EnrichmentResult> {
     const locale = opts?.locale ?? ''
-    const result = await provider.fetch(externalId, locale || undefined)
+    // Opaque-id providers (open-graph) need the source URL to reconstruct the
+    // upstream call. Cold paths supply it via `opts.url`; refresh paths fall
+    // back to whatever URL the existing cache row recorded so background
+    // refreshes work without re-matching.
+    let ctxUrl = opts?.url
+    if (!ctxUrl) {
+      const existing = await this.repository.findByProviderAndExternalId(
+        provider.name,
+        externalId,
+        locale,
+      )
+      ctxUrl = existing?.url
+    }
+    const result = await provider.fetch(
+      externalId,
+      locale || undefined,
+      ctxUrl ? { url: ctxUrl } : undefined,
+    )
     result.fetchedAt = new Date().toISOString()
     result.category = provider.category
     if (opts?.subtype) result.subtype = opts.subtype
