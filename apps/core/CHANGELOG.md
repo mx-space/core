@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## [12.2.4](https://github.com/mx-space/core/compare/v12.2.3...v12.2.4) (2026-05-08)
+
+
+### Bug Fixes
+
+* **deps:** sync rolldown override in pnpm-workspace.yaml ([e50b0f3](https://github.com/mx-space/core/commit/e50b0f3112b8367d8befb7dc941f02ee08c4a842))
+* **deps:** sync rolldown resolution to 1.0.0 ([a9b1567](https://github.com/mx-space/core/commit/a9b15677c55af0ae18028d9b07b33e88d35f2599))
+
+
 ## <small>12.2.3 (2026-05-08)</small>
 
 * release: v12.2.3 ([b3a2429](https://github.com/mx-space/core/commit/b3a2429))
