@@ -18,7 +18,7 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-nohup node apps/core/out/main.mjs 1>/dev/null &
+nohup node apps/core/out/main.mjs >/tmp/mx-server.log 2>&1 &
 p=$!
 echo "started server with pid $p"
 
@@ -53,6 +53,8 @@ if [[ $RETRY -gt $MAX_RETRIES ]]; then
 
 elif [[ $request_exit_code -ne 0 ]]; then
   echo -n "Request error"
+  echo -e "\n--- server log (/tmp/mx-server.log) ---"
+  cat /tmp/mx-server.log || true
   kill -9 $p
   exit 1
 
