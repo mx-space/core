@@ -53,9 +53,15 @@ if [[ $RETRY -gt $MAX_RETRIES ]]; then
 
 elif [[ $request_exit_code -ne 0 ]]; then
   echo -n "Request error"
-  echo -e "\n--- server log (/tmp/mx-server.log) ---"
-  cat /tmp/mx-server.log || true
-  kill -9 $p
+  echo -e "\n--- ps check ---"
+  ps -p $p -o pid,stat,etime,cmd || echo "process $p not running"
+  echo -e "\n--- pid map ($p) ---"
+  ls -la /proc/$p/fd 2>/dev/null | head -20 || true
+  kill $p 2>/dev/null || true
+  sleep 2
+  echo -e "\n--- server log (/tmp/mx-server.log, tail 200) ---"
+  tail -200 /tmp/mx-server.log || true
+  kill -9 $p 2>/dev/null || true
   exit 1
 
 else
