@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## [12.2.5](https://github.com/mx-space/core/compare/v12.2.4...v12.2.5) (2026-05-09)
+
+
+### Bug Fixes
+
+* **comment:** auto mark parent as read when owner replies ([d29c509](https://github.com/mx-space/core/commit/d29c5090d77ddd8cd44d1faf6a938942943f8b53))
+
+
+### Features
+
+* **enrichment:** add open-graph fallback provider ([fa76daa](https://github.com/mx-space/core/commit/fa76daa6ae0f01e0c0c8a00ef6886e9a34063f94))
+
+
 ## [12.2.4](https://github.com/mx-space/core/compare/v12.2.3...v12.2.4) (2026-05-08)
 
 
