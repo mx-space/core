@@ -55,12 +55,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "drizzle-orm": "*",
-    "zod": "*"
+    "drizzle-orm": "^0.45.2",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@types/node": "25.6.0",
-    "tsdown": "0.21.10",
+    "tsdown": "0.22.0",
     "typescript": "6.0.3"
   }
 }
