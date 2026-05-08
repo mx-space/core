@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/core",
-  "version": "12.2.2",
+  "version": "12.2.3",
   "type": "module",
   "private": true,
   "engines": {

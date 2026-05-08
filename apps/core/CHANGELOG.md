@@ -1,9 +1,15 @@
 # CHANGELOG
 
 
+## <small>12.2.3 (2026-05-08)</small>
+
+* release: v12.2.3 ([b3a2429](https://github.com/mx-space/core/commit/b3a2429))
+* feat(enrichment): enhance language handling and AI integration in MxSpaceProvider ([dfcaee6](https://github.com/mx-space/core/commit/dfcaee6))
+* chore(deps): bump @haklex/* to 0.4.1 ([fd149ab](https://github.com/mx-space/core/commit/fd149ab))
+
 ## <small>12.2.2 (2026-05-07)</small>
 
-* release: v12.2.2 ([145a064](https://github.com/mx-space/core/commit/145a064))
+* release: v12.2.2 ([3ae4d74](https://github.com/mx-space/core/commit/3ae4d74))
 * release(api-client): publish 4.0.0 ([2cb558c](https://github.com/mx-space/core/commit/2cb558c))
 * feat: add new database constants and methods for post and note retrieval ([509de8f](https://github.com/mx-space/core/commit/509de8f))
 * feat(enrichment): localize MxSpaceProvider, fix lexical link extraction ([f4e6b18](https://github.com/mx-space/core/commit/f4e6b18))
