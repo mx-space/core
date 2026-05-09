@@ -136,6 +136,8 @@ export const searchDocuments = pgTable(
     id: pkText(),
     refType: text('ref_type').notNull(),
     refId: refText('ref_id').notNull(),
+    lang: text('lang').notNull(),
+    sourceHash: text('source_hash').notNull().default(''),
     title: text('title').notNull(),
     searchText: text('search_text').notNull(),
     terms: text('terms')
@@ -161,10 +163,15 @@ export const searchDocuments = pgTable(
     modifiedAt: tsCol('modified_at'),
   },
   (table) => [
-    uniqueIndex('search_documents_ref_uniq').on(table.refType, table.refId),
+    uniqueIndex('search_documents_ref_lang_uniq').on(
+      table.refType,
+      table.refId,
+      table.lang,
+    ),
     index('search_documents_published_idx').on(
       table.isPublished,
       table.publicAt,
     ),
+    index('search_documents_lang_idx').on(table.lang),
   ],
 )

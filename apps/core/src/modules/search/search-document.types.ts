@@ -4,6 +4,8 @@ export interface SearchDocumentModel {
   id?: string
   refType: SearchDocumentRefType
   refId: string
+  lang: string
+  sourceHash: string
   title: string
   searchText: string
   terms: string[]
@@ -24,6 +26,8 @@ export interface SearchDocumentRow {
   id: string
   refType: SearchDocumentRefType
   refId: string
+  lang: string
+  sourceHash: string
   title: string
   searchText: string
   terms: string[]

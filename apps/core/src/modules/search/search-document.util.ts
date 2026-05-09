@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import removeMdCodeblock from 'remove-md-codeblock'
 
 import { extractTextFromContent } from '~/utils/content.util'
@@ -13,6 +15,7 @@ type SearchDocumentSource = {
   text?: string | null
   contentFormat?: string | null
   content?: string | null
+  tags?: string[] | null
   slug?: string | null
   nid?: number | null
   isPublished?: boolean | null
@@ -21,11 +24,13 @@ type SearchDocumentSource = {
   hasPassword?: boolean
   createdAt?: Date | null
   modifiedAt?: Date | null
+  sourceHash?: string | null
 }
 
 export function buildSearchDocument(
   refType: SearchDocumentRefType,
   data: SearchDocumentSource,
+  lang: string,
 ): Omit<SearchDocumentModel, 'id'> {
   const normalizedTitle = normalizeSearchText(data.title)
   const normalizedBody = normalizeSearchText(
@@ -46,9 +51,21 @@ export function buildSearchDocument(
   const titleTermFreq = buildTermFrequency(titleTerms)
   const bodyTermFreq = buildTermFrequency(bodyTerms)
 
+  const sourceHash =
+    data.sourceHash ??
+    computeSourceHash({
+      title: data.title ?? '',
+      text: data.text ?? '',
+      content: data.content ?? null,
+      contentFormat: data.contentFormat ?? null,
+      tags: data.tags ?? [],
+    })
+
   return {
     refType,
     refId: data.id,
+    lang,
+    sourceHash,
     title: normalizedTitle,
     searchText: normalizedBody,
     terms: [
@@ -127,3 +144,39 @@ function isCjkSegment(input: string) {
     input,
   )
 }
+
+/**
+ * Stable source hash for an article's content. Used by rebuild diff to skip
+ * documents whose source hasn't changed since last index. The hash captures
+ * everything that affects the indexed text + tokens.
+ */
+export function computeSourceHash(parts: {
+  title?: string | null
+  text?: string | null
+  content?: string | null
+  contentFormat?: string | null
+  tags?: string[] | null
+}): string {
+  const tagPart = (parts.tags ?? []).slice().sort().join(',')
+  const payload = [
+    parts.title ?? '',
+    parts.text ?? '',
+    parts.content ?? '',
+    parts.contentFormat ?? '',
+    tagPart,
+  ].join('\n')
+  return createHash('sha1').update(payload).digest('hex')
+}
+
+/**
+ * Source hash for a translation row. The translation table already stores a
+ * `hash` of its source snapshot — wrap it as an explicit accessor so callers
+ * don't conflate translation hash with the article's content hash.
+ */
+export function computeTranslationSourceHash(translation: {
+  hash: string
+}): string {
+  return translation.hash
+}
+
+export const SEARCH_DOCUMENT_DEFAULT_SOURCE_LANG = 'zh'

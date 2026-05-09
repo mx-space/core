@@ -64,6 +64,13 @@
       "when": 1778176563246,
       "tag": "0008_enrichment_clear_stale_errors",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778347379676,
+      "tag": "0009_search_documents_multilang",
+      "breakpoints": true
     }
   ]
 }
