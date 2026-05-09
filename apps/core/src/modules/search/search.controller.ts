@@ -5,7 +5,12 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { SearchDto } from '~/modules/search/search.schema'
+import {
+  SearchAdminListDto,
+  SearchDto,
+  SearchRebuildQueryDto,
+  SearchRebuildRefParamDto,
+} from '~/modules/search/search.schema'
 
 import { SearchService } from './search.service'
 
@@ -21,8 +26,23 @@ export class SearchController {
 
   @Post('/rebuild')
   @Auth()
-  rebuild() {
-    return this.searchService.rebuildSearchDocuments()
+  rebuild(@Query() query: SearchRebuildQueryDto) {
+    return this.searchService.rebuildSearchDocuments({
+      force: query.force ?? false,
+    })
+  }
+
+  @Post('/rebuild/:refType/:refId')
+  @Auth()
+  rebuildOne(@Param() params: SearchRebuildRefParamDto) {
+    return this.searchService.rebuildSingleRef(params.refType, params.refId)
+  }
+
+  @Get('/admin/documents')
+  @Auth()
+  @HttpCache.disable
+  adminListDocuments(@Query() query: SearchAdminListDto) {
+    return this.searchService.adminListDocuments(query)
   }
 
   @Get('/:type')

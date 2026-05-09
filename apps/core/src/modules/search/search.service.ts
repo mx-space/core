@@ -345,6 +345,16 @@ export class SearchService {
     )
   }
 
+  async adminListDocuments(query: {
+    refType?: SearchDocumentRefType
+    lang?: string
+    keyword?: string
+    page?: number
+    size?: number
+  }) {
+    return this.searchRepository.findAdminRows(query)
+  }
+
   async rebuildSingleRef(
     refType: SearchDocumentRefType,
     refId: string,
