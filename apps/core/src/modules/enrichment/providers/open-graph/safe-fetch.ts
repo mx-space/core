@@ -1,6 +1,8 @@
 import { lookup } from 'node:dns/promises'
 import { isIP } from 'node:net'
 
+import { isDev } from '~/global/env.global'
+
 const MAX_REDIRECTS = 5
 const DEFAULT_UA =
   'Mozilla/5.0 (compatible; mx-space-bot/1.0; +https://github.com/mx-space)'
@@ -64,7 +66,7 @@ export async function safeFetch(
   let currentUrl = rawUrl
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const parsed = parseAndValidateUrl(currentUrl)
-    await assertHostnameSafe(parsed.hostname)
+    if (!isDev) await assertHostnameSafe(parsed.hostname)
 
     const ac = new AbortController()
     const timer = setTimeout(() => ac.abort(), opts.timeoutMs)
@@ -142,13 +144,16 @@ function parseAndValidateUrl(raw: string): URL {
   }
   const host = url.hostname.toLowerCase()
   if (!host) throw new UnsafeUrlError('Empty hostname')
+  // Dev escape hatch: skip private-network guards so local proxies that
+  // route public domains through fake-IP / RFC2544 ranges (e.g. Surge's
+  // 198.18/15 enhanced-mode pool) can still resolve through this fetcher.
+  if (isDev) return url
   if (BLOCKED_HOSTNAMES.has(host)) {
     throw new UnsafeUrlError(`Blocked hostname: ${host}`)
   }
   if (BLOCKED_HOSTNAME_SUFFIXES.some((s) => host.endsWith(s))) {
     throw new UnsafeUrlError(`Blocked hostname suffix: ${host}`)
   }
-  // IP literal in URL — validate directly without DNS round-trip.
   const ipKind = isIP(stripIpv6Brackets(host))
   if (ipKind !== 0 && isPrivateIp(stripIpv6Brackets(host), ipKind)) {
     throw new UnsafeUrlError(`Private IP literal: ${host}`)
