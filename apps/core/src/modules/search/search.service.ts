@@ -263,7 +263,7 @@ export class SearchService {
       const result =
         refType === 'post'
           ? await this.postService.list({ page, size: ARTICLE_PAGE_SIZE })
-          : await this.noteService.listAll(page, ARTICLE_PAGE_SIZE, {})
+          : await this.noteService.listPaginated(page, ARTICLE_PAGE_SIZE)
       out.push(...result.data)
       if (page >= result.pagination.totalPage) break
       page++

@@ -52,7 +52,7 @@ const makeService = ({
     findById: vi.fn().mockResolvedValue(null),
     findRecent: vi.fn().mockResolvedValue(noteRecent),
     findManyByIds: vi.fn().mockResolvedValue([]),
-    listAll: vi.fn().mockResolvedValue(
+    listPaginated: vi.fn().mockResolvedValue(
       noteListAll ?? {
         data: noteRecent,
         pagination: {

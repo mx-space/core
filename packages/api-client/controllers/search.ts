@@ -23,6 +23,9 @@ export type SearchType = 'post' | 'note' | 'page'
 export type SearchOption = {
   orderBy?: string
   order?: number
+  /** Override the request-context lang for this query. Server falls back to
+   * the request `x-lang` header / `?lang=` if not set. */
+  lang?: string
 }
 
 export type SearchHighlight = {
@@ -30,8 +33,48 @@ export type SearchHighlight = {
   snippet: string | null
 }
 
+export type SearchResultMeta = {
+  /** The lang of the index row that produced this hit. */
+  lang: string
+  /** True when the hit came from the source-language fallback rather than the
+   * effective lang index. UI can flag these as "matched in original". */
+  isFallback: boolean
+}
+
 type SearchResultHighlight = {
   highlight: SearchHighlight
+} & SearchResultMeta
+
+export type SearchRebuildStats = {
+  total: number
+  created: number
+  updated: number
+  deleted: number
+  skipped: number
+}
+
+export type SearchAdminListQuery = {
+  refType?: SearchType
+  lang?: string
+  keyword?: string
+  page?: number
+  size?: number
+}
+
+export type SearchAdminDocument = {
+  id: string
+  refType: SearchType
+  refId: string
+  lang: string
+  sourceHash: string
+  title: string
+  titleLength: number
+  bodyLength: number
+  isPublished: boolean
+  publicAt: string | null
+  hasPassword: boolean
+  modifiedAt: string | null
+  createdAt: string
 }
 
 export class SearchController<ResponseWrapper> implements IController {
@@ -117,5 +160,29 @@ export class SearchController<ResponseWrapper> implements IController {
         ResponseWrapper
       >
     >({ params: { keyword, ...options } })
+  }
+
+  /** Trigger a global rebuild. Defaults to incremental (sourceHash diff);
+   * pass `force: true` for the legacy delete-all + bulk-upsert path. */
+  rebuild(opts: { force?: boolean } = {}) {
+    return this.proxy.rebuild.post<
+      RequestProxyResult<SearchRebuildStats, ResponseWrapper>
+    >({
+      params: opts.force ? { force: true } : undefined,
+    })
+  }
+
+  /** Force-refresh a single article and all of its translations. */
+  rebuildOne(refType: SearchType, refId: string) {
+    return this.proxy
+      .rebuild(refType)(refId)
+      .post<RequestProxyResult<{ rebuilt: number }, ResponseWrapper>>()
+  }
+
+  /** Admin-facing paginated listing of indexed documents (verification UI). */
+  adminListDocuments(query: SearchAdminListQuery = {}) {
+    return this.proxy.admin.documents.get<
+      RequestProxyResult<PaginateResult<SearchAdminDocument>, ResponseWrapper>
+    >({ params: query as Record<string, any> })
   }
 }
