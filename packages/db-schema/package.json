@@ -59,7 +59,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@types/node": "25.6.0",
+    "@types/node": "25.6.2",
     "tsdown": "0.22.0",
     "typescript": "6.0.3"
   }
