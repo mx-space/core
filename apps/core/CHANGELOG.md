@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## [12.2.6](https://github.com/mx-space/core/compare/v12.2.5...v12.2.6) (2026-05-09)
+
+
+### Bug Fixes
+
+* **enrichment:** synthesize merged state for github pr ([c1065af](https://github.com/mx-space/core/commit/c1065affa8639b3ce21a9197c7ff11566f5a3028))
+
+
+### Features
+
+* **enrichment:** hydrate recently by ref, share batch primitive ([c5dde29](https://github.com/mx-space/core/commit/c5dde294bacba819d9041b9a40391c2483fed343))
+* **enrichment:** skip og SSRF guards in development ([36ac82a](https://github.com/mx-space/core/commit/36ac82afed0ad72e6738f64e52843e9501a7f612))
+
+
 ## [12.2.5](https://github.com/mx-space/core/compare/v12.2.4...v12.2.5) (2026-05-09)
 
 
