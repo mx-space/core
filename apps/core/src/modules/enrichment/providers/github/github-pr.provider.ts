@@ -51,10 +51,11 @@ export class GitHubPrProvider implements EnrichmentProvider {
       },
     ]
 
-    if (data.state)
+    const state = data.merged ? 'merged' : data.state
+    if (state)
       attrs.push({
         key: 'state',
-        value: data.state,
+        value: state,
         label: 'State',
         format: 'text',
       })
