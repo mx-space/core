@@ -1002,14 +1002,38 @@ export class AiTranslationService
   }
 
   async deleteTranslation(id: string) {
+    // Read the row before delete so the emitted payload identifies which
+    // (refType, refId, lang) was removed — search-side listeners need it.
+    const existing = await this.aiTranslationRepository.findById(id)
     const deletedCount = await this.aiTranslationRepository.deleteById(id)
     if (deletedCount === 0) {
       throw new BizException(ErrorCodeEnum.AITranslationNotFound)
     }
+    if (existing) {
+      this.eventManager.emit(
+        BusinessEvents.TRANSLATION_DELETE,
+        {
+          refId: existing.refId,
+          refType: existing.refType,
+          lang: existing.lang,
+        },
+        { scope: EventScope.TO_SYSTEM },
+      )
+    }
   }
 
   async deleteTranslationsByRefId(refId: string) {
+    // Capture the rows we're about to drop so listeners can clean up the
+    // corresponding search-document rows in their own languages.
+    const existing = await this.aiTranslationRepository.listByRefId(refId)
     await this.aiTranslationRepository.deleteForRefId(refId)
+    for (const row of existing) {
+      this.eventManager.emit(
+        BusinessEvents.TRANSLATION_DELETE,
+        { refId: row.refId, refType: row.refType, lang: row.lang },
+        { scope: EventScope.TO_SYSTEM },
+      )
+    }
   }
 
   async getTranslationForArticle(
