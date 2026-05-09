@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 
+import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -13,7 +14,8 @@ import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { CommentService } from '../comment/comment.service'
-import { EnrichmentService } from '../enrichment/enrichment.service'
+import { EnrichmentService, refKey } from '../enrichment/enrichment.service'
+import type { EnrichmentResult } from '../enrichment/enrichment.types'
 import { RecentlyRepository } from './recently.repository'
 import { RecentlyAttitudeEnum } from './recently.schema'
 import { RecentlyModel, type RecentlyRow } from './recently.types'
@@ -226,13 +228,7 @@ export class RecentlyService {
       enrichmentExternalId: enrichmentRef?.externalId ?? null,
     })
     if (url && enrichmentRef) {
-      scheduleManager.schedule(async () => {
-        try {
-          await this.enrichmentService.resolve(url)
-        } catch {
-          // resolution failure is non-fatal; cache will fill on next read
-        }
-      })
+      this.enrichmentService.schedulePrefetchUrls([url])
     }
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_CREATE, withRef, {
@@ -274,13 +270,7 @@ export class RecentlyService {
     })
     if (!withRef) return null
     if (url && enrichmentRef) {
-      scheduleManager.schedule(async () => {
-        try {
-          await this.enrichmentService.resolve(url)
-        } catch {
-          // non-fatal
-        }
-      })
+      this.enrichmentService.schedulePrefetchUrls([url])
     }
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_UPDATE, withRef, {
@@ -353,27 +343,45 @@ export class RecentlyService {
     }
   }
 
+  /**
+   * Batch-hydrate `enrichment` for each row via the shared
+   * {@link EnrichmentService.hydrateRefs} primitive: one DB read for the
+   * whole page (instead of N getOne calls), Redis-warm SWR semantics,
+   * locale-aware fallback, and background refresh enqueue on cache miss.
+   * Mirrors what `attachEnrichments` does for post/note/page link cards.
+   */
   private async attachEnrichment<T extends RecentlyRow>(
     rows: T[],
-  ): Promise<Array<T & { enrichment?: any }>> {
+  ): Promise<Array<T & { enrichment?: EnrichmentResult | null }>> {
     if (rows.length === 0) return []
 
-    return Promise.all(
-      rows.map(async (row) => {
-        if (row.enrichmentProvider && row.enrichmentExternalId) {
-          try {
-            const result = await this.enrichmentService.getOne(
-              row.enrichmentProvider,
-              row.enrichmentExternalId,
-            )
-            return { ...row, enrichment: result }
-          } catch {
-            return { ...row, enrichment: null }
-          }
-        }
-        // Fallback for old rows without enrichment reference
+    const refs: Array<{ provider: string; externalId: string }> = []
+    for (const row of rows) {
+      if (row.enrichmentProvider && row.enrichmentExternalId) {
+        refs.push({
+          provider: row.enrichmentProvider,
+          externalId: row.enrichmentExternalId,
+        })
+      }
+    }
+    if (refs.length === 0) {
+      return rows.map((row) => ({ ...row, enrichment: null }))
+    }
+
+    const lang = RequestContext.currentLang()
+    let map: Record<string, EnrichmentResult> = {}
+    try {
+      map = await this.enrichmentService.hydrateRefs(refs, lang)
+    } catch {
+      // hydration failure must never crash the list response
+    }
+
+    return rows.map((row) => {
+      if (!row.enrichmentProvider || !row.enrichmentExternalId) {
         return { ...row, enrichment: null }
-      }),
-    )
+      }
+      const key = refKey(row.enrichmentProvider, row.enrichmentExternalId)
+      return { ...row, enrichment: map[key] ?? null }
+    })
   }
 }

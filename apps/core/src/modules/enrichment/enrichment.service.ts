@@ -35,6 +35,15 @@ interface EnrichmentRefreshPayload extends Record<string, unknown> {
   locale: string
 }
 
+/**
+ * Stable string key used by {@link EnrichmentService.hydrateRefs} consumers.
+ * `\t` separator avoids collisions with provider names or external ids that
+ * legitimately contain `:` or `/`.
+ */
+export function refKey(provider: string, externalId: string): string {
+  return `${provider}\t${externalId}`
+}
+
 @Injectable()
 export class EnrichmentService implements OnModuleInit {
   private readonly logger = new Logger(EnrichmentService.name)
@@ -268,96 +277,136 @@ export class EnrichmentService implements OnModuleInit {
   }
 
   /**
-   * Bulk URL → cached EnrichmentResult lookup. Returns any existing row
-   * (including expired ones) so SSR hydration matches SWR semantics; for
-   * expired non-backoff rows, also enqueues a background refresh. For refs
-   * with no cache row at all, enqueues a refresh when the provider is ready
-   * — first GET returns empty, subsequent GETs are warm.
+   * Bulk (provider, externalId) → cached EnrichmentResult lookup. Core
+   * primitive used by both URL-driven hydration (post/note/page link cards)
+   * and ref-driven hydration (recently rows that persist provider/externalId
+   * directly). Returns any existing row (including expired ones) so SSR
+   * hydration matches SWR semantics; for expired non-backoff rows, also
+   * enqueues a background refresh. For refs with no cache row at all,
+   * enqueues a refresh when the provider is ready — first GET returns empty,
+   * subsequent GETs are warm.
    *
    * `lang` selects the cache locale per provider via {@link resolveCacheLocale}.
    * For locale-aware misses, the default (`''`) row is returned as a fallback
    * while a background refresh fills the requested locale.
+   *
+   * Output is keyed by {@link refKey} (`${provider}\t${externalId}`); callers
+   * should index via the same helper.
    */
-  async hydrateUrls(
-    urls: readonly string[],
+  async hydrateRefs(
+    refs: ReadonlyArray<{ provider: string; externalId: string }>,
     lang?: string,
   ): Promise<Record<string, EnrichmentResult>> {
-    if (urls.length === 0) return {}
+    if (refs.length === 0) return {}
     const reqLocale = resolveRequestedLanguage(lang)
-    const unique = [...new Set(urls)]
 
     interface RefEntry {
       provider: string
       externalId: string
       locale: string
-      url: string
     }
     const byKey = new Map<string, RefEntry>()
-    for (const url of unique) {
-      const ref = this.matchUrlToRef(url)
-      if (!ref) continue
-      const provider = this.providerRegistry.getByName(ref.provider)
+    for (const r of refs) {
+      const provider = this.providerRegistry.getByName(r.provider)
       const locale = provider
         ? this.resolveCacheLocale(provider, reqLocale)
         : ''
-      const key = `${ref.provider}\t${ref.externalId}\t${locale}`
+      const key = `${r.provider}\t${r.externalId}\t${locale}`
       if (byKey.has(key)) continue
-      byKey.set(key, { ...ref, locale, url })
+      byKey.set(key, {
+        provider: r.provider,
+        externalId: r.externalId,
+        locale,
+      })
     }
     if (byKey.size === 0) return {}
 
-    const refs = [...byKey.values()].map((e) => ({
-      provider: e.provider,
-      externalId: e.externalId,
-      locale: e.locale,
-    }))
-    const rows = await this.repository.findManyByRefs(refs)
+    const refQueries = [...byKey.values()]
+    const rows = await this.repository.findManyByRefs(refQueries)
     const now = new Date()
     const out: Record<string, EnrichmentResult> = {}
     const seenKeys = new Set<string>()
     for (const row of rows) {
-      const key = `${row.provider}\t${row.externalId}\t${row.locale}`
-      seenKeys.add(key)
-      const entry = byKey.get(key)
-      if (!entry) continue
+      const fullKey = `${row.provider}\t${row.externalId}\t${row.locale}`
+      seenKeys.add(fullKey)
       const isExpired = !!row.expiresAt && row.expiresAt < now
       if (isExpired && !this.isInFailureBackoff(row, now)) {
         this.enqueueRefresh(row.provider, row.externalId, row.locale)
       }
-      out[entry.url] = row.normalized
+      out[refKey(row.provider, row.externalId)] = row.normalized
     }
 
     // Locale-aware fallback + cold-prefetch for keys that didn't hit.
-    const missing = [...byKey.values()].filter(
+    const missing = refQueries.filter(
       (e) => !seenKeys.has(`${e.provider}\t${e.externalId}\t${e.locale}`),
     )
     if (missing.length > 0) {
       let config: ThirdPartyConfig | undefined
-      // Group fallback lookups by (provider, externalId) so we issue at most
-      // one extra DB read per locale-aware miss.
       const fallbackTargets = missing.filter((e) => e.locale !== '')
-      const fallbackRows = await this.repository.findManyByRefs(
-        fallbackTargets.map((e) => ({
-          provider: e.provider,
-          externalId: e.externalId,
-          locale: '',
-        })),
-      )
+      const fallbackRows = fallbackTargets.length
+        ? await this.repository.findManyByRefs(
+            fallbackTargets.map((e) => ({
+              provider: e.provider,
+              externalId: e.externalId,
+              locale: '',
+            })),
+          )
+        : []
       const fallbackByKey = new Map<string, EnrichmentResult>()
       for (const row of fallbackRows) {
-        fallbackByKey.set(`${row.provider}\t${row.externalId}`, row.normalized)
+        fallbackByKey.set(refKey(row.provider, row.externalId), row.normalized)
       }
       for (const entry of missing) {
         const provider = this.providerRegistry.getByName(entry.provider)
         if (!provider) continue
         config ??= await this.configsService.get('thirdPartyServiceIntegration')
         if (!this.isProviderReady(provider, config)) continue
-        if (entry.locale !== '') {
-          const fb = fallbackByKey.get(`${entry.provider}\t${entry.externalId}`)
-          if (fb) out[entry.url] = fb
+        const k = refKey(entry.provider, entry.externalId)
+        if (entry.locale !== '' && !out[k]) {
+          const fb = fallbackByKey.get(k)
+          if (fb) out[k] = fb
         }
         this.enqueueRefresh(entry.provider, entry.externalId, entry.locale)
       }
+    }
+    return out
+  }
+
+  /**
+   * URL-keyed wrapper around {@link hydrateRefs}. Matches each URL to a
+   * provider ref, hydrates the deduped ref set in one batch, then re-keys
+   * the result by the original URL so post/note/page consumers can index
+   * their `enrichments` map directly by URL.
+   */
+  async hydrateUrls(
+    urls: readonly string[],
+    lang?: string,
+  ): Promise<Record<string, EnrichmentResult>> {
+    if (urls.length === 0) return {}
+    const unique = [...new Set(urls)]
+    const urlRefs: Array<{
+      provider: string
+      externalId: string
+      url: string
+    }> = []
+    for (const url of unique) {
+      const ref = this.matchUrlToRef(url)
+      if (!ref) continue
+      urlRefs.push({ ...ref, url })
+    }
+    if (urlRefs.length === 0) return {}
+
+    const refMap = await this.hydrateRefs(
+      urlRefs.map((r) => ({
+        provider: r.provider,
+        externalId: r.externalId,
+      })),
+      lang,
+    )
+    const out: Record<string, EnrichmentResult> = {}
+    for (const r of urlRefs) {
+      const result = refMap[refKey(r.provider, r.externalId)]
+      if (result && !out[r.url]) out[r.url] = result
     }
     return out
   }
@@ -401,6 +450,19 @@ export class EnrichmentService implements OnModuleInit {
     scheduleManager.schedule(async () => {
       const urls = this.urlExtractor.extractFromDoc(doc)
       if (urls.length === 0) return
+      await this.prefetchUrls(urls)
+    })
+  }
+
+  /**
+   * Schedule a non-blocking prefetch of explicit URLs. Used by ref-driven
+   * consumers (recently) where the URL is structured metadata rather than
+   * extracted from a doc body. Centralizes the fire-and-forget wiring so
+   * callers don't reach for `scheduleManager` directly.
+   */
+  schedulePrefetchUrls(urls: readonly string[]): void {
+    if (urls.length === 0) return
+    scheduleManager.schedule(async () => {
       await this.prefetchUrls(urls)
     })
   }

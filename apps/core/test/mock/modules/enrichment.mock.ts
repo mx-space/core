@@ -13,11 +13,20 @@ export const enrichmentProvider = defineProvider({
     scheduleDocPrefetch() {
       // no-op in contract tests
     },
+    schedulePrefetchUrls() {
+      // no-op in contract tests
+    },
     async hydrateUrls() {
+      return {}
+    },
+    async hydrateRefs() {
       return {}
     },
     async prefetchUrls() {
       // no-op
+    },
+    matchUrlToRef() {
+      return null
     },
   },
 })
