@@ -219,7 +219,7 @@ export class AiSummaryService implements OnModuleInit {
     const contentHash = this.computeContentHash(text)
 
     return this.toSummaryDoc(
-      await this.aiSummaryRepository.findByHash(articleId, contentHash),
+      await this.aiSummaryRepository.findByHash(articleId, contentHash, lang),
     )
   }
 

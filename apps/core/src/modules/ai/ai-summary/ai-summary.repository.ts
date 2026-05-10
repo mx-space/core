@@ -54,12 +54,19 @@ export class AiSummaryRepository extends BaseRepository {
   async findByHash(
     refId: EntityId | string,
     hash: string,
+    lang: string,
   ): Promise<AiSummaryRow | null> {
     const refBig = parseEntityId(refId)
     const [row] = await this.db
       .select()
       .from(aiSummaries)
-      .where(and(eq(aiSummaries.refId, refBig), eq(aiSummaries.hash, hash))!)
+      .where(
+        and(
+          eq(aiSummaries.refId, refBig),
+          eq(aiSummaries.hash, hash),
+          eq(aiSummaries.lang, lang),
+        )!,
+      )
       .limit(1)
     return row ? mapRow(row) : null
   }
