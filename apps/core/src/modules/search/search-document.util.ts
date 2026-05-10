@@ -32,7 +32,10 @@ export function buildSearchDocument(
   data: SearchDocumentSource,
   lang: string,
 ): Omit<SearchDocumentModel, 'id'> {
-  const normalizedTitle = normalizeSearchText(data.title)
+  // Preserve the original case for display; tokenization still uses the
+  // lowercased form so BM25/match logic is case-insensitive.
+  const displayTitle = cleanTitleForDisplay(data.title)
+  const lowerTitle = normalizeSearchText(displayTitle)
   const normalizedBody = normalizeSearchText(
     extractTextFromContent({
       text: data.text ?? '',
@@ -40,7 +43,7 @@ export function buildSearchDocument(
       content: data.content ?? undefined,
     }),
   )
-  const titleTerms = tokenizeSearchText(normalizedTitle, {
+  const titleTerms = tokenizeSearchText(lowerTitle, {
     includeCjkUnigrams: true,
     maxTokens: 96,
   })
@@ -66,7 +69,7 @@ export function buildSearchDocument(
     refId: data.id,
     lang,
     sourceHash,
-    title: normalizedTitle,
+    title: displayTitle,
     searchText: normalizedBody,
     terms: [
       ...new Set([...Object.keys(titleTermFreq), ...Object.keys(bodyTermFreq)]),
@@ -97,6 +100,18 @@ export function normalizeSearchText(text: unknown) {
   return removeMdCodeblock(typeof text === 'string' ? text : '')
     .normalize('NFKC')
     .toLowerCase()
+    .replaceAll(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Clean a title for display: NFKC + collapse whitespace + trim, but preserve
+ * original casing. Markdown stripping is not applied because titles never
+ * contain code fences.
+ */
+export function cleanTitleForDisplay(text: unknown) {
+  return (typeof text === 'string' ? text : '')
+    .normalize('NFKC')
     .replaceAll(/\s+/g, ' ')
     .trim()
 }

@@ -999,7 +999,9 @@ export class SearchService {
     highlightKeywordFragments: string[],
     searchTerms: string[],
   ) {
-    const title = doc.title ?? ''
+    // doc.title preserves original case for display; lowercase here so the
+    // (already lowercased) keyword fragments match case-insensitively.
+    const loweredTitle = (doc.title ?? '').toLowerCase()
     const text = doc.searchText ?? ''
     const docTerms = new Set([
       ...Object.keys(doc.titleTermFreq ?? {}),
@@ -1008,7 +1010,10 @@ export class SearchService {
     const candidates = new Set<string>()
 
     for (const fragment of highlightKeywordFragments) {
-      if (fragment && (title.includes(fragment) || text.includes(fragment))) {
+      if (
+        fragment &&
+        (loweredTitle.includes(fragment) || text.includes(fragment))
+      ) {
         candidates.add(fragment)
       }
     }

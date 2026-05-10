@@ -3,6 +3,7 @@ import { Get, Param, Post, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
+import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import {
@@ -14,12 +15,23 @@ import {
 
 import { SearchService } from './search.service'
 
+// Search results mix post/note/page; only post items carry `category`, so the
+// objectScan path naturally skips notes & pages.
+const SEARCH_TRANSLATE_FIELDS = [
+  {
+    path: 'data[].category.name',
+    keyPath: 'category.name',
+    idField: 'id',
+  },
+] as const
+
 @ApiController('search')
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @HttpCache.disable
   @Get()
+  @TranslateFields(...SEARCH_TRANSLATE_FIELDS)
   search(@Query() query: SearchDto) {
     return this.searchService.search(query)
   }
@@ -47,6 +59,7 @@ export class SearchController {
 
   @Get('/:type')
   @HttpCache.disable
+  @TranslateFields(...SEARCH_TRANSLATE_FIELDS)
   searchByType(@Query() query: SearchDto, @Param('type') type: string) {
     type = type.toLowerCase()
     switch (type) {

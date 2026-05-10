@@ -81,12 +81,16 @@ describe('search-document.util', () => {
       'post',
       {
         id: 'post-1',
-        title: 'Hello world',
+        title: 'Hello World',
         text: 'lorem ipsum',
       },
       'en',
     )
     expect(document.lang).toBe('en')
-    expect(document.title).toBe('hello world')
+    // title preserves original case for display
+    expect(document.title).toBe('Hello World')
+    // tokenization is still case-insensitive
+    expect(document.titleTermFreq.hello).toBe(1)
+    expect(document.titleTermFreq.world).toBe(1)
   })
 })
