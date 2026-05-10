@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## [12.3.0](https://github.com/mx-space/core/compare/v12.2.6...v12.3.0) (2026-05-10)
+
+
+### Bug Fixes
+
+* **ai-summary:** scope findByHash by lang to return correct locale ([25d7768](https://github.com/mx-space/core/commit/25d77680))
+
+
+### Features
+
+* **note:** add excludeId option to filter notes by created window ([ddc586a](https://github.com/mx-space/core/commit/ddc586ab))
+* **search:** multilingual BM25 with translation + fallback ([bb77cde](https://github.com/mx-space/core/commit/bb77cdeb)), closes [#2698](https://github.com/mx-space/core/issues/2698)
+
+
+
 ## [12.2.6](https://github.com/mx-space/core/compare/v12.2.5...v12.2.6) (2026-05-09)
 
 
