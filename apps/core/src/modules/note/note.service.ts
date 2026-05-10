@@ -19,6 +19,7 @@ import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
+import type { EntityId } from '~/shared/id/entity-id'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { isLexical } from '~/utils/content.util'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -201,7 +202,10 @@ export class NoteService {
     pivotDate: Date,
     direction: 'before' | 'after',
     limit: number,
-    options: { visibleOnly?: boolean } = {},
+    options: {
+      visibleOnly?: boolean
+      excludeId?: EntityId | string
+    } = {},
   ) {
     return this.noteRepository.findByCreatedWindow(
       pivotDate,

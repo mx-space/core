@@ -10,6 +10,7 @@ import {
   inArray,
   lt,
   lte,
+  ne,
   or,
   type SQL,
   sql,
@@ -355,7 +356,10 @@ export class NoteRepository extends BaseRepository {
     pivotDate: Date,
     direction: 'before' | 'after',
     limit: number,
-    options: { visibleOnly?: boolean } = {},
+    options: {
+      visibleOnly?: boolean
+      excludeId?: EntityId | string
+    } = {},
   ): Promise<NoteRow[]> {
     const filters: SQL[] = [
       direction === 'before'
@@ -363,6 +367,11 @@ export class NoteRepository extends BaseRepository {
         : gt(notes.createdAt, pivotDate),
     ]
     if (options.visibleOnly) filters.push(this.visibleClause())
+    // PG timestamp 至 μs，JS Date 仅 ms。`gt/lt(jsDate)` 会把 createdAt
+    // sub-ms 之同行（即 pivot 自身）取入，需显式排除。
+    if (options.excludeId !== undefined) {
+      filters.push(ne(notes.id, parseEntityId(options.excludeId)))
+    }
     const rows = await this.db
       .select()
       .from(notes)

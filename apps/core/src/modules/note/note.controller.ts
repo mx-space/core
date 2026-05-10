@@ -207,9 +207,11 @@ export class NoteController {
     const [[prev], [next]] = await Promise.all([
       this.noteService.findByCreatedWindow(current.createdAt!, 'after', 1, {
         visibleOnly,
+        excludeId: current.id,
       }),
       this.noteService.findByCreatedWindow(current.createdAt!, 'before', 1, {
         visibleOnly,
+        excludeId: current.id,
       }),
     ])
     if (!isAuthenticated) {
@@ -547,7 +549,7 @@ export class NoteController {
         currentDocument.createdAt,
         direction === 'prev' ? 'after' : 'before',
         count,
-        { visibleOnly: !isAuthenticated },
+        { visibleOnly: !isAuthenticated, excludeId: currentDocument.id },
       )
     }
 
