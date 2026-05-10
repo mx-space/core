@@ -18,6 +18,5 @@ export interface PollDefinition {
 
 export interface PollContentCandidate {
   content: string | null
-  text: string | null
   contentFormat: string
 }

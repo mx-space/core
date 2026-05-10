@@ -109,70 +109,15 @@ function extractFromLexical(content: string | null): PollDefinition[] {
   return out
 }
 
-function stripMarkdownLabel(label: string): string {
-  return label
-    .replace(/^[-*]\s+/, '')
-    .replace(/^(\*\*|__)(.*)\1$/, '$2')
-    .replaceAll(/<[^>]+>/g, '')
-    .trim()
-}
-
-function extractFromMarkdown(source: string | null): PollDefinition[] {
-  if (!source) return []
-
-  const out: PollDefinition[] = []
-  const blockPattern =
-    /<!--\s*haklex:poll\s+({[\s\S]*?})\s*-->([\s\S]*?)<!--\s*\/haklex:poll\s*-->/g
-
-  for (const match of source.matchAll(blockPattern)) {
-    const meta = parseJson(match[1] ?? '')
-    const body = match[2] ?? ''
-    if (!meta || typeof meta !== 'object') continue
-
-    const pollId = (meta as { pollId?: unknown }).pollId
-    const mode = (meta as { mode?: unknown }).mode
-    if (typeof pollId !== 'string' || !isPollMode(mode)) continue
-
-    const question =
-      body
-        .split('\n')
-        .map((line) => stripMarkdownLabel(line))
-        .find((line) => !!line && !line.includes('<!-- id=')) ?? ''
-
-    const options = [...body.matchAll(/^\s*[-*]\s+(.+?)\s*<!--\s*id=([^\s]+)\s*-->/gm)]
-      .map((optionMatch) => ({
-        label: stripMarkdownLabel(optionMatch[1] ?? ''),
-        id: optionMatch[2] ?? '',
-      }))
-      .filter((option) => option.id && option.label)
-
-    out.push({
-      pollId,
-      question,
-      options,
-      mode,
-      ...(typeof (meta as { closeAt?: unknown }).closeAt === 'string'
-        ? { closeAt: (meta as { closeAt: string }).closeAt }
-        : {}),
-      ...(isPollShowResults((meta as { showResults?: unknown }).showResults)
-        ? { showResults: (meta as { showResults: PollShowResults }).showResults }
-        : {}),
-    })
-  }
-
-  return out
-}
-
 export function extractPollDefinitions(input: {
   content: string | null
-  text?: string | null
   contentFormat: string
 }): PollDefinition[] {
   if (input.contentFormat === ContentFormat.Lexical) {
     return extractFromLexical(input.content)
   }
 
-  return extractFromMarkdown(input.content ?? input.text ?? null)
+  return []
 }
 
 export function isPollClosed(definition: Pick<PollDefinition, 'closeAt'>): boolean {

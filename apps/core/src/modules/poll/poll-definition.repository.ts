@@ -31,15 +31,11 @@ export class PollDefinitionRepository extends BaseRepository {
 
   private buildPollIdPredicate(
     contentColumn: SQLWrapper,
-    textColumn: SQLWrapper,
     pollIds: string[],
   ): SQL {
-    const predicates = pollIds.flatMap((pollId) => {
+    const predicates = pollIds.map((pollId) => {
       const pattern = `%${pollId}%`
-      return [
-        sql`${contentColumn} like ${pattern}`,
-        sql`${textColumn} like ${pattern}`,
-      ]
+      return sql`${contentColumn} like ${pattern}`
     })
 
     return sql`(${sql.join(predicates, sql` or `)})`
@@ -55,21 +51,18 @@ export class PollDefinitionRepository extends BaseRepository {
       this.db
         .select({
           content: posts.content,
-          text: posts.text,
           contentFormat: posts.contentFormat,
         })
         .from(posts)
         .where(
           sql`${posts.isPublished} = true and ${this.buildPollIdPredicate(
             posts.content,
-            posts.text,
             pollIds,
           )}`,
         ),
       this.db
         .select({
           content: notes.content,
-          text: notes.text,
           contentFormat: notes.contentFormat,
         })
         .from(notes)
@@ -77,16 +70,15 @@ export class PollDefinitionRepository extends BaseRepository {
           sql`${notes.isPublished} = true
             and (${notes.publicAt} is null or ${notes.publicAt} <= ${now})
             and (${notes.password} is null or ${notes.password} = '')
-            and ${this.buildPollIdPredicate(notes.content, notes.text, pollIds)}`,
+            and ${this.buildPollIdPredicate(notes.content, pollIds)}`,
         ),
       this.db
         .select({
           content: pages.content,
-          text: pages.text,
           contentFormat: pages.contentFormat,
         })
         .from(pages)
-        .where(this.buildPollIdPredicate(pages.content, pages.text, pollIds)),
+        .where(this.buildPollIdPredicate(pages.content, pollIds)),
     ])
 
     return [...postRows, ...noteRows, ...pageRows]

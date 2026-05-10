@@ -43,29 +43,14 @@ describe('poll definition extraction', () => {
     ])
   })
 
-  it('extracts poll metadata from markdown export blocks', () => {
+  it('ignores non-lexical content', () => {
     const definitions = extractPollDefinitions({
       contentFormat: ContentFormat.Markdown,
-      content: `<!--haklex:poll {"pollId":"p_abc","mode":"multiple","closeAt":"2999-01-01T00:00:00.000Z"}-->
-**Choose**
-
-- A <!-- id=o_a -->
-- B <!-- id=o_b -->
-<!--/haklex:poll-->`,
+      content:
+        '<!--haklex:poll {"pollId":"p_abc","mode":"single"}-->legacy<!--/haklex:poll-->',
     })
 
-    expect(definitions).toEqual([
-      {
-        pollId: 'p_abc',
-        question: 'Choose',
-        mode: 'multiple',
-        closeAt: '2999-01-01T00:00:00.000Z',
-        options: [
-          { id: 'o_a', label: 'A' },
-          { id: 'o_b', label: 'B' },
-        ],
-      },
-    ])
+    expect(definitions).toEqual([])
   })
 
   it('treats elapsed closeAt as closed', () => {
