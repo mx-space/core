@@ -107,8 +107,8 @@ importers:
         specifier: 9.1.3
         version: 9.1.3
       '@haklex/rich-headless':
-        specifier: 0.4.1
-        version: 0.4.1(lexical@0.44.0)
+        specifier: 0.6.1
+        version: 0.6.1(lexical@0.44.0)
       '@innei/next-async':
         specifier: 0.4.0
         version: 0.4.0
@@ -1705,8 +1705,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@haklex/rich-headless@0.4.1':
-    resolution: {integrity: sha512-cG+U2USYxop+AGYKJUCgsd2sBuwyljc56RVbzqkdILjb+2Rt3wxOfpqOFUeDbTHrjL5nsIWx5NUgnDoMvqc4Vw==}
+  '@haklex/rich-headless@0.6.1':
+    resolution: {integrity: sha512-gFbkm3OtGYfAXkM6ZN8PQdx3vgp5T1N6oHxBYYLJ65MH4PZC9ycx9WrXE8JNP+htVegI1FkdqnYn+Voqfwa9cw==}
     peerDependencies:
       lexical: ^0.44.0
 
@@ -8774,7 +8774,7 @@ snapshots:
       protobufjs: 7.5.6
       yargs: 17.7.2
 
-  '@haklex/rich-headless@0.4.1(lexical@0.44.0)':
+  '@haklex/rich-headless@0.6.1(lexical@0.44.0)':
     dependencies:
       '@lexical/code-core': 0.44.0
       '@lexical/extension': 0.44.0
