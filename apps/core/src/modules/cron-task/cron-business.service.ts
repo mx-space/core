@@ -221,12 +221,16 @@ export class CronBusinessService {
   }
 
   /**
-   * 重建搜索索引
+   * 重建搜索索引（默认增量；通过 source_hash 跳过未变文档）
    */
   async rebuildSearchIndex() {
-    this.logger.log('--> 开始重建搜索索引')
-    const result = await this.searchService.rebuildSearchDocuments()
-    this.logger.log(`--> 搜索索引重建完成，共 ${result.total} 条`)
+    this.logger.log('--> 开始重建搜索索引（增量）')
+    const result = await this.searchService.rebuildSearchDocuments({
+      force: false,
+    })
+    this.logger.log(
+      `--> 搜索索引重建完成 total=${result.total} created=${result.created} updated=${result.updated} deleted=${result.deleted} skipped=${result.skipped}`,
+    )
     return result
   }
 }
