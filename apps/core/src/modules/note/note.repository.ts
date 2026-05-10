@@ -69,13 +69,6 @@ export class NoteRepository extends BaseRepository {
     super(db)
   }
 
-  async nextNid(): Promise<number> {
-    const [row] = await this.db
-      .select({ max: sql<number>`coalesce(max(${notes.nid}), 0)::int` })
-      .from(notes)
-    return Number(row?.max ?? 0) + 1
-  }
-
   async getPassword(id: EntityId | string): Promise<string | null> {
     const idBig = parseEntityId(id)
     const [row] = await this.db
@@ -189,7 +182,6 @@ export class NoteRepository extends BaseRepository {
       .insert(notes)
       .values({
         id,
-        nid: input.nid,
         title: input.title ?? null,
         slug: input.slug ?? null,
         text: input.text ?? null,

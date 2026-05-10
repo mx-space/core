@@ -1,31 +1,25 @@
-import path from 'node:path'
-
-import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
-import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Pool } from 'pg'
 
 import { posts } from '~/database/schema'
 import { CategoryType } from '~/modules/category/category.enum'
 import { CategoryRepository } from '~/modules/category/category.repository'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
+import {
+  createPgTestDatabase,
+  type PgTestDatabase,
+} from 'test/helper/pg-verify-url'
 
-const verifyUrl = process.env.PG_VERIFY_URL
-const describeIfPg = verifyUrl ? describe : describe.skip
-
-describeIfPg('CategoryRepository', () => {
+describe('CategoryRepository', () => {
+  let context: PgTestDatabase
   let pool: Pool
-  let db: NodePgDatabase<typeof import('~/database/schema')>
+  let db: PgTestDatabase['db']
   let repository: CategoryRepository
   let snowflake: SnowflakeService
 
   beforeAll(async () => {
-    pool = new Pool({ connectionString: verifyUrl })
-    db = drizzle(pool, { casing: 'snake_case' })
-    const migrationsFolder = path.resolve(
-      __dirname,
-      '../../../../src/database/migrations',
-    )
-    await migrate(db, { migrationsFolder })
+    context = await createPgTestDatabase('mx_category')
+    pool = context.pool
+    db = context.db
     snowflake = new SnowflakeService()
     repository = new CategoryRepository(db as any, snowflake)
   }, 60_000)
@@ -36,7 +30,7 @@ describeIfPg('CategoryRepository', () => {
   })
 
   afterAll(async () => {
-    if (pool) await pool.end()
+    if (context) await context.close()
   })
 
   it('creates a category with a generated Snowflake id', async () => {

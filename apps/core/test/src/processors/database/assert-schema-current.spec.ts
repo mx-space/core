@@ -9,26 +9,29 @@ import {
   MigrationDriftError,
   SchemaBehindError,
 } from '~/processors/database/postgres.provider'
+import {
+  createPgTestDatabase,
+  type PgTestDatabase,
+} from 'test/helper/pg-verify-url'
 
 const { Pool } = pkg
-
-const verifyUrl = process.env.PG_VERIFY_URL
-const describeIfPg = verifyUrl ? describe : describe.skip
 
 const migrationsFolder = path.resolve(
   __dirname,
   '../../../../src/database/migrations',
 )
 
-describeIfPg('assertSchemaCurrent', () => {
+describe('assertSchemaCurrent', () => {
+  let context: PgTestDatabase
   let poolMain: pkg.Pool
 
   beforeAll(async () => {
-    poolMain = new Pool({ connectionString: verifyUrl, max: 2 })
+    context = await createPgTestDatabase('mx_assert_main')
+    poolMain = context.pool
   })
 
   afterAll(async () => {
-    await poolMain.end()
+    if (context) await context.close()
   })
 
   it('passes when the bundled migrations have been applied', async () => {
@@ -45,7 +48,7 @@ describeIfPg('assertSchemaCurrent', () => {
     const dbName = `mx_assert_${Date.now()}`
     await poolMain.query(`CREATE DATABASE ${dbName}`)
     try {
-      const url = new URL(verifyUrl!)
+      const url = new URL(context.connectionString)
       url.pathname = `/${dbName}`
       const fresh = new Pool({ connectionString: url.toString(), max: 1 })
       try {
@@ -66,7 +69,7 @@ describeIfPg('assertSchemaCurrent', () => {
     const dbName = `mx_drift_${Date.now()}`
     await poolMain.query(`CREATE DATABASE ${dbName}`)
     try {
-      const url = new URL(verifyUrl!)
+      const url = new URL(context.connectionString)
       url.pathname = `/${dbName}`
       const fresh = new Pool({ connectionString: url.toString(), max: 1 })
       try {

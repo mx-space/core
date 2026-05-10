@@ -36,6 +36,7 @@ import { NoteRepository } from './note.repository'
 import {
   type Coordinate,
   NOTE_PROTECTED_KEYS,
+  type NoteCreateDocument,
   type NoteListFilter,
   type NoteModel,
   type NoteRow,
@@ -276,7 +277,7 @@ export class NoteService {
     return Object.is(password, stored)
   }
 
-  public async create(document: NoteModel & { draftId?: string }) {
+  public async create(document: NoteCreateDocument) {
     this.lexicalService.populateText(document)
     const { draftId } = document
     const normalizedSlug = this.normalizeSlug(document.slug)
@@ -284,7 +285,6 @@ export class NoteService {
     if (normalizedSlug) document.slug = normalizedSlug
 
     let note = await this.noteRepository.create({
-      nid: document.nid ?? (await this.noteRepository.nextNid()),
       title: document.title,
       slug: normalizedSlug,
       text: document.text,

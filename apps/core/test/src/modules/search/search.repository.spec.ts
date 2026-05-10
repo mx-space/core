@@ -1,14 +1,11 @@
-import path from 'node:path'
-
-import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
-import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Pool } from 'pg'
 
 import { SearchRepository } from '~/modules/search/search.repository'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
-
-const verifyUrl = process.env.PG_VERIFY_URL
-const describeIfPg = verifyUrl ? describe : describe.skip
+import {
+  createPgTestDatabase,
+  type PgTestDatabase,
+} from 'test/helper/pg-verify-url'
 
 const baseDoc = (overrides: Record<string, any> = {}) => ({
   refType: 'post' as const,
@@ -31,19 +28,16 @@ const baseDoc = (overrides: Record<string, any> = {}) => ({
   ...overrides,
 })
 
-describeIfPg('SearchRepository', () => {
+describe('SearchRepository', () => {
+  let context: PgTestDatabase
   let pool: Pool
-  let db: NodePgDatabase<typeof import('~/database/schema')>
+  let db: PgTestDatabase['db']
   let repo: SearchRepository
 
   beforeAll(async () => {
-    pool = new Pool({ connectionString: verifyUrl })
-    db = drizzle(pool, { casing: 'snake_case' })
-    const migrationsFolder = path.resolve(
-      __dirname,
-      '../../../../src/database/migrations',
-    )
-    await migrate(db, { migrationsFolder })
+    context = await createPgTestDatabase('mx_search')
+    pool = context.pool
+    db = context.db
     repo = new SearchRepository(db as any, new SnowflakeService())
   }, 60_000)
 
@@ -52,7 +46,7 @@ describeIfPg('SearchRepository', () => {
   })
 
   afterAll(async () => {
-    if (pool) await pool.end()
+    if (context) await context.close()
   })
 
   it('upserts the same (refType, refId, lang) without violating unique', async () => {

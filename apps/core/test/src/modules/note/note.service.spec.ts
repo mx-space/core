@@ -84,21 +84,22 @@ const createService = () => {
 }
 
 describe('NoteService', () => {
-  it('creates notes with the next PG nid and normalized slug', async () => {
+  it('creates notes with database-generated nid and normalized slug', async () => {
     const { repository, service } = createService()
     repository.findBySlug.mockResolvedValue(null)
-    repository.nextNid.mockResolvedValue(42)
-    repository.create.mockResolvedValue(createNote({ nid: 42, slug: 'hello' }))
+    repository.create.mockResolvedValue(createNote({ slug: 'hello' }))
 
     await service.create({
+      nid: 42,
       title: 'Hello',
       slug: 'Hello!',
       text: 'body',
     } as any)
 
-    expect(repository.create).toHaveBeenCalledWith(
+    const createInput = repository.create.mock.calls[0][0]
+    expect(createInput).not.toHaveProperty('nid')
+    expect(createInput).toEqual(
       expect.objectContaining({
-        nid: 42,
         slug: 'hello',
         contentFormat: ContentFormat.Markdown,
       }),
@@ -109,7 +110,6 @@ describe('NoteService', () => {
     const { draftService, fileReferenceService, repository, service } =
       createService()
     repository.findBySlug.mockResolvedValue(null)
-    repository.nextNid.mockResolvedValue(1)
     repository.create.mockResolvedValue(createNote())
 
     await service.create({

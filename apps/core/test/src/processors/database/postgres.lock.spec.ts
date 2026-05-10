@@ -6,11 +6,12 @@ import {
   SCHEMA_MIGRATION_LOCK_KEY,
   withAdvisoryLock,
 } from '~/processors/database/postgres.lock'
+import {
+  createPgTestDatabase,
+  type PgTestDatabase,
+} from 'test/helper/pg-verify-url'
 
 const { Pool } = pkg
-
-const verifyUrl = process.env.PG_VERIFY_URL
-const describeIfPg = verifyUrl ? describe : describe.skip
 
 describe('SCHEMA_MIGRATION_LOCK_KEY', () => {
   it('matches sha256("mx-core:schema-migration:v1") first 8 bytes as signed bigint', () => {
@@ -24,19 +25,22 @@ describe('SCHEMA_MIGRATION_LOCK_KEY', () => {
   })
 })
 
-describeIfPg('withAdvisoryLock', () => {
+describe('withAdvisoryLock', () => {
+  let context: PgTestDatabase
   let poolA: pkg.Pool
   let poolB: pkg.Pool
   const TEST_KEY = 9999000000000001n
 
   beforeAll(async () => {
-    poolA = new Pool({ connectionString: verifyUrl, max: 2 })
-    poolB = new Pool({ connectionString: verifyUrl, max: 2 })
+    context = await createPgTestDatabase('mx_lock', { migrate: false })
+    poolA = new Pool({ connectionString: context.connectionString, max: 2 })
+    poolB = new Pool({ connectionString: context.connectionString, max: 2 })
   })
 
   afterAll(async () => {
     await poolA.end()
     await poolB.end()
+    if (context) await context.close()
   })
 
   it('blocks a second holder until the first releases', async () => {

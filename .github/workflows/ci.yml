@@ -165,6 +165,9 @@ jobs:
           CI: true
           REDIS_BINARY_PATH: /usr/bin/redis-server
           SNOWFLAKE_WORKER_ID: 1
+          PG_VERIFY_URL: postgres://mx:mx@127.0.0.1:5432/mx_core
+          PG_URL: postgres://mx:mx@127.0.0.1:5432/mx_core
+          PG_CONNECTION_STRING: postgres://mx:mx@127.0.0.1:5432/mx_core
           PG_HOST: 127.0.0.1
           PG_PORT: 5432
           PG_USER: mx

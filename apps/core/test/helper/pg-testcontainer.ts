@@ -12,11 +12,53 @@ import * as schema from '~/database/schema'
 
 const { Pool } = pkg
 
-let container: StartedPostgreSqlContainer | undefined
+interface PgTestDatabase {
+  getConnectionUri(): string
+}
 
-export async function startPgTestContainer() {
+let container: StartedPostgreSqlContainer | undefined
+let externalDatabase: PgTestDatabase | undefined
+let migrationsApplied = false
+
+const applyMigrations = async (connectionUri: string) => {
+  if (migrationsApplied) {
+    return
+  }
+
+  const migrationsFolder = path.resolve(
+    __dirname,
+    '../../src/database/migrations',
+  )
+  const pool = new Pool({ connectionString: connectionUri, max: 2 })
+  try {
+    const db = drizzle(pool, { schema, casing: 'snake_case' })
+    await drizzleMigrate(db, { migrationsFolder })
+    migrationsApplied = true
+  } finally {
+    await pool.end()
+  }
+}
+
+const setPostgresEnv = (connectionUri: string) => {
+  process.env.PG_URL = connectionUri
+  process.env.PG_CONNECTION_STRING = connectionUri
+  process.env.PG_VERIFY_URL = connectionUri
+  process.env.POSTGRES_URL = connectionUri
+}
+
+export async function startPgTestContainer(): Promise<PgTestDatabase> {
   if (container) {
     return container
+  }
+
+  const externalConnectionUri = process.env.PG_VERIFY_URL
+  if (externalConnectionUri) {
+    if (!externalDatabase) {
+      setPostgresEnv(externalConnectionUri)
+      externalDatabase = { getConnectionUri: () => externalConnectionUri }
+    }
+    await applyMigrations(externalConnectionUri)
+    return externalDatabase
   }
 
   container = await new PostgreSqlContainer('postgres:17-alpine')
@@ -26,34 +68,20 @@ export async function startPgTestContainer() {
     .start()
 
   const connectionUri = container.getConnectionUri()
-  process.env.PG_URL = connectionUri
-  process.env.PG_CONNECTION_STRING = connectionUri
-  process.env.PG_VERIFY_URL = connectionUri
-  process.env.POSTGRES_URL = connectionUri
-
-  // Apply bundled drizzle migrations so the assertSchemaCurrent boot guard
-  // (in postgres.provider.ts) passes for tests that go through the Nest module
-  // initialization path.
-  const migrationsFolder = path.resolve(
-    __dirname,
-    '../../src/database/migrations',
-  )
-  const pool = new Pool({ connectionString: connectionUri, max: 2 })
-  try {
-    const db = drizzle(pool, { schema, casing: 'snake_case' })
-    await drizzleMigrate(db, { migrationsFolder })
-  } finally {
-    await pool.end()
-  }
+  setPostgresEnv(connectionUri)
+  await applyMigrations(connectionUri)
 
   return container
 }
 
 export async function stopPgTestContainer() {
   if (!container) {
+    externalDatabase = undefined
+    migrationsApplied = false
     return
   }
 
   await container.stop()
   container = undefined
+  migrationsApplied = false
 }

@@ -104,7 +104,7 @@ export const notes = pgTable(
   {
     id: pkText(),
     createdAt: createdAt(),
-    nid: integer('nid').notNull(),
+    nid: integer('nid').notNull().generatedByDefaultAsIdentity(),
     title: text('title'),
     slug: text('slug'),
     text: text('text'),

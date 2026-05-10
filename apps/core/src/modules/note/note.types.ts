@@ -40,7 +40,6 @@ export interface NoteRow {
 }
 
 export interface NoteCreateInput {
-  nid: number
   contentFormat: string
   title?: string | null
   slug?: string | null
@@ -67,6 +66,12 @@ export type NotePatchInput = Partial<NoteCreateInput> & {
 export type NoteModel = NoteRow & {
   password?: string | null
 }
+
+export type NoteCreateDocument = Omit<Partial<NoteModel>, 'nid' | 'text'> &
+  Pick<NoteModel, 'text'> & {
+    draftId?: string
+    created?: Date | string | number
+  }
 
 export const NOTE_PROTECTED_KEYS = [
   'id',

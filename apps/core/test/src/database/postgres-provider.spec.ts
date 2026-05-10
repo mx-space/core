@@ -1,9 +1,4 @@
-import { existsSync } from 'node:fs'
-import path from 'node:path'
-
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Pool } from 'pg'
 
 import { categories, posts } from '~/database/schema'
@@ -11,38 +6,29 @@ import {
   SNOWFLAKE_EPOCH_MS,
   SnowflakeGenerator,
 } from '~/shared/id/snowflake.service'
+import {
+  createPgTestDatabase,
+  type PgTestDatabase,
+} from 'test/helper/pg-verify-url'
 
 /**
- * Integration smoke test. Skipped unless PG_VERIFY_URL points at a reachable
- * PostgreSQL instance with privileges to apply the schema. Local development
- * sets this against an ephemeral docker container.
+ * Integration smoke test. PG_VERIFY_URL must point at a reachable PostgreSQL
+ * instance with privileges to apply the schema. Local development sets this
+ * against an ephemeral docker container.
  */
-const verifyUrl = process.env.PG_VERIFY_URL
-const describeIfPg = verifyUrl ? describe : describe.skip
-
-describeIfPg('postgres provider smoke', () => {
+describe('postgres provider smoke', () => {
+  let context: PgTestDatabase
   let pool: Pool
-  let db: ReturnType<typeof drizzle>
+  let db: PgTestDatabase['db']
 
   beforeAll(async () => {
-    pool = new Pool({ connectionString: verifyUrl })
-    db = drizzle(pool, { casing: 'snake_case' })
-    const migrationsFolder = path.resolve(
-      __dirname,
-      '../../../src/database/migrations',
-    )
-    if (!existsSync(migrationsFolder)) {
-      throw new Error(`migrations folder missing: ${migrationsFolder}`)
-    }
-    await migrate(db, { migrationsFolder })
+    context = await createPgTestDatabase('mx_provider')
+    pool = context.pool
+    db = context.db
   }, 60_000)
 
   afterAll(async () => {
-    if (pool) {
-      await pool.query('truncate table posts cascade')
-      await pool.query('truncate table categories cascade')
-      await pool.end()
-    }
+    if (context) await context.close()
   })
 
   it('round-trips a category and post via Snowflake text ids', async () => {
