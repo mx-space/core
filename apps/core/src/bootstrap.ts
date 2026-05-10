@@ -15,6 +15,7 @@ import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guards/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { extendedZodValidationPipeInstance } from './common/zod'
+import { AppMigrationsService } from './database/app-migrations/app-migrations.service'
 import { logger } from './global/consola.global'
 import { isDev, isMainProcess, isTest } from './global/env.global'
 import { RedisService } from './processors/redis/redis.service'
@@ -83,6 +84,14 @@ export async function bootstrap() {
   app.useGlobalGuards(new SpiderGuard())
   !isTest &&
     app.useWebSocketAdapter(new RedisIoAdapter(app, app.get(RedisService)))
+
+  // Dev runs app-data migrations inline; prod boots them via the standalone
+  // `app-migrate.ts` CLI invoked by docker `mx-migrate`. Both paths share the
+  // same `AppMigrationsService` and respect the advisory lock + ledger, so
+  // multiple cluster workers / replicas hitting this concurrently is safe.
+  if (isDev && !isTest) {
+    await app.get(AppMigrationsService).run(app)
+  }
 
   await app.listen(
     {

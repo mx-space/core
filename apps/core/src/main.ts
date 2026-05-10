@@ -4,6 +4,8 @@ import 'dotenv-expand/config'
 
 import cluster from 'node:cluster'
 import { cpus } from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { DEBUG_MODE } from './app.config.js'
 import { registerForMemoryDump } from './dump'
@@ -15,7 +17,7 @@ process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'}) - ${
   process.env.NODE_ENV
 }`
 
-async function main() {
+export async function startMain() {
   initializeApp()
 
   const [{ bootstrap }, { CLUSTER, ENCRYPT }, { Cluster }] = await Promise.all([
@@ -57,4 +59,16 @@ async function main() {
   }
 }
 
-main()
+function isCliEntry(): boolean {
+  try {
+    const here = fileURLToPath(import.meta.url)
+    const entry = process.argv[1] ? path.resolve(process.argv[1]) : ''
+    return here === entry
+  } catch {
+    return false
+  }
+}
+
+if (isCliEntry()) {
+  startMain()
+}

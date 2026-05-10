@@ -11,11 +11,14 @@
  *           `~/app.config` evaluation only fires after schema phase logs.
  *
  * Both phases must succeed for the binary to exit 0. `node migrate.mjs` (in
- * the docker image) and `pnpm migrate` (in dev) both run the chain.
+ * the docker image) and `pnpm migrate` (in dev) both run the chain via the
+ * CLI guard at the bottom; importing this module from `dev.ts` only exposes
+ * `runSchemaMigrations` and does NOT trigger the chain.
  */
 import 'dotenv-expand/config'
 
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { migrate as drizzleMigrate } from 'drizzle-orm/node-postgres/migrator'
@@ -63,7 +66,7 @@ function resolveMigrationsFolder(): string {
     : path.resolve(process.cwd(), 'src', 'database', 'migrations')
 }
 
-async function runSchemaMigrations() {
+export async function runSchemaMigrations() {
   const cfg = resolvePgConfig()
   const pool = new Pool({
     connectionString: cfg.connectionString,
@@ -107,16 +110,28 @@ async function main() {
   await runAppMigrations()
 }
 
-main()
-  .then(() => {
-    // Force exit even if app.close() left handles open. ImageService's
-    // onModuleInit fires `requireDepsWithInstall('sharp')` which loads the
-    // sharp native binding once installed; sharp's worker pool keeps the
-    // event loop alive and migrate.mjs would otherwise hang here, blocking
-    // `service_completed_successfully` for mx-server in compose.
-    process.exit(0)
-  })
-  .catch((err) => {
-    console.error('[migrate] failed:', err)
-    process.exit(1)
-  })
+function isCliEntry(): boolean {
+  try {
+    const here = fileURLToPath(import.meta.url)
+    const entry = process.argv[1] ? path.resolve(process.argv[1]) : ''
+    return here === entry
+  } catch {
+    return false
+  }
+}
+
+if (isCliEntry()) {
+  main()
+    .then(() => {
+      // Force exit even if app.close() left handles open. ImageService's
+      // onModuleInit fires `requireDepsWithInstall('sharp')` which loads the
+      // sharp native binding once installed; sharp's worker pool keeps the
+      // event loop alive and migrate.mjs would otherwise hang here, blocking
+      // `service_completed_successfully` for mx-server in compose.
+      process.exit(0)
+    })
+    .catch((err) => {
+      console.error('[migrate] failed:', err)
+      process.exit(1)
+    })
+}

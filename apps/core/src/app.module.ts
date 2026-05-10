@@ -20,6 +20,7 @@ import { JSONTransformInterceptor } from './common/interceptors/json-transform.i
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { TranslationEntryInterceptor } from './common/interceptors/translation-entry.interceptor'
 import { RequestContextMiddleware } from './common/middlewares/request-context.middleware'
+import { AppMigrationsModule } from './database/app-migrations/app-migrations.module'
 import { AckModule } from './modules/ack/ack.module'
 import { ActivityModule } from './modules/activity/activity.module'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
@@ -30,11 +31,11 @@ import { BackupModule } from './modules/backup/backup.module'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
-import { EnrichmentModule } from './modules/enrichment/enrichment.module'
 import { CronTaskModule } from './modules/cron-task/cron-task.module'
 import { DebugModule } from './modules/debug/debug.module'
 import { DependencyModule } from './modules/dependency/dependency.module'
 import { DraftModule } from './modules/draft/draft.module'
+import { EnrichmentModule } from './modules/enrichment/enrichment.module'
 import { FeedModule } from './modules/feed/feed.module'
 import { FileModule } from './modules/file/file.module'
 import { HealthModule } from './modules/health/health.module'
@@ -75,6 +76,7 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
   imports: [
     LoggerModule,
     DatabaseModule,
+    AppMigrationsModule,
     RedisModule,
     TaskQueueModule,
 
