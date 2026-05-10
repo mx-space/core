@@ -1,5 +1,7 @@
-import { EnrichmentService } from '~/modules/enrichment/enrichment.service'
-import { RecentlyRepository } from '~/modules/recently/recently.repository'
+import { eq, isNull } from 'drizzle-orm'
+
+import { recentlies } from '~/database/schema'
+import { matchUrlToRef } from '~/modules/enrichment/url-match.util'
 
 import type { AppMigration } from './types'
 
@@ -19,17 +21,34 @@ export function extractFirstUrl(
   return url || null
 }
 
+/**
+ * Backfill enrichment refs on legacy `recentlies` rows that pre-date the
+ * enrichment columns. Pure DB migration — DI-free, no Nest service used.
+ *
+ * Behavior change vs. the original Nest-DI version: previously we eagerly
+ * called `EnrichmentService.resolve(url)` after writing the columns to warm
+ * the cache. That step did network IO and pulled in AiModule + ConfigsModule
+ * + ProviderRegistry, all of which we want OUT of the release-phase migrate
+ * binary. The live server resolves these refs lazily on first read via the
+ * SWR layer (see EnrichmentService default-ttl handling for `open-graph` and
+ * `mx-space`), so the user-visible end state is the same — just one extra
+ * background fetch on first access instead of pre-warming.
+ */
 export const migration: AppMigration = {
   id: '20260506-enrichment-backfill',
   description: 'Backfill enrichment refs for legacy recently rows',
-  async up({ app, logger }) {
-    const enrichmentService = app.get(EnrichmentService)
-    const recentlyRepo = app.get(RecentlyRepository)
+  async up({ db, logger }) {
+    const rows = await db
+      .select({
+        id: recentlies.id,
+        content: recentlies.content,
+        metadata: recentlies.metadata,
+      })
+      .from(recentlies)
+      .where(isNull(recentlies.enrichmentExternalId))
 
-    const rows = await recentlyRepo.findWithoutEnrichment()
     let matched = 0
     let skipped = 0
-    let resolveFailed = 0
     for (const row of rows) {
       const url =
         (row.metadata as { url?: string } | null)?.url ??
@@ -38,25 +57,23 @@ export const migration: AppMigration = {
         skipped++
         continue
       }
-      const ref = enrichmentService.matchUrlToRef(url)
+      const ref = matchUrlToRef(url)
       if (!ref) {
         skipped++
         continue
       }
-      await recentlyRepo.update(row.id, {
-        enrichmentProvider: ref.provider,
-        enrichmentExternalId: ref.externalId,
-      })
-      try {
-        await enrichmentService.resolve(url)
-      } catch (err) {
-        resolveFailed++
-        logger.warn(`resolve failed for ${url}: ${(err as Error).message}`)
-      }
+      await db
+        .update(recentlies)
+        .set({
+          enrichmentProvider: ref.provider,
+          enrichmentExternalId: ref.externalId,
+          modifiedAt: new Date(),
+        })
+        .where(eq(recentlies.id, row.id))
       matched++
     }
     logger.log(
-      `backfill: total=${rows.length} matched=${matched} skipped=${skipped} resolveFailed=${resolveFailed}`,
+      `backfill: total=${rows.length} matched=${matched} skipped=${skipped}`,
     )
   },
 }

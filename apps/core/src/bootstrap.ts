@@ -90,7 +90,7 @@ export async function bootstrap() {
   // same `AppMigrationsService` and respect the advisory lock + ledger, so
   // multiple cluster workers / replicas hitting this concurrently is safe.
   if (isDev && !isTest) {
-    await app.get(AppMigrationsService).run(app)
+    await app.get(AppMigrationsService).run()
   }
 
   await app.listen(

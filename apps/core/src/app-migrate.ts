@@ -1,10 +1,13 @@
 /**
  * App-data migration runner (standalone CLI).
  *
- * Boots a Nest application context (so migrations can `app.get(Service)` and
- * use real DI graph), then delegates to `AppMigrationsService.run`. The
- * service holds the canonical advisory-lock + ledger logic; in dev that
- * same service runs inline from `bootstrap.ts`.
+ * Boots a SLIM Nest application context (`MigrationsAppModule`) — only the
+ * postgres providers and the app-migrations runner. Critically, this does
+ * NOT pull AppModule, so onModuleInit side effects from business services
+ * (sharp install, Better Auth init, GatewayModule, TaskQueueModule, cron,
+ * email, etc.) never fire. The mx-migrate one-shot container in
+ * docker-compose.yml uses this entry, so a release-phase migration cannot
+ * be bricked by an unrelated business module's boot path.
  *
  * Schema migrations must run first — `src/migrate.ts` chains both phases so
  * `node migrate.mjs` (and `pnpm migrate`) is enough. This file remains a
@@ -12,9 +15,9 @@
  * exposes `runAppMigrations` for the combined runner.
  *
  * Mirrors the import-order trick in `main.ts`: `initializeApp()` MUST run
- * before AppModule (and anything in its graph) evaluates ambient globals
- * such as `isDev`. ESM hoists static imports, so the AppModule import is
- * deferred via dynamic `import()`.
+ * before MigrationsAppModule (and anything in its graph) evaluates ambient
+ * globals such as `isDev`. ESM hoists static imports, so the module import
+ * is deferred via dynamic `import()`.
  */
 import 'dotenv-expand/config'
 
@@ -28,20 +31,19 @@ import { initializeApp } from './global/index.global'
 export async function runAppMigrations() {
   initializeApp()
 
-  const [{ AppModule }, { AppMigrationsService }] = await Promise.all([
-    import('./app.module'),
-    import('./database/app-migrations/app-migrations.service'),
-  ])
-
-  const app = await NestFactory.createApplicationContext(
-    AppModule.register(false),
-    {
-      logger: ['error', 'warn', 'log'],
-    },
+  const [{ MigrationsAppModule }, { AppMigrationsService }] = await Promise.all(
+    [
+      import('./migrations-app.module'),
+      import('./database/app-migrations/app-migrations.service'),
+    ],
   )
 
+  const app = await NestFactory.createApplicationContext(MigrationsAppModule, {
+    logger: ['error', 'warn', 'log'],
+  })
+
   try {
-    await app.get(AppMigrationsService).run(app)
+    await app.get(AppMigrationsService).run()
   } finally {
     await app.close()
   }

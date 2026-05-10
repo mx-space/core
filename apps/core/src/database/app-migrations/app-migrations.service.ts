@@ -1,4 +1,3 @@
-import type { INestApplicationContext } from '@nestjs/common'
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import type pkg from 'pg'
 
@@ -13,18 +12,18 @@ import { appMigrations as ledgerTable } from '../schema'
 import { migrations } from './registry'
 
 /**
- * Runs app-data migrations against the running Nest application's DI graph.
- *
- * Execution model is identical to the legacy standalone `runAppMigrations`:
- * acquire an advisory lock, list ledger rows, iterate the registry sorted by
- * id, run pending `m.up({ app, logger })` calls, write a ledger row per
- * success. The advisory lock + ledger combination makes the call safe to
- * fire from multiple replicas / cluster workers concurrently.
+ * Runs app-data migrations against the database directly — no Nest DI graph
+ * is exposed to migration `up` functions. Acquires a Postgres advisory lock,
+ * lists ledger rows, iterates the registry sorted by id, and runs pending
+ * `m.up({ db, pool, logger })` calls, writing a ledger row per success. The
+ * advisory lock + ledger combination makes the call safe to fire from
+ * multiple replicas / cluster workers concurrently.
  *
  * In dev, this fires inline from `bootstrap.ts` so a single `vite-node`
  * process handles schema migrations (via `dev.ts`) + app-data migrations +
  * server boot. In prod, this runs from the standalone `app-migrate.ts` CLI
- * (invoked by docker `mx-migrate` via `migrate.mjs`).
+ * (invoked by docker `mx-migrate` via `migrate.mjs`) booting a slim
+ * `MigrationsAppModule` — no ImageService, AuthModule, Gateway, etc.
  */
 @Injectable()
 export class AppMigrationsService {
@@ -35,7 +34,7 @@ export class AppMigrationsService {
     @Inject(PG_POOL_TOKEN) private readonly pool: pkg.Pool,
   ) {}
 
-  async run(app: INestApplicationContext): Promise<void> {
+  async run(): Promise<void> {
     const { db, pool, logger } = this
     await withAdvisoryLock(pool, APP_MIGRATION_LOCK_KEY, async () => {
       const appliedRows = await db
@@ -52,7 +51,7 @@ export class AppMigrationsService {
         logger.log(`▶ ${m.id} — ${m.description}`)
         const start = Date.now()
         try {
-          await m.up({ app, logger })
+          await m.up({ db, pool, logger })
           const ms = Date.now() - start
           await db.insert(ledgerTable).values({ id: m.id, durationMs: ms })
           logger.log(`✓ ${m.id} (${ms}ms)`)
