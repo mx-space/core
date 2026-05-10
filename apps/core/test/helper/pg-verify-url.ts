@@ -55,7 +55,7 @@ export async function createPgTestDatabase(
     try {
       await pool.end()
       if (created) {
-        await adminPool.query(`DROP DATABASE ${quotedDbName} WITH (FORCE)`)
+        await adminPool.query(`DROP DATABASE ${quotedDbName}`)
       }
     } finally {
       await adminPool.end()
