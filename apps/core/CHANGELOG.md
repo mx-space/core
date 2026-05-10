@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## [12.3.1](https://github.com/mx-space/core/compare/v12.3.0...v12.3.1) (2026-05-10)
+
+
+### Bug Fixes
+
+* **note:** use database-generated nid ([c3fefe2](https://github.com/mx-space/core/commit/c3fefe24))
+
+
+### Refactor
+
+* **migrate:** decouple app-migrate from AppModule via slim MigrationsAppModule ([cda3434](https://github.com/mx-space/core/commit/cda34344))
+
+
 ## [12.3.0](https://github.com/mx-space/core/compare/v12.2.6...v12.3.0) (2026-05-10)
 
 
