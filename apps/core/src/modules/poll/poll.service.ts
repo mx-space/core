@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto'
 
 import { Injectable, Logger } from '@nestjs/common'
 
+import { PollDefinitionRepository } from './poll-definition.repository'
+import { isPollClosed } from './poll-definition.util'
 import { PollVoteRepository } from './poll-vote.repository'
 
 export interface PollState {
@@ -24,7 +26,10 @@ interface FingerprintInput {
 export class PollService {
   private readonly logger = new Logger(PollService.name)
 
-  constructor(private readonly pollVoteRepository: PollVoteRepository) {}
+  constructor(
+    private readonly pollVoteRepository: PollVoteRepository,
+    private readonly pollDefinitionRepository: PollDefinitionRepository,
+  ) {}
 
   /**
    * Stable identity for vote dedup. Logged-in readers map to `r:<id>`;
@@ -40,7 +45,8 @@ export class PollService {
   }
 
   async getState(pollId: string, voterFingerprint: string): Promise<PollState> {
-    const [tallyDocs, vote, totalVotes] = await Promise.all([
+    const [definition, tallyDocs, vote, totalVotes] = await Promise.all([
+      this.pollDefinitionRepository.findByPollId(pollId),
       this.pollVoteRepository.tally(pollId),
       this.pollVoteRepository.findByPollAndFingerprint(
         pollId,
@@ -51,14 +57,17 @@ export class PollService {
 
     const tallies: Record<string, number> = {}
     for (const doc of tallyDocs) tallies[doc.optionId] = doc.count
+    const closed = definition ? isPollClosed(definition) : false
+    const canVote = !!definition && !closed && !vote && definition.options.length > 0
 
     return {
       tallies,
       totalVotes,
       userVote: vote?.optionIds,
-      status: 'ready',
-      closed: false,
-      canVote: !vote,
+      status: definition ? 'ready' : 'error',
+      closed,
+      canVote,
+      ...(!definition ? { errorMessage: 'Poll not found' } : {}),
     }
   }
 
@@ -80,6 +89,16 @@ export class PollService {
     voterFingerprint: string,
     optionIds: string[],
   ): Promise<PollState> {
+    const definition = await this.pollDefinitionRepository.findByPollId(pollId)
+    if (!definition) {
+      return this.errorState(pollId, voterFingerprint, 'Poll not found')
+    }
+
+    const guardError = this.validateVote(definition, optionIds)
+    if (guardError) {
+      return this.errorState(pollId, voterFingerprint, guardError)
+    }
+
     try {
       await this.pollVoteRepository.castVote({
         pollId,
@@ -95,5 +114,44 @@ export class PollService {
       throw err
     }
     return this.getState(pollId, voterFingerprint)
+  }
+
+  private validateVote(
+    definition: Awaited<ReturnType<PollDefinitionRepository['findByPollId']>>,
+    optionIds: string[],
+  ): string | null {
+    if (!definition) return 'Poll not found'
+    if (isPollClosed(definition)) return 'Poll closed'
+    if (optionIds.length === 0) return 'No option selected'
+
+    const uniqueOptionIds = new Set(optionIds)
+    if (uniqueOptionIds.size !== optionIds.length) {
+      return 'Duplicate option'
+    }
+
+    if (definition.mode === 'single' && optionIds.length !== 1) {
+      return 'Multiple options not allowed'
+    }
+
+    const allowedOptions = new Set(definition.options.map((option) => option.id))
+    if (optionIds.some((optionId) => !allowedOptions.has(optionId))) {
+      return 'Invalid option'
+    }
+
+    return null
+  }
+
+  private async errorState(
+    pollId: string,
+    voterFingerprint: string,
+    errorMessage: string,
+  ): Promise<PollState> {
+    const state = await this.getState(pollId, voterFingerprint)
+    return {
+      ...state,
+      status: 'error',
+      canVote: false,
+      errorMessage,
+    }
   }
 }
