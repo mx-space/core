@@ -7,7 +7,9 @@ import {
   Query,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common'
+import { Throttle } from '@nestjs/throttler'
 import type { FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -18,12 +20,17 @@ import { AdminListQueryDto, ResolveQueryDto } from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
 import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
+import { EnrichmentOriginGuard } from './enrichment-origin.guard'
+
+const PUBLIC_RESOLVE_THROTTLE = { default: { limit: 30, ttl: 60_000 } }
 
 @ApiController('enrichment')
 export class EnrichmentController {
   constructor(private readonly enrichmentService: EnrichmentService) {}
 
   @Get('resolve')
+  @Throttle(PUBLIC_RESOLVE_THROTTLE)
+  @UseGuards(EnrichmentOriginGuard)
   async resolve(
     @Query() query: ResolveQueryDto,
     @Lang() lang: string | undefined,
@@ -57,6 +64,8 @@ export class EnrichmentController {
   }
 
   @Get(':provider/*')
+  @Throttle(PUBLIC_RESOLVE_THROTTLE)
+  @UseGuards(EnrichmentOriginGuard)
   async getOne(
     @Param('provider') provider: string,
     @Req() req: FastifyRequest,

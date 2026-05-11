@@ -5,6 +5,7 @@ import { ConfigsModule } from '../configs/configs.module'
 import { EnrichmentController } from './enrichment.controller'
 import { EnrichmentRepository } from './enrichment.repository'
 import { EnrichmentService } from './enrichment.service'
+import { EnrichmentOriginGuard } from './enrichment-origin.guard'
 import { ArxivProvider } from './providers/arxiv/arxiv.provider'
 import { BangumiProvider } from './providers/bangumi/bangumi.provider'
 // Providers
@@ -57,6 +58,7 @@ const allProviders = [
     EnrichmentService,
     ProviderRegistry,
     UrlExtractorService,
+    EnrichmentOriginGuard,
     ...allProviders,
   ],
   exports: [EnrichmentService, UrlExtractorService],
