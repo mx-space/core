@@ -18,20 +18,12 @@ const closeDatabase = async () => {
 
 const clearDatabase = async () => {
   if (!pool) return
-  await pool.query(`
-    do $$
-    declare
-      r record;
-    begin
-      for r in (
-        select tablename
-        from pg_tables
-        where schemaname = 'public'
-      ) loop
-        execute 'truncate table "' || r.tablename || '" restart identity cascade';
-      end loop;
-    end $$;
-  `)
+  const { rows } = await pool.query(
+    `select tablename from pg_tables where schemaname = 'public'`,
+  )
+  if (rows.length === 0) return
+  const tables = rows.map((r: any) => `"${r.tablename}"`).join(', ')
+  await pool.query(`truncate table ${tables} restart identity cascade`)
 }
 
 export const dbHelper = {
