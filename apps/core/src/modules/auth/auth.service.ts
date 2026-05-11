@@ -117,10 +117,6 @@ export class AuthService {
     return `txo${nanoid}`
   }
 
-  isCustomToken(token: string) {
-    return token.startsWith('txo') && token.length - 3 === 40
-  }
-
   async verifyCustomToken(
     token: string,
   ): Promise<[true, { userId: string }] | [false, null]> {

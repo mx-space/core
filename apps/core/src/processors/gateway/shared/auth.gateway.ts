@@ -77,9 +77,6 @@ export const createAuthGateway = (
       }
 
       const token = apiKey.replace(/^bearer\s+/i, '')
-      if (!this.authService.isCustomToken(token)) {
-        return this.authFailed(client)
-      }
       const result = await this.authService.verifyApiKey(token)
       if (
         !result ||

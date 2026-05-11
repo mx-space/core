@@ -36,10 +36,6 @@ export class AuthGuard implements CanActivate {
       throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
     }
 
-    if (!this.authService.isCustomToken(apiKey.key)) {
-      throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
-    }
-
     const result = await this.authService.verifyApiKey(apiKey.key)
     if (!result?.referenceId) {
       throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
