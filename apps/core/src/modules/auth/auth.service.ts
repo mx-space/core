@@ -111,10 +111,6 @@ export class AuthService {
     }
   }
 
-  isCustomToken(token: string) {
-    return typeof token === 'string' && /^txo[\dA-Za-z]{40}$/.test(token)
-  }
-
   async generateAccessToken() {
     const nanoid = customAlphabet(alphabet, 40)()
 

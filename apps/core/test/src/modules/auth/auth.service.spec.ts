@@ -42,14 +42,6 @@ const createService = () => {
 }
 
 describe('AuthService', () => {
-  it('recognizes only canonical txo access-token shape as custom tokens', () => {
-    const { service } = createService()
-
-    expect(service.isCustomToken(`txo${'a'.repeat(40)}`)).toBe(true)
-    expect(service.isCustomToken(`txo${'a'.repeat(39)}`)).toBe(false)
-    expect(service.isCustomToken(`abc${'a'.repeat(40)}`)).toBe(false)
-  })
-
   it('creates Better Auth API keys for the owner reader id', async () => {
     const { authInstance, service } = createService()
     const auth = authInstance.get()
