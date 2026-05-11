@@ -1,84 +1,70 @@
 # CHANGELOG
 
 
-## [12.3.2](https://github.com/mx-space/core/compare/v12.3.1...v12.3.2) (2026-05-11)
+## <small>12.3.3 (2026-05-11)</small>
 
+* release: v12.3.3 ([fdb2f77](https://github.com/mx-space/core/commit/fdb2f77))
+* fix(auth): accept Better Auth keys without txo prefix in x-api-key ([a5be497](https://github.com/mx-space/core/commit/a5be497)), closes [#2705](https://github.com/mx-space/core/issues/2705)
+* fix(auth): add missing isCustomToken method and fix test deadlock ([176bb6f](https://github.com/mx-space/core/commit/176bb6f))
+* fix(auth): remove stale isCustomToken test case ([e476439](https://github.com/mx-space/core/commit/e476439))
+* fix(data-jobs): change run method to a property for DataJob interface ([4ef68ed](https://github.com/mx-space/core/commit/4ef68ed))
+* chore(deps): bump @haklex/rich-headless to 0.8.0 ([82bcc67](https://github.com/mx-space/core/commit/82bcc67))
 
-### Bug Fixes
+## <small>12.3.2 (2026-05-11)</small>
 
-* **poll:** bypass response key transform to preserve option ids ([728d797](https://github.com/mx-space/core/commit/728d797b))
-* **poll:** restrict vote definitions to lexical nodes ([0a12537](https://github.com/mx-space/core/commit/0a125375))
-* **poll:** validate public vote eligibility ([a386b21](https://github.com/mx-space/core/commit/a386b214))
+* release: v12.3.2 ([1ac7ee1](https://github.com/mx-space/core/commit/1ac7ee1))
+* chore(deps): update dependency @better-auth/api-key to v1.6.10 (#2692) ([70ab1c2](https://github.com/mx-space/core/commit/70ab1c2)), closes [#2692](https://github.com/mx-space/core/issues/2692)
+* chore(deps): update dependency better-auth to v1.6.10 (#2694) ([82599ee](https://github.com/mx-space/core/commit/82599ee)), closes [#2694](https://github.com/mx-space/core/issues/2694)
+* chore(deps): update dependency lint-staged to v17.0.4 (#2695) ([b9b7b3b](https://github.com/mx-space/core/commit/b9b7b3b)), closes [#2695](https://github.com/mx-space/core/issues/2695)
+* fix(poll): bypass response key transform to preserve option ids ([728d797](https://github.com/mx-space/core/commit/728d797))
+* fix(poll): restrict vote definitions to lexical nodes ([0a12537](https://github.com/mx-space/core/commit/0a12537))
+* fix(poll): validate public vote eligibility ([a386b21](https://github.com/mx-space/core/commit/a386b21))
 
+## <small>12.3.1 (2026-05-10)</small>
 
+* release: v12.3.1 ([980cba5](https://github.com/mx-space/core/commit/980cba5))
+* test(pg): avoid forced database drops ([676a106](https://github.com/mx-space/core/commit/676a106))
+* fix(note): use database-generated nid ([c3fefe2](https://github.com/mx-space/core/commit/c3fefe2))
+* refactor(migrate): decouple app-migrate from AppModule via slim MigrationsAppModule ([cda3434](https://github.com/mx-space/core/commit/cda3434))
 
-## [12.3.1](https://github.com/mx-space/core/compare/v12.3.0...v12.3.1) (2026-05-10)
+## 12.3.0 (2026-05-10)
 
+* release: v12.3.0 ([7887dec](https://github.com/mx-space/core/commit/7887dec))
+* fix(ai-summary): scope findByHash by lang to return correct locale ([25d7768](https://github.com/mx-space/core/commit/25d7768))
+* feat(note): add excludeId option to filter notes by created window ([ddc586a](https://github.com/mx-space/core/commit/ddc586a))
+* feat(search): multilingual BM25 with translation + fallback (#2698) ([bb77cde](https://github.com/mx-space/core/commit/bb77cde)), closes [#2698](https://github.com/mx-space/core/issues/2698)
+* refactor(core): consolidate dev entry, replace tsdown with vite build ([1fe0008](https://github.com/mx-space/core/commit/1fe0008))
+* chore(deps): update dependency @better-auth/passkey to v1.6.10 (#2693) ([477cda3](https://github.com/mx-space/core/commit/477cda3)), closes [#2693](https://github.com/mx-space/core/issues/2693)
+* chore(deps): update pnpm to v11.0.9 (#2697) ([dd47bb8](https://github.com/mx-space/core/commit/dd47bb8)), closes [#2697](https://github.com/mx-space/core/issues/2697)
 
-### Bug Fixes
+## <small>12.2.6 (2026-05-09)</small>
 
-* **note:** use database-generated nid ([c3fefe2](https://github.com/mx-space/core/commit/c3fefe24))
+* release: v12.2.6 ([df6626c](https://github.com/mx-space/core/commit/df6626c))
+* chore(deps): bump @anthropic-ai/sdk, openai, @types/node, wrangler, workers-types ([de5f1b1](https://github.com/mx-space/core/commit/de5f1b1))
+* fix(enrichment): synthesize merged state for github pr ([c1065af](https://github.com/mx-space/core/commit/c1065af))
+* feat(enrichment): hydrate recently by ref, share batch primitive ([c5dde29](https://github.com/mx-space/core/commit/c5dde29))
+* feat(enrichment): skip og SSRF guards in development ([36ac82a](https://github.com/mx-space/core/commit/36ac82a))
 
+## <small>12.2.5 (2026-05-08)</small>
 
-### Refactor
+* release: v12.2.5 ([4738821](https://github.com/mx-space/core/commit/4738821))
+* test(enrichment): align resolve specs with new fetch ctx arg ([82b7f0c](https://github.com/mx-space/core/commit/82b7f0c))
+* feat(enrichment): add open-graph fallback provider ([fa76daa](https://github.com/mx-space/core/commit/fa76daa))
+* fix(comment): auto mark parent as read when owner replies ([d29c509](https://github.com/mx-space/core/commit/d29c509))
 
-* **migrate:** decouple app-migrate from AppModule via slim MigrationsAppModule ([cda3434](https://github.com/mx-space/core/commit/cda34344))
+## <small>12.2.4 (2026-05-08)</small>
 
-
-## [12.3.0](https://github.com/mx-space/core/compare/v12.2.6...v12.3.0) (2026-05-10)
-
-
-### Bug Fixes
-
-* **ai-summary:** scope findByHash by lang to return correct locale ([25d7768](https://github.com/mx-space/core/commit/25d77680))
-
-
-### Features
-
-* **note:** add excludeId option to filter notes by created window ([ddc586a](https://github.com/mx-space/core/commit/ddc586ab))
-* **search:** multilingual BM25 with translation + fallback ([bb77cde](https://github.com/mx-space/core/commit/bb77cdeb)), closes [#2698](https://github.com/mx-space/core/issues/2698)
-
-
-
-## [12.2.6](https://github.com/mx-space/core/compare/v12.2.5...v12.2.6) (2026-05-09)
-
-
-### Bug Fixes
-
-* **enrichment:** synthesize merged state for github pr ([c1065af](https://github.com/mx-space/core/commit/c1065affa8639b3ce21a9197c7ff11566f5a3028))
-
-
-### Features
-
-* **enrichment:** hydrate recently by ref, share batch primitive ([c5dde29](https://github.com/mx-space/core/commit/c5dde294bacba819d9041b9a40391c2483fed343))
-* **enrichment:** skip og SSRF guards in development ([36ac82a](https://github.com/mx-space/core/commit/36ac82afed0ad72e6738f64e52843e9501a7f612))
-
-
-## [12.2.5](https://github.com/mx-space/core/compare/v12.2.4...v12.2.5) (2026-05-09)
-
-
-### Bug Fixes
-
-* **comment:** auto mark parent as read when owner replies ([d29c509](https://github.com/mx-space/core/commit/d29c5090d77ddd8cd44d1faf6a938942943f8b53))
-
-
-### Features
-
-* **enrichment:** add open-graph fallback provider ([fa76daa](https://github.com/mx-space/core/commit/fa76daa6ae0f01e0c0c8a00ef6886e9a34063f94))
-
-
-## [12.2.4](https://github.com/mx-space/core/compare/v12.2.3...v12.2.4) (2026-05-08)
-
-
-### Bug Fixes
-
-* **deps:** sync rolldown override in pnpm-workspace.yaml ([e50b0f3](https://github.com/mx-space/core/commit/e50b0f3112b8367d8befb7dc941f02ee08c4a842))
-* **deps:** sync rolldown resolution to 1.0.0 ([a9b1567](https://github.com/mx-space/core/commit/a9b15677c55af0ae18028d9b07b33e88d35f2599))
-
+* release: v12.2.4 ([096ce37](https://github.com/mx-space/core/commit/096ce37))
+* chore(ci): capture bundled server log on test failure ([f382cbd](https://github.com/mx-space/core/commit/f382cbd))
+* chore(ci): improve bundle test diagnostics ([0d753e2](https://github.com/mx-space/core/commit/0d753e2))
+* chore(deps): update all dependencies to latest ([38a2d1f](https://github.com/mx-space/core/commit/38a2d1f))
+* fix(deps): sync rolldown override in pnpm-workspace.yaml ([e50b0f3](https://github.com/mx-space/core/commit/e50b0f3))
+* fix(deps): sync rolldown resolution to 1.0.0 ([a9b1567](https://github.com/mx-space/core/commit/a9b1567))
+* test: align lang-context and mx-space provider specs with current behavior ([5caaa8d](https://github.com/mx-space/core/commit/5caaa8d))
 
 ## <small>12.2.3 (2026-05-08)</small>
 
-* release: v12.2.3 ([b3a2429](https://github.com/mx-space/core/commit/b3a2429))
+* release: v12.2.3 ([d4eb25c](https://github.com/mx-space/core/commit/d4eb25c))
 * feat(enrichment): enhance language handling and AI integration in MxSpaceProvider ([dfcaee6](https://github.com/mx-space/core/commit/dfcaee6))
 * chore(deps): bump @haklex/* to 0.4.1 ([fd149ab](https://github.com/mx-space/core/commit/fd149ab))
 
