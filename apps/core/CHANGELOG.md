@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## [12.3.2](https://github.com/mx-space/core/compare/v12.3.1...v12.3.2) (2026-05-11)
+
+
+### Bug Fixes
+
+* **poll:** bypass response key transform to preserve option ids ([728d797](https://github.com/mx-space/core/commit/728d797b))
+* **poll:** restrict vote definitions to lexical nodes ([0a12537](https://github.com/mx-space/core/commit/0a125375))
+* **poll:** validate public vote eligibility ([a386b21](https://github.com/mx-space/core/commit/a386b214))
+
+
+
 ## [12.3.1](https://github.com/mx-space/core/compare/v12.3.0...v12.3.1) (2026-05-10)
 
 
