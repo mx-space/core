@@ -7,6 +7,10 @@ import tsconfigPath from 'vite-tsconfig-paths'
 export default defineConfig({
   // esbuild can not emit ts metadata
   esbuild: false,
+  define: {
+    __DEV__: 'true',
+    __TEST__: 'false',
+  },
   plugins: [
     swc.vite(),
     tsconfigPath({

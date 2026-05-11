@@ -19,6 +19,10 @@ import tsconfigPaths from 'vite-tsconfig-paths'
  */
 export default defineConfig({
   esbuild: false,
+  define: {
+    __DEV__: 'false',
+    __TEST__: 'false',
+  },
   plugins: [
     swc.vite(),
     tsconfigPaths({

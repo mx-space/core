@@ -42,6 +42,11 @@ export default defineConfig({
   // esbuild can not emit ts metadata
   esbuild: false,
 
+  define: {
+    __DEV__: 'true',
+    __TEST__: 'true',
+  },
+
   plugins: [
     swc.vite(),
 
