@@ -95,6 +95,38 @@ function extractExcalidrawTexts(
   }
 }
 
+function extractPollSegments(
+  node: any,
+  propertySegments: PropertySegment[],
+  counter: { t: number; p: number },
+  ctx: BlockContext,
+): void {
+  if (typeof node.question === 'string' && node.question.trim()) {
+    propertySegments.push({
+      id: `p_${counter.p++}`,
+      text: node.question,
+      node,
+      property: 'question',
+      blockId: ctx.blockId,
+      rootIndex: ctx.rootIndex,
+    })
+  }
+  if (Array.isArray(node.options)) {
+    for (const option of node.options) {
+      if (typeof option.label === 'string' && option.label.trim()) {
+        propertySegments.push({
+          id: `p_${counter.p++}`,
+          text: option.label,
+          node: option,
+          property: 'label',
+          blockId: ctx.blockId,
+          rootIndex: ctx.rootIndex,
+        })
+      }
+    }
+  }
+}
+
 function walkNode(
   node: any,
   segments: TranslationSegment[],
@@ -108,6 +140,11 @@ function walkNode(
   // Handle excalidraw: extract text from shapes within snapshot
   if (node.type === LEXICAL_CONTEXT_EXCALIDRAW_TYPE) {
     extractExcalidrawTexts(node, propertySegments, counter, ctx)
+    return
+  }
+
+  if (node.type === 'poll') {
+    extractPollSegments(node, propertySegments, counter, ctx)
     return
   }
 
