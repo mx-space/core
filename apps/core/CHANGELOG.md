@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## [12.3.4](https://github.com/mx-space/core/compare/v12.3.3...v12.3.4) (2026-05-13)
+
+
+### Bug Fixes
+
+* **activity:** bind reader to socket at ws handshake ([c2a709c](https://github.com/mx-space/core/commit/c2a709cb7c8b4171ac5f4a7c5a4c200cad02ba65))
+* **enrichment:** preserve open graph refresh url context ([fb87132](https://github.com/mx-space/core/commit/fb87132329518306ea2222cc3aacc1b502d73600))
+
+
+### Features
+
+* **ai-translation:** translate Lexical Poll node ([#2709](https://github.com/mx-space/core/issues/2709)) ([9e5cdf6](https://github.com/mx-space/core/commit/9e5cdf691e318622da72e9db62d1987e3f10d511))
+* **enrichment:** origin guard + throttle on public endpoints ([40f7514](https://github.com/mx-space/core/commit/40f75142450fe8d21f8c4788f2136a3da2a765f8))
+
+
 ## <small>12.3.3 (2026-05-11)</small>
 
 * release: v12.3.3 ([fdb2f77](https://github.com/mx-space/core/commit/fdb2f77))
