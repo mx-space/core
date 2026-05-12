@@ -320,20 +320,28 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       return
     }
 
+    // Trust server-side reader binding established at socket handshake over
+    // the client-provided readerId — the latter may be missing when the
+    // browser couldn't hydrate /auth/session in time, and could be spoofed.
+    const socketMeta = await this.gatewayService.getSocketMetadata(socket)
+    const resolvedReaderId = socketMeta?.readerId || data.readerId
+
     const presenceData: ActivityPresence = {
       ...data,
 
       operationTime: data.ts,
       updatedAt: Date.now(),
       connectedAt: +new Date(socket.handshake.time),
-      readerId: data.readerId,
+      readerId: resolvedReaderId,
       ip,
     }
 
     delete (presenceData as any).ts
     const serializedPresenceData = omit(presenceData, 'ip') as any
-    if (data.readerId) {
-      const reader = await this.readerService.findReaderInIds([data.readerId])
+    if (resolvedReaderId) {
+      const reader = await this.readerService.findReaderInIds([
+        resolvedReaderId,
+      ])
       if (reader.length) {
         Object.assign(serializedPresenceData, {
           reader: camelcaseKeys({

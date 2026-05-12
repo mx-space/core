@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common'
+import { forwardRef, Inject, Logger } from '@nestjs/common'
 import type {
   GatewayMetadata,
   OnGatewayConnection,
@@ -18,6 +18,7 @@ import { DefaultEventsMap } from 'socket.io'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
+import { AuthService } from '~/modules/auth/auth.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -33,6 +34,7 @@ declare module '~/types/socket-meta' {
   interface SocketMetadata {
     sessionId: string
     lang?: string
+    readerId?: string
 
     roomJoinedAtMap: Record<string, number>
   }
@@ -43,6 +45,10 @@ const namespace = 'web'
 // @UseGuards(WsExtendThrottlerGuard)
 @WebSocketGateway<GatewayMetadata>({
   namespace,
+  cors: {
+    origin: (origin, cb) => cb(null, origin || true),
+    credentials: true,
+  },
 })
 export class WebEventsGateway
   extends BroadcastBaseGateway
@@ -56,6 +62,9 @@ export class WebEventsGateway
     private readonly redisService: RedisService,
 
     private readonly gatewayService: GatewayService,
+
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
   ) {
     super()
   }
@@ -193,9 +202,12 @@ export class WebEventsGateway
         ? rawLang
         : undefined
 
+    const readerId = await this.resolveReaderIdFromHandshake(socket)
+
     await this.gatewayService.setSocketMetadata(socket, {
       sessionId: webSessionId,
       ...(lang ? { lang } : {}),
+      ...(readerId ? { readerId } : {}),
     })
 
     if (lang) {
@@ -216,6 +228,29 @@ export class WebEventsGateway
         )
       })
       .catch(() => {})
+  }
+
+  private async resolveReaderIdFromHandshake(
+    socket: SocketIO.Socket,
+  ): Promise<string | undefined> {
+    const cookie = socket.handshake.headers.cookie as string | undefined
+    if (!cookie) return undefined
+    const origin = socket.handshake.headers.origin as string | undefined
+    try {
+      const headers = new Headers()
+      headers.set('cookie', cookie)
+      if (origin) headers.set('origin', origin)
+      const session = await this.authService.getSessionUserFromHeaders(headers)
+      const id = session?.user?.id
+      return typeof id === 'string' ? id : undefined
+    } catch (error) {
+      this.logger.debug(
+        `resolveReaderIdFromHandshake failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      )
+      return undefined
+    }
   }
 
   private async updateSocketLang(socket: SocketIO.Socket, lang: string) {
