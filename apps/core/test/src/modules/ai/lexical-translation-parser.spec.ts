@@ -1067,6 +1067,170 @@ describe('lexical-translation-parser', () => {
     })
   })
 
+  describe('poll node translation', () => {
+    const pollNode = (payload: {
+      pollId?: string
+      question?: string
+      options?: Array<{ id: string; label: string }>
+      mode?: 'single' | 'multiple'
+      closeAt?: string
+      showResults?: string
+    }) => ({
+      type: 'poll',
+      version: 1,
+      pollId: payload.pollId ?? 'poll-1',
+      question: payload.question ?? '',
+      options: payload.options ?? [],
+      mode: payload.mode ?? 'single',
+      ...(payload.closeAt !== undefined && { closeAt: payload.closeAt }),
+      ...(payload.showResults !== undefined && {
+        showResults: payload.showResults,
+      }),
+    })
+
+    it('parses poll node → question + option label segments, no text segments', () => {
+      const json = makeEditorState([
+        {
+          ...pollNode({
+            question: 'Favourite colour?',
+            options: [
+              { id: 'opt-1', label: 'Red' },
+              { id: 'opt-2', label: 'Blue' },
+              { id: 'opt-3', label: 'Green' },
+            ],
+          }),
+          $: { blockId: 'poll-block' },
+        },
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(0)
+      expect(propertySegments).toHaveLength(4)
+
+      const [q, o1, o2, o3] = propertySegments
+      expect(q.text).toBe('Favourite colour?')
+      expect(q.property).toBe('question')
+      expect(q.key).toBeUndefined()
+      expect(q.blockId).toBe('poll-block')
+      expect(q.rootIndex).toBe(0)
+
+      expect(o1.text).toBe('Red')
+      expect(o1.property).toBe('label')
+      expect(o1.key).toBeUndefined()
+      expect(o1.blockId).toBe('poll-block')
+      expect(o1.rootIndex).toBe(0)
+
+      expect(o2.text).toBe('Blue')
+      expect(o2.key).toBeUndefined()
+      expect(o3.text).toBe('Green')
+      expect(o3.key).toBeUndefined()
+    })
+
+    it('round-trip: translated question and labels, metadata preserved', () => {
+      const json = makeEditorState([
+        pollNode({
+          pollId: 'p42',
+          question: 'What is your OS?',
+          options: [
+            { id: 'a', label: 'Linux' },
+            { id: 'b', label: 'macOS' },
+          ],
+          mode: 'single',
+          closeAt: '2026-12-31',
+          showResults: 'always',
+        }),
+      ])
+
+      const result = parseLexicalForTranslation(json)
+      const { propertySegments } = result
+      expect(propertySegments).toHaveLength(3)
+
+      const translations = new Map<string, string>([
+        [propertySegments[0].id, '你的操作系统是？'],
+        [propertySegments[1].id, 'Linux（不变）'],
+        [propertySegments[2].id, 'macOS（不变）'],
+      ])
+
+      const restored = JSON.parse(
+        restoreLexicalTranslation(result, translations),
+      )
+      const poll = restored.root.children[0]
+
+      expect(poll.question).toBe('你的操作系统是？')
+      expect(poll.options[0].label).toBe('Linux（不变）')
+      expect(poll.options[1].label).toBe('macOS（不变）')
+
+      expect(poll.pollId).toBe('p42')
+      expect(poll.options[0].id).toBe('a')
+      expect(poll.options[1].id).toBe('b')
+      expect(poll.mode).toBe('single')
+      expect(poll.closeAt).toBe('2026-12-31')
+      expect(poll.showResults).toBe('always')
+      expect(poll.type).toBe('poll')
+    })
+
+    it('empty option.label is skipped, option object retained in restored state', () => {
+      const json = makeEditorState([
+        pollNode({
+          question: 'Pick one',
+          options: [
+            { id: 'x', label: 'Valid' },
+            { id: 'y', label: '' },
+            { id: 'z', label: '   ' },
+          ],
+        }),
+      ])
+
+      const result = parseLexicalForTranslation(json)
+      expect(result.propertySegments).toHaveLength(2)
+      expect(result.propertySegments[0].text).toBe('Pick one')
+      expect(result.propertySegments[1].text).toBe('Valid')
+
+      const translations = new Map<string, string>([
+        [result.propertySegments[0].id, '选一个'],
+        [result.propertySegments[1].id, '有效'],
+      ])
+      const restored = JSON.parse(
+        restoreLexicalTranslation(result, translations),
+      )
+      const poll = restored.root.children[0]
+
+      expect(poll.options).toHaveLength(3)
+      expect(poll.options[0].label).toBe('有效')
+      expect(poll.options[1].label).toBe('')
+      expect(poll.options[2].label).toBe('   ')
+    })
+
+    it('poll inside details nested editor state is parsed', () => {
+      const nestedPoll = pollNode({
+        question: 'Nested question',
+        options: [
+          { id: 'n1', label: 'Option A' },
+          { id: 'n2', label: 'Option B' },
+        ],
+      })
+      const json = makeEditorState([detailsNode('See poll', nestedPoll)])
+
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+      expect(segments).toHaveLength(0)
+
+      const pollSegs = propertySegments.filter(
+        (p) => p.property === 'question' || p.property === 'label',
+      )
+      const summarySegs = propertySegments.filter(
+        (p) => p.property === 'summary',
+      )
+
+      expect(summarySegs).toHaveLength(1)
+      expect(summarySegs[0].text).toBe('See poll')
+
+      expect(pollSegs).toHaveLength(3)
+      expect(pollSegs[0].text).toBe('Nested question')
+      expect(pollSegs[1].text).toBe('Option A')
+      expect(pollSegs[2].text).toBe('Option B')
+    })
+  })
+
   describe('excalidraw text extraction', () => {
     const excalidrawNode = (store: Record<string, any>) => ({
       type: 'excalidraw',

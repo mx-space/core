@@ -5,8 +5,12 @@ export const isMainCluster =
   Number.parseInt(process.env.NODE_APP_INSTANCE) === 0
 export const isMainProcess = cluster.isPrimary || isMainCluster
 
-export const isDev = __DEV__
+export const isDev =
+  typeof __DEV__ !== 'undefined'
+    ? __DEV__
+    : process.env.NODE_ENV === 'development'
 
-export const isTest = __TEST__
+export const isTest =
+  typeof __TEST__ !== 'undefined' ? __TEST__ : !!process.env.TEST
 export const isDebugMode = process.env.DEBUG_MODE === '1'
 export const cwd = process.cwd()
