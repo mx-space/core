@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import { and, eq, gt, inArray, or, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
@@ -7,10 +7,16 @@ import { BaseRepository } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-import type { EnrichmentResult, EnrichmentRow } from './enrichment.types'
+import type {
+  EnrichmentResult,
+  EnrichmentRow,
+  EnrichmentScreenshot,
+} from './enrichment.types'
 
 @Injectable()
 export class EnrichmentRepository extends BaseRepository {
+  private readonly logger = new Logger(EnrichmentRepository.name)
+
   constructor(
     @Inject(PG_DB_TOKEN) db: AppDatabase,
     private readonly snowflake: SnowflakeService,
@@ -140,6 +146,36 @@ export class EnrichmentRepository extends BaseRepository {
       raw: input.raw,
       expiresAt: input.expiresAt,
     })
+  }
+
+  /**
+   * Merge a `screenshot` key into the row's `normalized` JSONB column. Used
+   * by the post-persist screenshot pipeline so an already-inserted row can
+   * pick up the screenshot fields without rewriting the entire normalized
+   * payload (which would race with concurrent writers and revert other
+   * fields). Uses PostgreSQL's `jsonb` `||` operator for an in-place merge.
+   */
+  async updateScreenshot(
+    id: string,
+    screenshot: EnrichmentScreenshot,
+  ): Promise<void> {
+    const patch = JSON.stringify({ screenshot })
+    const updated = await this.db
+      .update(enrichmentCache)
+      .set({
+        normalized: sql`coalesce(${enrichmentCache.normalized}, '{}'::jsonb) || ${patch}::jsonb`,
+      })
+      .where(eq(enrichmentCache.id, id))
+      .returning({ id: enrichmentCache.id })
+
+    if (updated.length === 0) {
+      // Row vanished between persist and screenshot write — most likely an
+      // admin `invalidate` ran concurrently. The S3 object is now orphaned;
+      // the warn log is the ops signal for an eventual reconciliation job.
+      this.logger.warn(
+        `updateScreenshot: row ${id} disappeared between persist and screenshot write; S3 object now orphaned`,
+      )
+    }
   }
 
   async recordFailure(

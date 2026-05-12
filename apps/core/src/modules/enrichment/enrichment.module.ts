@@ -6,6 +6,7 @@ import { EnrichmentController } from './enrichment.controller'
 import { EnrichmentRepository } from './enrichment.repository'
 import { EnrichmentService } from './enrichment.service'
 import { EnrichmentOriginGuard } from './enrichment-origin.guard'
+import { EnrichmentScreenshotRepository } from './enrichment-screenshot.repository'
 import { ArxivProvider } from './providers/arxiv/arxiv.provider'
 import { BangumiProvider } from './providers/bangumi/bangumi.provider'
 // Providers
@@ -18,7 +19,10 @@ import { GitHubRepoProvider } from './providers/github/github-repo.provider'
 import { LeetcodeProvider } from './providers/leetcode/leetcode.provider'
 import { NeoDBBookProvider } from './providers/neodb/neodb-book.provider'
 import { NeteaseMusicProvider } from './providers/netease/netease-music.provider'
+import { BrowserFetchService } from './providers/open-graph/browser-fetch.service'
 import { OpenGraphProvider } from './providers/open-graph/open-graph.provider'
+import { ScreenshotPipelineService } from './providers/open-graph/screenshot-pipeline.service'
+import { ScreenshotStorageService } from './providers/open-graph/screenshot-storage.service'
 import type { EnrichmentProvider } from './providers/provider.interface'
 import { ProviderRegistry } from './providers/provider.registry'
 import { QQMusicProvider } from './providers/qq/qq-music.provider'
@@ -55,10 +59,14 @@ const allProviders = [
   controllers: [EnrichmentController],
   providers: [
     EnrichmentRepository,
+    EnrichmentScreenshotRepository,
     EnrichmentService,
     ProviderRegistry,
     UrlExtractorService,
     EnrichmentOriginGuard,
+    BrowserFetchService,
+    ScreenshotPipelineService,
+    ScreenshotStorageService,
     ...allProviders,
   ],
   exports: [EnrichmentService, UrlExtractorService],

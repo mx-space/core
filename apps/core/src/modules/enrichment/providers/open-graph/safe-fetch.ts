@@ -4,8 +4,14 @@ import { isIP } from 'node:net'
 import { isDev } from '~/global/env.global'
 
 const MAX_REDIRECTS = 5
+// Pose as a current Chrome on macOS. Self-identifying "bot" UAs (the previous
+// default) are routinely blocked by Cloudflare/Akamai/Vercel firewall rules,
+// even for unauthenticated metadata reads. Browser-shaped UA + matching
+// Sec-Fetch / sec-ch-ua hints get past the cheapest heuristics.
 const DEFAULT_UA =
-  'Mozilla/5.0 (compatible; mx-space-bot/1.0; +https://github.com/mx-space)'
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+const SEC_CH_UA =
+  '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"'
 
 const BLOCKED_HOSTNAMES = new Set([
   'localhost',
@@ -77,12 +83,7 @@ export async function safeFetch(
         method: 'GET',
         redirect: 'manual',
         signal: ac.signal,
-        headers: {
-          'User-Agent': opts.userAgent ?? DEFAULT_UA,
-          Accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.5',
-          'Accept-Language': 'en-US,en;q=0.5',
-        },
+        headers: buildRequestHeaders(accept, opts.userAgent ?? DEFAULT_UA, hop),
       })
     } finally {
       clearTimeout(timer)
@@ -130,6 +131,50 @@ export async function safeFetch(
   }
 
   throw new Error(`Too many redirects (>${MAX_REDIRECTS}) for ${rawUrl}`)
+}
+
+/**
+ * Compose request headers shaped like a real Chrome navigation when the caller
+ * expects HTML (Open Graph fallback), and like an XHR JSON request for
+ * everything else (oEmbed). Anti-bot stacks key off the *combination* of UA,
+ * Accept, Sec-Fetch-* and sec-ch-ua, so we keep them consistent rather than
+ * just swapping the UA string.
+ */
+function buildRequestHeaders(
+  accept: readonly string[],
+  userAgent: string,
+  hop: number,
+): Record<string, string> {
+  const isHtml = accept.some((p) => p.startsWith('text/html'))
+  if (isHtml) {
+    return {
+      'User-Agent': userAgent,
+      Accept:
+        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+      'Sec-Ch-Ua': SEC_CH_UA,
+      'Sec-Ch-Ua-Mobile': '?0',
+      'Sec-Ch-Ua-Platform': '"macOS"',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': hop === 0 ? 'none' : 'cross-site',
+      'Sec-Fetch-User': '?1',
+      'Upgrade-Insecure-Requests': '1',
+    }
+  }
+  return {
+    'User-Agent': userAgent,
+    Accept: accept.length ? `${accept.join(', ')}, */*;q=0.1` : '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Sec-Ch-Ua': SEC_CH_UA,
+    'Sec-Ch-Ua-Mobile': '?0',
+    'Sec-Ch-Ua-Platform': '"macOS"',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'same-origin',
+  }
 }
 
 function parseAndValidateUrl(raw: string): URL {

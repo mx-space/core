@@ -117,7 +117,19 @@ export const generateDefaultConfig: () => IConfig = () => ({
     leetcode: { enabled: true },
     neteaseMusic: { enabled: true },
     qqMusic: { enabled: true },
-    openGraph: { enabled: true, timeoutMs: 8000, maxBodyBytes: 524_288 },
+    openGraph: {
+      enabled: true,
+      fetchMode: 'fetch',
+      timeoutMs: 8000,
+      maxBodyBytes: 524_288,
+      screenshot: {
+        enabled: false,
+        maxItems: 500,
+        maxTotalBytes: 100 * 1024 * 1024,
+        maxBytesPerImage: 512 * 1024,
+        webpQuality: 75,
+      },
+    },
   },
 
   authSecurity: {

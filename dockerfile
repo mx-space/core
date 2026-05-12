@@ -16,6 +16,21 @@ FROM node:24-alpine AS runner
 
 RUN apk add zip unzip postgresql-client bash fish rsync jq curl openrc --no-cache
 
+# Chromium + fonts/nss for the agent-browser headless fallback used by the
+# Open Graph enrichment provider (fetchMode = "browser"). Alpine's chromium
+# package is hardened against root, so we pin --no-sandbox via env below.
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    font-noto-cjk
+
+RUN npm i -g agent-browser
+
 WORKDIR /app
 COPY --from=builder /app/out .
 COPY --from=builder /app/assets ./assets
@@ -27,6 +42,11 @@ COPY --chmod=755 docker-entrypoint.sh .
 
 ENV TZ=Asia/Shanghai
 ENV MIGRATIONS_DIR=/app/migrations
+# agent-browser CLI picks up these knobs; system chromium replaces the
+# bundled Chrome download (which has no musl build).
+ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV AGENT_BROWSER_HEADED=0
+ENV AGENT_BROWSER_CHROME_ARGS="--no-sandbox --disable-dev-shm-usage --disable-gpu"
 
 EXPOSE 2333
 

@@ -10,11 +10,13 @@ import type {
   EnrichmentFetchContext,
   EnrichmentProvider,
 } from '../provider.interface'
+import { BrowserFetchService } from './browser-fetch.service'
 import { enrichWithOEmbed } from './oembed'
 import { parseOpenGraph } from './og-parser'
-import { safeFetch } from './safe-fetch'
+import { safeFetch, type SafeFetchResult } from './safe-fetch'
 
-const DEFAULT_TIMEOUT_MS = 8_000
+const DEFAULT_FETCH_TIMEOUT_MS = 8_000
+const DEFAULT_BROWSER_TIMEOUT_MS = 25_000
 const DEFAULT_MAX_BODY_BYTES = 524_288
 const ID_HEX_LENGTH = 32
 
@@ -44,7 +46,10 @@ export class OpenGraphProvider implements EnrichmentProvider {
 
   private readonly logger = new Logger(OpenGraphProvider.name)
 
-  constructor(private readonly configsService: ConfigsService) {}
+  constructor(
+    private readonly configsService: ConfigsService,
+    private readonly browserFetch: BrowserFetchService,
+  ) {}
 
   matchUrl(url: URL): UrlMatchResult | null {
     if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
@@ -76,19 +81,42 @@ export class OpenGraphProvider implements EnrichmentProvider {
 
     const config = await this.configsService.get('thirdPartyServiceIntegration')
     const og = config.openGraph ?? {}
-    const timeoutMs = og.timeoutMs ?? DEFAULT_TIMEOUT_MS
+    const fetchMode = og.fetchMode ?? 'fetch'
     const maxBodyBytes = og.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES
+    const defaultTimeout =
+      fetchMode === 'browser'
+        ? DEFAULT_BROWSER_TIMEOUT_MS
+        : DEFAULT_FETCH_TIMEOUT_MS
+    const timeoutMs = og.timeoutMs ?? defaultTimeout
 
-    const fetched = await safeFetch(url, { timeoutMs, maxBodyBytes })
-    const { result, oembedUrl } = parseOpenGraph(
-      fetched.body,
-      fetched.finalUrl,
-      url,
-    )
+    // Browser mode runs `fetchPage` (HTML + optional screenshot bytes in one
+    // session). HTTP mode stays on `safeFetch` — no Chromium spin-up, and
+    // screenshots are out of scope on that path (see spec Non-Goals). Note
+    // these are NOT fallbacks for each other: a `browser`-mode fetch failure
+    // throws, it does not silently downgrade to HTTP.
+    let safe: SafeFetchResult
+    let screenshotBytes: Buffer | undefined
+    if (fetchMode === 'browser') {
+      const fetched = await this.browserFetch.fetchPage(url, {
+        timeoutMs,
+        maxBodyBytes,
+      })
+      safe = fetched.html
+      screenshotBytes = fetched.screenshotBytes
+    } else {
+      safe = await safeFetch(url, { timeoutMs, maxBodyBytes })
+    }
 
+    const { result, oembedUrl } = parseOpenGraph(safe.body, safe.finalUrl, url)
+
+    // oEmbed alternates are always plain JSON — keep them on the HTTP path
+    // even in browser mode (cheap, no Chromium spin-up).
     if (oembedUrl) {
       try {
-        await enrichWithOEmbed(result, oembedUrl, { timeoutMs, maxBodyBytes })
+        await enrichWithOEmbed(result, oembedUrl, {
+          timeoutMs: DEFAULT_FETCH_TIMEOUT_MS,
+          maxBodyBytes,
+        })
       } catch (error) {
         this.logger.debug(
           `oEmbed enrichment skipped for ${url}: ${(error as Error).message}`,
@@ -98,6 +126,16 @@ export class OpenGraphProvider implements EnrichmentProvider {
 
     // Force category — defensive in case parseOpenGraph drift forgets it.
     result.category = this.category
+
+    // Hand raw screenshot bytes to `EnrichmentService` via the BrowserFetch
+    // WeakMap channel. `EnrichmentService.fetchAndPersist` reads them after
+    // the row is persisted (it needs the row id before writing the
+    // screenshot row). The public return type stays unchanged — `screenshot`
+    // is attached AFTER persistence, not by the provider.
+    if (screenshotBytes) {
+      this.browserFetch.attachScreenshotBytes(result, screenshotBytes)
+    }
+
     return result
   }
 }

@@ -115,6 +115,25 @@ function makeService(stubs: ServiceStubs = {}) {
     registerHandler: vi.fn(),
   }
 
+  const browserFetch = {
+    // Default: no screenshot bytes attached → post-persist screenshot block
+    // short-circuits before touching pipeline/storage/config.
+    takeScreenshotBytes: vi.fn(() => undefined),
+    attachScreenshotBytes: vi.fn(),
+  }
+  const screenshotPipeline = {
+    process: vi.fn(async () => null),
+  }
+  const screenshotStorage = {
+    storeOrEvict: vi.fn(async () => ({
+      url: 'https://example.test/screenshot.webp',
+      objectKey: 'enrichment-screenshots/x.webp',
+      bytes: 1024,
+    })),
+    delete: vi.fn(async () => undefined),
+    touchAccess: vi.fn(async () => undefined),
+  }
+
   const service = Object.create(EnrichmentService.prototype) as any
   service.repository = repository
   service.providerRegistry = providerRegistry
@@ -123,6 +142,9 @@ function makeService(stubs: ServiceStubs = {}) {
   service.imageService = imageService
   service.taskQueueService = taskQueueService
   service.taskQueueProcessor = taskQueueProcessor
+  service.browserFetch = browserFetch
+  service.screenshotPipeline = screenshotPipeline
+  service.screenshotStorage = screenshotStorage
   service.logger = { warn: vi.fn(), log: vi.fn() }
 
   return {

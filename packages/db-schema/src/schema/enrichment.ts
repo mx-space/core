@@ -9,7 +9,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core'
 
-import { createdAt, pkText } from './columns'
+import { createdAt, pkText, refText } from './columns'
 
 export const enrichmentCache = pgTable(
   'enrichment_cache',
@@ -39,5 +39,36 @@ export const enrichmentCache = pgTable(
       table.locale,
     ),
     index('enrichment_expires_at_idx').on(table.expiresAt),
+  ],
+)
+
+export interface EnrichmentScreenshotPalette {
+  dominant: string
+  swatches?: string[]
+}
+
+export const enrichmentScreenshots = pgTable(
+  'enrichment_screenshots',
+  {
+    enrichmentId: refText('enrichment_id')
+      .primaryKey()
+      .notNull()
+      .references(() => enrichmentCache.id, { onDelete: 'cascade' }),
+    objectKey: text('object_key').notNull(),
+    bytes: integer('bytes').notNull(),
+    width: integer('width').notNull(),
+    height: integer('height').notNull(),
+    blurhash: text('blurhash'),
+    palette: jsonb('palette').$type<EnrichmentScreenshotPalette>(),
+    createdAt: createdAt(),
+    lastAccessedAt: timestamp('last_accessed_at', {
+      withTimezone: true,
+      mode: 'date',
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('enrichment_screenshots_lru_idx').on(table.lastAccessedAt.asc()),
   ],
 )
