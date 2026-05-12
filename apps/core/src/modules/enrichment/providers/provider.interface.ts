@@ -43,6 +43,11 @@ export interface EnrichmentProvider<TRaw = unknown> {
   readonly requiredConfigKeys?: string[]
   readonly featureGateConfigKey?: string
   /**
+   * True when `externalId` alone is not enough to fetch upstream data.
+   * Ref-driven cold hydration must provide `ctx.url` for these providers.
+   */
+  readonly requiresUrlContext?: boolean
+  /**
    * When true, the service layer maps the request `lang` into a per-locale
    * cache row and passes it to {@link fetch}. Default false.
    */

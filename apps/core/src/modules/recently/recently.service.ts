@@ -20,6 +20,9 @@ import { RecentlyRepository } from './recently.repository'
 import { RecentlyAttitudeEnum } from './recently.schema'
 import { RecentlyModel, type RecentlyRow } from './recently.types'
 
+const URL_REGEX = /https?:\/\/\S+/i
+const URL_TAIL_TRIM = /[!"'),.:;>?\]`}—…、。〉《》「」『』〕！），：；？]+$/
+
 /**
  * Minimal hydrated reference returned alongside a recently row when its
  * `refType`/`refId` point at a post/note/page/recently. Mirrors the small
@@ -355,12 +358,14 @@ export class RecentlyService {
   ): Promise<Array<T & { enrichment?: EnrichmentResult | null }>> {
     if (rows.length === 0) return []
 
-    const refs: Array<{ provider: string; externalId: string }> = []
+    const refs: Array<{ provider: string; externalId: string; url?: string }> =
+      []
     for (const row of rows) {
       if (row.enrichmentProvider && row.enrichmentExternalId) {
         refs.push({
           provider: row.enrichmentProvider,
           externalId: row.enrichmentExternalId,
+          url: this.resolveEnrichmentUrl(row),
         })
       }
     }
@@ -384,4 +389,35 @@ export class RecentlyService {
       return { ...row, enrichment: map[key] ?? null }
     })
   }
+
+  private resolveEnrichmentUrl(row: RecentlyRow): string | undefined {
+    if (!row.enrichmentProvider || !row.enrichmentExternalId) return undefined
+    const metadataUrl = (row.metadata as { url?: unknown } | null)?.url
+    const candidates = [
+      typeof metadataUrl === 'string' ? metadataUrl : undefined,
+      extractFirstUrl(row.content),
+    ].filter((url): url is string => !!url)
+
+    for (const url of candidates) {
+      const ref = this.enrichmentService.matchUrlToRef(url)
+      if (
+        ref?.provider === row.enrichmentProvider &&
+        ref.externalId === row.enrichmentExternalId
+      ) {
+        return url
+      }
+    }
+    return undefined
+  }
+}
+
+function extractFirstUrl(
+  content: string | null | undefined,
+): string | undefined {
+  if (!content) return undefined
+  const match = content.match(URL_REGEX)
+  if (!match) return undefined
+  let url = match[0]
+  while (URL_TAIL_TRIM.test(url)) url = url.replace(URL_TAIL_TRIM, '')
+  return url || undefined
 }

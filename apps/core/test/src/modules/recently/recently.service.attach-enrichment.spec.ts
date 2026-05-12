@@ -25,11 +25,20 @@ function makeRow(overrides: Partial<RecentlyRow> = {}): RecentlyRow {
   }
 }
 
-function makeService(stubs: { hydrateRefs?: ReturnType<typeof vi.fn> }) {
+function makeService(stubs: {
+  hydrateRefs?: ReturnType<typeof vi.fn>
+  matchUrlToRef?: ReturnType<typeof vi.fn>
+}) {
   const enrichmentService = {
     hydrateRefs:
       stubs.hydrateRefs ??
       vi.fn(async () => ({}) as Record<string, EnrichmentResult>),
+    matchUrlToRef:
+      stubs.matchUrlToRef ??
+      vi.fn(() => ({
+        provider: 'gh-repo',
+        externalId: 'vercel/next.js',
+      })),
   }
   const service = Object.create(RecentlyService.prototype) as any
   service.enrichmentService = enrichmentService
@@ -81,9 +90,78 @@ describe('RecentlyService.attachEnrichment', () => {
     ]
     const out = await callAttach(service, rows)
     expect(enrichmentService.hydrateRefs).toHaveBeenCalledTimes(1)
+    expect(enrichmentService.hydrateRefs).toHaveBeenCalledWith(
+      [
+        {
+          provider: 'gh-repo',
+          externalId: 'vercel/next.js',
+          url: 'https://example.com',
+        },
+        {
+          provider: 'gh-repo',
+          externalId: 'vercel/next.js',
+          url: 'https://example.com',
+        },
+      ],
+      undefined,
+    )
     expect(out[0].enrichment).toBe(result)
     expect(out[1].enrichment).toBe(result)
     expect(out[2].enrichment).toBeNull()
+  })
+
+  it('derives URL context from content when metadata URL is absent', async () => {
+    const hydrate = vi.fn(async () => ({}))
+    const { service, enrichmentService } = makeService({ hydrateRefs: hydrate })
+    const row = makeRow({
+      metadata: null,
+      content: 'see https://example.com/article.',
+      enrichmentProvider: 'open-graph',
+      enrichmentExternalId: 'hash',
+    })
+    ;(
+      enrichmentService.matchUrlToRef as ReturnType<typeof vi.fn>
+    ).mockReturnValue({
+      provider: 'open-graph',
+      externalId: 'hash',
+    })
+
+    await callAttach(service, [row])
+
+    expect(enrichmentService.hydrateRefs).toHaveBeenCalledWith(
+      [
+        {
+          provider: 'open-graph',
+          externalId: 'hash',
+          url: 'https://example.com/article',
+        },
+      ],
+      undefined,
+    )
+  })
+
+  it('omits URL context when the candidate URL does not match the stored ref', async () => {
+    const hydrate = vi.fn(async () => ({}))
+    const matchUrlToRef = vi.fn(() => ({
+      provider: 'open-graph',
+      externalId: 'different-hash',
+    }))
+    const { service, enrichmentService } = makeService({
+      hydrateRefs: hydrate,
+      matchUrlToRef,
+    })
+    const row = makeRow({
+      metadata: { url: 'https://example.com/wrong' },
+      enrichmentProvider: 'open-graph',
+      enrichmentExternalId: 'hash',
+    })
+
+    await callAttach(service, [row])
+
+    expect(enrichmentService.hydrateRefs).toHaveBeenCalledWith(
+      [{ provider: 'open-graph', externalId: 'hash', url: undefined }],
+      undefined,
+    )
   })
 
   it('returns null per-row when the ref is missing from the map', async () => {

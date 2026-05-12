@@ -79,6 +79,9 @@ function makeService(stubs: ServiceStubs = {}) {
         },
       }
     }),
+    getByName: vi.fn((name: string) =>
+      name === provider.name ? provider : undefined,
+    ),
   }
   const configsService = {
     get: vi.fn(async () => ({})),
@@ -249,6 +252,17 @@ describe('EnrichmentService.resolveCacheLocale', () => {
       supportedLocales: ['zh'],
     } as any
     expect(service.resolveCacheLocale(provider, undefined)).toBe('')
+  })
+})
+
+describe('EnrichmentService.refresh', () => {
+  it('threads explicit URL context into provider fetch', async () => {
+    const url = 'https://example.com/post'
+    const { service, provider } = makeService({ dbRow: null })
+
+    await service.refresh('tmdb', 'movie/1', undefined, { url })
+
+    expect(provider.fetch).toHaveBeenCalledWith('movie/1', undefined, { url })
   })
 })
 

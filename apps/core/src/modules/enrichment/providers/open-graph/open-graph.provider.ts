@@ -40,6 +40,7 @@ export class OpenGraphProvider implements EnrichmentProvider {
   readonly priority = -100
   readonly defaultTtl = 86_400 * 7
   readonly featureGateConfigKey = 'openGraph'
+  readonly requiresUrlContext = true
 
   private readonly logger = new Logger(OpenGraphProvider.name)
 

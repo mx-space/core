@@ -92,6 +92,42 @@ describe('EnrichmentService.hydrateUrls', () => {
     expect(await svc.hydrateUrls(['https://github.com/a/b'])).toEqual({})
   })
 
+  it('passes URL context when a cache miss enqueues a cold refresh', async () => {
+    const url = 'https://example.com/article'
+    const taskQueueService = {
+      createTask: vi.fn(async () => ({ taskId: 't1', created: true })),
+    }
+    const svc = makeService({
+      matchUrlToRef: () => ({
+        provider: 'open-graph',
+        externalId: 'opaque-hash',
+      }),
+      rows: new Map(),
+      taskQueueService,
+    }) as any
+    svc.providerRegistry = {
+      getByName: () => ({
+        name: 'open-graph',
+        localeAware: false,
+      }),
+    }
+
+    expect(await (svc as EnrichmentService).hydrateUrls([url])).toEqual({})
+    await new Promise((r) => setImmediate(r))
+    expect(taskQueueService.createTask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'enrichment:refresh',
+        dedupKey: 'open-graph:opaque-hash',
+        payload: {
+          provider: 'open-graph',
+          externalId: 'opaque-hash',
+          locale: '',
+          url,
+        },
+      }),
+    )
+  })
+
   it('returns the cached normalized result keyed by original URL', async () => {
     const url = 'https://github.com/vercel/next.js'
     const row = makeRow({
@@ -250,7 +286,12 @@ describe('EnrichmentService.hydrateUrls', () => {
     expect(taskQueueService.createTask).toHaveBeenCalledWith(
       expect.objectContaining({
         dedupKey: 'tmdb:movie/1:zh',
-        payload: { provider: 'tmdb', externalId: 'movie/1', locale: 'zh' },
+        payload: {
+          provider: 'tmdb',
+          externalId: 'movie/1',
+          locale: 'zh',
+          url,
+        },
       }),
     )
   })

@@ -33,6 +33,13 @@ interface EnrichmentRefreshPayload extends Record<string, unknown> {
   provider: string
   externalId: string
   locale: string
+  url?: string
+}
+
+interface EnrichmentRefInput {
+  provider: string
+  externalId: string
+  url?: string
 }
 
 /**
@@ -64,8 +71,11 @@ export class EnrichmentService implements OnModuleInit {
       type: ENRICHMENT_REFRESH_TASK_TYPE,
       execute: async (payload: EnrichmentRefreshPayload) => {
         const locale = payload.locale ?? ''
+        const url = typeof payload.url === 'string' ? payload.url : undefined
         try {
-          await this.refresh(payload.provider, payload.externalId, locale)
+          await this.refresh(payload.provider, payload.externalId, locale, {
+            url,
+          })
         } catch (error) {
           // Record per-row failure so backoff kicks in on subsequent SWR
           // resolves; re-throw so the task queue marks the task failed.
@@ -217,6 +227,7 @@ export class EnrichmentService implements OnModuleInit {
     providerName: string,
     id: string,
     lang?: string,
+    opts?: { url?: string },
   ): Promise<EnrichmentResult> {
     const provider = this.providerRegistry.getByName(providerName)
     if (!provider) throw new Error(`Unknown provider: ${providerName}`)
@@ -226,6 +237,7 @@ export class EnrichmentService implements OnModuleInit {
 
     const result = await this.fetchAndPersist(provider, id, {
       locale: cacheLocale,
+      url: opts?.url,
     })
     await this.deleteFromRedis(result.url, cacheLocale)
     return result
@@ -294,7 +306,7 @@ export class EnrichmentService implements OnModuleInit {
    * should index via the same helper.
    */
   async hydrateRefs(
-    refs: ReadonlyArray<{ provider: string; externalId: string }>,
+    refs: ReadonlyArray<EnrichmentRefInput>,
     lang?: string,
   ): Promise<Record<string, EnrichmentResult>> {
     if (refs.length === 0) return {}
@@ -304,6 +316,7 @@ export class EnrichmentService implements OnModuleInit {
       provider: string
       externalId: string
       locale: string
+      url?: string
     }
     const byKey = new Map<string, RefEntry>()
     for (const r of refs) {
@@ -312,17 +325,28 @@ export class EnrichmentService implements OnModuleInit {
         ? this.resolveCacheLocale(provider, reqLocale)
         : ''
       const key = `${r.provider}\t${r.externalId}\t${locale}`
-      if (byKey.has(key)) continue
+      const existing = byKey.get(key)
+      if (existing) {
+        if (!existing.url && r.url) existing.url = r.url
+        continue
+      }
       byKey.set(key, {
         provider: r.provider,
         externalId: r.externalId,
         locale,
+        url: r.url,
       })
     }
     if (byKey.size === 0) return {}
 
     const refQueries = [...byKey.values()]
-    const rows = await this.repository.findManyByRefs(refQueries)
+    const rows = await this.repository.findManyByRefs(
+      refQueries.map(({ provider, externalId, locale }) => ({
+        provider,
+        externalId,
+        locale,
+      })),
+    )
     const now = new Date()
     const out: Record<string, EnrichmentResult> = {}
     const seenKeys = new Set<string>()
@@ -361,12 +385,18 @@ export class EnrichmentService implements OnModuleInit {
         if (!provider) continue
         config ??= await this.configsService.get('thirdPartyServiceIntegration')
         if (!this.isProviderReady(provider, config)) continue
+        if (provider.requiresUrlContext && !entry.url) continue
         const k = refKey(entry.provider, entry.externalId)
         if (entry.locale !== '' && !out[k]) {
           const fb = fallbackByKey.get(k)
           if (fb) out[k] = fb
         }
-        this.enqueueRefresh(entry.provider, entry.externalId, entry.locale)
+        this.enqueueRefresh(
+          entry.provider,
+          entry.externalId,
+          entry.locale,
+          entry.url,
+        )
       }
     }
     return out
@@ -400,6 +430,7 @@ export class EnrichmentService implements OnModuleInit {
       urlRefs.map((r) => ({
         provider: r.provider,
         externalId: r.externalId,
+        url: r.url,
       })),
       lang,
     )
@@ -604,6 +635,7 @@ export class EnrichmentService implements OnModuleInit {
     providerName: string,
     externalId: string,
     locale: string,
+    url?: string,
   ): void {
     const dedupKey = locale
       ? `${providerName}:${externalId}:${locale}`
@@ -617,6 +649,7 @@ export class EnrichmentService implements OnModuleInit {
           provider: providerName,
           externalId,
           locale,
+          ...(url ? { url } : {}),
         } satisfies EnrichmentRefreshPayload,
       })
       .catch((error) => {

@@ -187,4 +187,26 @@ describe('EnrichmentService.hydrateRefs', () => {
     await service.hydrateRefs([{ provider: 'gh-repo', externalId: 'a/b' }])
     expect(repository.findManyByRefs).toHaveBeenCalledTimes(1)
   })
+
+  it('does not enqueue a cold refresh for URL-context providers without URL', async () => {
+    const taskQueueService = {
+      createTask: vi.fn(async () => ({ taskId: 't1', created: true })),
+    }
+    const { service } = makeService({
+      rows: new Map(),
+      taskQueueService,
+      providerRegistry: {
+        getByName: () => ({
+          name: 'open-graph',
+          requiresUrlContext: true,
+        }),
+      },
+    })
+
+    await service.hydrateRefs([
+      { provider: 'open-graph', externalId: 'opaque-hash' },
+    ])
+    await new Promise((r) => setImmediate(r))
+    expect(taskQueueService.createTask).not.toHaveBeenCalled()
+  })
 })
