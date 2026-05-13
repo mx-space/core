@@ -75,6 +75,10 @@ export class BrowserSessionPool implements OnModuleDestroy {
 
   private readonly slots: InternalSlot[] = []
   private readonly waiters: Waiter[] = []
+  // In-flight `closeSlot` promises (from idle close / discard release).
+  // shutdown awaits these so chromium tear-down is fully drained before the
+  // pool is considered destroyed.
+  private readonly inFlightCloses = new Set<Promise<void>>()
   private shuttingDown = false
 
   constructor(@Optional() options?: BrowserSessionPoolOptions) {
@@ -125,13 +129,13 @@ export class BrowserSessionPool implements OnModuleDestroy {
     const internal = this.slots.find((s) => s.name === slot.name)
     if (!internal) return
     internal.inUse = false
+    internal.live = true
     if (options?.discard) {
-      // Mark live so close is issued even for a slot that never reported a
-      // successful command — caller saw an error and wants chromium torn down.
-      internal.live = true
-      void this.closeSlot(internal)
+      // closeSlot synchronously removes the slot from `this.slots` before
+      // awaiting the `close` CLI, so the immediately-following flushWaiter
+      // call cannot hand this same slot to a queued acquire mid-teardown.
+      this.trackClose(this.closeSlot(internal))
     } else {
-      internal.live = true
       this.scheduleIdleClose(internal)
     }
     this.flushWaiter()
@@ -151,6 +155,11 @@ export class BrowserSessionPool implements OnModuleDestroy {
       waiter.reject(new Error('BrowserSessionPool has been shut down'))
     }
     await Promise.all(this.slots.splice(0).map((s) => this.closeSlot(s, true)))
+    // Drain in-flight closes started by release / idle paths so the caller
+    // can rely on shutdown() meaning "all chromium is gone".
+    if (this.inFlightCloses.size > 0) {
+      await Promise.all(this.inFlightCloses)
+    }
   }
 
   /**
@@ -166,14 +175,33 @@ export class BrowserSessionPool implements OnModuleDestroy {
   private flushWaiter(): void {
     if (this.waiters.length === 0) return
     const free = this.slots.find((s) => !s.inUse)
-    if (!free) return
-    const waiter = this.waiters.shift()!
-    if (waiter.signal && waiter.onAbort) {
-      waiter.signal.removeEventListener('abort', waiter.onAbort)
+    if (free) {
+      const waiter = this.waiters.shift()!
+      if (waiter.signal && waiter.onAbort) {
+        waiter.signal.removeEventListener('abort', waiter.onAbort)
+      }
+      this.cancelIdleTimer(free)
+      free.inUse = true
+      waiter.resolve({ name: free.name })
+      return
     }
-    this.cancelIdleTimer(free)
-    free.inUse = true
-    waiter.resolve({ name: free.name })
+    // No reusable slot in pool, but headroom exists — typically after a
+    // discard or idle-close synchronously evicted a slot. Mint a fresh one
+    // so the waiter doesn't sit forever despite available capacity.
+    if (this.slots.length < this.maxSize) {
+      const slot: InternalSlot = {
+        index: this.slots.length,
+        name: `og-pool-${this.slots.length}`,
+        inUse: true,
+        live: false,
+      }
+      this.slots.push(slot)
+      const waiter = this.waiters.shift()!
+      if (waiter.signal && waiter.onAbort) {
+        waiter.signal.removeEventListener('abort', waiter.onAbort)
+      }
+      waiter.resolve({ name: slot.name })
+    }
   }
 
   private cancelIdleTimer(slot: InternalSlot): void {
@@ -186,20 +214,33 @@ export class BrowserSessionPool implements OnModuleDestroy {
   private scheduleIdleClose(slot: InternalSlot): void {
     this.cancelIdleTimer(slot)
     if (this.idleMs <= 0) {
-      void this.closeSlot(slot)
+      this.trackClose(this.closeSlot(slot))
       return
     }
     slot.idleTimer = setTimeout(() => {
       slot.idleTimer = undefined
-      if (!slot.inUse) void this.closeSlot(slot)
+      if (!slot.inUse) this.trackClose(this.closeSlot(slot))
     }, this.idleMs)
+  }
+
+  private trackClose(p: Promise<void>): void {
+    this.inFlightCloses.add(p)
+    p.finally(() => this.inFlightCloses.delete(p))
   }
 
   private async closeSlot(
     slot: InternalSlot,
-    forceRemoveFromList = false,
+    alreadyRemovedFromList = false,
   ): Promise<void> {
     this.cancelIdleTimer(slot)
+    // Remove from the pool SYNCHRONOUSLY before awaiting the CLI close so
+    // any concurrent acquire / flushWaiter sees a shorter pool and creates a
+    // fresh slot instead of handing this one to a new caller while chromium
+    // is being torn down. shutdown() pre-splices and passes the flag.
+    if (!alreadyRemovedFromList) {
+      const idx = this.slots.indexOf(slot)
+      if (idx !== -1) this.slots.splice(idx, 1)
+    }
     if (slot.live) {
       try {
         await execFileAsync(
@@ -218,8 +259,5 @@ export class BrowserSessionPool implements OnModuleDestroy {
       }
     }
     slot.live = false
-    if (forceRemoveFromList) return
-    const idx = this.slots.indexOf(slot)
-    if (idx !== -1) this.slots.splice(idx, 1)
   }
 }

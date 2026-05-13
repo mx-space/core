@@ -517,4 +517,79 @@ describe('ScreenshotStorageService', () => {
     expect(touchSpy).not.toHaveBeenCalled()
     touchSpy.mockRestore()
   })
+
+  it('serializes concurrent storeOrEvict so quota check + write never interleave', async () => {
+    // Regression for the codex P2 race: getQuotaUsage → S3 PUT → DB upsert
+    // is not transactional. Two concurrent storeOrEvict calls inside the
+    // same process must run sequentially or both observe headroom and
+    // overshoot maxItems / maxTotalBytes.
+    const id1 = generator.nextId()
+    const id2 = generator.nextId()
+    await seedEnrichment(context, id1)
+    await seedEnrichment(context, id2)
+    const { redisService } = makeRedisService()
+    const service = new TestScreenshotStorageService(
+      repository,
+      makeConfigsService(),
+      redisService,
+    )
+
+    const events: Array<'start' | 'end'> = []
+    const originalUpload = service.fakeS3.uploadBuffer.bind(service.fakeS3)
+    service.fakeS3.uploadBuffer = (async (
+      buf: Buffer,
+      key: string,
+      contentType: string,
+    ) => {
+      events.push('start')
+      // Hold the critical section briefly so any interleaving from the
+      // second concurrent call has a chance to surface.
+      await new Promise((r) => setTimeout(r, 20))
+      const url = await originalUpload(buf, key, contentType)
+      events.push('end')
+      return url
+    }) as typeof service.fakeS3.uploadBuffer
+
+    await Promise.all([
+      service.storeOrEvict({
+        enrichmentId: id1,
+        processed: makeProcessed({ webp: Buffer.alloc(1024, 1) }),
+      }),
+      service.storeOrEvict({
+        enrichmentId: id2,
+        processed: makeProcessed({ webp: Buffer.alloc(1024, 2) }),
+      }),
+    ])
+
+    expect(events).toEqual(['start', 'end', 'start', 'end'])
+    expect(service.fakeS3.putCalls).toHaveLength(2)
+  })
+
+  it('a rejected storeOrEvict does not poison subsequent calls', async () => {
+    const id1 = generator.nextId()
+    const id2 = generator.nextId()
+    await seedEnrichment(context, id1)
+    await seedEnrichment(context, id2)
+    const { redisService } = makeRedisService()
+    const service = new TestScreenshotStorageService(
+      repository,
+      makeConfigsService(),
+      redisService,
+    )
+
+    service.fakeS3.nextUploadError = new Error('boom')
+    await expect(
+      service.storeOrEvict({
+        enrichmentId: id1,
+        processed: makeProcessed(),
+      }),
+    ).rejects.toThrow(/boom/)
+
+    // Second call must proceed despite the first chain link rejecting.
+    const result = await service.storeOrEvict({
+      enrichmentId: id2,
+      processed: makeProcessed(),
+    })
+    expect(result.objectKey).toBe(`enrichment-screenshots/${id2}.webp`)
+  })
 })

@@ -125,6 +125,28 @@ describe('BrowserSessionPool', () => {
     await expect(pool.acquire()).rejects.toThrow(/shut down/i)
   })
 
+  it('discard release with a queued waiter does NOT hand the discarded slot to the waiter', async () => {
+    // Regression: discard fires close asynchronously; flushWaiter must not
+    // see the slot being torn down, or the waiter ends up sharing a session
+    // name with an in-flight `agent-browser ... close`.
+    const pool = new BrowserSessionPool({ maxSize: 1, idleMs: 60_000 })
+    const a = await pool.acquire()
+    const waiterPromise = pool.acquire()
+    pool.release(a, { discard: true })
+    const b = await waiterPromise
+    // Slot index reused (pool was emptied), so name collides — but the
+    // important invariant is that the slot object now in the pool is a
+    // fresh one, observable via the close-call count: discard issues one
+    // close, the waiter's slot has not been closed yet.
+    const closeCalls = execFileMock.mock.calls.filter(
+      (call) => (call[1] as string[]).at(-1) === 'close',
+    )
+    expect(closeCalls.length).toBe(1)
+    expect(b.name).toBe('og-pool-0')
+    pool.release(b)
+    await pool.shutdown()
+  })
+
   it('acquire waiter cancelled by aborted signal rejects without consuming a slot', async () => {
     const pool = new BrowserSessionPool({ maxSize: 1, idleMs: 60_000 })
     const a = await pool.acquire()

@@ -49,6 +49,16 @@ export class ScreenshotStorageService {
   private cachedUploader: { signature: string; uploader: S3Uploader } | null =
     null
 
+  // Per-instance serialization of `storeOrEvict`. The quota check
+  // (`getQuotaUsage`) + S3 PUT + DB upsert is not a transaction, so two
+  // concurrent calls inside the same process could each observe headroom
+  // and both write, transiently overshooting `maxItems` / `maxTotalBytes`.
+  // Chaining all calls through one promise makes the critical section
+  // serial within a pod. Cross-pod concurrency (Dokploy runs 2 replicas)
+  // still relies on the next storeOrEvict's LRU pass to converge back to
+  // the cap — quota is a soft target, not a hard invariant.
+  private storeChain: Promise<unknown> = Promise.resolve()
+
   constructor(
     private readonly repository: EnrichmentScreenshotRepository,
     private readonly configsService: ConfigsService,
@@ -56,6 +66,18 @@ export class ScreenshotStorageService {
   ) {}
 
   async storeOrEvict(args: {
+    enrichmentId: string
+    processed: ProcessedScreenshot
+  }): Promise<ScreenshotStoreResult> {
+    const next = this.storeChain.then(() => this.storeOrEvictUnlocked(args))
+    // Swallow rejection on the chain itself so a single failed write does
+    // not poison every subsequent caller; each awaiter still sees the real
+    // error via the returned promise.
+    this.storeChain = next.catch(() => undefined)
+    return next
+  }
+
+  private async storeOrEvictUnlocked(args: {
     enrichmentId: string
     processed: ProcessedScreenshot
   }): Promise<ScreenshotStoreResult> {
