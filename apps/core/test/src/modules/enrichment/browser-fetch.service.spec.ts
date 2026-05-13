@@ -23,11 +23,31 @@ vi.mock('node:child_process', async () => {
   }
 })
 
+// SSRF guard's `assertHostnameSafe` runs a real DNS lookup against the URL
+// hostname. The CI / dev machine may resolve `example.com` through a captive
+// portal or CGNAT-style 198.18.x address, which `isPrivateIp` correctly
+// rejects. We mock the DNS module to a stable public IP so the guard accepts
+// the hostnames used by these tests, and so we don't hit network in unit
+// tests. The `file://` protocol test goes through the protocol check, which
+// runs before DNS, so the mock does not need to special-case it.
+vi.mock('node:dns/promises', async () => {
+  const actual =
+    await vi.importActual<typeof import('node:dns/promises')>(
+      'node:dns/promises',
+    )
+  return {
+    ...actual,
+    lookup: vi.fn(async () => [{ address: '93.184.216.34', family: 4 }]),
+  }
+})
+
 // Import service AFTER the vi.mock setup so `promisify(execFile)` resolves to
 // the mocked execFile. The mocked fn lacks `util.promisify.custom`, so
 // `promisify` wraps it via the standard last-callback contract.
 const { BrowserFetchService } =
   await import('~/modules/enrichment/providers/open-graph/browser-fetch.service')
+const { BrowserSessionPool } =
+  await import('~/modules/enrichment/providers/open-graph/browser-session-pool')
 
 interface ExecFileCall {
   args: string[]
@@ -88,6 +108,12 @@ function parseBatchArgs(args: string[]): {
   return { sessionName, command, subCommands, screenshotDir }
 }
 
+function buildService() {
+  const pool = new BrowserSessionPool({ maxSize: 2, idleMs: 60_000 })
+  const service = new BrowserFetchService(pool)
+  return { pool, service }
+}
+
 describe('BrowserFetchService', () => {
   beforeEach(() => {
     execFileMock.mockReset()
@@ -116,8 +142,8 @@ describe('BrowserFetchService', () => {
         return { stdout: '' }
       })
 
-      const svc = new (BrowserFetchService as any)()
-      const html = await svc.fetchHtml('https://example.com', {
+      const { pool, service } = buildService()
+      const html = await service.fetchHtml('https://example.com', {
         timeoutMs: 5_000,
         maxBodyBytes: 4_000_000,
         executable: '/usr/local/bin/agent-browser-fake',
@@ -126,12 +152,12 @@ describe('BrowserFetchService', () => {
       expect(html.contentType).toBe('text/html')
       expect(html.body).toContain('<title>x</title>')
 
-      // Exactly one `batch` call (the HTML one) + the cleanup `close` call.
       const batches = calls.filter(
         (c) => parseBatchArgs(c.args).command === 'batch',
       )
       expect(batches).toHaveLength(1)
       const htmlBatch = parseBatchArgs(batches[0].args)
+      expect(htmlBatch.sessionName).toMatch(/^og-pool-\d+$/)
       expect(htmlBatch.subCommands.some((c) => c.startsWith('open '))).toBe(
         true,
       )
@@ -142,6 +168,8 @@ describe('BrowserFetchService', () => {
       expect(
         htmlBatch.subCommands.some((c) => c.startsWith('screenshot')),
       ).toBe(false)
+
+      await pool.shutdown()
     })
   })
 
@@ -176,8 +204,8 @@ describe('BrowserFetchService', () => {
         return { stdout: '' }
       })
 
-      const svc = new (BrowserFetchService as any)()
-      const res = await svc.fetchPage('https://example.com', {
+      const { pool, service } = buildService()
+      const res = await service.fetchPage('https://example.com', {
         timeoutMs: 5_000,
         maxBodyBytes: 4_000_000,
         executable: '/usr/local/bin/agent-browser-fake',
@@ -190,6 +218,8 @@ describe('BrowserFetchService', () => {
       // Tempdir cleanup: it must have been removed after the call.
       expect(seenScreenshotDirs).toHaveLength(1)
       expect(existsSync(seenScreenshotDirs[0])).toBe(false)
+
+      await pool.shutdown()
     })
 
     it('returns html with screenshotBytes undefined when screenshot step errors (and cleans tempdir)', async () => {
@@ -217,8 +247,8 @@ describe('BrowserFetchService', () => {
         return { stdout: '' }
       })
 
-      const svc = new (BrowserFetchService as any)()
-      const res = await svc.fetchPage('https://example.com', {
+      const { pool, service } = buildService()
+      const res = await service.fetchPage('https://example.com', {
         timeoutMs: 5_000,
         maxBodyBytes: 4_000_000,
         executable: '/usr/local/bin/agent-browser-fake',
@@ -229,6 +259,8 @@ describe('BrowserFetchService', () => {
 
       expect(seenScreenshotDirs).toHaveLength(1)
       expect(existsSync(seenScreenshotDirs[0])).toBe(false)
+
+      await pool.shutdown()
     })
 
     it('returns screenshotBytes undefined when no webp file is written', async () => {
@@ -250,8 +282,8 @@ describe('BrowserFetchService', () => {
         return { stdout: '' }
       })
 
-      const svc = new (BrowserFetchService as any)()
-      const res = await svc.fetchPage('https://example.com', {
+      const { pool, service } = buildService()
+      const res = await service.fetchPage('https://example.com', {
         timeoutMs: 5_000,
         maxBodyBytes: 4_000_000,
         executable: '/usr/local/bin/agent-browser-fake',
@@ -259,6 +291,8 @@ describe('BrowserFetchService', () => {
 
       expect(res.screenshotBytes).toBeUndefined()
       expect(res.html.body).toContain('only html')
+
+      await pool.shutdown()
     })
 
     it('appends viewport + screenshot sub-commands in the screenshot batch', async () => {
@@ -282,8 +316,8 @@ describe('BrowserFetchService', () => {
         return { stdout: '' }
       })
 
-      const svc = new (BrowserFetchService as any)()
-      await svc.fetchPage('https://example.com', {
+      const { pool, service } = buildService()
+      await service.fetchPage('https://example.com', {
         timeoutMs: 5_000,
         maxBodyBytes: 4_000_000,
         executable: '/usr/local/bin/agent-browser-fake',
@@ -300,31 +334,35 @@ describe('BrowserFetchService', () => {
       expect(screenshotCmd).toContain('--screenshot-format webp')
       expect(screenshotCmd).toContain('--screenshot-quality 90')
       expect(screenshotCmd).toContain('--screenshot-dir ')
+
+      await pool.shutdown()
     })
   })
 
   describe('WeakMap screenshot channel', () => {
     it('attach + take returns the buffer once, undefined on second read', () => {
-      const svc = new (BrowserFetchService as any)()
+      const { pool, service } = buildService()
       const result = {
         title: 'x',
         url: 'https://x',
         category: 'web',
       } as EnrichmentResult
       const buf = Buffer.from('payload')
-      svc.attachScreenshotBytes(result, buf)
-      expect(svc.takeScreenshotBytes(result)).toBe(buf)
-      expect(svc.takeScreenshotBytes(result)).toBeUndefined()
+      service.attachScreenshotBytes(result, buf)
+      expect(service.takeScreenshotBytes(result)).toBe(buf)
+      expect(service.takeScreenshotBytes(result)).toBeUndefined()
+      void pool.shutdown()
     })
 
     it('returns undefined for a result that was never attached', () => {
-      const svc = new (BrowserFetchService as any)()
+      const { pool, service } = buildService()
       const result = {
         title: 'x',
         url: 'https://x',
         category: 'web',
       } as EnrichmentResult
-      expect(svc.takeScreenshotBytes(result)).toBeUndefined()
+      expect(service.takeScreenshotBytes(result)).toBeUndefined()
+      void pool.shutdown()
     })
   })
 
@@ -334,11 +372,20 @@ describe('BrowserFetchService', () => {
       // callback only after the AbortController has aborted, with an
       // ECONNABORTED-ish error so the service sees `ac.signal.aborted = true`.
       execFileMock.mockImplementation((...invocationArgs: unknown[]) => {
+        const args = invocationArgs[1] as string[]
         const options = invocationArgs[2] as { signal?: AbortSignal }
         const callback = invocationArgs.at(-1) as (
           err: NodeJS.ErrnoException | null,
           result?: { stdout: string; stderr: string },
         ) => void
+        // pool.shutdown issues `--session <name> close` against the slot once
+        // the timeout path runs through `release` (no discard). That call has
+        // no AbortSignal, so we resolve it synchronously instead of leaving
+        // the test hanging on a never-resolving promise.
+        if (args.includes('close')) {
+          queueMicrotask(() => callback(null, { stdout: '', stderr: '' }))
+          return undefined
+        }
         options.signal?.addEventListener('abort', () => {
           const err = new Error('aborted') as NodeJS.ErrnoException
           err.code = 'ABORT_ERR'
@@ -347,14 +394,16 @@ describe('BrowserFetchService', () => {
         return undefined
       })
 
-      const svc = new (BrowserFetchService as any)()
+      const { pool, service } = buildService()
       await expect(
-        svc.fetchHtml('https://example.com', {
+        service.fetchHtml('https://example.com', {
           timeoutMs: 10,
           maxBodyBytes: 4_000_000,
           executable: '/usr/local/bin/agent-browser-fake',
         }),
       ).rejects.toThrow(/timed out after 10ms/)
+
+      await pool.shutdown()
     })
   })
 
@@ -384,8 +433,8 @@ describe('BrowserFetchService', () => {
         return { stdout: '' }
       })
 
-      const svc = new (BrowserFetchService as any)()
-      await svc.fetchPage('https://example.com', {
+      const { pool, service } = buildService()
+      await service.fetchPage('https://example.com', {
         timeoutMs: 5_000,
         maxBodyBytes: 4_000_000,
         executable: '/usr/local/bin/agent-browser-fake',
@@ -393,6 +442,55 @@ describe('BrowserFetchService', () => {
 
       expect(seenScreenshotDirs).toHaveLength(1)
       expect(existsSync(seenScreenshotDirs[0])).toBe(false)
+
+      await pool.shutdown()
+    })
+  })
+
+  describe('SSRF guard + pool reuse', () => {
+    it('rejects file:// URLs before invoking chromium', async () => {
+      // In test/dev mode (__DEV__=true) `parseAndValidateUrl` skips the
+      // hostname/IP block-list but still rejects unsupported protocols, so we
+      // exercise the protocol guard rather than the localhost block-list.
+      const pool = new BrowserSessionPool({ maxSize: 1, idleMs: 60_000 })
+      const service = new BrowserFetchService(pool)
+      await expect(
+        service.fetchPage('file:///etc/passwd', {
+          timeoutMs: 5_000,
+          maxBodyBytes: 1024,
+        }),
+      ).rejects.toThrow(/Disallowed protocol/)
+      expect(execFileMock).not.toHaveBeenCalled()
+      await pool.shutdown()
+    })
+
+    it('reuses the same session name across two sequential fetches', async () => {
+      const pool = new BrowserSessionPool({ maxSize: 1, idleMs: 60_000 })
+      const service = new BrowserFetchService(pool)
+      setExecFileBehavior(() => ({
+        stdout: JSON.stringify([{}, {}, { value: '<html></html>' }]),
+      }))
+      await service.fetchHtml('https://example.com/a', {
+        timeoutMs: 5_000,
+        maxBodyBytes: 1024,
+      })
+      await service.fetchHtml('https://example.com/b', {
+        timeoutMs: 5_000,
+        maxBodyBytes: 1024,
+      })
+      const openCalls = execFileMock.mock.calls.filter((call) => {
+        const args = call[1] as string[]
+        return (
+          args.includes('batch') &&
+          args.some((a: string) => a.startsWith('open '))
+        )
+      })
+      expect(openCalls.length).toBe(2)
+      const sessionNames = new Set(
+        openCalls.map((call) => (call[1] as string[])[1]),
+      )
+      expect(sessionNames.size).toBe(1)
+      await pool.shutdown()
     })
   })
 })

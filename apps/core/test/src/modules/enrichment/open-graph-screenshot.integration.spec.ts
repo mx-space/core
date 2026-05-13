@@ -18,6 +18,7 @@ import { EnrichmentRepository } from '~/modules/enrichment/enrichment.repository
 import { EnrichmentService } from '~/modules/enrichment/enrichment.service'
 import { EnrichmentScreenshotRepository } from '~/modules/enrichment/enrichment-screenshot.repository'
 import { BrowserFetchService } from '~/modules/enrichment/providers/open-graph/browser-fetch.service'
+import { BrowserSessionPool } from '~/modules/enrichment/providers/open-graph/browser-session-pool'
 import { OpenGraphProvider } from '~/modules/enrichment/providers/open-graph/open-graph.provider'
 import {
   type ProcessedScreenshot,
@@ -138,6 +139,7 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
   let context: PgTestDatabase
   let snowflake: SnowflakeService
   const RESOLVE_URL = 'https://integration.example.test/post/1'
+  const activePools: BrowserSessionPool[] = []
 
   beforeAll(async () => {
     context = await createPgTestDatabase('mx_og_screenshot')
@@ -152,8 +154,9 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
     await context.pool.query('TRUNCATE enrichment_cache CASCADE')
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.restoreAllMocks()
+    await Promise.all(activePools.splice(0).map((p) => p.shutdown()))
   })
 
   async function buildHarness(opts: BuildOptions = {}) {
@@ -220,7 +223,11 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
       extractFromDoc: vi.fn(() => []),
     } as any
 
-    const browserFetch = new BrowserFetchService()
+    const browserFetchPool = new BrowserSessionPool({
+      maxSize: 1,
+      idleMs: 60_000,
+    })
+    const browserFetch = new BrowserFetchService(browserFetchPool)
     const png = await makePngBytes()
     // Stub network step but keep the real WeakMap / attach contract intact.
     vi.spyOn(browserFetch, 'fetchPage').mockImplementation(async (url) => ({
@@ -270,6 +277,8 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
       pipeline,
       storage,
     )
+
+    activePools.push(browserFetchPool)
 
     return {
       service,

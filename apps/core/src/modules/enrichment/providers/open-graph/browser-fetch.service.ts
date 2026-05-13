@@ -1,5 +1,4 @@
 import { execFile } from 'node:child_process'
-import { randomBytes } from 'node:crypto'
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -8,7 +7,9 @@ import { promisify } from 'node:util'
 import { Injectable, Logger } from '@nestjs/common'
 
 import type { EnrichmentResult } from '../../enrichment.types'
+import { BrowserSessionPool, type PoolSlot } from './browser-session-pool'
 import type { SafeFetchOptions, SafeFetchResult } from './safe-fetch'
+import { assertHostnameSafe, parseAndValidateUrl } from './url-guard'
 
 const execFileAsync = promisify(execFile)
 
@@ -60,6 +61,8 @@ export class BrowserFetchService {
   // when the result object is garbage-collected, so there is no manual TTL.
   private readonly bytesByResult = new WeakMap<EnrichmentResult, Buffer>()
 
+  constructor(private readonly pool: BrowserSessionPool) {}
+
   async fetchHtml(
     rawUrl: string,
     opts: SafeFetchOptions & { executable?: string },
@@ -90,9 +93,10 @@ export class BrowserFetchService {
     opts: SafeFetchOptions & { executable?: string },
     captureScreenshot: boolean,
   ): Promise<FetchPageResult> {
-    const url = parseHttpUrl(rawUrl)
+    const url = parseAndValidateUrl(rawUrl)
+    await assertHostnameSafe(url.hostname)
 
-    const sessionName = `og-${randomBytes(6).toString('hex')}`
+    const slot: PoolSlot = await this.pool.acquire()
     const executable = opts.executable || DEFAULT_EXECUTABLE
     const evalScript =
       '(() => { try { return document.documentElement.outerHTML } catch (_e) { return "" } })()'
@@ -110,7 +114,7 @@ export class BrowserFetchService {
         executable,
         [
           '--session',
-          sessionName,
+          slot.name,
           'batch',
           '--bail',
           '--json',
@@ -125,6 +129,7 @@ export class BrowserFetchService {
           env: process.env,
         },
       )
+      this.pool.markLive(slot)
       const rawHtml = extractHtmlFromBatchOutput(stdout)
       const truncated = rawHtml.length > opts.maxBodyBytes
       const body = truncated ? rawHtml.slice(0, opts.maxBodyBytes) : rawHtml
@@ -136,15 +141,21 @@ export class BrowserFetchService {
       }
     } catch (error) {
       const err = error as NodeJS.ErrnoException & { stderr?: string }
-      if (err.code === 'ENOENT') {
+      if (ac.signal.aborted) {
+        // Timeout: pool keeps the slot — idle eviction will discard it
+        // later if chromium is wedged.
+        this.pool.release(slot)
         throw new Error(
-          `agent-browser executable not found at "${executable}". Install it or set thirdPartyServiceIntegration.openGraph.fetchMode = "fetch".`,
+          `agent-browser timed out after ${opts.timeoutMs}ms for ${url.toString()}`,
           { cause: error },
         )
       }
-      if (ac.signal.aborted) {
+      // Non-timeout: discard the slot so a wedged chromium does not poison
+      // the next caller.
+      this.pool.release(slot, { discard: true })
+      if (err.code === 'ENOENT') {
         throw new Error(
-          `agent-browser timed out after ${opts.timeoutMs}ms for ${url.toString()}`,
+          `agent-browser executable not found at "${executable}". Install it or set thirdPartyServiceIntegration.openGraph.fetchMode = "fetch".`,
           { cause: error },
         )
       }
@@ -160,6 +171,7 @@ export class BrowserFetchService {
     // the same named session so a failure cannot mask HTML success (the
     // `--bail` batch would have aborted on a sub-step failure and lost the
     // HTML result). We swallow all errors here and only log at `debug`.
+    // Reached only on try-block success — `slot` still held, chromium live.
     let screenshotBytes: Buffer | undefined
     if (captureScreenshot) {
       // Floor at 500ms so a near-exhausted budget still gives the CLI a
@@ -168,7 +180,7 @@ export class BrowserFetchService {
       const remaining = Math.max(500, opts.timeoutMs - (Date.now() - started))
       screenshotBytes = await this.captureScreenshot(
         executable,
-        sessionName,
+        slot.name,
         remaining,
       ).catch((screenshotErr) => {
         this.logger.debug(
@@ -178,20 +190,7 @@ export class BrowserFetchService {
       })
     }
 
-    // Best-effort cleanup; ignore failures so they cannot mask the primary
-    // error and so the happy path is not blocked on a slow shutdown.
-    try {
-      await execFileAsync(executable, ['--session', sessionName, 'close'], {
-        timeout: 5_000,
-        windowsHide: true,
-        env: process.env,
-      })
-    } catch (cleanupErr) {
-      this.logger.debug(
-        `agent-browser cleanup failed for session ${sessionName}: ${(cleanupErr as Error).message}`,
-      )
-    }
-
+    this.pool.release(slot)
     return { html, screenshotBytes }
   }
 
@@ -251,19 +250,6 @@ export class BrowserFetchService {
       }
     }
   }
-}
-
-function parseHttpUrl(raw: string): URL {
-  let url: URL
-  try {
-    url = new URL(raw)
-  } catch {
-    throw new Error(`Invalid URL for browser fetch: ${raw}`)
-  }
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw new Error(`Disallowed protocol for browser fetch: ${url.protocol}`)
-  }
-  return url
 }
 
 /**
