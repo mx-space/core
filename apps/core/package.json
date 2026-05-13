@@ -134,7 +134,7 @@
     "qs": "6.15.1",
     "rebuild": "^0.1.2",
     "reflect-metadata": "0.2.2",
-    "remove-markdown": "0.6.3",
+    "remove-markdown": "0.6.4",
     "remove-md-codeblock": "0.0.4",
     "resend": "^6.12.3",
     "rxjs": "7.8.2",
