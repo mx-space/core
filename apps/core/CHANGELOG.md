@@ -1,37 +1,35 @@
-# [12.5.0](https://github.com/mx-space/core/compare/v12.4.1...v12.5.0) (2026-05-14)
-
-
-### Features
-
-* **enrichment:** admin endpoints for cache detail, screenshots, and probe ([f61203c](https://github.com/mx-space/core/commit/f61203c8bb4090f057c122c5a0e1ec7e5ec65186))
-
-
-
-## [12.4.1](https://github.com/mx-space/core/compare/v12.4.0...v12.4.1) (2026-05-13)
-
-
-### Bug Fixes
-
-* **enrichment:** parse nested agent-browser eval result shape ([2d3f693](https://github.com/mx-space/core/commit/2d3f693c3c7d28b0df9c9b63fdc1aa5cbbed0f33))
-* **enrichment:** query GitHub Discussions via GraphQL ([7606ab5](https://github.com/mx-space/core/commit/7606ab5a69def007bb9a49e286995db44553ef43))
-* **gateway:** remove spurious forwardRef breaking @WebSocketServer injection ([9831804](https://github.com/mx-space/core/commit/98318042d92458b480e22a20c96e5efb665d24a6))
-
-
-
-# [12.4.0](https://github.com/mx-space/core/compare/v12.3.5...v12.4.0) (2026-05-13)
-
-
-### Features
-
-* **enrichment:** add screenshot pipeline with browser fetch and storage ([#2708](https://github.com/mx-space/core/issues/2708)) ([417a153](https://github.com/mx-space/core/commit/417a1536addc58883d3243b0c88258ba5308349f))
-
-
 # CHANGELOG
 
 
+## <small>12.5.1 (2026-05-13)</small>
+
+* release: v12.5.1 ([1d71e1a](https://github.com/mx-space/core/commit/1d71e1a))
+* chore(deps): bump @haklex/* to 0.10.0 ([cb66a5f](https://github.com/mx-space/core/commit/cb66a5f))
+
+## 12.5.0 (2026-05-13)
+
+* release: v12.5.0 ([a159600](https://github.com/mx-space/core/commit/a159600))
+* feat(enrichment): admin endpoints for cache detail, screenshots, and probe ([f61203c](https://github.com/mx-space/core/commit/f61203c))
+
+## <small>12.4.1 (2026-05-13)</small>
+
+* release: v12.4.1 ([46d5708](https://github.com/mx-space/core/commit/46d5708))
+* fix(enrichment): parse nested agent-browser eval result shape ([2d3f693](https://github.com/mx-space/core/commit/2d3f693))
+* fix(enrichment): query GitHub Discussions via GraphQL ([7606ab5](https://github.com/mx-space/core/commit/7606ab5))
+* fix(gateway): remove spurious forwardRef breaking @WebSocketServer injection ([9831804](https://github.com/mx-space/core/commit/9831804))
+
+## 12.4.0 (2026-05-13)
+
+* release: v12.4.0 ([eec703f](https://github.com/mx-space/core/commit/eec703f))
+* chore(deps): batch update dependencies (#2713) ([c2f6861](https://github.com/mx-space/core/commit/c2f6861)), closes [#2713](https://github.com/mx-space/core/issues/2713) [#2700](https://github.com/mx-space/core/issues/2700) [#2699](https://github.com/mx-space/core/issues/2699) [#2696](https://github.com/mx-space/core/issues/2696) [#2706](https://github.com/mx-space/core/issues/2706) [#2703](https://github.com/mx-space/core/issues/2703) [#2707](https://github.com/mx-space/core/issues/2707) [#2683](https://github.com/mx-space/core/issues/2683)
+* chore(deps): batch update dependencies (round 2) (#2715) ([f6abb79](https://github.com/mx-space/core/commit/f6abb79)), closes [#2715](https://github.com/mx-space/core/issues/2715) [#2714](https://github.com/mx-space/core/issues/2714)
+* chore(deps): update softprops/action-gh-release action to v3 (#2681) ([d79eb2f](https://github.com/mx-space/core/commit/d79eb2f)), closes [softprops/action-#release](https://github.com/softprops/action-/issues/release) [#2681](https://github.com/mx-space/core/issues/2681)
+* chore(release): bump @mx-space/api-client to v4.1.0 ([100b5c2](https://github.com/mx-space/core/commit/100b5c2))
+* feat(enrichment): add screenshot pipeline with browser fetch and storage (#2708) ([417a153](https://github.com/mx-space/core/commit/417a153)), closes [#2708](https://github.com/mx-space/core/issues/2708)
+
 ## <small>12.3.5 (2026-05-13)</small>
 
-* release: v12.3.5 ([df3c824](https://github.com/mx-space/core/commit/df3c824))
+* release: v12.3.5 ([412e5c7](https://github.com/mx-space/core/commit/412e5c7))
 * fix(activity): resolve presence readerId from HTTP session cookie ([181da63](https://github.com/mx-space/core/commit/181da63))
 * chore(deps): bump @haklex/* to 0.9.2 ([239446f](https://github.com/mx-space/core/commit/239446f))
 * chore(deps): update better-auth monorepo to v1.6.11 (#2710) ([4ee3244](https://github.com/mx-space/core/commit/4ee3244)), closes [#2710](https://github.com/mx-space/core/issues/2710)
