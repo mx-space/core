@@ -1,3 +1,11 @@
+# [12.4.0](https://github.com/mx-space/core/compare/v12.3.5...v12.4.0) (2026-05-13)
+
+
+### Features
+
+* **enrichment:** add screenshot pipeline with browser fetch and storage ([#2708](https://github.com/mx-space/core/issues/2708)) ([417a153](https://github.com/mx-space/core/commit/417a1536addc58883d3243b0c88258ba5308349f))
+
+
 # CHANGELOG
 
 
