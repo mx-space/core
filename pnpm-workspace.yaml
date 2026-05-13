@@ -19,7 +19,7 @@ overrides:
   "get-pixels@^3>request": ./external/request
   mongodb: ~7.2.0
   pino: ./external/pino
-  rolldown: 1.0.0
+  rolldown: 1.0.1
   semver: 7.8.0
   typescript: 6.0.3
   whatwg-url: 16.0.1
