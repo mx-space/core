@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Logger } from '@nestjs/common'
+import { Logger } from '@nestjs/common'
 import type {
   GatewayMetadata,
   OnGatewayConnection,
@@ -63,7 +63,6 @@ export class WebEventsGateway
 
     private readonly gatewayService: GatewayService,
 
-    @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
   ) {
     super()
@@ -101,6 +100,9 @@ export class WebEventsGateway
   }
 
   async getCurrentClientCount() {
+    if (!this.namespace?.server) {
+      return 0
+    }
     const server = this.namespace.server
 
     try {
@@ -120,7 +122,7 @@ export class WebEventsGateway
         'fetchSockets failed in getCurrentClientCount, fallback to local sockets count',
         error,
       )
-      return this.namespace.sockets.size
+      return this.namespace?.sockets?.size ?? 0
     }
   }
 
