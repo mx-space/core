@@ -1,3 +1,12 @@
+# [12.5.0](https://github.com/mx-space/core/compare/v12.4.1...v12.5.0) (2026-05-14)
+
+
+### Features
+
+* **enrichment:** admin endpoints for cache detail, screenshots, and probe ([f61203c](https://github.com/mx-space/core/commit/f61203c8bb4090f057c122c5a0e1ec7e5ec65186))
+
+
+
 ## [12.4.1](https://github.com/mx-space/core/compare/v12.4.0...v12.4.1) (2026-05-13)
 
 
