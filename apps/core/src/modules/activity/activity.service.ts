@@ -320,11 +320,13 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       return
     }
 
-    // Trust server-side reader binding established at socket handshake over
-    // the client-provided readerId — the latter may be missing when the
-    // browser couldn't hydrate /auth/session in time, and could be spoofed.
+    // Prefer the readerId resolved server-side from the HTTP session cookie
+    // (RolesGuard runs globally and fills request.readerId before this
+    // service runs). Fall back to the socket-handshake binding, and finally
+    // the client-provided value, both of which are less authoritative.
     const socketMeta = await this.gatewayService.getSocketMetadata(socket)
-    const resolvedReaderId = socketMeta?.readerId || data.readerId
+    const resolvedReaderId =
+      RequestContext.currentReaderId() || socketMeta?.readerId || data.readerId
 
     const presenceData: ActivityPresence = {
       ...data,
