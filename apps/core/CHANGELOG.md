@@ -1,3 +1,14 @@
+## [12.4.1](https://github.com/mx-space/core/compare/v12.4.0...v12.4.1) (2026-05-13)
+
+
+### Bug Fixes
+
+* **enrichment:** parse nested agent-browser eval result shape ([2d3f693](https://github.com/mx-space/core/commit/2d3f693c3c7d28b0df9c9b63fdc1aa5cbbed0f33))
+* **enrichment:** query GitHub Discussions via GraphQL ([7606ab5](https://github.com/mx-space/core/commit/7606ab5a69def007bb9a49e286995db44553ef43))
+* **gateway:** remove spurious forwardRef breaking @WebSocketServer injection ([9831804](https://github.com/mx-space/core/commit/98318042d92458b480e22a20c96e5efb665d24a6))
+
+
+
 # [12.4.0](https://github.com/mx-space/core/compare/v12.3.5...v12.4.0) (2026-05-13)
 
 
