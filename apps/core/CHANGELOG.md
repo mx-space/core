@@ -1,9 +1,14 @@
 # CHANGELOG
 
 
+## <small>12.5.2 (2026-05-13)</small>
+
+* release: v12.5.2 ([9a2d556](https://github.com/mx-space/core/commit/9a2d556))
+* feat(enrichment): screenshot only as og:image fallback in browser mode ([9ca84a5](https://github.com/mx-space/core/commit/9ca84a5))
+
 ## <small>12.5.1 (2026-05-13)</small>
 
-* release: v12.5.1 ([1d71e1a](https://github.com/mx-space/core/commit/1d71e1a))
+* release: v12.5.1 ([9533a1d](https://github.com/mx-space/core/commit/9533a1d))
 * chore(deps): bump @haklex/* to 0.10.0 ([cb66a5f](https://github.com/mx-space/core/commit/cb66a5f))
 
 ## 12.5.0 (2026-05-13)
