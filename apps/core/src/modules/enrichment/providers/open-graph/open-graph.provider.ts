@@ -94,10 +94,22 @@ export class OpenGraphProvider implements EnrichmentProvider {
     // screenshots are out of scope on that path (see spec Non-Goals). Note
     // these are NOT fallbacks for each other: a `browser`-mode fetch failure
     // throws, it does not silently downgrade to HTTP.
+    //
+    // Screenshot is a FALLBACK for og:image: even when `screenshot.enabled`,
+    // we parse the head first and only ask the browser to capture when the
+    // page advertises no usable image. Parsing is done inside the predicate
+    // so the same parse result is reused below (avoids parsing twice).
     let safe: SafeFetchResult
     let screenshotBytes: Buffer | undefined
+    let parsedCache: ReturnType<typeof parseOpenGraph> | undefined
     if (fetchMode === 'browser') {
-      const captureScreenshot = og.screenshot?.enabled === true
+      const screenshotEnabled = og.screenshot?.enabled === true
+      const captureScreenshot = screenshotEnabled
+        ? (html: SafeFetchResult): boolean => {
+            parsedCache = parseOpenGraph(html.body, html.finalUrl, url)
+            return !parsedCache.result.image?.url
+          }
+        : false
       const fetched = await this.browserFetch.fetchPage(url, {
         timeoutMs,
         maxBodyBytes,
@@ -109,7 +121,8 @@ export class OpenGraphProvider implements EnrichmentProvider {
       safe = await safeFetch(url, { timeoutMs, maxBodyBytes })
     }
 
-    const { result, oembedUrl } = parseOpenGraph(safe.body, safe.finalUrl, url)
+    const { result, oembedUrl } =
+      parsedCache ?? parseOpenGraph(safe.body, safe.finalUrl, url)
 
     // oEmbed alternates are always plain JSON — keep them on the HTTP path
     // even in browser mode (cheap, no Chromium spin-up).

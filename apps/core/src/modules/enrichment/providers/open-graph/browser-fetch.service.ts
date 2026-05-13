@@ -35,9 +35,13 @@ interface FetchPageResult {
   screenshotBytes?: Buffer
 }
 
+type CaptureScreenshotDecision =
+  | boolean
+  | ((html: SafeFetchResult) => boolean | Promise<boolean>)
+
 type BrowserFetchOptions = SafeFetchOptions & {
   executable?: string
-  captureScreenshot?: boolean
+  captureScreenshot?: CaptureScreenshotDecision
 }
 
 /**
@@ -102,7 +106,7 @@ export class BrowserFetchService {
   private async runSession(
     rawUrl: string,
     opts: SafeFetchOptions & { executable?: string },
-    captureScreenshot: boolean,
+    captureScreenshot: CaptureScreenshotDecision,
   ): Promise<FetchPageResult> {
     const url = parseAndValidateUrl(rawUrl)
     await assertHostnameSafe(url.hostname)
@@ -198,7 +202,20 @@ export class BrowserFetchService {
     // all errors here and only log at `debug`.
     // Reached only on try-block success — `slot` still held, chromium live.
     let screenshotBytes: Buffer | undefined
-    if (captureScreenshot) {
+    let shouldCapture: boolean
+    if (typeof captureScreenshot === 'function') {
+      try {
+        shouldCapture = await captureScreenshot(html)
+      } catch (predicateErr) {
+        this.logger.debug(
+          `screenshot decision predicate failed for ${url.toString()}: ${(predicateErr as Error).message}`,
+        )
+        shouldCapture = false
+      }
+    } else {
+      shouldCapture = captureScreenshot
+    }
+    if (shouldCapture) {
       // Floor at 500ms so a near-exhausted budget still gives the CLI a
       // realistic shot rather than passing 0 (AbortController fires
       // immediately on a zero timer in some Node versions).

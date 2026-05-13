@@ -133,6 +133,12 @@ interface BuildOptions {
    * shape but in browser mode — exercises the "no bytes attached" branch).
    */
   withoutScreenshotBytes?: boolean
+  /**
+   * Override the HTML body the mocked `fetchPage` returns. Default has no
+   * `og:image` so the fallback predicate will request a screenshot. Pass HTML
+   * with `og:image` to exercise the "skip screenshot" branch.
+   */
+  htmlBody?: string
 }
 
 describe('OpenGraph screenshot integration (Task 4)', () => {
@@ -230,20 +236,28 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
     const browserFetch = new BrowserFetchService(browserFetchPool)
     const png = await makePngBytes()
     // Stub network step but keep the real WeakMap / attach contract intact.
+    // Honors the predicate form of `captureScreenshot` so tests can verify the
+    // og:image-fallback gate.
     const fetchPageSpy = vi
       .spyOn(browserFetch, 'fetchPage')
-      .mockImplementation(async (url, fetchOpts) => ({
-        html: {
+      .mockImplementation(async (url, fetchOpts) => {
+        const html = {
           finalUrl: url,
           contentType: 'text/html',
-          body: makeHtmlBody(url),
+          body: opts.htmlBody ?? makeHtmlBody(url),
           truncated: false,
-        },
-        screenshotBytes:
-          opts.withoutScreenshotBytes || fetchOpts.captureScreenshot === false
-            ? undefined
-            : png,
-      }))
+        }
+        const decision = fetchOpts.captureScreenshot
+        const shouldCapture =
+          typeof decision === 'function'
+            ? await decision(html)
+            : decision !== false
+        return {
+          html,
+          screenshotBytes:
+            opts.withoutScreenshotBytes || !shouldCapture ? undefined : png,
+        }
+      })
 
     const pipeline = new ScreenshotPipelineService()
     const processSpy = vi.spyOn(pipeline, 'process')
@@ -321,6 +335,32 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
     const second = await service.resolve(RESOLVE_URL)
     expect(second.result.screenshot?.url).toBe(result.screenshot?.url)
     expect(fakeS3.putCalls).toHaveLength(1)
+  })
+
+  it('og:image present: screenshot fallback is skipped even when enabled', async () => {
+    const htmlBody = `<!DOCTYPE html><html><head>
+      <title>has image</title>
+      <meta property="og:title" content="has image">
+      <meta property="og:image" content="https://cdn.example.test/og.png">
+      <link rel="canonical" href="${RESOLVE_URL}">
+    </head><body></body></html>`
+    const { service, fakeS3, fetchPageSpy, processSpy } = await buildHarness({
+      htmlBody,
+    })
+
+    const { result } = await service.resolve(RESOLVE_URL)
+    expect(result.image?.url).toBe('https://cdn.example.test/og.png')
+    expect(result.screenshot).toBeUndefined()
+    // Provider passed a predicate (function), not a literal — predicate
+    // returned false because og:image was present.
+    expect(fetchPageSpy).toHaveBeenCalledWith(
+      RESOLVE_URL,
+      expect.objectContaining({
+        captureScreenshot: expect.any(Function),
+      }),
+    )
+    expect(processSpy).not.toHaveBeenCalled()
+    expect(fakeS3.putCalls).toHaveLength(0)
   })
 
   it('screenshot disabled: browser metadata fetch does not capture or store bytes', async () => {
