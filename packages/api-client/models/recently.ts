@@ -49,7 +49,28 @@ export interface EnrichmentAttribute {
   format?: 'number' | 'rating' | 'date' | 'percent' | 'text' | 'duration'
 }
 
+export interface EnrichmentScreenshotPalette {
+  dominant: string
+  swatches?: string[]
+}
+
+export interface EnrichmentScreenshot {
+  url: string
+  width: number
+  height: number
+  blurhash?: string
+  palette?: EnrichmentScreenshotPalette
+}
+
 export interface EnrichmentResult {
+  /**
+   * Cache row Snowflake id (mx-core enrichment_cache.id). Server-populated on
+   * cache hits so frontends can address the underlying row (LRU touch,
+   * admin links). Absent when the result originates from a fresh provider
+   * fetch that has not yet persisted.
+   */
+  id?: string
+
   title: string
   description?: string
   image?: EnrichmentImage
@@ -61,6 +82,7 @@ export interface EnrichmentResult {
   attributes?: EnrichmentAttribute[]
   color?: string
   links?: Array<{ rel: string; url: string; label?: string }>
+  screenshot?: EnrichmentScreenshot
 }
 
 /**

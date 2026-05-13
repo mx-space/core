@@ -441,14 +441,29 @@ const OpenGraphIntegrationSchema = section('Open Graph / oEmbed 兜底', {
     description:
       '未命中专用 provider 之 URL 抓 Open Graph / oEmbed 元数据作链接卡兜底',
   }),
+  fetchMode: field.select(
+    z.enum(['fetch', 'browser']).optional().default('fetch'),
+    '抓取方式',
+    [
+      { label: 'HTTP 直抓（fetch）', value: 'fetch' },
+      { label: '无头浏览器（agent-browser）', value: 'browser' },
+    ],
+    {
+      description:
+        '默认 HTTP 直抓。遇 Cloudflare / 强反爬站点时切 browser 走 Docker 内置之 chromium 渲染。browser 模式更慢，亦更贵。',
+    },
+  ),
   timeoutMs: field.number(
     z.preprocess(
       (val) =>
         val === '' || val === null || val === undefined ? val : Number(val),
-      z.number().int().min(1000).max(30000).optional(),
+      z.number().int().min(1000).max(60000).optional(),
     ),
     '抓取超时（毫秒）',
-    { description: '默认 8000，区间 1000-30000' },
+    {
+      description:
+        'fetch 模式默认 8000；browser 模式默认 25000。区间 1000-60000',
+    },
   ),
   maxBodyBytes: field.number(
     z.preprocess(
@@ -459,6 +474,57 @@ const OpenGraphIntegrationSchema = section('Open Graph / oEmbed 兜底', {
     '响应大小上限（字节）',
     { description: '默认 524288（512KB），区间 16KB-4MB；仅扫 <head>' },
   ),
+  screenshot: section('截图', {
+    enabled: field.toggle(z.boolean().optional().default(false), '启用截图', {
+      description: 'fetchMode 为 browser 时捕获页面截图。仅 browser 模式生效。',
+    }),
+    maxItems: field.number(
+      z.preprocess(
+        (val) =>
+          val === '' || val === null || val === undefined ? val : Number(val),
+        z.number().int().min(10).max(10_000).optional().default(500),
+      ),
+      '最大缓存数',
+      { description: '默认 500，区间 10-10000' },
+    ),
+    maxTotalBytes: field.number(
+      z.preprocess(
+        (val) =>
+          val === '' || val === null || val === undefined ? val : Number(val),
+        z
+          .number()
+          .int()
+          .min(1024 * 1024)
+          .optional()
+          .default(100 * 1024 * 1024),
+      ),
+      '总存储上限（字节）',
+      { description: '默认 104857600（100MB），下限 1MB' },
+    ),
+    maxBytesPerImage: field.number(
+      z.preprocess(
+        (val) =>
+          val === '' || val === null || val === undefined ? val : Number(val),
+        z
+          .number()
+          .int()
+          .min(1024)
+          .optional()
+          .default(512 * 1024),
+      ),
+      '单图上限（字节）',
+      { description: '默认 524288（512KB），下限 1KB' },
+    ),
+    webpQuality: field.number(
+      z.preprocess(
+        (val) =>
+          val === '' || val === null || val === undefined ? val : Number(val),
+        z.number().int().min(40).max(100).optional().default(75),
+      ),
+      'WebP 质量',
+      { description: '默认 75，区间 40-100' },
+    ),
+  }).optional(),
 })
 
 export const ThirdPartyServiceIntegrationSchema = section('第三方服务集成', {

@@ -78,6 +78,13 @@
       "when": 1778433600000,
       "tag": "0010_notes_nid_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1778522427325,
+      "tag": "0011_enrichment_screenshots",
+      "breakpoints": true
     }
   ]
 }

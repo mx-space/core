@@ -14,6 +14,9 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { EnrichmentRepository } from './enrichment.repository'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
 import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
+import { BrowserFetchService } from './providers/open-graph/browser-fetch.service'
+import { ScreenshotPipelineService } from './providers/open-graph/screenshot-pipeline.service'
+import { ScreenshotStorageService } from './providers/open-graph/screenshot-storage.service'
 import type { EnrichmentProvider } from './providers/provider.interface'
 import { ProviderRegistry } from './providers/provider.registry'
 import type { ContentDoc } from './url-extractor.service'
@@ -51,6 +54,20 @@ export function refKey(provider: string, externalId: string): string {
   return `${provider}\t${externalId}`
 }
 
+/**
+ * Stamp the cache row id onto `normalized` and return it. The argument is
+ * always a freshly-deserialized object (a Drizzle row's JSON column or a
+ * JSON.parse'd Redis payload) so in-place mutation is safe and avoids an
+ * extra allocation per cache hit.
+ */
+function stampRowId(
+  normalized: EnrichmentResult,
+  rowId: string,
+): EnrichmentResult {
+  normalized.id = rowId
+  return normalized
+}
+
 @Injectable()
 export class EnrichmentService implements OnModuleInit {
   private readonly logger = new Logger(EnrichmentService.name)
@@ -64,6 +81,9 @@ export class EnrichmentService implements OnModuleInit {
     private readonly taskQueueService: TaskQueueService,
     private readonly taskQueueProcessor: TaskQueueProcessor,
     private readonly urlExtractor: UrlExtractorService,
+    private readonly browserFetch: BrowserFetchService,
+    private readonly screenshotPipeline: ScreenshotPipelineService,
+    private readonly screenshotStorage: ScreenshotStorageService,
   ) {}
 
   onModuleInit() {
@@ -143,17 +163,18 @@ export class EnrichmentService implements OnModuleInit {
 
     if (dbRow) {
       const isExpired = !!dbRow.expiresAt && dbRow.expiresAt < now
+      const stamped = stampRowId(dbRow.normalized, dbRow.id)
 
       if (isExpired) {
         const inBackoff = this.isInFailureBackoff(dbRow, now)
         if (!inBackoff) {
           this.enqueueRefresh(provider.name, match.id, cacheLocale)
         }
-        return { result: dbRow.normalized, stale: true }
+        return { result: stamped, stale: true }
       }
 
-      await this.setToRedis(url, cacheLocale, dbRow.normalized)
-      return { result: dbRow.normalized }
+      await this.setToRedis(url, cacheLocale, stamped)
+      return { result: stamped }
     }
 
     // Locale-aware miss: try the default ('') row as fallback so the user
@@ -166,7 +187,10 @@ export class EnrichmentService implements OnModuleInit {
       )
       if (fallback) {
         this.enqueueRefresh(provider.name, match.id, cacheLocale)
-        return { result: fallback.normalized, stale: true }
+        return {
+          result: stampRowId(fallback.normalized, fallback.id),
+          stale: true,
+        }
       }
     }
 
@@ -218,7 +242,7 @@ export class EnrichmentService implements OnModuleInit {
       id,
       cacheLocale,
     )
-    if (row) return row.normalized
+    if (row) return stampRowId(row.normalized, row.id)
 
     return this.fetchAndPersist(provider, id, { locale: cacheLocale })
   }
@@ -256,6 +280,14 @@ export class EnrichmentService implements OnModuleInit {
       const rows = await this.repository.findAllLocalesByRef(providerName, id)
       for (const row of rows) {
         await this.deleteFromRedis(row.url, row.locale)
+        // S3 cleanup runs before the cache row is removed — the FK CASCADE
+        // would drop the screenshot row but leave the object behind. Failure
+        // is swallowed (see ScreenshotStorageService.delete contract).
+        await this.screenshotStorage.delete(row.id).catch((error) => {
+          this.logger.warn(
+            `screenshot delete failed for ${row.id}: ${(error as Error).message}`,
+          )
+        })
       }
       await this.repository.deleteByProviderAndExternalId(providerName, id)
       return
@@ -272,6 +304,11 @@ export class EnrichmentService implements OnModuleInit {
     )
     if (row) {
       await this.deleteFromRedis(row.url, cacheLocale)
+      await this.screenshotStorage.delete(row.id).catch((error) => {
+        this.logger.warn(
+          `screenshot delete failed for ${row.id}: ${(error as Error).message}`,
+        )
+      })
       await this.repository.deleteByProviderAndExternalId(
         providerName,
         id,
@@ -594,7 +631,7 @@ export class EnrichmentService implements OnModuleInit {
     await this.enrichWithImageMeta(result)
 
     const expiresAt = new Date(Date.now() + provider.defaultTtl * 1000)
-    await this.repository.upsert(
+    const row = await this.repository.upsert(
       provider.name,
       externalId,
       opts?.url ?? result.url,
@@ -603,7 +640,70 @@ export class EnrichmentService implements OnModuleInit {
       expiresAt,
       locale,
     )
+    result.id = row.id
+
+    await this.processScreenshotIfPresent(row.id, result)
+
     return result
+  }
+
+  /**
+   * Post-persist screenshot pipeline. Runs only when the matched provider has
+   * stashed raw screenshot bytes via `BrowserFetchService.attachScreenshotBytes`
+   * (currently only `OpenGraphProvider` in browser mode). The WeakMap read is
+   * the cheapest gate: it returns `undefined` for any provider that did not
+   * attach, so we can call this unconditionally without branching by provider.
+   *
+   * Any failure — pipeline drop, S3 put, DB merge — is logged at `warn` and
+   * swallowed. The enrichment response is still returned without `screenshot`
+   * and the card degrades gracefully (existing fallback behavior).
+   */
+  private async processScreenshotIfPresent(
+    rowId: string,
+    result: EnrichmentResult,
+  ): Promise<void> {
+    const bytes = this.browserFetch.takeScreenshotBytes(result)
+    if (!bytes) return
+
+    try {
+      const config = await this.configsService.get(
+        'thirdPartyServiceIntegration',
+      )
+      const screenshotConfig = config.openGraph?.screenshot
+      if (!screenshotConfig?.enabled) return
+
+      const webpQuality = Number(screenshotConfig.webpQuality ?? 75)
+      const maxBytesPerImage = Number(
+        screenshotConfig.maxBytesPerImage ?? 512 * 1024,
+      )
+
+      const processed = await this.screenshotPipeline.process(bytes, {
+        webpQuality,
+        maxBytesPerImage,
+      })
+      if (!processed) return
+
+      const stored = await this.screenshotStorage.storeOrEvict({
+        enrichmentId: rowId,
+        processed,
+      })
+
+      const screenshot = {
+        url: stored.url,
+        width: processed.width,
+        height: processed.height,
+        blurhash: processed.blurhash,
+        palette: processed.palette,
+      }
+      result.screenshot = screenshot
+      await this.repository.updateScreenshot(rowId, screenshot)
+    } catch (error) {
+      this.logger.warn(
+        `screenshot post-persist failed for ${result.url} (rowId=${rowId}): ${
+          (error as Error).message
+        }`,
+      )
+    }
   }
 
   /**

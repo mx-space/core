@@ -21,12 +21,16 @@ import { EnrichmentService } from './enrichment.service'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
 import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
 import { EnrichmentOriginGuard } from './enrichment-origin.guard'
+import { ScreenshotStorageService } from './providers/open-graph/screenshot-storage.service'
 
 const PUBLIC_RESOLVE_THROTTLE = { default: { limit: 30, ttl: 60_000 } }
 
 @ApiController('enrichment')
 export class EnrichmentController {
-  constructor(private readonly enrichmentService: EnrichmentService) {}
+  constructor(
+    private readonly enrichmentService: EnrichmentService,
+    private readonly screenshotStorage: ScreenshotStorageService,
+  ) {}
 
   @Get('resolve')
   @Throttle(PUBLIC_RESOLVE_THROTTLE)
@@ -47,6 +51,7 @@ export class EnrichmentController {
         // `@Res({ passthrough: true })` adapter object.
         res.header('X-Enrichment-Stale', 'true')
       }
+      this.bumpScreenshotAccess(result)
       return result
     } catch (error) {
       // Provider not configured / token missing is a "no data" case, not an
@@ -72,7 +77,21 @@ export class EnrichmentController {
     @Lang() lang: string | undefined,
   ): Promise<EnrichmentResult> {
     const id = decodeURIComponent((req.params as Record<string, string>)['*'])
-    return this.enrichmentService.getOne(provider, id, lang)
+    const result = await this.enrichmentService.getOne(provider, id, lang)
+    this.bumpScreenshotAccess(result)
+    return result
+  }
+
+  /**
+   * Fire-and-forget LRU touch. The throttle (Redis NX-EX 3600s) lives inside
+   * the storage service, so hot URLs do not write per-request. Failure is
+   * swallowed to keep the hot path free of screenshot-storage faults.
+   */
+  private bumpScreenshotAccess(result: EnrichmentResult | undefined): void {
+    if (!result?.screenshot || !result.id) return
+    this.screenshotStorage.touchAccess(result.id).catch(() => {
+      // ignored — storage logs internally
+    })
   }
 
   @Get('admin/list')
