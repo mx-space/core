@@ -1,7 +1,12 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
-import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common'
+import {
+  Injectable,
+  Logger,
+  type OnModuleDestroy,
+  Optional,
+} from '@nestjs/common'
 
 const execFileAsync = promisify(execFile)
 
@@ -72,7 +77,7 @@ export class BrowserSessionPool implements OnModuleDestroy {
   private readonly waiters: Waiter[] = []
   private shuttingDown = false
 
-  constructor(options?: BrowserSessionPoolOptions) {
+  constructor(@Optional() options?: BrowserSessionPoolOptions) {
     this.maxSize = Math.max(1, options?.maxSize ?? DEFAULT_MAX_SIZE)
     this.idleMs = Math.max(0, options?.idleMs ?? DEFAULT_IDLE_MS)
     this.executable = options?.executable ?? DEFAULT_EXECUTABLE
