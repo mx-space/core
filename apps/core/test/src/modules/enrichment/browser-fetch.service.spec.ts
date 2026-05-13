@@ -116,6 +116,21 @@ function parseBatchArgs(args: string[]): {
   return { sessionName, command, subCommands, screenshotDir, flagValue }
 }
 
+function batchValue(value: string): string {
+  return JSON.stringify([{}, {}, { value }])
+}
+
+function pageValue(html: string, href = 'https://example.com/'): string {
+  return batchValue(JSON.stringify({ href, html }))
+}
+
+function isNavigationBatch(parsed: ReturnType<typeof parseBatchArgs>): boolean {
+  return (
+    parsed.command === 'batch' &&
+    parsed.subCommands.some((c) => c.startsWith('open '))
+  )
+}
+
 function buildService() {
   const pool = new BrowserSessionPool({ maxSize: 2, idleMs: 60_000 })
   const service = new BrowserFetchService(pool)
@@ -138,14 +153,13 @@ describe('BrowserFetchService', () => {
         calls.push(call)
         const parsed = parseBatchArgs(call.args)
         if (parsed.command === 'batch') {
-          // Single batch is the HTML batch (open/wait/eval).
-          return {
-            stdout: JSON.stringify([
-              {},
-              {},
-              { value: '<html><head><title>x</title></head></html>' },
-            ]),
-          }
+          return isNavigationBatch(parsed)
+            ? { stdout: batchValue('https://example.com/') }
+            : {
+                stdout: pageValue(
+                  '<html><head><title>x</title></head></html>',
+                ),
+              }
         }
         return { stdout: '' }
       })
@@ -163,18 +177,31 @@ describe('BrowserFetchService', () => {
       const batches = calls.filter(
         (c) => parseBatchArgs(c.args).command === 'batch',
       )
-      expect(batches).toHaveLength(1)
-      const htmlBatch = parseBatchArgs(batches[0].args)
-      expect(htmlBatch.sessionName).toMatch(/^og-pool-\d+$/)
-      expect(htmlBatch.subCommands.some((c) => c.startsWith('open '))).toBe(
-        true,
+      expect(batches).toHaveLength(2)
+      expect(parseBatchArgs(batches[0].args).sessionName).toMatch(
+        /^og-pool-\d+$/,
       )
-      expect(htmlBatch.subCommands.some((c) => c.startsWith('eval '))).toBe(
-        true,
+      expect(
+        batches.some((c) =>
+          parseBatchArgs(c.args).subCommands.some((cmd) =>
+            cmd.startsWith('open '),
+          ),
+        ),
+      ).toBe(true)
+      expect(
+        batches.every((c) =>
+          parseBatchArgs(c.args).subCommands.some((cmd) =>
+            cmd.startsWith('eval '),
+          ),
+        ),
       )
       // No screenshot step in fetchHtml.
       expect(
-        htmlBatch.subCommands.some((c) => c.startsWith('screenshot')),
+        batches.some((c) =>
+          parseBatchArgs(c.args).subCommands.some((cmd) =>
+            cmd.startsWith('screenshot'),
+          ),
+        ),
       ).toBe(false)
 
       await pool.shutdown()
@@ -189,13 +216,9 @@ describe('BrowserFetchService', () => {
       setExecFileBehavior(async (call) => {
         const parsed = parseBatchArgs(call.args)
         if (parsed.command === 'batch') {
-          return {
-            stdout: JSON.stringify([
-              {},
-              {},
-              { value: '<html><body>ok</body></html>' },
-            ]),
-          }
+          return isNavigationBatch(parsed)
+            ? { stdout: batchValue('https://example.com/') }
+            : { stdout: pageValue('<html><body>ok</body></html>') }
         }
         if (parsed.command === 'screenshot') {
           const dir = parsed.screenshotDir!
@@ -229,13 +252,9 @@ describe('BrowserFetchService', () => {
       setExecFileBehavior((call) => {
         const parsed = parseBatchArgs(call.args)
         if (parsed.command === 'batch') {
-          return {
-            stdout: JSON.stringify([
-              {},
-              {},
-              { value: '<html><body>still ok</body></html>' },
-            ]),
-          }
+          return isNavigationBatch(parsed)
+            ? { stdout: batchValue('https://example.com/') }
+            : { stdout: pageValue('<html><body>still ok</body></html>') }
         }
         if (parsed.command === 'screenshot') {
           if (parsed.screenshotDir)
@@ -266,13 +285,9 @@ describe('BrowserFetchService', () => {
       setExecFileBehavior((call) => {
         const parsed = parseBatchArgs(call.args)
         if (parsed.command === 'batch') {
-          return {
-            stdout: JSON.stringify([
-              {},
-              {},
-              { value: '<html><body>only html</body></html>' },
-            ]),
-          }
+          return isNavigationBatch(parsed)
+            ? { stdout: batchValue('https://example.com/') }
+            : { stdout: pageValue('<html><body>only html</body></html>') }
         }
         if (parsed.command === 'screenshot') return { stdout: '' }
         return { stdout: '' }
@@ -297,9 +312,9 @@ describe('BrowserFetchService', () => {
         const parsed = parseBatchArgs(call.args)
         seenCommands.push({ command: parsed.command, args: call.args })
         if (parsed.command === 'batch') {
-          return {
-            stdout: JSON.stringify([{}, {}, { value: '<html></html>' }]),
-          }
+          return isNavigationBatch(parsed)
+            ? { stdout: batchValue('https://example.com/') }
+            : { stdout: pageValue('<html></html>') }
         }
         if (parsed.command === 'screenshot') {
           const dir = parsed.screenshotDir!
@@ -331,6 +346,98 @@ describe('BrowserFetchService', () => {
       expect(shotArgs[qIdx + 1]).toBe('90')
       expect(shotArgs).toContain('--screenshot-dir')
 
+      await pool.shutdown()
+    })
+
+    it('reports the browser final URL after redirects', async () => {
+      const finalUrl = 'https://redirected.example/path?q=1'
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        if (parsed.command === 'batch') {
+          return isNavigationBatch(parsed)
+            ? { stdout: batchValue(finalUrl) }
+            : {
+                stdout: pageValue(
+                  '<html><body>redirected</body></html>',
+                  finalUrl,
+                ),
+              }
+        }
+        if (parsed.command === 'screenshot') return { stdout: '' }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      const res = await service.fetchPage('https://example.com/start', {
+        timeoutMs: 5_000,
+        maxBodyBytes: 4_000_000,
+        executable: '/usr/local/bin/agent-browser-fake',
+        captureScreenshot: false,
+      })
+
+      expect(res.html.finalUrl).toBe(finalUrl)
+      expect(res.html.body).toContain('redirected')
+      await pool.shutdown()
+    })
+
+    it('rejects unsafe browser final URLs before HTML extraction and screenshot capture', async () => {
+      const seenCommands: string[] = []
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        seenCommands.push(parsed.command)
+        if (parsed.command === 'batch') {
+          return isNavigationBatch(parsed)
+            ? { stdout: batchValue('file:///etc/passwd') }
+            : {
+                stdout: pageValue(
+                  '<html>should not read</html>',
+                  'file:///etc/passwd',
+                ),
+              }
+        }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      await expect(
+        service.fetchPage('https://example.com/start', {
+          timeoutMs: 5_000,
+          maxBodyBytes: 4_000_000,
+          executable: '/usr/local/bin/agent-browser-fake',
+        }),
+      ).rejects.toThrow(/Disallowed protocol/)
+
+      expect(
+        seenCommands.filter((command) => command === 'batch'),
+      ).toHaveLength(1)
+      expect(seenCommands).not.toContain('screenshot')
+      await pool.shutdown()
+    })
+
+    it('skips viewport and screenshot commands when captureScreenshot is false', async () => {
+      const seenCommands: string[] = []
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        seenCommands.push(parsed.command)
+        if (parsed.command === 'batch') {
+          return isNavigationBatch(parsed)
+            ? { stdout: batchValue('https://example.com/') }
+            : { stdout: pageValue('<html><body>metadata only</body></html>') }
+        }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      const res = await service.fetchPage('https://example.com', {
+        timeoutMs: 5_000,
+        maxBodyBytes: 4_000_000,
+        executable: '/usr/local/bin/agent-browser-fake',
+        captureScreenshot: false,
+      })
+
+      expect(res.html.body).toContain('metadata only')
+      expect(res.screenshotBytes).toBeUndefined()
+      expect(seenCommands).toEqual(['batch', 'batch'])
       await pool.shutdown()
     })
   })
@@ -413,9 +520,9 @@ describe('BrowserFetchService', () => {
       setExecFileBehavior(async (call) => {
         const parsed = parseBatchArgs(call.args)
         if (parsed.command === 'batch') {
-          return {
-            stdout: JSON.stringify([{}, {}, { value: '<html/>' }]),
-          }
+          return isNavigationBatch(parsed)
+            ? { stdout: batchValue('https://example.com/') }
+            : { stdout: pageValue('<html/>') }
         }
         if (parsed.command === 'screenshot') {
           const dir = parsed.screenshotDir!
@@ -460,9 +567,15 @@ describe('BrowserFetchService', () => {
     it('reuses the same session name across two sequential fetches', async () => {
       const pool = new BrowserSessionPool({ maxSize: 1, idleMs: 60_000 })
       const service = new BrowserFetchService(pool)
-      setExecFileBehavior(() => ({
-        stdout: JSON.stringify([{}, {}, { value: '<html></html>' }]),
-      }))
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        if (parsed.command !== 'batch') return { stdout: '' }
+        const open = parsed.subCommands.find((c) => c.startsWith('open '))
+        const href = open ? open.slice('open '.length) : 'https://example.com/'
+        return isNavigationBatch(parsed)
+          ? { stdout: batchValue(href) }
+          : { stdout: pageValue('<html></html>', href) }
+      })
       await service.fetchHtml('https://example.com/a', {
         timeoutMs: 5_000,
         maxBodyBytes: 1024,

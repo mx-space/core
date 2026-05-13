@@ -230,25 +230,32 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
     const browserFetch = new BrowserFetchService(browserFetchPool)
     const png = await makePngBytes()
     // Stub network step but keep the real WeakMap / attach contract intact.
-    vi.spyOn(browserFetch, 'fetchPage').mockImplementation(async (url) => ({
-      html: {
-        finalUrl: url,
-        contentType: 'text/html',
-        body: makeHtmlBody(url),
-        truncated: false,
-      },
-      screenshotBytes: opts.withoutScreenshotBytes ? undefined : png,
-    }))
+    const fetchPageSpy = vi
+      .spyOn(browserFetch, 'fetchPage')
+      .mockImplementation(async (url, fetchOpts) => ({
+        html: {
+          finalUrl: url,
+          contentType: 'text/html',
+          body: makeHtmlBody(url),
+          truncated: false,
+        },
+        screenshotBytes:
+          opts.withoutScreenshotBytes || fetchOpts.captureScreenshot === false
+            ? undefined
+            : png,
+      }))
 
     const pipeline = new ScreenshotPipelineService()
+    const processSpy = vi.spyOn(pipeline, 'process')
     if (opts.pipelineOverride === null) {
-      vi.spyOn(pipeline, 'process').mockResolvedValue(null)
+      processSpy.mockResolvedValue(null)
     } else if (opts.pipelineOverride) {
-      vi.spyOn(pipeline, 'process').mockResolvedValue(opts.pipelineOverride)
+      processSpy.mockResolvedValue(opts.pipelineOverride)
     }
 
     const storage = new TestScreenshotStorageService(
       screenshotRepository,
+      repository,
       configsService,
       redisService,
     )
@@ -284,7 +291,9 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
       service,
       storage,
       pipeline,
+      processSpy,
       browserFetch,
+      fetchPageSpy,
       repository,
       screenshotRepository,
       touchSpy,
@@ -314,13 +323,18 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
     expect(fakeS3.putCalls).toHaveLength(1)
   })
 
-  it('screenshot disabled: bytes captured but never stored', async () => {
-    const { service, fakeS3 } = await buildHarness({
+  it('screenshot disabled: browser metadata fetch does not capture or store bytes', async () => {
+    const { service, fakeS3, fetchPageSpy, processSpy } = await buildHarness({
       screenshot: { enabled: false },
     })
 
     const { result } = await service.resolve(RESOLVE_URL)
     expect(result.screenshot).toBeUndefined()
+    expect(fetchPageSpy).toHaveBeenCalledWith(
+      RESOLVE_URL,
+      expect.objectContaining({ captureScreenshot: false }),
+    )
+    expect(processSpy).not.toHaveBeenCalled()
     expect(fakeS3.putCalls).toHaveLength(0)
   })
 

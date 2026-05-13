@@ -178,6 +178,15 @@ export class EnrichmentRepository extends BaseRepository {
     }
   }
 
+  async clearScreenshot(id: string): Promise<void> {
+    await this.db
+      .update(enrichmentCache)
+      .set({
+        normalized: sql`coalesce(${enrichmentCache.normalized}, '{}'::jsonb) - 'screenshot'`,
+      })
+      .where(eq(enrichmentCache.id, id))
+  }
+
   async recordFailure(
     provider: string,
     externalId: string,

@@ -9,7 +9,11 @@ import { Injectable, Logger } from '@nestjs/common'
 import type { EnrichmentResult } from '../../enrichment.types'
 import { BrowserSessionPool, type PoolSlot } from './browser-session-pool'
 import type { SafeFetchOptions, SafeFetchResult } from './safe-fetch'
-import { assertHostnameSafe, parseAndValidateUrl } from './url-guard'
+import {
+  assertHostnameSafe,
+  parseAndValidateUrl,
+  UnsafeUrlError,
+} from './url-guard'
 
 const execFileAsync = promisify(execFile)
 
@@ -31,12 +35,17 @@ interface FetchPageResult {
   screenshotBytes?: Buffer
 }
 
+type BrowserFetchOptions = SafeFetchOptions & {
+  executable?: string
+  captureScreenshot?: boolean
+}
+
 /**
  * Headless-browser fetcher backed by the agent-browser CLI. Used as the
  * "browser" fetchMode for the Open Graph provider when sites (Cloudflare,
  * Akamai, JS-rendered SPAs) refuse a plain HTTP request.
  *
- * The CLI is invoked via batch mode in a one-shot named session so:
+ * The CLI is invoked via batch mode in a named session so:
  *   1. session state is isolated per request (no cookie bleed across URLs);
  *   2. failures clean up the session even if the batch midway crashes;
  *   3. we can plumb a hard timeout via AbortController -> SIGKILL.
@@ -75,9 +84,9 @@ export class BrowserFetchService {
 
   async fetchPage(
     rawUrl: string,
-    opts: SafeFetchOptions & { executable?: string },
+    opts: BrowserFetchOptions,
   ): Promise<FetchPageResult> {
-    return this.runSession(rawUrl, opts, true)
+    return this.runSession(rawUrl, opts, opts.captureScreenshot ?? true)
   }
 
   attachScreenshotBytes(result: EnrichmentResult, bytes: Buffer): void {
@@ -101,12 +110,18 @@ export class BrowserFetchService {
     const slot: PoolSlot = await this.pool.acquire()
     const executable = opts.executable || DEFAULT_EXECUTABLE
     const evalScript =
-      '(() => { try { return document.documentElement.outerHTML } catch (_e) { return "" } })()'
-    const b64 = Buffer.from(evalScript, 'utf8').toString('base64')
+      '(() => { try { return window.location.href } catch (_e) { return "" } })()'
+    const finalUrlB64 = Buffer.from(evalScript, 'utf8').toString('base64')
+    const pageScript = [
+      '(() => { try { return JSON.stringify({ href: window.location.href, ',
+      'html: document.documentElement.outerHTML }) } catch (_e) { ',
+      'return JSON.stringify({ href: window.location.href, html: "" }) } })()',
+    ].join('')
+    const pageB64 = Buffer.from(pageScript, 'utf8').toString('base64')
 
-    // Shared wall budget. HTML batch consumes part of it; the screenshot
-    // step (if any) gets the remainder, so the total time of HTML +
-    // screenshot stays inside `opts.timeoutMs`.
+    // Shared wall budget. Navigation + HTML extraction consume part of it;
+    // the screenshot step (if any) gets the remainder, so the total time stays
+    // inside `opts.timeoutMs`.
     const started = Date.now()
     const ac = new AbortController()
     const timer = setTimeout(() => ac.abort(), opts.timeoutMs)
@@ -122,7 +137,7 @@ export class BrowserFetchService {
           '--json',
           `open ${url.toString()}`,
           'wait 1500',
-          `eval -b ${b64}`,
+          `eval -b ${finalUrlB64}`,
         ],
         {
           signal: ac.signal,
@@ -132,11 +147,21 @@ export class BrowserFetchService {
         },
       )
       this.pool.markLive(slot)
-      const rawHtml = extractHtmlFromBatchOutput(stdout)
-      const truncated = rawHtml.length > opts.maxBodyBytes
-      const body = truncated ? rawHtml.slice(0, opts.maxBodyBytes) : rawHtml
+      await this.assertBrowserFinalUrlSafe(
+        extractStringFromBatchOutput(stdout),
+      )
+
+      const page = await this.extractPage(executable, slot.name, pageB64, {
+        signal: ac.signal,
+        maxBodyBytes: opts.maxBodyBytes,
+      })
+      const pageFinalUrl = await this.assertBrowserFinalUrlSafe(page.href)
+      const truncated = page.html.length > opts.maxBodyBytes
+      const body = truncated
+        ? page.html.slice(0, opts.maxBodyBytes)
+        : page.html
       html = {
-        finalUrl: url.toString(),
+        finalUrl: pageFinalUrl.toString(),
         contentType: 'text/html',
         body,
         truncated,
@@ -155,6 +180,9 @@ export class BrowserFetchService {
       // Non-timeout: discard the slot so a wedged chromium does not poison
       // the next caller.
       this.pool.release(slot, { discard: true })
+      if (error instanceof UnsafeUrlError) {
+        throw error
+      }
       if (err.code === 'ENOENT') {
         throw new Error(
           `agent-browser executable not found at "${executable}". Install it or set thirdPartyServiceIntegration.openGraph.fetchMode = "fetch".`,
@@ -170,9 +198,8 @@ export class BrowserFetchService {
     }
 
     // Screenshot step. Runs as a SECOND `agent-browser` invocation against
-    // the same named session so a failure cannot mask HTML success (the
-    // `--bail` batch would have aborted on a sub-step failure and lost the
-    // HTML result). We swallow all errors here and only log at `debug`.
+    // the same named session so a failure cannot mask HTML success. We swallow
+    // all errors here and only log at `debug`.
     // Reached only on try-block success — `slot` still held, chromium live.
     let screenshotBytes: Buffer | undefined
     if (captureScreenshot) {
@@ -194,6 +221,47 @@ export class BrowserFetchService {
 
     this.pool.release(slot)
     return { html, screenshotBytes }
+  }
+
+  private async extractPage(
+    executable: string,
+    sessionName: string,
+    pageB64: string,
+    opts: { signal: AbortSignal; maxBodyBytes: number },
+  ): Promise<{ href: string; html: string }> {
+    const { stdout } = await execFileAsync(
+      executable,
+      [
+        '--session',
+        sessionName,
+        'batch',
+        '--bail',
+        '--json',
+        `eval -b ${pageB64}`,
+      ],
+      {
+        signal: opts.signal,
+        maxBuffer: Math.max(opts.maxBodyBytes * 2, 4_194_304),
+        windowsHide: true,
+        env: process.env,
+      },
+    )
+    const raw = extractStringFromBatchOutput(stdout)
+    try {
+      const parsed = JSON.parse(raw) as { href?: unknown; html?: unknown }
+      return {
+        href: typeof parsed.href === 'string' ? parsed.href : '',
+        html: typeof parsed.html === 'string' ? parsed.html : '',
+      }
+    } catch {
+      return { href: '', html: raw }
+    }
+  }
+
+  private async assertBrowserFinalUrlSafe(rawUrl: string): Promise<URL> {
+    const url = parseAndValidateUrl(rawUrl)
+    await assertHostnameSafe(url.hostname)
+    return url
   }
 
   private async captureScreenshot(
@@ -287,7 +355,7 @@ export class BrowserFetchService {
  * back to the raw stdout if nothing parses (defensive — a heavily-shifted
  * format would just return less useful HTML rather than crash the request).
  */
-function extractHtmlFromBatchOutput(stdout: string): string {
+function extractStringFromBatchOutput(stdout: string): string {
   const trimmed = stdout.trim()
   if (!trimmed) return ''
   try {

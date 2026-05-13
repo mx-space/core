@@ -97,9 +97,11 @@ export class OpenGraphProvider implements EnrichmentProvider {
     let safe: SafeFetchResult
     let screenshotBytes: Buffer | undefined
     if (fetchMode === 'browser') {
+      const captureScreenshot = og.screenshot?.enabled === true
       const fetched = await this.browserFetch.fetchPage(url, {
         timeoutMs,
         maxBodyBytes,
+        captureScreenshot,
       })
       safe = fetched.html
       screenshotBytes = fetched.screenshotBytes

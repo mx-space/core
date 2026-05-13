@@ -6,6 +6,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { S3Uploader } from '~/utils/s3.util'
 
+import { EnrichmentRepository } from '../../enrichment.repository'
 import { EnrichmentScreenshotRepository } from '../../enrichment-screenshot.repository'
 import type { ProcessedScreenshot } from './screenshot-pipeline.service'
 
@@ -61,6 +62,7 @@ export class ScreenshotStorageService {
 
   constructor(
     private readonly repository: EnrichmentScreenshotRepository,
+    private readonly enrichmentRepository: EnrichmentRepository,
     private readonly configsService: ConfigsService,
     private readonly redisService: RedisService,
   ) {}
@@ -253,6 +255,7 @@ export class ScreenshotStorageService {
         }
 
         try {
+          await this.enrichmentRepository.clearScreenshot(row.enrichmentId)
           await this.repository.deleteByEnrichmentId(row.enrichmentId)
         } catch (error) {
           // Abort: leaving the DB row in place while the S3 object is gone

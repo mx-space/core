@@ -5,6 +5,7 @@ import {
 } from 'test/helper/pg-verify-url'
 
 import { enrichmentCache, enrichmentScreenshots } from '~/database/schema'
+import { EnrichmentRepository } from '~/modules/enrichment/enrichment.repository'
 import { EnrichmentScreenshotRepository } from '~/modules/enrichment/enrichment-screenshot.repository'
 import type { ProcessedScreenshot } from '~/modules/enrichment/providers/open-graph/screenshot-pipeline.service'
 import { ScreenshotStorageService } from '~/modules/enrichment/providers/open-graph/screenshot-storage.service'
@@ -155,6 +156,28 @@ async function seedEnrichment(
   })
 }
 
+async function setCachedScreenshot(ctx: PgTestDatabase, id: string) {
+  await ctx.pool.query(
+    `update enrichment_cache set normalized = jsonb_set(normalized, '{screenshot}', $1::jsonb) where id = $2`,
+    [
+      JSON.stringify({
+        url: `https://cdn.example.test/enrichment-screenshots/${id}.webp`,
+        width: 1280,
+        height: 720,
+      }),
+      id,
+    ],
+  )
+}
+
+async function readCachedNormalized(ctx: PgTestDatabase, id: string) {
+  const result = await ctx.pool.query(
+    `select normalized from enrichment_cache where id = $1`,
+    [id],
+  )
+  return result.rows[0]?.normalized as Record<string, unknown> | undefined
+}
+
 /**
  * Stamp a deterministic `last_accessed_at` on an existing screenshot row.
  * Avoids `setTimeout`-based ordering, which is fragile under CI load.
@@ -173,10 +196,14 @@ async function stampAccessTime(
 describe('ScreenshotStorageService', () => {
   let context: PgTestDatabase
   let repository: EnrichmentScreenshotRepository
+  let cacheRepository: EnrichmentRepository
 
   beforeAll(async () => {
     context = await createPgTestDatabase('mx_screenshot_storage')
     repository = new EnrichmentScreenshotRepository(context.db as any)
+    cacheRepository = new EnrichmentRepository(context.db as any, {
+      nextId: async () => generator.nextId(),
+    } as any)
   }, 60_000)
 
   afterAll(async () => {
@@ -202,6 +229,7 @@ describe('ScreenshotStorageService', () => {
     const { redisService } = makeRedisService()
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService(),
       redisService,
     )
@@ -235,6 +263,7 @@ describe('ScreenshotStorageService', () => {
     const { redisService } = makeRedisService()
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService(),
       redisService,
     )
@@ -276,6 +305,7 @@ describe('ScreenshotStorageService', () => {
     const { redisService } = makeRedisService()
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService({ maxItems: 2 }),
       redisService,
     )
@@ -286,6 +316,7 @@ describe('ScreenshotStorageService', () => {
       enrichmentId: ids[0],
       processed: makeProcessed({ webp: Buffer.alloc(1024, 1) }),
     })
+    await setCachedScreenshot(context, ids[0])
     await stampAccessTime(context, ids[0], '2020-01-01T00:00:00Z')
     await service.storeOrEvict({
       enrichmentId: ids[1],
@@ -305,6 +336,9 @@ describe('ScreenshotStorageService', () => {
       `enrichment-screenshots/${ids[0]}.webp`,
     ])
     expect(await repository.findByEnrichmentId(ids[0])).toBeNull()
+    expect(await readCachedNormalized(context, ids[0])).toEqual({
+      title: 'probe',
+    })
     expect(await repository.findByEnrichmentId(ids[1])).not.toBeNull()
     expect(await repository.findByEnrichmentId(ids[2])).not.toBeNull()
   })
@@ -318,6 +352,7 @@ describe('ScreenshotStorageService', () => {
     // each row is 1500 bytes, so the third write needs eviction.
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService({ maxItems: 100, maxTotalBytes: 3000 }),
       redisService,
     )
@@ -352,6 +387,7 @@ describe('ScreenshotStorageService', () => {
     const { redisService } = makeRedisService()
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService({ maxItems: 1 }),
       redisService,
     )
@@ -395,6 +431,7 @@ describe('ScreenshotStorageService', () => {
     const { redisService } = makeRedisService()
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService(),
       redisService,
     )
@@ -417,6 +454,7 @@ describe('ScreenshotStorageService', () => {
     const { redisService } = makeRedisService()
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService(),
       redisService,
     )
@@ -431,6 +469,7 @@ describe('ScreenshotStorageService', () => {
     const { redisService } = makeRedisService()
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService(),
       redisService,
     )
@@ -478,6 +517,7 @@ describe('ScreenshotStorageService', () => {
     const touchSpy = vi.spyOn(repository, 'touchAccess')
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService(),
       redisService,
     )
@@ -508,6 +548,7 @@ describe('ScreenshotStorageService', () => {
     const touchSpy = vi.spyOn(repository, 'touchAccess')
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService(),
       redisService,
     )
@@ -530,6 +571,7 @@ describe('ScreenshotStorageService', () => {
     const { redisService } = makeRedisService()
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService(),
       redisService,
     )
@@ -573,6 +615,7 @@ describe('ScreenshotStorageService', () => {
     const { redisService } = makeRedisService()
     const service = new TestScreenshotStorageService(
       repository,
+      cacheRepository,
       makeConfigsService(),
       redisService,
     )
