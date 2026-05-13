@@ -3,10 +3,10 @@ import { describe, expect, it, vi } from 'vitest'
 import type { GitHubClient } from '~/modules/enrichment/providers/github/github.client'
 import { GitHubDiscussionProvider } from '~/modules/enrichment/providers/github/github-discussion.provider'
 
-const createClient = (mockData: Record<string, any>) =>
+const createClient = (mockData: any) =>
   ({
     getOctokit: vi.fn().mockResolvedValue({
-      request: vi.fn().mockResolvedValue({ data: mockData }),
+      graphql: vi.fn().mockResolvedValue(mockData),
     }),
   }) as unknown as GitHubClient
 
@@ -35,18 +35,18 @@ describe('GitHubDiscussionProvider', () => {
   })
 
   describe('fetch', () => {
-    it('uses search API and normalizes discussion', async () => {
+    it('queries GraphQL repository.discussion and normalizes', async () => {
       const mockData = {
-        items: [
-          {
+        repository: {
+          discussion: {
             title: 'Feature Request',
             body: 'Discussion body',
-            html_url: 'https://github.com/mx-space/core/discussions/42',
-            created_at: '2023-06-01T00:00:00Z',
-            comments: 3,
-            user: { avatar_url: 'https://avatar', login: 'user' },
+            url: 'https://github.com/mx-space/core/discussions/42',
+            createdAt: '2023-06-01T00:00:00Z',
+            author: { login: 'user', avatarUrl: 'https://avatar' },
+            comments: { totalCount: 3 },
           },
-        ],
+        },
       }
       const p = new GitHubDiscussionProvider(createClient(mockData))
 
@@ -54,6 +54,8 @@ describe('GitHubDiscussionProvider', () => {
 
       expect(result.title).toBe('Feature Request')
       expect(result.subtype).toBe('discussion')
+      expect(result.url).toBe('https://github.com/mx-space/core/discussions/42')
+      expect(result.image).toEqual({ url: 'https://avatar', alt: 'user' })
       expect(result.attributes).toContainEqual({
         key: 'repo',
         value: 'mx-space/core',
@@ -72,12 +74,54 @@ describe('GitHubDiscussionProvider', () => {
         label: 'Comments',
         format: 'number',
       })
+      expect(result.attributes).toContainEqual({
+        key: 'author',
+        value: 'user',
+        label: 'Author',
+        format: 'text',
+      })
+    })
+
+    it('handles ghost author (deleted user)', async () => {
+      const mockData = {
+        repository: {
+          discussion: {
+            title: 'Orphan',
+            body: null,
+            url: 'https://github.com/mx-space/core/discussions/1',
+            createdAt: null,
+            author: null,
+            comments: { totalCount: 0 },
+          },
+        },
+      }
+      const p = new GitHubDiscussionProvider(createClient(mockData))
+
+      const result = await p.fetch('mx-space/core/discussions/1')
+
+      expect(result.image).toBeUndefined()
+      expect(result.attributes).toContainEqual({
+        key: 'author',
+        value: '',
+        label: 'Author',
+        format: 'text',
+      })
     })
 
     it('throws when discussion not found', async () => {
-      const p = new GitHubDiscussionProvider(createClient({ items: [] }))
+      const p = new GitHubDiscussionProvider(
+        createClient({ repository: { discussion: null } }),
+      )
 
       await expect(p.fetch('mx-space/core/discussions/999')).rejects.toThrow(
+        'Discussion not found',
+      )
+    })
+
+    it('throws when repository not found', async () => {
+      const p = new GitHubDiscussionProvider(createClient({ repository: null }))
+
+      await expect(p.fetch('ghost/repo/discussions/1')).rejects.toThrow(
         'Discussion not found',
       )
     })

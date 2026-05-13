@@ -35,23 +35,46 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
   async fetch(id: string): Promise<EnrichmentResult> {
     const [owner, repo, , number] = id.split('/')
     const octokit = await this.client.getOctokit()
-    const { data: searchResult } = await octokit.request(
-      'GET /search/discussions',
-      { q: `repo:${owner}/${repo}+number:${number}` },
-    )
-    const discussion = (searchResult as any).items?.[0]
+    const query = `
+      query($owner: String!, $name: String!, $number: Int!) {
+        repository(owner: $owner, name: $name) {
+          discussion(number: $number) {
+            title
+            body
+            url
+            createdAt
+            author { login avatarUrl }
+            comments { totalCount }
+          }
+        }
+      }
+    `
+    const data = await octokit.graphql<{
+      repository: {
+        discussion: {
+          title: string
+          body: string | null
+          url: string
+          createdAt: string | null
+          author: { login: string; avatarUrl: string } | null
+          comments: { totalCount: number }
+        } | null
+      } | null
+    }>(query, { owner, name: repo, number: Number(number) })
+
+    const discussion = data?.repository?.discussion
     if (!discussion) throw new Error(`Discussion not found: ${id}`)
 
     return {
       title: discussion.title,
       description: (discussion.body || '').slice(0, 300) || undefined,
-      image: discussion.user?.avatar_url
-        ? { url: discussion.user.avatar_url, alt: discussion.user.login }
+      image: discussion.author?.avatarUrl
+        ? { url: discussion.author.avatarUrl, alt: discussion.author.login }
         : undefined,
-      url: discussion.html_url,
+      url: discussion.url,
       category: this.category,
       subtype: 'discussion',
-      publishedAt: discussion.created_at || undefined,
+      publishedAt: discussion.createdAt || undefined,
       fetchedAt: '',
       attributes: [
         {
@@ -68,13 +91,13 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
         },
         {
           key: 'author',
-          value: discussion.user?.login || '',
+          value: discussion.author?.login || '',
           label: 'Author',
           format: 'text',
         },
         {
           key: 'comments',
-          value: discussion.comments || 0,
+          value: discussion.comments.totalCount || 0,
           label: 'Comments',
           format: 'number',
         },
