@@ -92,20 +92,28 @@ function parseBatchArgs(args: string[]): {
   command: string
   subCommands: string[]
   screenshotDir?: string
+  flagValue: (flag: string) => string | undefined
 } {
-  // [--session, <name>, <command>, ...sub commands]
+  // [--session, <name>, <command>, ...rest]
   const sessionName = args[1]
   const command = args[2]
+  const rest = args.slice(3)
   const subCommands: string[] = []
   let screenshotDir: string | undefined
-  for (let i = 3; i < args.length; i++) {
-    const a = args[i]
+  for (let i = 0; i < rest.length; i++) {
+    const a = rest[i]
     if (a.startsWith('--')) continue
     subCommands.push(a)
     const match = /--screenshot-dir\s+(\S+)/.exec(a)
     if (match) screenshotDir = match[1]
   }
-  return { sessionName, command, subCommands, screenshotDir }
+  const flagValue = (flag: string): string | undefined => {
+    const idx = rest.indexOf(flag)
+    if (idx === -1 || idx + 1 >= rest.length) return undefined
+    return rest[idx + 1]
+  }
+  if (!screenshotDir) screenshotDir = flagValue('--screenshot-dir')
+  return { sessionName, command, subCommands, screenshotDir, flagValue }
 }
 
 function buildService() {
@@ -175,24 +183,12 @@ describe('BrowserFetchService', () => {
 
   describe('fetchPage', () => {
     it('returns html + screenshotBytes when CLI succeeds and tempfile exists', async () => {
-      const fakeWebp = Buffer.from([
-        0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
-      ])
+      const fakeJpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10])
       const seenScreenshotDirs: string[] = []
 
       setExecFileBehavior(async (call) => {
         const parsed = parseBatchArgs(call.args)
         if (parsed.command === 'batch') {
-          const isScreenshotBatch = parsed.subCommands.some((c) =>
-            c.startsWith('screenshot'),
-          )
-          if (isScreenshotBatch) {
-            // Simulate the CLI writing a webp to the screenshot-dir.
-            const dir = parsed.screenshotDir!
-            seenScreenshotDirs.push(dir)
-            await writeFile(join(dir, 'capture.webp'), fakeWebp)
-            return { stdout: '[]' }
-          }
           return {
             stdout: JSON.stringify([
               {},
@@ -200,6 +196,12 @@ describe('BrowserFetchService', () => {
               { value: '<html><body>ok</body></html>' },
             ]),
           }
+        }
+        if (parsed.command === 'screenshot') {
+          const dir = parsed.screenshotDir!
+          seenScreenshotDirs.push(dir)
+          await writeFile(join(dir, 'capture.jpeg'), fakeJpeg)
+          return { stdout: '' }
         }
         return { stdout: '' }
       })
@@ -213,7 +215,7 @@ describe('BrowserFetchService', () => {
 
       expect(res.html.body).toContain('<body>ok')
       expect(res.screenshotBytes).toBeInstanceOf(Buffer)
-      expect(res.screenshotBytes!.equals(fakeWebp)).toBe(true)
+      expect(res.screenshotBytes!.equals(fakeJpeg)).toBe(true)
 
       // Tempdir cleanup: it must have been removed after the call.
       expect(seenScreenshotDirs).toHaveLength(1)
@@ -227,15 +229,6 @@ describe('BrowserFetchService', () => {
       setExecFileBehavior((call) => {
         const parsed = parseBatchArgs(call.args)
         if (parsed.command === 'batch') {
-          const isScreenshotBatch = parsed.subCommands.some((c) =>
-            c.startsWith('screenshot'),
-          )
-          if (isScreenshotBatch) {
-            if (parsed.screenshotDir)
-              seenScreenshotDirs.push(parsed.screenshotDir)
-            const err = new Error('boom') as NodeJS.ErrnoException
-            return { error: err }
-          }
           return {
             stdout: JSON.stringify([
               {},
@@ -243,6 +236,12 @@ describe('BrowserFetchService', () => {
               { value: '<html><body>still ok</body></html>' },
             ]),
           }
+        }
+        if (parsed.command === 'screenshot') {
+          if (parsed.screenshotDir)
+            seenScreenshotDirs.push(parsed.screenshotDir)
+          const err = new Error('boom') as NodeJS.ErrnoException
+          return { error: err }
         }
         return { stdout: '' }
       })
@@ -263,14 +262,10 @@ describe('BrowserFetchService', () => {
       await pool.shutdown()
     })
 
-    it('returns screenshotBytes undefined when no webp file is written', async () => {
+    it('returns screenshotBytes undefined when no image file is written', async () => {
       setExecFileBehavior((call) => {
         const parsed = parseBatchArgs(call.args)
         if (parsed.command === 'batch') {
-          const isScreenshotBatch = parsed.subCommands.some((c) =>
-            c.startsWith('screenshot'),
-          )
-          if (isScreenshotBatch) return { stdout: '[]' } // no file written
           return {
             stdout: JSON.stringify([
               {},
@@ -279,6 +274,7 @@ describe('BrowserFetchService', () => {
             ]),
           }
         }
+        if (parsed.command === 'screenshot') return { stdout: '' }
         return { stdout: '' }
       })
 
@@ -295,23 +291,20 @@ describe('BrowserFetchService', () => {
       await pool.shutdown()
     })
 
-    it('appends viewport + screenshot sub-commands in the screenshot batch', async () => {
-      const seenSubCommands: string[][] = []
+    it('invokes set-viewport + screenshot as standalone CLI commands with expected flags', async () => {
+      const seenCommands: { command: string; args: string[] }[] = []
       setExecFileBehavior(async (call) => {
         const parsed = parseBatchArgs(call.args)
+        seenCommands.push({ command: parsed.command, args: call.args })
         if (parsed.command === 'batch') {
-          seenSubCommands.push(parsed.subCommands)
-          const isScreenshotBatch = parsed.subCommands.some((c) =>
-            c.startsWith('screenshot'),
-          )
-          if (isScreenshotBatch) {
-            const dir = parsed.screenshotDir!
-            await writeFile(join(dir, 'shot.webp'), Buffer.from([0x00]))
-            return { stdout: '[]' }
-          }
           return {
             stdout: JSON.stringify([{}, {}, { value: '<html></html>' }]),
           }
+        }
+        if (parsed.command === 'screenshot') {
+          const dir = parsed.screenshotDir!
+          await writeFile(join(dir, 'shot.jpeg'), Buffer.from([0xff, 0xd8]))
+          return { stdout: '' }
         }
         return { stdout: '' }
       })
@@ -323,17 +316,20 @@ describe('BrowserFetchService', () => {
         executable: '/usr/local/bin/agent-browser-fake',
       })
 
-      const screenshotBatch = seenSubCommands.find((s) =>
-        s.some((c) => c.startsWith('screenshot')),
-      )
-      expect(screenshotBatch).toBeDefined()
-      expect(screenshotBatch!.includes('set viewport 1280 720')).toBe(true)
-      const screenshotCmd = screenshotBatch!.find((c) =>
-        c.startsWith('screenshot'),
-      )!
-      expect(screenshotCmd).toContain('--screenshot-format webp')
-      expect(screenshotCmd).toContain('--screenshot-quality 90')
-      expect(screenshotCmd).toContain('--screenshot-dir ')
+      const setCall = seenCommands.find((c) => c.command === 'set')
+      expect(setCall).toBeDefined()
+      expect(setCall!.args.slice(2)).toEqual(['set', 'viewport', '1280', '720'])
+
+      const shotCall = seenCommands.find((c) => c.command === 'screenshot')
+      expect(shotCall).toBeDefined()
+      const shotArgs = shotCall!.args
+      const fmtIdx = shotArgs.indexOf('--screenshot-format')
+      expect(fmtIdx).toBeGreaterThan(-1)
+      expect(shotArgs[fmtIdx + 1]).toBe('jpeg')
+      const qIdx = shotArgs.indexOf('--screenshot-quality')
+      expect(qIdx).toBeGreaterThan(-1)
+      expect(shotArgs[qIdx + 1]).toBe('90')
+      expect(shotArgs).toContain('--screenshot-dir')
 
       await pool.shutdown()
     })
@@ -417,18 +413,15 @@ describe('BrowserFetchService', () => {
       setExecFileBehavior(async (call) => {
         const parsed = parseBatchArgs(call.args)
         if (parsed.command === 'batch') {
-          const isScreenshotBatch = parsed.subCommands.some((c) =>
-            c.startsWith('screenshot'),
-          )
-          if (isScreenshotBatch) {
-            const dir = parsed.screenshotDir!
-            seenScreenshotDirs.push(dir)
-            await writeFile(join(dir, 'c.webp'), Buffer.from([0x01]))
-            return { stdout: '[]' }
-          }
           return {
             stdout: JSON.stringify([{}, {}, { value: '<html/>' }]),
           }
+        }
+        if (parsed.command === 'screenshot') {
+          const dir = parsed.screenshotDir!
+          seenScreenshotDirs.push(dir)
+          await writeFile(join(dir, 'c.jpeg'), Buffer.from([0xff, 0xd8]))
+          return { stdout: '' }
         }
         return { stdout: '' }
       })

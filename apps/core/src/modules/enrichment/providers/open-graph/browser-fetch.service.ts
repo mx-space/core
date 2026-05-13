@@ -15,11 +15,13 @@ const execFileAsync = promisify(execFile)
 
 const DEFAULT_EXECUTABLE = process.env.AGENT_BROWSER_BIN || 'agent-browser'
 
-// Quality knob for the CLI's intermediate webp write. The pipeline re-encodes
-// at the configured `webpQuality` (default 75) afterwards, so this only needs
-// to be "high enough to survive the round-trip cleanly". 90 leaves enough
-// detail that the downstream sharp pass can still aggressively reduce size.
+// agent-browser writes jpeg/png natively (no webp). Downstream sharp re-encodes
+// to webp at the configured `webpQuality` (default 75), so this only needs to
+// be "high enough to survive the round-trip cleanly". 90 leaves enough detail
+// that the sharp pass can still aggressively reduce size.
 const SCREENSHOT_CLI_QUALITY = 90
+const SCREENSHOT_CLI_FORMAT = 'jpeg' as const
+const SCREENSHOT_CLI_EXT = '.jpeg'
 
 const SCREENSHOT_VIEWPORT_WIDTH = 1280
 const SCREENSHOT_VIEWPORT_HEIGHT = 720
@@ -120,7 +122,7 @@ export class BrowserFetchService {
           '--json',
           `open ${url.toString()}`,
           'wait 1500',
-          `eval -b ${b64} --json`,
+          `eval -b ${b64}`,
         ],
         {
           signal: ac.signal,
@@ -204,16 +206,40 @@ export class BrowserFetchService {
       const ac = new AbortController()
       const timer = setTimeout(() => ac.abort(), timeoutMs)
       try {
+        // agent-browser 0.26.0's `batch` sub-command parser does not recognize
+        // the screenshot-specific flags (e.g. `--screenshot-format`) — it
+        // treats them as positional [selector] tokens and the command fails
+        // with "Element not found". Run viewport + screenshot as two
+        // standalone invocations against the same `--session` instead.
         await execFileAsync(
           executable,
           [
             '--session',
             sessionName,
-            'batch',
-            '--bail',
-            '--json',
-            `set viewport ${SCREENSHOT_VIEWPORT_WIDTH} ${SCREENSHOT_VIEWPORT_HEIGHT}`,
-            `screenshot --screenshot-format webp --screenshot-quality ${SCREENSHOT_CLI_QUALITY} --screenshot-dir ${dir}`,
+            'set',
+            'viewport',
+            String(SCREENSHOT_VIEWPORT_WIDTH),
+            String(SCREENSHOT_VIEWPORT_HEIGHT),
+          ],
+          {
+            signal: ac.signal,
+            maxBuffer: 1_048_576,
+            windowsHide: true,
+            env: process.env,
+          },
+        )
+        await execFileAsync(
+          executable,
+          [
+            '--session',
+            sessionName,
+            'screenshot',
+            '--screenshot-format',
+            SCREENSHOT_CLI_FORMAT,
+            '--screenshot-quality',
+            String(SCREENSHOT_CLI_QUALITY),
+            '--screenshot-dir',
+            dir,
           ],
           {
             signal: ac.signal,
@@ -226,21 +252,23 @@ export class BrowserFetchService {
         clearTimeout(timer)
       }
 
-      // The CLI's chosen filename is not stable across versions, so discover
-      // it instead of hard-coding. Strict: expect exactly one `.webp` file.
-      // Zero or many is treated as a screenshot failure so a surprising CLI
-      // behavior shift surfaces here instead of silently picking one.
+      // CLI filename is not stable across versions, so discover the output
+      // instead of hard-coding. Strict: expect exactly one matching file; zero
+      // or many is treated as failure so a CLI behavior shift surfaces here
+      // rather than silently picking one.
       const entries = await readdir(dir)
-      const webpFiles = entries.filter((name) =>
-        name.toLowerCase().endsWith('.webp'),
+      const matches = entries.filter(
+        (name) =>
+          name.toLowerCase().endsWith(SCREENSHOT_CLI_EXT) ||
+          name.toLowerCase().endsWith('.jpg'),
       )
-      if (webpFiles.length !== 1) {
+      if (matches.length !== 1) {
         this.logger.debug(
-          `screenshot capture produced ${webpFiles.length} .webp files in ${dir}; expected 1`,
+          `screenshot capture produced ${matches.length} matching files in ${dir}; expected 1`,
         )
         return undefined
       }
-      return await readFile(join(dir, webpFiles[0]))
+      return await readFile(join(dir, matches[0]))
     } finally {
       // Best-effort tempdir cleanup. Failure is non-fatal.
       try {

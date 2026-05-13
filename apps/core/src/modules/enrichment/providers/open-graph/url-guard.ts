@@ -48,6 +48,7 @@ export function parseAndValidateUrl(raw: string): URL {
 }
 
 export async function assertHostnameSafe(hostname: string): Promise<void> {
+  if (isDev) return
   if (isIP(stripIpv6Brackets(hostname)) !== 0) return
   let addrs: { address: string; family: number }[]
   try {
