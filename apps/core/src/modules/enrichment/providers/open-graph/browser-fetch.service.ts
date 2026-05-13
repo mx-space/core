@@ -147,9 +147,7 @@ export class BrowserFetchService {
         },
       )
       this.pool.markLive(slot)
-      await this.assertBrowserFinalUrlSafe(
-        extractStringFromBatchOutput(stdout),
-      )
+      await this.assertBrowserFinalUrlSafe(extractStringFromBatchOutput(stdout))
 
       const page = await this.extractPage(executable, slot.name, pageB64, {
         signal: ac.signal,
@@ -157,9 +155,7 @@ export class BrowserFetchService {
       })
       const pageFinalUrl = await this.assertBrowserFinalUrlSafe(page.href)
       const truncated = page.html.length > opts.maxBodyBytes
-      const body = truncated
-        ? page.html.slice(0, opts.maxBodyBytes)
-        : page.html
+      const body = truncated ? page.html.slice(0, opts.maxBodyBytes) : page.html
       html = {
         finalUrl: pageFinalUrl.toString(),
         contentType: 'text/html',
@@ -349,38 +345,24 @@ export class BrowserFetchService {
 }
 
 /**
- * agent-browser `batch --json` prints a JSON array — one entry per sub-command.
- * The last entry corresponds to our `eval` and carries the evaluated value.
- * Output shape has shifted across versions, so we probe a few keys and fall
- * back to the raw stdout if nothing parses (defensive — a heavily-shifted
- * format would just return less useful HTML rather than crash the request).
+ * agent-browser 0.26 `batch --json` prints a JSON array — one entry per
+ * sub-command. The last entry corresponds to our `eval`; the evaluated string
+ * is nested at `entry.result.result` (the outer `result` wraps the command
+ * envelope, the inner is the eval return value).
  */
 function extractStringFromBatchOutput(stdout: string): string {
   const trimmed = stdout.trim()
   if (!trimmed) return ''
+  let parsed: unknown
   try {
-    const parsed = JSON.parse(trimmed)
-    const last = Array.isArray(parsed) ? parsed.at(-1) : parsed
-    if (last && typeof last === 'object') {
-      const candidate =
-        pickStringField(last, 'value') ??
-        pickStringField(last, 'result') ??
-        pickStringField(last, 'data') ??
-        (typeof (last as { output?: unknown }).output === 'string'
-          ? (last as { output: string }).output
-          : undefined)
-      if (typeof candidate === 'string') return candidate
-    }
-    if (typeof parsed === 'string') return parsed
+    parsed = JSON.parse(trimmed)
   } catch {
-    // Not JSON — could be a heredoc or plain-text mode. Treat as HTML.
+    return ''
   }
-  return trimmed
-}
-
-function pickStringField(obj: object, key: string): string | undefined {
-  const v = (obj as Record<string, unknown>)[key]
-  return typeof v === 'string' ? v : undefined
+  if (!Array.isArray(parsed)) return ''
+  const last = parsed.at(-1) as { result?: { result?: unknown } } | undefined
+  const value = last?.result?.result
+  return typeof value === 'string' ? value : ''
 }
 
 function truncate(s: string, n: number): string {

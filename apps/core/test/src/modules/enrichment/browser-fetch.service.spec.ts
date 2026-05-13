@@ -116,12 +116,20 @@ function parseBatchArgs(args: string[]): {
   return { sessionName, command, subCommands, screenshotDir, flagValue }
 }
 
-function batchValue(value: string): string {
-  return JSON.stringify([{}, {}, { value }])
+function batchValue(value: string, origin = value): string {
+  return JSON.stringify([
+    { command: ['open', origin], result: { url: origin }, success: true },
+    { command: ['wait', '1500'], result: { ms: 1500 }, success: true },
+    {
+      command: ['eval', '-b', '...'],
+      result: { origin, result: value },
+      success: true,
+    },
+  ])
 }
 
 function pageValue(html: string, href = 'https://example.com/'): string {
-  return batchValue(JSON.stringify({ href, html }))
+  return batchValue(JSON.stringify({ href, html }), href)
 }
 
 function isNavigationBatch(parsed: ReturnType<typeof parseBatchArgs>): boolean {
@@ -156,9 +164,7 @@ describe('BrowserFetchService', () => {
           return isNavigationBatch(parsed)
             ? { stdout: batchValue('https://example.com/') }
             : {
-                stdout: pageValue(
-                  '<html><head><title>x</title></head></html>',
-                ),
+                stdout: pageValue('<html><head><title>x</title></head></html>'),
               }
         }
         return { stdout: '' }
