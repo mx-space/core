@@ -1,24 +1,26 @@
 # CHANGELOG
 
 
-## [12.3.4](https://github.com/mx-space/core/compare/v12.3.3...v12.3.4) (2026-05-13)
+## <small>12.3.5 (2026-05-13)</small>
 
+* release: v12.3.5 ([df3c824](https://github.com/mx-space/core/commit/df3c824))
+* fix(activity): resolve presence readerId from HTTP session cookie ([181da63](https://github.com/mx-space/core/commit/181da63))
+* chore(deps): bump @haklex/* to 0.9.2 ([239446f](https://github.com/mx-space/core/commit/239446f))
+* chore(deps): update better-auth monorepo to v1.6.11 (#2710) ([4ee3244](https://github.com/mx-space/core/commit/4ee3244)), closes [#2710](https://github.com/mx-space/core/issues/2710)
 
-### Bug Fixes
+## <small>12.3.4 (2026-05-12)</small>
 
-* **activity:** bind reader to socket at ws handshake ([c2a709c](https://github.com/mx-space/core/commit/c2a709cb7c8b4171ac5f4a7c5a4c200cad02ba65))
-* **enrichment:** preserve open graph refresh url context ([fb87132](https://github.com/mx-space/core/commit/fb87132329518306ea2222cc3aacc1b502d73600))
-
-
-### Features
-
-* **ai-translation:** translate Lexical Poll node ([#2709](https://github.com/mx-space/core/issues/2709)) ([9e5cdf6](https://github.com/mx-space/core/commit/9e5cdf691e318622da72e9db62d1987e3f10d511))
-* **enrichment:** origin guard + throttle on public endpoints ([40f7514](https://github.com/mx-space/core/commit/40f75142450fe8d21f8c4788f2136a3da2a765f8))
-
+* release: v12.3.4 ([de43f59](https://github.com/mx-space/core/commit/de43f59))
+* fix(activity): bind reader to socket at ws handshake ([c2a709c](https://github.com/mx-space/core/commit/c2a709c))
+* fix(enrichment): preserve open graph refresh url context ([fb87132](https://github.com/mx-space/core/commit/fb87132))
+* chore(build): add __DEV__/__TEST__ vite define macros ([1783b79](https://github.com/mx-space/core/commit/1783b79))
+* chore(deps): bump @haklex/rich-headless from 0.8.0 to 0.9.1 ([768e377](https://github.com/mx-space/core/commit/768e377))
+* feat(ai-translation): translate Lexical Poll node (#2709) ([9e5cdf6](https://github.com/mx-space/core/commit/9e5cdf6)), closes [#2709](https://github.com/mx-space/core/issues/2709)
+* feat(enrichment): origin guard + throttle on public endpoints ([40f7514](https://github.com/mx-space/core/commit/40f7514))
 
 ## <small>12.3.3 (2026-05-11)</small>
 
-* release: v12.3.3 ([fdb2f77](https://github.com/mx-space/core/commit/fdb2f77))
+* release: v12.3.3 ([663f9e6](https://github.com/mx-space/core/commit/663f9e6))
 * fix(auth): accept Better Auth keys without txo prefix in x-api-key ([a5be497](https://github.com/mx-space/core/commit/a5be497)), closes [#2705](https://github.com/mx-space/core/issues/2705)
 * fix(auth): add missing isCustomToken method and fix test deadlock ([176bb6f](https://github.com/mx-space/core/commit/176bb6f))
 * fix(auth): remove stale isCustomToken test case ([e476439](https://github.com/mx-space/core/commit/e476439))
