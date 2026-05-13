@@ -1,11 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { asc, eq, sql } from 'drizzle-orm'
+import { asc, desc, eq, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import {
+  enrichmentCache,
   type EnrichmentScreenshotPalette,
   enrichmentScreenshots,
 } from '~/database/schema'
+import type { PaginationResult } from '~/processors/database/base.repository'
 import { BaseRepository } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 
@@ -20,6 +22,25 @@ export interface EnrichmentScreenshotRow {
   createdAt: Date
   lastAccessedAt: Date
 }
+
+export interface EnrichmentScreenshotJoinedRow {
+  enrichmentId: string
+  provider: string
+  externalId: string
+  url: string
+  title: string
+  objectKey: string
+  bytes: number
+  width: number
+  height: number
+  blurhash: string | null
+  palette: EnrichmentScreenshotPalette | null
+  createdAt: Date
+  lastAccessedAt: Date
+}
+
+export type EnrichmentScreenshotListSort = 'last_accessed' | 'created' | 'bytes'
+export type EnrichmentScreenshotListOrder = 'asc' | 'desc'
 
 export interface EnrichmentScreenshotInsert {
   enrichmentId: string
@@ -98,6 +119,73 @@ export class EnrichmentScreenshotRepository extends BaseRepository {
       .update(enrichmentScreenshots)
       .set({ lastAccessedAt: new Date() })
       .where(eq(enrichmentScreenshots.enrichmentId, enrichmentId))
+  }
+
+  async listJoined(
+    page: number,
+    size: number,
+    sort: EnrichmentScreenshotListSort,
+    order: EnrichmentScreenshotListOrder,
+  ): Promise<PaginationResult<EnrichmentScreenshotJoinedRow>> {
+    const offset = (page - 1) * size
+    const sortColumn =
+      sort === 'created'
+        ? enrichmentScreenshots.createdAt
+        : sort === 'bytes'
+          ? enrichmentScreenshots.bytes
+          : enrichmentScreenshots.lastAccessedAt
+    const orderBy = order === 'asc' ? asc(sortColumn) : desc(sortColumn)
+
+    const rows = await this.db
+      .select({
+        enrichmentId: enrichmentScreenshots.enrichmentId,
+        provider: enrichmentCache.provider,
+        externalId: enrichmentCache.externalId,
+        url: enrichmentCache.url,
+        title: sql<string | null>`${enrichmentCache.normalized}->>'title'`.as(
+          'title',
+        ),
+        objectKey: enrichmentScreenshots.objectKey,
+        bytes: enrichmentScreenshots.bytes,
+        width: enrichmentScreenshots.width,
+        height: enrichmentScreenshots.height,
+        blurhash: enrichmentScreenshots.blurhash,
+        palette: enrichmentScreenshots.palette,
+        createdAt: enrichmentScreenshots.createdAt,
+        lastAccessedAt: enrichmentScreenshots.lastAccessedAt,
+      })
+      .from(enrichmentScreenshots)
+      .leftJoin(
+        enrichmentCache,
+        eq(enrichmentScreenshots.enrichmentId, enrichmentCache.id),
+      )
+      .orderBy(orderBy)
+      .limit(size)
+      .offset(offset)
+
+    const countResult = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(enrichmentScreenshots)
+    const total = Number(countResult[0]?.count ?? 0)
+
+    return {
+      data: rows.map((r) => ({
+        enrichmentId: r.enrichmentId,
+        provider: r.provider ?? '',
+        externalId: r.externalId ?? '',
+        url: r.url ?? '',
+        title: r.title ?? '',
+        objectKey: r.objectKey,
+        bytes: r.bytes,
+        width: r.width,
+        height: r.height,
+        blurhash: r.blurhash,
+        palette: r.palette,
+        createdAt: r.createdAt,
+        lastAccessedAt: r.lastAccessedAt,
+      })),
+      pagination: this.paginationOf(total, page, size),
+    }
   }
 
   async getQuotaUsage(): Promise<{ count: number; totalBytes: number }> {

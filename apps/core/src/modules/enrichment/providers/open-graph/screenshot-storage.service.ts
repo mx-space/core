@@ -139,6 +139,11 @@ export class ScreenshotStorageService {
     await this.repository.deleteByEnrichmentId(enrichmentId)
   }
 
+  async getPublicUrlFor(objectKey: string): Promise<string> {
+    const s3 = await this.getUploader()
+    return s3.getPublicUrl(objectKey)
+  }
+
   async touchAccess(enrichmentId: string): Promise<void> {
     const key = getRedisKey(RedisKeys.EnrichmentScreenshotTouch, enrichmentId)
     let acquired: boolean

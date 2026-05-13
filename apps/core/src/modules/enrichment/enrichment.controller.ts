@@ -1,12 +1,16 @@
 import {
+  Body,
+  ConflictException,
   Delete,
   Get,
   HttpCode,
+  NotFoundException,
   Param,
   Post,
   Query,
   Req,
   Res,
+  UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
@@ -15,21 +19,36 @@ import type { FastifyRequest } from 'fastify'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
+import { ConfigsService } from '~/modules/configs/configs.service'
 
-import { AdminListQueryDto, ResolveQueryDto } from './enrichment.schema'
+import { EnrichmentRepository } from './enrichment.repository'
+import {
+  AdminListQueryDto,
+  AdminProbeBodyDto,
+  AdminScreenshotListQueryDto,
+  ResolveQueryDto,
+} from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
 import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
 import { EnrichmentOriginGuard } from './enrichment-origin.guard'
+import { EnrichmentScreenshotRepository } from './enrichment-screenshot.repository'
 import { ScreenshotStorageService } from './providers/open-graph/screenshot-storage.service'
 
 const PUBLIC_RESOLVE_THROTTLE = { default: { limit: 30, ttl: 60_000 } }
+const ADMIN_PROBE_THROTTLE = { default: { limit: 30, ttl: 60_000 } }
+
+const DEFAULT_SCREENSHOT_MAX_ITEMS = 500
+const DEFAULT_SCREENSHOT_MAX_TOTAL_BYTES = 100 * 1024 * 1024
 
 @ApiController('enrichment')
 export class EnrichmentController {
   constructor(
     private readonly enrichmentService: EnrichmentService,
     private readonly screenshotStorage: ScreenshotStorageService,
+    private readonly enrichmentRepository: EnrichmentRepository,
+    private readonly screenshotRepository: EnrichmentScreenshotRepository,
+    private readonly configsService: ConfigsService,
   ) {}
 
   @Get('resolve')
@@ -131,5 +150,123 @@ export class EnrichmentController {
   @Auth()
   async providers(): Promise<ProviderMeta[]> {
     return this.enrichmentService.getProviders()
+  }
+
+  @Get('admin/by-id/:id')
+  @Auth()
+  async byId(@Param('id') id: string) {
+    const row = await this.enrichmentRepository.findById(id)
+    if (!row) throw new NotFoundException(`Enrichment ${id} not found`)
+    const screenshot = await this.screenshotRepository.findByEnrichmentId(id)
+    return { ...row, screenshot }
+  }
+
+  @Get('admin/screenshots/quota')
+  @Auth()
+  async screenshotQuota() {
+    const used = await this.screenshotRepository.getQuotaUsage()
+    const config = await this.configsService.get('thirdPartyServiceIntegration')
+    const openGraph = config?.openGraph
+    const screenshot = openGraph?.screenshot
+    return {
+      used,
+      cap: {
+        maxItems: Number(screenshot?.maxItems ?? DEFAULT_SCREENSHOT_MAX_ITEMS),
+        maxTotalBytes: Number(
+          screenshot?.maxTotalBytes ?? DEFAULT_SCREENSHOT_MAX_TOTAL_BYTES,
+        ),
+      },
+      enabled: screenshot?.enabled === true,
+      fetchMode: openGraph?.fetchMode ?? 'fetch',
+    }
+  }
+
+  @Get('admin/screenshots')
+  @Auth()
+  async listScreenshots(@Query() query: AdminScreenshotListQueryDto) {
+    const result = await this.screenshotRepository.listJoined(
+      query.page,
+      query.size,
+      query.sort,
+      query.order,
+    )
+    const data = await Promise.all(
+      result.data.map(async (row) => ({
+        ...row,
+        publicUrl: await this.resolvePublicUrl(row.objectKey),
+      })),
+    )
+    return { data, pagination: result.pagination }
+  }
+
+  @Delete('admin/screenshots/:enrichmentId')
+  @Auth()
+  @HttpCode(204)
+  async deleteScreenshot(
+    @Param('enrichmentId') enrichmentId: string,
+  ): Promise<void> {
+    await this.screenshotStorage.delete(enrichmentId)
+    await this.enrichmentRepository.clearScreenshot(enrichmentId)
+  }
+
+  @Post('admin/screenshots/:enrichmentId/recapture')
+  @Auth()
+  @HttpCode(200)
+  async recaptureScreenshot(
+    @Param('enrichmentId') enrichmentId: string,
+  ): Promise<EnrichmentResult['screenshot']> {
+    const row = await this.enrichmentRepository.findById(enrichmentId)
+    if (!row)
+      throw new NotFoundException(`Enrichment ${enrichmentId} not found`)
+
+    const config = await this.configsService.get('thirdPartyServiceIntegration')
+    const openGraph = config?.openGraph
+    if (openGraph?.fetchMode !== 'browser') {
+      throw new ConflictException({
+        code: 'browser_mode_required',
+        message: 'OpenGraph fetchMode must be `browser` to recapture',
+      })
+    }
+    if (openGraph.screenshot?.enabled !== true) {
+      throw new ConflictException({
+        code: 'screenshot_disabled',
+        message: 'openGraph.screenshot.enabled is false',
+      })
+    }
+
+    await this.enrichmentService.refresh(
+      row.provider,
+      row.externalId,
+      row.locale,
+      {
+        url: row.url,
+      },
+    )
+
+    const fresh = await this.enrichmentRepository.findById(enrichmentId)
+    const screenshot = fresh?.normalized.screenshot
+    if (!screenshot) {
+      throw new UnprocessableEntityException({
+        code: 'capture_failed',
+        message: 'Screenshot was not produced by the refresh',
+      })
+    }
+    return screenshot
+  }
+
+  @Post('admin/probe')
+  @Auth()
+  @Throttle(ADMIN_PROBE_THROTTLE)
+  @HttpCode(200)
+  async probe(@Body() body: AdminProbeBodyDto) {
+    return this.enrichmentService.probe(body.url, body.useCache === true)
+  }
+
+  private async resolvePublicUrl(objectKey: string): Promise<string> {
+    try {
+      return await this.screenshotStorage.getPublicUrlFor(objectKey)
+    } catch {
+      return ''
+    }
   }
 }

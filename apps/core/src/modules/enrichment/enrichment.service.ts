@@ -325,6 +325,168 @@ export class EnrichmentService implements OnModuleInit {
     return this.repository.listPaginated(page, size, opts)
   }
 
+  async probe(
+    url: string,
+    useCache: boolean,
+  ): Promise<{
+    matched: { provider: string; externalId: string } | null
+    result: EnrichmentResult | null
+    cached: boolean
+    error?: {
+      code:
+        | 'unknown_provider'
+        | 'token_missing'
+        | 'provider_disabled'
+        | 'fetch_failed'
+      message: string
+    }
+  }> {
+    let parsedUrl: URL
+    try {
+      parsedUrl = new URL(url)
+    } catch {
+      return {
+        matched: null,
+        result: null,
+        cached: false,
+        error: { code: 'unknown_provider', message: `Invalid URL: ${url}` },
+      }
+    }
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return {
+        matched: null,
+        result: null,
+        cached: false,
+        error: {
+          code: 'unknown_provider',
+          message: `Unsupported protocol: ${parsedUrl.protocol}`,
+        },
+      }
+    }
+
+    if (useCache) {
+      try {
+        const { result } = await this.resolve(url)
+        return {
+          matched: this.matchUrlToRef(url),
+          result,
+          cached: true,
+        }
+      } catch (error) {
+        if (error instanceof ProviderDisabledError) {
+          return {
+            matched: this.matchUrlToRef(url),
+            result: null,
+            cached: false,
+            error: {
+              code:
+                error.providerName === 'unknown'
+                  ? 'unknown_provider'
+                  : 'provider_disabled',
+              message: error.message,
+            },
+          }
+        }
+        if (error instanceof TokenMissingError) {
+          return {
+            matched: this.matchUrlToRef(url),
+            result: null,
+            cached: false,
+            error: { code: 'token_missing', message: error.message },
+          }
+        }
+        return {
+          matched: this.matchUrlToRef(url),
+          result: null,
+          cached: false,
+          error: {
+            code: 'fetch_failed',
+            message: (error as Error).message,
+          },
+        }
+      }
+    }
+
+    const matched = this.providerRegistry.match(parsedUrl)
+    if (!matched) {
+      return {
+        matched: null,
+        result: null,
+        cached: false,
+        error: {
+          code: 'unknown_provider',
+          message: `No provider matched URL: ${url}`,
+        },
+      }
+    }
+    const { provider, match } = matched
+    const ref = { provider: provider.name, externalId: match.id }
+
+    const config = await this.configsService.get('thirdPartyServiceIntegration')
+    if (!this.isProviderEnabled(provider, config)) {
+      return {
+        matched: ref,
+        result: null,
+        cached: false,
+        error: {
+          code: 'provider_disabled',
+          message: `Provider disabled: ${provider.name}`,
+        },
+      }
+    }
+    if (
+      provider.requiredConfigKeys?.length &&
+      !this.hasRequiredConfig(provider, config)
+    ) {
+      return {
+        matched: ref,
+        result: null,
+        cached: false,
+        error: {
+          code: 'token_missing',
+          message: `Token missing for provider: ${provider.name}`,
+        },
+      }
+    }
+
+    try {
+      const result = await provider.fetch(match.id, undefined, {
+        url: match.fullUrl,
+      })
+      result.fetchedAt = new Date().toISOString()
+      result.category = provider.category
+      if (match.subtype) result.subtype = match.subtype
+      await this.enrichWithImageMeta(result)
+      return { matched: ref, result, cached: false }
+    } catch (error) {
+      if (error instanceof ProviderDisabledError) {
+        return {
+          matched: ref,
+          result: null,
+          cached: false,
+          error: { code: 'provider_disabled', message: error.message },
+        }
+      }
+      if (error instanceof TokenMissingError) {
+        return {
+          matched: ref,
+          result: null,
+          cached: false,
+          error: { code: 'token_missing', message: error.message },
+        }
+      }
+      return {
+        matched: ref,
+        result: null,
+        cached: false,
+        error: {
+          code: 'fetch_failed',
+          message: (error as Error).message,
+        },
+      }
+    }
+  }
+
   /**
    * Bulk (provider, externalId) → cached EnrichmentResult lookup. Core
    * primitive used by both URL-driven hydration (post/note/page link cards)

@@ -24,6 +24,15 @@ export class EnrichmentRepository extends BaseRepository {
     super(db)
   }
 
+  async findById(id: string): Promise<EnrichmentRow | null> {
+    const rows = await this.db
+      .select()
+      .from(enrichmentCache)
+      .where(eq(enrichmentCache.id, id))
+      .limit(1)
+    return rows[0] ? this.mapRow(rows[0]) : null
+  }
+
   async findByProviderAndExternalId(
     provider: string,
     externalId: string,

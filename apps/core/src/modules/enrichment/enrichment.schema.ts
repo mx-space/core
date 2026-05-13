@@ -20,3 +20,19 @@ export const AdminListQuerySchema = z.object({
     .transform((v) => (v === undefined ? undefined : v)),
 })
 export class AdminListQueryDto extends createZodDto(AdminListQuerySchema) {}
+
+export const AdminScreenshotListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().min(1).max(100).default(20),
+  sort: z.enum(['last_accessed', 'created', 'bytes']).default('last_accessed'),
+  order: z.enum(['asc', 'desc']).default('desc'),
+})
+export class AdminScreenshotListQueryDto extends createZodDto(
+  AdminScreenshotListQuerySchema,
+) {}
+
+export const AdminProbeBodySchema = z.object({
+  url: z.string().min(1),
+  useCache: z.boolean().optional().default(false),
+})
+export class AdminProbeBodyDto extends createZodDto(AdminProbeBodySchema) {}
