@@ -3,7 +3,7 @@
 - Status: Draft (awaiting approval)
 - Author: Innei
 - Date: 2026-05-14
-- Scope: v1 (content / config / maintenance / backup). v2 items are listed in roadmap only.
+- Scope: v1 — auth, content (post / note / page / category / topic), config. v2 (AI) and v3 (maintenance / backup / export-import) are listed in roadmap only.
 
 ## 1. Goals & Non-Goals
 
@@ -12,15 +12,18 @@
 - Ship a single-user, self-host-oriented CLI that lets the site owner — or an AI agent acting on their behalf — manage a deployed mx-core instance from anywhere.
 - Authenticate via OIDC Device Authorization Grant (RFC 8628) against the mx-core server's Better Auth.
 - Provide first-class authoring ergonomics centred on Lexical content, using `@haklex/rich-litexml` as the editing format so humans and AI agents both author in LiteXML XML instead of raw Lexical JSON.
-- Cover four command domains in v1: content (post / note / page / category / topic), configuration (option), maintenance (cache / search / data-jobs / health), and backup (dump / restore / export / import).
+- Cover three command domains in v1: auth (device login / logout / whoami / status), content (post / note / page / category / topic), configuration (option).
 - Be scriptable: every field exposed as a flag, every output renderable as `--json`, exit codes meaningful.
 
 ### Non-Goals (v1)
 
-- Multi-instance profiles (`mxs use <site>`) — single API URL only, deferred to v2.
+- Multi-instance profiles (`mxs use <site>`) — single API URL only, deferred to v3.
 - AI commands (`mxs ai summary regen`, translation, insights) — deferred to v2 roadmap.
 - Comment moderation (`mxs comment ...`) — v2.
-- Observability (`mxs logs tail`, `mxs metrics`) — v2.
+- Maintenance (cache / search / data-jobs / health) — v3.
+- Backup (dump / restore / download) — v3.
+- Export / import of content as files — v3.
+- Observability (`mxs logs tail`, `mxs metrics`) — v3.
 - Markdown → Lexical conversion. Markdown posts stay markdown; LiteXML round-trip only applies when the server's `contentFormat = lexical`.
 - OS keychain integration; v1 stores credentials in `~/.config/mxs/credentials.json` (mode 0600) with env override.
 
@@ -56,12 +59,6 @@
 │    category/{list,get,create,update,delete}.ts           │
 │    topic/{list,get,create,update,delete}.ts              │
 │    config/{list,get,set,edit}.ts                         │
-│    cache/{clear,stats}.ts                                │
-│    search/{reindex,status}.ts                            │
-│    job/{list,run}.ts                                     │
-│    health.ts                                             │
-│    backup/{create,list,download,restore}.ts              │
-│    export.ts, import.ts                                  │
 │         │                                                │
 │  core/                                                   │
 │    api-client.ts     — wraps @mx-space/api-client        │
@@ -270,36 +267,6 @@ mxs config get <key>                  # read one
 mxs config set <key> <value> [--type=json|string|number|bool]
 mxs config edit                       # pull full options as YAML, $EDITOR, diff + push
 ```
-
-### 4.6 Maintenance
-
-```
-mxs cache clear [--scope=all|view|post|note|page|aggregate]
-mxs cache stats
-mxs search reindex                    # full rebuild
-mxs search status
-mxs job list                          # list data-jobs (apps/core maintenance/jobs)
-mxs job run <name>
-mxs health                            # extended /health
-```
-
-### 4.7 Backup
-
-```
-mxs backup create [--output ./backup.tar.gz]
-mxs backup list
-mxs backup download <id> [--output <path>]
-mxs backup restore <id-or-file> [--force]
-```
-
-### 4.8 Export / Import (content only)
-
-```
-mxs export <dir> [--type=post,note,page] [--format=markdown|litexml]
-mxs import <dir> [--type=post] [--update-existing]
-```
-
-Each item exported as `<dir>/<type>/<slug>.xml` (or `.md`). Import reads filenames as slug hint; envelope `<meta>` takes precedence.
 
 ## 5. Content Conversion Flow
 
@@ -685,15 +652,33 @@ Documented in `packages/cli/test/manual.md`:
 - `docs/CODEMAPS/cli.md` (if codemap discipline applies): generated map of `packages/cli/src/`.
 - Update `apps/core/readme.md` with new auth header rule (§10).
 
-## 13. v2 Roadmap (declared, not built)
+## 13. Roadmap (declared, not built)
 
-To be captured in `packages/cli/ROADMAP.md`:
+To be captured in `packages/cli/ROADMAP.md`.
+
+### v2
 
 - **AI module commands**: `mxs ai summary regen <id>`, `mxs ai translate <id> --to ja`, `mxs ai insights refresh`, `mxs ai tokens`. Depends on existing `apps/core/src/modules/ai`.
-- **Multi-profile**: `mxs use <name>`, `~/.config/mxs/profiles.json`, profile-scoped credentials.
-- **Observability**: `mxs logs tail`, `mxs metrics`.
 - **Comment moderation**: `mxs comment list / approve / reject / delete`.
 - **Markdown ↔ Lexical bridge**: contingent on haklex adding markdown → Lexical reader.
+
+### v3
+
+- **Maintenance**:
+  - `mxs cache clear [--scope=all|view|post|note|page|aggregate]`, `mxs cache stats`
+  - `mxs search reindex`, `mxs search status`
+  - `mxs job list`, `mxs job run <name>` (data-jobs from `apps/core/src/maintenance/jobs`)
+  - `mxs health`
+- **Backup**:
+  - `mxs backup create [--output <path>]`
+  - `mxs backup list`
+  - `mxs backup download <id> [--output <path>]`
+  - `mxs backup restore <id-or-file> [--force]`
+- **Export / import (content)**:
+  - `mxs export <dir> [--type=post,note,page] [--format=markdown|litexml]`
+  - `mxs import <dir> [--type=post] [--update-existing]`
+- **Multi-profile**: `mxs use <name>`, `~/.config/mxs/profiles.json`, profile-scoped credentials.
+- **Observability**: `mxs logs tail`, `mxs metrics`.
 - **OS keychain storage**: keytar / libsecret integration once monorepo Node version stabilises.
 - **`mxs init`**: bootstrap a fresh mx-core deployment via compose.
 
