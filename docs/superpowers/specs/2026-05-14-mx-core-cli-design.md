@@ -102,7 +102,40 @@ Applicable to every command unless noted.
 
 Environment variables: `MXS_API_URL`, `MXS_TOKEN`, `MXS_DEBUG=1`.
 
-Resolution precedence: flag > env > `~/.config/mxs/` > prompt / error.
+Resolution precedence: flag > env > `~/.config/mxs/` > onboarding prompt / error.
+
+### 4.1.1 Onboarding (first-run / missing api_url)
+
+When any command resolves the API URL and finds none from flag, env, or `~/.config/mxs/config.json`, the CLI enters an inline onboarding prompt:
+
+```
+$ mxs post list
+👋 mx-space CLI — first run
+
+? API URL of your mx-core server: https://blog.example.com
+🔍 probing… API v2 (prefix /api/v2)
+✅ saved to ~/.config/mxs/config.json
+
+You are not logged in yet. Run `mxs auth login` to authenticate.
+```
+
+Rules:
+
+- The prompt only runs when stdin is a TTY. In non-TTY contexts (CI, piped input, `--json` mode in scripts), the CLI exits with code 5 and the JSON error:
+
+  ```json
+  {
+    "ok": false,
+    "code": "config.missing.api_url",
+    "message": "API URL is not configured",
+    "hint": "set MXS_API_URL or pass --api-url <url>, or run `mxs auth login` in an interactive shell"
+  }
+  ```
+
+- The URL is normalised: trailing slash stripped, scheme required (`https://` assumed if absent and host is not `localhost`).
+- After capture, the CLI immediately runs the prefix-detection probe (§8.3) and persists `api_url` / `api_base` / `auth_base` / `api_version` to `config.json`.
+- If the user then needs auth, they are reminded to run `mxs auth login`; the original command is **not** auto-continued (we don't surprise the user by running their command against an unauthenticated server in onboarding).
+- `mxs auth login` itself follows the same onboarding when missing api_url — it asks once, persists, then proceeds with the device flow.
 
 ### 4.2 Auth
 
@@ -505,7 +538,7 @@ The route resolves to:
 
 ```
 $ mxs auth login
-? API URL: https://blog.example.com
+? API URL: https://blog.example.com          # only asked if not yet configured (§4.1.1)
 🔍 probing server… API v2 (prefix /api/v2)
 🔐 requesting device code…
 📱 visit: https://blog.example.com/api/v2/device?user_code=ABCD-EFGH
@@ -514,6 +547,8 @@ $ mxs auth login
 ✅ authorized as innei <innei@example.com>
 🗝  token saved to ~/.config/mxs/credentials.json
 ```
+
+When `MXS_API_URL` is set or `config.json` already has `api_url`, the URL prompt is skipped.
 
 CLI uses `better-auth/client` + `deviceAuthorizationClient()`:
 
