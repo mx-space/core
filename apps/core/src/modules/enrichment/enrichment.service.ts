@@ -13,7 +13,11 @@ import { scheduleManager } from '~/utils/schedule.util'
 
 import { EnrichmentRepository } from './enrichment.repository'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
-import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
+import {
+  ChallengeBlockedError,
+  ProviderDisabledError,
+  TokenMissingError,
+} from './enrichment.types'
 import { BrowserFetchService } from './providers/open-graph/browser-fetch.service'
 import { ScreenshotPipelineService } from './providers/open-graph/screenshot-pipeline.service'
 import { ScreenshotStorageService } from './providers/open-graph/screenshot-storage.service'
@@ -99,7 +103,13 @@ export class EnrichmentService implements OnModuleInit {
         } catch (error) {
           // Record per-row failure so backoff kicks in on subsequent SWR
           // resolves; re-throw so the task queue marks the task failed.
-          this.logger.warn(
+          // Challenge pages are expected anti-bot signals, not infra faults —
+          // log at info to keep on-call dashboards clean.
+          const logFn =
+            error instanceof ChallengeBlockedError
+              ? this.logger.log.bind(this.logger)
+              : this.logger.warn.bind(this.logger)
+          logFn(
             `Enrichment refresh task failed for ${payload.provider}:${payload.externalId} (locale=${locale || '∅'}): ${error.message}`,
           )
           try {
@@ -203,7 +213,11 @@ export class EnrichmentService implements OnModuleInit {
       await this.setToRedis(url, cacheLocale, result)
       return { result }
     } catch (error) {
-      this.logger.warn(
+      const logFn =
+        error instanceof ChallengeBlockedError
+          ? this.logger.log.bind(this.logger)
+          : this.logger.warn.bind(this.logger)
+      logFn(
         `Provider ${provider.name} fetch failed for ${match.id} (locale=${cacheLocale || '∅'}): ${error.message}`,
       )
       throw error

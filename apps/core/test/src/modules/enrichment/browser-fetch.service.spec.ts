@@ -4,10 +4,11 @@ import { join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { EnrichmentResult } from '~/modules/enrichment/enrichment.types'
+import {
+  ChallengeBlockedError,
+  type EnrichmentResult,
+} from '~/modules/enrichment/enrichment.types'
 
-// Hoisted so the vi.mock factory below can see the same mock instance the
-// test bodies reach via `execFileMock`.
 const { execFileMock } = vi.hoisted(() => ({
   execFileMock: vi.fn(),
 }))
@@ -23,13 +24,6 @@ vi.mock('node:child_process', async () => {
   }
 })
 
-// SSRF guard's `assertHostnameSafe` runs a real DNS lookup against the URL
-// hostname. The CI / dev machine may resolve `example.com` through a captive
-// portal or CGNAT-style 198.18.x address, which `isPrivateIp` correctly
-// rejects. We mock the DNS module to a stable public IP so the guard accepts
-// the hostnames used by these tests, and so we don't hit network in unit
-// tests. The `file://` protocol test goes through the protocol check, which
-// runs before DNS, so the mock does not need to special-case it.
 vi.mock('node:dns/promises', async () => {
   const actual =
     await vi.importActual<typeof import('node:dns/promises')>(
@@ -41,13 +35,12 @@ vi.mock('node:dns/promises', async () => {
   }
 })
 
-// Import service AFTER the vi.mock setup so `promisify(execFile)` resolves to
-// the mocked execFile. The mocked fn lacks `util.promisify.custom`, so
-// `promisify` wraps it via the standard last-callback contract.
 const { BrowserFetchService } =
   await import('~/modules/enrichment/providers/open-graph/browser-fetch.service')
 const { BrowserSessionPool } =
   await import('~/modules/enrichment/providers/open-graph/browser-session-pool')
+const { OG_ACCEPT_LANGUAGE, OG_LAUNCH_ARGS, OG_NETWORKIDLE_MS, OG_USER_AGENT } =
+  await import('~/modules/enrichment/providers/open-graph/og-browser-constants')
 
 interface ExecFileCall {
   args: string[]
@@ -87,56 +80,98 @@ function setExecFileBehavior(
   })
 }
 
-function parseBatchArgs(args: string[]): {
+interface ParsedCall {
   sessionName: string
   command: string
   subCommands: string[]
   screenshotDir?: string
   flagValue: (flag: string) => string | undefined
-} {
-  // [--session, <name>, <command>, ...rest]
-  const sessionName = args[1]
-  const command = args[2]
-  const rest = args.slice(3)
+}
+
+function parseBatchArgs(args: string[]): ParsedCall {
+  const sessionIdx = args.indexOf('--session')
+  const sessionName = sessionIdx === -1 ? '' : args[sessionIdx + 1]
+  let command = ''
+  for (const a of args) {
+    if (
+      a === 'batch' ||
+      a === 'set' ||
+      a === 'screenshot' ||
+      a === 'network' ||
+      a === 'close' ||
+      a === 'eval'
+    ) {
+      command = a
+      break
+    }
+  }
+  const cmdIdx = command ? args.indexOf(command) : -1
+  const rest = cmdIdx === -1 ? [] : args.slice(cmdIdx + 1)
   const subCommands: string[] = []
-  let screenshotDir: string | undefined
-  for (let i = 0; i < rest.length; i++) {
-    const a = rest[i]
+  for (const a of rest) {
     if (a.startsWith('--')) continue
     subCommands.push(a)
-    const match = /--screenshot-dir\s+(\S+)/.exec(a)
-    if (match) screenshotDir = match[1]
   }
   const flagValue = (flag: string): string | undefined => {
-    const idx = rest.indexOf(flag)
-    if (idx === -1 || idx + 1 >= rest.length) return undefined
-    return rest[idx + 1]
+    const idx = args.indexOf(flag)
+    if (idx === -1 || idx + 1 >= args.length) return undefined
+    return args[idx + 1]
   }
-  if (!screenshotDir) screenshotDir = flagValue('--screenshot-dir')
+  const screenshotDir = flagValue('--screenshot-dir')
   return { sessionName, command, subCommands, screenshotDir, flagValue }
 }
 
-function batchValue(value: string, origin = value): string {
+function navBatchValue(href: string, html: string, title = ''): string {
   return JSON.stringify([
-    { command: ['open', origin], result: { url: origin }, success: true },
-    { command: ['wait', '1500'], result: { ms: 1500 }, success: true },
+    { command: ['open', href], result: { url: href }, success: true },
+    {
+      command: ['wait', '--load', 'networkidle'],
+      result: {},
+      success: true,
+    },
     {
       command: ['eval', '-b', '...'],
-      result: { origin, result: value },
+      result: {
+        origin: href,
+        result: JSON.stringify({ href, html, title }),
+      },
       success: true,
     },
   ])
 }
 
-function pageValue(html: string, href = 'https://example.com/'): string {
-  return batchValue(JSON.stringify({ href, html }), href)
+function reloadBatchValue(href: string, html: string, title = ''): string {
+  return JSON.stringify([
+    { command: ['reload'], result: {}, success: true },
+    {
+      command: ['wait', '--load', 'networkidle'],
+      result: {},
+      success: true,
+    },
+    {
+      command: ['eval', '-b', '...'],
+      result: {
+        origin: href,
+        result: JSON.stringify({ href, html, title }),
+      },
+      success: true,
+    },
+  ])
 }
 
-function isNavigationBatch(parsed: ReturnType<typeof parseBatchArgs>): boolean {
+function isNavigationBatch(parsed: ParsedCall): boolean {
   return (
     parsed.command === 'batch' &&
     parsed.subCommands.some((c) => c.startsWith('open '))
   )
+}
+
+function isReloadBatch(parsed: ParsedCall): boolean {
+  return parsed.command === 'batch' && parsed.subCommands.includes('reload')
+}
+
+function isNetworkRequests(parsed: ParsedCall): boolean {
+  return parsed.command === 'network'
 }
 
 function buildService() {
@@ -160,13 +195,16 @@ describe('BrowserFetchService', () => {
       setExecFileBehavior((call) => {
         calls.push(call)
         const parsed = parseBatchArgs(call.args)
-        if (parsed.command === 'batch') {
-          return isNavigationBatch(parsed)
-            ? { stdout: batchValue('https://example.com/') }
-            : {
-                stdout: pageValue('<html><head><title>x</title></head></html>'),
-              }
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              '<html><head><title>x</title></head></html>',
+              'x',
+            ),
+          }
         }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
         return { stdout: '' }
       })
 
@@ -183,32 +221,62 @@ describe('BrowserFetchService', () => {
       const batches = calls.filter(
         (c) => parseBatchArgs(c.args).command === 'batch',
       )
-      expect(batches).toHaveLength(2)
+      expect(batches).toHaveLength(1)
       expect(parseBatchArgs(batches[0].args).sessionName).toMatch(
         /^og-pool-\d+$/,
       )
       expect(
-        batches.some((c) =>
-          parseBatchArgs(c.args).subCommands.some((cmd) =>
-            cmd.startsWith('open '),
-          ),
-        ),
-      ).toBe(true)
-      expect(
-        batches.every((c) =>
-          parseBatchArgs(c.args).subCommands.some((cmd) =>
-            cmd.startsWith('eval '),
-          ),
-        ),
-      )
-      // No screenshot step in fetchHtml.
-      expect(
-        batches.some((c) =>
+        calls.some((c) =>
           parseBatchArgs(c.args).subCommands.some((cmd) =>
             cmd.startsWith('screenshot'),
           ),
         ),
       ).toBe(false)
+
+      await pool.shutdown()
+    })
+
+    it('injects UA, Accept-Language, and stealth args on every command', async () => {
+      const calls: ExecFileCall[] = []
+      setExecFileBehavior((call) => {
+        calls.push(call)
+        const parsed = parseBatchArgs(call.args)
+        if (isNavigationBatch(parsed)) {
+          return { stdout: navBatchValue('https://example.com/', '<html/>') }
+        }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
+        if (parsed.command === 'close') return { stdout: '' }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      await service.fetchHtml('https://example.com', {
+        timeoutMs: 5_000,
+        maxBodyBytes: 1024,
+        executable: '/usr/local/bin/agent-browser-fake',
+      })
+
+      const navCall = calls.find((c) =>
+        isNavigationBatch(parseBatchArgs(c.args)),
+      )!
+      expect(navCall.args).toContain('--user-agent')
+      expect(navCall.args[navCall.args.indexOf('--user-agent') + 1]).toBe(
+        OG_USER_AGENT,
+      )
+      expect(navCall.args).toContain('--headers')
+      const headers = JSON.parse(
+        navCall.args[navCall.args.indexOf('--headers') + 1],
+      )
+      expect(headers['Accept-Language']).toBe(OG_ACCEPT_LANGUAGE)
+      expect(navCall.args).toContain('--args')
+      expect(navCall.args[navCall.args.indexOf('--args') + 1]).toBe(
+        OG_LAUNCH_ARGS,
+      )
+      const navBatchCommands = parseBatchArgs(navCall.args).subCommands
+      const waitSub = navBatchCommands.find((c) => c.startsWith('wait '))
+      expect(waitSub).toBe(
+        `wait --load networkidle --timeout ${OG_NETWORKIDLE_MS}`,
+      )
 
       await pool.shutdown()
     })
@@ -221,11 +289,15 @@ describe('BrowserFetchService', () => {
 
       setExecFileBehavior(async (call) => {
         const parsed = parseBatchArgs(call.args)
-        if (parsed.command === 'batch') {
-          return isNavigationBatch(parsed)
-            ? { stdout: batchValue('https://example.com/') }
-            : { stdout: pageValue('<html><body>ok</body></html>') }
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              '<html><body>ok</body></html>',
+            ),
+          }
         }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
         if (parsed.command === 'screenshot') {
           const dir = parsed.screenshotDir!
           seenScreenshotDirs.push(dir)
@@ -246,22 +318,25 @@ describe('BrowserFetchService', () => {
       expect(res.screenshotBytes).toBeInstanceOf(Buffer)
       expect(res.screenshotBytes!.equals(fakeJpeg)).toBe(true)
 
-      // Tempdir cleanup: it must have been removed after the call.
       expect(seenScreenshotDirs).toHaveLength(1)
       expect(existsSync(seenScreenshotDirs[0])).toBe(false)
 
       await pool.shutdown()
     })
 
-    it('returns html with screenshotBytes undefined when screenshot step errors (and cleans tempdir)', async () => {
+    it('returns html with screenshotBytes undefined when screenshot step errors', async () => {
       const seenScreenshotDirs: string[] = []
       setExecFileBehavior((call) => {
         const parsed = parseBatchArgs(call.args)
-        if (parsed.command === 'batch') {
-          return isNavigationBatch(parsed)
-            ? { stdout: batchValue('https://example.com/') }
-            : { stdout: pageValue('<html><body>still ok</body></html>') }
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              '<html><body>still ok</body></html>',
+            ),
+          }
         }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
         if (parsed.command === 'screenshot') {
           if (parsed.screenshotDir)
             seenScreenshotDirs.push(parsed.screenshotDir)
@@ -290,11 +365,15 @@ describe('BrowserFetchService', () => {
     it('returns screenshotBytes undefined when no image file is written', async () => {
       setExecFileBehavior((call) => {
         const parsed = parseBatchArgs(call.args)
-        if (parsed.command === 'batch') {
-          return isNavigationBatch(parsed)
-            ? { stdout: batchValue('https://example.com/') }
-            : { stdout: pageValue('<html><body>only html</body></html>') }
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              '<html><body>only html</body></html>',
+            ),
+          }
         }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
         if (parsed.command === 'screenshot') return { stdout: '' }
         return { stdout: '' }
       })
@@ -317,11 +396,10 @@ describe('BrowserFetchService', () => {
       setExecFileBehavior(async (call) => {
         const parsed = parseBatchArgs(call.args)
         seenCommands.push({ command: parsed.command, args: call.args })
-        if (parsed.command === 'batch') {
-          return isNavigationBatch(parsed)
-            ? { stdout: batchValue('https://example.com/') }
-            : { stdout: pageValue('<html></html>') }
+        if (isNavigationBatch(parsed)) {
+          return { stdout: navBatchValue('https://example.com/', '<html/>') }
         }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
         if (parsed.command === 'screenshot') {
           const dir = parsed.screenshotDir!
           await writeFile(join(dir, 'shot.jpeg'), Buffer.from([0xff, 0xd8]))
@@ -339,7 +417,9 @@ describe('BrowserFetchService', () => {
 
       const setCall = seenCommands.find((c) => c.command === 'set')
       expect(setCall).toBeDefined()
-      expect(setCall!.args.slice(2)).toEqual(['set', 'viewport', '1280', '720'])
+      const setArgs = setCall!.args
+      const setIdx = setArgs.indexOf('set')
+      expect(setArgs.slice(setIdx)).toEqual(['set', 'viewport', '1280', '720'])
 
       const shotCall = seenCommands.find((c) => c.command === 'screenshot')
       expect(shotCall).toBeDefined()
@@ -359,16 +439,15 @@ describe('BrowserFetchService', () => {
       const finalUrl = 'https://redirected.example/path?q=1'
       setExecFileBehavior((call) => {
         const parsed = parseBatchArgs(call.args)
-        if (parsed.command === 'batch') {
-          return isNavigationBatch(parsed)
-            ? { stdout: batchValue(finalUrl) }
-            : {
-                stdout: pageValue(
-                  '<html><body>redirected</body></html>',
-                  finalUrl,
-                ),
-              }
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              finalUrl,
+              '<html><body>redirected</body></html>',
+            ),
+          }
         }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
         if (parsed.command === 'screenshot') return { stdout: '' }
         return { stdout: '' }
       })
@@ -391,16 +470,15 @@ describe('BrowserFetchService', () => {
       setExecFileBehavior((call) => {
         const parsed = parseBatchArgs(call.args)
         seenCommands.push(parsed.command)
-        if (parsed.command === 'batch') {
-          return isNavigationBatch(parsed)
-            ? { stdout: batchValue('file:///etc/passwd') }
-            : {
-                stdout: pageValue(
-                  '<html>should not read</html>',
-                  'file:///etc/passwd',
-                ),
-              }
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'file:///etc/passwd',
+              '<html>should not read</html>',
+            ),
+          }
         }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
         return { stdout: '' }
       })
 
@@ -413,9 +491,6 @@ describe('BrowserFetchService', () => {
         }),
       ).rejects.toThrow(/Disallowed protocol/)
 
-      expect(
-        seenCommands.filter((command) => command === 'batch'),
-      ).toHaveLength(1)
       expect(seenCommands).not.toContain('screenshot')
       await pool.shutdown()
     })
@@ -425,11 +500,15 @@ describe('BrowserFetchService', () => {
       setExecFileBehavior((call) => {
         const parsed = parseBatchArgs(call.args)
         seenCommands.push(parsed.command)
-        if (parsed.command === 'batch') {
-          return isNavigationBatch(parsed)
-            ? { stdout: batchValue('https://example.com/') }
-            : { stdout: pageValue('<html><body>metadata only</body></html>') }
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              '<html><body>metadata only</body></html>',
+            ),
+          }
         }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
         return { stdout: '' }
       })
 
@@ -443,7 +522,254 @@ describe('BrowserFetchService', () => {
 
       expect(res.html.body).toContain('metadata only')
       expect(res.screenshotBytes).toBeUndefined()
-      expect(seenCommands).toEqual(['batch', 'batch'])
+      expect(seenCommands.filter((c) => c === 'screenshot')).toHaveLength(0)
+      expect(seenCommands.filter((c) => c === 'set')).toHaveLength(0)
+      await pool.shutdown()
+    })
+  })
+
+  describe('HTTP status throws', () => {
+    it('throws when document request returns 403', async () => {
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              '<html><body>blocked</body></html>',
+            ),
+          }
+        }
+        if (isNetworkRequests(parsed)) {
+          return {
+            stdout: JSON.stringify([
+              {
+                status: 403,
+                url: 'https://example.com/',
+                method: 'GET',
+                type: 'document',
+              },
+            ]),
+          }
+        }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      await expect(
+        service.fetchHtml('https://example.com', {
+          timeoutMs: 5_000,
+          maxBodyBytes: 1024,
+          executable: '/usr/local/bin/agent-browser-fake',
+        }),
+      ).rejects.toThrow(/returned HTTP 403/)
+      await pool.shutdown()
+    })
+
+    it('throws with the LAST redirect-chain status when multiple rows present', async () => {
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue('https://example.com/final', '<html/>'),
+          }
+        }
+        if (isNetworkRequests(parsed)) {
+          return {
+            stdout: JSON.stringify([
+              { status: 302, url: 'https://example.com/', type: 'document' },
+              {
+                status: 500,
+                url: 'https://example.com/final',
+                type: 'document',
+              },
+            ]),
+          }
+        }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      await expect(
+        service.fetchHtml('https://example.com', {
+          timeoutMs: 5_000,
+          maxBodyBytes: 1024,
+          executable: '/usr/local/bin/agent-browser-fake',
+        }),
+      ).rejects.toThrow(/returned HTTP 500 for https:\/\/example\.com\/final/)
+      await pool.shutdown()
+    })
+
+    it('passes through when network requests output is empty array', async () => {
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              '<html><body>ok</body></html>',
+            ),
+          }
+        }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      const html = await service.fetchHtml('https://example.com', {
+        timeoutMs: 5_000,
+        maxBodyBytes: 1024,
+        executable: '/usr/local/bin/agent-browser-fake',
+      })
+      expect(html.body).toContain('ok')
+      await pool.shutdown()
+    })
+
+    it('passes through when network requests call itself errors', async () => {
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              '<html><body>ok</body></html>',
+            ),
+          }
+        }
+        if (isNetworkRequests(parsed)) {
+          return {
+            error: new Error('cli unknown flag') as NodeJS.ErrnoException,
+          }
+        }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      const html = await service.fetchHtml('https://example.com', {
+        timeoutMs: 5_000,
+        maxBodyBytes: 1024,
+        executable: '/usr/local/bin/agent-browser-fake',
+      })
+      expect(html.body).toContain('ok')
+      await pool.shutdown()
+    })
+  })
+
+  describe('challenge detection + retry', () => {
+    it('retries once via reload and returns clean payload', async () => {
+      let navCount = 0
+      let reloadCount = 0
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        if (isNavigationBatch(parsed)) {
+          navCount += 1
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              '<html><head><title>Just a moment...</title></head></html>',
+              'Just a moment...',
+            ),
+          }
+        }
+        if (isReloadBatch(parsed)) {
+          reloadCount += 1
+          return {
+            stdout: reloadBatchValue(
+              'https://example.com/',
+              '<html><body>real content</body></html>',
+              'Real Site',
+            ),
+          }
+        }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      const html = await service.fetchHtml('https://example.com', {
+        timeoutMs: 5_000,
+        maxBodyBytes: 1024,
+        executable: '/usr/local/bin/agent-browser-fake',
+      })
+      expect(navCount).toBe(1)
+      expect(reloadCount).toBe(1)
+      expect(html.body).toContain('real content')
+      await pool.shutdown()
+    })
+
+    it('throws ChallengeBlockedError when retry still hits the signature', async () => {
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        const challengeHtml =
+          '<html><head><title>Just a moment...</title></head></html>'
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              challengeHtml,
+              'Just a moment...',
+            ),
+          }
+        }
+        if (isReloadBatch(parsed)) {
+          return {
+            stdout: reloadBatchValue(
+              'https://example.com/',
+              challengeHtml,
+              'Just a moment...',
+            ),
+          }
+        }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      await expect(
+        service.fetchHtml('https://example.com', {
+          timeoutMs: 5_000,
+          maxBodyBytes: 1024,
+          executable: '/usr/local/bin/agent-browser-fake',
+        }),
+      ).rejects.toBeInstanceOf(ChallengeBlockedError)
+      await pool.shutdown()
+    })
+
+    it('detects challenge from body when title is clean', async () => {
+      let reloadFired = false
+      setExecFileBehavior((call) => {
+        const parsed = parseBatchArgs(call.args)
+        if (isNavigationBatch(parsed)) {
+          return {
+            stdout: navBatchValue(
+              'https://example.com/',
+              '<html><body><h1>Access Denied</h1></body></html>',
+              'normal title',
+            ),
+          }
+        }
+        if (isReloadBatch(parsed)) {
+          reloadFired = true
+          return {
+            stdout: reloadBatchValue(
+              'https://example.com/',
+              '<html><body>ok</body></html>',
+              'ok',
+            ),
+          }
+        }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
+        return { stdout: '' }
+      })
+
+      const { pool, service } = buildService()
+      const html = await service.fetchHtml('https://example.com', {
+        timeoutMs: 5_000,
+        maxBodyBytes: 1024,
+        executable: '/usr/local/bin/agent-browser-fake',
+      })
+      expect(reloadFired).toBe(true)
+      expect(html.body).toContain('<body>ok')
       await pool.shutdown()
     })
   })
@@ -477,9 +803,6 @@ describe('BrowserFetchService', () => {
 
   describe('timeout path', () => {
     it('aborts the HTML batch and throws a timeout error', async () => {
-      // Simulate the CLI never returning within the timeout. We invoke the
-      // callback only after the AbortController has aborted, with an
-      // ECONNABORTED-ish error so the service sees `ac.signal.aborted = true`.
       execFileMock.mockImplementation((...invocationArgs: unknown[]) => {
         const args = invocationArgs[1] as string[]
         const options = invocationArgs[2] as { signal?: AbortSignal }
@@ -487,10 +810,6 @@ describe('BrowserFetchService', () => {
           err: NodeJS.ErrnoException | null,
           result?: { stdout: string; stderr: string },
         ) => void
-        // pool.shutdown issues `--session <name> close` against the slot once
-        // the timeout path runs through `release` (no discard). That call has
-        // no AbortSignal, so we resolve it synchronously instead of leaving
-        // the test hanging on a never-resolving promise.
         if (args.includes('close')) {
           queueMicrotask(() => callback(null, { stdout: '', stderr: '' }))
           return undefined
@@ -516,48 +835,8 @@ describe('BrowserFetchService', () => {
     })
   })
 
-  describe('tempdir cleanup edge case', () => {
-    it('removes the screenshot tempdir it created after a successful run', async () => {
-      // Race-safe: snapshot exactly the tempdir the service mkdtemp'd via
-      // the CLI's --screenshot-dir argument, then assert it is gone after
-      // the call. We don't enumerate sibling entries in os.tmpdir(), so
-      // parallel test files don't perturb the assertion.
-      const seenScreenshotDirs: string[] = []
-      setExecFileBehavior(async (call) => {
-        const parsed = parseBatchArgs(call.args)
-        if (parsed.command === 'batch') {
-          return isNavigationBatch(parsed)
-            ? { stdout: batchValue('https://example.com/') }
-            : { stdout: pageValue('<html/>') }
-        }
-        if (parsed.command === 'screenshot') {
-          const dir = parsed.screenshotDir!
-          seenScreenshotDirs.push(dir)
-          await writeFile(join(dir, 'c.jpeg'), Buffer.from([0xff, 0xd8]))
-          return { stdout: '' }
-        }
-        return { stdout: '' }
-      })
-
-      const { pool, service } = buildService()
-      await service.fetchPage('https://example.com', {
-        timeoutMs: 5_000,
-        maxBodyBytes: 4_000_000,
-        executable: '/usr/local/bin/agent-browser-fake',
-      })
-
-      expect(seenScreenshotDirs).toHaveLength(1)
-      expect(existsSync(seenScreenshotDirs[0])).toBe(false)
-
-      await pool.shutdown()
-    })
-  })
-
   describe('SSRF guard + pool reuse', () => {
     it('rejects file:// URLs before invoking chromium', async () => {
-      // In test/dev mode (__DEV__=true) `parseAndValidateUrl` skips the
-      // hostname/IP block-list but still rejects unsupported protocols, so we
-      // exercise the protocol guard rather than the localhost block-list.
       const pool = new BrowserSessionPool({ maxSize: 1, idleMs: 60_000 })
       const service = new BrowserFetchService(pool)
       await expect(
@@ -575,12 +854,13 @@ describe('BrowserFetchService', () => {
       const service = new BrowserFetchService(pool)
       setExecFileBehavior((call) => {
         const parsed = parseBatchArgs(call.args)
-        if (parsed.command !== 'batch') return { stdout: '' }
-        const open = parsed.subCommands.find((c) => c.startsWith('open '))
-        const href = open ? open.slice('open '.length) : 'https://example.com/'
-        return isNavigationBatch(parsed)
-          ? { stdout: batchValue(href) }
-          : { stdout: pageValue('<html></html>', href) }
+        if (isNavigationBatch(parsed)) {
+          const openSub = parsed.subCommands.find((c) => c.startsWith('open '))!
+          const href = openSub.slice('open '.length)
+          return { stdout: navBatchValue(href, '<html/>') }
+        }
+        if (isNetworkRequests(parsed)) return { stdout: '[]' }
+        return { stdout: '' }
       })
       await service.fetchHtml('https://example.com/a', {
         timeoutMs: 5_000,
@@ -590,16 +870,20 @@ describe('BrowserFetchService', () => {
         timeoutMs: 5_000,
         maxBodyBytes: 1024,
       })
-      const openCalls = execFileMock.mock.calls.filter((call) => {
+      const navCalls = execFileMock.mock.calls.filter((call) => {
         const args = call[1] as string[]
         return (
           args.includes('batch') &&
           args.some((a: string) => a.startsWith('open '))
         )
       })
-      expect(openCalls.length).toBe(2)
+      expect(navCalls.length).toBe(2)
       const sessionNames = new Set(
-        openCalls.map((call) => (call[1] as string[])[1]),
+        navCalls.map((call) => {
+          const a = call[1] as string[]
+          const idx = a.indexOf('--session')
+          return a[idx + 1]
+        }),
       )
       expect(sessionNames.size).toBe(1)
       await pool.shutdown()
