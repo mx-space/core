@@ -1,0 +1,15 @@
+<mxnote>
+  <meta>
+    <title>note title</title>
+    <slug>my-note</slug>
+    <topic>life</topic>
+    <state>publish</state>
+    <mood>happy</mood>
+    <weather>sunny</weather>
+    <publicAt>2026-05-14T10:00:00Z</publicAt>
+    <bookmark>false</bookmark>
+  </meta>
+  <content>
+<p>note body</p>
+  </content>
+</mxnote>
