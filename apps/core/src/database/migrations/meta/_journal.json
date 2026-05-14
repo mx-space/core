@@ -85,6 +85,13 @@
       "when": 1778522427325,
       "tag": "0011_enrichment_screenshots",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1778777132097,
+      "tag": "0012_device_codes_table",
+      "breakpoints": true
     }
   ]
 }
