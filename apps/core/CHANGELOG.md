@@ -1,9 +1,29 @@
 # CHANGELOG
 
 
+## <small>12.5.4 (2026-05-14)</small>
+
+* release: v12.5.4 ([02aafdf](https://github.com/mx-space/core/commit/02aafdf))
+* fix(deps): update dependency @anthropic-ai/sdk to ^0.96.0 (#2684) ([baeb77b](https://github.com/mx-space/core/commit/baeb77b)), closes [#2684](https://github.com/mx-space/core/issues/2684)
+* fix(deps): update nest monorepo to v11.1.21 (#2712) ([daf9a9a](https://github.com/mx-space/core/commit/daf9a9a)), closes [#2712](https://github.com/mx-space/core/issues/2712)
+* fix(translation): align TranslateFields path to data[] key ([65c73e7](https://github.com/mx-space/core/commit/65c73e7))
+* chore(deps): bump @haklex/* to 0.12.0 ([529a32a](https://github.com/mx-space/core/commit/529a32a))
+* chore(deps): bump @haklex/rich-headless to 0.11.0 ([ba40615](https://github.com/mx-space/core/commit/ba40615))
+* chore(deps): bump @haklex/rich-headless to 0.13.0 ([a68741b](https://github.com/mx-space/core/commit/a68741b))
+* feat(ai): preserve mermaid diagrams during translation ([849c435](https://github.com/mx-space/core/commit/849c435))
+
+## <small>12.5.3 (2026-05-14)</small>
+
+* release: v12.5.3 ([9974dd5](https://github.com/mx-space/core/commit/9974dd5))
+* ci(release): drop user-review gate; release-core runs unattended ([5da09f6](https://github.com/mx-space/core/commit/5da09f6))
+* ci(release): switch GitHub Release body to narrative RELEASE_NOTES.md ([3db5ebc](https://github.com/mx-space/core/commit/3db5ebc))
+* docs(spec): release notes narrative design ([b5c0ae5](https://github.com/mx-space/core/commit/b5c0ae5))
+* chore(deps): update dependency axios to v1.16.1 (#2719) ([700fbee](https://github.com/mx-space/core/commit/700fbee)), closes [#2719](https://github.com/mx-space/core/issues/2719)
+* chore(deps): update dependency rolldown to v1.0.1 (#2718) ([324fa96](https://github.com/mx-space/core/commit/324fa96)), closes [#2718](https://github.com/mx-space/core/issues/2718)
+
 ## <small>12.5.2 (2026-05-13)</small>
 
-* release: v12.5.2 ([9a2d556](https://github.com/mx-space/core/commit/9a2d556))
+* release: v12.5.2 ([08ba4d1](https://github.com/mx-space/core/commit/08ba4d1))
 * feat(enrichment): screenshot only as og:image fallback in browser mode ([9ca84a5](https://github.com/mx-space/core/commit/9ca84a5))
 
 ## <small>12.5.1 (2026-05-13)</small>
