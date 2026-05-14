@@ -28,10 +28,9 @@ Run all of these. Stop and confirm with the user on any red.
 # In repo root
 git status                       # working tree must be clean
 git fetch origin && git status   # confirm relationship with origin/master (ahead = will publish; behind/diverged = stop)
-pnpm lint
-pnpm typecheck
-pnpm test                        # full suite, or scope to changed area with user's call
 ```
+
+CI (`release.yml`'s `quality` + `build` jobs) runs lint, typecheck, the bundled-server smoke, and the Docker smoke. Don't re-run them locally before tagging — fix-forward via a follow-up patch if CI fails.
 
 For the server pipeline, also enumerate what's about to ship:
 
@@ -122,16 +121,117 @@ The new block should:
 
 If the block looks wrong, `git checkout -- apps/core/CHANGELOG.md` and either re-run with corrected flags or write the block manually.
 
+### Step 6.5 — Generate the user-facing release notes
+
+`apps/core/CHANGELOG.md` (above) is for developers — Angular preset, commit-style. The GitHub Release body uses a different document: a human-narrative file at `apps/core/RELEASE_NOTES.md`, written by the agent and committed alongside the version bump. CI reads this file directly (no more `changelogithub`).
+
+**Source material**:
+
+```bash
+git log v${CURRENT}..HEAD --no-merges --pretty='%H %s%n%b' -- apps/core
+```
+
+Use full subjects + bodies (the body surfaces `BREAKING CHANGE:` footers and PR refs).
+
+**Selection rules**:
+
+1. Always include: `feat:`, `fix:`, anything with `BREAKING CHANGE:` footer or `feat!:` / `fix!:` markers — same scope `changelogithub` used to ship.
+2. Conditionally include: `refactor:`, `chore:`, `perf:`, `docs:` — only those whose subject/body indicates a **user-visible** effect (dependency major bump, behaviour change, performance improvement, public API tweak). Skip the rest.
+3. Never include: pure formatting (`style:`), test-only (`test:`), tooling chores with no runtime impact.
+
+**Structure auto-selection**:
+
+| Condition | Use |
+|-----------|-----|
+| Any `feat:` OR any breaking change in selection | **full** |
+| Else ≥ 4 entries selected | **full** |
+| Else all selected entries are internal-only (chore/dep bump, no user effect) | **simple** with "Internal maintenance release" TL;DR (see rule 9 below) |
+| Otherwise | **simple** |
+
+**Full structure** (`apps/core/RELEASE_NOTES.md`):
+
+```markdown
+## TL;DR
+
+<One sentence, 15–25 words, naming the headline change and its user impact.>
+
+## Breaking Changes   ← only when present, rendered at top
+
+- **<area>**: <what changed + why>. **Migration**: <concrete action operator must take>.
+
+## Highlights
+
+<2–3 prose paragraphs, ~40–80 words each. One topic per paragraph. Describe
+user-visible behaviour and value — not commit subjects. Note constraints or
+follow-ups.>
+
+## Changes
+
+### Features
+- <Human description of what users can now do.> ([#PR] or [sha])
+
+### Bug Fixes
+- <Human description of what is fixed.> ([#PR] or [sha])
+
+### Other   ← only when user-visible refactor/chore/perf was selected
+- <Human description.> ([#PR] or [sha])
+
+## Upgrade Notes   ← only when manual operator action is required
+
+<env var / migration / config changes; cite exact commands or file paths>
+
+---
+
+**Full Changelog**: https://github.com/mx-space/core/compare/v<prev>...v<this>
+```
+
+**Simple structure**:
+
+```markdown
+## TL;DR
+
+<One sentence.>
+
+## Changes
+
+- <Human description.> ([#PR] or [sha])
+
+---
+
+**Full Changelog**: https://github.com/mx-space/core/compare/v<prev>...v<this>
+```
+
+**Authoring rules** (self-discipline; verify each before showing the user):
+
+1. Use user-facing language. Translate `refactor pool` → "Connection pool now reuses sockets across requests, reducing handshake latency."
+2. Never copy a commit subject verbatim into an entry — rewrite it.
+3. Link priority: PR number (`#2708`) > issue number > short sha (7 chars + commit URL). Prefer PR when commit message contains `(#NNNN)`.
+4. Every `Breaking Changes` entry MUST include a `**Migration**:` clause with a concrete action — even if the action is "no action required, just observe the new behaviour".
+5. TL;DR is exactly one sentence, 15–25 words, naming the headline change and its user impact.
+6. Highlights paragraphs: 40–80 words each, 2–3 total in full structure.
+7. (See structure selection table above.)
+8. Empty sections are omitted entirely — do not render placeholder text like "No breaking changes."
+9. If selection is internal-only, TL;DR is `Internal maintenance release; no user-facing changes.` Highlights is omitted; `Changes` (or `Other`) lists the chore items.
+
+**Write + review gate**:
+
+1. Write `apps/core/RELEASE_NOTES.md` (overwrite any previous content).
+2. Print the full rendered file to chat.
+3. Ask the user: *"This is the proposed release notes body for vX.Y.Z. Approve to proceed to the release commit, or request edits."*
+4. **Do NOT advance to step 7 without affirmative approval.** If the user requests edits, revise the file and re-prompt. This gate cannot be skipped silently.
+
+Verify: `apps/core/RELEASE_NOTES.md` exists and is non-empty (`test -s apps/core/RELEASE_NOTES.md`).
+
 ### Step 7 — Commit
 
 ```bash
-git add apps/core/package.json apps/core/CHANGELOG.md
+git add apps/core/package.json apps/core/CHANGELOG.md apps/core/RELEASE_NOTES.md
 git commit -m "release: vX.Y.Z" --no-verify
 ```
 
-`--no-verify` skips the lint-staged pre-commit hook — release commits don't need it (CHANGELOG isn't lintable, package.json change is mechanical), and matches the historical commit pattern.
+`--no-verify` skips the lint-staged pre-commit hook — release commits don't need it (CHANGELOG/RELEASE_NOTES aren't lintable, package.json change is mechanical), and matches the historical commit pattern.
 
-Verify: `git log -1 --stat` shows exactly two files changed.
+Verify: `git log -1 --stat` shows exactly three files changed.
 
 ### Step 8 — Tag
 
@@ -161,7 +261,7 @@ gh run watch <run-id>            # blocks until the run finishes; or omit and ch
 
 `release.yml` runs:
 1. **quality** — lint + typecheck
-2. **build** — `pnpm bundle` → `scripts/workflow/test-server.sh` → zip → upload as GitHub Release asset → `npx changelogithub` populates the Release notes
+2. **build** — verify `apps/core/RELEASE_NOTES.md` present → `pnpm bundle` → `scripts/workflow/test-server.sh` → zip → upload as GitHub Release asset with `body_path: apps/core/RELEASE_NOTES.md` (this is what populates the Release notes; `changelogithub` is no longer used)
 3. **docker** (matrix `linux/amd64` + `linux/arm64`) — build, `scripts/workflow/test-docker.sh`, push by digest to DockerHub `innei/mx-server`
 4. **merge** — combine digests into multi-arch manifest, tag `latest` / `vX.Y.Z` / `X.Y` / `X` / sha
 5. **dokploy** — POST to `secrets.DOKPLOY_WEBHOOK_URL` (silently skipped if unset) — this is what redeploys production
@@ -232,13 +332,13 @@ Verify: `npm view @mx-space/api-client version` returns the new version (may tak
 | Tag pushed, Docker built, but bug critical | Cut a new patch with the fix. Don't re-tag the same version. |
 | api-client `npm publish` failed after commit/push | Re-run `npm publish --access=public` once the issue is resolved. The commit already records the intent. |
 | Wrong version published to npm | npm allows `npm unpublish` only within 72h, only if no one depends on it. Usually faster to publish a corrected next version. |
+| Release notes need a fix after tag is published | `gh release edit vX.Y.Z --notes-file apps/core/RELEASE_NOTES.md` (or `--notes "..."`) — updates the Release body only. Tag and assets are untouched. |
 
 **Never** force-push `master` and **never** delete a published tag without explicit user approval — release tags are referenced by Docker manifests and changelog tooling.
 
 ## Red flags — STOP and confirm
 
 - Working tree dirty before step 1
-- `pnpm lint` / `pnpm typecheck` / `pnpm test` failing
 - Asked to bump `major` (breaking) — confirm scope
 - On a non-`master` branch
 - `node get-latest-admin-version.js` fails (likely missing `gh auth` / token)
@@ -249,7 +349,8 @@ Verify: `npm view @mx-space/api-client version` returns the new version (may tak
 ## File reference
 
 - `apps/core/package.json` — server version + `dashboard.version` (mx-admin pin)
-- `apps/core/CHANGELOG.md` — server changelog (Angular preset)
+- `apps/core/CHANGELOG.md` — server changelog (Angular preset, developer-facing, machine-generated)
+- `apps/core/RELEASE_NOTES.md` — user-facing GitHub Release body (narrative, agent-authored, overwritten each release; CI reads via `body_path`)
 - `apps/core/get-latest-admin-version.js` — fetches latest mx-admin release tag
 - `apps/core/assets-push.sh` — force-pushes `assets/` to `mx-space/assets`
 - `packages/api-client/package.json` — npm package version

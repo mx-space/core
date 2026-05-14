@@ -92,20 +92,24 @@ jobs:
         run: |
           sh apps/core/zip-asset.sh
           mv release.zip release-linux.zip
-      
+
+      - name: Verify release notes present
+        run: |
+          if [ ! -s apps/core/RELEASE_NOTES.md ]; then
+            echo "::error::apps/core/RELEASE_NOTES.md is missing or empty. The release-core skill must produce it before tagging."
+            exit 1
+          fi
+
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
+          body_path: apps/core/RELEASE_NOTES.md
           prerelease: ${{ contains(fromJSON('["alpha", "beta"]'), github.ref_name) }}
           files: release-linux.zip
 
-      - name: Changelog
-        run: npx changelogithub
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+
   docker:
     name: Docker (${{ matrix.platform }})
     runs-on: ${{ matrix.runner }}
