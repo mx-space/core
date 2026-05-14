@@ -74,16 +74,26 @@ describe('AuthService', () => {
     expect(
       service.getApiKeyFromRequest({ headers: { 'x-api-key': 'current' } }),
     ).toEqual({ key: 'current', deprecated: false })
-    expect(
-      service.getApiKeyFromRequest({
-        headers: { authorization: 'Bearer legacy' },
-      }),
-    ).toEqual({ key: 'legacy', deprecated: true })
     expect(service.getApiKeyFromRequest({ query: { token: 'query' } })).toEqual(
       {
         key: 'query',
         deprecated: true,
       },
     )
+  })
+
+  it('ignores Authorization: Bearer api-key fallback after narrowing', () => {
+    const { service } = createService()
+
+    expect(
+      service.getApiKeyFromRequest({
+        headers: { authorization: 'Bearer txo-legacy' },
+      }),
+    ).toBeNull()
+    expect(
+      service.getApiKeyFromRequest({
+        headers: { Authorization: 'Bearer txo-legacy' },
+      }),
+    ).toBeNull()
   })
 })

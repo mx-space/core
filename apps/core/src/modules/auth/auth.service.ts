@@ -466,18 +466,6 @@ export class AuthService {
       return { key: apiKeyHeader, deprecated: false }
     }
 
-    const authorization = this.pickFirstHeader(
-      headers,
-      'authorization',
-      'Authorization',
-    )
-    if (authorization) {
-      const match = authorization.match(/^bearer\s+(\S+)$/i)
-      if (match) {
-        return { key: match[1], deprecated: true }
-      }
-    }
-
     if (typeof query.token === 'string') {
       return { key: query.token, deprecated: true }
     }
