@@ -35,6 +35,7 @@ interface ContentDoc {
 }
 
 export const LEXICAL_CONTEXT_EXCALIDRAW_TYPE = ExcalidrawNode.getType()
+export const LEXICAL_CONTEXT_MERMAID_TYPE = MermaidNode.getType()
 
 export const LEXICAL_CONTEXT_SKIP_BLOCKS = new Set([
   'code',

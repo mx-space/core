@@ -620,6 +620,16 @@ Use the provided document context for coherent, fluent translation.
   - Do NOT add or remove segment keys
   - Do NOT return extra wrapper fields like "type" or "segments" in the output
 
+## Mermaid Diagrams
+- Segments tagged with meta "mermaid.diagram" are full Mermaid diagram source strings (multi-line).
+- Preserve diagram syntax EXACTLY: graph type keywords (flowchart, graph, sequenceDiagram, classDiagram, stateDiagram, erDiagram, gantt, pie, mindmap, journey, etc.), directives (TD, LR, RL, BT), arrows (-->, ---, ==>, -.->, --x, etc.), brackets ([], (), {}, [[]], {{}}, [()], (())), and all node/edge identifiers.
+- Translate ONLY human-readable label text — typically content inside [], (), {}, ||, "..." labels, or after a colon in subgraph titles and sequence-diagram messages.
+- Do NOT translate or rename node identifiers (e.g. A, B, node1), class names, state names, or any token that appears bare without quotes or brackets.
+- Preserve all newlines, indentation, semicolons, and trailing whitespace exactly as in the source. Use \\n inside the JSON string for line breaks.
+- Escape any double quotes inside translated labels so the JSON remains valid.
+- Return the full translated diagram source as the string value for that segment key.
+- If you cannot fully preserve diagram syntax while translating labels (e.g. complex grammar you are unsure about, unusual node shapes, embedded markdown), return the source diagram UNCHANGED. A diagram that renders in the source language is always better than broken syntax; a downstream validator rejects malformed diagrams.
+
 ## Key Completeness (CRITICAL)
 - The "translations" object MUST contain EVERY key from the input "segments" object
 - Do NOT omit any key, even if the value appears untranslatable

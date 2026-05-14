@@ -9,6 +9,7 @@ import {
   isNestedLexicalEditorState,
   KNOWN_LEXICAL_STRUCTURAL_PROPS,
   LEXICAL_CONTEXT_EXCALIDRAW_TYPE,
+  LEXICAL_CONTEXT_MERMAID_TYPE,
   LEXICAL_CONTEXT_SKIP_BLOCKS,
   LEXICAL_CONTEXT_SKIP_INLINE,
 } from '~/utils/content.util'
@@ -95,6 +96,23 @@ function extractExcalidrawTexts(
   }
 }
 
+function extractMermaidSegments(
+  node: any,
+  propertySegments: PropertySegment[],
+  counter: { t: number; p: number },
+  ctx: BlockContext,
+): void {
+  if (typeof node.diagram !== 'string' || !node.diagram.trim()) return
+  propertySegments.push({
+    id: `p_${counter.p++}`,
+    text: node.diagram,
+    node,
+    property: 'diagram',
+    blockId: ctx.blockId,
+    rootIndex: ctx.rootIndex,
+  })
+}
+
 function extractPollSegments(
   node: any,
   propertySegments: PropertySegment[],
@@ -140,6 +158,11 @@ function walkNode(
   // Handle excalidraw: extract text from shapes within snapshot
   if (node.type === LEXICAL_CONTEXT_EXCALIDRAW_TYPE) {
     extractExcalidrawTexts(node, propertySegments, counter, ctx)
+    return
+  }
+
+  if (node.type === LEXICAL_CONTEXT_MERMAID_TYPE) {
+    extractMermaidSegments(node, propertySegments, counter, ctx)
     return
   }
 

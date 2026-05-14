@@ -230,7 +230,6 @@ describe('lexical-translation-parser', () => {
         codeBlock('const b = 2'),
         imageNode(),
         videoNode(),
-        mermaidNode(),
         katexBlockNode(),
       ])
       const { segments, propertySegments } = parseLexicalForTranslation(json)
@@ -854,9 +853,19 @@ describe('lexical-translation-parser', () => {
       expect(texts).toContain('Rating')
       expect(texts).toContain('Final score: 5/5')
 
-      // details.summary collected
-      expect(propertySegments).toHaveLength(1)
-      expect(propertySegments[0].text).toBe('Spoilers')
+      // details.summary + mermaid diagram collected
+      expect(propertySegments).toHaveLength(2)
+      const summaryProps = propertySegments.filter(
+        (p) => p.property === 'summary',
+      )
+      expect(summaryProps).toHaveLength(1)
+      expect(summaryProps[0].text).toBe('Spoilers')
+
+      const diagramProps = propertySegments.filter(
+        (p) => p.property === 'diagram',
+      )
+      expect(diagramProps).toHaveLength(1)
+      expect(diagramProps[0].text).toBe('graph LR; A-->B')
     })
 
     it('consecutive skip-blocks produce no segments', () => {
@@ -1228,6 +1237,102 @@ describe('lexical-translation-parser', () => {
       expect(pollSegs[0].text).toBe('Nested question')
       expect(pollSegs[1].text).toBe('Option A')
       expect(pollSegs[2].text).toBe('Option B')
+    })
+  })
+
+  describe('mermaid diagram translation', () => {
+    it('extracts mermaid diagram as a single PropertySegment', () => {
+      const json = makeEditorState([
+        mermaidNode(
+          'flowchart TD\n  A[Start] --> B{Decision}\n  B -->|Yes| C[Continue]\n  B -->|No| D[Stop]',
+        ),
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(0)
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].property).toBe('diagram')
+      expect(propertySegments[0].text).toContain('flowchart TD')
+      expect(propertySegments[0].text).toContain('A[Start]')
+      expect(propertySegments[0].key).toBeUndefined()
+    })
+
+    it('empty or whitespace-only diagram is skipped', () => {
+      const json = makeEditorState([mermaidNode(''), mermaidNode('   \n   ')])
+      const { propertySegments } = parseLexicalForTranslation(json)
+      expect(propertySegments).toHaveLength(0)
+    })
+
+    it('round-trip: translated diagram restored to node.diagram', () => {
+      const json = makeEditorState([mermaidNode('graph LR; A[Begin]-->B[End]')])
+      const result = parseLexicalForTranslation(json)
+      const [diagramProp] = result.propertySegments
+
+      const translations = new Map<string, string>([
+        [diagramProp.id, 'graph LR; A[开始]-->B[结束]'],
+      ])
+
+      const restored = JSON.parse(
+        restoreLexicalTranslation(result, translations),
+      )
+
+      expect(restored.root.children[0].diagram).toBe(
+        'graph LR; A[开始]-->B[结束]',
+      )
+      expect(restored.root.children[0].type).toBe('mermaid')
+      expect(restored.root.children[0].version).toBe(1)
+    })
+
+    it('mermaid diagram NOT included in document context', () => {
+      const json = makeEditorState([
+        paragraph(textNode('Before')),
+        mermaidNode('graph TD; X[Hidden Label]-->Y'),
+        paragraph(textNode('After')),
+      ])
+      const { editorState } = parseLexicalForTranslation(json)
+      const context = extractDocumentContext(editorState.root.children)
+
+      expect(context).toBe('Before\n\nAfter')
+      expect(context).not.toContain('Hidden Label')
+    })
+
+    it('mermaid carries correct blockId and rootIndex', () => {
+      const json = makeEditorState([
+        paragraph(textNode('First')),
+        {
+          ...mermaidNode('graph LR; A-->B'),
+          $: { blockId: 'mermaid-block' },
+        },
+      ])
+      const { propertySegments } = parseLexicalForTranslation(json)
+
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].blockId).toBe('mermaid-block')
+      expect(propertySegments[0].rootIndex).toBe(1)
+    })
+
+    it('mermaid inside details nested editor state is parsed', () => {
+      const json = makeEditorState([
+        detailsNode(
+          'See diagram',
+          mermaidNode('sequenceDiagram\nAlice->>Bob: Hello'),
+        ),
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(0)
+
+      const diagramSegs = propertySegments.filter(
+        (p) => p.property === 'diagram',
+      )
+      expect(diagramSegs).toHaveLength(1)
+      expect(diagramSegs[0].text).toContain('sequenceDiagram')
+
+      const summarySegs = propertySegments.filter(
+        (p) => p.property === 'summary',
+      )
+      expect(summarySegs).toHaveLength(1)
+      expect(summarySegs[0].text).toBe('See diagram')
     })
   })
 

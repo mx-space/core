@@ -16,6 +16,7 @@ import {
   restoreLexicalTranslation,
   type TranslationSegment,
 } from '../lexical-translation-parser'
+import { validateMermaidTranslation } from '../mermaid-translation-guard'
 import type {
   ITranslationStrategy,
   TranslationResult,
@@ -176,6 +177,8 @@ export class LexicalTranslationStrategy
         signal,
       )
     }
+
+    this.guardMermaidTranslations(parseResult, allTranslations)
 
     const translatedContent = restoreLexicalTranslation(
       parseResult,
@@ -408,6 +411,8 @@ export class LexicalTranslationStrategy
       if (sl) sourceLang = sl
     }
 
+    this.guardMermaidTranslations(parseResult, allTranslations)
+
     const translatedContent = restoreLexicalTranslation(
       parseResult,
       allTranslations,
@@ -513,14 +518,44 @@ export class LexicalTranslationStrategy
       units.push({
         id: prop.id,
         payload: prop.text,
-        meta:
-          prop.property === 'reading' && prop.node?.type === 'ruby'
-            ? 'ruby.reading'
-            : `property.${prop.property}`,
+        meta: this.resolvePropertyUnitMeta(prop),
       })
     }
 
     return units
+  }
+
+  private guardMermaidTranslations(
+    parseResult: LexicalTranslationResult,
+    translations: Map<string, string>,
+  ): void {
+    for (const prop of parseResult.propertySegments) {
+      if (prop.property !== 'diagram' || prop.node?.type !== 'mermaid') continue
+      const translated = translations.get(prop.id)
+      if (translated === undefined) continue
+      if (translated === prop.text) continue
+
+      const validation = validateMermaidTranslation(prop.text, translated)
+      if (!validation.ok) {
+        this.logger.warn(
+          `Mermaid translation rejected: reason=${validation.reason} sourceLen=${prop.text.length} translatedLen=${translated.length}`,
+        )
+        translations.delete(prop.id)
+      }
+    }
+  }
+
+  private resolvePropertyUnitMeta(prop: {
+    property: string
+    node: any
+  }): string {
+    if (prop.property === 'reading' && prop.node?.type === 'ruby') {
+      return 'ruby.reading'
+    }
+    if (prop.property === 'diagram' && prop.node?.type === 'mermaid') {
+      return 'mermaid.diagram'
+    }
+    return `property.${prop.property}`
   }
 
   private buildMetaTranslationUnits(
