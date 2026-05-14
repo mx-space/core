@@ -213,12 +213,12 @@ follow-ups.>
 8. Empty sections are omitted entirely — do not render placeholder text like "No breaking changes."
 9. If selection is internal-only, TL;DR is `Internal maintenance release; no user-facing changes.` Highlights is omitted; `Changes` (or `Other`) lists the chore items.
 
-**Write + review gate**:
+**Write**:
 
 1. Write `apps/core/RELEASE_NOTES.md` (overwrite any previous content).
-2. Print the full rendered file to chat.
-3. Ask the user: *"This is the proposed release notes body for vX.Y.Z. Approve to proceed to the release commit, or request edits."*
-4. **Do NOT advance to step 7 without affirmative approval.** If the user requests edits, revise the file and re-prompt. This gate cannot be skipped silently.
+2. Print the full rendered file to chat as a status update — for visibility, not approval. Proceed directly to step 7 without asking.
+
+The release flow runs unattended: if the agent has enough information to choose a version (step 1) and run the prior steps, it has enough to author the notes. Only stop and ask the user if a red flag in step 1 is unresolved (e.g. ambiguous breaking change scope).
 
 Verify: `apps/core/RELEASE_NOTES.md` exists and is non-empty (`test -s apps/core/RELEASE_NOTES.md`).
 
