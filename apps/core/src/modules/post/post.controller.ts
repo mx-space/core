@@ -52,7 +52,7 @@ export class PostController {
 
   @Get('/')
   @TranslateFields({
-    path: 'docs[].category.name',
+    path: 'data[].category.name',
     keyPath: 'category.name',
     idField: 'id',
   })

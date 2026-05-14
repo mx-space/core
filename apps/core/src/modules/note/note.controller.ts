@@ -716,8 +716,8 @@ export class NoteController {
 
   @Get('/topics/:id')
   @TranslateFields(
-    { path: 'docs[].mood', keyPath: 'note.mood' },
-    { path: 'docs[].weather', keyPath: 'note.weather' },
+    { path: 'data[].mood', keyPath: 'note.mood' },
+    { path: 'data[].weather', keyPath: 'note.weather' },
   )
   async getNotesByTopic(
     @Param() params: EntityIdDto,
