@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@antfu/install-pkg": "1.1.0",
-    "@anthropic-ai/sdk": "^0.95.2",
+    "@anthropic-ai/sdk": "^0.96.0",
     "@babel/core": "7.29.0",
     "@babel/plugin-transform-modules-commonjs": "7.28.6",
     "@babel/plugin-transform-typescript": "7.28.6",
