@@ -47,7 +47,7 @@ export function parseOpenGraph(
     pick(bag.named, 'description') ||
     undefined
 
-  const imageUrl = resolveImage(bag, requestUrl)
+  const resolvedImage = resolveImage(bag, requestUrl)
   const imageAlt =
     pick(bag.og, 'image:alt') || pick(bag.twitter, 'image:alt') || undefined
 
@@ -117,7 +117,14 @@ export function parseOpenGraph(
   const result: EnrichmentResult = {
     title,
     description,
-    image: imageUrl ? { url: imageUrl, alt: imageAlt } : undefined,
+    image: resolvedImage
+      ? {
+          url: resolvedImage.url,
+          alt: imageAlt,
+          width: resolvedImage.width,
+          height: resolvedImage.height,
+        }
+      : undefined,
     url: canonical,
     category: ENRICHMENT_CATEGORIES.WEB,
     subtype,
@@ -125,6 +132,7 @@ export function parseOpenGraph(
     publishedAt,
     color: themeColor,
     attributes: attributes.length ? attributes : undefined,
+    links: iconLinks(bag, requestUrl),
   }
 
   return { result, oembedUrl: bag.oembedUrl }
@@ -193,7 +201,17 @@ function pick(map: Record<string, string>, key: string): string | undefined {
   return v && v.length > 0 ? v : undefined
 }
 
-function resolveImage(bag: MetaBag, base: string): string | undefined {
+interface ResolvedImage {
+  url: string
+  width?: number
+  height?: number
+}
+
+// `image` is strictly the page's advertised OG / Twitter Card image. Icons
+// (favicon, apple-touch-icon) are deliberately excluded — a square favicon
+// must never land in a link card's wide image slot. Icons are surfaced
+// separately via `result.links`.
+function resolveImage(bag: MetaBag, base: string): ResolvedImage | undefined {
   const candidates = [
     pick(bag.og, 'image:secure_url'),
     pick(bag.og, 'image:url'),
@@ -201,21 +219,41 @@ function resolveImage(bag: MetaBag, base: string): string | undefined {
     pick(bag.twitter, 'image:src'),
     pick(bag.twitter, 'image'),
   ]
+  let url: string | undefined
   for (const c of candidates) {
     const abs = absolutize(c, base)
-    if (abs) return abs
+    if (abs) {
+      url = abs
+      break
+    }
   }
-  // Fallback: best-sized icon (apple-touch-icon prefers, else first).
-  const apple = bag.icons.find((i) => i.rel.startsWith('apple-touch-icon'))
-  if (apple) {
-    const abs = absolutize(apple.href, base)
-    if (abs) return abs
+  if (!url) return undefined
+  return {
+    url,
+    width: parseDimension(pick(bag.og, 'image:width')),
+    height: parseDimension(pick(bag.og, 'image:height')),
   }
-  if (bag.icons.length) {
-    const abs = absolutize(bag.icons[0].href, base)
-    if (abs) return abs
+}
+
+function parseDimension(raw: string | undefined): number | undefined {
+  if (!raw) return undefined
+  const n = Number.parseInt(raw, 10)
+  return Number.isFinite(n) && n > 0 ? n : undefined
+}
+
+function iconLinks(
+  bag: MetaBag,
+  base: string,
+): EnrichmentResult['links'] | undefined {
+  const seen = new Set<string>()
+  const links: NonNullable<EnrichmentResult['links']> = []
+  for (const icon of bag.icons) {
+    const url = absolutize(icon.href, base)
+    if (!url || seen.has(url)) continue
+    seen.add(url)
+    links.push({ rel: icon.rel, url })
   }
-  return undefined
+  return links.length ? links : undefined
 }
 
 function absolutize(
