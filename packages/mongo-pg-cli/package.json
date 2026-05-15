@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/mongo-pg-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "One-shot MongoDB → PostgreSQL data migration CLI for upgrading mx-space from v11 to v12",
   "keywords": [
     "mx-space",
