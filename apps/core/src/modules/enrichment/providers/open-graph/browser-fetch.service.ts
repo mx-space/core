@@ -6,8 +6,20 @@ import { promisify } from 'node:util'
 
 import { Injectable, Logger } from '@nestjs/common'
 
-import type { EnrichmentResult } from '../../enrichment.types'
+import {
+  ChallengeBlockedError,
+  type EnrichmentResult,
+} from '../../enrichment.types'
 import { BrowserSessionPool, type PoolSlot } from './browser-session-pool'
+import {
+  OG_ACCEPT_LANGUAGE,
+  OG_CHALLENGE_RETRY_MAX,
+  OG_CHALLENGE_SIGNATURES,
+  OG_HTML_SCAN_HEAD_BYTES,
+  OG_LAUNCH_ARGS,
+  OG_NETWORKIDLE_MS,
+  OG_USER_AGENT,
+} from './og-browser-constants'
 import type { SafeFetchOptions, SafeFetchResult } from './safe-fetch'
 import {
   assertHostnameSafe,
@@ -19,10 +31,6 @@ const execFileAsync = promisify(execFile)
 
 const DEFAULT_EXECUTABLE = process.env.AGENT_BROWSER_BIN || 'agent-browser'
 
-// agent-browser writes jpeg/png natively (no webp). Downstream sharp re-encodes
-// to webp at the configured `webpQuality` (default 75), so this only needs to
-// be "high enough to survive the round-trip cleanly". 90 leaves enough detail
-// that the sharp pass can still aggressively reduce size.
 const SCREENSHOT_CLI_QUALITY = 90
 const SCREENSHOT_CLI_FORMAT = 'jpeg' as const
 const SCREENSHOT_CLI_EXT = '.jpeg'
@@ -35,6 +43,12 @@ interface FetchPageResult {
   screenshotBytes?: Buffer
 }
 
+interface NavigationPayload {
+  href: string
+  html: string
+  title: string
+}
+
 type CaptureScreenshotDecision =
   | boolean
   | ((html: SafeFetchResult) => boolean | Promise<boolean>)
@@ -44,36 +58,18 @@ type BrowserFetchOptions = SafeFetchOptions & {
   captureScreenshot?: CaptureScreenshotDecision
 }
 
-/**
- * Headless-browser fetcher backed by the agent-browser CLI. Used as the
- * "browser" fetchMode for the Open Graph provider when sites (Cloudflare,
- * Akamai, JS-rendered SPAs) refuse a plain HTTP request.
- *
- * The CLI is invoked via batch mode in a named session so:
- *   1. session state is isolated per request (no cookie bleed across URLs);
- *   2. failures clean up the session even if the batch midway crashes;
- *   3. we can plumb a hard timeout via AbortController -> SIGKILL.
- *
- * Body is captured by evaluating `document.documentElement.outerHTML` after
- * page load, then truncated to `maxBodyBytes` so we match safeFetch's
- * post-conditions and feed the existing parseOpenGraph pipeline unchanged.
- *
- * `fetchPage` extends that with an optional viewport screenshot, captured in
- * the SAME named session (no second navigation). The screenshot step is run
- * as a separate `agent-browser` invocation against the same `--session` after
- * the HTML batch returns successfully, so a failure to write/read the webp
- * file cannot mask HTML success or short-circuit the HTML path.
- */
+const PAGE_SCRIPT = [
+  '(() => { try { return JSON.stringify({ href: window.location.href, ',
+  'html: document.documentElement.outerHTML, ',
+  'title: document.title || "" }) } catch (_e) { ',
+  'return JSON.stringify({ href: window.location.href, html: "", title: "" }) } })()',
+].join('')
+const PAGE_B64 = Buffer.from(PAGE_SCRIPT, 'utf8').toString('base64')
+
 @Injectable()
 export class BrowserFetchService {
   private readonly logger = new Logger(BrowserFetchService.name)
 
-  // Request-scoped channel for raw screenshot bytes. `OpenGraphProvider`
-  // attaches via `attachScreenshotBytes(result, buf)` keyed off the result
-  // instance it is about to return; `EnrichmentService` reads via
-  // `takeScreenshotBytes(result)` after persisting the row (it needs the row
-  // id before it can write the screenshot row). The WeakMap auto-clears
-  // when the result object is garbage-collected, so there is no manual TTL.
   private readonly bytesByResult = new WeakMap<EnrichmentResult, Buffer>()
 
   constructor(private readonly pool: BrowserSessionPool) {}
@@ -113,55 +109,53 @@ export class BrowserFetchService {
 
     const slot: PoolSlot = await this.pool.acquire()
     const executable = opts.executable || DEFAULT_EXECUTABLE
-    const evalScript =
-      '(() => { try { return window.location.href } catch (_e) { return "" } })()'
-    const finalUrlB64 = Buffer.from(evalScript, 'utf8').toString('base64')
-    const pageScript = [
-      '(() => { try { return JSON.stringify({ href: window.location.href, ',
-      'html: document.documentElement.outerHTML }) } catch (_e) { ',
-      'return JSON.stringify({ href: window.location.href, html: "" }) } })()',
-    ].join('')
-    const pageB64 = Buffer.from(pageScript, 'utf8').toString('base64')
 
-    // Shared wall budget. Navigation + HTML extraction consume part of it;
-    // the screenshot step (if any) gets the remainder, so the total time stays
-    // inside `opts.timeoutMs`.
     const started = Date.now()
     const ac = new AbortController()
     const timer = setTimeout(() => ac.abort(), opts.timeoutMs)
+
     let html: SafeFetchResult
     try {
-      const { stdout } = await execFileAsync(
+      let payload = await this.runNavigationBatch(
         executable,
-        [
-          '--session',
-          slot.name,
-          'batch',
-          '--bail',
-          '--json',
-          `open ${url.toString()}`,
-          'wait 1500',
-          `eval -b ${finalUrlB64}`,
-        ],
-        {
-          signal: ac.signal,
-          maxBuffer: Math.max(opts.maxBodyBytes * 2, 4_194_304),
-          windowsHide: true,
-          env: process.env,
-        },
+        slot,
+        url,
+        ac,
+        opts,
       )
       this.pool.markLive(slot)
-      await this.assertBrowserFinalUrlSafe(extractStringFromBatchOutput(stdout))
+      let safeUrl = await this.assertBrowserFinalUrlSafe(payload.href)
 
-      const page = await this.extractPage(executable, slot.name, pageB64, {
-        signal: ac.signal,
-        maxBodyBytes: opts.maxBodyBytes,
-      })
-      const pageFinalUrl = await this.assertBrowserFinalUrlSafe(page.href)
-      const truncated = page.html.length > opts.maxBodyBytes
-      const body = truncated ? page.html.slice(0, opts.maxBodyBytes) : page.html
+      const statusFailure = await this.fetchDocumentStatus(
+        executable,
+        slot,
+        url,
+        ac,
+      )
+      if (statusFailure) {
+        throw new Error(
+          `agent-browser navigation returned HTTP ${statusFailure.status} for ${statusFailure.url}`,
+        )
+      }
+
+      let signature = this.detectChallenge(payload.html, payload.title)
+      let retries = 0
+      while (signature && retries < OG_CHALLENGE_RETRY_MAX) {
+        retries += 1
+        payload = await this.reloadAndExtract(executable, slot, ac, opts)
+        safeUrl = await this.assertBrowserFinalUrlSafe(payload.href)
+        signature = this.detectChallenge(payload.html, payload.title)
+      }
+      if (signature) {
+        throw new ChallengeBlockedError(url.toString(), signature)
+      }
+
+      const truncated = payload.html.length > opts.maxBodyBytes
+      const body = truncated
+        ? payload.html.slice(0, opts.maxBodyBytes)
+        : payload.html
       html = {
-        finalUrl: pageFinalUrl.toString(),
+        finalUrl: safeUrl.toString(),
         contentType: 'text/html',
         body,
         truncated,
@@ -169,20 +163,31 @@ export class BrowserFetchService {
     } catch (error) {
       const err = error as NodeJS.ErrnoException & { stderr?: string }
       if (ac.signal.aborted) {
-        // Timeout: pool keeps the slot — idle eviction will discard it
-        // later if chromium is wedged.
         this.pool.release(slot)
         throw new Error(
           `agent-browser timed out after ${opts.timeoutMs}ms for ${url.toString()}`,
           { cause: error },
         )
       }
-      // Non-timeout: discard the slot so a wedged chromium does not poison
-      // the next caller.
-      this.pool.release(slot, { discard: true })
-      if (error instanceof UnsafeUrlError) {
+      if (
+        error instanceof UnsafeUrlError ||
+        error instanceof ChallengeBlockedError
+      ) {
+        this.pool.release(slot)
         throw error
       }
+      // Surface HTTP-status throw from fetchDocumentStatus without discarding
+      // the slot — chromium is still healthy.
+      if (
+        err instanceof Error &&
+        err.message.startsWith('agent-browser navigation returned HTTP')
+      ) {
+        this.pool.release(slot)
+        throw err
+      }
+      // Non-timeout CLI failure: discard the slot so a wedged chromium does
+      // not poison the next caller.
+      this.pool.release(slot, { discard: true })
       if (err.code === 'ENOENT') {
         throw new Error(
           `agent-browser executable not found at "${executable}". Install it or set thirdPartyServiceIntegration.openGraph.fetchMode = "fetch".`,
@@ -197,10 +202,6 @@ export class BrowserFetchService {
       clearTimeout(timer)
     }
 
-    // Screenshot step. Runs as a SECOND `agent-browser` invocation against
-    // the same named session so a failure cannot mask HTML success. We swallow
-    // all errors here and only log at `debug`.
-    // Reached only on try-block success — `slot` still held, chromium live.
     let screenshotBytes: Buffer | undefined
     let shouldCapture: boolean
     if (typeof captureScreenshot === 'function') {
@@ -216,13 +217,10 @@ export class BrowserFetchService {
       shouldCapture = captureScreenshot
     }
     if (shouldCapture) {
-      // Floor at 500ms so a near-exhausted budget still gives the CLI a
-      // realistic shot rather than passing 0 (AbortController fires
-      // immediately on a zero timer in some Node versions).
       const remaining = Math.max(500, opts.timeoutMs - (Date.now() - started))
       screenshotBytes = await this.captureScreenshot(
         executable,
-        slot.name,
+        slot,
         remaining,
       ).catch((screenshotErr) => {
         this.logger.debug(
@@ -236,39 +234,142 @@ export class BrowserFetchService {
     return { html, screenshotBytes }
   }
 
-  private async extractPage(
+  private buildBaseArgs(slot: PoolSlot): string[] {
+    return [
+      '--session',
+      slot.name,
+      '--user-agent',
+      OG_USER_AGENT,
+      '--headers',
+      JSON.stringify({ 'Accept-Language': OG_ACCEPT_LANGUAGE }),
+      '--args',
+      OG_LAUNCH_ARGS,
+    ]
+  }
+
+  private async runNavigationBatch(
     executable: string,
-    sessionName: string,
-    pageB64: string,
-    opts: { signal: AbortSignal; maxBodyBytes: number },
-  ): Promise<{ href: string; html: string }> {
+    slot: PoolSlot,
+    url: URL,
+    ac: AbortController,
+    opts: SafeFetchOptions,
+  ): Promise<NavigationPayload> {
     const { stdout } = await execFileAsync(
       executable,
       [
-        '--session',
-        sessionName,
+        ...this.buildBaseArgs(slot),
         'batch',
         '--bail',
         '--json',
-        `eval -b ${pageB64}`,
+        `open ${url.toString()}`,
+        `wait --load networkidle --timeout ${OG_NETWORKIDLE_MS}`,
+        `eval -b ${PAGE_B64}`,
       ],
       {
-        signal: opts.signal,
+        signal: ac.signal,
         maxBuffer: Math.max(opts.maxBodyBytes * 2, 4_194_304),
         windowsHide: true,
         env: process.env,
       },
     )
-    const raw = extractStringFromBatchOutput(stdout)
+    return parseNavigationPayload(extractStringFromBatchOutput(stdout))
+  }
+
+  private async reloadAndExtract(
+    executable: string,
+    slot: PoolSlot,
+    ac: AbortController,
+    opts: SafeFetchOptions,
+  ): Promise<NavigationPayload> {
+    const { stdout } = await execFileAsync(
+      executable,
+      [
+        ...this.buildBaseArgs(slot),
+        'batch',
+        '--bail',
+        '--json',
+        'reload',
+        `wait --load networkidle --timeout ${OG_NETWORKIDLE_MS}`,
+        `eval -b ${PAGE_B64}`,
+      ],
+      {
+        signal: ac.signal,
+        maxBuffer: Math.max(opts.maxBodyBytes * 2, 4_194_304),
+        windowsHide: true,
+        env: process.env,
+      },
+    )
+    return parseNavigationPayload(extractStringFromBatchOutput(stdout))
+  }
+
+  private async fetchDocumentStatus(
+    executable: string,
+    slot: PoolSlot,
+    url: URL,
+    ac: AbortController,
+  ): Promise<{ status: number; url: string } | null> {
+    const hostGlob = `${url.protocol}//${url.hostname}/**`
+    let stdout: string
     try {
-      const parsed = JSON.parse(raw) as { href?: unknown; html?: unknown }
-      return {
-        href: typeof parsed.href === 'string' ? parsed.href : '',
-        html: typeof parsed.html === 'string' ? parsed.html : '',
-      }
-    } catch {
-      return { href: '', html: raw }
+      const res = await execFileAsync(
+        executable,
+        [
+          ...this.buildBaseArgs(slot),
+          'network',
+          'requests',
+          '--filter',
+          hostGlob,
+          '--type',
+          'document',
+          '--status',
+          '400-599',
+          '--json',
+        ],
+        {
+          signal: ac.signal,
+          maxBuffer: 1_048_576,
+          windowsHide: true,
+          env: process.env,
+        },
+      )
+      stdout = res.stdout
+    } catch (error) {
+      // `network requests` is a diagnostic side channel — if the CLI does not
+      // implement the filter shape we expect, swallow and let the main flow
+      // proceed. The challenge detector covers the most common bad-page case.
+      this.logger.debug(
+        `network requests inspection failed for ${url.toString()}: ${(error as Error).message}`,
+      )
+      return null
     }
+    const trimmed = stdout.trim()
+    if (!trimmed) return null
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(trimmed)
+    } catch {
+      return null
+    }
+    if (!Array.isArray(parsed) || parsed.length === 0) return null
+    // Last entry is the final navigation after any redirect chain.
+    const last = parsed.at(-1) as
+      | { status?: unknown; url?: unknown }
+      | undefined
+    const status = typeof last?.status === 'number' ? last.status : NaN
+    const reqUrl = typeof last?.url === 'string' ? last.url : url.toString()
+    if (!Number.isFinite(status) || status < 400) return null
+    return { status, url: reqUrl }
+  }
+
+  private detectChallenge(html: string, title: string): string | null {
+    const headHtml = html.slice(0, OG_HTML_SCAN_HEAD_BYTES).toLowerCase()
+    const lowerTitle = title.toLowerCase()
+    for (const signature of OG_CHALLENGE_SIGNATURES) {
+      if (lowerTitle.includes(signature) || headHtml.includes(signature)) {
+        return signature
+      }
+    }
+    return null
   }
 
   private async assertBrowserFinalUrlSafe(rawUrl: string): Promise<URL> {
@@ -279,7 +380,7 @@ export class BrowserFetchService {
 
   private async captureScreenshot(
     executable: string,
-    sessionName: string,
+    slot: PoolSlot,
     timeoutMs: number,
   ): Promise<Buffer | undefined> {
     const dir = await mkdtemp(join(tmpdir(), 'mx-og-screenshot-'))
@@ -287,16 +388,10 @@ export class BrowserFetchService {
       const ac = new AbortController()
       const timer = setTimeout(() => ac.abort(), timeoutMs)
       try {
-        // agent-browser 0.26.0's `batch` sub-command parser does not recognize
-        // the screenshot-specific flags (e.g. `--screenshot-format`) — it
-        // treats them as positional [selector] tokens and the command fails
-        // with "Element not found". Run viewport + screenshot as two
-        // standalone invocations against the same `--session` instead.
         await execFileAsync(
           executable,
           [
-            '--session',
-            sessionName,
+            ...this.buildBaseArgs(slot),
             'set',
             'viewport',
             String(SCREENSHOT_VIEWPORT_WIDTH),
@@ -312,8 +407,7 @@ export class BrowserFetchService {
         await execFileAsync(
           executable,
           [
-            '--session',
-            sessionName,
+            ...this.buildBaseArgs(slot),
             'screenshot',
             '--screenshot-format',
             SCREENSHOT_CLI_FORMAT,
@@ -333,10 +427,6 @@ export class BrowserFetchService {
         clearTimeout(timer)
       }
 
-      // CLI filename is not stable across versions, so discover the output
-      // instead of hard-coding. Strict: expect exactly one matching file; zero
-      // or many is treated as failure so a CLI behavior shift surfaces here
-      // rather than silently picking one.
       const entries = await readdir(dir)
       const matches = entries.filter(
         (name) =>
@@ -351,7 +441,6 @@ export class BrowserFetchService {
       }
       return await readFile(join(dir, matches[0]))
     } finally {
-      // Best-effort tempdir cleanup. Failure is non-fatal.
       try {
         await rm(dir, { recursive: true, force: true })
       } catch {
@@ -361,12 +450,23 @@ export class BrowserFetchService {
   }
 }
 
-/**
- * agent-browser 0.26 `batch --json` prints a JSON array — one entry per
- * sub-command. The last entry corresponds to our `eval`; the evaluated string
- * is nested at `entry.result.result` (the outer `result` wraps the command
- * envelope, the inner is the eval return value).
- */
+function parseNavigationPayload(raw: string): NavigationPayload {
+  try {
+    const parsed = JSON.parse(raw) as {
+      href?: unknown
+      html?: unknown
+      title?: unknown
+    }
+    return {
+      href: typeof parsed.href === 'string' ? parsed.href : '',
+      html: typeof parsed.html === 'string' ? parsed.html : '',
+      title: typeof parsed.title === 'string' ? parsed.title : '',
+    }
+  } catch {
+    return { href: '', html: raw, title: '' }
+  }
+}
+
 function extractStringFromBatchOutput(stdout: string): string {
   const trimmed = stdout.trim()
   if (!trimmed) return ''
