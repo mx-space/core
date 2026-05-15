@@ -803,13 +803,13 @@ export const stepComments: MigrationStep = {
           state: d.state ?? 0,
           parentCommentId: resolver.ref(
             'comments',
-            d.parent,
+            d.parentCommentId,
             'parentCommentId',
             false,
           ),
           rootCommentId: resolver.ref(
             'comments',
-            d.root,
+            d.rootCommentId,
             'rootCommentId',
             false,
           ),
