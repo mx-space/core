@@ -1,15 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import {
-  and,
-  desc,
-  eq,
-  gt,
-  inArray,
-  isNull,
-  lt,
-  type SQL,
-  sql,
-} from 'drizzle-orm'
+import { and, desc, eq, gt, inArray, lt, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { recentlies } from '~/database/schema'
@@ -42,8 +32,6 @@ const mapRow = (row: typeof recentlies.$inferSelect): RecentlyRow => ({
   down: row.down,
   createdAt: row.createdAt,
   modifiedAt: row.modifiedAt,
-  enrichmentProvider: row.enrichmentProvider ?? null,
-  enrichmentExternalId: row.enrichmentExternalId ?? null,
 })
 
 @Injectable()
@@ -122,8 +110,6 @@ export class RecentlyRepository extends BaseRepository {
         refType: input.refType ?? null,
         refId: input.refId ? parseEntityId(input.refId) : null,
         allowComment: input.allowComment ?? true,
-        enrichmentProvider: input.enrichmentProvider ?? null,
-        enrichmentExternalId: input.enrichmentExternalId ?? null,
       })
       .returning()
     return mapRow(row)
@@ -149,10 +135,6 @@ export class RecentlyRepository extends BaseRepository {
     if (patch.down !== undefined) update.down = patch.down
     if (patch.commentsIndex !== undefined)
       update.commentsIndex = patch.commentsIndex
-    if (patch.enrichmentProvider !== undefined)
-      update.enrichmentProvider = patch.enrichmentProvider
-    if (patch.enrichmentExternalId !== undefined)
-      update.enrichmentExternalId = patch.enrichmentExternalId
     const [row] = await this.db
       .update(recentlies)
       .set(update)
@@ -191,14 +173,6 @@ export class RecentlyRepository extends BaseRepository {
       .select({ count: sql<number>`count(*)::int` })
       .from(recentlies)
     return Number(row?.count ?? 0)
-  }
-
-  async findWithoutEnrichment(): Promise<RecentlyRow[]> {
-    const rows = await this.db
-      .select()
-      .from(recentlies)
-      .where(isNull(recentlies.enrichmentExternalId))
-    return rows.map(mapRow)
   }
 
   async findRecent(size: number): Promise<RecentlyRow[]> {
