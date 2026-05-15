@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+# [12.6.0](https://github.com/mx-space/core/compare/v12.5.4...v12.6.0) (2026-05-15)
+
+
+### Features
+
+* **enrichment:** harden Open Graph browser mode against anti-bot pages ([#2724](https://github.com/mx-space/core/issues/2724)) ([383e0e4](https://github.com/mx-space/core/commit/383e0e4e1977873025f1385c81eeb3927b91246f))
+* **enrichment:** keep og-parser image OG-strict with dimensions ([8651e5c](https://github.com/mx-space/core/commit/8651e5c24e73c0459625e069d3e0a3c56b8e4153))
+
+
 ## <small>12.5.4 (2026-05-14)</small>
 
 * release: v12.5.4 ([02aafdf](https://github.com/mx-space/core/commit/02aafdf))
