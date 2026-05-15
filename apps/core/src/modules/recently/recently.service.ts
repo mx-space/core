@@ -189,9 +189,7 @@ export class RecentlyService {
   /**
    * Stamp `commentsIndex` with the live comment count per row. The persistent
    * counter column drifts (it is not incremented on comment create), so all
-   * read paths recompute it before returning. Mongo did this via a
-   * `$lookup`-driven `$addFields: { comments: { $size: ... } }` pipeline; PG
-   * does it as a single batched count grouped by `ref_id`.
+   * read paths recompute it before returning.
    */
   private async attachCommentCount<T extends RecentlyRow>(
     rows: T[],

@@ -86,10 +86,8 @@ export class TranslationEntryInterceptor implements NestInterceptor {
   ): Promise<any> {
     if (data == null) return data
 
-    // Always convert to plain objects first to ensure objectScan can
-    // traverse persistence documents (e.g. populated refs like category).
-    // Without this, a mix of .lean() and non-.lean() data causes partial
-    // scan success, skipping the fallback for the non-plain parts.
+    // Normalize to plain objects first so objectScan can traverse the tree;
+    // non-plain values (e.g. Date) would otherwise cause partial scan success.
     const plainData = this.toScannableObject(data)
     const translationTarget = plainData ?? data
     const { entityLookups, dictLookups } = this.buildLookups(
@@ -208,14 +206,6 @@ export class TranslationEntryInterceptor implements NestInterceptor {
     }
 
     if (!isPlainObject(value)) {
-      if (typeof value.toJSON === 'function') {
-        return this.normalizeScannableValue(value.toJSON())
-      }
-
-      if (typeof value.toObject === 'function') {
-        return this.normalizeScannableValue(value.toObject())
-      }
-
       try {
         return JSON.parse(JSON.stringify(value))
       } catch {

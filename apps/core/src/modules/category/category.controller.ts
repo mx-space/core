@@ -155,10 +155,8 @@ export class CategoryController {
       }),
       applyResult: (item: any, translation) => {
         if (!translation?.isTranslated) return item
-        const plain =
-          typeof item.toObject === 'function' ? item.toObject() : item
         return {
-          ...plain,
+          ...item,
           title: translation.title,
           isTranslated: true,
           translationMeta: translation.translationMeta,

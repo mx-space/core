@@ -138,9 +138,7 @@ export class AggregateService {
   > {
     const baseUrl =
       (await this.configs.get('url')).webUrl?.replace(/\/$/, '') ?? ''
-    // Full table scans on purpose — sitemaps must be exhaustive. The old
-    // mongoose impl had no LIMIT either; the PG cutover capped at 100 which
-    // silently truncated medium-sized sites.
+    // Full table scans on purpose — sitemaps must be exhaustive.
     const [pages, posts, notes] = await Promise.all([
       this.pageService.findAll(),
       this.postService.repository.findPublishedForSitemap(),
