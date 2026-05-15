@@ -1,19 +1,25 @@
 ## TL;DR
 
-This release hardens Open Graph enrichment: link cards now skip anti-bot challenge pages and stop rendering favicons in place of real preview images.
+Recently entries now resolve a link card for every URL in their body, and the deprecated typed-entry kinds have been removed.
 
 ## Highlights
 
-Open Graph browser mode now resists anti-bot defenses. Every agent-browser fetch carries a realistic user agent and language headers, waits for network idle instead of a fixed delay, and inspects the main document's HTTP status. Cloudflare and Akamai challenge pages are detected by signature and retried once; a persistent block surfaces as a distinct error instead of being cached as valid HTML.
+Recently (碎语) entries previously carried at most one enriched link. They now expose a URL-keyed enrichment map built the same way posts, notes and pages already work — the server scans the entry body and resolves a card for each link it finds. An entry that references several links gets a card for each, and enrichment is attached fresh on every read from the enrichment cache instead of being stored per row.
 
-The Open Graph parser is now strict about preview images. The `image` field holds only a genuine `og:image` or `twitter:image`, so link cards no longer drop a square favicon into a wide image slot. Image dimensions are parsed from `og:image:width` and `og:image:height`, and any discovered icons move to the result's `links` collection.
+The legacy typed recently kinds — `book`, `media`, `music`, `github`, `academic`, `code` — have been retired. `RecentlyTypeEnum` now only distinguishes `text` and `link`, and the type is derived server-side from whether the body contains a URL. The per-type metadata schemas and the discriminated-union create/update DTO are gone; creating an entry now only needs `content`.
 
 ## Changes
 
 ### Features
-- Open Graph browser mode detects and skips Cloudflare/Akamai challenge pages, sends realistic browser headers, and waits for network idle — preventing anti-bot interstitials and HTTP 4xx/5xx error pages from being cached as page content. ([#2724](https://github.com/mx-space/core/pull/2724))
-- The Open Graph parser keeps the `image` field strictly to real `og:image`/`twitter:image` values, parses image dimensions from OG width/height tags, and relocates favicons and link icons into `links`. ([8651e5c](https://github.com/mx-space/core/commit/8651e5c24e73c0459625e069d3e0a3c56b8e4153))
+
+- Recently entries resolve a link card per URL through a URL-keyed enrichment map, replacing the single per-entry enrichment. ([#2726](https://github.com/mx-space/core/pull/2726))
+- Deprecated typed recently entries (book/media/music/github/academic/code) removed; `RecentlyTypeEnum` collapses to `text`/`link`. ([#2726](https://github.com/mx-space/core/pull/2726))
+
+## Upgrade Notes
+
+- An app-migration drops the `recentlies.enrichment_provider` and `recentlies.enrichment_external_id` columns automatically on startup — no manual action required.
+- The recently API response shape changed: `enrichment` / `enrichmentExternalId` / `enrichmentProvider` are replaced by an `enrichments` map. Custom frontends that read recently entries should move to `@mx-space/api-client` 4.2.0; the bundled dashboard (mx-admin 7.3.0) already matches.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v12.5.4...v12.6.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v12.6.0...v12.7.0

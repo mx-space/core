@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+# [12.7.0](https://github.com/mx-space/core/compare/v12.6.0...v12.7.0) (2026-05-15)
+
+
+### Features
+
+* **recently:** URL-keyed enrichment map, drop typed entries ([#2726](https://github.com/mx-space/core/issues/2726)) ([91b8a47](https://github.com/mx-space/core/commit/91b8a47469e9b9f96016b7aa3651a2ffa6669719))
+
+
 # [12.6.0](https://github.com/mx-space/core/compare/v12.5.4...v12.6.0) (2026-05-15)
 
 
