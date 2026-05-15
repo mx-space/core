@@ -8,7 +8,6 @@ import {
   pgTable,
   text,
   uniqueIndex,
-  varchar,
 } from 'drizzle-orm/pg-core'
 
 import { readers } from './auth'
@@ -183,18 +182,10 @@ export const recentlies = pgTable(
     modifiedAt: tsCol('modified_at'),
     up: integer('up').notNull().default(0),
     down: integer('down').notNull().default(0),
-    enrichmentProvider: varchar('enrichment_provider', { length: 64 }),
-    enrichmentExternalId: varchar('enrichment_external_id', {
-      length: 256,
-    }),
   },
   (table) => [
     index('recentlies_ref_idx').on(table.refType, table.refId),
     index('recentlies_created_at_idx').on(table.createdAt),
-    index('recentlies_enrichment_idx').on(
-      table.enrichmentProvider,
-      table.enrichmentExternalId,
-    ),
   ],
 )
 

@@ -68,7 +68,10 @@ export class RecentlyController {
   @Put('/:id')
   @Auth()
   async update(@Param() { id }: EntityIdDto, @Body() body: RecentlyDto) {
-    const res = await this.recentlyService.update(id, body)
+    const res = await this.recentlyService.update(
+      id,
+      body as unknown as Partial<RecentlyModel>,
+    )
     if (!res) {
       throw new BizException(ErrorCodeEnum.EntryNotFound)
     }

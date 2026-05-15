@@ -14,14 +14,14 @@ import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { CommentService } from '../comment/comment.service'
-import { EnrichmentService, refKey } from '../enrichment/enrichment.service'
+import { EnrichmentService } from '../enrichment/enrichment.service'
 import type { EnrichmentResult } from '../enrichment/enrichment.types'
+import { UrlExtractorService } from '../enrichment/url-extractor.service'
 import { RecentlyRepository } from './recently.repository'
-import { RecentlyAttitudeEnum } from './recently.schema'
+import { RecentlyAttitudeEnum, RecentlyTypeEnum } from './recently.schema'
 import { RecentlyModel, type RecentlyRow } from './recently.types'
 
-const URL_REGEX = /https?:\/\/\S+/i
-const URL_TAIL_TRIM = /[!"'),.:;>?\]`}—…、。〉《》「」『』〕！），：；？]+$/
+type EnrichmentMap = Record<string, EnrichmentResult>
 
 /**
  * Minimal hydrated reference returned alongside a recently row when its
@@ -50,6 +50,7 @@ export class RecentlyService {
     private readonly commentService: CommentService,
     @Inject(forwardRef(() => EnrichmentService))
     private readonly enrichmentService: EnrichmentService,
+    private readonly urlExtractor: UrlExtractorService,
   ) {}
 
   public get repository() {
@@ -61,14 +62,14 @@ export class RecentlyService {
     if (!row) return row
     const withCount = await this.attachCommentCount([row])
     const [withRef] = await this.attachRef(withCount)
-    const [withEnrichment] = await this.attachEnrichment([withRef])
+    const [withEnrichment] = await this.attachEnrichments([withRef])
     return withEnrichment
   }
 
   async findRecent(size: number) {
     const rows = await this.recentlyRepository.findRecent(size)
     const withRef = await this.attachRef(await this.attachCommentCount(rows))
-    return this.attachEnrichment(withRef)
+    return this.attachEnrichments(withRef)
   }
 
   async count() {
@@ -80,7 +81,7 @@ export class RecentlyService {
     const withRef = await this.attachRef(
       await this.attachCommentCount(result.data),
     )
-    return this.attachEnrichment(withRef)
+    return this.attachEnrichments(withRef)
   }
 
   async getOne(id: string) {
@@ -177,7 +178,7 @@ export class RecentlyService {
       size: size ?? 10,
     })
     const withRef = await this.attachRef(await this.attachCommentCount(rows))
-    return this.attachEnrichment(withRef)
+    return this.attachEnrichments(withRef)
   }
 
   async getLatestOne() {
@@ -218,21 +219,16 @@ export class RecentlyService {
       refType = existModel.type
     }
 
-    const url = (model as any).metadata?.url
-    const enrichmentRef = url ? this.enrichmentService.matchUrlToRef(url) : null
+    const content = model.content ?? ''
+    const urls = this.urlExtractor.extractFromMarkdown(content)
 
     const withRef = await this.recentlyRepository.create({
-      content: model.content,
-      type: (model as any).type,
-      metadata: (model as any).metadata,
+      content,
+      type: urls.length > 0 ? RecentlyTypeEnum.Link : RecentlyTypeEnum.Text,
       refId,
       refType: refType as any,
-      enrichmentProvider: enrichmentRef?.provider ?? null,
-      enrichmentExternalId: enrichmentRef?.externalId ?? null,
     })
-    if (url && enrichmentRef) {
-      this.enrichmentService.schedulePrefetchUrls([url])
-    }
+    this.enrichmentService.schedulePrefetchUrls(urls)
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_CREATE, withRef, {
         scope: EventScope.TO_SYSTEM_VISITOR,
@@ -258,22 +254,23 @@ export class RecentlyService {
   }
 
   async update(id: string, model: Partial<RecentlyModel>) {
-    const url = (model as any).metadata?.url
-    const enrichmentRef = url ? this.enrichmentService.matchUrlToRef(url) : null
+    const contentChanged = model.content !== undefined
+    const urls = contentChanged
+      ? this.urlExtractor.extractFromMarkdown(model.content ?? '')
+      : []
 
     const withRef = await this.recentlyRepository.update(id, {
       content: model.content,
-      type: model.type,
-      metadata: model.metadata,
+      type: contentChanged
+        ? urls.length > 0
+          ? RecentlyTypeEnum.Link
+          : RecentlyTypeEnum.Text
+        : undefined,
       modifiedAt: new Date(),
-      ...(model.metadata !== undefined && {
-        enrichmentProvider: enrichmentRef?.provider ?? null,
-        enrichmentExternalId: enrichmentRef?.externalId ?? null,
-      }),
     })
     if (!withRef) return null
-    if (url && enrichmentRef) {
-      this.enrichmentService.schedulePrefetchUrls([url])
+    if (contentChanged) {
+      this.enrichmentService.schedulePrefetchUrls(urls)
     }
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_UPDATE, withRef, {
@@ -347,77 +344,39 @@ export class RecentlyService {
   }
 
   /**
-   * Batch-hydrate `enrichment` for each row via the shared
-   * {@link EnrichmentService.hydrateRefs} primitive: one DB read for the
-   * whole page (instead of N getOne calls), Redis-warm SWR semantics,
-   * locale-aware fallback, and background refresh enqueue on cache miss.
-   * Mirrors what `attachEnrichments` does for post/note/page link cards.
+   * Attach an `enrichments` map keyed by URL to each row. Scans every row's
+   * markdown `content` for single-link-paragraph URLs, hydrates the deduped
+   * union in one batch via {@link EnrichmentService.hydrateUrls}, then maps
+   * each row's own URLs back. Same contract as post/note/page link cards.
    */
-  private async attachEnrichment<T extends RecentlyRow>(
+  private async attachEnrichments<T extends RecentlyRow>(
     rows: T[],
-  ): Promise<Array<T & { enrichment?: EnrichmentResult | null }>> {
+  ): Promise<Array<T & { enrichments: EnrichmentMap }>> {
     if (rows.length === 0) return []
 
-    const refs: Array<{ provider: string; externalId: string; url?: string }> =
-      []
-    for (const row of rows) {
-      if (row.enrichmentProvider && row.enrichmentExternalId) {
-        refs.push({
-          provider: row.enrichmentProvider,
-          externalId: row.enrichmentExternalId,
-          url: this.resolveEnrichmentUrl(row),
-        })
-      }
-    }
-    if (refs.length === 0) {
-      return rows.map((row) => ({ ...row, enrichment: null }))
+    const urlsByRow = rows.map((row) =>
+      this.urlExtractor.extractFromMarkdown(row.content),
+    )
+    const allUrls = [...new Set(urlsByRow.flat())]
+    if (allUrls.length === 0) {
+      return rows.map((row) => ({ ...row, enrichments: {} }))
     }
 
     const lang = RequestContext.currentLang()
-    let map: Record<string, EnrichmentResult> = {}
+    let map: EnrichmentMap = {}
     try {
-      map = await this.enrichmentService.hydrateRefs(refs, lang)
+      map = await this.enrichmentService.hydrateUrls(allUrls, lang)
     } catch {
       // hydration failure must never crash the list response
     }
 
-    return rows.map((row) => {
-      if (!row.enrichmentProvider || !row.enrichmentExternalId) {
-        return { ...row, enrichment: null }
+    return rows.map((row, i) => {
+      const enrichments: EnrichmentMap = {}
+      for (const url of urlsByRow[i]) {
+        const result = map[url]
+        if (result) enrichments[url] = result
       }
-      const key = refKey(row.enrichmentProvider, row.enrichmentExternalId)
-      return { ...row, enrichment: map[key] ?? null }
+      return { ...row, enrichments }
     })
   }
-
-  private resolveEnrichmentUrl(row: RecentlyRow): string | undefined {
-    if (!row.enrichmentProvider || !row.enrichmentExternalId) return undefined
-    const metadataUrl = (row.metadata as { url?: unknown } | null)?.url
-    const candidates = [
-      typeof metadataUrl === 'string' ? metadataUrl : undefined,
-      extractFirstUrl(row.content),
-    ].filter((url): url is string => !!url)
-
-    for (const url of candidates) {
-      const ref = this.enrichmentService.matchUrlToRef(url)
-      if (
-        ref?.provider === row.enrichmentProvider &&
-        ref.externalId === row.enrichmentExternalId
-      ) {
-        return url
-      }
-    }
-    return undefined
-  }
-}
-
-function extractFirstUrl(
-  content: string | null | undefined,
-): string | undefined {
-  if (!content) return undefined
-  const match = content.match(URL_REGEX)
-  if (!match) return undefined
-  let url = match[0]
-  while (URL_TAIL_TRIM.test(url)) url = url.replace(URL_TAIL_TRIM, '')
-  return url || undefined
 }
