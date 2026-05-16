@@ -1,25 +1,12 @@
 ## TL;DR
 
-Recently entries now resolve a link card for every URL in their body, and the deprecated typed-entry kinds have been removed.
-
-## Highlights
-
-Recently (碎语) entries previously carried at most one enriched link. They now expose a URL-keyed enrichment map built the same way posts, notes and pages already work — the server scans the entry body and resolves a card for each link it finds. An entry that references several links gets a card for each, and enrichment is attached fresh on every read from the enrichment cache instead of being stored per row.
-
-The legacy typed recently kinds — `book`, `media`, `music`, `github`, `academic`, `code` — have been retired. `RecentlyTypeEnum` now only distinguishes `text` and `link`, and the type is derived server-side from whether the body contains a URL. The per-type metadata schemas and the discriminated-union create/update DTO are gone; creating an entry now only needs `content`.
+Restores comment-reply email notifications (broken since v12) and inlines built-in templates into the bundle, dropping the external assets repo dependency.
 
 ## Changes
 
-### Features
-
-- Recently entries resolve a link card per URL through a URL-keyed enrichment map, replacing the single per-entry enrichment. ([#2726](https://github.com/mx-space/core/pull/2726))
-- Deprecated typed recently entries (book/media/music/github/academic/code) removed; `RecentlyTypeEnum` collapses to `text`/`link`. ([#2726](https://github.com/mx-space/core/pull/2726))
-
-## Upgrade Notes
-
-- An app-migration drops the `recentlies.enrichment_provider` and `recentlies.enrichment_external_id` columns automatically on startup — no manual action required.
-- The recently API response shape changed: `enrichment` / `enrichmentExternalId` / `enrichmentProvider` are replaced by an `enrichments` map. Custom frontends that read recently entries should move to `@mx-space/api-client` 4.2.0; the bundled dashboard (mx-admin 7.3.0) already matches.
+- Comment-reply emails now resolve to the correct template filenames again; the v12 PG migration silently shifted the enum values out of step with the template files on disk, so notification mails to commenters and owners have been failing for the past two weeks. ([a549765](https://github.com/mx-space/core/commit/a5497655b9e0d6a2ef880e077022ed2c3f9a4d3c))
+- Built-in email and markdown templates are now compiled into the JS bundle via Vite `?raw` imports. The `mx-space/assets` external repo and the `apps/core/assets` symlink are no longer required at runtime, in Docker, or for `pnpm install`. Operators upgrading from source can delete the local `assets/` checkout. User overrides under `$DATA_DIR/assets/` continue to take precedence. ([da4cdd4](https://github.com/mx-space/core/commit/da4cdd48ab5b46aebe51d8ed7d92ce97e0b9a8eb))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v12.6.0...v12.7.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v12.7.0...v12.7.1

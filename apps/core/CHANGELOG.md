@@ -1,4 +1,10 @@
-# CHANGELOG
+## [12.7.1](https://github.com/mx-space/core/compare/v12.7.0...v12.7.1) (2026-05-16)
+
+
+### Bug Fixes
+
+* **comment:** restore email type enum values to match template filenames ([a549765](https://github.com/mx-space/core/commit/a5497655b9e0d6a2ef880e077022ed2c3f9a4d3c))
+
 
 
 # [12.7.0](https://github.com/mx-space/core/compare/v12.6.0...v12.7.0) (2026-05-15)
