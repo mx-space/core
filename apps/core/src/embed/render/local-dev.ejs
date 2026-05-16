@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script type="module">
+      import { inject } from 'https://localhost:9528/@vite-plugin-checker-runtime'
+
+      inject({
+        overlayConfig: {},
+        base: '/',
+      })
+    </script>
+
+    <script type="module" src="https://localhost:9528/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <link rel="icon" href="https://localhost:9528/favicon.svg" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
+    />
+    <title>Mx Space Admin Vue 3 v2</title>
+    <script>
+      window.injectData = {}
+      window.version = 'N/A'
+      window.pageSource = 'dev-local'
+    </script>
+    <script id="env_injection">
+      window.injectData = {
+        WEB_URL: '',
+        GATEWAY: '',
+        BASE_API: '',
+        PAGE_PROXY: true,
+      }
+    </script>
+
+    <script id="env_injection">
+      window.injectData = {
+        WEB_URL: '<%- web_url %>',
+        GATEWAY: '<%- gateway_url %>',
+        BASE_API: '<%- base_api %>',
+        PAGE_PROXY: true,
+      }
+    </script>
+    <script>
+      window.version = 'dev'
+    </script>
+    <!-- injectable script -->
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <noscript>
+      <strong
+        >We're sorry but MX Space Admin Vue 3 doesn't work properly without
+        JavaScript enabled. Please enable it to continue.</strong
+      >
+      <strong>
+        It may be a network problem that caused the failure to load the JS file.
+      </strong>
+    </noscript>
+    <script type="module" src="https://localhost:9528/src/main.ts"></script>
+  </body>
+</html>

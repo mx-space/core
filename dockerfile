@@ -33,7 +33,6 @@ RUN npm i -g agent-browser
 
 WORKDIR /app
 COPY --from=builder /app/out .
-COPY --from=builder /app/assets ./assets
 
 RUN npm i sharp -g
 RUN npm i sharp

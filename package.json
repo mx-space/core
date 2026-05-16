@@ -15,7 +15,7 @@
     "check:ai-translation-hash": "pnpm -C apps/core exec tsx scripts/check-ai-translation-hash.ts",
     "format": "prettier --write \"apps/**/*.ts\"",
     "lexical-live": "pnpm -C apps/core exec node scripts/lexical-translation-live.mjs",
-    "prepare": "simple-git-hooks && node scripts/init-project.mjs",
+    "prepare": "simple-git-hooks",
     "build": "pnpm -C \"apps/core\" run build",
     "dev": "pnpm -C \"apps/core\" run dev",
     "bundle": "pnpm -C \"apps/core\" run bundle",

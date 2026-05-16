@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="zh">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #fafafa;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    "
+  >
+    <div
+      style="
+        display: none;
+        overflow: hidden;
+        line-height: 1px;
+        opacity: 0;
+        max-height: 0;
+        max-width: 0;
+      "
+    >
+      你关注的 @<%= aggregate.owner.name %> 有新的内容发布啦。<%=
+      (aggregate.post.text || '').slice(0, 20) %>
+    </div>
+
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      style="background-color: #fafafa"
+    >
+      <tr>
+        <td align="center" style="padding: 48px 16px">
+          <table
+            role="presentation"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            width="560"
+            style="
+              max-width: 560px;
+              width: 100%;
+              background-color: #fff;
+              border: 1px solid #eaeaea;
+              border-radius: 6px;
+            "
+          >
+            <!-- Header -->
+            <tr>
+              <td style="padding: 40px 40px 0">
+                <table
+                  role="presentation"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  style="margin-bottom: 24px"
+                >
+                  <tr>
+                    <td
+                      style="vertical-align: middle; padding-right: 10px"
+                    >
+                      <img
+                        src="<%= aggregate.owner.avatar %>"
+                        width="28"
+                        height="28"
+                        alt=""
+                        style="
+                          display: block;
+                          width: 28px;
+                          height: 28px;
+                          border-radius: 50%;
+                        "
+                      />
+                    </td>
+                    <td style="vertical-align: middle">
+                      <p
+                        style="
+                          font-size: 13px;
+                          color: #666;
+                          margin: 0;
+                          line-height: 1.4;
+                        "
+                      >
+                        <strong style="color: #000"
+                          ><%= aggregate.owner.name %></strong
+                        >
+                        发布了新内容
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <h1
+                  style="
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #000;
+                    line-height: 1.3;
+                    margin: 0;
+                  "
+                >
+                  <%= title %>
+                </h1>
+              </td>
+            </tr>
+
+            <!-- Divider -->
+            <tr>
+              <td style="padding: 24px 40px 0">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td
+                      style="border-top: 1px solid #eaeaea; font-size: 0"
+                    >
+                      &nbsp;
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Content -->
+            <tr>
+              <td style="padding: 24px 40px 36px">
+                <p
+                  style="
+                    font-size: 14px;
+                    color: #444;
+                    line-height: 1.75;
+                    margin: 0 0 32px;
+                  "
+                >
+                  <%= text %>
+                </p>
+
+                <table
+                  role="presentation"
+                  align="center"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td
+                      style="background-color: #000; border-radius: 6px"
+                    >
+                      <a
+                        href="<%= detail_link %>"
+                        target="_blank"
+                        style="
+                          display: inline-block;
+                          padding: 10px 28px;
+                          font-size: 13px;
+                          font-weight: 500;
+                          color: #fff;
+                          text-decoration: none;
+                          line-height: 1.4;
+                        "
+                        >阅读全文</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer divider -->
+            <tr>
+              <td style="padding: 0 40px">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td
+                      style="border-top: 1px solid #eaeaea; font-size: 0"
+                    >
+                      &nbsp;
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding: 20px 40px 24px">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td style="font-size: 12px; color: #999">
+                      &copy; <%= new Date().getFullYear() %>
+                      <%= aggregate.owner.name %>
+                    </td>
+                    <td
+                      style="
+                        font-size: 12px;
+                        text-align: right;
+                      "
+                    >
+                      <a
+                        href="<%= unsubscribe_link %>"
+                        target="_blank"
+                        style="color: #999; text-decoration: underline"
+                        >退订</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

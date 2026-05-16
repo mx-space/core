@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 declare global {
   export type KV<T = any> = Record<string, T>
 
