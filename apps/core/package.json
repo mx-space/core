@@ -127,7 +127,7 @@
     "nodemailer": "8.0.7",
     "object-scan": "^20.0.4",
     "octokit": "^5.0.5",
-    "openai": "6.37.0",
+    "openai": "6.38.0",
     "pg": "^8.20.0",
     "picocolors": "^1.1.1",
     "pluralize": "^8.0.0",
