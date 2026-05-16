@@ -10,6 +10,6 @@ export enum CommentAnchorMode {
 }
 
 export enum CommentReplyMailType {
-  Guest = 'comment-reply-guest',
-  Owner = 'comment-reply-owner',
+  Guest = 'guest',
+  Owner = 'owner',
 }
