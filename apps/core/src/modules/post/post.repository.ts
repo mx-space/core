@@ -7,6 +7,7 @@ import {
   gte,
   ilike,
   inArray,
+  lt,
   lte,
   type SQL,
   sql,
@@ -56,6 +57,11 @@ const mapBase = (row: typeof posts.$inferSelect): PostRow => ({
 })
 
 const pinAtDescNullsLast = sql`${posts.pinAt} desc nulls last`
+
+const yearRange = (year: number) => ({
+  end: new Date(Date.UTC(year + 1, 0, 1)),
+  start: new Date(Date.UTC(year, 0, 1)),
+})
 
 @Injectable()
 export class PostRepository extends BaseRepository {
@@ -114,9 +120,8 @@ export class PostRepository extends BaseRepository {
       filters.push(sql`${posts.tags} @> array[${params.tag}]::text[]`)
     }
     if (params.year) {
-      filters.push(
-        sql`extract(year from ${posts.createdAt})::int = ${params.year}`,
-      )
+      const { start, end } = yearRange(params.year)
+      filters.push(gte(posts.createdAt, start), lt(posts.createdAt, end))
     }
     const whereClause = filters.length > 0 ? and(...filters) : undefined
     const orderBy =
@@ -148,9 +153,7 @@ export class PostRepository extends BaseRepository {
         .where(whereClause),
     ])
 
-    const dataWithCategory = await Promise.all(
-      rows.map((r) => this.attachCategory(mapBase(r))),
-    )
+    const dataWithCategory = await this.attachCategories(rows.map(mapBase))
     const data = await this.attachRelated(dataWithCategory)
     return {
       data,
@@ -269,9 +272,7 @@ export class PostRepository extends BaseRepository {
       .where(where)
       .orderBy(desc(posts.createdAt))
       .limit(Math.max(1, size))
-    const withCategory = await Promise.all(
-      rows.map((r) => this.attachCategory(mapBase(r))),
-    )
+    const withCategory = await this.attachCategories(rows.map(mapBase))
     return this.attachRelated(withCategory)
   }
 
@@ -282,7 +283,7 @@ export class PostRepository extends BaseRepository {
       .select()
       .from(posts)
       .where(inArray(posts.id, bigInts))
-    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+    return this.attachCategories(rows.map(mapBase))
   }
 
   async findIdsByTitle(search: string): Promise<EntityId[]> {
@@ -329,12 +330,12 @@ export class PostRepository extends BaseRepository {
     const rows = await this.db
       .select()
       .from(posts)
-      .where(sql`${tag} = any(${posts.tags})`)
+      .where(sql`${posts.tags} @> array[${tag}]::text[]`)
       .orderBy(pinAtDescNullsLast, desc(posts.createdAt))
 
     const mapped = rows.map(mapBase)
     if (!options.includeCategory) return mapped
-    return Promise.all(mapped.map((row) => this.attachCategory(row)))
+    return this.attachCategories(mapped)
   }
 
   async listByCategory(
@@ -356,7 +357,7 @@ export class PostRepository extends BaseRepository {
         : await query.limit(Math.max(1, options.limit))
     const mapped = rows.map(mapBase)
     if (options.includeCategory === false) return mapped
-    return Promise.all(mapped.map((row) => this.attachCategory(row)))
+    return this.attachCategories(mapped)
   }
 
   async findByCategoryAndSlug(
@@ -437,7 +438,7 @@ export class PostRepository extends BaseRepository {
         direction === 'before' ? desc(posts.createdAt) : asc(posts.createdAt),
       )
       .limit(Math.max(1, limit))
-    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+    return this.attachCategories(rows.map(mapBase))
   }
 
   async topTagsByCount(limit: number): Promise<PostTagCount[]> {
@@ -513,7 +514,7 @@ export class PostRepository extends BaseRepository {
       .where(eq(posts.isPublished, true))
       .orderBy(desc(posts.readCount), desc(posts.createdAt))
       .limit(Math.max(1, limit))
-    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+    return this.attachCategories(rows.map(mapBase))
   }
 
   async aggregateMonthlyTrend(options: {
@@ -572,7 +573,7 @@ export class PostRepository extends BaseRepository {
       .from(posts)
       .where(eq(posts.isPublished, true))
       .orderBy(desc(posts.createdAt))
-    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+    return this.attachCategories(rows.map(mapBase))
   }
 
   async findByYearForTimeline(options: {
@@ -583,9 +584,8 @@ export class PostRepository extends BaseRepository {
     const filters: SQL[] = []
     if (options.publishedOnly) filters.push(eq(posts.isPublished, true))
     if (options.year !== undefined) {
-      filters.push(
-        sql`extract(year from ${posts.createdAt})::int = ${options.year}`,
-      )
+      const { start, end } = yearRange(options.year)
+      filters.push(gte(posts.createdAt, start), lt(posts.createdAt, end))
     }
     const orderBy =
       options.sort === 'asc' ? asc(posts.createdAt) : desc(posts.createdAt)
@@ -594,7 +594,7 @@ export class PostRepository extends BaseRepository {
       .from(posts)
       .where(filters.length ? and(...filters) : undefined)
       .orderBy(orderBy)
-    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+    return this.attachCategories(rows.map(mapBase))
   }
 
   async setRelatedPosts(
@@ -631,26 +631,40 @@ export class PostRepository extends BaseRepository {
       .select()
       .from(posts)
       .where(inArray(posts.id, ids))
-    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+    return this.attachCategories(rows.map(mapBase))
   }
 
   private async attachCategory(row: PostRow): Promise<PostRow> {
-    const idBig = parseEntityId(row.categoryId)
-    const [cat] = await this.db
+    const [withCategory] = await this.attachCategories([row])
+    return withCategory
+  }
+
+  private async attachCategories(rows: PostRow[]): Promise<PostRow[]> {
+    if (rows.length === 0) return rows
+
+    const categoryIds = [
+      ...new Set(rows.map((row) => parseEntityId(row.categoryId))),
+    ]
+    const categoryRows = await this.db
       .select()
       .from(categories)
-      .where(eq(categories.id, idBig))
-      .limit(1)
-    if (!cat) return row
-    return {
-      ...row,
-      category: {
-        id: toEntityId(cat.id) as EntityId,
-        name: cat.name,
-        slug: cat.slug,
-        type: cat.type,
-      },
+      .where(inArray(categories.id, categoryIds))
+    const categoryById = new Map(
+      categoryRows.map((cat) => [
+        cat.id.toString(),
+        {
+          id: toEntityId(cat.id) as EntityId,
+          name: cat.name,
+          slug: cat.slug,
+          type: cat.type,
+        },
+      ]),
+    )
+
+    for (const row of rows) {
+      row.category = categoryById.get(parseEntityId(row.categoryId).toString())
     }
+    return rows
   }
 
   private async attachRelated(rows: PostRow[]): Promise<PostRow[]> {

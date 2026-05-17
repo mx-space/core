@@ -4,11 +4,9 @@ import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql'
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { migrate as drizzleMigrate } from 'drizzle-orm/node-postgres/migrator'
 import pkg from 'pg'
 
-import * as schema from '~/database/schema'
+import { runSchemaMigrationFiles } from '~/processors/database/schema-migrator'
 
 const { Pool } = pkg
 
@@ -31,8 +29,7 @@ const applyMigrations = async (connectionUri: string) => {
   )
   const pool = new Pool({ connectionString: connectionUri, max: 2 })
   try {
-    const db = drizzle(pool, { schema, casing: 'snake_case' })
-    await drizzleMigrate(db, { migrationsFolder })
+    await runSchemaMigrationFiles(pool, migrationsFolder)
     migrationsApplied = true
   } finally {
     await pool.end()
