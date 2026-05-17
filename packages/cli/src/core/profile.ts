@@ -1,14 +1,15 @@
-import { promises as fs } from 'node:fs'
+import { type Dirent, promises as fs } from 'node:fs'
 import path from 'node:path'
 
 import { getConfigDir } from './config-dir'
+import type { ConfigShape, CredentialsShape } from './config-store'
 import { MxsError } from './errors'
 
 export { getConfigDir }
 
 export const PROFILE_NAME_RE = /^[\d_a-z-]{1,32}$/
 
-export const RESERVED_PROFILE_NAMES = new Set(['current', ''])
+export const RESERVED_PROFILE_NAMES = new Set(['current'])
 
 export function validateProfileName(name: string): void {
   if (!name || name.length === 0) {
@@ -53,7 +54,7 @@ export function getProfileCredentialsPath(name: string): string {
 
 export async function listProfiles(): Promise<string[]> {
   const dir = getProfilesDir()
-  let entries: import('node:fs').Dirent[]
+  let entries: Dirent[]
   try {
     entries = await fs.readdir(dir, { withFileTypes: true })
   } catch (err: any) {
@@ -126,25 +127,8 @@ async function ensureProfileDir(name: string): Promise<void> {
   } catch {}
 }
 
-export interface ProfileConfigShape {
-  api_url?: string
-  api_base?: string
-  auth_base?: string
-  api_version?: number
-  client_id?: string
-  production?: boolean
-}
-
-export interface ProfileCredentialsShape {
-  access_token: string
-  refresh_token?: string
-  expires_at: number
-  user?: {
-    id?: string
-    email?: string
-    name?: string
-  }
-}
+export type ProfileConfigShape = ConfigShape
+export type ProfileCredentialsShape = CredentialsShape
 
 export async function readProfileConfig(
   name: string,

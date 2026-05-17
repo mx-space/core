@@ -5,6 +5,9 @@ import { getConfigDir } from './config-dir'
 import { MxsError } from './errors'
 import {
   getCurrentProfile,
+  getProfileConfigPath,
+  getProfileCredentialsPath,
+  getProfileDir,
   readProfileConfig,
   readProfileCredentials,
 } from './profile'
@@ -185,6 +188,29 @@ export async function resolveConfig(
     (await getCurrentProfile()) ||
     null
 
+  if (profileName && !urlOverridden) {
+    try {
+      const stat = await fs.stat(getProfileDir(profileName))
+      if (!stat.isDirectory()) {
+        throw new MxsError({
+          code: 'profile.not_found',
+          message: `profile '${profileName}' does not exist`,
+          hint: 'run `mxs profile ls` to see configured profiles, or `mxs auth login --profile <name>` to create one',
+        })
+      }
+    } catch (err: any) {
+      if (err instanceof MxsError) throw err
+      if (err?.code === 'ENOENT') {
+        throw new MxsError({
+          code: 'profile.not_found',
+          message: `profile '${profileName}' does not exist`,
+          hint: 'run `mxs profile ls` to see configured profiles, or `mxs auth login --profile <name>` to create one',
+        })
+      }
+      throw err
+    }
+  }
+
   let profileConfig: ConfigShape = {}
   if (profileName) {
     profileConfig = await readProfileConfig(profileName)
@@ -226,7 +252,6 @@ export async function resolveConfig(
       ? Boolean(profileConfig.production)
       : false
 
-  const configDir = getConfigDir()
   return {
     apiUrl,
     apiBase,
@@ -236,10 +261,10 @@ export async function resolveConfig(
     token,
     apiKey,
     configPath: profileName
-      ? `${configDir}/profiles/${profileName}/config.json`
+      ? getProfileConfigPath(profileName)
       : getLegacyConfigPath(),
     credentialsPath: profileName
-      ? `${configDir}/profiles/${profileName}/credentials.json`
+      ? getProfileCredentialsPath(profileName)
       : getLegacyCredentialsPath(),
     profileName,
     isProduction,

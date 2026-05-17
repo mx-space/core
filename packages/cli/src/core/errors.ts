@@ -14,6 +14,7 @@ export type MxsErrorCode =
   | 'resource.not_found'
   | 'config.missing.api_url'
   | 'config.missing.token'
+  | 'profile.not_found'
   | (string & {})
 
 export interface MxsErrorOptions {

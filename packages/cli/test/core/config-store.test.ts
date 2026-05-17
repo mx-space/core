@@ -27,6 +27,8 @@ beforeEach(async () => {
 
 afterEach(async () => {
   delete process.env.XDG_CONFIG_HOME
+  delete process.env.MXS_API_URL
+  delete process.env.MXS_TOKEN
   delete process.env.MXS_API_KEY
   delete process.env.MXS_PROFILE
   await fs.rm(tmpDir, { recursive: true, force: true })
@@ -256,6 +258,35 @@ describe('resolveConfig — new resolved fields', () => {
     process.env.MXS_PROFILE = 'dev'
     const r = await resolveConfig()
     expect(r.urlOverridden).toBe(false)
+  })
+})
+
+describe('resolveConfig — profile.not_found', () => {
+  it('throws profile.not_found when current points to a non-existent profile dir', async () => {
+    const mxsDir = path.join(tmpDir, 'mxs')
+    await fs.mkdir(mxsDir, { recursive: true })
+    await fs.writeFile(path.join(mxsDir, 'current'), 'ghost\n')
+    await expect(resolveConfig()).rejects.toMatchObject({
+      code: 'profile.not_found',
+    })
+  })
+
+  it('throws profile.not_found with a helpful hint', async () => {
+    const mxsDir = path.join(tmpDir, 'mxs')
+    await fs.mkdir(mxsDir, { recursive: true })
+    await fs.writeFile(path.join(mxsDir, 'current'), 'ghost\n')
+    const err: any = await resolveConfig().catch((e) => e)
+    expect(err.hint).toMatch(/mxs profile ls/)
+    expect(err.hint).toMatch(/mxs auth login --profile/)
+  })
+
+  it('does NOT throw profile.not_found in url-override mode even with stale current pointer', async () => {
+    const mxsDir = path.join(tmpDir, 'mxs')
+    await fs.mkdir(mxsDir, { recursive: true })
+    await fs.writeFile(path.join(mxsDir, 'current'), 'ghost\n')
+    const r = await resolveConfig({ apiUrl: 'https://custom.example.com' })
+    expect(r.urlOverridden).toBe(true)
+    expect(r.apiUrl).toBe('https://custom.example.com')
   })
 })
 
