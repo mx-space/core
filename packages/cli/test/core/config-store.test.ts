@@ -16,10 +16,12 @@ beforeEach(async () => {
   process.env.XDG_CONFIG_HOME = tmpDir
   delete process.env.MXS_API_URL
   delete process.env.MXS_TOKEN
+  delete process.env.MXS_API_KEY
 })
 
 afterEach(async () => {
   delete process.env.XDG_CONFIG_HOME
+  delete process.env.MXS_API_KEY
   await fs.rm(tmpDir, { recursive: true, force: true })
 })
 
@@ -58,6 +60,18 @@ describe('resolveConfig', () => {
     process.env.MXS_TOKEN = 'abc'
     const r = await resolveConfig()
     expect(r.token).toBe('abc')
+  })
+  it('reads api key from MXS_API_KEY env', async () => {
+    process.env.MXS_API_URL = 'https://x.example.com'
+    process.env.MXS_API_KEY = 'txo-secret'
+    const r = await resolveConfig()
+    expect(r.apiKey).toBe('txo-secret')
+  })
+  it('respects api key flag override', async () => {
+    process.env.MXS_API_URL = 'https://x.example.com'
+    process.env.MXS_API_KEY = 'txo-env'
+    const r = await resolveConfig({ apiKey: 'txo-flag' })
+    expect(r.apiKey).toBe('txo-flag')
   })
 })
 

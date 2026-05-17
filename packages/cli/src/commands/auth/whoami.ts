@@ -1,21 +1,26 @@
 import { readCredentials } from '../../core/config-store'
 import { MxsError } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
-import { type GlobalFlags, resolveContext } from '../internal/shared'
+import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
 
 export async function run(flags: GlobalFlags, out: OutputOptions) {
   const ctx = await resolveContext(flags, out)
   const cred = await readCredentials()
-  if (!cred) {
+  if (!cred && !ctx.token && !ctx.apiKey) {
     throw new MxsError({
       code: 'auth.missing',
       message: 'not authenticated',
       hint: 'run `mxs auth login`',
     })
   }
+  const client = buildApiClient(ctx, flags)
+  const session =
+    ctx.token && !ctx.apiKey
+      ? await client.request('/auth/session').then((res) => res.data)
+      : null
   emitSuccess(
     {
-      user: cred.user ?? null,
+      user: session ?? cred?.user ?? null,
       api_url: ctx.apiUrl,
     },
     out,

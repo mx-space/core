@@ -158,13 +158,65 @@ describe('pollDeviceToken', () => {
 })
 
 describe('refreshAccessToken', () => {
-  it('returns null when no refresh_token', async () => {
+  it('returns null when session refresh does not extend expiry', async () => {
+    const fetcher = vi.fn(() =>
+      Promise.resolve(
+        jsonResponse(200, {
+          session: { expiresAt: new Date(1000).toISOString() },
+          user: { id: 'u1' },
+        }),
+      ),
+    )
     const r = await refreshAccessToken(
       'https://blog.example.com/api/v2/auth',
       'mxs-cli',
-      { access_token: 'x', expires_at: 0 },
+      { access_token: 'x', expires_at: 1000 },
+      { fetch: fetcher as any },
     )
     expect(r).toBeNull()
+    expect(fetcher).toHaveBeenCalledWith(
+      'https://blog.example.com/api/v2/auth/get-session',
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({
+          authorization: 'Bearer x',
+        }),
+      }),
+    )
+  })
+  it('refreshes bearer session credentials through get-session', async () => {
+    const nextExpiry = Date.now() + 3600_000
+    const fetcher = vi.fn(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            session: { expiresAt: new Date(nextExpiry).toISOString() },
+            user: { id: 'u1', email: 'owner@example.com' },
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              'set-auth-token': 'signed-session-token',
+            },
+          },
+        ),
+      ),
+    )
+
+    const r = await refreshAccessToken(
+      'https://blog.example.com/api/v2/auth',
+      'mxs-cli',
+      { access_token: 'old-session-token', expires_at: 0 },
+      { fetch: fetcher as any },
+    )
+
+    expect(r).toEqual({
+      access_token: 'signed-session-token',
+      refresh_token: undefined,
+      expires_at: nextExpiry,
+      user: { id: 'u1', email: 'owner@example.com' },
+    })
   })
   it('returns refreshed credentials when server responds', async () => {
     const fetcher = vi.fn(() =>

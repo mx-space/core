@@ -30,6 +30,7 @@ export interface ResolvedConfig {
   apiVersion: number
   clientId: string
   token?: string
+  apiKey?: string
   configPath: string
   credentialsPath: string
 }
@@ -37,6 +38,7 @@ export interface ResolvedConfig {
 export interface StoreOverrides {
   apiUrl?: string
   token?: string
+  apiKey?: string
 }
 
 const DEFAULT_CLIENT_ID = 'mxs-cli'
@@ -154,6 +156,7 @@ export async function resolveConfig(
 ): Promise<ResolvedConfig> {
   const envApiUrl = process.env.MXS_API_URL?.trim()
   const envToken = process.env.MXS_TOKEN?.trim()
+  const envApiKey = process.env.MXS_API_KEY?.trim()
 
   const file = await readConfig()
   const credentials = await readCredentials()
@@ -178,6 +181,7 @@ export async function resolveConfig(
       : file.auth_base || `${apiBase}/auth`
 
   const token = overrides.token || envToken || credentials?.access_token
+  const apiKey = overrides.apiKey || envApiKey
 
   return {
     apiUrl,
@@ -186,6 +190,7 @@ export async function resolveConfig(
     apiVersion,
     clientId: file.client_id || DEFAULT_CLIENT_ID,
     token,
+    apiKey,
     configPath: getConfigPath(),
     credentialsPath: getCredentialsPath(),
   }

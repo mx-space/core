@@ -30,6 +30,7 @@ When the CLI cannot resolve an API URL, it starts an interactive onboarding prom
 | `--output <mode>` | Output mode. Supported: `pretty-json`, `json`, `readable`, `llm`, `envelope`. |
 | `--api-url <url>` | Override the configured mx-core API origin.                                   |
 | `--token <token>` | Override the stored access token.                                             |
+| `--api-key <key>` | Authenticate with an API key through the `x-api-key` header.                  |
 | `--quiet`, `-q`   | Suppress non-error stderr messages.                                           |
 | `--verbose`       | Print HTTP method, URL, status, and duration to stderr.                       |
 | `--dry-run`       | Resolve payloads without mutating the server where supported.                 |
@@ -78,10 +79,16 @@ content:
 | ----------------- | ----------------------------------------------------------------------- |
 | `mxs auth login`  | Start the OIDC device authorization flow and store credentials.         |
 | `mxs auth logout` | Delete stored credentials.                                              |
-| `mxs auth whoami` | Show the stored authenticated user and resolved API URL.                |
+| `mxs auth whoami` | Show the server-validated authenticated user and resolved API URL.      |
 | `mxs auth status` | Show token presence, expiry, refresh-token availability, and user data. |
 
 `auth login` prints the verification URL and user code. In non-JSON interactive mode, it attempts to open the complete verification URL in the browser.
+
+The CLI refreshes credentials in two ways. If a stored OAuth `refresh_token`
+exists, it uses the refresh-token grant. Device authorization normally stores a
+Better Auth session token instead; for that path the CLI calls Better Auth
+`/get-session`, accepts the refreshed `set-auth-token` header, and updates the
+local expiry from the refreshed session.
 
 ## Posts
 
@@ -267,6 +274,7 @@ Without `--type`, `config set` attempts JSON parsing first and falls back to str
 ## LiteXML Envelopes
 
 LiteXML envelopes can carry metadata and body content in one file. Flag values override envelope metadata.
+Use `--file -` to read an envelope from stdin.
 
 ### Post Envelope
 
@@ -334,7 +342,8 @@ Example config:
 | Variable          | Meaning                                                                  |
 | ----------------- | ------------------------------------------------------------------------ |
 | `MXS_API_URL`     | API origin override.                                                     |
-| `MXS_TOKEN`       | Access token override.                                                   |
+| `MXS_TOKEN`       | Better Auth access token override; sent as `Authorization: Bearer`.      |
+| `MXS_API_KEY`     | API key override; sent as `x-api-key`.                                   |
 | `MXS_DEBUG=1`     | Enables verbose HTTP diagnostics in auth helpers.                        |
 | `EDITOR`          | Editor used by `post edit`, `note edit`, `page edit`, and `config edit`. |
 | `XDG_CONFIG_HOME` | Base directory for `mxs` config files.                                   |
@@ -359,7 +368,7 @@ Example config:
 | `cannot detect auth endpoint`                      | Verify that the URL points to a live mx-core server with device authorization enabled. Use `--verbose` to inspect probes. |
 | `API URL is not configured`                        | Set `MXS_API_URL`, pass `--api-url`, or run `mxs auth login` in an interactive terminal.                                  |
 | `EDITOR is not set`                                | Set `EDITOR`, for example `EDITOR=vim`.                                                                                   |
-| API key no longer works in `Authorization: Bearer` | Use `x-api-key` for API keys. Bearer auth is reserved for Better Auth session/OIDC access tokens.                         |
+| API key no longer works in `Authorization: Bearer` | Use `--api-key` or `MXS_API_KEY` for API keys. Bearer auth is reserved for Better Auth session/OIDC access tokens.         |
 
 ## License
 

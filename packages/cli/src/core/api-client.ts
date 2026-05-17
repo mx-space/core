@@ -16,6 +16,8 @@ export interface ApiClientContext {
   authBase: string
   clientId: string
   token?: string
+  apiKey?: string
+  autoRefresh?: boolean
   verbose?: boolean
   http?: AuthHttp
 }
@@ -52,6 +54,9 @@ export class ApiClient {
     path: string,
     options: RequestOptions = {},
   ): Promise<ApiResponse<T>> {
+    if (this.ctx.autoRefresh && this.token) {
+      await this.tryRefresh()
+    }
     const url = buildUrl(this.ctx.apiBase, path, options.query)
     const method = options.method ?? 'GET'
     const headers: Record<string, string> = {
@@ -59,6 +64,7 @@ export class ApiClient {
       ...options.headers,
     }
     if (this.token) headers.authorization = `Bearer ${this.token}`
+    if (this.ctx.apiKey) headers['x-api-key'] = this.ctx.apiKey
     if (options.body !== undefined && !(options.body instanceof FormData)) {
       headers['content-type'] ??= 'application/json'
     }
@@ -109,6 +115,7 @@ export class ApiClient {
   private async tryRefresh(): Promise<CredentialsShape | null> {
     const current = await readCredentials()
     if (!current) return null
+    if (this.token && current.access_token !== this.token) return null
     const refreshed = await refreshAccessToken(
       this.ctx.authBase,
       this.ctx.clientId,
@@ -117,6 +124,7 @@ export class ApiClient {
     )
     if (!refreshed) return null
     await writeCredentials(refreshed)
+    this.token = refreshed.access_token
     return refreshed
   }
 }

@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { memoryAdapter } from 'better-auth/adapters/memory'
 import { APIError } from 'better-auth/api'
-import { deviceAuthorization } from 'better-auth/plugins'
+import { bearer, deviceAuthorization } from 'better-auth/plugins'
 
 const CLIENT_ID = 'mxs-cli'
 
@@ -23,6 +23,7 @@ function buildAuth(verificationUri = '/device') {
     emailAndPassword: { enabled: true, disableSignUp: false },
     database: memoryAdapter(db),
     plugins: [
+      bearer(),
       deviceAuthorization({
         expiresIn: '30m',
         interval: '5s',
@@ -137,6 +138,26 @@ describe('deviceAuthorization plugin (e2e)', () => {
     })
     expect(tokenRes.access_token).toBeTypeOf('string')
     expect(tokenRes.access_token.length).toBeGreaterThan(0)
+
+    const bearerHeaders = new Headers()
+    bearerHeaders.set('authorization', `Bearer ${tokenRes.access_token}`)
+    const session = await auth.api.getSession({ headers: bearerHeaders })
+    expect(session?.user.id).toBe(owner.user?.id)
+
+    const sessionRecord = db.session!.find(
+      (r) => r.token === tokenRes.access_token,
+    )!
+    const oldExpiresAt = new Date(Date.now() + 30_000)
+    sessionRecord.expiresAt = oldExpiresAt
+    const refreshed = await auth.api.getSession({
+      headers: bearerHeaders,
+      returnHeaders: true,
+    })
+    expect(refreshed.response?.user.id).toBe(owner.user?.id)
+    expect(refreshed.headers.get('set-auth-token')).toBeTruthy()
+    expect(
+      new Date(refreshed.response!.session.expiresAt).getTime(),
+    ).toBeGreaterThan(oldExpiresAt.getTime())
   })
 
   test('device token endpoint returns access_denied after the user denies the code', async () => {

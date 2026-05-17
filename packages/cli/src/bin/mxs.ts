@@ -9,6 +9,7 @@ interface GlobalOptions {
   output?: string
   apiUrl?: string
   token?: string
+  apiKey?: string
   quiet?: boolean
   verbose?: boolean
   dryRun?: boolean
@@ -24,6 +25,7 @@ program
   .option('--output <mode>', 'pretty-json | json | readable | llm | envelope')
   .option('--api-url <url>', 'override the configured API URL')
   .option('--token <t>', 'override the stored access token')
+  .option('--api-key <key>', 'authenticate with an x-api-key API key')
   .option('-q, --quiet', 'suppress non-error stderr')
   .option('--verbose', 'log HTTP method/url/status/duration')
   .option('--dry-run', 'show resolved payload without calling the server')

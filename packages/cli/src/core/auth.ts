@@ -218,7 +218,9 @@ export async function refreshAccessToken(
   cred: CredentialsShape,
   http: AuthHttp = defaultHttp(),
 ): Promise<CredentialsShape | null> {
-  if (!cred.refresh_token) return null
+  if (!cred.refresh_token) {
+    return refreshSessionToken(authBase, cred, http)
+  }
   const res = await http.fetch(`${authBase}/token`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -237,6 +239,46 @@ export async function refreshAccessToken(
     expires_at: Date.now() + body.expires_in * 1000,
     user: body.user ?? cred.user,
   }
+}
+
+async function refreshSessionToken(
+  authBase: string,
+  cred: CredentialsShape,
+  http: AuthHttp,
+): Promise<CredentialsShape | null> {
+  const res = await http.fetch(`${authBase}/get-session`, {
+    method: 'GET',
+    headers: {
+      accept: 'application/json',
+      authorization: `Bearer ${cred.access_token}`,
+    },
+  })
+  if (!res.ok) return null
+  const body = (await res.json().catch(() => null)) as
+    | {
+        session?: { expiresAt?: string | Date | number }
+        user?: CredentialsShape['user']
+      }
+    | null
+  const expiresAt = normalizeExpiresAt(body?.session?.expiresAt)
+  if (!expiresAt || expiresAt <= cred.expires_at) return null
+  return {
+    access_token: res.headers.get('set-auth-token') ?? cred.access_token,
+    refresh_token: cred.refresh_token,
+    expires_at: expiresAt,
+    user: body?.user ?? cred.user,
+  }
+}
+
+function normalizeExpiresAt(value: string | Date | number | undefined) {
+  if (value === undefined) return null
+  const time =
+    value instanceof Date
+      ? value.getTime()
+      : typeof value === 'number'
+        ? value
+        : new Date(value).getTime()
+  return Number.isFinite(time) ? time : null
 }
 
 export async function loadCredentialsOrThrow(): Promise<CredentialsShape> {
