@@ -153,15 +153,13 @@ export async function runLegacyMigrationIfNeeded(
     typeof legacyConfig.api_url === 'string' ? legacyConfig.api_url : undefined
 
   if (tty && apiUrl) {
-    if (opts?.promptIsProduction) {
-      production = await opts.promptIsProduction(apiUrl)
-    } else {
-      const answer = await confirm({
-        message: `Is "${apiUrl}" a production environment?`,
-        initialValue: false,
-      })
-      production = isCancel(answer) ? false : Boolean(answer)
-    }
+    const answer = opts?.promptIsProduction
+      ? await opts.promptIsProduction(apiUrl)
+      : await confirm({
+          message: `Is "${apiUrl}" a production environment?`,
+          initialValue: false,
+        })
+    production = isCancel(answer) ? false : Boolean(answer)
   }
 
   // Write profile config. If this fails, do NOT delete legacy files.
@@ -195,6 +193,10 @@ export async function runLegacyMigrationIfNeeded(
     }
   }
 
+  // Set current profile before deleting legacy files so that if this throws
+  // the user can still recover (legacy files are still on disk).
+  await setCurrentProfile('default')
+
   // Delete legacy files. If deletion fails, warn but do not abort.
   if (hasConfig) {
     await tryUnlink(legacyConfigPath, report)
@@ -202,9 +204,6 @@ export async function runLegacyMigrationIfNeeded(
   if (hasCreds) {
     await tryUnlink(legacyCredentialsPath, report)
   }
-
-  // Set current profile (the dir was created by writeProfileConfig above).
-  await setCurrentProfile('default')
 
   emit(report, `mxs: migrated single-profile config to profile 'default'.`)
 

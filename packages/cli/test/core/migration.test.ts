@@ -3,6 +3,18 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+// Mock isCancel so the Ctrl-C / symbol-return test can exercise the real branch
+// in migration.ts without needing the actual @clack/core cancel symbol.
+// All other tests inject promptIsProduction with boolean values, so they are
+// unaffected by this override.
+vi.mock('@clack/prompts', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@clack/prompts')>()
+  return {
+    ...original,
+    isCancel: (v: unknown) => typeof v === 'symbol',
+  }
+})
+
 import {
   runLegacyMigrationIfNeeded,
   type MigrationResult,
@@ -207,7 +219,7 @@ describe('full migration — only config.json (no credentials)', () => {
 })
 
 describe('full migration — only credentials.json (no config)', () => {
-  it('migrates credentials only, skips config write gracefully', async () => {
+  it('writes an empty config when only credentials exist', async () => {
     await stageLegacyCredentials({ access_token: 'tok-only-creds', expires_at: 5000 })
 
     const result = await runLegacyMigrationIfNeeded({
@@ -221,6 +233,10 @@ describe('full migration — only credentials.json (no config)', () => {
     // credentials written
     const creds = await readProfileCredentials('default')
     expect(creds.access_token).toBe('tok-only-creds')
+
+    // config.json must exist even when there was no legacy config (empty object written)
+    const cfg = await readProfileConfig('default')
+    expect(typeof cfg).toBe('object')
   })
 })
 
@@ -360,6 +376,28 @@ describe('promptIsProduction cancellation', () => {
     expect(result?.production).toBe(false)
     expect(result?.profile).toBe('default')
     expect(await legacyConfigExists()).toBe(false)
+  })
+
+  it('treats isCancel symbol (Ctrl-C) as production=false and completes migration', async () => {
+    // Simulate the Ctrl-C path: the top-level vi.mock makes isCancel return true
+    // for any symbol, mirroring what @clack/prompts does on real Ctrl-C.
+    // The injected prompt returns a symbol, so this exercises the
+    // `isCancel(answer) ? false : Boolean(answer)` branch in migration.ts —
+    // the same branch that runs when the user presses Ctrl-C on the real confirm().
+    await stageLegacyConfig({ api_url: 'https://blog.example.com' })
+
+    const cancelSymbol = Symbol('test-cancel')
+
+    const result = await runLegacyMigrationIfNeeded({
+      isTTY: true,
+      promptIsProduction: async () => cancelSymbol as any,
+      report: null,
+    })
+
+    expect(result?.production).toBe(false)
+    expect(result?.profile).toBe('default')
+    expect(await legacyConfigExists()).toBe(false)
+    expect(await readCurrentFile()).toBe('default')
   })
 })
 
