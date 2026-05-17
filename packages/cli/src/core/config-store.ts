@@ -1,8 +1,15 @@
 import { promises as fs } from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 
+import { getConfigDir } from './config-dir'
 import { MxsError } from './errors'
+import {
+  getCurrentProfile,
+  readProfileConfig,
+  readProfileCredentials,
+} from './profile'
+
+export { getConfigDir }
 
 export interface ConfigShape {
   api_url?: string
@@ -10,6 +17,7 @@ export interface ConfigShape {
   auth_base?: string
   api_version?: number
   client_id?: string
+  production?: boolean
 }
 
 export interface CredentialsShape {
@@ -33,28 +41,37 @@ export interface ResolvedConfig {
   apiKey?: string
   configPath: string
   credentialsPath: string
+  profileName: string | null
+  isProduction: boolean
+  profileExplicit: boolean
+  urlOverridden: boolean
 }
 
 export interface StoreOverrides {
   apiUrl?: string
   token?: string
   apiKey?: string
+  profile?: string
 }
 
 const DEFAULT_CLIENT_ID = 'mxs-cli'
 
-export function getConfigDir(): string {
-  const xdg = process.env.XDG_CONFIG_HOME
-  const base = xdg && xdg.length > 0 ? xdg : path.join(os.homedir(), '.config')
-  return path.join(base, 'mxs')
-}
-
-export function getConfigPath(): string {
+export function getLegacyConfigPath(): string {
   return path.join(getConfigDir(), 'config.json')
 }
 
-export function getCredentialsPath(): string {
+export function getLegacyCredentialsPath(): string {
   return path.join(getConfigDir(), 'credentials.json')
+}
+
+/** @deprecated Use getLegacyConfigPath for migration logic only */
+export function getConfigPath(): string {
+  return getLegacyConfigPath()
+}
+
+/** @deprecated Use getLegacyCredentialsPath for migration logic only */
+export function getCredentialsPath(): string {
+  return getLegacyCredentialsPath()
 }
 
 async function readJsonIfExists<T>(p: string): Promise<T | null> {
@@ -74,23 +91,23 @@ async function readJsonIfExists<T>(p: string): Promise<T | null> {
 }
 
 export async function readConfig(): Promise<ConfigShape> {
-  const data = await readJsonIfExists<ConfigShape>(getConfigPath())
+  const data = await readJsonIfExists<ConfigShape>(getLegacyConfigPath())
   return data ?? {}
 }
 
 export async function writeConfig(cfg: ConfigShape): Promise<void> {
   const dir = getConfigDir()
   await fs.mkdir(dir, { recursive: true })
-  await fs.writeFile(getConfigPath(), JSON.stringify(cfg, null, 2), {
+  await fs.writeFile(getLegacyConfigPath(), JSON.stringify(cfg, null, 2), {
     mode: 0o644,
   })
   try {
-    await fs.chmod(getConfigPath(), 0o644)
+    await fs.chmod(getLegacyConfigPath(), 0o644)
   } catch {}
 }
 
 export async function readCredentials(): Promise<CredentialsShape | null> {
-  const p = getCredentialsPath()
+  const p = getLegacyCredentialsPath()
   const data = await readJsonIfExists<CredentialsShape>(p)
   if (data) {
     await enforceCredentialsMode(p)
@@ -101,13 +118,13 @@ export async function readCredentials(): Promise<CredentialsShape | null> {
 export async function writeCredentials(cred: CredentialsShape): Promise<void> {
   const dir = getConfigDir()
   await fs.mkdir(dir, { recursive: true })
-  const p = getCredentialsPath()
+  const p = getLegacyCredentialsPath()
   await fs.writeFile(p, JSON.stringify(cred, null, 2), { mode: 0o600 })
   await fs.chmod(p, 0o600)
 }
 
 export async function deleteCredentials(): Promise<void> {
-  const p = getCredentialsPath()
+  const p = getLegacyCredentialsPath()
   try {
     await fs.unlink(p)
   } catch (err: any) {
@@ -116,7 +133,7 @@ export async function deleteCredentials(): Promise<void> {
 }
 
 export async function enforceCredentialsMode(
-  p = getCredentialsPath(),
+  p = getLegacyCredentialsPath(),
 ): Promise<boolean> {
   let stats
   try {
@@ -157,11 +174,23 @@ export async function resolveConfig(
   const envApiUrl = process.env.MXS_API_URL?.trim()
   const envToken = process.env.MXS_TOKEN?.trim()
   const envApiKey = process.env.MXS_API_KEY?.trim()
+  const envProfile = process.env.MXS_PROFILE?.trim()
 
-  const file = await readConfig()
-  const credentials = await readCredentials()
+  const urlOverridden = Boolean(overrides.apiUrl || envApiUrl)
+  const profileExplicit = Boolean(overrides.profile || envProfile)
 
-  const rawApiUrl = overrides.apiUrl || envApiUrl || file.api_url
+  const profileName: string | null =
+    overrides.profile?.trim() ||
+    envProfile ||
+    (await getCurrentProfile()) ||
+    null
+
+  let profileConfig: ConfigShape = {}
+  if (profileName) {
+    profileConfig = await readProfileConfig(profileName)
+  }
+
+  const rawApiUrl = overrides.apiUrl || envApiUrl || profileConfig.api_url
   if (!rawApiUrl) {
     throw new MxsError({
       code: 'config.missing.api_url',
@@ -170,28 +199,51 @@ export async function resolveConfig(
     })
   }
   const apiUrl = normalizeApiUrl(rawApiUrl)
-  const apiVersion = file.api_version ?? 2
-  const apiBase =
-    overrides.apiUrl || envApiUrl
-      ? `${apiUrl}/api/v${apiVersion}`
-      : file.api_base || `${apiUrl}/api/v${apiVersion}`
-  const authBase =
-    overrides.apiUrl || envApiUrl
-      ? `${apiBase}/auth`
-      : file.auth_base || `${apiBase}/auth`
+  const apiVersion = profileConfig.api_version ?? 2
+  const apiBase = urlOverridden
+    ? `${apiUrl}/api/v${apiVersion}`
+    : profileConfig.api_base || `${apiUrl}/api/v${apiVersion}`
+  const authBase = urlOverridden
+    ? `${apiBase}/auth`
+    : profileConfig.auth_base || `${apiBase}/auth`
 
-  const token = overrides.token || envToken || credentials?.access_token
+  let token: string | undefined
+  if (urlOverridden) {
+    token = overrides.token || envToken || undefined
+  } else {
+    let profileCreds: Awaited<ReturnType<typeof readProfileCredentials>> = null
+    if (profileName) {
+      profileCreds = await readProfileCredentials(profileName)
+    }
+    token = overrides.token || envToken || profileCreds?.access_token
+  }
+
   const apiKey = overrides.apiKey || envApiKey
 
+  const isProduction = urlOverridden
+    ? false
+    : profileName
+      ? Boolean(profileConfig.production)
+      : false
+
+  const configDir = getConfigDir()
   return {
     apiUrl,
     apiBase,
     authBase,
     apiVersion,
-    clientId: file.client_id || DEFAULT_CLIENT_ID,
+    clientId: profileConfig.client_id || DEFAULT_CLIENT_ID,
     token,
     apiKey,
-    configPath: getConfigPath(),
-    credentialsPath: getCredentialsPath(),
+    configPath: profileName
+      ? `${configDir}/profiles/${profileName}/config.json`
+      : getLegacyConfigPath(),
+    credentialsPath: profileName
+      ? `${configDir}/profiles/${profileName}/credentials.json`
+      : getLegacyCredentialsPath(),
+    profileName,
+    isProduction,
+    profileExplicit,
+    urlOverridden,
   }
 }
