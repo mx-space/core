@@ -52,6 +52,26 @@ describe('envelope parser', () => {
     expect(parsed.contentXml).toContain('<p>note body</p>')
   })
 
+  it('preserves content tag attributes', () => {
+    const xml = `<mxpost>
+  <meta>
+    <title>t</title>
+  </meta>
+  <content>
+<p id="p1">See <a href="https://example.com?a=1&amp;b=2" target="_blank">example</a></p>
+<embed id="e1" url="https://x.com/innei/status/1" source="tweet" />
+  </content>
+</mxpost>`
+    const parsed = parseEnvelope(xml, 'post')
+
+    expect(parsed.contentXml).toContain(
+      '<a href="https://example.com?a=1&amp;b=2" target="_blank">',
+    )
+    expect(parsed.contentXml).toContain(
+      '<embed id="e1" url="https://x.com/innei/status/1" source="tweet" />',
+    )
+  })
+
   it('records line numbers for meta entries', () => {
     const xml = fixture('post.xml')
     const parsed = parseEnvelope(xml, 'post')

@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
 
-import { readContentSpec, readJsonSpec } from './content-spec'
+import { readContentSpec, readJsonSpec, readStdin } from './content-spec'
 import {
   coerceMeta,
   type EnvelopeKind,
@@ -75,6 +75,13 @@ export async function loadEnvelopeIfAny(
   kind: EnvelopeKind,
 ): Promise<ParsedEnvelope | null> {
   if (!filePath) return null
+  if (filePath === '-' || filePath === 'stdin' || filePath === '/dev/stdin') {
+    return parseEnvelope(await readStdin(), kind)
+  }
+  if (filePath.startsWith('file=')) {
+    const src = await readContentSpec(filePath)
+    return parseEnvelope(src?.text ?? '', kind)
+  }
   const xml = await fs.readFile(filePath, 'utf8').catch((err) => {
     throw new MxsError({
       code: 'validation.failed',

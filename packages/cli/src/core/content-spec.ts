@@ -57,7 +57,7 @@ export async function readJsonSpec(spec: string | undefined): Promise<unknown> {
   }
 }
 
-async function readStdin(): Promise<string> {
+export async function readStdin(): Promise<string> {
   if (process.stdin.isTTY) {
     throw new MxsError({
       code: 'validation.failed',

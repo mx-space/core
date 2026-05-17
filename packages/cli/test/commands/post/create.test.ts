@@ -69,6 +69,63 @@ describe('post create payload', () => {
     expect(built.contentSource).toBe('envelope')
   })
 
+  it('reads --file=file=<path> envelopes', async () => {
+    const filePath = path.join(tmpDir, 'post.xml')
+    await fs.writeFile(
+      filePath,
+      `<mxpost>
+  <meta>
+    <title>envtitle</title>
+  </meta>
+  <content>
+<p>env body</p>
+  </content>
+</mxpost>`,
+      'utf8',
+    )
+    const built = await buildPostPayload({ file: `file=${filePath}` })
+    expect(built.payload.title).toBe('envtitle')
+    expect(built.contentSource).toBe('envelope')
+  })
+
+  it('preserves rich node attributes from envelope payloads', async () => {
+    const filePath = path.join(tmpDir, 'post.xml')
+    await fs.writeFile(
+      filePath,
+      `<mxpost>
+  <meta>
+    <title>envtitle</title>
+  </meta>
+  <content>
+<p>See <a href="https://example.com?a=1&amp;b=2">example</a></p>
+<embed url="https://x.com/innei/status/1" source="tweet" />
+  </content>
+</mxpost>`,
+      'utf8',
+    )
+    const built = await buildPostPayload({ file: filePath })
+    const content = JSON.parse(built.payload.content as string)
+    const refs: Array<{ type: string; url?: string; source?: string }> = []
+    const walk = (node: any) => {
+      if (!node || typeof node !== 'object') return
+      if (node.type === 'link' || node.type === 'embed') refs.push(node)
+      if (Array.isArray(node.children)) node.children.forEach(walk)
+    }
+    walk(content.root)
+
+    expect(refs).toEqual([
+      expect.objectContaining({
+        type: 'link',
+        url: 'https://example.com?a=1&b=2',
+      }),
+      expect.objectContaining({
+        type: 'embed',
+        url: 'https://x.com/innei/status/1',
+        source: 'tweet',
+      }),
+    ])
+  })
+
   it('flag overrides envelope meta', async () => {
     const filePath = path.join(tmpDir, 'post.xml')
     await fs.writeFile(

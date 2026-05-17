@@ -40,6 +40,7 @@ export function tagToFlag(tag: string): string {
 interface Token {
   kind: 'open' | 'close' | 'self' | 'text' | 'cdata'
   name?: string
+  raw?: string
   text?: string
   line: number
 }
@@ -92,10 +93,10 @@ function tokenize(xml: string): Token[] {
         tokens.push({ kind: 'close', name: raw.slice(1).trim(), line })
       } else if (raw.endsWith('/')) {
         const name = raw.slice(0, -1).trim().split(/\s+/)[0] ?? ''
-        tokens.push({ kind: 'self', name, line })
+        tokens.push({ kind: 'self', name, raw, line })
       } else {
         const name = raw.split(/\s+/)[0] ?? ''
-        tokens.push({ kind: 'open', name, line })
+        tokens.push({ kind: 'open', name, raw, line })
       }
       line += countLines(xml.slice(i, close + 1))
       i = close + 1
@@ -294,8 +295,8 @@ function renderInnerXml(tokens: Token[]): string {
   for (const t of tokens) {
     if (t.kind === 'text') out += t.text ?? ''
     else if (t.kind === 'cdata') out += `<![CDATA[${t.text ?? ''}]]>`
-    else if (t.kind === 'open') out += `<${t.name}>`
-    else if (t.kind === 'self') out += `<${t.name}/>`
+    else if (t.kind === 'open') out += `<${t.raw ?? t.name}>`
+    else if (t.kind === 'self') out += `<${t.raw ?? `${t.name}/`}>`
     else if (t.kind === 'close') out += `</${t.name}>`
   }
   if (out.startsWith('\n')) out = out.slice(1)
