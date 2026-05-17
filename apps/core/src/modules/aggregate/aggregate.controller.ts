@@ -96,15 +96,6 @@ export class AggregateController {
   async aggregate(@Query() query: AggregateQueryDto, @Lang() lang?: string) {
     const { theme } = query
 
-    const tasks = await Promise.allSettled([
-      this.ownerService.getOwner(),
-      this.configsService.get('url'),
-      this.configsService.get('seo'),
-      this.configsService.get('commentOptions'),
-      this.noteService.getLatestNoteId(),
-      this.getThemeConfig(theme, lang),
-      this.configsService.get('ai'),
-    ])
     const [
       user,
       url,
@@ -113,7 +104,15 @@ export class AggregateController {
       latestNoteId,
       themeConfig,
       aiConfig,
-    ] = tasks.map((t) => (t.status === 'fulfilled' ? t.value : null))
+    ] = await Promise.all([
+      this.ownerService.getOwner(),
+      this.configsService.get('url'),
+      this.configsService.get('seo'),
+      this.configsService.get('commentOptions'),
+      this.noteService.getLatestNoteId(),
+      this.getThemeConfig(theme, lang),
+      this.configsService.get('ai'),
+    ])
 
     return {
       user,
