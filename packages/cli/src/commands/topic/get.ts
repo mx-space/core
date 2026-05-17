@@ -1,6 +1,6 @@
 import { emitSuccess, type OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
 
 export async function run(
   slugOrId: string,

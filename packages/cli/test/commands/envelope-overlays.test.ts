@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   applyNoteEnvelopeMeta,
   applyPageEnvelopeMeta,
-} from '../../src/commands/_envelope-overlays'
+} from '../../src/commands/internal/envelope-overlays'
 
 describe('editor envelope metadata overlays', () => {
   it('applies edited note metadata to the update payload', () => {

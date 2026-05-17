@@ -6,8 +6,8 @@ import { serializeFromLexical } from '../../core/litexml-codec'
 import { emitInfo, emitSuccess, type OutputOptions } from '../../core/output'
 import { buildPagePayload, type PageFlagInputs } from '../../core/payload'
 import { isSnowflakeId } from '../../core/resolve'
-import { applyPageEnvelopeMeta } from '../_envelope-overlays'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { applyPageEnvelopeMeta } from '../internal/envelope-overlays'
+import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
 
 export async function run(
   slugOrId: string,

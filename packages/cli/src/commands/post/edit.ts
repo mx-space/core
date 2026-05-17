@@ -4,8 +4,8 @@ import { parseEnvelope } from '../../core/envelope'
 import { serializeFromLexical } from '../../core/litexml-codec'
 import { emitInfo, emitSuccess, type OutputOptions } from '../../core/output'
 import { buildPostPayload, type PostFlagInputs } from '../../core/payload'
-import { buildResolver, resolveCategoryRefs } from '../_resolve-helpers'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { buildResolver, resolveCategoryRefs } from '../internal/resolve-helpers'
+import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
 import { resolvePostId, resolvePostReadPath } from './resolve'
 
 export async function run(

@@ -1,5 +1,5 @@
 import { emitSuccess, type OutputOptions } from '../../core/output'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
 
 export async function run(
   _opts: unknown,

@@ -1,5 +1,5 @@
-import type { ApiClient } from '../core/api-client'
-import { NameResolver, type ResolvableItem } from '../core/resolve'
+import type { ApiClient } from '../../core/api-client'
+import { NameResolver, type ResolvableItem } from '../../core/resolve'
 
 export function buildResolver(client: ApiClient): NameResolver {
   return new NameResolver({

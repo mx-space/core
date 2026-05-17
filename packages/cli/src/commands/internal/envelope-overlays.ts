@@ -1,4 +1,4 @@
-import { coerceMeta } from '../core/envelope'
+import { coerceMeta } from '../../core/envelope'
 
 export function applyNoteEnvelopeMeta(
   payload: Record<string, unknown>,

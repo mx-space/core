@@ -2,7 +2,7 @@ import type { ApiClient } from '../../core/api-client'
 import { MxsError } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
 
 export interface TopicUpdateFlags {
   name?: string

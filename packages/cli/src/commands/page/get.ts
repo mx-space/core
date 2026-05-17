@@ -1,7 +1,7 @@
 import { emitDocument, type DocumentKind } from '../../core/document-output'
 import type { OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
 
 const KIND: DocumentKind = 'page'
 

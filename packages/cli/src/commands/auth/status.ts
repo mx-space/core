@@ -1,7 +1,7 @@
 import { isExpiringSoon } from '../../core/auth'
 import { readCredentials } from '../../core/config-store'
 import { emitSuccess, type OutputOptions } from '../../core/output'
-import { type GlobalFlags } from '../_shared'
+import { type GlobalFlags } from '../internal/shared'
 
 export async function run(_flags: GlobalFlags, out: OutputOptions) {
   const cred = await readCredentials()

@@ -1,7 +1,7 @@
 import { emitSuccess, type OutputOptions } from '../../core/output'
 import { buildNotePayload, type NoteFlagInputs } from '../../core/payload'
-import { buildResolver, resolveTopicRefs } from '../_resolve-helpers'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { buildResolver, resolveTopicRefs } from '../internal/resolve-helpers'
+import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
 
 export async function run(
   opts: NoteFlagInputs,

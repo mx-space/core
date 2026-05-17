@@ -1,13 +1,14 @@
-import { ApiClient } from '../core/api-client'
-import { readConfig, resolveConfig, writeConfig } from '../core/config-store'
-import { MxsError } from '../core/errors'
-import { runOnboarding } from '../core/onboarding'
-import { emitInfo, type OutputOptions } from '../core/output'
+import { ApiClient } from '../../core/api-client'
+import { readConfig, resolveConfig, writeConfig } from '../../core/config-store'
+import { MxsError } from '../../core/errors'
+import { runOnboarding } from '../../core/onboarding'
+import { emitInfo, type OutputOptions } from '../../core/output'
 
 export interface GlobalFlags {
   json?: boolean
   apiUrl?: string
   token?: string
+  apiKey?: string
   quiet?: boolean
   verbose?: boolean
   dryRun?: boolean
@@ -16,7 +17,11 @@ export interface GlobalFlags {
 export async function resolveContext(flags: GlobalFlags, out: OutputOptions) {
   let resolved
   try {
-    resolved = await resolveConfig({ apiUrl: flags.apiUrl, token: flags.token })
+    resolved = await resolveConfig({
+      apiUrl: flags.apiUrl,
+      token: flags.token,
+      apiKey: flags.apiKey,
+    })
   } catch (err) {
     if (err instanceof MxsError && err.code === 'config.missing.api_url') {
       const probed = await runOnboarding()
@@ -24,6 +29,7 @@ export async function resolveContext(flags: GlobalFlags, out: OutputOptions) {
       resolved = await resolveConfig({
         apiUrl: flags.apiUrl,
         token: flags.token,
+        apiKey: flags.apiKey,
       })
     } else {
       throw err
@@ -41,6 +47,12 @@ export function buildApiClient(
     authBase: resolved.authBase,
     clientId: resolved.clientId,
     token: resolved.token,
+    apiKey: resolved.apiKey,
+    autoRefresh:
+      Boolean(resolved.token) &&
+      !resolved.apiKey &&
+      !flags.token &&
+      !process.env.MXS_TOKEN,
     verbose: flags.verbose,
   })
 }

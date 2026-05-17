@@ -1,6 +1,6 @@
 import { emitDocument, type DocumentKind } from '../../core/document-output'
 import type { OutputOptions } from '../../core/output'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
 import { resolvePostReadPath } from './resolve'
 
 const KIND: DocumentKind = 'post'
