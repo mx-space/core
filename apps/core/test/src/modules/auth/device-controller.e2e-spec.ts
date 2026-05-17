@@ -25,8 +25,17 @@ const deviceApprove = vi.fn(async () => ({ success: true }))
 const deviceDeny = vi.fn(async () => ({ success: true }))
 const deviceVerify = vi.fn(async () => ({ status: 'pending' }))
 
+const DEVICE_TEMPLATE_STUB = `<!doctype html>
+<html><head><title><%= siteTitle %> · Device authorization</title></head>
+<body><h1><%= siteTitle %></h1><p>Device authorization</p>
+<p>code: <%= userCode %></p>
+<p>user: <%= user.email || user.name || user.id %></p>
+<form action="<%= verifyUrl %>"></form></body></html>`
+
 const assetService = {
-  getAsset: vi.fn(async () => null),
+  getAsset: vi.fn(async (path: string) =>
+    path === '/render/device.ejs' ? DEVICE_TEMPLATE_STUB : null,
+  ),
 }
 
 const configsService = {
