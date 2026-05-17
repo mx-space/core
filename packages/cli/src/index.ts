@@ -43,6 +43,12 @@ export {
 } from './core/content-spec'
 export { runEditorRoundTrip } from './core/editor'
 export {
+  emitDocument,
+  type DocumentKind,
+  renderDocumentEnvelope,
+  renderReadableDocument,
+} from './core/document-output'
+export {
   coerceMeta,
   type EnvelopeKind,
   type EnvelopeMeta,

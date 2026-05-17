@@ -1,6 +1,9 @@
-import { emitSuccess, type OutputOptions } from '../../core/output'
+import { emitDocument, type DocumentKind } from '../../core/document-output'
+import type { OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
 import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+
+const KIND: DocumentKind = 'note'
 
 export async function run(
   slugOrId: string,
@@ -13,18 +16,18 @@ export async function run(
     const res = await client.request(`/notes/${slugOrId}`, {
       query: { prefer: 'lexical' },
     })
-    emitSuccess(res.data, out)
+    emitDocument(KIND, res.data, out)
     return
   }
   if (/^\d+$/.test(slugOrId)) {
     const res = await client.request(`/notes/nid/${slugOrId}`, {
       query: { single: '1', prefer: 'lexical' },
     })
-    emitSuccess(res.data, out)
+    emitDocument(KIND, res.data, out)
     return
   }
   const res = await client.request(`/notes/${slugOrId}`, {
     query: { prefer: 'lexical' },
   })
-  emitSuccess(res.data, out)
+  emitDocument(KIND, res.data, out)
 }

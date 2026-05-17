@@ -1,6 +1,9 @@
-import { emitSuccess, type OutputOptions } from '../../core/output'
+import { emitDocument, type DocumentKind } from '../../core/document-output'
+import type { OutputOptions } from '../../core/output'
 import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
 import { resolvePostReadPath } from './resolve'
+
+const KIND: DocumentKind = 'post'
 
 export async function run(
   slugOrId: string,
@@ -13,5 +16,5 @@ export async function run(
   const res = await client.request(path, {
     query: { prefer: 'lexical' },
   })
-  emitSuccess(res.data, out)
+  emitDocument(KIND, res.data, out)
 }

@@ -6,6 +6,7 @@ import { emitError, type OutputOptions } from '../core/output'
 
 interface GlobalOptions {
   json?: boolean
+  output?: string
   apiUrl?: string
   token?: string
   quiet?: boolean
@@ -20,6 +21,7 @@ program
   .description('mx-space CLI — manage your mx-core blog from the command line')
   .version('0.1.0')
   .option('--json', 'emit JSON output')
+  .option('--output <mode>', 'pretty-json | json | readable | llm | envelope')
   .option('--api-url <url>', 'override the configured API URL')
   .option('--token <t>', 'override the stored access token')
   .option('-q, --quiet', 'suppress non-error stderr')
@@ -44,6 +46,7 @@ export function readGlobalOptions(cmd: Command): OutputOptions {
   const opts = cmd.optsWithGlobals() as GlobalOptions
   return {
     json: Boolean(opts.json),
+    output: opts.output ?? 'pretty-json',
     quiet: Boolean(opts.quiet),
     verbose: Boolean(opts.verbose),
   }

@@ -1,6 +1,9 @@
-import { emitSuccess, type OutputOptions } from '../../core/output'
+import { emitDocument, type DocumentKind } from '../../core/document-output'
+import type { OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
 import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+
+const KIND: DocumentKind = 'page'
 
 export async function run(
   slugOrId: string,
@@ -13,5 +16,5 @@ export async function run(
     ? `/pages/${slugOrId}`
     : `/pages/slug/${slugOrId}`
   const res = await client.request(path, { query: { prefer: 'lexical' } })
-  emitSuccess(res.data, out)
+  emitDocument(KIND, res.data, out)
 }

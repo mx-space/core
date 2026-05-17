@@ -2,12 +2,14 @@ import { MxsError } from './errors'
 
 export interface OutputOptions {
   json: boolean
+  output?: string
   quiet: boolean
   verbose: boolean
 }
 
 export const defaultOutputOptions: OutputOptions = {
   json: false,
+  output: 'pretty-json',
   quiet: false,
   verbose: false,
 }
@@ -22,7 +24,7 @@ function color(stream: NodeJS.WriteStream, code: number, text: string): string {
 }
 
 export function emitSuccess(data: unknown, opts: OutputOptions): void {
-  if (opts.json) {
+  if (opts.json || opts.output === 'json') {
     process.stdout.write(`${JSON.stringify({ ok: true, data })}\n`)
     return
   }
