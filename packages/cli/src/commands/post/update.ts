@@ -1,10 +1,8 @@
-import type { ApiClient } from '../../core/api-client'
-import { MxsError } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
 import { buildPostPayload, type PostFlagInputs } from '../../core/payload'
-import { isSnowflakeId } from '../../core/resolve'
 import { buildResolver, resolveCategoryRefs } from '../_resolve-helpers'
 import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { resolvePostId } from './resolve'
 
 export async function run(
   slugOrId: string,
@@ -26,21 +24,10 @@ export async function run(
   const client = buildApiClient(ctx, flags)
   const resolver = buildResolver(client)
   await resolveCategoryRefs(built.payload, resolver)
-  const id = await resolveId(client, slugOrId)
+  const id = await resolvePostId(client, slugOrId)
   const res = await client.request(`/posts/${id}`, {
     method: 'PATCH',
     body: built.payload,
   })
   emitSuccess(res.data, out)
-}
-
-async function resolveId(client: ApiClient, slugOrId: string): Promise<string> {
-  if (isSnowflakeId(slugOrId)) return slugOrId
-  const res = await client.request<{ id: string }>(`/posts/-/${slugOrId}`)
-  if (!res.data?.id)
-    throw new MxsError({
-      code: 'resource.not_found',
-      message: `post not found: ${slugOrId}`,
-    })
-  return res.data.id
 }

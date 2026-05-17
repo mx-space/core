@@ -6,6 +6,7 @@ import { serializeFromLexical } from '../../core/litexml-codec'
 import { emitInfo, emitSuccess, type OutputOptions } from '../../core/output'
 import { buildPagePayload, type PageFlagInputs } from '../../core/payload'
 import { isSnowflakeId } from '../../core/resolve'
+import { applyPageEnvelopeMeta } from '../_envelope-overlays'
 import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
 
 export async function run(
@@ -33,6 +34,7 @@ export async function run(
       content: parsed.contentXml,
       format: opts.format ?? 'lexical',
     })
+    applyPageEnvelopeMeta(built.payload, parsed.meta)
     if (flags.dryRun) {
       emitSuccess(built.payload, out)
       return

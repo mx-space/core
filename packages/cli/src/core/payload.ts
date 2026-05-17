@@ -202,8 +202,10 @@ export async function buildPagePayload(
   if (title !== undefined) payload.title = title
   const slug = flags.slug ?? envMeta.slug
   if (slug !== undefined) payload.slug = slug
-  if (flags.subtitle !== undefined) payload.subtitle = flags.subtitle
-  if (flags.order !== undefined) payload.order = flags.order
+  const subtitle = flags.subtitle ?? envMeta.subtitle
+  if (subtitle !== undefined) payload.subtitle = subtitle
+  const order = flags.order ?? envMeta.order
+  if (order !== undefined) payload.order = order
   if (flags.meta !== undefined) {
     payload.meta = await readJsonSpec(flags.meta)
   }

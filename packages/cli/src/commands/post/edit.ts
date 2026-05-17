@@ -1,13 +1,12 @@
 import type { ApiClient } from '../../core/api-client'
 import { runEditorRoundTrip } from '../../core/editor'
 import { parseEnvelope } from '../../core/envelope'
-import { MxsError } from '../../core/errors'
 import { serializeFromLexical } from '../../core/litexml-codec'
 import { emitInfo, emitSuccess, type OutputOptions } from '../../core/output'
 import { buildPostPayload, type PostFlagInputs } from '../../core/payload'
-import { isSnowflakeId } from '../../core/resolve'
 import { buildResolver, resolveCategoryRefs } from '../_resolve-helpers'
 import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { resolvePostId, resolvePostReadPath } from './resolve'
 
 export async function run(
   slugOrId: string,
@@ -43,7 +42,7 @@ export async function run(
     const resolver = buildResolver(client)
     await resolveCategoryRefs(built.payload, resolver)
     const res = await client.request(
-      `/posts/${await resolveId(client, slugOrId)}`,
+      `/posts/${await resolvePostId(client, slugOrId)}`,
       { method: 'PUT', body: built.payload },
     )
     emitSuccess(res.data, out)
@@ -58,31 +57,17 @@ export async function run(
   const resolver = buildResolver(client)
   await resolveCategoryRefs(built.payload, resolver)
   const res = await client.request(
-    `/posts/${await resolveId(client, slugOrId)}`,
+    `/posts/${await resolvePostId(client, slugOrId)}`,
     { method: 'PUT', body: built.payload },
   )
   emitSuccess(res.data, out)
-}
-
-async function resolveId(client: ApiClient, slugOrId: string): Promise<string> {
-  if (isSnowflakeId(slugOrId)) return slugOrId
-  const res = await client.request<{ id: string }>(`/posts/-/${slugOrId}`)
-  if (!res.data?.id) {
-    throw new MxsError({
-      code: 'resource.not_found',
-      message: `post not found: ${slugOrId}`,
-    })
-  }
-  return res.data.id
 }
 
 async function materializeForEditor(
   client: ApiClient,
   slugOrId: string,
 ): Promise<string> {
-  const path = isSnowflakeId(slugOrId)
-    ? `/posts/${slugOrId}`
-    : `/posts/-/${slugOrId}`
+  const path = await resolvePostReadPath(client, slugOrId)
   const res = await client.request<{
     id: string
     title?: string

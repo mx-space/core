@@ -9,6 +9,7 @@ const createService = () => {
     deleteApiKey: vi.fn(),
     listApiKeysForUser: vi.fn(),
     findApiKeyById: vi.fn(),
+    findApiKey: vi.fn(),
   }
   const readerRepository = {
     findOwner: vi.fn().mockResolvedValue({ id: 'owner-1' }),
@@ -27,6 +28,8 @@ const createService = () => {
         name: 'deploy',
         expiresAt: null,
       }),
+      getSession: vi.fn(),
+      listUserAccounts: vi.fn(),
     },
   }
   const authInstance = {
@@ -95,5 +98,40 @@ describe('AuthService', () => {
         headers: { Authorization: 'Bearer txo-legacy' },
       }),
     ).toBeNull()
+  })
+
+  it('uses Authorization bearer headers for session lookup', async () => {
+    const { authInstance, service } = createService()
+    const auth = authInstance.get()
+    auth.api.getSession.mockResolvedValue({
+      user: {
+        id: 'owner-1',
+        email: 'owner@example.com',
+        role: 'owner',
+      },
+      session: { token: 'session-token' },
+    })
+    auth.api.listUserAccounts.mockResolvedValue([
+      {
+        id: 'account-1',
+        accountId: 'owner-1',
+        providerId: 'device',
+      },
+    ])
+    const headers = new Headers()
+    headers.set('authorization', 'Bearer device-access-token')
+
+    await expect(service.getSessionUserFromHeaders(headers)).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'device',
+        providerAccountId: 'owner-1',
+        user: expect.objectContaining({ id: 'owner-1', role: 'owner' }),
+      }),
+    )
+
+    const sessionHeaders = auth.api.getSession.mock.calls[0][0].headers
+    expect(sessionHeaders.get('authorization')).toBe(
+      'Bearer device-access-token',
+    )
   })
 })

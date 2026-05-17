@@ -322,6 +322,8 @@ export interface EnvelopeMeta {
   password?: string
   bookmark?: boolean
   location?: string
+  subtitle?: string
+  order?: number
   format?: 'lexical' | 'markdown'
 }
 
@@ -370,6 +372,13 @@ export function coerceMeta(raw: Record<string, unknown>): EnvelopeMeta {
   }
   const location = get('location')
   if (typeof location === 'string') out.location = location
+  const subtitle = get('subtitle')
+  if (typeof subtitle === 'string') out.subtitle = subtitle
+  const order = get('order')
+  if (typeof order === 'string' && order.length > 0) {
+    const n = Number(order)
+    if (!Number.isNaN(n)) out.order = n
+  }
   const format = get('format')
   if (format === 'lexical' || format === 'markdown') out.format = format
 

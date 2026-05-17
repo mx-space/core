@@ -8,6 +8,7 @@ import { buildNotePayload, type NoteFlagInputs } from '../../core/payload'
 import { isSnowflakeId } from '../../core/resolve'
 import { buildResolver, resolveTopicRefs } from '../_resolve-helpers'
 import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import { applyNoteEnvelopeMeta } from '../_envelope-overlays'
 
 export async function run(
   slugOrId: string,
@@ -34,6 +35,7 @@ export async function run(
       content: parsed.contentXml,
       format: opts.format ?? 'lexical',
     })
+    applyNoteEnvelopeMeta(built.payload, parsed.meta)
     if (flags.dryRun) {
       emitSuccess(built.payload, out)
       return
