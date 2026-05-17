@@ -145,8 +145,13 @@ Events are defined in the core server and re-exported here. The following are co
 | `LINK_APPLY`              | Link model              |
 | `COMMENT_CREATE` / `COMMENT_UPDATE` | Comment payloads  |
 | `ACTIVITY_LIKE`           | Activity like payload   |
+| `AGGREGATE_UPDATE`        | Aggregate update payload |
+| `TRANSLATION_CREATE` / `TRANSLATION_UPDATE` / `TRANSLATION_DELETE` | AI translation payloads |
+| `INSIGHTS_CREATE` / `INSIGHTS_UPDATE` / `INSIGHTS_DELETE` / `INSIGHTS_GENERATED` | AI insights payloads |
 | `ARTICLE_READ_COUNT_UPDATE` | `{ count, type, id }` |
 | `health_check`            | `{}`                    |
+
+> Server v12+ serializes all entity ids (`id`, `categoryId`, `topicId`, etc.) as Snowflake **decimal strings**. Cast to `string`, not `number`.
 
 Use the TypeScript types from `@mx-space/webhook` for precise payload shapes when subscribing to specific events.
 

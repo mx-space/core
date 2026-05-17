@@ -23,7 +23,7 @@ A framework-agnostic TypeScript/JavaScript SDK for the MX Space server (MServer 
 ## Requirements
 
 - **Node.js** ≥ 22 (see `engines` in `package.json`)
-- **MX Space server** v10+ for api-client v2.x (Better Auth); v9 or below use api-client v1.x
+- **MX Space server**: v12+ (PostgreSQL + Snowflake IDs) for api-client **v4.x**. See the [Version Compatibility & Migration](#version-compatibility--migration) section for older lines.
 
 ---
 
@@ -197,48 +197,39 @@ client.note.proxy.something.other('123456').info.toString(true)
 
 ### Compatibility
 
-| api-client version | Server version | Notes |
-|--------------------|----------------|-------|
-| v2.x               | ≥ 10           | Better Auth; owner API; new auth endpoints. |
-| v1.x               | ≤ 9            | Legacy auth. |
+| api-client version | Server version  | Notes |
+|--------------------|-----------------|-------|
+| **v4.x** (current) | ≥ 12            | PostgreSQL + Snowflake IDs. Pairs with the PG cutover. |
+| v3.x               | 11 → early 12   | Transitional during the PG cutover. |
+| v2.x               | 10 → 11         | MongoDB + Better Auth. ObjectId IDs. |
+| v1.x               | ≤ 9             | Legacy JWT auth. |
 
-v2 introduces breaking changes; see migration below.
+### Migrating to v4 (server v12)
 
-### Migrating to v2
+v12 swapped the storage layer from MongoDB to PostgreSQL with Snowflake IDs. Most route shapes are preserved by the response interceptor, but a few semantics changed for consumers:
 
-**1. Controller renames**
+- **IDs are strings everywhere.** Snowflake values are 64-bit integers and are serialized as decimal strings at the API boundary. Treat every `id`, `categoryId`, `topicId`, `parentId`, `relatedId`, etc. as `string`; never parse as `number`.
+- **Pagination cursors.** Cursor-style endpoints that emit `before` / `after` now carry Snowflake strings instead of Mongo ObjectIds. Treat them as opaque tokens.
+- **`shorthand` / `friend` aliases.** `allControllerNames` still exposes `friend` and `shorthand` for backwards-compatible consumer code.
 
-- `user` / `master` → `owner`. Use `client.owner` for auth and owner info.
+### Migrating to v2 (legacy → Better Auth)
+
+If you are still on v1 and upgrading the server to v10 (Better Auth), `user` / `master` controllers were unified under `owner`:
 
 ```diff
 - client.user.getMasterInfo()
 - client.master.getMasterInfo()
 + client.owner.getOwnerInfo()
-```
 
-**2. Login**
-
-- Endpoint: `POST /master/login` → `POST /auth/sign-in`.
-- v2 `login` returns `{ token, user }`.
-
-```diff
 - client.user.login(username, password)
 + client.owner.login(username, password, { rememberMe: boolean })
 ```
 
-**3. New auth-related APIs (v2)**
+Login endpoint moved from `POST /master/login` to `POST /auth/sign-in`. The v2+ `login` returns `{ token, user }`. New auth helpers: `getSession`, `getAuthSession`, `logout`, `getAllowLoginMethods`, `getProviders`, `listSessions`, `revokeSession(token)`, `revokeSessions()`, `revokeOtherSessions()`.
 
-- `client.owner.getSession()`
-- `client.owner.getAuthSession()`
-- `client.owner.logout()`
-- `client.owner.getAllowLoginMethods()`
-- `client.owner.getProviders()`
-- `client.owner.listSessions()`
-- `client.owner.revokeSession(token)` / `revokeSessions()` / `revokeOtherSessions()`
+### Downgrading
 
-### Migrating from v2 to v1 (downgrade)
-
-- No re-export of `camelcase-keys`. Use the built-in helper or install yourself:
+- `camelcase-keys` is no longer re-exported. Use the built-in helper:
 
 ```diff
 - import { camelcaseKeysDeep, camelcaseKeys } from '@mx-space/api-client'

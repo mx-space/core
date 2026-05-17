@@ -55,9 +55,12 @@ mx-core/
 ├── apps/
 │   └── core/                 # Main server application (NestJS)
 ├── packages/
-│   ├── api-client/           # @mx-space/api-client — SDK for frontend & third-party clients
-│   └── webhook/              # @mx-space/webhook — Webhook integration SDK
-├── docker-compose.yml        # Development stack (PostgreSQL + Redis)
+│   ├── api-client/           # @mx-space/api-client — typed SDK for frontend & third-party clients
+│   ├── cli/                  # @mx-space/cli (mxs) — owner-side CLI for content + config
+│   ├── db-schema/            # @mx-space/db-schema — shared Drizzle schema + Snowflake utilities (private)
+│   ├── mongo-pg-cli/         # @mx-space/mongo-pg-cli — one-shot v11→v12 (MongoDB→PostgreSQL) data migration
+│   └── webhook/              # @mx-space/webhook — signature-verified webhook handler SDK
+├── docker-compose.yml        # Development stack (PostgreSQL + Redis + mx-migrate)
 ├── dockerfile                # Multi-stage production build
 └── docker-compose.server.yml # Production deployment template
 ```
@@ -66,28 +69,34 @@ mx-core/
 
 ```
 src/
-├── modules/          # 44 business modules
-│   ├── ai/           #   AI summary, translation, writer, task queue
-│   ├── auth/         #   JWT, OAuth, passkey, API key
+├── modules/          # 45 business modules
+│   ├── ai/           #   AI summary, translation, insights, writer, agent, task queue
+│   ├── auth/         #   Better Auth: session, OAuth, passkey, API key
 │   ├── post/         #   Blog posts
 │   ├── note/         #   Short notes with topic support
-│   ├── comment/      #   Nested comments + AI moderation
+│   ├── comment/      #   Nested comments + AI moderation + reader image upload
 │   ├── configs/      #   Runtime configuration
+│   ├── enrichment/   #   URL extraction, screenshot pipeline
+│   ├── reader/       #   Reader identity / image quotas
 │   ├── webhook/      #   Event dispatch to external services
 │   ├── serverless/   #   User-defined serverless functions
-│   └── ...           #   page, draft, category, topic, feed, search, etc.
+│   └── ...           #   page, draft, category, topic, feed, search, owner, etc.
 ├── processors/       # Infrastructure services
-│   ├── database/     #   PostgreSQL connection + repository registry
+│   ├── database/     #   PostgreSQL connection + repository registry + BaseRepository
 │   ├── redis/        #   Cache, pub/sub, emitter
 │   ├── gateway/      #   WebSocket (admin, web, shared namespaces)
 │   ├── task-queue/   #   Distributed job queue (Redis + Lua)
 │   └── helper/       #   Email, image, JWT, Lexical, URL builder, etc.
+├── database/         # Drizzle ORM
+│   ├── schema/       #   Table definitions
+│   └── migrations/   #   SQL migration files (release-phase, never run on boot)
 ├── common/           # Guards, interceptors, decorators, filters, pipes
 ├── constants/        # Business events, cache keys, error codes
 ├── transformers/     # Response transformation (snake_case, pagination)
-├── migration/        # Drizzle SQL migrations + MongoDB→PG data migration CLI
-└── utils/            # 34 utility modules
+└── utils/            # Utility modules
 ```
+
+> Historical MongoDB → PostgreSQL data migration lives in [`packages/mongo-pg-cli`](./packages/mongo-pg-cli). Forward schema migrations live in `apps/core/src/database/migrations/` and run as a one-shot release-phase step (see the [release-phase migration design](./docs/superpowers/specs/2026-05-05-database-migration-release-phase-design.md)).
 
 ## Quick Start
 
@@ -232,6 +241,9 @@ v10 includes a breaking auth system refactor. See [Upgrading to v10](./docs/migr
 | [Yohaku](https://github.com/Innei/Yohaku) | Next.js frontend |
 | [mx-admin](https://github.com/mx-space/mx-admin) | Vue 3 admin dashboard |
 | [@mx-space/api-client](./packages/api-client) | TypeScript API client SDK |
+| [@mx-space/cli](./packages/cli) | `mxs` CLI for posts/notes/pages/config (OIDC device auth) |
+| [@mx-space/mongo-pg-cli](./packages/mongo-pg-cli) | One-shot MongoDB → PostgreSQL migration for v11 → v12 |
+| [@mx-space/webhook](./packages/webhook) | Webhook handler SDK (signature-verified) |
 | [@haklex/rich-headless](https://github.com/innei/haklex) | Lexical editor (server-side) |
 
 ## License
