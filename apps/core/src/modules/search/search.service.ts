@@ -741,11 +741,14 @@ export class SearchService {
         SEARCH_MAX_CANDIDATES,
       )
     ).filter((doc) => this.isVisible(doc, hasAdminAccess))
+    const searchTermSet = new Set(searchTerms)
     const counts = new Map<string, number>()
     for (const doc of docs) {
-      for (const term of new Set(
-        doc.terms.filter((t) => searchTerms.includes(t)),
-      )) {
+      const matchedTerms = new Set<string>()
+      for (const term of doc.terms) {
+        if (searchTermSet.has(term)) matchedTerms.add(term)
+      }
+      for (const term of matchedTerms) {
         counts.set(term, (counts.get(term) ?? 0) + 1)
       }
     }

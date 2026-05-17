@@ -1,10 +1,10 @@
 import path from 'node:path'
 
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
-import { migrate as drizzleMigrate } from 'drizzle-orm/node-postgres/migrator'
 import { Pool } from 'pg'
 
 import * as schema from '~/database/schema'
+import { runSchemaMigrationFiles } from '~/processors/database/schema-migrator'
 
 export function requirePgVerifyUrl() {
   const verifyUrl = process.env.PG_VERIFY_URL
@@ -72,7 +72,7 @@ export async function createPgTestDatabase(
         __dirname,
         '../../src/database/migrations',
       )
-      await drizzleMigrate(db, { migrationsFolder })
+      await runSchemaMigrationFiles(pool, migrationsFolder)
     }
 
     return {

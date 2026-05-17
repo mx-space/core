@@ -78,6 +78,22 @@ export const posts = pgTable(
     index('posts_modified_at_idx').on(table.modifiedAt),
     index('posts_created_at_idx').on(table.createdAt),
     index('posts_category_id_idx').on(table.categoryId),
+    index('posts_published_created_at_idx')
+      .on(
+        table.isPublished,
+        table.pinAt.desc().nullsLast(),
+        table.createdAt.desc(),
+      )
+      .concurrently(),
+    index('posts_category_published_created_idx')
+      .on(
+        table.categoryId,
+        table.isPublished,
+        table.pinAt.desc().nullsLast(),
+        table.createdAt.desc(),
+      )
+      .concurrently(),
+    index('posts_tags_gin_idx').using('gin', table.tags).concurrently(),
   ],
 )
 
@@ -138,6 +154,9 @@ export const notes = pgTable(
     index('notes_modified_at_idx').on(table.modifiedAt),
     index('notes_created_at_idx').on(table.createdAt),
     index('notes_topic_id_idx').on(table.topicId),
+    index('notes_published_public_created_idx')
+      .on(table.isPublished, table.createdAt.desc(), table.publicAt)
+      .concurrently(),
   ],
 )
 

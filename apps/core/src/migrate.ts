@@ -20,15 +20,13 @@ import 'dotenv-expand/config'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { migrate as drizzleMigrate } from 'drizzle-orm/node-postgres/migrator'
 import pkg from 'pg'
 
-import * as schema from '~/database/schema'
 import {
   SCHEMA_MIGRATION_LOCK_KEY,
   withAdvisoryLock,
 } from '~/processors/database/postgres.lock'
+import { runSchemaMigrationFiles } from '~/processors/database/schema-migrator'
 
 const { Pool } = pkg
 
@@ -83,7 +81,6 @@ export async function runSchemaMigrations() {
     console.error('[migrate] pool error:', err)
   })
 
-  const db = drizzle(pool, { schema, casing: 'snake_case' })
   const migrationsFolder = resolveMigrationsFolder()
 
   const target = cfg.connectionString
@@ -94,7 +91,7 @@ export async function runSchemaMigrations() {
   const start = Date.now()
   try {
     await withAdvisoryLock(pool, SCHEMA_MIGRATION_LOCK_KEY, async () => {
-      await drizzleMigrate(db, { migrationsFolder })
+      await runSchemaMigrationFiles(pool, migrationsFolder)
     })
     console.log(`[migrate] schema done in ${Date.now() - start}ms`)
   } finally {

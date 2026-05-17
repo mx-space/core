@@ -15,6 +15,7 @@ import {
   type SQL,
   sql,
 } from 'drizzle-orm'
+import type pkg from 'pg'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { notes, topics } from '~/database/schema'
@@ -60,6 +61,260 @@ const mapBase = (row: typeof notes.$inferSelect): NoteRow => ({
   modifiedAt: row.modifiedAt,
 })
 
+const yearRange = (year: number) => ({
+  end: new Date(Date.UTC(year + 1, 0, 1)),
+  start: new Date(Date.UTC(year, 0, 1)),
+})
+
+const createdAtDescNullsLast = sql`${notes.createdAt} desc nulls last`
+
+const topicProjection = {
+  createdAt: topics.createdAt,
+  description: topics.description,
+  icon: topics.icon,
+  id: topics.id,
+  introduce: topics.introduce,
+  name: topics.name,
+  slug: topics.slug,
+}
+
+type TopicProjection = {
+  createdAt: Date
+  description: string
+  icon: string | null
+  id: string
+  introduce: string | null
+  name: string
+  slug: string
+} | null
+
+type RawNoteWithTopic = {
+  bookmark: boolean
+  content: string | null
+  contentFormat: string
+  coordinates: NoteRow['coordinates']
+  createdAt: Date
+  hasPassword: boolean
+  id: string
+  images: unknown[] | null
+  isPublished: boolean
+  likeCount: number
+  location: string | null
+  meta: Record<string, unknown> | null
+  modifiedAt: Date | null
+  mood: string | null
+  nid: number
+  noteTopicId: string | null
+  publicAt: Date | null
+  readCount: number
+  role?: 'latest' | 'next'
+  slug: string | null
+  text: string | null
+  title: string | null
+  totalCount?: number
+  topicCreatedAt: Date | null
+  topicDescription: string | null
+  topicIcon: string | null
+  topicId: string | null
+  topicIntroduce: string | null
+  topicName: string | null
+  topicSlug: string | null
+  weather: string | null
+}
+
+const mapTopic = (topic: TopicProjection): NoteRow['topic'] => {
+  if (!topic) return null
+  return {
+    id: toEntityId(topic.id) as EntityId,
+    name: topic.name,
+    slug: topic.slug,
+    description: topic.description,
+    introduce: topic.introduce,
+    icon: topic.icon,
+    createdAt: topic.createdAt,
+  }
+}
+
+const mapWithTopic = (
+  note: typeof notes.$inferSelect,
+  topic: TopicProjection,
+): NoteRow => {
+  const row = mapBase(note)
+  row.topic = mapTopic(topic)
+  return row
+}
+
+const mapRawNoteWithTopic = (row: RawNoteWithTopic): NoteRow => ({
+  id: toEntityId(row.id) as EntityId,
+  nid: row.nid,
+  title: row.title ?? '',
+  slug: row.slug,
+  text: row.text ?? '',
+  content: row.content,
+  contentFormat: row.contentFormat,
+  images: row.images,
+  meta: row.meta,
+  isPublished: row.isPublished,
+  hasPassword: row.hasPassword,
+  publicAt: row.publicAt,
+  mood: row.mood,
+  weather: row.weather,
+  bookmark: row.bookmark,
+  coordinates: row.coordinates,
+  location: row.location,
+  readCount: row.readCount,
+  likeCount: row.likeCount,
+  topicId: row.noteTopicId ? (toEntityId(row.noteTopicId) as EntityId) : null,
+  topic: row.topicId
+    ? {
+        id: toEntityId(row.topicId) as EntityId,
+        name: row.topicName ?? '',
+        slug: row.topicSlug ?? '',
+        description: row.topicDescription ?? '',
+        introduce: row.topicIntroduce,
+        icon: row.topicIcon,
+        createdAt: row.topicCreatedAt!,
+      }
+    : null,
+  createdAt: row.createdAt,
+  modifiedAt: row.modifiedAt,
+})
+
+const defaultVisibleNoteListSql = `
+  select
+    n.id as "id",
+    n.nid as "nid",
+    n.title as "title",
+    n.slug as "slug",
+    n.text as "text",
+    n.content as "content",
+    n.content_format as "contentFormat",
+    n.images as "images",
+    n.meta as "meta",
+    n.is_published as "isPublished",
+    (n.password is not null) as "hasPassword",
+    n.public_at as "publicAt",
+    n.mood as "mood",
+    n.weather as "weather",
+    n.bookmark as "bookmark",
+    n.coordinates as "coordinates",
+    n.location as "location",
+    n.read_count as "readCount",
+    n.like_count as "likeCount",
+    n.topic_id as "noteTopicId",
+    n.created_at as "createdAt",
+    n.modified_at as "modifiedAt",
+    t.id as "topicId",
+    t.name as "topicName",
+    t.slug as "topicSlug",
+    t.description as "topicDescription",
+    t.introduce as "topicIntroduce",
+    t.icon as "topicIcon",
+    t.created_at as "topicCreatedAt",
+    c.count as "totalCount"
+  from (
+    select *
+    from notes
+    where is_published = true
+      and (public_at is null or public_at <= now())
+    order by created_at desc nulls last
+    limit 10
+    offset 0
+  ) n
+  left join topics t on t.id = n.topic_id
+  cross join (
+    select count(*)::int as count
+    from notes
+    where is_published = true
+      and (public_at is null or public_at <= now())
+  ) c
+`
+
+const latestVisiblePairSql = `
+  with latest as (
+    select
+      'latest'::text as "role",
+      n.id as "id",
+      n.nid as "nid",
+      n.title as "title",
+      n.slug as "slug",
+      n.text as "text",
+      n.content as "content",
+      n.content_format as "contentFormat",
+      n.images as "images",
+      n.meta as "meta",
+      n.is_published as "isPublished",
+      (n.password is not null) as "hasPassword",
+      n.public_at as "publicAt",
+      n.mood as "mood",
+      n.weather as "weather",
+      n.bookmark as "bookmark",
+      n.coordinates as "coordinates",
+      n.location as "location",
+      n.read_count as "readCount",
+      n.like_count as "likeCount",
+      n.topic_id as "noteTopicId",
+      n.created_at as "createdAt",
+      n.modified_at as "modifiedAt",
+      t.id as "topicId",
+      t.name as "topicName",
+      t.slug as "topicSlug",
+      t.description as "topicDescription",
+      t.introduce as "topicIntroduce",
+      t.icon as "topicIcon",
+      t.created_at as "topicCreatedAt"
+    from notes n
+    left join topics t on t.id = n.topic_id
+    where n.is_published = true
+      and (n.public_at is null or n.public_at <= now())
+    order by n.created_at desc nulls last
+    limit 1
+  ),
+  next as (
+    select
+      'next'::text as "role",
+      n.id as "id",
+      n.nid as "nid",
+      n.title as "title",
+      n.slug as "slug",
+      n.text as "text",
+      n.content as "content",
+      n.content_format as "contentFormat",
+      n.images as "images",
+      n.meta as "meta",
+      n.is_published as "isPublished",
+      (n.password is not null) as "hasPassword",
+      n.public_at as "publicAt",
+      n.mood as "mood",
+      n.weather as "weather",
+      n.bookmark as "bookmark",
+      n.coordinates as "coordinates",
+      n.location as "location",
+      n.read_count as "readCount",
+      n.like_count as "likeCount",
+      n.topic_id as "noteTopicId",
+      n.created_at as "createdAt",
+      n.modified_at as "modifiedAt",
+      t.id as "topicId",
+      t.name as "topicName",
+      t.slug as "topicSlug",
+      t.description as "topicDescription",
+      t.introduce as "topicIntroduce",
+      t.icon as "topicIcon",
+      t.created_at as "topicCreatedAt"
+    from notes n
+    left join topics t on t.id = n.topic_id
+    where n.is_published = true
+      and (n.public_at is null or n.public_at <= now())
+      and n.created_at < (select "createdAt" from latest)
+    order by n.created_at desc nulls last
+    limit 1
+  )
+  select * from latest
+  union all
+  select * from next
+`
+
 @Injectable()
 export class NoteRepository extends BaseRepository {
   constructor(
@@ -67,6 +322,14 @@ export class NoteRepository extends BaseRepository {
     private readonly snowflake: SnowflakeService,
   ) {
     super(db)
+  }
+
+  private get pgPool(): pkg.Pool | null {
+    const client = (this.db as AppDatabase & { $client?: unknown }).$client
+    if (client && typeof (client as pkg.Pool).query === 'function') {
+      return client as pkg.Pool
+    }
+    return null
   }
 
   async getPassword(id: EntityId | string): Promise<string | null> {
@@ -129,7 +392,29 @@ export class NoteRepository extends BaseRepository {
     size = 10,
     options: NoteSortOptions & NoteListFilter = {},
   ): Promise<PaginationResult<NoteRow>> {
+    const hasDefaultOptions =
+      options.year === undefined &&
+      options.sortBy === undefined &&
+      options.sortOrder === undefined
+    if (page === 1 && size === 10 && hasDefaultOptions) {
+      const fastResult = await this.listDefaultVisibleFast()
+      if (fastResult) return fastResult
+    }
     return this.listInternal(page, size, options, this.visibleClause())
+  }
+
+  private async listDefaultVisibleFast(): Promise<PaginationResult<NoteRow> | null> {
+    const pool = this.pgPool
+    if (!pool) return null
+    const result = await pool.query<RawNoteWithTopic>({
+      name: 'notes_default_visible_list_v1',
+      text: defaultVisibleNoteListSql,
+    })
+    const count = result.rows[0]?.totalCount ?? 0
+    return {
+      data: result.rows.map(mapRawNoteWithTopic),
+      pagination: this.paginationOf(Number(count), 1, 10),
+    }
   }
 
   private async listInternal(
@@ -145,8 +430,9 @@ export class NoteRepository extends BaseRepository {
     const orderBy = this.resolveOrderBy(options)
     const [rows, [{ count }]] = await Promise.all([
       this.db
-        .select()
+        .select({ note: notes, topic: topicProjection })
         .from(notes)
+        .leftJoin(topics, eq(notes.topicId, topics.id))
         .where(where)
         .orderBy(...orderBy)
         .limit(size)
@@ -157,7 +443,7 @@ export class NoteRepository extends BaseRepository {
         .where(where),
     ])
     return {
-      data: await this.attachTopics(rows.map(mapBase)),
+      data: rows.map((row) => mapWithTopic(row.note, row.topic)),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
   }
@@ -169,7 +455,8 @@ export class NoteRepository extends BaseRepository {
     const filters: SQL[] = []
     if (visibility) filters.push(visibility)
     if (year !== undefined) {
-      filters.push(sql`extract(year from ${notes.createdAt})::int = ${year}`)
+      const { start, end } = yearRange(year)
+      filters.push(gte(notes.createdAt, start), lt(notes.createdAt, end))
     }
     if (filters.length === 0) return undefined
     if (filters.length === 1) return filters[0]
@@ -295,12 +582,13 @@ export class NoteRepository extends BaseRepository {
   ): Promise<NoteRow[]> {
     const where = options.visibleOnly ? this.visibleClause() : undefined
     const rows = await this.db
-      .select()
+      .select({ note: notes, topic: topicProjection })
       .from(notes)
+      .leftJoin(topics, eq(notes.topicId, topics.id))
       .where(where)
-      .orderBy(desc(notes.createdAt))
+      .orderBy(createdAtDescNullsLast)
       .limit(Math.max(1, size))
-    return this.attachTopics(rows.map(mapBase))
+    return rows.map((row) => mapWithTopic(row.note, row.topic))
   }
 
   async findManyByIds(ids: Array<EntityId | string>): Promise<NoteRow[]> {
@@ -369,7 +657,7 @@ export class NoteRepository extends BaseRepository {
       .from(notes)
       .where(and(...filters))
       .orderBy(
-        direction === 'before' ? desc(notes.createdAt) : asc(notes.createdAt),
+        direction === 'before' ? createdAtDescNullsLast : asc(notes.createdAt),
       )
       .limit(Math.max(1, limit))
     return this.attachTopics(rows.map(mapBase))
@@ -461,15 +749,28 @@ export class NoteRepository extends BaseRepository {
   }
 
   async getLatestVisible(): Promise<NoteRow | null> {
-    const [row] = await this.db
-      .select()
-      .from(notes)
-      .where(this.visibleClause())
-      .orderBy(desc(notes.createdAt))
-      .limit(1)
-    if (!row) return null
-    const [withTopic] = await this.attachTopics([mapBase(row)])
-    return withTopic
+    const [row] = await this.findRecent(1, { visibleOnly: true })
+    return row ?? null
+  }
+
+  async findLatestVisiblePair(): Promise<{
+    latest: NoteRow
+    next: NoteRow | null
+  } | null> {
+    const pool = this.pgPool
+    const result = pool
+      ? await pool.query<RawNoteWithTopic>({
+          name: 'notes_latest_visible_pair_v1',
+          text: latestVisiblePairSql,
+        })
+      : await this.db.execute<RawNoteWithTopic>(sql.raw(latestVisiblePairSql))
+    const latest = result.rows.find((row) => row.role === 'latest')
+    if (!latest) return null
+    const next = result.rows.find((row) => row.role === 'next')
+    return {
+      latest: mapRawNoteWithTopic(latest),
+      next: next ? mapRawNoteWithTopic(next) : null,
+    }
   }
 
   async findArchiveBuckets(): Promise<
@@ -563,18 +864,18 @@ export class NoteRepository extends BaseRepository {
     const filters: SQL[] = []
     if (options.visibleOnly) filters.push(this.visibleClause())
     if (options.year !== undefined) {
-      filters.push(
-        sql`extract(year from ${notes.createdAt})::int = ${options.year}`,
-      )
+      const { start, end } = yearRange(options.year)
+      filters.push(gte(notes.createdAt, start), lt(notes.createdAt, end))
     }
     const orderBy =
-      options.sort === 'asc' ? asc(notes.createdAt) : desc(notes.createdAt)
+      options.sort === 'asc' ? asc(notes.createdAt) : createdAtDescNullsLast
     const rows = await this.db
-      .select()
+      .select({ note: notes, topic: topicProjection })
       .from(notes)
+      .leftJoin(topics, eq(notes.topicId, topics.id))
       .where(filters.length ? and(...filters) : undefined)
       .orderBy(orderBy)
-    return this.attachTopics(rows.map(mapBase))
+    return rows.map((row) => mapWithTopic(row.note, row.topic))
   }
 
   async findVisibleForSitemap(): Promise<NoteRow[]> {
@@ -638,20 +939,22 @@ export class NoteRepository extends BaseRepository {
       case 'modifiedAt': {
         return [
           direction(sql`coalesce(${notes.modifiedAt}, ${notes.createdAt})`),
-          desc(notes.createdAt),
+          createdAtDescNullsLast,
         ]
       }
       case 'title': {
-        return [direction(notes.title), desc(notes.createdAt)]
+        return [direction(notes.title), createdAtDescNullsLast]
       }
       case 'mood': {
-        return [direction(notes.mood), desc(notes.createdAt)]
+        return [direction(notes.mood), createdAtDescNullsLast]
       }
       case 'weather': {
-        return [direction(notes.weather), desc(notes.createdAt)]
+        return [direction(notes.weather), createdAtDescNullsLast]
       }
       default: {
-        return [direction(notes.createdAt)]
+        return sortOrder === 1
+          ? [asc(notes.createdAt)]
+          : [createdAtDescNullsLast]
       }
     }
   }
