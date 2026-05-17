@@ -295,7 +295,7 @@ export class AuthService {
       throw new InternalServerErrorException('auth not found')
     }
 
-    if (!headers.get('cookie')) {
+    if (!headers.get('cookie') && !headers.get('authorization')) {
       return null
     }
     const session = await auth.api.getSession({
@@ -466,18 +466,6 @@ export class AuthService {
       return { key: apiKeyHeader, deprecated: false }
     }
 
-    const authorization = this.pickFirstHeader(
-      headers,
-      'authorization',
-      'Authorization',
-    )
-    if (authorization) {
-      const match = authorization.match(/^bearer\s+(\S+)$/i)
-      if (match) {
-        return { key: match[1], deprecated: true }
-      }
-    }
-
     if (typeof query.token === 'string') {
       return { key: query.token, deprecated: true }
     }
@@ -558,6 +546,14 @@ export class AuthService {
     const origin = this.pickFirstHeader(headers, 'origin')
     if (origin) {
       header.set('origin', origin)
+    }
+    const authorization = this.pickFirstHeader(
+      headers,
+      'authorization',
+      'Authorization',
+    )
+    if (authorization) {
+      header.set('authorization', authorization)
     }
     return header
   }

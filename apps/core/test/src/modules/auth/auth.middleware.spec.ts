@@ -2,7 +2,10 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import { vi } from 'vitest'
 
-import { AuthMiddleware } from '~/modules/auth/auth.middleware'
+import {
+  AuthMiddleware,
+  shouldBypassBetterAuth,
+} from '~/modules/auth/auth.middleware'
 
 function createMiddleware(handler?: any) {
   const middleware = Object.create(AuthMiddleware.prototype) as AuthMiddleware
@@ -127,18 +130,31 @@ describe('AuthMiddleware', () => {
       expect(next).not.toHaveBeenCalled()
     })
 
-    it('should bypass when url contains bypass path as substring', async () => {
+    it('should call authHandler when token is nested under device auth', async () => {
       const handler = vi.fn()
       const middleware = createMiddleware(handler)
       const { req, res, next } = createReqRes({
-        url: '/api/auth/session/refresh',
-        method: 'GET',
+        url: '/auth/device/token',
+        method: 'POST',
       })
 
       await middleware.use(req, res, next)
 
-      expect(next).toHaveBeenCalledOnce()
-      expect(handler).not.toHaveBeenCalled()
+      expect((middleware as any).ensureAuthHandlerFresh).toHaveBeenCalledOnce()
+      expect(handler).toHaveBeenCalledWith(req, res)
+      expect(next).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('shouldBypassBetterAuth()', () => {
+    it('matches only local auth controller endpoints', () => {
+      expect(shouldBypassBetterAuth('/auth/token')).toBe(true)
+      expect(shouldBypassBetterAuth('/auth/session?x=1')).toBe(true)
+      expect(shouldBypassBetterAuth('/api/v2/auth/providers/')).toBe(true)
+
+      expect(shouldBypassBetterAuth('/auth/device/token')).toBe(false)
+      expect(shouldBypassBetterAuth('/api/v2/auth/device/token')).toBe(false)
+      expect(shouldBypassBetterAuth('/api/auth/session/refresh')).toBe(false)
     })
   })
 })

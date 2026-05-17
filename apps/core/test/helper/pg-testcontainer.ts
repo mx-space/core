@@ -11,7 +11,7 @@ import { runSchemaMigrationFiles } from '~/processors/database/schema-migrator'
 const { Pool } = pkg
 
 interface PgTestDatabase {
-  getConnectionUri(): string
+  getConnectionUri: () => string
 }
 
 let container: StartedPostgreSqlContainer | undefined

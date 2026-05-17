@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+
 import process from 'node:process'
 
 // Reset argv so app.config's commander does not consume script flags.

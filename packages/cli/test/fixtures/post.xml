@@ -1,0 +1,19 @@
+<mxpost>
+  <meta>
+    <title>题名</title>
+    <slug>my-post</slug>
+    <category>tech</category>
+    <tags>
+      <tag>foo</tag>
+      <tag>bar</tag>
+    </tags>
+    <state>publish</state>
+    <summary>摘要</summary>
+    <copyright>true</copyright>
+    <pin>2026-05-14</pin>
+  </meta>
+  <content>
+<p>正文一</p>
+<h2>章节</h2>
+  </content>
+</mxpost>

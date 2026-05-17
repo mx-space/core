@@ -12,8 +12,9 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { APIError, createAuthMiddleware } from 'better-auth/api'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { toNodeHandler } from 'better-auth/node'
-import { username } from 'better-auth/plugins'
+import { bearer, deviceAuthorization, username } from 'better-auth/plugins'
 import { and, eq } from 'drizzle-orm'
+import { customAlphabet } from 'nanoid'
 
 import { API_VERSION, CROSS_DOMAIN } from '~/app.config'
 import { SECURITY } from '~/app.config.test'
@@ -25,10 +26,18 @@ const bcryptRegex = /^\$2[aby]\$/
 const isBcryptHash = (value?: string | null) =>
   typeof value === 'string' && bcryptRegex.test(value)
 
+export const MXS_CLI_CLIENT_ID = 'mxs-cli'
+
+const deviceUserCodeAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+const generateDeviceUserCode = customAlphabet(deviceUserCodeAlphabet, 8)
+
 export async function CreateAuth(
   providers: BetterAuthOptions['socialProviders'],
   passkeyOptions?: PasskeyOptions,
 ) {
+  const deviceVerificationPath = isDev
+    ? '/device'
+    : `/api/v${API_VERSION}/device`
   const auth = betterAuth({
     telemetry: { enabled: false },
     database: drizzleAdapter(db, {
@@ -100,18 +109,7 @@ export async function CreateAuth(
         apiKeyHeaders: ['x-api-key'],
         disableKeyHashing: true,
         defaultKeyLength: 43,
-        customAPIKeyGetter: (ctx) => {
-          const headerKey = ctx.headers?.get('x-api-key')
-          if (headerKey) {
-            return headerKey
-          }
-          const authorization = ctx.headers?.get('authorization')
-          if (!authorization) return null
-          const match = authorization.startsWith('Bearer ')
-            ? authorization.slice(7)
-            : null
-          return match
-        },
+        customAPIKeyGetter: (ctx) => ctx.headers?.get('x-api-key') ?? null,
       }),
       passkey({
         ...passkeyOptions,
@@ -126,8 +124,25 @@ export async function CreateAuth(
           },
         },
       } as PasskeyOptions),
+      bearer(),
       username({
         usernameValidator: validateMxUsername,
+      }),
+      deviceAuthorization({
+        expiresIn: '30m',
+        interval: '5s',
+        userCodeLength: 8,
+        schema: {},
+        generateUserCode: () => generateDeviceUserCode(),
+        verificationUri: deviceVerificationPath,
+        onDeviceAuthRequest: async (clientId) => {
+          if (clientId !== MXS_CLI_CLIENT_ID) {
+            throw new APIError('BAD_REQUEST', {
+              error: 'invalid_client',
+              error_description: `unsupported client_id: ${clientId}`,
+            })
+          }
+        },
       }),
     ],
     hooks: {

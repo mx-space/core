@@ -2,6 +2,10 @@ import path from 'node:path'
 
 import { drizzle } from 'drizzle-orm/node-postgres'
 import pkg from 'pg'
+import {
+  createPgTestDatabase,
+  type PgTestDatabase,
+} from 'test/helper/pg-verify-url'
 
 import {
   assertSchemaCurrent,
@@ -9,10 +13,6 @@ import {
   SchemaBehindError,
 } from '~/processors/database/postgres.provider'
 import { runSchemaMigrationFiles } from '~/processors/database/schema-migrator'
-import {
-  createPgTestDatabase,
-  type PgTestDatabase,
-} from 'test/helper/pg-verify-url'
 
 const { Pool } = pkg
 

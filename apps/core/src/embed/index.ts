@@ -21,6 +21,7 @@ import themeGithub from './markdown/theme/github.css.txt?raw'
 import themeGothic from './markdown/theme/gothic.css.txt?raw'
 import themeHan from './markdown/theme/han.css.txt?raw'
 import themeNewsprint from './markdown/theme/newsprint.css.txt?raw'
+import renderDevice from './render/device.ejs?raw'
 import renderDownloadAdmin from './render/download-admin.ejs?raw'
 import renderLocalDev from './render/local-dev.ejs?raw'
 import renderMarkdown from './render/markdown.ejs?raw'
@@ -34,6 +35,7 @@ export const EMBED_FILES: Record<string, string> = {
   '/markdown/theme/gothic.css': themeGothic,
   '/markdown/theme/han.css': themeHan,
   '/markdown/theme/newsprint.css': themeNewsprint,
+  '/render/device.ejs': renderDevice,
   '/render/download-admin.ejs': renderDownloadAdmin,
   '/render/local-dev.ejs': renderLocalDev,
   '/render/markdown.ejs': renderMarkdown,

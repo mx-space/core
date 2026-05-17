@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+/* eslint-disable unicorn/no-immediate-mutation */
 import { performance } from 'node:perf_hooks'
 import process from 'node:process'
 

@@ -12,8 +12,6 @@ export const migration: AppMigration = {
         DROP COLUMN IF EXISTS "enrichment_provider",
         DROP COLUMN IF EXISTS "enrichment_external_id"
     `)
-    await db.execute(
-      sql`DROP INDEX IF EXISTS "recentlies_enrichment_idx"`,
-    )
+    await db.execute(sql`DROP INDEX IF EXISTS "recentlies_enrichment_idx"`)
   },
 }

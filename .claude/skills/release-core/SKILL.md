@@ -1,6 +1,6 @@
 ---
 name: release-core
-description: Use when releasing mx-core server (apps/core) or @mx-space/api-client package — version bump, changelog, git tag, Docker build, GitHub Release, and Dokploy redeploy. Triggers on "发版", "release a new version", "cut a release", "bump version", "publish api-client".
+description: Use when releasing mx-core server (apps/core), @mx-space/api-client, or @mx-space/cli (mxs) — version bump, changelog, git tag, Docker build, GitHub Release, and Dokploy redeploy. Triggers on "发版", "release a new version", "cut a release", "bump version", "publish api-client", "publish cli", "release mxs".
 ---
 
 # mx-core Release (Agent-native)
@@ -13,12 +13,13 @@ This skill replicates the **same end state** (commit, tag, changelog, assets pus
 
 If a teammate insists on `bump`, fall back to it — but it's not needed for any agent-driven release.
 
-## Two pipelines (confirm which one with the user)
+## Three pipelines (confirm which one with the user)
 
 | Pipeline | Where | What ships | What auto-fires after `git push` |
 |----------|-------|------------|-----------------------------------|
 | **A. Server** | `apps/core` | DockerHub `innei/mx-server` + GitHub Release zip + Dokploy redeploy | `release.yml` triggers on tag `v*` |
 | **B. api-client** | `packages/api-client` | npm package `@mx-space/api-client` | `api-client.yml` runs CI only (no publish); the agent runs `npm publish` locally |
+| **C. cli (mxs)** | `packages/cli` | npm package `@mx-space/cli` (binary `mxs`) | No dedicated workflow; the agent runs `npm publish` locally |
 
 ## Pre-flight (BOTH pipelines)
 
@@ -322,6 +323,86 @@ Verify: `npm view @mx-space/api-client version` returns the new version (may tak
 
 `@mx-space/api-client` is consumed by Yohaku (`apps/web/package.json`) and admin-vue3 by pinned version. Bumping those is a separate change and only needed if consumers depend on the new behaviour. Don't do it as part of this skill unless the user asks.
 
+## C. cli Release (`packages/cli`, binary `mxs`)
+
+Same shape as api-client — no tag, no CHANGELOG file, just bump → commit → push → publish. Two extra cares: the `bin` field must remain executable, and the package was un-released until v0.1.x, so the first publish is a real first publish (not a re-publish).
+
+### Step 1 — Decide the version
+
+```bash
+node -p "require('./packages/cli/package.json').version"
+git log --pretty='%h %s' -- packages/cli | head -30
+```
+
+Same conventional-commits rules. Note: while in `0.y.z`, treat `feat:` as minor (`0.Y+1.0`) and breaking as minor too — `1.0.0` is reserved for the deliberate API freeze.
+
+### Step 2 — Sync + rebuild
+
+```bash
+git pull --rebase
+pnpm i                           # if needed
+pnpm -C packages/cli run package
+```
+
+`package` is `rm -rf dist && tsdown` — same as api-client. Builds `dist/` (gitignored).
+
+Verify:
+- `ls packages/cli/dist` lists `.mjs` / `.d.mts` (CLI ships ESM; `bin/mxs.cjs` is a thin shim into the bundle).
+- `node packages/cli/bin/mxs.cjs --version` prints the about-to-bump version (i.e. still the current one until step 3). Confirms the shim resolves `dist/` after a clean build.
+
+### Step 3 — Bump version
+
+Edit `packages/cli/package.json` `version` field. Do NOT touch the `bin` map — the `mxs` → `./bin/mxs.cjs` mapping is load-bearing.
+
+### Step 4 — Sanity-check the publish surface
+
+```bash
+npm pack --dry-run -w @mx-space/cli 2>&1 | tail -40
+```
+
+What to check in the output:
+- `bin/mxs.cjs` present
+- `dist/` present and non-empty (.mjs/.d.mts)
+- `README.md` + `ROADMAP.md` present
+- `src/` NOT present (would inflate tarball; `files` field already excludes it, just confirming)
+
+Skip pack if the consumer trusts the `files` array — but for a first publish, run it.
+
+### Step 5 — Commit + push
+
+```bash
+git add packages/cli/package.json
+git commit -m "chore(release): bump @mx-space/cli to vX.Y.Z" --no-verify
+git push
+```
+
+**No git tag.** Like api-client, CLI does not use the `v*` namespace (server-only). No CI workflow runs for CLI on push.
+
+### Step 6 — Publish to npm
+
+```bash
+cd packages/cli
+npm publish --access=public
+```
+
+For the **first publish** of `@mx-space/cli`, requires:
+- `npm whoami` returns a user with publish rights on the `mx-space` org (same as api-client).
+- `--access=public` is required because `@mx-space/cli` is a scoped package; npm defaults scoped packages to private. (Already set in `publishConfig.access`, but passing the flag is belt-and-suspenders.)
+
+If `npm whoami` is empty, ask the user to `npm login`. Don't attempt `--otp=...` guessing.
+
+Verify:
+- `npm view @mx-space/cli version` returns the new version (30–60s propagation).
+- After propagation, smoke-test the published binary:
+  ```bash
+  npx --yes @mx-space/cli@X.Y.Z --version
+  ```
+  Should print `X.Y.Z`. If it errors with `command not found: mxs`, the `bin` field is broken in the published manifest — investigate `npm view @mx-space/cli bin` before publishing a fix.
+
+### Step 7 — Notify consumers (optional)
+
+CLI has no in-repo consumers (it's an end-user tool, not a workspace dep). Skip the consumer-bump step.
+
 ## Rollback / recovery
 
 | Situation | Action |
@@ -331,6 +412,8 @@ Verify: `npm view @mx-space/api-client version` returns the new version (may tak
 | Tag pushed, CI quality/build failed | Fix forward with a new patch release. Don't delete the published tag. |
 | Tag pushed, Docker built, but bug critical | Cut a new patch with the fix. Don't re-tag the same version. |
 | api-client `npm publish` failed after commit/push | Re-run `npm publish --access=public` once the issue is resolved. The commit already records the intent. |
+| cli `npm publish` failed after commit/push | Re-run `npm publish --access=public` from `packages/cli`. If failure is missing `dist/`, re-run `pnpm -C packages/cli run package` first. |
+| Published cli but `mxs` binary missing on install | The `bin` field was likely stripped or the shim path is wrong. Cut a new patch with `bin/mxs.cjs` restored — do **not** unpublish unless within 24h and no installs. |
 | Wrong version published to npm | npm allows `npm unpublish` only within 72h, only if no one depends on it. Usually faster to publish a corrected next version. |
 | Release notes need a fix after tag is published | `gh release edit vX.Y.Z --notes-file apps/core/RELEASE_NOTES.md` (or `--notes "..."`) — updates the Release body only. Tag and assets are untouched. |
 
@@ -343,8 +426,10 @@ Verify: `npm view @mx-space/api-client version` returns the new version (may tak
 - On a non-`master` branch
 - `node get-latest-admin-version.js` fails (likely missing `gh auth` / token)
 - `assets-push.sh` reports a real conflict (not just "nothing to commit")
-- `npm whoami` empty when about to publish api-client
-- Two pipelines mixed up (e.g. tagging `v*` for an api-client-only change)
+- `npm whoami` empty when about to publish api-client or cli
+- Pipelines mixed up (e.g. tagging `v*` for an api-client- or cli-only change, or bumping CLI version when only api-client changed)
+- `packages/cli/dist` missing or stale before `npm publish` (skipped step 2 rebuild)
+- `packages/cli/package.json` `bin` field accidentally removed or path renamed
 
 ## File reference
 
@@ -354,8 +439,11 @@ Verify: `npm view @mx-space/api-client version` returns the new version (may tak
 - `apps/core/get-latest-admin-version.js` — fetches latest mx-admin release tag
 - `apps/core/assets-push.sh` — force-pushes `assets/` to `mx-space/assets`
 - `packages/api-client/package.json` — npm package version
+- `packages/cli/package.json` — npm package version + `bin.mxs` map (do not edit `bin` during a release)
+- `packages/cli/bin/mxs.cjs` — CommonJS shim that re-exports `dist/`; shipped in the tarball
 - `.github/workflows/release.yml` — server tag → Docker + GitHub Release + Dokploy
 - `.github/workflows/api-client.yml` — api-client CI (test/build only, no publish)
+- (No dedicated workflow for `packages/cli` — root `ci.yml` covers typecheck/test.)
 - `scripts/workflow/test-server.sh` / `test-docker.sh` — smoke tests CI runs
 
 ## Manual `bump` fallback

@@ -106,8 +106,14 @@ describe('RecentlyService.attachEnrichments', () => {
     }))
     const { service } = makeService({ hydrateUrls: hydrate })
     const rows = [
-      makeRow({ id: '1' as RecentlyRow['id'], content: 'https://example.com/a' }),
-      makeRow({ id: '2' as RecentlyRow['id'], content: 'https://example.com/b' }),
+      makeRow({
+        id: '1' as RecentlyRow['id'],
+        content: 'https://example.com/a',
+      }),
+      makeRow({
+        id: '2' as RecentlyRow['id'],
+        content: 'https://example.com/b',
+      }),
     ]
     const out = await callAttach(service, rows)
     expect(out[0].enrichments).toEqual({ 'https://example.com/a': a })

@@ -13,6 +13,7 @@ import type { AuthInstance } from './auth.interface'
 import { AuthMiddleware } from './auth.middleware'
 import { AuthRepository } from './auth.repository'
 import { AuthService } from './auth.service'
+import { DeviceController } from './device.controller'
 
 export class AuthModule implements NestModule {
   static forRoot(): DynamicModule {
@@ -31,7 +32,7 @@ export class AuthModule implements NestModule {
     }
 
     return {
-      controllers: [AuthController],
+      controllers: [AuthController, DeviceController],
       exports: [AuthService, authProvider],
       imports: [],
       module: AuthModule,
