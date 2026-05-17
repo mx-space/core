@@ -23,6 +23,7 @@ const ownerSession = {
 
 const deviceApprove = vi.fn(async () => ({ success: true }))
 const deviceDeny = vi.fn(async () => ({ success: true }))
+const deviceVerify = vi.fn(async () => ({ status: 'pending' }))
 
 const assetService = {
   getAsset: vi.fn(async () => null),
@@ -35,7 +36,7 @@ const configsService = {
 }
 
 const authInstance = {
-  get: () => ({ api: { deviceApprove, deviceDeny } }),
+  get: () => ({ api: { deviceApprove, deviceDeny, deviceVerify } }),
   set: vi.fn(),
 }
 
@@ -70,6 +71,7 @@ describe('DeviceController (e2e)', () => {
   beforeEach(() => {
     deviceApprove.mockClear()
     deviceDeny.mockClear()
+    deviceVerify.mockClear()
     authService.getSessionUserFromHeaders.mockReset()
     authService.getSessionUserFromHeaders.mockResolvedValue(null)
   })
@@ -92,6 +94,26 @@ describe('DeviceController (e2e)', () => {
     expect(res.body).toContain('ABCD1234')
     expect(res.body).toContain('Device authorization')
     expect(res.body).toContain('Test Site')
+    expect(deviceVerify).toHaveBeenCalledWith({
+      query: { user_code: 'ABCD1234' },
+      headers: expect.any(Headers),
+    })
+  })
+
+  test('GET /device normalizes the user code before claiming it', async () => {
+    authService.getSessionUserFromHeaders.mockResolvedValue(ownerSession)
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/device?user_code=%20ABCD1234%20',
+      headers: { cookie: 'session=abc' },
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(deviceVerify).toHaveBeenCalledWith({
+      query: { user_code: 'ABCD1234' },
+      headers: expect.any(Headers),
+    })
   })
 
   test('GET /device redirects unauthenticated requests to the admin login', async () => {
@@ -108,6 +130,7 @@ describe('DeviceController (e2e)', () => {
     expect(location).toContain('redirect=')
     expect(decodeURIComponent(location)).toContain('/device')
     expect(decodeURIComponent(location)).toContain('user_code=XYZ123')
+    expect(deviceVerify).not.toHaveBeenCalled()
   })
 
   test('GET /device redirects when the session is a non-owner reader', async () => {

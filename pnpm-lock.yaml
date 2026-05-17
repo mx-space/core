@@ -25,6 +25,9 @@ importers:
       '@lobehub/eslint-config':
         specifier: ^2.1.5
         version: 2.1.5(@typescript-eslint/eslint-plugin@8.59.2(@typescript-eslint/parser@8.59.2(eslint@10.3.0)(typescript@6.0.3))(eslint@10.3.0)(typescript@6.0.3))(@typescript-eslint/utils@8.59.2(eslint@10.3.0)(typescript@6.0.3))(eslint@10.3.0)(typescript@6.0.3)
+      '@mx-space/cli':
+        specifier: workspace:*
+        version: link:packages/cli
       '@types/node':
         specifier: 25.7.0
         version: 25.7.0
@@ -192,7 +195,7 @@ importers:
         version: 3.0.3
       better-auth:
         specifier: ^1.6.9
-        version: 1.6.11(@cloudflare/workers-types@4.20260511.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.20.0)(vitest@4.1.5)
+        version: 1.6.11(@cloudflare/workers-types@4.20260511.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.20.0)(vitest@4.1.5(@types/node@25.7.0)(happy-dom@20.9.0)(vite@8.0.11(@types/node@25.7.0)(esbuild@0.27.7)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)))
       blurhash:
         specifier: 2.0.5
         version: 2.0.5
@@ -540,7 +543,7 @@ importers:
         version: link:../api-client
       better-auth:
         specifier: ^1.6.9
-        version: 1.6.11(@cloudflare/workers-types@4.20260511.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.20.0)(vitest@4.1.5)
+        version: 1.6.11(@cloudflare/workers-types@4.20260511.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.20.0)(vitest@4.1.5(@types/node@25.7.0)(happy-dom@20.9.0)(vite@8.0.11(@types/node@25.7.0)(esbuild@0.27.7)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)))
       commander:
         specifier: 14.0.3
         version: 14.0.3
@@ -8231,7 +8234,7 @@ snapshots:
     dependencies:
       '@better-auth/core': 1.6.11(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@cloudflare/workers-types@4.20260511.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0)
       '@better-auth/utils': 0.4.0
-      better-auth: 1.6.11(@cloudflare/workers-types@4.20260511.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.20.0)(vitest@4.1.5)
+      better-auth: 1.6.11(@cloudflare/workers-types@4.20260511.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.20.0)(vitest@4.1.5(@types/node@25.7.0)(happy-dom@20.9.0)(vite@8.0.11(@types/node@25.7.0)(esbuild@0.27.7)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)))
       zod: 4.4.3
 
   '@better-auth/core@1.6.11(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@cloudflare/workers-types@4.20260511.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0)':
@@ -8281,7 +8284,7 @@ snapshots:
       '@better-fetch/fetch': 1.1.21
       '@simplewebauthn/browser': 13.3.0
       '@simplewebauthn/server': 13.3.0
-      better-auth: 1.6.11(@cloudflare/workers-types@4.20260511.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.20.0)(vitest@4.1.5)
+      better-auth: 1.6.11(@cloudflare/workers-types@4.20260511.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.20.0)(vitest@4.1.5(@types/node@25.7.0)(happy-dom@20.9.0)(vite@8.0.11(@types/node@25.7.0)(esbuild@0.27.7)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)))
       better-call: 1.3.5(zod@4.4.3)
       nanostores: 1.3.0
       zod: 4.4.3
@@ -11166,7 +11169,7 @@ snapshots:
 
   before-after-hook@4.0.0: {}
 
-  better-auth@1.6.11(@cloudflare/workers-types@4.20260511.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.20.0)(vitest@4.1.5):
+  better-auth@1.6.11(@cloudflare/workers-types@4.20260511.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.20.0)(vitest@4.1.5(@types/node@25.7.0)(happy-dom@20.9.0)(vite@8.0.11(@types/node@25.7.0)(esbuild@0.27.7)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4))):
     dependencies:
       '@better-auth/core': 1.6.11(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@cloudflare/workers-types@4.20260511.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0)
       '@better-auth/drizzle-adapter': 1.6.11(@better-auth/core@1.6.11(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@cloudflare/workers-types@4.20260511.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260511.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.20.0))

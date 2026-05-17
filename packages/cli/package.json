@@ -25,6 +25,7 @@
     "node": ">=22"
   },
   "files": [
+    "bin",
     "dist",
     "README.md",
     "ROADMAP.md"
@@ -33,7 +34,7 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "bin": {
-    "mxs": "./dist/bin/mxs.mjs"
+    "mxs": "./bin/mxs.cjs"
   },
   "exports": {
     ".": {

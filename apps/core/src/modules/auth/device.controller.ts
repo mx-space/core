@@ -134,6 +134,17 @@ export class DeviceController {
       return reply.redirect(redirect, 302)
     }
 
+    if (userCode) {
+      const auth = this.authInstance.get()
+      if (!auth) {
+        throw new BizException(ErrorCodeEnum.AuthFailed, 'auth not initialised')
+      }
+      await auth.api.deviceVerify({
+        query: { user_code: userCode.trim() },
+        headers,
+      })
+    }
+
     const html = await this.renderPage({
       userCode: userCode ?? '',
       user,

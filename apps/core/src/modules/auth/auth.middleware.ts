@@ -138,9 +138,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       return
     }
 
-    const bypassPath = ['/token', '/session', '/providers']
-
-    if (bypassPath.some((path) => req.originalUrl.includes(path))) {
+    if (shouldBypassBetterAuth(req.originalUrl)) {
       next()
       return
     }
@@ -153,4 +151,9 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
 
     return await this.authHandler(req, res)
   }
+}
+
+export function shouldBypassBetterAuth(originalUrl: string) {
+  const pathname = originalUrl.split('?')[0]?.replace(/\/+$/, '') || ''
+  return /\/auth\/(?:token|session|providers)$/.test(pathname)
 }
