@@ -3,47 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#0a0a0a">
   <title>Mix Space Admin - Resource Download</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/ansi_up@4.0.3/ansi_up.js"></script>
   <style>
     :root {
-      --bg-000: #000000;
-      --bg-100: #0a0a0a;
-      --bg-200: #171717;
-      --bg-card: #0a0a0a;
-      --text-primary: #ededed;
-      --text-secondary: #a1a1a1;
-      --text-tertiary: #737373;
-      --accent-color: #ededed;
-      --accent-hover: #ffffff;
-      --success-color: #00d26a;
-      --success-bg: rgba(0, 210, 106, 0.1);
-      --error-color: #f14c4c;
-      --error-bg: rgba(241, 76, 76, 0.1);
-      --border-color: #262626;
-      --border-subtle: #1a1a1a;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --font-mono: 'Geist Mono', 'Menlo', 'Monaco', monospace;
-      color-scheme: dark;
+      color-scheme: light dark;
+      --fg: #f4f4f5;
+      --bg: #0a0a0a;
+      --muted: #a1a1aa;
+      --subtle: #1f1f23;
+      --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      --error-color: var(--fg);
+      --success-color: var(--fg);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) {
+        --fg: #1f1f1f;
+        --bg: #ffffff;
+        --muted: #6b6b6b;
+        --subtle: #e4e4e7;
+        color-scheme: light;
+      }
     }
 
     [data-theme="light"] {
-      --bg-000: #ffffff;
-      --bg-100: #fafafa;
-      --bg-200: #f5f5f5;
-      --bg-card: #ffffff;
-      --text-primary: #171717;
-      --text-secondary: #525252;
-      --text-tertiary: #a1a1a1;
-      --accent-color: #171717;
-      --accent-hover: #000000;
-      --border-color: #e5e5e5;
-      --border-subtle: #f0f0f0;
+      --fg: #1f1f1f;
+      --bg: #ffffff;
+      --muted: #6b6b6b;
+      --subtle: #e4e4e7;
       color-scheme: light;
+    }
+
+    [data-theme="dark"] {
+      --fg: #f4f4f5;
+      --bg: #0a0a0a;
+      --muted: #a1a1aa;
+      --subtle: #1f1f23;
+      color-scheme: dark;
     }
 
     * {
@@ -66,31 +65,29 @@
 
     body {
       font-family: var(--font-sans);
-      background-color: var(--bg-000);
-      color: var(--text-primary);
+      background-color: var(--bg);
+      color: var(--fg);
       min-height: 100dvh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 24px;
       line-height: 1.5;
     }
 
     .container {
       width: 100%;
       max-width: 640px;
-      background-color: var(--bg-card);
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      overflow: hidden;
+      background-color: var(--bg);
+      border: 1px solid var(--fg);
       display: flex;
       flex-direction: column;
     }
 
     /* Header */
     .header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border-color);
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--fg);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -98,115 +95,103 @@
 
     .brand {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       gap: 10px;
     }
 
-    .brand-icon {
-      width: 24px;
-      height: 24px;
-      background-color: var(--text-primary);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .brand-title {
+      font-size: 13px;
       font-weight: 600;
-      font-size: 12px;
-      color: var(--bg-000);
+      letter-spacing: -0.01em;
     }
 
-    .brand-title {
-      font-size: 14px;
-      font-weight: 500;
-      letter-spacing: -0.01em;
+    .brand-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
     .controls {
       display: flex;
-      gap: 4px;
+      gap: 0;
+      border: 1px solid var(--fg);
     }
 
     .btn-icon {
       background: transparent;
-      border: 1px solid transparent;
-      color: var(--text-tertiary);
-      padding: 6px;
-      border-radius: 6px;
+      border: 0;
+      color: var(--fg);
+      padding: 6px 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: color 0.15s ease, background-color 0.15s ease;
-      min-width: 32px;
-      min-height: 32px;
+      transition: background-color 0.15s ease;
+      min-width: 30px;
+      min-height: 26px;
+      font-family: var(--font-mono);
+    }
+
+    .btn-icon + .btn-icon {
+      border-left: 1px solid var(--fg);
     }
 
     .btn-icon:hover {
-      background-color: var(--bg-200);
-      color: var(--text-primary);
+      background-color: var(--fg);
+      color: var(--bg);
     }
 
     .btn-icon:focus-visible {
-      outline: 2px solid var(--text-primary);
+      outline: 2px solid var(--fg);
       outline-offset: 2px;
     }
 
     /* Content */
     .content {
-      padding: 32px 24px;
+      padding: 28px 24px;
     }
 
     .status-section {
-      text-align: center;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     .status-badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 12px;
-      border-radius: 9999px;
-      font-size: 12px;
-      font-weight: 500;
-      margin-bottom: 16px;
-      border: 1px solid var(--border-color);
-      background-color: var(--bg-100);
-      color: var(--text-secondary);
+      padding: 4px 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      border: 1px solid var(--fg);
+      background: transparent;
+      color: var(--fg);
     }
 
-    .status-badge.active {
-      border-color: var(--border-color);
-      background-color: var(--bg-100);
-      color: var(--text-secondary);
-    }
-
-    .status-badge.success {
-      border-color: var(--success-color);
-      background-color: var(--success-bg);
-      color: var(--success-color);
-    }
-
+    .status-badge.success,
     .status-badge.error {
-      border-color: var(--error-color);
-      background-color: var(--error-bg);
-      color: var(--error-color);
+      border: 1px solid var(--fg);
+      background: var(--fg);
+      color: var(--bg);
     }
 
     .status-dot {
       width: 6px;
       height: 6px;
-      border-radius: 50%;
       background-color: currentColor;
     }
 
     .status-badge.active .status-dot {
-      animation: pulse 2s ease-in-out infinite;
+      animation: pulse 1.6s ease-in-out infinite;
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+      50% { opacity: 0.3; }
     }
 
     .status-title {
@@ -218,106 +203,116 @@
     }
 
     .status-desc {
-      color: var(--text-secondary);
-      font-size: 14px;
+      color: var(--muted);
+      font-size: 13px;
       text-wrap: pretty;
     }
 
     /* Progress Bar */
     .progress-container {
-      margin: 24px 0;
+      margin: 22px 0;
     }
 
     .progress-track {
-      height: 4px;
-      background-color: var(--bg-200);
-      border-radius: 2px;
+      height: 6px;
+      background-color: transparent;
+      border: 1px solid var(--fg);
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
-      background-color: var(--text-primary);
+      background-color: var(--fg);
       width: 0%;
-      border-radius: 2px;
       transition: width 0.3s ease-out;
     }
 
     .progress-fill.error {
-      background-color: var(--error-color);
+      background-image: repeating-linear-gradient(
+        135deg,
+        var(--fg),
+        var(--fg) 4px,
+        transparent 4px,
+        transparent 8px
+      );
+      background-color: transparent;
     }
 
     .progress-label {
       display: flex;
       justify-content: space-between;
-      margin-top: 10px;
-      font-size: 13px;
-      color: var(--text-tertiary);
+      margin-top: 8px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
     .progress-label span:last-child {
       font-variant-numeric: tabular-nums;
-      font-family: var(--font-mono);
+      color: var(--fg);
     }
 
     /* Terminal */
     .terminal {
-      background-color: var(--bg-200);
-      border-radius: 8px;
-      padding: 12px 14px;
+      background-color: transparent;
+      border: 1px solid var(--fg);
+      padding: 0;
       font-family: var(--font-mono);
       font-size: 12px;
       height: 240px;
-      overflow-y: auto;
-      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
     }
 
     .terminal-header {
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--fg);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
       display: flex;
-      gap: 6px;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border-color);
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .terminal-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: var(--border-color);
+    .terminal-header::before {
+      content: '// STREAM';
     }
 
     .terminal-content {
-      color: var(--text-secondary);
+      color: var(--muted);
       white-space: pre-wrap;
       line-height: 1.6;
       word-break: break-all;
+      padding: 12px 14px;
+      overflow-y: auto;
+      flex: 1;
     }
 
-    .terminal::-webkit-scrollbar {
+    .terminal-content::-webkit-scrollbar {
       width: 6px;
     }
 
-    .terminal::-webkit-scrollbar-track {
+    .terminal-content::-webkit-scrollbar-track {
       background: transparent;
     }
 
-    .terminal::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 3px;
+    .terminal-content::-webkit-scrollbar-thumb {
+      background: var(--subtle);
     }
 
-    .terminal::-webkit-scrollbar-thumb:hover {
-      background: var(--text-tertiary);
+    .terminal-content::-webkit-scrollbar-thumb:hover {
+      background: var(--muted);
     }
 
     /* Action Buttons */
     .actions {
-      margin-top: 24px;
+      margin-top: 20px;
       display: flex;
-      justify-content: center;
-      gap: 10px;
-      min-height: 32px;
+      gap: 8px;
       visibility: hidden;
       opacity: 0;
       transition: opacity 0.15s ease;
@@ -329,43 +324,42 @@
     }
 
     .btn {
-      padding: 6px 24px;
-      border-radius: 6px;
+      flex: 1;
+      padding: 10px 16px;
+      border: 1px solid var(--fg);
+      font-family: var(--font-sans);
       font-weight: 500;
-      font-size: 13px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       cursor: pointer;
-      border: none;
-      transition: background-color 0.15s ease;
-      height: 32px;
+      background: transparent;
+      color: var(--fg);
+      transition: opacity 0.15s ease;
       touch-action: manipulation;
     }
 
     .btn:focus-visible {
-      outline: 2px solid var(--text-primary);
+      outline: 2px solid var(--fg);
       outline-offset: 2px;
     }
 
+    .btn:hover {
+      opacity: 0.85;
+    }
+
     .btn:active {
-      opacity: 0.8;
+      opacity: 0.7;
     }
 
     .btn-primary {
-      background-color: var(--text-primary);
-      color: var(--bg-000);
-    }
-
-    .btn-primary:hover {
-      background-color: var(--accent-hover);
+      background-color: var(--fg);
+      color: var(--bg);
     }
 
     .btn-secondary {
       background-color: transparent;
-      border: 1px solid var(--border-color);
-      color: var(--text-primary);
-    }
-
-    .btn-secondary:hover {
-      background-color: var(--bg-200);
+      color: var(--fg);
     }
 
     .hidden {
@@ -376,13 +370,13 @@
     @media (max-width: 640px) {
       body {
         padding: 0;
-        align-items: flex-start;
+        align-items: stretch;
       }
       .container {
-        border-radius: 0;
         min-height: 100dvh;
-        border: none;
-        border-bottom: 1px solid var(--border-color);
+        border-left: 0;
+        border-right: 0;
+        border-top: 0;
       }
       .content {
         padding: 24px 20px;
@@ -397,18 +391,18 @@
   <div class="container">
     <header class="header">
       <div class="brand">
-        <div class="brand-icon">M</div>
         <div class="brand-title">Mix Space</div>
+        <div class="brand-tag">ADMIN</div>
       </div>
       <div class="controls">
         <button class="btn-icon" id="themeToggle" aria-label="Toggle theme">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M8 1v1M8 14v1M14 8h1M1 8h1M12.2 3.8l.7-.7M3.1 12.9l.7-.7M12.2 12.2l.7.7M3.1 3.1l.7.7" stroke-linecap="round"/>
             <circle cx="8" cy="8" r="3"/>
           </svg>
         </button>
         <button class="btn-icon" id="langToggle" aria-label="Switch language">
-          <span style="font-size: 12px; font-weight: 500;">EN</span>
+          <span style="font-size: 11px; font-weight: 500;">EN</span>
         </button>
       </div>
     </header>
@@ -434,11 +428,7 @@
       </div>
 
       <div class="terminal" id="terminalBlock">
-        <div class="terminal-header">
-          <div class="terminal-dot"></div>
-          <div class="terminal-dot"></div>
-          <div class="terminal-dot"></div>
-        </div>
+        <div class="terminal-header"></div>
         <div class="terminal-content" id="logContent"></div>
       </div>
 
@@ -482,7 +472,7 @@
     };
 
     let currentLang = localStorage.getItem('mx_lang') || (navigator.language.includes('zh') ? 'zh' : 'en');
-    let theme = localStorage.getItem('mx_theme') || 'dark';
+    let theme = localStorage.getItem('mx_theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     let logs = '';
     let lastLine = '';
     let consecutiveEmptyResponses = 0;
@@ -525,10 +515,10 @@
       theme = newTheme;
       localStorage.setItem('mx_theme', theme);
       els.root.setAttribute('data-theme', theme);
-      document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#000000' : '#ffffff';
+      document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#0a0a0a' : '#ffffff';
       els.themeToggle.innerHTML = theme === 'dark'
-        ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v1M8 14v1M14 8h1M1 8h1M12.2 3.8l.7-.7M3.1 12.9l.7-.7M12.2 12.2l.7.7M3.1 3.1l.7.7" stroke-linecap="round"/><circle cx="8" cy="8" r="3"/></svg>'
-        : '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 10.3A6.5 6.5 0 015.7 2.5a6.5 6.5 0 107.8 7.8z"/></svg>';
+        ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v1M8 14v1M14 8h1M1 8h1M12.2 3.8l.7-.7M3.1 12.9l.7-.7M12.2 12.2l.7.7M3.1 3.1l.7.7" stroke-linecap="round"/><circle cx="8" cy="8" r="3"/></svg>'
+        : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 10.3A6.5 6.5 0 015.7 2.5a6.5 6.5 0 107.8 7.8z"/></svg>';
     }
 
     els.themeToggle.addEventListener('click', () => {
@@ -603,7 +593,6 @@
       els.statusBadge.querySelector('span').textContent = t('status.error');
       els.statusTitle.textContent = t('title.error');
       els.statusDesc.textContent = msg;
-      els.statusDesc.style.color = 'var(--error-color)';
       els.errorActions.classList.add('visible');
       els.progressBar.classList.add('error');
     }
