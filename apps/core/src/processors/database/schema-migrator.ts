@@ -4,10 +4,14 @@ import type pkg from 'pg'
 const MIGRATIONS_SCHEMA = 'drizzle'
 const MIGRATIONS_TABLE = '__drizzle_migrations'
 
-function hasConcurrentIndex(statements: string[]): boolean {
-  return statements.some((statement) =>
-    /\bcreate\s+(?:unique\s+)?index\s+concurrently\b/i.test(statement),
+function isConcurrentIndexStatement(statement: string): boolean {
+  return /\b(?:create\s+(?:unique\s+)?index|drop\s+index)\s+concurrently\b/i.test(
+    statement,
   )
+}
+
+function hasConcurrentIndex(statements: string[]): boolean {
+  return statements.some(isConcurrentIndexStatement)
 }
 
 async function ensureMigrationTable(client: pkg.PoolClient): Promise<void> {
@@ -24,17 +28,12 @@ async function ensureMigrationTable(client: pkg.PoolClient): Promise<void> {
 async function runStatementsInTransaction(
   client: pkg.PoolClient,
   statements: string[],
-  migration: { folderMillis: number; hash: string },
 ): Promise<void> {
   await client.query('BEGIN')
   try {
     for (const statement of statements) {
       await client.query(statement)
     }
-    await client.query(
-      `INSERT INTO "${MIGRATIONS_SCHEMA}"."${MIGRATIONS_TABLE}" ("hash", "created_at") VALUES ($1, $2)`,
-      [migration.hash, migration.folderMillis],
-    )
     await client.query('COMMIT')
   } catch (error) {
     await client.query('ROLLBACK')
@@ -42,18 +41,66 @@ async function runStatementsInTransaction(
   }
 }
 
-async function runStatementsWithoutTransaction(
+async function insertMigrationRecord(
   client: pkg.PoolClient,
-  statements: string[],
   migration: { folderMillis: number; hash: string },
 ): Promise<void> {
-  for (const statement of statements) {
-    await client.query(statement)
-  }
   await client.query(
     `INSERT INTO "${MIGRATIONS_SCHEMA}"."${MIGRATIONS_TABLE}" ("hash", "created_at") VALUES ($1, $2)`,
     [migration.hash, migration.folderMillis],
   )
+}
+
+async function runOrdinaryMigration(
+  client: pkg.PoolClient,
+  statements: string[],
+  migration: { folderMillis: number; hash: string },
+): Promise<void> {
+  await client.query('BEGIN')
+  try {
+    for (const statement of statements) {
+      await client.query(statement)
+    }
+    await insertMigrationRecord(client, migration)
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  }
+}
+
+async function runMixedConcurrentMigration(
+  client: pkg.PoolClient,
+  statements: string[],
+  migration: { folderMillis: number; hash: string },
+): Promise<void> {
+  let transactionBatch: string[] = []
+
+  for (const statement of statements) {
+    if (!isConcurrentIndexStatement(statement)) {
+      transactionBatch.push(statement)
+      continue
+    }
+
+    if (transactionBatch.length > 0) {
+      await runStatementsInTransaction(client, transactionBatch)
+      transactionBatch = []
+    }
+
+    await client.query(statement)
+  }
+
+  await client.query('BEGIN')
+  try {
+    for (const statement of transactionBatch) {
+      await client.query(statement)
+    }
+    await insertMigrationRecord(client, migration)
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  }
 }
 
 /**
@@ -61,8 +108,8 @@ async function runStatementsWithoutTransaction(
  *
  * Drizzle's node-postgres migrator wraps each pending batch in a transaction.
  * PostgreSQL rejects `CREATE INDEX CONCURRENTLY` in that context, so this
- * runner keeps ordinary migrations transactional and executes migrations that
- * contain concurrent index creation outside a transaction.
+ * runner keeps ordinary migrations transactional and only executes concurrent
+ * index creation statements outside a transaction.
  */
 export async function runSchemaMigrationFiles(
   pool: pkg.Pool,
@@ -90,9 +137,9 @@ export async function runSchemaMigrationFiles(
         .filter(Boolean)
 
       if (hasConcurrentIndex(statements)) {
-        await runStatementsWithoutTransaction(client, statements, migration)
+        await runMixedConcurrentMigration(client, statements, migration)
       } else {
-        await runStatementsInTransaction(client, statements, migration)
+        await runOrdinaryMigration(client, statements, migration)
       }
     }
   } finally {
