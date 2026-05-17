@@ -16,21 +16,28 @@ vi.mock('@clack/prompts', async (importOriginal) => {
 import { confirm } from '@clack/prompts'
 
 import { run } from '../../../src/commands/profile/rm'
+import { getCurrentProfile, setCurrentProfile } from '../../../src/core/profile'
 import type { OutputOptions } from '../../../src/core/output'
 
 let tmpDir: string
 let origXdg: string | undefined
+let origIsTTY: boolean | undefined
 
 beforeEach(async () => {
   tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mxs-rm-test-'))
   origXdg = process.env.XDG_CONFIG_HOME
   process.env.XDG_CONFIG_HOME = tmpDir
+  origIsTTY = (process.stdin as any).isTTY
   vi.mocked(confirm).mockResolvedValue(true)
 })
 
 afterEach(async () => {
   if (origXdg === undefined) delete process.env.XDG_CONFIG_HOME
   else process.env.XDG_CONFIG_HOME = origXdg
+  Object.defineProperty(process.stdin, 'isTTY', {
+    value: origIsTTY,
+    configurable: true,
+  })
   await fs.rm(tmpDir, { recursive: true, force: true })
   vi.clearAllMocks()
 })
@@ -118,5 +125,32 @@ describe('profile rm', () => {
     await expect(run('ghost', { force: true }, {}, out)).rejects.toMatchObject({
       code: 'resource.not_found',
     })
+  })
+
+  it('refuses removal non-interactively without --force (non-TTY)', async () => {
+    await makeProfile('dev')
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: false,
+      configurable: true,
+    })
+    await expect(run('dev', {}, {}, out)).rejects.toMatchObject({
+      code: 'validation.failed',
+      message: expect.stringContaining('dev'),
+    })
+    expect(await profileExists('dev')).toBe(true)
+  })
+
+  it('clears active profile pointer when removing current profile with --force', async () => {
+    await makeProfile('dev')
+    await setCurrentProfile('dev')
+    const spy = vi.spyOn(process.stderr, 'write').mockReturnValue(true)
+    await run('dev', { force: true }, {}, out)
+    const stderrOutput = spy.mock.calls.map((c) => String(c[0]))
+    spy.mockRestore()
+    expect(await profileExists('dev')).toBe(false)
+    expect(await getCurrentProfile()).toBeNull()
+    expect(
+      stderrOutput.some((msg) => msg.includes('cleared active profile pointer')),
+    ).toBe(true)
   })
 })
