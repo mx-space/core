@@ -197,9 +197,7 @@ export async function removeProfile(name: string): Promise<void> {
   await fs.rm(dir, { recursive: true, force: true })
 }
 
-export async function enforceProfileCredentialsMode(
-  p: string,
-): Promise<boolean> {
+async function enforceProfileCredentialsMode(p: string): Promise<boolean> {
   let stats
   try {
     stats = await fs.stat(p)

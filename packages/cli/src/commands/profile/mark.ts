@@ -32,7 +32,8 @@ export async function run(
   try {
     const stat = await fs.stat(getProfileDir(name))
     if (!stat.isDirectory()) throw new Error('not a directory')
-  } catch {
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT' && !(err instanceof MxsError)) throw err
     throw new MxsError({
       code: 'profile.not_found',
       message: `profile '${name}' does not exist`,

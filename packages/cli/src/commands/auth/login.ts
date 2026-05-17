@@ -1,5 +1,3 @@
-import { promises as fs } from 'node:fs'
-
 import open from 'open'
 
 import {
@@ -10,7 +8,6 @@ import {
 import { emitInfo, emitSuccess, type OutputOptions } from '../../core/output'
 import {
   getCurrentProfile,
-  getProfileDir,
   readProfileConfig,
   setCurrentProfile,
   writeProfileConfig,
@@ -74,9 +71,6 @@ export async function run(
   // 3. fresh install → 'default'
   const target =
     flags.profile?.trim() || (await getCurrentProfile()) || 'default'
-
-  // Ensure the profile directory exists before writing
-  await fs.mkdir(getProfileDir(target), { recursive: true, mode: 0o700 })
 
   const existing = await readProfileConfig(target)
   await writeProfileConfig(target, {

@@ -1,11 +1,16 @@
-import { readCredentials } from '../../core/config-store'
 import { MxsError } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
+import { getCurrentProfile, readProfileCredentials } from '../../core/profile'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+} from '../internal/shared'
 
 export async function run(flags: GlobalFlags, out: OutputOptions) {
   const ctx = await resolveContext(flags, out)
-  const cred = await readCredentials()
+  const profileName = await getCurrentProfile()
+  const cred = profileName ? await readProfileCredentials(profileName) : null
   if (!cred && !ctx.token && !ctx.apiKey) {
     throw new MxsError({
       code: 'auth.missing',

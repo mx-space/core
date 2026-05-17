@@ -1,5 +1,3 @@
-import { promises as fs } from 'node:fs'
-
 import { text } from '@clack/prompts'
 
 import { type AuthHttp, defaultHttp, probeAuthEndpoint } from './auth'
@@ -7,7 +5,6 @@ import { normalizeApiUrl } from './config-store'
 import { MxsError } from './errors'
 import {
   getCurrentProfile,
-  getProfileDir,
   setCurrentProfile,
   writeProfileConfig,
 } from './profile'
@@ -65,9 +62,6 @@ export async function runOnboarding(
   // Determine target profile: --profile > active current > 'default'
   const target =
     opts.profile?.trim() || (await getCurrentProfile()) || 'default'
-
-  // Ensure dir exists before writing config
-  await fs.mkdir(getProfileDir(target), { recursive: true, mode: 0o700 })
 
   await writeProfileConfig(target, {
     api_url: probed.apiUrl,
