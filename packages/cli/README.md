@@ -24,17 +24,18 @@ When the CLI cannot resolve an API URL, it starts an interactive onboarding prom
 
 ## Global Flags
 
-| Flag              | Effect                                                                        |
-| ----------------- | ----------------------------------------------------------------------------- |
-| `--json`          | Emit `{ ok: true, data }` on stdout. Takes precedence over `--output`.        |
-| `--output <mode>` | Output mode. Supported: `pretty-json`, `json`, `readable`, `llm`, `envelope`. |
-| `--api-url <url>` | Override the configured mx-core API origin.                                   |
-| `--token <token>` | Override the stored access token.                                             |
-| `--api-key <key>` | Authenticate with an API key through the `x-api-key` header.                  |
-| `--lang <code>`   | Request translated data for read commands, such as `ja` or `en`.              |
-| `--quiet`, `-q`   | Suppress non-error stderr messages.                                           |
-| `--verbose`       | Print HTTP method, URL, status, and duration to stderr.                       |
-| `--dry-run`       | Resolve payloads without mutating the server where supported.                 |
+| Flag               | Effect                                                                        |
+| ------------------ | ----------------------------------------------------------------------------- |
+| `--json`           | Emit `{ ok: true, data }` on stdout. Takes precedence over `--output`.        |
+| `--output <mode>`  | Output mode. Supported: `pretty-json`, `json`, `readable`, `llm`, `envelope`. |
+| `--api-url <url>`  | Override the configured mx-core API origin.                                   |
+| `--token <token>`  | Override the stored access token.                                             |
+| `--api-key <key>`  | Authenticate with an API key through the `x-api-key` header.                  |
+| `--lang <code>`    | Request translated data for read commands, such as `ja` or `en`.              |
+| `--quiet`, `-q`    | Suppress non-error stderr messages.                                           |
+| `--verbose`        | Print HTTP method, URL, status, and duration to stderr.                       |
+| `--dry-run`        | Resolve payloads without mutating the server where supported.                 |
+| `--profile <name>` | Profile to use (overrides `MXS_PROFILE` and the active pointer).              |
 
 `readable`, `llm`, and `envelope` are document output modes for `post get`, `note get`, and `page get`. `post list` additionally supports `readable` and `llm` for concise list summaries. Other commands keep their existing JSON-oriented output.
 
@@ -91,6 +92,73 @@ exists, it uses the refresh-token grant. Device authorization normally stores a
 Better Auth session token instead; for that path the CLI calls Better Auth
 `/get-session`, accepts the refreshed `set-auth-token` header, and updates the
 local expiry from the refreshed session.
+
+### Auth and profiles
+
+`mxs auth login [--profile <name>] [--production]` writes credentials to the named profile. If `--profile` is omitted and a current profile is active, it refreshes that profile. If no current profile exists (fresh install), it creates and selects the `default` profile. Passing `--production` sets the production flag on the target profile after login succeeds.
+
+`mxs auth logout [--profile <name>]` clears credentials for the target profile; the profile directory and the `current` pointer are preserved.
+
+`mxs auth whoami` and `mxs auth status` scope to the active profile as resolved by the standard chain (see §Profiles below).
+
+## Profiles
+
+A profile is a named bundle of `(api_url, credentials)` stored under `~/.config/mxs/profiles/<name>/`. Switching profile switches both the URL and the credentials atomically, so a production token can never accidentally reach a development backend and vice versa.
+
+### Active profile
+
+The file `~/.config/mxs/current` contains the name of the default profile. This is the profile used when no override is present. You can override it per-invocation with `--profile <name>` or by setting `MXS_PROFILE=<name>` in the environment. The full resolution chain is: `--profile` flag → `MXS_PROFILE` env → `current` file. If none of these resolves to a valid profile and the command is not `profile`, `auth login --profile <name>`, or `--help`, the CLI exits with a `profile.none_active` error.
+
+### Profile commands
+
+| Command | Description |
+| --- | --- |
+| `mxs profile ls` | List profiles; current is marked with `*`; shows the production flag. |
+| `mxs profile show [<name>]` | Show api_url, authenticated user, production flag, and token expiry for the named profile (or the active one). Never prints the token. |
+| `mxs profile use <name>` | Set the active profile by writing `<name>` to `~/.config/mxs/current`. |
+| `mxs profile mark <name> --production` / `--no-production` | Toggle the production flag on a profile. |
+| `mxs profile rm <name>` | Delete a profile directory. Prompts for confirmation in TTY contexts; requires `--force` in non-TTY. |
+
+### Production-profile safety
+
+When a profile has `production: true`, the CLI prevents silent writes that occur only because the profile was inherited through the `current` pointer. A write command (`POST`, `PUT`, `PATCH`, `DELETE`) is blocked when: (1) the resolved profile is marked production, (2) the profile was selected only via the `current` file — not via `--profile` or `MXS_PROFILE`, and (3) the URL was not overridden with `--api-url` or `MXS_API_URL`. In that case the CLI refuses the request and emits:
+
+```json
+{ "ok": false, "error": "profile.write_requires_explicit",
+  "profile": "prod", "api_url": "https://blog.example.com",
+  "hint": "active profile 'prod' is production; retry with --profile prod or MXS_PROFILE=prod" }
+```
+
+Exit code is `4`. To proceed, supply an explicit signal of intent:
+
+```bash
+# Any of these bypasses the gate:
+mxs --profile prod post publish my-slug
+MXS_PROFILE=prod mxs post publish my-slug
+mxs --api-url https://blog.example.com post publish my-slug
+```
+
+Running `mxs profile use prod` and then issuing a write is **not** sufficient — the gate measures per-invocation explicitness, not session state.
+
+`mxs auth login` and `mxs auth logout` are exempt from the gate; they are not content writes.
+
+### Active-profile banner
+
+When the resolved profile is marked `production: true`, the CLI emits a single line to stderr before executing the command:
+
+```
+mxs: profile=prod (production) → https://blog.example.com
+```
+
+This banner is suppressed by `--quiet` / `-q` and never appears on stdout.
+
+### Profile name rules
+
+Profile names must match `^[a-z0-9_-]+$` and be 1–32 characters long. The name `current` is reserved and cannot be used.
+
+### Migration from the single-profile layout
+
+Existing installations that use the legacy flat files (`~/.config/mxs/config.json` and `~/.config/mxs/credentials.json`) are automatically migrated on the first run of the new CLI version. The legacy files are moved into `~/.config/mxs/profiles/default/` and `default` is written to `~/.config/mxs/current`. In TTY contexts, the CLI prompts once: `Is "<api_url>" a production environment? [y/N]` — answering yes sets `production: true` on the migrated profile. Non-TTY contexts skip the prompt and leave the flag unset. Migration runs at most once; subsequent invocations skip the check.
 
 ## Posts
 
@@ -322,14 +390,15 @@ Use `--file -` to read an envelope from stdin.
 
 ## Configuration Files
 
-| File                             | Mode   | Purpose                                                         |
-| -------------------------------- | ------ | --------------------------------------------------------------- |
-| `~/.config/mxs/config.json`      | `0644` | API URL, API base, auth base, API version, and client id.       |
-| `~/.config/mxs/credentials.json` | `0600` | Access token, refresh token, expiry, and optional user profile. |
+| File                                       | Mode   | Purpose                                                                    |
+| ------------------------------------------ | ------ | -------------------------------------------------------------------------- |
+| `~/.config/mxs/current`                    | `0644` | Active profile name (single line).                                         |
+| `~/.config/mxs/profiles/<name>/config.json`      | `0644` | API URL, API base, auth base, API version, client id, and production flag. |
+| `~/.config/mxs/profiles/<name>/credentials.json` | `0600` | Access token, refresh token, expiry, and optional user profile.            |
 
-`XDG_CONFIG_HOME` changes the base directory. Credentials with wider permissions are automatically changed to `0600`.
+`XDG_CONFIG_HOME` changes the base directory. Profile directories are created with mode `0700`. Credentials files with wider permissions are automatically changed to `0600`.
 
-Example config:
+Example profile config:
 
 ```json
 {
@@ -337,7 +406,8 @@ Example config:
   "api_base": "https://blog.example.com/api/v2",
   "auth_base": "https://blog.example.com/api/v2/auth",
   "api_version": 2,
-  "client_id": "mxs-cli"
+  "client_id": "mxs-cli",
+  "production": true
 }
 ```
 
@@ -348,22 +418,23 @@ Example config:
 | `MXS_API_URL`     | API origin override.                                                     |
 | `MXS_TOKEN`       | Better Auth access token override; sent as `Authorization: Bearer`.      |
 | `MXS_API_KEY`     | API key override; sent as `x-api-key`.                                   |
+| `MXS_PROFILE`     | Profile to use; overrides the `current` pointer.                         |
 | `MXS_DEBUG=1`     | Enables verbose HTTP diagnostics in auth helpers.                        |
 | `EDITOR`          | Editor used by `post edit`, `note edit`, `page edit`, and `config edit`. |
 | `XDG_CONFIG_HOME` | Base directory for `mxs` config files.                                   |
 
 ## Exit Codes
 
-| Code | Meaning                                 |
-| ---- | --------------------------------------- |
-| `0`  | Success                                 |
-| `1`  | Generic failure                         |
-| `2`  | Argument parsing failure                |
-| `3`  | Authentication or authorization failure |
-| `4`  | Network failure                         |
-| `5`  | Validation or configuration failure     |
-| `6`  | Server 5xx failure                      |
-| `7`  | Resource not found                      |
+| Code | Meaning                                                                      |
+| ---- | ---------------------------------------------------------------------------- |
+| `0`  | Success                                                                      |
+| `1`  | Generic failure                                                              |
+| `2`  | Argument parsing failure                                                     |
+| `3`  | Authentication or authorization failure                                      |
+| `4`  | Network failure; also profile write gate (`profile.write_requires_explicit`) and no active profile (`profile.none_active`) |
+| `5`  | Validation or configuration failure                                          |
+| `6`  | Server 5xx failure                                                           |
+| `7`  | Resource not found                                                           |
 
 ## Troubleshooting
 
@@ -373,6 +444,8 @@ Example config:
 | `API URL is not configured`                        | Set `MXS_API_URL`, pass `--api-url`, or run `mxs auth login` in an interactive terminal.                                  |
 | `EDITOR is not set`                                | Set `EDITOR`, for example `EDITOR=vim`.                                                                                   |
 | API key no longer works in `Authorization: Bearer` | Use `--api-key` or `MXS_API_KEY` for API keys. Bearer auth is reserved for Better Auth session/OIDC access tokens.         |
+| `profile.write_requires_explicit` on a write command | The active profile is marked production. Retry with `--profile <name>` or `MXS_PROFILE=<name>` to confirm intent.        |
+| `profile.none_active`                              | No active profile set. Run `mxs auth login` to create one, or `mxs profile use <name>` to activate an existing profile.  |
 
 ## License
 

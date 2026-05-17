@@ -1,5 +1,9 @@
 # `@mx-space/cli` Roadmap
 
+## Shipped in v0.2
+
+- Multi-environment profile system: named `(api_url, credentials)` bundles under `~/.config/mxs/profiles/<name>/`, `--profile` global flag, `MXS_PROFILE` env var, `mxs profile {ls,show,use,mark,rm}` subcommands, production write gate, and automatic migration from the legacy single-profile layout.
+
 ## v2
 
 - AI module commands
@@ -32,9 +36,6 @@
 - Export / import (content as files)
   - `mxs export <dir> [--type=post,note,page] [--format=markdown|litexml]`
   - `mxs import <dir> [--type=post] [--update-existing]`
-- Multi-profile
-  - `mxs use <name>`
-  - `~/.config/mxs/profiles.json`
 - Observability
   - `mxs logs tail`
   - `mxs metrics`
