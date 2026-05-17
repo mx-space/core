@@ -61,7 +61,7 @@ export async function run(
   }
   const resolver = buildResolver(client)
   await resolveTopicRefs(built.payload, resolver)
-  const id = await resolveId(client, slugOrId)
+  const id = await resolveNoteId(client, slugOrId)
   const res = await client.request(`/notes/${id}`, {
     method: 'PUT',
     body: built.payload,
