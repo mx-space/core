@@ -6,6 +6,7 @@ import {
   buildApiClient,
   type GlobalFlags,
   resolveContext,
+  withLangQuery,
 } from '../internal/shared'
 
 const KIND: DocumentKind = 'note'
@@ -19,14 +20,14 @@ export async function run(
   const client = buildApiClient(ctx, flags)
   if (isSnowflakeId(slugOrId)) {
     const res = await client.request(`/notes/${slugOrId}`, {
-      query: { prefer: 'lexical' },
+      query: withLangQuery(flags, { prefer: 'lexical' }),
     })
     emitDocument(KIND, res.data, out)
     return
   }
   if (/^\d+$/.test(slugOrId)) {
     const res = await client.request(`/notes/nid/${slugOrId}`, {
-      query: { single: '1', prefer: 'lexical' },
+      query: withLangQuery(flags, { single: '1', prefer: 'lexical' }),
     })
     emitDocument(KIND, res.data, out)
     return

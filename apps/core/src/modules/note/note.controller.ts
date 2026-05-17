@@ -233,6 +233,41 @@ export class NoteController {
     return { data, next: adjNext, prev: adjPrev }
   }
 
+  private async buildOwnerNoteDetailResponse(
+    current: NoteModel,
+    query: NotePasswordQueryDto,
+    lang?: string,
+  ) {
+    const translationResult = await this.translationService.translateArticle({
+      articleId: current.id!,
+      targetLang: lang,
+      allowHidden: true,
+      originalData: {
+        title: current.title,
+        text: current.text,
+      },
+    })
+
+    return this.enrichmentService.attachEnrichments(
+      applyContentPreference(
+        {
+          ...current,
+          title: translationResult.title,
+          text: translationResult.text,
+          ...(translationResult.content && {
+            content: translationResult.content,
+            contentFormat: translationResult.contentFormat,
+          }),
+          isTranslated: translationResult.isTranslated,
+          sourceLang: translationResult.sourceLang,
+          translationMeta: translationResult.translationMeta,
+          availableTranslations: translationResult.availableTranslations,
+        },
+        query.prefer,
+      ),
+    )
+  }
+
   private toArticleTranslationInput(note: NoteModel): ArticleTranslationInput {
     return {
       id: String(note.id),
@@ -465,13 +500,16 @@ export class NoteController {
   }
 
   @Get(':id')
+  @Auth()
   @TranslateFields(
     { path: 'mood', keyPath: 'note.mood' },
     { path: 'weather', keyPath: 'note.weather' },
   )
   async getOneNote(
     @Param() params: EntityIdDto,
+    @Query() query: NotePasswordQueryDto,
     @HasAdminAccess() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
     const { id } = params
 
@@ -485,12 +523,7 @@ export class NoteController {
       throw new CannotFindException()
     }
 
-    if (!isAuthenticated) {
-      current.location = null
-      current.coordinates = null
-    }
-
-    return this.enrichmentService.attachEnrichments(current)
+    return this.buildOwnerNoteDetailResponse(current as NoteModel, query, lang)
   }
 
   @Get('/:year/:month/:day/:slug')

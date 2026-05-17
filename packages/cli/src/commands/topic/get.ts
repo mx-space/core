@@ -1,6 +1,11 @@
 import { emitSuccess, type OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+  withLangQuery,
+} from '../internal/shared'
 
 export async function run(
   slugOrId: string,
@@ -12,6 +17,6 @@ export async function run(
   const path = isSnowflakeId(slugOrId)
     ? `/topics/${slugOrId}`
     : `/topics/slug/${slugOrId}`
-  const res = await client.request(path)
+  const res = await client.request(path, { query: withLangQuery(flags) })
   emitSuccess(res.data, out)
 }

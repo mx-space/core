@@ -9,6 +9,7 @@ export interface GlobalFlags {
   apiUrl?: string
   token?: string
   apiKey?: string
+  lang?: string
   quiet?: boolean
   verbose?: boolean
   dryRun?: boolean
@@ -55,6 +56,14 @@ export function buildApiClient(
       !process.env.MXS_TOKEN,
     verbose: flags.verbose,
   })
+}
+
+export function withLangQuery(
+  flags: GlobalFlags,
+  query: Record<string, unknown> = {},
+): Record<string, unknown> {
+  if (!flags.lang) return query
+  return { ...query, lang: flags.lang }
 }
 
 export async function persistApiVersion(version: number) {

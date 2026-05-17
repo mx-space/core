@@ -50,6 +50,78 @@ export class PostController {
     private readonly enrichmentService: EnrichmentService,
   ) {}
 
+  private async buildPostDetailResponse(
+    postDocument: PostModel,
+    query: PostDetailQueryDto,
+    ip: string,
+    isAuthenticated: boolean | undefined,
+    lang?: string,
+  ) {
+    const liked = await this.countingService.getThisRecordIsLiked(
+      postDocument.id,
+      ip,
+    )
+
+    const baseData = postDocument
+    const relatedList = Array.isArray((baseData as any).related)
+      ? ((baseData as any).related as any[])
+      : []
+    const relatedIds = relatedList
+      .map((item) => item?.id)
+      .filter((id): id is string => Boolean(id))
+
+    const insightsLang = parseLanguageCode(lang)
+    const [translationResult, relatedTitleMap, hasInsightsInLocale] =
+      await Promise.all([
+        this.translationService.translateArticle({
+          articleId: postDocument.id,
+          targetLang: lang,
+          allowHidden: Boolean(isAuthenticated),
+          originalData: {
+            title: baseData.title,
+            text: baseData.text,
+            summary: baseData.summary,
+            tags: baseData.tags,
+          },
+        }),
+        this.translationService.getCachedTitles(relatedIds, lang),
+        this.aiInsightsService
+          .hasInsightsInLang(postDocument.id, insightsLang)
+          .catch(() => false),
+      ])
+
+    const translatedRelated = relatedTitleMap.size
+      ? relatedList.map((item) => {
+          const refId = item?.id
+          const translatedTitle = refId ? relatedTitleMap.get(refId) : undefined
+          return translatedTitle ? { ...item, title: translatedTitle } : item
+        })
+      : relatedList
+
+    const finalDoc = applyContentPreference(
+      {
+        ...baseData,
+        related: translatedRelated,
+        title: translationResult.title,
+        text: translationResult.text,
+        summary: translationResult.summary,
+        tags: translationResult.tags,
+        ...(translationResult.content && {
+          content: translationResult.content,
+          contentFormat: translationResult.contentFormat,
+        }),
+        isTranslated: translationResult.isTranslated,
+        sourceLang: translationResult.sourceLang,
+        translationMeta: translationResult.translationMeta,
+        availableTranslations: translationResult.availableTranslations,
+        hasInsightsInLocale,
+        liked,
+      },
+      query.prefer,
+    )
+    return this.enrichmentService.attachEnrichments(finalDoc)
+  }
+
   @Get('/')
   @TranslateFields({
     path: 'data[].category.name',
@@ -168,6 +240,7 @@ export class PostController {
   }
 
   @Get('/:id')
+  @Auth()
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
@@ -175,7 +248,10 @@ export class PostController {
   })
   async getById(
     @Param() params: EntityIdDto,
+    @Query() query: PostDetailQueryDto,
+    @IpLocation() { ip }: IpRecord,
     @HasAdminAccess() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
     const { id } = params
     const doc = await this.postService.findById(id)
@@ -188,7 +264,7 @@ export class PostController {
       throw new CannotFindException()
     }
 
-    return this.enrichmentService.attachEnrichments(doc)
+    return this.buildPostDetailResponse(doc, query, ip, isAuthenticated, lang)
   }
 
   @Get('/latest')
@@ -246,69 +322,13 @@ export class PostController {
       throw new CannotFindException()
     }
 
-    const liked = await this.countingService.getThisRecordIsLiked(
-      postDocument.id,
+    return this.buildPostDetailResponse(
+      postDocument,
+      query,
       ip,
+      isAuthenticated,
+      lang,
     )
-
-    const baseData = postDocument
-    const relatedList = Array.isArray((baseData as any).related)
-      ? ((baseData as any).related as any[])
-      : []
-    const relatedIds = relatedList
-      .map((item) => item?.id)
-      .filter((id): id is string => Boolean(id))
-
-    const insightsLang = parseLanguageCode(lang)
-    const [translationResult, relatedTitleMap, hasInsightsInLocale] =
-      await Promise.all([
-        this.translationService.translateArticle({
-          articleId: postDocument.id,
-          targetLang: lang,
-          allowHidden: Boolean(isAuthenticated),
-          originalData: {
-            title: baseData.title,
-            text: baseData.text,
-            summary: baseData.summary,
-            tags: baseData.tags,
-          },
-        }),
-        this.translationService.getCachedTitles(relatedIds, lang),
-        this.aiInsightsService
-          .hasInsightsInLang(postDocument.id, insightsLang)
-          .catch(() => false),
-      ])
-
-    const translatedRelated = relatedTitleMap.size
-      ? relatedList.map((item) => {
-          const refId = item?.id
-          const translatedTitle = refId ? relatedTitleMap.get(refId) : undefined
-          return translatedTitle ? { ...item, title: translatedTitle } : item
-        })
-      : relatedList
-
-    const finalDoc = applyContentPreference(
-      {
-        ...baseData,
-        related: translatedRelated,
-        title: translationResult.title,
-        text: translationResult.text,
-        summary: translationResult.summary,
-        tags: translationResult.tags,
-        ...(translationResult.content && {
-          content: translationResult.content,
-          contentFormat: translationResult.contentFormat,
-        }),
-        isTranslated: translationResult.isTranslated,
-        sourceLang: translationResult.sourceLang,
-        translationMeta: translationResult.translationMeta,
-        availableTranslations: translationResult.availableTranslations,
-        hasInsightsInLocale,
-        liked,
-      },
-      query.prefer,
-    )
-    return this.enrichmentService.attachEnrichments(finalDoc)
   }
 
   @Post('/')

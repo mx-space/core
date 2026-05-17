@@ -10,6 +10,7 @@ interface GlobalOptions {
   apiUrl?: string
   token?: string
   apiKey?: string
+  lang?: string
   quiet?: boolean
   verbose?: boolean
   dryRun?: boolean
@@ -26,6 +27,7 @@ program
   .option('--api-url <url>', 'override the configured API URL')
   .option('--token <t>', 'override the stored access token')
   .option('--api-key <key>', 'authenticate with an x-api-key API key')
+  .option('--lang <code>', 'request translated read data for a locale')
   .option('-q, --quiet', 'suppress non-error stderr')
   .option('--verbose', 'log HTTP method/url/status/duration')
   .option('--dry-run', 'show resolved payload without calling the server')

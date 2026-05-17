@@ -31,11 +31,12 @@ When the CLI cannot resolve an API URL, it starts an interactive onboarding prom
 | `--api-url <url>` | Override the configured mx-core API origin.                                   |
 | `--token <token>` | Override the stored access token.                                             |
 | `--api-key <key>` | Authenticate with an API key through the `x-api-key` header.                  |
+| `--lang <code>`   | Request translated data for read commands, such as `ja` or `en`.              |
 | `--quiet`, `-q`   | Suppress non-error stderr messages.                                           |
 | `--verbose`       | Print HTTP method, URL, status, and duration to stderr.                       |
 | `--dry-run`       | Resolve payloads without mutating the server where supported.                 |
 
-`readable`, `llm`, and `envelope` are currently document output modes for `post get`, `note get`, and `page get`. Other commands keep their existing JSON-oriented output.
+`readable`, `llm`, and `envelope` are document output modes for `post get`, `note get`, and `page get`. `post list` additionally supports `readable` and `llm` for concise list summaries. Other commands keep their existing JSON-oriented output.
 
 ## Output Modes
 
@@ -53,6 +54,7 @@ Example:
 
 ```bash
 mxs post get my-slug --output llm
+mxs --lang ja post list --output llm
 ```
 
 ```text
@@ -111,6 +113,8 @@ local expiry from the refreshed session.
 | `--size <n>`      | Page size.                                                      |
 | `--state <state>` | Publication filter, such as `draft` or `publish`.               |
 | `--sort <field>`  | Sort field passed as `sortBy`, such as `created` or `modified`. |
+
+`mxs post list --output llm` emits one compact metadata block per post and omits full article bodies.
 
 ### Post Write Flags
 
