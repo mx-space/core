@@ -75,6 +75,7 @@ export function exitCodeForError(err: unknown): number {
   if (
     code === 'validation.failed' ||
     code === 'validation.xml' ||
+    code === 'profile.invalid_name' ||
     code === 'config.missing.api_url' ||
     code === 'config.missing.token'
   )

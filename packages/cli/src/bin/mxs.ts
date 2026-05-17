@@ -4,7 +4,7 @@ import { Command } from 'commander'
 import { exitCodeForError, MxsError } from '../core/errors'
 import { runLegacyMigrationIfNeeded } from '../core/migration'
 import { emitError, type OutputOptions } from '../core/output'
-import { validateProfileName } from '../core/profile'
+import { getCurrentProfile, validateProfileName } from '../core/profile'
 
 interface GlobalOptions {
   json?: boolean
@@ -39,7 +39,7 @@ program
     'profile to use (overrides MXS_PROFILE and the active profile pointer)',
   )
 
-program.hook('preAction', async (thisCommand) => {
+program.hook('preAction', async (thisCommand, actionCommand) => {
   const opts = thisCommand.optsWithGlobals() as GlobalOptions
   if (opts.profile) {
     try {
@@ -57,6 +57,43 @@ program.hook('preAction', async (thisCommand) => {
   }
   const report = opts.quiet ? null : undefined
   await runLegacyMigrationIfNeeded({ report })
+
+  // Guard: if no profile can be resolved and no URL override is in play,
+  // throw profile.none_active so the error surface is clean.
+  //
+  // Exempt commands (must not throw even with no profile):
+  //   - any subcommand of `mxs profile` (Task 4; not yet wired but exemption
+  //     is pre-registered so it is ready when those commands land)
+  //   - `auth login` when --profile is supplied (user is creating a new profile)
+  //   - Commander short-circuits --help / --version before reaching preAction
+  const effectiveProfile =
+    opts.profile ||
+    process.env.MXS_PROFILE?.trim() ||
+    (await getCurrentProfile())
+  const hasUrlOverride = Boolean(opts.apiUrl || process.env.MXS_API_URL?.trim())
+
+  if (!effectiveProfile && !hasUrlOverride) {
+    const commandName = actionCommand.name()
+    const parentName = actionCommand.parent?.name() ?? ''
+
+    // Exempt: any `profile *` subcommand (Task 4)
+    const isProfileCommand =
+      parentName === 'profile' || commandName === 'profile'
+
+    // Exempt: `auth login` when --profile flag is present (creating a new profile)
+    const isAuthLoginWithProfile =
+      parentName === 'auth' &&
+      commandName === 'login' &&
+      Boolean((actionCommand.opts() as GlobalOptions).profile ?? opts.profile)
+
+    if (!isProfileCommand && !isAuthLoginWithProfile) {
+      throw new MxsError({
+        code: 'profile.none_active',
+        message: 'no active mxs profile',
+        hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
+      })
+    }
+  }
 })
 
 addAuthCommands(program)

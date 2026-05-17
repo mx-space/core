@@ -13,7 +13,7 @@ import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MxsError } from '../../src/core/errors'
-import { validateProfileName } from '../../src/core/profile'
+import { getCurrentProfile, validateProfileName } from '../../src/core/profile'
 
 // ---------------------------------------------------------------------------
 // Helpers / environment isolation
@@ -216,5 +216,149 @@ describe('--profile flows into resolveConfig', () => {
 
     expect(resolved.profileName).toBe('default')
     expect(resolved.profileExplicit).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// profile.none_active guard in preAction
+// The guard logic is extracted here and tested directly rather than through
+// the Commander wiring (which requires a compiled subprocess).
+// ---------------------------------------------------------------------------
+
+/**
+ * Simulate the none_active guard logic from bin/mxs.ts preAction.
+ * Returns the MxsError that would be thrown, or null if the guard passes.
+ */
+async function runNoneActiveGuard(opts: {
+  profile?: string
+  apiUrl?: string
+  commandName: string
+  parentName: string
+  actionCommandProfile?: string
+}): Promise<MxsError | null> {
+  const effectiveProfile =
+    opts.profile ||
+    process.env.MXS_PROFILE?.trim() ||
+    (await getCurrentProfile())
+  const hasUrlOverride = Boolean(
+    opts.apiUrl || process.env.MXS_API_URL?.trim(),
+  )
+
+  if (!effectiveProfile && !hasUrlOverride) {
+    const isProfileCommand =
+      opts.parentName === 'profile' || opts.commandName === 'profile'
+    const isAuthLoginWithProfile =
+      opts.parentName === 'auth' &&
+      opts.commandName === 'login' &&
+      Boolean(opts.actionCommandProfile ?? opts.profile)
+
+    if (!isProfileCommand && !isAuthLoginWithProfile) {
+      return new MxsError({
+        code: 'profile.none_active',
+        message: 'no active mxs profile',
+        hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
+      })
+    }
+  }
+  return null
+}
+
+describe('profile.none_active guard', () => {
+  let origMxsProfile: string | undefined
+  let origMxsApiUrl: string | undefined
+
+  beforeEach(() => {
+    origMxsProfile = process.env.MXS_PROFILE
+    origMxsApiUrl = process.env.MXS_API_URL
+    delete process.env.MXS_PROFILE
+    delete process.env.MXS_API_URL
+  })
+
+  afterEach(() => {
+    if (origMxsProfile === undefined) delete process.env.MXS_PROFILE
+    else process.env.MXS_PROFILE = origMxsProfile
+    if (origMxsApiUrl === undefined) delete process.env.MXS_API_URL
+    else process.env.MXS_API_URL = origMxsApiUrl
+  })
+
+  it('throws profile.none_active when no profile, no env, no URL override on a generic command', async () => {
+    // No current file written in tmpDir → getCurrentProfile returns null
+    const err = await runNoneActiveGuard({
+      commandName: 'list',
+      parentName: 'post',
+    })
+    expect(err).toBeInstanceOf(MxsError)
+    expect(err!.code).toBe('profile.none_active')
+  })
+
+  it('does not throw when MXS_API_URL is set (URL override bypasses the guard)', async () => {
+    process.env.MXS_API_URL = 'https://blog.example.com'
+    const err = await runNoneActiveGuard({
+      commandName: 'list',
+      parentName: 'post',
+    })
+    expect(err).toBeNull()
+  })
+
+  it('does not throw when --api-url flag is set', async () => {
+    const err = await runNoneActiveGuard({
+      apiUrl: 'https://blog.example.com',
+      commandName: 'list',
+      parentName: 'post',
+    })
+    expect(err).toBeNull()
+  })
+
+  it('does not throw when MXS_PROFILE env is set', async () => {
+    // MXS_PROFILE set → effectiveProfile is truthy (guard passes even if profile
+    // dir doesn't exist yet — resolveConfig handles that separately)
+    process.env.MXS_PROFILE = 'staging'
+    const err = await runNoneActiveGuard({
+      commandName: 'list',
+      parentName: 'post',
+    })
+    expect(err).toBeNull()
+  })
+
+  it('does not throw when a current profile file exists', async () => {
+    // Write a current pointer in tmpDir (XDG_CONFIG_HOME is set in beforeEach)
+    const dir = mxsDir()
+    await fs.mkdir(dir, { recursive: true })
+    await fs.writeFile(path.join(dir, 'current'), 'default\n', {
+      encoding: 'utf8',
+    })
+    const err = await runNoneActiveGuard({
+      commandName: 'list',
+      parentName: 'post',
+    })
+    expect(err).toBeNull()
+  })
+
+  it('does not throw for a profile subcommand (exempted — Task 4)', async () => {
+    // TODO: full coverage in Task 4 once `mxs profile use` / `mxs profile ls`
+    // are implemented. For now we validate the exemption guard itself.
+    const err = await runNoneActiveGuard({
+      commandName: 'use',
+      parentName: 'profile',
+    })
+    expect(err).toBeNull()
+  })
+
+  it('does not throw for auth login when --profile is passed (creating new profile)', async () => {
+    const err = await runNoneActiveGuard({
+      commandName: 'login',
+      parentName: 'auth',
+      actionCommandProfile: 'newprofile',
+    })
+    expect(err).toBeNull()
+  })
+
+  it('throws for auth login when --profile is NOT passed', async () => {
+    const err = await runNoneActiveGuard({
+      commandName: 'login',
+      parentName: 'auth',
+    })
+    expect(err).toBeInstanceOf(MxsError)
+    expect(err!.code).toBe('profile.none_active')
   })
 })

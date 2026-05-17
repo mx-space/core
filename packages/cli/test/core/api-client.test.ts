@@ -227,12 +227,9 @@ describe('ApiClient production banner', () => {
     spy.mockRestore()
     void origWrite
 
-    expect(stderrLines.some((l) => l.includes('profile=prod (production)'))).toBe(
-      true,
+    expect(stderrLines.join('')).toMatch(
+      /^mxs: profile=prod \(production\) → https:\/\/blog\.example\.com$/m,
     )
-    expect(
-      stderrLines.some((l) => l.includes('https://blog.example.com')),
-    ).toBe(true)
   })
 
   it('does not emit banner when quiet is true', () => {
