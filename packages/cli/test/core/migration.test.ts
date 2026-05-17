@@ -259,7 +259,7 @@ describe('stale-legacy cleanup', () => {
     })
 
     expect(result).toMatchObject<MigrationResult>({
-      profile: '',
+      profile: null,
       production: false,
       cleanedStaleLegacy: true,
     })
@@ -390,7 +390,7 @@ describe('promptIsProduction cancellation', () => {
 
     const result = await runLegacyMigrationIfNeeded({
       isTTY: true,
-      promptIsProduction: async () => cancelSymbol as any,
+      promptIsProduction: async () => cancelSymbol,
       report: null,
     })
 
@@ -398,6 +398,28 @@ describe('promptIsProduction cancellation', () => {
     expect(result?.profile).toBe('default')
     expect(await legacyConfigExists()).toBe(false)
     expect(await readCurrentFile()).toBe('default')
+  })
+})
+
+describe('failure modes', () => {
+  it('rejects with config.migration.failed when config.json contains corrupt JSON', async () => {
+    await fs.mkdir(mxsDir(), { recursive: true })
+    await fs.writeFile(
+      path.join(mxsDir(), 'config.json'),
+      'this is not json{',
+    )
+
+    const legacyPath = path.join(mxsDir(), 'config.json')
+
+    await expect(
+      runLegacyMigrationIfNeeded({ isTTY: false, report: null }),
+    ).rejects.toMatchObject({
+      code: 'config.migration.failed',
+      message: expect.stringContaining(legacyPath),
+    })
+
+    // Legacy file must NOT be deleted — rejection happened during read
+    expect(await legacyConfigExists()).toBe(true)
   })
 })
 

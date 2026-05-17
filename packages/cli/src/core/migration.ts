@@ -14,15 +14,15 @@ import {
 export interface MigrationOptions {
   /** Defaults to process.stdin.isTTY && process.stdout.isTTY. */
   isTTY?: boolean
-  /** Injected for tests. Called when TTY + legacy api_url present. Resolves true to set production. */
-  promptIsProduction?: (apiUrl: string) => Promise<boolean>
+  /** Injected for tests. Called when TTY + legacy api_url present. Resolves true to set production; may resolve a cancel symbol (Ctrl-C). */
+  promptIsProduction?: (apiUrl: string) => Promise<boolean | symbol>
   /** Where to emit status messages. Defaults to process.stderr. Pass `null` to suppress. */
   report?: ((line: string) => void) | null
 }
 
 export interface MigrationResult {
-  /** The profile name that was created. Always 'default' in this version. */
-  profile: string
+  /** The profile name that was created ('default') on a successful migration, or null when only stale-cleanup happened. */
+  profile: string | null
   /** Whether the migrated profile was marked production. */
   production: boolean
   /** True if a stale-legacy cleanup happened (profiles/ existed but legacy files were still present). */
@@ -101,16 +101,16 @@ export async function runLegacyMigrationIfNeeded(
     if (hasConfig) toRemove.push(legacyConfigPath)
     if (hasCreds) toRemove.push(legacyCredentialsPath)
 
+    for (const p of toRemove) {
+      await tryUnlink(p, report)
+    }
+
     emit(
       report,
       `mxs: removed stale legacy config files at ${toRemove.join(', ')}`,
     )
 
-    for (const p of toRemove) {
-      await tryUnlink(p, report)
-    }
-
-    return { profile: '', production: false, cleanedStaleLegacy: true }
+    return { profile: null, production: false, cleanedStaleLegacy: true }
   }
 
   // Full migration branch.
