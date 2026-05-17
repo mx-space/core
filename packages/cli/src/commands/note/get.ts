@@ -1,7 +1,12 @@
-import { emitDocument, type DocumentKind } from '../../core/document-output'
+import { type DocumentKind, emitDocument } from '../../core/document-output'
+import { MxsError } from '../../core/errors'
 import type { OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+} from '../internal/shared'
 
 const KIND: DocumentKind = 'note'
 
@@ -26,8 +31,8 @@ export async function run(
     emitDocument(KIND, res.data, out)
     return
   }
-  const res = await client.request(`/notes/${slugOrId}`, {
-    query: { prefer: 'lexical' },
+  throw new MxsError({
+    code: 'validation.failed',
+    message: `invalid note reference: ${slugOrId} (use snowflake id or numeric nid)`,
   })
-  emitDocument(KIND, res.data, out)
 }

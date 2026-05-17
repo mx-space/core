@@ -1,8 +1,10 @@
-import type { ApiClient } from '../../core/api-client'
-import { MxsError } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
-import { isSnowflakeId } from '../../core/resolve'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+} from '../internal/shared'
+import { resolveCategoryId } from './resolve'
 
 export interface CategoryUpdateFlags {
   name?: string
@@ -28,21 +30,10 @@ export async function run(
   }
   const ctx = await resolveContext(flags, out)
   const client = buildApiClient(ctx, flags)
-  const id = await resolveId(client, slugOrId)
+  const id = await resolveCategoryId(client, slugOrId)
   const res = await client.request(`/categories/${id}`, {
     method: 'PATCH',
     body,
   })
   emitSuccess(res.data, out)
-}
-
-async function resolveId(client: ApiClient, slugOrId: string): Promise<string> {
-  if (isSnowflakeId(slugOrId)) return slugOrId
-  const res = await client.request<{ id?: string }>(`/categories/${slugOrId}`)
-  if (!res.data?.id)
-    throw new MxsError({
-      code: 'resource.not_found',
-      message: `category not found: ${slugOrId}`,
-    })
-  return res.data.id
 }

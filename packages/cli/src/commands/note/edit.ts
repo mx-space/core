@@ -1,14 +1,17 @@
 import type { ApiClient } from '../../core/api-client'
 import { runEditorRoundTrip } from '../../core/editor'
 import { parseEnvelope } from '../../core/envelope'
-import { MxsError } from '../../core/errors'
 import { serializeFromLexical } from '../../core/litexml-codec'
 import { emitInfo, emitSuccess, type OutputOptions } from '../../core/output'
 import { buildNotePayload, type NoteFlagInputs } from '../../core/payload'
-import { isSnowflakeId } from '../../core/resolve'
-import { buildResolver, resolveTopicRefs } from '../_resolve-helpers'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
-import { applyNoteEnvelopeMeta } from '../_envelope-overlays'
+import { applyNoteEnvelopeMeta } from '../internal/envelope-overlays'
+import { buildResolver, resolveTopicRefs } from '../internal/resolve-helpers'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+} from '../internal/shared'
+import { resolveNoteId } from './resolve'
 
 export async function run(
   slugOrId: string,
@@ -42,7 +45,7 @@ export async function run(
     }
     const resolver = buildResolver(client)
     await resolveTopicRefs(built.payload, resolver)
-    const id = await resolveId(client, slugOrId)
+    const id = await resolveNoteId(client, slugOrId)
     const res = await client.request(`/notes/${id}`, {
       method: 'PUT',
       body: built.payload,
@@ -66,29 +69,11 @@ export async function run(
   emitSuccess(res.data, out)
 }
 
-async function resolveId(client: ApiClient, slugOrId: string): Promise<string> {
-  if (isSnowflakeId(slugOrId)) return slugOrId
-  if (/^\d+$/.test(slugOrId)) {
-    const res = await client.request<{ data?: { id: string }; id?: string }>(
-      `/notes/nid/${slugOrId}`,
-      { query: { single: '1' } },
-    )
-    const id = (res.data as any)?.data?.id ?? (res.data as any)?.id
-    if (!id)
-      throw new MxsError({
-        code: 'resource.not_found',
-        message: `note not found: ${slugOrId}`,
-      })
-    return id
-  }
-  return slugOrId
-}
-
 async function materializeForEditor(
   client: ApiClient,
   slugOrId: string,
 ): Promise<string> {
-  const id = await resolveId(client, slugOrId)
+  const id = await resolveNoteId(client, slugOrId)
   const res = await client.request<{
     id?: string
     title?: string

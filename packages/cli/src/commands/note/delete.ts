@@ -1,8 +1,11 @@
-import type { ApiClient } from '../../core/api-client'
 import { MxsError } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
-import { isSnowflakeId } from '../../core/resolve'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../_shared'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+} from '../internal/shared'
+import { resolveNoteId } from './resolve'
 
 export async function run(
   slugOrId: string,
@@ -22,24 +25,7 @@ export async function run(
   }
   const ctx = await resolveContext(flags, out)
   const client = buildApiClient(ctx, flags)
-  const id = await resolveId(client, slugOrId)
+  const id = await resolveNoteId(client, slugOrId)
   await client.request(`/notes/${id}`, { method: 'DELETE' })
   emitSuccess({ deleted: id }, out)
-}
-
-async function resolveId(client: ApiClient, slugOrId: string): Promise<string> {
-  if (isSnowflakeId(slugOrId)) return slugOrId
-  if (/^\d+$/.test(slugOrId)) {
-    const res = await client.request<any>(`/notes/nid/${slugOrId}`, {
-      query: { single: '1' },
-    })
-    const id = res.data?.data?.id ?? res.data?.id
-    if (!id)
-      throw new MxsError({
-        code: 'resource.not_found',
-        message: `note not found: ${slugOrId}`,
-      })
-    return id
-  }
-  return slugOrId
 }
