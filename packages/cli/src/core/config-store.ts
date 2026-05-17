@@ -109,6 +109,10 @@ export async function writeConfig(cfg: ConfigShape): Promise<void> {
   } catch {}
 }
 
+/**
+ * @deprecated Read from profile credentials via `readProfileCredentials` in core/profile.ts.
+ * Kept for the legacy migration read path and api-client auto-refresh; remove after full profile migration.
+ */
 export async function readCredentials(): Promise<CredentialsShape | null> {
   const p = getLegacyCredentialsPath()
   const data = await readJsonIfExists<CredentialsShape>(p)
@@ -118,6 +122,10 @@ export async function readCredentials(): Promise<CredentialsShape | null> {
   return data
 }
 
+/**
+ * @deprecated Write to profile credentials via `writeProfileCredentials` in core/profile.ts.
+ * Kept for the legacy migration read path and api-client auto-refresh; remove after full profile migration.
+ */
 export async function writeCredentials(cred: CredentialsShape): Promise<void> {
   const dir = getConfigDir()
   await fs.mkdir(dir, { recursive: true })
@@ -126,6 +134,10 @@ export async function writeCredentials(cred: CredentialsShape): Promise<void> {
   await fs.chmod(p, 0o600)
 }
 
+/**
+ * @deprecated Use `deleteProfileCredentials` in core/profile.ts for profile-aware logout.
+ * Kept only for Task 2 migration's read path; remove after full profile migration.
+ */
 export async function deleteCredentials(): Promise<void> {
   const p = getLegacyCredentialsPath()
   try {

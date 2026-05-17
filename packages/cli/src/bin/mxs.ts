@@ -85,6 +85,7 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
 })
 
 addAuthCommands(program)
+addProfileCommands(program)
 addPostCommands(program)
 addNoteCommands(program)
 addPageCommands(program)
@@ -117,9 +118,12 @@ function addAuthCommands(parent: Command) {
   auth
     .command('login')
     .description('start device authorization flow')
-    .action(async (_opts, command) => {
+    .option('--production', 'mark the target profile as production after login')
+    .action(async (opts, command) => {
       const { run } = await import('../commands/auth/login')
-      await run(readGlobalFlags(command), readGlobalOptions(command))
+      await run(readGlobalFlags(command), readGlobalOptions(command), {
+        production: opts.production,
+      })
     })
   auth
     .command('logout')
@@ -494,6 +498,62 @@ function addConfigCommands(parent: Command) {
     const { run } = await import('../commands/config/edit')
     await run(readGlobalFlags(command), readGlobalOptions(command))
   })
+}
+
+function addProfileCommands(parent: Command) {
+  const profile = parent.command('profile').description('manage mxs profiles')
+  profile
+    .command('ls')
+    .description('list profiles')
+    .action(async (_opts, command) => {
+      const { run } = await import('../commands/profile/ls')
+      await run(readGlobalFlags(command), readGlobalOptions(command))
+    })
+  profile
+    .command('show [name]')
+    .description('show resolved info for a profile')
+    .action(async (name, _opts, command) => {
+      const { run } = await import('../commands/profile/show')
+      await run(
+        name as string | undefined,
+        readGlobalFlags(command),
+        readGlobalOptions(command),
+      )
+    })
+  profile
+    .command('use <name>')
+    .description('set the active profile')
+    .action(async (name, _opts, command) => {
+      const { run } = await import('../commands/profile/use')
+      await run(name, readGlobalFlags(command), readGlobalOptions(command))
+    })
+  profile
+    .command('mark <name>')
+    .description('toggle production flag on a profile')
+    .option('--production', 'mark profile as production')
+    .option('--no-production', 'mark profile as non-production')
+    .action(async (name, opts, command) => {
+      const { run } = await import('../commands/profile/mark')
+      await run(
+        name,
+        { production: opts.production as boolean | undefined },
+        readGlobalFlags(command),
+        readGlobalOptions(command),
+      )
+    })
+  profile
+    .command('rm <name>')
+    .description('remove a profile')
+    .option('--force', 'skip confirmation and allow removing current profile')
+    .action(async (name, opts, command) => {
+      const { run } = await import('../commands/profile/rm')
+      await run(
+        name,
+        opts,
+        readGlobalFlags(command),
+        readGlobalOptions(command),
+      )
+    })
 }
 
 void MxsError

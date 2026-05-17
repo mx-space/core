@@ -1,8 +1,16 @@
+import { promises as fs } from 'node:fs'
+
 import { text } from '@clack/prompts'
 
 import { type AuthHttp, defaultHttp, probeAuthEndpoint } from './auth'
-import { normalizeApiUrl, readConfig, writeConfig } from './config-store'
+import { normalizeApiUrl } from './config-store'
 import { MxsError } from './errors'
+import {
+  getCurrentProfile,
+  getProfileDir,
+  setCurrentProfile,
+  writeProfileConfig,
+} from './profile'
 
 export interface OnboardingResult {
   apiUrl: string
@@ -16,6 +24,8 @@ export interface OnboardingOptions {
   initialApiUrl?: string
   isTTY?: boolean
   prompt?: (question: string) => Promise<string>
+  /** Override the target profile name (mirrors --profile flag). */
+  profile?: string
 }
 
 export async function runOnboarding(
@@ -52,15 +62,22 @@ export async function runOnboarding(
   const apiUrl = normalizeApiUrl(input)
   const probed = await probeAuthEndpoint(apiUrl, opts.http ?? defaultHttp())
 
-  const existing = await readConfig()
-  await writeConfig({
-    ...existing,
+  // Determine target profile: --profile > active current > 'default'
+  const target =
+    opts.profile?.trim() || (await getCurrentProfile()) || 'default'
+
+  // Ensure dir exists before writing config
+  await fs.mkdir(getProfileDir(target), { recursive: true, mode: 0o700 })
+
+  await writeProfileConfig(target, {
     api_url: probed.apiUrl,
     api_base: probed.apiBase,
     auth_base: probed.authBase,
     api_version: probed.apiVersion,
-    client_id: existing.client_id ?? 'mxs-cli',
+    client_id: 'mxs-cli',
   })
+
+  await setCurrentProfile(target)
 
   return probed
 }

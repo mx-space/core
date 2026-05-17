@@ -172,6 +172,15 @@ export async function writeProfileCredentials(
   await fs.chmod(p, 0o600)
 }
 
+export async function deleteProfileCredentials(name: string): Promise<void> {
+  const p = getProfileCredentialsPath(name)
+  try {
+    await fs.unlink(p)
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') throw err
+  }
+}
+
 export async function removeProfile(name: string): Promise<void> {
   const dir = getProfileDir(name)
   try {

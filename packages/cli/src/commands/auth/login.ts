@@ -1,3 +1,5 @@
+import { promises as fs } from 'node:fs'
+
 import open from 'open'
 
 import {
@@ -5,11 +7,26 @@ import {
   requestDeviceCode,
   toCredentials,
 } from '../../core/auth'
-import { writeCredentials } from '../../core/config-store'
 import { emitInfo, emitSuccess, type OutputOptions } from '../../core/output'
+import {
+  getCurrentProfile,
+  getProfileDir,
+  readProfileConfig,
+  setCurrentProfile,
+  writeProfileConfig,
+  writeProfileCredentials,
+} from '../../core/profile'
 import { type GlobalFlags, resolveContext } from '../internal/shared'
 
-export async function run(flags: GlobalFlags, out: OutputOptions) {
+export interface LoginOpts {
+  production?: boolean
+}
+
+export async function run(
+  flags: GlobalFlags,
+  out: OutputOptions,
+  opts: LoginOpts = {},
+) {
   const ctx = await resolveContext(flags, out)
   emitInfo(`probing ${ctx.apiUrl}…`, out)
   emitInfo(`API base: ${ctx.apiBase}`, out)
@@ -50,8 +67,35 @@ export async function run(flags: GlobalFlags, out: OutputOptions) {
     },
   )
   const cred = toCredentials(token)
-  await writeCredentials(cred)
-  emitInfo('authorized', out)
+
+  // Determine target profile per spec §3:
+  // 1. --profile flag
+  // 2. active current profile
+  // 3. fresh install → 'default'
+  const target =
+    flags.profile?.trim() || (await getCurrentProfile()) || 'default'
+
+  // Ensure the profile directory exists before writing
+  await fs.mkdir(getProfileDir(target), { recursive: true, mode: 0o700 })
+
+  const existing = await readProfileConfig(target)
+  await writeProfileConfig(target, {
+    ...existing,
+    api_url: ctx.apiUrl,
+    api_base: ctx.apiBase,
+    auth_base: ctx.authBase,
+    api_version: ctx.apiVersion,
+    client_id: ctx.clientId,
+    ...(opts.production !== undefined
+      ? { production: opts.production }
+      : existing.production !== undefined
+        ? { production: existing.production }
+        : {}),
+  })
+  await writeProfileCredentials(target, cred)
+  await setCurrentProfile(target)
+
+  emitInfo(`mxs: logged in to profile '${target}'`, out)
   emitSuccess(
     {
       user: cred.user ?? null,
