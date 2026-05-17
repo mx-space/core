@@ -37,7 +37,7 @@ export async function runOnboarding(
       const answer = await text({
         message: 'API URL of your mx-core server',
         placeholder: 'https://blog.example.com',
-        validate: (v) => (v.trim().length === 0 ? 'required' : undefined),
+        validate: (v) => (!v || v.trim().length === 0 ? 'required' : undefined),
       })
       if (typeof answer !== 'string') {
         throw new MxsError({

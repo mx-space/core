@@ -57,7 +57,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@clack/prompts": "^0.11.0",
+    "@clack/prompts": "^1.4.0",
     "@haklex/rich-headless": "0.13.0",
     "@haklex/rich-litexml": "0.13.0",
     "@lexical/headless": "^0.44.0",
@@ -65,13 +65,13 @@
     "better-auth": "^1.6.9",
     "commander": "14.0.3",
     "lexical": "^0.44.0",
-    "open": "^10.2.0"
+    "open": "^11.0.0"
   },
   "devDependencies": {
-    "@types/node": "25.7.0",
+    "@types/node": "25.8.0",
     "tsdown": "0.22.0",
-    "tsx": "^4.21.0",
+    "tsx": "^4.22.1",
     "typescript": "6.0.3",
-    "vitest": "4.1.5"
+    "vitest": "4.1.6"
   }
 }
