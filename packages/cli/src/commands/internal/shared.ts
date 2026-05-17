@@ -13,6 +13,7 @@ export interface GlobalFlags {
   quiet?: boolean
   verbose?: boolean
   dryRun?: boolean
+  profile?: string
 }
 
 export async function resolveContext(flags: GlobalFlags, out: OutputOptions) {
@@ -22,6 +23,7 @@ export async function resolveContext(flags: GlobalFlags, out: OutputOptions) {
       apiUrl: flags.apiUrl,
       token: flags.token,
       apiKey: flags.apiKey,
+      profile: flags.profile,
     })
   } catch (err) {
     if (err instanceof MxsError && err.code === 'config.missing.api_url') {
@@ -31,6 +33,7 @@ export async function resolveContext(flags: GlobalFlags, out: OutputOptions) {
         apiUrl: flags.apiUrl,
         token: flags.token,
         apiKey: flags.apiKey,
+        profile: flags.profile,
       })
     } else {
       throw err
@@ -55,6 +58,8 @@ export function buildApiClient(
       !flags.token &&
       !process.env.MXS_TOKEN,
     verbose: flags.verbose,
+    quiet: flags.quiet,
+    resolved,
   })
 }
 

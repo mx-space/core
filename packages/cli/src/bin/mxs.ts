@@ -2,7 +2,9 @@
 import { Command } from 'commander'
 
 import { exitCodeForError, MxsError } from '../core/errors'
+import { runLegacyMigrationIfNeeded } from '../core/migration'
 import { emitError, type OutputOptions } from '../core/output'
+import { validateProfileName } from '../core/profile'
 
 interface GlobalOptions {
   json?: boolean
@@ -14,6 +16,7 @@ interface GlobalOptions {
   quiet?: boolean
   verbose?: boolean
   dryRun?: boolean
+  profile?: string
 }
 
 const program = new Command()
@@ -31,6 +34,30 @@ program
   .option('-q, --quiet', 'suppress non-error stderr')
   .option('--verbose', 'log HTTP method/url/status/duration')
   .option('--dry-run', 'show resolved payload without calling the server')
+  .option(
+    '--profile <name>',
+    'profile to use (overrides MXS_PROFILE and the active profile pointer)',
+  )
+
+program.hook('preAction', async (thisCommand) => {
+  const opts = thisCommand.optsWithGlobals() as GlobalOptions
+  if (opts.profile) {
+    try {
+      validateProfileName(opts.profile)
+    } catch (err) {
+      if (err instanceof MxsError) {
+        throw new MxsError({
+          code: 'profile.invalid_name',
+          message: err.message,
+          hint: 'profile name must match ^[a-z0-9_-]{1,32}$ and must not be "current"',
+        })
+      }
+      throw err
+    }
+  }
+  const report = opts.quiet ? null : undefined
+  await runLegacyMigrationIfNeeded({ report })
+})
 
 addAuthCommands(program)
 addPostCommands(program)

@@ -16,6 +16,9 @@ export type MxsErrorCode =
   | 'config.missing.token'
   | 'config.migration.failed'
   | 'profile.not_found'
+  | 'profile.none_active'
+  | 'profile.invalid_name'
+  | 'profile.write_requires_explicit'
   | (string & {})
 
 export interface MxsErrorOptions {
@@ -64,7 +67,9 @@ export function exitCodeForError(err: unknown): number {
   if (
     code === 'network.timeout' ||
     code === 'network.dns' ||
-    code === 'network.refused'
+    code === 'network.refused' ||
+    code === 'profile.write_requires_explicit' || // exit code 4: production write gate refusal
+    code === 'profile.none_active'
   )
     return 4
   if (

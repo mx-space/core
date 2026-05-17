@@ -7,9 +7,11 @@ import {
 import {
   type CredentialsShape,
   readCredentials,
+  type ResolvedConfig,
   writeCredentials,
 } from './config-store'
 import { MxsError } from './errors'
+import { decideWriteGate, type HttpMethod } from './gate'
 
 export interface ApiClientContext {
   apiBase: string
@@ -19,7 +21,10 @@ export interface ApiClientContext {
   apiKey?: string
   autoRefresh?: boolean
   verbose?: boolean
+  quiet?: boolean
   http?: AuthHttp
+  /** When provided, enables the production banner and write gate. */
+  resolved?: ResolvedConfig
 }
 
 export interface RequestOptions {
@@ -44,6 +49,12 @@ export class ApiClient {
   constructor(private ctx: ApiClientContext) {
     this.http = ctx.http ?? defaultHttp()
     this.token = ctx.token
+    if (ctx.resolved?.isProduction && !ctx.quiet) {
+      const r = ctx.resolved
+      process.stderr.write(
+        `mxs: profile=${r.profileName} (production) → ${r.apiUrl}\n`,
+      )
+    }
   }
 
   get apiBase(): string {
@@ -54,11 +65,25 @@ export class ApiClient {
     path: string,
     options: RequestOptions = {},
   ): Promise<ApiResponse<T>> {
+    const method = (options.method ?? 'GET') as HttpMethod
+    if (this.ctx.resolved) {
+      const decision = decideWriteGate(this.ctx.resolved, method)
+      if (!decision.allow) {
+        throw new MxsError({
+          code: 'profile.write_requires_explicit',
+          message: decision.message!,
+          hint: decision.hint,
+          details: {
+            profile: this.ctx.resolved.profileName,
+            api_url: this.ctx.resolved.apiUrl,
+          },
+        })
+      }
+    }
     if (this.ctx.autoRefresh && this.token) {
       await this.tryRefresh()
     }
     const url = buildUrl(this.ctx.apiBase, path, options.query)
-    const method = options.method ?? 'GET'
     const headers: Record<string, string> = {
       accept: 'application/json',
       ...options.headers,
