@@ -255,8 +255,11 @@ export class NoteService {
   }
 
   async getLatestOne(condition: { isPublished?: boolean } = {}) {
+    if (condition.isPublished === true) {
+      return this.noteRepository.findLatestVisiblePair()
+    }
     const [latest] = await this.findRecent(1, {
-      visibleOnly: condition.isPublished === true,
+      visibleOnly: false,
     })
     if (!latest) return null
     const [next] = await this.findByCreatedWindow(
@@ -264,7 +267,7 @@ export class NoteService {
       'before',
       1,
       {
-        visibleOnly: condition.isPublished === true,
+        visibleOnly: false,
       },
     )
     return { latest, next }

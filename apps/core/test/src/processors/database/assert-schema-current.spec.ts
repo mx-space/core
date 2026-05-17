@@ -1,7 +1,6 @@
 import path from 'node:path'
 
 import { drizzle } from 'drizzle-orm/node-postgres'
-import { migrate as drizzleMigrate } from 'drizzle-orm/node-postgres/migrator'
 import pkg from 'pg'
 
 import {
@@ -9,6 +8,7 @@ import {
   MigrationDriftError,
   SchemaBehindError,
 } from '~/processors/database/postgres.provider'
+import { runSchemaMigrationFiles } from '~/processors/database/schema-migrator'
 import {
   createPgTestDatabase,
   type PgTestDatabase,
@@ -74,7 +74,7 @@ describe('assertSchemaCurrent', () => {
       const fresh = new Pool({ connectionString: url.toString(), max: 1 })
       try {
         const db = drizzle(fresh, { casing: 'snake_case' })
-        await drizzleMigrate(db, { migrationsFolder })
+        await runSchemaMigrationFiles(fresh, migrationsFolder)
 
         await fresh.query(
           `UPDATE drizzle.__drizzle_migrations SET hash = 'tampered' WHERE created_at = (SELECT max(created_at) FROM drizzle.__drizzle_migrations)`,
