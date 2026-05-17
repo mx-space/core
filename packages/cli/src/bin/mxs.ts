@@ -4,6 +4,7 @@ import { Command } from 'commander'
 import { exitCodeForError, MxsError } from '../core/errors'
 import { runLegacyMigrationIfNeeded } from '../core/migration'
 import { emitError, type OutputOptions } from '../core/output'
+import { requiresActiveProfile } from '../core/preaction-guards'
 import { getCurrentProfile, validateProfileName } from '../core/profile'
 
 interface GlobalOptions {
@@ -61,38 +62,25 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
   // Guard: if no profile can be resolved and no URL override is in play,
   // throw profile.none_active so the error surface is clean.
   //
-  // Exempt commands (must not throw even with no profile):
-  //   - any subcommand of `mxs profile` (Task 4; not yet wired but exemption
-  //     is pre-registered so it is ready when those commands land)
-  //   - `auth login` when --profile is supplied (user is creating a new profile)
-  //   - Commander short-circuits --help / --version before reaching preAction
-  const effectiveProfile =
-    opts.profile ||
-    process.env.MXS_PROFILE?.trim() ||
-    (await getCurrentProfile())
-  const hasUrlOverride = Boolean(opts.apiUrl || process.env.MXS_API_URL?.trim())
-
-  if (!effectiveProfile && !hasUrlOverride) {
-    const commandName = actionCommand.name()
-    const parentName = actionCommand.parent?.name() ?? ''
-
-    // Exempt: any `profile *` subcommand (Task 4)
-    const isProfileCommand =
-      parentName === 'profile' || commandName === 'profile'
-
-    // Exempt: `auth login` when --profile flag is present (creating a new profile)
-    const isAuthLoginWithProfile =
-      parentName === 'auth' &&
-      commandName === 'login' &&
-      Boolean((actionCommand.opts() as GlobalOptions).profile ?? opts.profile)
-
-    if (!isProfileCommand && !isAuthLoginWithProfile) {
-      throw new MxsError({
-        code: 'profile.none_active',
-        message: 'no active mxs profile',
-        hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
-      })
-    }
+  // Exempt commands are declared in core/preaction-guards.ts (single source of
+  // truth). Commander short-circuits --help / --version before reaching preAction.
+  const currentProfile = await getCurrentProfile()
+  if (
+    requiresActiveProfile({
+      profileFlag: opts.profile,
+      apiUrlFlag: opts.apiUrl,
+      envProfile: process.env.MXS_PROFILE?.trim(),
+      envApiUrl: process.env.MXS_API_URL?.trim(),
+      currentProfile,
+      parentName: actionCommand.parent?.name() ?? '',
+      commandName: actionCommand.name(),
+    })
+  ) {
+    throw new MxsError({
+      code: 'profile.none_active',
+      message: 'no active mxs profile',
+      hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
+    })
   }
 })
 

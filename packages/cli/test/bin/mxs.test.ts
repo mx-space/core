@@ -13,6 +13,10 @@ import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MxsError } from '../../src/core/errors'
+import {
+  requiresActiveProfile,
+  type GuardInput,
+} from '../../src/core/preaction-guards'
 import { getCurrentProfile, validateProfileName } from '../../src/core/profile'
 
 // ---------------------------------------------------------------------------
@@ -221,44 +225,37 @@ describe('--profile flows into resolveConfig', () => {
 
 // ---------------------------------------------------------------------------
 // profile.none_active guard in preAction
-// The guard logic is extracted here and tested directly rather than through
-// the Commander wiring (which requires a compiled subprocess).
+// Tests use the real requiresActiveProfile() from core/preaction-guards.ts,
+// which is the same function bin/mxs.ts's preAction calls.
 // ---------------------------------------------------------------------------
 
 /**
- * Simulate the none_active guard logic from bin/mxs.ts preAction.
- * Returns the MxsError that would be thrown, or null if the guard passes.
+ * Build a GuardInput from the given partial options and run requiresActiveProfile.
+ * Returns an MxsError instance (mirroring what preAction would throw) or null.
  */
 async function runNoneActiveGuard(opts: {
   profile?: string
   apiUrl?: string
   commandName: string
   parentName: string
-  actionCommandProfile?: string
 }): Promise<MxsError | null> {
-  const effectiveProfile =
-    opts.profile ||
-    process.env.MXS_PROFILE?.trim() ||
-    (await getCurrentProfile())
-  const hasUrlOverride = Boolean(
-    opts.apiUrl || process.env.MXS_API_URL?.trim(),
-  )
+  const currentProfile = await getCurrentProfile()
+  const throws = requiresActiveProfile({
+    profileFlag: opts.profile,
+    apiUrlFlag: opts.apiUrl,
+    envProfile: process.env.MXS_PROFILE?.trim(),
+    envApiUrl: process.env.MXS_API_URL?.trim(),
+    currentProfile,
+    parentName: opts.parentName,
+    commandName: opts.commandName,
+  } satisfies GuardInput)
 
-  if (!effectiveProfile && !hasUrlOverride) {
-    const isProfileCommand =
-      opts.parentName === 'profile' || opts.commandName === 'profile'
-    const isAuthLoginWithProfile =
-      opts.parentName === 'auth' &&
-      opts.commandName === 'login' &&
-      Boolean(opts.actionCommandProfile ?? opts.profile)
-
-    if (!isProfileCommand && !isAuthLoginWithProfile) {
-      return new MxsError({
-        code: 'profile.none_active',
-        message: 'no active mxs profile',
-        hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
-      })
-    }
+  if (throws) {
+    return new MxsError({
+      code: 'profile.none_active',
+      message: 'no active mxs profile',
+      hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
+    })
   }
   return null
 }
@@ -344,21 +341,22 @@ describe('profile.none_active guard', () => {
     expect(err).toBeNull()
   })
 
-  it('does not throw for auth login when --profile is passed (creating new profile)', async () => {
+  it('does not throw for auth login even without --profile (fresh-install bootstrap)', async () => {
+    // Spec §3: bare `mxs auth login` on a clean machine must NOT throw
+    // profile.none_active — the login command itself creates the default profile.
     const err = await runNoneActiveGuard({
       commandName: 'login',
       parentName: 'auth',
-      actionCommandProfile: 'newprofile',
     })
     expect(err).toBeNull()
   })
 
-  it('throws for auth login when --profile is NOT passed', async () => {
+  it('does not throw for auth login when --profile is explicitly passed', async () => {
     const err = await runNoneActiveGuard({
       commandName: 'login',
       parentName: 'auth',
+      profile: 'newprofile',
     })
-    expect(err).toBeInstanceOf(MxsError)
-    expect(err!.code).toBe('profile.none_active')
+    expect(err).toBeNull()
   })
 })
