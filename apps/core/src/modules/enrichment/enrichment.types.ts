@@ -127,3 +127,14 @@ export class ProviderDisabledError extends Error {
     this.name = 'ProviderDisabledError'
   }
 }
+
+export class ChallengeBlockedError extends Error {
+  readonly code = 'challenge_blocked' as const
+  constructor(
+    public readonly url: string,
+    public readonly signature: string,
+  ) {
+    super(`challenge page detected for ${url} (signature: "${signature}")`)
+    this.name = 'ChallengeBlockedError'
+  }
+}

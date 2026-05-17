@@ -9,24 +9,6 @@ describe('snakecaseKeysWithCompat', () => {
     expect(snakecaseKeysWithCompat(obj)).toEqual({ a: 1, b_a: 2 })
   })
 
-  test('should convert class instance keys to snake_case', () => {
-    class A {
-      a = 1
-      bA = 2
-    }
-    expect(snakecaseKeysWithCompat(new A() as any)).toEqual({ a: 1, b_a: 2 })
-  })
-
-  test('should handle class instance with toJSON method', () => {
-    class Doc {
-      aB = 1
-      toJSON() {
-        return { cD: 2 }
-      }
-    }
-    expect(snakecaseKeysWithCompat(new Doc() as any)).toEqual({ c_d: 2 })
-  })
-
   test('should handle nested objects', () => {
     const obj = {
       outerKey: {

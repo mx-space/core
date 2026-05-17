@@ -562,9 +562,7 @@ export class NoteController {
     )
 
     // SDK consumer (`NoteTimelineItem`) only reads id/title/nid/slug/createdAt/
-    // isPublished plus translation flags, so trim eagerly here — the legacy
-    // mongo handler used `select('nid _id title slug created isPublished
-    // modified')` for the same reason.
+    // isPublished plus translation flags, so trim eagerly here.
     let data = merged.map((doc) => ({
       id: doc.id,
       title: doc.title,
@@ -699,8 +697,6 @@ export class NoteController {
     }
 
     // Unauthenticated callers must not see unpublished (draft) notes via nid.
-    // The PG cutover dropped the `isPublished: true` filter that the mongo
-    // version applied to `findOne({ nid, ...condition })`.
     if (!isAuthenticated && !current.isPublished) {
       throw new CannotFindException()
     }

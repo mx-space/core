@@ -165,7 +165,7 @@ export class CommentAnchorService {
 
   async resolveAnchorForCreate(
     anchorInput: CommentAnchorInput | undefined,
-    refDoc: RefDocLike & { _id?: any; id?: string },
+    refDoc: RefDocLike & { id?: string },
   ): Promise<CommentAnchorModel | undefined> {
     if (!anchorInput) {
       return undefined
@@ -186,9 +186,7 @@ export class CommentAnchorService {
       endOffset?: number
     }
 
-    const refDocId =
-      (refDoc.id as string | undefined) ||
-      (refDoc.id ? String(refDoc.id) : undefined)
+    const refDocId = refDoc.id as string | undefined
 
     let lexicalContent: string | undefined
 
@@ -385,10 +383,9 @@ export class CommentAnchorService {
    * Re-anchor comments after the underlying document content changed.
    *
    * TODO(post-merge): port the reanchor flow once CommentRepository exposes
-   * findRootCommentsWithAnchor + bulk update + cascade delete on PG. The
-   * mongoose bulkWrite/deleteMany version lived on master pre-cutover; we
-   * stub here so document edits do not regress, and because the comment
-   * anchor feature is itself gated behind newer admin tooling.
+   * findRootCommentsWithAnchor + bulk update + cascade delete on PG. Stubbed
+   * for now so document edits do not regress, and because the comment anchor
+   * feature is itself gated behind newer admin tooling.
    */
   async reanchorCommentsByRef(
     refType: CollectionRefTypes,

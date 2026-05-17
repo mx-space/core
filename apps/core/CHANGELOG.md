@@ -1,4 +1,27 @@
-# CHANGELOG
+## [12.7.1](https://github.com/mx-space/core/compare/v12.7.0...v12.7.1) (2026-05-16)
+
+
+### Bug Fixes
+
+* **comment:** restore email type enum values to match template filenames ([a549765](https://github.com/mx-space/core/commit/a5497655b9e0d6a2ef880e077022ed2c3f9a4d3c))
+
+
+
+# [12.7.0](https://github.com/mx-space/core/compare/v12.6.0...v12.7.0) (2026-05-15)
+
+
+### Features
+
+* **recently:** URL-keyed enrichment map, drop typed entries ([#2726](https://github.com/mx-space/core/issues/2726)) ([91b8a47](https://github.com/mx-space/core/commit/91b8a47469e9b9f96016b7aa3651a2ffa6669719))
+
+
+# [12.6.0](https://github.com/mx-space/core/compare/v12.5.4...v12.6.0) (2026-05-15)
+
+
+### Features
+
+* **enrichment:** harden Open Graph browser mode against anti-bot pages ([#2724](https://github.com/mx-space/core/issues/2724)) ([383e0e4](https://github.com/mx-space/core/commit/383e0e4e1977873025f1385c81eeb3927b91246f))
+* **enrichment:** keep og-parser image OG-strict with dimensions ([8651e5c](https://github.com/mx-space/core/commit/8651e5c24e73c0459625e069d3e0a3c56b8e4153))
 
 
 ## <small>12.5.4 (2026-05-14)</small>

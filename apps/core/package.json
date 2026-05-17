@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/core",
-  "version": "12.5.4",
+  "version": "12.7.1",
   "type": "module",
   "private": true,
   "engines": {
@@ -15,7 +15,7 @@
   "author": "Innei <https://innei.in>",
   "dashboard": {
     "repo": "mx-space/mx-admin",
-    "version": "7.2.0"
+    "version": "7.3.0"
   },
   "issues": "https://github.com/mx-space/core/issues",
   "scripts": {
@@ -47,9 +47,6 @@
       "git pull --rebase",
       "pnpm i",
       "node get-latest-admin-version.js"
-    ],
-    "after": [
-      "sh assets-push.sh"
     ],
     "changelog": true
   },
@@ -160,7 +157,7 @@
     "@types/get-image-colors": "4.0.5",
     "@types/js-yaml": "4.0.9",
     "@types/mime-types": "3.0.1",
-    "@types/node": "25.7.0",
+    "@types/node": "25.8.0",
     "@types/nodemailer": "8.0.0",
     "@types/pg": "^8.20.0",
     "@types/qs": "6.15.1",

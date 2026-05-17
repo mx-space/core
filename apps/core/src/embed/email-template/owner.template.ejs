@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="zh">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>新评论</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #fafafa;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    "
+  >
+    <div
+      style="
+        display: none;
+        overflow: hidden;
+        line-height: 1px;
+        opacity: 0;
+        max-height: 0;
+        max-width: 0;
+      "
+    >
+      <%= author %> 在《<%= title %>》说：<%= text %>
+    </div>
+
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      style="background-color: #fafafa"
+    >
+      <tr>
+        <td align="center" style="padding: 48px 16px">
+          <table
+            role="presentation"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            width="560"
+            style="
+              max-width: 560px;
+              width: 100%;
+              background-color: #fff;
+              border: 1px solid #eaeaea;
+              border-radius: 6px;
+            "
+          >
+            <!-- Header -->
+            <tr>
+              <td style="padding: 40px 40px 36px">
+                <p
+                  style="
+                    font-size: 11px;
+                    font-weight: 500;
+                    color: #888;
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                    margin: 0 0 12px;
+                  "
+                >
+                  新评论
+                </p>
+
+                <h1
+                  style="
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #000;
+                    line-height: 1.3;
+                    margin: 0 0 6px;
+                  "
+                >
+                  「<%= title %>」收到了新评论
+                </h1>
+
+                <p
+                  style="
+                    font-size: 14px;
+                    color: #666;
+                    margin: 0;
+                    line-height: 1.5;
+                  "
+                >
+                  来自 <strong style="color: #000"><%= author %></strong>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Divider -->
+            <tr>
+              <td style="padding: 0 40px">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td
+                      style="border-top: 1px solid #eaeaea; font-size: 0"
+                    >
+                      &nbsp;
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Comment -->
+            <tr>
+              <td style="padding: 28px 40px 36px">
+                <!-- Comment card -->
+                <table
+                  role="presentation"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  width="100%"
+                  style="margin-bottom: 24px"
+                >
+                  <tr>
+                    <td
+                      style="
+                        border: 1px solid #eaeaea;
+                        border-radius: 6px;
+                        padding: 20px;
+                      "
+                    >
+                      <table
+                        role="presentation"
+                        cellspacing="0"
+                        cellpadding="0"
+                        border="0"
+                        style="margin-bottom: 14px"
+                      >
+                        <tr>
+                          <td
+                            style="
+                              vertical-align: middle;
+                              padding-right: 10px;
+                            "
+                          >
+                            <img
+                              src="<%= aggregate.commentor.avatar %>"
+                              width="28"
+                              height="28"
+                              alt=""
+                              style="
+                                display: block;
+                                width: 28px;
+                                height: 28px;
+                                border-radius: 50%;
+                              "
+                            />
+                          </td>
+                          <td style="vertical-align: middle">
+                            <p
+                              style="
+                                font-size: 13px;
+                                font-weight: 600;
+                                color: #000;
+                                margin: 0;
+                                line-height: 1.3;
+                              "
+                            >
+                              <%= author %>
+                            </p>
+                            <p
+                              style="
+                                font-size: 11px;
+                                color: #999;
+                                margin: 1px 0 0;
+                                line-height: 1.3;
+                              "
+                            >
+                              <%= time %>
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p
+                        style="
+                          font-size: 14px;
+                          color: #333;
+                          line-height: 1.7;
+                          margin: 0;
+                        "
+                      >
+                        <%= text %>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <% if(aggregate.parent && aggregate.parent.text){ %>
+                <!-- Parent -->
+                <p
+                  style="
+                    font-size: 11px;
+                    font-weight: 500;
+                    color: #999;
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                    margin: 0 0 10px;
+                  "
+                >
+                  原评论
+                </p>
+                <table
+                  role="presentation"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  width="100%"
+                  style="margin-bottom: 24px"
+                >
+                  <tr>
+                    <td
+                      width="2"
+                      style="background-color: #d4d4d4; border-radius: 1px"
+                    ></td>
+                    <td style="padding: 6px 14px">
+                      <p
+                        style="
+                          font-size: 13px;
+                          color: #888;
+                          line-height: 1.65;
+                          margin: 0;
+                          font-style: italic;
+                        "
+                      >
+                        <%= aggregate.parent.text %>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                <% } %>
+
+                <!-- Meta -->
+                <p
+                  style="
+                    font-size: 11px;
+                    color: #bbb;
+                    margin: 0 0 28px;
+                    line-height: 1.8;
+                  "
+                >
+                  <%= ip %> &#183; <%= aggregate.commentor.mail %><% if
+                  (aggregate.commentor.url &&
+                  /^https?:\/\//.test(aggregate.commentor.url)) { %> &#183;
+                  <a
+                    href="<%= aggregate.commentor.url %>"
+                    target="_blank"
+                    style="color: #bbb; text-decoration: underline"
+                    ><%= aggregate.commentor.url %></a
+                  ><% } %>
+                </p>
+
+                <!-- CTA -->
+                <table
+                  role="presentation"
+                  align="center"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td
+                      style="background-color: #000; border-radius: 6px"
+                    >
+                      <a
+                        href="<%= link %>"
+                        target="_blank"
+                        style="
+                          display: inline-block;
+                          padding: 10px 28px;
+                          font-size: 13px;
+                          font-weight: 500;
+                          color: #fff;
+                          text-decoration: none;
+                          line-height: 1.4;
+                        "
+                        >前往查看</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer divider -->
+            <tr>
+              <td style="padding: 0 40px">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td
+                      style="border-top: 1px solid #eaeaea; font-size: 0"
+                    >
+                      &nbsp;
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                style="padding: 20px 40px 24px; font-size: 12px; color: #999"
+                align="center"
+              >
+                本邮件为系统自动发送，请勿直接回复<br />
+                &copy; <%= new Date().getFullYear() %> <%= owner %>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

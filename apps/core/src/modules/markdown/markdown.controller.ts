@@ -135,7 +135,7 @@ export class MarkdownController {
               arr.reduce((acc, cur: any) => {
                 return {
                   ...acc,
-                  [cur.meta.oid]: omit(id2DataMap[cur.meta.oid], 'text', '__v'),
+                  [cur.meta.oid]: omit(id2DataMap[cur.meta.oid], 'text'),
                 }
               }, {}),
             ),

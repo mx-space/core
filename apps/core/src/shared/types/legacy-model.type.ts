@@ -1,10 +1,8 @@
 import type { ContentFormat } from './content-format.type'
 
 export interface BaseModel {
-  _id?: any
   id?: string
   created?: Date
-  toObject?: () => any
   [key: string]: any
 }
 

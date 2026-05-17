@@ -33,36 +33,6 @@ export class JSONTransformInterceptor implements NestInterceptor {
       return obj
     }
 
-    if (Array.isArray(obj)) {
-      return Array.from(obj).map((i) => this.serialize(i))
-    }
-
-    if (obj.toJSON || obj.toObject) {
-      obj = obj.toJSON?.() ?? obj.toObject?.()
-    }
-
-    if (!isObjectLike(obj)) {
-      return obj
-    }
-
-    Reflect.deleteProperty(obj, '__v')
-
-    for (const key of Object.keys(obj)) {
-      const val = obj[key]
-      if (!isObjectLike(val)) {
-        continue
-      }
-
-      if (val.toJSON) {
-        obj[key] = val.toJSON()
-        if (!isObjectLike(obj[key])) {
-          continue
-        }
-        Reflect.deleteProperty(obj[key], '__v')
-      }
-      obj[key] = this.serialize(obj[key])
-    }
-
     // Skip key conversion for URL-keyed maps (e.g. `enrichments`): the keys
     // ARE the URLs and must round-trip verbatim so SSR consumers can look
     // up entries by the original href. Inner values still get camel→snake

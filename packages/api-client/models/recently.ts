@@ -1,3 +1,5 @@
+import type { EnrichmentMap } from './post'
+
 export enum RecentlyRefTypes {
   Post = 'post',
   Note = 'note',
@@ -25,13 +27,7 @@ export interface RecentlyRefSummary {
 
 export enum RecentlyTypeEnum {
   Text = 'text',
-  Book = 'book',
-  Media = 'media',
-  Music = 'music',
-  Github = 'github',
   Link = 'link',
-  Academic = 'academic',
-  Code = 'code',
 }
 
 export interface EnrichmentImage {
@@ -113,7 +109,5 @@ export interface RecentlyModel {
   commentsIndex: number
   allowComment: boolean
 
-  enrichmentProvider?: string | null
-  enrichmentExternalId?: string | null
-  enrichment?: EnrichmentResult | null
+  enrichments?: EnrichmentMap
 }

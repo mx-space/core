@@ -215,30 +215,6 @@ describe('TranslationEntryInterceptor path utilities', () => {
       expect(toScannableObject(data)).toBe(data)
     })
 
-    it('should prefer toJSON for document-like objects', () => {
-      const jsonData = { notes: [{ mood: '开心' }] }
-      class MockDoc {
-        toJSON = vi.fn(() => jsonData)
-        toObject = vi.fn(() => ({ notes: [{ mood: 'ignored' }] }))
-      }
-      const data = new MockDoc()
-
-      expect(toScannableObject(data)).toBe(jsonData)
-      expect(data.toJSON).toHaveBeenCalledOnce()
-      expect(data.toObject).not.toHaveBeenCalled()
-    })
-
-    it('should fall back to toObject when toJSON is unavailable', () => {
-      const objectData = { notes: [{ mood: '开心' }] }
-      class MockDoc {
-        toObject = vi.fn(() => objectData)
-      }
-      const data = new MockDoc()
-
-      expect(toScannableObject(data)).toBe(objectData)
-      expect(data.toObject).toHaveBeenCalledOnce()
-    })
-
     it('should recursively normalize document-like values nested under plain objects', () => {
       class TopicDoc {
         toJSON = vi.fn(() => ({ _id: 'topic-1', name: '近况' }))

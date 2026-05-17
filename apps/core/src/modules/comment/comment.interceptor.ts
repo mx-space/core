@@ -28,8 +28,6 @@ export class CommentFilterEmailInterceptor implements NestInterceptor {
         try {
           if (isArrayLike(data?.data)) {
             data?.data?.forEach((item: any, i: number) => {
-              // persistence model -> object
-              data.data[i] = data.data[i].toObject?.() || data.data[i]
               if (isDefined(item.mail)) {
                 data.data[i].avatar = getAvatar(item.mail)
                 delete data.data[i].mail
@@ -41,8 +39,6 @@ export class CommentFilterEmailInterceptor implements NestInterceptor {
           }
 
           if (isObjectLike(data)) {
-            data = data?.toJSON?.() || data
-
             Reflect.deleteProperty(data, 'mail')
           }
 
