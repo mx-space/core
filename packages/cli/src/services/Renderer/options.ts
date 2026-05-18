@@ -1,11 +1,6 @@
 import { FiberRef } from 'effect'
 
-export type OutputMode =
-  | 'pretty-json'
-  | 'json'
-  | 'readable'
-  | 'llm'
-  | 'envelope'
+export type OutputMode = 'pretty-json' | 'json' | 'readable' | 'llm' | 'xml'
 
 export interface OutputOptions {
   readonly json: boolean

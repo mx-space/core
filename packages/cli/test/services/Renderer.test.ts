@@ -496,7 +496,7 @@ describe('Renderer — emit(postListView)', () => {
     ).pipe(
       Effect.zipRight(
         withOpts(
-          { output: 'envelope' },
+          { output: 'xml' },
           Effect.gen(function* () {
             const renderer = yield* Renderer
             yield* renderer.emit(postListView, { data: [] })
@@ -507,7 +507,7 @@ describe('Renderer — emit(postListView)', () => {
         Effect.sync(() => {
           expect(stdoutLines.join('')).toContain('count: 0')
           expect(stderrLines.join('')).toContain(
-            'unsupported --output value for post-list: envelope',
+            'unsupported --output value for post-list: xml',
           )
         }),
       ),
@@ -517,7 +517,7 @@ describe('Renderer — emit(postListView)', () => {
 
   it.effect('emits colored unsupported-mode errors when stderr is a TTY', () =>
     withOpts(
-      { output: 'envelope' },
+      { output: 'xml' },
       Effect.gen(function* () {
         const renderer = yield* Renderer
         const prevIsTTY = process.stderr.isTTY
@@ -539,7 +539,7 @@ describe('Renderer — emit(postListView)', () => {
         Effect.sync(() => {
           expect(stderrLines.join('')).toContain('\x1B[31m')
           expect(stderrLines.join('')).toContain(
-            'unsupported --output value for post-list: envelope',
+            'unsupported --output value for post-list: xml',
           )
         }),
       ),
@@ -585,7 +585,7 @@ describe('Renderer — emit(postView/noteView/pageView)', () => {
 
   it.effect('renders note envelope under --output envelope', () =>
     withOpts(
-      { output: 'envelope' },
+      { output: 'xml' },
       Effect.gen(function* () {
         const renderer = yield* Renderer
         yield* renderer.emit(noteView, {
@@ -648,7 +648,7 @@ describe('Renderer — emit(postView/noteView/pageView)', () => {
 
   it.effect('renders post tags as child elements in envelope mode', () =>
     withOpts(
-      { output: 'envelope' },
+      { output: 'xml' },
       Effect.gen(function* () {
         const renderer = yield* Renderer
         yield* renderer.emit(postView, {
@@ -775,7 +775,7 @@ describe('Renderer — pure document renderers', () => {
     expect(readable).toContain('sun, wind')
     expect(readable).toContain('Plain fallback')
 
-    const envelope = postView.envelope!({
+    const envelope = postView.xml!({
       title: 'A & B < C',
       slug: 'a-b',
       category: { id: 'cat-id' },

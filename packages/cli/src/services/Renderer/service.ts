@@ -92,8 +92,8 @@ export const makeService = (): RendererService => {
             return
           }
           let text: string
-          if (mode === 'envelope' && view.envelope) {
-            text = view.envelope(data)
+          if (mode === 'xml' && view.xml) {
+            text = view.xml(data)
           } else if (mode === 'llm' && view.llm) {
             text = view.llm(data)
           } else if (mode === 'llm') {

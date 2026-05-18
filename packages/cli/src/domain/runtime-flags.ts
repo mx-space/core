@@ -32,7 +32,7 @@ const VALID_OUTPUT_MODES: ReadonlySet<OutputMode> = new Set<OutputMode>([
   'json',
   'readable',
   'llm',
-  'envelope',
+  'xml',
 ])
 
 const isOutputMode = (s: string): s is OutputMode =>

@@ -65,7 +65,7 @@ const pickSummary = (doc: Record<string, unknown>): string | undefined => {
 
 export const noteView: View<unknown> = {
   kind: 'note',
-  modes: new Set(['readable', 'llm', 'envelope']),
+  modes: new Set(['readable', 'llm', 'xml']),
   readable: (data, ctx) => {
     const doc = normalize(data)
     const content = renderContent(doc)
@@ -93,7 +93,7 @@ export const noteView: View<unknown> = {
     })
     return content.body ? `${fm}\n\n${content.body}` : fm
   },
-  envelope: (data) => {
+  xml: (data) => {
     const doc = normalize(data)
     const content = renderContent(doc)
     return renderEnvelope({

@@ -121,7 +121,7 @@ const GLOBAL_OPTIONS: readonly GlobalOptionHelp[] = [
   },
   {
     flag: '--output <mode>',
-    description: 'one of: readable (default), pretty-json, json, llm, envelope',
+    description: 'one of: readable (default), pretty-json, json, llm, xml',
   },
   { flag: '--api-url <url>', description: 'override the configured API URL' },
   { flag: '--token <t>', description: 'override the stored access token' },

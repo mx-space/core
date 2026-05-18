@@ -31,7 +31,7 @@ When the CLI cannot resolve an API URL, it starts an interactive onboarding prom
 | Flag               | Effect                                                                        |
 | ------------------ | ----------------------------------------------------------------------------- |
 | `--json`           | Emit `{ ok: true, data }` on stdout. Takes precedence over `--output`.        |
-| `--output <mode>`  | Output mode. Supported: `pretty-json`, `json`, `readable`, `llm`, `envelope`. |
+| `--output <mode>`  | Output mode. Supported: `pretty-json`, `json`, `readable`, `llm`, `xml`. |
 | `--api-url <url>`  | Override the configured mx-core API origin.                                   |
 | `--token <token>`  | Override the stored access token.                                             |
 | `--api-key <key>`  | Authenticate with an API key through the `x-api-key` header.                  |
@@ -41,7 +41,7 @@ When the CLI cannot resolve an API URL, it starts an interactive onboarding prom
 | `--dry-run`        | Resolve payloads without mutating the server where supported.                 |
 | `--profile <name>` | Profile to use (overrides `MXS_PROFILE` and the active pointer).              |
 
-`readable`, `llm`, and `envelope` are document output modes for `post get`, `note get`, and `page get`. `post list` additionally supports `readable` and `llm` for concise list summaries. Other commands keep their existing JSON-oriented output.
+`readable`, `llm`, and `xml` are document output modes for `post get`, `note get`, and `page get`. `post list` additionally supports `readable` and `llm` for concise list summaries. Other commands keep their existing JSON-oriented output.
 
 ## Output Modes
 
@@ -51,9 +51,9 @@ When the CLI cannot resolve an API URL, it starts an interactive onboarding prom
 | `json`        | `{ ok: true, data }` JSON envelope.              | Scripts and structured automation.            |
 | `readable`    | Compact key-value metadata plus readable body.   | Human terminal reading.                       |
 | `llm`         | Same stable readable structure as `readable`.    | AI-agent context with lower structural noise. |
-| `envelope`    | `<mxpost>` or `<mxnote>` LiteXML envelope.       | Editable document round trips.                |
+| `xml`         | `<mxpost>` or `<mxnote>` LiteXML envelope.       | Editable document round trips.                |
 
-For Lexical documents, `readable`, `llm`, and `envelope` render the body as LiteXML through `@haklex/rich-litexml` instead of exposing Lexical JSON.
+For Lexical documents, `readable`, `llm`, and `xml` render the body as LiteXML through `@haklex/rich-litexml` instead of exposing Lexical JSON.
 
 Example:
 

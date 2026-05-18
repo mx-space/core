@@ -14,5 +14,5 @@ export interface View<T> {
   readonly readable: (data: T, ctx: ViewCtx) => string
   /** Optional. Missing llm falls back to readable with color disabled. */
   readonly llm?: (data: T) => string
-  readonly envelope?: (data: T) => string
+  readonly xml?: (data: T) => string
 }

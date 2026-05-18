@@ -67,7 +67,7 @@ export const list = Command.make(
 
 The handler does not import the concrete implementations of `Api` or `Renderer` — it depends on the tags. Layer wiring at the program entry point resolves them. This makes every handler trivially testable: provide an in-memory layer for either service and observe behaviour.
 
-The renderer call is intentionally generic. `emit(view, data)` accepts any `View<T>` value defined by the resource and dispatches across the structural output modes (`readable` / `llm` / `envelope`). The view itself is a plain value imported by the command — see §6 for the contract.
+The renderer call is intentionally generic. `emit(view, data)` accepts any `View<T>` value defined by the resource and dispatches across the structural output modes (`readable` / `llm` / `xml`). The view itself is a plain value imported by the command — see §6 for the contract.
 
 ## 3. `Effect.tryPromise` — wrapping Promise-based libraries
 
@@ -180,7 +180,7 @@ export interface View<T> {
   readonly modes: ReadonlySet<OutputMode>            // which --output values are valid
   readonly readable: (data: T, ctx: ViewCtx) => string
   readonly llm?: (data: T) => string                 // missing → readable with color=false
-  readonly envelope?: (data: T) => string            // missing → "unsupported mode" error
+  readonly xml?: (data: T) => string                 // missing → "unsupported mode" error
 }
 ```
 
@@ -189,7 +189,7 @@ Dispatch rules implemented in `src/services/Renderer/service.ts#emit`:
 - `--json` / `--output json` / `--output pretty-json` bypass the view entirely and emit `{ ok: true, data }` envelopes (or pretty-printed raw payloads). The view is never called for JSON.
 - `--output <mode>` where `view.modes` does not include the mode emits the `unsupported --output value for <kind>: <mode>` error to stderr.
 - `--output llm` with no `view.llm` falls back to `view.readable(data, { color: false, verbose })`. Helpers in `src/cli/render/` honour the `color` flag, so passing `false` strips ANSI.
-- `--output envelope` with no `view.envelope` is a hard error (envelope is a machine format; silent fallback would corrupt downstream parsers).
+- `--output xml` with no `view.xml` is a hard error (xml is a machine format; silent fallback would corrupt downstream parsers).
 
 Layout:
 
