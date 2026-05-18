@@ -1,5 +1,9 @@
 # @mx-space/cli (`mxs`)
 
+> **v0.3.0 — Effect-TS rewrite.** The CLI has been re-implemented on top of [`@effect/cli`](https://effect.website) and the Effect platform. The user-facing surface — subcommands, flags, output modes, exit codes, JSON envelope shape — is preserved per the [design spec](../../docs/superpowers/specs/2026-05-18-cli-effect-ts-rewrite-design.md). If you depended on the JavaScript API surface (`import { … } from '@mx-space/cli'`), that surface is intentionally minimal in v0.3 — check the current exports in [`src/index.ts`](./src/index.ts).
+>
+> Architecture, conventions, and extension points are documented in [`docs/architecture.md`](./docs/architecture.md).
+
 Command-line interface for managing a deployed mx-core instance. The CLI is designed for single-owner blog operations, script automation, and AI agents that need stable read/write contracts.
 
 ## Installation
@@ -446,6 +450,16 @@ Example profile config:
 | API key no longer works in `Authorization: Bearer` | Use `--api-key` or `MXS_API_KEY` for API keys. Bearer auth is reserved for Better Auth session/OIDC access tokens.         |
 | `profile.write_requires_explicit` on a write command | The active profile is marked production. Retry with `--profile <name>` or `MXS_PROFILE=<name>` to confirm intent.        |
 | `profile.none_active`                              | No active profile set. Run `mxs auth login` to create one, or `mxs profile use <name>` to activate an existing profile.  |
+
+## v0.3.0 behavior changes
+
+The Effect-TS rewrite is intentionally surface-preserving. Behaviorally observable changes versus v0.2.x are:
+
+- **No first-run onboarding prompt.** Previous versions launched an interactive `runOnboarding` flow when no API URL was configured. v0.3 follows the static resolution chain (`--api-url` → `MXS_API_URL` → active profile → error) and reports `config.missing.api_url` (`exit 5`) when nothing resolves. Run `mxs auth login` to create the first profile.
+- **`--help` output formatting.** Help text is rendered by `@effect/cli` and looks slightly different — wider option summaries, ANSI styling, and synopsis lines — but the option/flag set and exit code (`0`) are unchanged.
+- **JavaScript API surface is minimal.** The public package entry (`@mx-space/cli`) now re-exports only `run` plus the error tag table from `src/index.ts`. Importing internal services or core utilities is no longer supported; depend on the CLI binary instead.
+
+Anything else (exit codes, JSON envelopes, output-mode rendering, write-gate refusal semantics) is byte-equivalent to v0.2.x per the design spec.
 
 ## License
 

@@ -1,624 +1,401 @@
 #!/usr/bin/env node
 import { createRequire } from 'node:module'
 
-import { Command } from 'commander'
+import { Command } from '@effect/cli'
+import { NodeContext, NodeHttpClient, NodeRuntime } from '@effect/platform-node'
+import { Effect, Layer } from 'effect'
 
+import { authCmd } from '../cli/auth'
+import { categoryCmd } from '../cli/category'
+import { configCmd } from '../cli/config'
 import {
-  DEV_DEFAULT_PROFILE_ENV,
-  DEV_DEFAULT_PROFILE_NAME,
-  shouldUseDevDefaultProfile,
-} from '../core/config-store'
-import { exitCodeForError, MxsError, MxsErrorCode } from '../core/errors'
-import { runLegacyMigrationIfNeeded } from '../core/migration'
-import { emitError, type OutputOptions } from '../core/output'
-import { requiresActiveProfile } from '../core/preaction-guards'
-import { getCurrentProfile, validateProfileName } from '../core/profile'
-import { buildContextFromFlags, maybeNotify } from '../core/update-notifier'
+  buildRootHelpData,
+  emitGroupHelp,
+  emitHelp,
+  groupHelpDataFor,
+  isGroupName,
+} from '../cli/help'
+import { noteCmd } from '../cli/note'
+import { pageCmd } from '../cli/page'
+import { postCmd } from '../cli/post'
+import { profileCmd } from '../cli/profile'
+import { topicCmd } from '../cli/topic'
+import { updateCmd } from '../cli/update'
+import {
+  type CliError,
+  exitCodeForTag,
+  Generic,
+  ProfileInvalidName,
+  ProfileNoneActive,
+  tagToCode,
+} from '../domain/errors'
+import {
+  detectInvokedCommand,
+  requiresActiveProfile,
+} from '../domain/preflight-guards'
+import {
+  currentDryRun,
+  type GlobalFlags,
+  parseGlobalFlags,
+} from '../domain/runtime-flags'
+import { AppLayer } from '../layers/App'
+import { Api } from '../services/Api'
+import {
+  LOCAL_DEV_ENV,
+  LOCAL_DEV_PROFILE_NAME,
+  shouldUseLocalDev,
+} from '../services/Config'
+import { Migration } from '../services/Migration'
+import { Profile } from '../services/Profile'
+import { currentOutputOptions, Renderer } from '../services/Renderer'
+import { Resolver } from '../services/Resolver'
+import { make as makeUpdater } from '../services/UpdateNotifier'
 
-const require = createRequire(import.meta.url)
-const { version: CLI_VERSION } = require('../../package.json') as {
-  version: string
-}
+// ---------------------------------------------------------------------------
+// Package version (read once at module load via createRequire).
+// ---------------------------------------------------------------------------
+//
+// `import.meta.url` resolves to one of:
+//   - `<root>/packages/cli/src/bin/mxs.ts`   (tsx, dev — 2 levels up)
+//   - `<root>/packages/cli/dist/mxs.mjs`     (tsdown bundle — 1 level up)
+//   - `<root>/packages/cli/dist/bin/mxs.mjs` (tsdown re-export shim — 2 up)
+//
+// To avoid hard-coding a fixed depth, walk up until we find a `package.json`
+// whose `name` is `@mx-space/cli`.
 
-if (import.meta.url.endsWith('/src/bin/mxs.ts')) {
-  process.env[DEV_DEFAULT_PROFILE_ENV] ??= '1'
-}
-
-interface GlobalOptions {
-  json?: boolean
-  output?: string
-  apiUrl?: string
-  token?: string
-  apiKey?: string
-  lang?: string
-  quiet?: boolean
-  verbose?: boolean
-  dryRun?: boolean
-  profile?: string
-}
-
-const program = new Command()
-
-program
-  .name('mxs')
-  .description('mx-space CLI — manage your mx-core blog from the command line')
-  .version(CLI_VERSION)
-  .option('--json', 'emit JSON output')
-  .option('--output <mode>', 'pretty-json | json | readable | llm | envelope')
-  .option('--api-url <url>', 'override the configured API URL')
-  .option('--token <t>', 'override the stored access token')
-  .option('--api-key <key>', 'authenticate with an x-api-key API key')
-  .option('--lang <code>', 'request translated read data for a locale')
-  .option('-q, --quiet', 'suppress non-error stderr')
-  .option('--verbose', 'log HTTP method/url/status/duration')
-  .option('--dry-run', 'show resolved payload without calling the server')
-  .option(
-    '--profile <name>',
-    'profile to use (overrides MXS_PROFILE and the active profile pointer)',
-  )
-
-program.hook('preAction', async (thisCommand, actionCommand) => {
-  const opts = thisCommand.optsWithGlobals() as GlobalOptions
-  if (opts.profile) {
+const requireFrom = createRequire(import.meta.url)
+const resolveCliVersion = (): string => {
+  const candidates = [
+    '../package.json',
+    '../../package.json',
+    '../../../package.json',
+  ]
+  for (const candidate of candidates) {
     try {
-      validateProfileName(opts.profile)
-    } catch (err) {
-      if (err instanceof MxsError) {
-        throw new MxsError({
-          code: MxsErrorCode.ProfileInvalidName,
-          message: err.message,
-          hint: 'profile name must match ^[a-z0-9_-]{1,32}$ and must not be "current"',
-        })
+      const pkg = requireFrom(candidate) as {
+        name?: string
+        version?: string
       }
-      throw err
+      if (pkg.name === '@mx-space/cli' && typeof pkg.version === 'string') {
+        return pkg.version
+      }
+    } catch {
+      // try next candidate
     }
   }
-  const report = opts.quiet ? null : undefined
-  await runLegacyMigrationIfNeeded({ report })
+  return '0.0.0-unknown'
+}
+const CLI_VERSION = resolveCliVersion()
 
-  // Guard: if no profile can be resolved and no URL override is in play,
-  // throw profile.none_active so the error surface is clean.
-  //
-  // Exempt commands are declared in core/preaction-guards.ts (single source of
-  // truth). Commander short-circuits --help / --version before reaching preAction.
-  const currentProfile = await getCurrentProfile()
-  const effectiveCurrentProfile =
-    currentProfile ||
-    (shouldUseDevDefaultProfile({
-      profileOverride: opts.profile,
-      envProfile: process.env.MXS_PROFILE,
-      apiUrlOverride: opts.apiUrl,
-      envApiUrl: process.env.MXS_API_URL,
-      currentProfile,
-    })
-      ? DEV_DEFAULT_PROFILE_NAME
-      : null)
-  if (
-    requiresActiveProfile({
-      profileFlag: opts.profile,
-      apiUrlFlag: opts.apiUrl,
-      envProfile: process.env.MXS_PROFILE?.trim(),
-      envApiUrl: process.env.MXS_API_URL?.trim(),
-      currentProfile: effectiveCurrentProfile,
-      parentName: actionCommand.parent?.name() ?? '',
-      commandName: actionCommand.name(),
-    })
-  ) {
-    throw new MxsError({
-      code: MxsErrorCode.ProfileNoneActive,
-      message: 'no active mxs profile',
-      hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
-    })
-  }
-
-  // Fire-and-forget passive update notifier.
-  void maybeNotify(
-    buildContextFromFlags({
-      currentVersion: CLI_VERSION,
-      flags: { quiet: opts.quiet, json: opts.json, output: opts.output },
-      commandName: actionCommand.name(),
-      parentName: actionCommand.parent?.name() ?? '',
-    }),
-  )
-})
-
-addAuthCommands(program)
-addProfileCommands(program)
-addPostCommands(program)
-addNoteCommands(program)
-addPageCommands(program)
-addCategoryCommands(program)
-addTopicCommands(program)
-addConfigCommands(program)
-addUpdateCommand(program)
-
-program.parseAsync(process.argv).catch((err) => {
-  const opts = readGlobalOptions(program)
-  emitError(err, opts)
-  process.exit(exitCodeForError(err))
-})
-
-export function readGlobalOptions(cmd: Command): OutputOptions {
-  const opts = cmd.optsWithGlobals() as GlobalOptions
-  return {
-    json: Boolean(opts.json),
-    output: opts.output ?? 'pretty-json',
-    quiet: Boolean(opts.quiet),
-    verbose: Boolean(opts.verbose),
-  }
+// Mirror the v0.2.x convenience: when running this file directly from source,
+// enable the local-dev default profile so the bare `mxs ...` invocation does
+// not require explicit configuration.
+if (import.meta.url.endsWith('/src/bin/mxs.ts')) {
+  process.env[LOCAL_DEV_ENV] ??= '1'
 }
 
-export function readGlobalFlags(cmd: Command): GlobalOptions {
-  return cmd.optsWithGlobals() as GlobalOptions
-}
+// ---------------------------------------------------------------------------
+// Root command (subcommands only — global flags are pre-parsed before
+// `@effect/cli` ever sees argv, so they don't need to be declared here).
+// ---------------------------------------------------------------------------
 
-function addUpdateCommand(parent: Command) {
-  parent
-    .command('update')
-    .description('check for and install a newer mxs release')
-    .option('--check', 'compare versions only; do not install')
-    .option('--prerelease', 'use the `next` dist-tag channel')
-    .option('--pm <name>', 'force package manager: npm | pnpm | yarn | bun')
-    .option('--force', 'bypass the 24h passive-check cache')
-    .option('--yes', 'skip the confirmation prompt')
-    .action(async (opts, command) => {
-      const { run } = await import('../commands/update/run')
-      await run(
-        {
-          check: opts.check as boolean | undefined,
-          prerelease: opts.prerelease as boolean | undefined,
-          pm: opts.pm as string | undefined,
-          force: opts.force as boolean | undefined,
-          yes: opts.yes as boolean | undefined,
-        },
-        readGlobalFlags(command),
-        readGlobalOptions(command),
-        CLI_VERSION,
+const rootCmd = Command.make('mxs', {}, () =>
+  Effect.flatMap(Renderer, (r) =>
+    r.emitInfo(
+      'mxs: mx-space CLI — see `mxs --help` for the command list, or `mxs <command> --help` for details.',
+    ),
+  ),
+).pipe(
+  Command.withDescription(
+    'mx-space CLI — manage your mx-core blog from the command line.',
+  ),
+  Command.withSubcommands([
+    authCmd,
+    profileCmd,
+    postCmd,
+    noteCmd,
+    pageCmd,
+    categoryCmd,
+    topicCmd,
+    configCmd,
+    updateCmd,
+  ]),
+)
+
+// ---------------------------------------------------------------------------
+// Preflight: profile-name validation, legacy migration, active-profile guard,
+// fire-and-forget passive update notifier.
+// ---------------------------------------------------------------------------
+
+const preflight = (flags: GlobalFlags) =>
+  Effect.gen(function* () {
+    const profile = yield* Profile
+    const migration = yield* Migration
+    const updater = yield* Effect.sync(() =>
+      makeUpdater({
+        emitInfo: flags.quiet ? () => undefined : undefined,
+      }),
+    )
+
+    // 1. Validate --profile name (mirrors legacy try { validateProfileName }).
+    if (flags.profile) {
+      yield* profile.validateName(flags.profile).pipe(
+        Effect.catchTag('ProfileInvalidName', (e) =>
+          Effect.fail(
+            new ProfileInvalidName({
+              name: e.name,
+              message: e.message,
+              hint: 'profile name must match ^[a-z0-9_-]{1,32}$ and must not be "current"',
+            }),
+          ),
+        ),
       )
-    })
-}
+    }
 
-function addAuthCommands(parent: Command) {
-  const auth = parent.command('auth').description('authentication')
-  auth
-    .command('login')
-    .description('start device authorization flow')
-    .option('--production', 'mark the target profile as production after login')
-    .action(async (opts, command) => {
-      const { run } = await import('../commands/auth/login')
-      await run(readGlobalFlags(command), readGlobalOptions(command), {
-        production: opts.production,
+    // 2. Run legacy migration if needed; stream status to stderr unless quiet.
+    yield* migration
+      .runLegacyMigrationIfNeeded({
+        report: flags.quiet ? null : undefined,
       })
-    })
-  auth
-    .command('logout')
-    .description('delete stored credentials')
-    .action(async (_opts, command) => {
-      const { run } = await import('../commands/auth/logout')
-      await run(readGlobalFlags(command), readGlobalOptions(command))
-    })
-  auth
-    .command('whoami')
-    .description('show the authenticated user')
-    .action(async (_opts, command) => {
-      const { run } = await import('../commands/auth/whoami')
-      await run(readGlobalFlags(command), readGlobalOptions(command))
-    })
-  auth
-    .command('status')
-    .description('show token validity and expiry')
-    .action(async (_opts, command) => {
-      const { run } = await import('../commands/auth/status')
-      await run(readGlobalFlags(command), readGlobalOptions(command))
-    })
-}
-
-function addPostCommands(parent: Command) {
-  const post = parent.command('post').description('manage posts')
-  post
-    .command('list')
-    .option('--page <n>', 'page number', (v) => Number(v))
-    .option('--size <n>', 'page size', (v) => Number(v))
-    .option('--state <s>', 'draft | publish')
-    .option('--sort <s>', 'created | modified')
-    .action(async (opts, command) => {
-      const { run } = await import('../commands/post/list')
-      await run(opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
-  post.command('get <slugOrId>').action(async (id, _opts, command) => {
-    const { run } = await import('../commands/post/get')
-    await run(id, readGlobalFlags(command), readGlobalOptions(command))
-  })
-  addPostWriteCommand(post, 'create')
-  addPostWriteCommand(post, 'edit', true)
-  addPostWriteCommand(post, 'update', true)
-  post
-    .command('delete <slugOrId>')
-    .option('--force', 'skip confirmation')
-    .action(async (id, opts, command) => {
-      const { run } = await import('../commands/post/delete')
-      await run(id, opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
-  post.command('publish <slugOrId>').action(async (id, _opts, command) => {
-    const { run } = await import('../commands/post/publish')
-    await run(id, true, readGlobalFlags(command), readGlobalOptions(command))
-  })
-  post.command('unpublish <slugOrId>').action(async (id, _opts, command) => {
-    const { run } = await import('../commands/post/publish')
-    await run(id, false, readGlobalFlags(command), readGlobalOptions(command))
-  })
-}
-
-function addPostWriteCommand(
-  parent: Command,
-  name: 'create' | 'edit' | 'update',
-  requiresId = false,
-) {
-  const cmd = parent.command(requiresId ? `${name} <slugOrId>` : `${name}`)
-  attachPostWriteFlags(cmd)
-  cmd.action(async (...args) => {
-    const command = args.at(-1) as Command
-    const opts = args.at(-2) as Record<string, unknown>
-    const id = requiresId ? (args[0] as string) : undefined
-    if (name === 'create') {
-      const { run } = await import('../commands/post/create')
-      await run(
-        opts as any,
-        readGlobalFlags(command),
-        readGlobalOptions(command),
+      .pipe(
+        Effect.catchAll((err) =>
+          Effect.fail(
+            new Generic({
+              message: err.message ?? 'legacy migration failed',
+              cause: err,
+            }),
+          ),
+        ),
       )
-    } else if (name === 'edit') {
-      const { run } = await import('../commands/post/edit')
-      await run(
-        id!,
-        opts as any,
-        readGlobalFlags(command),
-        readGlobalOptions(command),
-      )
-    } else {
-      const { run } = await import('../commands/post/update')
-      await run(
-        id!,
-        opts as any,
-        readGlobalFlags(command),
-        readGlobalOptions(command),
+
+    // 3. Guard: throw profile.none_active if no profile is resolvable AND the
+    //    active subcommand is not exempt.
+    const invoked = detectInvokedCommand(process.argv)
+    const currentProfile = yield* profile.current.pipe(
+      Effect.catchAll(() => Effect.succeed(null)),
+    )
+    const effectiveCurrentProfile =
+      currentProfile ||
+      (shouldUseLocalDev({
+        profileOverride: flags.profile,
+        envProfile: process.env.MXS_PROFILE,
+        apiUrlOverride: flags.apiUrl,
+        envApiUrl: process.env.MXS_API_URL,
+        currentProfile,
+      })
+        ? LOCAL_DEV_PROFILE_NAME
+        : null)
+    if (
+      requiresActiveProfile({
+        profileFlag: flags.profile,
+        apiUrlFlag: flags.apiUrl,
+        envProfile: process.env.MXS_PROFILE?.trim(),
+        envApiUrl: process.env.MXS_API_URL?.trim(),
+        currentProfile: effectiveCurrentProfile,
+        parentName: invoked.parentName,
+        commandName: invoked.commandName,
+      })
+    ) {
+      return yield* Effect.fail(
+        new ProfileNoneActive({
+          message: 'no active mxs profile',
+          hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
+        }),
       )
     }
-  })
-}
 
-function attachPostWriteFlags(cmd: Command) {
-  cmd
-    .option('--title <s>')
-    .option('--slug <s>')
-    .option('--category <s>')
-    .option('--content <spec>')
-    .option('--format <s>', 'lexical | markdown')
-    .option('--summary <s>')
-    .option('--state <s>', 'publish | draft')
-    .option('--tags <csv>', '', (v: string) =>
-      v
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
+    // 4. Fire-and-forget passive update notifier (no fiber leak — the bin's
+    //    runMain awaits all daemon fibers before exit).
+    yield* Effect.forkDaemon(
+      updater.maybeNotify({
+        currentVersion: CLI_VERSION,
+        quiet: flags.quiet,
+        json: flags.json,
+        output: flags.output,
+        commandName: invoked.commandName,
+        parentName: invoked.parentName,
+      }),
     )
-    .option('--copyright <b>', '', (v: string) => v === 'true')
-    .option('--pin <iso>')
-    .option('--pin-order <n>', '', (v: string) => Number(v))
-    .option('--related <csv>', '', (v: string) =>
-      v
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-    )
-    .option('--meta <spec>')
-    .option('--file <path>')
-}
+  })
 
-function addNoteCommands(parent: Command) {
-  const note = parent.command('note').description('manage notes')
-  note
-    .command('list')
-    .option('--page <n>', '', (v) => Number(v))
-    .option('--size <n>', '', (v) => Number(v))
-    .option('--state <s>')
-    .option('--sort <s>')
-    .action(async (opts, command) => {
-      const { run } = await import('../commands/note/list')
-      await run(opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
-  note.command('get <slugOrId>').action(async (id, _opts, command) => {
-    const { run } = await import('../commands/note/get')
-    await run(id, readGlobalFlags(command), readGlobalOptions(command))
-  })
-  addNoteWriteCommand(note, 'create')
-  addNoteWriteCommand(note, 'edit', true)
-  addNoteWriteCommand(note, 'update', true)
-  note
-    .command('delete <slugOrId>')
-    .option('--force')
-    .action(async (id, opts, command) => {
-      const { run } = await import('../commands/note/delete')
-      await run(id, opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
-  note.command('publish <slugOrId>').action(async (id, _opts, command) => {
-    const { run } = await import('../commands/note/publish')
-    await run(id, true, readGlobalFlags(command), readGlobalOptions(command))
-  })
-  note.command('unpublish <slugOrId>').action(async (id, _opts, command) => {
-    const { run } = await import('../commands/note/publish')
-    await run(id, false, readGlobalFlags(command), readGlobalOptions(command))
-  })
-}
+// ---------------------------------------------------------------------------
+// Wire it up.
+// ---------------------------------------------------------------------------
 
-function addNoteWriteCommand(
-  parent: Command,
-  name: 'create' | 'edit' | 'update',
-  requiresId = false,
-) {
-  const cmd = parent.command(requiresId ? `${name} <slugOrId>` : `${name}`)
-  cmd
-    .option('--title <s>')
-    .option('--slug <s>')
-    .option('--topic <s>')
-    .option('--content <spec>')
-    .option('--format <s>')
-    .option('--state <s>')
-    .option('--mood <s>')
-    .option('--weather <s>')
-    .option('--public-at <iso>')
-    .option('--password <s>')
-    .option('--bookmark <b>', '', (v: string) => v === 'true')
-    .option('--coords <s>')
-    .option('--location <s>')
-    .option('--images <spec>')
-    .option('--meta <spec>')
-    .option('--file <path>')
-  cmd.action(async (...args) => {
-    const command = args.at(-1) as Command
-    const opts = args.at(-2) as Record<string, unknown>
-    const id = requiresId ? (args[0] as string) : undefined
-    if (name === 'create') {
-      const { run } = await import('../commands/note/create')
-      await run(
-        opts as any,
-        readGlobalFlags(command),
-        readGlobalOptions(command),
-      )
-    } else if (name === 'edit') {
-      const { run } = await import('../commands/note/edit')
-      await run(
-        id!,
-        opts as any,
-        readGlobalFlags(command),
-        readGlobalOptions(command),
-      )
-    } else {
-      const { run } = await import('../commands/note/update')
-      await run(
-        id!,
-        opts as any,
-        readGlobalFlags(command),
-        readGlobalOptions(command),
-      )
-    }
-  })
-}
+/**
+ * Decide whether the user is asking for a help screen we render ourselves.
+ *
+ * We override `@effect/cli`'s built-in renderer at two levels:
+ *
+ *   - `root` — bare `mxs`, `mxs --help`, `mxs -h`. The default renderer
+ *     flattens every nested verb into one COMMANDS table and can't see our
+ *     pre-parsed global flags (stripped from argv before `Command.run`).
+ *
+ *   - `group` — `mxs <group>` or `mxs <group> --help|-h` for the 9 top-level
+ *     commands. The default renderer mis-labels the header as `mxs` instead
+ *     of `mxs <group>`, lists `$ <group>` (no program prefix) under USAGE,
+ *     and clutters OPTIONS with five built-in flags that don't apply to us.
+ *
+ * Verb-level help (`mxs post create --help`, etc.) is NOT intercepted —
+ * `@effect/cli`'s single-command pages are reasonable as-is.
+ */
+type HelpTarget =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'root' }
+  | { readonly kind: 'group'; readonly name: string }
 
-function addPageCommands(parent: Command) {
-  const page = parent.command('page').description('manage pages')
-  page.command('list').action(async (_opts, command) => {
-    const { run } = await import('../commands/page/list')
-    await run({}, readGlobalFlags(command), readGlobalOptions(command))
-  })
-  page.command('get <slugOrId>').action(async (id, _opts, command) => {
-    const { run } = await import('../commands/page/get')
-    await run(id, readGlobalFlags(command), readGlobalOptions(command))
-  })
-  const writeCmd = (
-    name: 'create' | 'edit' | 'update',
-    requiresId: boolean,
-  ) => {
-    const c = page.command(requiresId ? `${name} <slugOrId>` : `${name}`)
-    c.option('--title <s>')
-      .option('--slug <s>')
-      .option('--subtitle <s>')
-      .option('--order <n>', '', (v: string) => Number(v))
-      .option('--content <spec>')
-      .option('--format <s>')
-      .option('--meta <spec>')
-      .option('--file <path>')
-    c.action(async (...args) => {
-      const command = args.at(-1) as Command
-      const opts = args.at(-2) as Record<string, unknown>
-      const id = requiresId ? (args[0] as string) : undefined
-      const mod =
-        name === 'create'
-          ? await import('../commands/page/create')
-          : name === 'edit'
-            ? await import('../commands/page/edit')
-            : await import('../commands/page/update')
-      await mod.run(
-        id as any,
-        opts as any,
-        readGlobalFlags(command),
-        readGlobalOptions(command),
-      )
-    })
+const detectHelpTarget = (rest: readonly string[]): HelpTarget => {
+  // `rest` includes argv[0] (node) and argv[1] (script).
+  const args = rest.slice(2)
+  if (args.length === 0) return { kind: 'root' }
+  const first = args[0]
+  if (args.length === 1 && (first === '--help' || first === '-h')) {
+    return { kind: 'root' }
   }
-  writeCmd('create', false)
-  writeCmd('edit', true)
-  writeCmd('update', true)
-  page
-    .command('delete <slugOrId>')
-    .option('--force')
-    .action(async (id, opts, command) => {
-      const { run } = await import('../commands/page/delete')
-      await run(id, opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
+  if (args.length === 1 && isGroupName(first)) {
+    return { kind: 'group', name: first }
+  }
+  if (
+    args.length === 2 &&
+    isGroupName(first) &&
+    (args[1] === '--help' || args[1] === '-h')
+  ) {
+    return { kind: 'group', name: first }
+  }
+  return { kind: 'none' }
 }
 
-function addCategoryCommands(parent: Command) {
-  const cat = parent.command('category').description('manage categories / tags')
-  cat.command('list').action(async (_o, command) => {
-    const { run } = await import('../commands/category/list')
-    await run(readGlobalFlags(command), readGlobalOptions(command))
+export const run = (argv: readonly string[]): Promise<void> => {
+  const parsed = parseGlobalFlags(argv)
+  const flags = parsed.flags
+
+  // Intercept root- and group-level help BEFORE building any layers or
+  // invoking `@effect/cli`. This sidesteps the broken layout produced by the
+  // default renderer at both depths (see `src/cli/help.ts`).
+  const helpTarget = detectHelpTarget(parsed.rest)
+  if (helpTarget.kind === 'root') {
+    emitHelp(buildRootHelpData(CLI_VERSION))
+    return Promise.resolve()
+  }
+  if (helpTarget.kind === 'group') {
+    emitGroupHelp(groupHelpDataFor(helpTarget.name, CLI_VERSION))
+    return Promise.resolve()
+  }
+
+  // The HttpClient layer used by Api + Auth. NodeContext.layer brings FS,
+  // Path, Terminal, CommandExecutor but NOT HttpClient — that's a separate
+  // export.
+  const httpLayer = NodeHttpClient.layer
+
+  // Build the flag-aware Api layer. Resolver depends on Api, so we provide
+  // its dependencies first and let `Layer.provide` resolve the rest.
+  const apiLayer = Api.layer({
+    overrides: {
+      apiUrl: flags.apiUrl,
+      token: flags.token,
+      apiKey: flags.apiKey,
+      profile: flags.profile,
+    },
+    verbose: flags.verbose,
+    quiet: flags.quiet,
+    dryRun: flags.dryRun,
+    lang: flags.lang,
   })
-  cat.command('get <slugOrId>').action(async (id, _o, command) => {
-    const { run } = await import('../commands/category/get')
-    await run(id, readGlobalFlags(command), readGlobalOptions(command))
-  })
-  cat
-    .command('create')
-    .requiredOption('--name <s>')
-    .requiredOption('--slug <s>')
-    .option('--type <s>', 'category | tag')
-    .option('--icon <s>')
-    .action(async (opts, command) => {
-      const { run } = await import('../commands/category/create')
-      await run(opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
-  cat
-    .command('update <slugOrId>')
-    .option('--name <s>')
-    .option('--slug <s>')
-    .option('--type <s>')
-    .option('--icon <s>')
-    .action(async (id, opts, command) => {
-      const { run } = await import('../commands/category/update')
-      await run(id, opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
-  cat
-    .command('delete <slugOrId>')
-    .option('--force')
-    .action(async (id, opts, command) => {
-      const { run } = await import('../commands/category/delete')
-      await run(id, opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
+
+  // Layer composition. `AppLayer` requires platform services (FileSystem,
+  // Path, HttpClient). `Layer.mergeAll` does not internally wire deps so we
+  // use `Layer.provideMerge` to thread HttpClient into AppLayer while
+  // re-exporting both. The result still requires FileSystem + Path, which
+  // come from `NodeContext.layer` at the outer `Effect.provide` site.
+  const appWithHttp = AppLayer.pipe(Layer.provideMerge(httpLayer))
+  const apiWithDeps = apiLayer.pipe(Layer.provideMerge(appWithHttp))
+  const resolverWithDeps = Resolver.Default.pipe(
+    Layer.provideMerge(apiWithDeps),
+  )
+  const fullAppLayer = resolverWithDeps
+
+  const cli = Command.run(rootCmd, { name: 'mxs', version: CLI_VERSION })
+
+  // Tagged-error rendering + exit-code mapping happen INSIDE the FiberRef
+  // scopes so the Renderer sees the parsed `--json` / `--output` settings.
+  const core = preflight(flags).pipe(
+    Effect.zipRight(cli(parsed.rest)),
+    Effect.tapError((err) =>
+      isCliError(err)
+        ? Effect.flatMap(Renderer, (r) => r.emitError(err))
+        : Effect.sync(() => undefined),
+    ),
+    Effect.catchAll((err) =>
+      Effect.sync(() => {
+        const tag = isCliError(err) ? err._tag : 'Generic'
+        process.exit(exitCodeForTag(tag))
+      }),
+    ),
+  )
+
+  const program = Effect.locally(
+    Effect.locally(core, currentOutputOptions, {
+      json: flags.json,
+      output: flags.output,
+      quiet: flags.quiet,
+      verbose: flags.verbose,
+    }),
+    currentDryRun,
+    flags.dryRun,
+  )
+
+  // Defects bypass the Effect error channel; surface them generically.
+  const finalized = program.pipe(
+    Effect.catchAllDefect((defect) =>
+      Effect.sync(() => {
+        process.stderr.write(`mxs: internal error\n${String(defect)}\n`)
+        process.exit(1)
+      }),
+    ),
+    Effect.provide(fullAppLayer),
+    Effect.provide(NodeContext.layer),
+  )
+
+  return NodeRuntime.runMain(finalized) as unknown as Promise<void>
 }
 
-function addTopicCommands(parent: Command) {
-  const topic = parent.command('topic').description('manage topics')
-  topic.command('list').action(async (_o, command) => {
-    const { run } = await import('../commands/topic/list')
-    await run(readGlobalFlags(command), readGlobalOptions(command))
-  })
-  topic.command('get <slugOrId>').action(async (id, _o, command) => {
-    const { run } = await import('../commands/topic/get')
-    await run(id, readGlobalFlags(command), readGlobalOptions(command))
-  })
-  topic
-    .command('create')
-    .requiredOption('--name <s>')
-    .requiredOption('--slug <s>')
-    .option('--description <s>')
-    .option('--icon <s>')
-    .action(async (opts, command) => {
-      const { run } = await import('../commands/topic/create')
-      await run(opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
-  topic
-    .command('update <slugOrId>')
-    .option('--name <s>')
-    .option('--slug <s>')
-    .option('--description <s>')
-    .option('--icon <s>')
-    .action(async (id, opts, command) => {
-      const { run } = await import('../commands/topic/update')
-      await run(id, opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
-  topic
-    .command('delete <slugOrId>')
-    .option('--force')
-    .action(async (id, opts, command) => {
-      const { run } = await import('../commands/topic/delete')
-      await run(id, opts, readGlobalFlags(command), readGlobalOptions(command))
-    })
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const isCliError = (err: unknown): err is CliError => {
+  if (typeof err !== 'object' || err === null) return false
+  if (!('_tag' in err)) return false
+  const tag = (err as { _tag: unknown })._tag
+  return typeof tag === 'string' && tag in tagToCode
 }
 
-function addConfigCommands(parent: Command) {
-  const cfg = parent.command('config').description('manage server options')
-  cfg.command('list').action(async (_o, command) => {
-    const { run } = await import('../commands/config/list')
-    await run(readGlobalFlags(command), readGlobalOptions(command))
-  })
-  cfg.command('get <key>').action(async (key, _o, command) => {
-    const { run } = await import('../commands/config/get')
-    await run(key, readGlobalFlags(command), readGlobalOptions(command))
-  })
-  cfg
-    .command('set <key> <value>')
-    .option('--type <t>', 'json | string | number | bool')
-    .action(async (key, value, opts, command) => {
-      const { run } = await import('../commands/config/set')
-      await run(
-        key,
-        value,
-        opts,
-        readGlobalFlags(command),
-        readGlobalOptions(command),
-      )
-    })
-  cfg.command('edit').action(async (_o, command) => {
-    const { run } = await import('../commands/config/edit')
-    await run(readGlobalFlags(command), readGlobalOptions(command))
-  })
+// ---------------------------------------------------------------------------
+// Auto-run when executed as the program entry-point.
+//
+// `import.meta.url` ends in either `src/bin/mxs.ts` (tsx, dev) or
+// `dist/mxs.mjs` (built bundle); both invoke `run(process.argv)`. When the
+// module is imported (tests, library use), `run` is not invoked.
+// ---------------------------------------------------------------------------
+
+const isDirectInvocation = (): boolean => {
+  const url = import.meta.url
+  // Direct dev/source invocation (`tsx src/bin/mxs.ts`) or the legacy
+  // CommonJS shim (`bin/mxs.cjs`).
+  if (/\/bin\/mxs\.(?:ts|cjs)$/.test(url)) return true
+  // Bundled invocation: tsdown emits a re-export shim at `dist/bin/mxs.mjs`
+  // that pulls in the bundled core (`dist/mxs-<hash>.mjs`). Match either.
+  if (/\/dist\/bin\/mxs\.mjs$/.test(url)) return true
+  if (/\/dist\/mxs(?:-[^/]*)?\.mjs$/.test(url)) return true
+  // Fallback: process.argv[1]'s basename matches the module url's basename.
+  if (process.argv[1]) {
+    const argvBase = process.argv[1].split('/').pop() ?? ''
+    const urlBase = url.split('/').pop() ?? ''
+    if (argvBase === urlBase) return true
+  }
+  return false
 }
 
-function addProfileCommands(parent: Command) {
-  const profile = parent.command('profile').description('manage mxs profiles')
-  profile
-    .command('ls')
-    .description('list profiles')
-    .action(async (_opts, command) => {
-      const { run } = await import('../commands/profile/ls')
-      await run(readGlobalFlags(command), readGlobalOptions(command))
-    })
-  profile
-    .command('show [name]')
-    .description('show resolved info for a profile')
-    .action(async (name, _opts, command) => {
-      const { run } = await import('../commands/profile/show')
-      await run(
-        name as string | undefined,
-        readGlobalFlags(command),
-        readGlobalOptions(command),
-      )
-    })
-  profile
-    .command('use <name>')
-    .description('set the active profile')
-    .action(async (name, _opts, command) => {
-      const { run } = await import('../commands/profile/use')
-      await run(name, readGlobalFlags(command), readGlobalOptions(command))
-    })
-  profile
-    .command('mark <name>')
-    .description('toggle production flag on a profile')
-    .option('--production', 'mark profile as production')
-    .option('--no-production', 'mark profile as non-production')
-    .action(async (name, opts, command) => {
-      const { run } = await import('../commands/profile/mark')
-      await run(
-        name,
-        { production: opts.production as boolean | undefined },
-        readGlobalFlags(command),
-        readGlobalOptions(command),
-      )
-    })
-  profile
-    .command('rm <name>')
-    .description('remove a profile')
-    .option('--force', 'skip confirmation and allow removing current profile')
-    .action(async (name, opts, command) => {
-      const { run } = await import('../commands/profile/rm')
-      await run(
-        name,
-        opts,
-        readGlobalFlags(command),
-        readGlobalOptions(command),
-      )
-    })
+if (isDirectInvocation()) {
+  void run(process.argv)
 }
-
-void MxsError

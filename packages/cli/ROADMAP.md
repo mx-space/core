@@ -4,7 +4,13 @@
 
 - Multi-environment profile system: named `(api_url, credentials)` bundles under `~/.config/mxs/profiles/<name>/`, `--profile` global flag, `MXS_PROFILE` env var, `mxs profile {ls,show,use,mark,rm}` subcommands, production write gate, and automatic migration from the legacy single-profile layout.
 
+## Shipped in v0.3
+
+- Internal rewrite onto Effect-TS (`@effect/cli` + `@effect/platform`). User-facing CLI surface is unchanged — see [`README.md`](./README.md#v030-behavior-changes) for the small list of behavioral adjustments and [`docs/architecture.md`](./docs/architecture.md) for the new internal architecture.
+
 ## v2
+
+> **Note (v0.3):** Service interface placeholders for AI, Backup, and Cache are reserved in `src/services/{Ai,Backup,Cache}.ts` and threaded through the layer composition. Implementation is pending.
 
 - AI module commands
   - `mxs ai summary regen <id>`

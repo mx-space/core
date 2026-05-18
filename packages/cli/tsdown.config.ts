@@ -9,6 +9,7 @@ export default defineConfig({
   format: ['esm'],
   platform: 'node',
   noExternal: () => true,
-  sourcemap: true,
+  sourcemap: false,
+
   shims: true,
 })
