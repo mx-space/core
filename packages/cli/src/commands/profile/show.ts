@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
 
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
 import {
   getCurrentProfile,
@@ -22,7 +22,7 @@ export async function run(
   }
   if (!name) {
     throw new MxsError({
-      code: 'profile.none_active',
+      code: MxsErrorCode.ProfileNoneActive,
       message: 'no profile specified and no active profile',
       hint: 'run `mxs profile use <name>` or pass a profile name',
     })
@@ -36,7 +36,7 @@ export async function run(
   } catch (err: any) {
     if (err?.code !== 'ENOENT' && !(err instanceof MxsError)) throw err
     throw new MxsError({
-      code: 'profile.not_found',
+      code: MxsErrorCode.ProfileNotFound,
       message: `profile '${name}' does not exist`,
     })
   }

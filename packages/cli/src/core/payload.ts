@@ -8,7 +8,7 @@ import {
   type ParsedEnvelope,
   parseEnvelope,
 } from './envelope'
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 import {
   deriveTextFromLexical,
   emptyLexicalState,
@@ -84,7 +84,7 @@ export async function loadEnvelopeIfAny(
   }
   const xml = await fs.readFile(filePath, 'utf8').catch((err) => {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: `failed to read ${filePath}: ${err?.message ?? err}`,
     })
   })
@@ -171,7 +171,7 @@ export async function buildNotePayload(
     const lng = Number(lngRaw)
     if (Number.isNaN(lat) || Number.isNaN(lng)) {
       throw new MxsError({
-        code: 'validation.failed',
+        code: MxsErrorCode.ValidationFailed,
         message: `invalid --coords value "${flags.coords}", expected "lat,lng"`,
       })
     }
@@ -255,7 +255,7 @@ async function resolveContent(
   }
   if (source.text.length === 0) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: 'content is required when contentFormat is lexical',
       details: { issues: [{ path: ['content'], message: 'required' }] },
     })

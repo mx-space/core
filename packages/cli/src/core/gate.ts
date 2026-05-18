@@ -1,4 +1,5 @@
 import type { ResolvedConfig } from './config-store'
+import { MxsErrorCode } from './errors'
 
 export type HttpMethod =
   | 'GET'
@@ -40,7 +41,7 @@ export function decideWriteGate(
 
   return {
     allow: false,
-    code: 'profile.write_requires_explicit',
+    code: MxsErrorCode.ProfileWriteRequiresExplicit,
     message: `write blocked: active profile '${name}' (${url}) is production`,
     hint: `active profile '${name}' is production; retry with --profile ${name} or MXS_PROFILE=${name}`,
   }

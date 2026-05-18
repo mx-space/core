@@ -17,6 +17,7 @@ vi.mock('../../src/core/auth', async (importOriginal) => {
 })
 
 import { runOnboarding } from '../../src/core/onboarding'
+import { MxsErrorCode } from '../../src/core/errors'
 
 let tmpDir: string
 let origXdg: string | undefined
@@ -118,7 +119,7 @@ describe('runOnboarding', () => {
   it('throws config.missing.api_url in non-TTY without initialApiUrl', async () => {
     await expect(
       runOnboarding({ isTTY: false }),
-    ).rejects.toMatchObject({ code: 'config.missing.api_url' })
+    ).rejects.toMatchObject({ code: MxsErrorCode.ConfigMissingApiUrl })
   })
 
   it('aborts when prompt returns non-string (cancel)', async () => {

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { ApiClient } from '../../src/core/api-client'
 import type { ResolvedConfig } from '../../src/core/config-store'
+import { MxsErrorCode } from '../../src/core/errors'
 
 function makeResolved(
   overrides: Partial<
@@ -117,7 +118,7 @@ describe('ApiClient production write gate', () => {
     await expect(
       client.request('/posts', { method: 'POST', body: { title: 'x' } }),
     ).rejects.toMatchObject({
-      code: 'profile.write_requires_explicit',
+      code: MxsErrorCode.ProfileWriteRequiresExplicit,
     })
     expect(fetcher).not.toHaveBeenCalled()
   })

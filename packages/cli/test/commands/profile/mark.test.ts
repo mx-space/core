@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { run } from '../../../src/commands/profile/mark'
 import type { OutputOptions } from '../../../src/core/output'
+import { MxsErrorCode } from '../../../src/core/errors'
 
 let tmpDir: string
 let origXdg: string | undefined
@@ -65,13 +66,13 @@ describe('profile mark', () => {
   it('throws validation.failed when no flag supplied', async () => {
     await makeProfile('dev', {})
     await expect(run('dev', {}, {}, out)).rejects.toMatchObject({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
     })
   })
 
   it('throws profile.not_found for missing profile', async () => {
     await expect(run('ghost', { production: true }, {}, out)).rejects.toMatchObject({
-      code: 'profile.not_found',
+      code: MxsErrorCode.ProfileNotFound,
     })
   })
 })

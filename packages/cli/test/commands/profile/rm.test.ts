@@ -18,6 +18,7 @@ import { confirm } from '@clack/prompts'
 import { run } from '../../../src/commands/profile/rm'
 import { getCurrentProfile, setCurrentProfile } from '../../../src/core/profile'
 import type { OutputOptions } from '../../../src/core/output'
+import { MxsErrorCode } from '../../../src/core/errors'
 
 let tmpDir: string
 let origXdg: string | undefined
@@ -84,7 +85,7 @@ describe('profile rm', () => {
     await makeProfile('dev')
     await setCurrent('dev')
     await expect(run('dev', {}, {}, out)).rejects.toMatchObject({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
     })
   })
 
@@ -123,7 +124,7 @@ describe('profile rm', () => {
 
   it('throws resource.not_found for non-existent profile', async () => {
     await expect(run('ghost', { force: true }, {}, out)).rejects.toMatchObject({
-      code: 'resource.not_found',
+      code: MxsErrorCode.ResourceNotFound,
     })
   })
 
@@ -134,7 +135,7 @@ describe('profile rm', () => {
       configurable: true,
     })
     await expect(run('dev', {}, {}, out)).rejects.toMatchObject({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: expect.stringContaining('dev'),
     })
     expect(await profileExists('dev')).toBe(true)

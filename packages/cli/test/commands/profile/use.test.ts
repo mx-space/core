@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { run } from '../../../src/commands/profile/use'
 import type { OutputOptions } from '../../../src/core/output'
+import { MxsErrorCode } from '../../../src/core/errors'
 
 let tmpDir: string
 let origXdg: string | undefined
@@ -50,19 +51,19 @@ describe('profile use', () => {
 
   it('throws profile.not_found for missing profile dir', async () => {
     await expect(run('ghost', {}, out)).rejects.toMatchObject({
-      code: 'profile.not_found',
+      code: MxsErrorCode.ProfileNotFound,
     })
   })
 
   it('throws profile.invalid_name for invalid name', async () => {
     await expect(run('HAS SPACES', {}, out)).rejects.toMatchObject({
-      code: 'profile.invalid_name',
+      code: MxsErrorCode.ProfileInvalidName,
     })
   })
 
   it('throws profile.invalid_name for reserved name', async () => {
     await expect(run('current', {}, out)).rejects.toMatchObject({
-      code: 'profile.invalid_name',
+      code: MxsErrorCode.ProfileInvalidName,
     })
   })
 })

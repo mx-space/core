@@ -1,4 +1,4 @@
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { emitInfo, emitSuccess, type OutputOptions } from '../../core/output'
 import { deleteProfileCredentials, getCurrentProfile } from '../../core/profile'
 import { type GlobalFlags } from '../internal/shared'
@@ -8,7 +8,7 @@ export async function run(flags: GlobalFlags, out: OutputOptions) {
 
   if (!target) {
     throw new MxsError({
-      code: 'profile.none_active',
+      code: MxsErrorCode.ProfileNoneActive,
       message: 'no active profile to log out of',
       hint: 'pass --profile <name> or set an active profile with `mxs profile use <name>`',
     })

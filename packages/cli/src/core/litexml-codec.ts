@@ -10,7 +10,7 @@ import {
 } from '@haklex/rich-litexml'
 import { createHeadlessEditor } from '@lexical/headless'
 
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 
 export interface LexicalState {
   root: {
@@ -36,7 +36,7 @@ export function parseToLexical(xml: string): LexicalState {
     return deserializeFromXml(wrapped, getRegistry()) as LexicalState
   } catch (err: any) {
     throw new MxsError({
-      code: 'validation.xml',
+      code: MxsErrorCode.ValidationXml,
       message: `failed to parse LiteXML: ${err?.message ?? err}`,
       cause: err,
     })

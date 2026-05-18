@@ -1,5 +1,5 @@
 import type { ApiClient } from '../../core/api-client'
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { isSnowflakeId } from '../../core/resolve'
 
 interface NidEnvelope {
@@ -20,14 +20,14 @@ export async function resolveNoteId(
     const id = res.data?.data?.id ?? res.data?.id
     if (!id) {
       throw new MxsError({
-        code: 'resource.not_found',
+        code: MxsErrorCode.ResourceNotFound,
         message: `note not found: ${slugOrId}`,
       })
     }
     return id
   }
   throw new MxsError({
-    code: 'validation.failed',
+    code: MxsErrorCode.ValidationFailed,
     message: `invalid note reference: ${slugOrId} (use snowflake id or numeric nid)`,
   })
 }

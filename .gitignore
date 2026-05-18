@@ -55,6 +55,7 @@ dev/
 
 .eslintcache
 .superpowers
+.claude/scheduled_tasks.lock
 
 # local docker smoke overrides — never commit
 docker-compose.smoke.yml

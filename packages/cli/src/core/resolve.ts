@@ -1,4 +1,4 @@
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 
 export interface ResolvableItem {
   id: string
@@ -57,7 +57,7 @@ export class NameResolver {
     if (isSnowflakeId(value)) return value
     if (!fetcher) {
       throw new MxsError({
-        code: 'validation.failed',
+        code: MxsErrorCode.ValidationFailed,
         message: `cannot resolve ${kind}: no fetcher configured`,
       })
     }
@@ -66,7 +66,7 @@ export class NameResolver {
     if (hit) return hit.id
     const suggestions = fuzzySuggest(items, value)
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: `${kind} "${value}" not found`,
       details: {
         issues: [

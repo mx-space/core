@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { MxsError } from '../../../src/core/errors'
+import { MxsError, MxsErrorCode } from '../../../src/core/errors'
 import type { OutputOptions } from '../../../src/core/output'
 
 const mocks = vi.hoisted(() => ({
@@ -39,7 +39,7 @@ describe('resolveContext', () => {
     mocks.resolveConfig
       .mockRejectedValueOnce(
         new MxsError({
-          code: 'config.missing.api_url',
+          code: MxsErrorCode.ConfigMissingApiUrl,
           message: 'missing',
         }),
       )
@@ -62,7 +62,7 @@ describe('resolveContext', () => {
     mocks.resolveConfig
       .mockRejectedValueOnce(
         new MxsError({
-          code: 'config.missing.api_url',
+          code: MxsErrorCode.ConfigMissingApiUrl,
           message: 'missing',
         }),
       )

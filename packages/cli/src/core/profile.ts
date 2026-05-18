@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { getConfigDir } from './config-dir'
 import type { ConfigShape, CredentialsShape } from './config-store'
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 
 export { getConfigDir }
 
@@ -14,19 +14,19 @@ export const RESERVED_PROFILE_NAMES = new Set(['current'])
 export function validateProfileName(name: string): void {
   if (!name || name.length === 0) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: 'profile name must not be empty',
     })
   }
   if (RESERVED_PROFILE_NAMES.has(name)) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: `profile name '${name}' is reserved`,
     })
   }
   if (!PROFILE_NAME_RE.test(name)) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: `profile name '${name}' is invalid; must match ^[a-z0-9_-]{1,32}$`,
     })
   }
@@ -86,7 +86,7 @@ export async function setCurrentProfile(name: string): Promise<void> {
     const stat = await fs.stat(dir)
     if (!stat.isDirectory()) {
       throw new MxsError({
-        code: 'validation.failed',
+        code: MxsErrorCode.ValidationFailed,
         message: `profile '${name}' does not exist`,
       })
     }
@@ -94,7 +94,7 @@ export async function setCurrentProfile(name: string): Promise<void> {
     if (err instanceof MxsError) throw err
     if (err?.code === 'ENOENT') {
       throw new MxsError({
-        code: 'validation.failed',
+        code: MxsErrorCode.ValidationFailed,
         message: `profile '${name}' does not exist`,
       })
     }
@@ -111,7 +111,7 @@ async function readJsonIfExists<T>(p: string): Promise<T | null> {
     if (err?.code === 'ENOENT') return null
     if (err instanceof SyntaxError) {
       throw new MxsError({
-        code: 'generic',
+        code: MxsErrorCode.Generic,
         message: `failed to parse ${p}: ${err.message}`,
       })
     }
@@ -188,7 +188,7 @@ export async function removeProfile(name: string): Promise<void> {
   } catch (err: any) {
     if (err?.code === 'ENOENT') {
       throw new MxsError({
-        code: 'resource.not_found',
+        code: MxsErrorCode.ResourceNotFound,
         message: `profile '${name}' does not exist`,
       })
     }

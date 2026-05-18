@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 
 export interface ContentSource {
   text: string
@@ -25,7 +25,7 @@ export async function readContentSpec(
       return { text, origin: 'file', path: p }
     } catch (err: any) {
       throw new MxsError({
-        code: 'validation.failed',
+        code: MxsErrorCode.ValidationFailed,
         message: `failed to read ${p}: ${err?.message ?? err}`,
       })
     }
@@ -42,7 +42,7 @@ export async function readJsonSpec(spec: string | undefined): Promise<unknown> {
       return JSON.parse(text)
     } catch (err: any) {
       throw new MxsError({
-        code: 'validation.failed',
+        code: MxsErrorCode.ValidationFailed,
         message: `failed to read JSON from ${p}: ${err?.message ?? err}`,
       })
     }
@@ -51,7 +51,7 @@ export async function readJsonSpec(spec: string | undefined): Promise<unknown> {
     return JSON.parse(spec)
   } catch (err: any) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: `failed to parse JSON: ${err?.message ?? err}`,
     })
   }
@@ -60,7 +60,7 @@ export async function readJsonSpec(spec: string | undefined): Promise<unknown> {
 export async function readStdin(): Promise<string> {
   if (process.stdin.isTTY) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: 'requested stdin content but stdin is a TTY',
     })
   }

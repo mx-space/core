@@ -1,8 +1,12 @@
 import type { ApiClient } from '../../core/api-client'
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+} from '../internal/shared'
 
 export async function run(
   slugOrId: string,
@@ -12,7 +16,7 @@ export async function run(
 ) {
   if (!opts.force && !flags.dryRun && !process.stdin.isTTY) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: 'refusing to delete without --force in non-TTY context',
     })
   }
@@ -32,7 +36,7 @@ async function resolveId(client: ApiClient, slugOrId: string): Promise<string> {
   const res = await client.request<{ id: string }>(`/pages/slug/${slugOrId}`)
   if (!res.data?.id)
     throw new MxsError({
-      code: 'resource.not_found',
+      code: MxsErrorCode.ResourceNotFound,
       message: `page not found: ${slugOrId}`,
     })
   return res.data.id

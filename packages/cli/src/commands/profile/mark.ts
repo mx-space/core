@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
 
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { emitInfo, type OutputOptions } from '../../core/output'
 import {
   getProfileDir,
@@ -24,7 +24,7 @@ export async function run(
 
   if (opts.production === undefined) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: 'one of --production or --no-production is required',
     })
   }
@@ -35,7 +35,7 @@ export async function run(
   } catch (err: any) {
     if (err?.code !== 'ENOENT' && !(err instanceof MxsError)) throw err
     throw new MxsError({
-      code: 'profile.not_found',
+      code: MxsErrorCode.ProfileNotFound,
       message: `profile '${name}' does not exist`,
     })
   }

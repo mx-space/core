@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs'
 import { confirm, isCancel } from '@clack/prompts'
 
 import { getLegacyConfigPath, getLegacyCredentialsPath } from './config-store'
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 import {
   getProfilesDir,
   setCurrentProfile,
@@ -122,7 +122,7 @@ export async function runLegacyMigrationIfNeeded(
     } catch (err: any) {
       if (err?.code !== 'ENOENT') {
         throw new MxsError({
-          code: 'config.migration.failed',
+          code: MxsErrorCode.ConfigMigrationFailed,
           message: `failed to read legacy config at ${legacyConfigPath}: ${(err as Error).message}`,
           cause: err,
         })
@@ -138,7 +138,7 @@ export async function runLegacyMigrationIfNeeded(
     } catch (err: any) {
       if (err?.code !== 'ENOENT') {
         throw new MxsError({
-          code: 'config.migration.failed',
+          code: MxsErrorCode.ConfigMigrationFailed,
           message: `failed to read legacy credentials at ${legacyCredentialsPath}: ${(err as Error).message}`,
           cause: err,
         })
@@ -174,7 +174,7 @@ export async function runLegacyMigrationIfNeeded(
     await writeProfileConfig('default', migratedConfig as any)
   } catch (err: any) {
     throw new MxsError({
-      code: 'config.migration.failed',
+      code: MxsErrorCode.ConfigMigrationFailed,
       message: `failed to write profile config during migration: ${(err as Error).message}`,
       cause: err,
     })
@@ -186,7 +186,7 @@ export async function runLegacyMigrationIfNeeded(
       await writeProfileCredentials('default', legacyCredentials as any)
     } catch (err: any) {
       throw new MxsError({
-        code: 'config.migration.failed',
+        code: MxsErrorCode.ConfigMigrationFailed,
         message: `failed to write profile credentials during migration: ${(err as Error).message}`,
         cause: err,
       })

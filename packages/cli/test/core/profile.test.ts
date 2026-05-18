@@ -18,6 +18,7 @@ import {
   writeProfileConfig,
   writeProfileCredentials,
 } from '../../src/core/profile'
+import { MxsErrorCode } from '../../src/core/errors'
 
 let tmpDir: string
 let origXdg: string | undefined
@@ -146,19 +147,19 @@ describe('setCurrentProfile', () => {
 
   it('throws when profile dir does not exist', async () => {
     await expect(setCurrentProfile('nonexistent')).rejects.toMatchObject({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
     })
   })
 
   it('rejects reserved name', async () => {
     await expect(setCurrentProfile('current')).rejects.toMatchObject({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
     })
   })
 
   it('rejects invalid name', async () => {
     await expect(setCurrentProfile('Has Spaces')).rejects.toMatchObject({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
     })
   })
 })
@@ -237,7 +238,7 @@ describe('removeProfile', () => {
 
   it('throws resource.not_found for missing profile', async () => {
     await expect(removeProfile('ghost')).rejects.toMatchObject({
-      code: 'resource.not_found',
+      code: MxsErrorCode.ResourceNotFound,
     })
   })
 })

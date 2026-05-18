@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 
 export interface EditorOptions {
   filename: string
@@ -15,7 +15,7 @@ export async function runEditorRoundTrip(opts: EditorOptions): Promise<string> {
   const editor = opts.editor ?? process.env.EDITOR ?? process.env.VISUAL
   if (!editor) {
     throw new MxsError({
-      code: 'generic',
+      code: MxsErrorCode.Generic,
       message: '$EDITOR not set',
       hint: 'export EDITOR=vim (or another editor) and try again',
     })
@@ -39,7 +39,7 @@ function spawnInteractive(cmd: string, args: string[]): Promise<void> {
       else
         reject(
           new MxsError({
-            code: 'generic',
+            code: MxsErrorCode.Generic,
             message: `editor exited with code ${code}`,
           }),
         )

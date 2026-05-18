@@ -4,6 +4,7 @@ import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { OutputOptions } from '../../../src/core/output'
+import { MxsErrorCode } from '../../../src/core/errors'
 
 const mocks = vi.hoisted(() => ({
   buildApiClient: vi.fn(),
@@ -157,7 +158,7 @@ describe('auth whoami', () => {
       profileName: null,
     })
 
-    await expect(run({}, out)).rejects.toMatchObject({ code: 'auth.missing' })
+    await expect(run({}, out)).rejects.toMatchObject({ code: MxsErrorCode.AuthMissing })
   })
 
   it('reads per-profile credentials from active profile', async () => {

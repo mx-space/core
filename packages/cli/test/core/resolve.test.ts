@@ -7,6 +7,7 @@ import {
   matchItem,
   NameResolver,
 } from '../../src/core/resolve'
+import { MxsErrorCode } from '../../src/core/errors'
 
 describe('isSnowflakeId', () => {
   it('matches 15+ digit numerics', () => {
@@ -97,7 +98,7 @@ describe('NameResolver', () => {
       ],
     })
     await expect(resolver.resolveCategory('tch')).rejects.toMatchObject({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
     })
   })
 })

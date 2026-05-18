@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { run } from '../../../src/commands/auth/logout'
 import type { OutputOptions } from '../../../src/core/output'
+import { MxsErrorCode } from '../../../src/core/errors'
 
 let tmpDir: string
 let origXdg: string | undefined
@@ -116,7 +117,7 @@ describe('auth logout', () => {
 
   it('throws profile.none_active when no current and no --profile', async () => {
     await expect(run({}, out)).rejects.toMatchObject({
-      code: 'profile.none_active',
+      code: MxsErrorCode.ProfileNoneActive,
     })
   })
 })

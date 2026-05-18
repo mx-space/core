@@ -1,6 +1,6 @@
 import { ApiClient } from '../../core/api-client'
 import { readConfig, resolveConfig, writeConfig } from '../../core/config-store'
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { runOnboarding } from '../../core/onboarding'
 import { emitInfo, type OutputOptions } from '../../core/output'
 
@@ -26,7 +26,10 @@ export async function resolveContext(flags: GlobalFlags, out: OutputOptions) {
       profile: flags.profile,
     })
   } catch (err) {
-    if (err instanceof MxsError && err.code === 'config.missing.api_url') {
+    if (
+      err instanceof MxsError &&
+      err.code === MxsErrorCode.ConfigMissingApiUrl
+    ) {
       const probed = await runOnboarding({
         profile: flags.profile ?? process.env.MXS_PROFILE,
       })

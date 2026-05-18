@@ -1,6 +1,10 @@
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+} from '../internal/shared'
 
 export interface ConfigSetFlags {
   type?: 'json' | 'string' | 'number' | 'bool'
@@ -33,7 +37,7 @@ function coerce(value: string, type?: ConfigSetFlags['type']): unknown {
     const n = Number(value)
     if (Number.isNaN(n))
       throw new MxsError({
-        code: 'validation.failed',
+        code: MxsErrorCode.ValidationFailed,
         message: `invalid number: ${value}`,
       })
     return n
@@ -45,7 +49,7 @@ function coerce(value: string, type?: ConfigSetFlags['type']): unknown {
     } catch {
       if (type === 'json')
         throw new MxsError({
-          code: 'validation.failed',
+          code: MxsErrorCode.ValidationFailed,
           message: `invalid JSON: ${value}`,
         })
       return value

@@ -1,4 +1,4 @@
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
 import { readProfileCredentials } from '../../core/profile'
 import {
@@ -14,7 +14,7 @@ export async function run(flags: GlobalFlags, out: OutputOptions) {
     : null
   if (!cred && !ctx.token && !ctx.apiKey) {
     throw new MxsError({
-      code: 'auth.missing',
+      code: MxsErrorCode.AuthMissing,
       message: 'not authenticated',
       hint: 'run `mxs auth login`',
     })

@@ -8,6 +8,7 @@ import {
   requestDeviceCode,
   toCredentials,
 } from '../../src/core/auth'
+import { MxsErrorCode } from '../../src/core/errors'
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -78,7 +79,7 @@ describe('probeAuthEndpoint', () => {
       probeAuthEndpoint('https://blog.example.com', {
         fetch: fetcher as any,
       }),
-    ).rejects.toMatchObject({ code: 'auth.probe' })
+    ).rejects.toMatchObject({ code: MxsErrorCode.AuthProbe })
   })
 })
 
@@ -153,7 +154,7 @@ describe('pollDeviceToken', () => {
         'dev',
         { intervalSec: 0, expiresInSec: 5, http: { fetch: fetcher as any } },
       ),
-    ).rejects.toMatchObject({ code: 'auth.denied' })
+    ).rejects.toMatchObject({ code: MxsErrorCode.AuthDenied })
   })
 })
 

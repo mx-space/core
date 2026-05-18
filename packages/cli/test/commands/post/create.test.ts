@@ -7,6 +7,7 @@ import {
   buildPostPayload,
   type PostFlagInputs,
 } from '../../../src/core/payload'
+import { MxsErrorCode } from '../../../src/core/errors'
 
 let tmpDir: string
 beforeEach(async () => {
@@ -159,7 +160,7 @@ describe('post create payload', () => {
         content: '',
         format: 'lexical',
       }),
-    ).rejects.toMatchObject({ code: 'validation.failed' })
+    ).rejects.toMatchObject({ code: MxsErrorCode.ValidationFailed })
   })
 
   it('keeps markdown content identity', async () => {

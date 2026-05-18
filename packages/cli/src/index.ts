@@ -41,15 +41,15 @@ export {
   readContentSpec,
   readJsonSpec,
 } from './core/content-spec'
-export { runEditorRoundTrip } from './core/editor'
 export {
+  type DocumentKind,
   emitDocument,
   emitPostList,
-  type DocumentKind,
   renderDocumentEnvelope,
   renderPostList,
   renderReadableDocument,
 } from './core/document-output'
+export { runEditorRoundTrip } from './core/editor'
 export {
   coerceMeta,
   type EnvelopeKind,
@@ -62,7 +62,7 @@ export {
 export {
   exitCodeForError,
   MxsError,
-  type MxsErrorCode,
+  MxsErrorCode,
   type MxsErrorOptions,
 } from './core/errors'
 export {

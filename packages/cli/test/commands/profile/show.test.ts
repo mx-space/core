@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { run } from '../../../src/commands/profile/show'
 import type { OutputOptions } from '../../../src/core/output'
+import { MxsErrorCode } from '../../../src/core/errors'
 
 let tmpDir: string
 let origXdg: string | undefined
@@ -85,13 +86,13 @@ describe('profile show', () => {
 
   it('throws profile.none_active when no name and no current', async () => {
     await expect(run(undefined, {}, out)).rejects.toMatchObject({
-      code: 'profile.none_active',
+      code: MxsErrorCode.ProfileNoneActive,
     })
   })
 
   it('throws profile.not_found for non-existent profile', async () => {
     await expect(run('ghost', {}, out)).rejects.toMatchObject({
-      code: 'profile.not_found',
+      code: MxsErrorCode.ProfileNotFound,
     })
   })
 

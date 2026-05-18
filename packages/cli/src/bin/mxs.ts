@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 
-import { exitCodeForError, MxsError } from '../core/errors'
+import { exitCodeForError, MxsError, MxsErrorCode } from '../core/errors'
 import { runLegacyMigrationIfNeeded } from '../core/migration'
 import { emitError, type OutputOptions } from '../core/output'
 import { requiresActiveProfile } from '../core/preaction-guards'
 import { getCurrentProfile, validateProfileName } from '../core/profile'
+import { buildContextFromFlags, maybeNotify } from '../core/update-notifier'
+
+const CLI_VERSION = '0.2.0'
 
 interface GlobalOptions {
   json?: boolean
@@ -25,7 +28,7 @@ const program = new Command()
 program
   .name('mxs')
   .description('mx-space CLI — manage your mx-core blog from the command line')
-  .version('0.2.0')
+  .version(CLI_VERSION)
   .option('--json', 'emit JSON output')
   .option('--output <mode>', 'pretty-json | json | readable | llm | envelope')
   .option('--api-url <url>', 'override the configured API URL')
@@ -48,7 +51,7 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
     } catch (err) {
       if (err instanceof MxsError) {
         throw new MxsError({
-          code: 'profile.invalid_name',
+          code: MxsErrorCode.ProfileInvalidName,
           message: err.message,
           hint: 'profile name must match ^[a-z0-9_-]{1,32}$ and must not be "current"',
         })
@@ -77,11 +80,21 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
     })
   ) {
     throw new MxsError({
-      code: 'profile.none_active',
+      code: MxsErrorCode.ProfileNoneActive,
       message: 'no active mxs profile',
       hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
     })
   }
+
+  // Fire-and-forget passive update notifier.
+  void maybeNotify(
+    buildContextFromFlags({
+      currentVersion: CLI_VERSION,
+      flags: { quiet: opts.quiet, json: opts.json, output: opts.output },
+      commandName: actionCommand.name(),
+      parentName: actionCommand.parent?.name() ?? '',
+    }),
+  )
 })
 
 addAuthCommands(program)
@@ -92,6 +105,7 @@ addPageCommands(program)
 addCategoryCommands(program)
 addTopicCommands(program)
 addConfigCommands(program)
+addUpdateCommand(program)
 
 program.parseAsync(process.argv).catch((err) => {
   const opts = readGlobalOptions(program)
@@ -111,6 +125,32 @@ export function readGlobalOptions(cmd: Command): OutputOptions {
 
 export function readGlobalFlags(cmd: Command): GlobalOptions {
   return cmd.optsWithGlobals() as GlobalOptions
+}
+
+function addUpdateCommand(parent: Command) {
+  parent
+    .command('update')
+    .description('check for and install a newer mxs release')
+    .option('--check', 'compare versions only; do not install')
+    .option('--prerelease', 'use the `next` dist-tag channel')
+    .option('--pm <name>', 'force package manager: npm | pnpm | yarn | bun')
+    .option('--force', 'bypass the 24h passive-check cache')
+    .option('--yes', 'skip the confirmation prompt')
+    .action(async (opts, command) => {
+      const { run } = await import('../commands/update/run')
+      await run(
+        {
+          check: opts.check as boolean | undefined,
+          prerelease: opts.prerelease as boolean | undefined,
+          pm: opts.pm as string | undefined,
+          force: opts.force as boolean | undefined,
+          yes: opts.yes as boolean | undefined,
+        },
+        readGlobalFlags(command),
+        readGlobalOptions(command),
+        CLI_VERSION,
+      )
+    })
 }
 
 function addAuthCommands(parent: Command) {

@@ -20,6 +20,7 @@ import {
   type MigrationResult,
 } from '../../src/core/migration'
 import { getProfilesDir } from '../../src/core/profile'
+import { MxsErrorCode } from '../../src/core/errors'
 
 let tmpDir: string
 let origXdg: string | undefined
@@ -414,7 +415,7 @@ describe('failure modes', () => {
     await expect(
       runLegacyMigrationIfNeeded({ isTTY: false, report: null }),
     ).rejects.toMatchObject({
-      code: 'config.migration.failed',
+      code: MxsErrorCode.ConfigMigrationFailed,
       message: expect.stringContaining(legacyPath),
     })
 

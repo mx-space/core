@@ -1,5 +1,5 @@
 import type { ApiClient } from '../../core/api-client'
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { isSnowflakeId } from '../../core/resolve'
 
 interface PostSlugUrl {
@@ -22,7 +22,7 @@ export async function resolvePostReadPath(
   const path = resolved.data?.path
   if (!path) {
     throw new MxsError({
-      code: 'resource.not_found',
+      code: MxsErrorCode.ResourceNotFound,
       message: `post not found: ${slugOrId}`,
     })
   }
@@ -39,7 +39,7 @@ export async function resolvePostId(
   const res = await client.request<PostIdResult>(path)
   if (!res.data?.id) {
     throw new MxsError({
-      code: 'resource.not_found',
+      code: MxsErrorCode.ResourceNotFound,
       message: `post not found: ${slugOrId}`,
     })
   }

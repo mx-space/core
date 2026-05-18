@@ -1,8 +1,12 @@
 import type { ApiClient } from '../../core/api-client'
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+} from '../internal/shared'
 
 export interface TopicUpdateFlags {
   name?: string
@@ -41,7 +45,7 @@ async function resolveId(client: ApiClient, slugOrId: string): Promise<string> {
   const res = await client.request<{ id?: string }>(`/topics/slug/${slugOrId}`)
   if (!res.data?.id)
     throw new MxsError({
-      code: 'resource.not_found',
+      code: MxsErrorCode.ResourceNotFound,
       message: `topic not found: ${slugOrId}`,
     })
   return res.data.id

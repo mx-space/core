@@ -1,7 +1,11 @@
 import { runEditorRoundTrip } from '../../core/editor'
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { emitInfo, emitSuccess, type OutputOptions } from '../../core/output'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+} from '../internal/shared'
 
 export async function run(flags: GlobalFlags, out: OutputOptions) {
   const ctx = await resolveContext(flags, out)
@@ -21,7 +25,7 @@ export async function run(flags: GlobalFlags, out: OutputOptions) {
     parsed = JSON.parse(next)
   } catch (err: any) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: `invalid JSON: ${err?.message ?? err}`,
     })
   }

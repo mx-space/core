@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { MxsError } from '../../src/core/errors'
+import { MxsError, MxsErrorCode } from '../../src/core/errors'
 import { emitError, type OutputOptions } from '../../src/core/output'
 
 const defaultOpts: OutputOptions = {
@@ -44,7 +44,7 @@ describe('emitError — profile.write_requires_explicit JSON envelope', () => {
 
   it('serializes the spec §4 envelope to stdout under --json', () => {
     const err = new MxsError({
-      code: 'profile.write_requires_explicit',
+      code: MxsErrorCode.ProfileWriteRequiresExplicit,
       message: 'writing to production requires explicit acknowledgement',
       hint: 'pass --profile prod to confirm',
       details: { profile: 'prod', api_url: 'https://blog.example.com' },
@@ -67,7 +67,7 @@ describe('emitError — profile.write_requires_explicit JSON envelope', () => {
 
   it('writes a terse line to stderr (no JSON, no stdout) when not --json', () => {
     const err = new MxsError({
-      code: 'profile.write_requires_explicit',
+      code: MxsErrorCode.ProfileWriteRequiresExplicit,
       message: 'writing to production requires explicit acknowledgement',
       hint: 'pass --profile prod to confirm',
       details: { profile: 'prod', api_url: 'https://blog.example.com' },

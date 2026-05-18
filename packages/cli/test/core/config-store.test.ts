@@ -13,6 +13,7 @@ import {
   writeProfileCredentials,
   getProfilesDir,
 } from '../../src/core/profile'
+import { MxsErrorCode } from '../../src/core/errors'
 
 let tmpDir: string
 
@@ -267,7 +268,7 @@ describe('resolveConfig — profile.not_found', () => {
     await fs.mkdir(mxsDir, { recursive: true })
     await fs.writeFile(path.join(mxsDir, 'current'), 'ghost\n')
     await expect(resolveConfig()).rejects.toMatchObject({
-      code: 'profile.not_found',
+      code: MxsErrorCode.ProfileNotFound,
     })
   })
 

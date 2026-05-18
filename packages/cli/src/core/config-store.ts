@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
 import { getConfigDir } from './config-dir'
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 import {
   getCurrentProfile,
   getProfileConfigPath,
@@ -85,7 +85,7 @@ async function readJsonIfExists<T>(p: string): Promise<T | null> {
     if (err?.code === 'ENOENT') return null
     if (err instanceof SyntaxError) {
       throw new MxsError({
-        code: 'generic',
+        code: MxsErrorCode.Generic,
         message: `failed to parse ${p}: ${err.message}`,
       })
     }
@@ -172,7 +172,7 @@ export function normalizeApiUrl(input: string): string {
   let url = input.trim()
   if (!url) {
     throw new MxsError({
-      code: 'config.missing.api_url',
+      code: MxsErrorCode.ConfigMissingApiUrl,
       message: 'API URL is empty',
     })
   }
@@ -205,7 +205,7 @@ export async function resolveConfig(
       const stat = await fs.stat(getProfileDir(profileName))
       if (!stat.isDirectory()) {
         throw new MxsError({
-          code: 'profile.not_found',
+          code: MxsErrorCode.ProfileNotFound,
           message: `profile '${profileName}' does not exist`,
           hint: 'run `mxs profile ls` to see configured profiles, or `mxs auth login --profile <name>` to create one',
         })
@@ -214,7 +214,7 @@ export async function resolveConfig(
       if (err instanceof MxsError) throw err
       if (err?.code === 'ENOENT') {
         throw new MxsError({
-          code: 'profile.not_found',
+          code: MxsErrorCode.ProfileNotFound,
           message: `profile '${profileName}' does not exist`,
           hint: 'run `mxs profile ls` to see configured profiles, or `mxs auth login --profile <name>` to create one',
         })
@@ -231,7 +231,7 @@ export async function resolveConfig(
   const rawApiUrl = overrides.apiUrl || envApiUrl || profileConfig.api_url
   if (!rawApiUrl) {
     throw new MxsError({
-      code: 'config.missing.api_url',
+      code: MxsErrorCode.ConfigMissingApiUrl,
       message: 'API URL is not configured',
       hint: 'set MXS_API_URL or pass --api-url <url>, or run `mxs auth login` in an interactive shell',
     })

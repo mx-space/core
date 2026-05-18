@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs'
 
 import { confirm, isCancel } from '@clack/prompts'
 
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { emitInfo, type OutputOptions } from '../../core/output'
 import {
   getCurrentPath,
@@ -27,7 +27,7 @@ export async function run(
   const current = await getCurrentProfile()
   if (current === name && !opts.force) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: `profile '${name}' is currently active; pass --force to remove it`,
       hint: 'switch to another profile first with `mxs profile use <name>`',
     })
@@ -36,7 +36,7 @@ export async function run(
   if (!opts.force) {
     if (!process.stdin.isTTY) {
       throw new MxsError({
-        code: 'validation.failed',
+        code: MxsErrorCode.ValidationFailed,
         message: `cannot remove profile '${name}' non-interactively`,
         hint: 'pass --force to confirm removal in a non-interactive context',
       })

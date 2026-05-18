@@ -1,4 +1,4 @@
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 
 export interface OutputOptions {
   json: boolean
@@ -51,7 +51,7 @@ export function emitWarn(message: string, opts: OutputOptions): void {
 export function emitError(err: unknown, opts: OutputOptions): void {
   if (err instanceof MxsError) {
     if (opts.json) {
-      if (err.code === 'profile.write_requires_explicit') {
+      if (err.code === MxsErrorCode.ProfileWriteRequiresExplicit) {
         const details = err.details as
           | { profile?: unknown; api_url?: unknown }
           | undefined
@@ -84,7 +84,7 @@ export function emitError(err: unknown, opts: OutputOptions): void {
   const message = err instanceof Error ? err.message : String(err)
   if (opts.json) {
     process.stdout.write(
-      `${JSON.stringify({ ok: false, code: 'generic', message })}\n`,
+      `${JSON.stringify({ ok: false, code: MxsErrorCode.Generic, message })}\n`,
     )
     return
   }

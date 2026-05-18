@@ -1,5 +1,5 @@
 import type { ApiClient } from '../../core/api-client'
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { isSnowflakeId } from '../../core/resolve'
 
 interface CategoryEnvelope {
@@ -17,7 +17,7 @@ export async function resolveCategoryId(
   const id = res.data?.data?.id
   if (!id) {
     throw new MxsError({
-      code: 'resource.not_found',
+      code: MxsErrorCode.ResourceNotFound,
       message: `category not found: ${slugOrId}`,
     })
   }

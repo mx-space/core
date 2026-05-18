@@ -12,7 +12,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { MxsError } from '../../src/core/errors'
+import { MxsError, MxsErrorCode } from '../../src/core/errors'
 import {
   requiresActiveProfile,
   type GuardInput,
@@ -85,7 +85,7 @@ describe('--profile flag validation', () => {
     } catch (err) {
       if (err instanceof MxsError) {
         caught = new MxsError({
-          code: 'profile.invalid_name',
+          code: MxsErrorCode.ProfileInvalidName,
           message: err.message,
           hint: 'profile name must match ^[a-z0-9_-]{1,32}$ and must not be "current"',
         })
@@ -252,7 +252,7 @@ async function runNoneActiveGuard(opts: {
 
   if (throws) {
     return new MxsError({
-      code: 'profile.none_active',
+      code: MxsErrorCode.ProfileNoneActive,
       message: 'no active mxs profile',
       hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
     })

@@ -3,7 +3,7 @@ import {
   readCredentials,
   writeCredentials,
 } from './config-store'
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 
 export const SUPPORTED_API_VERSIONS = [2] as const
 
@@ -72,7 +72,7 @@ export async function probeAuthEndpoint(
     }
   }
   throw new MxsError({
-    code: 'auth.probe',
+    code: MxsErrorCode.AuthProbe,
     message: 'cannot detect auth endpoint',
     hint: 'verify the URL points at a running mx-core server',
   })
@@ -97,7 +97,7 @@ export async function requestDeviceCode(
       body = await res.text()
     }
     throw new MxsError({
-      code: 'auth.denied',
+      code: MxsErrorCode.AuthDenied,
       message: `device code request failed (${res.status})`,
       details: body,
     })
@@ -124,7 +124,10 @@ export async function pollDeviceToken(
   let intervalMs = Math.max(1, opts.intervalSec) * 1000
   while (Date.now() < deadline) {
     if (opts.signal?.aborted) {
-      throw new MxsError({ code: 'auth.denied', message: 'aborted by user' })
+      throw new MxsError({
+        code: MxsErrorCode.AuthDenied,
+        message: 'aborted by user',
+      })
     }
     await sleep(intervalMs, opts.signal)
     const res = await http.fetch(`${authBase}/device/token`, {
@@ -157,25 +160,25 @@ export async function pollDeviceToken(
     }
     if (err === 'access_denied') {
       throw new MxsError({
-        code: 'auth.denied',
+        code: MxsErrorCode.AuthDenied,
         message: 'user denied the authorization request',
       })
     }
     if (err === 'expired_token') {
       throw new MxsError({
-        code: 'auth.expired',
+        code: MxsErrorCode.AuthExpired,
         message: 'device code expired before authorization completed',
         hint: 'run `mxs auth login` again',
       })
     }
     throw new MxsError({
-      code: 'auth.denied',
+      code: MxsErrorCode.AuthDenied,
       message: `device token request failed (${res.status})`,
       details: body,
     })
   }
   throw new MxsError({
-    code: 'auth.expired',
+    code: MxsErrorCode.AuthExpired,
     message: 'device authorization timed out',
     hint: 'run `mxs auth login` again',
   })
@@ -254,12 +257,10 @@ async function refreshSessionToken(
     },
   })
   if (!res.ok) return null
-  const body = (await res.json().catch(() => null)) as
-    | {
-        session?: { expiresAt?: string | Date | number }
-        user?: CredentialsShape['user']
-      }
-    | null
+  const body = (await res.json().catch(() => null)) as {
+    session?: { expiresAt?: string | Date | number }
+    user?: CredentialsShape['user']
+  } | null
   const expiresAt = normalizeExpiresAt(body?.session?.expiresAt)
   if (!expiresAt || expiresAt <= cred.expires_at) return null
   return {
@@ -285,7 +286,7 @@ export async function loadCredentialsOrThrow(): Promise<CredentialsShape> {
   const cred = await readCredentials()
   if (!cred) {
     throw new MxsError({
-      code: 'auth.missing',
+      code: MxsErrorCode.AuthMissing,
       message: 'not authenticated',
       hint: 'run `mxs auth login`',
     })

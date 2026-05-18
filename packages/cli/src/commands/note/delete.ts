@@ -1,4 +1,4 @@
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import { emitSuccess, type OutputOptions } from '../../core/output'
 import {
   buildApiClient,
@@ -15,7 +15,7 @@ export async function run(
 ) {
   if (!opts.force && !flags.dryRun && !process.stdin.isTTY) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: 'refusing to delete without --force in non-TTY context',
     })
   }

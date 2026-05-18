@@ -1,5 +1,5 @@
-import { MxsError } from './errors'
-import { serializeFromLexical, type LexicalState } from './litexml-codec'
+import { MxsError, MxsErrorCode } from './errors'
+import { type LexicalState, serializeFromLexical } from './litexml-codec'
 import { emitSuccess, type OutputOptions } from './output'
 
 export type DocumentKind = 'post' | 'note' | 'page'
@@ -27,7 +27,7 @@ export function emitDocument(
   const mode = opts.output ?? 'pretty-json'
   if (!DOCUMENT_OUTPUT_MODES.has(mode)) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: `unsupported --output value: ${mode}`,
       hint: 'use --output pretty-json, json, readable, llm, or envelope',
     })
@@ -50,7 +50,7 @@ export function emitPostList(data: unknown, opts: OutputOptions): void {
   const mode = opts.output ?? 'pretty-json'
   if (!POST_LIST_OUTPUT_MODES.has(mode)) {
     throw new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: `unsupported --output value for post list: ${mode}`,
       hint: 'use --output pretty-json, json, readable, or llm',
     })

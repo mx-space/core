@@ -10,7 +10,7 @@ import {
   type ResolvedConfig,
   writeCredentials,
 } from './config-store'
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 import { decideWriteGate, type HttpMethod } from './gate'
 
 export interface ApiClientContext {
@@ -70,7 +70,7 @@ export class ApiClient {
       const decision = decideWriteGate(this.ctx.resolved, method)
       if (!decision.allow) {
         throw new MxsError({
-          code: 'profile.write_requires_explicit',
+          code: MxsErrorCode.ProfileWriteRequiresExplicit,
           message: decision.message!,
           hint: decision.hint,
           details: {
@@ -202,7 +202,7 @@ async function parseBody<T>(res: Response): Promise<T> {
 function toMxsError(status: number, body: unknown): MxsError {
   if (status === 401) {
     return new MxsError({
-      code: 'auth.expired',
+      code: MxsErrorCode.AuthExpired,
       message: 'authentication required',
       hint: 'run `mxs auth login`',
       details: body,
@@ -210,34 +210,34 @@ function toMxsError(status: number, body: unknown): MxsError {
   }
   if (status === 403) {
     return new MxsError({
-      code: 'auth.denied',
+      code: MxsErrorCode.AuthDenied,
       message: 'permission denied',
       details: body,
     })
   }
   if (status === 404) {
     return new MxsError({
-      code: 'resource.not_found',
+      code: MxsErrorCode.ResourceNotFound,
       message: 'resource not found',
       details: body,
     })
   }
   if (status === 422 || status === 400) {
     return new MxsError({
-      code: 'validation.failed',
+      code: MxsErrorCode.ValidationFailed,
       message: extractMessage(body) ?? 'validation failed',
       details: body,
     })
   }
   if (status >= 500) {
     return new MxsError({
-      code: 'server.error',
+      code: MxsErrorCode.ServerError,
       message: extractMessage(body) ?? `server error (${status})`,
       details: body,
     })
   }
   return new MxsError({
-    code: 'generic',
+    code: MxsErrorCode.Generic,
     message: extractMessage(body) ?? `request failed (${status})`,
     details: body,
   })

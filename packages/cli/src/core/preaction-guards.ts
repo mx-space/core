@@ -33,11 +33,20 @@ export interface GuardInput {
   commandName: string
 }
 
+/**
+ * Top-level command names that are exempt from the profile.none_active guard.
+ * Used for commands that should work without a configured server (e.g. `mxs update`).
+ */
+export const PREACTION_EXEMPT_TOPLEVEL: ReadonlySet<string> = new Set([
+  'update',
+])
+
 /** Returns true if the command is exempt from the profile.none_active guard. */
 export function isPreActionExempt(input: GuardInput): boolean {
   return (
     PREACTION_EXEMPT_PARENTS.has(input.parentName) ||
     input.commandName === 'profile' ||
+    PREACTION_EXEMPT_TOPLEVEL.has(input.commandName) ||
     PREACTION_EXEMPT_COMMANDS.some(
       (c) => c.parent === input.parentName && c.name === input.commandName,
     )

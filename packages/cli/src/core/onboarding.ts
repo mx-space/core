@@ -2,7 +2,7 @@ import { text } from '@clack/prompts'
 
 import { type AuthHttp, defaultHttp, probeAuthEndpoint } from './auth'
 import { normalizeApiUrl } from './config-store'
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 import {
   getCurrentProfile,
   setCurrentProfile,
@@ -33,7 +33,7 @@ export async function runOnboarding(
   if (!input) {
     if (!tty) {
       throw new MxsError({
-        code: 'config.missing.api_url',
+        code: MxsErrorCode.ConfigMissingApiUrl,
         message: 'API URL is not configured',
         hint: 'set MXS_API_URL or pass --api-url <url>, or run `mxs auth login` in an interactive shell',
       })
@@ -48,7 +48,7 @@ export async function runOnboarding(
       })
       if (typeof answer !== 'string') {
         throw new MxsError({
-          code: 'config.missing.api_url',
+          code: MxsErrorCode.ConfigMissingApiUrl,
           message: 'onboarding aborted',
         })
       }

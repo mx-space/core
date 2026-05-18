@@ -1,4 +1,4 @@
-import { MxsError } from './errors'
+import { MxsError, MxsErrorCode } from './errors'
 
 export type EnvelopeKind = 'post' | 'note'
 
@@ -56,7 +56,7 @@ function tokenize(xml: string): Token[] {
         const end = xml.indexOf('-->', i + 4)
         if (end < 0) {
           throw new MxsError({
-            code: 'validation.xml',
+            code: MxsErrorCode.ValidationXml,
             message: 'unterminated XML comment',
             details: { line },
           })
@@ -69,7 +69,7 @@ function tokenize(xml: string): Token[] {
         const end = xml.indexOf(']]>', i + 9)
         if (end < 0) {
           throw new MxsError({
-            code: 'validation.xml',
+            code: MxsErrorCode.ValidationXml,
             message: 'unterminated CDATA',
             details: { line },
           })
@@ -83,7 +83,7 @@ function tokenize(xml: string): Token[] {
       const close = xml.indexOf('>', i)
       if (close < 0) {
         throw new MxsError({
-          code: 'validation.xml',
+          code: MxsErrorCode.ValidationXml,
           message: 'unterminated tag',
           details: { line },
         })
@@ -137,7 +137,7 @@ export function parseEnvelope(xml: string, kind: EnvelopeKind): ParsedEnvelope {
   )
   if (rootStart < 0) {
     throw new MxsError({
-      code: 'validation.xml',
+      code: MxsErrorCode.ValidationXml,
       message: `expected root <${rootName}>`,
       details: { line: 1 },
     })
@@ -157,7 +157,7 @@ export function parseEnvelope(xml: string, kind: EnvelopeKind): ParsedEnvelope {
   }
   if (rootEnd < 0) {
     throw new MxsError({
-      code: 'validation.xml',
+      code: MxsErrorCode.ValidationXml,
       message: `unterminated <${rootName}>`,
       details: { line: tokens[rootStart]?.line ?? 1 },
     })
@@ -196,7 +196,7 @@ export function parseEnvelope(xml: string, kind: EnvelopeKind): ParsedEnvelope {
     }
     if (t.kind === 'open' || t.kind === 'self') {
       throw new MxsError({
-        code: 'validation.xml',
+        code: MxsErrorCode.ValidationXml,
         message: `unexpected <${t.name}> at root`,
         details: { line: t.line },
       })
@@ -222,7 +222,7 @@ function findMatchingClose(
     }
   }
   throw new MxsError({
-    code: 'validation.xml',
+    code: MxsErrorCode.ValidationXml,
     message: `unterminated <${name}>`,
     details: { line: tokens[startOpen]?.line ?? 1 },
   })

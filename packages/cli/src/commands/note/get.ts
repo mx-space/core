@@ -1,5 +1,5 @@
 import { type DocumentKind, emitDocument } from '../../core/document-output'
-import { MxsError } from '../../core/errors'
+import { MxsError, MxsErrorCode } from '../../core/errors'
 import type { OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
 import {
@@ -33,7 +33,7 @@ export async function run(
     return
   }
   throw new MxsError({
-    code: 'validation.failed',
+    code: MxsErrorCode.ValidationFailed,
     message: `invalid note reference: ${slugOrId} (use snowflake id or numeric nid)`,
   })
 }
