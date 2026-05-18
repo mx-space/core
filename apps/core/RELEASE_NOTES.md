@@ -1,30 +1,21 @@
 ## TL;DR
 
-Introduces the `@mx-space/cli` (`mxs`) for terminal-driven content authoring via OIDC device auth; the `Authorization: Bearer` header is now reserved for sessions only.
+Spider guard is reworked with a UA-first fast path and proper credential validation, eliminating per-request DB lookups for legitimate traffic.
 
 ## Highlights
 
-This release wires a complete OIDC device-authorization flow into mx-core's Better Auth instance and ships its first end-user CLI. Owners can now run `mxs auth login` from any terminal, approve the device on the admin panel, and drive posts, notes, pages, categories, topics, and configuration through the REST API — useful for self-host automation and agent-driven authoring. A new `device_codes` table and an `assets/render/device.ejs` template back the verification page.
+The anti-scraper guard now runs the User-Agent check first as a cheap fast path. Browsers, RSS readers, search bots, and the `mxs` CLI flow through without touching the database. Only requests with missing or scraper-like UAs fall back to credential validation, which means production traffic gets faster and the auth subsystem sees less pressure.
 
-To make room for OIDC bearer tokens, the API-key plugin no longer falls back to the `Authorization: Bearer` header. The documented `x-api-key` header (and `?token=` query parameter as a last resort) continues to work for API keys. A bearer-narrowing e2e test guards the boundary, and the CLI itself supports both flows via `--api-key` / `MXS_API_KEY` for headless contexts.
-
-Hot content queries (posts, notes, pages, aggregate) have been retuned for fewer round-trips and better index usage, with stricter failure semantics: aggregate-root requests now fail loudly when a dependency errors instead of returning partial state. Mixed schema migrations are kept transactional end-to-end so a failed step rolls back the rest of the batch.
+Authenticated bypass is now correctly enforced. Previously, any request carrying an `Authorization` or `x-api-key` header would slip past the UA filter without the credentials actually being validated — a bare `Authorization: junk` was enough. The guard now injects `AuthService` (via `APP_GUARD`) and only honors the bypass when the session or owner-scoped API key resolves. Operators with an authenticated client (CMS, mxs CLI, custom integrations) will see no change; abusive scrapers spoofing the header will not.
 
 ## Changes
 
 ### Features
-- New `@mx-space/cli` (`mxs`) shipped to npm in parallel; server adds the Better Auth `deviceAuthorization` plugin, a `/device` controller rendering an EJS verification page, and a `device_codes` table for the device flow. ([#2723](https://github.com/mx-space/core/issues/2723))
-- Server now enables the Better Auth `bearer()` plugin so OIDC access tokens issued by the device flow work transparently on subsequent API calls.
+- Spider guard now uses a UA-first fast path with `AuthService`-backed credential validation; legitimate browsers, RSS readers, and bots bypass without DB lookups. ([28cb17d](https://github.com/mx-space/core/commit/28cb17d5c99c40457f9e727812c9415df59770d0))
 
-### Other
-- Hot content read paths (post / note / page / aggregate) are faster and more predictable; mixed schema migrations now keep all statements in one transaction. ([#2732](https://github.com/mx-space/core/issues/2732))
-
-## Upgrade Notes
-
-- Pre-deploy: run `pnpm -C apps/core run migrate` so the new `device_codes` table (`0012_device_codes_table.sql`) is in place before the app starts. The app boot guard refuses to start against an older schema.
-- Make sure the sibling `assets/` checkout is up to date; the device verification page renders from `assets/render/device.ejs`. The repo's `assets/` checkout has already been pushed.
-- If any integration was passing API keys via `Authorization: Bearer <api-key>`, switch it to `x-api-key: <api-key>`. The Bearer header is now reserved for session/OIDC tokens.
+### Bug Fixes
+- Spider guard properly validates `Authorization` and `x-api-key` credentials before bypassing the UA filter, closing a header-spoofing gap. ([c4ab9c5](https://github.com/mx-space/core/commit/c4ab9c584fc79254fc0eb76be917c5871cc1b508))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v12.7.1...v12.8.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v12.8.0...v12.9.0

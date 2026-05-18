@@ -1,3 +1,16 @@
+# [12.9.0](https://github.com/mx-space/core/compare/v12.8.0...v12.9.0) (2026-05-18)
+
+
+### Bug Fixes
+
+* **cli,core:** allow authenticated requests through spider guard ([c4ab9c5](https://github.com/mx-space/core/commit/c4ab9c584fc79254fc0eb76be917c5871cc1b508))
+
+
+### Features
+
+* **cli:** environment profile system ([#2733](https://github.com/mx-space/core/issues/2733)) ([49d5d22](https://github.com/mx-space/core/commit/49d5d229b0783cf8d12637f7166a2ce28a27a113))
+* **core,cli:** spider guard fast-path + cli User-Agent ([28cb17d](https://github.com/mx-space/core/commit/28cb17d5c99c40457f9e727812c9415df59770d0))
+
 # [12.8.0](https://github.com/mx-space/core/compare/v12.7.1...v12.8.0) (2026-05-17)
 
 
