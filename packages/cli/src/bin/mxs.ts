@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { createRequire } from 'node:module'
+
 import { Command } from 'commander'
 
 import { exitCodeForError, MxsError, MxsErrorCode } from '../core/errors'
@@ -8,7 +10,10 @@ import { requiresActiveProfile } from '../core/preaction-guards'
 import { getCurrentProfile, validateProfileName } from '../core/profile'
 import { buildContextFromFlags, maybeNotify } from '../core/update-notifier'
 
-const CLI_VERSION = '0.2.0'
+const require = createRequire(import.meta.url)
+const { version: CLI_VERSION } = require('../../package.json') as {
+  version: string
+}
 
 interface GlobalOptions {
   json?: boolean
