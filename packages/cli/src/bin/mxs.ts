@@ -244,6 +244,11 @@ type HelpTarget =
   | { readonly kind: 'root' }
   | { readonly kind: 'group'; readonly name: string }
 
+// Top-level commands that are leafs (have their own handler) rather than
+// subcommand groups. Bare `mxs <leaf>` MUST execute the handler — only
+// `mxs <leaf> --help` should render our custom group/leaf help page.
+const LEAF_COMMANDS = new Set<string>(['update'])
+
 const detectHelpTarget = (rest: readonly string[]): HelpTarget => {
   // `rest` includes argv[0] (node) and argv[1] (script).
   const args = rest.slice(2)
@@ -252,9 +257,14 @@ const detectHelpTarget = (rest: readonly string[]): HelpTarget => {
   if (args.length === 1 && (first === '--help' || first === '-h')) {
     return { kind: 'root' }
   }
-  if (args.length === 1 && isGroupName(first)) {
+  // Bare `mxs <group>` (no flags, no verb) → group help. Groups have no
+  // default executable; @effect/cli would print its default help anyway.
+  // Leafs like `update` carry a real handler and must NOT be intercepted.
+  if (args.length === 1 && isGroupName(first) && !LEAF_COMMANDS.has(first)) {
     return { kind: 'group', name: first }
   }
+  // Explicit `--help` / `-h` on any top-level command (group OR leaf) → our
+  // custom help.
   if (
     args.length === 2 &&
     isGroupName(first) &&
