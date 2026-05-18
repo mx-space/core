@@ -228,6 +228,7 @@ const defaultVisibleNoteListSql = `
     where is_published = true
       and (public_at is null or public_at <= now())
   ) c
+  order by n.created_at desc nulls last
 `
 
 const latestVisiblePairSql = `
