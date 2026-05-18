@@ -43,6 +43,8 @@ CLI handlers are small `Effect.gen` blocks that pull the services they need with
 
 ```ts
 // src/cli/post/list.ts
+import { postListView } from './view'
+
 export const list = Command.make(
   'list',
   { page, size, state, sort },
@@ -58,12 +60,14 @@ export const list = Command.make(
           sortBy: unwrap(sort),
         },
       })
-      yield* renderer.emitPostList(res)
+      yield* renderer.emit(postListView, res)
     }),
 ).pipe(Command.withDescription('list posts'))
 ```
 
 The handler does not import the concrete implementations of `Api` or `Renderer` — it depends on the tags. Layer wiring at the program entry point resolves them. This makes every handler trivially testable: provide an in-memory layer for either service and observe behaviour.
+
+The renderer call is intentionally generic. `emit(view, data)` accepts any `View<T>` value defined by the resource and dispatches across the structural output modes (`readable` / `llm` / `envelope`). The view itself is a plain value imported by the command — see §6 for the contract.
 
 ## 3. `Effect.tryPromise` — wrapping Promise-based libraries
 
@@ -159,13 +163,76 @@ it.effect('resolves an active profile', () =>
 
 Integration tests under `test/integration/` spawn the actual binary via `child_process.spawn(BIN, ...)` and assert on stdout/stderr/exit code — these cover the cli surface end-to-end. See `test/integration/cli-error-envelope.test.ts` for the canonical example.
 
+## 6. `View<T>` — domain-owned rendering, generic dispatch
+
+Output rendering is split across two boundaries: a domain-agnostic dispatcher in `src/services/Renderer/`, and per-resource view modules in `src/cli/<kind>/view.ts` that own all schema knowledge.
+
+The view contract (`src/services/Renderer/view.ts`):
+
+```ts
+export interface ViewCtx {
+  readonly color: boolean
+  readonly verbose: boolean
+}
+
+export interface View<T> {
+  readonly kind: string                              // used only in error messages
+  readonly modes: ReadonlySet<OutputMode>            // which --output values are valid
+  readonly readable: (data: T, ctx: ViewCtx) => string
+  readonly llm?: (data: T) => string                 // missing → readable with color=false
+  readonly envelope?: (data: T) => string            // missing → "unsupported mode" error
+}
+```
+
+Dispatch rules implemented in `src/services/Renderer/service.ts#emit`:
+
+- `--json` / `--output json` / `--output pretty-json` bypass the view entirely and emit `{ ok: true, data }` envelopes (or pretty-printed raw payloads). The view is never called for JSON.
+- `--output <mode>` where `view.modes` does not include the mode emits the `unsupported --output value for <kind>: <mode>` error to stderr.
+- `--output llm` with no `view.llm` falls back to `view.readable(data, { color: false, verbose })`. Helpers in `src/cli/render/` honour the `color` flag, so passing `false` strips ANSI.
+- `--output envelope` with no `view.envelope` is a hard error (envelope is a machine format; silent fallback would corrupt downstream parsers).
+
+Layout:
+
+```
+src/services/Renderer/
+  index.ts          — Context.Tag, Layer, public surface re-exports
+  view.ts           — View<T>, ViewCtx (leaf module; no service imports)
+  options.ts        — OutputMode, OutputOptions, currentOutputOptions FiberRef
+  service.ts        — makeService(): emit, emitSuccess, emitView, emitMarkdown,
+                       emitInfo/Warn/Error/InfoBlock
+  primitives.ts     — writeStdout/writeStderr/color
+  errors.ts         — emitErrorSync, error envelope formatting
+  content.ts        — Lexical → LiteXML adapter, document field helpers
+                       (publishState, relationLabel, formatScalar, ...)
+  lists.ts          — renderReadableGeneric (used by emitSuccess fallback)
+
+src/cli/render/      — shared view helpers: frontmatter, metadata-block,
+                       envelope, markdown→ANSI renderer, codehighlight
+src/cli/ui/          — bespoke TTY primitives (badges, rounded box)
+src/cli/<kind>/view.ts — per-resource View<T> values
+```
+
+A view file composes domain-specific `collectFields` against shared rendering helpers. `cli/post/view.ts` shows the full pattern — the same field list powers `readable` (ANSI metadata block), `llm` (YAML frontmatter + body), and `envelope` (`<mxpost>` LiteXML). View files are typically under 150 lines.
+
+When to add a view vs use a primitive:
+
+- **Add a `View<T>`** for any read command whose output has a stable shape across `readable` / `llm` / `envelope`. The view lives next to the verbs in `cli/<kind>/view.ts`.
+- **Use `emitSuccess`** for mutation responses (`post create`, `note update`, etc.) — they render as generic key/value because the user is acting on the resource, not consuming it. `emitSuccess` honours `--json` / `--output json` (envelope) and `--output readable` (generic key/value via `renderReadableGeneric`).
+- **Use `emitView` / `emitMarkdown`** for ad-hoc one-off blocks without a reusable schema (login device-code banner, update-available notice).
+
+Test layering follows the same split:
+
+- View tests under `test/cli/<kind>/view.test.ts` snapshot `view.readable` / `view.llm` / `view.envelope` for representative inputs — these are pure functions with no Effect machinery.
+- `test/services/Renderer.test.ts` covers mode dispatch, JSON-envelope shape, and the suppression rules of `emitInfo` / `emitWarn` / `emitInfoBlock` under `--quiet` / `--json`.
+- Helper tests under `test/cli/render/*.test.ts` cover YAML quoting, alignment, XML escaping.
+
 ---
 
 # How to add a new command
 
 Each command lives in its own file under `src/cli/<resource>/<verb>.ts`. The aggregator file `src/cli/<resource>.ts` wires the verbs into a `Command.withSubcommands` group.
 
-1. **Create the verb.** Define options with `Options.*`, then `Command.make` with a handler that yields the services it needs. Keep it small — most logic should live in services.
+1. **Create the verb.** Define options with `Options.*`, then `Command.make` with a handler that yields the services it needs. Keep it small — most logic should live in services. Mutation verbs use `emitSuccess`; typed-read verbs use `emit(view, data)` (see step 2).
 
    ```ts
    // src/cli/post/archive.ts
@@ -179,25 +246,29 @@ Each command lives in its own file under `src/cli/<resource>/<verb>.ts`. The agg
          const res = yield* api.request(`/posts/${slugOrId}/archive`, {
            method: 'POST',
          })
-         yield* renderer.emitOk(res)
+         yield* renderer.emitSuccess(res)
        }),
    ).pipe(Command.withDescription('archive a post'))
    ```
 
-2. **Register the verb.** Add it to the resource aggregator (`src/cli/post.ts`):
+2. **(For typed read verbs) Add or reuse a `View<T>`.** If the verb returns a document or list and you need `readable` / `llm` / `envelope` rendering, define the view in `src/cli/<kind>/view.ts` (one file per resource — `postView`, `postListView`, `noteView`, etc.). Compose shared helpers from `src/cli/render/` and document helpers from `src/services/Renderer/content.ts`. Handlers then call `renderer.emit(theView, data)`.
+
+3. **Register the verb.** Add it to the resource aggregator (`src/cli/post/index.ts`):
 
    ```ts
-   import { archive } from './post/archive'
+   import { archive } from './archive'
    // ...
    export const postCmd = Command.make('post').pipe(
      Command.withSubcommands([list, get, create, edit, update, delete_, publish, unpublish, archive]),
    )
    ```
 
-3. **(Optional) Add a service.** If the verb needs a new capability, define it in `src/services/<Service>.ts` using the `Context.Tag + Layer` pattern from §1, add it to `src/layers/App.ts` so the application layer can build it, and wire any required platform services.
+   If the new verb is observable in `mxs post --help`, also register a `CommandHelp` entry via `registerCommandHelp` in `src/cli/help/registry.ts`-callers (the side-effect import in `src/cli/help/index.ts` loads each resource module once).
 
-4. **Write tests.** Most verbs need a unit-level test under `test/cli/<resource>/<verb>.test.ts` (using `it.effect` + canned layers) and — if the verb has user-visible output — an entry in the relevant integration test under `test/integration/`.
+4. **(Optional) Add a service.** If the verb needs a new capability, define it in `src/services/<Service>.ts` using the `Context.Tag + Layer` pattern from §1, add it to `src/layers/App.ts` so the application layer can build it, and wire any required platform services. If the service depends on per-invocation global flags (`--api-url`, `--token`, `--profile`, ...), construct it in `src/bin/mxs.ts` after `parseGlobalFlags` instead — `Api` and `Resolver` are the existing examples.
 
-5. **Run typecheck + vitest scoped to the changed files** before opening a PR. Both `pnpm typecheck` and `pnpm test` are file-cheap.
+5. **Write tests.** Most verbs need a unit-level test under `test/cli/<resource>/<verb>.test.ts` (using `it.effect` + canned layers) and — if the verb has user-visible output — an entry in the relevant integration test under `test/integration/`. New views also get a `test/cli/<kind>/view.test.ts` with snapshots for each declared mode.
 
-The five patterns above (Tag/Layer, Effect.gen, tryPromise, catchTag, test layers) are sufficient to implement every command in v0.3. Anything that doesn't fit one of them is a sign that the abstraction is wrong; revisit the service boundary rather than reaching for `unsafeRun*` escape hatches.
+6. **Run typecheck + vitest scoped to the changed files** before opening a PR. Both `pnpm typecheck` and `pnpm test` are file-cheap.
+
+The six patterns above (Tag/Layer, Effect.gen, tryPromise, catchTag, test layers, View<T>) are sufficient to implement every command in v0.3. Anything that doesn't fit one of them is a sign that the abstraction is wrong; revisit the service boundary rather than reaching for `unsafeRun*` escape hatches.
