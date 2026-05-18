@@ -227,6 +227,80 @@ describe('config set command', () => {
       expect((err as { _tag: string })?._tag).toBe('ValidationFailed')
     }
   })
+
+  it('coerces bool, string, explicit JSON failure, and implicit string fallback', async () => {
+    const http = testHttpLayer({
+      'PATCH https://blog.example.com/api/v2/options/flag': {
+        status: 200,
+        body: { ok: true },
+      },
+      'PATCH https://blog.example.com/api/v2/options/name': {
+        status: 200,
+        body: { ok: true },
+      },
+      'PATCH https://blog.example.com/api/v2/options/raw': {
+        status: 200,
+        body: { ok: true },
+      },
+    })
+    const layer = Layer.mergeAll(
+      Api.layer({ quiet: true }).pipe(
+        Layer.provide(
+          mockConfigLayer({
+            ...baseResolved,
+            profileExplicit: true,
+          }),
+        ),
+        Layer.provide(mockAuthLayer()),
+        Layer.provide(http.layer),
+      ),
+      Renderer.Default,
+    )
+
+    await Effect.runPromise(
+      set
+        .handler({
+          key: 'flag',
+          value: 'true',
+          type: Option.some('bool' as const),
+        })
+        .pipe(Effect.provide(layer)),
+    )
+    await Effect.runPromise(
+      set
+        .handler({
+          key: 'name',
+          value: '{"literal":true}',
+          type: Option.some('string' as const),
+        })
+        .pipe(Effect.provide(layer)),
+    )
+    await Effect.runPromise(
+      set
+        .handler({
+          key: 'raw',
+          value: 'not-json',
+          type: Option.none(),
+        })
+        .pipe(Effect.provide(layer)),
+    )
+    expect(http.recorder.calls.map((c) => c.body)).toEqual([
+      true,
+      '{"literal":true}',
+      'not-json',
+    ])
+
+    const jsonBad = await Effect.runPromiseExit(
+      set
+        .handler({
+          key: 'raw',
+          value: 'not-json',
+          type: Option.some('json' as const),
+        })
+        .pipe(Effect.provide(layer)),
+    )
+    expect(Exit.isFailure(jsonBad)).toBe(true)
+  })
 })
 
 describe('config edit command', () => {
@@ -254,6 +328,82 @@ describe('config edit command', () => {
     )
     expect(Exit.isSuccess(exit)).toBe(true)
     // Only the initial GET — no PATCH because nothing changed.
+    expect(http.recorder.calls.length).toBe(1)
+  })
+
+  it('patches every changed option after editor JSON changes', async () => {
+    const http = testHttpLayer({
+      'GET https://blog.example.com/api/v2/options': {
+        status: 200,
+        body: { site_url: 'https://example.com', enable_comments: true },
+      },
+      'PATCH https://blog.example.com/api/v2/options/site_url': {
+        status: 200,
+        body: { ok: true },
+      },
+      'PATCH https://blog.example.com/api/v2/options/enable_comments': {
+        status: 200,
+        body: { ok: true },
+      },
+    })
+    const layer = Layer.mergeAll(
+      Api.layer({ quiet: true }).pipe(
+        Layer.provide(
+          mockConfigLayer({
+            ...baseResolved,
+            profileExplicit: true,
+          }),
+        ),
+        Layer.provide(mockAuthLayer()),
+        Layer.provide(http.layer),
+      ),
+      Renderer.Default,
+      mockEditorLayer({
+        openEditor: () =>
+          Effect.succeed(
+            JSON.stringify(
+              { site_url: 'https://new.example.com', enable_comments: false },
+              null,
+              2,
+            ),
+          ),
+      }),
+    )
+    const exit = await Effect.runPromiseExit(
+      edit.handler({}).pipe(Effect.provide(layer)),
+    )
+    expect(Exit.isSuccess(exit)).toBe(true)
+    expect(http.recorder.calls.map((c) => c.method)).toEqual([
+      'GET',
+      'PATCH',
+      'PATCH',
+    ])
+    expect(http.recorder.calls[1]?.body).toBe('https://new.example.com')
+    expect(http.recorder.calls[2]?.body).toBe(false)
+  })
+
+  it('rejects invalid editor JSON', async () => {
+    const http = testHttpLayer({
+      'GET https://blog.example.com/api/v2/options': {
+        status: 200,
+        body: { site_url: 'https://example.com' },
+      },
+    })
+    const layer = Layer.mergeAll(
+      Api.layer({ quiet: true }).pipe(
+        Layer.provide(mockConfigLayer(baseResolved)),
+        Layer.provide(mockAuthLayer()),
+        Layer.provide(http.layer),
+      ),
+      Renderer.Default,
+      mockEditorLayer({
+        openEditor: () => Effect.succeed('{'),
+      }),
+    )
+    const exit = await Effect.runPromiseExit(
+      edit.handler({}).pipe(Effect.provide(layer)),
+    )
+    expect(Exit.isFailure(exit)).toBe(true)
     expect(http.recorder.calls.length).toBe(1)
   })
 })

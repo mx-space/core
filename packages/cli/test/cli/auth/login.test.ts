@@ -6,7 +6,11 @@ import { Auth, type AuthService } from '../../../src/services/Auth'
 import { Config } from '../../../src/services/Config'
 import { Editor, type EditorService } from '../../../src/services/Editor'
 import { Profile } from '../../../src/services/Profile'
-import { Renderer } from '../../../src/services/Renderer'
+import {
+  currentOutputOptions,
+  defaultOutputOptions,
+  Renderer,
+} from '../../../src/services/Renderer'
 import { makeMemFs, type MemFs, TestFsLive, TestPathLive } from '../../helper/test-fs'
 
 vi.mock('open', () => ({ default: vi.fn().mockResolvedValue(undefined) }))
@@ -190,5 +194,79 @@ describe('auth login command', () => {
     )
     expect(creds.access_token).toBe('new-access-token')
     expect(mem.readFile(`${mxsDir(XDG)}/current`)?.trim()).toBe('staging')
+  })
+
+  it('fails when the fresh-install API URL prompt is blank', async () => {
+    const { layer } = buildHarness(
+      {},
+      { prompt: () => Effect.succeed('   ') },
+    )
+    const exit = await Effect.runPromiseExit(
+      login.handler({ production: Option.none() }).pipe(Effect.provide(layer)),
+    )
+    expect(Exit.isFailure(exit)).toBe(true)
+  })
+
+  it('emits the device-code response in JSON mode before polling', async () => {
+    const stdout: string[] = []
+    const writeSpy = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation((chunk: any) => {
+        stdout.push(String(chunk))
+        return true
+      })
+    const { mem, layer } = buildHarness()
+    try {
+      const exit = await Effect.runPromiseExit(
+        Effect.locally(
+          login.handler({ production: Option.some(false) }),
+          currentOutputOptions,
+          { ...defaultOutputOptions, json: true },
+        ).pipe(Effect.provide(layer)),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      const first = JSON.parse(stdout[0]!)
+      expect(first.data).toMatchObject({
+        verification_uri: 'https://blog.example.com/api/v2/auth/device',
+        user_code: 'ABCD-1234',
+        expires_in: 300,
+      })
+      const cfg = JSON.parse(
+        mem.readFile(`${profileDir(XDG, 'default')}/config.json`) ?? '{}',
+      )
+      expect(cfg.production).toBe(false)
+    } finally {
+      writeSpy.mockRestore()
+    }
+  })
+
+  it('prints slow_down ticks in interactive non-json mode', async () => {
+    const stderr: string[] = []
+    const writeSpy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation((chunk: any) => {
+        stderr.push(String(chunk))
+        return true
+      })
+    const { layer } = buildHarness({
+      pollDeviceToken: (_authBase, _clientId, _deviceCode, opts) =>
+        Effect.sync(() => {
+          opts.onTick?.('slow_down')
+          return {
+            access_token: 'new-access-token',
+            token_type: 'Bearer',
+            expires_in: 3600,
+          }
+        }),
+    })
+    try {
+      const exit = await Effect.runPromiseExit(
+        login.handler({ production: Option.none() }).pipe(Effect.provide(layer)),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      expect(stderr.join('')).toContain('slow_down')
+    } finally {
+      writeSpy.mockRestore()
+    }
   })
 })
