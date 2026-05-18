@@ -52,6 +52,8 @@
     "prepackage": "rm -rf dist",
     "clean": "rm -rf dist",
     "dev": "tsx src/bin/mxs.ts",
+    "prepare": "node scripts/setup-local-bin.cjs",
+    "setup:local-bin": "node scripts/setup-local-bin.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit"

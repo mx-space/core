@@ -1,7 +1,11 @@
 import { text } from '@clack/prompts'
 
 import { type AuthHttp, defaultHttp, probeAuthEndpoint } from './auth'
-import { normalizeApiUrl } from './config-store'
+import {
+  DEV_DEFAULT_PROFILE_NAME,
+  isDevDefaultProfileEnabled,
+  normalizeApiUrl,
+} from './config-store'
 import { MxsError, MxsErrorCode } from './errors'
 import {
   getCurrentProfile,
@@ -59,16 +63,18 @@ export async function runOnboarding(
   const apiUrl = normalizeApiUrl(input)
   const probed = await probeAuthEndpoint(apiUrl, opts.http ?? defaultHttp())
 
-  // Determine target profile: --profile > active current > 'default'
+  // Determine target profile:
+  //   --profile > MXS_PROFILE > dev-default > active current > 'default'
   const target =
-    opts.profile?.trim() || (await getCurrentProfile()) || 'default'
+    opts.profile?.trim() ||
+    process.env.MXS_PROFILE?.trim() ||
+    (isDevDefaultProfileEnabled() ? DEV_DEFAULT_PROFILE_NAME : null) ||
+    (await getCurrentProfile()) ||
+    'default'
 
   await writeProfileConfig(target, {
     api_url: probed.apiUrl,
-    api_base: probed.apiBase,
-    auth_base: probed.authBase,
     api_version: probed.apiVersion,
-    client_id: 'mxs-cli',
   })
 
   await setCurrentProfile(target)

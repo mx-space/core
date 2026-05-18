@@ -67,19 +67,20 @@ export async function run(
 
   // Determine target profile per spec §3:
   // 1. --profile flag
-  // 2. active current profile
-  // 3. fresh install → 'default'
+  // 2. resolved profile, including the virtual dev default profile
+  // 3. active current profile
+  // 4. fresh install → 'default'
   const target =
-    flags.profile?.trim() || (await getCurrentProfile()) || 'default'
+    flags.profile?.trim() ||
+    ctx.profileName ||
+    (await getCurrentProfile()) ||
+    'default'
 
   const existing = await readProfileConfig(target)
   await writeProfileConfig(target, {
     ...existing,
     api_url: ctx.apiUrl,
-    api_base: ctx.apiBase,
-    auth_base: ctx.authBase,
     api_version: ctx.apiVersion,
-    client_id: ctx.clientId,
     ...(opts.production !== undefined
       ? { production: opts.production }
       : existing.production !== undefined

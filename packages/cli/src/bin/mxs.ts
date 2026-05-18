@@ -3,6 +3,11 @@ import { createRequire } from 'node:module'
 
 import { Command } from 'commander'
 
+import {
+  DEV_DEFAULT_PROFILE_ENV,
+  DEV_DEFAULT_PROFILE_NAME,
+  shouldUseDevDefaultProfile,
+} from '../core/config-store'
 import { exitCodeForError, MxsError, MxsErrorCode } from '../core/errors'
 import { runLegacyMigrationIfNeeded } from '../core/migration'
 import { emitError, type OutputOptions } from '../core/output'
@@ -13,6 +18,10 @@ import { buildContextFromFlags, maybeNotify } from '../core/update-notifier'
 const require = createRequire(import.meta.url)
 const { version: CLI_VERSION } = require('../../package.json') as {
   version: string
+}
+
+if (import.meta.url.endsWith('/src/bin/mxs.ts')) {
+  process.env[DEV_DEFAULT_PROFILE_ENV] ??= '1'
 }
 
 interface GlobalOptions {
@@ -73,13 +82,24 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
   // Exempt commands are declared in core/preaction-guards.ts (single source of
   // truth). Commander short-circuits --help / --version before reaching preAction.
   const currentProfile = await getCurrentProfile()
+  const effectiveCurrentProfile =
+    currentProfile ||
+    (shouldUseDevDefaultProfile({
+      profileOverride: opts.profile,
+      envProfile: process.env.MXS_PROFILE,
+      apiUrlOverride: opts.apiUrl,
+      envApiUrl: process.env.MXS_API_URL,
+      currentProfile,
+    })
+      ? DEV_DEFAULT_PROFILE_NAME
+      : null)
   if (
     requiresActiveProfile({
       profileFlag: opts.profile,
       apiUrlFlag: opts.apiUrl,
       envProfile: process.env.MXS_PROFILE?.trim(),
       envApiUrl: process.env.MXS_API_URL?.trim(),
-      currentProfile,
+      currentProfile: effectiveCurrentProfile,
       parentName: actionCommand.parent?.name() ?? '',
       commandName: actionCommand.name(),
     })

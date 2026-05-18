@@ -16,10 +16,7 @@ export { getConfigDir }
 
 export interface ConfigShape {
   api_url?: string
-  api_base?: string
-  auth_base?: string
   api_version?: number
-  client_id?: string
   production?: boolean
 }
 
@@ -57,7 +54,64 @@ export interface StoreOverrides {
   profile?: string
 }
 
-const DEFAULT_CLIENT_ID = 'mxs-cli'
+export const DEFAULT_CLIENT_ID = 'mxs-cli'
+
+/** Legacy fields written by older mxs versions; ignored on read and never written back. */
+export const LEGACY_CONFIG_FIELDS = [
+  'api_base',
+  'auth_base',
+  'client_id',
+] as const
+
+export function stripLegacyConfigFields(
+  cfg: Record<string, unknown>,
+): ConfigShape {
+  const out: Record<string, unknown> = { ...cfg }
+  for (const k of LEGACY_CONFIG_FIELDS) delete out[k]
+  return out as ConfigShape
+}
+
+export const DEV_DEFAULT_PROFILE_ENV = 'MXS_CLI_DEV_DEFAULT_PROFILE'
+export const DEV_DEFAULT_API_URL_ENV = 'MXS_CLI_DEV_API_URL'
+export const DEV_DEFAULT_PROFILE_NAME = 'local-dev'
+export const DEV_DEFAULT_API_URL = 'http://localhost:2333'
+
+export interface DevDefaultProfileInput {
+  profileOverride?: string
+  envProfile?: string
+  apiUrlOverride?: string
+  envApiUrl?: string
+  currentProfile?: string | null
+}
+
+export function isDevDefaultProfileEnabled(): boolean {
+  return process.env[DEV_DEFAULT_PROFILE_ENV] === '1'
+}
+
+export function getDevDefaultApiUrl(): string {
+  return process.env[DEV_DEFAULT_API_URL_ENV]?.trim() || DEV_DEFAULT_API_URL
+}
+
+export function shouldUseDevDefaultProfile(
+  input: DevDefaultProfileInput,
+): boolean {
+  return (
+    isDevDefaultProfileEnabled() &&
+    !input.profileOverride?.trim() &&
+    !input.envProfile?.trim() &&
+    !input.apiUrlOverride?.trim() &&
+    !input.envApiUrl?.trim()
+  )
+}
+
+function buildDevDefaultProfileConfig(): ConfigShape {
+  const { baseUrl } = parseApiUrl(getDevDefaultApiUrl())
+  return {
+    api_url: baseUrl,
+    api_version: 2,
+    production: false,
+  }
+}
 
 export function getLegacyConfigPath(): string {
   return path.join(getConfigDir(), 'config.json')
@@ -168,7 +222,22 @@ export async function enforceCredentialsMode(
   return false
 }
 
-export function normalizeApiUrl(input: string): string {
+export interface ParsedApiUrl {
+  /** Bare origin (or origin+path) with any trailing `/api/v\d+` stripped. */
+  baseUrl: string
+  /** Version extracted from a stripped `/api/v\d+` suffix, if present. */
+  apiVersion?: number
+}
+
+/**
+ * Parse a user-supplied API URL into the bare base + optional API version.
+ *
+ * Older mxs versions wrote `${baseUrl}/api/v\d+` directly into `api_url`,
+ * which doubles up when `resolveConfig` re-appends the prefix. Stripping
+ * the suffix on read makes polluted configs self-heal: the bare URL falls
+ * through to `apiUrl`, and `apiVersion` is back-filled from the path.
+ */
+export function parseApiUrl(input: string): ParsedApiUrl {
   let url = input.trim()
   if (!url) {
     throw new MxsError({
@@ -180,7 +249,16 @@ export function normalizeApiUrl(input: string): string {
     const isLocal = /^(?:localhost|127\.0\.0\.1|::1)(?::\d+)?$/i.test(url)
     url = isLocal ? `http://${url}` : `https://${url}`
   }
-  return url.replace(/\/+$/, '')
+  url = url.replace(/\/+$/, '')
+  const match = url.match(/^(.*)\/api\/v(\d+)$/)
+  if (match) {
+    return { baseUrl: match[1], apiVersion: Number(match[2]) }
+  }
+  return { baseUrl: url }
+}
+
+export function normalizeApiUrl(input: string): string {
+  return parseApiUrl(input).baseUrl
 }
 
 export async function resolveConfig(
@@ -193,14 +271,27 @@ export async function resolveConfig(
 
   const urlOverridden = Boolean(overrides.apiUrl || envApiUrl)
   const profileExplicit = Boolean(overrides.profile || envProfile)
+  const currentProfile = await getCurrentProfile()
+  const useDevDefaultProfile = shouldUseDevDefaultProfile({
+    profileOverride: overrides.profile,
+    envProfile,
+    apiUrlOverride: overrides.apiUrl,
+    envApiUrl,
+    currentProfile,
+  })
 
   const profileName: string | null =
     overrides.profile?.trim() ||
     envProfile ||
-    (await getCurrentProfile()) ||
+    (useDevDefaultProfile ? DEV_DEFAULT_PROFILE_NAME : null) ||
+    currentProfile ||
     null
+  const useDevLocalEndpoint =
+    isDevDefaultProfileEnabled() &&
+    !urlOverridden &&
+    profileName === DEV_DEFAULT_PROFILE_NAME
 
-  if (profileName && !urlOverridden) {
+  if (profileName && !urlOverridden && !useDevDefaultProfile) {
     try {
       const stat = await fs.stat(getProfileDir(profileName))
       if (!stat.isDirectory()) {
@@ -224,7 +315,9 @@ export async function resolveConfig(
   }
 
   let profileConfig: ConfigShape = {}
-  if (profileName) {
+  if (useDevDefaultProfile) {
+    profileConfig = buildDevDefaultProfileConfig()
+  } else if (profileName) {
     profileConfig = await readProfileConfig(profileName)
   }
 
@@ -236,14 +329,11 @@ export async function resolveConfig(
       hint: 'set MXS_API_URL or pass --api-url <url>, or run `mxs auth login` in an interactive shell',
     })
   }
-  const apiUrl = normalizeApiUrl(rawApiUrl)
-  const apiVersion = profileConfig.api_version ?? 2
-  const apiBase = urlOverridden
-    ? `${apiUrl}/api/v${apiVersion}`
-    : profileConfig.api_base || `${apiUrl}/api/v${apiVersion}`
-  const authBase = urlOverridden
-    ? `${apiBase}/auth`
-    : profileConfig.auth_base || `${apiBase}/auth`
+  const parsed = parseApiUrl(rawApiUrl)
+  const apiUrl = parsed.baseUrl
+  const apiVersion = profileConfig.api_version ?? parsed.apiVersion ?? 2
+  const apiBase = useDevLocalEndpoint ? apiUrl : `${apiUrl}/api/v${apiVersion}`
+  const authBase = useDevLocalEndpoint ? `${apiUrl}/auth` : `${apiBase}/auth`
 
   let token: string | undefined
   if (urlOverridden) {
@@ -269,7 +359,7 @@ export async function resolveConfig(
     apiBase,
     authBase,
     apiVersion,
-    clientId: profileConfig.client_id || DEFAULT_CLIENT_ID,
+    clientId: DEFAULT_CLIENT_ID,
     token,
     apiKey,
     configPath: profileName

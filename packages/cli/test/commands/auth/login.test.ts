@@ -152,4 +152,35 @@ describe('auth login', () => {
     const cfg = await readConfig('dev')
     expect(cfg.production).toBeUndefined()
   })
+
+  it('writes to local-dev when dev-default mode resolves that profile', async () => {
+    // Pre-create a non-local-dev current pointer to verify dev mode overrides it.
+    const profDir = path.join(mxsDir(), 'profiles', 'prod')
+    await fs.mkdir(profDir, { recursive: true })
+    await fs.mkdir(mxsDir(), { recursive: true })
+    await fs.writeFile(path.join(mxsDir(), 'current'), 'prod\n')
+
+    // resolveContext is mocked to surface profileName='local-dev' (as the real
+    // resolveConfig does under MXS_CLI_DEV_DEFAULT_PROFILE=1).
+    mocks.resolveContext.mockResolvedValueOnce({
+      apiUrl: 'http://localhost:2333',
+      apiBase: 'http://localhost:2333',
+      authBase: 'http://localhost:2333/auth',
+      apiVersion: 2,
+      clientId: 'mxs-cli',
+      token: undefined,
+      configPath: '/tmp/c',
+      credentialsPath: '/tmp/k',
+      profileName: 'local-dev',
+      isProduction: false,
+      profileExplicit: false,
+      urlOverridden: false,
+    })
+
+    await run({}, out)
+
+    const creds = await readCredentials('local-dev')
+    expect(creds.access_token).toBe('new-access-token')
+    expect(await readCurrent()).toBe('local-dev')
+  })
 })

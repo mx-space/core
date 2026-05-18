@@ -2,7 +2,11 @@ import { promises as fs } from 'node:fs'
 
 import { confirm, isCancel } from '@clack/prompts'
 
-import { getLegacyConfigPath, getLegacyCredentialsPath } from './config-store'
+import {
+  getLegacyConfigPath,
+  getLegacyCredentialsPath,
+  stripLegacyConfigFields,
+} from './config-store'
 import { MxsError, MxsErrorCode } from './errors'
 import {
   getProfilesDir,
@@ -163,7 +167,9 @@ export async function runLegacyMigrationIfNeeded(
   }
 
   // Write profile config. If this fails, do NOT delete legacy files.
-  const migratedConfig: Record<string, unknown> = { ...legacyConfig }
+  const migratedConfig: Record<string, unknown> = stripLegacyConfigFields(
+    legacyConfig,
+  ) as Record<string, unknown>
   if (production) {
     migratedConfig.production = true
   } else {

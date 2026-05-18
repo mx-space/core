@@ -12,6 +12,11 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  DEV_DEFAULT_PROFILE_ENV,
+  DEV_DEFAULT_PROFILE_NAME,
+  shouldUseDevDefaultProfile,
+} from '../../src/core/config-store'
 import { MxsError, MxsErrorCode } from '../../src/core/errors'
 import {
   requiresActiveProfile,
@@ -240,12 +245,23 @@ async function runNoneActiveGuard(opts: {
   parentName: string
 }): Promise<MxsError | null> {
   const currentProfile = await getCurrentProfile()
+  const effectiveCurrentProfile =
+    currentProfile ||
+    (shouldUseDevDefaultProfile({
+      profileOverride: opts.profile,
+      envProfile: process.env.MXS_PROFILE,
+      apiUrlOverride: opts.apiUrl,
+      envApiUrl: process.env.MXS_API_URL,
+      currentProfile,
+    })
+      ? DEV_DEFAULT_PROFILE_NAME
+      : null)
   const throws = requiresActiveProfile({
     profileFlag: opts.profile,
     apiUrlFlag: opts.apiUrl,
     envProfile: process.env.MXS_PROFILE?.trim(),
     envApiUrl: process.env.MXS_API_URL?.trim(),
-    currentProfile,
+    currentProfile: effectiveCurrentProfile,
     parentName: opts.parentName,
     commandName: opts.commandName,
   } satisfies GuardInput)
@@ -263,12 +279,15 @@ async function runNoneActiveGuard(opts: {
 describe('profile.none_active guard', () => {
   let origMxsProfile: string | undefined
   let origMxsApiUrl: string | undefined
+  let origDevDefaultProfile: string | undefined
 
   beforeEach(() => {
     origMxsProfile = process.env.MXS_PROFILE
     origMxsApiUrl = process.env.MXS_API_URL
+    origDevDefaultProfile = process.env[DEV_DEFAULT_PROFILE_ENV]
     delete process.env.MXS_PROFILE
     delete process.env.MXS_API_URL
+    delete process.env[DEV_DEFAULT_PROFILE_ENV]
   })
 
   afterEach(() => {
@@ -276,6 +295,11 @@ describe('profile.none_active guard', () => {
     else process.env.MXS_PROFILE = origMxsProfile
     if (origMxsApiUrl === undefined) delete process.env.MXS_API_URL
     else process.env.MXS_API_URL = origMxsApiUrl
+    if (origDevDefaultProfile === undefined) {
+      delete process.env[DEV_DEFAULT_PROFILE_ENV]
+    } else {
+      process.env[DEV_DEFAULT_PROFILE_ENV] = origDevDefaultProfile
+    }
   })
 
   it('throws profile.none_active when no profile, no env, no URL override on a generic command', async () => {
@@ -324,6 +348,15 @@ describe('profile.none_active guard', () => {
     await fs.writeFile(path.join(dir, 'current'), 'default\n', {
       encoding: 'utf8',
     })
+    const err = await runNoneActiveGuard({
+      commandName: 'list',
+      parentName: 'post',
+    })
+    expect(err).toBeNull()
+  })
+
+  it('does not throw when the dev bin enables the virtual local-dev profile', async () => {
+    process.env[DEV_DEFAULT_PROFILE_ENV] = '1'
     const err = await runNoneActiveGuard({
       commandName: 'list',
       parentName: 'post',

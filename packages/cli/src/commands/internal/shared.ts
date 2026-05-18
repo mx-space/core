@@ -1,5 +1,5 @@
 import { ApiClient } from '../../core/api-client'
-import { readConfig, resolveConfig, writeConfig } from '../../core/config-store'
+import { resolveConfig } from '../../core/config-store'
 import { MxsError, MxsErrorCode } from '../../core/errors'
 import { runOnboarding } from '../../core/onboarding'
 import { emitInfo, type OutputOptions } from '../../core/output'
@@ -74,10 +74,4 @@ export function withLangQuery(
 ): Record<string, unknown> {
   if (!flags.lang) return query
   return { ...query, lang: flags.lang }
-}
-
-export async function persistApiVersion(version: number) {
-  const cfg = await readConfig()
-  if (cfg.api_version === version) return
-  await writeConfig({ ...cfg, api_version: version })
 }

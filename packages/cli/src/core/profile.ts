@@ -2,7 +2,11 @@ import { type Dirent, promises as fs } from 'node:fs'
 import path from 'node:path'
 
 import { getConfigDir } from './config-dir'
-import type { ConfigShape, CredentialsShape } from './config-store'
+import {
+  type ConfigShape,
+  type CredentialsShape,
+  stripLegacyConfigFields,
+} from './config-store'
 import { MxsError, MxsErrorCode } from './errors'
 
 export { getConfigDir }
@@ -133,10 +137,10 @@ export type ProfileCredentialsShape = CredentialsShape
 export async function readProfileConfig(
   name: string,
 ): Promise<ProfileConfigShape> {
-  const data = await readJsonIfExists<ProfileConfigShape>(
+  const data = await readJsonIfExists<Record<string, unknown>>(
     getProfileConfigPath(name),
   )
-  return data ?? {}
+  return stripLegacyConfigFields(data ?? {})
 }
 
 export async function writeProfileConfig(

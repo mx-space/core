@@ -29,10 +29,13 @@ export {
   getConfigPath,
   getCredentialsPath,
   normalizeApiUrl,
+  parseApiUrl,
+  type ParsedApiUrl,
   readConfig,
   readCredentials,
   resolveConfig,
   type ResolvedConfig,
+  stripLegacyConfigFields,
   writeConfig,
   writeCredentials,
 } from './core/config-store'

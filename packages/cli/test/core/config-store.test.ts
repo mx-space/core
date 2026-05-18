@@ -4,14 +4,18 @@ import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import {
+  DEV_DEFAULT_PROFILE_ENV,
+  DEV_DEFAULT_PROFILE_NAME,
   enforceCredentialsMode,
   normalizeApiUrl,
   resolveConfig,
+  shouldUseDevDefaultProfile,
 } from '../../src/core/config-store'
 import {
+  getProfilesDir,
+  setCurrentProfile,
   writeProfileConfig,
   writeProfileCredentials,
-  getProfilesDir,
 } from '../../src/core/profile'
 import { MxsErrorCode } from '../../src/core/errors'
 
@@ -24,6 +28,8 @@ beforeEach(async () => {
   delete process.env.MXS_TOKEN
   delete process.env.MXS_API_KEY
   delete process.env.MXS_PROFILE
+  delete process.env.MXS_CLI_DEV_DEFAULT_PROFILE
+  delete process.env.MXS_CLI_DEV_API_URL
 })
 
 afterEach(async () => {
@@ -32,6 +38,8 @@ afterEach(async () => {
   delete process.env.MXS_TOKEN
   delete process.env.MXS_API_KEY
   delete process.env.MXS_PROFILE
+  delete process.env.MXS_CLI_DEV_DEFAULT_PROFILE
+  delete process.env.MXS_CLI_DEV_API_URL
   await fs.rm(tmpDir, { recursive: true, force: true })
 })
 
@@ -52,6 +60,35 @@ describe('normalizeApiUrl', () => {
 describe('resolveConfig — no profile configured', () => {
   it('throws when api_url missing and no profile active', async () => {
     await expect(resolveConfig()).rejects.toThrow(/API URL/)
+  })
+
+  it('uses the virtual local-dev profile when dev default is enabled', async () => {
+    process.env[DEV_DEFAULT_PROFILE_ENV] = '1'
+
+    const r = await resolveConfig()
+
+    expect(r.apiUrl).toBe('http://localhost:2333')
+    expect(r.apiBase).toBe('http://localhost:2333')
+    expect(r.authBase).toBe('http://localhost:2333/auth')
+    expect(r.profileName).toBe(DEV_DEFAULT_PROFILE_NAME)
+    expect(r.isProduction).toBe(false)
+    expect(r.profileExplicit).toBe(false)
+    expect(r.urlOverridden).toBe(false)
+    await expect(fs.stat(getProfilesDir())).rejects.toMatchObject({
+      code: 'ENOENT',
+    })
+  })
+
+  it('lets explicit URLs override the virtual local-dev profile', async () => {
+    process.env[DEV_DEFAULT_PROFILE_ENV] = '1'
+    process.env.MXS_API_URL = 'https://x.example.com'
+
+    const r = await resolveConfig()
+
+    expect(r.apiUrl).toBe('https://x.example.com')
+    expect(r.apiBase).toBe('https://x.example.com/api/v2')
+    expect(r.profileName).toBeNull()
+    expect(r.urlOverridden).toBe(true)
   })
 
   it('reads MXS_API_URL env', async () => {
@@ -93,6 +130,38 @@ describe('resolveConfig — no profile configured', () => {
   })
 })
 
+describe('shouldUseDevDefaultProfile', () => {
+  it('requires the dev-default flag and no explicit target', () => {
+    process.env[DEV_DEFAULT_PROFILE_ENV] = '1'
+
+    expect(shouldUseDevDefaultProfile({})).toBe(true)
+    expect(shouldUseDevDefaultProfile({ currentProfile: 'prod' })).toBe(true)
+    expect(shouldUseDevDefaultProfile({ envProfile: 'dev' })).toBe(false)
+    expect(shouldUseDevDefaultProfile({ profileOverride: 'dev' })).toBe(false)
+    expect(shouldUseDevDefaultProfile({ envApiUrl: 'http://x' })).toBe(false)
+    expect(shouldUseDevDefaultProfile({ apiUrlOverride: 'http://x' })).toBe(
+      false,
+    )
+  })
+
+  it('dev-default overrides a persisted current profile pointer', async () => {
+    process.env[DEV_DEFAULT_PROFILE_ENV] = '1'
+    await writeProfileConfig('prod', {
+      api_url: 'https://prod.example.com',
+      production: true,
+    })
+    const mxsDir = path.join(tmpDir, 'mxs')
+    await fs.mkdir(mxsDir, { recursive: true })
+    await fs.writeFile(path.join(mxsDir, 'current'), 'prod\n')
+
+    const r = await resolveConfig()
+
+    expect(r.profileName).toBe(DEV_DEFAULT_PROFILE_NAME)
+    expect(r.apiUrl).toBe('http://localhost:2333')
+    expect(r.isProduction).toBe(false)
+  })
+})
+
 describe('resolveConfig — profile-aware resolution', () => {
   it('reads api_url from active profile via MXS_PROFILE', async () => {
     await writeProfileConfig('dev', { api_url: 'https://dev.example.com' })
@@ -127,6 +196,41 @@ describe('resolveConfig — profile-aware resolution', () => {
     expect(r.profileName).toBe('prod')
     expect(r.profileExplicit).toBe(false)
     expect(r.isProduction).toBe(true)
+  })
+
+  it('keeps the local-dev endpoint shape after the dev profile is persisted', async () => {
+    process.env[DEV_DEFAULT_PROFILE_ENV] = '1'
+    await writeProfileConfig(DEV_DEFAULT_PROFILE_NAME, {
+      api_url: 'http://localhost:2333',
+      api_version: 2,
+    })
+    await setCurrentProfile(DEV_DEFAULT_PROFILE_NAME)
+
+    const r = await resolveConfig()
+
+    expect(r.profileName).toBe(DEV_DEFAULT_PROFILE_NAME)
+    expect(r.apiUrl).toBe('http://localhost:2333')
+    expect(r.apiBase).toBe('http://localhost:2333')
+    expect(r.authBase).toBe('http://localhost:2333/auth')
+  })
+
+  it('prefers the virtual local-dev profile over the active current profile in dev mode', async () => {
+    process.env[DEV_DEFAULT_PROFILE_ENV] = '1'
+    await writeProfileConfig('prod', {
+      api_url: 'https://prod.example.com',
+      production: true,
+    })
+    const mxsDir = path.join(tmpDir, 'mxs')
+    await fs.mkdir(mxsDir, { recursive: true })
+    await fs.writeFile(path.join(mxsDir, 'current'), 'prod\n')
+
+    const r = await resolveConfig()
+
+    expect(r.profileName).toBe(DEV_DEFAULT_PROFILE_NAME)
+    expect(r.apiUrl).toBe('http://localhost:2333')
+    expect(r.apiBase).toBe('http://localhost:2333')
+    expect(r.authBase).toBe('http://localhost:2333/auth')
+    expect(r.isProduction).toBe(false)
   })
 
   it('token comes from profile credentials when no url override', async () => {
