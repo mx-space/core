@@ -12,7 +12,6 @@ import { CROSS_DOMAIN, DEBUG_MODE, PORT, TELEMETRY } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
-import { SpiderGuard } from './common/guards/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { extendedZodValidationPipeInstance } from './common/zod'
 import { AppMigrationsService } from './database/app-migrations/app-migrations.service'
@@ -81,7 +80,6 @@ export async function bootstrap() {
   }
 
   app.useGlobalPipes(extendedZodValidationPipeInstance)
-  app.useGlobalGuards(new SpiderGuard())
   !isTest &&
     app.useWebSocketAdapter(new RedisIoAdapter(app, app.get(RedisService)))
 

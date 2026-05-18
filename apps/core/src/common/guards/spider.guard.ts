@@ -2,37 +2,67 @@ import type { CanActivate, ExecutionContext } from '@nestjs/common'
 import { ForbiddenException, Injectable } from '@nestjs/common'
 
 import { isDev } from '~/global/env.global'
+import { AuthService } from '~/modules/auth/auth.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 @Injectable()
 export class SpiderGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
+  constructor(private readonly authService: AuthService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     if (isDev) {
       return true
     }
 
     const request = getNestExecutionContextRequest(context)
-
-    // Authenticated callers bypass the UA-based filter entirely. The downstream
-    // auth/api-key validation rejects invalid credentials separately, so the
-    // mere presence of an Authorization or x-api-key header is enough signal
-    // that this isn't a drive-by scraper.
-    const auth = request.headers.authorization
-    const apiKey = request.headers['x-api-key']
-    if (
-      (typeof auth === 'string' && auth.length > 0) ||
-      (typeof apiKey === 'string' && apiKey.length > 0)
-    ) {
-      return true
-    }
-
-    const ua: string = request.headers['user-agent'] || ''
+    const ua: string = (request.headers['user-agent'] as string) || ''
     const isSpiderUA =
       !!/scrapy|httpclient|axios|python|requests/i.test(ua) &&
       !/mx-space|rss|google|baidu|bing/i.test(ua)
+
+    // Fast path: a well-formed, non-spider UA passes without auth lookups.
+    // This is the common case for browsers, RSS readers, and the mx-space
+    // CLI itself.
     if (ua && !isSpiderUA) {
       return true
     }
+
+    // Slow path: UA is missing or looks like a scraper. Allow only if the
+    // request carries valid owner credentials — header presence alone is not
+    // enough (otherwise `Authorization: junk` would let any scraper through).
+    if (await this.isAuthenticated(request)) {
+      return true
+    }
+
     throw new ForbiddenException(`爬虫是被禁止的哦，UA: ${ua}`)
+  }
+
+  private async isAuthenticated(
+    request: ReturnType<typeof getNestExecutionContextRequest>,
+  ): Promise<boolean> {
+    const auth = request.headers.authorization
+    const apiKeyHeader = request.headers['x-api-key']
+    if (!auth && !apiKeyHeader) return false
+
+    try {
+      // Session (cookie or Bearer) → owner user.
+      const session = await this.authService.getSessionUser(request.raw)
+      if (session?.user?.role === 'owner') return true
+
+      // API key (x-api-key header or `api_key` query).
+      const apiKey = this.authService.getApiKeyFromRequest({
+        headers: request.headers,
+        query: request.query as any,
+      })
+      if (!apiKey) return false
+      const verified = await this.authService.verifyApiKey(apiKey.key)
+      if (!verified?.referenceId) return false
+      // Match AuthGuard's policy: only owner-scoped API keys bypass guards.
+      return await this.authService.isOwnerReaderId(verified.referenceId)
+    } catch {
+      // Any failure (DB blip, malformed token, etc.) → fall through to the
+      // UA check rather than crashing the request.
+      return false
+    }
   }
 }

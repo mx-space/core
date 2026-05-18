@@ -11,6 +11,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guards/roles.guard'
+import { SpiderGuard } from './common/guards/spider.guard'
 import { ExtendThrottlerGuard } from './common/guards/throttler.guard'
 import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
@@ -170,6 +171,10 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: SpiderGuard,
     },
     {
       provide: APP_GUARD,

@@ -21,6 +21,7 @@ import {
   type ResolvedGateInput,
 } from '../domain/gate'
 import { extractServerMessage } from '../domain/schema/api-envelope'
+import { USER_AGENT } from '../domain/version'
 import { Auth } from './Auth'
 import { Config, type ResolvedConfig, type StoreOverrides } from './Config'
 
