@@ -245,6 +245,7 @@ function makeApiService(
         const url = buildUrl(resolved.apiBase, path, effectiveQuery)
         const baseHeaders: Record<string, string> = {
           accept: 'application/json',
+          'user-agent': USER_AGENT,
           ...options.headers,
         }
         if (token) baseHeaders.authorization = `Bearer ${token}`
