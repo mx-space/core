@@ -3,12 +3,12 @@ packages:
   - apps/*
 allowBuilds:
   "@nestjs/core": true
-  '@parcel/watcher': set this to true or false
+  '@parcel/watcher': false
   "@swc/core": true
   cpu-features: false
   esbuild: true
   mongodb-memory-server: true
-  msgpackr-extract: set this to true or false
+  msgpackr-extract: false
   protobufjs: false
   redis-memory-server: true
   sharp: true
