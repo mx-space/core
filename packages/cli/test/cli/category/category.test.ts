@@ -74,6 +74,7 @@ const mockAuthLayer = Layer.succeed(Auth, {
   whoami: Effect.die('whoami not used'),
   status: Effect.die('status not used'),
   ensureFresh: () => Effect.die('ensureFresh not used'),
+  enrichUser: (_profile, _authBase, cred) => Effect.succeed(cred),
 } satisfies AuthService)
 
 const buildLayer = (

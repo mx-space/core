@@ -5,6 +5,7 @@ import { ValidationFailed } from '../../domain/errors'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { isSnowflakeId } from '../../services/Resolver'
+import { noteView } from './view'
 
 const slugOrId = Args.text({ name: 'slugOrId' })
 
@@ -16,14 +17,14 @@ export const get = Command.make('get', { slugOrId }, ({ slugOrId }) =>
       const res = yield* api.request(`/notes/${slugOrId}`, {
         query: { prefer: 'lexical' },
       })
-      yield* renderer.emitDocument('note', res)
+      yield* renderer.emit(noteView, res)
       return
     }
     if (/^\d+$/.test(slugOrId)) {
       const res = yield* api.request(`/notes/nid/${slugOrId}`, {
         query: { single: '1', prefer: 'lexical' },
       })
-      yield* renderer.emitDocument('note', res)
+      yield* renderer.emit(noteView, res)
       return
     }
     return yield* Effect.fail(

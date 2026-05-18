@@ -148,6 +148,17 @@ export interface AuthService {
   readonly ensureFresh: (
     resolved: ResolvedConfig,
   ) => Effect.Effect<CredentialsShape, AuthMissing | AuthExpired | Generic>
+
+  /**
+   * Fill in `cred.user` via `GET /get-session` when missing, persisting the
+   * enriched credentials. Returns the input unchanged when the user is
+   * already known or when the upstream call fails — never errors.
+   */
+  readonly enrichUser: (
+    profileName: string,
+    authBase: string,
+    cred: CredentialsShape,
+  ) => Effect.Effect<CredentialsShape, Generic>
 }
 
 export class Auth extends Context.Tag('Auth')<Auth, AuthService>() {
@@ -560,6 +571,19 @@ function makeAuthService(
     }
   })
 
+  const enrichUser: AuthService['enrichUser'] = (profileName, authBase, cred) =>
+    Effect.gen(function* () {
+      if (cred.user?.id || cred.user?.email || cred.user?.name) return cred
+      const fetched = yield* Effect.tryPromise({
+        try: () => fetchSessionUser(authBase, cred),
+        catch: () => null,
+      }).pipe(Effect.catchAll(() => Effect.succeed(null)))
+      if (!fetched) return cred
+      const updated: CredentialsShape = { ...cred, user: fetched }
+      yield* config.writeProfileCredentials(profileName, updated)
+      return updated
+    })
+
   return {
     probe,
     requestDeviceCode,
@@ -570,6 +594,7 @@ function makeAuthService(
     whoami,
     status,
     ensureFresh,
+    enrichUser,
   }
 }
 
@@ -613,6 +638,24 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     }
     signal?.addEventListener('abort', onAbort, { once: true })
   })
+}
+
+async function fetchSessionUser(
+  authBase: string,
+  cred: CredentialsShape,
+): Promise<CredentialsShape['user'] | null> {
+  const res = await globalThis.fetch(`${authBase}/get-session`, {
+    method: 'GET',
+    headers: {
+      accept: 'application/json',
+      authorization: `Bearer ${cred.access_token}`,
+    },
+  })
+  if (!res.ok) return null
+  const body = (await res.json().catch(() => null)) as {
+    user?: CredentialsShape['user']
+  } | null
+  return body?.user ?? null
 }
 
 async function refreshSessionToken(

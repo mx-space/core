@@ -21,7 +21,7 @@ export interface GlobalFlags {
 
 export const defaultGlobalFlags: GlobalFlags = {
   json: false,
-  output: 'pretty-json',
+  output: 'readable',
   quiet: false,
   verbose: false,
   dryRun: false,
@@ -78,7 +78,7 @@ export const parseGlobalFlags = (
 ): { readonly flags: GlobalFlags; readonly rest: readonly string[] } => {
   const rest: string[] = []
   let json = false
-  let output: OutputMode = 'pretty-json'
+  let output: OutputMode = 'readable'
   let apiUrl: string | undefined
   let token: string | undefined
   let apiKey: string | undefined

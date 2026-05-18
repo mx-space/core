@@ -1,4 +1,4 @@
-import { HttpClient } from '@effect/platform'
+import { HttpClient, HttpClientError, HttpClientResponse } from '@effect/platform'
 import { describe, it as itVitest, expect, vi } from '@effect/vitest'
 import { Effect, Layer, Schema } from 'effect'
 
@@ -85,10 +85,45 @@ const makeMockAuthLayer = (overrides: Partial<AuthService> = {}) => {
         access_token: r.token ?? '',
         expires_at: Date.now() + 3600_000,
       }),
+    enrichUser: (_profile, _authBase, cred) => Effect.succeed(cred),
     ...overrides,
   }
   return Layer.succeed(Auth, noop)
 }
+
+const failingHttpLayer = (cause: unknown) =>
+  Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) =>
+      Effect.fail(
+        new HttpClientError.RequestError({
+          request,
+          reason: 'Transport',
+          cause,
+        }),
+      ),
+    ),
+  )
+
+const responseErrorHttpLayer = () =>
+  Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) =>
+      Effect.fail(
+        new HttpClientError.ResponseError({
+          request,
+          response: HttpClientResponse.fromWeb(
+            request,
+            new Response(JSON.stringify({ message: 'bad' }), {
+              status: 500,
+              headers: { 'content-type': 'application/json' },
+            }),
+          ),
+          reason: 'StatusCode',
+        }),
+      ),
+    ),
+  )
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -532,6 +567,49 @@ describe('Api.request', () => {
     ).resolves.toEqual({ uploaded: true })
   })
 
+  itVitest('maps JSON body encoding failures to Generic before HTTP execution', async () => {
+    const http = testHttpLayer({})
+    const layer = Api.Default.pipe(
+      Layer.provide(
+        makeMockConfigLayer({ ...baseResolved, profileExplicit: true }, null),
+      ),
+      Layer.provide(makeMockAuthLayer()),
+      Layer.provide(http.layer),
+    )
+    const circular: Record<string, unknown> = {}
+    circular.self = circular
+    const program = Effect.gen(function* () {
+      const api = yield* Api
+      return yield* Effect.flip(
+        api.request('/posts', { method: 'POST', body: circular }),
+      )
+    })
+    const err = await Effect.runPromise(Effect.provide(program, layer))
+    expect(err._tag).toBe('Generic')
+    expect(http.recorder.calls).toHaveLength(0)
+  })
+
+  itVitest('returns undefined when a JSON response body cannot be parsed', async () => {
+    const http = testHttpLayer({
+      'GET https://blog.example.com/api/v2/bad-json': {
+        status: 200,
+        body: '{',
+        headers: { 'content-type': 'application/json' },
+      },
+    })
+    const layer = Api.Default.pipe(
+      Layer.provide(makeMockConfigLayer(baseResolved, null)),
+      Layer.provide(makeMockAuthLayer()),
+      Layer.provide(http.layer),
+    )
+    const program = Effect.gen(function* () {
+      const api = yield* Api
+      return yield* api.request('/bad-json')
+    })
+    const result = await Effect.runPromise(Effect.provide(program, layer))
+    expect(result).toBeUndefined()
+  })
+
   itVitest('maps 403, 400, 422, 500, and other statuses to tagged errors', async () => {
     const http = testHttpLayer({
       'GET https://blog.example.com/api/v2/forbidden': {
@@ -620,5 +698,59 @@ describe('Api.request', () => {
     expect(err._tag).toBe('AuthExpired')
     expect(refresh).not.toHaveBeenCalled()
     expect(http.recorder.calls).toHaveLength(1)
+  })
+
+  const transportCases: Array<{
+    readonly name: string
+    readonly cause: unknown
+    readonly tag: string
+  }> = [
+    { name: 'dns not found', cause: { code: 'ENOTFOUND' }, tag: 'NetworkDns' },
+    { name: 'dns retry', cause: { code: 'EAI_AGAIN' }, tag: 'NetworkDns' },
+    {
+      name: 'connection refused',
+      cause: { code: 'ECONNREFUSED' },
+      tag: 'NetworkRefused',
+    },
+    { name: 'timeout', cause: { code: 'ETIMEDOUT' }, tag: 'NetworkTimeout' },
+    {
+      name: 'nested timeout',
+      cause: { cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } },
+      tag: 'NetworkTimeout',
+    },
+    { name: 'abort by name', cause: { name: 'AbortError' }, tag: 'Generic' },
+    { name: 'abort by code', cause: { code: 'ABORT_ERR' }, tag: 'Generic' },
+    { name: 'generic error', cause: new Error('socket closed'), tag: 'Generic' },
+  ]
+
+  for (const tc of transportCases) {
+    itVitest(`maps transport failure: ${tc.name}`, async () => {
+      const layer = Api.Default.pipe(
+        Layer.provide(makeMockConfigLayer(baseResolved, null)),
+        Layer.provide(makeMockAuthLayer()),
+        Layer.provide(failingHttpLayer(tc.cause)),
+      )
+      const program = Effect.gen(function* () {
+        const api = yield* Api
+        return yield* Effect.flip(api.request('/posts'))
+      })
+      const err = await Effect.runPromise(Effect.provide(program, layer))
+      expect(err._tag).toBe(tc.tag)
+    })
+  }
+
+  itVitest('maps unexpected HttpClient ResponseError to Generic', async () => {
+    const layer = Api.Default.pipe(
+      Layer.provide(makeMockConfigLayer(baseResolved, null)),
+      Layer.provide(makeMockAuthLayer()),
+      Layer.provide(responseErrorHttpLayer()),
+    )
+    const program = Effect.gen(function* () {
+      const api = yield* Api
+      return yield* Effect.flip(api.request('/posts'))
+    })
+    const err = await Effect.runPromise(Effect.provide(program, layer))
+    expect(err._tag).toBe('Generic')
+    expect(err.message).toBe('unexpected response error')
   })
 })

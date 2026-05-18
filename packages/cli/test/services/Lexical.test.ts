@@ -57,7 +57,6 @@ describe('Lexical service', () => {
     }).pipe(Effect.provide(Lexical.Default)),
   )
 
-
   it.effect('parses the post.xml fixture content section', () =>
     Effect.gen(function* () {
       const lexical = yield* Lexical

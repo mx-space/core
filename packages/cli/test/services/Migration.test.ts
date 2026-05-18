@@ -346,6 +346,32 @@ describe('report suppression', () => {
     }
     expect(stderrSpy).not.toHaveBeenCalled()
   })
+
+  it('uses process.stderr when no report callback is supplied', async () => {
+    const { mem, layer } = makeLayer()
+    mem.seed(
+      '/xdg/mxs/config.json',
+      JSON.stringify({ api_url: 'https://blog.example.com' }),
+    )
+    const stderrSpy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation(() => true)
+    try {
+      await Effect.runPromise(
+        Effect.gen(function* () {
+          const mig = yield* Migration
+          yield* mig.runLegacyMigrationIfNeeded({ isTTY: false })
+        }).pipe(Effect.provide(layer)),
+      )
+      expect(stderrSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "migrated single-profile config to profile 'default'",
+        ),
+      )
+    } finally {
+      stderrSpy.mockRestore()
+    }
+  })
 })
 
 describe('promptIsProduction cancellation', () => {
@@ -390,6 +416,54 @@ describe('failure modes', () => {
       expect(tagOf(exit.cause)).toBe('ConfigMigrationFailed')
     }
     // Legacy file must NOT be deleted — rejection happened during read.
+    expect(mem.has('/xdg/mxs/config.json')).toBe(true)
+  })
+
+  it('rejects with ConfigMigrationFailed on corrupt credentials json', async () => {
+    const { mem, layer } = makeLayer()
+    mem.seed(
+      '/xdg/mxs/config.json',
+      JSON.stringify({ api_url: 'https://blog.example.com' }),
+    )
+    mem.seed('/xdg/mxs/credentials.json', '{')
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const mig = yield* Migration
+        return yield* mig.runLegacyMigrationIfNeeded({
+          isTTY: false,
+          report: null,
+        })
+      }).pipe(Effect.provide(layer)),
+    )
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (Exit.isFailure(exit)) {
+      expect(tagOf(exit.cause)).toBe('ConfigMigrationFailed')
+    }
+    expect(mem.has('/xdg/mxs/credentials.json')).toBe(true)
+  })
+
+  it('rejects with ConfigMigrationFailed when the production prompt fails', async () => {
+    const { mem, layer } = makeLayer()
+    mem.seed(
+      '/xdg/mxs/config.json',
+      JSON.stringify({ api_url: 'https://blog.example.com' }),
+    )
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const mig = yield* Migration
+        return yield* mig.runLegacyMigrationIfNeeded({
+          isTTY: true,
+          promptIsProduction: async () => {
+            throw new Error('prompt unavailable')
+          },
+          report: null,
+        })
+      }).pipe(Effect.provide(layer)),
+    )
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (Exit.isFailure(exit)) {
+      expect(tagOf(exit.cause)).toBe('ConfigMigrationFailed')
+    }
     expect(mem.has('/xdg/mxs/config.json')).toBe(true)
   })
 })

@@ -71,6 +71,7 @@ const noopAuth: AuthService = {
       access_token: r.token ?? '',
       expires_at: Date.now() + 3600_000,
     }),
+  enrichUser: (_profile, _authBase, cred) => Effect.succeed(cred),
 }
 
 const none = <A>(): Option.Option<A> => Option.none()

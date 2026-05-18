@@ -1,3 +1,4 @@
+import { FileSystem } from '@effect/platform'
 import { it } from '@effect/vitest'
 import { Effect, Exit, Layer } from 'effect'
 import { afterEach, beforeEach, describe, expect } from 'vitest'
@@ -21,6 +22,24 @@ const makeLayer = () => {
   const configLayer = Config.Default.pipe(Layer.provide(baseLayer))
   return { mem, layer: Layer.merge(baseLayer, configLayer) }
 }
+
+const makeLayerWithFs = (
+  overrides: Parameters<typeof FileSystem.layerNoop>[0],
+) => {
+  const fsLayer = FileSystem.layerNoop(overrides)
+  const baseLayer = Layer.merge(fsLayer, TestPathLive)
+  const configLayer = Config.Default.pipe(Layer.provide(baseLayer))
+  return Layer.merge(baseLayer, configLayer)
+}
+
+const expectConfigFailure = async (
+  effect: Effect.Effect<unknown, unknown, never>,
+) => {
+  const exit = await Effect.runPromiseExit(effect)
+  expect(Exit.isFailure(exit)).toBe(true)
+}
+
+const failFs = (message: string) => Effect.fail(new Error(message) as never)
 
 beforeEach(() => {
   process.env.XDG_CONFIG_HOME = '/xdg'
@@ -185,6 +204,48 @@ describe('Config — profile config IO', () => {
     )
     expect(Exit.isFailure(exit)).toBe(true)
   })
+
+  it('maps profile config filesystem failures to Generic', async () => {
+    await expectConfigFailure(
+      Effect.gen(function* () {
+        const config = yield* Config
+        return yield* config.readProfileConfig('dev')
+      }).pipe(
+        Effect.provide(
+          makeLayerWithFs({
+            readFileString: () => failFs('read failed'),
+          }),
+        ),
+      ),
+    )
+
+    await expectConfigFailure(
+      Effect.gen(function* () {
+        const config = yield* Config
+        return yield* config.writeProfileConfig('dev', {})
+      }).pipe(
+        Effect.provide(
+          makeLayerWithFs({
+            makeDirectory: () => failFs('mkdir failed'),
+          }),
+        ),
+      ),
+    )
+
+    await expectConfigFailure(
+      Effect.gen(function* () {
+        const config = yield* Config
+        return yield* config.writeProfileConfig('dev', {})
+      }).pipe(
+        Effect.provide(
+          makeLayerWithFs({
+            makeDirectory: () => Effect.void,
+            writeFileString: () => failFs('write failed'),
+          }),
+        ),
+      ),
+    )
+  })
 })
 
 describe('Config — credentials IO', () => {
@@ -254,6 +315,21 @@ describe('Config — credentials IO', () => {
       process.stderr.write = descriptor
     }
   })
+
+  it('maps credential removal failures to Generic', async () => {
+    await expectConfigFailure(
+      Effect.gen(function* () {
+        const config = yield* Config
+        return yield* config.deleteProfileCredentials('dev')
+      }).pipe(
+        Effect.provide(
+          makeLayerWithFs({
+            remove: () => failFs('remove failed'),
+          }),
+        ),
+      ),
+    )
+  })
 })
 
 describe('Config — pointers, legacy files, and profile listing', () => {
@@ -306,6 +382,74 @@ describe('Config — pointers, legacy files, and profile listing', () => {
         yield* config.removeProfileDir('prod')
         expect(yield* config.profileExists('prod')).toBe(false)
       }).pipe(Effect.provide(layer)),
+    )
+  })
+
+  it('maps pointer and profile-listing filesystem failures to Generic', async () => {
+    await expectConfigFailure(
+      Effect.gen(function* () {
+        const config = yield* Config
+        return yield* config.writeCurrent('dev')
+      }).pipe(
+        Effect.provide(
+          makeLayerWithFs({
+            makeDirectory: () => failFs('mkdir failed'),
+          }),
+        ),
+      ),
+    )
+
+    await expectConfigFailure(
+      Effect.gen(function* () {
+        const config = yield* Config
+        return yield* config.writeCurrent('dev')
+      }).pipe(
+        Effect.provide(
+          makeLayerWithFs({
+            makeDirectory: () => Effect.void,
+            writeFileString: () => failFs('write failed'),
+          }),
+        ),
+      ),
+    )
+
+    await expectConfigFailure(
+      Effect.gen(function* () {
+        const config = yield* Config
+        return yield* config.listProfileDirs
+      }).pipe(
+        Effect.provide(
+          makeLayerWithFs({
+            readDirectory: () => failFs('list failed'),
+          }),
+        ),
+      ),
+    )
+
+    await expectConfigFailure(
+      Effect.gen(function* () {
+        const config = yield* Config
+        return yield* config.profileExists('dev')
+      }).pipe(
+        Effect.provide(
+          makeLayerWithFs({
+            stat: () => failFs('stat failed'),
+          }),
+        ),
+      ),
+    )
+
+    await expectConfigFailure(
+      Effect.gen(function* () {
+        const config = yield* Config
+        return yield* config.removeProfileDir('dev')
+      }).pipe(
+        Effect.provide(
+          makeLayerWithFs({
+            remove: () => failFs('remove failed'),
+          }),
+        ),
+      ),
     )
   })
 })

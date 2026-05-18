@@ -4,6 +4,7 @@ import { Effect } from 'effect'
 import { isExpiringSoon } from '../../services/Auth'
 import { Config } from '../../services/Config'
 import { Renderer } from '../../services/Renderer'
+import { statusView } from './view'
 
 export const status = Command.make('status', {}, () =>
   Effect.gen(function* () {
@@ -17,16 +18,21 @@ export const status = Command.make('status', {}, () =>
       : null
 
     if (!cred) {
-      yield* renderer.emitSuccess({ authenticated: false })
+      yield* renderer.emit(statusView, {
+        authenticated: false,
+        profile: profileName,
+      })
       return
     }
 
-    yield* renderer.emitSuccess({
+    const expiringSoon = isExpiringSoon(cred)
+    yield* renderer.emit(statusView, {
       authenticated: true,
       expires_at: cred.expires_at,
-      expiring_soon: isExpiringSoon(cred),
+      expiring_soon: expiringSoon,
       has_refresh: Boolean(cred.refresh_token),
       user: cred.user ?? null,
+      profile: profileName,
     })
   }),
 )

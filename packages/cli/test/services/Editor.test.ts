@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs'
+import { EventEmitter } from 'node:events'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -99,6 +100,24 @@ describe('Editor — service shape', () => {
       expect(result).toBe('edited')
     }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
   )
+
+  it.effect('openEditor maps a nonzero editor exit to Generic', () =>
+    Effect.gen(function* () {
+      const editor = yield* Editor
+      const result = yield* Effect.either(
+        editor.openEditor({
+          filename: 'fail.txt',
+          initialContent: 'initial',
+          editor: `${JSON.stringify(process.execPath)} -e "process.exit(7)"`,
+        }),
+      )
+      expect(result._tag).toBe('Left')
+      if (result._tag === 'Left') {
+        expect(result.left._tag).toBe('Generic')
+        expect(result.left.message).toContain('editor exited with code 7')
+      }
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+  )
 })
 
 describe('Editor — prompts', () => {
@@ -161,5 +180,67 @@ describe('Editor — prompts', () => {
         confirmSpy.mockReset()
       }
     }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('prompt and confirm map clack rejections to Generic', () =>
+    Effect.gen(function* () {
+      const textSpy = vi.mocked(Clack.text).mockRejectedValue('text failed')
+      const confirmSpy = vi
+        .mocked(Clack.confirm)
+        .mockRejectedValue(new Error('confirm failed'))
+      try {
+        const editor = yield* Editor
+        const promptResult = yield* Effect.either(editor.prompt('Question'))
+        const confirmResult = yield* Effect.either(editor.confirm('Confirm?'))
+        expect(promptResult._tag).toBe('Left')
+        expect(confirmResult._tag).toBe('Left')
+        if (promptResult._tag === 'Left') {
+          expect(promptResult.left.message).toBe('text failed')
+        }
+        if (confirmResult._tag === 'Left') {
+          expect(confirmResult.left.message).toBe('confirm failed')
+        }
+      } finally {
+        textSpy.mockReset()
+        confirmSpy.mockReset()
+      }
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+  )
+})
+
+describe('Editor — stdin', () => {
+  it.effect('reads from stdin when path is "-"', () =>
+    Effect.gen(function* () {
+      const fakeStdin = new EventEmitter() as EventEmitter & {
+        isPaused: () => boolean
+        resume: () => void
+      }
+      fakeStdin.isPaused = () => true
+      fakeStdin.resume = vi.fn(() => {
+        queueMicrotask(() => {
+          fakeStdin.emit('data', 'hello ')
+          fakeStdin.emit('data', Buffer.from('world'))
+          fakeStdin.emit('end')
+        })
+      })
+      const descriptor = Object.getOwnPropertyDescriptor(process, 'stdin')
+      Object.defineProperty(process, 'stdin', {
+        configurable: true,
+        value: fakeStdin,
+      })
+      try {
+        const promise = Effect.runPromise(
+          Effect.gen(function* () {
+            const editor = yield* Editor
+            return yield* editor.readFileOrStdin('-')
+          }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+        )
+        const result = yield* Effect.promise(() => promise)
+        expect(result).toBe('hello world')
+        expect(fakeStdin.resume).toHaveBeenCalledOnce()
+      } finally {
+        if (descriptor) Object.defineProperty(process, 'stdin', descriptor)
+      }
+    }),
   )
 })

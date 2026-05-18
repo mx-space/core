@@ -54,6 +54,7 @@ const makeAuthMock = (overrides: Partial<AuthService> = {}): AuthService => ({
   whoami: Effect.never as any,
   status: Effect.never as any,
   ensureFresh: () => Effect.never as any,
+  enrichUser: (_profile, _authBase, cred) => Effect.succeed(cred),
   ...overrides,
 })
 

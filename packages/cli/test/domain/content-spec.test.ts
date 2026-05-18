@@ -62,6 +62,50 @@ describe('readContentSpec', () => {
       if (descriptor) Object.defineProperty(process.stdin, 'isTTY', descriptor)
     }
   })
+
+  it('reads stdin specs when stdin is a stream', async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(process, 'stdin')
+    const fakeStdin = {
+      isTTY: false,
+      async *[Symbol.asyncIterator]() {
+        yield 'hello '
+        yield Buffer.from('world')
+      },
+    }
+    Object.defineProperty(process, 'stdin', {
+      configurable: true,
+      value: fakeStdin,
+    })
+    try {
+      await expect(run(readContentSpec('stdin'))).resolves.toEqual({
+        text: 'hello world',
+        origin: 'stdin',
+      })
+    } finally {
+      if (descriptor) Object.defineProperty(process, 'stdin', descriptor)
+    }
+  })
+
+  it('wraps stdin read failures as ValidationFailed', async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(process, 'stdin')
+    const fakeStdin = {
+      isTTY: false,
+      async *[Symbol.asyncIterator]() {
+        throw 'stream failed'
+      },
+    }
+    Object.defineProperty(process, 'stdin', {
+      configurable: true,
+      value: fakeStdin,
+    })
+    try {
+      const err = await run(Effect.flip(readContentSpec('-')))
+      expect(err._tag).toBe('ValidationFailed')
+      expect(err.message).toContain('stream failed')
+    } finally {
+      if (descriptor) Object.defineProperty(process, 'stdin', descriptor)
+    }
+  })
 })
 
 describe('readJsonSpec', () => {

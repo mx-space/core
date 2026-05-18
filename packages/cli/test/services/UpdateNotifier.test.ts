@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -17,7 +17,9 @@ import {
   satisfiesNodeEngine,
   shouldSkipNotify,
   type SpawnUpgradeResult,
+  UpdateNotifier,
   writeCacheAtomic,
+  layer as updateNotifierLayer,
 } from '../../src/services/UpdateNotifier'
 
 // ---------------------------------------------------------------------------
@@ -190,6 +192,9 @@ describe('compareSemver', () => {
     expect(compareSemver('1.0.0-rc.2', '1.0.0-rc.1')).toBe(1)
     expect(compareSemver('1.0.0-alpha', '1.0.0-alpha.1')).toBe(-1)
     expect(compareSemver('1.0.0-beta.2', '1.0.0-beta.alpha')).toBe(-1)
+    expect(compareSemver('1.0.0', '1.0.0-rc.1')).toBe(1)
+    expect(compareSemver('1.0.0-rc.1', '1.0.0-rc')).toBe(1)
+    expect(compareSemver('1.0.0-rc.alpha', '1.0.0-rc.1')).toBe(1)
     expect(compareSemver('bad', 'bad')).toBe(0)
     expect(compareSemver('bad-a', 'bad-b')).toBe(-1)
   })
@@ -280,6 +285,35 @@ describe('fetchLatestVersion', () => {
       /status 500/,
     )
   })
+
+  it('uses global fetch and the default registry when no fetch override is supplied', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        async json() {
+          return { version: '0.5.0' }
+        },
+      async text() {
+        return ''
+      },
+    } as unknown as Response)
+    try {
+      const hit = await fetchLatestVersion('stable')
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'https://registry.npmjs.org/@mx-space%2Fcli/latest',
+        expect.objectContaining({
+          headers: { accept: 'application/json' },
+        }),
+      )
+      expect('notModified' in hit).toBe(false)
+      if (!('notModified' in hit)) expect(hit.version).toBe('0.5.0')
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -293,6 +327,9 @@ describe('shouldSkipNotify', () => {
   })
   it('skips when json flag', () => {
     expect(shouldSkipNotify({ ...base, json: true })).toBe(true)
+  })
+  it('skips when json output mode is selected', () => {
+    expect(shouldSkipNotify({ ...base, output: 'json' })).toBe(true)
   })
   it('skips when CI is truthy', () => {
     expect(shouldSkipNotify({ ...base, env: { CI: 'true' } })).toBe(true)
@@ -310,6 +347,9 @@ describe('shouldSkipNotify', () => {
   })
   it('skips the update command itself', () => {
     expect(shouldSkipNotify({ ...base, commandName: 'update' })).toBe(true)
+  })
+  it('skips when invoked below the update parent command', () => {
+    expect(shouldSkipNotify({ ...base, parentName: 'update' })).toBe(true)
   })
 })
 
@@ -338,6 +378,13 @@ describe('cache read/write', () => {
     writeCacheAtomic({ last_check_ts: 123 }, tmpDir)
     const cacheFile = path.join(tmpDir, 'update-check.json')
     rmSync(cacheFile, { force: true })
+    expect(readCache(tmpDir)).toBeNull()
+  })
+
+  it('returns null when cache content has no numeric timestamp', () => {
+    const cacheFile = path.join(tmpDir, 'update-check.json')
+    writeCacheAtomic({ last_check_ts: 123 }, tmpDir)
+    writeFileSync(cacheFile, JSON.stringify({ latest_version: '0.3.0' }))
     expect(readCache(tmpDir)).toBeNull()
   })
 })
@@ -483,6 +530,45 @@ describe('maybeNotify', () => {
     expect(readCache(tmpDir)?.latest_version).toBe('0.4.0')
   })
 
+  it('uses XDG_CONFIG_HOME when no config directory override is supplied', async () => {
+    const previous = process.env.XDG_CONFIG_HOME
+    process.env.XDG_CONFIG_HOME = tmpDir
+    try {
+      const svc = make({
+        now: () => 1_000_000_000_000,
+        fetchImpl: makeFetchOK('0.4.0'),
+      })
+      await Effect.runPromise(
+        svc.maybeNotify({
+          currentVersion: '0.2.0',
+          isTTY: true,
+          env: {},
+          force: true,
+        }),
+      )
+      expect(readCache(path.join(tmpDir, 'mxs'))?.latest_version).toBe('0.4.0')
+    } finally {
+      if (previous === undefined) delete process.env.XDG_CONFIG_HOME
+      else process.env.XDG_CONFIG_HOME = previous
+    }
+  })
+
+  it('returns immediately when notify options request a skip', async () => {
+    const fetchImpl = vi.fn(makeFetchOK('0.4.0'))
+    const svc = make({ fetchImpl: fetchImpl as FetchImpl })
+    await Effect.runPromise(
+      svc.maybeNotify({
+        currentVersion: '0.2.0',
+        isTTY: true,
+        env: {},
+        quiet: true,
+        configDir: tmpDir,
+      }),
+    )
+    expect(fetchImpl).not.toHaveBeenCalled()
+    expect(readCache(tmpDir)).toBeNull()
+  })
+
   it('never throws even when the cache dir is unwritable', async () => {
     const svc = make({
       now: () => 1,
@@ -597,6 +683,31 @@ describe('runUpdate', () => {
     expect(spawnImpl).not.toHaveBeenCalled()
   })
 
+  it('emits the exact command for non-json dry-run updates', async () => {
+    const lines: string[] = []
+    const spawnImpl = vi.fn<
+      (cmd: string, args: string[]) => Promise<SpawnUpgradeResult>
+    >()
+    const svc = make({
+      fetchImpl: makeFetchOK('9.9.9'),
+      spawnImpl,
+      emitInfo: (line) => lines.push(line),
+    })
+    const res = await Effect.runPromise(
+      svc.runUpdate({
+        currentVersion: '0.2.0',
+        entrypoint:
+          '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+        dryRun: true,
+        yes: true,
+        json: false,
+      }),
+    )
+    expect(res.command).toBe('npm install -g @mx-space/cli@latest')
+    expect(lines.join('\n')).toContain('would run')
+    expect(spawnImpl).not.toHaveBeenCalled()
+  })
+
   it('returns check-only result and emits non-json announcement', async () => {
     const lines: string[] = []
     const spawnImpl = vi.fn<
@@ -639,6 +750,23 @@ describe('runUpdate', () => {
     expect(res.channel).toBe('next')
     expect(res.pm).toBe('pnpm')
     expect(res.command).toBe('pnpm add -g @mx-space/cli@next')
+  })
+
+  it('maps unexpected 304 during runUpdate to UpdateRegistryUnreachable', async () => {
+    const svc = make({ fetchImpl: makeFetch304() })
+    const exit = await Effect.runPromiseExit(
+      svc.runUpdate({
+        currentVersion: '0.2.0',
+        entrypoint:
+          '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+        yes: true,
+        json: true,
+      }),
+    )
+    expect(exit._tag).toBe('Failure')
+    if (exit._tag === 'Failure') {
+      expect(extractTag(exit.cause)).toBe('UpdateRegistryUnreachable')
+    }
   })
 
   it('returns cancelled result when interactive confirmation rejects', async () => {
@@ -777,6 +905,29 @@ describe('runUpdate', () => {
     expect(spawnImpl).toHaveBeenCalledOnce()
   })
 
+  it('emits restart guidance after a non-json successful spawn', async () => {
+    const lines: string[] = []
+    const spawnImpl = vi.fn<
+      (cmd: string, args: string[]) => Promise<SpawnUpgradeResult>
+    >(async () => ({ status: 0, stderr: '' }))
+    const svc = make({
+      fetchImpl: makeFetchOK('9.9.9'),
+      spawnImpl,
+      emitInfo: (line) => lines.push(line),
+    })
+    const res = await Effect.runPromise(
+      svc.runUpdate({
+        currentVersion: '0.2.0',
+        entrypoint:
+          '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+        yes: true,
+        json: false,
+      }),
+    )
+    expect(res.upgraded).toBe(true)
+    expect(lines.join('\n')).toContain('Restart any long-running mxs process')
+  })
+
   it('maps EACCES stderr to UpdatePermissionDenied', async () => {
     const spawnImpl = async () => ({
       status: 1,
@@ -834,6 +985,18 @@ describe('runUpdate', () => {
     if (exit._tag === 'Failure') {
       expect(extractTag(exit.cause)).toBe('UpdatePmUnknown')
     }
+  })
+})
+
+describe('UpdateNotifier layer', () => {
+  it('provides a service through the exported layer factory', async () => {
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const notifier = yield* UpdateNotifier
+        return typeof notifier.maybeNotify
+      }).pipe(Effect.provide(updateNotifierLayer())),
+    )
+    expect(result).toBe('function')
   })
 })
 

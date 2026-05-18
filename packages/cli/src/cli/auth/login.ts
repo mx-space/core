@@ -13,6 +13,7 @@ import {
 import { Editor } from '../../services/Editor'
 import { Profile } from '../../services/Profile'
 import { Renderer } from '../../services/Renderer'
+import { arrow, bold, dim, humanDuration, indent, ok, roundedBox } from '../ui'
 
 const production = Options.boolean('production', {
   negationNames: ['no-production'],
@@ -65,21 +66,20 @@ export const login = Command.make('login', { production }, ({ production }) =>
       targetProfile = yield* config.readCurrent
     }
 
-    yield* renderer.emitInfo(`probing ${apiUrl}…`)
+    yield* renderer.emitInfoBlock(
+      ({ color }) => `${arrow(`probing ${apiUrl}…`, color)}`,
+    )
 
     // 2. Probe the auth endpoint.
-    const probeResult = yield* auth
-      .probe(apiUrl)
-      .pipe(
-        Effect.mapError(
-          (e) =>
-            new Generic({
-              message: e.message ?? 'auth probe failed',
-              cause: e,
-            }),
-        ),
-      )
-    yield* renderer.emitInfo(`API base: ${probeResult.apiBase}`)
+    const probeResult = yield* auth.probe(apiUrl).pipe(
+      Effect.mapError(
+        (e) =>
+          new Generic({
+            message: e.message ?? 'auth probe failed',
+            cause: e,
+          }),
+      ),
+    )
 
     // 3. Request the device code.
     const code = yield* auth.requestDeviceCode(
@@ -87,9 +87,21 @@ export const login = Command.make('login', { production }, ({ production }) =>
       DEFAULT_CLIENT_ID,
     )
 
-    yield* renderer.emitInfo(`visit: ${code.verification_uri}`)
-    yield* renderer.emitInfo(`code:  ${code.user_code}`)
-    yield* renderer.emitInfo(`expires in ${code.expires_in}s`)
+    // Boxed device-code banner: verification URL on top, code in a rounded
+    // box for legibility, expiry hint underneath.
+    yield* renderer.emitInfoBlock(({ color }) => {
+      const ttl = humanDuration(code.expires_in)
+      const lines = [
+        `  ${dim('API base:', color)} ${probeResult.apiBase}`,
+        '',
+        `  Visit ${bold(code.verification_uri, color)} and enter:`,
+        '',
+        indent(roundedBox([`  ${bold(code.user_code, color)}  `]), 6),
+        '',
+        `  ${dim(`Expires in ${ttl}.`, color)}`,
+      ]
+      return lines.join('\n')
+    })
 
     if (opts.json) {
       yield* renderer.emitSuccess({
@@ -145,6 +157,14 @@ export const login = Command.make('login', { production }, ({ production }) =>
     yield* config.writeProfileCredentials(target, cred)
     yield* config.writeCurrent(target)
 
+    // Some servers (notably local-dev) omit `user` from the device-token
+    // response. Probe `/get-session` to backfill so `whoami` / `status` have
+    // something to display. Best-effort: failures fall back to the original
+    // creds and are surfaced only via the missing-user readable output.
+    const enriched = yield* auth
+      .enrichUser(target, probeResult.authBase, cred)
+      .pipe(Effect.catchAll(() => Effect.succeed(cred)))
+
     // 6. Mark production via the Profile service when explicitly requested
     //    (idempotent with the write above — Profile.mark enforces the
     //    profile-exists invariant and is the documented surface).
@@ -160,10 +180,22 @@ export const login = Command.make('login', { production }, ({ production }) =>
         )
     }
 
-    yield* renderer.emitInfo(`mxs: logged in to profile '${target}'`)
-    yield* renderer.emitSuccess({
-      user: cred.user ?? null,
-      expires_at: cred.expires_at,
-    })
+    yield* renderer.emitView(
+      {
+        user: enriched.user ?? null,
+        expires_at: enriched.expires_at,
+        profile: target,
+      },
+      ({ color }) => {
+        const head = ok(`logged in to '${target}'`, color)
+        const user = enriched.user
+        if (!user || (!user.name && !user.email)) return head
+        const name = user.name ?? user.email ?? ''
+        const email = user.name && user.email ? ` (${user.email})` : ''
+        const role = (user as { role?: string }).role
+        const meta = role ? `${name}${email} · ${role}` : `${name}${email}`
+        return `${head}\n  ${dim(meta, color)}`
+      },
+    )
   }),
 )

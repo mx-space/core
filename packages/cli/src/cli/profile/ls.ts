@@ -4,6 +4,7 @@ import { Effect } from 'effect'
 import { Config, type ConfigShape } from '../../services/Config'
 import { Profile } from '../../services/Profile'
 import { Renderer } from '../../services/Renderer'
+import { profileListView } from './view'
 
 export const ls = Command.make('ls', {}, () =>
   Effect.gen(function* () {
@@ -32,6 +33,6 @@ export const ls = Command.make('ls', {}, () =>
       })
     }
 
-    yield* renderer.emitProfileList(rows)
+    yield* renderer.emit(profileListView, rows)
   }),
 )

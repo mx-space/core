@@ -6,6 +6,7 @@ import { Auth } from '../../services/Auth'
 import { Config } from '../../services/Config'
 import { Profile } from '../../services/Profile'
 import { Renderer } from '../../services/Renderer'
+import { whoamiView } from './view'
 
 export const whoami = Command.make('whoami', {}, () =>
   Effect.gen(function* () {
@@ -35,9 +36,22 @@ export const whoami = Command.make('whoami', {}, () =>
       .ensureFresh(resolved)
       .pipe(Effect.catchTag('Generic', () => Effect.succeed(cred)))
 
-    yield* renderer.emitSuccess({
-      user: refreshed?.user ?? cred?.user ?? null,
+    // Backfill user via /get-session when the cached cred lacks it (servers
+    // that omit `user` from the device-token response). Best-effort.
+    const active = refreshed ?? cred
+    const enriched =
+      active && !active.user && resolved.profileName
+        ? yield* auth
+            .enrichUser(resolved.profileName, resolved.authBase, active)
+            .pipe(Effect.catchAll(() => Effect.succeed(active)))
+        : active
+
+    yield* renderer.emit(whoamiView, {
+      user: enriched?.user ?? null,
       api_url: resolved.apiUrl,
+      profile: resolved.profileName,
+      expires_at:
+        (enriched as { expires_at?: number } | null)?.expires_at ?? null,
     })
   }),
 )

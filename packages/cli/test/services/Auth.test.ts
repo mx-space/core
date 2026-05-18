@@ -6,6 +6,7 @@ import {
 import { describe, expect, it as itVitest, vi } from '@effect/vitest'
 import { Effect, Layer } from 'effect'
 
+import { Generic } from '../../src/domain/errors'
 import {
   Auth,
   isExpiringSoon,
@@ -42,6 +43,7 @@ const makeMockConfigLayer = (
   creds: CredentialsShape | null,
   writes: { last: CredentialsShape | null } = { last: null },
   deletes: { invokedFor: string | null } = { invokedFor: null },
+  resolveOverride?: ConfigService['resolve'],
 ) => {
   const service: ConfigService = {
     getConfigDir: Effect.succeed('/tmp'),
@@ -76,7 +78,7 @@ const makeMockConfigLayer = (
     listProfileDirs: Effect.succeed([]),
     profileExists: () => Effect.succeed(true),
     removeProfileDir: () => Effect.void,
-    resolve: () => Effect.succeed(resolved),
+    resolve: resolveOverride ?? (() => Effect.succeed(resolved)),
   }
   return Layer.succeed(Config, service)
 }
@@ -862,21 +864,15 @@ describe('Auth user-facing summaries', () => {
   })
 
   itVitest('whoami and status wrap config resolution failures as Generic', async () => {
-    const failingConfig: ConfigService = {
-      ...Layer,
-    } as never
-    const configLayer = makeMockConfigLayer(baseResolved, null)
     const layer = Auth.Default.pipe(
       Layer.provide(
-        Layer.succeed(Config, {
-          ...(await Effect.runPromise(
-            Effect.gen(function* () {
-              return yield* Config
-            }).pipe(Effect.provide(configLayer)),
-          )),
-          resolve: () =>
-            Effect.fail(new Generic({ message: 'resolve failed' })),
-        } satisfies ConfigService),
+        makeMockConfigLayer(
+          baseResolved,
+          null,
+          undefined,
+          undefined,
+          () => Effect.fail(new Generic({ message: 'resolve failed' })),
+        ),
       ),
       Layer.provide(testHttpLayer({}).layer),
     )
@@ -949,7 +945,12 @@ describe('Auth.logout', () => {
 
     const noTargetLayer = Auth.Default.pipe(
       Layer.provide(
-        makeMockConfigLayer({ ...baseResolved, profileName: null }, null, undefined, deletes),
+        makeMockConfigLayer(
+          { ...baseResolved, profileName: null },
+          null,
+          undefined,
+          deletes,
+        ),
       ),
       Layer.provide(http.layer),
     )

@@ -39,7 +39,7 @@ export const show = Command.make('show', { name: nameArg }, ({ name }) =>
     const expiresHuman =
       expiresAt !== null ? new Date(expiresAt).toISOString() : null
 
-    yield* renderer.emitProfileShow({
+    yield* renderer.emitSuccess({
       name: target,
       api_url: cfg.api_url ?? null,
       production: cfg.production ?? false,

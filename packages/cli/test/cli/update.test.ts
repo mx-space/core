@@ -2,7 +2,7 @@ import { Effect, Exit, Layer, Option } from 'effect'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { updateCmd as update } from '../../src/cli/update'
-import { UpdatePmUnknown } from '../../src/domain/errors'
+import { Generic, UpdatePmUnknown } from '../../src/domain/errors'
 import { Editor, type EditorService } from '../../src/services/Editor'
 import { Renderer } from '../../src/services/Renderer'
 import * as UpdaterMod from '../../src/services/UpdateNotifier'
@@ -280,6 +280,59 @@ describe('update command', () => {
     }
   })
 
+  it('wires update confirmation through the Editor service', async () => {
+    const confirm = vi.fn(() =>
+      Effect.fail(new Generic({ message: 'prompt unavailable' })),
+    )
+    vi.spyOn(UpdaterMod, 'make').mockImplementation((deps = {}) => ({
+      maybeNotify: () => Effect.void,
+      runUpdate: () =>
+        Effect.promise(() => deps.confirmImpl!('Install update?')).pipe(
+          Effect.map((accepted) => ({
+            fromVersion: '0.3.0',
+            toVersion: '0.4.0',
+            pm: 'npm',
+            channel: 'stable',
+            status: 0,
+            upgraded: false,
+            dryRun: true,
+            upToDate: false,
+            command: 'npm install -g @mx-space/cli@latest',
+            cancelled: accepted === false,
+          })),
+        ),
+    }))
+
+    const cap = captureStdout()
+    try {
+      const exit = await Effect.runPromiseExit(
+        update
+          .handler({
+            check: Option.none(),
+            prerelease: Option.none(),
+            pm: Option.none(),
+            force: Option.none(),
+            yes: Option.none(),
+          })
+          .pipe(
+            Effect.provide(buildLayer({ confirm })),
+            Renderer.withOptions({
+              json: true,
+              output: 'json',
+              quiet: false,
+              verbose: false,
+            }),
+          ),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      expect(confirm).toHaveBeenCalledWith('Install update?')
+      const parsed = JSON.parse(cap.data.join('').trim())
+      expect(parsed.data.cancelled).toBe(true)
+    } finally {
+      cap.restore()
+    }
+  })
+
   it('emits dry_run command envelope when no install ran outside --check', async () => {
     vi.spyOn(UpdaterMod, 'make').mockReturnValue({
       maybeNotify: () => Effect.void,
@@ -363,6 +416,54 @@ describe('update command', () => {
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) {
       expect(tagOf(exit.cause)).toBe('UpdatePmUnknown')
+    }
+  })
+
+  it('emits an informational up-to-date line for non-json output', async () => {
+    vi.spyOn(UpdaterMod, 'make').mockReturnValue({
+      maybeNotify: () => Effect.void,
+      runUpdate: () =>
+        Effect.succeed({
+          fromVersion: '0.3.0',
+          toVersion: '0.3.0',
+          pm: 'npm',
+          channel: 'stable',
+          status: 0,
+          upgraded: false,
+          dryRun: true,
+          upToDate: true,
+        }),
+    })
+
+    const cap = captureStdout()
+    const errCap = captureStderr()
+    try {
+      const exit = await Effect.runPromiseExit(
+        update
+          .handler({
+            check: Option.none(),
+            prerelease: Option.none(),
+            pm: Option.none(),
+            force: Option.none(),
+            yes: Option.some(true),
+          })
+          .pipe(
+            Effect.provide(buildLayer()),
+            Renderer.withOptions({
+              json: false,
+              output: 'readable',
+              quiet: false,
+              verbose: false,
+            }),
+          ),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      const stdout = cap.data.join('')
+      expect(stdout).toContain('up to date')
+      expect(stdout).toContain('0.3.0')
+    } finally {
+      cap.restore()
+      errCap.restore()
     }
   })
 })

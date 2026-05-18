@@ -4,6 +4,7 @@ import { Effect } from 'effect'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { isSnowflakeId } from '../../services/Resolver'
+import { pageView } from './view'
 
 const slugOrId = Args.text({ name: 'slugOrId' })
 
@@ -15,6 +16,6 @@ export const get = Command.make('get', { slugOrId }, ({ slugOrId }) =>
       ? `/pages/${slugOrId}`
       : `/pages/slug/${encodeURIComponent(slugOrId)}`
     const res = yield* api.request(path, { query: { prefer: 'lexical' } })
-    yield* renderer.emitDocument('page', res)
+    yield* renderer.emit(pageView, res)
   }),
 )

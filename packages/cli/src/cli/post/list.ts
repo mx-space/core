@@ -3,6 +3,7 @@ import { Effect, Option } from 'effect'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
+import { postListView } from './view'
 
 const page = Options.integer('page').pipe(Options.optional)
 const size = Options.integer('size').pipe(Options.optional)
@@ -31,6 +32,6 @@ export const list = Command.make(
           sortBy: unwrap(sort),
         },
       })
-      yield* renderer.emitPostList(res)
+      yield* renderer.emit(postListView, res)
     }),
 ).pipe(Command.withDescription('list posts'))
