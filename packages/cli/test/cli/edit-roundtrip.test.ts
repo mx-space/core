@@ -105,6 +105,8 @@ const commonPostOptions = {
   related: none<string>(),
   meta: none<string>(),
   file: none<string>(),
+  open: false,
+  silent: false,
 }
 
 const commonNoteOptions = {
@@ -124,6 +126,8 @@ const commonNoteOptions = {
   images: none<string>(),
   meta: none<string>(),
   file: none<string>(),
+  open: false,
+  silent: false,
 }
 
 const commonPageOptions = {
@@ -135,6 +139,8 @@ const commonPageOptions = {
   format: none<'lexical' | 'markdown'>(),
   meta: none<string>(),
   file: none<string>(),
+  open: false,
+  silent: false,
 }
 
 describe('edit command no-change round trip', () => {

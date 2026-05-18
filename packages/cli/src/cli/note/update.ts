@@ -1,6 +1,7 @@
 import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
 
+import { openAdminEdit } from '../../domain/admin-link'
 import { buildNotePayload } from '../../domain/payload'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
@@ -31,6 +32,7 @@ export const update = Command.make(
         method: 'PATCH',
         body: resolved,
       })
-      yield* renderer.emitSuccess(res)
+      yield* renderer.emitSuccess(rest.silent ? { ok: true } : res)
+      if (rest.open) yield* openAdminEdit('notes', id)
     }),
 ).pipe(Command.withDescription('partially update a note'))

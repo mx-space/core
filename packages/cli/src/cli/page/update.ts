@@ -1,6 +1,7 @@
 import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
 
+import { openAdminEdit } from '../../domain/admin-link'
 import { ResourceNotFound } from '../../domain/errors'
 import { buildPagePayload } from '../../domain/payload'
 import { Api, type ApiService } from '../../services/Api'
@@ -58,6 +59,7 @@ export const update = Command.make(
         method: 'PATCH',
         body,
       })
-      yield* renderer.emitSuccess(res)
+      yield* renderer.emitSuccess(rest.silent ? { ok: true } : res)
+      if (rest.open) yield* openAdminEdit('pages', id)
     }),
 )

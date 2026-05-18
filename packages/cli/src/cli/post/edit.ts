@@ -1,6 +1,7 @@
 import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
 
+import { openAdminEdit } from '../../domain/admin-link'
 import { coerceMeta, parseEnvelope } from '../../domain/envelope'
 import { ValidationXml } from '../../domain/errors'
 import { buildPostPayload } from '../../domain/payload'
@@ -120,7 +121,8 @@ export const edit = Command.make(
           method: 'PUT',
           body: resolved,
         })
-        yield* renderer.emitSuccess(res)
+        yield* renderer.emitSuccess(rest.silent ? { ok: true } : res)
+        if (rest.open) yield* openAdminEdit('posts', id)
         return
       }
 
@@ -132,6 +134,7 @@ export const edit = Command.make(
         method: 'PUT',
         body: resolved,
       })
-      yield* renderer.emitSuccess(res)
+      yield* renderer.emitSuccess(rest.silent ? { ok: true } : res)
+      if (rest.open) yield* openAdminEdit('posts', id)
     }),
 ).pipe(Command.withDescription('edit a post via $EDITOR or flags'))

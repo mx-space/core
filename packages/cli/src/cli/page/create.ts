@@ -1,10 +1,12 @@
 import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
 
+import { openAdminEdit } from '../../domain/admin-link'
 import type { PageFlagInputs } from '../../domain/payload'
 import { buildPagePayload } from '../../domain/payload'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
+import { extractId } from '../post/_flags'
 
 const title = Options.optional(Options.text('title'))
 const slug = Options.optional(Options.text('slug'))
@@ -16,6 +18,16 @@ const format = Options.choice('format', ['lexical', 'markdown']).pipe(
 )
 const meta = Options.optional(Options.text('meta'))
 const file = Options.optional(Options.text('file'))
+const openFlag = Options.boolean('open').pipe(
+  Options.withDescription(
+    'After success, open the admin edit page in the default browser.',
+  ),
+)
+const silentFlag = Options.boolean('silent').pipe(
+  Options.withDescription(
+    'On success, emit a minimal `ok` instead of the full server response (saves output tokens). Errors still print normally.',
+  ),
+)
 
 export const pageWriteOptions = {
   title,
@@ -26,6 +38,8 @@ export const pageWriteOptions = {
   format,
   meta,
   file,
+  open: openFlag,
+  silent: silentFlag,
 }
 
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>
@@ -40,6 +54,8 @@ export const toPageFlagInputs = (opts: {
   readonly format: Option.Option<'lexical' | 'markdown'>
   readonly meta: Option.Option<string>
   readonly file: Option.Option<string>
+  readonly open: boolean
+  readonly silent: boolean
 }): PageFlagInputs => ({
   title: unwrap(opts.title),
   slug: unwrap(opts.slug),
@@ -61,6 +77,10 @@ export const create = Command.make('create', pageWriteOptions, (opts) =>
       method: 'POST',
       body: built.payload,
     })
-    yield* renderer.emitSuccess(res)
+    yield* renderer.emitSuccess(opts.silent ? { ok: true } : res)
+    if (opts.open) {
+      const id = extractId(res)
+      if (id) yield* openAdminEdit('pages', id)
+    }
   }),
 )

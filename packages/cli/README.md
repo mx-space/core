@@ -19,9 +19,11 @@ Node.js 22 or newer is required.
 
 ```bash
 mxs auth login
-mxs post create --file ./post.xml
-mxs post update my-slug --title "New title" --state publish
-mxs post get my-slug --output llm
+mxs post create --file ./post.xml --open --silent     # open admin preview, terse output
+mxs post get my-slug --output xml > /tmp/post.xml     # round-trip envelope
+# edit /tmp/post.xml ...
+mxs post update my-slug --file /tmp/post.xml --open
+mxs post publish my-slug
 ```
 
 When the CLI cannot resolve an API URL, it starts an interactive onboarding prompt in TTY contexts. Use `MXS_API_URL` or `--api-url` for non-interactive environments.
@@ -206,6 +208,14 @@ Existing installations that use the legacy flat files (`~/.config/mxs/config.jso
 | `--related <csv>`         | Comma-separated related document ids.                                  |
 | `--meta <spec>`           | JSON literal or `file=<path>`.                                         |
 | `--file <path>`           | LiteXML envelope.                                                      |
+| `--open`                  | After success, open the admin edit page in the default browser.        |
+| `--silent`                | On success, emit `ok` instead of the full server response.             |
+
+`--open` and `--silent` are also available on `post update`, `post edit`,
+`note create`/`update`, and `page create`/`update`. The admin URL is
+resolved from the server's `/options/url.admin_url` config; the opened
+URL follows the admin-vue3 hash-router convention
+(`${admin_url}#/<kind>/edit?id=<id>`).
 
 ## Notes
 

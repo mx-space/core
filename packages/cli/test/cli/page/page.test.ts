@@ -149,6 +149,8 @@ describe('page create command', () => {
           format: Option.none(),
           meta: Option.none(),
           file: Option.none(),
+          open: false,
+          silent: false,
         })
         .pipe(
           Effect.provide(
@@ -188,6 +190,8 @@ describe('page update command', () => {
           format: Option.none(),
           meta: Option.none(),
           file: Option.none(),
+          open: false,
+          silent: false,
         })
         .pipe(
           Effect.provide(

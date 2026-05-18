@@ -162,6 +162,8 @@ describe('post command CRUD handlers', () => {
           related: none(),
           meta: none(),
           file: none(),
+          open: false,
+          silent: false,
         })
         .pipe(
           Effect.provide(buildLayer(calls)),
@@ -290,6 +292,8 @@ describe('note command CRUD handlers', () => {
           images: none(),
           meta: none(),
           file: none(),
+          open: false,
+          silent: false,
         })
         .pipe(
           Effect.provide(buildLayer(calls)),

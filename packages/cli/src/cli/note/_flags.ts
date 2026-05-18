@@ -30,6 +30,16 @@ export const format = Options.choice('format', ['lexical', 'markdown']).pipe(
 export const state = Options.choice('state', ['publish', 'draft']).pipe(
   Options.optional,
 )
+export const openFlag = Options.boolean('open').pipe(
+  Options.withDescription(
+    'After success, open the admin edit page in the default browser.',
+  ),
+)
+export const silentFlag = Options.boolean('silent').pipe(
+  Options.withDescription(
+    'On success, emit a minimal `ok` instead of the full server response (saves output tokens). Errors still print normally.',
+  ),
+)
 
 export const noteWriteOptions = {
   title,
@@ -48,6 +58,8 @@ export const noteWriteOptions = {
   images,
   meta,
   file,
+  open: openFlag,
+  silent: silentFlag,
 }
 
 export type NoteWriteOptionsParsed = {
@@ -67,6 +79,8 @@ export type NoteWriteOptionsParsed = {
   readonly images: Option.Option<string>
   readonly meta: Option.Option<string>
   readonly file: Option.Option<string>
+  readonly open: boolean
+  readonly silent: boolean
 }
 
 const parseBoolean = (v: string | undefined): boolean | undefined =>

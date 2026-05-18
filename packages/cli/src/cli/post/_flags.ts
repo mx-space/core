@@ -34,6 +34,17 @@ export const related = optional(Options.text('related'))
 export const pinOrder = optional(Options.integer('pin-order'))
 export const copyright = optional(Options.text('copyright'))
 
+export const openFlag = Options.boolean('open').pipe(
+  Options.withDescription(
+    'After success, open the admin edit page in the default browser.',
+  ),
+)
+export const silentFlag = Options.boolean('silent').pipe(
+  Options.withDescription(
+    'On success, emit a minimal `ok` instead of the full server response (saves output tokens). Errors still print normally.',
+  ),
+)
+
 const parseCsv = (v: string | undefined): string[] | undefined => {
   if (v === undefined) return undefined
   const parts = v
@@ -61,6 +72,8 @@ export const postWriteOptions = {
   related,
   meta,
   file,
+  open: openFlag,
+  silent: silentFlag,
 }
 
 export type PostWriteOptionsParsed = {
@@ -78,6 +91,8 @@ export type PostWriteOptionsParsed = {
   readonly related: Option.Option<string>
   readonly meta: Option.Option<string>
   readonly file: Option.Option<string>
+  readonly open: boolean
+  readonly silent: boolean
 }
 
 /** Resolve `__categoryName` placeholder (set by `buildPostPayload`) → `categoryId`. */
@@ -117,3 +132,12 @@ export const toPostFlagInputs = (
   meta: unwrap(opts.meta),
   file: unwrap(opts.file),
 })
+
+/** Extract the id from a server response — handles both `id` and `_id`. */
+export const extractId = (res: unknown): string | undefined => {
+  if (!res || typeof res !== 'object') return undefined
+  const r = res as Record<string, unknown>
+  if (typeof r.id === 'string') return r.id
+  if (typeof r._id === 'string') return r._id
+  return undefined
+}

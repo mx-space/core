@@ -94,6 +94,8 @@ const baseEmpty = {
   images: none<string>(),
   meta: none<string>(),
   file: none<string>(),
+  open: false,
+  silent: false,
 }
 
 const makeLayer = (http: ReturnType<typeof testHttpLayer>) => {
