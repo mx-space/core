@@ -1,5 +1,11 @@
-import { emitSuccess, type OutputOptions } from '../../core/output'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
+import { emitPostList } from '../../core/document-output'
+import type { OutputOptions } from '../../core/output'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+  withLangQuery,
+} from '../internal/shared'
 
 export interface PostListFlags {
   page?: number
@@ -19,12 +25,12 @@ export async function run(
     data: unknown[]
     pagination?: unknown
   }>('/posts', {
-    query: {
+    query: withLangQuery(flags, {
       page: opts.page,
       size: opts.size,
       state: opts.state,
       sortBy: opts.sort,
-    },
+    }),
   })
-  emitSuccess(res.data, out)
+  emitPostList(res.data, out)
 }

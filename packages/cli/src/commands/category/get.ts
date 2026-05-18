@@ -1,5 +1,10 @@
 import { emitSuccess, type OutputOptions } from '../../core/output'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+  withLangQuery,
+} from '../internal/shared'
 
 export async function run(
   slugOrId: string,
@@ -8,6 +13,8 @@ export async function run(
 ) {
   const ctx = await resolveContext(flags, out)
   const client = buildApiClient(ctx, flags)
-  const res = await client.request(`/categories/${slugOrId}`)
+  const res = await client.request(`/categories/${slugOrId}`, {
+    query: withLangQuery(flags),
+  })
   emitSuccess(res.data, out)
 }

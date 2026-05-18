@@ -1,7 +1,12 @@
 import { emitDocument, type DocumentKind } from '../../core/document-output'
 import type { OutputOptions } from '../../core/output'
 import { isSnowflakeId } from '../../core/resolve'
-import { buildApiClient, type GlobalFlags, resolveContext } from '../internal/shared'
+import {
+  buildApiClient,
+  type GlobalFlags,
+  resolveContext,
+  withLangQuery,
+} from '../internal/shared'
 
 const KIND: DocumentKind = 'page'
 
@@ -15,6 +20,8 @@ export async function run(
   const path = isSnowflakeId(slugOrId)
     ? `/pages/${slugOrId}`
     : `/pages/slug/${slugOrId}`
-  const res = await client.request(path, { query: { prefer: 'lexical' } })
+  const res = await client.request(path, {
+    query: withLangQuery(flags, { prefer: 'lexical' }),
+  })
   emitDocument(KIND, res.data, out)
 }

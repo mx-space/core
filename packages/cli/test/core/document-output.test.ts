@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  renderPostList,
   renderDocumentEnvelope,
   renderReadableDocument,
 } from '../../src/core/document-output'
@@ -67,5 +68,34 @@ describe('document output rendering', () => {
     expect(rendered).toContain('<tag>cli</tag>')
     expect(rendered).toContain('<tag>ai</tag>')
     expect(rendered).not.toContain('<tags>cli,ai</tags>')
+  })
+
+  it('renders post lists as concise readable rows for LLM output', () => {
+    const rendered = renderPostList({
+      data: [
+        {
+          id: '1',
+          title: 'Translated Title',
+          slug: 'translated-title',
+          isTranslated: true,
+          sourceLang: 'zh-CN',
+          isPublished: true,
+          category: { name: 'Tech' },
+          tags: ['cli', 'llm'],
+          summary: 'Short summary.',
+        },
+      ],
+      pagination: { page: 1, size: 10, total: 1 },
+    })
+
+    expect(rendered).toContain('posts')
+    expect(rendered).toContain('count: 1')
+    expect(rendered).toContain('page: 1')
+    expect(rendered).toContain('post 1:')
+    expect(rendered).toContain('title: Translated Title')
+    expect(rendered).toContain('category: Tech')
+    expect(rendered).toContain('tags: cli, llm')
+    expect(rendered).toContain('translated: true')
+    expect(rendered).not.toContain('content:')
   })
 })

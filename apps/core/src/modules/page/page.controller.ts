@@ -42,6 +42,41 @@ export class PageController {
     private readonly enrichmentService: EnrichmentService,
   ) {}
 
+  private async buildPageDetailResponse(
+    page: PageModel,
+    query: PageDetailQueryDto,
+    lang?: string,
+  ) {
+    const translationResult = await this.translationService.translateArticle({
+      articleId: String(page.id),
+      targetLang: lang,
+      originalData: {
+        title: page.title,
+        text: page.text,
+        subtitle: page.subtitle,
+      },
+    })
+
+    const finalDoc = applyContentPreference(
+      {
+        ...page,
+        title: translationResult.title,
+        text: translationResult.text,
+        subtitle: translationResult.subtitle,
+        ...(translationResult.content && {
+          content: translationResult.content,
+          contentFormat: translationResult.contentFormat,
+        }),
+        isTranslated: translationResult.isTranslated,
+        sourceLang: translationResult.sourceLang,
+        translationMeta: translationResult.translationMeta,
+        availableTranslations: translationResult.availableTranslations,
+      },
+      query.prefer,
+    )
+    return this.enrichmentService.attachEnrichments(finalDoc)
+  }
+
   @Get('/')
   async getPagesSummary(@Query() query: PagerDto, @Lang() lang?: string) {
     const { size, select, page } = query
@@ -110,12 +145,16 @@ export class PageController {
 
   @Get('/:id')
   @Auth()
-  async getPageById(@Param() params: EntityIdDto) {
+  async getPageById(
+    @Param() params: EntityIdDto,
+    @Query() query: PageDetailQueryDto,
+    @Lang() lang?: string,
+  ) {
     const page = await this.pageService.findById(params.id)
     if (!page) {
       throw new CannotFindException()
     }
-    return this.enrichmentService.attachEnrichments(page)
+    return this.buildPageDetailResponse(page, query, lang)
   }
 
   @Get('/slug/:slug')
@@ -133,34 +172,7 @@ export class PageController {
       throw new CannotFindException()
     }
 
-    const translationResult = await this.translationService.translateArticle({
-      articleId: String(page.id),
-      targetLang: lang,
-      originalData: {
-        title: page.title,
-        text: page.text,
-        subtitle: page.subtitle,
-      },
-    })
-
-    const finalDoc = applyContentPreference(
-      {
-        ...page,
-        title: translationResult.title,
-        text: translationResult.text,
-        subtitle: translationResult.subtitle,
-        ...(translationResult.content && {
-          content: translationResult.content,
-          contentFormat: translationResult.contentFormat,
-        }),
-        isTranslated: translationResult.isTranslated,
-        sourceLang: translationResult.sourceLang,
-        translationMeta: translationResult.translationMeta,
-        availableTranslations: translationResult.availableTranslations,
-      },
-      query.prefer,
-    )
-    return this.enrichmentService.attachEnrichments(finalDoc)
+    return this.buildPageDetailResponse(page, query, lang)
   }
 
   @Post('/')

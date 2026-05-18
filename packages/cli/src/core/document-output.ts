@@ -4,6 +4,13 @@ import { emitSuccess, type OutputOptions } from './output'
 
 export type DocumentKind = 'post' | 'note' | 'page'
 
+const POST_LIST_OUTPUT_MODES = new Set([
+  'pretty-json',
+  'json',
+  'readable',
+  'llm',
+])
+
 const DOCUMENT_OUTPUT_MODES = new Set([
   'pretty-json',
   'json',
@@ -39,6 +46,24 @@ export function emitDocument(
   process.stdout.write(`${rendered}\n`)
 }
 
+export function emitPostList(data: unknown, opts: OutputOptions): void {
+  const mode = opts.output ?? 'pretty-json'
+  if (!POST_LIST_OUTPUT_MODES.has(mode)) {
+    throw new MxsError({
+      code: 'validation.failed',
+      message: `unsupported --output value for post list: ${mode}`,
+      hint: 'use --output pretty-json, json, readable, or llm',
+    })
+  }
+
+  if (opts.json || mode === 'json' || mode === 'pretty-json') {
+    emitSuccess(data, opts)
+    return
+  }
+
+  process.stdout.write(`${renderPostList(data)}\n`)
+}
+
 export function renderReadableDocument(
   kind: DocumentKind,
   data: unknown,
@@ -67,6 +92,55 @@ export function renderReadableDocument(
       content.body,
     )
   }
+
+  return lines.join('\n')
+}
+
+export function renderPostList(data: unknown): string {
+  const payload = asRecord(data)
+  const rows = Array.isArray(payload.data)
+    ? payload.data
+    : Array.isArray(data)
+      ? data
+      : []
+  const pagination = asRecord(first(payload, 'pagination'))
+  const lines = ['posts']
+
+  if (rows.length > 0) {
+    lines.push(`count: ${rows.length}`)
+  } else {
+    lines.push('count: 0')
+  }
+
+  const page = first(pagination, 'page', 'currentPage')
+  const size = first(pagination, 'size', 'pageSize')
+  const total = first(pagination, 'total', 'totalCount')
+  if (page !== undefined) lines.push(`page: ${formatScalar(page)}`)
+  if (size !== undefined) lines.push(`size: ${formatScalar(size)}`)
+  if (total !== undefined) lines.push(`total: ${formatScalar(total)}`)
+
+  rows.forEach((row, index) => {
+    const doc = asRecord(row)
+    lines.push('', `post ${index + 1}:`)
+    const fields: Array<[string, unknown]> = [
+      ['id', first(doc, 'id')],
+      ['title', first(doc, 'title')],
+      ['slug', first(doc, 'slug')],
+      ['state', publishState(doc)],
+      ['category', relationLabel(first(doc, 'category'))],
+      ['tags', first(doc, 'tags')],
+      ['summary', first(doc, 'summary')],
+      ['created_at', first(doc, 'created_at', 'createdAt')],
+      ['modified_at', first(doc, 'modified_at', 'modifiedAt')],
+      ['source_lang', first(doc, 'source_lang', 'sourceLang')],
+      ['translated', first(doc, 'is_translated', 'isTranslated')],
+    ]
+
+    for (const [key, value] of fields) {
+      if (value === undefined || value === null || value === '') continue
+      lines.push(`${key}: ${formatScalar(value)}`)
+    }
+  })
 
   return lines.join('\n')
 }

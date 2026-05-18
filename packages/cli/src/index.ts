@@ -44,8 +44,10 @@ export {
 export { runEditorRoundTrip } from './core/editor'
 export {
   emitDocument,
+  emitPostList,
   type DocumentKind,
   renderDocumentEnvelope,
+  renderPostList,
   renderReadableDocument,
 } from './core/document-output'
 export {

@@ -51,6 +51,21 @@ export function emitWarn(message: string, opts: OutputOptions): void {
 export function emitError(err: unknown, opts: OutputOptions): void {
   if (err instanceof MxsError) {
     if (opts.json) {
+      if (err.code === 'profile.write_requires_explicit') {
+        const details = err.details as
+          | { profile?: unknown; api_url?: unknown }
+          | undefined
+        process.stdout.write(
+          `${JSON.stringify({
+            ok: false,
+            error: err.code,
+            profile: details?.profile ?? null,
+            api_url: details?.api_url ?? null,
+            hint: err.hint ?? null,
+          })}\n`,
+        )
+        return
+      }
       process.stdout.write(`${JSON.stringify(err.toJSON())}\n`)
       return
     }

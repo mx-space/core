@@ -9,9 +9,11 @@ export interface GlobalFlags {
   apiUrl?: string
   token?: string
   apiKey?: string
+  lang?: string
   quiet?: boolean
   verbose?: boolean
   dryRun?: boolean
+  profile?: string
 }
 
 export async function resolveContext(flags: GlobalFlags, out: OutputOptions) {
@@ -21,15 +23,19 @@ export async function resolveContext(flags: GlobalFlags, out: OutputOptions) {
       apiUrl: flags.apiUrl,
       token: flags.token,
       apiKey: flags.apiKey,
+      profile: flags.profile,
     })
   } catch (err) {
     if (err instanceof MxsError && err.code === 'config.missing.api_url') {
-      const probed = await runOnboarding()
+      const probed = await runOnboarding({
+        profile: flags.profile ?? process.env.MXS_PROFILE,
+      })
       emitInfo(`saved ${probed.apiUrl} to config`, out)
       resolved = await resolveConfig({
         apiUrl: flags.apiUrl,
         token: flags.token,
         apiKey: flags.apiKey,
+        profile: flags.profile,
       })
     } else {
       throw err
@@ -54,7 +60,17 @@ export function buildApiClient(
       !flags.token &&
       !process.env.MXS_TOKEN,
     verbose: flags.verbose,
+    quiet: flags.quiet,
+    resolved,
   })
+}
+
+export function withLangQuery(
+  flags: GlobalFlags,
+  query: Record<string, unknown> = {},
+): Record<string, unknown> {
+  if (!flags.lang) return query
+  return { ...query, lang: flags.lang }
 }
 
 export async function persistApiVersion(version: number) {

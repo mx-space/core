@@ -2,7 +2,10 @@
 import { Command } from 'commander'
 
 import { exitCodeForError, MxsError } from '../core/errors'
+import { runLegacyMigrationIfNeeded } from '../core/migration'
 import { emitError, type OutputOptions } from '../core/output'
+import { requiresActiveProfile } from '../core/preaction-guards'
+import { getCurrentProfile, validateProfileName } from '../core/profile'
 
 interface GlobalOptions {
   json?: boolean
@@ -10,9 +13,11 @@ interface GlobalOptions {
   apiUrl?: string
   token?: string
   apiKey?: string
+  lang?: string
   quiet?: boolean
   verbose?: boolean
   dryRun?: boolean
+  profile?: string
 }
 
 const program = new Command()
@@ -26,11 +31,61 @@ program
   .option('--api-url <url>', 'override the configured API URL')
   .option('--token <t>', 'override the stored access token')
   .option('--api-key <key>', 'authenticate with an x-api-key API key')
+  .option('--lang <code>', 'request translated read data for a locale')
   .option('-q, --quiet', 'suppress non-error stderr')
   .option('--verbose', 'log HTTP method/url/status/duration')
   .option('--dry-run', 'show resolved payload without calling the server')
+  .option(
+    '--profile <name>',
+    'profile to use (overrides MXS_PROFILE and the active profile pointer)',
+  )
+
+program.hook('preAction', async (thisCommand, actionCommand) => {
+  const opts = thisCommand.optsWithGlobals() as GlobalOptions
+  if (opts.profile) {
+    try {
+      validateProfileName(opts.profile)
+    } catch (err) {
+      if (err instanceof MxsError) {
+        throw new MxsError({
+          code: 'profile.invalid_name',
+          message: err.message,
+          hint: 'profile name must match ^[a-z0-9_-]{1,32}$ and must not be "current"',
+        })
+      }
+      throw err
+    }
+  }
+  const report = opts.quiet ? null : undefined
+  await runLegacyMigrationIfNeeded({ report })
+
+  // Guard: if no profile can be resolved and no URL override is in play,
+  // throw profile.none_active so the error surface is clean.
+  //
+  // Exempt commands are declared in core/preaction-guards.ts (single source of
+  // truth). Commander short-circuits --help / --version before reaching preAction.
+  const currentProfile = await getCurrentProfile()
+  if (
+    requiresActiveProfile({
+      profileFlag: opts.profile,
+      apiUrlFlag: opts.apiUrl,
+      envProfile: process.env.MXS_PROFILE?.trim(),
+      envApiUrl: process.env.MXS_API_URL?.trim(),
+      currentProfile,
+      parentName: actionCommand.parent?.name() ?? '',
+      commandName: actionCommand.name(),
+    })
+  ) {
+    throw new MxsError({
+      code: 'profile.none_active',
+      message: 'no active mxs profile',
+      hint: 'run `mxs profile use <name>` to switch, or `mxs auth login --profile <name>` to create one',
+    })
+  }
+})
 
 addAuthCommands(program)
+addProfileCommands(program)
 addPostCommands(program)
 addNoteCommands(program)
 addPageCommands(program)
@@ -63,9 +118,12 @@ function addAuthCommands(parent: Command) {
   auth
     .command('login')
     .description('start device authorization flow')
-    .action(async (_opts, command) => {
+    .option('--production', 'mark the target profile as production after login')
+    .action(async (opts, command) => {
       const { run } = await import('../commands/auth/login')
-      await run(readGlobalFlags(command), readGlobalOptions(command))
+      await run(readGlobalFlags(command), readGlobalOptions(command), {
+        production: opts.production,
+      })
     })
   auth
     .command('logout')
@@ -440,6 +498,62 @@ function addConfigCommands(parent: Command) {
     const { run } = await import('../commands/config/edit')
     await run(readGlobalFlags(command), readGlobalOptions(command))
   })
+}
+
+function addProfileCommands(parent: Command) {
+  const profile = parent.command('profile').description('manage mxs profiles')
+  profile
+    .command('ls')
+    .description('list profiles')
+    .action(async (_opts, command) => {
+      const { run } = await import('../commands/profile/ls')
+      await run(readGlobalFlags(command), readGlobalOptions(command))
+    })
+  profile
+    .command('show [name]')
+    .description('show resolved info for a profile')
+    .action(async (name, _opts, command) => {
+      const { run } = await import('../commands/profile/show')
+      await run(
+        name as string | undefined,
+        readGlobalFlags(command),
+        readGlobalOptions(command),
+      )
+    })
+  profile
+    .command('use <name>')
+    .description('set the active profile')
+    .action(async (name, _opts, command) => {
+      const { run } = await import('../commands/profile/use')
+      await run(name, readGlobalFlags(command), readGlobalOptions(command))
+    })
+  profile
+    .command('mark <name>')
+    .description('toggle production flag on a profile')
+    .option('--production', 'mark profile as production')
+    .option('--no-production', 'mark profile as non-production')
+    .action(async (name, opts, command) => {
+      const { run } = await import('../commands/profile/mark')
+      await run(
+        name,
+        { production: opts.production as boolean | undefined },
+        readGlobalFlags(command),
+        readGlobalOptions(command),
+      )
+    })
+  profile
+    .command('rm <name>')
+    .description('remove a profile')
+    .option('--force', 'skip confirmation and allow removing current profile')
+    .action(async (name, opts, command) => {
+      const { run } = await import('../commands/profile/rm')
+      await run(
+        name,
+        opts,
+        readGlobalFlags(command),
+        readGlobalOptions(command),
+      )
+    })
 }
 
 void MxsError
