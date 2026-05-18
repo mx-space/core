@@ -39,9 +39,10 @@ beforeEach(async () => {
     authBase: 'https://blog.example.com/api/v2/auth',
     apiVersion: 2,
     clientId: 'mxs-cli',
-    token: 'access-token',
+    token: 'fixture-access',
     configPath: '/tmp/config.json',
     credentialsPath: '/tmp/credentials.json',
+    profileName: 'default',
   })
   mocks.buildApiClient.mockReturnValue({ request: mocks.request })
   mocks.request.mockReset()
@@ -153,6 +154,7 @@ describe('auth whoami', () => {
       clientId: 'mxs-cli',
       configPath: '/tmp/config.json',
       credentialsPath: '/tmp/credentials.json',
+      profileName: null,
     })
 
     await expect(run({}, out)).rejects.toMatchObject({ code: 'auth.missing' })
@@ -160,19 +162,63 @@ describe('auth whoami', () => {
 
   it('reads per-profile credentials from active profile', async () => {
     await makeProfile('prod', {
-      access_token: 'prod-token',
+      access_token: 'fixture-prod',
       expires_at: Date.now() + 3600_000,
       user: { id: 'prod-user', email: 'prod@example.com' },
     })
     await setCurrent('prod')
 
     mocks.request.mockResolvedValue({ data: null })
+    mocks.resolveContext.mockResolvedValue({
+      apiUrl: 'https://blog.example.com',
+      apiBase: 'https://blog.example.com/api/v2',
+      authBase: 'https://blog.example.com/api/v2/auth',
+      apiVersion: 2,
+      clientId: 'mxs-cli',
+      token: 'fixture-prod',
+      configPath: '/tmp/prod-config.json',
+      credentialsPath: '/tmp/prod-credentials.json',
+      profileName: 'prod',
+    })
 
     await run({}, out)
 
     expect(JSON.parse(writes.join('')).data.user).toEqual({
       id: 'prod-user',
       email: 'prod@example.com',
+    })
+  })
+
+  it('reads cached user from resolved --profile instead of current profile', async () => {
+    await makeProfile('current', {
+      access_token: 'fixture-current',
+      expires_at: Date.now() + 3600_000,
+      user: { id: 'current-user', email: 'current@example.com' },
+    })
+    await makeProfile('target', {
+      access_token: 'fixture-target',
+      expires_at: Date.now() + 3600_000,
+      user: { id: 'target-user', email: 'target@example.com' },
+    })
+    await setCurrent('current')
+    mocks.resolveContext.mockResolvedValue({
+      apiUrl: 'https://target.example.com',
+      apiBase: 'https://target.example.com/api/v2',
+      authBase: 'https://target.example.com/api/v2/auth',
+      apiVersion: 2,
+      clientId: 'mxs-cli',
+      token: 'fixture-target',
+      configPath: '/tmp/target-config.json',
+      credentialsPath: '/tmp/target-credentials.json',
+      profileName: 'target',
+    })
+    mocks.request.mockResolvedValue({ data: null })
+
+    await run({ profile: 'target' }, out)
+
+    expect(JSON.parse(writes.join('')).data).toEqual({
+      user: { id: 'target-user', email: 'target@example.com' },
+      api_url: 'https://target.example.com',
     })
   })
 })

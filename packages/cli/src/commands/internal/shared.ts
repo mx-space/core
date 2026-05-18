@@ -27,7 +27,9 @@ export async function resolveContext(flags: GlobalFlags, out: OutputOptions) {
     })
   } catch (err) {
     if (err instanceof MxsError && err.code === 'config.missing.api_url') {
-      const probed = await runOnboarding()
+      const probed = await runOnboarding({
+        profile: flags.profile ?? process.env.MXS_PROFILE,
+      })
       emitInfo(`saved ${probed.apiUrl} to config`, out)
       resolved = await resolveConfig({
         apiUrl: flags.apiUrl,

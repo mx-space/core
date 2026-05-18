@@ -3,8 +3,11 @@ import { emitSuccess, type OutputOptions } from '../../core/output'
 import { getCurrentProfile, readProfileCredentials } from '../../core/profile'
 import { type GlobalFlags } from '../internal/shared'
 
-export async function run(_flags: GlobalFlags, out: OutputOptions) {
-  const profileName = await getCurrentProfile()
+export async function run(flags: GlobalFlags, out: OutputOptions) {
+  const profileName =
+    flags.profile?.trim() ||
+    process.env.MXS_PROFILE?.trim() ||
+    (await getCurrentProfile())
   const cred = profileName ? await readProfileCredentials(profileName) : null
   if (!cred) {
     emitSuccess({ authenticated: false }, out)

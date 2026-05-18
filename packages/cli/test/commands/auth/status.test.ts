@@ -18,6 +18,7 @@ beforeEach(async () => {
 afterEach(async () => {
   if (origXdg === undefined) delete process.env.XDG_CONFIG_HOME
   else process.env.XDG_CONFIG_HOME = origXdg
+  delete process.env.MXS_PROFILE
   await fs.rm(tmpDir, { recursive: true, force: true })
   vi.restoreAllMocks()
 })
@@ -122,5 +123,58 @@ describe('auth status', () => {
 
     const result = JSON.parse(writes.join(''))
     expect(result.data.has_refresh).toBe(true)
+  })
+
+  it('reads credentials from --profile instead of current profile', async () => {
+    await makeProfile('current', {
+      access_token: 'fixture-current',
+      expires_at: Date.now() + 3600_000,
+      user: { id: 'current-user' },
+    })
+    await makeProfile('target', {
+      access_token: 'fixture-target',
+      expires_at: Date.now() + 3600_000,
+      user: { id: 'target-user' },
+    })
+    await setCurrent('current')
+
+    const writes: string[] = []
+    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: string | Uint8Array) => {
+      writes.push(String(chunk))
+      return true
+    })
+
+    await run({ profile: 'target' }, out)
+
+    const result = JSON.parse(writes.join(''))
+    expect(result.data.authenticated).toBe(true)
+    expect(result.data.user).toEqual({ id: 'target-user' })
+  })
+
+  it('reads credentials from MXS_PROFILE instead of current profile', async () => {
+    await makeProfile('current', {
+      access_token: 'fixture-current',
+      expires_at: Date.now() + 3600_000,
+      user: { id: 'current-user' },
+    })
+    await makeProfile('env-target', {
+      access_token: 'fixture-env',
+      expires_at: Date.now() + 3600_000,
+      user: { id: 'env-user' },
+    })
+    await setCurrent('current')
+    process.env.MXS_PROFILE = 'env-target'
+
+    const writes: string[] = []
+    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: string | Uint8Array) => {
+      writes.push(String(chunk))
+      return true
+    })
+
+    await run({}, out)
+
+    const result = JSON.parse(writes.join(''))
+    expect(result.data.authenticated).toBe(true)
+    expect(result.data.user).toEqual({ id: 'env-user' })
   })
 })
