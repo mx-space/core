@@ -614,7 +614,7 @@ describe('Renderer — emit(postView/noteView/pageView)', () => {
     ),
   )
 
-  it.effect('renders Lexical content as LiteXML in readable mode', () =>
+  it.effect('renders Lexical content as styled ANSI in readable mode', () =>
     Effect.gen(function* () {
       const lexical = yield* Lexical
       const state = yield* lexical.litexmlToPayload('<p>Hello world.</p>')
@@ -637,7 +637,8 @@ describe('Renderer — emit(postView/noteView/pageView)', () => {
         }),
       )
       const out = stdoutLines.join('')
-      expect(out).toContain('<p>')
+      expect(out).toContain('Hello world.')
+      expect(out).not.toContain('<p>')
       expect(out).not.toContain('"root"')
     }).pipe(
       Effect.provide(Renderer.Default),

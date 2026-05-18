@@ -1,5 +1,6 @@
 import { formatScalar } from '../../services/Renderer/content'
 import { formatStateBadge, SEPARATOR_WIDTH } from './helpers'
+import { renderLexicalAnsi } from './lexical'
 import { ANSI, renderMarkdownToAnsi, visibleLen, wrap } from './markdown'
 
 export interface MetadataBlockInput {
@@ -54,6 +55,8 @@ export const renderMetadataBlock = (
     lines.push('')
     if (bodyFormat === 'markdown') {
       lines.push(renderMarkdownToAnsi(body, { color }))
+    } else if (bodyFormat === 'litexml') {
+      lines.push(renderLexicalAnsi(body, { color }))
     } else {
       lines.push(body)
     }
