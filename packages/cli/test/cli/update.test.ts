@@ -217,6 +217,117 @@ describe('update command', () => {
     }
   })
 
+  it('passes option flags through and emits cancelled envelope', async () => {
+    const runUpdate = vi.fn((opts: any) =>
+      Effect.succeed({
+        fromVersion: opts.currentVersion,
+        toVersion: '0.4.0',
+        pm: opts.pm,
+        channel: opts.prerelease ? 'next' : 'stable',
+        status: 0,
+        upgraded: false,
+        dryRun: true,
+        upToDate: false,
+        command: 'pnpm add -g @mx-space/cli@next',
+        cancelled: true,
+      }),
+    )
+    vi.spyOn(UpdaterMod, 'make').mockReturnValue({
+      maybeNotify: () => Effect.void,
+      runUpdate,
+    })
+
+    const cap = captureStdout()
+    try {
+      const exit = await Effect.runPromiseExit(
+        update
+          .handler({
+            check: Option.none(),
+            prerelease: Option.some(true),
+            pm: Option.some('pnpm'),
+            force: Option.some(true),
+            yes: Option.some(false),
+          })
+          .pipe(
+            Effect.provide(buildLayer()),
+            Renderer.withOptions({
+              json: true,
+              output: 'json',
+              quiet: false,
+              verbose: false,
+            }),
+          ),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      expect(runUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prerelease: true,
+          pm: 'pnpm',
+          force: true,
+          yes: false,
+          json: true,
+        }),
+      )
+      const parsed = JSON.parse(cap.data.join('').trim())
+      expect(parsed.data).toMatchObject({
+        latest: '0.4.0',
+        pm: 'pnpm',
+        cancelled: true,
+      })
+    } finally {
+      cap.restore()
+    }
+  })
+
+  it('emits dry_run command envelope when no install ran outside --check', async () => {
+    vi.spyOn(UpdaterMod, 'make').mockReturnValue({
+      maybeNotify: () => Effect.void,
+      runUpdate: () =>
+        Effect.succeed({
+          fromVersion: '0.3.0',
+          toVersion: '0.4.0',
+          pm: 'npm',
+          channel: 'stable',
+          status: 0,
+          upgraded: false,
+          dryRun: true,
+          upToDate: false,
+          command: 'npm install -g @mx-space/cli@latest',
+        }),
+    })
+
+    const cap = captureStdout()
+    try {
+      const exit = await Effect.runPromiseExit(
+        update
+          .handler({
+            check: Option.none(),
+            prerelease: Option.none(),
+            pm: Option.none(),
+            force: Option.none(),
+            yes: Option.none(),
+          })
+          .pipe(
+            Effect.provide(buildLayer()),
+            Renderer.withOptions({
+              json: true,
+              output: 'json',
+              quiet: false,
+              verbose: false,
+            }),
+          ),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      const parsed = JSON.parse(cap.data.join('').trim())
+      expect(parsed.data).toMatchObject({
+        command: 'npm install -g @mx-space/cli@latest',
+        dry_run: true,
+      })
+    } finally {
+      cap.restore()
+    }
+  })
+
   it('surfaces UpdatePmUnknown when the underlying service fails', async () => {
     vi.spyOn(UpdaterMod, 'make').mockReturnValue({
       maybeNotify: () => Effect.void,
