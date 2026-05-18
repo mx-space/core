@@ -73,7 +73,7 @@ If writes return `auth.expired` while reads work, confirm whether the available 
 
 ## Command Coverage
 
-The CLI command surface includes `auth`, `post`, `note`, `page`, `category`, `topic`, and `config`. Before using an unfamiliar command or flag, read [Command Index](references/command-index.md). Do not infer unsupported flags from another resource type.
+The CLI command surface includes `auth`, `post`, `note`, `page`, `category`, `topic`, `comment`, and `config`. Before using an unfamiliar command or flag, read [Command Index](references/command-index.md). Do not infer unsupported flags from another resource type.
 
 ## Verification Checklist
 

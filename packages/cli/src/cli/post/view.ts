@@ -10,6 +10,7 @@ import {
   renderContent,
   unwrapDocument,
 } from '../../services/Renderer/content'
+import { tryFormatTimestamp } from '../../services/Renderer/datetime'
 import type { View } from '../../services/Renderer/view'
 import { frontmatter, renderEnvelope, renderMetadataBlock } from '../render'
 
@@ -138,7 +139,9 @@ const renderPostListReadable = (data: unknown): string => {
     const fields = collectListItemFields(doc)
     for (const [key, value] of fields) {
       if (value === undefined || value === null || value === '') continue
-      lines.push(`${key}: ${formatScalar(value)}`)
+      const rendered =
+        tryFormatTimestamp(value, { style: 'rel' }) ?? formatScalar(value)
+      lines.push(`${key}: ${rendered}`)
     }
   })
   return lines.join('\n')

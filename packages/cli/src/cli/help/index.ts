@@ -28,6 +28,7 @@
 
 import '../auth'
 import '../category'
+import '../comment'
 import '../config'
 import '../note'
 import '../page'
@@ -73,6 +74,7 @@ export const GROUP_NAMES = [
   'page',
   'category',
   'topic',
+  'comment',
   'config',
   'update',
 ] as const

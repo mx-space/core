@@ -13,6 +13,9 @@ Use this reference for every mutation, deletion, publication change, or failed c
 | Delete | Confirm destructive intent and target; prefer `--dry-run`; use `--force` only when non-interactive deletion is intentional. | Confirm `get` fails with not found or list no longer includes the resource. |
 | Config set/edit | Confirm target because changes affect server behavior. | `config get <key>` or `config list`. |
 | Category/topic changes | Confirm dependent content implications before deletion or slug changes. | `category get/list` or `topic get/list`. |
+| Comment approve/reject | State change is soft and reversible; explicit-id form runs without confirmation. | `comment get <id> --json` and confirm `state`. |
+| Comment delete | Soft-delete; `--force` required in non-TTY for both single id and `--all`. | `comment list --state <s>` or `comment get <id>` confirms removal. |
+| Comment `--all` | Mass operation; always pass `--force` in non-TTY and prefer narrowing with `--state`. | `comment list --all --json` to confirm post-state. |
 
 `--dry-run` validates local payload construction only; it does not contact the server and does not prove write authorization. If the actual mutation returns `auth.expired`, `auth.denied`, or `未登录`, stop and obtain a server-valid Better Auth token or API key instead of retrying with the same stored credential.
 
@@ -91,3 +94,12 @@ mxs config list --json
 ```
 
 Verify only the intended option changed.
+
+### Comment
+
+```bash
+mxs comment get <id> --json
+mxs comment list --state <unread|read|junk> --json
+```
+
+Verify `state` matches the intended transition (`0=unread`, `1=read`, `2=junk`) and, for delete, that the id no longer appears in `comment list`.

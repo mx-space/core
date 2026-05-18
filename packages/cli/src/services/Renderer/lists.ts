@@ -1,4 +1,5 @@
 import { formatScalar } from './content'
+import { tryFormatTimestamp } from './datetime'
 
 // Generic readable renderer for arbitrary payloads. Drives the default
 // `--output readable` rendering for commands that emit ad-hoc objects via
@@ -11,12 +12,22 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   !Array.isArray(value) &&
   !(value instanceof Date)
 
+// Auto-detect timestamps inside arbitrary payloads and route them through
+// the friendlier formatter so the raw machine form never leaks into the
+// readable output.
+const formatLeaf = (value: unknown): string =>
+  tryFormatTimestamp(value, { style: 'both' }) ?? formatScalar(value)
+
 const renderReadableLines = (data: unknown, indent: number): string[] => {
   const pad = '  '.repeat(indent)
   if (data === null || data === undefined) return []
-  if (data instanceof Date) return [`${pad}${data.toISOString()}`]
+  if (data instanceof Date) {
+    return [`${pad}${formatLeaf(data)}`]
+  }
   if (typeof data === 'string') {
     if (data.length === 0) return []
+    const ts = tryFormatTimestamp(data, { style: 'both' })
+    if (ts !== null) return [`${pad}${ts}`]
     return data.split('\n').map((line) => `${pad}${line}`)
   }
   if (typeof data === 'number' || typeof data === 'boolean') {
@@ -41,7 +52,7 @@ const renderReadableLines = (data: unknown, indent: number): string[] => {
         lines.push(`${pad}-`)
         lines.push(...inner)
       } else if (item !== null && item !== undefined) {
-        lines.push(`${pad}- ${formatScalar(item)}`)
+        lines.push(`${pad}- ${formatLeaf(item)}`)
       }
     }
     return lines
@@ -62,7 +73,7 @@ const renderReadableLines = (data: unknown, indent: number): string[] => {
         if (allScalar) {
           const parts = value
             .filter((v) => v !== null && v !== undefined)
-            .map((v) => formatScalar(v))
+            .map((v) => formatLeaf(v))
           lines.push(`${pad}${key}: ${parts.join(', ')}`)
         } else {
           lines.push(`${pad}${key}:`)
@@ -73,10 +84,8 @@ const renderReadableLines = (data: unknown, indent: number): string[] => {
         if (inner.length === 0) continue
         lines.push(`${pad}${key}:`)
         lines.push(...inner)
-      } else if (value instanceof Date) {
-        lines.push(`${pad}${key}: ${value.toISOString()}`)
       } else {
-        lines.push(`${pad}${key}: ${formatScalar(value)}`)
+        lines.push(`${pad}${key}: ${formatLeaf(value)}`)
       }
     }
     return lines

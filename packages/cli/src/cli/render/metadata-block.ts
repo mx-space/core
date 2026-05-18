@@ -1,7 +1,19 @@
 import { formatScalar } from '../../services/Renderer/content'
+import { tryFormatTimestamp } from '../../services/Renderer/datetime'
 import { formatStateBadge, SEPARATOR_WIDTH } from './helpers'
 import { renderLexicalAnsi } from './lexical'
 import { ANSI, renderMarkdownToAnsi, visibleLen, wrap } from './markdown'
+
+const formatFieldValue = (
+  key: string,
+  value: unknown,
+  color: boolean,
+): string => {
+  if (key === 'state') {
+    return formatStateBadge(value, color) ?? formatScalar(value)
+  }
+  return tryFormatTimestamp(value, { style: 'both' }) ?? formatScalar(value)
+}
 
 export interface MetadataBlockInput {
   readonly title?: string
@@ -37,10 +49,7 @@ export const renderMetadataBlock = (
   const labelWidth = fields.reduce((max, [key]) => Math.max(max, key.length), 0)
   for (const [key, value] of fields) {
     const label = wrap(ANSI.dim, key.padEnd(labelWidth), color)
-    const rendered =
-      key === 'state'
-        ? (formatStateBadge(value, color) ?? formatScalar(value))
-        : formatScalar(value)
+    const rendered = formatFieldValue(key, value, color)
     lines.push(`${label}  ${rendered}`)
   }
 

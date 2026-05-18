@@ -5,6 +5,7 @@ import { ProfileNoneActive } from '../../domain/errors'
 import { Config } from '../../services/Config'
 import { Profile } from '../../services/Profile'
 import { Renderer } from '../../services/Renderer'
+import { formatDateTime } from '../../services/Renderer/datetime'
 
 const nameArg = Args.text({ name: 'name' }).pipe(Args.optional)
 
@@ -37,7 +38,7 @@ export const show = Command.make('show', { name: nameArg }, ({ name }) =>
 
     const expiresAt = creds?.expires_at ?? null
     const expiresHuman =
-      expiresAt !== null ? new Date(expiresAt).toISOString() : null
+      expiresAt !== null ? formatDateTime(expiresAt, { style: 'both' }) : null
 
     yield* renderer.emitSuccess({
       name: target,

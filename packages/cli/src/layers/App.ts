@@ -10,6 +10,10 @@ import { Profile } from '../services/Profile'
 import { Renderer } from '../services/Renderer'
 import { UpdateNotifier } from '../services/UpdateNotifier'
 
+// NOTE: `Comment` depends on `Api`, so it is layered into the composition in
+// `bin/mxs.ts` (alongside `Resolver`) — NOT here. Listing it would create a
+// dependency on per-invocation flags. See `bin/mxs.ts#fullAppLayer`.
+
 /**
  * Application-wide service layer — everything EXCEPT `Api` and `Resolver`,
  * which depend on per-invocation global flags (`--api-url`, `--token`,

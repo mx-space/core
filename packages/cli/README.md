@@ -324,6 +324,41 @@ Page edit and page file payloads currently reuse the `<mxpost>` envelope shape.
 | `--description <text>` | `description` |
 | `--icon <text>`        | `icon`        |
 
+## Comments
+
+Moderation commands for the comment queue. `state` is one of `unread`, `read`, or `junk` (server-side codes `0`, `1`, `2`).
+
+| Command                                | Description                                                       |
+| -------------------------------------- | ----------------------------------------------------------------- |
+| `mxs comment list`                     | List comments (default `--state unread`).                         |
+| `mxs comment unread`                   | Shortcut for `comment list --state unread` (accepts `--page` / `--size`). |
+| `mxs comment get <id>`                 | Show a single comment by id.                                      |
+| `mxs comment approve <id...>`          | Mark one or more comments as read (state→1).                      |
+| `mxs comment reject <id...>`           | Mark one or more comments as junk (state→2).                      |
+| `mxs comment delete <id...>`           | Soft-delete one or more comments.                                 |
+
+### Comment List Flags
+
+| Flag                          | Description                                                                |
+| ----------------------------- | -------------------------------------------------------------------------- |
+| `--page <n>` / `--size <n>`   | Standard paging knobs.                                                     |
+| `--state <unread|read|junk>`  | Filter by state. Defaults to `unread`.                                     |
+| `--all`                       | Aggregate every state into one response (issues three parallel requests).  |
+
+### Comment Moderation Flags
+
+| Flag                          | Applies to              | Description                                                                |
+| ----------------------------- | ----------------------- | -------------------------------------------------------------------------- |
+| `--all`                       | approve, reject, delete | Apply to every comment instead of the explicit `<id...>` list.             |
+| `--state <unread|read|junk>`  | approve, reject, delete | When used with `--all`, restricts the affected set by current state.       |
+| `--force`                     | delete, any `--all`     | Required in non-TTY contexts to confirm destructive operations.            |
+
+Guard summary:
+
+- `delete` of a single id refuses to run in a non-TTY context without `--force`.
+- Any `--all` invocation (`approve`, `reject`, `delete`) refuses to run in a non-TTY context without `--force`.
+- `approve` and `reject` of explicit ids run without confirmation.
+
 ## Configuration
 
 | Command                        | Description                                                    |

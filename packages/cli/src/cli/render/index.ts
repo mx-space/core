@@ -1,4 +1,17 @@
 export { highlightCode } from './codehighlight'
+// Date/time helpers live in services/Renderer (so the generic readable
+// renderer can use them without importing from cli/). Re-export here for
+// view authors who already import from `../render`.
+export {
+  type DateTimeStyle,
+  formatAbsoluteDateTime,
+  formatDateTime,
+  type FormatDateTimeOptions,
+  formatRelativeTime,
+  looksLikeTimestamp,
+  toDate,
+  tryFormatTimestamp,
+} from '../../services/Renderer/datetime'
 export { type EnvelopeInput, renderEnvelope } from './envelope'
 export {
   frontmatter,

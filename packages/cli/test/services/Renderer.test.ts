@@ -710,7 +710,11 @@ describe('Renderer — emit(postView/noteView/pageView)', () => {
           expect(out).toContain('subtitle')
           expect(out).toContain('Sub')
           expect(out).toContain('created_at')
-          expect(out).toContain('2026-01-01T00:00:00.000Z')
+          // Friendly form: `YYYY-MM-DD HH:mm (... ago/in ...)`.
+          // Day-of-month is timezone-dependent for a UTC midnight input,
+          // so we only assert the year/month and the relative suffix.
+          expect(out).toMatch(/created_at\s+\d{4}-\d{2}-\d{2} \d{2}:\d{2}/)
+          expect(out).toMatch(/\((?:in |[\w ]+ago)/)
           expect(out).toContain('Fallback text')
           expect(stderrLines.join('')).toContain(
             'unsupported --output value for post: table',
@@ -737,9 +741,10 @@ describe('Renderer — pure document renderers', () => {
     })
 
     expect(rendered).toContain('title: Generic')
-    expect(rendered).toContain('createdAt: 2026-01-02T00:00:00.000Z')
+    // Friendly form: timezone-dependent for a UTC midnight input.
+    expect(rendered).toMatch(/createdAt: \d{4}-\d{2}-\d{2} \d{2}:\d{2}/)
     expect(rendered).not.toContain('empty:')
-    expect(rendered).toContain('scalarList: 1, 2026-01-01T00:00:00.000Z')
+    expect(rendered).toMatch(/scalarList: 1, \d{4}-\d{2}-\d{2} \d{2}:\d{2}/)
     expect(rendered).toContain('- name: first')
     expect(rendered).toContain('  - nested')
     expect(rendered).toContain('- tail')

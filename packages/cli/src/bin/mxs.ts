@@ -7,6 +7,7 @@ import { Effect, Layer } from 'effect'
 
 import { authCmd } from '../cli/auth'
 import { categoryCmd } from '../cli/category'
+import { commentCmd } from '../cli/comment'
 import { configCmd } from '../cli/config'
 import {
   buildRootHelpData,
@@ -40,6 +41,7 @@ import {
 } from '../domain/runtime-flags'
 import { AppLayer } from '../layers/App'
 import { Api } from '../services/Api'
+import { Comment } from '../services/Comment'
 import {
   LOCAL_DEV_ENV,
   LOCAL_DEV_PROFILE_NAME,
@@ -117,6 +119,7 @@ const rootCmd = Command.make('mxs', {}, () =>
     pageCmd,
     categoryCmd,
     topicCmd,
+    commentCmd,
     configCmd,
     updateCmd,
   ]),
@@ -319,8 +322,9 @@ export const run = (argv: readonly string[]): Promise<void> => {
   // come from `NodeContext.layer` at the outer `Effect.provide` site.
   const appWithHttp = AppLayer.pipe(Layer.provideMerge(httpLayer))
   const apiWithDeps = apiLayer.pipe(Layer.provideMerge(appWithHttp))
+  const commentWithDeps = Comment.Default.pipe(Layer.provideMerge(apiWithDeps))
   const resolverWithDeps = Resolver.Default.pipe(
-    Layer.provideMerge(apiWithDeps),
+    Layer.provideMerge(commentWithDeps),
   )
   const fullAppLayer = resolverWithDeps
 

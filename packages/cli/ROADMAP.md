@@ -8,7 +8,17 @@
 
 - Internal rewrite onto Effect-TS (`@effect/cli` + `@effect/platform`). User-facing CLI surface is unchanged — see [`README.md`](./README.md#v030-behavior-changes) for the small list of behavioral adjustments and [`docs/architecture.md`](./docs/architecture.md) for the new internal architecture.
 
-## v2
+## Next — Comment moderation
+
+- `mxs comment list [--page N] [--size N] [--state unread|read|junk] [--all]`
+- `mxs comment get <id>`
+- `mxs comment approve <id...> | --all [--state <s>]`
+- `mxs comment reject <id...> | --all [--state <s>]`
+- `mxs comment delete <id...> | --all [--state <s>] [--force]`
+
+State map: `unread=0`, `read=1`, `junk=2`. Routes single-id verbs through the server's batch endpoints (`PATCH /comments/batch/state`, `DELETE /comments/batch`) for one unified path.
+
+## v2 — AI
 
 > **Note (v0.3):** Service interface placeholders for AI, Backup, and Cache are reserved in `src/services/{Ai,Backup,Cache}.ts` and threaded through the layer composition. Implementation is pending.
 
@@ -17,12 +27,6 @@
   - `mxs ai translate <id> --to <locale>`
   - `mxs ai insights refresh`
   - `mxs ai tokens`
-- Comment moderation
-  - `mxs comment list`
-  - `mxs comment approve <id>`
-  - `mxs comment reject <id>`
-  - `mxs comment delete <id>`
-- Markdown → Lexical bridge (contingent on a haklex reader)
 
 ## v3
 

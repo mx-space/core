@@ -3,6 +3,16 @@ import { Context, Effect, Layer } from 'effect'
 import { currentOutputOptions } from './options'
 import { makeService, type RendererService } from './service'
 
+export {
+  type DateTimeStyle,
+  formatAbsoluteDateTime,
+  formatDateTime,
+  type FormatDateTimeOptions,
+  formatRelativeTime,
+  looksLikeTimestamp,
+  toDate,
+  tryFormatTimestamp,
+} from './datetime'
 export { renderReadableGeneric } from './lists'
 export {
   currentOutputOptions,
