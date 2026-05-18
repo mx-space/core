@@ -25,7 +25,7 @@ const program = new Command()
 program
   .name('mxs')
   .description('mx-space CLI — manage your mx-core blog from the command line')
-  .version('0.1.0')
+  .version('0.2.0')
   .option('--json', 'emit JSON output')
   .option('--output <mode>', 'pretty-json | json | readable | llm | envelope')
   .option('--api-url <url>', 'override the configured API URL')
