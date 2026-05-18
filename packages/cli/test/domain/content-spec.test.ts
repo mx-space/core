@@ -47,6 +47,21 @@ describe('readContentSpec', () => {
     expect(err._tag).toBe('ValidationFailed')
     expect(err.message).toContain('failed to read')
   })
+
+  it('rejects stdin specs when stdin is a TTY', async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY')
+    Object.defineProperty(process.stdin, 'isTTY', {
+      configurable: true,
+      value: true,
+    })
+    try {
+      const err = await run(Effect.flip(readContentSpec('-')))
+      expect(err._tag).toBe('ValidationFailed')
+      expect(err.message).toContain('stdin is a TTY')
+    } finally {
+      if (descriptor) Object.defineProperty(process.stdin, 'isTTY', descriptor)
+    }
+  })
 })
 
 describe('readJsonSpec', () => {
@@ -74,5 +89,13 @@ describe('readJsonSpec', () => {
     await fs.writeFile(filePath, '{', 'utf8')
     const fileErr = await run(Effect.flip(readJsonSpec(`file=${filePath}`)))
     expect(fileErr._tag).toBe('ValidationFailed')
+  })
+
+  it('wraps file read failures for JSON specs', async () => {
+    const err = await run(
+      Effect.flip(readJsonSpec(`file=${path.join(tmpDir, 'missing.json')}`)),
+    )
+    expect(err._tag).toBe('ValidationFailed')
+    expect(err.message).toContain('failed to read JSON')
   })
 })

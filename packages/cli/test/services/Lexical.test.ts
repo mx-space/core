@@ -20,6 +20,14 @@ describe('Lexical service', () => {
     }).pipe(Effect.provide(Lexical.Default)),
   )
 
+  it.effect('accepts an already wrapped <doc> payload', () =>
+    Effect.gen(function* () {
+      const lexical = yield* Lexical
+      const state = yield* lexical.litexmlToPayload('<doc><p>hello</p></doc>')
+      expect(state.root.children.length).toBeGreaterThan(0)
+    }).pipe(Effect.provide(Lexical.Default)),
+  )
+
   it.effect('round-trips paragraph content', () =>
     Effect.gen(function* () {
       const lexical = yield* Lexical
@@ -48,6 +56,7 @@ describe('Lexical service', () => {
       expect(state.root.children).toEqual([])
     }).pipe(Effect.provide(Lexical.Default)),
   )
+
 
   it.effect('parses the post.xml fixture content section', () =>
     Effect.gen(function* () {

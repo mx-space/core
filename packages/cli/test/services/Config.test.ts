@@ -64,6 +64,15 @@ describe('pure helpers', () => {
     }),
   )
 
+  it.effect('parseApiUrl rejects blank input and supports 127.0.0.1', () =>
+    Effect.gen(function* () {
+      const err = yield* Effect.flip(parseApiUrl('   '))
+      expect(err._tag).toBe('ConfigMissingApiUrl')
+      const local = yield* normalizeApiUrl('127.0.0.1:2333')
+      expect(local).toBe('http://127.0.0.1:2333')
+    }),
+  )
+
   it.effect('parseApiUrl extracts api version from path', () =>
     Effect.gen(function* () {
       const out = yield* parseApiUrl('https://x.example.com/api/v3')
@@ -93,6 +102,12 @@ describe('pure helpers', () => {
     expect(shouldUseLocalDev({ apiUrlOverride: 'http://x' })).toBe(
       false,
     )
+  })
+
+  it('reads the local-dev API URL override from env', async () => {
+    process.env.MXS_CLI_LOCAL_DEV_API_URL = 'http://localhost:4000'
+    const { getLocalDevApiUrl } = await import('../../src/services/Config')
+    expect(getLocalDevApiUrl()).toBe('http://localhost:4000')
   })
 })
 
@@ -144,6 +159,32 @@ describe('Config — profile config IO', () => {
     )
     expect(result).toEqual({ api_url: 'https://x.example.com' })
   })
+
+  it('updates profile config and reports malformed JSON', async () => {
+    const { mem, layer } = makeLayer()
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const config = yield* Config
+        yield* config.writeProfileConfig('dev', {
+          api_url: 'https://dev.example.com',
+        })
+        return yield* config.updateProfileConfig('dev', (prev) => ({
+          ...prev,
+          production: true,
+        }))
+      }).pipe(Effect.provide(layer)),
+    )
+    expect(result.production).toBe(true)
+
+    mem.seed('/xdg/mxs/profiles/bad/config.json', '{')
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const config = yield* Config
+        return yield* config.readProfileConfig('bad')
+      }).pipe(Effect.provide(layer)),
+    )
+    expect(Exit.isFailure(exit)).toBe(true)
+  })
 })
 
 describe('Config — credentials IO', () => {
@@ -180,6 +221,90 @@ describe('Config — credentials IO', () => {
       Effect.gen(function* () {
         const config = yield* Config
         yield* config.deleteProfileCredentials('ghost')
+      }).pipe(Effect.provide(layer)),
+    )
+  })
+
+  it('fixes loose credentials file mode on read and deletes present credentials', async () => {
+    const { mem, layer } = makeLayer()
+    mem.seed(
+      '/xdg/mxs/profiles/dev/credentials.json',
+      JSON.stringify({ access_token: 'tok', expires_at: 1 }),
+      0o644,
+    )
+    const stderr: string[] = []
+    const descriptor = process.stderr.write
+    ;(process.stderr.write as any) = (chunk: any) => {
+      stderr.push(String(chunk))
+      return true
+    }
+    try {
+      const result = await Effect.runPromise(
+        Effect.gen(function* () {
+          const config = yield* Config
+          const creds = yield* config.readProfileCredentials('dev')
+          yield* config.deleteProfileCredentials('dev')
+          return creds
+        }).pipe(Effect.provide(layer)),
+      )
+      expect(result?.access_token).toBe('tok')
+      expect(mem.mode('/xdg/mxs/profiles/dev/credentials.json')).toBeNull()
+      expect(stderr.join('')).toContain('chmod 600')
+    } finally {
+      process.stderr.write = descriptor
+    }
+  })
+})
+
+describe('Config — pointers, legacy files, and profile listing', () => {
+  it('exposes derived paths, current pointer, legacy files, and profile listing', async () => {
+    const { mem, layer } = makeLayer()
+    mem.seed('/xdg/mxs/config.json', '{"api_url":"https://legacy.example.com","api_base":"old"}')
+    mem.seed('/xdg/mxs/credentials.json', '{"access_token":"legacy","expires_at":1}')
+    mem.seed('/xdg/mxs/profiles/.hidden/config.json', '{}')
+    mem.seed('/xdg/mxs/profiles/file.txt', 'not a directory')
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const config = yield* Config
+        expect(yield* config.getConfigDir).toBe('/xdg/mxs')
+        expect(yield* config.getProfilesDir).toBe('/xdg/mxs/profiles')
+        expect(yield* config.getProfileDir('dev')).toBe('/xdg/mxs/profiles/dev')
+        expect(yield* config.getProfileConfigPath('dev')).toBe(
+          '/xdg/mxs/profiles/dev/config.json',
+        )
+        expect(yield* config.getProfileCredentialsPath('dev')).toBe(
+          '/xdg/mxs/profiles/dev/credentials.json',
+        )
+        expect(yield* config.getCurrentPath).toBe('/xdg/mxs/current')
+        expect(yield* config.getLegacyConfigPath).toBe('/xdg/mxs/config.json')
+        expect(yield* config.getLegacyCredentialsPath).toBe(
+          '/xdg/mxs/credentials.json',
+        )
+
+        yield* config.writeProfileConfig('dev', { api_url: 'https://dev.example.com' })
+        yield* config.writeProfileConfig('prod', { api_url: 'https://prod.example.com' })
+        expect(yield* config.listProfileDirs).toEqual(['dev', 'prod'])
+        expect(yield* config.profileExists('dev')).toBe(true)
+        expect(yield* config.profileExists('ghost')).toBe(false)
+
+        yield* config.writeCurrent('prod')
+        expect(yield* config.readCurrent).toBe('prod')
+        mem.seed('/xdg/mxs/current', '   \n')
+        expect(yield* config.readCurrent).toBeNull()
+
+        expect(yield* config.readLegacyConfig).toEqual({
+          api_url: 'https://legacy.example.com',
+        })
+        expect(yield* config.readLegacyConfigRaw).toMatchObject({
+          api_url: 'https://legacy.example.com',
+        })
+        expect(yield* config.readLegacyCredentialsRaw).toMatchObject({
+          access_token: 'legacy',
+        })
+        yield* config.deleteLegacyConfig
+        yield* config.deleteLegacyCredentials
+        yield* config.removeProfileDir('prod')
+        expect(yield* config.profileExists('prod')).toBe(false)
       }).pipe(Effect.provide(layer)),
     )
   })
