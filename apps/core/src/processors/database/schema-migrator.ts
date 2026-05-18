@@ -51,6 +51,16 @@ async function insertMigrationRecord(
   )
 }
 
+async function realignMigrationTimestamp(
+  client: pkg.PoolClient,
+  migration: { folderMillis: number; hash: string },
+): Promise<void> {
+  await client.query(
+    `UPDATE "${MIGRATIONS_SCHEMA}"."${MIGRATIONS_TABLE}" SET "created_at" = $1 WHERE "hash" = $2`,
+    [migration.folderMillis, migration.hash],
+  )
+}
+
 async function runOrdinaryMigration(
   client: pkg.PoolClient,
   statements: string[],
@@ -110,6 +120,10 @@ async function runMixedConcurrentMigration(
  * PostgreSQL rejects `CREATE INDEX CONCURRENTLY` in that context, so this
  * runner keeps ordinary migrations transactional and only executes concurrent
  * index creation statements outside a transaction.
+ *
+ * Idempotency is keyed on each migration's content hash, not Drizzle's single
+ * `created_at` watermark — a migration re-tagged by a branch rebase keeps the
+ * same hash and is therefore not re-applied.
  */
 export async function runSchemaMigrationFiles(
   pool: pkg.Pool,
@@ -119,16 +133,34 @@ export async function runSchemaMigrationFiles(
   const client = await pool.connect()
   try {
     await ensureMigrationTable(client)
-    const result = await client.query<{ created_at: string }>(
-      `SELECT created_at FROM "${MIGRATIONS_SCHEMA}"."${MIGRATIONS_TABLE}" ORDER BY created_at DESC LIMIT 1`,
+    const result = await client.query<{ hash: string; created_at: string }>(
+      `SELECT hash, created_at FROM "${MIGRATIONS_SCHEMA}"."${MIGRATIONS_TABLE}"`,
     )
-    const lastDbMigration = result.rows[0]
+    const appliedAtByHash = new Map(
+      result.rows.map((row) => [row.hash, row.created_at]),
+    )
+    const waterline =
+      result.rows.length > 0
+        ? Math.max(...result.rows.map((row) => Number(row.created_at)))
+        : null
 
     for (const migration of migrations) {
-      if (
-        lastDbMigration &&
-        Number(lastDbMigration.created_at) >= migration.folderMillis
-      ) {
+      const appliedAt = appliedAtByHash.get(migration.hash)
+      if (appliedAt !== undefined) {
+        // A re-tagged migration (branch rebase / renumber) keeps the same hash
+        // but gets a fresh journal `when`. Mirror it into the ledger so the
+        // boot-time assertSchemaCurrent check does not read the schema behind.
+        if (Number(appliedAt) !== migration.folderMillis) {
+          await realignMigrationTimestamp(client, migration)
+        }
+        continue
+      }
+
+      // A pre-hash-era (waterline) database may have applied this migration
+      // without recording its hash. Anything at or below the old waterline was
+      // already considered applied — backfill the hash, never re-run the SQL.
+      if (waterline !== null && migration.folderMillis <= waterline) {
+        await insertMigrationRecord(client, migration)
         continue
       }
 
