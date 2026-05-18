@@ -1,3 +1,8 @@
+import {
+  HttpClient,
+  HttpClientError,
+  HttpClientResponse,
+} from '@effect/platform'
 import { describe, expect, it as itVitest, vi } from '@effect/vitest'
 import { Effect, Layer } from 'effect'
 
@@ -75,6 +80,40 @@ const makeMockConfigLayer = (
   }
   return Layer.succeed(Config, service)
 }
+
+const failingHttpLayer = (cause: unknown) =>
+  Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) =>
+      Effect.fail(
+        new HttpClientError.RequestError({
+          request,
+          reason: 'Transport',
+          cause,
+        }),
+      ),
+    ),
+  )
+
+const responseErrorHttpLayer = (status: number) =>
+  Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) =>
+      Effect.fail(
+        new HttpClientError.ResponseError({
+          request,
+          response: HttpClientResponse.fromWeb(
+            request,
+            new Response(JSON.stringify({ ok: false }), {
+              status,
+              headers: { 'content-type': 'application/json' },
+            }),
+          ),
+          reason: 'StatusCode',
+        }),
+      ),
+    ),
+  )
 
 // ---------------------------------------------------------------------------
 // Pure helpers
@@ -174,6 +213,76 @@ describe('Auth.probe', () => {
     const err = await Effect.runPromise(Effect.provide(program, layer))
     expect(err._tag).toBe('AuthProbe')
   })
+
+  itVitest.each([
+    [{ code: 'ENOTFOUND' }, 'NetworkDns'],
+    [{ code: 'EAI_AGAIN' }, 'NetworkDns'],
+    [{ code: 'ECONNREFUSED' }, 'NetworkRefused'],
+    [{ code: 'ETIMEDOUT' }, 'NetworkTimeout'],
+    [{ cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } }, 'NetworkTimeout'],
+  ] as const)('maps transport failure %j to %s', async (cause, tag) => {
+    const layer = Auth.Default.pipe(
+      Layer.provide(makeMockConfigLayer(baseResolved, null)),
+      Layer.provide(failingHttpLayer(cause)),
+    )
+    const program = Effect.gen(function* () {
+      const auth = yield* Auth
+      return yield* auth.probe('https://blog.example.com')
+    }).pipe(Effect.flip)
+    const err = await Effect.runPromise(Effect.provide(program, layer))
+    expect(err._tag).toBe(tag)
+  })
+
+  itVitest('ignores generic transport failures while trying fallback endpoints', async () => {
+    let call = 0
+    const http = Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make((request) => {
+        call += 1
+        if (call === 1) {
+          return Effect.fail(
+            new HttpClientError.RequestError({
+              request,
+              reason: 'Transport',
+              cause: new Error('temporary'),
+            }),
+          )
+        }
+        return Effect.succeed(
+          HttpClientResponse.fromWeb(
+            request,
+            new Response(JSON.stringify({ ok: true }), {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            }),
+          ),
+        )
+      }),
+    )
+    const layer = Auth.Default.pipe(
+      Layer.provide(makeMockConfigLayer(baseResolved, null)),
+      Layer.provide(http),
+    )
+    const program = Effect.gen(function* () {
+      const auth = yield* Auth
+      return yield* auth.probe('https://blog.example.com')
+    })
+    const res = await Effect.runPromise(Effect.provide(program, layer))
+    expect(res.authBase).toBe('https://blog.example.com/auth')
+  })
+
+  itVitest('uses ResponseError responses as probe responses', async () => {
+    const layer = Auth.Default.pipe(
+      Layer.provide(makeMockConfigLayer(baseResolved, null)),
+      Layer.provide(responseErrorHttpLayer(200)),
+    )
+    const program = Effect.gen(function* () {
+      const auth = yield* Auth
+      return yield* auth.probe('https://blog.example.com')
+    })
+    const res = await Effect.runPromise(Effect.provide(program, layer))
+    expect(res.authBase).toBe('https://blog.example.com/api/v2/auth')
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -225,6 +334,22 @@ describe('Auth.requestDeviceCode', () => {
     const layer = Auth.Default.pipe(
       Layer.provide(makeMockConfigLayer(baseResolved, null)),
       Layer.provide(http.layer),
+    )
+    const program = Effect.gen(function* () {
+      const auth = yield* Auth
+      return yield* auth.requestDeviceCode(
+        'https://blog.example.com/api/v2/auth',
+        'mxs-cli',
+      )
+    }).pipe(Effect.flip)
+    const err = await Effect.runPromise(Effect.provide(program, layer))
+    expect(err._tag).toBe('AuthDenied')
+  })
+
+  itVitest('collapses non-generic transport errors to AuthDenied', async () => {
+    const layer = Auth.Default.pipe(
+      Layer.provide(makeMockConfigLayer(baseResolved, null)),
+      Layer.provide(failingHttpLayer({ code: 'ECONNREFUSED' })),
     )
     const program = Effect.gen(function* () {
       const auth = yield* Auth
@@ -462,6 +587,28 @@ describe('Auth.ensureFresh', () => {
     expect(err._tag).toBe('AuthMissing')
   })
 
+  itVitest('fails AuthMissing when no profile is resolved', async () => {
+    const http = testHttpLayer({})
+    const layer = Auth.Default.pipe(
+      Layer.provide(
+        makeMockConfigLayer({ ...baseResolved, profileName: null }, null),
+      ),
+      Layer.provide(http.layer),
+    )
+    const err = await Effect.runPromise(
+      Effect.flip(
+        Effect.provide(
+          Effect.gen(function* () {
+            const auth = yield* Auth
+            return yield* auth.ensureFresh({ ...baseResolved, profileName: null })
+          }),
+          layer,
+        ),
+      ),
+    )
+    expect(err._tag).toBe('AuthMissing')
+  })
+
   itVitest('refreshes via refresh_token grant and writes back', async () => {
     const cred: CredentialsShape = {
       access_token: 'OLD',
@@ -576,6 +723,55 @@ describe('Auth.ensureFresh', () => {
       fetchSpy.mockRestore()
     }
   })
+
+  itVitest('keeps session-token credentials when get-session cannot extend expiry', async () => {
+    const cred: CredentialsShape = {
+      access_token: 'OLD',
+      expires_at: Date.now() + 1_000,
+      user: { id: 'old' },
+    }
+    const writes = { last: null as CredentialsShape | null }
+    const responses = [
+      new Response(JSON.stringify({ session: { expiresAt: 'bad-date' } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+      new Response(JSON.stringify({ session: { expiresAt: Date.now() } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+      new Response(JSON.stringify({}), {
+        status: 401,
+        headers: { 'content-type': 'application/json' },
+      }),
+    ]
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () => responses.shift()!)
+    try {
+      const http = testHttpLayer({})
+      const layer = Auth.Default.pipe(
+        Layer.provide(makeMockConfigLayer(baseResolved, cred, writes)),
+        Layer.provide(http.layer),
+      )
+      const program = Effect.gen(function* () {
+        const auth = yield* Auth
+        return yield* auth.ensureFresh(baseResolved)
+      })
+      await expect(
+        Effect.runPromise(Effect.provide(program, layer)),
+      ).resolves.toMatchObject({ access_token: 'OLD' })
+      await expect(
+        Effect.runPromise(Effect.provide(program, layer)),
+      ).resolves.toMatchObject({ access_token: 'OLD' })
+      await expect(
+        Effect.runPromise(Effect.provide(program, layer)),
+      ).resolves.toMatchObject({ access_token: 'OLD' })
+      expect(writes.last).toBeNull()
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -664,6 +860,51 @@ describe('Auth user-facing summaries', () => {
     )
     expect(err._tag).toBe('Generic')
   })
+
+  itVitest('whoami and status wrap config resolution failures as Generic', async () => {
+    const failingConfig: ConfigService = {
+      ...Layer,
+    } as never
+    const configLayer = makeMockConfigLayer(baseResolved, null)
+    const layer = Auth.Default.pipe(
+      Layer.provide(
+        Layer.succeed(Config, {
+          ...(await Effect.runPromise(
+            Effect.gen(function* () {
+              return yield* Config
+            }).pipe(Effect.provide(configLayer)),
+          )),
+          resolve: () =>
+            Effect.fail(new Generic({ message: 'resolve failed' })),
+        } satisfies ConfigService),
+      ),
+      Layer.provide(testHttpLayer({}).layer),
+    )
+    const whoamiErr = await Effect.runPromise(
+      Effect.flip(
+        Effect.provide(
+          Effect.gen(function* () {
+            const auth = yield* Auth
+            return yield* auth.whoami
+          }),
+          layer,
+        ),
+      ),
+    )
+    const statusErr = await Effect.runPromise(
+      Effect.flip(
+        Effect.provide(
+          Effect.gen(function* () {
+            const auth = yield* Auth
+            return yield* auth.status
+          }),
+          layer,
+        ),
+      ),
+    )
+    expect(whoamiErr._tag).toBe('Generic')
+    expect(statusErr._tag).toBe('Generic')
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -686,5 +927,42 @@ describe('Auth.logout', () => {
     })
     await Effect.runPromise(Effect.provide(program, layer))
     expect(deletes.invokedFor).toBe('prod')
+  })
+
+  itVitest('resolves the active profile when logout target is null and no-ops when unresolved', async () => {
+    const deletes = { invokedFor: null as string | null }
+    const http = testHttpLayer({})
+    const layer = Auth.Default.pipe(
+      Layer.provide(makeMockConfigLayer(baseResolved, null, undefined, deletes)),
+      Layer.provide(http.layer),
+    )
+    await Effect.runPromise(
+      Effect.provide(
+        Effect.gen(function* () {
+          const auth = yield* Auth
+          yield* auth.logout(null)
+        }),
+        layer,
+      ),
+    )
+    expect(deletes.invokedFor).toBe('prod')
+
+    const noTargetLayer = Auth.Default.pipe(
+      Layer.provide(
+        makeMockConfigLayer({ ...baseResolved, profileName: null }, null, undefined, deletes),
+      ),
+      Layer.provide(http.layer),
+    )
+    deletes.invokedFor = null
+    await Effect.runPromise(
+      Effect.provide(
+        Effect.gen(function* () {
+          const auth = yield* Auth
+          yield* auth.logout(null)
+        }),
+        noTargetLayer,
+      ),
+    )
+    expect(deletes.invokedFor).toBeNull()
   })
 })

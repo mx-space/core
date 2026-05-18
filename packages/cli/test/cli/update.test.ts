@@ -218,20 +218,21 @@ describe('update command', () => {
   })
 
   it('passes option flags through and emits cancelled envelope', async () => {
-    const runUpdate = vi.fn((opts: any) =>
-      Effect.succeed({
+    const runUpdate = vi.fn((opts: any) => {
+      const channel: 'stable' | 'next' = opts.prerelease ? 'next' : 'stable'
+      return Effect.succeed({
         fromVersion: opts.currentVersion,
         toVersion: '0.4.0',
         pm: opts.pm,
-        channel: opts.prerelease ? 'next' : 'stable',
+        channel,
         status: 0,
         upgraded: false,
         dryRun: true,
         upToDate: false,
         command: 'pnpm add -g @mx-space/cli@next',
         cancelled: true,
-      }),
-    )
+      })
+    })
     vi.spyOn(UpdaterMod, 'make').mockReturnValue({
       maybeNotify: () => Effect.void,
       runUpdate,

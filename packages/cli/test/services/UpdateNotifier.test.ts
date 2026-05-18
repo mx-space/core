@@ -468,7 +468,7 @@ describe('maybeNotify', () => {
     const urls: string[] = []
     const fetchImpl: FetchImpl = async (url) => {
       urls.push(url)
-      return makeFetchOK('0.4.0')()
+      return makeFetchOK('0.4.0')(url)
     }
     const svc = make({ now: () => t, fetchImpl, configDir: tmpDir })
     await Effect.runPromise(
