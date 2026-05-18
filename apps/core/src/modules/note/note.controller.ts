@@ -500,15 +500,12 @@ export class NoteController {
   }
 
   @Get(':id')
-  @Auth()
-  @TranslateFields(
-    { path: 'mood', keyPath: 'note.mood' },
-    { path: 'weather', keyPath: 'note.weather' },
-  )
+  @TranslateFields(...NOTE_DETAIL_TRANSLATE_FIELDS)
   async getOneNote(
     @Param() params: EntityIdDto,
-    @Query() query: NotePasswordQueryDto,
-    @HasAdminAccess() isAuthenticated: boolean,
+    @Query() query: NotePasswordQueryDto = {} as NotePasswordQueryDto,
+    @HasAdminAccess() isAuthenticated = false,
+    @IpLocation() { ip }: IpRecord = { ip: '' } as IpRecord,
     @Lang() lang?: string,
   ) {
     const { id } = params
@@ -523,7 +520,13 @@ export class NoteController {
       throw new CannotFindException()
     }
 
-    return this.buildOwnerNoteDetailResponse(current as NoteModel, query, lang)
+    return this.buildPublicNoteResponse(
+      current as NoteModel,
+      isAuthenticated,
+      { ...query, single: true },
+      ip,
+      lang,
+    )
   }
 
   @Get('/:year/:month/:day/:slug')

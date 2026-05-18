@@ -240,7 +240,6 @@ export class PostController {
   }
 
   @Get('/:id')
-  @Auth()
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
@@ -248,9 +247,9 @@ export class PostController {
   })
   async getById(
     @Param() params: EntityIdDto,
-    @Query() query: PostDetailQueryDto,
-    @IpLocation() { ip }: IpRecord,
-    @HasAdminAccess() isAuthenticated: boolean,
+    @Query() query: PostDetailQueryDto = {} as PostDetailQueryDto,
+    @IpLocation() { ip }: IpRecord = { ip: '' } as IpRecord,
+    @HasAdminAccess() isAuthenticated = false,
     @Lang() lang?: string,
   ) {
     const { id } = params
