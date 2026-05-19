@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## [12.9.3](https://github.com/mx-space/core/compare/v12.9.2...v12.9.3) (2026-05-19)
+
+
+### Bug Fixes
+
+* **auth:** revert dynamic baseURL device verification ([12828bf](https://github.com/mx-space/core/commit/12828bf4cf97661e3adc628b9524bc082f5b0d1e))
+
+
 ## [12.9.2](https://github.com/mx-space/core/compare/v12.9.1...v12.9.2) (2026-05-19)
 
 

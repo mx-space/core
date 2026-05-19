@@ -1,12 +1,11 @@
 ## TL;DR
 
-Patch release fixing device-login verification links and making schema migrations idempotent across branch switches so redeploys no longer fail.
+Hotfix reverting the v12.9.2 dynamic baseURL change, which caused auth requests from non-allowlisted hosts to fail with an internal error.
 
 ## Changes
 
-- `mxs auth login` now shows a device verification link on the same host you pointed the CLI at, rather than a fixed configured URL — the link and the API base stay consistent. ([a904013](https://github.com/mx-space/core/commit/a904013a1a1b468551af4451ed575ef214981647))
-- Schema migrations are now matched by content hash instead of a single timestamp watermark, so switching or rebasing branches no longer re-runs an already-applied migration and fails the deploy with `relation "..." already exists`. ([d1668db](https://github.com/mx-space/core/commit/d1668db9384b06efa3426db780a538dcb97a32fc))
+- Reverted the v12.9.2 dynamic device-verification change. It made Better Auth throw an internal error on any `/api/v2/auth/*` request whose `Host` header was not in the configured allowed origins, breaking authentication for affected clients. Upgrading from v12.9.2 restores stable auth behaviour. ([12828bf](https://github.com/mx-space/core/commit/12828bf4cf97661e3adc628b9524bc082f5b0d1e))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v12.9.1...v12.9.2
+**Full Changelog**: https://github.com/mx-space/core/compare/v12.9.2...v12.9.3
