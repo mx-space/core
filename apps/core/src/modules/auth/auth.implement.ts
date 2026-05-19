@@ -38,6 +38,9 @@ export async function CreateAuth(
   const deviceVerificationPath = isDev
     ? '/device'
     : `/api/v${API_VERSION}/device`
+  const dynamicBaseURL: BetterAuthOptions['baseURL'] = isDev
+    ? undefined
+    : { allowedHosts: CROSS_DOMAIN.allowedOrigins }
   const auth = betterAuth({
     telemetry: { enabled: false },
     database: drizzleAdapter(db, {
@@ -46,6 +49,7 @@ export async function CreateAuth(
       usePlural: true,
     }),
     socialProviders: providers,
+    baseURL: dynamicBaseURL,
     basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
     trustedOrigins: async (request) => {
       if (isDev) {
