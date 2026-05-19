@@ -311,11 +311,17 @@ git push
 ### Step 5 — Publish to npm
 
 ```bash
-cd packages/api-client
-npm publish --access=public
+cd packages/api-client && pnpm publish --access=public
 ```
 
-Requires `npm login` with publish rights on `@mx-space/api-client` (org `mx-space`). If `npm whoami` shows nothing, ask the user to log in — don't try to bypass.
+Use `pnpm publish`, **not** `npm publish`. pnpm rewrites any `workspace:`
+protocol dependency to a real version range in the published manifest;
+`npm publish` ships `workspace:*` verbatim and the package breaks on install.
+pnpm's git-checks abort the publish if the repo root has unrelated untracked
+files — after confirming those files are unrelated to this release, re-run with
+`--no-git-checks`.
+
+Requires publish rights on `@mx-space/api-client` (org `mx-space`). If `npm whoami` shows nothing, ask the user to log in — don't try to bypass.
 
 Verify: `npm view @mx-space/api-client version` returns the new version (may take 30–60s to propagate).
 
@@ -357,8 +363,12 @@ Edit `packages/cli/package.json` `version` field. Do NOT touch the `bin` map —
 ### Step 4 — Sanity-check the publish surface
 
 ```bash
-npm pack --dry-run -w @mx-space/cli 2>&1 | tail -40
+cd packages/cli && npm pack --dry-run 2>&1 | tail -40
 ```
+
+Run from inside `packages/cli`, not the repo root with `-w @mx-space/cli` — in
+this pnpm workspace the `-w` form resolves to pnpm and aborts with
+`ERR_PNPM_PACKAGE_NAME_NOT_FOUND` (the root package.json has no `name`).
 
 What to check in the output:
 - `bin/mxs.cjs` present
@@ -381,13 +391,17 @@ git push
 ### Step 6 — Publish to npm
 
 ```bash
-cd packages/cli
-npm publish --access=public
+cd packages/cli && pnpm publish --access=public
 ```
 
-For the **first publish** of `@mx-space/cli`, requires:
+Use `pnpm publish`, **not** `npm publish`. `@mx-space/cli` depends on
+`@mx-space/api-client` via `workspace:*`; pnpm rewrites that to a real version
+range when publishing, whereas `npm publish` ships `workspace:*` verbatim and
+breaks the package on install.
+
 - `npm whoami` returns a user with publish rights on the `mx-space` org (same as api-client).
 - `--access=public` is required because `@mx-space/cli` is a scoped package; npm defaults scoped packages to private. (Already set in `publishConfig.access`, but passing the flag is belt-and-suspenders.)
+- pnpm's git-checks abort the publish if the repo root has unrelated untracked files. After confirming those files are unrelated to this release, re-run with `--no-git-checks`.
 
 If `npm whoami` is empty, ask the user to `npm login`. Don't attempt `--otp=...` guessing.
 
@@ -411,8 +425,8 @@ CLI has no in-repo consumers (it's an end-user tool, not a workspace dep). Skip 
 | Pushed commit but tag push failed | Push the tag: `git push origin vX.Y.Z`. The commit alone won't trigger CI. |
 | Tag pushed, CI quality/build failed | Fix forward with a new patch release. Don't delete the published tag. |
 | Tag pushed, Docker built, but bug critical | Cut a new patch with the fix. Don't re-tag the same version. |
-| api-client `npm publish` failed after commit/push | Re-run `npm publish --access=public` once the issue is resolved. The commit already records the intent. |
-| cli `npm publish` failed after commit/push | Re-run `npm publish --access=public` from `packages/cli`. If failure is missing `dist/`, re-run `pnpm -C packages/cli run package` first. |
+| api-client `pnpm publish` failed after commit/push | Re-run `pnpm publish --access=public` once the issue is resolved. The commit already records the intent. |
+| cli `pnpm publish` failed after commit/push | Re-run `pnpm publish --access=public` from `packages/cli`. If failure is missing `dist/`, re-run `pnpm -C packages/cli run package` first. |
 | Published cli but `mxs` binary missing on install | The `bin` field was likely stripped or the shim path is wrong. Cut a new patch with `bin/mxs.cjs` restored — do **not** unpublish unless within 24h and no installs. |
 | Wrong version published to npm | npm allows `npm unpublish` only within 72h, only if no one depends on it. Usually faster to publish a corrected next version. |
 | Release notes need a fix after tag is published | `gh release edit vX.Y.Z --notes-file apps/core/RELEASE_NOTES.md` (or `--notes "..."`) — updates the Release body only. Tag and assets are untouched. |
@@ -428,7 +442,7 @@ CLI has no in-repo consumers (it's an end-user tool, not a workspace dep). Skip 
 - `assets-push.sh` reports a real conflict (not just "nothing to commit")
 - `npm whoami` empty when about to publish api-client or cli
 - Pipelines mixed up (e.g. tagging `v*` for an api-client- or cli-only change, or bumping CLI version when only api-client changed)
-- `packages/cli/dist` missing or stale before `npm publish` (skipped step 2 rebuild)
+- `packages/cli/dist` missing or stale before `pnpm publish` (skipped step 2 rebuild)
 - `packages/cli/package.json` `bin` field accidentally removed or path renamed
 
 ## File reference
