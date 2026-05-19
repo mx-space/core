@@ -1,11 +1,12 @@
 ## TL;DR
 
-Hotfix reverting the v12.9.2 dynamic baseURL change, which caused auth requests from non-allowlisted hosts to fail with an internal error.
+Reliability fixes: exception responses with a non-numeric status code no longer crash, and the mxs device-login link is restored on the request's own host.
 
 ## Changes
 
-- Reverted the v12.9.2 dynamic device-verification change. It made Better Auth throw an internal error on any `/api/v2/auth/*` request whose `Host` header was not in the configured allowed origins, breaking authentication for affected clients. Upgrading from v12.9.2 restores stable auth behaviour. ([12828bf](https://github.com/mx-space/core/commit/12828bf4cf97661e3adc628b9524bc082f5b0d1e))
+- Exception handling no longer crashes when an error carries a non-numeric status. A Better Auth `APIError` exposes a string status (e.g. `INTERNAL_SERVER_ERROR`); the exception filter now normalizes any status to a valid numeric HTTP code, so the response is sent instead of failing with an unhandled rejection. ([f24c9f9](https://github.com/mx-space/core/commit/f24c9f9c2c6c8f22d74f1e6b22cede3a8eb887ca))
+- `mxs auth login` again shows the device verification link on the same host the CLI connected to. This re-applies the change reverted in v12.9.3, now with a mandatory fallback (the configured server URL), so auth requests from hosts outside the allow-list resolve cleanly instead of breaking authentication. ([d591655](https://github.com/mx-space/core/commit/d5916554e5eb2cbc64c563dd37bb951964312355))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v12.9.2...v12.9.3
+**Full Changelog**: https://github.com/mx-space/core/compare/v12.9.3...v12.9.4

@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## [12.9.4](https://github.com/mx-space/core/compare/v12.9.3...v12.9.4) (2026-05-19)
+
+
+### Bug Fixes
+
+* **auth:** derive device verification URI from request host ([d591655](https://github.com/mx-space/core/commit/d5916554e5eb2cbc64c563dd37bb951964312355))
+* **core:** coerce non-numeric exception status to a valid HTTP code ([f24c9f9](https://github.com/mx-space/core/commit/f24c9f9c2c6c8f22d74f1e6b22cede3a8eb887ca))
+
+
 ## [12.9.3](https://github.com/mx-space/core/compare/v12.9.2...v12.9.3) (2026-05-19)
 
 
