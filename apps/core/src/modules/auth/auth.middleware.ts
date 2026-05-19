@@ -120,7 +120,11 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
           : parsedAdminUrl.origin,
       }
 
-      const { handler, auth } = await CreateAuth(providers, passkeyOptions)
+      const { handler, auth } = await CreateAuth(
+        providers,
+        passkeyOptions,
+        urls.serverUrl,
+      )
       this.authHandler = handler
 
       this.authInstance.set(auth)

@@ -31,13 +31,33 @@ export const MXS_CLI_CLIENT_ID = 'mxs-cli'
 const deviceUserCodeAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 const generateDeviceUserCode = customAlphabet(deviceUserCodeAlphabet, 8)
 
+const normalizeOrigin = (url: string | undefined): string | null => {
+  if (!url) return null
+  try {
+    return new URL(url).origin
+  } catch {
+    return null
+  }
+}
+
 export async function CreateAuth(
   providers: BetterAuthOptions['socialProviders'],
   passkeyOptions?: PasskeyOptions,
+  serverUrl?: string,
 ) {
   const deviceVerificationPath = isDev
     ? '/device'
     : `/api/v${API_VERSION}/device`
+  // `fallback` is mandatory: Better Auth throws on any request Host absent
+  // from allowedHosts when it is unset.
+  const fallbackOrigin = normalizeOrigin(serverUrl)
+  const dynamicBaseURL: BetterAuthOptions['baseURL'] =
+    isDev || !fallbackOrigin
+      ? undefined
+      : {
+          allowedHosts: CROSS_DOMAIN.allowedOrigins,
+          fallback: fallbackOrigin,
+        }
   const auth = betterAuth({
     telemetry: { enabled: false },
     database: drizzleAdapter(db, {
@@ -46,6 +66,7 @@ export async function CreateAuth(
       usePlural: true,
     }),
     socialProviders: providers,
+    baseURL: dynamicBaseURL,
     basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
     trustedOrigins: async (request) => {
       if (isDev) {

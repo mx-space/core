@@ -1,3 +1,4 @@
+import type { BetterAuthOptions } from 'better-auth'
 import { betterAuth } from 'better-auth'
 import { memoryAdapter } from 'better-auth/adapters/memory'
 import { APIError } from 'better-auth/api'
@@ -7,7 +8,10 @@ const CLIENT_ID = 'mxs-cli'
 
 type DeviceAuth = ReturnType<typeof buildAuth>['auth']
 
-function buildAuth(verificationUri = '/device') {
+function buildAuth(
+  verificationUri = '/device',
+  baseURL: BetterAuthOptions['baseURL'] = 'http://localhost/auth',
+) {
   const db: Record<string, any[]> = {
     user: [],
     session: [],
@@ -19,7 +23,7 @@ function buildAuth(verificationUri = '/device') {
     telemetry: { enabled: false },
     appName: 'mx-core-test',
     secret: 'test-secret-test-secret-test-secret-12345',
-    baseURL: 'http://localhost/auth',
+    baseURL,
     emailAndPassword: { enabled: true, disableSignUp: false },
     database: memoryAdapter(db),
     plugins: [
@@ -225,6 +229,31 @@ describe('deviceAuthorization plugin (e2e)', () => {
       }),
     ).rejects.toMatchObject({
       body: { error: 'unauthorized' },
+    })
+  })
+
+  describe('dynamic baseURL verification uri', () => {
+    const dynamicBaseURL = {
+      allowedHosts: ['mx.test', '*.mx.test'],
+      fallback: 'https://fallback.test',
+    }
+
+    test('uses the request host when it matches allowedHosts', async () => {
+      const { auth } = buildAuth('/api/v2/device', dynamicBaseURL)
+      const res = await auth.api.deviceCode({
+        body: { client_id: CLIENT_ID, scope: 'openid' },
+        headers: new Headers({ host: 'mx.test' }),
+      })
+      expect(res.verification_uri).toBe('https://mx.test/api/v2/device')
+    })
+
+    test('falls back instead of throwing when the host is not allowlisted', async () => {
+      const { auth } = buildAuth('/api/v2/device', dynamicBaseURL)
+      const res = await auth.api.deviceCode({
+        body: { client_id: CLIENT_ID, scope: 'openid' },
+        headers: new Headers({ host: 'not-allowed.test' }),
+      })
+      expect(res.verification_uri).toBe('https://fallback.test/api/v2/device')
     })
   })
 })
