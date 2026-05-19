@@ -29,6 +29,13 @@ import { SayService } from '../say/say.service'
 import type { RSSProps } from './aggregate.interface'
 import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.schema'
 
+const omitArticleBody = <T extends { text?: unknown; content?: unknown }>(
+  row: T,
+): Omit<T, 'text' | 'content'> => {
+  const { text, content, ...rest } = row
+  return rest
+}
+
 @Injectable()
 export class AggregateService {
   constructor(
@@ -72,7 +79,14 @@ export class AggregateService {
       this.sayService.findRecent(size),
       this.recentlyService.findRecent(size),
     ])
-    return { notes, posts, says, recently }
+    // The homepage renders only titles/metadata — keep `text`/`content`
+    // bodies out of this response or the SSR payload balloons by 100s of KB.
+    return {
+      notes: notes.map(omitArticleBody),
+      posts: posts.map(omitArticleBody),
+      says,
+      recently,
+    }
   }
 
   async getLatest(limit = 5, types?: TimelineType[], combined = false) {

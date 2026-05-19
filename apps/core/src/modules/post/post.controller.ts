@@ -173,7 +173,12 @@ export class PostController {
         })
       }
 
-      doc.text = truncate ? doc.text.slice(0, truncate) : doc.text
+      if (truncate) {
+        doc.text = doc.text.slice(0, truncate)
+        // List view renders only a text/summary preview — drop the lexical
+        // `content` tree too, else truncated rows still ship 100s of KB.
+        doc.content = null
+      }
     }
 
     if (select) {
