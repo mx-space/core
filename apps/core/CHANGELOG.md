@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## [12.9.5](https://github.com/mx-space/core/compare/v12.9.4...v12.9.5) (2026-05-19)
+
+
+### Bug Fixes
+
+* **core:** keep article bodies out of homepage & post-list payloads ([4e3a11e](https://github.com/mx-space/core/commit/4e3a11ee585409cfab50e04a7408a9dab6e7d341))
+
+
+
 ## [12.9.4](https://github.com/mx-space/core/compare/v12.9.3...v12.9.4) (2026-05-19)
 
 
