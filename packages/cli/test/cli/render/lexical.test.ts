@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { renderLexicalAnsi } from '../../../src/cli/render/lexical'
+import { visibleLen } from '../../../src/cli/render/markdown'
 
 const plain = (xml: string) => renderLexicalAnsi(xml, { color: false })
 const styled = (xml: string) => renderLexicalAnsi(xml, { color: true })
@@ -312,5 +313,21 @@ describe('renderLexicalAnsi — robustness', () => {
     expect(plain('<details summary="x"><p>y</p></details>')).toBe(
       '▸ x\n  y',
     )
+  })
+})
+
+describe('renderLexicalAnsi — table alignment', () => {
+  it('keeps every row the same visible width with CJK columns', () => {
+    const xml =
+      '<table>' +
+      '<tr><th>指标</th><th>Next.js</th><th>占优</th></tr>' +
+      '<tr><td>Performance</td><td>64</td><td>Remix</td></tr>' +
+      '<tr><td>FCP</td><td>3037 ms</td><td>Remix +19</td></tr>' +
+      '</table>'
+    const lines = plain(xml)
+      .split('\n')
+      .filter((line) => line.length > 0)
+    const widths = new Set(lines.map((line) => visibleLen(line)))
+    expect(widths.size).toBe(1)
   })
 })

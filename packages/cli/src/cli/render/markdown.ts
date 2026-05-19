@@ -1,13 +1,13 @@
+import { eastAsianWidth } from 'get-east-asian-width'
+
 import { highlightCode } from './codehighlight'
 
 // ---------------------------------------------------------------------------
 // Minimal markdown → ANSI renderer.
 //
-// We deliberately hand-roll instead of pulling in `marked-terminal` (~270 KB
-// of transitive deps incl. cli-highlight, node-emoji, cli-table3) because:
-//   (a) our markdown subset is tiny and fully under our control,
-//   (b) the CLI is already over its bundle budget,
-//   (c) we want zero runtime surprises around NO_COLOR / non-TTY detection.
+// Hand-rolled: the markdown subset we render is small and fully under our
+// control, and we want zero runtime surprises around NO_COLOR / non-TTY
+// detection.
 //
 // Supported constructs:
 //   - `# heading`, `## heading`            → bold + colour
@@ -41,9 +41,16 @@ export const ANSI = {
 export const wrap = (code: string, text: string, on: boolean): string =>
   on ? `${code}${text}${ANSI.reset}` : text
 
-export const visibleLen = (s: string): number =>
+export const visibleLen = (s: string): number => {
   // eslint-disable-next-line no-control-regex
-  s.replaceAll(/\x1B\[[\d;]*m/g, '').length
+  const text = s.replaceAll(/\x1B\[[\d;]*m/g, '')
+  let width = 0
+  for (const ch of text) {
+    const cp = ch.codePointAt(0)
+    if (cp !== undefined) width += eastAsianWidth(cp)
+  }
+  return width
+}
 
 export const isColorEnabled = (stream: NodeJS.WriteStream): boolean => {
   if (process.env.NO_COLOR && process.env.NO_COLOR !== '') return false
