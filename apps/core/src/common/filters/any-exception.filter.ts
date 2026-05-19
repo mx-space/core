@@ -1,19 +1,27 @@
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+
 import { EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import type { FastifyReply, FastifyRequest } from 'fastify'
+
 import { getIp } from '../../utils/ip.util'
 import { BizException } from '../exceptions/biz.exception'
 
 interface ErrorLike {
-  readonly status: number
+  readonly status?: number | string
   readonly statusCode?: number
   readonly message?: string
 }
+
+const isHttpStatusCode = (value: unknown): value is number =>
+  typeof value === 'number' &&
+  Number.isInteger(value) &&
+  value >= 100 &&
+  value <= 599
 
 let once = false
 
@@ -56,12 +64,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (request.method === 'OPTIONS') return response.status(204).send()
 
     const ip = getIp(request)
+    const errorLike = exception as ErrorLike | undefined
+    const rawStatus = errorLike?.status
+    const rawStatusCode = errorLike?.statusCode
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
-        : (exception as ErrorLike)?.status ||
-          (exception as ErrorLike)?.statusCode ||
-          HttpStatus.INTERNAL_SERVER_ERROR
+        : isHttpStatusCode(rawStatus)
+          ? rawStatus
+          : isHttpStatusCode(rawStatusCode)
+            ? rawStatusCode
+            : HttpStatus.INTERNAL_SERVER_ERROR
 
     const message =
       (exception as any)?.response?.message ||
