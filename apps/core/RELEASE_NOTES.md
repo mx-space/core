@@ -1,21 +1,12 @@
 ## TL;DR
 
-Spider guard is reworked with a UA-first fast path and proper credential validation, eliminating per-request DB lookups for legitimate traffic.
-
-## Highlights
-
-The anti-scraper guard now runs the User-Agent check first as a cheap fast path. Browsers, RSS readers, search bots, and the `mxs` CLI flow through without touching the database. Only requests with missing or scraper-like UAs fall back to credential validation, which means production traffic gets faster and the auth subsystem sees less pressure.
-
-Authenticated bypass is now correctly enforced. Previously, any request carrying an `Authorization` or `x-api-key` header would slip past the UA filter without the credentials actually being validated — a bare `Authorization: junk` was enough. The guard now injects `AuthService` (via `APP_GUARD`) and only honors the bypass when the session or owner-scoped API key resolves. Operators with an authenticated client (CMS, mxs CLI, custom integrations) will see no change; abusive scrapers spoofing the header will not.
+Patch release fixing device-login verification links and making schema migrations idempotent across branch switches so redeploys no longer fail.
 
 ## Changes
 
-### Features
-- Spider guard now uses a UA-first fast path with `AuthService`-backed credential validation; legitimate browsers, RSS readers, and bots bypass without DB lookups. ([28cb17d](https://github.com/mx-space/core/commit/28cb17d5c99c40457f9e727812c9415df59770d0))
-
-### Bug Fixes
-- Spider guard properly validates `Authorization` and `x-api-key` credentials before bypassing the UA filter, closing a header-spoofing gap. ([c4ab9c5](https://github.com/mx-space/core/commit/c4ab9c584fc79254fc0eb76be917c5871cc1b508))
+- `mxs auth login` now shows a device verification link on the same host you pointed the CLI at, rather than a fixed configured URL — the link and the API base stay consistent. ([a904013](https://github.com/mx-space/core/commit/a904013a1a1b468551af4451ed575ef214981647))
+- Schema migrations are now matched by content hash instead of a single timestamp watermark, so switching or rebasing branches no longer re-runs an already-applied migration and fails the deploy with `relation "..." already exists`. ([d1668db](https://github.com/mx-space/core/commit/d1668db9384b06efa3426db780a538dcb97a32fc))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v12.8.0...v12.9.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v12.9.1...v12.9.2

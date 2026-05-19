@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## [12.9.2](https://github.com/mx-space/core/compare/v12.9.1...v12.9.2) (2026-05-19)
+
+
+### Bug Fixes
+
+* **auth:** derive device verification URI host from request ([a904013](https://github.com/mx-space/core/commit/a904013a1a1b468551af4451ed575ef214981647))
+* **core:** key schema migration idempotency on content hash ([d1668db](https://github.com/mx-space/core/commit/d1668db9384b06efa3426db780a538dcb97a32fc))
+
+
 ## <small>12.9.1 (2026-05-18)</small>
 
 * release: v12.9.1 ([37af290](https://github.com/mx-space/core/commit/37af290))
