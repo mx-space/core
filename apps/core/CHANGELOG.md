@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## [12.10.0](https://github.com/mx-space/core/compare/v12.9.5...v12.10.0) (2026-05-20)
+
+
+### Features
+
+* **enrichment:** rename image/screenshot schema and add previewImage OG URLs ([#2734](https://github.com/mx-space/core/issues/2734)) ([975eb59](https://github.com/mx-space/core/commit/975eb598de496e26d89a5eb91195da441e374eb7))
+
+
+
 ## [12.9.5](https://github.com/mx-space/core/compare/v12.9.4...v12.9.5) (2026-05-19)
 
 
