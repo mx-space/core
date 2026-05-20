@@ -96,5 +96,64 @@ describe('GitHubPrProvider', () => {
         format: 'number',
       })
     })
+
+    it('merges fetched blurhash/palette into thumbnail and preview images', async () => {
+      const mockData = {
+        number: 42,
+        title: 'Fix bug',
+        body: 'PR description',
+        html_url: 'https://github.com/mx-space/core/pull/42',
+        state: 'open',
+        merged: false,
+        created_at: '2023-06-01T00:00:00Z',
+        updated_at: '2023-07-01T00:00:00Z',
+        user: { avatar_url: 'https://avatar', login: 'dev' },
+      }
+      const meta = {
+        width: 64,
+        height: 64,
+        blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
+        palette: { dominant: '#abcdef' },
+      }
+      const p = new GitHubPrProvider(
+        createClient(mockData),
+        stubImageMeta(meta),
+      )
+
+      const result = await p.fetch('mx-space/core/pulls/42')
+
+      expect(result.thumbnailImage?.blurhash).toBe(meta.blurhash)
+      expect(result.thumbnailImage?.palette).toEqual(meta.palette)
+      expect(result.previewImage?.blurhash).toBe(meta.blurhash)
+      expect(result.previewImage?.palette).toEqual(meta.palette)
+      expect(result.previewImage?.width).toBe(1280)
+      expect(result.previewImage?.height).toBe(640)
+    })
+
+    it('omits blurhash when ImageMetaService returns null', async () => {
+      const mockData = {
+        number: 42,
+        title: 'Fix bug',
+        body: 'PR description',
+        html_url: 'https://github.com/mx-space/core/pull/42',
+        state: 'open',
+        merged: false,
+        created_at: '2023-06-01T00:00:00Z',
+        updated_at: '2023-07-01T00:00:00Z',
+        user: { avatar_url: 'https://avatar', login: 'dev' },
+      }
+      const p = new GitHubPrProvider(
+        createClient(mockData),
+        stubImageMeta(null),
+      )
+
+      const result = await p.fetch('mx-space/core/pulls/42')
+
+      expect(result.thumbnailImage?.url).toBe('https://avatar')
+      expect(result.thumbnailImage?.blurhash).toBeUndefined()
+      expect(result.thumbnailImage?.palette).toBeUndefined()
+      expect(result.previewImage?.url).toMatch(/opengraph\.githubassets\.com/)
+      expect(result.previewImage?.blurhash).toBeUndefined()
+    })
   })
 })

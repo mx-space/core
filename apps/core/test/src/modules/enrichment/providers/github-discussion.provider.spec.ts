@@ -154,5 +154,68 @@ describe('GitHubDiscussionProvider', () => {
         'Discussion not found',
       )
     })
+
+    it('merges fetched blurhash/palette into thumbnail and preview images', async () => {
+      const mockData = {
+        repository: {
+          discussion: {
+            title: 'Feature Request',
+            body: 'Discussion body',
+            url: 'https://github.com/mx-space/core/discussions/42',
+            createdAt: '2023-06-01T00:00:00Z',
+            updatedAt: '2023-07-01T00:00:00Z',
+            author: { login: 'user', avatarUrl: 'https://avatar' },
+            comments: { totalCount: 3 },
+          },
+        },
+      }
+      const meta = {
+        width: 64,
+        height: 64,
+        blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
+        palette: { dominant: '#abcdef' },
+      }
+      const p = new GitHubDiscussionProvider(
+        createClient(mockData),
+        stubImageMeta(meta),
+      )
+
+      const result = await p.fetch('mx-space/core/discussions/42')
+
+      expect(result.thumbnailImage?.blurhash).toBe(meta.blurhash)
+      expect(result.thumbnailImage?.palette).toEqual(meta.palette)
+      expect(result.previewImage?.blurhash).toBe(meta.blurhash)
+      expect(result.previewImage?.palette).toEqual(meta.palette)
+      expect(result.previewImage?.width).toBe(1280)
+      expect(result.previewImage?.height).toBe(640)
+    })
+
+    it('omits blurhash when ImageMetaService returns null', async () => {
+      const mockData = {
+        repository: {
+          discussion: {
+            title: 'Feature Request',
+            body: 'Discussion body',
+            url: 'https://github.com/mx-space/core/discussions/42',
+            createdAt: '2023-06-01T00:00:00Z',
+            updatedAt: '2023-07-01T00:00:00Z',
+            author: { login: 'user', avatarUrl: 'https://avatar' },
+            comments: { totalCount: 3 },
+          },
+        },
+      }
+      const p = new GitHubDiscussionProvider(
+        createClient(mockData),
+        stubImageMeta(null),
+      )
+
+      const result = await p.fetch('mx-space/core/discussions/42')
+
+      expect(result.thumbnailImage?.url).toBe('https://avatar')
+      expect(result.thumbnailImage?.blurhash).toBeUndefined()
+      expect(result.thumbnailImage?.palette).toBeUndefined()
+      expect(result.previewImage?.url).toMatch(/opengraph\.githubassets\.com/)
+      expect(result.previewImage?.blurhash).toBeUndefined()
+    })
   })
 })
