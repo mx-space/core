@@ -143,8 +143,8 @@ function makeService(stubs: ServiceStubs = {}) {
   service.taskQueueService = taskQueueService
   service.taskQueueProcessor = taskQueueProcessor
   service.browserFetch = browserFetch
-  service.screenshotPipeline = screenshotPipeline
-  service.screenshotStorage = screenshotStorage
+  service.capturePipeline = screenshotPipeline
+  service.captureStorage = screenshotStorage
   service.logger = { warn: vi.fn(), log: vi.fn() }
 
   return {
@@ -207,7 +207,7 @@ describe('EnrichmentService.resolve (SWR)', () => {
 
   it('cold path: DB miss → fetch + enrichWithImageMeta + upsert', async () => {
     const fetchResult = makeResult({
-      image: { url: 'https://image.tmdb.org/t/p/w500/poster.jpg' },
+      thumbnailImage: { url: 'https://image.tmdb.org/t/p/w500/poster.jpg' },
     })
     const { service, repository, imageService, provider } = makeService({
       dbRow: null,
@@ -219,9 +219,9 @@ describe('EnrichmentService.resolve (SWR)', () => {
       'https://image.tmdb.org/t/p/w500/poster.jpg',
     )
     expect(out.result.color).toBe('#aabbcc')
-    expect(out.result.image?.blurhash).toBe('L_blurhash_')
-    expect(out.result.image?.width).toBe(500)
-    expect(out.result.image?.height).toBe(750)
+    expect(out.result.thumbnailImage?.blurhash).toBe('L_blurhash_')
+    expect(out.result.thumbnailImage?.width).toBe(500)
+    expect(out.result.thumbnailImage?.height).toBe(750)
     expect(repository.upsert).toHaveBeenCalled()
   })
 
@@ -394,20 +394,20 @@ describe('EnrichmentService.enrichWithImageMeta', () => {
   it('populates color/blurhash/size when image.url present and color absent', async () => {
     const { service, imageService } = makeService()
     const result = makeResult({
-      image: { url: 'https://example.com/p.jpg' },
+      thumbnailImage: { url: 'https://example.com/p.jpg' },
     })
     await (service as any).enrichWithImageMeta(result)
     expect(imageService.getOnlineImageSizeAndMeta).toHaveBeenCalledTimes(1)
     expect(result.color).toBe('#aabbcc')
-    expect(result.image?.blurhash).toBe('L_blurhash_')
-    expect(result.image?.width).toBe(500)
-    expect(result.image?.height).toBe(750)
+    expect(result.thumbnailImage?.blurhash).toBe('L_blurhash_')
+    expect(result.thumbnailImage?.width).toBe(500)
+    expect(result.thumbnailImage?.height).toBe(750)
   })
 
   it('skips when color is already set (e.g. github-repo language name)', async () => {
     const { service, imageService } = makeService()
     const result = makeResult({
-      image: { url: 'https://example.com/p.jpg' },
+      thumbnailImage: { url: 'https://example.com/p.jpg' },
       color: 'TypeScript',
     })
     await (service as any).enrichWithImageMeta(result)
@@ -428,7 +428,7 @@ describe('EnrichmentService.enrichWithImageMeta', () => {
       imageMeta: new Error('boom'),
     })
     const result = makeResult({
-      image: { url: 'https://example.com/p.jpg' },
+      thumbnailImage: { url: 'https://example.com/p.jpg' },
     })
     await expect(
       (service as any).enrichWithImageMeta(result),

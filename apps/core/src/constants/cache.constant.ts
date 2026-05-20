@@ -33,8 +33,8 @@ export enum RedisKeys {
   AnalyzeTrafficSource = 'analyze_traffic_source',
   AnalyzeDeviceDistribution = 'analyze_device_distribution',
 
-  /** Enrichment 截图 LRU touchAccess 节流 NX 锁 */
-  EnrichmentScreenshotTouch = 'enrichment_screenshot_touch',
+  /** Enrichment capture LRU touchAccess 节流 NX 锁 */
+  EnrichmentCaptureTouch = 'enrichment_capture_touch',
 }
 export const API_CACHE_PREFIX = 'mx-api-cache:'
 export enum CacheKeys {

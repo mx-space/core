@@ -66,7 +66,7 @@ export class GitHubRepoProvider implements EnrichmentProvider {
     return {
       title: data.full_name || id,
       description: data.description || undefined,
-      image: data.owner?.avatar_url
+      thumbnailImage: data.owner?.avatar_url
         ? { url: data.owner.avatar_url, alt: `${data.owner.login} avatar` }
         : undefined,
       url: data.html_url || `https://github.com/${id}`,

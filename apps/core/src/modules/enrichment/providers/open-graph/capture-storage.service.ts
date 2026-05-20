@@ -7,16 +7,16 @@ import { getRedisKey } from '~/utils/redis.util'
 import { S3Uploader } from '~/utils/s3.util'
 
 import { EnrichmentRepository } from '../../enrichment.repository'
-import { EnrichmentScreenshotRepository } from '../../enrichment-screenshot.repository'
-import type { ProcessedScreenshot } from './screenshot-pipeline.service'
+import { EnrichmentCaptureRepository } from '../../enrichment-capture.repository'
+import type { ProcessedCapture } from './capture-pipeline.service'
 
-export interface ScreenshotStoreResult {
+export interface CaptureStoreResult {
   url: string
   objectKey: string
   bytes: number
 }
 
-const OBJECT_KEY_PREFIX = 'enrichment-screenshots'
+const OBJECT_KEY_PREFIX = 'enrichment-captures'
 const EVICTION_BATCH_LIMIT = 50
 const TOUCH_TTL_SECONDS = 3600
 
@@ -24,7 +24,7 @@ const DEFAULT_MAX_ITEMS = 500
 const DEFAULT_MAX_TOTAL_BYTES = 100 * 1024 * 1024
 
 /**
- * Owns the put / evict / delete lifecycle for browser-mode screenshot blobs.
+ * Owns the put / evict / delete lifecycle for browser-mode capture blobs.
  *
  * S3 is treated as the source of truth: a DB row is only written after a
  * successful S3 PUT, and on LRU eviction the S3 DELETE runs before the DB
@@ -35,17 +35,15 @@ const DEFAULT_MAX_TOTAL_BYTES = 100 * 1024 * 1024
  * The admin "purge enrichment" path must never be blocked by a flaky S3
  * round-trip, and a stale `.webp` object that no longer has a DB row is
  * harmless (no admin UI references it, LRU never visits it). If/when an
- * orphan reconciliation job is added, this is the documented entry point;
- * for now the trade-off is intentional and Task 3 ships without it.
+ * orphan reconciliation job is added, this is the documented entry point.
  *
- * `EnrichmentModule` wires this service in Task 4 — this file ships the
- * standalone class only. The S3 client is constructed lazily from
- * `imageStorageOptions` and cached per-call options signature so live config
- * edits (custom domain, credentials) are picked up without a restart.
+ * The S3 client is constructed lazily from `imageStorageOptions` and cached
+ * per-call options signature so live config edits (custom domain,
+ * credentials) are picked up without a restart.
  */
 @Injectable()
-export class ScreenshotStorageService {
-  private readonly logger = new Logger(ScreenshotStorageService.name)
+export class CaptureStorageService {
+  private readonly logger = new Logger(CaptureStorageService.name)
 
   private cachedUploader: { signature: string; uploader: S3Uploader } | null =
     null
@@ -61,7 +59,7 @@ export class ScreenshotStorageService {
   private storeChain: Promise<unknown> = Promise.resolve()
 
   constructor(
-    private readonly repository: EnrichmentScreenshotRepository,
+    private readonly repository: EnrichmentCaptureRepository,
     private readonly enrichmentRepository: EnrichmentRepository,
     private readonly configsService: ConfigsService,
     private readonly redisService: RedisService,
@@ -69,8 +67,8 @@ export class ScreenshotStorageService {
 
   async storeOrEvict(args: {
     enrichmentId: string
-    processed: ProcessedScreenshot
-  }): Promise<ScreenshotStoreResult> {
+    processed: ProcessedCapture
+  }): Promise<CaptureStoreResult> {
     const next = this.storeChain.then(() => this.storeOrEvictUnlocked(args))
     // Swallow rejection on the chain itself so a single failed write does
     // not poison every subsequent caller; each awaiter still sees the real
@@ -81,8 +79,8 @@ export class ScreenshotStorageService {
 
   private async storeOrEvictUnlocked(args: {
     enrichmentId: string
-    processed: ProcessedScreenshot
-  }): Promise<ScreenshotStoreResult> {
+    processed: ProcessedCapture
+  }): Promise<CaptureStoreResult> {
     const { enrichmentId, processed } = args
     const bytes = processed.webp.length
     const objectKey = this.objectKeyFor(enrichmentId)
@@ -132,7 +130,7 @@ export class ScreenshotStorageService {
       await s3.deleteObject(row.objectKey)
     } catch (error) {
       this.logger.warn(
-        `screenshot delete: S3 deleteObject failed for ${row.objectKey}: ${(error as Error).message}`,
+        `capture delete: S3 deleteObject failed for ${row.objectKey}: ${(error as Error).message}`,
       )
     }
 
@@ -145,7 +143,7 @@ export class ScreenshotStorageService {
   }
 
   async touchAccess(enrichmentId: string): Promise<void> {
-    const key = getRedisKey(RedisKeys.EnrichmentScreenshotTouch, enrichmentId)
+    const key = getRedisKey(RedisKeys.EnrichmentCaptureTouch, enrichmentId)
     let acquired: boolean
     try {
       const client = this.redisService.getClient()
@@ -155,7 +153,7 @@ export class ScreenshotStorageService {
       // Best-effort. LRU may drift slightly toward marking active rows as
       // stale; recoverable on next access.
       this.logger.debug(
-        `screenshot touch: Redis NX-EX failed for ${enrichmentId}: ${(error as Error).message}`,
+        `capture touch: Redis NX-EX failed for ${enrichmentId}: ${(error as Error).message}`,
       )
       return
     }
@@ -166,7 +164,7 @@ export class ScreenshotStorageService {
       await this.repository.touchAccess(enrichmentId)
     } catch (error) {
       this.logger.debug(
-        `screenshot touch: DB update failed for ${enrichmentId}: ${(error as Error).message}`,
+        `capture touch: DB update failed for ${enrichmentId}: ${(error as Error).message}`,
       )
     }
   }
@@ -193,14 +191,14 @@ export class ScreenshotStorageService {
     // cannot possibly help — bail with a clear error rather than spin.
     if (newBytes > maxTotalBytes) {
       throw new Error(
-        `screenshot bytes (${newBytes}) exceed maxTotalBytes (${maxTotalBytes}); refusing to store`,
+        `capture bytes (${newBytes}) exceed maxTotalBytes (${maxTotalBytes}); refusing to store`,
       )
     }
 
     // The row we're about to overwrite (if any) is invariant across the
     // eviction loop — same enrichmentId, hoisted so we don't re-query it
     // every iteration. Subtract its byte count from projected usage so an
-    // upsert that REPLACES an existing screenshot doesn't trigger false-
+    // upsert that REPLACES an existing capture doesn't trigger false-
     // positive eviction.
     const existing =
       await this.repository.findByEnrichmentId(excludeEnrichmentId)
@@ -228,7 +226,7 @@ export class ScreenshotStorageService {
         // the lone existing row IS the one being replaced (handled above)
         // or maxItems/maxTotalBytes was lowered below the single new row.
         throw new Error(
-          `screenshot store: cannot fit new bytes (${newBytes}) within quota (items=${projectedCount}/${maxItems}, bytes=${projectedBytes}/${maxTotalBytes}) and no rows are available to evict`,
+          `capture store: cannot fit new bytes (${newBytes}) within quota (items=${projectedCount}/${maxItems}, bytes=${projectedBytes}/${maxTotalBytes}) and no rows are available to evict`,
         )
       }
 
@@ -250,24 +248,24 @@ export class ScreenshotStorageService {
             // failure is logged and treated as "skip this row" so a single
             // dead key cannot block the whole eviction batch.
             this.logger.warn(
-              `screenshot evict: S3 deleteObject failed for ${row.objectKey}: ${(error as Error).message}; treating as deleted`,
+              `capture evict: S3 deleteObject failed for ${row.objectKey}: ${(error as Error).message}; treating as deleted`,
             )
           })
         } catch (error) {
           this.logger.warn(
-            `screenshot evict: unexpected S3 error for ${row.objectKey}: ${(error as Error).message}`,
+            `capture evict: unexpected S3 error for ${row.objectKey}: ${(error as Error).message}`,
           )
         }
 
         try {
-          await this.enrichmentRepository.clearScreenshot(row.enrichmentId)
+          await this.enrichmentRepository.clearCapture(row.enrichmentId)
           await this.repository.deleteByEnrichmentId(row.enrichmentId)
         } catch (error) {
           // Abort: leaving the DB row in place while the S3 object is gone
           // is acceptable (frontend tolerates 404), but proceeding to PUT
           // now would risk overshooting the quota indefinitely.
           throw new Error(
-            `screenshot evict: aborted batch — DB delete failed for ${row.enrichmentId}: ${(error as Error).message}`,
+            `capture evict: aborted batch — DB delete failed for ${row.enrichmentId}: ${(error as Error).message}`,
             { cause: error },
           )
         }
@@ -280,7 +278,7 @@ export class ScreenshotStorageService {
         // All rows in the batch were the excluded row; we cannot make
         // progress. Surface a clear error.
         throw new Error(
-          'screenshot evict: no evictable rows found in batch (all matched the excluded enrichment id)',
+          'capture evict: no evictable rows found in batch (all matched the excluded enrichment id)',
         )
       }
 
@@ -290,7 +288,7 @@ export class ScreenshotStorageService {
     }
 
     throw new Error(
-      'screenshot evict: exceeded iteration cap without satisfying quota',
+      'capture evict: exceeded iteration cap without satisfying quota',
     )
   }
 
@@ -326,7 +324,7 @@ export class ScreenshotStorageService {
       !config.bucket
     ) {
       throw new Error(
-        'screenshot storage: imageStorageOptions is not fully configured (need enable=true, endpoint, secretId, secretKey, bucket)',
+        'capture storage: imageStorageOptions is not fully configured (need enable=true, endpoint, secretId, secretKey, bucket)',
       )
     }
 

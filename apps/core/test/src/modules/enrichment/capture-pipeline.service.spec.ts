@@ -2,7 +2,7 @@ import { decode } from 'blurhash'
 import sharp from 'sharp'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { ScreenshotPipelineService } from '~/modules/enrichment/providers/open-graph/screenshot-pipeline.service'
+import { CapturePipelineService } from '~/modules/enrichment/providers/open-graph/capture-pipeline.service'
 
 // Fixture images are synthesized at test setup with `sharp` so no binary
 // asset needs to live in the repo. The shapes are picked to exercise:
@@ -81,20 +81,20 @@ async function makeRandomNoisePng(
   return sharp(data, { raw: { width, height, channels } }).png().toBuffer()
 }
 
-describe('ScreenshotPipelineService', () => {
-  let service: ScreenshotPipelineService
+describe('CapturePipelineService', () => {
+  let service: CapturePipelineService
   let multiColor1280: Buffer
   let multiColorLarge: Buffer
   let noisyLarge: Buffer
 
   beforeAll(async () => {
-    service = new ScreenshotPipelineService()
+    service = new CapturePipelineService()
     multiColor1280 = await makeMultiColorPng(1280, 720)
     multiColorLarge = await makeMultiColorPng(2560, 1440)
     noisyLarge = await makeRandomNoisePng(1280, 720)
   })
 
-  it('returns processed screenshot for a normal image', async () => {
+  it('returns processed capture for a normal image', async () => {
     const result = await service.process(multiColor1280, {
       webpQuality: 75,
       maxBytesPerImage: 1024 * 1024,
@@ -148,7 +148,7 @@ describe('ScreenshotPipelineService', () => {
 
   it('returns null when even the retry-quality webp exceeds the byte cap', async () => {
     // 1280x720 of LCG noise will not compress under 100 bytes at q=95 nor
-    // at the retry q=80, so the pipeline must drop the screenshot. This
+    // at the retry q=80, so the pipeline must drop the capture. This
     // is the deterministic null branch and the warn log path.
     const result = await service.process(noisyLarge, {
       webpQuality: 95,

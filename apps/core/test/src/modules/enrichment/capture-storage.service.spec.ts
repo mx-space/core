@@ -4,11 +4,11 @@ import {
   type PgTestDatabase,
 } from 'test/helper/pg-verify-url'
 
-import { enrichmentCache, enrichmentScreenshots } from '~/database/schema'
+import { enrichmentCache, enrichmentCaptures } from '~/database/schema'
 import { EnrichmentRepository } from '~/modules/enrichment/enrichment.repository'
-import { EnrichmentScreenshotRepository } from '~/modules/enrichment/enrichment-screenshot.repository'
-import type { ProcessedScreenshot } from '~/modules/enrichment/providers/open-graph/screenshot-pipeline.service'
-import { ScreenshotStorageService } from '~/modules/enrichment/providers/open-graph/screenshot-storage.service'
+import { EnrichmentCaptureRepository } from '~/modules/enrichment/enrichment-capture.repository'
+import type { ProcessedCapture } from '~/modules/enrichment/providers/open-graph/capture-pipeline.service'
+import { CaptureStorageService } from '~/modules/enrichment/providers/open-graph/capture-storage.service'
 import { SnowflakeGenerator } from '~/shared/id/snowflake.service'
 import type { S3Uploader } from '~/utils/s3.util'
 
@@ -63,7 +63,7 @@ class FakeS3Uploader {
  * Subclass that injects a controllable fake S3 client and lets us swap the
  * Redis facade per-test without spinning up a real client.
  */
-class TestScreenshotStorageService extends ScreenshotStorageService {
+class TestCaptureStorageService extends CaptureStorageService {
   public readonly fakeS3 = new FakeS3Uploader()
 
   protected override async getUploader(): Promise<S3Uploader> {
@@ -72,8 +72,8 @@ class TestScreenshotStorageService extends ScreenshotStorageService {
 }
 
 function makeProcessed(
-  overrides: Partial<ProcessedScreenshot> = {},
-): ProcessedScreenshot {
+  overrides: Partial<ProcessedCapture> = {},
+): ProcessedCapture {
   return {
     webp: Buffer.alloc(1024, 0xab),
     width: 1280,
@@ -156,12 +156,12 @@ async function seedEnrichment(
   })
 }
 
-async function setCachedScreenshot(ctx: PgTestDatabase, id: string) {
+async function setCachedCapture(ctx: PgTestDatabase, id: string) {
   await ctx.pool.query(
-    `update enrichment_cache set normalized = jsonb_set(normalized, '{screenshot}', $1::jsonb) where id = $2`,
+    `update enrichment_cache set normalized = jsonb_set(normalized, '{captureImage}', $1::jsonb) where id = $2`,
     [
       JSON.stringify({
-        url: `https://cdn.example.test/enrichment-screenshots/${id}.webp`,
+        url: `https://cdn.example.test/enrichment-captures/${id}.webp`,
         width: 1280,
         height: 720,
       }),
@@ -179,7 +179,7 @@ async function readCachedNormalized(ctx: PgTestDatabase, id: string) {
 }
 
 /**
- * Stamp a deterministic `last_accessed_at` on an existing screenshot row.
+ * Stamp a deterministic `last_accessed_at` on an existing capture row.
  * Avoids `setTimeout`-based ordering, which is fragile under CI load.
  */
 async function stampAccessTime(
@@ -188,22 +188,25 @@ async function stampAccessTime(
   iso: string,
 ) {
   await ctx.pool.query(
-    `update enrichment_screenshots set last_accessed_at = $1 where enrichment_id = $2`,
+    `update enrichment_captures set last_accessed_at = $1 where enrichment_id = $2`,
     [iso, enrichmentId],
   )
 }
 
-describe('ScreenshotStorageService', () => {
+describe('CaptureStorageService', () => {
   let context: PgTestDatabase
-  let repository: EnrichmentScreenshotRepository
+  let repository: EnrichmentCaptureRepository
   let cacheRepository: EnrichmentRepository
 
   beforeAll(async () => {
-    context = await createPgTestDatabase('mx_screenshot_storage')
-    repository = new EnrichmentScreenshotRepository(context.db as any)
-    cacheRepository = new EnrichmentRepository(context.db as any, {
-      nextId: async () => generator.nextId(),
-    } as any)
+    context = await createPgTestDatabase('mx_capture_storage')
+    repository = new EnrichmentCaptureRepository(context.db as any)
+    cacheRepository = new EnrichmentRepository(
+      context.db as any,
+      {
+        nextId: async () => generator.nextId(),
+      } as any,
+    )
   }, 60_000)
 
   afterAll(async () => {
@@ -212,7 +215,7 @@ describe('ScreenshotStorageService', () => {
 
   beforeEach(async () => {
     // Truncate both tables so each test starts on a clean slate (CASCADE
-    // removes screenshots first via the FK).
+    // removes captures first via the FK).
     await context.pool.query('TRUNCATE enrichment_cache CASCADE')
   })
 
@@ -227,7 +230,7 @@ describe('ScreenshotStorageService', () => {
     await seedEnrichment(context, id)
     const processed = makeProcessed({ webp: Buffer.alloc(2048, 1) })
     const { redisService } = makeRedisService()
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService(),
@@ -239,14 +242,14 @@ describe('ScreenshotStorageService', () => {
       processed,
     })
 
-    expect(result.objectKey).toBe(`enrichment-screenshots/${id}.webp`)
+    expect(result.objectKey).toBe(`enrichment-captures/${id}.webp`)
     expect(result.bytes).toBe(2048)
     expect(result.url).toBe(
-      `https://cdn.example.test/enrichment-screenshots/${id}.webp`,
+      `https://cdn.example.test/enrichment-captures/${id}.webp`,
     )
     expect(service.fakeS3.putCalls).toHaveLength(1)
     expect(service.fakeS3.putCalls[0]).toMatchObject({
-      key: `enrichment-screenshots/${id}.webp`,
+      key: `enrichment-captures/${id}.webp`,
       contentType: 'image/webp',
       bytes: 2048,
     })
@@ -261,7 +264,7 @@ describe('ScreenshotStorageService', () => {
     const id = generator.nextId()
     await seedEnrichment(context, id)
     const { redisService } = makeRedisService()
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService(),
@@ -287,7 +290,7 @@ describe('ScreenshotStorageService', () => {
     expect(service.fakeS3.deleteCalls).toEqual([])
     expect(service.fakeS3.putCalls).toHaveLength(2)
     expect(
-      service.fakeS3.objects.get(`enrichment-screenshots/${id}.webp`)?.length,
+      service.fakeS3.objects.get(`enrichment-captures/${id}.webp`)?.length,
     ).toBe(3072)
 
     const row = await repository.findByEnrichmentId(id)
@@ -298,12 +301,12 @@ describe('ScreenshotStorageService', () => {
     })
   })
 
-  it('evicts oldest by item-cap before storing a new screenshot', async () => {
+  it('evicts oldest by item-cap before storing a new capture', async () => {
     const ids = [generator.nextId(), generator.nextId(), generator.nextId()]
     for (const id of ids) await seedEnrichment(context, id)
 
     const { redisService } = makeRedisService()
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService({ maxItems: 2 }),
@@ -316,7 +319,7 @@ describe('ScreenshotStorageService', () => {
       enrichmentId: ids[0],
       processed: makeProcessed({ webp: Buffer.alloc(1024, 1) }),
     })
-    await setCachedScreenshot(context, ids[0])
+    await setCachedCapture(context, ids[0])
     await stampAccessTime(context, ids[0], '2020-01-01T00:00:00Z')
     await service.storeOrEvict({
       enrichmentId: ids[1],
@@ -333,7 +336,7 @@ describe('ScreenshotStorageService', () => {
     })
 
     expect(service.fakeS3.deleteCalls).toEqual([
-      `enrichment-screenshots/${ids[0]}.webp`,
+      `enrichment-captures/${ids[0]}.webp`,
     ])
     expect(await repository.findByEnrichmentId(ids[0])).toBeNull()
     expect(await readCachedNormalized(context, ids[0])).toEqual({
@@ -350,7 +353,7 @@ describe('ScreenshotStorageService', () => {
     const { redisService } = makeRedisService()
     // maxItems plenty large, but bytes cap tight — 3000 bytes total,
     // each row is 1500 bytes, so the third write needs eviction.
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService({ maxItems: 100, maxTotalBytes: 3000 }),
@@ -373,7 +376,7 @@ describe('ScreenshotStorageService', () => {
     })
 
     expect(service.fakeS3.deleteCalls).toContain(
-      `enrichment-screenshots/${ids[0]}.webp`,
+      `enrichment-captures/${ids[0]}.webp`,
     )
     expect(await repository.findByEnrichmentId(ids[0])).toBeNull()
     expect(await repository.findByEnrichmentId(ids[1])).not.toBeNull()
@@ -385,7 +388,7 @@ describe('ScreenshotStorageService', () => {
     for (const id of ids) await seedEnrichment(context, id)
 
     const { redisService } = makeRedisService()
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService({ maxItems: 1 }),
@@ -418,7 +421,7 @@ describe('ScreenshotStorageService', () => {
 
     // We abort BEFORE the S3 put for the new id, so its object never appears.
     expect(
-      service.fakeS3.objects.has(`enrichment-screenshots/${ids[1]}.webp`),
+      service.fakeS3.objects.has(`enrichment-captures/${ids[1]}.webp`),
     ).toBe(false)
 
     // Restore repository state for subsequent tests.
@@ -429,7 +432,7 @@ describe('ScreenshotStorageService', () => {
     const id = generator.nextId()
     await seedEnrichment(context, id)
     const { redisService } = makeRedisService()
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService(),
@@ -444,7 +447,7 @@ describe('ScreenshotStorageService', () => {
     await service.delete(id)
 
     expect(service.fakeS3.deleteCalls).toContain(
-      `enrichment-screenshots/${id}.webp`,
+      `enrichment-captures/${id}.webp`,
     )
     expect(await repository.findByEnrichmentId(id)).toBeNull()
   })
@@ -452,7 +455,7 @@ describe('ScreenshotStorageService', () => {
   it('delete is a no-op when the row is missing', async () => {
     const id = generator.nextId()
     const { redisService } = makeRedisService()
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService(),
@@ -467,7 +470,7 @@ describe('ScreenshotStorageService', () => {
     const id = generator.nextId()
     await seedEnrichment(context, id)
     const { redisService } = makeRedisService()
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService(),
@@ -480,7 +483,7 @@ describe('ScreenshotStorageService', () => {
     })
 
     // Force the next S3 delete for this object key to fail.
-    const objectKey = `enrichment-screenshots/${id}.webp`
+    const objectKey = `enrichment-captures/${id}.webp`
     service.fakeS3.deleteFailKeys.add(objectKey)
 
     const warnSpy = vi
@@ -499,9 +502,9 @@ describe('ScreenshotStorageService', () => {
   it('touchAccess updates the DB only on the first Redis NX win', async () => {
     const id = generator.nextId()
     await seedEnrichment(context, id)
-    await context.db.insert(enrichmentScreenshots).values({
+    await context.db.insert(enrichmentCaptures).values({
       enrichmentId: id,
-      objectKey: `enrichment-screenshots/${id}.webp`,
+      objectKey: `enrichment-captures/${id}.webp`,
       bytes: 1024,
       width: 1280,
       height: 720,
@@ -515,7 +518,7 @@ describe('ScreenshotStorageService', () => {
     })
 
     const touchSpy = vi.spyOn(repository, 'touchAccess')
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService(),
@@ -531,7 +534,7 @@ describe('ScreenshotStorageService', () => {
     // it contains the enrichment id and the typed segment.
     expect(setMock).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining(`enrichment_screenshot_touch:${id}`),
+      expect.stringContaining(`enrichment_capture_touch:${id}`),
       '1',
       'EX',
       3600,
@@ -546,7 +549,7 @@ describe('ScreenshotStorageService', () => {
     const id = generator.nextId()
     const { redisService, setMock } = makeRedisService({ setThrows: true })
     const touchSpy = vi.spyOn(repository, 'touchAccess')
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService(),
@@ -569,7 +572,7 @@ describe('ScreenshotStorageService', () => {
     await seedEnrichment(context, id1)
     await seedEnrichment(context, id2)
     const { redisService } = makeRedisService()
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService(),
@@ -613,7 +616,7 @@ describe('ScreenshotStorageService', () => {
     await seedEnrichment(context, id1)
     await seedEnrichment(context, id2)
     const { redisService } = makeRedisService()
-    const service = new TestScreenshotStorageService(
+    const service = new TestCaptureStorageService(
       repository,
       cacheRepository,
       makeConfigsService(),
@@ -633,6 +636,6 @@ describe('ScreenshotStorageService', () => {
       enrichmentId: id2,
       processed: makeProcessed(),
     })
-    expect(result.objectKey).toBe(`enrichment-screenshots/${id2}.webp`)
+    expect(result.objectKey).toBe(`enrichment-captures/${id2}.webp`)
   })
 })

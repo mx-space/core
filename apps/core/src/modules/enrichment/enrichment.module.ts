@@ -5,8 +5,8 @@ import { ConfigsModule } from '../configs/configs.module'
 import { EnrichmentController } from './enrichment.controller'
 import { EnrichmentRepository } from './enrichment.repository'
 import { EnrichmentService } from './enrichment.service'
+import { EnrichmentCaptureRepository } from './enrichment-capture.repository'
 import { EnrichmentOriginGuard } from './enrichment-origin.guard'
-import { EnrichmentScreenshotRepository } from './enrichment-screenshot.repository'
 import { ArxivProvider } from './providers/arxiv/arxiv.provider'
 import { BangumiProvider } from './providers/bangumi/bangumi.provider'
 // Providers
@@ -21,9 +21,9 @@ import { NeoDBBookProvider } from './providers/neodb/neodb-book.provider'
 import { NeteaseMusicProvider } from './providers/netease/netease-music.provider'
 import { BrowserFetchService } from './providers/open-graph/browser-fetch.service'
 import { BrowserSessionPool } from './providers/open-graph/browser-session-pool'
+import { CapturePipelineService } from './providers/open-graph/capture-pipeline.service'
+import { CaptureStorageService } from './providers/open-graph/capture-storage.service'
 import { OpenGraphProvider } from './providers/open-graph/open-graph.provider'
-import { ScreenshotPipelineService } from './providers/open-graph/screenshot-pipeline.service'
-import { ScreenshotStorageService } from './providers/open-graph/screenshot-storage.service'
 import type { EnrichmentProvider } from './providers/provider.interface'
 import { ProviderRegistry } from './providers/provider.registry'
 import { QQMusicProvider } from './providers/qq/qq-music.provider'
@@ -60,15 +60,15 @@ const allProviders = [
   controllers: [EnrichmentController],
   providers: [
     EnrichmentRepository,
-    EnrichmentScreenshotRepository,
+    EnrichmentCaptureRepository,
     EnrichmentService,
     ProviderRegistry,
     UrlExtractorService,
     EnrichmentOriginGuard,
     BrowserSessionPool,
     BrowserFetchService,
-    ScreenshotPipelineService,
-    ScreenshotStorageService,
+    CapturePipelineService,
+    CaptureStorageService,
     ...allProviders,
   ],
   exports: [EnrichmentService, UrlExtractorService],

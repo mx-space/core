@@ -52,7 +52,7 @@ export class NeteaseMusicProvider implements EnrichmentProvider {
     return {
       title: song.name || id,
       description: song.artists?.map((a: any) => a.name).join(', '),
-      image: song.album?.picUrl
+      thumbnailImage: song.album?.picUrl
         ? { url: song.album.picUrl, alt: song.album.name }
         : undefined,
       url: `https://music.163.com/#/song?id=${id}`,

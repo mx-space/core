@@ -70,7 +70,7 @@ describe('TmdbProvider', () => {
 
       expect(result.title).toBe('Fight Club')
       expect(result.subtype).toBe('movie')
-      expect(result.image?.url).toBe(
+      expect(result.thumbnailImage?.url).toBe(
         'https://image.tmdb.org/t/p/w500/poster.jpg',
       )
       expect(result.publishedAt).toBe('1999-10-15')

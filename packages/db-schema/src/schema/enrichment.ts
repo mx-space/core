@@ -42,13 +42,13 @@ export const enrichmentCache = pgTable(
   ],
 )
 
-export interface EnrichmentScreenshotPalette {
+export interface EnrichmentCapturePalette {
   dominant: string
   swatches?: string[]
 }
 
-export const enrichmentScreenshots = pgTable(
-  'enrichment_screenshots',
+export const enrichmentCaptures = pgTable(
+  'enrichment_captures',
   {
     enrichmentId: refText('enrichment_id')
       .primaryKey()
@@ -59,7 +59,7 @@ export const enrichmentScreenshots = pgTable(
     width: integer('width').notNull(),
     height: integer('height').notNull(),
     blurhash: text('blurhash'),
-    palette: jsonb('palette').$type<EnrichmentScreenshotPalette>(),
+    palette: jsonb('palette').$type<EnrichmentCapturePalette>(),
     createdAt: createdAt(),
     lastAccessedAt: timestamp('last_accessed_at', {
       withTimezone: true,
@@ -69,6 +69,6 @@ export const enrichmentScreenshots = pgTable(
       .defaultNow(),
   },
   (table) => [
-    index('enrichment_screenshots_lru_idx').on(table.lastAccessedAt.asc()),
+    index('enrichment_captures_lru_idx').on(table.lastAccessedAt.asc()),
   ],
 )

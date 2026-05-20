@@ -55,7 +55,10 @@ describe('GitHubDiscussionProvider', () => {
       expect(result.title).toBe('Feature Request')
       expect(result.subtype).toBe('discussion')
       expect(result.url).toBe('https://github.com/mx-space/core/discussions/42')
-      expect(result.image).toEqual({ url: 'https://avatar', alt: 'user' })
+      expect(result.thumbnailImage).toEqual({
+        url: 'https://avatar',
+        alt: 'user',
+      })
       expect(result.attributes).toContainEqual({
         key: 'repo',
         value: 'mx-space/core',
@@ -99,7 +102,7 @@ describe('GitHubDiscussionProvider', () => {
 
       const result = await p.fetch('mx-space/core/discussions/1')
 
-      expect(result.image).toBeUndefined()
+      expect(result.thumbnailImage).toBeUndefined()
       expect(result.attributes).toContainEqual({
         key: 'author',
         value: '',

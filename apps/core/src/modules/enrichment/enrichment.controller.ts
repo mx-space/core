@@ -23,31 +23,31 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 
 import { EnrichmentRepository } from './enrichment.repository'
 import {
+  AdminCaptureListQueryDto,
   AdminListQueryDto,
   AdminProbeBodyDto,
-  AdminScreenshotListQueryDto,
   ResolveQueryDto,
 } from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
 import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
+import { EnrichmentCaptureRepository } from './enrichment-capture.repository'
 import { EnrichmentOriginGuard } from './enrichment-origin.guard'
-import { EnrichmentScreenshotRepository } from './enrichment-screenshot.repository'
-import { ScreenshotStorageService } from './providers/open-graph/screenshot-storage.service'
+import { CaptureStorageService } from './providers/open-graph/capture-storage.service'
 
 const PUBLIC_RESOLVE_THROTTLE = { default: { limit: 30, ttl: 60_000 } }
 const ADMIN_PROBE_THROTTLE = { default: { limit: 30, ttl: 60_000 } }
 
-const DEFAULT_SCREENSHOT_MAX_ITEMS = 500
-const DEFAULT_SCREENSHOT_MAX_TOTAL_BYTES = 100 * 1024 * 1024
+const DEFAULT_CAPTURE_MAX_ITEMS = 500
+const DEFAULT_CAPTURE_MAX_TOTAL_BYTES = 100 * 1024 * 1024
 
 @ApiController('enrichment')
 export class EnrichmentController {
   constructor(
     private readonly enrichmentService: EnrichmentService,
-    private readonly screenshotStorage: ScreenshotStorageService,
+    private readonly captureStorage: CaptureStorageService,
     private readonly enrichmentRepository: EnrichmentRepository,
-    private readonly screenshotRepository: EnrichmentScreenshotRepository,
+    private readonly captureRepository: EnrichmentCaptureRepository,
     private readonly configsService: ConfigsService,
   ) {}
 
@@ -70,7 +70,7 @@ export class EnrichmentController {
         // `@Res({ passthrough: true })` adapter object.
         res.header('X-Enrichment-Stale', 'true')
       }
-      this.bumpScreenshotAccess(result)
+      this.bumpCaptureAccess(result)
       return result
     } catch (error) {
       // Provider not configured / token missing is a "no data" case, not an
@@ -97,18 +97,18 @@ export class EnrichmentController {
   ): Promise<EnrichmentResult> {
     const id = decodeURIComponent((req.params as Record<string, string>)['*'])
     const result = await this.enrichmentService.getOne(provider, id, lang)
-    this.bumpScreenshotAccess(result)
+    this.bumpCaptureAccess(result)
     return result
   }
 
   /**
    * Fire-and-forget LRU touch. The throttle (Redis NX-EX 3600s) lives inside
    * the storage service, so hot URLs do not write per-request. Failure is
-   * swallowed to keep the hot path free of screenshot-storage faults.
+   * swallowed to keep the hot path free of capture-storage faults.
    */
-  private bumpScreenshotAccess(result: EnrichmentResult | undefined): void {
-    if (!result?.screenshot || !result.id) return
-    this.screenshotStorage.touchAccess(result.id).catch(() => {
+  private bumpCaptureAccess(result: EnrichmentResult | undefined): void {
+    if (!result?.captureImage || !result.id) return
+    this.captureStorage.touchAccess(result.id).catch(() => {
       // ignored — storage logs internally
     })
   }
@@ -157,23 +157,23 @@ export class EnrichmentController {
   async byId(@Param('id') id: string) {
     const row = await this.enrichmentRepository.findById(id)
     if (!row) throw new NotFoundException(`Enrichment ${id} not found`)
-    const screenshot = await this.screenshotRepository.findByEnrichmentId(id)
-    return { ...row, screenshot }
+    const capture = await this.captureRepository.findByEnrichmentId(id)
+    return { ...row, capture }
   }
 
-  @Get('admin/screenshots/quota')
+  @Get('admin/captures/quota')
   @Auth()
-  async screenshotQuota() {
-    const used = await this.screenshotRepository.getQuotaUsage()
+  async captureQuota() {
+    const used = await this.captureRepository.getQuotaUsage()
     const config = await this.configsService.get('thirdPartyServiceIntegration')
     const openGraph = config?.openGraph
     const screenshot = openGraph?.screenshot
     return {
       used,
       cap: {
-        maxItems: Number(screenshot?.maxItems ?? DEFAULT_SCREENSHOT_MAX_ITEMS),
+        maxItems: Number(screenshot?.maxItems ?? DEFAULT_CAPTURE_MAX_ITEMS),
         maxTotalBytes: Number(
-          screenshot?.maxTotalBytes ?? DEFAULT_SCREENSHOT_MAX_TOTAL_BYTES,
+          screenshot?.maxTotalBytes ?? DEFAULT_CAPTURE_MAX_TOTAL_BYTES,
         ),
       },
       enabled: screenshot?.enabled === true,
@@ -181,10 +181,10 @@ export class EnrichmentController {
     }
   }
 
-  @Get('admin/screenshots')
+  @Get('admin/captures')
   @Auth()
-  async listScreenshots(@Query() query: AdminScreenshotListQueryDto) {
-    const result = await this.screenshotRepository.listJoined(
+  async listCaptures(@Query() query: AdminCaptureListQueryDto) {
+    const result = await this.captureRepository.listJoined(
       query.page,
       query.size,
       query.sort,
@@ -199,22 +199,22 @@ export class EnrichmentController {
     return { data, pagination: result.pagination }
   }
 
-  @Delete('admin/screenshots/:enrichmentId')
+  @Delete('admin/captures/:enrichmentId')
   @Auth()
   @HttpCode(204)
-  async deleteScreenshot(
+  async deleteCapture(
     @Param('enrichmentId') enrichmentId: string,
   ): Promise<void> {
-    await this.screenshotStorage.delete(enrichmentId)
-    await this.enrichmentRepository.clearScreenshot(enrichmentId)
+    await this.captureStorage.delete(enrichmentId)
+    await this.enrichmentRepository.clearCapture(enrichmentId)
   }
 
-  @Post('admin/screenshots/:enrichmentId/recapture')
+  @Post('admin/captures/:enrichmentId/recapture')
   @Auth()
   @HttpCode(200)
-  async recaptureScreenshot(
+  async recapture(
     @Param('enrichmentId') enrichmentId: string,
-  ): Promise<EnrichmentResult['screenshot']> {
+  ): Promise<EnrichmentResult['captureImage']> {
     const row = await this.enrichmentRepository.findById(enrichmentId)
     if (!row)
       throw new NotFoundException(`Enrichment ${enrichmentId} not found`)
@@ -244,14 +244,14 @@ export class EnrichmentController {
     )
 
     const fresh = await this.enrichmentRepository.findById(enrichmentId)
-    const screenshot = fresh?.normalized.screenshot
-    if (!screenshot) {
+    const captureImage = fresh?.normalized.captureImage
+    if (!captureImage) {
       throw new UnprocessableEntityException({
         code: 'capture_failed',
-        message: 'Screenshot was not produced by the refresh',
+        message: 'Capture was not produced by the refresh',
       })
     }
-    return screenshot
+    return captureImage
   }
 
   @Post('admin/probe')
@@ -264,7 +264,7 @@ export class EnrichmentController {
 
   private async resolvePublicUrl(objectKey: string): Promise<string> {
     try {
-      return await this.screenshotStorage.getPublicUrlFor(objectKey)
+      return await this.captureStorage.getPublicUrlFor(objectKey)
     } catch {
       return ''
     }

@@ -21,14 +21,14 @@ export const AdminListQuerySchema = z.object({
 })
 export class AdminListQueryDto extends createZodDto(AdminListQuerySchema) {}
 
-export const AdminScreenshotListQuerySchema = z.object({
+export const AdminCaptureListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   size: z.coerce.number().int().min(1).max(100).default(20),
   sort: z.enum(['last_accessed', 'created', 'bytes']).default('last_accessed'),
   order: z.enum(['asc', 'desc']).default('desc'),
 })
-export class AdminScreenshotListQueryDto extends createZodDto(
-  AdminScreenshotListQuerySchema,
+export class AdminCaptureListQueryDto extends createZodDto(
+  AdminCaptureListQuerySchema,
 ) {}
 
 export const AdminProbeBodySchema = z.object({

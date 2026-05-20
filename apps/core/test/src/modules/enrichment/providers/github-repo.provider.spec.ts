@@ -83,7 +83,7 @@ describe('GitHubRepoProvider', () => {
       expect(result.category).toBe('github')
       expect(result.subtype).toBe('repo')
       expect(result.description).toBe('Test description')
-      expect(result.image).toEqual({
+      expect(result.thumbnailImage).toEqual({
         url: 'https://avatar.url',
         alt: 'mx-space avatar',
       })
@@ -135,7 +135,7 @@ describe('GitHubRepoProvider', () => {
 
       expect(result.title).toBe('mx-space/core')
       expect(result.description).toBeUndefined()
-      expect(result.image).toBeUndefined()
+      expect(result.thumbnailImage).toBeUndefined()
       expect(result.color).toBeUndefined()
       expect(result.attributes).toEqual([])
     })

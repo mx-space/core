@@ -68,7 +68,7 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
     return {
       title: discussion.title,
       description: (discussion.body || '').slice(0, 300) || undefined,
-      image: discussion.author?.avatarUrl
+      thumbnailImage: discussion.author?.avatarUrl
         ? { url: discussion.author.avatarUrl, alt: discussion.author.login }
         : undefined,
       url: discussion.url,

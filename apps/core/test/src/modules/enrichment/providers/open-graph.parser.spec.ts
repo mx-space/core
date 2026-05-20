@@ -10,7 +10,7 @@ function parse(head: string, url = 'https://example.com/article') {
   )
 }
 
-describe('parseOpenGraph — image', () => {
+describe('parseOpenGraph — thumbnailImage', () => {
   it('resolves og:image and records advertised dimensions', () => {
     const { result } = parse(`
       <meta property="og:title" content="A Post" />
@@ -18,7 +18,7 @@ describe('parseOpenGraph — image', () => {
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
     `)
-    expect(result.image).toEqual({
+    expect(result.thumbnailImage).toEqual({
       url: 'https://cdn.example.com/og.png',
       alt: undefined,
       width: 1200,
@@ -26,13 +26,13 @@ describe('parseOpenGraph — image', () => {
     })
   })
 
-  it('keeps the image without dimensions when none are advertised', () => {
+  it('keeps the thumbnailImage without dimensions when none are advertised', () => {
     const { result } = parse(`
       <meta property="og:image" content="https://cdn.example.com/og.png" />
     `)
-    expect(result.image?.url).toBe('https://cdn.example.com/og.png')
-    expect(result.image?.width).toBeUndefined()
-    expect(result.image?.height).toBeUndefined()
+    expect(result.thumbnailImage?.url).toBe('https://cdn.example.com/og.png')
+    expect(result.thumbnailImage?.width).toBeUndefined()
+    expect(result.thumbnailImage?.height).toBeUndefined()
   })
 
   it('ignores non-numeric / non-positive image dimensions', () => {
@@ -41,31 +41,31 @@ describe('parseOpenGraph — image', () => {
       <meta property="og:image:width" content="wide" />
       <meta property="og:image:height" content="0" />
     `)
-    expect(result.image?.width).toBeUndefined()
-    expect(result.image?.height).toBeUndefined()
+    expect(result.thumbnailImage?.width).toBeUndefined()
+    expect(result.thumbnailImage?.height).toBeUndefined()
   })
 
   it('falls back to twitter:image when no og:image is present', () => {
     const { result } = parse(`
       <meta name="twitter:image" content="https://cdn.example.com/tw.png" />
     `)
-    expect(result.image?.url).toBe('https://cdn.example.com/tw.png')
+    expect(result.thumbnailImage?.url).toBe('https://cdn.example.com/tw.png')
   })
 
-  it('absolutizes a relative image url', () => {
+  it('absolutizes a relative thumbnailImage url', () => {
     const { result } = parse(
       `<meta property="og:image" content="/static/og.png" />`,
       'https://example.com/blog/post',
     )
-    expect(result.image?.url).toBe('https://example.com/static/og.png')
+    expect(result.thumbnailImage?.url).toBe('https://example.com/static/og.png')
   })
 
-  it('does NOT use an apple-touch-icon / favicon as the image', () => {
+  it('does NOT use an apple-touch-icon / favicon as the thumbnailImage', () => {
     const { result } = parse(`
       <link rel="apple-touch-icon" href="https://example.com/touch.png" />
       <link rel="icon" href="https://example.com/favicon.ico" />
     `)
-    expect(result.image).toBeUndefined()
+    expect(result.thumbnailImage).toBeUndefined()
   })
 })
 

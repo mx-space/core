@@ -13,23 +13,23 @@ export interface EnrichmentAttribute {
   format?: 'number' | 'rating' | 'date' | 'percent' | 'text' | 'duration'
 }
 
-export interface EnrichmentScreenshotPalette {
+export interface EnrichmentCapturePalette {
   dominant: string
   swatches?: string[]
 }
 
-export interface EnrichmentScreenshot {
+export interface EnrichmentCapture {
   url: string
   width: number
   height: number
   blurhash?: string
-  palette?: EnrichmentScreenshotPalette
+  palette?: EnrichmentCapturePalette
 }
 
 export interface EnrichmentResult<TRaw = unknown> {
   /**
    * Cache row Snowflake id. Populated by `EnrichmentService` on cache hit
-   * and post-persist paths so consumers (notably the screenshot LRU touch
+   * and post-persist paths so consumers (notably the capture LRU touch
    * path) can address the underlying row without re-querying. Absent on
    * raw provider returns and on results fresh out of the cold provider
    * fetch before persistence.
@@ -38,7 +38,13 @@ export interface EnrichmentResult<TRaw = unknown> {
 
   title: string
   description?: string
-  image?: EnrichmentImage
+
+  /** Square card thumbnail (avatar / poster / icon). */
+  thumbnailImage?: EnrichmentImage
+
+  /** Wide 16:9 hero / OG-style preview image. Filled by GitHub providers in T2. */
+  previewImage?: EnrichmentImage
+
   url: string
 
   category: string
@@ -54,12 +60,12 @@ export interface EnrichmentResult<TRaw = unknown> {
   links?: Array<{ rel: string; url: string; label?: string }>
 
   /**
-   * Optional browser-mode page screenshot. Populated by `EnrichmentService`
-   * after the row is persisted (only when `screenshot.enabled` is set and
-   * the provider captured raw bytes via `BrowserFetchService.fetchPage`).
-   * Purely additive — consumers that ignore it see no behavioral change.
+   * Optional browser-mode page capture (wide puppeteer screenshot). Populated
+   * by `EnrichmentService` after the row is persisted, only when
+   * `screenshot.enabled` is set and the provider captured raw bytes via
+   * `BrowserFetchService.fetchPage`.
    */
-  screenshot?: EnrichmentScreenshot
+  captureImage?: EnrichmentCapture
 
   raw?: TRaw
 }

@@ -85,7 +85,7 @@ export class GitHubPrProvider implements EnrichmentProvider {
     return {
       title: data.title,
       description: (data.body || '').slice(0, 300) || undefined,
-      image: data.user?.avatar_url
+      thumbnailImage: data.user?.avatar_url
         ? { url: data.user.avatar_url, alt: data.user.login }
         : undefined,
       url: data.html_url,

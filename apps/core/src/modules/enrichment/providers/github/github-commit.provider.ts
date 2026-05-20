@@ -65,7 +65,7 @@ export class GitHubCommitProvider implements EnrichmentProvider {
       description:
         data.commit?.message?.split('\n').slice(1).join('\n').trim() ||
         undefined,
-      image: data.author?.avatar_url
+      thumbnailImage: data.author?.avatar_url
         ? { url: data.author.avatar_url, alt: data.author.login }
         : undefined,
       url: data.html_url,

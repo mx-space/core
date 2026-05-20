@@ -117,7 +117,7 @@ export function parseOpenGraph(
   const result: EnrichmentResult = {
     title,
     description,
-    image: resolvedImage
+    thumbnailImage: resolvedImage
       ? {
           url: resolvedImage.url,
           alt: imageAlt,
@@ -207,10 +207,10 @@ interface ResolvedImage {
   height?: number
 }
 
-// `image` is strictly the page's advertised OG / Twitter Card image. Icons
-// (favicon, apple-touch-icon) are deliberately excluded — a square favicon
-// must never land in a link card's wide image slot. Icons are surfaced
-// separately via `result.links`.
+// `thumbnailImage` is strictly the page's advertised OG / Twitter Card image.
+// Icons (favicon, apple-touch-icon) are deliberately excluded — a square
+// favicon must never land in a link card's wide image slot. Icons are
+// surfaced separately via `result.links`.
 function resolveImage(bag: MetaBag, base: string): ResolvedImage | undefined {
   const candidates = [
     pick(bag.og, 'image:secure_url'),
