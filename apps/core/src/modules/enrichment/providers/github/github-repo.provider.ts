@@ -63,12 +63,22 @@ export class GitHubRepoProvider implements EnrichmentProvider {
         format: 'text',
       })
 
+    const cacheToken = encodeURIComponent(
+      data.pushed_at ?? data.updated_at ?? new Date().toISOString(),
+    )
+
     return {
       title: data.full_name || id,
       description: data.description || undefined,
       thumbnailImage: data.owner?.avatar_url
         ? { url: data.owner.avatar_url, alt: `${data.owner.login} avatar` }
         : undefined,
+      previewImage: {
+        url: `https://opengraph.githubassets.com/${cacheToken}/${owner}/${repo}`,
+        width: 1280,
+        height: 640,
+        alt: `${data.full_name || id} on GitHub`,
+      },
       url: data.html_url || `https://github.com/${id}`,
       category: this.category,
       subtype: 'repo',

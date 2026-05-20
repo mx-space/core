@@ -43,6 +43,7 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
             body
             url
             createdAt
+            updatedAt
             author { login avatarUrl }
             comments { totalCount }
           }
@@ -56,6 +57,7 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
           body: string | null
           url: string
           createdAt: string | null
+          updatedAt: string | null
           author: { login: string; avatarUrl: string } | null
           comments: { totalCount: number }
         } | null
@@ -65,12 +67,22 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
     const discussion = data?.repository?.discussion
     if (!discussion) throw new Error(`Discussion not found: ${id}`)
 
+    const cacheToken = encodeURIComponent(
+      discussion.updatedAt ?? new Date().toISOString(),
+    )
+
     return {
       title: discussion.title,
       description: (discussion.body || '').slice(0, 300) || undefined,
       thumbnailImage: discussion.author?.avatarUrl
         ? { url: discussion.author.avatarUrl, alt: discussion.author.login }
         : undefined,
+      previewImage: {
+        url: `https://opengraph.githubassets.com/${cacheToken}/${owner}/${repo}/discussions/${number}`,
+        width: 1280,
+        height: 640,
+        alt: `${discussion.title} · Discussion #${number} · ${owner}/${repo}`,
+      },
       url: discussion.url,
       category: this.category,
       subtype: 'discussion',

@@ -54,6 +54,15 @@ describe('GitHubCommitProvider', () => {
       expect(result.title).toBe('Fix critical bug')
       expect(result.description).toBe('This fixes issue #42.')
       expect(result.publishedAt).toBe('2023-06-01T00:00:00Z')
+      expect(result.thumbnailImage).toEqual({
+        url: 'https://avatar',
+        alt: 'dev',
+      })
+      expect(result.previewImage?.url).toMatch(
+        /^https:\/\/opengraph\.githubassets\.com\/.+\/mx-space\/core\/commit\/abc123$/,
+      )
+      expect(result.previewImage?.width).toBe(1280)
+      expect(result.previewImage?.height).toBe(640)
     })
   })
 })

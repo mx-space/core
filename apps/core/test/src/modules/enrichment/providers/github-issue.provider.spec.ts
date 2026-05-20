@@ -56,6 +56,7 @@ describe('GitHubIssueProvider', () => {
         state: 'open',
         comments: 5,
         created_at: '2023-06-01T00:00:00Z',
+        updated_at: '2023-07-01T00:00:00Z',
         user: { avatar_url: 'https://avatar', login: 'testuser' },
       }
       const p = new GitHubIssueProvider(createClient(mockData))
@@ -64,6 +65,15 @@ describe('GitHubIssueProvider', () => {
 
       expect(result.title).toBe('Bug fix')
       expect(result.subtype).toBe('issue')
+      expect(result.thumbnailImage).toEqual({
+        url: 'https://avatar',
+        alt: 'testuser',
+      })
+      expect(result.previewImage?.url).toMatch(
+        /^https:\/\/opengraph\.githubassets\.com\/.+\/mx-space\/core\/issues\/42$/,
+      )
+      expect(result.previewImage?.width).toBe(1280)
+      expect(result.previewImage?.height).toBe(640)
       expect(result.attributes).toContainEqual({
         key: 'repo',
         value: 'mx-space/core',

@@ -82,12 +82,22 @@ export class GitHubPrProvider implements EnrichmentProvider {
         format: 'text',
       })
 
+    const cacheToken = encodeURIComponent(
+      data.updated_at ?? new Date().toISOString(),
+    )
+
     return {
       title: data.title,
       description: (data.body || '').slice(0, 300) || undefined,
       thumbnailImage: data.user?.avatar_url
         ? { url: data.user.avatar_url, alt: data.user.login }
         : undefined,
+      previewImage: {
+        url: `https://opengraph.githubassets.com/${cacheToken}/${owner}/${repo}/pull/${pull_number}`,
+        width: 1280,
+        height: 640,
+        alt: `${data.title} · PR #${pull_number} · ${owner}/${repo}`,
+      },
       url: data.html_url,
       category: this.category,
       subtype: 'pr',

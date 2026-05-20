@@ -48,6 +48,7 @@ describe('GitHubPrProvider', () => {
         additions: 100,
         deletions: 20,
         created_at: '2023-06-01T00:00:00Z',
+        updated_at: '2023-07-01T00:00:00Z',
         user: { avatar_url: 'https://avatar', login: 'dev' },
       }
       const p = new GitHubPrProvider(createClient(mockData))
@@ -56,6 +57,15 @@ describe('GitHubPrProvider', () => {
 
       expect(result.title).toBe('Fix bug')
       expect(result.subtype).toBe('pr')
+      expect(result.thumbnailImage).toEqual({
+        url: 'https://avatar',
+        alt: 'dev',
+      })
+      expect(result.previewImage?.url).toMatch(
+        /^https:\/\/opengraph\.githubassets\.com\/.+\/mx-space\/core\/pull\/42$/,
+      )
+      expect(result.previewImage?.width).toBe(1280)
+      expect(result.previewImage?.height).toBe(640)
       expect(result.attributes).toContainEqual({
         key: 'repo',
         value: 'mx-space/core',

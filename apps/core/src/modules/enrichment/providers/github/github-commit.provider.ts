@@ -60,6 +60,10 @@ export class GitHubCommitProvider implements EnrichmentProvider {
         format: 'number',
       })
 
+    const cacheToken = encodeURIComponent(
+      data.commit?.author?.date ?? new Date().toISOString(),
+    )
+
     return {
       title: data.commit?.message?.split('\n')[0] || id,
       description:
@@ -68,6 +72,12 @@ export class GitHubCommitProvider implements EnrichmentProvider {
       thumbnailImage: data.author?.avatar_url
         ? { url: data.author.avatar_url, alt: data.author.login }
         : undefined,
+      previewImage: {
+        url: `https://opengraph.githubassets.com/${cacheToken}/${owner}/${repo}/commit/${ref}`,
+        width: 1280,
+        height: 640,
+        alt: `${data.commit?.message?.split('\n')[0] || ref} · ${owner}/${repo}`,
+      },
       url: data.html_url,
       category: this.category,
       subtype: 'commit',

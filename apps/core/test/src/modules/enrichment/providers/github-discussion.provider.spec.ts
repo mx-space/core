@@ -43,6 +43,7 @@ describe('GitHubDiscussionProvider', () => {
             body: 'Discussion body',
             url: 'https://github.com/mx-space/core/discussions/42',
             createdAt: '2023-06-01T00:00:00Z',
+            updatedAt: '2023-07-01T00:00:00Z',
             author: { login: 'user', avatarUrl: 'https://avatar' },
             comments: { totalCount: 3 },
           },
@@ -59,6 +60,11 @@ describe('GitHubDiscussionProvider', () => {
         url: 'https://avatar',
         alt: 'user',
       })
+      expect(result.previewImage?.url).toMatch(
+        /^https:\/\/opengraph\.githubassets\.com\/.+\/mx-space\/core\/discussions\/42$/,
+      )
+      expect(result.previewImage?.width).toBe(1280)
+      expect(result.previewImage?.height).toBe(640)
       expect(result.attributes).toContainEqual({
         key: 'repo',
         value: 'mx-space/core',
@@ -93,6 +99,7 @@ describe('GitHubDiscussionProvider', () => {
             body: null,
             url: 'https://github.com/mx-space/core/discussions/1',
             createdAt: null,
+            updatedAt: null,
             author: null,
             comments: { totalCount: 0 },
           },

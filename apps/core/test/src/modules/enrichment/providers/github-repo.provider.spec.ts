@@ -11,6 +11,8 @@ const makeRepoResponse = (overrides: Record<string, any> = {}) => ({
   forks_count: 20,
   language: 'TypeScript',
   created_at: '2023-01-01T00:00:00Z',
+  pushed_at: '2023-06-01T00:00:00Z',
+  updated_at: '2023-05-01T00:00:00Z',
   owner: { avatar_url: 'https://avatar.url', login: 'mx-space' },
   license: { spdx_id: 'MIT' },
   ...overrides,
@@ -87,6 +89,11 @@ describe('GitHubRepoProvider', () => {
         url: 'https://avatar.url',
         alt: 'mx-space avatar',
       })
+      expect(result.previewImage?.url).toMatch(
+        /^https:\/\/opengraph\.githubassets\.com\/.+\/mx-space\/core$/,
+      )
+      expect(result.previewImage?.width).toBe(1280)
+      expect(result.previewImage?.height).toBe(640)
       expect(result.publishedAt).toBe('2023-01-01T00:00:00Z')
       expect(result.color).toBe('TypeScript')
 
