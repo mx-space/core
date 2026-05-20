@@ -3,7 +3,12 @@ import { Injectable } from '@nestjs/common'
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
-import { GitHubClient } from './github.client'
+import {
+  buildOgImageUrl,
+  GitHubClient,
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_WIDTH,
+} from './github.client'
 
 @Injectable()
 export class GitHubCommitProvider implements EnrichmentProvider {
@@ -60,10 +65,6 @@ export class GitHubCommitProvider implements EnrichmentProvider {
         format: 'number',
       })
 
-    const cacheToken = encodeURIComponent(
-      data.commit?.author?.date ?? new Date().toISOString(),
-    )
-
     return {
       title: data.commit?.message?.split('\n')[0] || id,
       description:
@@ -73,9 +74,15 @@ export class GitHubCommitProvider implements EnrichmentProvider {
         ? { url: data.author.avatar_url, alt: data.author.login }
         : undefined,
       previewImage: {
-        url: `https://opengraph.githubassets.com/${cacheToken}/${owner}/${repo}/commit/${ref}`,
-        width: 1280,
-        height: 640,
+        url: buildOgImageUrl(
+          data.commit?.author?.date,
+          owner,
+          repo,
+          'commit',
+          ref,
+        ),
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
         alt: `${data.commit?.message?.split('\n')[0] || ref} · ${owner}/${repo}`,
       },
       url: data.html_url,
