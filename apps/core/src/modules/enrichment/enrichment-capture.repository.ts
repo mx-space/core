@@ -4,8 +4,8 @@ import { asc, desc, eq, sql } from 'drizzle-orm'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import {
   enrichmentCache,
-  type EnrichmentCapturePalette,
   enrichmentCaptures,
+  type EnrichmentImagePalette,
 } from '~/database/schema'
 import type { PaginationResult } from '~/processors/database/base.repository'
 import { BaseRepository } from '~/processors/database/base.repository'
@@ -18,7 +18,7 @@ export interface EnrichmentCaptureRow {
   width: number
   height: number
   blurhash: string | null
-  palette: EnrichmentCapturePalette | null
+  palette: EnrichmentImagePalette | null
   createdAt: Date
   lastAccessedAt: Date
 }
@@ -34,7 +34,7 @@ export interface EnrichmentCaptureJoinedRow {
   width: number
   height: number
   blurhash: string | null
-  palette: EnrichmentCapturePalette | null
+  palette: EnrichmentImagePalette | null
   createdAt: Date
   lastAccessedAt: Date
 }
@@ -49,7 +49,7 @@ export interface EnrichmentCaptureInsert {
   width: number
   height: number
   blurhash?: string | null
-  palette?: EnrichmentCapturePalette | null
+  palette?: EnrichmentImagePalette | null
 }
 
 @Injectable()

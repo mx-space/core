@@ -42,7 +42,7 @@ export const enrichmentCache = pgTable(
   ],
 )
 
-export interface EnrichmentCapturePalette {
+export interface EnrichmentImagePalette {
   dominant: string
   swatches?: string[]
 }
@@ -59,7 +59,7 @@ export const enrichmentCaptures = pgTable(
     width: integer('width').notNull(),
     height: integer('height').notNull(),
     blurhash: text('blurhash'),
-    palette: jsonb('palette').$type<EnrichmentCapturePalette>(),
+    palette: jsonb('palette').$type<EnrichmentImagePalette>(),
     createdAt: createdAt(),
     lastAccessedAt: timestamp('last_accessed_at', {
       withTimezone: true,

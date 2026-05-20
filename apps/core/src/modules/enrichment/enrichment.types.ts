@@ -1,9 +1,15 @@
+export interface EnrichmentImagePalette {
+  dominant: string
+  swatches?: string[]
+}
+
 export interface EnrichmentImage {
   url: string
   width?: number
   height?: number
   alt?: string
   blurhash?: string
+  palette?: EnrichmentImagePalette
 }
 
 export interface EnrichmentAttribute {
@@ -11,19 +17,6 @@ export interface EnrichmentAttribute {
   value: string | number | boolean
   label?: string
   format?: 'number' | 'rating' | 'date' | 'percent' | 'text' | 'duration'
-}
-
-export interface EnrichmentCapturePalette {
-  dominant: string
-  swatches?: string[]
-}
-
-export interface EnrichmentCapture {
-  url: string
-  width: number
-  height: number
-  blurhash?: string
-  palette?: EnrichmentCapturePalette
 }
 
 export interface EnrichmentResult<TRaw = unknown> {
@@ -50,7 +43,7 @@ export interface EnrichmentResult<TRaw = unknown> {
 
   links?: Array<{ rel: string; url: string; label?: string }>
 
-  captureImage?: EnrichmentCapture
+  captureImage?: EnrichmentImage
 
   raw?: TRaw
 }

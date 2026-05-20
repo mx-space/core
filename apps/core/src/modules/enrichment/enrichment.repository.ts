@@ -8,7 +8,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import type {
-  EnrichmentCapture,
+  EnrichmentImage,
   EnrichmentResult,
   EnrichmentRow,
 } from './enrichment.types'
@@ -166,7 +166,7 @@ export class EnrichmentRepository extends BaseRepository {
    */
   async updateCapture(
     id: string,
-    captureImage: EnrichmentCapture,
+    captureImage: EnrichmentImage,
   ): Promise<void> {
     const patch = JSON.stringify({ captureImage })
     const updated = await this.db
