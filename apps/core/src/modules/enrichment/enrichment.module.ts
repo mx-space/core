@@ -16,6 +16,7 @@ import { GitHubDiscussionProvider } from './providers/github/github-discussion.p
 import { GitHubIssueProvider } from './providers/github/github-issue.provider'
 import { GitHubPrProvider } from './providers/github/github-pr.provider'
 import { GitHubRepoProvider } from './providers/github/github-repo.provider'
+import { ImageMetaService } from './providers/image-meta.service'
 import { LeetcodeProvider } from './providers/leetcode/leetcode.provider'
 import { NeoDBBookProvider } from './providers/neodb/neodb-book.provider'
 import { NeteaseMusicProvider } from './providers/netease/netease-music.provider'
@@ -69,6 +70,7 @@ const allProviders = [
     BrowserFetchService,
     CapturePipelineService,
     CaptureStorageService,
+    ImageMetaService,
     ...allProviders,
   ],
   exports: [EnrichmentService, UrlExtractorService],
