@@ -45,8 +45,8 @@ export async function enrichWithOEmbed(
 
   if (!result.title && parsed.title) result.title = parsed.title
 
-  if (!result.image?.url && parsed.thumbnail_url) {
-    result.image = {
+  if (!result.thumbnailImage?.url && parsed.thumbnail_url) {
+    result.thumbnailImage = {
       url: parsed.thumbnail_url,
       width: parsed.thumbnail_width,
       height: parsed.thumbnail_height,
