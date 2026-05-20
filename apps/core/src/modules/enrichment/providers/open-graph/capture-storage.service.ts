@@ -297,11 +297,11 @@ export class CaptureStorageService {
     maxTotalBytes: number
   }> {
     const config = await this.configsService.get('thirdPartyServiceIntegration')
-    const screenshot = config.openGraph?.screenshot
+    const captureConfig = config.openGraph?.screenshot
     return {
-      maxItems: Number(screenshot?.maxItems ?? DEFAULT_MAX_ITEMS),
+      maxItems: Number(captureConfig?.maxItems ?? DEFAULT_MAX_ITEMS),
       maxTotalBytes: Number(
-        screenshot?.maxTotalBytes ?? DEFAULT_MAX_TOTAL_BYTES,
+        captureConfig?.maxTotalBytes ?? DEFAULT_MAX_TOTAL_BYTES,
       ),
     }
   }

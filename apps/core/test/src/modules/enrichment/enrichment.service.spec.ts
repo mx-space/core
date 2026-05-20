@@ -121,13 +121,13 @@ function makeService(stubs: ServiceStubs = {}) {
     takeScreenshotBytes: vi.fn(() => undefined),
     attachScreenshotBytes: vi.fn(),
   }
-  const screenshotPipeline = {
+  const capturePipeline = {
     process: vi.fn(async () => null),
   }
-  const screenshotStorage = {
+  const captureStorage = {
     storeOrEvict: vi.fn(async () => ({
-      url: 'https://example.test/screenshot.webp',
-      objectKey: 'enrichment-screenshots/x.webp',
+      url: 'https://example.test/capture.webp',
+      objectKey: 'enrichment-captures/x.webp',
       bytes: 1024,
     })),
     delete: vi.fn(async () => undefined),
@@ -143,8 +143,8 @@ function makeService(stubs: ServiceStubs = {}) {
   service.taskQueueService = taskQueueService
   service.taskQueueProcessor = taskQueueProcessor
   service.browserFetch = browserFetch
-  service.capturePipeline = screenshotPipeline
-  service.captureStorage = screenshotStorage
+  service.capturePipeline = capturePipeline
+  service.captureStorage = captureStorage
   service.logger = { warn: vi.fn(), log: vi.fn() }
 
   return {

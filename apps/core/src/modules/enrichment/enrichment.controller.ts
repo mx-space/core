@@ -167,16 +167,16 @@ export class EnrichmentController {
     const used = await this.captureRepository.getQuotaUsage()
     const config = await this.configsService.get('thirdPartyServiceIntegration')
     const openGraph = config?.openGraph
-    const screenshot = openGraph?.screenshot
+    const captureConfig = openGraph?.screenshot
     return {
       used,
       cap: {
-        maxItems: Number(screenshot?.maxItems ?? DEFAULT_CAPTURE_MAX_ITEMS),
+        maxItems: Number(captureConfig?.maxItems ?? DEFAULT_CAPTURE_MAX_ITEMS),
         maxTotalBytes: Number(
-          screenshot?.maxTotalBytes ?? DEFAULT_CAPTURE_MAX_TOTAL_BYTES,
+          captureConfig?.maxTotalBytes ?? DEFAULT_CAPTURE_MAX_TOTAL_BYTES,
         ),
       },
-      enabled: screenshot?.enabled === true,
+      enabled: captureConfig?.enabled === true,
       fetchMode: openGraph?.fetchMode ?? 'fetch',
     }
   }

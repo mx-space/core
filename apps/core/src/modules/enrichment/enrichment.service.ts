@@ -845,12 +845,12 @@ export class EnrichmentService implements OnModuleInit {
       const config = await this.configsService.get(
         'thirdPartyServiceIntegration',
       )
-      const screenshotConfig = config.openGraph?.screenshot
-      if (!screenshotConfig?.enabled) return
+      const captureConfig = config.openGraph?.screenshot
+      if (!captureConfig?.enabled) return
 
-      const webpQuality = Number(screenshotConfig.webpQuality ?? 75)
+      const webpQuality = Number(captureConfig.webpQuality ?? 75)
       const maxBytesPerImage = Number(
-        screenshotConfig.maxBytesPerImage ?? 512 * 1024,
+        captureConfig.maxBytesPerImage ?? 512 * 1024,
       )
 
       const processed = await this.capturePipeline.process(bytes, {
