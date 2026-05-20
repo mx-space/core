@@ -2,6 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { GitHubClient } from '~/modules/enrichment/providers/github/github.client'
 import { GitHubCommitProvider } from '~/modules/enrichment/providers/github/github-commit.provider'
+import type { ImageMetaService } from '~/modules/enrichment/providers/image-meta.service'
+
+const stubImageMeta = (result: any = null): ImageMetaService =>
+  ({
+    fetchAndExtract: vi.fn(async () => result),
+  }) as unknown as ImageMetaService
 
 const createClient = (mockData: Record<string, any>) =>
   ({
@@ -14,7 +20,7 @@ const createClient = (mockData: Record<string, any>) =>
 
 describe('GitHubCommitProvider', () => {
   describe('matchUrl', () => {
-    const provider = new GitHubCommitProvider(createClient({}))
+    const provider = new GitHubCommitProvider(createClient({}), stubImageMeta())
 
     it('matches github.com/owner/repo/commit/sha', () => {
       const result = provider.matchUrl(
@@ -47,7 +53,10 @@ describe('GitHubCommitProvider', () => {
         author: { avatar_url: 'https://avatar', login: 'dev' },
         stats: { additions: 10, deletions: 5 },
       }
-      const p = new GitHubCommitProvider(createClient(mockData))
+      const p = new GitHubCommitProvider(
+        createClient(mockData),
+        stubImageMeta(),
+      )
 
       const result = await p.fetch('mx-space/core/commits/abc123')
 

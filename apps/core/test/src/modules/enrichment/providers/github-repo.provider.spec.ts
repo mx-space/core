@@ -2,6 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { GitHubClient } from '~/modules/enrichment/providers/github/github.client'
 import { GitHubRepoProvider } from '~/modules/enrichment/providers/github/github-repo.provider'
+import type { ImageMetaService } from '~/modules/enrichment/providers/image-meta.service'
+
+const stubImageMeta = (result: any = null): ImageMetaService =>
+  ({
+    fetchAndExtract: vi.fn(async () => result),
+  }) as unknown as ImageMetaService
 
 const makeRepoResponse = (overrides: Record<string, any> = {}) => ({
   full_name: 'mx-space/core',
@@ -29,7 +35,7 @@ const createClient = (mockData: Record<string, any>) =>
 
 describe('GitHubRepoProvider', () => {
   describe('matchUrl', () => {
-    const provider = new GitHubRepoProvider(createClient({}))
+    const provider = new GitHubRepoProvider(createClient({}), stubImageMeta())
 
     it('matches github.com/owner/repo', () => {
       const result = provider.matchUrl(
@@ -62,7 +68,7 @@ describe('GitHubRepoProvider', () => {
   })
 
   describe('isValidId', () => {
-    const provider = new GitHubRepoProvider(createClient({}))
+    const provider = new GitHubRepoProvider(createClient({}), stubImageMeta())
 
     it('accepts owner/repo format', () => {
       expect(provider.isValidId('mx-space/core')).toBe(true)
@@ -77,7 +83,10 @@ describe('GitHubRepoProvider', () => {
 
   describe('fetch', () => {
     it('normalizes GitHub API response with all fields', async () => {
-      const p = new GitHubRepoProvider(createClient(makeRepoResponse()))
+      const p = new GitHubRepoProvider(
+        createClient(makeRepoResponse()),
+        stubImageMeta(),
+      )
 
       const result = await p.fetch('mx-space/core')
 
@@ -136,6 +145,7 @@ describe('GitHubRepoProvider', () => {
             forks_count: null,
           }),
         ),
+        stubImageMeta(),
       )
 
       const result = await p.fetch('mx-space/core')
@@ -145,6 +155,43 @@ describe('GitHubRepoProvider', () => {
       expect(result.thumbnailImage).toBeUndefined()
       expect(result.color).toBeUndefined()
       expect(result.attributes).toEqual([])
+    })
+
+    it('merges fetched blurhash/palette into thumbnail and preview images', async () => {
+      const meta = {
+        width: 64,
+        height: 64,
+        blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
+        palette: { dominant: '#abcdef' },
+      }
+      const p = new GitHubRepoProvider(
+        createClient(makeRepoResponse()),
+        stubImageMeta(meta),
+      )
+
+      const result = await p.fetch('mx-space/core')
+
+      expect(result.thumbnailImage?.blurhash).toBe(meta.blurhash)
+      expect(result.thumbnailImage?.palette).toEqual(meta.palette)
+      expect(result.previewImage?.blurhash).toBe(meta.blurhash)
+      expect(result.previewImage?.palette).toEqual(meta.palette)
+      expect(result.previewImage?.width).toBe(1280)
+      expect(result.previewImage?.height).toBe(640)
+    })
+
+    it('omits blurhash when ImageMetaService returns null', async () => {
+      const p = new GitHubRepoProvider(
+        createClient(makeRepoResponse()),
+        stubImageMeta(null),
+      )
+
+      const result = await p.fetch('mx-space/core')
+
+      expect(result.thumbnailImage?.url).toBe('https://avatar.url')
+      expect(result.thumbnailImage?.blurhash).toBeUndefined()
+      expect(result.thumbnailImage?.palette).toBeUndefined()
+      expect(result.previewImage?.url).toMatch(/opengraph\.githubassets\.com/)
+      expect(result.previewImage?.blurhash).toBeUndefined()
     })
   })
 })

@@ -2,6 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { GitHubClient } from '~/modules/enrichment/providers/github/github.client'
 import { GitHubPrProvider } from '~/modules/enrichment/providers/github/github-pr.provider'
+import type { ImageMetaService } from '~/modules/enrichment/providers/image-meta.service'
+
+const stubImageMeta = (result: any = null): ImageMetaService =>
+  ({
+    fetchAndExtract: vi.fn(async () => result),
+  }) as unknown as ImageMetaService
 
 const createClient = (mockData: Record<string, any>) =>
   ({
@@ -14,7 +20,7 @@ const createClient = (mockData: Record<string, any>) =>
 
 describe('GitHubPrProvider', () => {
   describe('matchUrl', () => {
-    const provider = new GitHubPrProvider(createClient({}))
+    const provider = new GitHubPrProvider(createClient({}), stubImageMeta())
 
     it('matches github.com/owner/repo/pull/123', () => {
       const result = provider.matchUrl(
@@ -51,7 +57,7 @@ describe('GitHubPrProvider', () => {
         updated_at: '2023-07-01T00:00:00Z',
         user: { avatar_url: 'https://avatar', login: 'dev' },
       }
-      const p = new GitHubPrProvider(createClient(mockData))
+      const p = new GitHubPrProvider(createClient(mockData), stubImageMeta())
 
       const result = await p.fetch('mx-space/core/pulls/42')
 

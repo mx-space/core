@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
+import { ImageMetaService } from '../image-meta.service'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
 import {
@@ -20,7 +21,10 @@ export class GitHubPrProvider implements EnrichmentProvider {
   readonly featureGateConfigKey = 'github'
   readonly requiredConfigKeys = ['token']
 
-  constructor(private readonly client: GitHubClient) {}
+  constructor(
+    private readonly client: GitHubClient,
+    private readonly imageMeta: ImageMetaService,
+  ) {}
 
   matchUrl(url: URL): UrlMatchResult | null {
     if (url.hostname !== 'github.com') return null
@@ -87,14 +91,32 @@ export class GitHubPrProvider implements EnrichmentProvider {
         format: 'text',
       })
 
+    const avatarUrl = data.user?.avatar_url ?? null
+    const ogUrl = buildOgImageUrl(
+      data.updated_at,
+      owner,
+      repo,
+      'pull',
+      pull_number,
+    )
+    const [avatarMeta, ogMeta] = await Promise.all([
+      avatarUrl ? this.imageMeta.fetchAndExtract(avatarUrl) : null,
+      this.imageMeta.fetchAndExtract(ogUrl),
+    ])
+
     return {
       title: data.title,
       description: (data.body || '').slice(0, 300) || undefined,
-      thumbnailImage: data.user?.avatar_url
-        ? { url: data.user.avatar_url, alt: data.user.login }
+      thumbnailImage: avatarUrl
+        ? {
+            url: avatarUrl,
+            alt: data.user!.login,
+            ...avatarMeta,
+          }
         : undefined,
       previewImage: {
-        url: buildOgImageUrl(data.updated_at, owner, repo, 'pull', pull_number),
+        url: ogUrl,
+        ...ogMeta,
         width: OG_IMAGE_WIDTH,
         height: OG_IMAGE_HEIGHT,
         alt: `${data.title} · PR #${pull_number} · ${owner}/${repo}`,

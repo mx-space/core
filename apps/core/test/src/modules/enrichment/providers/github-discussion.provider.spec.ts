@@ -2,6 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { GitHubClient } from '~/modules/enrichment/providers/github/github.client'
 import { GitHubDiscussionProvider } from '~/modules/enrichment/providers/github/github-discussion.provider'
+import type { ImageMetaService } from '~/modules/enrichment/providers/image-meta.service'
+
+const stubImageMeta = (result: any = null): ImageMetaService =>
+  ({
+    fetchAndExtract: vi.fn(async () => result),
+  }) as unknown as ImageMetaService
 
 const createClient = (mockData: any) =>
   ({
@@ -12,7 +18,10 @@ const createClient = (mockData: any) =>
 
 describe('GitHubDiscussionProvider', () => {
   describe('matchUrl', () => {
-    const provider = new GitHubDiscussionProvider(createClient({}))
+    const provider = new GitHubDiscussionProvider(
+      createClient({}),
+      stubImageMeta(),
+    )
 
     it('matches github.com/owner/repo/discussions/123', () => {
       const result = provider.matchUrl(
@@ -49,7 +58,10 @@ describe('GitHubDiscussionProvider', () => {
           },
         },
       }
-      const p = new GitHubDiscussionProvider(createClient(mockData))
+      const p = new GitHubDiscussionProvider(
+        createClient(mockData),
+        stubImageMeta(),
+      )
 
       const result = await p.fetch('mx-space/core/discussions/42')
 
@@ -105,7 +117,10 @@ describe('GitHubDiscussionProvider', () => {
           },
         },
       }
-      const p = new GitHubDiscussionProvider(createClient(mockData))
+      const p = new GitHubDiscussionProvider(
+        createClient(mockData),
+        stubImageMeta(),
+      )
 
       const result = await p.fetch('mx-space/core/discussions/1')
 
@@ -121,6 +136,7 @@ describe('GitHubDiscussionProvider', () => {
     it('throws when discussion not found', async () => {
       const p = new GitHubDiscussionProvider(
         createClient({ repository: { discussion: null } }),
+        stubImageMeta(),
       )
 
       await expect(p.fetch('mx-space/core/discussions/999')).rejects.toThrow(
@@ -129,7 +145,10 @@ describe('GitHubDiscussionProvider', () => {
     })
 
     it('throws when repository not found', async () => {
-      const p = new GitHubDiscussionProvider(createClient({ repository: null }))
+      const p = new GitHubDiscussionProvider(
+        createClient({ repository: null }),
+        stubImageMeta(),
+      )
 
       await expect(p.fetch('ghost/repo/discussions/1')).rejects.toThrow(
         'Discussion not found',

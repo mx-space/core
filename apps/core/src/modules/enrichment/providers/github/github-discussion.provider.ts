@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
+import { ImageMetaService } from '../image-meta.service'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
 import {
@@ -20,7 +21,10 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
   readonly featureGateConfigKey = 'github'
   readonly requiredConfigKeys = ['token']
 
-  constructor(private readonly client: GitHubClient) {}
+  constructor(
+    private readonly client: GitHubClient,
+    private readonly imageMeta: ImageMetaService,
+  ) {}
 
   matchUrl(url: URL): UrlMatchResult | null {
     if (url.hostname !== 'github.com') return null
@@ -72,20 +76,32 @@ export class GitHubDiscussionProvider implements EnrichmentProvider {
     const discussion = data?.repository?.discussion
     if (!discussion) throw new Error(`Discussion not found: ${id}`)
 
+    const avatarUrl = discussion.author?.avatarUrl ?? null
+    const ogUrl = buildOgImageUrl(
+      discussion.updatedAt,
+      owner,
+      repo,
+      'discussions',
+      number,
+    )
+    const [avatarMeta, ogMeta] = await Promise.all([
+      avatarUrl ? this.imageMeta.fetchAndExtract(avatarUrl) : null,
+      this.imageMeta.fetchAndExtract(ogUrl),
+    ])
+
     return {
       title: discussion.title,
       description: (discussion.body || '').slice(0, 300) || undefined,
-      thumbnailImage: discussion.author?.avatarUrl
-        ? { url: discussion.author.avatarUrl, alt: discussion.author.login }
+      thumbnailImage: avatarUrl
+        ? {
+            url: avatarUrl,
+            alt: discussion.author!.login,
+            ...avatarMeta,
+          }
         : undefined,
       previewImage: {
-        url: buildOgImageUrl(
-          discussion.updatedAt,
-          owner,
-          repo,
-          'discussions',
-          number,
-        ),
+        url: ogUrl,
+        ...ogMeta,
         width: OG_IMAGE_WIDTH,
         height: OG_IMAGE_HEIGHT,
         alt: `${discussion.title} · Discussion #${number} · ${owner}/${repo}`,
