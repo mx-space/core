@@ -213,7 +213,7 @@ if (argv.config) {
 applyArgvEnvFallback(argv)
 
 export const PORT = argv.port || 2333
-export const API_VERSION = 2
+export const API_VERSION = 3
 
 export const DEMO_MODE = argv.demo || false
 

@@ -1,5 +1,6 @@
-import { NotFoundException } from '@nestjs/common'
 import { sample } from 'es-toolkit/compat'
+
+import { AppException } from '~/common/response/error.types'
 
 export const NotFoundMessage = [
   '真不巧，内容走丢了 o(╥﹏╥)o',
@@ -9,8 +10,8 @@ export const NotFoundMessage = [
   '嘿，这里空空如也，不如别处走走？',
 ]
 
-export class CannotFindException extends NotFoundException {
+export class CannotFindException extends AppException {
   constructor() {
-    super(sample(NotFoundMessage))
+    super('NOT_FOUND', sample(NotFoundMessage)!, 404)
   }
 }

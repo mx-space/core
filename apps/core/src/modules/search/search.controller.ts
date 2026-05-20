@@ -3,9 +3,8 @@ import { Get, Param, Post, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
-import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import {
   SearchAdminListDto,
   SearchDto,
@@ -15,67 +14,67 @@ import {
 
 import { SearchService } from './search.service'
 
-// Search results mix post/note/page; only post items carry `category`, so the
-// objectScan path naturally skips notes & pages.
-const SEARCH_TRANSLATE_FIELDS = [
-  {
-    path: 'data[].category.name',
-    keyPath: 'category.name',
-    idField: 'id',
-  },
-] as const
-
 @ApiController('search')
+@ResponseV2()
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @HttpCache.disable
   @Get()
-  @TranslateFields(...SEARCH_TRANSLATE_FIELDS)
-  search(@Query() query: SearchDto) {
-    return this.searchService.search(query)
+  async search(@Query() query: SearchDto) {
+    const result = await this.searchService.search(query)
+    return result
   }
 
   @Post('/rebuild')
   @Auth()
-  rebuild(@Query() query: SearchRebuildQueryDto) {
-    return this.searchService.rebuildSearchDocuments({
+  async rebuild(@Query() query: SearchRebuildQueryDto) {
+    const result = await this.searchService.rebuildSearchDocuments({
       force: query.force ?? false,
     })
+    return result
   }
 
   @Post('/rebuild/:refType/:refId')
   @Auth()
-  rebuildOne(@Param() params: SearchRebuildRefParamDto) {
-    return this.searchService.rebuildSingleRef(params.refType, params.refId)
+  async rebuildOne(@Param() params: SearchRebuildRefParamDto) {
+    const result = await this.searchService.rebuildSingleRef(
+      params.refType,
+      params.refId,
+    )
+    return result
   }
 
   @Get('/admin/documents')
   @Auth()
   @HttpCache.disable
-  adminListDocuments(@Query() query: SearchAdminListDto) {
-    return this.searchService.adminListDocuments(query)
+  async adminListDocuments(@Query() query: SearchAdminListDto) {
+    const result = await this.searchService.adminListDocuments(query)
+    return result
   }
 
   @Get('/:type')
   @HttpCache.disable
-  @TranslateFields(...SEARCH_TRANSLATE_FIELDS)
-  searchByType(@Query() query: SearchDto, @Param('type') type: string) {
+  async searchByType(@Query() query: SearchDto, @Param('type') type: string) {
     type = type.toLowerCase()
+    let result: any
     switch (type) {
       case 'post': {
-        return this.searchService.searchPost(query)
+        result = await this.searchService.searchPost(query)
+        break
       }
       case 'note': {
-        return this.searchService.searchNote(query)
+        result = await this.searchService.searchNote(query)
+        break
       }
       case 'page': {
-        return this.searchService.searchPage(query)
+        result = await this.searchService.searchPage(query)
+        break
       }
-
       default: {
-        throw new BizException(ErrorCodeEnum.InvalidSearchType, type)
+        throw createAppException(AppErrorCode.INVALID_SEARCH_TYPE, { type })
       }
     }
+    return result
   }
 }

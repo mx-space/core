@@ -1,6 +1,6 @@
 import type { Image } from './base'
 import type { CategoryModel } from './category'
-import type { EnrichmentResult } from './recently'
+import type { EnrichmentResult } from './enrichment'
 
 export type PostContentFormat = 'markdown' | 'lexical'
 

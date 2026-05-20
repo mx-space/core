@@ -129,7 +129,7 @@ describe('RecentlyController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body, { allowed: allowedRecentlyKeys })
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
     assertLowercaseRefType(body)
   })
 
@@ -154,7 +154,7 @@ describe('RecentlyController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body, { allowed: allowedRecentlyKeys })
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
     assertLowercaseRefType(body)
   })
 
@@ -181,7 +181,7 @@ describe('RecentlyController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeysDeep(body, ['ref.id', 'ref.title', 'ref.type'])
+    assertHasKeysDeep(body.data, ['ref.id', 'ref.title', 'ref.type'])
   })
 
   test('SDK shape — every RecentlyModel key present on list rows', async () => {
@@ -201,6 +201,6 @@ describe('RecentlyController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeys(body, EXPECTED_RECENTLY_MODEL_KEYS)
+    assertHasKeys(body.data, EXPECTED_RECENTLY_MODEL_KEYS)
   })
 })

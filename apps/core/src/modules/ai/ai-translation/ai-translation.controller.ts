@@ -12,6 +12,10 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { RawResponse } from '~/common/response/raw-response.decorator'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import {
   CreateTranslationAllTaskDto,
   CreateTranslationBatchTaskDto,
@@ -30,6 +34,7 @@ import {
 import { AiTranslationService } from './ai-translation.service'
 
 @ApiController('ai/translations')
+@ResponseV2()
 export class AiTranslationController {
   constructor(
     private readonly service: AiTranslationService,
@@ -39,7 +44,8 @@ export class AiTranslationController {
   @Post('/task')
   @Auth()
   async createTranslationTask(@Body() body: CreateTranslationTaskDto) {
-    return this.taskService.createTranslationTask(body)
+    const data = await this.taskService.createTranslationTask(body)
+    return data
   }
 
   @Post('/task/batch')
@@ -47,25 +53,32 @@ export class AiTranslationController {
   async createTranslationBatchTask(
     @Body() body: CreateTranslationBatchTaskDto,
   ) {
-    return this.taskService.createTranslationBatchTask(body)
+    const data = await this.taskService.createTranslationBatchTask(body)
+    return data
   }
 
   @Post('/task/all')
   @Auth()
   async createTranslationAllTask(@Body() body: CreateTranslationAllTaskDto) {
-    return this.taskService.createTranslationAllTask(body)
+    const data = await this.taskService.createTranslationAllTask(body)
+    return data
   }
 
   @Get('/ref/:id')
   @Auth()
   async getTranslationsByRefId(@Param() params: EntityIdDto) {
-    return this.service.getTranslationsByRefId(params.id)
+    const data = await this.service.getTranslationsByRefId(params.id)
+    return data
   }
 
   @Get('/grouped')
   @Auth()
   async getTranslationsGrouped(@Query() query: GetTranslationsGroupedQueryDto) {
-    return this.service.getAllTranslationsGrouped(query)
+    const result = await this.service.getAllTranslationsGrouped(query)
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder().pagination(result.pagination).build(),
+    )
   }
 
   @Patch('/:id')
@@ -74,13 +87,15 @@ export class AiTranslationController {
     @Param() params: EntityIdDto,
     @Body() body: UpdateTranslationDto,
   ) {
-    return this.service.updateTranslation(params.id, body)
+    const data = await this.service.updateTranslation(params.id, body)
+    return data
   }
 
   @Delete('/:id')
   @Auth()
   async deleteTranslation(@Param() params: EntityIdDto) {
-    return this.service.deleteTranslation(params.id)
+    const data = await this.service.deleteTranslation(params.id)
+    return data
   }
 
   @Get('/article/:id')
@@ -88,15 +103,21 @@ export class AiTranslationController {
     @Param() params: EntityIdDto,
     @Query() query: GetTranslationQueryDto,
   ) {
-    return this.service.getTranslationForArticle(params.id, query.lang)
+    const data = await this.service.getTranslationForArticle(
+      params.id,
+      query.lang,
+    )
+    return data
   }
 
   @Get('/article/:id/languages')
   async getAvailableLanguages(@Param() params: EntityIdDto) {
-    return this.service.getAvailableLanguagesForArticle(params.id)
+    const data = await this.service.getAvailableLanguagesForArticle(params.id)
+    return data
   }
 
   @Get('/article/:id/generate')
+  @RawResponse
   async streamArticleTranslation(
     @Param() params: EntityIdDto,
     @Query() query: GetTranslationStreamQueryDto,

@@ -27,7 +27,7 @@ describe('NoteController', () => {
     await expect(
       controller.create({ title: 'Note', text: 'body' } as any),
     ).resolves.toEqual({
-      id: 'note-1',
+      data: { id: 'note-1' },
     })
     expect(noteService.create).toHaveBeenCalledWith({
       title: 'Note',
@@ -40,7 +40,7 @@ describe('NoteController', () => {
 
     await expect(
       controller.modify({ title: 'Updated' } as any, { id: 'note-1' }),
-    ).resolves.toEqual({ id: 'note-1' })
+    ).resolves.toEqual({ data: { id: 'note-1' } })
 
     expect(noteService.updateById).toHaveBeenCalledWith('note-1', {
       title: 'Updated',
@@ -55,7 +55,7 @@ describe('NoteController', () => {
       controller.setPublishStatus({ id: 'note-1' }, {
         isPublished: false,
       } as any),
-    ).resolves.toEqual({ success: true })
+    ).resolves.toEqual({ data: { success: true } })
 
     expect(noteService.updateById).toHaveBeenCalledWith('note-1', {
       isPublished: false,

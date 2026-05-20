@@ -5,6 +5,10 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { RawResponse } from '~/common/response/raw-response.decorator'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -13,6 +17,7 @@ import { SnippetDto, SnippetMoreDto } from './snippet.schema'
 import { SnippetService } from './snippet.service'
 
 @ApiController('snippets')
+@ResponseV2()
 export class SnippetController {
   constructor(private readonly snippetService: SnippetService) {}
 
@@ -21,10 +26,18 @@ export class SnippetController {
   async getList(@Query() query: PagerDto) {
     const { page, size } = query
     const result = await this.snippetService.repository.list(page, size)
-    return {
-      ...result,
-      data: this.snippetService.transformLeanSnippetList(result.data),
-    }
+    const { pagination } = result
+    return withMeta(
+      this.snippetService.transformLeanSnippetList(result.data),
+      new MetaObjectBuilder()
+        .pagination({
+          page: pagination.currentPage,
+          size: pagination.size,
+          total: pagination.total,
+          total_pages: pagination.totalPage,
+        })
+        .build(),
+    )
   }
 
   @Post('/import')
@@ -51,7 +64,19 @@ export class SnippetController {
   @Auth()
   async getGroup(@Query() query: PagerDto) {
     const { page, size = 30 } = query
-    return this.snippetService.repository.listGrouped(page, size)
+    const result = await this.snippetService.repository.listGrouped(page, size)
+    const { pagination } = result
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder()
+        .pagination({
+          page: pagination.currentPage,
+          size: pagination.size,
+          total: pagination.total,
+          total_pages: pagination.totalPage,
+        })
+        .build(),
+    )
   }
 
   @Get('/group/:reference')
@@ -81,7 +106,7 @@ export class SnippetController {
   }
 
   @Get('/:reference/:name')
-  @HTTPDecorators.Bypass
+  @RawResponse
   async getSnippetByName(
     @Param('name') name: string,
     @Param('reference') reference: string,

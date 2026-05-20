@@ -39,19 +39,16 @@ export class CategoryController<ResponseWrapper> implements IController {
     return this.client.proxy(this.base)
   }
 
-  getAllCategories(): RequestProxyResult<
-    { data: CategoryModel[] },
-    ResponseWrapper
-  > {
-    return this.proxy.get({
+  getAllCategories(): RequestProxyResult<CategoryModel[], ResponseWrapper> {
+    return this.proxy.get<CategoryModel[]>({
       params: {
         type: CategoryType.Category,
       },
     })
   }
 
-  getAllTags(): RequestProxyResult<{ data: TagModel[] }, ResponseWrapper> {
-    return this.proxy.get<{ data: TagModel[] }>({
+  getAllTags(): RequestProxyResult<TagModel[], ResponseWrapper> {
+    return this.proxy.get<TagModel[]>({
       params: {
         type: CategoryType.Tag,
       },

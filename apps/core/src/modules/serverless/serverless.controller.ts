@@ -14,9 +14,10 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
+import { RawResponse } from '~/common/response/raw-response.decorator'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { getSandboxTypeDeclaration } from '~/utils/sandbox'
@@ -29,12 +30,13 @@ import {
 import { ServerlessService } from './serverless.service'
 
 @ApiController(['serverless', 'fn'])
+@ResponseV2()
 export class ServerlessController {
   constructor(private readonly serverlessService: ServerlessService) {}
 
   @Get('/types')
   @Auth()
-  @HTTPDecorators.Bypass
+  @RawResponse
   @CacheTTL(60 * 60 * 24)
   getCodeDefined() {
     return getSandboxTypeDeclaration()
@@ -57,7 +59,7 @@ export class ServerlessController {
 
   @Get('/compiled/:id')
   @Auth()
-  @HTTPDecorators.Bypass
+  @RawResponse
   async getCompiledCode(@Param() param: EntityIdDto) {
     const snippet = await this.serverlessService.repository.findById(param.id)
     if (!snippet) {
@@ -83,7 +85,7 @@ export class ServerlessController {
       ttl: 5000,
     },
   })
-  @HTTPDecorators.Bypass
+  @RawResponse
   async runServerlessFunctionWildcard(
     @Param() param: ServerlessReferenceDto,
     @HasAdminAccess() hasAdminAccess: boolean,
@@ -101,7 +103,7 @@ export class ServerlessController {
       ttl: 5000,
     },
   })
-  @HTTPDecorators.Bypass
+  @RawResponse
   async runServerlessFunction(
     @Param() param: ServerlessReferenceDto,
     @HasAdminAccess() hasAdminAccess: boolean,

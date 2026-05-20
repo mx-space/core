@@ -3,6 +3,7 @@ import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type { SayModel } from '~/models/say'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core'
 import { BaseCrudController } from './base'
 
@@ -35,6 +36,6 @@ export class SayController<ResponseWrapper>
    * 获取随机一条
    */
   getRandom() {
-    return this.proxy.random.get<{ data: SayModel | null }>()
+    return this.proxy.random.get<SayModel | null>()
   }
 }

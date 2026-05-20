@@ -14,6 +14,6 @@ describe('test Snippet client', () => {
     )
 
     expect(data).toEqual(mocked)
-    expect(data.$raw.data).toEqual(mocked)
+    expect(data.$raw.data.data).toEqual(mocked)
   })
 })

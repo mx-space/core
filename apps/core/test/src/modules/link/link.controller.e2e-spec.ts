@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { BizException } from '~/common/exceptions/biz.exception'
 import {
   LinkController,
   LinkControllerCrud,
 } from '~/modules/link/link.controller'
+import { LinkApplyDisabledException } from '~/modules/link/link.exceptions'
 
 describe('LinkController', () => {
   it('blocks link applications when the PG-backed service reports disabled audit', async () => {
@@ -21,7 +21,7 @@ describe('LinkController', () => {
         name: 'Example',
         author: 'Alice',
       } as any),
-    ).rejects.toThrow(BizException)
+    ).rejects.toThrow(LinkApplyDisabledException)
     expect(service.applyForLink).not.toHaveBeenCalled()
   })
 
@@ -36,8 +36,10 @@ describe('LinkController', () => {
     const controller = new LinkController(service as any)
 
     await expect(controller.approveLink('link-1')).resolves.toEqual({
-      link: { id: 'link-1', email: null },
-      convertedAvatar: 'https://cdn.example/avatar.png',
+      data: {
+        link: { id: 'link-1', email: null },
+        convertedAvatar: 'https://cdn.example/avatar.png',
+      },
     })
   })
 })
@@ -47,16 +49,12 @@ describe('LinkControllerCrud', () => {
     const repository = {
       list: vi.fn().mockResolvedValue({
         data: [{ id: '1', email: 'owner@example.com' }],
-        total: 1,
+        pagination: { total: 1, currentPage: 1, totalPage: 1, size: 10 },
       }),
     }
     const controller = new LinkControllerCrud(repository as any, {} as any)
 
-    await expect(
-      controller.gets({ page: 1, size: 10 } as any, false),
-    ).resolves.toEqual({
-      data: [{ id: '1', email: null }],
-      total: 1,
-    })
+    const result = await controller.gets({ page: 1, size: 10 } as any, false)
+    expect(result.data).toEqual([{ id: '1', email: null }])
   })
 })

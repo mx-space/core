@@ -1,23 +1,25 @@
 import { Get, Param, Post } from '@nestjs/common'
+
 import { BaseTaskController } from '~/common/controllers/base-task.controller'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import type { ScopedTaskService } from '~/processors/task-queue'
 import { StringIdDto } from '~/shared/dto/id.dto'
 import { isString } from '~/utils/validator.util'
+
 import { CronTaskService } from './cron-task.service'
 import { CronTaskType, type CronTaskTypeValue } from './cron-task.types'
 
 @ApiController('cron-task')
 @Auth()
+@ResponseV2()
 export class CronDefinitionController {
   constructor(private readonly cronTaskService: CronTaskService) {}
 
   @Get('/')
-  @HTTPDecorators.Bypass
   async getCronDefinitions() {
     return this.cronTaskService.getCronDefinitions()
   }
@@ -42,6 +44,7 @@ export class CronDefinitionController {
 
 @ApiController('cron-task/tasks')
 @Auth()
+@ResponseV2()
 export class CronTaskController extends BaseTaskController {
   constructor(private readonly cronTaskService: CronTaskService) {
     super()

@@ -2,8 +2,8 @@ import { Readable } from 'node:stream'
 
 import { describe, expect, it, vi } from 'vitest'
 
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { FileController } from '~/modules/file/file.controller'
+import { FileStorageNotConfiguredException } from '~/modules/file/file.exceptions'
 
 describe('FileController', () => {
   it('falls back to local storage for image uploads when S3 is disabled', async () => {
@@ -92,9 +92,7 @@ describe('FileController', () => {
 
     await expect(
       controller.upload({ type: 'image' } as any, {} as any),
-    ).rejects.toMatchObject({
-      bizCode: ErrorCodeEnum.ImageStorageNotConfigured,
-    })
+    ).rejects.toThrow(FileStorageNotConfiguredException)
 
     expect(getAndValidMultipartField).not.toHaveBeenCalled()
     expect(writeFile).not.toHaveBeenCalled()

@@ -1,5 +1,5 @@
 import type { Image } from './base'
-import type { EnrichmentResult } from './recently'
+import type { EnrichmentResult } from './enrichment'
 
 export type PageEnrichmentMap = Record<string, EnrichmentResult>
 

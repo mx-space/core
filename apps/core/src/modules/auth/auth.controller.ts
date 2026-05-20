@@ -16,8 +16,8 @@ import { z } from 'zod'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { StringIdDto } from '~/shared/dto/id.dto'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
@@ -38,6 +38,7 @@ export class TokenDto extends createZodDto(TokenSchema) {}
 @ApiController({
   path: 'auth',
 })
+@ResponseV2()
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -76,7 +77,7 @@ export class AuthController {
     const token = models.find((model) => model.id === id)?.token
 
     if (!token) {
-      throw new BizException(ErrorCodeEnum.TokenNotFound)
+      throw createAppException(AppErrorCode.AUTH_TOKEN_NOT_FOUND)
     }
     await this.authService.deleteToken(id)
 

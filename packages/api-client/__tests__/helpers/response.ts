@@ -1,18 +1,30 @@
 import type { URLSearchParams } from 'node:url'
 import { inspect } from 'node:util'
-import { axiosAdaptor } from '~/adaptors/axios'
+
 import { isEqual } from 'es-toolkit/compat'
 import { vi } from 'vitest'
 
+import { axiosAdaptor } from '~/adaptors/axios'
+
 const { spyOn } = vi
 
-export const buildResponseDataWrapper = (data: any) => ({ data })
+/**
+ * Build an adaptor response whose HTTP body is the V2 envelope
+ * `{ data, meta? }`. The adaptor itself wraps the body under `.data`.
+ */
+export const buildResponseDataWrapper = (
+  payload: any,
+  meta?: Record<string, any>,
+) => ({
+  data: meta === undefined ? { data: payload } : { data: payload, meta },
+})
 
 export const mockResponse = <T>(
   path: string,
   data: T,
   method = 'get',
   requestBody?: any,
+  meta?: Record<string, any>,
 ) => {
   const exceptUrlObject = new URL(
     path.startsWith('http')
@@ -45,7 +57,7 @@ export const mockResponse = <T>(
             )
           : true)
       ) {
-        return buildResponseDataWrapper(data)
+        return buildResponseDataWrapper(data, meta)
       } else {
         return buildResponseDataWrapper({
           error: 1,

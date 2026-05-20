@@ -220,8 +220,8 @@ describe('NoteController admin contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
-    assertHasKeys(body, NOTE_DETAIL_REQUIRED_KEYS)
+    assertPgTimestamps(body.data)
+    assertHasKeys(body.data, NOTE_DETAIL_REQUIRED_KEYS)
   })
 
   test('GET /notes/topics/:id (admin topic feed) — paginates with required list keys', async () => {

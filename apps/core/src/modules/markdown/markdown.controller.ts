@@ -8,7 +8,8 @@ import JSZip from 'jszip'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { RawResponse } from '~/common/response/raw-response.decorator'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 
@@ -18,6 +19,7 @@ import { DataListDto, ExportMarkdownQueryDto } from './markdown.schema'
 import { MarkdownService } from './markdown.service'
 
 @ApiController('markdown')
+@ResponseV2()
 export class MarkdownController {
   constructor(private readonly service: MarkdownService) {}
 
@@ -36,7 +38,7 @@ export class MarkdownController {
 
   @Get('/export')
   @Auth()
-  @HTTPDecorators.Bypass
+  @RawResponse
   @Header('Content-Type', 'application/zip')
   async exportArticleToMarkdown(@Query() query: ExportMarkdownQueryDto) {
     const { show_title: showTitle, slug, yaml, with_meta_json } = query

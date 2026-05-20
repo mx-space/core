@@ -15,8 +15,8 @@ import { z } from 'zod'
 
 import { API_VERSION } from '~/app.config'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
+import { RawResponse } from '~/common/response/raw-response.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { isDev } from '~/global/env.global'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -48,7 +48,7 @@ export class DeviceController {
   ) {}
 
   @Get('/')
-  @HTTPDecorators.Bypass
+  @RawResponse
   async page(
     @Query('user_code') userCode: string | undefined,
     @RequestHeaders('cookie') cookie: string | undefined,
@@ -85,7 +85,7 @@ export class DeviceController {
   }
 
   @Post('verify')
-  @HTTPDecorators.Bypass
+  @RawResponse
   async verify(
     @Body() body: DeviceVerifyDto,
     @RequestHeaders('cookie') cookie: string | undefined,

@@ -121,11 +121,11 @@ describe('Yohaku contract — /aggregate/feed and /aggregate/sitemap', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeys(body, ['title', 'description', 'author', 'url', 'data'])
-    expect(typeof body.url).toBe('string')
-    expect(body.url.length).toBeGreaterThan(0)
-    expect(Array.isArray(body.data)).toBe(true)
-    const item = body.data[0]
+    assertHasKeys(body.data, ['title', 'description', 'author', 'url', 'data'])
+    expect(typeof body.data.url).toBe('string')
+    expect(body.data.url.length).toBeGreaterThan(0)
+    expect(Array.isArray(body.data.data)).toBe(true)
+    const item = body.data.data[0]
     assertHasKeys(item, ['id', 'title', 'link', 'created', 'images'])
     expect(item.link).toMatch(/^https?:\/\//)
   })

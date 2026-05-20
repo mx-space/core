@@ -8,10 +8,11 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
+import { OK_DATA } from '~/common/response/envelope.types'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { snakecaseKeysWithCompat } from '~/utils/case.util'
 
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
@@ -40,6 +41,7 @@ const ARTICLE_REF_FIELDS = [
 ] as const
 
 @ApiController('/activity')
+@ResponseV2()
 export class ActivityController {
   constructor(
     private readonly service: ActivityService,
@@ -60,6 +62,7 @@ export class ActivityController {
       id,
       ip,
     )
+    return OK_DATA
   }
 
   @Get('/likes')
@@ -67,7 +70,8 @@ export class ActivityController {
   async getLikeActivities(@Query() pager: PagerDto) {
     const { page, size } = pager
 
-    return this.service.getLikeActivities(page, size)
+    const result = await this.service.getLikeActivities(page, size)
+    return result
   }
 
   @Get('/')
@@ -77,13 +81,16 @@ export class ActivityController {
 
     switch (type) {
       case Activity.Like: {
-        return this.service.getLikeActivities(page, size)
+        const result = await this.service.getLikeActivities(page, size)
+        return result
       }
 
       case Activity.ReadDuration: {
-        return this.service.getReadDurationActivities(page, size)
+        const result = await this.service.getReadDurationActivities(page, size)
+        return result
       }
     }
+    return null
   }
 
   @Post('/presence/update')
@@ -92,11 +99,11 @@ export class ActivityController {
     @IpLocation() location: IpRecord,
   ) {
     await this.service.updatePresence(body, location.ip)
+    return OK_DATA
   }
 
   @Get('/presence')
   @HTTPDecorators.SkipLogging
-  @HTTPDecorators.Bypass
   async getPresence(@Query() query: GetPresenceQueryDto) {
     const roomPresence = await this.service.getRoomPresence(query.room_name)
 
@@ -104,21 +111,13 @@ export class ActivityController {
       .map((item) => item.readerId)
       .filter(Boolean) as string[]
     const readerRows = await this.readerService.findReaderInIds(readerIds)
-    const readers = readerRows.map((item) =>
-      snakecaseKeysWithCompat({
-        ...item,
-        id: item.id,
-      }),
-    )
+    const readers = readerRows.map((item) => ({ ...item, id: item.id }))
 
     return {
-      data: keyBy(
-        roomPresence.map(({ ip, ...item }) => {
-          return snakecaseKeysWithCompat(item)
-        }),
+      presence: keyBy(
+        roomPresence.map(({ ip, ...item }) => item),
         'identity',
       ),
-
       readers: keyBy(readers, 'id'),
     }
   }
@@ -129,16 +128,18 @@ export class ActivityController {
     @Param() params: ActivityTypeParamsDto,
     @Body() body: ActivityDeleteDto,
   ) {
-    return this.service.deleteActivityByType(
+    const result = await this.service.deleteActivityByType(
       params.type,
       body.before ? new Date(body.before) : new Date(),
     )
+    return result
   }
 
   @Auth()
   @Delete('/all')
   async deleteAllPresence() {
-    return this.service.deleteAll()
+    const result = await this.service.deleteAll()
+    return result
   }
 
   @Get('/rooms')
@@ -200,7 +201,8 @@ export class ActivityController {
     const top = query.top ?? 5
     const days = query.days ?? 14
     const result = await this.service.getTopReadings(top, days)
-    return this.translateReadingList(result, lang)
+    const data = await this.translateReadingList(result, lang)
+    return data
   }
 
   @Auth()
@@ -218,7 +220,8 @@ export class ActivityController {
       endAt,
       limit,
     )
-    return this.translateReadingList(result, lang)
+    const data = await this.translateReadingList(result, lang)
+    return data
   }
 
   private async translateReadingList(
@@ -334,7 +337,8 @@ export class ActivityController {
     const fromDate = new Date(query.from)
     if (fromDate > new Date()) return []
 
-    const { post, note } = await this.getRecentActivities(lang)
+    const result = await this.getRecentActivities(lang)
+    const { post, note } = result
     const isAfter = (item: any) => new Date(item.createdAt) > fromDate
 
     const postList = post.filter(isAfter).map((item) => ({

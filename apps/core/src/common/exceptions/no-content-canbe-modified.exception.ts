@@ -1,8 +1,7 @@
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { BizException } from './biz.exception'
+import { AppException } from '~/common/response/error.types'
 
-export class NoContentCanBeModifiedException extends BizException {
+export class NoContentCanBeModifiedException extends AppException {
   constructor() {
-    super(ErrorCodeEnum.NoContentCanBeModified)
+    super('NO_CONTENT_MODIFIABLE', '内容不存在，没有内容可被修改', 400)
   }
 }

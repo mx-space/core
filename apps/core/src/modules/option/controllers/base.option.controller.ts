@@ -1,6 +1,7 @@
 import { Body, Get, Param, Patch } from '@nestjs/common'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
+
 import { BizException } from '~/common/exceptions/biz.exception'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import {
   attachAiProviderOptionsToFormDSL,
@@ -9,9 +10,11 @@ import {
 import { sanitizeConfigForResponse } from '~/modules/configs/configs.encrypt.util'
 import { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
+
 import { OptionController } from '../option.decorator'
 
 @OptionController()
+@ResponseV2()
 export class BaseOptionController {
   constructor(private readonly configsService: ConfigsService) {}
 
@@ -20,7 +23,6 @@ export class BaseOptionController {
     return this.configsService.getConfigForResponse()
   }
 
-  @HTTPDecorators.Bypass
   @Get('/form-schema')
   async getFormSchema() {
     const schema = generateFormDSL()
@@ -38,7 +40,7 @@ export class BaseOptionController {
     if (!value) {
       throw new BizException(ErrorCodeEnum.ConfigNotFound)
     }
-    return { data: value }
+    return value
   }
 
   @Patch('/:key')

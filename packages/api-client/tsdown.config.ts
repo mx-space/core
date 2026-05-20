@@ -12,7 +12,11 @@ const adaptorNames = readdirSync(path.resolve(__dirname, './adaptors')).map(
 export default defineConfig({
   clean: true,
   target: 'es2020',
-  entry: ['index.ts', ...adaptorNames.map((name) => `adaptors/${name}.ts`)],
+  entry: [
+    'index.ts',
+    'legacy/index.ts',
+    ...adaptorNames.map((name) => `adaptors/${name}.ts`),
+  ],
   external: adaptorNames,
   // `eager: true` runs the TypeScript compiler directly to emit declarations
   // instead of relying on rolldown-plugin-dts's bundler. The bundler chokes

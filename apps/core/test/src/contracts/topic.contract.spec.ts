@@ -95,7 +95,7 @@ describe('TopicController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
   })
 
   test('GET /topics/:id — by id, no legacy keys', async () => {
@@ -106,6 +106,6 @@ describe('TopicController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
   })
 })

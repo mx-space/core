@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/response/error.types'
 import { RecentlyController } from '~/modules/recently/recently.controller'
 
 const createController = () => {
@@ -23,7 +23,7 @@ describe('RecentlyController', () => {
 
     await expect(
       controller.getList({ before: 'b', after: 'a', size: 10 } as any),
-    ).rejects.toThrow(BizException)
+    ).rejects.toThrow(AppException)
     expect(service.getOffset).not.toHaveBeenCalled()
   })
 
@@ -36,7 +36,7 @@ describe('RecentlyController', () => {
         { attitude: 'like' } as any,
         { ip: '127.0.0.1' } as any,
       ),
-    ).resolves.toEqual({ code: 1 })
+    ).resolves.toEqual({ data: { code: 1 } })
 
     expect(service.updateAttitude).toHaveBeenCalledWith({
       id: 'recent-1',

@@ -238,7 +238,7 @@ describe('CommentController admin contract (e2e)', () => {
     const body = res.json()
     assertNoLegacyKeys(body, { allowed: ALLOWED_LEGACY_KEYS })
     assertLowercaseRefType(body)
-    assertHasKeys(body, COMMENT_DETAIL_REQUIRED_KEYS)
+    assertHasKeys(body.data, COMMENT_DETAIL_REQUIRED_KEYS)
   })
 
   test('GET /comments (admin list) — ref hydrated for post/note rows', async () => {
@@ -292,7 +292,7 @@ describe('CommentController admin contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeysDeep(body, [
+    assertHasKeysDeep(body.data, [
       'parent.id',
       'parent.author',
       'parent.text',
@@ -300,7 +300,7 @@ describe('CommentController admin contract (e2e)', () => {
     ])
     // The parent surface is slimmed to a four-key preview to avoid leaking
     // ip/agent/mail/etc. on the public detail endpoint.
-    expect(Object.keys(body.parent).sort()).toEqual([
+    expect(Object.keys(body.data.parent).sort()).toEqual([
       'author',
       'id',
       'is_deleted',

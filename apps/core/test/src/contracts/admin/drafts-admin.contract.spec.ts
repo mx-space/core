@@ -47,7 +47,17 @@ const draftServiceProvider = {
   provide: DraftService,
   useValue: {
     async list() {
-      return { data: [fixtureDraft()] }
+      return {
+        data: [fixtureDraft()],
+        pagination: {
+          total: 1,
+          currentPage: 1,
+          totalPage: 1,
+          size: 10,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      }
     },
     async count() {
       return 1
@@ -115,6 +125,6 @@ describe('DraftController admin contract (e2e)', () => {
     const body = res.json()
     assertNoLegacyKeys(body)
     assertLowercaseRefType(body)
-    assertHasKeys(body, DRAFT_REQUIRED_KEYS)
+    assertHasKeys(body.data, DRAFT_REQUIRED_KEYS)
   })
 })

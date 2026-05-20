@@ -1,13 +1,13 @@
-import { Pool } from 'pg'
+import type { Pool } from 'pg'
+import {
+  createPgTestDatabase,
+  type PgTestDatabase,
+} from 'test/helper/pg-verify-url'
 
 import { notes } from '~/database/schema'
 import { NoteRepository } from '~/modules/note/note.repository'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import {
-  createPgTestDatabase,
-  type PgTestDatabase,
-} from 'test/helper/pg-verify-url'
 
 describe('NoteRepository', () => {
   let context: PgTestDatabase

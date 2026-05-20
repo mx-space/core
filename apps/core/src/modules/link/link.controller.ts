@@ -4,8 +4,10 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { OK_DATA, withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { BasePgCrudFactory } from '~/transformers/crud-factor.pg.transformer'
@@ -19,6 +21,7 @@ import { LinkState } from './link.types'
 const paths = ['links', 'friends']
 
 @ApiController(paths)
+@ResponseV2()
 export class LinkControllerCrud extends BasePgCrudFactory({
   repository: LinkRepository,
 }) {
@@ -34,33 +37,40 @@ export class LinkControllerCrud extends BasePgCrudFactory({
     if (!hasAdminAccess) {
       result.data = result.data.map((row) => ({ ...row, email: null }))
     }
-    return result
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder().pagination(result.pagination).build(),
+    )
   }
 
   @Get('/all')
   async getAll(@HasAdminAccess() hasAdminAccess: boolean) {
     const rows = await this.repository.findAvailable()
-    if (hasAdminAccess) return rows
-    return rows.map((row) => ({ ...row, email: null }))
+    const data = hasAdminAccess
+      ? rows
+      : rows.map((row) => ({ ...row, email: null }))
+    return data
   }
 }
 
 @ApiController(paths)
+@ResponseV2()
 export class LinkController {
   constructor(private readonly linkService: LinkService) {}
 
   @Get('/audit')
   async canApplyLink() {
-    return { can: await this.linkService.canApplyLink() }
+    const can = await this.linkService.canApplyLink()
+    return { can }
   }
 
   @Get('/state')
   @Auth()
   async getLinkCount() {
-    return this.linkService.getCount()
+    const data = await this.linkService.getCount()
+    return data
   }
 
-  /** 申请友链 */
   @Post('/audit')
   @HTTPDecorators.Idempotence({
     expired: 20,
@@ -68,12 +78,13 @@ export class LinkController {
   })
   async applyForLink(@Body() body: LinkDto) {
     if (!(await this.linkService.canApplyLink())) {
-      throw new BizException(ErrorCodeEnum.LinkApplyDisabled)
+      throw createAppException(AppErrorCode.LINK_APPLY_DISABLED)
     }
     await this.linkService.applyForLink(body as any)
     scheduleManager.schedule(async () => {
       await this.linkService.sendToOwner(body.author, body as any)
     })
+    return OK_DATA
   }
 
   @Patch('/audit/:id')
@@ -98,18 +109,20 @@ export class LinkController {
     const { id } = params
     const { reason, state } = body
     await this.linkService.sendAuditResultByEmail(id, reason, state)
+    return OK_DATA
   }
 
   @Auth()
   @Get('/health')
   async checkHealth() {
-    return this.linkService.checkLinkHealth()
+    const data = await this.linkService.checkLinkHealth()
+    return data
   }
 
-  /** 批量迁移已通过友链的外部头像为内部链接 */
   @Post('/avatar/migrate')
   @Auth()
   async migrateExternalAvatars() {
-    return this.linkService.migrateExternalAvatarsForPassedLinks()
+    const data = await this.linkService.migrateExternalAvatarsForPassedLinks()
+    return data
   }
 }

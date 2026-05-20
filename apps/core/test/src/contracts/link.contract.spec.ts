@@ -84,7 +84,7 @@ describe('LinkController contract (e2e)', () => {
     ],
   })
 
-  test('GET /links — list, no legacy keys, PG timestamps', async () => {
+  test('GET /links — list, envelope wrapped, PG timestamps', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
       url: `${apiRoutePrefix}/links`,
@@ -96,7 +96,7 @@ describe('LinkController contract (e2e)', () => {
     assertPgTimestamps(body.data[0])
   })
 
-  test('GET /links/all — public friend list, no email leakage, no legacy keys', async () => {
+  test('GET /links/all — public friend list, no email leakage, envelope wrapped', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
       url: `${apiRoutePrefix}/links/all`,
@@ -110,7 +110,7 @@ describe('LinkController contract (e2e)', () => {
     expect(body.data[0].email).toBeNull()
   })
 
-  test('GET /links/audit — application gate flag', async () => {
+  test('GET /links/audit — application gate flag, envelope wrapped', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
       url: `${apiRoutePrefix}/links/audit`,
@@ -118,6 +118,6 @@ describe('LinkController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    expect(typeof body.can).toBe('boolean')
+    expect(typeof body.data.can).toBe('boolean')
   })
 })

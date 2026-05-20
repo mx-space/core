@@ -162,15 +162,10 @@ const commentServiceProvider = {
     },
     async getThreadReplies() {
       return {
-        data: [fixtureComment({ parentCommentId: '7000000000000000100' })],
-        pagination: {
-          total: 1,
-          currentPage: 1,
-          totalPage: 1,
-          size: 10,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
+        replies: [fixtureComment({ parentCommentId: '7000000000000000100' })],
+        remaining: 0,
+        done: true,
+        nextCursor: null,
       }
     },
   },
@@ -240,7 +235,7 @@ describe('CommentController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body, { allowed: allowedCommentKeys })
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
     assertLowercaseRefType(body)
   })
 
@@ -264,9 +259,9 @@ describe('CommentController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    expect(Array.isArray(body.data)).toBe(true)
+    expect(Array.isArray(body.data.replies)).toBe(true)
     assertNoLegacyKeys(body, { allowed: allowedCommentKeys })
-    assertPgTimestamps(body.data[0])
+    assertPgTimestamps(body.data.replies[0])
     assertLowercaseRefType(body)
   })
 
@@ -298,7 +293,7 @@ describe('CommentController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeysDeep(body, ['ref.id', 'ref.title', 'ref.slug'])
+    assertHasKeysDeep(body.data, ['ref.id', 'ref.title', 'ref.slug'])
   })
 
   test('SDK shape — every CommentModel key + parent + ref + mail present on admin list', async () => {
@@ -320,7 +315,7 @@ describe('CommentController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeys(body, EXPECTED_COMMENT_MODEL_KEYS)
-    assertHasKeys(body, ['parent', 'ref'])
+    assertHasKeys(body.data, EXPECTED_COMMENT_MODEL_KEYS)
+    assertHasKeys(body.data, ['parent', 'ref'])
   })
 })

@@ -152,13 +152,15 @@ describe('Admin contract — GET /aggregate/stat (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
 
-    assertHasKeys(body, EXPECTED_AGGREGATE_STAT_KEYS)
-    expect(body.recently).toBe(STAT_FIXTURE.recently)
-    expect(body.online).toBe(STAT_FIXTURE.online)
-    expect(body.today_max_online).toBe(STAT_FIXTURE.todayMaxOnline)
-    expect(body.today_online_total).toBe(STAT_FIXTURE.todayOnlineTotal)
-    expect(body.all_comments).toBe(STAT_FIXTURE.allComments)
-    expect(body.link_apply).toBe(STAT_FIXTURE.linkApply)
-    expect(body.today_ip_access_count).toBe(STAT_FIXTURE.todayIpAccessCount)
+    assertHasKeys(body.data, EXPECTED_AGGREGATE_STAT_KEYS)
+    expect(body.data.recently).toBe(STAT_FIXTURE.recently)
+    expect(body.data.online).toBe(STAT_FIXTURE.online)
+    expect(body.data.today_max_online).toBe(STAT_FIXTURE.todayMaxOnline)
+    expect(body.data.today_online_total).toBe(STAT_FIXTURE.todayOnlineTotal)
+    expect(body.data.all_comments).toBe(STAT_FIXTURE.allComments)
+    expect(body.data.link_apply).toBe(STAT_FIXTURE.linkApply)
+    expect(body.data.today_ip_access_count).toBe(
+      STAT_FIXTURE.todayIpAccessCount,
+    )
   })
 })

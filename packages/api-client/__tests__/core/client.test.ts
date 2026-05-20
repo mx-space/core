@@ -277,6 +277,76 @@ describe('test client', () => {
     }
   })
 
+  it('should camelCase $meta from snake_case wire response', async () => {
+    const client = generateClient<AxiosResponse>(axiosAdaptor)
+    spyOn(axiosAdaptor, 'get').mockImplementation((url) => {
+      if (url === 'http://127.0.0.1:2323/a') {
+        return Promise.resolve({
+          data: {
+            data: { id: '1' },
+            meta: {
+              interaction: {
+                is_liked: true,
+                like_count: 3,
+                read_count: 7,
+              },
+            },
+          },
+          status: 200,
+        })
+      }
+      return Promise.resolve({ data: null })
+    })
+
+    const res = await client.proxy.a.get()
+    expect(res.$meta).toBeDefined()
+    expect(res.$meta.interaction).toStrictEqual({
+      isLiked: true,
+      likeCount: 3,
+      readCount: 7,
+    })
+  })
+
+  it('should honor custom transformResponse for $meta', async () => {
+    const client = generateClient<AxiosResponse>(axiosAdaptor)
+    spyOn(axiosAdaptor, 'get').mockImplementation((url) => {
+      if (url === 'http://127.0.0.1:2323/a') {
+        return Promise.resolve({
+          data: {
+            data: { id: '1' },
+            meta: { interaction: { is_liked: false } },
+          },
+          status: 200,
+        })
+      }
+      return Promise.resolve({ data: null })
+    })
+
+    const res = await client.proxy.a.get({
+      transformResponse: (payload) => ({ transformed: true, ...payload }),
+    })
+    expect(res.$meta).toMatchObject({ transformed: true })
+    expect(res.$meta.interaction).toStrictEqual({ is_liked: false })
+  })
+
+  it('should leave $meta undefined when response body has no meta key', async () => {
+    const client = generateClient<AxiosResponse>(axiosAdaptor)
+    spyOn(axiosAdaptor, 'get').mockImplementation((url) => {
+      if (url === 'http://127.0.0.1:2323/a') {
+        return Promise.resolve({
+          data: {
+            data: { id: '1' },
+          },
+          status: 200,
+        })
+      }
+      return Promise.resolve({ data: null })
+    })
+
+    const res = await client.proxy.a.get()
+    expect(res.$meta).toBeUndefined()
+  })
+
   it('should throw custom exception', async () => {
     class MyRequestError extends Error {
       constructor(

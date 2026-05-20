@@ -1,11 +1,15 @@
 import { Body, Delete, Get, Put, Query } from '@nestjs/common'
+
 import { BizException } from '~/common/exceptions/biz.exception'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EmailService } from '~/processors/helper/helper.email.service'
+
 import { OptionController } from '../option.decorator'
 import { EmailTemplateBodyDto, EmailTemplateTypeDto } from '../option.schema'
 
 @OptionController('Email', 'email')
+@ResponseV2()
 export class EmailOptionController {
   constructor(private readonly emailService: EmailService) {}
 

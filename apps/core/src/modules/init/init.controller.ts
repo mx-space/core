@@ -2,8 +2,8 @@ import { Body, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common'
 import type { FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
 
@@ -16,21 +16,21 @@ import { InitService } from './init.service'
 
 @ApiController('/init')
 @UseGuards(InitGuard)
+@ResponseV2()
 export class InitController {
   constructor(
     private readonly configs: ConfigsService,
-
     private readonly initService: InitService,
-
     private readonly backupService: BackupService,
     private readonly uploadService: UploadService,
   ) {}
 
-  private async assertNotInitialized(
-    code: ErrorCodeEnum = ErrorCodeEnum.InitAlreadyCompleted,
-  ) {
+  private async assertNotInitialized(forbiddenMode = false) {
     if (await this.initService.isInit()) {
-      throw new BizException(code)
+      if (forbiddenMode) {
+        throw createAppException(AppErrorCode.INIT_FORBIDDEN)
+      }
+      throw createAppException(AppErrorCode.INIT_ALREADY_COMPLETED)
     }
   }
 
@@ -43,7 +43,7 @@ export class InitController {
 
   @Get('/configs/default')
   async getDefaultConfig() {
-    await this.assertNotInitialized(ErrorCodeEnum.InitForbidden)
+    await this.assertNotInitialized(true)
     return this.configs.defaultConfig
   }
 
@@ -54,7 +54,7 @@ export class InitController {
   ) {
     await this.assertNotInitialized()
     if (typeof body !== 'object') {
-      throw new BizException(ErrorCodeEnum.InvalidBody)
+      throw createAppException(AppErrorCode.INIT_INVALID_BODY)
     }
     return this.configs.patchAndValid(params.key, body)
   }
@@ -72,7 +72,7 @@ export class InitController {
     })
     const { mimetype } = data
     if (!isZipMinetype(mimetype)) {
-      throw new BizException(ErrorCodeEnum.MineZip, `got: ${mimetype}`)
+      throw createAppException(AppErrorCode.INIT_INVALID_MIME_TYPE, { got: mimetype })
     }
 
     await this.backupService.saveTempBackupByUpload(await data.toBuffer())

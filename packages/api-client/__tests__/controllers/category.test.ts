@@ -22,7 +22,7 @@ describe('test Category client', () => {
     })
 
     const data = await client.category.getAllCategories()
-    expect(data.$raw.data).toEqual(mocked)
+    expect(data.$raw.data.data).toEqual(mocked)
     expect(data.data).toEqual(mocked.data)
   })
 
@@ -171,7 +171,7 @@ describe('test Category client', () => {
 
     const data = await client.category.getAllCategories()
     expect(data.data).toEqual(mocked.data)
-    expect(data.$raw.data).toEqual(mocked)
+    expect(data.$raw.data.data).toEqual(mocked)
   })
 
   test('GET /categories?type=1', async () => {
@@ -189,7 +189,7 @@ describe('test Category client', () => {
     })
     const data = await client.category.getAllTags()
     expect(data.data).toEqual(mocked.data)
-    expect(data.$raw.data).toEqual(mocked)
+    expect(data.$raw.data.data).toEqual(mocked)
   })
 
   describe('GET /categories?ids=', () => {
@@ -274,7 +274,7 @@ describe('test Category client', () => {
         ]),
       )
 
-      expect(data.$raw.data).toEqual(mocked)
+      expect(data.$raw.data.data).toEqual(mocked)
     })
 
     it('should get with single id', async () => {
@@ -317,7 +317,7 @@ describe('test Category client', () => {
         }),
       )
 
-      expect(data.$raw.data).toEqual(mocked)
+      expect(data.$raw.data.data).toEqual(mocked)
     })
   })
 })

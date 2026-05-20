@@ -14,6 +14,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { RawResponse } from '~/common/response/raw-response.decorator'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import {
   applyRawCorsHeaders,
@@ -34,16 +36,16 @@ import { AiAgentChatService } from './ai-agent-chat.service'
 import { AiAgentConversationService } from './ai-agent-conversation.service'
 
 @ApiController('ai/agent')
+@ResponseV2()
 export class AiAgentController {
   constructor(
     private readonly chatService: AiAgentChatService,
     private readonly conversationService: AiAgentConversationService,
   ) {}
 
-  // --- Chat Proxy ---
-
   @Post('/chat')
   @Auth()
+  @RawResponse
   async chatProxy(
     @Body() body: ChatProxyDto,
     @Req() request: FastifyRequest,
@@ -77,7 +79,6 @@ export class AiAgentController {
       return
     }
 
-    // Pipe raw SSE stream through to client
     applyRawCorsHeaders(reply, request)
     reply.raw.setHeader('Content-Type', 'text/event-stream')
     reply.raw.setHeader('Cache-Control', 'no-cache, no-transform')
@@ -100,24 +101,28 @@ export class AiAgentController {
     }
   }
 
-  // --- Conversation CRUD ---
-
   @Post('/conversations')
   @Auth()
   async createConversation(@Body() body: CreateConversationDto) {
-    return this.conversationService.create(body)
+    const data = await this.conversationService.create(body)
+    return data
   }
 
   @Get('/conversations')
   @Auth()
   async listConversations(@Query() query: ListConversationsQueryDto) {
-    return this.conversationService.listByRef(query.refId, query.refType)
+    const data = await this.conversationService.listByRef(
+      query.refId,
+      query.refType,
+    )
+    return data
   }
 
   @Get('/conversations/:id')
   @Auth()
   async getConversation(@Param() params: EntityIdDto) {
-    return this.conversationService.getById(params.id)
+    const data = await this.conversationService.getById(params.id)
+    return data
   }
 
   @Patch('/conversations/:id')
@@ -126,7 +131,8 @@ export class AiAgentController {
     @Param() params: EntityIdDto,
     @Body() body: UpdateConversationDto,
   ) {
-    return this.conversationService.updateById(params.id, body)
+    const data = await this.conversationService.updateById(params.id, body)
+    return data
   }
 
   @Patch('/conversations/:id/messages')
@@ -135,7 +141,11 @@ export class AiAgentController {
     @Param() params: EntityIdDto,
     @Body() body: AppendMessagesDto,
   ) {
-    return this.conversationService.appendMessages(params.id, body.messages)
+    const data = await this.conversationService.appendMessages(
+      params.id,
+      body.messages,
+    )
+    return data
   }
 
   @Put('/conversations/:id/messages')
@@ -144,12 +154,17 @@ export class AiAgentController {
     @Param() params: EntityIdDto,
     @Body() body: ReplaceMessagesDto,
   ) {
-    return this.conversationService.replaceMessages(params.id, body.messages)
+    const data = await this.conversationService.replaceMessages(
+      params.id,
+      body.messages,
+    )
+    return data
   }
 
   @Delete('/conversations/:id')
   @Auth()
   async deleteConversation(@Param() params: EntityIdDto) {
-    return this.conversationService.deleteById(params.id)
+    const data = await this.conversationService.deleteById(params.id)
+    return data
   }
 }

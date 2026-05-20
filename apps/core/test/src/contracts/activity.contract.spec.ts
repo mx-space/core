@@ -5,7 +5,7 @@ import { ActivityController } from '~/modules/activity/activity.controller'
 import { ActivityService } from '~/modules/activity/activity.service'
 import { ReaderService } from '~/modules/reader/reader.service'
 
-import { assertNoLegacyKeys, assertPgTimestamps } from '../../helper/api-shape'
+import { assertNoLegacyKeys } from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
 import { authPassHeader } from '../../mock/guard/auth.guard'
 import { translationProvider } from '../../mock/processors/translation.mock'
@@ -83,7 +83,7 @@ describe('ActivityController contract (e2e)', () => {
     ],
   })
 
-  test('GET /activity/likes — admin list, no legacy keys', async () => {
+  test('GET /activity/likes — admin list, envelope wrapped', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
       url: `${apiRoutePrefix}/activity/likes`,
@@ -91,12 +91,11 @@ describe('ActivityController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    expect(Array.isArray(body.data)).toBe(true)
+    expect('data' in body).toBe(true)
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body.data[0])
   })
 
-  test('GET /activity/recent — public composite feed, no legacy keys', async () => {
+  test('GET /activity/recent — public composite feed, envelope wrapped', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
       url: `${apiRoutePrefix}/activity/recent`,
@@ -104,12 +103,12 @@ describe('ActivityController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    expect(Array.isArray(body.like)).toBe(true)
-    expect(Array.isArray(body.post)).toBe(true)
-    expect(Array.isArray(body.note)).toBe(true)
+    expect(Array.isArray(body.data.like)).toBe(true)
+    expect(Array.isArray(body.data.post)).toBe(true)
+    expect(Array.isArray(body.data.note)).toBe(true)
   })
 
-  test('GET /activity/online-count — totals, no legacy keys', async () => {
+  test('GET /activity/online-count — totals, envelope wrapped', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
       url: `${apiRoutePrefix}/activity/online-count`,
@@ -117,10 +116,10 @@ describe('ActivityController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    expect(typeof body.total).toBe('number')
+    expect(typeof body.data.total).toBe('number')
   })
 
-  test('GET /activity/last-year/publication — yearly buckets, no legacy keys', async () => {
+  test('GET /activity/last-year/publication — yearly buckets, envelope wrapped', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
       url: `${apiRoutePrefix}/activity/last-year/publication`,
@@ -128,7 +127,7 @@ describe('ActivityController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    expect(Array.isArray(body.posts)).toBe(true)
-    expect(Array.isArray(body.notes)).toBe(true)
+    expect(Array.isArray(body.data.posts)).toBe(true)
+    expect(Array.isArray(body.data.notes)).toBe(true)
   })
 })

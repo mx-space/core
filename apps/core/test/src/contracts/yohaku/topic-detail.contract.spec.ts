@@ -87,8 +87,8 @@ describe('Yohaku contract — topic detail (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
-    assertHasKeys(body, [
+    assertPgTimestamps(body.data)
+    assertHasKeys(body.data, [
       'id',
       'name',
       'slug',

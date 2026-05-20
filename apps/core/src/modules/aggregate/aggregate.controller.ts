@@ -7,7 +7,10 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
-import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
+import { withMeta } from '~/common/response/envelope.types'
+import type { EntryTranslation } from '~/common/response/meta.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 
@@ -34,6 +37,7 @@ type TitledItem = {
 } & Record<string, any>
 
 @ApiController('aggregate')
+@ResponseV2()
 export class AggregateController {
   constructor(
     private readonly aggregateService: AggregateService,
@@ -46,19 +50,10 @@ export class AggregateController {
   ) {}
 
   private async getThemeConfig(theme?: string, lang?: string) {
-    if (!theme) {
-      return
-    }
-
+    if (!theme) return
     const baseConfig = await this.getSnippetData('theme', theme)
-    if (!baseConfig) {
-      return
-    }
-
-    if (!lang) {
-      return baseConfig
-    }
-
+    if (!baseConfig) return
+    if (!lang) return baseConfig
     const langOverlay = await this.getSnippetData('theme', `${theme}.${lang}`)
     if (
       !langOverlay ||
@@ -67,7 +62,6 @@ export class AggregateController {
     ) {
       return baseConfig
     }
-
     return merge({}, baseConfig, langOverlay)
   }
 
@@ -117,17 +111,17 @@ export class AggregateController {
     return {
       user,
       seo,
-      url: omit(url, ['adminUrl']),
-      commentOptions: commentOptions
+      url: url ? omit(url, ['adminUrl']) : url,
+      comment_options: commentOptions
         ? {
-            disableComment: commentOptions.disableComment ?? false,
-            allowGuestComment: commentOptions.allowGuestComment ?? true,
+            disable_comment: commentOptions.disableComment ?? false,
+            allow_guest_comment: commentOptions.allowGuestComment ?? true,
           }
         : undefined,
-      latestNoteId,
+      latest_note_id: latestNoteId,
       theme: themeConfig,
       ai: {
-        enableSummary: aiConfig?.enableSummary ?? false,
+        enable_summary: aiConfig?.enableSummary ?? false,
       },
     }
   }
@@ -149,20 +143,14 @@ export class AggregateController {
       user: {
         id: user.id,
         name: user.name,
-        socialIds: user.socialIds,
+        social_ids: user.socialIds,
       },
       seo,
-      url: {
-        webUrl: url.webUrl,
-      },
+      url: { web_url: url.webUrl },
     }
   }
 
   @Get('/top')
-  @TranslateFields(
-    { path: 'notes[].mood', keyPath: 'note.mood' },
-    { path: 'notes[].weather', keyPath: 'note.weather' },
-  )
   async top(
     @Query() query: TopQueryDto,
     @HasAdminAccess() isAuthenticated: boolean,
@@ -174,112 +162,105 @@ export class AggregateController {
       isAuthenticated,
     )
 
-    if (lang) {
-      if (result.posts?.length) {
-        result.posts = (await this.translateTitleWithMeta(
-          result.posts as TitledItem[],
-          lang,
-        )) as unknown as typeof result.posts
-      }
-      if (result.notes?.length) {
-        result.notes = (await this.translateTitleWithMeta(
-          result.notes as TitledItem[],
-          lang,
-        )) as unknown as typeof result.notes
-      }
-    }
+    if (!lang) return result
 
-    return result
+    const translationMap = await this.buildTitleTranslationMap(
+      [
+        ...((result.posts ?? []) as TitledItem[]),
+        ...((result.notes ?? []) as TitledItem[]),
+      ],
+      lang,
+    )
+    if (translationMap.size === 0) return result
+
+    return withMeta(
+      result,
+      new MetaObjectBuilder().translation(translationMap).build(),
+    )
   }
 
   @Get('/latest')
-  @TranslateFields(
-    { path: 'notes[].mood', keyPath: 'note.mood' },
-    { path: 'notes[].weather', keyPath: 'note.weather' },
-    { path: 'data[].mood', keyPath: 'note.mood' },
-    { path: 'data[].weather', keyPath: 'note.weather' },
-  )
   async getLatest(@Query() query: LatestQueryDto, @Lang() lang?: string) {
     const { limit = 5, types, combined = false } = query
     const result = await this.aggregateService.getLatest(limit, types, combined)
 
     if (!lang) return result
 
-    if (combined) {
-      return this.translateTitleWithMeta(result as TitledItem[], lang)
-    }
+    const items: TitledItem[] = combined
+      ? (result as TitledItem[])
+      : [
+          ...(((result as Record<string, any>).posts ?? []) as TitledItem[]),
+          ...(((result as Record<string, any>).notes ?? []) as TitledItem[]),
+        ]
+    const translationMap = await this.buildTitleTranslationMap(items, lang)
+    if (translationMap.size === 0) return result
 
-    const data = result as Record<string, any>
-    if (data.posts?.length) {
-      data.posts = await this.translateTitleWithMeta(data.posts, lang)
-    }
-    if (data.notes?.length) {
-      data.notes = await this.translateTitleWithMeta(data.notes, lang)
-    }
-    return data
+    return withMeta(
+      result,
+      new MetaObjectBuilder().translation(translationMap).build(),
+    )
   }
 
   @Get('/timeline')
-  @TranslateFields(
-    { path: 'data.notes[].mood', keyPath: 'note.mood' },
-    { path: 'data.notes[].weather', keyPath: 'note.weather' },
-    {
-      path: 'data.posts[].category.name',
-      keyPath: 'category.name',
-      idField: 'id',
-    },
-  )
   async getTimeline(@Query() query: TimelineQueryDto, @Lang() lang?: string) {
     const { sort = 1, type, year } = query
     const data = await this.aggregateService.getTimeline(year, type, sort)
 
-    if (lang && data.posts?.length) {
-      data.posts = (await this.translateTitleWithMeta(
-        data.posts as unknown as TitledItem[],
-        lang,
-      )) as unknown as typeof data.posts
-    }
-    if (lang && data.notes?.length) {
-      data.notes = (await this.translateTitleWithMeta(
-        data.notes as unknown as TitledItem[],
-        lang,
-      )) as unknown as typeof data.notes
-    }
+    if (!lang) return data
 
-    return { data }
+    const translationMap = await this.buildTitleTranslationMap(
+      [
+        ...((data.posts ?? []) as unknown as TitledItem[]),
+        ...((data.notes ?? []) as unknown as TitledItem[]),
+      ],
+      lang,
+    )
+    if (translationMap.size === 0) return data
+
+    return withMeta(
+      data,
+      new MetaObjectBuilder().translation(translationMap).build(),
+    )
   }
 
-  private translateTitleWithMeta<T extends TitledItem>(
-    items: T[],
+  private async buildTitleTranslationMap(
+    items: TitledItem[],
     targetLang: string,
-  ) {
-    return this.translationService.translateList({
-      items,
-      targetLang,
-      translationFields: ['title', 'translationMeta'] as const,
-      getInput: (item) => ({
+  ): Promise<Map<string, EntryTranslation>> {
+    const map = new Map<string, EntryTranslation>()
+    if (!items.length) return map
+
+    const results = await this.translationService.translateArticleList({
+      articles: items.map((item) => ({
         id: String(item.id),
         title: item.title ?? '',
+        text: '',
         createdAt: item.createdAt,
         modifiedAt: item.modifiedAt,
-      }),
-      applyResult: (item, translation) => {
-        if (!translation?.isTranslated) return item
-        return {
-          ...item,
-          title: translation.title,
-          isTranslated: true,
-          translationMeta: translation.translationMeta,
-        }
-      },
+      })),
+      targetLang,
+      translationFields: ['title'] as const,
     })
+
+    for (const [id, translation] of results) {
+      if (translation?.isTranslated) {
+        map.set(id, {
+          article: {
+            is_translated: true,
+            target_lang: targetLang,
+            title: translation.title,
+          },
+        })
+      }
+    }
+    return map
   }
 
   @Get('/sitemap')
   @CacheKey(CacheKeys.SiteMap)
   @CacheTTL(3600)
   async getSiteMapContent() {
-    return { data: await this.aggregateService.getSiteMapContent() }
+    return await this.aggregateService.getSiteMapContent()
   }
 
   @Get('/feed')
@@ -297,29 +278,55 @@ export class AggregateController {
       this.analyzeService.getCallTime(),
       this.analyzeService.getTodayAccessIp(),
     ])
+    const c = count as Record<string, any>
+    const ct = callTime as Record<string, any>
     return {
-      ...count,
-      ...callTime,
-      todayIpAccessCount: todayIpAccess.length,
+      posts: c.posts,
+      notes: c.notes,
+      pages: c.pages,
+      says: c.says,
+      comments: c.comments,
+      all_comments: c.allComments ?? c.all_comments,
+      unread_comments: c.unreadComments ?? c.unread_comments,
+      links: c.links,
+      link_apply: c.linkApply ?? c.link_apply,
+      categories: c.categories,
+      recently: c.recently,
+      online: c.online,
+      today_max_online: c.todayMaxOnline ?? c.today_max_online,
+      today_online_total: c.todayOnlineTotal ?? c.today_online_total,
+      call_time: ct.callTime ?? ct.call_time,
+      uv: ct.uv,
+      today_ip_access_count: todayIpAccess.length,
     }
   }
 
   @Get('/count_read_and_like')
   async getAllReadAndLikeCount(@Query() query: ReadAndLikeCountTypeDto) {
     const { type = ReadAndLikeCountDocumentType.All } = query
-    return await this.aggregateService.getAllReadAndLikeCount(type)
+    const result = await this.aggregateService.getAllReadAndLikeCount(type)
+    return {
+      total_likes: (result as any).totalLikes ?? (result as any).total_likes,
+      total_reads: (result as any).totalReads ?? (result as any).total_reads,
+    }
   }
 
   @Get('/count_site_words')
   async getSiteWords() {
-    return {
-      count: await this.aggregateService.getAllSiteWordsCount(),
-    }
+    return { count: await this.aggregateService.getAllSiteWordsCount() }
   }
 
   @Get('/site_info')
   async getSiteInfo() {
-    return await this.aggregateService.getSiteInfo()
+    const info = await this.aggregateService.getSiteInfo()
+    return {
+      post_count: (info as any).postCount ?? (info as any).post_count,
+      note_count: (info as any).noteCount ?? (info as any).note_count,
+      total_word_count:
+        (info as any).totalWordCount ?? (info as any).total_word_count,
+      first_publish_date:
+        (info as any).firstPublishDate ?? (info as any).first_publish_date,
+    }
   }
 
   @Get('/stat/category-distribution')
@@ -346,7 +353,7 @@ export class AggregateController {
     const result = await this.aggregateService.getTopArticles()
 
     if (lang && result.length) {
-      return this.translationService.translateList({
+      const translated = await this.translationService.translateList({
         items: result as Array<Record<string, any>>,
         targetLang: lang,
         translationFields: ['title'] as const,
@@ -359,6 +366,7 @@ export class AggregateController {
           return { ...item, title: translation.title }
         },
       })
+      return translated
     }
 
     return result

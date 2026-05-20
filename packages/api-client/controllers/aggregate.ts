@@ -66,7 +66,7 @@ export class AggregateController<ResponseWrapper> implements IController {
     year?: number
   }) {
     const { sort, type, year } = options || {}
-    return this.proxy.timeline.get<{ data: TimelineData }>({
+    return this.proxy.timeline.get<TimelineData>({
       params: {
         sort: sort && sortOrderToNumber(sort),
         type,

@@ -1,6 +1,8 @@
 export const REFLECTOR = 'Reflector'
 
 export const RESPONSE_PASSTHROUGH_METADATA = '__responsePassthrough__'
+export const RESPONSE_V2_METADATA = '__responseV2__'
+export const BYPASS_CASE_TRANSFORM_METADATA = '__bypassCaseTransform__'
 // @nestjs/schedule
 
 // ESM requires explicit extension for deep imports under Node (e.g. Node 24+).

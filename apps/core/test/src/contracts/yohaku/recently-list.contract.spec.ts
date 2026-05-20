@@ -114,7 +114,7 @@ describe('Yohaku contract — recently list (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body, { allowed: allowedRecentlyKeys })
-    assertHasKeys(body, ['id', 'content', 'up', 'down', 'created_at'])
+    assertHasKeys(body.data, ['id', 'content', 'up', 'down', 'created_at'])
   })
 
   test('GET /recently — ref hydrated for rows with refId', async () => {

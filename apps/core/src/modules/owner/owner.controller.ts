@@ -4,7 +4,7 @@ import { RequestContext } from '~/common/contexts/request.context'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 
 import { AuthService } from '../auth/auth.service'
 import { ConfigsService } from '../configs/configs.service'
@@ -12,6 +12,7 @@ import { OwnerPatchDto } from './owner.schema'
 import { OwnerService } from './owner.service'
 
 @ApiController(['owner', 'user'])
+@ResponseV2()
 export class OwnerController {
   constructor(
     private readonly ownerService: OwnerService,
@@ -32,7 +33,6 @@ export class OwnerController {
 
   @Get('/allow-login')
   @HttpCache({ disable: true })
-  @HTTPDecorators.Bypass
   async allowLogin() {
     const { disablePasswordLogin } =
       await this.configsService.get('authSecurity')

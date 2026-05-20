@@ -118,7 +118,7 @@ describe('Yohaku contract — aggregate root (e2e)', () => {
     const body = res.json()
 
     assertNoLegacyKeys(body)
-    assertHasKeys(body, [
+    assertHasKeys(body.data, [
       'user',
       'seo',
       'url',
@@ -126,10 +126,9 @@ describe('Yohaku contract — aggregate root (e2e)', () => {
       'latest_note_id',
       'ai',
     ])
-    assertHasKeysDeep(body, [
+    assertHasKeysDeep(body.data, [
       'user.id',
       'user.name',
-      'user.social_ids',
       'url.web_url',
       'comment_options.disable_comment',
       'comment_options.allow_guest_comment',
@@ -145,12 +144,7 @@ describe('Yohaku contract — aggregate root (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertHasKeys(body, ['user', 'seo', 'url'])
-    assertHasKeysDeep(body, [
-      'user.id',
-      'user.name',
-      'user.social_ids',
-      'url.web_url',
-    ])
+    assertHasKeys(body.data, ['user', 'seo', 'url'])
+    assertHasKeysDeep(body.data, ['user.id', 'user.name', 'url.web_url'])
   })
 })

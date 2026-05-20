@@ -13,27 +13,30 @@ describe('test post client', () => {
   })
 
   it('should get post list filter filed', async () => {
-    const mocked = mockResponse('/posts?page=1&size=1&select=createdAt+title', {
-      data: [
-        {
-          id: '61586f7e769f07b6852f3da0',
-          title: '终于可以使用 Docker 托管整个 Mix Space 了',
-          createdAt: '2021-10-02T14:41:02.742Z',
-          category: null,
-        },
-        {
-          id: '614c539cfdf566c5d93a383f',
-          title: '再遇 Docker，容器化 Node 应用',
-          createdAt: '2021-09-23T10:14:52.491Z',
-          category: null,
-        },
-      ],
+    const items = [
+      {
+        id: '61586f7e769f07b6852f3da0',
+        title: '终于可以使用 Docker 托管整个 Mix Space 了',
+        createdAt: '2021-10-02T14:41:02.742Z',
+        category: null,
+      },
+      {
+        id: '614c539cfdf566c5d93a383f',
+        title: '再遇 Docker，容器化 Node 应用',
+        createdAt: '2021-09-23T10:14:52.491Z',
+        category: null,
+      },
+    ]
+    const pagination = { page: 1, size: 1, total: 2, total_pages: 2 }
+    mockResponse('/posts?page=1&size=1', items, 'get', undefined, {
+      pagination,
     })
 
-    const data = await client.post.getList(1, 1, {
-      select: ['createdAt', 'title'],
+    const data = await client.post.getList(1, 1)
+    expect(data).toEqual({
+      data: items,
+      pagination: { page: 1, size: 1, total: 2, totalPages: 2 },
     })
-    expect(data).toEqual(mocked)
   })
 
   it('should get latest post', async () => {

@@ -16,15 +16,17 @@ import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
-import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { withMeta } from '~/common/response/envelope.types'
+import type { EnrichmentEntry } from '~/common/response/meta.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
   type ArticleTranslationInput,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { applyContentPreference } from '~/utils/content.util'
 
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
@@ -38,9 +40,10 @@ import {
   SetPostPublishStatusDto,
 } from './post.schema'
 import { PostService } from './post.service'
-import { PostModel } from './post.types'
+import type { PostModel } from './post.types'
 
 @ApiController('posts')
+@ResponseV2()
 export class PostController {
   constructor(
     private readonly postService: PostService,
@@ -50,21 +53,176 @@ export class PostController {
     private readonly enrichmentService: EnrichmentService,
   ) {}
 
-  private async buildPostDetailResponse(
-    postDocument: PostModel,
-    query: PostDetailQueryDto,
-    ip: string,
-    isAuthenticated: boolean | undefined,
-    lang?: string,
+  @Get('/')
+  async getPaginate(
+    @Query() query: PostPagerDto,
+    @HasAdminAccess() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
+    const { size, page, year, sortBy, sortOrder, truncate, categoryIds } = query
+
+    const res = await this.postService.listPaginated({
+      size,
+      page,
+      year,
+      categoryIds,
+      publishedOnly: !isAuthenticated,
+      sortBy: sortBy as any,
+      sortOrder: sortOrder as 1 | -1 | undefined,
+    })
+
+    const translationInputs: ArticleTranslationInput[] = []
+    for (const doc of res.data) {
+      const originalText = doc.text
+      if (lang && typeof originalText === 'string') {
+        translationInputs.push({
+          id: String(doc.id),
+          title: doc.title,
+          text: originalText,
+          summary: doc.summary,
+          tags: doc.tags,
+          meta: doc.meta as { lang?: string } | undefined,
+          contentFormat: doc.contentFormat,
+          content: doc.content,
+          modifiedAt: doc.modifiedAt,
+          createdAt: doc.createdAt,
+        })
+      }
+      if (truncate) {
+        doc.text = doc.text.slice(0, truncate)
+        doc.content = null
+      }
+    }
+
+    const translationMap = new Map<string, any>()
+
+    if (lang && translationInputs.length) {
+      const translationResults =
+        await this.translationService.translateArticleList({
+          articles: translationInputs,
+          targetLang: lang,
+        })
+
+      for (const [id, translation] of translationResults) {
+        if (translation?.isTranslated) {
+          translationMap.set(id, {
+            article: {
+              is_translated: translation.isTranslated,
+              source_lang: translation.sourceLang,
+              target_lang: lang,
+              title: translation.title,
+              text: translation.text,
+              summary: translation.summary,
+              tags: translation.tags,
+            },
+          })
+        }
+      }
+    }
+
+    const metaBuilder = new MetaObjectBuilder().view('card').pagination({
+      page: res.pagination.currentPage,
+      size: res.pagination.size,
+      total: res.pagination.total,
+      total_pages: res.pagination.totalPage,
+    })
+
+    if (translationMap.size > 0) {
+      metaBuilder.translation(translationMap as any)
+    }
+
+    return withMeta(res.data, metaBuilder.build())
+  }
+
+  @Get('/get-url/:slug')
+  async getBySlug(@Param('slug') slug: string) {
+    if (typeof slug !== 'string') {
+      throw createAppException(AppErrorCode.POST_NOT_FOUND)
+    }
+    const doc = await this.postService.findBySlug(slug)
+    if (!doc) {
+      throw createAppException(AppErrorCode.POST_NOT_FOUND)
+    }
+
+    return {
+      path: `/${doc.category?.slug}/${doc.slug}`,
+    }
+  }
+
+  @Get('/latest')
+  async getLatest(
+    @IpLocation() ip: IpRecord,
+    @HasAdminAccess() isAuthenticated: boolean,
+    @Lang() lang?: string,
+  ) {
+    const [last] = await this.postService.findRecent(1, {
+      publishedOnly: !isAuthenticated,
+    })
+    if (!last) {
+      throw createAppException(AppErrorCode.POST_NOT_FOUND)
+    }
+    if (!last.category?.slug) throw createAppException(AppErrorCode.POST_NOT_FOUND)
+    return this.getByCateAndSlug(
+      { category: last.category.slug, slug: last.slug },
+      {} as any,
+      ip,
+      isAuthenticated,
+      lang,
+    )
+  }
+
+  @Get('/:id')
+  async getById(
+    @Param() params: EntityIdDto,
+    @HasAdminAccess() isAuthenticated: boolean,
+  ) {
+    const { id } = params
+    const doc = await this.postService.findById(id)
+    if (!doc) {
+      throw createAppException(AppErrorCode.POST_NOT_FOUND, { id })
+    }
+
+    if (!isAuthenticated && !doc.isPublished) {
+      throw createAppException(AppErrorCode.POST_NOT_FOUND, { id })
+    }
+
+    const { enrichments, ...docData } =
+      await this.enrichmentService.attachEnrichments(doc)
+    const metaBuilder = new MetaObjectBuilder().enrichments(
+      enrichments as Record<string, EnrichmentEntry>,
+    )
+    return withMeta(docData, metaBuilder.build())
+  }
+
+  @Get('/:category/:slug')
+  async getByCateAndSlug(
+    @Param() params: CategoryAndSlugDto,
+    @Query() query: PostDetailQueryDto,
+    @IpLocation() { ip }: IpRecord,
+    @HasAdminAccess() isAuthenticated?: boolean,
+    @Lang() lang?: string,
+  ) {
+    const { category, slug } = params
+    const postDocument = await this.postService.getPostBySlug(
+      category,
+      slug,
+      isAuthenticated,
+    )
+    if (!postDocument) {
+      throw createAppException(AppErrorCode.POST_NOT_FOUND)
+    }
+
+    if (!isAuthenticated && !postDocument.isPublished) {
+      throw createAppException(AppErrorCode.POST_NOT_FOUND)
+    }
+
     const liked = await this.countingService.getThisRecordIsLiked(
       postDocument.id,
       ip,
     )
 
-    const baseData = postDocument
-    const relatedList = Array.isArray((baseData as any).related)
-      ? ((baseData as any).related as any[])
+    const relatedList = Array.isArray((postDocument as any).related)
+      ? ((postDocument as any).related as any[])
       : []
     const relatedIds = relatedList
       .map((item) => item?.id)
@@ -78,10 +236,10 @@ export class PostController {
           targetLang: lang,
           allowHidden: Boolean(isAuthenticated),
           originalData: {
-            title: baseData.title,
-            text: baseData.text,
-            summary: baseData.summary,
-            tags: baseData.tags,
+            title: postDocument.title,
+            text: postDocument.text,
+            summary: postDocument.summary,
+            tags: postDocument.tags,
           },
         }),
         this.translationService.getCachedTitles(relatedIds, lang),
@@ -98,261 +256,57 @@ export class PostController {
         })
       : relatedList
 
-    const finalDoc = applyContentPreference(
-      {
-        ...baseData,
-        related: translatedRelated,
-        title: translationResult.title,
-        text: translationResult.text,
-        summary: translationResult.summary,
-        tags: translationResult.tags,
-        ...(translationResult.content && {
+    const { related: _related, ...postEntity } = postDocument
+    const { enrichments, ...postData } =
+      await this.enrichmentService.attachEnrichments(postEntity)
+
+    const metaBuilder = new MetaObjectBuilder()
+      .view('detail')
+      .interaction({ is_liked: liked })
+      .related(translatedRelated)
+      .insights({ has_in_locale: hasInsightsInLocale })
+      .enrichments(enrichments as Record<string, EnrichmentEntry>)
+
+    if (translationResult.isTranslated) {
+      metaBuilder.translation({
+        article: {
+          is_translated: translationResult.isTranslated,
+          source_lang: translationResult.sourceLang,
+          target_lang: lang,
+          title: translationResult.title,
+          text: translationResult.text,
+          summary: translationResult.summary,
+          tags: translationResult.tags,
           content: translationResult.content,
-          contentFormat: translationResult.contentFormat,
-        }),
-        isTranslated: translationResult.isTranslated,
-        sourceLang: translationResult.sourceLang,
-        translationMeta: translationResult.translationMeta,
-        availableTranslations: translationResult.availableTranslations,
-        hasInsightsInLocale,
-        liked,
-      },
-      query.prefer,
-    )
-    return this.enrichmentService.attachEnrichments(finalDoc)
-  }
-
-  @Get('/')
-  @TranslateFields({
-    path: 'data[].category.name',
-    keyPath: 'category.name',
-    idField: 'id',
-  })
-  async getPaginate(
-    @Query() query: PostPagerDto,
-    @HasAdminAccess() isAuthenticated: boolean,
-    @Lang() lang?: string,
-  ) {
-    const {
-      size,
-      select,
-      page,
-      year,
-      sortBy,
-      sortOrder,
-      truncate,
-      categoryIds,
-    } = query
-
-    const res = await this.postService.listPaginated({
-      size,
-      page,
-      year,
-      categoryIds,
-      publishedOnly: !isAuthenticated,
-      sortBy: sortBy as any,
-      sortOrder: sortOrder as 1 | -1 | undefined,
-    })
-
-    const translationInputs: ArticleTranslationInput[] = []
-    for (const doc of res.data) {
-      const originalText = doc.text
-
-      if (lang && typeof originalText === 'string') {
-        translationInputs.push({
-          id: String(doc.id),
-          title: doc.title,
-          text: originalText,
-          summary: doc.summary,
-          tags: doc.tags,
-          meta: doc.meta as { lang?: string } | undefined,
-          contentFormat: doc.contentFormat,
-          content: doc.content,
-          modifiedAt: doc.modifiedAt,
-          createdAt: doc.createdAt,
-        })
-      }
-
-      if (truncate) {
-        doc.text = doc.text.slice(0, truncate)
-        // List view renders only a text/summary preview — drop the lexical
-        // `content` tree too, else truncated rows still ship 100s of KB.
-        doc.content = null
-      }
+          content_format: translationResult.contentFormat,
+          available_translations: translationResult.availableTranslations,
+        },
+      })
     }
 
-    if (select) {
-      // Always preserve `id` and `category` to keep response shape sound:
-      // `id` is the row key, `category` is a joined value the legacy
-      // aggregate pipeline emitted after the `$project` stage.
-      const selected = new Set(
-        select
-          .split(' ')
-          .map((s) => s.trim().replace(/^[+-]/, ''))
-          .filter(Boolean),
-      )
-      selected.add('id')
-      selected.add('category')
-      res.data = res.data.map((doc) =>
-        Object.fromEntries(
-          Object.entries(doc).filter(([key]) => selected.has(key)),
-        ),
-      ) as typeof res.data
-    }
-
-    if (lang && translationInputs.length) {
-      const translationResults =
-        await this.translationService.translateArticleList({
-          articles: translationInputs,
-          targetLang: lang,
-        })
-
-      res.data = res.data.map((doc) => {
-        const docId = String(doc.id)
-        const translation = translationResults.get(docId)
-        if (!translation?.isTranslated) {
-          return doc
-        }
-
-        return {
-          ...doc,
-          title: translation.title,
-          text: translation.text,
-          summary: translation.summary,
-          tags: translation.tags,
-          isTranslated: translation.isTranslated,
-          translationMeta: translation.translationMeta,
-        }
-      }) as typeof res.data
-    }
-
-    return res
-  }
-
-  @Get('/get-url/:slug')
-  async getBySlug(@Param('slug') slug: string) {
-    if (typeof slug !== 'string') {
-      throw new CannotFindException()
-    }
-    const doc = await this.postService.findBySlug(slug)
-    if (!doc) {
-      throw new CannotFindException()
-    }
-
-    return {
-      path: `/${doc.category?.slug}/${doc.slug}`,
-    }
-  }
-
-  @Get('/:id')
-  @TranslateFields({
-    path: 'category.name',
-    keyPath: 'category.name',
-    idField: 'id',
-  })
-  async getById(
-    @Param() params: EntityIdDto,
-    @Query() query: PostDetailQueryDto = {} as PostDetailQueryDto,
-    @IpLocation() { ip }: IpRecord = { ip: '' } as IpRecord,
-    @HasAdminAccess() isAuthenticated = false,
-    @Lang() lang?: string,
-  ) {
-    const { id } = params
-    const doc = await this.postService.findById(id)
-    if (!doc) {
-      throw new CannotFindException()
-    }
-
-    // 非认证用户只能查看已发布的文章
-    if (!isAuthenticated && !doc.isPublished) {
-      throw new CannotFindException()
-    }
-
-    return this.buildPostDetailResponse(doc, query, ip, isAuthenticated, lang)
-  }
-
-  @Get('/latest')
-  @TranslateFields({
-    path: 'category.name',
-    keyPath: 'category.name',
-    idField: 'id',
-  })
-  async getLatest(
-    @IpLocation() ip: IpRecord,
-    @HasAdminAccess() isAuthenticated: boolean,
-    @Lang() lang?: string,
-  ) {
-    const [last] = await this.postService.findRecent(1, {
-      publishedOnly: !isAuthenticated,
-    })
-    if (!last) {
-      throw new CannotFindException()
-    }
-    if (!last.category?.slug) throw new CannotFindException()
-    return this.getByCateAndSlug(
-      { category: last.category.slug, slug: last.slug },
-      {} as any,
-      ip,
-      isAuthenticated,
-      lang,
-    )
-  }
-
-  @Get('/:category/:slug')
-  @TranslateFields({
-    path: 'category.name',
-    keyPath: 'category.name',
-    idField: 'id',
-  })
-  async getByCateAndSlug(
-    @Param() params: CategoryAndSlugDto,
-    @Query() query: PostDetailQueryDto,
-    @IpLocation() { ip }: IpRecord,
-    @HasAdminAccess() isAuthenticated?: boolean,
-    @Lang() lang?: string,
-  ) {
-    const { category, slug } = params
-    const postDocument = await this.postService.getPostBySlug(
-      category,
-      slug,
-      isAuthenticated,
-    )
-    if (!postDocument) {
-      throw new CannotFindException()
-    }
-
-    // 非认证用户只能查看已发布的文章
-    if (!isAuthenticated && !postDocument.isPublished) {
-      throw new CannotFindException()
-    }
-
-    return this.buildPostDetailResponse(
-      postDocument,
-      query,
-      ip,
-      isAuthenticated,
-      lang,
-    )
+    return withMeta(postData, metaBuilder.build())
   }
 
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
   async create(@Body() body: PostDto) {
-    return await this.postService.create({
+    const created = await this.postService.create({
       ...(body as unknown as PostModel),
       modifiedAt: null,
       slug: body.slug,
     })
+    return created
   }
 
   @Put('/:id')
   @Auth()
   async update(@Param() params: EntityIdDto, @Body() body: PostDto) {
-    return await this.postService.updateById(
+    const updated = await this.postService.updateById(
       params.id,
       body as unknown as PostModel,
     )
+    return updated
   }
 
   @Patch('/:id')
@@ -362,7 +316,6 @@ export class PostController {
       params.id,
       body as unknown as Partial<PostModel>,
     )
-    return
   }
 
   @Delete('/:id')
@@ -370,8 +323,6 @@ export class PostController {
   async deletePost(@Param() params: EntityIdDto) {
     const { id } = params
     await this.postService.deletePost(id)
-
-    return
   }
 
   @Patch('/:id/publish')

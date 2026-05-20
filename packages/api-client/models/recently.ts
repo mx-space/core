@@ -30,45 +30,6 @@ export enum RecentlyTypeEnum {
   Link = 'link',
 }
 
-export interface EnrichmentImagePalette {
-  dominant: string
-  swatches?: string[]
-}
-
-export interface EnrichmentImage {
-  url: string
-  width?: number
-  height?: number
-  alt?: string
-  blurhash?: string
-  palette?: EnrichmentImagePalette
-}
-
-export interface EnrichmentAttribute {
-  key: string
-  value: string | number | boolean
-  label?: string
-  format?: 'number' | 'rating' | 'date' | 'percent' | 'text' | 'duration'
-}
-
-export interface EnrichmentResult {
-  id?: string
-
-  title: string
-  description?: string
-  thumbnailImage?: EnrichmentImage
-  previewImage?: EnrichmentImage
-  url: string
-  category: string
-  subtype?: string
-  publishedAt?: string
-  fetchedAt: string
-  attributes?: EnrichmentAttribute[]
-  color?: string
-  links?: Array<{ rel: string; url: string; label?: string }>
-  captureImage?: EnrichmentImage
-}
-
 /**
  * 创建/更新 shorthand 时的轻量元数据。仅 url 必需，
  * 服务端据此匹配 provider 并落地至 enrichment_cache。

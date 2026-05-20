@@ -1,3 +1,5 @@
+import type { ResponseMeta } from '~/models/base'
+
 import type { RequestOptions } from './instance'
 
 type NoStringIndex<T> = {
@@ -74,6 +76,8 @@ type ResponseWrapperType<Response, RawData, T> = {
   }
 
   $serialized: T
+
+  $meta?: ResponseMeta
 }
 
 export type ResponseProxyExtraRaw<

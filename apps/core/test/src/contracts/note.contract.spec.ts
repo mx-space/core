@@ -194,7 +194,11 @@ describe('NoteController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
+
+    // Per-request fields live in meta, not on the resource object.
+    expect(body.data.enrichments).toBeUndefined()
+    expect(body.meta.enrichments).toBeDefined()
   })
 
   test('GET /notes/latest — latest note + next, no legacy keys', async () => {
@@ -206,6 +210,12 @@ describe('NoteController contract (e2e)', () => {
     const body = res.json()
     assertNoLegacyKeys(body)
     assertPgTimestamps(body.data)
+
+    // Per-request fields live in meta, not on the resource object.
+    expect(body.data.enrichments).toBeUndefined()
+    expect(body.data.has_insights_in_locale).toBeUndefined()
+    expect(body.meta.enrichments).toBeDefined()
+    expect(typeof body.meta.insights?.has_in_locale).toBe('boolean')
   })
 
   test('GET /notes/nid/:nid — detail by nid, no legacy keys', async () => {
@@ -238,7 +248,7 @@ describe('NoteController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    expect(body.ts).toBeTruthy()
+    expect(body.data.ts).toBeTruthy()
   })
 
   test('SDK shape — every NoteModel key present on list rows', async () => {
@@ -259,6 +269,12 @@ describe('NoteController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertHasKeys(body.data, EXPECTED_NOTE_MODEL_KEYS)
+
+    // Per-request fields live in meta, not on the resource object.
+    expect(body.data.enrichments).toBeUndefined()
+    expect(body.data.has_insights_in_locale).toBeUndefined()
+    expect(body.meta.enrichments).toBeDefined()
+    expect(typeof body.meta.insights?.has_in_locale).toBe('boolean')
   })
 
   test('GET /notes/nid/:nid — unauthenticated + unpublished → 404', async () => {

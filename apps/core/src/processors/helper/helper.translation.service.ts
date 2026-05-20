@@ -323,6 +323,32 @@ export class TranslationService {
     }
   }
 
+  async getTopicTranslationFields(
+    lang: string,
+    topicIds: string[],
+  ): Promise<Map<string, Record<string, string>>> {
+    const result = new Map<string, Record<string, string>>()
+    if (!topicIds.length) return result
+
+    const [names, introduces, descriptions] = await Promise.all([
+      this.getEntityTranslations('topic.name', lang, topicIds),
+      this.getEntityTranslations('topic.introduce', lang, topicIds),
+      this.getEntityTranslations('topic.description', lang, topicIds),
+    ])
+
+    for (const id of topicIds) {
+      const fields: Record<string, string> = {}
+      const name = names.get(id)
+      const introduce = introduces.get(id)
+      const description = descriptions.get(id)
+      if (name) fields.name = name
+      if (introduce) fields.introduce = introduce
+      if (description) fields.description = description
+      if (Object.keys(fields).length > 0) result.set(id, fields)
+    }
+    return result
+  }
+
   async getDictTranslations(
     keyPath: TranslationEntryKeyPath,
     lang: string,

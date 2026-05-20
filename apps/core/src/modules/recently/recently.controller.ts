@@ -5,27 +5,30 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
 
 import { RecentlyAttitudeDto, RecentlyDto } from './recently.schema'
 import { RecentlyService } from './recently.service'
-import { RecentlyModel } from './recently.types'
+import type { RecentlyModel } from './recently.types'
 
 @ApiController(['recently', 'shorthand'])
+@ResponseV2()
 export class RecentlyController {
   constructor(private readonly recentlyService: RecentlyService) {}
 
   @Get('/latest')
   async getLatestOne() {
-    return await this.recentlyService.getLatestOne()
+    const data = await this.recentlyService.getLatestOne()
+    return data
   }
 
   @Get('/all')
-  getAll() {
-    return this.recentlyService.getAll()
+  async getAll() {
+    const data = await this.recentlyService.getAll()
+    return data
   }
 
   @Get('/')
@@ -33,25 +36,29 @@ export class RecentlyController {
     const { before, after, size } = query
 
     if (before && after) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'you can only choose `before` or `after`',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'you can only choose `before` or `after`',
+      })
     }
 
-    return await this.recentlyService.getOffset({ before, after, size })
+    const data = await this.recentlyService.getOffset({ before, after, size })
+    return data
   }
 
   @Get('/:id')
   async getOne(@Param() { id }: EntityIdDto) {
-    return await this.recentlyService.getOne(id)
+    const data = await this.recentlyService.getOne(id)
+    return data
   }
 
   @Post('/')
   @HTTPDecorators.Idempotence()
   @Auth()
   async create(@Body() body: RecentlyDto) {
-    return await this.recentlyService.create(body as unknown as RecentlyModel)
+    const created = await this.recentlyService.create(
+      body as unknown as RecentlyModel,
+    )
+    return created
   }
 
   @Delete('/:id')
@@ -59,10 +66,8 @@ export class RecentlyController {
   async del(@Param() { id }: EntityIdDto) {
     const res = await this.recentlyService.delete(id)
     if (!res) {
-      throw new BizException(ErrorCodeEnum.EntryNotFound)
+      throw createAppException(AppErrorCode.RECENTLY_NOT_FOUND, { id })
     }
-
-    return
   }
 
   @Put('/:id')
@@ -73,15 +78,11 @@ export class RecentlyController {
       body as unknown as Partial<RecentlyModel>,
     )
     if (!res) {
-      throw new BizException(ErrorCodeEnum.EntryNotFound)
+      throw createAppException(AppErrorCode.RECENTLY_NOT_FOUND, { id })
     }
-
     return res
   }
 
-  /**
-   * 表态：点赞，点踩
-   */
   @Get('/attitude/:id')
   async attitude(
     @Param() { id }: EntityIdDto,
@@ -93,8 +94,6 @@ export class RecentlyController {
       id,
       ip,
     })
-    return {
-      code: result,
-    }
+    return { code: result }
   }
 }

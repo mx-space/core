@@ -5,8 +5,28 @@ import { SnippetController } from '~/modules/snippet/snippet.controller'
 
 const createController = () => {
   const repository = {
-    list: vi.fn().mockResolvedValue({ data: [{ id: '1' }], total: 1 }),
-    listGrouped: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+    list: vi.fn().mockResolvedValue({
+      data: [{ id: '1' }],
+      pagination: {
+        currentPage: 1,
+        totalPage: 1,
+        total: 1,
+        size: 10,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    }),
+    listGrouped: vi.fn().mockResolvedValue({
+      data: [],
+      pagination: {
+        currentPage: 1,
+        totalPage: 1,
+        total: 0,
+        size: 30,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    }),
     findAll: vi.fn().mockResolvedValue([{ id: '1' }]),
   }
   const service = {
@@ -30,11 +50,12 @@ describe('SnippetController', () => {
   it('maps PG repository list rows through the service transformer', async () => {
     const { controller, service } = createController()
 
-    await expect(
-      controller.getList({ page: 1, size: 10 } as any),
-    ).resolves.toEqual({
-      data: ['1'],
+    const result = await controller.getList({ page: 1, size: 10 } as any)
+    expect(result.data).toEqual(['1'])
+    expect(result.meta.pagination).toMatchObject({
+      page: 1,
       total: 1,
+      size: 10,
     })
 
     expect(service.transformLeanSnippetList).toHaveBeenCalledWith([{ id: '1' }])

@@ -210,12 +210,18 @@ describe('Yohaku contract — note detail (e2e)', () => {
       ])
     }
 
-    // Adjacency wrappers carry partial note shape.
-    if (body.next) {
-      assertHasKeys(body.next, ['nid', 'title', 'slug', 'id'])
+    // Adjacency wrappers carry partial note shape — nested inside data.
+    if (body.data.next) {
+      assertHasKeys(body.data.next, ['nid', 'title', 'slug', 'id'])
     }
-    if (body.prev) {
-      assertHasKeys(body.prev, ['nid', 'title', 'slug', 'id'])
+    if (body.data.prev) {
+      assertHasKeys(body.data.prev, ['nid', 'title', 'slug', 'id'])
     }
+
+    // Per-request fields live in meta, not on the resource object.
+    expect(body.data.enrichments).toBeUndefined()
+    expect(body.data.has_insights_in_locale).toBeUndefined()
+    expect(body.meta.enrichments).toBeDefined()
+    expect(typeof body.meta.insights?.has_in_locale).toBe('boolean')
   })
 })

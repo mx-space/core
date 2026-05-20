@@ -15,10 +15,11 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
-import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { withMeta } from '~/common/response/envelope.types'
+import type { EntryTranslation } from '~/common/response/meta.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -35,6 +36,7 @@ import {
 import { CategoryService } from './category.service'
 
 @ApiController({ path: 'categories' })
+@ResponseV2()
 export class CategoryController {
   constructor(
     private readonly categoryService: CategoryService,
@@ -44,11 +46,6 @@ export class CategoryController {
   ) {}
 
   @Get('/')
-  @TranslateFields({
-    path: '[].name',
-    keyPath: 'category.name',
-    idField: 'id',
-  })
   async getCategories(
     @Query() query: MultiCategoriesQueryDto,
     @Lang() lang?: string,
@@ -64,19 +61,20 @@ export class CategoryController {
       ]
       const map: Record<string, any> = {}
 
+      const idsTranslationMap = new Map<string, EntryTranslation>()
       await Promise.all(
         ids.map(async (id) => {
           const rawPosts = await this.postService.listByCategory(id, {
             includeCategory: false,
           })
-          let posts: any[] = rawPosts.map((post) => {
+          const posts: any[] = rawPosts.map((post) => {
             const cloned = { ...post }
             for (const field of omitKeys) delete cloned[field]
             return cloned
           })
 
           if (lang && posts.length) {
-            posts = await this.translatePostTitles(posts, lang)
+            await this.addPostTitleTranslations(idsTranslationMap, posts, lang)
           }
 
           if (joint) {
@@ -88,33 +86,61 @@ export class CategoryController {
         }),
       )
 
-      return { entries: map }
+      const idsMetaBuilder = new MetaObjectBuilder()
+      if (idsTranslationMap.size > 0) {
+        idsMetaBuilder.translation(idsTranslationMap)
+      }
+
+      return withMeta({ entries: map }, idsMetaBuilder.build())
     }
-    return type === CategoryType.Category
-      ? await this.categoryService.findAllCategory()
-      : await this.categoryService.getPostTagsSum()
+
+    const result =
+      type === CategoryType.Category
+        ? await this.categoryService.findAllCategory()
+        : await this.categoryService.getPostTagsSum()
+
+    const metaBuilder = new MetaObjectBuilder().view('card')
+    const translationMap = new Map<string, EntryTranslation>()
+
+    if (lang && Array.isArray(result) && result.length) {
+      const names = await this.translationService.getEntityTranslations(
+        'category.name',
+        lang,
+        result.map((cat: any) => String(cat.id)),
+      )
+      for (const cat of result as any[]) {
+        const translated = names.get(String(cat.id))
+        if (translated) {
+          translationMap.set(String(cat.id), { fields: { name: translated } })
+        }
+      }
+    }
+
+    if (translationMap.size > 0) metaBuilder.translation(translationMap)
+
+    return withMeta(result, metaBuilder.build())
   }
 
   @Get('/:query')
-  @TranslateFields({
-    path: 'data.name',
-    keyPath: 'category.name',
-    idField: 'id',
-  })
   async getCategoryById(
     @Param() { query }: SlugOrIdDto,
     @Query() { tag }: MultiQueryTagAndCategoryDto,
     @Lang() lang?: string,
   ) {
     if (!query) {
-      throw new BizException(ErrorCodeEnum.InvalidParameter)
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, { message: 'Query is required' })
     }
     if (tag === true) {
-      let data = await this.categoryService.findArticleWithTag(query)
+      const data = await this.categoryService.findArticleWithTag(query)
+      const tagMetaBuilder = new MetaObjectBuilder()
       if (lang && data?.length) {
-        data = await this.translatePostTitles(data, lang)
+        const tagTranslationMap = new Map<string, EntryTranslation>()
+        await this.addPostTitleTranslations(tagTranslationMap, data, lang)
+        if (tagTranslationMap.size > 0) {
+          tagMetaBuilder.translation(tagTranslationMap)
+        }
       }
-      return { tag: query, data }
+      return withMeta({ tag: query, data }, tagMetaBuilder.build())
     }
 
     const isIdLike = /^\d+$/.test(query) || /^[\da-f]{24}$/i.test(query)
@@ -123,7 +149,7 @@ export class CategoryController {
       : await this.categoryService.findBySlug(query)
 
     if (!res) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.CATEGORY_NOT_FOUND, { id: query })
     }
 
     const [postsResult, tagsSum, count] = await Promise.all([
@@ -134,35 +160,61 @@ export class CategoryController {
       this.postService.countByCategoryId(res.id),
     ])
 
-    let children: any[] = postsResult ?? []
-    if (lang && children.length) {
-      children = await this.translatePostTitles(children, lang)
-    }
+    const children: any[] = postsResult ?? []
 
-    return { data: { ...res, count, children, tagsSum } }
+    const metaBuilder = new MetaObjectBuilder().view('detail')
+    const translationMap = new Map<string, EntryTranslation>()
+    if (lang && res) {
+      const names = await this.translationService.getEntityTranslations(
+        'category.name',
+        lang,
+        [String(res.id)],
+      )
+      const translatedName = names.get(String(res.id))
+      if (translatedName) {
+        translationMap.set(String(res.id), {
+          fields: { name: translatedName },
+        })
+      }
+    }
+    if (lang && children.length) {
+      await this.addPostTitleTranslations(translationMap, children, lang)
+    }
+    if (translationMap.size > 0) metaBuilder.translation(translationMap)
+
+    return withMeta({ ...res, count, children, tagsSum }, metaBuilder.build())
   }
 
-  private translatePostTitles(posts: any[], lang: string) {
-    return this.translationService.translateList({
-      items: posts,
+  private async addPostTitleTranslations(
+    map: Map<string, EntryTranslation>,
+    posts: any[],
+    lang: string,
+  ): Promise<void> {
+    if (!posts.length) return
+
+    const results = await this.translationService.translateArticleList({
+      articles: posts.map((post) => ({
+        id: String(post.id),
+        title: post.title ?? '',
+        text: '',
+        createdAt: post.createdAt,
+        modifiedAt: post.modifiedAt ?? null,
+      })),
       targetLang: lang,
-      translationFields: ['title', 'translationMeta'] as const,
-      getInput: (item: any) => ({
-        id: item.id,
-        title: item.title ?? '',
-        createdAt: item.createdAt,
-        modifiedAt: item.modifiedAt,
-      }),
-      applyResult: (item: any, translation) => {
-        if (!translation?.isTranslated) return item
-        return {
-          ...item,
-          title: translation.title,
-          isTranslated: true,
-          translationMeta: translation.translationMeta,
-        }
-      },
+      translationFields: ['title'] as const,
     })
+
+    for (const [id, translation] of results) {
+      if (translation?.isTranslated) {
+        map.set(id, {
+          article: {
+            is_translated: true,
+            target_lang: lang,
+            title: translation.title,
+          },
+        })
+      }
+    }
   }
 
   @Post('/')
@@ -170,7 +222,8 @@ export class CategoryController {
   @HTTPDecorators.Idempotence()
   async create(@Body() body: CategoryDto) {
     const { name, slug } = body
-    return this.categoryService.create(name, slug!)
+    const created = await this.categoryService.create(name, slug!)
+    return created
   }
 
   @Put('/:id')
@@ -178,12 +231,9 @@ export class CategoryController {
   async modify(@Param() params: EntityIdDto, @Body() body: CategoryDto) {
     const { type, slug, name } = body
     const { id } = params
-    await this.categoryService.update(id, {
-      slug,
-      type,
-      name,
-    })
-    return await this.categoryService.findById(id)
+    await this.categoryService.update(id, { slug, type, name })
+    const updated = await this.categoryService.findById(id)
+    return updated
   }
 
   @Patch('/:id')
@@ -192,14 +242,13 @@ export class CategoryController {
   async patch(@Param() params: EntityIdDto, @Body() body: PartialCategoryDto) {
     const { id } = params
     await this.categoryService.update(id, body)
-    return
   }
 
   @Delete('/:id')
   @Auth()
   async deleteCategory(@Param() params: EntityIdDto) {
     const { id } = params
-
-    return await this.categoryService.deleteById(id)
+    const result = await this.categoryService.deleteById(id)
+    return result
   }
 }

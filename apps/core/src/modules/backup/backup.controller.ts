@@ -1,4 +1,5 @@
 import { Readable } from 'node:stream'
+
 import {
   Body,
   Delete,
@@ -10,19 +11,23 @@ import {
   Query,
   Req,
 } from '@nestjs/common'
+import type { FastifyRequest } from 'fastify'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
+import { RawResponse } from '~/common/response/raw-response.decorator'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
 import { getMediumDateTime } from '~/utils/time.util'
-import type { FastifyRequest } from 'fastify'
+
 import { BackupService } from './backup.service'
 
 @ApiController({ path: 'backups' })
 @Auth()
+@ResponseV2()
 export class BackupController {
   constructor(
     private readonly backupService: BackupService,
@@ -30,12 +35,12 @@ export class BackupController {
   ) {}
 
   @Get('/new')
+  @RawResponse
   @Header(
     'Content-Disposition',
     `attachment; filename="backup-${getMediumDateTime(new Date())}.zip"`,
   )
   @Header('Content-Type', 'application/zip')
-  @HTTPDecorators.Bypass
   async createNewBackup() {
     const res = await this.backupService.backup()
     if (typeof res == 'undefined') {
@@ -56,7 +61,7 @@ export class BackupController {
     return this.backupService.list()
   }
 
-  @HTTPDecorators.Bypass
+  @RawResponse
   @Header('Content-Type', 'application/zip')
   @Get('/:dirname')
   async download(@Param('dirname') dirname: string) {

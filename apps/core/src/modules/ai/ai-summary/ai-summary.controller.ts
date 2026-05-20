@@ -12,6 +12,10 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { RawResponse } from '~/common/response/raw-response.decorator'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CreateSummaryTaskDto } from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -29,6 +33,7 @@ import {
 import { AiSummaryService } from './ai-summary.service'
 
 @ApiController('ai/summaries')
+@ResponseV2()
 export class AiSummaryController {
   constructor(
     private readonly service: AiSummaryService,
@@ -38,25 +43,38 @@ export class AiSummaryController {
   @Post('/task')
   @Auth()
   async createSummaryTask(@Body() body: CreateSummaryTaskDto) {
-    return this.taskService.createSummaryTask(body)
+    const data = await this.taskService.createSummaryTask(body)
+    return data
   }
 
   @Get('/ref/:id')
   @Auth()
   async getSummaryByRefId(@Param() params: EntityIdDto) {
-    return this.service.getSummariesByRefId(params.id)
+    const data = await this.service.getSummariesByRefId(params.id)
+    return data
   }
 
   @Get('/')
   @Auth()
   async getSummaries(@Query() query: PagerDto) {
-    return this.service.getAllSummaries(query)
+    const result = await this.service.getAllSummaries(query)
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder()
+        .pagination(result.pagination)
+        .articles(result.articles)
+        .build(),
+    )
   }
 
   @Get('/grouped')
   @Auth()
   async getSummariesGrouped(@Query() query: GetSummariesGroupedQueryDto) {
-    return this.service.getAllSummariesGrouped(query)
+    const result = await this.service.getAllSummariesGrouped(query)
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder().pagination(result.pagination).build(),
+    )
   }
 
   @Patch('/:id')
@@ -65,13 +83,15 @@ export class AiSummaryController {
     @Param() params: EntityIdDto,
     @Body() body: UpdateSummaryDto,
   ) {
-    return this.service.updateSummaryInDb(params.id, body.summary)
+    const data = await this.service.updateSummaryInDb(params.id, body.summary)
+    return data
   }
 
   @Delete('/:id')
   @Auth()
   async deleteSummary(@Param() params: EntityIdDto) {
-    return this.service.deleteSummaryInDb(params.id)
+    const data = await this.service.deleteSummaryInDb(params.id)
+    return data
   }
 
   @Get('/article/:id')
@@ -79,13 +99,15 @@ export class AiSummaryController {
     @Param() params: EntityIdDto,
     @Query() query: GetSummaryQueryDto,
   ) {
-    return this.service.getOrGenerateSummaryForArticle(params.id, {
+    const data = await this.service.getOrGenerateSummaryForArticle(params.id, {
       lang: query.lang ? parseLanguageCode(query.lang) : DEFAULT_SUMMARY_LANG,
       onlyDb: query.onlyDb,
     })
+    return data
   }
 
   @Get('/article/:id/generate')
+  @RawResponse
   async generateArticleSummary(
     @Param() params: EntityIdDto,
     @Query() query: GetSummaryStreamQueryDto,

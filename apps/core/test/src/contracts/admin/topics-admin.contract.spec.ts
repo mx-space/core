@@ -121,6 +121,6 @@ describe('TopicController admin contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertHasKeys(body, TOPIC_REQUIRED_KEYS)
+    assertHasKeys(body.data, TOPIC_REQUIRED_KEYS)
   })
 })

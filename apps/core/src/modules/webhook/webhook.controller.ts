@@ -3,6 +3,9 @@ import { Body, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -13,6 +16,7 @@ import { WebhookModel } from './webhook.types'
 
 @ApiController('/webhooks')
 @Auth()
+@ResponseV2()
 export class WebhookController {
   constructor(private readonly service: WebhookService) {}
 
@@ -46,8 +50,23 @@ export class WebhookController {
   }
 
   @Get('/:id')
-  getEventsByHookId(@Param() { id }: EntityIdDto, @Query() query: PagerDto) {
-    return this.service.getEventsByHookId(id, query)
+  async getEventsByHookId(
+    @Param() { id }: EntityIdDto,
+    @Query() query: PagerDto,
+  ) {
+    const result = await this.service.getEventsByHookId(id, query)
+    const p = result.pagination
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder()
+        .pagination({
+          page: p.currentPage,
+          size: p.size,
+          total: p.total,
+          total_pages: p.totalPage,
+        })
+        .build(),
+    )
   }
 
   @Post('/redispatch/:id')

@@ -8,13 +8,12 @@ import { LinkController } from './link'
 import type {
   NoteMiddleListOptions,
   NoteTimelineItem,
-  NoteTopicListItem,
   NoteTopicListOptions,
 } from './note'
 import { NoteController } from './note'
 import { UserController } from './owner'
 import { PageController } from './page'
-import type { PostListItem, PostListOptions } from './post'
+import type { PostListOptions } from './post'
 import { PostController } from './post'
 import { ProjectController } from './project'
 import {
@@ -102,10 +101,5 @@ export {
   UserController,
 }
 
-export type {
-  NoteMiddleListOptions,
-  NoteTimelineItem,
-  NoteTopicListItem,
-  NoteTopicListOptions,
-}
-export type { PostListItem, PostListOptions }
+export type { NoteMiddleListOptions, NoteTimelineItem, NoteTopicListOptions }
+export type { PostListOptions }

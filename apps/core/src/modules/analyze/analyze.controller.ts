@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
 import type { PagerDto } from '~/shared/dto/pager.dto'
@@ -14,6 +15,7 @@ import { AnalyzeService } from './analyze.service'
 
 @ApiController({ path: 'analyze' })
 @Auth()
+@ResponseV2()
 export class AnalyzeController {
   constructor(
     private readonly service: AnalyzeService,
@@ -53,10 +55,11 @@ export class AnalyzeController {
   async getAnalyze(@Query() query: AnalyzeDto & Partial<PagerDto>) {
     const { from, to = new Date(), page = 1, size = 50 } = query
 
-    return this.service.getRangeAnalyzeData(from, to, {
+    const data = await this.service.getRangeAnalyzeData(from, to, {
       limit: Math.trunc(size),
       page,
     })
+    return data
   }
 
   @Get('/today')
@@ -64,10 +67,11 @@ export class AnalyzeController {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const todayEarly = getTodayEarly(today)
-    return await this.service.getRangeAnalyzeData(todayEarly, today, {
+    const data = await this.service.getRangeAnalyzeData(todayEarly, today, {
       limit: Math.trunc(size),
       page,
     })
+    return data
   }
 
   @Get('/week')
@@ -75,16 +79,17 @@ export class AnalyzeController {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const weekStart = getWeekStart(today)
-    return await this.service.getRangeAnalyzeData(weekStart, today, {
+    const data = await this.service.getRangeAnalyzeData(weekStart, today, {
       limit: size,
       page,
     })
+    return data
   }
 
   @Get('/aggregate')
   async getFragment() {
     const cacheKey = getRedisKey(RedisKeys.AnalyzeAggregate)
-    return this.getOrSetCache(cacheKey, 60, async () => {
+    const data = await this.getOrSetCache(cacheKey, 60, async () => {
       const getIpAndPvAggregate = async () => {
         const now = new Date()
         const todayEarly = getTodayEarly(now)
@@ -156,6 +161,7 @@ export class AnalyzeController {
         today_ips,
       }
     })
+    return data
   }
 
   @Get('/like')
@@ -163,7 +169,7 @@ export class AnalyzeController {
     const client = this.redisService.getClient()
     const keys = await client.keys(getRedisKey(RedisKeys.Like, '*'))
 
-    return Promise.all(
+    const data = await Promise.all(
       keys.map(async (key) => {
         const id = key.split('_').pop()!
 
@@ -173,6 +179,7 @@ export class AnalyzeController {
         }
       }),
     )
+    return data
   }
 
   @Get('/traffic-source')
@@ -182,9 +189,10 @@ export class AnalyzeController {
       RedisKeys.AnalyzeTrafficSource,
       ...rangeToCacheParts(from, to),
     )
-    return this.getOrSetCache(cacheKey, 300, () =>
+    const data = await this.getOrSetCache(cacheKey, 300, () =>
       this.service.getTrafficSource(from, to),
     )
+    return data
   }
 
   @Get('/device')
@@ -194,9 +202,10 @@ export class AnalyzeController {
       RedisKeys.AnalyzeDeviceDistribution,
       ...rangeToCacheParts(from, to),
     )
-    return this.getOrSetCache(cacheKey, 300, () =>
+    const data = await this.getOrSetCache(cacheKey, 300, () =>
       this.service.getDeviceDistribution(from, to),
     )
+    return data
   }
 
   @Delete('/')

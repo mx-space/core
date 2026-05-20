@@ -1,65 +1,135 @@
-import { Get, Param } from '@nestjs/common'
+import {
+  Body,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common'
 import slugify from 'slugify'
 
-import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { Lang } from '~/common/decorators/lang.decorator'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { withMeta } from '~/common/response/envelope.types'
+import type { EntryTranslation } from '~/common/response/meta.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
+import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { BasePgCrudFactory } from '~/transformers/crud-factor.pg.transformer'
+import { PagerDto } from '~/shared/dto/pager.dto'
 
 import { TopicRepository } from './topic.repository'
 import { TopicSlugParamsDto } from './topic.schema'
+import type { TopicCreateInput, TopicPatchInput } from './topic.types'
 
-const topicTranslateFields = [
-  { path: 'name', keyPath: 'topic.name' as const, idField: 'id' as const },
-  {
-    path: 'introduce',
-    keyPath: 'topic.introduce' as const,
-    idField: 'id' as const,
-  },
-  {
-    path: 'description',
-    keyPath: 'topic.description' as const,
-    idField: 'id' as const,
-  },
-]
+@ApiController('topics')
+@ResponseV2()
+export class TopicBaseController {
+  constructor(
+    protected readonly repository: TopicRepository,
+    private readonly translationService: TranslationService,
+  ) {}
 
-const topicTranslateListFields = [
-  { path: '[].name', keyPath: 'topic.name' as const, idField: 'id' as const },
-  {
-    path: '[].introduce',
-    keyPath: 'topic.introduce' as const,
-    idField: 'id' as const,
-  },
-  {
-    path: '[].description',
-    keyPath: 'topic.description' as const,
-    idField: 'id' as const,
-  },
-]
-
-export class TopicBaseController extends BasePgCrudFactory({
-  repository: TopicRepository,
-}) {
   @Get('/all')
-  @TranslateFields(...topicTranslateListFields)
-  async getAll() {
-    return this.repository.findAll()
+  async getAll(@Lang() lang?: string) {
+    const data = await this.repository.findAll()
+    const metaBuilder = new MetaObjectBuilder().view('card')
+
+    if (lang && data.length) {
+      const translationMap = await this.buildTopicTranslationMap(data, lang)
+      if (translationMap.size > 0) {
+        metaBuilder.translation(translationMap)
+      }
+    }
+
+    return withMeta(data, metaBuilder.build())
+  }
+
+  private async buildTopicTranslationMap(
+    topics: { id: unknown }[],
+    lang: string,
+  ): Promise<Map<string, EntryTranslation>> {
+    const fieldsMap = await this.translationService.getTopicTranslationFields(
+      lang,
+      topics.map((topic) => String(topic.id)),
+    )
+    const map = new Map<string, EntryTranslation>()
+    for (const [id, fields] of fieldsMap) {
+      map.set(id, { fields })
+    }
+    return map
   }
 
   @Get('/slug/:slug')
-  @TranslateFields(...topicTranslateFields)
   async getTopicByTopic(@Param() { slug }: TopicSlugParamsDto) {
     slug = slugify(slug)
     const topic = await this.repository.findBySlug(slug)
     if (!topic) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.TOPIC_NOT_FOUND)
     }
     return topic
   }
 
   @Get('/:id')
-  @TranslateFields(...topicTranslateFields)
   async get(@Param() param: EntityIdDto) {
-    return this.repository.findById(param.id)
+    const data = await this.repository.findById(param.id)
+    if (!data) {
+      throw createAppException(AppErrorCode.TOPIC_NOT_FOUND, { id: param.id })
+    }
+    return data
+  }
+
+  @Get('/')
+  async gets(@Query() pager: PagerDto) {
+    const size = pager.size ?? 10
+    const page = pager.page ?? 1
+    const result = await this.repository.list(page, size)
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder()
+        .view('card')
+        .pagination({
+          page: (result.pagination as any).currentPage ?? 1,
+          size: (result.pagination as any).size ?? 10,
+          total: (result.pagination as any).total ?? 0,
+          total_pages: (result.pagination as any).totalPage ?? 1,
+        })
+        .build(),
+    )
+  }
+
+  @Post('/')
+  @HTTPDecorators.Idempotence()
+  @Auth()
+  async create(@Body() body: TopicCreateInput) {
+    const created = await this.repository.create(body)
+    return created
+  }
+
+  @Put('/:id')
+  @Auth()
+  async update(@Body() body: TopicCreateInput, @Param() param: EntityIdDto) {
+    const updated = await this.repository.update(param.id, body)
+    return updated
+  }
+
+  @Patch('/:id')
+  @Auth()
+  @HttpCode(204)
+  async patch(@Body() body: TopicPatchInput, @Param() param: EntityIdDto) {
+    await this.repository.update(param.id, body)
+  }
+
+  @Delete('/:id')
+  @Auth()
+  @HttpCode(204)
+  async delete(@Param() param: EntityIdDto) {
+    await this.repository.deleteById(param.id)
   }
 }

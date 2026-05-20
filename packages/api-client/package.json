@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/api-client",
-  "version": "4.4.0",
+  "version": "5.0.1",
   "description": "A api client for mx-space server@next",
   "type": "module",
   "engines": {
@@ -19,6 +19,11 @@
       "types": "./dist/index.d.mts",
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
+    },
+    "./legacy": {
+      "types": "./dist/legacy/index.d.mts",
+      "require": "./dist/legacy/index.cjs",
+      "import": "./dist/legacy/index.mjs"
     },
     "./dist/*": {
       "require": "./dist/*.cjs",
@@ -53,7 +58,7 @@
     "@types/cors": "2.8.19",
     "@types/express": "5.0.6",
     "abort-controller": "3.0.0",
-    "axios": "^1.16.1",
+    "axios": "^1.16.0",
     "camelcase-keys": "^10.0.2",
     "cors": "2.8.6",
     "es-toolkit": "1.46.1",
@@ -61,8 +66,8 @@
     "form-data": "4.0.5",
     "tsdown": "0.22.0",
     "umi-request": "1.4.0",
-    "vite": "^8.0.13",
-    "vitest": "4.1.6"
+    "vite": "^8.0.11",
+    "vitest": "4.1.5"
   },
   "dependencies": {
     "rebuild": "^0.1.2"

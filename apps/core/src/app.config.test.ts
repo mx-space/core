@@ -1,7 +1,7 @@
 import type { AxiosRequestConfig } from 'axios'
 
 export const PORT = process.env.PORT || 2333
-export const API_VERSION = 2
+export const API_VERSION = 3
 
 export const CROSS_DOMAIN = {
   allowedOrigins: process.env.ALLOWED_ORIGINS

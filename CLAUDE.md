@@ -79,13 +79,44 @@ pnpm -C apps/core run test:watch
 
 ## API Response Rules
 
-`ResponseInterceptor` auto-wraps responses:
-- **Array** → `{ data: [...] }` (always wrapped)
-- **Object** → returned directly (no wrapper)
-- **@Paginator** → `{ data: [...], pagination: {...} }` (requires `model.paginate()` result)
-- **@Bypass** → skips all transformation
+Every successful JSON response has the shape `{ data, meta? }`. Every error has the shape `{ error: { code, message, details? } }`.
 
-`JSONTransformInterceptor` converts all keys to **snake_case** (e.g., `createdAt` → `created_at`)
+**Success envelope** — `ResponseInterceptorV2` (global `APP_INTERCEPTOR`) wraps controller return values:
+- A bare value `T` → `{ data: T }`
+- A value already shaped as `{ data, meta? }` → passed through unchanged
+- `undefined` → `204 No Content`
+
+**Error envelope** — `AppExceptionFilter` (global `APP_FILTER`) maps every thrown error:
+- `AppException` (and subclasses) → `{ error: { code, message, details? } }` at the exception's HTTP status
+- `ZodError` → 400 `VALIDATION_FAILED` with `details.issues`
+- Other `HttpException` → `{ error: { code: 'HTTP_ERROR', message } }`
+- Unknown errors → 500 `INTERNAL_ERROR`
+
+**Exceptions** — extend `AppException` with a stable `SCREAMING_SNAKE` code:
+```ts
+throw new BizException(ErrorCodeEnum.PostNotFound)    // code: 'PostNotFound', 404
+throw new CannotFindException()                        // code: 'NOT_FOUND', 404
+throw new BanInDemoExcpetion()                         // code: 'DEMO_FORBIDDEN', 403
+throw new NoContentCanBeModifiedException()            // code: 'NO_CONTENT_MODIFIABLE', 400
+```
+
+**Meta** — use `MetaObjectBuilder` for cross-cutting per-request data (pagination, translation, enrichment, interaction). Located in `src/common/response/meta-builder.ts`.
+
+**Named views** — field selection uses `*.views.ts` Zod schemas (e.g. `PostViews.card`, `PostViews.detail`) instead of a `?select=` parameter. Views are parsed at the controller layer.
+
+**Case conversion** — code is camelCase end to end (Drizzle column TS props, Zod DTOs, services). `ResponseInterceptorV2` converts the response `data`/`meta` to snake_case at the wire boundary (`transformResponseCase` in `src/common/response/case-transform.ts`); the wire format stays snake_case. DB column names are unchanged — each Drizzle column keeps its explicit snake_case name string. Never call a manual `snakeCaseKeys`-style helper in a controller.
+
+**`@BypassCaseTransform([paths])`** — opt a field subtree out of snake_case conversion (free-form JSON columns, snippet payloads). Paths root at `data`, dotted segments, `[]` marks an array level (e.g. `'items[].rawPayload'`). Located in `src/common/response/bypass-case-transform.decorator.ts`.
+
+**`@RawResponse`** — opt out of the whole envelope + casing pipeline for non-JSON responses (streams, HTML, RSS, redirects). Located in `src/common/response/raw-response.decorator.ts`.
+
+**`@ResponseV2()`** — controller decorator; currently a no-op kept for compatibility; all controllers carry it.
+
+**Writing a new endpoint:**
+1. Return `{ data: <value> }` or `{ data: <value>, meta: new MetaObjectBuilder()...build() }`.
+2. Throw `AppException` subclasses (or `BizException` with an `ErrorCodeEnum` code) for errors.
+3. Use `@RawResponse` only if the response is not JSON.
+4. Define or reuse a view in `<resource>.views.ts` and parse through it before returning.
 
 ## Testing
 

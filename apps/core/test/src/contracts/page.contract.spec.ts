@@ -95,7 +95,7 @@ describe('PageController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
   })
 
   test('SDK shape — every PageModel key present on list rows', async () => {
@@ -115,6 +115,6 @@ describe('PageController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeys(body, EXPECTED_PAGE_MODEL_KEYS)
+    assertHasKeys(body.data, EXPECTED_PAGE_MODEL_KEYS)
   })
 })

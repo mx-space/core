@@ -1,5 +1,5 @@
-import type { Image, ModelWithLiked, ModelWithTranslation } from './base'
-import type { EnrichmentResult } from './recently'
+import type { Image } from './base'
+import type { EnrichmentResult } from './enrichment'
 import type { TopicModel } from './topic'
 
 export type NoteEnrichmentMap = Record<string, EnrichmentResult>
@@ -56,20 +56,7 @@ export interface Coordinate {
   longitude: number
 }
 
-export interface NoteWrappedPayload {
-  data: NoteModel
-  next?: Partial<NoteModel>
-  prev?: Partial<NoteModel>
-}
-
-export interface NoteWrappedWithLikedPayload {
-  data: ModelWithLiked<NoteModel>
-  next?: Partial<NoteModel>
-  prev?: Partial<NoteModel>
-}
-
-export interface NoteWrappedWithLikedAndTranslationPayload {
-  data: ModelWithLiked<ModelWithTranslation<NoteModel>>
-  next?: Partial<NoteModel>
-  prev?: Partial<NoteModel>
+export type NoteWrappedPayload = NoteModel & {
+  next?: Partial<NoteModel> | null
+  prev?: Partial<NoteModel> | null
 }

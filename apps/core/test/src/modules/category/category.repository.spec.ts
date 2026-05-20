@@ -1,13 +1,13 @@
-import { Pool } from 'pg'
+import type { Pool } from 'pg'
+import {
+  createPgTestDatabase,
+  type PgTestDatabase,
+} from 'test/helper/pg-verify-url'
 
 import { posts } from '~/database/schema'
 import { CategoryType } from '~/modules/category/category.enum'
 import { CategoryRepository } from '~/modules/category/category.repository'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
-import {
-  createPgTestDatabase,
-  type PgTestDatabase,
-} from 'test/helper/pg-verify-url'
 
 describe('CategoryRepository', () => {
   let context: PgTestDatabase

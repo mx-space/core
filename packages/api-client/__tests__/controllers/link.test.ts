@@ -1,40 +1,42 @@
+import camelcaseKeys from 'camelcase-keys'
+
 import { mockRequestInstance } from '~/__tests__/helpers/instance'
 import { mockResponse } from '~/__tests__/helpers/response'
 import { LinkController } from '~/controllers'
-import camelcaseKeys from 'camelcase-keys'
 
 describe('test link client, /links', () => {
   const client = mockRequestInstance(LinkController)
 
   test('GET /', async () => {
-    const mocked = mockResponse('/links?size=10&page=1', {
-      data: [
-        {
-          type: 0,
-          state: 0,
-          id: '615c191ed5db15a1000e3ca6',
-          url: 'https://barry-flynn.github.io/',
-          avatar: 'https://i.loli.net/2021/09/09/5belKgmrkjN8ZQ7.jpg',
-          description: '星河滚烫，无问西东。',
-          name: '百里飞洋の博客',
-          created: '2021-10-05T09:21:34.257Z',
-          hide: false,
-        },
-        // ...
-      ],
-      pagination: {
-        total: 43,
-        current_page: 1,
-        total_page: 5,
-        size: 10,
-        has_next_page: true,
-        has_prev_page: false,
+    const items = [
+      {
+        type: 0,
+        state: 0,
+        id: '615c191ed5db15a1000e3ca6',
+        url: 'https://barry-flynn.github.io/',
+        avatar: 'https://i.loli.net/2021/09/09/5belKgmrkjN8ZQ7.jpg',
+        description: '星河滚烫，无问西东。',
+        name: '百里飞洋の博客',
+        created: '2021-10-05T09:21:34.257Z',
+        hide: false,
       },
+      // ...
+    ]
+    const pagination = {
+      page: 1,
+      size: 10,
+      total: 43,
+      total_pages: 5,
+    }
+    mockResponse('/links?size=10&page=1', items, 'get', undefined, {
+      pagination,
     })
 
     const data = await client.link.getAllPaginated(1, 10)
-    expect(data.$raw.data).toEqual(mocked)
-    expect(data).toEqual(camelcaseKeys(mocked, { deep: true }))
+    expect(data.$raw.data.data).toEqual(items)
+    expect(data).toEqual(
+      camelcaseKeys({ data: items, pagination }, { deep: true }),
+    )
   })
 
   it('should `friend` == `link`', () => {
@@ -47,7 +49,7 @@ describe('test link client, /links', () => {
     })
 
     const data = await client.link.getAll()
-    expect(data.$raw.data).toEqual(mocked)
+    expect(data.$raw.data.data).toEqual(mocked)
     expect(data).toEqual(camelcaseKeys(mocked, { deep: true }))
   })
 
@@ -63,7 +65,7 @@ describe('test link client, /links', () => {
       state: 0,
     })
     const data = await client.link.getById('5eaabe10cd5bca719652179d')
-    expect(data.$raw.data).toEqual(mocked)
+    expect(data.$raw.data.data).toEqual(mocked)
     expect(data).toEqual(camelcaseKeys(mocked, { deep: true }))
   })
 

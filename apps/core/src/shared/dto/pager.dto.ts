@@ -13,6 +13,7 @@ const DbQuerySchema = z.object({
   db_query: z.any().optional(),
 })
 
+/** @deprecated V2 endpoints use {@link createPagerSchema} instead. */
 export const PagerSchema = DbQuerySchema.extend({
   size: zPaginationSize,
   page: zPaginationPage,
@@ -23,7 +24,20 @@ export const PagerSchema = DbQuerySchema.extend({
   state: zCoerceInt.optional(),
 })
 
+/** @deprecated V2 endpoints use {@link createPagerSchema} instead. */
 export class PagerDto extends createZodDto(PagerSchema) {}
+
+export const createPagerSchema = <TSort extends [string, ...string[]]>(
+  sortKeys: TSort,
+) =>
+  z.object({
+    page: z.coerce.number().int().positive().default(1),
+    size: z.coerce.number().int().positive().max(100).default(10),
+    view: z.string().optional(),
+    sort_by: z.enum(sortKeys).optional(),
+    sort_order: z.enum(['asc', 'desc']).default('desc'),
+    year: z.coerce.number().int().optional(),
+  })
 
 export const OffsetSchema = z.object({
   before: zEntityId.optional(),

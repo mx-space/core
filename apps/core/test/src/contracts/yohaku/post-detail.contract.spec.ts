@@ -129,10 +129,10 @@ describe('Yohaku contract — post detail (e2e)', () => {
     const body = res.json()
 
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
 
-    // Top-level required by Yohaku post-detail page.
-    assertHasKeys(body, [
+    // Top-level required by Yohaku post-detail page (entity fields only).
+    assertHasKeys(body.data, [
       'id',
       'title',
       'slug',
@@ -144,23 +144,24 @@ describe('Yohaku contract — post detail (e2e)', () => {
       'images',
       'category',
       'category_id',
-      'related',
       'read_count',
       'like_count',
       'created_at',
       'modified_at',
-      'is_translated',
-      'has_insights_in_locale',
     ])
+    // Per-request fields live in meta, not on the resource object.
+    expect(body.meta).toBeDefined()
+    expect(body.data.has_insights_in_locale).toBeUndefined()
+    expect(body.data.enrichments).toBeUndefined()
+    expect(body.data.related).toBeUndefined()
+
+    // Insights and related refs are in meta.
+    expect(typeof body.meta.insights?.has_in_locale).toBe('boolean')
+    expect(Array.isArray(body.meta.related)).toBe(true)
+    assertHasKeysDeep(body.meta, ['related.0.title', 'related.0.slug'])
 
     // Deep paths Yohaku dereferences without optional chaining or with
     // direct destructuring.
-    assertHasKeysDeep(body, [
-      'category.slug',
-      'category.name',
-      'related.0.title',
-      'related.0.slug',
-      'related.0.category.slug',
-    ])
+    assertHasKeysDeep(body.data, ['category.slug', 'category.name'])
   })
 })

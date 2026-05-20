@@ -2,8 +2,9 @@ import { Body, Get, Param, Post } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { OK_DATA } from '~/common/response/envelope.types'
+import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 
 import { ConfigsService } from '../configs/configs.service'
 import { AI_PROMPTS } from './ai.prompts'
@@ -41,6 +42,7 @@ interface TestCommentReviewDto {
 }
 
 @ApiController('ai')
+@ResponseV2()
 export class AiController {
   constructor(
     private readonly configsService: ConfigsService,
@@ -94,14 +96,15 @@ export class AiController {
     const { type, apiKey, endpoint } = await this.resolveModelListConfig(body)
 
     if (!type) {
-      throw new BizException(
-        ErrorCodeEnum.AINotEnabled,
-        'Provider type is required',
-      )
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
+        message: 'Provider type is required',
+      })
     }
 
     if (!apiKey) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled, 'API key is required')
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
+        message: 'API key is required',
+      })
     }
 
     try {
@@ -125,18 +128,21 @@ export class AiController {
     const { type, apiKey, endpoint, model } = await this.resolveTestConfig(body)
 
     if (!type) {
-      throw new BizException(
-        ErrorCodeEnum.AINotEnabled,
-        'Provider type is required',
-      )
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
+        message: 'Provider type is required',
+      })
     }
 
     if (!apiKey) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled, 'API key is required')
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
+        message: 'API key is required',
+      })
     }
 
     if (!model) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled, 'Model is required')
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
+        message: 'Model is required',
+      })
     }
 
     try {
@@ -155,12 +161,11 @@ export class AiController {
         maxRetries: 0,
       })
 
-      return { ok: true }
+      return OK_DATA
     } catch (error: any) {
-      throw new BizException(
-        ErrorCodeEnum.AIException,
-        error?.message || 'AI test failed',
-      )
+      throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+        message: error?.message || 'AI test failed',
+      })
     }
   }
 
@@ -172,18 +177,14 @@ export class AiController {
     const { text } = body
 
     if (!text?.trim()) {
-      throw new BizException(
-        ErrorCodeEnum.ContentNotFoundCantProcess,
-        'Comment text is required',
-      )
+      throw createAppException(AppErrorCode.AI_CONTENT_MISSING, {
+        message: 'Comment text is required',
+      })
     }
 
     const commentConfig = await this.configsService.get('commentOptions')
     if (!commentConfig.aiReview) {
-      throw new BizException(
-        ErrorCodeEnum.AINotEnabled,
-        'AI review is not enabled',
-      )
+      throw createAppException(AppErrorCode.AI_REVIEW_NOT_ENABLED)
     }
 
     try {
@@ -228,10 +229,9 @@ export class AiController {
         return { isSpam, reason }
       }
     } catch (error: any) {
-      throw new BizException(
-        ErrorCodeEnum.AIException,
-        error?.message || 'AI comment review test failed',
-      )
+      throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+        message: error?.message || 'AI comment review test failed',
+      })
     }
   }
 
@@ -275,24 +275,21 @@ export class AiController {
     const provider = aiConfig.providers?.find((p) => p.id === providerId)
 
     if (!provider) {
-      throw new BizException(
-        ErrorCodeEnum.ContentNotFound,
-        `Provider ${providerId} not found`,
-      )
+      throw createAppException(AppErrorCode.AI_PROVIDER_NOT_FOUND, {
+        providerId,
+      })
     }
 
     if (!provider.enabled) {
-      throw new BizException(
-        ErrorCodeEnum.AINotEnabled,
-        `Provider ${providerId} is not enabled`,
-      )
+      throw createAppException(AppErrorCode.AI_PROVIDER_DISABLED, {
+        providerId,
+      })
     }
 
     if (!provider.apiKey) {
-      throw new BizException(
-        ErrorCodeEnum.AINotEnabled,
-        `Provider ${providerId} has no API key configured`,
-      )
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
+        message: `Provider ${providerId} has no API key configured`,
+      })
     }
 
     try {
