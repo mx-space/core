@@ -8,9 +8,9 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import type {
+  EnrichmentImage,
   EnrichmentResult,
   EnrichmentRow,
-  EnrichmentScreenshot,
 } from './enrichment.types'
 
 @Injectable()
@@ -158,17 +158,17 @@ export class EnrichmentRepository extends BaseRepository {
   }
 
   /**
-   * Merge a `screenshot` key into the row's `normalized` JSONB column. Used
-   * by the post-persist screenshot pipeline so an already-inserted row can
-   * pick up the screenshot fields without rewriting the entire normalized
+   * Merge a `captureImage` key into the row's `normalized` JSONB column. Used
+   * by the post-persist capture pipeline so an already-inserted row can
+   * pick up the capture fields without rewriting the entire normalized
    * payload (which would race with concurrent writers and revert other
    * fields). Uses PostgreSQL's `jsonb` `||` operator for an in-place merge.
    */
-  async updateScreenshot(
+  async updateCapture(
     id: string,
-    screenshot: EnrichmentScreenshot,
+    captureImage: EnrichmentImage,
   ): Promise<void> {
-    const patch = JSON.stringify({ screenshot })
+    const patch = JSON.stringify({ captureImage })
     const updated = await this.db
       .update(enrichmentCache)
       .set({
@@ -178,20 +178,20 @@ export class EnrichmentRepository extends BaseRepository {
       .returning({ id: enrichmentCache.id })
 
     if (updated.length === 0) {
-      // Row vanished between persist and screenshot write — most likely an
+      // Row vanished between persist and capture write — most likely an
       // admin `invalidate` ran concurrently. The S3 object is now orphaned;
       // the warn log is the ops signal for an eventual reconciliation job.
       this.logger.warn(
-        `updateScreenshot: row ${id} disappeared between persist and screenshot write; S3 object now orphaned`,
+        `updateCapture: row ${id} disappeared between persist and capture write; S3 object now orphaned`,
       )
     }
   }
 
-  async clearScreenshot(id: string): Promise<void> {
+  async clearCapture(id: string): Promise<void> {
     await this.db
       .update(enrichmentCache)
       .set({
-        normalized: sql`coalesce(${enrichmentCache.normalized}, '{}'::jsonb) - 'screenshot'`,
+        normalized: sql`coalesce(${enrichmentCache.normalized}, '{}'::jsonb) - 'captureImage'`,
       })
       .where(eq(enrichmentCache.id, id))
   }

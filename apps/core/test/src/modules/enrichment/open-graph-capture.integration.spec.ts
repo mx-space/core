@@ -16,30 +16,30 @@ import {
 
 import { EnrichmentRepository } from '~/modules/enrichment/enrichment.repository'
 import { EnrichmentService } from '~/modules/enrichment/enrichment.service'
-import { EnrichmentScreenshotRepository } from '~/modules/enrichment/enrichment-screenshot.repository'
+import { EnrichmentCaptureRepository } from '~/modules/enrichment/enrichment-capture.repository'
 import { BrowserFetchService } from '~/modules/enrichment/providers/open-graph/browser-fetch.service'
 import { BrowserSessionPool } from '~/modules/enrichment/providers/open-graph/browser-session-pool'
-import { OpenGraphProvider } from '~/modules/enrichment/providers/open-graph/open-graph.provider'
 import {
-  type ProcessedScreenshot,
-  ScreenshotPipelineService,
-} from '~/modules/enrichment/providers/open-graph/screenshot-pipeline.service'
-import { ScreenshotStorageService } from '~/modules/enrichment/providers/open-graph/screenshot-storage.service'
+  CapturePipelineService,
+  type ProcessedCapture,
+} from '~/modules/enrichment/providers/open-graph/capture-pipeline.service'
+import { CaptureStorageService } from '~/modules/enrichment/providers/open-graph/capture-storage.service'
+import { OpenGraphProvider } from '~/modules/enrichment/providers/open-graph/open-graph.provider'
 import { ProviderRegistry } from '~/modules/enrichment/providers/provider.registry'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 import type { S3Uploader } from '~/utils/s3.util'
 
 /**
- * Integration coverage for Task 4: the post-persist screenshot pipeline.
+ * Integration coverage for the post-persist capture pipeline.
  *
  * Wires real {@link EnrichmentService} + repositories against a Postgres
  * testcontainer, with three controllable seams:
  *
  *  - `BrowserFetchService.fetchPage` → returns synthesized HTML + a tiny PNG
  *    (the open-graph provider feeds the PNG into the WeakMap channel).
- *  - `ScreenshotStorageService.getUploader` → returns an in-memory fake S3
+ *  - `CaptureStorageService.getUploader` → returns an in-memory fake S3
  *    that records put/delete calls and can be made to throw on demand.
- *  - `ScreenshotPipelineService.process` → swapped per test so we can force
+ *  - `CapturePipelineService.process` → swapped per test so we can force
  *    a `null` (oversize) return without re-engineering image fixtures.
  *
  * Covers the happy path, screenshot-disabled, pipeline-null, storage-throws,
@@ -77,7 +77,7 @@ class FakeS3Uploader {
   }
 }
 
-class TestScreenshotStorageService extends ScreenshotStorageService {
+class TestCaptureStorageService extends CaptureStorageService {
   public readonly fakeS3 = new FakeS3Uploader()
   protected override async getUploader(): Promise<S3Uploader> {
     return this.fakeS3 as unknown as S3Uploader
@@ -123,7 +123,7 @@ interface BuildOptions {
    * `process` returns `null` (oversize / drop). When set to a Buffer, the
    * underlying real pipeline runs against those bytes.
    */
-  pipelineOverride?: ProcessedScreenshot | null
+  pipelineOverride?: ProcessedCapture | null
   /**
    * Force `storeOrEvict` to throw the given error.
    */
@@ -141,14 +141,14 @@ interface BuildOptions {
   htmlBody?: string
 }
 
-describe('OpenGraph screenshot integration (Task 4)', () => {
+describe('OpenGraph capture integration', () => {
   let context: PgTestDatabase
   let snowflake: SnowflakeService
   const RESOLVE_URL = 'https://integration.example.test/post/1'
   const activePools: BrowserSessionPool[] = []
 
   beforeAll(async () => {
-    context = await createPgTestDatabase('mx_og_screenshot')
+    context = await createPgTestDatabase('mx_og_capture')
     snowflake = new SnowflakeService()
   }, 60_000)
 
@@ -167,9 +167,7 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
 
   async function buildHarness(opts: BuildOptions = {}) {
     const repository = new EnrichmentRepository(context.db as any, snowflake)
-    const screenshotRepository = new EnrichmentScreenshotRepository(
-      context.db as any,
-    )
+    const captureRepository = new EnrichmentCaptureRepository(context.db as any)
 
     const screenshot = {
       enabled: true,
@@ -259,7 +257,7 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
         }
       })
 
-    const pipeline = new ScreenshotPipelineService()
+    const pipeline = new CapturePipelineService()
     const processSpy = vi.spyOn(pipeline, 'process')
     if (opts.pipelineOverride === null) {
       processSpy.mockResolvedValue(null)
@@ -267,8 +265,8 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
       processSpy.mockResolvedValue(opts.pipelineOverride)
     }
 
-    const storage = new TestScreenshotStorageService(
-      screenshotRepository,
+    const storage = new TestCaptureStorageService(
+      captureRepository,
       repository,
       configsService,
       redisService,
@@ -309,35 +307,33 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
       browserFetch,
       fetchPageSpy,
       repository,
-      screenshotRepository,
+      captureRepository,
       touchSpy,
       fakeS3: storage.fakeS3,
     }
   }
 
-  it('happy path: persists row, runs pipeline, attaches screenshot to response', async () => {
+  it('happy path: persists row, runs pipeline, attaches capture to response', async () => {
     const { service, fakeS3 } = await buildHarness()
 
     const { result } = await service.resolve(RESOLVE_URL)
 
-    expect(result.screenshot).toBeDefined()
-    expect(result.screenshot?.url).toMatch(/^https:\/\/cdn\.example\.test\//)
-    expect(result.screenshot?.width).toBeGreaterThan(0)
-    expect(result.screenshot?.height).toBeGreaterThan(0)
-    expect(result.screenshot?.palette?.dominant).toMatch(/^#[\da-f]{6}$/i)
+    expect(result.captureImage).toBeDefined()
+    expect(result.captureImage?.url).toMatch(/^https:\/\/cdn\.example\.test\//)
+    expect(result.captureImage?.width).toBeGreaterThan(0)
+    expect(result.captureImage?.height).toBeGreaterThan(0)
+    expect(result.captureImage?.palette?.dominant).toMatch(/^#[\da-f]{6}$/i)
     expect(fakeS3.putCalls).toHaveLength(1)
-    expect(fakeS3.putCalls[0].key).toMatch(
-      /^enrichment-screenshots\/\d+\.webp$/,
-    )
+    expect(fakeS3.putCalls[0].key).toMatch(/^enrichment-captures\/\d+\.webp$/)
 
-    // The row's normalized JSON must include the screenshot key — second
+    // The row's normalized JSON must include the captureImage key — second
     // resolve (cache hit) should see it without re-running the pipeline.
     const second = await service.resolve(RESOLVE_URL)
-    expect(second.result.screenshot?.url).toBe(result.screenshot?.url)
+    expect(second.result.captureImage?.url).toBe(result.captureImage?.url)
     expect(fakeS3.putCalls).toHaveLength(1)
   })
 
-  it('og:image present: screenshot fallback is skipped even when enabled', async () => {
+  it('og:image present: capture fallback is skipped even when enabled', async () => {
     const htmlBody = `<!DOCTYPE html><html><head>
       <title>has image</title>
       <meta property="og:title" content="has image">
@@ -349,8 +345,8 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
     })
 
     const { result } = await service.resolve(RESOLVE_URL)
-    expect(result.image?.url).toBe('https://cdn.example.test/og.png')
-    expect(result.screenshot).toBeUndefined()
+    expect(result.thumbnailImage?.url).toBe('https://cdn.example.test/og.png')
+    expect(result.captureImage).toBeUndefined()
     // Provider passed a predicate (function), not a literal — predicate
     // returned false because og:image was present.
     expect(fetchPageSpy).toHaveBeenCalledWith(
@@ -363,13 +359,13 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
     expect(fakeS3.putCalls).toHaveLength(0)
   })
 
-  it('screenshot disabled: browser metadata fetch does not capture or store bytes', async () => {
+  it('capture disabled: browser metadata fetch does not capture or store bytes', async () => {
     const { service, fakeS3, fetchPageSpy, processSpy } = await buildHarness({
       screenshot: { enabled: false },
     })
 
     const { result } = await service.resolve(RESOLVE_URL)
-    expect(result.screenshot).toBeUndefined()
+    expect(result.captureImage).toBeUndefined()
     expect(fetchPageSpy).toHaveBeenCalledWith(
       RESOLVE_URL,
       expect.objectContaining({ captureScreenshot: false }),
@@ -378,41 +374,41 @@ describe('OpenGraph screenshot integration (Task 4)', () => {
     expect(fakeS3.putCalls).toHaveLength(0)
   })
 
-  it('pipeline returns null (oversize): response has no screenshot field', async () => {
+  it('pipeline returns null (oversize): response has no captureImage field', async () => {
     const { service, fakeS3 } = await buildHarness({
       pipelineOverride: null,
     })
 
     const { result } = await service.resolve(RESOLVE_URL)
-    expect(result.screenshot).toBeUndefined()
+    expect(result.captureImage).toBeUndefined()
     expect(fakeS3.putCalls).toHaveLength(0)
   })
 
-  it('storage throws: response is still returned without screenshot', async () => {
+  it('storage throws: response is still returned without captureImage', async () => {
     const { service, fakeS3 } = await buildHarness({
       storageError: new Error('simulated S3 failure'),
     })
 
     const { result } = await service.resolve(RESOLVE_URL)
-    expect(result.screenshot).toBeUndefined()
+    expect(result.captureImage).toBeUndefined()
     // Storage stub throws synchronously before S3 PUT, so the fake never sees
     // the put call.
     expect(fakeS3.putCalls).toHaveLength(0)
   })
 
-  it('cache hit: touchAccess fires for results that carry a screenshot', async () => {
+  it('cache hit: touchAccess fires for results that carry a captureImage', async () => {
     const { service, storage, touchSpy } = await buildHarness()
 
     // Cold path warms the row.
     const cold = await service.resolve(RESOLVE_URL)
-    expect(cold.result.screenshot).toBeDefined()
+    expect(cold.result.captureImage).toBeDefined()
     expect(cold.result.id).toBeDefined()
 
     // Simulate the controller's fire-and-forget call on a cache-hit response.
     // We do not import the controller here to keep this test scoped to the
     // service-level integration; the controller code path is mechanically the
-    // same: `if (result.screenshot && result.id) storage.touchAccess(result.id)`.
-    if (cold.result.screenshot && cold.result.id) {
+    // same: `if (result.captureImage && result.id) storage.touchAccess(result.id)`.
+    if (cold.result.captureImage && cold.result.id) {
       await storage.touchAccess(cold.result.id)
     }
 

@@ -118,7 +118,7 @@ export class TmdbProvider implements EnrichmentProvider {
     return {
       title,
       description,
-      image: data.poster_path
+      thumbnailImage: data.poster_path
         ? {
             url: `${TMDB_IMAGE_BASE}${data.poster_path}`,
             alt: title,

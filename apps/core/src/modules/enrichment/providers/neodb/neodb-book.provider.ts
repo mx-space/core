@@ -70,7 +70,7 @@ export class NeoDBBookProvider implements EnrichmentProvider {
     return {
       title: data.title || id,
       description: data.description || undefined,
-      image: data.cover_image_url
+      thumbnailImage: data.cover_image_url
         ? { url: data.cover_image_url, alt: data.title }
         : undefined,
       url: data.url || `https://neodb.social/${id}`,

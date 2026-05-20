@@ -19,8 +19,8 @@ import {
   TokenMissingError,
 } from './enrichment.types'
 import { BrowserFetchService } from './providers/open-graph/browser-fetch.service'
-import { ScreenshotPipelineService } from './providers/open-graph/screenshot-pipeline.service'
-import { ScreenshotStorageService } from './providers/open-graph/screenshot-storage.service'
+import { CapturePipelineService } from './providers/open-graph/capture-pipeline.service'
+import { CaptureStorageService } from './providers/open-graph/capture-storage.service'
 import type { EnrichmentProvider } from './providers/provider.interface'
 import { ProviderRegistry } from './providers/provider.registry'
 import type { ContentDoc } from './url-extractor.service'
@@ -86,8 +86,8 @@ export class EnrichmentService implements OnModuleInit {
     private readonly taskQueueProcessor: TaskQueueProcessor,
     private readonly urlExtractor: UrlExtractorService,
     private readonly browserFetch: BrowserFetchService,
-    private readonly screenshotPipeline: ScreenshotPipelineService,
-    private readonly screenshotStorage: ScreenshotStorageService,
+    private readonly capturePipeline: CapturePipelineService,
+    private readonly captureStorage: CaptureStorageService,
   ) {}
 
   onModuleInit() {
@@ -295,11 +295,11 @@ export class EnrichmentService implements OnModuleInit {
       for (const row of rows) {
         await this.deleteFromRedis(row.url, row.locale)
         // S3 cleanup runs before the cache row is removed — the FK CASCADE
-        // would drop the screenshot row but leave the object behind. Failure
-        // is swallowed (see ScreenshotStorageService.delete contract).
-        await this.screenshotStorage.delete(row.id).catch((error) => {
+        // would drop the capture row but leave the object behind. Failure
+        // is swallowed (see CaptureStorageService.delete contract).
+        await this.captureStorage.delete(row.id).catch((error) => {
           this.logger.warn(
-            `screenshot delete failed for ${row.id}: ${(error as Error).message}`,
+            `capture delete failed for ${row.id}: ${(error as Error).message}`,
           )
         })
       }
@@ -318,9 +318,9 @@ export class EnrichmentService implements OnModuleInit {
     )
     if (row) {
       await this.deleteFromRedis(row.url, cacheLocale)
-      await this.screenshotStorage.delete(row.id).catch((error) => {
+      await this.captureStorage.delete(row.id).catch((error) => {
         this.logger.warn(
-          `screenshot delete failed for ${row.id}: ${(error as Error).message}`,
+          `capture delete failed for ${row.id}: ${(error as Error).message}`,
         )
       })
       await this.repository.deleteByProviderAndExternalId(
@@ -818,23 +818,23 @@ export class EnrichmentService implements OnModuleInit {
     )
     result.id = row.id
 
-    await this.processScreenshotIfPresent(row.id, result)
+    await this.processCaptureIfPresent(row.id, result)
 
     return result
   }
 
   /**
-   * Post-persist screenshot pipeline. Runs only when the matched provider has
+   * Post-persist capture pipeline. Runs only when the matched provider has
    * stashed raw screenshot bytes via `BrowserFetchService.attachScreenshotBytes`
    * (currently only `OpenGraphProvider` in browser mode). The WeakMap read is
    * the cheapest gate: it returns `undefined` for any provider that did not
    * attach, so we can call this unconditionally without branching by provider.
    *
    * Any failure — pipeline drop, S3 put, DB merge — is logged at `warn` and
-   * swallowed. The enrichment response is still returned without `screenshot`
-   * and the card degrades gracefully (existing fallback behavior).
+   * swallowed. The enrichment response is still returned without
+   * `captureImage` and the card degrades gracefully.
    */
-  private async processScreenshotIfPresent(
+  private async processCaptureIfPresent(
     rowId: string,
     result: EnrichmentResult,
   ): Promise<void> {
@@ -845,37 +845,37 @@ export class EnrichmentService implements OnModuleInit {
       const config = await this.configsService.get(
         'thirdPartyServiceIntegration',
       )
-      const screenshotConfig = config.openGraph?.screenshot
-      if (!screenshotConfig?.enabled) return
+      const captureConfig = config.openGraph?.screenshot
+      if (!captureConfig?.enabled) return
 
-      const webpQuality = Number(screenshotConfig.webpQuality ?? 75)
+      const webpQuality = Number(captureConfig.webpQuality ?? 75)
       const maxBytesPerImage = Number(
-        screenshotConfig.maxBytesPerImage ?? 512 * 1024,
+        captureConfig.maxBytesPerImage ?? 512 * 1024,
       )
 
-      const processed = await this.screenshotPipeline.process(bytes, {
+      const processed = await this.capturePipeline.process(bytes, {
         webpQuality,
         maxBytesPerImage,
       })
       if (!processed) return
 
-      const stored = await this.screenshotStorage.storeOrEvict({
+      const stored = await this.captureStorage.storeOrEvict({
         enrichmentId: rowId,
         processed,
       })
 
-      const screenshot = {
+      const captureImage = {
         url: stored.url,
         width: processed.width,
         height: processed.height,
         blurhash: processed.blurhash,
         palette: processed.palette,
       }
-      result.screenshot = screenshot
-      await this.repository.updateScreenshot(rowId, screenshot)
+      result.captureImage = captureImage
+      await this.repository.updateCapture(rowId, captureImage)
     } catch (error) {
       this.logger.warn(
-        `screenshot post-persist failed for ${result.url} (rowId=${rowId}): ${
+        `capture post-persist failed for ${result.url} (rowId=${rowId}): ${
           (error as Error).message
         }`,
       )
@@ -885,20 +885,23 @@ export class EnrichmentService implements OnModuleInit {
   /**
    * Best-effort enrichment of an EnrichmentResult with image-derived metadata
    * (dominant accent color, blurhash, dimensions). Mutates `result` in place.
-   * Skipped when no image URL is set or when `color` is already populated
-   * (preserves provider-specific writes such as github-repo's language name).
+   * Skipped when no thumbnailImage URL is set or when `color` is already
+   * populated (preserves provider-specific writes such as github-repo's
+   * language name).
    */
   private async enrichWithImageMeta(result: EnrichmentResult): Promise<void> {
-    if (!result.image?.url) return
+    if (!result.thumbnailImage?.url) return
     if (result.color) return
 
     try {
       const { size, accent, blurHash } =
-        await this.imageService.getOnlineImageSizeAndMeta(result.image.url)
+        await this.imageService.getOnlineImageSizeAndMeta(
+          result.thumbnailImage.url,
+        )
       result.color = accent
-      result.image.blurhash = blurHash
-      if (size.width != null) result.image.width = size.width
-      if (size.height != null) result.image.height = size.height
+      result.thumbnailImage.blurhash = blurHash
+      if (size.width != null) result.thumbnailImage.width = size.width
+      if (size.height != null) result.thumbnailImage.height = size.height
     } catch (error) {
       this.logger.warn(
         `Image meta extraction failed for ${result.url}: ${error.message}`,

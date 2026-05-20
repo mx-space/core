@@ -107,7 +107,7 @@ export class OpenGraphProvider implements EnrichmentProvider {
       const captureScreenshot = screenshotEnabled
         ? (html: SafeFetchResult): boolean => {
             parsedCache = parseOpenGraph(html.body, html.finalUrl, url)
-            return !parsedCache.result.image?.url
+            return !parsedCache.result.thumbnailImage?.url
           }
         : false
       const fetched = await this.browserFetch.fetchPage(url, {

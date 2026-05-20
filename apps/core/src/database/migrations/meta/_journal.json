@@ -99,6 +99,13 @@
       "when": 1779035095334,
       "tag": "0013_device_codes_table",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1779380000000,
+      "tag": "0014_enrichment_captures",
+      "breakpoints": true
     }
   ]
 }

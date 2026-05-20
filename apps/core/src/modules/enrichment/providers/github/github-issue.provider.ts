@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common'
 
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
+import { ImageMetaService } from '../image-meta.service'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
-import { GitHubClient } from './github.client'
+import {
+  buildOgImageUrl,
+  GitHubClient,
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_WIDTH,
+} from './github.client'
 
 @Injectable()
 export class GitHubIssueProvider implements EnrichmentProvider {
@@ -15,7 +21,10 @@ export class GitHubIssueProvider implements EnrichmentProvider {
   readonly featureGateConfigKey = 'github'
   readonly requiredConfigKeys = ['token']
 
-  constructor(private readonly client: GitHubClient) {}
+  constructor(
+    private readonly client: GitHubClient,
+    private readonly imageMeta: ImageMetaService,
+  ) {}
 
   matchUrl(url: URL): UrlMatchResult | null {
     if (url.hostname !== 'github.com') return null
@@ -73,12 +82,36 @@ export class GitHubIssueProvider implements EnrichmentProvider {
         format: 'text',
       })
 
+    const avatarUrl = data.user?.avatar_url ?? null
+    const ogUrl = buildOgImageUrl(
+      data.updated_at,
+      owner,
+      repo,
+      'issues',
+      issue_number,
+    )
+    const [avatarMeta, ogMeta] = await Promise.all([
+      avatarUrl ? this.imageMeta.fetchAndExtract(avatarUrl) : null,
+      this.imageMeta.fetchAndExtract(ogUrl),
+    ])
+
     return {
       title: data.title,
       description: (data.body || '').slice(0, 300) || undefined,
-      image: data.user?.avatar_url
-        ? { url: data.user.avatar_url, alt: data.user.login }
+      thumbnailImage: avatarUrl
+        ? {
+            url: avatarUrl,
+            alt: data.user!.login,
+            ...avatarMeta,
+          }
         : undefined,
+      previewImage: {
+        url: ogUrl,
+        ...ogMeta,
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        alt: `${data.title} · Issue #${issue_number} · ${owner}/${repo}`,
+      },
       url: data.html_url,
       category: this.category,
       subtype: 'issue',

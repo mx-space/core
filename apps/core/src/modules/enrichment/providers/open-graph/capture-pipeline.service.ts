@@ -2,17 +2,17 @@ import { Injectable, Logger } from '@nestjs/common'
 import { encode } from 'blurhash'
 import sharp from 'sharp'
 
-export interface ScreenshotPalette {
+export interface CapturePalette {
   dominant: string // #RRGGBB
   swatches?: string[] // top distinct, optional, up to 3
 }
 
-export interface ProcessedScreenshot {
+export interface ProcessedCapture {
   webp: Buffer
   width: number
   height: number
   blurhash: string
-  palette: ScreenshotPalette
+  palette: CapturePalette
 }
 
 const MAX_WIDTH = 1280
@@ -34,7 +34,7 @@ const BLURHASH_SIZE = 32
 const BLURHASH_COMP_X = 4
 const BLURHASH_COMP_Y = 4
 
-// Single retry, lower quality, before dropping the screenshot entirely.
+// Single retry, lower quality, before dropping the capture entirely.
 const QUALITY_RETRY_STEP = 15
 
 interface ProcessOptions {
@@ -43,13 +43,13 @@ interface ProcessOptions {
 }
 
 @Injectable()
-export class ScreenshotPipelineService {
-  private readonly logger = new Logger(ScreenshotPipelineService.name)
+export class CapturePipelineService {
+  private readonly logger = new Logger(CapturePipelineService.name)
 
   async process(
     input: Buffer,
     opts: ProcessOptions,
-  ): Promise<ProcessedScreenshot | null> {
+  ): Promise<ProcessedCapture | null> {
     // Reused sharp instance for everything except the swatch/blurhash clones,
     // which need their own raw pipelines. Note that `.metadata()` on a
     // pipeline reflects the SOURCE image, not the resized output — so we
@@ -64,7 +64,7 @@ export class ScreenshotPipelineService {
     const dominantHex = rgbToHex(dominant.r, dominant.g, dominant.b)
 
     const swatches = await extractSwatches(sharped)
-    const palette: ScreenshotPalette = swatches.length
+    const palette: CapturePalette = swatches.length
       ? { dominant: dominantHex, swatches }
       : { dominant: dominantHex }
 
@@ -77,7 +77,7 @@ export class ScreenshotPipelineService {
     )
     if (!encoded) {
       this.logger.warn(
-        `screenshot pipeline: bytes exceed cap ${opts.maxBytesPerImage} after retry; dropping screenshot`,
+        `capture pipeline: bytes exceed cap ${opts.maxBytesPerImage} after retry; dropping capture`,
       )
       return null
     }
@@ -86,7 +86,7 @@ export class ScreenshotPipelineService {
     const width = info.width
     const height = info.height
     if (!width || !height) {
-      this.logger.debug('screenshot pipeline: missing webp output dimensions')
+      this.logger.debug('capture pipeline: missing webp output dimensions')
       return null
     }
 

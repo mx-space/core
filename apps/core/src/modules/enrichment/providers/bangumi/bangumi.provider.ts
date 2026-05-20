@@ -51,7 +51,7 @@ export class BangumiProvider implements EnrichmentProvider {
     return {
       title: data.name || data.name_cn || id,
       description: (data.summary || '').slice(0, 500) || undefined,
-      image: data.images?.large
+      thumbnailImage: data.images?.large
         ? { url: data.images.large, alt: data.name }
         : undefined,
       url: `https://bgm.tv/subject/${id}`,
