@@ -189,7 +189,7 @@ export class OwnerService {
       ) {
         return {
           id: '1',
-          name: '站长大人',
+          name: 'Site Owner',
           mail: 'example@owner.com',
           username: 'johndoe',
           created: new Date('2021/1/1 10:00:11'),
