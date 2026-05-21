@@ -75,9 +75,9 @@ export class PageController {
         if (translation?.isTranslated) {
           translationMap.set(id, {
             article: {
-              is_translated: translation.isTranslated,
-              source_lang: translation.sourceLang,
-              target_lang: lang,
+              isTranslated: translation.isTranslated,
+              sourceLang: translation.sourceLang,
+              targetLang: lang,
               title: translation.title,
               text: translation.text,
               subtitle: translation.subtitle,
@@ -91,7 +91,7 @@ export class PageController {
       page: result.pagination.currentPage,
       size: result.pagination.size,
       total: result.pagination.total,
-      total_pages: result.pagination.totalPage,
+      totalPages: result.pagination.totalPage,
     })
     if (translationMap.size > 0) metaBuilder.translation(translationMap as any)
 

@@ -87,7 +87,7 @@ export class FileController {
           page: pagination.currentPage,
           size: pagination.size,
           total: pagination.total,
-          total_pages: pagination.totalPage,
+          totalPages: pagination.totalPage,
         })
         .build(),
     )
@@ -137,7 +137,7 @@ export class FileController {
           page,
           size,
           total,
-          total_pages: Math.ceil(total / size),
+          totalPages: Math.ceil(total / size),
         })
         .build(),
     )

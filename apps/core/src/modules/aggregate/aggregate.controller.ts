@@ -244,8 +244,8 @@ export class AggregateController {
       if (translation?.isTranslated) {
         map.set(id, {
           article: {
-            is_translated: true,
-            target_lang: targetLang,
+            isTranslated: true,
+            targetLang,
             title: translation.title,
           },
         })

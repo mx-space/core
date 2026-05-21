@@ -208,8 +208,8 @@ export class CategoryController {
       if (translation?.isTranslated) {
         map.set(id, {
           article: {
-            is_translated: true,
-            target_lang: lang,
+            isTranslated: true,
+            targetLang: lang,
             title: translation.title,
           },
         })

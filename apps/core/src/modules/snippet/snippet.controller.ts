@@ -31,7 +31,7 @@ export class SnippetController {
           page: pagination.currentPage,
           size: pagination.size,
           total: pagination.total,
-          total_pages: pagination.totalPage,
+          totalPages: pagination.totalPage,
         })
         .build(),
     )
@@ -70,7 +70,7 @@ export class SnippetController {
           page: pagination.currentPage,
           size: pagination.size,
           total: pagination.total,
-          total_pages: pagination.totalPage,
+          totalPages: pagination.totalPage,
         })
         .build(),
     )

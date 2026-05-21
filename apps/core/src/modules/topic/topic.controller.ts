@@ -96,7 +96,7 @@ export class TopicBaseController {
           page: (result.pagination as any).currentPage ?? 1,
           size: (result.pagination as any).size ?? 10,
           total: (result.pagination as any).total ?? 0,
-          total_pages: (result.pagination as any).totalPage ?? 1,
+          totalPages: (result.pagination as any).totalPage ?? 1,
         })
         .build(),
     )

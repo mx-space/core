@@ -58,7 +58,7 @@ export class DraftController {
           page: result.pagination.currentPage,
           size: result.pagination.size,
           total: result.pagination.total,
-          total_pages: result.pagination.totalPage,
+          totalPages: result.pagination.totalPage,
         })
         .build(),
     )

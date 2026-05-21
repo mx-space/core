@@ -142,8 +142,8 @@ export class NoteController {
 
     const metaBuilder = new MetaObjectBuilder()
       .view('detail')
-      .interaction({ is_liked: liked })
-      .insights({ has_in_locale: hasInsightsInLocale })
+      .interaction({ isLiked: liked })
+      .insights({ hasInLocale: hasInsightsInLocale })
 
     const translationMap = new Map<string, EntryTranslation>([
       [
@@ -259,13 +259,13 @@ export class NoteController {
           if (translation?.isTranslated) {
             translationMap.set(id, {
               article: {
-                is_translated: translation.isTranslated,
-                source_lang: translation.sourceLang,
-                target_lang: lang,
+                isTranslated: translation.isTranslated,
+                sourceLang: translation.sourceLang,
+                targetLang: lang,
                 title: translation.title,
                 text: translation.text,
                 content: translation.content,
-                content_format: translation.contentFormat,
+                contentFormat: translation.contentFormat,
               },
             })
           }
@@ -295,7 +295,7 @@ export class NoteController {
       page: result.pagination.currentPage,
       size: result.pagination.size,
       total: result.pagination.total,
-      total_pages: result.pagination.totalPage,
+      totalPages: result.pagination.totalPage,
     })
 
     if (translationMap.size > 0) {
@@ -426,9 +426,9 @@ export class NoteController {
         if (translation?.isTranslated) {
           translationMap.set(id, {
             article: {
-              is_translated: translation.isTranslated,
+              isTranslated: translation.isTranslated,
               title: translation.title,
-              target_lang: lang,
+              targetLang: lang,
             },
           })
         }
@@ -516,7 +516,7 @@ export class NoteController {
 
     const metaBuilder = new MetaObjectBuilder()
       .view('detail')
-      .insights({ has_in_locale: hasInsightsInLocale })
+      .insights({ hasInLocale: hasInsightsInLocale })
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
     const translationMap = new Map<string, EntryTranslation>([
@@ -620,9 +620,9 @@ export class NoteController {
         if (translation?.isTranslated) {
           translationMap.set(id, {
             article: {
-              is_translated: translation.isTranslated,
+              isTranslated: translation.isTranslated,
               title: translation.title,
-              target_lang: lang,
+              targetLang: lang,
             },
           })
         }
@@ -633,7 +633,7 @@ export class NoteController {
       page: result.pagination.currentPage,
       size: result.pagination.size,
       total: result.pagination.total,
-      total_pages: result.pagination.totalPage,
+      totalPages: result.pagination.totalPage,
     })
     if (translationMap.size > 0) metaBuilder.translation(translationMap as any)
 

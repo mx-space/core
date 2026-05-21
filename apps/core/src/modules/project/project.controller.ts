@@ -37,7 +37,7 @@ export class ProjectController {
           page: p.currentPage,
           size: p.size,
           total: p.total,
-          total_pages: p.totalPage,
+          totalPages: p.totalPage,
         })
         .build(),
     )

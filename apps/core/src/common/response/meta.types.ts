@@ -4,23 +4,23 @@ export const PaginationSchema = z.object({
   page: z.number().int().positive(),
   size: z.number().int().positive(),
   total: z.number().int().nonnegative(),
-  total_pages: z.number().int().nonnegative(),
+  totalPages: z.number().int().nonnegative(),
 })
 
 export const ArticleTranslationSchema = z.object({
-  is_translated: z.boolean(),
-  source_lang: z.string().nullable().optional(),
-  target_lang: z.string().nullable().optional(),
+  isTranslated: z.boolean(),
+  sourceLang: z.string().nullable().optional(),
+  targetLang: z.string().nullable().optional(),
   model: z.string().optional(),
-  translated_at: z.date().optional(),
+  translatedAt: z.date().optional(),
   title: z.string().optional(),
   text: z.string().optional(),
   subtitle: z.string().nullable().optional(),
   summary: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
   content: z.string().optional(),
-  content_format: z.string().optional(),
-  available_translations: z.array(z.string()).optional(),
+  contentFormat: z.string().optional(),
+  availableTranslations: z.array(z.string()).optional(),
 })
 
 export const EntryTranslationSchema = z
@@ -32,9 +32,9 @@ export const EntryTranslationSchema = z
 
 export const InteractionMetaSchema = z
   .object({
-    is_liked: z.boolean().optional(),
-    like_count: z.number().int().nonnegative().optional(),
-    read_count: z.number().int().nonnegative().optional(),
+    isLiked: z.boolean().optional(),
+    likeCount: z.number().int().nonnegative().optional(),
+    readCount: z.number().int().nonnegative().optional(),
   })
   .strict()
 
@@ -106,7 +106,7 @@ export const RelatedRefSchema = z
   .passthrough()
 
 export const InsightsMetaSchema = z
-  .object({ has_in_locale: z.boolean() })
+  .object({ hasInLocale: z.boolean() })
   .strict()
 
 export const ResponseMetaSchema = z.object({

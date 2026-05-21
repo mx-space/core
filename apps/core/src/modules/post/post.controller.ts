@@ -114,9 +114,9 @@ export class PostController {
         if (translation?.isTranslated) {
           translationMap.set(id, {
             article: {
-              is_translated: translation.isTranslated,
-              source_lang: translation.sourceLang,
-              target_lang: lang,
+              isTranslated: translation.isTranslated,
+              sourceLang: translation.sourceLang,
+              targetLang: lang,
               title: translation.title,
               text: translation.text,
               summary: translation.summary,
@@ -131,7 +131,7 @@ export class PostController {
       page: res.pagination.currentPage,
       size: res.pagination.size,
       total: res.pagination.total,
-      total_pages: res.pagination.totalPage,
+      totalPages: res.pagination.totalPage,
     })
 
     if (translationMap.size > 0) {
@@ -270,9 +270,9 @@ export class PostController {
 
     const metaBuilder = new MetaObjectBuilder()
       .view('detail')
-      .interaction({ is_liked: liked })
+      .interaction({ isLiked: liked })
       .related(translatedRelated)
-      .insights({ has_in_locale: hasInsightsInLocale })
+      .insights({ hasInLocale: hasInsightsInLocale })
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
     metaBuilder.translation({

@@ -15,14 +15,14 @@ describe('MetaObjectBuilder', () => {
 
   test('pagination sets the pagination key only', () => {
     const meta = new MetaObjectBuilder()
-      .pagination({ page: 1, size: 10, total: 42, total_pages: 5 })
+      .pagination({ page: 1, size: 10, total: 42, totalPages: 5 })
       .build()
 
     expect(meta.pagination).toEqual({
       page: 1,
       size: 10,
       total: 42,
-      total_pages: 5,
+      totalPages: 5,
     })
     expect(Object.keys(meta)).toEqual(['pagination'])
   })
@@ -43,7 +43,7 @@ describe('MetaObjectBuilder', () => {
       page: 2,
       size: 10,
       total: 42,
-      total_pages: 5,
+      totalPages: 5,
     })
   })
 
@@ -56,7 +56,7 @@ describe('MetaObjectBuilder', () => {
 
   test('translation accepts a single EntryTranslation', () => {
     const entry: EntryTranslation = {
-      article: { is_translated: true, title: 'Hello', target_lang: 'en' },
+      article: { isTranslated: true, title: 'Hello', targetLang: 'en' },
       fields: { 'category.name': 'News' },
     }
     const meta = new MetaObjectBuilder().translation(entry).build()
@@ -66,19 +66,19 @@ describe('MetaObjectBuilder', () => {
 
   test('translation normalizes a Map into an id-keyed record', () => {
     const map = new Map<string, EntryTranslation>([
-      ['1', { article: { is_translated: true, title: 'A' } }],
-      ['2', { article: { is_translated: false } }],
+      ['1', { article: { isTranslated: true, title: 'A' } }],
+      ['2', { article: { isTranslated: false } }],
     ])
     const meta = new MetaObjectBuilder().translation(map).build()
 
     expect(meta.translation).toEqual({
-      1: { article: { is_translated: true, title: 'A' } },
-      2: { article: { is_translated: false } },
+      1: { article: { isTranslated: true, title: 'A' } },
+      2: { article: { isTranslated: false } },
     })
   })
 
   test('interaction accepts a single InteractionMeta', () => {
-    const interaction: InteractionMeta = { is_liked: true, like_count: 3 }
+    const interaction: InteractionMeta = { isLiked: true, likeCount: 3 }
     const meta = new MetaObjectBuilder().interaction(interaction).build()
 
     expect(meta.interaction).toEqual(interaction)
@@ -86,14 +86,14 @@ describe('MetaObjectBuilder', () => {
 
   test('interaction normalizes a Map into an id-keyed record', () => {
     const map = new Map<string, InteractionMeta>([
-      ['1', { is_liked: true }],
-      ['2', { is_liked: false }],
+      ['1', { isLiked: true }],
+      ['2', { isLiked: false }],
     ])
     const meta = new MetaObjectBuilder().interaction(map).build()
 
     expect(meta.interaction).toEqual({
-      1: { is_liked: true },
-      2: { is_liked: false },
+      1: { isLiked: true },
+      2: { isLiked: false },
     })
   })
 
@@ -134,14 +134,14 @@ describe('MetaObjectBuilder', () => {
   test('chained builders compose all keys and validate', () => {
     const meta = new MetaObjectBuilder()
       .view('detail')
-      .pagination({ page: 2, size: 20, total: 100, total_pages: 5 })
-      .interaction({ is_liked: false })
+      .pagination({ page: 2, size: 20, total: 100, totalPages: 5 })
+      .interaction({ isLiked: false })
       .build()
 
     expect(ResponseMetaSchema.safeParse(meta).success).toBe(true)
     expect(meta.view).toBe('detail')
     expect(meta.pagination?.page).toBe(2)
-    expect(meta.interaction).toEqual({ is_liked: false })
+    expect(meta.interaction).toEqual({ isLiked: false })
   })
 
   test('build throws when a value violates the schema', () => {
@@ -149,18 +149,16 @@ describe('MetaObjectBuilder', () => {
       page: -1,
       size: 10,
       total: 0,
-      total_pages: 0,
+      totalPages: 0,
     })
 
     expect(() => builder.build()).toThrow()
   })
 
   test('insights sets the insights key', () => {
-    const meta = new MetaObjectBuilder()
-      .insights({ has_in_locale: true })
-      .build()
+    const meta = new MetaObjectBuilder().insights({ hasInLocale: true }).build()
 
-    expect(meta.insights).toEqual({ has_in_locale: true })
+    expect(meta.insights).toEqual({ hasInLocale: true })
     expect(Object.keys(meta)).toEqual(['insights'])
   })
 })

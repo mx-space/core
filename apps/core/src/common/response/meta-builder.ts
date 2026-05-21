@@ -15,7 +15,7 @@ type LegacyPaginationLike = {
   size: number
   total: number
   totalPage?: number
-  total_pages?: number
+  totalPages?: number
   hasNextPage?: boolean
   hasPrevPage?: boolean
 }
@@ -23,7 +23,7 @@ type LegacyPaginationLike = {
 const normalizePagination = (pagination: LegacyPaginationLike) => {
   const page = pagination.page ?? pagination.currentPage ?? 1
   const totalPages =
-    pagination.total_pages ??
+    pagination.totalPages ??
     pagination.totalPage ??
     Math.ceil(pagination.total / pagination.size)
 
@@ -31,7 +31,7 @@ const normalizePagination = (pagination: LegacyPaginationLike) => {
     page,
     size: pagination.size,
     total: pagination.total,
-    total_pages: totalPages,
+    totalPages,
   }
 }
 

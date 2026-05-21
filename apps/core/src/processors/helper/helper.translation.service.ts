@@ -34,12 +34,13 @@ export type TranslationResultPick<
 export type ArticleTranslationInput = TranslationSourceSnapshot
 
 /**
- * Build the `translation.article` meta payload (snake_case) for a detail
- * response. Always emits `is_translated`, `source_lang`, and
- * `available_translations` so V1 consumers can read them unconditionally.
+ * Build the `translation.article` meta payload (camelCase) for a detail
+ * response. Always emits `isTranslated`, `sourceLang`, and
+ * `availableTranslations` so consumers can read them unconditionally.
  * When the article has actually been translated, the translated fields
  * (title/text/content/...) plus any `extras` (e.g. `summary`/`tags` for
- * posts, `subtitle` for pages) are merged in.
+ * posts, `subtitle` for pages) are merged in. Wire-layer snake_case
+ * conversion is handled by `ResponseInterceptorV2`.
  */
 export function buildArticleTranslationMeta(
   result: TranslationResult,
@@ -47,17 +48,17 @@ export function buildArticleTranslationMeta(
   extras?: Record<string, unknown>,
 ): Record<string, unknown> {
   const meta: Record<string, unknown> = {
-    is_translated: result.isTranslated,
-    source_lang: result.sourceLang ?? null,
-    available_translations: result.availableTranslations ?? [],
+    isTranslated: result.isTranslated,
+    sourceLang: result.sourceLang ?? null,
+    availableTranslations: result.availableTranslations ?? [],
   }
   if (result.isTranslated) {
     Object.assign(meta, {
-      target_lang: lang,
+      targetLang: lang,
       title: result.title,
       text: result.text,
       content: result.content,
-      content_format: result.contentFormat,
+      contentFormat: result.contentFormat,
       ...extras,
     })
   }
@@ -144,10 +145,11 @@ export class TranslationService {
   }
 
   /**
-   * 通用列表翻译方法
+   * Generic list translation method.
    *
-   * @warning items 数组在方法执行期间不应被修改或重排，
-   *          因为内部使用 index 匹配 inputs 和结果
+   * @warning The items array must not be mutated or reordered while this
+   *          method is running, because indexes are used to match inputs
+   *          with results.
    */
   async translateList<
     T,
