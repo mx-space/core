@@ -20,8 +20,16 @@ const jsonDataAttachResponse = async (response: Response) => {
     }
   }
 
+  // `Response`'s `status`/`statusText`/`url`/`headers`/`ok` are getters, so
+  // `Object.assign({}, response, ...)` drops them. Copy them explicitly so
+  // downstream error handling (RequestError.status, etc.) can read them.
   const nextResponse = Object.assign({}, response, {
     data,
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+    url: response.url,
+    ok: response.ok,
   })
 
   if (response.ok) {

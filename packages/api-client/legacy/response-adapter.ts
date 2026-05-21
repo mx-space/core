@@ -1,6 +1,4 @@
-import { metaFor } from '~/core/meta-for'
 import type { ResponseAdapter, ResponseAdapterContext } from '~/interfaces/client'
-import type { EntryTranslation, ResponseMeta } from '~/models/base'
 import { attachRawFromOneToAnthor, destructureData, isPlainObject } from '~/utils'
 
 export type LegacyResponseAdapterMatcher =
@@ -56,70 +54,375 @@ function shouldTransform(
   return true
 }
 
-function buildLegacyTranslationFields(
-  translation: EntryTranslation | undefined,
-) {
-  const article = translation?.article
-  if (!article) return {}
+// --- helpers ---------------------------------------------------------------
+// All field names here are camelCase — the client's default transformResponse
+// runs camelcaseKeys on the raw snake_case wire payload before it reaches this
+// adapter. So `is_liked` arrives as `isLiked`, `source_lang` as `sourceLang`, etc.
 
-  return {
-    isTranslated: article.isTranslated,
-    translationMeta: article,
+const stripPath = (p: string) => p.split('?')[0].replace(/\/+$/, '') || '/'
+
+function pickRecordEntry<T>(
+  value: T | Record<string, T> | undefined,
+  id: string | undefined,
+  knownKeys: string[],
+): T | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const keys = Object.keys(value as object)
+  if (keys.length === 0) return undefined
+  // Heuristic: a record keyed by snowflake id (long numeric strings) vs a
+  // flat shape whose keys are known field names.
+  const looksKeyed = keys.every((k) => /^\d{8,}$/.test(k))
+  if (looksKeyed) {
+    return id ? (value as Record<string, T>)[id] : undefined
   }
+  if (knownKeys.some((k) => keys.includes(k))) return value as T
+  return id ? (value as Record<string, T>)[id] : undefined
 }
 
-function attachMetaToItem<T>(
-  item: T,
-  meta: ResponseMeta | undefined,
-): T {
+function buildTranslationFlat(translation: any): Record<string, unknown> {
+  if (!translation || typeof translation !== 'object') return {}
+  const article = translation.article ?? translation
+  if (!article || typeof article !== 'object') return {}
+  const out: Record<string, unknown> = {}
+  if ('isTranslated' in article) out.isTranslated = article.isTranslated ?? false
+  // V1 only emitted `sourceLang` when the post actually had a source language
+  // recorded; null/undefined was elided.
+  if ('sourceLang' in article && article.sourceLang != null) {
+    out.sourceLang = article.sourceLang
+  }
+  if ('availableTranslations' in article)
+    out.availableTranslations = article.availableTranslations ?? []
+  // V1 only attached `translationMeta` when content was actually translated.
+  if (translation.article && article.isTranslated) {
+    out.translationMeta = translation.article
+  }
+  return out
+}
+
+function buildInteractionFlat(interaction: any): Record<string, unknown> {
+  if (!interaction || typeof interaction !== 'object') return {}
+  const out: Record<string, unknown> = {}
+  if ('isLiked' in interaction) out.liked = !!interaction.isLiked
+  return out
+}
+
+function buildInsightsFlat(insights: any): Record<string, unknown> {
+  if (!insights || typeof insights !== 'object') return {}
+  const out: Record<string, unknown> = {}
+  if ('hasInLocale' in insights)
+    out.hasInsightsInLocale = !!insights.hasInLocale
+  return out
+}
+
+function flattenMetaIntoItem(item: any, meta: any): any {
   if (!isPlainObject(item) || typeof (item as any).id !== 'string') return item
+  if (!meta || typeof meta !== 'object') return item
 
-  const { interaction, translation } = metaFor(item as { id: string }, meta)
-  const legacyFields = {
-    ...buildLegacyTranslationFields(translation),
-    ...interaction,
-  }
-  const hasLegacyFields = Object.keys(legacyFields).length > 0
-  const responseMetaFields = {
-    ...(meta?.enrichments ? { enrichments: meta.enrichments } : {}),
-    ...(meta?.related ? { related: meta.related } : {}),
-    ...(meta?.insights?.hasInLocale !== undefined
-      ? { hasInsightsInLocale: meta.insights.hasInLocale }
-      : {}),
-  }
-  const hasResponseMetaFields = Object.keys(responseMetaFields).length > 0
+  const id = (item as any).id
+  const translation = pickRecordEntry(meta.translation, id, ['article', 'fields'])
+  const interaction = pickRecordEntry(meta.interaction, id, [
+    'isLiked',
+    'likeCount',
+    'readCount',
+  ])
 
-  if (!hasLegacyFields && !hasResponseMetaFields) return item
+  const tFlat = buildTranslationFlat(translation)
+  const iFlat = buildInteractionFlat(interaction)
+  const insightsFlat = buildInsightsFlat(meta.insights)
 
-  const nextItem = {
-    ...(item as Record<string, unknown>),
-    ...legacyFields,
-    ...responseMetaFields,
-  }
-  attachRawFromOneToAnthor(item, nextItem)
-  return nextItem as T
-}
-
-function transformLegacyData<T>(data: T, meta: ResponseMeta | undefined): T {
-  const normalizedData = destructureData(data)
-
-  if (Array.isArray(normalizedData)) {
-    return normalizedData.map((item) => attachMetaToItem(item, meta)) as T
-  }
+  const extras: Record<string, unknown> = {}
+  if (meta.enrichments !== undefined) extras.enrichments = meta.enrichments
+  if (meta.related !== undefined) extras.related = meta.related
 
   if (
-    isPlainObject(normalizedData) &&
-    Array.isArray((normalizedData as any).data)
+    Object.keys(tFlat).length === 0 &&
+    Object.keys(iFlat).length === 0 &&
+    Object.keys(insightsFlat).length === 0 &&
+    Object.keys(extras).length === 0
   ) {
-    return {
-      ...(normalizedData as Record<string, unknown>),
-      data: (normalizedData as any).data.map((item: unknown) =>
-        attachMetaToItem(item, meta),
-      ),
-    } as T
+    return item
   }
 
-  return attachMetaToItem(normalizedData, meta)
+  const next: Record<string, unknown> = {
+    ...(item as Record<string, unknown>),
+    ...tFlat,
+    ...iFlat,
+    ...insightsFlat,
+    ...extras,
+  }
+  attachRawFromOneToAnthor(item, next)
+  return next
+}
+
+// Pagination shape conversion (camelCase after default camelcaseKeys):
+//   V2:  { page, size, total, totalPages }
+//   V1:  { currentPage, totalPage, total, size, hasNextPage, hasPrevPage }
+function remapPagination(pg: any): any {
+  if (!pg || typeof pg !== 'object') return pg
+  const currentPage = pg.currentPage ?? pg.page
+  const size = pg.size
+  const total = pg.total
+  const totalPage = pg.totalPage ?? pg.totalPages
+  const hasNextPage =
+    pg.hasNextPage ??
+    (typeof currentPage === 'number' && typeof totalPage === 'number'
+      ? currentPage < totalPage
+      : undefined)
+  const hasPrevPage =
+    pg.hasPrevPage ??
+    (typeof currentPage === 'number' ? currentPage > 1 : undefined)
+
+  const out: Record<string, unknown> = {
+    currentPage,
+    totalPage,
+    total,
+    size,
+    hasNextPage,
+    hasPrevPage,
+  }
+  for (const k of Object.keys(out)) if (out[k] === undefined) delete out[k]
+  return out
+}
+
+// --- per-endpoint rules ----------------------------------------------------
+
+interface RuleContext {
+  path: string
+  method: string
+  meta: any
+}
+
+interface Rule {
+  match: RegExp | ((path: string, method: string) => boolean)
+  fn: (data: any, ctx: RuleContext) => any
+}
+
+const COMMENT_LIST_REGEX = /^\/comments\/ref\/[^/]+$/
+const COMMENT_THREAD_REGEX = /^\/comments\/thread\/[^/]+$/
+const NOTE_DETAIL_REGEX =
+  /^\/notes\/(?:nid\/\d+|latest|\d{4}\/\d{1,2}\/\d{1,2}\/[^/]+)$/
+const COMMENT_UPLOAD_CONFIG_REGEX = /^\/comments\/uploads\/config$/
+const ACTIVITY_PRESENCE_REGEX = /^\/activity\/presence$/
+const NOTE_MIDDLE_LIST_REGEX = /^\/notes\/list\/[^/]+$/
+const NOTE_TOPIC_LIST_REGEX = /^\/notes\/topics\/[^/]+$/
+
+function unwrapInnerEnvelope(data: any) {
+  if (
+    isPlainObject(data) &&
+    'data' in data &&
+    Array.isArray((data as any).data) &&
+    isPlainObject((data as any).meta)
+  ) {
+    return data
+  }
+  return undefined
+}
+
+const commentListRule: Rule = {
+  match: COMMENT_LIST_REGEX,
+  fn: (raw, ctx) => {
+    const inner = unwrapInnerEnvelope(raw) ?? raw
+    const items: any[] = Array.isArray(inner.data)
+      ? inner.data
+      : Array.isArray(raw?.data)
+        ? raw.data
+        : []
+    const pagination = remapPagination(
+      inner.meta?.pagination ?? ctx.meta?.pagination ?? raw?.pagination,
+    )
+
+    const readers: Record<string, any> =
+      isPlainObject(raw?.readers) ? { ...(raw.readers as Record<string, any>) } : {}
+    const cleanedItems = items.map((it) => {
+      const readerId =
+        (it && (it.readerId ?? it.reader_id)) ?? it?.reader?.id ?? null
+      if (it?.reader && readerId) readers[readerId] = it.reader
+      if (it && 'reader' in it) {
+        const { reader: _drop, ...rest } = it
+        return rest
+      }
+      return it
+    })
+
+    const out: Record<string, unknown> = { data: cleanedItems }
+    if (pagination !== undefined) out.pagination = pagination
+    out.readers = readers
+    return out
+  },
+}
+
+const commentThreadRule: Rule = {
+  match: COMMENT_THREAD_REGEX,
+  fn: (raw) => {
+    if (!isPlainObject(raw)) return raw
+    // V1 returned { replies, remaining, done }; V2 adds nextCursor.
+    const { nextCursor: _drop, ...rest } = raw as any
+    return rest
+  },
+}
+
+const noteDetailRule: Rule = {
+  match: NOTE_DETAIL_REGEX,
+  fn: (raw, ctx) => {
+    if (!isPlainObject(raw)) return raw
+    // V1 already wraps the model under `data`; pass through (with meta flatten).
+    if (isPlainObject((raw as any).data) && typeof (raw as any).data?.id === 'string') {
+      const wrapped = raw as Record<string, any>
+      const flat = flattenMetaIntoItem(wrapped.data, ctx.meta)
+      return { ...wrapped, data: flat }
+    }
+    // V2: top-level is the NoteModel itself, with next/prev as siblings.
+    const { next, prev, ...note } = raw as any
+    const flat = flattenMetaIntoItem(note, ctx.meta)
+    const out: Record<string, unknown> = { data: flat }
+    if (next !== undefined && next !== null) out.next = next
+    if (prev !== undefined && prev !== null) out.prev = prev
+    return out
+  },
+}
+
+const AGGREGATE_TOP_REGEX = /^\/aggregate\/top$/
+const aggregateTopRule: Rule = {
+  match: AGGREGATE_TOP_REGEX,
+  fn: (raw) => {
+    if (!isPlainObject(raw)) return raw
+    const stripBody = (it: any) => {
+      if (!isPlainObject(it)) return it
+      const { text: _t, content: _c, ...rest } = it as any
+      return rest
+    }
+    const r = raw as any
+    const out: Record<string, unknown> = { ...r }
+    if (Array.isArray(r.notes)) out.notes = r.notes.map(stripBody)
+    if (Array.isArray(r.posts)) out.posts = r.posts.map(stripBody)
+    return out
+  },
+}
+
+const commentUploadConfigRule: Rule = {
+  match: COMMENT_UPLOAD_CONFIG_REGEX,
+  fn: (raw) => {
+    if (!isPlainObject(raw)) return raw
+    // V2 emits `single_file_size_m_b` → camelcase → `singleFileSizeMB`;
+    // V1 emitted `single_file_size_mb` → `singleFileSizeMb`.
+    const r = raw as any
+    if (r.singleFileSizeMB === undefined) return raw
+    const { singleFileSizeMB, ...rest } = r
+    return { ...rest, singleFileSizeMb: singleFileSizeMB }
+  },
+}
+
+const activityPresenceRule: Rule = {
+  match: ACTIVITY_PRESENCE_REGEX,
+  fn: (raw) => {
+    if (!isPlainObject(raw)) return raw
+    const r = raw as any
+    // V2 inner: { presence, readers }; V1: { data, readers }
+    if ('presence' in r) {
+      const { presence, ...rest } = r
+      return { data: presence, ...rest }
+    }
+    return raw
+  },
+}
+
+const noteMiddleListRule: Rule = {
+  match: NOTE_MIDDLE_LIST_REGEX,
+  fn: (raw) => {
+    // V1: { data: [...], size }
+    // V2 (after envelope unwrap): bare [...] array
+    if (Array.isArray(raw)) return { data: raw, size: raw.length }
+    return raw
+  },
+}
+
+const noteTopicListRule: Rule = {
+  match: NOTE_TOPIC_LIST_REGEX,
+  fn: (raw, ctx) => {
+    // Generic list flow, then strip `text` field from each note (V1 card view omitted it).
+    if (!isPlainObject(raw)) return raw
+    const r = raw as any
+    if (!Array.isArray(r.data)) return raw
+    const data = r.data.map((it: any) => {
+      const flat = flattenMetaIntoItem(it, ctx.meta)
+      if (flat && 'text' in flat) {
+        const { text: _drop, ...rest } = flat as any
+        return rest
+      }
+      return flat
+    })
+    const next: Record<string, unknown> = { ...r, data }
+    if (next.pagination) next.pagination = remapPagination(next.pagination)
+    else if (ctx.meta?.pagination)
+      next.pagination = remapPagination(ctx.meta.pagination)
+    return next
+  },
+}
+
+const RULES: Rule[] = [
+  commentListRule,
+  commentThreadRule,
+  noteDetailRule,
+  commentUploadConfigRule,
+  activityPresenceRule,
+  noteMiddleListRule,
+  noteTopicListRule,
+  aggregateTopRule,
+]
+
+function applyRule(path: string, method: string, raw: any, meta: any) {
+  for (const rule of RULES) {
+    const ok =
+      typeof rule.match === 'function'
+        ? rule.match(path, method)
+        : rule.match.test(path)
+    if (ok) return rule.fn(raw, { path, method, meta })
+  }
+  return undefined
+}
+
+// --- top-level transform ---------------------------------------------------
+
+function transformLegacyData<T>(
+  data: T,
+  meta: any,
+  ctx: ResponseAdapterContext,
+): T {
+  const normalizedData: any = destructureData(data)
+  const path = stripPath(normalizePath(ctx.path))
+  const method = ctx.method.toUpperCase()
+
+  // Endpoint-specific rule first.
+  const ruled = applyRule(path, method, normalizedData, meta)
+  if (ruled !== undefined) return ruled as T
+
+  // Generic: bare array → flatten meta into each item.
+  if (Array.isArray(normalizedData)) {
+    const items = normalizedData.map((it) => flattenMetaIntoItem(it, meta))
+    if (meta?.pagination) {
+      return {
+        data: items,
+        pagination: remapPagination(meta.pagination),
+      } as T
+    }
+    return items as T
+  }
+
+  // Generic: object with array `data` → flatten meta into items, remap pagination.
+  if (isPlainObject(normalizedData) && Array.isArray(normalizedData.data)) {
+    const next: Record<string, unknown> = {
+      ...(normalizedData as Record<string, unknown>),
+      data: (normalizedData as any).data.map((it: any) =>
+        flattenMetaIntoItem(it, meta),
+      ),
+    }
+    if (next.pagination) next.pagination = remapPagination(next.pagination)
+    else if (meta?.pagination) next.pagination = remapPagination(meta.pagination)
+    return next as T
+  }
+
+  // Generic: single item → flatten meta into it.
+  return flattenMetaIntoItem(normalizedData, meta) as T
 }
 
 export function legacyResponseAdapter(
@@ -128,7 +431,7 @@ export function legacyResponseAdapter(
   return {
     transformData(data, context) {
       if (!shouldTransform(context, options)) return data
-      return transformLegacyData(data, context.meta as ResponseMeta | undefined)
+      return transformLegacyData(data, context.meta, context)
     },
   }
 }
