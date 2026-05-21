@@ -123,13 +123,14 @@ const renderPostListReadable = (data: unknown): string => {
     : Array.isArray(data)
       ? (data as unknown[])
       : []
-  const pagination = asRecord(first(payload, 'pagination'))
+  const meta = asRecord(first(payload, 'meta'))
+  const pagination = asRecord(first(meta, 'pagination'))
   const lines = ['posts']
   if (rows.length > 0) lines.push(`count: ${rows.length}`)
   else lines.push('count: 0')
   const page = first(pagination, 'page', 'currentPage')
   const size = first(pagination, 'size', 'pageSize')
-  const total = first(pagination, 'total', 'totalCount')
+  const total = first(pagination, 'total', 'totalCount', 'total_count')
   if (page !== undefined) lines.push(`page: ${formatScalar(page)}`)
   if (size !== undefined) lines.push(`size: ${formatScalar(size)}`)
   if (total !== undefined) lines.push(`total: ${formatScalar(total)}`)

@@ -134,15 +134,16 @@ const renderListHeader = (
   rowCount: number,
   color: boolean,
 ): string => {
-  const pagination = asRecord(first(payload, 'pagination'))
+  const envelopeMeta = asRecord(first(payload, 'meta'))
+  const pagination = asRecord(first(envelopeMeta, 'pagination'))
   const page = first(pagination, 'page', 'currentPage')
   const size = first(pagination, 'size', 'pageSize')
-  const total = first(pagination, 'total', 'totalCount')
+  const total = first(pagination, 'total', 'totalCount', 'total_count')
 
-  const meta: string[] = [`count: ${rowCount}`]
-  if (page !== undefined) meta.push(`page: ${formatScalar(page)}`)
-  if (size !== undefined) meta.push(`size: ${formatScalar(size)}`)
-  if (total !== undefined) meta.push(`total: ${formatScalar(total)}`)
+  const headerParts: string[] = [`count: ${rowCount}`]
+  if (page !== undefined) headerParts.push(`page: ${formatScalar(page)}`)
+  if (size !== undefined) headerParts.push(`size: ${formatScalar(size)}`)
+  if (total !== undefined) headerParts.push(`total: ${formatScalar(total)}`)
 
   const heading = wrap(ANSI.bold, 'Comments', color)
   const ruleLen = Math.min(
@@ -150,7 +151,7 @@ const renderListHeader = (
     SEPARATOR_WIDTH,
   )
   const rule = wrap(ANSI.dim, '─'.repeat(ruleLen), color)
-  const metaLine = wrap(ANSI.dim, meta.join('  ·  '), color)
+  const metaLine = wrap(ANSI.dim, headerParts.join('  ·  '), color)
   return `${heading}\n${rule}\n${metaLine}`
 }
 
@@ -162,7 +163,8 @@ const renderListItem = (
   const author = authorOf(doc)
   const id = firstString(doc, 'id')
   const stateBadge =
-    colorForCommentState(first(doc, 'state'), color) ?? stateLabel(first(doc, 'state'))
+    colorForCommentState(first(doc, 'state'), color) ??
+    stateLabel(first(doc, 'state'))
   const ref = refLabel(doc)
   const created = first(doc, 'created_at', 'createdAt')
 

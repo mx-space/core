@@ -4,6 +4,12 @@ import type { Schema } from 'effect'
 import { Context, Effect, Layer, Ref } from 'effect'
 
 import {
+  detectWireVersion,
+  normalizeErrorBody,
+  normalizeSuccessBody,
+  type WireVersion,
+} from '../domain/envelope-compat'
+import {
   AuthDenied,
   AuthExpired,
   Generic,
@@ -20,7 +26,6 @@ import {
   type HttpMethod,
   type ResolvedGateInput,
 } from '../domain/gate'
-import { extractServerMessage } from '../domain/schema/api-envelope'
 import { USER_AGENT } from '../domain/version'
 import { Auth } from './Auth'
 import { Config, type ResolvedConfig, type StoreOverrides } from './Config'
@@ -140,6 +145,9 @@ function makeApiService(
 ): Effect.Effect<ApiService> {
   return Effect.gen(function* () {
     const bannerEmitted = yield* Ref.make(false)
+    // COMPAT:envelope — diagnostic-only cache of the detected wire version.
+    // Used to enrich the `--verbose` log line. Drop with envelope-compat.ts.
+    const detectedWire = yield* Ref.make<WireVersion | null>(null)
 
     /**
      * Resolved config is cached per `ApiService` instance. This matches
@@ -324,9 +332,26 @@ function makeApiService(
 
         // ---- 4. parse + status mapping ---------------------------------
         const body = yield* parseBody(res)
+
+        // COMPAT:envelope — sniff wire version once per ApiService instance
+        // for verbose diagnostics. Normalizers below are shape-tolerant and
+        // do not consume this verdict. Drop with envelope-compat.ts.
+        if (opts.verbose) {
+          const cached = yield* Ref.get(detectedWire)
+          if (!cached) {
+            const sniffed = detectWireVersion(body)
+            if (sniffed) {
+              yield* Ref.set(detectedWire, sniffed)
+              process.stderr.write(`mxs: detected wire version: ${sniffed}\n`)
+            }
+          }
+        }
+
         if (res.status >= 200 && res.status < 300) {
-          if (!options.schema) return body as A
-          return yield* decodeWithSchema(options.schema, body)
+          // COMPAT:envelope — lift V2 root `pagination` to V3 `meta.pagination`.
+          const normalized = normalizeSuccessBody(body)
+          if (!options.schema) return normalized as A
+          return yield* decodeWithSchema(options.schema, normalized)
         }
         return yield* Effect.fail(mapHttpStatusToError(res.status, body))
       })
@@ -403,38 +428,66 @@ function serializeParseError(err: unknown): unknown {
 }
 
 function mapHttpStatusToError(status: number, body: unknown): ApiError {
+  // COMPAT:envelope — flatten V2/V3 error body shapes to one tuple. Drop with
+  // envelope-compat.ts when V2 support ends; replace with direct
+  // `body.error?.message` reads.
+  const {
+    code,
+    message: serverMsg,
+    details: serverDetails,
+  } = normalizeErrorBody(body)
+  const details = serverDetails ?? body
+
+  // Code-driven mapping wins over status-derived classification when the V3
+  // server emits a stable SCREAMING_SNAKE error code.
+  if (code === 'NOT_FOUND' || code?.endsWith('_NOT_FOUND')) {
+    return new ResourceNotFound({
+      message: serverMsg ?? 'resource not found',
+      details,
+    })
+  }
+  if (code === 'VALIDATION_FAILED') {
+    return new ValidationFailed({
+      message: serverMsg ?? 'validation failed',
+      details,
+    })
+  }
+
   if (status === 401) {
     return new AuthExpired({
-      message: 'authentication required',
+      message: serverMsg ?? 'authentication required',
       hint: 'run `mxs auth login`',
-      details: body,
+      details,
     })
   }
   if (status === 403) {
-    return new AuthDenied({ message: 'permission denied', details: body })
+    return new AuthDenied({
+      message: serverMsg ?? 'permission denied',
+      details,
+    })
   }
   if (status === 404) {
     return new ResourceNotFound({
-      message: 'resource not found',
-      details: body,
+      message: serverMsg ?? 'resource not found',
+      details,
     })
   }
   if (status === 400 || status === 422) {
     return new ValidationFailed({
-      message: extractServerMessage(body) ?? 'validation failed',
-      details: body,
+      message: serverMsg ?? 'validation failed',
+      details,
     })
   }
   if (status >= 500) {
     return new ServerError({
       status,
-      message: extractServerMessage(body) ?? `server error (${status})`,
-      details: body,
+      message: serverMsg ?? `server error (${status})`,
+      details,
     })
   }
   return new Generic({
-    message: extractServerMessage(body) ?? `request failed (${status})`,
-    details: body,
+    message: serverMsg ?? `request failed (${status})`,
+    details,
   })
 }
 

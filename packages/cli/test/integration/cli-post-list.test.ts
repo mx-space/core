@@ -51,6 +51,7 @@ interface MockServerHandle {
 
 const startMockServer = (
   handler: (req: IncomingMessage, res: ServerResponse) => void,
+  prefix: 'v2' | 'v3' = 'v2',
 ): Promise<MockServerHandle> =>
   new Promise((resolve) => {
     const requests: MockServerHandle['requests'] = [] as any
@@ -65,7 +66,7 @@ const startMockServer = (
     server.listen(0, '127.0.0.1', () => {
       const addr = server.address() as AddressInfo
       resolve({
-        url: `http://127.0.0.1:${addr.port}/api/v2`,
+        url: `http://127.0.0.1:${addr.port}/api/${prefix}`,
         stop: () => new Promise<void>((r) => server.close(() => r())),
         requests,
       })
@@ -86,7 +87,7 @@ describe('cli post list — end-to-end pipeline', () => {
   })
 
   it(
-    'fetches /posts via --api-url override and emits JSON',
+    'fetches /posts against a V2 server and emits JSON',
     async () => {
       server = await startMockServer((req, res) => {
         // Probe (auth detection) → reply with a v2 root document
@@ -136,6 +137,66 @@ describe('cli post list — end-to-end pipeline', () => {
       // Verify at least one request hit /posts
       const postCalls = server.requests.filter((r) =>
         r.url.startsWith('/api/v2/posts'),
+      )
+      expect(postCalls.length).toBeGreaterThan(0)
+    },
+    30_000,
+  )
+
+  it(
+    'fetches /posts against a V3 server and emits JSON',
+    async () => {
+      server = await startMockServer((req, res) => {
+        if (req.url === '/api/v3/' || req.url === '/api/v3') {
+          res.writeHead(200, { 'content-type': 'application/json' })
+          res.end(
+            JSON.stringify({
+              data: {
+                name: 'mx-server',
+                version: '3.0.0',
+                auth_client: 'better-auth',
+              },
+            }),
+          )
+          return
+        }
+        if (req.url?.startsWith('/api/v3/posts')) {
+          res.writeHead(200, { 'content-type': 'application/json' })
+          res.end(
+            JSON.stringify({
+              data: [
+                {
+                  id: 'p1',
+                  title: 'Hello',
+                  slug: 'hello',
+                  is_published: true,
+                  created_at: '2026-05-18T00:00:00Z',
+                },
+              ],
+              meta: { pagination: { page: 1, size: 10, total: 1 } },
+            }),
+          )
+          return
+        }
+        res.writeHead(404, { 'content-type': 'application/json' })
+        res.end(
+          JSON.stringify({ error: { code: 'NOT_FOUND', message: 'not found' } }),
+        )
+      }, 'v3')
+
+      const res = await runMxs([
+        '--api-url',
+        server.url,
+        '--json',
+        'post',
+        'list',
+      ])
+
+      expect(res.code).toBe(0)
+      expect(res.stdout).toContain('"ok":true')
+      expect(res.stdout).toContain('"title":"Hello"')
+      const postCalls = server.requests.filter((r) =>
+        r.url.startsWith('/api/v3/posts'),
       )
       expect(postCalls.length).toBeGreaterThan(0)
     },

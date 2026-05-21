@@ -432,7 +432,7 @@ describe('Renderer — emit(postListView)', () => {
         const renderer = yield* Renderer
         yield* renderer.emit(postListView, {
           data: [{ id: '1', title: 'a', slug: 'a' }],
-          pagination: { page: 1, size: 10, total: 1 },
+          meta: { pagination: { page: 1, size: 10, total: 1 } },
         })
       }),
     ).pipe(
@@ -464,7 +464,7 @@ describe('Renderer — emit(postListView)', () => {
               summary: 'Short summary.',
             },
           ],
-          pagination: { page: 1, size: 10, total: 1 },
+          meta: { pagination: { page: 1, size: 10, total: 1 } },
         })
       }),
     ).pipe(
@@ -806,7 +806,8 @@ describe('Renderer — pure document renderers', () => {
             created_at: new Date('2026-01-01T00:00:00Z'),
           },
         ],
-        pagination: { currentPage: 2, pageSize: 5, totalCount: 9 },
+        // V3 envelope shape (post envelope-compat normalization).
+        meta: { pagination: { page: 2, size: 5, total: 9 } },
       },
       viewCtx,
     )
