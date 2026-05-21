@@ -69,16 +69,14 @@ for (const file of walk(modulesDir)) {
     }
 
     const names = expression.properties.map(propertyName)
-    const isDataOnly = names.length === 1 && names[0] === 'data'
-    const isDataWithMeta =
-      names.length === 2 && names.includes('data') && names.includes('meta')
+    const hasDataKey = names.includes('data')
 
-    if (isDataOnly || isDataWithMeta) {
+    if (hasDataKey) {
       const { line, character } = source.getLineAndCharacterOfPosition(
         expression.getStart(source),
       )
       violations.push(
-        `${relative(repoRoot, file)}:${line + 1}:${character + 1} return raw data directly, or use withMeta(data, meta) for response metadata.`,
+        `${relative(repoRoot, file)}:${line + 1}:${character + 1} return raw data directly, or use withMeta(data, meta) for response metadata. A literal containing a 'data' key will be double-wrapped by ResponseInterceptorV2.`,
       )
     }
 

@@ -13,9 +13,8 @@ import { mkdirp } from 'mkdirp'
 import { POSTGRES } from '~/app.config'
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
@@ -251,11 +250,13 @@ export class BackupService {
 
   checkBackupExist(dirname: string) {
     if (/[/\\]|\.\./.test(dirname)) {
-      throw new BizException(ErrorCodeEnum.InvalidParameter)
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'invalid dirname',
+      })
     }
     const filePath = join(BACKUP_DIR, dirname, `backup-${dirname}.zip`)
     if (!existsSync(filePath)) {
-      throw new BizException(ErrorCodeEnum.FileNotFound)
+      throw createAppException(AppErrorCode.FILE_NOT_FOUND)
     }
     return filePath
   }
@@ -385,11 +386,13 @@ export class BackupService {
 
   async deleteBackup(filename: string) {
     if (/[/\\]|\.\./.test(filename)) {
-      throw new BizException(ErrorCodeEnum.InvalidParameter)
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'invalid filename',
+      })
     }
     const filePath = join(BACKUP_DIR, filename)
     if (!existsSync(filePath)) {
-      throw new BizException(ErrorCodeEnum.FileNotFound)
+      throw createAppException(AppErrorCode.FILE_NOT_FOUND)
     }
 
     await rm(filePath, { recursive: true })

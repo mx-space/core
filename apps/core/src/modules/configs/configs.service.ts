@@ -3,10 +3,9 @@ import { Injectable, Logger } from '@nestjs/common'
 import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
 import type { z, ZodError } from 'zod'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import type { AIProviderConfig } from '~/modules/ai/ai.types'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -307,14 +306,16 @@ export class ConfigsService implements OnModuleInit {
 
     const dto = configDtoMapping[key]
     if (!dto) {
-      throw new BizException(ErrorCodeEnum.ConfigNotFound)
+      throw createAppException(AppErrorCode.CONFIG_NOT_FOUND, {
+        id: key as string,
+      })
     }
     // 如果是评论设置，并且尝试启用 AI 审核，就检查 AI 配置
     if (key === 'commentOptions' && (value as any).aiReview === true) {
       const aiConfig = await this.get('ai')
       const hasEnabledProvider = aiConfig.providers?.some((p) => p.enabled)
       if (!hasEnabledProvider) {
-        throw new BizException(ErrorCodeEnum.AIProviderNotEnabled)
+        throw createAppException(AppErrorCode.AI_PROVIDER_DISABLED)
       }
     }
     const instanceValue = this.validWithDto(dto, value) as Partial<IConfig[T]>
@@ -439,10 +440,9 @@ export class ConfigsService implements OnModuleInit {
     }
 
     if (errors.length > 0) {
-      throw new BizException(
-        ErrorCodeEnum.ConfigValidationFailed,
-        errors.join('; '),
-      )
+      throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+        message: errors.join('; '),
+      })
     }
   }
 
@@ -454,10 +454,9 @@ export class ConfigsService implements OnModuleInit {
         const path = err.path.join('.')
         return path ? `${path}: ${err.message}` : err.message
       })
-      throw new BizException(
-        ErrorCodeEnum.ConfigValidationFailed,
-        errorMessages.join('; '),
-      )
+      throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+        message: errorMessages.join('; '),
+      })
     }
     return result.data
   }

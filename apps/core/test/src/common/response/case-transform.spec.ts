@@ -71,6 +71,22 @@ describe('transformResponseCase', () => {
     })
   })
 
+  it('preserves acronym boundaries on consecutive uppercase letters', () => {
+    expect(
+      transformResponseCase({
+        articleURL: 'a',
+        htmlContent: 'b',
+        ioError: 'c',
+        userIDList: 'd',
+      }),
+    ).toEqual({
+      article_url: 'a',
+      html_content: 'b',
+      io_error: 'c',
+      user_id_list: 'd',
+    })
+  })
+
   it('only bypasses an exact path, not its prefixes', () => {
     expect(
       transformResponseCase({ outerField: { innerField: { deepKey: 1 } } }, [

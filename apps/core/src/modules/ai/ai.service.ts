@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 
 import type { AIConfig } from '../configs/configs.schema'
 import { ConfigsService } from '../configs/configs.service'
@@ -69,10 +68,9 @@ export class AiService {
     const provider = this.resolveProvider(aiConfig, assignment?.providerId)
 
     if (!provider) {
-      throw new BizException(
-        ErrorCodeEnum.AINotEnabled,
-        'No AI provider configured',
-      )
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
+        message: 'No AI provider configured',
+      })
     }
 
     return {

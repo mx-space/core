@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/response/error.types'
 import type {
   AiTranslationRepository,
   AiTranslationRow,
@@ -95,7 +95,7 @@ describe('AiTranslationService', () => {
     repository.deleteById.mockResolvedValue(0)
 
     await expect(service.deleteTranslation('missing')).rejects.toThrow(
-      BizException,
+      AppException,
     )
   })
 })

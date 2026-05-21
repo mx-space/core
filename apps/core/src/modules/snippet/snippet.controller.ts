@@ -4,13 +4,12 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { SnippetDto, SnippetMoreDto } from './snippet.schema'
 import { SnippetService } from './snippet.service'
@@ -21,7 +20,7 @@ export class SnippetController {
 
   @Get('/')
   @Auth()
-  async getList(@Query() query: PagerDto) {
+  async getList(@Query() query: BasicPagerDto) {
     const { page, size } = query
     const result = await this.snippetService.repository.list(page, size)
     const { pagination } = result
@@ -60,7 +59,7 @@ export class SnippetController {
 
   @Get('/group')
   @Auth()
-  async getGroup(@Query() query: PagerDto) {
+  async getGroup(@Query() query: BasicPagerDto) {
     const { page, size = 30 } = query
     const result = await this.snippetService.repository.listGrouped(page, size)
     const { pagination } = result
@@ -81,7 +80,7 @@ export class SnippetController {
   @Auth()
   async getGroupByReference(@Param('reference') reference: string) {
     if (typeof reference !== 'string') {
-      throw new BizException(ErrorCodeEnum.InvalidReference)
+      throw createAppException(AppErrorCode.INVALID_REFERENCE)
     }
 
     const rows = await this.snippetService.repository.findAll(reference)
@@ -97,10 +96,10 @@ export class SnippetController {
   @Post('/aggregate')
   @Auth()
   async aggregate() {
-    throw new BizException(
-      ErrorCodeEnum.InvalidParameter,
-      'POST /snippets/aggregate is removed in PostgreSQL mode. Use GET /snippets/group or /snippets/group/:reference instead.',
-    )
+    throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+      message:
+        'POST /snippets/aggregate is removed in PostgreSQL mode. Use GET /snippets/group or /snippets/group/:reference instead.',
+    })
   }
 
   @Get('/:reference/:name')
@@ -111,11 +110,11 @@ export class SnippetController {
     @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     if (typeof name !== 'string') {
-      throw new BizException(ErrorCodeEnum.InvalidName)
+      throw createAppException(AppErrorCode.INVALID_NAME)
     }
 
     if (typeof reference !== 'string') {
-      throw new BizException(ErrorCodeEnum.InvalidReference)
+      throw createAppException(AppErrorCode.INVALID_REFERENCE)
     }
     const cached = hasAdminAccess
       ? (

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/response/error.types'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 
 const createController = () => {
@@ -64,7 +64,7 @@ describe('SnippetController', () => {
   it('rejects the removed aggregate endpoint in PG mode', async () => {
     const { controller } = createController()
 
-    await expect(controller.aggregate()).rejects.toThrow(BizException)
+    await expect(controller.aggregate()).rejects.toThrow(AppException)
   })
 
   it('uses public snippet lookup when cache misses', async () => {

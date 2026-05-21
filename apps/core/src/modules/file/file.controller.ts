@@ -26,7 +26,7 @@ import { RawResponse } from '~/common/response/raw-response.decorator'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto, BasicPagerInput } from '~/shared/dto/pager.dto'
 import {
   generateFilename,
   generateFilePath,
@@ -62,7 +62,7 @@ export class FileController {
 
   @Get('/orphans/list')
   @Auth()
-  async getOrphanFiles(@Query() query: PagerDto) {
+  async getOrphanFiles(@Query() query: BasicPagerDto) {
     const { page = 1, size = 20 } = query
     const { data: files, pagination } =
       await this.fileReferenceService.listOrphanFiles(page, size)
@@ -110,7 +110,7 @@ export class FileController {
   @Auth()
   async getCommentUploads(
     @Query()
-    query: PagerDto & {
+    query: BasicPagerInput & {
       status?: FileReferenceStatus
       readerId?: string
       refId?: string
@@ -166,7 +166,10 @@ export class FileController {
 
   @Get('/:type')
   @Auth()
-  async getTypes(@Query() query: PagerDto, @Param() params: FileUploadDto) {
+  async getTypes(
+    @Query() query: BasicPagerDto,
+    @Param() params: FileUploadDto,
+  ) {
     const { type = 'file' } = params
     const dir = await this.service.getDir(type)
     const files = await Promise.all(

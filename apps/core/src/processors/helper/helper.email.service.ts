@@ -5,8 +5,7 @@ import { createTransport } from 'nodemailer'
 import type Mail from 'nodemailer/lib/mailer'
 import { Resend } from 'resend'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { OwnerService } from '~/modules/owner/owner.service'
@@ -75,7 +74,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
 
   public getExampleRenderProps(type: string) {
     const props = this.emailTypeMap[type]
-    if (!props) throw new BizException(ErrorCodeEnum.EmailTemplateNotFound)
+    if (!props) throw createAppException(AppErrorCode.EMAIL_TEMPLATE_NOT_FOUND)
     return props
   }
 
@@ -165,7 +164,9 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
             )
             const to = this.normalizeAddressList(options.to)
             if (!from || !to) {
-              throw new BizException('邮件发送失败')
+              throw createAppException(AppErrorCode.INTERNAL_ERROR, {
+                message: '邮件发送失败',
+              })
             }
             const cc = this.normalizeAddressList(options.cc)
             const bcc = this.normalizeAddressList(options.bcc)
@@ -174,7 +175,9 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
               this.normalizeContent(options.html) ||
               this.normalizeContent(options.text)
             if (!html) {
-              throw new BizException('邮件发送失败')
+              throw createAppException(AppErrorCode.INTERNAL_ERROR, {
+                message: '邮件发送失败',
+              })
             }
 
             return resend.emails.send({
@@ -317,7 +320,11 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           this.logger.warn(
             error instanceof Error ? error.message : String(error),
           )
-          item.reject(new BizException('邮件发送失败'))
+          item.reject(
+            createAppException(AppErrorCode.INTERNAL_ERROR, {
+              message: '邮件发送失败',
+            }),
+          )
         }
       }
     } finally {

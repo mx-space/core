@@ -2,7 +2,7 @@ import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zCoerceInt, zEntityId } from '~/common/zod'
-import { PagerSchema } from '~/shared/dto/pager.dto'
+import { BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { Activity } from './activity.constant'
 import type { ActivityLikeSupportType } from './activity.interface'
@@ -33,7 +33,7 @@ export class ActivityDeleteDto extends createZodDto(ActivityDeleteSchema) {}
 /**
  * Activity query schema
  */
-export const ActivityQuerySchema = PagerSchema.extend({
+export const ActivityQuerySchema = BasicPagerSchema.extend({
   type: z.preprocess((val) => transformEnum(val), z.enum(Activity).optional()),
 })
 

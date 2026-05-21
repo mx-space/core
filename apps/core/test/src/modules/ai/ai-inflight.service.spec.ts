@@ -1,8 +1,9 @@
 import { Test } from '@nestjs/testing'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { describe, expect, it } from 'vitest'
+
+import { AppException } from '~/common/response/error.types'
 import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { describe, expect, it } from 'vitest'
 
 class FakeRedis {
   private store = new Map<string, string>()
@@ -195,6 +196,6 @@ describe('AiInFlightService', () => {
       caught = error
     }
 
-    expect(caught).toBeInstanceOf(BizException)
+    expect(caught).toBeInstanceOf(AppException)
   })
 })

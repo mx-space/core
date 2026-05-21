@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { isDev } from '~/global/env.global'
 import { RedisService } from '~/processors/redis/redis.service'
 import { sleep } from '~/utils/tool.util'
@@ -232,17 +231,15 @@ export class AiInFlightService {
 
         const lockExists = await redis.exists(keys.lockKey)
         if (!lockExists) {
-          throw new BizException(
-            ErrorCodeEnum.AIException,
-            'AI stream ended without result',
-          )
+          throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+            message: 'AI stream ended without result',
+          })
         }
 
         if (Date.now() - startAt > options.idleTimeoutMs) {
-          throw new BizException(
-            ErrorCodeEnum.AIException,
-            'AI stream idle timeout',
-          )
+          throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+            message: 'AI stream idle timeout',
+          })
         }
 
         continue
@@ -303,22 +300,22 @@ export class AiInFlightService {
 
       const errorMessage = await redis.get(keys.errorKey)
       if (errorMessage) {
-        throw new BizException(ErrorCodeEnum.AIException, errorMessage)
+        throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+          message: errorMessage,
+        })
       }
 
       const lockExists = await redis.exists(keys.lockKey)
       if (!lockExists) {
-        throw new BizException(
-          ErrorCodeEnum.AIException,
-          'AI processing ended without result',
-        )
+        throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+          message: 'AI processing ended without result',
+        })
       }
 
       if (Date.now() - startAt > options.idleTimeoutMs) {
-        throw new BizException(
-          ErrorCodeEnum.AIException,
-          'AI processing idle timeout',
-        )
+        throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+          message: 'AI processing idle timeout',
+        })
       }
 
       await sleep(100)

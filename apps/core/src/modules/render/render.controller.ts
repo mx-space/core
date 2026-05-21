@@ -16,10 +16,9 @@ import xss from 'xss'
 import { RequestContext } from '~/common/contexts/request.context'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { RawResponse } from '~/common/response/raw-response.decorator'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils/time.util'
 
@@ -67,7 +66,7 @@ export class RenderEjsController {
       ('password' in document && !isNil(document.password))
 
     if (!hasAdminAccess && isPrivateOrEncrypt) {
-      throw new BizException(ErrorCodeEnum.PostHiddenOrEncrypted)
+      throw createAppException(AppErrorCode.POST_HIDDEN_OR_ENCRYPTED)
     }
 
     const relativePath = (() => {

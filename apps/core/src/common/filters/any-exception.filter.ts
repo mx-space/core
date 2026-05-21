@@ -2,6 +2,7 @@ import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
+import { AppException } from '~/common/response/error.types'
 import { EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -9,7 +10,6 @@ import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { getIp } from '../../utils/ip.util'
-import { BizException } from '../exceptions/biz.exception'
 
 interface ErrorLike {
   readonly status?: number | string
@@ -101,7 +101,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (
       status === HttpStatus.INTERNAL_SERVER_ERROR &&
-      !(exception instanceof BizException)
+      !(exception instanceof AppException)
     ) {
       this.logger.error(exception)
       this.eventManager.broadcast(

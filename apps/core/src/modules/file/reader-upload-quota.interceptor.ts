@@ -5,8 +5,7 @@ import type {
 } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { CommentRepository } from '~/modules/comment/comment.repository'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { ReaderRepository } from '~/modules/reader/reader.repository'
@@ -30,7 +29,7 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
     const readerId = request.readerId || request.user?.id
 
     if (!readerId) {
-      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+      throw createAppException(AppErrorCode.AUTH_NOT_LOGGED_IN)
     }
 
     if (request.user?.role === 'owner') {
@@ -47,7 +46,7 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
         !createdAt ||
         Date.now() - createdAt.getTime() < minAccountAgeHours * 60 * 60 * 1000
       ) {
-        throw new BizException(ErrorCodeEnum.CommentUploadAccountTooNew)
+        throw createAppException(AppErrorCode.COMMENT_UPLOAD_ACCOUNT_TOO_NEW)
       }
     }
 
@@ -55,7 +54,9 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
     if (minCommentCount > 0) {
       const count = await this.commentRepository.countActiveByReader(readerId)
       if (count < minCommentCount) {
-        throw new BizException(ErrorCodeEnum.CommentUploadInsufficientComments)
+        throw createAppException(
+          AppErrorCode.COMMENT_UPLOAD_INSUFFICIENT_COMMENTS,
+        )
       }
     }
 
@@ -67,7 +68,7 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
         since,
       )
       if (count >= hourlyLimit) {
-        throw new BizException(ErrorCodeEnum.CommentUploadRateLimited)
+        throw createAppException(AppErrorCode.COMMENT_UPLOAD_RATE_LIMITED)
       }
     }
 
@@ -76,7 +77,7 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
       const totalBytes =
         await this.fileReferenceService.sumReaderActiveBytes(readerId)
       if (totalBytes >= totalBytesLimitMB * 1024 * 1024) {
-        throw new BizException(ErrorCodeEnum.CommentUploadQuotaExceeded)
+        throw createAppException(AppErrorCode.COMMENT_UPLOAD_QUOTA_EXCEEDED)
       }
     }
 

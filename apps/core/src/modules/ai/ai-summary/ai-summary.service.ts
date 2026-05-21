@@ -2,17 +2,17 @@ import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import removeMdCodeblock from 'remove-md-codeblock'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { AppException } from '~/common/response/error.types'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   type TaskExecuteContext,
   TaskQueueProcessor,
   TaskStatus,
 } from '~/processors/task-queue'
-import type { PagerDto } from '~/shared/dto/pager.dto'
+import type { BasicPagerInput } from '~/shared/dto/pager.dto'
 import { createAbortError } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
@@ -192,14 +192,14 @@ export class AiSummaryService implements OnModuleInit {
   }> {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article || !article.document) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
 
     if (
       article.type === CollectionRefTypes.Recently ||
       article.type === CollectionRefTypes.Page
     ) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
 
     return {
@@ -338,7 +338,7 @@ export class AiSummaryService implements OnModuleInit {
           await this.aiSummaryRepository.findById(resultId),
         )
         if (!doc) {
-          throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+          throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
         }
         return doc
       },
@@ -355,7 +355,7 @@ export class AiSummaryService implements OnModuleInit {
     } = await this.configService.waitForConfigReady()
 
     if (!enableSummary) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
 
     const { document } = await this.resolveArticleForSummary(articleId)
@@ -369,14 +369,16 @@ export class AiSummaryService implements OnModuleInit {
       )
       return await result
     } catch (error) {
-      if (error instanceof BizException) {
+      if (error instanceof AppException) {
         throw error
       }
       this.logger.error(
         `OpenAI 在处理文章 ${articleId} 时出错：${error.message}`,
         error.stack,
       )
-      throw new BizException(ErrorCodeEnum.AIException, error.message)
+      throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+        message: error.message,
+      })
     }
   }
 
@@ -401,7 +403,7 @@ export class AiSummaryService implements OnModuleInit {
     const article = await this.databaseService.findGlobalById(refId)
 
     if (!article) {
-      throw new BizException(ErrorCodeEnum.ContentNotFound)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, { id: refId })
     }
     const summaries = this.toSummaryDocs(
       await this.aiSummaryRepository.listForRef(refId),
@@ -413,7 +415,7 @@ export class AiSummaryService implements OnModuleInit {
     }
   }
 
-  async getAllSummaries(pager: PagerDto) {
+  async getAllSummaries(pager: BasicPagerInput) {
     const { page, size } = pager
     const summaries = await this.aiSummaryRepository.list(page, size)
     const docs = this.toSummaryDocs(summaries.data)
@@ -565,7 +567,7 @@ export class AiSummaryService implements OnModuleInit {
   async updateSummaryInDb(id: string, summary: string) {
     const doc = this.toSummaryDoc(await this.aiSummaryRepository.findById(id))
     if (!doc) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
 
     return this.toSummaryDoc(
@@ -580,7 +582,7 @@ export class AiSummaryService implements OnModuleInit {
   async getSummaryById(id: string) {
     const doc = this.toSummaryDoc(await this.aiSummaryRepository.findById(id))
     if (!doc) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
     return doc
   }
@@ -595,7 +597,7 @@ export class AiSummaryService implements OnModuleInit {
     const aiConfig = await this.configService.get('ai')
 
     if (!aiConfig?.enableSummary) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
 
     const { lang } = options
@@ -637,7 +639,7 @@ export class AiSummaryService implements OnModuleInit {
     const aiConfig = await this.configService.get('ai')
 
     if (!aiConfig?.enableSummary) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
 
     return this.generateSummaryByOpenAI(articleId, lang)

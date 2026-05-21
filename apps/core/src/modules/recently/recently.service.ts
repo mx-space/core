@@ -1,12 +1,10 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 
 import { RequestContext } from '~/common/contexts/request.context'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
@@ -212,7 +210,7 @@ export class RecentlyService {
     if (refId) {
       const existModel = await this.databaseService.findGlobalById(refId)
       if (!existModel || !existModel.type) {
-        throw new BizException(ErrorCodeEnum.RefModelNotFound)
+        throw createAppException(AppErrorCode.REF_MODEL_NOT_FOUND)
       }
       refType = existModel.type
     }
@@ -287,9 +285,9 @@ export class RecentlyService {
     attitude: RecentlyAttitudeEnum
     ip: string
   }) {
-    if (!ip) throw new BizException(ErrorCodeEnum.CannotGetIp)
+    if (!ip) throw createAppException(AppErrorCode.CANNOT_GET_IP)
     const model = await this.recentlyRepository.findById(id)
-    if (!model) throw new CannotFindException()
+    if (!model) throw createAppException(AppErrorCode.NOT_FOUND)
 
     const redis = this.redisService.getClient()
     const redisKey = getRedisKey(RedisKeys.RecentlyAttitude)

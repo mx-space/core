@@ -6,7 +6,6 @@ import {
   zEntityId,
   zPaginationPage,
   zPaginationSize,
-  zSortOrder,
 } from '~/common/zod'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
@@ -41,9 +40,8 @@ export class UpdateDraftDto extends createZodDto(UpdateDraftSchema) {}
 export const DraftPagerSchema = z.object({
   size: zPaginationSize,
   page: zPaginationPage,
-  select: z.string().min(1).optional(),
-  sortBy: z.string().optional(),
-  sortOrder: zSortOrder,
+  sort_by: z.string().optional(),
+  sort_order: z.enum(['asc', 'desc']).default('desc'),
   refType: z.enum(DraftRefType).optional(),
   hasRef: zCoerceBoolean.optional(),
 })

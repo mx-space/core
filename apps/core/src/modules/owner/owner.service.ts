@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { AppException } from '~/common/response/error.types'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getAvatar } from '~/utils/tool.util'
@@ -73,7 +73,7 @@ export class OwnerService {
   async getOwnerInfo(getLoginIp = false) {
     const reader = await this.getOwnerReader()
     if (!reader) {
-      throw new BizException(ErrorCodeEnum.MasterLost)
+      throw createAppException(AppErrorCode.MASTER_LOST)
     }
 
     const profile = await this.getOwnerProfile(reader.id, getLoginIp)
@@ -87,7 +87,7 @@ export class OwnerService {
   public async getOwner() {
     const owner = await this.getOwnerInfo()
     if (!owner) {
-      throw new BizException(ErrorCodeEnum.UserNotExists)
+      throw createAppException(AppErrorCode.USER_NOT_EXISTS)
     }
     return owner
   }
@@ -95,7 +95,7 @@ export class OwnerService {
   async patchOwnerData(data: Partial<OwnerModel>) {
     const reader = await this.getOwnerReader()
     if (!reader?.id) {
-      throw new BizException(ErrorCodeEnum.MasterLost)
+      throw createAppException(AppErrorCode.MASTER_LOST)
     }
 
     const readerPatch: Record<string, any> = {}
@@ -149,7 +149,7 @@ export class OwnerService {
   ): Promise<Record<string, Date | string | null>> {
     const reader = await this.getOwnerReader()
     if (!reader?.id) {
-      throw new BizException(ErrorCodeEnum.MasterLost)
+      throw createAppException(AppErrorCode.MASTER_LOST)
     }
     const profile = await this.getOwnerProfile(reader.id, true)
     const prevFootstep = {
@@ -184,8 +184,8 @@ export class OwnerService {
   async getSiteOwnerOrMocked() {
     return this.getOwnerInfo().catch((error) => {
       if (
-        error instanceof BizException &&
-        error.bizCode === ErrorCodeEnum.MasterLost
+        error instanceof AppException &&
+        error.code === AppErrorCode.MASTER_LOST
       ) {
         return {
           id: '1',

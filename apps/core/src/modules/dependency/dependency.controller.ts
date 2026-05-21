@@ -7,9 +7,8 @@ import { Observable } from 'rxjs'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR } from '~/constants/path.constant'
 import { installPKG } from '~/utils/system.util'
 
@@ -32,10 +31,9 @@ export class DependencyController {
     const { packageNames } = query
 
     if (typeof packageNames !== 'string') {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'packageNames must be string',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'packageNames must be string',
+      })
     }
 
     const pty = await installPKG(packageNames.split(',').join(' '), DATA_DIR)

@@ -1,10 +1,17 @@
 const ARRAY_SEGMENT = '[]'
 const IDENTIFIER_RE = /^[a-z][\dA-Za-z]*$/
 const UPPER_RE = /[A-Z]/
+const LOWER_UPPER_RE = /([\da-z])([A-Z])/g
+const UPPER_LOWER_RE = /([A-Z]+)([A-Z][a-z])/g
 
+// Boundary-aware: `articleURL` → `article_url`, `HTMLContent` → `html_content`,
+// rather than the naïve `_a_r_t_i_c_l_e__u_r_l`.
 const snakeKey = (key: string): string => {
   if (!IDENTIFIER_RE.test(key) || !UPPER_RE.test(key)) return key
-  return key.replaceAll(/[A-Z]/g, (char) => `_${char.toLowerCase()}`)
+  return key
+    .replaceAll(UPPER_LOWER_RE, '$1_$2')
+    .replaceAll(LOWER_UPPER_RE, '$1_$2')
+    .toLowerCase()
 }
 
 const parseBypassPath = (path: string): string[] =>

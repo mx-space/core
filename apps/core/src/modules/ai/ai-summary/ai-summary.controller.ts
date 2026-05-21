@@ -18,7 +18,7 @@ import { RawResponse } from '~/common/response/raw-response.decorator'
 import { CreateSummaryTaskDto } from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
@@ -54,7 +54,7 @@ export class AiSummaryController {
 
   @Get('/')
   @Auth()
-  async getSummaries(@Query() query: PagerDto) {
+  async getSummaries(@Query() query: BasicPagerDto) {
     const result = await this.service.getAllSummaries(query)
     return withMeta(
       result.data,

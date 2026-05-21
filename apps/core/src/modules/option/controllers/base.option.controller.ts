@@ -1,7 +1,6 @@
 import { Body, Get, Param, Patch } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import {
   attachAiProviderOptionsToFormDSL,
   generateFormDSL,
@@ -36,7 +35,9 @@ export class BaseOptionController {
   async getOptionKey(@Param('key') key: keyof IConfig) {
     const value = await this.configsService.getForResponse(key)
     if (!value) {
-      throw new BizException(ErrorCodeEnum.ConfigNotFound)
+      throw createAppException(AppErrorCode.CONFIG_NOT_FOUND, {
+        id: key as string,
+      })
     }
     return value
   }
@@ -47,7 +48,7 @@ export class BaseOptionController {
     @Body() body: Record<string, any>,
   ) {
     if (typeof body !== 'object') {
-      throw new BizException(ErrorCodeEnum.InvalidBody)
+      throw createAppException(AppErrorCode.INVALID_BODY)
     }
     const result = await this.configsService.patchAndValid(key, body)
     return sanitizeConfigForResponse(result as object, key)

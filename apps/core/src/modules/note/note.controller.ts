@@ -145,10 +145,14 @@ export class NoteController {
       .interaction({ is_liked: liked })
       .insights({ has_in_locale: hasInsightsInLocale })
 
-    const translationMap = new Map<string, EntryTranslation>()
-    translationMap.set(String(current.id), {
-      article: buildArticleTranslationMeta(translationResult, lang) as any,
-    })
+    const translationMap = new Map<string, EntryTranslation>([
+      [
+        String(current.id),
+        {
+          article: buildArticleTranslationMeta(translationResult, lang) as any,
+        },
+      ],
+    ])
     if (lang && current.topic?.id) {
       const topicId = String(current.topic.id)
       const topicFields = (
@@ -208,7 +212,14 @@ export class NoteController {
     @Query() query: NoteQueryDto,
     @Lang() lang?: string,
   ) {
-    const { size, page, sortBy, sortOrder, year, withSummary } = query
+    const {
+      size,
+      page,
+      sort_by: sortBy,
+      sort_order: sortOrder,
+      year,
+      withSummary,
+    } = query
 
     const result = await this.noteService.listPaginated(page, size, {
       visibleOnly: !isAuthenticated,
@@ -219,7 +230,7 @@ export class NoteController {
         | 'mood'
         | 'weather'
         | undefined,
-      sortOrder: sortOrder as 1 | -1 | undefined,
+      sortOrder: sortOrder === 'asc' ? 1 : -1,
       year,
     })
 
@@ -365,7 +376,7 @@ export class NoteController {
 
     const currentDocument = await this.noteService.findById(id)
     if (!currentDocument) {
-      return { data: [], size: 0 }
+      return withMeta([], new MetaObjectBuilder().view('card').build())
     }
 
     const findAdjacent = (direction: 'prev' | 'next', count: number) => {
@@ -508,10 +519,14 @@ export class NoteController {
       .insights({ has_in_locale: hasInsightsInLocale })
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
-    const translationMap = new Map<string, EntryTranslation>()
-    translationMap.set(String(latest.id), {
-      article: buildArticleTranslationMeta(translationResult, lang) as any,
-    })
+    const translationMap = new Map<string, EntryTranslation>([
+      [
+        String(latest.id),
+        {
+          article: buildArticleTranslationMeta(translationResult, lang) as any,
+        },
+      ],
+    ])
     if (lang && latest.topic?.id) {
       const topicId = String(latest.topic.id)
       const topicFields = (
@@ -569,14 +584,14 @@ export class NoteController {
     @Lang() lang?: string,
   ) {
     const { id } = params
-    const { size, page, sortBy, sortOrder } = query
+    const { size, page, sort_by: sortBy, sort_order: sortOrder } = query
     const result = await this.noteService.getNotePaginationByTopicId(
       id,
       {
         page,
         limit: size,
         sortBy: sortBy as any,
-        sortOrder: sortOrder as 1 | -1 | undefined,
+        sortOrder: sortOrder === 'asc' ? 1 : -1,
       },
       isAuthenticated ? {} : { isPublished: true },
     )

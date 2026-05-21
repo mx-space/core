@@ -21,15 +21,12 @@ import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { ConfigsService } from '../configs/configs.service'
 import { ReaderService } from '../reader/reader.service'
@@ -39,6 +36,7 @@ import { CommentLifecycleService } from './comment.lifecycle.service'
 import {
   BatchCommentDeleteDto,
   BatchCommentStateDto,
+  CommentAdminPagerDto,
   CommentDto,
   CommentRefTypesDto,
   CommentStatePatchDto,
@@ -118,7 +116,7 @@ export class CommentController {
 
   @Get('/')
   @Auth()
-  async getRecentlyComments(@Query() query: PagerDto) {
+  async getRecentlyComments(@Query() query: CommentAdminPagerDto) {
     const { size = 10, page = 1, state = 0 } = query
     const comments = await this.commentService.getComments({
       size,
@@ -143,7 +141,7 @@ export class CommentController {
   @Get('/ref/:id')
   async getCommentsByRefId(
     @Param() params: EntityIdDto,
-    @Query() query: PagerDto,
+    @Query() query: BasicPagerDto,
     @Query('hasAnchor') hasAnchor: string,
     @Query('sort') sort: string | undefined,
     @Query('around') around: string | undefined,
@@ -187,7 +185,7 @@ export class CommentController {
   @Get('/thread/:rootCommentId')
   async getThreadReplies(
     @Param('rootCommentId') rootCommentId: string,
-    @Query() query: PagerDto,
+    @Query() query: BasicPagerDto,
     @Query('cursor') cursor: string,
     @HasAdminAccess() hasAdminAccess: boolean,
   ) {
@@ -268,7 +266,7 @@ export class CommentController {
       throw createAppException(AppErrorCode.COMMENT_DISABLED)
     }
     if (!readerId) {
-      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+      throw createAppException(AppErrorCode.AUTH_NOT_LOGGED_IN)
     }
     return this.createCommentWithBody(params, body, ipLocation, query)
   }
@@ -316,7 +314,7 @@ export class CommentController {
       throw createAppException(AppErrorCode.COMMENT_DISABLED)
     }
     if (!readerId) {
-      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+      throw createAppException(AppErrorCode.AUTH_NOT_LOGGED_IN)
     }
     return this.replyCommentWithBody(params, body, ipLocation)
   }
@@ -341,7 +339,7 @@ export class CommentController {
     try {
       await this.commentService.updateComment(id, updateResult)
     } catch {
-      throw new NoContentCanBeModifiedException()
+      throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
     }
 
     if (!isUndefined(state)) {

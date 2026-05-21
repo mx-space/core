@@ -1,8 +1,7 @@
 import type { OnModuleInit } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 
 import { MetaFieldType, MetaPresetScope } from './meta-preset.enum'
 import { MetaPresetRepository } from './meta-preset.repository'
@@ -173,7 +172,9 @@ export class MetaPresetService implements OnModuleInit {
   async create(dto: CreateMetaPresetDto) {
     const exists = await this.metaPresetRepository.findByName(dto.key)
     if (exists) {
-      throw new BizException(ErrorCodeEnum.PresetKeyExists, `key: "${dto.key}"`)
+      throw createAppException(AppErrorCode.META_PRESET_KEY_EXISTS, {
+        key: dto.key,
+      })
     }
 
     // 获取最大 order 值
@@ -194,7 +195,7 @@ export class MetaPresetService implements OnModuleInit {
   async update(id: string, dto: UpdateMetaPresetDto) {
     const preset = await this.metaPresetRepository.findById(id)
     if (!preset) {
-      throw new BizException(ErrorCodeEnum.PresetNotFound)
+      throw createAppException(AppErrorCode.META_PRESET_NOT_FOUND, { id })
     }
 
     // 内置预设只能修改 enabled 和 order
@@ -209,10 +210,9 @@ export class MetaPresetService implements OnModuleInit {
     if (dto.key && dto.key !== preset.key) {
       const exists = await this.metaPresetRepository.findByName(dto.key)
       if (exists) {
-        throw new BizException(
-          ErrorCodeEnum.PresetKeyExists,
-          `key: "${dto.key}"`,
-        )
+        throw createAppException(AppErrorCode.META_PRESET_KEY_EXISTS, {
+          key: dto.key,
+        })
       }
     }
 
@@ -225,11 +225,11 @@ export class MetaPresetService implements OnModuleInit {
   async delete(id: string) {
     const preset = await this.metaPresetRepository.findById(id)
     if (!preset) {
-      throw new BizException(ErrorCodeEnum.PresetNotFound)
+      throw createAppException(AppErrorCode.META_PRESET_NOT_FOUND, { id })
     }
 
     if (preset.isBuiltin) {
-      throw new BizException(ErrorCodeEnum.BuiltinPresetCannotDelete)
+      throw createAppException(AppErrorCode.BUILTIN_PRESET_CANNOT_DELETE)
     }
 
     return this.metaPresetRepository.deleteById(id)

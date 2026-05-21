@@ -3,8 +3,7 @@ import path from 'node:path'
 
 import { Injectable, Logger } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import type { ContentFormat } from '~/shared/types/content-format.type'
@@ -256,7 +255,7 @@ export class FileReferenceService {
     const newUrls = this.parseCommentImageUrls(text, hosts)
 
     if (newUrls.length > cap) {
-      throw new BizException(ErrorCodeEnum.CommentImageCapExceeded)
+      throw createAppException(AppErrorCode.COMMENT_IMAGE_CAP_EXCEEDED)
     }
 
     if (newUrls.length === 0 && mode === 'create') {
@@ -268,7 +267,7 @@ export class FileReferenceService {
     for (const ref of candidates) {
       if (ref.uploadedBy !== FileUploadedBy.Reader) continue
       if (ref.readerId && ref.readerId !== readerId) {
-        throw new BizException(ErrorCodeEnum.CommentUploadFileNotOwned)
+        throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_NOT_OWNED)
       }
     }
 
@@ -280,7 +279,7 @@ export class FileReferenceService {
       ) {
         continue
       }
-      throw new BizException(ErrorCodeEnum.CommentUploadFileAlreadyBound)
+      throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_ALREADY_BOUND)
     }
 
     const existingForComment =

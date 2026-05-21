@@ -1,13 +1,11 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { AuthService } from '~/modules/auth/auth.service'
 import type { SessionUser } from '~/modules/auth/auth.types'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-
-import { BizException } from '../exceptions/biz.exception'
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -33,22 +31,22 @@ export class AuthGuard implements CanActivate {
     })
 
     if (!apiKey) {
-      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+      throw createAppException(AppErrorCode.AUTH_NOT_LOGGED_IN)
     }
 
     const result = await this.authService.verifyApiKey(apiKey.key)
     if (!result?.referenceId) {
-      throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
+      throw createAppException(AppErrorCode.AUTH_TOKEN_INVALID)
     }
 
     const isOwner = await this.authService.isOwnerReaderId(result.referenceId)
     if (!isOwner) {
-      throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
+      throw createAppException(AppErrorCode.AUTH_TOKEN_INVALID)
     }
 
     const readerUser = await this.authService.getReaderById(result.referenceId)
     if (!readerUser) {
-      throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
+      throw createAppException(AppErrorCode.AUTH_TOKEN_INVALID)
     }
     this.attachUserAndToken(request, readerUser, apiKey.key)
     return true

@@ -4,8 +4,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import type { FastifyRequest } from 'fastify'
 import { fileTypeFromBuffer } from 'file-type'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import {
@@ -90,7 +89,7 @@ export class CommentUploadService {
   ): Promise<ReaderUploadResult> {
     const rawConfig = await this.configsService.get('commentUploadOptions')
     if (rawConfig.enable === false) {
-      throw new BizException(ErrorCodeEnum.CommentUploadDisabled)
+      throw createAppException(AppErrorCode.COMMENT_UPLOAD_DISABLED)
     }
 
     const {
@@ -110,18 +109,18 @@ export class CommentUploadService {
       chunks.push(chunk)
       totalBytes += chunk.length
       if (totalBytes > maxFileSize) {
-        throw new BizException(ErrorCodeEnum.CommentUploadFileTooLarge)
+        throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_TOO_LARGE)
       }
     }
     const buffer = Buffer.concat(chunks)
 
     if (file.file.truncated) {
-      throw new BizException(ErrorCodeEnum.CommentUploadFileTooLarge)
+      throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_TOO_LARGE)
     }
 
     const detected = await detectImageMime(buffer)
     if (!detected || !whitelist.includes(detected.mime)) {
-      throw new BizException(ErrorCodeEnum.CommentUploadInvalidMime)
+      throw createAppException(AppErrorCode.COMMENT_UPLOAD_INVALID_MIME)
     }
 
     const detectedMime = detected.mime

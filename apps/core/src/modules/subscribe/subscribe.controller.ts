@@ -6,7 +6,7 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { SubscribeTypeToBitMap } from './subscribe.constant'
 import {
@@ -34,7 +34,7 @@ export class SubscribeController {
 
   @Get('/')
   @Auth()
-  async list(@Query() query: PagerDto) {
+  async list(@Query() query: BasicPagerDto) {
     const { page = 1, size = 10 } = query
     const result = await this.service.list(page, size)
     return withMeta(

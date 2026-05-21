@@ -1,8 +1,7 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { SchedulerRegistry } from '@nestjs/schedule'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import {
   ScopedTaskService,
   type TaskExecuteContext,
@@ -91,7 +90,7 @@ export class CronTaskService implements OnModuleInit {
   ): Promise<{ taskId: string; created: boolean }> {
     const meta = CronTaskMetas[type]
     if (!meta) {
-      throw new BizException(ErrorCodeEnum.CronNotFound, type)
+      throw createAppException(AppErrorCode.CRON_NOT_FOUND, { extra: type })
     }
 
     return this.crud.createTask({

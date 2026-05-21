@@ -83,7 +83,7 @@ Every successful JSON response has the shape `{ data, meta? }`. Every error has 
 
 **Success envelope** — `ResponseInterceptorV2` (global `APP_INTERCEPTOR`) wraps controller return values:
 - A bare value `T` → `{ data: T }`
-- A value already shaped as `{ data, meta? }` → passed through unchanged
+- A value produced via `withMeta(data, meta)` (from `~/common/response/envelope.types`) → emitted as `{ data, meta }`. Detection is by an internal `Symbol`, **not** by the presence of a `data` key — returning a literal `{ data, ... }` will be double-wrapped. CI enforces this via `scripts/check-controller-response-envelope.ts`.
 - `undefined` → `204 No Content`
 
 **Error envelope** — `AppExceptionFilter` (global `APP_FILTER`) maps every thrown error:
@@ -111,7 +111,7 @@ throw new NoContentCanBeModifiedException()            // code: 'NO_CONTENT_MODI
 **`@RawResponse`** — opt out of the whole envelope + casing pipeline for non-JSON responses (streams, HTML, RSS, redirects). Located in `src/common/response/raw-response.decorator.ts`.
 
 **Writing a new endpoint:**
-1. Return `{ data: <value> }` or `{ data: <value>, meta: new MetaObjectBuilder()...build() }`.
+1. Return `<value>` for a bare envelope, or `withMeta(<value>, new MetaObjectBuilder()...build())` for `{ data, meta }`. Never return an object literal whose top-level keys include `data`.
 2. Throw `AppException` subclasses (or `BizException` with an `ErrorCodeEnum` code) for errors.
 3. Use `@RawResponse` only if the response is not JSON.
 4. Define or reuse a view in `<resource>.views.ts` and parse through it before returning.

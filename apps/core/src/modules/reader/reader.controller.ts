@@ -5,7 +5,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { StringIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { ReaderService } from './reader.service'
 
@@ -15,7 +15,7 @@ export class ReaderAuthController {
   constructor(private readonly readerService: ReaderService) {}
 
   @Get('/')
-  async find(@Query() query: PagerDto) {
+  async find(@Query() query: BasicPagerDto) {
     const { page = 1, size = 20 } = query
     const result = await this.readerService.findPaginated(page, size)
     const p = result.pagination

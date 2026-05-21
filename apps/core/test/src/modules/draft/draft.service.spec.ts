@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/response/error.types'
 import { DraftRefType } from '~/modules/draft/draft.enum'
 import type {
   DraftRepository,
@@ -130,6 +130,6 @@ describe('DraftService', () => {
 
     await expect(
       service.update('missing', { text: 'x' } as any),
-    ).rejects.toThrow(BizException)
+    ).rejects.toThrow(AppException)
   })
 })

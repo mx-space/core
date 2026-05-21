@@ -3,14 +3,13 @@ import { createHmac } from 'node:crypto'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EventPayloadEnricherService } from '~/processors/helper/helper.event-payload.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
-import type { PagerDto } from '~/shared/dto/pager.dto'
+import type { BasicPagerInput } from '~/shared/dto/pager.dto'
 
 import { WebhookRepository } from './webhook.repository'
 import type { WebhookRow } from './webhook.types'
@@ -186,11 +185,13 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   async redispatch(id: string) {
     const record = await this.webhookRepository.findEventById(id)
     if (!record) {
-      throw new BizException(ErrorCodeEnum.WebhookEventNotFound)
+      throw createAppException(AppErrorCode.WEBHOOK_EVENT_NOT_FOUND, { id })
     }
     const hook = await this.webhookRepository.findById(record.hookId)
     if (!hook) {
-      throw new BizException(ErrorCodeEnum.WebhookNotFound)
+      throw createAppException(AppErrorCode.WEBHOOK_NOT_FOUND, {
+        id: record.hookId,
+      })
     }
 
     await this.sendWebhookEvent(
@@ -202,7 +203,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     )
   }
 
-  async getEventsByHookId(hookId: string, query: PagerDto) {
+  async getEventsByHookId(hookId: string, query: BasicPagerInput) {
     const { page, size } = query
     return this.webhookRepository.listEvents(hookId, page, size)
   }

@@ -14,7 +14,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { ProjectRepository } from './project.repository'
 
@@ -25,7 +25,7 @@ export class ProjectController {
   ) {}
 
   @Get('/')
-  async gets(@Query() pager: PagerDto) {
+  async gets(@Query() pager: BasicPagerDto) {
     const size = pager.size ?? 10
     const page = pager.page ?? 1
     const result = await this.repository.list(page, size)

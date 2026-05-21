@@ -2,12 +2,9 @@ import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import { omit } from 'es-toolkit/compat'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -89,7 +86,7 @@ export class CategoryService implements OnApplicationBootstrap {
       condition.isPublished === undefined
         ? posts
         : posts.filter((post) => post.isPublished === condition.isPublished)
-    if (filtered.length === 0) throw new CannotFindException()
+    if (filtered.length === 0) throw createAppException(AppErrorCode.NOT_FOUND)
     return filtered.map(
       ({
         id,
@@ -175,11 +172,11 @@ export class CategoryService implements OnApplicationBootstrap {
 
   async deleteById(id: string) {
     const category = await this.categoryRepository.findById(id)
-    if (!category) throw new NoContentCanBeModifiedException()
+    if (!category) throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
 
     const postsInCategory = await this.findPostsInCategory(category.id)
     if (postsInCategory.length > 0) {
-      throw new BizException(ErrorCodeEnum.CategoryHasPosts)
+      throw createAppException(AppErrorCode.CATEGORY_HAS_POSTS)
     }
     const deleted = await this.categoryRepository.deleteById(category.id)
     if ((await this.categoryRepository.countAll()) === 0) {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/response/error.types'
 import { AuthService } from '~/modules/auth/auth.service'
 
 const createService = () => {
@@ -68,7 +68,7 @@ describe('AuthService', () => {
 
     await expect(
       service.createAccessToken({ name: 'deploy' } as any),
-    ).rejects.toThrow(BizException)
+    ).rejects.toThrow(AppException)
   })
 
   it('extracts API keys from current and deprecated request locations', () => {

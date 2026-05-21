@@ -1,9 +1,10 @@
 import { Test } from '@nestjs/testing'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { AppException } from '~/common/response/error.types'
 import { AiService } from '~/modules/ai/ai.service'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock the runtime factory
 vi.mock('~/modules/ai/runtime', () => ({
@@ -102,12 +103,12 @@ describe('AiService', () => {
   describe('when no providers configured', () => {
     it('should throw when providers array is empty', async () => {
       configsService.get.mockResolvedValueOnce({ providers: [] })
-      await expect(service.getSummaryModel()).rejects.toThrow(BizException)
+      await expect(service.getSummaryModel()).rejects.toThrow(AppException)
     })
 
     it('should throw when providers is undefined', async () => {
       configsService.get.mockResolvedValueOnce({})
-      await expect(service.getSummaryModel()).rejects.toThrow(BizException)
+      await expect(service.getSummaryModel()).rejects.toThrow(AppException)
     })
   })
 

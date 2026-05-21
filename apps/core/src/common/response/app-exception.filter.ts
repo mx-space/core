@@ -15,7 +15,6 @@ import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getIp } from '~/utils/ip.util'
 
-import { BizException } from '../exceptions/biz.exception'
 import { AppException, ErrorCodes } from './error.types'
 
 let processHooksRegistered = false
@@ -50,6 +49,30 @@ export class AppExceptionFilter implements ExceptionFilter {
     })
   }
 
+  private logServerError(exception: unknown) {
+    this.logger.error(exception)
+    this.eventManager?.broadcast(
+      EventBusEvents.SystemException,
+      {
+        message: (exception as Error)?.message,
+        stack: (exception as Error)?.stack,
+      },
+      { scope: EventScope.TO_SYSTEM },
+    )
+  }
+
+  private async handleThrottle(ip: string | undefined, url: string) {
+    this.logger.warn(`IP: ${ip} suspected attack at path: ${decodeURI(url)}`)
+    if (!this.configService || !this.barkService) return
+    const { enableThrottleGuard } = await this.configService.get('barkOptions')
+    if (enableThrottleGuard) {
+      this.barkService.throttlePush({
+        title: 'Suspected attack',
+        body: `IP: ${ip} Path: ${decodeURI(url)}`,
+      })
+    }
+  }
+
   async catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
     const reply = ctx.getResponse()
@@ -68,30 +91,12 @@ export class AppExceptionFilter implements ExceptionFilter {
       const status = exception.getStatus()
 
       if (status === HttpStatus.TOO_MANY_REQUESTS) {
-        this.logger.warn(`IP: ${ip} 疑似遭到攻击 Path: ${decodeURI(url)}`)
-        if (this.configService && this.barkService) {
-          const { enableThrottleGuard } =
-            await this.configService.get('barkOptions')
-          if (enableThrottleGuard) {
-            this.barkService.throttlePush({
-              title: '疑似遭到攻击',
-              body: `IP: ${ip} Path: ${decodeURI(url)}`,
-            })
-          }
-        }
-      } else if (status >= 500 && !(exception instanceof BizException)) {
-        this.logger.error(exception)
-        this.eventManager?.broadcast(
-          EventBusEvents.SystemException,
-          {
-            message: exception.message,
-            stack: (exception as Error).stack,
-          },
-          { scope: EventScope.TO_SYSTEM },
-        )
+        await this.handleThrottle(ip, url)
+      } else if (status >= 500) {
+        this.logServerError(exception)
       } else {
         this.logger.warn(
-          `IP: ${ip} 错误信息：(${status}) ${exception.message} Path: ${decodeURI(url)}`,
+          `IP: ${ip} error (${status}) ${exception.message} at path: ${decodeURI(url)}`,
         )
       }
 
@@ -119,35 +124,17 @@ export class AppExceptionFilter implements ExceptionFilter {
       const message = exception.message
 
       if (status === HttpStatus.TOO_MANY_REQUESTS) {
-        this.logger.warn(`IP: ${ip} 疑似遭到攻击 Path: ${decodeURI(url)}`)
-        if (this.configService && this.barkService) {
-          const { enableThrottleGuard } =
-            await this.configService.get('barkOptions')
-          if (enableThrottleGuard) {
-            this.barkService.throttlePush({
-              title: '疑似遭到攻击',
-              body: `IP: ${ip} Path: ${decodeURI(url)}`,
-            })
-          }
-        }
+        await this.handleThrottle(ip, url)
         return reply.status(429).send({
           error: {
             code: ErrorCodes.RATE_LIMITED,
-            message: '请求过于频繁，请稍后再试',
+            message: 'Too many requests, please try again later',
           },
         })
       }
 
       if (status >= 500) {
-        this.logger.error(exception)
-        this.eventManager?.broadcast(
-          EventBusEvents.SystemException,
-          {
-            message: (exception as Error)?.message,
-            stack: (exception as Error)?.stack,
-          },
-          { scope: EventScope.TO_SYSTEM },
-        )
+        this.logServerError(exception)
       } else {
         this.logger.warn(
           `IP: ${ip} 错误信息：(${status}) ${message} Path: ${decodeURI(url)}`,
@@ -159,18 +146,7 @@ export class AppExceptionFilter implements ExceptionFilter {
       })
     }
 
-    const unknownMessage =
-      (exception as Error)?.message || 'Internal server error'
-
-    this.logger.error(exception)
-    this.eventManager?.broadcast(
-      EventBusEvents.SystemException,
-      {
-        message: unknownMessage,
-        stack: (exception as Error)?.stack,
-      },
-      { scope: EventScope.TO_SYSTEM },
-    )
+    this.logServerError(exception)
 
     return reply.status(500).send({
       error: {

@@ -2,12 +2,9 @@ import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { RequestContext } from '~/common/contexts/request.context'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getAvatar } from '~/utils/tool.util'
@@ -316,7 +313,7 @@ export class CommentService {
       const result = await this.databaseService.findGlobalById(id)
       if (result) refType = result.type
     }
-    if (!refType) throw new BizException(ErrorCodeEnum.CommentPostNotExists)
+    if (!refType) throw createAppException(AppErrorCode.COMMENT_POST_NOT_EXISTS)
 
     const comment = await this.commentRepository.create({
       text: doc.text!,
@@ -347,16 +344,15 @@ export class CommentService {
   async validAuthorName(author: string): Promise<void> {
     const isExist = await this.ownerService.isOwnerName(author)
     if (isExist) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        '用户名与主人重名啦，但是你好像并不是我的主人唉',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: '用户名与主人重名啦，但是你好像并不是我的主人唉',
+      })
     }
   }
 
   async replyComment(id: string, doc: Partial<CommentModel>) {
     const parent = await this.commentRepository.findById(id)
-    if (!parent) throw new CannotFindException()
+    if (!parent) throw createAppException(AppErrorCode.NOT_FOUND)
 
     const reader = await this.assignReaderToComment()
     if (reader) {
@@ -409,7 +405,7 @@ export class CommentService {
 
   async softDeleteComment(id: string) {
     const comment = await this.commentRepository.findById(id)
-    if (!comment) throw new NoContentCanBeModifiedException()
+    if (!comment) throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
     if (comment.isDeleted) return
     await this.commentRepository.update(id, {
       isDeleted: true,
@@ -430,7 +426,7 @@ export class CommentService {
 
   async allowComment(id: string, _type?: CollectionRefTypes) {
     const result = await this.databaseService.findGlobalById(id)
-    if (!result) throw new CannotFindException()
+    if (!result) throw createAppException(AppErrorCode.NOT_FOUND)
     return 'allowComment' in result.document
       ? (result.document as any).allowComment
       : true
@@ -438,7 +434,7 @@ export class CommentService {
 
   async allowCommentByCommentId(commentId: string) {
     const comment = await this.commentRepository.findById(commentId)
-    if (!comment) throw new CannotFindException()
+    if (!comment) throw createAppException(AppErrorCode.NOT_FOUND)
     return this.allowComment(
       comment.refId,
       comment.refType as CollectionRefTypes,
@@ -749,8 +745,9 @@ export class CommentService {
 
   async editComment(id: string, text: string) {
     const comment = await this.commentRepository.findById(id)
-    if (!comment) throw new CannotFindException()
-    if (comment.isDeleted) throw new NoContentCanBeModifiedException()
+    if (!comment) throw createAppException(AppErrorCode.NOT_FOUND)
+    if (comment.isDeleted)
+      throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
     await this.commentRepository.update(id, { text, editedAt: new Date() })
     await this.eventManager.broadcast(
       BusinessEvents.COMMENT_UPDATE,

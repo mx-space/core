@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 
 import { AiAgentChatService } from './ai-agent-chat.service'
 import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
@@ -37,10 +36,9 @@ export class AiAgentConversationService {
   async getById(id: string) {
     const doc = await this.conversationRepository.findById(id)
     if (!doc) {
-      throw new BizException(
-        ErrorCodeEnum.ContentNotFoundCantProcess,
-        'Conversation not found',
-      )
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Conversation not found',
+      })
     }
     return doc
   }
@@ -53,10 +51,9 @@ export class AiAgentConversationService {
         })
       : null
     if (!result) {
-      throw new BizException(
-        ErrorCodeEnum.ContentNotFoundCantProcess,
-        'Conversation not found',
-      )
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Conversation not found',
+      })
     }
 
     if (
@@ -78,10 +75,9 @@ export class AiAgentConversationService {
   async replaceMessages(id: string, messages: Record<string, unknown>[]) {
     const result = await this.conversationRepository.update(id, { messages })
     if (!result) {
-      throw new BizException(
-        ErrorCodeEnum.ContentNotFoundCantProcess,
-        'Conversation not found',
-      )
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Conversation not found',
+      })
     }
 
     if (
@@ -105,10 +101,9 @@ export class AiAgentConversationService {
   ) {
     const result = await this.conversationRepository.update(id, data)
     if (!result) {
-      throw new BizException(
-        ErrorCodeEnum.ContentNotFoundCantProcess,
-        'Conversation not found',
-      )
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Conversation not found',
+      })
     }
     return result
   }

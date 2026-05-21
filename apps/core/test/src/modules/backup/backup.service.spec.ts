@@ -2,7 +2,7 @@ import { rm } from 'node:fs/promises'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode } from '~/common/errors'
 import { BackupService } from '~/modules/backup/backup.service'
 
 vi.mock('~/constants/path.constant', () => ({
@@ -30,14 +30,14 @@ describe('BackupService path validation', () => {
   it('rejects traversal input when resolving backup files', () => {
     expect(() => service.checkBackupExist('../archive')).toThrowError(
       expect.objectContaining({
-        bizCode: ErrorCodeEnum.InvalidParameter,
+        code: AppErrorCode.INVALID_PARAMETER,
       }),
     )
   })
 
   it('rejects traversal input when deleting backups', async () => {
     await expect(service.deleteBackup('../archive')).rejects.toMatchObject({
-      bizCode: ErrorCodeEnum.InvalidParameter,
+      code: AppErrorCode.INVALID_PARAMETER,
     })
 
     expect(rm).not.toHaveBeenCalled()

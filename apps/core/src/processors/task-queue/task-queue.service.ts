@@ -1,7 +1,6 @@
 import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { getRedisKey } from '~/utils/redis.util'
 import { md5 } from '~/utils/tool.util'
 
@@ -329,11 +328,11 @@ export class TaskQueueService implements OnModuleDestroy {
   async cancelTask(taskId: string): Promise<boolean> {
     const task = await this.getTask(taskId)
     if (!task) {
-      throw new BizException(ErrorCodeEnum.AITaskNotFound)
+      throw createAppException(AppErrorCode.AI_TASK_NOT_FOUND, { id: taskId })
     }
 
     if (isTerminalStatus(task.status)) {
-      throw new BizException(ErrorCodeEnum.AITaskAlreadyCompleted)
+      throw createAppException(AppErrorCode.AI_TASK_ALREADY_COMPLETED)
     }
 
     if (task.status === TaskStatus.Pending) {
@@ -407,7 +406,7 @@ export class TaskQueueService implements OnModuleDestroy {
   async deleteTask(taskId: string): Promise<void> {
     const task = await this.getTask(taskId)
     if (!task) {
-      throw new BizException(ErrorCodeEnum.AITaskNotFound)
+      throw createAppException(AppErrorCode.AI_TASK_NOT_FOUND, { id: taskId })
     }
 
     const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
@@ -452,10 +451,9 @@ export class TaskQueueService implements OnModuleDestroy {
     const { status, type, scope, before } = options
 
     if (before >= Date.now()) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'before must be in the past',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'before must be in the past',
+      })
     }
 
     const indexKey = this.pickIndexKeyByOption({ type, scope, status })

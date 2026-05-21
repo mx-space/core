@@ -23,7 +23,7 @@ import {
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { EnrichmentService } from '../enrichment/enrichment.service'
 import {
@@ -44,7 +44,7 @@ export class PageController {
   ) {}
 
   @Get('/')
-  async getPagesSummary(@Query() query: PagerDto, @Lang() lang?: string) {
+  async getPagesSummary(@Query() query: BasicPagerDto, @Lang() lang?: string) {
     const { size, page } = query
     const result = await this.pageService.listPaginated(page, size)
 

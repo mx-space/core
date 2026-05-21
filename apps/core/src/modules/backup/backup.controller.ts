@@ -15,9 +15,8 @@ import type { FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
 import { getMediumDateTime } from '~/utils/time.util'
@@ -42,10 +41,12 @@ export class BackupController {
   async createNewBackup() {
     const res = await this.backupService.backup()
     if (typeof res == 'undefined') {
-      throw new BizException(ErrorCodeEnum.BackupNotEnabled)
+      throw createAppException(AppErrorCode.BACKUP_NOT_ENABLED)
     }
     if (typeof res.buffer === 'undefined') {
-      throw new BizException(ErrorCodeEnum.FileNotFound, 'backup zip missing')
+      throw createAppException(AppErrorCode.FILE_NOT_FOUND, {
+        extra: 'backup zip missing',
+      })
     }
     const stream = new Readable()
 
@@ -74,7 +75,9 @@ export class BackupController {
     const { mimetype } = data
 
     if (!isZipMinetype(mimetype)) {
-      throw new BizException(ErrorCodeEnum.MineZip, `got: ${mimetype}`)
+      throw createAppException(AppErrorCode.MIME_ZIP_REQUIRED, {
+        got: `got: ${mimetype}`,
+      })
     }
 
     await this.backupService.saveTempBackupByUpload(await data.toBuffer())
@@ -82,7 +85,9 @@ export class BackupController {
   @Patch(['/rollback/:dirname', '/:dirname'])
   async rollback(@Param('dirname') dirname: string) {
     if (!dirname) {
-      throw new BizException(ErrorCodeEnum.InvalidParameter)
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'dirname is required',
+      })
     }
 
     this.backupService.rollbackTo(dirname)
@@ -95,7 +100,9 @@ export class BackupController {
   ) {
     const nextFiles = files || filesBody
     if (!nextFiles) {
-      throw new BizException(ErrorCodeEnum.InvalidParameter)
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'files is required',
+      })
     }
 
     const filesList = nextFiles.split(',')

@@ -17,7 +17,7 @@ import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { RawResponse } from '~/common/response/raw-response.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
@@ -79,7 +79,7 @@ export class AiInsightsController {
 
   @Get('/')
   @Auth()
-  async getInsights(@Query() query: PagerDto) {
+  async getInsights(@Query() query: BasicPagerDto) {
     const result = await this.service.getAllInsights(query)
     return withMeta(
       result.data,

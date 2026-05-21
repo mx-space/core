@@ -2,10 +2,8 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { omit } from 'es-toolkit/compat'
 import slugify from 'slugify'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -79,7 +77,7 @@ export class PageService {
     const { draftId } = doc
     const count = await this.pageRepository.count()
     if (count >= 10) {
-      throw new BizException(ErrorCodeEnum.MaxCountLimit)
+      throw createAppException(AppErrorCode.MAX_COUNT_LIMIT)
     }
     if (!doc.order) {
       doc.order = count + 1
@@ -169,7 +167,7 @@ export class PageService {
     })
 
     if (!newDoc) {
-      throw new NoContentCanBeModifiedException()
+      throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
     }
 
     if (draftId) {

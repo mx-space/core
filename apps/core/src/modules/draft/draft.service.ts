@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
@@ -62,7 +61,7 @@ export class DraftService {
 
   async update(id: string, dto: UpdateDraftDto): Promise<DraftRow> {
     const draft = await this.draftRepository.findById(id)
-    if (!draft) throw new BizException(ErrorCodeEnum.DraftNotFound)
+    if (!draft) throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id })
 
     const hasContentChange = this.draftHistoryService.hasContentChange(
       {
@@ -99,7 +98,7 @@ export class DraftService {
       version: hasContentChange ? draft.version + 1 : draft.version,
       history,
     })
-    if (!updated) throw new BizException(ErrorCodeEnum.DraftNotFound)
+    if (!updated) throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id })
 
     if (dto.text !== undefined) {
       await this.fileReferenceService.updateReferencesForDocument(
@@ -141,7 +140,7 @@ export class DraftService {
 
   async delete(id: string): Promise<void> {
     const result = await this.draftRepository.deleteById(id)
-    if (!result) throw new BizException(ErrorCodeEnum.DraftNotFound)
+    if (!result) throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id })
     await this.fileReferenceService.removeReferencesForDocument(
       id,
       FileReferenceType.Draft,
@@ -160,7 +159,7 @@ export class DraftService {
 
   async getHistory(id: string) {
     const draft = await this.draftRepository.findById(id)
-    if (!draft) throw new BizException(ErrorCodeEnum.DraftNotFound)
+    if (!draft) throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id })
     return this.draftHistoryService.getHistorySummary(draft.history as any)
   }
 
@@ -169,10 +168,10 @@ export class DraftService {
     version: number,
   ): Promise<{ draft: DraftRow; resolved: DraftHistoryModel }> {
     const draft = await this.draftRepository.findById(id)
-    if (!draft) throw new BizException(ErrorCodeEnum.DraftNotFound)
+    if (!draft) throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id })
     const historyEntry = draft.history.find((h) => h.version === version)
     if (!historyEntry)
-      throw new BizException(ErrorCodeEnum.DraftHistoryNotFound)
+      throw createAppException(AppErrorCode.DRAFT_HISTORY_NOT_FOUND)
     const resolved = this.draftHistoryService.resolveHistoryEntry(
       historyEntry as any,
       draft.history as any,

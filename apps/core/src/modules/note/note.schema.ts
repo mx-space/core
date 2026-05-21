@@ -10,7 +10,7 @@ import {
   zPrefer,
   zTransformEmptyNull,
 } from '~/common/zod'
-import { PagerSchema } from '~/shared/dto/pager.dto'
+import { createPagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
@@ -82,14 +82,13 @@ export class PartialNoteDto extends createZodDto(PartialNoteSchema) {}
 /**
  * Note query schema for pagination
  */
-export const NoteQuerySchema = PagerSchema.extend({
-  sortBy: z
-    .enum(['title', 'createdAt', 'modifiedAt', 'weather', 'mood'])
-    .optional(),
-  sortOrder: z.preprocess(
-    (val) => (typeof val === 'string' ? Math.trunc(Number(val)) : val),
-    z.union([z.literal(1), z.literal(-1)]).optional(),
-  ),
+export const NoteQuerySchema = createPagerSchema([
+  'title',
+  'createdAt',
+  'modifiedAt',
+  'weather',
+  'mood',
+]).extend({
   lang: zLang,
   withSummary: zCoerceBoolean.optional(),
 })
@@ -155,9 +154,15 @@ export class SetNotePublishStatusDto extends createZodDto(
 ) {}
 
 /**
- * Note topic pager schema (extends PagerSchema with lang support)
+ * Note topic pager schema (extends pager with lang support)
  */
-export const NoteTopicPagerSchema = PagerSchema.extend({
+export const NoteTopicPagerSchema = createPagerSchema([
+  'title',
+  'createdAt',
+  'modifiedAt',
+  'weather',
+  'mood',
+]).extend({
   lang: zLang,
 })
 

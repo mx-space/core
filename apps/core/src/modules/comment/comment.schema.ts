@@ -2,6 +2,7 @@ import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { BasicPagerSchema } from '~/shared/dto/pager.dto'
 import { normalizeRefType } from '~/utils/database.util'
 
 import { CommentAnchorMode } from './comment.enum'
@@ -156,6 +157,18 @@ export const CommentListQuerySchema = z.object({
 })
 
 export class CommentListQueryDto extends createZodDto(CommentListQuerySchema) {}
+
+/**
+ * Admin pager query for `GET /comments` — adds optional `state` filter on top
+ * of the basic pager.
+ */
+export const CommentAdminPagerSchema = BasicPagerSchema.extend({
+  state: z.coerce.number().int().optional(),
+})
+
+export class CommentAdminPagerDto extends createZodDto(
+  CommentAdminPagerSchema,
+) {}
 
 /**
  * Comment state patch schema

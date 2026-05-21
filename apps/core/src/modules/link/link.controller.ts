@@ -8,12 +8,11 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { OK_DATA, withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
 import { BasePgCrudFactory } from '~/transformers/crud-factor.pg.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { LinkRepository } from './link.repository'
-import { AuditReasonDto, LinkDto } from './link.schema'
+import { AuditReasonDto, LinkDto, LinkPagerDto } from './link.schema'
 import { LinkService } from './link.service'
 import { LinkState } from './link.types'
 
@@ -25,7 +24,7 @@ export class LinkControllerCrud extends BasePgCrudFactory({
 }) {
   @Get('/')
   async gets(
-    @Query() pager: PagerDto,
+    @Query() pager: LinkPagerDto,
     @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     const { size = 10, page = 1, state } = pager

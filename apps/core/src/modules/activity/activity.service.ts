@@ -4,10 +4,9 @@ import { omit, pick, uniqBy } from 'es-toolkit/compat'
 import type { Socket } from 'socket.io'
 
 import { RequestContext } from '~/common/contexts/request.context'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { GatewayService } from '~/processors/gateway/gateway.service'
@@ -267,7 +266,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       ip,
     )
     if (!res) {
-      throw new BizException(ErrorCodeEnum.AlreadySupported)
+      throw createAppException(AppErrorCode.ALREADY_SUPPORTED)
     }
 
     const globalResult = await this.databaseService.findGlobalById(id)
@@ -308,7 +307,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const roomName = data.roomName
 
     if (!isValidRoomName(roomName)) {
-      throw new BizException(ErrorCodeEnum.InvalidRoomName)
+      throw createAppException(AppErrorCode.INVALID_ROOM_NAME)
     }
     const roomSockets = await this.webGateway.getSocketsOfRoom(roomName)
 

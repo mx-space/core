@@ -1,9 +1,8 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import {
   type TaskExecuteContext,
   TaskQueueProcessor,
@@ -103,7 +102,9 @@ export class AiInsightsTranslationService implements OnModuleInit {
       await this.aiInsightsRepository.findById(payload.sourceInsightsId),
     )
     if (!source || source.isTranslation) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Source insights not found or already translated',
+      })
     }
     const key = md5(
       JSON.stringify({
@@ -152,10 +153,9 @@ export class AiInsightsTranslationService implements OnModuleInit {
           }
           const translatedText = stripTopLevelCodeFence(raw).trim()
           if (!translatedText) {
-            throw new BizException(
-              ErrorCodeEnum.AIException,
-              'Insights translation returned empty content',
-            )
+            throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+              message: 'Insights translation returned empty content',
+            })
           }
           const doc = this.toInsightsDoc(
             await this.aiInsightsRepository.upsert({
@@ -175,7 +175,12 @@ export class AiInsightsTranslationService implements OnModuleInit {
             await this.aiInsightsRepository.findById(resultId),
           )
           if (!doc)
-            throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+            throw createAppException(
+              AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS,
+              {
+                message: 'Translated insights not found',
+              },
+            )
           return doc
         },
       })

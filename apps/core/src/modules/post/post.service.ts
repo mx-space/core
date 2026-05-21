@@ -3,14 +3,10 @@ import { ModuleRef } from '@nestjs/core'
 import { debounce, omit } from 'es-toolkit/compat'
 import slugify from 'slugify'
 
-import {
-  BizException,
-  BusinessException,
-} from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import {
   CATEGORY_SERVICE_TOKEN,
@@ -161,12 +157,12 @@ export class PostService implements OnApplicationBootstrap {
       categoryId as any as string,
     )
     if (!category) {
-      throw new BizException(ErrorCodeEnum.CategoryNotFound)
+      throw createAppException(AppErrorCode.CATEGORY_NOT_FOUND)
     }
 
     const slug = post.slug ? slugify(post.slug) : slugify(post.title)
     if (!(await this.isAvailableSlug(slug))) {
-      throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
+      throw createAppException(AppErrorCode.SLUG_NOT_AVAILABLE)
     }
 
     const relatedIds = await this.checkRelated(post)
@@ -246,7 +242,7 @@ export class PostService implements OnApplicationBootstrap {
       oldDocument.categoryId.toString(),
     )
     if (!oldDocumentRefCategory) {
-      throw new BizException(ErrorCodeEnum.CategoryNotFound)
+      throw createAppException(AppErrorCode.CATEGORY_NOT_FOUND)
     }
     const oldSlugMeta = {
       slug: oldDocument.slug,
@@ -287,9 +283,12 @@ export class PostService implements OnApplicationBootstrap {
     const categoryDocument = await this.getCategoryBySlug(categorySlug)
     if (!categoryDocument) {
       const trackedPost = await findTrackedPost()
-      if (!trackedPost) throw new BizException(ErrorCodeEnum.CategoryNotFound)
+      if (!trackedPost)
+        throw createAppException(AppErrorCode.CATEGORY_NOT_FOUND)
       if (!isAuthenticated && !trackedPost.isPublished) {
-        throw new BizException(ErrorCodeEnum.PostNotFound)
+        throw createAppException(AppErrorCode.POST_NOT_FOUND, {
+          id: trackedPost.id,
+        })
       }
       return trackedPost
     }
@@ -303,7 +302,9 @@ export class PostService implements OnApplicationBootstrap {
 
     const trackedPost = await findTrackedPost()
     if (trackedPost && !isAuthenticated && !trackedPost.isPublished) {
-      throw new BizException(ErrorCodeEnum.PostNotFound)
+      throw createAppException(AppErrorCode.POST_NOT_FOUND, {
+        id: trackedPost.id,
+      })
     }
     return trackedPost
   }
@@ -316,7 +317,7 @@ export class PostService implements OnApplicationBootstrap {
 
     const oldDocument = await this.findById(id)
     if (!oldDocument) {
-      throw new BizException(ErrorCodeEnum.PostNotFound)
+      throw createAppException(AppErrorCode.POST_NOT_FOUND, { id })
     }
 
     const { draftId } = data
@@ -325,7 +326,7 @@ export class PostService implements OnApplicationBootstrap {
       const category = await this.categoryService.findCategoryById(
         categoryId as any as string,
       )
-      if (!category) throw new BizException(ErrorCodeEnum.CategoryNotFound)
+      if (!category) throw createAppException(AppErrorCode.CATEGORY_NOT_FOUND)
     }
 
     if ([data.text, data.title, data.slug].some(isDefined)) {
@@ -335,7 +336,7 @@ export class PostService implements OnApplicationBootstrap {
     if (data.slug && data.slug !== oldDocument.slug) {
       data.slug = slugify(data.slug)
       if (!(await this.isAvailableSlug(data.slug))) {
-        throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
+        throw createAppException(AppErrorCode.SLUG_NOT_AVAILABLE)
       }
     }
 
@@ -462,12 +463,12 @@ export class PostService implements OnApplicationBootstrap {
 
     const relatedPosts = await this.postRepository.findManyByIds(data.relatedId)
     if (relatedPosts.length !== data.relatedId.length) {
-      throw new BizException(ErrorCodeEnum.PostRelatedNotExists)
+      throw createAppException(AppErrorCode.POST_RELATED_NOT_EXISTS)
     }
 
     return relatedPosts.map((post) => {
       if (post.id === data.id) {
-        throw new BizException(ErrorCodeEnum.PostSelfRelation)
+        throw createAppException(AppErrorCode.POST_SELF_RELATION)
       }
       return post.id
     })

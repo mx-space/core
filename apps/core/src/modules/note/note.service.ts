@@ -3,16 +3,10 @@ import dayjs from 'dayjs'
 import { debounce, omit } from 'es-toolkit/compat'
 import slugify from 'slugify'
 
-import {
-  BizException,
-  BusinessException,
-} from '~/common/exceptions/biz.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
@@ -134,7 +128,7 @@ export class NoteService {
     const existing = await this.noteRepository.findBySlug(slug)
     if (!existing) return
     if (excludeId && existing.id === excludeId) return
-    throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
+    throw createAppException(AppErrorCode.SLUG_NOT_AVAILABLE)
   }
 
   private async trackSeoPathChanges(
@@ -224,7 +218,7 @@ export class NoteService {
     _options?: { includeLocation?: boolean },
   ) {
     const normalizedSlug = this.normalizeSlug(slug)
-    if (!normalizedSlug) throw new BizException(ErrorCodeEnum.InvalidSlug)
+    if (!normalizedSlug) throw createAppException(AppErrorCode.INVALID_SLUG)
 
     const { start, end } = this.getDateRange(year, month, day)
     const direct = await this.noteRepository.findOneByDateAndSlug(
@@ -250,7 +244,7 @@ export class NoteService {
 
   async getLatestNoteId() {
     const note = await this.noteRepository.getLatestVisible()
-    if (!note) throw new CannotFindException()
+    if (!note) throw createAppException(AppErrorCode.NOT_FOUND)
     return { nid: note.nid, id: note.id }
   }
 
@@ -365,7 +359,7 @@ export class NoteService {
   ) {
     this.lexicalService.populateText(data as any)
     const oldDoc = await this.findById(id)
-    if (!oldDoc) throw new NoContentCanBeModifiedException()
+    if (!oldDoc) throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
 
     const { draftId } = data
     const hasSlugInput = Object.prototype.hasOwnProperty.call(data, 'slug')
@@ -413,7 +407,7 @@ export class NoteService {
         : undefined,
       modifiedAt: hasContentChanged || hasFieldChanged ? new Date() : undefined,
     })
-    if (!updated) throw new NoContentCanBeModifiedException()
+    if (!updated) throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
 
     await this.trackSeoPathChanges(
       oldDoc,

@@ -5,7 +5,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
-import type { PagerDto } from '~/shared/dto/pager.dto'
+import type { BasicPagerInput } from '~/shared/dto/pager.dto'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 
@@ -50,7 +50,7 @@ export class AnalyzeController {
   }
 
   @Get('/')
-  async getAnalyze(@Query() query: AnalyzeDto & Partial<PagerDto>) {
+  async getAnalyze(@Query() query: AnalyzeDto & Partial<BasicPagerInput>) {
     const { from, to = new Date(), page = 1, size = 50 } = query
 
     const data = await this.service.getRangeAnalyzeData(from, to, {
@@ -61,7 +61,7 @@ export class AnalyzeController {
   }
 
   @Get('/today')
-  async getAnalyzeToday(@Query() query: Partial<PagerDto>) {
+  async getAnalyzeToday(@Query() query: Partial<BasicPagerInput>) {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const todayEarly = getTodayEarly(today)
@@ -73,7 +73,7 @@ export class AnalyzeController {
   }
 
   @Get('/week')
-  async getAnalyzeWeek(@Query() query: Partial<PagerDto>) {
+  async getAnalyzeWeek(@Query() query: Partial<BasicPagerInput>) {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const weekStart = getWeekStart(today)

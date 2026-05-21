@@ -11,7 +11,7 @@ import { Lang } from '~/common/decorators/lang.decorator'
 import { OK_DATA } from '~/common/response/envelope.types'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
@@ -65,7 +65,7 @@ export class ActivityController {
 
   @Get('/likes')
   @Auth()
-  async getLikeActivities(@Query() pager: PagerDto) {
+  async getLikeActivities(@Query() pager: BasicPagerDto) {
     const { page, size } = pager
 
     const result = await this.service.getLikeActivities(page, size)

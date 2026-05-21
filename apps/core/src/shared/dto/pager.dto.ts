@@ -1,39 +1,34 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import {
-  zCoerceInt,
-  zEntityId,
-  zPaginationPage,
-  zPaginationSize,
-  zSortOrder,
-} from '~/common/zod'
+import { zCoerceInt, zEntityId } from '~/common/zod'
 
-const DbQuerySchema = z.object({
-  db_query: z.any().optional(),
+/**
+ * Base pager — page + size + optional view. No sort fields.
+ *
+ * Use this when an endpoint does not expose sortable columns.
+ * If sorting is supported, use {@link createPagerSchema} instead so the sort
+ * keys are explicit and type-safe.
+ */
+export const BasicPagerSchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  size: z.coerce.number().int().positive().max(100).default(10),
+  view: z.string().optional(),
 })
 
-/** @deprecated V2 endpoints use {@link createPagerSchema} instead. */
-export const PagerSchema = DbQuerySchema.extend({
-  size: zPaginationSize,
-  page: zPaginationPage,
-  select: z.string().min(1).optional(),
-  sortBy: z.string().optional(),
-  sortOrder: zSortOrder,
-  year: zCoerceInt.min(1).optional(),
-  state: zCoerceInt.optional(),
-})
+export class BasicPagerDto extends createZodDto(BasicPagerSchema) {}
 
-/** @deprecated V2 endpoints use {@link createPagerSchema} instead. */
-export class PagerDto extends createZodDto(PagerSchema) {}
+export type BasicPagerInput = z.infer<typeof BasicPagerSchema>
 
+/**
+ * Sort-aware pager factory. Pass the column names this endpoint is allowed to
+ * sort by; the resulting schema exposes `sort_by` (typed as `z.enum(sortKeys)`)
+ * and `sort_order` (`'asc' | 'desc'`, default `'desc'`) on the wire.
+ */
 export const createPagerSchema = <TSort extends [string, ...string[]]>(
   sortKeys: TSort,
 ) =>
-  z.object({
-    page: z.coerce.number().int().positive().default(1),
-    size: z.coerce.number().int().positive().max(100).default(10),
-    view: z.string().optional(),
+  BasicPagerSchema.extend({
     sort_by: z.enum(sortKeys).optional(),
     sort_order: z.enum(['asc', 'desc']).default('desc'),
     year: z.coerce.number().int().optional(),
@@ -47,5 +42,4 @@ export const OffsetSchema = z.object({
 
 export class OffsetDto extends createZodDto(OffsetSchema) {}
 
-export type PagerInput = z.infer<typeof PagerSchema>
 export type OffsetInput = z.infer<typeof OffsetSchema>

@@ -2,6 +2,7 @@ import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zEmail, zHttpsUrl, zMaxLengthString } from '~/common/zod'
+import { BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { LinkState, LinkType } from './link.enum'
 
@@ -55,6 +56,15 @@ export const AuditReasonSchema = z.object({
 })
 
 export class AuditReasonDto extends createZodDto(AuditReasonSchema) {}
+
+/**
+ * Link list pager — basic pager plus optional `state` filter.
+ */
+export const LinkPagerSchema = BasicPagerSchema.extend({
+  state: z.coerce.number().int().optional(),
+})
+
+export class LinkPagerDto extends createZodDto(LinkPagerSchema) {}
 
 // Type exports
 export type LinkInput = z.infer<typeof LinkSchema>

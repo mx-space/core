@@ -4,8 +4,7 @@ import { URL } from 'node:url'
 import { Injectable, Logger } from '@nestjs/common'
 import { customAlphabet } from 'nanoid'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { alphabet } from '~/constants/other.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { validateImageBuffer } from '~/utils/image.util'
@@ -54,7 +53,7 @@ export class LinkAvatarService {
       typeof link === 'string' ? await this.linkRepository.findById(link) : link
     if (!doc) {
       if (typeof link === 'string') {
-        throw new BizException(ErrorCodeEnum.LinkNotFound)
+        throw createAppException(AppErrorCode.LINK_NOT_FOUND, { id: link })
       }
       return false
     }
@@ -119,10 +118,9 @@ export class LinkAvatarService {
     })
 
     if (!validation.ok) {
-      throw new BizException(
-        ErrorCodeEnum.LinkAvatarValidationFailed,
-        validation.reason,
-      )
+      throw createAppException(AppErrorCode.LINK_AVATAR_VALIDATION_FAILED, {
+        reason: validation.reason,
+      })
     }
 
     const { ext } = validation

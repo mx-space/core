@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/response/error.types'
 import type {
   SnippetRepository,
   SnippetRow,
@@ -92,7 +92,7 @@ describe('SnippetService', () => {
         raw: '{}',
         name: 'feature-flags',
       }),
-    ).rejects.toThrow(BizException)
+    ).rejects.toThrow(AppException)
 
     expect(repository.create).not.toHaveBeenCalled()
   })
@@ -108,7 +108,7 @@ describe('SnippetService', () => {
         name: 'handler',
         reference: 'system',
       }),
-    ).rejects.toThrow(BizException)
+    ).rejects.toThrow(AppException)
 
     repository.create.mockResolvedValue(
       createSnippet({

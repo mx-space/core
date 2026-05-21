@@ -4,7 +4,7 @@ import { sample } from 'es-toolkit/compat'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { SayRepository } from './say.repository'
 
@@ -15,7 +15,7 @@ export class SayController {
   ) {}
 
   @Get('/')
-  async gets(@Query() pager: PagerDto) {
+  async gets(@Query() pager: BasicPagerDto) {
     const size = pager.size ?? 10
     const page = pager.page ?? 1
     const result = await this.repository.list(page, size)

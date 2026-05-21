@@ -7,9 +7,8 @@ import { omit } from 'es-toolkit/compat'
 import { dump } from 'js-yaml'
 import JSZip from 'jszip'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
@@ -217,7 +216,7 @@ ${text.trim()}
     const result = await this.databaseService.findGlobalById(id)
 
     if (!result || result.type === CollectionRefTypes.Recently)
-      throw new BizException(ErrorCodeEnum.DocumentNotFound)
+      throw createAppException(AppErrorCode.DOCUMENT_NOT_FOUND, { id })
 
     return {
       html: this.renderMarkdownContent(result.document.text),

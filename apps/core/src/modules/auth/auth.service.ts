@@ -10,8 +10,7 @@ import { hashPassword } from 'better-auth/crypto'
 import { customAlphabet } from 'nanoid'
 
 import { RequestContext } from '~/common/contexts/request.context'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { alphabet } from '~/constants/other.constant'
 import { getAvatar } from '~/utils/tool.util'
 
@@ -135,7 +134,7 @@ export class AuthService {
 
     const ownerId = await this.getOwnerReaderId()
     if (!ownerId) {
-      throw new BizException(ErrorCodeEnum.AuthUserIdNotFound)
+      throw createAppException(AppErrorCode.AUTH_USER_ID_NOT_FOUND)
     }
 
     const expiresIn =
@@ -144,10 +143,9 @@ export class AuthService {
         : undefined
 
     if (expiresIn !== undefined && expiresIn <= 0) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'expired must be in the future',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'expired must be in the future',
+      })
     }
 
     const created = await auth.api.createApiKey({
@@ -168,7 +166,7 @@ export class AuthService {
   async saveToken(model: TokenDto & { token: string }) {
     const ownerId = await this.getOwnerReaderId()
     if (!ownerId) {
-      throw new BizException(ErrorCodeEnum.AuthUserIdNotFound)
+      throw createAppException(AppErrorCode.AUTH_USER_ID_NOT_FOUND)
     }
     const now = new Date()
     const start = model.token.slice(0, 6)
@@ -196,25 +194,25 @@ export class AuthService {
   async createOwnerByCredential(input: CreateOwnerByCredentialInput) {
     const normalizedUsername = this.normalizeUsername(input.username)
     if (!normalizedUsername) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'username is required',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'username is required',
+      })
     }
     if (typeof input.password !== 'string' || input.password.length === 0) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'password is required',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'password is required',
+      })
     }
     const mail = this.normalizeOptional(input.mail)
     if (!mail) {
-      throw new BizException(ErrorCodeEnum.InvalidParameter, 'mail is required')
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'mail is required',
+      })
     }
 
     const ownerCount = await this.readerRepository.countOwners()
     if (ownerCount > 0) {
-      throw new BizException(ErrorCodeEnum.UserAlreadyExists)
+      throw createAppException(AppErrorCode.USER_ALREADY_EXISTS)
     }
 
     const exists = await this.readerRepository.existsByUsernameOrEmail(
@@ -222,7 +220,7 @@ export class AuthService {
       mail,
     )
     if (exists) {
-      throw new BizException(ErrorCodeEnum.UserAlreadyExists)
+      throw createAppException(AppErrorCode.USER_ALREADY_EXISTS)
     }
 
     const rawUsername =
@@ -274,7 +272,7 @@ export class AuthService {
       })
     } catch (error) {
       if (this.isDuplicateKeyError(error)) {
-        throw new BizException(ErrorCodeEnum.UserAlreadyExists)
+        throw createAppException(AppErrorCode.USER_ALREADY_EXISTS)
       }
 
       throw error
@@ -348,15 +346,15 @@ export class AuthService {
   async setCurrentOauthAsOwner() {
     const req = RequestContext.currentRequest()
     if (!req) {
-      throw new BizException(ErrorCodeEnum.AuthFailed)
+      throw createAppException(AppErrorCode.AUTH_FAILED)
     }
     const session = await this.getSessionUser(req)
     if (!session) {
-      throw new BizException(ErrorCodeEnum.AuthSessionNotFound)
+      throw createAppException(AppErrorCode.AUTH_SESSION_NOT_FOUND)
     }
     const userId = session.user?.id
     if (!userId) {
-      throw new BizException(ErrorCodeEnum.AuthUserIdNotFound)
+      throw createAppException(AppErrorCode.AUTH_USER_ID_NOT_FOUND)
     }
 
     return this.transferOwnerRole(userId)
@@ -365,7 +363,7 @@ export class AuthService {
   async transferOwnerRole(targetUserId: string) {
     const target = await this.readerRepository.findById(targetUserId)
     if (!target?.id) {
-      throw new BizException(ErrorCodeEnum.AuthUserIdNotFound)
+      throw createAppException(AppErrorCode.AUTH_USER_ID_NOT_FOUND)
     }
 
     await this.readerRepository.setOwnersExceptToReader(target.id)
@@ -373,10 +371,9 @@ export class AuthService {
 
     const ownerCount = await this.readerRepository.countOwners()
     if (ownerCount !== 1) {
-      throw new BizException(
-        ErrorCodeEnum.AuthFailed,
-        'owner role consistency check failed',
-      )
+      throw createAppException(AppErrorCode.AUTH_FAILED, {
+        message: 'owner role consistency check failed',
+      })
     }
     return 'OK'
   }
@@ -384,7 +381,7 @@ export class AuthService {
   async revokeOwnerRole(targetUserId: string) {
     const target = await this.readerRepository.findById(targetUserId)
     if (!target?.id) {
-      throw new BizException(ErrorCodeEnum.AuthUserIdNotFound)
+      throw createAppException(AppErrorCode.AUTH_USER_ID_NOT_FOUND)
     }
     if (target.role !== 'owner') {
       return 'OK'
@@ -392,10 +389,9 @@ export class AuthService {
 
     const ownerCount = await this.readerRepository.countOwners()
     if (ownerCount <= 1) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'owner must be unique and cannot be empty',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'owner must be unique and cannot be empty',
+      })
     }
 
     await this.readerRepository.setRole(target.id, 'reader')

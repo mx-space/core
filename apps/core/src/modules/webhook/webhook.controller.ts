@@ -7,7 +7,7 @@ import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { WebhookDto, WebhookDtoPartial } from './webhook.schema'
 import { WebhookService } from './webhook.service'
@@ -50,7 +50,7 @@ export class WebhookController {
   @Get('/:id')
   async getEventsByHookId(
     @Param() { id }: EntityIdDto,
-    @Query() query: PagerDto,
+    @Query() query: BasicPagerDto,
   ) {
     const result = await this.service.getEventsByHookId(id, query)
     const p = result.pagination

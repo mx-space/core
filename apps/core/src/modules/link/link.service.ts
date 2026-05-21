@@ -2,9 +2,8 @@ import { URL } from 'node:url'
 
 import { Injectable, Logger } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { isDev } from '~/global/env.global'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -76,10 +75,10 @@ export class LinkService {
       switch (existed.state) {
         case LinkState.Pass:
         case LinkState.Audit: {
-          throw new BizException(ErrorCodeEnum.DuplicateLink)
+          throw createAppException(AppErrorCode.DUPLICATE_LINK)
         }
         case LinkState.Banned: {
-          throw new BizException(ErrorCodeEnum.LinkDisabled)
+          throw createAppException(AppErrorCode.LINK_DISABLED)
         }
         case LinkState.Reject:
         case LinkState.Outdate: {
@@ -94,7 +93,7 @@ export class LinkService {
       const url = new URL(input.url)
       const pathname = url.pathname
       if (pathname !== '/' && !allowSubPath) {
-        throw new BizException(ErrorCodeEnum.SubpathLinkDisabled)
+        throw createAppException(AppErrorCode.SUBPATH_LINK_DISABLED)
       }
       nextLink = await this.linkRepository.create({
         name: input.name,
@@ -117,7 +116,7 @@ export class LinkService {
   async approveLink(id: string) {
     const updated = await this.linkRepository.updateState(id, LinkState.Pass)
     if (!updated) {
-      throw new BizException(ErrorCodeEnum.LinkNotFound)
+      throw createAppException(AppErrorCode.LINK_NOT_FOUND, { id })
     }
     const convertedAvatar =
       await this.linkAvatarService.convertToInternal(updated)
@@ -256,7 +255,7 @@ export class LinkService {
   async sendAuditResultByEmail(id: string, reason: string, state: LinkState) {
     const updated = await this.linkRepository.updateState(id, state)
     if (!updated) {
-      throw new BizException(ErrorCodeEnum.LinkNotFound)
+      throw createAppException(AppErrorCode.LINK_NOT_FOUND, { id })
     }
 
     const { enable } = await this.configsService.get('mailOptions')

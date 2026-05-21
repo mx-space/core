@@ -15,9 +15,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { getSandboxTypeDeclaration } from '~/utils/sandbox'
 
@@ -118,23 +117,21 @@ export class ServerlessController {
         requestMethod,
       )
 
-    const errorPath = `Path: /${reference}/${name}`
+    const errorPath = `/${reference}/${name}`
     if (!snippet) {
-      throw new BizException(
-        ErrorCodeEnum.FunctionNotFound,
-        `serverless function is not exist, ${errorPath}`,
-      )
+      throw createAppException(AppErrorCode.FUNCTION_NOT_FOUND, {
+        path: errorPath,
+      })
     }
 
     if (!snippet.enable) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        `serverless function is not enabled, ${errorPath}`,
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: `serverless function is not enabled, ${errorPath}`,
+      })
     }
 
     if (snippet.private && !hasAdminAccess) {
-      throw new BizException(ErrorCodeEnum.ServerlessNoPermission)
+      throw createAppException(AppErrorCode.SERVERLESS_NO_PERMISSION)
     }
 
     const result =
@@ -158,7 +155,7 @@ export class ServerlessController {
     if (!builtIn) {
       const snippet = await this.serverlessService.repository.findById(id)
       if (!snippet) {
-        throw new BizException(ErrorCodeEnum.FunctionNotFound)
+        throw createAppException(AppErrorCode.FUNCTION_NOT_FOUND)
       }
       await this.serverlessService.repository.deleteById(id)
       return

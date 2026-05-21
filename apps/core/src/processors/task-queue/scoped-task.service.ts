@@ -1,7 +1,7 @@
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+
 import type { CreateTaskOptions, TaskQueueService } from './task-queue.service'
-import { TaskStatus, type Task } from './task-queue.types'
+import { type Task, TaskStatus } from './task-queue.types'
 
 export class ScopedTaskService {
   constructor(
@@ -12,10 +12,10 @@ export class ScopedTaskService {
   private async verifyScope(taskId: string): Promise<Task> {
     const task = await this.taskQueueService.getTask(taskId)
     if (!task) {
-      throw new BizException(ErrorCodeEnum.AITaskNotFound)
+      throw createAppException(AppErrorCode.AI_TASK_NOT_FOUND, { id: taskId })
     }
     if (task.scope !== this.scope) {
-      throw new BizException(ErrorCodeEnum.AITaskNotFound)
+      throw createAppException(AppErrorCode.AI_TASK_NOT_FOUND, { id: taskId })
     }
     return task
   }
@@ -91,10 +91,10 @@ export class ScopedTaskService {
       task.status !== TaskStatus.PartialFailed &&
       task.status !== TaskStatus.Cancelled
     ) {
-      throw new BizException(
-        ErrorCodeEnum.AITaskCannotRetry,
-        'Only failed, partial_failed, or cancelled tasks can be retried',
-      )
+      throw createAppException(AppErrorCode.AI_TASK_CANNOT_RETRY, {
+        reason:
+          'Only failed, partial_failed, or cancelled tasks can be retried',
+      })
     }
 
     if (createTaskFn) {
