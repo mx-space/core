@@ -36,7 +36,7 @@ describe('RecentlyController', () => {
         { attitude: 'like' } as any,
         { ip: '127.0.0.1' } as any,
       ),
-    ).resolves.toEqual({ data: { code: 1 } })
+    ).resolves.toEqual({ code: 1 })
 
     expect(service.updateAttitude).toHaveBeenCalledWith({
       id: 'recent-1',

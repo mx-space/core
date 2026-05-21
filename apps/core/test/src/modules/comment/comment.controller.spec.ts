@@ -5,9 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { AuthGuard } from '~/common/guards/auth.guard'
+import { AppException } from '~/common/response/error.types'
 import { AuthService } from '~/modules/auth/auth.service'
 import { CommentController } from '~/modules/comment/comment.controller'
-import { CommentForbiddenException } from '~/modules/comment/comment.exceptions'
 import { CommentLifecycleService } from '~/modules/comment/comment.lifecycle.service'
 import { CommentService } from '~/modules/comment/comment.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -113,7 +113,7 @@ describe('CommentController permission gating', () => {
         {} as any,
         { ref: undefined } as any,
       ),
-    ).rejects.toBeInstanceOf(CommentForbiddenException)
+    ).rejects.toBeInstanceOf(AppException)
 
     expect(mockCommentService.createComment).not.toHaveBeenCalled()
   })
@@ -128,7 +128,7 @@ describe('CommentController permission gating', () => {
         'reader-1',
         {} as any,
       ),
-    ).rejects.toBeInstanceOf(CommentForbiddenException)
+    ).rejects.toBeInstanceOf(AppException)
 
     expect(mockCommentService.replyComment).not.toHaveBeenCalled()
   })
@@ -150,9 +150,7 @@ describe('CommentController permission gating', () => {
           { ref: undefined } as any,
         ),
       ),
-    ).resolves.toMatchObject({
-      data: { id: 'comment-created' },
-    })
+    ).resolves.toMatchObject({ id: 'comment-created' })
 
     expect(mockCommentService.createComment).toHaveBeenCalled()
   })
@@ -173,9 +171,7 @@ describe('CommentController permission gating', () => {
           {} as any,
         ),
       ),
-    ).resolves.toMatchObject({
-      data: { id: 'reply-created' },
-    })
+    ).resolves.toMatchObject({ id: 'reply-created' })
 
     expect(mockCommentService.replyComment).toHaveBeenCalled()
   })

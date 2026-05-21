@@ -11,6 +11,7 @@ import { describe, expect, test } from 'vitest'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { TopicBaseController } from '~/modules/topic/topic.controller'
 import { TopicRepository } from '~/modules/topic/topic.repository'
+import { TranslationService } from '~/processors/helper/helper.translation.service'
 
 import {
   assertHasKeys,
@@ -60,10 +61,21 @@ const topicRepoProvider = {
   },
 }
 
+const translationServiceProvider = {
+  provide: TranslationService,
+  useValue: {
+    getTopicTranslationFields: async () => new Map(),
+  },
+}
+
 describe('Yohaku contract — topic detail (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [TopicBaseController],
-    providers: [topicRepoProvider, ...eventEmitterProvider],
+    providers: [
+      topicRepoProvider,
+      translationServiceProvider,
+      ...eventEmitterProvider,
+    ],
   })
 
   test('GET /topics/all — list, exposes Yohaku-required topic fields', async () => {

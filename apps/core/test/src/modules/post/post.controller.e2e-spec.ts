@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { AppException } from '~/common/response/error.types'
 import { PostController } from '~/modules/post/post.controller'
-import { PostNotFoundException } from '~/modules/post/post.exceptions'
 
 const createController = () => {
   const postService = {
@@ -29,7 +29,7 @@ describe('PostController', () => {
     const { controller } = createController()
 
     await expect(controller.getBySlug('hello')).resolves.toEqual({
-      data: { path: '/default/hello' },
+      path: '/default/hello',
     })
   })
 
@@ -38,7 +38,7 @@ describe('PostController', () => {
     postService.findById.mockResolvedValue({ id: 'post-1', isPublished: false })
 
     await expect(controller.getById({ id: 'post-1' }, false)).rejects.toThrow(
-      PostNotFoundException,
+      AppException,
     )
   })
 
@@ -49,7 +49,7 @@ describe('PostController', () => {
       controller.setPublishStatus({ id: 'post-1' }, {
         isPublished: false,
       } as any),
-    ).resolves.toEqual({ data: { success: true } })
+    ).resolves.toEqual({ success: true })
 
     expect(postService.updateById).toHaveBeenCalledWith('post-1', {
       isPublished: false,

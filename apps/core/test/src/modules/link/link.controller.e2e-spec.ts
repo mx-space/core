@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { AppException } from '~/common/response/error.types'
 import {
   LinkController,
   LinkControllerCrud,
 } from '~/modules/link/link.controller'
-import { LinkApplyDisabledException } from '~/modules/link/link.exceptions'
 
 describe('LinkController', () => {
   it('blocks link applications when the PG-backed service reports disabled audit', async () => {
@@ -21,7 +21,7 @@ describe('LinkController', () => {
         name: 'Example',
         author: 'Alice',
       } as any),
-    ).rejects.toThrow(LinkApplyDisabledException)
+    ).rejects.toThrow(AppException)
     expect(service.applyForLink).not.toHaveBeenCalled()
   })
 
@@ -36,10 +36,8 @@ describe('LinkController', () => {
     const controller = new LinkController(service as any)
 
     await expect(controller.approveLink('link-1')).resolves.toEqual({
-      data: {
-        link: { id: 'link-1', email: null },
-        convertedAvatar: 'https://cdn.example/avatar.png',
-      },
+      link: { id: 'link-1', email: null },
+      convertedAvatar: 'https://cdn.example/avatar.png',
     })
   })
 })
