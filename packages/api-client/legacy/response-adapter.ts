@@ -184,11 +184,16 @@ function remapPagination(pg: any): any {
   const hasPrevPage =
     pg.hasPrevPage ?? (typeof page === 'number' ? page > 1 : undefined)
 
+  // V2 wire used `currentPage` / `totalPage`; V3 wire uses `page` / `totalPages`.
+  // Emit both so consumers migrating field-by-field don't break — the typed
+  // `Pager` interface exposes the V3 names plus the V2 aliases as optional.
   const out: Record<string, unknown> = {
     page,
+    currentPage: page,
     total,
     size,
     totalPages,
+    totalPage: totalPages,
     hasNextPage,
     hasPrevPage,
   }

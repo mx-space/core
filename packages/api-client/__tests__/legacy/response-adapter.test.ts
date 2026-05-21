@@ -92,9 +92,11 @@ describe('legacy response adapter', () => {
       ],
       pagination: {
         page: 2,
+        currentPage: 2,
         size: 2,
         total: 6,
         totalPages: 3,
+        totalPage: 3,
         hasNextPage: true,
         hasPrevPage: true,
       },

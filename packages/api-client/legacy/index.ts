@@ -13,6 +13,7 @@ export type {
   LegacyResponseAdapterMatcher,
   LegacyResponseAdapterOptions,
 } from './response-adapter'
+export type { LegacyPager, LegacyPaginateResult } from './types'
 
 export function createLegacyApiClient<T extends IRequestAdapter>(
   adapter: T,
