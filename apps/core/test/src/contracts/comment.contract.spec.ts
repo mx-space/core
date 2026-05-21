@@ -250,9 +250,10 @@ describe('CommentController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    expect(Array.isArray(body.data)).toBe(true)
+    const data = getResponseData(body)
+    expect(Array.isArray(data)).toBe(true)
     assertNoLegacyKeys(body, { allowed: allowedCommentKeys })
-    assertPgTimestamps(body.data[0])
+    assertPgTimestamps(data[0])
     assertLowercaseRefType(body)
   })
 
@@ -277,17 +278,18 @@ describe('CommentController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
+    const data = getResponseData(body)
     // post-ref row exposes id/title/slug + nested category.slug.
-    assertHasKeysDeep(body.data[0], [
+    assertHasKeysDeep(data[0], [
       'ref.id',
       'ref.title',
       'ref.slug',
       'ref.category.slug',
     ])
     // note-ref row exposes id/title/nid (no category).
-    assertHasKeysDeep(body.data[1], ['ref.id', 'ref.title', 'ref.nid'])
+    assertHasKeysDeep(data[1], ['ref.id', 'ref.title', 'ref.nid'])
     // orphan ref serialized as null so dashboard renders a degraded label.
-    expect(body.data[2].ref).toBeNull()
+    expect(data[2].ref).toBeNull()
   })
 
   test('GET /comments/:id — detail hydrates ref', async () => {
@@ -308,8 +310,9 @@ describe('CommentController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeys(body.data[0], EXPECTED_COMMENT_MODEL_KEYS)
-    assertHasKeys(body.data[0], ['parent', 'ref', 'mail'])
+    const data = getResponseData(body)
+    assertHasKeys(data[0], EXPECTED_COMMENT_MODEL_KEYS)
+    assertHasKeys(data[0], ['parent', 'ref', 'mail'])
   })
 
   test('SDK shape — every CommentModel key present on detail', async () => {
