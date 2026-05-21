@@ -3,10 +3,7 @@ import { vi } from 'vitest'
 
 import { axiosAdaptor } from '~/adaptors/axios'
 import { createClient } from '~/core'
-import {
-  createLegacyApiClient,
-  legacyResponseAdapter,
-} from '~/legacy'
+import { createLegacyApiClient, legacyResponseAdapter } from '~/legacy'
 
 const { spyOn } = vi
 
@@ -68,7 +65,7 @@ describe('legacy response adapter', () => {
           { id: '2', title: 'two' },
         ],
         meta: {
-          pagination: { page: 1, size: 2, total: 2, total_pages: 1 },
+          pagination: { page: 2, size: 2, total: 6, total_pages: 3 },
           interaction: {
             '1': { is_liked: true },
             '2': { is_liked: false },
@@ -93,7 +90,14 @@ describe('legacy response adapter', () => {
         },
         { id: '2', isLiked: false },
       ],
-      pagination: { page: 1, size: 2, total: 2, totalPages: 1 },
+      pagination: {
+        page: 2,
+        size: 2,
+        total: 6,
+        totalPages: 3,
+        hasNextPage: true,
+        hasPrevPage: true,
+      },
     })
   })
 

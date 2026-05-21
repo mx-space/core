@@ -1,5 +1,12 @@
-import type { ResponseAdapter, ResponseAdapterContext } from '~/interfaces/client'
-import { attachRawFromOneToAnthor, destructureData, isPlainObject } from '~/utils'
+import type {
+  ResponseAdapter,
+  ResponseAdapterContext,
+} from '~/interfaces/client'
+import {
+  attachRawFromOneToAnthor,
+  destructureData,
+  isPlainObject,
+} from '~/utils'
 
 export type LegacyResponseAdapterMatcher =
   | string
@@ -84,7 +91,8 @@ function buildTranslationFlat(translation: any): Record<string, unknown> {
   const article = translation.article ?? translation
   if (!article || typeof article !== 'object') return {}
   const out: Record<string, unknown> = {}
-  if ('isTranslated' in article) out.isTranslated = article.isTranslated ?? false
+  if ('isTranslated' in article)
+    out.isTranslated = article.isTranslated ?? false
   // V1 only emitted `sourceLang` when the post actually had a source language
   // recorded; null/undefined was elided.
   if ('sourceLang' in article && article.sourceLang != null) {
@@ -102,7 +110,9 @@ function buildTranslationFlat(translation: any): Record<string, unknown> {
 function buildInteractionFlat(interaction: any): Record<string, unknown> {
   if (!interaction || typeof interaction !== 'object') return {}
   const out: Record<string, unknown> = {}
-  if ('isLiked' in interaction) out.liked = !!interaction.isLiked
+  if ('isLiked' in interaction) out.isLiked = !!interaction.isLiked
+  if ('likeCount' in interaction) out.likeCount = interaction.likeCount
+  if ('readCount' in interaction) out.readCount = interaction.readCount
   return out
 }
 
@@ -119,7 +129,10 @@ function flattenMetaIntoItem(item: any, meta: any): any {
   if (!meta || typeof meta !== 'object') return item
 
   const id = (item as any).id
-  const translation = pickRecordEntry(meta.translation, id, ['article', 'fields'])
+  const translation = pickRecordEntry(meta.translation, id, [
+    'article',
+    'fields',
+  ])
   const interaction = pickRecordEntry(meta.interaction, id, [
     'isLiked',
     'likeCount',
@@ -154,29 +167,28 @@ function flattenMetaIntoItem(item: any, meta: any): any {
   return next
 }
 
-// Pagination shape conversion (camelCase after default camelcaseKeys):
+// Pagination shape normalization (camelCase after default camelcaseKeys):
 //   V2:  { page, size, total, totalPages }
-//   V1:  { currentPage, totalPage, total, size, hasNextPage, hasPrevPage }
+//   Legacy adapters also expose hasNextPage/hasPrevPage as convenience flags.
 function remapPagination(pg: any): any {
   if (!pg || typeof pg !== 'object') return pg
-  const currentPage = pg.currentPage ?? pg.page
+  const page = pg.page ?? pg.currentPage
   const size = pg.size
   const total = pg.total
-  const totalPage = pg.totalPage ?? pg.totalPages
+  const totalPages = pg.totalPages ?? pg.totalPage
   const hasNextPage =
     pg.hasNextPage ??
-    (typeof currentPage === 'number' && typeof totalPage === 'number'
-      ? currentPage < totalPage
+    (typeof page === 'number' && typeof totalPages === 'number'
+      ? page < totalPages
       : undefined)
   const hasPrevPage =
-    pg.hasPrevPage ??
-    (typeof currentPage === 'number' ? currentPage > 1 : undefined)
+    pg.hasPrevPage ?? (typeof page === 'number' ? page > 1 : undefined)
 
   const out: Record<string, unknown> = {
-    currentPage,
-    totalPage,
+    page,
     total,
     size,
+    totalPages,
     hasNextPage,
     hasPrevPage,
   }
@@ -200,7 +212,7 @@ interface Rule {
 const COMMENT_LIST_REGEX = /^\/comments\/ref\/[^/]+$/
 const COMMENT_THREAD_REGEX = /^\/comments\/thread\/[^/]+$/
 const NOTE_DETAIL_REGEX =
-  /^\/notes\/(?:nid\/\d+|latest|\d{4}\/\d{1,2}\/\d{1,2}\/[^/]+)$/
+  /^\/notes\/(?:nid\/\d+|latest|\d{4}(?:\/\d{1,2}){2}\/[^/]+)$/
 const COMMENT_UPLOAD_CONFIG_REGEX = /^\/comments\/uploads\/config$/
 const ACTIVITY_PRESENCE_REGEX = /^\/activity\/presence$/
 const NOTE_MIDDLE_LIST_REGEX = /^\/notes\/list\/[^/]+$/
@@ -231,8 +243,9 @@ const commentListRule: Rule = {
       inner.meta?.pagination ?? ctx.meta?.pagination ?? raw?.pagination,
     )
 
-    const readers: Record<string, any> =
-      isPlainObject(raw?.readers) ? { ...(raw.readers as Record<string, any>) } : {}
+    const readers: Record<string, any> = isPlainObject(raw?.readers)
+      ? { ...(raw.readers as Record<string, any>) }
+      : {}
     const cleanedItems = items.map((it) => {
       const readerId =
         (it && (it.readerId ?? it.reader_id)) ?? it?.reader?.id ?? null
@@ -266,7 +279,10 @@ const noteDetailRule: Rule = {
   fn: (raw, ctx) => {
     if (!isPlainObject(raw)) return raw
     // V1 already wraps the model under `data`; pass through (with meta flatten).
-    if (isPlainObject((raw as any).data) && typeof (raw as any).data?.id === 'string') {
+    if (
+      isPlainObject((raw as any).data) &&
+      typeof (raw as any).data?.id === 'string'
+    ) {
       const wrapped = raw as Record<string, any>
       const flat = flattenMetaIntoItem(wrapped.data, ctx.meta)
       return { ...wrapped, data: flat }
@@ -417,7 +433,8 @@ function transformLegacyData<T>(
       ),
     }
     if (next.pagination) next.pagination = remapPagination(next.pagination)
-    else if (meta?.pagination) next.pagination = remapPagination(meta.pagination)
+    else if (meta?.pagination)
+      next.pagination = remapPagination(meta.pagination)
     return next as T
   }
 

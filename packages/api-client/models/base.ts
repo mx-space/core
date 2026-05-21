@@ -14,6 +14,8 @@ export interface Pager {
   size: number
   total: number
   totalPages: number
+  hasNextPage?: boolean
+  hasPrevPage?: boolean
 }
 
 export interface PaginateResult<T> {
