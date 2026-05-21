@@ -18,10 +18,10 @@ export class UploadService {
     })
 
     if (!data) {
-      throw new BadRequestException('仅供上传文件！')
+      throw new BadRequestException('Only file uploads are accepted!')
     }
     if (data.fieldname != 'file') {
-      throw new BadRequestException('字段必须为 file')
+      throw new BadRequestException('The field name must be "file"')
     }
 
     return data

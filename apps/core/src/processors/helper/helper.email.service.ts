@@ -65,7 +65,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     exampleRenderProps: Record<string, any>,
   ) {
     if (this.emailTypeSet.has(type)) {
-      this.logger.warn(`重复注册邮件类型 ${type}`)
+      this.logger.warn(`Duplicate email type registration: ${type}`)
       return
     }
     this.emailTypeMap[type] = exampleRenderProps || {}
@@ -147,7 +147,9 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       if (this.provider === 'resend') {
         const apiKey = mailOptions.resend?.apiKey
         if (!apiKey) {
-          this.logger.warn('Resend API Key 未配置，邮件服务未启动')
+          this.logger.warn(
+            'Resend API key not configured; email service not started',
+          )
           this.appliedMailVersion = nextVersion
           this.mailConfigSynced = true
           return
@@ -165,7 +167,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
             const to = this.normalizeAddressList(options.to)
             if (!from || !to) {
               throw createAppException(AppErrorCode.INTERNAL_ERROR, {
-                message: '邮件发送失败',
+                message: 'Failed to send email',
               })
             }
             const cc = this.normalizeAddressList(options.cc)
@@ -176,7 +178,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
               this.normalizeContent(options.text)
             if (!html) {
               throw createAppException(AppErrorCode.INTERNAL_ERROR, {
-                message: '邮件发送失败',
+                message: 'Failed to send email',
               })
             }
 
@@ -197,7 +199,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
         const { smtp } = mailOptions
         const { user, pass, host, port, secure } = smtp || {}
         if (!user && !pass) {
-          this.logger.warn('未启动邮件通知')
+          this.logger.warn('Email notifications are disabled')
           this.appliedMailVersion = nextVersion
           this.mailConfigSynced = true
           return
@@ -217,7 +219,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       this.mailConfigSynced = true
       const ready = await this.checkIsReady(false)
       if (ready) {
-        this.logger.log('送信服务已经加载完毕！')
+        this.logger.log('Mail delivery service is ready!')
       }
     } catch (error) {
       this.logger.error(error instanceof Error ? error.message : String(error))
@@ -237,7 +239,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     return await this.verifyClient()
   }
 
-  // 验证有效性
+  // Verify the client is reachable
   private verifyClient() {
     return new Promise<boolean>((r) => {
       if (!this.instance?.verify) {
@@ -246,7 +248,10 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       }
       this.instance.verify((error) => {
         if (error) {
-          this.logger.error('邮件客户端初始化连接失败！', error.message)
+          this.logger.error(
+            'Failed to initialize the email client connection!',
+            error.message,
+          )
           r(false)
         } else {
           r(true)
@@ -262,8 +267,8 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     return this.send({
       from: `"Mx Space" <${senderEmail}>`,
       to: owner.mail,
-      subject: '测试邮件',
-      text: '这是一封测试邮件',
+      subject: 'Test email',
+      text: 'This is a test email',
     })
   }
 
@@ -300,7 +305,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
         try {
           await this.ensureMailTransportFresh()
           if (!this.instance) {
-            throw new Error('邮件服务未初始化')
+            throw new Error('Email service is not initialized')
           }
           const result = await this.instance.sendMail(item.options)
           this.lastSendTime = Date.now()
@@ -311,7 +316,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           if (item.attempts < maxRetry) {
             item.attempts++
             this.logger.warn(
-              `邮件发送失败，第 ${item.attempts} 次重试: ${error instanceof Error ? error.message : String(error)}`,
+              `Failed to send email, retry ${item.attempts}: ${error instanceof Error ? error.message : String(error)}`,
             )
             await sleep(1000 * item.attempts)
             this.pendingQueue.push(item)
@@ -322,7 +327,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           )
           item.reject(
             createAppException(AppErrorCode.INTERNAL_ERROR, {
-              message: '邮件发送失败',
+              message: 'Failed to send email',
             }),
           )
         }

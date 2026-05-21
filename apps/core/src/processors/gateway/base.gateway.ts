@@ -19,7 +19,7 @@ export abstract class BaseGateway {
     client.send(
       this.gatewayMessageFormat(
         BusinessEvents.GATEWAY_CONNECT,
-        'WebSocket 断开',
+        'WebSocket disconnected',
       ),
     )
   }
@@ -27,7 +27,7 @@ export abstract class BaseGateway {
     client.send(
       this.gatewayMessageFormat(
         BusinessEvents.GATEWAY_CONNECT,
-        'WebSocket 已连接',
+        'WebSocket connected',
       ),
     )
   }

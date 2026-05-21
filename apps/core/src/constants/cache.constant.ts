@@ -6,25 +6,25 @@ export enum RedisKeys {
   MaxOnlineCount = 'max_online_count',
   IpInfoMap = 'ip_info_map',
   LikeSite = 'like_site',
-  /** 后台管理入口页面缓存 */
+  /** Admin dashboard entry page cache */
   AdminPage = 'admin_next_index_entry',
-  /** 配置项缓存 */
+  /** Configuration cache */
   ConfigCache = 'config_cache',
-  /** 配置版本号 */
+  /** Configuration version number */
   ConfigVersion = 'config_version',
   PTYSession = 'pty_session',
-  /** HTTP 请求缓存 */
+  /** HTTP request cache */
   HTTPCache = 'http_cache',
-  /** Snippet 缓存 */
+  /** Snippet cache */
   SnippetCache = 'snippet_cache',
-  /** 翻译词表缓存 */
+  /** Translation glossary cache */
   TranslationEntryDict = 'translation_entry_dict',
 
-  /** 云函数缓存数据 */
+  /** Serverless function cache storage */
   ServerlessStorage = 'serverless_storage',
 
   JWTStore = 'jwt_store',
-  /** 最近速记的点赞，点踩记录 */
+  /** Like/dislike records for recent shorthand entries */
   RecentlyAttitude = 'recently_attitude',
   Socket = 'socket',
   ClusterEventStream = 'cluster_event_stream',
@@ -33,7 +33,7 @@ export enum RedisKeys {
   AnalyzeTrafficSource = 'analyze_traffic_source',
   AnalyzeDeviceDistribution = 'analyze_device_distribution',
 
-  /** Enrichment capture LRU touchAccess 节流 NX 锁 */
+  /** NX lock to throttle Enrichment capture LRU touchAccess */
   EnrichmentCaptureTouch = 'enrichment_capture_touch',
 }
 export const API_CACHE_PREFIX = 'mx-api-cache:'

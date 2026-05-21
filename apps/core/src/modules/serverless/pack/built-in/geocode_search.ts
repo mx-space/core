@@ -13,7 +13,7 @@ export default async function handler(ctx: Context) {
   const gaodemapKey = adminExtra?.gaodemapKey || secret.gaodemapKey
 
   if (!gaodemapKey) {
-    ctx.throws(422, '高德地图 API Key 未配置')
+    ctx.throws(422, 'Amap (Gaode) API key is not configured')
   }
 
   const params = new URLSearchParams([
@@ -31,7 +31,7 @@ export default async function handler(ctx: Context) {
     })
   if (!data) {
     ctx.throws(500,
-      \`高德地图 API 调用失败，\${errorMessage}\`,
+      \`Amap (Gaode) API request failed: \${errorMessage}\`,
     )
   }
   return data

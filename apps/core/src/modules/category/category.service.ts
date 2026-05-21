@@ -202,7 +202,7 @@ export class CategoryService implements OnApplicationBootstrap {
   async createDefaultCategory() {
     if ((await this.categoryRepository.countAll()) === 0) {
       return this.categoryRepository.create({
-        name: '默认分类',
+        name: 'Default',
         slug: 'default',
       })
     }

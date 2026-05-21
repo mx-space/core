@@ -66,21 +66,21 @@ export class CronTaskService implements OnModuleInit {
       throw new TypeError(`Cron method not found: ${String(methodName)}`)
     }
 
-    await context.appendLog('info', `开始执行: ${meta.description}`)
-    await context.updateProgress(0, '执行中...')
+    await context.appendLog('info', `Starting: ${meta.description}`)
+    await context.updateProgress(0, 'Running...')
 
     try {
       const result = await method.call(this.cronBusinessService)
-      await context.updateProgress(100, '完成')
+      await context.updateProgress(100, 'Completed')
 
       const hasResult = result !== undefined && result !== null
       await context.setResult(hasResult ? result : { success: true })
       await context.appendLog(
         'info',
-        hasResult ? `执行完成: ${JSON.stringify(result)}` : '执行完成',
+        hasResult ? `Finished: ${JSON.stringify(result)}` : 'Finished',
       )
     } catch (error) {
-      await context.appendLog('error', `执行失败: ${error.message}`)
+      await context.appendLog('error', `Failed: ${error.message}`)
       throw error
     }
   }

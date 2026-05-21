@@ -81,17 +81,17 @@ export function validateImageBuffer({
 }): ImageValidationResult {
   const detected = detectImageType(buffer)
   if (!detected) {
-    return { ok: false, reason: '不支持的头像图片格式' }
+    return { ok: false, reason: 'Unsupported avatar image format' }
   }
 
   const { mime, ext } = detected
 
   if (allowedMimeTypes && !allowedMimeTypes.has(mime)) {
-    return { ok: false, reason: '头像仅支持上传常见图片格式' }
+    return { ok: false, reason: 'Avatar only supports common image formats' }
   }
 
   if (allowedExtensions && !allowedExtensions.has(ext)) {
-    return { ok: false, reason: '头像仅支持上传常见图片格式' }
+    return { ok: false, reason: 'Avatar only supports common image formats' }
   }
 
   if (originUrl) {
@@ -99,10 +99,10 @@ export function validateImageBuffer({
       const urlExt = path.extname(new URL(originUrl).pathname).toLowerCase()
 
       if (urlExt && allowedExtensions && !allowedExtensions.has(urlExt)) {
-        return { ok: false, reason: '头像文件后缀不被支持' }
+        return { ok: false, reason: 'Avatar file extension is not supported' }
       }
     } catch {
-      return { ok: false, reason: '头像地址无法解析' }
+      return { ok: false, reason: 'Avatar URL cannot be parsed' }
     }
   }
 

@@ -50,7 +50,7 @@ export class ImageService implements OnModuleInit {
       const originImage = oldImagesMap.get(src)
       const keys = new Set(Object.keys(originImage || {}))
 
-      // 原有图片 和 现有图片 src 一致 跳过
+      // Skip if the existing image and the new image share the same src
       if (
         originImage &&
         originImage.src === src &&
@@ -95,7 +95,7 @@ export class ImageService implements OnModuleInit {
     const wait = queue.addMultiple(imageProcessingTasks)
     await wait()
 
-    // 老图片不要过滤，记录到列头
+    // Keep old images instead of filtering them out — prepend to the list
     if (originImages) {
       for (const oldImageRecord of originImages as ImageModel[]) {
         const src = oldImageRecord.src

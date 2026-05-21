@@ -18,10 +18,10 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 
 /**
- * CronBusinessService - Cron 任务业务逻辑层
+ * CronBusinessService - Business logic layer for cron tasks.
  *
- * 本服务仅保留业务方法的实现，供 CronTaskService 调用
- * 调度逻辑在 CronTaskScheduler 中
+ * This service only holds business method implementations invoked by
+ * CronTaskService. Scheduling logic lives in CronTaskScheduler.
  */
 @Injectable()
 export class CronBusinessService {
@@ -42,7 +42,7 @@ export class CronBusinessService {
   }
 
   /**
-   * 清理 7 天前的访问记录
+   * Clean up access records older than 7 days.
    */
   async cleanAccessRecord() {
     const cleanDate = dayjs().add(-7, 'd')
@@ -51,22 +51,22 @@ export class CronBusinessService {
       cleanDate.toDate(),
     )
 
-    this.logger.log('--> 清理访问记录成功')
+    this.logger.log('--> Access records cleaned up successfully')
     return { deletedCount }
   }
 
   /**
-   * 每天凌晨删除 IP 访问缓存
+   * Reset the IP access cache every midnight.
    */
   async resetIPAccess() {
     await this.redisService.getClient().del(getRedisKey(RedisKeys.AccessIp))
 
-    this.logger.log('--> 清理 IP 访问记录成功')
+    this.logger.log('--> IP access records cleaned up successfully')
     return { success: true }
   }
 
   /**
-   * 每天凌晨删除喜欢/阅读记录缓存
+   * Reset the like / read article cache every midnight.
    */
   async resetLikedOrReadArticleRecord() {
     const redis = this.redisService.getClient()
@@ -79,22 +79,22 @@ export class CronBusinessService {
     ).flat()
     await Promise.all(allKeys.map((key) => redis.del(key)))
 
-    this.logger.log('--> 清理喜欢数成功')
+    this.logger.log('--> Like counts cleaned up successfully')
     return { success: true }
   }
 
   /**
-   * 清理临时文件目录
+   * Clean up the temporary file directory.
    */
   async cleanTempDirectory() {
     await rm(TEMP_DIR, { recursive: true })
     mkdirp.sync(STATIC_FILE_TRASH_DIR)
-    this.logger.log('--> 清理临时文件成功')
+    this.logger.log('--> Temporary files cleaned up successfully')
     return { success: true }
   }
 
   /**
-   * 推送站点地图到百度搜索
+   * Push the sitemap to Baidu Search.
    */
   async pushToBaiduSearch() {
     const {
@@ -107,7 +107,7 @@ export class CronBusinessService {
     }
     const token = configs.token
     if (!token) {
-      this.logger.error('[BaiduSearchPushTask] token 为空')
+      this.logger.error('[BaiduSearchPushTask] token is empty')
       return { skipped: true, reason: 'token is empty' }
     }
 
@@ -120,16 +120,18 @@ export class CronBusinessService {
         urls,
         { headers: { 'Content-Type': 'text/plain' } },
       )
-      this.logger.log(`百度站长提交结果：${JSON.stringify(res.data)}`)
+      this.logger.log(
+        `Baidu Webmaster submission result: ${JSON.stringify(res.data)}`,
+      )
       return { response: res.data }
     } catch (error) {
-      this.logger.error(`百度推送错误：${error.message}`)
+      this.logger.error(`Baidu push error: ${error.message}`)
       throw error
     }
   }
 
   /**
-   * 推送站点地图到 Bing 搜索
+   * Push the sitemap to Bing Search.
    */
   async pushToBingSearch() {
     const {
@@ -142,7 +144,7 @@ export class CronBusinessService {
     }
     const apiKey = configs.token
     if (!apiKey) {
-      this.logger.error('[BingSearchPushTask] API key 为空')
+      this.logger.error('[BingSearchPushTask] API key is empty')
       return { skipped: true, reason: 'API key is empty' }
     }
 
@@ -164,22 +166,24 @@ export class CronBusinessService {
         },
       )
       if (res?.data?.d === null) {
-        this.logger.log('Bing 站长提交成功')
+        this.logger.log('Bing Webmaster submission succeeded')
       } else {
-        this.logger.log(`Bing 站长提交结果：${JSON.stringify(res.data)}`)
+        this.logger.log(
+          `Bing Webmaster submission result: ${JSON.stringify(res.data)}`,
+        )
       }
       return { response: res.data }
     } catch (error) {
-      this.logger.error(`Bing 推送错误：${error.message}`)
+      this.logger.error(`Bing push error: ${error.message}`)
       throw error
     }
   }
 
   /**
-   * 扫表删除过期的 JWT
+   * Scan the store and delete expired JWTs.
    */
   async deleteExpiredJWT() {
-    this.logger.log('--> 开始扫表，清除过期的 token')
+    this.logger.log('--> Scanning the store to purge expired tokens')
     const redis = this.redisService.getClient()
     const storeKey = getRedisKey(RedisKeys.JWTStore)
     const keys = await redis.hkeys(storeKey)
@@ -197,39 +201,41 @@ export class CronBusinessService {
         }
 
         this.logger.debug(
-          `--> 删除过期的 token：${key}, 签发于 ${date.format('YYYY-MM-DD H:mm:ss')}`,
+          `--> Deleting expired token: ${key}, issued at ${date.format('YYYY-MM-DD H:mm:ss')}`,
         )
         await redis.hdel(storeKey, key)
         deleteCount += 1
       }),
     )
 
-    this.logger.log(`--> 删除了 ${deleteCount} 个过期的 token`)
+    this.logger.log(`--> Deleted ${deleteCount} expired tokens`)
     return { deletedCount: deleteCount }
   }
 
   /**
-   * 清理评论图片上传：pending 超 TTL + detached 超 TTL 双 pass。
+   * Clean up comment image uploads: a two-pass sweep that removes both
+   * pending uploads past TTL and detached uploads past TTL.
    */
   async cleanCommentUploads() {
-    this.logger.log('--> 开始清理评论图片上传')
+    this.logger.log('--> Starting cleanup of comment image uploads')
     const result = await this.fileReferenceService.cleanupCommentUploads()
     this.logger.log(
-      `--> 清理评论图片上传完成 pending=${result.pendingDeleted} detached=${result.detachedDeleted}`,
+      `--> Comment image upload cleanup finished pending=${result.pendingDeleted} detached=${result.detachedDeleted}`,
     )
     return result
   }
 
   /**
-   * 重建搜索索引（默认增量；通过 source_hash 跳过未变文档）
+   * Rebuild the search index (incremental by default; documents whose
+   * source_hash is unchanged are skipped).
    */
   async rebuildSearchIndex() {
-    this.logger.log('--> 开始重建搜索索引（增量）')
+    this.logger.log('--> Starting search index rebuild (incremental)')
     const result = await this.searchService.rebuildSearchDocuments({
       force: false,
     })
     this.logger.log(
-      `--> 搜索索引重建完成 total=${result.total} created=${result.created} updated=${result.updated} deleted=${result.deleted} skipped=${result.skipped}`,
+      `--> Search index rebuild finished total=${result.total} created=${result.created} updated=${result.updated} deleted=${result.deleted} skipped=${result.skipped}`,
     )
     return result
   }

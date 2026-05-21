@@ -129,8 +129,8 @@ export class BackupService {
   }
 
   async backup() {
-    this.logger.log('--> 备份数据库中')
-    // 用时间格式命名文件夹
+    this.logger.log('--> Backing up database')
+    // Use timestamp as directory name
     const dateDir = getMediumDateTime(new Date())
 
     const backupDirPath = join(BACKUP_DIR, dateDir)
@@ -162,7 +162,7 @@ export class BackupService {
 
       if (!existsSync(dumpFilePath)) {
         const error = new Error(
-          `pg_dump 已执行，但未生成文件：${dumpFilePath}（请检查 DB 名称、连接与权限）`,
+          `pg_dump ran but produced no file: ${dumpFilePath} (check DB name, connection, and permissions)`,
         ) as any
         error.step = 'pg_dump'
         error.cwd = backupDirPath
@@ -171,14 +171,14 @@ export class BackupService {
       const dumpStat = statSync(dumpFilePath)
       if (dumpStat.size === 0) {
         const error = new Error(
-          `pg_dump 生成文件为空：${dumpFilePath}（zip exit code 12 常见原因）`,
+          `pg_dump produced an empty file: ${dumpFilePath} (common cause of zip exit code 12)`,
         ) as any
         error.step = 'pg_dump'
         error.cwd = backupDirPath
         throw error
       }
 
-      // 使用目录而非通配符，避免目录为空时触发 "zip error: Nothing to do" (exit code 12)
+      // Use a directory instead of a wildcard to avoid "zip error: Nothing to do" (exit code 12) when the directory is empty
       await runStep(
         'zip-db',
         `zip -r backup-${dateDir} mx-space && rm -rf mx-space`,
@@ -187,7 +187,7 @@ export class BackupService {
         },
       )
 
-      // 打包数据目录
+      // Bundle the data directory
 
       const flags = excludeFolders.map((item) => `--exclude ${item}`).join(' ')
       await rm(join(DATA_DIR, 'backup_data'), { recursive: true, force: true })
@@ -205,7 +205,7 @@ export class BackupService {
         { cwd: DATA_DIR },
       )
 
-      this.logger.log('--> 备份成功')
+      this.logger.log('--> Backup completed successfully')
     } catch (error) {
       const step = (error as any)?.step ? `step=${(error as any).step}` : ''
       const cwd = (error as any)?.cwd ? `cwd=${(error as any).cwd}` : ''
@@ -216,7 +216,7 @@ export class BackupService {
         ? `\n\nstdout:\n${(error as any).stdout}`
         : ''
 
-      // 额外诊断：命令是否存在、备份目录当前内容
+      // Extra diagnostics: command availability and current backup directory contents
       const [hasZip, hasPgDump, hasPgRestore] = await Promise.all([
         this.commandExists('zip'),
         this.commandExists('pg_dump'),
@@ -225,7 +225,7 @@ export class BackupService {
       const backupDirContent = await this.safeListDir(backupDirPath)
 
       this.logger.error(
-        `--> 备份失败（${[step, cwd].filter(Boolean).join(', ')}），${error.message}` +
+        `--> Backup failed (${[step, cwd].filter(Boolean).join(', ')}): ${error.message}` +
           `${stderr}${stdout}\n\n` +
           `diagnostics:\n` +
           `- zip: ${hasZip ? 'found' : 'missing'}\n` +
@@ -281,7 +281,7 @@ export class BackupService {
     await this.backup()
     const isExist = existsSync(restoreFilePath)
     if (!isExist) {
-      throw new InternalServerErrorException('备份文件不存在')
+      throw new InternalServerErrorException('Backup file does not exist')
     }
     const dirPath = path.dirname(restoreFilePath)
 
@@ -292,27 +292,33 @@ export class BackupService {
       }),
     )
 
-    // 解压
+    // Unzip
     try {
       await $throw(`unzip ${restoreFilePath}`, { cwd: dirPath })
     } catch (error: any) {
       if (error?.exitCode === 127) {
-        throw new InternalServerErrorException('服务端 unzip 命令未找到')
+        throw new InternalServerErrorException(
+          'unzip command not found on server',
+        )
       }
       this.logger.error(
-        `unzip 失败：${error?.message || error}\n\n${error?.stderr || ''}`,
+        `unzip failed: ${error?.message || error}\n\n${error?.stderr || ''}`,
       )
       throw error
     }
     try {
-      // 验证
+      // Verify
       if (!existsSync(join(dirPath, 'mx-space'))) {
-        throw new InternalServerErrorException('备份文件错误，目录不存在')
+        throw new InternalServerErrorException(
+          'Invalid backup file: directory does not exist',
+        )
       }
 
       const dumpFilePath = join(dirPath, 'mx-space', 'pg.dump')
       if (!existsSync(dumpFilePath)) {
-        throw new InternalServerErrorException('备份文件错误，数据库备份不存在')
+        throw new InternalServerErrorException(
+          'Invalid backup file: database dump does not exist',
+        )
       }
 
       await $throw(
@@ -321,7 +327,7 @@ export class BackupService {
       )
     } catch (error) {
       this.logger.error(
-        `restore 失败：${(error as any)?.message || error}\n\n${
+        `restore failed: ${(error as any)?.message || error}\n\n${
           (error as any)?.stderr || ''
         }`,
       )
@@ -329,7 +335,7 @@ export class BackupService {
     } finally {
       await rm(join(dirPath, 'mx-space'), { recursive: true, force: true })
     }
-    // 还原 backup_data
+    // Restore backup_data
 
     const backupDataDir = join(dirPath, 'backup_data')
 
@@ -354,9 +360,11 @@ export class BackupService {
       if (pkg.dependencies) {
         await Promise.all(
           Object.entries(pkg.dependencies).map(([name, version]) => {
-            this.logger.log(`--> 安装依赖 ${name}@${version}`)
+            this.logger.log(`--> Installing dependency ${name}@${version}`)
             return installPKG(`${name}@${version}`, DATA_DIR).catch((error) => {
-              this.logger.error(`--> 依赖安装失败：${error.message}`)
+              this.logger.error(
+                `--> Dependency installation failed: ${error.message}`,
+              )
             })
           }),
         )
@@ -400,7 +408,7 @@ export class BackupService {
   }
 
   @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
-  @CronDescription('备份 DB 并上传 COS')
+  @CronDescription('Back up the database and upload to object storage')
   async backupDB() {
     const { backupOptions: configs } = await this.configs.waitForConfigReady()
     if (!configs.enable) {
@@ -428,15 +436,15 @@ export class BackupService {
 
       const pathParts = backup.path.split('/')
       const remoteFileKey = `${pathParts.at(-2)}.zip`
-      this.logger.log('--> 开始上传到 S3')
+      this.logger.log('--> Starting upload to S3')
       await s3
         .uploadFile(backup.buffer, remoteFileKey, 'backup')
         .catch((error) => {
-          this.logger.error('--> 上传失败了')
+          this.logger.error('--> Upload failed')
           throw error
         })
 
-      this.logger.log('--> 上传成功')
+      this.logger.log('--> Upload succeeded')
     })
   }
 }

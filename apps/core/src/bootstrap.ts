@@ -37,7 +37,7 @@ export async function bootstrap() {
     fastifyApp,
   )
 
-  // 使用自定义 Logger 替换 NestJS 内置 Logger
+  // Replace NestJS built-in logger with our custom Logger
   app.useLogger(app.get(Logger))
 
   const allowAllCors: FastifyCorsOptions = {
@@ -45,7 +45,7 @@ export async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     origin: (origin, callback) => callback(null, origin || ''),
   }
-  // Origin 如果不是数组就全部允许跨域
+  // If Origin is not an array, allow all cross-origin requests
 
   app.enableCors(
     isDev

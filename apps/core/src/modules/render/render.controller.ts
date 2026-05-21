@@ -95,18 +95,16 @@ export class RenderEjsController {
 
     const html = ejs.render(await this.service.getMarkdownEjsRenderTemplate(), {
       ...structure,
-      info: isPrivateOrEncrypt ? '正在查看的文章还未公开' : undefined,
+      info: isPrivateOrEncrypt ? 'This article is not yet public.' : undefined,
 
       title: document.title,
-      footer: `<div>本文渲染于 ${getShortDateTime(
+      footer: `<div>Rendered on ${getShortDateTime(
         new Date(),
-      )}，由 marked.js 解析生成，用时 ${(performance.now() - now).toFixed(
-        2,
-      )}ms</div>
-      <div>作者：${username}，撰写于${dayjs(document.createdAt).format(
+      )} by marked.js, in ${(performance.now() - now).toFixed(2)}ms</div>
+      <div>Author: ${username}, written on ${dayjs(document.createdAt).format(
         'llll',
       )}</div>
-        <div>原文地址：<a href="${url}">${decodeURIComponent(
+        <div>Original URL: <a href="${url}">${decodeURIComponent(
           url.toString(),
         )}</a></div>
         `,

@@ -21,7 +21,8 @@ export const SnippetSchema = BaseSchema.extend({
     .min(1)
     .transform((val) => val.trim()),
   name: z.string().regex(/^[\w-]{1,30}$/, {
-    message: 'name 只能使用英文字母和数字下划线且不超过 30 个字符',
+    message:
+      'name must only contain letters, digits, and underscores, and be at most 30 characters',
   }),
   reference: z.string().min(1).default('root').optional(),
   comment: z.string().nullable().optional(),

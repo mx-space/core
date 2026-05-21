@@ -1,6 +1,6 @@
 /**
  * Cache config service.
- * @file Cache 配置器
+ * @file Cache configuration factory
  * @module processor/redis/redis.config.service
  * @author Innei <https://github.com/innei>
  */
@@ -11,11 +11,12 @@ import type {
   CacheOptionsFactory,
 } from '@nestjs/cache-manager'
 import { Injectable } from '@nestjs/common'
+
 import { REDIS } from '~/app.config'
 
 @Injectable()
 export class RedisConfigService implements CacheOptionsFactory {
-  // 缓存配置
+  // Cache configuration
   public createCacheOptions(): CacheModuleOptions {
     const url = REDIS.url ?? `redis://${REDIS.host}:${REDIS.port}`
     return {

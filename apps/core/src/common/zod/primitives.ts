@@ -26,7 +26,7 @@ export const zAllowedUrl = z.string().refine(
       return false
     }
   },
-  { message: '请更正为正确的网址' },
+  { message: 'Please enter a valid URL' },
 )
 
 export const zStrictUrl = z.string().url()

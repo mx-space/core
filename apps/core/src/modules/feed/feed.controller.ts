@@ -40,19 +40,19 @@ export class FeedController {
         const renderResult = await this.markdownService.renderArticle(item.id)
 
         const description = isLexical
-          ? '富文本内容，请前往原站查看'
+          ? 'Rich-text content; please visit the original site to view.'
           : escapeXml(
               xss(RemoveMarkdown(renderResult.document.text).slice(0, 50)),
             )
 
         const contentEncoded = isLexical
-          ? `<p>前往原站查看：<a href="${xss(item.link)}">${xss(item.link)}</a></p>`
-          : `<blockquote>该渲染由 marked 生成，可能存在排版问题，最佳体验请前往：<a href='${xss(
+          ? `<p>View on the original site: <a href="${xss(item.link)}">${xss(item.link)}</a></p>`
+          : `<blockquote>This rendering is produced by marked and may have formatting issues. For the best experience, visit: <a href='${xss(
               item.link,
             )}'>${xss(item.link)}</a></blockquote>
           ${renderResult.html}
           <p style='text-align: right'>
-          <a href='${`${xss(item.link)}#comments`}'>看完了？说点什么呢</a>
+          <a href='${`${xss(item.link)}#comments`}'>Finished reading? Leave a comment</a>
           </p>`
 
         return `<item>

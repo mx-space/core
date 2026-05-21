@@ -10,7 +10,7 @@ import { LinkState, LinkType } from './link.enum'
  * Link schema for API validation
  */
 export const LinkSchema = z.object({
-  name: zMaxLengthString(20, '标题太长了 www'),
+  name: zMaxLengthString(20, 'Title is too long'),
   url: zHttpsUrl,
   avatar: z
     .preprocess(
@@ -18,13 +18,16 @@ export const LinkSchema = z.object({
       z.string().url().max(200).nullable(),
     )
     .optional(),
-  description: zMaxLengthString(50, '描述信息超过 50 会坏掉的！').optional(),
+  description: zMaxLengthString(
+    50,
+    'Description must not exceed 50 characters',
+  ).optional(),
   type: z.enum(LinkType).default(LinkType.Friend).optional(),
   state: z.enum(LinkState).default(LinkState.Pass).optional(),
   email: z
     .preprocess(
       (val) => (val === '' ? null : val),
-      zEmail('请输入正确的邮箱！').max(50).nullable(),
+      zEmail('Please enter a valid email address').max(50).nullable(),
     )
     .optional(),
 })
@@ -35,7 +38,7 @@ export class LinkSchemaDto extends createZodDto(LinkSchema) {}
  * Link DTO with author field (for guest submissions)
  */
 export const LinkWithAuthorSchema = LinkSchema.extend({
-  author: zMaxLengthString(20, '乃的名字太长了'),
+  author: zMaxLengthString(20, 'Your name is too long'),
 })
 
 export class LinkDto extends createZodDto(LinkWithAuthorSchema) {}
@@ -51,7 +54,7 @@ export class PartialLinkDto extends createZodDto(PartialLinkSchema) {}
  * Audit reason schema
  */
 export const AuditReasonSchema = z.object({
-  reason: z.string().min(1, '请输入审核理由'),
+  reason: z.string().min(1, 'Please enter an audit reason'),
   state: z.enum(LinkState),
 })
 

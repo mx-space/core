@@ -257,7 +257,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
 
     const options: Mail.Options = {
       from: sendfrom,
-      subject: `[${seo.title || 'Mx Space'}] 发布了新内容~`,
+      subject: `[${seo.title || 'Mx Space'}] New content published`,
       to: email,
       html: ejs.render(finalTemplate, source),
       headers: { 'List-Unsubscribe': `<${unsubscribeLink}>` },

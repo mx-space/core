@@ -146,7 +146,7 @@ export class ServerlessController {
   }
 
   /**
-   * 重置内建函数，过期的内建函数会被删除
+   * Reset a built-in function. Stale built-in functions are deleted.
    */
   @Delete('/reset/:id')
   @Auth()

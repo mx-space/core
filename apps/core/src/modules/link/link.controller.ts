@@ -70,7 +70,7 @@ export class LinkController {
   @Post('/audit')
   @HTTPDecorators.Idempotence({
     expired: 20,
-    errorMessage: '哦吼，你已经提交过这个友链了',
+    errorMessage: 'Oh, you have already submitted this friend link',
   })
   async applyForLink(@Body() body: LinkDto) {
     if (!(await this.linkService.canApplyLink())) {

@@ -1,7 +1,7 @@
 /**
- * 生成 Worker 线程代码字符串
- * Worker 本身就是隔离环境，很多功能直接在这里实现
- * 支持 Next.js Edge Runtime 兼容的全局 API
+ * Generate the worker thread code string.
+ * The Worker is itself an isolated environment, so many features are implemented inline here.
+ * Provides globals compatible with the Next.js Edge Runtime.
  */
 export function createSandboxWorkerCode(): string {
   return `
@@ -36,7 +36,7 @@ function sendMessage(message) {
   port.postMessage(message);
 }
 
-// Bridge 调用：只用于必须访问主线程资源的操作
+// Bridge call: used only for operations that must access main-thread resources
 async function requestBridgeCall(method, args) {
   const id = generateId();
   return new Promise((resolve, reject) => {
@@ -51,17 +51,17 @@ async function requestBridgeCall(method, args) {
   });
 }
 
-// ===== 以下功能直接在 Worker 中实现 =====
+// ===== The following features are implemented directly inside the Worker =====
 
 const BANNED_MODULES = new Set([
   'child_process', 'cluster', 'dgram', 'dns', 'fs', 'fs/promises',
   'inspector', 'os', 'process',
   'repl', 'sys', 'tls', 'v8', 'vm', 'worker_threads',
-  // 防止通过 module.createRequire 绕过沙箱限制
+  // Prevent bypassing sandbox restrictions via module.createRequire
   'module',
 ]);
 
-// require 直接在 Worker 中执行
+// require runs directly inside the Worker
 function createSandboxRequire(basePath) {
   const baseRequire = createRequire(basePath);
 
@@ -76,7 +76,7 @@ function createSandboxRequire(basePath) {
       throw new Error('require: module "' + moduleId + '" is not allowed');
     }
 
-    // 远程模块通过 bridge 加载
+    // Remote modules are loaded through the bridge
     if (moduleId.startsWith('http://') || moduleId.startsWith('https://')) {
       throw new Error('Remote modules must use async require: await require("' + moduleId + '")');
     }
@@ -85,7 +85,7 @@ function createSandboxRequire(basePath) {
   };
 }
 
-// 异步 require
+// Async require
 function createAsyncRequire(basePath) {
   const syncRequire = createSandboxRequire(basePath);
   return async function asyncRequire(moduleId) {
@@ -132,9 +132,9 @@ function createSandboxConsole(namespace) {
   return { console: sandboxConsole, getLogs: () => logs };
 }
 
-// ===== 以下功能需要通过 Bridge 访问主线程 =====
+// ===== The following features need to reach the main thread via the Bridge =====
 
-// 创建 HTTP 服务（直接在 Worker 中实现）
+// Create the HTTP service (implemented directly inside the Worker)
 function createHttpService() {
   const request = async (url, options = {}) => {
     const res = await fetch(url, options);
@@ -189,13 +189,13 @@ function createBridgeContext(namespace) {
   };
 }
 
-// ===== 定时器管理 =====
+// ===== Timer management =====
 
 function createTimerManager() {
   const timers = new Set();
   const intervals = new Set();
   const MAX_TIMERS = 100;
-  const MAX_DELAY = 30000; // 最大延迟 30 秒
+  const MAX_DELAY = 30000; // Max delay of 30 seconds
 
   return {
     setTimeout: (callback, delay, ...args) => {
@@ -218,7 +218,7 @@ function createTimerManager() {
       if (intervals.size >= MAX_TIMERS) {
         throw new Error('Too many intervals created');
       }
-      const clampedDelay = Math.max(10, Math.min(delay || 10, MAX_DELAY)); // 最小 10ms
+      const clampedDelay = Math.max(10, Math.min(delay || 10, MAX_DELAY)); // Minimum 10ms
       const id = setInterval(callback, clampedDelay, ...args);
       intervals.add(id);
       return id;
@@ -236,8 +236,8 @@ function createTimerManager() {
   };
 }
 
-// ===== 受限的 Function 构造函数 =====
-// Edge Runtime 不允许通过字符串创建函数
+// ===== Restricted Function constructor =====
+// The Edge Runtime forbids creating functions from strings
 const RestrictedFunction = new Proxy(Function, {
   construct(target, args) {
     throw new Error('Code generation from strings is not allowed in sandbox');
@@ -246,12 +246,12 @@ const RestrictedFunction = new Proxy(Function, {
     throw new Error('Code generation from strings is not allowed in sandbox');
   },
   get(target, prop) {
-    // 允许访问 Function 的静态属性和 prototype
+    // Allow access to Function's static properties and prototype
     return target[prop];
   },
 });
 
-// ===== 代码执行 =====
+// ===== Code execution =====
 
 async function executeCode(payload) {
   const startTime = Date.now();
@@ -391,7 +391,7 @@ async function executeCode(payload) {
 
       // ===== Core Objects =====
       Object: globalThis.Object,
-      Function: RestrictedFunction, // 禁止通过字符串创建函数
+      Function: RestrictedFunction, // Forbid creating functions from strings
       Boolean: globalThis.Boolean,
       Symbol: globalThis.Symbol,
       Number: globalThis.Number,
@@ -433,13 +433,13 @@ async function executeCode(payload) {
       undefined: undefined,
 
       // ===== Process (Limited) =====
-      // 注意：不暴露 process.env，防止敏感信息泄露
+      // Note: do not expose process.env to avoid leaking sensitive information
       process: {
         nextTick: (callback) => queueMicrotask(callback),
       },
 
       // ===== Global Reference =====
-      globalThis: null, // 将在创建 context 后设置
+      globalThis: null, // Set after the context is created
     };
 
     const vmContext = vm.createContext(sandboxGlobals, {
@@ -447,7 +447,7 @@ async function executeCode(payload) {
       codeGeneration: { strings: false, wasm: false },
     });
 
-    // 设置 globalThis 引用
+    // Set the globalThis reference
     vmContext.globalThis = vmContext;
     vmContext.global = vmContext;
     vmContext.self = vmContext;
@@ -474,12 +474,12 @@ async function executeCode(payload) {
       logs: getLogs(),
     };
   } finally {
-    // 清理所有定时器
+    // Clean up all timers
     timerManager.cleanup();
   }
 }
 
-// ===== 消息处理 =====
+// ===== Message handling =====
 
 port.on('message', async (message) => {
   const { id, type, payload } = message;

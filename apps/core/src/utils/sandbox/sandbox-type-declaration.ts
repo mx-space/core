@@ -1,8 +1,8 @@
 /**
- * Serverless 函数的类型声明，供 Monaco Editor 代码补全使用
- * 此声明与 sandbox-worker-code.ts 中 sandboxGlobals 保持一致
+ * Type declarations for serverless functions, used by Monaco Editor for code completion.
+ * These must stay in sync with sandboxGlobals in sandbox-worker-code.ts.
  *
- * 变更 sandbox API 时须同步更新此文件
+ * Update this file whenever the sandbox API surface changes.
  */
 export function getSandboxTypeDeclaration(): string {
   return `

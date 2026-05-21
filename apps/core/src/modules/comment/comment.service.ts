@@ -54,7 +54,7 @@ export type CommentParentPreview = {
 const COMMENT_REPLY_THRESHOLD = 20
 const COMMENT_REPLY_EDGE_SIZE = 3
 const COMMENT_THREAD_BATCH_SIZE = 10
-const COMMENT_DELETED_PLACEHOLDER = '该评论已删除'
+const COMMENT_DELETED_PLACEHOLDER = 'This comment has been deleted'
 
 @Injectable()
 export class CommentService {
@@ -72,8 +72,9 @@ export class CommentService {
   ) {}
 
   /**
-   * 评论批量更新状态时之级联清图。
-   * Junk(state=2) 转移会触发关联 reader-uploaded 文件之硬删除（按配置）。
+   * Cascade-clean uploaded files when batch-updating comment state.
+   * Moving comments to Junk (state=2) triggers hard deletion of the
+   * associated reader-uploaded files (per configuration).
    */
   async cascadeFilesForCommentsIfSpam(commentIds: string[], state: number) {
     if (state !== CommentState.Junk) return
@@ -345,7 +346,8 @@ export class CommentService {
     const isExist = await this.ownerService.isOwnerName(author)
     if (isExist) {
       throw createAppException(AppErrorCode.INVALID_PARAMETER, {
-        message: '用户名与主人重名啦，但是你好像并不是我的主人唉',
+        message:
+          "That name belongs to the site owner, and you don't look like them.",
       })
     }
   }
@@ -360,7 +362,7 @@ export class CommentService {
       this.assignAuthProviderToComment(doc)
     }
 
-    // Owner 回复未读评论时，自动将父评论标为已读
+    // When the owner replies to an unread comment, mark the parent as read.
     if (
       RequestContext.hasAdminAccess() &&
       parent.state === CommentState.Unread

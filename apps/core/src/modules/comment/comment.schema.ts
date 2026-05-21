@@ -44,23 +44,29 @@ export const CommentAnchorSchema = z.discriminatedUnion('mode', [
  * Comment schema for API validation
  */
 export const CommentSchema = z.object({
-  author: z.string().min(1).max(20, { message: '昵称不得大于 20 个字符' }),
-  text: z.string().min(1).max(500, { message: '评论内容不得大于 500 个字符' }),
+  author: z
+    .string()
+    .min(1)
+    .max(20, { message: 'Nickname must not exceed 20 characters' }),
+  text: z
+    .string()
+    .min(1)
+    .max(500, { message: 'Comment must not exceed 500 characters' }),
   mail: z
     .string()
-    .email({ message: '请更正为正确的邮箱' })
-    .max(50, { message: '邮箱地址不得大于 50 个字符' }),
+    .email({ message: 'Please provide a valid email address' })
+    .max(50, { message: 'Email address must not exceed 50 characters' }),
   url: z
     .string()
-    .url({ message: '请更正为正确的网址' })
-    .max(50, { message: '地址不得大于 50 个字符' })
+    .url({ message: 'Please provide a valid URL' })
+    .max(50, { message: 'URL must not exceed 50 characters' })
     .optional(),
   isWhispers: z.boolean().optional(),
   avatar: z
     .string()
-    .url({ message: '头像必须是合法的 HTTPS URL 哦' })
+    .url({ message: 'Avatar must be a valid HTTPS URL' })
     .refine((val) => val.startsWith('https://'), {
-      message: '头像必须是合法的 HTTPS URL 哦',
+      message: 'Avatar must be a valid HTTPS URL',
     })
     .optional(),
   anchor: CommentAnchorSchema.optional(),
@@ -70,7 +76,10 @@ export const AnonymousCommentSchema = CommentSchema
 export const AnonymousReplyCommentSchema = CommentSchema.omit({ anchor: true })
 
 export const ReaderCommentSchema = z.object({
-  text: z.string().min(1).max(500, { message: '评论内容不得大于 500 个字符' }),
+  text: z
+    .string()
+    .min(1)
+    .max(500, { message: 'Comment must not exceed 500 characters' }),
   isWhispers: z.boolean().optional(),
   anchor: CommentAnchorSchema.optional(),
 })
@@ -101,11 +110,14 @@ export class EditCommentDto extends createZodDto(EditCommentSchema) {}
  * Required guest reader comment schema
  */
 export const RequiredGuestReaderCommentSchema = CommentSchema.extend({
-  author: z.string().min(1).max(20, { message: '昵称不得大于 20 个字符' }),
+  author: z
+    .string()
+    .min(1)
+    .max(20, { message: 'Nickname must not exceed 20 characters' }),
   mail: z
     .string()
-    .email({ message: '请更正为正确的邮箱' })
-    .max(50, { message: '邮箱地址不得大于 50 个字符' }),
+    .email({ message: 'Please provide a valid email address' })
+    .max(50, { message: 'Email address must not exceed 50 characters' }),
 })
 
 export class RequiredGuestReaderCommentDto extends createZodDto(

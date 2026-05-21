@@ -27,11 +27,11 @@ export class CountingService {
 
   private checkIdAndIp(id: string, ip: string) {
     if (!ip) {
-      this.logger.debug('无法更新阅读计数，IP 无效')
+      this.logger.debug('Cannot update read count: invalid IP')
       return false
     }
     if (!id) {
-      this.logger.debug('无法更新阅读计数，ID 不存在')
+      this.logger.debug('Cannot update read count: missing ID')
       return false
     }
     return true
@@ -45,11 +45,11 @@ export class CountingService {
     const repo = this.repoFor(type)
     if (!repo) return false
     const doc = await repo.findById(id)
-    if (!doc) throw '无法更新喜欢计数，文档不存在'
+    if (!doc) throw 'Cannot update like count: document not found'
 
     const isLikeBefore = await this.getThisRecordIsLiked(id, ip)
     if (isLikeBefore) {
-      this.logger.debug(`已经增加过计数了，${id}`)
+      this.logger.debug(`Already counted, ${id}`)
       return false
     }
 
@@ -58,7 +58,7 @@ export class CountingService {
       redis.sadd(getRedisKey(RedisKeys.Like, doc.id), ip),
       repo.incrementLike(doc.id),
     ])
-    this.logger.debug(`增加喜欢计数，${doc.title}`)
+    this.logger.debug(`Incremented like count, ${doc.title}`)
     return true
   }
 
@@ -68,13 +68,13 @@ export class CountingService {
     const doc = await repo.findById(id)
     if (!doc) throw ''
     await repo.incrementRead(doc.id)
-    this.logger.debug(`增加阅读计数，${doc.title}`)
+    this.logger.debug(`Incremented read count, ${doc.title}`)
     return { ...doc, readCount: doc.readCount + 1 }
   }
 
   async getThisRecordIsLiked(id: string, ip: string) {
     if (!this.checkIdAndIp(id, ip)) {
-      throw '无法获取到 IP'
+      throw 'Cannot resolve IP'
     }
 
     const redis = this.redisService.getClient()

@@ -48,7 +48,7 @@ import {
 import { CommentService } from './comment.service'
 import type { CommentModel } from './comment.types'
 
-const idempotenceMessage = '哦吼，这句话你已经说过啦'
+const idempotenceMessage = 'Whoops, you already said this'
 
 @ApiController({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)

@@ -165,7 +165,7 @@ export class AiSummaryService implements OnModuleInit {
   }
 
   /**
-   * 计算内容 hash，用于检测内容是否变更
+   * Compute a content hash used to detect whether the content has changed.
    */
   private computeContentHash(text: string): string {
     return md5(this.serializeText(text))
@@ -184,7 +184,7 @@ export class AiSummaryService implements OnModuleInit {
   }
 
   /**
-   * 获取并验证文章，用于摘要相关操作
+   * Fetch and validate an article for summary-related operations.
    */
   private async resolveArticleForSummary(articleId: string): Promise<{
     document: { text: string; title: string }
@@ -209,7 +209,7 @@ export class AiSummaryService implements OnModuleInit {
   }
 
   /**
-   * 检查数据库中是否存在 hash 匹配的有效摘要
+   * Check whether a valid summary with a matching hash already exists in the database.
    */
   private async findValidSummary(
     articleId: string,
@@ -224,7 +224,7 @@ export class AiSummaryService implements OnModuleInit {
   }
 
   /**
-   * 将已有摘要包装为立即返回的 stream 格式
+   * Wrap an existing summary in the stream format so it can be returned immediately.
    */
   private wrapAsImmediateStream(summary: AISummaryModel): {
     events: AsyncIterable<AiStreamEvent>
@@ -373,7 +373,7 @@ export class AiSummaryService implements OnModuleInit {
         throw error
       }
       this.logger.error(
-        `OpenAI 在处理文章 ${articleId} 时出错：${error.message}`,
+        `OpenAI failed while processing article ${articleId}: ${error.message}`,
         error.stack,
       )
       throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {

@@ -319,7 +319,7 @@ export const ENCRYPT = {
 
 if (ENCRYPT.enable && (!ENCRYPT.key || ENCRYPT.key.length !== 64))
   throw new Error(
-    `你开启了 Key 加密（MX_ENCRYPT_KEY or --encrypt_key），但是 Key 的长度不为 64，当前：${ENCRYPT.key.length}`,
+    `Key encryption is enabled (MX_ENCRYPT_KEY or --encrypt_key), but the key length is not 64. Current length: ${ENCRYPT.key.length}`,
   )
 
 export const TELEMETRY = {

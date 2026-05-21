@@ -1,7 +1,7 @@
 /**
  * @file helper.asset.service.ts
  * @author Innei
- * @description 静态资源服务。用户覆写 (FS) 优先于内置 (虚拟) bundle。
+ * @description Static asset service. User overrides (FS) take precedence over the built-in (virtual) bundle.
  */
 import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'

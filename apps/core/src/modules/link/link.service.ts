@@ -18,11 +18,11 @@ import { LinkAvatarService } from './link-avatar.service'
 import { LinkApplyEmailType } from './link-mail.enum'
 
 const LinkStateMap: Record<LinkState, string> = {
-  [LinkState.Pass]: '通过',
-  [LinkState.Audit]: '审核',
-  [LinkState.Outdate]: '过期',
-  [LinkState.Banned]: '禁用',
-  [LinkState.Reject]: '拒绝',
+  [LinkState.Pass]: 'Approved',
+  [LinkState.Audit]: 'Under review',
+  [LinkState.Outdate]: 'Outdated',
+  [LinkState.Banned]: 'Banned',
+  [LinkState.Reject]: 'Rejected',
 }
 
 @Injectable()
@@ -145,10 +145,10 @@ export class LinkService {
     if (!enable || isDev) {
       console.info(`
       To: ${model.email}
-      你的友链已通过
-        站点标题：${model.name}
-        站点网站：${model.url}
-        站点描述：${model.description}`)
+      Your friend link has been approved
+        Site title: ${model.name}
+        Site URL: ${model.url}
+        Site description: ${model.description}`)
       return
     }
     await this.sendLinkApplyEmail({
@@ -161,10 +161,10 @@ export class LinkService {
   async sendToOwner(authorName: string, model: LinkRow) {
     const { enable } = await this.configsService.get('mailOptions')
     if (!enable || isDev) {
-      console.info(`来自 ${authorName} 的友链请求：
-        站点标题：${model.name}
-        站点网站：${model.url}
-        站点描述：${model.description}`)
+      console.info(`New friend link request from ${authorName}:
+        Site title: ${model.name}
+        Site URL: ${model.url}
+        Site description: ${model.description}`)
       return
     }
     scheduleManager.schedule(async () => {
@@ -210,15 +210,15 @@ export class LinkService {
     const siteTitle = seo.title || 'Mx Space'
     const isToOwner = template === LinkApplyEmailType.ToOwner
     const subject = isToOwner
-      ? `[${siteTitle}] 新的朋友 ${authorName}`
-      : `嘿!~, 主人已通过你的友链申请!~`
+      ? `[${siteTitle}] New friend ${authorName}`
+      : `Hey! Your friend link application has been approved`
     const text = isToOwner
-      ? `来自 ${model.name} 的友链请求：
-          站点标题：${model.name}
-          站点网站：${model.url}
-          站点描述：${model.description}
+      ? `New friend link request from ${model.name}:
+          Site title: ${model.name}
+          Site URL: ${model.url}
+          Site description: ${model.description}
         `
-      : `你的友链申请：${model.name}, ${model.url} 已通过`
+      : `Your friend link application: ${model.name}, ${model.url} has been approved`
     await this.sendLinkMail(to, subject, text)
   }
 
@@ -226,7 +226,7 @@ export class LinkService {
     const links = await this.linkRepository.findByState(LinkState.Pass)
     const results = await Promise.all(
       links.map(async ({ id, url }) => {
-        this.logger.debug(`检查友链 ${id} 的健康状态：GET -> ${url}`)
+        this.logger.debug(`Checking friend link ${id} health: GET -> ${url}`)
         try {
           const res = await this.http.axiosRef.get(url, {
             timeout: 5000,
@@ -260,15 +260,15 @@ export class LinkService {
 
     const { enable } = await this.configsService.get('mailOptions')
     if (!enable || isDev) {
-      console.info(`友链结果通知：${reason}, 状态：${state}`)
+      console.info(`Friend link audit result: ${reason}, state: ${state}`)
       return
     }
     if (!updated.email) return
 
     await this.sendLinkMail(
       updated.email,
-      `嘿!~, 主人已处理你的友链申请!~`,
-      `申请结果：${LinkStateMap[state]}\n原因：${reason}`,
+      `Hey! Your friend link application has been processed`,
+      `Result: ${LinkStateMap[state]}\nReason: ${reason}`,
     )
   }
 

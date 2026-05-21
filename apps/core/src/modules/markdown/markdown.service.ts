@@ -69,12 +69,12 @@ export class MarkdownService {
     const models = [] as PostModel[]
     const defaultCategory = categoryNameAndId[0]
     if (!defaultCategory) {
-      throw new InternalServerErrorException('分类不存在')
+      throw new InternalServerErrorException('Category does not exist')
     }
     for (const item of data) {
       if (!item.meta) {
         models.push({
-          title: `未命名-${count++}`,
+          title: `Untitled-${count++}`,
           slug: String(Date.now()),
           text: item.text,
           ...genDate(item),
@@ -102,7 +102,7 @@ export class MarkdownService {
         } as any),
       ),
     ).catch(() => {
-      this.logger.warn('一篇文章导入失败')
+      this.logger.warn('Failed to import one post')
     })
   }
 
@@ -110,7 +110,7 @@ export class MarkdownService {
     const models = [] as NoteModel[]
     for (const item of data) {
       models.push({
-        title: item.meta?.title ?? '未命名记录',
+        title: item.meta?.title ?? 'Untitled note',
         text: item.text,
         ...this.genDate(item),
       } as NoteModel)
@@ -207,7 +207,7 @@ ${text.trim()}
   }
 
   /**
-   * 根据文章 Id 渲染一篇文章
+   * Render a single article by its ID.
    * @param id
    * @returns
    */
@@ -225,7 +225,7 @@ ${text.trim()}
   }
 
   /**
-   * 渲染 Markdown 文本输出 html
+   * Render Markdown text to HTML.
    * @param text
    * @returns
    */

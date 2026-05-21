@@ -149,14 +149,19 @@ export class AiAgentConversationService {
     const titleMessages: Record<string, unknown>[] = [
       {
         role: 'system',
-        content: '用 10 字以内概括这段对话的主题，只返回标题文字',
+        content:
+          'Summarize the topic of this conversation in 10 words or fewer. Reply with the title text only.',
       },
       { role: 'user', content: String(firstUser.content ?? '').slice(0, 500) },
       {
         role: 'assistant',
         content: String(firstAssistant.content ?? '').slice(0, 500),
       },
-      { role: 'user', content: '请用 10 字以内概括以上对话主题' },
+      {
+        role: 'user',
+        content:
+          'Please summarize the topic of the conversation above in 10 words or fewer.',
+      },
     ]
 
     try {

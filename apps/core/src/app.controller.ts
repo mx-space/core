@@ -67,7 +67,7 @@ export class AppController {
       ip,
     )
     if (isLikedBefore) {
-      throw new BadRequestException('一天一次就够啦')
+      throw new BadRequestException('Once a day is enough')
     } else {
       redis.sadd(getRedisKey(RedisKeys.LikeSite), ip)
     }

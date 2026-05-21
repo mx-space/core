@@ -2,15 +2,15 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { Inject, Injectable } from '@nestjs/common'
 import type { Cache } from 'cache-manager'
 
-// Cache 客户端管理器
+// Cache client manager
 
-// 获取器
+// Getters
 export type TCacheKey = string
 export type TCacheResult<T> = Promise<T | undefined>
 
 /**
  * @class CacheService
- * @classdesc 承载缓存服务
+ * @classdesc Wraps the cache backend
  * @example CacheService.get(CacheKey).then()
  * @example CacheService.set(CacheKey).then()
  */

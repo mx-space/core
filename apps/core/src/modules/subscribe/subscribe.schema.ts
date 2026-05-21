@@ -27,7 +27,7 @@ export const BatchUnsubscribeSchema = z
   .refine(
     (data) => data.all === true || (data.emails && data.emails.length > 0),
     {
-      message: '必须提供 emails 数组或设置 all 为 true',
+      message: 'Either provide an emails array or set all to true',
     },
   )
 

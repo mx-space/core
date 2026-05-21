@@ -9,7 +9,7 @@ export default async function handler(ctx: Context) {
   const gaodemapKey = adminExtra?.gaodemapKey || secret.gaodemapKey
 
   if (!gaodemapKey) {
-    ctx.throws(400, '高德地图 API Key 未配置')
+    ctx.throws(400, 'Amap (Gaode) API key is not configured')
   }
   const { data } = await axios.get(
     \`https://restapi.amap.com/v3/geocode/regeo?key=\${gaodemapKey}&location=\` +
@@ -17,7 +17,7 @@ export default async function handler(ctx: Context) {
   ).catch(() => null)
 
   if (!data) {
-    ctx.throws(500, '高德地图 API 调用失败')
+    ctx.throws(500, 'Amap (Gaode) API request failed')
   }
   return data
 }

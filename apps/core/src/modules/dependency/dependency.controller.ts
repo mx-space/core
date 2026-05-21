@@ -46,7 +46,7 @@ export class DependencyController {
         if (exitCode !== 0) {
           subscriber.next(pc.red(`Error: Exit code: ${exitCode}\n`))
         }
-        subscriber.next(pc.green('任务完成，可关闭此窗口。'))
+        subscriber.next(pc.green('Task complete. You may close this window.'))
         subscriber.complete()
       })
     })

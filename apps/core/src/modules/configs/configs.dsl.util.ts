@@ -86,36 +86,36 @@ interface GroupConfig {
 const groupConfigs: GroupConfig[] = [
   {
     key: 'site',
-    title: '网站',
-    description: '站点地址、SEO',
+    title: 'Site',
+    description: 'Site URL, SEO',
     icon: 'globe',
     sectionKeys: ['url', 'seo'],
   },
   {
     key: 'content',
-    title: '内容',
-    description: '评论、友链',
+    title: 'Content',
+    description: 'Comments, friend links',
     icon: 'file-text',
     sectionKeys: ['commentOptions', 'friendLinkOptions'],
   },
   {
     key: 'notification',
-    title: '通知',
-    description: '邮件、Bark 推送',
+    title: 'Notifications',
+    description: 'Email, Bark push',
     icon: 'bell',
     sectionKeys: ['mailOptions', 'barkOptions'],
   },
   {
     key: 'search',
-    title: '搜索推送',
-    description: '搜索引擎、全文检索',
+    title: 'Search push',
+    description: 'Search engines, full-text search',
     icon: 'search',
     sectionKeys: ['baiduSearchOptions', 'bingSearchOptions'],
   },
   {
     key: 'storage',
-    title: '存储',
-    description: '备份、图床、评论图片上传',
+    title: 'Storage',
+    description: 'Backup, image hosting, comment image uploads',
     icon: 'database',
     sectionKeys: [
       'backupOptions',
@@ -126,21 +126,21 @@ const groupConfigs: GroupConfig[] = [
   {
     key: 'ai',
     title: 'AI',
-    description: 'AI 摘要、写作助手',
+    description: 'AI summary, writing assistant',
     icon: 'sparkles',
     sectionKeys: ['ai'],
   },
   {
     key: 'integrations',
-    title: '第三方集成',
-    description: 'GitHub、TMDB、Bangumi 等',
+    title: 'Third-party integrations',
+    description: 'GitHub, TMDB, Bangumi, etc.',
     icon: 'puzzle',
     sectionKeys: ['thirdPartyServiceIntegration'],
   },
   {
     key: 'system',
-    title: '系统',
-    description: '后台设置、功能开关',
+    title: 'System',
+    description: 'Admin settings, feature toggles',
     icon: 'settings',
     sectionKeys: ['adminExtra', 'featureList'],
   },
@@ -413,7 +413,7 @@ export function generateFormDSL(): FormDSL {
   }
 
   const dsl: FormDSL = {
-    title: fullMeta?.title || '设置',
+    title: fullMeta?.title || 'Settings',
     groups,
     defaults: {},
   }

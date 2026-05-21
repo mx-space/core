@@ -137,7 +137,7 @@ export class AppExceptionFilter implements ExceptionFilter {
         this.logServerError(exception)
       } else {
         this.logger.warn(
-          `IP: ${ip} 错误信息：(${status}) ${message} Path: ${decodeURI(url)}`,
+          `IP: ${ip} Error: (${status}) ${message} Path: ${decodeURI(url)}`,
         )
       }
 

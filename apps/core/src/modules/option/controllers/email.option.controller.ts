@@ -13,7 +13,7 @@ export class EmailOptionController {
   @Get('/template')
   async getEmailTemplate(@Query() { type }: EmailTemplateTypeDto) {
     const template = await this.emailService.readTemplate(type).catch(() => {
-      // TODO  判断异常类型
+      // TODO: discriminate by exception type
       return ''
     })
 

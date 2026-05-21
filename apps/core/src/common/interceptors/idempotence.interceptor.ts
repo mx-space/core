@@ -31,23 +31,24 @@ export type IdempotenceOption = {
   pendingMessage?: string
 
   /**
-   * 如果重复请求的话，手动处理异常
+   * Custom handler invoked when a duplicate request is detected.
    */
   handler?: (req: FastifyRequest) => any
 
   /**
-   * 记录重复请求的时间
+   * How long (in seconds) the idempotence record is retained.
    * @default 60
    */
   expired?: number
 
   /**
-   * 如果 header 没有幂等 key，根据 request 生成 key，如何生成这个 key 的方法
+   * How to derive the idempotence key from the request when no key
+   * is provided in the header.
    */
   generateKey?: (req: FastifyRequest) => string
 
   /**
-   * 仅读取 header 的 key，不自动生成
+   * Only honor the header key; do not auto-generate one.
    * @default false
    */
   disableGenerateKey?: boolean
@@ -80,8 +81,8 @@ export class IdempotenceInterceptor implements NestInterceptor {
     }
 
     const {
-      errorMessage = '相同请求成功后在 60 秒内只能发送一次',
-      pendingMessage = '相同请求正在处理中...',
+      errorMessage = 'The same request can only be sent once within 60 seconds after success',
+      pendingMessage = 'The same request is already being processed...',
       handler: errorHandler,
       expired = 60,
       disableGenerateKey = false,

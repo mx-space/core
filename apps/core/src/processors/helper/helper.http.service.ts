@@ -1,13 +1,16 @@
 import { inspect } from 'node:util'
+
 import { Injectable, Logger } from '@nestjs/common'
+import type { AxiosInstance, AxiosRequestConfig } from 'axios'
+import axios from 'axios'
+import axiosRetry, { exponentialDelay } from 'axios-retry'
+import pc from 'picocolors'
+
 import { AXIOS_CONFIG, DEBUG_MODE } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { PKG } from '~/utils/pkg.util'
 import { getRedisKey } from '~/utils/redis.util'
-import axios from 'axios'
-import type { AxiosInstance, AxiosRequestConfig } from 'axios'
-import axiosRetry, { exponentialDelay } from 'axios-retry'
-import pc from 'picocolors'
+
 import { RedisService } from '../redis/redis.service'
 
 const DEFAULT_UA = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${PKG.version}`
@@ -77,7 +80,7 @@ export class HttpService {
   }
 
   /**
-   * 缓存请求数据，现支持文本
+   * Cache request data. Currently supports text responses.
    * @param url
    */
   public async getAndCacheRequest(url: string) {

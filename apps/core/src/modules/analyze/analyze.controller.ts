@@ -103,7 +103,7 @@ export class AnalyzeController {
         const dayData = Array.from({ length: 24 }, (_, i) => {
           const hour = i.toString().padStart(2, '0')
           const bucket = day[hour]
-          const label = `${i}时`
+          const label = `${i}:00`
           return [
             { hour: label, key: 'ip', value: bucket?.ip || 0 },
             { hour: label, key: 'pv', value: bucket?.pv || 0 },
@@ -117,11 +117,11 @@ export class AnalyzeController {
           granularity: 'date',
         })) as any[]
 
-        const weekDayLabels = ['日', '一', '二', '三', '四', '五', '六']
+        const weekDayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         const weekData = all
           .slice(0, 7)
           .map((item) => {
-            const day = `周${weekDayLabels[dayjs(item.date).get('day')]}`
+            const day = weekDayLabels[dayjs(item.date).get('day')]
             return [
               { day, key: 'ip', value: item.ip },
               { day, key: 'pv', value: item.pv },

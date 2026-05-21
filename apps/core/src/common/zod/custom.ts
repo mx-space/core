@@ -34,14 +34,14 @@ export const zSlug = z
   .min(1)
   .transform((val) => val.trim())
 
-export const zEmail = (message = '请更正为正确的邮箱') =>
+export const zEmail = (message = 'Please enter a valid email address') =>
   z.string().email({ message })
 
-export const zUrl = (message = '请更正为正确的网址') =>
+export const zUrl = (message = 'Please enter a valid URL') =>
   z.string().url({ message })
 
 export const zMaxLengthString = (max: number, message?: string) =>
-  z.string().max(max, message || `不得大于 ${max} 个字符`)
+  z.string().max(max, message || `Must not exceed ${max} characters`)
 
 export const zRefTypeTransform = z.preprocess((val) => {
   if (!val || typeof val !== 'string') return val

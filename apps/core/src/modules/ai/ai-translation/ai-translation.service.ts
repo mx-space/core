@@ -497,7 +497,7 @@ export class AiTranslationService
   }
 
   /**
-   * 获取并验证文章，用于翻译相关操作
+   * Fetch and validate an article for translation-related operations.
    */
   private async resolveArticleForTranslation(articleId: string): Promise<{
     document: ArticleDocument
@@ -522,7 +522,7 @@ export class AiTranslationService
   }
 
   /**
-   * 检查数据库中是否存在 hash 匹配的有效翻译
+   * Check whether a valid translation with a matching hash already exists in the database.
    */
   private async findValidTranslation(
     articleId: string,
@@ -553,7 +553,7 @@ export class AiTranslationService
   }
 
   /**
-   * 将已有翻译包装为立即返回的 stream 格式
+   * Wrap an existing translation in the stream format so it can be returned immediately.
    */
   private wrapAsImmediateStream(translation: AITranslationModel): {
     events: AsyncIterable<AiStreamEvent>
@@ -789,7 +789,7 @@ export class AiTranslationService
     const { document, type } =
       await this.resolveArticleForTranslation(articleId)
 
-    // 检查数据库中是否已有有效翻译（hash 匹配）
+    // Check whether a valid translation (matching hash) already exists in the database.
     const existingTranslation = await this.findValidTranslation(
       articleId,
       targetLang,

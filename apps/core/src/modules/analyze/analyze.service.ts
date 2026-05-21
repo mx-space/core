@@ -133,17 +133,17 @@ export class AnalyzeService {
     )
 
     const deviceTypeMap: Record<string, string> = {
-      desktop: '桌面端',
-      mobile: '移动端',
-      tablet: '平板',
-      unknown: '未知',
+      desktop: 'Desktop',
+      mobile: 'Mobile',
+      tablet: 'Tablet',
+      unknown: 'Unknown',
     }
 
     return {
       browsers: data.browsers,
       os: data.os,
       devices: data.devices.map((item) => ({
-        name: deviceTypeMap[item.name?.toLowerCase()] || item.name || '桌面端',
+        name: deviceTypeMap[item.name?.toLowerCase()] || item.name || 'Desktop',
         value: item.value,
       })),
     }
@@ -205,10 +205,10 @@ export class AnalyzeService {
 
     return {
       categories: [
-        { name: '直接访问', value: categories.direct },
-        { name: '搜索引擎', value: categories.search },
-        { name: '社交媒体', value: categories.social },
-        { name: '其他来源', value: categories.other },
+        { name: 'Direct', value: categories.direct },
+        { name: 'Search engine', value: categories.search },
+        { name: 'Social media', value: categories.social },
+        { name: 'Other', value: categories.other },
       ].filter((c) => c.value > 0),
       details: [...detailsMap.entries()]
         .map(([source, count]) => ({ source, count }))

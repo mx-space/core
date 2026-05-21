@@ -259,7 +259,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       note: ArticleTypeEnum.Note,
     }
 
-    // TODO 改成 reader 维度
+    // TODO switch to a reader-level dimension
     const res = await this.countingService.updateLikeCountWithIp(
       mapping[type],
       id,
@@ -506,7 +506,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * 获取过去一年的文章发布
+   * Fetch article publications from the past year.
    */
   async getLastYearPublication() {
     const $gte = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
@@ -519,7 +519,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       .filter((row) => row.createdAt >= $gte)
       .map((note) => {
         if (note.hasPassword || !note.isPublished) {
-          note.title = '未公开的日记'
+          note.title = 'Private note'
         }
         return omit(note, 'isPublished')
       })

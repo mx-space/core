@@ -162,7 +162,7 @@ export class OwnerService {
       lastLoginIp: ip,
     })
 
-    this.logger.warn(`主人已登录，IP: ${ip}`)
+    this.logger.warn(`Owner signed in, IP: ${ip}`)
     return prevFootstep
   }
 

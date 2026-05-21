@@ -202,9 +202,9 @@ export class AiController {
 
         let reason: string | undefined
         if (hasSensitiveContent) {
-          reason = '包含敏感内容'
+          reason = 'Contains sensitive content'
         } else if (isSpam) {
-          reason = `评分 ${score} 超过阈值 ${threshold}`
+          reason = `Score ${score} exceeds threshold ${threshold}`
         }
 
         return { isSpam, score, reason }
@@ -219,9 +219,9 @@ export class AiController {
 
         let reason: string | undefined
         if (hasSensitiveContent) {
-          reason = '包含敏感内容'
+          reason = 'Contains sensitive content'
         } else if (rawIsSpam) {
-          reason = '判定为垃圾评论'
+          reason = 'Flagged as spam comment'
         }
 
         return { isSpam, reason }

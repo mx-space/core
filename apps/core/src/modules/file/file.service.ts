@@ -135,13 +135,17 @@ export class FileService {
       }
     } catch (error) {
       if (error?.code === 'ENOENT') {
-        // 幂等：源文件不存在就视为已删除
-        this.logger.warn(`删除文件：源文件不存在，跳过 (${type}/${name})`)
+        // Idempotent: if the source file is missing, treat it as already deleted.
+        this.logger.warn(
+          `Delete file: source missing, skipping (${type}/${name})`,
+        )
         return
       }
-      this.logger.error('删除文件失败', error)
+      this.logger.error('Failed to delete file', error)
 
-      throw new InternalServerErrorException(`删除文件失败，${error.message}`)
+      throw new InternalServerErrorException(
+        `Failed to delete file: ${error.message}`,
+      )
     }
   }
 
@@ -162,7 +166,7 @@ export class FileService {
     try {
       await rename(oldPath, newPath)
     } catch (error) {
-      this.logger.error('重命名文件失败', error.message)
+      this.logger.error('Failed to rename file', error.message)
       throw createAppException(AppErrorCode.FILE_RENAME_FAILED)
     }
   }

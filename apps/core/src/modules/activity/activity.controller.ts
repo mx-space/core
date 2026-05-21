@@ -266,7 +266,7 @@ export class ActivityController {
     let transformedLike = like.data.map((item) => {
       const likeData = pick(item, 'createdAt', 'id') as any
       if (!item.ref) {
-        likeData.title = '已删除的内容'
+        likeData.title = 'Deleted content'
         return likeData
       }
       if ('nid' in item.ref) {
@@ -387,7 +387,7 @@ export class ActivityController {
         targetLang: lang,
         translationFields: ['title', 'translationMeta'] as const,
         getInput: (item: any) => ({
-          id: item.title === '未公开的日记' ? '' : item.id,
+          id: item.title === 'Private note' ? '' : item.id,
           title: item.title ?? '',
           createdAt: item.createdAt,
         }),

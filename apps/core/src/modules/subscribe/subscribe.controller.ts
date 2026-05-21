@@ -67,9 +67,9 @@ export class SubscribeController {
 
     const result = await this.service.unsubscribe(email, cancelToken)
     if (result) {
-      return '已取消订阅'
+      return 'Unsubscribed successfully'
     }
-    return '出现错误'
+    return 'An error occurred'
   }
 
   @Delete('/unsubscribe/batch')

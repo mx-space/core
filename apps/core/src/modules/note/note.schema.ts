@@ -29,8 +29,8 @@ export const CoordinateSchema = z.object({
 export const NoteSchema = WriteBaseSchema.extend({
   title: z
     .string()
-    .transform((val) => (val.length === 0 ? '无题' : val))
-    .default('无题'),
+    .transform((val) => (val.length === 0 ? 'Untitled' : val))
+    .default('Untitled'),
   slug: z.preprocess((val) => {
     if (typeof val !== 'string') {
       return val
@@ -53,7 +53,7 @@ export const NoteSchema = WriteBaseSchema.extend({
   location: z.string().optional().nullable(),
   topicId: zEntityId.optional().nullable(),
   images: z.array(ImageSchema).optional().default([]),
-  /** 关联的草稿 ID，发布时标记该草稿为已发布 */
+  /** ID of the associated draft; marked as published when this note is published */
   draftId: zEntityId.optional(),
 })
 
@@ -66,7 +66,7 @@ export class NoteDto extends createZodDto(NoteSchema) {}
 export const PartialNoteSchema = NoteSchema.extend({
   title: z
     .string()
-    .transform((val) => (val.length === 0 ? '无题' : val))
+    .transform((val) => (val.length === 0 ? 'Untitled' : val))
     .optional(),
   contentFormat: z
     .enum([ContentFormat.Markdown, ContentFormat.Lexical])
