@@ -27,22 +27,59 @@ export default defineConfig({
   dts: { eager: true },
   format: ['cjs', 'esm'],
   onSuccess() {
-    // Replace declare module '../core/client' with declare module '@mx-space/api-client'
+    // Module augmentations for HTTPClient must live in the root entry d.ts so
+    // TypeScript merges them with the re-exported class. When rolldown-plugin-dts
+    // splits declarations into chunks, augmentations land in chunk files where
+    // they never reach consumer projects. We:
+    //   1. Rewrite augment target `'../core/client'` → `'<pkg>'` everywhere.
+    //   2. Strip the augmentation blocks from chunk files.
+    //   3. Append them to the root index.d.cts / index.d.mts so consumers see them.
     const PKG = JSON.parse(
       readFileSync(path.resolve(__dirname, './package.json'), 'utf-8'),
     )
-    const dts = path.resolve(__dirname, './dist/index.d.cts')
-    const dtsm = path.resolve(__dirname, './dist/index.d.mts')
-    const content = readFileSync(dts, 'utf-8')
+    const distRoot = path.resolve(__dirname, './dist')
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const resolved = path.join(dir, entry.name)
+        if (entry.isDirectory()) return walk(resolved)
+        return /\.d\.(c|m)?ts$/.test(entry.name) ? [resolved] : []
+      })
 
-    for (const file of [dts, dtsm]) {
-      writeFileSync(
-        file,
-        content.replaceAll(
-          /declare module '..\/core\/client'/g,
-          `declare module '${PKG.name}'`,
-        ),
+    const augmentPattern = new RegExp(
+      `declare module ['"](?:\\.\\./core/client|${PKG.name.replace(/[/\\\\^$*+?.()|[\\]{}]/g, '\\$&')})['"]\\s*\\{[\\s\\S]*?^\\}`,
+      'gm',
+    )
+    const collected = new Set<string>()
+
+    for (const file of walk(distRoot)) {
+      const isRootEntry =
+        file === path.join(distRoot, 'index.d.cts') ||
+        file === path.join(distRoot, 'index.d.mts')
+      let content = readFileSync(file, 'utf-8')
+
+      content = content.replaceAll(
+        /declare module ['"]\.\.\/core\/client['"]/g,
+        `declare module '${PKG.name}'`,
       )
+
+      if (!isRootEntry) {
+        const matches = content.match(augmentPattern)
+        if (matches?.length) {
+          matches.forEach((m) => collected.add(m.trim()))
+          content = content.replaceAll(augmentPattern, '').replace(/\n{3,}/g, '\n\n')
+        }
+      }
+
+      writeFileSync(file, content)
+    }
+
+    if (collected.size === 0) return
+
+    for (const root of ['index.d.cts', 'index.d.mts']) {
+      const file = path.join(distRoot, root)
+      const content = readFileSync(file, 'utf-8')
+      const block = ['', '// --- HTTPClient augmentations (inlined) ---', ...collected].join('\n')
+      writeFileSync(file, content.trimEnd() + '\n' + block + '\n')
     }
   },
 })
