@@ -23,6 +23,7 @@ import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
   type ArticleTranslationInput,
+  buildArticleTranslationMeta,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -266,22 +267,12 @@ export class PostController {
       .insights({ has_in_locale: hasInsightsInLocale })
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
-    if (translationResult.isTranslated) {
-      metaBuilder.translation({
-        article: {
-          is_translated: translationResult.isTranslated,
-          source_lang: translationResult.sourceLang,
-          target_lang: lang,
-          title: translationResult.title,
-          text: translationResult.text,
-          summary: translationResult.summary,
-          tags: translationResult.tags,
-          content: translationResult.content,
-          content_format: translationResult.contentFormat,
-          available_translations: translationResult.availableTranslations,
-        },
-      })
-    }
+    metaBuilder.translation({
+      article: buildArticleTranslationMeta(translationResult, lang, {
+        summary: translationResult.summary,
+        tags: translationResult.tags,
+      }) as any,
+    })
 
     return withMeta(postData, metaBuilder.build())
   }

@@ -9,8 +9,8 @@ export const PaginationSchema = z.object({
 
 export const ArticleTranslationSchema = z.object({
   is_translated: z.boolean(),
-  source_lang: z.string().optional(),
-  target_lang: z.string().optional(),
+  source_lang: z.string().nullable().optional(),
+  target_lang: z.string().nullable().optional(),
   model: z.string().optional(),
   translated_at: z.date().optional(),
   title: z.string().optional(),

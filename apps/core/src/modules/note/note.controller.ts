@@ -27,6 +27,7 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import {
   type ArticleTranslationInput,
+  buildArticleTranslationMeta,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -145,20 +146,9 @@ export class NoteController {
       .insights({ has_in_locale: hasInsightsInLocale })
 
     const translationMap = new Map<string, EntryTranslation>()
-    if (translationResult.isTranslated) {
-      translationMap.set(String(current.id), {
-        article: {
-          is_translated: translationResult.isTranslated,
-          source_lang: translationResult.sourceLang,
-          target_lang: lang,
-          title: translationResult.title,
-          text: translationResult.text,
-          content: translationResult.content,
-          content_format: translationResult.contentFormat,
-          available_translations: translationResult.availableTranslations,
-        },
-      })
-    }
+    translationMap.set(String(current.id), {
+      article: buildArticleTranslationMeta(translationResult, lang) as any,
+    })
     if (lang && current.topic?.id) {
       const topicId = String(current.topic.id)
       const topicFields = (
@@ -519,20 +509,9 @@ export class NoteController {
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
     const translationMap = new Map<string, EntryTranslation>()
-    if (translationResult.isTranslated) {
-      translationMap.set(String(latest.id), {
-        article: {
-          is_translated: translationResult.isTranslated,
-          source_lang: translationResult.sourceLang,
-          target_lang: lang,
-          title: translationResult.title,
-          text: translationResult.text,
-          content: translationResult.content,
-          content_format: translationResult.contentFormat,
-          available_translations: translationResult.availableTranslations,
-        },
-      })
-    }
+    translationMap.set(String(latest.id), {
+      article: buildArticleTranslationMeta(translationResult, lang) as any,
+    })
     if (lang && latest.topic?.id) {
       const topicId = String(latest.topic.id)
       const topicFields = (

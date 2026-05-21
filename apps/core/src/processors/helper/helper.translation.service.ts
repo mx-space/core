@@ -33,6 +33,37 @@ export type TranslationResultPick<
 > = { isTranslated: boolean } & Pick<TranslationResult, Fields>
 export type ArticleTranslationInput = TranslationSourceSnapshot
 
+/**
+ * Build the `translation.article` meta payload (snake_case) for a detail
+ * response. Always emits `is_translated`, `source_lang`, and
+ * `available_translations` so V1 consumers can read them unconditionally.
+ * When the article has actually been translated, the translated fields
+ * (title/text/content/...) plus any `extras` (e.g. `summary`/`tags` for
+ * posts, `subtitle` for pages) are merged in.
+ */
+export function buildArticleTranslationMeta(
+  result: TranslationResult,
+  lang: string | undefined,
+  extras?: Record<string, unknown>,
+): Record<string, unknown> {
+  const meta: Record<string, unknown> = {
+    is_translated: result.isTranslated,
+    source_lang: result.sourceLang ?? null,
+    available_translations: result.availableTranslations ?? [],
+  }
+  if (result.isTranslated) {
+    Object.assign(meta, {
+      target_lang: lang,
+      title: result.title,
+      text: result.text,
+      content: result.content,
+      content_format: result.contentFormat,
+      ...extras,
+    })
+  }
+  return meta
+}
+
 @Injectable()
 export class TranslationService {
   private readonly logger = new Logger(TranslationService.name)

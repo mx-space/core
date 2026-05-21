@@ -19,6 +19,7 @@ import type { EnrichmentEntry } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import {
   type ArticleTranslationInput,
+  buildArticleTranslationMeta,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -143,21 +144,11 @@ export class PageController {
       .view('detail')
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
-    if (translationResult.isTranslated) {
-      metaBuilder.translation({
-        article: {
-          is_translated: translationResult.isTranslated,
-          source_lang: translationResult.sourceLang,
-          target_lang: lang,
-          title: translationResult.title,
-          text: translationResult.text,
-          subtitle: translationResult.subtitle,
-          content: translationResult.content,
-          content_format: translationResult.contentFormat,
-          available_translations: translationResult.availableTranslations,
-        },
-      })
-    }
+    metaBuilder.translation({
+      article: buildArticleTranslationMeta(translationResult, lang, {
+        subtitle: translationResult.subtitle,
+      }) as any,
+    })
 
     return withMeta(pageData, metaBuilder.build())
   }
