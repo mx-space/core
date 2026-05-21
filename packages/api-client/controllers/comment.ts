@@ -20,7 +20,7 @@ import type {
   ReaderCommentDto,
 } from '../dtos/comment'
 
-declare module '../core/client' {
+declare module '@mx-space/api-client' {
   interface HTTPClient<
     T extends IRequestAdapter = IRequestAdapter,
     ResponseWrapper = unknown,

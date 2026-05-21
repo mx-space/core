@@ -1,4 +1,5 @@
-import { createClient } from '~/core'
+import type { HTTPClient } from '~/index'
+import { createClient } from '~/index'
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { ClientOptions } from '~/interfaces/client'
 
@@ -16,7 +17,13 @@ export type {
 export function createLegacyApiClient<T extends IRequestAdapter>(
   adapter: T,
   legacyOptions?: LegacyResponseAdapterOptions,
-) {
+): <
+  ResponseWrapper = T extends { responseWrapper: infer Type }
+    ? Type extends undefined
+      ? unknown
+      : Type
+    : unknown,
+>(endpoint: string, options?: ClientOptions) => HTTPClient<T, ResponseWrapper> {
   const create = createClient(adapter)
 
   return <
