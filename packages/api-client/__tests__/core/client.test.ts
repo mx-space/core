@@ -329,6 +329,35 @@ describe('test client', () => {
     expect(res.$meta.interaction).toStrictEqual({ is_liked: false })
   })
 
+  it('should extract $meta when the adapter returns the envelope directly (ofetch-style)', async () => {
+    // ofetch's $fetch returns the parsed body as-is — no axios-style `{ data: <body> }` wrapper.
+    const ofetchAdapter: IRequestAdapter = {
+      default: () => Promise.resolve(null),
+      get: () =>
+        Promise.resolve({
+          data: [{ id: '1' }, { id: '2' }],
+          meta: {
+            pagination: { page: 1, size: 10, total: 42, total_pages: 5 },
+          },
+        }) as any,
+      post: () => Promise.resolve(null) as any,
+      put: () => Promise.resolve(null) as any,
+      patch: () => Promise.resolve(null) as any,
+      delete: () => Promise.resolve(null) as any,
+    }
+
+    const client = createClient(ofetchAdapter)('http://127.0.0.1:2323')
+    const res = await client.proxy.posts.get()
+
+    expect(res.$meta).toBeDefined()
+    expect(res.$meta.pagination).toStrictEqual({
+      page: 1,
+      size: 10,
+      total: 42,
+      totalPages: 5,
+    })
+  })
+
   it('should leave $meta undefined when response body has no meta key', async () => {
     const client = generateClient<AxiosResponse>(axiosAdaptor)
     spyOn(axiosAdaptor, 'get').mockImplementation((url) => {

@@ -168,12 +168,11 @@ export class MarkdownService {
     const zip = new JSZip()
 
     for (const document of documents) {
-      zip.file(
-        (options.slug ? document.meta.slug : document.meta.title)
-          .concat('.md')
-          .replaceAll('/', '-'),
-        document.text,
+      // Notes set meta.slug to nid (a number) — coerce so .concat works.
+      const name = String(
+        options.slug ? document.meta.slug : document.meta.title,
       )
+      zip.file(name.concat('.md').replaceAll('/', '-'), document.text)
     }
     return zip
   }

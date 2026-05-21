@@ -38,6 +38,7 @@ export const APP_ERROR_DEFINITIONS = {
   [AppErrorCode.NOT_FOUND]: {
     status: 404,
     message: (p) => p?.message ?? 'Not found',
+    details: (p) => (p?.id ? { id: p.id } : undefined),
   },
   [AppErrorCode.NO_CONTENT_MODIFIABLE]: {
     status: 400,

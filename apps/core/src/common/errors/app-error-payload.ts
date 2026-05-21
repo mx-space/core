@@ -8,7 +8,7 @@ type WithExtra = { extra?: string } | undefined
 export type AppErrorPayloadMap = {
   // generic
   [AppErrorCode.INTERNAL_ERROR]: OptMessage
-  [AppErrorCode.NOT_FOUND]: OptMessage
+  [AppErrorCode.NOT_FOUND]: { message?: string; id?: string } | undefined
   [AppErrorCode.NO_CONTENT_MODIFIABLE]: undefined
   [AppErrorCode.DEMO_FORBIDDEN]: undefined
   [AppErrorCode.RESOURCE_NOT_FOUND]: WithId

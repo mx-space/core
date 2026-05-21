@@ -21,8 +21,25 @@ import { RequestError } from './error'
 
 const methodPrefix = '_$'
 
+// Adapter responses come in two shapes:
+//   - axios-style: `{ data: <envelope>, status, headers, ... }` — body lives in `res.data`.
+//   - ofetch-style: the parsed body itself (i.e. `res === <envelope>`).
+// Probe the axios shape first because both shapes can pass the `isResponseEnvelope`
+// key-set check (an axios wrapper with only a `data` key is structurally a subset
+// of an envelope). The deciding test is whether the inner `res.data` is itself
+// envelope-shaped — if so, treat `res` as the axios wrapper.
+function pickResponseBody(res: any) {
+  if (isPlainObject(res) && isResponseEnvelope(res.data)) {
+    return res.data
+  }
+  if (isResponseEnvelope(res)) {
+    return res
+  }
+  return res?.data
+}
+
 function defaultGetDataFromResponse(res: any) {
-  const body = res?.data
+  const body = pickResponseBody(res)
   if (!isResponseEnvelope(body)) {
     return body
   }
@@ -33,7 +50,7 @@ function defaultGetDataFromResponse(res: any) {
 }
 
 function extractResponseMeta(res: any): Record<string, any> | undefined {
-  const body = res?.data
+  const body = pickResponseBody(res)
   return isResponseEnvelope(body) ? body.meta : undefined
 }
 
@@ -49,11 +66,14 @@ function applyResponseMetaAdapters(
   adapters: ResponseAdapter[],
   context: ResponseAdapterContext,
 ) {
-  return adapters.reduce<Record<string, any> | undefined>((nextMeta, adapter) => {
-    return adapter.transformMeta
-      ? adapter.transformMeta(nextMeta, { ...context, meta: nextMeta })
-      : nextMeta
-  }, meta)
+  return adapters.reduce<Record<string, any> | undefined>(
+    (nextMeta, adapter) => {
+      return adapter.transformMeta
+        ? adapter.transformMeta(nextMeta, { ...context, meta: nextMeta })
+        : nextMeta
+    },
+    meta,
+  )
 }
 
 function applyResponseDataAdapters<T>(

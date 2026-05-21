@@ -26,7 +26,7 @@ import { RawResponse } from '~/common/response/raw-response.decorator'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
-import { BasicPagerDto, BasicPagerInput } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 import {
   generateFilename,
   generateFilePath,
@@ -36,12 +36,12 @@ import { S3Uploader } from '~/utils/s3.util'
 
 import {
   BatchOrphanDeleteDto,
+  CommentUploadsListQueryDto,
   FileQueryDto,
   FileUploadDto,
   RenameFileQueryDto,
 } from './file.schema'
 import { FileService } from './file.service'
-import { FileReferenceStatus } from './file-reference.enum'
 import { FileReferenceService } from './file-reference.service'
 import { FileDeletionReason } from './file-reference.types'
 
@@ -108,15 +108,8 @@ export class FileController {
 
   @Get('/comment-uploads/list')
   @Auth()
-  async getCommentUploads(
-    @Query()
-    query: BasicPagerInput & {
-      status?: FileReferenceStatus
-      readerId?: string
-      refId?: string
-    },
-  ) {
-    const { page = 1, size = 24, status, readerId, refId } = query
+  async getCommentUploads(@Query() query: CommentUploadsListQueryDto) {
+    const { page, size, status, readerId, refId } = query
     const { files, total } = await this.fileReferenceService.listReaderUploads({
       page,
       size,
