@@ -17,7 +17,6 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import type { EnrichmentEntry } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import {
   type ArticleTranslationInput,
   TranslationService,
@@ -36,7 +35,6 @@ import { PageService } from './page.service'
 import type { PageModel } from './page.types'
 
 @ApiController('pages')
-@ResponseV2()
 export class PageController {
   constructor(
     private readonly pageService: PageService,

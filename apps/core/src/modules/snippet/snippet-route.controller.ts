@@ -6,7 +6,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 
 import { createMockedContextResponse } from '../serverless/mock-response.util'
@@ -17,7 +16,6 @@ import type { SnippetRow } from './snippet.types'
 const MAX_PREFIX_DEPTH = 10
 
 @ApiController('s')
-@ResponseV2()
 export class SnippetRouteController {
   constructor(
     private readonly snippetService: SnippetService,

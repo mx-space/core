@@ -23,7 +23,6 @@ import type {
   EntryTranslation,
 } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import {
@@ -53,7 +52,6 @@ import { NoteService } from './note.service'
 import type { NoteModel } from './note.types'
 
 @ApiController({ path: 'notes' })
-@ResponseV2()
 export class NoteController {
   constructor(
     private readonly noteService: NoteService,

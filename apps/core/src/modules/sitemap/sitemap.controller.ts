@@ -2,13 +2,11 @@ import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
 import { Controller, Get, Header } from '@nestjs/common'
 
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
 import { AggregateService } from '../aggregate/aggregate.service'
 
 @Controller()
-@ResponseV2()
 export class SitemapController {
   constructor(private readonly aggregateService: AggregateService) {}
 

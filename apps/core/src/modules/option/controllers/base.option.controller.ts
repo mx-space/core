@@ -1,7 +1,6 @@
 import { Body, Get, Param, Patch } from '@nestjs/common'
 
 import { BizException } from '~/common/exceptions/biz.exception'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import {
   attachAiProviderOptionsToFormDSL,
@@ -14,7 +13,6 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { OptionController } from '../option.decorator'
 
 @OptionController()
-@ResponseV2()
 export class BaseOptionController {
   constructor(private readonly configsService: ConfigsService) {}
 

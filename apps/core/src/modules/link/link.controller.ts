@@ -7,7 +7,6 @@ import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { OK_DATA, withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { BasePgCrudFactory } from '~/transformers/crud-factor.pg.transformer'
@@ -21,7 +20,6 @@ import { LinkState } from './link.types'
 const paths = ['links', 'friends']
 
 @ApiController(paths)
-@ResponseV2()
 export class LinkControllerCrud extends BasePgCrudFactory({
   repository: LinkRepository,
 }) {
@@ -54,7 +52,6 @@ export class LinkControllerCrud extends BasePgCrudFactory({
 }
 
 @ApiController(paths)
-@ResponseV2()
 export class LinkController {
   constructor(private readonly linkService: LinkService) {}
 

@@ -9,7 +9,6 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
 
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { resolveAdminAssetRoot } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 
@@ -18,7 +17,6 @@ import { PageProxyService } from './pageproxy.service'
 
 @Controller('/')
 @SkipThrottle()
-@ResponseV2()
 export class PageProxyController {
   constructor(
     private readonly service: PageProxyService,

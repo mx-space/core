@@ -15,7 +15,6 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CreateSummaryTaskDto } from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -33,7 +32,6 @@ import {
 import { AiSummaryService } from './ai-summary.service'
 
 @ApiController('ai/summaries')
-@ResponseV2()
 export class AiSummaryController {
   constructor(
     private readonly service: AiSummaryService,

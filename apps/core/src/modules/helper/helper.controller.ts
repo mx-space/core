@@ -6,7 +6,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -20,7 +19,6 @@ import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'
 
 @ApiController('helper')
-@ResponseV2()
 export class HelperController {
   constructor(
     private readonly urlBulderService: UrlBuilderService,
@@ -38,7 +36,9 @@ export class HelperController {
     const doc = await this.databaseService.findGlobalById(params.id)
     if (!doc || doc.type === CollectionRefTypes.Recently) {
       if (redirect) {
-        throw createAppException(AppErrorCode.HELPER_DOCUMENT_NOT_FOUND, { id: params.id })
+        throw createAppException(AppErrorCode.HELPER_DOCUMENT_NOT_FOUND, {
+          id: params.id,
+        })
       }
 
       res.send(null)

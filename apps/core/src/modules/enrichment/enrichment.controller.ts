@@ -19,7 +19,6 @@ import { Lang } from '~/common/decorators/lang.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 import { EnrichmentRepository } from './enrichment.repository'
@@ -43,7 +42,6 @@ const DEFAULT_CAPTURE_MAX_ITEMS = 500
 const DEFAULT_CAPTURE_MAX_TOTAL_BYTES = 100 * 1024 * 1024
 
 @ApiController('enrichment')
-@ResponseV2()
 export class EnrichmentController {
   constructor(
     private readonly enrichmentService: EnrichmentService,
@@ -153,7 +151,8 @@ export class EnrichmentController {
   @Auth()
   async byId(@Param('id') id: string) {
     const row = await this.enrichmentRepository.findById(id)
-    if (!row) throw createAppException(AppErrorCode.ENRICHMENT_NOT_FOUND, { id })
+    if (!row)
+      throw createAppException(AppErrorCode.ENRICHMENT_NOT_FOUND, { id })
     const capture = await this.captureRepository.findByEnrichmentId(id)
     return {
       ...row,
@@ -219,7 +218,10 @@ export class EnrichmentController {
     @Param('enrichmentId') enrichmentId: string,
   ): Promise<EnrichmentResult['captureImage']> {
     const row = await this.enrichmentRepository.findById(enrichmentId)
-    if (!row) throw createAppException(AppErrorCode.ENRICHMENT_NOT_FOUND, { id: enrichmentId })
+    if (!row)
+      throw createAppException(AppErrorCode.ENRICHMENT_NOT_FOUND, {
+        id: enrichmentId,
+      })
 
     const config = await this.configsService.get('thirdPartyServiceIntegration')
     const openGraph = config?.openGraph

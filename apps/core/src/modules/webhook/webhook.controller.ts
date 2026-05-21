@@ -5,7 +5,6 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -16,7 +15,6 @@ import { WebhookModel } from './webhook.types'
 
 @ApiController('/webhooks')
 @Auth()
-@ResponseV2()
 export class WebhookController {
   constructor(private readonly service: WebhookService) {}
 

@@ -3,7 +3,6 @@ import type { FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
 
@@ -16,7 +15,6 @@ import { InitService } from './init.service'
 
 @ApiController('/init')
 @UseGuards(InitGuard)
-@ResponseV2()
 export class InitController {
   constructor(
     private readonly configs: ConfigsService,
@@ -72,7 +70,9 @@ export class InitController {
     })
     const { mimetype } = data
     if (!isZipMinetype(mimetype)) {
-      throw createAppException(AppErrorCode.INIT_INVALID_MIME_TYPE, { got: mimetype })
+      throw createAppException(AppErrorCode.INIT_INVALID_MIME_TYPE, {
+        got: mimetype,
+      })
     }
 
     await this.backupService.saveTempBackupByUpload(await data.toBuffer())

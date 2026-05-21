@@ -11,7 +11,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { resolveAdminAssetRoot } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
 import { PKG } from '~/utils/pkg.util'
@@ -22,7 +21,6 @@ import { UpdateService } from './update.service'
 
 @ApiController('update')
 @Auth()
-@ResponseV2()
 export class UpdateController {
   constructor(private readonly service: UpdateService) {}
 

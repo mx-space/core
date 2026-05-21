@@ -4,13 +4,11 @@ import { sample } from 'es-toolkit/compat'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
 import { SayRepository } from './say.repository'
 
 @ApiController('says')
-@ResponseV2()
 export class SayController {
   constructor(
     @Inject(SayRepository) private readonly repository: SayRepository,

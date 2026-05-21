@@ -4,7 +4,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { OK_DATA } from '~/common/response/envelope.types'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 
 import { ConfigsService } from '../configs/configs.service'
 import { AI_PROMPTS } from './ai.prompts'
@@ -42,7 +41,6 @@ interface TestCommentReviewDto {
 }
 
 @ApiController('ai')
-@ResponseV2()
 export class AiController {
   constructor(
     private readonly configsService: ConfigsService,

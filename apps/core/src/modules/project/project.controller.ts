@@ -13,14 +13,12 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
 import { ProjectRepository } from './project.repository'
 
 @ApiController('projects')
-@ResponseV2()
 export class ProjectController {
   constructor(
     @Inject(ProjectRepository) private readonly repository: ProjectRepository,

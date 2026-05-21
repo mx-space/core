@@ -16,7 +16,6 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
@@ -35,7 +34,6 @@ import {
 import { AiInsightsService } from './ai-insights.service'
 
 @ApiController('ai/insights')
-@ResponseV2()
 export class AiInsightsController {
   constructor(
     private readonly service: AiInsightsService,

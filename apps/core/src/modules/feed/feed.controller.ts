@@ -4,7 +4,6 @@ import RemoveMarkdown from 'remove-markdown'
 import xss from 'xss'
 
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { escapeXml } from '~/utils/tool.util'
@@ -16,7 +15,6 @@ import { MarkdownService } from '../markdown/markdown.service'
 import { OwnerService } from '../owner/owner.service'
 
 @Controller()
-@ResponseV2()
 export class FeedController {
   constructor(
     private readonly aggregateService: AggregateService,

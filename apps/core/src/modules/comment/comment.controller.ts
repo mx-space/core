@@ -25,7 +25,6 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -55,7 +54,6 @@ const idempotenceMessage = '哦吼，这句话你已经说过啦'
 
 @ApiController({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
-@ResponseV2()
 export class CommentController {
   constructor(
     private readonly commentService: CommentService,

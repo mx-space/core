@@ -23,7 +23,6 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
@@ -47,7 +46,6 @@ import { FileReferenceService } from './file-reference.service'
 import { FileDeletionReason } from './file-reference.types'
 
 @ApiController(['objects', 'files'])
-@ResponseV2()
 export class FileController {
   constructor(
     private readonly service: FileService,

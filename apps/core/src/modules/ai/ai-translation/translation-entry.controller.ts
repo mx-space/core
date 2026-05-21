@@ -4,7 +4,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import {
@@ -15,7 +14,6 @@ import {
 import { TranslationEntryService } from './translation-entry.service'
 
 @ApiController('ai/translations/entries')
-@ResponseV2()
 export class TranslationEntryController {
   constructor(
     private readonly translationEntryService: TranslationEntryService,

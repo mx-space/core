@@ -17,7 +17,6 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { getSandboxTypeDeclaration } from '~/utils/sandbox'
@@ -30,7 +29,6 @@ import {
 import { ServerlessService } from './serverless.service'
 
 @ApiController(['serverless', 'fn'])
-@ResponseV2()
 export class ServerlessController {
   constructor(private readonly serverlessService: ServerlessService) {}
 

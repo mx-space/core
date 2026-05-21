@@ -4,14 +4,12 @@ import type { FastifyRequest } from 'fastify'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import { CommentUploadService } from './comment-upload.service'
 import { ReaderUploadQuotaInterceptor } from './reader-upload-quota.interceptor'
 
 @ApiController('comments/uploads')
-@ResponseV2()
 export class CommentUploadController {
   constructor(private readonly commentUploadService: CommentUploadService) {}
 

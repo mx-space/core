@@ -110,8 +110,6 @@ throw new NoContentCanBeModifiedException()            // code: 'NO_CONTENT_MODI
 
 **`@RawResponse`** — opt out of the whole envelope + casing pipeline for non-JSON responses (streams, HTML, RSS, redirects). Located in `src/common/response/raw-response.decorator.ts`.
 
-**`@ResponseV2()`** — controller decorator; currently a no-op kept for compatibility; all controllers carry it.
-
 **Writing a new endpoint:**
 1. Return `{ data: <value> }` or `{ data: <value>, meta: new MetaObjectBuilder()...build() }`.
 2. Throw `AppException` subclasses (or `BizException` with an `ErrorCodeEnum` code) for errors.

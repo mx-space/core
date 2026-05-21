@@ -15,7 +15,6 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import {
   CreateTranslationAllTaskDto,
   CreateTranslationBatchTaskDto,
@@ -34,7 +33,6 @@ import {
 import { AiTranslationService } from './ai-translation.service'
 
 @ApiController('ai/translations')
-@ResponseV2()
 export class AiTranslationController {
   constructor(
     private readonly service: AiTranslationService,

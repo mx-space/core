@@ -9,7 +9,6 @@ import dayjs from 'dayjs'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { PKG } from '~/utils/pkg.util'
 
 import { HttpCache } from './common/decorators/cache.decorator'
@@ -23,7 +22,6 @@ import { RedisService } from './processors/redis/redis.service'
 import { getRedisKey } from './utils/redis.util'
 
 @ApiController()
-@ResponseV2()
 export class AppController {
   constructor(
     private readonly redisService: RedisService,

@@ -3,14 +3,12 @@ import { Body, Get, Post } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 
 import { AiSlugBackfillService } from './ai-slug-backfill.service'
 import { AiQueryType, GenerateAiDto } from './ai-writer.schema'
 import { AiWriterService } from './ai-writer.service'
 
 @ApiController('ai/writer')
-@ResponseV2()
 export class AiWriterController {
   constructor(
     private readonly aiWriterService: AiWriterService,

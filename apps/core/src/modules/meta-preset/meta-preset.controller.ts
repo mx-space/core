@@ -11,7 +11,6 @@ import {
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import {
@@ -23,7 +22,6 @@ import {
 import { MetaPresetService } from './meta-preset.service'
 
 @ApiController({ path: 'meta-presets' })
-@ResponseV2()
 export class MetaPresetController {
   constructor(private readonly metaPresetService: MetaPresetService) {}
 

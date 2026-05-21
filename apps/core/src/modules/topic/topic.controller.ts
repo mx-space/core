@@ -19,7 +19,6 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import type { EntryTranslation } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -29,7 +28,6 @@ import { TopicSlugParamsDto } from './topic.schema'
 import type { TopicCreateInput, TopicPatchInput } from './topic.types'
 
 @ApiController('topics')
-@ResponseV2()
 export class TopicBaseController {
   constructor(
     protected readonly repository: TopicRepository,

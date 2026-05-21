@@ -3,13 +3,11 @@ import { Body, Get, Param, Post, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { IpLocation, type IpRecord } from '~/common/decorators/ip.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 
 import { BatchPollQueryDto, PollIdDto, SubmitPollDto } from './poll.dto'
 import { PollService } from './poll.service'
 
 @ApiController('polls')
-@ResponseV2()
 export class PollController {
   constructor(private readonly pollService: PollService) {}
 

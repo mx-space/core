@@ -20,7 +20,6 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import type { EnrichmentEntry } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
   type ArticleTranslationInput,
@@ -43,7 +42,6 @@ import { PostService } from './post.service'
 import type { PostModel } from './post.types'
 
 @ApiController('posts')
-@ResponseV2()
 export class PostController {
   constructor(
     private readonly postService: PostService,
@@ -161,7 +159,8 @@ export class PostController {
     if (!last) {
       throw createAppException(AppErrorCode.POST_NOT_FOUND)
     }
-    if (!last.category?.slug) throw createAppException(AppErrorCode.POST_NOT_FOUND)
+    if (!last.category?.slug)
+      throw createAppException(AppErrorCode.POST_NOT_FOUND)
     return this.getByCateAndSlug(
       { category: last.category.slug, slug: last.slug },
       {} as any,

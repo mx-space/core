@@ -19,7 +19,6 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import type { EntryTranslation } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -36,7 +35,6 @@ import {
 import { CategoryService } from './category.service'
 
 @ApiController({ path: 'categories' })
-@ResponseV2()
 export class CategoryController {
   constructor(
     private readonly categoryService: CategoryService,
@@ -128,7 +126,9 @@ export class CategoryController {
     @Lang() lang?: string,
   ) {
     if (!query) {
-      throw createAppException(AppErrorCode.INVALID_PARAMETER, { message: 'Query is required' })
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'Query is required',
+      })
     }
     if (tag === true) {
       const data = await this.categoryService.findArticleWithTag(query)

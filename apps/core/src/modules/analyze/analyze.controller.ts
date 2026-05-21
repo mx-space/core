@@ -3,7 +3,6 @@ import dayjs from 'dayjs'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
 import type { PagerDto } from '~/shared/dto/pager.dto'
@@ -15,7 +14,6 @@ import { AnalyzeService } from './analyze.service'
 
 @ApiController({ path: 'analyze' })
 @Auth()
-@ResponseV2()
 export class AnalyzeController {
   constructor(
     private readonly service: AnalyzeService,

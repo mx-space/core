@@ -6,7 +6,6 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
 import { SubscribeTypeToBitMap } from './subscribe.constant'
@@ -18,7 +17,6 @@ import {
 import { SubscribeService } from './subscribe.service'
 
 @ApiController('subscribe')
-@ResponseV2()
 export class SubscribeController {
   constructor(private readonly service: SubscribeService) {}
 

@@ -15,7 +15,6 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import {
   applyRawCorsHeaders,
@@ -36,7 +35,6 @@ import { AiAgentChatService } from './ai-agent-chat.service'
 import { AiAgentConversationService } from './ai-agent-conversation.service'
 
 @ApiController('ai/agent')
-@ResponseV2()
 export class AiAgentController {
   constructor(
     private readonly chatService: AiAgentChatService,

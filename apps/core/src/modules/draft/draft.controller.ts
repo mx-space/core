@@ -5,7 +5,6 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import { DraftRefType } from './draft.enum'
@@ -20,7 +19,6 @@ import {
 import { DraftService } from './draft.service'
 
 @ApiController('drafts')
-@ResponseV2()
 export class DraftController {
   constructor(private readonly draftService: DraftService) {}
 

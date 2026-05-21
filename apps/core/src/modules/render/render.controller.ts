@@ -18,7 +18,6 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -33,7 +32,6 @@ import type { PageModel } from '../page/page.types'
 import type { PostModel } from '../post/post.types'
 
 @Controller('/render')
-@ResponseV2()
 export class RenderEjsController {
   constructor(
     private readonly service: MarkdownService,

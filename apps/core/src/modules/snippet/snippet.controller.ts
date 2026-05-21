@@ -8,7 +8,6 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -17,7 +16,6 @@ import { SnippetDto, SnippetMoreDto } from './snippet.schema'
 import { SnippetService } from './snippet.service'
 
 @ApiController('snippets')
-@ResponseV2()
 export class SnippetController {
   constructor(private readonly snippetService: SnippetService) {}
 

@@ -6,7 +6,6 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
 
@@ -15,7 +14,6 @@ import { RecentlyService } from './recently.service'
 import type { RecentlyModel } from './recently.types'
 
 @ApiController(['recently', 'shorthand'])
-@ResponseV2()
 export class RecentlyController {
   constructor(private readonly recentlyService: RecentlyService) {}
 

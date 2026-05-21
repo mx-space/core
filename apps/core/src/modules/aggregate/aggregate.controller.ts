@@ -10,7 +10,6 @@ import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import type { EntryTranslation } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 
@@ -37,7 +36,6 @@ type TitledItem = {
 } & Record<string, any>
 
 @ApiController('aggregate')
-@ResponseV2()
 export class AggregateController {
   constructor(
     private readonly aggregateService: AggregateService,

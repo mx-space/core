@@ -9,7 +9,6 @@ import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { OK_DATA } from '~/common/response/envelope.types'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -41,7 +40,6 @@ const ARTICLE_REF_FIELDS = [
 ] as const
 
 @ApiController('/activity')
-@ResponseV2()
 export class ActivityController {
   constructor(
     private readonly service: ActivityService,

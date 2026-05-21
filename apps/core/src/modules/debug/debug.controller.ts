@@ -2,7 +2,6 @@ import { Body, Get, Post, Query, Request, Response } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { RawResponse } from '~/common/response/raw-response.decorator'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
@@ -13,7 +12,6 @@ import type { SnippetRow } from '../snippet/snippet.types'
 import { DebugService } from './debug.service'
 
 @ApiController('debug')
-@ResponseV2()
 export class DebugController {
   constructor(
     private readonly serverlessService: ServerlessService,

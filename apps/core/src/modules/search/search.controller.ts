@@ -4,7 +4,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { ResponseV2 } from '~/common/response/v2-controller.decorator'
 import {
   SearchAdminListDto,
   SearchDto,
@@ -15,7 +14,6 @@ import {
 import { SearchService } from './search.service'
 
 @ApiController('search')
-@ResponseV2()
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
