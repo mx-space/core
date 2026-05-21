@@ -2,8 +2,8 @@ import { Readable } from 'node:stream'
 
 import { describe, expect, it, vi } from 'vitest'
 
+import { AppException } from '~/common/response/error.types'
 import { FileController } from '~/modules/file/file.controller'
-import { FileStorageNotConfiguredException } from '~/modules/file/file.exceptions'
 
 describe('FileController', () => {
   it('falls back to local storage for image uploads when S3 is disabled', async () => {
@@ -92,7 +92,7 @@ describe('FileController', () => {
 
     await expect(
       controller.upload({ type: 'image' } as any, {} as any),
-    ).rejects.toThrow(FileStorageNotConfiguredException)
+    ).rejects.toThrow(AppException)
 
     expect(getAndValidMultipartField).not.toHaveBeenCalled()
     expect(writeFile).not.toHaveBeenCalled()

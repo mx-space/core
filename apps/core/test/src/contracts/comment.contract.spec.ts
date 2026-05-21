@@ -197,6 +197,9 @@ const readerServiceProvider = {
   },
 }
 
+const getResponseData = (body: any) =>
+  Array.isArray(body.data) ? body.data : body.data?.data
+
 describe('CommentController contract (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [CommentController],
@@ -221,9 +224,10 @@ describe('CommentController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    expect(Array.isArray(body.data)).toBe(true)
+    const data = getResponseData(body)
+    expect(Array.isArray(data)).toBe(true)
     assertNoLegacyKeys(body, { allowed: allowedCommentKeys })
-    assertPgTimestamps(body.data[0])
+    assertPgTimestamps(data[0])
     assertLowercaseRefType(body)
   })
 

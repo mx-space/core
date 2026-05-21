@@ -8,7 +8,12 @@ const createController = (posts: Record<string, unknown>[]) => {
   const postService = {
     listPaginated: vi.fn(async () => ({
       data: posts,
-      pagination: { total: posts.length },
+      pagination: {
+        total: posts.length,
+        currentPage: 1,
+        totalPage: 1,
+        size: 10,
+      },
     })),
   }
   const controller = new PostController(

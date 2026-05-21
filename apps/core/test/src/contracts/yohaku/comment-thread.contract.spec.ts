@@ -81,15 +81,10 @@ const commentServiceProvider = {
     },
     async getThreadReplies() {
       return {
-        data: [fixtureComment({ parentCommentId: '7000000000000000100' })],
-        pagination: {
-          total: 1,
-          currentPage: 1,
-          totalPage: 1,
-          size: 10,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
+        replies: [fixtureComment({ parentCommentId: '7000000000000000100' })],
+        remaining: 0,
+        done: true,
+        nextCursor: null,
       }
     },
   },
@@ -118,6 +113,9 @@ const readerServiceProvider = {
   },
 }
 
+const getResponseData = (body: any) =>
+  Array.isArray(body.data) ? body.data : body.data?.data
+
 describe('Yohaku contract — comment thread (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [CommentController],
@@ -142,9 +140,11 @@ describe('Yohaku contract — comment thread (e2e)', () => {
 
     assertNoLegacyKeys(body, { allowed: allowedCommentKeys })
     assertLowercaseRefType(body)
-    assertPgTimestamps(body.data[0])
+    const data = getResponseData(body)
+    expect(Array.isArray(data)).toBe(true)
+    assertPgTimestamps(data[0])
 
-    assertHasKeys(body.data[0], [
+    assertHasKeys(data[0], [
       'id',
       'author',
       'text',

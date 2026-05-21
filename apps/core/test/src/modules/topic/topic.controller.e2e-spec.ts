@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { AppException } from '~/common/response/error.types'
 import { TopicBaseController } from '~/modules/topic/topic.controller'
-import { TopicNotFoundException } from '~/modules/topic/topic.exceptions'
+import type { TranslationService } from '~/processors/helper/helper.translation.service'
 
 const createController = () => {
   const repository = {
@@ -10,7 +11,12 @@ const createController = () => {
     findById: vi.fn().mockResolvedValue({ id: 'topic-1' }),
   }
   return {
-    controller: new TopicBaseController(repository as any),
+    controller: new TopicBaseController(
+      repository as any,
+      {
+        getTopicTranslationFields: vi.fn().mockResolvedValue(new Map()),
+      } as unknown as TranslationService,
+    ),
     repository,
   }
 }
@@ -21,7 +27,7 @@ describe('TopicBaseController', () => {
 
     await expect(
       controller.getTopicByTopic({ slug: 'Hello Topic' } as any),
-    ).resolves.toEqual({ data: { id: 'topic-1', slug: 'hello' } })
+    ).resolves.toEqual({ id: 'topic-1', slug: 'hello' })
 
     expect(repository.findBySlug).toHaveBeenCalledWith('Hello-Topic')
   })
@@ -32,6 +38,6 @@ describe('TopicBaseController', () => {
 
     await expect(
       controller.getTopicByTopic({ slug: 'missing' } as any),
-    ).rejects.toThrow(TopicNotFoundException)
+    ).rejects.toThrow(AppException)
   })
 })

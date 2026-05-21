@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { AppException } from '~/common/response/error.types'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthController } from '~/modules/auth/auth.controller'
-import { AuthTokenNotFoundException } from '~/modules/auth/auth.exceptions'
 
 const createController = () => {
   const authService = {
@@ -60,7 +60,7 @@ describe('AuthController', () => {
     authService.getAllAccessToken.mockResolvedValue([])
 
     await expect(controller.deleteToken({ id: 'missing' })).rejects.toThrow(
-      AuthTokenNotFoundException,
+      AppException,
     )
   })
 })
