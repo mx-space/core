@@ -1,7 +1,7 @@
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
 import { Controller, Get, Header } from '@nestjs/common'
 
-import { RawResponse } from '~/common/response/raw-response.decorator'
+import { RawResponse } from '~/common/decorators/raw-response.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
 import { AggregateService } from '../aggregate/aggregate.service'

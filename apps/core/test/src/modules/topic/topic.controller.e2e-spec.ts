@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
 import { TopicBaseController } from '~/modules/topic/topic.controller'
 import type { TranslationService } from '~/processors/helper/helper.translation.service'
 

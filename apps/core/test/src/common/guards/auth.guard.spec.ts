@@ -2,8 +2,8 @@ import type { ExecutionContext } from '@nestjs/common'
 import { vi } from 'vitest'
 
 import { AppErrorCode } from '~/common/errors'
+import { AppException } from '~/common/errors/exception.types'
 import { AuthGuard } from '~/common/guards/auth.guard'
-import { AppException } from '~/common/response/error.types'
 import type { AuthService } from '~/modules/auth/auth.service'
 import type { SessionUser } from '~/modules/auth/auth.types'
 

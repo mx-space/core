@@ -2,7 +2,7 @@ import { Readable } from 'node:stream'
 
 import { describe, expect, it, vi } from 'vitest'
 
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
 import { FileController } from '~/modules/file/file.controller'
 
 describe('FileController', () => {

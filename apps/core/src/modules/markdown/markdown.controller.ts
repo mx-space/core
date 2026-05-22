@@ -8,7 +8,7 @@ import JSZip from 'jszip'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { RawResponse } from '~/common/response/raw-response.decorator'
+import { RawResponse } from '~/common/decorators/raw-response.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 

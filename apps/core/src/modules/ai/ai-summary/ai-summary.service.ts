@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter'
 import removeMdCodeblock from 'remove-md-codeblock'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'

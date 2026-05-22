@@ -2,8 +2,8 @@ import type { ArgumentsHost } from '@nestjs/common'
 import { BadRequestException } from '@nestjs/common'
 import { z } from 'zod'
 
-import { AppExceptionFilter } from '~/common/response/app-exception.filter'
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
+import { AppExceptionFilter } from '~/common/filters/app-exception.filter'
 
 interface FakeReply {
   statusCode?: number

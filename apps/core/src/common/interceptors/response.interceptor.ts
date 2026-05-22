@@ -8,16 +8,15 @@ import { Reflector } from '@nestjs/core'
 import type { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 
+import { transformResponseCase } from '~/common/response/case-transform'
+import {
+  isExplicitSuccessEnvelope,
+  type SuccessEnvelope,
+} from '~/common/response/envelope.types'
 import {
   BYPASS_CASE_TRANSFORM_METADATA,
   RESPONSE_PASSTHROUGH_METADATA,
 } from '~/constants/system.constant'
-
-import { transformResponseCase } from './case-transform'
-import {
-  isExplicitSuccessEnvelope,
-  type SuccessEnvelope,
-} from './envelope.types'
 
 @Injectable()
 export class ResponseInterceptorV2 implements NestInterceptor {

@@ -14,7 +14,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { RawResponse } from '~/common/response/raw-response.decorator'
+import { RawResponse } from '~/common/decorators/raw-response.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import {
   applyRawCorsHeaders,

@@ -12,9 +12,9 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { RawResponse } from '~/common/decorators/raw-response.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { RawResponse } from '~/common/response/raw-response.decorator'
 import {
   CreateTranslationAllTaskDto,
   CreateTranslationBatchTaskDto,

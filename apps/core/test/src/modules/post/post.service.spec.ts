@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import {
   CATEGORY_SERVICE_TOKEN,

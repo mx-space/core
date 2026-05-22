@@ -8,14 +8,13 @@ import {
 } from '@nestjs/common'
 import { ZodError } from 'zod'
 
+import { AppException, ErrorCodes } from '~/common/errors/exception.types'
 import { EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getIp } from '~/utils/ip.util'
-
-import { AppException, ErrorCodes } from './error.types'
 
 let processHooksRegistered = false
 

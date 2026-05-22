@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
 import { parseView } from '~/common/views/view.types'
 
 const ResourceSchema = z.object({

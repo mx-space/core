@@ -1,4 +1,4 @@
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
 
 import { AppErrorCode } from './app-error-code'
 import { APP_ERROR_DEFINITIONS } from './app-error-definitions'
@@ -16,20 +16,19 @@ type RuntimeAppErrorDefinition = {
   details?: (payload: unknown) => Record<string, unknown> | undefined
 }
 
-type AppErrorArgs<C extends AppErrorCode> =
-  [PayloadFor<C>] extends [undefined]
-    ? [code: C]
-    : undefined extends PayloadFor<C>
-      ? NonUndefined<PayloadFor<C>> extends object
-        ? RequiredKeys<NonUndefined<PayloadFor<C>>> extends never
-          ? [code: C, payload?: NonUndefined<PayloadFor<C>>]
-          : [code: C, payload: NonUndefined<PayloadFor<C>>]
-        : never
-      : NonUndefined<PayloadFor<C>> extends object
-        ? RequiredKeys<NonUndefined<PayloadFor<C>>> extends never
-          ? [code: C, payload?: NonUndefined<PayloadFor<C>>]
-          : [code: C, payload: NonUndefined<PayloadFor<C>>]
-        : never
+type AppErrorArgs<C extends AppErrorCode> = [PayloadFor<C>] extends [undefined]
+  ? [code: C]
+  : undefined extends PayloadFor<C>
+    ? NonUndefined<PayloadFor<C>> extends object
+      ? RequiredKeys<NonUndefined<PayloadFor<C>>> extends never
+        ? [code: C, payload?: NonUndefined<PayloadFor<C>>]
+        : [code: C, payload: NonUndefined<PayloadFor<C>>]
+      : never
+    : NonUndefined<PayloadFor<C>> extends object
+      ? RequiredKeys<NonUndefined<PayloadFor<C>>> extends never
+        ? [code: C, payload?: NonUndefined<PayloadFor<C>>]
+        : [code: C, payload: NonUndefined<PayloadFor<C>>]
+      : never
 
 export function createAppException<C extends AppErrorCode>(
   ...args: AppErrorArgs<C>

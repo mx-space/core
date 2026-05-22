@@ -1,7 +1,7 @@
 import { Body, Get, Post, Query, Request, Response } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { RawResponse } from '~/common/response/raw-response.decorator'
+import { RawResponse } from '~/common/decorators/raw-response.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
 import type { AiSummaryRepository } from '~/modules/ai/ai-summary/ai-summary.repository'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing'
 import { describe, expect, it } from 'vitest'
 
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
 import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
 import { RedisService } from '~/processors/redis/redis.service'
 

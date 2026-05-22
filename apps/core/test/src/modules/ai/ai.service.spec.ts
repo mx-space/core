@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
 import { AiService } from '~/modules/ai/ai.service'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import { ConfigsService } from '~/modules/configs/configs.service'

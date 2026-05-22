@@ -7,8 +7,8 @@ import { Observable } from 'rxjs'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { RawResponse } from '~/common/decorators/raw-response.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { RawResponse } from '~/common/response/raw-response.decorator'
 import { DATA_DIR } from '~/constants/path.constant'
 import { installPKG } from '~/utils/system.util'
 

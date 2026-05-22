@@ -106,9 +106,9 @@ throw new NoContentCanBeModifiedException()            // code: 'NO_CONTENT_MODI
 
 **Case conversion** — code is camelCase end to end (Drizzle column TS props, Zod DTOs, services). `ResponseInterceptorV2` converts the response `data`/`meta` to snake_case at the wire boundary (`transformResponseCase` in `src/common/response/case-transform.ts`); the wire format stays snake_case. DB column names are unchanged — each Drizzle column keeps its explicit snake_case name string. Never call a manual `snakeCaseKeys`-style helper in a controller.
 
-**`@BypassCaseTransform([paths])`** — opt a field subtree out of snake_case conversion (free-form JSON columns, snippet payloads). Paths root at `data`, dotted segments, `[]` marks an array level (e.g. `'items[].rawPayload'`). Located in `src/common/response/bypass-case-transform.decorator.ts`.
+**`@BypassCaseTransform([paths])`** — opt a field subtree out of snake_case conversion (free-form JSON columns, snippet payloads). Paths root at `data`, dotted segments, `[]` marks an array level (e.g. `'items[].rawPayload'`). Located in `src/common/decorators/bypass-case-transform.decorator.ts`.
 
-**`@RawResponse`** — opt out of the whole envelope + casing pipeline for non-JSON responses (streams, HTML, RSS, redirects). Located in `src/common/response/raw-response.decorator.ts`.
+**`@RawResponse`** — opt out of the whole envelope + casing pipeline for non-JSON responses (streams, HTML, RSS, redirects). Located in `src/common/decorators/raw-response.decorator.ts`.
 
 **Writing a new endpoint:**
 1. Return `<value>` for a bare envelope, or `withMeta(<value>, new MetaObjectBuilder()...build())` for `{ data, meta }`. Never return an object literal whose top-level keys include `data`.

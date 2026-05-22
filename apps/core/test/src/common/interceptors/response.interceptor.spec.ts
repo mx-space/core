@@ -5,8 +5,8 @@ import type {
 } from '@nestjs/common'
 import { firstValueFrom, of } from 'rxjs'
 
+import { ResponseInterceptorV2 } from '~/common/interceptors/response.interceptor'
 import { withMeta } from '~/common/response/envelope.types'
-import { ResponseInterceptorV2 } from '~/common/response/response.interceptor'
 
 interface FakeResponse {
   statusCode?: number

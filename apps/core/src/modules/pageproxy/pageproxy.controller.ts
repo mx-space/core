@@ -8,7 +8,7 @@ import ejs from 'ejs'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
 
-import { RawResponse } from '~/common/response/raw-response.decorator'
+import { RawResponse } from '~/common/decorators/raw-response.decorator'
 import { resolveAdminAssetRoot } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 

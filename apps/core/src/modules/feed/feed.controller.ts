@@ -3,7 +3,7 @@ import { Controller, Get, Header } from '@nestjs/common'
 import RemoveMarkdown from 'remove-markdown'
 import xss from 'xss'
 
-import { RawResponse } from '~/common/response/raw-response.decorator'
+import { RawResponse } from '~/common/decorators/raw-response.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { escapeXml } from '~/utils/tool.util'

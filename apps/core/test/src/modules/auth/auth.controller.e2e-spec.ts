@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { AppException } from '~/common/response/error.types'
+import { AppException } from '~/common/errors/exception.types'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthController } from '~/modules/auth/auth.controller'
 
