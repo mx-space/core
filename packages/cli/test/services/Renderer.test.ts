@@ -817,4 +817,69 @@ describe('Renderer — pure document renderers', () => {
     expect(list).toContain('category: tech')
     expect(list).toContain('state: draft')
   })
+
+  it('reads source_lang and translated from meta.translation when the doc itself omits them', () => {
+    const envelope = {
+      data: {
+        id: 'p1',
+        title: 'Translated title',
+        slug: 'translated',
+        is_published: true,
+        contentFormat: 'markdown',
+        content: 'body',
+        text: 'body',
+      },
+      meta: {
+        translation: {
+          p1: {
+            article: {
+              is_translated: true,
+              source_lang: 'zh',
+              target_lang: 'en',
+            },
+          },
+        },
+      },
+    }
+    const readable = postView.readable!(envelope, viewCtx)
+    expect(readable).toMatch(/source_lang\s+zh/)
+    expect(readable).toMatch(/translated\s+true/)
+
+    const noteEnvelope = {
+      ...envelope,
+      data: { ...envelope.data, topic: 'life' },
+    }
+    const noteReadable = noteView.readable!(noteEnvelope, viewCtx)
+    expect(noteReadable).toMatch(/source_lang\s+zh/)
+    expect(noteReadable).toMatch(/translated\s+true/)
+
+    const pageReadable = pageView.readable!(envelope, viewCtx)
+    expect(pageReadable).toMatch(/source_lang\s+zh/)
+    expect(pageReadable).toMatch(/translated\s+true/)
+  })
+
+  it('falls back to meta.translation per-row for the post list view', () => {
+    const list = postListView.readable(
+      {
+        data: [
+          { id: 'p1', title: 'A' },
+          { id: 'p2', title: 'B' },
+        ],
+        meta: {
+          translation: {
+            p1: {
+              article: {
+                is_translated: true,
+                source_lang: 'zh',
+                target_lang: 'en',
+              },
+            },
+          },
+        },
+      },
+      viewCtx,
+    )
+    expect(list).toContain('source_lang: zh')
+    expect(list).toContain('translated: true')
+  })
 })

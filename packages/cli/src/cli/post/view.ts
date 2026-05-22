@@ -4,6 +4,7 @@ import {
   first,
   firstString,
   formatScalar,
+  pickArticleTranslationMeta,
   publishState,
   relationLabel,
   relationSlugOrLabel,
@@ -19,7 +20,9 @@ const normalize = (data: unknown): Record<string, unknown> =>
 
 const collectFields = (
   doc: Record<string, unknown>,
+  articleMeta?: Record<string, unknown>,
 ): Array<[string, unknown]> => {
+  const meta = articleMeta ?? {}
   const fields: Array<[string, unknown]> = [
     ['id', first(doc, 'id')],
     ['slug', first(doc, 'slug')],
@@ -29,8 +32,16 @@ const collectFields = (
     ['pin', first(doc, 'pin')],
     ['created_at', first(doc, 'created_at', 'createdAt')],
     ['modified_at', first(doc, 'modified_at', 'modifiedAt')],
-    ['source_lang', first(doc, 'source_lang', 'sourceLang')],
-    ['translated', first(doc, 'is_translated', 'isTranslated')],
+    [
+      'source_lang',
+      first(doc, 'source_lang', 'sourceLang') ??
+        first(meta, 'source_lang', 'sourceLang'),
+    ],
+    [
+      'translated',
+      first(doc, 'is_translated', 'isTranslated') ??
+        first(meta, 'is_translated', 'isTranslated'),
+    ],
   ]
   return fields.filter(
     ([key, value]) =>
@@ -64,13 +75,14 @@ export const postView: View<unknown> = {
   modes: new Set(['readable', 'llm', 'xml']),
   readable: (data, ctx) => {
     const doc = normalize(data)
+    const articleMeta = pickArticleTranslationMeta(data, first(doc, 'id'))
     const content = renderContent(doc)
     const title = firstString(doc, 'title')
     return renderMetadataBlock(
       {
         title: title || undefined,
         kind: 'post',
-        fields: collectFields(doc),
+        fields: collectFields(doc, articleMeta),
         summary: pickSummary(doc),
         body: content.body || undefined,
         bodyFormat: content.format,
@@ -80,11 +92,12 @@ export const postView: View<unknown> = {
   },
   llm: (data) => {
     const doc = normalize(data)
+    const articleMeta = pickArticleTranslationMeta(data, first(doc, 'id'))
     const content = renderContent(doc, true)
     const title = firstString(doc, 'title')
     const fm = frontmatter({
       title: title || undefined,
-      fields: collectFields(doc),
+      fields: collectFields(doc, articleMeta),
       summary: pickSummary(doc),
     })
     return content.body ? `${fm}\n\n${content.body}` : fm
@@ -102,19 +115,31 @@ export const postView: View<unknown> = {
 
 const collectListItemFields = (
   doc: Record<string, unknown>,
-): Array<[string, unknown]> => [
-  ['id', first(doc, 'id')],
-  ['title', first(doc, 'title')],
-  ['slug', first(doc, 'slug')],
-  ['state', publishState(doc)],
-  ['category', relationLabel(first(doc, 'category'))],
-  ['tags', first(doc, 'tags')],
-  ['summary', first(doc, 'summary')],
-  ['created_at', first(doc, 'created_at', 'createdAt')],
-  ['modified_at', first(doc, 'modified_at', 'modifiedAt')],
-  ['source_lang', first(doc, 'source_lang', 'sourceLang')],
-  ['translated', first(doc, 'is_translated', 'isTranslated')],
-]
+  articleMeta?: Record<string, unknown>,
+): Array<[string, unknown]> => {
+  const meta = articleMeta ?? {}
+  return [
+    ['id', first(doc, 'id')],
+    ['title', first(doc, 'title')],
+    ['slug', first(doc, 'slug')],
+    ['state', publishState(doc)],
+    ['category', relationLabel(first(doc, 'category'))],
+    ['tags', first(doc, 'tags')],
+    ['summary', first(doc, 'summary')],
+    ['created_at', first(doc, 'created_at', 'createdAt')],
+    ['modified_at', first(doc, 'modified_at', 'modifiedAt')],
+    [
+      'source_lang',
+      first(doc, 'source_lang', 'sourceLang') ??
+        first(meta, 'source_lang', 'sourceLang'),
+    ],
+    [
+      'translated',
+      first(doc, 'is_translated', 'isTranslated') ??
+        first(meta, 'is_translated', 'isTranslated'),
+    ],
+  ]
+}
 
 const renderPostListReadable = (data: unknown): string => {
   const payload = asRecord(data)
@@ -136,8 +161,9 @@ const renderPostListReadable = (data: unknown): string => {
   if (total !== undefined) lines.push(`total: ${formatScalar(total)}`)
   rows.forEach((row, index) => {
     const doc = asRecord(row)
+    const articleMeta = pickArticleTranslationMeta(data, first(doc, 'id'))
     lines.push('', `post ${index + 1}:`)
-    const fields = collectListItemFields(doc)
+    const fields = collectListItemFields(doc, articleMeta)
     for (const [key, value] of fields) {
       if (value === undefined || value === null || value === '') continue
       const rendered =

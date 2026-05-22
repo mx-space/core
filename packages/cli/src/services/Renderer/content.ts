@@ -76,6 +76,20 @@ export const unwrapDocument = (data: unknown): unknown => {
   return data
 }
 
+export const pickArticleTranslationMeta = (
+  payload: unknown,
+  docId: unknown,
+): Record<string, unknown> | undefined => {
+  const translation = asRecord(asRecord(asRecord(payload).meta).translation)
+  if (Object.keys(translation).length === 0) return undefined
+  const direct = asRecord(translation.article)
+  if (Object.keys(direct).length > 0) return direct
+  if (docId === undefined || docId === null) return undefined
+  const entry = asRecord(translation[String(docId)])
+  const article = asRecord(entry.article)
+  return Object.keys(article).length > 0 ? article : undefined
+}
+
 // Synchronous Lexical → LiteXML helper kept inline so the Renderer can match
 // legacy `document-output.ts` behaviour without depending on the Lexical
 // service. The Lexical service still owns Markdown derivation (`--output llm`)

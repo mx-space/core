@@ -3,6 +3,7 @@ import {
   contentFormat,
   first,
   firstString,
+  pickArticleTranslationMeta,
   renderContent,
   unwrapDocument,
 } from '../../services/Renderer/content'
@@ -14,7 +15,9 @@ const normalize = (data: unknown): Record<string, unknown> =>
 
 const collectFields = (
   doc: Record<string, unknown>,
+  articleMeta?: Record<string, unknown>,
 ): Array<[string, unknown]> => {
+  const meta = articleMeta ?? {}
   const fields: Array<[string, unknown]> = [
     ['id', first(doc, 'id')],
     ['slug', first(doc, 'slug')],
@@ -22,8 +25,16 @@ const collectFields = (
     ['order', first(doc, 'order')],
     ['created_at', first(doc, 'created_at', 'createdAt')],
     ['modified_at', first(doc, 'modified_at', 'modifiedAt')],
-    ['source_lang', first(doc, 'source_lang', 'sourceLang')],
-    ['translated', first(doc, 'is_translated', 'isTranslated')],
+    [
+      'source_lang',
+      first(doc, 'source_lang', 'sourceLang') ??
+        first(meta, 'source_lang', 'sourceLang'),
+    ],
+    [
+      'translated',
+      first(doc, 'is_translated', 'isTranslated') ??
+        first(meta, 'is_translated', 'isTranslated'),
+    ],
   ]
   return fields.filter(
     ([key, value]) =>
@@ -55,13 +66,14 @@ export const pageView: View<unknown> = {
   modes: new Set(['readable', 'llm', 'xml']),
   readable: (data, ctx) => {
     const doc = normalize(data)
+    const articleMeta = pickArticleTranslationMeta(data, first(doc, 'id'))
     const content = renderContent(doc)
     const title = firstString(doc, 'title')
     return renderMetadataBlock(
       {
         title: title || undefined,
         kind: 'page',
-        fields: collectFields(doc),
+        fields: collectFields(doc, articleMeta),
         summary: pickSummary(doc),
         body: content.body || undefined,
         bodyFormat: content.format,
@@ -71,11 +83,12 @@ export const pageView: View<unknown> = {
   },
   llm: (data) => {
     const doc = normalize(data)
+    const articleMeta = pickArticleTranslationMeta(data, first(doc, 'id'))
     const content = renderContent(doc, true)
     const title = firstString(doc, 'title')
     const fm = frontmatter({
       title: title || undefined,
-      fields: collectFields(doc),
+      fields: collectFields(doc, articleMeta),
       summary: pickSummary(doc),
     })
     return content.body ? `${fm}\n\n${content.body}` : fm
