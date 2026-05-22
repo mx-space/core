@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common'
 
 import { GatewayModule } from '~/processors/gateway/gateway.module'
 
+import { AiModule } from '../ai/ai.module'
 import { AnalyzeModule } from '../analyze/analyze.module'
 import { CategoryModule } from '../category/category.module'
 import { CommentModule } from '../comment/comment.module'
@@ -26,6 +27,8 @@ import { AggregateService } from './aggregate.service'
     forwardRef(() => LinkModule),
     forwardRef(() => RecentlyModule),
     forwardRef(() => SnippetModule),
+
+    forwardRef(() => AiModule),
 
     AnalyzeModule,
     GatewayModule,

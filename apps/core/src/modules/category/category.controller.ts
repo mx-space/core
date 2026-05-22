@@ -122,9 +122,9 @@ export class CategoryController {
                   },
                 ],
               })
-            : Promise.resolve({
-                entityMaps: new Map<string, Map<string, string>>(),
-                dictMaps: new Map<string, Map<string, string>>(),
+            : Promise.resolve<EntryMaps>({
+                entityMaps: new Map(),
+                dictMaps: new Map(),
               }),
         ])
 
