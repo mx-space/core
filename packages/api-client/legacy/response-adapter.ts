@@ -6,6 +6,7 @@ import {
   attachRawFromOneToAnthor,
   destructureData,
   isPlainObject,
+  isResponseEnvelope,
 } from '~/utils'
 
 export type LegacyResponseAdapterMatcher =
@@ -409,7 +410,16 @@ function transformLegacyData<T>(
   meta: any,
   ctx: ResponseAdapterContext,
 ): T {
-  const normalizedData: any = destructureData(data)
+  // `defaultGetDataFromResponse` normally peels the V3 `{ data, meta }`
+  // envelope before the adapter runs, so rules can assume inner-data. When
+  // a consumer ships their own pass-through `getDataFromResponse` (common
+  // with ofetch stacks that already deliver the parsed body), the envelope
+  // arrives intact and rules like `aggregateTopRule` would otherwise read
+  // `notes`/`posts` off the wrapper and miss them. Strip it here so the
+  // rules see the same shape either way.
+  const unwrapped: any =
+    isPlainObject(data) && isResponseEnvelope(data) ? (data as any).data : data
+  const normalizedData: any = destructureData(unwrapped)
   const path = stripPath(normalizePath(ctx.path))
   const method = ctx.method.toUpperCase()
 

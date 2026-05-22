@@ -132,6 +132,47 @@ describe('legacy response adapter', () => {
     })
   })
 
+  it('strips body off aggregate/top items even when the envelope is passed through', async () => {
+    // Simulates a consumer whose `getDataFromResponse` is identity (e.g. an
+    // ofetch-based stack), so the adapter receives the full `{ data, meta }`
+    // envelope instead of the inner data the rule expects.
+    spyOn(axiosAdaptor, 'get').mockResolvedValue({
+      data: {
+        data: {
+          notes: [{ id: '1', title: 'note', text: 'body' }],
+          posts: [{ id: '2', title: 'post', content: 'body' }],
+          says: [{ id: '3', text: 'say' }],
+          recently: [{ id: '4', content: 'recent' }],
+        },
+        meta: {
+          translation: {
+            '1': { article: { is_translated: true, title: 'translated' } },
+          },
+        },
+      },
+      status: 200,
+    } as any)
+
+    const client = createClient(axiosAdaptor)<AxiosResponse>(
+      'https://example.com',
+      {
+        responseAdapter: legacyResponseAdapter(),
+        getDataFromResponse: (res: any) => res?.data,
+      },
+    )
+
+    const data = await client.proxy.aggregate.top.get<any>()
+
+    expect(data).toMatchObject({
+      notes: [{ id: '1', title: 'note' }],
+      posts: [{ id: '2', title: 'post' }],
+      says: [{ id: '3', text: 'say' }],
+      recently: [{ id: '4', content: 'recent' }],
+    })
+    expect(data.notes[0]).not.toHaveProperty('text')
+    expect(data.posts[0]).not.toHaveProperty('content')
+  })
+
   it('creates a client with the legacy adapter preconfigured', async () => {
     spyOn(axiosAdaptor, 'get').mockResolvedValue({
       data: {
