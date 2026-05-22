@@ -56,8 +56,7 @@ describe('MetaObjectBuilder', () => {
 
   test('translation accepts a single EntryTranslation', () => {
     const entry: EntryTranslation = {
-      article: { isTranslated: true, title: 'Hello', targetLang: 'en' },
-      fields: { 'category.name': 'News' },
+      article: { isTranslated: true, sourceLang: 'zh', targetLang: 'en' },
     }
     const meta = new MetaObjectBuilder().translation(entry).build()
 
@@ -66,13 +65,13 @@ describe('MetaObjectBuilder', () => {
 
   test('translation normalizes a Map into an id-keyed record', () => {
     const map = new Map<string, EntryTranslation>([
-      ['1', { article: { isTranslated: true, title: 'A' } }],
+      ['1', { article: { isTranslated: true, sourceLang: 'zh' } }],
       ['2', { article: { isTranslated: false } }],
     ])
     const meta = new MetaObjectBuilder().translation(map).build()
 
     expect(meta.translation).toEqual({
-      1: { article: { isTranslated: true, title: 'A' } },
+      1: { article: { isTranslated: true, sourceLang: 'zh' } },
       2: { article: { isTranslated: false } },
     })
   })

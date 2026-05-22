@@ -7,26 +7,20 @@ export const PaginationSchema = z.object({
   totalPages: z.number().int().nonnegative(),
 })
 
-export const ArticleTranslationSchema = z.object({
-  isTranslated: z.boolean(),
-  sourceLang: z.string().nullable().optional(),
-  targetLang: z.string().nullable().optional(),
-  model: z.string().optional(),
-  translatedAt: z.date().optional(),
-  title: z.string().optional(),
-  text: z.string().optional(),
-  subtitle: z.string().nullable().optional(),
-  summary: z.string().nullable().optional(),
-  tags: z.array(z.string()).optional(),
-  content: z.string().optional(),
-  contentFormat: z.string().optional(),
-  availableTranslations: z.array(z.string()).optional(),
-})
+export const ArticleTranslationSchema = z
+  .object({
+    isTranslated: z.boolean(),
+    sourceLang: z.string().nullable().optional(),
+    targetLang: z.string().nullable().optional(),
+    translatedAt: z.date().optional(),
+    model: z.string().optional(),
+    availableTranslations: z.array(z.string()).optional(),
+  })
+  .strict()
 
 export const EntryTranslationSchema = z
   .object({
     article: ArticleTranslationSchema.optional(),
-    fields: z.record(z.string(), z.string()).optional(),
   })
   .strict()
 
