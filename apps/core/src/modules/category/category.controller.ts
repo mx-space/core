@@ -23,6 +23,7 @@ import { TranslationEntryService } from '~/modules/ai/ai-translation/translation
 import {
   applyArticleTranslationInPlace,
   applyTranslationEntriesInPlace,
+  type EntryMaps,
   type EntryRule,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
