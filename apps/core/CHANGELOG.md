@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## [13.0.0](https://github.com/mx-space/core/compare/v12.10.0...v13.0.0) (2026-05-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* **api:** V3 response envelope replaces the legacy V2 shape. All list endpoints now return `{ data, meta }` with snake_case fields and named views (card/detail). Consumers that read top-level pagination keys or expect inline `translation`/`enrichments`/`related` properties must read them from `meta.*` instead. The `@mx-space/api-client` v5 legacy adapter reconstructs the V1 wire format for older callers.
+
+
+### Refactors
+
+* **api:** V3 response envelope, snake_case schema, named views ([#2729](https://github.com/mx-space/core/issues/2729)) ([f84b946](https://github.com/mx-space/core/commit/f84b9463decc5f508edd913ff08d3e404dab7337))
+* **logging:** improve logging format and clarity in interceptor ([2e70a8a](https://github.com/mx-space/core/commit/2e70a8a2))
+
+
 ## [12.10.0](https://github.com/mx-space/core/compare/v12.9.5...v12.10.0) (2026-05-20)
 
 
