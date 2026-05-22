@@ -251,12 +251,8 @@ export class EnrichmentController {
   @Auth()
   @Throttle(ADMIN_PROBE_THROTTLE)
   @HttpCode(200)
-  async probe(@Body() body: AdminProbeBodyDto) {
-    const data = await this.enrichmentService.probe(
-      body.url,
-      body.useCache === true,
-    )
-    return data
+  probe(@Body() body: AdminProbeBodyDto) {
+    return this.enrichmentService.probe(body.url, body.useCache === true)
   }
 
   private async resolvePublicUrl(objectKey: string): Promise<string> {

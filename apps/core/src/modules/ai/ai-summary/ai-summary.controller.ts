@@ -86,15 +86,14 @@ export class AiSummaryController {
   }
 
   @Get('/article/:id')
-  async getArticleSummary(
+  getArticleSummary(
     @Param() params: EntityIdDto,
     @Query() query: GetSummaryQueryDto,
   ) {
-    const data = await this.service.getOrGenerateSummaryForArticle(params.id, {
+    return this.service.getOrGenerateSummaryForArticle(params.id, {
       lang: query.lang ? parseLanguageCode(query.lang) : DEFAULT_SUMMARY_LANG,
       onlyDb: query.onlyDb,
     })
-    return data
   }
 
   @Get('/article/:id/generate')

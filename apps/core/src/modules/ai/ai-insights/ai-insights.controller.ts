@@ -113,15 +113,14 @@ export class AiInsightsController {
   }
 
   @Get('/article/:id')
-  async getArticleInsights(
+  getArticleInsights(
     @Param() params: EntityIdDto,
     @Query() query: GetInsightsQueryDto,
   ) {
-    const data = await this.service.getOrGenerateInsightsForArticle(params.id, {
+    return this.service.getOrGenerateInsightsForArticle(params.id, {
       lang: query.lang ? parseLanguageCode(query.lang) : DEFAULT_SUMMARY_LANG,
       onlyDb: query.onlyDb,
     })
-    return data
   }
 
   @Get('/article/:id/generate')

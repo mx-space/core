@@ -21,11 +21,8 @@ export class TranslationEntryController {
 
   @Post('/generate')
   @Auth()
-  async generateEntries(@Body() body?: GenerateEntriesDto) {
-    const data = await this.translationEntryService.generateTranslations(
-      body ?? {},
-    )
-    return data
+  generateEntries(@Body() body?: GenerateEntriesDto) {
+    return this.translationEntryService.generateTranslations(body ?? {})
   }
 
   @Get('/')

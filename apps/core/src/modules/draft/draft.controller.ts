@@ -118,14 +118,10 @@ export class DraftController {
 
   @Post('/:id/restore/:version')
   @Auth()
-  async restore(
+  restore(
     @Param() params: EntityIdDto,
     @Param() versionParams: RestoreVersionDto,
   ) {
-    const data = await this.draftService.restoreVersion(
-      params.id,
-      versionParams.version,
-    )
-    return data
+    return this.draftService.restoreVersion(params.id, versionParams.version)
   }
 }

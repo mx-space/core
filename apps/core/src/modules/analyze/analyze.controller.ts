@@ -50,44 +50,40 @@ export class AnalyzeController {
   }
 
   @Get('/')
-  async getAnalyze(@Query() query: AnalyzeDto & Partial<BasicPagerInput>) {
+  getAnalyze(@Query() query: AnalyzeDto & Partial<BasicPagerInput>) {
     const { from, to = new Date(), page = 1, size = 50 } = query
-
-    const data = await this.service.getRangeAnalyzeData(from, to, {
+    return this.service.getRangeAnalyzeData(from, to, {
       limit: Math.trunc(size),
       page,
     })
-    return data
   }
 
   @Get('/today')
-  async getAnalyzeToday(@Query() query: Partial<BasicPagerInput>) {
+  getAnalyzeToday(@Query() query: Partial<BasicPagerInput>) {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const todayEarly = getTodayEarly(today)
-    const data = await this.service.getRangeAnalyzeData(todayEarly, today, {
+    return this.service.getRangeAnalyzeData(todayEarly, today, {
       limit: Math.trunc(size),
       page,
     })
-    return data
   }
 
   @Get('/week')
-  async getAnalyzeWeek(@Query() query: Partial<BasicPagerInput>) {
+  getAnalyzeWeek(@Query() query: Partial<BasicPagerInput>) {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const weekStart = getWeekStart(today)
-    const data = await this.service.getRangeAnalyzeData(weekStart, today, {
+    return this.service.getRangeAnalyzeData(weekStart, today, {
       limit: size,
       page,
     })
-    return data
   }
 
   @Get('/aggregate')
-  async getFragment() {
+  getFragment() {
     const cacheKey = getRedisKey(RedisKeys.AnalyzeAggregate)
-    const data = await this.getOrSetCache(cacheKey, 60, async () => {
+    return this.getOrSetCache(cacheKey, 60, async () => {
       const getIpAndPvAggregate = async () => {
         const now = new Date()
         const todayEarly = getTodayEarly(now)
@@ -159,7 +155,6 @@ export class AnalyzeController {
         today_ips,
       }
     })
-    return data
   }
 
   @Get('/like')
@@ -181,29 +176,27 @@ export class AnalyzeController {
   }
 
   @Get('/traffic-source')
-  async getTrafficSource(@Query() query: AnalyzeDto) {
+  getTrafficSource(@Query() query: AnalyzeDto) {
     const { from, to } = query
     const cacheKey = getRedisKey(
       RedisKeys.AnalyzeTrafficSource,
       ...rangeToCacheParts(from, to),
     )
-    const data = await this.getOrSetCache(cacheKey, 300, () =>
+    return this.getOrSetCache(cacheKey, 300, () =>
       this.service.getTrafficSource(from, to),
     )
-    return data
   }
 
   @Get('/device')
-  async getDeviceDistribution(@Query() query: AnalyzeDto) {
+  getDeviceDistribution(@Query() query: AnalyzeDto) {
     const { from, to } = query
     const cacheKey = getRedisKey(
       RedisKeys.AnalyzeDeviceDistribution,
       ...rangeToCacheParts(from, to),
     )
-    const data = await this.getOrSetCache(cacheKey, 300, () =>
+    return this.getOrSetCache(cacheKey, 300, () =>
       this.service.getDeviceDistribution(from, to),
     )
-    return data
   }
 
   @Delete('/')
