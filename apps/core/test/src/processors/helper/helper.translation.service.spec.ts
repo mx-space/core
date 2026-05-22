@@ -2,8 +2,17 @@ import { Test } from '@nestjs/testing'
 
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
-import type { ArticleTranslationInput } from '~/processors/helper/helper.translation.service'
-import { TranslationService } from '~/processors/helper/helper.translation.service'
+import type {
+  ArticleTranslationInput,
+  EntryMaps,
+  TranslationResult,
+} from '~/processors/helper/helper.translation.service'
+import {
+  applyArticleTranslationInPlace,
+  applyTranslationEntriesInPlace,
+  buildArticleTranslationMeta,
+  TranslationService,
+} from '~/processors/helper/helper.translation.service'
 
 const createMockAiTranslationService = () => ({
   getAvailableLanguagesForArticle: vi.fn(),
@@ -699,5 +708,372 @@ describe('TranslationService', () => {
       expect(item.isTranslated).toBe(false)
       expect(item.title).toBe('T')
     })
+  })
+
+  describe('collectArticleTranslations', () => {
+    const articles: ArticleTranslationInput[] = [
+      { id: 'a1', title: 'Title 1', text: 'Text 1' },
+      { id: 'a2', title: 'Title 2', text: 'Text 2' },
+    ]
+
+    it('returns slim meta — no title/text/content in meta map', async () => {
+      const translatedAt = new Date()
+      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
+        {
+          validTranslations: new Map([
+            [
+              'a1',
+              {
+                title: 'T1',
+                text: 'X1',
+                content: 'C1',
+                contentFormat: 'markdown',
+                sourceLang: 'zh',
+                lang: 'en',
+                createdAt: translatedAt,
+                aiModel: 'gpt-4',
+              },
+            ],
+          ]),
+          staleRefIds: [],
+        },
+      )
+
+      const { meta } = await service.collectArticleTranslations({
+        articles,
+        targetLang: 'en',
+        fields: ['title', 'text', 'content'],
+      })
+
+      expect(meta.size).toBe(1)
+      const entry = meta.get('a1')!
+      expect(entry.article).toBeDefined()
+      expect(entry.article!.isTranslated).toBe(true)
+      expect(entry.article!.sourceLang).toBe('zh')
+      expect(entry.article!.targetLang).toBe('en')
+      expect(entry.article!.translatedAt).toEqual(translatedAt)
+      expect(entry.article!.model).toBe('gpt-4')
+      expect((entry.article as any).title).toBeUndefined()
+      expect((entry.article as any).text).toBeUndefined()
+      expect((entry.article as any).content).toBeUndefined()
+      expect((entry.article as any).contentFormat).toBeUndefined()
+    })
+
+    it('returns per-id TranslationResult in results map', async () => {
+      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
+        {
+          validTranslations: new Map([
+            [
+              'a1',
+              {
+                title: 'T1',
+                text: 'X1',
+                sourceLang: 'zh',
+                lang: 'en',
+                createdAt: new Date(),
+              },
+            ],
+          ]),
+          staleRefIds: [],
+        },
+      )
+
+      const { results } = await service.collectArticleTranslations({
+        articles,
+        targetLang: 'en',
+        fields: ['title', 'text'],
+      })
+
+      expect(results.size).toBe(2)
+      const r1 = results.get('a1')!
+      expect(r1.isTranslated).toBe(true)
+      expect(r1.title).toBe('T1')
+      const r2 = results.get('a2')!
+      expect(r2.isTranslated).toBe(false)
+    })
+
+    it('omits untranslated items from meta map', async () => {
+      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
+        {
+          validTranslations: new Map(),
+          staleRefIds: [],
+        },
+      )
+
+      const { meta } = await service.collectArticleTranslations({
+        articles,
+        targetLang: 'en',
+        fields: ['title'],
+      })
+
+      expect(meta.size).toBe(0)
+    })
+  })
+})
+
+describe('buildArticleTranslationMeta', () => {
+  it('untranslated result — no content keys, availableTranslations empty array', () => {
+    const result: TranslationResult = {
+      title: 'T',
+      text: 'X',
+      isTranslated: false,
+      sourceLang: 'zh',
+      availableTranslations: [],
+    }
+
+    const meta = buildArticleTranslationMeta(result, 'en')
+
+    expect(meta.isTranslated).toBe(false)
+    expect(meta.sourceLang).toBe('zh')
+    expect(meta.availableTranslations).toEqual([])
+    expect(meta).not.toHaveProperty('title')
+    expect(meta).not.toHaveProperty('text')
+    expect(meta).not.toHaveProperty('content')
+    expect(meta).not.toHaveProperty('contentFormat')
+    expect(meta).not.toHaveProperty('subtitle')
+    expect(meta).not.toHaveProperty('summary')
+    expect(meta).not.toHaveProperty('tags')
+  })
+
+  it('translated result with full translationMeta', () => {
+    const translatedAt = new Date()
+    const result: TranslationResult = {
+      title: 'T',
+      text: 'X',
+      isTranslated: true,
+      sourceLang: 'zh',
+      translationMeta: {
+        sourceLang: 'zh',
+        targetLang: 'en',
+        translatedAt,
+        model: 'claude-haiku',
+      },
+      availableTranslations: ['en', 'ja'],
+    }
+
+    const meta = buildArticleTranslationMeta(result, 'en')
+
+    expect(meta.isTranslated).toBe(true)
+    expect(meta.sourceLang).toBe('zh')
+    expect(meta.targetLang).toBe('en')
+    expect(meta.translatedAt).toBe(translatedAt)
+    expect(meta.model).toBe('claude-haiku')
+    expect(meta.availableTranslations).toEqual(['en', 'ja'])
+    expect(meta).not.toHaveProperty('title')
+    expect(meta).not.toHaveProperty('text')
+    expect(meta).not.toHaveProperty('content')
+  })
+
+  it('translated result without translationMeta — targetLang falls back to lang param', () => {
+    const result: TranslationResult = {
+      title: 'T',
+      text: 'X',
+      isTranslated: true,
+      sourceLang: 'zh',
+    }
+
+    const meta = buildArticleTranslationMeta(result, 'ja')
+
+    expect(meta.targetLang).toBe('ja')
+    expect(meta.translatedAt).toBeUndefined()
+    expect(meta.model).toBeUndefined()
+  })
+})
+
+describe('applyArticleTranslationInPlace', () => {
+  const makeResult = (
+    overrides: Partial<TranslationResult> = {},
+  ): TranslationResult => ({
+    title: 'Translated Title',
+    text: 'Translated Text',
+    subtitle: 'Translated Subtitle',
+    summary: 'Translated Summary',
+    tags: ['tag-en'],
+    content: 'Translated Content',
+    contentFormat: 'markdown',
+    isTranslated: true,
+    sourceLang: 'zh',
+    ...overrides,
+  })
+
+  it('untranslated result — no-op', () => {
+    const target = { title: 'Original', text: 'Original Text' }
+    const result = makeResult({ isTranslated: false })
+
+    applyArticleTranslationInPlace(target, result)
+
+    expect(target.title).toBe('Original')
+    expect(target.text).toBe('Original Text')
+  })
+
+  it('translated result overwrites all seven fields by default', () => {
+    const target: any = {
+      title: 'O',
+      text: 'O',
+      subtitle: 'O',
+      summary: 'O',
+      tags: ['orig'],
+      content: 'O',
+      contentFormat: 'O',
+    }
+
+    applyArticleTranslationInPlace(target, makeResult())
+
+    expect(target.title).toBe('Translated Title')
+    expect(target.text).toBe('Translated Text')
+    expect(target.subtitle).toBe('Translated Subtitle')
+    expect(target.summary).toBe('Translated Summary')
+    expect(target.tags).toEqual(['tag-en'])
+    expect(target.content).toBe('Translated Content')
+    expect(target.contentFormat).toBe('markdown')
+  })
+
+  it('empty-string text still overwrites (nullish, not truthy check)', () => {
+    const target: any = { title: 'O', text: 'O' }
+
+    applyArticleTranslationInPlace(target, makeResult({ text: '' }))
+
+    expect(target.text).toBe('')
+  })
+
+  it('content present but contentFormat null — contentFormat retained from target', () => {
+    const target: any = { content: 'O', contentFormat: 'lexical' }
+
+    applyArticleTranslationInPlace(
+      target,
+      makeResult({ content: 'New Content', contentFormat: undefined }),
+    )
+
+    expect(target.content).toBe('New Content')
+    expect(target.contentFormat).toBe('lexical')
+  })
+
+  it('content null but contentFormat present — neither overwritten', () => {
+    const target: any = { content: 'O', contentFormat: 'lexical' }
+
+    applyArticleTranslationInPlace(
+      target,
+      makeResult({ content: undefined, contentFormat: 'markdown' }),
+    )
+
+    expect(target.content).toBe('O')
+    expect(target.contentFormat).toBe('lexical')
+  })
+
+  it('opts.fields = ["title"] — only title overwritten', () => {
+    const target: any = {
+      title: 'O',
+      text: 'O',
+      summary: 'O',
+    }
+
+    applyArticleTranslationInPlace(target, makeResult(), { fields: ['title'] })
+
+    expect(target.title).toBe('Translated Title')
+    expect(target.text).toBe('O')
+    expect(target.summary).toBe('O')
+  })
+})
+
+describe('applyTranslationEntriesInPlace', () => {
+  const makeEmptyMaps = (): EntryMaps => ({
+    entityMaps: new Map(),
+    dictMaps: new Map(),
+  })
+
+  it('entity mode — hit overwrites leaf', () => {
+    const target: any = { topic: { id: 'topic-1', name: 'Original Name' } }
+    const maps = makeEmptyMaps()
+    maps.entityMaps.set('topic.name', new Map([['topic-1', 'Translated Name']]))
+
+    applyTranslationEntriesInPlace(target, maps, [
+      {
+        path: 'topic.name',
+        keyPath: 'topic.name',
+        mode: 'entity',
+        idField: 'id',
+      },
+    ])
+
+    expect(target.topic.name).toBe('Translated Name')
+  })
+
+  it('entity mode — miss retains leaf', () => {
+    const target: any = { topic: { id: 'topic-2', name: 'Original Name' } }
+    const maps = makeEmptyMaps()
+    maps.entityMaps.set('topic.name', new Map([['topic-1', 'Translated Name']]))
+
+    applyTranslationEntriesInPlace(target, maps, [
+      {
+        path: 'topic.name',
+        keyPath: 'topic.name',
+        mode: 'entity',
+        idField: 'id',
+      },
+    ])
+
+    expect(target.topic.name).toBe('Original Name')
+  })
+
+  it('entity mode — undefined intermediate path is no-op', () => {
+    const target: any = { topic: undefined }
+
+    applyTranslationEntriesInPlace(target, makeEmptyMaps(), [
+      {
+        path: 'topic.name',
+        keyPath: 'topic.name',
+        mode: 'entity',
+        idField: 'id',
+      },
+    ])
+
+    expect(target.topic).toBeUndefined()
+  })
+
+  it('dict mode — hit overwrites leaf', () => {
+    const target: any = { mood: 'happy' }
+    const maps = makeEmptyMaps()
+    maps.dictMaps.set('note.mood', new Map([['happy', 'Glücklich']]))
+
+    applyTranslationEntriesInPlace(target, maps, [
+      { path: 'mood', keyPath: 'note.mood', mode: 'dict' },
+    ])
+
+    expect(target.mood).toBe('Glücklich')
+  })
+
+  it('dict mode — miss retains leaf', () => {
+    const target: any = { mood: 'sad' }
+    const maps = makeEmptyMaps()
+    maps.dictMaps.set('note.mood', new Map([['happy', 'Glücklich']]))
+
+    applyTranslationEntriesInPlace(target, maps, [
+      { path: 'mood', keyPath: 'note.mood', mode: 'dict' },
+    ])
+
+    expect(target.mood).toBe('sad')
+  })
+
+  it('multiple rules on same target — all applied independently', () => {
+    const target: any = {
+      topic: { id: 'topic-1', name: 'OrigName' },
+      mood: 'happy',
+    }
+    const maps = makeEmptyMaps()
+    maps.entityMaps.set('topic.name', new Map([['topic-1', 'NewName']]))
+    maps.dictMaps.set('note.mood', new Map([['happy', 'Fröhlich']]))
+
+    applyTranslationEntriesInPlace(target, maps, [
+      {
+        path: 'topic.name',
+        keyPath: 'topic.name',
+        mode: 'entity',
+        idField: 'id',
+      },
+      { path: 'mood', keyPath: 'note.mood', mode: 'dict' },
+    ])
+
+    expect(target.topic.name).toBe('NewName')
+    expect(target.mood).toBe('Fröhlich')
   })
 })
