@@ -293,6 +293,111 @@ describe('legacy response adapter', () => {
     expect(data.objects.note[0]).not.toHaveProperty('isTranslated')
   })
 
+  it('wraps bare list payloads into envelope shape when no pagination meta is present', async () => {
+    spyOn(axiosAdaptor, 'get').mockResolvedValue({
+      data: {
+        data: [
+          { id: '1', title: 'first' },
+          { id: '2', title: 'second' },
+        ],
+      },
+      status: 200,
+    } as any)
+
+    const client = createLegacyApiClient(axiosAdaptor)<AxiosResponse>(
+      'https://example.com',
+    )
+
+    const data = await client.proxy.recently.get<any>()
+
+    expect(data).toEqual({
+      data: [
+        { id: '1', title: 'first' },
+        { id: '2', title: 'second' },
+      ],
+    })
+  })
+
+  it('rewraps aggregate/timeline payload into the envelope shape', async () => {
+    spyOn(axiosAdaptor, 'get').mockResolvedValue({
+      data: {
+        data: {
+          posts: [{ id: '1', title: 'Translated Post' }],
+          notes: [{ id: '2', title: 'note' }],
+        },
+        meta: {
+          translation: {
+            '1': {
+              article: {
+                is_translated: true,
+                source_lang: 'zh',
+                target_lang: 'en',
+                model: 'claude-haiku-4-5',
+                available_translations: ['en'],
+              },
+            },
+          },
+        },
+      },
+      status: 200,
+    } as any)
+
+    const client = createLegacyApiClient(axiosAdaptor)<AxiosResponse>(
+      'https://example.com',
+    )
+
+    const data = await client.proxy.aggregate.timeline.get<any>()
+
+    expect(data).toMatchObject({
+      data: {
+        posts: [
+          {
+            id: '1',
+            title: 'Translated Post',
+            isTranslated: true,
+            sourceLang: 'zh',
+          },
+        ],
+        notes: [{ id: '2', title: 'note' }],
+      },
+    })
+    expect(data.data.posts[0].translationMeta).toMatchObject({
+      sourceLang: 'zh',
+      targetLang: 'en',
+      model: 'claude-haiku-4-5',
+    })
+  })
+
+  it('rewraps aggregate/timeline even when envelope is passed through', async () => {
+    spyOn(axiosAdaptor, 'get').mockResolvedValue({
+      data: {
+        data: {
+          posts: [{ id: '1', title: 'post' }],
+          notes: [{ id: '2', title: 'note' }],
+        },
+        meta: {},
+      },
+      status: 200,
+    } as any)
+
+    const client = createClient(axiosAdaptor)<AxiosResponse>(
+      'https://example.com',
+      {
+        responseAdapter: legacyResponseAdapter(),
+        getDataFromResponse: (res: any) => res?.data,
+      },
+    )
+
+    const data = await client.proxy.aggregate.timeline.get<any>()
+
+    expect(data).toMatchObject({
+      data: {
+        posts: [{ id: '1', title: 'post' }],
+        notes: [{ id: '2', title: 'note' }],
+      },
+    })
+  })
+
   it('synthesizes id from refId for reading rank/top items', async () => {
     spyOn(axiosAdaptor, 'get').mockResolvedValue({
       data: {

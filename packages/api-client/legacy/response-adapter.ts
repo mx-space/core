@@ -352,7 +352,8 @@ const aggregateTimelineRule: Rule = {
       const inner = flattenNestedArrays(r.data, ctx.meta, ['notes', 'posts'])
       return { ...r, data: inner }
     }
-    return flattenNestedArrays(r, ctx.meta, ['notes', 'posts'])
+    const inner = flattenNestedArrays(r, ctx.meta, ['notes', 'posts'])
+    return { data: inner }
   },
 }
 
@@ -529,7 +530,11 @@ function transformLegacyData<T>(
   const ruled = applyRule(path, method, normalizedData, meta)
   if (ruled !== undefined) return ruled as T
 
-  // Generic: bare array → flatten meta into each item.
+  // Generic: bare array → flatten meta into each item, wrap into envelope so
+  // the runtime shape matches the controller method's default typed return
+  // (`{ data: T[], ... }`). Callers throughout the host app destructure
+  // `.data` off list responses (matching the type declaration); returning
+  // a bare array here would silently make `.data` undefined.
   if (Array.isArray(normalizedData)) {
     const items = normalizedData.map((it) => flattenMetaIntoItem(it, meta))
     if (meta?.pagination) {
@@ -538,7 +543,7 @@ function transformLegacyData<T>(
         pagination: remapPagination(meta.pagination),
       } as T
     }
-    return items as T
+    return { data: items } as T
   }
 
   // Generic: object with array `data` → flatten meta into items, remap pagination.
