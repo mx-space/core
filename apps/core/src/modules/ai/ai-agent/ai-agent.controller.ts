@@ -101,68 +101,52 @@ export class AiAgentController {
 
   @Post('/conversations')
   @Auth()
-  async createConversation(@Body() body: CreateConversationDto) {
-    const data = await this.conversationService.create(body)
-    return data
+  createConversation(@Body() body: CreateConversationDto) {
+    return this.conversationService.create(body)
   }
 
   @Get('/conversations')
   @Auth()
-  async listConversations(@Query() query: ListConversationsQueryDto) {
-    const data = await this.conversationService.listByRef(
-      query.refId,
-      query.refType,
-    )
-    return data
+  listConversations(@Query() query: ListConversationsQueryDto) {
+    return this.conversationService.listByRef(query.refId, query.refType)
   }
 
   @Get('/conversations/:id')
   @Auth()
-  async getConversation(@Param() params: EntityIdDto) {
-    const data = await this.conversationService.getById(params.id)
-    return data
+  getConversation(@Param() params: EntityIdDto) {
+    return this.conversationService.getById(params.id)
   }
 
   @Patch('/conversations/:id')
   @Auth()
-  async updateConversation(
+  updateConversation(
     @Param() params: EntityIdDto,
     @Body() body: UpdateConversationDto,
   ) {
-    const data = await this.conversationService.updateById(params.id, body)
-    return data
+    return this.conversationService.updateById(params.id, body)
   }
 
   @Patch('/conversations/:id/messages')
   @Auth()
-  async appendMessages(
+  appendMessages(
     @Param() params: EntityIdDto,
     @Body() body: AppendMessagesDto,
   ) {
-    const data = await this.conversationService.appendMessages(
-      params.id,
-      body.messages,
-    )
-    return data
+    return this.conversationService.appendMessages(params.id, body.messages)
   }
 
   @Put('/conversations/:id/messages')
   @Auth()
-  async replaceMessages(
+  replaceMessages(
     @Param() params: EntityIdDto,
     @Body() body: ReplaceMessagesDto,
   ) {
-    const data = await this.conversationService.replaceMessages(
-      params.id,
-      body.messages,
-    )
-    return data
+    return this.conversationService.replaceMessages(params.id, body.messages)
   }
 
   @Delete('/conversations/:id')
   @Auth()
-  async deleteConversation(@Param() params: EntityIdDto) {
-    const data = await this.conversationService.deleteById(params.id)
-    return data
+  deleteConversation(@Param() params: EntityIdDto) {
+    return this.conversationService.deleteById(params.id)
   }
 }

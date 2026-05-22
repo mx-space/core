@@ -20,16 +20,10 @@ export class AiWriterController {
   async generate(@Body() body: GenerateAiDto) {
     switch (body.type) {
       case AiQueryType.TitleSlug: {
-        const data = await this.aiWriterService.generateTitleAndSlugByOpenAI(
-          body.text!,
-        )
-        return data
+        return this.aiWriterService.generateTitleAndSlugByOpenAI(body.text!)
       }
       case AiQueryType.Slug: {
-        const data = await this.aiWriterService.generateSlugByTitleViaOpenAI(
-          body.title!,
-        )
-        return data
+        return this.aiWriterService.generateSlugByTitleViaOpenAI(body.title!)
       }
       default: {
         throw createAppException(AppErrorCode.AI_INVALID_QUERY_TYPE)
@@ -50,7 +44,6 @@ export class AiWriterController {
   @Post('backfill-slugs')
   @Auth()
   async backfillSlugs() {
-    const data = await this.aiSlugBackfillService.createBackfillTask()
-    return data
+    return this.aiSlugBackfillService.createBackfillTask()
   }
 }

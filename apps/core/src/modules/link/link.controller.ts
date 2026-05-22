@@ -62,9 +62,8 @@ export class LinkController {
 
   @Get('/state')
   @Auth()
-  async getLinkCount() {
-    const data = await this.linkService.getCount()
-    return data
+  getLinkCount() {
+    return this.linkService.getCount()
   }
 
   @Post('/audit')
@@ -110,15 +109,13 @@ export class LinkController {
 
   @Auth()
   @Get('/health')
-  async checkHealth() {
-    const data = await this.linkService.checkLinkHealth()
-    return data
+  checkHealth() {
+    return this.linkService.checkLinkHealth()
   }
 
   @Post('/avatar/migrate')
   @Auth()
-  async migrateExternalAvatars() {
-    const data = await this.linkService.migrateExternalAvatarsForPassedLinks()
-    return data
+  migrateExternalAvatars() {
+    return this.linkService.migrateExternalAvatarsForPassedLinks()
   }
 }

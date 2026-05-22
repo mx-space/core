@@ -547,17 +547,15 @@ export class NoteController {
   @Post('/')
   @HTTPDecorators.Idempotence()
   @Auth()
-  async create(@Body() body: NoteDto) {
-    const created = await this.noteService.create(body as unknown as NoteModel)
-    return created
+  create(@Body() body: NoteDto) {
+    return this.noteService.create(body as unknown as NoteModel)
   }
 
   @Put('/:id')
   @Auth()
   async modify(@Body() body: NoteDto, @Param() params: EntityIdDto) {
     await this.noteService.updateById(params.id, body as unknown as NoteModel)
-    const updated = await this.noteService.findOneByIdOrNid(params.id)
-    return updated
+    return this.noteService.findOneByIdOrNid(params.id)
   }
 
   @Patch('/:id')

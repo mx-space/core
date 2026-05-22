@@ -118,14 +118,13 @@ export class EnrichmentController {
   @Post('admin/refresh/:provider/*')
   @Auth()
   @HttpCode(200)
-  async refresh(
+  refresh(
     @Param('provider') provider: string,
     @Req() req: FastifyRequest,
     @Query('lang') lang?: string,
   ): Promise<EnrichmentResult> {
     const id = decodeURIComponent((req.params as Record<string, string>)['*'])
-    const data = await this.enrichmentService.refresh(provider, id, lang)
-    return data
+    return this.enrichmentService.refresh(provider, id, lang)
   }
 
   @Delete('admin/cache/:provider/*')
@@ -142,9 +141,8 @@ export class EnrichmentController {
 
   @Get('admin/providers')
   @Auth()
-  async providers(): Promise<ProviderMeta[]> {
-    const data = await this.enrichmentService.getProviders()
-    return data
+  providers(): Promise<ProviderMeta[]> {
+    return this.enrichmentService.getProviders()
   }
 
   @Get('admin/by-id/:id')

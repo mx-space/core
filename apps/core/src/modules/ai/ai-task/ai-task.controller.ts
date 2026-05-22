@@ -26,9 +26,8 @@ export class AiTaskController extends BaseTaskController {
 
   @Get('/group/:id')
   @Auth()
-  async getTasksByGroupId(@Param() params: StringIdDto) {
-    const data = await this.service.crud.getTasksByGroupId(params.id)
-    return data
+  getTasksByGroupId(@Param() params: StringIdDto) {
+    return this.service.crud.getTasksByGroupId(params.id)
   }
 
   @Delete('/group/:id')

@@ -79,29 +79,23 @@ export class SearchController {
 
   @Post('/rebuild')
   @Auth()
-  async rebuild(@Query() query: SearchRebuildQueryDto) {
-    const result = await this.searchService.rebuildSearchDocuments({
+  rebuild(@Query() query: SearchRebuildQueryDto) {
+    return this.searchService.rebuildSearchDocuments({
       force: query.force ?? false,
     })
-    return result
   }
 
   @Post('/rebuild/:refType/:refId')
   @Auth()
-  async rebuildOne(@Param() params: SearchRebuildRefParamDto) {
-    const result = await this.searchService.rebuildSingleRef(
-      params.refType,
-      params.refId,
-    )
-    return result
+  rebuildOne(@Param() params: SearchRebuildRefParamDto) {
+    return this.searchService.rebuildSingleRef(params.refType, params.refId)
   }
 
   @Get('/admin/documents')
   @Auth()
   @HttpCache.disable
-  async adminListDocuments(@Query() query: SearchAdminListDto) {
-    const result = await this.searchService.adminListDocuments(query)
-    return result
+  adminListDocuments(@Query() query: SearchAdminListDto) {
+    return this.searchService.adminListDocuments(query)
   }
 
   @Get('/:type')

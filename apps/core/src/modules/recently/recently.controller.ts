@@ -18,15 +18,13 @@ export class RecentlyController {
   constructor(private readonly recentlyService: RecentlyService) {}
 
   @Get('/latest')
-  async getLatestOne() {
-    const data = await this.recentlyService.getLatestOne()
-    return data
+  getLatestOne() {
+    return this.recentlyService.getLatestOne()
   }
 
   @Get('/all')
-  async getAll() {
-    const data = await this.recentlyService.getAll()
-    return data
+  getAll() {
+    return this.recentlyService.getAll()
   }
 
   @Get('/')
@@ -39,24 +37,19 @@ export class RecentlyController {
       })
     }
 
-    const data = await this.recentlyService.getOffset({ before, after, size })
-    return data
+    return this.recentlyService.getOffset({ before, after, size })
   }
 
   @Get('/:id')
-  async getOne(@Param() { id }: EntityIdDto) {
-    const data = await this.recentlyService.getOne(id)
-    return data
+  getOne(@Param() { id }: EntityIdDto) {
+    return this.recentlyService.getOne(id)
   }
 
   @Post('/')
   @HTTPDecorators.Idempotence()
   @Auth()
-  async create(@Body() body: RecentlyDto) {
-    const created = await this.recentlyService.create(
-      body as unknown as RecentlyModel,
-    )
-    return created
+  create(@Body() body: RecentlyDto) {
+    return this.recentlyService.create(body as unknown as RecentlyModel)
   }
 
   @Delete('/:id')

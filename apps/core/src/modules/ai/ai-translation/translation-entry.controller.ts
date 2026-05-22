@@ -40,21 +40,16 @@ export class TranslationEntryController {
 
   @Patch('/:id')
   @Auth()
-  async updateEntry(
-    @Param() params: EntityIdDto,
-    @Body() body: UpdateEntryDto,
-  ) {
-    const data = await this.translationEntryService.updateEntry(
+  updateEntry(@Param() params: EntityIdDto, @Body() body: UpdateEntryDto) {
+    return this.translationEntryService.updateEntry(
       params.id,
       body.translatedText,
     )
-    return data
   }
 
   @Delete('/:id')
   @Auth()
-  async deleteEntry(@Param() params: EntityIdDto) {
-    const data = await this.translationEntryService.deleteEntry(params.id)
-    return data
+  deleteEntry(@Param() params: EntityIdDto) {
+    return this.translationEntryService.deleteEntry(params.id)
   }
 }

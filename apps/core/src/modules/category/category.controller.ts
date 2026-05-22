@@ -301,10 +301,9 @@ export class CategoryController {
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: CategoryDto) {
+  create(@Body() body: CategoryDto) {
     const { name, slug } = body
-    const created = await this.categoryService.create(name, slug!)
-    return created
+    return this.categoryService.create(name, slug!)
   }
 
   @Put('/:id')
@@ -313,8 +312,7 @@ export class CategoryController {
     const { type, slug, name } = body
     const { id } = params
     await this.categoryService.update(id, { slug, type, name })
-    const updated = await this.categoryService.findById(id)
-    return updated
+    return this.categoryService.findById(id)
   }
 
   @Patch('/:id')
@@ -327,9 +325,7 @@ export class CategoryController {
 
   @Delete('/:id')
   @Auth()
-  async deleteCategory(@Param() params: EntityIdDto) {
-    const { id } = params
-    const result = await this.categoryService.deleteById(id)
-    return result
+  deleteCategory(@Param() params: EntityIdDto) {
+    return this.categoryService.deleteById(params.id)
   }
 }

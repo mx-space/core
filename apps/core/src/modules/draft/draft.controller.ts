@@ -24,9 +24,8 @@ export class DraftController {
 
   @Post('/')
   @Auth()
-  async create(@Body() body: CreateDraftDto) {
-    const created = await this.draftService.create(body)
-    return created
+  create(@Body() body: CreateDraftDto) {
+    return this.draftService.create(body)
   }
 
   @Get('/')
@@ -66,21 +65,17 @@ export class DraftController {
 
   @Get('/by-ref/:refType/new')
   @Auth()
-  async getNewDrafts(@Param() params: DraftRefTypeDto) {
-    const data = await this.draftService.findNewDrafts(
-      params.refType as DraftRefType,
-    )
-    return data
+  getNewDrafts(@Param() params: DraftRefTypeDto) {
+    return this.draftService.findNewDrafts(params.refType as DraftRefType)
   }
 
   @Get('/by-ref/:refType/:refId')
   @Auth()
-  async getByRef(@Param() params: DraftRefTypeAndIdDto) {
-    const draft = await this.draftService.findByRef(
+  getByRef(@Param() params: DraftRefTypeAndIdDto) {
+    return this.draftService.findByRef(
       params.refType as DraftRefType,
       params.refId,
     )
-    return draft
   }
 
   @Get('/:id')
@@ -95,9 +90,8 @@ export class DraftController {
 
   @Put('/:id')
   @Auth()
-  async update(@Param() params: EntityIdDto, @Body() body: UpdateDraftDto) {
-    const updated = await this.draftService.update(params.id, body)
-    return updated
+  update(@Param() params: EntityIdDto, @Body() body: UpdateDraftDto) {
+    return this.draftService.update(params.id, body)
   }
 
   @Delete('/:id')
@@ -109,22 +103,17 @@ export class DraftController {
 
   @Get('/:id/history')
   @Auth()
-  async getHistory(@Param() params: EntityIdDto) {
-    const data = await this.draftService.getHistory(params.id)
-    return data
+  getHistory(@Param() params: EntityIdDto) {
+    return this.draftService.getHistory(params.id)
   }
 
   @Get('/:id/history/:version')
   @Auth()
-  async getHistoryVersion(
+  getHistoryVersion(
     @Param() params: EntityIdDto,
     @Param() versionParams: RestoreVersionDto,
   ) {
-    const data = await this.draftService.getHistoryVersion(
-      params.id,
-      versionParams.version,
-    )
-    return data
+    return this.draftService.getHistoryVersion(params.id, versionParams.version)
   }
 
   @Post('/:id/restore/:version')

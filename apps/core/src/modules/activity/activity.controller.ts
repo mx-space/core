@@ -73,27 +73,22 @@ export class ActivityController {
 
   @Get('/likes')
   @Auth()
-  async getLikeActivities(@Query() pager: BasicPagerDto) {
+  getLikeActivities(@Query() pager: BasicPagerDto) {
     const { page, size } = pager
-
-    const result = await this.service.getLikeActivities(page, size)
-    return result
+    return this.service.getLikeActivities(page, size)
   }
 
   @Get('/')
   @Auth()
-  async activities(@Query() pager: ActivityQueryDto) {
+  activities(@Query() pager: ActivityQueryDto) {
     const { page, size, type } = pager
 
     switch (type) {
       case Activity.Like: {
-        const result = await this.service.getLikeActivities(page, size)
-        return result
+        return this.service.getLikeActivities(page, size)
       }
-
       case Activity.ReadDuration: {
-        const result = await this.service.getReadDurationActivities(page, size)
-        return result
+        return this.service.getReadDurationActivities(page, size)
       }
     }
     return null
@@ -130,22 +125,20 @@ export class ActivityController {
 
   @Delete('/:type')
   @Auth()
-  async deletePresence(
+  deletePresence(
     @Param() params: ActivityTypeParamsDto,
     @Body() body: ActivityDeleteDto,
   ) {
-    const result = await this.service.deleteActivityByType(
+    return this.service.deleteActivityByType(
       params.type,
       body.before ? new Date(body.before) : new Date(),
     )
-    return result
   }
 
   @Auth()
   @Delete('/all')
-  async deleteAllPresence() {
-    const result = await this.service.deleteAll()
-    return result
+  deleteAllPresence() {
+    return this.service.deleteAll()
   }
 
   @Get('/rooms')
@@ -217,8 +210,7 @@ export class ActivityController {
     const top = query.top ?? 5
     const days = query.days ?? 14
     const result = await this.service.getTopReadings(top, days)
-    const data = await this.translateReadingList(result, lang)
-    return data
+    return this.translateReadingList(result, lang)
   }
 
   @Auth()
@@ -236,8 +228,7 @@ export class ActivityController {
       endAt,
       limit,
     )
-    const data = await this.translateReadingList(result, lang)
-    return data
+    return this.translateReadingList(result, lang)
   }
 
   private async translateReadingList(

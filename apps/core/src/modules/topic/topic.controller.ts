@@ -157,16 +157,14 @@ export class TopicBaseController {
   @Post('/')
   @HTTPDecorators.Idempotence()
   @Auth()
-  async create(@Body() body: TopicCreateInput) {
-    const created = await this.repository.create(body)
-    return created
+  create(@Body() body: TopicCreateInput) {
+    return this.repository.create(body)
   }
 
   @Put('/:id')
   @Auth()
-  async update(@Body() body: TopicCreateInput, @Param() param: EntityIdDto) {
-    const updated = await this.repository.update(param.id, body)
-    return updated
+  update(@Body() body: TopicCreateInput, @Param() param: EntityIdDto) {
+    return this.repository.update(param.id, body)
   }
 
   @Patch('/:id')

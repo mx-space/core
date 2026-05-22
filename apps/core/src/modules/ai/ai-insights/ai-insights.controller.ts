@@ -42,9 +42,8 @@ export class AiInsightsController {
 
   @Post('/task')
   @Auth()
-  async createInsightsTask(@Body() body: CreateInsightsTaskDto) {
-    const data = await this.taskService.createInsightsTask(body)
-    return data
+  createInsightsTask(@Body() body: CreateInsightsTaskDto) {
+    return this.taskService.createInsightsTask(body)
   }
 
   @Post('/task/translate')
@@ -62,19 +61,17 @@ export class AiInsightsController {
         message: 'targetLang must differ from source lang',
       })
     }
-    const data = await this.taskService.createInsightsTranslationTask({
+    return this.taskService.createInsightsTranslationTask({
       refId: body.refId,
       sourceInsightsId: source.id!,
       targetLang: body.targetLang,
     })
-    return data
   }
 
   @Get('/ref/:id')
   @Auth()
-  async getInsightsByRefId(@Param() params: EntityIdDto) {
-    const data = await this.service.getInsightsByRefId(params.id)
-    return data
+  getInsightsByRefId(@Param() params: EntityIdDto) {
+    return this.service.getInsightsByRefId(params.id)
   }
 
   @Get('/')
@@ -102,19 +99,17 @@ export class AiInsightsController {
 
   @Patch('/:id')
   @Auth()
-  async updateInsights(
+  updateInsights(
     @Param() params: EntityIdDto,
     @Body() body: UpdateInsightsDto,
   ) {
-    const data = await this.service.updateInsightsInDb(params.id, body.content)
-    return data
+    return this.service.updateInsightsInDb(params.id, body.content)
   }
 
   @Delete('/:id')
   @Auth()
-  async deleteInsights(@Param() params: EntityIdDto) {
-    const data = await this.service.deleteInsightsInDb(params.id)
-    return data
+  deleteInsights(@Param() params: EntityIdDto) {
+    return this.service.deleteInsightsInDb(params.id)
   }
 
   @Get('/article/:id')

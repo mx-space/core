@@ -40,16 +40,14 @@ export class AiSummaryController {
 
   @Post('/task')
   @Auth()
-  async createSummaryTask(@Body() body: CreateSummaryTaskDto) {
-    const data = await this.taskService.createSummaryTask(body)
-    return data
+  createSummaryTask(@Body() body: CreateSummaryTaskDto) {
+    return this.taskService.createSummaryTask(body)
   }
 
   @Get('/ref/:id')
   @Auth()
-  async getSummaryByRefId(@Param() params: EntityIdDto) {
-    const data = await this.service.getSummariesByRefId(params.id)
-    return data
+  getSummaryByRefId(@Param() params: EntityIdDto) {
+    return this.service.getSummariesByRefId(params.id)
   }
 
   @Get('/')
@@ -77,19 +75,14 @@ export class AiSummaryController {
 
   @Patch('/:id')
   @Auth()
-  async updateSummary(
-    @Param() params: EntityIdDto,
-    @Body() body: UpdateSummaryDto,
-  ) {
-    const data = await this.service.updateSummaryInDb(params.id, body.summary)
-    return data
+  updateSummary(@Param() params: EntityIdDto, @Body() body: UpdateSummaryDto) {
+    return this.service.updateSummaryInDb(params.id, body.summary)
   }
 
   @Delete('/:id')
   @Auth()
-  async deleteSummary(@Param() params: EntityIdDto) {
-    const data = await this.service.deleteSummaryInDb(params.id)
-    return data
+  deleteSummary(@Param() params: EntityIdDto) {
+    return this.service.deleteSummaryInDb(params.id)
   }
 
   @Get('/article/:id')

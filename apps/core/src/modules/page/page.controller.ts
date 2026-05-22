@@ -200,9 +200,8 @@ export class PageController {
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: PageDto) {
-    const created = await this.pageService.create(body as unknown as PageModel)
-    return created
+  create(@Body() body: PageDto) {
+    return this.pageService.create(body as unknown as PageModel)
   }
 
   @Put('/:id')
@@ -210,8 +209,7 @@ export class PageController {
   async modify(@Body() body: PageDto, @Param() params: EntityIdDto) {
     const { id } = params
     await this.pageService.updateById(id, body as unknown as PageModel)
-    const updated = await this.pageService.findById(id)
-    return updated
+    return this.pageService.findById(id)
   }
 
   @Patch('/:id')

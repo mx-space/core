@@ -41,32 +41,26 @@ export class AiTranslationController {
 
   @Post('/task')
   @Auth()
-  async createTranslationTask(@Body() body: CreateTranslationTaskDto) {
-    const data = await this.taskService.createTranslationTask(body)
-    return data
+  createTranslationTask(@Body() body: CreateTranslationTaskDto) {
+    return this.taskService.createTranslationTask(body)
   }
 
   @Post('/task/batch')
   @Auth()
-  async createTranslationBatchTask(
-    @Body() body: CreateTranslationBatchTaskDto,
-  ) {
-    const data = await this.taskService.createTranslationBatchTask(body)
-    return data
+  createTranslationBatchTask(@Body() body: CreateTranslationBatchTaskDto) {
+    return this.taskService.createTranslationBatchTask(body)
   }
 
   @Post('/task/all')
   @Auth()
-  async createTranslationAllTask(@Body() body: CreateTranslationAllTaskDto) {
-    const data = await this.taskService.createTranslationAllTask(body)
-    return data
+  createTranslationAllTask(@Body() body: CreateTranslationAllTaskDto) {
+    return this.taskService.createTranslationAllTask(body)
   }
 
   @Get('/ref/:id')
   @Auth()
-  async getTranslationsByRefId(@Param() params: EntityIdDto) {
-    const data = await this.service.getTranslationsByRefId(params.id)
-    return data
+  getTranslationsByRefId(@Param() params: EntityIdDto) {
+    return this.service.getTranslationsByRefId(params.id)
   }
 
   @Get('/grouped')
@@ -81,37 +75,30 @@ export class AiTranslationController {
 
   @Patch('/:id')
   @Auth()
-  async updateTranslation(
+  updateTranslation(
     @Param() params: EntityIdDto,
     @Body() body: UpdateTranslationDto,
   ) {
-    const data = await this.service.updateTranslation(params.id, body)
-    return data
+    return this.service.updateTranslation(params.id, body)
   }
 
   @Delete('/:id')
   @Auth()
-  async deleteTranslation(@Param() params: EntityIdDto) {
-    const data = await this.service.deleteTranslation(params.id)
-    return data
+  deleteTranslation(@Param() params: EntityIdDto) {
+    return this.service.deleteTranslation(params.id)
   }
 
   @Get('/article/:id')
-  async getArticleTranslation(
+  getArticleTranslation(
     @Param() params: EntityIdDto,
     @Query() query: GetTranslationQueryDto,
   ) {
-    const data = await this.service.getTranslationForArticle(
-      params.id,
-      query.lang,
-    )
-    return data
+    return this.service.getTranslationForArticle(params.id, query.lang)
   }
 
   @Get('/article/:id/languages')
-  async getAvailableLanguages(@Param() params: EntityIdDto) {
-    const data = await this.service.getAvailableLanguagesForArticle(params.id)
-    return data
+  getAvailableLanguages(@Param() params: EntityIdDto) {
+    return this.service.getAvailableLanguagesForArticle(params.id)
   }
 
   @Get('/article/:id/generate')
