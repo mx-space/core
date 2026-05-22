@@ -143,18 +143,21 @@ information that has no `data` counterpart.
 ### Success envelope (list / aggregate / activity)
 
 Each item carries its translated fields in place. `meta.translation`
-carries one slim metadata block per item id:
+carries one slim metadata block **per actually-translated item id**;
+items where `isTranslated === false` are omitted entirely (this matches
+the semantics of the existing `collectArticleTranslations` helper).
 
 ```jsonc
 {
   "data": [
     { "id": "X1", "title": "…(translated)", "topic": { "name": "…(translated)" }, … },
     { "id": "X2", "title": "…(translated)", … }
+    // X3 (untranslated) is in `data` but produces no `meta.translation` entry
   ],
   "meta": {
     "translation": {
-      "X1": { "article": { "is_translated": true, "source_lang": "zh", … } },
-      "X2": { "article": { "is_translated": false, "source_lang": "zh", "available_translations": ["en"] } }
+      "X1": { "article": { "is_translated": true, "source_lang": "zh", "target_lang": "en", … } },
+      "X2": { "article": { "is_translated": true, "source_lang": "zh", "target_lang": "en", … } }
     }
   }
 }
@@ -172,9 +175,21 @@ carries one slim metadata block per item id:
 - `meta.translation.<id>.fields` (entry/dict translations now overwrite
   data — there is no `fields` block any more)
 
-Sub-entity entries (topic/category) and cached-title translations
-(`related[].title`, aggregate item titles, etc.) do **not** emit any
-`meta.translation` entry — they have no per-row metadata to expose.
+**Meta-emission rules:**
+- *Sub-entity entry translations* (`topic.*`, `category.name`, `note.mood`,
+  `note.weather`) overwrite their nested data location but never emit a
+  `meta.translation` entry — they have no per-row metadata to expose.
+- *Article-row translations* (anything sourced from `ai_translations`)
+  may emit a slim `<articleId>.article` block when that row’s metadata
+  is available (`sourceLang/targetLang/translatedAt/model/…`). This
+  includes aggregate / activity / category list items where the
+  underlying lookup goes through `ai_translations` even if only the
+  `title` field is consumed.
+- Pure cached-title overlays that have no per-row metadata available at
+  the call site (e.g. legacy `getCachedTitles` returning `Map<id,string>`
+  without the row object) skip the meta entry. Where the controller can
+  cheaply produce both the translated title *and* the metadata block,
+  prefer doing so for consistency.
 
 ## Zod Schema Changes
 
@@ -253,11 +268,13 @@ applyArticleTranslationInPlace<T extends Record<string, unknown>>(
   Internally:
 
   ```ts
-  if (translatedContent) {
+  if (translatedContent != null) {
     target.content = translatedContent
     target.contentFormat = translatedContentFormat ?? target.contentFormat
   }
   ```
+  (Use a nullish check, not a truthy check — an empty-string translated
+  body is still a legitimate overwrite candidate.)
 - Mutates `target` and returns it (for spread-readability at call sites).
 
 ### 3. `applyTranslationEntriesInPlace(target, maps, rules)`
@@ -355,11 +372,17 @@ viewing without a second roundtrip.
 
 ### post.controller.ts
 
-| Endpoint | Overwritten in `data` | Entry lookups | `meta.translation` |
-|----------|-----------------------|---------------|---------------------|
-| `GET /:category/:slug` | `title/text/content/contentFormat/summary/tags`; `related[].title`; `category.name` | `category.name` (entity, by post.category.id) | `<postId>.article` slim |
+The "Overwritten in response" column lists fields that the controller
+translates in place — most are in `data`, but `related[].title` is the
+canonical title inside `meta.related` (which is itself a meta field
+already; translating it there is the in-place action and does not
+duplicate anything).
+
+| Endpoint | Overwritten in response | Entry lookups | `meta.translation` |
+|----------|-------------------------|---------------|---------------------|
+| `GET /:category/:slug` | `data.{title,text,content,contentFormat,summary,tags}`; `data.category.name`; **`meta.related[].title`** | `category.name` (entity, by post.category.id) | `<postId>.article` slim |
 | `GET /:id` (auth) | same | same | same |
-| `GET /` | item `title/text/content/contentFormat`; item `category.name` | `category.name` (entity, ids from items) | translated items only |
+| `GET /` | item `data[].{title,text,content,contentFormat}`; item `data[].category.name` | `category.name` (entity, ids from items) | translated items only |
 | `GET /latest` | item same | same | translated items only |
 
 Existing `withMeta(...)` call sites stay; `buildArticleTranslationMeta`
@@ -468,20 +491,49 @@ Changes:
    `sourceLang/targetLang/translatedAt/model`. Add an extra assertion
    that the *translated* `data.title/text/content` are present.
 
-### Activity reading items — adapter rule
+### Nested-array adapter rules (aggregate / activity / etc.)
 
-`/activity/reading/top` and `/activity/reading/rank` items use
-`refId` (not `id`) as their stable identifier:
-[`activity.controller.ts:225`](../../apps/core/src/modules/activity/activity.controller.ts).
-The generic `flattenMetaIntoItem` at
-[`response-adapter.ts:128`](../../packages/api-client/legacy/response-adapter.ts)
-keys translation lookups by `item.id` and ignores items lacking it, so
-reading-ranked items would lose their `translationMeta` under the
-default flow.
+The generic flattening in `transformLegacyData` only walks three shapes:
+a bare array, `{ data: [...] }`, and a single item. Many V3 endpoints
+return *nested* arrays at non-`data` keys — `notes[]`, `posts[]`,
+`combined[]`, `data.notes[]`, `data.posts[]`, `objects[<type>][]`,
+`like[]`, `comment[]`, `recentPost[]`, `recentNote[]`. The existing
+`aggregateTopRule` already inspects these arrays to strip bodies but
+ignores `ctx.meta`, so per-item `translationMeta` flatten is currently
+lost on those endpoints.
 
-Add a dedicated rule (`READING_RANK_REGEX`) that, before generic
-flattening, treats `refId` as the lookup id for `meta.translation`
-matching:
+Add a small adapter helper and a dedicated rule per shape:
+
+```ts
+function flattenNestedArrays(raw: any, meta: any, keys: string[]) {
+  if (!isPlainObject(raw)) return raw
+  const out = { ...raw }
+  for (const key of keys) {
+    if (Array.isArray(out[key])) {
+      out[key] = out[key].map((it: any) => flattenMetaIntoItem(it, meta))
+    }
+  }
+  return out
+}
+```
+
+Then add rules for every endpoint that returns nested item arrays
+where each item is article-row translated:
+
+| Endpoint (regex) | Arrays to flatten | Item id field |
+|---|---|---|
+| `/aggregate/top` | `notes`, `posts` | `id` |
+| `/aggregate/latest` (separate mode) | `notes`, `posts`; combined mode already produces a bare array | `id` |
+| `/aggregate/timeline` | `data.notes`, `data.posts` | `id` |
+| `/aggregate/stat/top-articles` | `data` (top-level array — already covered by generic flow) | `id` |
+| `/activity/rooms` | `objects.<type>` for each type | `id` |
+| `/activity/recent` | `like`, `comment`, `recentPost`, `recentNote` | `id` (each item is an article-shaped record with `id`) |
+| `/activity/reading/top`, `/activity/reading/rank` | `data` | **`refId`** (use a synthesized-`id` walker; see below) |
+| `/activity/last-year/publication` | per shape returned by `getRecentActivities`-style aggregation | `id` |
+
+`/activity/reading/{top,rank}` items use `refId` (not `id`) as their
+stable identifier ([`activity.controller.ts:225`](../../apps/core/src/modules/activity/activity.controller.ts)).
+Use a synthesized-id wrapper:
 
 ```ts
 const READING_RANK_REGEX = /^\/activity\/reading\/(top|rank)$/
@@ -499,8 +551,13 @@ const readingRankRule: Rule = {
 }
 ```
 
-(Implementation detail; the goal is "translation metadata reaches the
-reading item via `refId`".)
+For the remaining endpoints, define one rule per regex and dispatch to
+`flattenNestedArrays(raw, ctx.meta, [...])`. Update the existing
+`aggregateTopRule` to compose with the new helper rather than ignore
+`ctx.meta`.
+
+This closes the V1-wire parity gap that smoke-diff would otherwise
+expose on every nested-array endpoint.
 
 ### smoke-diff harness
 
@@ -574,7 +631,7 @@ For note detail: assert `next/prev` translations also overwrite in place.
      new helpers
    - `apps/core/src/modules/ai/ai-translation/translation-entry.service.ts`
      — expose `fetchByLookups` (or rename existing entry point)
-   - all 9 affected controllers
+   - all 8 affected controllers (post, note, page, topic, category, search, aggregate, activity)
    - `packages/api-client/legacy/response-adapter.ts`
    - bump `@mx-space/api-client` to `5.0.2-next.9`
    - new tests + updated snapshots
