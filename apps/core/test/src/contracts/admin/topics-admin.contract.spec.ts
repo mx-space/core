@@ -16,7 +16,7 @@ import { assertHasKeys, assertNoLegacyKeys } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { authPassHeader } from '../../../mock/guard/auth.guard'
 import { eventEmitterProvider } from '../../../mock/processors/event.mock'
-import { translationProvider } from '../../../mock/processors/translation.mock'
+import { translationEntryProvider } from '../../../mock/processors/translation.mock'
 
 const fixtureTopic = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000800',
@@ -81,7 +81,7 @@ describe('TopicController admin contract (e2e)', () => {
     controllers: [TopicBaseController],
     providers: [
       topicRepoProvider,
-      translationProvider,
+      translationEntryProvider,
       ...eventEmitterProvider,
     ],
   })

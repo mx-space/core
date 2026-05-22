@@ -15,9 +15,13 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
-import type { EnrichmentEntry } from '~/common/response/meta.types'
+import type {
+  ArticleTranslation,
+  EnrichmentEntry,
+} from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import {
+  applyArticleTranslationInPlace,
   type ArticleTranslationInput,
   buildArticleTranslationMeta,
   TranslationService,
@@ -62,12 +66,21 @@ export class PageController {
       }),
     )
 
-    const translationMap =
+    const { results: translationResults, meta: translationMeta } =
       await this.translationService.collectArticleTranslations({
         articles: translationInputs,
         targetLang: lang,
-        fields: ['title', 'text', 'subtitle'],
+        fields: ['title', 'text', 'subtitle', 'content', 'contentFormat'],
       })
+
+    for (const doc of result.data) {
+      const tr = translationResults.get(String(doc.id))
+      if (tr?.isTranslated) {
+        applyArticleTranslationInPlace(doc as Record<string, any>, tr as any, {
+          fields: ['title', 'text', 'subtitle', 'content', 'contentFormat'],
+        })
+      }
+    }
 
     const metaBuilder = new MetaObjectBuilder().view('card').pagination({
       page: result.pagination.currentPage,
@@ -75,23 +88,57 @@ export class PageController {
       total: result.pagination.total,
       totalPages: result.pagination.totalPage,
     })
-    if (translationMap.size > 0) metaBuilder.translation(translationMap)
+    if (translationMeta.size > 0) metaBuilder.translation(translationMeta)
 
     return withMeta(result.data, metaBuilder.build())
   }
 
   @Get('/:id')
   @Auth()
-  async getPageById(@Param() params: EntityIdDto) {
+  async getPageById(@Param() params: EntityIdDto, @Lang() lang?: string) {
     const page = await this.pageService.findById(params.id)
     if (!page) {
       throw createAppException(AppErrorCode.PAGE_NOT_FOUND, { id: params.id })
     }
+
+    const translationResult = await this.translationService.translateArticle({
+      articleId: String(page.id),
+      targetLang: lang,
+      originalData: {
+        title: page.title,
+        text: page.text,
+        subtitle: page.subtitle,
+      },
+    })
+
+    applyArticleTranslationInPlace(
+      page as Record<string, any>,
+      translationResult,
+      {
+        fields: ['title', 'text', 'subtitle', 'content', 'contentFormat'],
+      },
+    )
+
     const { enrichments, ...pageData } =
       await this.enrichmentService.attachEnrichments(page)
+
     const metaBuilder = new MetaObjectBuilder().enrichments(
       enrichments as Record<string, EnrichmentEntry>,
     )
+
+    const translationMap = new Map([
+      [
+        String(page.id),
+        {
+          article: buildArticleTranslationMeta(
+            translationResult,
+            lang,
+          ) as ArticleTranslation,
+        },
+      ],
+    ])
+    metaBuilder.translation(translationMap)
+
     return withMeta(pageData, metaBuilder.build())
   }
 
@@ -119,6 +166,14 @@ export class PageController {
       },
     })
 
+    applyArticleTranslationInPlace(
+      page as Record<string, any>,
+      translationResult,
+      {
+        fields: ['title', 'text', 'subtitle', 'content', 'contentFormat'],
+      },
+    )
+
     const { enrichments, ...pageData } =
       await this.enrichmentService.attachEnrichments(page)
 
@@ -126,11 +181,18 @@ export class PageController {
       .view('detail')
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
-    metaBuilder.translation({
-      article: buildArticleTranslationMeta(translationResult, lang, {
-        subtitle: translationResult.subtitle,
-      }) as any,
-    })
+    const translationMap = new Map([
+      [
+        String(page.id),
+        {
+          article: buildArticleTranslationMeta(
+            translationResult,
+            lang,
+          ) as ArticleTranslation,
+        },
+      ],
+    ])
+    metaBuilder.translation(translationMap)
 
     return withMeta(pageData, metaBuilder.build())
   }

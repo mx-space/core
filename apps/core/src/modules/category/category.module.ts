@@ -1,7 +1,8 @@
-import { Global, Module } from '@nestjs/common'
+import { forwardRef, Global, Module } from '@nestjs/common'
 
 import { CATEGORY_SERVICE_TOKEN } from '~/constants/injection.constant'
 
+import { AiModule } from '../ai/ai.module'
 import { SlugTrackerModule } from '../slug-tracker/slug-tracker.module'
 import { CategoryController } from './category.controller'
 import { CategoryRepository } from './category.repository'
@@ -16,6 +17,6 @@ import { CategoryService } from './category.service'
   ],
   exports: [CategoryService, CategoryRepository, CATEGORY_SERVICE_TOKEN],
   controllers: [CategoryController],
-  imports: [SlugTrackerModule],
+  imports: [SlugTrackerModule, forwardRef(() => AiModule)],
 })
 export class CategoryModule {}

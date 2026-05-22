@@ -3,11 +3,11 @@ import { describe, expect, test } from 'vitest'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { TopicBaseController } from '~/modules/topic/topic.controller'
 import { TopicRepository } from '~/modules/topic/topic.repository'
-import { TranslationService } from '~/processors/helper/helper.translation.service'
 
 import { assertNoLegacyKeys, assertPgTimestamps } from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
 import { eventEmitterProvider } from '../../mock/processors/event.mock'
+import { translationEntryProvider } from '../../mock/processors/translation.mock'
 
 const fixtureTopic = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000080',
@@ -58,19 +58,12 @@ const topicRepoProvider = {
   },
 }
 
-const translationServiceProvider = {
-  provide: TranslationService,
-  useValue: {
-    getTopicTranslationFields: async () => new Map(),
-  },
-}
-
 describe('TopicController contract (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [TopicBaseController],
     providers: [
       topicRepoProvider,
-      translationServiceProvider,
+      translationEntryProvider,
       ...eventEmitterProvider,
     ],
   })

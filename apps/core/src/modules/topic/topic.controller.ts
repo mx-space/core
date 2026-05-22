@@ -17,9 +17,12 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
-import type { EntryTranslation } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { TranslationService } from '~/processors/helper/helper.translation.service'
+import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
+import {
+  applyTranslationEntriesInPlace,
+  type EntryRule,
+} from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
@@ -27,59 +30,108 @@ import { TopicRepository } from './topic.repository'
 import { TopicSlugParamsDto } from './topic.schema'
 import type { TopicCreateInput, TopicPatchInput } from './topic.types'
 
+const TOPIC_ENTRY_RULES: ReadonlyArray<EntryRule> = [
+  { path: 'name', keyPath: 'topic.name', mode: 'entity', idField: 'id' },
+  {
+    path: 'introduce',
+    keyPath: 'topic.introduce',
+    mode: 'entity',
+    idField: 'id',
+  },
+  {
+    path: 'description',
+    keyPath: 'topic.description',
+    mode: 'entity',
+    idField: 'id',
+  },
+]
+
 @ApiController('topics')
 export class TopicBaseController {
   constructor(
     protected readonly repository: TopicRepository,
-    private readonly translationService: TranslationService,
+    private readonly translationEntryService: TranslationEntryService,
   ) {}
 
   @Get('/all')
   async getAll(@Lang() lang?: string) {
     const data = await this.repository.findAll()
-    const metaBuilder = new MetaObjectBuilder().view('card')
 
     if (lang && data.length) {
-      const translationMap = await this.buildTopicTranslationMap(data, lang)
-      if (translationMap.size > 0) {
-        metaBuilder.translation(translationMap)
+      const ids = new Set(data.map((t) => String(t.id)))
+      const entryMaps = await this.translationEntryService.getTranslationsBatch(
+        lang,
+        {
+          entityLookups: [
+            { keyPath: 'topic.name', lookupKeys: ids },
+            { keyPath: 'topic.introduce', lookupKeys: ids },
+            { keyPath: 'topic.description', lookupKeys: ids },
+          ],
+        },
+      )
+      for (const topic of data) {
+        applyTranslationEntriesInPlace(
+          topic as any,
+          entryMaps,
+          TOPIC_ENTRY_RULES,
+        )
       }
     }
 
-    return withMeta(data, metaBuilder.build())
-  }
-
-  private async buildTopicTranslationMap(
-    topics: { id: unknown }[],
-    lang: string,
-  ): Promise<Map<string, EntryTranslation>> {
-    const fieldsMap = await this.translationService.getTopicTranslationFields(
-      lang,
-      topics.map((topic) => String(topic.id)),
-    )
-    const map = new Map<string, EntryTranslation>()
-    for (const [id, fields] of fieldsMap) {
-      map.set(id, { fields })
-    }
-    return map
+    return data
   }
 
   @Get('/slug/:slug')
-  async getTopicByTopic(@Param() { slug }: TopicSlugParamsDto) {
+  async getTopicByTopic(
+    @Param() { slug }: TopicSlugParamsDto,
+    @Lang() lang?: string,
+  ) {
     slug = slugify(slug)
     const topic = await this.repository.findBySlug(slug)
     if (!topic) {
       throw createAppException(AppErrorCode.TOPIC_NOT_FOUND)
     }
+
+    if (lang) {
+      const id = String(topic.id)
+      const entryMaps = await this.translationEntryService.getTranslationsBatch(
+        lang,
+        {
+          entityLookups: [
+            { keyPath: 'topic.name', lookupKeys: new Set([id]) },
+            { keyPath: 'topic.introduce', lookupKeys: new Set([id]) },
+            { keyPath: 'topic.description', lookupKeys: new Set([id]) },
+          ],
+        },
+      )
+      applyTranslationEntriesInPlace(topic as any, entryMaps, TOPIC_ENTRY_RULES)
+    }
+
     return topic
   }
 
   @Get('/:id')
-  async get(@Param() param: EntityIdDto) {
+  async get(@Param() param: EntityIdDto, @Lang() lang?: string) {
     const data = await this.repository.findById(param.id)
     if (!data) {
       throw createAppException(AppErrorCode.TOPIC_NOT_FOUND, { id: param.id })
     }
+
+    if (lang) {
+      const id = String(data.id)
+      const entryMaps = await this.translationEntryService.getTranslationsBatch(
+        lang,
+        {
+          entityLookups: [
+            { keyPath: 'topic.name', lookupKeys: new Set([id]) },
+            { keyPath: 'topic.introduce', lookupKeys: new Set([id]) },
+            { keyPath: 'topic.description', lookupKeys: new Set([id]) },
+          ],
+        },
+      )
+      applyTranslationEntriesInPlace(data as any, entryMaps, TOPIC_ENTRY_RULES)
+    }
+
     return data
   }
 
