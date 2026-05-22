@@ -330,14 +330,7 @@ export class NoteController {
     @Query() query: NoteQueryDto,
     @Lang() lang?: string,
   ) {
-    const {
-      size,
-      page,
-      sort_by: sortBy,
-      sort_order: sortOrder,
-      year,
-      withSummary,
-    } = query
+    const { size, page, sortBy, sortOrder, year, withSummary } = query
 
     const result = await this.noteService.listPaginated(page, size, {
       visibleOnly: !isAuthenticated,
@@ -706,7 +699,7 @@ export class NoteController {
     @Lang() lang?: string,
   ) {
     const { id } = params
-    const { size, page, sort_by: sortBy, sort_order: sortOrder } = query
+    const { size, page, sortBy, sortOrder } = query
     const result = await this.noteService.getNotePaginationByTopicId(
       id,
       {

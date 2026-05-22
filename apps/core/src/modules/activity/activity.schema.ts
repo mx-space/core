@@ -107,7 +107,7 @@ export class UpdatePresenceDto extends createZodDto(UpdatePresenceSchema) {}
  * Get presence query schema
  */
 export const GetPresenceQuerySchema = z.object({
-  room_name: z.string().max(50),
+  roomName: z.string().max(50),
 })
 
 export class GetPresenceQueryDto extends createZodDto(GetPresenceQuerySchema) {}

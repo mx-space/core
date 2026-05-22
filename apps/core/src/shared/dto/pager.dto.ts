@@ -22,15 +22,17 @@ export type BasicPagerInput = z.infer<typeof BasicPagerSchema>
 
 /**
  * Sort-aware pager factory. Pass the column names this endpoint is allowed to
- * sort by; the resulting schema exposes `sort_by` (typed as `z.enum(sortKeys)`)
- * and `sort_order` (`'asc' | 'desc'`, default `'desc'`) on the wire.
+ * sort by; the resulting schema exposes `sortBy` (typed as `z.enum(sortKeys)`)
+ * and `sortOrder` (`'asc' | 'desc'`, default `'desc'`) inside core. On the
+ * wire both `sortBy=`/`sort_by=` are accepted (the global request-case
+ * normalization pipe folds snake_case query keys to camelCase before zod).
  */
 export const createPagerSchema = <TSort extends [string, ...string[]]>(
   sortKeys: TSort,
 ) =>
   BasicPagerSchema.extend({
-    sort_by: z.enum(sortKeys).optional(),
-    sort_order: z.enum(['asc', 'desc']).default('desc'),
+    sortBy: z.enum(sortKeys).optional(),
+    sortOrder: z.enum(['asc', 'desc']).default('desc'),
     year: z.coerce.number().int().optional(),
   })
 

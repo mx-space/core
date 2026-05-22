@@ -13,6 +13,7 @@ import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
+import { requestCaseNormalizationPipeInstance } from './common/request/case-normalization.pipe'
 import { extendedZodValidationPipeInstance } from './common/zod'
 import { AppMigrationsService } from './database/app-migrations/app-migrations.service'
 import { logger } from './global/consola.global'
@@ -79,7 +80,10 @@ export async function bootstrap() {
     app.useGlobalInterceptors(new LoggingInterceptor())
   }
 
-  app.useGlobalPipes(extendedZodValidationPipeInstance)
+  app.useGlobalPipes(
+    requestCaseNormalizationPipeInstance,
+    extendedZodValidationPipeInstance,
+  )
   !isTest &&
     app.useWebSocketAdapter(new RedisIoAdapter(app, app.get(RedisService)))
 

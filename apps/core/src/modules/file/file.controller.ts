@@ -350,7 +350,7 @@ export class FileController {
     @Query() query: RenameFileQueryDto,
   ) {
     const { type, name } = params
-    const { new_name } = query
-    await this.service.renameFile(type, name, new_name)
+    const { newName } = query
+    await this.service.renameFile(type, name, newName)
   }
 }

@@ -29,7 +29,7 @@ export class FileUploadDto extends createZodDto(FileUploadSchema) {}
  * Rename file query schema
  */
 export const RenameFileQuerySchema = z.object({
-  new_name: z.string(),
+  newName: z.string(),
 })
 
 export class RenameFileQueryDto extends createZodDto(RenameFileQuerySchema) {}

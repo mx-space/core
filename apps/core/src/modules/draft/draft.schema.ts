@@ -40,8 +40,8 @@ export class UpdateDraftDto extends createZodDto(UpdateDraftSchema) {}
 export const DraftPagerSchema = z.object({
   size: zPaginationSize,
   page: zPaginationPage,
-  sort_by: z.string().optional(),
-  sort_order: z.enum(['asc', 'desc']).default('desc'),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
   refType: z.enum(DraftRefType).optional(),
   hasRef: zCoerceBoolean.optional(),
 })

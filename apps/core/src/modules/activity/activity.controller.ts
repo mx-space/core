@@ -106,7 +106,7 @@ export class ActivityController {
   @Get('/presence')
   @HTTPDecorators.SkipLogging
   async getPresence(@Query() query: GetPresenceQueryDto) {
-    const roomPresence = await this.service.getRoomPresence(query.room_name)
+    const roomPresence = await this.service.getRoomPresence(query.roomName)
 
     const readerIds = roomPresence
       .map((item) => item.readerId)
