@@ -241,37 +241,16 @@ export class NoteController {
       }
     }
 
-    const translationMap = new Map<string, EntryTranslation>()
+    const translationInputs: ArticleTranslationInput[] = result.data
+      .filter((doc) => typeof doc.text === 'string')
+      .map((doc) => this.toArticleTranslationInput(doc))
 
-    if (lang && result.data.length) {
-      const translationInputs: ArticleTranslationInput[] = result.data
-        .filter((doc) => typeof doc.text === 'string')
-        .map((doc) => this.toArticleTranslationInput(doc))
-
-      if (translationInputs.length) {
-        const translationResults =
-          await this.translationService.translateArticleList({
-            articles: translationInputs,
-            targetLang: lang,
-          })
-
-        for (const [id, translation] of translationResults) {
-          if (translation?.isTranslated) {
-            translationMap.set(id, {
-              article: {
-                isTranslated: translation.isTranslated,
-                sourceLang: translation.sourceLang,
-                targetLang: lang,
-                title: translation.title,
-                text: translation.text,
-                content: translation.content,
-                contentFormat: translation.contentFormat,
-              },
-            })
-          }
-        }
-      }
-    }
+    const translationMap =
+      await this.translationService.collectArticleTranslations({
+        articles: translationInputs,
+        targetLang: lang,
+        fields: ['title', 'text', 'content', 'contentFormat'],
+      })
 
     if (withSummary) {
       const SUMMARY_MAX_LENGTH = 150
@@ -407,33 +386,18 @@ export class NoteController {
       createdAt: doc.createdAt,
     }))
 
-    const translationMap = new Map<string, EntryTranslation>()
-
-    if (lang && listData.length) {
-      const translationResults =
-        await this.translationService.translateArticleList({
-          articles: listData.map((item) => ({
-            id: String(item.id),
-            title: item.title,
-            text: '',
-            createdAt: item.createdAt,
-            modifiedAt: null,
-          })),
-          targetLang: lang,
-        })
-
-      for (const [id, translation] of translationResults) {
-        if (translation?.isTranslated) {
-          translationMap.set(id, {
-            article: {
-              isTranslated: translation.isTranslated,
-              title: translation.title,
-              targetLang: lang,
-            },
-          })
-        }
-      }
-    }
+    const translationMap =
+      await this.translationService.collectArticleTranslations({
+        articles: listData.map((item) => ({
+          id: String(item.id),
+          title: item.title,
+          text: '',
+          createdAt: item.createdAt,
+          modifiedAt: null,
+        })),
+        targetLang: lang,
+        fields: ['title'],
+      })
 
     const metaBuilder = new MetaObjectBuilder().view('card')
     if (translationMap.size > 0) {
@@ -603,31 +567,18 @@ export class NoteController {
       }
     }
 
-    const translationMap = new Map<string, EntryTranslation>()
-    if (lang && result.data.length) {
-      const translationResults =
-        await this.translationService.translateArticleList({
-          articles: result.data.map((doc) => ({
-            id: String(doc.id),
-            title: doc.title,
-            text: '',
-            createdAt: doc.createdAt,
-            modifiedAt: doc.modifiedAt,
-          })),
-          targetLang: lang,
-        })
-      for (const [id, translation] of translationResults) {
-        if (translation?.isTranslated) {
-          translationMap.set(id, {
-            article: {
-              isTranslated: translation.isTranslated,
-              title: translation.title,
-              targetLang: lang,
-            },
-          })
-        }
-      }
-    }
+    const translationMap =
+      await this.translationService.collectArticleTranslations({
+        articles: result.data.map((doc) => ({
+          id: String(doc.id),
+          title: doc.title,
+          text: '',
+          createdAt: doc.createdAt,
+          modifiedAt: doc.modifiedAt,
+        })),
+        targetLang: lang,
+        fields: ['title'],
+      })
 
     const metaBuilder = new MetaObjectBuilder().view('card').pagination({
       page: result.pagination.currentPage,
@@ -635,7 +586,7 @@ export class NoteController {
       total: result.pagination.total,
       totalPages: result.pagination.totalPage,
     })
-    if (translationMap.size > 0) metaBuilder.translation(translationMap as any)
+    if (translationMap.size > 0) metaBuilder.translation(translationMap)
 
     return withMeta(result.data, metaBuilder.build())
   }

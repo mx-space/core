@@ -221,14 +221,11 @@ export class AggregateController {
     )
   }
 
-  private async buildTitleTranslationMap(
+  private buildTitleTranslationMap(
     items: TitledItem[],
     targetLang: string,
   ): Promise<Map<string, EntryTranslation>> {
-    const map = new Map<string, EntryTranslation>()
-    if (!items.length) return map
-
-    const results = await this.translationService.translateArticleList({
+    return this.translationService.collectArticleTranslations({
       articles: items.map((item) => ({
         id: String(item.id),
         title: item.title ?? '',
@@ -237,21 +234,8 @@ export class AggregateController {
         modifiedAt: item.modifiedAt,
       })),
       targetLang,
-      translationFields: ['title'] as const,
+      fields: ['title'],
     })
-
-    for (const [id, translation] of results) {
-      if (translation?.isTranslated) {
-        map.set(id, {
-          article: {
-            isTranslated: true,
-            targetLang,
-            title: translation.title,
-          },
-        })
-      }
-    }
-    return map
   }
 
   @Get('/sitemap')

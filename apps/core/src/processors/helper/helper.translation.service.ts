@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 
+import type { EntryTranslation } from '~/common/response/meta.types'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import type { TranslationSourceSnapshot } from '~/modules/ai/ai-translation/translation-consistency.types'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
@@ -32,6 +33,15 @@ export type TranslationResultPick<
   Fields extends TranslationField = TranslationField,
 > = { isTranslated: boolean } & Pick<TranslationResult, Fields>
 export type ArticleTranslationInput = TranslationSourceSnapshot
+
+export type ArticleMetaField =
+  | 'title'
+  | 'text'
+  | 'subtitle'
+  | 'summary'
+  | 'tags'
+  | 'content'
+  | 'contentFormat'
 
 /**
  * Build the `translation.article` meta payload (camelCase) for a detail
@@ -335,6 +345,40 @@ export class TranslationService {
       this.logger.error(error)
       return buildUntranslatedMap()
     }
+  }
+
+  async collectArticleTranslations(options: {
+    articles: TranslationSourceSnapshot[]
+    targetLang?: string
+    fields: readonly ArticleMetaField[]
+  }): Promise<Map<string, EntryTranslation>> {
+    const { articles, targetLang, fields } = options
+    const map = new Map<string, EntryTranslation>()
+    if (!targetLang || !articles.length) return map
+
+    const projection = Array.from(
+      new Set<TranslationField>([...fields, 'translationMeta']),
+    )
+    const results = await this.translateArticleList({
+      articles,
+      targetLang,
+      translationFields: projection,
+    })
+
+    for (const [id, translation] of results) {
+      if (!translation?.isTranslated) continue
+      const article: Record<string, unknown> = {
+        isTranslated: true,
+        sourceLang: translation.translationMeta?.sourceLang ?? null,
+        targetLang,
+      }
+      for (const field of fields) {
+        const value = (translation as Record<string, unknown>)[field]
+        if (value !== undefined) article[field] = value
+      }
+      map.set(id, { article } as EntryTranslation)
+    }
+    return map
   }
 
   async getEntityTranslations(

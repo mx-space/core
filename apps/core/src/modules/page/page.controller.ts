@@ -48,44 +48,26 @@ export class PageController {
     const { size, page } = query
     const result = await this.pageService.listPaginated(page, size)
 
-    const translationMap = new Map<string, any>()
+    const translationInputs: ArticleTranslationInput[] = result.data.map(
+      (doc) => ({
+        id: String(doc.id),
+        title: doc.title,
+        text: doc.text,
+        subtitle: doc.subtitle,
+        meta: doc.meta as { lang?: string } | undefined,
+        contentFormat: doc.contentFormat,
+        content: doc.content,
+        modifiedAt: doc.modifiedAt,
+        createdAt: doc.createdAt,
+      }),
+    )
 
-    if (lang && result.data.length) {
-      const translationInputs: ArticleTranslationInput[] = result.data.map(
-        (doc) => ({
-          id: String(doc.id),
-          title: doc.title,
-          text: doc.text,
-          subtitle: doc.subtitle,
-          meta: doc.meta as { lang?: string } | undefined,
-          contentFormat: doc.contentFormat,
-          content: doc.content,
-          modifiedAt: doc.modifiedAt,
-          createdAt: doc.createdAt,
-        }),
-      )
-
-      const translationResults =
-        await this.translationService.translateArticleList({
-          articles: translationInputs,
-          targetLang: lang,
-        })
-
-      for (const [id, translation] of translationResults) {
-        if (translation?.isTranslated) {
-          translationMap.set(id, {
-            article: {
-              isTranslated: translation.isTranslated,
-              sourceLang: translation.sourceLang,
-              targetLang: lang,
-              title: translation.title,
-              text: translation.text,
-              subtitle: translation.subtitle,
-            },
-          })
-        }
-      }
-    }
+    const translationMap =
+      await this.translationService.collectArticleTranslations({
+        articles: translationInputs,
+        targetLang: lang,
+        fields: ['title', 'text', 'subtitle'],
+      })
 
     const metaBuilder = new MetaObjectBuilder().view('card').pagination({
       page: result.pagination.currentPage,
@@ -93,7 +75,7 @@ export class PageController {
       total: result.pagination.total,
       totalPages: result.pagination.totalPage,
     })
-    if (translationMap.size > 0) metaBuilder.translation(translationMap as any)
+    if (translationMap.size > 0) metaBuilder.translation(translationMap)
 
     return withMeta(result.data, metaBuilder.build())
   }

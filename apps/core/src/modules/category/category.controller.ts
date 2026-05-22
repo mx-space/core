@@ -190,9 +190,7 @@ export class CategoryController {
     posts: any[],
     lang: string,
   ): Promise<void> {
-    if (!posts.length) return
-
-    const results = await this.translationService.translateArticleList({
+    const sub = await this.translationService.collectArticleTranslations({
       articles: posts.map((post) => ({
         id: String(post.id),
         title: post.title ?? '',
@@ -201,20 +199,9 @@ export class CategoryController {
         modifiedAt: post.modifiedAt ?? null,
       })),
       targetLang: lang,
-      translationFields: ['title'] as const,
+      fields: ['title'],
     })
-
-    for (const [id, translation] of results) {
-      if (translation?.isTranslated) {
-        map.set(id, {
-          article: {
-            isTranslated: true,
-            targetLang: lang,
-            title: translation.title,
-          },
-        })
-      }
-    }
+    for (const [id, entry] of sub) map.set(id, entry)
   }
 
   @Post('/')

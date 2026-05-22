@@ -101,31 +101,12 @@ export class PostController {
       }
     }
 
-    const translationMap = new Map<string, any>()
-
-    if (lang && translationInputs.length) {
-      const translationResults =
-        await this.translationService.translateArticleList({
-          articles: translationInputs,
-          targetLang: lang,
-        })
-
-      for (const [id, translation] of translationResults) {
-        if (translation?.isTranslated) {
-          translationMap.set(id, {
-            article: {
-              isTranslated: translation.isTranslated,
-              sourceLang: translation.sourceLang,
-              targetLang: lang,
-              title: translation.title,
-              text: translation.text,
-              summary: translation.summary,
-              tags: translation.tags,
-            },
-          })
-        }
-      }
-    }
+    const translationMap =
+      await this.translationService.collectArticleTranslations({
+        articles: translationInputs,
+        targetLang: lang,
+        fields: ['title', 'text', 'summary', 'tags'],
+      })
 
     const metaBuilder = new MetaObjectBuilder().view('card').pagination({
       page: res.pagination.currentPage,
@@ -135,7 +116,7 @@ export class PostController {
     })
 
     if (translationMap.size > 0) {
-      metaBuilder.translation(translationMap as any)
+      metaBuilder.translation(translationMap)
     }
 
     return withMeta(res.data, metaBuilder.build())

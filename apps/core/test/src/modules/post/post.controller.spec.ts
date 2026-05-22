@@ -16,10 +16,15 @@ const createController = (posts: Record<string, unknown>[]) => {
       },
     })),
   }
+  const translationService = {
+    async collectArticleTranslations() {
+      return new Map()
+    },
+  }
   const controller = new PostController(
     postService as any,
     {} as any,
-    {} as any,
+    translationService as any,
     {} as any,
     {} as any,
   )
