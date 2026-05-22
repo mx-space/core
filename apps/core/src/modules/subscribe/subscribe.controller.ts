@@ -22,13 +22,13 @@ export class SubscribeController {
 
   @Get('/status')
   async checkStatus() {
-    const allow_types = ['note_c', 'post_c']
+    const allowTypes = ['note_c', 'post_c']
     const enable = await this.service.checkEnable()
     return {
       enable,
-      bit_map: SubscribeTypeToBitMap,
-      allow_bits: allow_types.map((t) => SubscribeTypeToBitMap[t]),
-      allow_types,
+      bitMap: SubscribeTypeToBitMap,
+      allowBits: allowTypes.map((t) => SubscribeTypeToBitMap[t]),
+      allowTypes,
     }
   }
 

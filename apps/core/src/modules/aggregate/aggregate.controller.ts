@@ -110,16 +110,16 @@ export class AggregateController {
       user,
       seo,
       url: url ? omit(url, ['adminUrl']) : url,
-      comment_options: commentOptions
+      commentOptions: commentOptions
         ? {
-            disable_comment: commentOptions.disableComment ?? false,
-            allow_guest_comment: commentOptions.allowGuestComment ?? true,
+            disableComment: commentOptions.disableComment ?? false,
+            allowGuestComment: commentOptions.allowGuestComment ?? true,
           }
         : undefined,
-      latest_note_id: latestNoteId,
+      latestNoteId,
       theme: themeConfig,
       ai: {
-        enable_summary: aiConfig?.enableSummary ?? false,
+        enableSummary: aiConfig?.enableSummary ?? false,
       },
     }
   }
@@ -141,10 +141,10 @@ export class AggregateController {
       user: {
         id: user.id,
         name: user.name,
-        social_ids: user.socialIds,
+        socialIds: user.socialIds,
       },
       seo,
-      url: { web_url: url.webUrl },
+      url: { webUrl: url.webUrl },
     }
   }
 
@@ -276,37 +276,17 @@ export class AggregateController {
       this.analyzeService.getCallTime(),
       this.analyzeService.getTodayAccessIp(),
     ])
-    const c = count as Record<string, any>
-    const ct = callTime as Record<string, any>
     return {
-      posts: c.posts,
-      notes: c.notes,
-      pages: c.pages,
-      says: c.says,
-      comments: c.comments,
-      all_comments: c.allComments ?? c.all_comments,
-      unread_comments: c.unreadComments ?? c.unread_comments,
-      links: c.links,
-      link_apply: c.linkApply ?? c.link_apply,
-      categories: c.categories,
-      recently: c.recently,
-      online: c.online,
-      today_max_online: c.todayMaxOnline ?? c.today_max_online,
-      today_online_total: c.todayOnlineTotal ?? c.today_online_total,
-      call_time: ct.callTime ?? ct.call_time,
-      uv: ct.uv,
-      today_ip_access_count: todayIpAccess.length,
+      ...count,
+      ...callTime,
+      todayIpAccessCount: todayIpAccess.length,
     }
   }
 
   @Get('/count_read_and_like')
   async getAllReadAndLikeCount(@Query() query: ReadAndLikeCountTypeDto) {
     const { type = ReadAndLikeCountDocumentType.All } = query
-    const result = await this.aggregateService.getAllReadAndLikeCount(type)
-    return {
-      total_likes: (result as any).totalLikes ?? (result as any).total_likes,
-      total_reads: (result as any).totalReads ?? (result as any).total_reads,
-    }
+    return await this.aggregateService.getAllReadAndLikeCount(type)
   }
 
   @Get('/count_site_words')
@@ -316,15 +296,7 @@ export class AggregateController {
 
   @Get('/site_info')
   async getSiteInfo() {
-    const info = await this.aggregateService.getSiteInfo()
-    return {
-      post_count: (info as any).postCount ?? (info as any).post_count,
-      note_count: (info as any).noteCount ?? (info as any).note_count,
-      total_word_count:
-        (info as any).totalWordCount ?? (info as any).total_word_count,
-      first_publish_date:
-        (info as any).firstPublishDate ?? (info as any).first_publish_date,
-    }
+    return await this.aggregateService.getSiteInfo()
   }
 
   @Get('/stat/category-distribution')

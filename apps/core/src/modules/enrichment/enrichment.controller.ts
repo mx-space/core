@@ -170,13 +170,13 @@ export class EnrichmentController {
     return {
       used,
       cap: {
-        max_items: Number(captureConfig?.maxItems ?? DEFAULT_CAPTURE_MAX_ITEMS),
-        max_total_bytes: Number(
+        maxItems: Number(captureConfig?.maxItems ?? DEFAULT_CAPTURE_MAX_ITEMS),
+        maxTotalBytes: Number(
           captureConfig?.maxTotalBytes ?? DEFAULT_CAPTURE_MAX_TOTAL_BYTES,
         ),
       },
       enabled: captureConfig?.enabled === true,
-      fetch_mode: openGraph?.fetchMode ?? 'fetch',
+      fetchMode: openGraph?.fetchMode ?? 'fetch',
     }
   }
 
@@ -192,7 +192,7 @@ export class EnrichmentController {
     const items = await Promise.all(
       result.data.map(async (row) => ({
         ...row,
-        public_url: await this.resolvePublicUrl(row.objectKey),
+        publicUrl: await this.resolvePublicUrl(row.objectKey),
       })),
     )
     return withMeta(

@@ -403,8 +403,8 @@ export class NoteController {
       title: doc.title,
       nid: doc.nid,
       slug: doc.slug,
-      is_published: doc.isPublished,
-      created_at: doc.createdAt,
+      isPublished: doc.isPublished,
+      createdAt: doc.createdAt,
     }))
 
     const translationMap = new Map<string, EntryTranslation>()
@@ -416,7 +416,7 @@ export class NoteController {
             id: String(item.id),
             title: item.title,
             text: '',
-            createdAt: item.created_at,
+            createdAt: item.createdAt,
             modifiedAt: null,
           })),
           targetLang: lang,

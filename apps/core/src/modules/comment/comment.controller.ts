@@ -202,7 +202,7 @@ export class CommentController {
       replies: result.replies,
       remaining: result.remaining,
       done: result.done,
-      next_cursor: result.nextCursor ?? null,
+      nextCursor: result.nextCursor ?? null,
     }
   }
 
