@@ -29,4 +29,19 @@ describe('createPagerSchema', () => {
   test('rejects a size above the 100 cap', () => {
     expect(schema.safeParse({ size: '500' }).success).toBe(false)
   })
+
+  test.each([
+    ['asc', 'asc'],
+    ['desc', 'desc'],
+    ['1', 'asc'],
+    ['-1', 'desc'],
+    [1, 'asc'],
+    [-1, 'desc'],
+  ])('coerces sortOrder=%s to %s', (input, expected) => {
+    expect(schema.parse({ sortOrder: input }).sortOrder).toBe(expected)
+  })
+
+  test('rejects an unknown sortOrder value', () => {
+    expect(schema.safeParse({ sortOrder: 'sideways' }).success).toBe(false)
+  })
 })

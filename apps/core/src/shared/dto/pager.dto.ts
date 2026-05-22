@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { zCoerceInt, zEntityId } from '~/common/zod'
+import { zCoerceInt, zEntityId, zSortOrder } from '~/common/zod'
 
 /**
  * Base pager — page + size + optional view. No sort fields.
@@ -25,14 +25,15 @@ export type BasicPagerInput = z.infer<typeof BasicPagerSchema>
  * sort by; the resulting schema exposes `sortBy` (typed as `z.enum(sortKeys)`)
  * and `sortOrder` (`'asc' | 'desc'`, default `'desc'`) inside core. On the
  * wire both `sortBy=`/`sort_by=` are accepted (the global request-case
- * normalization pipe folds snake_case query keys to camelCase before zod).
+ * normalization pipe folds snake_case query keys to camelCase before zod), and
+ * the legacy `1` / `-1` sortOrder values are coerced to `'asc'` / `'desc'`.
  */
 export const createPagerSchema = <TSort extends [string, ...string[]]>(
   sortKeys: TSort,
 ) =>
   BasicPagerSchema.extend({
     sortBy: z.enum(sortKeys).optional(),
-    sortOrder: z.enum(['asc', 'desc']).default('desc'),
+    sortOrder: zSortOrder,
     year: z.coerce.number().int().optional(),
   })
 
