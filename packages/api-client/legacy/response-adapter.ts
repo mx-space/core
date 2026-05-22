@@ -88,22 +88,20 @@ function pickRecordEntry<T>(
 }
 
 function buildTranslationFlat(translation: any): Record<string, unknown> {
-  if (!translation || typeof translation !== 'object') return {}
-  const article = translation.article ?? translation
-  if (!article || typeof article !== 'object') return {}
+  if (!translation?.article) return {}
+  const a = translation.article
   const out: Record<string, unknown> = {}
-  if ('isTranslated' in article)
-    out.isTranslated = article.isTranslated ?? false
-  // V1 only emitted `sourceLang` when the post actually had a source language
-  // recorded; null/undefined was elided.
-  if ('sourceLang' in article && article.sourceLang != null) {
-    out.sourceLang = article.sourceLang
-  }
-  if ('availableTranslations' in article)
-    out.availableTranslations = article.availableTranslations ?? []
-  // V1 only attached `translationMeta` when content was actually translated.
-  if (translation.article && article.isTranslated) {
-    out.translationMeta = translation.article
+  if ('isTranslated' in a) out.isTranslated = a.isTranslated ?? false
+  if (a.sourceLang != null) out.sourceLang = a.sourceLang
+  if ('availableTranslations' in a)
+    out.availableTranslations = a.availableTranslations ?? []
+  if (a.isTranslated) {
+    out.translationMeta = {
+      sourceLang: a.sourceLang,
+      targetLang: a.targetLang,
+      translatedAt: a.translatedAt,
+      model: a.model,
+    }
   }
   return out
 }
@@ -130,10 +128,7 @@ function flattenMetaIntoItem(item: any, meta: any): any {
   if (!meta || typeof meta !== 'object') return item
 
   const id = (item as any).id
-  const translation = pickRecordEntry(meta.translation, id, [
-    'article',
-    'fields',
-  ])
+  const translation = pickRecordEntry(meta.translation, id, ['article'])
   const interaction = pickRecordEntry(meta.interaction, id, [
     'isLiked',
     'likeCount',
@@ -166,6 +161,17 @@ function flattenMetaIntoItem(item: any, meta: any): any {
   }
   attachRawFromOneToAnthor(item, next)
   return next
+}
+
+function flattenNestedArrays(raw: any, meta: any, keys: string[]) {
+  if (!isPlainObject(raw)) return raw
+  const out = { ...raw }
+  for (const key of keys) {
+    if (Array.isArray(out[key])) {
+      out[key] = out[key].map((it: any) => flattenMetaIntoItem(it, meta))
+    }
+  }
+  return out
 }
 
 // Pagination shape normalization (camelCase after default camelcaseKeys):
@@ -306,7 +312,7 @@ const noteDetailRule: Rule = {
 const AGGREGATE_TOP_REGEX = /^\/aggregate\/top$/
 const aggregateTopRule: Rule = {
   match: AGGREGATE_TOP_REGEX,
-  fn: (raw) => {
+  fn: (raw, ctx) => {
     if (!isPlainObject(raw)) return raw
     const stripBody = (it: any) => {
       if (!isPlainObject(it)) return it
@@ -314,10 +320,100 @@ const aggregateTopRule: Rule = {
       return rest
     }
     const r = raw as any
-    const out: Record<string, unknown> = { ...r }
-    if (Array.isArray(r.notes)) out.notes = r.notes.map(stripBody)
-    if (Array.isArray(r.posts)) out.posts = r.posts.map(stripBody)
+    const withMeta = flattenNestedArrays(r, ctx.meta, ['notes', 'posts'])
+    const out: Record<string, unknown> = { ...withMeta }
+    if (Array.isArray(out.notes))
+      out.notes = (out.notes as any[]).map(stripBody)
+    if (Array.isArray(out.posts))
+      out.posts = (out.posts as any[]).map(stripBody)
     return out
+  },
+}
+
+const AGGREGATE_LATEST_REGEX = /^\/aggregate\/latest$/
+const aggregateLatestRule: Rule = {
+  match: AGGREGATE_LATEST_REGEX,
+  fn: (raw, ctx) => {
+    if (Array.isArray(raw)) {
+      return raw.map((it) => flattenMetaIntoItem(it, ctx.meta))
+    }
+    if (!isPlainObject(raw)) return raw
+    return flattenNestedArrays(raw, ctx.meta, ['notes', 'posts'])
+  },
+}
+
+const AGGREGATE_TIMELINE_REGEX = /^\/aggregate\/timeline$/
+const aggregateTimelineRule: Rule = {
+  match: AGGREGATE_TIMELINE_REGEX,
+  fn: (raw, ctx) => {
+    if (!isPlainObject(raw)) return raw
+    const r = raw as any
+    if (isPlainObject(r.data)) {
+      const inner = flattenNestedArrays(r.data, ctx.meta, ['notes', 'posts'])
+      return { ...r, data: inner }
+    }
+    return flattenNestedArrays(r, ctx.meta, ['notes', 'posts'])
+  },
+}
+
+const ACTIVITY_ROOMS_REGEX = /^\/activity\/rooms$/
+const activityRoomsRule: Rule = {
+  match: ACTIVITY_ROOMS_REGEX,
+  fn: (raw, ctx) => {
+    if (!isPlainObject(raw)) return raw
+    const r = raw as any
+    if (!isPlainObject(r.objects)) return raw
+    const objects: Record<string, unknown> = { ...r.objects }
+    for (const type of Object.keys(objects)) {
+      if (Array.isArray(objects[type])) {
+        objects[type] = (objects[type] as any[]).map((it) =>
+          flattenMetaIntoItem(it, ctx.meta),
+        )
+      }
+    }
+    return { ...r, objects }
+  },
+}
+
+const ACTIVITY_RECENT_REGEX = /^\/activity\/recent$/
+const activityRecentRule: Rule = {
+  match: ACTIVITY_RECENT_REGEX,
+  fn: (raw, ctx) => {
+    if (!isPlainObject(raw)) return raw
+    return flattenNestedArrays(raw, ctx.meta, [
+      'like',
+      'comment',
+      'recentPost',
+      'recentNote',
+      'post',
+      'note',
+    ])
+  },
+}
+
+const READING_RANK_REGEX = /^\/activity\/reading\/(top|rank)$/
+const readingRankRule: Rule = {
+  match: READING_RANK_REGEX,
+  fn: (raw, ctx) => {
+    const items: any[] = Array.isArray(raw?.data) ? raw.data : []
+    return {
+      ...raw,
+      data: items
+        .map((it) => flattenMetaIntoItem({ ...it, id: it.refId }, ctx.meta))
+        .map((it: any) => {
+          const { id: _drop, ...rest } = it
+          return rest
+        }),
+    }
+  },
+}
+
+const ACTIVITY_LAST_YEAR_REGEX = /^\/activity\/last-year\/publication$/
+const activityLastYearRule: Rule = {
+  match: ACTIVITY_LAST_YEAR_REGEX,
+  fn: (raw, ctx) => {
+    if (!isPlainObject(raw)) return raw
+    return flattenNestedArrays(raw, ctx.meta, ['posts', 'notes'])
   },
 }
 
@@ -390,6 +486,12 @@ const RULES: Rule[] = [
   noteMiddleListRule,
   noteTopicListRule,
   aggregateTopRule,
+  aggregateLatestRule,
+  aggregateTimelineRule,
+  activityRoomsRule,
+  activityRecentRule,
+  readingRankRule,
+  activityLastYearRule,
 ]
 
 function applyRule(path: string, method: string, raw: any, meta: any) {

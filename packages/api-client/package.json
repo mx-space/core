@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/api-client",
-  "version": "5.0.2-next.8",
+  "version": "5.0.2-next.9",
   "description": "A api client for mx-space server@next",
   "type": "module",
   "engines": {
@@ -52,7 +52,8 @@
     "build": "npm run package",
     "prepackage": "rm -rf dist",
     "test": "vitest",
-    "dev": "vitest"
+    "dev": "vitest",
+    "smoke:diff": "node scripts/smoke-diff.mjs"
   },
   "devDependencies": {
     "@types/cors": "2.8.19",

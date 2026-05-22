@@ -16,11 +16,18 @@ describe('legacy response adapter', () => {
   it('restores detail meta fields onto the entity', async () => {
     spyOn(axiosAdaptor, 'get').mockResolvedValue({
       data: {
-        data: { id: '1', title: 'hello' },
+        data: { id: '1', title: 'Code & Dopamine' },
         meta: {
           interaction: { is_liked: true, like_count: 2 },
           translation: {
-            article: { is_translated: true, source_lang: 'zh' },
+            article: {
+              is_translated: true,
+              source_lang: 'zh',
+              target_lang: 'en',
+              translated_at: '2026-05-22T00:00:00.000Z',
+              model: 'claude-haiku-4-5',
+              available_translations: ['en', 'ko'],
+            },
           },
           enrichments: {
             'https://example.com': { id: 'enrichment-1' },
@@ -36,17 +43,26 @@ describe('legacy response adapter', () => {
 
     expect(data).toMatchObject({
       id: '1',
-      title: 'hello',
+      title: 'Code & Dopamine',
       isLiked: true,
       likeCount: 2,
       isTranslated: true,
-      translationMeta: { isTranslated: true, sourceLang: 'zh' },
+      sourceLang: 'zh',
+      availableTranslations: ['en', 'ko'],
+      translationMeta: {
+        sourceLang: 'zh',
+        targetLang: 'en',
+        model: 'claude-haiku-4-5',
+      },
       enrichments: {
         'https://example.com': { id: 'enrichment-1' },
       },
       related: [{ id: '2', title: 'related' }],
       hasInsightsInLocale: true,
     })
+    expect((data as any).translationMeta).not.toHaveProperty('title')
+    expect((data as any).translationMeta).not.toHaveProperty('text')
+    expect((data as any).translationMeta).not.toHaveProperty('content')
     expect(data.$serialized).toMatchObject({
       id: '1',
       isLiked: true,
@@ -61,7 +77,7 @@ describe('legacy response adapter', () => {
     spyOn(axiosAdaptor, 'get').mockResolvedValue({
       data: {
         data: [
-          { id: '1', title: 'one' },
+          { id: '1', title: 'Translated Title' },
           { id: '2', title: 'two' },
         ],
         meta: {
@@ -71,7 +87,15 @@ describe('legacy response adapter', () => {
             '2': { is_liked: false },
           },
           translation: {
-            '1': { article: { is_translated: true, title: 'translated' } },
+            '1': {
+              article: {
+                is_translated: true,
+                source_lang: 'zh',
+                target_lang: 'en',
+                model: 'claude-haiku-4-5',
+                available_translations: ['en'],
+              },
+            },
           },
         },
       },
@@ -84,9 +108,16 @@ describe('legacy response adapter', () => {
       data: [
         {
           id: '1',
+          title: 'Translated Title',
           isLiked: true,
           isTranslated: true,
-          translationMeta: { isTranslated: true, title: 'translated' },
+          sourceLang: 'zh',
+          availableTranslations: ['en'],
+          translationMeta: {
+            sourceLang: 'zh',
+            targetLang: 'en',
+            model: 'claude-haiku-4-5',
+          },
         },
         { id: '2', isLiked: false },
       ],
@@ -101,6 +132,9 @@ describe('legacy response adapter', () => {
         hasPrevPage: true,
       },
     })
+    expect((data as any).data[0].translationMeta).not.toHaveProperty('title')
+    expect((data as any).data[0].translationMeta).not.toHaveProperty('text')
+    expect((data as any).data[0].translationMeta).not.toHaveProperty('content')
   })
 
   it('supports endpoint include and exclude matchers for gradual migration', async () => {
@@ -133,20 +167,25 @@ describe('legacy response adapter', () => {
   })
 
   it('strips body off aggregate/top items even when the envelope is passed through', async () => {
-    // Simulates a consumer whose `getDataFromResponse` is identity (e.g. an
-    // ofetch-based stack), so the adapter receives the full `{ data, meta }`
-    // envelope instead of the inner data the rule expects.
     spyOn(axiosAdaptor, 'get').mockResolvedValue({
       data: {
         data: {
-          notes: [{ id: '1', title: 'note', text: 'body' }],
+          notes: [{ id: '1', title: 'Translated Note', text: 'body' }],
           posts: [{ id: '2', title: 'post', content: 'body' }],
           says: [{ id: '3', text: 'say' }],
           recently: [{ id: '4', content: 'recent' }],
         },
         meta: {
           translation: {
-            '1': { article: { is_translated: true, title: 'translated' } },
+            '1': {
+              article: {
+                is_translated: true,
+                source_lang: 'zh',
+                target_lang: 'en',
+                model: 'claude-haiku-4-5',
+                available_translations: ['en'],
+              },
+            },
           },
         },
       },
@@ -164,13 +203,23 @@ describe('legacy response adapter', () => {
     const data = await client.proxy.aggregate.top.get<any>()
 
     expect(data).toMatchObject({
-      notes: [{ id: '1', title: 'note' }],
+      notes: [{ id: '1', title: 'Translated Note' }],
       posts: [{ id: '2', title: 'post' }],
       says: [{ id: '3', text: 'say' }],
       recently: [{ id: '4', content: 'recent' }],
     })
     expect(data.notes[0]).not.toHaveProperty('text')
     expect(data.posts[0]).not.toHaveProperty('content')
+    expect(data.notes[0]).toMatchObject({
+      isTranslated: true,
+      sourceLang: 'zh',
+      translationMeta: {
+        sourceLang: 'zh',
+        targetLang: 'en',
+        model: 'claude-haiku-4-5',
+      },
+    })
+    expect(data.notes[0].translationMeta).not.toHaveProperty('title')
   })
 
   it('creates a client with the legacy adapter preconfigured', async () => {
@@ -188,5 +237,109 @@ describe('legacy response adapter', () => {
     await expect(client.proxy.posts.latest.get()).resolves.toEqual({
       title: 'wrapped',
     })
+  })
+
+  it('flattens translation meta onto nested arrays in activity/rooms', async () => {
+    spyOn(axiosAdaptor, 'get').mockResolvedValue({
+      data: {
+        data: {
+          rooms: ['room-1'],
+          roomCount: { 'room-1': 2 },
+          objects: {
+            post: [{ id: '10', title: 'Translated Post Title' }],
+            note: [{ id: '20', title: 'Note Title' }],
+          },
+        },
+        meta: {
+          translation: {
+            '10': {
+              article: {
+                is_translated: true,
+                source_lang: 'zh',
+                target_lang: 'en',
+                model: 'claude-haiku-4-5',
+                available_translations: ['en'],
+              },
+            },
+          },
+        },
+      },
+      status: 200,
+    } as any)
+
+    const client = createClient(axiosAdaptor)<AxiosResponse>(
+      'https://example.com',
+      {
+        responseAdapter: legacyResponseAdapter(),
+        getDataFromResponse: (res: any) => res?.data,
+      },
+    )
+
+    const data = await client.proxy.activity.rooms.get<any>()
+
+    expect(data.objects.post[0]).toMatchObject({
+      id: '10',
+      title: 'Translated Post Title',
+      isTranslated: true,
+      sourceLang: 'zh',
+      translationMeta: {
+        sourceLang: 'zh',
+        targetLang: 'en',
+        model: 'claude-haiku-4-5',
+      },
+    })
+    expect(data.objects.post[0].translationMeta).not.toHaveProperty('title')
+    expect(data.objects.note[0]).not.toHaveProperty('translationMeta')
+    expect(data.objects.note[0]).not.toHaveProperty('isTranslated')
+  })
+
+  it('synthesizes id from refId for reading rank/top items', async () => {
+    spyOn(axiosAdaptor, 'get').mockResolvedValue({
+      data: {
+        data: {
+          data: [
+            { refId: '100', ref: { title: 'Translated Ref Title' }, count: 5 },
+            { refId: '200', ref: { title: 'Other Ref' }, count: 3 },
+          ],
+        },
+        meta: {
+          translation: {
+            '100': {
+              article: {
+                is_translated: true,
+                source_lang: 'zh',
+                target_lang: 'en',
+                model: 'claude-haiku-4-5',
+                available_translations: ['en'],
+              },
+            },
+          },
+        },
+      },
+      status: 200,
+    } as any)
+
+    const client = createClient(axiosAdaptor)<AxiosResponse>(
+      'https://example.com',
+      {
+        responseAdapter: legacyResponseAdapter(),
+        getDataFromResponse: (res: any) => res?.data,
+      },
+    )
+
+    const data = await client.proxy.activity.reading.top.get<any>()
+
+    expect(data.data[0]).toMatchObject({
+      refId: '100',
+      isTranslated: true,
+      translationMeta: {
+        sourceLang: 'zh',
+        targetLang: 'en',
+        model: 'claude-haiku-4-5',
+      },
+    })
+    expect(data.data[0]).not.toHaveProperty('id')
+    expect(data.data[1]).not.toHaveProperty('translationMeta')
+    expect(data.data[1]).not.toHaveProperty('isTranslated')
   })
 })
