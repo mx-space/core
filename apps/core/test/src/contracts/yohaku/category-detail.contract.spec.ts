@@ -24,7 +24,10 @@ import {
   assertPgTimestamps,
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
-import { translationProvider } from '../../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../../mock/processors/translation.mock'
 
 const fixtureCategory = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000900',
@@ -106,6 +109,7 @@ describe('Yohaku contract — category (e2e)', () => {
       categoryServiceProvider,
       postServiceProvider,
       translationProvider,
+      translationEntryProvider,
     ],
   })
 

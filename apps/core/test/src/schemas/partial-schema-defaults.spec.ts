@@ -53,8 +53,8 @@ describe('Partial schemas should not apply defaults for missing fields', () => {
     expect(result.topicId).toBe(ENTITY_ID)
   })
 
-  it('PartialNoteSchema - empty title should transform to 无题', () => {
+  it('PartialNoteSchema - empty title should transform to Untitled', () => {
     const result = PartialNoteSchema.parse({ title: '' })
-    expect(result.title).toBe('无题')
+    expect(result.title).toBe('Untitled')
   })
 })

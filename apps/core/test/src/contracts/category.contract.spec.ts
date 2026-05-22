@@ -11,7 +11,10 @@ import {
   assertPgTimestamps,
 } from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
-import { translationProvider } from '../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../mock/processors/translation.mock'
 
 /** SDK `CategoryModel` 之必填键（packages/api-client/models/category.ts）。 */
 const EXPECTED_CATEGORY_MODEL_KEYS = [
@@ -75,6 +78,7 @@ describe('CategoryController contract (e2e)', () => {
       categoryServiceProvider,
       postServiceProvider,
       translationProvider,
+      translationEntryProvider,
     ],
   })
 

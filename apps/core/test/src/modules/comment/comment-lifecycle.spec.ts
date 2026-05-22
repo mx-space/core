@@ -109,7 +109,7 @@ describe('CommentLifecycleService', () => {
 
     expect(barkService.push).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: '收到一条新评论',
+        title: 'New comment received',
         body: expect.stringContaining('Alice'),
         url: 'https://admin.example.com#/comments',
       }),
