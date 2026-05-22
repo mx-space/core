@@ -22,20 +22,19 @@ export class LoggingInterceptor implements NestInterceptor {
     next: CallHandler<any>,
   ): Observable<any> {
     const request = getNestExecutionContextRequest(context)
-    const content = `${request.method} -> ${request.url}`
-    this.logger.debug(`+++ Request received: ${content}`)
+    const content = `${request.method} ${request.url}`
+    this.logger.debug(`${pc.dim('→')} ${content}`)
     const now = Date.now()
 
     SetMetadata(HTTP_REQUEST_TIME, now)(request as any)
 
-    return next
-      .handle()
-      .pipe(
-        tap(() =>
-          this.logger.debug(
-            `--- Response sent: ${content}${pc.yellow(` +${Date.now() - now}ms`)}`,
-          ),
-        ),
-      )
+    return next.handle().pipe(
+      tap(() => {
+        const statusCode = context.switchToHttp().getResponse()?.statusCode
+        this.logger.debug(
+          `${pc.dim('←')} ${content} ${pc.cyan(statusCode)} ${pc.yellow(`+${Date.now() - now}ms`)}`,
+        )
+      }),
+    )
   }
 }
