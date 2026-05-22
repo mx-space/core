@@ -1,4 +1,4 @@
-import { camelKey, transformRequestCase } from '~/common/request/case-transform'
+import { camelKey, transformRequestCase } from '~/common/pipes/case-transform'
 
 describe('camelKey', () => {
   test('camelizes snake_case identifiers', () => {

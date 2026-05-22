@@ -2,7 +2,7 @@ import { Readable } from 'node:stream'
 
 import type { ArgumentMetadata } from '@nestjs/common'
 
-import { RequestCaseNormalizationPipe } from '~/common/request/case-normalization.pipe'
+import { RequestCaseNormalizationPipe } from '~/common/pipes/case-normalization.pipe'
 
 const meta = (type: ArgumentMetadata['type']): ArgumentMetadata => ({
   type,
