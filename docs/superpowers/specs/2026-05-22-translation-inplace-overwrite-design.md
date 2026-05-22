@@ -181,14 +181,16 @@ Sub-entity entries (topic/category) and cached-title translations
 `apps/core/src/common/response/meta.types.ts`:
 
 ```ts
-export const ArticleTranslationSchema = z.object({
-  isTranslated: z.boolean(),
-  sourceLang: z.string().nullable().optional(),
-  targetLang: z.string().nullable().optional(),
-  translatedAt: z.date().optional(),
-  model: z.string().optional(),
-  availableTranslations: z.array(z.string()).optional(),
-})
+export const ArticleTranslationSchema = z
+  .object({
+    isTranslated: z.boolean(),
+    sourceLang: z.string().nullable().optional(),
+    targetLang: z.string().nullable().optional(),
+    translatedAt: z.date().optional(),
+    model: z.string().optional(),
+    availableTranslations: z.array(z.string()).optional(),
+  })
+  .strict() // ← must be strict at the article level too
 // Removed: title, text, subtitle, summary, tags, content, contentFormat
 
 export const EntryTranslationSchema = z
@@ -197,8 +199,12 @@ export const EntryTranslationSchema = z
 // Removed: fields
 ```
 
-Schema parsing remains strict — any controller that accidentally emits
-the removed fields will fail validation in `MetaObjectBuilder.build()`.
+Both `ArticleTranslationSchema` and `EntryTranslationSchema` are
+`.strict()`. Outer-only `.strict()` on `EntryTranslationSchema` would
+let removed inner fields (`title`, `text`, etc.) be silently stripped
+rather than rejected — that would let a regression slip past
+`MetaObjectBuilder.build()`. Tests must assert the *removed* fields
+produce a Zod parse error, not a stripped output.
 
 ## Helpers — `helper.translation.service.ts`
 
@@ -206,6 +212,21 @@ the removed fields will fail validation in `MetaObjectBuilder.build()`.
 
 Drops `title/text/subtitle/summary/tags/content/contentFormat`. Returns
 only the metadata shape above. The `extras` parameter is removed.
+
+`translatedAt`, `model`, and `targetLang` are read from
+`result.translationMeta.*`, **not** from `result.*` — the
+`TranslationResult` type nests those fields:
+
+```ts
+{
+  isTranslated: result.isTranslated,
+  sourceLang: result.sourceLang ?? null,
+  targetLang: result.translationMeta?.targetLang ?? lang ?? null,
+  translatedAt: result.translationMeta?.translatedAt,
+  model: result.translationMeta?.model,
+  availableTranslations: result.availableTranslations ?? [],
+}
+```
 
 ### 2. `applyArticleTranslationInPlace(target, result, opts?)`
 
@@ -225,6 +246,18 @@ applyArticleTranslationInPlace<T extends Record<string, unknown>>(
   preserves the original `content` when a markdown-only article has no
   lexical translation, and preserves original `summary/tags` when the
   translation row doesn’t carry them.
+- **`content` and `contentFormat` are paired**: `contentFormat` is only
+  overwritten when `content` is also being overwritten in the same call.
+  Writing `contentFormat` without `content` would leave the document in
+  an inconsistent state (e.g. `format='lexical'` over markdown body).
+  Internally:
+
+  ```ts
+  if (translatedContent) {
+    target.content = translatedContent
+    target.contentFormat = translatedContentFormat ?? target.contentFormat
+  }
+  ```
 - Mutates `target` and returns it (for spread-readability at call sites).
 
 ### 3. `applyTranslationEntriesInPlace(target, maps, rules)`
@@ -263,10 +296,15 @@ fetchByLookups(lang, {
 }): Promise<EntryMaps>
 ```
 
-One round-trip per request. Each controller assembles all entity ids and
-dict source values across detail + next + prev + list items, calls once,
-gets `{ entityMaps, dictMaps }`, threads to
-`applyTranslationEntriesInPlace`.
+Each controller assembles all entity ids and dict source values across
+detail + next + prev + list items, calls once, gets
+`{ entityMaps, dictMaps }`, threads to `applyTranslationEntriesInPlace`.
+
+The work is bounded by the number of lookup groups (one per `keyPath`),
+not by per-id round-trips. Current `ai-translation.repository.ts`
+issues one query per group; collapsing to a single `or(...)` SQL across
+all groups is an internal optimisation that may follow but is not
+required by this spec.
 
 ### 5. Removed
 
@@ -276,19 +314,53 @@ gets `{ entityMaps, dictMaps }`, threads to
   `Map<topicId, Record<field, string>>` for meta — replaced by the
   `entityMaps` returned from `fetchByLookups`.
 
+## Controller Pipeline Order (mandatory)
+
+Each affected controller MUST execute its data-building pipeline in this
+order:
+
+```
+1. Fetch source row(s) from repository
+2. applyArticleTranslationInPlace(...)          ← title/text/content/...
+3. applyTranslationEntriesInPlace(...)          ← mood/weather/topic.*/category.name
+4. enrichmentService.attachEnrichments(...)
+5. metaBuilder.translation(...) / withMeta(...)
+```
+
+Translation MUST run before enrichment. `EnrichmentService` scans
+`content`/`text` to extract link cards, image enrichments, etc. If
+enrichment runs against the source-language body and translation
+overwrites afterwards, link-card placements and URL anchors will be
+based on the source body while the visible prose is the target body —
+producing visibly misaligned enrichments. Running translation first
+keeps enrichment-extracted URLs in lock-step with the translated body.
+
 ## Per-Endpoint Changes
 
 For each endpoint, list (a) fields overwritten in `data`, (b) entry
 lookups required, (c) whether a `meta.translation` entry is emitted.
 
+**List `meta.translation` policy:** for list, aggregate, and activity
+endpoints, emit a slim `meta.translation.<itemId>.article` entry **only
+for items that were actually translated** (`isTranslated === true`).
+Items with `isTranslated: false` are omitted — this matches the
+semantics of the existing `collectArticleTranslations` helper and keeps
+per-item payload bounded for large pages.
+
+For detail endpoints, always emit a slim entry for the primary id (and
+for `next`/`prev` when those adjacent rows exist), even when
+`isTranslated === false`, so that consumers can read
+`sourceLang` / `availableTranslations` for the article they are
+viewing without a second roundtrip.
+
 ### post.controller.ts
 
 | Endpoint | Overwritten in `data` | Entry lookups | `meta.translation` |
 |----------|-----------------------|---------------|---------------------|
-| `GET /:cat/:slug` | `title/text/content/contentFormat/summary/tags`; `related[].title`; `category.name` | `category.name` (entity, by post.category.id) | `<postId>.article` slim |
-| `GET /` | item `title/text/content/contentFormat`; item `category.name` | `category.name` (entity, ids from items) | `<itemId>.article` slim per item |
-| `GET /latest` | item same | same | same |
-| `GET /category/:slug` | item same | same | same |
+| `GET /:category/:slug` | `title/text/content/contentFormat/summary/tags`; `related[].title`; `category.name` | `category.name` (entity, by post.category.id) | `<postId>.article` slim |
+| `GET /:id` (auth) | same | same | same |
+| `GET /` | item `title/text/content/contentFormat`; item `category.name` | `category.name` (entity, ids from items) | translated items only |
+| `GET /latest` | item same | same | translated items only |
 
 Existing `withMeta(...)` call sites stay; `buildArticleTranslationMeta`
 returns the slim shape.
@@ -298,16 +370,19 @@ returns the slim shape.
 | Endpoint | Overwritten in `data` | Entry lookups | `meta.translation` |
 |----------|-----------------------|---------------|---------------------|
 | `buildPublicNoteResponse` (nid, slug-date) | `title/text/content/contentFormat`; `mood/weather` (dict); `topic.{name,introduce,description}` (entity); `next/prev` same | `note.mood/weather` (dict, source values across current+next+prev); `topic.*` (entity, ids across current+next+prev) | `<currentId>.article` slim; `<nextId>.article`, `<prevId>.article` slim when adjacent exists |
-| `GET /latest` | `latest` + `next` same as detail | same | `<latestId>` + `<nextId>` |
-| `GET /` | item `title/text/content/contentFormat` (or summary when `withSummary`); item `mood/weather/topic.*` | per-page batch | `<itemId>.article` slim per item |
-| `GET /topics/:id` | item `title`; item `mood/weather/topic.*` | per-page batch | per-item slim |
+| `GET /:id` (admin, also a detail route) | same as `buildPublicNoteResponse` | same | same |
+| `GET /list/:id` (admin, ranged list) | item `title/text/content/contentFormat`; item `mood/weather/topic.*` | per-batch | translated items only |
+| `GET /latest` | `latest` + `next` same as detail | same | `<latestId>` + `<nextId>` (both always emitted) |
+| `GET /` | item `title/text/content/contentFormat` (or summary when `withSummary`); item `mood/weather/topic.*` | per-page batch | translated items only |
+| `GET /topics/:id` | item `title`; item `mood/weather/topic.*` (entity lookups extended beyond V1 — V1 only covered `mood/weather`; this is an intentional expansion) | per-page batch | translated items only |
 
 ### page.controller.ts
 
 | Endpoint | Overwritten | Entry lookups | meta |
 |----------|-------------|---------------|------|
-| `GET /:slug` (detail) | `title/text/subtitle/content/contentFormat` | — | `<pageId>.article` slim |
-| `GET /` (list) | item same | — | per-item slim |
+| `GET /slug/:slug` (public detail) | `title/text/subtitle/content/contentFormat` | — | `<pageId>.article` slim |
+| `GET /:id` (auth detail) | same | — | same |
+| `GET /` (list) | item same | — | translated items only |
 
 ### topic.controller.ts
 
@@ -320,31 +395,35 @@ returns the slim shape.
 
 | Endpoint | Overwritten | Entry lookups | meta |
 |----------|-------------|---------------|------|
-| `GET /` (list, with `ids`) | `entries[<id>].children[].title` (via post list) | — | `<childPostId>.article` slim per child |
-| `GET /` (list, by type) | `[].name` | `category.name` (entity, all category ids) | none |
-| `GET /:query` | `data.name`; `children[].title` | `category.name` (entity, this id) | per child slim |
+| `GET /` (with `ids`) | `entries[<id>].children[].title` (via post list) | — | translated children only |
+| `GET /` (by type, no `ids`) | `[].name` | `category.name` (entity, all category ids) | none |
+| `GET /:query` (regular branch) | `data.name`; `children[].title` | `category.name` (entity, this id) | translated children only |
+| `GET /:query` (with `tag=true`) | `data[].title` (post list under the tag) — response shape `{ tag, data }` carries no `name`; only the post titles translate | — | translated items only |
 
 ### search.controller.ts
 
 | Endpoint | Overwritten | Entry lookups | meta |
 |----------|-------------|---------------|------|
 | `GET /` | `data[].category.name` (only on post items) | `category.name` (entity, ids from post items) | none |
+| `GET /:type` | same as `GET /` | same | none |
 
 ### aggregate.controller.ts
 
 | Endpoint | Overwritten | Entry lookups | meta |
 |----------|-------------|---------------|------|
-| `GET /top` | `notes[]/posts[].title`; `notes[].mood/weather` | `note.mood/weather` (dict) | per-item slim |
-| `GET /latest` (combined/separate) | items `title`; `notes[].mood/weather` | dict | per-item slim |
-| `GET /timeline` | `data.notes[]/posts[].title`; `notes[].mood/weather`; `posts[].category.name` | dict + `category.name` (entity) | per-item slim |
+| `GET /top` | `notes[]/posts[].title`; `notes[].mood/weather` | `note.mood/weather` (dict) | translated items only |
+| `GET /latest` (combined/separate) | items `title`; `notes[].mood/weather` | dict | translated items only |
+| `GET /timeline` | `data.notes[]/posts[].title`; `notes[].mood/weather`; `posts[].category.name` | dict + `category.name` (entity) | translated items only |
+| `GET /stat/top-articles` | item `title` | — | translated items only |
 
 ### activity.controller.ts
 
 | Endpoint | Overwritten | Entry lookups | meta |
 |----------|-------------|---------------|------|
-| `GET /rooms` | `objects[<type>][].title` | — | per-item slim |
-| `GET /reading/top`, `GET /reading/rank` | `[].ref.title` | — | per-ref slim (keyed by `refId`) |
-| `GET /recent` | likes/comments/recentPost/recentNote item `title` | — | per-item slim |
+| `GET /rooms` | `objects[<type>][].title` | — | translated items only |
+| `GET /reading/top`, `GET /reading/rank` | `[].ref.title` | — | translated items only, **keyed by `refId`** (see Adapter §3 below for the corresponding legacy rule) |
+| `GET /recent` | likes/comments/recentPost/recentNote item `title` | — | translated items only |
+| `GET /last-year/publication` | item `title` | — | translated items only |
 
 ## api-client Legacy Adapter
 
@@ -371,19 +450,70 @@ function buildTranslationFlat(translation: any): Record<string, unknown> {
 ```
 
 Changes:
-- Drop the `translation.article ?? translation` fallback — the V3 contract
-  guarantees `article` is nested.
-- `translationMeta` becomes the slim metadata-only shape, which is what
-  V1’s `TranslationMeta` type already was.
-- All `fields`-handling code paths are removed.
-- The rest of `flattenMetaIntoItem` (interaction, insights, enrichments,
-  related) is untouched.
-- `noteDetailRule`, `noteMiddleListRule`, `noteTopicListRule`,
-  `aggregateTopRule`, etc. continue to drive the V1 wire shape; the only
-  inside-rule change is the slimmer translation block.
+1. Drop the `translation.article ?? translation` fallback — the V3 contract
+   guarantees `article` is nested.
+2. `translationMeta` becomes the slim metadata-only shape, which is what
+   V1’s `TranslationMeta` type already was.
+3. All `fields`-handling code paths are removed.
+4. The rest of `flattenMetaIntoItem` (interaction, insights, enrichments,
+   related) is untouched.
+5. `noteDetailRule`, `noteMiddleListRule`, `noteTopicListRule`,
+   `aggregateTopRule`, etc. continue to drive the V1 wire shape; the only
+   inside-rule change is the slimmer translation block.
+6. Existing adapter tests at
+   `packages/api-client/__tests__/legacy/response-adapter.test.ts:73`
+   assert that `translationMeta` carries `title/text/content` etc.
+   Those expectations are updated: the translated display fields now
+   live in `data` (inline), and `translationMeta` carries only
+   `sourceLang/targetLang/translatedAt/model`. Add an extra assertion
+   that the *translated* `data.title/text/content` are present.
 
-The `packages/api-client/scripts/smoke-diff.mjs` parity harness reruns
-against Yohaku’s 52-endpoint call surface and must report 0 diffs.
+### Activity reading items — adapter rule
+
+`/activity/reading/top` and `/activity/reading/rank` items use
+`refId` (not `id`) as their stable identifier:
+[`activity.controller.ts:225`](../../apps/core/src/modules/activity/activity.controller.ts).
+The generic `flattenMetaIntoItem` at
+[`response-adapter.ts:128`](../../packages/api-client/legacy/response-adapter.ts)
+keys translation lookups by `item.id` and ignores items lacking it, so
+reading-ranked items would lose their `translationMeta` under the
+default flow.
+
+Add a dedicated rule (`READING_RANK_REGEX`) that, before generic
+flattening, treats `refId` as the lookup id for `meta.translation`
+matching:
+
+```ts
+const READING_RANK_REGEX = /^\/activity\/reading\/(top|rank)$/
+const readingRankRule: Rule = {
+  match: READING_RANK_REGEX,
+  fn: (raw, ctx) => {
+    const items: any[] = Array.isArray(raw?.data) ? raw.data : []
+    return {
+      ...raw,
+      data: items.map((it) =>
+        flattenMetaIntoItem({ ...it, id: it.refId }, ctx.meta),
+      ).map(({ id: _drop, ...rest }) => rest), // strip the synthesized id
+    }
+  },
+}
+```
+
+(Implementation detail; the goal is "translation metadata reaches the
+reading item via `refId`".)
+
+### smoke-diff harness
+
+The smoke-diff harness lives at
+`packages/api-client/scripts/smoke-diff.mjs` but is **not** currently
+declared as a package script. Either:
+
+- (a) Add a `"smoke:diff": "node scripts/smoke-diff.mjs"` entry to
+  `packages/api-client/package.json`, or
+- (b) Invoke directly: `node packages/api-client/scripts/smoke-diff.mjs`.
+
+The spec assumes (a). Smoke-diff against Yohaku’s call surface must
+report 0 diffs across all touched endpoints.
 
 api-client version: bump to `5.0.2-next.9`.
 
@@ -425,7 +555,10 @@ For note detail: assert `next/prev` translations also overwrite in place.
 
 - `ResponseMetaSchema.parse(...)` rejects payloads that include any of
   the removed fields in `meta.translation.*.article` or
-  `meta.translation.*.fields`.
+  `meta.translation.*.fields`. The test must assert that the Zod parse
+  throws (or `safeParse` returns `success: false`), not that the
+  offending key was silently stripped — see Schema section above for
+  why `ArticleTranslationSchema` itself must be `.strict()`.
 
 ### Smoke-diff (api-client)
 
@@ -464,9 +597,10 @@ For note detail: assert `next/prev` translations also overwrite in place.
    present (e.g. a downstream service we don’t own), they will break.
    Mitigation: this branch hasn’t been released; the V3 wire has not
    shipped to production consumers.
-2. **List meta cost.** Every list item now carries a `meta.translation.
-   <itemId>.article` slim entry. For a 20-item page this adds ~1.5 KB of
-   JSON. Acceptable; bounded by `size`.
+2. **List meta cost.** Slim entries are emitted only for items that were
+   actually translated (see policy above). For a 20-item page where 18
+   items have a translation, this adds ~1.5 KB of JSON; the worst case
+   is bounded by `size`.
 3. **`mood/weather` dict misses.** When a value has no entry for a lang,
    the original is retained. Front-end must not assume `mood` is in the
    requested lang. Documented behaviour, matches V1.
