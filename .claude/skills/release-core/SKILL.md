@@ -9,7 +9,7 @@ description: Use when releasing mx-core server (apps/core), @mx-space/api-client
 
 The repo has historically used `bump` (nbump) — an interactive CLI that bundles ~6 steps behind a single prompt. It's great for humans, hostile for agents: every step is hidden, prompts must be fed via stdin, and a mid-run error leaves the working tree in an unknown state.
 
-This skill replicates the **same end state** (commit, tag, changelog, assets push) by driving the underlying git/file operations directly. Each step is observable, individually verifiable, and individually retryable.
+This skill replicates the **same end state** (commit, tag, changelog) by driving the underlying git/file operations directly. Each step is observable, individually verifiable, and individually retryable.
 
 If a teammate insists on `bump`, fall back to it — but it's not needed for any agent-driven release.
 
@@ -76,17 +76,7 @@ Effect: queries `https://api.github.com/repos/mx-space/mx-admin/releases/latest`
 
 Verify: `git diff apps/core/package.json` shows only `dashboard.version` changing (or no diff if already current).
 
-### Step 4 — Push admin assets
-
-```bash
-bash apps/core/assets-push.sh
-```
-
-Effect: enters `assets/` (a sibling working copy of `mx-space/assets`), commits any changes, force-pushes to its `master`. **Force push** is intentional — it tracks DB-derived snapshots, not curated history.
-
-Verify: script ends with `Everything up-to-date` or a successful `master -> master` push.
-
-### Step 5 — Bump version in package.json
+### Step 4 — Bump version in package.json
 
 Use the Edit tool (do **not** use `npm version`, which would create its own commit/tag).
 
@@ -97,7 +87,7 @@ Use the Edit tool (do **not** use `npm version`, which would create its own comm
 
 Verify: `git diff apps/core/package.json` shows only the `version` field (and possibly `dashboard.version` from step 3).
 
-### Step 6 — Generate the CHANGELOG entry
+### Step 5 — Generate the CHANGELOG entry
 
 Format used by the existing CHANGELOG.md is **conventional-changelog / Angular preset**. Reproduce it with one command:
 
@@ -122,7 +112,7 @@ The new block should:
 
 If the block looks wrong, `git checkout -- apps/core/CHANGELOG.md` and either re-run with corrected flags or write the block manually.
 
-### Step 6.5 — Generate the user-facing release notes
+### Step 5.5 — Generate the user-facing release notes
 
 `apps/core/CHANGELOG.md` (above) is for developers — Angular preset, commit-style. The GitHub Release body uses a different document: a human-narrative file at `apps/core/RELEASE_NOTES.md`, written by the agent and committed alongside the version bump. CI reads this file directly (no more `changelogithub`).
 
@@ -223,7 +213,7 @@ The release flow runs unattended: if the agent has enough information to choose 
 
 Verify: `apps/core/RELEASE_NOTES.md` exists and is non-empty (`test -s apps/core/RELEASE_NOTES.md`).
 
-### Step 7 — Commit
+### Step 6 — Commit
 
 ```bash
 git add apps/core/package.json apps/core/CHANGELOG.md apps/core/RELEASE_NOTES.md
@@ -234,7 +224,7 @@ git commit -m "release: vX.Y.Z" --no-verify
 
 Verify: `git log -1 --stat` shows exactly three files changed.
 
-### Step 8 — Tag
+### Step 7 — Tag
 
 ```bash
 git tag -a vX.Y.Z -m "Release vX.Y.Z"
@@ -244,7 +234,7 @@ Annotated tag (`-a`) — `release.yml` trigger condition is just `tags: v*`, but
 
 Verify: `git tag -l vX.Y.Z` returns the tag.
 
-### Step 9 — Push
+### Step 8 — Push
 
 ```bash
 git push                         # commit
@@ -253,7 +243,7 @@ git push origin vX.Y.Z           # tag — this is what triggers release.yml
 
 Both are required. Pushing the commit alone does nothing visible; pushing the tag without the commit gets a tag pointing at a sha that origin doesn't have yet.
 
-### Step 10 — Watch CI
+### Step 9 — Watch CI
 
 ```bash
 gh run list --workflow=release.yml --limit 1
@@ -439,7 +429,6 @@ CLI has no in-repo consumers (it's an end-user tool, not a workspace dep). Skip 
 - Asked to bump `major` (breaking) — confirm scope
 - On a non-`master` branch
 - `node get-latest-admin-version.js` fails (likely missing `gh auth` / token)
-- `assets-push.sh` reports a real conflict (not just "nothing to commit")
 - `npm whoami` empty when about to publish api-client or cli
 - Pipelines mixed up (e.g. tagging `v*` for an api-client- or cli-only change, or bumping CLI version when only api-client changed)
 - `packages/cli/dist` missing or stale before `pnpm publish` (skipped step 2 rebuild)
@@ -451,7 +440,6 @@ CLI has no in-repo consumers (it's an end-user tool, not a workspace dep). Skip 
 - `apps/core/CHANGELOG.md` — server changelog (Angular preset, developer-facing, machine-generated)
 - `apps/core/RELEASE_NOTES.md` — user-facing GitHub Release body (narrative, agent-authored, overwritten each release; CI reads via `body_path`)
 - `apps/core/get-latest-admin-version.js` — fetches latest mx-admin release tag
-- `apps/core/assets-push.sh` — force-pushes `assets/` to `mx-space/assets`
 - `packages/api-client/package.json` — npm package version
 - `packages/cli/package.json` — npm package version + `bin.mxs` map (do not edit `bin` during a release)
 - `packages/cli/bin/mxs.cjs` — CommonJS shim that re-exports `dist/`; shipped in the tarball
@@ -469,4 +457,4 @@ cd apps/core
 yes "" | pnpm exec bump patch    # nbump prompts Continue? — yes "" auto-accepts
 ```
 
-This collapses steps 2–9 into one opaque run. Use only as a last resort; the agent-native flow above is preferred because each step is observable.
+This collapses steps 2–8 into one opaque run. Use only as a last resort; the agent-native flow above is preferred because each step is observable.
