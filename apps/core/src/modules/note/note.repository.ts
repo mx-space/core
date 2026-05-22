@@ -648,8 +648,9 @@ export class NoteRepository extends BaseRepository {
         : gt(notes.createdAt, pivotDate),
     ]
     if (options.visibleOnly) filters.push(this.visibleClause())
-    // PG timestamp 至 μs，JS Date 仅 ms。`gt/lt(jsDate)` 会把 createdAt
-    // sub-ms 之同行（即 pivot 自身）取入，需显式排除。
+    // PG timestamps have μs precision while JS Date is only ms. `gt/lt(jsDate)`
+    // can include rows with sub-ms differences in createdAt (e.g. the pivot row
+    // itself), so explicitly exclude them by id.
     if (options.excludeId !== undefined) {
       filters.push(ne(notes.id, parseEntityId(options.excludeId)))
     }

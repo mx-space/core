@@ -26,7 +26,7 @@ export const BACKUP_DIR = !isDev
   ? join(DATA_DIR, 'backup')
   : join(TEMP_DIR, 'backup')
 
-// Swarm/容器环境下，更新后的 admin 资源需要落到持久化数据目录。
+// In Swarm/container environments, updated admin assets must land in the persistent data directory.
 export const LOCAL_ADMIN_ASSET_PATH = join(DATA_DIR, 'admin')
 export const BUNDLED_ADMIN_ASSET_PATH = isDev
   ? LOCAL_ADMIN_ASSET_PATH

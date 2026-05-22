@@ -35,7 +35,17 @@ const draftServiceProvider = {
   provide: DraftService,
   useValue: {
     async list() {
-      return { data: [fixtureDraft()] }
+      return {
+        data: [fixtureDraft()],
+        pagination: {
+          total: 1,
+          currentPage: 1,
+          totalPage: 1,
+          size: 10,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      }
     },
     async count() {
       return 1
@@ -84,7 +94,7 @@ describe('DraftController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
     assertLowercaseRefType(body)
   })
 
@@ -97,7 +107,7 @@ describe('DraftController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
     assertLowercaseRefType(body)
   })
 

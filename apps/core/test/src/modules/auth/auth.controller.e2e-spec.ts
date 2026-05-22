@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/errors/exception.types'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthController } from '~/modules/auth/auth.controller'
 
@@ -60,7 +60,7 @@ describe('AuthController', () => {
     authService.getAllAccessToken.mockResolvedValue([])
 
     await expect(controller.deleteToken({ id: 'missing' })).rejects.toThrow(
-      BizException,
+      AppException,
     )
   })
 })

@@ -5,7 +5,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
-import type { PagerDto } from '~/shared/dto/pager.dto'
+import type { BasicPagerInput } from '~/shared/dto/pager.dto'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 
@@ -50,9 +50,8 @@ export class AnalyzeController {
   }
 
   @Get('/')
-  async getAnalyze(@Query() query: AnalyzeDto & Partial<PagerDto>) {
+  getAnalyze(@Query() query: AnalyzeDto & Partial<BasicPagerInput>) {
     const { from, to = new Date(), page = 1, size = 50 } = query
-
     return this.service.getRangeAnalyzeData(from, to, {
       limit: Math.trunc(size),
       page,
@@ -60,29 +59,29 @@ export class AnalyzeController {
   }
 
   @Get('/today')
-  async getAnalyzeToday(@Query() query: Partial<PagerDto>) {
+  getAnalyzeToday(@Query() query: Partial<BasicPagerInput>) {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const todayEarly = getTodayEarly(today)
-    return await this.service.getRangeAnalyzeData(todayEarly, today, {
+    return this.service.getRangeAnalyzeData(todayEarly, today, {
       limit: Math.trunc(size),
       page,
     })
   }
 
   @Get('/week')
-  async getAnalyzeWeek(@Query() query: Partial<PagerDto>) {
+  getAnalyzeWeek(@Query() query: Partial<BasicPagerInput>) {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const weekStart = getWeekStart(today)
-    return await this.service.getRangeAnalyzeData(weekStart, today, {
+    return this.service.getRangeAnalyzeData(weekStart, today, {
       limit: size,
       page,
     })
   }
 
   @Get('/aggregate')
-  async getFragment() {
+  getFragment() {
     const cacheKey = getRedisKey(RedisKeys.AnalyzeAggregate)
     return this.getOrSetCache(cacheKey, 60, async () => {
       const getIpAndPvAggregate = async () => {
@@ -100,7 +99,7 @@ export class AnalyzeController {
         const dayData = Array.from({ length: 24 }, (_, i) => {
           const hour = i.toString().padStart(2, '0')
           const bucket = day[hour]
-          const label = `${i}时`
+          const label = `${i}:00`
           return [
             { hour: label, key: 'ip', value: bucket?.ip || 0 },
             { hour: label, key: 'pv', value: bucket?.pv || 0 },
@@ -114,11 +113,11 @@ export class AnalyzeController {
           granularity: 'date',
         })) as any[]
 
-        const weekDayLabels = ['日', '一', '二', '三', '四', '五', '六']
+        const weekDayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         const weekData = all
           .slice(0, 7)
           .map((item) => {
-            const day = `周${weekDayLabels[dayjs(item.date).get('day')]}`
+            const day = weekDayLabels[dayjs(item.date).get('day')]
             return [
               { day, key: 'ip', value: item.ip },
               { day, key: 'pv', value: item.pv },
@@ -163,7 +162,7 @@ export class AnalyzeController {
     const client = this.redisService.getClient()
     const keys = await client.keys(getRedisKey(RedisKeys.Like, '*'))
 
-    return Promise.all(
+    const data = await Promise.all(
       keys.map(async (key) => {
         const id = key.split('_').pop()!
 
@@ -173,10 +172,11 @@ export class AnalyzeController {
         }
       }),
     )
+    return data
   }
 
   @Get('/traffic-source')
-  async getTrafficSource(@Query() query: AnalyzeDto) {
+  getTrafficSource(@Query() query: AnalyzeDto) {
     const { from, to } = query
     const cacheKey = getRedisKey(
       RedisKeys.AnalyzeTrafficSource,
@@ -188,7 +188,7 @@ export class AnalyzeController {
   }
 
   @Get('/device')
-  async getDeviceDistribution(@Query() query: AnalyzeDto) {
+  getDeviceDistribution(@Query() query: AnalyzeDto) {
     const { from, to } = query
     const cacheKey = getRedisKey(
       RedisKeys.AnalyzeDeviceDistribution,

@@ -25,7 +25,7 @@ export class UpdateController {
 
   @Sse('/upgrade/dashboard')
   @HTTPDecorators.Idempotence()
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async updateDashboard(
     @Query() query: UpdateAdminDto,
   ): Promise<Observable<string>> {

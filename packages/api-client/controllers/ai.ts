@@ -11,7 +11,7 @@ import type {
   AITranslationModel,
 } from '../models/ai'
 
-declare module '../core/client' {
+declare module '@mx-space/api-client' {
   interface HTTPClient<
     T extends IRequestAdapter = IRequestAdapter,
     ResponseWrapper = unknown,

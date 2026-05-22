@@ -8,7 +8,7 @@ import type { EnrichmentProvider } from '../provider.interface'
 @Injectable()
 export class NeteaseMusicProvider implements EnrichmentProvider {
   readonly name = 'netease-music'
-  readonly displayName = '网易云音乐'
+  readonly displayName = 'NetEase Cloud Music'
   readonly category = ENRICHMENT_CATEGORIES.MUSIC
   readonly priority = 10
   readonly defaultTtl = 86400

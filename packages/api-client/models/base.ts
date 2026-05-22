@@ -1,3 +1,5 @@
+import type { EnrichmentResult } from './enrichment'
+
 export interface Image {
   height: number
   width: number
@@ -8,12 +10,12 @@ export interface Image {
 }
 
 export interface Pager {
-  total: number
+  page: number
   size: number
-  currentPage: number
-  totalPage: number
-  hasPrevPage: boolean
-  hasNextPage: boolean
+  total: number
+  totalPages: number
+  hasNextPage?: boolean
+  hasPrevPage?: boolean
 }
 
 export interface PaginateResult<T> {
@@ -21,25 +23,59 @@ export interface PaginateResult<T> {
   pagination: Pager
 }
 
-export type ModelWithLiked<T> = T & {
-  liked: boolean
+export interface PaginationMeta {
+  page: number
+  size: number
+  total: number
+  totalPages: number
 }
 
-export interface TranslationMeta {
-  sourceLang: string
-  targetLang: string
-  translatedAt: string
+export interface InteractionMeta {
+  isLiked?: boolean
+  likeCount?: number
+  readCount?: number
 }
 
-export type ModelWithTranslation<T> = T & {
+export interface ArticleTranslation {
   isTranslated: boolean
-  translationMeta?: TranslationMeta
+  sourceLang?: string
+  targetLang?: string
+  model?: string
+  translatedAt?: string
+  title?: string
+  text?: string
+  subtitle?: string | null
+  summary?: string | null
+  tags?: string[]
+  content?: string
+  contentFormat?: string
   availableTranslations?: string[]
-  /**
-   * Whether AI insights are available in the caller's requested locale.
-   * Independent from `translationMeta` because insights maintain their own
-   * translation pipeline — the article may be translated without insights,
-   * and vice versa. Absent (undefined) on endpoints that don't surface it.
-   */
-  hasInsightsInLocale?: boolean
+}
+
+export interface EntryTranslation {
+  article?: ArticleTranslation
+  fields?: Record<string, string>
+}
+
+export interface RelatedRef {
+  id: string
+  title: string
+  slug?: string
+  nid?: number
+  type?: string
+}
+
+export interface InsightsMeta {
+  hasInLocale: boolean
+}
+
+export interface ResponseMeta {
+  pagination?: PaginationMeta
+  view?: string
+  translation?: EntryTranslation | Record<string, EntryTranslation>
+  interaction?: InteractionMeta | Record<string, InteractionMeta>
+  enrichments?: Record<string, EnrichmentResult>
+  related?: RelatedRef[]
+  articles?: Record<string, RelatedRef>
+  insights?: InsightsMeta
 }

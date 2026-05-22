@@ -1,9 +1,10 @@
 import { Delete, Get, Param, Post, Query } from '@nestjs/common'
+
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import type { ScopedTaskService } from '~/processors/task-queue/scoped-task.service'
 import { StringIdDto } from '~/shared/dto/id.dto'
+
 import { BaseDeleteTasksQueryDto, BaseGetTasksQueryDto } from './base-task.dto'
 
 export abstract class BaseTaskController {
@@ -14,7 +15,9 @@ export abstract class BaseTaskController {
   async getTask(@Param() params: StringIdDto) {
     const task = await this.taskCrudService.getTask(params.id)
     if (!task) {
-      throw new BizException(ErrorCodeEnum.AITaskNotFound)
+      throw createAppException(AppErrorCode.AI_TASK_NOT_FOUND, {
+        id: params.id,
+      })
     }
     return task
   }

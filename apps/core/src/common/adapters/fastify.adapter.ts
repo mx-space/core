@@ -2,8 +2,9 @@ import fastifyCookie from '@fastify/cookie'
 import FastifyMultipart from '@fastify/multipart'
 import { Logger } from '@nestjs/common'
 import { FastifyAdapter } from '@nestjs/platform-fastify'
-import { getIp } from '~/utils/ip.util'
 import type { FastifyRequest } from 'fastify'
+
+import { getIp } from '~/utils/ip.util'
 
 const logger = new Logger('Fastify')
 
@@ -43,7 +44,7 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
   if (url.endsWith('.php')) {
     reply.raw.statusMessage =
       'Eh. PHP is not support on this machine. Yep, I also think PHP is bestest programming language. But for me it is beyond my reach.'
-    logWarn('PHP 是世界上最好的语言！！！！！', request, 'GodPHP')
+    logWarn('PHP is the best language in the world!!!!!', request, 'GodPHP')
 
     return reply.code(418).send()
   } else if (/\/(?:adminer|admin|wp-login|phpmyadmin|\.env)$/i.test(url)) {
@@ -51,7 +52,7 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
     reply.raw.statusMessage = 'Hey, What the fuck are you doing!'
     reply.raw.statusCode = isMxSpaceClient ? 666 : 200
     logWarn(
-      '注意了，有人正在搞渗透，让我看看是谁，是哪个小坏蛋这么不听话。\n',
+      'Heads up — someone is probing for vulnerabilities. Let me see which little troublemaker this is.\n',
       request,
       'Security',
     )

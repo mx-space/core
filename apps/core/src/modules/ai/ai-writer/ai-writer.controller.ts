@@ -2,8 +2,7 @@ import { Body, Get, Post } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 
 import { AiSlugBackfillService } from './ai-slug-backfill.service'
 import { AiQueryType, GenerateAiDto } from './ai-writer.schema'
@@ -27,7 +26,7 @@ export class AiWriterController {
         return this.aiWriterService.generateSlugByTitleViaOpenAI(body.title!)
       }
       default: {
-        throw new BizException(ErrorCodeEnum.Default, 'Invalid query type')
+        throw createAppException(AppErrorCode.AI_INVALID_QUERY_TYPE)
       }
     }
   }

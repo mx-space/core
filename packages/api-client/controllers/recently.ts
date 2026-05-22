@@ -6,7 +6,7 @@ import { autoBind } from '~/utils/auto-bind'
 
 import type { HTTPClient } from '../core'
 
-declare module '../core/client' {
+declare module '@mx-space/api-client' {
   interface HTTPClient<
     T extends IRequestAdapter = IRequestAdapter,
     ResponseWrapper = unknown,
@@ -45,7 +45,7 @@ export class RecentlyController<ResponseWrapper> implements IController {
   }
 
   getAll() {
-    return this.proxy.all.get<{ data: RecentlyModel[] }>()
+    return this.proxy.all.get<RecentlyModel[]>()
   }
 
   getList({
@@ -57,7 +57,7 @@ export class RecentlyController<ResponseWrapper> implements IController {
     after?: string | undefined
     size?: number | number
   } = {}) {
-    return this.proxy.get<{ data: RecentlyModel[] }>({
+    return this.proxy.get<RecentlyModel[]>({
       params: {
         before,
         after,

@@ -4,11 +4,12 @@ import type {
   NestInterceptor,
 } from '@nestjs/common'
 import { Injectable, Logger, SetMetadata } from '@nestjs/common'
-import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
-import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import pc from 'picocolors'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
+
+import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -22,7 +23,7 @@ export class LoggingInterceptor implements NestInterceptor {
   ): Observable<any> {
     const request = getNestExecutionContextRequest(context)
     const content = `${request.method} -> ${request.url}`
-    this.logger.debug(`+++ 收到请求：${content}`)
+    this.logger.debug(`+++ Request received: ${content}`)
     const now = Date.now()
 
     SetMetadata(HTTP_REQUEST_TIME, now)(request as any)
@@ -32,7 +33,7 @@ export class LoggingInterceptor implements NestInterceptor {
       .pipe(
         tap(() =>
           this.logger.debug(
-            `--- 响应请求：${content}${pc.yellow(` +${Date.now() - now}ms`)}`,
+            `--- Response sent: ${content}${pc.yellow(` +${Date.now() - now}ms`)}`,
           ),
         ),
       )

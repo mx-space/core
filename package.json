@@ -13,6 +13,7 @@
   "author": "Innei <https://innei.in>",
   "scripts": {
     "check:ai-translation-hash": "pnpm -C apps/core exec tsx scripts/check-ai-translation-hash.ts",
+    "check:controller-response-envelope": "pnpm -C apps/core exec tsx ../../scripts/check-controller-response-envelope.ts",
     "format": "prettier --write \"apps/**/*.ts\"",
     "lexical-live": "pnpm -C apps/core exec node scripts/lexical-translation-live.mjs",
     "prepare": "simple-git-hooks",
@@ -21,7 +22,7 @@
     "bundle": "pnpm -C \"apps/core\" run bundle",
     "test": "pnpm -C \"apps/core\" run test",
     "lint": "pnpm -C \"apps/core\" run lint",
-    "typecheck": "pnpm -C \"apps/core\" run typecheck",
+    "typecheck": "pnpm check:controller-response-envelope && pnpm -C \"apps/core\" run typecheck",
     "publish:core": "cd apps/core && npm run publish"
   },
   "devDependencies": {

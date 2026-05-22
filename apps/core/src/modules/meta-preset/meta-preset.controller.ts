@@ -25,54 +25,35 @@ import { MetaPresetService } from './meta-preset.service'
 export class MetaPresetController {
   constructor(private readonly metaPresetService: MetaPresetService) {}
 
-  /**
-   * 获取所有预设字段
-   * 支持按 scope 过滤
-   */
   @Get('/')
   async getAll(@Query() query: QueryMetaPresetDto) {
     const { scope, enabledOnly } = query
     return this.metaPresetService.findAll(scope, enabledOnly)
   }
 
-  /**
-   * 获取单个预设字段
-   */
   @Get('/:id')
   async getById(@Param() { id }: EntityIdDto) {
     return this.metaPresetService.findById(id)
   }
 
-  /**
-   * 创建自定义预设字段
-   */
   @Post('/')
   @Auth()
   async create(@Body() dto: CreateMetaPresetDto) {
     return this.metaPresetService.create(dto)
   }
 
-  /**
-   * 更新预设字段
-   */
   @Patch('/:id')
   @Auth()
   async update(@Param() { id }: EntityIdDto, @Body() dto: UpdateMetaPresetDto) {
     return this.metaPresetService.update(id, dto)
   }
 
-  /**
-   * 删除预设字段
-   */
   @Delete('/:id')
   @Auth()
   async delete(@Param() { id }: EntityIdDto) {
     return this.metaPresetService.delete(id)
   }
 
-  /**
-   * 批量更新排序
-   */
   @Put('/order')
   @Auth()
   async updateOrder(@Body() dto: UpdateOrderDto) {

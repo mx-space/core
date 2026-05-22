@@ -1,7 +1,8 @@
-import { zCoerceBoolean } from '~/common/zod'
-import { ArticleTypeEnum } from '~/constants/article.constant'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { zCoerceBoolean } from '~/common/zod'
+import { ArticleTypeEnum } from '~/constants/article.constant'
 
 /**
  * Meta schema
@@ -51,8 +52,8 @@ export class DataListDto extends createZodDto(DataListSchema) {}
 export const ExportMarkdownQuerySchema = z.object({
   yaml: zCoerceBoolean.optional(),
   slug: zCoerceBoolean.optional(),
-  show_title: zCoerceBoolean.optional(),
-  with_meta_json: zCoerceBoolean.optional(),
+  showTitle: zCoerceBoolean.optional(),
+  withMetaJson: zCoerceBoolean.optional(),
 })
 
 export class ExportMarkdownQueryDto extends createZodDto(

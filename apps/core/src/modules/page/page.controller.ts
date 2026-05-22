@@ -13,16 +13,21 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { withMeta } from '~/common/response/envelope.types'
+import type {
+  ArticleTranslation,
+  EnrichmentEntry,
+} from '~/common/response/meta.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import {
+  applyArticleTranslationInPlace,
   type ArticleTranslationInput,
+  buildArticleTranslationMeta,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
-import { applyContentPreference } from '~/utils/content.util'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { EnrichmentService } from '../enrichment/enrichment.service'
 import {
@@ -32,7 +37,7 @@ import {
   PartialPageDto,
 } from './page.schema'
 import { PageService } from './page.service'
-import { PageModel } from './page.types'
+import type { PageModel } from './page.types'
 
 @ApiController('pages')
 export class PageController {
@@ -42,49 +47,10 @@ export class PageController {
     private readonly enrichmentService: EnrichmentService,
   ) {}
 
-  private async buildPageDetailResponse(
-    page: PageModel,
-    query: PageDetailQueryDto,
-    lang?: string,
-  ) {
-    const translationResult = await this.translationService.translateArticle({
-      articleId: String(page.id),
-      targetLang: lang,
-      originalData: {
-        title: page.title,
-        text: page.text,
-        subtitle: page.subtitle,
-      },
-    })
-
-    const finalDoc = applyContentPreference(
-      {
-        ...page,
-        title: translationResult.title,
-        text: translationResult.text,
-        subtitle: translationResult.subtitle,
-        ...(translationResult.content && {
-          content: translationResult.content,
-          contentFormat: translationResult.contentFormat,
-        }),
-        isTranslated: translationResult.isTranslated,
-        sourceLang: translationResult.sourceLang,
-        translationMeta: translationResult.translationMeta,
-        availableTranslations: translationResult.availableTranslations,
-      },
-      query.prefer,
-    )
-    return this.enrichmentService.attachEnrichments(finalDoc)
-  }
-
   @Get('/')
-  async getPagesSummary(@Query() query: PagerDto, @Lang() lang?: string) {
-    const { size, select, page } = query
+  async getPagesSummary(@Query() query: BasicPagerDto, @Lang() lang?: string) {
+    const { size, page } = query
     const result = await this.pageService.listPaginated(page, size)
-
-    if (!lang || !result.data.length) {
-      return result
-    }
 
     const translationInputs: ArticleTranslationInput[] = result.data.map(
       (doc) => ({
@@ -100,61 +66,80 @@ export class PageController {
       }),
     )
 
-    const translationResults =
-      await this.translationService.translateArticleList({
+    const { results: translationResults, meta: translationMeta } =
+      await this.translationService.collectArticleTranslations({
         articles: translationInputs,
         targetLang: lang,
+        fields: ['title', 'text', 'subtitle', 'content', 'contentFormat'],
       })
 
-    result.data = result.data.map((doc) => {
-      const translation = translationResults.get(String(doc.id))
-      if (!translation?.isTranslated) {
-        return doc
-      }
-      doc.title = translation.title
-      doc.text = translation.text
-      doc.subtitle = translation.subtitle ?? null
-      ;(doc as { isTranslated?: boolean }).isTranslated =
-        translation.isTranslated
-      ;(doc as { translationMeta?: unknown }).translationMeta =
-        translation.translationMeta
-      return doc
-    })
-
-    // Strip fields fetched only for translation when caller did not request them.
-    if (select) {
-      const TRANSLATION_FIELDS = [
-        'text',
-        'meta',
-        'subtitle',
-        'content',
-        'contentFormat',
-        'modified',
-        'created',
-      ]
-      const stripFields = TRANSLATION_FIELDS.filter((f) => !select.includes(f))
-      for (const doc of result.data) {
-        for (const field of stripFields) {
-          delete (doc as any)[field]
-        }
+    for (const doc of result.data) {
+      const tr = translationResults.get(String(doc.id))
+      if (tr?.isTranslated) {
+        applyArticleTranslationInPlace(doc as Record<string, any>, tr as any, {
+          fields: ['title', 'text', 'subtitle', 'content', 'contentFormat'],
+        })
       }
     }
 
-    return result
+    const metaBuilder = new MetaObjectBuilder().view('card').pagination({
+      page: result.pagination.currentPage,
+      size: result.pagination.size,
+      total: result.pagination.total,
+      totalPages: result.pagination.totalPage,
+    })
+    if (translationMeta.size > 0) metaBuilder.translation(translationMeta)
+
+    return withMeta(result.data, metaBuilder.build())
   }
 
   @Get('/:id')
   @Auth()
-  async getPageById(
-    @Param() params: EntityIdDto,
-    @Query() query: PageDetailQueryDto,
-    @Lang() lang?: string,
-  ) {
+  async getPageById(@Param() params: EntityIdDto, @Lang() lang?: string) {
     const page = await this.pageService.findById(params.id)
     if (!page) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.PAGE_NOT_FOUND, { id: params.id })
     }
-    return this.buildPageDetailResponse(page, query, lang)
+
+    const translationResult = await this.translationService.translateArticle({
+      articleId: String(page.id),
+      targetLang: lang,
+      originalData: {
+        title: page.title,
+        text: page.text,
+        subtitle: page.subtitle,
+      },
+    })
+
+    applyArticleTranslationInPlace(
+      page as Record<string, any>,
+      translationResult,
+      {
+        fields: ['title', 'text', 'subtitle', 'content', 'contentFormat'],
+      },
+    )
+
+    const { enrichments, ...pageData } =
+      await this.enrichmentService.attachEnrichments(page)
+
+    const metaBuilder = new MetaObjectBuilder().enrichments(
+      enrichments as Record<string, EnrichmentEntry>,
+    )
+
+    const translationMap = new Map([
+      [
+        String(page.id),
+        {
+          article: buildArticleTranslationMeta(
+            translationResult,
+            lang,
+          ) as ArticleTranslation,
+        },
+      ],
+    ])
+    metaBuilder.translation(translationMap)
+
+    return withMeta(pageData, metaBuilder.build())
   }
 
   @Get('/slug/:slug')
@@ -164,22 +149,59 @@ export class PageController {
     @Lang() lang?: string,
   ) {
     if (typeof slug !== 'string') {
-      throw new BizException(ErrorCodeEnum.InvalidSlug)
+      throw createAppException(AppErrorCode.PAGE_NOT_FOUND)
     }
     const page = await this.pageService.findBySlug(slug)
-
     if (!page) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.PAGE_NOT_FOUND)
     }
 
-    return this.buildPageDetailResponse(page, query, lang)
+    const translationResult = await this.translationService.translateArticle({
+      articleId: String(page.id),
+      targetLang: lang,
+      originalData: {
+        title: page.title,
+        text: page.text,
+        subtitle: page.subtitle,
+      },
+    })
+
+    applyArticleTranslationInPlace(
+      page as Record<string, any>,
+      translationResult,
+      {
+        fields: ['title', 'text', 'subtitle', 'content', 'contentFormat'],
+      },
+    )
+
+    const { enrichments, ...pageData } =
+      await this.enrichmentService.attachEnrichments(page)
+
+    const metaBuilder = new MetaObjectBuilder()
+      .view('detail')
+      .enrichments(enrichments as Record<string, EnrichmentEntry>)
+
+    const translationMap = new Map([
+      [
+        String(page.id),
+        {
+          article: buildArticleTranslationMeta(
+            translationResult,
+            lang,
+          ) as ArticleTranslation,
+        },
+      ],
+    ])
+    metaBuilder.translation(translationMap)
+
+    return withMeta(pageData, metaBuilder.build())
   }
 
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: PageDto) {
-    return await this.pageService.create(body as unknown as PageModel)
+  create(@Body() body: PageDto) {
+    return this.pageService.create(body as unknown as PageModel)
   }
 
   @Put('/:id')
@@ -187,8 +209,7 @@ export class PageController {
   async modify(@Body() body: PageDto, @Param() params: EntityIdDto) {
     const { id } = params
     await this.pageService.updateById(id, body as unknown as PageModel)
-
-    return await this.pageService.findById(id)
+    return this.pageService.findById(id)
   }
 
   @Patch('/:id')
@@ -196,8 +217,6 @@ export class PageController {
   async patch(@Body() body: PartialPageDto, @Param() params: EntityIdDto) {
     const { id } = params
     await this.pageService.updateById(id, body as unknown as Partial<PageModel>)
-
-    return
   }
 
   @Patch('/reorder')
@@ -207,18 +226,18 @@ export class PageController {
     const orders = seq.map(($) => $.order)
     const uniq = new Set(orders)
     if (uniq.size !== orders.length) {
-      throw new BizException(ErrorCodeEnum.InvalidOrderValue)
+      throw createAppException(AppErrorCode.INVALID_ORDER_VALUE)
     }
     const tasks = seq.map(({ id, order }) => {
       return this.pageService.updateOrder(id, order)
     })
     await Promise.all(tasks)
+    return { success: true }
   }
 
   @Delete('/:id')
   @Auth()
   async deletePage(@Param() params: EntityIdDto) {
     await this.pageService.deleteById(params.id)
-    return
   }
 }

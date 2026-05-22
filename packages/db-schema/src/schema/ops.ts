@@ -183,7 +183,10 @@ export const fileReferences = pgTable(
     uploadedBy: text('uploaded_by'),
     mimeType: text('mime_type'),
     byteSize: bigint('byte_size', { mode: 'number' }),
-    detachedAt: timestamp('detached_at', { withTimezone: false, mode: 'date' }),
+    detachedAt: timestamp('detached_at', {
+      withTimezone: false,
+      mode: 'date',
+    }),
   },
   (table) => [
     index('file_references_file_url_idx').on(table.fileUrl),

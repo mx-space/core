@@ -22,14 +22,17 @@ describe('test note client', () => {
   })
 
   it('should get post list filter filed', async () => {
-    const mocked = mockResponse('/notes?page=1&size=1&select=createdAt+title', {
-      data: [{}],
+    const items = [{}]
+    const pagination = { page: 1, size: 1, total: 1, total_pages: 1 }
+    mockResponse('/notes?page=1&size=1', items, 'get', undefined, {
+      pagination,
     })
 
-    const data = await client.note.getList(1, 1, {
-      select: ['createdAt', 'title'],
+    const data = await client.note.getList(1, 1)
+    expect(data).toEqual({
+      data: items,
+      pagination: { page: 1, size: 1, total: 1, totalPages: 1 },
     })
-    expect(data).toEqual(mocked)
   })
 
   it('should get latest note', async () => {

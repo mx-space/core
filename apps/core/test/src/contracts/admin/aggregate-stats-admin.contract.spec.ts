@@ -28,7 +28,10 @@ import { SnippetService } from '~/modules/snippet/snippet.service'
 import { assertHasKeys } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { authPassHeader } from '../../../mock/guard/auth.guard'
-import { translationProvider } from '../../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../../mock/processors/translation.mock'
 
 const stub = <T>(token: T, value: any) => ({
   provide: token as any,
@@ -95,6 +98,7 @@ const aggregateServiceProvider = {
 const baseProviders = [
   aggregateServiceProvider,
   translationProvider,
+  translationEntryProvider,
   stub(AnalyzeService, {
     async getCallTime() {
       return { callTime: 0, uv: 0 }
@@ -212,9 +216,9 @@ describe('Admin contract — /aggregate/stat & /aggregate/site_info family', () 
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeys(body, ['os', 'browser'])
-    assertHasKeys(body.os[0], ['name', 'count'])
-    assertHasKeys(body.browser[0], ['name', 'count'])
+    assertHasKeys(body.data, ['os', 'browser'])
+    assertHasKeys(body.data.os[0], ['name', 'count'])
+    assertHasKeys(body.data.browser[0], ['name', 'count'])
   })
 
   test('GET /aggregate/count_read_and_like', async () => {
@@ -224,9 +228,9 @@ describe('Admin contract — /aggregate/stat & /aggregate/site_info family', () 
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeys(body, ['total_likes', 'total_reads'])
-    expect(body.total_likes).toBe(42)
-    expect(body.total_reads).toBe(100)
+    assertHasKeys(body.data, ['total_likes', 'total_reads'])
+    expect(body.data.total_likes).toBe(42)
+    expect(body.data.total_reads).toBe(100)
   })
 
   test('GET /aggregate/count_site_words', async () => {
@@ -236,7 +240,7 @@ describe('Admin contract — /aggregate/stat & /aggregate/site_info family', () 
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    expect(body.count).toBe(12345)
+    expect(body.data.count).toBe(12345)
   })
 
   test('GET /aggregate/site_info', async () => {
@@ -246,12 +250,12 @@ describe('Admin contract — /aggregate/stat & /aggregate/site_info family', () 
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeys(body, [
+    assertHasKeys(body.data, [
       'post_count',
       'note_count',
       'total_word_count',
       'first_publish_date',
     ])
-    expect(body.first_publish_date).toBe('2024-01-01T00:00:00.000Z')
+    expect(body.data.first_publish_date).toBe('2024-01-01T00:00:00.000Z')
   })
 })

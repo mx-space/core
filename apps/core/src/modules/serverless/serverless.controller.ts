@@ -16,8 +16,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { getSandboxTypeDeclaration } from '~/utils/sandbox'
 
@@ -34,7 +33,7 @@ export class ServerlessController {
 
   @Get('/types')
   @Auth()
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   @CacheTTL(60 * 60 * 24)
   getCodeDefined() {
     return getSandboxTypeDeclaration()
@@ -57,7 +56,7 @@ export class ServerlessController {
 
   @Get('/compiled/:id')
   @Auth()
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async getCompiledCode(@Param() param: EntityIdDto) {
     const snippet = await this.serverlessService.repository.findById(param.id)
     if (!snippet) {
@@ -83,7 +82,7 @@ export class ServerlessController {
       ttl: 5000,
     },
   })
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async runServerlessFunctionWildcard(
     @Param() param: ServerlessReferenceDto,
     @HasAdminAccess() hasAdminAccess: boolean,
@@ -101,7 +100,7 @@ export class ServerlessController {
       ttl: 5000,
     },
   })
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async runServerlessFunction(
     @Param() param: ServerlessReferenceDto,
     @HasAdminAccess() hasAdminAccess: boolean,
@@ -118,23 +117,21 @@ export class ServerlessController {
         requestMethod,
       )
 
-    const errorPath = `Path: /${reference}/${name}`
+    const errorPath = `/${reference}/${name}`
     if (!snippet) {
-      throw new BizException(
-        ErrorCodeEnum.FunctionNotFound,
-        `serverless function is not exist, ${errorPath}`,
-      )
+      throw createAppException(AppErrorCode.FUNCTION_NOT_FOUND, {
+        path: errorPath,
+      })
     }
 
     if (!snippet.enable) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        `serverless function is not enabled, ${errorPath}`,
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: `serverless function is not enabled, ${errorPath}`,
+      })
     }
 
     if (snippet.private && !hasAdminAccess) {
-      throw new BizException(ErrorCodeEnum.ServerlessNoPermission)
+      throw createAppException(AppErrorCode.SERVERLESS_NO_PERMISSION)
     }
 
     const result =
@@ -149,7 +146,7 @@ export class ServerlessController {
   }
 
   /**
-   * 重置内建函数，过期的内建函数会被删除
+   * Reset a built-in function. Stale built-in functions are deleted.
    */
   @Delete('/reset/:id')
   @Auth()
@@ -158,7 +155,7 @@ export class ServerlessController {
     if (!builtIn) {
       const snippet = await this.serverlessService.repository.findById(id)
       if (!snippet) {
-        throw new BizException(ErrorCodeEnum.FunctionNotFound)
+        throw createAppException(AppErrorCode.FUNCTION_NOT_FOUND)
       }
       await this.serverlessService.repository.deleteById(id)
       return

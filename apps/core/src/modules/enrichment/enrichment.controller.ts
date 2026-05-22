@@ -1,16 +1,13 @@
 import {
   Body,
-  ConflictException,
   Delete,
   Get,
   HttpCode,
-  NotFoundException,
   Param,
   Post,
   Query,
   Req,
   Res,
-  UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
@@ -19,6 +16,9 @@ import type { FastifyRequest } from 'fastify'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 import { EnrichmentRepository } from './enrichment.repository'
@@ -65,17 +65,11 @@ export class EnrichmentController {
         lang,
       )
       if (stale) {
-        // Fastify reply uses `header(name, value)`; the legacy
-        // `setHeader` shim is not exposed when accessed through Nest's
-        // `@Res({ passthrough: true })` adapter object.
         res.header('X-Enrichment-Stale', 'true')
       }
       this.bumpCaptureAccess(result)
-      return result
+      return result as EnrichmentResult
     } catch (error) {
-      // Provider not configured / token missing is a "no data" case, not an
-      // error: return 204 so frontends can render the URL as a plain link
-      // without per-card 500s polluting logs.
       if (
         error instanceof ProviderDisabledError ||
         error instanceof TokenMissingError
@@ -101,11 +95,6 @@ export class EnrichmentController {
     return result
   }
 
-  /**
-   * Fire-and-forget LRU touch. The throttle (Redis NX-EX 3600s) lives inside
-   * the storage service, so hot URLs do not write per-request. Failure is
-   * swallowed to keep the hot path free of capture-storage faults.
-   */
   private bumpCaptureAccess(result: EnrichmentResult | undefined): void {
     if (!result?.captureImage || !result.id) return
     this.captureStorage.touchAccess(result.id).catch(() => {
@@ -116,16 +105,20 @@ export class EnrichmentController {
   @Get('admin/list')
   @Auth()
   async list(@Query() query: AdminListQueryDto) {
-    return this.enrichmentService.list(query.page, query.size, {
+    const result = await this.enrichmentService.list(query.page, query.size, {
       onlyFailed: query.onlyFailed,
       locale: query.locale,
     })
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder().pagination(result.pagination).build(),
+    )
   }
 
   @Post('admin/refresh/:provider/*')
   @Auth()
   @HttpCode(200)
-  async refresh(
+  refresh(
     @Param('provider') provider: string,
     @Req() req: FastifyRequest,
     @Query('lang') lang?: string,
@@ -148,7 +141,7 @@ export class EnrichmentController {
 
   @Get('admin/providers')
   @Auth()
-  async providers(): Promise<ProviderMeta[]> {
+  providers(): Promise<ProviderMeta[]> {
     return this.enrichmentService.getProviders()
   }
 
@@ -156,9 +149,13 @@ export class EnrichmentController {
   @Auth()
   async byId(@Param('id') id: string) {
     const row = await this.enrichmentRepository.findById(id)
-    if (!row) throw new NotFoundException(`Enrichment ${id} not found`)
+    if (!row)
+      throw createAppException(AppErrorCode.ENRICHMENT_NOT_FOUND, { id })
     const capture = await this.captureRepository.findByEnrichmentId(id)
-    return { ...row, capture }
+    return {
+      ...row,
+      capture,
+    }
   }
 
   @Get('admin/captures/quota')
@@ -190,13 +187,16 @@ export class EnrichmentController {
       query.sort,
       query.order,
     )
-    const data = await Promise.all(
+    const items = await Promise.all(
       result.data.map(async (row) => ({
         ...row,
         publicUrl: await this.resolvePublicUrl(row.objectKey),
       })),
     )
-    return { data, pagination: result.pagination }
+    return withMeta(
+      items,
+      new MetaObjectBuilder().pagination(result.pagination).build(),
+    )
   }
 
   @Delete('admin/captures/:enrichmentId')
@@ -217,21 +217,17 @@ export class EnrichmentController {
   ): Promise<EnrichmentResult['captureImage']> {
     const row = await this.enrichmentRepository.findById(enrichmentId)
     if (!row)
-      throw new NotFoundException(`Enrichment ${enrichmentId} not found`)
+      throw createAppException(AppErrorCode.ENRICHMENT_NOT_FOUND, {
+        id: enrichmentId,
+      })
 
     const config = await this.configsService.get('thirdPartyServiceIntegration')
     const openGraph = config?.openGraph
     if (openGraph?.fetchMode !== 'browser') {
-      throw new ConflictException({
-        code: 'browser_mode_required',
-        message: 'OpenGraph fetchMode must be `browser` to recapture',
-      })
+      throw createAppException(AppErrorCode.ENRICHMENT_BROWSER_MODE_REQUIRED)
     }
     if (openGraph.screenshot?.enabled !== true) {
-      throw new ConflictException({
-        code: 'screenshot_disabled',
-        message: 'openGraph.screenshot.enabled is false',
-      })
+      throw createAppException(AppErrorCode.ENRICHMENT_SCREENSHOT_DISABLED)
     }
 
     await this.enrichmentService.refresh(
@@ -246,10 +242,7 @@ export class EnrichmentController {
     const fresh = await this.enrichmentRepository.findById(enrichmentId)
     const captureImage = fresh?.normalized.captureImage
     if (!captureImage) {
-      throw new UnprocessableEntityException({
-        code: 'capture_failed',
-        message: 'Capture was not produced by the refresh',
-      })
+      throw createAppException(AppErrorCode.ENRICHMENT_CAPTURE_FAILED)
     }
     return captureImage
   }
@@ -258,7 +251,7 @@ export class EnrichmentController {
   @Auth()
   @Throttle(ADMIN_PROBE_THROTTLE)
   @HttpCode(200)
-  async probe(@Body() body: AdminProbeBodyDto) {
+  probe(@Body() body: AdminProbeBodyDto) {
     return this.enrichmentService.probe(body.url, body.useCache === true)
   }
 

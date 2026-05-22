@@ -1,12 +1,10 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { AuthService } from '~/modules/auth/auth.service'
 import type { SessionUser } from '~/modules/auth/auth.types'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-
-import { BizException } from '../exceptions/biz.exception'
 
 @Injectable()
 export class ReaderAuthGuard implements CanActivate {
@@ -19,11 +17,11 @@ export class ReaderAuthGuard implements CanActivate {
     const user = session?.user as SessionUser | undefined
 
     if (!user?.id) {
-      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+      throw createAppException(AppErrorCode.AUTH_NOT_LOGGED_IN)
     }
 
     if (user.role !== 'reader' && user.role !== 'owner') {
-      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+      throw createAppException(AppErrorCode.AUTH_NOT_LOGGED_IN)
     }
 
     request.user = user

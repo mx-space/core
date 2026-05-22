@@ -4,8 +4,7 @@ import { URL } from 'node:url'
 import { Injectable, Logger } from '@nestjs/common'
 import { customAlphabet } from 'nanoid'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { alphabet } from '~/constants/other.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { validateImageBuffer } from '~/utils/image.util'
@@ -54,7 +53,7 @@ export class LinkAvatarService {
       typeof link === 'string' ? await this.linkRepository.findById(link) : link
     if (!doc) {
       if (typeof link === 'string') {
-        throw new BizException(ErrorCodeEnum.LinkNotFound)
+        throw createAppException(AppErrorCode.LINK_NOT_FOUND, { id: link })
       }
       return false
     }
@@ -80,7 +79,7 @@ export class LinkAvatarService {
         }
       } catch (error: any) {
         this.logger.warn(
-          `解析友链 ${doc.id} 的站点地址失败: ${error?.message || String(error)}`,
+          `Failed to parse the site URL for friend link ${doc.id}: ${error?.message || String(error)}`,
         )
       }
       return webUrl
@@ -106,7 +105,7 @@ export class LinkAvatarService {
       !this.isAllowedMimeType(normalizedContentType)
     ) {
       this.logger.warn(
-        `友链 ${doc.id} 头像响应类型 ${contentType || 'unknown'} 不在受支持图片范围，跳过内链转换`,
+        `Friend link ${doc.id} avatar response type ${contentType || 'unknown'} is not a supported image format; skipping internalization`,
       )
       return false
     }
@@ -119,10 +118,9 @@ export class LinkAvatarService {
     })
 
     if (!validation.ok) {
-      throw new BizException(
-        ErrorCodeEnum.LinkAvatarValidationFailed,
-        validation.reason,
-      )
+      throw createAppException(AppErrorCode.LINK_AVATAR_VALIDATION_FAILED, {
+        reason: validation.reason,
+      })
     }
 
     const { ext } = validation
@@ -142,7 +140,7 @@ export class LinkAvatarService {
 
     await this.linkRepository.updateAvatar(doc.id, internalUrl)
 
-    this.logger.log(`友链 ${doc.id} 头像已转换为内部链接`)
+    this.logger.log(`Friend link ${doc.id} avatar has been internalized`)
 
     return true
   }
@@ -169,7 +167,7 @@ export class LinkAvatarService {
         }
       } catch (error: any) {
         this.logger.error(
-          `迁移友链头像失败: ${link.id} - ${error?.message || String(error)}`,
+          `Failed to migrate friend link avatar: ${link.id} - ${error?.message || String(error)}`,
         )
       }
     }

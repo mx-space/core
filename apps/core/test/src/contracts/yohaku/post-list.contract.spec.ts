@@ -128,6 +128,6 @@ describe('Yohaku contract — post list (e2e)', () => {
       'modified_at',
     ])
     assertHasKeysDeep(body.data[0], ['category.slug', 'category.name'])
-    expect(body.pagination).toMatchObject({ total: expect.any(Number) })
+    expect(body.meta.pagination).toMatchObject({ total: expect.any(Number) })
   })
 })

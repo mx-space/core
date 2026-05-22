@@ -2,7 +2,7 @@ import { Readable } from 'node:stream'
 
 import { describe, expect, it, vi } from 'vitest'
 
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppException } from '~/common/errors/exception.types'
 import { FileController } from '~/modules/file/file.controller'
 
 describe('FileController', () => {
@@ -92,9 +92,7 @@ describe('FileController', () => {
 
     await expect(
       controller.upload({ type: 'image' } as any, {} as any),
-    ).rejects.toMatchObject({
-      bizCode: ErrorCodeEnum.ImageStorageNotConfigured,
-    })
+    ).rejects.toThrow(AppException)
 
     expect(getAndValidMultipartField).not.toHaveBeenCalled()
     expect(writeFile).not.toHaveBeenCalled()

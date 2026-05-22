@@ -6,7 +6,7 @@ import { autoBind } from '~/utils/auto-bind'
 import type { HTTPClient } from '../core'
 import { BaseCrudController } from './base'
 
-declare module '../core/client' {
+declare module '@mx-space/api-client' {
   interface HTTPClient<
     T extends IRequestAdapter = IRequestAdapter,
     ResponseWrapper = unknown,

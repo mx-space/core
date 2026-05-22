@@ -2,7 +2,9 @@ import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import { DraftRefType } from './draft.enum'
@@ -22,8 +24,8 @@ export class DraftController {
 
   @Post('/')
   @Auth()
-  async create(@Body() body: CreateDraftDto) {
-    return await this.draftService.create(body)
+  create(@Body() body: CreateDraftDto) {
+    return this.draftService.create(body)
   }
 
   @Get('/')
@@ -41,30 +43,39 @@ export class DraftController {
         try {
           ;(d as any).typeSpecificData = JSON.parse(d.typeSpecificData)
         } catch {
-          // keep raw payload when not valid JSON
+          // keep raw payload
         }
       }
       return d
     })
 
-    return { ...result, data }
+    return withMeta(
+      data,
+      new MetaObjectBuilder()
+        .view('card')
+        .pagination({
+          page: result.pagination.currentPage,
+          size: result.pagination.size,
+          total: result.pagination.total,
+          totalPages: result.pagination.totalPage,
+        })
+        .build(),
+    )
   }
 
   @Get('/by-ref/:refType/new')
   @Auth()
-  async getNewDrafts(@Param() params: DraftRefTypeDto) {
-    return await this.draftService.findNewDrafts(params.refType as DraftRefType)
+  getNewDrafts(@Param() params: DraftRefTypeDto) {
+    return this.draftService.findNewDrafts(params.refType as DraftRefType)
   }
 
   @Get('/by-ref/:refType/:refId')
   @Auth()
-  async getByRef(@Param() params: DraftRefTypeAndIdDto) {
-    // 返回 null 表示没有关联草稿，这是正常情况，不是错误
-    const draft = await this.draftService.findByRef(
+  getByRef(@Param() params: DraftRefTypeAndIdDto) {
+    return this.draftService.findByRef(
       params.refType as DraftRefType,
       params.refId,
     )
-    return draft
   }
 
   @Get('/:id')
@@ -72,15 +83,15 @@ export class DraftController {
   async getById(@Param() params: EntityIdDto) {
     const draft = await this.draftService.findById(params.id)
     if (!draft) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id: params.id })
     }
     return draft
   }
 
   @Put('/:id')
   @Auth()
-  async update(@Param() params: EntityIdDto, @Body() body: UpdateDraftDto) {
-    return await this.draftService.update(params.id, body)
+  update(@Param() params: EntityIdDto, @Body() body: UpdateDraftDto) {
+    return this.draftService.update(params.id, body)
   }
 
   @Delete('/:id')
@@ -92,31 +103,25 @@ export class DraftController {
 
   @Get('/:id/history')
   @Auth()
-  async getHistory(@Param() params: EntityIdDto) {
-    return await this.draftService.getHistory(params.id)
+  getHistory(@Param() params: EntityIdDto) {
+    return this.draftService.getHistory(params.id)
   }
 
   @Get('/:id/history/:version')
   @Auth()
-  async getHistoryVersion(
+  getHistoryVersion(
     @Param() params: EntityIdDto,
     @Param() versionParams: RestoreVersionDto,
   ) {
-    return await this.draftService.getHistoryVersion(
-      params.id,
-      versionParams.version,
-    )
+    return this.draftService.getHistoryVersion(params.id, versionParams.version)
   }
 
   @Post('/:id/restore/:version')
   @Auth()
-  async restore(
+  restore(
     @Param() params: EntityIdDto,
     @Param() versionParams: RestoreVersionDto,
   ) {
-    return await this.draftService.restoreVersion(
-      params.id,
-      versionParams.version,
-    )
+    return this.draftService.restoreVersion(params.id, versionParams.version)
   }
 }

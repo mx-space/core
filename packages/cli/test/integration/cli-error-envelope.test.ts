@@ -46,13 +46,14 @@ interface MockServerHandle {
 
 const startMockServer = (
   handler: (req: IncomingMessage, res: ServerResponse) => void,
+  prefix: 'v2' | 'v3' = 'v2',
 ): Promise<MockServerHandle> =>
   new Promise((resolve) => {
     const server: Server = createServer(handler)
     server.listen(0, '127.0.0.1', () => {
       const addr = server.address() as AddressInfo
       resolve({
-        url: `http://127.0.0.1:${addr.port}/api/v2`,
+        url: `http://127.0.0.1:${addr.port}/api/${prefix}`,
         stop: () => new Promise<void>((r) => server.close(() => r())),
       })
     })
@@ -72,7 +73,7 @@ describe('cli --json error envelope', () => {
   })
 
   it(
-    'emits a wire-format error envelope when the server returns 500',
+    'emits a wire-format error envelope when a V2 server returns 500',
     async () => {
       server = await startMockServer((req, res) => {
         if (req.url === '/api/v2' || req.url === '/api/v2/') {
@@ -104,6 +105,96 @@ describe('cli --json error envelope', () => {
       expect(envelope.ok).toBe(false)
       expect(envelope.code).toBe('server.error')
       expect(typeof envelope.message).toBe('string')
+      expect(envelope.message).toContain('boom')
+    },
+    30_000,
+  )
+
+  it(
+    'unwraps a V3 error envelope on 500',
+    async () => {
+      server = await startMockServer((req, res) => {
+        if (req.url === '/api/v3' || req.url === '/api/v3/') {
+          res.writeHead(200, { 'content-type': 'application/json' })
+          res.end(
+            JSON.stringify({
+              data: {
+                name: 'mx-server',
+                version: '3.0.0',
+                auth_client: 'better-auth',
+              },
+            }),
+          )
+          return
+        }
+        res.writeHead(500, { 'content-type': 'application/json' })
+        res.end(
+          JSON.stringify({
+            error: { code: 'INTERNAL_ERROR', message: 'boom v3' },
+          }),
+        )
+      }, 'v3')
+
+      const res = await runMxs([
+        '--api-url',
+        server.url,
+        '--json',
+        'post',
+        'list',
+      ])
+
+      expect(res.code).toBe(6)
+      const envelope = JSON.parse(res.stdout)
+      expect(envelope.ok).toBe(false)
+      expect(envelope.code).toBe('server.error')
+      // Adapter unwraps `error.message`, which then surfaces in the renderer.
+      expect(envelope.message).toContain('boom v3')
+    },
+    30_000,
+  )
+
+  it(
+    'maps a V3 404 with <RESOURCE>_NOT_FOUND code to ResourceNotFound',
+    async () => {
+      server = await startMockServer((req, res) => {
+        if (req.url === '/api/v3' || req.url === '/api/v3/') {
+          res.writeHead(200, { 'content-type': 'application/json' })
+          res.end(
+            JSON.stringify({
+              data: {
+                name: 'mx-server',
+                version: '3.0.0',
+                auth_client: 'better-auth',
+              },
+            }),
+          )
+          return
+        }
+        res.writeHead(404, { 'content-type': 'application/json' })
+        res.end(
+          JSON.stringify({
+            error: {
+              code: 'CATEGORY_NOT_FOUND',
+              message: 'category not found',
+            },
+          }),
+        )
+      }, 'v3')
+
+      const res = await runMxs([
+        '--api-url',
+        server.url,
+        '--json',
+        'category',
+        'get',
+        'missing',
+      ])
+
+      expect(res.code).toBe(7)
+      const envelope = JSON.parse(res.stdout)
+      expect(envelope.ok).toBe(false)
+      expect(envelope.code).toBe('resource.not_found')
+      expect(envelope.message).toContain('category not found')
     },
     30_000,
   )

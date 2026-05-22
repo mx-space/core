@@ -101,8 +101,8 @@ export class CommentSpamFilterService {
 
     if (result.isSpam) {
       this.logger.warn(
-        `--> 检测到垃圾评论 [${result.reason}]：` +
-          `作者：${doc.author}, IP: ${doc.ip}, 内容：${doc.text}`,
+        `--> Spam comment detected [${result.reason}]: ` +
+          `author: ${doc.author}, IP: ${doc.ip}, text: ${doc.text}`,
       )
     }
     return result.isSpam
@@ -138,7 +138,7 @@ export class CommentSpamFilterService {
         }
         return output.score > aiReviewThreshold
       } catch (error) {
-        this.logger.error('AI 评审评分模式出错', error)
+        this.logger.error('AI review score mode failed', error)
         return false
       }
     } else {
@@ -152,7 +152,7 @@ export class CommentSpamFilterService {
         }
         return output.isSpam
       } catch (error) {
-        this.logger.error('AI 评审垃圾检测模式出错', error)
+        this.logger.error('AI review spam detection mode failed', error)
         return false
       }
     }

@@ -3,10 +3,9 @@ import { Injectable, Logger } from '@nestjs/common'
 import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
 import type { z, ZodError } from 'zod'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import type { AIProviderConfig } from '~/modules/ai/ai.types'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -39,9 +38,11 @@ const aggregateConfigKeys = new Set<keyof IConfig>([
 
 /*
  * NOTE:
- * 1. 读配置在 Redis 中，getConfig 为收口，获取配置都从 Redis 拿，初始化之后入到 Redis，
- * 2. 对于加密的字段，在 Redis 的缓存中应该也是加密的。
- * 3. 何时解密，在 Node 中消费时，即 getConfig 时统一解密。
+ * 1. Configs live in Redis. `getConfig` is the single entry point; all reads
+ *    come from Redis, and the initial values are loaded into Redis on startup.
+ * 2. Encrypted fields stay encrypted in the Redis cache as well.
+ * 3. Decryption happens at the point of consumption in Node — i.e. uniformly
+ *    inside `getConfig`.
  */
 @Injectable()
 export class ConfigsService implements OnModuleInit {
@@ -60,7 +61,7 @@ export class ConfigsService implements OnModuleInit {
 
   async onModuleInit() {
     await this.ensureConfigInitialized()
-    this.logger.log('Config 已经加载完毕！')
+    this.logger.log('Config loaded successfully')
   }
 
   private async getRedisClient() {
@@ -192,7 +193,7 @@ export class ConfigsService implements OnModuleInit {
     return config[key]
   }
 
-  // Config 在此收口
+  // Single entry point for config reads
   public async getConfig(errorRetryCount = 3): Promise<Readonly<IConfig>> {
     await this.ensureConfigInitialized()
 
@@ -208,7 +209,7 @@ export class ConfigsService implements OnModuleInit {
         if (errorRetryCount > 0) {
           return await this.getConfig(errorRetryCount - 1)
         }
-        this.logger.error('获取配置失败')
+        this.logger.error('Failed to load config')
         throw error
       }
     } else {
@@ -245,11 +246,11 @@ export class ConfigsService implements OnModuleInit {
     const updatedConfigRow = await this.optionsRepository.upsert(
       key as string,
       mergeWith(cloneDeep(config[key]), data, (old, newer) => {
-        // 数组不合并
+        // Arrays are not merged
         if (Array.isArray(old)) {
           return newer
         }
-        // 对象合并
+        // Objects are merged
         if (typeof old === 'object' && typeof newer === 'object') {
           return { ...old, ...newer }
         }
@@ -307,14 +308,16 @@ export class ConfigsService implements OnModuleInit {
 
     const dto = configDtoMapping[key]
     if (!dto) {
-      throw new BizException(ErrorCodeEnum.ConfigNotFound)
+      throw createAppException(AppErrorCode.CONFIG_NOT_FOUND, {
+        id: key as string,
+      })
     }
-    // 如果是评论设置，并且尝试启用 AI 审核，就检查 AI 配置
+    // If this is the comment settings and AI review is being enabled, validate the AI config
     if (key === 'commentOptions' && (value as any).aiReview === true) {
       const aiConfig = await this.get('ai')
       const hasEnabledProvider = aiConfig.providers?.some((p) => p.enabled)
       if (!hasEnabledProvider) {
-        throw new BizException(ErrorCodeEnum.AIProviderNotEnabled)
+        throw createAppException(AppErrorCode.AI_PROVIDER_DISABLED)
       }
     }
     const instanceValue = this.validWithDto(dto, value) as Partial<IConfig[T]>
@@ -421,28 +424,29 @@ export class ConfigsService implements OnModuleInit {
     const errors: string[] = []
 
     if (mailOptions.provider === 'resend') {
-      // Resend 验证: from 和 apiKey 必填
+      // Resend validation: `from` and `apiKey` are required
       if (!mailOptions.from) {
-        errors.push('mailOptions.from: 发件邮箱地址不能为空')
+        errors.push('mailOptions.from: sender email address must not be empty')
       }
       if (!mailOptions.resend?.apiKey) {
-        errors.push('mailOptions.resend.apiKey: Resend API Key 不能为空')
+        errors.push(
+          'mailOptions.resend.apiKey: Resend API key must not be empty',
+        )
       }
     } else if (
-      mailOptions.provider === 'smtp' && // SMTP 验证: 至少需要 user 或 from
+      mailOptions.provider === 'smtp' && // SMTP validation: at least one of `user` or `from` is required
       !mailOptions.smtp?.user &&
       !mailOptions.from
     ) {
       errors.push(
-        'mailOptions.smtp.user 或 mailOptions.from: 至少需要填写一个发件人',
+        'mailOptions.smtp.user or mailOptions.from: at least one sender must be provided',
       )
     }
 
     if (errors.length > 0) {
-      throw new BizException(
-        ErrorCodeEnum.ConfigValidationFailed,
-        errors.join('; '),
-      )
+      throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+        message: errors.join('; '),
+      })
     }
   }
 
@@ -454,10 +458,9 @@ export class ConfigsService implements OnModuleInit {
         const path = err.path.join('.')
         return path ? `${path}: ${err.message}` : err.message
       })
-      throw new BizException(
-        ErrorCodeEnum.ConfigValidationFailed,
-        errorMessages.join('; '),
-      )
+      throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+        message: errorMessages.join('; '),
+      })
     }
     return result.data
   }

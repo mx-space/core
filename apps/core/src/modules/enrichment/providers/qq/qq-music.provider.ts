@@ -7,7 +7,7 @@ import type { EnrichmentProvider } from '../provider.interface'
 @Injectable()
 export class QQMusicProvider implements EnrichmentProvider {
   readonly name = 'qq-music'
-  readonly displayName = 'QQ音乐'
+  readonly displayName = 'QQ Music'
   readonly category = ENRICHMENT_CATEGORIES.MUSIC
   readonly priority = 9
   readonly defaultTtl = 86400
@@ -28,7 +28,7 @@ export class QQMusicProvider implements EnrichmentProvider {
   async fetch(id: string): Promise<EnrichmentResult> {
     return {
       title: `QQ Music: ${id}`,
-      description: 'QQ音乐歌曲',
+      description: 'QQ Music song',
       url: `https://y.qq.com/n/ryqq/songDetail/${id}`,
       category: this.category,
       subtype: 'song',

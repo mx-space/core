@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { AppException } from '~/common/errors/exception.types'
 import { PostController } from '~/modules/post/post.controller'
 
 const createController = () => {
@@ -38,7 +38,7 @@ describe('PostController', () => {
     postService.findById.mockResolvedValue({ id: 'post-1', isPublished: false })
 
     await expect(controller.getById({ id: 'post-1' }, false)).rejects.toThrow(
-      CannotFindException,
+      AppException,
     )
   })
 

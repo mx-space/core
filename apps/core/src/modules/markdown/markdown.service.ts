@@ -7,9 +7,8 @@ import { omit } from 'es-toolkit/compat'
 import { dump } from 'js-yaml'
 import JSZip from 'jszip'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
@@ -70,12 +69,12 @@ export class MarkdownService {
     const models = [] as PostModel[]
     const defaultCategory = categoryNameAndId[0]
     if (!defaultCategory) {
-      throw new InternalServerErrorException('分类不存在')
+      throw new InternalServerErrorException('Category does not exist')
     }
     for (const item of data) {
       if (!item.meta) {
         models.push({
-          title: `未命名-${count++}`,
+          title: `Untitled-${count++}`,
           slug: String(Date.now()),
           text: item.text,
           ...genDate(item),
@@ -103,7 +102,7 @@ export class MarkdownService {
         } as any),
       ),
     ).catch(() => {
-      this.logger.warn('一篇文章导入失败')
+      this.logger.warn('Failed to import one post')
     })
   }
 
@@ -111,7 +110,7 @@ export class MarkdownService {
     const models = [] as NoteModel[]
     for (const item of data) {
       models.push({
-        title: item.meta?.title ?? '未命名记录',
+        title: item.meta?.title ?? 'Untitled note',
         text: item.text,
         ...this.genDate(item),
       } as NoteModel)
@@ -169,12 +168,11 @@ export class MarkdownService {
     const zip = new JSZip()
 
     for (const document of documents) {
-      zip.file(
-        (options.slug ? document.meta.slug : document.meta.title)
-          .concat('.md')
-          .replaceAll('/', '-'),
-        document.text,
+      // Notes set meta.slug to nid (a number) — coerce so .concat works.
+      const name = String(
+        options.slug ? document.meta.slug : document.meta.title,
       )
+      zip.file(name.concat('.md').replaceAll('/', '-'), document.text)
     }
     return zip
   }
@@ -209,7 +207,7 @@ ${text.trim()}
   }
 
   /**
-   * 根据文章 Id 渲染一篇文章
+   * Render a single article by its ID.
    * @param id
    * @returns
    */
@@ -217,7 +215,7 @@ ${text.trim()}
     const result = await this.databaseService.findGlobalById(id)
 
     if (!result || result.type === CollectionRefTypes.Recently)
-      throw new BizException(ErrorCodeEnum.DocumentNotFound)
+      throw createAppException(AppErrorCode.DOCUMENT_NOT_FOUND, { id })
 
     return {
       html: this.renderMarkdownContent(result.document.text),
@@ -227,7 +225,7 @@ ${text.trim()}
   }
 
   /**
-   * 渲染 Markdown 文本输出 html
+   * Render Markdown text to HTML.
    * @param text
    * @returns
    */

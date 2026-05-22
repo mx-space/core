@@ -2,12 +2,16 @@ import type {
   IAdaptorRequestResponseType,
   IRequestAdapter,
 } from '~/interfaces/adapter'
-import type { ClientOptions } from '~/interfaces/client'
+import type {
+  ClientOptions,
+  ResponseAdapter,
+  ResponseAdapterContext,
+} from '~/interfaces/client'
 import type { IController } from '~/interfaces/controller'
 import type { RequestOptions } from '~/interfaces/instance'
 import type { IRequestHandler, Method } from '~/interfaces/request'
 import type { Class } from '~/interfaces/types'
-import { isPlainObject } from '~/utils'
+import { isPlainObject, isResponseEnvelope } from '~/utils'
 import { camelcaseKeys } from '~/utils/camelcase-keys'
 import { resolveFullPath } from '~/utils/path'
 
@@ -16,6 +20,74 @@ import { attachRequestMethod } from './attach-request'
 import { RequestError } from './error'
 
 const methodPrefix = '_$'
+
+// Adapter responses come in two shapes:
+//   - axios-style: `{ data: <envelope>, status, headers, ... }` — body lives in `res.data`.
+//   - ofetch-style: the parsed body itself (i.e. `res === <envelope>`).
+// Probe the axios shape first because both shapes can pass the `isResponseEnvelope`
+// key-set check (an axios wrapper with only a `data` key is structurally a subset
+// of an envelope). The deciding test is whether the inner `res.data` is itself
+// envelope-shaped — if so, treat `res` as the axios wrapper.
+function pickResponseBody(res: any) {
+  if (isPlainObject(res) && isResponseEnvelope(res.data)) {
+    return res.data
+  }
+  if (isResponseEnvelope(res)) {
+    return res
+  }
+  return res?.data
+}
+
+function defaultGetDataFromResponse(res: any) {
+  const body = pickResponseBody(res)
+  if (!isResponseEnvelope(body)) {
+    return body
+  }
+  if (body.meta && isPlainObject(body.meta.pagination)) {
+    return { data: body.data, pagination: body.meta.pagination }
+  }
+  return body.data
+}
+
+function extractResponseMeta(res: any): Record<string, any> | undefined {
+  const body = pickResponseBody(res)
+  return isResponseEnvelope(body) ? body.meta : undefined
+}
+
+function normalizeResponseAdapters(
+  responseAdapter: ClientOptions['responseAdapter'],
+): ResponseAdapter[] {
+  if (!responseAdapter) return []
+  return Array.isArray(responseAdapter) ? responseAdapter : [responseAdapter]
+}
+
+function applyResponseMetaAdapters(
+  meta: Record<string, any> | undefined,
+  adapters: ResponseAdapter[],
+  context: ResponseAdapterContext,
+) {
+  return adapters.reduce<Record<string, any> | undefined>(
+    (nextMeta, adapter) => {
+      return adapter.transformMeta
+        ? adapter.transformMeta(nextMeta, { ...context, meta: nextMeta })
+        : nextMeta
+    },
+    meta,
+  )
+}
+
+function applyResponseDataAdapters<T>(
+  data: T,
+  adapters: ResponseAdapter[],
+  context: ResponseAdapterContext,
+) {
+  return adapters.reduce<T>((nextData, adapter) => {
+    return adapter.transformData
+      ? adapter.transformData(nextData, context)
+      : nextData
+  }, data)
+}
+
 export type { HTTPClient }
 class HTTPClient<
   T extends IRequestAdapter = IRequestAdapter,
@@ -32,7 +104,7 @@ class HTTPClient<
 
     this._proxy = this.buildRoute(this)()
     options.transformResponse ||= (data) => camelcaseKeys(data)
-    options.getDataFromResponse ||= (res: any) => res.data
+    options.getDataFromResponse ||= defaultGetDataFromResponse
 
     this.initGetClient()
 
@@ -142,7 +214,8 @@ class HTTPClient<
             }
           if (methods.includes(name)) {
             return async (options: RequestOptions = {}) => {
-              const url = resolveFullPath(that.endpoint, route.join('/'))
+              const path = route.join('/')
+              const url = resolveFullPath(that.endpoint, path)
               route.length = 0
               const {
                 transformResponse: perRequestTransformResponse,
@@ -157,14 +230,26 @@ class HTTPClient<
                 })
               } catch (error: any) {
                 let message = error.message
-                let code =
-                  error.code ||
+                const status: number =
                   error.status ||
                   error.statusCode ||
                   error.response?.status ||
                   error.response?.statusCode ||
                   error.response?.code ||
                   500
+                let code: string | number = error.code || status
+                let details: unknown
+
+                const errorBody = error?.response?.data ?? error?.data
+                const v2Error =
+                  errorBody && typeof errorBody === 'object'
+                    ? (errorBody as { error?: any }).error
+                    : undefined
+                if (v2Error && typeof v2Error === 'object') {
+                  if (v2Error.code != null) code = v2Error.code
+                  if (v2Error.message) message = v2Error.message
+                  details = v2Error.details
+                }
 
                 if (that.options.getCodeMessageFromException) {
                   const errorInfo =
@@ -175,7 +260,7 @@ class HTTPClient<
 
                 throw that.options.customThrowResponseError
                   ? that.options.customThrowResponseError(error)
-                  : new RequestError(message, code, url, error)
+                  : new RequestError(message, status, url, error, code, details)
               }
 
               const data = that.options.getDataFromResponse!(res)
@@ -194,12 +279,39 @@ class HTTPClient<
                   ? responseTransformer(data)
                   : data
 
-              let nextObject: any = cameledObject
+              const rawMeta = extractResponseMeta(res)
+              const transformedMeta =
+                rawMeta !== undefined && responseTransformer
+                  ? responseTransformer(rawMeta)
+                  : rawMeta
+              const responseAdapters = normalizeResponseAdapters(
+                that.options.responseAdapter,
+              )
+              const context: ResponseAdapterContext = {
+                url,
+                path,
+                method: name,
+                options,
+                response: res,
+                meta: transformedMeta,
+              }
+              const adaptedMeta = applyResponseMetaAdapters(
+                transformedMeta,
+                responseAdapters,
+                context,
+              )
+              const adaptedObject = applyResponseDataAdapters(
+                cameledObject,
+                responseAdapters,
+                { ...context, meta: adaptedMeta },
+              )
 
-              if (cameledObject && typeof cameledObject === 'object') {
-                nextObject = Array.isArray(cameledObject)
-                  ? [...cameledObject]
-                  : { ...cameledObject }
+              let nextObject: any = adaptedObject
+
+              if (adaptedObject && typeof adaptedObject === 'object') {
+                nextObject = Array.isArray(adaptedObject)
+                  ? [...adaptedObject]
+                  : { ...adaptedObject }
                 Object.defineProperty(nextObject, '$raw', {
                   get() {
                     return res
@@ -208,7 +320,6 @@ class HTTPClient<
                   configurable: false,
                 })
 
-                // attach request config onto response
                 Object.defineProperty(nextObject, '$request', {
                   get() {
                     return {
@@ -222,8 +333,15 @@ class HTTPClient<
 
                 Object.defineProperty(nextObject, '$serialized', {
                   get() {
-                    return cameledObject
+                    return adaptedObject
                   },
+                })
+
+                Object.defineProperty(nextObject, '$meta', {
+                  get() {
+                    return adaptedMeta
+                  },
+                  enumerable: false,
                 })
               }
 

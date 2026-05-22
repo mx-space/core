@@ -1,9 +1,9 @@
 import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
@@ -497,7 +497,7 @@ export class AiTranslationService
   }
 
   /**
-   * 获取并验证文章，用于翻译相关操作
+   * Fetch and validate an article for translation-related operations.
    */
   private async resolveArticleForTranslation(articleId: string): Promise<{
     document: ArticleDocument
@@ -508,11 +508,11 @@ export class AiTranslationService
   }> {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article || !article.document) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
 
     if (article.type === CollectionRefTypes.Recently) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
 
     return {
@@ -522,7 +522,7 @@ export class AiTranslationService
   }
 
   /**
-   * 检查数据库中是否存在 hash 匹配的有效翻译
+   * Check whether a valid translation with a matching hash already exists in the database.
    */
   private async findValidTranslation(
     articleId: string,
@@ -553,7 +553,7 @@ export class AiTranslationService
   }
 
   /**
-   * 将已有翻译包装为立即返回的 stream 格式
+   * Wrap an existing translation in the stream format so it can be returned immediately.
    */
   private wrapAsImmediateStream(translation: AITranslationModel): {
     events: AsyncIterable<AiStreamEvent>
@@ -641,7 +641,7 @@ export class AiTranslationService
     const startedAt = Date.now()
     const aiConfig = await this.configService.get('ai')
     if (!aiConfig.enableTranslation) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
 
     const { document, type } =
@@ -668,14 +668,16 @@ export class AiTranslationService
       )
       return translated
     } catch (error: any) {
-      if (error instanceof BizException || error.name === 'AbortError') {
+      if (error instanceof AppException || error.name === 'AbortError') {
         throw error
       }
       this.logger.error(
         `AI translation failed for article ${articleId}: ${error.message}`,
         error.stack,
       )
-      throw new BizException(ErrorCodeEnum.AIException, error.message)
+      throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+        message: error.message,
+      })
     }
   }
 
@@ -765,7 +767,7 @@ export class AiTranslationService
       parseResult: async (resultId) => {
         const doc = await this.aiTranslationRepository.findById(resultId)
         if (!doc) {
-          throw new BizException(ErrorCodeEnum.AITranslationNotFound)
+          throw createAppException(AppErrorCode.AI_TRANSLATION_NOT_FOUND)
         }
         return doc
       },
@@ -781,13 +783,13 @@ export class AiTranslationService
   }> {
     const aiConfig = await this.configService.get('ai')
     if (!aiConfig.enableTranslation) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
 
     const { document, type } =
       await this.resolveArticleForTranslation(articleId)
 
-    // 检查数据库中是否已有有效翻译（hash 匹配）
+    // Check whether a valid translation (matching hash) already exists in the database.
     const existingTranslation = await this.findValidTranslation(
       articleId,
       targetLang,
@@ -892,7 +894,7 @@ export class AiTranslationService
       this.aiTranslationRepository.listByRefId(refId),
     ])
     if (!article) {
-      throw new BizException(ErrorCodeEnum.ContentNotFound)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, { id: refId })
     }
 
     return { translations, article }
@@ -901,7 +903,7 @@ export class AiTranslationService
   async getTranslationById(id: string) {
     const doc = await this.aiTranslationRepository.findById(id)
     if (!doc) {
-      throw new BizException(ErrorCodeEnum.AITranslationNotFound)
+      throw createAppException(AppErrorCode.AI_TRANSLATION_NOT_FOUND)
     }
     return doc
   }
@@ -977,7 +979,7 @@ export class AiTranslationService
   ) {
     const existing = await this.aiTranslationRepository.findById(id)
     if (!existing) {
-      throw new BizException(ErrorCodeEnum.AITranslationNotFound)
+      throw createAppException(AppErrorCode.AI_TRANSLATION_NOT_FOUND)
     }
 
     const patch: Parameters<typeof this.aiTranslationRepository.updateById>[1] =
@@ -996,7 +998,7 @@ export class AiTranslationService
 
     const updated = await this.aiTranslationRepository.updateById(id, patch)
     if (!updated) {
-      throw new BizException(ErrorCodeEnum.AITranslationNotFound)
+      throw createAppException(AppErrorCode.AI_TRANSLATION_NOT_FOUND)
     }
     return updated
   }
@@ -1007,7 +1009,7 @@ export class AiTranslationService
     const existing = await this.aiTranslationRepository.findById(id)
     const deletedCount = await this.aiTranslationRepository.deleteById(id)
     if (deletedCount === 0) {
-      throw new BizException(ErrorCodeEnum.AITranslationNotFound)
+      throw createAppException(AppErrorCode.AI_TRANSLATION_NOT_FOUND)
     }
     if (existing) {
       this.eventManager.emit(
@@ -1043,14 +1045,16 @@ export class AiTranslationService
   ): Promise<AITranslationModel | null> {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article || !article.document) {
-      throw new BizException(ErrorCodeEnum.ContentNotFound)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, {
+        id: articleId,
+      })
     }
 
     if (!options?.ignoreVisibility && !this.isArticleVisible(article)) {
       if (article.type === CollectionRefTypes.Post) {
-        throw new BizException(ErrorCodeEnum.PostHiddenOrEncrypted)
+        throw createAppException(AppErrorCode.POST_HIDDEN_OR_ENCRYPTED)
       }
-      throw new BizException(ErrorCodeEnum.NoteForbidden)
+      throw createAppException(AppErrorCode.NOTE_FORBIDDEN)
     }
 
     const document = article.document as ArticleDocument
@@ -1196,14 +1200,16 @@ export class AiTranslationService
   }> {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article || !article.document) {
-      throw new BizException(ErrorCodeEnum.ContentNotFound)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, {
+        id: articleId,
+      })
     }
 
     if (!options?.ignoreVisibility && !this.isArticleVisible(article)) {
       if (article.type === CollectionRefTypes.Post) {
-        throw new BizException(ErrorCodeEnum.PostHiddenOrEncrypted)
+        throw createAppException(AppErrorCode.POST_HIDDEN_OR_ENCRYPTED)
       }
-      throw new BizException(ErrorCodeEnum.NoteForbidden)
+      throw createAppException(AppErrorCode.NOTE_FORBIDDEN)
     }
 
     const document = article.document as ArticleDocument

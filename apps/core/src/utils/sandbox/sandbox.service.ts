@@ -1,5 +1,5 @@
 import { Worker } from 'node:worker_threads'
-import { createSandboxWorkerCode } from './sandbox-worker-code'
+
 import type {
   BridgeCallPayload,
   ExecutePayload,
@@ -8,6 +8,7 @@ import type {
   WorkerMessage,
 } from './sandbox.types'
 import { WorkerMessageType } from './sandbox.types'
+import { createSandboxWorkerCode } from './sandbox-worker-code'
 
 interface BridgeHandlers {
   'storage.cache.get': (key: string) => Promise<unknown>
@@ -48,7 +49,7 @@ export interface SandboxServiceOptions {
   defaultTimeout?: number
   requireBasePath?: string
   bridgeHandlers: Partial<BridgeHandlers>
-  /** 空闲多久后回收 Worker (ms)，默认 60000 (1分钟) */
+  /** Idle duration (ms) before a Worker is reclaimed. Default: 60000 (1 minute) */
   idleTimeout?: number
 }
 
@@ -84,7 +85,7 @@ export class SandboxService {
       defaultTimeout: options.defaultTimeout ?? 30000,
       requireBasePath: options.requireBasePath ?? process.cwd(),
       bridgeHandlers: options.bridgeHandlers,
-      idleTimeout: options.idleTimeout ?? 60000, // 默认 1 分钟
+      idleTimeout: options.idleTimeout ?? 60000, // Default 1 minute
     }
 
     this.workerCode = createSandboxWorkerCode()
@@ -93,7 +94,7 @@ export class SandboxService {
   async initialize(): Promise<void> {
     if (this.initialized) return
 
-    // 创建最小数量的 Worker
+    // Create the minimum number of Workers
     const initPromises: Promise<void>[] = []
     for (let i = 0; i < this.options.minWorkers; i++) {
       initPromises.push(
@@ -104,13 +105,13 @@ export class SandboxService {
     }
     await Promise.all(initPromises)
 
-    // 启动空闲清理定时器
+    // Start the idle cleanup timer
     this.startIdleCleanup()
     this.initialized = true
   }
 
   private startIdleCleanup(): void {
-    // 每 30 秒检查一次空闲 Worker
+    // Check for idle Workers every 30 seconds
     this.idleCleanupInterval = setInterval(() => {
       this.cleanupIdleWorkers()
     }, 30000)
@@ -120,12 +121,12 @@ export class SandboxService {
     const now = Date.now()
     const idleTimeout = this.options.idleTimeout
 
-    // 找出空闲超时的 Worker（保留最小数量）
+    // Find Workers that have been idle past the timeout (keeping the minimum count)
     const idleWorkers = this.workers.filter(
       (w) => !w.busy && now - w.lastUsed > idleTimeout,
     )
 
-    // 确保至少保留 minWorkers 个 Worker
+    // Ensure at least minWorkers remain alive
     const toRemove = Math.min(
       idleWorkers.length,
       this.workers.length - this.options.minWorkers,
@@ -155,12 +156,12 @@ export class SandboxService {
         workerData: {
           requireBasePath: this.options.requireBasePath,
         },
-        // 限制每个 Worker 的资源使用，防止影响主进程
+        // Cap each Worker's resource usage so it does not impact the main process
         resourceLimits: {
-          maxOldGenerationSizeMb: 128, // V8 老生代内存限制
-          maxYoungGenerationSizeMb: 32, // V8 新生代内存限制
-          codeRangeSizeMb: 32, // 代码段内存限制
-          stackSizeMb: 4, // 栈大小限制
+          maxOldGenerationSizeMb: 128, // V8 old-generation memory limit
+          maxYoungGenerationSizeMb: 32, // V8 young-generation memory limit
+          codeRangeSizeMb: 32, // Code segment memory limit
+          stackSizeMb: 4, // Stack size limit
         },
       })
 
@@ -357,7 +358,7 @@ export class SandboxService {
   }
 
   async shutdown(): Promise<void> {
-    // 停止空闲清理定时器
+    // Stop the idle cleanup timer
     if (this.idleCleanupInterval) {
       clearInterval(this.idleCleanupInterval)
       this.idleCleanupInterval = null

@@ -8,6 +8,6 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 export class ServerTimeController {
   @Get('/server-time')
   @HttpCache.disable
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async serverTime() {}
 }

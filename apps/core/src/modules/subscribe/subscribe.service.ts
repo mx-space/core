@@ -9,9 +9,8 @@ import { LRUCache } from 'lru-cache'
 import { nanoid } from 'nanoid'
 import type Mail from 'nodemailer/lib/mailer'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { isMainProcess } from '~/global/env.global'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
@@ -233,7 +232,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
 
   subscribeTypeToBit(type: keyof typeof SubscribeTypeToBitMap) {
     if (!Object.keys(SubscribeTypeToBitMap).includes(type))
-      throw new BizException(ErrorCodeEnum.InvalidSubscribeType)
+      throw createAppException(AppErrorCode.INVALID_SUBSCRIBE_TYPE)
     return SubscribeTypeToBitMap[type]
   }
 
@@ -258,7 +257,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
 
     const options: Mail.Options = {
       from: sendfrom,
-      subject: `[${seo.title || 'Mx Space'}] 发布了新内容~`,
+      subject: `[${seo.title || 'Mx Space'}] New content published`,
       to: email,
       html: ejs.render(finalTemplate, source),
       headers: { 'List-Unsubscribe': `<${unsubscribeLink}>` },

@@ -340,7 +340,7 @@ export class VisitorEventDispatchService implements OnModuleInit {
         availableTranslations: result.availableTranslations,
       }
 
-      // socket ID 即 socket.io 自动加入的 room，可直接定向
+      // The socket ID is the room socket.io auto-joins, so we can target it directly
       this.webGateway.broadcast(event, data, { rooms: socketIds })
     }
   }

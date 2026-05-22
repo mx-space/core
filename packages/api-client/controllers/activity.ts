@@ -13,7 +13,7 @@ import { camelcaseKeys } from '~/utils/camelcase-keys'
 
 import type { HTTPClient } from '../core'
 
-declare module '../core/client' {
+declare module '@mx-space/api-client' {
   interface HTTPClient<
     T extends IRequestAdapter = IRequestAdapter,
     ResponseWrapper = unknown,

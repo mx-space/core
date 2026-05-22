@@ -1,13 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { sql } from 'drizzle-orm'
 import type { SQL, SQLWrapper } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { notes, pages, posts } from '~/database/schema'
 import { BaseRepository } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 
-import type { PollContentCandidate, PollDefinition } from './poll-definition.types'
+import type {
+  PollContentCandidate,
+  PollDefinition,
+} from './poll-definition.types'
 import { extractPollDefinitions } from './poll-definition.util'
 
 @Injectable()

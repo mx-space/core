@@ -143,7 +143,11 @@ describe('PostController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
+
+    // Per-request fields live in meta, not on the resource object.
+    expect(body.data.enrichments).toBeUndefined()
+    expect(body.meta.enrichments).toBeDefined()
   })
 
   test('GET /posts/:category/:slug — public detail, no legacy keys', async () => {
@@ -154,7 +158,7 @@ describe('PostController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
   })
 
   test('GET /posts/latest — latest post, no legacy keys', async () => {
@@ -165,7 +169,7 @@ describe('PostController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
   })
 
   test('GET /posts/get-url/:slug — slug→path resolver, no legacy keys', async () => {
@@ -176,7 +180,7 @@ describe('PostController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    expect(typeof body.path).toBe('string')
+    expect(typeof body.data.path).toBe('string')
   })
 
   test('SDK shape — every PostModel key present on list rows', async () => {
@@ -201,6 +205,6 @@ describe('PostController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    assertHasKeys(body, EXPECTED_POST_MODEL_KEYS)
+    assertHasKeys(body.data, EXPECTED_POST_MODEL_KEYS)
   })
 })

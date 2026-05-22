@@ -323,7 +323,8 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       to: recipientMail,
       type,
       source: {
-        title: refType === CollectionRefTypes.Recently ? '速记' : refDoc.title,
+        title:
+          refType === CollectionRefTypes.Recently ? 'Thinking' : refDoc.title,
         text: comment.text,
         author:
           (type === CommentReplyMailType.Guest
@@ -425,10 +426,10 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const { adminUrl } = await this.configsService.get('url')
 
     await this.barkService.push({
-      title: '收到一条新评论',
-      body: `${comment.author} 评论了你的${
-        comment.refType === CollectionRefTypes.Recently ? '速记' : '文章'
-      }：${comment.text}`,
+      title: 'New comment received',
+      body: `${comment.author} commented on your ${
+        comment.refType === CollectionRefTypes.Recently ? 'thinking' : 'article'
+      }: ${comment.text}`,
       icon: comment.avatar ?? undefined,
       url: `${adminUrl}#/comments`,
     })
@@ -474,8 +475,8 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
     const subject =
       type === CommentReplyMailType.Guest
-        ? `[${seo.title || 'Mx Space'}] ${source.owner || '有人'}给你了新的回复`
-        : `[${seo.title || 'Mx Space'}] 有新回复了耶~`
+        ? `[${seo.title || 'Mx Space'}] ${source.owner || 'Someone'} has replied to you`
+        : `[${seo.title || 'Mx Space'}] You have a new reply`
 
     source.ip ??= ''
     const options = {

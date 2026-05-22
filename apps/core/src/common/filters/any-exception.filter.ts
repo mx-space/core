@@ -2,6 +2,7 @@ import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
+import { AppException } from '~/common/errors/exception.types'
 import { EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -9,7 +10,6 @@ import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { getIp } from '../../utils/ip.util'
-import { BizException } from '../exceptions/biz.exception'
 
 interface ErrorLike {
   readonly status?: number | string
@@ -83,25 +83,25 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const url = request.raw?.url || request.url || 'Unknown URL'
 
     if (status === HttpStatus.TOO_MANY_REQUESTS) {
-      this.logger.warn(`IP: ${ip} 疑似遭到攻击 Path: ${decodeURI(url)}`)
+      this.logger.warn(`IP: ${ip} suspected attack Path: ${decodeURI(url)}`)
 
       const { enableThrottleGuard } =
         await this.configService.get('barkOptions')
       if (enableThrottleGuard) {
         this.barkService.throttlePush({
-          title: '疑似遭到攻击',
+          title: 'Suspected attack',
           body: `IP: ${ip} Path: ${decodeURI(url)}`,
         })
       }
 
       return response.status(429).send({
-        message: '请求过于频繁，请稍后再试',
+        message: 'Too many requests, please try again later',
       })
     }
 
     if (
       status === HttpStatus.INTERNAL_SERVER_ERROR &&
-      !(exception instanceof BizException)
+      !(exception instanceof AppException)
     ) {
       this.logger.error(exception)
       this.eventManager.broadcast(
@@ -114,7 +114,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       )
     } else {
       this.logger.warn(
-        `IP: ${ip} 错误信息：(${status}) ${message} Path: ${decodeURI(url)}`,
+        `IP: ${ip} Error: (${status}) ${message} Path: ${decodeURI(url)}`,
       )
     }
 
@@ -125,7 +125,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       .send({
         ok: 0,
         code: res?.code,
-        message: res?.message || (exception as any)?.message || '未知错误',
+        message: res?.message || (exception as any)?.message || 'Unknown error',
       })
   }
 }

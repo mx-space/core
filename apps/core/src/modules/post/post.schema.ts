@@ -10,7 +10,7 @@ import {
   zPinDate,
   zPrefer,
 } from '~/common/zod'
-import { PagerSchema } from '~/shared/dto/pager.dto'
+import { createPagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
@@ -34,7 +34,7 @@ export const PostSchema = WriteBaseSchema.extend({
   ),
   relatedId: z.array(zEntityId).optional(),
   images: z.array(ImageSchema).optional(),
-  /** 关联的草稿 ID，发布时标记该草稿为已发布 */
+  /** ID of the associated draft; marked as published when this post is published */
   draftId: zEntityId.optional(),
 })
 
@@ -83,7 +83,11 @@ export class PostDetailQueryDto extends createZodDto(PostDetailQuerySchema) {}
 /**
  * Post pager schema
  */
-export const PostPagerSchema = PagerSchema.extend({
+export const PostPagerSchema = createPagerSchema([
+  'createdAt',
+  'modifiedAt',
+  'pinAt',
+]).extend({
   truncate: zCoerceInt.optional(),
   categoryIds: z
     .preprocess(

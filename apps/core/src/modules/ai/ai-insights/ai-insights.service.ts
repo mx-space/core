@@ -2,16 +2,16 @@ import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter'
 import removeMdCodeblock from 'remove-md-codeblock'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   type TaskExecuteContext,
   TaskQueueProcessor,
 } from '~/processors/task-queue'
-import type { PagerDto } from '~/shared/dto/pager.dto'
+import type { BasicPagerInput } from '~/shared/dto/pager.dto'
 import { createAbortError } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
@@ -121,13 +121,13 @@ export class AiInsightsService implements OnModuleInit {
   }> {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article || !article.document) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
     if (
       article.type === CollectionRefTypes.Recently ||
       article.type === CollectionRefTypes.Page
     ) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
     const doc = article.document as any
     return {
@@ -262,7 +262,7 @@ export class AiInsightsService implements OnModuleInit {
           await this.aiInsightsRepository.findById(resultId),
         )
         if (!doc) {
-          throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+          throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
         }
         return doc
       },
@@ -277,7 +277,7 @@ export class AiInsightsService implements OnModuleInit {
       ai: { enableInsights },
     } = await this.configService.waitForConfigReady()
     if (!enableInsights) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
     const { article } = await this.resolveArticleForInsights(articleId)
     const lang = this.resolveSourceLang(article)
@@ -290,15 +290,14 @@ export class AiInsightsService implements OnModuleInit {
       )
       return await result
     } catch (error) {
-      if (error instanceof BizException) throw error
+      if (error instanceof AppException) throw error
       this.logger.error(
         `AI insights generation failed for article ${articleId}: ${(error as Error).message}`,
         (error as Error).stack,
       )
-      throw new BizException(
-        ErrorCodeEnum.AIException,
-        (error as Error).message,
-      )
+      throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
+        message: (error as Error).message,
+      })
     }
   }
 
@@ -321,7 +320,7 @@ export class AiInsightsService implements OnModuleInit {
   }> {
     const aiConfig = await this.configService.get('ai')
     if (!aiConfig?.enableInsights) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
     const { article } = await this.resolveArticleForInsights(articleId)
     const lang = options.lang || this.resolveSourceLang(article)
@@ -344,7 +343,7 @@ export class AiInsightsService implements OnModuleInit {
     if (options.onlyDb) return null
     const aiConfig = await this.configService.get('ai')
     if (!aiConfig?.enableInsights) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
     return this.generateInsights(articleId)
   }
@@ -369,20 +368,22 @@ export class AiInsightsService implements OnModuleInit {
 
   async getInsightsById(id: string) {
     const doc = this.toInsightsDoc(await this.aiInsightsRepository.findById(id))
-    if (!doc) throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    if (!doc)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     return doc
   }
 
   async getInsightsByRefId(refId: string) {
     const article = await this.databaseService.findGlobalById(refId)
-    if (!article) throw new BizException(ErrorCodeEnum.ContentNotFound)
+    if (!article)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, { id: refId })
     const insights = this.toInsightsDocs(
       await this.aiInsightsRepository.listForRef(refId),
     )
     return { insights, article }
   }
 
-  async getAllInsights(pager: PagerDto) {
+  async getAllInsights(pager: BasicPagerInput) {
     const { page, size } = pager
     const result = await this.aiInsightsRepository.list(page, size)
     const docs = this.toInsightsDocs(result.data)
@@ -513,7 +514,8 @@ export class AiInsightsService implements OnModuleInit {
 
   async updateInsightsInDb(id: string, content: string) {
     const doc = this.toInsightsDoc(await this.aiInsightsRepository.findById(id))
-    if (!doc) throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    if (!doc)
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     return this.toInsightsDoc(
       await this.aiInsightsRepository.updateContent(id, content),
     )

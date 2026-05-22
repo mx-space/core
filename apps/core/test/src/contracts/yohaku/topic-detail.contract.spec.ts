@@ -19,6 +19,7 @@ import {
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { eventEmitterProvider } from '../../../mock/processors/event.mock'
+import { translationEntryProvider } from '../../../mock/processors/translation.mock'
 
 const fixtureTopic = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000080',
@@ -63,7 +64,11 @@ const topicRepoProvider = {
 describe('Yohaku contract — topic detail (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [TopicBaseController],
-    providers: [topicRepoProvider, ...eventEmitterProvider],
+    providers: [
+      topicRepoProvider,
+      translationEntryProvider,
+      ...eventEmitterProvider,
+    ],
   })
 
   test('GET /topics/all — list, exposes Yohaku-required topic fields', async () => {
@@ -87,8 +92,8 @@ describe('Yohaku contract — topic detail (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
-    assertHasKeys(body, [
+    assertPgTimestamps(body.data)
+    assertHasKeys(body.data, [
       'id',
       'name',
       'slug',

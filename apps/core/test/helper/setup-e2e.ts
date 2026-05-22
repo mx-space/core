@@ -1,10 +1,12 @@
 import type { ModuleMetadata } from '@nestjs/common'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test, TestingModule } from '@nestjs/testing'
+import { AuthTestingGuard } from 'test/mock/guard/auth.guard'
+
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { AuthGuard } from '~/common/guards/auth.guard'
+import { requestCaseNormalizationPipeInstance } from '~/common/pipes/case-normalization.pipe'
 import { extendedZodValidationPipeInstance } from '~/common/zod'
-import { AuthTestingGuard } from 'test/mock/guard/auth.guard'
 
 export const setupE2EApp = async (module: TestingModule | ModuleMetadata) => {
   let nextModule: TestingModule
@@ -19,7 +21,10 @@ export const setupE2EApp = async (module: TestingModule | ModuleMetadata) => {
 
   const app =
     nextModule.createNestApplication<NestFastifyApplication>(fastifyApp)
-  app.useGlobalPipes(extendedZodValidationPipeInstance)
+  app.useGlobalPipes(
+    requestCaseNormalizationPipeInstance,
+    extendedZodValidationPipeInstance,
+  )
 
   await app.init()
   await app.getHttpAdapter().getInstance().ready()

@@ -18,20 +18,20 @@ import { consola, globalLogger, logger } from './consola.global'
 import { cwd, isDev } from './env.global'
 import { registerJSONGlobal } from './json.global'
 
-// 建立目录
+// Create application directories
 function createAppFolders() {
   if (!CLUSTER.enable || cluster.isPrimary) {
     mkdirSync(DATA_DIR, { recursive: true })
-    globalLogger.log(pc.blue(`数据目录已经建好：${DATA_DIR}`))
+    globalLogger.log(pc.blue(`Data directory ready: ${DATA_DIR}`))
     mkdirSync(TEMP_DIR, { recursive: true })
-    globalLogger.log(pc.blue(`临时目录已经建好：${TEMP_DIR}`))
+    globalLogger.log(pc.blue(`Temp directory ready: ${TEMP_DIR}`))
     mkdirSync(USER_ASSET_DIR, { recursive: true })
-    globalLogger.log(pc.blue(`资源目录已经建好：${USER_ASSET_DIR}`))
+    globalLogger.log(pc.blue(`Asset directory ready: ${USER_ASSET_DIR}`))
     mkdirSync(STATIC_FILE_DIR, { recursive: true })
-    globalLogger.log(pc.blue(`文件存放目录已经建好：${STATIC_FILE_DIR}`))
+    globalLogger.log(pc.blue(`Static file directory ready: ${STATIC_FILE_DIR}`))
     mkdirSync(STATIC_FILE_TRASH_DIR, { recursive: true })
     globalLogger.log(
-      pc.blue(`文件回收站目录已经建好：${STATIC_FILE_TRASH_DIR}`),
+      pc.blue(`File trash directory ready: ${STATIC_FILE_TRASH_DIR}`),
     )
 
     const packageJSON = `${DATA_DIR}/package.json`

@@ -3,8 +3,7 @@ import type { FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import { CommentUploadService } from './comment-upload.service'
@@ -26,7 +25,7 @@ export class CommentUploadController {
     const bizReq = req as FastifyBizRequest
     const readerId = bizReq.readerId || bizReq.user?.id
     if (!readerId) {
-      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+      throw createAppException(AppErrorCode.FILE_UPLOAD_NOT_AUTHORIZED)
     }
     return this.commentUploadService.uploadForReader(req, readerId)
   }

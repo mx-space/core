@@ -169,8 +169,48 @@ client.injectControllers(allControllers)
 | `controllers`              | Array of controller classes to inject immediately. |
 | `transformResponse`       | `(data) => transformed`. Default: camelCase keys. |
 | `getDataFromResponse`     | `(response) => data`. Default: `(res) => res.data`. |
+| `responseAdapter`         | Post-transform response adapter or adapter array. Use this for compatibility layers such as `@mx-space/api-client/legacy`. |
 | `getCodeMessageFromException` | `(error) => { message?, code? }` for custom error parsing. |
 | `customThrowResponseError` | `(error) => Error` to throw a custom error type. |
+
+### Legacy V2 Compatibility
+
+The V2 response shape keeps resource data flat and moves request-derived fields
+to `$meta`. During downstream migrations, import the removable legacy layer from
+the isolated `legacy` entry:
+
+```ts
+import { createClient } from '@mx-space/api-client'
+import { axiosAdaptor } from '@mx-space/api-client/adaptors/axios'
+import { legacyResponseAdapter } from '@mx-space/api-client/legacy'
+
+const client = createClient(axiosAdaptor)('https://api.example.com/v2', {
+  responseAdapter: legacyResponseAdapter(),
+})
+```
+
+For a fast full-client opt-in:
+
+```ts
+import { createLegacyApiClient } from '@mx-space/api-client/legacy'
+
+const client = createLegacyApiClient(axiosAdaptor)('https://api.example.com/v2')
+```
+
+For gradual migration, scope the adapter by path:
+
+```ts
+const client = createClient(axiosAdaptor)('https://api.example.com/v2', {
+  responseAdapter: legacyResponseAdapter({
+    only: ['/posts', 'GET /notes/latest'],
+    except: ['/posts/latest'],
+  }),
+})
+```
+
+The legacy entry is intentionally separate from the main client. Once downstream
+apps finish migration, remove imports from `@mx-space/api-client/legacy` and use
+the default V2 shape directly.
 
 ---
 

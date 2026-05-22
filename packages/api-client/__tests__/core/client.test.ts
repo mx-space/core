@@ -277,6 +277,105 @@ describe('test client', () => {
     }
   })
 
+  it('should camelCase $meta from snake_case wire response', async () => {
+    const client = generateClient<AxiosResponse>(axiosAdaptor)
+    spyOn(axiosAdaptor, 'get').mockImplementation((url) => {
+      if (url === 'http://127.0.0.1:2323/a') {
+        return Promise.resolve({
+          data: {
+            data: { id: '1' },
+            meta: {
+              interaction: {
+                is_liked: true,
+                like_count: 3,
+                read_count: 7,
+              },
+            },
+          },
+          status: 200,
+        })
+      }
+      return Promise.resolve({ data: null })
+    })
+
+    const res = await client.proxy.a.get()
+    expect(res.$meta).toBeDefined()
+    expect(res.$meta.interaction).toStrictEqual({
+      isLiked: true,
+      likeCount: 3,
+      readCount: 7,
+    })
+  })
+
+  it('should honor custom transformResponse for $meta', async () => {
+    const client = generateClient<AxiosResponse>(axiosAdaptor)
+    spyOn(axiosAdaptor, 'get').mockImplementation((url) => {
+      if (url === 'http://127.0.0.1:2323/a') {
+        return Promise.resolve({
+          data: {
+            data: { id: '1' },
+            meta: { interaction: { is_liked: false } },
+          },
+          status: 200,
+        })
+      }
+      return Promise.resolve({ data: null })
+    })
+
+    const res = await client.proxy.a.get({
+      transformResponse: (payload) => ({ transformed: true, ...payload }),
+    })
+    expect(res.$meta).toMatchObject({ transformed: true })
+    expect(res.$meta.interaction).toStrictEqual({ is_liked: false })
+  })
+
+  it('should extract $meta when the adapter returns the envelope directly (ofetch-style)', async () => {
+    // ofetch's $fetch returns the parsed body as-is — no axios-style `{ data: <body> }` wrapper.
+    const ofetchAdapter: IRequestAdapter = {
+      default: () => Promise.resolve(null),
+      get: () =>
+        Promise.resolve({
+          data: [{ id: '1' }, { id: '2' }],
+          meta: {
+            pagination: { page: 1, size: 10, total: 42, total_pages: 5 },
+          },
+        }) as any,
+      post: () => Promise.resolve(null) as any,
+      put: () => Promise.resolve(null) as any,
+      patch: () => Promise.resolve(null) as any,
+      delete: () => Promise.resolve(null) as any,
+    }
+
+    const client = createClient(ofetchAdapter)('http://127.0.0.1:2323')
+    const res = await client.proxy.posts.get()
+
+    expect(res.$meta).toBeDefined()
+    expect(res.$meta.pagination).toStrictEqual({
+      page: 1,
+      size: 10,
+      total: 42,
+      totalPages: 5,
+    })
+  })
+
+  it('should leave $meta undefined when response body has no meta key', async () => {
+    const client = generateClient<AxiosResponse>(axiosAdaptor)
+    spyOn(axiosAdaptor, 'get').mockImplementation((url) => {
+      if (url === 'http://127.0.0.1:2323/a') {
+        return Promise.resolve({
+          data: {
+            data: { id: '1' },
+          },
+          status: 200,
+        })
+      }
+      return Promise.resolve({ data: null })
+    })
+
+    const res = await client.proxy.a.get()
+    expect(res.$meta).toBeUndefined()
+  })
+
   it('should throw custom exception', async () => {
     class MyRequestError extends Error {
       constructor(

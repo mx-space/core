@@ -34,7 +34,7 @@ export class SpiderGuard implements CanActivate {
       return true
     }
 
-    throw new ForbiddenException(`爬虫是被禁止的哦，UA: ${ua}`)
+    throw new ForbiddenException(`Crawlers are not allowed, UA: ${ua}`)
   }
 
   private async isAuthenticated(

@@ -109,7 +109,7 @@ describe('CategoryController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    expect(body.entries).toBeDefined()
+    expect(body.data.entries).toBeDefined()
   })
 
   test('SDK shape — every CategoryModel key present on list rows', async () => {

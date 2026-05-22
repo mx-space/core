@@ -1,11 +1,11 @@
 import type { ModuleMetadata } from '@nestjs/common'
-import { APP_INTERCEPTOR } from '@nestjs/core'
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
+import { AppExceptionFilter } from '~/common/filters/app-exception.filter'
 import { HttpCacheInterceptor } from '~/common/interceptors/cache.interceptor'
 import { DbQueryInterceptor } from '~/common/interceptors/db-query.interceptor'
-import { JSONTransformInterceptor } from '~/common/interceptors/json-transform.interceptor'
-import { ResponseInterceptor } from '~/common/interceptors/response.interceptor'
+import { ResponseInterceptorV2 } from '~/common/interceptors/response.interceptor'
 
 import { redisHelper } from './redis-mock.helper'
 import { setupE2EApp } from './setup-e2e'
@@ -25,20 +25,17 @@ export const createE2EApp = (module: ModuleMetadata) => {
         provide: APP_INTERCEPTOR,
         useClass: DbQueryInterceptor,
       },
-
       {
         provide: APP_INTERCEPTOR,
-        useClass: HttpCacheInterceptor, // 5
+        useClass: HttpCacheInterceptor,
       },
-
       {
         provide: APP_INTERCEPTOR,
-        useClass: JSONTransformInterceptor, // 3
+        useClass: ResponseInterceptorV2,
       },
-
       {
-        provide: APP_INTERCEPTOR,
-        useClass: ResponseInterceptor, // 1
+        provide: APP_FILTER,
+        useClass: AppExceptionFilter,
       },
     )
 

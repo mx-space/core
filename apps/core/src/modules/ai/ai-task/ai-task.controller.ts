@@ -26,7 +26,7 @@ export class AiTaskController extends BaseTaskController {
 
   @Get('/group/:id')
   @Auth()
-  async getTasksByGroupId(@Param() params: StringIdDto) {
+  getTasksByGroupId(@Param() params: StringIdDto) {
     return this.service.crud.getTasksByGroupId(params.id)
   }
 

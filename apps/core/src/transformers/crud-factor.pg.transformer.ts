@@ -19,7 +19,7 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 import type { EntityId } from '~/shared/id/entity-id'
 
 export type ClassType<T> = new (...args: any[]) => T
@@ -95,12 +95,10 @@ export function BasePgCrudFactory<TRepo extends PgCrudRepository<any>>({
     }
 
     @Get('/')
-    async gets(@Query() pager: PagerDto) {
+    async gets(@Query() pager: BasicPagerDto) {
       const size = pager.size ?? 10
       const page = pager.page ?? 1
-      const filter: Record<string, unknown> = {}
-      if (pager.state !== undefined) filter.state = pager.state
-      return this.repo.list(page, size, filter)
+      return this.repo.list(page, size, {})
     }
 
     @Get('/all')

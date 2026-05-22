@@ -12,11 +12,11 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { PKG } from '~/utils/pkg.util'
 
 import { HttpCache } from './common/decorators/cache.decorator'
-import { HTTPDecorators } from './common/decorators/http.decorator'
 import type { IpRecord } from './common/decorators/ip.decorator'
 import { IpLocation } from './common/decorators/ip.decorator'
 import { AllowAllCorsInterceptor } from './common/interceptors/allow-all-cors.interceptor'
 import { RedisKeys } from './constants/cache.constant'
+import { isDev } from './global/env.global'
 import { ConfigsService } from './modules/configs/configs.service'
 import { RedisService } from './processors/redis/redis.service'
 import { getRedisKey } from './utils/redis.util'
@@ -30,7 +30,6 @@ export class AppController {
 
   @Get('/uptime')
   @HttpCache.disable
-  @HTTPDecorators.Bypass
   async getUptime() {
     const ts = (process.uptime() * 1000) | 0
     return {
@@ -68,7 +67,7 @@ export class AppController {
       ip,
     )
     if (isLikedBefore) {
-      throw new BadRequestException('一天一次就够啦')
+      throw new BadRequestException('Once a day is enough')
     } else {
       redis.sadd(getRedisKey(RedisKeys.LikeSite), ip)
     }

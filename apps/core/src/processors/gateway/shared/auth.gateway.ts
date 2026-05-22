@@ -39,7 +39,10 @@ export const createAuthGateway = (
 
     authFailed(client: Socket) {
       client.send(
-        this.gatewayMessageFormat(BusinessEvents.AUTH_FAILED, '认证失败'),
+        this.gatewayMessageFormat(
+          BusinessEvents.AUTH_FAILED,
+          'Authentication failed',
+        ),
       )
       client.disconnect()
     }

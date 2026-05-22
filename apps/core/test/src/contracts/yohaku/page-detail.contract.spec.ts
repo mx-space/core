@@ -75,9 +75,9 @@ describe('Yohaku contract — page detail (e2e)', () => {
     const body = res.json()
 
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
 
-    assertHasKeys(body, [
+    assertHasKeys(body.data, [
       'id',
       'title',
       'slug',
@@ -90,6 +90,10 @@ describe('Yohaku contract — page detail (e2e)', () => {
       'created_at',
       'modified_at',
     ])
+
+    // Per-request fields live in meta, not on the resource object.
+    expect(body.data.enrichments).toBeUndefined()
+    expect(body.meta.enrichments).toBeDefined()
   })
 
   test('GET /pages — list, items expose nav fields Yohaku reads', async () => {

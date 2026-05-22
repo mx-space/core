@@ -1,9 +1,9 @@
 import type { ExecutionContext } from '@nestjs/common'
 import { vi } from 'vitest'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode } from '~/common/errors'
+import { AppException } from '~/common/errors/exception.types'
 import { AuthGuard } from '~/common/guards/auth.guard'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import type { AuthService } from '~/modules/auth/auth.service'
 import type { SessionUser } from '~/modules/auth/auth.types'
 
@@ -105,14 +105,14 @@ describe('AuthGuard', () => {
         session: { token: 'reader-tok' },
       })
 
-      await expect(guard.canActivate(context)).rejects.toThrow(BizException)
+      await expect(guard.canActivate(context)).rejects.toThrow(AppException)
     })
 
     it('should fall through to API key when session is null', async () => {
       const { context } = createMockContext()
       authService.getSessionUser.mockResolvedValue(null)
 
-      await expect(guard.canActivate(context)).rejects.toThrow(BizException)
+      await expect(guard.canActivate(context)).rejects.toThrow(AppException)
     })
   })
 
@@ -126,7 +126,7 @@ describe('AuthGuard', () => {
       authService.getApiKeyFromRequest.mockReturnValue(null)
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        expect.objectContaining({ bizCode: ErrorCodeEnum.AuthNotLoggedIn }),
+        expect.objectContaining({ code: AppErrorCode.AUTH_NOT_LOGGED_IN }),
       )
     })
 
@@ -139,7 +139,7 @@ describe('AuthGuard', () => {
       authService.isCustomToken.mockReturnValue(false)
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        expect.objectContaining({ bizCode: ErrorCodeEnum.AuthTokenInvalid }),
+        expect.objectContaining({ code: AppErrorCode.AUTH_TOKEN_INVALID }),
       )
     })
 
@@ -153,7 +153,7 @@ describe('AuthGuard', () => {
       authService.verifyApiKey.mockResolvedValue(null)
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        expect.objectContaining({ bizCode: ErrorCodeEnum.AuthTokenInvalid }),
+        expect.objectContaining({ code: AppErrorCode.AUTH_TOKEN_INVALID }),
       )
     })
 
@@ -167,7 +167,7 @@ describe('AuthGuard', () => {
       authService.verifyApiKey.mockResolvedValue({})
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        expect.objectContaining({ bizCode: ErrorCodeEnum.AuthTokenInvalid }),
+        expect.objectContaining({ code: AppErrorCode.AUTH_TOKEN_INVALID }),
       )
     })
 
@@ -182,7 +182,7 @@ describe('AuthGuard', () => {
       authService.isOwnerReaderId.mockResolvedValue(false)
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        expect.objectContaining({ bizCode: ErrorCodeEnum.AuthTokenInvalid }),
+        expect.objectContaining({ code: AppErrorCode.AUTH_TOKEN_INVALID }),
       )
     })
 
@@ -198,7 +198,7 @@ describe('AuthGuard', () => {
       authService.getReaderById.mockResolvedValue(null)
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        expect.objectContaining({ bizCode: ErrorCodeEnum.AuthTokenInvalid }),
+        expect.objectContaining({ code: AppErrorCode.AUTH_TOKEN_INVALID }),
       )
     })
 

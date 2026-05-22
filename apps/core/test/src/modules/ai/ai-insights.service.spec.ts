@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/errors/exception.types'
 import type { AiInsightsRepository } from '~/modules/ai/ai-insights/ai-insights.repository'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 
@@ -73,7 +73,7 @@ describe('AiInsightsService', () => {
     repository.findById.mockResolvedValue(null)
 
     await expect(service.updateInsightsInDb('missing', 'new')).rejects.toThrow(
-      BizException,
+      AppException,
     )
   })
 

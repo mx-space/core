@@ -20,14 +20,13 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { ConfigsService } from '../configs/configs.service'
 import { ReaderService } from '../reader/reader.service'
@@ -37,6 +36,7 @@ import { CommentLifecycleService } from './comment.lifecycle.service'
 import {
   BatchCommentDeleteDto,
   BatchCommentStateDto,
+  CommentAdminPagerDto,
   CommentDto,
   CommentRefTypesDto,
   CommentStatePatchDto,
@@ -48,7 +48,7 @@ import {
 import { CommentService } from './comment.service'
 import type { CommentModel } from './comment.types'
 
-const idempotenceMessage = '哦吼，这句话你已经说过啦'
+const idempotenceMessage = 'Whoops, you already said this'
 
 @ApiController({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
@@ -73,7 +73,7 @@ export class CommentController {
     const id = params.id
 
     if (!hasAdminAccess && !(await this.commentService.allowComment(id, ref))) {
-      throw new BizException(ErrorCodeEnum.CommentForbidden)
+      throw createAppException(AppErrorCode.COMMENT_FORBIDDEN)
     }
 
     const model: Partial<CommentModel> = { ...body, ...ipLocation }
@@ -98,7 +98,7 @@ export class CommentController {
       !hasAdminAccess &&
       !(await this.commentService.allowCommentByCommentId(params.id))
     ) {
-      throw new BizException(ErrorCodeEnum.CommentForbidden)
+      throw createAppException(AppErrorCode.COMMENT_FORBIDDEN)
     }
 
     const isLoggedInComment = RequestContext.hasReaderIdentity()
@@ -109,18 +109,15 @@ export class CommentController {
     }
 
     const comment = await this.commentService.replyComment(params.id, model)
-
     this.lifecycleService.afterReplyComment(comment, ipLocation)
-
     const [doc] = await this.commentService.fillAndReplaceAvatarUrl([comment])
     return doc
   }
 
   @Get('/')
   @Auth()
-  async getRecentlyComments(@Query() query: PagerDto) {
+  async getRecentlyComments(@Query() query: CommentAdminPagerDto) {
     const { size = 10, page = 1, state = 0 } = query
-
     const comments = await this.commentService.getComments({
       size,
       page,
@@ -130,15 +127,21 @@ export class CommentController {
       comments.data.map((doc) => doc.readerId).filter(Boolean) as string[],
     )
 
-    return Object.assign({}, comments, {
-      readers: keyBy(readers, 'id'),
-    })
+    const readerMap = keyBy(readers, 'id')
+    const data = comments.data.map((doc) => ({
+      ...doc,
+      reader: readerMap[(doc as any).readerId] ?? null,
+    }))
+    return withMeta(
+      data,
+      new MetaObjectBuilder().pagination(comments.pagination).build(),
+    )
   }
 
   @Get('/ref/:id')
   async getCommentsByRefId(
     @Param() params: EntityIdDto,
-    @Query() query: PagerDto,
+    @Query() query: BasicPagerDto,
     @Query('hasAnchor') hasAnchor: string,
     @Query('sort') sort: string | undefined,
     @Query('around') around: string | undefined,
@@ -168,29 +171,39 @@ export class CommentController {
     const readerIds = this.commentService.collectThreadReaderIds(comments.data)
     const readers = await this.readerService.findReaderInIds(readerIds)
 
-    const result = Object.assign({}, comments, {
-      readers: keyBy(readers, 'id'),
-    })
-
-    return result
+    const readerMap2 = keyBy(readers, 'id')
+    const refData = comments.data.map((doc) => ({
+      ...doc,
+      reader: readerMap2[(doc as any).readerId] ?? null,
+    }))
+    return withMeta(
+      refData,
+      new MetaObjectBuilder().pagination(comments.pagination).build(),
+    )
   }
 
   @Get('/thread/:rootCommentId')
   async getThreadReplies(
     @Param('rootCommentId') rootCommentId: string,
-    @Query() query: PagerDto,
+    @Query() query: BasicPagerDto,
     @Query('cursor') cursor: string,
     @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     const { size = 10 } = query
     const configs = await this.configsService.get('commentOptions')
 
-    return this.commentService.getThreadReplies(rootCommentId, {
+    const result = await this.commentService.getThreadReplies(rootCommentId, {
       cursor,
       size,
       isAuthenticated: hasAdminAccess,
       commentShouldAudit: configs.commentShouldAudit,
     })
+    return {
+      replies: result.replies,
+      remaining: result.remaining,
+      done: result.done,
+      nextCursor: result.nextCursor ?? null,
+    }
   }
 
   @Get('/:id')
@@ -203,28 +216,23 @@ export class CommentController {
       await this.commentService.findByIdWithRelations(id)
 
     if (!data) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.COMMENT_NOT_FOUND, { id })
     }
     if (data.isWhispers && !hasAdminAccess) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.COMMENT_NOT_FOUND, { id })
     }
 
     await this.commentService.fillAndReplaceAvatarUrl([data])
     if (data.readerId) {
       const reader = await this.readerService.findReaderInIds([data.readerId])
-      Object.assign(data, {
-        reader: reader[0],
-      })
+      Object.assign(data, { reader: reader[0] })
     }
 
     return data
   }
 
   @Post('/guest/:id')
-  @HTTPDecorators.Idempotence({
-    expired: 20,
-    errorMessage: idempotenceMessage,
-  })
+  @HTTPDecorators.Idempotence({ expired: 20, errorMessage: idempotenceMessage })
   async guestComment(
     @Param() params: EntityIdDto,
     @Body() body: CommentDto,
@@ -234,22 +242,18 @@ export class CommentController {
     const { allowGuestComment, disableComment } =
       await this.configsService.get('commentOptions')
     if (disableComment) {
-      throw new BizException(ErrorCodeEnum.CommentDisabled)
+      throw createAppException(AppErrorCode.COMMENT_DISABLED)
     }
     if (!allowGuestComment) {
-      throw new BizException(ErrorCodeEnum.CommentForbidden)
+      throw createAppException(AppErrorCode.COMMENT_FORBIDDEN)
     }
 
     await this.commentService.validAuthorName(body.author)
-
     return this.createCommentWithBody(params, body, ipLocation, query)
   }
 
   @Post('/reader/:id')
-  @HTTPDecorators.Idempotence({
-    expired: 20,
-    errorMessage: idempotenceMessage,
-  })
+  @HTTPDecorators.Idempotence({ expired: 20, errorMessage: idempotenceMessage })
   async readerComment(
     @Param() params: EntityIdDto,
     @Body() body: ReaderCommentDto,
@@ -259,20 +263,16 @@ export class CommentController {
   ) {
     const { disableComment } = await this.configsService.get('commentOptions')
     if (disableComment && !RequestContext.hasAdminAccess()) {
-      throw new BizException(ErrorCodeEnum.CommentDisabled)
+      throw createAppException(AppErrorCode.COMMENT_DISABLED)
     }
     if (!readerId) {
-      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+      throw createAppException(AppErrorCode.AUTH_NOT_LOGGED_IN)
     }
-
     return this.createCommentWithBody(params, body, ipLocation, query)
   }
 
   @Post('/guest/reply/:id')
-  @HTTPDecorators.Idempotence({
-    expired: 20,
-    errorMessage: idempotenceMessage,
-  })
+  @HTTPDecorators.Idempotence({ expired: 20, errorMessage: idempotenceMessage })
   async guestReplyByCid(
     @Param() params: EntityIdDto,
     @Body() body: ReplyCommentDto,
@@ -281,24 +281,18 @@ export class CommentController {
     const { allowGuestComment, disableComment } =
       await this.configsService.get('commentOptions')
     if (disableComment) {
-      throw new BizException(ErrorCodeEnum.CommentDisabled)
+      throw createAppException(AppErrorCode.COMMENT_DISABLED)
     }
-
     if (!allowGuestComment) {
-      throw new BizException(ErrorCodeEnum.CommentForbidden)
+      throw createAppException(AppErrorCode.COMMENT_FORBIDDEN)
     }
-
     await this.commentService.validAuthorName(body.author)
-
     return this.replyCommentWithBody(params, body, ipLocation)
   }
 
   @Post('/owner-reply/:id')
   @Auth()
-  @HTTPDecorators.Idempotence({
-    expired: 20,
-    errorMessage: idempotenceMessage,
-  })
+  @HTTPDecorators.Idempotence({ expired: 20, errorMessage: idempotenceMessage })
   async replyByCid(
     @Param() params: EntityIdDto,
     @Body() body: ReaderReplyCommentDto,
@@ -308,10 +302,7 @@ export class CommentController {
   }
 
   @Post('/reader/reply/:id')
-  @HTTPDecorators.Idempotence({
-    expired: 20,
-    errorMessage: idempotenceMessage,
-  })
+  @HTTPDecorators.Idempotence({ expired: 20, errorMessage: idempotenceMessage })
   async readerReplyByCid(
     @Param() params: EntityIdDto,
     @Body() body: ReaderReplyCommentDto,
@@ -320,13 +311,11 @@ export class CommentController {
   ) {
     const { disableComment } = await this.configsService.get('commentOptions')
     if (disableComment && !RequestContext.hasAdminAccess()) {
-      throw new BizException(ErrorCodeEnum.CommentDisabled)
+      throw createAppException(AppErrorCode.COMMENT_DISABLED)
     }
-
     if (!readerId) {
-      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+      throw createAppException(AppErrorCode.AUTH_NOT_LOGGED_IN)
     }
-
     return this.replyCommentWithBody(params, body, ipLocation)
   }
 
@@ -350,7 +339,7 @@ export class CommentController {
     try {
       await this.commentService.updateComment(id, updateResult)
     } catch {
-      throw new NoContentCanBeModifiedException()
+      throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
     }
 
     if (!isUndefined(state)) {
@@ -366,12 +355,8 @@ export class CommentController {
     await this.eventManager.emit(
       BusinessEvents.COMMENT_DELETE,
       { id },
-      {
-        scope: EventScope.TO_SYSTEM_VISITOR,
-        nextTick: true,
-      },
+      { scope: EventScope.TO_SYSTEM_VISITOR, nextTick: true },
     )
-    return
   }
 
   @Patch('/batch/state')
@@ -382,9 +367,7 @@ export class CommentController {
     let affected: string[] = []
     if (all) {
       const filter: Record<string, any> = {}
-      if (!isUndefined(currentState)) {
-        filter.state = currentState
-      }
+      if (!isUndefined(currentState)) filter.state = currentState
       const matched = await this.commentService.findByFilter(filter)
       affected = matched.map((c) => String(c.id))
       await this.commentService.updateStateByFilter(filter, state)
@@ -396,8 +379,6 @@ export class CommentController {
     if (affected.length) {
       await this.commentService.cascadeFilesForCommentsIfSpam(affected, state)
     }
-
-    return
   }
 
   @Delete('/batch')
@@ -407,9 +388,7 @@ export class CommentController {
 
     if (all) {
       const filter: Record<string, any> = {}
-      if (!isUndefined(state)) {
-        filter.state = state
-      }
+      if (!isUndefined(state)) filter.state = state
       const comments = await this.commentService.findByFilter(filter)
       await Promise.all(
         comments.map((comment) =>
@@ -421,8 +400,6 @@ export class CommentController {
         ids.map((id) => this.commentService.softDeleteComment(id)),
       )
     }
-
-    return
   }
 
   @Patch('/edit/:id')
@@ -436,10 +413,10 @@ export class CommentController {
     const { text } = body
     const comment = await this.commentService.findById(id)
     if (!comment) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.COMMENT_NOT_FOUND, { id })
     }
     if (comment.readerId !== readerId && !hasAdminAccess) {
-      throw new BizException(ErrorCodeEnum.CommentForbidden)
+      throw createAppException(AppErrorCode.COMMENT_FORBIDDEN)
     }
     await this.commentService.editComment(id, text)
   }

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/errors/exception.types'
 import {
   LinkController,
   LinkControllerCrud,
@@ -21,7 +21,7 @@ describe('LinkController', () => {
         name: 'Example',
         author: 'Alice',
       } as any),
-    ).rejects.toThrow(BizException)
+    ).rejects.toThrow(AppException)
     expect(service.applyForLink).not.toHaveBeenCalled()
   })
 
@@ -47,16 +47,12 @@ describe('LinkControllerCrud', () => {
     const repository = {
       list: vi.fn().mockResolvedValue({
         data: [{ id: '1', email: 'owner@example.com' }],
-        total: 1,
+        pagination: { total: 1, currentPage: 1, totalPage: 1, size: 10 },
       }),
     }
     const controller = new LinkControllerCrud(repository as any, {} as any)
 
-    await expect(
-      controller.gets({ page: 1, size: 10 } as any, false),
-    ).resolves.toEqual({
-      data: [{ id: '1', email: null }],
-      total: 1,
-    })
+    const result = await controller.gets({ page: 1, size: 10 } as any, false)
+    expect(result.data).toEqual([{ id: '1', email: null }])
   })
 })

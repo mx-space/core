@@ -25,8 +25,7 @@ const fixtureSay = (overrides: Record<string, unknown> = {}) => ({
   text: 'A short musing.',
   source: 'me',
   author: 'innei',
-  createdAt: new Date('2024-09-15T00:00:00.000Z'),
-  modifiedAt: null,
+  created_at: new Date('2024-09-15T00:00:00.000Z'),
   ...overrides,
 })
 

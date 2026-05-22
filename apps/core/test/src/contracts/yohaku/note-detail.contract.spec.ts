@@ -30,7 +30,10 @@ import {
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { enrichmentProvider } from '../../../mock/modules/enrichment.mock'
 import { countingServiceProvider } from '../../../mock/processors/counting.mock'
-import { translationProvider } from '../../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../../mock/processors/translation.mock'
 
 const fixtureNote = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000070',
@@ -153,6 +156,7 @@ describe('Yohaku contract — note detail (e2e)', () => {
       noteServiceProvider,
       countingServiceProvider,
       translationProvider,
+      translationEntryProvider,
       enrichmentProvider,
       aiSummaryProvider,
       aiInsightsProvider,
@@ -210,12 +214,18 @@ describe('Yohaku contract — note detail (e2e)', () => {
       ])
     }
 
-    // Adjacency wrappers carry partial note shape.
-    if (body.next) {
-      assertHasKeys(body.next, ['nid', 'title', 'slug', 'id'])
+    // Adjacency wrappers carry partial note shape — nested inside data.
+    if (body.data.next) {
+      assertHasKeys(body.data.next, ['nid', 'title', 'slug', 'id'])
     }
-    if (body.prev) {
-      assertHasKeys(body.prev, ['nid', 'title', 'slug', 'id'])
+    if (body.data.prev) {
+      assertHasKeys(body.data.prev, ['nid', 'title', 'slug', 'id'])
     }
+
+    // Per-request fields live in meta, not on the resource object.
+    expect(body.data.enrichments).toBeUndefined()
+    expect(body.data.has_insights_in_locale).toBeUndefined()
+    expect(body.meta.enrichments).toBeDefined()
+    expect(typeof body.meta.insights?.has_in_locale).toBe('boolean')
   })
 })

@@ -18,7 +18,7 @@ export const PageSchema = WriteBaseSchema.extend({
     z.number().int().min(0).default(1),
   ),
   images: z.array(ImageSchema).optional(),
-  /** 关联的草稿 ID，发布时标记该草稿为已发布 */
+  /** ID of the associated draft; marked as published when this page is published */
   draftId: zEntityId.optional(),
 })
 

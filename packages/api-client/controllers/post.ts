@@ -1,19 +1,13 @@
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
-import type { SelectFields } from '~/interfaces/types'
-import type {
-  ModelWithLiked,
-  ModelWithTranslation,
-  PaginateResult,
-  TranslationMeta,
-} from '~/models/base'
+import type { PaginateResult } from '~/models/base'
 import type { PostModel } from '~/models/post'
 import { autoBind } from '~/utils/auto-bind'
 
 import type { HTTPClient } from '../core/client'
 
-declare module '../core/client' {
+declare module '@mx-space/api-client' {
   interface HTTPClient<
     T extends IRequestAdapter = IRequestAdapter,
     ResponseWrapper = unknown,
@@ -23,19 +17,12 @@ declare module '../core/client' {
 }
 
 export type PostListOptions = {
-  select?: SelectFields<keyof PostModel>
   year?: number
   sortBy?: 'categoryId' | 'title' | 'createdAt' | 'modifiedAt' | 'pinAt'
   sortOrder?: 1 | -1
   truncate?: number
   /** 语言代码，用于获取翻译版本 */
   lang?: string
-}
-
-/** 文章列表项，可能包含翻译信息 */
-export type PostListItem = PostModel & {
-  isTranslated?: boolean
-  translationMeta?: TranslationMeta
 }
 
 export class PostController<ResponseWrapper> implements IController {
@@ -51,20 +38,12 @@ export class PostController<ResponseWrapper> implements IController {
     return this.client.proxy(this.base)
   }
 
-  /**
-   * 获取文章列表分页
-   * @param page
-   * @param perPage
-   * @param options 可选参数，包含 lang 用于获取翻译版本
-   * @returns 当传入 lang 时，返回的文章可能包含 isTranslated 和 translationMeta 字段
-   */
   getList(page = 1, perPage = 10, options: PostListOptions = {}) {
-    const { select, sortBy, sortOrder, year, truncate, lang } = options
-    return this.proxy.get<PaginateResult<PostListItem>>({
+    const { sortBy, sortOrder, year, truncate, lang } = options
+    return this.proxy.get<PaginateResult<PostModel>>({
       params: {
         page,
         size: perPage,
-        select: select?.join(' '),
         sortBy,
         sortOrder,
         year,
@@ -74,24 +53,11 @@ export class PostController<ResponseWrapper> implements IController {
     })
   }
 
-  /**
-   * 根据分类和路径查找文章
-   * @param categoryName
-   * @param slug
-   * @param options 可选参数，包含 lang 用于获取翻译版本
-   */
   getPost(
     categoryName: string,
     slug: string,
     options?: { lang?: string; prefer?: 'lexical' },
-  ): RequestProxyResult<
-    ModelWithLiked<ModelWithTranslation<PostModel>>,
-    ResponseWrapper
-  >
-  /**
-   * 根据 ID 查找文章
-   * @param id
-   */
+  ): RequestProxyResult<PostModel, ResponseWrapper>
   getPost(id: string): RequestProxyResult<PostModel, ResponseWrapper>
   getPost(
     idOrCategoryName: string,
@@ -110,11 +76,8 @@ export class PostController<ResponseWrapper> implements IController {
     }
   }
 
-  /**
-   * 获取最新的文章
-   */
   getLatest() {
-    return this.proxy.latest.get<ModelWithLiked<PostModel>>()
+    return this.proxy.latest.get<PostModel>()
   }
 
   getFullUrl(slug: string) {

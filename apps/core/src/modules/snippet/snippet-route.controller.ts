@@ -5,8 +5,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
@@ -29,7 +28,7 @@ export class SnippetRouteController {
       ttl: 5000,
     },
   })
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async handleCustomPath(
     @HasAdminAccess() hasAdminAccess: boolean,
     @Request() req: FastifyRequest,
@@ -47,7 +46,7 @@ export class SnippetRouteController {
 
     if (dataSnippet) {
       if (dataSnippet.private && !hasAdminAccess) {
-        throw new BizException(ErrorCodeEnum.SnippetPrivate)
+        throw createAppException(AppErrorCode.SNIPPET_PRIVATE)
       }
 
       // check cache
@@ -106,7 +105,7 @@ export class SnippetRouteController {
       }
     }
 
-    throw new BizException(ErrorCodeEnum.SnippetNotFound)
+    throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
   }
 
   private async executeFunction(
@@ -116,14 +115,13 @@ export class SnippetRouteController {
     reply: FastifyReply,
   ) {
     if (!snippet.enable) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'serverless function is not enabled',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'serverless function is not enabled',
+      })
     }
 
     if (snippet.private && !hasAdminAccess) {
-      throw new BizException(ErrorCodeEnum.ServerlessNoPermission)
+      throw createAppException(AppErrorCode.SERVERLESS_NO_PERMISSION)
     }
 
     const result =

@@ -1,3 +1,4 @@
+// Tables readers, accounts, sessions, apiKeys, passkeys, verifications intentionally keep camelCase property names for Better Auth drizzle-adapter compatibility.
 import { sql } from 'drizzle-orm'
 import {
   boolean,

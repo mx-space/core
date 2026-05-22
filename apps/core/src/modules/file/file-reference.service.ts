@@ -3,8 +3,7 @@ import path from 'node:path'
 
 import { Injectable, Logger } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import type { ContentFormat } from '~/shared/types/content-format.type'
@@ -48,7 +47,8 @@ export class FileReferenceService {
   }
 
   /**
-   * 删除本地图片文件。若磁盘上已不存在（ENOENT），视为已清理成功。
+   * Delete a local image file. If it already does not exist on disk (ENOENT),
+   * treat the cleanup as successful.
    */
   private async unlinkLocalImage(fileName: string): Promise<void> {
     const localPath = path.join(STATIC_FILE_DIR, 'image', fileName)
@@ -137,7 +137,8 @@ export class FileReferenceService {
   }
 
   /**
-   * 解析评论 markdown 中之图片 URL，仅返回属本站 host 之 URL。
+   * Extract image URLs from comment markdown, keeping only URLs whose host
+   * belongs to this site.
    */
   parseCommentImageUrls(text: string, allowedHosts: string[]): string[] {
     if (!text) return []
@@ -165,7 +166,7 @@ export class FileReferenceService {
   }
 
   /**
-   * 收集本站允许之图片 host：webUrl/serverUrl/customDomain。
+   * Collect the image hosts allowed for this site: webUrl, serverUrl, and customDomain.
    */
   async collectAllowedImageHosts(): Promise<string[]> {
     const [{ webUrl, serverUrl }, imageStorageConfig] = await Promise.all([
@@ -189,7 +190,7 @@ export class FileReferenceService {
   }
 
   /**
-   * 计算评论 update 时之 attach/detach/revive 三类文件。
+   * Compute the attach / detach / revive file sets for a comment update.
    */
   diffReaderImages(
     refs: FileReferenceRow[],
@@ -239,7 +240,7 @@ export class FileReferenceService {
   }
 
   /**
-   * 评论 create / update 时之 attach。
+   * Attach images on comment create / update.
    */
   async attachReaderImagesToComment(params: {
     commentId: string
@@ -256,7 +257,7 @@ export class FileReferenceService {
     const newUrls = this.parseCommentImageUrls(text, hosts)
 
     if (newUrls.length > cap) {
-      throw new BizException(ErrorCodeEnum.CommentImageCapExceeded)
+      throw createAppException(AppErrorCode.COMMENT_IMAGE_CAP_EXCEEDED)
     }
 
     if (newUrls.length === 0 && mode === 'create') {
@@ -268,7 +269,7 @@ export class FileReferenceService {
     for (const ref of candidates) {
       if (ref.uploadedBy !== FileUploadedBy.Reader) continue
       if (ref.readerId && ref.readerId !== readerId) {
-        throw new BizException(ErrorCodeEnum.CommentUploadFileNotOwned)
+        throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_NOT_OWNED)
       }
     }
 
@@ -280,7 +281,7 @@ export class FileReferenceService {
       ) {
         continue
       }
-      throw new BizException(ErrorCodeEnum.CommentUploadFileAlreadyBound)
+      throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_ALREADY_BOUND)
     }
 
     const existingForComment =
@@ -332,7 +333,8 @@ export class FileReferenceService {
   }
 
   /**
-   * 硬删之核心：删 storage 对象 → 删 record。删除审计仅落 stdout 结构化日志。
+   * Core hard-delete flow: remove the storage object first, then delete the
+   * record. Deletion audits are emitted only as structured logs to stdout.
    */
   async hardDeleteFile(
     file: FileReferenceRow,
@@ -385,7 +387,7 @@ export class FileReferenceService {
   }
 
   /**
-   * 级联清除某评论挂之全部文件（reader uploads）。
+   * Cascade-delete every file (reader uploads) attached to a comment.
    */
   async hardDeleteFilesForComment(
     commentId: string,
@@ -426,7 +428,8 @@ export class FileReferenceService {
   }
 
   /**
-   * 评论上传专用清扫：pending TTL + detached TTL 双 pass。
+   * Cleanup pass dedicated to comment uploads: two passes over pending TTL
+   * and detached TTL.
    */
   async cleanupCommentUploads(): Promise<{
     pendingDeleted: number
@@ -469,7 +472,8 @@ export class FileReferenceService {
   }
 
   /**
-   * Owner 路径之既有清扫：仅扫 uploadedBy != Reader 之 pending 文件。
+   * Existing cleanup pass for the owner path: scans only pending files where
+   * uploadedBy != Reader.
    */
   async cleanupOrphanFiles(maxAgeMinutes = 60) {
     const cutoffTime = new Date(Date.now() - maxAgeMinutes * 60 * 1000)

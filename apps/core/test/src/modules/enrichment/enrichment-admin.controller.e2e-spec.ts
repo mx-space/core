@@ -45,12 +45,12 @@ const baseCaptureRow = {
 
 interface ConfigState {
   fetchMode: 'fetch' | 'browser'
-  screenshotEnabled: boolean
+  captureEnabled: boolean
 }
 
 const configState: ConfigState = {
   fetchMode: 'fetch',
-  screenshotEnabled: false,
+  captureEnabled: false,
 }
 
 const enrichmentRepositoryMock = {
@@ -86,7 +86,7 @@ const configsServiceMock = {
         openGraph: {
           fetchMode: configState.fetchMode,
           screenshot: {
-            enabled: configState.screenshotEnabled,
+            enabled: configState.captureEnabled,
             maxItems: 500,
             maxTotalBytes: 100 * 1024 * 1024,
           },
@@ -108,7 +108,8 @@ const providers = [
   }),
   defineProvider({
     provide: EnrichmentCaptureRepository,
-    useValue: captureRepositoryMock as unknown as EnrichmentCaptureRepository,
+    useValue:
+      captureRepositoryMock as unknown as EnrichmentCaptureRepository,
   }),
   defineProvider({
     provide: CaptureStorageService,
@@ -129,10 +130,12 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     configState.fetchMode = 'fetch'
-    configState.screenshotEnabled = false
+    configState.captureEnabled = false
     enrichmentRepositoryMock.findById.mockResolvedValue(baseRow)
     enrichmentRepositoryMock.clearCapture.mockResolvedValue(undefined)
-    captureRepositoryMock.findByEnrichmentId.mockResolvedValue(baseCaptureRow)
+    captureRepositoryMock.findByEnrichmentId.mockResolvedValue(
+      baseCaptureRow,
+    )
     captureRepositoryMock.getQuotaUsage.mockResolvedValue({
       count: 3,
       totalBytes: 4096,
@@ -213,9 +216,11 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    expect(body.id).toBe('row-1')
-    expect(body.capture).toBeTruthy()
-    expect(body.capture.object_key).toBe('enrichment-captures/row-1.webp')
+    expect(body.data.id).toBe('row-1')
+    expect(body.data.capture).toBeTruthy()
+    expect(body.data.capture.object_key).toBe(
+      'enrichment-captures/row-1.webp',
+    )
   })
 
   test('GET admin/by-id/:id 404 when missing', async () => {
@@ -240,7 +245,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     expect(body.data[0].public_url).toBe(
       'https://cdn.example.test/enrichment-captures/row-1.webp',
     )
-    expect(body.pagination.total).toBe(1)
+    expect(body.meta.pagination.total).toBe(1)
   })
 
   test('GET admin/captures returns publicUrl empty when storage unconfigured', async () => {
@@ -258,7 +263,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
 
   test('GET admin/captures/quota reflects config + usage', async () => {
     configState.fetchMode = 'browser'
-    configState.screenshotEnabled = true
+    configState.captureEnabled = true
     const res = await proxy.app.inject({
       method: 'GET',
       url: `${apiRoutePrefix}/enrichment/admin/captures/quota`,
@@ -266,11 +271,11 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    expect(body.used.count).toBe(3)
-    expect(body.used.total_bytes).toBe(4096)
-    expect(body.cap.max_items).toBe(500)
-    expect(body.enabled).toBe(true)
-    expect(body.fetch_mode).toBe('browser')
+    expect(body.data.used.count).toBe(3)
+    expect(body.data.used.total_bytes).toBe(4096)
+    expect(body.data.cap.max_items).toBe(500)
+    expect(body.data.enabled).toBe(true)
+    expect(body.data.fetch_mode).toBe('browser')
   })
 
   test('DELETE admin/captures/:id 204 even when not present', async () => {
@@ -281,12 +286,14 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     })
     expect(res.statusCode).toBe(204)
     expect(captureStorageMock.delete).toHaveBeenCalledWith('row-1')
-    expect(enrichmentRepositoryMock.clearCapture).toHaveBeenCalledWith('row-1')
+    expect(enrichmentRepositoryMock.clearCapture).toHaveBeenCalledWith(
+      'row-1',
+    )
   })
 
   test('POST admin/captures/:id/recapture 409 when fetchMode != browser', async () => {
     configState.fetchMode = 'fetch'
-    configState.screenshotEnabled = true
+    configState.captureEnabled = true
     const res = await proxy.app.inject({
       method: 'POST',
       url: `${apiRoutePrefix}/enrichment/admin/captures/row-1/recapture`,
@@ -294,12 +301,12 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     })
     expect(res.statusCode).toBe(409)
     const body = res.json()
-    expect(body.message?.code ?? body.code).toBe('browser_mode_required')
+    expect(body.error.code).toBe('ENRICHMENT_BROWSER_MODE_REQUIRED')
   })
 
-  test('POST admin/captures/:id/recapture 409 when screenshot disabled', async () => {
+  test('POST admin/captures/:id/recapture 409 when capture disabled', async () => {
     configState.fetchMode = 'browser'
-    configState.screenshotEnabled = false
+    configState.captureEnabled = false
     const res = await proxy.app.inject({
       method: 'POST',
       url: `${apiRoutePrefix}/enrichment/admin/captures/row-1/recapture`,
@@ -307,7 +314,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     })
     expect(res.statusCode).toBe(409)
     const body = res.json()
-    expect(body.message?.code ?? body.code).toBe('screenshot_disabled')
+    expect(body.error.code).toBe('ENRICHMENT_SCREENSHOT_DISABLED')
   })
 
   test('POST admin/captures/:id/recapture 404 for unknown id', async () => {
@@ -320,9 +327,9 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     expect(res.statusCode).toBe(404)
   })
 
-  test('POST admin/captures/:id/recapture happy path returns captureImage', async () => {
+  test('POST admin/captures/:id/recapture happy path returns capture', async () => {
     configState.fetchMode = 'browser'
-    configState.screenshotEnabled = true
+    configState.captureEnabled = true
     const captureImage = {
       url: 'https://cdn.example.test/enrichment-captures/row-1.webp',
       width: 1280,
@@ -349,7 +356,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
       { url: 'https://example.com/post' },
     )
     const body = res.json()
-    expect(body.url).toBe(captureImage.url)
+    expect(body.data.url).toBe(captureImage.url)
   })
 
   test('POST admin/probe forwards useCache=true and returns result', async () => {
@@ -370,8 +377,8 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
       true,
     )
     const body = res.json()
-    expect(body.cached).toBe(true)
-    expect(body.result.title).toBe('cached')
+    expect(body.data.cached).toBe(true)
+    expect(body.data.result.title).toBe('cached')
   })
 
   test('POST admin/probe with useCache=false default', async () => {
@@ -392,6 +399,6 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
       'https://example.com',
       false,
     )
-    expect(res.json().error.code).toBe('unknown_provider')
+    expect(res.json().data.error.code).toBe('unknown_provider')
   })
 })

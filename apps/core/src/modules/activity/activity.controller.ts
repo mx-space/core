@@ -8,10 +8,18 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
+import {
+  isExplicitSuccessEnvelope,
+  OK_DATA,
+  withMeta,
+} from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { TranslationService } from '~/processors/helper/helper.translation.service'
-import { PagerDto } from '~/shared/dto/pager.dto'
-import { snakecaseKeysWithCompat } from '~/utils/case.util'
+import {
+  applyArticleTranslationInPlace,
+  TranslationService,
+} from '~/processors/helper/helper.translation.service'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
@@ -60,30 +68,30 @@ export class ActivityController {
       id,
       ip,
     )
+    return OK_DATA
   }
 
   @Get('/likes')
   @Auth()
-  async getLikeActivities(@Query() pager: PagerDto) {
+  getLikeActivities(@Query() pager: BasicPagerDto) {
     const { page, size } = pager
-
     return this.service.getLikeActivities(page, size)
   }
 
   @Get('/')
   @Auth()
-  async activities(@Query() pager: ActivityQueryDto) {
+  activities(@Query() pager: ActivityQueryDto) {
     const { page, size, type } = pager
 
     switch (type) {
       case Activity.Like: {
         return this.service.getLikeActivities(page, size)
       }
-
       case Activity.ReadDuration: {
         return this.service.getReadDurationActivities(page, size)
       }
     }
+    return null
   }
 
   @Post('/presence/update')
@@ -92,40 +100,32 @@ export class ActivityController {
     @IpLocation() location: IpRecord,
   ) {
     await this.service.updatePresence(body, location.ip)
+    return OK_DATA
   }
 
   @Get('/presence')
   @HTTPDecorators.SkipLogging
-  @HTTPDecorators.Bypass
   async getPresence(@Query() query: GetPresenceQueryDto) {
-    const roomPresence = await this.service.getRoomPresence(query.room_name)
+    const roomPresence = await this.service.getRoomPresence(query.roomName)
 
     const readerIds = roomPresence
       .map((item) => item.readerId)
       .filter(Boolean) as string[]
     const readerRows = await this.readerService.findReaderInIds(readerIds)
-    const readers = readerRows.map((item) =>
-      snakecaseKeysWithCompat({
-        ...item,
-        id: item.id,
-      }),
-    )
+    const readers = readerRows.map((item) => ({ ...item, id: item.id }))
 
     return {
-      data: keyBy(
-        roomPresence.map(({ ip, ...item }) => {
-          return snakecaseKeysWithCompat(item)
-        }),
+      presence: keyBy(
+        roomPresence.map(({ ip, ...item }) => item),
         'identity',
       ),
-
       readers: keyBy(readers, 'id'),
     }
   }
 
   @Delete('/:type')
   @Auth()
-  async deletePresence(
+  deletePresence(
     @Param() params: ActivityTypeParamsDto,
     @Body() body: ActivityDeleteDto,
   ) {
@@ -137,7 +137,7 @@ export class ActivityController {
 
   @Auth()
   @Delete('/all')
-  async deleteAllPresence() {
+  deleteAllPresence() {
     return this.service.deleteAll()
   }
 
@@ -152,32 +152,42 @@ export class ActivityController {
       )
     }
 
-    if (lang) {
-      for (const type of Object.keys(objects)) {
-        if (!objects[type].length) continue
-        objects[type] = await this.translationService.translateList({
-          items: objects[type],
-          targetLang: lang,
-          translationFields: ['title', 'translationMeta'] as const,
-          getInput: (item: any) => ({
-            id: item.id ?? '',
-            title: item.title ?? '',
-            createdAt: item.createdAt,
-          }),
-          applyResult: (item: any, translation) => {
-            if (!translation?.isTranslated) return item
-            return {
-              ...item,
-              title: translation.title,
-              isTranslated: true,
-              translationMeta: translation.translationMeta,
-            }
-          },
-        })
+    if (!lang) return { ...roomInfo, objects }
+
+    const allItems = Object.values(objects).flat() as Array<{
+      id: string
+      title: string
+      createdAt: Date
+      modifiedAt?: Date | null
+    }>
+
+    const { results, meta } =
+      await this.translationService.collectArticleTranslations({
+        articles: allItems.map((item) => ({
+          id: String(item.id),
+          title: item.title ?? '',
+          text: '',
+          createdAt: item.createdAt,
+          modifiedAt: item.modifiedAt ?? null,
+        })),
+        targetLang: lang,
+        fields: ['title'],
+      })
+
+    for (const type of Object.keys(objects)) {
+      for (const item of objects[type] as Array<Record<string, any>>) {
+        const r = results.get(String(item.id))
+        if (r)
+          applyArticleTranslationInPlace(item, r as any, { fields: ['title'] })
       }
     }
 
-    return { ...roomInfo, objects }
+    if (meta.size === 0) return { ...roomInfo, objects }
+
+    return withMeta(
+      { ...roomInfo, objects },
+      new MetaObjectBuilder().translation(meta).build(),
+    )
   }
 
   @Get('/online-count')
@@ -230,28 +240,38 @@ export class ActivityController {
       ref: pick(item.ref, ARTICLE_REF_FIELDS),
     }))
     if (!lang) return data
-    return this.translationService.translateList({
-      items: data,
-      targetLang: lang,
-      translationFields: ['title', 'translationMeta'] as const,
-      getInput: (item) => {
-        const ref = item.ref as Record<string, any> | undefined
-        return {
-          id: item.refId,
-          title: ref?.title ?? '',
-          created: ref?.createdAt,
-        }
-      },
-      applyResult: (item, translation) => {
-        if (!translation?.isTranslated || !item.ref) return item
-        return {
-          ...item,
-          ref: { ...item.ref, title: translation.title },
-          isTranslated: true,
-          translationMeta: translation.translationMeta,
-        }
-      },
-    })
+
+    const { results, meta } =
+      await this.translationService.collectArticleTranslations({
+        articles: data
+          .filter((item) => item.ref)
+          .map((item) => ({
+            id: String(item.refId),
+            title: (item.ref as any)?.title ?? '',
+            text: '',
+            createdAt: (item.ref as any)?.createdAt,
+            modifiedAt: null as Date | null,
+          })),
+        targetLang: lang,
+        fields: ['title'],
+      })
+
+    for (const item of data) {
+      if (!item.ref) continue
+      const r = results.get(String(item.refId))
+      if (r)
+        applyArticleTranslationInPlace(
+          item.ref as Record<string, any>,
+          r as any,
+          {
+            fields: ['title'],
+          },
+        )
+    }
+
+    if (meta.size === 0) return data
+
+    return withMeta(data, new MetaObjectBuilder().translation(meta).build())
   }
 
   @Get('/recent')
@@ -262,10 +282,10 @@ export class ActivityController {
       this.service.getRecentPublish(),
     ])
 
-    let transformedLike = like.data.map((item) => {
+    const transformedLike = like.data.map((item) => {
       const likeData = pick(item, 'createdAt', 'id') as any
       if (!item.ref) {
-        likeData.title = '已删除的内容'
+        likeData.title = 'Deleted content'
         return likeData
       }
       if ('nid' in item.ref) {
@@ -280,49 +300,109 @@ export class ActivityController {
       return likeData
     })
 
-    let post = recentPublish.post as any[]
-    let note = recentPublish.note as any[]
+    const post = recentPublish.post as any[]
+    const note = recentPublish.note as any[]
 
-    if (lang) {
-      const translateTitleOnly = <T extends Record<string, any>>(
-        items: T[],
-        getId: (item: T) => string,
-      ) =>
-        this.translationService.translateList({
-          items,
-          targetLang: lang,
-          translationFields: ['title'] as const,
-          getInput: (item) => ({
-            id: getId(item),
-            title: item.title ?? '',
-            createdAt: item.createdAt,
-            modifiedAt: item.modifiedAt,
-          }),
-          applyResult: (item, translation) =>
-            translation?.isTranslated
-              ? { ...item, title: translation.title }
-              : item,
-        })
+    if (!lang) {
+      for (const item of transformedLike) {
+        delete item.articleId
+      }
+      return {
+        like: transformedLike,
+        comment,
+        recent: recentPublish.recent,
+        post,
+        note,
+      }
+    }
 
-      transformedLike = await translateTitleOnly(
-        transformedLike,
-        (item) => item.articleId ?? '',
-      )
-      post = await translateTitleOnly(post, (item) => item.id)
-      note = await translateTitleOnly(note, (item) => item.id)
+    const likeSnapshots = transformedLike
+      .filter((item) => item.articleId && item.title !== 'Deleted content')
+      .map((item) => ({
+        id: String(item.articleId),
+        title: item.title ?? '',
+        text: '',
+        createdAt: item.createdAt,
+        modifiedAt: null as Date | null,
+      }))
+
+    const postSnapshots = post.map((item) => ({
+      id: String(item.id),
+      title: item.title ?? '',
+      text: '',
+      createdAt: item.createdAt,
+      modifiedAt: item.modifiedAt ?? null,
+    }))
+
+    const noteSnapshots = note.map((item) => ({
+      id: String(item.id),
+      title: item.title ?? '',
+      text: '',
+      createdAt: item.createdAt,
+      modifiedAt: item.modifiedAt ?? null,
+    }))
+
+    const [likeCollect, postCollect, noteCollect] = await Promise.all([
+      this.translationService.collectArticleTranslations({
+        articles: likeSnapshots,
+        targetLang: lang,
+        fields: ['title'],
+      }),
+      this.translationService.collectArticleTranslations({
+        articles: postSnapshots,
+        targetLang: lang,
+        fields: ['title'],
+      }),
+      this.translationService.collectArticleTranslations({
+        articles: noteSnapshots,
+        targetLang: lang,
+        fields: ['title'],
+      }),
+    ])
+
+    for (const item of transformedLike) {
+      if (!item.articleId || item.title === 'Deleted content') continue
+      const r = likeCollect.results.get(String(item.articleId))
+      if (r)
+        applyArticleTranslationInPlace(item, r as any, { fields: ['title'] })
+    }
+
+    for (const item of post) {
+      const r = postCollect.results.get(String(item.id))
+      if (r)
+        applyArticleTranslationInPlace(item, r as any, { fields: ['title'] })
+    }
+
+    for (const item of note) {
+      const r = noteCollect.results.get(String(item.id))
+      if (r)
+        applyArticleTranslationInPlace(item, r as any, { fields: ['title'] })
     }
 
     for (const item of transformedLike) {
       delete item.articleId
     }
 
-    return {
+    const combinedMeta = new Map([
+      ...likeCollect.meta,
+      ...postCollect.meta,
+      ...noteCollect.meta,
+    ])
+
+    const data = {
       like: transformedLike,
       comment,
       recent: recentPublish.recent,
       post,
       note,
     }
+
+    if (combinedMeta.size === 0) return data
+
+    return withMeta(
+      data,
+      new MetaObjectBuilder().translation(combinedMeta).build(),
+    )
   }
 
   @HTTPDecorators.SkipLogging
@@ -334,7 +414,9 @@ export class ActivityController {
     const fromDate = new Date(query.from)
     if (fromDate > new Date()) return []
 
-    const { post, note } = await this.getRecentActivities(lang)
+    const raw = await this.getRecentActivities(lang)
+    const result = isExplicitSuccessEnvelope(raw) ? raw.data : raw
+    const { post, note } = result
     const isAfter = (item: any) => new Date(item.createdAt) > fromDate
 
     const postList = post.filter(isAfter).map((item) => ({
@@ -357,50 +439,60 @@ export class ActivityController {
     const result = await this.service.getLastYearPublication()
     if (!lang) return result
 
-    if (result.posts.length) {
-      result.posts = await this.translationService.translateList({
-        items: result.posts as any[],
+    const posts = result.posts as any[]
+    const notes = result.notes as any[]
+
+    const postSnapshots = posts.map((item: any) => ({
+      id: String(item.id),
+      title: item.title ?? '',
+      text: '',
+      createdAt: item.createdAt,
+      modifiedAt: item.modifiedAt ?? null,
+    }))
+
+    const noteSnapshots = notes
+      .filter((item: any) => item.title !== 'Private note')
+      .map((item: any) => ({
+        id: String(item.id),
+        title: item.title ?? '',
+        text: '',
+        createdAt: item.createdAt,
+        modifiedAt: item.modifiedAt ?? null,
+      }))
+
+    const [postCollect, noteCollect] = await Promise.all([
+      this.translationService.collectArticleTranslations({
+        articles: postSnapshots,
         targetLang: lang,
-        translationFields: ['title', 'translationMeta'] as const,
-        getInput: (item: any) => ({
-          id: item.id,
-          title: item.title ?? '',
-          createdAt: item.createdAt,
-        }),
-        applyResult: (item: any, translation) => {
-          if (!translation?.isTranslated) return item
-          return {
-            ...item,
-            title: translation.title,
-            isTranslated: true,
-            translationMeta: translation.translationMeta,
-          }
-        },
-      })
+        fields: ['title'],
+      }),
+      this.translationService.collectArticleTranslations({
+        articles: noteSnapshots,
+        targetLang: lang,
+        fields: ['title'],
+      }),
+    ])
+
+    for (const item of posts) {
+      const r = postCollect.results.get(String(item.id))
+      if (r)
+        applyArticleTranslationInPlace(item, r as any, { fields: ['title'] })
     }
 
-    if (result.notes.length) {
-      result.notes = await this.translationService.translateList({
-        items: result.notes as any[],
-        targetLang: lang,
-        translationFields: ['title', 'translationMeta'] as const,
-        getInput: (item: any) => ({
-          id: item.title === '未公开的日记' ? '' : item.id,
-          title: item.title ?? '',
-          createdAt: item.createdAt,
-        }),
-        applyResult: (item: any, translation) => {
-          if (!translation?.isTranslated) return item
-          return {
-            ...item,
-            title: translation.title,
-            isTranslated: true,
-            translationMeta: translation.translationMeta,
-          }
-        },
-      })
+    for (const item of notes) {
+      if (item.title === 'Private note') continue
+      const r = noteCollect.results.get(String(item.id))
+      if (r)
+        applyArticleTranslationInPlace(item, r as any, { fields: ['title'] })
     }
 
-    return result
+    const combinedMeta = new Map([...postCollect.meta, ...noteCollect.meta])
+
+    if (combinedMeta.size === 0) return result
+
+    return withMeta(
+      result,
+      new MetaObjectBuilder().translation(combinedMeta).build(),
+    )
   }
 }

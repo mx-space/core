@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 import type { AIProviderConfig } from '../ai.types'
@@ -23,10 +22,9 @@ export class AiAgentChatService {
       (p) => p.id === providerId && p.enabled,
     )
     if (!provider) {
-      throw new BizException(
-        ErrorCodeEnum.AINotEnabled,
-        `Provider "${providerId}" not found or disabled`,
-      )
+      throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
+        message: `Provider "${providerId}" not found or disabled`,
+      })
     }
     return provider
   }

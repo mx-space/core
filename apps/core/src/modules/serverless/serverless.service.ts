@@ -12,13 +12,12 @@ import {
 import { isPlainObject } from 'es-toolkit/compat'
 import qs from 'qs'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import {
   EventScope,
   SERVERLESS_EVENT_PREFIX,
 } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
 import { AssetService } from '~/processors/helper/helper.asset.service'
@@ -354,10 +353,9 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
         `Serverless function error [${scope}]: ${result.error?.message}`,
         result.error?.stack,
       )
-      throw new BizException(
-        ErrorCodeEnum.ServerlessError,
-        result.error?.message || 'Unknown error, please check log',
-      )
+      throw createAppException(AppErrorCode.SERVERLESS_ERROR, {
+        message: result.error?.message || 'Unknown error, please check log',
+      })
     }
 
     return result.data

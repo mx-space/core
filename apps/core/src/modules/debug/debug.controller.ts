@@ -47,7 +47,7 @@ export class DebugController {
   }
 
   @Post('/function')
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async runFunction(
     @Body('function') functionString: string,
     @Request() req,

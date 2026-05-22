@@ -15,7 +15,7 @@ import { isDefined } from '~/utils/validator.util'
 export class CommentFilterEmailInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {
     const request = this.getRequest(context)
-    // 如果已经登陆
+    // Already authenticated — skip filtering
     const isAuthenticated = request.user
     if (isAuthenticated) {
       return next.handle()

@@ -16,8 +16,7 @@ import {
   Logger,
 } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import {
   STATIC_FILE_DIR,
   STATIC_FILE_TRASH_DIR,
@@ -37,7 +36,9 @@ export class FileService {
     const base = path.resolve(STATIC_FILE_DIR, type)
     const resolved = path.resolve(base, name)
     if (!resolved.startsWith(base + path.sep) && resolved !== base) {
-      throw new BizException(ErrorCodeEnum.InvalidParameter)
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'invalid file path',
+      })
     }
     return resolved
   }
@@ -55,7 +56,7 @@ export class FileService {
     const filePath = this.resolveFilePath(type, name)
     const exists = await this.checkIsExist(filePath)
     if (!exists) {
-      throw new BizException(ErrorCodeEnum.FileNotFound)
+      throw createAppException(AppErrorCode.FILE_NOT_FOUND, { name })
     }
     return createReadStream(filePath)
   }
@@ -70,7 +71,7 @@ export class FileService {
     return new Promise(async (resolve, reject) => {
       const filePath = this.resolveFilePath(type, name)
       if (await this.checkIsExist(filePath)) {
-        reject(new BizException(ErrorCodeEnum.FileExists))
+        reject(createAppException(AppErrorCode.FILE_EXISTS))
         return
       }
       await mkdir(path.dirname(filePath), { recursive: true })
@@ -100,7 +101,7 @@ export class FileService {
     return new Promise(async (resolve, reject) => {
       const filePath = this.resolveFilePath(type, name)
       if (!(await this.checkIsExist(filePath))) {
-        reject(new BizException(ErrorCodeEnum.FileNotFound))
+        reject(createAppException(AppErrorCode.FILE_NOT_FOUND, { name }))
         return
       }
       const writable = createWriteStream(filePath, { encoding })
@@ -134,13 +135,17 @@ export class FileService {
       }
     } catch (error) {
       if (error?.code === 'ENOENT') {
-        // 幂等：源文件不存在就视为已删除
-        this.logger.warn(`删除文件：源文件不存在，跳过 (${type}/${name})`)
+        // Idempotent: if the source file is missing, treat it as already deleted.
+        this.logger.warn(
+          `Delete file: source missing, skipping (${type}/${name})`,
+        )
         return
       }
-      this.logger.error('删除文件失败', error)
+      this.logger.error('Failed to delete file', error)
 
-      throw new InternalServerErrorException(`删除文件失败，${error.message}`)
+      throw new InternalServerErrorException(
+        `Failed to delete file: ${error.message}`,
+      )
     }
   }
 
@@ -161,8 +166,8 @@ export class FileService {
     try {
       await rename(oldPath, newPath)
     } catch (error) {
-      this.logger.error('重命名文件失败', error.message)
-      throw new BizException(ErrorCodeEnum.FileRenameFailed)
+      this.logger.error('Failed to rename file', error.message)
+      throw createAppException(AppErrorCode.FILE_RENAME_FAILED)
     }
   }
 }

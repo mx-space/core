@@ -14,6 +14,19 @@ export const sortOrderToNumber = (order: SortOrder) => {
   )
 }
 const isObject = (obj: any) => obj && typeof obj === 'object'
+
+export interface ResponseEnvelope<T = any> {
+  data: T
+  meta?: Record<string, any>
+}
+
+export const isResponseEnvelope = (body: any): body is ResponseEnvelope => {
+  if (!isPlainObject(body) || !('data' in body)) {
+    return false
+  }
+  return Object.keys(body).every((key) => key === 'data' || key === 'meta')
+}
+
 export const destructureData = (payload: any) => {
   if (typeof payload !== 'object') {
     return payload

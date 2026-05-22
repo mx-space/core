@@ -26,7 +26,7 @@ export const zAllowedUrl = z.string().refine(
       return false
     }
   },
-  { message: '请更正为正确的网址' },
+  { message: 'Please enter a valid URL' },
 )
 
 export const zStrictUrl = z.string().url()
@@ -84,16 +84,15 @@ export const zUniqueStringArray = zArrayUnique(z.string().min(1))
 
 // Sort Types
 
-export const zSortOrder = z.preprocess(
-  (val) => {
-    if (typeof val === 'number' && (val === 1 || val === -1)) return val
-    if (typeof val === 'string') {
-      if (val === '1' || val === 'asc') return 1
-      if (val === '-1' || val === 'desc') return -1
-      const num = Number.parseInt(val)
-      if (num === 1 || num === -1) return num
-    }
-    return undefined
-  },
-  z.union([z.literal(1), z.literal(-1)]).optional(),
-)
+// Internally typed as `'asc' | 'desc'`; on the wire, the legacy numeric form
+// `1` / `-1` (and their string equivalents) is coerced for backward compat.
+export const zSortOrder = z
+  .preprocess(
+    (val) => {
+      if (val === 1 || val === '1') return 'asc'
+      if (val === -1 || val === '-1') return 'desc'
+      return val
+    },
+    z.enum(['asc', 'desc']),
+  )
+  .default('desc')

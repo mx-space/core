@@ -2,12 +2,9 @@ import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { RequestContext } from '~/common/contexts/request.context'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getAvatar } from '~/utils/tool.util'
@@ -57,7 +54,7 @@ export type CommentParentPreview = {
 const COMMENT_REPLY_THRESHOLD = 20
 const COMMENT_REPLY_EDGE_SIZE = 3
 const COMMENT_THREAD_BATCH_SIZE = 10
-const COMMENT_DELETED_PLACEHOLDER = '该评论已删除'
+const COMMENT_DELETED_PLACEHOLDER = 'This comment has been deleted'
 
 @Injectable()
 export class CommentService {
@@ -75,8 +72,9 @@ export class CommentService {
   ) {}
 
   /**
-   * 评论批量更新状态时之级联清图。
-   * Junk(state=2) 转移会触发关联 reader-uploaded 文件之硬删除（按配置）。
+   * Cascade-clean uploaded files when batch-updating comment state.
+   * Moving comments to Junk (state=2) triggers hard deletion of the
+   * associated reader-uploaded files (per configuration).
    */
   async cascadeFilesForCommentsIfSpam(commentIds: string[], state: number) {
     if (state !== CommentState.Junk) return
@@ -316,7 +314,7 @@ export class CommentService {
       const result = await this.databaseService.findGlobalById(id)
       if (result) refType = result.type
     }
-    if (!refType) throw new BizException(ErrorCodeEnum.CommentPostNotExists)
+    if (!refType) throw createAppException(AppErrorCode.COMMENT_POST_NOT_EXISTS)
 
     const comment = await this.commentRepository.create({
       text: doc.text!,
@@ -347,16 +345,16 @@ export class CommentService {
   async validAuthorName(author: string): Promise<void> {
     const isExist = await this.ownerService.isOwnerName(author)
     if (isExist) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        '用户名与主人重名啦，但是你好像并不是我的主人唉',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message:
+          "That name belongs to the site owner, and you don't look like them.",
+      })
     }
   }
 
   async replyComment(id: string, doc: Partial<CommentModel>) {
     const parent = await this.commentRepository.findById(id)
-    if (!parent) throw new CannotFindException()
+    if (!parent) throw createAppException(AppErrorCode.NOT_FOUND)
 
     const reader = await this.assignReaderToComment()
     if (reader) {
@@ -364,7 +362,7 @@ export class CommentService {
       this.assignAuthProviderToComment(doc)
     }
 
-    // Owner 回复未读评论时，自动将父评论标为已读
+    // When the owner replies to an unread comment, mark the parent as read.
     if (
       RequestContext.hasAdminAccess() &&
       parent.state === CommentState.Unread
@@ -409,7 +407,7 @@ export class CommentService {
 
   async softDeleteComment(id: string) {
     const comment = await this.commentRepository.findById(id)
-    if (!comment) throw new NoContentCanBeModifiedException()
+    if (!comment) throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
     if (comment.isDeleted) return
     await this.commentRepository.update(id, {
       isDeleted: true,
@@ -430,7 +428,7 @@ export class CommentService {
 
   async allowComment(id: string, _type?: CollectionRefTypes) {
     const result = await this.databaseService.findGlobalById(id)
-    if (!result) throw new CannotFindException()
+    if (!result) throw createAppException(AppErrorCode.NOT_FOUND)
     return 'allowComment' in result.document
       ? (result.document as any).allowComment
       : true
@@ -438,7 +436,7 @@ export class CommentService {
 
   async allowCommentByCommentId(commentId: string) {
     const comment = await this.commentRepository.findById(commentId)
-    if (!comment) throw new CannotFindException()
+    if (!comment) throw createAppException(AppErrorCode.NOT_FOUND)
     return this.allowComment(
       comment.refId,
       comment.refType as CollectionRefTypes,
@@ -749,8 +747,9 @@ export class CommentService {
 
   async editComment(id: string, text: string) {
     const comment = await this.commentRepository.findById(id)
-    if (!comment) throw new CannotFindException()
-    if (comment.isDeleted) throw new NoContentCanBeModifiedException()
+    if (!comment) throw createAppException(AppErrorCode.NOT_FOUND)
+    if (comment.isDeleted)
+      throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
     await this.commentRepository.update(id, { text, editedAt: new Date() })
     await this.eventManager.broadcast(
       BusinessEvents.COMMENT_UPDATE,

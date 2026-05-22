@@ -6,75 +6,75 @@ import { customAlphabet } from 'nanoid'
 import { alphabet } from '~/constants/other.constant'
 
 /**
- * 文件名模板占位符替换工具
- * 支持的占位符:
- * - {Y} 年份 (4位)
- * - {y} 年份 (2位)
- * - {m} 月份 (2位)
- * - {d} 日期 (2位)
- * - {h} 小时 (2位)
- * - {i} 分钟 (2位)
- * - {s} 秒钟 (2位)
- * - {ms} 毫秒 (3位)
- * - {timestamp} 时间戳 (毫秒)
- * - {md5} 随机MD5字符串 (32位)
- * - {md5-16} 随机MD5字符串 (16位)
- * - {uuid} UUID字符串
- * - {str-数字} 随机字符串，数字表示长度
- * - {filename} 原文件名 (包含扩展名)
- * - {name} 原文件名 (不含扩展名)
- * - {ext} 扩展名 (包含点号)
- * - {type} 文件类型
- * - {localFolder:数字} 原文件所在文件夹 (数字表示层级)
- * - {readerId} 读者 ID (评论上传专用)
+ * Filename template placeholder substitution utility.
+ * Supported placeholders:
+ * - {Y} Year (4 digits)
+ * - {y} Year (2 digits)
+ * - {m} Month (2 digits)
+ * - {d} Day (2 digits)
+ * - {h} Hour (2 digits)
+ * - {i} Minute (2 digits)
+ * - {s} Second (2 digits)
+ * - {ms} Millisecond (3 digits)
+ * - {timestamp} Timestamp (milliseconds)
+ * - {md5} Random MD5 string (32 chars)
+ * - {md5-16} Random MD5 string (16 chars)
+ * - {uuid} UUID string
+ * - {str-<n>} Random string; number specifies length
+ * - {filename} Original filename (with extension)
+ * - {name} Original filename (without extension)
+ * - {ext} Extension (with dot)
+ * - {type} File type
+ * - {localFolder:<n>} Original folder of the file; number specifies depth
+ * - {readerId} Reader ID (for comment uploads only)
  */
 export interface FilenameTemplateContext {
   /**
-   * 原始文件名 (包含扩展名)
+   * Original filename (including extension)
    */
   originalFilename: string
 
   /**
-   * 文件类型 (如: image, file, avatar, icon)
+   * File type (e.g. image, file, avatar, icon)
    */
   fileType?: string
 
   /**
-   * 本地文件夹路径 (用于 localFolder 占位符)
+   * Local folder path (used for the localFolder placeholder)
    */
   localFolderPath?: string
 
   /**
-   * 读者 ID (用于评论上传 {readerId} 占位符)
+   * Reader ID (used for the {readerId} placeholder in comment uploads)
    */
   readerId?: string
 }
 
 /**
- * 生成一个随机的 MD5 字符串
+ * Generate a random MD5-like hex string.
  */
 function generateRandomMd5(): string {
   return crypto.randomBytes(16).toString('hex')
 }
 
 /**
- * 生成一个 UUID v4 字符串
+ * Generate a UUID v4 string.
  */
 function generateUuid(): string {
   return crypto.randomUUID()
 }
 
 /**
- * 格式化数字，补零到指定位数
+ * Format a number with leading zeros to the given length.
  */
 function padZero(num: number, length: number): string {
   return num.toString().padStart(length, '0')
 }
 
 /**
- * 提取文件名中的文件夹层级
- * @param folderPath 文件夹路径
- * @param level 提取的层级数
+ * Extract folder segments from a path.
+ * @param folderPath The folder path.
+ * @param level Number of trailing segments to extract.
  */
 function extractFolderLevel(
   folderPath: string | undefined,
@@ -89,10 +89,10 @@ function extractFolderLevel(
 }
 
 /**
- * 替换模板中的占位符
- * @param template 模板字符串
- * @param context 上下文信息
- * @returns 替换后的字符串
+ * Replace placeholders in the template string.
+ * @param template Template string.
+ * @param context Context information.
+ * @returns The substituted string.
  */
 export function replaceFilenameTemplate(
   template: string,
@@ -106,13 +106,13 @@ export function replaceFilenameTemplate(
     readerId = '',
   } = context
 
-  // 提取文件名和扩展名
+  // Extract filename and extension
   const ext = path.extname(originalFilename).toLowerCase()
   const nameWithoutExt = path.basename(originalFilename, ext)
 
   let result = template
 
-  // 时间相关占位符
+  // Date/time placeholders
   result = result.replaceAll('{Y}', now.getFullYear().toString())
   result = result.replaceAll('{y}', padZero(now.getFullYear() % 100, 2))
   result = result.replaceAll('{m}', padZero(now.getMonth() + 1, 2))
@@ -123,37 +123,37 @@ export function replaceFilenameTemplate(
   result = result.replaceAll('{ms}', padZero(now.getMilliseconds(), 3))
   result = result.replaceAll('{timestamp}', now.getTime().toString())
 
-  // 随机字符串占位符
+  // Random string placeholders
   result = result.replaceAll('{md5}', () => generateRandomMd5())
   result = result.replaceAll('{md5-16}', () => generateRandomMd5().slice(0, 16))
   result = result.replaceAll('{uuid}', () => generateUuid())
 
-  // 自定义长度的随机字符串 {str-数字}
+  // Random string with custom length: {str-<n>}
   // eslint-disable-next-line unicorn/better-regex
   result = result.replaceAll(/\{str-(\d+)\}/g, (_match, length) => {
     const len = Number.parseInt(length, 10)
     return customAlphabet(alphabet)(len)
   })
 
-  // 文件名相关占位符
+  // Filename placeholders
   result = result.replaceAll('{filename}', originalFilename)
   result = result.replaceAll('{name}', nameWithoutExt)
   result = result.replaceAll('{ext}', ext)
 
-  // 文件类型占位符
+  // File type placeholder
   result = result.replaceAll('{type}', fileType)
 
-  // 读者 ID 占位符（评论上传专用）
+  // Reader ID placeholder (for comment uploads only)
   result = result.replaceAll('{readerId}', readerId)
 
-  // 本地文件夹占位符 {localFolder:数字}
+  // Local folder placeholder: {localFolder:<n>}
   // eslint-disable-next-line unicorn/better-regex
   result = result.replaceAll(/\{localFolder:(\d+)\}/g, (_match, level) => {
     const lvl = Number.parseInt(level, 10)
     return extractFolderLevel(localFolderPath, lvl)
   })
 
-  // 防止路径遍历：移除父目录引用（..）
+  // Prevent path traversal: strip any parent-directory references (..)
   const segments = result.split(/[/\\]+/)
   const safeSegments = segments.filter((segment) => segment !== '..')
   const safeResult = safeSegments.join('/')
@@ -162,10 +162,10 @@ export function replaceFilenameTemplate(
 }
 
 /**
- * 生成文件名（应用模板或使用默认规则）
- * @param config 配置对象
- * @param context 上下文信息
- * @returns 生成的文件名
+ * Generate a filename (using a template or the default rule).
+ * @param config Configuration object.
+ * @param context Context information.
+ * @returns The generated filename.
  */
 export function generateFilename(
   config: {
@@ -174,7 +174,7 @@ export function generateFilename(
   },
   context: FilenameTemplateContext,
 ): string {
-  // 如果未启用自定义命名或没有模板，使用默认规则
+  // Fall back to the default rule when custom naming is disabled or no template is provided
   if (!config.enableCustomNaming || !config.filenameTemplate) {
     const ext = path.extname(context.originalFilename).toLowerCase()
     return customAlphabet(alphabet)(18) + ext
@@ -184,10 +184,10 @@ export function generateFilename(
 }
 
 /**
- * 生成文件路径（应用模板或使用默认规则）
- * @param config 配置对象
- * @param context 上下文信息
- * @returns 生成的路径
+ * Generate a file path (using a template or the default rule).
+ * @param config Configuration object.
+ * @param context Context information.
+ * @returns The generated path.
  */
 export function generateFilePath(
   config: {
@@ -196,7 +196,7 @@ export function generateFilePath(
   },
   context: FilenameTemplateContext,
 ): string {
-  // 如果未启用自定义命名或没有路径模板，使用默认规则（文件类型）
+  // Fall back to the default rule (file type) when custom naming is disabled or no path template is provided
   if (!config.enableCustomNaming || !config.pathTemplate) {
     return context.fileType || ''
   }

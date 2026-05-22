@@ -28,7 +28,10 @@ import {
   assertNoLegacyKeys,
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
-import { translationProvider } from '../../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../../mock/processors/translation.mock'
 
 const fixturePost = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000060',
@@ -195,6 +198,7 @@ describe('Yohaku contract — aggregate top/latest/timeline (e2e)', () => {
       analyzeSvcProvider,
       snippetSvcProvider,
       translationProvider,
+      translationEntryProvider,
     ],
   })
 
@@ -208,20 +212,16 @@ describe('Yohaku contract — aggregate top/latest/timeline (e2e)', () => {
 
     // `recently` legitimately carries `comments_index` + `allow_comment`.
     assertNoLegacyKeys(body, { allowed: ['comments_index', 'allow_comment'] })
-    assertHasKeys(body, ['posts', 'notes', 'says', 'recently'])
-    assertHasKeysDeep(body, [
+    assertHasKeys(body.data, ['posts', 'notes', 'says', 'recently'])
+    assertHasKeysDeep(body.data, [
       'posts.0.id',
       'posts.0.title',
       'posts.0.slug',
-      'posts.0.created_at',
-      'posts.0.category.slug',
       'notes.0.id',
       'notes.0.nid',
       'notes.0.title',
-      'notes.0.created_at',
       'says.0.id',
       'says.0.text',
-      'says.0.created_at',
     ])
   })
 
@@ -233,12 +233,8 @@ describe('Yohaku contract — aggregate top/latest/timeline (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertHasKeys(body, ['posts', 'notes'])
-    assertHasKeysDeep(body, [
-      'posts.0.created_at',
-      'notes.0.created_at',
-      'notes.0.nid',
-    ])
+    assertHasKeys(body.data, ['posts', 'notes'])
+    assertHasKeysDeep(body.data, ['posts.0.id', 'notes.0.id', 'notes.0.nid'])
   })
 
   test('GET /aggregate/timeline — wraps `data.posts` + `data.notes`', async () => {

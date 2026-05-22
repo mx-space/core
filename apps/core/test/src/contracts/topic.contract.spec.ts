@@ -7,6 +7,7 @@ import { TopicRepository } from '~/modules/topic/topic.repository'
 import { assertNoLegacyKeys, assertPgTimestamps } from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
 import { eventEmitterProvider } from '../../mock/processors/event.mock'
+import { translationEntryProvider } from '../../mock/processors/translation.mock'
 
 const fixtureTopic = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000080',
@@ -60,7 +61,11 @@ const topicRepoProvider = {
 describe('TopicController contract (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [TopicBaseController],
-    providers: [topicRepoProvider, ...eventEmitterProvider],
+    providers: [
+      topicRepoProvider,
+      translationEntryProvider,
+      ...eventEmitterProvider,
+    ],
   })
 
   test('GET /topics — list, no legacy keys', async () => {
@@ -95,7 +100,7 @@ describe('TopicController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
   })
 
   test('GET /topics/:id — by id, no legacy keys', async () => {
@@ -106,6 +111,6 @@ describe('TopicController contract (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body)
+    assertPgTimestamps(body.data)
   })
 })

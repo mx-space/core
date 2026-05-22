@@ -16,19 +16,26 @@ import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
-import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { withMeta } from '~/common/response/envelope.types'
+import type {
+  ArticleTranslation,
+  EnrichmentEntry,
+} from '~/common/response/meta.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import {
+  applyArticleTranslationInPlace,
+  applyTranslationEntriesInPlace,
   type ArticleTranslationInput,
-  type TranslationMeta,
+  buildArticleTranslationMeta,
+  type EntryMaps,
+  type EntryRule,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { applyContentPreference } from '~/utils/content.util'
 import { truncateAtBoundary } from '~/utils/text-summary.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai/ai.constants'
@@ -48,225 +55,38 @@ import {
   SetNotePublishStatusDto,
 } from './note.schema'
 import { NoteService } from './note.service'
-import { NoteModel } from './note.types'
+import type { NoteModel } from './note.types'
 
-type NoteListItem = NoteModel & {
-  isTranslated?: boolean
-  translationMeta?: TranslationMeta
-}
-
-// Shared @TranslateFields rule sets — kept top-of-file so detail/list endpoints
-// stay in sync without copy-paste drift.
-const NOTE_LIST_TRANSLATE_FIELDS = [
-  { path: 'data[].mood', keyPath: 'note.mood' },
-  { path: 'data[].weather', keyPath: 'note.weather' },
-  { path: 'data[].topic.name', keyPath: 'topic.name', idField: 'id' },
+const NOTE_ENTRY_RULES: ReadonlyArray<EntryRule> = [
+  { path: 'topic.name', keyPath: 'topic.name', mode: 'entity', idField: 'id' },
   {
-    path: 'data[].topic.introduce',
+    path: 'topic.introduce',
     keyPath: 'topic.introduce',
+    mode: 'entity',
     idField: 'id',
   },
   {
-    path: 'data[].topic.description',
+    path: 'topic.description',
     keyPath: 'topic.description',
+    mode: 'entity',
     idField: 'id',
   },
-] as const
-
-const NOTE_DETAIL_TRANSLATE_FIELDS = [
-  { path: 'mood', keyPath: 'note.mood' },
-  { path: 'weather', keyPath: 'note.weather' },
-  { path: 'topic.name', keyPath: 'topic.name', idField: 'id' },
-  { path: 'topic.introduce', keyPath: 'topic.introduce', idField: 'id' },
-  { path: 'topic.description', keyPath: 'topic.description', idField: 'id' },
-  { path: 'data.mood', keyPath: 'note.mood' },
-  { path: 'data.weather', keyPath: 'note.weather' },
-  { path: 'data.topic.name', keyPath: 'topic.name', idField: 'id' },
-  {
-    path: 'data.topic.introduce',
-    keyPath: 'topic.introduce',
-    idField: 'id',
-  },
-  {
-    path: 'data.topic.description',
-    keyPath: 'topic.description',
-    idField: 'id',
-  },
-  { path: 'next.mood', keyPath: 'note.mood' },
-  { path: 'next.weather', keyPath: 'note.weather' },
-  { path: 'next.topic.name', keyPath: 'topic.name', idField: 'id' },
-  {
-    path: 'next.topic.introduce',
-    keyPath: 'topic.introduce',
-    idField: 'id',
-  },
-  {
-    path: 'next.topic.description',
-    keyPath: 'topic.description',
-    idField: 'id',
-  },
-  { path: 'prev.mood', keyPath: 'note.mood' },
-  { path: 'prev.weather', keyPath: 'note.weather' },
-  { path: 'prev.topic.name', keyPath: 'topic.name', idField: 'id' },
-  {
-    path: 'prev.topic.introduce',
-    keyPath: 'topic.introduce',
-    idField: 'id',
-  },
-  {
-    path: 'prev.topic.description',
-    keyPath: 'topic.description',
-    idField: 'id',
-  },
-] as const
+  { path: 'mood', keyPath: 'note.mood', mode: 'dict' },
+  { path: 'weather', keyPath: 'note.weather', mode: 'dict' },
+]
 
 @ApiController({ path: 'notes' })
 export class NoteController {
   constructor(
     private readonly noteService: NoteService,
     private readonly countingService: CountingService,
-
     private readonly translationService: TranslationService,
     private readonly aiSummaryService: AiSummaryService,
     private readonly aiInsightsService: AiInsightsService,
     private readonly lexicalService: LexicalService,
     private readonly enrichmentService: EnrichmentService,
+    private readonly translationEntryService: TranslationEntryService,
   ) {}
-
-  private async buildPublicNoteResponse(
-    current: NoteModel,
-    isAuthenticated: boolean,
-    query: NotePasswordQueryDto,
-    ip: string,
-    lang?: string,
-  ) {
-    const { password, single: isSingle, prefer } = query
-    const visibleOnly = !isAuthenticated
-
-    if (!isAuthenticated) {
-      current.location = null
-      current.coordinates = null
-    }
-
-    current.text =
-      !isAuthenticated && this.noteService.checkNoteIsSecret(current)
-        ? ''
-        : current.text
-
-    if (
-      !(await this.noteService.checkPasswordToAccess(current.id, password)) &&
-      !isAuthenticated
-    ) {
-      throw new BizException(ErrorCodeEnum.NoteForbidden)
-    }
-
-    const liked = await this.countingService
-      .getThisRecordIsLiked(current.id!, ip)
-      .catch(() => false)
-
-    const translationResult = await this.translationService.translateArticle({
-      articleId: current.id!,
-      targetLang: lang,
-      allowHidden: Boolean(isAuthenticated || current.password),
-      originalData: {
-        title: current.title,
-        text: current.text,
-      },
-    })
-
-    // Insights live in their own collection with an independent translation
-    // pipeline, so article-translation metadata can't answer "do we have
-    // insights in the caller's locale?". Surface a dedicated flag instead.
-    const insightsLang = parseLanguageCode(lang)
-    const hasInsightsInLocale = await this.aiInsightsService
-      .hasInsightsInLang(current.id!, insightsLang)
-      .catch(() => false)
-
-    const currentData = {
-      ...current,
-      title: translationResult.title,
-      text: translationResult.text,
-      ...(translationResult.content && {
-        content: translationResult.content,
-        contentFormat: translationResult.contentFormat,
-      }),
-      isTranslated: translationResult.isTranslated,
-      sourceLang: translationResult.sourceLang,
-      translationMeta: translationResult.translationMeta,
-      availableTranslations: translationResult.availableTranslations,
-      hasInsightsInLocale,
-      liked,
-    }
-
-    if (isSingle) {
-      return this.enrichmentService.attachEnrichments(
-        applyContentPreference(currentData, prefer),
-      )
-    }
-
-    const [[prev], [next]] = await Promise.all([
-      this.noteService.findByCreatedWindow(current.createdAt!, 'after', 1, {
-        visibleOnly,
-        excludeId: current.id,
-      }),
-      this.noteService.findByCreatedWindow(current.createdAt!, 'before', 1, {
-        visibleOnly,
-        excludeId: current.id,
-      }),
-    ])
-    if (!isAuthenticated) {
-      for (const adj of [prev, next]) {
-        if (!adj) continue
-        adj.location = null
-        adj.coordinates = null
-      }
-    }
-
-    const [, data] = await Promise.all([
-      this.translateAdjacentNotes([prev, next], lang),
-      this.enrichmentService.attachEnrichments(
-        applyContentPreference(currentData, prefer),
-      ),
-    ])
-    const adjPrev = prev ? applyContentPreference(prev, prefer) : prev
-    const adjNext = next ? applyContentPreference(next, prefer) : next
-    return { data, next: adjNext, prev: adjPrev }
-  }
-
-  private async buildOwnerNoteDetailResponse(
-    current: NoteModel,
-    query: NotePasswordQueryDto,
-    lang?: string,
-  ) {
-    const translationResult = await this.translationService.translateArticle({
-      articleId: current.id!,
-      targetLang: lang,
-      allowHidden: true,
-      originalData: {
-        title: current.title,
-        text: current.text,
-      },
-    })
-
-    return this.enrichmentService.attachEnrichments(
-      applyContentPreference(
-        {
-          ...current,
-          title: translationResult.title,
-          text: translationResult.text,
-          ...(translationResult.content && {
-            content: translationResult.content,
-            contentFormat: translationResult.contentFormat,
-          }),
-          isTranslated: translationResult.isTranslated,
-          sourceLang: translationResult.sourceLang,
-          translationMeta: translationResult.translationMeta,
-          availableTranslations: translationResult.availableTranslations,
-        },
-        query.prefer,
-      ),
-    )
-  }
 
   private toArticleTranslationInput(note: NoteModel): ArticleTranslationInput {
     return {
@@ -281,207 +101,6 @@ export class NoteController {
     }
   }
 
-  /**
-   * Read-only: never enqueues new translations — if a locale isn't cached, the
-   * adjacent note keeps source-language fields.
-   */
-  private async translateAdjacentNotes(
-    notes: Array<NoteListItem | null>,
-    lang?: string,
-  ) {
-    if (!lang) return
-    const items = notes.filter((note): note is NoteListItem => Boolean(note))
-    if (!items.length) return
-
-    const translationResults =
-      await this.translationService.translateArticleList({
-        articles: items.map((note) => this.toArticleTranslationInput(note)),
-        targetLang: lang,
-      })
-
-    for (const note of items) {
-      const translation = translationResults.get(String(note.id))
-      if (!translation?.isTranslated) continue
-      note.title = translation.title
-      note.text = translation.text
-      if (translation.content) {
-        note.content = translation.content
-        note.contentFormat = note.contentFormat ?? translation.contentFormat
-      }
-      note.isTranslated = translation.isTranslated
-      note.translationMeta = translation.translationMeta
-    }
-  }
-
-  @Get('/')
-  @TranslateFields(...NOTE_LIST_TRANSLATE_FIELDS)
-  async getNotes(
-    @HasAdminAccess() isAuthenticated: boolean,
-    @Query() query: NoteQueryDto,
-    @Lang() lang?: string,
-  ) {
-    const { size, select, page, sortBy, sortOrder, year, withSummary } = query
-
-    const result = await this.noteService.listPaginated(page, size, {
-      visibleOnly: !isAuthenticated,
-      sortBy: sortBy as
-        | 'createdAt'
-        | 'modifiedAt'
-        | 'title'
-        | 'mood'
-        | 'weather'
-        | undefined,
-      sortOrder: sortOrder as 1 | -1 | undefined,
-      year,
-    })
-
-    if (!isAuthenticated) {
-      for (const doc of result.data) {
-        doc.location = null
-        doc.coordinates = null
-      }
-    }
-
-    if (!result.data.length) {
-      return result
-    }
-
-    if (withSummary && !lang) {
-      await this.enrichDocsWithSummary(result)
-      this.applyNoteSelect(result.data, select)
-      return result
-    }
-
-    if (!lang) {
-      this.applyNoteSelect(result.data, select)
-      return result
-    }
-
-    const translationInputs: ArticleTranslationInput[] = []
-    for (const doc of result.data) {
-      if (typeof doc.text === 'string') {
-        translationInputs.push(this.toArticleTranslationInput(doc))
-      }
-    }
-
-    if (!translationInputs.length) {
-      if (withSummary) {
-        await this.enrichDocsWithSummary(result, lang)
-      }
-      this.applyNoteSelect(result.data, select)
-      return result
-    }
-
-    const translationResults =
-      await this.translationService.translateArticleList({
-        articles: translationInputs,
-        targetLang: lang,
-      })
-
-    result.data = result.data.map((doc) => {
-      const docId = String(doc.id)
-      const translation = translationResults.get(docId)
-      if (!translation?.isTranslated) {
-        return doc
-      }
-
-      doc.title = translation.title
-      doc.text = translation.text
-      if (translation.content) {
-        doc.content = translation.content
-        doc.contentFormat = doc.contentFormat ?? translation.contentFormat
-      }
-      ;(doc as { isTranslated?: boolean }).isTranslated =
-        translation.isTranslated
-      ;(doc as { translationMeta?: unknown }).translationMeta =
-        translation.translationMeta
-      return doc
-    })
-
-    // Strip text/content if not originally requested (added only for translation).
-    // Cast is required because `delete` on typed required properties needs an
-    // index-signature target.
-    const originalSelectHasText = select?.includes('text')
-    const originalSelectHasContent = select?.includes('content')
-    if (!originalSelectHasText || !originalSelectHasContent) {
-      for (const doc of result.data) {
-        if (!originalSelectHasText && !withSummary) delete (doc as any).text
-        if (!originalSelectHasContent) delete (doc as any).content
-      }
-    }
-
-    if (withSummary) {
-      await this.enrichDocsWithSummary(result, lang)
-    }
-
-    this.applyNoteSelect(result.data, select)
-    return result
-  }
-
-  private applyNoteSelect(rows: object[], select: string | undefined): void {
-    if (!select) return
-    const selected = new Set(
-      select
-        .split(' ')
-        .map((s) => s.trim().replace(/^[+-]/, ''))
-        .filter(Boolean),
-    )
-    // Always preserve `id`, `topic`, and `summary` to keep response shape sound:
-    // `id` is the row key, `topic` is a joined value the legacy aggregate
-    // pipeline emitted after the `$project` stage, and `summary` is injected
-    // by `enrichDocsWithSummary` AFTER select runs — stripping it would erase
-    // the very field `?withSummary=1` was sent to populate.
-    selected.add('id')
-    selected.add('topic')
-    selected.add('summary')
-    for (let i = 0; i < rows.length; i++) {
-      rows[i] = Object.fromEntries(
-        Object.entries(rows[i] as Record<string, unknown>).filter(([key]) =>
-          selected.has(key),
-        ),
-      )
-    }
-  }
-
-  private async enrichDocsWithSummary(
-    result: { data: NoteModel[] },
-    lang?: string,
-  ) {
-    const SUMMARY_MAX_LENGTH = 150
-    const ids = result.data.map((d) => d.id)
-    const summaryMap = await this.aiSummaryService.batchGetSummariesByRefIds(
-      ids,
-      lang || DEFAULT_SUMMARY_LANG,
-    )
-
-    const enriched = result.data.map((doc) => {
-      const plain = { ...doc } as Record<string, unknown>
-      plain.summary =
-        summaryMap.get(doc.id) ??
-        this.fallbackSummary(doc, SUMMARY_MAX_LENGTH) ??
-        ''
-      delete plain.text
-      delete plain.content
-      return plain
-    })
-
-    ;(result as unknown as { data: typeof enriched }).data = enriched
-  }
-
-  /**
-   * Fallback summary used when the AI cache misses.
-   *
-   * Truncation is delegated to `truncateAtBoundary` so the teaser never
-   * ends mid-word for Latin scripts or mid-sentence for CJK. Locale comes
-   * from `meta.lang` when authored that way; otherwise we let
-   * `Intl.Segmenter` fall back to its default rules.
-   *
-   * Lexical notes carry richer structure — the head of `text` (the
-   * markdown render of the editor state) often leads with heading hashes,
-   * list markers, or block prefixes that look messy in a teaser; pick the
-   * first paragraph block from the original editor state instead, which
-   * mirrors how a reader would see "the opening" of the note.
-   */
   private fallbackSummary(doc: NoteModel, maxLength: number): string | null {
     const locale =
       typeof (doc.meta as { lang?: unknown } | undefined)?.lang === 'string'
@@ -499,38 +118,324 @@ export class NoteController {
     return truncateAtBoundary(doc.text, maxLength, locale)
   }
 
-  @Get(':id')
-  @TranslateFields(...NOTE_DETAIL_TRANSLATE_FIELDS)
-  async getOneNote(
-    @Param() params: EntityIdDto,
-    @Query() query: NotePasswordQueryDto = {} as NotePasswordQueryDto,
-    @HasAdminAccess() isAuthenticated = false,
-    @IpLocation() { ip }: IpRecord = { ip: '' } as IpRecord,
-    @Lang() lang?: string,
+  private async batchEntryTranslations(
+    lang: string,
+    notes: Array<NoteModel | null | undefined>,
+  ): Promise<EntryMaps> {
+    const topicIds = new Set<string>()
+    const moods = new Set<string>()
+    const weathers = new Set<string>()
+
+    for (const note of notes) {
+      if (!note) continue
+      if (note.topic?.id) topicIds.add(String(note.topic.id))
+      if (note.mood) moods.add(note.mood)
+      if (note.weather) weathers.add(note.weather)
+    }
+
+    return this.translationEntryService.getTranslationsBatch(lang, {
+      entityLookups:
+        topicIds.size > 0
+          ? [
+              { keyPath: 'topic.name', lookupKeys: topicIds },
+              { keyPath: 'topic.introduce', lookupKeys: topicIds },
+              { keyPath: 'topic.description', lookupKeys: topicIds },
+            ]
+          : [],
+      dictLookups: [
+        ...(moods.size > 0
+          ? [{ keyPath: 'note.mood' as const, sourceTexts: moods }]
+          : []),
+        ...(weathers.size > 0
+          ? [{ keyPath: 'note.weather' as const, sourceTexts: weathers }]
+          : []),
+      ],
+    })
+  }
+
+  private async buildPublicNoteResponse(
+    current: NoteModel,
+    isAuthenticated: boolean,
+    query: NotePasswordQueryDto,
+    ip: string,
+    lang?: string,
   ) {
-    const { id } = params
+    const { password, single: isSingle } = query
+    const visibleOnly = !isAuthenticated
 
-    const current = await this.noteService.findById(id)
-    if (!current) {
-      throw new CannotFindException()
+    if (!isAuthenticated) {
+      current.location = null
+      current.coordinates = null
     }
 
-    // 非认证用户只能查看已发布的手记
-    if (!isAuthenticated && !current.isPublished) {
-      throw new CannotFindException()
+    current.text =
+      !isAuthenticated && this.noteService.checkNoteIsSecret(current)
+        ? ''
+        : current.text
+
+    if (
+      !(await this.noteService.checkPasswordToAccess(current.id, password)) &&
+      !isAuthenticated
+    ) {
+      throw createAppException(AppErrorCode.NOTE_FORBIDDEN)
     }
 
-    return this.buildPublicNoteResponse(
-      current as NoteModel,
-      isAuthenticated,
-      { ...query, single: true },
-      ip,
-      lang,
+    const liked = await this.countingService
+      .getThisRecordIsLiked(current.id!, ip)
+      .catch(() => false)
+
+    const translationResult = await this.translationService.translateArticle({
+      articleId: current.id!,
+      targetLang: lang,
+      allowHidden: Boolean(isAuthenticated || current.password),
+      originalData: {
+        title: current.title,
+        text: current.text,
+      },
+    })
+
+    applyArticleTranslationInPlace(current, translationResult)
+
+    const insightsLang = parseLanguageCode(lang)
+    const hasInsightsInLocale = await this.aiInsightsService
+      .hasInsightsInLang(current.id!, insightsLang)
+      .catch(() => false)
+
+    const metaBuilder = new MetaObjectBuilder()
+      .view('detail')
+      .interaction({ isLiked: liked })
+      .insights({ hasInLocale: hasInsightsInLocale })
+
+    if (isSingle) {
+      if (lang) {
+        const entryMaps = await this.batchEntryTranslations(lang, [current])
+        applyTranslationEntriesInPlace(current, entryMaps, NOTE_ENTRY_RULES)
+      }
+
+      const translationMap = new Map([
+        [
+          String(current.id),
+          {
+            article: buildArticleTranslationMeta(
+              translationResult,
+              lang,
+            ) as ArticleTranslation,
+          },
+        ],
+      ])
+      metaBuilder.translation(translationMap)
+
+      const { enrichments, ...noteData } =
+        await this.enrichmentService.attachEnrichments(current)
+      metaBuilder.enrichments(enrichments as Record<string, EnrichmentEntry>)
+      return withMeta(noteData, metaBuilder.build())
+    }
+
+    const [[prev], [next]] = await Promise.all([
+      this.noteService.findByCreatedWindow(current.createdAt!, 'after', 1, {
+        visibleOnly,
+        excludeId: current.id,
+      }),
+      this.noteService.findByCreatedWindow(current.createdAt!, 'before', 1, {
+        visibleOnly,
+        excludeId: current.id,
+      }),
+    ])
+
+    if (!isAuthenticated) {
+      for (const adj of [prev, next]) {
+        if (!adj) continue
+        adj.location = null
+        adj.coordinates = null
+      }
+    }
+
+    const translationMap = new Map([
+      [
+        String(current.id),
+        {
+          article: buildArticleTranslationMeta(
+            translationResult,
+            lang,
+          ) as ArticleTranslation,
+        },
+      ],
+    ])
+
+    if (lang) {
+      const adjacents = [prev, next].filter(Boolean) as NoteModel[]
+      if (adjacents.length > 0) {
+        const adjResults = await this.translationService.translateArticleList({
+          articles: adjacents.map((n) => this.toArticleTranslationInput(n)),
+          targetLang: lang,
+          translationFields: [
+            'title',
+            'text',
+            'content',
+            'contentFormat',
+            'translationMeta',
+            'sourceLang',
+            'availableTranslations',
+          ],
+        })
+        for (const adj of adjacents) {
+          const adjResult = adjResults.get(String(adj.id))
+          if (adjResult) {
+            applyArticleTranslationInPlace(adj, adjResult as any, {
+              fields: ['title', 'text', 'content', 'contentFormat'],
+            })
+            if (adjResult.isTranslated) {
+              translationMap.set(String(adj.id), {
+                article: buildArticleTranslationMeta(
+                  adjResult as any,
+                  lang,
+                ) as ArticleTranslation,
+              })
+            }
+          }
+        }
+      }
+
+      const entryMaps = await this.batchEntryTranslations(lang, [
+        current,
+        prev,
+        next,
+      ])
+      applyTranslationEntriesInPlace(current, entryMaps, NOTE_ENTRY_RULES)
+      if (prev)
+        applyTranslationEntriesInPlace(prev, entryMaps, NOTE_ENTRY_RULES)
+      if (next)
+        applyTranslationEntriesInPlace(next, entryMaps, NOTE_ENTRY_RULES)
+    }
+
+    metaBuilder.translation(translationMap)
+
+    const { enrichments, ...noteData } =
+      await this.enrichmentService.attachEnrichments(current)
+    metaBuilder.enrichments(enrichments as Record<string, EnrichmentEntry>)
+
+    return withMeta(
+      {
+        ...noteData,
+        next: next ?? null,
+        prev: prev ?? null,
+      },
+      metaBuilder.build(),
     )
   }
 
+  @Get('/')
+  async getNotes(
+    @HasAdminAccess() isAuthenticated: boolean,
+    @Query() query: NoteQueryDto,
+    @Lang() lang?: string,
+  ) {
+    const { size, page, sortBy, sortOrder, year, withSummary } = query
+
+    const result = await this.noteService.listPaginated(page, size, {
+      visibleOnly: !isAuthenticated,
+      sortBy: sortBy as
+        | 'createdAt'
+        | 'modifiedAt'
+        | 'title'
+        | 'mood'
+        | 'weather'
+        | undefined,
+      sortOrder: sortOrder === 'asc' ? 1 : -1,
+      year,
+    })
+
+    if (!isAuthenticated) {
+      for (const doc of result.data) {
+        doc.location = null
+        doc.coordinates = null
+      }
+    }
+
+    const { results: translationResults, meta: translationMeta } =
+      await this.translationService.collectArticleTranslations({
+        articles: result.data
+          .filter((doc) => typeof doc.text === 'string')
+          .map((doc) => this.toArticleTranslationInput(doc)),
+        targetLang: lang,
+        fields: ['title', 'text', 'content', 'contentFormat'],
+      })
+
+    for (const doc of result.data) {
+      const tr = translationResults.get(String(doc.id))
+      if (tr?.isTranslated) {
+        applyArticleTranslationInPlace(doc, tr as any)
+      }
+    }
+
+    if (withSummary) {
+      const SUMMARY_MAX_LENGTH = 150
+      const ids = result.data.map((d) => d.id)
+      const summaryMap = await this.aiSummaryService.batchGetSummariesByRefIds(
+        ids,
+        lang || DEFAULT_SUMMARY_LANG,
+      )
+      for (const doc of result.data) {
+        const plain = doc as any
+        plain.summary =
+          summaryMap.get(doc.id) ??
+          this.fallbackSummary(doc, SUMMARY_MAX_LENGTH) ??
+          ''
+        delete plain.text
+        delete plain.content
+      }
+    }
+
+    if (lang) {
+      const entryMaps = await this.batchEntryTranslations(lang, result.data)
+      for (const doc of result.data) {
+        applyTranslationEntriesInPlace(doc, entryMaps, NOTE_ENTRY_RULES)
+      }
+    }
+
+    const metaBuilder = new MetaObjectBuilder().view('card').pagination({
+      page: result.pagination.currentPage,
+      size: result.pagination.size,
+      total: result.pagination.total,
+      totalPages: result.pagination.totalPage,
+    })
+
+    if (translationMeta.size > 0) {
+      metaBuilder.translation(translationMeta)
+    }
+
+    return withMeta(result.data, metaBuilder.build())
+  }
+
+  @Get(':id')
+  async getOneNote(
+    @Param() params: EntityIdDto,
+    @HasAdminAccess() isAuthenticated: boolean,
+  ) {
+    const { id } = params
+    const current = await this.noteService.findById(id)
+    if (!current) {
+      throw createAppException(AppErrorCode.NOTE_NOT_FOUND, { id })
+    }
+
+    if (!isAuthenticated && !current.isPublished) {
+      throw createAppException(AppErrorCode.NOTE_NOT_FOUND, { id })
+    }
+
+    if (!isAuthenticated) {
+      current.location = null
+      current.coordinates = null
+    }
+
+    const { enrichments, ...noteData } =
+      await this.enrichmentService.attachEnrichments(current)
+    const metaBuilder = new MetaObjectBuilder().enrichments(
+      enrichments as Record<string, EnrichmentEntry>,
+    )
+    return withMeta(noteData, metaBuilder.build())
+  }
+
   @Get('/:year/:month/:day/:slug')
-  @TranslateFields(...NOTE_DETAIL_TRANSLATE_FIELDS)
   async getNoteByDateAndSlug(
     @Param() params: NoteSlugDateParamsDto,
     @HasAdminAccess() isAuthenticated: boolean,
@@ -544,13 +449,11 @@ export class NoteController {
       month,
       day,
       slug,
-      {
-        includeLocation: isAuthenticated,
-      },
+      { includeLocation: isAuthenticated },
     )
 
     if (!current || (!isAuthenticated && !current.isPublished)) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.NOTE_NOT_FOUND)
     }
 
     return this.buildPublicNoteResponse(
@@ -573,12 +476,11 @@ export class NoteController {
     const half = size >> 1
     const { id } = params
 
-    // 当前文档直接找，不用加条件，反正里面的东西是看不到的
     const currentDocument = await this.noteService.findById(id)
-
     if (!currentDocument) {
-      return { data: [], size: 0 }
+      return withMeta([], new MetaObjectBuilder().view('card').build())
     }
+
     const findAdjacent = (direction: 'prev' | 'next', count: number) => {
       if (count <= 0) return Promise.resolve([])
       return this.noteService.findByCreatedWindow(
@@ -593,50 +495,53 @@ export class NoteController {
       findAdjacent('prev', half - 1),
       findAdjacent('next', half ? half - 1 : 0),
     ])
+
     const merged = [...prevList, ...nextList, currentDocument].sort(
       (a, b) => (b.createdAt?.valueOf() ?? 0) - (a.createdAt?.valueOf() ?? 0),
     )
 
-    // SDK consumer (`NoteTimelineItem`) only reads id/title/nid/slug/createdAt/
-    // isPublished plus translation flags, so trim eagerly here.
-    let data = merged.map((doc) => ({
+    const listData = merged.map((doc) => ({
       id: doc.id,
       title: doc.title,
       nid: doc.nid,
       slug: doc.slug,
       isPublished: doc.isPublished,
       createdAt: doc.createdAt,
-    })) as NoteListItem[]
+    }))
 
-    // 处理翻译
-    data = await this.translationService.translateList({
-      items: data,
-      targetLang: lang,
-      translationFields: ['title', 'translationMeta'] as const,
-      getInput: (item) => ({
-        id: String(item.id),
-        title: item.title,
-        modifiedAt: item.modifiedAt,
-        createdAt: item.createdAt,
-      }),
-      applyResult: (item, translation) => {
-        if (translation?.isTranslated) {
-          item.title = translation.title
-          item.isTranslated = true
-          item.translationMeta = translation.translationMeta
-        }
-        return item
-      },
-    })
+    const { results: translationResults, meta: translationMeta } =
+      await this.translationService.collectArticleTranslations({
+        articles: listData.map((item) => ({
+          id: String(item.id),
+          title: item.title,
+          text: '',
+          createdAt: item.createdAt,
+          modifiedAt: null,
+        })),
+        targetLang: lang,
+        fields: ['title'],
+      })
 
-    return { data, size: data.length }
+    for (const item of listData) {
+      const tr = translationResults.get(String(item.id))
+      if (tr?.isTranslated && tr.title) {
+        item.title = tr.title
+      }
+    }
+
+    const metaBuilder = new MetaObjectBuilder().view('card')
+    if (translationMeta.size > 0) {
+      metaBuilder.translation(translationMeta)
+    }
+
+    return withMeta(listData, metaBuilder.build())
   }
 
   @Post('/')
   @HTTPDecorators.Idempotence()
   @Auth()
-  async create(@Body() body: NoteDto) {
-    return await this.noteService.create(body as unknown as NoteModel)
+  create(@Body() body: NoteDto) {
+    return this.noteService.create(body as unknown as NoteModel)
   }
 
   @Put('/:id')
@@ -653,7 +558,6 @@ export class NoteController {
       params.id,
       body as unknown as Partial<NoteModel>,
     )
-    return
   }
 
   @Delete(':id')
@@ -663,7 +567,6 @@ export class NoteController {
   }
 
   @Get('/latest')
-  @TranslateFields(...NOTE_DETAIL_TRANSLATE_FIELDS)
   async getLatestOne(
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
@@ -674,6 +577,7 @@ export class NoteController {
 
     if (!result) return null
     const { latest, next } = result
+
     if (!isAuthenticated) {
       latest.location = null
       latest.coordinates = null
@@ -694,31 +598,73 @@ export class NoteController {
       },
     })
 
+    applyArticleTranslationInPlace(latest, translationResult)
+
+    let nextTranslationResult: Awaited<
+      ReturnType<TranslationService['translateArticle']>
+    > | null = null
+
+    if (lang && next) {
+      nextTranslationResult = await this.translationService.translateArticle({
+        articleId: String(next.id),
+        targetLang: lang,
+        allowHidden: Boolean(isAuthenticated),
+        originalData: { title: next.title, text: next.text ?? '' },
+      })
+      applyArticleTranslationInPlace(next, nextTranslationResult)
+    }
+
+    if (lang) {
+      const entryMaps = await this.batchEntryTranslations(lang, [latest, next])
+      applyTranslationEntriesInPlace(latest, entryMaps, NOTE_ENTRY_RULES)
+      if (next)
+        applyTranslationEntriesInPlace(next, entryMaps, NOTE_ENTRY_RULES)
+    }
+
     const insightsLang = parseLanguageCode(lang)
     const hasInsightsInLocale = await this.aiInsightsService
       .hasInsightsInLang(latest.id!, insightsLang)
       .catch(() => false)
 
-    const data = await this.enrichmentService.attachEnrichments({
-      ...latest,
-      title: translationResult.title,
-      text: translationResult.text,
-      ...(translationResult.content && {
-        content: translationResult.content,
-        contentFormat: translationResult.contentFormat,
-      }),
-      isTranslated: translationResult.isTranslated,
-      sourceLang: translationResult.sourceLang,
-      translationMeta: translationResult.translationMeta,
-      availableTranslations: translationResult.availableTranslations,
-      hasInsightsInLocale,
-    })
-    return { data, next }
+    const { enrichments, ...latestData } =
+      await this.enrichmentService.attachEnrichments(latest)
+
+    const metaBuilder = new MetaObjectBuilder()
+      .view('detail')
+      .insights({ hasInLocale: hasInsightsInLocale })
+      .enrichments(enrichments as Record<string, EnrichmentEntry>)
+
+    const translationMap = new Map([
+      [
+        String(latest.id),
+        {
+          article: buildArticleTranslationMeta(
+            translationResult,
+            lang,
+          ) as ArticleTranslation,
+        },
+      ],
+    ])
+    if (nextTranslationResult) {
+      translationMap.set(String(next!.id), {
+        article: buildArticleTranslationMeta(
+          nextTranslationResult,
+          lang,
+        ) as ArticleTranslation,
+      })
+    }
+    metaBuilder.translation(translationMap)
+
+    return withMeta(
+      {
+        ...latestData,
+        next: next ?? null,
+      },
+      metaBuilder.build(),
+    )
   }
 
-  // C 端入口
   @Get('/nid/:nid')
-  @TranslateFields(...NOTE_DETAIL_TRANSLATE_FIELDS)
   async getNoteByNid(
     @Param() params: NidType,
     @HasAdminAccess() isAuthenticated: boolean,
@@ -729,12 +675,11 @@ export class NoteController {
     const { nid } = params
     const current: NoteModel | null = await this.noteService.findByNid(nid)
     if (!current) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.NOTE_NOT_FOUND)
     }
 
-    // Unauthenticated callers must not see unpublished (draft) notes via nid.
     if (!isAuthenticated && !current.isPublished) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.NOTE_NOT_FOUND)
     }
 
     return this.buildPublicNoteResponse(
@@ -747,10 +692,6 @@ export class NoteController {
   }
 
   @Get('/topics/:id')
-  @TranslateFields(
-    { path: 'data[].mood', keyPath: 'note.mood' },
-    { path: 'data[].weather', keyPath: 'note.weather' },
-  )
   async getNotesByTopic(
     @Param() params: EntityIdDto,
     @Query() query: NoteTopicPagerDto,
@@ -764,14 +705,8 @@ export class NoteController {
       {
         page,
         limit: size,
-        sortBy: sortBy as
-          | 'createdAt'
-          | 'modifiedAt'
-          | 'title'
-          | 'mood'
-          | 'weather'
-          | undefined,
-        sortOrder: sortOrder as 1 | -1 | undefined,
+        sortBy: sortBy as any,
+        sortOrder: sortOrder === 'asc' ? 1 : -1,
       },
       isAuthenticated ? {} : { isPublished: true },
     )
@@ -783,30 +718,42 @@ export class NoteController {
       }
     }
 
-    // 处理翻译
-    const translatedDocs = await this.translationService.translateList({
-      items: result.data as unknown as NoteListItem[],
-      targetLang: lang,
-      translationFields: ['title', 'translationMeta'] as const,
-      getInput: (item) => ({
-        id: String(item.id),
-        title: item.title,
-        modifiedAt: item.modifiedAt,
-        createdAt: item.createdAt,
-      }),
-      applyResult: (item, translation) => {
-        delete (item as { text?: string }).text // 始终移除 text
-        if (translation?.isTranslated) {
-          item.title = translation.title
-          item.isTranslated = true
-          item.translationMeta = translation.translationMeta
-        }
-        return item
-      },
-    })
-    result.data = translatedDocs as typeof result.data
+    const { results: translationResults, meta: translationMeta } =
+      await this.translationService.collectArticleTranslations({
+        articles: result.data.map((doc) => ({
+          id: String(doc.id),
+          title: doc.title,
+          text: '',
+          createdAt: doc.createdAt,
+          modifiedAt: doc.modifiedAt,
+        })),
+        targetLang: lang,
+        fields: ['title'],
+      })
 
-    return result
+    for (const doc of result.data) {
+      const tr = translationResults.get(String(doc.id))
+      if (tr?.isTranslated && tr.title) {
+        doc.title = tr.title
+      }
+    }
+
+    if (lang) {
+      const entryMaps = await this.batchEntryTranslations(lang, result.data)
+      for (const doc of result.data) {
+        applyTranslationEntriesInPlace(doc, entryMaps, NOTE_ENTRY_RULES)
+      }
+    }
+
+    const metaBuilder = new MetaObjectBuilder().view('card').pagination({
+      page: result.pagination.currentPage,
+      size: result.pagination.size,
+      total: result.pagination.total,
+      totalPages: result.pagination.totalPage,
+    })
+    if (translationMeta.size > 0) metaBuilder.translation(translationMeta)
+
+    return withMeta(result.data, metaBuilder.build())
   }
 
   @Get('/topics/:id/recent-update')

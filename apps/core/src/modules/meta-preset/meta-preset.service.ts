@@ -1,8 +1,7 @@
 import type { OnModuleInit } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 
 import { MetaFieldType, MetaPresetScope } from './meta-preset.enum'
 import { MetaPresetRepository } from './meta-preset.repository'
@@ -13,28 +12,28 @@ import type {
 import type { MetaPresetModel } from './meta-preset.types'
 
 /**
- * 内置预设字段种子数据
+ * Seed data for built-in preset fields.
  */
 const BUILTIN_PRESETS: Partial<MetaPresetModel>[] = [
   {
     key: 'aiGen',
-    label: 'AI 参与声明',
+    label: 'AI Involvement Disclosure',
     type: MetaFieldType.Checkbox,
     scope: MetaPresetScope.Both,
-    description: '声明 AI 在创作过程中的参与程度',
+    description: 'Declare how much AI was involved during creation',
     allowCustomOption: true,
     options: [
-      { value: -1, label: '无 AI (手作)', exclusive: true },
-      { value: 0, label: '辅助写作' },
-      { value: 1, label: '润色' },
-      { value: 2, label: '完全 AI 生成', exclusive: true },
-      { value: 3, label: '故事整理' },
-      { value: 4, label: '标题生成' },
-      { value: 5, label: '校对' },
-      { value: 6, label: '灵感提供' },
-      { value: 7, label: '改写' },
-      { value: 8, label: 'AI 作图' },
-      { value: 9, label: '口述' },
+      { value: -1, label: 'No AI (handcrafted)', exclusive: true },
+      { value: 0, label: 'Writing assistance' },
+      { value: 1, label: 'Polishing' },
+      { value: 2, label: 'Fully AI-generated', exclusive: true },
+      { value: 3, label: 'Story organization' },
+      { value: 4, label: 'Title generation' },
+      { value: 5, label: 'Proofreading' },
+      { value: 6, label: 'Inspiration source' },
+      { value: 7, label: 'Rewriting' },
+      { value: 8, label: 'AI-generated imagery' },
+      { value: 9, label: 'Dictation' },
     ],
     isBuiltin: true,
     order: 0,
@@ -42,7 +41,7 @@ const BUILTIN_PRESETS: Partial<MetaPresetModel>[] = [
   },
   {
     key: 'cover',
-    label: '封面图',
+    label: 'Cover image',
     type: MetaFieldType.Url,
     scope: MetaPresetScope.Both,
     placeholder: 'https://...',
@@ -52,33 +51,33 @@ const BUILTIN_PRESETS: Partial<MetaPresetModel>[] = [
   },
   {
     key: 'banner',
-    label: '横幅信息',
+    label: 'Banner',
     type: MetaFieldType.Object,
     scope: MetaPresetScope.Both,
-    description: '在文章顶部显示的提示横幅',
+    description: 'Notice banner displayed at the top of an article',
     children: [
       {
         key: 'type',
-        label: '类型',
+        label: 'Type',
         type: MetaFieldType.Select,
         options: [
-          { value: 'info', label: '信息' },
-          { value: 'warning', label: '警告' },
-          { value: 'error', label: '错误' },
-          { value: 'success', label: '成功' },
-          { value: 'secondary', label: '次要' },
+          { value: 'info', label: 'Info' },
+          { value: 'warning', label: 'Warning' },
+          { value: 'error', label: 'Error' },
+          { value: 'success', label: 'Success' },
+          { value: 'secondary', label: 'Secondary' },
         ],
       },
       {
         key: 'message',
-        label: '消息内容',
+        label: 'Message',
         type: MetaFieldType.Textarea,
       },
       {
         key: 'className',
-        label: '自定义类名',
+        label: 'Custom class name',
         type: MetaFieldType.Text,
-        placeholder: '可选的 CSS 类名',
+        placeholder: 'Optional CSS class name',
       },
     ],
     isBuiltin: true,
@@ -87,20 +86,20 @@ const BUILTIN_PRESETS: Partial<MetaPresetModel>[] = [
   },
   {
     key: 'keywords',
-    label: 'SEO 关键词',
+    label: 'SEO keywords',
     type: MetaFieldType.Tags,
     scope: MetaPresetScope.Both,
-    placeholder: '输入关键词后按回车',
+    placeholder: 'Type a keyword and press Enter',
     isBuiltin: true,
     order: 3,
     enabled: true,
   },
   {
     key: 'style',
-    label: '文章样式',
+    label: 'Article style',
     type: MetaFieldType.Text,
     scope: MetaPresetScope.Both,
-    placeholder: '输入样式名称',
+    placeholder: 'Enter a style name',
     isBuiltin: true,
     order: 4,
     enabled: true,
@@ -112,14 +111,14 @@ export class MetaPresetService implements OnModuleInit {
   constructor(private readonly metaPresetRepository: MetaPresetRepository) {}
 
   /**
-   * 模块初始化时初始化内置预设
+   * Initialize built-in presets when the module starts up.
    */
   async onModuleInit() {
     await this.initBuiltinPresets()
   }
 
   /**
-   * 初始化内置预设字段
+   * Initialize built-in preset fields.
    */
   private async initBuiltinPresets() {
     for (const preset of BUILTIN_PRESETS) {
@@ -128,7 +127,7 @@ export class MetaPresetService implements OnModuleInit {
       if (!exists) {
         await this.metaPresetRepository.create(preset)
       } else {
-        // 更新内置预设的 options 和 children（保持最新）
+        // Keep options and children for built-in presets in sync with the source.
         await this.metaPresetRepository.update(exists.id, {
           options: preset.options,
           children: preset.children,
@@ -142,7 +141,7 @@ export class MetaPresetService implements OnModuleInit {
   }
 
   /**
-   * 获取所有预设字段
+   * Get all preset fields.
    */
   async findAll(scope?: MetaPresetScope, enabledOnly = false) {
     const presets = await this.metaPresetRepository.findAll()
@@ -154,29 +153,31 @@ export class MetaPresetService implements OnModuleInit {
   }
 
   /**
-   * 根据 ID 获取单个预设字段
+   * Get a single preset field by ID.
    */
   async findById(id: string) {
     return this.metaPresetRepository.findById(id)
   }
 
   /**
-   * 根据 key 获取预设字段
+   * Get a preset field by key.
    */
   async findByKey(key: string) {
     return this.metaPresetRepository.findByName(key)
   }
 
   /**
-   * 创建自定义预设字段
+   * Create a custom preset field.
    */
   async create(dto: CreateMetaPresetDto) {
     const exists = await this.metaPresetRepository.findByName(dto.key)
     if (exists) {
-      throw new BizException(ErrorCodeEnum.PresetKeyExists, `key: "${dto.key}"`)
+      throw createAppException(AppErrorCode.META_PRESET_KEY_EXISTS, {
+        key: dto.key,
+      })
     }
 
-    // 获取最大 order 值
+    // Get the current maximum order value
     const maxOrder = await this.metaPresetRepository.findMaxOrder()
 
     const order = dto.order ?? maxOrder + 1
@@ -189,15 +190,15 @@ export class MetaPresetService implements OnModuleInit {
   }
 
   /**
-   * 更新预设字段
+   * Update a preset field.
    */
   async update(id: string, dto: UpdateMetaPresetDto) {
     const preset = await this.metaPresetRepository.findById(id)
     if (!preset) {
-      throw new BizException(ErrorCodeEnum.PresetNotFound)
+      throw createAppException(AppErrorCode.META_PRESET_NOT_FOUND, { id })
     }
 
-    // 内置预设只能修改 enabled 和 order
+    // Built-in presets only allow `enabled` and `order` to be modified.
     if (preset.isBuiltin) {
       const updateData: Partial<UpdateMetaPresetDto> = {}
       if (dto.enabled !== undefined) updateData.enabled = dto.enabled
@@ -205,14 +206,13 @@ export class MetaPresetService implements OnModuleInit {
       return this.metaPresetRepository.update(id, updateData)
     }
 
-    // 检查 key 是否重复
+    // Check whether the key already exists
     if (dto.key && dto.key !== preset.key) {
       const exists = await this.metaPresetRepository.findByName(dto.key)
       if (exists) {
-        throw new BizException(
-          ErrorCodeEnum.PresetKeyExists,
-          `key: "${dto.key}"`,
-        )
+        throw createAppException(AppErrorCode.META_PRESET_KEY_EXISTS, {
+          key: dto.key,
+        })
       }
     }
 
@@ -220,23 +220,23 @@ export class MetaPresetService implements OnModuleInit {
   }
 
   /**
-   * 删除预设字段
+   * Delete a preset field.
    */
   async delete(id: string) {
     const preset = await this.metaPresetRepository.findById(id)
     if (!preset) {
-      throw new BizException(ErrorCodeEnum.PresetNotFound)
+      throw createAppException(AppErrorCode.META_PRESET_NOT_FOUND, { id })
     }
 
     if (preset.isBuiltin) {
-      throw new BizException(ErrorCodeEnum.BuiltinPresetCannotDelete)
+      throw createAppException(AppErrorCode.BUILTIN_PRESET_CANNOT_DELETE)
     }
 
     return this.metaPresetRepository.deleteById(id)
   }
 
   /**
-   * 批量更新排序
+   * Batch-update the display order.
    */
   async updateOrder(ids: string[]) {
     await this.metaPresetRepository.updateOrder(ids)

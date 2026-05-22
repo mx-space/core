@@ -22,9 +22,9 @@ export const mapString = (keyString: string) => {
   hash.update(keyString + SALT)
   const digest = hash.digest('hex')
   if (digest.length >= 64) {
-    return digest.slice(0, 64) // 如果哈希值的长度大于等于 64，直接返回哈希值
+    return digest.slice(0, 64) // If the hash is already 64 chars or longer, return it directly
   } else {
-    const padding = '0'.repeat(64 - digest.length) // 使用 0 填充到 64 位
+    const padding = '0'.repeat(64 - digest.length) // Pad with zeros to reach 64 chars
     return padding + digest
   }
 }

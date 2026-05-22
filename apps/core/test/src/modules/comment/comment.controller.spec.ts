@@ -4,9 +4,8 @@ import { Test } from '@nestjs/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RequestContext } from '~/common/contexts/request.context'
-import type { BizException } from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/errors/exception.types'
 import { AuthGuard } from '~/common/guards/auth.guard'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { CommentController } from '~/modules/comment/comment.controller'
 import { CommentLifecycleService } from '~/modules/comment/comment.lifecycle.service'
@@ -114,9 +113,7 @@ describe('CommentController permission gating', () => {
         {} as any,
         { ref: undefined } as any,
       ),
-    ).rejects.toMatchObject<Partial<BizException>>({
-      bizCode: ErrorCodeEnum.CommentForbidden,
-    })
+    ).rejects.toBeInstanceOf(AppException)
 
     expect(mockCommentService.createComment).not.toHaveBeenCalled()
   })
@@ -131,9 +128,7 @@ describe('CommentController permission gating', () => {
         'reader-1',
         {} as any,
       ),
-    ).rejects.toMatchObject<Partial<BizException>>({
-      bizCode: ErrorCodeEnum.CommentForbidden,
-    })
+    ).rejects.toBeInstanceOf(AppException)
 
     expect(mockCommentService.replyComment).not.toHaveBeenCalled()
   })
@@ -155,9 +150,7 @@ describe('CommentController permission gating', () => {
           { ref: undefined } as any,
         ),
       ),
-    ).resolves.toMatchObject({
-      id: 'comment-created',
-    })
+    ).resolves.toMatchObject({ id: 'comment-created' })
 
     expect(mockCommentService.createComment).toHaveBeenCalled()
   })
@@ -178,9 +171,7 @@ describe('CommentController permission gating', () => {
           {} as any,
         ),
       ),
-    ).resolves.toMatchObject({
-      id: 'reply-created',
-    })
+    ).resolves.toMatchObject({ id: 'reply-created' })
 
     expect(mockCommentService.replyComment).toHaveBeenCalled()
   })

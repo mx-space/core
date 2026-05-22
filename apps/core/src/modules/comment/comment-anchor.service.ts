@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
 import DiffMatchPatch from 'diff-match-patch'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   type LexicalRootBlock,
@@ -211,10 +210,9 @@ export class CommentAnchorService {
         !refDoc.content ||
         typeof refDoc.content !== 'string'
       ) {
-        throw new BizException(
-          ErrorCodeEnum.InvalidParameter,
-          'Anchor comments are only supported for lexical content.',
-        )
+        throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+          message: 'Anchor comments are only supported for lexical content.',
+        })
       }
       lexicalContent = refDoc.content
     }
@@ -222,10 +220,9 @@ export class CommentAnchorService {
     const blocks = this.lexicalService.extractRootBlocks(lexicalContent)
     const block = this.findBlockByAnchor(anchor, blocks)
     if (!block || !block.id) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'Cannot find the anchor block in current lexical document.',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'Cannot find the anchor block in current lexical document.',
+      })
     }
 
     const now = new Date()
@@ -248,10 +245,9 @@ export class CommentAnchorService {
 
     const quote = anchor.quote
     if (!quote) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'Range anchor quote cannot be empty.',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'Range anchor quote cannot be empty.',
+      })
     }
 
     const initialSlice = block.text.slice(anchor.startOffset, anchor.endOffset)
@@ -270,10 +266,9 @@ export class CommentAnchorService {
           )
 
     if (!range) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'Cannot resolve selected text in current block.',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'Cannot resolve selected text in current block.',
+      })
     }
 
     return {

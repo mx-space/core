@@ -17,9 +17,8 @@ import { RequestContext } from '~/common/contexts/request.context'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils/time.util'
 
@@ -32,7 +31,6 @@ import type { PageModel } from '../page/page.types'
 import type { PostModel } from '../post/post.types'
 
 @Controller('/render')
-@HTTPDecorators.Bypass
 export class RenderEjsController {
   constructor(
     private readonly service: MarkdownService,
@@ -41,6 +39,7 @@ export class RenderEjsController {
   ) {}
 
   @Get('/markdown/:id')
+  @HTTPDecorators.RawResponse
   @Header('content-type', 'text/html')
   @CacheTTL(60 * 60)
   async renderArticle(
@@ -67,7 +66,7 @@ export class RenderEjsController {
       ('password' in document && !isNil(document.password))
 
     if (!hasAdminAccess && isPrivateOrEncrypt) {
-      throw new BizException(ErrorCodeEnum.PostHiddenOrEncrypted)
+      throw createAppException(AppErrorCode.POST_HIDDEN_OR_ENCRYPTED)
     }
 
     const relativePath = (() => {
@@ -96,18 +95,16 @@ export class RenderEjsController {
 
     const html = ejs.render(await this.service.getMarkdownEjsRenderTemplate(), {
       ...structure,
-      info: isPrivateOrEncrypt ? '正在查看的文章还未公开' : undefined,
+      info: isPrivateOrEncrypt ? 'This article is not yet public.' : undefined,
 
       title: document.title,
-      footer: `<div>本文渲染于 ${getShortDateTime(
+      footer: `<div>Rendered on ${getShortDateTime(
         new Date(),
-      )}，由 marked.js 解析生成，用时 ${(performance.now() - now).toFixed(
-        2,
-      )}ms</div>
-      <div>作者：${username}，撰写于${dayjs(document.createdAt).format(
+      )} by marked.js, in ${(performance.now() - now).toFixed(2)}ms</div>
+      <div>Author: ${username}, written on ${dayjs(document.createdAt).format(
         'llll',
       )}</div>
-        <div>原文地址：<a href="${url}">${decodeURIComponent(
+        <div>Original URL: <a href="${url}">${decodeURIComponent(
           url.toString(),
         )}</a></div>
         `,
@@ -117,6 +114,7 @@ export class RenderEjsController {
   }
 
   @Post('/markdown')
+  @HTTPDecorators.RawResponse
   @HttpCache.disable
   @Auth()
   @Header('content-type', 'text/html')

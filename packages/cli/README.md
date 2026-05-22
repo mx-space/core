@@ -243,7 +243,7 @@ URL follows the admin-vue3 hash-router convention
 
 | Flag                   | Field                                                                  |
 | ---------------------- | ---------------------------------------------------------------------- |
-| `--title <text>`       | `title`; defaults to `无题` for create payloads.                       |
+| `--title <text>`       | `title`; defaults to `无题` ("Untitled") for create payloads.          |
 | `--slug <slug>`        | `slug`                                                                 |
 | `--topic <id-or-name>` | Resolved to `topicId` by id, slug, or name.                            |
 | `--content <spec>`     | Body source.                                                           |

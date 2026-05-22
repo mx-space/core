@@ -13,7 +13,7 @@ export class SitemapController {
   @Get('/sitemap')
   @CacheTTL(3600)
   @CacheKey(CacheKeys.SiteMapXml)
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   @Header('content-type', 'application/xml')
   async getSitemap() {
     const content = await this.aggregateService.getSiteMapContent()

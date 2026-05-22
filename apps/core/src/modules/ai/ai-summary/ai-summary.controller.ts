@@ -12,10 +12,13 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { CreateSummaryTaskDto } from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
@@ -37,45 +40,53 @@ export class AiSummaryController {
 
   @Post('/task')
   @Auth()
-  async createSummaryTask(@Body() body: CreateSummaryTaskDto) {
+  createSummaryTask(@Body() body: CreateSummaryTaskDto) {
     return this.taskService.createSummaryTask(body)
   }
 
   @Get('/ref/:id')
   @Auth()
-  async getSummaryByRefId(@Param() params: EntityIdDto) {
+  getSummaryByRefId(@Param() params: EntityIdDto) {
     return this.service.getSummariesByRefId(params.id)
   }
 
   @Get('/')
   @Auth()
-  async getSummaries(@Query() query: PagerDto) {
-    return this.service.getAllSummaries(query)
+  async getSummaries(@Query() query: BasicPagerDto) {
+    const result = await this.service.getAllSummaries(query)
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder()
+        .pagination(result.pagination)
+        .articles(result.articles)
+        .build(),
+    )
   }
 
   @Get('/grouped')
   @Auth()
   async getSummariesGrouped(@Query() query: GetSummariesGroupedQueryDto) {
-    return this.service.getAllSummariesGrouped(query)
+    const result = await this.service.getAllSummariesGrouped(query)
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder().pagination(result.pagination).build(),
+    )
   }
 
   @Patch('/:id')
   @Auth()
-  async updateSummary(
-    @Param() params: EntityIdDto,
-    @Body() body: UpdateSummaryDto,
-  ) {
+  updateSummary(@Param() params: EntityIdDto, @Body() body: UpdateSummaryDto) {
     return this.service.updateSummaryInDb(params.id, body.summary)
   }
 
   @Delete('/:id')
   @Auth()
-  async deleteSummary(@Param() params: EntityIdDto) {
+  deleteSummary(@Param() params: EntityIdDto) {
     return this.service.deleteSummaryInDb(params.id)
   }
 
   @Get('/article/:id')
-  async getArticleSummary(
+  getArticleSummary(
     @Param() params: EntityIdDto,
     @Query() query: GetSummaryQueryDto,
   ) {
@@ -86,6 +97,7 @@ export class AiSummaryController {
   }
 
   @Get('/article/:id/generate')
+  @HTTPDecorators.RawResponse
   async generateArticleSummary(
     @Param() params: EntityIdDto,
     @Query() query: GetSummaryStreamQueryDto,

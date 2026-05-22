@@ -2,6 +2,8 @@ import { Body, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import {
@@ -19,22 +21,23 @@ export class TranslationEntryController {
 
   @Post('/generate')
   @Auth()
-  async generateEntries(@Body() body?: GenerateEntriesDto) {
+  generateEntries(@Body() body?: GenerateEntriesDto) {
     return this.translationEntryService.generateTranslations(body ?? {})
   }
 
   @Get('/')
   @Auth()
   async queryEntries(@Query() query: QueryEntriesDto) {
-    return this.translationEntryService.findEntries(query)
+    const result = await this.translationEntryService.findEntries(query)
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder().pagination(result.pagination).build(),
+    )
   }
 
   @Patch('/:id')
   @Auth()
-  async updateEntry(
-    @Param() params: EntityIdDto,
-    @Body() body: UpdateEntryDto,
-  ) {
+  updateEntry(@Param() params: EntityIdDto, @Body() body: UpdateEntryDto) {
     return this.translationEntryService.updateEntry(
       params.id,
       body.translatedText,
@@ -43,7 +46,7 @@ export class TranslationEntryController {
 
   @Delete('/:id')
   @Auth()
-  async deleteEntry(@Param() params: EntityIdDto) {
+  deleteEntry(@Param() params: EntityIdDto) {
     return this.translationEntryService.deleteEntry(params.id)
   }
 }

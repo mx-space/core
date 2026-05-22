@@ -20,13 +20,13 @@ import { lookup } from 'mime-types'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 import {
   generateFilename,
   generateFilePath,
@@ -36,12 +36,12 @@ import { S3Uploader } from '~/utils/s3.util'
 
 import {
   BatchOrphanDeleteDto,
+  CommentUploadsListQueryDto,
   FileQueryDto,
   FileUploadDto,
   RenameFileQueryDto,
 } from './file.schema'
 import { FileService } from './file.service'
-import { FileReferenceStatus } from './file-reference.enum'
 import { FileReferenceService } from './file-reference.service'
 import { FileDeletionReason } from './file-reference.types'
 
@@ -62,13 +62,13 @@ export class FileController {
 
   @Get('/orphans/list')
   @Auth()
-  async getOrphanFiles(@Query() query: PagerDto) {
+  async getOrphanFiles(@Query() query: BasicPagerDto) {
     const { page = 1, size = 20 } = query
     const { data: files, pagination } =
       await this.fileReferenceService.listOrphanFiles(page, size)
 
-    return {
-      data: files.map((file) => ({
+    return withMeta(
+      files.map((file) => ({
         id: file.id,
         fileName: file.fileName,
         fileUrl: file.fileUrl,
@@ -82,8 +82,15 @@ export class FileController {
         detachedAt: file.detachedAt,
         createdAt: file.createdAt,
       })),
-      pagination,
-    }
+      new MetaObjectBuilder()
+        .pagination({
+          page: pagination.currentPage,
+          size: pagination.size,
+          total: pagination.total,
+          totalPages: pagination.totalPage,
+        })
+        .build(),
+    )
   }
 
   @Get('/orphans/count')
@@ -101,15 +108,8 @@ export class FileController {
 
   @Get('/comment-uploads/list')
   @Auth()
-  async getCommentUploads(
-    @Query()
-    query: PagerDto & {
-      status?: FileReferenceStatus
-      readerId?: string
-      refId?: string
-    },
-  ) {
-    const { page = 1, size = 24, status, readerId, refId } = query
+  async getCommentUploads(@Query() query: CommentUploadsListQueryDto) {
+    const { page, size, status, readerId, refId } = query
     const { files, total } = await this.fileReferenceService.listReaderUploads({
       page,
       size,
@@ -118,8 +118,8 @@ export class FileController {
       refId,
     })
 
-    return {
-      data: files.map((file) => ({
+    return withMeta(
+      files.map((file) => ({
         id: file.id,
         fileName: file.fileName,
         fileUrl: file.fileUrl,
@@ -132,15 +132,15 @@ export class FileController {
         detachedAt: file.detachedAt,
         createdAt: file.createdAt,
       })),
-      pagination: {
-        currentPage: page,
-        totalPage: Math.ceil(total / size),
-        size,
-        total,
-        hasNextPage: page * size < total,
-        hasPrevPage: page > 1,
-      },
-    }
+      new MetaObjectBuilder()
+        .pagination({
+          page,
+          size,
+          total,
+          totalPages: Math.ceil(total / size),
+        })
+        .build(),
+    )
   }
 
   @Delete('/comment-uploads/:id')
@@ -148,7 +148,7 @@ export class FileController {
   async deleteCommentUpload(@Param('id') id: string) {
     const file = await this.fileReferenceService.getReferenceById(id)
     if (!file) {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.FILE_NOT_FOUND, { name: id })
     }
     const { storageRemoved } = await this.fileReferenceService.hardDeleteFile(
       file,
@@ -159,9 +159,11 @@ export class FileController {
 
   @Get('/:type')
   @Auth()
-  async getTypes(@Query() query: PagerDto, @Param() params: FileUploadDto) {
+  async getTypes(
+    @Query() query: BasicPagerDto,
+    @Param() params: FileUploadDto,
+  ) {
     const { type = 'file' } = params
-    // const { page, size } = query
     const dir = await this.service.getDir(type)
     const files = await Promise.all(
       dir.map(async (name) => {
@@ -185,7 +187,7 @@ export class FileController {
       ttl: 60_000,
     },
   })
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async get(@Param() params: FileQueryDto, @Res() reply: FastifyReply) {
     const { type, name } = params
     const ext = path.extname(name)
@@ -204,7 +206,7 @@ export class FileController {
 
       return reply.send(stream)
     } catch {
-      throw new CannotFindException()
+      throw createAppException(AppErrorCode.FILE_NOT_FOUND, { name })
     }
   }
 
@@ -213,7 +215,6 @@ export class FileController {
   async upload(@Query() query: FileUploadDto, @Req() req: FastifyRequest) {
     const { type = 'file' } = query
 
-    // 获取文件上传配置
     const uploadConfig = await this.configsService.get('fileUploadOptions')
     const imageStorageConfig =
       type === 'image'
@@ -228,20 +229,18 @@ export class FileController {
         !config.secretKey ||
         !config.bucket
       ) {
-        throw new BizException(ErrorCodeEnum.ImageStorageNotConfigured)
+        throw createAppException(AppErrorCode.FILE_STORAGE_NOT_CONFIGURED)
       }
 
       const file = await this.uploadService.getAndValidMultipartField(req, {
         maxFileSize: 20 * 1024 * 1024,
       })
 
-      // 生成文件名（支持模板或默认随机名）
       const filename = generateFilename(uploadConfig, {
         originalFilename: file.filename,
         fileType: type,
       })
 
-      // 处理 prefix 中的模板变量
       let prefixPath = ''
       if (config.prefix) {
         prefixPath = replaceFilenameTemplate(config.prefix, {
@@ -295,19 +294,16 @@ export class FileController {
         : undefined,
     )
 
-    // 生成文件名（可能包含子路径）
     const rawFilename = generateFilename(uploadConfig, {
       originalFilename: file.filename,
       fileType: type,
     })
 
-    // 生成基础路径
     const basePath = generateFilePath(uploadConfig, {
       originalFilename: file.filename,
       fileType: type,
     })
 
-    // 构建相对路径（相对于文件类型目录）
     let relativePath: string
     if (basePath === type || !basePath) {
       relativePath = rawFilename
@@ -354,7 +350,7 @@ export class FileController {
     @Query() query: RenameFileQueryDto,
   ) {
     const { type, name } = params
-    const { new_name } = query
-    await this.service.renameFile(type, name, new_name)
+    const { newName } = query
+    await this.service.renameFile(type, name, newName)
   }
 }

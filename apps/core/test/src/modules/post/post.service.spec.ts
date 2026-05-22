@@ -1,10 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
-import {
-  BizException,
-  BusinessException,
-} from '~/common/exceptions/biz.exception'
+import { AppException } from '~/common/errors/exception.types'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import {
   CATEGORY_SERVICE_TOKEN,
@@ -138,7 +135,7 @@ describe('PostService', () => {
         text: 'body',
         categoryId: 'cat-1',
       } as any),
-    ).rejects.toThrow(BusinessException)
+    ).rejects.toThrow(AppException)
 
     expect(repository.create).not.toHaveBeenCalled()
   })
@@ -214,6 +211,6 @@ describe('PostService', () => {
 
     await expect(
       service.checkRelated({ relatedId: ['missing'] } as any),
-    ).rejects.toThrow(BizException)
+    ).rejects.toThrow(AppException)
   })
 })

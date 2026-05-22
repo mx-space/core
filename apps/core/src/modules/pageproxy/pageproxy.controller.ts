@@ -25,7 +25,7 @@ export class PageProxyController {
   ) {}
 
   @Get('/proxy/qaqdmin')
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async getLocalBundledAdmin(@Query() query: any, @Res() reply: FastifyReply) {
     if ((await this.service.checkCanAccessAdminProxy()) === false) {
       return reply.type('application/json').status(403).send({
@@ -68,7 +68,7 @@ export class PageProxyController {
   }
 
   @Get('/proxy/qaqdmin/dev-proxy')
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async proxyLocalDev(@Res() reply: FastifyReply) {
     const template = (await this.assetService.getAsset(
       '/render/local-dev.ejs',
@@ -86,7 +86,7 @@ export class PageProxyController {
   }
 
   @Get('/proxy/*')
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async proxyAssetRoute(
     @Req() request: FastifyRequest,
     @Res() reply: FastifyReply,

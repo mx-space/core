@@ -7,22 +7,22 @@ import { AIProviderType } from '~/modules/ai/ai.types'
 import { field, section, withMeta } from './configs.zod-schema.util'
 
 // ==================== SEO ====================
-export const SeoSchema = section('SEO 优化', {
-  title: field.plain(z.string().min(1).optional(), '网站标题'),
-  description: field.plain(z.string().min(1).optional(), '网站描述'),
-  icon: field.halfGrid(z.string().optional(), '浅色图标 URL'),
-  iconDark: field.halfGrid(z.string().optional(), '深色图标 URL'),
-  keywords: field.array(z.array(z.string()).optional(), '关键字'),
+export const SeoSchema = section('SEO', {
+  title: field.plain(z.string().min(1).optional(), 'Site title'),
+  description: field.plain(z.string().min(1).optional(), 'Site description'),
+  icon: field.halfGrid(z.string().optional(), 'Light icon URL'),
+  iconDark: field.halfGrid(z.string().optional(), 'Dark icon URL'),
+  keywords: field.array(z.array(z.string()).optional(), 'Keywords'),
 })
 export class SeoDto extends createZodDto(SeoSchema) {}
 export type SeoConfig = z.infer<typeof SeoSchema>
 
 // ==================== URL ====================
-export const UrlSchema = section('网站设置', {
-  webUrl: field.halfGrid(zAllowedUrl.optional(), '前端地址'),
-  adminUrl: field.halfGrid(zAllowedUrl.optional(), '管理后台地址'),
-  serverUrl: field.halfGrid(zAllowedUrl.optional(), 'API 地址'),
-  wsUrl: field.halfGrid(zAllowedUrl.optional(), 'Gateway 地址'),
+export const UrlSchema = section('Site URLs', {
+  webUrl: field.halfGrid(zAllowedUrl.optional(), 'Frontend URL'),
+  adminUrl: field.halfGrid(zAllowedUrl.optional(), 'Admin dashboard URL'),
+  serverUrl: field.halfGrid(zAllowedUrl.optional(), 'API URL'),
+  wsUrl: field.halfGrid(zAllowedUrl.optional(), 'Gateway URL'),
 })
 export class UrlDto extends createZodDto(UrlSchema) {}
 export type UrlConfig = z.infer<typeof UrlSchema>
@@ -31,22 +31,25 @@ export type UrlConfig = z.infer<typeof UrlSchema>
 const SmtpConfigSchema = withMeta(
   z
     .object({
-      user: field.halfGrid(z.string().optional(), 'SMTP 用户名'),
-      pass: field.passwordHalfGrid(z.string().min(1).optional(), 'SMTP 密码'),
-      host: field.halfGrid(z.string().optional(), 'SMTP 主机'),
+      user: field.halfGrid(z.string().optional(), 'SMTP username'),
+      pass: field.passwordHalfGrid(
+        z.string().min(1).optional(),
+        'SMTP password',
+      ),
+      host: field.halfGrid(z.string().optional(), 'SMTP host'),
       port: field.number(
         z.preprocess(
           (val) => (val ? Number(val) : val),
           z.number().int().optional(),
         ),
-        'SMTP 端口',
+        'SMTP port',
         { 'ui:options': { halfGrid: true } },
       ),
-      secure: field.toggle(z.boolean().optional(), '使用 SSL/TLS'),
+      secure: field.toggle(z.boolean().optional(), 'Use SSL/TLS'),
     })
     .optional(),
   {
-    title: 'SMTP 配置',
+    title: 'SMTP configuration',
     'ui:options': { showWhen: { provider: 'smtp' } },
   },
 )
@@ -58,20 +61,29 @@ const ResendConfigSchema = withMeta(
     })
     .optional(),
   {
-    title: 'Resend 配置',
+    title: 'Resend configuration',
     'ui:options': { showWhen: { provider: 'resend' } },
   },
 )
 
-export const MailOptionsSchema = section('邮件通知设置', {
-  enable: field.toggle(z.boolean().optional(), '开启邮箱提醒'),
-  provider: field.select(z.enum(['smtp', 'resend']).optional(), '邮件服务', [
-    { label: 'SMTP', value: 'smtp' },
-    { label: 'Resend', value: 'resend' },
-  ]),
-  from: field.halfGrid(z.email().optional().or(z.literal('')), '发件邮箱地址', {
-    description: 'Resend 必填；SMTP 可选，不填则使用 SMTP 用户名',
-  }),
+export const MailOptionsSchema = section('Email notifications', {
+  enable: field.toggle(z.boolean().optional(), 'Enable email notifications'),
+  provider: field.select(
+    z.enum(['smtp', 'resend']).optional(),
+    'Email provider',
+    [
+      { label: 'SMTP', value: 'smtp' },
+      { label: 'Resend', value: 'resend' },
+    ],
+  ),
+  from: field.halfGrid(
+    z.email().optional().or(z.literal('')),
+    'Sender email address',
+    {
+      description:
+        'Required for Resend; optional for SMTP (defaults to the SMTP username if omitted)',
+    },
+  ),
   smtp: SmtpConfigSchema,
   resend: ResendConfigSchema,
   rateLimit: field.number(
@@ -79,9 +91,9 @@ export const MailOptionsSchema = section('邮件通知设置', {
       (val) => (val ? Number(val) : val),
       z.number().int().min(1).max(1000).optional(),
     ),
-    '发送速率限制',
+    'Send rate limit',
     {
-      description: '每秒最大发送次数，默认 10',
+      description: 'Maximum sends per second; defaults to 10',
       'ui:options': { halfGrid: true },
     },
   ),
@@ -90,9 +102,9 @@ export const MailOptionsSchema = section('邮件通知设置', {
       (val) => (val ? Number(val) : val),
       z.number().int().min(0).max(10).optional(),
     ),
-    '发送失败重试次数',
+    'Send failure retry count',
     {
-      description: '发送失败后的最大重试次数，默认 3',
+      description: 'Maximum retries after a send failure; defaults to 3',
       'ui:options': { halfGrid: true },
     },
   ),
@@ -101,86 +113,116 @@ export class MailOptionsDto extends createZodDto(MailOptionsSchema) {}
 export type MailOptionsConfig = z.infer<typeof MailOptionsSchema>
 
 // ==================== Comment Options ====================
-export const CommentOptionsSchema = section('评论设置', {
-  antiSpam: field.toggle(z.boolean().optional(), '反垃圾评论'),
-  aiReview: field.toggle(z.boolean().optional(), '开启 AI 审核'),
+export const CommentOptionsSchema = section('Comment settings', {
+  antiSpam: field.toggle(z.boolean().optional(), 'Anti-spam'),
+  aiReview: field.toggle(z.boolean().optional(), 'Enable AI review'),
   aiReviewType: field.select(
     z.enum(['binary', 'score']).optional(),
-    'AI 审核方式',
+    'AI review mode',
     [
-      { label: '是非', value: 'binary' },
-      { label: '评分', value: 'score' },
+      { label: 'Binary', value: 'binary' },
+      { label: 'Score', value: 'score' },
     ],
-    { description: '默认为是非，可以选择评分' },
+    { description: 'Defaults to binary; score mode is also available' },
   ),
   aiReviewThreshold: field.number(
     z.preprocess(
       (val) => (val ? Number(val) : val),
       z.number().int().min(1).max(10).optional(),
     ),
-    'AI 审核阈值',
-    { description: '分数大于多少时会被归类为垃圾评论，范围为 1-10, 默认为 5' },
+    'AI review threshold',
+    {
+      description:
+        'Scores above this value are classified as spam. Range 1-10, default 5',
+    },
   ),
-  testAiReview: field.action('测试 AI 审核', 'test-ai-review', {
-    description: '输入测试内容，验证 AI 审核功能是否正常工作',
-    actionLabel: '测试',
+  testAiReview: field.action('Test AI review', 'test-ai-review', {
+    description:
+      'Enter test content to verify whether AI review is working correctly',
+    actionLabel: 'Test',
     showWhen: { aiReview: 'true' },
   }),
-  disableComment: field.toggle(z.boolean().optional(), '全站禁止评论', {
-    description: '敏感时期专用',
-  }),
-  allowGuestComment: field.toggle(z.boolean().optional(), '允许未登录评论', {
-    description: '关闭后，只有已登录 reader 或 owner 可以评论和回复',
-  }),
-  spamKeywords: field.array(z.array(z.string()).optional(), '自定义屏蔽关键词'),
+  disableComment: field.toggle(
+    z.boolean().optional(),
+    'Disable comments site-wide',
+    {
+      description: 'Reserved for sensitive periods',
+    },
+  ),
+  allowGuestComment: field.toggle(
+    z.boolean().optional(),
+    'Allow comments without login',
+    {
+      description:
+        'When disabled, only signed-in readers or the owner can comment and reply',
+    },
+  ),
+  spamKeywords: field.array(
+    z.array(z.string()).optional(),
+    'Custom blocked keywords',
+  ),
   blockIps: field.array(
     z.array(z.union([z.ipv4(), z.ipv6()])).optional(),
-    '自定义屏蔽 IP',
+    'Custom blocked IPs',
   ),
-  disableNoChinese: field.toggle(z.boolean().optional(), '禁止非中文评论'),
-  commentShouldAudit: field.toggle(z.boolean().optional(), '只展示已读评论'),
-  recordIpLocation: field.toggle(z.boolean().optional(), '评论公开归属地'),
+  disableNoChinese: field.toggle(
+    z.boolean().optional(),
+    'Reject non-Chinese comments',
+  ),
+  commentShouldAudit: field.toggle(
+    z.boolean().optional(),
+    'Only show approved comments',
+  ),
+  recordIpLocation: field.toggle(
+    z.boolean().optional(),
+    'Publicly display comment location',
+  ),
 })
 export class CommentOptionsDto extends createZodDto(CommentOptionsSchema) {}
 export type CommentOptionsConfig = z.infer<typeof CommentOptionsSchema>
 
 // ==================== Backup Options ====================
-export const BackupOptionsSchema = section('备份', {
-  enable: field.toggle(z.boolean().optional(), '开启自动备份', {
-    description: '填写以下 S3 信息，将同时上传备份到 S3',
+export const BackupOptionsSchema = section('Backup', {
+  enable: field.toggle(z.boolean().optional(), 'Enable automatic backup', {
+    description:
+      'Fill in the S3 information below to also upload backups to S3',
   }),
-  endpoint: field.plain(z.string().optional(), 'S3 服务端点'),
+  endpoint: field.plain(z.string().optional(), 'S3 endpoint'),
   secretId: field.halfGrid(z.string().optional(), 'SecretId'),
   secretKey: field.passwordHalfGrid(z.string().optional(), 'SecretKey'),
   bucket: field.halfGrid(z.string().optional(), 'Bucket'),
-  region: field.halfGrid(z.string().optional(), '地域 Region'),
+  region: field.halfGrid(z.string().optional(), 'Region'),
 })
 export class BackupOptionsDto extends createZodDto(BackupOptionsSchema) {}
 export type BackupOptionsConfig = z.infer<typeof BackupOptionsSchema>
 
 // ==================== Image Storage Options ====================
-export const ImageStorageOptionsSchema = section('图床设置', {
-  enable: field.toggle(z.boolean().optional(), '开启 S3 图床'),
-  endpoint: field.plain(z.string().optional(), 'S3 服务端点'),
+export const ImageStorageOptionsSchema = section('Image storage', {
+  enable: field.toggle(z.boolean().optional(), 'Enable S3 image storage'),
+  endpoint: field.plain(z.string().optional(), 'S3 endpoint'),
   secretId: field.halfGrid(z.string().optional(), 'Access Key ID'),
   secretKey: field.passwordHalfGrid(z.string().optional(), 'Secret Access Key'),
   bucket: field.halfGrid(z.string().optional(), 'Bucket'),
   region: field.halfGrid(z.string().optional(), 'Region').default('auto'),
   customDomain: field.plain(
     z.url().optional().or(z.literal('')),
-    '自定义域名 (CDN)',
+    'Custom domain (CDN)',
     {
-      description: '用于替换默认的 S3 URL，例如 CDN 域名',
+      description: 'Used to replace the default S3 URL, e.g. a CDN domain',
     },
   ),
-  prefix: field.plain(z.string().optional(), '文件路径前缀', {
+  prefix: field.plain(z.string().optional(), 'File path prefix', {
     description:
-      '上传到 S3 的文件路径前缀，支持模板占位符: {Y}年4位, {y}年2位, {m}月, {d}日, {h}时, {i}分, {s}秒, {md5}随机MD5, {type}文件类型等。例如: blog/{Y}/{m}/{d} 或 images/',
+      'Path prefix for files uploaded to S3. Supports placeholders: {Y} 4-digit year, {y} 2-digit year, {m} month, {d} day, {h} hour, {i} minute, {s} second, {md5} random MD5, {type} file type, etc. Example: blog/{Y}/{m}/{d} or images/',
   }),
-  commentUploadPrefix: field.plain(z.string().optional(), '评论图片路径前缀', {
-    description:
-      '读者评论上传专用路径前缀，留空则使用 comments/{readerId}/{Y}/{m}/{md5}.{ext}。占位符同 prefix，且额外支持 {readerId}',
-  }),
+  commentUploadPrefix: field.plain(
+    z.string().optional(),
+    'Comment image path prefix',
+    {
+      description:
+        'Path prefix dedicated to reader comment uploads. Defaults to comments/{readerId}/{Y}/{m}/{md5}.{ext} when empty. Placeholders are the same as prefix, with additional support for {readerId}',
+    },
+  ),
 })
 export class ImageStorageOptionsDto extends createZodDto(
   ImageStorageOptionsSchema,
@@ -190,19 +232,25 @@ export type ImageStorageOptionsConfig = z.infer<
 >
 
 // ==================== Comment Upload Options ====================
-export const CommentUploadOptionsSchema = section('评论图片上传', {
-  enable: field.toggle(z.boolean().optional(), '启用读者评论图片上传', {
-    description: '关闭则前端隐藏上传入口，且后端接口返回 503',
-  }),
+export const CommentUploadOptionsSchema = section('Comment image uploads', {
+  enable: field.toggle(
+    z.boolean().optional(),
+    'Enable reader comment image uploads',
+    {
+      description:
+        'When disabled, the frontend hides the upload entry and the backend returns 503',
+    },
+  ),
   pendingTtlMinutes: field.number(
     z.preprocess(
       (val) => (val ? Number(val) : val),
       z.number().int().min(5).optional(),
     ),
-    'Pending TTL（分钟）',
+    'Pending TTL (minutes)',
     {
       'ui:options': { halfGrid: true },
-      description: '上传后未被评论引用之保留时长，过期清除。默认 120',
+      description:
+        'Retention time for uploaded images not yet referenced by a comment; expired ones are removed. Default 120',
     },
   ),
   detachedTtlMinutes: field.number(
@@ -210,10 +258,11 @@ export const CommentUploadOptionsSchema = section('评论图片上传', {
       (val) => (val ? Number(val) : val),
       z.number().int().min(1).optional(),
     ),
-    'Detached TTL（分钟）',
+    'Detached TTL (minutes)',
     {
       'ui:options': { halfGrid: true },
-      description: '评论编辑后被移除之图保留时长。默认 30',
+      description:
+        'Retention time for images removed by a comment edit. Default 30',
     },
   ),
   cronIntervalMinutes: field.number(
@@ -221,50 +270,50 @@ export const CommentUploadOptionsSchema = section('评论图片上传', {
       (val) => (val ? Number(val) : val),
       z.number().int().min(1).optional(),
     ),
-    '清理巡检间隔（分钟）',
-    { 'ui:options': { halfGrid: true }, description: '默认 15' },
+    'Cleanup interval (minutes)',
+    { 'ui:options': { halfGrid: true }, description: 'Default 15' },
   ),
   singleFileSizeMB: field.number(
     z.preprocess(
       (val) => (val ? Number(val) : val),
       z.number().int().min(1).max(50).optional(),
     ),
-    '单图最大大小（MB）',
-    { 'ui:options': { halfGrid: true }, description: '默认 5' },
+    'Max size per image (MB)',
+    { 'ui:options': { halfGrid: true }, description: 'Default 5' },
   ),
   commentImageMaxCount: field.number(
     z.preprocess(
       (val) => (val ? Number(val) : val),
       z.number().int().min(1).max(20).optional(),
     ),
-    '单评论图片张数上限',
-    { 'ui:options': { halfGrid: true }, description: '默认 4' },
+    'Max images per comment',
+    { 'ui:options': { halfGrid: true }, description: 'Default 4' },
   ),
   readerHourlyUploadCount: field.number(
     z.preprocess(
       (val) => (val ? Number(val) : val),
       z.number().int().min(1).optional(),
     ),
-    '单读者每小时上传上限',
-    { 'ui:options': { halfGrid: true }, description: '默认 10' },
+    'Max uploads per reader per hour',
+    { 'ui:options': { halfGrid: true }, description: 'Default 10' },
   ),
   readerTotalActiveBytesMB: field.number(
     z.preprocess(
       (val) => (val ? Number(val) : val),
       z.number().int().min(1).optional(),
     ),
-    '单读者活跃图总容量上限（MB）',
-    { 'ui:options': { halfGrid: true }, description: '默认 50' },
+    'Max total active image storage per reader (MB)',
+    { 'ui:options': { halfGrid: true }, description: 'Default 50' },
   ),
   readerMinAccountAgeHours: field.number(
     z.preprocess(
       (val) => (val ? Number(val) : val),
       z.number().int().min(0).optional(),
     ),
-    '读者账号最小年龄（小时）',
+    'Minimum reader account age (hours)',
     {
       'ui:options': { halfGrid: true },
-      description: '准入门槛，0 表示不限。默认 0',
+      description: 'Eligibility threshold; 0 means no limit. Default 0',
     },
   ),
   readerMinCommentCount: field.number(
@@ -272,20 +321,23 @@ export const CommentUploadOptionsSchema = section('评论图片上传', {
       (val) => (val ? Number(val) : val),
       z.number().int().min(0).optional(),
     ),
-    '读者最小已发评论数',
+    'Minimum comments posted by reader',
     {
       'ui:options': { halfGrid: true },
-      description: '准入门槛，0 表示不限。默认 0',
+      description: 'Eligibility threshold; 0 means no limit. Default 0',
     },
   ),
   deleteFilesOnSpam: field.toggle(
     z.boolean().optional(),
-    '评论标记 spam 时同步删图',
-    { description: '默认开启。关闭则仅删评论，保留图待手动处理' },
+    'Delete images when comment is marked as spam',
+    {
+      description:
+        'Enabled by default. When disabled, only the comment is removed and images are kept for manual review',
+    },
   ),
-  mimeWhitelist: field.array(z.array(z.string()).optional(), 'MIME 白名单', {
+  mimeWhitelist: field.array(z.array(z.string()).optional(), 'MIME whitelist', {
     description:
-      '默认 image/jpeg, image/png, image/webp, image/gif。修改后立即生效',
+      'Defaults to image/jpeg, image/png, image/webp, image/gif. Changes take effect immediately',
   }),
 })
 export class CommentUploadOptionsDto extends createZodDto(
@@ -296,21 +348,21 @@ export type CommentUploadOptionsConfig = z.infer<
 >
 
 // ==================== File Upload Options ====================
-export const FileUploadOptionsSchema = section('文件上传设定', {
+export const FileUploadOptionsSchema = section('File upload settings', {
   enableCustomNaming: field.toggle(
     z.boolean().optional(),
-    '启用自定义文件命名',
+    'Enable custom file naming',
     {
-      description: '开启后将使用下方的命名模板规则',
+      description: 'When enabled, the naming templates below are applied',
     },
   ),
-  filenameTemplate: field.plain(z.string().optional(), '文件名模板', {
+  filenameTemplate: field.plain(z.string().optional(), 'Filename template', {
     description:
-      '支持占位符: {Y}年4位, {y}年2位, {m}月, {d}日, {h}时, {i}分, {s}秒, {ms}毫秒, {timestamp}时间戳, {md5}随机MD5, {md5-16}随机MD5(16位), {uuid}UUID, {str-数字}随机字符串, {filename}原文件名(含扩展名), {name}原文件名(不含扩展名), {ext}扩展名',
+      'Supported placeholders: {Y} 4-digit year, {y} 2-digit year, {m} month, {d} day, {h} hour, {i} minute, {s} second, {ms} milliseconds, {timestamp} timestamp, {md5} random MD5, {md5-16} random MD5 (16 chars), {uuid} UUID, {str-<n>} random string of length n, {filename} original filename (with extension), {name} original filename (without extension), {ext} extension',
   }),
-  pathTemplate: field.plain(z.string().optional(), '文件路径模板', {
+  pathTemplate: field.plain(z.string().optional(), 'File path template', {
     description:
-      '支持占位符同文件名模板，另外支持 {type} 文件类型, {localFolder:数字} 原文件所在文件夹层级',
+      'Same placeholders as the filename template, plus {type} for file type and {localFolder:<n>} for the n-th original folder level',
   }),
 })
 export class FileUploadOptionsDto extends createZodDto(
@@ -319,8 +371,8 @@ export class FileUploadOptionsDto extends createZodDto(
 export type FileUploadOptionsConfig = z.infer<typeof FileUploadOptionsSchema>
 
 // ==================== Baidu Search Options ====================
-export const BaiduSearchOptionsSchema = section('百度推送设定', {
-  enable: field.toggle(z.boolean().optional(), '开启推送'),
+export const BaiduSearchOptionsSchema = section('Baidu push settings', {
+  enable: field.toggle(z.boolean().optional(), 'Enable push'),
   token: field.password(z.string().min(1).optional(), 'Token'),
 })
 export class BaiduSearchOptionsDto extends createZodDto(
@@ -329,9 +381,9 @@ export class BaiduSearchOptionsDto extends createZodDto(
 export type BaiduSearchOptionsConfig = z.infer<typeof BaiduSearchOptionsSchema>
 
 // ==================== Bing Search Options ====================
-export const BingSearchOptionsSchema = section('Bing 推送设定', {
-  enable: field.toggle(z.boolean().optional(), '开启推送'),
-  token: field.password(z.string().optional(), 'Bing API 密钥'),
+export const BingSearchOptionsSchema = section('Bing push settings', {
+  enable: field.toggle(z.boolean().optional(), 'Enable push'),
+  token: field.password(z.string().optional(), 'Bing API key'),
 })
 export class BingSearchOptionsDto extends createZodDto(
   BingSearchOptionsSchema,
@@ -339,30 +391,42 @@ export class BingSearchOptionsDto extends createZodDto(
 export type BingSearchOptionsConfig = z.infer<typeof BingSearchOptionsSchema>
 
 // ==================== Admin Extra ====================
-export const AdminExtraSchema = section('后台附加设置', {
-  enableAdminProxy: field.toggle(z.boolean().optional(), '开启后台管理反代', {
-    description: '是否可以通过 API 访问后台',
-  }),
-  background: field.plain(z.string().optional(), '登录页面背景'),
-  gaodemapKey: field.password(z.string().optional(), '高德查询 API Key', {
-    description: '日记地点定位',
+export const AdminExtraSchema = section('Admin extras', {
+  enableAdminProxy: field.toggle(
+    z.boolean().optional(),
+    'Enable admin reverse proxy',
+    {
+      description:
+        'Whether the admin dashboard can be accessed through the API',
+    },
+  ),
+  background: field.plain(z.string().optional(), 'Login page background'),
+  gaodemapKey: field.password(z.string().optional(), 'Amap query API key', {
+    description: 'Location lookup for diary entries',
   }),
 })
 export class AdminExtraDto extends createZodDto(AdminExtraSchema) {}
 export type AdminExtraConfig = z.infer<typeof AdminExtraSchema>
 
 // ==================== Friend Link Options ====================
-export const FriendLinkOptionsSchema = section('友链设定', {
-  allowApply: field.toggle(z.boolean().optional(), '允许申请友链'),
-  allowSubPath: field.toggle(z.boolean().optional(), '允许子路径友链', {
-    description: '例如 /blog 子路径',
-  }),
+export const FriendLinkOptionsSchema = section('Friend link settings', {
+  allowApply: field.toggle(
+    z.boolean().optional(),
+    'Allow friend link applications',
+  ),
+  allowSubPath: field.toggle(
+    z.boolean().optional(),
+    'Allow sub-path friend links',
+    {
+      description: 'For example, a /blog sub-path',
+    },
+  ),
   enableAvatarInternalization: field.toggle(
     z.boolean().optional(),
-    '友链头像转内链',
+    'Internalize friend link avatars',
     {
       description:
-        '通过审核后将会下载友链头像并改为内部链接，仅支持常见图片格式，其他格式将不会转换',
+        'After approval, the friend link avatar is downloaded and converted to an internal link. Only common image formats are supported; other formats are not converted',
     },
   ),
 })
@@ -372,18 +436,22 @@ export class FriendLinkOptionsDto extends createZodDto(
 export type FriendLinkOptionsConfig = z.infer<typeof FriendLinkOptionsSchema>
 
 // ==================== Bark Options ====================
-export const BarkOptionsSchema = section('Bark 通知设定', {
-  enable: field.toggle(z.boolean().optional(), '开启 Bark 通知'),
-  key: field.password(z.string().optional(), '设备 Key'),
-  serverUrl: field.plain(z.string().url().optional(), '服务器 URL', {
-    description: '如果不填写，则使用默认的服务器，https://day.app',
+export const BarkOptionsSchema = section('Bark notifications', {
+  enable: field.toggle(z.boolean().optional(), 'Enable Bark notifications'),
+  key: field.password(z.string().optional(), 'Device key'),
+  serverUrl: field.plain(z.string().url().optional(), 'Server URL', {
+    description: 'Defaults to the public server, https://day.app, when empty',
   }),
-  enableComment: field.toggle(z.boolean().optional(), '开启评论通知'),
+  enableComment: field.toggle(
+    z.boolean().optional(),
+    'Enable comment notifications',
+  ),
   enableThrottleGuard: field.toggle(
     z.boolean().optional(),
-    '开启请求被限流时通知',
+    'Notify on rate-limited requests',
     {
-      description: '当请求被限流会通知，或许可以一定程度上预警被攻击',
+      description:
+        'Sends a notification when requests are rate-limited; can serve as an early warning for attacks',
     },
   ),
 })
@@ -391,8 +459,11 @@ export class BarkOptionsDto extends createZodDto(BarkOptionsSchema) {}
 export type BarkOptionsConfig = z.infer<typeof BarkOptionsSchema>
 
 // ==================== Feature List ====================
-export const FeatureListSchema = section('特征开关设定', {
-  emailSubscribe: field.toggle(z.boolean().optional(), '开启邮件推送订阅'),
+export const FeatureListSchema = section('Feature toggles', {
+  emailSubscribe: field.toggle(
+    z.boolean().optional(),
+    'Enable email subscription',
+  ),
 })
 export class FeatureListDto extends createZodDto(FeatureListSchema) {}
 export type FeatureListConfig = z.infer<typeof FeatureListSchema>
@@ -400,57 +471,58 @@ export type FeatureListConfig = z.infer<typeof FeatureListSchema>
 // ==================== Third Party Service Integration ====================
 
 const GitHubIntegrationSchema = section('GitHub', {
-  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+  enabled: field.toggle(z.boolean().optional().default(true), 'Enabled'),
   token: field.password(z.string().optional(), 'Personal Access Token', {
-    description: '调用 GitHub API；遇限流则填',
+    description:
+      'Used when calling the GitHub API; fill in when you hit rate limits',
   }),
 })
 
 const TmdbIntegrationSchema = section('TMDB', {
-  enabled: field.toggle(z.boolean().optional().default(false), '启用'),
+  enabled: field.toggle(z.boolean().optional().default(false), 'Enabled'),
   apiKey: field.password(z.string().optional(), 'API Key'),
 })
 
 const BangumiIntegrationSchema = section('Bangumi', {
-  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+  enabled: field.toggle(z.boolean().optional().default(true), 'Enabled'),
   accessToken: field.password(z.string().optional(), 'Access Token'),
 })
 
 const NeoDBIntegrationSchema = section('NeoDB', {
-  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+  enabled: field.toggle(z.boolean().optional().default(true), 'Enabled'),
 })
 
 const ArxivIntegrationSchema = section('Arxiv', {
-  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+  enabled: field.toggle(z.boolean().optional().default(true), 'Enabled'),
 })
 
 const LeetcodeIntegrationSchema = section('Leetcode', {
-  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+  enabled: field.toggle(z.boolean().optional().default(true), 'Enabled'),
 })
 
-const NeteaseMusicIntegrationSchema = section('网易云音乐', {
-  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+const NeteaseMusicIntegrationSchema = section('NetEase Cloud Music', {
+  enabled: field.toggle(z.boolean().optional().default(true), 'Enabled'),
 })
 
-const QQMusicIntegrationSchema = section('QQ 音乐', {
-  enabled: field.toggle(z.boolean().optional().default(true), '启用'),
+const QQMusicIntegrationSchema = section('QQ Music', {
+  enabled: field.toggle(z.boolean().optional().default(true), 'Enabled'),
 })
 
-const OpenGraphIntegrationSchema = section('Open Graph / oEmbed 兜底', {
-  enabled: field.toggle(z.boolean().optional().default(true), '启用', {
+const OpenGraphIntegrationSchema = section('Open Graph / oEmbed fallback', {
+  enabled: field.toggle(z.boolean().optional().default(true), 'Enabled', {
     description:
-      '未命中专用 provider 之 URL 抓 Open Graph / oEmbed 元数据作链接卡兜底',
+      'Fetches Open Graph / oEmbed metadata as a link card fallback for URLs not handled by a dedicated provider',
   }),
   fetchMode: field.select(
     z.enum(['fetch', 'browser']).optional().default('fetch'),
-    '抓取方式',
+    'Fetch mode',
     [
-      { label: 'HTTP 直抓（fetch）', value: 'fetch' },
-      { label: '无头浏览器（agent-browser）', value: 'browser' },
+      { label: 'HTTP fetch', value: 'fetch' },
+      { label: 'Headless browser (agent-browser)', value: 'browser' },
     ],
     {
       description:
-        '默认 HTTP 直抓。遇 Cloudflare / 强反爬站点时切 browser 走 Docker 内置之 chromium 渲染。browser 模式更慢，亦更贵。',
+        'Defaults to HTTP fetch. For Cloudflare-protected or anti-bot sites, switch to browser mode to render via the chromium bundled in Docker. Browser mode is slower and more expensive.',
     },
   ),
   timeoutMs: field.number(
@@ -459,10 +531,10 @@ const OpenGraphIntegrationSchema = section('Open Graph / oEmbed 兜底', {
         val === '' || val === null || val === undefined ? val : Number(val),
       z.number().int().min(1000).max(60000).optional(),
     ),
-    '抓取超时（毫秒）',
+    'Fetch timeout (milliseconds)',
     {
       description:
-        'fetch 模式默认 8000；browser 模式默认 25000。区间 1000-60000',
+        'Defaults to 8000 in fetch mode and 25000 in browser mode. Range 1000-60000',
     },
   ),
   maxBodyBytes: field.number(
@@ -471,21 +543,29 @@ const OpenGraphIntegrationSchema = section('Open Graph / oEmbed 兜底', {
         val === '' || val === null || val === undefined ? val : Number(val),
       z.number().int().min(16384).max(4_194_304).optional(),
     ),
-    '响应大小上限（字节）',
-    { description: '默认 524288（512KB），区间 16KB-4MB；仅扫 <head>' },
+    'Max response size (bytes)',
+    {
+      description:
+        'Defaults to 524288 (512KB); range 16KB-4MB; only the <head> is scanned',
+    },
   ),
-  screenshot: section('截图', {
-    enabled: field.toggle(z.boolean().optional().default(false), '启用截图', {
-      description: 'fetchMode 为 browser 时捕获页面截图。仅 browser 模式生效。',
-    }),
+  screenshot: section('Screenshot', {
+    enabled: field.toggle(
+      z.boolean().optional().default(false),
+      'Enable screenshots',
+      {
+        description:
+          'Capture page screenshots when fetchMode is browser. Only effective in browser mode.',
+      },
+    ),
     maxItems: field.number(
       z.preprocess(
         (val) =>
           val === '' || val === null || val === undefined ? val : Number(val),
         z.number().int().min(10).max(10_000).optional().default(500),
       ),
-      '最大缓存数',
-      { description: '默认 500，区间 10-10000' },
+      'Max cached items',
+      { description: 'Default 500; range 10-10000' },
     ),
     maxTotalBytes: field.number(
       z.preprocess(
@@ -498,8 +578,8 @@ const OpenGraphIntegrationSchema = section('Open Graph / oEmbed 兜底', {
           .optional()
           .default(100 * 1024 * 1024),
       ),
-      '总存储上限（字节）',
-      { description: '默认 104857600（100MB），下限 1MB' },
+      'Max total storage (bytes)',
+      { description: 'Default 104857600 (100MB); minimum 1MB' },
     ),
     maxBytesPerImage: field.number(
       z.preprocess(
@@ -512,8 +592,8 @@ const OpenGraphIntegrationSchema = section('Open Graph / oEmbed 兜底', {
           .optional()
           .default(512 * 1024),
       ),
-      '单图上限（字节）',
-      { description: '默认 524288（512KB），下限 1KB' },
+      'Max size per image (bytes)',
+      { description: 'Default 524288 (512KB); minimum 1KB' },
     ),
     webpQuality: field.number(
       z.preprocess(
@@ -521,23 +601,26 @@ const OpenGraphIntegrationSchema = section('Open Graph / oEmbed 兜底', {
           val === '' || val === null || val === undefined ? val : Number(val),
         z.number().int().min(40).max(100).optional().default(75),
       ),
-      'WebP 质量',
-      { description: '默认 75，区间 40-100' },
+      'WebP quality',
+      { description: 'Default 75; range 40-100' },
     ),
   }).optional(),
 })
 
-export const ThirdPartyServiceIntegrationSchema = section('第三方服务集成', {
-  github: GitHubIntegrationSchema.optional(),
-  tmdb: TmdbIntegrationSchema.optional(),
-  bangumi: BangumiIntegrationSchema.optional(),
-  neodb: NeoDBIntegrationSchema.optional(),
-  arxiv: ArxivIntegrationSchema.optional(),
-  leetcode: LeetcodeIntegrationSchema.optional(),
-  neteaseMusic: NeteaseMusicIntegrationSchema.optional(),
-  qqMusic: QQMusicIntegrationSchema.optional(),
-  openGraph: OpenGraphIntegrationSchema.optional(),
-})
+export const ThirdPartyServiceIntegrationSchema = section(
+  'Third-party integrations',
+  {
+    github: GitHubIntegrationSchema.optional(),
+    tmdb: TmdbIntegrationSchema.optional(),
+    bangumi: BangumiIntegrationSchema.optional(),
+    neodb: NeoDBIntegrationSchema.optional(),
+    arxiv: ArxivIntegrationSchema.optional(),
+    leetcode: LeetcodeIntegrationSchema.optional(),
+    neteaseMusic: NeteaseMusicIntegrationSchema.optional(),
+    qqMusic: QQMusicIntegrationSchema.optional(),
+    openGraph: OpenGraphIntegrationSchema.optional(),
+  },
+)
 export class ThirdPartyServiceIntegrationDto extends createZodDto(
   ThirdPartyServiceIntegrationSchema,
 ) {}
@@ -547,12 +630,16 @@ export type ThirdPartyServiceIntegrationConfig = z.infer<
 
 // ==================== Auth Security ====================
 export const AuthSecuritySchema = section(
-  '认证安全设置',
+  'Auth security',
   {
-    disablePasswordLogin: field.toggle(z.boolean().optional(), '禁用密码登录', {
-      description:
-        '禁用密码登录，只能通过 PassKey or Oauth 登录，如果没有配置这些请不要开启',
-    }),
+    disablePasswordLogin: field.toggle(
+      z.boolean().optional(),
+      'Disable password login',
+      {
+        description:
+          'Disables password login, allowing sign-in only via Passkey or OAuth. Do not enable unless those methods are configured.',
+      },
+    ),
   },
   { 'ui:options': { type: 'hidden' } },
 )
@@ -563,70 +650,78 @@ export type AuthSecurityConfig = z.infer<typeof AuthSecuritySchema>
 const AIProviderConfigSchema = withMeta(
   z.object({
     id: field.plain(z.string().min(1), 'Provider ID', {
-      description: '唯一标识符，如 "openai-main", "deepseek"',
+      description: 'Unique identifier, e.g. "openai-main", "deepseek"',
     }),
-    name: field.plain(z.string().min(1), '显示名称'),
-    type: field.plain(z.enum(AIProviderType), 'Provider 类型', {
+    name: field.plain(z.string().min(1), 'Display name'),
+    type: field.plain(z.enum(AIProviderType), 'Provider type', {
       description: 'openai | openai-compatible | anthropic | openrouter',
     }),
     apiKey: field.password(z.string().min(1), 'API Key'),
-    endpoint: field.plain(z.string().optional(), '自定义 Endpoint', {
-      description: 'OpenAI 兼容服务必填，如 https://api.deepseek.com',
+    endpoint: field.plain(z.string().optional(), 'Custom endpoint', {
+      description:
+        'Required for OpenAI-compatible services, e.g. https://api.deepseek.com',
     }),
-    defaultModel: field.plain(z.string().min(1), '默认模型', {
-      description: '如 gpt-4o, deepseek-chat, claude-sonnet-4-20250514',
+    defaultModel: field.plain(z.string().min(1), 'Default model', {
+      description: 'E.g. gpt-4o, deepseek-chat, claude-sonnet-4-20250514',
     }),
-    enabled: field.toggle(z.boolean(), '启用'),
+    enabled: field.toggle(z.boolean(), 'Enabled'),
   }),
-  { title: 'AI Provider 配置', 'ui:options': { type: 'hidden' } },
+  { title: 'AI provider configuration', 'ui:options': { type: 'hidden' } },
 )
 
 const AIModelAssignmentSchema = withMeta(
   z.object({
     providerId: field.plain(z.string().optional(), 'Provider ID', {
-      description: '指向 providers 中某个 provider 的 id',
+      description: 'References the id of a provider in `providers`',
     }),
-    model: field.plain(z.string().optional(), '模型覆盖', {
-      description: '覆盖 provider 的默认模型，留空使用 provider 默认值',
+    model: field.plain(z.string().optional(), 'Model override', {
+      description:
+        "Overrides the provider's default model; leave empty to use the provider default",
     }),
   }),
-  { title: 'AI 模型分配', 'ui:options': { type: 'hidden' } },
+  { title: 'AI model assignment', 'ui:options': { type: 'hidden' } },
 )
 
-export const AISchema = section('AI 设定', {
+export const AISchema = section('AI settings', {
   providers: field.array(
     z.array(AIProviderConfigSchema).optional(),
-    'AI Providers',
-    { description: '配置多个 AI 服务提供商' },
+    'AI providers',
+    { description: 'Configure multiple AI service providers' },
   ),
-  summaryModel: field.plain(AIModelAssignmentSchema.optional(), '摘要功能模型'),
-  writerModel: field.plain(AIModelAssignmentSchema.optional(), '写作助手模型'),
+  summaryModel: field.plain(
+    AIModelAssignmentSchema.optional(),
+    'Summary model',
+  ),
+  writerModel: field.plain(
+    AIModelAssignmentSchema.optional(),
+    'Writing assistant model',
+  ),
   commentReviewModel: field.plain(
     AIModelAssignmentSchema.optional(),
-    '评论审核模型',
+    'Comment review model',
   ),
-  enableSummary: field.toggle(z.boolean().optional(), '可调用 AI 摘要', {
-    description: '是否开启调用 AI 去生成摘要',
+  enableSummary: field.toggle(z.boolean().optional(), 'Allow AI summary', {
+    description: 'Whether to allow calling AI to generate summaries',
   }),
   enableAutoGenerateSummaryOnCreate: field.toggle(
     z.boolean().optional(),
-    '文章创建时自动生成摘要',
-    { description: '需同时启用 enableSummary' },
+    'Auto-generate summary on article creation',
+    { description: 'Requires enableSummary to also be enabled' },
   ),
   enableAutoGenerateSummaryOnUpdate: field.toggle(
     z.boolean().optional(),
-    '文章更新时重新生成摘要',
+    'Regenerate summary on article update',
     {
       description:
-        '仅在源文本 hash 变化的语言重新生成；需同时启用 enableSummary',
+        'Regenerates only for languages whose source-text hash has changed; requires enableSummary to also be enabled',
     },
   ),
   summaryTargetLanguages: field.array(
     z.array(z.string()).optional(),
-    'AI 摘要目标语言列表',
+    'AI summary target languages',
     {
       description:
-        '自动生成摘要的目标语言列表，使用 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)，如 ["zh", "en", "ja"]',
+        'Target languages for auto-generated summaries, using [ISO 639-1 language codes](https://www.w3schools.com/tags/ref_language_codes.asp), e.g. ["zh", "en", "ja"]',
     },
   ),
   summaryMinTextLength: field.number(
@@ -635,70 +730,81 @@ export const AISchema = section('AI 设定', {
         val === '' || val === null || val === undefined ? val : Number(val),
       z.number().int().min(0).optional(),
     ),
-    '摘要自动生成最小文本长度',
+    'Minimum text length for summary auto-generation',
     {
       description:
-        '正文字符数低于此值时跳过自动钩子（OnCreate/OnUpdate），仅影响自动触发；0 表示不限。默认 100',
+        'Skips automatic hooks (OnCreate/OnUpdate) when the body has fewer characters than this; only affects automatic triggers. 0 means no limit. Default 100',
     },
   ),
   translationModel: field.plain(
     AIModelAssignmentSchema.optional(),
-    '翻译功能模型',
+    'Translation model',
   ),
-  enableTranslation: field.toggle(z.boolean().optional(), '可调用 AI 翻译', {
-    description: '是否开启调用 AI 去生成翻译',
-  }),
+  enableTranslation: field.toggle(
+    z.boolean().optional(),
+    'Allow AI translation',
+    {
+      description: 'Whether to allow calling AI to generate translations',
+    },
+  ),
   enableAutoGenerateTranslation: field.toggle(
     z.boolean().optional(),
-    '开启 AI 翻译自动生成',
+    'Auto-generate AI translations',
     {
       description:
-        '此选项开启后，将会在文章发布后自动生成翻译，需要开启上面的选项，否则无效',
+        'When enabled, translations are auto-generated after an article is published. Requires the option above to also be enabled, otherwise has no effect.',
     },
   ),
   translationTargetLanguages: field.array(
     z.array(z.string()).optional(),
-    'AI 翻译目标语言列表',
+    'AI translation target languages',
     {
       description:
-        '自动生成翻译的目标语言列表，使用 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)，如 ["en", "ja", "ko"]',
+        'Target languages for auto-generated translations, using [ISO 639-1 language codes](https://www.w3schools.com/tags/ref_language_codes.asp), e.g. ["en", "ja", "ko"]',
     },
   ),
   insightsModel: field.plain(
     AIModelAssignmentSchema.optional(),
-    'Insights 精读模型',
+    'Insights model',
     {
-      description: '用于生成 Insights 精读的 AI 模型',
+      description: 'AI model used to generate Insights',
     },
   ),
   insightsTranslationModel: field.plain(
     AIModelAssignmentSchema.optional(),
-    'Insights 翻译模型',
-    { description: '用于翻译 Insights 的 AI 模型，留空则复用翻译模型' },
+    'Insights translation model',
+    {
+      description:
+        'AI model used to translate Insights; falls back to the translation model when empty',
+    },
   ),
-  enableInsights: field.toggle(z.boolean().optional(), '可调用 AI Insights', {
-    description: '总开关',
+  enableInsights: field.toggle(z.boolean().optional(), 'Allow AI Insights', {
+    description: 'Master switch',
   }),
   enableAutoGenerateInsightsOnCreate: field.toggle(
     z.boolean().optional(),
-    '文章创建时自动生成 Insights',
-    { description: '需同时启用 enableInsights' },
+    'Auto-generate Insights on article creation',
+    { description: 'Requires enableInsights to also be enabled' },
   ),
   enableAutoGenerateInsightsOnUpdate: field.toggle(
     z.boolean().optional(),
-    '文章更新时重新生成 Insights',
-    { description: '仅在源文本 hash 变化时触发' },
+    'Regenerate Insights on article update',
+    { description: 'Triggers only when the source-text hash changes' },
   ),
   enableAutoTranslateInsights: field.toggle(
     z.boolean().optional(),
-    'Insights 生成后自动翻译',
-    { description: '按 insightsTargetLanguages 派发翻译任务' },
+    'Auto-translate Insights after generation',
+    {
+      description:
+        'Dispatches translation tasks based on insightsTargetLanguages',
+    },
   ),
   insightsTargetLanguages: field.array(
     z.array(z.string()).optional(),
-    'Insights 目标语言列表',
+    'Insights target languages',
     {
-      description: 'ISO 639-1 列表；源语言自动排除',
+      description:
+        'ISO 639-1 list; the source language is automatically excluded',
     },
   ),
   insightsMinTextLength: field.number(
@@ -707,10 +813,10 @@ export const AISchema = section('AI 设定', {
         val === '' || val === null || val === undefined ? val : Number(val),
       z.number().int().min(0).optional(),
     ),
-    'Insights 自动生成最小文本长度',
+    'Minimum text length for Insights auto-generation',
     {
       description:
-        '正文字符数低于此值时跳过自动钩子（OnCreate/OnUpdate），仅影响自动触发；0 表示不限。默认 300',
+        'Skips automatic hooks (OnCreate/OnUpdate) when the body has fewer characters than this; only affects automatic triggers. 0 means no limit. Default 300',
     },
   ),
 })
@@ -786,8 +892,9 @@ export const FullConfigSchema = withMeta(
     oauth: OAuthSchema,
   }),
   {
-    title: '设置',
-    description: '* 敏感字段不显示，后端默认不返回敏感字段，显示为空',
+    title: 'Settings',
+    description:
+      '* Sensitive fields are hidden; the backend does not return them by default, so they appear empty',
   },
 )
 

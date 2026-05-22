@@ -2,9 +2,9 @@ import { Body, HttpCode, Post, Res } from '@nestjs/common'
 import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 
@@ -14,12 +14,12 @@ import { AckDto, AckEventType, AckReadPayloadSchema } from './ack.schema'
 export class AckController {
   constructor(
     private readonly countingService: CountingService,
-
     private readonly webGateway: WebEventsGateway,
   ) {}
 
   @Post('/')
   @HttpCode(200)
+  @HTTPDecorators.RawResponse
   async ack(@Body() body: AckDto, @Res() res: FastifyReply) {
     const { type, payload } = body
 
@@ -31,10 +31,9 @@ export class AckController {
             const path = err.path.join('.')
             return path ? `${path}: ${err.message}` : err.message
           })
-          throw new BizException(
-            ErrorCodeEnum.InvalidBody,
-            errorMessages.join('; '),
-          )
+          throw createAppException(AppErrorCode.ACK_INVALID_PAYLOAD, {
+            message: errorMessages.join('; '),
+          })
         }
 
         const { id, type: articleType } = result.data

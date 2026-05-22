@@ -14,6 +14,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import {
   applyRawCorsHeaders,
@@ -40,10 +41,9 @@ export class AiAgentController {
     private readonly conversationService: AiAgentConversationService,
   ) {}
 
-  // --- Chat Proxy ---
-
   @Post('/chat')
   @Auth()
+  @HTTPDecorators.RawResponse
   async chatProxy(
     @Body() body: ChatProxyDto,
     @Req() request: FastifyRequest,
@@ -77,7 +77,6 @@ export class AiAgentController {
       return
     }
 
-    // Pipe raw SSE stream through to client
     applyRawCorsHeaders(reply, request)
     reply.raw.setHeader('Content-Type', 'text/event-stream')
     reply.raw.setHeader('Cache-Control', 'no-cache, no-transform')
@@ -100,29 +99,27 @@ export class AiAgentController {
     }
   }
 
-  // --- Conversation CRUD ---
-
   @Post('/conversations')
   @Auth()
-  async createConversation(@Body() body: CreateConversationDto) {
+  createConversation(@Body() body: CreateConversationDto) {
     return this.conversationService.create(body)
   }
 
   @Get('/conversations')
   @Auth()
-  async listConversations(@Query() query: ListConversationsQueryDto) {
+  listConversations(@Query() query: ListConversationsQueryDto) {
     return this.conversationService.listByRef(query.refId, query.refType)
   }
 
   @Get('/conversations/:id')
   @Auth()
-  async getConversation(@Param() params: EntityIdDto) {
+  getConversation(@Param() params: EntityIdDto) {
     return this.conversationService.getById(params.id)
   }
 
   @Patch('/conversations/:id')
   @Auth()
-  async updateConversation(
+  updateConversation(
     @Param() params: EntityIdDto,
     @Body() body: UpdateConversationDto,
   ) {
@@ -131,7 +128,7 @@ export class AiAgentController {
 
   @Patch('/conversations/:id/messages')
   @Auth()
-  async appendMessages(
+  appendMessages(
     @Param() params: EntityIdDto,
     @Body() body: AppendMessagesDto,
   ) {
@@ -140,7 +137,7 @@ export class AiAgentController {
 
   @Put('/conversations/:id/messages')
   @Auth()
-  async replaceMessages(
+  replaceMessages(
     @Param() params: EntityIdDto,
     @Body() body: ReplaceMessagesDto,
   ) {
@@ -149,7 +146,7 @@ export class AiAgentController {
 
   @Delete('/conversations/:id')
   @Auth()
-  async deleteConversation(@Param() params: EntityIdDto) {
+  deleteConversation(@Param() params: EntityIdDto) {
     return this.conversationService.deleteById(params.id)
   }
 }

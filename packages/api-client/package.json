@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/api-client",
-  "version": "4.4.0",
+  "version": "5.0.2-next.10",
   "description": "A api client for mx-space server@next",
   "type": "module",
   "engines": {
@@ -19,6 +19,11 @@
       "types": "./dist/index.d.mts",
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
+    },
+    "./legacy": {
+      "types": "./dist/legacy/index.d.mts",
+      "require": "./dist/legacy/index.cjs",
+      "import": "./dist/legacy/index.mjs"
     },
     "./dist/*": {
       "require": "./dist/*.cjs",
@@ -47,7 +52,8 @@
     "build": "npm run package",
     "prepackage": "rm -rf dist",
     "test": "vitest",
-    "dev": "vitest"
+    "dev": "vitest",
+    "smoke:diff": "node scripts/smoke-diff.mjs"
   },
   "devDependencies": {
     "@types/cors": "2.8.19",

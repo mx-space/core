@@ -1,7 +1,8 @@
+import camelcaseKeys from 'camelcase-keys'
+
 import { mockRequestInstance } from '~/__tests__/helpers/instance'
 import { mockResponse } from '~/__tests__/helpers/response'
 import { UserController } from '~/controllers'
-import camelcaseKeys from 'camelcase-keys'
 
 describe('test owner client', () => {
   const client = mockRequestInstance(UserController)
@@ -27,7 +28,7 @@ describe('test owner client', () => {
     const data = await client.owner.getOwnerInfo()
     expect(data.id).toEqual(mocked.id)
     expect(data).toEqual(camelcaseKeys(mocked, { deep: true }))
-    expect(data.$raw.data).toEqual(mocked)
+    expect(data.$raw.data.data).toEqual(mocked)
   })
 
   test('POST /auth/sign-in/username', async () => {
@@ -47,7 +48,7 @@ describe('test owner client', () => {
     )
     const data = await client.owner.login('test', 'test')
     expect(data.token).toEqual(mocked.token)
-    expect(data.$raw.data).toEqual(mocked)
+    expect(data.$raw.data.data).toEqual(mocked)
   })
 
   test('GET /owner/check_logged', async () => {

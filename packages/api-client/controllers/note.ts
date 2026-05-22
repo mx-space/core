@@ -1,20 +1,14 @@
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
-import type { SelectFields } from '~/interfaces/types'
-import type { PaginateResult, TranslationMeta } from '~/models/base'
-import type {
-  NoteModel,
-  NoteWrappedPayload,
-  NoteWrappedWithLikedAndTranslationPayload,
-  NoteWrappedWithLikedPayload,
-} from '~/models/note'
+import type { PaginateResult } from '~/models/base'
+import type { NoteModel, NoteWrappedPayload } from '~/models/note'
 import { autoBind } from '~/utils/auto-bind'
 
 import type { HTTPClient } from '../core/client'
 import type { SortOptions } from './base'
 
-declare module '../core/client' {
+declare module '@mx-space/api-client' {
   interface HTTPClient<
     T extends IRequestAdapter = IRequestAdapter,
     ResponseWrapper = unknown,
@@ -24,7 +18,6 @@ declare module '../core/client' {
 }
 
 export type NoteListOptions = {
-  select?: SelectFields<keyof NoteModel>
   year?: number
   sortBy?: 'weather' | 'mood' | 'title' | 'createdAt' | 'modifiedAt'
   sortOrder?: 1 | -1
@@ -52,15 +45,7 @@ export type NoteTopicListOptions = SortOptions & {
 export type NoteTimelineItem = Pick<
   NoteModel,
   'id' | 'title' | 'nid' | 'slug' | 'createdAt' | 'isPublished'
-> & {
-  isTranslated?: boolean
-  translationMeta?: TranslationMeta
-}
-
-export type NoteTopicListItem = NoteModel & {
-  isTranslated?: boolean
-  translationMeta?: TranslationMeta
-}
+>
 
 export class NoteController<ResponseWrapper> implements IController {
   base = 'notes'
@@ -77,7 +62,7 @@ export class NoteController<ResponseWrapper> implements IController {
    * 最新日记
    */
   getLatest() {
-    return this.proxy.latest.get<NoteWrappedWithLikedPayload>()
+    return this.proxy.latest.get<NoteWrappedPayload>()
   }
 
   /**
@@ -105,7 +90,7 @@ export class NoteController<ResponseWrapper> implements IController {
     const [id, password = undefined, singleResult = false] = rest
 
     if (typeof id === 'number') {
-      return this.proxy.nid(id.toString()).get<NoteWrappedWithLikedPayload>({
+      return this.proxy.nid(id.toString()).get<NoteWrappedPayload>({
         params: { password, single: singleResult ? '1' : undefined },
       })
     } else {
@@ -121,10 +106,7 @@ export class NoteController<ResponseWrapper> implements IController {
   getNoteByNid(
     nid: number,
     options?: NoteByNidOptions,
-  ): RequestProxyResult<
-    NoteWrappedWithLikedAndTranslationPayload,
-    ResponseWrapper
-  > {
+  ): RequestProxyResult<NoteWrappedPayload, ResponseWrapper> {
     const { password, single, lang, prefer } = options || {}
     return this.proxy.nid(nid.toString()).get({
       params: {
@@ -142,10 +124,7 @@ export class NoteController<ResponseWrapper> implements IController {
     day: number,
     slug: string,
     options?: NoteBySlugDateOptions,
-  ): RequestProxyResult<
-    NoteWrappedWithLikedAndTranslationPayload,
-    ResponseWrapper
-  > {
+  ): RequestProxyResult<NoteWrappedPayload, ResponseWrapper> {
     const { password, single, lang, prefer } = options || {}
     return this.proxy(year.toString())(month.toString())(day.toString())(
       slug,
@@ -164,12 +143,11 @@ export class NoteController<ResponseWrapper> implements IController {
    */
 
   getList(page = 1, perPage = 10, options: NoteListOptions = {}) {
-    const { select, sortBy, sortOrder, year, lang, withSummary } = options
+    const { sortBy, sortOrder, year, lang, withSummary } = options
     return this.proxy.get<PaginateResult<NoteModel>>({
       params: {
         page,
         size: perPage,
-        select: select?.join(' '),
         sortBy,
         sortOrder,
         year,
@@ -209,7 +187,7 @@ export class NoteController<ResponseWrapper> implements IController {
     options: NoteTopicListOptions = {},
   ) {
     const { lang, ...sortOptions } = options
-    return this.proxy.topics(topicId).get<PaginateResult<NoteTopicListItem>>({
+    return this.proxy.topics(topicId).get<PaginateResult<NoteModel>>({
       params: { page, size, lang, ...sortOptions },
     })
   }

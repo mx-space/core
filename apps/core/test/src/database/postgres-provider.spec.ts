@@ -1,15 +1,15 @@
 import { eq } from 'drizzle-orm'
-import { Pool } from 'pg'
+import type { Pool } from 'pg'
+import {
+  createPgTestDatabase,
+  type PgTestDatabase,
+} from 'test/helper/pg-verify-url'
 
 import { categories, posts } from '~/database/schema'
 import {
   SNOWFLAKE_EPOCH_MS,
   SnowflakeGenerator,
 } from '~/shared/id/snowflake.service'
-import {
-  createPgTestDatabase,
-  type PgTestDatabase,
-} from 'test/helper/pg-verify-url'
 
 /**
  * Integration smoke test. PG_VERIFY_URL must point at a reachable PostgreSQL

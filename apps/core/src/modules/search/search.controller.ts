@@ -3,37 +3,78 @@ import { Get, Param, Post, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
-import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { Lang } from '~/common/decorators/lang.decorator'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import {
   SearchAdminListDto,
   SearchDto,
   SearchRebuildQueryDto,
   SearchRebuildRefParamDto,
 } from '~/modules/search/search.schema'
+import {
+  applyTranslationEntriesInPlace,
+  type EntryMaps,
+  type EntryRule,
+} from '~/processors/helper/helper.translation.service'
 
 import { SearchService } from './search.service'
 
-// Search results mix post/note/page; only post items carry `category`, so the
-// objectScan path naturally skips notes & pages.
-const SEARCH_TRANSLATE_FIELDS = [
+const CATEGORY_NAME_RULES: ReadonlyArray<EntryRule> = [
   {
-    path: 'data[].category.name',
+    path: 'category.name',
     keyPath: 'category.name',
+    mode: 'entity',
     idField: 'id',
   },
-] as const
+]
 
 @ApiController('search')
 export class SearchController {
-  constructor(private readonly searchService: SearchService) {}
+  constructor(
+    private readonly searchService: SearchService,
+    private readonly translationEntryService: TranslationEntryService,
+  ) {}
+
+  private async batchCategoryEntryTranslations(
+    lang: string,
+    items: Array<
+      { type?: string; category?: { id: unknown } | null } | null | undefined
+    >,
+  ): Promise<EntryMaps> {
+    const categoryIds = new Set<string>()
+    for (const item of items) {
+      if (item?.type === 'post' && item?.category?.id) {
+        categoryIds.add(String(item.category.id))
+      }
+    }
+    return this.translationEntryService.getTranslationsBatch(lang, {
+      entityLookups: categoryIds.size
+        ? [{ keyPath: 'category.name', lookupKeys: categoryIds }]
+        : [],
+    })
+  }
 
   @HttpCache.disable
   @Get()
-  @TranslateFields(...SEARCH_TRANSLATE_FIELDS)
-  search(@Query() query: SearchDto) {
-    return this.searchService.search(query)
+  async search(@Query() query: SearchDto, @Lang() lang?: string) {
+    const result = await this.searchService.search(query)
+    if (lang) {
+      const entryMaps = await this.batchCategoryEntryTranslations(
+        lang,
+        result.data,
+      )
+      for (const item of result.data) {
+        if ((item as any)?.type === 'post' && (item as any)?.category) {
+          applyTranslationEntriesInPlace(
+            item as Record<string, any>,
+            entryMaps,
+            CATEGORY_NAME_RULES,
+          )
+        }
+      }
+    }
+    return result
   }
 
   @Post('/rebuild')
@@ -59,23 +100,45 @@ export class SearchController {
 
   @Get('/:type')
   @HttpCache.disable
-  @TranslateFields(...SEARCH_TRANSLATE_FIELDS)
-  searchByType(@Query() query: SearchDto, @Param('type') type: string) {
+  async searchByType(
+    @Query() query: SearchDto,
+    @Param('type') type: string,
+    @Lang() lang?: string,
+  ) {
     type = type.toLowerCase()
+    let result: any
     switch (type) {
       case 'post': {
-        return this.searchService.searchPost(query)
+        result = await this.searchService.searchPost(query)
+        break
       }
       case 'note': {
-        return this.searchService.searchNote(query)
+        result = await this.searchService.searchNote(query)
+        break
       }
       case 'page': {
-        return this.searchService.searchPage(query)
+        result = await this.searchService.searchPage(query)
+        break
       }
-
       default: {
-        throw new BizException(ErrorCodeEnum.InvalidSearchType, type)
+        throw createAppException(AppErrorCode.INVALID_SEARCH_TYPE, { type })
       }
     }
+    if (lang && type === 'post') {
+      const entryMaps = await this.batchCategoryEntryTranslations(
+        lang,
+        result.data,
+      )
+      for (const item of result.data) {
+        if ((item as any)?.category) {
+          applyTranslationEntriesInPlace(
+            item as Record<string, any>,
+            entryMaps,
+            CATEGORY_NAME_RULES,
+          )
+        }
+      }
+    }
+    return result
   }
 }

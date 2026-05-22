@@ -4,9 +4,9 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
@@ -23,24 +23,22 @@ export class HelperController {
   constructor(
     private readonly urlBulderService: UrlBuilderService,
     private readonly databaseService: DatabaseService,
-
     private readonly moduleRef: ModuleRef,
   ) {}
 
   @Get('/url-builder/:id')
+  @HTTPDecorators.RawResponse
   async builderById(
     @Param() params: EntityIdDto,
     @Query('redirect') redirect: boolean,
-
     @Res() res: FastifyReply,
   ) {
     const doc = await this.databaseService.findGlobalById(params.id)
     if (!doc || doc.type === CollectionRefTypes.Recently) {
       if (redirect) {
-        throw new BizException(
-          ErrorCodeEnum.DocumentNotFound,
-          'not found or this type can not redirect to',
-        )
+        throw createAppException(AppErrorCode.HELPER_DOCUMENT_NOT_FOUND, {
+          id: params.id,
+        })
       }
 
       res.send(null)

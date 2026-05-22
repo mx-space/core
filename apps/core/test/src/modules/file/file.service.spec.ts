@@ -2,7 +2,7 @@ import { copyFile, mkdir, unlink } from 'node:fs/promises'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode } from '~/common/errors'
 import { FileService } from '~/modules/file/file.service'
 
 vi.mock('~/constants/path.constant', () => {
@@ -84,7 +84,7 @@ describe('FileService.deleteFile', () => {
     await expect(
       service.deleteFile('image' as any, '../secret.txt'),
     ).rejects.toMatchObject({
-      bizCode: ErrorCodeEnum.InvalidParameter,
+      code: AppErrorCode.INVALID_PARAMETER,
     })
 
     expect(mkdir).not.toHaveBeenCalled()

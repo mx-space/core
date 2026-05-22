@@ -2,7 +2,7 @@ import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zNonEmptyString } from '~/common/zod'
-import { PagerSchema } from '~/shared/dto/pager.dto'
+import { BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 const langField = z
   .string()
@@ -11,7 +11,7 @@ const langField = z
   .transform((val) => val.toLowerCase())
   .optional()
 
-export const SearchSchema = PagerSchema.extend({
+export const SearchSchema = BasicPagerSchema.extend({
   keyword: zNonEmptyString,
   orderBy: zNonEmptyString.optional(),
   order: z.preprocess(
@@ -48,7 +48,7 @@ export class SearchRebuildRefParamDto extends createZodDto(
   SearchRebuildRefParamSchema,
 ) {}
 
-export const SearchAdminListSchema = PagerSchema.extend({
+export const SearchAdminListSchema = BasicPagerSchema.extend({
   refType: z.enum(['post', 'note', 'page']).optional(),
   lang: langField,
   keyword: z.string().trim().min(1).optional(),

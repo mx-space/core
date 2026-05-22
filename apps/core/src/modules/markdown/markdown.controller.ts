@@ -36,10 +36,10 @@ export class MarkdownController {
 
   @Get('/export')
   @Auth()
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   @Header('Content-Type', 'application/zip')
   async exportArticleToMarkdown(@Query() query: ExportMarkdownQueryDto) {
-    const { show_title: showTitle, slug, yaml, with_meta_json } = query
+    const { showTitle, slug, yaml, withMetaJson } = query
     const allArticles = await this.service.extractAllArticle()
     const { notes, pages, posts } = allArticles
 
@@ -127,7 +127,7 @@ export class MarkdownController {
           rtzip.file(join(key, relativePath), file.nodeStream())
         })
 
-        if (with_meta_json) {
+        if (withMetaJson) {
           rtzip.file(
             `${key}/_meta.json`,
             JSON.stringify(

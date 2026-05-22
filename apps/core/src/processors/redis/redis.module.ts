@@ -1,6 +1,6 @@
 /**
  * Cache module.
- * @file Cache 全局模块
+ * @file Global cache module
  * @module processor/cache/module
  */
 import { CacheModule as NestCacheModule } from '@nestjs/cache-manager'

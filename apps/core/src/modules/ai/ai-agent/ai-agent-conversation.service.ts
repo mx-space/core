@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 
 import { AiAgentChatService } from './ai-agent-chat.service'
 import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
@@ -37,10 +36,9 @@ export class AiAgentConversationService {
   async getById(id: string) {
     const doc = await this.conversationRepository.findById(id)
     if (!doc) {
-      throw new BizException(
-        ErrorCodeEnum.ContentNotFoundCantProcess,
-        'Conversation not found',
-      )
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Conversation not found',
+      })
     }
     return doc
   }
@@ -53,10 +51,9 @@ export class AiAgentConversationService {
         })
       : null
     if (!result) {
-      throw new BizException(
-        ErrorCodeEnum.ContentNotFoundCantProcess,
-        'Conversation not found',
-      )
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Conversation not found',
+      })
     }
 
     if (
@@ -78,10 +75,9 @@ export class AiAgentConversationService {
   async replaceMessages(id: string, messages: Record<string, unknown>[]) {
     const result = await this.conversationRepository.update(id, { messages })
     if (!result) {
-      throw new BizException(
-        ErrorCodeEnum.ContentNotFoundCantProcess,
-        'Conversation not found',
-      )
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Conversation not found',
+      })
     }
 
     if (
@@ -105,10 +101,9 @@ export class AiAgentConversationService {
   ) {
     const result = await this.conversationRepository.update(id, data)
     if (!result) {
-      throw new BizException(
-        ErrorCodeEnum.ContentNotFoundCantProcess,
-        'Conversation not found',
-      )
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Conversation not found',
+      })
     }
     return result
   }
@@ -154,14 +149,19 @@ export class AiAgentConversationService {
     const titleMessages: Record<string, unknown>[] = [
       {
         role: 'system',
-        content: '用 10 字以内概括这段对话的主题，只返回标题文字',
+        content:
+          'Summarize the topic of this conversation in 10 words or fewer. Reply with the title text only.',
       },
       { role: 'user', content: String(firstUser.content ?? '').slice(0, 500) },
       {
         role: 'assistant',
         content: String(firstAssistant.content ?? '').slice(0, 500),
       },
-      { role: 'user', content: '请用 10 字以内概括以上对话主题' },
+      {
+        role: 'user',
+        content:
+          'Please summarize the topic of the conversation above in 10 words or fewer.',
+      },
     ]
 
     try {

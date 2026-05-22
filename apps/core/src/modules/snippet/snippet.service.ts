@@ -4,10 +4,9 @@ import JSON5 from 'json5'
 import qs from 'qs'
 
 import { RequestContext } from '~/common/contexts/request.context'
-import { BizException } from '~/common/exceptions/biz.exception'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
@@ -79,10 +78,9 @@ export class SnippetService {
 
       const reference = model.reference ?? 'root'
       if (this.reservedReferenceKeys.includes(reference)) {
-        throw new BizException(
-          ErrorCodeEnum.InvalidParameter,
-          `"${reference}" as reference is reserved`,
-        )
+        throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+          message: `"${reference}" as reference is reserved`,
+        })
       }
     }
 
@@ -93,7 +91,7 @@ export class SnippetService {
       model.method ?? null,
     )
     if (exists > 0) {
-      throw new BizException(ErrorCodeEnum.SnippetExists)
+      throw createAppException(AppErrorCode.SNIPPET_EXISTS)
     }
 
     if (model.customPath) {
@@ -101,10 +99,9 @@ export class SnippetService {
         model.customPath,
       )
       if (cpExists > 0) {
-        throw new BizException(
-          ErrorCodeEnum.InvalidParameter,
-          'customPath already exists',
-        )
+        throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+          message: 'customPath already exists',
+        })
       }
     }
 
@@ -148,17 +145,17 @@ export class SnippetService {
 
     const old = await this.snippetRepository.findById(id)
     if (!old) {
-      throw new BizException(ErrorCodeEnum.SnippetNotFound)
+      throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
 
     if (
       old.type === SnippetType.Function &&
       newModel.type !== SnippetType.Function
     ) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        '`type` is not allowed to change if this snippet set to Function type.',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message:
+          '`type` is not allowed to change if this snippet set to Function type.',
+      })
     }
 
     let mergedSecret = newModel.secret
@@ -188,10 +185,9 @@ export class SnippetService {
           id,
         )
         if (cpExists > 0) {
-          throw new BizException(
-            ErrorCodeEnum.InvalidParameter,
-            'customPath already exists',
-          )
+          throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+            message: 'customPath already exists',
+          })
         }
       }
 
@@ -236,7 +232,7 @@ export class SnippetService {
 
     const updated = await this.snippetRepository.update(id, patch)
     if (!updated) {
-      throw new BizException(ErrorCodeEnum.SnippetNotFound)
+      throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
 
     if (old.reference === 'theme' || newModel.reference === 'theme') {
@@ -249,14 +245,13 @@ export class SnippetService {
   async delete(id: string): Promise<void> {
     const doc = await this.snippetRepository.findById(id)
     if (!doc) {
-      throw new BizException(ErrorCodeEnum.SnippetNotFound)
+      throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
 
     if (doc.type === SnippetType.Function && doc.reference === 'built-in') {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'built-in function snippet is not allowed to delete',
-      )
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'built-in function snippet is not allowed to delete',
+      })
     }
 
     await this.snippetRepository.deleteById(id)
@@ -276,7 +271,7 @@ export class SnippetService {
         try {
           JSON.parse(model.raw)
         } catch {
-          throw new BizException(ErrorCodeEnum.SnippetInvalidJson)
+          throw createAppException(AppErrorCode.SNIPPET_INVALID_JSON)
         }
         break
       }
@@ -284,7 +279,7 @@ export class SnippetService {
         try {
           JSON5.parse(model.raw)
         } catch {
-          throw new BizException(ErrorCodeEnum.SnippetInvalidJson5)
+          throw createAppException(AppErrorCode.SNIPPET_INVALID_JSON5)
         }
         break
       }
@@ -292,7 +287,7 @@ export class SnippetService {
         try {
           load(model.raw)
         } catch {
-          throw new BizException(ErrorCodeEnum.SnippetInvalidYaml)
+          throw createAppException(AppErrorCode.SNIPPET_INVALID_YAML)
         }
         break
       }
@@ -301,10 +296,12 @@ export class SnippetService {
           model.raw,
         )
         if (typeof isValid === 'string') {
-          throw new BizException(ErrorCodeEnum.SnippetInvalidFunction, isValid)
+          throw createAppException(AppErrorCode.SNIPPET_INVALID_FUNCTION, {
+            extra: isValid,
+          })
         }
         if (!isValid) {
-          throw new BizException(ErrorCodeEnum.SnippetInvalidFunction)
+          throw createAppException(AppErrorCode.SNIPPET_INVALID_FUNCTION)
         }
         break
       }
@@ -323,7 +320,7 @@ export class SnippetService {
   async getSnippetById(id: string): Promise<SnippetRow> {
     const doc = await this.snippetRepository.findById(id)
     if (!doc) {
-      throw new BizException(ErrorCodeEnum.SnippetNotFound)
+      throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
     return this.transformLeanSnippetModel(doc)
   }
@@ -354,7 +351,7 @@ export class SnippetService {
   async getSnippetByName(name: string, reference: string): Promise<SnippetRow> {
     const doc = await this.snippetRepository.findPublicByName(name, reference)
     if (!doc) {
-      throw new BizException(ErrorCodeEnum.SnippetNotFound)
+      throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
     return doc
   }
@@ -362,11 +359,11 @@ export class SnippetService {
   async getPublicSnippetByName(name: string, reference: string) {
     const snippet = await this.getSnippetByName(name, reference)
     if (snippet.type === SnippetType.Function) {
-      throw new BizException(ErrorCodeEnum.SnippetNotFound)
+      throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
 
     if (snippet.private && !RequestContext.hasAdminAccess()) {
-      throw new BizException(ErrorCodeEnum.SnippetPrivate)
+      throw createAppException(AppErrorCode.SNIPPET_PRIVATE)
     }
 
     const res = await this.attachSnippet(snippet)
@@ -378,7 +375,7 @@ export class SnippetService {
     model: T,
   ): Promise<T & { data: any }> {
     if (!model) {
-      throw new BizException(ErrorCodeEnum.SnippetNotFound)
+      throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
     switch (model.type) {
       case SnippetType.JSON: {

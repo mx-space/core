@@ -12,10 +12,12 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
@@ -40,7 +42,7 @@ export class AiInsightsController {
 
   @Post('/task')
   @Auth()
-  async createInsightsTask(@Body() body: CreateInsightsTaskDto) {
+  createInsightsTask(@Body() body: CreateInsightsTaskDto) {
     return this.taskService.createInsightsTask(body)
   }
 
@@ -53,14 +55,11 @@ export class AiInsightsController {
     if (!source) {
       return { taskId: null, created: false, reason: 'source-missing' }
     }
-    // Guard against same-language translation which would upsert onto the
-    // source row (unique index on refId+lang) and flip isTranslation to true.
     const sourceLang = source.sourceLang || source.lang
     if (body.targetLang === sourceLang) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'targetLang must differ from source lang',
-      )
+      throw createAppException(AppErrorCode.AI_INVALID_PARAMETER, {
+        message: 'targetLang must differ from source lang',
+      })
     }
     return this.taskService.createInsightsTranslationTask({
       refId: body.refId,
@@ -71,25 +70,36 @@ export class AiInsightsController {
 
   @Get('/ref/:id')
   @Auth()
-  async getInsightsByRefId(@Param() params: EntityIdDto) {
+  getInsightsByRefId(@Param() params: EntityIdDto) {
     return this.service.getInsightsByRefId(params.id)
   }
 
   @Get('/')
   @Auth()
-  async getInsights(@Query() query: PagerDto) {
-    return this.service.getAllInsights(query)
+  async getInsights(@Query() query: BasicPagerDto) {
+    const result = await this.service.getAllInsights(query)
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder()
+        .pagination(result.pagination)
+        .articles(result.articles)
+        .build(),
+    )
   }
 
   @Get('/grouped')
   @Auth()
   async getInsightsGrouped(@Query() query: GetInsightsGroupedQueryDto) {
-    return this.service.getAllInsightsGrouped(query)
+    const result = await this.service.getAllInsightsGrouped(query)
+    return withMeta(
+      result.data,
+      new MetaObjectBuilder().pagination(result.pagination).build(),
+    )
   }
 
   @Patch('/:id')
   @Auth()
-  async updateInsights(
+  updateInsights(
     @Param() params: EntityIdDto,
     @Body() body: UpdateInsightsDto,
   ) {
@@ -98,12 +108,12 @@ export class AiInsightsController {
 
   @Delete('/:id')
   @Auth()
-  async deleteInsights(@Param() params: EntityIdDto) {
+  deleteInsights(@Param() params: EntityIdDto) {
     return this.service.deleteInsightsInDb(params.id)
   }
 
   @Get('/article/:id')
-  async getArticleInsights(
+  getArticleInsights(
     @Param() params: EntityIdDto,
     @Query() query: GetInsightsQueryDto,
   ) {
@@ -114,6 +124,7 @@ export class AiInsightsController {
   }
 
   @Get('/article/:id/generate')
+  @HTTPDecorators.RawResponse
   async generateArticleInsights(
     @Param() params: EntityIdDto,
     @Query() query: GetInsightsStreamQueryDto,

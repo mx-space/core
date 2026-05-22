@@ -58,7 +58,7 @@ export enum BusinessEvents {
   INSIGHTS_GENERATED = 'INSIGHTS_GENERATED',
 
   // util
-  CONTENT_REFRESH = 'CONTENT_REFRESH', // 内容更新或重置 页面需要重载
+  CONTENT_REFRESH = 'CONTENT_REFRESH', // Content updated or reset; page needs reload
 
   // for admin
   IMAGE_REFRESH = 'IMAGE_REFRESH',

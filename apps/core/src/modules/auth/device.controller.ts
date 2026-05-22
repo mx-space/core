@@ -16,8 +16,7 @@ import { z } from 'zod'
 import { API_VERSION } from '~/app.config'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { isDev } from '~/global/env.global'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
@@ -48,7 +47,7 @@ export class DeviceController {
   ) {}
 
   @Get('/')
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async page(
     @Query('user_code') userCode: string | undefined,
     @RequestHeaders('cookie') cookie: string | undefined,
@@ -68,7 +67,9 @@ export class DeviceController {
     if (userCode) {
       const auth = this.authInstance.get()
       if (!auth) {
-        throw new BizException(ErrorCodeEnum.AuthFailed, 'auth not initialised')
+        throw createAppException(AppErrorCode.AUTH_FAILED, {
+          message: 'auth not initialised',
+        })
       }
       await auth.api.deviceVerify({
         query: { user_code: userCode.trim() },
@@ -85,7 +86,7 @@ export class DeviceController {
   }
 
   @Post('verify')
-  @HTTPDecorators.Bypass
+  @HTTPDecorators.RawResponse
   async verify(
     @Body() body: DeviceVerifyDto,
     @RequestHeaders('cookie') cookie: string | undefined,
@@ -94,12 +95,14 @@ export class DeviceController {
     if (cookie) headers.set('cookie', cookie)
     const session = await this.authService.getSessionUserFromHeaders(headers)
     if (!session?.user || session.user.role !== 'owner') {
-      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+      throw createAppException(AppErrorCode.AUTH_NOT_LOGGED_IN)
     }
 
     const auth = this.authInstance.get()
     if (!auth) {
-      throw new BizException(ErrorCodeEnum.AuthFailed, 'auth not initialised')
+      throw createAppException(AppErrorCode.AUTH_FAILED, {
+        message: 'auth not initialised',
+      })
     }
 
     const userCode = body.user_code.trim()
@@ -147,10 +150,9 @@ export class DeviceController {
       encoding: 'utf-8',
     })) as string
     if (typeof template !== 'string' || template.length === 0) {
-      throw new BizException(
-        ErrorCodeEnum.AuthFailed,
-        'device template missing',
-      )
+      throw createAppException(AppErrorCode.AUTH_FAILED, {
+        message: 'device template missing',
+      })
     }
     return template
   }
