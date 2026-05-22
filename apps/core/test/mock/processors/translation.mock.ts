@@ -1,5 +1,6 @@
 import { defineProvider } from 'test/helper/defineProvider'
 
+import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 
 export const translationProvider = defineProvider({
@@ -22,7 +23,22 @@ export const translationProvider = defineProvider({
       return new Map()
     },
     async collectArticleTranslations() {
-      return new Map()
+      return {
+        results: new Map(),
+        meta: new Map(),
+      }
     },
   },
 })
+
+export const translationEntryProvider = {
+  provide: TranslationEntryService,
+  useValue: {
+    async getTranslationsBatch() {
+      return {
+        entityMaps: new Map<string, Map<string, string>>(),
+        dictMaps: new Map<string, Map<string, string>>(),
+      }
+    },
+  },
+}

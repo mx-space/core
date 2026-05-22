@@ -15,7 +15,10 @@ import {
 import { createE2EApp } from '../../helper/create-e2e-app'
 import { enrichmentProvider } from '../../mock/modules/enrichment.mock'
 import { countingServiceProvider } from '../../mock/processors/counting.mock'
-import { translationProvider } from '../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../mock/processors/translation.mock'
 
 /**
  * SDK `NoteModel` 之必填键（packages/api-client/models/note.ts）。
@@ -167,6 +170,7 @@ describe('NoteController contract (e2e)', () => {
       noteServiceProvider,
       countingServiceProvider,
       translationProvider,
+      translationEntryProvider,
       enrichmentProvider,
       aiSummaryProvider,
       aiInsightsProvider,

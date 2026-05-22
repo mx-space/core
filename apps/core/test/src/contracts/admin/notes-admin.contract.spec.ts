@@ -30,7 +30,10 @@ import { createE2EApp } from '../../../helper/create-e2e-app'
 import { authPassHeader } from '../../../mock/guard/auth.guard'
 import { enrichmentProvider } from '../../../mock/modules/enrichment.mock'
 import { countingServiceProvider } from '../../../mock/processors/counting.mock'
-import { translationProvider } from '../../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../../mock/processors/translation.mock'
 
 const fixtureNote = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000020',
@@ -189,6 +192,7 @@ describe('NoteController admin contract (e2e)', () => {
       noteServiceProvider,
       countingServiceProvider,
       translationProvider,
+      translationEntryProvider,
       enrichmentProvider,
       aiSummaryProvider,
       aiInsightsProvider,

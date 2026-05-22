@@ -23,7 +23,10 @@ import { SnippetService } from '~/modules/snippet/snippet.service'
 
 import { assertHasKeys } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
-import { translationProvider } from '../../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../../mock/processors/translation.mock'
 
 const stub = <T>(token: T, value: any) => ({
   provide: token as any,
@@ -72,6 +75,7 @@ const aggregateServiceProvider = {
 const baseProviders = [
   aggregateServiceProvider,
   translationProvider,
+  translationEntryProvider,
   stub(AnalyzeService, {
     async getCallTime() {
       return { callTime: 0, uv: 0 }

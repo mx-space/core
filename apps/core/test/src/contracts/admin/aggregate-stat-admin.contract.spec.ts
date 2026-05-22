@@ -30,7 +30,10 @@ import { SnippetService } from '~/modules/snippet/snippet.service'
 import { assertHasKeys } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { authPassHeader } from '../../../mock/guard/auth.guard'
-import { translationProvider } from '../../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../../mock/processors/translation.mock'
 
 // SDK `AggregateStat`-shaped fixture. The `satisfies AggregateStat` clause
 // is the static lock: removing a field from the SDK type or returning a
@@ -114,6 +117,7 @@ describe('Admin contract — GET /aggregate/stat (e2e)', () => {
       aggregateServiceProvider,
       analyzeSvcProvider,
       translationProvider,
+      translationEntryProvider,
       stubProvider(ConfigsService, {
         async get() {
           return {}

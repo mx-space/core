@@ -28,7 +28,10 @@ import {
   assertNoLegacyKeys,
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
-import { translationProvider } from '../../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../../mock/processors/translation.mock'
 
 const fixturePost = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000060',
@@ -195,6 +198,7 @@ describe('Yohaku contract — aggregate top/latest/timeline (e2e)', () => {
       analyzeSvcProvider,
       snippetSvcProvider,
       translationProvider,
+      translationEntryProvider,
     ],
   })
 

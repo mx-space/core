@@ -28,7 +28,10 @@ import {
   assertNoLegacyKeys,
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
-import { translationProvider } from '../../../mock/processors/translation.mock'
+import {
+  translationEntryProvider,
+  translationProvider,
+} from '../../../mock/processors/translation.mock'
 
 const aggregateServiceProvider = {
   provide: AggregateService,
@@ -106,6 +109,7 @@ describe('Yohaku contract — aggregate root (e2e)', () => {
       analyzeSvcProvider,
       snippetSvcProvider,
       translationProvider,
+      translationEntryProvider,
     ],
   })
 

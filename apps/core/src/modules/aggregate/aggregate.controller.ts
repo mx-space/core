@@ -8,11 +8,15 @@ import { HttpCache } from '~/common/decorators/cache.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { withMeta } from '~/common/response/envelope.types'
-import type { EntryTranslation } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { CacheKeys } from '~/constants/cache.constant'
-import { TranslationService } from '~/processors/helper/helper.translation.service'
+import {
+  applyArticleTranslationInPlace,
+  applyTranslationEntriesInPlace,
+  TranslationService,
+} from '~/processors/helper/helper.translation.service'
 
+import { TranslationEntryService } from '../ai/ai-translation/translation-entry.service'
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'
@@ -35,6 +39,20 @@ type TitledItem = {
   modifiedAt: Date | null
 } & Record<string, any>
 
+const NOTE_DICT_RULES = [
+  { path: 'mood', keyPath: 'note.mood' as const, mode: 'dict' as const },
+  { path: 'weather', keyPath: 'note.weather' as const, mode: 'dict' as const },
+]
+
+const CATEGORY_NAME_RULES = [
+  {
+    path: 'category.name',
+    keyPath: 'category.name' as const,
+    mode: 'entity' as const,
+    idField: 'id',
+  },
+]
+
 @ApiController('aggregate')
 export class AggregateController {
   constructor(
@@ -45,6 +63,7 @@ export class AggregateController {
     private readonly snippetService: SnippetService,
     private readonly ownerService: OwnerService,
     private readonly translationService: TranslationService,
+    private readonly translationEntryService: TranslationEntryService,
   ) {}
 
   private async getThemeConfig(theme?: string, lang?: string) {
@@ -162,18 +181,63 @@ export class AggregateController {
 
     if (!lang) return result
 
-    const translationMap = await this.buildTitleTranslationMap(
-      [
-        ...((result.posts ?? []) as TitledItem[]),
-        ...((result.notes ?? []) as TitledItem[]),
-      ],
-      lang,
-    )
-    if (translationMap.size === 0) return result
+    const notes = (result.notes ?? []) as TitledItem[]
+    const posts = (result.posts ?? []) as TitledItem[]
+    const allItems = [...posts, ...notes]
+
+    const [{ results: translationResults, meta: translationMeta }, entryMaps] =
+      await Promise.all([
+        this.translationService.collectArticleTranslations({
+          articles: allItems.map((item) => ({
+            id: String(item.id),
+            title: item.title ?? '',
+            text: '',
+            createdAt: item.createdAt,
+            modifiedAt: item.modifiedAt,
+          })),
+          targetLang: lang,
+          fields: ['title'],
+        }),
+        this.translationEntryService.getTranslationsBatch(lang, {
+          dictLookups: [
+            {
+              keyPath: 'note.mood',
+              sourceTexts: notes
+                .map((n) => n.mood)
+                .filter((v): v is string => v != null),
+            },
+            {
+              keyPath: 'note.weather',
+              sourceTexts: notes
+                .map((n) => n.weather)
+                .filter((v): v is string => v != null),
+            },
+          ],
+        }),
+      ])
+
+    for (const item of allItems) {
+      const r = translationResults.get(String(item.id))
+      if (r) {
+        applyArticleTranslationInPlace(item as Record<string, any>, r as any, {
+          fields: ['title'],
+        })
+      }
+    }
+
+    for (const note of notes) {
+      applyTranslationEntriesInPlace(
+        note as Record<string, any>,
+        entryMaps,
+        NOTE_DICT_RULES,
+      )
+    }
+
+    if (translationMeta.size === 0) return result
 
     return withMeta(
       result,
-      new MetaObjectBuilder().translation(translationMap).build(),
+      new MetaObjectBuilder().translation(translationMeta).build(),
     )
   }
 
@@ -184,18 +248,70 @@ export class AggregateController {
 
     if (!lang) return result
 
-    const items: TitledItem[] = combined
+    const isCombined = combined === true
+    const notes: TitledItem[] = isCombined
+      ? (result as TitledItem[]).filter((i) => i.type === 'note')
+      : (((result as Record<string, any>).notes ?? []) as TitledItem[])
+    const allItems: TitledItem[] = isCombined
       ? (result as TitledItem[])
       : [
           ...(((result as Record<string, any>).posts ?? []) as TitledItem[]),
-          ...(((result as Record<string, any>).notes ?? []) as TitledItem[]),
+          ...notes,
         ]
-    const translationMap = await this.buildTitleTranslationMap(items, lang)
-    if (translationMap.size === 0) return result
+
+    const [{ results: translationResults, meta: translationMeta }, entryMaps] =
+      await Promise.all([
+        this.translationService.collectArticleTranslations({
+          articles: allItems.map((item) => ({
+            id: String(item.id),
+            title: item.title ?? '',
+            text: '',
+            createdAt: item.createdAt,
+            modifiedAt: item.modifiedAt,
+          })),
+          targetLang: lang,
+          fields: ['title'],
+        }),
+        this.translationEntryService.getTranslationsBatch(lang, {
+          dictLookups: [
+            {
+              keyPath: 'note.mood',
+              sourceTexts: notes
+                .map((n) => n.mood)
+                .filter((v): v is string => v != null),
+            },
+            {
+              keyPath: 'note.weather',
+              sourceTexts: notes
+                .map((n) => n.weather)
+                .filter((v): v is string => v != null),
+            },
+          ],
+        }),
+      ])
+
+    for (const item of allItems) {
+      const r = translationResults.get(String(item.id))
+      if (r) {
+        applyArticleTranslationInPlace(item as Record<string, any>, r as any, {
+          fields: ['title'],
+        })
+      }
+    }
+
+    for (const note of notes) {
+      applyTranslationEntriesInPlace(
+        note as Record<string, any>,
+        entryMaps,
+        NOTE_DICT_RULES,
+      )
+    }
+
+    if (translationMeta.size === 0) return result
 
     return withMeta(
       result,
-      new MetaObjectBuilder().translation(translationMap).build(),
+      new MetaObjectBuilder().translation(translationMeta).build(),
     )
   }
 
@@ -206,36 +322,85 @@ export class AggregateController {
 
     if (!lang) return data
 
-    const translationMap = await this.buildTitleTranslationMap(
-      [
-        ...((data.posts ?? []) as unknown as TitledItem[]),
-        ...((data.notes ?? []) as unknown as TitledItem[]),
-      ],
-      lang,
-    )
-    if (translationMap.size === 0) return data
+    const notes = (data.notes ?? []) as TitledItem[]
+    const posts = (data.posts ?? []) as TitledItem[]
+    const allItems = [...posts, ...notes]
+
+    const categoryIds = posts
+      .map((p) => p.category?.id)
+      .filter((id): id is string => id != null)
+      .map(String)
+
+    const [{ results: translationResults, meta: translationMeta }, entryMaps] =
+      await Promise.all([
+        this.translationService.collectArticleTranslations({
+          articles: allItems.map((item) => ({
+            id: String(item.id),
+            title: item.title ?? '',
+            text: '',
+            createdAt: item.createdAt,
+            modifiedAt: item.modifiedAt,
+          })),
+          targetLang: lang,
+          fields: ['title'],
+        }),
+        this.translationEntryService.getTranslationsBatch(lang, {
+          dictLookups: [
+            {
+              keyPath: 'note.mood',
+              sourceTexts: notes
+                .map((n) => n.mood)
+                .filter((v): v is string => v != null),
+            },
+            {
+              keyPath: 'note.weather',
+              sourceTexts: notes
+                .map((n) => n.weather)
+                .filter((v): v is string => v != null),
+            },
+          ],
+          entityLookups: categoryIds.length
+            ? [
+                {
+                  keyPath: 'category.name',
+                  lookupKeys: [...new Set(categoryIds)],
+                },
+              ]
+            : [],
+        }),
+      ])
+
+    for (const item of allItems) {
+      const r = translationResults.get(String(item.id))
+      if (r) {
+        applyArticleTranslationInPlace(item as Record<string, any>, r as any, {
+          fields: ['title'],
+        })
+      }
+    }
+
+    for (const note of notes) {
+      applyTranslationEntriesInPlace(
+        note as Record<string, any>,
+        entryMaps,
+        NOTE_DICT_RULES,
+      )
+    }
+
+    for (const post of posts) {
+      applyTranslationEntriesInPlace(
+        post as Record<string, any>,
+        entryMaps,
+        CATEGORY_NAME_RULES,
+      )
+    }
+
+    if (translationMeta.size === 0) return data
 
     return withMeta(
       data,
-      new MetaObjectBuilder().translation(translationMap).build(),
+      new MetaObjectBuilder().translation(translationMeta).build(),
     )
-  }
-
-  private buildTitleTranslationMap(
-    items: TitledItem[],
-    targetLang: string,
-  ): Promise<Map<string, EntryTranslation>> {
-    return this.translationService.collectArticleTranslations({
-      articles: items.map((item) => ({
-        id: String(item.id),
-        title: item.title ?? '',
-        text: '',
-        createdAt: item.createdAt,
-        modifiedAt: item.modifiedAt,
-      })),
-      targetLang,
-      fields: ['title'],
-    })
   }
 
   @Get('/sitemap')
@@ -306,24 +471,36 @@ export class AggregateController {
   async getTopArticles(@Lang() lang?: string) {
     const result = await this.aggregateService.getTopArticles()
 
-    if (lang && result.length) {
-      const translated = await this.translationService.translateList({
-        items: result as Array<Record<string, any>>,
-        targetLang: lang,
-        translationFields: ['title'] as const,
-        getInput: (item) => ({
-          id: item.id,
+    if (!lang || !result.length) return result
+
+    const { results: translationResults, meta: translationMeta } =
+      await this.translationService.collectArticleTranslations({
+        articles: result.map((item) => ({
+          id: String(item.id),
           title: item.title ?? '',
-        }),
-        applyResult: (item, translation) => {
-          if (!translation?.isTranslated) return item
-          return { ...item, title: translation.title }
-        },
+          text: '',
+          createdAt: new Date(),
+          modifiedAt: null,
+        })),
+        targetLang: lang,
+        fields: ['title'],
       })
-      return translated
+
+    for (const item of result) {
+      const r = translationResults.get(String(item.id))
+      if (r) {
+        applyArticleTranslationInPlace(item as Record<string, any>, r as any, {
+          fields: ['title'],
+        })
+      }
     }
 
-    return result
+    if (translationMeta.size === 0) return result
+
+    return withMeta(
+      result,
+      new MetaObjectBuilder().translation(translationMeta).build(),
+    )
   }
 
   @Get('/stat/comment-activity')

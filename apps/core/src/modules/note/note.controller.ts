@@ -19,15 +19,20 @@ import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import type {
+  ArticleTranslation,
   EnrichmentEntry,
-  EntryTranslation,
 } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import {
+  applyArticleTranslationInPlace,
+  applyTranslationEntriesInPlace,
   type ArticleTranslationInput,
   buildArticleTranslationMeta,
+  type EntryMaps,
+  type EntryRule,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -52,6 +57,24 @@ import {
 import { NoteService } from './note.service'
 import type { NoteModel } from './note.types'
 
+const NOTE_ENTRY_RULES: ReadonlyArray<EntryRule> = [
+  { path: 'topic.name', keyPath: 'topic.name', mode: 'entity', idField: 'id' },
+  {
+    path: 'topic.introduce',
+    keyPath: 'topic.introduce',
+    mode: 'entity',
+    idField: 'id',
+  },
+  {
+    path: 'topic.description',
+    keyPath: 'topic.description',
+    mode: 'entity',
+    idField: 'id',
+  },
+  { path: 'mood', keyPath: 'note.mood', mode: 'dict' },
+  { path: 'weather', keyPath: 'note.weather', mode: 'dict' },
+]
+
 @ApiController({ path: 'notes' })
 export class NoteController {
   constructor(
@@ -62,6 +85,7 @@ export class NoteController {
     private readonly aiInsightsService: AiInsightsService,
     private readonly lexicalService: LexicalService,
     private readonly enrichmentService: EnrichmentService,
+    private readonly translationEntryService: TranslationEntryService,
   ) {}
 
   private toArticleTranslationInput(note: NoteModel): ArticleTranslationInput {
@@ -92,6 +116,41 @@ export class NoteController {
     }
     if (typeof doc.text !== 'string' || !doc.text) return null
     return truncateAtBoundary(doc.text, maxLength, locale)
+  }
+
+  private async batchEntryTranslations(
+    lang: string,
+    notes: Array<NoteModel | null | undefined>,
+  ): Promise<EntryMaps> {
+    const topicIds = new Set<string>()
+    const moods = new Set<string>()
+    const weathers = new Set<string>()
+
+    for (const note of notes) {
+      if (!note) continue
+      if (note.topic?.id) topicIds.add(String(note.topic.id))
+      if (note.mood) moods.add(note.mood)
+      if (note.weather) weathers.add(note.weather)
+    }
+
+    return this.translationEntryService.getTranslationsBatch(lang, {
+      entityLookups:
+        topicIds.size > 0
+          ? [
+              { keyPath: 'topic.name', lookupKeys: topicIds },
+              { keyPath: 'topic.introduce', lookupKeys: topicIds },
+              { keyPath: 'topic.description', lookupKeys: topicIds },
+            ]
+          : [],
+      dictLookups: [
+        ...(moods.size > 0
+          ? [{ keyPath: 'note.mood' as const, sourceTexts: moods }]
+          : []),
+        ...(weathers.size > 0
+          ? [{ keyPath: 'note.weather' as const, sourceTexts: weathers }]
+          : []),
+      ],
+    })
   }
 
   private async buildPublicNoteResponse(
@@ -135,6 +194,8 @@ export class NoteController {
       },
     })
 
+    applyArticleTranslationInPlace(current, translationResult)
+
     const insightsLang = parseLanguageCode(lang)
     const hasInsightsInLocale = await this.aiInsightsService
       .hasInsightsInLang(current.id!, insightsLang)
@@ -145,28 +206,25 @@ export class NoteController {
       .interaction({ isLiked: liked })
       .insights({ hasInLocale: hasInsightsInLocale })
 
-    const translationMap = new Map<string, EntryTranslation>([
-      [
-        String(current.id),
-        {
-          article: buildArticleTranslationMeta(translationResult, lang) as any,
-        },
-      ],
-    ])
-    if (lang && current.topic?.id) {
-      const topicId = String(current.topic.id)
-      const topicFields = (
-        await this.translationService.getTopicTranslationFields(lang, [topicId])
-      ).get(topicId)
-      if (topicFields) {
-        translationMap.set(topicId, { fields: topicFields })
-      }
-    }
-    if (translationMap.size > 0) {
-      metaBuilder.translation(translationMap)
-    }
-
     if (isSingle) {
+      if (lang) {
+        const entryMaps = await this.batchEntryTranslations(lang, [current])
+        applyTranslationEntriesInPlace(current, entryMaps, NOTE_ENTRY_RULES)
+      }
+
+      const translationMap = new Map([
+        [
+          String(current.id),
+          {
+            article: buildArticleTranslationMeta(
+              translationResult,
+              lang,
+            ) as ArticleTranslation,
+          },
+        ],
+      ])
+      metaBuilder.translation(translationMap)
+
       const { enrichments, ...noteData } =
         await this.enrichmentService.attachEnrichments(current)
       metaBuilder.enrichments(enrichments as Record<string, EnrichmentEntry>)
@@ -191,6 +249,66 @@ export class NoteController {
         adj.coordinates = null
       }
     }
+
+    const translationMap = new Map([
+      [
+        String(current.id),
+        {
+          article: buildArticleTranslationMeta(
+            translationResult,
+            lang,
+          ) as ArticleTranslation,
+        },
+      ],
+    ])
+
+    if (lang) {
+      const adjacents = [prev, next].filter(Boolean) as NoteModel[]
+      if (adjacents.length > 0) {
+        const adjResults = await this.translationService.translateArticleList({
+          articles: adjacents.map((n) => this.toArticleTranslationInput(n)),
+          targetLang: lang,
+          translationFields: [
+            'title',
+            'text',
+            'content',
+            'contentFormat',
+            'translationMeta',
+            'sourceLang',
+            'availableTranslations',
+          ],
+        })
+        for (const adj of adjacents) {
+          const adjResult = adjResults.get(String(adj.id))
+          if (adjResult) {
+            applyArticleTranslationInPlace(adj, adjResult as any, {
+              fields: ['title', 'text', 'content', 'contentFormat'],
+            })
+            if (adjResult.isTranslated) {
+              translationMap.set(String(adj.id), {
+                article: buildArticleTranslationMeta(
+                  adjResult as any,
+                  lang,
+                ) as ArticleTranslation,
+              })
+            }
+          }
+        }
+      }
+
+      const entryMaps = await this.batchEntryTranslations(lang, [
+        current,
+        prev,
+        next,
+      ])
+      applyTranslationEntriesInPlace(current, entryMaps, NOTE_ENTRY_RULES)
+      if (prev)
+        applyTranslationEntriesInPlace(prev, entryMaps, NOTE_ENTRY_RULES)
+      if (next)
+        applyTranslationEntriesInPlace(next, entryMaps, NOTE_ENTRY_RULES)
+    }
+
+    metaBuilder.translation(translationMap)
 
     const { enrichments, ...noteData } =
       await this.enrichmentService.attachEnrichments(current)
@@ -241,16 +359,21 @@ export class NoteController {
       }
     }
 
-    const translationInputs: ArticleTranslationInput[] = result.data
-      .filter((doc) => typeof doc.text === 'string')
-      .map((doc) => this.toArticleTranslationInput(doc))
-
-    const translationMap =
+    const { results: translationResults, meta: translationMeta } =
       await this.translationService.collectArticleTranslations({
-        articles: translationInputs,
+        articles: result.data
+          .filter((doc) => typeof doc.text === 'string')
+          .map((doc) => this.toArticleTranslationInput(doc)),
         targetLang: lang,
         fields: ['title', 'text', 'content', 'contentFormat'],
       })
+
+    for (const doc of result.data) {
+      const tr = translationResults.get(String(doc.id))
+      if (tr?.isTranslated) {
+        applyArticleTranslationInPlace(doc, tr as any)
+      }
+    }
 
     if (withSummary) {
       const SUMMARY_MAX_LENGTH = 150
@@ -270,6 +393,13 @@ export class NoteController {
       }
     }
 
+    if (lang) {
+      const entryMaps = await this.batchEntryTranslations(lang, result.data)
+      for (const doc of result.data) {
+        applyTranslationEntriesInPlace(doc, entryMaps, NOTE_ENTRY_RULES)
+      }
+    }
+
     const metaBuilder = new MetaObjectBuilder().view('card').pagination({
       page: result.pagination.currentPage,
       size: result.pagination.size,
@@ -277,8 +407,8 @@ export class NoteController {
       totalPages: result.pagination.totalPage,
     })
 
-    if (translationMap.size > 0) {
-      metaBuilder.translation(translationMap)
+    if (translationMeta.size > 0) {
+      metaBuilder.translation(translationMeta)
     }
 
     return withMeta(result.data, metaBuilder.build())
@@ -386,7 +516,7 @@ export class NoteController {
       createdAt: doc.createdAt,
     }))
 
-    const translationMap =
+    const { results: translationResults, meta: translationMeta } =
       await this.translationService.collectArticleTranslations({
         articles: listData.map((item) => ({
           id: String(item.id),
@@ -399,9 +529,16 @@ export class NoteController {
         fields: ['title'],
       })
 
+    for (const item of listData) {
+      const tr = translationResults.get(String(item.id))
+      if (tr?.isTranslated && tr.title) {
+        item.title = tr.title
+      }
+    }
+
     const metaBuilder = new MetaObjectBuilder().view('card')
-    if (translationMap.size > 0) {
-      metaBuilder.translation(translationMap)
+    if (translationMeta.size > 0) {
+      metaBuilder.translation(translationMeta)
     }
 
     return withMeta(listData, metaBuilder.build())
@@ -470,6 +607,29 @@ export class NoteController {
       },
     })
 
+    applyArticleTranslationInPlace(latest, translationResult)
+
+    let nextTranslationResult: Awaited<
+      ReturnType<TranslationService['translateArticle']>
+    > | null = null
+
+    if (lang && next) {
+      nextTranslationResult = await this.translationService.translateArticle({
+        articleId: String(next.id),
+        targetLang: lang,
+        allowHidden: Boolean(isAuthenticated),
+        originalData: { title: next.title, text: next.text ?? '' },
+      })
+      applyArticleTranslationInPlace(next, nextTranslationResult)
+    }
+
+    if (lang) {
+      const entryMaps = await this.batchEntryTranslations(lang, [latest, next])
+      applyTranslationEntriesInPlace(latest, entryMaps, NOTE_ENTRY_RULES)
+      if (next)
+        applyTranslationEntriesInPlace(next, entryMaps, NOTE_ENTRY_RULES)
+    }
+
     const insightsLang = parseLanguageCode(lang)
     const hasInsightsInLocale = await this.aiInsightsService
       .hasInsightsInLang(latest.id!, insightsLang)
@@ -483,26 +643,26 @@ export class NoteController {
       .insights({ hasInLocale: hasInsightsInLocale })
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
-    const translationMap = new Map<string, EntryTranslation>([
+    const translationMap = new Map([
       [
         String(latest.id),
         {
-          article: buildArticleTranslationMeta(translationResult, lang) as any,
+          article: buildArticleTranslationMeta(
+            translationResult,
+            lang,
+          ) as ArticleTranslation,
         },
       ],
     ])
-    if (lang && latest.topic?.id) {
-      const topicId = String(latest.topic.id)
-      const topicFields = (
-        await this.translationService.getTopicTranslationFields(lang, [topicId])
-      ).get(topicId)
-      if (topicFields) {
-        translationMap.set(topicId, { fields: topicFields })
-      }
+    if (nextTranslationResult) {
+      translationMap.set(String(next!.id), {
+        article: buildArticleTranslationMeta(
+          nextTranslationResult,
+          lang,
+        ) as ArticleTranslation,
+      })
     }
-    if (translationMap.size > 0) {
-      metaBuilder.translation(translationMap)
-    }
+    metaBuilder.translation(translationMap)
 
     return withMeta(
       {
@@ -567,7 +727,7 @@ export class NoteController {
       }
     }
 
-    const translationMap =
+    const { results: translationResults, meta: translationMeta } =
       await this.translationService.collectArticleTranslations({
         articles: result.data.map((doc) => ({
           id: String(doc.id),
@@ -580,13 +740,27 @@ export class NoteController {
         fields: ['title'],
       })
 
+    for (const doc of result.data) {
+      const tr = translationResults.get(String(doc.id))
+      if (tr?.isTranslated && tr.title) {
+        doc.title = tr.title
+      }
+    }
+
+    if (lang) {
+      const entryMaps = await this.batchEntryTranslations(lang, result.data)
+      for (const doc of result.data) {
+        applyTranslationEntriesInPlace(doc, entryMaps, NOTE_ENTRY_RULES)
+      }
+    }
+
     const metaBuilder = new MetaObjectBuilder().view('card').pagination({
       page: result.pagination.currentPage,
       size: result.pagination.size,
       total: result.pagination.total,
       totalPages: result.pagination.totalPage,
     })
-    if (translationMap.size > 0) metaBuilder.translation(translationMap)
+    if (translationMeta.size > 0) metaBuilder.translation(translationMeta)
 
     return withMeta(result.data, metaBuilder.build())
   }
