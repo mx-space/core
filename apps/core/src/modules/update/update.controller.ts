@@ -10,7 +10,6 @@ import { lt, major, minor } from 'semver'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
 import { resolveAdminAssetRoot } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
 import { PKG } from '~/utils/pkg.util'
@@ -26,7 +25,7 @@ export class UpdateController {
 
   @Sse('/upgrade/dashboard')
   @HTTPDecorators.Idempotence()
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async updateDashboard(
     @Query() query: UpdateAdminDto,
   ): Promise<Observable<string>> {

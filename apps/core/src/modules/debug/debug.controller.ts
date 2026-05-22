@@ -1,7 +1,7 @@
 import { Body, Get, Post, Query, Request, Response } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
@@ -47,7 +47,7 @@ export class DebugController {
   }
 
   @Post('/function')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async runFunction(
     @Body('function') functionString: string,
     @Request() req,

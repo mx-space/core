@@ -2,7 +2,7 @@ import { Body, Delete, Get, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
@@ -61,7 +61,7 @@ export class SubscribeController {
   }
 
   @Get('/unsubscribe')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async unsubscribe(@Query() query: CancelSubscribeDto) {
     const { email, cancelToken } = query
 

@@ -16,7 +16,7 @@ import xss from 'xss'
 import { RequestContext } from '~/common/contexts/request.context'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -39,7 +39,7 @@ export class RenderEjsController {
   ) {}
 
   @Get('/markdown/:id')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   @Header('content-type', 'text/html')
   @CacheTTL(60 * 60)
   async renderArticle(
@@ -114,7 +114,7 @@ export class RenderEjsController {
   }
 
   @Post('/markdown')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   @HttpCache.disable
   @Auth()
   @Header('content-type', 'text/html')

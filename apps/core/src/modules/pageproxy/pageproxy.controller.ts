@@ -8,7 +8,7 @@ import ejs from 'ejs'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
 
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { resolveAdminAssetRoot } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 
@@ -25,7 +25,7 @@ export class PageProxyController {
   ) {}
 
   @Get('/proxy/qaqdmin')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async getLocalBundledAdmin(@Query() query: any, @Res() reply: FastifyReply) {
     if ((await this.service.checkCanAccessAdminProxy()) === false) {
       return reply.type('application/json').status(403).send({
@@ -68,7 +68,7 @@ export class PageProxyController {
   }
 
   @Get('/proxy/qaqdmin/dev-proxy')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async proxyLocalDev(@Res() reply: FastifyReply) {
     const template = (await this.assetService.getAsset(
       '/render/local-dev.ejs',
@@ -86,7 +86,7 @@ export class PageProxyController {
   }
 
   @Get('/proxy/*')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async proxyAssetRoute(
     @Req() request: FastifyRequest,
     @Res() reply: FastifyReply,

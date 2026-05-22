@@ -14,7 +14,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -33,7 +33,7 @@ export class ServerlessController {
 
   @Get('/types')
   @Auth()
-  @RawResponse
+  @HTTPDecorators.RawResponse
   @CacheTTL(60 * 60 * 24)
   getCodeDefined() {
     return getSandboxTypeDeclaration()
@@ -56,7 +56,7 @@ export class ServerlessController {
 
   @Get('/compiled/:id')
   @Auth()
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async getCompiledCode(@Param() param: EntityIdDto) {
     const snippet = await this.serverlessService.repository.findById(param.id)
     if (!snippet) {
@@ -82,7 +82,7 @@ export class ServerlessController {
       ttl: 5000,
     },
   })
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async runServerlessFunctionWildcard(
     @Param() param: ServerlessReferenceDto,
     @HasAdminAccess() hasAdminAccess: boolean,
@@ -100,7 +100,7 @@ export class ServerlessController {
       ttl: 5000,
     },
   })
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async runServerlessFunction(
     @Param() param: ServerlessReferenceDto,
     @HasAdminAccess() hasAdminAccess: boolean,

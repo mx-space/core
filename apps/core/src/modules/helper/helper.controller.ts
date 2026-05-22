@@ -4,7 +4,7 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -27,7 +27,7 @@ export class HelperController {
   ) {}
 
   @Get('/url-builder/:id')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async builderById(
     @Param() params: EntityIdDto,
     @Query('redirect') redirect: boolean,

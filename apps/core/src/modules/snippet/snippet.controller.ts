@@ -3,7 +3,6 @@ import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
@@ -103,7 +102,7 @@ export class SnippetController {
   }
 
   @Get('/:reference/:name')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async getSnippetByName(
     @Param('name') name: string,
     @Param('reference') reference: string,

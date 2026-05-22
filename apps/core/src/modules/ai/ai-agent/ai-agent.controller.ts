@@ -14,7 +14,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import {
   applyRawCorsHeaders,
@@ -43,7 +43,7 @@ export class AiAgentController {
 
   @Post('/chat')
   @Auth()
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async chatProxy(
     @Body() body: ChatProxyDto,
     @Req() request: FastifyRequest,

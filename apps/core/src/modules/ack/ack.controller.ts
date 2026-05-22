@@ -2,7 +2,7 @@ import { Body, HttpCode, Post, Res } from '@nestjs/common'
 import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
@@ -19,7 +19,7 @@ export class AckController {
 
   @Post('/')
   @HttpCode(200)
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async ack(@Body() body: AckDto, @Res() res: FastifyReply) {
     const { type, payload } = body
 

@@ -15,7 +15,7 @@ import type { FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
@@ -32,7 +32,7 @@ export class BackupController {
   ) {}
 
   @Get('/new')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   @Header(
     'Content-Disposition',
     `attachment; filename="backup-${getMediumDateTime(new Date())}.zip"`,
@@ -60,7 +60,7 @@ export class BackupController {
     return this.backupService.list()
   }
 
-  @RawResponse
+  @HTTPDecorators.RawResponse
   @Header('Content-Type', 'application/zip')
   @Get('/:dirname')
   async download(@Param('dirname') dirname: string) {

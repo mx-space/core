@@ -108,12 +108,12 @@ throw new NoContentCanBeModifiedException()            // code: 'NO_CONTENT_MODI
 
 **`@BypassCaseTransform([paths])`** — opt a field subtree out of snake_case conversion (free-form JSON columns, snippet payloads). Paths root at `data`, dotted segments, `[]` marks an array level (e.g. `'items[].rawPayload'`). Located in `src/common/decorators/bypass-case-transform.decorator.ts`.
 
-**`@RawResponse`** — opt out of the whole envelope + casing pipeline for non-JSON responses (streams, HTML, RSS, redirects). Located in `src/common/decorators/raw-response.decorator.ts`.
+**`@HTTPDecorators.RawResponse`** — opt out of the whole envelope + casing pipeline for non-JSON responses (streams, HTML, RSS, redirects). Located in `src/common/decorators/http.decorator.ts`.
 
 **Writing a new endpoint:**
 1. Return `<value>` for a bare envelope, or `withMeta(<value>, new MetaObjectBuilder()...build())` for `{ data, meta }`. Never return an object literal whose top-level keys include `data`.
 2. Throw `AppException` subclasses (or `BizException` with an `ErrorCodeEnum` code) for errors.
-3. Use `@RawResponse` only if the response is not JSON.
+3. Use `@HTTPDecorators.RawResponse` only if the response is not JSON.
 4. Define or reuse a view in `<resource>.views.ts` and parse through it before returning.
 
 ## Testing

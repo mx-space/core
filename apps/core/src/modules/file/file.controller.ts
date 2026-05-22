@@ -19,7 +19,7 @@ import { lookup } from 'mime-types'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
@@ -187,7 +187,7 @@ export class FileController {
       ttl: 60_000,
     },
   })
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async get(@Param() params: FileQueryDto, @Res() reply: FastifyReply) {
     const { type, name } = params
     const ext = path.extname(name)

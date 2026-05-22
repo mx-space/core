@@ -3,7 +3,7 @@ import { Controller, Get, Header } from '@nestjs/common'
 import RemoveMarkdown from 'remove-markdown'
 import xss from 'xss'
 
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { escapeXml } from '~/utils/tool.util'
@@ -26,7 +26,7 @@ export class FeedController {
   @Get(['/feed', '/atom.xml'])
   @CacheKey(CacheKeys.RSSXml)
   @CacheTTL(3600)
-  @RawResponse
+  @HTTPDecorators.RawResponse
   @Header('content-type', 'application/xml')
   async rss() {
     const { author, data, url, description } =

@@ -16,7 +16,13 @@ export const Idempotence: (options?: IdempotenceOption) => MethodDecorator =
 
 export const SkipLogging = SetMetadata(SYSTEM.SKIP_LOGGING_METADATA, true)
 
+export const RawResponse = SetMetadata(
+  SYSTEM.RESPONSE_PASSTHROUGH_METADATA,
+  true,
+)
+
 export const HTTPDecorators = {
   Idempotence,
   SkipLogging,
+  RawResponse,
 }

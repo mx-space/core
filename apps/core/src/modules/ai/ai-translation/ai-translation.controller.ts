@@ -12,7 +12,7 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import {
@@ -115,7 +115,7 @@ export class AiTranslationController {
   }
 
   @Get('/article/:id/generate')
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async streamArticleTranslation(
     @Param() params: EntityIdDto,
     @Query() query: GetTranslationStreamQueryDto,

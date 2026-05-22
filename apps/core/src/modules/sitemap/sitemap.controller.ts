@@ -1,7 +1,7 @@
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
 import { Controller, Get, Header } from '@nestjs/common'
 
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
 import { AggregateService } from '../aggregate/aggregate.service'
@@ -13,7 +13,7 @@ export class SitemapController {
   @Get('/sitemap')
   @CacheTTL(3600)
   @CacheKey(CacheKeys.SiteMapXml)
-  @RawResponse
+  @HTTPDecorators.RawResponse
   @Header('content-type', 'application/xml')
   async getSitemap() {
     const content = await this.aggregateService.getSiteMapContent()

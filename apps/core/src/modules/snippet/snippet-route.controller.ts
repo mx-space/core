@@ -3,7 +3,7 @@ import { Throttle } from '@nestjs/throttler'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { RawResponse } from '~/common/decorators/raw-response.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 
@@ -28,7 +28,7 @@ export class SnippetRouteController {
       ttl: 5000,
     },
   })
-  @RawResponse
+  @HTTPDecorators.RawResponse
   async handleCustomPath(
     @HasAdminAccess() hasAdminAccess: boolean,
     @Request() req: FastifyRequest,
