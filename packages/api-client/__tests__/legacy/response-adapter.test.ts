@@ -293,6 +293,49 @@ describe('legacy response adapter', () => {
     expect(data.objects.note[0]).not.toHaveProperty('isTranslated')
   })
 
+  it('rewrites legacy sortBy aliases on outgoing requests', async () => {
+    const get = spyOn(axiosAdaptor, 'get').mockResolvedValue({
+      data: { data: { data: [], pagination: {} } },
+      status: 200,
+    } as any)
+    get.mockClear()
+
+    const client = createLegacyApiClient(axiosAdaptor)<AxiosResponse>(
+      'https://example.com',
+    )
+
+    await client.proxy.notes.topics('topic-1').get<any>({
+      params: { sortBy: 'created', sortOrder: -1 },
+    })
+    expect(get.mock.calls[0][0]).toContain('sortBy=createdAt')
+    expect(get.mock.calls[0][0]).toContain('sortOrder=-1')
+    expect(get.mock.calls[0][0]).not.toMatch(/sortBy=created(?!At)/)
+
+    await client.proxy.notes.topics('topic-1').get<any>({
+      params: { sortBy: 'modified', sortOrder: 1 },
+    })
+    expect(get.mock.calls[1][0]).toContain('sortBy=modifiedAt')
+
+    await client.proxy.notes.topics('topic-1').get<any>({
+      params: { sortBy: 'title' },
+    })
+    expect(get.mock.calls[2][0]).toContain('sortBy=title')
+
+    const postSpy = spyOn(axiosAdaptor, 'post').mockResolvedValue({
+      data: { data: {} },
+      status: 200,
+    } as any)
+    postSpy.mockClear()
+    await client.proxy.search.post<any>({
+      params: { sortBy: 'modified' },
+      data: { q: 'x' },
+    })
+    // POST keeps params on the options object — rewrite still applies.
+    expect(postSpy.mock.calls[0][1]?.params).toMatchObject({
+      sortBy: 'modifiedAt',
+    })
+  })
+
   it('wraps bare list payloads into envelope shape when no pagination meta is present', async () => {
     spyOn(axiosAdaptor, 'get').mockResolvedValue({
       data: {
