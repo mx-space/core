@@ -1,7 +1,8 @@
-import { Effect, Exit, Layer, Option } from 'effect'
+import { Effect, Exit, FiberRef, Layer, Option } from 'effect'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { login } from '../../../src/cli/auth/login'
+import { currentProfileFlag } from '../../../src/domain/runtime-flags'
 import { Auth, type AuthService } from '../../../src/services/Auth'
 import { Config } from '../../../src/services/Config'
 import { Editor, type EditorService } from '../../../src/services/Editor'
@@ -239,6 +240,99 @@ describe('auth login command', () => {
     } finally {
       writeSpy.mockRestore()
     }
+  })
+
+  it('creates the requested profile when the active pointer references a deleted profile dir', async () => {
+    // Boundary case: the user manually deleted ~/.config/mxs/profiles/default
+    // but the `current` pointer still says `default`. Running
+    // `mxs auth login --profile main` previously failed with
+    // `profile 'default' does not exist`; now the `--profile` override is
+    // honoured and the missing-profile error is downgraded to the
+    // fresh-install prompt path.
+    const mem = makeMemFs()
+    mem.seed(`${mxsDir(XDG)}/current`, 'default\n', 0o644)
+    // No `profiles/default` dir on disk.
+
+    const fsLayer = TestFsLive(mem)
+    const base = Layer.merge(fsLayer, TestPathLive)
+    const configLayer = Config.Default.pipe(Layer.provide(base))
+    const profileLayer = Profile.Default.pipe(Layer.provide(configLayer))
+    const authLayer = Layer.succeed(Auth, makeAuthMock())
+    const promptSpy = vi.fn(() => Effect.succeed('https://blog.example.com'))
+    const editorLayer = Layer.succeed(
+      Editor,
+      makeEditorMock({ prompt: promptSpy as any }),
+    )
+    const layer = Layer.mergeAll(
+      base,
+      configLayer,
+      profileLayer,
+      authLayer,
+      editorLayer,
+      Renderer.Default,
+    )
+
+    const exit = await Effect.runPromiseExit(
+      Effect.locally(
+        login.handler({ production: Option.none() }),
+        currentProfileFlag,
+        'main',
+      ).pipe(Effect.provide(layer)),
+    )
+    expect(Exit.isSuccess(exit)).toBe(true)
+
+    // Prompted because the resolved profile (default) did not exist on disk.
+    expect(promptSpy).toHaveBeenCalledTimes(1)
+
+    // Credentials land under the flag-provided profile, NOT under `default`.
+    const credsPath = `${profileDir(XDG, 'main')}/credentials.json`
+    const creds = JSON.parse(mem.readFile(credsPath) ?? '{}')
+    expect(creds.access_token).toBe('new-access-token')
+
+    expect(mem.readFile(`${mxsDir(XDG)}/current`)?.trim()).toBe('main')
+    expect(mem.readFile(`${profileDir(XDG, 'default')}/credentials.json`)).toBe(
+      null,
+    )
+  })
+
+  it('falls back to the default profile when the active pointer points at a deleted dir and no --profile flag is given', async () => {
+    // Same `current` pointer issue as above, but without `--profile`. The
+    // fresh-install path should kick in and credentials should land under
+    // the pointer's name (legacy compatibility: `readCurrent` still returns
+    // `default`, so writes go there and recreate the dir).
+    const mem = makeMemFs()
+    mem.seed(`${mxsDir(XDG)}/current`, 'default\n', 0o644)
+
+    const fsLayer = TestFsLive(mem)
+    const base = Layer.merge(fsLayer, TestPathLive)
+    const configLayer = Config.Default.pipe(Layer.provide(base))
+    const profileLayer = Profile.Default.pipe(Layer.provide(configLayer))
+    const authLayer = Layer.succeed(Auth, makeAuthMock())
+    const promptSpy = vi.fn(() => Effect.succeed('https://blog.example.com'))
+    const editorLayer = Layer.succeed(
+      Editor,
+      makeEditorMock({ prompt: promptSpy as any }),
+    )
+    const layer = Layer.mergeAll(
+      base,
+      configLayer,
+      profileLayer,
+      authLayer,
+      editorLayer,
+      Renderer.Default,
+    )
+
+    const exit = await Effect.runPromiseExit(
+      login.handler({ production: Option.none() }).pipe(Effect.provide(layer)),
+    )
+    expect(Exit.isSuccess(exit)).toBe(true)
+    expect(promptSpy).toHaveBeenCalledTimes(1)
+
+    const creds = JSON.parse(
+      mem.readFile(`${profileDir(XDG, 'default')}/credentials.json`) ?? '{}',
+    )
+    expect(creds.access_token).toBe('new-access-token')
+    expect(mem.readFile(`${mxsDir(XDG)}/current`)?.trim()).toBe('default')
   })
 
   it('prints slow_down ticks in interactive non-json mode', async () => {

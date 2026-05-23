@@ -38,6 +38,7 @@ import {
 } from '../domain/preflight-guards'
 import {
   currentDryRun,
+  currentProfileFlag,
   type GlobalFlags,
   parseGlobalFlags,
 } from '../domain/runtime-flags'
@@ -352,14 +353,18 @@ export const run = (argv: readonly string[]): Promise<void> => {
   )
 
   const program = Effect.locally(
-    Effect.locally(core, currentOutputOptions, {
-      json: flags.json,
-      output: flags.output,
-      quiet: flags.quiet,
-      verbose: flags.verbose,
-    }),
-    currentDryRun,
-    flags.dryRun,
+    Effect.locally(
+      Effect.locally(core, currentOutputOptions, {
+        json: flags.json,
+        output: flags.output,
+        quiet: flags.quiet,
+        verbose: flags.verbose,
+      }),
+      currentDryRun,
+      flags.dryRun,
+    ),
+    currentProfileFlag,
+    flags.profile?.trim() || undefined,
   )
 
   // Defects bypass the Effect error channel; surface them generically.

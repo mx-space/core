@@ -101,7 +101,7 @@ local expiry from the refreshed session.
 
 ### Auth and profiles
 
-`mxs auth login [--profile <name>] [--production]` writes credentials to the named profile. If `--profile` is omitted and a current profile is active, it refreshes that profile. If no current profile exists (fresh install), it creates and selects the `default` profile. Passing `--production` sets the production flag on the target profile after login succeeds.
+`mxs auth login [--profile <name>] [--production]` writes credentials to the named profile. If `--profile` is omitted and a current profile is active, it refreshes that profile. If no current profile exists (fresh install), it creates and selects the `default` profile. If the `current` pointer references a profile whose directory has been removed, `auth login` recovers by creating the requested profile (or recreating the pointed-at one) rather than failing with `profile.not_found`. Passing `--production` sets the production flag on the target profile after login succeeds.
 
 `mxs auth logout [--profile <name>]` clears credentials for the target profile; the profile directory and the `current` pointer are preserved.
 

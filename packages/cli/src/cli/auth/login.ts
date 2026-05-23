@@ -1,8 +1,9 @@
 import { Command, Options } from '@effect/cli'
-import { Effect, Option } from 'effect'
+import { Effect, FiberRef, Option } from 'effect'
 import open from 'open'
 
 import { Generic } from '../../domain/errors'
+import { currentProfileFlag } from '../../domain/runtime-flags'
 import { Auth, toCredentials } from '../../services/Auth'
 import {
   Config,
@@ -32,16 +33,31 @@ export const login = Command.make('login', { production }, ({ production }) =>
 
     // 1. Resolve api-url + target profile from current config; prompt when
     //    no URL is available on a fresh install.
-    const resolved = yield* profile.resolve().pipe(
-      Effect.catchTag('Generic', (e) => {
-        // ConfigMissingApiUrl is collapsed into Generic by Profile.resolve;
-        // detect it via the preserved `cause` and prompt instead of failing.
-        const cause = (e as { cause?: { _tag?: string } }).cause
-        return cause?._tag === 'ConfigMissingApiUrl'
-          ? Effect.succeed(null)
-          : Effect.fail(e)
-      }),
-    )
+    //
+    //    The `--profile` global flag is pre-parsed and propagated via a
+    //    FiberRef; forward it as an override so `auth login --profile foo`
+    //    targets `foo` even when the active-profile pointer is missing or
+    //    points at a profile whose directory has been deleted manually.
+    const flagProfile = yield* FiberRef.get(currentProfileFlag)
+    const resolved = yield* profile
+      .resolve(flagProfile ? { profile: flagProfile } : {})
+      .pipe(
+        Effect.catchTags({
+          Generic: (e) => {
+            // ConfigMissingApiUrl is collapsed into Generic by Profile.resolve;
+            // detect it via the preserved `cause` and prompt instead of failing.
+            const cause = (e as { cause?: { _tag?: string } }).cause
+            return cause?._tag === 'ConfigMissingApiUrl'
+              ? Effect.succeed(null)
+              : Effect.fail(e)
+          },
+          // The active-profile pointer (or the resolved profile name) refers
+          // to a directory that does not exist. `auth login` is the command
+          // that *creates* a profile, so treat this as a fresh-install path
+          // rather than a hard error.
+          ProfileNotFound: () => Effect.succeed(null),
+        }),
+      )
 
     let apiUrl: string
     let targetProfile: string | null
@@ -63,7 +79,10 @@ export const login = Command.make('login', { production }, ({ production }) =>
         Effect.mapError((e) => new Generic({ message: e.message, cause: e })),
       )
       apiUrl = parsed.baseUrl
-      targetProfile = yield* config.readCurrent
+      // Prefer the explicit `--profile` flag over a stale `current` pointer.
+      // Falling back to `readCurrent` preserves the historical behaviour on
+      // fresh installs (no flag, no pointer → step 5 lands on DEFAULT_PROFILE).
+      targetProfile = flagProfile?.trim() || (yield* config.readCurrent)
     }
 
     yield* renderer.emitInfoBlock(
