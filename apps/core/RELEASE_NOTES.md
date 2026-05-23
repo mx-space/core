@@ -1,34 +1,22 @@
 ## TL;DR
 
-V3 API contract ships — list endpoints now return `{ data, meta }` with snake_case fields and named views, replacing the legacy V2 wire shape.
-
-## Breaking Changes
-
-- **api: V3 response envelope replaces V2 wire shape**. All list endpoints now return `{ data, meta }`. Pagination, translation, enrichments, related, and insights move from inline top-level keys into `meta.*` (e.g. `meta.pagination`, `meta.translation`, `meta.enrichments`). Field naming is snake_case end-to-end. Each list endpoint exposes a named view (`card` for collections, `detail` for single-item endpoints) so consumers can ask for the projection they actually need. **Migration**: upgrade `@mx-space/api-client` to v5 — its legacy adapter reconstructs the V1 wire shape for older callers (camelCase, flattened meta, V1 pagination keys) so existing code keeps working while you migrate readers off the legacy adapter. Direct HTTP consumers must read pagination from `meta.pagination` and translation/enrichment metadata from `meta.*` instead of the top-level object.
+Aggregate endpoint now accepts a pipe-separated theme fallback chain, letting frontends gracefully degrade from a custom theme to a shared default.
 
 ## Highlights
 
-The response contract is the headline change. The previous V2 shape leaked translation, enrichment, and pagination state into the top-level payload, which made the wire format ambiguous (is this field part of the resource, or platform metadata?) and forced every consumer to know which fields were "real." V3 splits resource fields from platform metadata cleanly: `data` is the resource (or array of resources), and everything platform-injected lives under `meta`. Snake_case removes the mixed-case quirk inherited from the Mongo era, and named views (`card`/`detail`) let endpoints declare their projection instead of having callers guess.
+The `/aggregate` endpoint now accepts `?theme=a|b|c` and walks the candidate list in order, returning the first available theme snippet (with its locale overlay merged in). This unblocks downstream frontends like Yohaku that want to fall back from a primary theme such as `yohaku` to a shared default like `shiro` without coupling clients to server-side defaults. Single-theme requests behave unchanged.
 
-Article detail handlers (post/page/note) now always emit translation meta, even when the article has no translation. V1 consumers previously had to special-case the missing `is_translated` / `source_lang` / `available_translations` fields; they're now present by default so the language picker and source-language badge render unconditionally.
-
-`@mx-space/api-client` v5 ships alongside this release with a legacy adapter that converts V3 envelopes back to the V1 wire shape (camelCase, flattened meta, `currentPage`/`totalPage` pagination, `hasNextPage`/`hasPrevPage` flags). The adapter is transparent — existing callers using the V1 client surface keep working without changes — but it's a compatibility layer, not the future. New code should use the V3 envelope directly.
-
-Logging output gets a more concise format. Request lines now show direction arrows (`→` / `←`), the response status code, and the elapsed milliseconds in one compact line, replacing the previous `+++ Request received` / `--- Response sent` pair.
+Snippet name validation widens from `[\w-]{1,30}` to `[\w.-]{1,30}`, so existing multi-locale names like `shiro.ja` now pass without renaming. The 1–30 length cap stays in place and the error message reflects the new rule. No data migration is required.
 
 ## Changes
 
-### Refactors
-- V3 response envelope, snake_case schema, named views ([#2729](https://github.com/mx-space/core/pull/2729))
-- Request/response logging interceptor — compact single-line format with status code and timing ([2e70a8a](https://github.com/mx-space/core/commit/2e70a8a2))
+### Features
+- Theme fallback chain on `/aggregate` via pipe separator (e.g. `?theme=yohaku|shiro`). ([e2118f5](https://github.com/mx-space/core/commit/e2118f51c0d23465b8388d400d91aeb4d74a4a75))
+- Snippet names accept dots and hyphens, allowing locale-suffixed names like `shiro.ja`. ([1fb180f](https://github.com/mx-space/core/commit/1fb180fd6d2d9574e59f4b00166dac26671a7a8b))
 
-## Upgrade Notes
-
-- Bump `@mx-space/api-client` to **v5.x** in any direct consumer. The legacy adapter is the migration bridge; ship it first, then migrate readers off it endpoint-by-endpoint.
-- Direct HTTP / REST consumers (no api-client): read pagination from `meta.pagination` (`page`, `size`, `total`, `total_pages`) and translation/enrichments/related/insights metadata from `meta.*`. Field names are snake_case throughout.
-- Article detail endpoints (post/page/note) now always emit `is_translated`, `source_lang`, and `available_translations` — if your consumer was guarding on their absence, the guard is dead code and can be removed.
-- Self-hosted admin operators: dashboard pin is bumped to **v8.0.0** — deploy the matching mx-admin release.
+### Bug Fixes
+- Dev script now SIGKILLs the nodemon child to prevent a stale core process surviving restart and stacking up duplicates. ([e3cd8da](https://github.com/mx-space/core/commit/e3cd8daa835f1f3f23a2762e41d528150d3898f6))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v12.10.0...v13.0.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.0.0...v13.0.1

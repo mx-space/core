@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## [13.0.1](https://github.com/mx-space/core/compare/v13.0.0...v13.0.1) (2026-05-23)
+
+
+### Bug Fixes
+
+* **dev:** force-kill nodemon child with SIGKILL to prevent duplicate cores ([e3cd8da](https://github.com/mx-space/core/commit/e3cd8daa835f1f3f23a2762e41d528150d3898f6))
+
+
+### Features
+
+* **aggregate:** support theme fallback chain via pipe separator ([e2118f5](https://github.com/mx-space/core/commit/e2118f51c0d23465b8388d400d91aeb4d74a4a75))
+* **snippet:** allow dots and hyphens in snippet name ([1fb180f](https://github.com/mx-space/core/commit/1fb180fd6d2d9574e59f4b00166dac26671a7a8b))
+
+
 ## [13.0.0](https://github.com/mx-space/core/compare/v12.10.0...v13.0.0) (2026-05-22)
 
 
