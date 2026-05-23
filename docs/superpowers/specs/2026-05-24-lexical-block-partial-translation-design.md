@@ -32,6 +32,8 @@ unchanged blocks can remain useful.
 - Trigger regeneration for stale translations asynchronously.
 - Avoid requiring frontend block-level merge logic.
 - Avoid persisting partial translations as canonical translation rows.
+- Keep read-path block reuse and write-path incremental reuse on the same
+  implementation primitives.
 
 ## Non-Goals
 
@@ -98,6 +100,22 @@ The composition unit should be an internal backend helper, for example
 an existing translation row, then returns either a composed translation-like
 object or a failure result.
 
+The block reuse logic must be shared with the existing incremental write path
+rather than duplicated. The current private helpers in
+`lexical-translation.strategy.ts` are the reference behavior:
+
+| Existing helper | Required shared responsibility |
+| --- | --- |
+| `groupSegmentsByBlock()` | Build comparable block buckets from parsed Lexical translation segments. |
+| `canReuseBlockTranslations()` | Enforce segment/property shape compatibility before reuse. |
+| `backfillReusableBlockTranslations()` | Copy translated segment/property values only for unchanged reusable blocks. |
+
+Implementation should extract these behaviors into a shared internal module,
+for example `lexical-block-reuse.ts`, and have both the incremental write path
+and partial read path call the same functions. The design intentionally rejects
+parallel read/write implementations because divergent block matching would make
+freshness behavior non-deterministic.
+
 Composition rules:
 
 | Content region | Fresh | Stale |
@@ -106,11 +124,23 @@ Composition rules:
 | `title` | Reuse old translated title. | Use current source title. |
 | `subtitle` | Reuse old translated subtitle. | Use current source subtitle or `null`. |
 | `summary` | Reuse old translated summary. | Use current source summary or `null`. |
-| `tags` | Reuse old translated tags. | Use current source tags. |
+| `tags` | Reuse old translated tags. | Use current source tags, an empty array, or `null` according to the source value. |
 | `text` | Recompute from composed Lexical `content`. | Recompute from composed Lexical `content`. |
 
 Block reuse must require `blockId + fingerprint` equality. Index alone is not a
 safe key because blocks may be reordered.
+
+Current meta hashes must be recomputed with the identical `md5` scheme used by
+the incremental write path:
+
+| Field | Hash input |
+| --- | --- |
+| `title` | `md5(content.title)` |
+| `subtitle` | `md5(content.subtitle)` when present |
+| `summary` | `md5(content.summary)` when present |
+| `tags` | `md5(content.tags.join('|||'))` when tags are present |
+
+The read path must not introduce an alternate hashing scheme.
 
 ```text
 ┌────────────────────┐
@@ -154,6 +184,7 @@ property:
 
 - Populate the translation map only for unchanged blocks.
 - Omit stale blocks from the translation map.
+- Run the same Mermaid translation guard used by the write path before restore.
 - Restore into the current source parse result.
 - Recompute Markdown from the restored Lexical JSON.
 
@@ -164,10 +195,15 @@ property:
 | A block without `blockId` is treated as stale. | It falls back to source text. |
 | A block whose fingerprint differs is treated as stale. | It falls back to source text. |
 | A reused block must have compatible segment/property shape. | Incompatible blocks fall back to source text. |
+| Mermaid property translations reused from the old row must pass `validateMermaidTranslation()` against the current source diagram. | Invalid Mermaid translations are removed from the translation map and fall back to source. |
 | If source Lexical parsing fails, partial composition fails. | Existing stale behavior applies. |
 | If translated Lexical parsing fails, partial composition fails. | Existing stale behavior applies. |
 | Mermaid, Excalidraw, poll, ruby, and other property segments must use the existing parser/restorer path. | Special node behavior remains centralized. |
 | `text` must be generated from composed `content`. | `content` and `text` remain consistent. |
+
+The primary invariant is stronger than a display preference: any block whose
+current fingerprint differs from the stored source snapshot must render as the
+current source block verbatim.
 
 ## Persistence
 
@@ -201,6 +237,27 @@ The read path must not block on an LLM call. A successful partial response is
 valid for immediate display because stale blocks have already fallen back to the
 current source.
 
+The partial path should reuse the existing stale-regeneration scheduler,
+`scheduleRegenerationForStaleTranslations()`, rather than creating a
+per-request scheduling path. That scheduler already batches article IDs and
+revalidates staleness through `filterTrulyStaleTranslations()` before task
+creation. Reuse is required to avoid a thundering herd when repeated reads hit
+the same stale translation.
+
+## Caching
+
+Partial responses are temporary read views and must not be cached as canonical
+translation results.
+
+| Cache layer | Constraint |
+| --- | --- |
+| Translation row persistence | Do not write partial content into `ai_translations`. |
+| Redis or response cache | Do not cache partial responses, unless a deliberately short TTL is chosen below the expected regeneration SLA. |
+| Search index cache | Do not index partial content as a translation-language document. |
+
+Fresh regenerated translations may use existing cache and indexing behavior
+after the canonical row has been updated.
+
 ## Error Handling
 
 | Failure | Behavior |
@@ -227,14 +284,21 @@ static internal tables.
 | `text` is returned. | It is generated from the composed `content`. |
 | Non-Lexical content is stale. | Existing whole-document stale behavior remains unchanged. |
 | Regeneration scheduling fails. | The partial response still succeeds. |
+| Whole-document hash differs but all block IDs and fingerprints match. | The composed result is equivalent to the stored translation row, except for metadata derived from changed meta fields. |
+| Stored translation contains a block deleted from the current source. | The deleted block is absent from the response. |
 
 ## Acceptance Criteria
 
 - A stale Lexical translation with unchanged blocks can still produce a readable
   backend-composed response.
-- Changed blocks are not shown with old translations.
+- Any block whose fingerprint differs from the stored source snapshot is
+  rendered as the current source block verbatim.
 - The frontend can render the returned response without block-level merge logic.
 - No partial result is written into `ai_translations`.
 - The requested language is scheduled for regeneration after a partial response.
 - Existing behavior for fresh, missing, and non-Lexical translations remains
   compatible.
+- Read-path partial reuse and write-path incremental reuse share the same block
+  grouping and compatibility helpers.
+- Partial-read observability reports total, changed, and reused block counts in
+  the same spirit as the existing incremental diff log.
