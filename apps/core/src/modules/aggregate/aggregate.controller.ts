@@ -68,18 +68,28 @@ export class AggregateController {
 
   private async getThemeConfig(theme?: string, lang?: string) {
     if (!theme) return
-    const baseConfig = await this.getSnippetData('theme', theme)
-    if (!baseConfig) return
-    if (!lang) return baseConfig
-    const langOverlay = await this.getSnippetData('theme', `${theme}.${lang}`)
-    if (
-      !langOverlay ||
-      typeof baseConfig !== 'object' ||
-      typeof langOverlay !== 'object'
-    ) {
-      return baseConfig
+    const candidates = theme
+      .split('|')
+      .map((s) => s.trim())
+      .filter(Boolean)
+    for (const candidate of candidates) {
+      const baseConfig = await this.getSnippetData('theme', candidate)
+      if (!baseConfig) continue
+      if (!lang) return baseConfig
+      const langOverlay = await this.getSnippetData(
+        'theme',
+        `${candidate}.${lang}`,
+      )
+      if (
+        !langOverlay ||
+        typeof baseConfig !== 'object' ||
+        typeof langOverlay !== 'object'
+      ) {
+        return baseConfig
+      }
+      return merge({}, baseConfig, langOverlay)
     }
-    return merge({}, baseConfig, langOverlay)
+    return
   }
 
   private async getSnippetData(reference: string, name: string) {

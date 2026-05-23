@@ -189,6 +189,127 @@ describe('AggregateController', () => {
   })
 })
 
+describe('AggregateController.aggregate theme fallback', () => {
+  const buildController = (snippets: Record<string, unknown>) => {
+    const getPublicSnippetByName = vi.fn(async (name: string, ref: string) => {
+      const key = `${ref}/${name}`
+      if (key in snippets) return snippets[key]
+      throw new Error('not found')
+    })
+
+    return {
+      controller: new AggregateController(
+        {} as any,
+        {
+          get: vi.fn(async (key: string) => {
+            if (key === 'url') return { webUrl: 'https://x.test' }
+            if (key === 'seo') return { title: 's', description: 'd' }
+            if (key === 'commentOptions') return {}
+            if (key === 'ai') return {}
+            return {}
+          }),
+        } as any,
+        {} as any,
+        { getLatestNoteId: vi.fn(async () => 1) } as any,
+        {
+          getCachedSnippet: vi.fn(async () => null),
+          getPublicSnippetByName,
+        } as any,
+        {
+          getOwner: vi.fn(async () => ({ id: '1', name: 'o', socialIds: {} })),
+        } as any,
+        {} as any,
+        {} as any,
+      ),
+      getPublicSnippetByName,
+    }
+  }
+
+  it('returns undefined when no theme requested', async () => {
+    const { controller, getPublicSnippetByName } = buildController({})
+    const res = await controller.aggregate({} as any)
+    expect(res.theme).toBeUndefined()
+    expect(getPublicSnippetByName).not.toHaveBeenCalled()
+  })
+
+  it('returns single theme config when found', async () => {
+    const { controller } = buildController({
+      'theme/shiro': { color: 'red' },
+    })
+    const res = await controller.aggregate({ theme: 'shiro' } as any)
+    expect(res.theme).toEqual({ color: 'red' })
+  })
+
+  it('merges lang overlay onto base for single theme', async () => {
+    const { controller } = buildController({
+      'theme/shiro': { color: 'red', title: 'zh' },
+      'theme/shiro.ja': { title: 'ja' },
+    })
+    const res = await controller.aggregate({ theme: 'shiro' } as any, 'ja')
+    expect(res.theme).toEqual({ color: 'red', title: 'ja' })
+  })
+
+  it('falls back to second candidate when first is missing', async () => {
+    const { controller, getPublicSnippetByName } = buildController({
+      'theme/default': { color: 'blue' },
+    })
+    const res = await controller.aggregate({
+      theme: 'shiro|default',
+    } as any)
+    expect(res.theme).toEqual({ color: 'blue' })
+    expect(getPublicSnippetByName).toHaveBeenCalledWith('shiro', 'theme')
+    expect(getPublicSnippetByName).toHaveBeenCalledWith('default', 'theme')
+  })
+
+  it('uses first hit and skips remaining candidates', async () => {
+    const { controller, getPublicSnippetByName } = buildController({
+      'theme/shiro': { color: 'red' },
+      'theme/default': { color: 'blue' },
+    })
+    const res = await controller.aggregate({
+      theme: 'shiro|default|fallback',
+    } as any)
+    expect(res.theme).toEqual({ color: 'red' })
+    const names = getPublicSnippetByName.mock.calls.map((c) => c[0])
+    expect(names).toContain('shiro')
+    expect(names).not.toContain('default')
+    expect(names).not.toContain('fallback')
+  })
+
+  it('applies lang overlay scoped to the matched candidate', async () => {
+    const { controller, getPublicSnippetByName } = buildController({
+      'theme/default': { color: 'blue', title: 'zh' },
+      'theme/default.ja': { title: 'ja' },
+      'theme/shiro.ja': { title: 'shouldNotUse' },
+    })
+    const res = await controller.aggregate(
+      { theme: 'shiro|default' } as any,
+      'ja',
+    )
+    expect(res.theme).toEqual({ color: 'blue', title: 'ja' })
+    const calls = getPublicSnippetByName.mock.calls.map((c) => c[0])
+    expect(calls).not.toContain('shiro.ja')
+  })
+
+  it('returns undefined when all candidates miss', async () => {
+    const { controller } = buildController({})
+    const res = await controller.aggregate({
+      theme: 'a|b|c',
+    } as any)
+    expect(res.theme).toBeUndefined()
+  })
+
+  it('trims whitespace and skips empty segments', async () => {
+    const { controller } = buildController({
+      'theme/shiro': { ok: true },
+    })
+    const res = await controller.aggregate({
+      theme: ' | shiro |  ',
+    } as any)
+    expect(res.theme).toEqual({ ok: true })
+  })
+})
+
 describe('AggregateController.top', () => {
   it('returns raw result when lang is absent', async () => {
     const { controller, aggregateService } = createController({
