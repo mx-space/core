@@ -30,8 +30,20 @@ const paragraph = (text: string, blockId?: string) => ({
   ...(blockId ? { $: { blockId } } : {}),
 })
 
+const emptyParagraph = (blockId: string) => ({
+  children: [],
+  direction: null,
+  format: '',
+  indent: 0,
+  type: 'paragraph',
+  version: 1,
+  $: { blockId },
+})
+
 const editorState = (
-  children: Array<ReturnType<typeof paragraph>>,
+  children: Array<
+    ReturnType<typeof paragraph> | ReturnType<typeof emptyParagraph>
+  >,
 ): string =>
   JSON.stringify({
     root: {
@@ -205,6 +217,69 @@ describe('LexicalPartialTranslationBuilder', () => {
     ])
 
     expect(builder.build(content(), row({ content: 'not json' }))).toBeNull()
+  })
+
+  it('counts unchanged-fingerprint blocks without reusable segments as changed', () => {
+    const { builder, lexicalService } = createBuilder()
+    const sourceContent = editorState([emptyParagraph('block-empty')])
+    const existingContent = editorState([emptyParagraph('block-empty')])
+    lexicalService.extractRootBlocks.mockReturnValue([
+      {
+        id: 'block-empty',
+        type: 'paragraph',
+        text: '',
+        fingerprint: 'fp-empty',
+        index: 0,
+      },
+    ])
+
+    const result = builder.build(
+      content({ content: sourceContent }),
+      row({
+        content: existingContent,
+        sourceBlockSnapshots: [{ id: 'block-empty', fingerprint: 'fp-empty' }],
+      }),
+    )
+
+    expect(result?.stats).toEqual({
+      totalBlockCount: 1,
+      changedBlockCount: 1,
+      reusedBlockCount: 0,
+      skippedReusableBlockCount: 1,
+    })
+  })
+
+  it('returns null when markdown rendering fails', () => {
+    const { builder, lexicalService } = createBuilder()
+    lexicalService.extractRootBlocks.mockReturnValue([
+      {
+        id: 'block-a',
+        type: 'paragraph',
+        text: 'Source unchanged',
+        fingerprint: 'fp-a',
+        index: 0,
+      },
+    ])
+    lexicalService.lexicalToMarkdown.mockImplementation(() => {
+      throw new Error('markdown failed')
+    })
+
+    expect(builder.build(content(), row())).toBeNull()
+  })
+
+  it('returns null when current Lexical content cannot be parsed', () => {
+    const { builder, lexicalService } = createBuilder()
+    lexicalService.extractRootBlocks.mockReturnValue([
+      {
+        id: 'block-a',
+        type: 'paragraph',
+        text: 'Source unchanged',
+        fingerprint: 'fp-a',
+        index: 0,
+      },
+    ])
+
+    expect(builder.build(content({ content: 'not json' }), row())).toBeNull()
   })
 
   it('treats a current block without block id as changed and returns source text', () => {

@@ -127,7 +127,8 @@ export class LexicalPartialTranslationBuilder {
       const metaHashes = getMetaHashes(existing.sourceMetaHashes)
       const stats: PartialLexicalTranslationStats = {
         totalBlockCount: currentBlocks.length,
-        changedBlockCount: currentBlocks.length - unchangedBlockIds.size,
+        changedBlockCount:
+          currentBlocks.length - backfillResult.reusedBlockIds.length,
         reusedBlockCount: backfillResult.reusedBlockIds.length,
         skippedReusableBlockCount: backfillResult.skippedBlockIds.length,
       }
