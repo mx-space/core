@@ -4,6 +4,7 @@ import { Test } from '@nestjs/testing'
 import { vi } from 'vitest'
 
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
+import { requestCaseNormalizationPipeInstance } from '~/common/pipes/case-normalization.pipe'
 import { extendedZodValidationPipeInstance } from '~/common/zod'
 import { AuthInstanceInjectKey } from '~/modules/auth/auth.constant'
 import { AuthService } from '~/modules/auth/auth.service'
@@ -72,7 +73,10 @@ describe('DeviceController (e2e)', () => {
       imports: [DeviceControllerTestModule],
     }).compile()
     app = moduleRef.createNestApplication<NestFastifyApplication>(fastifyApp)
-    app.useGlobalPipes(extendedZodValidationPipeInstance)
+    app.useGlobalPipes(
+      requestCaseNormalizationPipeInstance,
+      extendedZodValidationPipeInstance,
+    )
     await app.init()
     await app.getHttpAdapter().getInstance().ready()
   })
