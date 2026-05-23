@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { AppException } from '~/common/errors/exception.types'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import type {
   AiTranslationRepository,
   AiTranslationRow,
@@ -32,23 +33,50 @@ const row = (overrides: Partial<AiTranslationRow> = {}): AiTranslationRow => ({
   ...overrides,
 })
 
+const articleDocument = (overrides: Record<string, unknown> = {}) => ({
+  id: 'post-1',
+  title: 'Source Title',
+  text: 'Source Text',
+  subtitle: null,
+  summary: null,
+  tags: [],
+  contentFormat: ContentFormat.Lexical,
+  content: '{"root":{"children":[]}}',
+  isPublished: true,
+  meta: { lang: 'zh' },
+  modifiedAt: now,
+  createdAt: now,
+  ...overrides,
+})
+
 const createService = () => {
   const repository = createPgRepositoryMock<AiTranslationRepository>()
   const databaseService = { findGlobalById: vi.fn(), findGlobalByIds: vi.fn() }
-  const translationConsistencyService = {}
-  const configService = {}
+  const translationConsistencyService = {
+    evaluateTranslationFreshness: vi.fn(() => 'valid'),
+    filterTrulyStaleTranslations: vi.fn(),
+    partitionValidAndStaleTranslations: vi.fn(),
+  }
+  const partialBuilder = { build: vi.fn() }
+  const configService = {
+    get: vi.fn(() => ({
+      enableAutoGenerateTranslation: true,
+      enableTranslation: true,
+    })),
+  }
   const aiService = {}
   const aiInFlightService = {}
   const eventManager = { emit: vi.fn() }
   const taskProcessor = { registerHandler: vi.fn() }
   const lexicalService = { lexicalToMarkdown: vi.fn(() => 'markdown') }
-  const aiTaskService = {}
+  const aiTaskService = { createTranslationTask: vi.fn() }
   const lexicalStrategy = {}
   const markdownStrategy = {}
   const service = new AiTranslationService(
     repository as any,
     databaseService as any,
     translationConsistencyService as any,
+    partialBuilder as any,
     configService as any,
     aiService as any,
     aiInFlightService as any,
@@ -59,7 +87,16 @@ const createService = () => {
     lexicalStrategy as any,
     markdownStrategy as any,
   )
-  return { databaseService, lexicalService, repository, service }
+  return {
+    aiTaskService,
+    configService,
+    databaseService,
+    lexicalService,
+    partialBuilder,
+    repository,
+    service,
+    translationConsistencyService,
+  }
 }
 
 describe('AiTranslationService', () => {
@@ -97,5 +134,166 @@ describe('AiTranslationService', () => {
     await expect(service.deleteTranslation('missing')).rejects.toThrow(
       AppException,
     )
+  })
+
+  it('returns a partial lexical translation for a stale article translation without persisting it', async () => {
+    const {
+      databaseService,
+      partialBuilder,
+      repository,
+      service,
+      translationConsistencyService,
+    } = createService()
+    const staleTranslation = row({
+      contentFormat: ContentFormat.Lexical,
+      content: '{"root":{"children":[]}}',
+    })
+    const partialTranslation = row({
+      id: 'translation-1' as any,
+      title: 'Partial Title',
+      text: 'Partial Text',
+      contentFormat: ContentFormat.Lexical,
+      content: '{"root":{"children":[]}}',
+    })
+    const scheduleSpy = vi
+      .spyOn(service, 'scheduleRegenerationForStaleTranslations')
+      .mockResolvedValue(undefined)
+
+    databaseService.findGlobalById.mockResolvedValue({
+      document: articleDocument(),
+      type: CollectionRefTypes.Post,
+    })
+    repository.findByRefAndLang.mockResolvedValue(staleTranslation)
+    translationConsistencyService.evaluateTranslationFreshness.mockReturnValue(
+      'stale',
+    )
+    partialBuilder.build.mockReturnValue({
+      stats: {
+        changedBlockCount: 0,
+        reusedBlockCount: 1,
+        skippedReusableBlockCount: 0,
+        totalBlockCount: 1,
+      },
+      translation: partialTranslation,
+    })
+
+    await expect(
+      service.getTranslationForArticle('post-1', 'en'),
+    ).resolves.toBe(partialTranslation)
+
+    expect(partialBuilder.build).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: '{"root":{"children":[]}}',
+        contentFormat: ContentFormat.Lexical,
+        text: 'Source Text',
+        title: 'Source Title',
+      }),
+      staleTranslation,
+    )
+    expect(scheduleSpy).toHaveBeenCalledWith(['post-1'], 'en')
+    expect(repository.updateById).not.toHaveBeenCalled()
+    expect(repository.upsert).not.toHaveBeenCalled()
+  })
+
+  it('returns null for a stale lexical article translation when partial build is unavailable', async () => {
+    const {
+      databaseService,
+      partialBuilder,
+      repository,
+      service,
+      translationConsistencyService,
+    } = createService()
+    const staleTranslation = row({
+      contentFormat: ContentFormat.Lexical,
+      content: '{"root":{"children":[]}}',
+    })
+    const scheduleSpy = vi
+      .spyOn(service, 'scheduleRegenerationForStaleTranslations')
+      .mockResolvedValue(undefined)
+
+    databaseService.findGlobalById.mockResolvedValue({
+      document: articleDocument(),
+      type: CollectionRefTypes.Post,
+    })
+    repository.findByRefAndLang.mockResolvedValue(staleTranslation)
+    translationConsistencyService.evaluateTranslationFreshness.mockReturnValue(
+      'stale',
+    )
+    partialBuilder.build.mockReturnValue(null)
+
+    await expect(
+      service.getTranslationForArticle('post-1', 'en'),
+    ).resolves.toBeNull()
+
+    expect(partialBuilder.build).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contentFormat: ContentFormat.Lexical,
+      }),
+      staleTranslation,
+    )
+    expect(scheduleSpy).toHaveBeenCalledWith(['post-1'], 'en')
+  })
+
+  it('returns a partial requested stale translation without listing it as available', async () => {
+    const {
+      databaseService,
+      partialBuilder,
+      repository,
+      service,
+      translationConsistencyService,
+    } = createService()
+    const validTranslation = row({ lang: 'en' })
+    const staleTranslation = row({
+      id: 'translation-2' as any,
+      lang: 'ja',
+      contentFormat: ContentFormat.Lexical,
+      content: '{"root":{"children":[]}}',
+    })
+    const partialTranslation = row({
+      id: 'translation-2' as any,
+      lang: 'ja',
+      text: 'Partial Japanese Text',
+      contentFormat: ContentFormat.Lexical,
+      content: '{"root":{"children":[]}}',
+    })
+    const scheduleSpy = vi
+      .spyOn(service, 'scheduleRegenerationForStaleTranslations')
+      .mockResolvedValue(undefined)
+
+    databaseService.findGlobalById.mockResolvedValue({
+      document: articleDocument(),
+      type: CollectionRefTypes.Post,
+    })
+    repository.listByRefId.mockResolvedValue([validTranslation, staleTranslation])
+    translationConsistencyService.evaluateTranslationFreshness.mockImplementation(
+      (_snapshot: unknown, translation: AiTranslationRow) =>
+        translation.lang === 'ja' ? 'stale' : 'valid',
+    )
+    partialBuilder.build.mockReturnValue({
+      stats: {
+        changedBlockCount: 0,
+        reusedBlockCount: 1,
+        skippedReusableBlockCount: 0,
+        totalBlockCount: 1,
+      },
+      translation: partialTranslation,
+    })
+
+    await expect(
+      service.getTranslationAndAvailableLanguages('post-1', 'ja'),
+    ).resolves.toEqual({
+      availableTranslations: ['en'],
+      sourceLang: 'zh',
+      translation: partialTranslation,
+    })
+
+    expect(repository.findByRefAndLang).not.toHaveBeenCalled()
+    expect(partialBuilder.build).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contentFormat: ContentFormat.Lexical,
+      }),
+      staleTranslation,
+    )
+    expect(scheduleSpy).toHaveBeenCalledWith(['post-1'], 'ja')
   })
 })

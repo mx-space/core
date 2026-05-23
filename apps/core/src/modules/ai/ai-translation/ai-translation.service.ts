@@ -46,6 +46,7 @@ import type {
 } from './ai-translation.types'
 import { AITranslationModel } from './ai-translation.types-model'
 import { BaseTranslationService } from './base-translation.service'
+import { LexicalPartialTranslationBuilder } from './lexical-partial-translation.builder'
 import { TranslationConsistencyService } from './translation-consistency.service'
 import type { TranslationSourceSnapshot } from './translation-consistency.types'
 import type { ITranslationStrategy } from './translation-strategy.interface'
@@ -100,6 +101,7 @@ export class AiTranslationService
     private readonly aiTranslationRepository: AiTranslationRepository,
     private readonly databaseService: DatabaseService,
     private readonly translationConsistencyService: TranslationConsistencyService,
+    private readonly lexicalPartialTranslationBuilder: LexicalPartialTranslationBuilder,
     private readonly configService: ConfigsService,
     private readonly aiService: AiService,
     private readonly aiInFlightService: AiInFlightService,
@@ -119,6 +121,19 @@ export class AiTranslationService
     return contentFormat === ContentFormat.Lexical
       ? this.lexicalStrategy
       : this.markdownStrategy
+  }
+
+  private scheduleStaleTranslationRegenerationBestEffort(
+    articleId: string,
+    targetLang: string,
+  ) {
+    this.scheduleRegenerationForStaleTranslations([articleId], targetLang).catch(
+      (err) =>
+        this.logger.error(
+          'Failed to schedule stale translation regeneration',
+          err,
+        ),
+    )
   }
 
   onModuleInit() {
@@ -1074,7 +1089,18 @@ export class AiTranslationService
         translation,
       )
 
-    return status === 'valid' ? translation : null
+    if (status === 'valid') {
+      return translation
+    }
+
+    this.scheduleStaleTranslationRegenerationBestEffort(articleId, targetLang)
+
+    const partial = this.lexicalPartialTranslationBuilder.build(
+      this.toArticleContent(document),
+      translation,
+    )
+
+    return partial?.translation ?? null
   }
 
   async getValidTranslationsForArticles(
@@ -1225,6 +1251,7 @@ export class AiTranslationService
     const snapshot = this.buildSnapshotFromDocument(articleId, document)
     const validLangs: string[] = []
     const staleLangs: string[] = []
+    let matchedTranslation: AITranslationModel | null = null
 
     for (const t of translations) {
       const status =
@@ -1234,29 +1261,23 @@ export class AiTranslationService
         )
       if (status === 'valid') {
         validLangs.push(t.lang)
+        if (targetLang === t.lang) {
+          matchedTranslation = t
+        }
       } else if (status === 'stale') {
         staleLangs.push(t.lang)
+        if (targetLang === t.lang) {
+          matchedTranslation =
+            this.lexicalPartialTranslationBuilder.build(
+              this.toArticleContent(document),
+              t,
+            )?.translation ?? null
+        }
       }
     }
 
-    const matchedTranslation =
-      targetLang && validLangs.includes(targetLang)
-        ? await this.aiTranslationRepository.findByRefAndLang(
-            articleId,
-            targetLang,
-          )
-        : null
-
     if (staleLangs.length && targetLang) {
-      this.scheduleRegenerationForStaleTranslations(
-        [articleId],
-        targetLang,
-      ).catch((err) =>
-        this.logger.error(
-          'Failed to schedule stale translation regeneration',
-          err,
-        ),
-      )
+      this.scheduleStaleTranslationRegenerationBestEffort(articleId, targetLang)
     }
 
     return {
