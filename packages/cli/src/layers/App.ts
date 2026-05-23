@@ -8,6 +8,7 @@ import { Lexical } from '../services/Lexical'
 import { Migration } from '../services/Migration'
 import { Profile } from '../services/Profile'
 import { Renderer } from '../services/Renderer'
+import { Skill } from '../services/Skill'
 import { UpdateNotifier } from '../services/UpdateNotifier'
 
 // NOTE: `Comment` depends on `Api`, so it is layered into the composition in
@@ -40,6 +41,7 @@ export const AppLayer: Layer.Layer<
   | Migration
   | Profile
   | Renderer
+  | Skill
   | UpdateNotifier,
   never,
   FileSystem.FileSystem | HttpClient.HttpClient | Path.Path
@@ -57,6 +59,7 @@ export const AppLayer: Layer.Layer<
     editorLayer,
     Renderer.Default,
     Lexical.Default,
+    Skill.Default,
     UpdateNotifier.Default,
   )
 })()

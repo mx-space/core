@@ -19,7 +19,9 @@ import {
 import { noteCmd } from '../cli/note'
 import { pageCmd } from '../cli/page'
 import { postCmd } from '../cli/post'
+import { previewCmd } from '../cli/preview'
 import { profileCmd } from '../cli/profile'
+import { skillCmd } from '../cli/skill'
 import { topicCmd } from '../cli/topic'
 import { updateCmd } from '../cli/update'
 import {
@@ -121,6 +123,8 @@ const rootCmd = Command.make('mxs', {}, () =>
     topicCmd,
     commentCmd,
     configCmd,
+    skillCmd,
+    previewCmd,
     updateCmd,
   ]),
 )
@@ -250,7 +254,7 @@ type HelpTarget =
 // Top-level commands that are leafs (have their own handler) rather than
 // subcommand groups. Bare `mxs <leaf>` MUST execute the handler — only
 // `mxs <leaf> --help` should render our custom group/leaf help page.
-const LEAF_COMMANDS = new Set<string>(['update'])
+const LEAF_COMMANDS = new Set<string>(['update', 'skill', 'preview'])
 
 const detectHelpTarget = (rest: readonly string[]): HelpTarget => {
   // `rest` includes argv[0] (node) and argv[1] (script).

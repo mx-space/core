@@ -199,6 +199,21 @@ export class ArgvParse extends Data.TaggedError('ArgvParse')<{
   readonly hint?: string
 }> {}
 
+// skill.*
+export class ChapterNotFound extends Data.TaggedError('ChapterNotFound')<{
+  readonly message?: string
+  readonly slug?: string
+  readonly details?: unknown
+  readonly hint?: string
+}> {}
+
+export class SkillCorpusEmpty extends Data.TaggedError('SkillCorpusEmpty')<{
+  readonly message?: string
+  readonly details?: unknown
+  readonly hint?: string
+  readonly cause?: unknown
+}> {}
+
 // generic
 export class Generic extends Data.TaggedError('Generic')<{
   readonly message?: string
@@ -238,6 +253,8 @@ export type CliError =
   | UpdateSpawnFailed
   | UpdatePermissionDenied
   | ArgvParse
+  | ChapterNotFound
+  | SkillCorpusEmpty
   | Generic
 
 export type CliErrorTag = CliError['_tag']
@@ -272,6 +289,8 @@ export const tagToCode: Record<CliErrorTag, string> = {
   UpdateSpawnFailed: 'update.spawn_failed',
   UpdatePermissionDenied: 'update.permission_denied',
   ArgvParse: 'argv.parse',
+  ChapterNotFound: 'skill.chapter_not_found',
+  SkillCorpusEmpty: 'skill.corpus_empty',
   Generic: 'generic',
 }
 
@@ -309,7 +328,8 @@ export const exitCodeForTag = (tag: CliErrorTag): number => {
     case 'ServerError': {
       return 6
     }
-    case 'ResourceNotFound': {
+    case 'ResourceNotFound':
+    case 'ChapterNotFound': {
       return 7
     }
     case 'UpdatePmUnknown': {
@@ -372,6 +392,8 @@ const defaultMessages: Record<CliErrorTag, string> = {
   UpdateSpawnFailed: 'failed to spawn package manager',
   UpdatePermissionDenied: 'permission denied while writing to install prefix',
   ArgvParse: 'failed to parse arguments',
+  ChapterNotFound: 'skill chapter not found',
+  SkillCorpusEmpty: 'skill corpus is empty',
   Generic: 'mxs error',
 }
 

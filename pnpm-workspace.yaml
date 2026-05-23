@@ -32,3 +32,6 @@ publicHoistPattern:
   - "*eslint*"
   - "*webpack*"
 strictPeerDependencies: false
+minimumReleaseAgeExclude:
+  - "@haklex/*"
+  - "@mx-space/*"

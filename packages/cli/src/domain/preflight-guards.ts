@@ -9,6 +9,7 @@
 /** Parent command names whose entire subtree is exempt from the none_active guard. */
 export const PREFLIGHT_EXEMPT_PARENTS: ReadonlySet<string> = new Set([
   'profile',
+  'skill',
 ])
 
 export interface ExemptCommand {
@@ -30,6 +31,8 @@ export const PREFLIGHT_EXEMPT_COMMANDS: readonly ExemptCommand[] = [
  */
 export const PREFLIGHT_EXEMPT_TOPLEVEL: ReadonlySet<string> = new Set([
   'update',
+  'skill',
+  'preview',
 ])
 
 export interface GuardInput {
@@ -80,6 +83,8 @@ export const TOPLEVEL_COMMANDS: ReadonlySet<string> = new Set([
   'category',
   'topic',
   'config',
+  'skill',
+  'preview',
   'update',
 ])
 

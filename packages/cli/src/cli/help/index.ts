@@ -33,7 +33,9 @@ import '../config'
 import '../note'
 import '../page'
 import '../post'
+import '../preview'
 import '../profile'
+import '../skill'
 import '../topic'
 import '../update'
 
@@ -76,6 +78,8 @@ export const GROUP_NAMES = [
   'topic',
   'comment',
   'config',
+  'skill',
+  'preview',
   'update',
 ] as const
 
