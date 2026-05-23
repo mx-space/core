@@ -1,6 +1,8 @@
-import { HttpStatus, UnprocessableEntityException } from '@nestjs/common'
+import { HttpStatus } from '@nestjs/common'
 import { createZodValidationPipe } from 'nestjs-zod'
 import type { ZodError } from 'zod'
+
+import { AppException, ErrorCodes } from '~/common/errors/exception.types'
 
 function formatValidationMessage(error: ZodError): string {
   const firstError = error.issues[0]
@@ -14,14 +16,18 @@ function formatValidationMessage(error: ZodError): string {
 
 export const ExtendedZodValidationPipe = createZodValidationPipe({
   createValidationException: (error: ZodError) => {
-    return new UnprocessableEntityException({
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      message: formatValidationMessage(error),
-      errors: error.issues.map((err) => ({
-        field: err.path.join('.'),
-        message: err.message,
-      })),
-    })
+    const errors = error.issues.map((err) => ({
+      field: err.path.join('.'),
+      path: err.path,
+      code: err.code,
+      message: err.message,
+    }))
+    return new AppException(
+      ErrorCodes.VALIDATION_FAILED,
+      formatValidationMessage(error),
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      { errors, issues: error.issues },
+    )
   },
 })
 

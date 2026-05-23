@@ -12,7 +12,7 @@ import {
 } from '~/common/zod'
 import { createPagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
-import { ImageSchema } from '~/shared/schema/image.schema'
+import { ImageArraySchema } from '~/shared/schema/image.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
@@ -52,7 +52,7 @@ export const NoteSchema = WriteBaseSchema.extend({
   coordinates: CoordinateSchema.optional().nullable(),
   location: z.string().optional().nullable(),
   topicId: zEntityId.optional().nullable(),
-  images: z.array(ImageSchema).optional().default([]),
+  images: ImageArraySchema.optional().default([]),
   /** ID of the associated draft; marked as published when this note is published */
   draftId: zEntityId.optional(),
 })
@@ -74,7 +74,7 @@ export const PartialNoteSchema = NoteSchema.extend({
   meta: z.record(z.string(), z.any()).optional().nullable(),
   isPublished: z.boolean().optional(),
   bookmark: z.boolean().optional(),
-  images: z.array(ImageSchema).optional(),
+  images: ImageArraySchema.optional(),
 }).partial()
 
 export class PartialNoteDto extends createZodDto(PartialNoteSchema) {}
