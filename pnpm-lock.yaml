@@ -539,8 +539,8 @@ importers:
         specifier: 0.13.0
         version: 0.13.0(lexical@0.44.0)
       '@haklex/rich-litexml':
-        specifier: 0.15.2
-        version: 0.15.2
+        specifier: 0.15.3
+        version: 0.15.3
       '@haklex/rich-litexml-cli':
         specifier: 0.15.3
         version: 0.15.3(9933edd19bb0484bb36a888f362702ac)
@@ -2243,6 +2243,9 @@ packages:
 
   '@haklex/rich-litexml@0.15.2':
     resolution: {integrity: sha512-CzUpgMaB9q7dco42qTeOPoG1faC1cu6BiN2nYXCqNE5EbVD26sNG4pwAK2SoWJBla65wMJmyZY94r/NcweKOLg==}
+
+  '@haklex/rich-litexml@0.15.3':
+    resolution: {integrity: sha512-CU+Fm+KZ8/Ko1/L+OVlZTJSmP1U/GCUBqpBkQD7rVUsOQiQc2HD705PhoJkG1Qy1UiiY4g5r5fplPcCh+LcPag==}
 
   '@haklex/rich-renderer-alert@0.15.1':
     resolution: {integrity: sha512-L2l0wBgIpJXmBzFAexvJJOVZMT2foQIT4wy0yDVY7aA20bmdEISizbNouPrHpvBt8xedSbLBJUex8JQvaC5+pA==}
@@ -11899,6 +11902,14 @@ snapshots:
       - utf-8-validate
 
   '@haklex/rich-litexml@0.15.2':
+    dependencies:
+      lexical: 0.44.0
+      linkedom: 0.18.12
+      nanoid: 5.1.11
+    transitivePeerDependencies:
+      - canvas
+
+  '@haklex/rich-litexml@0.15.3':
     dependencies:
       lexical: 0.44.0
       linkedom: 0.18.12

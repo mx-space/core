@@ -185,6 +185,15 @@ export const previewCmd = Command.make(
         )
       }
 
+      // Wrap content in `<doc>` so haklex's deserializer recognises the root
+      // as a block container and strips whitespace between block-level nodes.
+      // Without this, the litexml preview client hydrates a Lexical state with
+      // stray whitespace text nodes as direct children of root, which Lexical
+      // rejects with error #282 ("invalid child of RootNode").
+      if (!body.includes('<doc')) {
+        body = `<doc>${body}</doc>`
+      }
+
       const resolvedVariant = Option.getOrElse(variant, () => detectedVariant)
       const resolvedTheme = Option.getOrUndefined(theme)
       const savePath = Option.getOrUndefined(save)
