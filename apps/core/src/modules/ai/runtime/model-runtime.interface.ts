@@ -1,5 +1,8 @@
 import type { z } from 'zod'
+
 import type {
+  EmbedBatchOptions,
+  EmbedBatchResult,
   GenerateStructuredOptions,
   GenerateStructuredResult,
   GenerateTextOptions,
@@ -22,5 +25,9 @@ export interface IModelRuntime {
     options: GenerateStructuredOptions<T>,
   ) => Promise<GenerateStructuredResult<z.infer<T>>>
 
+  embedBatch?: (options: EmbedBatchOptions) => Promise<EmbedBatchResult>
+
   listModels?: () => Promise<ModelInfo[]>
+  listChatModels?: () => Promise<ModelInfo[]>
+  listEmbeddingModels?: () => Promise<ModelInfo[]>
 }

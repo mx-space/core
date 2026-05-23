@@ -209,6 +209,111 @@ export const APP_ERROR_DEFINITIONS = {
     message: 'Translation not found',
   },
 
+  // ai-embeddings
+  [AppErrorCode.AI_EMBEDDING_MODEL_NOT_CONFIGURED]: {
+    status: 400,
+    message: 'AI embedding model is not configured',
+  },
+  [AppErrorCode.AI_EMBEDDING_BATCH_FAILED]: {
+    status: 502,
+    message: (p) => p?.message ?? 'AI embedding batch failed',
+  },
+
+  // ai-persona
+  [AppErrorCode.AI_PERSONA_NOT_FOUND]: {
+    status: 404,
+    message: (p) =>
+      p?.key ? `Persona "${p.key}" not found` : 'Persona not found',
+    details: (p) => (p?.key ? { key: p.key } : undefined),
+  },
+  [AppErrorCode.AI_PERSONA_PROFILE_NOT_FOUND]: {
+    status: 404,
+    message: (p) =>
+      p?.key
+        ? `Persona profile "${p.key}" not found`
+        : 'Persona profile not found',
+    details: (p) => (p?.key ? { key: p.key } : undefined),
+  },
+  [AppErrorCode.AI_PERSONA_NOT_DISTILLABLE]: {
+    status: 400,
+    message: (p) =>
+      p?.key
+        ? `Persona "${p.key}" cannot be distilled`
+        : 'Persona cannot be distilled',
+    details: (p) => (p?.key ? { key: p.key } : undefined),
+  },
+  [AppErrorCode.AI_PERSONA_REFRESH_IN_PROGRESS]: {
+    status: 409,
+    message: 'Persona refresh is already in progress',
+    details: (p) => (p?.key ? { key: p.key } : undefined),
+  },
+  [AppErrorCode.AI_PERSONA_DISTILL_MODEL_NOT_CONFIGURED]: {
+    status: 400,
+    message: 'AI persona distill model is not configured',
+  },
+
+  // ai-memory
+  [AppErrorCode.AI_MEMORY_NOT_FOUND]: {
+    status: 404,
+    message: 'Memory not found',
+    details: (p) => (p?.id ? { id: p.id } : undefined),
+  },
+  [AppErrorCode.AI_MEMORY_INVALID_SCOPE]: {
+    status: 400,
+    message: (p) =>
+      p?.scope ? `Invalid memory scope: ${p.scope}` : 'Invalid memory scope',
+    details: (p) => (p?.scope ? { scope: p.scope } : undefined),
+  },
+  [AppErrorCode.AI_MEMORY_INVALID_TYPE]: {
+    status: 400,
+    message: (p) =>
+      p?.type ? `Invalid memory type: ${p.type}` : 'Invalid memory type',
+    details: (p) => (p?.type ? { type: p.type } : undefined),
+  },
+
+  // ai-echo
+  [AppErrorCode.AI_ECHO_NOT_FOUND]: {
+    status: 404,
+    message: 'Echo not found',
+    details: (p) => (p?.id ? { id: p.id } : undefined),
+  },
+  [AppErrorCode.AI_ECHO_SUBJECT_NOT_FOUND]: {
+    status: 404,
+    message: 'Echo subject not found',
+    details: (p) =>
+      p?.subjectId
+        ? { subjectType: p.subjectType, subjectId: p.subjectId }
+        : undefined,
+  },
+  [AppErrorCode.AI_ECHO_SCENARIO_NOT_REGISTERED]: {
+    status: 400,
+    message: (p) =>
+      p?.scenarioKey
+        ? `Echo scenario "${p.scenarioKey}" is not registered`
+        : 'Echo scenario is not registered',
+    details: (p) =>
+      p?.scenarioKey ? { scenarioKey: p.scenarioKey } : undefined,
+  },
+  [AppErrorCode.AI_ECHO_GENERATION_FAILED]: {
+    status: 500,
+    message: (p) => p?.message ?? 'Echo generation failed',
+  },
+  [AppErrorCode.AI_ECHO_REGENERATE_IN_PROGRESS]: {
+    status: 409,
+    message: 'Echo regeneration already in progress',
+    details: (p) => (p?.echoId ? { echoId: p.echoId } : undefined),
+  },
+  [AppErrorCode.AI_ECHO_MODEL_NOT_CONFIGURED]: {
+    status: 400,
+    message: 'AI echo model is not configured',
+  },
+  [AppErrorCode.AI_ECHO_DAILY_QUOTA_EXCEEDED]: {
+    status: 429,
+    message: 'Echo daily quota exceeded',
+    details: (p) =>
+      p?.quota !== undefined ? { used: p?.used, quota: p?.quota } : undefined,
+  },
+
   // auth
   [AppErrorCode.AUTH_DEVICE_FLOW_PENDING]: {
     status: 202,

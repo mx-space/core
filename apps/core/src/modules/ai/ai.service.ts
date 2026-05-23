@@ -58,6 +58,29 @@ export class AiService {
     return this.getModelForFeature(AIFeatureKey.InsightsTranslation)
   }
 
+  public async getEchoModel(): Promise<IModelRuntime> {
+    return this.getModelForFeature(AIFeatureKey.Echo)
+  }
+
+  public async getEmbeddingModel(): Promise<IModelRuntime> {
+    return this.getModelForFeature(AIFeatureKey.Embedding)
+  }
+
+  public async getPersonaDistillModel(): Promise<IModelRuntime> {
+    const aiConfig = await this.configService.get('ai')
+    const assignment = this.getAssignment(aiConfig, AIFeatureKey.PersonaDistill)
+    if (!assignment) {
+      return this.getEchoModel()
+    }
+    return this.getModelForFeature(AIFeatureKey.PersonaDistill)
+  }
+
+  public async hasFeatureModel(feature: AIFeatureKey): Promise<boolean> {
+    const aiConfig = await this.configService.get('ai')
+    const assignment = this.getAssignment(aiConfig, feature)
+    return Boolean(this.resolveProvider(aiConfig, assignment?.providerId))
+  }
+
   private async resolveFeatureRuntime(feature: AIFeatureKey): Promise<{
     runtime: IModelRuntime
     provider: AIProviderConfig
@@ -113,6 +136,9 @@ export class AiService {
       [AIFeatureKey.Translation]: 'translationModel',
       [AIFeatureKey.Insights]: 'insightsModel',
       [AIFeatureKey.InsightsTranslation]: 'insightsTranslationModel',
+      [AIFeatureKey.Echo]: 'echoModel',
+      [AIFeatureKey.Embedding]: 'embeddingModel',
+      [AIFeatureKey.PersonaDistill]: 'personaDistillModel',
     }
     return config[featureToConfigKey[feature]] as AIModelAssignment | undefined
   }

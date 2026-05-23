@@ -819,6 +819,101 @@ export const AISchema = section('AI settings', {
         'Skips automatic hooks (OnCreate/OnUpdate) when the body has fewer characters than this; only affects automatic triggers. 0 means no limit. Default 300',
     },
   ),
+  echoModel: field.plain(AIModelAssignmentSchema.optional(), 'Echo model'),
+  embeddingModel: field.plain(
+    AIModelAssignmentSchema.optional(),
+    'Embedding model',
+  ),
+  personaDistillModel: field.plain(
+    AIModelAssignmentSchema.optional(),
+    'Persona distill model',
+    { description: 'Falls back to the echo model when empty' },
+  ),
+  enableEcho: field.toggle(z.boolean().optional(), 'Allow AI echo', {
+    description: 'Master switch for AI echo generation',
+  }),
+  enableAutoGenerateEchoOnCreate: field.toggle(
+    z.boolean().optional(),
+    'Auto-generate echo on recently create',
+    { description: 'Requires enableEcho to also be enabled' },
+  ),
+  echoDailyQuota: field.number(
+    z.preprocess(
+      (val) =>
+        val === '' || val === null || val === undefined ? val : Number(val),
+      z.number().int().min(0).optional(),
+    ),
+    'Echo daily quota',
+    {
+      description:
+        'Max echo generation calls per day; 0 means unlimited. Default 200',
+    },
+  ),
+  echoRetrievalTopK: field.number(
+    z.preprocess(
+      (val) =>
+        val === '' || val === null || val === undefined ? val : Number(val),
+      z.number().int().min(1).optional(),
+    ),
+    'Echo retrieval top-K',
+    { description: 'Default 5' },
+  ),
+  echoRetrievalMinSimilarity: field.number(
+    z.preprocess(
+      (val) =>
+        val === '' || val === null || val === undefined ? val : Number(val),
+      z.number().min(0).max(1).optional(),
+    ),
+    'Echo retrieval min similarity',
+    {
+      description:
+        'Cosine similarity threshold; below this, no retrieval section is injected. Default 0.72',
+    },
+  ),
+  echoExemplarsCount: field.number(
+    z.preprocess(
+      (val) =>
+        val === '' || val === null || val === undefined ? val : Number(val),
+      z.number().int().min(0).optional(),
+    ),
+    'Echo exemplars count',
+    { description: 'Default 4' },
+  ),
+  aiEmbedding: field.plain(
+    z
+      .object({
+        chunkMaxTokens: z.number().int().min(64).optional(),
+        chunkOverlapTokens: z.number().int().min(0).optional(),
+        backfillBatchSize: z.number().int().min(1).optional(),
+        defaultMinSimilarity: z.number().min(0).max(1).optional(),
+        defaultTopK: z.number().int().min(1).optional(),
+      })
+      .optional(),
+    'Embedding parameters',
+  ),
+  aiPersona: field.plain(
+    z
+      .object({
+        distillSampleMaxTokens: z.number().int().min(1000).optional(),
+        exemplarsLengthMin: z.number().int().min(40).optional(),
+        exemplarsLengthMax: z.number().int().min(80).optional(),
+        exemplarsCandidateCacheTtlSec: z.number().int().min(60).optional(),
+        autoRefreshCron: z.string().optional(),
+        autoRefreshThreshold: z.number().int().min(1).optional(),
+      })
+      .optional(),
+    'Persona parameters',
+  ),
+  aiMemory: field.plain(
+    z
+      .object({
+        recallTopK: z.number().int().min(1).optional(),
+        recallMinSimilarity: z.number().min(0).max(1).optional(),
+        nudgeIfReferencedBelow: z.number().int().min(0).optional(),
+      })
+      .optional(),
+    'Memory parameters',
+  ),
 })
 export class AIDto extends createZodDto(AISchema) {}
 export type AIConfig = z.infer<typeof AISchema>
