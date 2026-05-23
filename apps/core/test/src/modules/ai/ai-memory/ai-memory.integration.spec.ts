@@ -10,7 +10,6 @@ import {
   vi,
 } from 'vitest'
 
-import { dbHelper } from '@/helper/db-mock.helper'
 import { startPgTestContainer } from '@/helper/pg-testcontainer'
 import { createMockEmbeddingRuntime } from '@/mock/processors/ai-embedding.mock'
 import * as schema from '~/database/schema'
@@ -83,7 +82,6 @@ describe('AiMemoryService integration (pg testcontainer)', () => {
 
   beforeEach(async () => {
     await pool.query('DELETE FROM ai_memories')
-    await dbHelper.clear().catch(() => {})
   })
 
   it('creates memory with embedding=null and enqueues MEMORY_EMBED', async () => {
