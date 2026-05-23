@@ -20,9 +20,9 @@ export const SnippetSchema = BaseSchema.extend({
     .string()
     .min(1)
     .transform((val) => val.trim()),
-  name: z.string().regex(/^[\w-]{1,30}$/, {
+  name: z.string().regex(/^[\w.-]{1,30}$/, {
     message:
-      'name must only contain letters, digits, and underscores, and be at most 30 characters',
+      'name must only contain letters, digits, underscores, dots, and hyphens, and be at most 30 characters',
   }),
   reference: z.string().min(1).default('root').optional(),
   comment: z.string().nullable().optional(),
