@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 import { FileSystem, Path } from '@effect/platform'
 import { Context, Effect, Layer, Ref } from 'effect'
+import MiniSearch from 'minisearch'
 
 import { ChapterNotFound, SkillCorpusEmpty } from '../domain/errors'
 
@@ -346,46 +347,91 @@ const buildRegistry = (
     return [...all].sort((a, b) => a.order - b.order)
   })
 
-const indexOfCaseInsensitive = (haystack: string, needle: string): number =>
-  haystack.toLowerCase().indexOf(needle.toLowerCase())
-
-const buildSnippets = (body: string, keyword: string): readonly string[] => {
-  const out: string[] = []
-  const lower = body.toLowerCase()
-  const k = keyword.toLowerCase()
-  if (!k) return out
-  let from = 0
-  while (out.length < 3) {
-    const idx = lower.indexOf(k, from)
-    if (idx < 0) break
-    const start = Math.max(0, idx - 60)
-    const end = Math.min(body.length, idx + keyword.length + 60)
-    let snippet = body.slice(start, end).replaceAll(/\s+/g, ' ').trim()
-    if (start > 0) snippet = `…${snippet}`
-    if (end < body.length) snippet = `${snippet}…`
-    out.push(snippet)
-    from = idx + keyword.length
-  }
-  return out
+interface IndexDoc {
+  readonly slug: string
+  readonly title: string
+  readonly description: string
+  readonly body: string
 }
 
-const rank = (chapter: Chapter, keyword: string): number => {
-  if (!keyword) return 0
-  let score = 0
-  if (indexOfCaseInsensitive(chapter.title, keyword) >= 0) score += 3
-  if (indexOfCaseInsensitive(chapter.description, keyword) >= 0) score += 2
-  const bodyLower = chapter.body.toLowerCase()
-  const k = keyword.toLowerCase()
-  let from = 0
-  let count = 0
-  while (count < 10) {
-    const idx = bodyLower.indexOf(k, from)
-    if (idx < 0) break
-    count += 1
-    from = idx + k.length
+const buildIndex = (chapters: readonly Chapter[]): MiniSearch<IndexDoc> => {
+  const mini = new MiniSearch<IndexDoc>({
+    fields: ['title', 'description', 'body'],
+    storeFields: ['slug'],
+    idField: 'slug',
+    searchOptions: {
+      boost: { title: 3, description: 2 },
+      combineWith: 'AND',
+      prefix: true,
+      fuzzy: 0.2,
+    },
+  })
+  mini.addAll(
+    chapters.map((c) => ({
+      slug: c.slug,
+      title: c.title,
+      description: c.description,
+      body: c.body,
+    })),
+  )
+  return mini
+}
+
+/**
+ * Tokenize the user's query string the same way MiniSearch does for indexing,
+ * so snippets can be located in the body. We use this lightweight tokenizer
+ * rather than `r.terms` because fuzzy / prefix matches expose the indexed
+ * term, not the substring that appears in the body verbatim.
+ */
+const tokenizeQuery = (s: string): readonly string[] =>
+  s
+    .toLowerCase()
+    .split(/[\s\p{P}]+/u)
+    .filter((t) => t.length > 0)
+
+const buildSnippets = (
+  body: string,
+  terms: readonly string[],
+): readonly string[] => {
+  if (terms.length === 0) return []
+  const lower = body.toLowerCase()
+  // Pre-collect up to 5 occurrences per term so single-term queries can
+  // surface multiple snippets and multi-term queries stay balanced via
+  // round-robin emission below.
+  const occs: number[][] = terms.map((term) => {
+    const t = term.toLowerCase()
+    if (!t) return []
+    const positions: number[] = []
+    let from = 0
+    while (positions.length < 5) {
+      const idx = lower.indexOf(t, from)
+      if (idx < 0) break
+      positions.push(idx)
+      from = idx + t.length
+    }
+    return positions
+  })
+  const cursors = Array.from({ length: terms.length }).fill(0)
+  const out: string[] = []
+  let progressed = true
+  while (out.length < 3 && progressed) {
+    progressed = false
+    for (let i = 0; i < terms.length && out.length < 3; i++) {
+      const c = cursors[i]!
+      if (c >= occs[i]!.length) continue
+      const idx = occs[i]![c]!
+      const tLen = terms[i]!.length
+      cursors[i] = c + 1
+      progressed = true
+      const start = Math.max(0, idx - 60)
+      const end = Math.min(body.length, idx + tLen + 60)
+      let snippet = body.slice(start, end).replaceAll(/\s+/g, ' ').trim()
+      if (start > 0) snippet = `…${snippet}`
+      if (end < body.length) snippet = `${snippet}…`
+      out.push(snippet)
+    }
   }
-  score += count
-  return score
+  return out
 }
 
 const make = Effect.gen(function* () {
@@ -395,6 +441,7 @@ const make = Effect.gen(function* () {
   const cliDir = resolveCliSkillsDir()
   const haklexDir = resolveHaklexSkillsDir()
   const cache = yield* Ref.make<readonly Chapter[] | null>(null)
+  const indexCache = yield* Ref.make<MiniSearch<IndexDoc> | null>(null)
 
   const load: Effect.Effect<readonly Chapter[], SkillCorpusEmpty> = Effect.gen(
     function* () {
@@ -405,6 +452,18 @@ const make = Effect.gen(function* () {
       return chapters
     },
   )
+
+  const loadIndex: Effect.Effect<
+    MiniSearch<IndexDoc>,
+    SkillCorpusEmpty
+  > = Effect.gen(function* () {
+    const cached = yield* Ref.get(indexCache)
+    if (cached) return cached
+    const chapters = yield* load
+    const mini = buildIndex(chapters)
+    yield* Ref.set(indexCache, mini)
+    return mini
+  })
 
   const svc: SkillService = {
     list: load,
@@ -429,23 +488,25 @@ const make = Effect.gen(function* () {
       }),
     search: (keyword) =>
       Effect.gen(function* () {
-        const chapters = yield* load
         const kw = keyword.trim()
         if (!kw) return [] as readonly SearchHit[]
-        const scored: Array<{ chapter: Chapter; score: number }> = []
-        for (const c of chapters) {
-          const s = rank(c, kw)
-          if (s > 0) scored.push({ chapter: c, score: s })
-        }
-        scored.sort(
-          (a, b) => b.score - a.score || a.chapter.order - b.chapter.order,
-        )
-        return scored.map(({ chapter }) => ({
-          slug: chapter.slug,
-          title: chapter.title,
-          description: chapter.description,
-          snippets: buildSnippets(chapter.body, kw),
-        }))
+        const chapters = yield* load
+        const mini = yield* loadIndex
+        const tokens = tokenizeQuery(kw)
+        const results = mini.search(kw)
+        const bySlug = new Map(chapters.map((c) => [c.slug, c]))
+        return results.flatMap((r) => {
+          const chapter = bySlug.get(r.id as string)
+          if (!chapter) return []
+          return [
+            {
+              slug: chapter.slug,
+              title: chapter.title,
+              description: chapter.description,
+              snippets: buildSnippets(chapter.body, tokens),
+            },
+          ]
+        })
       }),
   }
   return svc

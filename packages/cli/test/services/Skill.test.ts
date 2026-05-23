@@ -214,6 +214,60 @@ describe('Skill.search', () => {
     expect(hits[1].slug).toBe('b')
   })
 
+  it('matches a multi-word AND query across hyphen-joined tokens', async () => {
+    const layer = makeLayer((mem) => {
+      mem.nodes.set(CLI_DIR, { type: 'dir', mode: 0o755 })
+      mem.nodes.set(`${CLI_DIR}/a.md`, {
+        type: 'file',
+        data: chapter(
+          'a',
+          'AI Authoring',
+          'AI involvement disclosure',
+          0,
+          'Fully AI-generated bodies should declare aiGen 2.',
+        ),
+        mode: 0o644,
+      })
+      mem.nodes.set(`${CLI_DIR}/b.md`, {
+        type: 'file',
+        data: chapter('b', 'Other', 'unrelated', 1, 'only ai here, no second token'),
+        mode: 0o644,
+      })
+    })
+
+    const hits = await Effect.runPromise(
+      Effect.gen(function* () {
+        const skill = yield* Skill
+        return yield* skill.search('ai generated')
+      }).pipe(Effect.provide(layer)),
+    )
+
+    expect(hits.map((h) => h.slug)).toEqual(['a'])
+    expect(hits[0].snippets.length).toBeGreaterThan(0)
+  })
+
+  it('matches a prefix query (aigen → aiGen)', async () => {
+    const layer = makeLayer((mem) => {
+      mem.nodes.set(CLI_DIR, { type: 'dir', mode: 0o755 })
+      mem.nodes.set(`${CLI_DIR}/a.md`, {
+        type: 'file',
+        data: chapter('a', 'Authoring', 'meta presets', 0, 'set meta.aiGen to 2 for full AI'),
+        mode: 0o644,
+      })
+    })
+
+    const hits = await Effect.runPromise(
+      Effect.gen(function* () {
+        const skill = yield* Skill
+        return yield* skill.search('aigen')
+      }).pipe(Effect.provide(layer)),
+    )
+
+    expect(hits.length).toBe(1)
+    expect(hits[0].slug).toBe('a')
+    expect(hits[0].snippets[0]).toMatch(/aiGen/)
+  })
+
   it('returns empty array for blank keyword', async () => {
     const layer = makeLayer((mem) => {
       mem.nodes.set(CLI_DIR, { type: 'dir', mode: 0o755 })
