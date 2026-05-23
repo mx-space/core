@@ -40,9 +40,18 @@ const emptyParagraph = (blockId: string) => ({
   $: { blockId },
 })
 
+const mermaidNode = (diagram: string, blockId: string) => ({
+  type: 'mermaid',
+  version: 1,
+  diagram,
+  $: { blockId },
+})
+
 const editorState = (
   children: Array<
-    ReturnType<typeof paragraph> | ReturnType<typeof emptyParagraph>
+    | ReturnType<typeof paragraph>
+    | ReturnType<typeof emptyParagraph>
+    | ReturnType<typeof mermaidNode>
   >,
 ): string =>
   JSON.stringify({
@@ -58,8 +67,13 @@ const editorState = (
 
 const rootTexts = (content: string): string[] =>
   JSON.parse(content).root.children.map(
-    (child: any) => child.children[0]?.text,
+    (child: any) => child.children?.[0]?.text,
   )
+
+const rootDiagrams = (content: string): string[] =>
+  JSON.parse(content).root.children
+    .filter((child: any) => child.type === 'mermaid')
+    .map((child: any) => child.diagram)
 
 const row = (overrides: Partial<AiTranslationRow> = {}): AiTranslationRow => ({
   id: 'translation-1' as any,
@@ -108,6 +122,57 @@ const createBuilder = () => {
 }
 
 describe('LexicalPartialTranslationBuilder', () => {
+  it('reuses every eligible unchanged block even when the document hash differs', () => {
+    const { builder, lexicalService } = createBuilder()
+    const sourceContent = editorState([
+      paragraph('Source first', 'block-a'),
+      paragraph('Source second', 'block-b'),
+    ])
+    const existingContent = editorState([
+      paragraph('Translated first', 'block-a'),
+      paragraph('Translated second', 'block-b'),
+    ])
+    lexicalService.extractRootBlocks.mockReturnValue([
+      {
+        id: 'block-a',
+        type: 'paragraph',
+        text: 'Source first',
+        fingerprint: 'fp-a',
+        index: 0,
+      },
+      {
+        id: 'block-b',
+        type: 'paragraph',
+        text: 'Source second',
+        fingerprint: 'fp-b',
+        index: 1,
+      },
+    ])
+
+    const result = builder.build(
+      content({ content: sourceContent }),
+      row({
+        hash: 'different-whole-document-hash',
+        content: existingContent,
+        sourceBlockSnapshots: [
+          { id: 'block-a', fingerprint: 'fp-a' },
+          { id: 'block-b', fingerprint: 'fp-b' },
+        ],
+      }),
+    )
+
+    expect(result?.stats).toEqual({
+      totalBlockCount: 2,
+      changedBlockCount: 0,
+      reusedBlockCount: 2,
+      skippedReusableBlockCount: 0,
+    })
+    expect(rootTexts(result!.translation.content!)).toEqual([
+      'Translated first',
+      'Translated second',
+    ])
+  })
+
   it('reuses unchanged blocks, keeps changed blocks as source, and omits deleted old blocks', () => {
     const { builder, lexicalService } = createBuilder()
     const sourceContent = editorState([
@@ -314,5 +379,44 @@ describe('LexicalPartialTranslationBuilder', () => {
       'Anonymous source',
     ])
     expect(result!.translation.text).toBe('Anonymous source')
+  })
+
+  it('falls back to the current Mermaid source when an unchanged block has an invalid reused diagram translation', () => {
+    const { builder, lexicalService } = createBuilder()
+    const sourceDiagram = 'graph TD\n  A[Input] --> B[Output]'
+    const invalidTranslatedDiagram = 'sequenceDiagram\n  A-->B'
+    const sourceContent = editorState([
+      mermaidNode(sourceDiagram, 'block-mermaid'),
+    ])
+    const existingContent = editorState([
+      mermaidNode(invalidTranslatedDiagram, 'block-mermaid'),
+    ])
+    lexicalService.extractRootBlocks.mockReturnValue([
+      {
+        id: 'block-mermaid',
+        type: 'mermaid',
+        text: sourceDiagram,
+        fingerprint: 'fp-mermaid',
+        index: 0,
+      },
+    ])
+
+    const result = builder.build(
+      content({ content: sourceContent }),
+      row({
+        content: existingContent,
+        sourceBlockSnapshots: [
+          { id: 'block-mermaid', fingerprint: 'fp-mermaid' },
+        ],
+      }),
+    )
+
+    expect(result?.stats).toEqual({
+      totalBlockCount: 1,
+      changedBlockCount: 0,
+      reusedBlockCount: 1,
+      skippedReusableBlockCount: 0,
+    })
+    expect(rootDiagrams(result!.translation.content!)).toEqual([sourceDiagram])
   })
 })
