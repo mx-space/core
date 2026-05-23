@@ -76,7 +76,7 @@ export interface PollDeviceTokenOptions {
   readonly onTick?: (state: 'pending' | 'slow_down') => void
 }
 
-export const SUPPORTED_API_VERSIONS = [2] as const
+export const SUPPORTED_API_VERSIONS = [3, 2] as const
 
 // ---------------------------------------------------------------------------
 // Service interface
@@ -285,6 +285,7 @@ function makeAuthService(
 
       type Transport = NetworkTimeout | NetworkDns | NetworkRefused | Generic
       let lastTransport: Transport | null = null
+      const attempted: Array<{ url: string; status: number }> = []
 
       for (const cand of candidates) {
         const probeUrl = `${apiUrl}${cand.prefix}/ok`
@@ -301,6 +302,7 @@ function makeAuthService(
           continue
         }
         const res = result.right
+        attempted.push({ url: probeUrl, status: res.status })
         if (res.status >= 200 && res.status < 300) {
           const apiVersion = cand.version ?? SUPPORTED_API_VERSIONS[0]
           const apiBase =
@@ -313,10 +315,14 @@ function makeAuthService(
       if (lastTransport && lastTransport._tag !== 'Generic') {
         return yield* Effect.fail(lastTransport)
       }
+      const tried =
+        attempted.length > 0
+          ? attempted.map((a) => `${a.url} → ${a.status}`).join(', ')
+          : 'no responses'
       return yield* Effect.fail(
         new AuthProbe({
           message: 'cannot detect auth endpoint',
-          hint: 'verify the URL points at a running mx-core server',
+          hint: `tried: ${tried}. supply the site root (e.g. https://blog.example.com), not the API path. verify the server is reachable and runs a supported API version (${SUPPORTED_API_VERSIONS.join(', ')}).`,
         }),
       )
     })
