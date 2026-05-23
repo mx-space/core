@@ -240,6 +240,27 @@ describe('resolvePostReadPath / resolvePostId', () => {
       expect(extractError(exit.cause)?._tag).toBe('ResourceNotFound')
     }
   })
+
+  it('unwraps the response envelope ({ data: { path } }) from /posts/get-url', async () => {
+    const api = mockApi({
+      '/posts/get-url/aws-vless': { data: { path: '/writing/aws-vless' } },
+    })
+    const svc = make(api)
+    expect(
+      await Effect.runPromise(svc.resolvePostReadPath('aws-vless')),
+    ).toBe('/posts/writing/aws-vless')
+  })
+
+  it('unwraps the response envelope ({ data: { id } }) from the post detail route', async () => {
+    const api = mockApi({
+      '/posts/get-url/aws-vless': { data: { path: '/writing/aws-vless' } },
+      '/posts/writing/aws-vless': { data: { id: 'post-9' }, meta: {} },
+    })
+    const svc = make(api)
+    expect(await Effect.runPromise(svc.resolvePostId('aws-vless'))).toBe(
+      'post-9',
+    )
+  })
 })
 
 describe('resolveNoteId', () => {
