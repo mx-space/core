@@ -1,3 +1,12 @@
+## [13.0.3](https://github.com/mx-space/core/compare/v13.0.2...v13.0.3) (2026-05-24)
+
+
+### Bug Fixes
+
+* **core:** surface field errors in zod pipe and tolerate null images ([ae0ab41](https://github.com/mx-space/core/commit/ae0ab41d558158ad3a3d3f1fe613ed5b72d6e861))
+
+
+
 ## [13.0.2](https://github.com/mx-space/core/compare/v13.0.1...v13.0.2) (2026-05-23)
 
 
