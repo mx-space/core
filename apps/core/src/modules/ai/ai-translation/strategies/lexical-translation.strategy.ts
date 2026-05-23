@@ -10,13 +10,14 @@ import type { IModelRuntime } from '../../runtime'
 import type { ArticleContent } from '../ai-translation.types'
 import type { AITranslationModel } from '../ai-translation.types-model'
 import {
-  type LexicalTranslationResult,
+  backfillReusableBlockTranslations,
+  guardMermaidTranslations,
+} from '../lexical-block-reuse'
+import {
   parseLexicalForTranslation,
-  type PropertySegment,
   restoreLexicalTranslation,
   type TranslationSegment,
 } from '../lexical-translation-parser'
-import { validateMermaidTranslation } from '../mermaid-translation-guard'
 import type {
   ITranslationStrategy,
   TranslationResult,
@@ -34,11 +35,6 @@ interface TranslationUnit {
       }
   meta: string
   memberIds?: string[]
-}
-
-interface BlockTranslationSegments {
-  segments: TranslationSegment[]
-  propertySegments: PropertySegment[]
 }
 
 interface LexicalTranslationInput {
@@ -178,7 +174,9 @@ export class LexicalTranslationStrategy
       )
     }
 
-    this.guardMermaidTranslations(parseResult, allTranslations)
+    guardMermaidTranslations(parseResult, allTranslations, (message) =>
+      this.logger.warn(message),
+    )
 
     const translatedContent = restoreLexicalTranslation(
       parseResult,
@@ -251,11 +249,14 @@ export class LexicalTranslationStrategy
       const translatedParseResult = parseLexicalForTranslation(
         existing.content!,
       )
-      this.backfillReusableBlockTranslations(
+      const backfillResult = backfillReusableBlockTranslations(
         parseResult,
         translatedParseResult,
         unchangedBlockIds,
         allTranslations,
+      )
+      this.logger.log(
+        `Incremental reuse: reused=${backfillResult.reusedBlockIds.length} skipped=${backfillResult.skippedBlockIds.length}`,
       )
     } catch {
       throw new Error('Failed to parse existing translated content')
@@ -411,7 +412,9 @@ export class LexicalTranslationStrategy
       if (sl) sourceLang = sl
     }
 
-    this.guardMermaidTranslations(parseResult, allTranslations)
+    guardMermaidTranslations(parseResult, allTranslations, (message) =>
+      this.logger.warn(message),
+    )
 
     const translatedContent = restoreLexicalTranslation(
       parseResult,
@@ -525,26 +528,6 @@ export class LexicalTranslationStrategy
     return units
   }
 
-  private guardMermaidTranslations(
-    parseResult: LexicalTranslationResult,
-    translations: Map<string, string>,
-  ): void {
-    for (const prop of parseResult.propertySegments) {
-      if (prop.property !== 'diagram' || prop.node?.type !== 'mermaid') continue
-      const translated = translations.get(prop.id)
-      if (translated === undefined) continue
-      if (translated === prop.text) continue
-
-      const validation = validateMermaidTranslation(prop.text, translated)
-      if (!validation.ok) {
-        this.logger.warn(
-          `Mermaid translation rejected: reason=${validation.reason} sourceLen=${prop.text.length} translatedLen=${translated.length}`,
-        )
-        translations.delete(prop.id)
-      }
-    }
-  }
-
   private resolvePropertyUnitMeta(prop: {
     property: string
     node: any
@@ -588,88 +571,6 @@ export class LexicalTranslationStrategy
     }
 
     return units
-  }
-
-  private groupSegmentsByBlock(
-    result: LexicalTranslationResult,
-  ): Map<string, BlockTranslationSegments> {
-    const byBlock = new Map<string, BlockTranslationSegments>()
-
-    const getBucket = (blockId: string) => {
-      let bucket = byBlock.get(blockId)
-      if (!bucket) {
-        bucket = { segments: [], propertySegments: [] }
-        byBlock.set(blockId, bucket)
-      }
-      return bucket
-    }
-
-    for (const segment of result.segments) {
-      if (!segment.blockId || !segment.translatable) continue
-      getBucket(segment.blockId).segments.push(segment)
-    }
-
-    for (const propertySegment of result.propertySegments) {
-      if (!propertySegment.blockId) continue
-      getBucket(propertySegment.blockId).propertySegments.push(propertySegment)
-    }
-
-    return byBlock
-  }
-
-  private canReuseBlockTranslations(
-    currentBlock: BlockTranslationSegments,
-    translatedBlock: BlockTranslationSegments,
-  ): boolean {
-    if (currentBlock.segments.length !== translatedBlock.segments.length) {
-      return false
-    }
-
-    if (
-      currentBlock.propertySegments.length !==
-      translatedBlock.propertySegments.length
-    ) {
-      return false
-    }
-
-    return currentBlock.propertySegments.every((segment, index) => {
-      const translatedSegment = translatedBlock.propertySegments[index]
-      return (
-        translatedSegment.property === segment.property &&
-        translatedSegment.key === segment.key
-      )
-    })
-  }
-
-  private backfillReusableBlockTranslations(
-    currentResult: LexicalTranslationResult,
-    translatedResult: LexicalTranslationResult,
-    unchangedBlockIds: Set<string>,
-    output: Map<string, string>,
-  ): void {
-    const currentBlocks = this.groupSegmentsByBlock(currentResult)
-    const translatedBlocks = this.groupSegmentsByBlock(translatedResult)
-
-    for (const blockId of unchangedBlockIds) {
-      const currentBlock = currentBlocks.get(blockId)
-      const translatedBlock = translatedBlocks.get(blockId)
-
-      if (!currentBlock || !translatedBlock) continue
-      if (!this.canReuseBlockTranslations(currentBlock, translatedBlock)) {
-        continue
-      }
-
-      currentBlock.segments.forEach((segment, index) => {
-        output.set(segment.id, translatedBlock.segments[index].text)
-      })
-
-      currentBlock.propertySegments.forEach((propertySegment, index) => {
-        output.set(
-          propertySegment.id,
-          translatedBlock.propertySegments[index].text,
-        )
-      })
-    }
   }
 
   private unitsToEntries(units: TranslationUnit[]): Record<string, unknown> {
