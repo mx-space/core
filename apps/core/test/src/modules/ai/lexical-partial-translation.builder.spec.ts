@@ -5,6 +5,7 @@ import type {
   ArticleContent,
 } from '~/modules/ai/ai-translation/ai-translation.types'
 import { LexicalPartialTranslationBuilder } from '~/modules/ai/ai-translation/lexical-partial-translation.builder'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { md5 } from '~/utils/tool.util'
 
@@ -418,5 +419,49 @@ describe('LexicalPartialTranslationBuilder', () => {
       skippedReusableBlockCount: 0,
     })
     expect(rootDiagrams(result!.translation.content!)).toEqual([sourceDiagram])
+  })
+
+  it('keeps the current Mermaid source when its diagram changed under the same block id', () => {
+    const lexicalService = new LexicalService()
+    const builder = new LexicalPartialTranslationBuilder(lexicalService)
+    const oldSourceDiagram = 'graph TD\n  A[Input] --> B[Old]'
+    const currentSourceDiagram = 'graph TD\n  A[Input] --> C[Current]'
+    const oldTranslatedDiagram = 'graph TD\n  A[Translated] --> B[Stale]'
+    const oldSourceContent = editorState([
+      mermaidNode(oldSourceDiagram, 'block-mermaid'),
+    ])
+    const currentSourceContent = editorState([
+      mermaidNode(currentSourceDiagram, 'block-mermaid'),
+    ])
+    const existingTranslatedContent = editorState([
+      mermaidNode(oldTranslatedDiagram, 'block-mermaid'),
+    ])
+    const [oldSourceBlock] = lexicalService.extractRootBlocks(oldSourceContent)
+
+    const result = builder.build(
+      content({ content: currentSourceContent }),
+      row({
+        content: existingTranslatedContent,
+        sourceBlockSnapshots: [
+          {
+            id: 'block-mermaid',
+            fingerprint: oldSourceBlock.fingerprint,
+          },
+        ],
+      }),
+    )
+
+    expect(result?.stats).toEqual({
+      totalBlockCount: 1,
+      changedBlockCount: 1,
+      reusedBlockCount: 0,
+      skippedReusableBlockCount: 0,
+    })
+    expect(rootDiagrams(result!.translation.content!)).toEqual([
+      currentSourceDiagram,
+    ])
+    expect(rootDiagrams(result!.translation.content!)).not.toContain(
+      oldTranslatedDiagram,
+    )
   })
 })
