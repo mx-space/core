@@ -1,22 +1,12 @@
 ## TL;DR
 
-Aggregate endpoint now accepts a pipe-separated theme fallback chain, letting frontends gracefully degrade from a custom theme to a shared default.
-
-## Highlights
-
-The `/aggregate` endpoint now accepts `?theme=a|b|c` and walks the candidate list in order, returning the first available theme snippet (with its locale overlay merged in). This unblocks downstream frontends like Yohaku that want to fall back from a primary theme such as `yohaku` to a shared default like `shiro` without coupling clients to server-side defaults. Single-theme requests behave unchanged.
-
-Snippet name validation widens from `[\w-]{1,30}` to `[\w.-]{1,30}`, so existing multi-locale names like `shiro.ja` now pass without renaming. The 1–30 length cap stays in place and the error message reflects the new rule. No data migration is required.
+Patch release: the device-authorization endpoint now accepts owner approvals again, and Mermaid diagrams in rich content render with stable layout.
 
 ## Changes
 
-### Features
-- Theme fallback chain on `/aggregate` via pipe separator (e.g. `?theme=yohaku|shiro`). ([e2118f5](https://github.com/mx-space/core/commit/e2118f51c0d23465b8388d400d91aeb4d74a4a75))
-- Snippet names accept dots and hyphens, allowing locale-suffixed names like `shiro.ja`. ([1fb180f](https://github.com/mx-space/core/commit/1fb180fd6d2d9574e59f4b00166dac26671a7a8b))
-
-### Bug Fixes
-- Dev script now SIGKILLs the nodemon child to prevent a stale core process surviving restart and stacking up duplicates. ([e3cd8da](https://github.com/mx-space/core/commit/e3cd8daa835f1f3f23a2762e41d528150d3898f6))
+- Owner approval for `mxs auth login` (and any other device-flow client) once again succeeds — the verify endpoint was rejecting every payload with `user_code: Invalid input` because the schema declared a snake-case key while the global case-normalization pipe had already camelized it. ([f5703a2](https://github.com/mx-space/core/commit/f5703a23419a5328059ecfe559801d10c0274ac0))
+- Mermaid diagram rendering moves off the upstream `mermaid` runtime onto `beautiful-mermaid` via `@haklex/rich-headless@0.15.4`. Output is unchanged, but loading is staged and the diagram now reserves its estimated height so Mermaid blocks no longer cause cumulative layout shift. ([ff7d07a](https://github.com/mx-space/core/commit/ff7d07aa4c37d5b010fef1be1b4485a1ae67e342), [b5b2bb3](https://github.com/mx-space/core/commit/b5b2bb3189a40ed0186140ece3c92e03fbeddb15))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.0.0...v13.0.1
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.0.1...v13.0.2

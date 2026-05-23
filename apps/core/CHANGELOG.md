@@ -1,3 +1,9 @@
+## [13.0.2](https://github.com/mx-space/core/compare/v13.0.1...v13.0.2) (2026-05-23)
+
+
+### Bug Fixes
+
+* **auth:** align device verify schema with camelCase pipe ([f5703a2](https://github.com/mx-space/core/commit/f5703a23419a5328059ecfe559801d10c0274ac0))
 # CHANGELOG
 
 
