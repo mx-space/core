@@ -100,6 +100,16 @@ describe('pure helpers', () => {
     }),
   )
 
+  it.effect('parseApiUrl strips a bare /api suffix', () =>
+    Effect.gen(function* () {
+      const out = yield* parseApiUrl('https://x.example.com/api')
+      expect(out.baseUrl).toBe('https://x.example.com')
+      expect(out.apiVersion).toBeUndefined()
+      const trailing = yield* parseApiUrl('https://x.example.com/api/')
+      expect(trailing.baseUrl).toBe('https://x.example.com')
+    }),
+  )
+
   it('stripLegacyConfigFields removes legacy keys', () => {
     expect(
       stripLegacyConfigFields({

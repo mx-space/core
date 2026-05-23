@@ -89,15 +89,24 @@ export const login = Command.make('login', { production }, ({ production }) =>
       ({ color }) => `${arrow(`probing ${apiUrl}…`, color)}`,
     )
 
-    // 2. Probe the auth endpoint.
+    // 2. Probe the auth endpoint. Preserve AuthProbe verbatim so the hint
+    //    (attempted endpoints + URL guidance) reaches the renderer; only
+    //    collapse transport-level errors into Generic.
     const probeResult = yield* auth.probe(apiUrl).pipe(
-      Effect.mapError(
-        (e) =>
-          new Generic({
-            message: e.message ?? 'auth probe failed',
-            cause: e,
-          }),
-      ),
+      Effect.catchTags({
+        NetworkTimeout: (e) =>
+          Effect.fail(
+            new Generic({ message: e.message ?? 'auth probe failed', cause: e }),
+          ),
+        NetworkDns: (e) =>
+          Effect.fail(
+            new Generic({ message: e.message ?? 'auth probe failed', cause: e }),
+          ),
+        NetworkRefused: (e) =>
+          Effect.fail(
+            new Generic({ message: e.message ?? 'auth probe failed', cause: e }),
+          ),
+      }),
     )
 
     // 3. Request the device code.

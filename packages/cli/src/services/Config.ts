@@ -124,6 +124,13 @@ export const parseApiUrl = (
     if (match) {
       return { baseUrl: match[1], apiVersion: Number(match[2]) }
     }
+    // Accept a bare `/api` suffix too — many users habitually paste the API
+    // root rather than the site root. The probe lives at `/api/v{N}/auth/ok`,
+    // so a leftover `/api` would yield a `/api/api/v{N}/...` URL and 404.
+    const apiSuffix = url.match(/^(.*)\/api$/)
+    if (apiSuffix) {
+      return { baseUrl: apiSuffix[1] }
+    }
     return { baseUrl: url }
   })
 
