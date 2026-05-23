@@ -181,3 +181,13 @@ export const parseGlobalFlags = (
 
 export const currentDryRun: FiberRef.FiberRef<boolean> =
   FiberRef.unsafeMake<boolean>(false)
+
+// ---------------------------------------------------------------------------
+// FiberRef: --profile. The flag is already threaded into `Api.layer` via
+// `StoreOverrides`, but commands that talk to the Profile/Config services
+// directly (notably `auth login`, which creates profiles) need to read it
+// without re-parsing argv. Set once in `bin/mxs.ts` after `parseGlobalFlags`.
+// ---------------------------------------------------------------------------
+
+export const currentProfileFlag: FiberRef.FiberRef<string | undefined> =
+  FiberRef.unsafeMake<string | undefined>(undefined)
