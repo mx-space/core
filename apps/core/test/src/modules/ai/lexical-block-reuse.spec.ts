@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   backfillReusableBlockTranslations,
-  canReuseBlockTranslations,
-  guardMermaidTranslations,
-  groupSegmentsByBlock,
   type BlockTranslationSegments,
+  canReuseBlockTranslations,
+  groupSegmentsByBlock,
+  guardMermaidTranslations,
 } from '~/modules/ai/ai-translation/lexical-block-reuse'
 import type {
   LexicalTranslationResult,
