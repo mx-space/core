@@ -1093,6 +1093,10 @@ export class AiTranslationService
       return translation
     }
 
+    if (status !== 'stale') {
+      return null
+    }
+
     this.scheduleStaleTranslationRegenerationBestEffort(articleId, targetLang)
 
     const partial = this.lexicalPartialTranslationBuilder.build(
