@@ -19,7 +19,9 @@ import {
 import { noteCmd } from '../cli/note'
 import { pageCmd } from '../cli/page'
 import { postCmd } from '../cli/post'
+import { previewCmd } from '../cli/preview'
 import { profileCmd } from '../cli/profile'
+import { skillCmd } from '../cli/skill'
 import { topicCmd } from '../cli/topic'
 import { updateCmd } from '../cli/update'
 import {
@@ -36,6 +38,7 @@ import {
 } from '../domain/preflight-guards'
 import {
   currentDryRun,
+  currentProfileFlag,
   type GlobalFlags,
   parseGlobalFlags,
 } from '../domain/runtime-flags'
@@ -121,6 +124,8 @@ const rootCmd = Command.make('mxs', {}, () =>
     topicCmd,
     commentCmd,
     configCmd,
+    skillCmd,
+    previewCmd,
     updateCmd,
   ]),
 )
@@ -250,7 +255,7 @@ type HelpTarget =
 // Top-level commands that are leafs (have their own handler) rather than
 // subcommand groups. Bare `mxs <leaf>` MUST execute the handler — only
 // `mxs <leaf> --help` should render our custom group/leaf help page.
-const LEAF_COMMANDS = new Set<string>(['update'])
+const LEAF_COMMANDS = new Set<string>(['update', 'skill', 'preview'])
 
 const detectHelpTarget = (rest: readonly string[]): HelpTarget => {
   // `rest` includes argv[0] (node) and argv[1] (script).
@@ -348,14 +353,18 @@ export const run = (argv: readonly string[]): Promise<void> => {
   )
 
   const program = Effect.locally(
-    Effect.locally(core, currentOutputOptions, {
-      json: flags.json,
-      output: flags.output,
-      quiet: flags.quiet,
-      verbose: flags.verbose,
-    }),
-    currentDryRun,
-    flags.dryRun,
+    Effect.locally(
+      Effect.locally(core, currentOutputOptions, {
+        json: flags.json,
+        output: flags.output,
+        quiet: flags.quiet,
+        verbose: flags.verbose,
+      }),
+      currentDryRun,
+      flags.dryRun,
+    ),
+    currentProfileFlag,
+    flags.profile?.trim() || undefined,
   )
 
   // Defects bypass the Effect error channel; surface them generically.

@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/cli",
-  "version": "0.5.1",
+  "version": "0.6.6",
   "description": "Command line interface for mx-space (mx-core) — auth, content, configuration",
   "keywords": [
     "mx-space",
@@ -27,6 +27,7 @@
   "files": [
     "bin",
     "dist",
+    "skills",
     "README.md",
     "ROADMAP.md"
   ],
@@ -64,7 +65,8 @@
     "@effect/platform": "0.96.1",
     "@effect/platform-node": "0.106.0",
     "@haklex/rich-headless": "0.13.0",
-    "@haklex/rich-litexml": "0.13.0",
+    "@haklex/rich-litexml": "0.15.3",
+    "@haklex/rich-litexml-cli": "0.15.3",
     "@lexical/headless": "^0.44.0",
     "@mx-space/api-client": "workspace:*",
     "better-auth": "^1.6.9",

@@ -101,7 +101,7 @@ local expiry from the refreshed session.
 
 ### Auth and profiles
 
-`mxs auth login [--profile <name>] [--production]` writes credentials to the named profile. If `--profile` is omitted and a current profile is active, it refreshes that profile. If no current profile exists (fresh install), it creates and selects the `default` profile. Passing `--production` sets the production flag on the target profile after login succeeds.
+`mxs auth login [--profile <name>] [--production]` writes credentials to the named profile. If `--profile` is omitted and a current profile is active, it refreshes that profile. If no current profile exists (fresh install), it creates and selects the `default` profile. If the `current` pointer references a profile whose directory has been removed, `auth login` recovers by creating the requested profile (or recreating the pointed-at one) rather than failing with `profile.not_found`. Passing `--production` sets the production flag on the target profile after login succeeds.
 
 `mxs auth logout [--profile <name>]` clears credentials for the target profile; the profile directory and the `current` pointer are preserved.
 
@@ -484,6 +484,40 @@ Example profile config:
 | `5`  | Validation or configuration failure                                          |
 | `6`  | Server 5xx failure                                                           |
 | `7`  | Resource not found                                                           |
+
+## Preview
+
+`mxs preview <file>` renders a LiteXML fragment or `<mxpost>` / `<mxnote>` envelope to HTML and opens it in your default browser. Use it to sanity-check what the article will look like before publishing.
+
+```bash
+mxs preview ./post.xml                 # open in browser
+mxs preview - < note.xml               # read stdin
+mxs preview ./post.xml --theme dark    # dark theme
+mxs preview ./post.xml --save out.html # write HTML to file
+mxs preview ./post.xml --print         # emit HTML to stdout
+```
+
+The variant (`article` / `note`) is auto-detected from the envelope root. Override with `--variant` for raw LiteXML fragments. The command does not contact `mx-core` — it's a pure local render via `@haklex/rich-litexml-cli`.
+
+## Skill bundle
+
+`mxs skill` exposes the bundled AI-agent documentation directly from the CLI binary. Chapters are shipped inside the published `@mx-space/cli` package; liteXML chapters are pulled live from `@haklex/rich-litexml` at runtime (requires `@haklex/rich-litexml@>=0.16.0`).
+
+| Command                          | Behaviour                                                  |
+| -------------------------------- | ---------------------------------------------------------- |
+| `mxs skill`                      | List every chapter (slug + one-line description).          |
+| `mxs skill get <slug>`           | Print one chapter; default output is markdown for agents.  |
+| `mxs skill all`                  | Concatenate every chapter in registry order.               |
+| `mxs skill search <keyword>`     | Substring search across title / description / body.        |
+
+All four verbs honour the global `--json`, `--output llm`, `--output xml`, and `--output readable` flags.
+
+Override paths for development or vendoring:
+
+| Variable                | Effect                                                                 |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `MXS_SKILL_CLI_DIR`     | Override the CLI-native skill directory (default: `<pkg>/skills/`).    |
+| `MXS_SKILL_HAKLEX_DIR`  | Override the haklex liteXML skill directory.                           |
 
 ## Troubleshooting
 

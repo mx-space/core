@@ -47,7 +47,7 @@ describe('cli --help', () => {
   })
 
   it(
-    'lists all nine top-level subcommands',
+    'lists all top-level subcommands',
     async () => {
       const res = await runMxs(['--help'])
       // strip ANSI codes — `@effect/cli` colours headings
@@ -61,6 +61,8 @@ describe('cli --help', () => {
         'category',
         'topic',
         'config',
+        'skill',
+        'preview',
         'update',
       ]) {
         expect(stripped).toMatch(new RegExp(`\\b${cmd}\\b`))

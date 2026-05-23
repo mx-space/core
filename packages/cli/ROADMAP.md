@@ -8,6 +8,11 @@
 
 - Internal rewrite onto Effect-TS (`@effect/cli` + `@effect/platform`). User-facing CLI surface is unchanged — see [`README.md`](./README.md#v030-behavior-changes) for the small list of behavioral adjustments and [`docs/architecture.md`](./docs/architecture.md) for the new internal architecture.
 
+## Shipped in v0.6
+
+- `mxs skill` — bundled AI-agent documentation. List, get, all, search across chapters shipped inside the CLI (`packages/cli/skills/*.md`); liteXML chapters loaded live from the installed `@haklex/rich-litexml` package. Default output is raw markdown for direct context injection.
+- `mxs preview <file>` — local HTML preview of a LiteXML fragment or `<mxpost>` / `<mxnote>` envelope. Wraps `@haklex/rich-litexml-cli` so the output matches the editor renderer.
+
 ## Next — Comment moderation
 
 - `mxs comment list [--page N] [--size N] [--state unread|read|junk] [--all]`
