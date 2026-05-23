@@ -81,7 +81,7 @@ pnpm -C apps/core run test:watch
 
 Every successful JSON response has the shape `{ data, meta? }`. Every error has the shape `{ error: { code, message, details? } }`.
 
-**Success envelope** — `ResponseInterceptorV2` (global `APP_INTERCEPTOR`) wraps controller return values:
+**Success envelope** — `ResponseInterceptor` (global `APP_INTERCEPTOR`) wraps controller return values:
 - A bare value `T` → `{ data: T }`
 - A value produced via `withMeta(data, meta)` (from `~/common/response/envelope.types`) → emitted as `{ data, meta }`. Detection is by an internal `Symbol`, **not** by the presence of a `data` key — returning a literal `{ data, ... }` will be double-wrapped. CI enforces this via `scripts/check-controller-response-envelope.ts`.
 - `undefined` → `204 No Content`
@@ -104,7 +104,7 @@ throw new NoContentCanBeModifiedException()            // code: 'NO_CONTENT_MODI
 
 **Named views** — field selection uses `*.views.ts` Zod schemas (e.g. `PostViews.card`, `PostViews.detail`) instead of a `?select=` parameter. Views are parsed at the controller layer.
 
-**Case conversion** — code is camelCase end to end (Drizzle column TS props, Zod DTOs, services). The `RequestCaseNormalizationPipe` (global, runs before the Zod validation pipe) folds incoming request keys to camelCase: query and path params are camelized recursively; request bodies are camelized **only at the top level** so freeform JSON values (`meta`, `socialIds`, AI agent `messages`, snippet payloads) survive verbatim. Both `?sort_by=` and `?sortBy=` reach the controller as `sortBy`. `ResponseInterceptorV2` converts the response `data`/`meta` back to snake_case at the wire boundary (`transformResponseCase` in `src/common/response/case-transform.ts`); the wire format stays snake_case. DB column names are unchanged — each Drizzle column keeps its explicit snake_case name string. Never call a manual `snakeCaseKeys`-style helper in a controller.
+**Case conversion** — code is camelCase end to end (Drizzle column TS props, Zod DTOs, services). The `RequestCaseNormalizationPipe` (global, runs before the Zod validation pipe) folds incoming request keys to camelCase: query and path params are camelized recursively; request bodies are camelized **only at the top level** so freeform JSON values (`meta`, `socialIds`, AI agent `messages`, snippet payloads) survive verbatim. Both `?sort_by=` and `?sortBy=` reach the controller as `sortBy`. `ResponseInterceptor` converts the response `data`/`meta` back to snake_case at the wire boundary (`transformResponseCase` in `src/common/response/case-transform.ts`); the wire format stays snake_case. DB column names are unchanged — each Drizzle column keeps its explicit snake_case name string. Never call a manual `snakeCaseKeys`-style helper in a controller.
 
 **`@BypassCaseTransform([paths])`** — opt a field subtree out of snake_case conversion (free-form JSON columns, snippet payloads). Paths root at `data`, dotted segments, `[]` marks an array level (e.g. `'items[].rawPayload'`). Located in `src/common/decorators/bypass-case-transform.decorator.ts`.
 

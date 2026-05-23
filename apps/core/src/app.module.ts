@@ -17,7 +17,7 @@ import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { DbQueryInterceptor } from './common/interceptors/db-query.interceptor'
 import { IdempotenceInterceptor } from './common/interceptors/idempotence.interceptor'
-import { ResponseInterceptorV2 } from './common/interceptors/response.interceptor'
+import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { RequestContextMiddleware } from './common/middlewares/request-context.middleware'
 import { AppMigrationsModule } from './database/app-migrations/app-migrations.module'
 import { AckModule } from './modules/ack/ack.module'
@@ -150,7 +150,7 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
 
     {
       provide: APP_INTERCEPTOR,
-      useClass: ResponseInterceptorV2,
+      useClass: ResponseInterceptor,
     },
 
     {

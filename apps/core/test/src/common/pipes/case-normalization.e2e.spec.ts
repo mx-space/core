@@ -41,7 +41,7 @@ describe('request case normalization', () => {
       url: '/case-test/echo?sort_by=createdAt&sort_order=asc',
     })
     expect(res.statusCode).toBe(200)
-    // ResponseInterceptorV2 snake-cases the controller return on the wire
+    // ResponseInterceptor snake-cases the controller return on the wire
     expect(res.json().data).toEqual({ sort_by: 'createdAt', sort_order: 'asc' })
   })
 
