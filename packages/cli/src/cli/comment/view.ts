@@ -44,10 +44,12 @@ const colorForCommentState = (
   return formatStateBadge(label, color) ?? label
 }
 
-const truncate = (s: string, max = 80): string =>
-  s.length > max ? `${s.slice(0, max - 1)}…` : s
-
-const oneLine = (s: string): string => s.replaceAll(/\s+/g, ' ').trim()
+const indentBody = (s: string, indent = '   '): string =>
+  s
+    .replace(/\s+$/, '')
+    .split('\n')
+    .map((line) => `${indent}${line}`)
+    .join('\n')
 
 const authorOf = (doc: Record<string, unknown>): string => {
   const reader = asRecord(first(doc, 'reader'))
@@ -190,9 +192,9 @@ const renderListItem = (
     lines.push(wrap(ANSI.dim, `   ${metaParts.join('  ·  ')}`, color))
   }
 
-  // Body preview (one line, truncated).
+  // Body — full text, indented to align with list item.
   const text = firstString(doc, 'text')
-  if (text) lines.push(`   ${truncate(oneLine(text))}`)
+  if (text) lines.push(indentBody(text))
 
   return lines.join('\n')
 }
