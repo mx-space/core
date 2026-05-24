@@ -952,6 +952,72 @@ describe('LexicalService', () => {
         updatedBlocks[2].fingerprint,
       )
     })
+
+    it('changes the fingerprint when a Mermaid diagram changes without changing block id', () => {
+      const originalState = makeEditorState([
+        {
+          type: 'mermaid',
+          version: 1,
+          diagram: 'graph TD\n  A[Input] --> B[Output]',
+          $: { blockId: 'mermaid1' },
+        },
+      ])
+      const updatedState = makeEditorState([
+        {
+          type: 'mermaid',
+          version: 1,
+          diagram: 'graph TD\n  A[Input] --> C[Changed]',
+          $: { blockId: 'mermaid1' },
+        },
+      ])
+
+      const [originalBlock] = service.extractRootBlocks(originalState)
+      const [updatedBlock] = service.extractRootBlocks(updatedState)
+
+      expect(originalBlock.id).toBe('mermaid1')
+      expect(updatedBlock.id).toBe('mermaid1')
+      expect(originalBlock.text).toContain('B[Output]')
+      expect(updatedBlock.text).toContain('C[Changed]')
+      expect(originalBlock.fingerprint).not.toBe(updatedBlock.fingerprint)
+    })
+
+    it('changes the fingerprint when a poll question or option label changes without changing block id', () => {
+      const originalState = makeEditorState([
+        {
+          type: 'poll',
+          version: 1,
+          question: 'Preferred release window?',
+          options: [
+            { id: 'a', label: 'Morning', url: '/ignored-a' },
+            { id: 'b', label: 'Evening', url: '/ignored-b' },
+          ],
+          $: { blockId: 'poll0001' },
+        },
+      ])
+      const updatedState = makeEditorState([
+        {
+          type: 'poll',
+          version: 1,
+          question: 'Preferred deployment window?',
+          options: [
+            { id: 'a', label: 'Morning', url: '/ignored-a' },
+            { id: 'b', label: 'Afternoon', url: '/ignored-b' },
+          ],
+          $: { blockId: 'poll0001' },
+        },
+      ])
+
+      const [originalBlock] = service.extractRootBlocks(originalState)
+      const [updatedBlock] = service.extractRootBlocks(updatedState)
+
+      expect(originalBlock.id).toBe('poll0001')
+      expect(updatedBlock.id).toBe('poll0001')
+      expect(originalBlock.text).toContain('Preferred release window?')
+      expect(originalBlock.text).toContain('Evening')
+      expect(updatedBlock.text).toContain('Preferred deployment window?')
+      expect(updatedBlock.text).toContain('Afternoon')
+      expect(originalBlock.fingerprint).not.toBe(updatedBlock.fingerprint)
+    })
   })
 
   // ── Error handling ──

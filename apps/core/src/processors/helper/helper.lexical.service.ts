@@ -140,6 +140,33 @@ export class LexicalService {
       ({ text }) => text,
     )
 
+    if (
+      node.type === 'mermaid' &&
+      typeof node.diagram === 'string' &&
+      node.diagram.trim()
+    ) {
+      segments.push(node.diagram)
+    }
+
+    if (node.type === 'poll') {
+      if (typeof node.question === 'string' && node.question.trim()) {
+        segments.push(node.question)
+      }
+
+      if (Array.isArray(node.options)) {
+        for (const option of node.options) {
+          if (
+            option &&
+            typeof option === 'object' &&
+            typeof option.label === 'string' &&
+            option.label.trim()
+          ) {
+            segments.push(option.label)
+          }
+        }
+      }
+    }
+
     if (Array.isArray(node.children)) {
       const childText = node.children
         .map((child: any) => this.extractBlockText(child))
