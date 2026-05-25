@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, asc, eq, inArray, ne, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, ne, or, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { readers } from '~/database/schema'
+import { readers, sessions } from '~/database/schema'
 import {
   BaseRepository,
   type PaginationResult,
@@ -116,11 +116,30 @@ export class ReaderRepository extends BaseRepository {
     page = Math.max(1, page)
     size = Math.min(100, Math.max(1, size))
     const offset = (page - 1) * size
+    const lastLoginAt = sql<Date | null>`max(${sessions.createdAt})`
     const [rows, [{ count }]] = await Promise.all([
       this.db
-        .select()
+        .select({
+          id: readers.id,
+          email: readers.email,
+          emailVerified: readers.emailVerified,
+          name: readers.name,
+          handle: readers.handle,
+          username: readers.username,
+          displayUsername: readers.displayUsername,
+          image: readers.image,
+          role: readers.role,
+          createdAt: readers.createdAt,
+          updatedAt: readers.updatedAt,
+        })
         .from(readers)
-        .orderBy(asc(readers.createdAt), asc(readers.id))
+        .leftJoin(sessions, eq(sessions.userId, readers.id))
+        .groupBy(readers.id)
+        .orderBy(
+          sql`${lastLoginAt} desc nulls last`,
+          desc(readers.createdAt),
+          asc(readers.id),
+        )
         .limit(size)
         .offset(offset),
       this.db.select({ count: sql<number>`count(*)::int` }).from(readers),
