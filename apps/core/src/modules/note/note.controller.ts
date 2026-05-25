@@ -197,14 +197,26 @@ export class NoteController {
     applyArticleTranslationInPlace(current, translationResult)
 
     const insightsLang = parseLanguageCode(lang)
-    const hasInsightsInLocale = await this.aiInsightsService
-      .hasInsightsInLang(current.id!, insightsLang)
-      .catch(() => false)
+    const [hasInsightsInLocale, summaryDoc] = await Promise.all([
+      this.aiInsightsService
+        .hasInsightsInLang(current.id!, insightsLang)
+        .catch(() => false),
+      this.aiSummaryService.getSummaryForPublicMeta(current.id!, insightsLang),
+    ])
 
     const metaBuilder = new MetaObjectBuilder()
       .view('detail')
       .interaction({ isLiked: liked })
       .insights({ hasInLocale: hasInsightsInLocale })
+
+    if (summaryDoc) {
+      metaBuilder.summary({
+        id: summaryDoc.id,
+        text: summaryDoc.summary,
+        lang: summaryDoc.lang ?? insightsLang,
+        createdAt: summaryDoc.createdAt,
+      })
+    }
 
     if (isSingle) {
       if (lang) {

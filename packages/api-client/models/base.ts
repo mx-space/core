@@ -69,6 +69,13 @@ export interface InsightsMeta {
   hasInLocale: boolean
 }
 
+export interface SummaryMeta {
+  id: string
+  text: string
+  lang: string
+  createdAt: string
+}
+
 export interface ResponseMeta {
   pagination?: PaginationMeta
   view?: string
@@ -78,4 +85,5 @@ export interface ResponseMeta {
   related?: RelatedRef[]
   articles?: Record<string, RelatedRef>
   insights?: InsightsMeta
+  summary?: SummaryMeta
 }

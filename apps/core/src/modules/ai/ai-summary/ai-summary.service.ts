@@ -579,6 +579,22 @@ export class AiSummaryService implements OnModuleInit {
     return this.findValidSummary(articleId, lang, document.text)
   }
 
+  async getSummaryForPublicMeta(
+    articleId: string,
+    lang: string,
+  ): Promise<AISummaryModel | null> {
+    try {
+      return await this.getSummaryByArticleId(articleId, lang)
+    } catch (error) {
+      this.logger.warn(
+        `summary meta lookup failed: article=${articleId} lang=${lang} ${
+          (error as Error).message
+        }`,
+      )
+      return null
+    }
+  }
+
   async getSummaryById(id: string) {
     const doc = this.toSummaryDoc(await this.aiSummaryRepository.findById(id))
     if (!doc) {

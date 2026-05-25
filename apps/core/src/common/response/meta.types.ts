@@ -103,6 +103,15 @@ export const InsightsMetaSchema = z
   .object({ hasInLocale: z.boolean() })
   .strict()
 
+export const SummaryMetaSchema = z
+  .object({
+    id: z.string(),
+    text: z.string(),
+    lang: z.string(),
+    createdAt: z.date(),
+  })
+  .strict()
+
 export const ResponseMetaSchema = z.object({
   pagination: PaginationSchema.optional(),
   view: z.string().optional(),
@@ -119,6 +128,7 @@ export const ResponseMetaSchema = z.object({
   related: z.array(RelatedRefSchema).optional(),
   articles: z.record(z.string(), RelatedRefSchema).optional(),
   insights: InsightsMetaSchema.optional(),
+  summary: SummaryMetaSchema.optional(),
 })
 
 export type Pagination = z.infer<typeof PaginationSchema>
@@ -129,4 +139,5 @@ export type EnrichmentEntry = z.infer<typeof EnrichmentEntrySchema>
 export type RelatedRef = z.infer<typeof RelatedRefSchema>
 export type ArticleRefMap = Record<string, RelatedRef>
 export type InsightsMeta = z.infer<typeof InsightsMetaSchema>
+export type SummaryMeta = z.infer<typeof SummaryMetaSchema>
 export type ResponseMeta = z.infer<typeof ResponseMetaSchema>
