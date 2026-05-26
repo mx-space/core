@@ -15,10 +15,47 @@ import { PageModel } from '~/modules/page/page.types'
 import { PostModel } from '~/modules/post/post.types'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EventPayloadEnricherService } from '~/processors/helper/helper.event-payload.service'
-import { TranslationService } from '~/processors/helper/helper.translation.service'
+import {
+  applyTranslationEntriesInPlace,
+  type EntryMaps,
+  type EntryRule,
+  TranslationService,
+} from '~/processors/helper/helper.translation.service'
 
 import { GatewayService } from '../gateway.service'
 import { WebEventsGateway } from './events.gateway'
+
+const POST_ENTRY_RULES: ReadonlyArray<EntryRule> = [
+  {
+    path: 'category.name',
+    keyPath: 'category.name',
+    mode: 'entity',
+    idField: 'id',
+  },
+]
+
+const NOTE_ENTRY_RULES: ReadonlyArray<EntryRule> = [
+  { path: 'topic.name', keyPath: 'topic.name', mode: 'entity', idField: 'id' },
+  {
+    path: 'topic.introduce',
+    keyPath: 'topic.introduce',
+    mode: 'entity',
+    idField: 'id',
+  },
+  {
+    path: 'topic.description',
+    keyPath: 'topic.description',
+    mode: 'entity',
+    idField: 'id',
+  },
+  { path: 'mood', keyPath: 'note.mood', mode: 'dict' },
+  { path: 'weather', keyPath: 'note.weather', mode: 'dict' },
+]
+
+const emptyEntryMaps = (): EntryMaps => ({
+  dictMaps: new Map(),
+  entityMaps: new Map(),
+})
 
 @Injectable()
 export class VisitorEventDispatchService implements OnModuleInit {
@@ -319,11 +356,14 @@ export class VisitorEventDispatchService implements OnModuleInit {
     )
 
     for (const [lang, socketIds] of langGroups) {
-      const result = await this.translationService.translateArticle({
-        articleId,
-        targetLang: lang,
-        originalData,
-      })
+      const [result, entryMaps] = await Promise.all([
+        this.translationService.translateArticle({
+          articleId,
+          targetLang: lang,
+          originalData,
+        }),
+        this.getEntryTranslationsForSocketPayload(doc, lang),
+      ])
 
       const data = {
         ...doc,
@@ -338,10 +378,98 @@ export class VisitorEventDispatchService implements OnModuleInit {
         isTranslated: result.isTranslated,
         translationMeta: result.translationMeta,
         availableTranslations: result.availableTranslations,
+        payloadLang: result.isTranslated
+          ? result.translationMeta?.targetLang
+          : (result.sourceLang ?? (doc as any).meta?.lang),
+      }
+
+      if (lang) {
+        applyTranslationEntriesInPlace(
+          data,
+          entryMaps,
+          this.getEntryRulesForSocketPayload(data),
+        )
       }
 
       // The socket ID is the room socket.io auto-joins, so we can target it directly
       this.webGateway.broadcast(event, data, { rooms: socketIds })
     }
+  }
+
+  private getEntryRulesForSocketPayload(
+    doc: Record<string, any>,
+  ): ReadonlyArray<EntryRule> {
+    if (doc.category?.id) return POST_ENTRY_RULES
+    if (doc.topic?.id || doc.mood || doc.weather) return NOTE_ENTRY_RULES
+    return []
+  }
+
+  private async getEntryTranslationsForSocketPayload(
+    doc: PostModel | NoteModel | PageModel,
+    lang?: string,
+  ): Promise<EntryMaps> {
+    if (!lang) return emptyEntryMaps()
+
+    const entityMaps = new Map<EntryRule['keyPath'], Map<string, string>>()
+    const dictMaps = new Map<EntryRule['keyPath'], Map<string, string>>()
+    const lookups: Array<Promise<void>> = []
+    const payload = doc as Record<string, any>
+
+    if (payload.category?.id) {
+      lookups.push(
+        this.translationService
+          .getEntityTranslations('category.name', lang, [
+            String(payload.category.id),
+          ])
+          .then((map) => {
+            entityMaps.set('category.name', map)
+          }),
+      )
+    }
+
+    if (payload.topic?.id) {
+      const topicId = String(payload.topic.id)
+      lookups.push(
+        this.translationService
+          .getEntityTranslations('topic.name', lang, [topicId])
+          .then((map) => {
+            entityMaps.set('topic.name', map)
+          }),
+        this.translationService
+          .getEntityTranslations('topic.introduce', lang, [topicId])
+          .then((map) => {
+            entityMaps.set('topic.introduce', map)
+          }),
+        this.translationService
+          .getEntityTranslations('topic.description', lang, [topicId])
+          .then((map) => {
+            entityMaps.set('topic.description', map)
+          }),
+      )
+    }
+
+    if (payload.mood) {
+      lookups.push(
+        this.translationService
+          .getDictTranslations('note.mood', lang, [payload.mood])
+          .then((map) => {
+            dictMaps.set('note.mood', map)
+          }),
+      )
+    }
+
+    if (payload.weather) {
+      lookups.push(
+        this.translationService
+          .getDictTranslations('note.weather', lang, [payload.weather])
+          .then((map) => {
+            dictMaps.set('note.weather', map)
+          }),
+      )
+    }
+
+    await Promise.all(lookups)
+
+    return { dictMaps, entityMaps }
   }
 }
