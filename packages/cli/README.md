@@ -239,6 +239,8 @@ URL follows the admin-vue3 hash-router convention
 | `--state <state>` | Publication filter.            |
 | `--sort <field>`  | Sort field passed as `sortBy`. |
 
+`mxs note list --output llm` emits one compact metadata block per note and omits full note bodies.
+
 ### Note Write Flags
 
 | Flag                   | Field                                                                  |

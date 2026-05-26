@@ -3,6 +3,7 @@ import { Effect, Option } from 'effect'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
+import { noteListView } from './view'
 
 const page = Options.integer('page').pipe(Options.optional)
 const size = Options.integer('size').pipe(Options.optional)
@@ -26,6 +27,6 @@ export const list = Command.make(
           sortBy: unwrap(sort),
         },
       })
-      yield* renderer.emitSuccess(res)
+      yield* renderer.emit(noteListView, res)
     }),
 ).pipe(Command.withDescription('list notes'))
