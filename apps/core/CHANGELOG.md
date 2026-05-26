@@ -1,3 +1,17 @@
+# [13.1.0](https://github.com/mx-space/core/compare/v13.0.3...v13.1.0) (2026-05-26)
+
+
+### Bug Fixes
+
+* **activity:** lowercase identity on presence update ([3798d14](https://github.com/mx-space/core/commit/3798d14c06c7e5cc4514a4879ca55e1858af28e0))
+* **gateway:** localize article update payloads ([cd71e1a](https://github.com/mx-space/core/commit/cd71e1a613b540b898636b8420d2965dce1c59e9))
+
+
+### Features
+
+* **ai:** support partial lexical block translations ([#2737](https://github.com/mx-space/core/issues/2737)) ([40dfd26](https://github.com/mx-space/core/commit/40dfd26ec88748d59101ce3dc0f190b76fadac04))
+* **core:** expose ai summary on public article detail meta ([d78967d](https://github.com/mx-space/core/commit/d78967d4d352fb3c0e1a861cd1f84b229dc20509))
+* **core:** order reader list by most recent session ([dc826bb](https://github.com/mx-space/core/commit/dc826bbe4d24521bab7be9425c70d94b832457f5))
 ## [13.0.3](https://github.com/mx-space/core/compare/v13.0.2...v13.0.3) (2026-05-24)
 
 
