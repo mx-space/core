@@ -103,16 +103,26 @@ export class AgentBrowserService {
         ac,
       )
       this.pool.markLive(slot)
+      const safeFinalUrl = finalUrl ? parseAndValidateUrl(finalUrl) : url
+      await assertHostnameSafe(safeFinalUrl.hostname)
 
       const documentStatus = await this.queryFinalDocumentStatus(
         executable,
         baseArgs,
-        url,
+        safeFinalUrl,
         ac,
       )
-      const status = documentStatus ?? 200
+      if (documentStatus === null) {
+        return {
+          ok: false,
+          status: null,
+          finalUrl: safeFinalUrl.toString(),
+          error: 'agent-browser document status unavailable',
+        }
+      }
+      const status = documentStatus
       const ok = status >= 200 && status < 400
-      return { ok, status, finalUrl: finalUrl || url.toString() }
+      return { ok, status, finalUrl: safeFinalUrl.toString() }
     } catch (error) {
       const err = error as NodeJS.ErrnoException & { stderr?: string }
       if (ac.signal.aborted) {
@@ -131,6 +141,13 @@ export class AgentBrowserService {
           ok: false,
           status: null,
           error: `agent-browser not installed (${executable})`,
+        }
+      }
+      if (error instanceof UnsafeUrlError) {
+        return {
+          ok: false,
+          status: null,
+          error: error.message,
         }
       }
       // Likely chromium-side failure (DNS, TLS, refused). Discard the slot so
