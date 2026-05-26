@@ -65,6 +65,7 @@ import { SubscribeModule } from './modules/subscribe/subscribe.module'
 import { TopicModule } from './modules/topic/topic.module'
 import { UpdateModule } from './modules/update/update.module'
 import { WebhookModule } from './modules/webhook/webhook.module'
+import { AgentBrowserModule } from './processors/agent-browser/agent-browser.module'
 import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
@@ -127,6 +128,7 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
     RenderEjsModule,
     // end biz
 
+    AgentBrowserModule,
     GatewayModule,
     HelperModule,
 

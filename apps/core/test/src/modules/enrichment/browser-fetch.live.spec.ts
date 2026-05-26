@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { BrowserFetchService } from '~/modules/enrichment/providers/open-graph/browser-fetch.service'
-import { BrowserSessionPool } from '~/modules/enrichment/providers/open-graph/browser-session-pool'
+import { AgentBrowserSessionPool as BrowserSessionPool } from '~/processors/agent-browser/agent-browser-pool.service'
 
 const LIVE = process.env.LIVE_BROWSER_FETCH === '1'
 const describeLive = LIVE ? describe : describe.skip

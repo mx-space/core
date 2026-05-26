@@ -5,9 +5,9 @@ import { Injectable, Logger } from '@nestjs/common'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { isDev } from '~/global/env.global'
+import { AgentBrowserService } from '~/processors/agent-browser/agent-browser.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { HttpService } from '~/processors/helper/helper.http.service'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -35,7 +35,7 @@ export class LinkService {
     private readonly configsService: ConfigsService,
     private readonly ownerService: OwnerService,
     private readonly eventManager: EventManagerService,
-    private readonly http: HttpService,
+    private readonly agentBrowser: AgentBrowserService,
     private readonly linkAvatarService: LinkAvatarService,
   ) {}
 
@@ -224,21 +224,26 @@ export class LinkService {
 
   async checkLinkHealth() {
     const links = await this.linkRepository.findByState(LinkState.Pass)
+    // Probe through the shared agent-browser pool so JS-rendered landing
+    // pages, anti-bot challenges, and client-side redirects no longer look
+    // dead to us. The pool acts as a concurrency semaphore — `Promise.all`
+    // below queues at the pool, it does not fork one chromium per link.
     const results = await Promise.all(
       links.map(async ({ id, url }) => {
-        this.logger.debug(`Checking friend link ${id} health: GET -> ${url}`)
-        try {
-          const res = await this.http.axiosRef.get(url, {
-            timeout: 5000,
-            'axios-retry': { retries: 1, shouldResetTimeout: true },
-          })
-          return { status: res.status, id }
-        } catch (error: any) {
-          return {
-            id,
-            status: error.response?.status || 'ERROR',
-            message: error.message,
-          }
+        this.logger.debug(
+          `Checking friend link ${id} health via agent-browser -> ${url}`,
+        )
+        const probe = await this.agentBrowser.checkUrl(url, {
+          timeoutMs: 15_000,
+        })
+        if (probe.ok) {
+          return { id, status: probe.status ?? 200, finalUrl: probe.finalUrl }
+        }
+        return {
+          id,
+          status: probe.status ?? 'ERROR',
+          message: probe.error,
+          finalUrl: probe.finalUrl,
         }
       }),
     )

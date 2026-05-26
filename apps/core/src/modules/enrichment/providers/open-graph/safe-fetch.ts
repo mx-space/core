@@ -1,8 +1,13 @@
 import { isDev } from '~/global/env.global'
+import {
+  assertHostnameSafe,
+  parseAndValidateUrl,
+} from '~/processors/agent-browser/url-guard'
 
-import { assertHostnameSafe, parseAndValidateUrl } from './url-guard'
-
-export { isPrivateIp, UnsafeUrlError } from './url-guard'
+export {
+  isPrivateIp,
+  UnsafeUrlError,
+} from '~/processors/agent-browser/url-guard'
 
 const MAX_REDIRECTS = 5
 // Pose as a current Chrome on macOS. Self-identifying "bot" UAs (the previous
