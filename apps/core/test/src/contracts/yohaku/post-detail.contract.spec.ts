@@ -21,6 +21,7 @@ import { describe, expect, test } from 'vitest'
 
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
+import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { PostController } from '~/modules/post/post.controller'
 import { PostService } from '~/modules/post/post.service'
 
@@ -111,6 +112,15 @@ const aiInsightsProvider = {
   },
 }
 
+const aiSummaryProvider = {
+  provide: AiSummaryService,
+  useValue: {
+    async getSummaryForPublicMeta() {
+      return null
+    },
+  },
+}
+
 describe('Yohaku contract — post detail (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [PostController],
@@ -121,6 +131,7 @@ describe('Yohaku contract — post detail (e2e)', () => {
       translationEntryProvider,
       enrichmentProvider,
       aiInsightsProvider,
+      aiSummaryProvider,
     ],
   })
 

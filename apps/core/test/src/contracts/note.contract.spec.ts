@@ -139,6 +139,9 @@ const aiSummaryProvider = {
     async batchGetSummariesByRefIds() {
       return new Map<string, string>()
     },
+    async getSummaryForPublicMeta() {
+      return null
+    },
   },
 }
 

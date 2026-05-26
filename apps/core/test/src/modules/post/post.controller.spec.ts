@@ -102,11 +102,16 @@ const createController = (opts: CreateControllerOptions = {}) => {
     hasInsightsInLang: vi.fn(async () => false),
   }
 
+  const aiSummaryService = {
+    getSummaryForPublicMeta: vi.fn(async () => null),
+  }
+
   const controller = new PostController(
     postService as any,
     countingService as any,
     translationService as any,
     aiInsightsService as any,
+    aiSummaryService as any,
     enrichmentService as any,
     translationEntryService as any,
   )
