@@ -333,9 +333,26 @@ Moderation commands for the comment queue. `state` is one of `unread`, `read`, o
 | `mxs comment list`                     | List comments (default `--state unread`).                         |
 | `mxs comment unread`                   | Shortcut for `comment list --state unread` (accepts `--page` / `--size`). |
 | `mxs comment get <id>`                 | Show a single comment by id.                                      |
+| `mxs comment reply <id> --text <s>`    | Post an owner reply to a comment.                                 |
 | `mxs comment approve <id...>`          | Mark one or more comments as read (state→1).                      |
 | `mxs comment reject <id...>`           | Mark one or more comments as junk (state→2).                      |
 | `mxs comment delete <id...>`           | Soft-delete one or more comments.                                 |
+
+### Comment Reply Flags
+
+| Flag           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `--text <s>`   | Reply text. Accepts inline literal, `file=<path>`, or `-` / `stdin` to read from stdin.     |
+| `--whispers`   | Mark this reply as whispers (owner-only visible).                                           |
+| `--silent`     | On success, emit a minimal `{ ok: true }` instead of the full server response.              |
+
+Examples:
+
+```bash
+mxs comment reply 141088044533944320 --text "thanks for reading"
+mxs comment reply 141088044533944320 --text file=reply.md --silent
+echo "stdin body" | mxs comment reply 141088044533944320 --text -
+```
 
 ### Comment List Flags
 

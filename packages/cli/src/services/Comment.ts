@@ -48,12 +48,23 @@ export interface CommentBatchFilter {
   readonly currentState?: CommentStateName
 }
 
+export interface CommentReplyInput {
+  readonly text: string
+  readonly isWhispers?: boolean
+}
+
 export interface CommentService {
   readonly list: (
     opts: CommentListOptions,
   ) => Effect.Effect<CommentListResponse, ApiError>
 
   readonly get: (id: string) => Effect.Effect<unknown, ApiError>
+
+  /** Reply to a comment as the owner. Routes through `/comments/owner-reply/:id`. */
+  readonly reply: (
+    parentId: string,
+    body: CommentReplyInput,
+  ) => Effect.Effect<unknown, ApiError>
 
   /** Mark one or more comments as read (state=1). Routes through batch endpoint. */
   readonly approve: (
@@ -151,6 +162,17 @@ const makeService = (api: Context.Tag.Service<Api>): CommentService => {
 
     get: (id) => api.request(`/comments/${id}`),
 
+    reply: (parentId, body) =>
+      api.request(`/comments/owner-reply/${parentId}`, {
+        method: 'POST',
+        body: {
+          text: body.text,
+          ...(body.isWhispers !== undefined
+            ? { isWhispers: body.isWhispers }
+            : {}),
+        },
+      }),
+
     approve: (ids) =>
       patchBatchState({ ids: [...ids], state: stateToCode.read }),
     reject: (ids) =>
@@ -186,10 +208,7 @@ const makeService = (api: Context.Tag.Service<Api>): CommentService => {
   }
 }
 
-export class Comment extends Context.Tag('Comment')<
-  Comment,
-  CommentService
->() {
+export class Comment extends Context.Tag('Comment')<Comment, CommentService>() {
   static Default: Layer.Layer<Comment, never, Api> = Layer.effect(
     Comment,
     Effect.gen(function* () {
