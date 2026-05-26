@@ -309,6 +309,9 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     if (!isValidRoomName(roomName)) {
       throw createAppException(AppErrorCode.INVALID_ROOM_NAME)
     }
+
+    data.identity = data.identity.toLowerCase()
+
     const roomSockets = await this.webGateway.getSocketsOfRoom(roomName)
 
     const socket = roomSockets.find((socket) => socket.id === data.sid)
