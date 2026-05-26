@@ -52,28 +52,21 @@ export class ActivityController<ResponseWrapper> implements IController {
    */
   getPresence(roomName: string) {
     return this.proxy.presence.get<{
-      data: Record<string, ActivityPresence>
+      presence: Record<string, ActivityPresence>
       readers: Record<string, AuthUser>
     }>({
       params: {
         room_name: roomName,
       },
-      transformResponse: (data) => {
+      transformResponse: <T>(data: any): T => {
         const payload = data as {
-          data?: Record<string, unknown>
+          presence?: Record<string, unknown>
           readers?: Record<string, unknown>
         }
 
         return {
-          ...camelcaseKeys(
-            Object.fromEntries(
-              Object.entries(payload).filter(
-                ([key]) => key !== 'data' && key !== 'readers',
-              ),
-            ),
-          ),
-          data: Object.fromEntries(
-            Object.entries(payload.data ?? {}).map(([identity, value]) => [
+          presence: Object.fromEntries(
+            Object.entries(payload.presence ?? {}).map(([identity, value]) => [
               identity,
               camelcaseKeys<ActivityPresence>(value),
             ]),
@@ -84,7 +77,7 @@ export class ActivityController<ResponseWrapper> implements IController {
               camelcaseKeys<AuthUser>(value),
             ]),
           ),
-        }
+        } as T
       },
     })
   }

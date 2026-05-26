@@ -18,7 +18,7 @@ describe('test activity client', () => {
 
   test('GET /presence', async () => {
     mockResponse('/activity/presence', {
-      data: {
+      presence: {
         owner_a07f1234: {
           identity: 'owner_a07f1234',
           position: 0,
@@ -34,7 +34,7 @@ describe('test activity client', () => {
     })
 
     await expect(client.activity.getPresence('122')).resolves.toMatchObject({
-      data: {
+      presence: {
         owner_a07f1234: {
           identity: 'owner_a07f1234',
           position: 0,
@@ -50,8 +50,8 @@ describe('test activity client', () => {
     })
 
     const result = await client.activity.getPresence('122')
-    expect(result.$serialized.data).toHaveProperty('owner_a07f1234')
-    expect(result.$serialized.data).not.toHaveProperty('ownerA07f1234')
+    expect(result.$serialized.presence).toHaveProperty('owner_a07f1234')
+    expect(result.$serialized.presence).not.toHaveProperty('ownerA07f1234')
   })
 
   test('POST /presence/update', async () => {
