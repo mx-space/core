@@ -21,7 +21,6 @@ import { LeetcodeProvider } from './providers/leetcode/leetcode.provider'
 import { NeoDBBookProvider } from './providers/neodb/neodb-book.provider'
 import { NeteaseMusicProvider } from './providers/netease/netease-music.provider'
 import { BrowserFetchService } from './providers/open-graph/browser-fetch.service'
-import { BrowserSessionPool } from './providers/open-graph/browser-session-pool'
 import { CapturePipelineService } from './providers/open-graph/capture-pipeline.service'
 import { CaptureStorageService } from './providers/open-graph/capture-storage.service'
 import { OpenGraphProvider } from './providers/open-graph/open-graph.provider'
@@ -66,7 +65,6 @@ const allProviders = [
     ProviderRegistry,
     UrlExtractorService,
     EnrichmentOriginGuard,
-    BrowserSessionPool,
     BrowserFetchService,
     CapturePipelineService,
     CaptureStorageService,

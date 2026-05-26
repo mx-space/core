@@ -8,12 +8,14 @@ import {
   Optional,
 } from '@nestjs/common'
 
-const execFileAsync = promisify(execFile)
+import {
+  AGENT_BROWSER_CLOSE_TIMEOUT_MS,
+  AGENT_BROWSER_DEFAULT_EXECUTABLE,
+  AGENT_BROWSER_DEFAULT_IDLE_MS,
+  AGENT_BROWSER_DEFAULT_MAX_SIZE,
+} from './agent-browser.constants'
 
-const DEFAULT_EXECUTABLE = process.env.AGENT_BROWSER_BIN || 'agent-browser'
-const DEFAULT_MAX_SIZE = Number(process.env.AGENT_BROWSER_MAX_CONCURRENT ?? '2')
-const DEFAULT_IDLE_MS = Number(process.env.AGENT_BROWSER_IDLE_MS ?? '60000')
-const CLOSE_TIMEOUT_MS = 5_000
+const execFileAsync = promisify(execFile)
 
 export interface PoolSlot {
   readonly name: string
@@ -48,7 +50,7 @@ interface Waiter {
   onAbort?: () => void
 }
 
-export interface BrowserSessionPoolOptions {
+export interface AgentBrowserSessionPoolOptions {
   maxSize?: number
   idleMs?: number
   executable?: string
@@ -57,18 +59,20 @@ export interface BrowserSessionPoolOptions {
 /**
  * Bounded pool of long-lived `agent-browser --session` names. Acts as both a
  * resource cache (avoids per-request chromium spin-up) and a concurrency
- * semaphore (no more than `maxSize` in-flight captures).
+ * semaphore (no more than `maxSize` in-flight commands).
  *
- * State note: chromium cookies / localStorage persist across reuses of the
- * same slot. Open Graph fetches do not send credentials, so cross-origin
- * leakage is bounded to whatever a previously-visited page chose to set
- * publicly. Operators wanting stricter isolation should set
- * `AGENT_BROWSER_MAX_CONCURRENT=1` + `AGENT_BROWSER_IDLE_MS=0` which approximates
- * the per-request lifecycle the pool replaced.
+ * Lifecycle invariants:
+ *   - chromium is only started lazily on first command on a slot
+ *   - idle slots close themselves after `idleMs` so we do not hold dozens of
+ *     headless Chromiums in RAM between bursts
+ *   - `release(slot, { discard: true })` synchronously evicts a wedged slot
+ *     so a subsequent acquire does not reuse a broken chromium state
+ *   - `onModuleDestroy` drains every in-flight close, so Nest shutdown means
+ *     "no more chromium processes"
  */
 @Injectable()
-export class BrowserSessionPool implements OnModuleDestroy {
-  private readonly logger = new Logger(BrowserSessionPool.name)
+export class AgentBrowserSessionPool implements OnModuleDestroy {
+  private readonly logger = new Logger(AgentBrowserSessionPool.name)
   private readonly maxSize: number
   private readonly idleMs: number
   private readonly executable: string
@@ -81,15 +85,22 @@ export class BrowserSessionPool implements OnModuleDestroy {
   private readonly inFlightCloses = new Set<Promise<void>>()
   private shuttingDown = false
 
-  constructor(@Optional() options?: BrowserSessionPoolOptions) {
-    this.maxSize = Math.max(1, options?.maxSize ?? DEFAULT_MAX_SIZE)
-    this.idleMs = Math.max(0, options?.idleMs ?? DEFAULT_IDLE_MS)
-    this.executable = options?.executable ?? DEFAULT_EXECUTABLE
+  constructor(@Optional() options?: AgentBrowserSessionPoolOptions) {
+    this.maxSize = Math.max(
+      1,
+      options?.maxSize ?? AGENT_BROWSER_DEFAULT_MAX_SIZE,
+    )
+    this.idleMs = Math.max(0, options?.idleMs ?? AGENT_BROWSER_DEFAULT_IDLE_MS)
+    this.executable = options?.executable ?? AGENT_BROWSER_DEFAULT_EXECUTABLE
+  }
+
+  get executableName(): string {
+    return this.executable
   }
 
   async acquire(options?: AcquireOptions): Promise<PoolSlot> {
     if (this.shuttingDown) {
-      throw new Error('BrowserSessionPool has been shut down')
+      throw new Error('AgentBrowserSessionPool has been shut down')
     }
     const free = this.slots.find((s) => !s.inUse)
     if (free) {
@@ -100,7 +111,7 @@ export class BrowserSessionPool implements OnModuleDestroy {
     if (this.slots.length < this.maxSize) {
       const slot: InternalSlot = {
         index: this.slots.length,
-        name: `og-pool-${this.slots.length}`,
+        name: this.buildSlotName(this.slots.length),
         inUse: true,
         live: false,
       }
@@ -152,7 +163,7 @@ export class BrowserSessionPool implements OnModuleDestroy {
       if (waiter.signal && waiter.onAbort) {
         waiter.signal.removeEventListener('abort', waiter.onAbort)
       }
-      waiter.reject(new Error('BrowserSessionPool has been shut down'))
+      waiter.reject(new Error('AgentBrowserSessionPool has been shut down'))
     }
     await Promise.all(this.slots.splice(0).map((s) => this.closeSlot(s, true)))
     // Drain in-flight closes started by release / idle paths so the caller
@@ -163,13 +174,17 @@ export class BrowserSessionPool implements OnModuleDestroy {
   }
 
   /**
-   * Hook called by `BrowserFetchService` after the first successful command on
-   * a freshly-allocated slot — at that point chromium has truly started, so
-   * subsequent shutdown / discard knows to issue `close`.
+   * Hook called by callers after the first successful command on a freshly-
+   * allocated slot — at that point chromium has truly started, so subsequent
+   * shutdown / discard knows to issue `close`.
    */
   markLive(slot: PoolSlot): void {
     const internal = this.slots.find((s) => s.name === slot.name)
     if (internal) internal.live = true
+  }
+
+  private buildSlotName(index: number): string {
+    return `agent-browser-${index}`
   }
 
   private flushWaiter(): void {
@@ -191,7 +206,7 @@ export class BrowserSessionPool implements OnModuleDestroy {
     if (this.slots.length < this.maxSize) {
       const slot: InternalSlot = {
         index: this.slots.length,
-        name: `og-pool-${this.slots.length}`,
+        name: this.buildSlotName(this.slots.length),
         inUse: true,
         live: false,
       }
@@ -247,7 +262,7 @@ export class BrowserSessionPool implements OnModuleDestroy {
           this.executable,
           ['--session', slot.name, 'close'],
           {
-            timeout: CLOSE_TIMEOUT_MS,
+            timeout: AGENT_BROWSER_CLOSE_TIMEOUT_MS,
             windowsHide: true,
             env: process.env,
           },

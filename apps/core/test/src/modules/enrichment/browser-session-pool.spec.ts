@@ -12,8 +12,8 @@ vi.mock('node:child_process', async () => {
   return { ...actual, execFile: execFileMock }
 })
 
-const { BrowserSessionPool } =
-  await import('~/modules/enrichment/providers/open-graph/browser-session-pool')
+const { AgentBrowserSessionPool: BrowserSessionPool } =
+  await import('~/processors/agent-browser/agent-browser-pool.service')
 
 function mockExecFileSuccess(): void {
   execFileMock.mockImplementation((...args: unknown[]) => {
@@ -39,10 +39,10 @@ afterEach(() => {
 })
 
 describe('BrowserSessionPool', () => {
-  it('acquire returns a slot named og-pool-0 on first use', async () => {
+  it('acquire returns a slot named agent-browser-0 on first use', async () => {
     const pool = new BrowserSessionPool({ maxSize: 2, idleMs: 60_000 })
     const slot = await pool.acquire()
-    expect(slot.name).toBe('og-pool-0')
+    expect(slot.name).toBe('agent-browser-0')
     pool.release(slot)
     await pool.shutdown()
   })
@@ -51,7 +51,10 @@ describe('BrowserSessionPool', () => {
     const pool = new BrowserSessionPool({ maxSize: 2, idleMs: 60_000 })
     const a = await pool.acquire()
     const b = await pool.acquire()
-    expect([a.name, b.name].sort()).toEqual(['og-pool-0', 'og-pool-1'])
+    expect([a.name, b.name].sort()).toEqual([
+      'agent-browser-0',
+      'agent-browser-1',
+    ])
     pool.release(a)
     pool.release(b)
     await pool.shutdown()
@@ -142,7 +145,7 @@ describe('BrowserSessionPool', () => {
       (call) => (call[1] as string[]).at(-1) === 'close',
     )
     expect(closeCalls.length).toBe(1)
-    expect(b.name).toBe('og-pool-0')
+    expect(b.name).toBe('agent-browser-0')
     pool.release(b)
     await pool.shutdown()
   })
