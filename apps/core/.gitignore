@@ -11,3 +11,5 @@ tmp
 
 temp.ts
 dist
+
+scripts/.bench-translation-output-*.md
