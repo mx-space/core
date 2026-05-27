@@ -518,8 +518,17 @@ New file
 ### Historical migration spec
 
 `test/src/database/app-migrations/20260512-enrichment-captures.spec.ts`
-asserts the historical schema shape and is **not** updated; it must keep
-showing the `blurhash` column to validate the older migration.
+must be updated to assert the post-0015 shape. The schema migrator runs the
+entire migration chain on every test database, so by the time the spec's
+assertions execute, 0015 has already renamed `blurhash` → `thumbhash`.
+Concretely:
+
+- Column assertion: `byName.get('thumbhash')` (was `blurhash`), and additionally
+  assert `byName.has('blurhash') === false`.
+- Insert at line ~143: write `thumbhash:` not `blurhash:`.
+
+The cascade- and LRU-index coverage in the same spec stays valuable and is
+preserved.
 
 ### lint:migrations
 
