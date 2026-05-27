@@ -9,7 +9,7 @@ export const ImageSchema = z.object({
   accent: zHexColor.optional(),
   type: z.string().optional(),
   src: zStrictUrl.optional(),
-  blurHash: z.string().optional(),
+  thumbhash: z.string().optional(),
 })
 
 export class ImageDto extends createZodDto(ImageSchema) {}

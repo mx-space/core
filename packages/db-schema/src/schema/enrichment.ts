@@ -58,7 +58,7 @@ export const enrichmentCaptures = pgTable(
     bytes: integer('bytes').notNull(),
     width: integer('width').notNull(),
     height: integer('height').notNull(),
-    blurhash: text('blurhash'),
+    thumbhash: text('thumbhash'),
     palette: jsonb('palette').$type<EnrichmentImagePalette>(),
     createdAt: createdAt(),
     lastAccessedAt: timestamp('last_accessed_at', {
