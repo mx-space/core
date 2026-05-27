@@ -213,7 +213,7 @@ describe('OpenGraph capture integration', () => {
       getOnlineImageSizeAndMeta: vi.fn(async () => ({
         size: { width: 0, height: 0 },
         accent: '#000000',
-        blurHash: '',
+        thumbhash: '',
       })),
     } as any
 

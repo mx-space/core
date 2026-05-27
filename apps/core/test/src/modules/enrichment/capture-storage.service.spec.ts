@@ -78,7 +78,7 @@ function makeProcessed(
     webp: Buffer.alloc(1024, 0xab),
     width: 1280,
     height: 720,
-    blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
+    thumbhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
     palette: { dominant: '#112233' },
     ...overrides,
   }
@@ -508,7 +508,7 @@ describe('CaptureStorageService', () => {
       bytes: 1024,
       width: 1280,
       height: 720,
-      blurhash: null,
+      thumbhash: null,
       palette: null,
     })
 

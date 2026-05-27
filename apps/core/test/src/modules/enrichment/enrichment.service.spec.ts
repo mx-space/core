@@ -44,7 +44,7 @@ interface ServiceStubs {
     | {
         size: { width?: number; height?: number }
         accent: string
-        blurHash: string
+        thumbhash: string
       }
     | Error
   configEnabled?: boolean
@@ -103,7 +103,7 @@ function makeService(stubs: ServiceStubs = {}) {
         stubs.imageMeta ?? {
           size: { width: 500, height: 750 },
           accent: '#aabbcc',
-          blurHash: 'L_blurhash_',
+          thumbhash: 'L_blurhash_',
         }
       )
     }),
@@ -219,7 +219,7 @@ describe('EnrichmentService.resolve (SWR)', () => {
       'https://image.tmdb.org/t/p/w500/poster.jpg',
     )
     expect(out.result.color).toBe('#aabbcc')
-    expect(out.result.thumbnailImage?.blurhash).toBe('L_blurhash_')
+    expect(out.result.thumbnailImage?.thumbhash).toBe('L_blurhash_')
     expect(out.result.thumbnailImage?.width).toBe(500)
     expect(out.result.thumbnailImage?.height).toBe(750)
     expect(repository.upsert).toHaveBeenCalled()
@@ -391,7 +391,7 @@ describe('EnrichmentService.resolve (locale)', () => {
 })
 
 describe('EnrichmentService.enrichWithImageMeta', () => {
-  it('populates color/blurhash/size when image.url present and color absent', async () => {
+  it('populates color/thumbhash/size when image.url present and color absent', async () => {
     const { service, imageService } = makeService()
     const result = makeResult({
       thumbnailImage: { url: 'https://example.com/p.jpg' },
@@ -399,7 +399,7 @@ describe('EnrichmentService.enrichWithImageMeta', () => {
     await (service as any).enrichWithImageMeta(result)
     expect(imageService.getOnlineImageSizeAndMeta).toHaveBeenCalledTimes(1)
     expect(result.color).toBe('#aabbcc')
-    expect(result.thumbnailImage?.blurhash).toBe('L_blurhash_')
+    expect(result.thumbnailImage?.thumbhash).toBe('L_blurhash_')
     expect(result.thumbnailImage?.width).toBe(500)
     expect(result.thumbnailImage?.height).toBe(750)
   })
