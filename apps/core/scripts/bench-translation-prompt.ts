@@ -14,6 +14,7 @@ import {
   AIProviderType,
 } from '../src/modules/ai/ai.types'
 import type { ArticleContent } from '../src/modules/ai/ai-translation/ai-translation.types'
+import { TranslationReviewerService } from '../src/modules/ai/ai-translation/reviewer.service'
 import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/strategies/lexical-translation.strategy'
 import {
   createModelRuntime,
@@ -844,7 +845,11 @@ async function runSample(
 ) {
   const fixture = JSON.parse(await readFile(args.file, 'utf8'))
   const lexicalService = new LexicalService()
-  const strategy = new LexicalTranslationStrategy(lexicalService)
+  const reviewerService = new TranslationReviewerService()
+  const strategy = new LexicalTranslationStrategy(
+    lexicalService,
+    reviewerService,
+  )
   const { article, inputMode, parityWarnings, sourceLexical } = buildArticle(
     args.file,
     fixture,
