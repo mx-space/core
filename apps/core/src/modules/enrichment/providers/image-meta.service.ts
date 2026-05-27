@@ -1,18 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { encode } from 'blurhash'
 import sharp from 'sharp'
+import { rgbaToThumbHash } from 'thumbhash'
 
 const FETCH_TIMEOUT_MS = 5000
 const MAX_BYTES = 5 * 1024 * 1024
 
-const BLURHASH_SIZE = 32
-const BLURHASH_COMP_X = 4
-const BLURHASH_COMP_Y = 4
-
 export interface ImageMeta {
   width?: number
   height?: number
-  blurhash?: string
+  thumbhash?: string
   palette?: { dominant: string; swatches?: string[] }
 }
 
@@ -73,11 +69,11 @@ export class ImageMetaService {
     const metadata = await sharped.metadata()
     const { dominant } = await sharped.stats()
     const dominantHex = rgbToHex(dominant.r, dominant.g, dominant.b)
-    const blurhash = await encodeBlurhash(sharped)
+    const thumbhash = await encodeThumbhash(sharped)
     return {
       width: metadata.width,
       height: metadata.height,
-      blurhash,
+      thumbhash,
       palette: { dominant: dominantHex },
     }
   }
@@ -91,18 +87,13 @@ function rgbToHex(r: number, g: number, b: number): string {
   return `#${h(r)}${h(g)}${h(b)}`
 }
 
-async function encodeBlurhash(source: sharp.Sharp): Promise<string> {
+async function encodeThumbhash(source: sharp.Sharp): Promise<string> {
   const { data, info } = await source
     .clone()
     .raw()
     .ensureAlpha()
-    .resize(BLURHASH_SIZE, BLURHASH_SIZE, { fit: 'inside' })
+    .resize(100, 100, { fit: 'inside' })
     .toBuffer({ resolveWithObject: true })
-  return encode(
-    new Uint8ClampedArray(data),
-    info.width,
-    info.height,
-    BLURHASH_COMP_X,
-    BLURHASH_COMP_Y,
-  )
+  const u8 = rgbaToThumbHash(info.width, info.height, data)
+  return Buffer.from(u8).toString('base64')
 }

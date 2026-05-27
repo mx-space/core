@@ -37,7 +37,7 @@ const EnrichmentImageSchema = z.object({
   width: z.number().optional(),
   height: z.number().optional(),
   alt: z.string().optional(),
-  blurhash: z.string().optional(),
+  thumbhash: z.string().optional(),
 })
 
 const EnrichmentAttributeSchema = z.object({
@@ -53,7 +53,7 @@ const EnrichmentScreenshotSchema = z.object({
   url: z.string(),
   width: z.number(),
   height: z.number(),
-  blurhash: z.string().optional(),
+  thumbhash: z.string().optional(),
   palette: z
     .object({
       dominant: z.string(),

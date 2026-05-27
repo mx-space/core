@@ -196,9 +196,6 @@ importers:
       better-auth:
         specifier: ^1.6.11
         version: 1.6.11(@cloudflare/workers-types@4.20260525.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260525.1)(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.21.0))(mongodb@7.2.0(@noble/hashes@2.2.0))(pg@8.21.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vitest@4.1.7)
-      blurhash:
-        specifier: 2.0.5
-        version: 2.0.5
       cache-manager:
         specifier: 7.2.8
         version: 7.2.8
@@ -337,6 +334,9 @@ importers:
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
+      thumbhash:
+        specifier: 0.1.1
+        version: 0.1.1
       ua-parser-js:
         specifier: 2.0.10
         version: 2.0.10
@@ -5327,9 +5327,6 @@ packages:
 
   blake3-wasm@2.1.5:
     resolution: {integrity: sha512-F1+K8EbfOZE49dtoPtmxUQrpXaBIl3ICvasLh+nJta0xkz+9kF/7uet9fLnwKqhDrmj6g+6K3Tw9yQPUg2ka5g==}
-
-  blurhash@2.0.5:
-    resolution: {integrity: sha512-cRygWd7kGBQO3VEhPiTgq4Wc43ctsM+o46urrmPOiuAe+07fzlSB9OJVdpgDL0jPqXUVQ9ht7aq7kxOeJHRK+w==}
 
   body-parser@2.2.2:
     resolution: {integrity: sha512-oP5VkATKlNwcgvxi0vM0p/D3n2C3EReYVX+DNYs5TjZFn/oQt2j+4sVJtSMr18pdRr8wjTcBl6LoV+FUwzPmNA==}
@@ -15197,8 +15194,6 @@ snapshots:
       readable-stream: 3.6.2
 
   blake3-wasm@2.1.5: {}
-
-  blurhash@2.0.5: {}
 
   body-parser@2.2.2:
     dependencies:

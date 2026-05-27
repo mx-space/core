@@ -868,7 +868,7 @@ export class EnrichmentService implements OnModuleInit {
         url: stored.url,
         width: processed.width,
         height: processed.height,
-        blurhash: processed.blurhash,
+        thumbhash: processed.thumbhash,
         palette: processed.palette,
       }
       result.captureImage = captureImage
@@ -884,7 +884,7 @@ export class EnrichmentService implements OnModuleInit {
 
   /**
    * Best-effort enrichment of an EnrichmentResult with image-derived metadata
-   * (dominant accent color, blurhash, dimensions). Mutates `result` in place.
+   * (dominant accent color, thumbhash, dimensions). Mutates `result` in place.
    * Skipped when no thumbnailImage URL is set or when `color` is already
    * populated (preserves provider-specific writes such as github-repo's
    * language name).
@@ -894,19 +894,19 @@ export class EnrichmentService implements OnModuleInit {
     if (result.color) return
 
     try {
-      const { size, accent, blurHash } =
+      const { size, accent, thumbhash } =
         await this.imageService.getOnlineImageSizeAndMeta(
           result.thumbnailImage.url,
         )
       result.color = accent
-      result.thumbnailImage.blurhash = blurHash
+      result.thumbnailImage.thumbhash = thumbhash
       if (size.width != null) result.thumbnailImage.width = size.width
       if (size.height != null) result.thumbnailImage.height = size.height
     } catch (error) {
       this.logger.warn(
         `Image meta extraction failed for ${result.url}: ${error.message}`,
       )
-      // swallow — color/blurhash/size are optional fields
+      // swallow — color/thumbhash/size are optional fields
     }
   }
 

@@ -106,7 +106,7 @@ export class CaptureStorageService {
       bytes,
       width: processed.width,
       height: processed.height,
-      blurhash: processed.blurhash,
+      thumbhash: processed.thumbhash,
       palette: processed.palette,
     })
 

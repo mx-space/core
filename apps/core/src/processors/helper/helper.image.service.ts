@@ -1,7 +1,7 @@
 import type { OnModuleInit } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
-import { encode } from 'blurhash'
 import type { Sharp } from 'sharp'
+import { rgbaToThumbHash } from 'thumbhash'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
 import type { ImageModel } from '~/shared/types/legacy-model.type'
@@ -54,7 +54,7 @@ export class ImageService implements OnModuleInit {
       if (
         originImage &&
         originImage.src === src &&
-        ['height', 'width', 'type', 'accent', 'blurHash'].every(
+        ['height', 'width', 'type', 'accent', 'thumbhash'].every(
           (key) => keys.has(key) && originImage[key],
         )
       ) {
@@ -64,14 +64,14 @@ export class ImageService implements OnModuleInit {
 
       try {
         this.logger.log(`Get --> ${src}`)
-        const { size, accent, blurHash } =
+        const { size, accent, thumbhash } =
           await this.getOnlineImageSizeAndMeta(src)
         const filename = src.split('/').pop()
         this.logger.debug(
           `[${filename}]: height: ${size.height}, width: ${size.width}, accent: ${accent}`,
         )
 
-        result.push({ ...size, accent, src, blurHash })
+        result.push({ ...size, accent, src, thumbhash })
       } catch (error) {
         this.logger.error(`GET --> ${src} ${error.message}`)
 
@@ -85,7 +85,7 @@ export class ImageService implements OnModuleInit {
             type: undefined,
             accent: undefined,
             src: undefined,
-            blurHash: undefined,
+            thumbhash: undefined,
           })
         }
       }
@@ -138,21 +138,21 @@ export class ImageService implements OnModuleInit {
     // r g b number to hex
     const accent = `#${dominant.r.toString(16).padStart(2, '0')}${dominant.g.toString(16).padStart(2, '0')}${dominant.b.toString(16).padStart(2, '0')}`
 
-    const blurHash = await encodeImageToBlurhash(sharped)
+    const thumbhash = await encodeImageToThumbhash(sharped)
 
-    return { size, accent, blurHash }
+    return { size, accent, thumbhash }
   }
 }
 
-const encodeImageToBlurhash = (sharped: Sharp) =>
+const encodeImageToThumbhash = (sharped: Sharp) =>
   new Promise<string>((resolve, reject) => {
     sharped
       .raw()
       .ensureAlpha()
-      .resize(32, 32, { fit: 'inside' })
+      .resize(100, 100, { fit: 'inside' })
       .toBuffer((err, buffer, { width, height }) => {
         if (err) return reject(err)
-
-        resolve(encode(new Uint8ClampedArray(buffer), width, height, 4, 4))
+        const u8 = rgbaToThumbHash(width, height, buffer)
+        resolve(Buffer.from(u8).toString('base64'))
       })
   })
