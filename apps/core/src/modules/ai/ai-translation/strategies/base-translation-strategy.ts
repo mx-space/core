@@ -362,14 +362,14 @@ export abstract class BaseTranslationStrategy {
       ...chunkResponse,
       translations: this.normalizeTranslationTree(
         chunkResponse.translations,
-        'callChunkTranslation',
+        'callWriter',
       ),
     } as T
   }
 
-  protected async callChunkTranslation(
+  protected async callWriter(
     targetLang: string,
-    chunk: {
+    payload: {
       documentContext: string
       textEntries: Record<string, unknown>
       segmentMeta?: Record<string, string>
@@ -381,13 +381,13 @@ export abstract class BaseTranslationStrategy {
     sourceLang: string
     translations: Record<string, string | Record<string, string>>
   }> {
-    type ChunkTranslationResult = {
+    type WriterResult = {
       sourceLang: string
       translations: Record<string, string | Record<string, string>>
     }
 
     const { systemPrompt, prompt, schema, reasoningEffort } =
-      AI_PROMPTS.translationChunk(targetLang, chunk)
+      AI_PROMPTS.translationChunk(targetLang, payload)
 
     const messages = [
       { role: 'system' as const, content: systemPrompt },
@@ -405,10 +405,10 @@ export abstract class BaseTranslationStrategy {
         })
         return schema.parse(
           this.normalizeChunkTranslationResponse(result.output),
-        ) as ChunkTranslationResult
+        ) as WriterResult
       } catch (error) {
         this.logger.warn(
-          `callChunkTranslation: structured output failed, falling back to text mode (${
+          `callWriter: structured output failed, falling back to text mode (${
             error instanceof Error ? error.message : String(error)
           })`,
         )
@@ -441,11 +441,70 @@ export abstract class BaseTranslationStrategy {
 
     return schema.parse(
       this.normalizeChunkTranslationResponse(
-        this.parseModelJson<ChunkTranslationResult>(
-          fullText,
-          'callChunkTranslation',
-        ),
+        this.parseModelJson<WriterResult>(fullText, 'callWriter'),
       ),
-    ) as ChunkTranslationResult
+    ) as WriterResult
+  }
+
+  protected async callEditor(
+    targetLang: string,
+    payload: {
+      fullTranslations: Record<string, string>
+      issues: Array<{
+        id: string
+        severity: 'minor' | 'major'
+        problem: string
+        hint?: string
+      }>
+    },
+    runtime: IModelRuntime,
+    signal?: AbortSignal,
+  ): Promise<{ patches: Record<string, string> } | null> {
+    const { systemPrompt, prompt, schema, reasoningEffort } =
+      AI_PROMPTS.translationEditor(targetLang, payload)
+
+    if (typeof runtime.generateStructured === 'function') {
+      try {
+        const result = await runtime.generateStructured({
+          systemPrompt,
+          prompt,
+          schema,
+          reasoningEffort,
+          signal,
+        })
+        return schema.parse(result.output) as {
+          patches: Record<string, string>
+        }
+      } catch (error) {
+        this.logger.warn(
+          `callEditor: structured output failed, falling back to text mode (${
+            error instanceof Error ? error.message : String(error)
+          })`,
+        )
+      }
+    }
+
+    try {
+      const result = await runtime.generateText({
+        messages: [
+          { role: 'system' as const, content: systemPrompt },
+          { role: 'user' as const, content: prompt },
+        ],
+        temperature: 0.3,
+        maxRetries: 1,
+        reasoningEffort,
+        signal,
+      })
+      const parsed = this.parseModelJson<{ patches: Record<string, string> }>(
+        result.text,
+        'callEditor',
+      )
+      return schema.parse(parsed) as { patches: Record<string, string> }
+    } catch (error) {
+      this.logger.warn(
+        `callEditor failed: ${error instanceof Error ? error.message : String(error)}`,
+      )
+      return null
+    }
   }
 }

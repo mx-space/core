@@ -40,6 +40,10 @@
     "prod:debug": "cross-env NODE_ENV=production nest start --debug --watch",
     "test": "NODE_ENV=development vitest",
     "test:watch": "NODE_ENV=development vitest -w",
+    "test:live": "NODE_ENV=development RUN_LIVE_TESTS=1 vitest run translation-review-pipeline.live.e2e-spec.ts",
+    "test:live:local": "NODE_ENV=development RUN_LIVE_TESTS=1 SMOKE_PROVIDER=openai-compatible vitest run translation-review-pipeline.live.e2e-spec.ts",
+    "test:live:mix": "NODE_ENV=development RUN_LIVE_TESTS=1 SMOKE_TRANSLATOR_PROVIDER=openai-compatible SMOKE_REVIEWER_PROVIDER=openrouter SMOKE_REVIEWER_MODEL=openai/gpt-5.5 vitest run translation-review-pipeline.live.e2e-spec.ts",
+    "test:live:deepseek-mix": "NODE_ENV=development RUN_LIVE_TESTS=1 SMOKE_REVIEWER_MODEL=openai/gpt-5.5 vitest run translation-review-pipeline.live.e2e-spec.ts",
     "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs",
     "publish": "bump"
   },

@@ -41,6 +41,18 @@ export class AiService {
     return this.getModelWithInfoForFeature(AIFeatureKey.Translation)
   }
 
+  public async getTranslationReviewModel(): Promise<IModelRuntime> {
+    const aiConfig = await this.configService.get('ai')
+    const assignment = this.getAssignment(
+      aiConfig,
+      AIFeatureKey.TranslationReview,
+    )
+    if (!assignment) {
+      return this.getTranslationModel()
+    }
+    return this.getModelForFeature(AIFeatureKey.TranslationReview)
+  }
+
   public async getInsightsModel(): Promise<IModelRuntime> {
     return this.getModelForFeature(AIFeatureKey.Insights)
   }
@@ -111,6 +123,7 @@ export class AiService {
       [AIFeatureKey.Writer]: 'writerModel',
       [AIFeatureKey.CommentReview]: 'commentReviewModel',
       [AIFeatureKey.Translation]: 'translationModel',
+      [AIFeatureKey.TranslationReview]: 'translationReviewModel',
       [AIFeatureKey.Insights]: 'insightsModel',
       [AIFeatureKey.InsightsTranslation]: 'insightsTranslationModel',
     }

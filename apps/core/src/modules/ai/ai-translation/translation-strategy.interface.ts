@@ -3,6 +3,38 @@ import type { IModelRuntime } from '../runtime'
 import type { ArticleContent } from './ai-translation.types'
 import type { AITranslationModel } from './ai-translation.types-model'
 
+export interface PipelineReviewerMetrics {
+  invoked: boolean
+  durationMs: number
+  skippedReason: string | null
+  score: number | null
+  issuesCount: number
+  issuesBySeverity: { minor: number; major: number }
+  issueIds: string[]
+  issues: Array<{
+    id: string
+    severity: 'minor' | 'major'
+    problem: string
+    hint?: string
+  }>
+}
+
+export interface PipelineEditorMetrics {
+  invoked: boolean
+  durationMs: number
+  skippedReason: string | null
+  patchKeysRequested: string[]
+  patchKeysApplied: string[]
+  patchKeysDropped: string[]
+  patches: Array<{ id: string; before: string; after: string }>
+}
+
+export interface PipelineMetrics {
+  writerMs?: number
+  reviewer?: PipelineReviewerMetrics
+  editor?: PipelineEditorMetrics
+}
+
 export const LEXICAL_TRANSLATION_STRATEGY = Symbol(
   'LEXICAL_TRANSLATION_STRATEGY',
 )
@@ -28,6 +60,9 @@ export interface TranslationStrategyOptions {
   onToken?: (count?: number) => Promise<void>
   signal?: AbortSignal
   existing?: AITranslationModel | null
+  reviewerRuntime?: IModelRuntime
+  reviewScoreThreshold?: number
+  metrics?: PipelineMetrics
 }
 
 export interface ITranslationStrategy {

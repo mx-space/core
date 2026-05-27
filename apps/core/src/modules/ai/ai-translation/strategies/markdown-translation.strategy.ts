@@ -5,19 +5,56 @@ import { throwIfAborted } from '~/utils/abort.util'
 import { AI_PROMPTS } from '../../ai.prompts'
 import type { IModelRuntime } from '../../runtime'
 import type { ArticleContent } from '../ai-translation.types'
+import {
+  applyParagraphPatches,
+  splitMarkdownIntoParagraphs,
+} from '../markdown-paragraph-splitter'
+import { TranslationReviewerService } from '../reviewer.service'
 import type {
   ITranslationStrategy,
+  PipelineMetrics,
   TranslationResult,
   TranslationStrategyOptions,
 } from '../translation-strategy.interface'
 import { BaseTranslationStrategy } from './base-translation-strategy'
+
+const DEFAULT_REVIEW_SCORE_THRESHOLD = 85
+const META_TITLE_KEY = '__title__'
+const META_SUBTITLE_KEY = '__subtitle__'
+const META_SUMMARY_KEY = '__summary__'
+const META_TAGS_KEY = '__tags__'
+
+function emptyReviewerMetrics(skippedReason: string) {
+  return {
+    invoked: false,
+    durationMs: 0,
+    skippedReason,
+    score: null,
+    issuesCount: 0,
+    issuesBySeverity: { minor: 0, major: 0 },
+    issueIds: [],
+    issues: [],
+  }
+}
+
+function emptyEditorMetrics(skippedReason: string) {
+  return {
+    invoked: false,
+    durationMs: 0,
+    skippedReason,
+    patchKeysRequested: [],
+    patchKeysApplied: [],
+    patchKeysDropped: [],
+    patches: [],
+  }
+}
 
 @Injectable()
 export class MarkdownTranslationStrategy
   extends BaseTranslationStrategy
   implements ITranslationStrategy
 {
-  constructor() {
+  constructor(private readonly reviewerService: TranslationReviewerService) {
     super(MarkdownTranslationStrategy.name)
   }
 
@@ -28,7 +65,14 @@ export class MarkdownTranslationStrategy
     info: { model: string; provider: string },
     options: TranslationStrategyOptions,
   ): Promise<TranslationResult> {
-    const { push, onToken, signal } = options
+    const {
+      push,
+      onToken,
+      signal,
+      reviewerRuntime,
+      reviewScoreThreshold,
+      metrics,
+    } = options
 
     const { systemPrompt, prompt, reasoningEffort } =
       AI_PROMPTS.translationStream(targetLang, {
@@ -44,6 +88,7 @@ export class MarkdownTranslationStrategy
       { role: 'user' as const, content: prompt },
     ]
 
+    const writerStart = Date.now()
     let fullText = ''
     if (runtime.generateTextStream) {
       for await (const chunk of runtime.generateTextStream({
@@ -92,15 +137,278 @@ export class MarkdownTranslationStrategy
       throw new Error('Invalid translation JSON response')
     }
 
+    if (metrics) metrics.writerMs = Date.now() - writerStart
+
+    let finalTitle = parsed.title
+    let finalText = parsed.text
+    let finalSubtitle: string | null = parsed.subtitle ?? null
+    let finalSummary: string | null = parsed.summary ?? null
+    let finalTags: string[] | null = parsed.tags ?? null
+
+    if (reviewerRuntime) {
+      const reviewed = await this.runReviewAndEdit(
+        targetLang,
+        runtime,
+        reviewerRuntime,
+        {
+          title: finalTitle,
+          text: finalText,
+          subtitle: finalSubtitle,
+          summary: finalSummary,
+          tags: finalTags,
+        },
+        reviewScoreThreshold ?? DEFAULT_REVIEW_SCORE_THRESHOLD,
+        signal,
+        metrics,
+      )
+      finalTitle = reviewed.title
+      finalText = reviewed.text
+      finalSubtitle = reviewed.subtitle
+      finalSummary = reviewed.summary
+      finalTags = reviewed.tags
+    } else if (metrics) {
+      metrics.reviewer = emptyReviewerMetrics('review-disabled')
+      metrics.editor = emptyEditorMetrics('review-disabled')
+    }
+
     return {
       sourceLang: parsed.sourceLang,
-      title: parsed.title,
-      text: parsed.text,
-      subtitle: parsed.subtitle ?? null,
-      summary: parsed.summary ?? null,
-      tags: parsed.tags ?? null,
+      title: finalTitle,
+      text: finalText,
+      subtitle: finalSubtitle,
+      summary: finalSummary,
+      tags: finalTags,
       aiModel: info.model,
       aiProvider: info.provider,
+    }
+  }
+
+  private async runReviewAndEdit(
+    targetLang: string,
+    translatorRuntime: IModelRuntime,
+    reviewerRuntime: IModelRuntime,
+    initial: {
+      title: string
+      text: string
+      subtitle: string | null
+      summary: string | null
+      tags: string[] | null
+    },
+    scoreThreshold: number,
+    signal?: AbortSignal,
+    metrics?: PipelineMetrics,
+  ): Promise<{
+    title: string
+    text: string
+    subtitle: string | null
+    summary: string | null
+    tags: string[] | null
+  }> {
+    const paragraphs = splitMarkdownIntoParagraphs(initial.text)
+    const fullTranslations: Record<string, string> = {
+      [META_TITLE_KEY]: initial.title,
+    }
+    if (initial.subtitle) {
+      fullTranslations[META_SUBTITLE_KEY] = initial.subtitle
+    }
+    if (initial.summary) {
+      fullTranslations[META_SUMMARY_KEY] = initial.summary
+    }
+    if (initial.tags?.length) {
+      fullTranslations[META_TAGS_KEY] = initial.tags.join('|||')
+    }
+    for (const paragraph of paragraphs) {
+      fullTranslations[paragraph.id] = paragraph.text
+    }
+
+    const allowedIds = Object.keys(fullTranslations)
+    const reviewerStart = Date.now()
+    const review = await this.reviewerService.callReviewer(
+      reviewerRuntime,
+      targetLang,
+      { allowedIds, fullTranslations },
+      signal,
+    )
+    const reviewerMs = Date.now() - reviewerStart
+
+    if (!review) {
+      this.logger.warn('Reviewer returned null; persisting writer output as-is')
+      if (metrics) {
+        metrics.reviewer = {
+          invoked: true,
+          durationMs: reviewerMs,
+          skippedReason: 'reviewer-failed',
+          score: null,
+          issuesCount: 0,
+          issuesBySeverity: { minor: 0, major: 0 },
+          issueIds: [],
+          issues: [],
+        }
+        metrics.editor = emptyEditorMetrics('reviewer-failed')
+      }
+      return initial
+    }
+
+    const issuesBySeverity = {
+      minor: review.issues.filter((i) => i.severity === 'minor').length,
+      major: review.issues.filter((i) => i.severity === 'major').length,
+    }
+
+    if (review.score >= scoreThreshold || review.issues.length === 0) {
+      this.logger.log(
+        `Review pass: score=${review.score} issues=${review.issues.length}; edit skipped`,
+      )
+      if (metrics) {
+        metrics.reviewer = {
+          invoked: true,
+          durationMs: reviewerMs,
+          skippedReason: null,
+          score: review.score,
+          issuesCount: review.issues.length,
+          issuesBySeverity,
+          issueIds: review.issues.map((i) => i.id),
+          issues: review.issues,
+        }
+        metrics.editor = emptyEditorMetrics(
+          review.issues.length === 0 ? 'empty-issues' : 'score-above-threshold',
+        )
+      }
+      return initial
+    }
+
+    const editorStart = Date.now()
+    const editor = await this.callEditor(
+      targetLang,
+      { fullTranslations, issues: review.issues },
+      translatorRuntime,
+      signal,
+    )
+    const editorMs = Date.now() - editorStart
+
+    if (!editor) {
+      this.logger.warn('Editor returned null; persisting writer output as-is')
+      if (metrics) {
+        metrics.reviewer = {
+          invoked: true,
+          durationMs: reviewerMs,
+          skippedReason: null,
+          score: review.score,
+          issuesCount: review.issues.length,
+          issuesBySeverity,
+          issueIds: review.issues.map((i) => i.id),
+          issues: review.issues,
+        }
+        metrics.editor = {
+          invoked: false,
+          durationMs: editorMs,
+          skippedReason: 'editor-failed',
+          patchKeysRequested: [],
+          patchKeysApplied: [],
+          patchKeysDropped: [],
+          patches: [],
+        }
+      }
+      return initial
+    }
+
+    let nextTitle = initial.title
+    let nextSubtitle = initial.subtitle
+    let nextSummary = initial.summary
+    let nextTags = initial.tags
+    const paragraphPatches: Record<string, string> = {}
+    const dropped: string[] = []
+    const applied: string[] = []
+    const patchSamples: Array<{ id: string; before: string; after: string }> =
+      []
+    const allowedSet = new Set(allowedIds)
+    const patchKeysRequested = Object.keys(editor.patches)
+
+    for (const [id, patched] of Object.entries(editor.patches)) {
+      if (!allowedSet.has(id)) {
+        dropped.push(id)
+        continue
+      }
+      const before = fullTranslations[id] ?? ''
+      switch (id) {
+        case META_TITLE_KEY: {
+          nextTitle = patched
+          applied.push(id)
+          patchSamples.push({ id, before, after: patched })
+          break
+        }
+        case META_SUBTITLE_KEY: {
+          nextSubtitle = patched
+          applied.push(id)
+          patchSamples.push({ id, before, after: patched })
+          break
+        }
+        case META_SUMMARY_KEY: {
+          nextSummary = patched
+          applied.push(id)
+          patchSamples.push({ id, before, after: patched })
+          break
+        }
+        case META_TAGS_KEY: {
+          nextTags = patched.split('|||')
+          applied.push(id)
+          patchSamples.push({ id, before, after: patched })
+          break
+        }
+        default: {
+          if (id.startsWith('text:p')) {
+            paragraphPatches[id] = patched
+            applied.push(id)
+            patchSamples.push({ id, before, after: patched })
+          }
+        }
+      }
+    }
+
+    let nextText = initial.text
+    if (Object.keys(paragraphPatches).length > 0) {
+      const result = applyParagraphPatches(initial.text, paragraphPatches)
+      nextText = result.joined
+      for (const unknown of result.unknownIds) dropped.push(unknown)
+    }
+
+    if (dropped.length > 0) {
+      this.logger.warn(
+        `Editor produced ${dropped.length} out-of-set patches: ${dropped.slice(0, 5).join(', ')}`,
+      )
+    }
+
+    if (metrics) {
+      metrics.reviewer = {
+        invoked: true,
+        durationMs: reviewerMs,
+        skippedReason: null,
+        score: review.score,
+        issuesCount: review.issues.length,
+        issuesBySeverity,
+        issueIds: review.issues.map((i) => i.id),
+        issues: review.issues,
+      }
+      metrics.editor = {
+        invoked: true,
+        durationMs: editorMs,
+        skippedReason: null,
+        patchKeysRequested,
+        patchKeysApplied: applied,
+        patchKeysDropped: dropped,
+        patches: patchSamples,
+      }
+    }
+
+    this.logger.log(
+      `Edit applied: title=${nextTitle !== initial.title} text=${nextText !== initial.text} subtitle=${nextSubtitle !== initial.subtitle} summary=${nextSummary !== initial.summary} tags=${nextTags !== initial.tags}`,
+    )
+
+    return {
+      title: nextTitle,
+      text: nextText,
+      subtitle: nextSubtitle,
+      summary: nextSummary,
+      tags: nextTags,
     }
   }
 }
