@@ -59,7 +59,6 @@ orthogonal and stays.
 - Rollback / reverse migration. Mitigation is rolling forward only.
 - Changes to accent color extraction, swatch palette extraction, capture
   pipeline retry/quality logic, or sharp resize concurrency.
-- SSR-injected placeholder dataURLs.
 
 ## Architecture overview
 
@@ -142,40 +141,82 @@ export interface ImageModel {
 }
 ```
 
-### Migration — `0015_blurhash_to_thumbhash.sql`
+### Migration — `0015_blurhash_to_thumbhash`
 
 Single forward migration, executed inside the maintenance window after both
-mx-core replicas are stopped:
+mx-core replicas are stopped.
+
+**Generation:** The migrator (`apps/core/src/processors/database/schema-migrator.ts`)
+reads `meta/_journal.json` and only applies tags listed there, so a hand-written
+SQL file is not sufficient on its own. Update the Drizzle schema first
+(`packages/db-schema/src/schema/enrichment.ts`), then run
+`pnpm -C apps/core run db:generate` to emit:
+
+- `apps/core/src/database/migrations/0015_blurhash_to_thumbhash.sql` (drop +
+  add column statements; the `images jsonb` cleanup is hand-appended below).
+- `apps/core/src/database/migrations/meta/0015_snapshot.json` (regenerated
+  schema snapshot).
+- An updated entry in `apps/core/src/database/migrations/meta/_journal.json`.
+
+After generation, append the JSON-cleanup `UPDATE` statements to the SQL file:
 
 ```sql
+-- migration-lint:allow=no-drop-column reason=blurhash→thumbhash cutover in maintenance window
 ALTER TABLE enrichment_captures DROP COLUMN blurhash;
 ALTER TABLE enrichment_captures ADD COLUMN thumbhash text;
 
-UPDATE posts SET images = (
+-- Strip dead `blurHash` keys from images jsonb on every content table.
+-- COALESCE preserves `[]` (jsonb_agg returns NULL for an empty input set).
+UPDATE posts SET images = COALESCE((
   SELECT jsonb_agg(elem - 'blurHash')
   FROM jsonb_array_elements(images) elem
-) WHERE images IS NOT NULL AND jsonb_typeof(images) = 'array';
+), '[]'::jsonb)
+WHERE images IS NOT NULL AND jsonb_typeof(images) = 'array';
 
-UPDATE notes SET images = (
+UPDATE notes SET images = COALESCE((
   SELECT jsonb_agg(elem - 'blurHash')
   FROM jsonb_array_elements(images) elem
-) WHERE images IS NOT NULL AND jsonb_typeof(images) = 'array';
+), '[]'::jsonb)
+WHERE images IS NOT NULL AND jsonb_typeof(images) = 'array';
 
-UPDATE pages SET images = (
+UPDATE pages SET images = COALESCE((
   SELECT jsonb_agg(elem - 'blurHash')
   FROM jsonb_array_elements(images) elem
-) WHERE images IS NOT NULL AND jsonb_typeof(images) = 'array';
+), '[]'::jsonb)
+WHERE images IS NOT NULL AND jsonb_typeof(images) = 'array';
 
-UPDATE recently SET images = (
+UPDATE drafts SET images = COALESCE((
   SELECT jsonb_agg(elem - 'blurHash')
   FROM jsonb_array_elements(images) elem
-) WHERE images IS NOT NULL AND jsonb_typeof(images) = 'array';
+), '[]'::jsonb)
+WHERE images IS NOT NULL AND jsonb_typeof(images) = 'array';
+
+-- enrichment_cache.normalized embeds the same blurhash strings under
+-- `thumbnailImage.blurhash` and `captureImage.blurhash`. Strip both paths.
+-- The `#-` operator removes a single nested key; null-safe by definition.
+UPDATE enrichment_cache
+SET normalized = (normalized #- '{thumbnailImage,blurhash}') #- '{captureImage,blurhash}'
+WHERE normalized IS NOT NULL
+  AND (normalized #> '{thumbnailImage,blurhash}' IS NOT NULL
+    OR normalized #> '{captureImage,blurhash}' IS NOT NULL);
 ```
 
-This is a destructive `DROP COLUMN`; `lint:migrations` will flag it. Allow with
-an inline comment justifying the maintenance window. The mx-migration-author
-expand-contract guidance does not apply here because the deploy plan stops both
-replicas before running migrate.
+Notes:
+- The four content tables that carry `images jsonb` are `posts`, `notes`,
+  `pages`, and `drafts`. `recentlies` has no `images` column.
+- Image order inside `images` is preserved because `jsonb_array_elements`
+  yields rows in the same order as the source array on PostgreSQL 16+. If
+  CI runs against an older minor version, add `WITH ORDINALITY ... ORDER BY ord`.
+- This is a destructive `DROP COLUMN`. `lint:migrations` is suppressed via
+  the inline `migration-lint:allow=no-drop-column reason=...` comment shown
+  above. The mx-migration-author expand-contract guidance does not apply
+  because the deploy plan stops both replicas before running migrate.
+
+**Redis cache invalidation:** `enrichment.service.ts` caches enriched payloads
+in Redis under `enrichment:cache:*` with a 600s TTL (see line 31). After the
+migration runs, flush those keys (`redis-cli --scan --pattern 'enrichment:cache:*' | xargs redis-cli del`)
+to avoid serving stale payloads that still carry `blurhash` strings. Add this
+step to the deploy runbook between steps 6 and 7.
 
 ## Server pipeline changes
 
@@ -280,10 +321,19 @@ field. No `BypassCaseTransform` is required. The historical `blurHash` →
 
 - `import { rgbaToThumbHash } from 'thumbhash'`.
 - Export `getThumbhash(imageObject: HTMLImageElement)` returning the base64
-  string. The function:
-  1. Downscales to ≤100×100 onto an offscreen canvas.
-  2. `ctx.getImageData(0, 0, w, h).data` → `rgbaToThumbHash(w, h, rgba)`.
-  3. `btoa(String.fromCharCode(...u8))` → base64.
+  string. The function MUST pre-downscale because `rgbaToThumbHash` throws
+  on any dimension > 100:
+  1. Compute `scale = Math.min(100 / img.naturalWidth, 100 / img.naturalHeight, 1)`.
+  2. Draw onto an offscreen 2D canvas at `(w*scale, h*scale)`.
+  3. `ctx.getImageData(0, 0, sw, sh).data` → `rgbaToThumbHash(sw, sh, rgba)`.
+  4. Convert the `Uint8Array` to base64 via
+     `btoa(String.fromCharCode.apply(null, Array.from(u8)))` (or a small
+     chunked helper for very long arrays — thumbhash output is ~20 bytes so
+     a single `apply` is fine).
+- The existing WebGL-accelerated encoder branch (current `image.ts:57+` and
+  the `useWebglFlag` toggle at `image-detail-section.tsx:47`) is removed.
+  thumbhash encoding does not benefit from WebGL and the dual code path is
+  no longer worth keeping; drop the LocalStorage flag too.
 
 ### `apps/admin/src/models/base.ts`
 
@@ -304,13 +354,25 @@ field. No `BypassCaseTransform` is required. The historical `blurHash` →
     props: { hash: { type: String, required: true } },
     setup(props) {
       const dataUrl = computed(() => {
-        const u8 = Uint8Array.from(atob(props.hash), (c) => c.charCodeAt(0))
-        return thumbHashToDataURL(u8)
+        try {
+          const u8 = Uint8Array.from(atob(props.hash), (c) => c.charCodeAt(0))
+          return thumbHashToDataURL(u8)
+        } catch {
+          return undefined
+        }
       })
-      return () => <img src={dataUrl.value} alt="Thumbhash preview" />
+      return () =>
+        dataUrl.value ? (
+          <img src={dataUrl.value} alt="Thumbhash preview" />
+        ) : null
     },
   })
   ```
+
+  The `try/catch` guards against corrupt strings (e.g. legacy blurhash
+  payloads that survived the migration as text in an unexpected place,
+  URL-safe base64, or arbitrary user-supplied values). On decode failure the
+  caller falls back to `accent` via the parent component's logic.
 
 - Existing image-info reads `thumbhash` instead of `blurHash`.
 - UI label `"BlurHash 预览"` → `"Thumbhash 预览"`.
@@ -339,6 +401,15 @@ type Props = {
   className?: string
 }
 
+function decode(hash: string): string | undefined {
+  try {
+    const u8 = Uint8Array.from(atob(hash), (c) => c.charCodeAt(0))
+    return thumbHashToDataURL(u8)
+  } catch {
+    return undefined
+  }
+}
+
 export function ImagePlaceholder({
   thumbhash,
   accent,
@@ -346,9 +417,8 @@ export function ImagePlaceholder({
   height,
   className,
 }: Props) {
-  if (thumbhash) {
-    const u8 = Uint8Array.from(atob(thumbhash), (c) => c.charCodeAt(0))
-    const src = thumbHashToDataURL(u8)
+  const src = thumbhash ? decode(thumbhash) : undefined
+  if (src) {
     return (
       <img
         src={src}
@@ -373,6 +443,12 @@ export function ImagePlaceholder({
 }
 ```
 
+The decode runs synchronously during render. Next.js may invoke this during
+SSR; that is intentional — emitting the placeholder data URL in the initial
+HTML eliminates a render flicker on first paint. The cost is ~20 bytes of
+base64 plus the ~30µs decode per image; trivial. (This refines the original
+"no SSR-injected dataURL" non-goal — see Out of scope.)
+
 ### Sites to migrate
 
 - `apps/web/src/models/writing.ts` — `blurhash?` → `thumbhash?`.
@@ -396,6 +472,9 @@ export function ImagePlaceholder({
   - Data attribute `data-veil-blurhash` → `data-veil-thumbhash` and CSS
     selectors update.
 - `apps/web/src/lib/image.ts` — encoder rewritten on top of `rgbaToThumbHash`.
+  MUST pre-downscale to ≤100×100 onto an offscreen canvas before calling
+  `rgbaToThumbHash`, mirroring the admin-vue3 helper. Current encoder reads
+  full natural dimensions and would throw against any normal photograph.
 
 ### Tests
 
@@ -461,10 +540,14 @@ Single coordinated release inside a planned maintenance window
    (admin-vue3).
 5. Stop both `mx-core` replicas in Dokploy.
 6. Run `pnpm -C apps/core run migrate` against production Postgres.
-7. Deploy the new `mx-core` image and start replicas.
-8. Deploy admin-vue3.
-9. Deploy Yohaku.
-10. Disable maintenance page; verify a sample post and link-card render
+7. Flush Redis enrichment cache:
+   `redis-cli --scan --pattern 'enrichment:cache:*' | xargs -r redis-cli del`.
+   Skipping this step lets enriched payloads with stale `blurhash` strings
+   survive in cache for up to 600 seconds.
+8. Deploy the new `mx-core` image and start replicas.
+9. Deploy admin-vue3.
+10. Deploy Yohaku.
+11. Disable maintenance page; verify a sample post and link-card render
     correctly (thumbhash placeholder visible on freshly-saved content,
     accent fallback visible on legacy content).
 
@@ -482,5 +565,4 @@ Single coordinated release inside a planned maintenance window
 - Rollback / reverse migration.
 - Accent color algorithm changes.
 - Swatch palette changes.
-- SSR-injected dataURL placeholders.
 - Forward/backward compatibility shims.
