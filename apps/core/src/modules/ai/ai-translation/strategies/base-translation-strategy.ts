@@ -11,6 +11,63 @@ import {
 
 import { AI_PROMPTS } from '../../ai.prompts'
 import type { IModelRuntime } from '../../runtime'
+import type {
+  PipelineEditorMetrics,
+  PipelineReviewerMetrics,
+} from '../translation-strategy.interface'
+
+export const DEFAULT_REVIEW_SCORE_THRESHOLD = 85
+
+export function emptyReviewerMetrics(
+  skippedReason: string,
+): PipelineReviewerMetrics {
+  return {
+    invoked: false,
+    durationMs: 0,
+    skippedReason,
+    score: null,
+    issuesCount: 0,
+    issuesBySeverity: { minor: 0, major: 0 },
+    issueIds: [],
+    issues: [],
+  }
+}
+
+export function emptyEditorMetrics(
+  skippedReason: string,
+): PipelineEditorMetrics {
+  return {
+    invoked: false,
+    durationMs: 0,
+    skippedReason,
+    patchKeysRequested: [],
+    patchKeysApplied: [],
+    patchKeysDropped: [],
+    patches: [],
+  }
+}
+
+export function buildReviewerMetrics(
+  durationMs: number,
+  review: {
+    score: number
+    issues: PipelineReviewerMetrics['issues']
+  },
+): PipelineReviewerMetrics {
+  return {
+    invoked: true,
+    durationMs,
+    skippedReason: null,
+    score: review.score,
+    issuesCount: review.issues.length,
+    issuesBySeverity: {
+      minor: review.issues.filter((i) => i.severity === 'minor').length,
+      major: review.issues.filter((i) => i.severity === 'major').length,
+    },
+    issueIds: review.issues.map((i) => i.id),
+    issues: review.issues,
+  }
+}
 
 export abstract class BaseTranslationStrategy {
   protected readonly logger: Logger

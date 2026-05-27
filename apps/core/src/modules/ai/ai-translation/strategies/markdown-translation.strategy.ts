@@ -16,38 +16,18 @@ import type {
   TranslationResult,
   TranslationStrategyOptions,
 } from '../translation-strategy.interface'
-import { BaseTranslationStrategy } from './base-translation-strategy'
+import {
+  BaseTranslationStrategy,
+  buildReviewerMetrics,
+  DEFAULT_REVIEW_SCORE_THRESHOLD,
+  emptyEditorMetrics,
+  emptyReviewerMetrics,
+} from './base-translation-strategy'
 
-const DEFAULT_REVIEW_SCORE_THRESHOLD = 85
 const META_TITLE_KEY = '__title__'
 const META_SUBTITLE_KEY = '__subtitle__'
 const META_SUMMARY_KEY = '__summary__'
 const META_TAGS_KEY = '__tags__'
-
-function emptyReviewerMetrics(skippedReason: string) {
-  return {
-    invoked: false,
-    durationMs: 0,
-    skippedReason,
-    score: null,
-    issuesCount: 0,
-    issuesBySeverity: { minor: 0, major: 0 },
-    issueIds: [],
-    issues: [],
-  }
-}
-
-function emptyEditorMetrics(skippedReason: string) {
-  return {
-    invoked: false,
-    durationMs: 0,
-    skippedReason,
-    patchKeysRequested: [],
-    patchKeysApplied: [],
-    patchKeysDropped: [],
-    patches: [],
-  }
-}
 
 @Injectable()
 export class MarkdownTranslationStrategy
@@ -235,23 +215,13 @@ export class MarkdownTranslationStrategy
       this.logger.warn('Reviewer returned null; persisting writer output as-is')
       if (metrics) {
         metrics.reviewer = {
+          ...emptyReviewerMetrics('reviewer-failed'),
           invoked: true,
           durationMs: reviewerMs,
-          skippedReason: 'reviewer-failed',
-          score: null,
-          issuesCount: 0,
-          issuesBySeverity: { minor: 0, major: 0 },
-          issueIds: [],
-          issues: [],
         }
         metrics.editor = emptyEditorMetrics('reviewer-failed')
       }
       return initial
-    }
-
-    const issuesBySeverity = {
-      minor: review.issues.filter((i) => i.severity === 'minor').length,
-      major: review.issues.filter((i) => i.severity === 'major').length,
     }
 
     if (review.score >= scoreThreshold || review.issues.length === 0) {
@@ -259,16 +229,7 @@ export class MarkdownTranslationStrategy
         `Review pass: score=${review.score} issues=${review.issues.length}; edit skipped`,
       )
       if (metrics) {
-        metrics.reviewer = {
-          invoked: true,
-          durationMs: reviewerMs,
-          skippedReason: null,
-          score: review.score,
-          issuesCount: review.issues.length,
-          issuesBySeverity,
-          issueIds: review.issues.map((i) => i.id),
-          issues: review.issues,
-        }
+        metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
         metrics.editor = emptyEditorMetrics(
           review.issues.length === 0 ? 'empty-issues' : 'score-above-threshold',
         )
@@ -288,24 +249,10 @@ export class MarkdownTranslationStrategy
     if (!editor) {
       this.logger.warn('Editor returned null; persisting writer output as-is')
       if (metrics) {
-        metrics.reviewer = {
-          invoked: true,
-          durationMs: reviewerMs,
-          skippedReason: null,
-          score: review.score,
-          issuesCount: review.issues.length,
-          issuesBySeverity,
-          issueIds: review.issues.map((i) => i.id),
-          issues: review.issues,
-        }
+        metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
         metrics.editor = {
-          invoked: false,
+          ...emptyEditorMetrics('editor-failed'),
           durationMs: editorMs,
-          skippedReason: 'editor-failed',
-          patchKeysRequested: [],
-          patchKeysApplied: [],
-          patchKeysDropped: [],
-          patches: [],
         }
       }
       return initial
@@ -328,39 +275,39 @@ export class MarkdownTranslationStrategy
         dropped.push(id)
         continue
       }
-      const before = fullTranslations[id] ?? ''
+      let handled = true
       switch (id) {
         case META_TITLE_KEY: {
           nextTitle = patched
-          applied.push(id)
-          patchSamples.push({ id, before, after: patched })
           break
         }
         case META_SUBTITLE_KEY: {
           nextSubtitle = patched
-          applied.push(id)
-          patchSamples.push({ id, before, after: patched })
           break
         }
         case META_SUMMARY_KEY: {
           nextSummary = patched
-          applied.push(id)
-          patchSamples.push({ id, before, after: patched })
           break
         }
         case META_TAGS_KEY: {
           nextTags = patched.split('|||')
-          applied.push(id)
-          patchSamples.push({ id, before, after: patched })
           break
         }
         default: {
           if (id.startsWith('text:p')) {
             paragraphPatches[id] = patched
-            applied.push(id)
-            patchSamples.push({ id, before, after: patched })
+          } else {
+            handled = false
           }
         }
+      }
+      if (handled) {
+        applied.push(id)
+        patchSamples.push({
+          id,
+          before: fullTranslations[id] ?? '',
+          after: patched,
+        })
       }
     }
 
@@ -378,16 +325,7 @@ export class MarkdownTranslationStrategy
     }
 
     if (metrics) {
-      metrics.reviewer = {
-        invoked: true,
-        durationMs: reviewerMs,
-        skippedReason: null,
-        score: review.score,
-        issuesCount: review.issues.length,
-        issuesBySeverity,
-        issueIds: review.issues.map((i) => i.id),
-        issues: review.issues,
-      }
+      metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
       metrics.editor = {
         invoked: true,
         durationMs: editorMs,
