@@ -6,7 +6,7 @@ export interface Image {
   type: string
   accent?: string
   src: string
-  blurHash?: string
+  thumbhash?: string
 }
 
 export interface Pager {

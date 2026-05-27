@@ -35,6 +35,7 @@ export enum BusinessEvents {
   AGGREGATE_UPDATE = 'AGGREGATE_UPDATE',
   TRANSLATION_CREATE = 'TRANSLATION_CREATE',
   TRANSLATION_UPDATE = 'TRANSLATION_UPDATE',
+  TRANSLATION_DELETE = 'TRANSLATION_DELETE',
   INSIGHTS_CREATE = 'INSIGHTS_CREATE',
   INSIGHTS_UPDATE = 'INSIGHTS_UPDATE',
   INSIGHTS_DELETE = 'INSIGHTS_DELETE',
@@ -69,13 +70,6 @@ export enum ContentFormat {
   Lexical = 'lexical',
 }
 
-export enum CollectionRefTypes {
-  Post = 'post',
-  Note = 'note',
-  Page = 'page',
-  Recently = 'recently',
-}
-
 export enum CommentState {
   Unread,
   Read,
@@ -107,20 +101,12 @@ export enum LinkState {
 
 export enum RecentlyTypeEnum {
   Text = 'text',
-  Book = 'book',
-  Media = 'media',
-  Music = 'music',
-  Github = 'github',
   Link = 'link',
-  Academic = 'academic',
-  Code = 'code',
 }
 
 export interface BaseModel {
-  _id?: any
   id?: string
   created?: Date
-  toObject?: () => any
 }
 
 export interface CountModel {
@@ -139,7 +125,7 @@ export interface ImageModel {
   accent?: string
   type?: string
   src?: string
-  blurHash?: string
+  thumbhash?: string
 }
 
 export interface WriteBaseModel extends BaseCommentIndexModel {
@@ -272,10 +258,6 @@ export type NoteModel = NoteRow & {
   password?: string | null
 }
 
-export type NormalizedNote = Omit<NoteModel, 'password' | 'topic'> & {
-  topic: TopicModel
-}
-
 export interface PageRow {
   id: string
   title: string
@@ -340,10 +322,6 @@ export interface PostRelatedSummary {
 
 export type PostModel = PostRow & {
   relatedId?: string[]
-}
-
-export type NormalizedPost = Omit<PostModel, 'category'> & {
-  category: CategoryModel
 }
 
 export type RecentlyRefType = `${CollectionRefTypes}` | null
