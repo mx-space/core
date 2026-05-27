@@ -36,6 +36,7 @@ import {
   type TranslationBatchTaskPayload,
   type TranslationTaskPayload,
 } from '../ai-task/ai-task.types'
+import type { IModelRuntime } from '../runtime'
 import { AiTranslationRepository } from './ai-translation.repository'
 import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
 import type {
@@ -127,12 +128,14 @@ export class AiTranslationService
     articleId: string,
     targetLang: string,
   ) {
-    this.scheduleRegenerationForStaleTranslations([articleId], targetLang).catch(
-      (err) =>
-        this.logger.error(
-          'Failed to schedule stale translation regeneration',
-          err,
-        ),
+    this.scheduleRegenerationForStaleTranslations(
+      [articleId],
+      targetLang,
+    ).catch((err) =>
+      this.logger.error(
+        'Failed to schedule stale translation regeneration',
+        err,
+      ),
     )
   }
 
@@ -639,11 +642,28 @@ export class AiTranslationService
   ) {
     const { runtime, info } = await this.aiService.getTranslationModelWithInfo()
     const strategy = this.getStrategy(content.contentFormat)
+    const aiConfig = await this.configService.get('ai')
+
+    let reviewerRuntime: IModelRuntime | undefined
+    let reviewScoreThreshold: number | undefined
+    if (aiConfig.enableTranslationReview) {
+      try {
+        reviewerRuntime = await this.aiService.getTranslationReviewModel()
+        reviewScoreThreshold = aiConfig.translationReviewScoreThreshold
+      } catch (error) {
+        this.logger.warn(
+          `Translation reviewer runtime resolution failed; review disabled for this run: ${error instanceof Error ? error.message : String(error)}`,
+        )
+      }
+    }
+
     return strategy.translate(content, targetLang, runtime, info, {
       push,
       onToken,
       signal,
       existing,
+      reviewerRuntime,
+      reviewScoreThreshold,
     })
   }
 

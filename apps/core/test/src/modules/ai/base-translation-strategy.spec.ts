@@ -21,7 +21,7 @@ class TestTranslationStrategy extends BaseTranslationStrategy {
     },
     runtime: IModelRuntime,
   ) {
-    return this.callChunkTranslation(targetLang, chunk, runtime)
+    return this.callWriter(targetLang, chunk, runtime)
   }
 }
 
