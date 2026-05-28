@@ -9,9 +9,10 @@ import { ReaderModule } from '../reader/reader.module'
 import { ActivityController } from './activity.controller'
 import { ActivityRepository } from './activity.repository'
 import { ActivityService } from './activity.service'
+import { ActivitySampleService } from './sample/activity-sample.service'
 
 @Module({
-  providers: [ActivityService, ActivityRepository],
+  providers: [ActivityService, ActivityRepository, ActivitySampleService],
   controllers: [ActivityController],
   exports: [ActivityService],
   imports: [

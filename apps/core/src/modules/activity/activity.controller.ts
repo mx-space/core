@@ -20,6 +20,7 @@ import {
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { SampleResponse } from '~/shared/sample/sample-response.decorator'
 
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
@@ -35,6 +36,7 @@ import {
   UpdatePresenceDto,
 } from './activity.schema'
 import { ActivityService } from './activity.service'
+import { ActivitySampleService } from './sample/activity-sample.service'
 
 const ARTICLE_REF_FIELDS = [
   'title',
@@ -80,6 +82,7 @@ export class ActivityController {
 
   @Get('/')
   @Auth()
+  @SampleResponse(ActivitySampleService, 'list')
   activities(@Query() pager: ActivityQueryDto) {
     const { page, size, type } = pager
 
@@ -203,6 +206,7 @@ export class ActivityController {
   @Auth()
   @Get('/reading/top')
   @HttpCache({ ttl: 300, force: true, withQuery: true })
+  @SampleResponse(ActivitySampleService, 'topReadings')
   async getTopReadings(
     @Query() query: ActivityTopReadingsDto,
     @Lang() lang?: string,
@@ -215,6 +219,7 @@ export class ActivityController {
 
   @Auth()
   @Get('/reading/rank')
+  @SampleResponse(ActivitySampleService, 'readingRank')
   async getReadingRangeRank(
     @Query() query: ActivityRangeDto,
     @Lang() lang?: string,

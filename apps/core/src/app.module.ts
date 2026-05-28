@@ -71,6 +71,7 @@ import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
 import { RedisModule } from './processors/redis/redis.module'
 import { TaskQueueModule } from './processors/task-queue/task-queue.module'
+import { SampleResponseInterceptor } from './shared/sample/sample-response.interceptor'
 
 @Module({
   imports: [
@@ -153,6 +154,11 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
+    },
+
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: SampleResponseInterceptor,
     },
 
     {

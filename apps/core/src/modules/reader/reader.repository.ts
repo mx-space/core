@@ -1,5 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, asc, desc, eq, inArray, ne, or, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNotNull,
+  ne,
+  or,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { readers, sessions } from '~/database/schema'
@@ -11,6 +23,22 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 
 import type { ReaderRow } from './reader.types'
 
+export type ReaderRoleFilter = 'all' | 'owner' | 'reader'
+
+export interface ReaderListParams {
+  page?: number
+  size?: number
+  search?: string
+  role?: ReaderRoleFilter
+}
+
+export interface ReaderRoleCounts {
+  all: number
+  owner: number
+  reader: number
+  banned: number
+}
+
 const mapRow = (row: typeof readers.$inferSelect): ReaderRow => ({
   id: row.id,
   email: row.email,
@@ -21,9 +49,27 @@ const mapRow = (row: typeof readers.$inferSelect): ReaderRow => ({
   displayUsername: row.displayUsername,
   image: row.image,
   role: row.role,
+  bannedAt: row.bannedAt,
+  banReason: row.banReason,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 })
+
+const readerSelection = {
+  id: readers.id,
+  email: readers.email,
+  emailVerified: readers.emailVerified,
+  name: readers.name,
+  handle: readers.handle,
+  username: readers.username,
+  displayUsername: readers.displayUsername,
+  image: readers.image,
+  role: readers.role,
+  bannedAt: readers.bannedAt,
+  banReason: readers.banReason,
+  createdAt: readers.createdAt,
+  updatedAt: readers.updatedAt,
+} as const
 
 @Injectable()
 export class ReaderRepository extends BaseRepository {
@@ -112,28 +158,43 @@ export class ReaderRepository extends BaseRepository {
     return directRows.map(mapRow)
   }
 
-  async list(page = 1, size = 20): Promise<PaginationResult<ReaderRow>> {
-    page = Math.max(1, page)
-    size = Math.min(100, Math.max(1, size))
+  private buildListFilter(params: ReaderListParams): SQL | undefined {
+    const conditions: SQL[] = []
+    if (params.role && params.role !== 'all') {
+      conditions.push(eq(readers.role, params.role))
+    }
+    const search = params.search?.trim()
+    if (search) {
+      const pattern = `%${search}%`
+      const searchClause = or(
+        ilike(readers.name, pattern),
+        ilike(readers.email, pattern),
+        ilike(readers.handle, pattern),
+        ilike(readers.username, pattern),
+      )
+      if (searchClause) conditions.push(searchClause)
+    }
+    if (conditions.length === 0) return undefined
+    return conditions.length === 1 ? conditions[0] : and(...conditions)
+  }
+
+  async list(
+    params: ReaderListParams = {},
+  ): Promise<PaginationResult<ReaderRow>> {
+    const page = Math.max(1, params.page ?? 1)
+    const size = Math.min(100, Math.max(1, params.size ?? 20))
     const offset = (page - 1) * size
+    const where = this.buildListFilter(params)
     const lastLoginAt = sql<Date | null>`max(${sessions.createdAt})`
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select({
-          id: readers.id,
-          email: readers.email,
-          emailVerified: readers.emailVerified,
-          name: readers.name,
-          handle: readers.handle,
-          username: readers.username,
-          displayUsername: readers.displayUsername,
-          image: readers.image,
-          role: readers.role,
-          createdAt: readers.createdAt,
-          updatedAt: readers.updatedAt,
+          ...readerSelection,
+          lastLoginAt,
         })
         .from(readers)
         .leftJoin(sessions, eq(sessions.userId, readers.id))
+        .where(where)
         .groupBy(readers.id)
         .orderBy(
           sql`${lastLoginAt} desc nulls last`,
@@ -142,11 +203,78 @@ export class ReaderRepository extends BaseRepository {
         )
         .limit(size)
         .offset(offset),
-      this.db.select({ count: sql<number>`count(*)::int` }).from(readers),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(readers)
+        .where(where),
     ])
     return {
-      data: rows.map(mapRow),
+      data: rows.map((row) => ({
+        ...mapRow(row),
+        lastLoginAt: row.lastLoginAt,
+      })),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  async findByIdDetailed(id: string): Promise<ReaderRow | null> {
+    const lastLoginAt = sql<Date | null>`max(${sessions.createdAt})`
+    const [row] = await this.db
+      .select({
+        ...readerSelection,
+        lastLoginAt,
+      })
+      .from(readers)
+      .leftJoin(sessions, eq(sessions.userId, readers.id))
+      .where(eq(readers.id, id))
+      .groupBy(readers.id)
+      .limit(1)
+    return row ? { ...mapRow(row), lastLoginAt: row.lastLoginAt } : null
+  }
+
+  async setBanned(
+    id: string,
+    payload: { bannedAt: Date; banReason: string | null },
+  ): Promise<ReaderRow | null> {
+    const [row] = await this.db
+      .update(readers)
+      .set({
+        bannedAt: payload.bannedAt,
+        banReason: payload.banReason,
+        updatedAt: new Date(),
+      })
+      .where(eq(readers.id, id))
+      .returning()
+    return row ? mapRow(row) : null
+  }
+
+  async unsetBanned(id: string): Promise<ReaderRow | null> {
+    const [row] = await this.db
+      .update(readers)
+      .set({ bannedAt: null, banReason: null, updatedAt: new Date() })
+      .where(eq(readers.id, id))
+      .returning()
+    return row ? mapRow(row) : null
+  }
+
+  async deleteSessionsForUser(userId: string): Promise<void> {
+    await this.db.delete(sessions).where(eq(sessions.userId, userId))
+  }
+
+  async countByRole(): Promise<ReaderRoleCounts> {
+    const [row] = await this.db
+      .select({
+        all: sql<number>`count(*)::int`,
+        owner: sql<number>`count(*) filter (where ${eq(readers.role, 'owner')})::int`,
+        reader: sql<number>`count(*) filter (where ${eq(readers.role, 'reader')})::int`,
+        banned: sql<number>`count(*) filter (where ${isNotNull(readers.bannedAt)})::int`,
+      })
+      .from(readers)
+    return {
+      all: Number(row?.all ?? 0),
+      owner: Number(row?.owner ?? 0),
+      reader: Number(row?.reader ?? 0),
+      banned: Number(row?.banned ?? 0),
     }
   }
 

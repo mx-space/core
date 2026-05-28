@@ -328,9 +328,12 @@ export class AuthService {
       role?: string
       handle?: string
     }
-    if (sessionUser?.id && !sessionUser.role) {
+    if (sessionUser?.id) {
       const reader = await this.readerRepository.findById(sessionUser.id)
-      if (reader?.role) {
+      if (reader?.bannedAt) {
+        return null
+      }
+      if (reader?.role && !sessionUser.role) {
         sessionUser = { ...sessionUser, role: reader.role }
       }
     }
