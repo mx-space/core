@@ -1,0 +1,5 @@
+event: token
+data: {"id":"r-cache-1","articleId":"a1","lang":"en","summary":"hello world","createdAt":"2026-05-30T00:00:00.000Z"}
+
+event: done
+
