@@ -1,7 +1,8 @@
 import { toJSONSchema, type z } from 'zod'
+
 import type { IModelRuntime } from './model-runtime.interface'
 import type {
-  GenerateStructuredOptions,
+  GenerateStructuredOptionsZod,
   GenerateStructuredResult,
   GenerateTextOptions,
   GenerateTextResult,
@@ -17,7 +18,7 @@ export abstract class BaseRuntime implements IModelRuntime {
   ): Promise<GenerateTextResult>
 
   abstract generateStructured<T extends z.ZodType>(
-    options: GenerateStructuredOptions<T>,
+    options: GenerateStructuredOptionsZod<T>,
   ): Promise<GenerateStructuredResult<z.infer<T>>>
 
   listModels?(): Promise<ModelInfo[]>

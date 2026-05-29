@@ -6,7 +6,7 @@ import { isDev } from '~/global/env.global'
 import { buildAiSdkDefaultHeaders } from './ai-sdk-attribution'
 import { BaseRuntime } from './base.runtime'
 import type {
-  GenerateStructuredOptions,
+  GenerateStructuredOptionsZod,
   GenerateStructuredResult,
   GenerateTextOptions,
   GenerateTextResult,
@@ -129,7 +129,7 @@ export class AnthropicRuntime extends BaseRuntime {
   }
 
   async generateStructured<T extends z.ZodType>(
-    options: GenerateStructuredOptions<T>,
+    options: GenerateStructuredOptionsZod<T>,
   ): Promise<GenerateStructuredResult<z.infer<T>>> {
     const {
       prompt,

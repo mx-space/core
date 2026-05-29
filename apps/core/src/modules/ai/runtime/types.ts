@@ -1,3 +1,4 @@
+import type { Tool, TSchema } from '@earendil-works/pi-ai'
 import type { z } from 'zod'
 
 import type { AIProviderType } from '../ai.types'
@@ -40,13 +41,30 @@ export interface GenerateTextResult {
   }
 }
 
-export interface GenerateStructuredOptions<T extends z.ZodType> extends Omit<
+/** @deprecated Zod-based options retained for legacy callers; removed in step-7. */
+export interface GenerateStructuredOptionsZod<T extends z.ZodType> extends Omit<
   GenerateTextOptions,
   'prompt'
 > {
   prompt: string
   systemPrompt?: string
   schema: T
+}
+
+export interface GenerateStructuredOptions<T extends TSchema> extends Omit<
+  GenerateTextOptions,
+  'prompt'
+> {
+  prompt: string
+  systemPrompt?: string
+  schema: T
+  /**
+   * When true (default) the adapter validates the model's tool call output
+   * against the TypeBox schema before returning. Pass false to skip validation
+   * when the caller post-processes the raw output before validating itself
+   * (e.g. base-translation-strategy normalises chunks before schema.parse).
+   */
+  validate?: boolean
 }
 
 export interface GenerateStructuredResult<T> {
@@ -56,6 +74,22 @@ export interface GenerateStructuredResult<T> {
     completionTokens?: number
     totalTokens?: number
   }
+}
+
+export interface StructuredStreamChunk<T> {
+  partial: Partial<T>
+  delta?: string
+  done?: boolean
+  final?: T
+}
+
+export interface StreamMessageOptions extends Omit<
+  GenerateTextOptions,
+  'prompt'
+> {
+  messages: Message[]
+  systemPrompt?: string
+  tools?: Tool[]
 }
 
 export interface ModelInfo {
