@@ -1,11 +1,12 @@
 import { Plus } from 'lucide-react'
 import { act, createElement, useEffect } from 'react'
+import type { Root } from 'react-dom/client'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { HeaderAction } from '~/ui/layout/page-layout'
-import type { Root } from 'react-dom/client'
 
+import { I18nProvider } from '~/i18n'
+import type { HeaderAction } from '~/ui/layout/page-layout'
 import { PageHeader } from '~/ui/layout/page-layout'
 import { ShellNavProvider, useShellNav } from '~/ui/layout/shell-nav-context'
 
@@ -33,7 +34,13 @@ function mount(): Harness {
 
 function renderWithRouter(harness: Harness, element: React.ReactNode) {
   act(() => {
-    harness.root.render(createElement(MemoryRouter, null, element))
+    harness.root.render(
+      createElement(
+        MemoryRouter,
+        null,
+        createElement(I18nProvider, null, element),
+      ),
+    )
   })
 }
 
@@ -211,14 +218,18 @@ describe('PageHeader', () => {
         createElement(
           MemoryRouter,
           null,
-          createElement(ShellNavProvider, {
-            open: false,
-            setOpen,
-            children: [
-              createElement(Probe, { key: 'probe' }),
-              createElement(PageHeader, { key: 'header', title: 'Title' }),
-            ],
-          }),
+          createElement(
+            I18nProvider,
+            null,
+            createElement(ShellNavProvider, {
+              open: false,
+              setOpen,
+              children: [
+                createElement(Probe, { key: 'probe' }),
+                createElement(PageHeader, { key: 'header', title: 'Title' }),
+              ],
+            }),
+          ),
         ),
       )
     })
@@ -229,11 +240,15 @@ describe('PageHeader', () => {
         createElement(
           MemoryRouter,
           null,
-          createElement(ShellNavProvider, {
-            open: false,
-            setOpen,
-            children: createElement(Probe),
-          }),
+          createElement(
+            I18nProvider,
+            null,
+            createElement(ShellNavProvider, {
+              open: false,
+              setOpen,
+              children: createElement(Probe),
+            }),
+          ),
         ),
       )
     })

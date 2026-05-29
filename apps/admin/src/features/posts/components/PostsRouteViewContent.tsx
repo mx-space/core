@@ -1,17 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText, Plus, RefreshCw, Trash2 } from 'lucide-react'
-import {
-  FormEvent,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import type { FormEvent } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import type { PostModel } from '~/models/post'
-import type { PostSortKey, SortOrder } from '../types/posts'
 
 import { getCategories } from '~/api/categories'
 import { deletePost, getPosts, patchPost, searchPosts } from '~/api/posts'
@@ -22,6 +14,7 @@ import {
   SortMenu,
 } from '~/features/_shared/components/content-list-toolbar'
 import { useI18n } from '~/i18n'
+import type { PostModel } from '~/models/post'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { FocusScope } from '~/ui/focus-scope'
@@ -36,6 +29,7 @@ import {
   postSortOptionDefinitions,
   postsPageSize,
 } from '../constants'
+import type { PostSortKey, SortOrder } from '../types/posts'
 import { getErrorMessage } from '../utils/errors'
 import {
   readPage,
@@ -253,7 +247,6 @@ export function PostsRouteViewContent() {
         },
         t,
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [t],
   )
 

@@ -1,11 +1,12 @@
 import { Folder, Inbox } from 'lucide-react'
-import type { ProjectModel } from '~/models/project'
-import type { ProjectAvatarSize } from '../types/projects'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { ProjectModel } from '~/models/project'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { cn } from '~/utils/cn'
 
+import type { ProjectAvatarSize } from '../types/projects'
 import { readInitial } from '../utils/projects'
 
 export function ProjectAvatar(props: {
@@ -76,6 +77,7 @@ export function ProjectDetailSkeleton() {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
+        <MobileHeaderAffordance />
         <h2 className="text-lg font-semibold text-neutral-950 dark:text-neutral-50">
           Loading project
         </h2>
@@ -100,6 +102,7 @@ export function ProjectSelectPlaceholder() {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
+        <MobileHeaderAffordance />
         <h2 className="text-lg font-semibold text-neutral-950 dark:text-neutral-50">
           {t('projects.detailPlaceholder.heading')}
         </h2>

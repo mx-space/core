@@ -1,11 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, Trash2 } from 'lucide-react'
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useCallback, useMemo } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import type { AITaskType } from '~/api/ai'
-import type { HeaderAction } from '~/ui/layout/page-layout'
 
+import type { AITask, AITaskType } from '~/api/ai'
 import {
   AITaskStatus,
   cancelAiTask,
@@ -15,11 +14,9 @@ import {
   retryAiTask,
 } from '~/api/ai'
 import { useI18n } from '~/i18n'
-import {
-  AppPage,
-  MasterDetailLayout,
-  PageHeader,
-} from '~/ui/layout/page-layout'
+import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
+import type { HeaderAction } from '~/ui/layout/page-layout'
+import { AppPage, PageHeader } from '~/ui/layout/page-layout'
 import { SelectField } from '~/ui/primitives/select'
 
 import { aiTasksQueryKey, pageSize, typeOptionKeys } from '../constants'
@@ -29,28 +26,23 @@ import {
   readTaskStatusFilter,
   readTaskTypeFilter,
 } from '../utils/ai'
-import { TaskDetail } from './TaskDetail'
+import { AiTasksRouteContext } from './ai-tasks-route-context'
 import { TaskListPane } from './TaskListPane'
 import { TaskDetailEmpty } from './TaskStates'
+
+const TASKS_BASE_PATH = '/ai/tasks'
 
 export function AiRouteViewContent() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const params = useParams<{ id?: string }>()
+  const detailId = params.id ?? null
   const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-  const [statusFilter, setStatusFilter] = useState<AITaskStatus | ''>(
-    readTaskStatusFilter(searchParams.get('status')),
-  )
-  const [typeFilter, setTypeFilter] = useState<AITaskType | ''>(
-    readTaskTypeFilter(searchParams.get('type')),
-  )
-  const [page, setPage] = useState(readPositivePage(searchParams.get('page')))
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(
-    searchParams.get('id'),
-  )
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(
-    Boolean(searchParams.get('id')),
-  )
+
+  const statusFilter = readTaskStatusFilter(searchParams.get('status'))
+  const typeFilter = readTaskTypeFilter(searchParams.get('type'))
+  const page = readPositivePage(searchParams.get('page'))
 
   const queryParams = {
     page,
@@ -69,67 +61,70 @@ export function AiRouteViewContent() {
   const tasks = tasksQuery.data?.data ?? []
   const total = tasksQuery.data?.total ?? 0
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
-  const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null
 
-  useLayoutEffect(() => {
-    const nextStatus = readTaskStatusFilter(searchParams.get('status'))
-    const nextType = readTaskTypeFilter(searchParams.get('type'))
-    const nextPage = readPositivePage(searchParams.get('page'))
-    const nextSelectedId = searchParams.get('id')
-
-    setStatusFilter((value) => (value === nextStatus ? value : nextStatus))
-    setTypeFilter((value) => (value === nextType ? value : nextType))
-    setPage((value) => (value === nextPage ? value : nextPage))
-    setSelectedTaskId((value) =>
-      value === nextSelectedId ? value : nextSelectedId,
-    )
-    setShowDetailOnMobile(Boolean(nextSelectedId))
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const next = new URLSearchParams(searchParams)
-    if (statusFilter) next.set('status', statusFilter)
-    else next.delete('status')
-    if (typeFilter) next.set('type', typeFilter)
-    else next.delete('type')
-    if (page > 1) next.set('page', String(page))
-    else next.delete('page')
-    if (selectedTaskId) next.set('id', selectedTaskId)
-    else next.delete('id')
-
-    if (next.toString() !== searchParamsKey) {
-      setSearchParams(next, { replace: true })
-    }
-  }, [
-    page,
-    searchParams,
-    searchParamsKey,
-    selectedTaskId,
-    setSearchParams,
-    statusFilter,
-    typeFilter,
-  ])
-
-  useEffect(() => {
-    if (
-      selectedTaskId &&
-      !selectedTask &&
-      tasksQuery.isSuccess &&
-      !tasksQuery.isFetching
-    ) {
-      setSelectedTaskId(null)
-      setShowDetailOnMobile(false)
-    }
-  }, [
-    selectedTask,
-    selectedTaskId,
-    tasksQuery.isFetching,
-    tasksQuery.isSuccess,
-  ])
-
-  const invalidateTasks = async () => {
+  const invalidateTasks = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: aiTasksQueryKey })
-  }
+  }, [queryClient])
+
+  const buildListSearch = useCallback(
+    (mutate?: (sp: URLSearchParams) => void) => {
+      const next = new URLSearchParams(searchParams)
+      mutate?.(next)
+      const qs = next.toString()
+      return qs ? `?${qs}` : ''
+    },
+    [searchParams],
+  )
+
+  const closeDetail = useCallback(() => {
+    navigate(`${TASKS_BASE_PATH}${buildListSearch()}`)
+  }, [buildListSearch, navigate])
+
+  const openTask = useCallback(
+    (id: string) => {
+      navigate(`${TASKS_BASE_PATH}/${id}${buildListSearch()}`)
+    },
+    [buildListSearch, navigate],
+  )
+
+  const updateListParam = useCallback(
+    (key: string, value: string | null) => {
+      const next = new URLSearchParams(searchParams)
+      if (value) next.set(key, value)
+      else next.delete(key)
+      setSearchParams(next, { replace: true })
+    },
+    [searchParams, setSearchParams],
+  )
+
+  const setPage = useCallback(
+    (nextPage: number) => {
+      updateListParam('page', nextPage > 1 ? String(nextPage) : null)
+    },
+    [updateListParam],
+  )
+
+  const handleStatusChange = useCallback(
+    (next: AITaskStatus | '') => {
+      const sp = new URLSearchParams(searchParams)
+      if (next) sp.set('status', next)
+      else sp.delete('status')
+      sp.delete('page')
+      setSearchParams(sp, { replace: true })
+    },
+    [searchParams, setSearchParams],
+  )
+
+  const handleTypeChange = useCallback(
+    (next: AITaskType | '') => {
+      const sp = new URLSearchParams(searchParams)
+      if (next) sp.set('type', next)
+      else sp.delete('type')
+      sp.delete('page')
+      setSearchParams(sp, { replace: true })
+    },
+    [searchParams, setSearchParams],
+  )
 
   const retryMutation = useMutation({
     mutationFn: retryAiTask,
@@ -158,8 +153,7 @@ export function AiRouteViewContent() {
       toast.error(getErrorMessage(error, t('ai.tasks.toast.deleteFailed'))),
     onSuccess: async () => {
       toast.success(t('ai.tasks.toast.deleted'))
-      setSelectedTaskId(null)
-      setShowDetailOnMobile(false)
+      closeDetail()
       await invalidateTasks()
     },
   })
@@ -177,19 +171,6 @@ export function AiRouteViewContent() {
       await invalidateTasks()
     },
   })
-
-  const handleStatusChange = (next: AITaskStatus | '') => {
-    setStatusFilter(next)
-    setPage(1)
-  }
-  const handleTypeChange = (next: AITaskType | '') => {
-    setTypeFilter(next)
-    setPage(1)
-  }
-  const handleSelectTask = (id: string) => {
-    setSelectedTaskId(id)
-    setShowDetailOnMobile(true)
-  }
 
   const typeOptions = useMemo(
     () =>
@@ -248,6 +229,35 @@ export function AiRouteViewContent() {
     },
   ]
 
+  const routeContextValue = useMemo(
+    () => ({
+      canceling: cancelMutation.isPending,
+      deleting: deleteMutation.isPending,
+      onBack: closeDetail,
+      onCancel: (task: AITask) => {
+        if (window.confirm(t('ai.confirm.cancelTask', { id: task.id }))) {
+          cancelMutation.mutate(task.id)
+        }
+      },
+      onDelete: (task: AITask) => {
+        if (window.confirm(t('ai.confirm.deleteTask', { id: task.id }))) {
+          deleteMutation.mutate(task.id)
+        }
+      },
+      onRetry: (task: AITask) => retryMutation.mutate(task.id),
+      polling: !tasksQuery.isPaused,
+      retrying: retryMutation.isPending,
+    }),
+    [
+      cancelMutation,
+      closeDetail,
+      deleteMutation,
+      retryMutation,
+      t,
+      tasksQuery.isPaused,
+    ],
+  )
+
   return (
     <AppPage>
       <PageHeader
@@ -260,57 +270,32 @@ export function AiRouteViewContent() {
         title={t('routes.aiTasks.title')}
       />
 
-      <MasterDetailLayout
-        showDetailOnMobile={showDetailOnMobile}
-        list={
-          <TaskListPane
-            isError={tasksQuery.isError}
-            isLoading={tasksQuery.isLoading}
-            onPageChange={setPage}
-            onRefetch={() => void tasksQuery.refetch()}
-            onSelectTask={handleSelectTask}
-            onStatusChange={handleStatusChange}
-            page={page}
-            pageCount={pageCount}
-            pageSize={pageSize}
-            selectedTaskId={selectedTaskId}
-            status={statusFilter}
-            tasks={tasks}
-            type={typeFilter}
-          />
-        }
-        detail={
-          <section className="h-full min-h-0">
-            {selectedTask ? (
-              <TaskDetail
-                canceling={cancelMutation.isPending}
-                deleting={deleteMutation.isPending}
-                onBack={() => setShowDetailOnMobile(false)}
-                onCancel={(task) => {
-                  if (
-                    window.confirm(t('ai.confirm.cancelTask', { id: task.id }))
-                  ) {
-                    cancelMutation.mutate(task.id)
-                  }
-                }}
-                onDelete={(task) => {
-                  if (
-                    window.confirm(t('ai.confirm.deleteTask', { id: task.id }))
-                  ) {
-                    deleteMutation.mutate(task.id)
-                  }
-                }}
-                onRetry={(task) => retryMutation.mutate(task.id)}
-                polling={!tasksQuery.isPaused}
-                retrying={retryMutation.isPending}
-                task={selectedTask}
-              />
-            ) : (
+      <AiTasksRouteContext.Provider value={routeContextValue}>
+        <MasterDetailShell
+          emptyDetail={
+            <section className="h-full min-h-0">
               <TaskDetailEmpty />
-            )}
-          </section>
-        }
-      />
+            </section>
+          }
+          list={
+            <TaskListPane
+              isError={tasksQuery.isError}
+              isLoading={tasksQuery.isLoading}
+              onPageChange={setPage}
+              onRefetch={() => void tasksQuery.refetch()}
+              onSelectTask={openTask}
+              onStatusChange={handleStatusChange}
+              page={page}
+              pageCount={pageCount}
+              pageSize={pageSize}
+              selectedTaskId={detailId}
+              status={statusFilter}
+              tasks={tasks}
+              type={typeFilter}
+            />
+          }
+        />
+      </AiTasksRouteContext.Provider>
     </AppPage>
   )
 }

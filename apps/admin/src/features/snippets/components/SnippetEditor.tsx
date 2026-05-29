@@ -9,16 +9,17 @@ import {
   ScrollText,
   Trash2,
 } from 'lucide-react'
+import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import type { CreateSnippetData } from '~/api/snippets'
-import type { SnippetModel } from '~/models/snippet'
-import type { FormEvent } from 'react'
 
+import type { CreateSnippetData } from '~/api/snippets'
 import { createSnippet, updateSnippet } from '~/api/snippets'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { SnippetModel } from '~/models/snippet'
 import { SnippetType, SnippetTypeToLanguage } from '~/models/snippet'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { CodeEditor } from '~/ui/primitives/code-editor'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -108,6 +109,7 @@ export function SnippetEditor(props: {
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           <Button
             aria-label={t('snippets.editor.backAria')}
             className="h-8 px-2 lg:hidden"

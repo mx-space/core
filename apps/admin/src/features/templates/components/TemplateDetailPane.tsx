@@ -1,14 +1,15 @@
 import { Loader2, MailCheck, RefreshCw, RotateCcw, Save } from 'lucide-react'
 import { useMemo } from 'react'
-import type { TemplateType, TemplateViewMode } from '../types/templates'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
 import { templateDescriptors } from '../constants'
+import type { TemplateType, TemplateViewMode } from '../types/templates'
 import { TemplateCodeEditor } from './TemplateCodeEditor'
 import { TemplatePreview } from './TemplatePreview'
 import { TemplatePropsPopover } from './TemplatePropsPopover'
@@ -65,6 +66,7 @@ export function TemplateDetailPane(props: TemplateDetailPaneProps) {
         )}
       >
         <div className="flex min-w-0 items-center gap-3">
+          <MobileHeaderAffordance />
           <h2 className="inline-flex min-w-0 items-center gap-2 text-lg font-semibold">
             <Icon aria-hidden="true" className="size-4 shrink-0" />
             <span className="truncate">{t(descriptor.labelKey)}</span>

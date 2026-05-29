@@ -1,11 +1,12 @@
 import { Copy, ExternalLink, FileIcon, Trash2 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import type { ReactNode } from 'react'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import { HeaderBackButton } from '~/ui/layout/header-back-button'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
@@ -55,6 +56,7 @@ export function FileDetailPane(props: FileDetailPaneProps) {
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           {props.isMobile && props.onBack ? (
             <HeaderBackButton onClick={props.onBack} />
           ) : null}

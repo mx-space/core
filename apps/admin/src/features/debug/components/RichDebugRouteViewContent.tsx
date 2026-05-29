@@ -1,18 +1,19 @@
 import { RotateCcw } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import type {
-  MountRichEditorOptions,
-  RichEditorHandle,
-} from '~/vendor/rich-editor/mount/mount-rich-editor'
 
 import { resolveEnrichment } from '~/api/enrichment'
 import { uploadFile } from '~/api/files'
 import { API_URL } from '~/constants/env'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
+import type {
+  MountRichEditorOptions,
+  RichEditorHandle,
+} from '~/vendor/rich-editor/mount/mount-rich-editor'
 
 const STORAGE_KEY = 'debug-rich-editor-content'
 
@@ -57,15 +58,18 @@ export function RichDebugRouteViewContent() {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
-        <div className="min-w-0">
-          <div className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
-            {t('debug.rich.title')}
-          </div>
-          <div className="truncate text-xs text-neutral-500 dark:text-neutral-400">
-            {t('debug.rich.charsAndSize', {
-              chars: stats.textLength,
-              size: stats.contentSize,
-            })}
+        <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
+          <div className="min-w-0">
+            <div className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+              {t('debug.rich.title')}
+            </div>
+            <div className="truncate text-xs text-neutral-500 dark:text-neutral-400">
+              {t('debug.rich.charsAndSize', {
+                chars: stats.textLength,
+                size: stats.contentSize,
+              })}
+            </div>
           </div>
         </div>
         <Button onClick={handleReset} type="button" variant="subtle">
@@ -179,7 +183,7 @@ function parseSerializedEditorState(
 
 async function saveExcalidrawSnapshot(snapshot: object, existingRef?: string) {
   const name = existingRef
-    ? `${existingRef.replace(/[^\w.-]/g, '-')}.json`
+    ? `${existingRef.replaceAll(/[^\w.-]/g, '-')}.json`
     : `excalidraw-${crypto.randomUUID()}.json`
   const file = new File([JSON.stringify(snapshot)], name, {
     type: 'application/json',

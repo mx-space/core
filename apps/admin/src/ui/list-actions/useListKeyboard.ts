@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react'
 import type { KeybindingsMap } from 'tinykeys'
-import type { ListAction } from './types'
-import type { ListSelectionAPI } from './useListSelection'
 
 import { setActiveScope, useScopeArrowNav } from '~/ui/focus-scope'
 
+import type { ListAction } from './types'
+import type { ListSelectionAPI } from './useListSelection'
 import { useListSelection } from './useListSelection'
 import { useListShortcuts } from './useListShortcuts'
 
@@ -46,7 +46,6 @@ function safeCall(fn: (() => void) | undefined, label: string) {
   try {
     fn()
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error(`[useListKeyboard] ${label} threw:`, error)
   }
 }
@@ -129,7 +128,6 @@ export function useListKeyboard<T>(
     )
     for (const key of Object.keys(callerExtra)) {
       if (actionKeys.has(key)) {
-        // eslint-disable-next-line no-console
         console.warn(
           `[useListKeyboard] caller extra "${key}" overrides action shortcut on scope "${options.scopeId}"`,
         )
@@ -197,7 +195,6 @@ export function useListKeyboard<T>(
   useEffect(() => {
     patchedSelection.clear()
     // patchedSelection.clear already calls onBeforeSelectionReset internally.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, resetOn ?? [])
 
   return { scopeId: options.scopeId, selection: patchedSelection }

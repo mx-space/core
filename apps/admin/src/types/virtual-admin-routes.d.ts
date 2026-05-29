@@ -1,6 +1,7 @@
 declare module 'virtual:admin-routes' {
-  import type { ComponentType, LazyExoticComponent } from 'react'
   import type { LucideIcon } from 'lucide-react'
+  import type { ComponentType, LazyExoticComponent } from 'react'
+
   import type { TranslationKey } from '~/i18n/types'
 
   export interface AppRoute {
@@ -12,6 +13,12 @@ declare module 'virtual:admin-routes' {
     matchPaths?: string[]
     layout: 'shell' | 'public'
     hidden?: boolean
+    /**
+     * Nested child routes (for React Router nested rendering). Only populated on
+     * shellRoutes entries; appRoutes uses the absolute-path flat form and never
+     * has children.
+     */
+    children?: AppRoute[]
   }
 
   export interface SidebarNode {

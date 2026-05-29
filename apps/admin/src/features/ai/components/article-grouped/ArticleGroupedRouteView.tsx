@@ -1,33 +1,20 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw } from 'lucide-react'
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
-import { toast } from 'sonner'
-import type { ArticleInfo } from '~/api/ai'
-import type { HeaderAction } from '~/ui/layout/page-layout'
-import type { ArticleGroupedConfig } from './types'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router'
 
+import type { ArticleInfo } from '~/api/ai'
 import { useI18n } from '~/i18n'
-import { confirmDialog } from '~/ui/feedback/confirm'
-import { ContentLayout, ContentLayoutSlot } from '~/ui/layout/content-layout'
-import {
-  AppPage,
-  MasterDetailLayout,
-  PageHeader,
-} from '~/ui/layout/page-layout'
+import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
+import type { HeaderAction } from '~/ui/layout/page-layout'
+import { AppPage, PageHeader } from '~/ui/layout/page-layout'
 
 import { groupedPageSize } from '../../constants'
-import { getErrorMessage } from '../../utils/ai'
+import type { ArticleGroupedRouteContextValue } from './article-grouped-route-context'
+import { ArticleGroupedRouteContext } from './article-grouped-route-context'
 import { ArticleDetailEmptyState } from './ArticleDetailEmptyState'
-import { ArticleDetailPane } from './ArticleDetailPane'
-import { ArticleEditPanel } from './ArticleEditPanel'
 import { ArticleListPane } from './ArticleListPane'
-import { useItemActions } from './useItemActions'
+import type { ArticleGroupedConfig } from './types'
 
 const SEARCH_DEBOUNCE_MS = 300
 
@@ -41,20 +28,24 @@ export function ArticleGroupedRouteView<TItem>(
   const { config } = props
   const { t } = useI18n()
   const queryClient = useQueryClient()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-  const idParam = searchParams.get('id')
+  const navigate = useNavigate()
+  const location = useLocation()
+  const params = useParams<{ id?: string }>()
+  const selectedArticleId = params.id ?? null
+
+  // Strip the trailing `/<id>` segment from the current pathname to recover
+  // the list base path. Works for `/ai/summary`, `/ai/translation`, `/ai/insights`.
+  const basePath = useMemo(() => {
+    if (!selectedArticleId) return location.pathname
+    const suffix = `/${selectedArticleId}`
+    if (location.pathname.endsWith(suffix)) {
+      return location.pathname.slice(0, -suffix.length)
+    }
+    return location.pathname
+  }, [location.pathname, selectedArticleId])
 
   const [inputSearch, setInputSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
-    () => idParam,
-  )
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(() =>
-    Boolean(idParam),
-  )
-  const [editingItemId, setEditingItemId] = useState<string | null>(null)
-  const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -62,23 +53,6 @@ export function ArticleGroupedRouteView<TItem>(
     }, SEARCH_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
   }, [inputSearch])
-
-  useLayoutEffect(() => {
-    setSelectedArticleId((value) => (value === idParam ? value : idParam))
-    setShowDetailOnMobile(Boolean(idParam))
-  }, [searchParamsKey, idParam])
-
-  useEffect(() => {
-    const next = new URLSearchParams(searchParams)
-    if (selectedArticleId) {
-      next.set('id', selectedArticleId)
-    } else {
-      next.delete('id')
-    }
-    if (next.toString() !== searchParamsKey) {
-      setSearchParams(next, { replace: true })
-    }
-  }, [searchParams, searchParamsKey, selectedArticleId, setSearchParams])
 
   const listQuery = useInfiniteQuery({
     initialPageParam: 1,
@@ -103,29 +77,6 @@ export function ArticleGroupedRouteView<TItem>(
   )
   const total = listQuery.data?.pages[0]?.pagination.total ?? 0
 
-  const detailQuery = useQuery({
-    enabled: Boolean(selectedArticleId),
-    queryFn: () => config.getItemsByRef(selectedArticleId!),
-    queryKey: ['ai', config.groupedQueryKey, 'by-ref', selectedArticleId],
-  })
-
-  const detailArticle: ArticleInfo | null = useMemo(() => {
-    if (!selectedArticleId) return null
-    const fromList = groups.find((g) => g.article.id === selectedArticleId)
-    if (fromList) return fromList.article
-    const detail = detailQuery.data?.article
-    if (detail) {
-      return {
-        id: selectedArticleId,
-        title: detail.document.title,
-        type: detail.type,
-      }
-    }
-    return null
-  }, [groups, detailQuery.data, selectedArticleId])
-
-  const detailItems: TItem[] = detailQuery.data?.items ?? []
-
   const invalidate = async () => {
     await queryClient.invalidateQueries({
       queryKey: ['ai', config.groupedQueryKey],
@@ -133,86 +84,23 @@ export function ArticleGroupedRouteView<TItem>(
     await queryClient.invalidateQueries({ queryKey: ['ai', 'tasks'] })
   }
 
-  const deleteMutation = useMutation({
-    mutationFn: config.deleteItem,
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('ai.toast.deleteFailed'))),
-    onSuccess: async () => {
-      toast.success(t('ai.toast.deleted'))
-      await invalidate()
-    },
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, next }: { id: string; next: TItem }) =>
-      config.updateItem(id, next),
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('ai.toast.deleteFailed'))),
-    onSuccess: async () => {
-      toast.success(t('ai.toast.saved'))
-      setEditingItemId(null)
-      await invalidate()
-    },
-  })
-
-  const generateMutation = useMutation({
-    mutationFn: (input: { refId: string; lang?: string }) =>
-      config.generate.runTask(input),
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('ai.toast.taskCreateFailed'))),
-    onSuccess: async (result) => {
-      toast.success(
-        result.created ? t('ai.toast.taskCreated') : t('ai.toast.taskExists'),
-      )
-      setGenerating(false)
-      await invalidate()
-    },
-  })
-
-  const extraActionMutation = useMutation({
-    mutationFn: async (input: {
-      item: TItem
-      run: (item: TItem) => Promise<unknown>
-    }) => input.run(input.item),
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('ai.toast.taskCreateFailed'))),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['ai'] })
-    },
-  })
-
-  const confirmAndDelete = async (item: TItem) => {
-    const ok = await confirmDialog({
-      destructive: true,
-      title: t(config.itemDeleteConfirmKey, { kind: t(config.kindKey) }),
-    })
-    if (!ok) return
-    deleteMutation.mutate(config.getId(item))
+  const openArticle = (article: ArticleInfo) => {
+    navigate(`${basePath}/${article.id}`)
   }
 
-  const { keyboardActions, buildMenu } = useItemActions<TItem>({
-    config,
-    onEdit: (item) => setEditingItemId(config.getId(item)),
-    onDelete: (item) => void confirmAndDelete(item),
-    onExtraAction: (item, run) => extraActionMutation.mutate({ item, run }),
-  })
-
-  const editingItem: TItem | null = useMemo(() => {
-    if (!editingItemId) return null
-    return (
-      detailItems.find((item) => config.getId(item) === editingItemId) ?? null
-    )
-  }, [detailItems, editingItemId, config])
-
-  const handleSelectArticle = (article: ArticleInfo) => {
-    setSelectedArticleId(article.id)
-    setShowDetailOnMobile(true)
+  const closeDetail = () => {
+    navigate(basePath)
   }
 
-  const closeEditPanel = () => {
-    setEditingItemId(null)
-    setGenerating(false)
-  }
+  const routeContextValue = useMemo<ArticleGroupedRouteContextValue<TItem>>(
+    () => ({
+      basePath,
+      config,
+      invalidate,
+      onBack: closeDetail,
+    }),
+    [basePath, config],
+  )
 
   const headerActions: HeaderAction[] = [
     ...(config.pageActions?.({ invalidate }) ?? []),
@@ -223,9 +111,8 @@ export function ArticleGroupedRouteView<TItem>(
       label: t('common.refresh'),
       onClick: () => {
         void listQuery.refetch()
-        if (selectedArticleId) void detailQuery.refetch()
       },
-      disabled: listQuery.isFetching || detailQuery.isFetching,
+      disabled: listQuery.isFetching,
     },
   ]
 
@@ -239,91 +126,34 @@ export function ArticleGroupedRouteView<TItem>(
         title={t(config.pageTitleKey)}
       />
 
-      <MasterDetailLayout
-        detail={
-          detailArticle ? (
-            <ContentLayout
-              asideDefaultSize="70%"
-              asideMaxSize="85%"
-              asideMinSize="480px"
-              asideMobileTitle={
-                editingItem
-                  ? t(config.editTitleKey)
-                  : t(config.generate.labelKey)
-              }
-              className="h-full"
-              mainMinSize="280px"
-              onCloseAside={closeEditPanel}
-              open={Boolean(editingItem) || generating}
-            >
-              <ArticleDetailPane<TItem>
-                article={detailArticle}
-                buildMenu={buildMenu}
-                config={config}
-                isLoading={detailQuery.isLoading}
-                items={detailItems}
-                keyboardActions={keyboardActions}
-                onBack={() => setShowDetailOnMobile(false)}
-                onDelete={(item) => void confirmAndDelete(item)}
-                onEdit={(item) => setEditingItemId(config.getId(item))}
-                onGenerate={() => setGenerating(true)}
-                onItemFocus={(item) => {
-                  if (editingItemId !== null) {
-                    setEditingItemId(config.getId(item))
-                  }
-                }}
-              />
-              <ContentLayoutSlot
-                active={Boolean(editingItem) || generating}
-                id="ai-article-edit"
-              >
-                <ArticleEditPanel<TItem>
-                  config={config}
-                  editingItem={editingItem}
-                  generateSubmitting={generateMutation.isPending}
-                  mode={editingItem ? 'edit' : 'generate'}
-                  onClose={closeEditPanel}
-                  onGenerate={async (lang) => {
-                    if (!selectedArticleId) return
-                    await generateMutation.mutateAsync({
-                      refId: selectedArticleId,
-                      lang,
-                    })
-                  }}
-                  onUpdate={async (next) => {
-                    await updateMutation.mutateAsync({
-                      id: config.getId(next),
-                      next,
-                    })
-                  }}
-                  selectedArticleId={selectedArticleId}
-                  updateSubmitting={updateMutation.isPending}
-                />
-              </ContentLayoutSlot>
-            </ContentLayout>
-          ) : (
+      <ArticleGroupedRouteContext.Provider
+        value={
+          routeContextValue as unknown as ArticleGroupedRouteContextValue<unknown>
+        }
+      >
+        <MasterDetailShell
+          emptyDetail={
             <ArticleDetailEmptyState
               description={t(config.detailEmptyDescriptionKey)}
               title={t(config.detailEmptyTitleKey)}
             />
-          )
-        }
-        list={
-          <ArticleListPane<TItem>
-            config={config}
-            groups={groups}
-            hasNextPage={Boolean(listQuery.hasNextPage)}
-            isFetchingNextPage={listQuery.isFetchingNextPage}
-            isLoading={listQuery.isLoading}
-            onLoadMore={() => void listQuery.fetchNextPage()}
-            onSearchChange={setInputSearch}
-            onSelectArticle={handleSelectArticle}
-            search={inputSearch}
-            selectedArticleId={selectedArticleId}
-          />
-        }
-        showDetailOnMobile={showDetailOnMobile}
-      />
+          }
+          list={
+            <ArticleListPane<TItem>
+              config={config}
+              groups={groups}
+              hasNextPage={Boolean(listQuery.hasNextPage)}
+              isFetchingNextPage={listQuery.isFetchingNextPage}
+              isLoading={listQuery.isLoading}
+              onLoadMore={() => void listQuery.fetchNextPage()}
+              onSearchChange={setInputSearch}
+              onSelectArticle={openArticle}
+              search={inputSearch}
+              selectedArticleId={selectedArticleId}
+            />
+          }
+        />
+      </ArticleGroupedRouteContext.Provider>
     </AppPage>
   )
 }

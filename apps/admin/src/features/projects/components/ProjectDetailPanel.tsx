@@ -2,11 +2,12 @@ import { useMutation } from '@tanstack/react-query'
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { ProjectModel } from '~/models/project'
 
 import { deleteProject } from '~/api/projects'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { ProjectModel } from '~/models/project'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { MarkdownRender } from '~/ui/primitives/markdown-render'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -44,7 +45,8 @@ export function ProjectDetailPanel(props: {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           <h2 className="inline-flex min-w-0 items-center gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
             <ProjectAvatar project={props.project} size="small" />
             <span className="truncate">{props.project.name}</span>

@@ -1,16 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { Loader2, Sparkles } from 'lucide-react'
+import type { PropsWithChildren } from 'react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import type { PropsWithChildren } from 'react'
 
-import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { Drawer } from '~/ui/feedback/drawer'
 import { FOCUS_SCOPES, FocusScope, useScopeArrowNav } from '~/ui/focus-scope'
-import { MobileHamburger } from '~/ui/layout/mobile-hamburger'
-import { ShellNavProvider, useShellNav } from '~/ui/layout/shell-nav-context'
+import { ShellNavProvider } from '~/ui/layout/shell-nav-context'
 import { SidebarBody } from '~/ui/layout/sidebar-body'
-import { cn } from '~/utils/cn'
 
 import { AITaskStatus, getAiTasks } from './api/ai'
 import { useI18n } from './i18n'
@@ -82,7 +79,6 @@ export function AdminShell(props: PropsWithChildren) {
         </aside>
 
         <section className="flex h-screen min-h-0 min-w-0 flex-col">
-          <MobileShellTopBar />
           <div className="relative min-h-0 flex-1 overflow-hidden">
             {props.children}
             {activeAiTaskCount > 0 ? (
@@ -102,6 +98,7 @@ export function AdminShell(props: PropsWithChildren) {
         <Drawer
           onClose={() => setNavOpen(false)}
           open={navOpen}
+          showHeader={false}
           side="left"
           title={t('common.primaryNavigation')}
           widthClassName="w-[min(85vw,18rem)]"
@@ -115,21 +112,6 @@ export function AdminShell(props: PropsWithChildren) {
         </Drawer>
       </main>
     </ShellNavProvider>
-  )
-}
-
-function MobileShellTopBar() {
-  const shellNav = useShellNav()
-  if (shellNav?.hasOwnHeader) return null
-  return (
-    <div
-      className={cn(
-        'flex shrink-0 items-center gap-2 border-b border-neutral-200 bg-white px-3 lg:hidden dark:border-neutral-800 dark:bg-neutral-950',
-        APP_SHELL_HEADER_HEIGHT_CLASS,
-      )}
-    >
-      <MobileHamburger />
-    </div>
   )
 }
 

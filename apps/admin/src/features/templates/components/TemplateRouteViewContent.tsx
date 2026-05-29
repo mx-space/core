@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
-import type { TemplateType, TemplateViewMode } from '../types/templates'
 
 import { sendTestEmail } from '~/api/health'
 import {
@@ -12,7 +11,7 @@ import {
 } from '~/api/options'
 import { useI18n } from '~/i18n'
 import { confirmDialog } from '~/ui/feedback/confirm'
-import { MasterDetailLayout } from '~/ui/layout/page-layout'
+import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 
 import {
   DEFAULT_VIEW_MODE,
@@ -27,9 +26,11 @@ import {
   mergeFallbackProps,
   templateFallbackProps,
 } from '../lib/fallback-props'
+import type { TemplateType, TemplateViewMode } from '../types/templates'
 import { getErrorMessage } from '../utils/errors'
 import { TemplateDetailPane } from './TemplateDetailPane'
 import { TemplateListPane } from './TemplateListPane'
+import { TemplatesRouteContext } from './templates-route-context'
 
 function isTemplateType(value: unknown): value is TemplateType {
   return value === 'guest' || value === 'owner' || value === 'newsletter'
@@ -48,36 +49,21 @@ function readInitialViewMode(): TemplateViewMode {
 export function TemplateRouteViewContent() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const paramsKey = searchParams.toString()
+  const navigate = useNavigate()
+  const params = useParams<{ id?: string }>()
+  const pathType: TemplateType | null = isTemplateType(params.id)
+    ? params.id
+    : null
+  // For data/state hooks always use a concrete type; default to the first
+  // descriptor so the query has something stable to fetch.
+  const type: TemplateType = pathType ?? templateDescriptors[0].value
 
-  const initialType: TemplateType = isTemplateType(searchParams.get('type'))
-    ? (searchParams.get('type') as TemplateType)
-    : templateDescriptors[0].value
-  const [type, setType] = useState<TemplateType>(initialType)
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(false)
   const [source, setSource] = useState('')
   const [propsValue, setPropsValue] = useState<unknown>({})
   const [previewHtml, setPreviewHtml] = useState('')
   const [previewError, setPreviewError] = useState('')
   const [viewMode, setViewMode] =
     useState<TemplateViewMode>(readInitialViewMode)
-
-  useLayoutEffect(() => {
-    const nextRaw = searchParams.get('type')
-    const next = isTemplateType(nextRaw)
-      ? nextRaw
-      : templateDescriptors[0].value
-    setType((value) => (value === next ? value : next))
-  }, [paramsKey, searchParams])
-
-  useEffect(() => {
-    const next = new URLSearchParams(searchParams)
-    if (type === templateDescriptors[0].value) next.delete('type')
-    else next.set('type', type)
-    if (next.toString() === paramsKey) return
-    setSearchParams(next, { replace: true })
-  }, [paramsKey, searchParams, setSearchParams, type])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -135,11 +121,11 @@ export function TemplateRouteViewContent() {
 
   const propsKeys = useMemo(() => flattenPropsKeys(propsValue), [propsValue])
 
-  const invalidateTemplate = async () => {
+  const invalidateTemplate = useCallback(async () => {
     await queryClient.invalidateQueries({
       queryKey: [...templateQueryKey, type],
     })
-  }
+  }, [queryClient, type])
 
   const saveMutation = useMutation({
     mutationFn: () => updateEmailTemplate(type, source),
@@ -174,7 +160,7 @@ export function TemplateRouteViewContent() {
     },
   })
 
-  const requestReset = async () => {
+  const requestReset = useCallback(async () => {
     const confirmed = await confirmDialog({
       title: t('templates.resetDialog.title'),
       description: t('templates.resetDialog.description'),
@@ -182,51 +168,97 @@ export function TemplateRouteViewContent() {
       destructive: true,
     })
     if (confirmed) resetMutation.mutate()
-  }
+  }, [resetMutation, t])
 
-  const handleSelect = (next: TemplateType) => {
-    setType(next)
-    setShowDetailOnMobile(true)
-  }
+  const handleSelect = useCallback(
+    (next: TemplateType) => {
+      navigate(`/assets/template/${next}`)
+    },
+    [navigate],
+  )
+
+  const ctxValue = useMemo(
+    () => ({
+      defaultProps,
+      dirty: isDirty,
+      loading: templateQuery.isLoading,
+      onChangeProps: setPropsValue,
+      onChangeSource: setSource,
+      onChangeView: setViewMode,
+      onRefresh: () => void templateQuery.refetch(),
+      onReset: () => void requestReset(),
+      onSave: () => saveMutation.mutate(),
+      onTestSmtp: () => testEmailMutation.mutate(),
+      previewError,
+      previewHtml,
+      propsKeys,
+      propsValue,
+      refreshing: templateQuery.isFetching && !templateQuery.isLoading,
+      resetting: resetMutation.isPending,
+      saving: saveMutation.isPending,
+      source,
+      testing: testEmailMutation.isPending,
+      type,
+      viewMode,
+    }),
+    [
+      defaultProps,
+      isDirty,
+      previewError,
+      previewHtml,
+      propsKeys,
+      propsValue,
+      requestReset,
+      resetMutation.isPending,
+      saveMutation,
+      saveMutation.isPending,
+      source,
+      templateQuery,
+      testEmailMutation,
+      type,
+      viewMode,
+    ],
+  )
 
   return (
-    <MasterDetailLayout
-      defaultSize={220}
-      detail={
-        <TemplateDetailPane
-          defaultProps={defaultProps}
-          dirty={isDirty}
-          loading={templateQuery.isLoading}
-          onChangeProps={setPropsValue}
-          onChangeSource={setSource}
-          onChangeView={setViewMode}
-          onRefresh={() => void templateQuery.refetch()}
-          onReset={() => void requestReset()}
-          onSave={() => saveMutation.mutate()}
-          onTestSmtp={() => testEmailMutation.mutate()}
-          previewError={previewError}
-          previewHtml={previewHtml}
-          propsKeys={propsKeys}
-          propsValue={propsValue}
-          refreshing={templateQuery.isFetching && !templateQuery.isLoading}
-          resetting={resetMutation.isPending}
-          saving={saveMutation.isPending}
-          source={source}
-          testing={testEmailMutation.isPending}
-          type={type}
-          viewMode={viewMode}
-        />
-      }
-      list={
-        <TemplateListPane
-          dirtyType={isDirty ? type : null}
-          onSelect={handleSelect}
-          selected={type}
-        />
-      }
-      maxSize={320}
-      minSize={180}
-      showDetailOnMobile={showDetailOnMobile}
-    />
+    <TemplatesRouteContext.Provider value={ctxValue}>
+      <MasterDetailShell
+        defaultSize={220}
+        emptyDetail={
+          <TemplateDetailPane
+            defaultProps={defaultProps}
+            dirty={isDirty}
+            loading={templateQuery.isLoading}
+            onChangeProps={setPropsValue}
+            onChangeSource={setSource}
+            onChangeView={setViewMode}
+            onRefresh={() => void templateQuery.refetch()}
+            onReset={() => void requestReset()}
+            onSave={() => saveMutation.mutate()}
+            onTestSmtp={() => testEmailMutation.mutate()}
+            previewError={previewError}
+            previewHtml={previewHtml}
+            propsKeys={propsKeys}
+            propsValue={propsValue}
+            refreshing={templateQuery.isFetching && !templateQuery.isLoading}
+            resetting={resetMutation.isPending}
+            saving={saveMutation.isPending}
+            source={source}
+            testing={testEmailMutation.isPending}
+            type={type}
+            viewMode={viewMode}
+          />
+        }
+        list={
+          <TemplateListPane
+            dirtyType={isDirty ? type : null}
+            onSelect={handleSelect}
+            selected={type}
+          />
+        }
+        maxSize={320}
+        minSize={180}
+      />
+    </TemplatesRouteContext.Provider>
   )
 }

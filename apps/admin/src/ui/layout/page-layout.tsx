@@ -1,15 +1,10 @@
-import { useEffect } from 'react'
-import {
-  Group as PanelGroup,
-  Panel as ResizablePanel,
-} from 'react-resizable-panels'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useEffect } from 'react'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { HeaderBackButton } from '~/ui/layout/header-back-button'
 import { MobileHamburger } from '~/ui/layout/mobile-hamburger'
-import { ResizeHandle } from '~/ui/layout/resize-handle'
 import { useShellNav } from '~/ui/layout/shell-nav-context'
 import { cn } from '~/utils/cn'
 
@@ -78,7 +73,8 @@ export function PageHeader(props: PageHeaderProps) {
       !(Array.isArray(props.actions) && props.actions.length === 0))
 
   const shellNav = useShellNav()
-  useEffect(() => shellNav?.registerPageHeader(), [shellNav])
+  const registerPageHeader = shellNav?.registerPageHeader
+  useEffect(() => registerPageHeader?.(), [registerPageHeader])
 
   return (
     <header
@@ -180,88 +176,5 @@ function renderHeaderAction(action: HeaderAction, index: number) {
         <span>{action.label}</span>
       </button>
     </span>
-  )
-}
-
-/**
- * List 之默认宽度（像素）。group 改尺寸时保 pixel-size 不变。
- */
-const DEFAULT_LIST_PIXELS = 320
-const DEFAULT_LIST_MIN_PIXELS = 240
-const DEFAULT_LIST_MAX_PIXELS = 560
-
-export function MasterDetailLayout(props: {
-  className?: string
-  children?: ReactNode
-  /** List 之默认宽度，像素。 */
-  defaultSize?: number
-  detail: ReactNode
-  detailClassName?: string
-  list: ReactNode
-  listClassName?: string
-  /** List 之最大宽度，像素。 */
-  maxSize?: number
-  /** List 之最小宽度，像素。 */
-  minSize?: number
-  showDetailOnMobile?: boolean
-}) {
-  const defaultSize = props.defaultSize ?? DEFAULT_LIST_PIXELS
-  const minSize = props.minSize ?? DEFAULT_LIST_MIN_PIXELS
-  const maxSize = props.maxSize ?? DEFAULT_LIST_MAX_PIXELS
-
-  return (
-    <div
-      className={cn(
-        'relative h-full min-h-0 overflow-hidden bg-white dark:bg-neutral-950',
-        props.className,
-      )}
-    >
-      <div className="absolute inset-0 overflow-hidden lg:hidden">
-        <div
-          className={cn(
-            'absolute inset-0 min-h-0 overflow-hidden transition-transform duration-300 ease-out',
-            props.showDetailOnMobile ? '-translate-x-full' : 'translate-x-0',
-            props.listClassName,
-          )}
-        >
-          {props.list}
-        </div>
-        <div
-          className={cn(
-            'absolute inset-0 min-h-0 min-w-0 overflow-hidden transition-transform duration-300 ease-out',
-            props.showDetailOnMobile ? 'translate-x-0' : 'translate-x-full',
-            props.detailClassName,
-          )}
-        >
-          {props.detail}
-        </div>
-      </div>
-
-      <PanelGroup
-        className="hidden h-full min-h-0 lg:flex"
-        orientation="horizontal"
-      >
-        <ResizablePanel
-          className={cn('min-h-0 overflow-hidden', props.listClassName)}
-          defaultSize={defaultSize}
-          groupResizeBehavior="preserve-pixel-size"
-          maxSize={maxSize}
-          minSize={minSize}
-        >
-          {props.list}
-        </ResizablePanel>
-        <ResizeHandle />
-        <ResizablePanel
-          className={cn(
-            'min-h-0 min-w-0 overflow-hidden',
-            props.detailClassName,
-          )}
-        >
-          {props.detail}
-        </ResizablePanel>
-      </PanelGroup>
-
-      {props.children}
-    </div>
   )
 }

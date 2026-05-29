@@ -1,9 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCheck, MessageSquare, ShieldAlert, Trash2 } from 'lucide-react'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import type { CommentModel } from '~/models/comment'
 
 import {
   batchDeleteComments,
@@ -15,10 +21,12 @@ import {
 } from '~/api/comments'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { CommentModel } from '~/models/comment'
 import { CommentState } from '~/models/comment'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { FocusScope } from '~/ui/focus-scope'
-import { MasterDetailLayout } from '~/ui/layout/page-layout'
+import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { useListKeyboard } from '~/ui/list-actions'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
@@ -33,15 +41,19 @@ import {
 } from '../constants'
 import { normalizeCommentState, readCommentPage } from '../utils/comments'
 import { buildCommentActions } from './buildCommentActions'
-import { CommentDetail } from './CommentDetail'
+import { CommentDetailEmpty } from './CommentDetailEmpty'
 import { CommentListItem } from './CommentListItem'
 import { CommentEmptyState } from './CommentPrimitives'
+import { CommentsRouteContext } from './comments-route-context'
 
 const FOCUS_SCOPE_ID = 'comments-list'
 
 export function CommentsRouteViewContent() {
   const { locale, t } = useI18n()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const params = useParams<{ id?: string }>()
+  const detailId = params.id ?? null
   const commentFilters = useMemo(() => getCommentFilters(), [locale])
   const [searchParams, setSearchParams] = useSearchParams()
   const searchParamsKey = searchParams.toString()
@@ -50,14 +62,6 @@ export function CommentsRouteViewContent() {
   )
   const [page, setPage] = useState(() =>
     readCommentPage(searchParams.get('page')),
-  )
-  const [detailId, setDetailId] = useState<string | null>(
-    searchParams.get('id'),
-  )
-  const [selectedCommentSnapshot, setSelectedCommentSnapshot] =
-    useState<CommentModel | null>(null)
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(
-    Boolean(searchParams.get('id')),
   )
   const [selectAllMode, setSelectAllMode] = useState(false)
 
@@ -69,42 +73,40 @@ export function CommentsRouteViewContent() {
 
   const comments = commentsQuery.data?.data ?? []
   const pagination = commentsQuery.data?.pagination
-  const selectedComment =
-    comments.find((comment) => comment.id === detailId) ??
-    (selectedCommentSnapshot?.id === detailId ? selectedCommentSnapshot : null)
 
   useLayoutEffect(() => {
     const nextState = normalizeCommentState(searchParams.get('state'))
     const nextPage = readCommentPage(searchParams.get('page'))
-    const nextDetailId = searchParams.get('id')
 
     setState((value) => (value === nextState ? value : nextState))
     setPage((value) => (value === nextPage ? value : nextPage))
-    setDetailId((value) => (value === nextDetailId ? value : nextDetailId))
-    setShowDetailOnMobile(Boolean(nextDetailId))
     setSelectAllMode(false)
-    if (!nextDetailId) setSelectedCommentSnapshot(null)
   }, [searchParamsKey])
 
   useEffect(() => {
     const next = new URLSearchParams()
     next.set('state', String(state))
     if (page > 1) next.set('page', String(page))
-    if (detailId) next.set('id', detailId)
     if (next.toString() !== searchParamsKey) {
       setSearchParams(next, { replace: true })
     }
-  }, [page, searchParamsKey, detailId, setSearchParams, state])
+  }, [page, searchParamsKey, setSearchParams, state])
 
   const selectionClearRef = useRef<(() => void) | null>(null)
-  // Batch mutations close over this ref so they can read the latest selection
-  // without depending on selection identity (which is created later, after
-  // `actions`). Updated immediately after useListKeyboard returns.
   const selectionTargetsRef = useRef<CommentModel[]>([])
 
-  const invalidateComments = async () => {
+  const invalidateComments = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: commentsQueryKey })
-  }
+  }, [queryClient])
+
+  const buildListUrl = useCallback(() => {
+    const qs = searchParams.toString()
+    return `/comments${qs ? `?${qs}` : ''}`
+  }, [searchParams])
+
+  const closeDetail = useCallback(() => {
+    navigate(buildListUrl())
+  }, [buildListUrl, navigate])
 
   const stateMutation = useMutation({
     mutationFn: ({ id, nextState }: { id: string; nextState: CommentState }) =>
@@ -119,10 +121,8 @@ export function CommentsRouteViewContent() {
     mutationFn: deleteComment,
     onSuccess: async () => {
       toast.success(t('comments.toast.deleted'))
-      setDetailId(null)
-      setSelectedCommentSnapshot(null)
-      setShowDetailOnMobile(false)
       selectionClearRef.current?.()
+      navigate(buildListUrl())
       await invalidateComments()
     },
   })
@@ -157,9 +157,7 @@ export function CommentsRouteViewContent() {
     onSuccess: async () => {
       toast.success(t('comments.toast.deleted'))
       selectionClearRef.current?.()
-      setDetailId(null)
-      setSelectedCommentSnapshot(null)
-      setShowDetailOnMobile(false)
+      navigate(buildListUrl())
       await invalidateComments()
     },
   })
@@ -173,30 +171,35 @@ export function CommentsRouteViewContent() {
     },
   })
 
-  const openComment = (comment: CommentModel) => {
-    setDetailId(comment.id)
-    setSelectedCommentSnapshot({ ...comment })
-    setShowDetailOnMobile(true)
-  }
+  const openComment = useCallback(
+    (comment: CommentModel) => {
+      const qs = searchParams.toString()
+      navigate(`/comments/${comment.id}${qs ? `?${qs}` : ''}`)
+    },
+    [navigate, searchParams],
+  )
 
-  const confirmDeleteComments = async (targets: CommentModel[]) => {
-    if (targets.length === 0) return
-    const description =
-      targets.length === 1
-        ? t('comments.confirmDelete.single')
-        : t('comments.confirmDelete.batch', { count: targets.length })
-    const confirmed = await confirmDialog({
-      description,
-      destructive: true,
-      title: t('common.confirmDelete'),
-    })
-    if (!confirmed) return
-    if (targets.length === 1) {
-      deleteMutation.mutate(targets[0].id)
-    } else {
-      batchDeleteMutation.mutate()
-    }
-  }
+  const confirmDeleteComments = useCallback(
+    async (targets: CommentModel[]) => {
+      if (targets.length === 0) return
+      const description =
+        targets.length === 1
+          ? t('comments.confirmDelete.single')
+          : t('comments.confirmDelete.batch', { count: targets.length })
+      const confirmed = await confirmDialog({
+        description,
+        destructive: true,
+        title: t('common.confirmDelete'),
+      })
+      if (!confirmed) return
+      if (targets.length === 1) {
+        deleteMutation.mutate(targets[0].id)
+      } else {
+        batchDeleteMutation.mutate()
+      }
+    },
+    [batchDeleteMutation, deleteMutation, t],
+  )
 
   const actions = useMemo(
     () =>
@@ -207,7 +210,6 @@ export function CommentsRouteViewContent() {
         },
         t,
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [t],
   )
 
@@ -225,9 +227,10 @@ export function CommentsRouteViewContent() {
   const changeFilter = (nextState: CommentState) => {
     setState(nextState)
     setPage(1)
-    setDetailId(null)
-    setSelectedCommentSnapshot(null)
-    setShowDetailOnMobile(false)
+    // Closing detail when filter changes.
+    const next = new URLSearchParams()
+    next.set('state', String(nextState))
+    navigate(`/comments?${next.toString()}`, { replace: true })
   }
 
   const selectedCount = selectAllMode
@@ -254,204 +257,194 @@ export function CommentsRouteViewContent() {
     })()
   }
 
+  const routeContextValue = useMemo(
+    () => ({
+      currentState: state,
+      onBack: closeDetail,
+      onDelete: (comment: CommentModel) => {
+        void confirmDeleteComments([comment])
+      },
+      onReply: (id: string, text: string) =>
+        replyMutation.mutateAsync({ id, text }),
+      onStateChange: (id: string, nextState: CommentState) =>
+        stateMutation.mutate({ id, nextState }),
+      replyPending: replyMutation.isPending,
+    }),
+    [closeDetail, confirmDeleteComments, replyMutation, state, stateMutation],
+  )
+
   return (
-    <MasterDetailLayout
-      showDetailOnMobile={showDetailOnMobile}
-      list={
-        <FocusScope
-          className="outline-hidden flex h-full min-h-0 flex-col"
-          id={FOCUS_SCOPE_ID}
-        >
-          <div
-            className={cn(
-              'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
-              APP_SHELL_HEADER_HEIGHT_CLASS,
-            )}
+    <CommentsRouteContext.Provider value={routeContextValue}>
+      <MasterDetailShell
+        emptyDetail={<CommentDetailEmpty />}
+        list={
+          <FocusScope
+            className="outline-hidden flex h-full min-h-0 flex-col"
+            id={FOCUS_SCOPE_ID}
           >
-            <div className="flex items-center gap-2">
-              <MessageSquare aria-hidden="true" className="size-4" />
-              <SelectField
-                aria-label={t('comments.filter.label')}
-                options={commentFilters}
-                onValueChange={changeFilter}
-                triggerClassName="h-auto border-0 bg-transparent px-0 text-sm font-medium hover:bg-transparent dark:bg-transparent dark:hover:bg-transparent"
-                value={state}
-              />
-            </div>
-            <span className="text-xs text-neutral-400">
-              {pagination
-                ? t('comments.list.totalCount', { count: pagination.total })
-                : 'Comments'}
-            </span>
-          </div>
-
-          {comments.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-sm dark:border-neutral-800 dark:bg-neutral-900/40">
-              <Checkbox
-                aria-label={t('comments.list.selectPage')}
-                checked={allVisibleSelected}
-                indeterminate={indeterminate}
-                onCheckedChange={(checked) => {
-                  if (checked) selection.selectAll()
-                  else selection.clear()
-                }}
-              />
-              <span className="text-neutral-500 dark:text-neutral-400">
-                {hasSelection
-                  ? t('comments.list.selectedCount', { count: selectedCount })
-                  : t('comments.list.selectAll')}
-              </span>
-              {allVisibleSelected &&
-              pagination &&
-              pagination.totalPages > 1 &&
-              !selectAllMode ? (
-                <button
-                  className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-                  onClick={() => setSelectAllMode(true)}
-                  type="button"
-                >
-                  {t('comments.list.selectAllCount', {
-                    count: pagination.total,
-                  })}
-                </button>
-              ) : null}
-            </div>
-          ) : null}
-
-          <Scroll className="flex-1">
-            {commentsQuery.isLoading && comments.length === 0 ? (
-              <div className="flex justify-center py-20">
-                <div className="size-6 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-950 dark:border-neutral-700 dark:border-t-neutral-100" />
-              </div>
-            ) : comments.length === 0 ? (
-              <CommentEmptyState />
-            ) : (
-              comments.map((comment) => (
-                <CommentListItem
-                  actions={actions}
-                  checked={selection.isSelected(comment.id)}
-                  comment={comment}
-                  currentFilter={state}
-                  isDetailTarget={detailId === comment.id}
-                  key={comment.id}
-                  onCheck={() => selection.toggleWithAnchor(comment.id)}
-                  onMarkJunk={(id) =>
-                    stateMutation.mutate({ id, nextState: CommentState.Junk })
-                  }
-                  onMarkRead={(id) =>
-                    stateMutation.mutate({ id, nextState: CommentState.Read })
-                  }
-                  onSelect={(mode) => {
-                    if (mode === 'range') selection.selectRange(comment.id)
-                    else if (mode === 'toggle')
-                      selection.toggleWithAnchor(comment.id)
-                    else {
-                      selection.selectOne(comment.id)
-                      openComment(comment)
-                    }
-                  }}
-                  selected={selection.isSelected(comment.id)}
+            <div
+              className={cn(
+                'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+                APP_SHELL_HEADER_HEIGHT_CLASS,
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <MobileHeaderAffordance />
+                <MessageSquare aria-hidden="true" className="size-4" />
+                <SelectField
+                  aria-label={t('comments.filter.label')}
+                  options={commentFilters}
+                  onValueChange={changeFilter}
+                  triggerClassName="h-auto border-0 bg-transparent px-0 text-sm font-medium hover:bg-transparent dark:bg-transparent dark:hover:bg-transparent"
+                  value={state}
                 />
-              ))
-            )}
-          </Scroll>
-
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-            <div className="flex gap-2">
-              <Button
-                className="h-8 px-2"
-                disabled={!hasSelection || state === CommentState.Read}
-                onClick={() => batchStateMutation.mutate(CommentState.Read)}
-                type="button"
-                variant="subtle"
-              >
-                <CheckCheck aria-hidden="true" className="size-3.5" />
-                {t('comments.action.markRead')}
-              </Button>
-              <Button
-                className="h-8 px-2"
-                disabled={!hasSelection || state === CommentState.Junk}
-                onClick={() => batchStateMutation.mutate(CommentState.Junk)}
-                type="button"
-                variant="subtle"
-              >
-                <ShieldAlert aria-hidden="true" className="size-3.5" />
-                {t('comments.action.markJunk')}
-              </Button>
-              <Button
-                className="h-8 px-2 text-red-600 dark:text-red-400"
-                disabled={!hasSelection}
-                onClick={confirmBatchDelete}
-                type="button"
-                variant="subtle"
-              >
-                <Trash2 aria-hidden="true" className="size-3.5" />
-                {t('common.delete')}
-              </Button>
+              </div>
+              <span className="text-xs text-neutral-400">
+                {pagination
+                  ? t('comments.list.totalCount', { count: pagination.total })
+                  : 'Comments'}
+              </span>
             </div>
-            {pagination && pagination.totalPages > 1 ? (
-              <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
-                <Button
-                  className="h-8 px-2"
-                  disabled={page <= 1}
-                  onClick={() => {
-                    setPage((current) => Math.max(1, current - 1))
+
+            {comments.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-sm dark:border-neutral-800 dark:bg-neutral-900/40">
+                <Checkbox
+                  aria-label={t('comments.list.selectPage')}
+                  checked={allVisibleSelected}
+                  indeterminate={indeterminate}
+                  onCheckedChange={(checked) => {
+                    if (checked) selection.selectAll()
+                    else selection.clear()
                   }}
-                  type="button"
-                  variant="subtle"
-                >
-                  {t('common.pagination.previousPage')}
-                </Button>
-                <span>
-                  {pagination.page} / {pagination.totalPages}
+                />
+                <span className="text-neutral-500 dark:text-neutral-400">
+                  {hasSelection
+                    ? t('comments.list.selectedCount', { count: selectedCount })
+                    : t('comments.list.selectAll')}
                 </span>
-                <Button
-                  className="h-8 px-2"
-                  disabled={page >= pagination.totalPages}
-                  onClick={() => {
-                    setPage((current) =>
-                      Math.min(pagination.totalPages, current + 1),
-                    )
-                  }}
-                  type="button"
-                  variant="subtle"
-                >
-                  {t('common.pagination.nextPage')}
-                </Button>
+                {allVisibleSelected &&
+                pagination &&
+                pagination.totalPages > 1 &&
+                !selectAllMode ? (
+                  <button
+                    className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                    onClick={() => setSelectAllMode(true)}
+                    type="button"
+                  >
+                    {t('comments.list.selectAllCount', {
+                      count: pagination.total,
+                    })}
+                  </button>
+                ) : null}
               </div>
             ) : null}
-          </div>
-        </FocusScope>
-      }
-      detail={
-        <section className="h-full min-h-0">
-          {selectedComment ? (
-            <CommentDetail
-              comment={selectedComment}
-              currentState={state}
-              onBack={() => setShowDetailOnMobile(false)}
-              onDelete={(id) => {
-                const target =
-                  comments.find((c) => c.id === id) ?? selectedComment
-                if (target) void confirmDeleteComments([target])
-              }}
-              onReply={(id, text) => replyMutation.mutateAsync({ id, text })}
-              onStateChange={(id, nextState) =>
-                stateMutation.mutate({ id, nextState })
-              }
-              replyPending={replyMutation.isPending}
-            />
-          ) : (
-            <div className="flex h-full min-h-72 flex-col items-center justify-center text-center text-sm text-neutral-500 dark:text-neutral-400">
-              <MessageSquare
-                aria-hidden="true"
-                className="mb-3 size-10 text-neutral-300 dark:text-neutral-700"
-              />
-              {t('comments.detail.empty')}
+
+            <Scroll className="flex-1">
+              {commentsQuery.isLoading && comments.length === 0 ? (
+                <div className="flex justify-center py-20">
+                  <div className="size-6 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-950 dark:border-neutral-700 dark:border-t-neutral-100" />
+                </div>
+              ) : comments.length === 0 ? (
+                <CommentEmptyState />
+              ) : (
+                comments.map((comment) => (
+                  <CommentListItem
+                    actions={actions}
+                    checked={selection.isSelected(comment.id)}
+                    comment={comment}
+                    currentFilter={state}
+                    isDetailTarget={detailId === comment.id}
+                    key={comment.id}
+                    onCheck={() => selection.toggleWithAnchor(comment.id)}
+                    onMarkJunk={(id) =>
+                      stateMutation.mutate({ id, nextState: CommentState.Junk })
+                    }
+                    onMarkRead={(id) =>
+                      stateMutation.mutate({ id, nextState: CommentState.Read })
+                    }
+                    onSelect={(mode) => {
+                      if (mode === 'range') selection.selectRange(comment.id)
+                      else if (mode === 'toggle')
+                        selection.toggleWithAnchor(comment.id)
+                      else {
+                        selection.selectOne(comment.id)
+                        openComment(comment)
+                      }
+                    }}
+                    selected={selection.isSelected(comment.id)}
+                  />
+                ))
+              )}
+            </Scroll>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+              <div className="flex gap-2">
+                <Button
+                  className="h-8 px-2"
+                  disabled={!hasSelection || state === CommentState.Read}
+                  onClick={() => batchStateMutation.mutate(CommentState.Read)}
+                  type="button"
+                  variant="subtle"
+                >
+                  <CheckCheck aria-hidden="true" className="size-3.5" />
+                  {t('comments.action.markRead')}
+                </Button>
+                <Button
+                  className="h-8 px-2"
+                  disabled={!hasSelection || state === CommentState.Junk}
+                  onClick={() => batchStateMutation.mutate(CommentState.Junk)}
+                  type="button"
+                  variant="subtle"
+                >
+                  <ShieldAlert aria-hidden="true" className="size-3.5" />
+                  {t('comments.action.markJunk')}
+                </Button>
+                <Button
+                  className="h-8 px-2 text-red-600 dark:text-red-400"
+                  disabled={!hasSelection}
+                  onClick={confirmBatchDelete}
+                  type="button"
+                  variant="subtle"
+                >
+                  <Trash2 aria-hidden="true" className="size-3.5" />
+                  {t('common.delete')}
+                </Button>
+              </div>
+              {pagination && pagination.totalPages > 1 ? (
+                <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  <Button
+                    className="h-8 px-2"
+                    disabled={page <= 1}
+                    onClick={() => {
+                      setPage((current) => Math.max(1, current - 1))
+                    }}
+                    type="button"
+                    variant="subtle"
+                  >
+                    {t('common.pagination.previousPage')}
+                  </Button>
+                  <span>
+                    {pagination.page} / {pagination.totalPages}
+                  </span>
+                  <Button
+                    className="h-8 px-2"
+                    disabled={page >= pagination.totalPages}
+                    onClick={() => {
+                      setPage((current) =>
+                        Math.min(pagination.totalPages, current + 1),
+                      )
+                    }}
+                    type="button"
+                    variant="subtle"
+                  >
+                    {t('common.pagination.nextPage')}
+                  </Button>
+                </div>
+              ) : null}
             </div>
-          )}
-        </section>
-      }
-    />
+          </FocusScope>
+        }
+      />
+    </CommentsRouteContext.Provider>
   )
 }

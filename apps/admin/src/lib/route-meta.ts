@@ -1,5 +1,6 @@
-import type { TranslationKey } from '~/i18n/types'
 import type { LucideIcon } from 'lucide-react'
+
+import type { TranslationKey } from '~/i18n/types'
 
 export interface RouteMetadata {
   titleKey?: TranslationKey
@@ -8,6 +9,7 @@ export interface RouteMetadata {
   order?: number
   matchPaths?: string[]
   hidden?: boolean
+  nested?: boolean
 }
 
 export interface SectionMeta {

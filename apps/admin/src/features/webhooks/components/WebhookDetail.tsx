@@ -9,10 +9,11 @@ import {
   Webhook,
 } from 'lucide-react'
 import { useState } from 'react'
-import type { WebhookModel } from '~/api/webhooks'
 
+import type { WebhookModel } from '~/api/webhooks'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -41,6 +42,7 @@ export function WebhookDetail(props: {
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           {props.showBack ? (
             <Button
               aria-label={t('webhooks.detail.backAria')}

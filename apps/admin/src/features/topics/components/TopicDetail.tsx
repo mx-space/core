@@ -2,12 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Edit3, Loader2, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import type { TopicModel } from '~/models/topic'
 
 import { patchNote } from '~/api/notes'
 import { getNotesByTopic, getTopic } from '~/api/topics'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { TopicModel } from '~/models/topic'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -86,6 +87,7 @@ export function TopicDetail(props: {
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           <button
             className="inline-flex size-8 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-50"
             onClick={props.onBack}

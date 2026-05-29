@@ -8,13 +8,13 @@ import {
   Search,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
+
 import type {
   SearchDocumentAdminRow,
   SearchIndexRefType,
 } from '~/api/search-index'
-
 import {
   getSearchIndexDocuments,
   rebuildSearchIndex,
@@ -23,7 +23,8 @@ import {
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import { FocusScope } from '~/ui/focus-scope'
-import { MasterDetailLayout } from '~/ui/layout/page-layout'
+import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { useListKeyboard } from '~/ui/list-actions'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -33,7 +34,7 @@ import { cn } from '~/utils/cn'
 
 import { refTypeOptionKeys, searchIndexQueryKey } from '../constants'
 import { getErrorMessage } from '../utils/format'
-import { SearchIndexDetail } from './SearchIndexDetail'
+import { SearchIndexRouteContext } from './search-index-route-context'
 import { SearchIndexDetailEmptyState } from './SearchIndexDetailEmptyState'
 import { SearchIndexEmptyState } from './SearchIndexEmptyState'
 import { SearchIndexRow } from './SearchIndexRow'
@@ -47,6 +48,9 @@ const REF_TYPE_VALUES = new Set<string>(['note', 'page', 'post'])
 export function SearchIndexRouteViewContent() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const params = useParams<{ id?: string }>()
+  const selectedId = params.id ?? null
   const [searchParams, setSearchParams] = useSearchParams()
 
   const refTypeFilter = parseRefType(searchParams.get('type'))
@@ -54,12 +58,8 @@ export function SearchIndexRouteViewContent() {
   const keyword = searchParams.get('q') ?? ''
   const page = clampPositive(searchParams.get('page'), 1)
   const pageSize = clampPageSize(searchParams.get('size'))
-  const selectedId = searchParams.get('id')
 
   const [keywordInput, setKeywordInput] = useState(keyword)
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(() =>
-    Boolean(selectedId),
-  )
 
   const updateParams = useCallback(
     (mutate: (params: URLSearchParams) => void) => {
@@ -83,22 +83,31 @@ export function SearchIndexRouteViewContent() {
         if (trimmed) params.set('q', trimmed)
         else params.delete('q')
         params.delete('page')
-        params.delete('id')
       })
     }, KEYWORD_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
   }, [keywordInput, keyword, updateParams])
 
-  useEffect(() => {
-    setShowDetailOnMobile(Boolean(selectedId))
-  }, [selectedId])
+  const closeDetail = useCallback(() => {
+    const qs = searchParams.toString()
+    navigate(`/maintenance/search-index${qs ? `?${qs}` : ''}`)
+  }, [navigate, searchParams])
+
+  const openRow = useCallback(
+    (id: string) => {
+      const qs = searchParams.toString()
+      navigate(
+        `/maintenance/search-index/${encodeURIComponent(id)}${qs ? `?${qs}` : ''}`,
+      )
+    },
+    [navigate, searchParams],
+  )
 
   const setRefTypeFilter = (value: SearchIndexRefType | '') => {
     updateParams((params) => {
       if (value) params.set('type', value)
       else params.delete('type')
       params.delete('page')
-      params.delete('id')
     })
   }
   const setLangFilter = (value: string) => {
@@ -107,14 +116,12 @@ export function SearchIndexRouteViewContent() {
       if (trimmed) params.set('lang', trimmed)
       else params.delete('lang')
       params.delete('page')
-      params.delete('id')
     })
   }
   const setPage = (value: number) => {
     updateParams((params) => {
       if (value <= 1) params.delete('page')
       else params.set('page', String(value))
-      params.delete('id')
     })
   }
   const setPageSize = (value: number) => {
@@ -122,13 +129,6 @@ export function SearchIndexRouteViewContent() {
       if (value === PAGE_SIZE_OPTIONS[0]) params.delete('size')
       else params.set('size', String(value))
       params.delete('page')
-      params.delete('id')
-    })
-  }
-  const setSelectedId = (value: string | null) => {
-    updateParams((params) => {
-      if (value) params.set('id', value)
-      else params.delete('id')
     })
   }
 
@@ -157,13 +157,12 @@ export function SearchIndexRouteViewContent() {
   )
   const total = documentsQuery.data?.pagination.total ?? 0
   const pageCount = documentsQuery.data?.pagination.totalPage ?? 1
-  const selectedRow = rows.find((row) => row.id === selectedId) ?? null
 
   useListKeyboard({
     actions: [],
     getId: (row) => row.id,
     items: rows,
-    onItemFocus: (id) => setSelectedId(id),
+    onItemFocus: (id) => openRow(id),
     resetOn: [refTypeFilter, langFilter, keyword, page, pageSize],
     scopeId: FOCUS_SCOPE_ID,
   })
@@ -204,179 +203,184 @@ export function SearchIndexRouteViewContent() {
     },
   })
 
-  const selectedRebuilding =
-    rebuildOneMutation.isPending &&
-    rebuildOneMutation.variables?.id === selectedRow?.id
+  const routeContextValue = useMemo(
+    () => ({
+      onBack: closeDetail,
+      onRebuild: (row: SearchDocumentAdminRow) =>
+        rebuildOneMutation.mutate(row),
+      isRebuilding: (id: string) =>
+        rebuildOneMutation.isPending && rebuildOneMutation.variables?.id === id,
+    }),
+    [closeDetail, rebuildOneMutation],
+  )
 
   return (
-    <MasterDetailLayout
-      detail={
-        <section className="h-full min-h-0">
-          {selectedRow ? (
-            <SearchIndexDetail
-              onBack={() => setShowDetailOnMobile(false)}
-              onRebuild={() => rebuildOneMutation.mutate(selectedRow)}
-              rebuilding={selectedRebuilding}
-              row={selectedRow}
-            />
-          ) : (
-            <SearchIndexDetailEmptyState />
-          )}
-        </section>
-      }
-      list={
-        <FocusScope
-          className="outline-hidden flex h-full min-h-0 flex-col"
-          id={FOCUS_SCOPE_ID}
-        >
-          <div
-            className={cn(
-              'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
-              APP_SHELL_HEADER_HEIGHT_CLASS,
-            )}
+    <SearchIndexRouteContext.Provider value={routeContextValue}>
+      <MasterDetailShell
+        emptyDetail={<SearchIndexDetailEmptyState />}
+        onDismiss={closeDetail}
+        list={
+          <FocusScope
+            className="outline-hidden flex h-full min-h-0 flex-col"
+            id={FOCUS_SCOPE_ID}
           >
-            <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
-              <span className="truncate">{t('searchIndex.title')}</span>
-              <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
-                {total}
-              </span>
-            </h2>
-            <div className="flex shrink-0 items-center gap-1">
-              <Button
-                aria-label={t('searchIndex.action.incrementalRebuild')}
-                disabled={rebuildAllMutation.isPending}
-                iconOnly
-                onClick={() => {
-                  if (window.confirm(t('searchIndex.confirm.incremental'))) {
-                    rebuildAllMutation.mutate(false)
-                  }
-                }}
-                title={t('searchIndex.action.incrementalRebuild')}
-                type="button"
-                variant="subtle"
-              >
-                {rebuildAllMutation.isPending &&
-                rebuildAllMutation.variables === false ? (
-                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-                ) : (
-                  <Layers aria-hidden="true" className="size-4" />
-                )}
-              </Button>
-              <Button
-                aria-label={t('searchIndex.action.fullRebuild')}
-                className="text-amber-700 dark:text-amber-300"
-                disabled={rebuildAllMutation.isPending}
-                iconOnly
-                onClick={() => {
-                  if (window.confirm(t('searchIndex.confirm.full'))) {
-                    rebuildAllMutation.mutate(true)
-                  }
-                }}
-                title={t('searchIndex.action.fullRebuild')}
-                type="button"
-                variant="subtle"
-              >
-                {rebuildAllMutation.isPending &&
-                rebuildAllMutation.variables === true ? (
-                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-                ) : (
-                  <Hammer aria-hidden="true" className="size-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-            <div className="relative">
-              <Search
-                aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400"
-              />
-              <TextInput
-                controlClassName="h-9 pl-9 focus:border-neutral-400 focus:ring-0"
-                onChange={setKeywordInput}
-                placeholder={t('searchIndex.search.placeholder')}
-                value={keywordInput}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <SelectField
-                aria-label={t('searchIndex.filter.typeAria')}
-                onValueChange={(value) =>
-                  setRefTypeFilter(value as SearchIndexRefType | '')
-                }
-                options={refTypeOptions}
-                value={refTypeFilter}
-              />
-              <TextInput
-                controlClassName="h-9 focus:border-neutral-400 focus:ring-0"
-                onChange={setLangFilter}
-                placeholder={t('searchIndex.filter.langPlaceholder')}
-                value={langFilter}
-              />
-            </div>
-          </div>
-
-          <Scroll className="flex-1">
-            {documentsQuery.isLoading && rows.length === 0 ? (
-              <SearchIndexSkeleton />
-            ) : rows.length === 0 ? (
-              <SearchIndexEmptyState />
-            ) : (
-              rows.map((row) => (
-                <SearchIndexRow
-                  key={row.id}
-                  onSelect={() => setSelectedId(row.id)}
-                  row={row}
-                  selected={selectedId === row.id}
-                />
-              ))
-            )}
-          </Scroll>
-
-          {total > 0 ? (
-            <div className="flex shrink-0 items-center justify-between gap-3 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-              <SelectField
-                aria-label={t('searchIndex.pagination.pageSizeAria')}
-                onValueChange={(value) => setPageSize(value)}
-                options={PAGE_SIZE_OPTIONS.map((size) => ({
-                  label: t('searchIndex.pagination.pageSize', { size }),
-                  value: size,
-                }))}
-                triggerClassName="h-8 text-xs"
-                value={pageSize}
-              />
-              <div className="flex items-center gap-1">
+            <div
+              className={cn(
+                'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+                APP_SHELL_HEADER_HEIGHT_CLASS,
+              )}
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <MobileHeaderAffordance />
+                <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
+                  <span className="truncate">{t('searchIndex.title')}</span>
+                  <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
+                    {total}
+                  </span>
+                </h2>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
                 <Button
-                  aria-label={t('common.pagination.previousPage')}
-                  disabled={page <= 1}
+                  aria-label={t('searchIndex.action.incrementalRebuild')}
+                  disabled={rebuildAllMutation.isPending}
                   iconOnly
-                  onClick={() => setPage(Math.max(1, page - 1))}
+                  onClick={() => {
+                    if (window.confirm(t('searchIndex.confirm.incremental'))) {
+                      rebuildAllMutation.mutate(false)
+                    }
+                  }}
+                  title={t('searchIndex.action.incrementalRebuild')}
                   type="button"
                   variant="subtle"
                 >
-                  <ChevronLeft aria-hidden="true" className="size-4" />
+                  {rebuildAllMutation.isPending &&
+                  rebuildAllMutation.variables === false ? (
+                    <Loader2
+                      aria-hidden="true"
+                      className="size-4 animate-spin"
+                    />
+                  ) : (
+                    <Layers aria-hidden="true" className="size-4" />
+                  )}
                 </Button>
-                <span className="px-1 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
-                  {page} / {pageCount}
-                </span>
                 <Button
-                  aria-label={t('common.pagination.nextPage')}
-                  disabled={page >= pageCount}
+                  aria-label={t('searchIndex.action.fullRebuild')}
+                  className="text-amber-700 dark:text-amber-300"
+                  disabled={rebuildAllMutation.isPending}
                   iconOnly
-                  onClick={() => setPage(Math.min(pageCount, page + 1))}
+                  onClick={() => {
+                    if (window.confirm(t('searchIndex.confirm.full'))) {
+                      rebuildAllMutation.mutate(true)
+                    }
+                  }}
+                  title={t('searchIndex.action.fullRebuild')}
                   type="button"
                   variant="subtle"
                 >
-                  <ChevronRight aria-hidden="true" className="size-4" />
+                  {rebuildAllMutation.isPending &&
+                  rebuildAllMutation.variables === true ? (
+                    <Loader2
+                      aria-hidden="true"
+                      className="size-4 animate-spin"
+                    />
+                  ) : (
+                    <Hammer aria-hidden="true" className="size-4" />
+                  )}
                 </Button>
               </div>
             </div>
-          ) : null}
-        </FocusScope>
-      }
-      showDetailOnMobile={showDetailOnMobile}
-    />
+
+            <div className="flex flex-col gap-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+              <div className="relative">
+                <Search
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400"
+                />
+                <TextInput
+                  controlClassName="h-9 pl-9 focus:border-neutral-400 focus:ring-0"
+                  onChange={setKeywordInput}
+                  placeholder={t('searchIndex.search.placeholder')}
+                  value={keywordInput}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <SelectField
+                  aria-label={t('searchIndex.filter.typeAria')}
+                  onValueChange={(value) =>
+                    setRefTypeFilter(value as SearchIndexRefType | '')
+                  }
+                  options={refTypeOptions}
+                  value={refTypeFilter}
+                />
+                <TextInput
+                  controlClassName="h-9 focus:border-neutral-400 focus:ring-0"
+                  onChange={setLangFilter}
+                  placeholder={t('searchIndex.filter.langPlaceholder')}
+                  value={langFilter}
+                />
+              </div>
+            </div>
+
+            <Scroll className="flex-1">
+              {documentsQuery.isLoading && rows.length === 0 ? (
+                <SearchIndexSkeleton />
+              ) : rows.length === 0 ? (
+                <SearchIndexEmptyState />
+              ) : (
+                rows.map((row) => (
+                  <SearchIndexRow
+                    key={row.id}
+                    onSelect={() => openRow(row.id)}
+                    row={row}
+                    selected={selectedId === row.id}
+                  />
+                ))
+              )}
+            </Scroll>
+
+            {total > 0 ? (
+              <div className="flex shrink-0 items-center justify-between gap-3 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+                <SelectField
+                  aria-label={t('searchIndex.pagination.pageSizeAria')}
+                  onValueChange={(value) => setPageSize(value)}
+                  options={PAGE_SIZE_OPTIONS.map((size) => ({
+                    label: t('searchIndex.pagination.pageSize', { size }),
+                    value: size,
+                  }))}
+                  triggerClassName="h-8 text-xs"
+                  value={pageSize}
+                />
+                <div className="flex items-center gap-1">
+                  <Button
+                    aria-label={t('common.pagination.previousPage')}
+                    disabled={page <= 1}
+                    iconOnly
+                    onClick={() => setPage(Math.max(1, page - 1))}
+                    type="button"
+                    variant="subtle"
+                  >
+                    <ChevronLeft aria-hidden="true" className="size-4" />
+                  </Button>
+                  <span className="px-1 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+                    {page} / {pageCount}
+                  </span>
+                  <Button
+                    aria-label={t('common.pagination.nextPage')}
+                    disabled={page >= pageCount}
+                    iconOnly
+                    onClick={() => setPage(Math.min(pageCount, page + 1))}
+                    type="button"
+                    variant="subtle"
+                  >
+                    <ChevronRight aria-hidden="true" className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </FocusScope>
+        }
+      />
+    </SearchIndexRouteContext.Provider>
   )
 }
 

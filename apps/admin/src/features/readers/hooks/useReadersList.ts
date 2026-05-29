@@ -1,8 +1,8 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import type { ReaderRoleFilter } from '~/api/readers'
 
+import type { ReaderRoleFilter } from '~/api/readers'
 import { getReaders } from '~/api/readers'
 
 import {
@@ -30,10 +30,6 @@ export function useReadersList() {
   const [role, setRole] = useState<ReaderRoleFilter>(() =>
     parseRole(searchParams.get('role')),
   )
-  const [detailId, setDetailId] = useState<string | null>(() =>
-    searchParams.get('id'),
-  )
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(false)
   const [debouncedSearch, setDebouncedSearch] = useState(search)
 
   useEffect(() => {
@@ -67,14 +63,10 @@ export function useReadersList() {
     const nextRole = parseRole(searchParams.get('role'))
     const nextSearch = searchParams.get('q') ?? ''
     const nextPage = parsePage(searchParams.get('page'))
-    const nextDetailId = searchParams.get('id')
 
     setRole((value) => (value === nextRole ? value : nextRole))
     setSearch((value) => (value === nextSearch ? value : nextSearch))
     setPage((value) => (value === nextPage ? value : nextPage))
-    setDetailId((value) => (value === nextDetailId ? value : nextDetailId))
-    setShowDetailOnMobile(Boolean(nextDetailId))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParamsKey])
 
   useEffect(() => {
@@ -89,36 +81,22 @@ export function useReadersList() {
     if (page > 1) nextParams.set('page', String(page))
     else nextParams.delete('page')
 
-    if (detailId) nextParams.set('id', detailId)
-    else nextParams.delete('id')
-
     if (nextParams.toString() !== searchParamsKey) {
       setSearchParams(nextParams, { replace: true })
     }
-  }, [
-    role,
-    search,
-    page,
-    detailId,
-    searchParams,
-    searchParamsKey,
-    setSearchParams,
-  ])
+  }, [role, search, page, searchParams, searchParamsKey, setSearchParams])
 
   const changeSearch = (value: string) => {
     setSearch(value)
     setPage(1)
-    setDetailId(null)
   }
 
   const changeRole = (value: ReaderRoleFilter) => {
     setRole(value)
     setPage(1)
-    setDetailId(null)
   }
 
   return {
-    detailId,
     isFetching: readersQuery.isFetching,
     isLoading: readersQuery.isLoading,
     page,
@@ -127,11 +105,8 @@ export function useReadersList() {
     refetch: () => void readersQuery.refetch(),
     role,
     search,
-    setDetailId,
     setPage,
     setRole: changeRole,
     setSearch: changeSearch,
-    setShowDetailOnMobile,
-    showDetailOnMobile,
   }
 }

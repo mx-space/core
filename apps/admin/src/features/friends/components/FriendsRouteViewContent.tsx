@@ -3,8 +3,6 @@ import { Plus, RefreshCcw, SearchCheck, UserRound } from 'lucide-react'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import type { LinkModel } from '~/models/link'
-import type { HealthMap } from '../types/friends'
 
 import {
   auditPassLink,
@@ -16,11 +14,14 @@ import {
 } from '~/api/links'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { LinkModel } from '~/models/link'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
 import { friendsPageSize, friendsQueryKey } from '../constants'
+import type { HealthMap } from '../types/friends'
 import { normalizeState, readPage } from '../utils/friends'
 import { presentAuditReason } from './AuditReasonModal'
 import { presentFriendEditor } from './FriendEditorModal'
@@ -136,7 +137,8 @@ export function FriendsRouteViewContent() {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
             <UserRound aria-hidden="true" className="size-4" />
             {t('friends.title')}

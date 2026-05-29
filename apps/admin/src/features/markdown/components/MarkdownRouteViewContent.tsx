@@ -1,21 +1,22 @@
 import { FileDown } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import type { ParsedItem } from '../types/markdown'
-import type { MarkdownView } from './MarkdownViewTabs'
 
 import { importMarkdown } from '~/api/markdown'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { cn } from '~/utils/cn'
 import { ParseMarkdownYAML } from '~/utils/markdown-parser'
 
+import type { ParsedItem } from '../types/markdown'
 import { ImportType } from '../types/markdown'
 import { readMarkdownFile } from '../utils/files'
 import { getErrorMessage } from '../utils/format'
 import { ExportPanel } from './export/ExportPanel'
 import { ImportSection } from './import/ImportSection'
 import { presentImportConfirm } from './ImportConfirmModal'
+import type { MarkdownView } from './MarkdownViewTabs'
 import { MarkdownViewTabs } from './MarkdownViewTabs'
 
 type MetaEdits = Partial<NonNullable<ParsedItem['meta']>>
@@ -203,8 +204,8 @@ export function MarkdownRouteViewContent() {
       })
       setSelectedFilename((current) => {
         if (current !== filename) return current
-        const remaining = parsedItems.filter((it) => it.filename !== filename)
-        return remaining[0]?.filename ?? null
+        const remaining = parsedItems.find((it) => it.filename !== filename)
+        return remaining?.filename ?? null
       })
     },
     [parsedItems],
@@ -287,14 +288,17 @@ export function MarkdownRouteViewContent() {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
-        <div className="min-w-0">
-          <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
-            <FileDown aria-hidden="true" className="size-4" />
-            Markdown
-          </h2>
-          <span className="ml-3 text-xs text-neutral-500 dark:text-neutral-400">
-            {t('markdown.subtitle')}
-          </span>
+        <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
+          <div className="min-w-0">
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
+              <FileDown aria-hidden="true" className="size-4" />
+              Markdown
+            </h2>
+            <span className="ml-3 text-xs text-neutral-500 dark:text-neutral-400">
+              {t('markdown.subtitle')}
+            </span>
+          </div>
         </div>
       </header>
 

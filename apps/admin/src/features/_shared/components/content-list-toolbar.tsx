@@ -1,7 +1,7 @@
 import { Popover } from '@base-ui/react/popover'
 import { ArrowDown, ArrowUp, ArrowUpDown, Search, X } from 'lucide-react'
-import { useEffect } from 'react'
 import type { FormEventHandler, ReactNode } from 'react'
+import { useEffect } from 'react'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
@@ -47,7 +47,8 @@ export function ContentListHeader(props: {
   title: ReactNode
 }) {
   const shellNav = useShellNav()
-  useEffect(() => shellNav?.registerPageHeader(), [shellNav])
+  const registerPageHeader = shellNav?.registerPageHeader
+  useEffect(() => registerPageHeader?.(), [registerPageHeader])
 
   return (
     <header

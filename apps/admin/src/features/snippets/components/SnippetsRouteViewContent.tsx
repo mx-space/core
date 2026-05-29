@@ -7,19 +7,14 @@ import {
   RefreshCw,
   Search,
 } from 'lucide-react'
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
-import type { SnippetModel } from '~/models/snippet'
-import type { ContextMenuItem } from '~/ui/overlay/context-menu'
-import type { SelectedSnippetId } from '../types/snippets'
-import type { SnippetGroupState } from './SnippetList'
 
 import { getDependencyInstallUrl } from '~/api/dependencies'
 import {
   deleteSnippet,
   getGroupSnippets,
-  getSnippetById,
   getSnippetGroups,
   resetFunctionSnippet,
 } from '~/api/snippets'
@@ -27,10 +22,13 @@ import { API_URL } from '~/constants/env'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { presentTerminalOutput } from '~/features/snippets/components/terminal-output-modal'
 import { useI18n } from '~/i18n'
+import type { SnippetModel } from '~/models/snippet'
 import { SnippetType } from '~/models/snippet'
 import { FocusScope } from '~/ui/focus-scope'
-import { MasterDetailLayout } from '~/ui/layout/page-layout'
+import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { useListKeyboard } from '~/ui/list-actions'
+import type { ContextMenuItem } from '~/ui/overlay/context-menu'
 import { showContextMenu } from '~/ui/overlay/context-menu'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -43,15 +41,15 @@ import { CompiledCodeModal } from './CompiledCodeModal'
 import { FunctionLogsDrawer } from './FunctionLogsDrawer'
 import { ImportSnippetModal } from './ImportSnippetModal'
 import { InstallDependencyModal } from './InstallDependencyModal'
-import { SnippetEditor } from './SnippetEditor'
+import type { SnippetGroupState } from './SnippetList'
 import {
   filterGroupsBySearch,
   flattenVisibleSnippets,
   SnippetList,
 } from './SnippetList'
+import { SnippetsRouteContext } from './snippets-route-context'
 import {
   SnippetDetailEmpty,
-  SnippetDetailLoading,
   SnippetEmpty,
   SnippetSkeleton,
 } from './SnippetStates'
@@ -77,38 +75,20 @@ function buildSnippetExternalUrl(snippet: SnippetModel) {
 export function SnippetsRouteViewContent() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-  const [selectedId, setSelectedId] = useState<SelectedSnippetId>(
-    searchParams.get('id'),
-  )
+  const navigate = useNavigate()
+  const params = useParams<{ id?: string }>()
+  const selectedId = params.id ?? null
+  const isCreating = selectedId === 'new'
   const [search, setSearch] = useState('')
   const [importOpen, setImportOpen] = useState(false)
   const [installOpen, setInstallOpen] = useState(false)
   const [installInitialPackages, setInstallInitialPackages] = useState('')
   const [dependenciesOpen, setDependenciesOpen] = useState(false)
-  const [compiledOpen, setCompiledOpen] = useState(false)
-  const [logsOpen, setLogsOpen] = useState(false)
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(false)
+  const [compiledTarget, setCompiledTarget] = useState<SnippetModel | null>(
+    null,
+  )
+  const [logsTarget, setLogsTarget] = useState<SnippetModel | null>(null)
   const [runtime, setRuntime] = useState<Record<string, GroupRuntimeState>>({})
-
-  useLayoutEffect(() => {
-    const nextId = searchParams.get('id')
-    setSelectedId((value) => (value === nextId ? value : nextId))
-    setShowDetailOnMobile(Boolean(nextId))
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const nextId = selectedId && selectedId !== 'new' ? selectedId : null
-    const next = new URLSearchParams(searchParams)
-    if (nextId) next.set('id', nextId)
-    else next.delete('id')
-    // Strip legacy filter params from the URL.
-    next.delete('type')
-    next.delete('reference')
-    if (next.toString() === searchParamsKey) return
-    setSearchParams(next, { replace: true })
-  }, [searchParams, searchParamsKey, selectedId, setSearchParams])
 
   const groupsQuery = useQuery({
     placeholderData: (previous) => previous,
@@ -116,17 +96,19 @@ export function SnippetsRouteViewContent() {
     queryKey: [...snippetsQueryKey, 'groups'],
   })
 
-  const detailQuery = useQuery({
-    enabled: Boolean(selectedId && selectedId !== 'new'),
-    queryFn: () => getSnippetById(String(selectedId)),
-    queryKey: [...snippetsQueryKey, 'detail', selectedId],
-  })
+  // Detail's reference for auto-expanding the owning group — read from cache.
+  const detailRef = useMemo(() => {
+    if (!selectedId || isCreating) return undefined
+    const detail = queryClient.getQueryData<SnippetModel>([
+      ...snippetsQueryKey,
+      'detail',
+      selectedId,
+    ])
+    return detail?.reference
+  }, [isCreating, queryClient, selectedId])
 
   const baseGroups = groupsQuery.data?.data ?? []
 
-  // When a snippet was loaded directly (deep-link via id), auto-expand its
-  // group so the row is visible in the list.
-  const detailRef = detailQuery.data?.reference
   useEffect(() => {
     if (!detailRef) return
     setRuntime((state) => {
@@ -143,37 +125,46 @@ export function SnippetsRouteViewContent() {
     })
   }, [detailRef])
 
-  const fetchGroup = async (reference: string) => {
-    setRuntime((state) => ({
-      ...state,
-      [reference]: {
-        expanded: state[reference]?.expanded ?? true,
-        loading: true,
-        snippets: state[reference]?.snippets ?? null,
-      },
-    }))
-    try {
-      const snippets = await getGroupSnippets(reference)
+  const fetchGroup = useCallback(
+    async (reference: string) => {
       setRuntime((state) => ({
         ...state,
         [reference]: {
           expanded: state[reference]?.expanded ?? true,
-          loading: false,
+          loading: true,
+          snippets: state[reference]?.snippets ?? null,
+        },
+      }))
+      try {
+        const snippets = await getGroupSnippets(reference)
+        // Mirror into a stable query cache so list-cache findInListCache
+        // can locate snippets by id when the detail route mounts.
+        queryClient.setQueryData(
+          [...snippetsQueryKey, 'group', reference],
           snippets,
-        },
-      }))
-    } catch (error) {
-      setRuntime((state) => ({
-        ...state,
-        [reference]: {
-          expanded: state[reference]?.expanded ?? true,
-          loading: false,
-          snippets: state[reference]?.snippets ?? [],
-        },
-      }))
-      toast.error(getErrorMessage(error, t('snippets.toast.deleteFailed')))
-    }
-  }
+        )
+        setRuntime((state) => ({
+          ...state,
+          [reference]: {
+            expanded: state[reference]?.expanded ?? true,
+            loading: false,
+            snippets,
+          },
+        }))
+      } catch (error) {
+        setRuntime((state) => ({
+          ...state,
+          [reference]: {
+            expanded: state[reference]?.expanded ?? true,
+            loading: false,
+            snippets: state[reference]?.snippets ?? [],
+          },
+        }))
+        toast.error(getErrorMessage(error, t('snippets.toast.deleteFailed')))
+      }
+    },
+    [queryClient, t],
+  )
 
   useEffect(() => {
     if (!detailRef) return
@@ -182,7 +173,6 @@ export function SnippetsRouteViewContent() {
       void fetchGroup(detailRef)
     }
     // fetchGroup reads latest runtime via setState updater.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailRef])
 
   const toggleGroup = (reference: string) => {
@@ -228,30 +218,22 @@ export function SnippetsRouteViewContent() {
     [displayGroups],
   )
 
-  const selectedSnippet = useMemo(() => {
-    if (detailQuery.data) return detailQuery.data
-    for (const group of groups) {
-      const found = group.snippets.find((snippet) => snippet.id === selectedId)
-      if (found) return found
-    }
-    return null
-  }, [detailQuery.data, groups, selectedId])
-
-  const selectedFunction =
-    selectedSnippet?.type === SnippetType.Function ? selectedSnippet : null
-
-  const invalidateGroups = async () => {
+  const invalidateGroups = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: snippetsQueryKey })
-  }
+  }, [queryClient])
 
-  const refreshAll = async () => {
+  const refreshAll = useCallback(async () => {
     await invalidateGroups()
     await Promise.all(
       Object.entries(runtime)
         .filter(([, state]) => state.expanded)
         .map(([reference]) => fetchGroup(reference)),
     )
-  }
+  }, [fetchGroup, invalidateGroups, runtime])
+
+  const closeDetail = useCallback(() => {
+    navigate('/snippets')
+  }, [navigate])
 
   const deleteMutation = useMutation({
     mutationFn: deleteSnippet,
@@ -259,8 +241,7 @@ export function SnippetsRouteViewContent() {
       toast.error(getErrorMessage(error, t('snippets.toast.deleteFailed'))),
     onSuccess: async () => {
       toast.success(t('snippets.toast.deleted'))
-      setSelectedId(null)
-      setShowDetailOnMobile(false)
+      closeDetail()
       await invalidateGroups()
     },
   })
@@ -275,33 +256,37 @@ export function SnippetsRouteViewContent() {
     },
   })
 
-  const selectSnippet = (snippet: SnippetModel) => {
-    setSelectedId(snippet.id)
-    setShowDetailOnMobile(true)
-  }
+  const selectSnippet = useCallback(
+    (snippet: SnippetModel) => {
+      navigate(`/snippets/${snippet.id}`)
+    },
+    [navigate],
+  )
 
-  const startCreate = () => {
-    setSelectedId('new')
-    setShowDetailOnMobile(true)
-  }
+  const startCreate = useCallback(() => {
+    navigate('/snippets/new')
+  }, [navigate])
 
-  const requestDelete = (snippet: SnippetModel) => {
-    const isReset = snippet.builtIn && snippet.type === SnippetType.Function
-    const confirmed = window.confirm(
-      isReset
-        ? t('snippets.confirm.resetBuiltIn', { name: snippet.name })
-        : t('snippets.confirm.delete', { name: snippet.name }),
-    )
-    if (!confirmed) return
-    const refetchAfter = () => {
-      if (snippet.reference) void fetchGroup(snippet.reference)
-    }
-    if (isReset) {
-      resetMutation.mutate(snippet.id, { onSuccess: refetchAfter })
-    } else {
-      deleteMutation.mutate(snippet.id, { onSuccess: refetchAfter })
-    }
-  }
+  const requestDelete = useCallback(
+    (snippet: SnippetModel) => {
+      const isReset = snippet.builtIn && snippet.type === SnippetType.Function
+      const confirmed = window.confirm(
+        isReset
+          ? t('snippets.confirm.resetBuiltIn', { name: snippet.name })
+          : t('snippets.confirm.delete', { name: snippet.name }),
+      )
+      if (!confirmed) return
+      const refetchAfter = () => {
+        if (snippet.reference) void fetchGroup(snippet.reference)
+      }
+      if (isReset) {
+        resetMutation.mutate(snippet.id, { onSuccess: refetchAfter })
+      } else {
+        deleteMutation.mutate(snippet.id, { onSuccess: refetchAfter })
+      }
+    },
+    [deleteMutation, fetchGroup, resetMutation, t],
+  )
 
   const openExternal = (snippet: SnippetModel) => {
     window.open(buildSnippetExternalUrl(snippet), '_blank', 'noopener')
@@ -337,9 +322,47 @@ export function SnippetsRouteViewContent() {
   const listHasGroups = groups.length > 0
   const visibleHasContent = displayGroups.length > 0
 
+  const handleSaved = useCallback(
+    (snippet: SnippetModel) => {
+      navigate(`/snippets/${snippet.id}`)
+      void invalidateGroups()
+      if (snippet.reference) void fetchGroup(snippet.reference)
+    },
+    [fetchGroup, invalidateGroups, navigate],
+  )
+
+  const handleInstallDependency = useCallback(() => {
+    setInstallInitialPackages('')
+    setInstallOpen(true)
+  }, [])
+
+  const routeContextValue = useMemo(
+    () => ({
+      deleting: deleteMutation.isPending,
+      emptySnippet,
+      onBack: closeDetail,
+      onDelete: requestDelete,
+      onInstallDependency: handleInstallDependency,
+      onOpenCompiled: (snippet: SnippetModel) => setCompiledTarget(snippet),
+      onOpenLogs: (snippet: SnippetModel) => setLogsTarget(snippet),
+      onReset: requestDelete,
+      onSaved: handleSaved,
+      resetting: resetMutation.isPending,
+    }),
+    [
+      closeDetail,
+      deleteMutation.isPending,
+      handleInstallDependency,
+      handleSaved,
+      requestDelete,
+      resetMutation.isPending,
+    ],
+  )
+
   return (
-    <>
-      <MasterDetailLayout
+    <SnippetsRouteContext.Provider value={routeContextValue}>
+      <MasterDetailShell
+        emptyDetail={<SnippetDetailEmpty />}
         list={
           <FocusScope
             className="outline-hidden flex h-full min-h-0 flex-col"
@@ -351,6 +374,7 @@ export function SnippetsRouteViewContent() {
                 APP_SHELL_HEADER_HEIGHT_CLASS,
               )}
             >
+              <MobileHeaderAffordance />
               <div className="relative min-w-0 flex-1">
                 <Search
                   aria-hidden="true"
@@ -432,55 +456,13 @@ export function SnippetsRouteViewContent() {
             </Scroll>
           </FocusScope>
         }
-        showDetailOnMobile={showDetailOnMobile}
-        detail={
-          <section className="h-full min-h-0">
-            {selectedId === 'new' ? (
-              <SnippetEditor
-                initialValue={emptySnippet}
-                mode="create"
-                onBack={() => setShowDetailOnMobile(false)}
-                onSaved={(snippet) => {
-                  setSelectedId(snippet.id)
-                  void invalidateGroups()
-                  if (snippet.reference) void fetchGroup(snippet.reference)
-                }}
-              />
-            ) : selectedSnippet ? (
-              <SnippetEditor
-                deleting={deleteMutation.isPending}
-                initialValue={selectedSnippet}
-                mode="edit"
-                onBack={() => setShowDetailOnMobile(false)}
-                onDelete={(snippet) => requestDelete(snippet)}
-                onInstallDependency={() => {
-                  setInstallInitialPackages('')
-                  setInstallOpen(true)
-                }}
-                onOpenCompiled={() => setCompiledOpen(true)}
-                onOpenLogs={() => setLogsOpen(true)}
-                onReset={(snippet) => requestDelete(snippet)}
-                onSaved={(snippet) => {
-                  setSelectedId(snippet.id)
-                  void invalidateGroups()
-                  if (snippet.reference) void fetchGroup(snippet.reference)
-                }}
-                resetting={resetMutation.isPending}
-              />
-            ) : detailQuery.isFetching ? (
-              <SnippetDetailLoading />
-            ) : (
-              <SnippetDetailEmpty />
-            )}
-          </section>
-        }
       />
 
       <ImportSnippetModal
         onClose={() => setImportOpen(false)}
         onImported={(packages) => {
           void invalidateGroups()
-          setShowDetailOnMobile(false)
+          closeDetail()
           if (packages.length > 0) {
             setInstallInitialPackages(packages.join('\n'))
             setInstallOpen(true)
@@ -490,6 +472,10 @@ export function SnippetsRouteViewContent() {
       />
       <InstallDependencyModal
         initialPackages={installInitialPackages}
+        onClose={() => {
+          setInstallOpen(false)
+          setInstallInitialPackages('')
+        }}
         onInstall={(packages) => {
           presentTerminalOutput({
             onFinish: () => toast.success(t('snippets.toast.installComplete')),
@@ -497,13 +483,10 @@ export function SnippetsRouteViewContent() {
             url: getDependencyInstallUrl(packages),
           })
         }}
-        onClose={() => {
-          setInstallOpen(false)
-          setInstallInitialPackages('')
-        }}
         open={installOpen}
       />
       <UpdateDependenciesModal
+        onClose={() => setDependenciesOpen(false)}
         onInstall={(packageName, onFinish) => {
           presentTerminalOutput({
             onFinish: () => {
@@ -514,19 +497,20 @@ export function SnippetsRouteViewContent() {
             url: getDependencyInstallUrl(packageName),
           })
         }}
-        onClose={() => setDependenciesOpen(false)}
         open={dependenciesOpen}
       />
       <CompiledCodeModal
-        onClose={() => setCompiledOpen(false)}
-        open={compiledOpen}
-        snippet={selectedFunction}
+        onClose={() => setCompiledTarget(null)}
+        open={compiledTarget !== null}
+        snippet={
+          compiledTarget?.type === SnippetType.Function ? compiledTarget : null
+        }
       />
       <FunctionLogsDrawer
-        onClose={() => setLogsOpen(false)}
-        open={logsOpen}
-        snippet={selectedFunction}
+        onClose={() => setLogsTarget(null)}
+        open={logsTarget !== null}
+        snippet={logsTarget?.type === SnippetType.Function ? logsTarget : null}
       />
-    </>
+    </SnippetsRouteContext.Provider>
   )
 }

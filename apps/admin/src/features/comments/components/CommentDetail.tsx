@@ -10,22 +10,23 @@ import {
   Smartphone,
   Trash2,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import type { CommentModel } from '~/models/comment'
 import type { FormEvent, KeyboardEvent } from 'react'
-import type { LocalReply } from '../types/comments'
+import { useEffect, useRef, useState } from 'react'
 
 import { getOwner } from '~/api/options'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { IpInfoPopover } from '~/features/_shared/components/ip-info-popover'
 import { useI18n } from '~/i18n'
+import type { CommentModel } from '~/models/comment'
 import { CommentState } from '~/models/comment'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { MarkdownRender } from '~/ui/primitives/markdown-render'
 import { Scroll } from '~/ui/primitives/scroll'
 import { TextArea } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
+import type { LocalReply } from '../types/comments'
 import {
   formatCommentDate,
   getDeviceInfo,
@@ -129,6 +130,7 @@ export function CommentDetail(props: {
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           <Button
             aria-label={t('comments.action.backToList')}
             className="h-8 px-2 lg:hidden"

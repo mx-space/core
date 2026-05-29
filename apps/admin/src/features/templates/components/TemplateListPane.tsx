@@ -1,11 +1,11 @@
-import type { TemplateType } from '../types/templates'
-
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
 import { templateDescriptors } from '../constants'
+import type { TemplateType } from '../types/templates'
 
 interface TemplateListPaneProps {
   dirtyType: TemplateType | null
@@ -24,7 +24,12 @@ export function TemplateListPane(props: TemplateListPaneProps) {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
-        <h2 className="text-lg font-semibold">{t('templates.title')}</h2>
+        <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
+          <h2 className="truncate text-lg font-semibold">
+            {t('templates.title')}
+          </h2>
+        </div>
         <span className="text-xs text-neutral-500 dark:text-neutral-400">
           {templateDescriptors.length}
         </span>

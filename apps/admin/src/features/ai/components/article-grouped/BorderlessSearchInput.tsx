@@ -26,7 +26,6 @@ export function BorderlessSearchInput(props: BorderlessSearchInputProps) {
       props.onChange(local)
     }, debounceMs)
     return () => window.clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [local, debounceMs])
 
   return (

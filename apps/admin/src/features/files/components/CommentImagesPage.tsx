@@ -1,26 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw } from 'lucide-react'
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import type { CommentUploadFile, CommentUploadStatus } from '~/api/files'
-import type { TranslationKey, TranslationValues } from '~/i18n/types'
-import type { ListAction } from '~/ui/list-actions'
-import type { FileRowItem } from '../utils/adapters'
 
+import type { CommentUploadFile, CommentUploadStatus } from '~/api/files'
 import { deleteCommentUpload, getCommentUploads } from '~/api/files'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
-import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { FocusScope } from '~/ui/focus-scope'
-import { MasterDetailLayout } from '~/ui/layout/page-layout'
+import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
+import type { ListAction } from '~/ui/list-actions'
 import { useListKeyboard } from '~/ui/list-actions'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
-import { relativeTimeFromNow } from '~/utils/time'
 
 import {
   commentStatusOptions,
@@ -28,21 +31,19 @@ import {
   filesQueryKey,
 } from '../constants'
 import { useFileSearch } from '../hooks/useFileSearch'
+import type { FileRowItem } from '../utils/adapters'
 import { adaptCommentUpload } from '../utils/adapters'
-import { formatBytes, getErrorMessage } from '../utils/format'
+import { getErrorMessage } from '../utils/format'
 import { ChipStrip } from './ChipStrip'
+import { CommentImagesRouteContext } from './comment-images-route-context'
 import { FileDetailEmpty } from './FileDetailEmpty'
-import { FileDetailPane } from './FileDetailPane'
 import { FileListEmpty } from './FileListEmpty'
 import { FileListRow } from './FileListRow'
 import { FileListSkeleton } from './FileListSkeleton'
 import { FilePreviewLightbox } from './FilePreviewLightbox'
 import { SearchRow } from './SearchRow'
-import { MetadataGrid } from './sections/MetadataGrid'
-import { PaletteSwatches } from './sections/PaletteSwatches'
 
 const FOCUS_SCOPE_ID = 'comment-images-list'
-type Translator = (key: TranslationKey, values?: TranslationValues) => string
 
 function isStatus(value: string | null): value is CommentUploadStatus {
   return (
@@ -57,6 +58,9 @@ function isStatus(value: string | null): value is CommentUploadStatus {
 export function CommentImagesPage() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const params = useParams<{ id?: string }>()
+  const detailId = params.id ?? null
   const [searchParams, setSearchParams] = useSearchParams()
   const searchParamsKey = searchParams.toString()
 
@@ -67,15 +71,10 @@ export function CommentImagesPage() {
   const [page, setPage] = useState<number>(
     Number(searchParams.get('page')) || 1,
   )
-  const [selectedId, setSelectedId] = useState<null | string>(
-    searchParams.get('id'),
-  )
   const [searchQuery, setSearchQuery] = useState('')
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(false)
   const [preview, setPreview] = useState<null | { name: string; url: string }>(
     null,
   )
-  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY)
 
   const commentStatusLabels: Record<
     Exclude<CommentUploadStatus, ''>,
@@ -108,7 +107,6 @@ export function CommentImagesPage() {
   const adapted = useMemo(
     () =>
       comments.map((item) => adaptCommentUpload(item, t, commentStatusLabels)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [comments, t],
   )
   const fileSearch = useFileSearch(adapted)
@@ -116,22 +114,15 @@ export function CommentImagesPage() {
 
   useEffect(() => {
     if (fileSearch.query !== searchQuery) fileSearch.setQuery(searchQuery)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery])
 
   useLayoutEffect(() => {
     const nextStatus = searchParams.get('status')
     const nextPage = Number(searchParams.get('page')) || 1
-    const nextId = searchParams.get('id')
     if (isStatus(nextStatus) && (nextStatus ?? '') !== status) {
       setStatus(nextStatus ?? '')
     }
     if (nextPage !== page) setPage(nextPage)
-    if (nextId !== selectedId) {
-      setSelectedId(nextId)
-      setShowDetailOnMobile(Boolean(nextId))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParamsKey])
 
   useEffect(() => {
@@ -140,17 +131,34 @@ export function CommentImagesPage() {
     else next.delete('status')
     if (page > 1) next.set('page', String(page))
     else next.delete('page')
-    if (selectedId) next.set('id', selectedId)
-    else next.delete('id')
     if (next.toString() !== searchParamsKey) {
       setSearchParams(next, { replace: true })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, page, selectedId])
+  }, [status, page])
 
-  const selectedItem = useMemo(
-    () => adapted.find((item) => item.id === selectedId) ?? null,
-    [adapted, selectedId],
+  const buildListPath = useCallback(() => {
+    const sp = new URLSearchParams()
+    if (status) sp.set('status', status)
+    if (page > 1) sp.set('page', String(page))
+    const qs = sp.toString()
+    return `/files/comment-images${qs ? `?${qs}` : ''}`
+  }, [page, status])
+
+  const closeDetail = useCallback(() => {
+    navigate(buildListPath())
+  }, [buildListPath, navigate])
+
+  const openItem = useCallback(
+    (item: FileRowItem<CommentUploadFile>) => {
+      const sp = new URLSearchParams()
+      if (status) sp.set('status', status)
+      if (page > 1) sp.set('page', String(page))
+      const qs = sp.toString()
+      navigate(
+        `/files/comment-images/${encodeURIComponent(item.id)}${qs ? `?${qs}` : ''}`,
+      )
+    },
+    [navigate, page, status],
   )
 
   const deleteMutation = useMutation({
@@ -163,25 +171,22 @@ export function CommentImagesPage() {
       } else {
         toast.warning(t('files.toast.commentDeletedStorageFailed'))
       }
-      setSelectedId(null)
-      setShowDetailOnMobile(false)
+      closeDetail()
       await queryClient.invalidateQueries({ queryKey: filesQueryKey })
     },
   })
 
-  const confirmAndDelete = async (item: FileRowItem<CommentUploadFile>) => {
-    const ok = await confirmDialog({
-      destructive: true,
-      title: t('files.confirmDeleteNamed', { name: item.name }),
-    })
-    if (!ok) return
-    deleteMutation.mutate(item.id)
-  }
-
-  const openItem = (item: FileRowItem<CommentUploadFile>) => {
-    setSelectedId(item.id)
-    setShowDetailOnMobile(true)
-  }
+  const confirmAndDelete = useCallback(
+    async (item: FileRowItem<CommentUploadFile>) => {
+      const ok = await confirmDialog({
+        destructive: true,
+        title: t('files.confirmDeleteNamed', { name: item.name }),
+      })
+      if (!ok) return
+      deleteMutation.mutate(item.id)
+    },
+    [deleteMutation, t],
+  )
 
   const actions = useMemo<ListAction<FileRowItem<CommentUploadFile>>[]>(
     () => [
@@ -196,13 +201,12 @@ export function CommentImagesPage() {
         danger: true,
         key: 'delete',
         label: t('common.delete'),
-        run: (targets) => confirmAndDelete(targets[0]),
+        run: (targets) => void confirmAndDelete(targets[0]),
         shortcut: 'Backspace',
         shortcutLabel: '⌫',
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [t],
+    [t, openItem, confirmAndDelete],
   )
 
   const { selection } = useListKeyboard<FileRowItem<CommentUploadFile>>({
@@ -220,9 +224,24 @@ export function CommentImagesPage() {
 
   const refreshing = commentsQuery.isFetching
 
+  const ctxValue = useMemo(
+    () => ({
+      status,
+      page,
+      statusLabels: commentStatusLabels,
+      deleteDisabled: deleteMutation.isPending,
+      onBack: closeDetail,
+      onDelete: (item: FileRowItem<CommentUploadFile>) =>
+        void confirmAndDelete(item),
+      onOpenPreview: (next: { name: string; url: string }) => setPreview(next),
+    }),
+    [status, page, deleteMutation.isPending, closeDetail, confirmAndDelete, t],
+  )
+
   return (
-    <>
-      <MasterDetailLayout
+    <CommentImagesRouteContext.Provider value={ctxValue}>
+      <MasterDetailShell
+        emptyDetail={<FileDetailEmpty />}
         list={
           <FocusScope
             className="outline-hidden flex h-full min-h-0 flex-col"
@@ -234,14 +253,17 @@ export function CommentImagesPage() {
                 APP_SHELL_HEADER_HEIGHT_CLASS,
               )}
             >
-              <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
-                <span className="truncate">
-                  {t('files.source.commentImages')}
-                </span>
-                <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
-                  {total}
-                </span>
-              </h2>
+              <div className="flex min-w-0 items-center gap-2">
+                <MobileHeaderAffordance />
+                <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
+                  <span className="truncate">
+                    {t('files.source.commentImages')}
+                  </span>
+                  <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
+                    {total}
+                  </span>
+                </h2>
+              </div>
               <div className="flex shrink-0 items-center gap-1">
                 <Button
                   aria-label={t('files.action.refresh')}
@@ -264,8 +286,13 @@ export function CommentImagesPage() {
               onChange={(next) => {
                 setStatus(next)
                 setPage(1)
-                setSelectedId(null)
-                setShowDetailOnMobile(false)
+                // Filter change closes detail.
+                navigate(
+                  `/files/comment-images${next ? `?status=${next}` : ''}`,
+                  {
+                    replace: true,
+                  },
+                )
               }}
               options={chipOptions}
               value={status}
@@ -293,7 +320,7 @@ export function CommentImagesPage() {
                 filtered.map((item) => (
                   <FileListRow<CommentUploadFile>
                     actions={actions}
-                    isDetailTarget={selectedId === item.id}
+                    isDetailTarget={detailId === item.id}
                     item={item}
                     key={item.id}
                     onSelect={(mode) => {
@@ -325,149 +352,8 @@ export function CommentImagesPage() {
             ) : null}
           </FocusScope>
         }
-        showDetailOnMobile={showDetailOnMobile}
-        detail={
-          <section className="h-full min-h-0">
-            {selectedItem ? (
-              <FileDetailPane
-                thumbhash={selectedItem.thumbhash}
-                deleteDisabled={deleteMutation.isPending}
-                dominantColor={selectedItem.palette?.dominant}
-                isMobile={!isDesktop}
-                name={selectedItem.name}
-                onBack={() => setShowDetailOnMobile(false)}
-                onDelete={() => void confirmAndDelete(selectedItem)}
-                onOpenPreview={() =>
-                  setPreview({
-                    name: selectedItem.name,
-                    url: selectedItem.url,
-                  })
-                }
-                sections={buildSections({
-                  item: selectedItem,
-                  statusLabels: commentStatusLabels,
-                  t,
-                })}
-                url={selectedItem.url}
-              />
-            ) : (
-              <FileDetailEmpty />
-            )}
-          </section>
-        }
       />
       <FilePreviewLightbox image={preview} onClose={() => setPreview(null)} />
-    </>
+    </CommentImagesRouteContext.Provider>
   )
-}
-
-function buildSections(args: {
-  item: FileRowItem<CommentUploadFile>
-  statusLabels: Record<Exclude<CommentUploadStatus, ''>, string>
-  t: Translator
-}) {
-  const { item, statusLabels, t } = args
-  const raw = item.raw
-  const unknown = t('files.detail.value.unknown')
-  const ref =
-    raw.refType && raw.refId
-      ? `${raw.refType}/${raw.refId}`
-      : t('files.detail.value.unbound')
-
-  return [
-    {
-      key: 'status',
-      title: t('files.detail.section.status'),
-      body: (
-        <MetadataGrid
-          entries={[
-            {
-              key: 'status',
-              label: t('files.detail.field.status'),
-              value: statusLabels[raw.status],
-            },
-            {
-              key: 'detachedAt',
-              label: t('files.detail.field.detachedAt'),
-              value: raw.detachedAt
-                ? relativeTimeFromNow(raw.detachedAt)
-                : unknown,
-            },
-          ]}
-        />
-      ),
-    },
-    {
-      key: 'reference',
-      title: t('files.detail.section.reference'),
-      body: (
-        <MetadataGrid
-          entries={[
-            {
-              key: 'ref',
-              label: t('files.detail.field.refType'),
-              value: ref,
-            },
-            {
-              key: 'reader',
-              label: t('files.detail.field.readerId'),
-              value: raw.readerId ?? unknown,
-            },
-          ]}
-        />
-      ),
-    },
-    {
-      key: 'image',
-      title: t('files.detail.section.image'),
-      body: (
-        <MetadataGrid
-          entries={[
-            {
-              key: 'url',
-              label: t('files.detail.field.url'),
-              mono: true,
-              value: raw.fileUrl,
-            },
-            {
-              key: 'size',
-              label: t('files.detail.field.size'),
-              value: formatBytes(raw.byteSize),
-            },
-            {
-              key: 'mime',
-              label: t('files.detail.field.mime'),
-              value: raw.mimeType ?? unknown,
-            },
-            {
-              key: 'created',
-              label: t('files.detail.field.created'),
-              value: relativeTimeFromNow(raw.createdAt),
-            },
-          ]}
-        />
-      ),
-    },
-    {
-      key: 'appearance',
-      title: t('files.detail.section.appearance'),
-      body: (
-        <MetadataGrid
-          entries={[
-            {
-              key: 'palette',
-              label: t('files.detail.field.palette'),
-              value: <PaletteSwatches palette={raw.palette} />,
-            },
-            {
-              key: 'thumbhash',
-              label: t('files.detail.field.thumbhash'),
-              mono: true,
-              value: raw.thumbhash ?? unknown,
-            },
-          ]}
-        />
-      ),
-    },
-  ]
 }

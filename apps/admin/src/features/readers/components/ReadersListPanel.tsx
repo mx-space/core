@@ -1,9 +1,9 @@
 import type { ReaderModel, ReaderRoleFilter, ReaderStats } from '~/api/readers'
-import type { Pager } from '~/models/base'
-
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { Pager } from '~/models/base'
 import { FocusScope } from '~/ui/focus-scope'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { useListKeyboard } from '~/ui/list-actions'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -75,12 +75,15 @@ export function ReadersListPanel(props: ReadersListPanelProps) {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
-        <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
-          <span className="truncate">{t('readers.title')}</span>
-          <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
-            {props.stats?.all ?? props.pagination?.total ?? 0}
-          </span>
-        </h2>
+        <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
+          <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
+            <span className="truncate">{t('readers.title')}</span>
+            <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
+              {props.stats?.all ?? props.pagination?.total ?? 0}
+            </span>
+          </h2>
+        </div>
       </div>
 
       <ReadersTabBar

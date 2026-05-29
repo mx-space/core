@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
 import type { EditorView } from '@codemirror/view'
+import { useEffect, useRef, useState } from 'react'
 
 export interface SelectionPosition {
   x: number
@@ -141,7 +141,6 @@ export function useSelectionPosition(
       scroller.removeEventListener('scroll', handleScroll)
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editorView])
 
   const clearSelection = () => {

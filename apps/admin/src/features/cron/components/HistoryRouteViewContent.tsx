@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { RefreshCw, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useCallback, useMemo } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 
 import { CronTaskStatus, CronTaskType, getCronTasks } from '~/api/cron-tasks'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import { FocusScope } from '~/ui/focus-scope'
-import { MasterDetailLayout } from '~/ui/layout/page-layout'
+import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { useListKeyboard } from '~/ui/list-actions'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -27,59 +28,61 @@ import {
   TaskEmptyState,
   TaskListSkeleton,
 } from './CronPrimitives'
-import { TaskDetail } from './TaskDetail'
+import { HistoryRouteContext } from './history-route-context'
 import { TaskListItem } from './TaskListItem'
 
 const FOCUS_SCOPE_ID = 'cron-history'
+const HISTORY_BASE_PATH = '/maintenance/cron/history'
 
 const STATUS_VALUES = new Set<string>(Object.values(CronTaskStatus))
 const TYPE_VALUES = new Set<string>(Object.values(CronTaskType))
 
 export function HistoryRouteViewContent() {
   const { t } = useI18n()
+  const navigate = useNavigate()
+  const params = useParams<{ id?: string }>()
+  const detailId = params.id ?? null
   const { cancel, clearCompleted, refreshAll, remove, retry } =
     useCronMutations()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(false)
 
   const statusFilter = parseStatus(searchParams.get('status'))
   const typeFilter = parseType(searchParams.get('type'))
-  const selectedTaskId = searchParams.get('taskId')
 
-  const updateParams = useCallback(
-    (mutate: (params: URLSearchParams) => void) => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev)
-          mutate(next)
-          return next
-        },
-        { replace: true },
-      )
+  const buildListSearch = useCallback(
+    (mutate?: (sp: URLSearchParams) => void) => {
+      const next = new URLSearchParams(searchParams)
+      mutate?.(next)
+      const qs = next.toString()
+      return qs ? `?${qs}` : ''
     },
-    [setSearchParams],
+    [searchParams],
   )
 
-  const setStatusFilter = (value?: CronTaskStatus) => {
-    updateParams((params) => {
-      if (value) params.set('status', value)
-      else params.delete('status')
-      params.delete('taskId')
-    })
-  }
-  const setTypeFilter = (value?: CronTaskType) => {
-    updateParams((params) => {
-      if (value) params.set('type', value)
-      else params.delete('type')
-      params.delete('taskId')
-    })
-  }
-  const setSelectedTaskId = (value: string | null) => {
-    updateParams((params) => {
-      if (value) params.set('taskId', value)
-      else params.delete('taskId')
-    })
-  }
+  const updateFilter = useCallback(
+    (key: 'status' | 'type', value: string | undefined) => {
+      const next = new URLSearchParams(searchParams)
+      if (value) next.set(key, value)
+      else next.delete(key)
+      setSearchParams(next, { replace: true })
+      // Filter change closes detail and resets to list root.
+      navigate(`${HISTORY_BASE_PATH}${next.toString() ? `?${next}` : ''}`, {
+        replace: true,
+      })
+    },
+    [navigate, searchParams, setSearchParams],
+  )
+
+  const closeDetail = useCallback(() => {
+    navigate(`${HISTORY_BASE_PATH}${buildListSearch()}`)
+  }, [buildListSearch, navigate])
+
+  const openTask = useCallback(
+    (id: string) => {
+      navigate(`${HISTORY_BASE_PATH}/${id}${buildListSearch()}`)
+    },
+    [buildListSearch, navigate],
+  )
 
   const statusOptions = statusOptionKeys.map((opt) => ({
     label: opt.labelKey ? t(opt.labelKey) : (opt.labelText ?? opt.value),
@@ -104,149 +107,127 @@ export function HistoryRouteViewContent() {
 
   const tasks = useMemo(() => tasksQuery.data?.data ?? [], [tasksQuery.data])
   const total = tasksQuery.data?.total ?? 0
-  const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null
-
-  useEffect(() => {
-    if (selectedTaskId && !selectedTask && !tasksQuery.isLoading) {
-      setShowDetailOnMobile(false)
-    } else if (selectedTaskId) {
-      setShowDetailOnMobile(true)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTaskId, selectedTask, tasksQuery.isLoading])
 
   useListKeyboard({
     actions: [],
     getId: (task) => task.id,
     items: tasks,
-    onItemFocus: (id) => setSelectedTaskId(id),
+    onItemFocus: (id) => openTask(id),
     resetOn: [statusFilter, typeFilter],
     scopeId: FOCUS_SCOPE_ID,
   })
 
-  const selectTask = (taskId: string) => {
-    setSelectedTaskId(taskId)
-    setShowDetailOnMobile(true)
-  }
+  const routeContextValue = useMemo(
+    () => ({
+      onBack: closeDetail,
+      onCancel: (taskId: string) => {
+        if (window.confirm(t('cron.detail.confirmCancel'))) {
+          cancel.mutate(taskId)
+        }
+      },
+      onDelete: (taskId: string) => {
+        if (window.confirm(t('cron.detail.confirmDelete'))) {
+          remove.mutate(taskId, {
+            onSuccess: () => {
+              closeDetail()
+            },
+          })
+        }
+      },
+      onRetry: (taskId: string) => retry.mutate(taskId),
+    }),
+    [cancel, closeDetail, remove, retry, t],
+  )
 
   return (
-    <MasterDetailLayout
-      detail={
-        <section className="h-full min-h-0">
-          {selectedTask ? (
-            <TaskDetail
-              onBack={() => setShowDetailOnMobile(false)}
-              onCancel={() => {
-                if (window.confirm(t('cron.detail.confirmCancel'))) {
-                  cancel.mutate(selectedTask.id)
-                }
-              }}
-              onDelete={() => {
-                if (window.confirm(t('cron.detail.confirmDelete'))) {
-                  remove.mutate(selectedTask.id, {
-                    onSuccess: () => {
-                      setSelectedTaskId(null)
-                      setShowDetailOnMobile(false)
-                    },
-                  })
-                }
-              }}
-              onRetry={() => retry.mutate(selectedTask.id)}
-              task={selectedTask}
-            />
-          ) : (
-            <TaskDetailEmptyState />
-          )}
-        </section>
-      }
-      list={
-        <FocusScope
-          className="outline-hidden flex h-full min-h-0 flex-col"
-          id={FOCUS_SCOPE_ID}
-        >
-          <div
-            className={cn(
-              'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
-              APP_SHELL_HEADER_HEIGHT_CLASS,
-            )}
+    <HistoryRouteContext.Provider value={routeContextValue}>
+      <MasterDetailShell
+        emptyDetail={<TaskDetailEmptyState />}
+        list={
+          <FocusScope
+            className="outline-hidden flex h-full min-h-0 flex-col"
+            id={FOCUS_SCOPE_ID}
           >
-            <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
-              <span className="truncate">{t('cron.history.title')}</span>
-              <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
-                {total}
-              </span>
-            </h2>
-            <div className="flex shrink-0 items-center gap-1">
-              <Button
-                aria-label={t('cron.action.clearCompleted')}
-                disabled={clearCompleted.isPending}
-                iconOnly
-                onClick={() => clearCompleted.mutate()}
-                type="button"
-                variant="subtle"
-              >
-                <Trash2 aria-hidden="true" className="size-4" />
-              </Button>
-              <Button
-                aria-label={t('common.refresh')}
-                disabled={tasksQuery.isFetching}
-                iconOnly
-                onClick={() => void refreshAll()}
-                type="button"
-                variant="subtle"
-              >
-                <RefreshCw
-                  aria-hidden="true"
-                  className={cn(
-                    'size-4',
-                    tasksQuery.isFetching && 'animate-spin',
-                  )}
-                />
-              </Button>
+            <div
+              className={cn(
+                'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+                APP_SHELL_HEADER_HEIGHT_CLASS,
+              )}
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <MobileHeaderAffordance />
+                <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
+                  <span className="truncate">{t('cron.history.title')}</span>
+                  <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
+                    {total}
+                  </span>
+                </h2>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <Button
+                  aria-label={t('cron.action.clearCompleted')}
+                  disabled={clearCompleted.isPending}
+                  iconOnly
+                  onClick={() => clearCompleted.mutate()}
+                  type="button"
+                  variant="subtle"
+                >
+                  <Trash2 aria-hidden="true" className="size-4" />
+                </Button>
+                <Button
+                  aria-label={t('common.refresh')}
+                  disabled={tasksQuery.isFetching}
+                  iconOnly
+                  onClick={() => void refreshAll()}
+                  type="button"
+                  variant="subtle"
+                >
+                  <RefreshCw
+                    aria-hidden="true"
+                    className={cn(
+                      'size-4',
+                      tasksQuery.isFetching && 'animate-spin',
+                    )}
+                  />
+                </Button>
+              </div>
             </div>
-          </div>
 
-          <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-            <Select
-              ariaLabel={t('cron.filter.statusAria')}
-              onChange={(value) =>
-                setStatusFilter(
-                  (value || undefined) as CronTaskStatus | undefined,
-                )
-              }
-              options={statusOptions}
-              value={statusFilter ?? ''}
-            />
-            <Select
-              ariaLabel={t('cron.filter.typeAria')}
-              onChange={(value) =>
-                setTypeFilter((value || undefined) as CronTaskType | undefined)
-              }
-              options={typeOptions}
-              value={typeFilter ?? ''}
-            />
-          </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+              <Select
+                ariaLabel={t('cron.filter.statusAria')}
+                onChange={(value) => updateFilter('status', value || undefined)}
+                options={statusOptions}
+                value={statusFilter ?? ''}
+              />
+              <Select
+                ariaLabel={t('cron.filter.typeAria')}
+                onChange={(value) => updateFilter('type', value || undefined)}
+                options={typeOptions}
+                value={typeFilter ?? ''}
+              />
+            </div>
 
-          <Scroll className="flex-1">
-            {tasksQuery.isLoading && tasks.length === 0 ? (
-              <TaskListSkeleton />
-            ) : tasks.length === 0 ? (
-              <TaskEmptyState />
-            ) : (
-              tasks.map((task) => (
-                <TaskListItem
-                  key={task.id}
-                  onSelect={() => selectTask(task.id)}
-                  selected={selectedTaskId === task.id}
-                  task={task}
-                />
-              ))
-            )}
-          </Scroll>
-        </FocusScope>
-      }
-      showDetailOnMobile={showDetailOnMobile}
-    />
+            <Scroll className="flex-1">
+              {tasksQuery.isLoading && tasks.length === 0 ? (
+                <TaskListSkeleton />
+              ) : tasks.length === 0 ? (
+                <TaskEmptyState />
+              ) : (
+                tasks.map((task) => (
+                  <TaskListItem
+                    key={task.id}
+                    onSelect={() => openTask(task.id)}
+                    selected={detailId === task.id}
+                    task={task}
+                  />
+                ))
+              )}
+            </Scroll>
+          </FocusScope>
+        }
+      />
+    </HistoryRouteContext.Provider>
   )
 }
 

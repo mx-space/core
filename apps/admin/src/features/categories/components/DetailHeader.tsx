@@ -2,6 +2,7 @@ import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { cn } from '~/utils/cn'
 
 export function DetailHeader(props: {
@@ -17,6 +18,7 @@ export function DetailHeader(props: {
       )}
     >
       <div className="flex min-w-0 items-center gap-2">
+        <MobileHeaderAffordance />
         <button
           className="inline-flex size-8 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-50"
           onClick={props.onBack}

@@ -1,3 +1,4 @@
+import type { InfiniteData } from '@tanstack/react-query'
 import {
   useInfiniteQuery,
   useMutation,
@@ -7,13 +8,13 @@ import { Plus, StickyNote } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import type { InfiniteData } from '@tanstack/react-query'
-import type { EnrichmentResult } from '~/models/enrichment'
-import type { RecentlyModel } from '~/models/recently'
 
 import { deleteRecently, getRecentlyList } from '~/api/recently'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { EnrichmentResult } from '~/models/enrichment'
+import type { RecentlyModel } from '~/models/recently'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -150,7 +151,8 @@ export function RecentlyRouteViewContent() {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
             <StickyNote aria-hidden="true" className="size-4" />
             {t('recently.title')}

@@ -3,7 +3,6 @@ import { ChevronLeft, GitCompare, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import type { DraftModel } from '~/models/draft'
 
 import {
   getDraftHistory,
@@ -12,7 +11,9 @@ import {
 } from '~/api/drafts'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { DraftModel } from '~/models/draft'
 import { FocusScope, useScopeArrowNav } from '~/ui/focus-scope'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -104,6 +105,7 @@ export function DraftDetail(props: {
         )}
       >
         <div className="flex min-w-0 items-center gap-3">
+          <MobileHeaderAffordance />
           <Button
             aria-label={t('drafts.detail.backAria')}
             className="h-8 px-2 lg:hidden"

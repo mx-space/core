@@ -1,13 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2, RefreshCw, Trash2 } from 'lucide-react'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import type { OrphanFile } from '~/api/files'
-import type { TranslationKey, TranslationValues } from '~/i18n/types'
-import type { ListAction } from '~/ui/list-actions'
-import type { FileRowItem } from '../utils/adapters'
 
+import type { OrphanFile } from '~/api/files'
 import {
   batchDeleteOrphanFiles,
   cleanupOrphanFiles,
@@ -15,55 +19,51 @@ import {
   getOrphanFiles,
 } from '~/api/files'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
-import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { FocusScope } from '~/ui/focus-scope'
-import { MasterDetailLayout } from '~/ui/layout/page-layout'
+import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
+import type { ListAction } from '~/ui/list-actions'
 import { useListKeyboard } from '~/ui/list-actions'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
-import { relativeTimeFromNow } from '~/utils/time'
 
 import { FILES_PAGE_SIZE, filesQueryKey } from '../constants'
 import { useFileSearch } from '../hooks/useFileSearch'
+import type { FileRowItem } from '../utils/adapters'
 import { adaptOrphanFile } from '../utils/adapters'
-import { formatBytes, getErrorMessage } from '../utils/format'
+import { getErrorMessage } from '../utils/format'
 import { FileDetailEmpty } from './FileDetailEmpty'
-import { FileDetailPane } from './FileDetailPane'
 import { FileListEmpty } from './FileListEmpty'
 import { FileListRow } from './FileListRow'
 import { FileListSkeleton } from './FileListSkeleton'
 import { FilePreviewLightbox } from './FilePreviewLightbox'
+import { OrphanFilesRouteContext } from './orphan-files-route-context'
 import { SearchRow } from './SearchRow'
-import { MetadataGrid } from './sections/MetadataGrid'
-import { PaletteSwatches } from './sections/PaletteSwatches'
 
 const FOCUS_SCOPE_ID = 'orphan-files-list'
-type Translator = (key: TranslationKey, values?: TranslationValues) => string
 
 export function OrphanFilesPage() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const params = useParams<{ id?: string }>()
+  const detailId = params.id ?? null
   const [searchParams, setSearchParams] = useSearchParams()
   const searchParamsKey = searchParams.toString()
 
   const [page, setPage] = useState<number>(
     Number(searchParams.get('page')) || 1,
   )
-  const [selectedId, setSelectedId] = useState<null | string>(
-    searchParams.get('id'),
-  )
   const [searchQuery, setSearchQuery] = useState('')
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(false)
   const [preview, setPreview] = useState<null | { name: string; url: string }>(
     null,
   )
   const [selectAllAcross, setSelectAllAcross] = useState(false)
-  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY)
   const selectionClearRef = useRef<(() => void) | null>(null)
 
   const orphansQuery = useQuery({
@@ -85,35 +85,43 @@ export function OrphanFilesPage() {
 
   useEffect(() => {
     if (fileSearch.query !== searchQuery) fileSearch.setQuery(searchQuery)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery])
 
   useLayoutEffect(() => {
     const nextPage = Number(searchParams.get('page')) || 1
-    const nextId = searchParams.get('id')
     if (nextPage !== page) setPage(nextPage)
-    if (nextId !== selectedId) {
-      setSelectedId(nextId)
-      setShowDetailOnMobile(Boolean(nextId))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParamsKey])
 
   useEffect(() => {
     const next = new URLSearchParams(searchParams)
     if (page > 1) next.set('page', String(page))
     else next.delete('page')
-    if (selectedId) next.set('id', selectedId)
-    else next.delete('id')
     if (next.toString() !== searchParamsKey) {
       setSearchParams(next, { replace: true })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, selectedId])
+  }, [page])
 
-  const selectedItem = useMemo(
-    () => adapted.find((item) => item.id === selectedId) ?? null,
-    [adapted, selectedId],
+  const buildListPath = useCallback(() => {
+    const sp = new URLSearchParams()
+    if (page > 1) sp.set('page', String(page))
+    const qs = sp.toString()
+    return `/files/orphans${qs ? `?${qs}` : ''}`
+  }, [page])
+
+  const closeDetail = useCallback(() => {
+    navigate(buildListPath())
+  }, [buildListPath, navigate])
+
+  const openItem = useCallback(
+    (item: FileRowItem<OrphanFile>) => {
+      const sp = new URLSearchParams()
+      if (page > 1) sp.set('page', String(page))
+      const qs = sp.toString()
+      navigate(
+        `/files/orphans/${encodeURIComponent(item.id)}${qs ? `?${qs}` : ''}`,
+      )
+    },
+    [navigate, page],
   )
 
   const deleteMutation = useMutation({
@@ -123,8 +131,7 @@ export function OrphanFilesPage() {
       toast.error(getErrorMessage(error, t('files.toast.deleteFailed'))),
     onSuccess: async () => {
       toast.success(t('files.toast.orphanDeleted'))
-      setSelectedId(null)
-      setShowDetailOnMobile(false)
+      closeDetail()
       await queryClient.invalidateQueries({ queryKey: filesQueryKey })
     },
   })
@@ -157,19 +164,17 @@ export function OrphanFilesPage() {
     },
   })
 
-  const confirmAndDelete = async (item: FileRowItem<OrphanFile>) => {
-    const ok = await confirmDialog({
-      destructive: true,
-      title: t('files.confirmDeleteNamed', { name: item.name }),
-    })
-    if (!ok) return
-    deleteMutation.mutate(item.raw)
-  }
-
-  const openItem = (item: FileRowItem<OrphanFile>) => {
-    setSelectedId(item.id)
-    setShowDetailOnMobile(true)
-  }
+  const confirmAndDelete = useCallback(
+    async (item: FileRowItem<OrphanFile>) => {
+      const ok = await confirmDialog({
+        destructive: true,
+        title: t('files.confirmDeleteNamed', { name: item.name }),
+      })
+      if (!ok) return
+      deleteMutation.mutate(item.raw)
+    },
+    [deleteMutation, t],
+  )
 
   const actions = useMemo<ListAction<FileRowItem<OrphanFile>>[]>(
     () => [
@@ -184,13 +189,12 @@ export function OrphanFilesPage() {
         danger: true,
         key: 'delete',
         label: t('common.delete'),
-        run: (targets) => confirmAndDelete(targets[0]),
+        run: (targets) => void confirmAndDelete(targets[0]),
         shortcut: 'Backspace',
         shortcutLabel: '⌫',
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [t],
+    [t, openItem, confirmAndDelete],
   )
 
   const { selection } = useListKeyboard<FileRowItem<OrphanFile>>({
@@ -200,8 +204,6 @@ export function OrphanFilesPage() {
     onBeforeSelectionReset: () => setSelectAllAcross(false),
     resetOn: [page, searchQuery],
     onItemFocus: (id) => {
-      // arrow keys move focus but should not change detail unless caller
-      // already had a selection — match drafts behavior (also no-op here)
       selection.selectOne(id)
     },
     scopeId: FOCUS_SCOPE_ID,
@@ -242,9 +244,21 @@ export function OrphanFilesPage() {
   const refreshing = orphansQuery.isFetching
   const hasSelection = selectedCount > 0 || selectAllAcross
 
+  const ctxValue = useMemo(
+    () => ({
+      page,
+      deleteDisabled: deleteMutation.isPending,
+      onBack: closeDetail,
+      onDelete: (item: FileRowItem<OrphanFile>) => void confirmAndDelete(item),
+      onOpenPreview: (next: { name: string; url: string }) => setPreview(next),
+    }),
+    [page, deleteMutation.isPending, closeDetail, confirmAndDelete],
+  )
+
   return (
-    <>
-      <MasterDetailLayout
+    <OrphanFilesRouteContext.Provider value={ctxValue}>
+      <MasterDetailShell
+        emptyDetail={<FileDetailEmpty />}
         list={
           <FocusScope
             className="outline-hidden flex h-full min-h-0 flex-col"
@@ -256,12 +270,15 @@ export function OrphanFilesPage() {
                 APP_SHELL_HEADER_HEIGHT_CLASS,
               )}
             >
-              <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
-                <span className="truncate">{t('files.source.orphans')}</span>
-                <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
-                  {total}
-                </span>
-              </h2>
+              <div className="flex min-w-0 items-center gap-2">
+                <MobileHeaderAffordance />
+                <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
+                  <span className="truncate">{t('files.source.orphans')}</span>
+                  <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
+                    {total}
+                  </span>
+                </h2>
+              </div>
               <div className="flex shrink-0 items-center gap-1">
                 <Button
                   aria-label={t('files.orphans.cleanup')}
@@ -380,7 +397,7 @@ export function OrphanFilesPage() {
                   <FileListRow<OrphanFile>
                     actions={actions}
                     checked={selectAllAcross || selection.isSelected(item.id)}
-                    isDetailTarget={selectedId === item.id}
+                    isDetailTarget={detailId === item.id}
                     item={item}
                     key={item.id}
                     onCheck={(_id, checked) => {
@@ -418,146 +435,8 @@ export function OrphanFilesPage() {
             ) : null}
           </FocusScope>
         }
-        showDetailOnMobile={showDetailOnMobile}
-        detail={
-          <section className="h-full min-h-0">
-            {selectedItem ? (
-              <FileDetailPane
-                thumbhash={selectedItem.thumbhash}
-                deleteDisabled={deleteMutation.isPending}
-                dominantColor={selectedItem.palette?.dominant}
-                isMobile={!isDesktop}
-                name={selectedItem.name}
-                onBack={() => setShowDetailOnMobile(false)}
-                onDelete={() => void confirmAndDelete(selectedItem)}
-                onOpenPreview={() =>
-                  setPreview({
-                    name: selectedItem.name,
-                    url: selectedItem.url,
-                  })
-                }
-                sections={buildSections({ item: selectedItem, t })}
-                url={selectedItem.url}
-              />
-            ) : (
-              <FileDetailEmpty />
-            )}
-          </section>
-        }
       />
       <FilePreviewLightbox image={preview} onClose={() => setPreview(null)} />
-    </>
+    </OrphanFilesRouteContext.Provider>
   )
-}
-
-function buildSections(args: { item: FileRowItem<OrphanFile>; t: Translator }) {
-  const { item, t } = args
-  const raw = item.raw
-  const unknown = t('files.detail.value.unknown')
-  const ref =
-    raw.refType && raw.refId
-      ? `${raw.refType}/${raw.refId}`
-      : t('files.detail.value.unbound')
-
-  return [
-    {
-      key: 'status',
-      title: t('files.detail.section.status'),
-      body: (
-        <MetadataGrid
-          entries={[
-            {
-              key: 'status',
-              label: t('files.detail.field.status'),
-              value: raw.status ?? unknown,
-            },
-            {
-              key: 'detachedAt',
-              label: t('files.detail.field.detachedAt'),
-              value: raw.detachedAt
-                ? relativeTimeFromNow(raw.detachedAt)
-                : unknown,
-            },
-            {
-              key: 'uploadedBy',
-              label: t('files.detail.field.uploadedBy'),
-              value: raw.uploadedBy ?? unknown,
-            },
-          ]}
-        />
-      ),
-    },
-    {
-      key: 'reference',
-      title: t('files.detail.section.reference'),
-      body: (
-        <MetadataGrid
-          entries={[
-            {
-              key: 'ref',
-              label: t('files.detail.field.refType'),
-              value: ref,
-            },
-            {
-              key: 'reader',
-              label: t('files.detail.field.readerId'),
-              value: raw.readerId ?? unknown,
-            },
-          ]}
-        />
-      ),
-    },
-    {
-      key: 'image',
-      title: t('files.detail.section.image'),
-      body: (
-        <MetadataGrid
-          entries={[
-            {
-              key: 'url',
-              label: t('files.detail.field.url'),
-              mono: true,
-              value: raw.fileUrl,
-            },
-            {
-              key: 'size',
-              label: t('files.detail.field.size'),
-              value: formatBytes(raw.byteSize),
-            },
-            {
-              key: 'mime',
-              label: t('files.detail.field.mime'),
-              value: raw.mimeType ?? unknown,
-            },
-            {
-              key: 'created',
-              label: t('files.detail.field.created'),
-              value: relativeTimeFromNow(raw.createdAt),
-            },
-          ]}
-        />
-      ),
-    },
-    {
-      key: 'appearance',
-      title: t('files.detail.section.appearance'),
-      body: (
-        <MetadataGrid
-          entries={[
-            {
-              key: 'palette',
-              label: t('files.detail.field.palette'),
-              value: <PaletteSwatches palette={raw.palette} />,
-            },
-            {
-              key: 'thumbhash',
-              label: t('files.detail.field.thumbhash'),
-              mono: true,
-              value: raw.thumbhash ?? unknown,
-            },
-          ]}
-        />
-      ),
-    },
-  ]
 }

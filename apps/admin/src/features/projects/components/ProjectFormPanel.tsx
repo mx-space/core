@@ -1,20 +1,22 @@
 import { useMutation } from '@tanstack/react-query'
 import { ArrowLeft, Import as ImportIcon, Save, X } from 'lucide-react'
-import { FormEvent, useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import type { GithubRepo } from '~/api/github-repo'
-import type { ProjectModel } from '~/models/project'
-import type { ProjectFormMode, ProjectFormState } from '../types/projects'
 
+import type { GithubRepo } from '~/api/github-repo'
 import { createProject, updateProject } from '~/api/projects'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { ProjectModel } from '~/models/project'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { TextArea, TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
 import { emptyProjectForm } from '../constants'
+import type { ProjectFormMode, ProjectFormState } from '../types/projects'
 import {
   formToPayload,
   pickImagesFromMarkdown,
@@ -105,6 +107,7 @@ export function ProjectFormPanel(props: {
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           <Button
             aria-label={t('projects.form.returnAria')}
             className="h-8 px-2 lg:hidden"

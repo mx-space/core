@@ -1,14 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw } from 'lucide-react'
-import { useEffect, useLayoutEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
-import type {
-  CacheFilterMode,
-  CaptureSortField,
-  EnrichmentSource,
-  ProbeHistoryEntry,
-  SortOrder,
-} from '../types/enrichment'
+import { useCallback, useMemo, useState } from 'react'
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router'
 
 import {
   getEnrichmentCaptureQuota,
@@ -17,18 +15,24 @@ import {
   getEnrichmentProviders,
 } from '~/api/enrichment'
 import { useI18n } from '~/i18n'
-import { MasterDetailLayout } from '~/ui/layout/page-layout'
+import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
 import { defaultPageSize, enrichmentQueryKey } from '../constants'
+import type {
+  CacheFilterMode,
+  CaptureSortField,
+  EnrichmentSource,
+  ProbeHistoryEntry,
+  SortOrder,
+} from '../types/enrichment'
 import { formatBytes, isEnrichmentSource } from '../utils/enrichment'
-import { CacheDetailPanel } from './CacheDetailPanel'
 import { CacheListPanel } from './CacheListPanel'
-import { CaptureDetail } from './CaptureDetail'
 import { CaptureListPanel } from './CaptureListPanel'
+import { EnrichmentRouteContext } from './enrichment-route-context'
 import { DetailEmpty } from './EnrichmentPrimitives'
-import { ProbeConsole } from './ProbeConsole'
 import { ProbeListPanel } from './ProbeListPanel'
 import {
   CaptureControls,
@@ -40,24 +44,20 @@ import {
 export function EnrichmentRouteViewContent() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-  const initialSourceParam = searchParams.get('source')
-  const initialSource = isEnrichmentSource(initialSourceParam)
-    ? initialSourceParam
-    : 'cache'
-  const initialSelectedId = searchParams.get('id')
-  const [source, setSource] = useState<EnrichmentSource>(initialSource)
-  const [selectedCacheId, setSelectedCacheId] = useState<string | null>(
-    initialSource === 'cache' ? initialSelectedId : null,
-  )
-  const [selectedCaptureId, setSelectedCaptureId] = useState<string | null>(
-    initialSource === 'screenshots' ? initialSelectedId : null,
-  )
-  const [selectedProbeId, setSelectedProbeId] = useState<string | null>(null)
-  const [showDetailOnMobile, setShowDetailOnMobile] = useState(
-    Boolean(initialSelectedId),
-  )
+  const navigate = useNavigate()
+  const location = useLocation()
+  const params = useParams<{ id?: string }>()
+  const [searchParams] = useSearchParams()
+
+  const onProbeRoute = location.pathname === '/enrichment/probe'
+  const detailId = !onProbeRoute && params.id ? params.id : null
+  const sourceParam = searchParams.get('source')
+  const source: EnrichmentSource = onProbeRoute
+    ? 'probe'
+    : isEnrichmentSource(sourceParam)
+      ? sourceParam
+      : 'cache'
+
   const [cachePage, setCachePage] = useState(1)
   const [cachePageSize, setCachePageSize] = useState(defaultPageSize)
   const [capturePage, setCapturePage] = useState(1)
@@ -67,6 +67,7 @@ export function EnrichmentRouteViewContent() {
     useState<CaptureSortField>('last_accessed')
   const [captureOrder, setCaptureOrder] = useState<SortOrder>('desc')
   const [probeHistory, setProbeHistory] = useState<ProbeHistoryEntry[]>([])
+  const [selectedProbeId, setSelectedProbeId] = useState<string | null>(null)
 
   const cacheQuery = useQuery({
     enabled: source === 'cache',
@@ -122,273 +123,235 @@ export function EnrichmentRouteViewContent() {
 
   const cacheRows = cacheQuery.data?.data ?? []
   const cachePager = cacheQuery.data?.pagination
-  const selectedCache =
-    cacheRows.find((row) => row.id === selectedCacheId) ?? null
   const captureRows = captureQuery.data?.data ?? []
   const capturePager = captureQuery.data?.pagination
-  const selectedCapture =
-    captureRows.find((row) => row.enrichmentId === selectedCaptureId) ?? null
-  const selectedProbe =
-    probeHistory.find((entry) => entry.id === selectedProbeId) ?? null
 
-  useLayoutEffect(() => {
-    const nextSourceParam = searchParams.get('source')
-    const nextSource = isEnrichmentSource(nextSourceParam)
-      ? nextSourceParam
-      : 'cache'
-    const nextSelectedId = searchParams.get('id')
+  const selectedCacheId = source === 'cache' ? detailId : null
+  const selectedCaptureId = source === 'screenshots' ? detailId : null
 
-    setSource((value) => (value === nextSource ? value : nextSource))
-    setSelectedProbeId(null)
+  const buildListPath = useCallback((next: EnrichmentSource) => {
+    if (next === 'probe') return '/enrichment/probe'
+    if (next === 'screenshots') return '/enrichment?source=screenshots'
+    return '/enrichment'
+  }, [])
 
-    if (nextSource === 'cache') {
-      setSelectedCacheId((value) =>
-        value === nextSelectedId ? value : nextSelectedId,
-      )
-      setSelectedCaptureId(null)
-    } else if (nextSource === 'screenshots') {
-      setSelectedCacheId(null)
-      setSelectedCaptureId((value) =>
-        value === nextSelectedId ? value : nextSelectedId,
-      )
-    } else {
-      setSelectedCacheId(null)
-      setSelectedCaptureId(null)
-    }
+  const switchSource = useCallback(
+    (next: EnrichmentSource) => {
+      navigate(buildListPath(next), { replace: true })
+    },
+    [buildListPath, navigate],
+  )
 
-    setShowDetailOnMobile(Boolean(nextSelectedId) && nextSource !== 'probe')
-  }, [searchParamsKey])
+  const closeDetail = useCallback(() => {
+    navigate(buildListPath(source), { replace: false })
+  }, [buildListPath, navigate, source])
 
-  useEffect(() => {
-    const next = new URLSearchParams()
-    const selectedId =
-      source === 'cache'
-        ? selectedCacheId
-        : source === 'screenshots'
-          ? selectedCaptureId
-          : null
+  const invalidateAll = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: enrichmentQueryKey }),
+    [queryClient],
+  )
 
-    if (source !== 'cache') next.set('source', source)
-    if (selectedId) next.set('id', selectedId)
+  const openCacheRow = useCallback(
+    (id: string) => {
+      navigate(`/enrichment/${encodeURIComponent(id)}`)
+    },
+    [navigate],
+  )
 
-    if (next.toString() !== searchParamsKey) {
-      setSearchParams(next, { replace: true })
-    }
-  }, [
-    searchParamsKey,
-    selectedCacheId,
-    selectedCaptureId,
-    setSearchParams,
-    source,
-  ])
+  const openCaptureRow = useCallback(
+    (id: string) => {
+      navigate(`/enrichment/${encodeURIComponent(id)}?source=screenshots`)
+    },
+    [navigate],
+  )
 
-  const setSourceAndReset = (next: EnrichmentSource) => {
-    setSource(next)
-    setSelectedCacheId(null)
-    setSelectedCaptureId(null)
-    setSelectedProbeId(null)
-    setShowDetailOnMobile(false)
-  }
+  const jumpToScreenshot = useCallback(
+    (id: string) => {
+      navigate(`/enrichment/${encodeURIComponent(id)}?source=screenshots`)
+    },
+    [navigate],
+  )
 
-  const invalidateAll = async () => {
-    await queryClient.invalidateQueries({ queryKey: enrichmentQueryKey })
-  }
+  const handleCaptureDeleted = useCallback(
+    (id: string) => {
+      if (selectedCaptureId === id) {
+        navigate('/enrichment?source=screenshots', { replace: true })
+      }
+    },
+    [navigate, selectedCaptureId],
+  )
+
+  const pushProbeEntry = useCallback((entry: ProbeHistoryEntry) => {
+    setProbeHistory((current) => [entry, ...current].slice(0, 20))
+  }, [])
+
+  const routeContextValue = useMemo(
+    () => ({
+      source,
+      cacheRows,
+      captureRows,
+      quota: quotaQuery.data ?? null,
+      probeHistory,
+      selectedProbeId,
+      onSelectProbe: setSelectedProbeId,
+      onPushProbeEntry: pushProbeEntry,
+      onBack: closeDetail,
+      onJumpToScreenshot: jumpToScreenshot,
+      onCaptureDeleted: handleCaptureDeleted,
+      invalidateAll,
+    }),
+    [
+      cacheRows,
+      captureRows,
+      closeDetail,
+      handleCaptureDeleted,
+      invalidateAll,
+      jumpToScreenshot,
+      probeHistory,
+      pushProbeEntry,
+      quotaQuery.data,
+      selectedProbeId,
+      source,
+    ],
+  )
 
   return (
-    <MasterDetailLayout
-      showDetailOnMobile={showDetailOnMobile}
-      list={
-        <section className="flex h-full min-h-0 flex-col">
-          <div className="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-            <SourceSwitcher onChange={setSourceAndReset} value={source} />
-            {source === 'cache' ? (
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <FilterSegment
-                    onChange={(next) => {
-                      setFilterMode(next)
-                      setCachePage(1)
-                    }}
-                    value={filterMode}
-                  />
-                  {providersQuery.data ? (
-                    <ProviderStatusBar providers={providersQuery.data} />
-                  ) : null}
+    <EnrichmentRouteContext.Provider value={routeContextValue}>
+      <MasterDetailShell
+        emptyDetail={<DetailEmpty label={t('enrichment.detail.emptyCache')} />}
+        onDismiss={closeDetail}
+        list={
+          <section className="flex h-full min-h-0 flex-col">
+            <div className="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+              <div className="flex items-center gap-2">
+                <MobileHeaderAffordance />
+                <SourceSwitcher onChange={switchSource} value={source} />
+              </div>
+              {source === 'cache' ? (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <FilterSegment
+                      onChange={(next) => {
+                        setFilterMode(next)
+                        setCachePage(1)
+                      }}
+                      value={filterMode}
+                    />
+                    {providersQuery.data ? (
+                      <ProviderStatusBar providers={providersQuery.data} />
+                    ) : null}
+                  </div>
+                  <Button
+                    disabled={cacheQuery.isFetching}
+                    onClick={() => void cacheQuery.refetch()}
+                    type="button"
+                    variant="subtle"
+                  >
+                    <RefreshCw
+                      aria-hidden="true"
+                      className={cn(
+                        'size-4',
+                        cacheQuery.isFetching && 'animate-spin',
+                      )}
+                    />
+                    {t('common.refresh')}
+                  </Button>
                 </div>
-                <Button
-                  disabled={cacheQuery.isFetching}
-                  onClick={() => void cacheQuery.refetch()}
-                  type="button"
-                  variant="subtle"
-                >
-                  <RefreshCw
-                    aria-hidden="true"
-                    className={cn(
-                      'size-4',
-                      cacheQuery.isFetching && 'animate-spin',
-                    )}
+              ) : null}
+              {source === 'screenshots' ? (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <CaptureControls
+                    onOrderChange={(next) => {
+                      setCaptureOrder(next)
+                      setCapturePage(1)
+                    }}
+                    onSortChange={(next) => {
+                      setCaptureSort(next)
+                      setCapturePage(1)
+                    }}
+                    order={captureOrder}
+                    sort={captureSort}
                   />
-                  {t('common.refresh')}
-                </Button>
-              </div>
+                  <Button
+                    disabled={captureQuery.isFetching}
+                    onClick={() => {
+                      void captureQuery.refetch()
+                      void quotaQuery.refetch()
+                    }}
+                    type="button"
+                    variant="subtle"
+                  >
+                    <RefreshCw
+                      aria-hidden="true"
+                      className={cn(
+                        'size-4',
+                        captureQuery.isFetching && 'animate-spin',
+                      )}
+                    />
+                    {t('common.refresh')}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+
+            {source === 'cache' ? (
+              <CacheListPanel
+                filterMode={filterMode}
+                loading={cacheQuery.isLoading}
+                onPageChange={setCachePage}
+                onPageSizeChange={(size) => {
+                  setCachePageSize(size)
+                  setCachePage(1)
+                }}
+                onSelect={(row) => openCacheRow(row.id)}
+                page={cachePage}
+                pageCount={cachePager?.totalPage ?? 1}
+                pageSize={cachePageSize}
+                rows={cacheRows}
+                selectedId={selectedCacheId}
+                total={cachePager?.total ?? 0}
+              />
             ) : null}
+
             {source === 'screenshots' ? (
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                <CaptureControls
-                  onOrderChange={(next) => {
-                    setCaptureOrder(next)
-                    setCapturePage(1)
-                  }}
-                  onSortChange={(next) => {
-                    setCaptureSort(next)
-                    setCapturePage(1)
-                  }}
-                  order={captureOrder}
-                  sort={captureSort}
-                />
-                <Button
-                  disabled={captureQuery.isFetching}
-                  onClick={() => {
-                    void captureQuery.refetch()
-                    void quotaQuery.refetch()
-                  }}
-                  type="button"
-                  variant="subtle"
-                >
-                  <RefreshCw
-                    aria-hidden="true"
-                    className={cn(
-                      'size-4',
-                      captureQuery.isFetching && 'animate-spin',
-                    )}
-                  />
-                  {t('common.refresh')}
-                </Button>
-              </div>
+              <CaptureListPanel
+                loading={captureQuery.isLoading}
+                onPageChange={setCapturePage}
+                onPageSizeChange={(size) => {
+                  setCapturePageSize(size)
+                  setCapturePage(1)
+                }}
+                onSelect={(row) => openCaptureRow(row.enrichmentId)}
+                page={capturePage}
+                pageCount={capturePager?.totalPage ?? 1}
+                pageSize={capturePageSize}
+                quota={
+                  quotaQuery.data
+                    ? `${formatBytes(quotaQuery.data.used.totalBytes)} / ${formatBytes(
+                        quotaQuery.data.cap.maxTotalBytes,
+                      )}`
+                    : null
+                }
+                rows={captureRows}
+                selectedId={selectedCaptureId}
+                total={capturePager?.total ?? 0}
+              />
             ) : null}
-          </div>
 
-          {source === 'cache' ? (
-            <CacheListPanel
-              filterMode={filterMode}
-              loading={cacheQuery.isLoading}
-              onPageChange={setCachePage}
-              onPageSizeChange={(size) => {
-                setCachePageSize(size)
-                setCachePage(1)
-              }}
-              onSelect={(row) => {
-                setSelectedCacheId(row.id)
-                setShowDetailOnMobile(true)
-              }}
-              page={cachePage}
-              pageCount={cachePager?.totalPage ?? 1}
-              pageSize={cachePageSize}
-              rows={cacheRows}
-              selectedId={selectedCacheId}
-              total={cachePager?.total ?? 0}
-            />
-          ) : null}
-
-          {source === 'screenshots' ? (
-            <CaptureListPanel
-              loading={captureQuery.isLoading}
-              onPageChange={setCapturePage}
-              onPageSizeChange={(size) => {
-                setCapturePageSize(size)
-                setCapturePage(1)
-              }}
-              onSelect={(row) => {
-                setSelectedCaptureId(row.enrichmentId)
-                setShowDetailOnMobile(true)
-              }}
-              page={capturePage}
-              pageCount={capturePager?.totalPage ?? 1}
-              pageSize={capturePageSize}
-              quota={
-                quotaQuery.data
-                  ? `${formatBytes(quotaQuery.data.used.totalBytes)} / ${formatBytes(
-                      quotaQuery.data.cap.maxTotalBytes,
-                    )}`
-                  : null
-              }
-              rows={captureRows}
-              selectedId={selectedCaptureId}
-              total={capturePager?.total ?? 0}
-            />
-          ) : null}
-
-          {source === 'probe' ? (
-            <ProbeListPanel
-              history={probeHistory}
-              onClear={() => {
-                setProbeHistory([])
-                setSelectedProbeId(null)
-                setShowDetailOnMobile(false)
-              }}
-              onSelect={(entry) => {
-                setSelectedProbeId(entry.id)
-                setShowDetailOnMobile(true)
-              }}
-              selectedId={selectedProbeId}
-            />
-          ) : null}
-        </section>
-      }
-      detail={
-        <section className="min-h-0">
-          {source === 'cache' ? (
-            selectedCacheId ? (
-              <CacheDetailPanel
-                fallback={selectedCache}
-                id={selectedCacheId}
-                invalidateAll={invalidateAll}
-                onBack={() => setShowDetailOnMobile(false)}
-                onJumpToScreenshot={(id) => {
-                  setSource('screenshots')
-                  setSelectedCacheId(null)
-                  setSelectedCaptureId(id)
+            {source === 'probe' ? (
+              <ProbeListPanel
+                history={probeHistory}
+                onClear={() => {
+                  setProbeHistory([])
                   setSelectedProbeId(null)
-                  setShowDetailOnMobile(true)
                 }}
+                onSelect={(entry) => setSelectedProbeId(entry.id)}
+                selectedId={selectedProbeId}
               />
-            ) : (
-              <DetailEmpty label={t('enrichment.detail.emptyCache')} />
-            )
-          ) : null}
-
-          {source === 'screenshots' ? (
-            selectedCapture ? (
-              <CaptureDetail
-                invalidateAll={invalidateAll}
-                onDeleted={(id) => {
-                  if (selectedCaptureId === id) {
-                    setSelectedCaptureId(null)
-                    setShowDetailOnMobile(false)
-                  }
-                }}
-                onBack={() => setShowDetailOnMobile(false)}
-                quota={quotaQuery.data ?? null}
-                row={selectedCapture}
-              />
-            ) : (
-              <DetailEmpty label={t('enrichment.detail.emptyCapture')} />
-            )
-          ) : null}
-
-          {source === 'probe' ? (
-            <ProbeConsole
-              onProbed={(entry) => {
-                setProbeHistory((current) => [entry, ...current].slice(0, 20))
-                setSelectedProbeId(entry.id)
-                setShowDetailOnMobile(true)
-              }}
-              onBack={() => setShowDetailOnMobile(false)}
-              selected={selectedProbe}
-            />
-          ) : null}
-        </section>
-      }
-    />
+            ) : null}
+          </section>
+        }
+      />
+    </EnrichmentRouteContext.Provider>
   )
 }

@@ -1,6 +1,5 @@
-import type * as t from '@babel/types'
-
 import { parse } from '@babel/parser'
+import type * as t from '@babel/types'
 
 export interface ParsedRouteMetadata {
   titleKey?: string
@@ -10,6 +9,12 @@ export interface ParsedRouteMetadata {
   order?: number
   matchPaths?: string[]
   hidden?: boolean
+  /**
+   * 显式标记此 route 为 nearest URL-prefix parent route 之 React Router child。
+   * 默认 (false/未设)：仅尾段皆 dynamic-param 时方自动 nest（如 `/foo/:id`）。
+   * 静态名子页（如 `/enrichment/probe` 之于 `/enrichment`）须 opt-in 方为 nested。
+   */
+  nested?: boolean
 }
 
 export interface ParsedSectionMeta {
@@ -224,6 +229,13 @@ export function parsePageMetadata(
         result.hidden = value.value
         break
       }
+      case 'nested': {
+        if (!isBooleanLiteral(value)) {
+          throw new MetaParseError(`nested must be a boolean literal`, file)
+        }
+        result.nested = value.value
+        break
+      }
       default: {
         throw new MetaParseError(`unknown metadata key "${keyName}"`, file)
       }
@@ -247,13 +259,12 @@ export function parseSectionMeta(
       break
     }
     if (
-      decl.type === 'TSAsExpression' ||
-      decl.type === 'TSSatisfiesExpression'
+      (decl.type === 'TSAsExpression' ||
+        decl.type === 'TSSatisfiesExpression') &&
+      decl.expression.type === 'ObjectExpression'
     ) {
-      if (decl.expression.type === 'ObjectExpression') {
-        obj = decl.expression
-        break
-      }
+      obj = decl.expression
+      break
     }
   }
   if (!obj) {

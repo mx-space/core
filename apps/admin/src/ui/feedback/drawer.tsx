@@ -1,9 +1,9 @@
+import type { LucideIcon } from 'lucide-react'
 import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import type { ReactNode } from 'react'
 import { useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
-import type { LucideIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
@@ -25,6 +25,7 @@ export function Drawer(props: {
   onClose: () => void
   open: boolean
   side?: DrawerSide
+  showHeader?: boolean
   title: ReactNode
   widthClassName?: string
 }) {
@@ -35,6 +36,7 @@ export function Drawer(props: {
   const titleId = useId()
   const offClosed = side === 'right' ? '100%' : '-100%'
   const { z, depth } = useFloatingZ('drawer')
+  const showHeader = props.showHeader ?? true
 
   useEffect(() => {
     if (!props.open) return
@@ -79,7 +81,12 @@ export function Drawer(props: {
               transition={FADE}
             />
             <motion.div
-              aria-labelledby={titleId}
+              aria-label={
+                !showHeader && typeof props.title === 'string'
+                  ? props.title
+                  : undefined
+              }
+              aria-labelledby={showHeader ? titleId : undefined}
               aria-modal="true"
               className={cn(
                 'outline-hidden absolute bottom-0 top-0 flex flex-col bg-white dark:bg-neutral-950',
@@ -96,33 +103,35 @@ export function Drawer(props: {
               }}
               transition={SPRING}
             >
-              <div
-                className={cn(
-                  'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950',
-                  APP_SHELL_HEADER_HEIGHT_CLASS,
-                )}
-              >
-                <h2
-                  className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-950 dark:text-neutral-50"
-                  id={titleId}
+              {showHeader ? (
+                <div
+                  className={cn(
+                    'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950',
+                    APP_SHELL_HEADER_HEIGHT_CLASS,
+                  )}
                 >
-                  {Icon ? (
-                    <Icon aria-hidden="true" className="size-4 shrink-0" />
-                  ) : null}
-                  <span className="truncate">{props.title}</span>
-                </h2>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  {props.headerActions}
-                  <button
-                    aria-label={t('ui.modal.closeAria')}
-                    className="inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
-                    onClick={props.onClose}
-                    type="button"
+                  <h2
+                    className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-950 dark:text-neutral-50"
+                    id={titleId}
                   >
-                    <X aria-hidden="true" className="size-4" />
-                  </button>
+                    {Icon ? (
+                      <Icon aria-hidden="true" className="size-4 shrink-0" />
+                    ) : null}
+                    <span className="truncate">{props.title}</span>
+                  </h2>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {props.headerActions}
+                    <button
+                      aria-label={t('ui.modal.closeAria')}
+                      className="inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                      onClick={props.onClose}
+                      type="button"
+                    >
+                      <X aria-hidden="true" className="size-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : null}
               <div
                 className={cn(
                   'flex min-h-0 flex-1 flex-col',

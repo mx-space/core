@@ -11,6 +11,7 @@ import {
 } from '~/api/subscribe'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -129,10 +130,13 @@ export function SubscribeRouteViewContent() {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
-        <h2 className="inline-flex min-w-0 items-center gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
-          <Mail aria-hidden="true" className="size-4" />
-          <span className="truncate">{t('subscribe.title')}</span>
-        </h2>
+        <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
+          <h2 className="inline-flex min-w-0 items-center gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
+            <Mail aria-hidden="true" className="size-4" />
+            <span className="truncate">{t('subscribe.title')}</span>
+          </h2>
+        </div>
         <div className="flex shrink-0 items-center gap-2">
           <span className="hidden text-xs text-neutral-500 sm:inline dark:text-neutral-400">
             {t('subscribe.countSuffix', { count: totalCount })}

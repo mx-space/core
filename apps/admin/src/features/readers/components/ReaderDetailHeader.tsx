@@ -1,8 +1,9 @@
 import { BadgeCheck, ChevronLeft, Crown, ShieldAlert } from 'lucide-react'
-import type { ReaderModel } from '~/api/readers'
 
+import type { ReaderModel } from '~/api/readers'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
@@ -27,6 +28,7 @@ export function ReaderDetailHeader(props: {
         APP_SHELL_HEADER_HEIGHT_CLASS,
       )}
     >
+      <MobileHeaderAffordance />
       <Button
         aria-label={t('readers.detail.backAria')}
         className="h-8 px-2 lg:hidden"

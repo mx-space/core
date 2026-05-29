@@ -2,12 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText, Plus, RefreshCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import type { PageModel } from '~/models/page'
 
 import { deletePage, getPages, reorderPages } from '~/api/pages'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import type { PageModel } from '~/models/page'
 import { confirmDialog } from '~/ui/feedback/confirm'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button, ButtonLink } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -85,7 +86,8 @@ export function PagesRouteViewContent() {
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
             <FileText aria-hidden="true" className="size-4" />
             {t('pages.title')}

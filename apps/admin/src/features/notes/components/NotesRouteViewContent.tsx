@@ -1,22 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookOpen, Plus, RefreshCw, Trash2 } from 'lucide-react'
-import {
-  FormEvent,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import type { FormEvent } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import type { NoteModel } from '~/models/note'
-import type {
-  NoteFilter,
-  NoteMetadataUpdate,
-  NoteSortKey,
-  SortOrder,
-} from '../types/notes'
 
 import {
   deleteNote,
@@ -32,6 +19,7 @@ import {
   SortMenu,
 } from '~/features/_shared/components/content-list-toolbar'
 import { useI18n } from '~/i18n'
+import type { NoteModel } from '~/models/note'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { FocusScope } from '~/ui/focus-scope'
@@ -47,6 +35,12 @@ import {
   notesPageSize,
   notesQueryKey,
 } from '../constants'
+import type {
+  NoteFilter,
+  NoteMetadataUpdate,
+  NoteSortKey,
+  SortOrder,
+} from '../types/notes'
 import { getErrorMessage } from '../utils/errors'
 import { buildNotePublicPath } from '../utils/format'
 import { getFilteredNotes } from '../utils/get-filtered-notes'
@@ -253,7 +247,6 @@ export function NotesRouteViewContent() {
         },
         t,
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [t],
   )
 

@@ -1,8 +1,18 @@
 import { Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
+import type { AppRoute } from 'virtual:admin-routes'
 import { publicRoutes, redirects, shellRoutes } from 'virtual:admin-routes'
 
 import { LegacyStaticRedirect } from './lib/legacy-redirects'
+
+function renderShellRoute(route: AppRoute) {
+  const Element = route.element
+  return (
+    <Route element={<Element />} key={route.path} path={route.path}>
+      {route.children?.map((child) => renderShellRoute(child))}
+    </Route>
+  )
+}
 
 export function AppRoutes() {
   return (
@@ -30,12 +40,7 @@ export function AppRoutes() {
             <Route element={<Element />} key={entry.from} path={entry.from} />
           ) : null
         })}
-        {shellRoutes.map((route) => {
-          const Element = route.element
-          return (
-            <Route element={<Element />} key={route.path} path={route.path} />
-          )
-        })}
+        {shellRoutes.map((route) => renderShellRoute(route))}
         <Route element={<Navigate replace to="/dashboard" />} path="*" />
       </Routes>
     </Suspense>

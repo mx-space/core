@@ -7,10 +7,11 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
-import type { BackupFile } from '~/api/backups'
 
+import type { BackupFile } from '~/api/backups'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Panel } from '~/ui/primitives/panel'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -40,6 +41,7 @@ export function BackupDetail(props: {
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
+          <MobileHeaderAffordance />
           <button
             className="inline-flex size-8 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-50"
             onClick={props.onBack}
