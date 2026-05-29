@@ -1,4 +1,6 @@
-import { Body, Get, Param, Post } from '@nestjs/common'
+import type { Api, Model } from '@earendil-works/pi-ai'
+import { getModels } from '@earendil-works/pi-ai'
+import { Body, Get, Logger, Param, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -7,10 +9,21 @@ import { OK_DATA } from '~/common/response/envelope.types'
 
 import { ConfigsService } from '../configs/configs.service'
 import { AI_PROMPTS } from './ai.prompts'
+import { RegistryModelsQueryDto } from './ai.schema'
 import { AiService } from './ai.service'
 import { AIProviderType } from './ai.types'
+import type { RegistryModelView } from './ai.views'
+import { AiViews } from './ai.views'
 import type { IModelRuntime, ModelInfo } from './runtime'
 import { createModelRuntime, createRuntimeForModelList } from './runtime'
+
+const REGISTRY_CACHE_TTL_MS = 5 * 60 * 1000
+
+interface RegistryCacheEntry {
+  value: RegistryModelView[]
+  expiresAt: number
+  refreshing: boolean
+}
 
 interface FetchModelsDto {
   providerId?: string
@@ -42,6 +55,9 @@ interface TestCommentReviewDto {
 
 @ApiController('ai')
 export class AiController {
+  private readonly logger = new Logger(AiController.name)
+  private readonly registryCache = new Map<string, RegistryCacheEntry>()
+
   constructor(
     private readonly configsService: ConfigsService,
     private readonly aiService: AiService,
@@ -310,6 +326,77 @@ export class AiController {
         error: error.message || 'Unknown error',
       }
     }
+  }
+
+  @Get('/registry/models')
+  @Auth()
+  async getRegistryModels(
+    @Query() query: RegistryModelsQueryDto,
+  ): Promise<RegistryModelView[]> {
+    const { providerId } = query
+    const now = Date.now()
+    const cached = this.registryCache.get(providerId)
+
+    if (cached && cached.expiresAt > now) {
+      return cached.value
+    }
+
+    if (cached && !cached.refreshing) {
+      cached.refreshing = true
+      void this.refreshRegistryCache(providerId).finally(() => {
+        const entry = this.registryCache.get(providerId)
+        if (entry) entry.refreshing = false
+      })
+      return cached.value
+    }
+
+    const fresh = this.loadRegistryModels(providerId)
+    this.registryCache.set(providerId, {
+      value: fresh,
+      expiresAt: now + REGISTRY_CACHE_TTL_MS,
+      refreshing: false,
+    })
+    return fresh
+  }
+
+  private async refreshRegistryCache(providerId: string): Promise<void> {
+    try {
+      const fresh = this.loadRegistryModels(providerId)
+      this.registryCache.set(providerId, {
+        value: fresh,
+        expiresAt: Date.now() + REGISTRY_CACHE_TTL_MS,
+        refreshing: false,
+      })
+    } catch (error) {
+      this.logger.warn(
+        `registry cache refresh failed for ${providerId}: ${
+          (error as Error).message
+        }`,
+      )
+    }
+  }
+
+  private loadRegistryModels(providerId: string): RegistryModelView[] {
+    let models: Model<Api>[]
+    try {
+      models = getModels(providerId as never) as Model<Api>[]
+    } catch {
+      return []
+    }
+    if (!Array.isArray(models) || models.length === 0) return []
+    return models.map((m) =>
+      AiViews.registryModel.parse({
+        id: m.id,
+        name: m.name,
+        contextWindow: m.contextWindow,
+        maxTokens: m.maxTokens,
+        costs: {
+          inputPerMillion: m.cost.input,
+          outputPerMillion: m.cost.output,
+          cachedInputPerMillion: m.cost.cacheRead,
+        },
+      } satisfies RegistryModelView),
+    )
   }
 
   private async fetchModelsFromRuntime(
