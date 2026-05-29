@@ -1,0 +1,39 @@
+[
+  {
+    "name": "happy-empty",
+    "value": { "translations": {} },
+    "expected": true
+  },
+  {
+    "name": "happy-pairs",
+    "value": {
+      "translations": { "title": "Title", "subtitle": "Sub" }
+    },
+    "expected": true
+  },
+  {
+    "name": "happy-zh-cn",
+    "value": {
+      "translations": {
+        "title": "标题",
+        "summary": "撮要"
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "missing-translations",
+    "value": {},
+    "expected": false
+  },
+  {
+    "name": "value-wrong-type",
+    "value": { "translations": { "k": 1 } },
+    "expected": false
+  },
+  {
+    "name": "extra-key",
+    "value": { "translations": {}, "meta": "x" },
+    "expected": false
+  }
+]

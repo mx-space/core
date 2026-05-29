@@ -1,0 +1,36 @@
+[
+  {
+    "name": "happy-clean",
+    "value": { "isSpam": false, "hasSensitiveContent": false },
+    "expected": true
+  },
+  {
+    "name": "happy-spam",
+    "value": { "isSpam": true, "hasSensitiveContent": false },
+    "expected": true
+  },
+  {
+    "name": "happy-sensitive",
+    "value": { "isSpam": false, "hasSensitiveContent": true },
+    "expected": true
+  },
+  {
+    "name": "missing-flag",
+    "value": { "isSpam": false },
+    "expected": false
+  },
+  {
+    "name": "extra-key",
+    "value": {
+      "isSpam": false,
+      "hasSensitiveContent": false,
+      "category": "ok"
+    },
+    "expected": false
+  },
+  {
+    "name": "wrong-type",
+    "value": { "isSpam": "yes", "hasSensitiveContent": false },
+    "expected": false
+  }
+]

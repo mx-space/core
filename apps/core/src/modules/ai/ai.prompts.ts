@@ -1,4 +1,5 @@
-import { z } from 'zod'
+import type { TSchema } from '@earendil-works/pi-ai'
+import { Type } from '@earendil-works/pi-ai'
 
 import {
   AI_SUMMARY_MAX_WORDS,
@@ -161,7 +162,7 @@ ${JSON.stringify(chunk.textEntries)}`
 }
 
 const buildTranslationChunkSchema = (textEntries: Record<string, unknown>) => {
-  const translationShape: Record<string, z.ZodTypeAny> = {}
+  const translationShape: Record<string, TSchema> = {}
 
   for (const [key, value] of Object.entries(textEntries)) {
     if (
@@ -174,66 +175,79 @@ const buildTranslationChunkSchema = (textEntries: Record<string, unknown>) => {
       const groupShape = Object.fromEntries(
         ((value as any).segments as Array<{ id: string }>).map((segment) => [
           segment.id,
-          z.string(),
+          Type.String(),
         ]),
       )
 
-      translationShape[key] = z
-        .object(groupShape)
-        .strict()
-        .describe(`Translated segment map for group ${key}`)
+      translationShape[key] = Type.Object(groupShape, {
+        additionalProperties: false,
+        description: `Translated segment map for group ${key}`,
+      })
       continue
     }
 
-    translationShape[key] = z.string()
+    translationShape[key] = Type.String()
   }
 
-  return z.object({
-    sourceLang: z
-      .string()
-      .describe('Detected source language as an ISO 639-1 code'),
-    translations: z
-      .object(translationShape)
-      .strict()
-      .describe(
-        'Exact map of segment key to translated text, or group key to a translated member-id map',
-      ),
-  })
+  return Type.Object(
+    {
+      sourceLang: Type.String({
+        description: 'Detected source language as an ISO 639-1 code',
+      }),
+      translations: Type.Object(translationShape, {
+        additionalProperties: false,
+        description:
+          'Exact map of segment key to translated text, or group key to a translated member-id map',
+      }),
+    },
+    { additionalProperties: false },
+  )
 }
 
-const REVIEWER_OUTPUT_SCHEMA = z.object({
-  score: z
-    .number()
-    .int()
-    .min(0)
-    .max(100)
-    .describe('Native-feel score for the translation as a whole'),
-  issues: z
-    .array(
-      z.object({
-        id: z
-          .string()
-          .describe('Segment ID or field name to flag; MUST be in ALLOWED_IDS'),
-        severity: z.enum(['minor', 'major']),
-        problem: z
-          .string()
-          .describe('One short clause describing what is wrong'),
-        hint: z
-          .string()
-          .optional()
-          .describe('Optional short cue; NOT a full rewrite'),
-      }),
-    )
-    .describe('List of flagged issues; empty if translation is acceptable'),
-})
-
-const EDITOR_OUTPUT_SCHEMA = z.object({
-  patches: z
-    .record(z.string(), z.string())
-    .describe(
-      'Map of segment ID to revised translation; omit keys not improved',
+const REVIEWER_OUTPUT_SCHEMA = Type.Object(
+  {
+    score: Type.Integer({
+      minimum: 0,
+      maximum: 100,
+      description: 'Native-feel score for the translation as a whole',
+    }),
+    issues: Type.Array(
+      Type.Object(
+        {
+          id: Type.String({
+            description:
+              'Segment ID or field name to flag; MUST be in ALLOWED_IDS',
+          }),
+          severity: Type.Union([Type.Literal('minor'), Type.Literal('major')]),
+          problem: Type.String({
+            description: 'One short clause describing what is wrong',
+          }),
+          hint: Type.Optional(
+            Type.String({
+              description: 'Optional short cue; NOT a full rewrite',
+            }),
+          ),
+        },
+        { additionalProperties: false },
+      ),
+      {
+        description:
+          'List of flagged issues; empty if translation is acceptable',
+      },
     ),
-})
+  },
+  { additionalProperties: false },
+)
+
+const EDITOR_OUTPUT_SCHEMA = Type.Object(
+  {
+    patches: Type.Record(Type.String(), Type.String(), {
+      description:
+        'Map of segment ID to revised translation; omit keys not improved',
+    }),
+  },
+  { additionalProperties: false },
+)
 
 const buildTranslationReviewerPrompt = (
   targetLanguage: string,
@@ -320,13 +334,14 @@ export const AI_PROMPTS = {
 <<<CONTENT
 ${text}
 CONTENT`,
-      schema: z.object({
-        summary: z
-          .string()
-          .describe(
-            `The summary of the input text in ${targetLanguage}, max ${AI_SUMMARY_MAX_WORDS} words.`,
-          ),
-      }),
+      schema: Type.Object(
+        {
+          summary: Type.String({
+            description: `The summary of the input text in ${targetLanguage}, max ${AI_SUMMARY_MAX_WORDS} words.`,
+          }),
+        },
+        { additionalProperties: false },
+      ),
       reasoningEffort: NO_REASONING,
     }
   },
@@ -406,28 +421,27 @@ SOURCE_MARKDOWN`
       prompt: `<<<CONTENT
 ${text}
 CONTENT`,
-      schema: z.object({
-        title: z
-          .string()
-          .describe(
-            'A concise, engaging title in the same language as the input text that captures the main topic.',
-          ),
-        slug: z
-          .string()
-          .describe(
-            'SEO-friendly slug in English. Lowercase, hyphens to separate words, alphanumeric only.',
-          ),
-        lang: z
-          .string()
-          .describe(
-            'ISO 639-1 language code of the input text (e.g., "en", "zh", "ja").',
-          ),
-        keywords: z
-          .array(z.string())
-          .describe(
-            '3-5 relevant keywords or key phrases representing the main topics.',
-          ),
-      }),
+      schema: Type.Object(
+        {
+          title: Type.String({
+            description:
+              'A concise, engaging title in the same language as the input text that captures the main topic.',
+          }),
+          slug: Type.String({
+            description:
+              'SEO-friendly slug in English. Lowercase, hyphens to separate words, alphanumeric only.',
+          }),
+          lang: Type.String({
+            description:
+              'ISO 639-1 language code of the input text (e.g., "en", "zh", "ja").',
+          }),
+          keywords: Type.Array(Type.String(), {
+            description:
+              '3-5 relevant keywords or key phrases representing the main topics.',
+          }),
+        },
+        { additionalProperties: false },
+      ),
       reasoningEffort: NO_REASONING,
     }),
 
@@ -436,13 +450,15 @@ CONTENT`,
       prompt: `<<<TITLE
 ${title}
 TITLE`,
-      schema: z.object({
-        slug: z
-          .string()
-          .describe(
-            'SEO-friendly slug in English. Lowercase, hyphens to separate words, alphanumeric only, concise with relevant keywords.',
-          ),
-      }),
+      schema: Type.Object(
+        {
+          slug: Type.String({
+            description:
+              'SEO-friendly slug in English. Lowercase, hyphens to separate words, alphanumeric only, concise with relevant keywords.',
+          }),
+        },
+        { additionalProperties: false },
+      ),
       reasoningEffort: NO_REASONING,
     }),
   },
@@ -453,16 +469,18 @@ TITLE`,
       prompt: `<<<COMMENT
 ${text}
 COMMENT`,
-      schema: z.object({
-        score: z
-          .number()
-          .describe('Risk score 1-10, higher means more dangerous'),
-        hasSensitiveContent: z
-          .boolean()
-          .describe(
-            'Whether it contains politically sensitive, pornographic, violent, or threatening content',
-          ),
-      }),
+      schema: Type.Object(
+        {
+          score: Type.Number({
+            description: 'Risk score 1-10, higher means more dangerous',
+          }),
+          hasSensitiveContent: Type.Boolean({
+            description:
+              'Whether it contains politically sensitive, pornographic, violent, or threatening content',
+          }),
+        },
+        { additionalProperties: false },
+      ),
       reasoningEffort: NO_REASONING,
     }),
 
@@ -471,72 +489,22 @@ COMMENT`,
       prompt: `<<<COMMENT
 ${text}
 COMMENT`,
-      schema: z.object({
-        isSpam: z.boolean().describe('Whether it is spam content'),
-        hasSensitiveContent: z
-          .boolean()
-          .describe(
-            'Whether it contains politically sensitive, pornographic, violent, or threatening content',
-          ),
-      }),
+      schema: Type.Object(
+        {
+          isSpam: Type.Boolean({
+            description: 'Whether it is spam content',
+          }),
+          hasSensitiveContent: Type.Boolean({
+            description:
+              'Whether it contains politically sensitive, pornographic, violent, or threatening content',
+          }),
+        },
+        { additionalProperties: false },
+      ),
       reasoningEffort: NO_REASONING,
     }),
   },
 
-  translation: (
-    targetLang: string,
-    content: {
-      title: string
-      text: string
-      subtitle?: string
-      summary?: string
-      tags?: string[]
-    },
-  ) => {
-    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
-    const isJapanese = targetLang === 'ja'
-
-    return {
-      systemPrompt: buildTranslationSystem(isJapanese, false),
-      prompt: buildTranslationPrompt(targetLanguage, content),
-      schema: z.object({
-        sourceLang: z
-          .string()
-          .describe(
-            'ISO 639-1 code of the detected source language (e.g., "en", "zh", "ja")',
-          ),
-        title: z
-          .string()
-          .describe(
-            'The title fully translated into the target language, no mixed languages',
-          ),
-        text: z
-          .string()
-          .describe(
-            'The text content fully translated into the target language, preserving Markdown formatting, no mixed languages allowed',
-          ),
-        subtitle: z
-          .string()
-          .nullable()
-          .describe(
-            'The subtitle fully translated into the target language (if provided)',
-          ),
-        summary: z
-          .string()
-          .nullable()
-          .describe(
-            'The summary fully translated into the target language (if provided)',
-          ),
-        tags: z
-          .array(z.string())
-          .nullable()
-          .describe(
-            'Array of tags translated into the target language (if provided)',
-          ),
-      }),
-      reasoningEffort: NO_REASONING,
-    }
-  },
   translationStream: (
     targetLang: string,
     content: {
@@ -616,11 +584,14 @@ COMMENT`,
     return {
       systemPrompt: FIELD_TRANSLATION_SYSTEM,
       prompt: `TARGET_LANGUAGE: ${targetLanguage}\n\n## Fields to translate\n${JSON.stringify(fields)}`,
-      schema: z.object({
-        translations: z
-          .record(z.string(), z.string())
-          .describe('Map of key to translated text'),
-      }),
+      schema: Type.Object(
+        {
+          translations: Type.Record(Type.String(), Type.String(), {
+            description: 'Map of key to translated text',
+          }),
+        },
+        { additionalProperties: false },
+      ),
       reasoningEffort: NO_REASONING,
     }
   },

@@ -1,0 +1,115 @@
+[
+  {
+    "name": "happy-flat",
+    "textEntries": { "seg-1": "Hello", "seg-2": "World" },
+    "value": {
+      "sourceLang": "en",
+      "translations": { "seg-1": "你好", "seg-2": "世界" }
+    },
+    "expected": true
+  },
+  {
+    "name": "happy-flat-bom-prefixed-translation",
+    "textEntries": { "seg-1": "Hello" },
+    "value": {
+      "sourceLang": "en",
+      "translations": { "seg-1": "﻿你好" }
+    },
+    "expected": true
+  },
+  {
+    "name": "happy-flat-escaped-quotes",
+    "textEntries": { "seg-1": "She said \"hi\"" },
+    "value": {
+      "sourceLang": "en",
+      "translations": { "seg-1": "她说「你好」" }
+    },
+    "expected": true
+  },
+  {
+    "name": "happy-language-code-with-region",
+    "textEntries": { "seg-1": "Hi" },
+    "value": {
+      "sourceLang": "zh-CN",
+      "translations": { "seg-1": "嗨" }
+    },
+    "expected": true
+  },
+  {
+    "name": "happy-group",
+    "textEntries": {
+      "seg-1": "flat",
+      "grp-1": {
+        "type": "text.group",
+        "segments": [{ "id": "m-a" }, { "id": "m-b" }]
+      }
+    },
+    "value": {
+      "sourceLang": "en",
+      "translations": {
+        "seg-1": "平",
+        "grp-1": { "m-a": "甲", "m-b": "乙" }
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "extra-group-key",
+    "textEntries": {
+      "grp-1": {
+        "type": "text.group",
+        "segments": [{ "id": "m-a" }]
+      }
+    },
+    "value": {
+      "sourceLang": "en",
+      "translations": { "grp-1": { "m-a": "甲", "m-c": "extra" } }
+    },
+    "expected": false
+  },
+  {
+    "name": "missing-group-segment",
+    "textEntries": {
+      "grp-1": {
+        "type": "text.group",
+        "segments": [{ "id": "m-a" }, { "id": "m-b" }]
+      }
+    },
+    "value": {
+      "sourceLang": "en",
+      "translations": { "grp-1": { "m-a": "甲" } }
+    },
+    "expected": false
+  },
+  {
+    "name": "extra-top-level-key",
+    "textEntries": { "seg-1": "x" },
+    "value": {
+      "sourceLang": "en",
+      "translations": { "seg-1": "y", "seg-99": "stray" }
+    },
+    "expected": false
+  },
+  {
+    "name": "missing-sourceLang",
+    "textEntries": { "seg-1": "x" },
+    "value": {
+      "translations": { "seg-1": "y" }
+    },
+    "expected": false
+  },
+  {
+    "name": "value-wrong-type-in-group",
+    "textEntries": {
+      "grp-1": {
+        "type": "text.group",
+        "segments": [{ "id": "m-a" }]
+      }
+    },
+    "value": {
+      "sourceLang": "en",
+      "translations": { "grp-1": { "m-a": 42 } }
+    },
+    "expected": false
+  }
+]

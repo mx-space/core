@@ -1,0 +1,48 @@
+[
+  {
+    "name": "happy",
+    "value": {
+      "title": "Hello World",
+      "slug": "hello-world",
+      "lang": "en",
+      "keywords": ["hello", "world"]
+    },
+    "expected": true
+  },
+  {
+    "name": "happy-zh",
+    "value": {
+      "title": "你好",
+      "slug": "ni-hao",
+      "lang": "zh",
+      "keywords": ["你好", "世界", "招呼"]
+    },
+    "expected": true
+  },
+  {
+    "name": "extra-key",
+    "value": {
+      "title": "T",
+      "slug": "t",
+      "lang": "en",
+      "keywords": [],
+      "score": 0.9
+    },
+    "expected": false
+  },
+  {
+    "name": "missing-keywords",
+    "value": { "title": "T", "slug": "t", "lang": "en" },
+    "expected": false
+  },
+  {
+    "name": "keywords-wrong-type",
+    "value": { "title": "T", "slug": "t", "lang": "en", "keywords": "a,b" },
+    "expected": false
+  },
+  {
+    "name": "keywords-element-wrong-type",
+    "value": { "title": "T", "slug": "t", "lang": "en", "keywords": [1, 2] },
+    "expected": false
+  }
+]

@@ -1,0 +1,19 @@
+[
+  { "name": "happy", "value": { "slug": "my-post" }, "expected": true },
+  {
+    "name": "happy-numeric-slug",
+    "value": { "slug": "react-19-best-practices" },
+    "expected": true
+  },
+  { "name": "missing", "value": {}, "expected": false },
+  {
+    "name": "extra-key",
+    "value": { "slug": "ok", "title": "T" },
+    "expected": false
+  },
+  {
+    "name": "wrong-type",
+    "value": { "slug": ["my", "post"] },
+    "expected": false
+  }
+]

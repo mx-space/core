@@ -1,0 +1,37 @@
+[
+  {
+    "name": "happy-empty-patches",
+    "value": { "patches": {} },
+    "expected": true
+  },
+  {
+    "name": "happy-single-patch",
+    "value": { "patches": { "seg-1": "更地道之译" } },
+    "expected": true
+  },
+  {
+    "name": "happy-multi",
+    "value": {
+      "patches": {
+        "title": "Refined title",
+        "subtitle": "Refined subtitle"
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "missing-patches",
+    "value": {},
+    "expected": false
+  },
+  {
+    "name": "extra-key",
+    "value": { "patches": {}, "score": 80 },
+    "expected": false
+  },
+  {
+    "name": "value-wrong-type",
+    "value": { "patches": { "x": 42 } },
+    "expected": false
+  }
+]

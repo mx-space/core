@@ -1,0 +1,37 @@
+[
+  {
+    "name": "happy-safe",
+    "value": { "score": 1, "hasSensitiveContent": false },
+    "expected": true
+  },
+  {
+    "name": "happy-flagged",
+    "value": { "score": 9, "hasSensitiveContent": true },
+    "expected": true
+  },
+  {
+    "name": "happy-float",
+    "value": { "score": 5.5, "hasSensitiveContent": false },
+    "expected": true
+  },
+  {
+    "name": "missing-flag",
+    "value": { "score": 1 },
+    "expected": false
+  },
+  {
+    "name": "extra-key",
+    "value": { "score": 1, "hasSensitiveContent": false, "reason": "ok" },
+    "expected": false
+  },
+  {
+    "name": "wrong-flag-type",
+    "value": { "score": 1, "hasSensitiveContent": "no" },
+    "expected": false
+  },
+  {
+    "name": "wrong-score-type",
+    "value": { "score": "high", "hasSensitiveContent": false },
+    "expected": false
+  }
+]

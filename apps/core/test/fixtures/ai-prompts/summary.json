@@ -1,0 +1,32 @@
+[
+  {
+    "name": "happy",
+    "value": { "summary": "A concise summary." },
+    "expected": true
+  },
+  {
+    "name": "happy-zh",
+    "value": { "summary": "一篇短文之要旨。" },
+    "expected": true
+  },
+  {
+    "name": "extra-key",
+    "value": { "summary": "ok", "extra": 1 },
+    "expected": false
+  },
+  {
+    "name": "missing-summary",
+    "value": {},
+    "expected": false
+  },
+  {
+    "name": "wrong-type",
+    "value": { "summary": 42 },
+    "expected": false
+  },
+  {
+    "name": "null-summary",
+    "value": { "summary": null },
+    "expected": false
+  }
+]
