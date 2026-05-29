@@ -120,16 +120,16 @@ html.dark *::-webkit-scrollbar-corner {
   --width: 360px;
 }
 
-/* Base toast — flex row, hairline border, single soft shadow with top inner highlight */
+/* Base toast — tight flex row, hairline border, soft single shadow (no inset) */
 [data-sonner-toast].sonner-toast {
   align-items: flex-start !important;
-  padding: 12px 14px !important;
-  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  border-radius: 9px !important;
   border-width: 1px !important;
   border-style: solid !important;
   font-family: var(--sans-font) !important;
   font-feature-settings: 'cv11', 'ss01' !important;
-  gap: 10px !important;
+  gap: 9px !important;
   transition:
     transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.4s !important;
@@ -140,9 +140,8 @@ html:not(.dark) [data-sonner-toast].sonner-toast {
   border-color: var(--color-neutral-200) !important;
   color: var(--color-neutral-900) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 10px 30px -10px rgba(0, 0, 0, 0.1),
-    0 2px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    0 4px 12px -4px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
 html.dark [data-sonner-toast].sonner-toast {
@@ -150,16 +149,15 @@ html.dark [data-sonner-toast].sonner-toast {
   border-color: var(--color-neutral-800) !important;
   color: var(--color-neutral-100) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 10px 30px -10px rgba(0, 0, 0, 0.55),
-    0 2px 6px -2px rgba(0, 0, 0, 0.35) !important;
+    0 4px 12px -4px rgba(0, 0, 0, 0.45),
+    0 1px 2px rgba(0, 0, 0, 0.25) !important;
 }
 
-/* Icon container — 24x24 rounded square with faint state tint, sits on first text line */
+/* Icon container — 22x22 rounded square, optical-centered to title line */
 [data-sonner-toast] [data-icon] {
-  width: 24px !important;
-  height: 24px !important;
-  margin: -2px 0 0 !important;
+  width: 22px !important;
+  height: 22px !important;
+  margin: -1px 0 0 !important;
   border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -168,34 +166,34 @@ html.dark [data-sonner-toast].sonner-toast {
 }
 
 [data-sonner-toast] [data-icon] svg {
-  width: 14px !important;
-  height: 14px !important;
+  width: 13px !important;
+  height: 13px !important;
 }
 
-/* State tints + icon stroke — low-saturation 600 series */
+/* State tints + icon stroke — desaturated 8% tints */
 [data-sonner-toast][data-type='success'] [data-icon] {
-  background: rgba(5, 150, 105, 0.1) !important;
+  background: rgba(5, 150, 105, 0.08) !important;
 }
 [data-sonner-toast][data-type='success'] [data-icon] svg {
   color: #059669 !important;
 }
 
 [data-sonner-toast][data-type='error'] [data-icon] {
-  background: rgba(220, 38, 38, 0.1) !important;
+  background: rgba(220, 38, 38, 0.08) !important;
 }
 [data-sonner-toast][data-type='error'] [data-icon] svg {
   color: #dc2626 !important;
 }
 
 [data-sonner-toast][data-type='warning'] [data-icon] {
-  background: rgba(217, 119, 6, 0.1) !important;
+  background: rgba(217, 119, 6, 0.08) !important;
 }
 [data-sonner-toast][data-type='warning'] [data-icon] svg {
   color: #d97706 !important;
 }
 
 [data-sonner-toast][data-type='info'] [data-icon] {
-  background: rgba(2, 132, 199, 0.1) !important;
+  background: rgba(2, 132, 199, 0.08) !important;
 }
 [data-sonner-toast][data-type='info'] [data-icon] svg {
   color: #0284c7 !important;
@@ -215,10 +213,10 @@ html.dark [data-sonner-toast][data-type='loading'] [data-icon] svg {
   color: var(--color-neutral-100, #fafafa) !important;
 }
 
-/* Title — 13.5/600 with tighter tracking, locked to 20px line for baseline grid */
+/* Title — 13/600 with tighter tracking, locked to 20px line for baseline grid */
 .sonner-title {
   margin: 0 !important;
-  font-size: 13.5px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
   line-height: 20px !important;
   letter-spacing: -0.005em !important;
@@ -232,10 +230,11 @@ html.dark .sonner-title {
   color: var(--color-neutral-50) !important;
 }
 
-/* Description — 12.5/18, neutral-600 / neutral-400 for stronger contrast than v1 */
+/* Description — 12/500/18, neutral-600 / neutral-400 for stronger contrast than v1 */
 .sonner-description {
   margin: 3px 0 0 !important;
-  font-size: 12.5px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
   line-height: 18px !important;
   letter-spacing: -0.003em !important;
 }
@@ -248,17 +247,20 @@ html.dark .sonner-description {
   color: var(--color-neutral-400) !important;
 }
 
-/* Close button — 20x20, low-opacity until hover */
+/* Close button — 18x18, optical-centered on title line.
+   Sonner default applies translate(35%, -35%) for its outside-corner look;
+   we override to none so our top/right pinning sits flush inside. */
 [data-sonner-toast][data-styled='true'] [data-close-button] {
-  width: 20px !important;
-  height: 20px !important;
+  width: 18px !important;
+  height: 18px !important;
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
   border-radius: 4px !important;
-  top: 10px !important;
-  right: 10px !important;
+  top: 11px !important;
+  right: 9px !important;
   left: auto !important;
+  transform: none !important;
   opacity: 0.4 !important;
   transition:
     opacity 0.15s,
