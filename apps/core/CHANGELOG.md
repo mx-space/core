@@ -1,3 +1,12 @@
+## [13.3.1](https://github.com/mx-space/core/compare/v13.3.0...v13.3.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* **admin:** raise dashboard version baseline to 8.2.0 so the bundled build supersedes stale runtime-downloaded copies ([69e7657](https://github.com/mx-space/core/commit/69e76578))
+
+
+
 # [13.3.0](https://github.com/mx-space/core/compare/v13.2.0...v13.3.0) (2026-05-29)
 
 
