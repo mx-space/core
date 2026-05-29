@@ -1,4 +1,4 @@
-import type { Tool, TSchema } from '@earendil-works/pi-ai'
+import type { Message as PiMessage, Tool, TSchema } from '@earendil-works/pi-ai'
 
 import type { AIProviderType } from '../ai.types'
 
@@ -74,9 +74,14 @@ export interface StructuredStreamChunk<T> {
 
 export interface StreamMessageOptions extends Omit<
   GenerateTextOptions,
-  'prompt'
+  'prompt' | 'messages'
 > {
-  messages: Message[]
+  /**
+   * Accepts either the thin runtime `Message` shape (text-only sys/user/asst)
+   * or full pi `Message[]` (UserMessage / AssistantMessage / ToolResultMessage)
+   * for multi-turn tool-call conversations. The adapter detects per-element.
+   */
+  messages: (Message | PiMessage)[]
   systemPrompt?: string
   tools?: Tool[]
 }

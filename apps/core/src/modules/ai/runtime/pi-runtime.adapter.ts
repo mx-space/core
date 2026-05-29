@@ -193,36 +193,40 @@ export class PiRuntimeAdapter implements IModelRuntime {
 
   private buildContext(options: {
     prompt?: string
-    messages?: Message[]
+    messages?: (Message | PiMessage)[]
     systemPrompt?: string
     tools?: Tool[]
   }): Context {
     const { prompt, messages, systemPrompt, tools } = options
     const ts = Date.now()
     const systemFromMessages = messages?.find(
-      (m) => m.role === 'system',
+      (m): m is Message & { role: 'system' } =>
+        m.role === 'system' && typeof (m as Message).content === 'string',
     )?.content
     const list: PiMessage[] = messages
       ? messages
           .filter((m) => m.role !== 'system')
-          .map((m) =>
-            m.role === 'assistant'
-              ? ({
-                  role: 'assistant',
-                  content: [{ type: 'text', text: m.content }],
-                  api: this.api,
-                  provider: this.piProviderId,
-                  model: this.providerInfo.model,
-                  usage: undefined as never,
-                  stopReason: 'stop',
-                  timestamp: ts,
-                } as unknown as PiMessage)
-              : ({
-                  role: 'user',
-                  content: m.content,
-                  timestamp: ts,
-                } as PiMessage),
-          )
+          .map((m): PiMessage => {
+            if (this.isPiMessage(m)) return m
+            const thin = m as Message
+            if (thin.role === 'assistant') {
+              return {
+                role: 'assistant',
+                content: [{ type: 'text', text: thin.content }],
+                api: this.api,
+                provider: this.piProviderId,
+                model: this.providerInfo.model,
+                usage: undefined as never,
+                stopReason: 'stop',
+                timestamp: ts,
+              } as unknown as PiMessage
+            }
+            return {
+              role: 'user',
+              content: thin.content,
+              timestamp: ts,
+            } as PiMessage
+          })
       : prompt !== undefined
         ? [{ role: 'user', content: prompt, timestamp: ts } as PiMessage]
         : []
@@ -231,6 +235,19 @@ export class PiRuntimeAdapter implements IModelRuntime {
       messages: list,
       tools,
     }
+  }
+
+  private isPiMessage(value: Message | PiMessage): value is PiMessage {
+    if (value.role === 'user') {
+      return typeof (value as PiMessage).timestamp === 'number'
+    }
+    if (value.role === 'assistant') {
+      return Array.isArray((value as PiMessage & { role: 'assistant' }).content)
+    }
+    if ((value as PiMessage).role === 'toolResult') {
+      return true
+    }
+    return false
   }
 
   private buildStreamOptions(opts: {
