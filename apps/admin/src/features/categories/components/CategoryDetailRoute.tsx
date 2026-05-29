@@ -98,7 +98,7 @@ export function CategoryDetailRoute() {
 
   return (
     <CategoryDetail
-      category={category}
+      categoryId={category.id}
       deleting={ctx.deleting}
       onBack={ctx.onBack}
       onDelete={ctx.onDelete}

@@ -394,7 +394,6 @@ function WritePage(props: { kind: WriteKind }) {
     () => adminQueryKeys.posts.relatedOptions('write'),
     [],
   )
-  const relatedPostsResource = usePostResourceList(relatedPostsQueryKey)
 
   const categoriesQuery = useQuery({
     enabled: props.kind === 'post',
@@ -475,8 +474,6 @@ function WritePage(props: { kind: WriteKind }) {
       : emptyCategories
   const tags = tagsQuery.data ?? []
   const topics = topicsQuery.data?.data ?? emptyTopics
-  const relatedPosts =
-    props.kind === 'post' ? relatedPostsResource.posts : []
   const firstCategoryId = categories[0]?.id ?? ''
   const activeCategory =
     categories.find((category) => category.id === state.categoryId) ??
@@ -1233,9 +1230,8 @@ function WritePage(props: { kind: WriteKind }) {
                 postFields={
                   props.kind === 'post' ? (
                     <PostFields
-                      categories={categories}
                       currentPostId={id}
-                      relatedPosts={relatedPosts}
+                      relatedPostsQueryKey={relatedPostsQueryKey}
                       state={state}
                       tags={tags}
                       updateField={updateField}
@@ -2149,9 +2145,8 @@ function getSharedSuffixLength(left: string, right: string) {
 }
 
 function PostFields(props: {
-  categories: CategoryModel[]
   currentPostId: string
-  relatedPosts: PostModel[]
+  relatedPostsQueryKey: readonly unknown[]
   state: WriteFormState
   tags: Array<{ count: number; name: string }>
   updateField: <TKey extends keyof WriteFormState>(
@@ -2160,9 +2155,11 @@ function PostFields(props: {
   ) => void
 }) {
   const { t } = useI18n()
+  const categories = usePostResourceCategories().filter(isCategoryModel)
+  const relatedPosts = usePostResourceList(props.relatedPostsQueryKey).posts
   const selectedTags = splitCommaList(props.state.tags)
   const selectedRelatedIds = splitCommaList(props.state.relatedId)
-  const visibleRelatedPosts = props.relatedPosts.filter(
+  const visibleRelatedPosts = relatedPosts.filter(
     (post) => post.id !== props.currentPostId,
   )
   const toggleTag = (tag: string) => {
@@ -2184,7 +2181,7 @@ function PostFields(props: {
             onValueChange={(categoryId) =>
               props.updateField('categoryId', categoryId)
             }
-            options={props.categories.map((category) => ({
+            options={categories.map((category) => ({
               label: category.name,
               value: category.id,
             }))}

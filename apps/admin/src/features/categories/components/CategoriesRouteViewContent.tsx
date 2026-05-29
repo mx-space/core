@@ -3,6 +3,7 @@ import { useCallback, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { usePostResourceCategoryIds } from '~/data/post-category-resource/hooks'
 import { useI18n } from '~/i18n'
 import type { CategoryModel } from '~/models/category'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
@@ -42,7 +43,8 @@ export function CategoriesRouteViewContent() {
   const params = useParams<{ id?: string }>()
   const selectedItem = decodeTarget(params.id)
 
-  const { categories, categoriesQuery, tags, tagsQuery } = useCategoriesList()
+  const { categoriesQuery, tags, tagsQuery } = useCategoriesList()
+  const categoryIds = usePostResourceCategoryIds()
 
   const closeDetail = useCallback(() => {
     navigate('/posts/category')
@@ -114,7 +116,7 @@ export function CategoriesRouteViewContent() {
                 </h2>
               </div>
               <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                {categories.length} / {tags.length}
+                {categoryIds.length} / {tags.length}
               </span>
               <Button
                 onClick={() => void openForm({ kind: 'create' })}
@@ -128,11 +130,11 @@ export function CategoriesRouteViewContent() {
 
             <Scroll className="min-h-0 flex-1">
               <ListSection
-                count={categories.length}
+                count={categoryIds.length}
                 loading={categoriesQuery.isLoading}
                 title={t('categories.section.categories')}
               >
-                {categories.length === 0 && !categoriesQuery.isLoading ? (
+                {categoryIds.length === 0 && !categoriesQuery.isLoading ? (
                   <EmptyList
                     action={
                       <Button
@@ -146,16 +148,16 @@ export function CategoriesRouteViewContent() {
                     label={t('categories.list.emptyCategories')}
                   />
                 ) : (
-                  categories.map((category) => (
+                  categoryIds.map((categoryId) => (
                     <CategoryRow
-                      category={category}
-                      key={category.id}
+                      categoryId={categoryId}
+                      key={categoryId}
                       onSelect={() =>
-                        selectItem({ id: category.id, kind: 'category' })
+                        selectItem({ id: categoryId, kind: 'category' })
                       }
                       selected={
                         selectedItem?.kind === 'category' &&
-                        selectedItem.id === category.id
+                        selectedItem.id === categoryId
                       }
                     />
                   ))

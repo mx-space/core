@@ -21,6 +21,10 @@ export function usePostResourceCategories() {
   return usePostCategoryResourceStore(selectPostCategories, shallow)
 }
 
+export function usePostResourceCategoryIds() {
+  return usePostCategoryResourceStore((state) => state.categoryIds, shallow)
+}
+
 export function usePostResourceCategory(categoryId: string) {
   return usePostCategoryResourceStore(
     (state) => (categoryId ? selectPostCategory(state, categoryId) : undefined),
