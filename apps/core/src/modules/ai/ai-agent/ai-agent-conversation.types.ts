@@ -2,15 +2,10 @@ import type { EntityId } from '~/shared/id/entity-id'
 
 export interface AiAgentConversationRow {
   id: EntityId
-  refId: EntityId
-  refType: string
-  title: string | null
+  sessionId: string
+  model: string | null
+  providerId: string | null
   messages: unknown[]
-  model: string
-  providerId: string
-  reviewState: Record<string, unknown> | null
-  diffState: Record<string, unknown> | null
-  messageCount: number
   createdAt: Date
   updatedAt: Date | null
 }

@@ -1,11 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, type SQL, sql } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { aiAgentConversations } from '~/database/schema'
 import {
   BaseRepository,
-  type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -18,15 +17,10 @@ const mapRow = (
   row: typeof aiAgentConversations.$inferSelect,
 ): AiAgentConversationRow => ({
   id: toEntityId(row.id) as EntityId,
-  refId: toEntityId(row.refId) as EntityId,
-  refType: row.refType,
-  title: row.title,
-  messages: row.messages ?? [],
+  sessionId: row.sessionId,
   model: row.model,
   providerId: row.providerId,
-  reviewState: row.reviewState,
-  diffState: row.diffState,
-  messageCount: row.messageCount,
+  messages: (row.messages as unknown[] | null) ?? [],
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 })
@@ -52,51 +46,20 @@ export class AiAgentConversationRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
-  async list(
-    params: {
-      page?: number
-      size?: number
-      refType?: string
-      refId?: EntityId | string
-    } = {},
-  ): Promise<PaginationResult<AiAgentConversationRow>> {
-    const page = Math.max(1, params.page ?? 1)
-    const size = Math.min(100, Math.max(1, params.size ?? 20))
-    const offset = (page - 1) * size
-    const filters: SQL[] = []
-    if (params.refType)
-      filters.push(eq(aiAgentConversations.refType, params.refType))
-    if (params.refId)
-      filters.push(eq(aiAgentConversations.refId, parseEntityId(params.refId)))
-    const where = filters.length > 0 ? and(...filters) : undefined
-    const [rows, [{ count }]] = await Promise.all([
-      this.db
-        .select()
-        .from(aiAgentConversations)
-        .where(where)
-        .orderBy(desc(aiAgentConversations.updatedAt))
-        .limit(size)
-        .offset(offset),
-      this.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(aiAgentConversations)
-        .where(where),
-    ])
-    return {
-      data: rows.map(mapRow),
-      pagination: this.paginationOf(Number(count ?? 0), page, size),
-    }
+  async listBySession(sessionId: string): Promise<AiAgentConversationRow[]> {
+    const rows = await this.db
+      .select()
+      .from(aiAgentConversations)
+      .where(eq(aiAgentConversations.sessionId, sessionId))
+      .orderBy(desc(aiAgentConversations.updatedAt))
+    return rows.map(mapRow)
   }
 
   async create(input: {
-    refId: EntityId | string
-    refType: string
-    title?: string | null
+    sessionId: string
     messages?: unknown[]
-    model: string
-    providerId: string
-    reviewState?: Record<string, unknown> | null
-    diffState?: Record<string, unknown> | null
+    model?: string | null
+    providerId?: string | null
   }): Promise<AiAgentConversationRow> {
     const id = this.snowflake.nextId()
     const messages = input.messages ?? []
@@ -104,15 +67,10 @@ export class AiAgentConversationRepository extends BaseRepository {
       .insert(aiAgentConversations)
       .values({
         id,
-        refId: parseEntityId(input.refId),
-        refType: input.refType,
-        title: input.title ?? null,
+        sessionId: input.sessionId,
         messages,
-        model: input.model,
-        providerId: input.providerId,
-        reviewState: input.reviewState ?? null,
-        diffState: input.diffState ?? null,
-        messageCount: messages.length,
+        model: input.model ?? null,
+        providerId: input.providerId ?? null,
       })
       .returning()
     return mapRow(row)
@@ -121,27 +79,20 @@ export class AiAgentConversationRepository extends BaseRepository {
   async update(
     id: EntityId | string,
     patch: Partial<{
-      title: string | null
+      sessionId: string
       messages: unknown[]
-      model: string
-      providerId: string
-      reviewState: Record<string, unknown> | null
-      diffState: Record<string, unknown> | null
+      model: string | null
+      providerId: string | null
     }>,
   ): Promise<AiAgentConversationRow | null> {
     const idBig = parseEntityId(id)
     const update: Partial<typeof aiAgentConversations.$inferInsert> = {
       updatedAt: new Date(),
     }
-    if (patch.title !== undefined) update.title = patch.title
-    if (patch.messages !== undefined) {
-      update.messages = patch.messages
-      update.messageCount = patch.messages.length
-    }
+    if (patch.sessionId !== undefined) update.sessionId = patch.sessionId
+    if (patch.messages !== undefined) update.messages = patch.messages
     if (patch.model !== undefined) update.model = patch.model
     if (patch.providerId !== undefined) update.providerId = patch.providerId
-    if (patch.reviewState !== undefined) update.reviewState = patch.reviewState
-    if (patch.diffState !== undefined) update.diffState = patch.diffState
     const [row] = await this.db
       .update(aiAgentConversations)
       .set(update)
@@ -169,7 +120,6 @@ export class AiAgentConversationRepository extends BaseRepository {
         .update(aiAgentConversations)
         .set({
           messages,
-          messageCount: messages.length,
           updatedAt: new Date(),
         })
         .where(eq(aiAgentConversations.id, idBig))
@@ -187,13 +137,5 @@ export class AiAgentConversationRepository extends BaseRepository {
       .where(eq(aiAgentConversations.id, idBig))
       .returning()
     return row ? mapRow(row) : null
-  }
-
-  async deleteForRef(refId: EntityId | string): Promise<number> {
-    const result = await this.db
-      .delete(aiAgentConversations)
-      .where(eq(aiAgentConversations.refId, parseEntityId(refId)))
-      .returning({ id: aiAgentConversations.id })
-    return result.length
   }
 }

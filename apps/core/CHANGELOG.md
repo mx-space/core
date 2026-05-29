@@ -1,3 +1,28 @@
+# Upcoming — AI SDK migration to pi (step-9)
+
+## BREAKING CHANGE: `ai_agent_conversations` table rewritten
+
+The `ai_agent_conversations` table is dropped and recreated with a new shape
+`{ id, sessionId, model, providerId, messages, createdAt, updatedAt }`. The
+legacy columns `refId`, `refType`, `title`, `reviewState`, `diffState`, and
+`messageCount` are gone, and existing rows are not preserved. The companion
+`@OnEvent(POST_DELETE | NOTE_DELETE | PAGE_DELETE)` cascade is removed; orphan
+conversation rows after an article delete are accepted as known data debt.
+
+Operational requirements:
+
+- This migration MUST run as a pre-deploy step (Dokploy `mx-migrate` job).
+  Both replicas of `mx-core` MUST be stopped or in cutover before it executes
+  — `DROP TABLE` is incompatible with a hot replica still reading the old
+  schema.
+- The admin agent chat endpoint (`/api/ai/agent/*`) is unavailable for the
+  duration of the cutover (≤ 5 minutes, acceptable per design discussion).
+- The legacy article-scoped “conversations for this post” admin UX is
+  REMOVED (no `sessionId ↔ articleId` mapping is retained server-side).
+- Title generation is no longer persisted on the conversation row; if a
+  caller needs a title it must store it client-side via the existing
+  `generateTitle` helper on `AiAgentConversationService`.
+
 ## [13.3.1](https://github.com/mx-space/core/compare/v13.3.0...v13.3.1) (2026-05-29)
 
 

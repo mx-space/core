@@ -2,7 +2,6 @@ import { CollectionRefTypes } from '@mx-space/db-schema'
 import {
   accounts,
   activities,
-  aiAgentConversations,
   aiInsights,
   aiSummaries,
   aiTranslations,
@@ -1193,7 +1192,6 @@ export const stepAi: MigrationStep = {
       allocateForCollection(ctx, 'ai_insights'),
       allocateForCollection(ctx, 'ai_translations'),
       allocateForCollection(ctx, 'translation_entries'),
-      allocateForCollection(ctx, 'ai_agent_conversations'),
     ])
   },
   async load(ctx) {
@@ -1201,7 +1199,6 @@ export const stepAi: MigrationStep = {
     const insightsResolver = createResolver(ctx, 'ai_insights')
     const translationResolver = createResolver(ctx, 'ai_translations')
     const entryResolver = createResolver(ctx, 'translation_entries')
-    const agentResolver = createResolver(ctx, 'ai_agent_conversations')
 
     const candidates = ['posts', 'notes', 'pages']
     const resolveContentRef = (
@@ -1322,30 +1319,6 @@ export const stepAi: MigrationStep = {
       .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, translationEntries, entryRows)
     recordLoad(ctx, 'translation_entries', entryRows.length)
-
-    const agentDocs = await collect<any>(ctx, 'ai_agent_conversations')
-    const agentRows = agentDocs
-      .map((d) => {
-        const refId = resolveContentRef(d.refId, 'ai_agent_conversations')
-        if (!refId) return null
-        return {
-          id: agentResolver.self(d._id),
-          refId,
-          refType: normalizeContentRefType(d.refType)?.refType ?? d.refType,
-          title: d.title ?? null,
-          messages: d.messages ?? [],
-          model: d.model,
-          providerId: d.providerId,
-          reviewState: d.reviewState ?? null,
-          diffState: d.diffState ?? null,
-          messageCount: Array.isArray(d.messages) ? d.messages.length : 0,
-          createdAt: dateOrNull(d.created) ?? new Date(),
-          updatedAt: dateOrNull(d.updated),
-        }
-      })
-      .filter((r): r is NonNullable<typeof r> => r !== null)
-    await upsert(ctx, aiAgentConversations, agentRows)
-    recordLoad(ctx, 'ai_agent_conversations', agentRows.length)
   },
 }
 

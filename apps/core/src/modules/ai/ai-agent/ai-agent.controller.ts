@@ -108,7 +108,7 @@ export class AiAgentController {
   @Get('/conversations')
   @Auth()
   listConversations(@Query() query: ListConversationsQueryDto) {
-    return this.conversationService.listByRef(query.refId, query.refType)
+    return this.conversationService.listBySession(query.sessionId)
   }
 
   @Get('/conversations/:id')

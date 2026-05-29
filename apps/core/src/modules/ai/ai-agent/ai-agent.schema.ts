@@ -1,17 +1,13 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { zEntityId } from '~/common/zod'
-
 // --- Conversation CRUD ---
 
 export const CreateConversationSchema = z.object({
-  refId: zEntityId,
-  refType: z.enum(['post', 'note', 'page']),
-  title: z.string().optional(),
+  sessionId: z.string().min(1),
   messages: z.array(z.record(z.string(), z.unknown())).default([]),
-  model: z.string().min(1),
-  providerId: z.string().min(1),
+  model: z.string().min(1).nullish(),
+  providerId: z.string().min(1).nullish(),
 })
 export class CreateConversationDto extends createZodDto(
   CreateConversationSchema,
@@ -28,17 +24,16 @@ export const ReplaceMessagesSchema = z.object({
 export class ReplaceMessagesDto extends createZodDto(ReplaceMessagesSchema) {}
 
 export const UpdateConversationSchema = z.object({
-  title: z.string().optional(),
-  reviewState: z.record(z.string(), z.unknown()).nullable().optional(),
-  diffState: z.record(z.string(), z.unknown()).nullable().optional(),
+  sessionId: z.string().min(1).optional(),
+  model: z.string().min(1).nullish(),
+  providerId: z.string().min(1).nullish(),
 })
 export class UpdateConversationDto extends createZodDto(
   UpdateConversationSchema,
 ) {}
 
 export const ListConversationsQuerySchema = z.object({
-  refId: zEntityId,
-  refType: z.enum(['post', 'note', 'page']),
+  sessionId: z.string().min(1),
 })
 export class ListConversationsQueryDto extends createZodDto(
   ListConversationsQuerySchema,

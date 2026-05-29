@@ -3,7 +3,6 @@ import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import {
   boolean,
   index,
-  integer,
   jsonb,
   pgTable,
   text,
@@ -112,20 +111,15 @@ export const aiAgentConversations = pgTable(
   'ai_agent_conversations',
   {
     id: pkText(),
+    sessionId: text('session_id').notNull(),
+    model: text('model'),
+    providerId: text('provider_id'),
+    messages: jsonb('messages')
+      .$type<unknown[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
-    refId: refText('ref_id').notNull(),
-    refType: text('ref_type').notNull(),
-    title: text('title'),
-    messages: jsonb('messages').$type<unknown[]>().notNull(),
-    model: text('model').notNull(),
-    providerId: text('provider_id').notNull(),
-    reviewState: jsonb('review_state').$type<Record<string, unknown> | null>(),
-    diffState: jsonb('diff_state').$type<Record<string, unknown> | null>(),
-    messageCount: integer('message_count').notNull().default(0),
   },
-  (table) => [
-    index('ai_agent_conversations_ref_idx').on(table.refId, table.refType),
-    index('ai_agent_conversations_updated_at_idx').on(table.updatedAt),
-  ],
+  (table) => [index('ai_agent_conversation_session_idx').on(table.sessionId)],
 )
