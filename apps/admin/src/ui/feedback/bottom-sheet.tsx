@@ -1,16 +1,23 @@
-import { ChevronDown, ChevronUp, X } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useId, useState } from 'react'
-import { createPortal } from 'react-dom'
 import type { LucideIcon } from 'lucide-react'
+import { ChevronDown, ChevronUp, X } from 'lucide-react'
+import { motion, useMotionValue, useTransform } from 'motion/react'
 import type { ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
+import { createPortal } from 'react-dom'
 
-import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import { PortalLayerScope, useFloatingZ } from '~/ui/feedback/portal-layer'
 import { cn } from '~/utils/cn'
 
 export type BottomSheetSnap = 'half' | 'full'
+type SheetState = BottomSheetSnap | 'closed'
 
 export interface BottomSheetProps {
   open: boolean
@@ -27,157 +34,456 @@ export interface BottomSheetProps {
   onSnapChange?: (snap: BottomSheetSnap) => void
 }
 
-const SPRING = { duration: 0.32, ease: [0.32, 0.72, 0, 1] as const }
-const FADE = { duration: 0.2, ease: 'easeOut' as const }
+// iOS-like critically-damped-ish spring. Validated in interactive prototype v2
+// (see docs/superpowers/specs/2026-05-29-admin-bottom-sheet-ios-redesign-design.md §4.3).
+const STIFFNESS = 400
+const DAMPING = 40
+const PROJECTION_SECONDS = 0.2
+const CLOSE_FLING = 1500
+const FULL_FLING = -1200
+const RUBBER_UP = 0.06
+const SAFE_TOP_MIN = 12
+const BODY_DRAG_THRESHOLD = 6
+const SETTLE_EPS_V = 0.5
+const SETTLE_EPS_Y = 0.3
+const DT_CLAMP = 0.032
 
-const SNAP_HEIGHT: Record<BottomSheetSnap, string> = {
-  half: '60vh',
-  full: '95vh',
+export const SNAP_HEIGHT: Record<BottomSheetSnap, string> = {
+  half: 'min(62dvh, calc(100dvh - 12px))',
+  full: 'calc(100dvh - max(env(safe-area-inset-top), 12px))',
+}
+
+interface DetentMetrics {
+  TY_FULL: number
+  TY_HALF: number
+  TY_CLOSED: number
+}
+
+export function resolveDetent(
+  ty: number,
+  vy: number,
+  currentSnap: SheetState,
+  m: DetentMetrics,
+): SheetState {
+  if (vy > CLOSE_FLING) return 'closed'
+  if (vy < FULL_FLING && currentSnap !== 'closed') return 'full'
+
+  const projected = ty + vy * PROJECTION_SECONDS
+  const candidates: Array<[SheetState, number]> = [
+    ['closed', m.TY_CLOSED],
+    ['half', m.TY_HALF],
+    ['full', m.TY_FULL],
+  ]
+  let best = candidates[0]
+  let bestD = Number.POSITIVE_INFINITY
+  for (const c of candidates) {
+    const d = Math.abs(projected - c[1])
+    if (d < bestD) {
+      bestD = d
+      best = c
+    }
+  }
+  return best[0]
+}
+
+function computeMetrics(viewportH: number): DetentMetrics {
+  const safeTop = Math.max(SAFE_TOP_MIN, 12)
+  const fullH = viewportH - safeTop
+  const halfH = Math.min(viewportH * 0.62, viewportH - SAFE_TOP_MIN)
+  return {
+    TY_FULL: 0,
+    TY_HALF: fullH - halfH,
+    TY_CLOSED: fullH + 24,
+  }
+}
+
+interface UseSheetEngineOpts {
+  open: boolean
+  activeSnap: BottomSheetSnap
+  onClose: () => void
+  onSnapResolved: (next: BottomSheetSnap) => void
+}
+
+function useSheetEngine(opts: UseSheetEngineOpts) {
+  const [mounted, setMounted] = useState(false)
+  const ty = useMotionValue(0)
+  const bodyRef = useRef<HTMLDivElement>(null)
+
+  const stateRef = useRef({
+    snap: 'closed' as SheetState,
+    target: 0,
+    vy: 0,
+    metrics: computeMetrics(0),
+    rafId: 0,
+    lastT: 0,
+    onSettled: undefined as (() => void) | undefined,
+    dragOrigin: null as 'grabber' | 'body' | null,
+    dragging: false,
+    dragStartClientY: 0,
+    dragStartTy: 0,
+    lastPointerClientY: 0,
+    lastPointerTime: 0,
+  })
+  const onCloseRef = useRef(opts.onClose)
+  onCloseRef.current = opts.onClose
+  const onSnapResolvedRef = useRef(opts.onSnapResolved)
+  onSnapResolvedRef.current = opts.onSnapResolved
+
+  useEffect(() => {
+    if (opts.open) setMounted(true)
+  }, [opts.open])
+
+  useEffect(() => {
+    if (!mounted) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [mounted])
+
+  useEffect(() => {
+    if (!mounted) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation()
+        onCloseRef.current()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [mounted])
+
+  useLayoutEffect(() => {
+    if (!mounted) return
+    const measure = () => {
+      const st = stateRef.current
+      st.metrics = computeMetrics(window.innerHeight)
+      if (st.snap === 'half') st.target = st.metrics.TY_HALF
+      else if (st.snap === 'full') st.target = st.metrics.TY_FULL
+      else st.target = st.metrics.TY_CLOSED
+      ty.set(ty.get())
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [mounted, ty])
+
+  const runSpring = useCallback(() => {
+    const st = stateRef.current
+    cancelAnimationFrame(st.rafId)
+    st.lastT = performance.now()
+    const tick = (now: number) => {
+      const dt = Math.min(DT_CLAMP, (now - st.lastT) / 1000)
+      st.lastT = now
+      const cur = ty.get()
+      const a = -STIFFNESS * (cur - st.target) - DAMPING * st.vy
+      st.vy += a * dt
+      const next = cur + st.vy * dt
+      ty.set(next)
+      if (
+        Math.abs(st.vy) < SETTLE_EPS_V &&
+        Math.abs(next - st.target) < SETTLE_EPS_Y
+      ) {
+        ty.set(st.target)
+        st.vy = 0
+        const cb = st.onSettled
+        st.onSettled = undefined
+        cb?.()
+        return
+      }
+      st.rafId = requestAnimationFrame(tick)
+    }
+    st.rafId = requestAnimationFrame(tick)
+  }, [ty])
+
+  const setSnapTarget = useCallback(
+    (next: SheetState) => {
+      const st = stateRef.current
+      st.snap = next
+      const m = st.metrics
+      if (next === 'closed') {
+        st.target = m.TY_CLOSED
+        st.onSettled = () => setMounted(false)
+        runSpring()
+        return
+      }
+      st.target = next === 'full' ? m.TY_FULL : m.TY_HALF
+      st.onSettled = undefined
+      runSpring()
+    },
+    [runSpring],
+  )
+
+  useEffect(() => {
+    if (!mounted) return
+    const st = stateRef.current
+    if (!opts.open) {
+      setSnapTarget('closed')
+      return
+    }
+    if (st.snap === 'closed') {
+      ty.set(st.metrics.TY_CLOSED)
+      st.vy = 0
+    }
+    setSnapTarget(opts.activeSnap)
+  }, [mounted, opts.open, opts.activeSnap, setSnapTarget, ty])
+
+  const beginDrag = useCallback(
+    (clientY: number) => {
+      const st = stateRef.current
+      cancelAnimationFrame(st.rafId)
+      st.dragStartClientY = clientY
+      st.dragStartTy = ty.get()
+      st.lastPointerClientY = clientY
+      st.lastPointerTime = performance.now()
+      st.vy = 0
+    },
+    [ty],
+  )
+
+  const onGrabberPointerDown = useCallback(
+    (event: React.PointerEvent) => {
+      if (stateRef.current.snap === 'closed') return
+      stateRef.current.dragOrigin = 'grabber'
+      stateRef.current.dragging = true
+      beginDrag(event.clientY)
+      event.currentTarget.setPointerCapture(event.pointerId)
+      event.preventDefault()
+    },
+    [beginDrag],
+  )
+
+  const onBodyPointerDown = useCallback(
+    (event: React.PointerEvent) => {
+      const body = bodyRef.current
+      if (!body || stateRef.current.snap === 'closed') return
+      if (body.scrollTop > 0) return
+      stateRef.current.dragOrigin = 'body'
+      stateRef.current.dragging = false
+      beginDrag(event.clientY)
+    },
+    [beginDrag],
+  )
+
+  const onPointerMove = useCallback(
+    (event: React.PointerEvent) => {
+      const st = stateRef.current
+      if (!st.dragOrigin) return
+      const dy = event.clientY - st.dragStartClientY
+      if (!st.dragging && st.dragOrigin === 'body') {
+        if (dy < BODY_DRAG_THRESHOLD) return
+        const body = bodyRef.current
+        if (!body || body.scrollTop > 0) {
+          st.dragOrigin = null
+          return
+        }
+        st.dragging = true
+        if (event.currentTarget instanceof Element) {
+          event.currentTarget.setPointerCapture(event.pointerId)
+        }
+      }
+      const now = performance.now()
+      const dt = (now - st.lastPointerTime) / 1000
+      if (dt > 0) st.vy = (event.clientY - st.lastPointerClientY) / dt
+      st.lastPointerClientY = event.clientY
+      st.lastPointerTime = now
+      ty.set(st.dragStartTy + dy)
+      event.preventDefault()
+    },
+    [ty],
+  )
+
+  const endDrag = useCallback(() => {
+    const st = stateRef.current
+    if (!st.dragOrigin) return
+    const wasDragging = st.dragging
+    st.dragOrigin = null
+    st.dragging = false
+    if (!wasDragging) return
+    const next = resolveDetent(ty.get(), st.vy, st.snap, st.metrics)
+    if (next === 'closed') {
+      onCloseRef.current()
+    } else {
+      onSnapResolvedRef.current(next)
+      setSnapTarget(next)
+    }
+  }, [setSnapTarget, ty])
+
+  const scrimOpacity = useTransform(ty, (cur) => {
+    const m = stateRef.current.metrics
+    const visual =
+      cur < m.TY_FULL ? m.TY_FULL + (cur - m.TY_FULL) * RUBBER_UP : cur
+    const range = m.TY_CLOSED - m.TY_FULL
+    if (range <= 0) return 0
+    const r = Math.min(1, Math.max(0, (visual - m.TY_FULL) / range))
+    return 0.35 * (1 - r)
+  })
+  const cornerRadius = useTransform(ty, (cur) => {
+    const m = stateRef.current.metrics
+    const past = Math.max(0, cur - m.TY_FULL)
+    const fullProx = Math.max(0, 1 - past / 60)
+    return 24 - 8 * fullProx
+  })
+  const visualY = useTransform(ty, (cur) => {
+    const m = stateRef.current.metrics
+    return cur < m.TY_FULL ? m.TY_FULL + (cur - m.TY_FULL) * RUBBER_UP : cur
+  })
+
+  return {
+    mounted,
+    bodyRef,
+    visualY,
+    scrimOpacity,
+    cornerRadius,
+    setSnapTarget,
+    onGrabberPointerDown,
+    onBodyPointerDown,
+    onPointerMove,
+    endDrag,
+  }
 }
 
 export function BottomSheet(props: BottomSheetProps) {
   const { t } = useI18n()
   const Icon = props.icon
   const titleId = useId()
-  // BottomSheet shares the drawer tier intentionally (sibling overlay system)
   const { z, depth } = useFloatingZ('drawer')
+
+  const isControlled = props.snap !== undefined
   const [internalSnap, setInternalSnap] = useState<BottomSheetSnap>(
     props.defaultSnap ?? 'half',
   )
-  const isControlled = props.snap !== undefined
-  const snap = props.snap ?? internalSnap
+  const activeSnap: BottomSheetSnap = props.snap ?? internalSnap
 
-  useEffect(() => {
-    if (!props.open) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.stopPropagation()
-        props.onClose()
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [props.open, props.onClose])
+  const reportSnap = useCallback(
+    (next: BottomSheetSnap) => {
+      if (!isControlled) setInternalSnap(next)
+      props.onSnapChange?.(next)
+    },
+    [isControlled, props],
+  )
 
-  // Shares Drawer's limitation: nested overlays clobber each other's scroll restoration; shared useBodyScrollLock ref-count is a future cleanup
-  useEffect(() => {
-    if (!props.open) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = previous
-    }
-  }, [props.open])
+  const engine = useSheetEngine({
+    open: props.open,
+    activeSnap,
+    onClose: props.onClose,
+    onSnapResolved: reportSnap,
+  })
+
+  const toggleSnap = useCallback(() => {
+    const next: BottomSheetSnap = activeSnap === 'half' ? 'full' : 'half'
+    reportSnap(next)
+    engine.setSnapTarget(next)
+  }, [activeSnap, reportSnap, engine])
 
   if (typeof document === 'undefined') return null
+  if (!engine.mounted) return null
 
-  const toggleSnap = () => {
-    const next: BottomSheetSnap = snap === 'half' ? 'full' : 'half'
-    if (!isControlled) setInternalSnap(next)
-    props.onSnapChange?.(next)
-  }
-
-  const ToggleIcon = snap === 'half' ? ChevronUp : ChevronDown
+  const ToggleIcon = activeSnap === 'half' ? ChevronUp : ChevronDown
 
   return createPortal(
     <PortalLayerScope depth={depth}>
-      <AnimatePresence>
-        {props.open ? (
+      <div aria-hidden={false} className="fixed inset-0" style={{ zIndex: z }}>
+        <motion.div
+          aria-hidden="true"
+          className="absolute inset-0 bg-black"
+          data-testid="bottom-sheet-scrim"
+          onClick={props.onClose}
+          style={{ opacity: engine.scrimOpacity }}
+        />
+        <div
+          aria-labelledby={props.title ? titleId : undefined}
+          aria-modal="true"
+          className="outline-hidden absolute inset-x-0 bottom-0"
+          data-snap={activeSnap}
+          role="dialog"
+          style={{ height: SNAP_HEIGHT.full }}
+        >
           <motion.div
-            aria-hidden={false}
-            className="fixed inset-0"
-            style={{ zIndex: z }}
-            initial="closed"
-            animate="open"
-            exit="closed"
+            className={cn(
+              'flex h-full w-full flex-col bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_48px_-16px_rgba(15,23,42,0.28),0_-2px_10px_-2px_rgba(15,23,42,0.10)] will-change-transform dark:bg-neutral-950 dark:shadow-[0_-20px_56px_-16px_rgba(0,0,0,0.72),0_-2px_10px_-2px_rgba(0,0,0,0.44)]',
+              props.className,
+            )}
+            style={{
+              y: engine.visualY,
+              borderTopLeftRadius: engine.cornerRadius,
+              borderTopRightRadius: engine.cornerRadius,
+            }}
           >
-            <motion.div
-              aria-hidden="true"
-              className="absolute inset-0 bg-black/35"
-              data-testid="bottom-sheet-scrim"
-              onClick={props.onClose}
-              variants={{ closed: { opacity: 0 }, open: { opacity: 1 } }}
-              transition={FADE}
-            />
-            <motion.div
-              aria-labelledby={props.title ? titleId : undefined}
-              aria-modal="true"
-              className={cn(
-                'outline-hidden absolute inset-x-0 bottom-0 flex flex-col rounded-t-2xl bg-white shadow-[0_-12px_32px_-8px_rgba(15,23,42,0.18),0_-2px_8px_-2px_rgba(15,23,42,0.08)] dark:bg-neutral-950 dark:shadow-[0_-16px_40px_-8px_rgba(0,0,0,0.6),0_-2px_8px_-2px_rgba(0,0,0,0.4)]',
-                props.className,
-              )}
-              role="dialog"
-              style={{ height: SNAP_HEIGHT[snap] }}
-              variants={{
-                closed: { y: '100%', opacity: 0 },
-                open: { y: 0, opacity: 1 },
-              }}
-              transition={SPRING}
+            <button
+              aria-label={
+                activeSnap === 'half'
+                  ? t('ui.bottomSheet.expand')
+                  : t('ui.bottomSheet.collapse')
+              }
+              className="flex h-9 shrink-0 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+              onClick={toggleSnap}
+              onPointerCancel={engine.endDrag}
+              onPointerDown={engine.onGrabberPointerDown}
+              onPointerMove={engine.onPointerMove}
+              onPointerUp={engine.endDrag}
+              type="button"
             >
-              <div
-                aria-hidden="true"
-                className="flex shrink-0 items-center justify-center pt-2"
+              <div className="h-1.5 w-10 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+            </button>
+            <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950">
+              <h2
+                className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-950 dark:text-neutral-50"
+                id={titleId}
               >
-                <div className="h-[3px] w-8 rounded bg-neutral-300 dark:bg-neutral-700" />
-              </div>
-              <div
-                className={cn(
-                  'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950',
-                  APP_SHELL_HEADER_HEIGHT_CLASS,
-                )}
-              >
-                <h2
-                  className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-950 dark:text-neutral-50"
-                  id={titleId}
+                {Icon ? (
+                  <Icon aria-hidden="true" className="size-4 shrink-0" />
+                ) : null}
+                {props.title ? (
+                  <span className="truncate">{props.title}</span>
+                ) : null}
+              </h2>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <button
+                  aria-label={
+                    activeSnap === 'half'
+                      ? t('ui.bottomSheet.expand')
+                      : t('ui.bottomSheet.collapse')
+                  }
+                  className="inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                  onClick={toggleSnap}
+                  type="button"
                 >
-                  {Icon ? (
-                    <Icon aria-hidden="true" className="size-4 shrink-0" />
-                  ) : null}
-                  {props.title ? (
-                    <span className="truncate">{props.title}</span>
-                  ) : null}
-                </h2>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <button
-                    aria-label={
-                      snap === 'half'
-                        ? t('ui.bottomSheet.expand')
-                        : t('ui.bottomSheet.collapse')
-                    }
-                    className="inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
-                    onClick={toggleSnap}
-                    type="button"
-                  >
-                    <ToggleIcon aria-hidden="true" className="size-4" />
-                  </button>
-                  {props.headerActions}
-                  <button
-                    aria-label={t('ui.bottomSheet.closeAria')}
-                    className="inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
-                    onClick={props.onClose}
-                    type="button"
-                  >
-                    <X aria-hidden="true" className="size-4" />
-                  </button>
-                </div>
+                  <ToggleIcon aria-hidden="true" className="size-4" />
+                </button>
+                {props.headerActions}
+                <button
+                  aria-label={t('ui.bottomSheet.closeAria')}
+                  className="inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                  onClick={props.onClose}
+                  type="button"
+                >
+                  <X aria-hidden="true" className="size-4" />
+                </button>
               </div>
-              <div
-                className={cn(
-                  'flex min-h-0 flex-1 flex-col',
-                  props.bodyClassName,
-                )}
-              >
-                {props.children}
+            </div>
+            <div
+              className={cn(
+                'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [touch-action:pan-y]',
+                props.bodyClassName,
+              )}
+              onPointerCancel={engine.endDrag}
+              onPointerDown={engine.onBodyPointerDown}
+              onPointerMove={engine.onPointerMove}
+              onPointerUp={engine.endDrag}
+              ref={engine.bodyRef}
+            >
+              {props.children}
+            </div>
+            {props.footer ? (
+              <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+                {props.footer}
               </div>
-              {props.footer ? (
-                <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-                  {props.footer}
-                </div>
-              ) : null}
-            </motion.div>
+            ) : null}
           </motion.div>
-        ) : null}
-      </AnimatePresence>
+        </div>
+      </div>
     </PortalLayerScope>,
     document.body,
   )
