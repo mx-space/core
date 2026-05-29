@@ -21,6 +21,9 @@ export interface ReaderRow {
   displayUsername: string | null
   image: string | null
   role: string
+  bannedAt: Date | null
+  banReason: string | null
   createdAt: Date
   updatedAt: Date | null
+  lastLoginAt?: Date | null
 }

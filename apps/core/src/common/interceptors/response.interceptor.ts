@@ -19,7 +19,7 @@ import {
 } from '~/constants/system.constant'
 
 @Injectable()
-export class ResponseInterceptorV2 implements NestInterceptor {
+export class ResponseInterceptor implements NestInterceptor {
   constructor(private readonly reflector: Reflector) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {

@@ -5,7 +5,7 @@ import type {
 } from '@nestjs/common'
 import { firstValueFrom, of } from 'rxjs'
 
-import { ResponseInterceptorV2 } from '~/common/interceptors/response.interceptor'
+import { ResponseInterceptor } from '~/common/interceptors/response.interceptor'
 import { withMeta } from '~/common/response/envelope.types'
 
 interface FakeResponse {
@@ -48,9 +48,9 @@ const run = (
   value: unknown,
 ) => firstValueFrom(interceptor.intercept(context, createHandler(value)) as any)
 
-describe('ResponseInterceptorV2', () => {
+describe('ResponseInterceptor', () => {
   const make = (passthrough = false) =>
-    new ResponseInterceptorV2({
+    new ResponseInterceptor({
       getAllAndOverride: () => passthrough,
     } as any)
 

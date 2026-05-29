@@ -17,7 +17,7 @@ import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { DbQueryInterceptor } from './common/interceptors/db-query.interceptor'
 import { IdempotenceInterceptor } from './common/interceptors/idempotence.interceptor'
-import { ResponseInterceptorV2 } from './common/interceptors/response.interceptor'
+import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { RequestContextMiddleware } from './common/middlewares/request-context.middleware'
 import { AppMigrationsModule } from './database/app-migrations/app-migrations.module'
 import { AckModule } from './modules/ack/ack.module'
@@ -65,11 +65,13 @@ import { SubscribeModule } from './modules/subscribe/subscribe.module'
 import { TopicModule } from './modules/topic/topic.module'
 import { UpdateModule } from './modules/update/update.module'
 import { WebhookModule } from './modules/webhook/webhook.module'
+import { AgentBrowserModule } from './processors/agent-browser/agent-browser.module'
 import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
 import { RedisModule } from './processors/redis/redis.module'
 import { TaskQueueModule } from './processors/task-queue/task-queue.module'
+import { SampleResponseInterceptor } from './shared/sample/sample-response.interceptor'
 
 @Module({
   imports: [
@@ -127,6 +129,7 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
     RenderEjsModule,
     // end biz
 
+    AgentBrowserModule,
     GatewayModule,
     HelperModule,
 
@@ -150,7 +153,12 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
 
     {
       provide: APP_INTERCEPTOR,
-      useClass: ResponseInterceptorV2,
+      useClass: ResponseInterceptor,
+    },
+
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: SampleResponseInterceptor,
     },
 
     {

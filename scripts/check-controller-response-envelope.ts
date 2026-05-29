@@ -76,7 +76,7 @@ for (const file of walk(modulesDir)) {
         expression.getStart(source),
       )
       violations.push(
-        `${relative(repoRoot, file)}:${line + 1}:${character + 1} return raw data directly, or use withMeta(data, meta) for response metadata. A literal containing a 'data' key will be double-wrapped by ResponseInterceptorV2.`,
+        `${relative(repoRoot, file)}:${line + 1}:${character + 1} return raw data directly, or use withMeta(data, meta) for response metadata. A literal containing a 'data' key will be double-wrapped by ResponseInterceptor.`,
       )
     }
 

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppException } from '~/common/errors/exception.types'
 import { AiService } from '~/modules/ai/ai.service'
-import { AIProviderType } from '~/modules/ai/ai.types'
+import { AIFeatureKey, AIProviderType } from '~/modules/ai/ai.types'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 // Mock the runtime factory
@@ -157,6 +157,55 @@ describe('AiService', () => {
       })
       const runtime = await service.getSummaryModel()
       expect(runtime.providerInfo.id).toBe('enabled-second')
+    })
+  })
+
+  describe('embedding model', () => {
+    it('reports unconfigured when no embedding assignment exists', async () => {
+      configsService.get.mockResolvedValueOnce({
+        ...mockAiConfig,
+        embeddingModel: undefined,
+      })
+
+      await expect(
+        service.hasFeatureModel(AIFeatureKey.Embedding),
+      ).resolves.toBe(false)
+    })
+
+    it('throws when resolving embedding without explicit assignment', async () => {
+      configsService.get.mockResolvedValueOnce({
+        ...mockAiConfig,
+        embeddingModel: undefined,
+      })
+
+      await expect(service.getEmbeddingModel()).rejects.toBeInstanceOf(
+        AppException,
+      )
+    })
+
+    it('does not fallback when embedding assignment points to a missing provider', async () => {
+      configsService.get.mockResolvedValueOnce({
+        ...mockAiConfig,
+        embeddingModel: { providerId: 'missing' },
+      })
+
+      await expect(
+        service.hasFeatureModel(AIFeatureKey.Embedding),
+      ).resolves.toBe(false)
+      await expect(service.getEmbeddingModel()).rejects.toBeInstanceOf(
+        AppException,
+      )
+    })
+
+    it('uses the configured embedding assignment', async () => {
+      configsService.get.mockResolvedValueOnce({
+        ...mockAiConfig,
+        embeddingModel: { providerId: 'main', model: 'text-embedding-3-small' },
+      })
+
+      const runtime = await service.getEmbeddingModel()
+      expect(runtime.providerInfo.id).toBe('main')
+      expect(runtime.providerInfo.model).toBe('text-embedding-3-small')
     })
   })
 })

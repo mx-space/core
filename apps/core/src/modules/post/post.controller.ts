@@ -38,6 +38,7 @@ import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
+import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
 import { EnrichmentService } from '../enrichment/enrichment.service'
 import {
   CategoryAndSlugDto,
@@ -66,6 +67,7 @@ export class PostController {
     private readonly countingService: CountingService,
     private readonly translationService: TranslationService,
     private readonly aiInsightsService: AiInsightsService,
+    private readonly aiSummaryService: AiSummaryService,
     private readonly enrichmentService: EnrichmentService,
     private readonly translationEntryService: TranslationEntryService,
   ) {}
@@ -306,25 +308,34 @@ export class PostController {
       .filter((id): id is string => Boolean(id))
 
     const insightsLang = parseLanguageCode(lang)
-    const [translationResult, relatedTitleMap, entryMaps, hasInsightsInLocale] =
-      await Promise.all([
-        this.translationService.translateArticle({
-          articleId: postDocument.id,
-          targetLang: lang,
-          allowHidden: Boolean(isAuthenticated),
-          originalData: {
-            title: postDocument.title,
-            text: postDocument.text,
-            summary: postDocument.summary,
-            tags: postDocument.tags,
-          },
-        }),
-        this.translationService.getCachedTitles(relatedIds, lang),
-        this.batchCategoryEntryTranslations(lang ?? '', [postDocument]),
-        this.aiInsightsService
-          .hasInsightsInLang(postDocument.id, insightsLang)
-          .catch(() => false),
-      ])
+    const [
+      translationResult,
+      relatedTitleMap,
+      entryMaps,
+      hasInsightsInLocale,
+      summaryDoc,
+    ] = await Promise.all([
+      this.translationService.translateArticle({
+        articleId: postDocument.id,
+        targetLang: lang,
+        allowHidden: Boolean(isAuthenticated),
+        originalData: {
+          title: postDocument.title,
+          text: postDocument.text,
+          summary: postDocument.summary,
+          tags: postDocument.tags,
+        },
+      }),
+      this.translationService.getCachedTitles(relatedIds, lang),
+      this.batchCategoryEntryTranslations(lang ?? '', [postDocument]),
+      this.aiInsightsService
+        .hasInsightsInLang(postDocument.id, insightsLang)
+        .catch(() => false),
+      this.aiSummaryService.getSummaryForPublicMeta(
+        postDocument.id,
+        insightsLang,
+      ),
+    ])
 
     applyArticleTranslationInPlace(
       postDocument as Record<string, any>,
@@ -357,6 +368,15 @@ export class PostController {
       .related(translatedRelated)
       .insights({ hasInLocale: hasInsightsInLocale })
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
+
+    if (summaryDoc) {
+      metaBuilder.summary({
+        id: summaryDoc.id,
+        text: summaryDoc.summary,
+        lang: summaryDoc.lang ?? insightsLang,
+        createdAt: summaryDoc.createdAt,
+      })
+    }
 
     const translationMap = new Map([
       [

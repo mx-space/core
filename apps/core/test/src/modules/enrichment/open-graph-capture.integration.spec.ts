@@ -18,7 +18,6 @@ import { EnrichmentRepository } from '~/modules/enrichment/enrichment.repository
 import { EnrichmentService } from '~/modules/enrichment/enrichment.service'
 import { EnrichmentCaptureRepository } from '~/modules/enrichment/enrichment-capture.repository'
 import { BrowserFetchService } from '~/modules/enrichment/providers/open-graph/browser-fetch.service'
-import { BrowserSessionPool } from '~/modules/enrichment/providers/open-graph/browser-session-pool'
 import {
   CapturePipelineService,
   type ProcessedCapture,
@@ -26,6 +25,7 @@ import {
 import { CaptureStorageService } from '~/modules/enrichment/providers/open-graph/capture-storage.service'
 import { OpenGraphProvider } from '~/modules/enrichment/providers/open-graph/open-graph.provider'
 import { ProviderRegistry } from '~/modules/enrichment/providers/provider.registry'
+import { AgentBrowserSessionPool as BrowserSessionPool } from '~/processors/agent-browser/agent-browser-pool.service'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 import type { S3Uploader } from '~/utils/s3.util'
 
@@ -213,7 +213,7 @@ describe('OpenGraph capture integration', () => {
       getOnlineImageSizeAndMeta: vi.fn(async () => ({
         size: { width: 0, height: 0 },
         accent: '#000000',
-        blurHash: '',
+        thumbhash: '',
       })),
     } as any
 

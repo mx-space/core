@@ -12,7 +12,7 @@ import {
 } from '~/common/zod'
 import { createPagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
-import { ImageSchema } from '~/shared/schema/image.schema'
+import { ImageArraySchema } from '~/shared/schema/image.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
@@ -33,7 +33,7 @@ export const PostSchema = WriteBaseSchema.extend({
     zCoerceInt.min(0).optional(),
   ),
   relatedId: z.array(zEntityId).optional(),
-  images: z.array(ImageSchema).optional(),
+  images: ImageArraySchema.optional(),
   /** ID of the associated draft; marked as published when this post is published */
   draftId: zEntityId.optional(),
 })

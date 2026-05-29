@@ -1,5 +1,5 @@
-import { decode } from 'blurhash'
 import sharp from 'sharp'
+import { thumbHashToRGBA } from 'thumbhash'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { CapturePipelineService } from '~/modules/enrichment/providers/open-graph/capture-pipeline.service'
@@ -105,8 +105,8 @@ describe('CapturePipelineService', () => {
     expect(result!.width).toBe(1280)
     expect(result!.height).toBe(720)
     expect(result!.palette.dominant).toMatch(HEX_RE)
-    expect(result!.blurhash).toBeTypeOf('string')
-    expect(result!.blurhash.length).toBeGreaterThan(0)
+    expect(result!.thumbhash).toBeTypeOf('string')
+    expect(result!.thumbhash.length).toBeGreaterThan(0)
   })
 
   it('clamps oversized input to <=1280 / <=720', async () => {
@@ -132,18 +132,20 @@ describe('CapturePipelineService', () => {
     }
   })
 
-  it('produces a blurhash that decodes to a non-trivial canvas', async () => {
+  it('produces a thumbhash that decodes to a non-trivial RGBA', async () => {
     const result = await service.process(multiColor1280, {
       webpQuality: 75,
       maxBytesPerImage: 1024 * 1024,
     })
     expect(result).not.toBeNull()
-    const decoded = decode(result!.blurhash, 32, 32)
-    // 32 * 32 RGBA = 4096 bytes
-    expect(decoded).toBeInstanceOf(Uint8ClampedArray)
-    expect(decoded.length).toBe(32 * 32 * 4)
-    const nonZero = decoded.some((v) => v !== 0)
-    expect(nonZero).toBe(true)
+    const u8 = Uint8Array.from(atob(result!.thumbhash), (c) => c.charCodeAt(0))
+    const decoded = thumbHashToRGBA(u8)
+    expect(decoded.w).toBeGreaterThan(0)
+    expect(decoded.h).toBeGreaterThan(0)
+    expect(decoded.rgba.length).toBe(decoded.w * decoded.h * 4)
+    const first = decoded.rgba[0]
+    const variance = decoded.rgba.some((v) => v !== first)
+    expect(variance).toBe(true)
   })
 
   it('returns null when even the retry-quality webp exceeds the byte cap', async () => {

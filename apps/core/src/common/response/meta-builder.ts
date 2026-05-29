@@ -6,6 +6,7 @@ import type {
   InteractionMeta,
   RelatedRef,
   ResponseMeta,
+  SummaryMeta,
 } from './meta.types'
 import { ResponseMetaSchema } from './meta.types'
 
@@ -77,6 +78,11 @@ export class MetaObjectBuilder {
 
   insights(value: InsightsMeta): this {
     this.meta.insights = value
+    return this
+  }
+
+  summary(value: SummaryMeta): this {
+    this.meta.summary = value
     return this
   }
 

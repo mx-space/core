@@ -41,6 +41,18 @@ export class AiService {
     return this.getModelWithInfoForFeature(AIFeatureKey.Translation)
   }
 
+  public async getTranslationReviewModel(): Promise<IModelRuntime> {
+    const aiConfig = await this.configService.get('ai')
+    const assignment = this.getAssignment(
+      aiConfig,
+      AIFeatureKey.TranslationReview,
+    )
+    if (!assignment) {
+      return this.getTranslationModel()
+    }
+    return this.getModelForFeature(AIFeatureKey.TranslationReview)
+  }
+
   public async getInsightsModel(): Promise<IModelRuntime> {
     return this.getModelForFeature(AIFeatureKey.Insights)
   }
@@ -63,7 +75,13 @@ export class AiService {
   }
 
   public async getEmbeddingModel(): Promise<IModelRuntime> {
-    return this.getModelForFeature(AIFeatureKey.Embedding)
+    const aiConfig = await this.configService.get('ai')
+    const assignment = this.getAssignment(aiConfig, AIFeatureKey.Embedding)
+    const provider = this.resolveAssignedProvider(aiConfig, assignment)
+    if (!provider) {
+      throw createAppException(AppErrorCode.AI_EMBEDDING_MODEL_NOT_CONFIGURED)
+    }
+    return createModelRuntime(provider, assignment?.model)
   }
 
   public async getPersonaDistillModel(): Promise<IModelRuntime> {
@@ -78,6 +96,9 @@ export class AiService {
   public async hasFeatureModel(feature: AIFeatureKey): Promise<boolean> {
     const aiConfig = await this.configService.get('ai')
     const assignment = this.getAssignment(aiConfig, feature)
+    if (feature === AIFeatureKey.Embedding) {
+      return Boolean(this.resolveAssignedProvider(aiConfig, assignment))
+    }
     return Boolean(this.resolveProvider(aiConfig, assignment?.providerId))
   }
 
@@ -134,6 +155,7 @@ export class AiService {
       [AIFeatureKey.Writer]: 'writerModel',
       [AIFeatureKey.CommentReview]: 'commentReviewModel',
       [AIFeatureKey.Translation]: 'translationModel',
+      [AIFeatureKey.TranslationReview]: 'translationReviewModel',
       [AIFeatureKey.Insights]: 'insightsModel',
       [AIFeatureKey.InsightsTranslation]: 'insightsTranslationModel',
       [AIFeatureKey.Echo]: 'echoModel',
@@ -161,5 +183,19 @@ export class AiService {
 
     // Fallback to first enabled provider
     return config.providers.find((p) => p.enabled) || null
+  }
+
+  private resolveAssignedProvider(
+    config: AIConfig,
+    assignment?: AIModelAssignment,
+  ): AIProviderConfig | null {
+    if (!assignment?.providerId || !config.providers?.length) {
+      return null
+    }
+    return (
+      config.providers.find(
+        (provider) => provider.id === assignment.providerId && provider.enabled,
+      ) || null
+    )
   }
 }

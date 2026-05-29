@@ -231,7 +231,8 @@ export const make = (
       const raw = yield* api
         .raw(`/posts/get-url/${encodeURIComponent(slugOrId)}`)
         .pipe(Effect.mapError(mapApiError))
-      const path = (raw as { path?: string } | undefined)?.path
+      const env = raw as { data?: { path?: string }; path?: string } | undefined
+      const path = env?.data?.path ?? env?.path
       if (!path) {
         return yield* Effect.fail(
           new ResourceNotFound({
@@ -251,7 +252,8 @@ export const make = (
       if (isSnowflakeId(slugOrId)) return slugOrId
       const apiPath = yield* resolvePostReadPath(slugOrId)
       const raw = yield* api.raw(apiPath).pipe(Effect.mapError(mapApiError))
-      const id = (raw as { id?: string } | undefined)?.id
+      const env = raw as { data?: { id?: string }; id?: string } | undefined
+      const id = env?.data?.id ?? env?.id
       if (!id) {
         return yield* Effect.fail(
           new ResourceNotFound({

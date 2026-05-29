@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { zCoerceInt, zEntityId, zNonEmptyString, zPrefer } from '~/common/zod'
 import { WriteBaseSchema } from '~/shared/schema'
-import { ImageSchema } from '~/shared/schema/image.schema'
+import { ImageArraySchema } from '~/shared/schema/image.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
@@ -17,7 +17,7 @@ export const PageSchema = WriteBaseSchema.extend({
       typeof val === 'string' ? Number.parseInt(val, 10) : (val as number),
     z.number().int().min(0).default(1),
   ),
-  images: z.array(ImageSchema).optional(),
+  images: ImageArraySchema.optional(),
   /** ID of the associated draft; marked as published when this page is published */
   draftId: zEntityId.optional(),
 })

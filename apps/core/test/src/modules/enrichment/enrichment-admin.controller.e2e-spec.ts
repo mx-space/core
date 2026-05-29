@@ -37,7 +37,7 @@ const baseCaptureRow = {
   bytes: 2048,
   width: 1280,
   height: 720,
-  blurhash: 'LKO2?U%2',
+  thumbhash: 'LKO2?U%2',
   palette: { dominant: '#112233' },
   createdAt: new Date('2026-01-01T00:00:00Z'),
   lastAccessedAt: new Date('2026-01-01T00:00:00Z'),
@@ -152,7 +152,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
           bytes: 2048,
           width: 1280,
           height: 720,
-          blurhash: null,
+          thumbhash: null,
           palette: null,
           createdAt: new Date('2026-01-01T00:00:00Z'),
           lastAccessedAt: new Date('2026-01-01T00:00:00Z'),
@@ -334,7 +334,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
       url: 'https://cdn.example.test/enrichment-captures/row-1.webp',
       width: 1280,
       height: 720,
-      blurhash: 'L_X',
+      thumbhash: 'L_X',
     }
     enrichmentRepositoryMock.findById
       .mockResolvedValueOnce(baseRow)

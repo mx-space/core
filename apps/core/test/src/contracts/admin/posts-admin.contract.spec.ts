@@ -18,6 +18,7 @@ import { describe, expect, test } from 'vitest'
 
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
+import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { PostController } from '~/modules/post/post.controller'
 import { PostService } from '~/modules/post/post.service'
 
@@ -106,6 +107,15 @@ const aiInsightsProvider = {
   },
 }
 
+const aiSummaryProvider = {
+  provide: AiSummaryService,
+  useValue: {
+    async getSummaryForPublicMeta() {
+      return null
+    },
+  },
+}
+
 // Keys (snake_case post-interceptor) the admin list dereferences directly.
 const POST_LIST_REQUIRED_KEYS = [
   'id',
@@ -144,6 +154,7 @@ describe('PostController admin contract (e2e)', () => {
       translationEntryProvider,
       enrichmentProvider,
       aiInsightsProvider,
+      aiSummaryProvider,
     ],
   })
 

@@ -30,7 +30,6 @@ import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { ConfigsService } from '../configs/configs.service'
 import { ReaderService } from '../reader/reader.service'
-import { CommentState } from './comment.enum'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
 import { CommentLifecycleService } from './comment.lifecycle.service'
 import {
@@ -101,11 +100,9 @@ export class CommentController {
       throw createAppException(AppErrorCode.COMMENT_FORBIDDEN)
     }
 
-    const isLoggedInComment = RequestContext.hasReaderIdentity()
     const model: Partial<CommentModel> = {
       ...body,
       ...ipLocation,
-      state: isLoggedInComment ? CommentState.Read : CommentState.Unread,
     }
 
     const comment = await this.commentService.replyComment(params.id, model)

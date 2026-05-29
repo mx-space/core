@@ -22,7 +22,7 @@ export interface ImageModel {
   accent?: string
   type?: string
   src?: string
-  blurHash?: string
+  thumbhash?: string
 }
 
 export interface WriteBaseModel extends BaseCommentIndexModel {

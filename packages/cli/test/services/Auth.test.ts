@@ -270,7 +270,7 @@ describe('Auth.probe', () => {
       return yield* auth.probe('https://blog.example.com')
     })
     const res = await Effect.runPromise(Effect.provide(program, layer))
-    expect(res.authBase).toBe('https://blog.example.com/auth')
+    expect(res.authBase).toBe('https://blog.example.com/api/v2/auth')
   })
 
   itVitest('uses ResponseError responses as probe responses', async () => {
@@ -283,7 +283,7 @@ describe('Auth.probe', () => {
       return yield* auth.probe('https://blog.example.com')
     })
     const res = await Effect.runPromise(Effect.provide(program, layer))
-    expect(res.authBase).toBe('https://blog.example.com/api/v2/auth')
+    expect(res.authBase).toBe('https://blog.example.com/api/v3/auth')
   })
 })
 

@@ -71,11 +71,14 @@ describe('migration — enrichment_captures', () => {
       nullable: 'NO',
       default: null,
     })
-    expect(byName.get('blurhash')).toEqual({
+    // 0015 migration renamed `blurhash` → `thumbhash`. The capture table's
+    // placeholder column is now exposed as `thumbhash` (still nullable text).
+    expect(byName.get('thumbhash')).toEqual({
       type: 'text',
       nullable: 'YES',
       default: null,
     })
+    expect(byName.has('blurhash')).toBe(false)
     expect(byName.get('palette')).toEqual({
       type: 'jsonb',
       nullable: 'YES',
@@ -140,7 +143,7 @@ describe('migration — enrichment_captures', () => {
       bytes: 12345,
       width: 1280,
       height: 720,
-      blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
+      thumbhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
       palette,
     })
 

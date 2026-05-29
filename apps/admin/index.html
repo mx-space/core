@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
+    />
+    <script type="module">
+      import favicon from './favicon.png'
+
+      const link = document.createElement('link')
+      link.rel = 'icon'
+      link.href = favicon
+      document.head.appendChild(link)
+    </script>
+    <title>Mx Space Admin</title>
+    <script>
+      window.injectData = {}
+      window.version = 'N/A'
+      window.pageSource = 'self'
+    </script>
+    <!-- ENV INJECT -->
+    <!-- MX SPACE ADMIN DASHBOARD VERSION INJECT -->
+    <!-- injectable script -->
+  </head>
+
+  <body>
+    <div id="app">
+      <!-- Initial Loading State -->
+      <div id="initial-loader">
+        <div class="loader-content">
+          <div class="loader-spinner">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <style>
+        #initial-loader {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #ffffff;
+          transition: opacity 0.2s ease-out;
+          z-index: 9999;
+        }
+        .dark #initial-loader {
+          background-color: #0a0a0a;
+        }
+        .loader-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+        }
+        .loader-spinner {
+          width: 32px;
+          height: 32px;
+          color: #171717;
+          animation: spin 1s linear infinite;
+        }
+        .dark .loader-spinner {
+          color: #ededed;
+        }
+        .loader-spinner svg {
+          width: 100%;
+          height: 100%;
+        }
+
+        .dark .loader-text {
+          color: #a3a3a3;
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        #initial-loader.fade-out {
+          opacity: 0;
+          pointer-events: none;
+        }
+      </style>
+    </div>
+    <noscript>
+      <strong
+        >We're sorry but MX Space Admin doesn't work properly without JavaScript
+        enabled. Please enable it to continue.</strong
+      >
+      <strong>
+        It may be a network problem that caused the failure to load the JS file.
+      </strong>
+    </noscript>
+    <script>
+      // Initialize theme before the application loads to prevent flash
+      ;(function () {
+        var themeMode = localStorage.getItem('theme-mode')
+        // Remove quotes if stored as JSON string
+        if (themeMode) {
+          themeMode = themeMode.replace(/^"|"$/g, '')
+        }
+        var isDark = false
+        if (themeMode === 'dark') {
+          isDark = true
+        } else if (themeMode === 'system' || !themeMode) {
+          isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        }
+        if (isDark) {
+          document.documentElement.classList.add('dark')
+        }
+      })()
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

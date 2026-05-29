@@ -4,6 +4,7 @@ import { AggregateController } from './aggregate'
 import { AIController } from './ai'
 import { CategoryController } from './category'
 import { CommentController } from './comment'
+import { EnrichmentController } from './enrichment'
 import { LinkController } from './link'
 import type {
   NoteMiddleListOptions,
@@ -35,6 +36,7 @@ export const allControllers = [
   AIController,
   CategoryController,
   CommentController,
+  EnrichmentController,
   LinkController,
   NoteController,
   PageController,
@@ -57,6 +59,7 @@ export const allControllerNames = [
   'aggregate',
   'category',
   'comment',
+  'enrichment',
   'link',
   'note',
   'page',
@@ -83,6 +86,7 @@ export {
   AIController,
   CategoryController,
   CommentController,
+  EnrichmentController,
   LinkController,
   NoteController,
   PageController,

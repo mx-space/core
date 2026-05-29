@@ -17,7 +17,7 @@ export interface EnrichmentCaptureRow {
   bytes: number
   width: number
   height: number
-  blurhash: string | null
+  thumbhash: string | null
   palette: EnrichmentImagePalette | null
   createdAt: Date
   lastAccessedAt: Date
@@ -33,7 +33,7 @@ export interface EnrichmentCaptureJoinedRow {
   bytes: number
   width: number
   height: number
-  blurhash: string | null
+  thumbhash: string | null
   palette: EnrichmentImagePalette | null
   createdAt: Date
   lastAccessedAt: Date
@@ -48,7 +48,7 @@ export interface EnrichmentCaptureInsert {
   bytes: number
   width: number
   height: number
-  blurhash?: string | null
+  thumbhash?: string | null
   palette?: EnrichmentImagePalette | null
 }
 
@@ -83,7 +83,7 @@ export class EnrichmentCaptureRepository extends BaseRepository {
         bytes: input.bytes,
         width: input.width,
         height: input.height,
-        blurhash: input.blurhash ?? null,
+        thumbhash: input.thumbhash ?? null,
         palette: input.palette ?? null,
       })
       .onConflictDoUpdate({
@@ -93,7 +93,7 @@ export class EnrichmentCaptureRepository extends BaseRepository {
           bytes: sql`excluded.bytes`,
           width: sql`excluded.width`,
           height: sql`excluded.height`,
-          blurhash: sql`excluded.blurhash`,
+          thumbhash: sql`excluded.thumbhash`,
           palette: sql`excluded.palette`,
           lastAccessedAt: sql`now()`,
         },
@@ -147,7 +147,7 @@ export class EnrichmentCaptureRepository extends BaseRepository {
         bytes: enrichmentCaptures.bytes,
         width: enrichmentCaptures.width,
         height: enrichmentCaptures.height,
-        blurhash: enrichmentCaptures.blurhash,
+        thumbhash: enrichmentCaptures.thumbhash,
         palette: enrichmentCaptures.palette,
         createdAt: enrichmentCaptures.createdAt,
         lastAccessedAt: enrichmentCaptures.lastAccessedAt,
@@ -177,7 +177,7 @@ export class EnrichmentCaptureRepository extends BaseRepository {
         bytes: r.bytes,
         width: r.width,
         height: r.height,
-        blurhash: r.blurhash,
+        thumbhash: r.thumbhash,
         palette: r.palette,
         createdAt: r.createdAt,
         lastAccessedAt: r.lastAccessedAt,
@@ -220,7 +220,7 @@ export class EnrichmentCaptureRepository extends BaseRepository {
       bytes: row.bytes,
       width: row.width,
       height: row.height,
-      blurhash: row.blurhash,
+      thumbhash: row.thumbhash,
       palette: row.palette,
       createdAt: row.createdAt,
       lastAccessedAt: row.lastAccessedAt,

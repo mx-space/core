@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { encode } from 'blurhash'
 import sharp from 'sharp'
+import { rgbaToThumbHash } from 'thumbhash'
 
 export interface CapturePalette {
   dominant: string // #RRGGBB
@@ -11,7 +11,7 @@ export interface ProcessedCapture {
   webp: Buffer
   width: number
   height: number
-  blurhash: string
+  thumbhash: string
   palette: CapturePalette
 }
 
@@ -29,10 +29,8 @@ const SWATCH_BUCKET_SIZE = 256 / SWATCH_BUCKETS_PER_CHANNEL // 8
 const SWATCH_DOWNSCALE = 64
 const SWATCH_TOP_COUNT = 3
 
-// Blurhash sample size mirrors `helper.image.service.ts`.
-const BLURHASH_SIZE = 32
-const BLURHASH_COMP_X = 4
-const BLURHASH_COMP_Y = 4
+// Thumbhash pre-resize cap mirrors `helper.image.service.ts`.
+const THUMBHASH_MAX_DIM = 100
 
 // Single retry, lower quality, before dropping the capture entirely.
 const QUALITY_RETRY_STEP = 15
@@ -50,7 +48,7 @@ export class CapturePipelineService {
     input: Buffer,
     opts: ProcessOptions,
   ): Promise<ProcessedCapture | null> {
-    // Reused sharp instance for everything except the swatch/blurhash clones,
+    // Reused sharp instance for everything except the swatch/thumbhash clones,
     // which need their own raw pipelines. Note that `.metadata()` on a
     // pipeline reflects the SOURCE image, not the resized output — so we
     // capture the post-resize dimensions from the webp encode's
@@ -68,7 +66,7 @@ export class CapturePipelineService {
       ? { dominant: dominantHex, swatches }
       : { dominant: dominantHex }
 
-    const blurhash = await encodeBlurhash(sharped)
+    const thumbhash = await encodeThumbhash(sharped)
 
     const encoded = await encodeWebpWithRetry(
       sharped,
@@ -90,7 +88,7 @@ export class CapturePipelineService {
       return null
     }
 
-    return { webp, width, height, blurhash, palette }
+    return { webp, width, height, thumbhash, palette }
   }
 }
 
@@ -171,20 +169,15 @@ function euclideanDistance(
   return Math.sqrt(dr * dr + dg * dg + db * db)
 }
 
-async function encodeBlurhash(source: sharp.Sharp): Promise<string> {
+async function encodeThumbhash(source: sharp.Sharp): Promise<string> {
   const { data, info } = await source
     .clone()
     .raw()
     .ensureAlpha()
-    .resize(BLURHASH_SIZE, BLURHASH_SIZE, { fit: 'inside' })
+    .resize(THUMBHASH_MAX_DIM, THUMBHASH_MAX_DIM, { fit: 'inside' })
     .toBuffer({ resolveWithObject: true })
-  return encode(
-    new Uint8ClampedArray(data),
-    info.width,
-    info.height,
-    BLURHASH_COMP_X,
-    BLURHASH_COMP_Y,
-  )
+  const u8 = rgbaToThumbHash(info.width, info.height, data)
+  return Buffer.from(u8).toString('base64')
 }
 
 async function encodeWebpWithRetry(

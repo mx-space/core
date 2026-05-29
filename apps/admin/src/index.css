@@ -1,0 +1,395 @@
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;1,300&display=swap');
+@import 'tailwindcss';
+@import 'sonner/dist/styles.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-neutral-200, currentColor);
+  }
+  :where(.dark, .dark *) {
+    border-color: var(--color-neutral-800, currentColor);
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-neutral-400);
+  }
+  :where(.dark, .dark *) input::placeholder,
+  :where(.dark, .dark *) textarea::placeholder {
+    color: var(--color-neutral-500);
+  }
+}
+
+body,
+html {
+  margin: 0;
+  font-size: 14px !important;
+  padding: 0;
+
+  --sans-font:
+    'Segoe UI', 'Helvetica Neue', sans-serif, -apple-system, system-ui;
+
+  font-family: var(--sans-font);
+  background: var(--page-bg);
+}
+
+body {
+  min-height: 100vh;
+  background: var(--page-bg);
+
+  @apply overflow-hidden;
+}
+
+@layer base {
+  body a {
+    color: var(--color-primary);
+    transition: color 0.15s ease;
+    text-decoration: none;
+  }
+
+  body a:hover {
+    color: var(--color-primary-shallow);
+  }
+
+  /* 按钮样式重置 - 针对自定义按钮组件 */
+  button:focus,
+  button {
+    outline: unset;
+  }
+
+  button {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 5px;
+}
+
+html:not(.dark) *::-webkit-scrollbar-thumb {
+  background-color: rgba(115, 115, 115, 0.4);
+}
+
+html:not(.dark) *::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(115, 115, 115, 0.6);
+}
+
+html.dark *::-webkit-scrollbar-thumb {
+  background-color: rgba(163, 163, 163, 0.3);
+}
+
+html.dark *::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(163, 163, 163, 0.5);
+}
+
+html:not(.dark) *::-webkit-scrollbar-corner {
+  background: #f5f5f5;
+}
+
+html.dark *::-webkit-scrollbar-corner {
+  background: #171717;
+}
+
+/* Sonner toast styles - Vercel-minimal redesign */
+[data-sonner-toaster] {
+  font-family: var(--sans-font) !important;
+  --width: 360px;
+}
+
+/* Base toast — flex row, hairline border, single soft shadow with top inner highlight */
+[data-sonner-toast].sonner-toast {
+  align-items: flex-start !important;
+  padding: 12px 14px !important;
+  border-radius: 10px !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  font-family: var(--sans-font) !important;
+  font-feature-settings: 'cv11', 'ss01' !important;
+  gap: 10px !important;
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s !important;
+}
+
+html:not(.dark) [data-sonner-toast].sonner-toast {
+  background: #ffffff !important;
+  border-color: var(--color-neutral-200) !important;
+  color: var(--color-neutral-900) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 10px 30px -10px rgba(0, 0, 0, 0.1),
+    0 2px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.dark [data-sonner-toast].sonner-toast {
+  background: #141414 !important;
+  border-color: var(--color-neutral-800) !important;
+  color: var(--color-neutral-100) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 30px -10px rgba(0, 0, 0, 0.55),
+    0 2px 6px -2px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Icon container — 24x24 rounded square with faint state tint, sits on first text line */
+[data-sonner-toast] [data-icon] {
+  width: 24px !important;
+  height: 24px !important;
+  margin: -2px 0 0 !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+[data-sonner-toast] [data-icon] svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* State tints + icon stroke — low-saturation 600 series */
+[data-sonner-toast][data-type='success'] [data-icon] {
+  background: rgba(5, 150, 105, 0.1) !important;
+}
+[data-sonner-toast][data-type='success'] [data-icon] svg {
+  color: #059669 !important;
+}
+
+[data-sonner-toast][data-type='error'] [data-icon] {
+  background: rgba(220, 38, 38, 0.1) !important;
+}
+[data-sonner-toast][data-type='error'] [data-icon] svg {
+  color: #dc2626 !important;
+}
+
+[data-sonner-toast][data-type='warning'] [data-icon] {
+  background: rgba(217, 119, 6, 0.1) !important;
+}
+[data-sonner-toast][data-type='warning'] [data-icon] svg {
+  color: #d97706 !important;
+}
+
+[data-sonner-toast][data-type='info'] [data-icon] {
+  background: rgba(2, 132, 199, 0.1) !important;
+}
+[data-sonner-toast][data-type='info'] [data-icon] svg {
+  color: #0284c7 !important;
+}
+
+/* Loading uses neutral tint (state-agnostic) */
+html:not(.dark) [data-sonner-toast][data-type='loading'] [data-icon] {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+html.dark [data-sonner-toast][data-type='loading'] [data-icon] {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+html:not(.dark) [data-sonner-toast][data-type='loading'] [data-icon] svg {
+  color: var(--color-neutral-900, #171717) !important;
+}
+html.dark [data-sonner-toast][data-type='loading'] [data-icon] svg {
+  color: var(--color-neutral-100, #fafafa) !important;
+}
+
+/* Title — 13.5/600 with tighter tracking, locked to 20px line for baseline grid */
+.sonner-title {
+  margin: 0 !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  line-height: 20px !important;
+  letter-spacing: -0.005em !important;
+}
+
+html:not(.dark) .sonner-title {
+  color: var(--color-neutral-950) !important;
+}
+
+html.dark .sonner-title {
+  color: var(--color-neutral-50) !important;
+}
+
+/* Description — 12.5/18, neutral-600 / neutral-400 for stronger contrast than v1 */
+.sonner-description {
+  margin: 3px 0 0 !important;
+  font-size: 12.5px !important;
+  line-height: 18px !important;
+  letter-spacing: -0.003em !important;
+}
+
+html:not(.dark) .sonner-description {
+  color: var(--color-neutral-600) !important;
+}
+
+html.dark .sonner-description {
+  color: var(--color-neutral-400) !important;
+}
+
+/* Close button — 20x20, low-opacity until hover */
+[data-sonner-toast][data-styled='true'] [data-close-button] {
+  width: 20px !important;
+  height: 20px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  border-radius: 4px !important;
+  top: 10px !important;
+  right: 10px !important;
+  left: auto !important;
+  opacity: 0.4 !important;
+  transition:
+    opacity 0.15s,
+    background 0.15s,
+    color 0.15s !important;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  opacity: 1 !important;
+}
+
+html:not(.dark) [data-sonner-toast] [data-close-button] {
+  color: var(--color-neutral-600) !important;
+}
+
+html:not(.dark) [data-sonner-toast] [data-close-button]:hover {
+  background: var(--color-neutral-100) !important;
+  color: var(--color-neutral-900) !important;
+}
+
+html.dark [data-sonner-toast] [data-close-button] {
+  color: var(--color-neutral-400) !important;
+}
+
+html.dark [data-sonner-toast] [data-close-button]:hover {
+  background: var(--color-neutral-800) !important;
+  color: var(--color-neutral-100) !important;
+}
+
+/* Action button — mirrors <Button variant="primary"> */
+.sonner-action-button {
+  margin-top: 8px !important;
+  height: 26px !important;
+  padding: 0 10px !important;
+  border-radius: 5px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.005em !important;
+  border: 0 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition:
+    background 0.15s,
+    color 0.15s !important;
+}
+
+html:not(.dark) .sonner-action-button {
+  background: var(--color-neutral-950) !important;
+  color: #ffffff !important;
+}
+
+html:not(.dark) .sonner-action-button:hover {
+  background: var(--color-neutral-800) !important;
+}
+
+html.dark .sonner-action-button {
+  background: var(--color-neutral-50) !important;
+  color: var(--color-neutral-950) !important;
+}
+
+html.dark .sonner-action-button:hover {
+  background: var(--color-neutral-200) !important;
+}
+
+/* Cancel button — mirrors <Button variant="subtle"> */
+.sonner-cancel-button {
+  margin-top: 8px !important;
+  height: 26px !important;
+  padding: 0 10px !important;
+  border-radius: 5px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.005em !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition:
+    background 0.15s !important;
+}
+
+html:not(.dark) .sonner-cancel-button {
+  background: #ffffff !important;
+  border: 1px solid var(--color-neutral-200) !important;
+  color: var(--color-neutral-700) !important;
+}
+
+html:not(.dark) .sonner-cancel-button:hover {
+  background: var(--color-neutral-50) !important;
+}
+
+html.dark .sonner-cancel-button {
+  background: var(--color-neutral-950) !important;
+  border: 1px solid var(--color-neutral-800) !important;
+  color: var(--color-neutral-200) !important;
+}
+
+html.dark .sonner-cancel-button:hover {
+  background: var(--color-neutral-900) !important;
+}
+
+/* Mobile — shrink to viewport with 16px gutters */
+@media (max-width: 768px) {
+  [data-sonner-toaster] {
+    --width: calc(100vw - 32px) !important;
+  }
+}
+
+.modal-card {
+  @apply !w-[60rem] !max-w-[90vw];
+
+  &.sm {
+    @apply !w-[40rem];
+  }
+
+  &.xs {
+    @apply !w-[30rem];
+  }
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+[data-content-layout] [data-panel] {
+  transition: none;
+}

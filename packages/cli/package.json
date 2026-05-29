@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/cli",
-  "version": "0.6.6",
+  "version": "0.7.7",
   "description": "Command line interface for mx-space (mx-core) — auth, content, configuration",
   "keywords": [
     "mx-space",
@@ -64,26 +64,27 @@
     "@effect/cli": "0.75.1",
     "@effect/platform": "0.96.1",
     "@effect/platform-node": "0.106.0",
-    "@haklex/rich-headless": "0.13.0",
-    "@haklex/rich-litexml": "0.15.3",
-    "@haklex/rich-litexml-cli": "0.15.3",
+    "@haklex/rich-headless": "0.16.0",
+    "@haklex/rich-litexml": "0.16.0",
+    "@haklex/rich-litexml-cli": "0.16.0",
     "@lexical/headless": "^0.44.0",
     "@mx-space/api-client": "workspace:*",
-    "better-auth": "^1.6.9",
+    "better-auth": "^1.6.11",
     "effect": "3.21.2",
-    "fast-xml-parser": "4.5.6",
+    "fast-xml-parser": "5.8.0",
     "get-east-asian-width": "^1.6.0",
     "lexical": "^0.44.0",
+    "minisearch": "^7.2.0",
     "open": "^11.0.0",
-    "semver": "7.8.0"
+    "semver": "7.8.1"
   },
   "devDependencies": {
     "@effect/vitest": "0.29.0",
-    "@types/node": "25.8.0",
+    "@types/node": "25.9.1",
     "@types/semver": "7.7.1",
     "tsdown": "0.22.0",
-    "tsx": "^4.22.1",
+    "tsx": "^4.22.3",
     "typescript": "6.0.3",
-    "vitest": "4.1.6"
+    "vitest": "4.1.7"
   }
 }

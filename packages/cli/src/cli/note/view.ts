@@ -3,6 +3,7 @@ import {
   contentFormat,
   first,
   firstString,
+  formatScalar,
   pickArticleTranslationMeta,
   publishState,
   relationLabel,
@@ -10,6 +11,7 @@ import {
   renderContent,
   unwrapDocument,
 } from '../../services/Renderer/content'
+import { tryFormatTimestamp } from '../../services/Renderer/datetime'
 import type { View } from '../../services/Renderer/view'
 import { frontmatter, renderEnvelope, renderMetadataBlock } from '../render'
 
@@ -115,4 +117,76 @@ export const noteView: View<unknown> = {
       content: content.body,
     })
   },
+}
+
+const collectListItemFields = (
+  doc: Record<string, unknown>,
+  articleMeta?: Record<string, unknown>,
+): Array<[string, unknown]> => {
+  const meta = articleMeta ?? {}
+  return [
+    ['id', first(doc, 'id')],
+    ['nid', first(doc, 'nid')],
+    ['title', first(doc, 'title')],
+    ['slug', first(doc, 'slug')],
+    ['state', publishState(doc)],
+    ['topic', relationLabel(first(doc, 'topic'))],
+    ['mood', first(doc, 'mood')],
+    ['weather', first(doc, 'weather')],
+    ['bookmark', first(doc, 'bookmark')],
+    ['summary', first(doc, 'summary')],
+    ['public_at', first(doc, 'public_at', 'publicAt')],
+    ['created_at', first(doc, 'created_at', 'createdAt')],
+    ['modified_at', first(doc, 'modified_at', 'modifiedAt')],
+    [
+      'source_lang',
+      first(doc, 'source_lang', 'sourceLang') ??
+        first(meta, 'source_lang', 'sourceLang'),
+    ],
+    [
+      'translated',
+      first(doc, 'is_translated', 'isTranslated') ??
+        first(meta, 'is_translated', 'isTranslated'),
+    ],
+  ]
+}
+
+const renderNoteListReadable = (data: unknown): string => {
+  const payload = asRecord(data)
+  const rows = Array.isArray(payload.data)
+    ? (payload.data as unknown[])
+    : Array.isArray(data)
+      ? (data as unknown[])
+      : []
+  const meta = asRecord(first(payload, 'meta'))
+  const pagination = asRecord(first(meta, 'pagination'))
+  const lines = ['notes']
+  if (rows.length > 0) lines.push(`count: ${rows.length}`)
+  else lines.push('count: 0')
+  const page = first(pagination, 'page', 'currentPage')
+  const size = first(pagination, 'size', 'pageSize')
+  const total = first(pagination, 'total', 'totalCount', 'total_count')
+  if (page !== undefined) lines.push(`page: ${formatScalar(page)}`)
+  if (size !== undefined) lines.push(`size: ${formatScalar(size)}`)
+  if (total !== undefined) lines.push(`total: ${formatScalar(total)}`)
+  rows.forEach((row, index) => {
+    const doc = asRecord(row)
+    const articleMeta = pickArticleTranslationMeta(data, first(doc, 'id'))
+    lines.push('', `note ${index + 1}:`)
+    const fields = collectListItemFields(doc, articleMeta)
+    for (const [key, value] of fields) {
+      if (value === undefined || value === null || value === '') continue
+      if (key === 'translated' && value === false) continue
+      const rendered =
+        tryFormatTimestamp(value, { style: 'rel' }) ?? formatScalar(value)
+      lines.push(`${key}: ${rendered}`)
+    }
+  })
+  return lines.join('\n')
+}
+
+export const noteListView: View<unknown> = {
+  kind: 'note-list',
+  modes: new Set(['readable', 'llm']),
+  readable: (data) => renderNoteListReadable(data),
 }

@@ -6,6 +6,7 @@ import { del } from './delete'
 import { get } from './get'
 import { list } from './list'
 import { reject } from './reject'
+import { reply } from './reply'
 import { unread } from './unread'
 
 const help = registerCommandHelp({
@@ -24,6 +25,16 @@ const help = registerCommandHelp({
       description: 'alias for `list --state unread`',
     },
     { name: 'get', args: ['<id>'], description: 'show a single comment' },
+    {
+      name: 'reply',
+      args: [
+        '<id>',
+        '--text <inline|file=<path>|->',
+        '[--whispers]',
+        '[--silent]',
+      ],
+      description: 'post an owner reply to a comment',
+    },
     {
       name: 'approve',
       args: ['<id...>', '|', '--all', '[--state <s>]'],
@@ -44,5 +55,5 @@ const help = registerCommandHelp({
 
 export const commentCmd = Command.make('comment').pipe(
   Command.withDescription(help.description),
-  Command.withSubcommands([list, unread, get, approve, reject, del]),
+  Command.withSubcommands([list, unread, get, reply, approve, reject, del]),
 )

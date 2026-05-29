@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common'
 
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { throwIfAborted } from '~/utils/abort.util'
 import { extractDocumentContext } from '~/utils/content.util'
 import { md5 } from '~/utils/tool.util'
 
@@ -10,19 +9,28 @@ import type { IModelRuntime } from '../../runtime'
 import type { ArticleContent } from '../ai-translation.types'
 import type { AITranslationModel } from '../ai-translation.types-model'
 import {
-  type LexicalTranslationResult,
+  backfillReusableBlockTranslations,
+  guardMermaidTranslations,
+} from '../lexical-block-reuse'
+import {
   parseLexicalForTranslation,
-  type PropertySegment,
   restoreLexicalTranslation,
   type TranslationSegment,
 } from '../lexical-translation-parser'
-import { validateMermaidTranslation } from '../mermaid-translation-guard'
+import { TranslationReviewerService } from '../reviewer.service'
 import type {
   ITranslationStrategy,
+  PipelineMetrics,
   TranslationResult,
   TranslationStrategyOptions,
 } from '../translation-strategy.interface'
-import { BaseTranslationStrategy } from './base-translation-strategy'
+import {
+  BaseTranslationStrategy,
+  buildReviewerMetrics,
+  DEFAULT_REVIEW_SCORE_THRESHOLD,
+  emptyEditorMetrics,
+  emptyReviewerMetrics,
+} from './base-translation-strategy'
 
 interface TranslationUnit {
   id: string
@@ -34,11 +42,6 @@ interface TranslationUnit {
       }
   meta: string
   memberIds?: string[]
-}
-
-interface BlockTranslationSegments {
-  segments: TranslationSegment[]
-  propertySegments: PropertySegment[]
 }
 
 interface LexicalTranslationInput {
@@ -74,7 +77,10 @@ export class LexicalTranslationStrategy
   extends BaseTranslationStrategy
   implements ITranslationStrategy
 {
-  constructor(private readonly lexicalService: LexicalService) {
+  constructor(
+    private readonly lexicalService: LexicalService,
+    private readonly reviewerService: TranslationReviewerService,
+  ) {
     super(LexicalTranslationStrategy.name)
   }
 
@@ -85,7 +91,14 @@ export class LexicalTranslationStrategy
     info: { model: string; provider: string },
     options: TranslationStrategyOptions,
   ): Promise<TranslationResult> {
-    const { onToken, signal, existing } = options
+    const {
+      onToken,
+      signal,
+      existing,
+      reviewerRuntime,
+      reviewScoreThreshold,
+      metrics,
+    } = options
     const isLexical = content.contentFormat === ContentFormat.Lexical
     const existingBlockSnapshots = existing?.sourceBlockSnapshots as
       | LexicalSourceBlockSnapshot[]
@@ -104,6 +117,9 @@ export class LexicalTranslationStrategy
           existing!,
           onToken,
           signal,
+          reviewerRuntime,
+          reviewScoreThreshold,
+          metrics,
         )
       } catch (error: any) {
         if (error.name === 'AbortError') throw error
@@ -121,7 +137,120 @@ export class LexicalTranslationStrategy
       info,
       onToken,
       signal,
+      reviewerRuntime,
+      reviewScoreThreshold,
+      metrics,
     )
+  }
+
+  private async runReviewAndEdit(
+    targetLang: string,
+    translatorRuntime: IModelRuntime,
+    reviewerRuntime: IModelRuntime,
+    allTranslations: Map<string, string>,
+    writtenIds: readonly string[],
+    scoreThreshold: number,
+    signal?: AbortSignal,
+    metrics?: PipelineMetrics,
+  ): Promise<void> {
+    if (writtenIds.length === 0) {
+      if (metrics) {
+        metrics.reviewer = emptyReviewerMetrics('no-changed-segments')
+        metrics.editor = emptyEditorMetrics('no-changed-segments')
+      }
+      return
+    }
+
+    const fullTranslations: Record<string, string> = {}
+    for (const [id, text] of allTranslations) {
+      fullTranslations[id] = text
+    }
+
+    const reviewerStart = Date.now()
+    const review = await this.reviewerService.callReviewer(
+      reviewerRuntime,
+      targetLang,
+      { allowedIds: [...writtenIds], fullTranslations },
+      signal,
+    )
+    const reviewerMs = Date.now() - reviewerStart
+
+    if (!review) {
+      this.logger.warn('Reviewer returned null; persisting writer output as-is')
+      if (metrics) {
+        metrics.reviewer = {
+          ...emptyReviewerMetrics('reviewer-failed'),
+          invoked: true,
+          durationMs: reviewerMs,
+        }
+        metrics.editor = emptyEditorMetrics('reviewer-failed')
+      }
+      return
+    }
+
+    if (review.score >= scoreThreshold || review.issues.length === 0) {
+      this.logger.log(
+        `Review pass: score=${review.score} issues=${review.issues.length}; edit skipped`,
+      )
+      if (metrics) {
+        metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
+        metrics.editor = emptyEditorMetrics(
+          review.issues.length === 0 ? 'empty-issues' : 'score-above-threshold',
+        )
+      }
+      return
+    }
+
+    const editorStart = Date.now()
+    const editor = await this.callEditor(
+      targetLang,
+      { fullTranslations, issues: review.issues },
+      translatorRuntime,
+      signal,
+    )
+    const editorMs = Date.now() - editorStart
+
+    const patchKeysApplied: string[] = []
+    const patchKeysDropped: string[] = []
+    const patchKeysRequested = editor ? Object.keys(editor.patches) : []
+    const patches: Array<{ id: string; before: string; after: string }> = []
+
+    if (editor) {
+      const allowedSet = new Set(writtenIds)
+      for (const [id, patched] of Object.entries(editor.patches)) {
+        if (allowedSet.has(id) && allTranslations.has(id)) {
+          const before = allTranslations.get(id) ?? ''
+          allTranslations.set(id, patched)
+          patchKeysApplied.push(id)
+          patches.push({ id, before, after: patched })
+        } else {
+          patchKeysDropped.push(id)
+        }
+      }
+      if (patchKeysDropped.length > 0) {
+        this.logger.warn(
+          `Editor produced ${patchKeysDropped.length} out-of-set patches: ${patchKeysDropped.slice(0, 5).join(', ')}`,
+        )
+      }
+      this.logger.log(
+        `Edit applied: ${patchKeysApplied.length}/${review.issues.length} issues addressed`,
+      )
+    } else {
+      this.logger.warn('Editor returned null; persisting writer output as-is')
+    }
+
+    if (metrics) {
+      metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
+      metrics.editor = {
+        invoked: !!editor,
+        durationMs: editorMs,
+        skippedReason: editor ? null : 'editor-failed',
+        patchKeysRequested,
+        patchKeysApplied,
+        patchKeysDropped,
+        patches,
+      }
+    }
   }
 
   private async translateFull(
@@ -131,54 +260,57 @@ export class LexicalTranslationStrategy
     info: { model: string; provider: string },
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
+    reviewerRuntime?: IModelRuntime,
+    reviewScoreThreshold?: number,
+    metrics?: PipelineMetrics,
   ): Promise<TranslationResult> {
     const parseResult = parseLexicalForTranslation(content.content!)
     const { segments, propertySegments, editorState } = parseResult
     const allTranslations = new Map<string, string>()
-    let sourceLang: string
     const contentUnits = this.buildContentTranslationUnits(
       segments,
       propertySegments,
     )
     const metaUnits = this.buildMetaTranslationUnits(content)
+    const allUnits = [...metaUnits, ...contentUnits]
+    const documentContext = contentUnits.length
+      ? extractDocumentContext(editorState.root?.children ?? [])
+      : content.title
 
-    if (contentUnits.length === 0) {
-      const result = await this.callChunkTranslation(
+    const writerStart = Date.now()
+    const sourceLang = await this.translateAllUnits(
+      targetLang,
+      {
+        documentContext,
+        units: allUnits,
+      },
+      allTranslations,
+      runtime,
+      onToken,
+      signal,
+    )
+    if (metrics) metrics.writerMs = Date.now() - writerStart
+
+    if (reviewerRuntime) {
+      const writtenIds = Array.from(allTranslations.keys())
+      await this.runReviewAndEdit(
         targetLang,
-        {
-          documentContext: content.title,
-          textEntries: this.unitsToEntries(metaUnits),
-          segmentMeta: this.unitsToMeta(metaUnits),
-        },
         runtime,
-        onToken,
-        signal,
-      )
-      sourceLang = result.sourceLang
-      for (const [id, text] of Object.entries(result.translations)) {
-        if (typeof text === 'string') {
-          allTranslations.set(id, text)
-        }
-      }
-    } else {
-      const documentContext = extractDocumentContext(
-        editorState.root?.children ?? [],
-      )
-      sourceLang = await this.translateChunkedUnits(
-        targetLang,
-        {
-          documentContext,
-          contentUnits,
-          metaUnits,
-        },
+        reviewerRuntime,
         allTranslations,
-        runtime,
-        onToken,
+        writtenIds,
+        reviewScoreThreshold ?? DEFAULT_REVIEW_SCORE_THRESHOLD,
         signal,
+        metrics,
       )
+    } else if (metrics) {
+      metrics.reviewer = emptyReviewerMetrics('review-disabled')
+      metrics.editor = emptyEditorMetrics('review-disabled')
     }
 
-    this.guardMermaidTranslations(parseResult, allTranslations)
+    guardMermaidTranslations(parseResult, allTranslations, (message) =>
+      this.logger.warn(message),
+    )
 
     const translatedContent = restoreLexicalTranslation(
       parseResult,
@@ -214,6 +346,9 @@ export class LexicalTranslationStrategy
     existing: AITranslationModel,
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
+    reviewerRuntime?: IModelRuntime,
+    reviewScoreThreshold?: number,
+    metrics?: PipelineMetrics,
   ): Promise<TranslationResult> {
     const currentBlocks = this.lexicalService.extractRootBlocks(
       content.content!,
@@ -251,11 +386,14 @@ export class LexicalTranslationStrategy
       const translatedParseResult = parseLexicalForTranslation(
         existing.content!,
       )
-      this.backfillReusableBlockTranslations(
+      const backfillResult = backfillReusableBlockTranslations(
         parseResult,
         translatedParseResult,
         unchangedBlockIds,
         allTranslations,
+      )
+      this.logger.log(
+        `Incremental reuse: reused=${backfillResult.reusedBlockIds.length} skipped=${backfillResult.skippedBlockIds.length}`,
       )
     } catch {
       throw new Error('Failed to parse existing translated content')
@@ -359,16 +497,18 @@ export class LexicalTranslationStrategy
         text: this.lexicalService.lexicalToMarkdown(translatedContent),
         contentFormat: ContentFormat.Lexical,
         content: translatedContent,
-        subtitle: removedMetaKeys.has(REMOVED_SUBTITLE_KEY)
-          ? null
-          : (allTranslations.get(REMOVED_SUBTITLE_KEY) ??
-            existing.subtitle ??
-            null),
-        summary: removedMetaKeys.has(REMOVED_SUMMARY_KEY)
-          ? null
-          : (allTranslations.get(REMOVED_SUMMARY_KEY) ??
-            existing.summary ??
-            null),
+        subtitle: this.resolveOptionalMeta(
+          REMOVED_SUBTITLE_KEY,
+          removedMetaKeys,
+          allTranslations,
+          existing.subtitle,
+        ),
+        summary: this.resolveOptionalMeta(
+          REMOVED_SUMMARY_KEY,
+          removedMetaKeys,
+          allTranslations,
+          existing.summary,
+        ),
         tags: removedMetaKeys.has(REMOVED_TAGS_KEY)
           ? null
           : (existing.tags ?? null),
@@ -377,61 +517,75 @@ export class LexicalTranslationStrategy
       }
     }
 
-    if (contentUnits.length === 0) {
-      const result = await this.callChunkTranslation(
+    const writtenIdsBeforeCall = new Set(allTranslations.keys())
+    const allUnits = [...metaUnits, ...contentUnits]
+    const callContext = contentUnits.length ? documentContext : content.title
+
+    const writerStart = Date.now()
+    const sl = await this.translateAllUnits(
+      targetLang,
+      {
+        documentContext: callContext,
+        units: allUnits,
+      },
+      allTranslations,
+      runtime,
+      onToken,
+      signal,
+    )
+    if (metrics) metrics.writerMs = Date.now() - writerStart
+    if (sl) sourceLang = sl
+
+    const writtenIds = Array.from(allTranslations.keys()).filter(
+      (id) => !writtenIdsBeforeCall.has(id),
+    )
+
+    if (reviewerRuntime && writtenIds.length > 0) {
+      await this.runReviewAndEdit(
         targetLang,
-        {
-          documentContext: content.title,
-          textEntries: this.unitsToEntries(metaUnits),
-          segmentMeta: this.unitsToMeta(metaUnits),
-        },
         runtime,
-        onToken,
-        signal,
-      )
-      if (result.sourceLang) sourceLang = result.sourceLang
-      for (const [id, text] of Object.entries(result.translations)) {
-        if (typeof text === 'string') {
-          allTranslations.set(id, text)
-        }
-      }
-    } else {
-      const sl = await this.translateChunkedUnits(
-        targetLang,
-        {
-          documentContext,
-          contentUnits,
-          metaUnits,
-        },
+        reviewerRuntime,
         allTranslations,
-        runtime,
-        onToken,
+        writtenIds,
+        reviewScoreThreshold ?? DEFAULT_REVIEW_SCORE_THRESHOLD,
         signal,
+        metrics,
       )
-      if (sl) sourceLang = sl
+    } else if (metrics) {
+      metrics.reviewer = emptyReviewerMetrics(
+        reviewerRuntime ? 'full-reuse' : 'review-disabled',
+      )
+      metrics.editor = emptyEditorMetrics(
+        reviewerRuntime ? 'full-reuse' : 'review-disabled',
+      )
     }
 
-    this.guardMermaidTranslations(parseResult, allTranslations)
+    guardMermaidTranslations(parseResult, allTranslations, (message) =>
+      this.logger.warn(message),
+    )
 
     const translatedContent = restoreLexicalTranslation(
       parseResult,
       allTranslations,
     )
     const title = allTranslations.get('__title__') ?? existing.title
-    const subtitle = removedMetaKeys.has(REMOVED_SUBTITLE_KEY)
-      ? null
-      : (allTranslations.get(REMOVED_SUBTITLE_KEY) ?? existing.subtitle ?? null)
-    const summary = removedMetaKeys.has(REMOVED_SUMMARY_KEY)
-      ? null
-      : (allTranslations.get(REMOVED_SUMMARY_KEY) ?? existing.summary ?? null)
-    const tagsStr = removedMetaKeys.has(REMOVED_TAGS_KEY)
-      ? undefined
-      : allTranslations.get(REMOVED_TAGS_KEY)
-    const tags = tagsStr
-      ? tagsStr.split('|||')
-      : removedMetaKeys.has(REMOVED_TAGS_KEY)
-        ? null
-        : (existing.tags ?? content.tags ?? null)
+    const subtitle = this.resolveOptionalMeta(
+      REMOVED_SUBTITLE_KEY,
+      removedMetaKeys,
+      allTranslations,
+      existing.subtitle,
+    )
+    const summary = this.resolveOptionalMeta(
+      REMOVED_SUMMARY_KEY,
+      removedMetaKeys,
+      allTranslations,
+      existing.summary,
+    )
+    const tags = this.resolveTagsMeta(
+      removedMetaKeys,
+      allTranslations,
+      existing.tags ?? content.tags ?? null,
+    )
 
     return {
       sourceLang,
@@ -445,6 +599,27 @@ export class LexicalTranslationStrategy
       aiModel: info.model,
       aiProvider: info.provider,
     }
+  }
+
+  private resolveOptionalMeta(
+    key: string,
+    removedMetaKeys: Set<string>,
+    allTranslations: Map<string, string>,
+    fallback: string | null | undefined,
+  ): string | null {
+    if (removedMetaKeys.has(key)) return null
+    return allTranslations.get(key) ?? fallback ?? null
+  }
+
+  private resolveTagsMeta(
+    removedMetaKeys: Set<string>,
+    allTranslations: Map<string, string>,
+    fallback: string[] | null,
+  ): string[] | null {
+    if (removedMetaKeys.has(REMOVED_TAGS_KEY)) return null
+    const tagsStr = allTranslations.get(REMOVED_TAGS_KEY)
+    if (tagsStr) return tagsStr.split('|||')
+    return fallback
   }
 
   private buildContentTranslationUnits(
@@ -525,26 +700,6 @@ export class LexicalTranslationStrategy
     return units
   }
 
-  private guardMermaidTranslations(
-    parseResult: LexicalTranslationResult,
-    translations: Map<string, string>,
-  ): void {
-    for (const prop of parseResult.propertySegments) {
-      if (prop.property !== 'diagram' || prop.node?.type !== 'mermaid') continue
-      const translated = translations.get(prop.id)
-      if (translated === undefined) continue
-      if (translated === prop.text) continue
-
-      const validation = validateMermaidTranslation(prop.text, translated)
-      if (!validation.ok) {
-        this.logger.warn(
-          `Mermaid translation rejected: reason=${validation.reason} sourceLen=${prop.text.length} translatedLen=${translated.length}`,
-        )
-        translations.delete(prop.id)
-      }
-    }
-  }
-
   private resolvePropertyUnitMeta(prop: {
     property: string
     node: any
@@ -590,88 +745,6 @@ export class LexicalTranslationStrategy
     return units
   }
 
-  private groupSegmentsByBlock(
-    result: LexicalTranslationResult,
-  ): Map<string, BlockTranslationSegments> {
-    const byBlock = new Map<string, BlockTranslationSegments>()
-
-    const getBucket = (blockId: string) => {
-      let bucket = byBlock.get(blockId)
-      if (!bucket) {
-        bucket = { segments: [], propertySegments: [] }
-        byBlock.set(blockId, bucket)
-      }
-      return bucket
-    }
-
-    for (const segment of result.segments) {
-      if (!segment.blockId || !segment.translatable) continue
-      getBucket(segment.blockId).segments.push(segment)
-    }
-
-    for (const propertySegment of result.propertySegments) {
-      if (!propertySegment.blockId) continue
-      getBucket(propertySegment.blockId).propertySegments.push(propertySegment)
-    }
-
-    return byBlock
-  }
-
-  private canReuseBlockTranslations(
-    currentBlock: BlockTranslationSegments,
-    translatedBlock: BlockTranslationSegments,
-  ): boolean {
-    if (currentBlock.segments.length !== translatedBlock.segments.length) {
-      return false
-    }
-
-    if (
-      currentBlock.propertySegments.length !==
-      translatedBlock.propertySegments.length
-    ) {
-      return false
-    }
-
-    return currentBlock.propertySegments.every((segment, index) => {
-      const translatedSegment = translatedBlock.propertySegments[index]
-      return (
-        translatedSegment.property === segment.property &&
-        translatedSegment.key === segment.key
-      )
-    })
-  }
-
-  private backfillReusableBlockTranslations(
-    currentResult: LexicalTranslationResult,
-    translatedResult: LexicalTranslationResult,
-    unchangedBlockIds: Set<string>,
-    output: Map<string, string>,
-  ): void {
-    const currentBlocks = this.groupSegmentsByBlock(currentResult)
-    const translatedBlocks = this.groupSegmentsByBlock(translatedResult)
-
-    for (const blockId of unchangedBlockIds) {
-      const currentBlock = currentBlocks.get(blockId)
-      const translatedBlock = translatedBlocks.get(blockId)
-
-      if (!currentBlock || !translatedBlock) continue
-      if (!this.canReuseBlockTranslations(currentBlock, translatedBlock)) {
-        continue
-      }
-
-      currentBlock.segments.forEach((segment, index) => {
-        output.set(segment.id, translatedBlock.segments[index].text)
-      })
-
-      currentBlock.propertySegments.forEach((propertySegment, index) => {
-        output.set(
-          propertySegment.id,
-          translatedBlock.propertySegments[index].text,
-        )
-      })
-    }
-  }
-
   private unitsToEntries(units: TranslationUnit[]): Record<string, unknown> {
     return Object.fromEntries(units.map((unit) => [unit.id, unit.payload]))
   }
@@ -702,12 +775,6 @@ export class LexicalTranslationStrategy
     }
 
     return result
-  }
-
-  private getUnitTokenText(unit: TranslationUnit): string {
-    return typeof unit.payload === 'string'
-      ? unit.payload
-      : unit.payload.segments.map((segment) => segment.text).join('')
   }
 
   private resolveUnitTranslations(
@@ -747,111 +814,79 @@ export class LexicalTranslationStrategy
     return unresolvedUnitIds
   }
 
-  private async translateChunkedUnits(
+  private async translateAllUnits(
     targetLang: string,
     ctx: {
       documentContext: string
-      contentUnits: TranslationUnit[]
-      metaUnits: TranslationUnit[]
+      units: TranslationUnit[]
     },
     output: Map<string, string>,
     runtime: IModelRuntime,
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
   ): Promise<string> {
-    const { documentContext, contentUnits, metaUnits } = ctx
-    const allTranslations = output
-    let sourceLang = ''
-    const MAX_BATCH_TOKENS = 4000
-    const estimateTokens = (text: string) => Math.ceil(text.length / 3)
+    const { documentContext, units } = ctx
+    if (units.length === 0) return ''
 
-    const batches: TranslationUnit[][] = []
-    let currentBatch = [...metaUnits]
-    let currentTokens = metaUnits.reduce(
-      (sum, unit) => sum + estimateTokens(this.getUnitTokenText(unit)),
-      0,
+    const result = await this.callWriter(
+      targetLang,
+      {
+        documentContext,
+        textEntries: this.unitsToEntries(units),
+        segmentMeta: this.unitsToMeta(units),
+      },
+      runtime,
+      onToken,
+      signal,
     )
-    let hasContentUnit = false
 
-    for (const unit of contentUnits) {
-      const tokens = estimateTokens(this.getUnitTokenText(unit))
-      if (hasContentUnit && currentTokens + tokens > MAX_BATCH_TOKENS) {
-        batches.push(currentBatch)
-        currentBatch = []
-        currentTokens = 0
-      }
-      currentBatch.push(unit)
-      currentTokens += tokens
-      hasContentUnit = true
-    }
+    const sourceLang = result.sourceLang
+    const unresolvedUnitIds = this.resolveUnitTranslations(
+      units,
+      result.translations,
+      output,
+    )
 
-    if (currentBatch.length > 0) {
-      batches.push(currentBatch)
-    }
-
-    for (const batch of batches) {
-      throwIfAborted(signal)
-      const result = await this.callChunkTranslation(
-        targetLang,
-        {
-          documentContext,
-          textEntries: this.unitsToEntries(batch),
-          segmentMeta: this.unitsToMeta(batch),
-        },
-        runtime,
-        onToken,
-        signal,
+    if (unresolvedUnitIds.length > 0) {
+      const retryUnits = units.filter((unit) =>
+        unresolvedUnitIds.includes(unit.id),
       )
-      if (!sourceLang) sourceLang = result.sourceLang
-
-      const unresolvedUnitIds = this.resolveUnitTranslations(
-        batch,
-        result.translations,
-        allTranslations,
-      )
-
-      if (unresolvedUnitIds.length > 0) {
-        const retryUnits = batch.filter((unit) =>
-          unresolvedUnitIds.includes(unit.id),
+      try {
+        const retryResult = await this.callWriter(
+          targetLang,
+          {
+            documentContext,
+            textEntries: this.unitsToEntries(retryUnits),
+            segmentMeta: this.unitsToMeta(retryUnits),
+          },
+          runtime,
+          onToken,
+          signal,
         )
-        try {
-          const retryResult = await this.callChunkTranslation(
-            targetLang,
-            {
-              documentContext,
-              textEntries: this.unitsToEntries(retryUnits),
-              segmentMeta: this.unitsToMeta(retryUnits),
-            },
-            runtime,
-            onToken,
-            signal,
-          )
-          this.resolveUnitTranslations(
-            retryUnits,
-            retryResult.translations,
-            allTranslations,
-          )
+        this.resolveUnitTranslations(
+          retryUnits,
+          retryResult.translations,
+          output,
+        )
 
-          const stillMissing = retryUnits.filter((unit) => {
-            if (unit.memberIds?.length) {
-              return unit.memberIds.some(
-                (memberId) => !allTranslations.has(memberId),
-              )
-            }
-            return !allTranslations.has(unit.id)
-          })
+        const stillMissing = retryUnits.filter((unit) => {
+          if (unit.memberIds?.length) {
+            return unit.memberIds.some((memberId) => !output.has(memberId))
+          }
+          return !output.has(unit.id)
+        })
 
-          for (const unit of stillMissing) {
-            this.logger.warn(
-              `Translation missing for unit ${unit.id} after retry, falling back to original`,
-            )
-          }
-        } catch {
-          for (const unit of retryUnits) {
-            this.logger.warn(
-              `Translation retry failed for unit ${unit.id}, falling back to original`,
-            )
-          }
+        for (const unit of stillMissing) {
+          this.logger.warn(
+            `Translation missing for unit ${unit.id} after retry, falling back to original`,
+          )
+        }
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error)
+        for (const unit of retryUnits) {
+          this.logger.warn(
+            `Translation retry failed for unit ${unit.id} (${reason}), falling back to original`,
+          )
         }
       }
     }

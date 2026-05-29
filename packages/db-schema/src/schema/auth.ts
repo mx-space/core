@@ -26,6 +26,8 @@ export const readers = pgTable(
     displayUsername: text('display_username'),
     image: text('image'),
     role: text('role').notNull().default('reader'),
+    bannedAt: tsCol('banned_at'),
+    banReason: text('ban_reason'),
   },
   (table) => [
     uniqueIndex('readers_email_uniq')

@@ -5,6 +5,7 @@ import { approve } from '../../../src/cli/comment/approve'
 import { del } from '../../../src/cli/comment/delete'
 import { list } from '../../../src/cli/comment/list'
 import { reject } from '../../../src/cli/comment/reject'
+import { reply } from '../../../src/cli/comment/reply'
 import { unread } from '../../../src/cli/comment/unread'
 import { Api } from '../../../src/services/Api'
 import { Auth, type AuthService } from '../../../src/services/Auth'
@@ -15,6 +16,7 @@ import {
   type ResolvedConfig,
 } from '../../../src/services/Config'
 import { Renderer } from '../../../src/services/Renderer'
+import { makeMemFs, TestFsLive, TestPathLive } from '../../helper/test-fs'
 import { testHttpLayer } from '../../helper/test-http'
 
 const resolved: ResolvedConfig = {
@@ -328,6 +330,92 @@ describe('comment reject', () => {
     } finally {
       out.restore()
     }
+  })
+})
+
+describe('comment reply', () => {
+  const replyLayer = (httpLayer: Layer.Layer<any>) =>
+    Layer.mergeAll(buildLayer(httpLayer), TestFsLive(makeMemFs()), TestPathLive)
+
+  it('posts inline text to /comments/owner-reply/:id with text body', async () => {
+    const http = testHttpLayer({
+      'POST https://blog.example.com/api/v2/comments/owner-reply/c1': {
+        status: 200,
+        body: { id: 'r1', text: 'thanks' },
+      },
+    })
+    const out = muteStdout()
+    try {
+      const layer = replyLayer(http.layer)
+      const program = reply.handler({
+        id: 'c1',
+        text: Option.some('thanks'),
+        whispers: false,
+        silent: false,
+      })
+      await Effect.runPromise(Effect.provide(program, layer))
+      expect(http.recorder.calls.length).toBe(1)
+      const body = http.recorder.calls[0]?.body as Record<string, unknown>
+      expect(body).toEqual({ text: 'thanks' })
+    } finally {
+      out.restore()
+    }
+  })
+
+  it('forwards isWhispers=true when --whispers is set', async () => {
+    const http = testHttpLayer({
+      'POST https://blog.example.com/api/v2/comments/owner-reply/c2': {
+        status: 200,
+        body: { ok: true },
+      },
+    })
+    const out = muteStdout()
+    try {
+      const layer = replyLayer(http.layer)
+      const program = reply.handler({
+        id: 'c2',
+        text: Option.some('shh'),
+        whispers: true,
+        silent: true,
+      })
+      await Effect.runPromise(Effect.provide(program, layer))
+      const body = http.recorder.calls[0]?.body as Record<string, unknown>
+      expect(body).toEqual({ text: 'shh', isWhispers: true })
+    } finally {
+      out.restore()
+    }
+  })
+
+  it('rejects when --text is missing', async () => {
+    const http = testHttpLayer({})
+    const layer = replyLayer(http.layer)
+    const program = reply.handler({
+      id: 'c3',
+      text: Option.none(),
+      whispers: false,
+      silent: false,
+    })
+    const err = await Effect.runPromise(
+      Effect.flip(Effect.provide(program, layer)),
+    )
+    expect(err._tag).toBe('ValidationFailed')
+    expect(http.recorder.calls.length).toBe(0)
+  })
+
+  it('rejects when text is whitespace-only', async () => {
+    const http = testHttpLayer({})
+    const layer = replyLayer(http.layer)
+    const program = reply.handler({
+      id: 'c4',
+      text: Option.some('   \n\t  '),
+      whispers: false,
+      silent: false,
+    })
+    const err = await Effect.runPromise(
+      Effect.flip(Effect.provide(program, layer)),
+    )
+    expect(err._tag).toBe('ValidationFailed')
+    expect(http.recorder.calls.length).toBe(0)
   })
 })
 

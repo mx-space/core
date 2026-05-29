@@ -26,7 +26,7 @@ import type { InjectAuthInstance } from './auth.interface'
 import { AuthService } from './auth.service'
 
 const DeviceVerifyBodySchema = z.object({
-  user_code: z.string().min(1),
+  userCode: z.string().min(1),
   action: z.enum(['approve', 'deny']),
 })
 
@@ -105,7 +105,7 @@ export class DeviceController {
       })
     }
 
-    const userCode = body.user_code.trim()
+    const userCode = body.userCode.trim()
     try {
       if (body.action === 'approve') {
         await auth.api.deviceApprove({ body: { userCode }, headers })

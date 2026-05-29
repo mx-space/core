@@ -6,11 +6,13 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
 import type { BasicPagerInput } from '~/shared/dto/pager.dto'
+import { SampleResponse } from '~/shared/sample/sample-response.decorator'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 
 import { AnalyzeDto } from './analyze.schema'
 import { AnalyzeService } from './analyze.service'
+import { AnalyzeSampleService } from './sample/analyze-sample.service'
 
 @ApiController({ path: 'analyze' })
 @Auth()
@@ -50,6 +52,7 @@ export class AnalyzeController {
   }
 
   @Get('/')
+  @SampleResponse(AnalyzeSampleService, 'list')
   getAnalyze(@Query() query: AnalyzeDto & Partial<BasicPagerInput>) {
     const { from, to = new Date(), page = 1, size = 50 } = query
     return this.service.getRangeAnalyzeData(from, to, {
@@ -81,6 +84,7 @@ export class AnalyzeController {
   }
 
   @Get('/aggregate')
+  @SampleResponse(AnalyzeSampleService, 'aggregate')
   getFragment() {
     const cacheKey = getRedisKey(RedisKeys.AnalyzeAggregate)
     return this.getOrSetCache(cacheKey, 60, async () => {
@@ -176,6 +180,7 @@ export class AnalyzeController {
   }
 
   @Get('/traffic-source')
+  @SampleResponse(AnalyzeSampleService, 'trafficSource')
   getTrafficSource(@Query() query: AnalyzeDto) {
     const { from, to } = query
     const cacheKey = getRedisKey(
@@ -188,6 +193,7 @@ export class AnalyzeController {
   }
 
   @Get('/device')
+  @SampleResponse(AnalyzeSampleService, 'device')
   getDeviceDistribution(@Query() query: AnalyzeDto) {
     const { from, to } = query
     const cacheKey = getRedisKey(

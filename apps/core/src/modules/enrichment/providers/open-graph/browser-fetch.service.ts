@@ -7,10 +7,19 @@ import { promisify } from 'node:util'
 import { Injectable, Logger } from '@nestjs/common'
 
 import {
+  AgentBrowserSessionPool,
+  type PoolSlot,
+} from '~/processors/agent-browser/agent-browser-pool.service'
+import {
+  assertHostnameSafe,
+  parseAndValidateUrl,
+  UnsafeUrlError,
+} from '~/processors/agent-browser/url-guard'
+
+import {
   ChallengeBlockedError,
   type EnrichmentResult,
 } from '../../enrichment.types'
-import { BrowserSessionPool, type PoolSlot } from './browser-session-pool'
 import {
   OG_ACCEPT_LANGUAGE,
   OG_CHALLENGE_RETRY_MAX,
@@ -21,11 +30,6 @@ import {
   OG_USER_AGENT,
 } from './og-browser-constants'
 import type { SafeFetchOptions, SafeFetchResult } from './safe-fetch'
-import {
-  assertHostnameSafe,
-  parseAndValidateUrl,
-  UnsafeUrlError,
-} from './url-guard'
 
 const execFileAsync = promisify(execFile)
 
@@ -72,7 +76,7 @@ export class BrowserFetchService {
 
   private readonly bytesByResult = new WeakMap<EnrichmentResult, Buffer>()
 
-  constructor(private readonly pool: BrowserSessionPool) {}
+  constructor(private readonly pool: AgentBrowserSessionPool) {}
 
   async fetchHtml(
     rawUrl: string,

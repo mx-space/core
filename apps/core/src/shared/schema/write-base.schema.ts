@@ -1,14 +1,16 @@
-import { zCoerceDate, zNonEmptyString } from '~/common/zod'
-import { ContentFormat } from '~/shared/types/content-format.type'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { zCoerceDate, zNonEmptyString } from '~/common/zod'
+import { ContentFormat } from '~/shared/types/content-format.type'
+
 import { BaseCommentIndexSchema } from './base.schema'
-import { ImageSchema } from './image.schema'
+import { ImageArraySchema } from './image.schema'
 
 export const WriteBaseSchema = BaseCommentIndexSchema.extend({
   title: zNonEmptyString,
   text: z.string(),
-  images: z.array(ImageSchema).optional(),
+  images: ImageArraySchema.optional(),
   created: zCoerceDate.optional(),
   meta: z.record(z.string(), z.any()).optional().nullable().default(null),
   contentFormat: z

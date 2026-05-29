@@ -28,6 +28,8 @@ import {
 } from './ai-translation/ai-translation.repository'
 import { AiTranslationService } from './ai-translation/ai-translation.service'
 import { AiTranslationEventHandlerService } from './ai-translation/ai-translation-event-handler.service'
+import { LexicalPartialTranslationBuilder } from './ai-translation/lexical-partial-translation.builder'
+import { TranslationReviewerService } from './ai-translation/reviewer.service'
 import { LexicalTranslationStrategy } from './ai-translation/strategies/lexical-translation.strategy'
 import { MarkdownTranslationStrategy } from './ai-translation/strategies/markdown-translation.strategy'
 import { TranslationConsistencyService } from './ai-translation/translation-consistency.service'
@@ -70,6 +72,8 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
       useClass: MarkdownTranslationStrategy,
     },
     TranslationConsistencyService,
+    TranslationReviewerService,
+    LexicalPartialTranslationBuilder,
     AiTranslationService,
     AiTranslationRepository,
     TranslationEntryRepository,

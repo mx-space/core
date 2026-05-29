@@ -763,6 +763,34 @@ export const AISchema = section('AI settings', {
         'Target languages for auto-generated translations, using [ISO 639-1 language codes](https://www.w3schools.com/tags/ref_language_codes.asp), e.g. ["en", "ja", "ko"]',
     },
   ),
+  enableTranslationReview: field.toggle(
+    z.boolean().optional(),
+    'Enable translation review',
+    {
+      description:
+        'When enabled, translations go through a writer → reviewer → editor pipeline. Reviewer scores native-feel; below threshold triggers a revise pass.',
+    },
+  ),
+  translationReviewModel: field.plain(
+    AIModelAssignmentSchema.optional(),
+    'Translation reviewer model',
+    {
+      description:
+        'AI model used by the translation reviewer (critique-only). Falls back to the translation model when empty.',
+    },
+  ),
+  translationReviewScoreThreshold: field.number(
+    z.preprocess(
+      (val) =>
+        val === '' || val === null || val === undefined ? val : Number(val),
+      z.number().int().min(0).max(100).optional(),
+    ),
+    'Translation review score threshold',
+    {
+      description:
+        'Reviewer score (0-100) at or above which the editor pass is skipped. Default 85.',
+    },
+  ),
   insightsModel: field.plain(
     AIModelAssignmentSchema.optional(),
     'Insights model',

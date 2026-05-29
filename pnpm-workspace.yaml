@@ -22,16 +22,28 @@ overrides:
   mongodb: ~7.2.0
   pino: ./external/pino
   rolldown: 1.0.1
-  semver: 7.8.0
+  semver: 7.8.1
   typescript: 6.0.3
   whatwg-url: 16.0.1
   zod: 4.4.3
+  "lodash-es@<4.18.0": 4.18.1
+  "nanoid@<3.3.8": 3.3.12
+  "nanoid@>=4.0.0 <5.0.9": 5.1.11
+  "tmp@<0.2.6": 0.2.6
+  "uuid@<11.1.1": 11.1.1
+  lucide-react: 1.8.0
+  "@codemirror/state": 6.6.0
+  "@codemirror/view": 6.42.1
+  "@codemirror/commands": 6.10.3
+  "@codemirror/language": 6.12.3
 publicHoistPattern:
   - "*fastify*"
   - mongodb
   - "*eslint*"
   - "*webpack*"
+  - "*@codemirror*"
 strictPeerDependencies: false
 minimumReleaseAgeExclude:
   - "@haklex/*"
   - "@mx-space/*"
+  - "@babel/*"

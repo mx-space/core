@@ -37,8 +37,8 @@ vi.mock('node:dns/promises', async () => {
 
 const { BrowserFetchService } =
   await import('~/modules/enrichment/providers/open-graph/browser-fetch.service')
-const { BrowserSessionPool } =
-  await import('~/modules/enrichment/providers/open-graph/browser-session-pool')
+const { AgentBrowserSessionPool: BrowserSessionPool } =
+  await import('~/processors/agent-browser/agent-browser-pool.service')
 const { OG_ACCEPT_LANGUAGE, OG_LAUNCH_ARGS, OG_NETWORKIDLE_MS, OG_USER_AGENT } =
   await import('~/modules/enrichment/providers/open-graph/og-browser-constants')
 
@@ -223,7 +223,7 @@ describe('BrowserFetchService', () => {
       )
       expect(batches).toHaveLength(1)
       expect(parseBatchArgs(batches[0].args).sessionName).toMatch(
-        /^og-pool-\d+$/,
+        /^agent-browser-\d+$/,
       )
       expect(
         calls.some((c) =>

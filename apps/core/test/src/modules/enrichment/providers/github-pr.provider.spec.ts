@@ -97,7 +97,7 @@ describe('GitHubPrProvider', () => {
       })
     })
 
-    it('merges fetched blurhash/palette into thumbnail and preview images', async () => {
+    it('merges fetched thumbhash/palette into thumbnail and preview images', async () => {
       const mockData = {
         number: 42,
         title: 'Fix bug',
@@ -112,7 +112,7 @@ describe('GitHubPrProvider', () => {
       const meta = {
         width: 64,
         height: 64,
-        blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
+        thumbhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
         palette: { dominant: '#abcdef' },
       }
       const p = new GitHubPrProvider(
@@ -122,15 +122,15 @@ describe('GitHubPrProvider', () => {
 
       const result = await p.fetch('mx-space/core/pulls/42')
 
-      expect(result.thumbnailImage?.blurhash).toBe(meta.blurhash)
+      expect(result.thumbnailImage?.thumbhash).toBe(meta.thumbhash)
       expect(result.thumbnailImage?.palette).toEqual(meta.palette)
-      expect(result.previewImage?.blurhash).toBe(meta.blurhash)
+      expect(result.previewImage?.thumbhash).toBe(meta.thumbhash)
       expect(result.previewImage?.palette).toEqual(meta.palette)
       expect(result.previewImage?.width).toBe(1280)
       expect(result.previewImage?.height).toBe(640)
     })
 
-    it('omits blurhash when ImageMetaService returns null', async () => {
+    it('omits thumbhash when ImageMetaService returns null', async () => {
       const mockData = {
         number: 42,
         title: 'Fix bug',
@@ -150,10 +150,10 @@ describe('GitHubPrProvider', () => {
       const result = await p.fetch('mx-space/core/pulls/42')
 
       expect(result.thumbnailImage?.url).toBe('https://avatar')
-      expect(result.thumbnailImage?.blurhash).toBeUndefined()
+      expect(result.thumbnailImage?.thumbhash).toBeUndefined()
       expect(result.thumbnailImage?.palette).toBeUndefined()
       expect(result.previewImage?.url).toMatch(/opengraph\.githubassets\.com/)
-      expect(result.previewImage?.blurhash).toBeUndefined()
+      expect(result.previewImage?.thumbhash).toBeUndefined()
     })
   })
 })

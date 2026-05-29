@@ -39,7 +39,7 @@ describe('ImageMetaService', () => {
     vi.restoreAllMocks()
   })
 
-  it('returns width/height/blurhash/dominant palette for a valid image', async () => {
+  it('returns width/height/thumbhash/dominant palette for a valid image', async () => {
     const buffer = await makePngBuffer()
     globalThis.fetch = vi
       .fn()
@@ -50,8 +50,8 @@ describe('ImageMetaService', () => {
     expect(meta).not.toBeNull()
     expect(meta!.width).toBe(32)
     expect(meta!.height).toBe(32)
-    expect(typeof meta!.blurhash).toBe('string')
-    expect(meta!.blurhash!.length).toBeGreaterThan(0)
+    expect(typeof meta!.thumbhash).toBe('string')
+    expect(meta!.thumbhash!.length).toBeGreaterThan(0)
     expect(meta!.palette?.dominant).toMatch(/^#[\da-f]{6}$/)
   })
 
