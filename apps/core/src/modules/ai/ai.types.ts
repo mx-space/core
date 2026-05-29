@@ -1,8 +1,7 @@
 export enum AIProviderType {
-  OpenAI = 'openai',
   OpenAICompatible = 'openai-compatible',
   Anthropic = 'anthropic',
-  OpenRouter = 'openrouter',
+  Generic = 'generic',
 }
 
 export enum AIFeatureKey {
@@ -30,6 +29,10 @@ export interface AIProviderConfig {
   defaultModel: string
   /** Whether this provider is enabled */
   enabled: boolean
+  /** Optional context window size; falls back to pi registry / adapter default when null */
+  contextWindow?: number | null
+  /** Optional max output tokens; falls back to pi registry / adapter default when null */
+  maxTokens?: number | null
 }
 
 export interface AIModelAssignment {

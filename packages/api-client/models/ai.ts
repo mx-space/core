@@ -1,3 +1,17 @@
+export type AIProviderType = 'anthropic' | 'generic' | 'openai-compatible'
+
+export interface AIProviderConfigModel {
+  apiKey: string
+  contextWindow?: number | null
+  defaultModel: string
+  enabled: boolean
+  endpoint?: string
+  id: string
+  maxTokens?: number | null
+  name: string
+  type: AIProviderType
+}
+
 export interface AISummaryModel {
   id: string
   createdAt: string

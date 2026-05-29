@@ -1,19 +1,18 @@
-import type { ConfigFormGroup } from '~/api/options'
-import type { TranslationKey } from '~/i18n/types'
 import type { LucideIcon } from 'lucide-react'
 
-export type AIProviderType =
-  | 'anthropic'
-  | 'openai'
-  | 'openai-compatible'
-  | 'openrouter'
+import type { ConfigFormGroup } from '~/api/options'
+import type { TranslationKey } from '~/i18n/types'
+
+export type AIProviderType = 'anthropic' | 'generic' | 'openai-compatible'
 
 export interface AIProviderConfig {
   apiKey: string
+  contextWindow?: number | null
   defaultModel: string
   enabled: boolean
   endpoint?: string
   id: string
+  maxTokens?: number | null
   name: string
   type: AIProviderType
 }

@@ -1,7 +1,9 @@
 import { ListPlus, Shield, User } from 'lucide-react'
+
 import type { TranslationKey } from '~/i18n/types'
 import type { MetaFieldType, MetaPresetScope } from '~/models/meta-preset'
 import { adminQueryKeys } from '~/query/keys'
+
 import type {
   AIProviderType,
   OauthProviderType,
@@ -16,10 +18,9 @@ export const aiProviderTypeOptions: Array<{
   label: string
   value: AIProviderType
 }> = [
-  { label: 'OpenAI', value: 'openai' },
   { label: 'OpenAI Compatible', value: 'openai-compatible' },
   { label: 'Anthropic', value: 'anthropic' },
-  { label: 'OpenRouter', value: 'openrouter' },
+  { label: 'Generic', value: 'generic' },
 ]
 
 type SocialOption =
