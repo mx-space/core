@@ -1,0 +1,247 @@
+import { relative, sep } from 'node:path'
+import type { ScannedPage, ScannedSection, ScanResult } from './scan'
+
+interface GenerateOptions {
+  viewsRoot: string
+  isDev: boolean
+}
+
+interface RouteEntry {
+  bindingId: string
+  page: ScannedPage
+  sourcePath: string
+}
+
+function toViewImportPath(viewsRoot: string, absPath: string): string {
+  const rel = relative(viewsRoot, absPath).split(sep).join('/')
+  return `~/views/${rel.replace(/\.tsx?$/, '')}`
+}
+
+function escapeString(value: string): string {
+  return JSON.stringify(value)
+}
+
+function escapeArray(values: string[]): string {
+  return `[${values.map(escapeString).join(', ')}]`
+}
+
+function renderRouteRecord(binding: string, page: ScannedPage): string {
+  const m = page.metadata
+  const parts: string[] = []
+  parts.push(`path: ${escapeString(page.url)}`)
+  parts.push(`element: ${binding}`)
+  if (m.titleKey) {
+    parts.push(`titleKey: ${escapeString(m.titleKey)}`)
+  }
+  if (m.descriptionKey) {
+    parts.push(`descriptionKey: ${escapeString(m.descriptionKey)}`)
+  }
+  if (m.iconName) {
+    parts.push(`icon: ${m.iconName}`)
+  }
+  if (m.matchPaths?.length) {
+    parts.push(`matchPaths: ${escapeArray(m.matchPaths)}`)
+  }
+  parts.push(`layout: ${escapeString(page.layout)}`)
+  if (m.hidden) {
+    parts.push(`hidden: true`)
+  }
+  return `{ ${parts.join(', ')} }`
+}
+
+interface TreeNode {
+  entry: RouteEntry
+  children: TreeNode[]
+}
+
+function buildSectionTree(entries: RouteEntry[]): TreeNode[] {
+  const byUrl = new Map<string, TreeNode>()
+  for (const entry of entries) {
+    byUrl.set(entry.page.url, { entry, children: [] })
+  }
+  const roots: TreeNode[] = []
+  // Sort entries by URL depth (shallow first) for deterministic processing
+  const sorted = [...entries].sort((a, b) => {
+    const da = a.page.url.split('/').length
+    const db = b.page.url.split('/').length
+    if (da !== db) return da - db
+    return a.page.url.localeCompare(b.page.url)
+  })
+  for (const entry of sorted) {
+    const node = byUrl.get(entry.page.url)!
+    const segs = entry.page.url.split('/').filter(Boolean)
+    let parent: TreeNode | null = null
+    for (let n = segs.length - 1; n > 0; n--) {
+      const prefix = `/${segs.slice(0, n).join('/')}`
+      if (byUrl.has(prefix) && prefix !== entry.page.url) {
+        parent = byUrl.get(prefix)!
+        break
+      }
+    }
+    if (parent) {
+      parent.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+  return roots
+}
+
+function sortByOrder<T extends { metadata: { order?: number }; url: string }>(
+  items: T[],
+): T[] {
+  return [...items].sort((a, b) => {
+    const oa = a.metadata.order ?? 999
+    const ob = b.metadata.order ?? 999
+    if (oa !== ob) return oa - ob
+    return a.url.localeCompare(b.url)
+  })
+}
+
+function renderSidebarNode(node: TreeNode): string {
+  const sortedChildren = sortByOrder(
+    node.children
+      .map((child) => child.entry.page)
+      .filter(
+        (p) =>
+          !p.metadata.hidden && !p.url.includes(':') && !p.url.includes('*'),
+      ),
+  )
+  const childMap = new Map(node.children.map((c) => [c.entry.page.url, c]))
+  const children = sortedChildren
+    .map((p) => childMap.get(p.url))
+    .filter((c): c is TreeNode => Boolean(c))
+  if (children.length === 0) {
+    return `{ route: ${node.entry.bindingId}_r }`
+  }
+  return `{ route: ${node.entry.bindingId}_r, children: [${children
+    .map(renderSidebarNode)
+    .join(', ')}] }`
+}
+
+export function generateModule(
+  scan: ScanResult,
+  options: GenerateOptions,
+): string {
+  const { viewsRoot, isDev } = options
+
+  // Filter out (dev) section in production
+  const pages = scan.pages.filter((page) => {
+    if (page.section === 'dev' && page.sectionIsGroup && !isDev) return false
+    if (page.section === 'dev' && !page.sectionIsGroup && !isDev) return false
+    return true
+  })
+
+  // Allocate stable binding ids
+  const sortedPages = [...pages].sort((a, b) => a.url.localeCompare(b.url))
+  const entries: RouteEntry[] = sortedPages.map((page, index) => ({
+    bindingId: `P${index}`,
+    page,
+    sourcePath: toViewImportPath(viewsRoot, page.filePath),
+  }))
+
+  // Lucide icon imports
+  const iconNames = new Set<string>()
+  for (const entry of entries) {
+    if (entry.page.metadata.iconName) {
+      iconNames.add(entry.page.metadata.iconName)
+    }
+  }
+
+  // Build sections (only those that have at least one page)
+  const sectionByName = new Map<string, ScannedSection>()
+  for (const section of scan.sections) {
+    sectionByName.set(section.name, section)
+  }
+  const sectionsWithPages = new Map<string, RouteEntry[]>()
+  for (const entry of entries) {
+    if (entry.page.layout === 'public') continue
+    const key = entry.page.section
+    if (!sectionsWithPages.has(key)) sectionsWithPages.set(key, [])
+    sectionsWithPages.get(key)!.push(entry)
+  }
+
+  const lines: string[] = []
+  lines.push(`// generated by admin-routes plugin — do not edit`)
+  lines.push(`import { lazy } from 'react'`)
+  if (iconNames.size) {
+    lines.push(
+      `import { ${[...iconNames].sort().join(', ')} } from 'lucide-react'`,
+    )
+  }
+  // Sync imports
+  for (const entry of entries) {
+    if (entry.page.lazy) continue
+    lines.push(`import ${entry.bindingId} from '${entry.sourcePath}'`)
+  }
+  // Lazy bindings
+  for (const entry of entries) {
+    if (!entry.page.lazy) continue
+    lines.push(
+      `const ${entry.bindingId} = lazy(() => import('${entry.sourcePath}'))`,
+    )
+  }
+  // Redirects re-export
+  if (scan.redirectsFile) {
+    lines.push(
+      `import __userRedirects from '${toViewImportPath(viewsRoot, scan.redirectsFile)}'`,
+    )
+  } else {
+    lines.push(`const __userRedirects = []`)
+  }
+
+  // Route record bindings
+  for (const entry of entries) {
+    lines.push(
+      `const ${entry.bindingId}_r = ${renderRouteRecord(entry.bindingId, entry.page)}`,
+    )
+  }
+
+  lines.push(
+    `export const appRoutes = [${entries.map((e) => `${e.bindingId}_r`).join(', ')}]`,
+  )
+  lines.push(
+    `export const publicRoutes = appRoutes.filter((r) => r.layout === 'public')`,
+  )
+  lines.push(
+    `export const shellRoutes = appRoutes.filter((r) => r.layout === 'shell')`,
+  )
+
+  // Sidebar tree per section
+  const sectionTreeParts: string[] = []
+  const sectionsSorted = [...sectionsWithPages.entries()].sort((a, b) => {
+    const sa = sectionByName.get(a[0])
+    const sb = sectionByName.get(b[0])
+    const oa = sa?.meta?.order ?? 0
+    const ob = sb?.meta?.order ?? 0
+    if (oa !== ob) return oa - ob
+    return a[0].localeCompare(b[0])
+  })
+  for (const [sectionName, sectionEntries] of sectionsSorted) {
+    const section = sectionByName.get(sectionName)
+    const titleKey = section?.meta?.titleKey
+    const order = section?.meta?.order ?? 0
+    const tree = buildSectionTree(sectionEntries)
+    const topLevelPages = sortByOrder(
+      tree
+        .map((node) => node.entry.page)
+        .filter(
+          (p) =>
+            !p.metadata.hidden && !p.url.includes(':') && !p.url.includes('*'),
+        ),
+    )
+    const topMap = new Map(tree.map((n) => [n.entry.page.url, n]))
+    const items = topLevelPages
+      .map((p) => topMap.get(p.url))
+      .filter((n): n is TreeNode => Boolean(n))
+    if (!items.length) continue
+    const titlePart = titleKey ? `titleKey: ${escapeString(titleKey)}, ` : ''
+    sectionTreeParts.push(
+      `{ ${titlePart}order: ${order}, items: [${items.map(renderSidebarNode).join(', ')}] }`,
+    )
+  }
+  lines.push(`export const sidebarTree = [${sectionTreeParts.join(', ')}]`)
+  lines.push(`export const redirects = __userRedirects`)
+
+  return lines.join('\n')
+}

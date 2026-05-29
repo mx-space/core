@@ -6,8 +6,4 @@ export const PKG = PKG_JSON as {
   version: string
   homepage?: string
   issues?: string
-  dashboard?: {
-    repo: string
-    version: string
-  }
 }

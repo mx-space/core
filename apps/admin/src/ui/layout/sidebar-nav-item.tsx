@@ -1,0 +1,210 @@
+import { ChevronDown } from 'lucide-react'
+import { NavLink } from 'react-router'
+import type { TranslationKey } from '~/i18n/types'
+import type { AppRoute, SidebarNode } from 'virtual:admin-routes'
+
+import { cn } from '~/utils/cn'
+
+export type SidebarNavRoute = AppRoute
+export type SidebarNavNode = SidebarNode
+
+const activeLinkClassName =
+  'bg-neutral-950 text-white shadow-xs dark:bg-neutral-50 dark:text-neutral-950'
+const inactiveLinkClassName =
+  'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-50'
+
+export function SidebarNavItem(props: {
+  active: boolean
+  depth: number
+  isExpanded: (path: string) => boolean
+  isRouteActive: (route: SidebarNavRoute) => boolean
+  isNodeActive: (node: SidebarNavNode) => boolean
+  node: SidebarNavNode
+  onExpandedChange: (path: string) => void
+  t: (key: TranslationKey) => string
+}) {
+  const Icon = props.node.route.icon
+  const hasChildren = !!props.node.children?.length
+  const expanded = props.isExpanded(props.node.route.path)
+  const titleText = props.node.route.titleKey
+    ? props.t(props.node.route.titleKey)
+    : props.node.route.path
+  const titleTooltip = props.node.route.descriptionKey
+    ? props.t(props.node.route.descriptionKey)
+    : titleText
+  const isSelfRouteActive = props.isRouteActive(props.node.route)
+  const parentClassName = cn(
+    'grid w-full grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-2 rounded text-left transition-colors',
+    props.depth === 0 ? 'h-9 px-3 text-sm' : 'h-8 px-2 text-[13px]',
+    isSelfRouteActive
+      ? activeLinkClassName
+      : props.active
+        ? cn(
+            'bg-neutral-100 text-neutral-950 dark:bg-neutral-900 dark:text-neutral-50',
+            hasChildren ? 'font-medium' : null,
+          )
+        : inactiveLinkClassName,
+  )
+
+  return (
+    <div>
+      {hasChildren ? (
+        <div className="relative">
+          <NavLink
+            className={cn(parentClassName, 'pr-8')}
+            data-scope-item="nav"
+            title={titleTooltip}
+            to={props.node.route.path}
+          >
+            {Icon ? (
+              <Icon
+                aria-hidden="true"
+                className={cn(
+                  'shrink-0',
+                  props.depth === 0 ? 'size-4' : 'size-3.5',
+                )}
+              />
+            ) : (
+              <span aria-hidden="true" className="size-4 shrink-0" />
+            )}
+            <span className="min-w-0 flex-1 truncate">{titleText}</span>
+            <span aria-hidden="true" className="size-3.5" />
+          </NavLink>
+          <button
+            aria-expanded={expanded}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${titleText}`}
+            className={cn(
+              'absolute inset-y-0 right-1 my-auto inline-flex h-6 w-6 items-center justify-center rounded transition-colors',
+              isSelfRouteActive
+                ? 'text-white/70 hover:bg-white/10 hover:text-white dark:text-neutral-900/70 dark:hover:bg-neutral-900/10 dark:hover:text-neutral-900'
+                : 'text-neutral-400 hover:bg-neutral-200/60 hover:text-neutral-700 dark:hover:bg-neutral-800/60 dark:hover:text-neutral-300',
+            )}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              props.onExpandedChange(props.node.route.path)
+            }}
+            type="button"
+          >
+            <ChevronDown
+              aria-hidden="true"
+              className={cn(
+                'size-3.5 shrink-0 transition-transform',
+                expanded ? 'rotate-180' : null,
+              )}
+            />
+          </button>
+        </div>
+      ) : (
+        <NavLink
+          className={parentClassName}
+          data-scope-item="nav"
+          title={titleTooltip}
+          to={props.node.route.path}
+        >
+          {Icon ? (
+            <Icon
+              aria-hidden="true"
+              className={cn(
+                'shrink-0',
+                props.depth === 0 ? 'size-4' : 'size-3.5',
+              )}
+            />
+          ) : (
+            <span aria-hidden="true" className="size-4 shrink-0" />
+          )}
+          <span className="min-w-0 flex-1 truncate">{titleText}</span>
+          <span aria-hidden="true" className="size-3.5" />
+        </NavLink>
+      )}
+
+      {hasChildren ? (
+        <div
+          className={cn(
+            'grid overflow-hidden transition-[grid-template-rows,opacity] duration-200 ease-out',
+            expanded
+              ? 'grid-rows-[1fr] opacity-100'
+              : 'grid-rows-[0fr] opacity-0',
+          )}
+        >
+          <div className="min-h-0">
+            <div className="ml-4 mt-1 grid gap-0.5 border-l border-neutral-200 pl-2 dark:border-neutral-800">
+              {props.node.children?.map((child) => (
+                <SidebarNavItem
+                  active={props.isNodeActive(child)}
+                  depth={props.depth + 1}
+                  isExpanded={props.isExpanded}
+                  isRouteActive={props.isRouteActive}
+                  isNodeActive={props.isNodeActive}
+                  key={child.route.path}
+                  node={child}
+                  onExpandedChange={props.onExpandedChange}
+                  t={props.t}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+export function collectActiveParentPaths(
+  node: SidebarNavNode,
+  activePath: string,
+  currentPath: string,
+): string[] {
+  if (!node.children?.length) {
+    return []
+  }
+
+  const activeChildPaths = node.children.flatMap((child) =>
+    collectActiveParentPaths(child, activePath, currentPath),
+  )
+  const hasActiveDescendant =
+    doesRouteMatch(node.route, activePath, currentPath) ||
+    activeChildPaths.length > 0 ||
+    node.children.some((child) =>
+      doesRouteMatch(child.route, activePath, currentPath),
+    )
+
+  return hasActiveDescendant
+    ? [node.route.path, ...activeChildPaths]
+    : activeChildPaths
+}
+
+export function doesRouteMatch(
+  route: SidebarNavRoute,
+  activePath: string,
+  currentPath: string,
+) {
+  return (
+    route.path === activePath ||
+    route.path === currentPath ||
+    (route.matchPaths ?? []).some(
+      (path) => path === activePath || path === currentPath,
+    )
+  )
+}
+
+export function filterSidebarNode(node: SidebarNavNode): SidebarNavNode | null {
+  if (node.route.path === '/debug' || node.route.path.startsWith('/debug/')) {
+    return null
+  }
+
+  if (!node.children?.length) {
+    return node
+  }
+
+  const children = node.children.flatMap((child) => {
+    const visibleChild = filterSidebarNode(child)
+
+    return visibleChild ? [visibleChild] : []
+  })
+
+  return {
+    ...node,
+    children,
+  }
+}

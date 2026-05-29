@@ -5,7 +5,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { parseHTML } from 'linkedom'
 
 import { API_VERSION } from '~/app.config'
-import { PKG } from '~/utils/pkg.util'
+import { ADMIN_DASHBOARD_REPO } from '~/constants/admin.constant'
 
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerService } from '../owner/owner.service'
@@ -32,7 +32,7 @@ export class PageProxyService {
     )
     const githubToken = thirdParty.github?.token
     const response = await fetch(
-      `https://api.github.com/repos/${PKG.dashboard!.repo}/releases/latest`,
+      `https://api.github.com/repos/${ADMIN_DASHBOARD_REPO}/releases/latest`,
       {
         headers: githubToken ? { Authorization: `Bearer ${githubToken}` } : {},
       },

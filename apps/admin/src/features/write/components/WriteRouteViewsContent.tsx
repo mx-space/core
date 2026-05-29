@@ -1,0 +1,4045 @@
+import { Popover } from '@base-ui/react/popover'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  ArrowLeftRight,
+  BookOpen,
+  Bot,
+  Braces,
+  Bug,
+  Check,
+  Clock,
+  Copy,
+  File as FileIcon,
+  FileText,
+  Hash,
+  History,
+  Image as ImageIcon,
+  Loader2,
+  MapPin,
+  Pencil,
+  Search,
+  Send,
+  SlidersHorizontal,
+  WandSparkles,
+  X,
+} from 'lucide-react'
+import {
+  FormEvent,
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import {
+  useBeforeUnload,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from 'react-router'
+import { load } from 'js-yaml'
+import { toast } from 'sonner'
+import type { CreateDraftData } from '~/api/drafts'
+import type { TranslationKey } from '~/i18n/types'
+import type { Amap, AMapSearch } from '~/models/amap'
+import type { Image as ImageModel } from '~/models/base'
+import type { CategoryModel } from '~/models/category'
+import type { DraftModel } from '~/models/draft'
+import type { NoteModel } from '~/models/note'
+import type { PageModel } from '~/models/page'
+import type { PostModel } from '~/models/post'
+import type { TopicModel } from '~/models/topic'
+import type {
+  RichEditorWithAgentProps,
+  RichEditorWithAgentRef,
+} from '~/vendor/rich-editor/components/RichEditorWithAgent'
+import type { MetaFieldsSchema } from '~/vendor/rich-editor/utils/meta-tools'
+import type { SerializedEditorState } from 'lexical'
+import type { LucideIcon } from 'lucide-react'
+import type { CSSProperties, ReactNode } from 'react'
+
+import { AiQueryType, writerGenerate } from '~/api/ai'
+import { getCategories, getTags } from '~/api/categories'
+import {
+  createDraft,
+  getDraftById,
+  getDraftByRef,
+  getDraftHistory,
+  getDraftHistoryVersion,
+  getNewDrafts,
+  updateDraft,
+} from '~/api/drafts'
+import { uploadFile } from '~/api/files'
+import { createNote, getNoteById, updateNote } from '~/api/notes'
+import { createPage, getPageById, updatePage } from '~/api/pages'
+import { createPost, getPostById, getPosts, updatePost } from '~/api/posts'
+import { callBuiltInFunction } from '~/api/system'
+import { getTopics } from '~/api/topics'
+import { API_URL, WEB_URL } from '~/constants/env'
+import {
+  APP_SHELL_HEADER_HEIGHT_CLASS,
+  APP_SHELL_HEADER_HEIGHT_VALUE,
+} from '~/constants/layout'
+import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
+import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
+import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
+import { MetaPresetSection } from '~/features/write/meta-presets'
+import { useLocalStorageState } from '~/hooks/use-local-storage-state'
+import { useI18n } from '~/i18n'
+import { translate } from '~/i18n/translate'
+import { DraftRefType } from '~/models/draft'
+import { confirmDialog } from '~/ui/feedback/confirm'
+import { Drawer } from '~/ui/feedback/drawer'
+import { Modal, ModalHeader } from '~/ui/feedback/modal'
+import { present } from '~/ui/feedback/modal-imperative'
+import {
+  AsidePanel,
+  ContentLayout,
+  ContentLayoutSlot,
+} from '~/ui/layout/content-layout'
+import { HeaderBackButton } from '~/ui/layout/header-back-button'
+import { Button } from '~/ui/primitives/button'
+import { DateTimePicker } from '~/ui/primitives/datetime-picker'
+import { Scroll } from '~/ui/primitives/scroll'
+import { SelectField } from '~/ui/primitives/select'
+import { Switch } from '~/ui/primitives/switch'
+import { TextArea, TextInput } from '~/ui/primitives/text-field'
+import { cn } from '~/utils/cn'
+import { getDayOfYear } from '~/utils/time'
+import { CodeMirrorEditor, ImageDropZone } from '~/vendor/codemirror'
+import {
+  buildMetaSystemMessages,
+  buildMetaTools,
+} from '~/vendor/rich-editor/utils/meta-tools'
+
+type WriteKind = 'note' | 'page' | 'post'
+type ContentFormat = 'lexical' | 'markdown'
+type NoteCoordinates = { latitude: number; longitude: number }
+
+interface WriteFormState {
+  bookmark: boolean
+  categoryId: string
+  content: string
+  contentFormat: ContentFormat
+  coordinatesLat: string
+  coordinatesLng: string
+  copyright: boolean
+  isPublished: boolean
+  images: NonNullable<DraftModel['images']>
+  location: string
+  meta: Record<string, unknown>
+  mood: string
+  order: string
+  password: string
+  passwordProtected: boolean
+  pin: boolean
+  pinOrder: string
+  publicAt: string
+  relatedId: string
+  slug: string
+  subtitle: string
+  summary: string
+  tags: string
+  text: string
+  title: string
+  topicId: string
+  weather: string
+}
+
+const emptyState: WriteFormState = {
+  bookmark: false,
+  categoryId: '',
+  content: '',
+  contentFormat: 'markdown',
+  coordinatesLat: '',
+  coordinatesLng: '',
+  copyright: true,
+  isPublished: true,
+  images: [],
+  location: '',
+  meta: {},
+  mood: '',
+  order: '',
+  password: '',
+  passwordProtected: false,
+  pin: false,
+  pinOrder: '1',
+  publicAt: '',
+  relatedId: '',
+  slug: '',
+  subtitle: '',
+  summary: '',
+  tags: '',
+  text: '',
+  title: '',
+  topicId: '',
+  weather: '',
+}
+
+const emptyCategories: CategoryModel[] = []
+const emptyTopics: TopicModel[] = []
+const PREFERRED_CONTENT_FORMAT_STORAGE_KEY = 'preferred-content-format'
+const RichEditorWithAgent = lazy(() =>
+  import('~/vendor/rich-editor/components/RichEditorWithAgent').then(
+    (module) => ({
+      default: module.RichEditorWithAgent,
+    }),
+  ),
+)
+
+interface PresetOption {
+  labelKey: TranslationKey
+  value: string
+}
+
+// Mood/weather values are persisted as Chinese strings in the backend; we keep
+// them as escape sequences so this source file stays free of inline CJK while
+// still mapping to the existing API contract. Display labels come from i18n.
+const MOOD_SET: readonly PresetOption[] = [
+  { labelKey: 'write.mood.delight', value: '\u5f00\u5fc3' },
+  { labelKey: 'write.mood.sad', value: '\u4f24\u5fc3' },
+  { labelKey: 'write.mood.determined', value: '\u51b3\u5fc3' },
+  { labelKey: 'write.mood.firm', value: '\u575a\u5b9a' },
+  { labelKey: 'write.mood.hatred', value: '\u75db\u6068' },
+  { labelKey: 'write.mood.irritated', value: '\u751f\u6c14' },
+  { labelKey: 'write.mood.grief', value: '\u60b2\u54c0' },
+  { labelKey: 'write.mood.bitter', value: '\u75db\u82e6' },
+  { labelKey: 'write.mood.scared', value: '\u53ef\u6015' },
+  { labelKey: 'write.mood.unease', value: '\u4e0d\u5feb' },
+  { labelKey: 'write.mood.loathed', value: '\u53ef\u6076' },
+  { labelKey: 'write.mood.dread', value: '\u62c5\u5fc3' },
+  { labelKey: 'write.mood.depressed', value: '\u7edd\u671b' },
+  { labelKey: 'write.mood.tense', value: '\u7126\u8651' },
+  { labelKey: 'write.mood.excited', value: '\u6fc0\u52a8' },
+] as const
+const WEATHER_SET: readonly PresetOption[] = [
+  { labelKey: 'write.weather.sunny', value: '\u6674' },
+  { labelKey: 'write.weather.cloudy', value: '\u591a\u4e91' },
+  { labelKey: 'write.weather.rain', value: '\u96e8' },
+  { labelKey: 'write.weather.overcast', value: '\u9634' },
+  { labelKey: 'write.weather.snow', value: '\u96ea' },
+  { labelKey: 'write.weather.thunderstorm', value: '\u96f7\u96e8' },
+] as const
+
+const POST_META_SCHEMA: MetaFieldsSchema = {
+  title: { description: 'Post title', type: 'string' },
+  slug: {
+    description:
+      'URL path segment; prefer lowercase English words joined with hyphens.',
+    example: 'my-first-post',
+    type: 'string',
+  },
+  tags: { description: 'Post tag list', type: 'string[]' },
+  summary: {
+    description: 'Post summary; leave empty to auto-generate.',
+    type: 'string',
+  },
+  copyright: {
+    description: 'Whether to show the copyright notice at the end.',
+    type: 'boolean',
+  },
+  pin: { description: 'Whether the post is pinned', type: 'boolean' },
+  pinOrder: {
+    description:
+      'Pin order; higher numbers float to the top; set to 0 when pin is off.',
+    type: 'number',
+  },
+  isPublished: {
+    description: 'Published flag (false means draft).',
+    type: 'boolean',
+  },
+}
+
+const NOTE_META_SCHEMA: MetaFieldsSchema = {
+  title: { description: 'Note title', type: 'string' },
+  slug: {
+    description: 'URL path segment; may be empty (then the nid path is used).',
+    type: 'string',
+  },
+  mood: { description: 'Mood', type: 'string' },
+  weather: { description: 'Weather', type: 'string' },
+  bookmark: {
+    description: 'Whether to mark as a bookmarked memory.',
+    type: 'boolean',
+  },
+  location: { description: 'Location text (optional).', type: 'string' },
+  isPublished: {
+    description: 'Published flag (false means draft).',
+    type: 'boolean',
+  },
+}
+
+const PAGE_META_SCHEMA: MetaFieldsSchema = {
+  title: { description: 'Page title', type: 'string' },
+  slug: {
+    description:
+      'URL path segment; prefer lowercase English words joined with hyphens.',
+    example: 'about',
+    type: 'string',
+  },
+  subtitle: { description: 'Subtitle', type: 'string' },
+  order: {
+    description: 'Navigation order; smaller numbers come first.',
+    type: 'number',
+  },
+}
+
+interface KindConfig {
+  description: string
+  icon: LucideIcon
+  listPath: string
+  queryKey: string
+  title: string
+}
+
+function getKindConfig(kind: WriteKind): KindConfig {
+  if (kind === 'note') {
+    return {
+      description: translate('write.kindDescription.note'),
+      icon: BookOpen,
+      listPath: '/notes',
+      queryKey: 'notes',
+      title: translate('write.header.titleNote'),
+    }
+  }
+  if (kind === 'page') {
+    return {
+      description: translate('write.kindDescription.page'),
+      icon: FileIcon,
+      listPath: '/pages',
+      queryKey: 'pages',
+      title: translate('write.header.titlePage'),
+    }
+  }
+  return {
+    description: translate('write.kindDescription.post'),
+    icon: FileText,
+    listPath: '/posts',
+    queryKey: 'posts',
+    title: translate('write.header.titlePost'),
+  }
+}
+
+function getDraftKindLabel(kind: WriteKind) {
+  if (kind === 'note') return translate('write.kind.note')
+  if (kind === 'page') return translate('write.kind.page')
+  return translate('write.kind.post')
+}
+
+export function PostWritePageContent() {
+  return <WritePage kind="post" />
+}
+
+export function NoteWritePageContent() {
+  return <WritePage kind="note" />
+}
+
+export function PageWritePageContent() {
+  return <WritePage kind="page" />
+}
+
+function WritePage(props: { kind: WriteKind }) {
+  const { t } = useI18n()
+  const config = getKindConfig(props.kind)
+  const Icon = config.icon
+  const queryClient = useQueryClient()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const id = searchParams.get('id') ?? ''
+  const routeDraftId = searchParams.get('draftId') ?? ''
+  const isEditing = Boolean(id)
+  const [preferredContentFormat, setPreferredContentFormat] =
+    useLocalStorageState<ContentFormat>(
+      PREFERRED_CONTENT_FORMAT_STORAGE_KEY,
+      'markdown',
+    )
+  const [state, setState] = useState<WriteFormState>(() => ({
+    ...emptyState,
+    contentFormat: preferredContentFormat,
+  }))
+  const [asidePanel, setAsidePanel] = useState<'agent' | 'meta' | null>(null)
+  const agentVisible = asidePanel === 'agent'
+  const metaPanelOpen = asidePanel === 'meta'
+  const toggleAsidePanel = (panel: 'agent' | 'meta') =>
+    setAsidePanel((current) => (current === panel ? null : panel))
+  const [draftId, setDraftId] = useState('')
+  const [pageParseDialogOpen, setPageParseDialogOpen] = useState(false)
+  const [pageLexicalDebugOpen, setPageLexicalDebugOpen] = useState(false)
+  const [draftListOpen, setDraftListOpen] = useState(false)
+  const [draftListHintDismissed, setDraftListHintDismissed] = useState(false)
+  const [recoveryHintDismissed, setRecoveryHintDismissed] = useState(false)
+  const applyDraftRef = useRef<(draft: DraftModel) => void>(() => {})
+  const appliedRouteDraftIdRef = useRef<string | null>(null)
+  const acceptedRouteRef = useRef({ pathname: '', route: '' })
+  const confirmedNavigationRouteRef = useRef('')
+  const isConfirmingNavRef = useRef(false)
+  const draftDirtyRef = useRef(false)
+  const lastSavedDraftFingerprintRef = useRef('')
+  const latestDraftFingerprintRef = useRef('')
+  const [lastSavedFingerprint, setLastSavedFingerprint] = useState('')
+  const draftRefType = draftRefTypeByKind[props.kind]
+
+  const categoriesQuery = useQuery({
+    enabled: props.kind === 'post',
+    queryFn: () => getCategories({ type: 'Category' }),
+    queryKey: ['categories', 'list'],
+  })
+  const topicsQuery = useQuery({
+    enabled: props.kind === 'note',
+    queryFn: () => getTopics({ page: 1, size: 100 }),
+    queryKey: ['topics', 'list', 'write'],
+  })
+  const tagsQuery = useQuery({
+    enabled: props.kind === 'post',
+    queryFn: getTags,
+    queryKey: ['tags', 'list', 'write'],
+  })
+  const relatedPostsQuery = useQuery({
+    enabled: props.kind === 'post',
+    queryFn: () =>
+      getPosts({
+        page: 1,
+        size: 100,
+        sort_by: 'createdAt',
+        sort_order: 'desc',
+      }),
+    queryKey: ['posts', 'related-options', 'write'],
+  })
+  const detailQuery = useQuery<WriteModel>({
+    enabled: isEditing,
+    queryFn: () => getWriteDetail(props.kind, id),
+    queryKey: [config.queryKey, 'write-detail', id],
+  })
+  const refDraftQuery = useQuery({
+    enabled: isEditing,
+    queryFn: () => getDraftByRef(draftRefType, id),
+    queryKey: ['drafts', 'by-ref', draftRefType, id],
+  })
+  const routeDraftQuery = useQuery({
+    enabled: Boolean(routeDraftId),
+    queryFn: () => getDraftById(routeDraftId),
+    queryKey: ['drafts', 'detail', routeDraftId],
+  })
+  const newDraftsQuery = useQuery({
+    enabled: !isEditing,
+    queryFn: () => getNewDrafts(draftRefType),
+    queryKey: ['drafts', 'new', draftRefType],
+  })
+
+  const categories = categoriesQuery.data ?? emptyCategories
+  const tags = tagsQuery.data ?? []
+  const topics = topicsQuery.data?.data ?? emptyTopics
+  const relatedPosts = relatedPostsQuery.data?.data ?? []
+  const firstCategoryId = categories[0]?.id ?? ''
+  const activeCategory =
+    categories.find((category) => category.id === state.categoryId) ??
+    categories[0]
+  const availableDraft = useMemo(() => {
+    if (refDraftQuery.data) return refDraftQuery.data
+
+    return [...(newDraftsQuery.data ?? [])].sort(
+      (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt),
+    )[0]
+  }, [newDraftsQuery.data, refDraftQuery.data])
+  const publishedContent = useMemo(
+    () => (detailQuery.data ? getPublishedContent(detailQuery.data) : null),
+    [detailQuery.data],
+  )
+  const defaultNoteTitle = useMemo(() => {
+    if (props.kind === 'note' && detailQuery.data) {
+      return getDefaultNoteTitle(
+        new Date((detailQuery.data as NoteModel).createdAt),
+      )
+    }
+
+    return getDefaultNoteTitle()
+  }, [detailQuery.data, props.kind])
+  const notePublicPath =
+    props.kind === 'note'
+      ? buildNotePublicPath(state, detailQuery.data as NoteModel | undefined)
+      : ''
+  const postPublicPath =
+    props.kind === 'post' ? buildPostPublicPath(state, activeCategory) : ''
+  const draftFingerprint = useMemo(
+    () =>
+      JSON.stringify(
+        toDraftData(props.kind, state, isEditing ? id : undefined),
+      ),
+    [id, isEditing, props.kind, state],
+  )
+  const hasDraftAutosaveContent =
+    state.title.trim().length > 0 ||
+    state.text.trim().length > 0 ||
+    state.content.trim().length > 0
+  const canSwitchEditorType = !state.text.trim() && !state.content.trim()
+
+  useEffect(() => {
+    latestDraftFingerprintRef.current = draftFingerprint
+  }, [draftFingerprint])
+
+  const hasUnsavedDraftChanges = () =>
+    draftDirtyRef.current &&
+    hasDraftAutosaveContent &&
+    latestDraftFingerprintRef.current !== lastSavedDraftFingerprintRef.current
+
+  useBeforeUnload(
+    (event) => {
+      if (!hasUnsavedDraftChanges()) return
+      event.preventDefault()
+    },
+    { capture: true },
+  )
+
+  useEffect(() => {
+    const onClickCapture = (event: MouseEvent) => {
+      if (event.defaultPrevented) return
+      if (event.button !== 0) return
+      if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
+        return
+      if (!hasUnsavedDraftChanges()) return
+
+      const target = event.target
+      const anchor =
+        target instanceof Element
+          ? target.closest<HTMLAnchorElement>('a')
+          : null
+      if (!anchor) return
+      if (anchor.target && anchor.target !== '_self') return
+      if (anchor.hasAttribute('download')) return
+
+      const nextRoute = getHashRouterRoute(anchor.href)
+      if (!nextRoute) return
+      const nextPathname = getRoutePathname(nextRoute)
+      if (nextPathname === location.pathname) return
+
+      event.preventDefault()
+      event.stopPropagation()
+
+      if (isConfirmingNavRef.current) return
+      isConfirmingNavRef.current = true
+      void confirmDialog({
+        title: t('write.confirmLeave.title'),
+        description: t('write.confirmLeave.description'),
+        confirmText: t('common.leave'),
+      }).then((ok) => {
+        isConfirmingNavRef.current = false
+        if (!ok) return
+        confirmedNavigationRouteRef.current = nextRoute
+        navigate(nextRoute)
+      })
+    }
+
+    document.addEventListener('click', onClickCapture, true)
+    return () => document.removeEventListener('click', onClickCapture, true)
+  }, [hasDraftAutosaveContent, location.pathname, navigate, t])
+
+  useEffect(() => {
+    const currentRoute = `${location.pathname}${location.search}${location.hash}`
+    const acceptedRoute = acceptedRouteRef.current
+
+    if (!acceptedRoute.route) {
+      acceptedRouteRef.current = {
+        pathname: location.pathname,
+        route: currentRoute,
+      }
+      return
+    }
+
+    if (acceptedRoute.route === currentRoute) return
+
+    if (confirmedNavigationRouteRef.current === currentRoute) {
+      confirmedNavigationRouteRef.current = ''
+      acceptedRouteRef.current = {
+        pathname: location.pathname,
+        route: currentRoute,
+      }
+      return
+    }
+
+    if (
+      acceptedRoute.pathname !== location.pathname &&
+      hasUnsavedDraftChanges()
+    ) {
+      const targetRoute = currentRoute
+      navigate(acceptedRoute.route, { replace: true })
+      if (isConfirmingNavRef.current) return
+      isConfirmingNavRef.current = true
+      void confirmDialog({
+        title: t('write.confirmLeave.title'),
+        description: t('write.confirmLeave.description'),
+        confirmText: t('common.leave'),
+      }).then((ok) => {
+        isConfirmingNavRef.current = false
+        if (!ok) return
+        confirmedNavigationRouteRef.current = targetRoute
+        navigate(targetRoute)
+      })
+      return
+    }
+
+    acceptedRouteRef.current = {
+      pathname: location.pathname,
+      route: currentRoute,
+    }
+  }, [location.hash, location.pathname, location.search, navigate])
+
+  useEffect(() => {
+    if (!detailQuery.data) {
+      if (props.kind !== 'post' || !firstCategoryId) return
+      setState((previous) =>
+        previous.categoryId
+          ? previous
+          : {
+              ...previous,
+              categoryId: firstCategoryId,
+            },
+      )
+      return
+    }
+
+    if (!routeDraftId) {
+      setState(fromModel(props.kind, detailQuery.data))
+    }
+  }, [detailQuery.data, firstCategoryId, props.kind, routeDraftId])
+
+  useEffect(() => {
+    if (refDraftQuery.data && !draftId) {
+      setDraftId(refDraftQuery.data.id)
+    }
+  }, [draftId, refDraftQuery.data])
+
+  const recoveryHintDraft = useMemo(() => {
+    const draft = refDraftQuery.data
+    const published = detailQuery.data
+    if (!isEditing || routeDraftId || !draft || !published) return null
+    if (!isDraftNewerThanPublished(draft, published)) return null
+    return draft
+  }, [detailQuery.data, isEditing, refDraftQuery.data, routeDraftId])
+
+  const openRecoveryDialog = (draft: DraftModel) => {
+    if (!publishedContent) return
+    const handle = present(
+      DraftRecoveryDialog,
+      {
+        draft,
+        publishedContent,
+        onRecover: (recovered) => {
+          applyDraftRef.current(recovered)
+          setRecoveryHintDismissed(true)
+          handle.dismiss()
+        },
+        onUsePublished: () => {
+          draftDirtyRef.current = false
+          lastSavedDraftFingerprintRef.current =
+            latestDraftFingerprintRef.current
+          setLastSavedFingerprint(latestDraftFingerprintRef.current)
+          setRecoveryHintDismissed(true)
+          handle.dismiss()
+        },
+      },
+      {
+        modalProps: {
+          popupStyle: { height: 'min(78vh, 38rem)', width: 'min(92vw, 56rem)' },
+        },
+      },
+    )
+  }
+
+  useEffect(() => {
+    const draft = routeDraftQuery.data
+    if (!draft || appliedRouteDraftIdRef.current === draft.id) return
+
+    if (draft.refType !== draftRefType) {
+      toast.error(t('write.toast.draftTypeMismatch'))
+      appliedRouteDraftIdRef.current = draft.id
+      return
+    }
+
+    appliedRouteDraftIdRef.current = draft.id
+    setDraftId(draft.id)
+    setState((previous) => fromDraft(props.kind, draft, previous))
+
+    if (draft.refId && !id) {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('id', draft.refId)
+      nextParams.set('draftId', draft.id)
+      setSearchParams(nextParams, { replace: true })
+    }
+  }, [
+    draftRefType,
+    id,
+    props.kind,
+    routeDraftQuery.data,
+    searchParams,
+    setSearchParams,
+  ])
+
+  const saveMutation = useMutation<WriteModel>({
+    mutationFn: () => saveWrite(props.kind, id, state, draftId || undefined),
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, t('write.toast.saveFailed'))),
+    onSuccess: async (result) => {
+      draftDirtyRef.current = false
+      lastSavedDraftFingerprintRef.current = latestDraftFingerprintRef.current
+      setLastSavedFingerprint(latestDraftFingerprintRef.current)
+      toast.success(
+        isEditing ? t('write.toast.saved') : t('write.toast.createOk'),
+      )
+      await queryClient.invalidateQueries({ queryKey: [config.queryKey] })
+      if (props.kind === 'page') {
+        navigate(config.listPath)
+        return
+      }
+      if (!isEditing) {
+        const nextParams = new URLSearchParams(searchParams)
+        nextParams.set('id', result.id)
+        setSearchParams(nextParams, { replace: true })
+      }
+    },
+  })
+  const draftMutation = useMutation({
+    mutationFn: () => {
+      const data = toDraftData(props.kind, state, isEditing ? id : undefined)
+      return draftId ? updateDraft(draftId, data) : createDraft(data)
+    },
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, t('write.toast.draftSaveFailed'))),
+    onSuccess: async (draft) => {
+      const isFirstDraftSave = !draftId
+      setDraftId(draft.id)
+      draftDirtyRef.current = false
+      lastSavedDraftFingerprintRef.current = latestDraftFingerprintRef.current
+      setLastSavedFingerprint(latestDraftFingerprintRef.current)
+      if (isFirstDraftSave && searchParams.get('draftId') !== draft.id) {
+        const nextParams = new URLSearchParams(searchParams)
+        nextParams.set('draftId', draft.id)
+        setSearchParams(nextParams, { replace: true })
+      }
+      toast.success(t('write.toast.draftSaved'))
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['drafts'] }),
+        isEditing ? refDraftQuery.refetch() : newDraftsQuery.refetch(),
+      ])
+    },
+  })
+  const draftMutationRef = useRef(draftMutation)
+  draftMutationRef.current = draftMutation
+  const writerGenerateMutation = useMutation({
+    mutationFn: () => {
+      const trimmedTitle = state.title.trim()
+      const trimmedText = state.text.trim()
+
+      if (trimmedTitle) {
+        return writerGenerate({
+          title: trimmedTitle,
+          type: AiQueryType.Slug,
+        })
+      }
+
+      return writerGenerate({
+        text: trimmedText,
+        type: AiQueryType.TitleSlug,
+      })
+    },
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, t('write.toast.aiGenerateFailed'))),
+    onSuccess: (result) => {
+      draftDirtyRef.current = true
+      setState((previous) => ({
+        ...previous,
+        slug: result.slug || previous.slug,
+        title: result.title || previous.title,
+      }))
+      toast.success(t('write.toast.aiApplied'))
+    },
+  })
+
+  const validationError = useMemo(
+    () => validateState(props.kind, state, categories, isEditing),
+    [categories, isEditing, props.kind, state],
+  )
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (validationError) {
+      toast.error(validationError)
+      return
+    }
+
+    saveMutation.mutate()
+  }
+  useEffect(() => {
+    if (!draftDirtyRef.current) return
+    if (!hasDraftAutosaveContent) return
+    if (draftFingerprint === lastSavedDraftFingerprintRef.current) return
+
+    const timer = window.setTimeout(() => {
+      if (!draftDirtyRef.current || draftMutationRef.current.isPending) return
+      draftMutationRef.current.mutate()
+    }, 10000)
+
+    return () => window.clearTimeout(timer)
+  }, [draftFingerprint, hasDraftAutosaveContent])
+
+  const updateField = <TKey extends keyof WriteFormState>(
+    key: TKey,
+    value: WriteFormState[TKey],
+  ) => {
+    draftDirtyRef.current = true
+    setState((previous) => ({ ...previous, [key]: value }))
+  }
+
+  const updateContentFormat = (format: ContentFormat) => {
+    setPreferredContentFormat(format)
+    updateField('contentFormat', format)
+  }
+
+  const getAgentMetaFields = () => getWriteAgentMetaFields(props.kind, state)
+
+  const applyAgentMetaUpdates = (updates: Record<string, unknown>) => {
+    draftDirtyRef.current = true
+    setState((previous) =>
+      applyWriteAgentMetaUpdates(props.kind, previous, updates),
+    )
+  }
+
+  const applyDraft = (draft: DraftModel) => {
+    draftDirtyRef.current = true
+    setDraftId(draft.id)
+    setState((previous) => fromDraft(props.kind, draft, previous))
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('draftId', draft.id)
+    if (draft.refId) nextParams.set('id', draft.refId)
+    setSearchParams(nextParams, { replace: true })
+    toast.success(t('write.toast.draftApplied'))
+  }
+  applyDraftRef.current = applyDraft
+
+  const generateTitleOrSlug = () => {
+    if (!state.title.trim() && !state.text.trim()) {
+      toast.error(t('write.slugGenerate.bothMissing'))
+      return
+    }
+
+    writerGenerateMutation.mutate()
+  }
+
+  const saveDraftNow = () => {
+    if (!hasDraftAutosaveContent) {
+      toast.error(t('write.toast.contentEmptyForDraft'))
+      return
+    }
+    if (draftMutation.isPending) return
+
+    draftMutation.mutate()
+  }
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault()
+        saveDraftNow()
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [saveDraftNow])
+
+  const copyPageUrl = () => {
+    if (!state.slug.trim()) return
+
+    void navigator.clipboard
+      .writeText(`${WEB_URL}/${state.slug.trim()}`)
+      .then(() => toast.success(t('write.editor.copyLinkOk')))
+      .catch(() => toast.error(t('write.toast.copyFailed')))
+  }
+
+  const latestDraft = draftMutation.data ?? availableDraft
+  const draftListHintCount =
+    !isEditing && !routeDraftId ? (newDraftsQuery.data?.length ?? 0) : 0
+  const showDraftListHint =
+    draftListHintCount > 0 && !draftListHintDismissed && !draftListOpen
+  const showRecoveryHint = Boolean(
+    recoveryHintDraft && publishedContent && !recoveryHintDismissed,
+  )
+  const draftKindText = getDraftKindLabel(props.kind)
+  const isDirty =
+    hasDraftAutosaveContent && draftFingerprint !== lastSavedFingerprint
+  const metaStatus = computeMetaStatus({
+    isDirty,
+    isEditing,
+    isPendingDraftSave: draftMutation.isPending,
+    latestDraft,
+    publishedUpdatedAt: detailQuery.data
+      ? getPublishedContent(detailQuery.data).updatedAt
+      : undefined,
+  })
+
+  const slugPathPrefix =
+    props.kind === 'post'
+      ? `/posts/${activeCategory?.slug ?? ''}/`
+      : props.kind === 'page'
+        ? '/'
+        : ''
+  const slugDisplayPath = state.slug.trim()
+    ? `${slugPathPrefix}${state.slug.trim()}`
+    : ''
+  const aiButtonVisible =
+    state.text.trim().length > 0 &&
+    (props.kind === 'note' ||
+      (props.kind === 'post' && (!state.title.trim() || !state.slug.trim())) ||
+      (props.kind === 'page' && !state.slug.trim()))
+
+  const titlePlaceholder =
+    props.kind === 'note'
+      ? defaultNoteTitle
+      : t('write.editor.titlePlaceholder')
+
+  const subtitleNode: ReactNode =
+    props.kind === 'page' ? (
+      <input
+        className="outline-hidden mt-1 w-full border-0 bg-transparent px-0 text-base text-neutral-500 placeholder:text-neutral-300 dark:text-neutral-400 dark:placeholder:text-neutral-700"
+        onChange={(event) => updateField('subtitle', event.target.value)}
+        placeholder={t('write.editor.subtitlePlaceholder')}
+        value={state.subtitle}
+      />
+    ) : null
+
+  return (
+    <form className="flex h-full min-h-0 flex-col" onSubmit={onSubmit}>
+      <section
+        className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950"
+        style={
+          {
+            '--app-shell-header-height': APP_SHELL_HEADER_HEIGHT_VALUE,
+          } as CSSProperties
+        }
+      >
+        <div
+          className={cn(
+            'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+            APP_SHELL_HEADER_HEIGHT_CLASS,
+          )}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <HeaderBackButton
+              label={t('write.header.backToList')}
+              to={config.listPath}
+            />
+            <h2 className="inline-flex min-w-0 items-center gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
+              <Icon aria-hidden="true" className="size-4 shrink-0" />
+              <span className="truncate">
+                {props.kind === 'page'
+                  ? isEditing
+                    ? t('write.header.editPage')
+                    : t('write.header.newPage')
+                  : config.title}
+              </span>
+            </h2>
+            <DraftStatusTag
+              className="hidden md:inline-flex"
+              draft={draftMutation.data ?? availableDraft}
+              isSaving={draftMutation.isPending}
+            />
+          </div>
+          {props.kind === 'page' ? (
+            <div className="flex shrink-0 items-center gap-1.5">
+              {state.contentFormat === 'markdown' ? (
+                <WriteHeaderIconButton
+                  onClick={() => setPageParseDialogOpen(true)}
+                  title={t('write.pill.parseMd')}
+                  type="button"
+                >
+                  <Hash aria-hidden="true" className="size-4" />
+                </WriteHeaderIconButton>
+              ) : (
+                <WriteHeaderIconButton
+                  onClick={() => setPageLexicalDebugOpen(true)}
+                  title={t('write.pill.lexicalDebug')}
+                  type="button"
+                >
+                  <Bug aria-hidden="true" className="size-4" />
+                </WriteHeaderIconButton>
+              )}
+              <WriteHeaderIconButton
+                onClick={() => toggleAsidePanel('meta')}
+                title={
+                  metaPanelOpen
+                    ? t('write.pageHeader.hidePageSettings')
+                    : t('write.pageHeader.pageSettings')
+                }
+                type="button"
+                variant={metaPanelOpen ? 'primary' : 'default'}
+              >
+                <SlidersHorizontal aria-hidden="true" className="size-4" />
+              </WriteHeaderIconButton>
+              <WriteHeaderIconButton
+                disabled={saveMutation.isPending || detailQuery.isLoading}
+                title={t('write.header.publish')}
+                type="submit"
+                variant="primary"
+              >
+                {saveMutation.isPending ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <Send aria-hidden="true" className="size-4" />
+                )}
+              </WriteHeaderIconButton>
+            </div>
+          ) : (
+            <div className="flex shrink-0 items-center gap-1.5">
+              <WriteHeaderIconButton
+                disabled={state.contentFormat !== 'lexical'}
+                onClick={() => toggleAsidePanel('agent')}
+                title={
+                  agentVisible ? t('write.pill.hideAi') : t('write.pill.showAi')
+                }
+                type="button"
+                variant={agentVisible ? 'primary' : 'default'}
+              >
+                <Bot aria-hidden="true" className="size-4" />
+              </WriteHeaderIconButton>
+              <WriteHeaderIconButton
+                onClick={() => toggleAsidePanel('meta')}
+                title={
+                  metaPanelOpen
+                    ? props.kind === 'post'
+                      ? t('write.pill.hidePostSettings')
+                      : t('write.pill.hideNoteSettings')
+                    : props.kind === 'post'
+                      ? t('write.pill.postSettings')
+                      : t('write.pill.noteSettings')
+                }
+                type="button"
+                variant={metaPanelOpen ? 'primary' : 'default'}
+              >
+                <SlidersHorizontal aria-hidden="true" className="size-4" />
+              </WriteHeaderIconButton>
+              <WriteHeaderIconButton
+                disabled={saveMutation.isPending || detailQuery.isLoading}
+                title={t('write.header.publish')}
+                type="submit"
+                variant="primary"
+              >
+                {saveMutation.isPending ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <Send aria-hidden="true" className="size-4" />
+                )}
+              </WriteHeaderIconButton>
+            </div>
+          )}
+        </div>
+
+        {showDraftListHint ? (
+          <DraftHintBanner
+            actionLabel={t('write.draftList.hintAction')}
+            message={t('write.draftList.hintMessage', {
+              count: draftListHintCount,
+              label: draftKindText,
+            })}
+            onAction={() => setDraftListOpen(true)}
+            onDismiss={() => setDraftListHintDismissed(true)}
+            variant="list"
+          />
+        ) : null}
+        {showRecoveryHint && recoveryHintDraft ? (
+          <DraftHintBanner
+            actionLabel={t('write.recovery.compareAction')}
+            message={t('write.recovery.draftHasNew', {
+              label: draftKindText,
+              version: recoveryHintDraft.version,
+            })}
+            onAction={() => openRecoveryDialog(recoveryHintDraft)}
+            onDismiss={() => setRecoveryHintDismissed(true)}
+            variant="recovery"
+          />
+        ) : null}
+
+        <ContentLayout
+          className="min-h-0 flex-1"
+          mainClassName="flex flex-col"
+          onCloseAside={() => setAsidePanel(null)}
+          open={asidePanel !== null && !detailQuery.isLoading}
+        >
+          {detailQuery.isLoading ? (
+            <div className="min-h-0 flex-1">
+              <WriteSkeleton kind={props.kind} />
+            </div>
+          ) : (
+            <Scroll
+              className="min-h-0 flex-1"
+              innerClassName="min-h-full bg-white dark:bg-neutral-950"
+            >
+              <main className="flex min-h-full min-w-0 flex-col bg-white dark:bg-neutral-950">
+                <div className="mx-auto w-full max-w-5xl shrink-0 px-3 pt-8">
+                  <EditorMetaStrip
+                    aiButtonPending={writerGenerateMutation.isPending}
+                    aiButtonVisible={aiButtonVisible}
+                    canSwitchFormat={canSwitchEditorType}
+                    format={state.contentFormat}
+                    onAiGenerate={generateTitleOrSlug}
+                    onToggleFormat={() =>
+                      updateContentFormat(
+                        state.contentFormat === 'lexical'
+                          ? 'markdown'
+                          : 'lexical',
+                      )
+                    }
+                    status={metaStatus.status}
+                    statusText={metaStatus.text}
+                  />
+                  <EditorTitleArea
+                    autoFocus={!isEditing}
+                    copyPageUrl={
+                      props.kind === 'page' ? copyPageUrl : undefined
+                    }
+                    displayPath={slugDisplayPath}
+                    onSlugChange={(value) => updateField('slug', value)}
+                    onTitleChange={(value) => updateField('title', value)}
+                    placeholder={titlePlaceholder}
+                    required={props.kind !== 'note'}
+                    showSlugPill={props.kind !== 'note'}
+                    slug={state.slug}
+                    slugPlaceholder={
+                      props.kind === 'page' ? 'slug' : 'slug-of-this-post'
+                    }
+                    slugPrefix={slugPathPrefix}
+                    subtitle={subtitleNode}
+                    title={state.title}
+                  />
+                  <hr className="my-4 border-0 border-t border-neutral-100 dark:border-neutral-900" />
+                </div>
+
+                <div className="flex min-h-0 flex-1 flex-col pb-[200px]">
+                  <div className="mx-auto w-full max-w-5xl px-3">
+                    {state.contentFormat === 'lexical' ? (
+                      <RichWriteSurface
+                        agentVisible={agentVisible}
+                        autoFocus={isEditing}
+                        content={state.content}
+                        contentClassName="min-h-120 px-0 py-3"
+                        kind={props.kind}
+                        key={`${props.kind}:${id || 'new'}:${state.contentFormat}`}
+                        getMetaFields={getAgentMetaFields}
+                        metaFieldsSchema={getWriteAgentMetaSchema(props.kind)}
+                        onContentChange={(content) =>
+                          updateField('content', content)
+                        }
+                        onMetaFieldsUpdate={applyAgentMetaUpdates}
+                        onTextChange={(text) => updateField('text', text)}
+                        refId={isEditing ? id : routeDraftId || undefined}
+                        surfaceClassName="min-h-136 rounded-none border-0 bg-transparent dark:bg-transparent"
+                        surfaceStyle={
+                          {
+                            minHeight: '34rem',
+                            '--rc-max-width': 'none',
+                          } as CSSProperties
+                        }
+                      />
+                    ) : (
+                      <>
+                        <CodeMirrorEditor
+                          autoFocus={isEditing}
+                          className="min-h-136 rounded-none border-0 bg-transparent px-0 py-6"
+                          onChange={(value) => updateField('text', value)}
+                          style={{ minHeight: '34rem' }}
+                          text={state.text}
+                        />
+                        <ImageDropZone />
+                      </>
+                    )}
+                  </div>
+                </div>
+              </main>
+            </Scroll>
+          )}
+          <ContentLayoutSlot active={metaPanelOpen} id="meta">
+            {props.kind === 'page' ? (
+              <PageSettingsPanel state={state} updateField={updateField} />
+            ) : (
+              <ContentSettingsPanel
+                availableDraft={availableDraft}
+                draftMutationData={draftMutation.data}
+                draftMutationPending={draftMutation.isPending}
+                kind={props.kind}
+                noteFields={
+                  props.kind === 'note' ? (
+                    <NoteFields
+                      state={state}
+                      topics={topics}
+                      updateField={updateField}
+                    />
+                  ) : null
+                }
+                onApplyDraft={applyDraft}
+                onGenerateTitleOrSlug={generateTitleOrSlug}
+                onSaveDraft={saveDraftNow}
+                postFields={
+                  props.kind === 'post' ? (
+                    <PostFields
+                      categories={categories}
+                      currentPostId={id}
+                      relatedPosts={relatedPosts}
+                      state={state}
+                      tags={tags}
+                      updateField={updateField}
+                    />
+                  ) : null
+                }
+                publicPath={
+                  props.kind === 'note'
+                    ? notePublicPath
+                      ? `${WEB_URL}${notePublicPath}`
+                      : t('write.notePublicPath.fallback')
+                    : postPublicPath
+                      ? `${WEB_URL}${postPublicPath}`
+                      : t('write.postPublicPath.fallback')
+                }
+                saveResultId={saveMutation.data?.id}
+                state={state}
+                updateField={updateField}
+                writerGeneratePending={writerGenerateMutation.isPending}
+              />
+            )}
+          </ContentLayoutSlot>
+        </ContentLayout>
+      </section>
+
+      {props.kind === 'page' ? (
+        <PageParseMarkdownDialog
+          onApply={(parsed) => {
+            setState((previous) => applyParsedPageMarkdown(previous, parsed))
+            setPageParseDialogOpen(false)
+            toast.success(t('write.parseMd.success'))
+          }}
+          onClose={() => setPageParseDialogOpen(false)}
+          open={pageParseDialogOpen}
+        />
+      ) : null}
+      {props.kind === 'page' ? (
+        <PageLexicalDebugDialog
+          content={state.content}
+          onClose={() => setPageLexicalDebugOpen(false)}
+          open={pageLexicalDebugOpen}
+        />
+      ) : null}
+      <DraftListDialog
+        draftLabel={getDraftKindLabel(props.kind)}
+        drafts={newDraftsQuery.data ?? []}
+        onClose={() => {
+          setDraftListOpen(false)
+          setDraftListHintDismissed(true)
+        }}
+        onCreate={() => {
+          setDraftListOpen(false)
+          setDraftListHintDismissed(true)
+        }}
+        onSelect={(draft) => {
+          applyDraft(draft)
+          setDraftListOpen(false)
+          setDraftListHintDismissed(true)
+        }}
+        open={draftListOpen}
+      />
+    </form>
+  )
+}
+
+function ContentSettingsPanel(props: {
+  availableDraft?: DraftModel
+  draftMutationData?: DraftModel
+  draftMutationPending: boolean
+  kind: Exclude<WriteKind, 'page'>
+  noteFields: ReactNode
+  onApplyDraft: (draft: DraftModel) => void
+  onGenerateTitleOrSlug: () => void
+  onSaveDraft: () => void
+  postFields: ReactNode
+  publicPath: string
+  saveResultId?: string
+  state: WriteFormState
+  updateField: <TKey extends keyof WriteFormState>(
+    key: TKey,
+    value: WriteFormState[TKey],
+  ) => void
+  writerGeneratePending: boolean
+}) {
+  const { t } = useI18n()
+  return (
+    <AsidePanel>
+      <Scroll
+        className="min-h-0 flex-1"
+        innerClassName="grid grid-cols-[minmax(0,1fr)] gap-4 p-4"
+      >
+        <PanelBlock title={t('write.section.publish.title')}>
+          <Switch
+            checked={props.state.isPublished}
+            label={t('write.section.path.publishLabel')}
+            onCheckedChange={(checked) =>
+              props.updateField('isPublished', checked)
+            }
+          />
+          {props.saveResultId ? (
+            <div className="mt-3 inline-flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
+              <Check aria-hidden="true" className="size-4" />
+              {t('write.section.path.savedId', { id: props.saveResultId })}
+            </div>
+          ) : null}
+        </PanelBlock>
+
+        <PanelBlock title={t('write.section.draft.title')}>
+          <div className="space-y-3 text-sm">
+            {props.availableDraft ? (
+              <div className="border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950">
+                <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                  <History aria-hidden="true" className="size-4" />
+                  <span>
+                    {t('write.section.draft.versionLine', {
+                      version: props.availableDraft.version,
+                      time: formatDateTime(props.availableDraft.updatedAt),
+                    })}
+                  </span>
+                </div>
+                <p className="mt-2 line-clamp-2 text-neutral-800 dark:text-neutral-200">
+                  {props.availableDraft.title ||
+                    t('write.section.draft.untitled')}
+                </p>
+                <Button
+                  className="mt-3 w-full"
+                  onClick={() => props.onApplyDraft(props.availableDraft!)}
+                  type="button"
+                  variant="subtle"
+                >
+                  {t('write.section.draft.applyDraft')}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                {t('write.section.draft.empty')}
+              </p>
+            )}
+
+            <Button
+              className="w-full"
+              disabled={props.draftMutationPending}
+              onClick={props.onSaveDraft}
+              type="button"
+              variant="subtle"
+            >
+              {props.draftMutationPending ? (
+                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+              ) : (
+                <Clock aria-hidden="true" className="size-4" />
+              )}
+              {t('write.section.draft.save')}
+            </Button>
+            {props.draftMutationData ? (
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                {t('write.section.draft.lastSaved', {
+                  time: formatDateTime(props.draftMutationData.updatedAt),
+                })}
+              </p>
+            ) : null}
+          </div>
+        </PanelBlock>
+
+        <PanelBlock title={t('write.section.path.title')}>
+          <TextInput
+            controlClassName="h-9 font-mono focus:border-neutral-400"
+            label="Slug"
+            onChange={(value) => props.updateField('slug', value)}
+            required={props.kind !== 'note'}
+            value={props.state.slug}
+          />
+          <Button
+            className="w-full"
+            disabled={props.writerGeneratePending}
+            onClick={props.onGenerateTitleOrSlug}
+            type="button"
+            variant="subtle"
+          >
+            {props.writerGeneratePending ? (
+              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+            ) : (
+              <WandSparkles aria-hidden="true" className="size-4" />
+            )}
+            {props.state.title.trim()
+              ? t('write.slugGenerate.haveTitle')
+              : t('write.slugGenerate.noTitle')}
+          </Button>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            {props.publicPath}
+          </p>
+        </PanelBlock>
+
+        {props.postFields}
+        {props.noteFields}
+        <MediaAndMetaFields
+          kind={props.kind}
+          state={props.state}
+          updateField={props.updateField}
+        />
+      </Scroll>
+    </AsidePanel>
+  )
+}
+
+function DraftListDialog(props: {
+  draftLabel: string
+  drafts: DraftModel[]
+  onClose: () => void
+  onCreate: () => void
+  onSelect: (draft: DraftModel) => void
+  open: boolean
+}) {
+  const { t } = useI18n()
+  const [selectedDraftId, setSelectedDraftId] = useState('')
+  const selectedDraft =
+    props.drafts.find((draft) => draft.id === selectedDraftId) ??
+    props.drafts[0]
+
+  useEffect(() => {
+    if (!props.open) return
+    setSelectedDraftId(props.drafts[0]?.id ?? '')
+  }, [props.drafts, props.open])
+
+  const continueDraft = () => {
+    if (!selectedDraft) return
+    props.onSelect(selectedDraft)
+  }
+
+  return (
+    <Modal
+      className="max-h-[88vh]"
+      onClose={props.onClose}
+      open={props.open}
+      popupStyle={{ height: 'min(82vh, 38rem)', width: 'min(92vw, 56rem)' }}
+    >
+      <ModalHeader icon={History} title={t('write.draftList.title')} />
+
+      <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[15rem_minmax(0,1fr)]">
+        <Scroll
+          className="min-h-0 border-b border-neutral-200 md:border-b-0 md:border-r dark:border-neutral-800"
+          innerClassName="divide-y divide-neutral-100 dark:divide-neutral-900"
+        >
+          {props.drafts.map((draft) => (
+            <button
+              className={cn(
+                'flex w-full min-w-0 items-start gap-3 px-4 py-3 text-left transition-colors',
+                selectedDraft?.id === draft.id
+                  ? 'bg-neutral-100 dark:bg-neutral-900'
+                  : 'hover:bg-neutral-50 dark:hover:bg-neutral-900/60',
+              )}
+              key={draft.id}
+              onClick={() => setSelectedDraftId(draft.id)}
+              type="button"
+            >
+              <span
+                className={cn(
+                  'mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-full border',
+                  selectedDraft?.id === draft.id
+                    ? 'border-neutral-900 bg-neutral-900 dark:border-neutral-100 dark:bg-neutral-100'
+                    : 'border-neutral-300 dark:border-neutral-700',
+                )}
+                aria-hidden="true"
+              >
+                {selectedDraft?.id === draft.id ? (
+                  <span className="size-1.5 rounded-full bg-white dark:bg-neutral-950" />
+                ) : null}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+                  {draft.title || t('write.editor.untitled')}
+                </span>
+                <span className="mt-1 block text-xs text-neutral-500 dark:text-neutral-400">
+                  {t('write.draftList.summary', {
+                    version: draft.version,
+                    chars: draft.text.length,
+                  })}
+                </span>
+                <span className="mt-0.5 block text-xs text-neutral-400 dark:text-neutral-500">
+                  {formatDateTime(draft.updatedAt)}
+                </span>
+              </span>
+            </button>
+          ))}
+        </Scroll>
+
+        <Scroll className="min-h-0" innerClassName="p-4">
+          {selectedDraft ? (
+            <div className="min-h-full border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900/60">
+              <div className="mb-3 flex min-w-0 items-center justify-between gap-3 border-b border-neutral-200 pb-3 dark:border-neutral-800">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+                    {selectedDraft.title || t('write.editor.untitled')}
+                  </p>
+                  <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    {selectedDraft.contentFormat === 'lexical'
+                      ? 'Lexical'
+                      : 'Markdown'}{' '}
+                    ·{' '}
+                    {t('write.draftList.updatedAt', {
+                      time: formatDateTime(selectedDraft.updatedAt),
+                    })}
+                  </p>
+                </div>
+                <FileText
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-neutral-400"
+                />
+              </div>
+              <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-5 text-neutral-800 dark:text-neutral-200">
+                {selectedDraft.text || t('write.draftList.emptyText')}
+              </pre>
+            </div>
+          ) : (
+            <div className="flex h-full min-h-60 items-center justify-center text-sm text-neutral-500 dark:text-neutral-400">
+              {t('write.draftList.selectPrompt')}
+            </div>
+          )}
+        </Scroll>
+      </div>
+
+      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+        <Button onClick={props.onCreate} type="button" variant="subtle">
+          {t('write.draftList.createNew', { label: props.draftLabel })}
+        </Button>
+        <Button disabled={!selectedDraft} onClick={continueDraft} type="button">
+          {t('write.draftList.continueDraft')}
+        </Button>
+      </div>
+    </Modal>
+  )
+}
+
+interface PublishedWriteContent {
+  content?: string
+  contentFormat?: ContentFormat
+  text: string
+  title: string
+  updatedAt: string
+}
+
+function DraftRecoveryDialog(props: {
+  draft: DraftModel
+  onRecover: (draft: DraftModel) => void
+  onUsePublished: () => void
+  publishedContent: PublishedWriteContent
+}) {
+  const { t } = useI18n()
+  const [selectedVersion, setSelectedVersion] = useState<
+    'current' | 'published' | number
+  >('current')
+  const [selectedDraft, setSelectedDraft] = useState<DraftModel>(props.draft)
+  const historyQuery = useQuery({
+    enabled: Boolean(props.draft.id),
+    queryFn: () => getDraftHistory(props.draft.id),
+    queryKey: ['drafts', 'recovery-history', props.draft.id],
+  })
+  const selectedVersionQuery = useQuery({
+    enabled:
+      typeof selectedVersion === 'number' &&
+      selectedVersion !== props.draft.version,
+    queryFn: () =>
+      getDraftHistoryVersion(props.draft.id, selectedVersion as number),
+    queryKey: ['drafts', 'recovery-version', props.draft.id, selectedVersion],
+  })
+  const versionItems = useMemo(
+    () => buildRecoveryVersionItems(props.draft, historyQuery.data),
+    [historyQuery.data, props.draft],
+  )
+  const selectedContent =
+    selectedVersion === 'published'
+      ? props.publishedContent
+      : selectedVersion === 'current' || selectedVersion === props.draft.version
+        ? props.draft
+        : (selectedVersionQuery.data ?? selectedDraft)
+  const diffStats = getDraftDiffStats(props.publishedContent, selectedContent)
+
+  useEffect(() => {
+    setSelectedVersion('current')
+    setSelectedDraft(props.draft)
+  }, [props.draft])
+
+  useEffect(() => {
+    if (selectedVersionQuery.data) {
+      setSelectedDraft(selectedVersionQuery.data)
+    }
+  }, [selectedVersionQuery.data])
+
+  const recoverSelected = () => {
+    if (selectedVersion === 'published') {
+      props.onUsePublished()
+      return
+    }
+
+    props.onRecover(
+      selectedVersion === 'current' || selectedVersion === props.draft.version
+        ? props.draft
+        : selectedDraft,
+    )
+  }
+
+  return (
+    <>
+      <ModalHeader
+        className="h-auto py-3"
+        subtitle={t('write.recovery.dialogSubtitle', {
+          time: formatDateTime(props.draft.updatedAt),
+        })}
+        title={t('write.recovery.dialogTitle')}
+      />
+
+      <div
+        className="grid min-h-0 flex-1"
+        style={{ gridTemplateColumns: '16rem minmax(0, 1fr)' }}
+      >
+        <Scroll className="min-h-0 border-r border-neutral-200 dark:border-neutral-800">
+          <button
+            className={cn(
+              'grid w-full gap-1 border-b border-neutral-100 px-4 py-3 text-left text-sm transition-colors dark:border-neutral-900',
+              selectedVersion === 'current'
+                ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-900 dark:text-neutral-50'
+                : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900/60',
+            )}
+            onClick={() => {
+              setSelectedVersion('current')
+              setSelectedDraft(props.draft)
+            }}
+            type="button"
+          >
+            <span className="font-medium">
+              {t('write.recovery.draftCurrent')}
+            </span>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              v{props.draft.version} · {formatDateTime(props.draft.updatedAt)}
+            </span>
+          </button>
+
+          {versionItems.map((item) => (
+            <button
+              className={cn(
+                'grid w-full gap-1 border-b border-neutral-100 px-4 py-3 text-left text-sm transition-colors dark:border-neutral-900',
+                selectedVersion === item.version
+                  ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-900 dark:text-neutral-50'
+                  : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900/60',
+              )}
+              key={item.version}
+              onClick={() => setSelectedVersion(item.version)}
+              type="button"
+            >
+              <span className="font-medium">
+                {t('write.recovery.historyVersion', { version: item.version })}
+              </span>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                {formatDateTime(item.savedAt)}
+              </span>
+            </button>
+          ))}
+
+          <button
+            className={cn(
+              'grid w-full gap-1 px-4 py-3 text-left text-sm transition-colors',
+              selectedVersion === 'published'
+                ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-900 dark:text-neutral-50'
+                : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900/60',
+            )}
+            onClick={() => setSelectedVersion('published')}
+            type="button"
+          >
+            <span className="font-medium">{t('write.recovery.published')}</span>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              {formatDateTime(props.publishedContent.updatedAt)}
+            </span>
+          </button>
+        </Scroll>
+
+        <main className="flex min-h-0 flex-col">
+          <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-4 py-2.5 text-xs dark:border-neutral-800">
+            <div className="min-w-0 truncate text-neutral-500 dark:text-neutral-400">
+              {t('write.recovery.headerArrow')}{' '}
+              {selectedVersion === 'published'
+                ? t('write.recovery.published')
+                : selectedVersion === 'current'
+                  ? t('write.recovery.draftCurrent')
+                  : t('write.recovery.historyVersion', {
+                      version: selectedVersion,
+                    })}
+            </div>
+            <div className="shrink-0 text-neutral-500 dark:text-neutral-400">
+              {diffStats.isSame ? (
+                t('write.recovery.contentSame')
+              ) : (
+                <>
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    +{diffStats.added}
+                  </span>
+                  <span> / </span>
+                  <span className="text-red-600 dark:text-red-400">
+                    -{diffStats.removed}
+                  </span>
+                  <span>{t('write.recovery.diffWords')}</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <Scroll
+            className="min-h-0 flex-1"
+            innerClassName="grid grid-cols-[minmax(0,1fr)] gap-3 p-4"
+          >
+            <div>
+              <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                {t('write.editor.titleField')}
+              </div>
+              <div className="mt-1 text-sm text-neutral-950 dark:text-neutral-50">
+                {selectedContent.title || t('write.editor.untitled')}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                {t('write.editor.contentPreview')}
+              </div>
+              <Scroll
+                className="mt-2 border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/60"
+                orientation="both"
+                viewportClassName="max-h-96"
+              >
+                <pre className="whitespace-pre-wrap p-3 text-xs leading-5 text-neutral-700 dark:text-neutral-200">
+                  {selectedContent.text ||
+                    selectedContent.content ||
+                    t('write.editor.contentEmpty')}
+                </pre>
+              </Scroll>
+            </div>
+          </Scroll>
+        </main>
+      </div>
+
+      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+        <Button onClick={props.onUsePublished} type="button" variant="subtle">
+          {t('write.recovery.usePublished')}
+        </Button>
+        <Button
+          disabled={
+            selectedVersion === 'published' || selectedVersionQuery.isLoading
+          }
+          onClick={recoverSelected}
+          type="button"
+        >
+          {selectedVersionQuery.isLoading ? (
+            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+          ) : (
+            <History aria-hidden="true" className="size-4" />
+          )}
+          {t('write.recovery.recoverButton')}
+        </Button>
+      </div>
+    </>
+  )
+}
+
+function WriteHeaderIconButton(props: {
+  children: ReactNode
+  disabled?: boolean
+  onClick?: () => void
+  title: string
+  type: 'button' | 'submit'
+  variant?: 'default' | 'primary'
+}) {
+  return (
+    <button
+      aria-label={props.title}
+      className={cn(
+        'focus-visible:outline-hidden inline-flex size-9 items-center justify-center rounded transition-colors focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 dark:focus-visible:ring-neutral-500 dark:focus-visible:ring-offset-neutral-900',
+        props.variant === 'primary'
+          ? 'bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100'
+          : 'bg-neutral-100/80 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-neutral-800/50 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100',
+      )}
+      disabled={props.disabled}
+      onClick={props.onClick}
+      title={props.title}
+      type={props.type}
+    >
+      {props.children}
+    </button>
+  )
+}
+
+type MetaStatus = 'new' | 'dirty' | 'saved' | 'published'
+
+function computeMetaStatus(input: {
+  isDirty: boolean
+  isEditing: boolean
+  isPendingDraftSave: boolean
+  latestDraft?: DraftModel
+  publishedUpdatedAt?: string
+}): { status: MetaStatus; text: string } {
+  if (input.isPendingDraftSave) {
+    return { status: 'dirty', text: translate('write.metaStatus.dirtySaving') }
+  }
+  if (input.isDirty) {
+    const versionSuffix = input.latestDraft
+      ? translate('write.metaStatus.versionSuffix', {
+          version: input.latestDraft.version,
+        })
+      : ''
+    return {
+      status: 'dirty',
+      text: translate('write.metaStatus.dirty', { version: versionSuffix }),
+    }
+  }
+  if (input.latestDraft) {
+    const savedAt =
+      input.latestDraft.updatedAt ?? input.latestDraft.createdAt ?? ''
+    const suffix = savedAt
+      ? translate('write.metaStatus.savedAt', {
+          time: formatRelativeTime(savedAt),
+        })
+      : ''
+    return {
+      status: 'saved',
+      text: translate('write.metaStatus.draft', {
+        version: input.latestDraft.version,
+        suffix,
+      }),
+    }
+  }
+  if (input.isEditing && input.publishedUpdatedAt) {
+    return {
+      status: 'published',
+      text: translate('write.metaStatus.published', {
+        time: formatRelativeTime(input.publishedUpdatedAt),
+      }),
+    }
+  }
+  return { status: 'new', text: translate('write.metaStatus.new') }
+}
+
+function formatRelativeTime(value: string | null | undefined) {
+  if (value == null || value === '') return '-'
+  const ts = Date.parse(value)
+  if (Number.isNaN(ts)) return '-'
+  const diffMs = Date.now() - ts
+  if (diffMs < 0) return formatDateTime(value)
+  const sec = Math.round(diffMs / 1000)
+  if (sec < 45) return translate('write.relativeTime.justNow')
+  const min = Math.round(sec / 60)
+  if (min < 60)
+    return translate('write.relativeTime.minutesAgo', { count: min })
+  const hr = Math.round(min / 60)
+  if (hr < 24) return translate('write.relativeTime.hoursAgo', { count: hr })
+  const day = Math.round(hr / 24)
+  if (day < 7) return translate('write.relativeTime.daysAgo', { count: day })
+  return formatDateTime(value)
+}
+
+function EditorMetaStrip(props: {
+  aiButtonPending: boolean
+  aiButtonVisible: boolean
+  canSwitchFormat: boolean
+  format: ContentFormat
+  onAiGenerate: () => void
+  onToggleFormat: () => void
+  status: MetaStatus
+  statusText: string
+}) {
+  const { t } = useI18n()
+  const dotClass =
+    props.status === 'dirty'
+      ? 'bg-amber-500'
+      : props.status === 'saved' || props.status === 'published'
+        ? 'bg-emerald-500'
+        : 'bg-neutral-300 dark:bg-neutral-600'
+  const formatLabel =
+    props.format === 'lexical'
+      ? t('write.format.toMarkdown')
+      : t('write.format.toLexical')
+
+  return (
+    <div className="group mb-3 flex items-center justify-between opacity-60 transition-opacity duration-200 hover:opacity-100">
+      <div className="flex min-w-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+        <span
+          aria-hidden="true"
+          className={cn(
+            'inline-block size-1.5 shrink-0 rounded-full',
+            dotClass,
+          )}
+        />
+        <span className="truncate">{props.statusText}</span>
+      </div>
+      <div className="flex shrink-0 items-center gap-0.5">
+        {props.canSwitchFormat ? (
+          <button
+            aria-label={formatLabel}
+            className="focus-visible:outline-hidden inline-flex size-7 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-500 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+            onClick={props.onToggleFormat}
+            title={formatLabel}
+            type="button"
+          >
+            <ArrowLeftRight aria-hidden="true" className="size-3.5" />
+          </button>
+        ) : null}
+        {props.aiButtonVisible ? (
+          <button
+            aria-label={t('write.pill.aiGenerate')}
+            className="focus-visible:outline-hidden inline-flex size-7 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-1 focus-visible:ring-neutral-400 disabled:pointer-events-none disabled:opacity-50 dark:text-neutral-500 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+            disabled={props.aiButtonPending}
+            onClick={props.onAiGenerate}
+            title={t('write.pill.aiGenerate')}
+            type="button"
+          >
+            {props.aiButtonPending ? (
+              <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
+            ) : (
+              <WandSparkles aria-hidden="true" className="size-3.5" />
+            )}
+          </button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function EditorTitleArea(props: {
+  autoFocus: boolean
+  copyPageUrl?: () => void
+  displayPath: string
+  onSlugChange: (value: string) => void
+  onTitleChange: (value: string) => void
+  placeholder: string
+  required: boolean
+  showSlugPill: boolean
+  slug: string
+  slugPlaceholder: string
+  slugPrefix: string
+  subtitle: ReactNode
+  title: string
+}) {
+  return (
+    <div className="group">
+      <input
+        autoFocus={props.autoFocus}
+        className="outline-hidden w-full border-0 bg-transparent px-0 py-0 text-3xl font-semibold tracking-tight text-neutral-950 placeholder:font-medium placeholder:text-neutral-300 dark:text-neutral-50 dark:placeholder:text-neutral-700"
+        onChange={(event) => props.onTitleChange(event.target.value)}
+        placeholder={props.placeholder}
+        required={props.required}
+        value={props.title}
+      />
+      {props.showSlugPill ? (
+        <SlugPill
+          copyPageUrl={props.copyPageUrl}
+          displayPath={props.displayPath}
+          onSlugChange={props.onSlugChange}
+          slug={props.slug}
+          slugPlaceholder={props.slugPlaceholder}
+          slugPrefix={props.slugPrefix}
+        />
+      ) : null}
+      {props.subtitle}
+    </div>
+  )
+}
+
+function SlugPill(props: {
+  copyPageUrl?: () => void
+  displayPath: string
+  onSlugChange: (value: string) => void
+  slug: string
+  slugPlaceholder: string
+  slugPrefix: string
+}) {
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  const hasSlug = Boolean(props.slug.trim())
+  const triggerLabel = hasSlug
+    ? props.displayPath
+    : t('write.editor.titleArea.addSlug')
+
+  return (
+    <Popover.Root onOpenChange={setOpen} open={open}>
+      <Popover.Trigger
+        aria-label={
+          hasSlug
+            ? t('write.editor.titleArea.editSlugAria')
+            : t('write.editor.titleArea.addSlugAria')
+        }
+        className={cn(
+          'focus-visible:outline-hidden -ml-1 mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-xs text-neutral-500 transition-opacity duration-150 hover:bg-neutral-100 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-400 dark:hover:bg-neutral-900',
+          hasSlug
+            ? 'opacity-0 hover:!opacity-100 focus-visible:!opacity-100 group-hover:opacity-70'
+            : 'opacity-0 hover:!opacity-100 focus-visible:!opacity-100 group-hover:opacity-50',
+        )}
+        type="button"
+      >
+        <span className="truncate">{triggerLabel}</span>
+        <Pencil aria-hidden="true" className="size-3 shrink-0" />
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Positioner align="start" side="bottom" sideOffset={6}>
+          <Popover.Popup className="outline-hidden w-80 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
+            <div className="text-xs font-medium uppercase tracking-wider text-neutral-400">
+              Slug
+            </div>
+            <div className="mt-2 flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 font-mono text-xs dark:border-neutral-800 dark:bg-neutral-900">
+              {props.slugPrefix ? (
+                <span className="select-none text-neutral-400">
+                  {props.slugPrefix}
+                </span>
+              ) : null}
+              <input
+                autoFocus
+                className="outline-hidden min-w-0 flex-1 bg-transparent text-neutral-800 placeholder:text-neutral-400 dark:text-neutral-100"
+                onChange={(event) => props.onSlugChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    setOpen(false)
+                  }
+                }}
+                placeholder={props.slugPlaceholder}
+                value={props.slug}
+              />
+            </div>
+            {props.copyPageUrl ? (
+              <div className="mt-2 flex justify-end">
+                <button
+                  className="focus-visible:outline-hidden inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 focus-visible:ring-1 focus-visible:ring-neutral-400 disabled:pointer-events-none disabled:opacity-40 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
+                  disabled={!hasSlug}
+                  onClick={props.copyPageUrl}
+                  type="button"
+                >
+                  <Copy aria-hidden="true" className="size-3" />
+                  {t('write.editor.copyLink')}
+                </button>
+              </div>
+            ) : null}
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
+  )
+}
+
+function buildRecoveryVersionItems(
+  draft: DraftModel,
+  history:
+    | Array<{
+        savedAt: string
+        title: string
+        version: number
+      }>
+    | undefined,
+) {
+  return [...(history ?? [])]
+    .filter((item) => item.version !== draft.version)
+    .sort((a, b) => b.version - a.version)
+    .map((item) => ({
+      savedAt: item.savedAt,
+      title: item.title,
+      version: item.version,
+    }))
+}
+
+function getDraftDiffStats(
+  publishedContent: PublishedWriteContent,
+  selectedContent: PublishedWriteContent | DraftModel,
+) {
+  const publishedText = publishedContent.text || publishedContent.content || ''
+  const selectedText = selectedContent.text || selectedContent.content || ''
+  const sharedPrefixLength = getSharedPrefixLength(publishedText, selectedText)
+  const publishedRemainder = publishedText.slice(sharedPrefixLength)
+  const selectedRemainder = selectedText.slice(sharedPrefixLength)
+  const sharedSuffixLength = getSharedSuffixLength(
+    publishedRemainder,
+    selectedRemainder,
+  )
+  const removed = Math.max(0, publishedRemainder.length - sharedSuffixLength)
+  const added = Math.max(0, selectedRemainder.length - sharedSuffixLength)
+
+  return {
+    added,
+    isSame: publishedText === selectedText,
+    removed,
+  }
+}
+
+function getSharedPrefixLength(left: string, right: string) {
+  const maxLength = Math.min(left.length, right.length)
+  let index = 0
+
+  while (index < maxLength && left[index] === right[index]) {
+    index += 1
+  }
+
+  return index
+}
+
+function getSharedSuffixLength(left: string, right: string) {
+  const maxLength = Math.min(left.length, right.length)
+  let index = 0
+
+  while (
+    index < maxLength &&
+    left[left.length - 1 - index] === right[right.length - 1 - index]
+  ) {
+    index += 1
+  }
+
+  return index
+}
+
+function PostFields(props: {
+  categories: CategoryModel[]
+  currentPostId: string
+  relatedPosts: PostModel[]
+  state: WriteFormState
+  tags: Array<{ count: number; name: string }>
+  updateField: <TKey extends keyof WriteFormState>(
+    key: TKey,
+    value: WriteFormState[TKey],
+  ) => void
+}) {
+  const { t } = useI18n()
+  const selectedTags = splitCommaList(props.state.tags)
+  const selectedRelatedIds = splitCommaList(props.state.relatedId)
+  const visibleRelatedPosts = props.relatedPosts.filter(
+    (post) => post.id !== props.currentPostId,
+  )
+  const toggleTag = (tag: string) => {
+    props.updateField('tags', toggleListValue(selectedTags, tag).join(', '))
+  }
+  const toggleRelatedPost = (postId: string) => {
+    props.updateField(
+      'relatedId',
+      toggleListValue(selectedRelatedIds, postId).join(', '),
+    )
+  }
+
+  return (
+    <>
+      <PanelBlock title={t('write.postFields.section.category')}>
+        <Field label={t('write.postFields.category')} required>
+          <SelectField
+            aria-label={t('write.postFields.category')}
+            onValueChange={(categoryId) =>
+              props.updateField('categoryId', categoryId)
+            }
+            options={props.categories.map((category) => ({
+              label: category.name,
+              value: category.id,
+            }))}
+            value={props.state.categoryId}
+          />
+        </Field>
+      </PanelBlock>
+
+      <PanelBlock title={t('write.postFields.section.meta')}>
+        <TextInput
+          controlClassName="h-9 focus:border-neutral-400"
+          list="write-post-tags"
+          label={t('write.postFields.allTags')}
+          onChange={(value) => props.updateField('tags', value)}
+          placeholder={t('write.postFields.allTagsPlaceholder')}
+          value={props.state.tags}
+        />
+        <datalist id="write-post-tags">
+          {props.tags.map((tag) => (
+            <option key={tag.name} label={`${tag.name} (${tag.count})`}>
+              {tag.name}
+            </option>
+          ))}
+        </datalist>
+        {props.tags.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {props.tags.slice(0, 24).map((tag) => {
+              const selected = selectedTags.includes(tag.name)
+
+              return (
+                <button
+                  className={cn(
+                    'rounded border px-2 py-1 text-xs transition-colors',
+                    selected
+                      ? 'border-neutral-950 bg-neutral-950 text-white dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900',
+                  )}
+                  key={tag.name}
+                  onClick={() => toggleTag(tag.name)}
+                  type="button"
+                >
+                  {tag.name}
+                  <span className="text-current/60 ml-1">{tag.count}</span>
+                </button>
+              )
+            })}
+          </div>
+        ) : null}
+        <TextArea
+          controlClassName="min-h-24 focus:border-neutral-400"
+          label={t('write.postFields.summary')}
+          onChange={(value) => props.updateField('summary', value)}
+          value={props.state.summary}
+        />
+        <Switch
+          checked={props.state.copyright}
+          label={t('write.postFields.copyright')}
+          onCheckedChange={(checked) => props.updateField('copyright', checked)}
+        />
+        <Switch
+          checked={props.state.pin}
+          label={t('write.postFields.pin')}
+          onCheckedChange={(checked) => props.updateField('pin', checked)}
+        />
+        {props.state.pin ? (
+          <TextInput
+            controlClassName="h-9 focus:border-neutral-400"
+            inputMode="numeric"
+            label={t('write.postFields.pinOrder')}
+            onChange={(value) => props.updateField('pinOrder', value)}
+            value={props.state.pinOrder}
+          />
+        ) : null}
+      </PanelBlock>
+
+      <PanelBlock title={t('write.postFields.section.related')}>
+        {visibleRelatedPosts.length > 0 ? (
+          <>
+            <SelectField
+              aria-label={t('write.postFields.related.addAria')}
+              onValueChange={(postId) => {
+                if (postId && !selectedRelatedIds.includes(postId)) {
+                  toggleRelatedPost(postId)
+                }
+              }}
+              options={[
+                { label: t('write.postFields.related.placeholder'), value: '' },
+                ...visibleRelatedPosts
+                  .filter((post) => !selectedRelatedIds.includes(post.id))
+                  .map((post) => ({
+                    label: post.category?.name
+                      ? `${post.category.name} · ${post.title}`
+                      : post.title,
+                    value: post.id,
+                  })),
+              ]}
+              value=""
+            />
+            {selectedRelatedIds.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedRelatedIds.map((id) => {
+                  const post = visibleRelatedPosts.find((p) => p.id === id)
+                  const label = post ? post.title : `${id.slice(0, 8)}…`
+                  return (
+                    <span
+                      className="inline-flex max-w-full items-center gap-1 rounded-sm border border-neutral-200 bg-neutral-50 py-1 pl-2 pr-1 text-xs text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
+                      key={id}
+                    >
+                      <span className="truncate">{label}</span>
+                      <button
+                        aria-label={t('write.postFields.related.removeAria')}
+                        className="inline-flex size-4 shrink-0 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-200 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                        onClick={() => toggleRelatedPost(id)}
+                        type="button"
+                      >
+                        <X aria-hidden="true" className="size-3" />
+                      </button>
+                    </span>
+                  )
+                })}
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            {t('write.postFields.related.empty')}
+          </p>
+        )}
+        <TextInput
+          controlClassName="h-9 font-mono focus:border-neutral-400"
+          label={t('write.postFields.related.idLabel')}
+          onChange={(value) => props.updateField('relatedId', value)}
+          placeholder={t('write.postFields.related.idPlaceholder')}
+          value={props.state.relatedId}
+        />
+      </PanelBlock>
+    </>
+  )
+}
+
+function MetadataPill(props: {
+  active: boolean
+  children: ReactNode
+  onClick: () => void
+}) {
+  return (
+    <button
+      className={cn(
+        'rounded border px-2 py-1 text-xs transition-colors',
+        props.active
+          ? 'border-neutral-950 bg-neutral-950 text-white dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
+          : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900',
+      )}
+      onClick={props.onClick}
+      type="button"
+    >
+      {props.children}
+    </button>
+  )
+}
+
+function NoteFields(props: {
+  state: WriteFormState
+  topics: TopicModel[]
+  updateField: <TKey extends keyof WriteFormState>(
+    key: TKey,
+    value: WriteFormState[TKey],
+  ) => void
+}) {
+  const { t } = useI18n()
+  const [locationSearchOpen, setLocationSearchOpen] = useState(false)
+  const updateLocation = (
+    location: string,
+    coordinates: NoteCoordinates | null,
+  ) => {
+    props.updateField('location', location)
+    props.updateField(
+      'coordinatesLat',
+      typeof coordinates?.latitude === 'number'
+        ? String(coordinates.latitude)
+        : '',
+    )
+    props.updateField(
+      'coordinatesLng',
+      typeof coordinates?.longitude === 'number'
+        ? String(coordinates.longitude)
+        : '',
+    )
+  }
+
+  return (
+    <>
+      <PanelBlock title={t('write.noteFields.section.note')}>
+        <Field label={t('write.noteFields.topic')}>
+          <SelectField
+            aria-label={t('write.noteFields.topic')}
+            onValueChange={(topicId) => props.updateField('topicId', topicId)}
+            options={[
+              { label: t('write.noteFields.topicNone'), value: '' },
+              ...props.topics.map((topic) => ({
+                label: topic.name,
+                value: topic.id,
+              })),
+            ]}
+            value={props.state.topicId}
+          />
+        </Field>
+        <TextInput
+          controlClassName="h-9 focus:border-neutral-400"
+          list="write-note-moods"
+          label={t('write.noteFields.mood')}
+          onChange={(value) => props.updateField('mood', value)}
+          placeholder={t('write.noteFields.moodPlaceholder')}
+          value={props.state.mood}
+        />
+        <datalist id="write-note-moods">
+          {MOOD_SET.map((mood) => (
+            <option key={mood.value} label={t(mood.labelKey)}>
+              {mood.value}
+            </option>
+          ))}
+        </datalist>
+        <div className="flex flex-wrap gap-1.5">
+          {MOOD_SET.map((mood) => (
+            <MetadataPill
+              active={props.state.mood === mood.value}
+              key={mood.value}
+              onClick={() => props.updateField('mood', mood.value)}
+            >
+              {t(mood.labelKey)}
+            </MetadataPill>
+          ))}
+        </div>
+        <TextInput
+          controlClassName="h-9 focus:border-neutral-400"
+          list="write-note-weathers"
+          label={t('write.noteFields.weather')}
+          onChange={(value) => props.updateField('weather', value)}
+          placeholder={t('write.noteFields.weatherPlaceholder')}
+          value={props.state.weather}
+        />
+        <datalist id="write-note-weathers">
+          {WEATHER_SET.map((weather) => (
+            <option key={weather.value} label={t(weather.labelKey)}>
+              {weather.value}
+            </option>
+          ))}
+        </datalist>
+        <div className="flex flex-wrap gap-1.5">
+          {WEATHER_SET.map((weather) => (
+            <MetadataPill
+              active={props.state.weather === weather.value}
+              key={weather.value}
+              onClick={() => props.updateField('weather', weather.value)}
+            >
+              {t(weather.labelKey)}
+            </MetadataPill>
+          ))}
+        </div>
+        <Switch
+          checked={props.state.bookmark}
+          label={t('write.noteFields.bookmark')}
+          onCheckedChange={(checked) => props.updateField('bookmark', checked)}
+        />
+      </PanelBlock>
+
+      <PanelBlock title={t('write.noteFields.section.publicLocation')}>
+        <DateTimePicker
+          controlClassName="h-9 focus:border-neutral-400"
+          label={t('write.field.publicAt')}
+          min={toDatetimeLocalValue(new Date())}
+          onChange={(value) => props.updateField('publicAt', value)}
+          placeholder={t('write.field.publicAtPlaceholder')}
+          value={props.state.publicAt}
+        />
+        <div className="grid grid-cols-2 gap-1.5">
+          {[
+            [t('write.field.publicAtPreset.day'), { days: 1 }],
+            [t('write.field.publicAtPreset.week'), { days: 7 }],
+            [t('write.field.publicAtPreset.fortnight'), { days: 14 }],
+            [t('write.field.publicAtPreset.month'), { months: 1 }],
+          ].map(([label, offset]) => (
+            <button
+              className="h-8 rounded border border-neutral-200 bg-white px-2 text-xs text-neutral-600 transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900"
+              key={label as string}
+              onClick={() =>
+                props.updateField(
+                  'publicAt',
+                  toDatetimeLocalValue(
+                    addDateOffset(new Date(), offset as DateOffset),
+                  ),
+                )
+              }
+              type="button"
+            >
+              {label as string}
+            </button>
+          ))}
+        </div>
+        <TextInput
+          controlClassName="h-9 focus:border-neutral-400"
+          label={t('write.location.field.label')}
+          onChange={(value) => props.updateField('location', value)}
+          value={props.state.location}
+        />
+        <div className="flex flex-wrap gap-2">
+          <GetCurrentLocationButton onChange={updateLocation} />
+          <Button
+            onClick={() => setLocationSearchOpen(true)}
+            type="button"
+            variant="subtle"
+          >
+            <Search aria-hidden="true" className="size-4" />
+            {t('write.location.button.custom')}
+          </Button>
+          <Button
+            disabled={
+              !props.state.location &&
+              !props.state.coordinatesLat &&
+              !props.state.coordinatesLng
+            }
+            onClick={() => updateLocation('', null)}
+            type="button"
+            variant="subtle"
+          >
+            {t('write.location.button.clear')}
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <TextInput
+            controlClassName="h-9 focus:border-neutral-400"
+            inputMode="decimal"
+            label={t('write.location.coordinates.lat')}
+            onChange={(value) => props.updateField('coordinatesLat', value)}
+            value={props.state.coordinatesLat}
+          />
+          <TextInput
+            controlClassName="h-9 focus:border-neutral-400"
+            inputMode="decimal"
+            label={t('write.location.coordinates.lng')}
+            onChange={(value) => props.updateField('coordinatesLng', value)}
+            value={props.state.coordinatesLng}
+          />
+        </div>
+        <LocationSearchDialog
+          onClose={() => setLocationSearchOpen(false)}
+          onSelect={(location, coordinates) => {
+            updateLocation(location, coordinates)
+            setLocationSearchOpen(false)
+          }}
+          open={locationSearchOpen}
+          placeholder={props.state.location}
+        />
+      </PanelBlock>
+
+      <PanelBlock title={t('write.noteFields.section.access')}>
+        <Switch
+          checked={props.state.passwordProtected}
+          label={t('write.field.passwordProtected')}
+          onCheckedChange={(checked) =>
+            props.updateField('passwordProtected', checked)
+          }
+        />
+        {props.state.passwordProtected ? (
+          <TextInput
+            autoComplete="new-password"
+            controlClassName="h-9 focus:border-neutral-400"
+            label={t('write.field.password')}
+            onChange={(value) => props.updateField('password', value)}
+            placeholder={t('write.field.passwordPlaceholder')}
+            type="password"
+            value={props.state.password}
+          />
+        ) : null}
+      </PanelBlock>
+    </>
+  )
+}
+
+function GetCurrentLocationButton(props: {
+  onChange: (location: string, coordinates: NoteCoordinates) => void
+}) {
+  const { t } = useI18n()
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!navigator.geolocation) {
+        throw new Error(t('write.location.error.unsupported'))
+      }
+
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject)
+        },
+      )
+      const { latitude, longitude } = position.coords
+      const result = await callBuiltInFunction<Amap>('geocode_location', {
+        latitude,
+        longitude,
+      })
+
+      return {
+        coordinates: { latitude, longitude },
+        location: result.regeocode.formattedAddress,
+      }
+    },
+    onError(error) {
+      const geolocationErrorCode = isRecord(error) ? error.code : undefined
+      if (geolocationErrorCode === 2) {
+        toast.error(t('write.location.error.timeout'))
+        return
+      }
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t('write.location.error.permission'),
+      )
+    },
+    onSuccess(result) {
+      props.onChange(result.location, result.coordinates)
+    },
+  })
+
+  return (
+    <Button
+      disabled={mutation.isPending}
+      onClick={() => mutation.mutate()}
+      type="button"
+      variant="subtle"
+    >
+      {mutation.isPending ? (
+        <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+      ) : (
+        <MapPin aria-hidden="true" className="size-4" />
+      )}
+      {t('write.location.button.locate')}
+    </Button>
+  )
+}
+
+function LocationSearchDialog(props: {
+  onClose: () => void
+  onSelect: (location: string, coordinates: NoteCoordinates) => void
+  open: boolean
+  placeholder?: string
+}) {
+  const { t } = useI18n()
+  const [keyword, setKeyword] = useState('')
+  const [options, setOptions] = useState<
+    Array<{ coordinates: NoteCoordinates; id: string; label: string }>
+  >([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!props.open) {
+      setKeyword('')
+      setOptions([])
+      return
+    }
+
+    const trimmedKeyword = keyword.trim()
+    if (!trimmedKeyword) {
+      setOptions([])
+      return
+    }
+
+    let cancelled = false
+    const timeoutId = window.setTimeout(() => {
+      setLoading(true)
+      callBuiltInFunction<AMapSearch>('geocode_search', {
+        keywords: trimmedKeyword,
+      })
+        .then((result) => {
+          if (cancelled) return
+          setOptions(
+            result.pois
+              .map((poi) => {
+                const [longitude, latitude] = poi.location
+                  .split(',')
+                  .map(Number)
+                if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+                  return null
+                }
+
+                return {
+                  coordinates: { latitude, longitude },
+                  id: poi.id,
+                  label: [poi.cityname, poi.adname, poi.address, poi.name]
+                    .filter(Boolean)
+                    .join(''),
+                }
+              })
+              .filter(
+                (
+                  option,
+                ): option is {
+                  coordinates: NoteCoordinates
+                  id: string
+                  label: string
+                } => Boolean(option),
+              ),
+          )
+        })
+        .catch((error: unknown) => {
+          if (cancelled) return
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : t('write.location.error.search'),
+          )
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false)
+        })
+    }, 350)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeoutId)
+    }
+  }, [keyword, props.open])
+
+  return (
+    <Modal
+      className="w-[min(92vw,30rem)]"
+      onClose={props.onClose}
+      open={props.open}
+    >
+      <ModalHeader icon={Search} title={t('write.location.dialog.title')} />
+
+      <div className="grid gap-3 p-4">
+        <TextInput
+          autoFocus
+          controlClassName="h-9 focus:border-neutral-400"
+          label={t('write.location.dialog.searchLabel')}
+          onChange={setKeyword}
+          placeholder={
+            props.placeholder || t('write.location.dialog.placeholder')
+          }
+          value={keyword}
+        />
+        <Scroll className="max-h-72" viewportClassName="max-h-72">
+          <div className="grid gap-1 pr-1">
+            {loading ? (
+              <div className="flex h-24 items-center justify-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
+                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                {t('write.location.dialog.searching')}
+              </div>
+            ) : options.length > 0 ? (
+              options.map((option) => (
+                <button
+                  className="grid gap-1 rounded px-3 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                  key={option.id}
+                  onClick={() =>
+                    props.onSelect(option.label, option.coordinates)
+                  }
+                  type="button"
+                >
+                  <span className="text-sm text-neutral-900 dark:text-neutral-100">
+                    {option.label}
+                  </span>
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                    {option.coordinates.longitude.toFixed(6)},{' '}
+                    {option.coordinates.latitude.toFixed(6)}
+                  </span>
+                </button>
+              ))
+            ) : (
+              <div className="flex h-24 items-center justify-center text-sm text-neutral-500 dark:text-neutral-400">
+                {keyword.trim()
+                  ? t('write.location.dialog.searchEmpty')
+                  : t('write.location.dialog.searchHint')}
+              </div>
+            )}
+          </div>
+        </Scroll>
+      </div>
+    </Modal>
+  )
+}
+
+function PageFields(props: {
+  state: WriteFormState
+  updateField: <TKey extends keyof WriteFormState>(
+    key: TKey,
+    value: WriteFormState[TKey],
+  ) => void
+}) {
+  const { t } = useI18n()
+  return (
+    <PanelBlock
+      description={t('write.page.section.options.description')}
+      icon={FileText}
+      title={t('write.page.section.options.title')}
+    >
+      <TextInput
+        controlClassName="h-9 focus:border-neutral-400"
+        inputMode="numeric"
+        label={t('write.pageFields.orderLabel')}
+        min="0"
+        onChange={(value) => props.updateField('order', value)}
+        placeholder={t('write.pageFields.orderPlaceholder')}
+        type="number"
+        value={props.state.order}
+      />
+      <p className="text-xs leading-5 text-neutral-500 dark:text-neutral-400">
+        {t('write.pageFields.orderHint')}
+      </p>
+    </PanelBlock>
+  )
+}
+
+function MediaAndMetaFields(props: {
+  kind: WriteKind
+  state: WriteFormState
+  updateField: <TKey extends keyof WriteFormState>(
+    key: TKey,
+    value: WriteFormState[TKey],
+  ) => void
+}) {
+  const { t } = useI18n()
+  const images = buildWriteImages(props.state)
+  const cover = getMetaString(props.state.meta, 'cover')
+
+  return (
+    <>
+      <PanelBlock
+        description={t('write.section.image.description')}
+        icon={ImageIcon}
+        title={t('write.section.image.title')}
+      >
+        <TextInput
+          controlClassName="h-9 focus:border-neutral-400"
+          label={t('write.section.image.coverLabel')}
+          list="page-cover-image-options"
+          onChange={(value) =>
+            props.updateField(
+              'meta',
+              setMetaValue(props.state.meta, 'cover', value),
+            )
+          }
+          placeholder={t('write.section.image.coverPlaceholder')}
+          value={cover}
+        />
+        {images.length > 0 ? (
+          <datalist id="page-cover-image-options">
+            {images.map((image) => (
+              <option key={image.src} value={image.src} />
+            ))}
+          </datalist>
+        ) : null}
+        {cover ? (
+          <div className="overflow-hidden border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/60">
+            <img
+              alt={t('write.section.image.coverAlt')}
+              className="max-h-48 w-full object-contain"
+              src={cover}
+            />
+          </div>
+        ) : null}
+        {images.length > 0 ? (
+          <div className="space-y-2">
+            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+              {t('write.section.image.imageCount', { count: images.length })}
+            </div>
+            <div className="grid gap-1.5">
+              {images.slice(0, 6).map((image) => (
+                <div
+                  className="truncate border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-300"
+                  key={image.src}
+                  title={image.src}
+                >
+                  {image.src}
+                </div>
+              ))}
+              {images.length > 6 ? (
+                <div className="text-xs text-neutral-400 dark:text-neutral-500">
+                  {t('write.section.image.moreCount', {
+                    count: images.length - 6,
+                  })}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            {t('write.section.image.candidateHint')}
+          </p>
+        )}
+      </PanelBlock>
+
+      <PanelBlock icon={Braces} title={t('write.section.image.metaTitle')}>
+        {props.kind === 'page' ? (
+          <MetaJsonField state={props.state} updateField={props.updateField} />
+        ) : (
+          <MetaPresetSection
+            meta={props.state.meta}
+            onUpdateMeta={(meta) => props.updateField('meta', meta)}
+            scope={props.kind === 'post' ? 'post' : 'note'}
+          />
+        )}
+      </PanelBlock>
+    </>
+  )
+}
+
+function MetaJsonField(props: {
+  state: WriteFormState
+  updateField: <TKey extends keyof WriteFormState>(
+    key: TKey,
+    value: WriteFormState[TKey],
+  ) => void
+}) {
+  const { t } = useI18n()
+  const [value, setValue] = useState(() => formatMetaJson(props.state.meta))
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    setValue(formatMetaJson(props.state.meta))
+    setError('')
+  }, [props.state.meta])
+
+  const apply = () => {
+    const trimmed = value.trim()
+    if (!trimmed) {
+      setError('')
+      props.updateField('meta', {})
+      return
+    }
+
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (!isRecord(parsed)) {
+        setError(t('write.meta.json.invalidObject'))
+        return
+      }
+      setError('')
+      props.updateField('meta', parsed)
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : t('write.meta.json.parseError'),
+      )
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <TextArea
+        controlClassName="min-h-32 font-mono text-xs leading-5 focus:border-neutral-400"
+        label="Meta JSON"
+        onBlur={apply}
+        onChange={setValue}
+        placeholder='{"cover":"https://..."}'
+        value={value}
+      />
+      <div className="flex items-center justify-between gap-2">
+        <p
+          className={cn(
+            'min-w-0 text-xs',
+            error
+              ? 'text-red-600 dark:text-red-400'
+              : 'text-neutral-500 dark:text-neutral-400',
+          )}
+        >
+          {error || t('write.meta.json.emptyHint')}
+        </p>
+        <Button onClick={apply} type="button" variant="subtle">
+          {t('write.meta.json.applyButton')}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+interface ParsedPageMarkdown {
+  meta?: Record<string, unknown>
+  order?: string
+  slug?: string
+  subtitle?: string
+  text: string
+  title?: string
+}
+
+function PageParseMarkdownDialog(props: {
+  onApply: (parsed: ParsedPageMarkdown) => void
+  onClose: () => void
+  open: boolean
+}) {
+  const { t } = useI18n()
+  const [value, setValue] = useState('')
+
+  useEffect(() => {
+    if (!props.open) {
+      setValue('')
+    }
+  }, [props.open])
+
+  const apply = () => {
+    const parsed = parsePageMarkdown(value)
+
+    if (!parsed.text.trim() && !parsed.title?.trim()) {
+      toast.error(t('write.parseMd.invalid'))
+      return
+    }
+
+    props.onApply(parsed)
+  }
+
+  return (
+    <Modal
+      onClose={props.onClose}
+      open={props.open}
+      popupStyle={{ height: 'min(82vh, 42rem)', width: 'min(92vw, 56rem)' }}
+    >
+      <ModalHeader title={t('write.parseMd.dialogTitle')} />
+      <div className="min-h-0 flex-1 p-4">
+        <TextArea
+          controlClassName="h-full min-h-0 resize-none rounded border-neutral-200 font-mono text-xs leading-5 focus:border-neutral-400 dark:border-neutral-800"
+          onChange={setValue}
+          placeholder={t('write.parseMd.placeholder')}
+          value={value}
+        />
+      </div>
+      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+        <p className="min-w-0 text-xs text-neutral-500 dark:text-neutral-400">
+          {t('write.parseMd.hint')}
+        </p>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button onClick={() => setValue('')} type="button" variant="subtle">
+            {t('write.parseMd.reset')}
+          </Button>
+          <Button onClick={apply} type="button">
+            {t('write.parseMd.ok')}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+function PageLexicalDebugDialog(props: {
+  content: string
+  onClose: () => void
+  open: boolean
+}) {
+  const { t } = useI18n()
+  const formattedContent = useMemo(
+    () => formatLexicalDebugContent(props.content),
+    [props.content],
+  )
+
+  const copyContent = () => {
+    void navigator.clipboard
+      .writeText(formattedContent)
+      .then(() => toast.success(t('write.section.lexicalDebug.copyOk')))
+      .catch(() => toast.error(t('write.toast.copyFailed')))
+  }
+
+  return (
+    <Drawer
+      footer={
+        <>
+          <p className="min-w-0 flex-1 truncate text-xs text-neutral-500 dark:text-neutral-400">
+            {t('write.section.lexicalDebug.footer')}
+          </p>
+          <Button onClick={copyContent} type="button" variant="subtle">
+            {t('write.section.lexicalDebug.copyButton')}
+          </Button>
+        </>
+      }
+      icon={Bug}
+      onClose={props.onClose}
+      open={props.open}
+      title="Lexical State"
+      widthClassName="w-[min(92vw,38rem)]"
+    >
+      <Scroll className="min-h-0 flex-1" innerClassName="p-4">
+        <pre className="min-h-full whitespace-pre-wrap break-words border border-neutral-200 bg-neutral-50 p-3 font-mono text-xs leading-5 text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-200">
+          {formattedContent}
+        </pre>
+      </Scroll>
+    </Drawer>
+  )
+}
+
+function formatLexicalDebugContent(content: string) {
+  if (!content.trim()) return '{}'
+
+  try {
+    return JSON.stringify(JSON.parse(content), null, 2)
+  } catch {
+    return content
+  }
+}
+
+function parsePageMarkdown(value: string): ParsedPageMarkdown {
+  let text = value.trim()
+  const parsed: ParsedPageMarkdown = { text: '' }
+  const yamlHeader = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text)
+
+  if (yamlHeader) {
+    const meta = parseYamlMeta(yamlHeader[1])
+    const { order, slug, subtitle, title, ...restMeta } = meta
+
+    parsed.title = optionalString(title)
+    parsed.slug = optionalString(slug)
+    parsed.subtitle = optionalString(subtitle)
+    if (order != null) {
+      parsed.order = String(order)
+    }
+    if (Object.keys(restMeta).length > 0) {
+      parsed.meta = restMeta
+    }
+    text = text.replace(yamlHeader[0], '').trim()
+  }
+
+  const lines = text.split('\n')
+  const firstLine = lines[0]?.trim() ?? ''
+  if (firstLine.startsWith('#')) {
+    const headingTitle = firstLine.replace(/^#+/, '').trim()
+
+    if (headingTitle) {
+      parsed.title = headingTitle
+      lines.shift()
+    }
+  }
+
+  parsed.text = lines.join('\n').trim()
+  return parsed
+}
+
+function parseYamlMeta(value: string): Record<string, unknown> {
+  try {
+    const meta = load(value)
+
+    return meta && typeof meta === 'object' && !Array.isArray(meta)
+      ? (meta as Record<string, unknown>)
+      : {}
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : translate('write.parseMd.yamlParseFailed')
+
+    toast.error(message)
+    return {}
+  }
+}
+
+function optionalString(value: unknown) {
+  if (value == null) return undefined
+
+  return String(value)
+}
+
+function getHashRouterRoute(href: string) {
+  try {
+    const url = new URL(href, window.location.href)
+    if (url.origin !== window.location.origin) return ''
+    if (!url.hash.startsWith('#/')) return ''
+
+    return url.hash.slice(1) || '/'
+  } catch {
+    return ''
+  }
+}
+
+function getRoutePathname(route: string) {
+  return route.split(/[?#]/, 1)[0] || '/'
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function getMetaString(meta: Record<string, unknown>, key: string) {
+  const value = meta[key]
+  return typeof value === 'string' ? value : ''
+}
+
+function setMetaValue(
+  meta: Record<string, unknown>,
+  key: string,
+  value: unknown,
+) {
+  const next = { ...meta }
+
+  if (value == null || value === '') {
+    delete next[key]
+  } else {
+    next[key] = value
+  }
+
+  return next
+}
+
+function formatMetaJson(meta: Record<string, unknown>) {
+  return Object.keys(meta).length > 0 ? JSON.stringify(meta, null, 2) : ''
+}
+
+function buildWriteImages(state: WriteFormState): ImageModel[] {
+  const images = new Map<string, ImageModel>()
+  const addImage = (image: ImageModel | null | undefined) => {
+    if (!image?.src) return
+    images.set(image.src, image)
+  }
+  const addImageSrc = (src: string | undefined) => {
+    if (!src || images.has(src)) return
+    images.set(src, {
+      accent: '',
+      height: 0,
+      src,
+      type: getFileExtension(src),
+      width: 0,
+    })
+  }
+
+  for (const image of state.images) addImage(image)
+  for (const src of pickImagesFromMarkdown(state.text)) addImageSrc(src)
+  addImageSrc(getMetaString(state.meta, 'cover'))
+
+  return [...images.values()]
+}
+
+function pickImagesFromMarkdown(text: string) {
+  const images: string[] = []
+  const imagePattern = /!\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)/g
+
+  for (const match of text.matchAll(imagePattern)) {
+    if (match[1]) images.push(match[1])
+  }
+
+  return images
+}
+
+function getFileExtension(src: string) {
+  const pathname = src.split(/[?#]/)[0] ?? src
+  return pathname.split('.').pop() || ''
+}
+
+function applyParsedPageMarkdown(
+  state: WriteFormState,
+  parsed: ParsedPageMarkdown,
+): WriteFormState {
+  return {
+    ...state,
+    meta: parsed.meta ?? state.meta,
+    order: parsed.order ?? state.order,
+    slug: parsed.slug ?? state.slug,
+    subtitle: parsed.subtitle ?? state.subtitle,
+    text: parsed.text,
+    title: parsed.title ?? state.title,
+  }
+}
+
+function PageSettingsPanel(props: {
+  state: WriteFormState
+  updateField: <TKey extends keyof WriteFormState>(
+    key: TKey,
+    value: WriteFormState[TKey],
+  ) => void
+}) {
+  return (
+    <AsidePanel>
+      <Scroll
+        className="min-h-0 flex-1"
+        innerClassName="grid grid-cols-[minmax(0,1fr)] gap-5 px-5 py-4"
+      >
+        <PageFields state={props.state} updateField={props.updateField} />
+        <MediaAndMetaFields
+          kind="page"
+          state={props.state}
+          updateField={props.updateField}
+        />
+      </Scroll>
+    </AsidePanel>
+  )
+}
+
+function PanelBlock(props: {
+  children: ReactNode
+  description?: string
+  icon?: LucideIcon
+  title: string
+}) {
+  const Icon = props.icon
+
+  return (
+    <section className="border-b border-neutral-200 pb-5 last:border-b-0 dark:border-neutral-800">
+      <div className="mb-3 grid gap-1">
+        <h3 className="inline-flex items-center gap-2 text-xs font-medium uppercase text-neutral-500 dark:text-neutral-400">
+          {Icon ? <Icon aria-hidden="true" className="size-3.5" /> : null}
+          <span>{props.title}</span>
+        </h3>
+        {props.description ? (
+          <p className="text-xs leading-5 text-neutral-500 dark:text-neutral-400">
+            {props.description}
+          </p>
+        ) : null}
+      </div>
+      <div className="space-y-3">{props.children}</div>
+    </section>
+  )
+}
+
+function Field(props: {
+  children: ReactNode
+  label: string
+  required?: boolean
+}) {
+  return (
+    <label className="grid gap-1.5">
+      <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+        {props.label}
+        {props.required ? <span className="ml-0.5 text-red-500">*</span> : null}
+      </span>
+      {props.children}
+    </label>
+  )
+}
+
+function WriteSkeleton(props: { kind: WriteKind }) {
+  if (props.kind === 'page') {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col bg-white dark:bg-neutral-950">
+        <div className="mx-auto w-full max-w-[60rem] shrink-0 px-3 pb-2 pt-6">
+          <div className="h-14 w-full animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-900" />
+          <div className="mt-3 h-4 w-1/2 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
+          <div className="mt-3 h-4 w-2/3 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
+        </div>
+        <div className="mx-auto mt-6 h-[34rem] w-full max-w-[60rem] px-3">
+          <div className="h-full animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="space-y-4">
+        <div className="h-11 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
+        <div className="h-[34rem] animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
+      </div>
+      <div className="space-y-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            className="h-28 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900"
+            key={index}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+type WriteModel = NoteModel | PageModel | PostModel
+
+const draftRefTypeByKind: Record<WriteKind, DraftRefType> = {
+  note: DraftRefType.Note,
+  page: DraftRefType.Page,
+  post: DraftRefType.Post,
+}
+
+function getWriteDetail(kind: WriteKind, id: string): Promise<WriteModel> {
+  if (kind === 'post') return getPostById(id)
+  if (kind === 'note') return getNoteById(id, { single: true })
+  return getPageById(id)
+}
+
+function getPublishedContent(model: WriteModel): PublishedWriteContent {
+  return {
+    content: model.content ?? undefined,
+    contentFormat: model.contentFormat,
+    text: model.text ?? '',
+    title: model.title,
+    updatedAt: model.modifiedAt || model.createdAt,
+  }
+}
+
+function isDraftNewerThanPublished(draft: DraftModel, model: WriteModel) {
+  const draftUpdatedAt = Date.parse(draft.updatedAt)
+  const publishedUpdatedAt = Date.parse(model.modifiedAt || model.createdAt)
+
+  if (Number.isNaN(draftUpdatedAt) || Number.isNaN(publishedUpdatedAt)) {
+    return true
+  }
+
+  return draftUpdatedAt > publishedUpdatedAt
+}
+
+function fromModel(kind: WriteKind, model: WriteModel) {
+  if (kind === 'post') {
+    const post = model as PostModel
+    return {
+      ...emptyState,
+      categoryId: post.categoryId,
+      content: post.content ?? '',
+      contentFormat: post.contentFormat ?? 'markdown',
+      copyright: post.copyright,
+      images: post.images ?? [],
+      isPublished: post.isPublished ?? true,
+      meta: isRecord(post.meta) ? post.meta : {},
+      pin: Boolean(post.pinAt),
+      pinOrder: String(post.pinOrder ?? 1),
+      relatedId: post.related?.map((item) => item.id).join(', ') ?? '',
+      slug: post.slug,
+      summary: post.summary ?? '',
+      tags: post.tags.join(', '),
+      text: post.text ?? '',
+      title: post.title,
+    }
+  }
+
+  if (kind === 'note') {
+    const note = model as NoteModel
+    return {
+      ...emptyState,
+      content: note.content ?? '',
+      contentFormat: note.contentFormat ?? 'markdown',
+      bookmark: note.bookmark,
+      coordinatesLat:
+        typeof note.coordinates?.latitude === 'number'
+          ? String(note.coordinates.latitude)
+          : '',
+      coordinatesLng:
+        typeof note.coordinates?.longitude === 'number'
+          ? String(note.coordinates.longitude)
+          : '',
+      isPublished: note.isPublished,
+      images: note.images ?? [],
+      location: note.location ?? '',
+      meta: isRecord(note.meta) ? note.meta : {},
+      mood: note.mood ?? '',
+      password: '',
+      passwordProtected: Boolean(note.hasPassword || note.password),
+      publicAt: toDatetimeLocalValue(note.publicAt),
+      slug: note.slug ?? '',
+      text: note.text ?? '',
+      title: note.title,
+      topicId: note.topicId ?? '',
+      weather: note.weather ?? '',
+    }
+  }
+
+  const page = model as PageModel
+  return {
+    ...emptyState,
+    content: page.content ?? '',
+    contentFormat: page.contentFormat ?? 'markdown',
+    images: page.images ?? [],
+    isPublished: true,
+    meta: isRecord(page.meta) ? page.meta : {},
+    order: typeof page.order === 'number' ? String(page.order) : '',
+    slug: page.slug,
+    subtitle: page.subtitle ?? '',
+    text: page.text ?? '',
+    title: page.title,
+  }
+}
+
+function fromDraft(
+  kind: WriteKind,
+  draft: DraftModel,
+  previous: WriteFormState,
+): WriteFormState {
+  const specific = draft.typeSpecificData ?? {}
+  const base = {
+    ...previous,
+    content: draft.content ?? '',
+    contentFormat: draft.contentFormat ?? 'markdown',
+    images: draft.images ?? previous.images,
+    meta: isRecord(draft.meta) ? draft.meta : previous.meta,
+    text: draft.text ?? '',
+    title: draft.title ?? '',
+  }
+
+  if (kind === 'post') {
+    return {
+      ...base,
+      categoryId:
+        typeof specific.categoryId === 'string'
+          ? specific.categoryId
+          : previous.categoryId,
+      copyright:
+        typeof specific.copyright === 'boolean'
+          ? specific.copyright
+          : previous.copyright,
+      isPublished:
+        typeof specific.isPublished === 'boolean'
+          ? specific.isPublished
+          : previous.isPublished,
+      pin: 'pin' in specific ? Boolean(specific.pin) : previous.pin,
+      pinOrder:
+        typeof specific.pinOrder === 'number'
+          ? String(specific.pinOrder)
+          : previous.pinOrder,
+      relatedId: Array.isArray(specific.relatedId)
+        ? specific.relatedId.map((id) => String(id)).join(', ')
+        : previous.relatedId,
+      slug: typeof specific.slug === 'string' ? specific.slug : previous.slug,
+      summary:
+        'summary' in specific
+          ? typeof specific.summary === 'string'
+            ? specific.summary
+            : ''
+          : previous.summary,
+      tags: Array.isArray(specific.tags)
+        ? specific.tags.map((tag) => String(tag)).join(', ')
+        : previous.tags,
+    }
+  }
+
+  if (kind === 'note') {
+    return {
+      ...base,
+      bookmark:
+        typeof specific.bookmark === 'boolean'
+          ? specific.bookmark
+          : previous.bookmark,
+      coordinatesLat:
+        'coordinates' in specific && specific.coordinates == null
+          ? ''
+          : typeof specific.coordinates?.latitude === 'number'
+            ? String(specific.coordinates.latitude)
+            : previous.coordinatesLat,
+      coordinatesLng:
+        'coordinates' in specific && specific.coordinates == null
+          ? ''
+          : typeof specific.coordinates?.longitude === 'number'
+            ? String(specific.coordinates.longitude)
+            : previous.coordinatesLng,
+      isPublished:
+        typeof specific.isPublished === 'boolean'
+          ? specific.isPublished
+          : previous.isPublished,
+      location:
+        typeof specific.location === 'string'
+          ? specific.location
+          : previous.location,
+      mood: typeof specific.mood === 'string' ? specific.mood : previous.mood,
+      password:
+        typeof specific.password === 'string'
+          ? specific.password
+          : 'password' in specific
+            ? ''
+            : previous.password,
+      passwordProtected: resolveDraftPasswordProtected(specific, previous),
+      publicAt:
+        'publicAt' in specific && specific.publicAt == null
+          ? ''
+          : typeof specific.publicAt === 'string'
+            ? toDatetimeLocalValue(specific.publicAt)
+            : previous.publicAt,
+      slug: typeof specific.slug === 'string' ? specific.slug : previous.slug,
+      topicId:
+        'topicId' in specific
+          ? typeof specific.topicId === 'string'
+            ? specific.topicId
+            : ''
+          : previous.topicId,
+      weather:
+        typeof specific.weather === 'string'
+          ? specific.weather
+          : previous.weather,
+    }
+  }
+
+  return {
+    ...base,
+    order:
+      typeof specific.order === 'number'
+        ? String(specific.order)
+        : previous.order,
+    slug: typeof specific.slug === 'string' ? specific.slug : previous.slug,
+    subtitle:
+      'subtitle' in specific
+        ? typeof specific.subtitle === 'string'
+          ? specific.subtitle
+          : ''
+        : previous.subtitle,
+  }
+}
+
+function resolveDraftPasswordProtected(
+  specific: Record<string, any>,
+  previous: WriteFormState,
+) {
+  if (typeof specific.passwordProtected === 'boolean') {
+    return specific.passwordProtected
+  }
+
+  if (!('password' in specific)) {
+    return previous.passwordProtected
+  }
+
+  if (typeof specific.password === 'string') {
+    return specific.password.length > 0 || previous.passwordProtected
+  }
+
+  return previous.passwordProtected
+}
+
+function saveWrite(
+  kind: WriteKind,
+  id: string,
+  state: WriteFormState,
+  draftId?: string,
+): Promise<WriteModel> {
+  if (kind === 'post') {
+    const data = {
+      categoryId: state.categoryId,
+      content: state.contentFormat === 'lexical' ? state.content : undefined,
+      contentFormat: state.contentFormat,
+      copyright: state.copyright,
+      draftId,
+      images: buildWriteImages(state),
+      isPublished: state.isPublished,
+      meta: state.meta,
+      pin: state.pin ? new Date().toISOString() : null,
+      pinOrder: state.pin ? Number(state.pinOrder) || 1 : null,
+      relatedId: splitCommaList(state.relatedId),
+      slug: state.slug,
+      summary: state.summary || null,
+      tags: state.tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+      text: state.text,
+      title: state.title,
+    }
+
+    return id ? updatePost(id, data) : createPost(data)
+  }
+
+  if (kind === 'note') {
+    const data = {
+      bookmark: state.bookmark,
+      content: state.contentFormat === 'lexical' ? state.content : undefined,
+      contentFormat: state.contentFormat,
+      coordinates: parseCoordinates(state),
+      draftId,
+      images: buildWriteImages(state),
+      isPublished: state.isPublished,
+      location: state.location || null,
+      meta: state.meta,
+      mood: state.mood || undefined,
+      password: state.passwordProtected
+        ? state.password.trim() || undefined
+        : null,
+      publicAt: normalizeFutureDatetimeIso(state.publicAt),
+      slug: state.slug || undefined,
+      text: state.text,
+      title: resolveWriteTitle(kind, state),
+      topicId: state.topicId || null,
+      weather: state.weather || undefined,
+    }
+
+    return id ? updateNote(id, data) : createNote(data)
+  }
+
+  const data = {
+    content: state.contentFormat === 'lexical' ? state.content : undefined,
+    contentFormat: state.contentFormat,
+    draftId,
+    images: buildWriteImages(state),
+    meta: state.meta,
+    order: state.order ? Number(state.order) : undefined,
+    slug: state.slug,
+    subtitle: state.subtitle,
+    text: state.text,
+    title: state.title,
+  }
+
+  return id ? updatePage(id, data) : createPage(data)
+}
+
+function toDraftData(
+  kind: WriteKind,
+  state: WriteFormState,
+  refId?: string,
+): CreateDraftData {
+  const base = {
+    content: state.contentFormat === 'lexical' ? state.content : undefined,
+    contentFormat: state.contentFormat,
+    images: buildWriteImages(state),
+    meta: state.meta,
+    refId,
+    refType: draftRefTypeByKind[kind],
+    text: state.text,
+    title: resolveWriteTitle(kind, state),
+  } satisfies CreateDraftData
+
+  if (kind === 'post') {
+    return {
+      ...base,
+      typeSpecificData: {
+        categoryId: state.categoryId,
+        copyright: state.copyright,
+        isPublished: state.isPublished,
+        pin: state.pin ? new Date().toISOString() : null,
+        pinOrder: state.pin ? Number(state.pinOrder) || 1 : undefined,
+        relatedId: splitCommaList(state.relatedId),
+        slug: state.slug,
+        summary: state.summary || null,
+        tags: state.tags
+          .split(',')
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      },
+    }
+  }
+
+  if (kind === 'note') {
+    return {
+      ...base,
+      typeSpecificData: {
+        isPublished: state.isPublished,
+        bookmark: state.bookmark,
+        coordinates: parseCoordinates(state),
+        location: state.location,
+        mood: state.mood,
+        password: state.passwordProtected ? state.password || '' : null,
+        passwordProtected: state.passwordProtected,
+        publicAt: normalizeFutureDatetimeIso(state.publicAt),
+        slug: state.slug,
+        topicId: state.topicId || null,
+        weather: state.weather,
+      },
+    }
+  }
+
+  return {
+    ...base,
+    typeSpecificData: {
+      order: state.order ? Number(state.order) : undefined,
+      slug: state.slug,
+      subtitle: state.subtitle || null,
+    },
+  }
+}
+
+function RichWriteSurface(props: {
+  agentVisible?: boolean
+  autoFocus?: boolean
+  content: string
+  contentClassName?: string
+  kind: WriteKind
+  onContentChange: (content: string) => void
+  onTextChange: (text: string) => void
+  getMetaFields?: () => Record<string, unknown>
+  metaFieldsSchema?: MetaFieldsSchema
+  onMetaFieldsUpdate?: (
+    updates: Record<string, unknown>,
+  ) => Promise<void> | void
+  refId?: string
+  surfaceClassName?: string
+  surfaceStyle?: CSSProperties
+}) {
+  const { t } = useI18n()
+  const editorRef = useRef<RichEditorWithAgentRef | null>(null)
+  const agent = useWriteAgent({
+    agentVisible: Boolean(props.agentVisible),
+    kind: props.kind,
+    refId: props.refId,
+  })
+  const latestCallbacks = useRef({
+    onContentChange: props.onContentChange,
+    onTextChange: props.onTextChange,
+  })
+
+  latestCallbacks.current = {
+    onContentChange: props.onContentChange,
+    onTextChange: props.onTextChange,
+  }
+
+  const editorStyle = {
+    maxWidth: '100%',
+    ...props.surfaceStyle,
+  } satisfies Record<string, string | number>
+  const editorOptions: RichEditorWithAgentProps = {
+    apiUrl: API_URL,
+    autoFocus: props.autoFocus ?? false,
+    className: cn(
+      'min-h-136 bg-white dark:bg-neutral-950',
+      props.surfaceClassName,
+    ),
+    contentClassName: cn('min-h-120 px-4 py-3', props.contentClassName),
+    debounceMs: 250,
+    editorStyle,
+    imageUpload: async (file) => {
+      const result = await uploadFile(file, 'image')
+      return { src: result.url }
+    },
+    initialValue: parseSerializedEditorState(props.content),
+    systemMessages: props.metaFieldsSchema
+      ? buildMetaSystemMessages(props.metaFieldsSchema)
+      : undefined,
+    tools:
+      props.metaFieldsSchema && props.getMetaFields && props.onMetaFieldsUpdate
+        ? buildMetaTools({
+            getFields: props.getMetaFields,
+            schema: props.metaFieldsSchema,
+            setFields: props.onMetaFieldsUpdate,
+          })
+        : undefined,
+    onAgentLoopReady: agent.onAgentLoopReady,
+    onChange: (value) => {
+      latestCallbacks.current.onContentChange(JSON.stringify(value))
+    },
+    onEditorReady: agent.onEditorReady,
+    onTextChange: (text) => {
+      latestCallbacks.current.onTextChange(text)
+    },
+    placeholder: t('write.richEditor.placeholder'),
+    provider: agent.provider,
+    saveExcalidrawSnapshot,
+    store: agent.store,
+    theme: getColorScheme(),
+    variant: props.kind === 'note' ? 'note' : 'article',
+  }
+
+  return (
+    <>
+      <Suspense
+        fallback={<RichEditorFallback className={editorOptions.className} />}
+      >
+        <RichEditorWithAgent ref={editorRef} {...editorOptions} />
+      </Suspense>
+      <ContentLayoutSlot active={Boolean(props.agentVisible)} id="agent">
+        <AgentPanel agent={agent} />
+      </ContentLayoutSlot>
+    </>
+  )
+}
+
+function RichEditorFallback(props: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        'min-h-136 bg-white px-4 py-3 dark:bg-neutral-950',
+        props.className,
+      )}
+    >
+      <div className="h-32 animate-pulse bg-neutral-100 dark:bg-neutral-900" />
+    </div>
+  )
+}
+
+function parseSerializedEditorState(
+  content: string,
+): SerializedEditorState | undefined {
+  if (!content.trim()) return undefined
+
+  try {
+    const parsed = JSON.parse(content)
+    if (parsed && typeof parsed === 'object' && 'root' in parsed) {
+      return parsed as SerializedEditorState
+    }
+  } catch {
+    return undefined
+  }
+
+  return undefined
+}
+
+async function saveExcalidrawSnapshot(snapshot: object, existingRef?: string) {
+  const name = existingRef
+    ? `${existingRef.replace(/[^\w.-]/g, '-')}.json`
+    : `excalidraw-${crypto.randomUUID()}.json`
+  const file = new File([JSON.stringify(snapshot)], name, {
+    type: 'application/json',
+  })
+  const result = await uploadFile(file, 'file')
+
+  return result.url
+}
+
+function getColorScheme(): 'dark' | 'light' {
+  return document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+}
+
+function formatDateTime(value: string | null | undefined) {
+  if (value == null || value === '') return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+
+  return new Intl.DateTimeFormat('zh-CN', {
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: '2-digit',
+  }).format(date)
+}
+
+function validateState(
+  kind: WriteKind,
+  state: WriteFormState,
+  categories: CategoryModel[],
+  isEditing: boolean,
+) {
+  if (kind !== 'note' && !state.title.trim())
+    return translate('write.validation.titleRequired')
+  if (!state.text.trim()) return translate('write.validation.textRequired')
+  if (kind !== 'note' && !state.slug.trim())
+    return translate('write.validation.slugRequired')
+  if (kind === 'post' && !state.categoryId) {
+    return categories.length > 0
+      ? translate('write.validation.selectCategory')
+      : translate('write.validation.createCategoryFirst')
+  }
+  if (kind === 'page' && state.order && Number.isNaN(Number(state.order))) {
+    return translate('write.validation.sortNumber')
+  }
+  if (kind === 'post' && state.pin && Number.isNaN(Number(state.pinOrder))) {
+    return translate('write.validation.pinOrderNumber')
+  }
+  if (
+    kind === 'note' &&
+    state.passwordProtected &&
+    !isEditing &&
+    !state.password.trim()
+  ) {
+    return translate('write.validation.passwordRequired')
+  }
+
+  return null
+}
+
+function getWriteAgentMetaSchema(kind: WriteKind) {
+  if (kind === 'post') return POST_META_SCHEMA
+  if (kind === 'note') return NOTE_META_SCHEMA
+  return PAGE_META_SCHEMA
+}
+
+function getWriteAgentMetaFields(kind: WriteKind, state: WriteFormState) {
+  if (kind === 'post') {
+    return {
+      copyright: state.copyright,
+      isPublished: state.isPublished,
+      pin: state.pin,
+      pinOrder: Number(state.pinOrder) || 0,
+      slug: state.slug,
+      summary: state.summary,
+      tags: splitCommaList(state.tags),
+      title: state.title,
+    }
+  }
+
+  if (kind === 'note') {
+    return {
+      bookmark: state.bookmark,
+      isPublished: state.isPublished,
+      location: state.location,
+      mood: state.mood,
+      slug: state.slug,
+      title: state.title,
+      weather: state.weather,
+    }
+  }
+
+  return {
+    order: Number(state.order) || 0,
+    slug: state.slug,
+    subtitle: state.subtitle,
+    title: state.title,
+  }
+}
+
+function applyWriteAgentMetaUpdates(
+  kind: WriteKind,
+  state: WriteFormState,
+  updates: Record<string, unknown>,
+) {
+  const next = { ...state }
+
+  if ('title' in updates) next.title = String(updates.title ?? '')
+  if ('slug' in updates) next.slug = String(updates.slug ?? '')
+
+  if (kind === 'post') {
+    if ('tags' in updates && Array.isArray(updates.tags)) {
+      next.tags = updates.tags.map((tag) => String(tag)).join(', ')
+    }
+    if ('summary' in updates) next.summary = String(updates.summary ?? '')
+    if ('copyright' in updates) next.copyright = Boolean(updates.copyright)
+    if ('pin' in updates) {
+      next.pin = Boolean(updates.pin)
+      if (!next.pin) next.pinOrder = '0'
+      else if (!next.pinOrder || Number(next.pinOrder) === 0)
+        next.pinOrder = '1'
+    }
+    if ('pinOrder' in updates) {
+      next.pinOrder = String(Number(updates.pinOrder ?? 0) || 0)
+    }
+    if ('isPublished' in updates) {
+      next.isPublished = Boolean(updates.isPublished)
+    }
+  }
+
+  if (kind === 'note') {
+    if ('mood' in updates) next.mood = String(updates.mood ?? '')
+    if ('weather' in updates) next.weather = String(updates.weather ?? '')
+    if ('bookmark' in updates) next.bookmark = Boolean(updates.bookmark)
+    if ('location' in updates) {
+      next.location = updates.location == null ? '' : String(updates.location)
+    }
+    if ('isPublished' in updates) {
+      next.isPublished = Boolean(updates.isPublished)
+    }
+  }
+
+  if (kind === 'page') {
+    if ('subtitle' in updates) next.subtitle = String(updates.subtitle ?? '')
+    if ('order' in updates) {
+      next.order = String(Number(updates.order ?? 0) || 0)
+    }
+  }
+
+  return next
+}
+
+function resolveWriteTitle(kind: WriteKind, state: WriteFormState) {
+  if (state.title.trim()) return state.title.trim()
+  if (kind === 'note') return getDefaultNoteTitle()
+  return state.title
+}
+
+function splitCommaList(value: string) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function toggleListValue(values: string[], value: string) {
+  return values.includes(value)
+    ? values.filter((item) => item !== value)
+    : [...values, value]
+}
+
+function parseCoordinates(state: WriteFormState) {
+  if (!state.coordinatesLat.trim() || !state.coordinatesLng.trim()) return null
+
+  const latitude = Number(state.coordinatesLat)
+  const longitude = Number(state.coordinatesLng)
+
+  if (Number.isNaN(latitude) || Number.isNaN(longitude)) return null
+
+  return { latitude, longitude }
+}
+
+function toDatetimeLocalValue(value: Date | string | null | undefined) {
+  if (!value) return ''
+
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  return offsetDate.toISOString().slice(0, 16)
+}
+
+function normalizeFutureDatetimeIso(value: string) {
+  if (!value) return null
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime()) || date.getTime() <= Date.now()) return null
+
+  return date.toISOString()
+}
+
+interface DateOffset {
+  days?: number
+  months?: number
+}
+
+function addDateOffset(date: Date, offset: DateOffset) {
+  const next = new Date(date)
+  if (offset.days) next.setDate(next.getDate() + offset.days)
+  if (offset.months) next.setMonth(next.getMonth() + offset.months)
+  return next
+}
+
+function getDefaultNoteTitle(date = new Date()) {
+  return translate('write.noteDefaultTitle', {
+    year: date.getFullYear(),
+    day: getDayOfYear(date),
+  })
+}
+
+function buildNotePublicPath(
+  state: Pick<WriteFormState, 'slug'>,
+  note: NoteModel | undefined,
+) {
+  if (state.slug.trim()) {
+    const date = note?.createdAt ? new Date(note.createdAt) : new Date()
+    return `/notes/${date.getUTCFullYear()}/${date.getUTCMonth() + 1}/${date.getUTCDate()}/${state.slug.trim()}`
+  }
+
+  return note?.nid ? `/notes/${note.nid}` : ''
+}
+
+function buildPostPublicPath(
+  state: Pick<WriteFormState, 'slug'>,
+  category: CategoryModel | undefined,
+) {
+  if (!state.slug.trim() || !category?.slug) return ''
+  return `/posts/${category.slug}/${state.slug.trim()}`
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) return error.message
+  return fallback
+}
