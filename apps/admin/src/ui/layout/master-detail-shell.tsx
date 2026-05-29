@@ -3,6 +3,7 @@ import { animate, motion, useMotionValue, useTransform } from 'motion/react'
 import type { ReactNode } from 'react'
 import {
   createContext,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -173,7 +174,11 @@ function DesktopShell(props: DesktopShellProps) {
           )}
         >
           <div className="relative h-full" ref={props.asideRef}>
-            {props.hasDetail ? props.outlet : props.emptyDetail}
+            {props.hasDetail ? (
+              <Suspense fallback={<DetailSkeleton />}>{props.outlet}</Suspense>
+            ) : (
+              props.emptyDetail
+            )}
           </div>
         </ResizablePanel>
       </PanelGroup>
@@ -346,7 +351,9 @@ function MobileShell(props: MobileShellProps) {
           onPointerDown={handlePointerDown}
           style={{ x }}
         >
-          {lastOutletRef.current}
+          <Suspense fallback={<DetailSkeleton />}>
+            {lastOutletRef.current}
+          </Suspense>
         </motion.div>
       ) : null}
     </div>
@@ -358,4 +365,26 @@ function MobileShell(props: MobileShellProps) {
  */
 export function useMasterDetailContext() {
   return useContext(MasterDetailContext)
+}
+
+/**
+ * Detail lazy-load 之 Suspense fallback。形如 detail panel：header 占位 + body
+ * pulse lines。受 overlay/aside 之 inset 自然，shell 之 push 动画立起即显此态，
+ * detail 模块入屏后 swap。
+ *
+ * 若 feature 欲自定 fallback，可于其 detail route 内套 inner `<Suspense>`——
+ * 此 outer fallback 用于"模块仍在 lazy import"阶段，inner Suspense 处理已 mount
+ * 后之 useQuery / async UI。
+ */
+function DetailSkeleton() {
+  return (
+    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
+      <div className="h-14 shrink-0 border-b border-neutral-200 px-4 dark:border-neutral-800" />
+      <div className="flex-1 space-y-3 p-4">
+        <div className="h-4 w-3/4 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
+        <div className="h-4 w-1/2 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
+      </div>
+    </div>
+  )
 }
