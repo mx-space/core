@@ -8,11 +8,15 @@ import { AiAgentController } from './ai-agent/ai-agent.controller'
 import { AiAgentChatService } from './ai-agent/ai-agent-chat.service'
 import { AiAgentConversationRepository } from './ai-agent/ai-agent-conversation.repository'
 import { AiAgentConversationService } from './ai-agent/ai-agent-conversation.service'
+import { AiEchoModule } from './ai-echo/ai-echo.module'
+import { AiEmbeddingsModule } from './ai-embeddings/ai-embeddings.module'
 import { AiInFlightService } from './ai-inflight/ai-inflight.service'
 import { AiInsightsController } from './ai-insights/ai-insights.controller'
 import { AiInsightsRepository } from './ai-insights/ai-insights.repository'
 import { AiInsightsService } from './ai-insights/ai-insights.service'
 import { AiInsightsTranslationService } from './ai-insights/ai-insights-translation.service'
+import { AiMemoryModule } from './ai-memory/ai-memory.module'
+import { AiPersonaModule } from './ai-persona/ai-persona.module'
 import { AiSummaryController } from './ai-summary/ai-summary.controller'
 import { AiSummaryRepository } from './ai-summary/ai-summary.repository'
 import { AiSummaryService } from './ai-summary/ai-summary.service'
@@ -40,7 +44,15 @@ import { AiWriterController } from './ai-writer/ai-writer.controller'
 import { AiWriterService } from './ai-writer/ai-writer.service'
 
 @Module({
-  imports: [AiTaskModule, TopicModule, forwardRef(() => NoteModule)],
+  imports: [
+    AiTaskModule,
+    TopicModule,
+    forwardRef(() => NoteModule),
+    AiEmbeddingsModule,
+    AiPersonaModule,
+    AiMemoryModule,
+    AiEchoModule,
+  ],
   providers: [
     AiSummaryService,
     AiSummaryRepository,

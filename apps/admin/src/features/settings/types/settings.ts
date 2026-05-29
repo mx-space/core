@@ -24,21 +24,47 @@ export interface AIModelAssignment {
 }
 
 export interface AIConfig {
+  aiEmbedding?: {
+    backfillBatchSize?: number
+    chunkMaxTokens?: number
+    chunkOverlapTokens?: number
+    defaultMinSimilarity?: number
+    defaultTopK?: number
+  }
+  aiMemory?: {
+    recallMinSimilarity?: number
+    recallTopK?: number
+  }
+  aiPersona?: {
+    distillSampleMaxTokens?: number
+    exemplarsCandidateCacheTtlSec?: number
+    exemplarsLengthMax?: number
+    exemplarsLengthMin?: number
+  }
   commentReviewModel?: AIModelAssignment
+  echoDailyQuota?: number
+  echoExemplarsCount?: number
+  echoModel?: AIModelAssignment
+  echoRetrievalMinSimilarity?: number
+  echoRetrievalTopK?: number
   enableAutoGenerateInsightsOnCreate?: boolean
   enableAutoGenerateInsightsOnUpdate?: boolean
+  enableAutoGenerateEchoOnCreate?: boolean
   enableAutoGenerateSummaryOnCreate?: boolean
   enableAutoGenerateSummaryOnUpdate?: boolean
   enableAutoGenerateTranslation?: boolean
   enableAutoTranslateInsights?: boolean
+  enableEcho?: boolean
   enableInsights?: boolean
   enableSummary?: boolean
   enableTranslation?: boolean
   enableTranslationReview?: boolean
+  embeddingModel?: AIModelAssignment
   insightsMinTextLength?: number
   insightsModel?: AIModelAssignment
   insightsTargetLanguages?: string[]
   insightsTranslationModel?: AIModelAssignment
+  personaDistillModel?: AIModelAssignment
   providers?: AIProviderConfig[]
   summaryMinTextLength?: number
   summaryModel?: AIModelAssignment

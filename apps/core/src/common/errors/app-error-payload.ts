@@ -54,6 +54,37 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.AI_TASK_CANNOT_RETRY]: { reason?: string } | undefined
   [AppErrorCode.AI_TRANSLATION_NOT_FOUND]: undefined
 
+  // ai-embeddings
+  [AppErrorCode.AI_EMBEDDING_MODEL_NOT_CONFIGURED]: undefined
+  [AppErrorCode.AI_EMBEDDING_BATCH_FAILED]: OptMessage
+
+  // ai-persona
+  [AppErrorCode.AI_PERSONA_NOT_FOUND]: { key?: string } | undefined
+  [AppErrorCode.AI_PERSONA_PROFILE_NOT_FOUND]: { key?: string } | undefined
+  [AppErrorCode.AI_PERSONA_NOT_DISTILLABLE]: { key?: string } | undefined
+  [AppErrorCode.AI_PERSONA_REFRESH_IN_PROGRESS]: { key?: string } | undefined
+  [AppErrorCode.AI_PERSONA_DISTILL_MODEL_NOT_CONFIGURED]: undefined
+
+  // ai-memory
+  [AppErrorCode.AI_MEMORY_NOT_FOUND]: WithId
+  [AppErrorCode.AI_MEMORY_INVALID_SCOPE]: { scope?: string } | undefined
+  [AppErrorCode.AI_MEMORY_INVALID_TYPE]: { type?: string } | undefined
+
+  // ai-echo
+  [AppErrorCode.AI_ECHO_NOT_FOUND]: WithId
+  [AppErrorCode.AI_ECHO_SUBJECT_NOT_FOUND]:
+    | { subjectType?: string; subjectId?: string }
+    | undefined
+  [AppErrorCode.AI_ECHO_SCENARIO_NOT_REGISTERED]:
+    | { scenarioKey?: string }
+    | undefined
+  [AppErrorCode.AI_ECHO_GENERATION_FAILED]: OptMessage
+  [AppErrorCode.AI_ECHO_REGENERATE_IN_PROGRESS]: { echoId?: string } | undefined
+  [AppErrorCode.AI_ECHO_MODEL_NOT_CONFIGURED]: undefined
+  [AppErrorCode.AI_ECHO_DAILY_QUOTA_EXCEEDED]:
+    | { used?: number; quota?: number }
+    | undefined
+
   // auth
   [AppErrorCode.AUTH_DEVICE_FLOW_PENDING]: undefined
   [AppErrorCode.AUTH_INVALID_CREDENTIALS]: undefined

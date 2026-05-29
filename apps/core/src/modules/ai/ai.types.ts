@@ -13,6 +13,9 @@ export enum AIFeatureKey {
   TranslationReview = 'translationReview',
   Insights = 'insights',
   InsightsTranslation = 'insightsTranslation',
+  Echo = 'echo',
+  Embedding = 'embedding',
+  PersonaDistill = 'personaDistill',
 }
 
 export interface AIProviderConfig {

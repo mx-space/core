@@ -7,6 +7,8 @@ import { AIProviderType } from '../ai.types'
 import { buildAiSdkDefaultHeaders } from './ai-sdk-attribution'
 import { BaseRuntime } from './base.runtime'
 import type {
+  EmbedBatchOptions,
+  EmbedBatchResult,
   GenerateStructuredOptions,
   GenerateStructuredResult,
   GenerateTextOptions,
@@ -17,6 +19,18 @@ import type {
   RuntimeProviderInfo,
   TextStreamChunk,
 } from './types'
+
+const NON_CHAT_MODEL_TOKENS = [
+  'embedding',
+  'whisper',
+  'tts',
+  'dall-e',
+  'moderation',
+  'davinci',
+  'babbage',
+  'ada',
+  'curie',
+]
 
 export class OpenAICompatibleRuntime extends BaseRuntime {
   readonly providerInfo: RuntimeProviderInfo
@@ -293,6 +307,38 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
   }
 
   async listModels(): Promise<ModelInfo[]> {
+    return this.listChatModels()
+  }
+
+  async listChatModels(): Promise<ModelInfo[]> {
+    return this.listFilteredModels((id) =>
+      NON_CHAT_MODEL_TOKENS.every((token) => !id.includes(token)),
+    )
+  }
+
+  async listEmbeddingModels(): Promise<ModelInfo[]> {
+    return this.listFilteredModels((id) => id.includes('embedding'))
+  }
+
+  async embedBatch(options: EmbedBatchOptions): Promise<EmbedBatchResult> {
+    if (options.inputs.length === 0) {
+      return { vectors: [], model: this.providerInfo.model, dim: 0 }
+    }
+    const response = await this.client.embeddings.create(
+      {
+        model: this.providerInfo.model,
+        input: options.inputs,
+      },
+      { signal: options.signal },
+    )
+    const vectors = response.data.map((entry) => entry.embedding as number[])
+    const dim = vectors[0]?.length ?? 0
+    return { vectors, model: response.model ?? this.providerInfo.model, dim }
+  }
+
+  private async listFilteredModels(
+    keep: (lowercasedId: string) => boolean,
+  ): Promise<ModelInfo[]> {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000)
 
@@ -306,20 +352,7 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
       const models: ModelInfo[] = []
       for await (const model of response) {
         const id = (model.id || '').toLowerCase()
-        // Filter out non-chat models
-        if (
-          id.includes('embedding') ||
-          id.includes('whisper') ||
-          id.includes('tts') ||
-          id.includes('dall-e') ||
-          id.includes('moderation') ||
-          id.includes('davinci') ||
-          id.includes('babbage') ||
-          id.includes('ada') ||
-          id.includes('curie')
-        ) {
-          continue
-        }
+        if (!keep(id)) continue
         models.push({
           id: model.id,
           name: model.id,
@@ -327,7 +360,6 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
         })
       }
 
-      // Sort by creation time, newest first
       return models.sort((a, b) => (b.created || 0) - (a.created || 0))
     } catch (error: any) {
       clearTimeout(timeoutId)

@@ -24,6 +24,7 @@ interface ProviderModelsResponse {
   providerName: string
   providerType: AIProviderType
   models: ModelInfo[]
+  embeddingModels?: ModelInfo[]
   error?: string
 }
 
@@ -66,7 +67,10 @@ export class AiController {
       try {
         const runtime = createModelRuntime(provider)
         const models = await this.fetchModelsFromRuntime(runtime)
+        const embeddingModels =
+          await this.fetchEmbeddingModelsFromRuntime(runtime)
         results.push({
+          embeddingModels,
           providerId: provider.id,
           providerName: provider.name,
           providerType: provider.type,
@@ -77,6 +81,7 @@ export class AiController {
           providerId: provider.id,
           providerName: provider.name,
           providerType: provider.type,
+          embeddingModels: [],
           models: [],
           error: error.message || 'Unknown error',
         })
@@ -293,7 +298,10 @@ export class AiController {
     try {
       const runtime = createModelRuntime(provider)
       const models = await this.fetchModelsFromRuntime(runtime)
+      const embeddingModels =
+        await this.fetchEmbeddingModelsFromRuntime(runtime)
       return {
+        embeddingModels,
         providerId: provider.id,
         providerName: provider.name,
         providerType: provider.type,
@@ -304,6 +312,7 @@ export class AiController {
         providerId: provider.id,
         providerName: provider.name,
         providerType: provider.type,
+        embeddingModels: [],
         models: [],
         error: error.message || 'Unknown error',
       }
@@ -317,5 +326,14 @@ export class AiController {
       return []
     }
     return runtime.listModels()
+  }
+
+  private async fetchEmbeddingModelsFromRuntime(
+    runtime: IModelRuntime,
+  ): Promise<ModelInfo[]> {
+    if (!runtime.listEmbeddingModels) {
+      return []
+    }
+    return runtime.listEmbeddingModels()
   }
 }

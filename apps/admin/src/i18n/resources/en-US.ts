@@ -1652,6 +1652,10 @@ export const enUS = {
   'settings.ai.assignment.commentReviewDescription':
     'Model used to review comments.',
   'settings.ai.assignment.commentReviewLabel': 'Comment review',
+  'settings.ai.assignment.echoLabel': 'Echo generation',
+  'settings.ai.assignment.embeddingDescription':
+    'Embedding requires an explicit assignment; it does not fall back to the provider default chat model.',
+  'settings.ai.assignment.embeddingLabel': 'Embedding',
   'settings.ai.assignment.insightsDescription':
     'Model used to generate long-form insights.',
   'settings.ai.assignment.insightsLabel': 'Insights',
@@ -1661,6 +1665,7 @@ export const enUS = {
   'settings.ai.assignment.modelPlaceholder': 'Use provider default model',
   'settings.ai.assignment.providerAriaLabel': '{label} provider',
   'settings.ai.assignment.providerNone': 'Unassigned',
+  'settings.ai.assignment.personaDistillLabel': 'Persona distill',
   'settings.ai.assignment.summaryDescription':
     'Model used to generate article summaries.',
   'settings.ai.assignment.summaryLabel': 'Summary',
@@ -1701,6 +1706,9 @@ export const enUS = {
   'settings.ai.provider.editAction': 'Edit',
   'settings.ai.provider.row.empty': 'No model assigned',
   'settings.ai.section.featureToggles': 'Feature toggles',
+  'settings.ai.section.echo': 'AI echo',
+  'settings.ai.section.echoDescription':
+    'Generate persona replies for recently entries, with retrieval, memories, and persona distillation.',
   'settings.ai.section.insights': 'AI insights',
   'settings.ai.section.insightsDescription':
     'Generate long-form insights from article content; optional translation.',
@@ -1722,7 +1730,23 @@ export const enUS = {
     'Auto-generate summary on create',
   'settings.ai.switch.enableAutoSummaryUpdate': 'Regenerate summary on update',
   'settings.ai.switch.enableAutoTranslate': 'Auto-generate translations',
+  'settings.ai.switch.enableAutoEchoCreate':
+    'Auto-generate echo on recently create',
   'settings.ai.switch.enableAutoTranslateInsights': 'Auto-translate insights',
+  'settings.ai.switch.echoDailyQuota': 'Echo daily quota',
+  'settings.ai.switch.echoExemplarsCount': 'Echo exemplars count',
+  'settings.ai.switch.echoRetrievalMinSimilarity':
+    'Echo retrieval min similarity',
+  'settings.ai.switch.echoRetrievalTopK': 'Echo retrieval top-K',
+  'settings.ai.switch.embeddingBackfillBatchSize':
+    'Embedding backfill batch size',
+  'settings.ai.switch.embeddingChunkMaxTokens': 'Embedding chunk max tokens',
+  'settings.ai.switch.embeddingChunkOverlapTokens':
+    'Embedding chunk overlap tokens',
+  'settings.ai.switch.embeddingDefaultMinSimilarity':
+    'Embedding default min similarity',
+  'settings.ai.switch.embeddingDefaultTopK': 'Embedding default top-K',
+  'settings.ai.switch.enableEcho': 'Enable AI echo',
   'settings.ai.switch.enableInsights': 'Enable AI insights',
   'settings.ai.switch.enableSummary': 'Enable AI summary',
   'settings.ai.switch.enableTranslation': 'Enable AI translation',
@@ -1732,6 +1756,11 @@ export const enUS = {
   'settings.ai.switch.insightsMinTextLength':
     'Insights auto-generate minimum text length',
   'settings.ai.switch.insightsTargetLanguages': 'Insights target languages',
+  'settings.ai.switch.memoryRecallMinSimilarity':
+    'Memory recall min similarity',
+  'settings.ai.switch.memoryRecallTopK': 'Memory recall top-K',
+  'settings.ai.switch.personaDistillSampleMaxTokens':
+    'Persona distill sample max tokens',
   'settings.ai.switch.summaryMinTextLength':
     'Summary auto-generate minimum text length',
   'settings.ai.switch.summaryTargetLanguages': 'Summary target languages',

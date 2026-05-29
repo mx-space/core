@@ -64,6 +64,17 @@ export interface ModelInfo {
   created?: number
 }
 
+export interface EmbedBatchOptions {
+  inputs: string[]
+  signal?: AbortSignal
+}
+
+export interface EmbedBatchResult {
+  vectors: number[][]
+  model: string
+  dim: number
+}
+
 export interface RuntimeConfig {
   apiKey: string
   endpoint?: string

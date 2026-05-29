@@ -58,7 +58,7 @@ export async function startPgTestContainer(): Promise<PgTestDatabase> {
     return externalDatabase
   }
 
-  container = await new PostgreSqlContainer('postgres:17-alpine')
+  container = await new PostgreSqlContainer('pgvector/pgvector:pg17')
     .withDatabase('mx_verify')
     .withUsername('mx')
     .withPassword('mx')

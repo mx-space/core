@@ -25,6 +25,7 @@ interface TextInputProps {
   labelClassName?: string
   list?: string
   maxLength?: number
+  max?: ComponentPropsWithoutRef<'input'>['max']
   min?: ComponentPropsWithoutRef<'input'>['min']
   name?: string
   onBlur?: FocusEventHandler<HTMLInputElement>
@@ -33,6 +34,7 @@ interface TextInputProps {
   placeholder?: string
   required?: boolean
   spellCheck?: boolean
+  step?: ComponentPropsWithoutRef<'input'>['step']
   style?: CSSProperties
   type?: TextInputType
   value: string
@@ -52,6 +54,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         id={props.id}
         inputMode={props.inputMode}
         list={props.list}
+        max={props.max}
         maxLength={props.maxLength}
         min={props.min}
         name={props.name}
@@ -62,6 +65,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         ref={ref}
         required={props.required}
         spellCheck={props.spellCheck}
+        step={props.step}
         style={props.style}
         type={props.type ?? 'text'}
         value={props.value}

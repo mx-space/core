@@ -134,6 +134,7 @@ export interface ProviderModel {
 }
 
 export interface ProviderModelsResponse {
+  embeddingModels?: ProviderModel[]
   error?: string
   models: ProviderModel[]
   providerId: string

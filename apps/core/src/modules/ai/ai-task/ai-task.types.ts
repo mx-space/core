@@ -6,6 +6,11 @@ export enum AITaskType {
   SlugBackfill = 'ai:slug:backfill',
   Insights = 'ai:insights',
   InsightsTranslation = 'ai:insights:translation',
+  EmbedSync = 'ai:embed:sync',
+  EmbedBackfill = 'ai:embed:backfill',
+  PersonaDistill = 'ai:persona:distill',
+  MemoryEmbed = 'ai:memory:embed',
+  EchoGenerate = 'ai:echo:generate',
 }
 
 export interface SummaryTaskPayload {
@@ -56,6 +61,29 @@ export interface InsightsTranslationTaskPayload {
   refType?: string
 }
 
+export interface EmbedSyncTaskPayload {
+  sourceType: string
+  sourceId: string
+  op: 'upsert' | 'delete'
+}
+
+export interface EmbedBackfillTaskPayload {
+  sourceTypes?: string[]
+  batchSize?: number
+}
+
+export interface PersonaDistillTaskPayload {
+  personaKey: string
+}
+
+export interface MemoryEmbedTaskPayload {
+  memoryId: string
+}
+
+export interface EchoGenerateTaskPayload {
+  echoId: string
+}
+
 export type AITaskPayload =
   | SummaryTaskPayload
   | TranslationTaskPayload
@@ -64,6 +92,11 @@ export type AITaskPayload =
   | SlugBackfillTaskPayload
   | InsightsTaskPayload
   | InsightsTranslationTaskPayload
+  | EmbedSyncTaskPayload
+  | EmbedBackfillTaskPayload
+  | PersonaDistillTaskPayload
+  | MemoryEmbedTaskPayload
+  | EchoGenerateTaskPayload
 
 export function computeAITaskDedupKey(
   type: AITaskType,
@@ -100,6 +133,26 @@ export function computeAITaskDedupKey(
     case AITaskType.InsightsTranslation: {
       const p = payload as InsightsTranslationTaskPayload
       return `${p.refId}:${p.targetLang}`
+    }
+    case AITaskType.EmbedSync: {
+      const p = payload as EmbedSyncTaskPayload
+      return `embed:${p.sourceType}:${p.sourceId}:${p.op}`
+    }
+    case AITaskType.EmbedBackfill: {
+      const p = payload as EmbedBackfillTaskPayload
+      return `embed:backfill:${(p.sourceTypes || []).slice().sort().join(',')}`
+    }
+    case AITaskType.PersonaDistill: {
+      const p = payload as PersonaDistillTaskPayload
+      return `persona:distill:${p.personaKey}`
+    }
+    case AITaskType.MemoryEmbed: {
+      const p = payload as MemoryEmbedTaskPayload
+      return `memory:embed:${p.memoryId}`
+    }
+    case AITaskType.EchoGenerate: {
+      const p = payload as EchoGenerateTaskPayload
+      return `echo:generate:${p.echoId}`
     }
   }
 }

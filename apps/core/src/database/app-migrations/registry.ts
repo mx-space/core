@@ -1,4 +1,5 @@
 import { migration as recentlyDropEnrichmentColumns } from './20260515-recently-drop-enrichment-columns'
+import { migration as aiCorpusInitialBackfill } from './20260524-ai-corpus-initial-backfill'
 import type { AppMigration } from './types'
 
 /**
@@ -9,4 +10,7 @@ import type { AppMigration } from './types'
  * Migrations removed from this list never re-run; the ledger row of a
  * previously applied one is left in place and simply goes unreferenced.
  */
-export const migrations: AppMigration[] = [recentlyDropEnrichmentColumns]
+export const migrations: AppMigration[] = [
+  recentlyDropEnrichmentColumns,
+  aiCorpusInitialBackfill,
+]

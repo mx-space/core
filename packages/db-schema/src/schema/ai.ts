@@ -6,11 +6,12 @@ import {
   integer,
   jsonb,
   pgTable,
+  real,
   text,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
-import { createdAt, pkText, refText, tsCol, updatedAt } from './columns'
+import { createdAt, pkText, refText, tsCol, updatedAt, vector } from './columns'
 
 export const aiTranslations = pgTable(
   'ai_translations',
@@ -127,5 +128,122 @@ export const aiAgentConversations = pgTable(
   (table) => [
     index('ai_agent_conversations_ref_idx').on(table.refId, table.refType),
     index('ai_agent_conversations_updated_at_idx').on(table.updatedAt),
+  ],
+)
+
+export const corpusEmbeddings = pgTable(
+  'corpus_embeddings',
+  {
+    id: pkText(),
+    sourceType: text('source_type').notNull(),
+    sourceId: refText('source_id').notNull(),
+    chunkIndex: integer('chunk_index').notNull(),
+    content: text('content').notNull(),
+    contentHash: text('content_hash').notNull(),
+    embedding: vector('embedding').notNull(),
+    embeddingModel: text('embedding_model').notNull(),
+    dim: integer('dim').notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    uniqueIndex('corpus_embeddings_source_chunk_model_uniq').on(
+      table.sourceType,
+      table.sourceId,
+      table.chunkIndex,
+      table.embeddingModel,
+    ),
+    index('corpus_embeddings_source_idx').on(table.sourceType, table.sourceId),
+  ],
+)
+
+export const personaProfiles = pgTable('persona_profiles', {
+  id: pkText(),
+  personaKey: text('persona_key').notNull().unique(),
+  profile: text('profile').notNull(),
+  profileSummary: text('profile_summary'),
+  corpusVersion: integer('corpus_version').notNull(),
+  distillModel: text('distill_model').notNull(),
+  refreshedAt: tsCol('refreshed_at').notNull(),
+  autoNextAt: tsCol('auto_next_at'),
+  metadata: jsonb('metadata')
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default(sql`'{}'::jsonb`),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+})
+
+export const aiMemories = pgTable(
+  'ai_memories',
+  {
+    id: pkText(),
+    scope: text('scope').notNull(),
+    type: text('type').notNull(),
+    content: text('content').notNull(),
+    confidence: real('confidence').notNull().default(1),
+    salience: real('salience').notNull().default(1),
+    source: jsonb('source')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    embedding: vector('embedding'),
+    embeddingModel: text('embedding_model'),
+    dim: integer('dim'),
+    firstSeenAt: tsCol('first_seen_at').notNull().defaultNow(),
+    lastSeenAt: tsCol('last_seen_at').notNull().defaultNow(),
+    expiresAt: tsCol('expires_at'),
+    supersedesId: refText('supersedes_id').references(
+      (): AnyPgColumn => aiMemories.id,
+      { onDelete: 'set null' },
+    ),
+    status: text('status').notNull().default('active'),
+    metadata: jsonb('metadata')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    index('ai_memories_scope_status_idx').on(table.scope, table.status),
+    index('ai_memories_active_idx')
+      .on(table.status)
+      .where(sql`${table.status} = 'active'`),
+  ],
+)
+
+export const aiEchoes = pgTable(
+  'ai_echoes',
+  {
+    id: pkText(),
+    scenarioKey: text('scenario_key').notNull(),
+    subjectType: text('subject_type').notNull(),
+    subjectId: refText('subject_id').notNull(),
+    personaKey: text('persona_key').notNull(),
+    content: text('content'),
+    status: text('status').notNull(),
+    model: text('model'),
+    metadata: jsonb('metadata')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    generatedAt: tsCol('generated_at'),
+    editedAt: tsCol('edited_at'),
+    editedBy: refText('edited_by'),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    index('ai_echoes_subject_idx').on(
+      table.scenarioKey,
+      table.subjectType,
+      table.subjectId,
+    ),
+    index('ai_echoes_status_idx').on(table.scenarioKey, table.status),
+    index('ai_echoes_persona_subject_idx').on(
+      table.subjectType,
+      table.subjectId,
+      table.personaKey,
+    ),
   ],
 )

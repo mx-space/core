@@ -36,22 +36,51 @@ export function AIConfigEditor(props: {
     enabled: hasEnabledProvider,
     queryFn: async () => {
       const response = await getModels()
-      return response.reduce<Record<string, AIProviderModel[]>>(
+      return response.reduce<{
+        chat: Record<string, AIProviderModel[]>
+        embedding: Record<string, AIProviderModel[]>
+      }>(
         (result, provider) => ({
-          ...result,
-          [provider.providerId]: provider.models ?? [],
+          chat: {
+            ...result.chat,
+            [provider.providerId]: provider.models ?? [],
+          },
+          embedding: {
+            ...result.embedding,
+            [provider.providerId]: provider.embeddingModels ?? [],
+          },
         }),
-        {},
+        { chat: {}, embedding: {} },
       )
     },
     queryKey: props.modelCacheKey,
     staleTime: 24 * 60 * 60 * 1000,
   })
-  const providerModels = modelsQuery.data ?? {}
+  const providerModels = modelsQuery.data?.chat ?? {}
+  const embeddingProviderModels = modelsQuery.data?.embedding ?? {}
   const providers = props.value.providers ?? []
 
   const updateConfig = (patch: Partial<AIConfig>) =>
     props.onChange({ ...props.value, ...patch })
+
+  const updateNumber = (key: keyof AIConfig, raw: string) => {
+    const trimmed = raw.trim()
+    updateConfig({ [key]: trimmed ? Number(trimmed) : undefined })
+  }
+
+  const updateNestedNumber = (
+    section: 'aiEmbedding' | 'aiMemory' | 'aiPersona',
+    key: string,
+    raw: string,
+  ) => {
+    const trimmed = raw.trim()
+    updateConfig({
+      [section]: {
+        ...(props.value[section] ?? {}),
+        [key]: trimmed ? Number(trimmed) : undefined,
+      },
+    })
+  }
 
   const updateProvider = (id: string, patch: Partial<AIProviderConfig>) => {
     updateConfig({
@@ -335,6 +364,183 @@ export function AIConfigEditor(props: {
           />
         </FeatureSection>
 
+        <FeatureSection
+          assignment={
+            <>
+              <AIModelAssignmentField
+                label={t('settings.ai.assignment.echoLabel')}
+                models={providerModels}
+                onChange={(echoModel) => updateConfig({ echoModel })}
+                providers={providers}
+                value={props.value.echoModel}
+              />
+              <AIModelAssignmentField
+                description={t('settings.ai.assignment.embeddingDescription')}
+                label={t('settings.ai.assignment.embeddingLabel')}
+                models={embeddingProviderModels}
+                onChange={(embeddingModel) => updateConfig({ embeddingModel })}
+                providers={providers}
+                value={props.value.embeddingModel}
+              />
+              <AIModelAssignmentField
+                label={t('settings.ai.assignment.personaDistillLabel')}
+                models={providerModels}
+                onChange={(personaDistillModel) =>
+                  updateConfig({ personaDistillModel })
+                }
+                providers={providers}
+                value={props.value.personaDistillModel}
+              />
+            </>
+          }
+          description={t('settings.ai.section.echoDescription')}
+          enabled={Boolean(props.value.enableEcho)}
+          onEnabledChange={(enableEcho) => updateConfig({ enableEcho })}
+          title={t('settings.ai.section.echo')}
+          toggleLabel={t('settings.ai.switch.enableEcho')}
+        >
+          <Switch
+            checked={Boolean(props.value.enableAutoGenerateEchoOnCreate)}
+            disabled={!props.value.enableEcho}
+            label={t('settings.ai.switch.enableAutoEchoCreate')}
+            onCheckedChange={(enableAutoGenerateEchoOnCreate) =>
+              updateConfig({ enableAutoGenerateEchoOnCreate })
+            }
+          />
+          <NumberGrid>
+            <TextInput
+              disabled={!props.value.enableEcho}
+              inputMode="numeric"
+              label={t('settings.ai.switch.echoDailyQuota')}
+              min={0}
+              onChange={(value) => updateNumber('echoDailyQuota', value)}
+              type="number"
+              value={String(props.value.echoDailyQuota ?? 200)}
+            />
+            <TextInput
+              disabled={!props.value.enableEcho}
+              inputMode="numeric"
+              label={t('settings.ai.switch.echoRetrievalTopK')}
+              min={1}
+              onChange={(value) => updateNumber('echoRetrievalTopK', value)}
+              type="number"
+              value={String(props.value.echoRetrievalTopK ?? 5)}
+            />
+            <TextInput
+              disabled={!props.value.enableEcho}
+              inputMode="decimal"
+              label={t('settings.ai.switch.echoRetrievalMinSimilarity')}
+              max={1}
+              min={0}
+              onChange={(value) =>
+                updateNumber('echoRetrievalMinSimilarity', value)
+              }
+              step={0.01}
+              type="number"
+              value={String(props.value.echoRetrievalMinSimilarity ?? 0.72)}
+            />
+            <TextInput
+              disabled={!props.value.enableEcho}
+              inputMode="numeric"
+              label={t('settings.ai.switch.echoExemplarsCount')}
+              min={0}
+              onChange={(value) => updateNumber('echoExemplarsCount', value)}
+              type="number"
+              value={String(props.value.echoExemplarsCount ?? 4)}
+            />
+          </NumberGrid>
+          <NumberGrid>
+            <TextInput
+              inputMode="numeric"
+              label={t('settings.ai.switch.embeddingChunkMaxTokens')}
+              min={64}
+              onChange={(value) =>
+                updateNestedNumber('aiEmbedding', 'chunkMaxTokens', value)
+              }
+              type="number"
+              value={String(props.value.aiEmbedding?.chunkMaxTokens ?? 500)}
+            />
+            <TextInput
+              inputMode="numeric"
+              label={t('settings.ai.switch.embeddingChunkOverlapTokens')}
+              min={0}
+              onChange={(value) =>
+                updateNestedNumber('aiEmbedding', 'chunkOverlapTokens', value)
+              }
+              type="number"
+              value={String(props.value.aiEmbedding?.chunkOverlapTokens ?? 50)}
+            />
+            <TextInput
+              inputMode="numeric"
+              label={t('settings.ai.switch.embeddingBackfillBatchSize')}
+              min={1}
+              onChange={(value) =>
+                updateNestedNumber('aiEmbedding', 'backfillBatchSize', value)
+              }
+              type="number"
+              value={String(props.value.aiEmbedding?.backfillBatchSize ?? 50)}
+            />
+            <TextInput
+              inputMode="numeric"
+              label={t('settings.ai.switch.embeddingDefaultTopK')}
+              min={1}
+              onChange={(value) =>
+                updateNestedNumber('aiEmbedding', 'defaultTopK', value)
+              }
+              type="number"
+              value={String(props.value.aiEmbedding?.defaultTopK ?? 5)}
+            />
+            <TextInput
+              inputMode="decimal"
+              label={t('settings.ai.switch.embeddingDefaultMinSimilarity')}
+              max={1}
+              min={0}
+              onChange={(value) =>
+                updateNestedNumber('aiEmbedding', 'defaultMinSimilarity', value)
+              }
+              step={0.01}
+              type="number"
+              value={String(
+                props.value.aiEmbedding?.defaultMinSimilarity ?? 0.7,
+              )}
+            />
+            <TextInput
+              inputMode="numeric"
+              label={t('settings.ai.switch.memoryRecallTopK')}
+              min={1}
+              onChange={(value) =>
+                updateNestedNumber('aiMemory', 'recallTopK', value)
+              }
+              type="number"
+              value={String(props.value.aiMemory?.recallTopK ?? 5)}
+            />
+            <TextInput
+              inputMode="decimal"
+              label={t('settings.ai.switch.memoryRecallMinSimilarity')}
+              max={1}
+              min={0}
+              onChange={(value) =>
+                updateNestedNumber('aiMemory', 'recallMinSimilarity', value)
+              }
+              step={0.01}
+              type="number"
+              value={String(props.value.aiMemory?.recallMinSimilarity ?? 0.7)}
+            />
+            <TextInput
+              inputMode="numeric"
+              label={t('settings.ai.switch.personaDistillSampleMaxTokens')}
+              min={1000}
+              onChange={(value) =>
+                updateNestedNumber('aiPersona', 'distillSampleMaxTokens', value)
+              }
+              type="number"
+              value={String(
+                props.value.aiPersona?.distillSampleMaxTokens ?? 60000,
+              )}
+            />
+          </NumberGrid>
+        </FeatureSection>
+
         <SettingsSection
           description={t('settings.ai.section.otherModelsDescription')}
           title={t('settings.ai.section.otherModels')}
@@ -439,5 +645,13 @@ function FeatureSection(props: {
         {props.children}
       </div>
     </SettingsSection>
+  )
+}
+
+function NumberGrid(props: { children: ReactNode }) {
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {props.children}
+    </div>
   )
 }

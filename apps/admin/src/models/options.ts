@@ -153,13 +153,39 @@ export namespace MxServerOptions {
   }
 
   export interface AIOption {
+    aiEmbedding?: {
+      backfillBatchSize?: number
+      chunkMaxTokens?: number
+      chunkOverlapTokens?: number
+      defaultMinSimilarity?: number
+      defaultTopK?: number
+    }
+    aiMemory?: {
+      recallMinSimilarity?: number
+      recallTopK?: number
+    }
+    aiPersona?: {
+      distillSampleMaxTokens?: number
+      exemplarsCandidateCacheTtlSec?: number
+      exemplarsLengthMax?: number
+      exemplarsLengthMin?: number
+    }
     providers: AIProviderConfig[]
     summaryModel?: AIModelAssignment
     writerModel?: AIModelAssignment
     commentReviewModel?: AIModelAssignment
+    echoModel?: AIModelAssignment
+    embeddingModel?: AIModelAssignment
+    personaDistillModel?: AIModelAssignment
     enableSummary: boolean
     enableAutoGenerateSummaryOnCreate: boolean
     enableAutoGenerateSummaryOnUpdate: boolean
+    enableEcho?: boolean
+    enableAutoGenerateEchoOnCreate?: boolean
+    echoDailyQuota?: number
+    echoRetrievalTopK?: number
+    echoRetrievalMinSimilarity?: number
+    echoExemplarsCount?: number
     summaryTargetLanguages: string[]
     summaryMinTextLength?: number
     insightsModel?: AIModelAssignment
@@ -179,6 +205,7 @@ export namespace MxServerOptions {
   }
 
   export interface ProviderModelsResponse {
+    embeddingModels?: ModelInfo[]
     providerId: string
     providerName: string
     providerType: AIProviderType

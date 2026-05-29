@@ -9,6 +9,7 @@ import {
   type AITaskPayload,
   AITaskType,
   computeAITaskDedupKey,
+  type EmbedSyncTaskPayload,
   type InsightsTaskPayload,
   type InsightsTranslationTaskPayload,
   type SlugBackfillTaskPayload,
@@ -73,6 +74,12 @@ export class AiTaskService {
   ): Promise<{ taskId: string; created: boolean }> {
     await this.fillArticleInfo(payload)
     return this.createTask(AITaskType.InsightsTranslation, payload)
+  }
+
+  async createEmbedSyncTask(
+    payload: EmbedSyncTaskPayload,
+  ): Promise<{ taskId: string; created: boolean }> {
+    return this.createTask(AITaskType.EmbedSync, payload)
   }
 
   async retryTaskWithFailedOnly(
