@@ -19,7 +19,6 @@ import {
   validateToolCall,
 } from '@earendil-works/pi-ai'
 import { Logger } from '@nestjs/common'
-import type { z } from 'zod'
 
 import { isDev } from '~/global/env.global'
 
@@ -27,7 +26,6 @@ import { AIProviderType } from '../ai.types'
 import type { IModelRuntime } from './model-runtime.interface'
 import type {
   GenerateStructuredOptions,
-  GenerateStructuredOptionsZod,
   GenerateStructuredResult,
   GenerateTextOptions,
   GenerateTextResult,
@@ -295,35 +293,10 @@ export class PiRuntimeAdapter implements IModelRuntime {
     }
   }
 
-  // Deprecated Zod overload — kept until step-7 removes the interface signature.
-  // Callers using a TypeBox schema use the implementation below; Zod callers
-  // throw to surface unmigrated sites loudly during step-8.
-  generateStructured<Z extends z.ZodType>(
-    options: GenerateStructuredOptionsZod<Z>,
-  ): Promise<GenerateStructuredResult<z.infer<Z>>>
-  generateStructured<T extends TSchema>(
+  async generateStructured<T extends TSchema>(
     options: GenerateStructuredOptions<T>,
-  ): Promise<GenerateStructuredResult<Static<T>>>
-  async generateStructured(
-    options:
-      | GenerateStructuredOptionsZod<z.ZodType>
-      | GenerateStructuredOptions<TSchema>,
-  ): Promise<GenerateStructuredResult<unknown>> {
-    const rawSchema = (options as { schema: unknown }).schema as
-      | { parse?: unknown; type?: unknown }
-      | null
-      | undefined
-    if (
-      !rawSchema ||
-      typeof rawSchema !== 'object' ||
-      typeof rawSchema.parse === 'function' ||
-      typeof rawSchema.type !== 'string'
-    ) {
-      throw new Error(
-        'PiRuntimeAdapter.generateStructured: Zod overload is no longer supported; pass a TypeBox schema',
-      )
-    }
-    const typed = options as GenerateStructuredOptions<TSchema>
+  ): Promise<GenerateStructuredResult<Static<T>>> {
+    const typed = options
 
     const tool: Tool = {
       name: STRUCTURED_TOOL_NAME,
@@ -422,7 +395,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       }
 
       return {
-        output,
+        output: output as Static<T>,
         usage: mapUsage(usageAccum),
       }
     }

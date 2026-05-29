@@ -1,8 +1,7 @@
 import type { AIProviderConfig } from '../ai.types'
 import { AIProviderType } from '../ai.types'
-import { AnthropicRuntime } from './anthropic.runtime'
 import type { IModelRuntime } from './model-runtime.interface'
-import { OpenAICompatibleRuntime } from './openai-compatible.runtime'
+import { PiRuntimeAdapter } from './pi-runtime.adapter'
 import type { RuntimeConfig } from './types'
 
 export function createModelRuntime(
@@ -20,18 +19,18 @@ export function createModelRuntime(
   }
 
   switch (config.type) {
-    case AIProviderType.Anthropic: {
-      return new AnthropicRuntime(runtimeConfig)
-    }
-
-    case AIProviderType.OpenAI:
+    case AIProviderType.Anthropic:
     case AIProviderType.OpenAICompatible:
-    case AIProviderType.OpenRouter: {
-      return new OpenAICompatibleRuntime(runtimeConfig)
+    case AIProviderType.Generic: {
+      return new PiRuntimeAdapter({
+        ...runtimeConfig,
+        contextWindow: config.contextWindow ?? undefined,
+        maxTokens: config.maxTokens ?? undefined,
+      })
     }
 
     default: {
-      throw new Error(`Unsupported provider type: ${config.type}`)
+      throw new Error(`Unsupported provider type: ${config.type as string}`)
     }
   }
 }

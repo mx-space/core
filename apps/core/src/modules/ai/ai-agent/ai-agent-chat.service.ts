@@ -5,7 +5,11 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 
 import type { AIProviderConfig } from '../ai.types'
 import { AIProviderType } from '../ai.types'
-import { buildAiSdkDefaultHeaders } from '../runtime/ai-sdk-attribution'
+
+const AI_SDK_ATTRIBUTION_HEADERS = {
+  'X-Title': 'Mix Space',
+  'HTTP-Referer': 'https://github.com/mx-space/core',
+} as const
 
 @Injectable()
 export class AiAgentChatService {
@@ -125,7 +129,7 @@ export class AiAgentChatService {
         'x-api-key': provider.apiKey,
         'anthropic-version': '2023-06-01',
         'anthropic-beta': 'interleaved-thinking-2025-05-14',
-        ...buildAiSdkDefaultHeaders(),
+        ...AI_SDK_ATTRIBUTION_HEADERS,
       },
       body: JSON.stringify(body),
     }
@@ -186,15 +190,13 @@ export class AiAgentChatService {
     }
 
     let baseUrl: string
-    if (provider.type === AIProviderType.OpenRouter) {
-      baseUrl = provider.endpoint || 'https://openrouter.ai/api/v1'
-    } else if (provider.type === AIProviderType.OpenAI) {
-      baseUrl = provider.endpoint || 'https://api.openai.com/v1'
-    } else {
-      baseUrl = provider.endpoint!
+    if (provider.endpoint) {
+      baseUrl = provider.endpoint
       if (!baseUrl.endsWith('/v1')) {
         baseUrl = `${baseUrl.replace(/\/+$/, '')}/v1`
       }
+    } else {
+      baseUrl = 'https://api.openai.com/v1'
     }
 
     return {
@@ -202,7 +204,7 @@ export class AiAgentChatService {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${provider.apiKey}`,
-        ...buildAiSdkDefaultHeaders(),
+        ...AI_SDK_ATTRIBUTION_HEADERS,
       },
       body: JSON.stringify(body),
     }

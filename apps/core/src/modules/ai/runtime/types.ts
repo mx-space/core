@@ -1,5 +1,4 @@
 import type { Tool, TSchema } from '@earendil-works/pi-ai'
-import type { z } from 'zod'
 
 import type { AIProviderType } from '../ai.types'
 
@@ -39,16 +38,6 @@ export interface GenerateTextResult {
     completionTokens?: number
     totalTokens?: number
   }
-}
-
-/** @deprecated Zod-based options retained for legacy callers; removed in step-7. */
-export interface GenerateStructuredOptionsZod<T extends z.ZodType> extends Omit<
-  GenerateTextOptions,
-  'prompt'
-> {
-  prompt: string
-  systemPrompt?: string
-  schema: T
 }
 
 export interface GenerateStructuredOptions<T extends TSchema> extends Omit<
