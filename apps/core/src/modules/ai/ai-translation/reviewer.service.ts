@@ -1,12 +1,19 @@
+import type { Static, TSchema } from '@earendil-works/pi-ai'
 import { Injectable, Logger } from '@nestjs/common'
 import JSON5 from 'json5'
 import { jsonrepair } from 'jsonrepair'
-import type { z } from 'zod'
+import { Value } from 'typebox/value'
 
 import { extractFirstJsonObject } from '~/utils/json.util'
 
 import { AI_PROMPTS } from '../ai.prompts'
 import type { IModelRuntime } from '../runtime'
+
+function firstValidationFailure(schema: TSchema, value: unknown): string {
+  const [first] = [...Value.Errors(schema, value)]
+  if (!first) return 'unknown validation failure'
+  return `${first.instancePath || '/'}: ${first.message}`
+}
 
 export interface ReviewerIssue {
   id: string
@@ -93,8 +100,14 @@ export class TranslationReviewerService {
           schema,
           reasoningEffort,
           signal,
+          validate: false,
         })
-        return schema.parse(result.output) as ReviewerOutput
+        if (!Value.Check(schema, result.output)) {
+          throw new Error(
+            `Reviewer output validation failed at ${firstValidationFailure(schema, result.output)}`,
+          )
+        }
+        return result.output as ReviewerOutput
       } catch (error) {
         this.logger.warn(
           `Reviewer structured output failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -117,7 +130,12 @@ export class TranslationReviewerService {
         })
         const parsed = parseLooseJson<unknown>(result.text)
         if (!parsed) return null
-        return schema.parse(parsed) as ReviewerOutput
+        if (!Value.Check(schema, parsed)) {
+          throw new Error(
+            `Reviewer output validation failed at ${firstValidationFailure(schema, parsed)}`,
+          )
+        }
+        return parsed as ReviewerOutput
       } catch (error) {
         this.logger.warn(
           `Reviewer text-mode call/parse failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -168,7 +186,7 @@ export type EditorSchema = ReturnType<
   typeof AI_PROMPTS.translationEditor
 >['schema']
 
-export type ReviewerSchemaType = z.infer<ReviewerSchema>
-export type EditorSchemaType = z.infer<EditorSchema>
+export type ReviewerSchemaType = Static<ReviewerSchema>
+export type EditorSchemaType = Static<EditorSchema>
 
 export const __test_only__ = { parseLooseJson }

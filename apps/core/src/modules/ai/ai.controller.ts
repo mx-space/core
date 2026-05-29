@@ -195,6 +195,7 @@ export class AiController {
         const promptConfig = AI_PROMPTS.comment.score(text)
         const result = await runtime.generateStructured({
           ...promptConfig,
+          maxRetries: 0,
         })
 
         const { score, hasSensitiveContent } = result.output
@@ -212,6 +213,7 @@ export class AiController {
         const promptConfig = AI_PROMPTS.comment.spam(text)
         const result = await runtime.generateStructured({
           ...promptConfig,
+          maxRetries: 0,
         })
 
         const { isSpam: rawIsSpam, hasSensitiveContent } = result.output

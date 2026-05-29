@@ -1,7 +1,9 @@
 /* eslint-disable unicorn/better-regex */
+import type { TSchema } from '@earendil-works/pi-ai'
 import { Logger } from '@nestjs/common'
 import JSON5 from 'json5'
 import { jsonrepair } from 'jsonrepair'
+import { Value } from 'typebox/value'
 
 import { throwIfAborted } from '~/utils/abort.util'
 import {
@@ -15,6 +17,12 @@ import type {
   PipelineEditorMetrics,
   PipelineReviewerMetrics,
 } from '../translation-strategy.interface'
+
+function firstValidationFailure(schema: TSchema, value: unknown): string {
+  const [first] = [...Value.Errors(schema, value)]
+  if (!first) return 'unknown validation failure'
+  return `${first.instancePath || '/'}: ${first.message}`
+}
 
 export const DEFAULT_REVIEW_SCORE_THRESHOLD = 85
 
@@ -459,10 +467,15 @@ export abstract class BaseTranslationStrategy {
           schema,
           reasoningEffort,
           signal,
+          validate: false,
         })
-        return schema.parse(
-          this.normalizeChunkTranslationResponse(result.output),
-        ) as WriterResult
+        const normalised = this.normalizeChunkTranslationResponse(result.output)
+        if (!Value.Check(schema, normalised)) {
+          throw new Error(
+            `callWriter: translation chunk validation failed at ${firstValidationFailure(schema, normalised)}`,
+          )
+        }
+        return normalised as WriterResult
       } catch (error) {
         this.logger.warn(
           `callWriter: structured output failed, falling back to text mode (${
@@ -496,11 +509,15 @@ export abstract class BaseTranslationStrategy {
       fullText = result.text
     }
 
-    return schema.parse(
-      this.normalizeChunkTranslationResponse(
-        this.parseModelJson<WriterResult>(fullText, 'callWriter'),
-      ),
-    ) as WriterResult
+    const normalisedFallback = this.normalizeChunkTranslationResponse(
+      this.parseModelJson<WriterResult>(fullText, 'callWriter'),
+    )
+    if (!Value.Check(schema, normalisedFallback)) {
+      throw new Error(
+        `callWriter: translation chunk validation failed at ${firstValidationFailure(schema, normalisedFallback)}`,
+      )
+    }
+    return normalisedFallback as WriterResult
   }
 
   protected async callEditor(
@@ -528,10 +545,15 @@ export abstract class BaseTranslationStrategy {
           schema,
           reasoningEffort,
           signal,
+          validate: false,
         })
-        return schema.parse(result.output) as {
-          patches: Record<string, string>
+        const output = result.output
+        if (!Value.Check(schema, output)) {
+          throw new Error(
+            `callEditor: editor output validation failed at ${firstValidationFailure(schema, output)}`,
+          )
         }
+        return output as { patches: Record<string, string> }
       } catch (error) {
         this.logger.warn(
           `callEditor: structured output failed, falling back to text mode (${
@@ -556,7 +578,12 @@ export abstract class BaseTranslationStrategy {
         result.text,
         'callEditor',
       )
-      return schema.parse(parsed) as { patches: Record<string, string> }
+      if (!Value.Check(schema, parsed)) {
+        throw new Error(
+          `callEditor: editor output validation failed at ${firstValidationFailure(schema, parsed)}`,
+        )
+      }
+      return parsed as { patches: Record<string, string> }
     } catch (error) {
       this.logger.warn(
         `callEditor failed: ${error instanceof Error ? error.message : String(error)}`,

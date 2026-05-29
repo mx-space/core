@@ -14,6 +14,7 @@
   "scripts": {
     "check:ai-translation-hash": "pnpm -C apps/core exec tsx scripts/check-ai-translation-hash.ts",
     "check:controller-response-envelope": "pnpm -C apps/core exec tsx ../../scripts/check-controller-response-envelope.ts",
+    "check:validate-false-paired": "pnpm -C apps/core exec tsx ../../scripts/check-validate-false-paired-with-check.ts",
     "format": "prettier --write \"apps/**/*.ts\"",
     "lexical-live": "pnpm -C apps/core exec node scripts/lexical-translation-live.mjs",
     "prepare": "simple-git-hooks",
@@ -22,7 +23,7 @@
     "bundle": "pnpm -C \"apps/core\" run bundle",
     "test": "pnpm -C \"apps/core\" run test",
     "lint": "pnpm -C \"apps/core\" run lint",
-    "typecheck": "pnpm check:controller-response-envelope && pnpm -C \"apps/core\" run typecheck",
+    "typecheck": "pnpm check:controller-response-envelope && pnpm check:validate-false-paired && pnpm -C \"apps/core\" run typecheck",
     "publish:core": "cd apps/core && npm run publish",
     "dev:admin": "pnpm -C apps/admin run dev",
     "build:admin": "pnpm -C apps/admin run build",
