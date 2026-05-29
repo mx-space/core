@@ -1,0 +1,11 @@
+{
+  "type": "toolcall_end",
+  "contentIndex": 2,
+  "toolCall": {
+    "id": "call_001",
+    "name": "lookup",
+    "arguments": {
+      "query": "falcon"
+    }
+  }
+}

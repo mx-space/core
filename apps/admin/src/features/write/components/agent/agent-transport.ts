@@ -1,6 +1,13 @@
 import type { TransportAdapter } from '@haklex/rich-agent-core'
+// Type-only import pins the admin to the shared SSE event contract emitted by
+// the core controller. Drift between the two surfaces fails the admin
+// typecheck (see packages/api-client/models/ai-agent-sse.ts). The runtime
+// consumer of these frames is wired up in step-18.
+import type { AiAgentSseEvent } from '@mx-space/api-client'
 
 import { API_URL } from '~/constants/env'
+
+export type AdminAiAgentSseEvent = AiAgentSseEvent
 
 export function createAdminAgentTransport(
   providerId: string,
@@ -33,7 +40,7 @@ export function createAdminAgentTransport(
     }
 
     const firstText = decoder.decode(first.value, { stream: true })
-    if (/(^|\n)event:\s*error/.test(firstText)) {
+    if (/(?:^|\n)event:\s*error/.test(firstText)) {
       let buffer = firstText
       while (true) {
         const { done, value } = await reader.read()
@@ -57,7 +64,7 @@ export function createAdminAgentTransport(
           }
 
           const text = decoder.decode(value, { stream: true })
-          if (/(^|\n)event:\s*error/.test(text)) {
+          if (/(?:^|\n)event:\s*error/.test(text)) {
             let buffer = text
             while (true) {
               const { done: d, value: v } = await reader.read()

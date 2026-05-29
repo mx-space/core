@@ -1,3 +1,5 @@
+import type { AssistantMessageEvent } from '@earendil-works/pi-ai'
+import type { AiAgentSseEvent } from '@mx-space/api-client'
 import {
   Body,
   Delete,
@@ -16,12 +18,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import {
-  applyRawCorsHeaders,
-  endSse,
-  initSse,
-  sendSseEvent,
-} from '~/utils/sse.util'
+import { applyRawCorsHeaders } from '~/utils/sse.util'
 
 import {
   AppendMessagesDto,
@@ -33,6 +30,8 @@ import {
 } from './ai-agent.schema'
 import { AiAgentChatService } from './ai-agent-chat.service'
 import { AiAgentConversationService } from './ai-agent-conversation.service'
+
+const HEARTBEAT_INTERVAL_MS = 15_000
 
 @ApiController('ai/agent')
 export class AiAgentController {
@@ -49,34 +48,6 @@ export class AiAgentController {
     @Req() request: FastifyRequest,
     @Res() reply: FastifyReply,
   ) {
-    const provider = await this.chatService.resolveProvider(body.providerId)
-    const {
-      url,
-      headers,
-      body: requestBody,
-    } = this.chatService.buildRequestBody(
-      provider,
-      body.model,
-      body.messages,
-      body.tools,
-    )
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: requestBody,
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      initSse(reply, request)
-      sendSseEvent(reply, 'error', {
-        message: `LLM API error (${response.status}): ${errorText}`,
-      })
-      endSse(reply)
-      return
-    }
-
     applyRawCorsHeaders(reply, request)
     reply.raw.setHeader('Content-Type', 'text/event-stream')
     reply.raw.setHeader('Cache-Control', 'no-cache, no-transform')
@@ -84,18 +55,54 @@ export class AiAgentController {
     reply.raw.setHeader('X-Accel-Buffering', 'no')
     reply.raw.flushHeaders()
 
-    const reader = response.body!.getReader()
+    const abortController = new AbortController()
+    const onClose = () => abortController.abort()
+    const onAborted = () => abortController.abort()
+    reply.raw.on('close', onClose)
+    request.raw.on('aborted', onAborted)
+
+    const writeFrame = (event: AiAgentSseEvent) => {
+      if (reply.raw.writableEnded) return
+      reply.raw.write(`data: ${JSON.stringify(event)}\n\n`)
+    }
+    const writeHeartbeat = () => {
+      if (reply.raw.writableEnded) return
+      reply.raw.write(`: ping\n\n`)
+    }
+
+    const heartbeat = setInterval(writeHeartbeat, HEARTBEAT_INTERVAL_MS)
+
     try {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        reply.raw.write(value)
+      const events = this.chatService.streamChat({
+        model: body.model,
+        providerId: body.providerId,
+        messages: body.messages,
+        tools: body.tools,
+        signal: abortController.signal,
+      })
+
+      for await (const event of events) {
+        const frame = mapPiEventToSse(event)
+        if (!frame) continue
+        writeFrame(frame)
+        if (frame.type === 'done' || frame.type === 'error') {
+          break
+        }
       }
-    } catch {
-      // Client disconnected or upstream error
+    } catch (error) {
+      const reason = abortController.signal.aborted ? 'aborted' : 'error'
+      writeFrame({
+        type: 'error',
+        reason,
+        message: (error as Error)?.message ?? 'Unknown error',
+      })
     } finally {
-      reader.releaseLock()
-      reply.raw.end()
+      clearInterval(heartbeat)
+      reply.raw.off('close', onClose)
+      request.raw.off('aborted', onAborted)
+      if (!reply.raw.writableEnded) {
+        reply.raw.end()
+      }
     }
   }
 
@@ -149,4 +156,112 @@ export class AiAgentController {
   deleteConversation(@Param() params: EntityIdDto) {
     return this.conversationService.deleteById(params.id)
   }
+}
+
+function mapPiEventToSse(event: AssistantMessageEvent): AiAgentSseEvent | null {
+  switch (event.type) {
+    case 'text_start': {
+      return { type: 'text_start', contentIndex: event.contentIndex }
+    }
+    case 'text_delta': {
+      return {
+        type: 'text_delta',
+        contentIndex: event.contentIndex,
+        delta: event.delta,
+      }
+    }
+    case 'text_end': {
+      return { type: 'text_end', contentIndex: event.contentIndex }
+    }
+    case 'thinking_start': {
+      return { type: 'thinking_start', contentIndex: event.contentIndex }
+    }
+    case 'thinking_delta': {
+      return {
+        type: 'thinking_delta',
+        contentIndex: event.contentIndex,
+        delta: event.delta,
+      }
+    }
+    case 'thinking_end': {
+      return { type: 'thinking_end', contentIndex: event.contentIndex }
+    }
+    case 'toolcall_start': {
+      const name = extractToolCallName(event.partial, event.contentIndex)
+      return {
+        type: 'toolcall_start',
+        contentIndex: event.contentIndex,
+        ...(name !== undefined ? { name } : {}),
+      }
+    }
+    case 'toolcall_delta': {
+      const partialArgs = safeParsePartialArgs(event.delta)
+      return {
+        type: 'toolcall_delta',
+        contentIndex: event.contentIndex,
+        partialArgs,
+      }
+    }
+    case 'toolcall_end': {
+      return {
+        type: 'toolcall_end',
+        contentIndex: event.contentIndex,
+        toolCall: {
+          id: event.toolCall.id,
+          name: event.toolCall.name,
+          arguments: event.toolCall.arguments ?? {},
+        },
+      }
+    }
+    case 'done': {
+      return {
+        type: 'done',
+        message: event.message as unknown as Record<string, unknown>,
+      }
+    }
+    case 'error': {
+      return {
+        type: 'error',
+        reason: event.reason,
+        message:
+          event.error.errorMessage ??
+          (event.reason === 'aborted' ? 'Stream aborted' : 'Stream error'),
+      }
+    }
+    case 'start': {
+      return null
+    }
+    default: {
+      return null
+    }
+  }
+}
+
+function extractToolCallName(
+  partial: unknown,
+  contentIndex: number,
+): string | undefined {
+  const blocks = (partial as { content?: Array<Record<string, unknown>> })
+    ?.content
+  if (!Array.isArray(blocks)) return undefined
+  const block = blocks[contentIndex]
+  if (block && block.type === 'toolCall' && typeof block.name === 'string') {
+    return block.name
+  }
+  return undefined
+}
+
+function safeParsePartialArgs(delta: string): Record<string, unknown> {
+  if (!delta) return {}
+  try {
+    const parsed = JSON.parse(delta) as unknown
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>
+    }
+  } catch {
+    // partial JSON fragment — emit raw delta under a known key so the admin can
+    // accumulate it without losing data.
+    return { __partial: delta }
+  }
+  return {}
 }

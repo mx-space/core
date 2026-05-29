@@ -1,0 +1,5 @@
+{
+  "type": "toolcall_start",
+  "contentIndex": 2,
+  "name": "lookup"
+}

@@ -1,0 +1,7 @@
+{
+  "type": "toolcall_delta",
+  "contentIndex": 2,
+  "partialArgs": {
+    "query": "fal"
+  }
+}

@@ -58,6 +58,7 @@
     "@lexical/react": "^0.44.0",
     "@lezer/highlight": "1.2.3",
     "@monaco-editor/react": "4.7.0",
+    "@mx-space/api-client": "workspace:*",
     "@pierre/diffs": "1.1.3",
     "@rehookify/datepicker": "6.6.8",
     "@simplewebauthn/browser": "13.3.0",
