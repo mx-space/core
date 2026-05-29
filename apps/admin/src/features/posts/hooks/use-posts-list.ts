@@ -1,8 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 
 import { getCategories } from '~/api/categories'
 import { getPosts, searchPosts } from '~/api/posts'
+import {
+  usePostResourceCategories,
+  usePostResourceList,
+} from '~/data/post-category-resource/hooks'
+import {
+  serializeResourceListKey,
+  usePostCategoryResourceStore,
+} from '~/data/post-category-resource/store'
 import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -59,6 +67,27 @@ export function usePostsList() {
     queryKey: adminQueryKeys.categories.postFilter(),
   })
 
+  const postsListQueryKey = useMemo(
+    () =>
+      adminQueryKeys.posts.list({
+        categoryId: state.categoryId,
+        keyword: state.keyword,
+        page: state.page,
+        size: postsPageSize,
+        sortKey: state.sortKey,
+        sortOrder: state.sortOrder,
+      }),
+    [
+      state.categoryId,
+      state.keyword,
+      state.page,
+      state.sortKey,
+      state.sortOrder,
+    ],
+  )
+  const postListResource = usePostResourceList(postsListQueryKey)
+  const categories = usePostResourceCategories()
+
   const postsQuery = useQuery({
     placeholderData: (previous) => previous,
     queryFn: () =>
@@ -78,18 +107,24 @@ export function usePostsList() {
             sort_by: state.sortKey,
             sort_order: state.sortOrder,
           }),
-    queryKey: adminQueryKeys.posts.list({
-      categoryId: state.categoryId,
-      keyword: state.keyword,
-      page: state.page,
-      size: postsPageSize,
-      sortKey: state.sortKey,
-      sortOrder: state.sortOrder,
-    }),
+    queryKey: postsListQueryKey,
   })
 
+  useLayoutEffect(() => {
+    if (!categoriesQuery.data) return
+    getPostResourceListStoreActions().hydrateCategories(categoriesQuery.data)
+  }, [categoriesQuery.data])
+
+  useLayoutEffect(() => {
+    if (!postsQuery.data) return
+    getPostResourceListStoreActions().hydratePostList(
+      serializeResourceListKey(postsListQueryKey),
+      postsQuery.data,
+    )
+  }, [postsQuery.data, postsListQueryKey])
+
   return {
-    categories: categoriesQuery.data ?? [],
+    categories,
     categoriesQuery,
     categoryId: state.categoryId,
     clearSearch: () => {
@@ -99,8 +134,8 @@ export function usePostsList() {
     keyword: state.keyword,
     keywordInput,
     page: state.page,
-    pagination: postsQuery.data?.pagination,
-    posts: postsQuery.data?.data ?? [],
+    pagination: postListResource.pagination,
+    posts: postListResource.posts,
     postsQuery,
     rootQueryKey: postsQueryKey,
     setCategoryId: (categoryId: string) =>
@@ -123,4 +158,8 @@ export function usePostsList() {
         page: 1,
       })),
   }
+}
+
+function getPostResourceListStoreActions() {
+  return usePostCategoryResourceStore.getState()
 }
