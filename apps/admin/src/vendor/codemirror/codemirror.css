@@ -1,0 +1,793 @@
+@reference 'tailwindcss';
+
+.cm-editor {
+  @apply bg-transparent;
+
+  /* Fix widget buffer img causing line height issues */
+  & .cm-widgetBuffer {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    vertical-align: baseline;
+    font-size: 0;
+    line-height: 0;
+  }
+
+  & .cm-gutters {
+    @apply bg-transparent;
+  }
+
+  & {
+    @apply h-full;
+  }
+
+  .cm-editor {
+    .cm-gutters,
+    .cm-activeLineGutter,
+    .cm-activeLine {
+      @apply transition-colors duration-500;
+    }
+  }
+
+  &.cm-focused {
+    @apply !outline-none;
+  }
+
+  & .cm-gutters,
+  & .cm-gutter {
+    @apply !min-w-[3rem];
+  }
+
+  /* WYSIWYG Mode Styles */
+  &.cm-wysiwyg-mode {
+    --wysiwyg-paragraph-gap: 0.9rem;
+    /* Hide line numbers and gutters */
+    & .cm-gutters {
+      display: none !important;
+    }
+
+    /* Override theme colors - use inherit for natural text color */
+    color: inherit !important;
+
+    & > .cm-scroller {
+      color: inherit !important;
+    }
+
+    & > .cm-scroller > .cm-content {
+      color: inherit !important;
+      caret-color: currentColor !important;
+    }
+
+    & > .cm-scroller > .cm-content > .cm-line {
+      color: inherit !important;
+    }
+
+    /* Reset all syntax highlighting colors in WYSIWYG mode */
+    & > .cm-scroller > .cm-content > .cm-line * {
+      color: inherit !important;
+    }
+
+    /* Typography optimization - prose style */
+    & > .cm-scroller > .cm-content {
+      max-width: var(--wysiwyg-content-width, 100%);
+      margin: 0 auto;
+      padding-top: 36px;
+      padding-bottom: 36px;
+      font-family:
+        'Noto Serif SC', 'Source Han Serif SC', 'Source Han Serif',
+        'Noto Serif CJK SC', Georgia, 'Times New Roman', serif;
+      font-size: 1rem;
+      line-height: 1.75;
+      letter-spacing: 0.01em;
+    }
+
+    /* Remove active line highlight in WYSIWYG mode for cleaner look */
+    & > .cm-scroller > .cm-content .cm-activeLine {
+      @apply rounded-sm bg-neutral-100 dark:bg-neutral-800;
+    }
+
+    & > .cm-gutters .cm-activeLineGutter {
+      background-color: transparent !important;
+    }
+
+    /* Hide paragraph separator empty lines (applied via decoration) */
+    & .cm-wysiwyg-hidden-empty-line {
+      height: var(--wysiwyg-paragraph-gap) !important;
+      min-height: var(--wysiwyg-paragraph-gap) !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden;
+      font-size: 0;
+      line-height: var(--wysiwyg-paragraph-gap);
+    }
+
+    /* Visible empty lines (user-created extra spacing) */
+    & > .cm-scroller > .cm-content > .cm-line:has(> br:only-child),
+    & > .cm-scroller > .cm-content > .cm-line:empty {
+      min-height: 1em;
+      margin-bottom: 0;
+    }
+
+    /* Selection style */
+    & > .cm-scroller > .cm-content .cm-selectionBackground {
+      background-color: color-mix(
+        in srgb,
+        var(--primary-default) 20%,
+        transparent
+      ) !important;
+    }
+
+    &.cm-focused > .cm-scroller > .cm-content .cm-selectionBackground {
+      background-color: color-mix(
+        in srgb,
+        var(--primary-default) 30%,
+        transparent
+      ) !important;
+    }
+
+    /* Cursor style */
+    & .cm-cursor {
+      border-left-width: 2px;
+      border-color: currentColor !important;
+    }
+
+    /* Enhanced heading styles for article typography */
+    /* Page title is text-2xl (1.5rem = 24px), so article headings should be smaller */
+    & .cm-wysiwyg-heading {
+      font-family:
+        'Noto Sans SC',
+        'Source Han Sans SC',
+        'Source Han Sans',
+        'Noto Sans CJK SC',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        Roboto,
+        sans-serif;
+    }
+
+    & .cm-wysiwyg-heading-1 {
+      font-size: 1.375rem;
+      padding-top: 1.5em;
+      padding-bottom: 0.5em;
+    }
+
+    & .cm-wysiwyg-heading-2 {
+      font-size: 1.25rem;
+      padding-top: 1.25em;
+      padding-bottom: 0.4em;
+    }
+
+    & .cm-wysiwyg-heading-3 {
+      font-size: 1.125rem;
+      padding-top: 1em;
+      padding-bottom: 0.35em;
+    }
+
+    & .cm-wysiwyg-heading-4 {
+      font-size: 1rem;
+      padding-top: 0.875em;
+      padding-bottom: 0.3em;
+    }
+
+    /* Enhanced divider for article */
+    & .cm-wysiwyg-divider {
+      padding: 2em 0;
+      opacity: 0.4;
+    }
+
+    /* Enhanced blockquote for article */
+    & .cm-wysiwyg-blockquote-line {
+      padding-top: 0.5em;
+      padding-bottom: 0.5em;
+      padding-left: 1.25em;
+      border-left-width: 4px;
+      border-color: color-mix(in srgb, var(--primary-default) 60%, transparent);
+    }
+
+    /* Ensure alerts keep their own border color in article styling */
+    & .cm-wysiwyg-alert-line {
+      border-left-color: var(--cm-alert-color) !important;
+    }
+
+    /* Ensure alert header (icon + label) keeps type color */
+    & .cm-wysiwyg-alert-marker,
+    & .cm-wysiwyg-alert-label,
+    & .cm-wysiwyg-alert-icon {
+      color: var(--cm-alert-color) !important;
+    }
+
+    /* Beat the very specific color reset on .cm-line * */
+    & > .cm-scroller > .cm-content > .cm-line .cm-wysiwyg-alert-marker,
+    & > .cm-scroller > .cm-content > .cm-line .cm-wysiwyg-alert-label,
+    & > .cm-scroller > .cm-content > .cm-line .cm-wysiwyg-alert-icon {
+      color: var(--cm-alert-color) !important;
+    }
+
+    /* Enhanced details block for article */
+    & .cm-wysiwyg-details {
+      border-radius: 0.625rem;
+      border-color: color-mix(
+        in srgb,
+        var(--primary-default) 25%,
+        transparent
+      );
+    }
+
+    /* Enhanced code block for article */
+    & .cm-wysiwyg-codeblock {
+      border-radius: 0.625rem;
+      overflow: hidden;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    & .cm-wysiwyg-codeblock-editor .cm-content {
+      font-size: 0.875em;
+      line-height: 1.6;
+      min-width: 0;
+    }
+
+    /* Enhanced list styles for article */
+    & .cm-wysiwyg-list-marker {
+      opacity: 0.9;
+    }
+
+    /* Enhanced math block for article */
+    & .cm-wysiwyg-math-block {
+      padding-top: 1.5em;
+      padding-bottom: 1.5em;
+    }
+
+    /* Enhanced inline code for article */
+    & .cm-wysiwyg-inline-code {
+      font-size: 0.875em;
+      padding: 0.15em 0.4em;
+      border-radius: 0.3rem;
+    }
+  }
+
+  .cm-wysiwyg-divider {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0;
+    opacity: 0.6;
+  }
+
+  .cm-wysiwyg-divider hr {
+    border: 0;
+    border-top: 1px solid currentColor;
+    margin: 0;
+  }
+
+  .cm-wysiwyg-line-break-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+    opacity: 0.4;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* Heading WYSIWYG styles */
+  .cm-wysiwyg-heading-marker {
+    display: none;
+  }
+
+  .cm-wysiwyg-heading {
+    font-weight: 600;
+  }
+
+  .cm-wysiwyg-heading-1 {
+    font-size: 2em;
+    line-height: 1.3;
+  }
+
+  .cm-wysiwyg-heading-2 {
+    font-size: 1.5em;
+    line-height: 1.35;
+  }
+
+  .cm-wysiwyg-heading-3 {
+    font-size: 1.25em;
+    line-height: 1.4;
+  }
+
+  .cm-wysiwyg-heading-4 {
+    font-size: 1.125em;
+    line-height: 1.45;
+  }
+
+  .cm-wysiwyg-heading-5 {
+    font-size: 1em;
+    line-height: 1.5;
+  }
+
+  .cm-wysiwyg-heading-6 {
+    font-size: 0.875em;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  /* Inline WYSIWYG styles */
+  .cm-wysiwyg-hidden-marker {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0;
+    line-height: 0;
+  }
+
+  .cm-wysiwyg-bold {
+    font-weight: 700;
+  }
+
+  .cm-wysiwyg-italic {
+    font-style: italic;
+  }
+
+  .cm-wysiwyg-strikethrough {
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+
+  .cm-wysiwyg-link {
+    color: var(--primary-default);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .cm-wysiwyg-link-url {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0;
+    line-height: 0;
+  }
+
+  /* Inline code styles */
+  .cm-wysiwyg-inline-code {
+    font-family:
+      ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+      'Liberation Mono', monospace;
+    font-size: 0.9em;
+    padding: 0.125em 0.375em;
+    border-radius: 0.25rem;
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+    display: inline-block;
+    white-space: pre;
+    vertical-align: baseline;
+  }
+
+  .cm-wysiwyg-inline-code .line {
+    display: inline;
+  }
+
+  /* Code block styles - editing mode */
+  .cm-wysiwyg-codeblock-line {
+    font-family:
+      ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+      'Liberation Mono', monospace;
+    font-size: 0.9em;
+  }
+
+  .cm-wysiwyg-codeblock-editing {
+    background-color: color-mix(in srgb, currentColor 8%, transparent);
+  }
+
+  /* Details block widget styles */
+  .cm-wysiwyg-details {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px dashed color-mix(in srgb, currentColor 20%, transparent);
+  }
+
+  .cm-wysiwyg-details-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 10px;
+    background-color: color-mix(in srgb, currentColor 6%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .cm-wysiwyg-details.collapsed .cm-wysiwyg-details-header {
+    border-bottom: none;
+  }
+
+  .cm-wysiwyg-details-triangle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: transform 0.15s ease;
+  }
+
+  .cm-wysiwyg-details-triangle.collapsed {
+    transform: rotate(-90deg);
+  }
+
+  .cm-wysiwyg-details-summary-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    outline: none;
+    padding: 0;
+    min-width: 0;
+    font-family:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .cm-wysiwyg-details-summary-input::placeholder {
+    opacity: 0.4;
+  }
+
+  .cm-wysiwyg-details-content {
+    background-color: color-mix(in srgb, currentColor 3%, transparent);
+  }
+
+  .cm-wysiwyg-details-content.collapsed {
+    display: none;
+  }
+
+  .cm-wysiwyg-details-editor {
+    width: 100%;
+  }
+
+  /* Inner editor overrides for details block */
+  .cm-wysiwyg-details-editor .cm-editor {
+    height: auto !important;
+    background: transparent;
+  }
+
+  .cm-wysiwyg-details-editor .cm-gutters {
+    display: none !important;
+  }
+
+  .cm-wysiwyg-details-editor .cm-editor.cm-wysiwyg-mode > .cm-scroller > .cm-content {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* Code block widget - host element styles (can be overridden externally) */
+  .cm-wysiwyg-codeblock {
+    display: block;
+    margin: 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  /* List styles */
+  .cm-wysiwyg-list-marker {
+    display: inline-block;
+    color: var(--primary-default, currentColor);
+    font-family: system-ui;
+    opacity: 0.8;
+  }
+
+  .cm-wysiwyg-ul-marker {
+    font-size: 0.8em;
+  }
+
+  .cm-wysiwyg-ol-marker {
+    font-variant-numeric: tabular-nums;
+    min-width: 1.5em;
+  }
+
+  .cm-wysiwyg-checkbox {
+    display: inline-block;
+    font-size: 1em;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+
+  .cm-wysiwyg-checkbox:hover {
+    transform: scale(1.1);
+  }
+
+  .cm-wysiwyg-checkbox:active {
+    transform: scale(0.95);
+  }
+
+  .cm-wysiwyg-checkbox-checked {
+    color: var(--primary-default);
+  }
+
+  /* Highlight styles */
+  .cm-wysiwyg-highlight {
+    background-color: rgba(255, 235, 59, 0.4);
+    border-radius: 0.125rem;
+    padding: 0 0.125em;
+  }
+
+  :root.dark .cm-wysiwyg-highlight {
+    background-color: rgba(255, 235, 59, 0.25);
+  }
+
+  /* Blockquote styles */
+  .cm-wysiwyg-blockquote-marker {
+    display: inline-block;
+    width: 0;
+  }
+
+  .cm-wysiwyg-blockquote-line {
+    border-left: 3px solid var(--primary-default, currentColor);
+    padding-left: 1em;
+    opacity: 0.85;
+    font-style: italic;
+    border-radius: 0;
+    background-color: color-mix(
+      in srgb,
+      var(--primary-default) 8%,
+      transparent
+    );
+    margin: 0;
+  }
+
+  .cm-wysiwyg-blockquote-start,
+  .cm-wysiwyg-blockquote-single {
+    padding-top: 16px;
+  }
+
+  .cm-wysiwyg-blockquote-end,
+  .cm-wysiwyg-blockquote-single {
+    padding-bottom: 16px;
+  }
+
+  /* GitHub alert styles */
+  .cm-wysiwyg-alert-line {
+    --cm-alert-color: #0969da;
+    font-style: normal;
+    opacity: 1;
+    border-left: 4px solid var(--cm-alert-color);
+    background-color: transparent;
+    padding-left: 16px;
+    padding-right: 16px;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .cm-wysiwyg-alert-marker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--cm-alert-color);
+    margin-bottom: 0;
+    user-select: none;
+    vertical-align: middle;
+    min-width: var(--cm-alert-marker-width, 10ch);
+  }
+
+  .cm-wysiwyg-alert-icon {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    stroke: currentColor;
+  }
+
+  .cm-wysiwyg-alert-label {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Specific Colors (Light Mode - Standard GitHub) */
+  .cm-wysiwyg-alert-note {
+    --cm-alert-color: #0969da;
+    --cm-alert-marker-width: 10ch;
+  }
+  .cm-wysiwyg-alert-tip {
+    --cm-alert-color: #1a7f37;
+    --cm-alert-marker-width: 9ch;
+  }
+  .cm-wysiwyg-alert-important {
+    --cm-alert-color: #8250df;
+    --cm-alert-marker-width: 15ch;
+  }
+  .cm-wysiwyg-alert-warning {
+    --cm-alert-color: #9a6700;
+    --cm-alert-marker-width: 13ch;
+  }
+  .cm-wysiwyg-alert-caution {
+    --cm-alert-color: #cf222e;
+    --cm-alert-marker-width: 13ch;
+  }
+
+  .cm-wysiwyg-alert-start,
+  .cm-wysiwyg-alert-single {
+    padding-top: 12px;
+  }
+
+  .cm-wysiwyg-alert-end,
+  .cm-wysiwyg-alert-single {
+    padding-bottom: 12px;
+  }
+
+  .cm-wysiwyg-alert-middle {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  .cm-wysiwyg-blockquote-level-2 {
+    border-left-width: 3px;
+    margin-left: 1em;
+  }
+
+  .cm-wysiwyg-blockquote-level-3 {
+    border-left-width: 3px;
+    margin-left: 2em;
+  }
+
+  .cm-wysiwyg-blockquote-level-4 {
+    border-left-width: 3px;
+    margin-left: 3em;
+  }
+
+  .cm-wysiwyg-blockquote-level-5 {
+    border-left-width: 3px;
+    margin-left: 4em;
+  }
+
+  .cm-wysiwyg-alert-line.cm-wysiwyg-blockquote-level-2,
+  .cm-wysiwyg-alert-line.cm-wysiwyg-blockquote-level-3,
+  .cm-wysiwyg-alert-line.cm-wysiwyg-blockquote-level-4,
+  .cm-wysiwyg-alert-line.cm-wysiwyg-blockquote-level-5 {
+    border-left-width: 0.25em;
+  }
+
+  /* Keep blockquote shape/background stable on active line */
+  & > .cm-scroller > .cm-content .cm-wysiwyg-blockquote-line.cm-activeLine {
+    border-radius: 0 !important;
+    background-color: color-mix(
+      in srgb,
+      var(--primary-default) 8%,
+      transparent
+    ) !important;
+  }
+
+  /* Prevent active-line highlight from altering alert shape/height */
+  & > .cm-scroller > .cm-content .cm-wysiwyg-alert-line.cm-activeLine {
+    background-color: transparent !important;
+    border-radius: 0 !important;
+  }
+
+  /* Math styles */
+  .cm-wysiwyg-math-inline {
+    display: inline-block;
+    vertical-align: middle;
+    padding: 0 0.125em;
+  }
+
+  .cm-wysiwyg-math-inline-editing {
+    font-family:
+      ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+      'Liberation Mono', monospace;
+    background-color: color-mix(in srgb, currentColor 8%, transparent);
+    border-radius: 0.25rem;
+    padding: 0 0.25em;
+  }
+
+  .cm-wysiwyg-math-block {
+    display: block;
+    margin: 0;
+    padding: 1rem;
+    text-align: center;
+    background-color: color-mix(in srgb, currentColor 3%, transparent);
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    cursor: pointer;
+  }
+
+  .cm-wysiwyg-math-block:hover {
+    background-color: color-mix(in srgb, currentColor 6%, transparent);
+  }
+
+  .cm-wysiwyg-math-block-line {
+    font-family:
+      ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+      'Liberation Mono', monospace;
+    font-size: 0.9em;
+  }
+
+  .cm-wysiwyg-math-block-editing {
+    background-color: color-mix(in srgb, currentColor 5%, transparent);
+  }
+
+  .cm-wysiwyg-math-error {
+    color: #ef4444;
+    font-family:
+      ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+      'Liberation Mono', monospace;
+    font-size: 0.9em;
+  }
+
+  /* KaTeX overrides */
+  .katex {
+    font-size: 1.1em;
+  }
+}
+
+/* Image Edit Popover */
+@keyframes popover-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.cm-image-edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: auto;
+}
+
+.cm-image-edit-popover {
+  position: fixed;
+  z-index: 10000;
+  padding: 12px;
+  min-width: 280px;
+  border-radius: 8px;
+  border: none;
+  pointer-events: auto;
+  /* Entry animation */
+  animation: popover-enter 0.2s cubic-bezier(0.22, 1, 0.36, 1); /* ease-spring */
+  transform-origin: top left;
+}
+
+cm-wysiwyg-image {
+  margin: 0;
+}
+/* Light mode (default) */
+.cm-image-edit-popover {
+  background-color: #fff;
+  color: #171717; /* neutral-900 */
+  /* Vercel-style shadow for light mode */
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 16px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Dark mode */
+html.dark .cm-image-edit-popover {
+  background-color: #171717; /* neutral-900 */
+  color: #fafafa; /* neutral-50 */
+  /* Vercel-style shadow for dark mode */
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 16px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .cm-image-edit-popover {
+    animation: none;
+  }
+}

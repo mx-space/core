@@ -1,0 +1,40 @@
+/* Slash Menu Transitions */
+.slash-menu-enter-active {
+  transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slash-menu-leave-active {
+  transition: all 100ms ease-in;
+}
+
+.slash-menu-enter-from,
+.slash-menu-leave-to {
+  opacity: 0;
+  transform: translateY(4px) scale(0.98);
+}
+
+/* Custom scrollbar for the menu */
+.slash-menu ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.slash-menu ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.slash-menu ::-webkit-scrollbar-thumb {
+  background: rgb(212 212 216 / 50%);
+  border-radius: 3px;
+}
+
+.slash-menu ::-webkit-scrollbar-thumb:hover {
+  background: rgb(161 161 170 / 60%);
+}
+
+.dark .slash-menu ::-webkit-scrollbar-thumb {
+  background: rgb(63 63 70 / 50%);
+}
+
+.dark .slash-menu ::-webkit-scrollbar-thumb:hover {
+  background: rgb(82 82 91 / 60%);
+}

@@ -10,13 +10,13 @@ import {
 import pc from 'picocolors'
 import { Observable, ReplaySubject } from 'rxjs'
 
+import { ADMIN_DASHBOARD_REPO } from '~/constants/admin.constant'
 import { RedisService } from '~/processors/redis/redis.service'
-import { PKG } from '~/utils/pkg.util'
 
 import { UpdateDownloadService } from './update-download.service'
 import { UpdateInstallService } from './update-install.service'
 
-const { repo } = PKG.dashboard!
+const repo = ADMIN_DASHBOARD_REPO
 
 const REDIS_KEY_PREFIX = 'update:admin'
 

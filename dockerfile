@@ -10,7 +10,14 @@ RUN pnpm install
 RUN pnpm bundle
 RUN mv apps/core/out ./out
 RUN cp -R apps/core/src/database/migrations ./out/migrations
-RUN node apps/core/download-latest-admin-assets.js
+# Build the admin dashboard from this workspace instead of downloading a
+# prebuilt release. Vite emits apps/admin/dist/{index.html,assets,js}; the
+# server expects index.html at the asset root, so copy dist/* into out/admin
+# (flattening the dist/ wrapper, matching the old download layout exactly).
+RUN pnpm --filter @mx-admin/admin run build
+RUN mkdir -p ./out/admin && cp -R apps/admin/dist/. ./out/admin/
+# Stamp the built-in admin version (mirrors the runtime updater's `version` file).
+RUN node -p "require('./apps/admin/package.json').version" > ./out/admin/version
 
 FROM node:24-alpine AS runner
 

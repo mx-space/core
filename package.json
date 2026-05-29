@@ -23,7 +23,11 @@
     "test": "pnpm -C \"apps/core\" run test",
     "lint": "pnpm -C \"apps/core\" run lint",
     "typecheck": "pnpm check:controller-response-envelope && pnpm -C \"apps/core\" run typecheck",
-    "publish:core": "cd apps/core && npm run publish"
+    "publish:core": "cd apps/core && npm run publish",
+    "dev:admin": "pnpm -C apps/admin run dev",
+    "build:admin": "pnpm -C apps/admin run build",
+    "typecheck:admin": "pnpm -C apps/admin run typecheck",
+    "lint:admin": "pnpm -C apps/admin run lint"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",

@@ -31,11 +31,17 @@ overrides:
   "nanoid@>=4.0.0 <5.0.9": 5.1.11
   "tmp@<0.2.6": 0.2.6
   "uuid@<11.1.1": 11.1.1
+  lucide-react: 1.8.0
+  "@codemirror/state": 6.6.0
+  "@codemirror/view": 6.42.1
+  "@codemirror/commands": 6.10.3
+  "@codemirror/language": 6.12.3
 publicHoistPattern:
   - "*fastify*"
   - mongodb
   - "*eslint*"
   - "*webpack*"
+  - "*@codemirror*"
 strictPeerDependencies: false
 minimumReleaseAgeExclude:
   - "@haklex/*"

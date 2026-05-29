@@ -12,7 +12,6 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { resolveAdminAssetRoot } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
-import { PKG } from '~/utils/pkg.util'
 import { isSemVer } from '~/utils/validator.util'
 
 import { UpdateAdminDto } from './update.schema'
@@ -42,7 +41,7 @@ export class UpdateController {
         })
 
       const run = async () => {
-        let { version: currentVersion } = PKG.dashboard!
+        let currentVersion = '0.0.0'
 
         const adminAssetRoot = resolveAdminAssetRoot('index.html')
         const isExistLocalAdmin = existsSync(

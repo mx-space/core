@@ -5,7 +5,6 @@ import { join } from 'node:path'
 import semver from 'semver'
 
 import { cwd, isDev } from '~/global/env.global'
-import { PKG } from '~/utils/pkg.util'
 
 export const HOME = homedir()
 
@@ -58,6 +57,34 @@ const readLocalAdminVersion = (): string | null => {
   return version
 }
 
+let bundledAdminVersionCache: {
+  mtimeMs: number
+  version: string | null
+} | null = null
+
+const readBundledAdminVersion = (): string | null => {
+  const versionPath = join(BUNDLED_ADMIN_ASSET_PATH, 'version')
+  let mtimeMs: number
+  try {
+    mtimeMs = statSync(versionPath).mtimeMs
+  } catch {
+    bundledAdminVersionCache = null
+    return null
+  }
+  if (bundledAdminVersionCache && bundledAdminVersionCache.mtimeMs === mtimeMs) {
+    return bundledAdminVersionCache.version
+  }
+  let version: string | null = null
+  try {
+    const raw = readFileSync(versionPath, 'utf8').split('\n')[0]?.trim()
+    if (raw && semver.valid(raw)) version = raw
+  } catch {
+    version = null
+  }
+  bundledAdminVersionCache = { mtimeMs, version }
+  return version
+}
+
 export const resolveAdminAssetRoot = (relativePath = 'index.html') => {
   const localExists = existsSync(join(LOCAL_ADMIN_ASSET_PATH, relativePath))
   const bundledExists =
@@ -65,7 +92,7 @@ export const resolveAdminAssetRoot = (relativePath = 'index.html') => {
     existsSync(join(BUNDLED_ADMIN_ASSET_PATH, relativePath))
 
   if (localExists && bundledExists) {
-    const bundledVersion = PKG.dashboard?.version
+    const bundledVersion = readBundledAdminVersion()
     const localVersion = readLocalAdminVersion() ?? '0.0.0'
     if (
       bundledVersion &&

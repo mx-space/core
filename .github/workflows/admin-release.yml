@@ -1,0 +1,135 @@
+name: Admin Release
+
+# Independent admin release, decoupled from the core release (`v*` tags).
+# Builds the admin SPA, bumps its version, packages it (electron-style update
+# artifact + latest.json manifest), publishes to S3 (reserved — no-op until
+# ADMIN_UPDATE_S3_* are configured), and records the release as an `admin-v*` tag.
+on:
+  push:
+    tags:
+      - 'admin-v*'
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Semver bump level for the admin package'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+      dry_run:
+        description: 'Build & package only — no version commit, tag, or S3 publish'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Cloudflare R2 (S3-compatible) publish target — hardcoded per request.
+# Credentials come from repo secrets AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+# (an R2 "S3 API" token). ADMIN_PUBLIC_BASE is the bucket's public read base
+# (custom domain mapped to the bucket root); it is written into latest.json `url`.
+env:
+  R2_BUCKET: admin-r2
+  R2_ENDPOINT: https://de7ecb0eaa0a328071255d557a6adb66.r2.cloudflarestorage.com
+  ADMIN_PUBLIC_BASE: https://admin-r2.innei.dev
+
+jobs:
+  release-admin:
+    name: Build, version & publish admin
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node
+        with:
+          node-version: '22.x'
+
+      - name: Resolve admin version
+        id: bump
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Tag-triggered (admin-v*): the version was already bumped, committed
+            # and tagged by scripts/release-admin.sh — just read it from the tag.
+            VERSION="${GITHUB_REF_NAME#admin-v}"
+          else
+            VERSION="$(node apps/core/scripts/bump-admin-release.js ${{ inputs.bump }})"
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Admin version: ${VERSION}"
+
+      - name: Build admin
+        run: pnpm --filter @mx-admin/admin run build
+
+      - name: Package admin
+        id: pkg
+        run: |
+          set -e
+          VERSION="${{ steps.bump.outputs.version }}"
+          ZIP="admin-${VERSION}.zip"
+          # Top-level dist/ wrapper, matching the layout consumers flatten at install time.
+          ( cd apps/admin && zip -r "../../${ZIP}" dist )
+          SHA="$(sha256sum "${ZIP}" | awk '{print $1}')"
+          if [ -n "${ADMIN_PUBLIC_BASE:-}" ]; then
+            URL="${ADMIN_PUBLIC_BASE%/}/${ZIP}"
+          else
+            URL=""
+          fi
+          cat > latest.json <<EOF
+          {
+            "version": "${VERSION}",
+            "file": "${ZIP}",
+            "url": "${URL}",
+            "sha256": "${SHA}",
+            "tag": "admin-v${VERSION}"
+          }
+          EOF
+          echo "zip=${ZIP}" >> "$GITHUB_OUTPUT"
+          cat latest.json
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: admin-${{ steps.bump.outputs.version }}
+          path: |
+            ${{ steps.pkg.outputs.zip }}
+            latest.json
+          if-no-files-found: error
+          retention-days: 30
+
+      # Publish to Cloudflare R2 (S3-compatible). Skipped only on a dry-run dispatch.
+      - name: Publish admin assets to R2
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          # Recent aws-cli defaults to CRC64-NVME checksums that R2 rejects — force off.
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+        run: |
+          set -e
+          ZIP="${{ steps.pkg.outputs.zip }}"
+          aws s3 cp "${ZIP}" "s3://${R2_BUCKET}/${ZIP}" --endpoint-url "${R2_ENDPOINT}"
+          aws s3 cp latest.json "s3://${R2_BUCKET}/latest.json" --endpoint-url "${R2_ENDPOINT}"
+
+      # Only the UI path (workflow_dispatch) bumps + tags here. The tag-triggered
+      # path already has its commit + tag from scripts/release-admin.sh.
+      - name: Commit version bump & tag
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.dry_run }}
+        run: |
+          set -e
+          VERSION="${{ steps.bump.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps/admin/package.json
+          git commit -m "chore(admin): release v${VERSION}"
+          git tag "admin-v${VERSION}"
+          git push origin "HEAD:${{ github.ref_name }}"
+          git push origin "admin-v${VERSION}"

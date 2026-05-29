@@ -12,6 +12,11 @@ env:
   IMAGE: innei/mx-server
   REDISMS_DISABLE_POSTINSTALL: 1
   MONGOMS_DISABLE_POSTINSTALL: 1
+  # Cloudflare R2 (S3-compatible) admin publish target — hardcoded per request.
+  # Credentials come from repo secrets AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY.
+  R2_BUCKET: admin-r2
+  R2_ENDPOINT: https://de7ecb0eaa0a328071255d557a6adb66.r2.cloudflarestorage.com
+  ADMIN_PUBLIC_BASE: https://admin-r2.innei.dev
 
 jobs:
   quality:
@@ -92,6 +97,33 @@ jobs:
         run: |
           sh apps/core/zip-asset.sh
           mv release.zip release-linux.zip
+
+      # Publish the bundled admin to Cloudflare R2 (S3-compatible) on every core release.
+      - name: Publish admin assets to R2
+        continue-on-error: true
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          # Recent aws-cli defaults to CRC64-NVME checksums that R2 rejects — force off.
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+        run: |
+          set -e
+          ADMIN_VERSION="$(node -p "require('./apps/admin/package.json').version")"
+          ADMIN_ZIP="admin-${ADMIN_VERSION}.zip"
+          # Package the locally-built admin (apps/admin/dist) with a top-level dist/ wrapper.
+          ( cd apps/admin && zip -r "../../${ADMIN_ZIP}" dist )
+          cat > latest.json <<EOF
+          {
+            "version": "${ADMIN_VERSION}",
+            "file": "${ADMIN_ZIP}",
+            "url": "${ADMIN_PUBLIC_BASE%/}/${ADMIN_ZIP}",
+            "tag": "${{ github.ref_name }}"
+          }
+          EOF
+          aws s3 cp "${ADMIN_ZIP}" "s3://${R2_BUCKET}/${ADMIN_ZIP}" --endpoint-url "${R2_ENDPOINT}"
+          aws s3 cp latest.json "s3://${R2_BUCKET}/latest.json" --endpoint-url "${R2_ENDPOINT}"
 
       - name: Verify release notes present
         run: |

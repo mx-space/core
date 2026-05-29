@@ -13,10 +13,6 @@
     "url": "https://github.com/mx-space/core"
   },
   "author": "Innei <https://innei.in>",
-  "dashboard": {
-    "repo": "mx-space/mx-admin",
-    "version": "8.1.0"
-  },
   "issues": "https://github.com/mx-space/core/issues",
   "scripts": {
     "prebuild": "rimraf dist",
@@ -51,7 +47,7 @@
     "before": [
       "git pull --rebase",
       "pnpm i",
-      "node get-latest-admin-version.js"
+      "node scripts/bump-admin-version.js"
     ],
     "changelog": true
   },

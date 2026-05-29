@@ -199,6 +199,12 @@ const commander = program
   .option('--pg_max_pool_size <number>', 'PostgreSQL pool size')
   .option('--pg_ssl', 'enable PostgreSQL TLS')
 
+  // admin asset update (reserved)
+  .option(
+    '--admin_update_s3_base_url <string>',
+    'reserved: S3 base URL for admin asset updates (empty = disabled, falls back to GitHub releases)',
+  )
+
 commander.parse()
 
 const argv = commander.opts()
@@ -380,4 +386,14 @@ export const POSTGRES = {
     parseBooleanishValue(argv.pg_ssl ?? process.env.PG_SSL) === true
       ? { rejectUnauthorized: false }
       : false,
+}
+
+// Reserved for the future electron-style admin asset update source.
+// When `s3BaseUrl` is non-empty, the admin updater will fetch a `latest.json`
+// manifest + admin zip from S3 instead of GitHub releases. Empty string is the
+// "disabled" sentinel, keeping the current GitHub upgrade path as the default.
+export const ADMIN_UPDATE = {
+  s3BaseUrl: (argv.admin_update_s3_base_url ||
+    process.env.ADMIN_UPDATE_S3_BASE_URL ||
+    '') as string,
 }

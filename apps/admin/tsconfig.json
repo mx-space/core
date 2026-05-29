@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "jsx": "react-jsx",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "baseUrl": "./",
+    "ignoreDeprecations": "6.0",
+    "skipLibCheck": true,
+    "noEmit": true,
+    "skipDefaultLibCheck": true,
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": [],
+    "paths": {
+      "~": ["./src"],
+      "~/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src/main.tsx",
+    "src/App.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts",
+    "vite.config.mts"
+  ],
+  "exclude": ["node_modules", "assets", "dist/**"]
+}
