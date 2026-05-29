@@ -15,6 +15,15 @@
       "labels": [
         "UPDATE-MAJOR"
       ]
+    },
+    {
+      "matchPackageNames": [
+        "@earendil-works/pi-ai"
+      ],
+      "labels": [
+        "requires-faux-and-live-tests"
+      ],
+      "rangeStrategy": "pin"
     }
   ],
   "ignoreDeps": [
