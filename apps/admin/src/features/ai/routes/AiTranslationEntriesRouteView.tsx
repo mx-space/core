@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookOpenText, Loader2, RefreshCw, Sparkles } from 'lucide-react'
-import { useEffect, useLayoutEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useMemo } from 'react'
 import { toast } from 'sonner'
 import type { TranslationEntry, TranslationEntryKeyPath } from '~/api/ai'
 
@@ -12,7 +11,9 @@ import {
   updateTranslationEntry,
 } from '~/api/ai'
 import { ContentListHeader } from '~/features/_shared/components/content-list-toolbar'
+import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { FocusScope } from '~/ui/focus-scope'
@@ -43,38 +44,39 @@ function isKeyPath(value: string): value is TranslationEntryKeyPath {
   return (translationEntryKeyPathOptions as readonly string[]).includes(value)
 }
 
+interface TranslationEntriesUrlState {
+  keyPath: TranslationEntryKeyPath | ''
+  lang: string
+  page: number
+}
+
+function writeTranslationEntriesUrlState(state: TranslationEntriesUrlState) {
+  const next = new URLSearchParams()
+  if (state.page > 1) next.set('page', String(state.page))
+  if (state.keyPath) next.set('keyPath', state.keyPath)
+  if (state.lang) next.set('lang', state.lang)
+  return next
+}
+
 export function AiTranslationEntriesRouteView() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-
-  const [page, setPage] = useState(readPositiveInt(searchParams.get('page')))
-  const [keyPath, setKeyPath] = useState<TranslationEntryKeyPath | ''>(() => {
-    const v = searchParams.get('keyPath') ?? ''
-    return v && isKeyPath(v) ? v : ''
-  })
-  const [lang, setLang] = useState(searchParams.get('lang') ?? '')
-
-  useLayoutEffect(() => {
-    const nextPage = readPositiveInt(searchParams.get('page'))
-    const rawKeyPath = searchParams.get('keyPath') ?? ''
-    const nextKeyPath = rawKeyPath && isKeyPath(rawKeyPath) ? rawKeyPath : ''
-    const nextLang = searchParams.get('lang') ?? ''
-    setPage((v) => (v === nextPage ? v : nextPage))
-    setKeyPath((v) => (v === nextKeyPath ? v : nextKeyPath))
-    setLang((v) => (v === nextLang ? v : nextLang))
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const next = new URLSearchParams()
-    if (page > 1) next.set('page', String(page))
-    if (keyPath) next.set('keyPath', keyPath)
-    if (lang) next.set('lang', lang)
-    if (next.toString() !== searchParamsKey) {
-      setSearchParams(next, { replace: true })
-    }
-  }, [keyPath, lang, page, searchParamsKey, setSearchParams])
+  const urlStateOptions = useMemo(
+    () => ({
+      read: (searchParams: URLSearchParams): TranslationEntriesUrlState => {
+        const rawKeyPath = searchParams.get('keyPath') ?? ''
+        return {
+          keyPath: rawKeyPath && isKeyPath(rawKeyPath) ? rawKeyPath : '',
+          lang: searchParams.get('lang') ?? '',
+          page: readPositiveInt(searchParams.get('page')),
+        }
+      },
+      write: writeTranslationEntriesUrlState,
+    }),
+    [],
+  )
+  const [urlState, setUrlState] = useUrlListState(urlStateOptions)
+  const { keyPath, lang, page } = urlState
 
   const params = {
     keyPath: keyPath || undefined,
@@ -86,7 +88,7 @@ export function AiTranslationEntriesRouteView() {
   const query = useQuery({
     placeholderData: (previous) => previous,
     queryFn: () => getTranslationEntries(params),
-    queryKey: ['ai', 'translation-entries', params],
+    queryKey: adminQueryKeys.ai.translationEntries(params),
   })
 
   const entries = query.data?.data ?? []
@@ -95,7 +97,7 @@ export function AiTranslationEntriesRouteView() {
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({
-      queryKey: ['ai', 'translation-entries'],
+      queryKey: adminQueryKeys.ai.translationEntriesRoot,
     })
   }
 
@@ -189,8 +191,11 @@ export function AiTranslationEntriesRouteView() {
           <SelectField
             aria-label={t('ai.filter.keyPathAria')}
             onValueChange={(value) => {
-              setKeyPath(isKeyPath(value) ? value : '')
-              setPage(1)
+              setUrlState((current) => ({
+                ...current,
+                keyPath: isKeyPath(value) ? value : '',
+                page: 1,
+              }))
             }}
             options={keyPathOptions}
             triggerClassName="w-36 !h-7 !border-transparent !bg-transparent text-xs hover:!bg-neutral-100 dark:hover:!bg-neutral-900"
@@ -199,8 +204,7 @@ export function AiTranslationEntriesRouteView() {
           <TextInput
             controlClassName="h-7 w-24 !border-transparent !bg-transparent text-xs hover:!bg-neutral-100 dark:hover:!bg-neutral-900"
             onChange={(value) => {
-              setLang(value)
-              setPage(1)
+              setUrlState((current) => ({ ...current, lang: value, page: 1 }))
             }}
             placeholder={t('ai.filter.langPlaceholder')}
             value={lang}
@@ -221,7 +225,7 @@ export function AiTranslationEntriesRouteView() {
         </button>
       </div>
 
-      <Scroll className="min-h-0 flex-1" orientation="horizontal">
+      <Scroll className="min-h-0 flex-1" orientation="both">
         {query.isLoading && entries.length === 0 ? (
           <GroupedResourceSkeleton />
         ) : query.isError ? (
@@ -298,7 +302,7 @@ export function AiTranslationEntriesRouteView() {
             {t('ai.page.pageIndex', { page })}
           </span>
           <CompactPagination
-            onPageChange={setPage}
+            onPageChange={(nextPage) => setUrlState({ page: nextPage })}
             onPageSizeChange={() => undefined}
             page={page}
             pageCount={pageCount}

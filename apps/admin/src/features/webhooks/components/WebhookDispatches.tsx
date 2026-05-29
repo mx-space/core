@@ -5,11 +5,12 @@ import { toast } from 'sonner'
 import { getWebhookDispatches, redispatchWebhook } from '~/api/webhooks'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
-import { dispatchPageSize, webhooksQueryKey } from '../constants'
+import { dispatchPageSize } from '../constants'
 import { DispatchRow } from './DispatchRow'
 
 export function WebhookDispatches(props: { webhookId: string }) {
@@ -24,7 +25,11 @@ export function WebhookDispatches(props: { webhookId: string }) {
         page,
         size: dispatchPageSize,
       }),
-    queryKey: [...webhooksQueryKey, 'dispatches', props.webhookId, page],
+    queryKey: adminQueryKeys.webhooks.dispatches({
+      page,
+      size: dispatchPageSize,
+      webhookId: props.webhookId,
+    }),
   })
 
   useEffect(() => {
@@ -38,7 +43,7 @@ export function WebhookDispatches(props: { webhookId: string }) {
     onSuccess: async () => {
       toast.success(t('webhooks.toast.redispatched'))
       await queryClient.invalidateQueries({
-        queryKey: [...webhooksQueryKey, 'dispatches', props.webhookId],
+        queryKey: adminQueryKeys.webhooks.dispatchesRoot(props.webhookId),
       })
     },
     onError: () => {

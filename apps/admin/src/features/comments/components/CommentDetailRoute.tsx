@@ -3,13 +3,11 @@ import { useParams } from 'react-router'
 
 import { findInListCache } from '~/api/list-cache'
 import type { CommentModel } from '~/models/comment'
+import { adminQueryKeys } from '~/query/keys'
 
-import { commentsQueryKey } from '../constants'
 import { CommentDetail } from './CommentDetail'
 import { CommentDetailEmpty } from './CommentDetailEmpty'
 import { useCommentsRouteContext } from './comments-route-context'
-
-const LIST_PREFIX = [...commentsQueryKey, 'list'] as const
 
 export function CommentDetailRoute() {
   const { id } = useParams<{ id: string }>()
@@ -39,3 +37,5 @@ export function CommentDetailRoute() {
 }
 
 export default CommentDetailRoute
+
+const LIST_PREFIX = adminQueryKeys.comments.listRoot

@@ -10,6 +10,7 @@ import {
   unbanReader,
 } from '~/api/readers'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 
 import { readersQueryKey } from '../constants'
 
@@ -38,7 +39,7 @@ export function useReaderMutations() {
   const failureToast = (error: unknown, key: TranslationKey) =>
     toast.error(getErrorMessage(error, t(key)))
 
-  const detailKey = (id: string) => [...readersQueryKey, 'detail', id]
+  const detailKey = (id: string) => adminQueryKeys.readers.detail(id)
 
   const transferOwnerMutation = useMutation({
     mutationFn: (id: string) => transferOwner(id),

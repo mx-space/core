@@ -4,10 +4,10 @@ import type { TimeRange } from '../types/analyze'
 
 import { getAnalyzeAggregate } from '~/api/analyze'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { AppPage, PageHeader } from '~/ui/layout/page-layout'
 import { Scroll } from '~/ui/primitives/scroll'
 
-import { analyzeQueryKey } from '../constants'
 import { getTimeWindow } from '../utils/analyze'
 import { AnalyzeActions } from './blocks/AnalyzeActions'
 import { AnalyzeActivityPanel } from './blocks/AnalyzeActivityPanel'
@@ -24,7 +24,7 @@ export function AnalyzeRouteViewContent() {
 
   const aggregateQuery = useQuery({
     queryFn: getAnalyzeAggregate,
-    queryKey: [...analyzeQueryKey, 'aggregate'],
+    queryKey: adminQueryKeys.analyze.aggregate(),
   })
 
   const aggregate = aggregateQuery.data

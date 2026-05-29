@@ -1,17 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, RefreshCcw, SearchCheck, UserRound } from 'lucide-react'
-import { useEffect, useLayoutEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
-import { toast } from 'sonner'
+import { useState } from 'react'
 
-import {
-  auditPassLink,
-  checkLinksHealth,
-  deleteLink,
-  getLinks,
-  getLinkStateCount,
-  migrateLinkAvatars,
-} from '~/api/links'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { LinkModel } from '~/models/link'
@@ -20,9 +9,9 @@ import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
-import { friendsPageSize, friendsQueryKey } from '../constants'
+import { useFriendMutations } from '../hooks/use-friend-mutations'
+import { useFriendsList } from '../hooks/use-friends-list'
 import type { HealthMap } from '../types/friends'
-import { normalizeState, readPage } from '../utils/friends'
 import { presentAuditReason } from './AuditReasonModal'
 import { presentFriendEditor } from './FriendEditorModal'
 import { FriendRow } from './FriendRow'
@@ -31,73 +20,26 @@ import { FriendsTabBar } from './FriendsTabBar'
 
 export function FriendsRouteViewContent() {
   const { t } = useI18n()
-  const queryClient = useQueryClient()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-  const [state, setState] = useState(() =>
-    normalizeState(searchParams.get('state')),
-  )
-  const [page, setPage] = useState(() => readPage(searchParams.get('page')))
   const [health, setHealth] = useState<HealthMap>({})
+  const {
+    counts,
+    links,
+    linksQuery,
+    page,
+    pagination,
+    setPage,
+    setState,
+    state,
+  } = useFriendsList()
 
-  const linksQuery = useQuery({
-    placeholderData: (previous) => previous,
-    queryFn: () => getLinks({ page, size: friendsPageSize, state }),
-    queryKey: [...friendsQueryKey, 'list', state, page, friendsPageSize],
-  })
-
-  const countsQuery = useQuery({
-    queryFn: getLinkStateCount,
-    queryKey: [...friendsQueryKey, 'state-count'],
-  })
-
-  useLayoutEffect(() => {
-    const nextState = normalizeState(searchParams.get('state'))
-    const nextPage = readPage(searchParams.get('page'))
-
-    setState((value) => (value === nextState ? value : nextState))
-    setPage((value) => (value === nextPage ? value : nextPage))
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const next = new URLSearchParams()
-    next.set('state', String(state))
-    if (page > 1) next.set('page', String(page))
-    if (next.toString() !== searchParamsKey) {
-      setSearchParams(next, { replace: true })
-    }
-  }, [page, searchParamsKey, setSearchParams, state])
-
-  const invalidateLinks = async () => {
-    await queryClient.invalidateQueries({ queryKey: friendsQueryKey })
-  }
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteLink,
-    onSuccess: async () => {
-      toast.success(t('friends.toast.deleted'))
-      await invalidateLinks()
-    },
-  })
-
-  const auditPassMutation = useMutation({
-    mutationFn: auditPassLink,
-    onSuccess: async () => {
-      toast.success(t('friends.toast.auditPass'))
-      await invalidateLinks()
-    },
-  })
-
-  const openAuditReason = async (link: LinkModel) => {
-    const ok = await presentAuditReason(link)
-    if (ok) {
-      await invalidateLinks()
-    }
-  }
-
-  const healthMutation = useMutation({
-    mutationFn: checkLinksHealth,
-    onSuccess: (result) => {
+  const {
+    auditPassMutation,
+    deleteMutation,
+    healthMutation,
+    invalidateFriends,
+    migrateMutation,
+  } = useFriendMutations({
+    onHealthResult: (result) => {
       setHealth(
         Object.fromEntries(
           Object.entries(result).map(([key, value]) => [
@@ -106,26 +48,20 @@ export function FriendsRouteViewContent() {
           ]),
         ),
       )
-      toast.success(t('friends.toast.healthDone'))
     },
   })
 
-  const migrateMutation = useMutation({
-    mutationFn: migrateLinkAvatars,
-    onSuccess: async () => {
-      toast.success(t('friends.toast.migrated'))
-      await invalidateLinks()
-    },
-  })
-
-  const links = linksQuery.data?.data ?? []
-  const pagination = linksQuery.data?.pagination
-  const counts = countsQuery.data
+  const openAuditReason = async (link: LinkModel) => {
+    const ok = await presentAuditReason(link)
+    if (ok) {
+      await invalidateFriends()
+    }
+  }
 
   const openEditor = async (link: LinkModel | null) => {
     const ok = await presentFriendEditor(link)
     if (ok) {
-      await invalidateLinks()
+      await invalidateFriends()
     }
   }
 
@@ -186,14 +122,7 @@ export function FriendsRouteViewContent() {
       </div>
 
       <div className="shrink-0 border-b border-neutral-200 px-4 py-2 dark:border-neutral-800">
-        <FriendsTabBar
-          counts={counts}
-          onChange={(nextState) => {
-            setState(nextState)
-            setPage(1)
-          }}
-          value={state}
-        />
+        <FriendsTabBar counts={counts} onChange={setState} value={state} />
       </div>
 
       <Scroll className="flex-1" orientation="both">

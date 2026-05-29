@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'react-router'
 import { findInListCache } from '~/api/list-cache'
 import { getProject } from '~/api/projects'
 import type { ProjectModel } from '~/models/project'
+import { adminQueryKeys } from '~/query/keys'
 
 import { projectsQueryKey } from '../constants'
 import { ProjectDetailPanel } from './ProjectDetailPanel'
@@ -33,7 +34,7 @@ export function ProjectDetailRoute() {
     enabled: Boolean(id) && !isCreating,
     initialData: initialProject,
     queryFn: () => getProject(id!),
-    queryKey: [...projectsQueryKey, 'detail', id],
+    queryKey: id ? adminQueryKeys.projects.detail(id) : projectsQueryKey,
     staleTime: initialProject ? 30_000 : 0,
   })
 

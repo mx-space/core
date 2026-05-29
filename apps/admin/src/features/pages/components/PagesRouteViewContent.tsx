@@ -7,6 +7,7 @@ import { deletePage, getPages, reorderPages } from '~/api/pages'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { PageModel } from '~/models/page'
+import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button, ButtonLink } from '~/ui/primitives/button'
@@ -28,7 +29,7 @@ export function PagesRouteViewContent() {
   const [draggingId, setDraggingId] = useState('')
   const pagesQuery = useQuery({
     queryFn: () => getPages({ page: 1, size: 100 }),
-    queryKey: [...pagesQueryKey, 'list'],
+    queryKey: adminQueryKeys.pages.list({ page: 1, size: 100 }),
   })
 
   const deleteMutation = useMutation({

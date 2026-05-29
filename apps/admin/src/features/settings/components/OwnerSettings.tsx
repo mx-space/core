@@ -17,11 +17,12 @@ import { uploadFile } from '~/api/files'
 import { getOwner, updateOwner } from '~/api/options'
 import { IpInfoPopover } from '~/features/_shared/components/ip-info-popover'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { SelectField } from '~/ui/primitives/select'
 import { TextArea, TextInput } from '~/ui/primitives/text-field'
 
-import { settingsQueryKey, socialOptions } from '../constants'
+import { socialOptions } from '../constants'
 import { formatDateTime, getErrorMessage } from '../utils/settings'
 import { SettingsSection, SettingsSkeleton } from './SettingsPrimitives'
 
@@ -38,7 +39,7 @@ export function OwnerSettings(props: { onSaved: () => Promise<unknown> }) {
 
   const ownerQuery = useQuery({
     queryFn: getOwner,
-    queryKey: [...settingsQueryKey, 'owner'],
+    queryKey: adminQueryKeys.settings.owner(),
   })
 
   useEffect(() => {

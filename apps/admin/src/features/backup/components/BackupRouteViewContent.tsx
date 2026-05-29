@@ -15,6 +15,7 @@ import {
 } from '~/api/backups'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
@@ -40,7 +41,7 @@ export function BackupRouteViewContent() {
 
   const backupsQuery = useQuery({
     queryFn: getBackups,
-    queryKey: ['backups', 'list'],
+    queryKey: adminQueryKeys.backups.list(),
   })
 
   const backups = useMemo(
@@ -53,7 +54,9 @@ export function BackupRouteViewContent() {
   const allSelected = backups.length > 0 && selectedKeys.size === backups.length
 
   const invalidateBackups = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['backups'] })
+    await queryClient.invalidateQueries({
+      queryKey: adminQueryKeys.backups.root,
+    })
   }
 
   const closeDetail = useCallback(() => {

@@ -5,6 +5,7 @@ import { CronTaskStatus } from '~/api/cron-tasks'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
+import { Badge } from '~/ui/primitives/badge'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -86,9 +87,9 @@ export function TaskDetail(props: {
         <div className="flex shrink-0 items-center gap-2">
           <StatusBadge status={task.status} />
           {task.retryCount > 0 ? (
-            <span className="rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300">
+            <Badge tone="warning">
               {t('cron.detail.retryBadge', { count: task.retryCount })}
-            </span>
+            </Badge>
           ) : null}
         </div>
       </div>

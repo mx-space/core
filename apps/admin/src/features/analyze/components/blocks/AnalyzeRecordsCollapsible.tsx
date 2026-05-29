@@ -4,11 +4,12 @@ import { useState } from 'react'
 
 import { getAnalyzeList } from '~/api/analyze'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 
-import { analyzeQueryKey, pageSize } from '../../constants'
+import { pageSize } from '../../constants'
 import { AnalyzeSkeleton, EmptyBlock } from '../AnalyzePrimitives'
 import { AnalyzeRecordRow } from '../AnalyzeRecordRow'
 
@@ -40,7 +41,7 @@ export function AnalyzeRecordsCollapsible() {
   const recordsQuery = useQuery({
     placeholderData: (previous) => previous,
     queryFn: () => getAnalyzeList({ page, size: pageSize }),
-    queryKey: [...analyzeQueryKey, 'records', { page, size: pageSize }],
+    queryKey: adminQueryKeys.analyze.records({ page, size: pageSize }),
   })
 
   const records = recordsQuery.data?.data ?? []

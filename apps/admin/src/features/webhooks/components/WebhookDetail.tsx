@@ -14,6 +14,7 @@ import type { WebhookModel } from '~/api/webhooks'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
+import { Badge } from '~/ui/primitives/badge'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -123,11 +124,11 @@ export function WebhookDetail(props: {
                 ) : null}
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
-                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs dark:bg-neutral-800">
+                <Badge pill size="sm" variant="soft">
                   {props.webhook.enabled
                     ? t('webhooks.detail.enabled')
                     : t('webhooks.detail.disabled')}
-                </span>
+                </Badge>
                 <span>{getScopeText(props.webhook.scope, t)}</span>
               </div>
             </div>

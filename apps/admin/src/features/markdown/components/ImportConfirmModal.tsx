@@ -3,6 +3,7 @@ import { AlertCircle } from 'lucide-react'
 import { useI18n } from '~/i18n'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
+import { Badge } from '~/ui/primitives/badge'
 import { Button } from '~/ui/primitives/button'
 
 import { ImportType } from '../types/markdown'
@@ -28,11 +29,11 @@ function ImportConfirmModal(props: ImportConfirmModalProps) {
           <div>
             <p className="text-sm text-neutral-700 dark:text-neutral-300">
               {t('markdown.confirm.message', { count: props.itemCount })}{' '}
-              <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-1 text-xs dark:border-neutral-800 dark:bg-neutral-900">
+              <Badge>
                 {props.importType === ImportType.Post
                   ? t('markdown.type.post')
                   : t('markdown.type.note')}
-              </span>
+              </Badge>
             </p>
             <p className="mt-2 text-xs text-neutral-500">
               {t('markdown.confirm.note')}

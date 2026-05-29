@@ -4,11 +4,12 @@ import { useState } from 'react'
 
 import { ActivityType, getActivityList } from '~/api/activity'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { Panel } from '~/ui/primitives/panel'
 import { cn } from '~/utils/cn'
 
-import { activityPageSize, analyzeQueryKey } from '../../constants'
+import { activityPageSize } from '../../constants'
 import { buildRefObjectMap } from '../../utils/analyze'
 import { ActivityList } from '../ActivityList'
 import { AnalyzeSkeleton, EmptyBlock, ErrorBlock } from '../AnalyzePrimitives'
@@ -28,11 +29,11 @@ export function AnalyzeActivityPanel() {
         size: activityPageSize,
         type: activityType,
       }),
-    queryKey: [
-      ...analyzeQueryKey,
-      'activity',
-      { activityPage, activityPageSize, activityType },
-    ],
+    queryKey: adminQueryKeys.analyze.activity({
+      page: activityPage,
+      size: activityPageSize,
+      type: activityType,
+    }),
   })
 
   const activities = activityQuery.data?.data ?? []

@@ -6,6 +6,7 @@ import type { TokenModel } from '~/models/token'
 
 import { deleteToken, getToken, getTokens } from '~/api/auth'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 
@@ -36,7 +37,7 @@ export function TokenPanel() {
 
   const tokensQuery = useQuery({
     queryFn: getTokens,
-    queryKey: [...accountQueryKey, 'tokens'],
+    queryKey: adminQueryKeys.settings.tokens(),
   })
 
   const deleteMutation = useMutation({

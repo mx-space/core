@@ -1,17 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw } from 'lucide-react'
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
 import type { CommentUploadFile, CommentUploadStatus } from '~/api/files'
-import { deleteCommentUpload, getCommentUploads } from '~/api/files'
+import { deleteCommentUpload } from '~/api/files'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import { CompactPagination } from '~/ui/data/compact-pagination'
@@ -30,6 +24,7 @@ import {
   FILES_PAGE_SIZE,
   filesQueryKey,
 } from '../constants'
+import { useCommentImagesList } from '../hooks/useCommentImagesList'
 import { useFileSearch } from '../hooks/useFileSearch'
 import type { FileRowItem } from '../utils/adapters'
 import { adaptCommentUpload } from '../utils/adapters'
@@ -45,32 +40,22 @@ import { SearchRow } from './SearchRow'
 
 const FOCUS_SCOPE_ID = 'comment-images-list'
 
-function isStatus(value: string | null): value is CommentUploadStatus {
-  return (
-    value === '' ||
-    value === null ||
-    value === 'active' ||
-    value === 'detached' ||
-    value === 'pending'
-  )
-}
-
 export function CommentImagesPage() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
   const detailId = params.id ?? null
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-
-  const initialStatus = searchParams.get('status')
-  const [status, setStatus] = useState<CommentUploadStatus>(
-    isStatus(initialStatus) ? (initialStatus ?? '') : '',
-  )
-  const [page, setPage] = useState<number>(
-    Number(searchParams.get('page')) || 1,
-  )
+  const {
+    comments,
+    commentsQuery,
+    page,
+    pageCount,
+    setPage,
+    setStatus,
+    status,
+    total,
+  } = useCommentImagesList()
   const [searchQuery, setSearchQuery] = useState('')
   const [preview, setPreview] = useState<null | { name: string; url: string }>(
     null,
@@ -85,25 +70,6 @@ export function CommentImagesPage() {
     pending: t('files.commentStatus.pending'),
   }
 
-  const commentsQuery = useQuery({
-    placeholderData: (previous) => previous,
-    queryFn: () =>
-      getCommentUploads({
-        page,
-        size: FILES_PAGE_SIZE,
-        status: status === '' ? undefined : status,
-      }),
-    queryKey: [
-      ...filesQueryKey,
-      'comment-uploads',
-      { page, size: FILES_PAGE_SIZE, status },
-    ],
-  })
-
-  const comments = commentsQuery.data?.data ?? []
-  const total = commentsQuery.data?.pagination.total ?? 0
-  const pageCount = commentsQuery.data?.pagination.totalPage ?? 1
-
   const adapted = useMemo(
     () =>
       comments.map((item) => adaptCommentUpload(item, t, commentStatusLabels)),
@@ -115,26 +81,6 @@ export function CommentImagesPage() {
   useEffect(() => {
     if (fileSearch.query !== searchQuery) fileSearch.setQuery(searchQuery)
   }, [searchQuery])
-
-  useLayoutEffect(() => {
-    const nextStatus = searchParams.get('status')
-    const nextPage = Number(searchParams.get('page')) || 1
-    if (isStatus(nextStatus) && (nextStatus ?? '') !== status) {
-      setStatus(nextStatus ?? '')
-    }
-    if (nextPage !== page) setPage(nextPage)
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const next = new URLSearchParams(searchParams)
-    if (status) next.set('status', status)
-    else next.delete('status')
-    if (page > 1) next.set('page', String(page))
-    else next.delete('page')
-    if (next.toString() !== searchParamsKey) {
-      setSearchParams(next, { replace: true })
-    }
-  }, [status, page])
 
   const buildListPath = useCallback(() => {
     const sp = new URLSearchParams()

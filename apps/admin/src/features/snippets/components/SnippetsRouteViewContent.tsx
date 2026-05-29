@@ -24,6 +24,7 @@ import { presentTerminalOutput } from '~/features/snippets/components/terminal-o
 import { useI18n } from '~/i18n'
 import type { SnippetModel } from '~/models/snippet'
 import { SnippetType } from '~/models/snippet'
+import { adminQueryKeys } from '~/query/keys'
 import { FocusScope } from '~/ui/focus-scope'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
@@ -93,17 +94,15 @@ export function SnippetsRouteViewContent() {
   const groupsQuery = useQuery({
     placeholderData: (previous) => previous,
     queryFn: () => getSnippetGroups({ page: 1, size: 50 }),
-    queryKey: [...snippetsQueryKey, 'groups'],
+    queryKey: adminQueryKeys.snippets.groups(),
   })
 
   // Detail's reference for auto-expanding the owning group — read from cache.
   const detailRef = useMemo(() => {
     if (!selectedId || isCreating) return undefined
-    const detail = queryClient.getQueryData<SnippetModel>([
-      ...snippetsQueryKey,
-      'detail',
-      selectedId,
-    ])
+    const detail = queryClient.getQueryData<SnippetModel>(
+      adminQueryKeys.snippets.detail(selectedId),
+    )
     return detail?.reference
   }, [isCreating, queryClient, selectedId])
 
@@ -140,7 +139,7 @@ export function SnippetsRouteViewContent() {
         // Mirror into a stable query cache so list-cache findInListCache
         // can locate snippets by id when the detail route mounts.
         queryClient.setQueryData(
-          [...snippetsQueryKey, 'group', reference],
+          adminQueryKeys.snippets.group(reference),
           snippets,
         )
         setRuntime((state) => ({

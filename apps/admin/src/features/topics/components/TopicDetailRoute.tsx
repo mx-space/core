@@ -4,12 +4,13 @@ import { useParams } from 'react-router'
 import { findInListCache } from '~/api/list-cache'
 import { getTopic } from '~/api/topics'
 import type { TopicModel } from '~/models/topic'
+import { adminQueryKeys } from '~/query/keys'
 
 import { TopicDetail } from './TopicDetail'
 import { TopicDetailEmpty } from './TopicDetailEmpty'
 import { useTopicsRouteContext } from './topics-route-context'
 
-const LIST_PREFIX = ['topics', 'list'] as const
+const LIST_PREFIX = adminQueryKeys.topics.listRoot
 
 export function TopicDetailRoute() {
   const { id } = useParams<{ id: string }>()
@@ -26,7 +27,9 @@ export function TopicDetailRoute() {
     enabled: Boolean(id),
     initialData: initialTopic,
     queryFn: () => getTopic(id!),
-    queryKey: ['topics', 'detail', id],
+    queryKey: id
+      ? adminQueryKeys.topics.detail(id)
+      : adminQueryKeys.topics.root,
     staleTime: initialTopic ? 30_000 : 0,
   })
 

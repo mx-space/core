@@ -1,16 +1,15 @@
 import { File, FileText, StickyNote } from 'lucide-react'
 import type { TranslationKey } from '~/i18n/types'
 import type { RecentlyRefTypes } from '~/models/recently'
+import { adminQueryKeys } from '~/query/keys'
 
 export const RECENTLY_PAGE_SIZE = 20
 
-export const recentlyListQueryKey = [
-  'recently',
-  'list',
-  { size: RECENTLY_PAGE_SIZE },
-] as const
+export const recentlyListQueryKey = adminQueryKeys.recently.list({
+  size: RECENTLY_PAGE_SIZE,
+})
 
-export const recentlyQueryKey = ['recently'] as const
+export const recentlyQueryKey = adminQueryKeys.recently.root
 
 export const URL_REGEX = /https?:\/\/\S+/gi
 export const URL_TAIL_TRIM =

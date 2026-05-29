@@ -10,6 +10,7 @@ import {
   updateEmailTemplate,
 } from '~/api/options'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 
@@ -72,7 +73,7 @@ export function TemplateRouteViewContent() {
 
   const templateQuery = useQuery({
     queryFn: () => getEmailTemplate(type),
-    queryKey: [...templateQueryKey, type],
+    queryKey: adminQueryKeys.templates.email(type),
   })
   const savedSource = templateQuery.data?.template ?? ''
   const defaultProps = useMemo(
@@ -123,7 +124,7 @@ export function TemplateRouteViewContent() {
 
   const invalidateTemplate = useCallback(async () => {
     await queryClient.invalidateQueries({
-      queryKey: [...templateQueryKey, type],
+      queryKey: adminQueryKeys.templates.email(type),
     })
   }, [queryClient, type])
 

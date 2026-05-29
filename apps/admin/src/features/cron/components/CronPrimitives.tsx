@@ -4,23 +4,19 @@ import type { ReactNode } from 'react'
 import type { SelectOption } from '../types/cron'
 
 import { useI18n } from '~/i18n'
+import { Badge } from '~/ui/primitives/badge'
 import { SelectField } from '~/ui/primitives/select'
 import { cn } from '~/utils/cn'
 
-import { taskStatusClassNames, taskStatusLabelKeys } from '../constants'
+import { taskStatusLabelKeys, taskStatusTones } from '../constants'
 import { formatLogTime } from '../utils/cron'
 
 export function StatusBadge(props: { status: CronTaskStatus }) {
   const { t } = useI18n()
   return (
-    <span
-      className={cn(
-        'inline-flex rounded border px-2 py-1 text-xs font-medium',
-        taskStatusClassNames[props.status],
-      )}
-    >
+    <Badge tone={taskStatusTones[props.status]}>
       {t(taskStatusLabelKeys[props.status])}
-    </span>
+    </Badge>
   )
 }
 

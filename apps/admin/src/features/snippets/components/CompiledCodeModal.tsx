@@ -3,6 +3,7 @@ import type { SnippetModel } from '~/models/snippet'
 
 import { getCompiledCode } from '~/api/serverless'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Scroll } from '~/ui/primitives/scroll'
 
 import { getErrorMessage } from '../utils/snippets'
@@ -17,7 +18,7 @@ export function CompiledCodeModal(props: {
   const query = useQuery({
     enabled: props.open && Boolean(props.snippet?.id),
     queryFn: () => getCompiledCode(String(props.snippet?.id)),
-    queryKey: ['serverless', 'compiled', props.snippet?.id],
+    queryKey: adminQueryKeys.serverless.compiled(props.snippet?.id ?? ''),
   })
 
   return (

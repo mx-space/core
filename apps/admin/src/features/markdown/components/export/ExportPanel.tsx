@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ExportConfig } from '../../types/markdown'
 
 import { useI18n } from '~/i18n'
+import { Badge } from '~/ui/primitives/badge'
 import { Scroll } from '~/ui/primitives/scroll'
 
 import { ExportOptionsGrid } from './ExportOptionsGrid'
@@ -52,9 +53,9 @@ export function ExportPanel() {
           {t('markdown.export.openHint')}
         </span>
         <div className="flex-1" />
-        <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-xs tabular-nums text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+        <Badge className="tabular-nums" size="sm">
           {t('markdown.export.enabledCount', { count: enabledCount })}
-        </span>
+        </Badge>
       </div>
 
       <Scroll className="flex-1">

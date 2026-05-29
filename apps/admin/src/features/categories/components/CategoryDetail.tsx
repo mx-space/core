@@ -4,6 +4,7 @@ import type { CategoryModel } from '~/models/category'
 
 import { getPosts } from '~/api/posts'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 
@@ -30,7 +31,7 @@ export function CategoryDetail(props: {
         sort_by: 'createdAt',
         sort_order: 'desc',
       }).then((result) => result.data),
-    queryKey: ['posts', 'category-detail', props.category.id],
+    queryKey: adminQueryKeys.posts.categoryDetail(props.category.id),
   })
 
   return (

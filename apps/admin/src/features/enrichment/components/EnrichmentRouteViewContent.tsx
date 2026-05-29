@@ -15,6 +15,7 @@ import {
   getEnrichmentProviders,
 } from '~/api/enrichment'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
@@ -78,11 +79,11 @@ export function EnrichmentRouteViewContent() {
         page: cachePage,
         size: cachePageSize,
       }),
-    queryKey: [
-      ...enrichmentQueryKey,
-      'cache',
-      { filterMode, page: cachePage, size: cachePageSize },
-    ],
+    queryKey: adminQueryKeys.enrichment.cacheList({
+      filterMode,
+      page: cachePage,
+      size: cachePageSize,
+    }),
   })
 
   const captureQuery = useQuery({
@@ -95,29 +96,25 @@ export function EnrichmentRouteViewContent() {
         size: capturePageSize,
         sort: captureSort,
       }),
-    queryKey: [
-      ...enrichmentQueryKey,
-      'captures',
-      {
-        order: captureOrder,
-        page: capturePage,
-        size: capturePageSize,
-        sort: captureSort,
-      },
-    ],
+    queryKey: adminQueryKeys.enrichment.captureList({
+      order: captureOrder,
+      page: capturePage,
+      size: capturePageSize,
+      sort: captureSort,
+    }),
   })
 
   const quotaQuery = useQuery({
     enabled: source === 'screenshots',
     queryFn: getEnrichmentCaptureQuota,
-    queryKey: [...enrichmentQueryKey, 'captures', 'quota'],
+    queryKey: adminQueryKeys.enrichment.captureQuota(),
     staleTime: 30_000,
   })
 
   const providersQuery = useQuery({
     enabled: source === 'cache',
     queryFn: getEnrichmentProviders,
-    queryKey: [...enrichmentQueryKey, 'providers'],
+    queryKey: adminQueryKeys.enrichment.providers(),
     staleTime: 30_000,
   })
 

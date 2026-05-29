@@ -4,13 +4,13 @@ import { useParams } from 'react-router'
 import { getDraftById } from '~/api/drafts'
 import { findInListCache } from '~/api/list-cache'
 import type { DraftModel } from '~/models/draft'
+import { adminQueryKeys } from '~/query/keys'
 
-import { draftsQueryKey } from '../constants'
 import { DraftDetail } from './DraftDetail'
 import { DraftDetailEmpty } from './DraftDetailEmpty'
 import { useDraftsRouteContext } from './drafts-route-context'
 
-const LIST_PREFIX = [...draftsQueryKey, 'list'] as const
+const LIST_PREFIX = adminQueryKeys.drafts.listRoot
 
 export function DraftDetailRoute() {
   const { id } = useParams<{ id: string }>()
@@ -25,7 +25,7 @@ export function DraftDetailRoute() {
     enabled: Boolean(id),
     initialData: initialDraft,
     queryFn: () => getDraftById(id!),
-    queryKey: [...draftsQueryKey, 'detail', id],
+    queryKey: adminQueryKeys.drafts.detail(id ?? ''),
     staleTime: initialDraft ? 30_000 : 0,
   })
 

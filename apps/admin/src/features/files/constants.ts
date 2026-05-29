@@ -2,8 +2,9 @@ import { FileIcon, ImageIcon, Smile, User } from 'lucide-react'
 import type { CommentUploadStatus, FileType } from '~/api/files'
 import type { TranslationKey } from '~/i18n/types'
 import type { LucideIcon } from 'lucide-react'
+import { adminQueryKeys } from '~/query/keys'
 
-export const filesQueryKey = ['files'] as const
+export const filesQueryKey = adminQueryKeys.files.root
 
 export interface FileTypeOption {
   acceptImage: boolean

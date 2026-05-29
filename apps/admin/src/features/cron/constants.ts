@@ -10,9 +10,11 @@ import type { TranslationKey } from '~/i18n/types'
 import type { LucideIcon } from 'lucide-react'
 
 import { CronTaskStatus, CronTaskType } from '~/api/cron-tasks'
+import { adminQueryKeys } from '~/query/keys'
+import type { BadgeTone } from '~/ui/primitives/badge'
 
-export const taskQueryKey = ['cron-tasks'] as const
-export const definitionQueryKey = ['cron-task-definitions'] as const
+export const taskQueryKey = adminQueryKeys.cron.taskRoot
+export const definitionQueryKey = adminQueryKeys.cron.definitionRoot
 
 export const taskListPageSize = 50
 export const taskRefetchInterval = 5000
@@ -49,19 +51,13 @@ export const taskStatusIcons: Record<CronTaskStatus, LucideIcon> = {
   [CronTaskStatus.Running]: Loader2,
 }
 
-export const taskStatusClassNames: Record<CronTaskStatus, string> = {
-  [CronTaskStatus.Cancelled]:
-    'border-neutral-200 bg-neutral-50 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400',
-  [CronTaskStatus.Completed]:
-    'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300',
-  [CronTaskStatus.Failed]:
-    'border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300',
-  [CronTaskStatus.PartialFailed]:
-    'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300',
-  [CronTaskStatus.Pending]:
-    'border-neutral-200 bg-white text-neutral-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300',
-  [CronTaskStatus.Running]:
-    'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300',
+export const taskStatusTones: Record<CronTaskStatus, BadgeTone> = {
+  [CronTaskStatus.Cancelled]: 'neutral',
+  [CronTaskStatus.Completed]: 'success',
+  [CronTaskStatus.Failed]: 'danger',
+  [CronTaskStatus.PartialFailed]: 'warning',
+  [CronTaskStatus.Pending]: 'neutral',
+  [CronTaskStatus.Running]: 'info',
 }
 
 export const taskStatusIconClassNames: Record<CronTaskStatus, string> = {

@@ -1,8 +1,9 @@
 import type { StateTab } from './types/friends'
 
 import { LinkState } from '~/models/link'
+import { adminQueryKeys } from '~/query/keys'
 
-export const friendsQueryKey = ['links'] as const
+export const friendsQueryKey = adminQueryKeys.links.root
 export const friendsPageSize = 50
 
 export const stateTabs: StateTab[] = [

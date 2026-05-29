@@ -19,7 +19,11 @@ import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
-import { RECENTLY_PAGE_SIZE, recentlyListQueryKey } from '../constants'
+import {
+  RECENTLY_PAGE_SIZE,
+  recentlyListQueryKey,
+  recentlyQueryKey,
+} from '../constants'
 import { presentRecentlyEditor } from './RecentlyEditorModal'
 import { RecentlyListItem } from './RecentlyListItem'
 import {
@@ -60,14 +64,14 @@ export function RecentlyRouteViewContent() {
     mutationFn: deleteRecently,
     onSuccess: async () => {
       toast.success(t('recently.deleteSuccess'))
-      await queryClient.invalidateQueries({ queryKey: ['recently'] })
+      await queryClient.invalidateQueries({ queryKey: recentlyQueryKey })
     },
   })
 
   const openEditor = async (item: RecentlyModel | null) => {
     const ok = await presentRecentlyEditor(item)
     if (ok) {
-      await queryClient.invalidateQueries({ queryKey: ['recently'] })
+      await queryClient.invalidateQueries({ queryKey: recentlyQueryKey })
     }
   }
 

@@ -1,9 +1,10 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { useEffect, useLayoutEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { ReaderRoleFilter } from '~/api/readers'
 import { getReaders } from '~/api/readers'
+import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
+import { adminQueryKeys } from '~/query/keys'
 
 import {
   readersPageSize,
@@ -22,90 +23,77 @@ function parsePage(value: string | null): number {
 }
 
 export function useReadersList() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-
-  const [page, setPage] = useState(() => parsePage(searchParams.get('page')))
-  const [search, setSearch] = useState(() => searchParams.get('q') ?? '')
-  const [role, setRole] = useState<ReaderRoleFilter>(() =>
-    parseRole(searchParams.get('role')),
+  const urlStateOptions = useMemo(
+    () => ({
+      read: (searchParams: URLSearchParams) => ({
+        page: parsePage(searchParams.get('page')),
+        role: parseRole(searchParams.get('role')),
+        search: searchParams.get('q') ?? '',
+      }),
+      write: (state: {
+        page: number
+        role: ReaderRoleFilter
+        search: string
+      }) => {
+        const nextParams = new URLSearchParams()
+        if (state.role !== 'all') nextParams.set('role', state.role)
+        if (state.search) nextParams.set('q', state.search)
+        if (state.page > 1) nextParams.set('page', String(state.page))
+        return nextParams
+      },
+    }),
+    [],
   )
-  const [debouncedSearch, setDebouncedSearch] = useState(search)
+
+  const [state, setState] = useUrlListState(urlStateOptions)
+  const [debouncedSearch, setDebouncedSearch] = useState(state.search)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setDebouncedSearch(search)
+      setDebouncedSearch(state.search)
     }, searchDebounceMs)
 
     return () => window.clearTimeout(timer)
-  }, [search])
+  }, [state.search])
 
   const readersQuery = useQuery({
     placeholderData: keepPreviousData,
     queryFn: () =>
       getReaders({
-        page,
-        role: role === 'all' ? undefined : role,
+        page: state.page,
+        role: state.role === 'all' ? undefined : state.role,
         search: debouncedSearch.trim() || undefined,
         size: readersPageSize,
       }),
-    queryKey: [
-      ...readersQueryKey,
-      'list',
-      page,
-      readersPageSize,
-      debouncedSearch.trim(),
-      role,
-    ],
+    queryKey: adminQueryKeys.readers.list({
+      page: state.page,
+      role: state.role,
+      search: debouncedSearch.trim(),
+      size: readersPageSize,
+    }),
   })
 
-  useLayoutEffect(() => {
-    const nextRole = parseRole(searchParams.get('role'))
-    const nextSearch = searchParams.get('q') ?? ''
-    const nextPage = parsePage(searchParams.get('page'))
-
-    setRole((value) => (value === nextRole ? value : nextRole))
-    setSearch((value) => (value === nextSearch ? value : nextSearch))
-    setPage((value) => (value === nextPage ? value : nextPage))
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const nextParams = new URLSearchParams(searchParams)
-
-    if (role === 'all') nextParams.delete('role')
-    else nextParams.set('role', role)
-
-    if (search) nextParams.set('q', search)
-    else nextParams.delete('q')
-
-    if (page > 1) nextParams.set('page', String(page))
-    else nextParams.delete('page')
-
-    if (nextParams.toString() !== searchParamsKey) {
-      setSearchParams(nextParams, { replace: true })
-    }
-  }, [role, search, page, searchParams, searchParamsKey, setSearchParams])
-
   const changeSearch = (value: string) => {
-    setSearch(value)
-    setPage(1)
+    setState((current) => ({ ...current, page: 1, search: value }))
   }
 
   const changeRole = (value: ReaderRoleFilter) => {
-    setRole(value)
-    setPage(1)
+    setState((current) => ({ ...current, page: 1, role: value }))
   }
+
+  const listQueryString = urlStateOptions.write(state).toString()
 
   return {
     isFetching: readersQuery.isFetching,
     isLoading: readersQuery.isLoading,
-    page,
+    listQueryString,
+    page: state.page,
     pagination: readersQuery.data?.pagination,
     readers: readersQuery.data?.data ?? [],
     refetch: () => void readersQuery.refetch(),
-    role,
-    search,
-    setPage,
+    role: state.role,
+    search: state.search,
+    setPage: (page: number) => setState({ page }),
     setRole: changeRole,
     setSearch: changeSearch,
   }

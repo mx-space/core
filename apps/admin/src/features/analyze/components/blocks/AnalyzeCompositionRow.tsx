@@ -3,9 +3,9 @@ import { MonitorSmartphone, Route } from 'lucide-react'
 
 import { getDeviceDistribution, getTrafficSource } from '~/api/analyze'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Panel } from '~/ui/primitives/panel'
 
-import { analyzeQueryKey } from '../../constants'
 import { hasDeviceDistribution } from '../../utils/analyze'
 import { AnalyzeSkeleton, EmptyBlock, ErrorBlock } from '../AnalyzePrimitives'
 import { DeviceDistributionChart } from '../DeviceDistributionChart'
@@ -22,7 +22,10 @@ export function AnalyzeCompositionRow(props: {
         from: String(props.window.start),
         to: String(props.window.end),
       }),
-    queryKey: [...analyzeQueryKey, 'traffic-source', props.window],
+    queryKey: adminQueryKeys.analyze.trafficSource({
+      end: props.window.end,
+      start: props.window.start,
+    }),
   })
   const deviceDistributionQuery = useQuery({
     queryFn: () =>
@@ -30,7 +33,10 @@ export function AnalyzeCompositionRow(props: {
         from: String(props.window.start),
         to: String(props.window.end),
       }),
-    queryKey: [...analyzeQueryKey, 'device-distribution', props.window],
+    queryKey: adminQueryKeys.analyze.deviceDistribution({
+      end: props.window.end,
+      start: props.window.start,
+    }),
   })
 
   return (

@@ -1,10 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Hash, Plus, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
-import { toast } from 'sonner'
 
-import { deleteTopic, getTopics } from '~/api/topics'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { TopicModel } from '~/models/topic'
@@ -20,9 +17,9 @@ import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
 import { topicPageSize } from '../constants'
+import { useTopicMutations } from '../hooks/use-topic-mutations'
+import { useTopicsList } from '../hooks/use-topics-list'
 import type { TopicFormMode } from '../types/topics'
-import { getErrorMessage } from '../utils/errors'
-import { readPositiveInt } from '../utils/search-params'
 import { buildTopicActions } from './buildTopicActions'
 import { ListEmpty } from './ListEmpty'
 import { ListError } from './ListError'
@@ -36,94 +33,26 @@ const FOCUS_SCOPE_ID = 'topics-list'
 
 export function TopicsRouteViewContent() {
   const { t } = useI18n()
-  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
   const detailId = params.id ?? ''
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-  const [page, setPage] = useState(readPositiveInt(searchParams.get('page')))
-
-  useEffect(() => {
-    const next = new URLSearchParams(searchParams)
-    if (page > 1) next.set('page', String(page))
-    else next.delete('page')
-    if (next.toString() !== searchParamsKey) {
-      setSearchParams(next, { replace: true })
-    }
-  }, [page, searchParamsKey, searchParams, setSearchParams])
-
-  const topicsQuery = useQuery({
-    placeholderData: (previous) => previous,
-    queryFn: () => getTopics({ page, size: topicPageSize }),
-    queryKey: ['topics', 'list', page, topicPageSize],
-  })
-
-  const topics = topicsQuery.data?.data ?? []
-  const pagination = topicsQuery.data?.pagination
+  const [searchParams] = useSearchParams()
+  const { page, pagination, setPage, topics, topicsQuery } = useTopicsList()
 
   const selectionClearRef = useRef<(() => void) | null>(null)
-
-  const invalidateTopics = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ['topics'] })
-  }, [queryClient])
 
   const closeDetail = useCallback(() => {
     const qs = searchParams.toString()
     navigate(`/notes/topic${qs ? `?${qs}` : ''}`)
   }, [navigate, searchParams])
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteTopic,
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('topics.list.deleteFailed'))),
-    onSuccess: async () => {
-      toast.success(t('topics.list.deleteSuccess'))
-      selectionClearRef.current?.()
-      closeDetail()
-      await invalidateTopics()
-    },
-  })
-
-  const batchDeleteMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => deleteTopic(id)))
-      return {
-        failedCount: results.filter((r) => r.status === 'rejected').length,
-        successCount: results.filter((r) => r.status === 'fulfilled').length,
-      }
-    },
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('topics.list.deleteFailed'))),
-    onSuccess: async ({ failedCount, successCount }) => {
-      selectionClearRef.current?.()
-      closeDetail()
-      if (failedCount > 0) {
-        toast.warning(`${successCount}/${successCount + failedCount}`)
-      } else {
-        toast.success(t('topics.list.deleteSuccess'))
-      }
-      await invalidateTopics()
-    },
-  })
-
-  const confirmAndDelete = useCallback(
-    async (targets: TopicModel[]) => {
-      if (targets.length === 0) return
-      const title =
-        targets.length === 1
-          ? t('topics.detail.confirmDelete', { name: targets[0].name })
-          : t('topics.list.confirmBatchDelete', { count: targets.length })
-      const confirmed = await confirmDialog({ destructive: true, title })
-      if (!confirmed) return
-      if (targets.length === 1) {
-        deleteMutation.mutate(targets[0].id)
-      } else {
-        batchDeleteMutation.mutate(targets.map((target) => target.id))
-      }
-    },
-    [batchDeleteMutation, deleteMutation, t],
-  )
+  const { batchDeleteMutation, deleteMutation, invalidateTopics } =
+    useTopicMutations({
+      onAfterDeleteSuccess: () => {
+        selectionClearRef.current?.()
+        closeDetail()
+      },
+    })
 
   const openTopic = useCallback(
     (topic: TopicModel) => {
@@ -145,6 +74,24 @@ export function TopicsRouteViewContent() {
     [invalidateTopics, navigate, searchParams],
   )
 
+  const confirmAndDelete = useCallback(
+    async (targets: TopicModel[]) => {
+      if (targets.length === 0) return
+      const title =
+        targets.length === 1
+          ? t('topics.detail.confirmDelete', { name: targets[0].name })
+          : t('topics.list.confirmBatchDelete', { count: targets.length })
+      const confirmed = await confirmDialog({ destructive: true, title })
+      if (!confirmed) return
+      if (targets.length === 1) {
+        deleteMutation.mutate(targets[0].id)
+      } else {
+        batchDeleteMutation.mutate(targets.map((target) => target.id))
+      }
+    },
+    [batchDeleteMutation, deleteMutation, t],
+  )
+
   const actions = useMemo(
     () =>
       buildTopicActions(
@@ -154,7 +101,7 @@ export function TopicsRouteViewContent() {
         },
         t,
       ),
-    [t],
+    [confirmAndDelete, openTopic, t],
   )
 
   const { selection } = useListKeyboard<TopicModel>({

@@ -1,10 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FolderOpen, Plus } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { toast } from 'sonner'
 
-import { deleteCategory, getCategories, getTags } from '~/api/categories'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { CategoryModel } from '~/models/category'
@@ -14,8 +11,9 @@ import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
+import { useCategoriesList } from '../hooks/use-categories-list'
+import { useCategoryMutations } from '../hooks/use-category-mutations'
 import type { CategoryFormMode, SelectedItem } from '../types/categories'
-import { getErrorMessage } from '../utils/errors'
 import { CategoriesRouteContext } from './categories-route-context'
 import { presentCategoryForm } from './CategoryFormModal'
 import { CategoryRow } from './CategoryRow'
@@ -40,40 +38,19 @@ function decodeTarget(raw: string | undefined): SelectedItem | null {
 
 export function CategoriesRouteViewContent() {
   const { t } = useI18n()
-  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
   const selectedItem = decodeTarget(params.id)
 
-  const categoriesQuery = useQuery({
-    queryFn: () => getCategories({ type: 'Category' }),
-    queryKey: ['categories', 'list'],
-  })
-  const tagsQuery = useQuery({
-    queryFn: getTags,
-    queryKey: ['categories', 'tags'],
-  })
-
-  const categories = categoriesQuery.data ?? []
-  const tags = tagsQuery.data ?? []
+  const { categories, categoriesQuery, tags, tagsQuery } = useCategoriesList()
 
   const closeDetail = useCallback(() => {
     navigate('/posts/category')
   }, [navigate])
 
-  const invalidateCategories = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ['categories'] })
-    await queryClient.invalidateQueries({ queryKey: ['posts'] })
-  }, [queryClient])
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteCategory,
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('categories.toast.deleteFailed'))),
-    onSuccess: async () => {
-      toast.success(t('categories.toast.deleted'))
+  const { deleteMutation, invalidateCategories } = useCategoryMutations({
+    onAfterDeleteSuccess: () => {
       closeDetail()
-      await invalidateCategories()
     },
   })
 

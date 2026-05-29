@@ -6,16 +6,13 @@ import type { CronTask, CronTaskDefinition } from '~/api/cron-tasks'
 import { getCronTasks } from '~/api/cron-tasks'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
-import {
-  taskQueryKey,
-  taskRefetchInterval,
-  taskTypeLabelKeys,
-} from '../constants'
+import { taskRefetchInterval, taskTypeLabelKeys } from '../constants'
 import { useCronMutations } from '../hooks/useCronMutations'
 import { formatDateTime, formatNullableDate } from '../utils/cron'
 import { DefinitionRunRow } from './DefinitionRunRow'
@@ -35,7 +32,10 @@ export function DefinitionDetail(props: {
   const recentRunsQuery = useQuery({
     queryFn: () =>
       getCronTasks({ page: 1, size: RECENT_RUNS_LIMIT, type: definition.type }),
-    queryKey: [...taskQueryKey, { type: definition.type }],
+    queryKey: adminQueryKeys.cron.recentRuns({
+      limit: RECENT_RUNS_LIMIT,
+      type: definition.type,
+    }),
     refetchInterval: taskRefetchInterval,
   })
 

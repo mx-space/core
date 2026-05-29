@@ -19,6 +19,7 @@ import { getModels } from '~/api/ai'
 import { useAgentSessionManager } from '~/hooks/use-agent-session-manager'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 
 import { extractAgentOperationFromToolItem } from './agent-operations'
 import { createManagedAgentStore } from './agent-store'
@@ -87,7 +88,7 @@ export function useWriteAgent(opts: {
   const modelsQuery = useQuery({
     enabled: opts.agentVisible,
     queryFn: getModels,
-    queryKey: ['ai', 'models', 'write-agent'],
+    queryKey: adminQueryKeys.ai.models('write-agent'),
   })
   const providerGroups = modelsQuery.data ?? []
 

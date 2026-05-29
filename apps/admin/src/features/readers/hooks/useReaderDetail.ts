@@ -2,8 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { ReaderModel } from '~/api/readers'
 
 import { getReader } from '~/api/readers'
-
-import { readersQueryKey } from '../constants'
+import { adminQueryKeys } from '~/query/keys'
 
 export function useReaderDetail(
   detailId: string | null,
@@ -12,7 +11,9 @@ export function useReaderDetail(
   const detailQuery = useQuery({
     enabled: Boolean(detailId),
     queryFn: () => getReader(detailId as string),
-    queryKey: [...readersQueryKey, 'detail', detailId],
+    queryKey: detailId
+      ? adminQueryKeys.readers.detail(detailId)
+      : adminQueryKeys.readers.root,
   })
 
   if (!detailId) return { isLoading: false, reader: null }

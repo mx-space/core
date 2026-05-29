@@ -3,6 +3,7 @@ import type { ListAction, ListRowSelectMode } from '~/ui/list-actions'
 
 import { useI18n } from '~/i18n'
 import { buildMenuItemsFromActions, ListRow } from '~/ui/list-actions'
+import { Badge } from '~/ui/primitives/badge'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { cn } from '~/utils/cn'
 import { relativeTimeFromNow } from '~/utils/time'
@@ -52,15 +53,10 @@ export function DraftRow(props: {
       selected={props.selected}
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span
-          className={cn(
-            'mt-0.5 inline-flex shrink-0 items-center gap-1 rounded border px-2 py-1 text-xs',
-            meta.className,
-          )}
-        >
+        <Badge className="mt-0.5" tone={meta.tone}>
           <Icon aria-hidden="true" className="size-3" />
           {t(meta.labelKey)}
-        </span>
+        </Badge>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
             <h3 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">

@@ -15,6 +15,7 @@ import {
   updateMetaPreset,
 } from '~/api/meta-presets'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
@@ -68,7 +69,9 @@ function MetaPresetModal(props: MetaPresetModalProps) {
       const presets = await getMetaPresets()
       return presets.find((preset) => preset.id === props.id) ?? null
     },
-    queryKey: [...metaPresetsQueryKey, props.id],
+    queryKey: props.id
+      ? adminQueryKeys.metaPresets.detail(props.id)
+      : adminQueryKeys.metaPresets.root,
   })
   const [form, setForm] = useState<CreateMetaPresetDto>(emptyMetaPreset())
 

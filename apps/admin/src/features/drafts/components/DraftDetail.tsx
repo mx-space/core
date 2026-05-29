@@ -12,6 +12,7 @@ import {
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { DraftModel } from '~/models/draft'
+import { adminQueryKeys } from '~/query/keys'
 import { FocusScope, useScopeArrowNav } from '~/ui/focus-scope'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
@@ -39,7 +40,7 @@ export function DraftDetail(props: {
   const historyQuery = useQuery({
     enabled: Boolean(props.draft.id),
     queryFn: () => getDraftHistory(props.draft.id),
-    queryKey: [...draftsQueryKey, 'history', props.draft.id],
+    queryKey: adminQueryKeys.drafts.history(props.draft.id),
   })
   const meta = refTypeMeta[props.draft.refType]
   const editPath = getEditPathForDraft(props.draft)
@@ -70,12 +71,10 @@ export function DraftDetail(props: {
   const selectedVersionQuery = useQuery({
     enabled: selectedVersion != null && selectedVersion !== props.draft.version,
     queryFn: () => getDraftHistoryVersion(props.draft.id, selectedVersion!),
-    queryKey: [
-      ...draftsQueryKey,
-      'history-version',
-      props.draft.id,
-      selectedVersion,
-    ],
+    queryKey: adminQueryKeys.drafts.historyVersion({
+      id: props.draft.id,
+      version: selectedVersion,
+    }),
   })
   const selectedVersionDraft =
     selectedVersion === props.draft.version

@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 
 import type { ArticleInfo } from '~/api/ai'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { ContentLayout, ContentLayoutSlot } from '~/ui/layout/content-layout'
 
@@ -28,7 +29,10 @@ export function ArticleGroupedDetailRoute<TItem>() {
   const detailQuery = useQuery({
     enabled: Boolean(id),
     queryFn: () => config.getItemsByRef(id!),
-    queryKey: ['ai', config.groupedQueryKey, 'by-ref', id],
+    queryKey: adminQueryKeys.ai.groupedByRef({
+      group: config.groupedQueryKey,
+      id: id ?? '',
+    }),
   })
 
   const detailArticle: ArticleInfo | null = useMemo(() => {
@@ -38,7 +42,9 @@ export function ArticleGroupedDetailRoute<TItem>() {
       pages?: Array<{
         data: Array<{ article: ArticleInfo }>
       }>
-    }>({ queryKey: ['ai', config.groupedQueryKey, 'grouped'] })
+    }>({
+      queryKey: adminQueryKeys.ai.groupedListRoot(config.groupedQueryKey),
+    })
     for (const [, data] of listEntries) {
       const pages = data?.pages
       if (!pages) continue
@@ -104,7 +110,7 @@ export function ArticleGroupedDetailRoute<TItem>() {
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('ai.toast.taskCreateFailed'))),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['ai'] })
+      await queryClient.invalidateQueries({ queryKey: adminQueryKeys.ai.root })
     },
   })
 

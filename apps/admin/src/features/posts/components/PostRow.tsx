@@ -8,6 +8,7 @@ import {
   ContentListStatusBadge,
 } from '~/features/_shared/components/content-list-item'
 import { useI18n } from '~/i18n'
+import { Badge } from '~/ui/primitives/badge'
 import { relativeTimeFromNow } from '~/utils/time'
 
 import { buildPostMenuItems } from './buildPostMenuItems'
@@ -62,9 +63,9 @@ export function PostRow(props: {
       menuItems={menuItems}
       meta={
         <>
-          <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+          <Badge size="sm" variant="soft">
             {post.category?.name ?? t('posts.meta.uncategorized')}
-          </span>
+          </Badge>
           {post.tags?.length ? (
             <span className="max-w-64 truncate">{post.tags.join('、')}</span>
           ) : null}

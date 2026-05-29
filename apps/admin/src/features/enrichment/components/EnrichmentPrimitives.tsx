@@ -1,8 +1,8 @@
 import { DatabaseZap, Loader2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { Badge } from '~/ui/primitives/badge'
 import { Scroll } from '~/ui/primitives/scroll'
-import { cn } from '~/utils/cn'
 
 export function DetailBlock(props: { children: ReactNode; title: string }) {
   return (
@@ -51,37 +51,10 @@ export function JsonBlock(props: { value: unknown }) {
 }
 
 export function ProviderBadge(props: { provider: string }) {
-  return (
-    <span className="inline-flex shrink-0 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300">
-      {props.provider}
-    </span>
-  )
+  return <Badge tone="info">{props.provider}</Badge>
 }
 
-export function SmallBadge(props: {
-  children: ReactNode
-  tone?: 'danger' | 'default' | 'success' | 'warning'
-}) {
-  const tone = props.tone ?? 'default'
-  const className = {
-    danger:
-      'border-red-200 bg-red-50 text-red-700 dark:border-red-950 dark:bg-red-950/40 dark:text-red-300',
-    default:
-      'border-neutral-200 bg-neutral-50 text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300',
-    success:
-      'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300',
-    warning:
-      'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300',
-  }[tone]
-
-  return (
-    <span
-      className={cn('inline-flex rounded border px-2 py-1 text-xs', className)}
-    >
-      {props.children}
-    </span>
-  )
-}
+export { Badge as SmallBadge } from '~/ui/primitives/badge'
 
 export function ListLoading() {
   return (

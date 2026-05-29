@@ -7,6 +7,7 @@ import type { ConfigFormGroup, ConfigFormSchema } from '~/api/options'
 import { sendTestEmail } from '~/api/health'
 import { getAllOptions, patchOption } from '~/api/options'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 
 import { settingsQueryKey } from '../constants'
@@ -36,7 +37,7 @@ export function SystemSettings(props: {
   const optionsQuery = useQuery({
     enabled: Boolean(props.schema),
     queryFn: getAllOptions,
-    queryKey: [...settingsQueryKey, 'options'],
+    queryKey: adminQueryKeys.settings.options(),
   })
 
   useEffect(() => {
@@ -149,7 +150,7 @@ export function SystemSettings(props: {
           >
             {section.key === 'ai' ? (
               <AIConfigEditor
-                modelCacheKey={[...settingsQueryKey, 'ai-models']}
+                modelCacheKey={adminQueryKeys.settings.aiModels()}
                 onChange={(value) => updateValue(section.key, value)}
                 value={normalizeAIConfig(configs[section.key])}
               />

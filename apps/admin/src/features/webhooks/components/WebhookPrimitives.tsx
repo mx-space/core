@@ -1,8 +1,9 @@
 import type { Globe } from 'lucide-react'
 
+import { Badge } from '~/ui/primitives/badge'
 import { Scroll } from '~/ui/primitives/scroll'
 
-import { formatJson, getEventColorClass } from '../utils/webhooks'
+import { formatJson, getEventTone } from '../utils/webhooks'
 
 export function StatusDot(props: { enabled: boolean }) {
   return (
@@ -16,12 +17,10 @@ export function StatusDot(props: { enabled: boolean }) {
 }
 
 export function EventBadge(props: { event: string }) {
-  const colorClass = getEventColorClass(props.event)
-
   return (
-    <span className={`rounded px-1.5 py-0.5 text-xs ${colorClass}`}>
+    <Badge size="sm" tone={getEventTone(props.event)} variant="soft">
       {props.event}
-    </span>
+    </Badge>
   )
 }
 

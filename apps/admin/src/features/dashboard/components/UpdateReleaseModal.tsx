@@ -4,13 +4,14 @@ import type { ReleaseModalState } from '../types/dashboard'
 
 import { getReleaseDetails } from '~/api/github-update'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present } from '~/ui/feedback/modal-imperative'
+import { Badge } from '~/ui/primitives/badge'
 import { Button } from '~/ui/primitives/button'
 import { MarkdownRender } from '~/ui/primitives/markdown-render'
 import { Scroll } from '~/ui/primitives/scroll'
 
-import { dashboardQueryKeys } from '../constants'
 import { formatDateTime } from '../utils/dashboard'
 
 interface UpdateReleaseModalProps {
@@ -21,11 +22,10 @@ function UpdateReleaseModal(props: UpdateReleaseModalProps) {
   const { t } = useI18n()
   const releaseQuery = useQuery({
     queryFn: () => getReleaseDetails(props.release.repo, props.release.version),
-    queryKey: [
-      ...dashboardQueryKeys.releaseDetail,
-      props.release.repo,
-      props.release.version,
-    ],
+    queryKey: adminQueryKeys.dashboard.releaseDetail({
+      repo: props.release.repo,
+      version: props.release.version,
+    }),
     retry: false,
   })
   const details = releaseQuery.data
@@ -48,9 +48,9 @@ function UpdateReleaseModal(props: UpdateReleaseModalProps) {
                   {details.name || details.tagName}
                 </h3>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-                  <span className="rounded border border-neutral-200 px-2 py-0.5 dark:border-neutral-800">
+                  <Badge size="sm" variant="outline">
                     {details.tagName}
-                  </span>
+                  </Badge>
                   <span>
                     {t('dashboard.release.publishedAt', {
                       date: formatDateTime(details.publishedAt || ''),

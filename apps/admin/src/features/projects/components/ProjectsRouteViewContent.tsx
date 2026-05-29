@@ -1,27 +1,18 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Folder, Plus } from 'lucide-react'
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { useCallback, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 
-import { getProjects } from '~/api/projects'
-import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { ContentListHeader } from '~/features/_shared/components/content-list-toolbar'
 import { useI18n } from '~/i18n'
 import type { ProjectModel } from '~/models/project'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
-import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
-import { cn } from '~/utils/cn'
 
-import { projectsPageSize, projectsQueryKey } from '../constants'
-import { readPage } from '../utils/projects'
+import { projectsPageSize } from '../constants'
+import { useProjectMutations } from '../hooks/use-project-mutations'
+import { useProjectsList } from '../hooks/use-projects-list'
 import { ProjectListItem } from './ProjectListItem'
 import {
   ProjectEmptyState,
@@ -32,41 +23,15 @@ import { ProjectsRouteContext } from './projects-route-context'
 
 export function ProjectsRouteViewContent() {
   const { t } = useI18n()
-  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
   const detailId = params.id ?? null
   const isCreating = detailId === 'new'
   const selectedId = isCreating ? null : detailId
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-  const [page, setPage] = useState(readPage(searchParams.get('page')))
-
-  const projectsQuery = useQuery({
-    placeholderData: (previous) => previous,
-    queryFn: () => getProjects({ page, size: projectsPageSize }),
-    queryKey: [...projectsQueryKey, 'list', page, projectsPageSize],
-  })
-
-  const projects = projectsQuery.data?.data ?? []
-  const pagination = projectsQuery.data?.pagination
-
-  useLayoutEffect(() => {
-    const nextPage = readPage(searchParams.get('page'))
-    setPage((value) => (value === nextPage ? value : nextPage))
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const nextParams = new URLSearchParams()
-    if (page > 1) nextParams.set('page', String(page))
-    if (nextParams.toString() !== searchParamsKey) {
-      setSearchParams(nextParams, { replace: true })
-    }
-  }, [page, searchParamsKey, setSearchParams])
-
-  const invalidateProjects = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: projectsQueryKey })
-  }, [queryClient])
+  const [searchParams] = useSearchParams()
+  const { page, pagination, projects, projectsQuery, setPage } =
+    useProjectsList()
+  const { invalidateProjects } = useProjectMutations()
 
   const buildListUrl = useCallback(() => {
     const qs = new URLSearchParams()
@@ -112,8 +77,7 @@ export function ProjectsRouteViewContent() {
 
   const onDeleted = useCallback(async () => {
     navigate(buildListUrl())
-    await invalidateProjects()
-  }, [buildListUrl, invalidateProjects, navigate])
+  }, [buildListUrl, navigate])
 
   const openProject = useCallback(
     (project: ProjectModel) => {
@@ -147,29 +111,21 @@ export function ProjectsRouteViewContent() {
         emptyDetail={<ProjectSelectPlaceholder />}
         list={
           <section className="flex h-full min-h-0 flex-col">
-            <div
-              className={cn(
-                'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
-                APP_SHELL_HEADER_HEIGHT_CLASS,
-              )}
-            >
-              <div className="flex min-w-0 items-center gap-2">
-                <MobileHeaderAffordance />
-                <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-neutral-950 dark:text-neutral-50">
-                  <Folder aria-hidden="true" className="size-4" />
-                  {t('projects.title')}
-                </h2>
-              </div>
-              {pagination ? (
-                <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                  {t('projects.countLabel', { count: pagination.total })}
-                </span>
-              ) : null}
-              <Button onClick={startCreate} type="button" variant="subtle">
-                <Plus aria-hidden="true" className="size-4" />
-                {t('projects.create')}
-              </Button>
-            </div>
+            <ContentListHeader
+              action={
+                <Button onClick={startCreate} type="button" variant="subtle">
+                  <Plus aria-hidden="true" className="size-4" />
+                  {t('projects.create')}
+                </Button>
+              }
+              count={
+                pagination
+                  ? t('projects.countLabel', { count: pagination.total })
+                  : null
+              }
+              icon={<Folder aria-hidden="true" className="size-4" />}
+              title={t('projects.title')}
+            />
 
             <Scroll className="flex-1">
               {projectsQuery.isLoading && projects.length === 0 ? (

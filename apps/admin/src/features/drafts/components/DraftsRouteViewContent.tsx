@@ -9,6 +9,7 @@ import { deleteDraft, getDrafts } from '~/api/drafts'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { DraftModel, DraftRefType } from '~/models/draft'
+import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { FocusScope } from '~/ui/focus-scope'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
@@ -61,7 +62,7 @@ export function DraftsRouteViewContent() {
         refType: filterType === 'all' ? undefined : filterType,
         size: 50,
       }),
-    queryKey: [...draftsQueryKey, 'list', filterType],
+    queryKey: adminQueryKeys.drafts.list(filterType),
   })
 
   const drafts = draftsQuery.data?.data ?? []

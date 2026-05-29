@@ -1,7 +1,10 @@
 import type { SearchIndexRefType } from '~/api/search-index'
 import type { TranslationKey } from '~/i18n/types'
+import { adminQueryKeys } from '~/query/keys'
+import type { BadgeTone } from '~/ui/primitives/badge'
 
-export const searchIndexQueryKey = ['search-index'] as const
+export const searchIndexQueryKey = adminQueryKeys.searchIndex.root
+export const searchIndexPageSizeOptions = [20, 50, 100] as const
 
 export const refTypeOptionKeys: Array<{
   labelKey: TranslationKey
@@ -19,8 +22,8 @@ export const refTypeLabelKeys: Record<string, TranslationKey> = {
   post: 'searchIndex.refTypeLabel.post',
 }
 
-export const refTypeClassNames: Record<string, string> = {
-  note: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300',
-  page: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300',
-  post: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300',
+export const refTypeTones: Record<string, BadgeTone> = {
+  note: 'success',
+  page: 'warning',
+  post: 'info',
 }

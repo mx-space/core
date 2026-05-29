@@ -1,15 +1,16 @@
 import { ListPlus, Shield, User } from 'lucide-react'
 import type { TranslationKey } from '~/i18n/types'
 import type { MetaFieldType, MetaPresetScope } from '~/models/meta-preset'
+import { adminQueryKeys } from '~/query/keys'
 import type {
   AIProviderType,
   OauthProviderType,
   SettingsGroupSummary,
 } from './types/settings'
 
-export const settingsQueryKey = ['settings'] as const
-export const metaPresetsQueryKey = ['meta-presets'] as const
-export const accountQueryKey = ['settings', 'account'] as const
+export const settingsQueryKey = adminQueryKeys.settings.root
+export const metaPresetsQueryKey = adminQueryKeys.metaPresets.root
+export const accountQueryKey = adminQueryKeys.settings.accountRoot
 
 export const aiProviderTypeOptions: Array<{
   label: string

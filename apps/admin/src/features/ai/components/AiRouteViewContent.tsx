@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, Trash2 } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
 import type { AITask, AITaskType } from '~/api/ai'
@@ -13,7 +13,9 @@ import {
   getAiTasks,
   retryAiTask,
 } from '~/api/ai'
+import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import type { HeaderAction } from '~/ui/layout/page-layout'
 import { AppPage, PageHeader } from '~/ui/layout/page-layout'
@@ -32,17 +34,40 @@ import { TaskDetailEmpty } from './TaskStates'
 
 const TASKS_BASE_PATH = '/ai/tasks'
 
+interface AiTasksUrlState {
+  page: number
+  status: AITaskStatus | ''
+  type: AITaskType | ''
+}
+
+function writeAiTasksUrlState(state: AiTasksUrlState) {
+  const params = new URLSearchParams()
+  if (state.page > 1) params.set('page', String(state.page))
+  if (state.status) params.set('status', state.status)
+  if (state.type) params.set('type', state.type)
+  return params
+}
+
 export function AiRouteViewContent() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
   const detailId = params.id ?? null
-  const [searchParams, setSearchParams] = useSearchParams()
+  const urlStateOptions = useMemo(
+    () => ({
+      read: (searchParams: URLSearchParams): AiTasksUrlState => ({
+        page: readPositivePage(searchParams.get('page')),
+        status: readTaskStatusFilter(searchParams.get('status')),
+        type: readTaskTypeFilter(searchParams.get('type')),
+      }),
+      write: writeAiTasksUrlState,
+    }),
+    [],
+  )
+  const [listState, setListState] = useUrlListState(urlStateOptions)
 
-  const statusFilter = readTaskStatusFilter(searchParams.get('status'))
-  const typeFilter = readTaskTypeFilter(searchParams.get('type'))
-  const page = readPositivePage(searchParams.get('page'))
+  const { page, status: statusFilter, type: typeFilter } = listState
 
   const queryParams = {
     page,
@@ -54,7 +79,7 @@ export function AiRouteViewContent() {
   const tasksQuery = useQuery({
     placeholderData: (previous) => previous,
     queryFn: () => getAiTasks(queryParams),
-    queryKey: [...aiTasksQueryKey, queryParams],
+    queryKey: adminQueryKeys.ai.tasks(queryParams),
     refetchInterval: 5000,
   })
 
@@ -67,13 +92,12 @@ export function AiRouteViewContent() {
   }, [queryClient])
 
   const buildListSearch = useCallback(
-    (mutate?: (sp: URLSearchParams) => void) => {
-      const next = new URLSearchParams(searchParams)
-      mutate?.(next)
+    (state: AiTasksUrlState = listState) => {
+      const next = writeAiTasksUrlState(state)
       const qs = next.toString()
       return qs ? `?${qs}` : ''
     },
-    [searchParams],
+    [listState],
   )
 
   const closeDetail = useCallback(() => {
@@ -87,43 +111,25 @@ export function AiRouteViewContent() {
     [buildListSearch, navigate],
   )
 
-  const updateListParam = useCallback(
-    (key: string, value: string | null) => {
-      const next = new URLSearchParams(searchParams)
-      if (value) next.set(key, value)
-      else next.delete(key)
-      setSearchParams(next, { replace: true })
-    },
-    [searchParams, setSearchParams],
-  )
-
   const setPage = useCallback(
     (nextPage: number) => {
-      updateListParam('page', nextPage > 1 ? String(nextPage) : null)
+      setListState({ page: nextPage })
     },
-    [updateListParam],
+    [setListState],
   )
 
   const handleStatusChange = useCallback(
     (next: AITaskStatus | '') => {
-      const sp = new URLSearchParams(searchParams)
-      if (next) sp.set('status', next)
-      else sp.delete('status')
-      sp.delete('page')
-      setSearchParams(sp, { replace: true })
+      setListState((current) => ({ ...current, page: 1, status: next }))
     },
-    [searchParams, setSearchParams],
+    [setListState],
   )
 
   const handleTypeChange = useCallback(
     (next: AITaskType | '') => {
-      const sp = new URLSearchParams(searchParams)
-      if (next) sp.set('type', next)
-      else sp.delete('type')
-      sp.delete('page')
-      setSearchParams(sp, { replace: true })
+      setListState((current) => ({ ...current, page: 1, type: next }))
     },
-    [searchParams, setSearchParams],
+    [setListState],
   )
 
   const retryMutation = useMutation({

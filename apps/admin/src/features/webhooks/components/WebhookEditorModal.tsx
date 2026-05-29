@@ -10,6 +10,7 @@ import {
   updateWebhook,
 } from '~/api/webhooks'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
@@ -18,7 +19,7 @@ import { Scroll } from '~/ui/primitives/scroll'
 import { Switch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 
-import { scopeOptions, webhooksQueryKey } from '../constants'
+import { scopeOptions } from '../constants'
 
 interface WebhookEditorModalProps {
   webhook: WebhookModel | null
@@ -42,7 +43,7 @@ function WebhookEditorModal(props: WebhookEditorModalProps) {
 
   const eventsQuery = useQuery({
     queryFn: getWebhookEvents,
-    queryKey: [...webhooksQueryKey, 'events'],
+    queryKey: adminQueryKeys.webhooks.events(),
   })
   const availableEvents = eventsQuery.data ?? []
   const allEventsChecked = events.includes('all')

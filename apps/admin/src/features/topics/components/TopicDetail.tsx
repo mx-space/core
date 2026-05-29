@@ -8,6 +8,7 @@ import { getNotesByTopic, getTopic } from '~/api/topics'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { TopicModel } from '~/models/topic'
+import { adminQueryKeys } from '~/query/keys'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -34,7 +35,7 @@ export function TopicDetail(props: {
 
   const topicQuery = useQuery({
     queryFn: () => getTopic(props.topicId),
-    queryKey: ['topics', 'detail', props.topicId],
+    queryKey: adminQueryKeys.topics.detail(props.topicId),
   })
   const notesQuery = useQuery({
     placeholderData: (previous) => previous,
@@ -43,7 +44,11 @@ export function TopicDetail(props: {
         page: notesPage,
         size: topicNotesPageSize,
       }),
-    queryKey: ['topics', 'notes', props.topicId, notesPage],
+    queryKey: adminQueryKeys.topics.notes({
+      page: notesPage,
+      size: topicNotesPageSize,
+      topicId: props.topicId,
+    }),
   })
 
   useEffect(() => {
@@ -61,9 +66,11 @@ export function TopicDetail(props: {
     onSuccess: async () => {
       toast.success(t('topics.detail.removeRefSuccess'))
       await queryClient.invalidateQueries({
-        queryKey: ['topics', 'notes', props.topicId],
+        queryKey: adminQueryKeys.topics.notesRoot(props.topicId),
       })
-      await queryClient.invalidateQueries({ queryKey: ['notes'] })
+      await queryClient.invalidateQueries({
+        queryKey: adminQueryKeys.notes.root,
+      })
     },
   })
 
@@ -72,9 +79,11 @@ export function TopicDetail(props: {
     if (ok) {
       setNotesPage(1)
       await queryClient.invalidateQueries({
-        queryKey: ['topics', 'notes', props.topicId],
+        queryKey: adminQueryKeys.topics.notesRoot(props.topicId),
       })
-      await queryClient.invalidateQueries({ queryKey: ['notes'] })
+      await queryClient.invalidateQueries({
+        queryKey: adminQueryKeys.notes.root,
+      })
     }
   }
 

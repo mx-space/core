@@ -5,6 +5,7 @@ import type { OauthOptions, OauthProviderType } from '../../types/settings'
 
 import { getOption, patchOption } from '~/api/options'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 
 import { accountQueryKey, oauthProviders } from '../../constants'
 import { flattenOauthOptions } from '../../utils/oauth'
@@ -18,7 +19,7 @@ export function OauthSection() {
   const queryClient = useQueryClient()
   const oauthQuery = useQuery({
     queryFn: () => getOption<OauthOptions>('oauth'),
-    queryKey: [...accountQueryKey, 'oauth'],
+    queryKey: adminQueryKeys.settings.oauth(),
   })
 
   const saveMutation = useMutation({

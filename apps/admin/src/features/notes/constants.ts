@@ -1,9 +1,10 @@
 import type { TranslationKey } from '~/i18n/types'
+import { adminQueryKeys } from '~/query/keys'
 import type { NoteFilter, NoteSortKey } from './types/notes'
 
 export const filteredNotesFetchSize = 100
 export const notesPageSize = 20
-export const notesQueryKey = ['notes'] as const
+export const notesQueryKey = adminQueryKeys.notes.root
 
 export const noteFilterOptionDefinitions: Array<{
   labelKey: TranslationKey

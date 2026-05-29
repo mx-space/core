@@ -11,6 +11,7 @@ import {
 } from '~/api/subscribe'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
@@ -19,7 +20,7 @@ import { Switch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
-import { pageSize } from '../constants'
+import { pageSize, subscribeQueryKey } from '../constants'
 import { StatCard } from './StatCard'
 import { SubscribeEmptyState } from './SubscribeEmptyState'
 import { SubscriberRow } from './SubscriberRow'
@@ -36,12 +37,12 @@ export function SubscribeRouteViewContent() {
 
   const statusQuery = useQuery({
     queryFn: getSubscribeStatus,
-    queryKey: ['subscribe', 'status'],
+    queryKey: adminQueryKeys.subscribe.status(),
   })
 
   const listQuery = useQuery({
     queryFn: () => getSubscribers({ page, size: pageSize }),
-    queryKey: ['subscribe', 'list', page, pageSize],
+    queryKey: adminQueryKeys.subscribe.list({ page, size: pageSize }),
   })
 
   const subscribers = listQuery.data?.data ?? []
@@ -63,7 +64,7 @@ export function SubscribeRouteViewContent() {
   const selectedCount = selectedIds.size
 
   const invalidateSubscribe = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['subscribe'] })
+    await queryClient.invalidateQueries({ queryKey: subscribeQueryKey })
   }
 
   const toggleMutation = useMutation({

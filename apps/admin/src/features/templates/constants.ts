@@ -1,9 +1,10 @@
 import { Mail, MailOpen, Megaphone } from 'lucide-react'
 import type { TranslationKey } from '~/i18n/types'
+import { adminQueryKeys } from '~/query/keys'
 import type { LucideIcon } from 'lucide-react'
 import type { TemplateType, TemplateViewMode } from './types/templates'
 
-export const templateQueryKey = ['templates', 'email'] as const
+export const templateQueryKey = adminQueryKeys.templates.root
 
 export const VIEW_MODE_STORAGE_KEY = 'templates.viewMode'
 

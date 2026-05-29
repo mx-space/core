@@ -3,6 +3,7 @@ import { RefreshCw } from 'lucide-react'
 
 import { getDependencyGraph, getNpmPackageLatest } from '~/api/dependencies'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
@@ -18,12 +19,14 @@ export function UpdateDependenciesModal(props: {
   const graphQuery = useQuery({
     enabled: props.open,
     queryFn: getDependencyGraph,
-    queryKey: ['dependencies', 'graph'],
+    queryKey: adminQueryKeys.dependencies.graph(),
   })
   const dependencies = Object.entries(graphQuery.data?.dependencies ?? {})
   const refreshDependencies = async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['dependencies'] }),
+      queryClient.invalidateQueries({
+        queryKey: adminQueryKeys.dependencies.root,
+      }),
       graphQuery.refetch(),
     ])
   }
@@ -118,7 +121,7 @@ function DependencyRow(props: {
   const latestQuery = useQuery({
     enabled: props.open,
     queryFn: () => getNpmPackageLatest(props.name),
-    queryKey: ['npm-latest', props.name],
+    queryKey: adminQueryKeys.dependencies.npmLatest(props.name),
     staleTime: 5 * 60 * 1000,
   })
   const latestVersion = latestQuery.data?.version

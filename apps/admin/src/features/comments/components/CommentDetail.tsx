@@ -19,6 +19,7 @@ import { IpInfoPopover } from '~/features/_shared/components/ip-info-popover'
 import { useI18n } from '~/i18n'
 import type { CommentModel } from '~/models/comment'
 import { CommentState } from '~/models/comment'
+import { adminQueryKeys } from '~/query/keys'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { MarkdownRender } from '~/ui/primitives/markdown-render'
@@ -54,7 +55,7 @@ export function CommentDetail(props: {
   const replyInputRef = useRef<HTMLTextAreaElement | null>(null)
   const ownerQuery = useQuery({
     queryFn: getOwner,
-    queryKey: ['comments', 'owner'],
+    queryKey: adminQueryKeys.comments.owner(),
     staleTime: 5 * 60 * 1000,
   })
   const commentText = props.comment.isDeleted

@@ -10,8 +10,9 @@ import type { TranslationKey } from '~/i18n/types'
 import type { LucideIcon } from 'lucide-react'
 
 import { AITaskStatus, AITaskType } from '~/api/ai'
+import { adminQueryKeys } from '~/query/keys'
 
-export const aiTasksQueryKey = ['ai', 'tasks'] as const
+export const aiTasksQueryKey = adminQueryKeys.ai.tasksRoot
 
 export const pageSize = 50
 export const groupedPageSize = 20
@@ -42,21 +43,6 @@ export const statusIcon: Record<AITaskStatus, LucideIcon> = {
   [AITaskStatus.PartialFailed]: AlertTriangle,
   [AITaskStatus.Failed]: AlertCircle,
   [AITaskStatus.Cancelled]: XCircle,
-}
-
-export const statusClassName: Record<AITaskStatus, string> = {
-  [AITaskStatus.Pending]:
-    'border-neutral-200 bg-neutral-50 text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300',
-  [AITaskStatus.Running]:
-    'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300',
-  [AITaskStatus.Completed]:
-    'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300',
-  [AITaskStatus.PartialFailed]:
-    'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300',
-  [AITaskStatus.Failed]:
-    'border-red-200 bg-red-50 text-red-700 dark:border-red-950 dark:bg-red-950/40 dark:text-red-300',
-  [AITaskStatus.Cancelled]:
-    'border-neutral-200 bg-neutral-50 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400',
 }
 
 export const statusOptionKeys: Array<{

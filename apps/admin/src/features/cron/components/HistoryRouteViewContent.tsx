@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { RefreshCw, Trash2 } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 
 import { CronTaskStatus, CronTaskType, getCronTasks } from '~/api/cron-tasks'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { FocusScope } from '~/ui/focus-scope'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
@@ -17,7 +19,6 @@ import { cn } from '~/utils/cn'
 import {
   statusOptionKeys,
   taskListPageSize,
-  taskQueryKey,
   taskRefetchInterval,
   typeOptionKeys,
 } from '../constants'
@@ -44,44 +45,63 @@ export function HistoryRouteViewContent() {
   const detailId = params.id ?? null
   const { cancel, clearCompleted, refreshAll, remove, retry } =
     useCronMutations()
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  const statusFilter = parseStatus(searchParams.get('status'))
-  const typeFilter = parseType(searchParams.get('type'))
+  const urlStateOptions = useMemo(
+    () => ({
+      read: (searchParams: URLSearchParams) => ({
+        statusFilter: parseStatus(searchParams.get('status')),
+        typeFilter: parseType(searchParams.get('type')),
+      }),
+      write: (state: {
+        statusFilter?: CronTaskStatus
+        typeFilter?: CronTaskType
+      }) => buildHistorySearchParams(state.statusFilter, state.typeFilter),
+    }),
+    [],
+  )
+  const [filterState, setFilterState] = useUrlListState(urlStateOptions)
+  const statusFilter = filterState.statusFilter
+  const typeFilter = filterState.typeFilter
+  const listQueryString = urlStateOptions.write(filterState).toString()
 
   const buildListSearch = useCallback(
-    (mutate?: (sp: URLSearchParams) => void) => {
-      const next = new URLSearchParams(searchParams)
-      mutate?.(next)
-      const qs = next.toString()
+    (nextState = filterState) => {
+      const qs = urlStateOptions.write(nextState).toString()
       return qs ? `?${qs}` : ''
     },
-    [searchParams],
+    [filterState, urlStateOptions],
   )
 
   const updateFilter = useCallback(
     (key: 'status' | 'type', value: string | undefined) => {
-      const next = new URLSearchParams(searchParams)
-      if (value) next.set(key, value)
-      else next.delete(key)
-      setSearchParams(next, { replace: true })
+      const nextState = {
+        ...filterState,
+        [key === 'status' ? 'statusFilter' : 'typeFilter']:
+          key === 'status'
+            ? parseStatus(value ?? null)
+            : parseType(value ?? null),
+      }
+      setFilterState(nextState)
       // Filter change closes detail and resets to list root.
-      navigate(`${HISTORY_BASE_PATH}${next.toString() ? `?${next}` : ''}`, {
+      navigate(`${HISTORY_BASE_PATH}${buildListSearch(nextState)}`, {
         replace: true,
       })
     },
-    [navigate, searchParams, setSearchParams],
+    [buildListSearch, filterState, navigate, setFilterState],
   )
 
   const closeDetail = useCallback(() => {
-    navigate(`${HISTORY_BASE_PATH}${buildListSearch()}`)
-  }, [buildListSearch, navigate])
+    navigate(
+      `${HISTORY_BASE_PATH}${listQueryString ? `?${listQueryString}` : ''}`,
+    )
+  }, [listQueryString, navigate])
 
   const openTask = useCallback(
     (id: string) => {
-      navigate(`${HISTORY_BASE_PATH}/${id}${buildListSearch()}`)
+      navigate(
+        `${HISTORY_BASE_PATH}/${id}${listQueryString ? `?${listQueryString}` : ''}`,
+      )
     },
-    [buildListSearch, navigate],
+    [listQueryString, navigate],
   )
 
   const statusOptions = statusOptionKeys.map((opt) => ({
@@ -101,7 +121,10 @@ export function HistoryRouteViewContent() {
         status: statusFilter,
         type: typeFilter,
       }),
-    queryKey: [...taskQueryKey, 'history', { statusFilter, typeFilter }],
+    queryKey: adminQueryKeys.cron.history({
+      status: statusFilter,
+      type: typeFilter,
+    }),
     refetchInterval: taskRefetchInterval,
   })
 
@@ -239,4 +262,14 @@ function parseStatus(raw: string | null): CronTaskStatus | undefined {
 function parseType(raw: string | null): CronTaskType | undefined {
   if (raw && TYPE_VALUES.has(raw)) return raw as CronTaskType
   return undefined
+}
+
+function buildHistorySearchParams(
+  statusFilter?: CronTaskStatus,
+  typeFilter?: CronTaskType,
+) {
+  const nextParams = new URLSearchParams()
+  if (statusFilter) nextParams.set('status', statusFilter)
+  if (typeFilter) nextParams.set('type', typeFilter)
+  return nextParams
 }

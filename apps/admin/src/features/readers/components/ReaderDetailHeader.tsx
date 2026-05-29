@@ -4,6 +4,7 @@ import type { ReaderModel } from '~/api/readers'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
+import { Badge } from '~/ui/primitives/badge'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
@@ -62,10 +63,10 @@ export function ReaderDetailHeader(props: {
             </span>
           ) : null}
           {banned ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-600 dark:text-red-400">
+            <Badge pill size="sm" tone="danger" variant="soft">
               <ShieldAlert aria-hidden="true" className="size-3" />
               {t('readers.row.banned')}
-            </span>
+            </Badge>
           ) : null}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">

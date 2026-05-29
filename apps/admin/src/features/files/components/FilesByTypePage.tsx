@@ -1,19 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, RefreshCw, Upload } from 'lucide-react'
 import type { ChangeEvent } from 'react'
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
-import type { FileItem, FileType } from '~/api/files'
-import { deleteFileByTypeAndName, getFilesByType } from '~/api/files'
+import type { FileItem } from '~/api/files'
+import { deleteFileByTypeAndName } from '~/api/files'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
@@ -28,6 +21,7 @@ import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
 import { filesQueryKey, fileTypeOptions } from '../constants'
+import { useFilesByTypeList } from '../hooks/useFilesByTypeList'
 import { useFileSearch } from '../hooks/useFileSearch'
 import { useFileUploader } from '../hooks/useFileUploader'
 import type { FileRowItem } from '../utils/adapters'
@@ -46,28 +40,13 @@ import { UploadProgressDock } from './UploadProgressDock'
 
 const FOCUS_SCOPE_ID = 'files-list'
 
-function isFileType(value: string | null): value is FileType {
-  return (
-    value === 'avatar' ||
-    value === 'file' ||
-    value === 'icon' ||
-    value === 'image'
-  )
-}
-
 export function FilesByTypePage() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
   const detailName = params.id ?? null
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-
-  const initialType = searchParams.get('type')
-  const [fileType, setFileType] = useState<FileType>(
-    isFileType(initialType) ? initialType : 'icon',
-  )
+  const { allFiles, fileType, filesQuery, setFileType } = useFilesByTypeList()
   const [searchQuery, setSearchQuery] = useState('')
   const [preview, setPreview] = useState<null | { name: string; url: string }>(
     null,
@@ -84,12 +63,6 @@ export function FilesByTypePage() {
     (option) => option.value === fileType,
   )!
 
-  const filesQuery = useQuery({
-    queryFn: () => getFilesByType(fileType),
-    queryKey: [...filesQueryKey, 'by-type', fileType],
-  })
-
-  const allFiles = filesQuery.data ?? []
   const adapted = useMemo(
     () => allFiles.map((item) => adaptFileItem(item)),
     [allFiles],
@@ -100,21 +73,6 @@ export function FilesByTypePage() {
   useEffect(() => {
     if (fileSearch.query !== searchQuery) fileSearch.setQuery(searchQuery)
   }, [searchQuery])
-
-  useLayoutEffect(() => {
-    const nextType = searchParams.get('type')
-    if (isFileType(nextType) && nextType !== fileType) {
-      setFileType(nextType)
-    }
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const next = new URLSearchParams(searchParams)
-    next.set('type', fileType)
-    if (next.toString() !== searchParamsKey) {
-      setSearchParams(next, { replace: true })
-    }
-  }, [fileType])
 
   useEffect(() => {
     setNaturalSize(null)

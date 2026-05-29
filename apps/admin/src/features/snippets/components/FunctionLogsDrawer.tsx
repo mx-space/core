@@ -7,6 +7,7 @@ import type { StatusFilter } from '../types/snippets'
 
 import { getInvocationLogDetail, getInvocationLogs } from '~/api/serverless'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -51,7 +52,12 @@ export function FunctionLogsDrawer(props: {
         size: logPageSize,
         status: statusFilter === 'all' ? undefined : statusFilter,
       }),
-    queryKey: ['serverless', 'logs', props.snippet?.id, page, statusFilter],
+    queryKey: adminQueryKeys.serverless.logs({
+      page,
+      size: logPageSize,
+      snippetId: props.snippet?.id ?? '',
+      status: statusFilter,
+    }),
   })
   const logs = logsQuery.data?.data ?? []
   const pagination = logsQuery.data?.pagination
@@ -196,7 +202,7 @@ function LogDetail(props: { id: string }) {
   const { t } = useI18n()
   const query = useQuery({
     queryFn: () => getInvocationLogDetail(props.id),
-    queryKey: ['serverless', 'log-detail', props.id],
+    queryKey: adminQueryKeys.serverless.logDetail(props.id),
     staleTime: 5 * 60 * 1000,
   })
 

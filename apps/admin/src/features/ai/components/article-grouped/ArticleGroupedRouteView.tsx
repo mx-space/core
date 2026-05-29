@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router'
 
 import type { ArticleInfo } from '~/api/ai'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import type { HeaderAction } from '~/ui/layout/page-layout'
 import { AppPage, PageHeader } from '~/ui/layout/page-layout'
@@ -68,7 +69,10 @@ export function ArticleGroupedRouteView<TItem>(
       const current = pagination.currentPage ?? pagination.page ?? 1
       return current + 1
     },
-    queryKey: ['ai', config.groupedQueryKey, 'grouped', debouncedSearch],
+    queryKey: adminQueryKeys.ai.grouped({
+      group: config.groupedQueryKey,
+      search: debouncedSearch,
+    }),
   })
 
   const groups = useMemo(
@@ -79,9 +83,11 @@ export function ArticleGroupedRouteView<TItem>(
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({
-      queryKey: ['ai', config.groupedQueryKey],
+      queryKey: adminQueryKeys.ai.groupedRoot(config.groupedQueryKey),
     })
-    await queryClient.invalidateQueries({ queryKey: ['ai', 'tasks'] })
+    await queryClient.invalidateQueries({
+      queryKey: adminQueryKeys.ai.tasksRoot,
+    })
   }
 
   const openArticle = (article: ArticleInfo) => {

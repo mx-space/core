@@ -1,7 +1,8 @@
 import { translate } from '~/i18n/translate'
 import { CommentState } from '~/models/comment'
+import { adminQueryKeys } from '~/query/keys'
 
-export const commentsQueryKey = ['comments']
+export const commentsQueryKey = adminQueryKeys.comments.root
 export const commentsPageSize = 20
 
 export const commentQuickEmojis = [

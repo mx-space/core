@@ -9,6 +9,7 @@ import type { NoteModel } from '~/models/note'
 import { getNotes, patchNote } from '~/api/notes'
 import { useI18n } from '~/i18n'
 import { ModalHeader } from '~/ui/feedback/modal'
+import { adminQueryKeys } from '~/query/keys'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -32,7 +33,7 @@ function AddNotesToTopicModal(props: AddNotesToTopicModalProps) {
     PaginateResult<NoteModel>,
     Error,
     InfiniteData<PaginateResult<NoteModel>, number>,
-    readonly ['notes', 'topic-picker', string],
+    ReturnType<typeof adminQueryKeys.notes.topicPicker>,
     number
   >({
     getNextPageParam: (lastPage) =>
@@ -45,7 +46,7 @@ function AddNotesToTopicModal(props: AddNotesToTopicModalProps) {
         page: pageParam,
         size: topicPickerPageSize,
       }),
-    queryKey: ['notes', 'topic-picker', props.topicId] as const,
+    queryKey: adminQueryKeys.notes.topicPicker(props.topicId),
   })
 
   const notes = useMemo(

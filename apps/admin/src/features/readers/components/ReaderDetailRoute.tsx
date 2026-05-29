@@ -4,13 +4,13 @@ import { useParams } from 'react-router'
 import { findInListCache } from '~/api/list-cache'
 import type { ReaderModel } from '~/api/readers'
 import { getReader } from '~/api/readers'
+import { adminQueryKeys } from '~/query/keys'
 
-import { readersQueryKey } from '../constants'
 import { ReaderDetailEmpty } from './ReaderDetailEmpty'
 import { useReadersRouteContext } from './readers-route-context'
 import { ReadersDetailPane } from './ReadersDetailPane'
 
-const LIST_PREFIX = [...readersQueryKey, 'list'] as const
+const LIST_PREFIX = adminQueryKeys.readers.listRoot
 
 function extractReaders(value: unknown): ReaderModel[] | undefined {
   if (!value || typeof value !== 'object') return undefined
@@ -33,7 +33,9 @@ export function ReaderDetailRoute() {
     enabled: Boolean(id),
     initialData: initialReader,
     queryFn: () => getReader(id as string),
-    queryKey: [...readersQueryKey, 'detail', id],
+    queryKey: id
+      ? adminQueryKeys.readers.detail(id)
+      : adminQueryKeys.readers.root,
     staleTime: initialReader ? 30_000 : 0,
   })
 

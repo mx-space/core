@@ -94,16 +94,21 @@ export function TaskTimeline(props: { task: AITask }) {
       <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
         {t('ai.tasks.timeline.title')}
       </h3>
-      <ol className="space-y-2">
+      <ol>
         {stages.map((stage, index) => (
-          <li className="flex items-start gap-3 text-sm" key={stage.key}>
-            <div className="relative mt-1 flex flex-col items-center">
+          <li className="flex items-stretch gap-3 text-sm" key={stage.key}>
+            <div className="flex flex-col items-center pt-1">
               <StageMarker state={stage.state} />
               {index < stages.length - 1 ? (
-                <span className="absolute top-3 h-full w-px bg-neutral-200 dark:bg-neutral-800" />
+                <span className="mt-1 w-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
               ) : null}
             </div>
-            <div className="min-w-0 flex-1 pb-2">
+            <div
+              className={cn(
+                'min-w-0 flex-1',
+                index < stages.length - 1 && 'pb-3',
+              )}
+            >
               <div className="flex items-baseline justify-between gap-2">
                 <span
                   className={cn(

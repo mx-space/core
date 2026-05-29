@@ -6,6 +6,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { getFormSchema } from '~/api/options'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { FocusScope, useScopeArrowNav } from '~/ui/focus-scope'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
@@ -35,7 +36,7 @@ export function SettingsRouteViewContent() {
 
   const schemaQuery = useQuery({
     queryFn: getFormSchema,
-    queryKey: [...settingsQueryKey, 'schema'],
+    queryKey: adminQueryKeys.settings.schema(),
   })
 
   const groups = useMemo<SettingsGroupSummary[]>(() => {

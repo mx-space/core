@@ -3,9 +3,9 @@ import { BookOpen, Calendar } from 'lucide-react'
 
 import { getReadingRank } from '~/api/activity'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Panel } from '~/ui/primitives/panel'
 
-import { analyzeQueryKey } from '../../constants'
 import { formatDateTime } from '../../utils/analyze'
 import { AnalyzeSkeleton, EmptyBlock, ErrorBlock } from '../AnalyzePrimitives'
 import { ReadingRankList } from '../ReadingRankList'
@@ -22,7 +22,11 @@ export function AnalyzeRankPanel(props: {
         limit: 10,
         start: props.window.start,
       }),
-    queryKey: [...analyzeQueryKey, 'reading-rank', props.window],
+    queryKey: adminQueryKeys.analyze.readingRank({
+      end: props.window.end,
+      limit: 10,
+      start: props.window.start,
+    }),
   })
 
   return (

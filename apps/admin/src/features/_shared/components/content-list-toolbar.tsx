@@ -1,5 +1,12 @@
 import { Popover } from '@base-ui/react/popover'
-import { ArrowDown, ArrowUp, ArrowUpDown, Search, X } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  RefreshCw,
+  Search,
+  X,
+} from 'lucide-react'
 import type { FormEventHandler, ReactNode } from 'react'
 import { useEffect } from 'react'
 
@@ -151,6 +158,27 @@ export function ContentListToolbar(props: ContentListToolbarProps) {
         />
       ) : null}
     </div>
+  )
+}
+
+export function ContentListRefreshButton(props: {
+  isFetching: boolean
+  label: string
+  onRefresh: () => void
+}) {
+  return (
+    <button
+      aria-label={props.label}
+      className="outline-hidden inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-[var(--color-primary-shallow)] disabled:pointer-events-none disabled:opacity-50 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
+      disabled={props.isFetching}
+      onClick={props.onRefresh}
+      type="button"
+    >
+      <RefreshCw
+        aria-hidden="true"
+        className={cn('size-3.5', props.isFetching && 'animate-spin')}
+      />
+    </button>
   )
 }
 

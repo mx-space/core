@@ -4,13 +4,13 @@ import { useParams } from 'react-router'
 import { findInListCache } from '~/api/list-cache'
 import { getGroupSnippets, getSnippetById } from '~/api/snippets'
 import type { SnippetModel } from '~/models/snippet'
+import { adminQueryKeys } from '~/query/keys'
 
-import { snippetsQueryKey } from '../constants'
 import { SnippetEditor } from './SnippetEditor'
 import { useSnippetsRouteContext } from './snippets-route-context'
 import { SnippetDetailEmpty, SnippetDetailLoading } from './SnippetStates'
 
-const GROUPS_KEY = [...snippetsQueryKey, 'groups'] as const
+const GROUPS_KEY = adminQueryKeys.snippets.groups()
 
 // Each cached group fetch (one per reference) stores SnippetModel[].
 function extractFromGroupCache(value: unknown): SnippetModel[] | undefined {
@@ -31,7 +31,7 @@ export function SnippetDetailRoute() {
     !isCreate && id
       ? findInListCache<SnippetModel>(
           queryClient,
-          [...snippetsQueryKey, 'group'],
+          adminQueryKeys.snippets.groupRoot,
           id,
           { extractItems: extractFromGroupCache },
         )
@@ -41,7 +41,7 @@ export function SnippetDetailRoute() {
     enabled: Boolean(!isCreate && id),
     initialData: cachedFromGroup,
     queryFn: () => getSnippetById(id!),
-    queryKey: [...snippetsQueryKey, 'detail', id],
+    queryKey: adminQueryKeys.snippets.detail(id ?? ''),
     staleTime: cachedFromGroup ? 30_000 : 0,
   })
 

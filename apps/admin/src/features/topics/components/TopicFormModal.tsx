@@ -9,6 +9,7 @@ import type { TopicFormMode } from '../types/topics'
 import { uploadFile } from '~/api/files'
 import { createTopic, getTopic, updateTopic } from '~/api/topics'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
@@ -29,7 +30,9 @@ function TopicFormModal(props: TopicFormModalProps) {
   const topicQuery = useQuery({
     enabled: isEdit,
     queryFn: () => getTopic(editId ?? ''),
-    queryKey: ['topics', 'detail', editId ?? 'new'],
+    queryKey: editId
+      ? adminQueryKeys.topics.detail(editId)
+      : adminQueryKeys.topics.root,
   })
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')

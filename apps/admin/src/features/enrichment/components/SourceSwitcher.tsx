@@ -125,7 +125,7 @@ export function ProviderStatusBar(props: {
       {props.providers.slice(0, 4).map((provider) => (
         <SmallBadge
           key={provider.name}
-          tone={provider.ready ? 'success' : 'default'}
+          tone={provider.ready ? 'success' : 'neutral'}
         >
           {provider.displayName}
         </SmallBadge>

@@ -4,14 +4,15 @@ import { useParams } from 'react-router'
 import { getCategories, getCategory, getTags } from '~/api/categories'
 import { findInListCache } from '~/api/list-cache'
 import type { CategoryModel, TagModel } from '~/models/category'
+import { adminQueryKeys } from '~/query/keys'
 
 import { useCategoriesRouteContext } from './categories-route-context'
 import { CategoryDetail } from './CategoryDetail'
 import { DetailEmpty } from './DetailEmpty'
 import { TagDetail } from './TagDetail'
 
-const CATEGORY_LIST_KEY = ['categories', 'list'] as const
-const TAGS_LIST_KEY = ['categories', 'tags'] as const
+const CATEGORY_LIST_KEY = adminQueryKeys.categories.list()
+const TAGS_LIST_KEY = adminQueryKeys.categories.tags()
 
 interface ParsedTarget {
   kind: 'category' | 'tag'
@@ -48,7 +49,9 @@ export function CategoryDetailRoute() {
     enabled: parsed?.kind === 'category',
     initialData: initialCategory,
     queryFn: () => getCategory(parsed!.value),
-    queryKey: ['categories', 'detail', parsed?.value],
+    queryKey: parsed?.value
+      ? adminQueryKeys.categories.detail(parsed.value)
+      : adminQueryKeys.categories.root,
     staleTime: initialCategory ? 30_000 : 0,
   })
 

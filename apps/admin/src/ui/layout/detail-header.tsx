@@ -10,6 +10,10 @@ import { cn } from '~/utils/cn'
 export interface DetailHeaderProps {
   title?: ReactNode
   icon?: LucideIcon
+  /** Icon 之额外 className（如 animate-spin、status 染色） */
+  iconClassName?: string
+  /** Title 下副行（meta、summary） */
+  subtitle?: ReactNode
   actions?: ReactNode
   /**
    * Desktop 关 detail 之 X button 之 handler。传则显，未传则不显。
@@ -32,9 +36,14 @@ export function DetailHeader(props: DetailHeaderProps) {
   const { t } = useI18n()
   const Icon = props.icon
   const hasContent =
-    props.title != null || props.actions != null || props.onClose != null
+    props.title != null ||
+    props.subtitle != null ||
+    props.actions != null ||
+    props.onClose != null
 
   if (!hasContent) return null
+
+  const hasSubtitle = props.subtitle != null
 
   return (
     <div
@@ -48,12 +57,26 @@ export function DetailHeader(props: DetailHeaderProps) {
         <span className="contents lg:hidden">
           <HeaderBackButton onClick={props.onBack} />
         </span>
-        <h2 className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-950 dark:text-neutral-50">
-          {Icon ? (
-            <Icon aria-hidden="true" className="size-4 shrink-0" />
-          ) : null}
-          {props.title ? <span className="truncate">{props.title}</span> : null}
-        </h2>
+        {Icon ? (
+          <Icon
+            aria-hidden="true"
+            className={cn('size-4 shrink-0', props.iconClassName)}
+          />
+        ) : null}
+        {hasSubtitle ? (
+          <div className="min-w-0 flex-1">
+            <h2 className="flex min-w-0 items-center gap-2 truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+              {props.title}
+            </h2>
+            <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-neutral-400">
+              {props.subtitle}
+            </p>
+          </div>
+        ) : props.title ? (
+          <h2 className="inline-flex min-w-0 items-center gap-2 truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+            {props.title}
+          </h2>
+        ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         {props.actions}

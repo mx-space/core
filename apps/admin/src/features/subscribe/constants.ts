@@ -1,4 +1,5 @@
 import type { TranslationKey } from '~/i18n/types'
+import { adminQueryKeys } from '~/query/keys'
 
 import {
   SubscribeNoteCreateBit,
@@ -8,6 +9,7 @@ import {
 } from '~/api/subscribe'
 
 export const pageSize = 50
+export const subscribeQueryKey = adminQueryKeys.subscribe.root
 
 export const subscribeBits: Array<{
   bit: number

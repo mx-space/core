@@ -4,6 +4,7 @@ import { useParams } from 'react-router'
 import type { AITask } from '~/api/ai'
 import { getAiTask } from '~/api/ai'
 import { findInListCache } from '~/api/list-cache'
+import { adminQueryKeys } from '~/query/keys'
 
 import { aiTasksQueryKey } from '../constants'
 import { useAiTasksRouteContext } from './ai-tasks-route-context'
@@ -23,7 +24,7 @@ export function AiTaskDetailRoute() {
     enabled: Boolean(id),
     initialData: initialTask,
     queryFn: () => getAiTask(id!),
-    queryKey: [...aiTasksQueryKey, 'detail', id],
+    queryKey: adminQueryKeys.ai.taskDetail(id ?? ''),
     refetchInterval: 5000,
     staleTime: initialTask ? 5_000 : 0,
   })

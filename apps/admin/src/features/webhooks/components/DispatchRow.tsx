@@ -2,6 +2,7 @@ import { ChevronRight, RefreshCw } from 'lucide-react'
 import type { WebhookEventRecord } from '~/api/webhooks'
 
 import { useI18n } from '~/i18n'
+import { Badge } from '~/ui/primitives/badge'
 import { Button } from '~/ui/primitives/button'
 
 import { formatDateTime } from '../utils/webhooks'
@@ -32,16 +33,13 @@ export function DispatchRow(props: {
         <div className="min-w-0 flex-1">
           <EventBadge event={props.dispatch.event} />
         </div>
-        <span
-          className={[
-            'rounded px-1.5 py-0.5 text-xs',
-            props.dispatch.success
-              ? 'bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400'
-              : 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400',
-          ].join(' ')}
+        <Badge
+          size="sm"
+          tone={props.dispatch.success ? 'success' : 'danger'}
+          variant="soft"
         >
           {props.dispatch.status}
-        </span>
+        </Badge>
         <time
           className="shrink-0 text-xs text-neutral-400"
           dateTime={props.dispatch.timestamp}

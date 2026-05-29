@@ -1,4 +1,5 @@
 import type { TranslationKey } from '~/i18n/types'
+import type { BadgeTone } from '~/ui/primitives/badge'
 
 import { EventScope } from '~/api/webhooks'
 
@@ -18,20 +19,12 @@ export function getScopeText(scope: number, t: Translator) {
   return scopes.join(', ') || t('webhooks.scope.none')
 }
 
-export function getEventColorClass(event: string) {
-  if (event === 'all') {
-    return 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400'
-  }
-  if (event.includes('create')) {
-    return 'bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400'
-  }
-  if (event.includes('update')) {
-    return 'bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400'
-  }
-  if (event.includes('delete')) {
-    return 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400'
-  }
-  return 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
+export function getEventTone(event: string): BadgeTone {
+  if (event === 'all') return 'info'
+  if (event.includes('create')) return 'success'
+  if (event.includes('update')) return 'warning'
+  if (event.includes('delete')) return 'danger'
+  return 'neutral'
 }
 
 export function formatJson(content: unknown) {

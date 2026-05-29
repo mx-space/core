@@ -41,6 +41,7 @@ import { getOwner } from '~/api/options'
 import { rebuildSearchIndex } from '~/api/search-index'
 import { getAppInfo } from '~/api/system'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { AppPage, PageHeader } from '~/ui/layout/page-layout'
 import { Button } from '~/ui/primitives/button'
 import { Panel } from '~/ui/primitives/panel'
@@ -166,7 +167,9 @@ export function DashboardRouteViewContent() {
       ),
     onSuccess: async (result) => {
       toast.success(formatSearchIndexStats(result))
-      await queryClient.invalidateQueries({ queryKey: ['search-index'] })
+      await queryClient.invalidateQueries({
+        queryKey: adminQueryKeys.searchIndex.root,
+      })
     },
   })
 

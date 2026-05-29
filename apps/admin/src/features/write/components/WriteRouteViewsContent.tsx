@@ -89,6 +89,7 @@ import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
 import { translate } from '~/i18n/translate'
 import { DraftRefType } from '~/models/draft'
+import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { Drawer } from '~/ui/feedback/drawer'
 import { Modal, ModalHeader } from '~/ui/feedback/modal'
@@ -289,7 +290,6 @@ interface KindConfig {
   description: string
   icon: LucideIcon
   listPath: string
-  queryKey: string
   title: string
 }
 
@@ -299,7 +299,6 @@ function getKindConfig(kind: WriteKind): KindConfig {
       description: translate('write.kindDescription.note'),
       icon: BookOpen,
       listPath: '/notes',
-      queryKey: 'notes',
       title: translate('write.header.titleNote'),
     }
   }
@@ -308,7 +307,6 @@ function getKindConfig(kind: WriteKind): KindConfig {
       description: translate('write.kindDescription.page'),
       icon: FileIcon,
       listPath: '/pages',
-      queryKey: 'pages',
       title: translate('write.header.titlePage'),
     }
   }
@@ -316,7 +314,6 @@ function getKindConfig(kind: WriteKind): KindConfig {
     description: translate('write.kindDescription.post'),
     icon: FileText,
     listPath: '/posts',
-    queryKey: 'posts',
     title: translate('write.header.titlePost'),
   }
 }
@@ -384,17 +381,17 @@ function WritePage(props: { kind: WriteKind }) {
   const categoriesQuery = useQuery({
     enabled: props.kind === 'post',
     queryFn: () => getCategories({ type: 'Category' }),
-    queryKey: ['categories', 'list'],
+    queryKey: adminQueryKeys.categories.list(),
   })
   const topicsQuery = useQuery({
     enabled: props.kind === 'note',
     queryFn: () => getTopics({ page: 1, size: 100 }),
-    queryKey: ['topics', 'list', 'write'],
+    queryKey: adminQueryKeys.topics.list({ page: 1, size: 100 }),
   })
   const tagsQuery = useQuery({
     enabled: props.kind === 'post',
     queryFn: getTags,
-    queryKey: ['tags', 'list', 'write'],
+    queryKey: adminQueryKeys.categories.tags(),
   })
   const relatedPostsQuery = useQuery({
     enabled: props.kind === 'post',
@@ -405,27 +402,27 @@ function WritePage(props: { kind: WriteKind }) {
         sort_by: 'createdAt',
         sort_order: 'desc',
       }),
-    queryKey: ['posts', 'related-options', 'write'],
+    queryKey: adminQueryKeys.posts.relatedOptions('write'),
   })
   const detailQuery = useQuery<WriteModel>({
     enabled: isEditing,
     queryFn: () => getWriteDetail(props.kind, id),
-    queryKey: [config.queryKey, 'write-detail', id],
+    queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
   })
   const refDraftQuery = useQuery({
     enabled: isEditing,
     queryFn: () => getDraftByRef(draftRefType, id),
-    queryKey: ['drafts', 'by-ref', draftRefType, id],
+    queryKey: adminQueryKeys.drafts.byRef({ id, refType: draftRefType }),
   })
   const routeDraftQuery = useQuery({
     enabled: Boolean(routeDraftId),
     queryFn: () => getDraftById(routeDraftId),
-    queryKey: ['drafts', 'detail', routeDraftId],
+    queryKey: adminQueryKeys.drafts.detail(routeDraftId),
   })
   const newDraftsQuery = useQuery({
     enabled: !isEditing,
     queryFn: () => getNewDrafts(draftRefType),
-    queryKey: ['drafts', 'new', draftRefType],
+    queryKey: adminQueryKeys.drafts.newDraft(draftRefType),
   })
 
   const categories = categoriesQuery.data ?? emptyCategories
@@ -687,7 +684,9 @@ function WritePage(props: { kind: WriteKind }) {
       toast.success(
         isEditing ? t('write.toast.saved') : t('write.toast.createOk'),
       )
-      await queryClient.invalidateQueries({ queryKey: [config.queryKey] })
+      await queryClient.invalidateQueries({
+        queryKey: adminQueryKeys.write.contentRoot(props.kind),
+      })
       if (props.kind === 'page') {
         navigate(config.listPath)
         return
@@ -719,7 +718,7 @@ function WritePage(props: { kind: WriteKind }) {
       }
       toast.success(t('write.toast.draftSaved'))
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['drafts'] }),
+        queryClient.invalidateQueries({ queryKey: adminQueryKeys.drafts.root }),
         isEditing ? refDraftQuery.refetch() : newDraftsQuery.refetch(),
       ])
     },
@@ -1538,7 +1537,7 @@ function DraftRecoveryDialog(props: {
   const historyQuery = useQuery({
     enabled: Boolean(props.draft.id),
     queryFn: () => getDraftHistory(props.draft.id),
-    queryKey: ['drafts', 'recovery-history', props.draft.id],
+    queryKey: adminQueryKeys.drafts.recoveryHistory(props.draft.id),
   })
   const selectedVersionQuery = useQuery({
     enabled:
@@ -1546,7 +1545,10 @@ function DraftRecoveryDialog(props: {
       selectedVersion !== props.draft.version,
     queryFn: () =>
       getDraftHistoryVersion(props.draft.id, selectedVersion as number),
-    queryKey: ['drafts', 'recovery-version', props.draft.id, selectedVersion],
+    queryKey: adminQueryKeys.drafts.recoveryVersion({
+      id: props.draft.id,
+      version: typeof selectedVersion === 'number' ? selectedVersion : null,
+    }),
   })
   const versionItems = useMemo(
     () => buildRecoveryVersionItems(props.draft, historyQuery.data),

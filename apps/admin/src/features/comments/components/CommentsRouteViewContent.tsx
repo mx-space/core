@@ -1,24 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCheck, MessageSquare, ShieldAlert, Trash2 } from 'lucide-react'
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
-import { toast } from 'sonner'
 
-import {
-  batchDeleteComments,
-  batchUpdateCommentState,
-  deleteComment,
-  getComments,
-  replyComment,
-  updateCommentState,
-} from '~/api/comments'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { CommentModel } from '~/models/comment'
@@ -34,12 +17,9 @@ import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
 import { cn } from '~/utils/cn'
 
-import {
-  commentsPageSize,
-  commentsQueryKey,
-  getCommentFilters,
-} from '../constants'
-import { normalizeCommentState, readCommentPage } from '../utils/comments'
+import { commentsPageSize, getCommentFilters } from '../constants'
+import { useCommentMutations } from '../hooks/use-comment-mutations'
+import { useCommentsList } from '../hooks/use-comments-list'
 import { buildCommentActions } from './buildCommentActions'
 import { CommentDetailEmpty } from './CommentDetailEmpty'
 import { CommentListItem } from './CommentListItem'
@@ -50,54 +30,23 @@ const FOCUS_SCOPE_ID = 'comments-list'
 
 export function CommentsRouteViewContent() {
   const { locale, t } = useI18n()
-  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
   const detailId = params.id ?? null
   const commentFilters = useMemo(() => getCommentFilters(), [locale])
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-  const [state, setState] = useState(() =>
-    normalizeCommentState(searchParams.get('state')),
-  )
-  const [page, setPage] = useState(() =>
-    readCommentPage(searchParams.get('page')),
-  )
+  const [searchParams] = useSearchParams()
+  const {
+    comments,
+    commentsQuery,
+    page,
+    pagination,
+    setPage,
+    setState,
+    state,
+  } = useCommentsList()
   const [selectAllMode, setSelectAllMode] = useState(false)
 
-  const commentsQuery = useQuery({
-    placeholderData: (previous) => previous,
-    queryFn: () => getComments({ page, size: commentsPageSize, state }),
-    queryKey: [...commentsQueryKey, 'list', state, page, commentsPageSize],
-  })
-
-  const comments = commentsQuery.data?.data ?? []
-  const pagination = commentsQuery.data?.pagination
-
-  useLayoutEffect(() => {
-    const nextState = normalizeCommentState(searchParams.get('state'))
-    const nextPage = readCommentPage(searchParams.get('page'))
-
-    setState((value) => (value === nextState ? value : nextState))
-    setPage((value) => (value === nextPage ? value : nextPage))
-    setSelectAllMode(false)
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const next = new URLSearchParams()
-    next.set('state', String(state))
-    if (page > 1) next.set('page', String(page))
-    if (next.toString() !== searchParamsKey) {
-      setSearchParams(next, { replace: true })
-    }
-  }, [page, searchParamsKey, setSearchParams, state])
-
   const selectionClearRef = useRef<(() => void) | null>(null)
-  const selectionTargetsRef = useRef<CommentModel[]>([])
-
-  const invalidateComments = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: commentsQueryKey })
-  }, [queryClient])
 
   const buildListUrl = useCallback(() => {
     const qs = searchParams.toString()
@@ -108,67 +57,22 @@ export function CommentsRouteViewContent() {
     navigate(buildListUrl())
   }, [buildListUrl, navigate])
 
-  const stateMutation = useMutation({
-    mutationFn: ({ id, nextState }: { id: string; nextState: CommentState }) =>
-      updateCommentState(id, nextState),
-    onSuccess: async () => {
-      toast.success(t('comments.toast.updated'))
-      await invalidateComments()
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteComment,
-    onSuccess: async () => {
-      toast.success(t('comments.toast.deleted'))
+  const selectedTargetsRef = useRef<CommentModel[]>([])
+  const {
+    batchDeleteMutation,
+    batchStateMutation,
+    deleteMutation,
+    replyMutation,
+    stateMutation,
+  } = useCommentMutations({
+    getSelectedTargets: () => selectedTargetsRef.current,
+    onAfterBatchSuccess: () => selectionClearRef.current?.(),
+    onAfterDeleteSuccess: () => {
       selectionClearRef.current?.()
       navigate(buildListUrl())
-      await invalidateComments()
     },
-  })
-
-  const batchStateMutation = useMutation({
-    mutationFn: (nextState: CommentState) => {
-      if (selectAllMode) {
-        return batchUpdateCommentState({
-          all: true,
-          currentState: state,
-          state: nextState,
-        })
-      }
-      const ids = selectionTargetsRef.current.map((c) => c.id)
-      return batchUpdateCommentState({ ids, state: nextState })
-    },
-    onSuccess: async () => {
-      toast.success(t('comments.toast.updated'))
-      selectionClearRef.current?.()
-      await invalidateComments()
-    },
-  })
-
-  const batchDeleteMutation = useMutation({
-    mutationFn: () => {
-      if (selectAllMode) {
-        return batchDeleteComments({ all: true, state })
-      }
-      const ids = selectionTargetsRef.current.map((c) => c.id)
-      return batchDeleteComments({ ids })
-    },
-    onSuccess: async () => {
-      toast.success(t('comments.toast.deleted'))
-      selectionClearRef.current?.()
-      navigate(buildListUrl())
-      await invalidateComments()
-    },
-  })
-
-  const replyMutation = useMutation({
-    mutationFn: ({ id, text }: { id: string; text: string }) =>
-      replyComment(id, text),
-    onSuccess: async () => {
-      toast.success(t('comments.toast.replied'))
-      await invalidateComments()
-    },
+    selectAllMode,
+    state,
   })
 
   const openComment = useCallback(
@@ -222,11 +126,11 @@ export function CommentsRouteViewContent() {
     scopeId: FOCUS_SCOPE_ID,
   })
   selectionClearRef.current = selection.clear
-  selectionTargetsRef.current = selection.getSelectedTargets()
+  selectedTargetsRef.current = selection.getSelectedTargets()
 
   const changeFilter = (nextState: CommentState) => {
     setState(nextState)
-    setPage(1)
+    setSelectAllMode(false)
     // Closing detail when filter changes.
     const next = new URLSearchParams()
     next.set('state', String(nextState))

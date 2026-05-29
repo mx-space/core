@@ -8,6 +8,7 @@ import type { WebhookModel } from '~/api/webhooks'
 import { deleteWebhook, getWebhooks, testWebhook } from '~/api/webhooks'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
@@ -34,7 +35,7 @@ export function WebhooksRouteViewContent() {
 
   const webhooksQuery = useQuery({
     queryFn: getWebhooks,
-    queryKey: [...webhooksQueryKey, 'list'],
+    queryKey: adminQueryKeys.webhooks.list(),
   })
 
   const webhooks = webhooksQuery.data ?? []

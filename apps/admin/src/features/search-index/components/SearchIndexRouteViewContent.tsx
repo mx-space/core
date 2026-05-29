@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ChevronLeft,
   ChevronRight,
@@ -7,8 +7,8 @@ import {
   Loader2,
   Search,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useCallback, useMemo } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
 import type {
@@ -16,7 +16,6 @@ import type {
   SearchIndexRefType,
 } from '~/api/search-index'
 import {
-  getSearchIndexDocuments,
   rebuildSearchIndex,
   rebuildSearchIndexDocument,
 } from '~/api/search-index'
@@ -32,7 +31,12 @@ import { SelectField } from '~/ui/primitives/select'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
-import { refTypeOptionKeys, searchIndexQueryKey } from '../constants'
+import {
+  refTypeOptionKeys,
+  searchIndexPageSizeOptions,
+  searchIndexQueryKey,
+} from '../constants'
+import { useSearchIndexDocuments } from '../hooks/use-search-index-documents'
 import { getErrorMessage } from '../utils/format'
 import { SearchIndexRouteContext } from './search-index-route-context'
 import { SearchIndexDetailEmptyState } from './SearchIndexDetailEmptyState'
@@ -41,9 +45,6 @@ import { SearchIndexRow } from './SearchIndexRow'
 import { SearchIndexSkeleton } from './SearchIndexSkeleton'
 
 const FOCUS_SCOPE_ID = 'search-index'
-const KEYWORD_DEBOUNCE_MS = 350
-const PAGE_SIZE_OPTIONS = [20, 50, 100] as const
-const REF_TYPE_VALUES = new Set<string>(['note', 'page', 'post'])
 
 export function SearchIndexRouteViewContent() {
   const { t } = useI18n()
@@ -51,112 +52,44 @@ export function SearchIndexRouteViewContent() {
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
   const selectedId = params.id ?? null
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  const refTypeFilter = parseRefType(searchParams.get('type'))
-  const langFilter = searchParams.get('lang') ?? ''
-  const keyword = searchParams.get('q') ?? ''
-  const page = clampPositive(searchParams.get('page'), 1)
-  const pageSize = clampPageSize(searchParams.get('size'))
-
-  const [keywordInput, setKeywordInput] = useState(keyword)
-
-  const updateParams = useCallback(
-    (mutate: (params: URLSearchParams) => void) => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev)
-          mutate(next)
-          return next
-        },
-        { replace: true },
-      )
-    },
-    [setSearchParams],
-  )
-
-  useEffect(() => {
-    const trimmed = keywordInput.trim()
-    if (trimmed === keyword) return
-    const timer = window.setTimeout(() => {
-      updateParams((params) => {
-        if (trimmed) params.set('q', trimmed)
-        else params.delete('q')
-        params.delete('page')
-      })
-    }, KEYWORD_DEBOUNCE_MS)
-    return () => window.clearTimeout(timer)
-  }, [keywordInput, keyword, updateParams])
+  const {
+    documentsQuery,
+    keyword,
+    keywordInput,
+    langFilter,
+    listQueryString,
+    page,
+    pageCount,
+    pageSize,
+    refTypeFilter,
+    rows,
+    setKeywordInput,
+    setLangFilter,
+    setPage,
+    setPageSize,
+    setRefTypeFilter,
+    total,
+  } = useSearchIndexDocuments()
 
   const closeDetail = useCallback(() => {
-    const qs = searchParams.toString()
-    navigate(`/maintenance/search-index${qs ? `?${qs}` : ''}`)
-  }, [navigate, searchParams])
+    navigate(
+      `/maintenance/search-index${listQueryString ? `?${listQueryString}` : ''}`,
+    )
+  }, [listQueryString, navigate])
 
   const openRow = useCallback(
     (id: string) => {
-      const qs = searchParams.toString()
       navigate(
-        `/maintenance/search-index/${encodeURIComponent(id)}${qs ? `?${qs}` : ''}`,
+        `/maintenance/search-index/${encodeURIComponent(id)}${listQueryString ? `?${listQueryString}` : ''}`,
       )
     },
-    [navigate, searchParams],
+    [listQueryString, navigate],
   )
-
-  const setRefTypeFilter = (value: SearchIndexRefType | '') => {
-    updateParams((params) => {
-      if (value) params.set('type', value)
-      else params.delete('type')
-      params.delete('page')
-    })
-  }
-  const setLangFilter = (value: string) => {
-    const trimmed = value.trim()
-    updateParams((params) => {
-      if (trimmed) params.set('lang', trimmed)
-      else params.delete('lang')
-      params.delete('page')
-    })
-  }
-  const setPage = (value: number) => {
-    updateParams((params) => {
-      if (value <= 1) params.delete('page')
-      else params.set('page', String(value))
-    })
-  }
-  const setPageSize = (value: number) => {
-    updateParams((params) => {
-      if (value === PAGE_SIZE_OPTIONS[0]) params.delete('size')
-      else params.set('size', String(value))
-      params.delete('page')
-    })
-  }
 
   const refTypeOptions = refTypeOptionKeys.map((opt) => ({
     label: t(opt.labelKey),
     value: opt.value,
   }))
-
-  const queryParams = {
-    keyword: keyword || undefined,
-    lang: langFilter || undefined,
-    page,
-    refType: refTypeFilter || undefined,
-    size: pageSize,
-  }
-
-  const documentsQuery = useQuery({
-    placeholderData: (previous) => previous,
-    queryFn: () => getSearchIndexDocuments(queryParams),
-    queryKey: [...searchIndexQueryKey, queryParams],
-  })
-
-  const rows = useMemo(
-    () => documentsQuery.data?.data ?? [],
-    [documentsQuery.data],
-  )
-  const total = documentsQuery.data?.pagination.total ?? 0
-  const pageCount = documentsQuery.data?.pagination.totalPage ?? 1
 
   useListKeyboard({
     actions: [],
@@ -343,7 +276,7 @@ export function SearchIndexRouteViewContent() {
                 <SelectField
                   aria-label={t('searchIndex.pagination.pageSizeAria')}
                   onValueChange={(value) => setPageSize(value)}
-                  options={PAGE_SIZE_OPTIONS.map((size) => ({
+                  options={searchIndexPageSizeOptions.map((size) => ({
                     label: t('searchIndex.pagination.pageSize', { size }),
                     value: size,
                   }))}
@@ -382,26 +315,4 @@ export function SearchIndexRouteViewContent() {
       />
     </SearchIndexRouteContext.Provider>
   )
-}
-
-function parseRefType(raw: string | null): SearchIndexRefType | '' {
-  if (raw && REF_TYPE_VALUES.has(raw)) return raw as SearchIndexRefType
-  return ''
-}
-
-function clampPositive(raw: string | null, fallback: number): number {
-  if (!raw) return fallback
-  const parsed = Number.parseInt(raw, 10)
-  if (!Number.isFinite(parsed) || parsed < 1) return fallback
-  return parsed
-}
-
-function clampPageSize(raw: string | null): number {
-  const parsed = clampPositive(raw, PAGE_SIZE_OPTIONS[0])
-  if (
-    PAGE_SIZE_OPTIONS.includes(parsed as (typeof PAGE_SIZE_OPTIONS)[number])
-  ) {
-    return parsed
-  }
-  return PAGE_SIZE_OPTIONS[0]
 }

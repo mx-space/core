@@ -1,22 +1,21 @@
 import type { StatCount } from '~/api/aggregate'
-
-export const dashboardQueryKey = 'dashboard'
+import { adminQueryKeys } from '~/query/keys'
 
 export const dashboardQueryKeys = {
-  aggregateStat: [dashboardQueryKey, 'aggregate-stat'] as const,
-  appInfo: [dashboardQueryKey, 'app-info'] as const,
-  categoryDistribution: [dashboardQueryKey, 'category-distribution'] as const,
-  commentActivity: [dashboardQueryKey, 'comment-activity'] as const,
-  githubUpdate: [dashboardQueryKey, 'github-update'] as const,
-  owner: [dashboardQueryKey, 'owner'] as const,
-  publicationTrend: [dashboardQueryKey, 'publication-trend'] as const,
-  readLike: [dashboardQueryKey, 'read-like'] as const,
-  releaseDetail: [dashboardQueryKey, 'release-detail'] as const,
-  siteLike: [dashboardQueryKey, 'site-like'] as const,
-  tagCloud: [dashboardQueryKey, 'tag-cloud'] as const,
-  topArticles: [dashboardQueryKey, 'top-articles'] as const,
-  trafficSource: [dashboardQueryKey, 'traffic-source'] as const,
-  wordCount: [dashboardQueryKey, 'word-count'] as const,
+  aggregateStat: adminQueryKeys.dashboard.aggregateStat(),
+  appInfo: adminQueryKeys.dashboard.appInfo(),
+  categoryDistribution: adminQueryKeys.dashboard.categoryDistribution(),
+  commentActivity: adminQueryKeys.dashboard.commentActivity(),
+  githubUpdate: adminQueryKeys.dashboard.githubUpdate(),
+  owner: adminQueryKeys.dashboard.owner(),
+  publicationTrend: adminQueryKeys.dashboard.publicationTrend(),
+  readLike: adminQueryKeys.dashboard.readLike(),
+  releaseDetail: adminQueryKeys.dashboard.releaseDetailRoot,
+  siteLike: adminQueryKeys.dashboard.siteLike(),
+  tagCloud: adminQueryKeys.dashboard.tagCloud(),
+  topArticles: adminQueryKeys.dashboard.topArticles(),
+  trafficSource: adminQueryKeys.dashboard.trafficSource(),
+  wordCount: adminQueryKeys.dashboard.wordCount(),
 }
 
 export const aggregateStatRefetchInterval = 3000

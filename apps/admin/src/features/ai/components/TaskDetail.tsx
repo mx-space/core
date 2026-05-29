@@ -1,9 +1,9 @@
-import { ArrowLeft, Loader2, RotateCcw, Trash2, XCircle } from 'lucide-react'
+import { Loader2, RotateCcw, Trash2, XCircle } from 'lucide-react'
 import type { AITask } from '~/api/ai'
 
 import { AITaskStatus } from '~/api/ai'
-import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { DetailHeader } from '~/ui/layout/detail-header'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -59,32 +59,73 @@ export function TaskDetail(props: {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header
-        className={cn(
-          'flex shrink-0 items-center gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
-          APP_SHELL_HEADER_HEIGHT_CLASS,
+      <DetailHeader
+        actions={
+          <>
+            {canRetry ? (
+              <Button
+                aria-label={t('ai.action.retryTask')}
+                disabled={props.retrying}
+                iconOnly
+                onClick={() => props.onRetry(task)}
+                title={t('ai.action.retryTask')}
+                type="button"
+                variant="subtle"
+              >
+                {props.retrying ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <RotateCcw aria-hidden="true" className="size-4" />
+                )}
+              </Button>
+            ) : null}
+            {canCancel ? (
+              <Button
+                aria-label={t('ai.action.cancel')}
+                disabled={props.canceling}
+                iconOnly
+                onClick={() => props.onCancel(task)}
+                title={t('ai.action.cancel')}
+                type="button"
+                variant="subtle"
+              >
+                {props.canceling ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <XCircle aria-hidden="true" className="size-4" />
+                )}
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                aria-label={t('ai.action.deleteTask')}
+                className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-950 dark:text-red-400 dark:hover:bg-red-950/30"
+                disabled={props.deleting}
+                iconOnly
+                onClick={() => props.onDelete(task)}
+                title={t('ai.action.deleteTask')}
+                type="button"
+                variant="subtle"
+              >
+                {props.deleting ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 aria-hidden="true" className="size-4" />
+                )}
+              </Button>
+            ) : null}
+          </>
+        }
+        icon={Icon}
+        iconClassName={cn(
+          isRunning && 'animate-spin',
+          statusIconClassName(effectiveStatus),
         )}
-      >
-        <button
-          className="inline-flex size-8 shrink-0 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-50"
-          onClick={props.onBack}
-          type="button"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-        </button>
-        <Icon
-          aria-hidden="true"
-          className={cn(
-            'size-5 shrink-0',
-            isRunning && 'animate-spin',
-            statusIconClassName(effectiveStatus),
-          )}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <h2 className="truncate text-lg font-semibold text-neutral-950 dark:text-neutral-50">
-              {t(taskTypeLabelKeys[task.type])}
-            </h2>
+        onBack={props.onBack}
+        subtitle={getTaskDetailSummary(task, t)}
+        title={
+          <>
+            <span className="truncate">{t(taskTypeLabelKeys[task.type])}</span>
             <StatusBadge status={effectiveStatus}>
               {t(taskStatusLabelKeys[effectiveStatus])}
             </StatusBadge>
@@ -96,66 +137,9 @@ export function TaskDetail(props: {
             {isBatchTask(task) ? (
               <SmallBadge tone="info">{t('ai.task.batch')}</SmallBadge>
             ) : null}
-          </div>
-          <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-neutral-400">
-            {getTaskDetailSummary(task, t)}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {canRetry ? (
-            <Button
-              aria-label={t('ai.action.retryTask')}
-              disabled={props.retrying}
-              iconOnly
-              onClick={() => props.onRetry(task)}
-              title={t('ai.action.retryTask')}
-              type="button"
-              variant="subtle"
-            >
-              {props.retrying ? (
-                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-              ) : (
-                <RotateCcw aria-hidden="true" className="size-4" />
-              )}
-            </Button>
-          ) : null}
-          {canCancel ? (
-            <Button
-              aria-label={t('ai.action.cancel')}
-              disabled={props.canceling}
-              iconOnly
-              onClick={() => props.onCancel(task)}
-              title={t('ai.action.cancel')}
-              type="button"
-              variant="subtle"
-            >
-              {props.canceling ? (
-                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-              ) : (
-                <XCircle aria-hidden="true" className="size-4" />
-              )}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Button
-              aria-label={t('ai.action.deleteTask')}
-              className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-950 dark:text-red-400 dark:hover:bg-red-950/30"
-              disabled={props.deleting}
-              iconOnly
-              onClick={() => props.onDelete(task)}
-              title={t('ai.action.deleteTask')}
-              type="button"
-              variant="subtle"
-            >
-              {props.deleting ? (
-                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-              ) : (
-                <Trash2 aria-hidden="true" className="size-4" />
-              )}
-            </Button>
-          ) : null}
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <Scroll className="flex-1" innerClassName="px-5 py-4">
         {task.error ? (

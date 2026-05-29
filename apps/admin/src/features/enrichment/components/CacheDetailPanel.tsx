@@ -17,6 +17,7 @@ import {
 } from '~/api/enrichment'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
@@ -51,7 +52,7 @@ export function CacheDetailPanel(props: {
         }
       : undefined,
     queryFn: () => getEnrichmentById(props.id),
-    queryKey: [...enrichmentQueryKey, 'cache', 'detail', props.id],
+    queryKey: adminQueryKeys.enrichment.cacheDetail(props.id),
   })
 
   const row = detailQuery.data

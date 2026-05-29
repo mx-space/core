@@ -1,15 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { FileText, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { FileText, Plus, Trash2 } from 'lucide-react'
 import type { FormEvent } from 'react'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router'
-import { toast } from 'sonner'
+import { useMemo, useRef } from 'react'
 
-import { getCategories } from '~/api/categories'
-import { deletePost, getPosts, patchPost, searchPosts } from '~/api/posts'
 import { WEB_URL } from '~/constants/env'
 import {
   ContentListHeader,
+  ContentListRefreshButton,
   ContentListToolbar,
   SortMenu,
 } from '~/features/_shared/components/content-list-toolbar'
@@ -22,20 +18,15 @@ import { useListKeyboard } from '~/ui/list-actions'
 import { ButtonLink } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
-import { cn } from '~/utils/cn'
 
 import {
   allCategoriesValue,
   postSortOptionDefinitions,
   postsPageSize,
 } from '../constants'
-import type { PostSortKey, SortOrder } from '../types/posts'
-import { getErrorMessage } from '../utils/errors'
-import {
-  readPage,
-  readPostSortKey,
-  readSortOrder,
-} from '../utils/search-params'
+import { usePostMutations } from '../hooks/use-post-mutations'
+import { usePostsList } from '../hooks/use-posts-list'
+import type { PostSortKey } from '../types/posts'
 import { buildPostActions } from './buildPostActions'
 import { PostRow } from './PostRow'
 import { PostsEmpty } from './PostsEmpty'
@@ -46,168 +37,37 @@ const FOCUS_SCOPE_ID = 'posts-list'
 
 export function PostsRouteViewContent() {
   const { t } = useI18n()
-  const queryClient = useQueryClient()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [page, setPage] = useState(readPage(searchParams.get('page')))
-  const [keywordInput, setKeywordInput] = useState(
-    searchParams.get('keyword') ?? '',
-  )
-  const [keyword, setKeyword] = useState(searchParams.get('keyword') ?? '')
-  const [categoryId, setCategoryId] = useState(
-    searchParams.get('category') ?? allCategoriesValue,
-  )
-  const [sortKey, setSortKey] = useState<PostSortKey>(
-    readPostSortKey(searchParams.get('sort')),
-  )
-  const [sortOrder, setSortOrder] = useState<SortOrder>(
-    readSortOrder(searchParams.get('order')),
-  )
-  const searchParamsKey = searchParams.toString()
-
-  useLayoutEffect(() => {
-    const nextPage = readPage(searchParams.get('page'))
-    const nextKeyword = searchParams.get('keyword') ?? ''
-    const nextCategoryId = searchParams.get('category') ?? allCategoriesValue
-    const nextSortKey = readPostSortKey(searchParams.get('sort'))
-    const nextSortOrder = readSortOrder(searchParams.get('order'))
-
-    setPage((value) => (value === nextPage ? value : nextPage))
-    setKeyword((value) => (value === nextKeyword ? value : nextKeyword))
-    setKeywordInput((value) => (value === nextKeyword ? value : nextKeyword))
-    setCategoryId((value) =>
-      value === nextCategoryId ? value : nextCategoryId,
-    )
-    setSortKey((value) => (value === nextSortKey ? value : nextSortKey))
-    setSortOrder((value) => (value === nextSortOrder ? value : nextSortOrder))
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const nextParams = new URLSearchParams()
-    if (page > 1) nextParams.set('page', String(page))
-    if (keyword) nextParams.set('keyword', keyword)
-    if (categoryId !== allCategoriesValue)
-      nextParams.set('category', categoryId)
-    if (sortKey !== 'createdAt') nextParams.set('sort', sortKey)
-    if (sortOrder !== 'desc') nextParams.set('order', sortOrder)
-    if (nextParams.toString() !== searchParamsKey) {
-      setSearchParams(nextParams, { replace: true })
-    }
-  }, [
+  const list = usePostsList()
+  const {
+    categories,
     categoryId,
     keyword,
+    keywordInput,
     page,
-    searchParamsKey,
-    setSearchParams,
+    pagination,
+    posts,
+    postsQuery,
+    setCategoryId,
+    setKeywordInput,
+    setPage,
+    setSort,
     sortKey,
     sortOrder,
-  ])
-
-  const categoriesQuery = useQuery({
-    queryFn: () => getCategories({ type: 'Category' }),
-    queryKey: ['categories', 'post-filter'],
-  })
-
-  const postsQuery = useQuery({
-    placeholderData: (previous) => previous,
-    queryFn: () =>
-      keyword
-        ? searchPosts({ keyword, page, size: postsPageSize })
-        : getPosts({
-            categoryIds:
-              categoryId === allCategoriesValue ? undefined : [categoryId],
-            page,
-            size: postsPageSize,
-            sort_by: sortKey,
-            sort_order: sortOrder,
-          }),
-    queryKey: [
-      'posts',
-      'list',
-      page,
-      postsPageSize,
-      keyword,
-      categoryId,
-      sortKey,
-      sortOrder,
-    ],
-  })
-
-  const posts = postsQuery.data?.data ?? []
-  const pagination = postsQuery.data?.pagination
+    submitSearch,
+  } = list
 
   // selection is created by useListKeyboard below, after `actions` is built.
   // mutations that fire `selection.clear()` go through this ref to avoid TDZ.
   const selectionClearRef = useRef<(() => void) | null>(null)
 
-  const invalidatePosts = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['posts'] })
-  }
-
-  const publishMutation = useMutation({
-    mutationFn: (payload: { id: string; isPublished: boolean }) =>
-      patchPost(payload.id, { isPublished: payload.isPublished }),
-    onSuccess: invalidatePosts,
-  })
-
-  const categoryMutation = useMutation({
-    mutationFn: (payload: { categoryId: string; id: string }) =>
-      patchPost(payload.id, { categoryId: payload.categoryId }),
-    onError: (error: unknown) =>
-      toast.error(
-        getErrorMessage(error, t('posts.toast.categoryUpdateFailed')),
-      ),
-    onSuccess: invalidatePosts,
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deletePost,
-    onSuccess: async () => {
-      toast.success(t('posts.toast.deleted'))
-      await invalidatePosts()
-    },
-  })
-
-  const batchDeleteMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => deletePost(id)))
-      const successfulIds = ids.filter(
-        (_, index) => results[index].status === 'fulfilled',
-      )
-
-      return {
-        failedCount: ids.length - successfulIds.length,
-        successfulIds,
-        successCount: successfulIds.length,
-      }
-    },
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('posts.toast.batchDeleteFailed'))),
-    onSuccess: async ({ failedCount, successCount }) => {
-      selectionClearRef.current?.()
-      if (failedCount > 0) {
-        toast.warning(
-          t('posts.toast.batchDeletePartial', {
-            failed: failedCount,
-            success: successCount,
-          }),
-        )
-      } else {
-        toast.success(
-          t('posts.toast.batchDeleteSucceeded', { count: successCount }),
-        )
-      }
-      await invalidatePosts()
-    },
-  })
-
-  const pinMutation = useMutation({
-    mutationFn: (payload: { id: string; isPinned: boolean }) =>
-      patchPost(payload.id, {
-        pinAt: payload.isPinned ? new Date().toISOString() : null,
-      }),
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('posts.toast.pinFailed'))),
-    onSuccess: invalidatePosts,
+  const {
+    batchDeleteMutation,
+    categoryMutation,
+    deleteMutation,
+    pinMutation,
+    publishMutation,
+  } = usePostMutations({
+    onBatchSuccess: () => selectionClearRef.current?.(),
   })
 
   const externalHrefFor = (post: PostModel) =>
@@ -276,21 +136,21 @@ export function PostsRouteViewContent() {
   const categoryOptions = useMemo(
     () => [
       { label: t('posts.filter.allCategories'), value: allCategoriesValue },
-      ...(categoriesQuery.data ?? []).map((category) => ({
+      ...categories.map((category) => ({
         label: category.name,
         value: category.id,
       })),
     ],
-    [categoriesQuery.data, t],
+    [categories, t],
   )
 
   const rowCategoryOptions = useMemo(
     () =>
-      (categoriesQuery.data ?? []).map((category) => ({
+      categories.map((category) => ({
         id: category.id,
         name: category.name,
       })),
-    [categoriesQuery.data],
+    [categories],
   )
 
   const selectedCount = selection.size
@@ -300,8 +160,7 @@ export function PostsRouteViewContent() {
 
   const onSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setPage(1)
-    setKeyword(keywordInput.trim())
+    submitSearch()
   }
 
   const toggleAllVisible = (checked: boolean) => {
@@ -328,21 +187,11 @@ export function PostsRouteViewContent() {
 
       <ContentListToolbar
         extraActions={
-          <button
-            aria-label={t('posts.list.refreshAria')}
-            className="outline-hidden inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-[var(--color-primary-shallow)] disabled:pointer-events-none disabled:opacity-50 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
-            disabled={postsQuery.isFetching}
-            onClick={() => void postsQuery.refetch()}
-            type="button"
-          >
-            <RefreshCw
-              aria-hidden="true"
-              className={cn(
-                'size-3.5',
-                postsQuery.isFetching && 'animate-spin',
-              )}
-            />
-          </button>
+          <ContentListRefreshButton
+            isFetching={postsQuery.isFetching}
+            label={t('posts.list.refreshAria')}
+            onRefresh={() => void postsQuery.refetch()}
+          />
         }
         filters={
           <SelectField
@@ -361,21 +210,13 @@ export function PostsRouteViewContent() {
           <SortMenu<PostSortKey>
             disabled={Boolean(keyword)}
             field={sortKey}
-            onChange={({ field, order }) => {
-              setSortKey(field)
-              setSortOrder(order)
-              setPage(1)
-            }}
+            onChange={setSort}
             options={sortOptions}
             order={sortOrder}
           />
         }
         hasSearch={Boolean(keyword)}
-        onClearSearch={() => {
-          setKeywordInput('')
-          setKeyword('')
-          setPage(1)
-        }}
+        onClearSearch={list.clearSearch}
         onSearch={onSearch}
         onSearchValueChange={setKeywordInput}
         searchPlaceholder={t('posts.list.searchPlaceholder')}

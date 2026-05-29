@@ -4,6 +4,7 @@ import type { TagModel } from '~/models/category'
 
 import { getPostsByTag } from '~/api/categories'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Scroll } from '~/ui/primitives/scroll'
 
 import { DetailHeader } from './DetailHeader'
@@ -15,7 +16,7 @@ export function TagDetail(props: { onBack: () => void; tag: TagModel }) {
   const postsQuery = useQuery({
     enabled: !!props.tag.name,
     queryFn: () => getPostsByTag(props.tag.name),
-    queryKey: ['posts', 'tag-detail', props.tag.name],
+    queryKey: adminQueryKeys.posts.tagDetail(props.tag.name),
   })
 
   return (

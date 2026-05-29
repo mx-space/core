@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 
+import { Badge } from '~/ui/primitives/badge'
 import { cn } from '~/utils/cn'
 
 export function FieldShell(props: { children: ReactNode; label: string }) {
@@ -39,9 +40,9 @@ export function SettingsSkeleton(props: { title: string }) {
 
 export function SmallBadge(props: { children: ReactNode }) {
   return (
-    <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
+    <Badge size="sm" variant="soft">
       {props.children}
-    </span>
+    </Badge>
   )
 }
 

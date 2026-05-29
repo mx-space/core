@@ -1,14 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, RefreshCw, Trash2 } from 'lucide-react'
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
 import type { OrphanFile } from '~/api/files'
@@ -16,7 +9,6 @@ import {
   batchDeleteOrphanFiles,
   cleanupOrphanFiles,
   deleteFileByTypeAndName,
-  getOrphanFiles,
 } from '~/api/files'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
@@ -34,6 +26,7 @@ import { cn } from '~/utils/cn'
 
 import { FILES_PAGE_SIZE, filesQueryKey } from '../constants'
 import { useFileSearch } from '../hooks/useFileSearch'
+import { useOrphanFilesList } from '../hooks/useOrphanFilesList'
 import type { FileRowItem } from '../utils/adapters'
 import { adaptOrphanFile } from '../utils/adapters'
 import { getErrorMessage } from '../utils/format'
@@ -53,28 +46,14 @@ export function OrphanFilesPage() {
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
   const detailId = params.id ?? null
-  const [searchParams, setSearchParams] = useSearchParams()
-  const searchParamsKey = searchParams.toString()
-
-  const [page, setPage] = useState<number>(
-    Number(searchParams.get('page')) || 1,
-  )
+  const { orphans, orphansQuery, page, pageCount, setPage, total } =
+    useOrphanFilesList()
   const [searchQuery, setSearchQuery] = useState('')
   const [preview, setPreview] = useState<null | { name: string; url: string }>(
     null,
   )
   const [selectAllAcross, setSelectAllAcross] = useState(false)
   const selectionClearRef = useRef<(() => void) | null>(null)
-
-  const orphansQuery = useQuery({
-    placeholderData: (previous) => previous,
-    queryFn: () => getOrphanFiles(page, FILES_PAGE_SIZE),
-    queryKey: [...filesQueryKey, 'orphans', { page, size: FILES_PAGE_SIZE }],
-  })
-
-  const orphans = orphansQuery.data?.data ?? []
-  const total = orphansQuery.data?.pagination.total ?? 0
-  const pageCount = orphansQuery.data?.pagination.totalPage ?? 1
 
   const adapted = useMemo(
     () => orphans.map((item) => adaptOrphanFile(item, t)),
@@ -86,20 +65,6 @@ export function OrphanFilesPage() {
   useEffect(() => {
     if (fileSearch.query !== searchQuery) fileSearch.setQuery(searchQuery)
   }, [searchQuery])
-
-  useLayoutEffect(() => {
-    const nextPage = Number(searchParams.get('page')) || 1
-    if (nextPage !== page) setPage(nextPage)
-  }, [searchParamsKey])
-
-  useEffect(() => {
-    const next = new URLSearchParams(searchParams)
-    if (page > 1) next.set('page', String(page))
-    else next.delete('page')
-    if (next.toString() !== searchParamsKey) {
-      setSearchParams(next, { replace: true })
-    }
-  }, [page])
 
   const buildListPath = useCallback(() => {
     const sp = new URLSearchParams()

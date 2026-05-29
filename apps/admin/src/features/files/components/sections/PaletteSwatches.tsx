@@ -1,3 +1,5 @@
+import { Badge } from '~/ui/primitives/badge'
+
 import { isPreviewColor } from '../../utils/format'
 
 interface PaletteSwatchesProps {
@@ -19,16 +21,13 @@ export function PaletteSwatches(props: PaletteSwatchesProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       {dominant ? (
-        <span
-          className="inline-flex items-center gap-1.5 rounded border border-neutral-200 px-1.5 py-0.5 text-xs dark:border-neutral-800"
-          title={dominant}
-        >
+        <Badge size="sm" title={dominant} variant="outline">
           <span
             className="inline-block size-3 rounded border border-black/10 dark:border-white/10"
             style={{ backgroundColor: dominant }}
           />
           <span className="font-mono">{dominant}</span>
-        </span>
+        </Badge>
       ) : null}
       {swatches.map((color) => (
         <span

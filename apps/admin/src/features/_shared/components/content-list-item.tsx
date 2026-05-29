@@ -12,6 +12,7 @@ import type {
 import { useI18n } from '~/i18n'
 import { ListRow } from '~/ui/list-actions'
 import { showContextMenu } from '~/ui/overlay/context-menu'
+import { Badge } from '~/ui/primitives/badge'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { cn } from '~/utils/cn'
 
@@ -230,15 +231,8 @@ export function ContentListStatusBadge(props: {
   children: ReactNode
 }) {
   return (
-    <span
-      className={cn(
-        'shrink-0 rounded px-1.5 py-0.5 text-xs leading-4',
-        props.active
-          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
-          : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400',
-      )}
-    >
+    <Badge size="sm" tone={props.active ? 'success' : 'neutral'} variant="soft">
       {props.children}
-    </span>
+    </Badge>
   )
 }

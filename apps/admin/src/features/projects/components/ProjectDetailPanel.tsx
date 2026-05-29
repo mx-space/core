@@ -1,9 +1,6 @@
-import { useMutation } from '@tanstack/react-query'
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
 
-import { deleteProject } from '~/api/projects'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { ProjectModel } from '~/models/project'
@@ -14,6 +11,7 @@ import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 import { relativeTimeFromNow } from '~/utils/time'
 
+import { useProjectMutations } from '../hooks/use-project-mutations'
 import { ProjectImageGrid } from './ProjectImageGrid'
 import { ProjectLinks } from './ProjectLinks'
 import { ProjectAvatar } from './ProjectPrimitives'
@@ -27,12 +25,8 @@ export function ProjectDetailPanel(props: {
 }) {
   const { t } = useI18n()
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
-  const deleteMutation = useMutation({
-    mutationFn: deleteProject,
-    onSuccess: async () => {
-      toast.success(t('projects.detail.deleteSuccess'))
-      await props.onDeleted()
-    },
+  const { deleteMutation } = useProjectMutations({
+    onDeleted: props.onDeleted,
   })
 
   const images = props.project.images?.filter(Boolean) ?? []

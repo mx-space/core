@@ -6,11 +6,11 @@ import type { AccountSession } from '../../types/settings'
 
 import { IpInfoPopover } from '~/features/_shared/components/ip-info-popover'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { authClient } from '~/utils/authjs/auth'
 import { cn } from '~/utils/cn'
 
-import { accountQueryKey } from '../../constants'
 import { listSessions } from '../../utils/account-sessions'
 import { formatDateTime, getErrorMessage } from '../../utils/settings'
 import { SettingsSection } from '../SettingsPrimitives'
@@ -20,7 +20,7 @@ export function SessionSection() {
   const [expanded, setExpanded] = useState(false)
   const sessionsQuery = useQuery({
     queryFn: () => listSessions(t),
-    queryKey: [...accountQueryKey, 'sessions'],
+    queryKey: adminQueryKeys.settings.sessions(),
   })
 
   const deleteMutation = useMutation({

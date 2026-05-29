@@ -1,9 +1,10 @@
 import { FileIcon } from 'lucide-react'
 import type { ListAction, ListRowSelectMode } from '~/ui/list-actions'
 import type { ReactNode } from 'react'
-import type { FileRowItem, RowTone } from '../utils/adapters'
+import type { FileRowItem } from '../utils/adapters'
 
 import { buildMenuItemsFromActions, ListRow } from '~/ui/list-actions'
+import { Badge } from '~/ui/primitives/badge'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { cn } from '~/utils/cn'
 
@@ -20,14 +21,6 @@ interface FileListRowProps<TRaw> {
   onSelect: (mode: ListRowSelectMode) => void
   actions: ReadonlyArray<ListAction<FileRowItem<TRaw>>>
   trailing?: ReactNode
-}
-
-const toneClasses: Record<RowTone, string> = {
-  neutral:
-    'border-neutral-200 text-neutral-600 dark:border-neutral-800 dark:text-neutral-300',
-  warn: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300',
-  danger:
-    'border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300',
 }
 
 export function FileListRow<TRaw>(props: FileListRowProps<TRaw>) {
@@ -89,14 +82,9 @@ export function FileListRow<TRaw>(props: FileListRowProps<TRaw>) {
               {props.item.primary}
             </h3>
             {props.item.status ? (
-              <span
-                className={cn(
-                  'inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-xs',
-                  toneClasses[props.item.status.tone],
-                )}
-              >
+              <Badge size="sm" tone={props.item.status.tone}>
                 {props.item.status.label}
-              </span>
+              </Badge>
             ) : null}
           </div>
           {props.item.secondary || props.item.tertiary ? (

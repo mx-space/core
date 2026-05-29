@@ -9,6 +9,7 @@ import type { NotificationTypes } from './types'
 
 import { GATEWAY_URL } from '../constants/env'
 import { translate } from '../i18n/translate'
+import { adminQueryKeys } from '../query/keys'
 import { EventTypes } from './types'
 
 interface GatewayMessage {
@@ -52,13 +53,19 @@ export function SocketBridge() {
           break
         }
         case EventTypes.COMMENT_CREATE: {
-          void queryClient.invalidateQueries({ queryKey: ['comments'] })
-          void queryClient.invalidateQueries({ queryKey: ['aggregate'] })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.comments.root,
+          })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.aggregate.root,
+          })
           notifyNewComment(payload, navigate)
           break
         }
         case EventTypes.LINK_APPLY: {
-          void queryClient.invalidateQueries({ queryKey: ['links'] })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.links.root,
+          })
           notifyLinkApply(payload, navigate)
           break
         }
@@ -76,32 +83,50 @@ export function SocketBridge() {
         case EventTypes.POST_CREATE:
         case EventTypes.POST_UPDATE:
         case EventTypes.POST_DELETE: {
-          void queryClient.invalidateQueries({ queryKey: ['posts'] })
-          void queryClient.invalidateQueries({ queryKey: ['aggregate'] })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.posts.root,
+          })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.aggregate.root,
+          })
           break
         }
         case EventTypes.NOTE_CREATE:
         case EventTypes.NOTE_UPDATE:
         case EventTypes.NOTE_DELETE: {
-          void queryClient.invalidateQueries({ queryKey: ['notes'] })
-          void queryClient.invalidateQueries({ queryKey: ['aggregate'] })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.notes.root,
+          })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.aggregate.root,
+          })
           break
         }
         case EventTypes.PAGE_UPDATED: {
-          void queryClient.invalidateQueries({ queryKey: ['pages'] })
-          void queryClient.invalidateQueries({ queryKey: ['aggregate'] })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.pages.root,
+          })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.aggregate.root,
+          })
           break
         }
         case EventTypes.SAY_CREATE:
         case EventTypes.SAY_UPDATE:
         case EventTypes.SAY_DELETE: {
-          void queryClient.invalidateQueries({ queryKey: ['says'] })
-          void queryClient.invalidateQueries({ queryKey: ['aggregate'] })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.says.root,
+          })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.aggregate.root,
+          })
           break
         }
         case EventTypes.IMAGE_FETCH:
         case EventTypes.IMAGE_REFRESH: {
-          void queryClient.invalidateQueries({ queryKey: ['files'] })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.files.root,
+          })
           break
         }
         default: {

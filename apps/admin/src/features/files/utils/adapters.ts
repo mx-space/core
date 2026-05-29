@@ -5,16 +5,15 @@ import type {
   OrphanFile,
 } from '~/api/files'
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
+import type { BadgeTone } from '~/ui/primitives/badge'
 
 import { relativeTimeFromNow } from '~/utils/time'
 
 import { formatBytes } from './format'
 
-export type RowTone = 'neutral' | 'warn' | 'danger'
-
 export interface RowStatus {
   label: string
-  tone: RowTone
+  tone: BadgeTone
 }
 
 export interface FileRowItem<TRaw = unknown> {
@@ -79,12 +78,12 @@ export function adaptOrphanFile(
   }
 }
 
-function orphanStatusTone(status: OrphanFile['status']): RowTone {
+function orphanStatusTone(status: OrphanFile['status']): BadgeTone {
   switch (status) {
     case 'active':
       return 'neutral'
     case 'pending':
-      return 'warn'
+      return 'warning'
     case 'detached':
       return 'danger'
     default:
@@ -123,12 +122,12 @@ export function adaptCommentUpload(
   }
 }
 
-function commentStatusTone(status: CommentUploadFile['status']): RowTone {
+function commentStatusTone(status: CommentUploadFile['status']): BadgeTone {
   switch (status) {
     case 'active':
       return 'neutral'
     case 'pending':
-      return 'warn'
+      return 'warning'
     case 'detached':
       return 'danger'
     default:

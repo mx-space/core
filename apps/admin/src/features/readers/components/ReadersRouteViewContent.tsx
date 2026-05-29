@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router'
 
 import { getOwner } from '~/api/options'
 import type { ReaderModel } from '~/api/readers'
+import { adminQueryKeys } from '~/query/keys'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 
 import { useReaderMutations } from '../hooks/useReaderMutations'
@@ -24,30 +25,22 @@ export function ReadersRouteViewContent() {
 
   const ownerQuery = useQuery({
     queryFn: getOwner,
-    queryKey: ['shell', 'owner'],
+    queryKey: adminQueryKeys.shell.owner(),
     retry: false,
   })
   const currentUserId = ownerQuery.data?.id ?? null
 
   const buildListPath = useCallback(() => {
-    const sp = new URLSearchParams()
-    if (list.role !== 'all') sp.set('role', list.role)
-    if (list.search) sp.set('q', list.search)
-    if (list.page > 1) sp.set('page', String(list.page))
-    const qs = sp.toString()
-    return `/readers${qs ? `?${qs}` : ''}`
-  }, [list.page, list.role, list.search])
+    return `/readers${list.listQueryString ? `?${list.listQueryString}` : ''}`
+  }, [list.listQueryString])
 
   const handleSelect = useCallback(
     (reader: ReaderModel) => {
-      const sp = new URLSearchParams()
-      if (list.role !== 'all') sp.set('role', list.role)
-      if (list.search) sp.set('q', list.search)
-      if (list.page > 1) sp.set('page', String(list.page))
-      const qs = sp.toString()
-      navigate(`/readers/${reader.id}${qs ? `?${qs}` : ''}`)
+      navigate(
+        `/readers/${reader.id}${list.listQueryString ? `?${list.listQueryString}` : ''}`,
+      )
     },
-    [list.page, list.role, list.search, navigate],
+    [list.listQueryString, navigate],
   )
 
   const closeDetail = useCallback(() => {

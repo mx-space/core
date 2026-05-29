@@ -3,14 +3,14 @@ import { useParams } from 'react-router'
 
 import { findInListCache } from '~/api/list-cache'
 import type { WebhookModel } from '~/api/webhooks'
+import { adminQueryKeys } from '~/query/keys'
 
-import { webhooksQueryKey } from '../constants'
 import { WebhookDetail } from './WebhookDetail'
 import { WebhookDispatches } from './WebhookDispatches'
 import { useWebhooksRouteContext } from './webhooks-route-context'
 import { WebhookDetailEmptyState } from './WebhookStates'
 
-const LIST_PREFIX = [...webhooksQueryKey, 'list'] as const
+const LIST_PREFIX = adminQueryKeys.webhooks.list()
 
 function extractWebhooks(value: unknown): WebhookModel[] | undefined {
   if (Array.isArray(value)) return value as WebhookModel[]

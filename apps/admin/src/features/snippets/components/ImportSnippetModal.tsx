@@ -7,6 +7,7 @@ import type { ImportFunctionPreview } from '../types/snippets'
 import { importSnippets } from '~/api/snippets'
 import { useI18n } from '~/i18n'
 import { SnippetType } from '~/models/snippet'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
 
@@ -40,13 +41,13 @@ export function ImportSnippetModal(props: {
   const availableQuery = useQuery({
     enabled: props.open,
     queryFn: fetchAvailableSnippetPackages,
-    queryKey: ['github-snippet-packages'],
+    queryKey: adminQueryKeys.snippets.githubPackages(),
   })
 
   const previewQuery = useQuery({
     enabled: props.open && Boolean(processName),
     queryFn: () => loadSnippetPackage(processName, t),
-    queryKey: ['github-snippet-package', processName],
+    queryKey: adminQueryKeys.snippets.githubPackage(processName),
   })
 
   useEffect(() => {

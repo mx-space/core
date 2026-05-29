@@ -1,20 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookOpen, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { BookOpen, Plus, Trash2 } from 'lucide-react'
 import type { FormEvent } from 'react'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router'
-import { toast } from 'sonner'
+import { useMemo, useRef } from 'react'
 
-import {
-  deleteNote,
-  getNotes,
-  patchNote,
-  patchNotePublish,
-  searchNotes,
-} from '~/api/notes'
 import { WEB_URL } from '~/constants/env'
 import {
   ContentListHeader,
+  ContentListRefreshButton,
   ContentListToolbar,
   SortMenu,
 } from '~/features/_shared/components/content-list-toolbar'
@@ -27,29 +18,16 @@ import { useListKeyboard } from '~/ui/list-actions'
 import { ButtonLink } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
-import { cn } from '~/utils/cn'
 
 import {
   noteFilterOptionDefinitions,
   noteSortOptionDefinitions,
   notesPageSize,
-  notesQueryKey,
 } from '../constants'
-import type {
-  NoteFilter,
-  NoteMetadataUpdate,
-  NoteSortKey,
-  SortOrder,
-} from '../types/notes'
-import { getErrorMessage } from '../utils/errors'
+import { useNoteMutations } from '../hooks/use-note-mutations'
+import { useNotesList } from '../hooks/use-notes-list'
+import type { NoteFilter, NoteSortKey } from '../types/notes'
 import { buildNotePublicPath } from '../utils/format'
-import { getFilteredNotes } from '../utils/get-filtered-notes'
-import {
-  readNoteFilter,
-  readNoteSortKey,
-  readPage,
-  readSortOrder,
-} from '../utils/search-params'
 import { buildNoteActions } from './buildNoteActions'
 import { NoteRow } from './NoteRow'
 import { NotesEmpty } from './NotesEmpty'
@@ -60,153 +38,35 @@ const FOCUS_SCOPE_ID = 'notes-list'
 
 export function NotesRouteViewContent() {
   const { t } = useI18n()
-  const queryClient = useQueryClient()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [page, setPage] = useState(readPage(searchParams.get('page')))
-  const [keywordInput, setKeywordInput] = useState(
-    searchParams.get('keyword') ?? '',
-  )
-  const [keyword, setKeyword] = useState(searchParams.get('keyword') ?? '')
-  const [filter, setFilter] = useState<NoteFilter>(
-    readNoteFilter(searchParams.get('filter')),
-  )
-  const [sortKey, setSortKey] = useState<NoteSortKey>(
-    readNoteSortKey(searchParams.get('sort')),
-  )
-  const [sortOrder, setSortOrder] = useState<SortOrder>(
-    readSortOrder(searchParams.get('order')),
-  )
-  const searchParamsKey = searchParams.toString()
-
-  useLayoutEffect(() => {
-    const nextPage = readPage(searchParams.get('page'))
-    const nextKeyword = searchParams.get('keyword') ?? ''
-    const nextFilter = readNoteFilter(searchParams.get('filter'))
-    const nextSortKey = readNoteSortKey(searchParams.get('sort'))
-    const nextSortOrder = readSortOrder(searchParams.get('order'))
-
-    setPage((value) => (value === nextPage ? value : nextPage))
-    setKeyword((value) => (value === nextKeyword ? value : nextKeyword))
-    setKeywordInput((value) => (value === nextKeyword ? value : nextKeyword))
-    setFilter((value) => (value === nextFilter ? value : nextFilter))
-    setSortKey((value) => (value === nextSortKey ? value : nextSortKey))
-    setSortOrder((value) => (value === nextSortOrder ? value : nextSortOrder))
-  }, [searchParamsKey])
-
-  const notesQuery = useQuery({
-    placeholderData: (previous) => previous,
-    queryFn: () =>
-      keyword
-        ? searchNotes({ keyword, page, size: notesPageSize })
-        : filter === 'all'
-          ? getNotes({
-              page,
-              size: notesPageSize,
-              sort_by: sortKey,
-              sort_order: sortOrder,
-            })
-          : getFilteredNotes({
-              filter,
-              page,
-              size: notesPageSize,
-              sortKey,
-              sortOrder,
-            }),
-    queryKey: [
-      ...notesQueryKey,
-      'list',
-      { filter, keyword, page, size: notesPageSize, sortKey, sortOrder },
-    ],
-  })
-
-  const notes = notesQuery.data?.data ?? []
-  const pagination = notesQuery.data?.pagination
+  const list = useNotesList()
+  const {
+    filter,
+    keyword,
+    keywordInput,
+    notes,
+    notesQuery,
+    page,
+    pagination,
+    setFilter,
+    setKeywordInput,
+    setPage,
+    setSort,
+    sortKey,
+    sortOrder,
+    submitSearch,
+  } = list
 
   // selection created by useListKeyboard later (after `actions`). Mutations
   // that fire selection.clear() go through this ref to avoid TDZ.
   const selectionClearRef = useRef<(() => void) | null>(null)
 
-  const invalidateNotes = async () => {
-    await queryClient.invalidateQueries({ queryKey: notesQueryKey })
-  }
-
-  useEffect(() => {
-    const nextParams = new URLSearchParams()
-    if (page > 1) nextParams.set('page', String(page))
-    if (keyword) nextParams.set('keyword', keyword)
-    if (filter !== 'all') nextParams.set('filter', filter)
-    if (sortKey !== 'createdAt') nextParams.set('sort', sortKey)
-    if (sortOrder !== 'desc') nextParams.set('order', sortOrder)
-    if (nextParams.toString() !== searchParamsKey) {
-      setSearchParams(nextParams, { replace: true })
-    }
-  }, [
-    filter,
-    keyword,
-    page,
-    searchParamsKey,
-    setSearchParams,
-    sortKey,
-    sortOrder,
-  ])
-
-  const publishMutation = useMutation({
-    mutationFn: (payload: { id: string; isPublished: boolean }) =>
-      patchNotePublish(payload.id, payload.isPublished),
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('notes.toast.updateFailed'))),
-    onSuccess: invalidateNotes,
-  })
-
-  const patchMutation = useMutation({
-    mutationFn: (payload: { data: NoteMetadataUpdate; id: string }) =>
-      patchNote(payload.id, payload.data),
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('notes.toast.updateFailed'))),
-    onSuccess: invalidateNotes,
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteNote,
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('notes.toast.deleteFailed'))),
-    onSuccess: async () => {
-      toast.success(t('notes.toast.deleted'))
-      await invalidateNotes()
-    },
-  })
-
-  const batchDeleteMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => deleteNote(id)))
-      const successfulIds = ids.filter(
-        (_, index) => results[index].status === 'fulfilled',
-      )
-
-      return {
-        failedCount: ids.length - successfulIds.length,
-        successfulIds,
-        successCount: successfulIds.length,
-      }
-    },
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('notes.toast.batchDeleteFailed'))),
-    onSuccess: async ({ failedCount, successCount }) => {
-      selectionClearRef.current?.()
-      if (failedCount > 0) {
-        toast.warning(
-          t('notes.toast.batchDeletePartial', {
-            failed: failedCount,
-            success: successCount,
-          }),
-        )
-      } else {
-        toast.success(
-          t('notes.toast.batchDeleteSucceeded', { count: successCount }),
-        )
-      }
-      await invalidateNotes()
-    },
+  const {
+    batchDeleteMutation,
+    deleteMutation,
+    patchMutation,
+    publishMutation,
+  } = useNoteMutations({
+    onBatchSuccess: () => selectionClearRef.current?.(),
   })
 
   const confirmAndDelete = async (targets: NoteModel[]) => {
@@ -288,8 +148,7 @@ export function NotesRouteViewContent() {
 
   const onSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setPage(1)
-    setKeyword(keywordInput.trim())
+    submitSearch()
   }
 
   const toggleAllVisible = (checked: boolean) => {
@@ -318,21 +177,11 @@ export function NotesRouteViewContent() {
 
       <ContentListToolbar
         extraActions={
-          <button
-            aria-label={t('notes.list.refreshAria')}
-            className="outline-hidden inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-[var(--color-primary-shallow)] disabled:pointer-events-none disabled:opacity-50 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
-            disabled={notesQuery.isFetching}
-            onClick={() => void notesQuery.refetch()}
-            type="button"
-          >
-            <RefreshCw
-              aria-hidden="true"
-              className={cn(
-                'size-3.5',
-                notesQuery.isFetching && 'animate-spin',
-              )}
-            />
-          </button>
+          <ContentListRefreshButton
+            isFetching={notesQuery.isFetching}
+            label={t('notes.list.refreshAria')}
+            onRefresh={() => void notesQuery.refetch()}
+          />
         }
         filters={
           <SelectField
@@ -351,21 +200,13 @@ export function NotesRouteViewContent() {
           <SortMenu<NoteSortKey>
             disabled={Boolean(keyword)}
             field={sortKey}
-            onChange={({ field, order }) => {
-              setSortKey(field)
-              setSortOrder(order)
-              setPage(1)
-            }}
+            onChange={setSort}
             options={sortOptions}
             order={sortOrder}
           />
         }
         hasSearch={Boolean(keyword)}
-        onClearSearch={() => {
-          setKeywordInput('')
-          setKeyword('')
-          setPage(1)
-        }}
+        onClearSearch={list.clearSearch}
         onSearch={onSearch}
         onSearchValueChange={setKeywordInput}
         searchPlaceholder={t('notes.list.searchPlaceholder')}

@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { deletePasskey, listPasskeys } from '~/api/auth'
 import { getOption, patchOption } from '~/api/options'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { Switch } from '~/ui/primitives/switch'
@@ -55,12 +56,12 @@ export function PasskeyPanel() {
   const authSecurityQuery = useQuery({
     queryFn: () =>
       getOption<{ disablePasswordLogin?: boolean }>('authSecurity'),
-    queryKey: [...accountQueryKey, 'auth-security'],
+    queryKey: adminQueryKeys.settings.authSecurity(),
   })
 
   const passkeysQuery = useQuery({
     queryFn: listPasskeys,
-    queryKey: [...accountQueryKey, 'passkeys'],
+    queryKey: adminQueryKeys.settings.passkeys(),
   })
 
   const updateAuthSecurityMutation = useMutation({
