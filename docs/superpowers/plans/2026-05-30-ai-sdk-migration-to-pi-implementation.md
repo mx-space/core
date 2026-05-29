@@ -356,13 +356,14 @@ return normalised;
 
 **Size:** XS | **Depends on:** step-3a, step-7
 
-**Prompt:** With the app now fully typechecking after step-7, run `pnpm -C apps/core run migrate` against a fresh PG 17 testcontainer. Assert: (a) `\d ai_providers` shows `context_window` and `max_tokens` integer-nullable columns; (b) the `ai_provider_type` enum has exactly 3 labels; (c) existing rows with legacy `openai`/`openrouter` values are mapped to `openai-compatible`; (d) `pnpm -C apps/core run lint:migrations` is still green.
+**Prompt:** With the app now fully typechecking after step-7, run `pnpm -C apps/core run migrate` against a fresh PG 17 testcontainer. NOTE: step-3a delivered a jsonb-based collapse (provider config lives in `options.value` jsonb, no dedicated `ai_providers` table and no `ai_provider_type` pgEnum exist), so the original (a)/(b) checks no longer apply — they assumed a table+enum design. The effective verification is: (a) `pnpm -C apps/core run migrate` succeeds end-to-end on a fresh PG 17 testcontainer; (b) seeded legacy provider entries with `type` in `{openai, openrouter, anthropic, openai-compatible}` are rewritten so `openai`/`openrouter` → `openai-compatible` and the other two stay unchanged; (c) sibling fields on each provider object (`id`, `name`, `endpoint`, `apiKey`, `contextWindow`, `maxTokens`) are preserved untouched; (d) `pnpm -C apps/core run lint:migrations` is still green.
 
 **Success criteria:**
 
 - `pnpm -C apps/core run migrate` exits 0 against fresh testcontainer
-- Enum recreation succeeded; legacy values mapped correctly
-- context_window/max_tokens columns present and nullable
+- Legacy `openai`/`openrouter` jsonb provider entries rewritten to `openai-compatible`; `anthropic` and `openai-compatible` entries unchanged
+- Non-`type` fields (`endpoint`, `apiKey`, etc.) on every provider object survive the migration intact
+- `pnpm -C apps/core run lint:migrations` exits 0
 
 ### step-9 — Rewrite ai_agent_conversations: drop+create + repo/service/types/schema rewrites
 
@@ -662,7 +663,7 @@ Full `pnpm -C apps/core exec tsc --noEmit` passes. `pnpm -C apps/core test -- ai
 
 ### After step-3b
 
-Fresh `pnpm -C apps/core run migrate` against clean PG 17 testcontainer succeeds end-to-end. `\d ai_providers` shows context_window/max_tokens nullable. Enum has 3 labels. Legacy values mapped to openai-compatible.
+Fresh `pnpm -C apps/core run migrate` against clean PG 17 testcontainer succeeds end-to-end. Because step-3a chose a jsonb-only collapse (no `ai_providers` table, no `ai_provider_type` pgEnum), the verification asserts data-shape rewrites instead of DDL: seeded legacy provider entries with `type='openai'` and `type='openrouter'` are rewritten to `openai-compatible`; `anthropic` and `openai-compatible` entries are left untouched; sibling fields on every provider object (`endpoint`, `apiKey`, etc.) are preserved verbatim. `pnpm -C apps/core run lint:migrations` stays green.
 
 ### After step-10
 
