@@ -105,6 +105,44 @@ describe('post category resource store', () => {
     ).toHaveLength(1)
   })
 
+  it('hydrates detail rows into the shared post table', () => {
+    const store = usePostCategoryResourceStore.getState()
+
+    store.hydratePostDetail(post({ id: 'p1', title: 'Detail title' }))
+
+    const state = usePostCategoryResourceStore.getState()
+    expect(selectVisiblePost(state, 'p1')?.title).toBe('Detail title')
+    expect(state.postIdsByCategoryId.c1).toEqual(['p1'])
+  })
+
+  it('updates visible post category data when category management saves', () => {
+    const store = usePostCategoryResourceStore.getState()
+    store.hydratePostDetail(post({ id: 'p1' }))
+
+    store.hydrateCategory(
+      categoryModel({ id: 'c1', name: 'Engineering', slug: 'engineering' }),
+    )
+
+    const visiblePost = selectVisiblePost(
+      usePostCategoryResourceStore.getState(),
+      'p1',
+    )
+    expect(visiblePost?.category.name).toBe('Engineering')
+    expect(visiblePost?.category.slug).toBe('engineering')
+  })
+
+  it('removes category management rows without deleting posts', () => {
+    const store = usePostCategoryResourceStore.getState()
+    store.hydrateCategories([categoryModel({ id: 'c1' })])
+    store.hydratePostDetail(post({ id: 'p1' }))
+
+    store.removeCategory('c1')
+
+    const state = usePostCategoryResourceStore.getState()
+    expect(state.categoryIds).toEqual([])
+    expect(selectVisiblePost(state, 'p1')?.id).toBe('p1')
+  })
+
   it('supports class-based transaction commit and rollback', () => {
     const store = usePostCategoryResourceStore.getState()
     store.hydratePostList(listKey, paginated([post({ id: 'p1', title: 'A' })]))

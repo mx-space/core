@@ -1,8 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
+import { useLayoutEffect, useMemo } from 'react'
 import { Edit3, FolderOpen, Loader2, Trash2 } from 'lucide-react'
 import type { CategoryModel } from '~/models/category'
 
 import { getPosts } from '~/api/posts'
+import { usePostResourceList } from '~/data/post-category-resource/hooks'
+import {
+  serializeResourceListKey,
+  usePostCategoryResourceStore,
+} from '~/data/post-category-resource/store'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
@@ -21,6 +27,11 @@ export function CategoryDetail(props: {
   onEdit: (category: CategoryModel) => void
 }) {
   const { t } = useI18n()
+  const postsQueryKey = useMemo(
+    () => adminQueryKeys.posts.categoryDetail(props.category.id),
+    [props.category.id],
+  )
+  const postListResource = usePostResourceList(postsQueryKey)
   const postsQuery = useQuery({
     enabled: !!props.category.id,
     queryFn: () =>
@@ -30,9 +41,16 @@ export function CategoryDetail(props: {
         size: categoryDetailPostPageSize,
         sort_by: 'createdAt',
         sort_order: 'desc',
-      }).then((result) => result.data),
-    queryKey: adminQueryKeys.posts.categoryDetail(props.category.id),
+      }),
+    queryKey: postsQueryKey,
   })
+
+  useLayoutEffect(() => {
+    if (!postsQuery.data) return
+    usePostCategoryResourceStore
+      .getState()
+      .hydratePostList(serializeResourceListKey(postsQueryKey), postsQuery.data)
+  }, [postsQuery.data, postsQueryKey])
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -73,7 +91,7 @@ export function CategoryDetail(props: {
         <PostListSection
           emptyText={t('categories.detail.postsByCategoryEmpty')}
           loading={postsQuery.isLoading}
-          posts={postsQuery.data ?? []}
+          posts={postListResource.posts}
           title={t('categories.detail.postsByCategory')}
         />
       </Scroll>

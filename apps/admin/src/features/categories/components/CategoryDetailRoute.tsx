@@ -1,8 +1,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useLayoutEffect } from 'react'
 import { useParams } from 'react-router'
 
 import { getCategories, getCategory, getTags } from '~/api/categories'
 import { findInListCache } from '~/api/list-cache'
+import { usePostResourceCategory } from '~/data/post-category-resource/hooks'
+import { usePostCategoryResourceStore } from '~/data/post-category-resource/store'
 import type { CategoryModel, TagModel } from '~/models/category'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -35,6 +38,9 @@ export function CategoryDetailRoute() {
   const ctx = useCategoriesRouteContext()
 
   const parsed = parseId(id)
+  const resourceCategory = usePostResourceCategory(
+    parsed?.kind === 'category' ? parsed.value : '',
+  )
 
   const initialCategory =
     parsed?.kind === 'category'
@@ -69,6 +75,11 @@ export function CategoryDetailRoute() {
     queryKey: CATEGORY_LIST_KEY,
   })
 
+  useLayoutEffect(() => {
+    if (!categoryQuery.data) return
+    usePostCategoryResourceStore.getState().hydrateCategory(categoryQuery.data)
+  }, [categoryQuery.data])
+
   if (!parsed) return <DetailEmpty />
 
   if (parsed.kind === 'tag') {
@@ -80,7 +91,9 @@ export function CategoryDetailRoute() {
     return <TagDetail onBack={ctx.onBack} tag={tag} />
   }
 
-  const category = categoryQuery.data
+  const category = (resourceCategory ?? categoryQuery.data) as
+    | CategoryModel
+    | undefined
   if (!category) return <DetailEmpty />
 
   return (

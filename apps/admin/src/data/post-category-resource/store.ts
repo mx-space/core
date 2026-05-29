@@ -44,10 +44,13 @@ interface PostCategoryResourceActions {
     serverPost?: PostModel,
   ) => void
   hydrateCategories: (categories: ResourceCategory[]) => void
+  hydrateCategory: (category: ResourceCategory) => void
+  hydratePostDetail: (post: PostModel) => void
   hydratePostList: (
     listKey: string,
     result: PaginateResult<PostModel>,
   ) => void
+  removeCategory: (categoryId: string) => void
   reset: () => void
   rollbackPostTransaction: (transactionId: string, error?: unknown) => void
 }
@@ -128,11 +131,24 @@ export const usePostCategoryResourceStore =
           produce<PostCategoryResourceStore>((draft) => {
             draft.categoryIds = categories.map((category) => category.id)
             for (const category of categories) {
-              draft.categoriesById[category.id] = {
-                ...draft.categoriesById[category.id],
-                ...category,
-              }
+              upsertCategory(draft, category)
             }
+            rebuildPostCategoryRelations(draft)
+          }),
+        )
+      },
+      hydrateCategory: (category) => {
+        set(
+          produce<PostCategoryResourceStore>((draft) => {
+            upsertCategory(draft, category)
+            rebuildPostCategoryRelations(draft)
+          }),
+        )
+      },
+      hydratePostDetail: (post) => {
+        set(
+          produce<PostCategoryResourceStore>((draft) => {
+            upsertPost(draft, post)
             rebuildPostCategoryRelations(draft)
           }),
         )
@@ -148,6 +164,17 @@ export const usePostCategoryResourceStore =
               pagination: result.pagination,
               updatedAt: Date.now(),
             }
+            rebuildPostCategoryRelations(draft)
+          }),
+        )
+      },
+      removeCategory: (categoryId) => {
+        set(
+          produce<PostCategoryResourceStore>((draft) => {
+            delete draft.categoriesById[categoryId]
+            draft.categoryIds = draft.categoryIds.filter(
+              (id) => id !== categoryId,
+            )
             rebuildPostCategoryRelations(draft)
           }),
         )
@@ -199,6 +226,13 @@ export function selectPostCategories(state: PostCategoryResourceState) {
   return state.categoryIds
     .map((id) => state.categoriesById[id])
     .filter((category): category is ResourceCategory => Boolean(category))
+}
+
+export function selectPostCategory(
+  state: PostCategoryResourceState,
+  categoryId: string,
+) {
+  return state.categoriesById[categoryId]
 }
 
 export function selectVisiblePost(
@@ -265,16 +299,22 @@ function removePostTransaction(
 
 function upsertPost(draft: PostCategoryResourceStore, post: PostModel) {
   if (post.category) {
-    const category = post.category
-    draft.categoriesById[category.id] = {
-      ...draft.categoriesById[category.id],
-      ...category,
-    }
-    if (!draft.categoryIds.includes(category.id)) {
-      draft.categoryIds.push(category.id)
-    }
+    upsertCategory(draft, post.category)
   }
   draft.postsById[post.id] = post
+}
+
+function upsertCategory(
+  draft: PostCategoryResourceStore,
+  category: ResourceCategory,
+) {
+  draft.categoriesById[category.id] = {
+    ...draft.categoriesById[category.id],
+    ...category,
+  }
+  if (!draft.categoryIds.includes(category.id)) {
+    draft.categoryIds.push(category.id)
+  }
 }
 
 function rebuildPostCategoryRelations(draft: PostCategoryResourceStore) {

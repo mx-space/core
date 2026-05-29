@@ -3,6 +3,7 @@ import { useCallback } from 'react'
 import { toast } from 'sonner'
 
 import { deleteCategory } from '~/api/categories'
+import { usePostCategoryResourceStore } from '~/data/post-category-resource/store'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -28,7 +29,8 @@ export function useCategoryMutations(
     mutationFn: deleteCategory,
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('categories.toast.deleteFailed'))),
-    onSuccess: async () => {
+    onSuccess: async (_, id) => {
+      usePostCategoryResourceStore.getState().removeCategory(id)
       toast.success(t('categories.toast.deleted'))
       options.onAfterDeleteSuccess?.()
       await invalidateCategories()

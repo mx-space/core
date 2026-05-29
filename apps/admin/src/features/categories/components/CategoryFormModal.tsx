@@ -7,6 +7,7 @@ import type { CategoryModel } from '~/models/category'
 import type { CategoryFormMode } from '../types/categories'
 
 import { createCategory, updateCategory } from '~/api/categories'
+import { usePostCategoryResourceStore } from '~/data/post-category-resource/store'
 import { useI18n } from '~/i18n'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
@@ -41,6 +42,7 @@ function CategoryFormModal(props: CategoryFormModalProps) {
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('categories.form.saveFailed'))),
     onSuccess: (category) => {
+      usePostCategoryResourceStore.getState().hydrateCategory(category)
       toast.success(
         props.mode.kind === 'edit'
           ? t('categories.form.updated')
