@@ -48,7 +48,6 @@
     "prepackage": "rm -rf dist",
     "clean": "rm -rf dist",
     "dev": "tsx src/cli.ts",
-    "prepare": "npm run package",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit",
