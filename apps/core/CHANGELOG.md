@@ -1,3 +1,17 @@
+# [13.3.0](https://github.com/mx-space/core/compare/v13.2.0...v13.3.0) (2026-05-29)
+
+
+### Features
+
+* **admin:** integrate admin SPA into the monorepo ([#2740](https://github.com/mx-space/core/issues/2740)) ([76ca444](https://github.com/mx-space/core/commit/76ca4445))
+* **reader:** add ban support and role-filtered pagination ([91acc5d](https://github.com/mx-space/core/commit/91acc5d3))
+
+
+### Bug Fixes
+
+* **comment:** keep reader replies as unread instead of inheriting read state ([7332443](https://github.com/mx-space/core/commit/73324431))
+
+
 # [13.2.0](https://github.com/mx-space/core/compare/v13.1.2...v13.2.0) (2026-05-28)
 
 
