@@ -125,6 +125,19 @@ shells live in `apps/admin/src/ui/layout/`:
 - `apps/admin/src/constants/env.ts` — resolves API/web/gateway URLs (injected env first,
   then `VITE_APP_*`)
 
+## Release
+
+Two channels publish the dashboard (full detail in `../../docs/admin-monorepo-migration.md`):
+
+- **With a core release** (`v*` tag): `release.yml` builds admin, bundles it into the
+  server zip + Docker image, and publishes it to Cloudflare R2.
+- **Independently** (admin-only fix, no core release): run
+  `../../scripts/release-admin.sh [patch|minor|major]` — bumps `package.json`, tags
+  `admin-v*`, and `admin-release.yml` builds + publishes to R2.
+
+The version baseline is `8.x`+ (above the retired GitHub channel) so a freshly bundled
+build supersedes any copy previously downloaded into the server's data directory.
+
 ## Related Projects (within the monorepo)
 
 - **apps/core** — backend API server (NestJS), the sibling workspace app. Serves the built
@@ -134,5 +147,4 @@ shells live in `apps/admin/src/ui/layout/`:
 
 ### Rich Editor Integration
 
-Rich editor work is integrated as ordinary React components — there is no framework
-bridge or compatibility shim.
+Rich editor work is integrated as ordinary React components.

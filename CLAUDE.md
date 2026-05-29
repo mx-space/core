@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MX Space is a personal blog server application (AI-powered headless CMS) built with NestJS, PostgreSQL, and Redis. This is a monorepo containing the core server application and related packages. The main application is located in `apps/core/`.
+MX Space is a personal blog server application (AI-powered headless CMS) built with NestJS, PostgreSQL, and Redis. This is a monorepo containing the core server application and related packages. The main application is located in `apps/core/`; the admin dashboard SPA lives at `apps/admin/` and is built into the server release (see `apps/admin/CLAUDE.md`).
 
 ## Related Projects
 
-- **Dashboard (admin-vue3)**: `../admin-vue3` — 后台管理面板，Vue 3 项目
+- **Dashboard**: now an in-repo app at `apps/admin` (React 19 SPA, `@mx-admin/admin`). Built locally during the core build/release, served under `/proxy/qaqdmin`, and published to Cloudflare R2. See `apps/admin/CLAUDE.md` and `docs/admin-monorepo-migration.md`. (The former standalone `mx-space/mx-admin` repo is archived.)
 - **Frontend (Yohaku)**: `../Yohaku` — 主站前端 (Next.js)
 - **haklex**: `../haklex` (standalone) — Rich editor packages (`@haklex/*`)
 
