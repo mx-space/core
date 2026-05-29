@@ -258,19 +258,33 @@ export class AiSummaryService implements OnModuleInit {
     ]
 
     let fullText = ''
-    if (runtime.generateTextStream) {
-      for await (const chunk of runtime.generateTextStream({
+    let totalTokens = 0
+    if (runtime.streamMessage) {
+      const events = runtime.streamMessage({
         messages,
         temperature: 0.5,
         maxRetries: 2,
         reasoningEffort,
-      })) {
-        fullText += chunk.text
-        if (push) {
-          await push({ type: 'token', data: chunk.text })
-        }
-        if (onToken) {
-          await onToken()
+      })
+      for await (const event of events) {
+        if (event.type === 'text_delta') {
+          const delta = event.delta
+          if (typeof delta !== 'string' || delta.length === 0) continue
+          fullText += delta
+          if (push) {
+            await push({ type: 'token', data: delta })
+          }
+        } else if (
+          event.type === 'thinking_delta' ||
+          event.type === 'toolcall_start' ||
+          event.type === 'toolcall_delta' ||
+          event.type === 'toolcall_end'
+        ) {
+          this.logger.debug(`stream non-text event filtered: ${event.type}`)
+        } else if (event.type === 'done') {
+          totalTokens = event.message.usage?.totalTokens ?? 0
+        } else if (event.type === 'error') {
+          throw new Error(event.error.errorMessage || 'AI summary stream error')
         }
       }
     } else {
@@ -281,17 +295,19 @@ export class AiSummaryService implements OnModuleInit {
         reasoningEffort,
       })
       fullText = result.text
+      totalTokens = result.usage?.totalTokens ?? 0
       if (push && result.text) {
         await push({ type: 'token', data: result.text })
-      }
-      if (onToken && result.text) {
-        await onToken()
       }
     }
 
     const parsed = JSON.parse(fullText) as { summary?: string }
     if (!parsed?.summary || typeof parsed.summary !== 'string') {
       throw new Error('Invalid summary JSON response')
+    }
+
+    if (onToken) {
+      await onToken(totalTokens)
     }
 
     return { summary: parsed.summary, rawText: fullText }

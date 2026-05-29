@@ -178,6 +178,10 @@ export class AiInFlightService {
     }
   }
 
+  // PRESERVE: cached hydrate bypasses snake_case conversion. Controllers using
+  // @HTTPDecorators.RawResponse emit the cached blob via sendSseEvent without
+  // ResponseInterceptor case-transform — this matches pre-pi-migration wire
+  // bytes for cache-hit responses. Do not route this through transformResponseCase.
   private async *createImmediateDoneStream(
     resultId: string,
   ): AsyncIterable<AiStreamEvent> {
