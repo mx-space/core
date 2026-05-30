@@ -12,6 +12,7 @@ import {
   TASK_QUEUE_TTL,
   TASK_QUEUE_TTL_MS,
 } from './task-queue.constants'
+import { TaskQueueEmitter } from './task-queue.emitter'
 import {
   LUA_ACQUIRE_TASK,
   LUA_CANCEL_PENDING,
@@ -22,6 +23,7 @@ import {
   parseTask,
   type SubTaskStats,
   type Task,
+  type TaskLog,
   type TaskRedis,
   TaskStatus,
 } from './task-queue.types'
@@ -70,7 +72,10 @@ export interface CreateTaskOptions {
 export class TaskQueueService implements OnModuleDestroy {
   private readonly logger = new Logger(TaskQueueService.name)
 
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly emitter: TaskQueueEmitter,
+  ) {}
 
   async onModuleDestroy() {}
 
@@ -206,6 +211,10 @@ export class TaskQueueService implements OnModuleDestroy {
     this.logger.log(
       `Task created: id=${taskId} type=${type}${groupId ? ` group=${groupId}` : ''}`,
     )
+
+    const snapshot = parseTask(taskData, [])
+    this.emitter.emitCreated(snapshot)
+
     return { taskId, created: true }
   }
 
@@ -366,6 +375,11 @@ export class TaskQueueService implements OnModuleDestroy {
       if (result === 1) {
         await this.appendLog(taskId, 'info', 'Task cancelled by user')
         this.logger.log(`Task cancelled (pending): id=${taskId}`)
+        this.emitter.emitStatus(
+          { id: taskId, type: task.type, groupId: task.groupId },
+          { status: TaskStatus.Cancelled },
+        )
+        this.emitter.dispose(taskId)
         return true
       }
     }
@@ -457,6 +471,13 @@ export class TaskQueueService implements OnModuleDestroy {
     await pipeline.exec()
 
     this.logger.log(`Task deleted: id=${taskId}`)
+
+    this.emitter.emitDeleted({
+      id: taskId,
+      type: task.type,
+      groupId: task.groupId,
+    })
+    this.emitter.dispose(taskId)
   }
 
   async deleteTasks(options: {
@@ -525,6 +546,14 @@ export class TaskQueueService implements OnModuleDestroy {
       if (task) {
         await this.redis.zrem(indexPending, taskId)
         await this.redis.zadd(indexRunning, task.createdAt, taskId)
+        this.emitter.emitStarted(
+          { id: task.id, type: task.type, groupId: task.groupId },
+          {
+            status: TaskStatus.Running,
+            workerId: task.workerId,
+            startedAt: task.startedAt,
+          },
+        )
       }
       this.logger.debug(`Task acquired: id=${taskId} worker=${workerId}`)
       return taskId
@@ -584,6 +613,15 @@ export class TaskQueueService implements OnModuleDestroy {
     }
 
     await this.redis.hset(taskKey, updates)
+
+    const meta = await this.getEmitMeta(taskId)
+    if (meta) {
+      const patch: Partial<Task> = { progress }
+      if (message !== undefined) patch.progressMessage = message
+      if (completed !== undefined) patch.completedItems = completed
+      if (total !== undefined) patch.totalItems = total
+      this.emitter.emitProgress(meta, patch)
+    }
   }
 
   async incrementTokens(taskId: string, count: number = 1): Promise<void> {
@@ -633,6 +671,45 @@ export class TaskQueueService implements OnModuleDestroy {
       await this.redis.expire(taskKey, TASK_QUEUE_TTL.taskCompleted)
       await this.redis.expire(logsKey, TASK_QUEUE_TTL.taskCompleted)
     }
+
+    // Emit lifecycle update — refetch the task once for an accurate patch and
+    // for the terminal 'result' decision. Skip emit silently if the task
+    // vanished mid-update (e.g. concurrent delete).
+    const fresh = await this.getTask(taskId)
+    if (!fresh) return
+    const meta = { id: fresh.id, type: fresh.type, groupId: fresh.groupId }
+    const statusPatch: Partial<Task> = {
+      status: fresh.status,
+      progress: fresh.progress,
+      progressMessage: fresh.progressMessage,
+      completedAt: fresh.completedAt,
+      error: fresh.error,
+    }
+    this.emitter.emitStatus(meta, statusPatch)
+
+    if (!isTerminalStatus(status)) return
+
+    // Always release throttle state when a task reaches a terminal status.
+    this.emitter.dispose(taskId)
+
+    const shouldEmitResult =
+      (status === TaskStatus.Completed ||
+        status === TaskStatus.PartialFailed) &&
+      fresh.result !== undefined &&
+      fresh.result !== null
+    if (shouldEmitResult) {
+      this.emitter.emitResult(meta, statusPatch, fresh.result)
+      return
+    }
+
+    if (
+      status === TaskStatus.Completed &&
+      (fresh.result === undefined || fresh.result === null)
+    ) {
+      this.logger.warn(
+        `Terminal Completed without setResult: id=${taskId} type=${fresh.type}`,
+      )
+    }
   }
 
   async setResult(taskId: string, result: unknown): Promise<void> {
@@ -674,15 +751,21 @@ export class TaskQueueService implements OnModuleDestroy {
       message = `${new TextDecoder().decode(bytes)}...`
     }
 
-    const log = JSON.stringify({
+    const logEntry: TaskLog = {
       timestamp: Date.now(),
       level,
       message,
-    })
+    }
+    const log = JSON.stringify(logEntry)
 
     const logsKey = this.getKey(TASK_QUEUE_KEYS.logs(taskId))
     await this.redis.rpush(logsKey, log)
     await this.redis.ltrim(logsKey, -TASK_QUEUE_LIMITS.maxLogs, -1)
+
+    const meta = await this.getEmitMeta(taskId)
+    if (meta) {
+      this.emitter.emitLog(meta, logEntry)
+    }
   }
 
   async recoverStaleTasks(): Promise<number> {
@@ -718,6 +801,24 @@ export class TaskQueueService implements OnModuleDestroy {
     const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
     const status = await this.redis.hget(taskKey, 'status')
     return status === TaskStatus.Cancelled
+  }
+
+  /**
+   * Fetch the minimal task metadata needed for an AI_TASK_UPDATE emit
+   * (id / type / groupId). Returns null when the task hash no longer exists,
+   * so callers can skip the emit silently.
+   */
+  private async getEmitMeta(
+    taskId: string,
+  ): Promise<{ id: string; type: string; groupId?: string } | null> {
+    const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
+    const [type, groupId] = await this.redis.hmget(taskKey, 'type', 'groupId')
+    if (!type) return null
+    return {
+      id: taskId,
+      type,
+      groupId: groupId || undefined,
+    }
   }
 
   private generateTaskId(): string {
