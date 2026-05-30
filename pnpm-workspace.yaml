@@ -2,7 +2,7 @@ packages:
   - packages/*
   - apps/*
 allowBuilds:
-  '@google/genai': set this to true or false
+  '@google/genai': false
   "@nestjs/core": true
   '@parcel/watcher': false
   "@swc/core": true
