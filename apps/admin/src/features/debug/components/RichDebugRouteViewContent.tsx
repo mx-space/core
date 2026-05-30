@@ -51,7 +51,7 @@ export function RichDebugRouteViewContent() {
   const placeholderText = t('debug.rich.placeholder')
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
+    <div className="flex h-full min-h-0 flex-col bg-background">
       <div
         className={cn(
           'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
@@ -125,7 +125,7 @@ function RichDebugSurface(props: {
       const options: MountRichEditorOptions = {
         apiUrl: API_URL,
         autoFocus: true,
-        className: 'h-full bg-white dark:bg-neutral-950',
+        className: 'h-full bg-background',
         contentClassName: 'min-h-full px-5 py-4',
         debounceMs: 250,
         editorStyle: { maxWidth: '100%' },

@@ -28,7 +28,7 @@ export function SaysRouteViewContent() {
   }
 
   return (
-    <section className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
+    <section className="flex h-full min-h-0 flex-col bg-background">
       <ContentListHeader
         action={
           <Button

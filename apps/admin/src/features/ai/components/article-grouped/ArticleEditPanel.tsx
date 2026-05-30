@@ -1,9 +1,9 @@
 import { X } from 'lucide-react'
-import type { ArticleGroupedConfig } from './types'
 
 import { useI18n } from '~/i18n'
 
 import { GeneratePromptBody } from './GeneratePromptBody'
+import type { ArticleGroupedConfig } from './types'
 
 interface ArticleEditPanelProps<TItem> {
   config: ArticleGroupedConfig<TItem>
@@ -24,7 +24,7 @@ export function ArticleEditPanel<TItem>(props: ArticleEditPanelProps<TItem>) {
     mode === 'generate' ? t(config.generate.labelKey) : t(config.editTitleKey)
 
   return (
-    <section className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
+    <section className="flex h-full min-h-0 flex-col bg-background">
       <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800">
         <h3 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
           {title}

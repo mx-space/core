@@ -26,7 +26,7 @@ import {
 } from '../constants'
 import { useNoteMutations } from '../hooks/use-note-mutations'
 import { useNotesList } from '../hooks/use-notes-list'
-import type { NoteFilter, NoteSortKey } from '../types/notes'
+import type { NoteSortKey } from '../types/notes'
 import { buildNotePublicPath } from '../utils/format'
 import { buildNoteActions } from './buildNoteActions'
 import { NoteRow } from './NoteRow'
@@ -158,7 +158,7 @@ export function NotesRouteViewContent() {
 
   return (
     <FocusScope
-      className="outline-hidden flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950"
+      className="outline-hidden flex h-full min-h-0 flex-col bg-background"
       id={FOCUS_SCOPE_ID}
     >
       <ContentListHeader

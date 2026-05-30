@@ -17,7 +17,7 @@ export function TemplateListPane(props: TemplateListPaneProps) {
   const { t } = useI18n()
 
   return (
-    <section className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
+    <section className="flex h-full min-h-0 flex-col bg-background">
       <div
         className={cn(
           'flex shrink-0 items-center justify-between gap-2 border-b border-neutral-200 px-4 dark:border-neutral-800',

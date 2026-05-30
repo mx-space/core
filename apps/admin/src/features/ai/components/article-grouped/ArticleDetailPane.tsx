@@ -66,7 +66,7 @@ export function ArticleDetailPane<TItem>(props: ArticleDetailPaneProps<TItem>) {
   return (
     <FocusScope
       className={cn(
-        'outline-hidden flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950',
+        'outline-hidden flex h-full min-h-0 flex-col bg-background',
       )}
       id={scopeId}
     >

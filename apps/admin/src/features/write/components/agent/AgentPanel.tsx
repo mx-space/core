@@ -13,7 +13,7 @@ export function AgentPanel({ agent }: AgentPanelProps) {
   const [input, setInput] = useState('')
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
+    <div className="flex h-full min-h-0 flex-col bg-background">
       <SessionHeader
         activeSessionId={agent.activeSessionId}
         isLoading={agent.isLoadingSessions}

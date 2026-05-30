@@ -170,7 +170,7 @@ export function PostsRouteViewContent() {
 
   return (
     <FocusScope
-      className="outline-hidden flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950"
+      className="outline-hidden flex h-full min-h-0 flex-col bg-background"
       id={FOCUS_SCOPE_ID}
     >
       <ContentListHeader

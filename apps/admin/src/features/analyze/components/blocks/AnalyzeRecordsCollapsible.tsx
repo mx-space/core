@@ -50,7 +50,7 @@ export function AnalyzeRecordsCollapsible() {
 
   return (
     <details
-      className="group bg-white dark:bg-neutral-950"
+      className="group bg-background"
       open={open}
       onToggle={(event) => {
         const next = event.currentTarget.open

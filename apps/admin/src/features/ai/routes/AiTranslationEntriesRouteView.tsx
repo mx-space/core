@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookOpenText, Loader2, RefreshCw, Sparkles } from 'lucide-react'
 import { useMemo } from 'react'
 import { toast } from 'sonner'
-import type { TranslationEntry, TranslationEntryKeyPath } from '~/api/ai'
 
+import type { TranslationEntry, TranslationEntryKeyPath } from '~/api/ai'
 import {
   deleteTranslationEntry,
   generateTranslationEntries,
@@ -162,7 +162,7 @@ export function AiTranslationEntriesRouteView() {
 
   return (
     <FocusScope
-      className="outline-hidden flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950"
+      className="outline-hidden flex h-full min-h-0 flex-col bg-background"
       id={FOCUS_SCOPE_ID}
     >
       <ContentListHeader

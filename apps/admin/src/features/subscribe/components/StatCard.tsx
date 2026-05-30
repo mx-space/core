@@ -9,7 +9,7 @@ export function StatCard(props: {
   const Icon = props.icon
   const tone = props.tone ?? 'default'
   const toneClasses = {
-    default: 'bg-white dark:bg-neutral-950 text-neutral-400',
+    default: 'bg-background text-neutral-400',
     success: 'bg-green-50 dark:bg-green-950/30 text-green-500',
     warning: 'bg-amber-50 dark:bg-amber-950/30 text-amber-500',
   }

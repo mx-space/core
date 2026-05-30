@@ -262,7 +262,7 @@ export function DashboardRouteViewContent() {
         title={t('dashboard.header.title')}
       />
       <Scroll
-        className="min-h-0 flex-1 bg-white dark:bg-neutral-950"
+        className="min-h-0 flex-1 bg-background"
         innerClassName="flex flex-col p-4"
       >
         <section className="grid gap-3 md:grid-cols-3">
@@ -406,7 +406,7 @@ export function DashboardRouteViewContent() {
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 aria-hidden="true"
-                className="bg-white dark:bg-neutral-950"
+                className="bg-background"
                 key={`stat-spacer-${i}`}
               />
             ))}

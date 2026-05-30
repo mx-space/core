@@ -919,7 +919,7 @@ function WritePage(props: { kind: WriteKind }) {
   return (
     <form className="flex h-full min-h-0 flex-col" onSubmit={onSubmit}>
       <section
-        className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950"
+        className="flex h-full min-h-0 flex-col bg-background"
         style={
           {
             '--app-shell-header-height': APP_SHELL_HEADER_HEIGHT_VALUE,
@@ -2954,7 +2954,7 @@ function Field(props: {
 function WriteSkeleton(props: { kind: WriteKind }) {
   if (props.kind === 'page') {
     return (
-      <div className="flex min-h-0 flex-1 flex-col bg-white dark:bg-neutral-950">
+      <div className="flex min-h-0 flex-1 flex-col bg-background">
         <div className="mx-auto w-full max-w-[60rem] shrink-0 px-3 pb-2 pt-6">
           <div className="h-14 w-full animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-900" />
           <div className="mt-3 h-4 w-1/2 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
@@ -3412,10 +3412,7 @@ function RichWriteSurface(props: {
   const editorOptions: RichEditorWithAgentProps = {
     apiUrl: API_URL,
     autoFocus: props.autoFocus ?? false,
-    className: cn(
-      'min-h-136 bg-white dark:bg-neutral-950',
-      props.surfaceClassName,
-    ),
+    className: cn('min-h-136 bg-background', props.surfaceClassName),
     contentClassName: cn('min-h-120 px-4 py-3', props.contentClassName),
     debounceMs: 250,
     editorStyle,
