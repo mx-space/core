@@ -4,12 +4,15 @@ import {
   type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common'
+
 import { TASK_QUEUE_LIMITS, TASK_QUEUE_TTL_MS } from './task-queue.constants'
+import { TaskQueueEmitter } from './task-queue.emitter'
 import { TaskQueueService } from './task-queue.service'
+import { TaskStreamBuffer } from './task-queue.stream-buffer'
 import {
-  TaskStatus,
   type TaskExecuteContext,
   type TaskHandler,
+  TaskStatus,
 } from './task-queue.types'
 
 @Injectable()
@@ -24,7 +27,10 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
   private activeTaskCount = 0
   private lastRedisUnavailableWarnAt = 0
 
-  constructor(private readonly taskService: TaskQueueService) {
+  constructor(
+    private readonly taskService: TaskQueueService,
+    private readonly emitter: TaskQueueEmitter,
+  ) {
     this.workerId = `worker-${process.pid}-${Date.now().toString(36)}`
   }
 
@@ -155,6 +161,18 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
     const controller = new AbortController()
     this.activeAbortControllers.set(taskId, controller)
 
+    // Per-task stream coalescer bound to emitter.emitStream. groupId is
+    // captured here for emitter metadata only — stream phase always targets
+    // the detail room (see TaskQueueEmitter.emitStream).
+    const streamMeta = {
+      id: task.id,
+      type: task.type,
+      groupId: task.groupId,
+    }
+    const buffer = new TaskStreamBuffer((frame) =>
+      this.emitter.emitStream(streamMeta, frame),
+    )
+
     const heartbeatInterval = setInterval(async () => {
       try {
         const renewed = await this.taskService.renewLock(taskId, this.workerId)
@@ -201,6 +219,12 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
         handlerSetStatus = status
       },
       isAborted: () => controller.signal.aborted,
+      streamPusher: (ev) =>
+        buffer.push(ev.lang, ev.segmentId, {
+          chunk: ev.chunk,
+          partial: ev.partial,
+          done: ev.done,
+        }),
     }
 
     try {
@@ -269,6 +293,8 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
     } finally {
       clearInterval(heartbeatInterval)
       clearInterval(cancelCheckInterval)
+      buffer.flushAndDispose()
+      this.emitter.dispose(taskId)
       this.activeAbortControllers.delete(taskId)
       await this.taskService.releaseLock(taskId)
     }

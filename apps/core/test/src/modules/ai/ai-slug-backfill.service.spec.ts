@@ -42,6 +42,7 @@ describe('AiSlugBackfillService', () => {
       setResult: vi.fn(async () => undefined),
       setStatus: vi.fn(),
       isAborted: vi.fn(() => false),
+      streamPusher: vi.fn(),
     }
 
     return { context, logs }

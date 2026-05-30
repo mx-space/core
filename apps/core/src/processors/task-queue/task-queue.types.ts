@@ -96,6 +96,20 @@ export interface TaskExecuteContext {
   setResult: (result: unknown) => Promise<void>
   setStatus: (status: TaskStatus) => void
   isAborted: () => boolean
+  /**
+   * Sync push of a stream frame for this task. The TaskStreamBuffer behind
+   * this closure coalesces calls (200ms idle / 80-char threshold) and routes
+   * the resulting frame through `TaskQueueEmitter.emitStream`. When the task
+   * has no groupId (e.g. markdown summary), emit still targets the detail
+   * room ONLY — groupId is informational and never routes the stream phase.
+   */
+  streamPusher: (event: {
+    lang?: string
+    segmentId?: string
+    chunk?: string
+    partial?: unknown
+    done?: boolean
+  }) => void
 }
 
 export interface TaskHandler<TPayload = Record<string, unknown>> {
