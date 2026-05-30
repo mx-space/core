@@ -163,6 +163,7 @@ export class TaskQueueService implements OnModuleDestroy {
       totalItems: '',
       completedItems: '',
       tokensGenerated: '0',
+      totalCost: '0',
       createdAt: String(now),
       startedAt: '',
       completedAt: '',
@@ -635,6 +636,26 @@ export class TaskQueueService implements OnModuleDestroy {
       await this.redis.hset(taskKey, 'tokensGenerated', '0')
     }
     await this.redis.hincrby(taskKey, 'tokensGenerated', count)
+  }
+
+  /**
+   * Accumulate cost into the task hash as integer cents.
+   *
+   * - Storage precision: 2 decimal places (USD cents) via HINCRBY — sufficient
+   *   for billing display. pi-runtime adapter returns USD as a float; if pi
+   *   ever switches to micro-dollars or sub-cent units, revisit the MappedUsage
+   *   mapping in pi-runtime.adapter.ts before changing the wire format here.
+   * - HINCRBY auto-creates the `totalCost` field on pre-spec-2 task hashes,
+   *   so callers do not need to seed it.
+   * - No-op for non-positive / non-finite input so duplicate calls or
+   *   cache-hydrate paths cannot pollute the field.
+   */
+  async incrementCost(taskId: string, usd: number): Promise<void> {
+    if (!(Number.isFinite(usd) && usd > 0)) return
+    const cents = Math.round(usd * 100)
+    if (cents <= 0) return
+    const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
+    await this.redis.hincrby(taskKey, 'totalCost', cents)
   }
 
   async updateStatus(

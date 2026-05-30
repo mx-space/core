@@ -39,6 +39,7 @@ describe('AiSlugBackfillService', () => {
       }),
       updateProgress: vi.fn(async () => undefined),
       incrementTokens: vi.fn(async () => undefined),
+      incrementCost: vi.fn(async () => undefined),
       setResult: vi.fn(async () => undefined),
       setStatus: vi.fn(),
       isAborted: vi.fn(() => false),

@@ -212,6 +212,7 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
         ),
       incrementTokens: (count = 1) =>
         this.taskService.incrementTokens(taskId, count),
+      incrementCost: (usd) => this.taskService.incrementCost(taskId, usd),
       appendLog: (level, message) =>
         this.taskService.appendLog(taskId, level, message),
       setResult: (result) => this.taskService.setResult(taskId, result),

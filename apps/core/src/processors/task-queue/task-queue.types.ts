@@ -36,6 +36,9 @@ export interface TaskRedis {
   totalItems: string
   completedItems: string
   tokensGenerated: string
+  // Optional — old task hashes from pre-spec-2 do not have this field.
+  // Stored as integer cents string via HINCRBY. parseTask exposes USD float.
+  totalCost?: string
 
   createdAt: string
   startedAt: string
@@ -63,6 +66,8 @@ export interface Task<TPayload = Record<string, unknown>, TResult = unknown> {
   totalItems?: number
   completedItems?: number
   tokensGenerated?: number
+  // USD float (cents/100). Undefined when pre-spec-2 task hash lacks the field.
+  totalCost?: number
 
   createdAt: number
   startedAt?: number
@@ -89,6 +94,7 @@ export interface TaskExecuteContext {
     total?: number,
   ) => Promise<void>
   incrementTokens: (count?: number) => Promise<void>
+  incrementCost: (usd: number) => Promise<void>
   appendLog: (
     level: 'info' | 'warn' | 'error',
     message: string,
@@ -166,6 +172,11 @@ const optionalNumber = (raw: string): number | undefined =>
 const optionalString = (raw: string): string | undefined => raw || undefined
 
 export function parseTask(raw: TaskRedis, logs: string[]): Task {
+  // Defensive: pre-spec-2 task hashes have no `totalCost` field. Guard against
+  // empty string / undefined / NaN — only expose USD float when cents>0.
+  const cents = Number(raw.totalCost)
+  const totalCost =
+    Number.isFinite(cents) && cents > 0 ? cents / 100 : undefined
   return {
     id: raw.id,
     type: raw.type,
@@ -178,6 +189,7 @@ export function parseTask(raw: TaskRedis, logs: string[]): Task {
     totalItems: optionalNumber(raw.totalItems),
     completedItems: optionalNumber(raw.completedItems),
     tokensGenerated: optionalNumber(raw.tokensGenerated),
+    totalCost,
     createdAt: Number(raw.createdAt),
     startedAt: optionalNumber(raw.startedAt),
     completedAt: optionalNumber(raw.completedAt),
