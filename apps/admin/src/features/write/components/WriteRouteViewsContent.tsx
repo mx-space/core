@@ -1754,7 +1754,7 @@ function WriteHeaderIconButton(props: {
         'focus-visible:outline-hidden inline-flex size-9 items-center justify-center rounded-sm transition-colors focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:pointer-events-none disabled:opacity-40',
         props.variant === 'primary'
           ? 'bg-accent text-white hover:bg-accent-hover'
-          : 'bg-surface-inset text-fg-muted hover:bg-surface-card hover:text-fg',
+          : 'bg-surface-inset text-fg-muted hover:bg-black/[0.06] hover:text-fg dark:hover:bg-white/[0.08]',
       )}
       disabled={props.disabled}
       onClick={props.onClick}
