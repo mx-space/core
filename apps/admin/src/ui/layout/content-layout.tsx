@@ -2,7 +2,14 @@ import type { LucideIcon } from 'lucide-react'
 import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import type { ReactNode } from 'react'
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { Group as PanelGroup, Panel, usePanelRef } from 'react-resizable-panels'
 
@@ -55,6 +62,7 @@ export function ContentLayout(props: {
           className={props.className}
           mainClassName={props.mainClassName}
           mainMinSize={props.mainMinSize}
+          onCloseAside={props.onCloseAside}
           open={props.open}
           setAsideEl={setAsideEl}
         >
@@ -85,17 +93,24 @@ function DesktopContentLayout(props: {
   className?: string
   mainClassName?: string
   mainMinSize?: number | string
+  onCloseAside?: () => void
   open: boolean
   setAsideEl: (el: HTMLDivElement | null) => void
 }) {
   const asideRef = usePanelRef()
   const [resizing, setResizing] = useState(false)
+  const lastExpandedPxRef = useRef<number | null>(null)
 
   useEffect(() => {
     const panel = asideRef.current
     if (!panel) return
     if (props.open && panel.isCollapsed()) {
-      panel.expand()
+      const last = lastExpandedPxRef.current
+      if (last && last > 0) {
+        panel.resize(`${last}px`)
+      } else {
+        panel.expand()
+      }
     } else if (!props.open && !panel.isCollapsed()) {
       panel.collapse()
     }
@@ -111,6 +126,14 @@ function DesktopContentLayout(props: {
       window.removeEventListener('pointercancel', stop)
     }
   }, [resizing])
+
+  useEffect(() => {
+    if (resizing) return
+    const panel = asideRef.current
+    if (!panel) return
+    const sz = panel.getSize()
+    if (sz.inPixels > 0) lastExpandedPxRef.current = sz.inPixels
+  }, [resizing, asideRef])
 
   return (
     <PanelGroup
@@ -134,11 +157,16 @@ function DesktopContentLayout(props: {
         className="min-h-0 overflow-hidden"
         collapsedSize={0}
         collapsible
-        defaultSize={props.asideDefaultSize ?? '320px'}
+        defaultSize={props.asideDefaultSize ?? '450px'}
         groupResizeBehavior="preserve-pixel-size"
         id="content-layout-aside"
         maxSize={props.asideMaxSize ?? '50%'}
         minSize={props.asideMinSize ?? '280px'}
+        onResize={(size) => {
+          if (size.inPixels === 0 && props.open) {
+            props.onCloseAside?.()
+          }
+        }}
         panelRef={asideRef}
       >
         <div

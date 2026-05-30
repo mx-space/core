@@ -1045,7 +1045,7 @@ function WritePage(props: { kind: WriteKind }) {
               <main className="flex min-h-full min-w-0 flex-col bg-white dark:bg-neutral-950">
                 <div className="mx-auto w-full max-w-5xl shrink-0 px-3 pt-8">
                   {showDraftListHint ? (
-                    <div className="mb-3">
+                    <div className="mb-3 -mt-4">
                       <DraftHintBanner
                         actionLabel={t('write.draftList.hintAction')}
                         message={t('write.draftList.hintMessage', {
