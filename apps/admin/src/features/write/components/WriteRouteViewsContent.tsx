@@ -78,6 +78,20 @@ import { callBuiltInFunction } from '~/api/system'
 import { getTopics } from '~/api/topics'
 import { API_URL, WEB_URL } from '~/constants/env'
 import {
+  usePostResourceCategories,
+  usePostResourceList,
+  usePostResourcePost,
+} from '~/data/post-category-resource/hooks'
+import {
+  usePostCategoriesResourceQuery,
+  usePostDetailResourceQuery,
+  usePostListResourceQuery,
+} from '~/data/post-category-resource/queries'
+import {
+  usePostCategoryResourceStore,
+} from '~/data/post-category-resource/store'
+import { PostCategoryResourceTransaction } from '~/data/post-category-resource/transaction'
+import {
   APP_SHELL_HEADER_HEIGHT_CLASS,
   APP_SHELL_HEADER_HEIGHT_VALUE,
 } from '~/constants/layout'
@@ -377,8 +391,14 @@ function WritePage(props: { kind: WriteKind }) {
   const latestDraftFingerprintRef = useRef('')
   const [lastSavedFingerprint, setLastSavedFingerprint] = useState('')
   const draftRefType = draftRefTypeByKind[props.kind]
+  const postResource = usePostResourcePost(props.kind === 'post' ? id : '')
+  const postResourceCategories = usePostResourceCategories()
+  const relatedPostsQueryKey = useMemo(
+    () => adminQueryKeys.posts.relatedOptions('write'),
+    [],
+  )
 
-  const categoriesQuery = useQuery({
+  usePostCategoriesResourceQuery({
     enabled: props.kind === 'post',
     queryFn: () => getCategories({ type: 'Category' }),
     queryKey: adminQueryKeys.categories.list(),
@@ -393,7 +413,7 @@ function WritePage(props: { kind: WriteKind }) {
     queryFn: getTags,
     queryKey: adminQueryKeys.categories.tags(),
   })
-  const relatedPostsQuery = useQuery({
+  usePostListResourceQuery({
     enabled: props.kind === 'post',
     queryFn: () =>
       getPosts({
@@ -402,13 +422,20 @@ function WritePage(props: { kind: WriteKind }) {
         sort_by: 'createdAt',
         sort_order: 'desc',
       }),
-    queryKey: adminQueryKeys.posts.relatedOptions('write'),
+    queryKey: relatedPostsQueryKey,
   })
-  const detailQuery = useQuery<WriteModel>({
-    enabled: isEditing,
+  const postDetailQuery = usePostDetailResourceQuery({
+    enabled: isEditing && props.kind === 'post',
+    queryFn: () => getPostById(id),
+    queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
+  })
+  const nonPostDetailQuery = useQuery<WriteModel>({
+    enabled: isEditing && props.kind !== 'post',
     queryFn: () => getWriteDetail(props.kind, id),
     queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
   })
+  const detailQuery =
+    props.kind === 'post' ? postDetailQuery : nonPostDetailQuery
   const refDraftQuery = useQuery({
     enabled: isEditing,
     queryFn: () => getDraftByRef(draftRefType, id),
@@ -425,10 +452,14 @@ function WritePage(props: { kind: WriteKind }) {
     queryKey: adminQueryKeys.drafts.newDraft(draftRefType),
   })
 
-  const categories = categoriesQuery.data ?? emptyCategories
+  const detailModel =
+    props.kind === 'post' ? postResource : nonPostDetailQuery.data
+  const categories =
+    props.kind === 'post'
+      ? postResourceCategories.filter(isCategoryModel)
+      : emptyCategories
   const tags = tagsQuery.data ?? []
   const topics = topicsQuery.data?.data ?? emptyTopics
-  const relatedPosts = relatedPostsQuery.data?.data ?? []
   const firstCategoryId = categories[0]?.id ?? ''
   const activeCategory =
     categories.find((category) => category.id === state.categoryId) ??
@@ -441,21 +472,21 @@ function WritePage(props: { kind: WriteKind }) {
     )[0]
   }, [newDraftsQuery.data, refDraftQuery.data])
   const publishedContent = useMemo(
-    () => (detailQuery.data ? getPublishedContent(detailQuery.data) : null),
-    [detailQuery.data],
+    () => (detailModel ? getPublishedContent(detailModel) : null),
+    [detailModel],
   )
   const defaultNoteTitle = useMemo(() => {
-    if (props.kind === 'note' && detailQuery.data) {
+    if (props.kind === 'note' && detailModel) {
       return getDefaultNoteTitle(
-        new Date((detailQuery.data as NoteModel).createdAt),
+        new Date((detailModel as NoteModel).createdAt),
       )
     }
 
     return getDefaultNoteTitle()
-  }, [detailQuery.data, props.kind])
+  }, [detailModel, props.kind])
   const notePublicPath =
     props.kind === 'note'
-      ? buildNotePublicPath(state, detailQuery.data as NoteModel | undefined)
+      ? buildNotePublicPath(state, detailModel as NoteModel | undefined)
       : ''
   const postPublicPath =
     props.kind === 'post' ? buildPostPublicPath(state, activeCategory) : ''
@@ -583,7 +614,7 @@ function WritePage(props: { kind: WriteKind }) {
   }, [location.hash, location.pathname, location.search, navigate])
 
   useEffect(() => {
-    if (!detailQuery.data) {
+    if (!detailModel) {
       if (props.kind !== 'post' || !firstCategoryId) return
       setState((previous) =>
         previous.categoryId
@@ -597,9 +628,9 @@ function WritePage(props: { kind: WriteKind }) {
     }
 
     if (!routeDraftId) {
-      setState(fromModel(props.kind, detailQuery.data))
+      setState(fromModel(props.kind, detailModel))
     }
-  }, [detailQuery.data, firstCategoryId, props.kind, routeDraftId])
+  }, [detailModel, firstCategoryId, props.kind, routeDraftId])
 
   useEffect(() => {
     if (refDraftQuery.data && !draftId) {
@@ -609,11 +640,11 @@ function WritePage(props: { kind: WriteKind }) {
 
   const recoveryHintDraft = useMemo(() => {
     const draft = refDraftQuery.data
-    const published = detailQuery.data
+    const published = detailModel
     if (!isEditing || routeDraftId || !draft || !published) return null
     if (!isDraftNewerThanPublished(draft, published)) return null
     return draft
-  }, [detailQuery.data, isEditing, refDraftQuery.data, routeDraftId])
+  }, [detailModel, isEditing, refDraftQuery.data, routeDraftId])
 
   const openRecoveryDialog = (draft: DraftModel) => {
     if (!publishedContent) return
@@ -678,6 +709,11 @@ function WritePage(props: { kind: WriteKind }) {
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('write.toast.saveFailed'))),
     onSuccess: async (result) => {
+      if (props.kind === 'post') {
+        usePostCategoryResourceStore
+          .getState()
+          .hydratePostDetail(result as PostModel)
+      }
       draftDirtyRef.current = false
       lastSavedDraftFingerprintRef.current = latestDraftFingerprintRef.current
       setLastSavedFingerprint(latestDraftFingerprintRef.current)
@@ -872,8 +908,8 @@ function WritePage(props: { kind: WriteKind }) {
     isEditing,
     isPendingDraftSave: draftMutation.isPending,
     latestDraft,
-    publishedUpdatedAt: detailQuery.data
-      ? getPublishedContent(detailQuery.data).updatedAt
+    publishedUpdatedAt: detailModel
+      ? getPublishedContent(detailModel).updatedAt
       : undefined,
   })
 
@@ -1180,9 +1216,8 @@ function WritePage(props: { kind: WriteKind }) {
                 postFields={
                   props.kind === 'post' ? (
                     <PostFields
-                      categories={categories}
                       currentPostId={id}
-                      relatedPosts={relatedPosts}
+                      relatedPostsQueryKey={relatedPostsQueryKey}
                       state={state}
                       tags={tags}
                       updateField={updateField}
@@ -2096,9 +2131,8 @@ function getSharedSuffixLength(left: string, right: string) {
 }
 
 function PostFields(props: {
-  categories: CategoryModel[]
   currentPostId: string
-  relatedPosts: PostModel[]
+  relatedPostsQueryKey: readonly unknown[]
   state: WriteFormState
   tags: Array<{ count: number; name: string }>
   updateField: <TKey extends keyof WriteFormState>(
@@ -2107,9 +2141,11 @@ function PostFields(props: {
   ) => void
 }) {
   const { t } = useI18n()
+  const categories = usePostResourceCategories().filter(isCategoryModel)
+  const relatedPosts = usePostResourceList(props.relatedPostsQueryKey).posts
   const selectedTags = splitCommaList(props.state.tags)
   const selectedRelatedIds = splitCommaList(props.state.relatedId)
-  const visibleRelatedPosts = props.relatedPosts.filter(
+  const visibleRelatedPosts = relatedPosts.filter(
     (post) => post.id !== props.currentPostId,
   )
   const toggleTag = (tag: string) => {
@@ -2131,7 +2167,7 @@ function PostFields(props: {
             onValueChange={(categoryId) =>
               props.updateField('categoryId', categoryId)
             }
-            options={props.categories.map((category) => ({
+            options={categories.map((category) => ({
               label: category.name,
               value: category.id,
             }))}
@@ -3542,29 +3578,7 @@ function saveWrite(
   draftId?: string,
 ): Promise<WriteModel> {
   if (kind === 'post') {
-    const data = {
-      categoryId: state.categoryId,
-      content: state.contentFormat === 'lexical' ? state.content : undefined,
-      contentFormat: state.contentFormat,
-      copyright: state.copyright,
-      draftId,
-      images: buildWriteImages(state),
-      isPublished: state.isPublished,
-      meta: state.meta,
-      pin: state.pin ? new Date().toISOString() : null,
-      pinOrder: state.pin ? Number(state.pinOrder) || 1 : null,
-      relatedId: splitCommaList(state.relatedId),
-      slug: state.slug,
-      summary: state.summary || null,
-      tags: state.tags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean),
-      text: state.text,
-      title: state.title,
-    }
-
-    return id ? updatePost(id, data) : createPost(data)
+    return savePostWrite(id, state, draftId)
   }
 
   if (kind === 'note') {
@@ -3607,6 +3621,69 @@ function saveWrite(
   }
 
   return id ? updatePage(id, data) : createPage(data)
+}
+
+function savePostWrite(
+  id: string,
+  state: WriteFormState,
+  draftId?: string,
+): Promise<PostModel> {
+  const data = buildPostWriteData(state, draftId)
+  if (!id) return createPost(data)
+
+  const tx = new PostCategoryResourceTransaction<PostModel>(
+    `savePost(${id})`,
+  ).patchPost(id, toOptimisticPostPatch(data))
+  tx.request = () => updatePost(id, data)
+  tx.onSuccess = (post) => {
+    tx.commitPost(post.id, post)
+  }
+  return tx.commit()
+}
+
+function buildPostWriteData(state: WriteFormState, draftId?: string) {
+  return {
+    categoryId: state.categoryId,
+    content: state.contentFormat === 'lexical' ? state.content : undefined,
+    contentFormat: state.contentFormat,
+    copyright: state.copyright,
+    draftId,
+    images: buildWriteImages(state),
+    isPublished: state.isPublished,
+    meta: state.meta,
+    pin: state.pin ? new Date().toISOString() : null,
+    pinOrder: state.pin ? Number(state.pinOrder) || 1 : null,
+    relatedId: splitCommaList(state.relatedId),
+    slug: state.slug,
+    summary: state.summary || null,
+    tags: state.tags
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean),
+    text: state.text,
+    title: state.title,
+  }
+}
+
+function toOptimisticPostPatch(
+  data: ReturnType<typeof buildPostWriteData>,
+): Partial<PostModel> {
+  return {
+    categoryId: data.categoryId,
+    content: data.content,
+    contentFormat: data.contentFormat,
+    copyright: data.copyright,
+    images: data.images,
+    isPublished: data.isPublished,
+    meta: data.meta,
+    pinAt: data.pin,
+    pinOrder: data.pinOrder,
+    slug: data.slug,
+    summary: data.summary,
+    tags: data.tags,
+    text: data.text,
+    title: data.title,
+  }
 }
 
 function toDraftData(
@@ -3859,6 +3936,15 @@ function validateState(
   }
 
   return null
+}
+
+function isCategoryModel(category: unknown): category is CategoryModel {
+  return (
+    typeof category === 'object' &&
+    category !== null &&
+    'count' in category &&
+    'createdAt' in category
+  )
 }
 
 function getWriteAgentMetaSchema(kind: WriteKind) {
