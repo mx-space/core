@@ -75,6 +75,10 @@ describe('public SSE controllers — partial filter', () => {
     )
     const bytes = cap.bytes()
     expect(bytes).not.toContain('event: partial')
+    // step-26d: partial payload must not leak via stray data: lines either
+    expect(bytes).not.toContain('partial-text')
+    expect(bytes).not.toContain('"segmentId"')
+    expect(bytes).not.toContain('"foo":"bar"')
     // Sanity: token + done frames preserved byte-for-byte
     expect(bytes).toContain('event: token\ndata: hello \n\n')
     expect(bytes).toContain('event: token\ndata: world\n\n')
