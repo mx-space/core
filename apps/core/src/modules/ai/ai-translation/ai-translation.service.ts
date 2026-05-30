@@ -251,6 +251,13 @@ export class AiTranslationService
             const langPush = async (ev: AiStreamEvent) => {
               if (ev.type === 'token') {
                 context.streamPusher({ lang, chunk: ev.data })
+              } else if (ev.type === 'partial') {
+                context.streamPusher({
+                  lang,
+                  segmentId: ev.data.segmentId,
+                  partial: ev.data.partial,
+                  done: ev.data.done,
+                })
               }
             }
             try {
