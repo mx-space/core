@@ -1,6 +1,6 @@
 import { Loader2, RotateCcw, Trash2, XCircle } from 'lucide-react'
-import type { AITask } from '~/api/ai'
 
+import type { AITask } from '~/api/ai'
 import { AITaskStatus } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { DetailHeader } from '~/ui/layout/detail-header'
@@ -24,6 +24,7 @@ import {
 import { Code, Field, JsonBlock, SmallBadge, StatusBadge } from './AiPrimitives'
 import { CollapsibleSection } from './CollapsibleSection'
 import { SubTaskStatsView } from './SubTaskStatsView'
+import { TaskCostBadge } from './TaskCostBadge'
 import { TaskLogsBlock } from './TaskLogsBlock'
 import { TaskTimeline } from './TaskTimeline'
 
@@ -129,6 +130,7 @@ export function TaskDetail(props: {
             <StatusBadge status={effectiveStatus}>
               {t(taskStatusLabelKeys[effectiveStatus])}
             </StatusBadge>
+            <TaskCostBadge cost={task.cost} />
             {task.retryCount > 0 ? (
               <SmallBadge tone="warning">
                 {t('ai.task.retryBadge', { count: task.retryCount })}
