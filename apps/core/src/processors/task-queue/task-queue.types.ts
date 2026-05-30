@@ -103,6 +103,50 @@ export interface TaskHandler<TPayload = Record<string, unknown>> {
   execute: (payload: TPayload, context: TaskExecuteContext) => Promise<void>
 }
 
+/**
+ * Frozen phase union for AI_TASK_UPDATE realtime fan-out (spec 2).
+ * Adding a new phase is a wire-contract break — admin EventTypes mirror must
+ * also be updated in apps/admin/src/socket/types.ts.
+ */
+export type AiTaskUpdatePhase =
+  | 'created'
+  | 'started'
+  | 'progress'
+  | 'status'
+  | 'log'
+  | 'result'
+  | 'stream'
+  | 'deleted'
+
+export interface AiTaskUpdateStreamFrame {
+  lang?: string
+  segmentId?: string
+  chunk?: string
+  partial?: unknown
+  done?: boolean
+}
+
+interface AiTaskUpdatePayloadBase {
+  id: string
+  type: string
+  groupId?: string
+  log?: TaskLog
+  stream?: AiTaskUpdateStreamFrame
+  result?: unknown
+}
+
+export type AiTaskUpdatePayload =
+  | (AiTaskUpdatePayloadBase & {
+      phase: 'created'
+      // On 'created', patch is the FULL task snapshot.
+      patch: Task
+    })
+  | (AiTaskUpdatePayloadBase & {
+      phase: Exclude<AiTaskUpdatePhase, 'created'>
+      // On all other phases, patch is a partial diff (or omitted entirely).
+      patch?: Partial<Task>
+    })
+
 const optionalNumber = (raw: string): number | undefined =>
   raw ? Number(raw) : undefined
 const optionalString = (raw: string): string | undefined => raw || undefined

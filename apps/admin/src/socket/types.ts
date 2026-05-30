@@ -1,3 +1,5 @@
+import type { AITask, AITaskLog } from '~/api/ai'
+
 export enum EventTypes {
   GATEWAY_CONNECT = 'GATEWAY_CONNECT',
   GATEWAY_DISCONNECT = 'GATEWAY_DISCONNECT',
@@ -32,6 +34,55 @@ export enum EventTypes {
   IMAGE_FETCH = 'IMAGE_FETCH',
 
   ADMIN_NOTIFICATION = 'ADMIN_NOTIFICATION',
+
+  // AI Task Queue realtime fan-out (spec 2). Hand-duplicated from
+  // apps/core/src/constants/business-event.constant.ts — no monorepo import.
+  AI_TASK_UPDATE = 'AI_TASK_UPDATE',
 }
+
+/**
+ * Frozen phase union for AI_TASK_UPDATE — verbatim mirror of the server-side
+ * AiTaskUpdatePhase declared in
+ * apps/core/src/processors/task-queue/task-queue.types.ts. Keep in sync by
+ * hand; there is intentionally no cross-package import.
+ */
+export type AiTaskUpdatePhase =
+  | 'created'
+  | 'started'
+  | 'progress'
+  | 'status'
+  | 'log'
+  | 'result'
+  | 'stream'
+  | 'deleted'
+
+export interface AiTaskUpdateStreamFrame {
+  lang?: string
+  segmentId?: string
+  chunk?: string
+  partial?: unknown
+  done?: boolean
+}
+
+interface AiTaskUpdatePayloadBase {
+  id: string
+  type: string
+  groupId?: string
+  log?: AITaskLog
+  stream?: AiTaskUpdateStreamFrame
+  result?: unknown
+}
+
+export type AiTaskUpdatePayload =
+  | (AiTaskUpdatePayloadBase & {
+      phase: 'created'
+      // On 'created', patch is the FULL task snapshot.
+      patch: AITask
+    })
+  | (AiTaskUpdatePayloadBase & {
+      phase: Exclude<AiTaskUpdatePhase, 'created'>
+      // On all other phases, patch is a partial diff (or omitted entirely).
+      patch?: Partial<AITask>
+    })
 
 export type NotificationTypes = 'error' | 'info' | 'success' | 'warn'
