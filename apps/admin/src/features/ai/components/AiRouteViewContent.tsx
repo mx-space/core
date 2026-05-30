@@ -21,7 +21,13 @@ import type { HeaderAction } from '~/ui/layout/page-layout'
 import { AppPage, PageHeader } from '~/ui/layout/page-layout'
 import { SelectField } from '~/ui/primitives/select'
 
-import { aiTasksQueryKey, pageSize, typeOptionKeys } from '../constants'
+import {
+  aiTasksQueryKey,
+  fallbackPollingIntervalMs,
+  liveSubscribeIntervalMs,
+  pageSize,
+  typeOptionKeys,
+} from '../constants'
 import {
   getErrorMessage,
   readPositivePage,
@@ -76,11 +82,14 @@ export function AiRouteViewContent() {
     type: typeFilter || undefined,
   }
 
+  // step-22 will rewire socketConnected from useAiTaskListSubscription
+  const socketConnected = false
   const tasksQuery = useQuery({
     placeholderData: (previous) => previous,
     queryFn: () => getAiTasks(queryParams),
     queryKey: adminQueryKeys.ai.tasks(queryParams),
-    refetchInterval: 5000,
+    refetchInterval: () =>
+      socketConnected ? liveSubscribeIntervalMs : fallbackPollingIntervalMs,
   })
 
   const tasks = tasksQuery.data?.data ?? []

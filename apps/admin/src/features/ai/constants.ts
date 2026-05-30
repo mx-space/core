@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react'
 import {
   AlertCircle,
   AlertTriangle,
@@ -6,16 +7,18 @@ import {
   Loader2,
   XCircle,
 } from 'lucide-react'
-import type { TranslationKey } from '~/i18n/types'
-import type { LucideIcon } from 'lucide-react'
 
 import { AITaskStatus, AITaskType } from '~/api/ai'
+import type { TranslationKey } from '~/i18n/types'
 import { adminQueryKeys } from '~/query/keys'
 
 export const aiTasksQueryKey = adminQueryKeys.ai.tasksRoot
 
 export const pageSize = 50
 export const groupedPageSize = 20
+
+export const liveSubscribeIntervalMs = 30_000
+export const fallbackPollingIntervalMs = 5_000
 
 export const taskTypeLabelKeys: Record<AITaskType, TranslationKey> = {
   [AITaskType.Summary]: 'ai.taskType.summary',

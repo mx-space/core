@@ -7,7 +7,11 @@ import { findInListCache } from '~/api/list-cache'
 import { useDocumentTitle } from '~/hooks/use-document-title'
 import { adminQueryKeys } from '~/query/keys'
 
-import { aiTasksQueryKey } from '../constants'
+import {
+  aiTasksQueryKey,
+  fallbackPollingIntervalMs,
+  liveSubscribeIntervalMs,
+} from '../constants'
 import { useAiTasksRouteContext } from './ai-tasks-route-context'
 import { TaskDetail } from './TaskDetail'
 import { TaskDetailEmpty } from './TaskStates'
@@ -21,12 +25,15 @@ export function AiTaskDetailRoute() {
     ? findInListCache<AITask>(queryClient, aiTasksQueryKey, id)
     : undefined
 
+  // step-22 will rewire socketConnected from useAiTaskDetailSubscription
+  const socketConnected = false
   const taskQuery = useQuery({
     enabled: Boolean(id),
     initialData: initialTask,
     queryFn: () => getAiTask(id!),
     queryKey: adminQueryKeys.ai.taskDetail(id ?? ''),
-    refetchInterval: 5000,
+    refetchInterval: () =>
+      socketConnected ? liveSubscribeIntervalMs : fallbackPollingIntervalMs,
     staleTime: initialTask ? 5_000 : 0,
   })
 

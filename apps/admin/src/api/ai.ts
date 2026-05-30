@@ -250,6 +250,7 @@ export interface SubTaskStats {
 export interface AITask {
   completedAt?: number
   completedItems?: number
+  cost?: number
   createdAt: number
   error?: string
   groupId?: string
