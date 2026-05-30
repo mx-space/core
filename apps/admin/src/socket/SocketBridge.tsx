@@ -397,7 +397,7 @@ function readString(value: unknown) {
  *    the parent group's subTaskStats on its detail cache (server guarantees
  *    a full SubTaskStats object per step-19).
  */
-function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
+export function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
   if (!isAiTaskUpdatePayload(payload)) return
 
   const { id, groupId, phase, patch, log, stream } = payload
