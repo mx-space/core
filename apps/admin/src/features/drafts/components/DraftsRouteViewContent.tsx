@@ -1,4 +1,3 @@
-import { Menu } from '@base-ui/react/menu'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useRef } from 'react'
@@ -15,7 +14,7 @@ import { FocusScope } from '~/ui/focus-scope'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { useListKeyboard } from '~/ui/list-actions'
-import { menuStyles } from '~/ui/overlay/menu-styles'
+import { DropdownMenu } from '~/ui/overlay/dropdown-menu'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -203,40 +202,27 @@ export function DraftsRouteViewContent() {
                 </h2>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <Menu.Root>
-                  <Menu.Trigger
+                <DropdownMenu>
+                  <DropdownMenu.Trigger
                     aria-label={t('drafts.newPost')}
-                    className="outline-hidden inline-flex h-9 items-center gap-1.5 rounded px-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:ring-2 focus-visible:ring-[var(--color-primary-shallow)] dark:text-neutral-200 dark:hover:bg-neutral-800"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-sm px-2.5 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg focus-visible:ring-[3px] focus-visible:ring-accent/15 data-[popup-open]:bg-surface-inset"
                     type="button"
                   >
                     <Plus aria-hidden="true" className="size-4" />
                     {t('common.add')}
-                  </Menu.Trigger>
-                  <Menu.Portal>
-                    <Menu.Positioner align="end" side="bottom" sideOffset={6}>
-                      <Menu.Popup className={menuStyles.popup}>
-                        <Menu.Item
-                          className={menuStyles.item}
-                          render={<Link to="/posts/edit" />}
-                        >
-                          {t('drafts.newPost')}
-                        </Menu.Item>
-                        <Menu.Item
-                          className={menuStyles.item}
-                          render={<Link to="/notes/edit" />}
-                        >
-                          {t('drafts.newNote')}
-                        </Menu.Item>
-                        <Menu.Item
-                          className={menuStyles.item}
-                          render={<Link to="/pages/edit" />}
-                        >
-                          {t('drafts.newPage')}
-                        </Menu.Item>
-                      </Menu.Popup>
-                    </Menu.Positioner>
-                  </Menu.Portal>
-                </Menu.Root>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Content align="end">
+                    <DropdownMenu.Item render={<Link to="/posts/edit" />}>
+                      {t('drafts.newPost')}
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item render={<Link to="/notes/edit" />}>
+                      {t('drafts.newNote')}
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item render={<Link to="/pages/edit" />}>
+                      {t('drafts.newPage')}
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Content>
+                </DropdownMenu>
                 <Button
                   aria-label={t('common.refresh')}
                   disabled={draftsQuery.isFetching}

@@ -10,7 +10,7 @@ export function TopArticlesPanel(props: {
   const { t } = useI18n()
   return (
     <Panel title={t('dashboard.topArticles.title')}>
-      <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+      <div className="divide-y divide-border">
         {props.articles.length === 0 ? (
           <EmptyDashboardBlock />
         ) : (
@@ -19,10 +19,8 @@ export function TopArticlesPanel(props: {
               className="flex items-center justify-between gap-4 px-4 py-3 text-sm"
               key={article.id}
             >
-              <span className="min-w-0 truncate text-neutral-800 dark:text-neutral-100">
-                {article.title}
-              </span>
-              <span className="shrink-0 text-xs tabular-nums text-neutral-500">
+              <span className="min-w-0 truncate text-fg">{article.title}</span>
+              <span className="shrink-0 text-xs tabular-nums text-fg-muted">
                 {t('dashboard.topArticles.stats', {
                   likes: formatNumber(article.likes),
                   reads: formatNumber(article.reads),

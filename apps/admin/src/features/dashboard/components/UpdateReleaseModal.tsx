@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { ExternalLink } from 'lucide-react'
-import type { ReleaseModalState } from '../types/dashboard'
 
 import { getReleaseDetails } from '~/api/github-update'
 import { useI18n } from '~/i18n'
@@ -12,6 +11,7 @@ import { Button } from '~/ui/primitives/button'
 import { MarkdownRender } from '~/ui/primitives/markdown-render'
 import { Scroll } from '~/ui/primitives/scroll'
 
+import type { ReleaseModalState } from '../types/dashboard'
 import { formatDateTime } from '../utils/dashboard'
 
 interface UpdateReleaseModalProps {
@@ -69,7 +69,7 @@ function UpdateReleaseModal(props: UpdateReleaseModalProps) {
             </div>
             {details.body ? (
               <MarkdownRender
-                className="rounded border border-neutral-100 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900/50"
+                className="rounded-sm border border-border bg-surface-inset p-4"
                 text={details.body}
               />
             ) : (

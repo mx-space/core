@@ -1,11 +1,10 @@
-import { Popover } from '@base-ui/react/popover'
 import { MapPin } from 'lucide-react'
-import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 
 import { callBuiltInFunction } from '~/api/system'
 import { useI18n } from '~/i18n'
-import { PortalLayerScope, useFloatingZ } from '~/ui/feedback/portal-layer'
+import { Popover } from '~/ui/overlay/popover'
 
 interface IpInfo {
   cityName?: string
@@ -33,7 +32,6 @@ export function IpInfoPopover(props: {
   )
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const { z, depth } = useFloatingZ('popover')
 
   const loadInfo = async () => {
     if (!props.ip || ipInfoCache.has(props.ip)) {
@@ -60,7 +58,7 @@ export function IpInfoPopover(props: {
   }
 
   return (
-    <Popover.Root
+    <Popover
       onOpenChange={(open) => {
         if (open) void loadInfo()
       }}
@@ -76,67 +74,57 @@ export function IpInfoPopover(props: {
           <>
             <MapPin
               aria-hidden="true"
-              className="size-3.5 shrink-0 text-neutral-400"
+              className="size-3.5 shrink-0 text-fg-subtle"
             />
             <span>{props.ip}</span>
           </>
         )}
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Positioner
-          align="start"
-          side="top"
-          sideOffset={8}
-          style={{ zIndex: z }}
-        >
-          <PortalLayerScope depth={depth}>
-            <Popover.Popup className="outline-hidden w-72 rounded border border-neutral-200 bg-white p-3 text-xs text-neutral-600 shadow-xl dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300">
-              {loading ? (
-                <span className="text-neutral-400">
-                  {t('shared.ipInfo.loading')}
-                </span>
-              ) : error ? (
-                <span className="text-red-500">{error}</span>
-              ) : info ? (
-                <div className="grid gap-2">
-                  <InfoRow label="IP" value={info.ip || props.ip} />
-                  <InfoRow
-                    label={t('shared.ipInfo.label.city')}
-                    value={
-                      [info.countryName, info.regionName, info.cityName]
-                        .filter(Boolean)
-                        .join(' - ') || 'N/A'
-                    }
-                  />
-                  <InfoRow
-                    label={t('shared.ipInfo.label.isp')}
-                    value={info.ispDomain || 'N/A'}
-                  />
-                  <InfoRow
-                    label={t('shared.ipInfo.label.org')}
-                    value={info.ownerDomain || 'N/A'}
-                  />
-                  <InfoRow
-                    label={t('shared.ipInfo.label.range')}
-                    value={
-                      info.range
-                        ? [info.range.from, info.range.to]
-                            .filter(Boolean)
-                            .join(' - ') || 'N/A'
-                        : 'N/A'
-                    }
-                  />
-                </div>
-              ) : (
-                <span className="text-neutral-400">
-                  {t('shared.ipInfo.empty')}
-                </span>
-              )}
-            </Popover.Popup>
-          </PortalLayerScope>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
+      <Popover.Content
+        align="start"
+        className="w-72 p-3 text-xs text-fg-muted"
+        side="top"
+        sideOffset={8}
+      >
+        {loading ? (
+          <span className="text-fg-subtle">{t('shared.ipInfo.loading')}</span>
+        ) : error ? (
+          <span className="text-red-500">{error}</span>
+        ) : info ? (
+          <div className="grid gap-2">
+            <InfoRow label="IP" value={info.ip || props.ip} />
+            <InfoRow
+              label={t('shared.ipInfo.label.city')}
+              value={
+                [info.countryName, info.regionName, info.cityName]
+                  .filter(Boolean)
+                  .join(' - ') || 'N/A'
+              }
+            />
+            <InfoRow
+              label={t('shared.ipInfo.label.isp')}
+              value={info.ispDomain || 'N/A'}
+            />
+            <InfoRow
+              label={t('shared.ipInfo.label.org')}
+              value={info.ownerDomain || 'N/A'}
+            />
+            <InfoRow
+              label={t('shared.ipInfo.label.range')}
+              value={
+                info.range
+                  ? [info.range.from, info.range.to]
+                      .filter(Boolean)
+                      .join(' - ') || 'N/A'
+                  : 'N/A'
+              }
+            />
+          </div>
+        ) : (
+          <span className="text-fg-subtle">{t('shared.ipInfo.empty')}</span>
+        )}
+      </Popover.Content>
+    </Popover>
   )
 }
 

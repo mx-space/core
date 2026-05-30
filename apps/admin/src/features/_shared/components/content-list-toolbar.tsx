@@ -1,4 +1,3 @@
-import { Popover } from '@base-ui/react/popover'
 import {
   ArrowDown,
   ArrowUp,
@@ -8,13 +7,9 @@ import {
   X,
 } from 'lucide-react'
 import type { FormEventHandler, ReactNode } from 'react'
-import { useEffect } from 'react'
 
-import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
-import { PortalLayerScope, useFloatingZ } from '~/ui/feedback/portal-layer'
-import { MobileHamburger } from '~/ui/layout/mobile-hamburger'
-import { useShellNav } from '~/ui/layout/shell-nav-context'
+import { DropdownMenu } from '~/ui/overlay/dropdown-menu'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { cn } from '~/utils/cn'
 
@@ -44,48 +39,6 @@ interface ContentListToolbarProps {
   searchValue: string
   selection?: ContentListToolbarSelection
   sortMenu?: ReactNode
-}
-
-export function ContentListHeader(props: {
-  action?: ReactNode
-  className?: string
-  count?: ReactNode
-  icon: ReactNode
-  title: ReactNode
-}) {
-  const shellNav = useShellNav()
-  const registerPageHeader = shellNav?.registerPageHeader
-  useEffect(() => registerPageHeader?.(), [registerPageHeader])
-
-  return (
-    <header
-      className={cn(
-        'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950',
-        APP_SHELL_HEADER_HEIGHT_CLASS,
-        props.className,
-      )}
-    >
-      <div className="flex min-w-0 items-center gap-2.5">
-        <MobileHamburger />
-        <span className="inline-flex size-6 shrink-0 items-center justify-center border border-border bg-surface-inset text-fg-muted">
-          {props.icon}
-        </span>
-        <div className="flex min-w-0 items-baseline gap-2">
-          <h2 className="truncate text-base font-semibold text-fg">
-            {props.title}
-          </h2>
-          {props.count != null ? (
-            <span className="shrink-0 text-xs tabular-nums text-fg-muted">
-              {props.count}
-            </span>
-          ) : null}
-        </div>
-      </div>
-      {props.action ? (
-        <div className="flex shrink-0 items-center gap-2">{props.action}</div>
-      ) : null}
-    </header>
-  )
 }
 
 export function ContentListToolbar(props: ContentListToolbarProps) {
@@ -247,86 +200,69 @@ export function SortMenu<TField extends string = string>(
     (option) => option.value === props.field,
   )
   const OrderIcon = props.order === 'asc' ? ArrowUp : ArrowDown
-  const { z, depth } = useFloatingZ('popover')
 
   return (
-    <Popover.Root>
-      <Popover.Trigger
+    <DropdownMenu>
+      <DropdownMenu.Trigger
         aria-label={t('shared.sortMenu.label')}
         className={cn(
-          'outline-hidden inline-flex h-7 shrink-0 items-center gap-1.5 rounded px-2 text-xs text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:ring-2 focus-visible:ring-[var(--color-primary-shallow)] disabled:cursor-not-allowed disabled:opacity-60 data-[popup-open]:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-900 dark:data-[popup-open]:bg-neutral-900',
+          'inline-flex h-7 shrink-0 items-center gap-1.5 rounded-sm px-2 text-xs text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60 data-[popup-open]:bg-surface-inset',
           props.className,
         )}
         disabled={props.disabled}
         type="button"
       >
-        <ArrowUpDown aria-hidden="true" className="size-3.5 text-neutral-400" />
+        <ArrowUpDown aria-hidden="true" className="size-3.5 text-fg-subtle" />
         <span className="truncate">
           {activeOption?.label ?? t('shared.sortMenu.label')}
         </span>
-        <OrderIcon aria-hidden="true" className="size-3 text-neutral-400" />
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Positioner
-          align="end"
-          side="bottom"
-          sideOffset={6}
-          style={{ zIndex: z }}
-        >
-          <PortalLayerScope depth={depth}>
-            <Popover.Popup className="outline-hidden w-48 rounded-lg border border-border bg-surface-overlay p-1 text-xs shadow-md">
-              <div className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-fg-subtle">
-                {t('shared.sortMenu.field')}
-              </div>
-              {props.options.map((option) => {
-                const active = option.value === props.field
-                return (
-                  <button
-                    className={cn(
-                      'outline-hidden flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-surface-inset',
-                      active ? 'font-medium text-fg' : 'text-fg-muted',
-                    )}
-                    key={String(option.value)}
-                    onClick={() =>
-                      props.onChange({
-                        field: option.value,
-                        order: props.order,
-                      })
-                    }
-                    type="button"
-                  >
-                    <span className="truncate">{option.label}</span>
-                    {active ? <span className="text-accent">●</span> : null}
-                  </button>
-                )
-              })}
-              <div className="mx-1 my-1 border-t border-border" />
-              <div className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-fg-subtle">
-                {t('shared.sortMenu.direction')}
-              </div>
-              <div className="grid grid-cols-2 gap-1 p-1">
-                <SortOrderButton
-                  active={props.order === 'desc'}
-                  icon={<ArrowDown aria-hidden="true" className="size-3.5" />}
-                  label={t('shared.sortMenu.desc')}
-                  onClick={() =>
-                    props.onChange({ field: props.field, order: 'desc' })
-                  }
-                />
-                <SortOrderButton
-                  active={props.order === 'asc'}
-                  icon={<ArrowUp aria-hidden="true" className="size-3.5" />}
-                  label={t('shared.sortMenu.asc')}
-                  onClick={() =>
-                    props.onChange({ field: props.field, order: 'asc' })
-                  }
-                />
-              </div>
-            </Popover.Popup>
-          </PortalLayerScope>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
+        <OrderIcon aria-hidden="true" className="size-3 text-fg-subtle" />
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content align="end" className="w-48">
+        <DropdownMenu.GroupLabel>
+          {t('shared.sortMenu.field')}
+        </DropdownMenu.GroupLabel>
+        {props.options.map((option) => {
+          const active = option.value === props.field
+          return (
+            <DropdownMenu.Item
+              className={cn(active ? 'font-medium text-fg' : 'text-fg-muted')}
+              key={String(option.value)}
+              onClick={() =>
+                props.onChange({ field: option.value, order: props.order })
+              }
+            >
+              <span className="min-w-0 flex-1 truncate">{option.label}</span>
+              {active ? (
+                <span className="text-accent" aria-hidden="true">
+                  ●
+                </span>
+              ) : null}
+            </DropdownMenu.Item>
+          )
+        })}
+        <DropdownMenu.Separator />
+        <DropdownMenu.GroupLabel>
+          {t('shared.sortMenu.direction')}
+        </DropdownMenu.GroupLabel>
+        <div className="grid grid-cols-2 gap-1 p-1">
+          <SortOrderButton
+            active={props.order === 'desc'}
+            icon={<ArrowDown aria-hidden="true" className="size-3.5" />}
+            label={t('shared.sortMenu.desc')}
+            onClick={() =>
+              props.onChange({ field: props.field, order: 'desc' })
+            }
+          />
+          <SortOrderButton
+            active={props.order === 'asc'}
+            icon={<ArrowUp aria-hidden="true" className="size-3.5" />}
+            label={t('shared.sortMenu.asc')}
+            onClick={() => props.onChange({ field: props.field, order: 'asc' })}
+          />
+        </div>
+      </DropdownMenu.Content>
+    </DropdownMenu>
   )
 }
 
@@ -339,10 +275,10 @@ function SortOrderButton(props: {
   return (
     <button
       className={cn(
-        'inline-flex h-7 items-center justify-center gap-1.5 rounded border text-xs transition-colors',
+        'inline-flex h-7 items-center justify-center gap-1.5 rounded-sm border text-xs transition-colors',
         props.active
-          ? 'border-neutral-950 bg-neutral-950 text-white dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
-          : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900',
+          ? 'border-fg bg-fg text-surface-page'
+          : 'border-border bg-surface-card text-fg-muted hover:bg-surface-inset',
       )}
       onClick={props.onClick}
       type="button"

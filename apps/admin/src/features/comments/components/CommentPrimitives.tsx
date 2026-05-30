@@ -1,9 +1,9 @@
-import { Popover } from '@base-ui/react/popover'
 import { Inbox, SmilePlus } from 'lucide-react'
 import { useState } from 'react'
 
 import { useI18n } from '~/i18n'
 import type { CommentModel } from '~/models/comment'
+import { Popover } from '~/ui/overlay/popover'
 import { cn } from '~/utils/cn'
 
 import { commentQuickEmojis } from '../constants'
@@ -87,33 +87,35 @@ export function EmojiPopover(props: { onSelect: (emoji: string) => void }) {
   const { t } = useI18n()
 
   return (
-    <Popover.Root onOpenChange={setOpen} open={open}>
+    <Popover onOpenChange={setOpen} open={open}>
       <Popover.Trigger
         aria-label={t('comments.reply.emojiPickerLabel')}
-        className="inline-flex size-8 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-200 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+        className="inline-flex size-8 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
         type="button"
       >
         <SmilePlus aria-hidden="true" className="size-4" />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Positioner align="start" side="top" sideOffset={8}>
-          <Popover.Popup className="outline-hidden z-50 grid w-64 grid-cols-8 gap-1 rounded border border-neutral-200 bg-white p-2 shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
-            {commentQuickEmojis.map((emoji) => (
-              <button
-                className="flex size-7 items-center justify-center rounded text-lg transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                key={emoji}
-                onClick={() => {
-                  props.onSelect(emoji)
-                  setOpen(false)
-                }}
-                type="button"
-              >
-                {emoji}
-              </button>
-            ))}
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
+      <Popover.Content
+        align="start"
+        className="grid grid-cols-8 gap-1 p-2"
+        side="top"
+        sideOffset={8}
+        width="sm"
+      >
+        {commentQuickEmojis.map((emoji) => (
+          <button
+            className="flex size-7 items-center justify-center rounded-sm text-lg transition-colors hover:bg-surface-inset"
+            key={emoji}
+            onClick={() => {
+              props.onSelect(emoji)
+              setOpen(false)
+            }}
+            type="button"
+          >
+            {emoji}
+          </button>
+        ))}
+      </Popover.Content>
+    </Popover>
   )
 }

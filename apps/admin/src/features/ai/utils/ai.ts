@@ -137,12 +137,12 @@ export function getProgress(task: AITask) {
 
 export function statusIconClassName(status: AITaskStatus) {
   return {
-    [AITaskStatus.Pending]: 'text-neutral-400',
+    [AITaskStatus.Pending]: 'text-fg-subtle',
     [AITaskStatus.Running]: 'text-blue-500',
     [AITaskStatus.Completed]: 'text-emerald-500',
     [AITaskStatus.PartialFailed]: 'text-amber-500',
     [AITaskStatus.Failed]: 'text-red-500',
-    [AITaskStatus.Cancelled]: 'text-neutral-400',
+    [AITaskStatus.Cancelled]: 'text-fg-subtle',
   }[status]
 }
 

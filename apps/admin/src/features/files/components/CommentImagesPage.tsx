@@ -195,17 +195,17 @@ export function CommentImagesPage() {
           >
             <header
               className={cn(
-                'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+                'flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-page px-4',
                 APP_SHELL_HEADER_HEIGHT_CLASS,
               )}
             >
               <div className="flex min-w-0 items-center gap-2">
                 <MobileHeaderAffordance />
-                <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
+                <h2 className="flex min-w-0 items-baseline gap-2 text-base font-semibold text-fg">
                   <span className="truncate">
                     {t('files.source.commentImages')}
                   </span>
-                  <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
+                  <span className="text-xs font-normal tabular-nums text-fg-muted">
                     {total}
                   </span>
                 </h2>
@@ -285,7 +285,7 @@ export function CommentImagesPage() {
             </Scroll>
 
             {pageCount > 1 ? (
-              <div className="flex shrink-0 items-center justify-end border-t border-neutral-200 px-4 py-2 dark:border-neutral-800">
+              <div className="flex shrink-0 items-center justify-end border-t border-border px-4 py-2">
                 <CompactPagination
                   onPageChange={setPage}
                   onPageSizeChange={() => undefined}

@@ -20,7 +20,7 @@ export function ChipStrip<V extends string>(props: ChipStripProps<V>) {
   return (
     <div
       aria-label={props.ariaLabel}
-      className="flex flex-wrap gap-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800"
+      className="flex flex-wrap gap-2 border-b border-border px-4 py-3"
       role="tablist"
     >
       {props.options.map((option) => {
@@ -32,8 +32,8 @@ export function ChipStrip<V extends string>(props: ChipStripProps<V>) {
             className={cn(
               'inline-flex items-center gap-1.5 rounded border px-2.5 py-1 text-xs transition-colors',
               active
-                ? 'border-neutral-950 bg-neutral-950 text-white dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
-                : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900',
+                ? 'border-accent bg-accent text-white hover:bg-accent-hover'
+                : 'border-border text-fg-muted hover:bg-surface-inset',
             )}
             key={option.value}
             onClick={() => props.onChange(option.value)}

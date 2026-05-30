@@ -1,8 +1,12 @@
 import { Select as BaseSelect } from '@base-ui/react/select'
-import { ChevronDown } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { PortalLayerScope, useFloatingZ } from '~/ui/feedback/portal-layer'
+import {
+  useFloatLayerContainer,
+  useLayerZIndex,
+} from '~/ui/overlay/floating-layer'
+import { menuStyles } from '~/ui/overlay/menu-styles'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
@@ -28,7 +32,8 @@ interface SelectFieldProps<TValue extends SelectValue = string> {
 export function SelectField<TValue extends SelectValue = string>(
   props: SelectFieldProps<TValue>,
 ) {
-  const { z, depth } = useFloatingZ('popover')
+  const { ref: zRef, zIndex } = useLayerZIndex<HTMLDivElement>('floating')
+  const container = useFloatLayerContainer()
   return (
     <BaseSelect.Root<TValue>
       disabled={props.disabled}
@@ -53,32 +58,38 @@ export function SelectField<TValue extends SelectValue = string>(
           className="size-4 shrink-0 text-fg-subtle"
         />
       </BaseSelect.Trigger>
-      <BaseSelect.Portal>
-        <BaseSelect.Positioner style={{ zIndex: z }}>
-          <PortalLayerScope depth={depth}>
-            <BaseSelect.Popup
-              className={cn(
-                'outline-hidden shadow-md w-[var(--anchor-width)] rounded-lg bg-surface-overlay text-sm',
-                props.popupClassName,
-              )}
+      <BaseSelect.Portal container={container ?? undefined}>
+        <BaseSelect.Positioner ref={zRef} style={{ zIndex }}>
+          <BaseSelect.Popup
+            className={cn(
+              'outline-hidden shadow-lg w-[var(--anchor-width)] rounded-lg border border-border bg-surface-overlay p-1 text-sm text-fg',
+              props.popupClassName,
+            )}
+          >
+            <Scroll
+              className="max-h-72"
+              innerClassName="flex flex-col"
+              viewportClassName="max-h-72"
             >
-              <Scroll
-                className="max-h-72"
-                innerClassName="p-1"
-                viewportClassName="max-h-72"
-              >
-                {props.options.map((option) => (
-                  <BaseSelect.Item
-                    className="outline-hidden cursor-pointer rounded-sm px-2 py-1.5 text-fg data-[highlighted]:bg-surface-inset data-[selected]:bg-accent-soft data-[selected]:text-fg"
-                    key={String(option.value)}
-                    value={option.value}
+              {props.options.map((option) => (
+                <BaseSelect.Item
+                  className={cn(
+                    menuStyles.item,
+                    'data-[selected]:bg-accent-soft data-[selected]:text-fg',
+                  )}
+                  key={String(option.value)}
+                  value={option.value}
+                >
+                  <span className={menuStyles.label}>{option.label}</span>
+                  <BaseSelect.ItemIndicator
+                    className={menuStyles.indicatorRight}
                   >
-                    {option.label}
-                  </BaseSelect.Item>
-                ))}
-              </Scroll>
-            </BaseSelect.Popup>
-          </PortalLayerScope>
+                    <Check aria-hidden="true" className="size-3.5" />
+                  </BaseSelect.ItemIndicator>
+                </BaseSelect.Item>
+              ))}
+            </Scroll>
+          </BaseSelect.Popup>
         </BaseSelect.Positioner>
       </BaseSelect.Portal>
     </BaseSelect.Root>

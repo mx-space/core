@@ -1,4 +1,3 @@
-import { Popover } from '@base-ui/react/popover'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { load } from 'js-yaml'
 import type { SerializedEditorState } from 'lexical'
@@ -86,6 +85,7 @@ import {
   ContentLayoutSlot,
 } from '~/ui/layout/content-layout'
 import { HeaderBackButton } from '~/ui/layout/header-back-button'
+import { Popover } from '~/ui/overlay/popover'
 import { EmptyState } from '~/ui/patterns/EmptyState'
 import { Button } from '~/ui/primitives/button'
 import { DateTimePicker } from '~/ui/primitives/datetime-picker'
@@ -1727,7 +1727,7 @@ function SlugPill(props: {
     : t('write.editor.titleArea.addSlug')
 
   return (
-    <Popover.Root onOpenChange={setOpen} open={open}>
+    <Popover onOpenChange={setOpen} open={open}>
       <Popover.Trigger
         aria-label={
           hasSlug
@@ -1735,7 +1735,7 @@ function SlugPill(props: {
             : t('write.editor.titleArea.addSlugAria')
         }
         className={cn(
-          'focus-visible:outline-hidden -ml-1 mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-xs text-neutral-500 transition-opacity duration-150 hover:bg-neutral-100 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-400 dark:hover:bg-neutral-900',
+          '-ml-1 mt-1 inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-xs text-fg-muted transition-opacity duration-150 hover:bg-surface-inset focus-visible:ring-[3px] focus-visible:ring-accent/15',
           hasSlug
             ? 'opacity-0 hover:!opacity-100 focus-visible:!opacity-100 group-hover:opacity-70'
             : 'opacity-0 hover:!opacity-100 focus-visible:!opacity-100 group-hover:opacity-50',
@@ -1745,49 +1745,45 @@ function SlugPill(props: {
         <span className="truncate">{triggerLabel}</span>
         <Pencil aria-hidden="true" className="size-3 shrink-0" />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Positioner align="start" side="bottom" sideOffset={6}>
-          <Popover.Popup className="outline-hidden w-80 rounded-md border border-neutral-200 bg-white p-3 shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
-            <div className="text-xs font-medium uppercase tracking-wider text-neutral-400">
-              Slug
-            </div>
-            <div className="mt-2 flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 font-mono text-xs dark:border-neutral-800 dark:bg-neutral-900">
-              {props.slugPrefix ? (
-                <span className="select-none text-neutral-400">
-                  {props.slugPrefix}
-                </span>
-              ) : null}
-              <input
-                autoFocus
-                className="outline-hidden min-w-0 flex-1 bg-transparent text-neutral-800 placeholder:text-neutral-400 dark:text-neutral-100"
-                onChange={(event) => props.onSlugChange(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault()
-                    setOpen(false)
-                  }
-                }}
-                placeholder={props.slugPlaceholder}
-                value={props.slug}
-              />
-            </div>
-            {props.copyPageUrl ? (
-              <div className="mt-2 flex justify-end">
-                <button
-                  className="focus-visible:outline-hidden inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 focus-visible:ring-1 focus-visible:ring-neutral-400 disabled:pointer-events-none disabled:opacity-40 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
-                  disabled={!hasSlug}
-                  onClick={props.copyPageUrl}
-                  type="button"
-                >
-                  <Copy aria-hidden="true" className="size-3" />
-                  {t('write.editor.copyLink')}
-                </button>
-              </div>
-            ) : null}
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
+      <Popover.Content className="p-3" width="md">
+        <div className="text-xs font-medium uppercase tracking-wider text-fg-subtle">
+          Slug
+        </div>
+        <div className="mt-2 flex items-center gap-1 rounded-sm border border-border bg-surface-inset px-2 py-1.5 font-mono text-xs">
+          {props.slugPrefix ? (
+            <span className="select-none text-fg-subtle">
+              {props.slugPrefix}
+            </span>
+          ) : null}
+          <input
+            autoFocus
+            className="outline-hidden min-w-0 flex-1 bg-transparent text-fg placeholder:text-fg-subtle"
+            onChange={(event) => props.onSlugChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                setOpen(false)
+              }
+            }}
+            placeholder={props.slugPlaceholder}
+            value={props.slug}
+          />
+        </div>
+        {props.copyPageUrl ? (
+          <div className="mt-2 flex justify-end">
+            <button
+              className="inline-flex items-center gap-1.5 rounded-sm px-2 py-1 text-xs text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:pointer-events-none disabled:opacity-40"
+              disabled={!hasSlug}
+              onClick={props.copyPageUrl}
+              type="button"
+            >
+              <Copy aria-hidden="true" className="size-3" />
+              {t('write.editor.copyLink')}
+            </button>
+          </div>
+        ) : null}
+      </Popover.Content>
+    </Popover>
   )
 }
 

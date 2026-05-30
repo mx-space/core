@@ -220,15 +220,15 @@ export function FilesByTypePage() {
             >
               <header
                 className={cn(
-                  'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+                  'flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-page px-4',
                   APP_SHELL_HEADER_HEIGHT_CLASS,
                 )}
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <MobileHeaderAffordance />
-                  <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
+                  <h2 className="flex min-w-0 items-baseline gap-2 text-base font-semibold text-fg">
                     <span className="truncate">{t('files.source.files')}</span>
-                    <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
+                    <span className="text-xs font-normal tabular-nums text-fg-muted">
                       {filtered.length}
                     </span>
                   </h2>

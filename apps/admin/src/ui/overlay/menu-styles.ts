@@ -19,7 +19,7 @@ export const menuStyles = {
    * Popup container. Use on `<Menu.Popup>` / `<ContextMenu.Popup>`.
    */
   popup:
-    'outline-hidden shadow-md min-w-[12rem] max-w-[22rem] rounded-lg bg-surface-overlay p-1 text-sm text-fg',
+    'outline-hidden shadow-md min-w-[12rem] max-w-[22rem] rounded-lg bg-surface-card p-1 text-sm text-fg',
 
   /**
    * Base item. Apply on `Menu.Item`, `Menu.CheckboxItem`, `Menu.SubmenuTrigger`.

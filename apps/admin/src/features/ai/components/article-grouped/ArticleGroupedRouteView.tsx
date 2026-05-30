@@ -8,7 +8,7 @@ import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import type { HeaderAction } from '~/ui/layout/page-layout'
-import { AppPage, PageHeader } from '~/ui/layout/page-layout'
+import { AppPage } from '~/ui/layout/page-layout'
 
 import { groupedPageSize } from '../../constants'
 import type { ArticleGroupedRouteContextValue } from './article-grouped-route-context'
@@ -79,7 +79,6 @@ export function ArticleGroupedRouteView<TItem>(
     () => listQuery.data?.pages.flatMap((page) => page.data) ?? [],
     [listQuery.data],
   )
-  const total = listQuery.data?.pages[0]?.pagination.total ?? 0
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({
@@ -124,14 +123,6 @@ export function ArticleGroupedRouteView<TItem>(
 
   return (
     <AppPage>
-      <PageHeader
-        actions={headerActions}
-        description={
-          total > 0 ? t(config.totalCountKey, { count: total }) : undefined
-        }
-        title={t(config.pageTitleKey)}
-      />
-
       <ArticleGroupedRouteContext.Provider
         value={
           routeContextValue as unknown as ArticleGroupedRouteContextValue<unknown>
@@ -146,6 +137,7 @@ export function ArticleGroupedRouteView<TItem>(
           }
           list={
             <ArticleListPane<TItem>
+              actions={headerActions}
               config={config}
               groups={groups}
               hasNextPage={Boolean(listQuery.hasNextPage)}

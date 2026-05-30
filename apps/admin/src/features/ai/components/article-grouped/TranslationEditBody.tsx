@@ -1,14 +1,14 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
-import type { AITranslation } from '~/api/ai'
 import type { SerializedEditorState } from 'lexical'
-import type { EditDrawerBodyProps } from './types'
+import { lazy, Suspense, useMemo, useState } from 'react'
 
+import type { AITranslation } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
 import { CodeMirrorEditor } from '~/vendor/codemirror'
 
 import { formatDateString } from '../../utils/ai'
+import type { EditDrawerBodyProps } from './types'
 
 const LexicalEmbeddedEditor = lazy(async () => {
   await import('~/vendor/rich-editor/core/style')
@@ -75,10 +75,10 @@ export function TranslationEditBody(props: EditDrawerBodyProps<AITranslation>) {
           value={subtitle}
         />
         <section>
-          <p className="mb-1.5 text-xs font-medium text-neutral-700 dark:text-neutral-300">
+          <p className="mb-1.5 text-xs font-medium text-fg">
             {t('ai.translation.editLabel.summary')}
           </p>
-          <div className="rounded border border-neutral-200 dark:border-neutral-800">
+          <div className="rounded border border-border">
             <CodeMirrorEditor
               embedded
               onChange={setSummary}
@@ -89,14 +89,14 @@ export function TranslationEditBody(props: EditDrawerBodyProps<AITranslation>) {
         </section>
 
         <section>
-          <p className="mb-1.5 text-xs font-medium text-neutral-700 dark:text-neutral-300">
+          <p className="mb-1.5 text-xs font-medium text-fg">
             {t('ai.translation.editLabel.text')}
           </p>
           {useLexical && initialLexical ? (
-            <div className="rounded border border-neutral-200 dark:border-neutral-800">
+            <div className="rounded border border-border">
               <Suspense
                 fallback={
-                  <div className="px-3 py-2 text-xs text-neutral-400">
+                  <div className="px-3 py-2 text-xs text-fg-subtle">
                     {t('common.loading')}
                   </div>
                 }
@@ -109,7 +109,7 @@ export function TranslationEditBody(props: EditDrawerBodyProps<AITranslation>) {
               </Suspense>
             </div>
           ) : (
-            <div className="rounded border border-neutral-200 dark:border-neutral-800">
+            <div className="rounded border border-border">
               <CodeMirrorEditor
                 embedded
                 onChange={setText}
@@ -121,7 +121,7 @@ export function TranslationEditBody(props: EditDrawerBodyProps<AITranslation>) {
         </section>
 
         <section>
-          <p className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <p className="mb-2 text-sm font-medium text-fg">
             {t('ai.translation.editLabel.meta')}
           </p>
           <dl className="grid grid-cols-2 gap-y-1.5 text-xs">
@@ -149,7 +149,7 @@ export function TranslationEditBody(props: EditDrawerBodyProps<AITranslation>) {
           </dl>
         </section>
       </div>
-      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-3">
         <Button onClick={props.onCancel} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
@@ -171,8 +171,8 @@ export function TranslationEditBody(props: EditDrawerBodyProps<AITranslation>) {
 function Row(props: { label: string; value: string }) {
   return (
     <div className="contents">
-      <dt className="text-neutral-500 dark:text-neutral-400">{props.label}</dt>
-      <dd className="text-neutral-700 dark:text-neutral-200">{props.value}</dd>
+      <dt className="text-fg-muted">{props.label}</dt>
+      <dd className="text-fg">{props.value}</dd>
     </div>
   )
 }

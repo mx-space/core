@@ -29,7 +29,7 @@ export function FileThumbnail(props: FileThumbnailProps) {
 
   return (
     <span
-      className="relative block h-full w-full overflow-hidden bg-neutral-100 dark:bg-neutral-900"
+      className="relative block h-full w-full overflow-hidden bg-surface-inset"
       style={backgroundColor ? { backgroundColor } : undefined}
     >
       {placeholder ? (
@@ -47,7 +47,7 @@ export function FileThumbnail(props: FileThumbnailProps) {
         <span
           aria-hidden="true"
           className={cn(
-            'absolute inset-0 bg-neutral-100 transition-opacity duration-300 dark:bg-neutral-900',
+            'absolute inset-0 bg-surface-inset transition-opacity duration-300',
             loaded ? 'opacity-0' : 'opacity-100',
           )}
         />

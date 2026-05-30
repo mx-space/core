@@ -4,7 +4,6 @@ import { useMemo, useRef } from 'react'
 
 import { WEB_URL } from '~/constants/env'
 import {
-  ContentListHeader,
   ContentListRefreshButton,
   ContentListToolbar,
   SortMenu,
@@ -14,6 +13,7 @@ import type { PostModel } from '~/models/post'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { FocusScope } from '~/ui/focus-scope'
+import { PageHeader } from '~/ui/layout/page-layout'
 import { useListKeyboard } from '~/ui/list-actions'
 import { ButtonLink } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -173,10 +173,10 @@ export function PostsRouteViewContent() {
       className="outline-hidden flex h-full min-h-0 flex-col bg-background"
       id={FOCUS_SCOPE_ID}
     >
-      <ContentListHeader
-        action={
-          <ButtonLink to="/posts/edit">
-            <Plus aria-hidden="true" className="size-4" />
+      <PageHeader
+        actions={
+          <ButtonLink className="text-xs" to="/posts/edit">
+            <Plus aria-hidden="true" className="size-3.5" />
             {t('posts.action.newPost')}
           </ButtonLink>
         }

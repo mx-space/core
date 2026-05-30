@@ -69,7 +69,7 @@ export function AdminShell(props: PropsWithChildren) {
   return (
     <ShellNavProvider open={navOpen} setOpen={setNavOpen}>
       <main className="grid h-screen min-h-0 grid-cols-[minmax(0,1fr)] overflow-hidden bg-surface-page text-fg lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="hidden h-screen min-h-0 flex-col border-r border-border bg-surface-card lg:flex">
+        <aside className="hidden h-screen min-h-0 flex-col border-r border-border bg-surface-page lg:flex">
           <FocusScope
             className="flex min-h-0 flex-1 flex-col"
             id={FOCUS_SCOPES.sidebar}
@@ -78,7 +78,7 @@ export function AdminShell(props: PropsWithChildren) {
           </FocusScope>
         </aside>
 
-        <section className="flex h-screen min-h-0 min-w-0 flex-col">
+        <section className="flex h-screen min-h-0 min-w-0 flex-col bg-background">
           <div className="relative min-h-0 flex-1 overflow-hidden">
             {props.children}
             {activeAiTaskCount > 0 ? (

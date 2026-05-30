@@ -40,12 +40,12 @@ export function GeneratePromptBody(props: GeneratePromptBodyProps) {
             value={lang}
           />
         ) : (
-          <p className="text-sm text-neutral-600 dark:text-neutral-300">
+          <p className="text-sm text-fg-muted">
             {props.inlineEmpty ?? props.generateLabel}
           </p>
         )}
       </div>
-      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-3">
         <Button onClick={props.onCancel} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>

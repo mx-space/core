@@ -71,7 +71,7 @@ export function ProjectListSkeleton() {
 
 export function ProjectDetailSkeleton() {
   return (
-    <section className="flex h-full min-h-0 flex-col bg-background">
+    <section className="flex h-full min-h-0 flex-col bg-surface-card">
       <div
         className={cn(
           'flex shrink-0 items-center border-b border-neutral-200 px-4 dark:border-neutral-800',

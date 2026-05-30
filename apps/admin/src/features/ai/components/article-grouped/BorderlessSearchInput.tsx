@@ -37,11 +37,11 @@ export function BorderlessSearchInput(props: BorderlessSearchInputProps) {
     >
       <Search
         aria-hidden="true"
-        className="pointer-events-none absolute left-3 size-4 text-neutral-400"
+        className="pointer-events-none absolute left-3 size-4 text-fg-subtle"
       />
       <input
         aria-label={props.ariaLabel}
-        className="outline-hidden h-full w-full bg-transparent pl-9 pr-3 text-sm text-neutral-900 placeholder:text-neutral-400 dark:text-neutral-100"
+        className="outline-hidden h-full w-full bg-transparent pl-9 pr-3 text-sm text-fg placeholder:text-fg-subtle"
         onChange={(event) => setLocal(event.target.value)}
         placeholder={props.placeholder}
         type="search"

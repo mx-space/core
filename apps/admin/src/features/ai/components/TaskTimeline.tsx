@@ -1,6 +1,6 @@
 import { Loader2 } from 'lucide-react'
-import type { AITask } from '~/api/ai'
 
+import type { AITask } from '~/api/ai'
 import { AITaskStatus } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { cn } from '~/utils/cn'
@@ -91,7 +91,7 @@ export function TaskTimeline(props: { task: AITask }) {
 
   return (
     <section className="mb-6">
-      <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-fg-muted">
         {t('ai.tasks.timeline.title')}
       </h3>
       <ol>
@@ -100,7 +100,7 @@ export function TaskTimeline(props: { task: AITask }) {
             <div className="flex flex-col items-center pt-1">
               <StageMarker state={stage.state} />
               {index < stages.length - 1 ? (
-                <span className="mt-1 w-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
+                <span className="mt-1 w-px flex-1 bg-border" />
               ) : null}
             </div>
             <div
@@ -113,20 +113,18 @@ export function TaskTimeline(props: { task: AITask }) {
                 <span
                   className={cn(
                     'font-medium',
-                    stage.state === 'pending'
-                      ? 'text-neutral-400 dark:text-neutral-500'
-                      : 'text-neutral-950 dark:text-neutral-50',
+                    stage.state === 'pending' ? 'text-fg-subtle' : 'text-fg',
                   )}
                 >
                   {t(stage.labelKey)}
                 </span>
                 {stage.duration ? (
-                  <span className="shrink-0 text-xs tabular-nums text-neutral-400 dark:text-neutral-500">
+                  <span className="shrink-0 text-xs tabular-nums text-fg-subtle">
                     {stage.duration}
                   </span>
                 ) : null}
               </div>
-              <div className="mt-0.5 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+              <div className="mt-0.5 text-xs tabular-nums text-fg-muted">
                 {stage.timestamp
                   ? formatAbsoluteTimestamp(stage.timestamp)
                   : t('ai.tasks.timeline.notReached')}
@@ -155,7 +153,7 @@ function StageMarker(props: { state: Stage['state'] }) {
         'size-2.5 rounded-full border',
         props.state === 'done'
           ? 'border-emerald-500 bg-emerald-500'
-          : 'border-neutral-300 bg-white dark:border-neutral-700 dark:bg-neutral-900',
+          : 'border-border-strong bg-surface-card',
       )}
     />
   )

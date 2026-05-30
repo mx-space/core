@@ -25,7 +25,7 @@ const variantConfig: Record<
 > = {
   list: {
     icon: History,
-    cardClass: 'bg-surface-inset border-border',
+    cardClass: 'bg-surface-card border-border',
     iconClass: 'text-fg-muted',
     actionVariant: 'secondary',
     dismissClass:

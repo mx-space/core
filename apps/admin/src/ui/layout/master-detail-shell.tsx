@@ -152,13 +152,16 @@ function DesktopShell(props: DesktopShellProps) {
   return (
     <div
       className={cn(
-        'relative h-full min-h-0 overflow-hidden bg-surface-card',
+        'relative h-full min-h-0 overflow-hidden bg-background',
         props.className,
       )}
     >
       <PanelGroup className="flex h-full min-h-0" orientation="horizontal">
         <ResizablePanel
-          className={cn('min-h-0 overflow-hidden', props.listClassName)}
+          className={cn(
+            'min-h-0 overflow-hidden bg-background',
+            props.listClassName,
+          )}
           defaultSize={defaultSize}
           groupResizeBehavior="preserve-pixel-size"
           maxSize={maxSize}
@@ -169,7 +172,7 @@ function DesktopShell(props: DesktopShellProps) {
         <ResizeHandle />
         <ResizablePanel
           className={cn(
-            'min-h-0 min-w-0 overflow-hidden',
+            'min-h-0 min-w-0 overflow-hidden bg-surface-card',
             props.detailClassName,
           )}
         >
@@ -320,7 +323,7 @@ function MobileShell(props: MobileShellProps) {
   return (
     <div
       className={cn(
-        'relative h-full min-h-0 overflow-hidden bg-surface-card',
+        'relative h-full min-h-0 overflow-hidden bg-background',
         props.className,
       )}
       ref={containerRef}
@@ -328,7 +331,7 @@ function MobileShell(props: MobileShellProps) {
       <motion.div
         aria-hidden={renderOverlay ? 'true' : undefined}
         className={cn(
-          'absolute inset-0 min-h-0 overflow-hidden',
+          'absolute inset-0 min-h-0 overflow-hidden bg-background',
           renderOverlay && 'pointer-events-none',
           props.listClassName,
         )}

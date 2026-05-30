@@ -15,7 +15,7 @@ export function DashboardRuntimeFooter(props: {
 }) {
   const { t } = useI18n()
   return (
-    <footer className="border-t border-neutral-100 pb-4 pt-4 text-center text-xs leading-6 text-neutral-400 dark:border-neutral-800 dark:text-neutral-500">
+    <footer className="border-t border-border pb-4 pt-4 text-center text-xs leading-6 text-fg-subtle">
       <div className="inline-flex flex-wrap items-center justify-center gap-2">
         <span>
           {props.adminLatestVersion
@@ -29,7 +29,7 @@ export function DashboardRuntimeFooter(props: {
         </span>
         <button
           aria-label={t('dashboard.footer.checkUpdates')}
-          className="inline-flex size-6 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+          className="inline-flex size-6 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
           disabled={props.refreshing}
           onClick={props.onCheckUpdates}
           type="button"
@@ -40,7 +40,7 @@ export function DashboardRuntimeFooter(props: {
           />
         </button>
         <button
-          className="inline-flex h-6 items-center gap-1 rounded border border-neutral-200 px-2 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800 dark:border-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
+          className="inline-flex h-6 items-center gap-1 rounded-sm border border-border px-2 text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
           onClick={props.onOpenUpgrade}
           type="button"
         >

@@ -1,10 +1,9 @@
-import { Popover } from '@base-ui/react/popover'
 import { Check, ChevronDown, Search, Sparkles } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
-import type { ProviderModelsResponse } from '~/api/ai'
-import type { SelectedAgentModel } from './types'
 
+import type { ProviderModelsResponse } from '~/api/ai'
 import { useI18n } from '~/i18n'
+import { Popover } from '~/ui/overlay/popover'
 import { cn } from '~/utils/cn'
 
 import {
@@ -13,6 +12,7 @@ import {
   rememberRecentModel,
   writeRecentModels,
 } from './model-recents'
+import type { SelectedAgentModel } from './types'
 
 interface ModelSelectorProps {
   providerGroups: ProviderModelsResponse[]
@@ -140,11 +140,9 @@ export function ModelSelector({
   }
 
   return (
-    <Popover.Root onOpenChange={handleOpenChange} open={open}>
+    <Popover onOpenChange={handleOpenChange} open={open}>
       <Popover.Trigger
-        className={cn(
-          'focus-visible:outline-hidden inline-flex items-center gap-1 text-xs text-neutral-500 transition-colors hover:text-neutral-800 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-neutral-100',
-        )}
+        className="inline-flex items-center gap-1 text-xs text-fg-muted transition-colors hover:text-fg disabled:opacity-50"
         disabled={isEmpty}
         type="button"
       >
@@ -154,66 +152,68 @@ export function ModelSelector({
         </span>
         <ChevronDown aria-hidden="true" className="size-3 shrink-0" />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Positioner align="start" side="top" sideOffset={6}>
-          <Popover.Popup
-            className="outline-hidden flex max-h-80 w-72 flex-col border border-neutral-200 bg-white p-0 shadow-xl dark:border-neutral-800 dark:bg-neutral-950"
-            initialFocus={inputRef}
-          >
-            <div className="flex items-center gap-1.5 border-b border-neutral-200 px-2.5 py-2 dark:border-neutral-800">
-              <Search
-                aria-hidden="true"
-                className="size-3.5 shrink-0 text-neutral-400"
-              />
-              <input
-                className="outline-hidden min-w-0 flex-1 bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-200 dark:placeholder:text-neutral-500"
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={t('write.agent.model.search')}
-                ref={inputRef}
-                value={query}
-              />
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto py-1">
-              {hasResults ? (
-                groups.map((group) => (
-                  <div key={group.key}>
-                    <div className="px-2 py-1 text-xs uppercase tracking-wide text-neutral-400">
-                      {group.label}
-                    </div>
-                    {group.rows.map((row) => {
-                      const active =
-                        selectedModel?.providerId === row.providerId &&
-                        selectedModel?.modelId === row.modelId
-                      return (
-                        <button
-                          className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-xs text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-900"
-                          key={`${group.key}:${row.providerId}::${row.modelId}`}
-                          onClick={() => handleSelect(row)}
-                          type="button"
-                        >
-                          <span className="min-w-0 flex-1 truncate">
-                            {row.name}
-                          </span>
-                          {active ? (
-                            <Check
-                              aria-hidden="true"
-                              className="size-3.5 shrink-0 text-neutral-500"
-                            />
-                          ) : null}
-                        </button>
-                      )
-                    })}
-                  </div>
-                ))
-              ) : (
-                <div className="px-2 py-6 text-center text-xs text-neutral-400">
-                  {t('write.agent.model.empty')}
+      <Popover.Content
+        align="start"
+        className="flex max-h-80 w-72 flex-col"
+        initialFocus={inputRef}
+        side="top"
+        sideOffset={6}
+      >
+        <div className="flex items-center gap-1.5 border-b border-border px-2.5 py-2">
+          <Search
+            aria-hidden="true"
+            className="size-3.5 shrink-0 text-fg-subtle"
+          />
+          <input
+            className="outline-hidden min-w-0 flex-1 bg-transparent text-xs text-fg placeholder:text-fg-subtle"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t('write.agent.model.search')}
+            ref={inputRef}
+            value={query}
+          />
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto py-1">
+          {hasResults ? (
+            groups.map((group) => (
+              <div key={group.key}>
+                <div className="px-2 py-1 text-xs uppercase tracking-wide text-fg-subtle">
+                  {group.label}
                 </div>
-              )}
+                {group.rows.map((row) => {
+                  const active =
+                    selectedModel?.providerId === row.providerId &&
+                    selectedModel?.modelId === row.modelId
+                  return (
+                    <button
+                      className={cn(
+                        'flex w-full items-center gap-2 px-2 py-1.5 text-left text-xs text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg',
+                        active && 'text-fg',
+                      )}
+                      key={`${group.key}:${row.providerId}::${row.modelId}`}
+                      onClick={() => handleSelect(row)}
+                      type="button"
+                    >
+                      <span className="min-w-0 flex-1 truncate">
+                        {row.name}
+                      </span>
+                      {active ? (
+                        <Check
+                          aria-hidden="true"
+                          className="size-3.5 shrink-0 text-accent"
+                        />
+                      ) : null}
+                    </button>
+                  )
+                })}
+              </div>
+            ))
+          ) : (
+            <div className="px-2 py-6 text-center text-xs text-fg-subtle">
+              {t('write.agent.model.empty')}
             </div>
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
+          )}
+        </div>
+      </Popover.Content>
+    </Popover>
   )
 }

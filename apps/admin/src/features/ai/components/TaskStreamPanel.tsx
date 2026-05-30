@@ -73,16 +73,16 @@ export function TaskStreamPanel(props: { taskId: string }) {
   return (
     <section className="mb-6">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-fg-muted">
           {t('ai.task.stream.title')}
         </h3>
       </div>
-      <p className="mb-3 text-xs text-neutral-500 dark:text-neutral-400">
+      <p className="mb-3 text-xs text-fg-muted">
         {t('ai.task.stream.lateHint')}
       </p>
 
       {entries.length === 0 ? (
-        <div className="rounded border border-dashed border-neutral-200 px-3 py-4 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+        <div className="rounded border border-dashed border-border px-3 py-4 text-xs text-fg-muted">
           {t('ai.task.stream.waiting')}
         </div>
       ) : (
@@ -107,8 +107,8 @@ function LangCard(props: { lang: string; state: LangStreamState }) {
       : t('ai.task.stream.lang', { lang })
 
   return (
-    <div className="rounded border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-700 dark:border-neutral-800 dark:text-neutral-200">
+    <div className="rounded border border-border bg-surface-inset">
+      <div className="flex items-center justify-between border-b border-border px-3 py-1.5 text-xs font-medium text-fg">
         <span>{langLabel}</span>
         {state.done ? (
           <span className="text-emerald-600 dark:text-emerald-400">●</span>
@@ -159,7 +159,7 @@ function MarkdownStream(props: { chunks: string[] }) {
       ref={scrollViewportRef}
       viewportClassName="max-h-72"
     >
-      <pre className="whitespace-pre-wrap break-words p-3 font-mono text-xs leading-5 text-neutral-800 dark:text-neutral-200">
+      <pre className="whitespace-pre-wrap break-words p-3 font-mono text-xs leading-5 text-fg">
         {text}
       </pre>
     </Scroll>
@@ -174,13 +174,13 @@ function LexicalSegments(props: { segments: Array<[string, LexicalSegment]> }) {
       orientation="vertical"
       viewportClassName="max-h-72"
     >
-      <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
+      <ul className="divide-y divide-border">
         {props.segments.map(([segmentId, segment]) => (
           <li
             key={segmentId}
-            className="space-y-1 p-3 text-xs text-neutral-800 transition-opacity duration-200 dark:text-neutral-200"
+            className="space-y-1 p-3 text-xs text-fg transition-opacity duration-200"
           >
-            <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+            <div className="text-xs font-medium text-fg-muted">
               {t('ai.task.stream.segment', { segmentId })}
             </div>
             <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-5">

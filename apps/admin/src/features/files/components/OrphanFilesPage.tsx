@@ -231,15 +231,15 @@ export function OrphanFilesPage() {
           >
             <header
               className={cn(
-                'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+                'flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-page px-4',
                 APP_SHELL_HEADER_HEIGHT_CLASS,
               )}
             >
               <div className="flex min-w-0 items-center gap-2">
                 <MobileHeaderAffordance />
-                <h2 className="flex min-w-0 items-baseline gap-2 text-lg font-semibold">
+                <h2 className="flex min-w-0 items-baseline gap-2 text-base font-semibold text-fg">
                   <span className="truncate">{t('files.source.orphans')}</span>
-                  <span className="text-xs font-normal tabular-nums text-neutral-400 dark:text-neutral-500">
+                  <span className="text-xs font-normal tabular-nums text-fg-muted">
                     {total}
                   </span>
                 </h2>
@@ -285,7 +285,7 @@ export function OrphanFilesPage() {
             />
 
             {filtered.length > 0 ? (
-              <div className="flex h-9 shrink-0 items-center gap-3 border-b border-neutral-200 bg-neutral-50/60 px-4 text-xs dark:border-neutral-800 dark:bg-neutral-900/40">
+              <div className="flex h-9 shrink-0 items-center gap-3 border-b border-border bg-surface-inset px-4 text-xs">
                 <Checkbox
                   aria-label={t('files.orphans.selectCurrentPage')}
                   checked={allVisibleSelected || selectAllAcross}
@@ -296,7 +296,7 @@ export function OrphanFilesPage() {
                     else selection.clear()
                   }}
                 />
-                <span className="text-neutral-500 dark:text-neutral-400">
+                <span className="text-fg-muted">
                   {selectAllAcross
                     ? t('files.orphans.allSelected', { count: total })
                     : selectedCount > 0
@@ -307,7 +307,7 @@ export function OrphanFilesPage() {
                 </span>
                 {allVisibleSelected && pageCount > 1 && !selectAllAcross ? (
                   <button
-                    className="text-neutral-700 underline-offset-2 hover:underline dark:text-neutral-200"
+                    className="text-fg underline-offset-2 hover:underline"
                     onClick={() => setSelectAllAcross(true)}
                     type="button"
                   >
@@ -316,7 +316,7 @@ export function OrphanFilesPage() {
                 ) : null}
                 {selectAllAcross ? (
                   <button
-                    className="text-neutral-700 underline-offset-2 hover:underline dark:text-neutral-200"
+                    className="text-fg underline-offset-2 hover:underline"
                     onClick={() => {
                       setSelectAllAcross(false)
                       selection.clear()
@@ -387,7 +387,7 @@ export function OrphanFilesPage() {
             </Scroll>
 
             {pageCount > 1 ? (
-              <div className="flex shrink-0 items-center justify-end border-t border-neutral-200 px-4 py-2 dark:border-neutral-800">
+              <div className="flex shrink-0 items-center justify-end border-t border-border px-4 py-2">
                 <CompactPagination
                   onPageChange={setPage}
                   onPageSizeChange={() => undefined}

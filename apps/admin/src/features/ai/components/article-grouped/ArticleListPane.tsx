@@ -1,16 +1,19 @@
 import { Inbox, Loader2 } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import type { ArticleInfo } from '~/api/ai'
-import type { ArticleGroup, ArticleGroupedConfig } from './types'
 
+import type { ArticleInfo } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { FocusScope } from '~/ui/focus-scope'
+import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
+import type { HeaderAction } from '~/ui/layout/page-layout'
+import { HeaderActions } from '~/ui/layout/page-layout'
 import { useListKeyboard } from '~/ui/list-actions'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
 import { ArticleListRow } from './ArticleListRow'
 import { BorderlessSearchInput } from './BorderlessSearchInput'
+import type { ArticleGroup, ArticleGroupedConfig } from './types'
 
 interface ArticleListPaneProps<TItem> {
   config: ArticleGroupedConfig<TItem>
@@ -23,6 +26,7 @@ interface ArticleListPaneProps<TItem> {
   hasNextPage: boolean
   isFetchingNextPage: boolean
   onLoadMore: () => void
+  actions?: HeaderAction[]
 }
 
 export function ArticleListPane<TItem>(props: ArticleListPaneProps<TItem>) {
@@ -84,13 +88,17 @@ export function ArticleListPane<TItem>(props: ArticleListPaneProps<TItem>) {
       className={cn('outline-hidden flex h-full min-h-0 flex-col')}
       id={scopeId}
     >
-      <div className="flex h-12 shrink-0 items-center border-b border-neutral-200 px-1 dark:border-neutral-800">
+      <div className="flex h-12 shrink-0 items-center gap-1 border-b border-border pl-1 pr-2">
+        <MobileHeaderAffordance />
         <BorderlessSearchInput
           ariaLabel={t(props.config.searchPlaceholderKey)}
           onChange={props.onSearchChange}
           placeholder={t(props.config.searchPlaceholderKey)}
           value={props.search}
         />
+        {props.actions?.length ? (
+          <HeaderActions actions={props.actions} />
+        ) : null}
       </div>
 
       <Scroll className="flex-1" ref={scrollRef}>
@@ -130,7 +138,7 @@ export function ArticleListPane<TItem>(props: ArticleListPaneProps<TItem>) {
                 {props.isFetchingNextPage ? (
                   <Loader2
                     aria-hidden="true"
-                    className="size-4 animate-spin text-neutral-400"
+                    className="size-4 animate-spin text-fg-subtle"
                   />
                 ) : null}
               </div>
@@ -145,13 +153,9 @@ export function ArticleListPane<TItem>(props: ArticleListPaneProps<TItem>) {
 function ListEmpty(props: { title: string; description: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-4 py-16 text-center">
-      <Inbox aria-hidden="true" className="size-8 text-neutral-400" />
-      <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-        {props.title}
-      </p>
-      <p className="text-xs text-neutral-500 dark:text-neutral-400">
-        {props.description}
-      </p>
+      <Inbox aria-hidden="true" className="size-8 text-fg-subtle" />
+      <p className="text-sm font-medium text-fg">{props.title}</p>
+      <p className="text-xs text-fg-muted">{props.description}</p>
     </div>
   )
 }

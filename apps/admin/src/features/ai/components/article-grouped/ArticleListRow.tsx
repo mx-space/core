@@ -44,7 +44,7 @@ export function ArticleListRow(props: ArticleListRowProps) {
         </h3>
       </div>
       <div className="mt-1.5 flex items-center gap-2 pl-6">
-        <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-fg-muted dark:bg-neutral-800">
+        <span className="rounded bg-surface-inset px-1.5 py-0.5 text-xs text-fg-muted">
           {t(meta.labelKey)}
         </span>
         <span className="text-xs text-fg-subtle">

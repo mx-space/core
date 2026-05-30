@@ -164,20 +164,20 @@ export function TaskDetail(props: {
 
         {progress !== null ? (
           <section className="mb-6">
-            <div className="mb-2 flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+            <div className="mb-2 flex items-center justify-between text-xs text-fg-muted">
               <span>
                 {task.progressMessage ?? t('ai.task.progressDefault')}
               </span>
               <span className="tabular-nums">{Math.round(progress)}%</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-900">
+            <div className="h-1.5 overflow-hidden rounded-full bg-surface-inset">
               <div
                 className="h-full rounded-full bg-[var(--color-primary)] transition-[width]"
                 style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
               />
             </div>
             {task.tokensGenerated && task.tokensGenerated > 0 ? (
-              <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-fg-muted">
                 <Loader2
                   aria-hidden="true"
                   className={cn(
@@ -261,7 +261,7 @@ export function TaskDetail(props: {
 function MetadataGroup(props: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-fg-muted">
         {props.title}
       </h4>
       <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">

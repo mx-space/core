@@ -24,14 +24,12 @@ export function ArticleEditPanel<TItem>(props: ArticleEditPanelProps<TItem>) {
     mode === 'generate' ? t(config.generate.labelKey) : t(config.editTitleKey)
 
   return (
-    <section className="flex h-full min-h-0 flex-col bg-background">
-      <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800">
-        <h3 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
-          {title}
-        </h3>
+    <section className="flex h-full min-h-0 flex-col bg-surface-card">
+      <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-4">
+        <h3 className="truncate text-sm font-medium text-fg">{title}</h3>
         <button
           aria-label={t('ui.modal.closeAria')}
-          className="inline-flex size-8 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-50"
+          className="inline-flex size-8 items-center justify-center rounded text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
           onClick={props.onClose}
           type="button"
         >

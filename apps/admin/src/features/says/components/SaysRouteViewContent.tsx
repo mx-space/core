@@ -1,9 +1,9 @@
 import { Plus, Quote } from 'lucide-react'
 
-import { ContentListHeader } from '~/features/_shared/components/content-list-toolbar'
 import { useI18n } from '~/i18n'
 import type { SayModel } from '~/models/say'
 import { CompactPagination } from '~/ui/data/compact-pagination'
+import { PageHeader } from '~/ui/layout/page-layout'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 
@@ -29,14 +29,15 @@ export function SaysRouteViewContent() {
 
   return (
     <section className="flex h-full min-h-0 flex-col bg-background">
-      <ContentListHeader
-        action={
+      <PageHeader
+        actions={
           <Button
+            className="text-xs"
             onClick={() => void openEditor(null)}
             type="button"
             variant="subtle"
           >
-            <Plus aria-hidden="true" className="size-4" />
+            <Plus aria-hidden="true" className="size-3.5" />
             {t('says.addOne')}
           </Button>
         }

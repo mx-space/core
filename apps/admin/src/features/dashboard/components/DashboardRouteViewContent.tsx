@@ -246,6 +246,7 @@ export function DashboardRouteViewContent() {
       <PageHeader
         actions={
           <Button
+            className="text-xs"
             disabled={statQuery.isFetching}
             onClick={() => void statQuery.refetch()}
             type="button"
@@ -253,7 +254,7 @@ export function DashboardRouteViewContent() {
           >
             <RefreshCw
               aria-hidden="true"
-              className={cn('size-4', statQuery.isFetching && 'animate-spin')}
+              className={cn('size-3.5', statQuery.isFetching && 'animate-spin')}
             />
             {t('dashboard.header.refresh')}
           </Button>
@@ -291,7 +292,7 @@ export function DashboardRouteViewContent() {
           })}
           title={t('dashboard.panel.quickActions.title')}
         >
-          <div className="grid gap-px bg-neutral-200 sm:grid-cols-2 lg:grid-cols-4 dark:bg-neutral-800">
+          <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
             <ActionCard
               icon={FileText}
               label={t('dashboard.action.label.posts')}
@@ -328,7 +329,7 @@ export function DashboardRouteViewContent() {
         </Panel>
 
         <Panel className="mt-6" title={t('dashboard.panel.stats.title')}>
-          <div className="grid gap-px bg-neutral-100 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:bg-neutral-800">
+          <div className="grid gap-px bg-border sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
             <StatCell
               icon={File}
               label={t('dashboard.stat.pages')}
@@ -441,7 +442,7 @@ export function DashboardRouteViewContent() {
         </section>
 
         <Panel className="mt-6" title={t('dashboard.panel.maintenance.title')}>
-          <div className="grid gap-px bg-neutral-200 sm:grid-cols-2 xl:grid-cols-3 dark:bg-neutral-800">
+          <div className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-3">
             <MaintenanceCard
               disabled={cleanCacheMutation.isPending}
               icon={BrushCleaning}

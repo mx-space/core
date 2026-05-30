@@ -1,4 +1,3 @@
-import { Popover } from '@base-ui/react/popover'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
@@ -26,7 +25,6 @@ import { SUPPORTED_LOCALES } from '~/i18n/resources'
 import type { Locale, TranslationKey } from '~/i18n/types'
 import type { ThemeMode } from '~/theme'
 import { useThemeMode } from '~/theme'
-import { PortalLayerScope, useFloatingZ } from '~/ui/feedback/portal-layer'
 import {
   collectActiveParentPaths,
   doesRouteMatch,
@@ -34,6 +32,7 @@ import {
   SidebarNavItem,
 } from '~/ui/layout/sidebar-nav-item'
 import { showContextMenu } from '~/ui/overlay/context-menu'
+import { DropdownMenu } from '~/ui/overlay/dropdown-menu'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
 import { authClient } from '~/utils/authjs/auth'
@@ -65,7 +64,6 @@ export function SidebarBody() {
   const queryClient = useQueryClient()
   const { locale, setLocale, t } = useI18n()
   const { setThemeMode, themeMode } = useThemeMode()
-  const userMenuFloat = useFloatingZ('popover')
   const ownerQuery = useQuery({
     queryFn: getOwner,
     queryKey: ['shell', 'owner'],
@@ -209,9 +207,9 @@ export function SidebarBody() {
           />
           <span className="truncate text-sm font-medium text-fg">Mx Space</span>
         </div>
-        <Popover.Root>
-          <Popover.Trigger
-            className="outline-hidden flex shrink-0 items-center gap-1 rounded-sm p-1 transition-colors hover:bg-surface-inset data-[popup-open]:bg-surface-inset"
+        <DropdownMenu>
+          <DropdownMenu.Trigger
+            className="flex shrink-0 items-center gap-1 rounded-sm p-1 transition-colors hover:bg-surface-card data-[popup-open]:bg-surface-card"
             title={ownerName}
             type="button"
           >
@@ -231,124 +229,100 @@ export function SidebarBody() {
               aria-hidden="true"
               className="size-3 shrink-0 text-fg-subtle"
             />
-          </Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Positioner
-              align="end"
-              side="bottom"
-              sideOffset={8}
-              style={{ zIndex: userMenuFloat.z }}
-            >
-              <PortalLayerScope depth={userMenuFloat.depth}>
-                <Popover.Popup className="shadow-md outline-hidden w-64 rounded-lg bg-surface-overlay p-1 text-sm">
-                  <div className="flex min-w-0 items-center gap-3 px-2 py-2">
-                    {owner?.avatar ? (
-                      <img
-                        alt=""
-                        className="size-9 shrink-0 rounded-lg object-cover"
-                        decoding="async"
-                        src={owner.avatar}
-                      />
-                    ) : (
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-inset text-sm font-medium text-fg-muted">
-                        {ownerName.slice(0, 1).toUpperCase()}
-                      </span>
-                    )}
-                    <div className="min-w-0">
-                      <div className="truncate font-medium text-fg">
-                        {ownerName}
-                      </div>
-                      {ownerContact ? (
-                        <div className="mt-0.5 truncate text-xs text-fg-muted">
-                          {ownerContact}
-                        </div>
-                      ) : null}
-                    </div>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content align="end" className="w-64" sideOffset={8}>
+            <div className="flex min-w-0 items-center gap-3 px-2 py-2">
+              {owner?.avatar ? (
+                <img
+                  alt=""
+                  className="size-9 shrink-0 rounded-lg object-cover"
+                  decoding="async"
+                  src={owner.avatar}
+                />
+              ) : (
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-inset text-sm font-medium text-fg-muted">
+                  {ownerName.slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              <div className="min-w-0">
+                <div className="truncate font-medium text-fg">{ownerName}</div>
+                {ownerContact ? (
+                  <div className="mt-0.5 truncate text-xs text-fg-muted">
+                    {ownerContact}
                   </div>
-                  <div className="my-1 h-px bg-border" />
-                  <button
-                    className="flex h-8 w-full items-center gap-2 rounded-sm px-2 text-left text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
-                    onClick={() => navigate('/setting?group=user')}
-                    type="button"
-                  >
-                    <Settings aria-hidden="true" className="size-4" />
-                    {t('ui.layout.accountSettings')}
-                  </button>
-                  <a
-                    className="flex h-8 w-full items-center gap-2 rounded-sm px-2 text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
-                    href={WEB_URL}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    <ExternalLink aria-hidden="true" className="size-4" />
-                    {t('common.openMainSite')}
-                  </a>
-                  <div className="my-1 h-px bg-border" />
-                  <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-                    <span className="shrink-0 text-xs text-fg-muted">
-                      {t('ui.layout.preferences.theme')}
-                    </span>
-                    <div
-                      aria-label={t('shell.theme.label')}
-                      className="grid shrink-0 grid-cols-3 gap-0.5 rounded-sm bg-surface-inset p-0.5"
-                      role="group"
-                    >
-                      {themeModeOptions.map((option) => {
-                        const Icon = option.icon
-                        const active = option.value === themeMode
+                ) : null}
+              </div>
+            </div>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item onClick={() => navigate('/setting?group=user')}>
+              <Settings aria-hidden="true" className="size-4" />
+              {t('ui.layout.accountSettings')}
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              render={
+                <a href={WEB_URL} rel="noreferrer" target="_blank">
+                  <ExternalLink aria-hidden="true" className="size-4" />
+                  {t('common.openMainSite')}
+                </a>
+              }
+            />
+            <DropdownMenu.Separator />
+            <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+              <span className="shrink-0 text-xs text-fg-muted">
+                {t('ui.layout.preferences.theme')}
+              </span>
+              <div
+                aria-label={t('shell.theme.label')}
+                className="grid shrink-0 grid-cols-3 gap-0.5 rounded-sm bg-surface-inset p-0.5"
+                role="group"
+              >
+                {themeModeOptions.map((option) => {
+                  const Icon = option.icon
+                  const active = option.value === themeMode
 
-                        return (
-                          <button
-                            aria-label={t(themeModeLabelKeys[option.value])}
-                            className={cn(
-                              'inline-flex size-6 items-center justify-center rounded-sm text-fg-muted transition-colors hover:text-fg',
-                              active
-                                ? 'shadow-xs bg-surface-card text-fg'
-                                : null,
-                            )}
-                            key={option.value}
-                            onClick={() => setThemeMode(option.value)}
-                            title={t(themeModeLabelKeys[option.value])}
-                            type="button"
-                          >
-                            <Icon aria-hidden="true" className="size-3.5" />
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-                    <span className="shrink-0 text-xs text-fg-muted">
-                      {t('ui.layout.preferences.language')}
-                    </span>
-                    <div className="w-20 shrink-0">
-                      <SelectField
-                        aria-label={t('shell.locale.label')}
-                        onValueChange={setLocale}
-                        options={SUPPORTED_LOCALES.map((value) => ({
-                          label: localeShortLabels[value],
-                          value,
-                        }))}
-                        popupClassName="text-xs"
-                        triggerClassName="h-7 border-transparent bg-transparent px-2 text-xs font-medium text-fg-muted hover:bg-surface-inset"
-                        value={locale}
-                      />
-                    </div>
-                  </div>
-                  <div className="my-1 h-px bg-border" />
-                  <button
-                    className="flex h-8 w-full items-center gap-2 rounded-sm px-2 text-left text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                    onClick={() => void handleLogout()}
-                    type="button"
-                  >
-                    <LogOut aria-hidden="true" className="size-4" />
-                    {t('shell.logout')}
-                  </button>
-                </Popover.Popup>
-              </PortalLayerScope>
-            </Popover.Positioner>
-          </Popover.Portal>
-        </Popover.Root>
+                  return (
+                    <button
+                      aria-label={t(themeModeLabelKeys[option.value])}
+                      className={cn(
+                        'inline-flex size-6 items-center justify-center rounded-sm text-fg-muted transition-colors hover:text-fg',
+                        active ? 'shadow-xs bg-surface-card text-fg' : null,
+                      )}
+                      key={option.value}
+                      onClick={() => setThemeMode(option.value)}
+                      title={t(themeModeLabelKeys[option.value])}
+                      type="button"
+                    >
+                      <Icon aria-hidden="true" className="size-3.5" />
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+              <span className="shrink-0 text-xs text-fg-muted">
+                {t('ui.layout.preferences.language')}
+              </span>
+              <div className="w-20 shrink-0">
+                <SelectField
+                  aria-label={t('shell.locale.label')}
+                  onValueChange={setLocale}
+                  options={SUPPORTED_LOCALES.map((value) => ({
+                    label: localeShortLabels[value],
+                    value,
+                  }))}
+                  popupClassName="text-xs"
+                  triggerClassName="h-6 border-transparent bg-transparent px-1.5 text-xs font-medium text-fg-muted shadow-none hover:bg-surface-inset"
+                  value={locale}
+                />
+              </div>
+            </div>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item danger onClick={() => void handleLogout()}>
+              <LogOut aria-hidden="true" className="size-4" />
+              {t('shell.logout')}
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu>
       </div>
 
       <nav

@@ -9,7 +9,7 @@ interface ArticleDetailEmptyStateProps {
 
 export function ArticleDetailEmptyState(props: ArticleDetailEmptyStateProps) {
   return (
-    <div className="flex h-full min-h-0 items-center justify-center bg-surface-card">
+    <div className="flex h-full min-h-0 items-center justify-center">
       <EmptyState
         description={props.description}
         icon={Sparkles}

@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
-import { useEffect, useRef } from 'react'
 import type { ChangeEvent } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { useI18n } from '~/i18n'
 
@@ -34,15 +34,15 @@ export function SearchRow(props: SearchRowProps) {
   }, [])
 
   return (
-    <div className="shrink-0 border-b border-neutral-200 px-4 py-2 dark:border-neutral-800">
+    <div className="shrink-0 border-b border-border px-4 py-2">
       <div className="relative">
         <Search
           aria-hidden="true"
-          className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-neutral-400"
+          className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-fg-subtle"
         />
         <input
           aria-label={props.placeholder ?? t('files.search.placeholder')}
-          className="focus-visible:outline-hidden pl-7.5 h-8 w-full rounded border border-neutral-200 bg-white pr-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:ring-2 focus-visible:ring-neutral-400 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-50 dark:focus-visible:ring-neutral-500"
+          className="focus-visible:outline-hidden pl-7.5 h-8 w-full rounded border border-border bg-surface-card pr-2.5 text-sm text-fg placeholder:text-fg-subtle focus-visible:ring-[3px] focus-visible:ring-accent/15"
           onChange={onChange}
           placeholder={props.placeholder ?? t('files.search.placeholder')}
           ref={inputRef}

@@ -22,12 +22,12 @@ import {
 } from '../utils/ai'
 
 const statusDotClassName: Record<AITaskStatus, string> = {
-  [AITaskStatus.Pending]: 'bg-neutral-300 dark:bg-neutral-600',
+  [AITaskStatus.Pending]: 'bg-border-strong',
   [AITaskStatus.Running]: 'bg-blue-500',
   [AITaskStatus.Completed]: 'bg-emerald-500',
   [AITaskStatus.PartialFailed]: 'bg-amber-500',
   [AITaskStatus.Failed]: 'bg-red-500',
-  [AITaskStatus.Cancelled]: 'bg-neutral-400 dark:bg-neutral-500',
+  [AITaskStatus.Cancelled]: 'bg-fg-subtle',
 }
 
 const statusTextClassName: Record<AITaskStatus, string> = {

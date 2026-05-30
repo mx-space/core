@@ -10,13 +10,13 @@ import {
   getTranslationEntries,
   updateTranslationEntry,
 } from '~/api/ai'
-import { ContentListHeader } from '~/features/_shared/components/content-list-toolbar'
 import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { FocusScope } from '~/ui/focus-scope'
+import { PageHeader } from '~/ui/layout/page-layout'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
@@ -165,18 +165,19 @@ export function AiTranslationEntriesRouteView() {
       className="outline-hidden flex h-full min-h-0 flex-col bg-background"
       id={FOCUS_SCOPE_ID}
     >
-      <ContentListHeader
-        action={
+      <PageHeader
+        actions={
           <Button
+            className="text-xs"
             disabled={generateMutation.isPending}
             onClick={() => generateMutation.mutate()}
             type="button"
             variant="primary"
           >
             {generateMutation.isPending ? (
-              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+              <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
             ) : (
-              <Sparkles aria-hidden="true" className="size-4" />
+              <Sparkles aria-hidden="true" className="size-3.5" />
             )}
             {t('ai.action.generateEntries')}
           </Button>
@@ -186,7 +187,7 @@ export function AiTranslationEntriesRouteView() {
         title={t('routes.aiTranslationEntries.title')}
       />
 
-      <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border bg-surface-inset px-4">
         <div className="flex shrink-0 items-center gap-1.5">
           <SelectField
             aria-label={t('ai.filter.keyPathAria')}
@@ -198,11 +199,11 @@ export function AiTranslationEntriesRouteView() {
               }))
             }}
             options={keyPathOptions}
-            triggerClassName="w-36 !h-7 !border-transparent !bg-transparent text-xs hover:!bg-neutral-100 dark:hover:!bg-neutral-900"
+            triggerClassName="w-36 !h-7 !border-transparent !bg-transparent text-xs hover:!bg-surface-inset"
             value={keyPath}
           />
           <TextInput
-            controlClassName="h-7 w-24 !border-transparent !bg-transparent text-xs hover:!bg-neutral-100 dark:hover:!bg-neutral-900"
+            controlClassName="h-7 w-24 !border-transparent !bg-transparent text-xs hover:!bg-surface-inset"
             onChange={(value) => {
               setUrlState((current) => ({ ...current, lang: value, page: 1 }))
             }}
@@ -210,10 +211,10 @@ export function AiTranslationEntriesRouteView() {
             value={lang}
           />
         </div>
-        <span className="ml-auto h-3.5 w-px shrink-0 bg-neutral-200 dark:bg-neutral-800" />
+        <span className="ml-auto h-3.5 w-px shrink-0 bg-border" />
         <button
           aria-label={t('common.refresh')}
-          className="outline-hidden inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-[var(--color-primary-shallow)] disabled:pointer-events-none disabled:opacity-50 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
+          className="outline-hidden inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg focus-visible:ring-2 focus-visible:ring-[var(--color-primary-shallow)] disabled:pointer-events-none disabled:opacity-50"
           disabled={query.isFetching}
           onClick={() => void query.refetch()}
           type="button"
@@ -234,7 +235,7 @@ export function AiTranslationEntriesRouteView() {
           <ResourceEmpty label={t('ai.tab.entries')} />
         ) : (
           <table className="w-full min-w-[860px] text-sm">
-            <thead className="border-b border-neutral-200 text-left text-xs uppercase text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+            <thead className="border-b border-border text-left text-xs uppercase text-fg-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">
                   {t('ai.translation.column.path')}
@@ -253,7 +254,7 @@ export function AiTranslationEntriesRouteView() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-900">
+            <tbody className="divide-y divide-border">
               {entries.map((entry) => (
                 <tr key={entry.id}>
                   <td className="px-4 py-3 align-top">
@@ -262,10 +263,10 @@ export function AiTranslationEntriesRouteView() {
                   <td className="px-4 py-3 align-top">
                     <SmallBadge tone="info">{entry.lang}</SmallBadge>
                   </td>
-                  <td className="max-w-xs px-4 py-3 align-top text-neutral-700 dark:text-neutral-300">
+                  <td className="max-w-xs px-4 py-3 align-top text-fg">
                     {entry.sourceText}
                   </td>
-                  <td className="max-w-md px-4 py-3 align-top text-neutral-700 dark:text-neutral-300">
+                  <td className="max-w-md px-4 py-3 align-top text-fg">
                     {entry.translatedText || '-'}
                   </td>
                   <td className="px-4 py-3 align-top">
@@ -297,8 +298,8 @@ export function AiTranslationEntriesRouteView() {
       </Scroll>
 
       {pageCount > 1 ? (
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-          <span className="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-4 py-3">
+          <span className="text-xs tabular-nums text-fg-muted">
             {t('ai.page.pageIndex', { page })}
           </span>
           <CompactPagination

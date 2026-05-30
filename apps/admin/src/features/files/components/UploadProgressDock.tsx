@@ -1,9 +1,10 @@
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 import { useState } from 'react'
-import type { UploadItem } from '../hooks/useFileUploader'
 
 import { useI18n } from '~/i18n'
 import { cn } from '~/utils/cn'
+
+import type { UploadItem } from '../hooks/useFileUploader'
 
 interface UploadProgressDockProps {
   items: UploadItem[]
@@ -23,9 +24,9 @@ export function UploadProgressDock(props: UploadProgressDockProps) {
   ).length
 
   return (
-    <div className="shrink-0 border-t border-neutral-200 bg-neutral-50/60 text-xs dark:border-neutral-800 dark:bg-neutral-900/40">
+    <div className="shrink-0 border-t border-border bg-surface-inset text-xs">
       <button
-        className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-neutral-600 transition-colors hover:bg-neutral-100/60 dark:text-neutral-300 dark:hover:bg-neutral-800/40"
+        className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-fg-muted transition-colors hover:bg-surface-overlay hover:text-fg"
         onClick={() => setCollapsed((value) => !value)}
         type="button"
       >
@@ -49,7 +50,7 @@ export function UploadProgressDock(props: UploadProgressDockProps) {
         <ul className="max-h-48 overflow-y-auto px-4 pb-3">
           {props.items.map((item) => (
             <li className="grid gap-1 py-1.5" key={item.id}>
-              <div className="flex items-center justify-between gap-3 text-neutral-600 dark:text-neutral-300">
+              <div className="flex items-center justify-between gap-3 text-fg-muted">
                 <span className="min-w-0 truncate">{item.name}</span>
                 <span className="shrink-0 tabular-nums">
                   {item.status === 'done'
@@ -59,13 +60,11 @@ export function UploadProgressDock(props: UploadProgressDockProps) {
                       : `${item.progress}%`}
                 </span>
               </div>
-              <div className="h-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
+              <div className="h-1 overflow-hidden rounded-full bg-border">
                 <div
                   className={cn(
                     'h-full transition-all',
-                    item.status === 'error'
-                      ? 'bg-red-500'
-                      : 'bg-neutral-950 dark:bg-neutral-50',
+                    item.status === 'error' ? 'bg-red-500' : 'bg-accent',
                   )}
                   style={{ width: `${item.progress}%` }}
                 />

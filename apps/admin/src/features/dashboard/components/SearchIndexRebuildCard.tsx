@@ -11,15 +11,15 @@ export function SearchIndexRebuildCard(props: {
 }) {
   const { t } = useI18n()
   return (
-    <div className="bg-white p-4 dark:bg-neutral-950">
-      <Search className="mb-3 size-5 text-neutral-400" />
-      <div className="text-sm text-neutral-500">
+    <div className="bg-surface-card p-4">
+      <Search className="mb-3 size-5 text-fg-subtle" />
+      <div className="text-sm text-fg-muted">
         {t('dashboard.maintenance.searchIndex.label')}
       </div>
-      <div className="mt-1 text-lg font-semibold">
+      <div className="mt-1 text-lg font-semibold text-fg">
         {t('dashboard.maintenance.searchIndex.value')}
       </div>
-      <p className="mt-1 line-clamp-2 text-xs text-neutral-400 dark:text-neutral-500">
+      <p className="mt-1 line-clamp-2 text-xs text-fg-subtle">
         {t('dashboard.maintenance.searchIndex.description')}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">

@@ -53,11 +53,8 @@ export function ArticleDetailPane<TItem>(props: ArticleDetailPaneProps<TItem>) {
 
   const articleTitleNode = (
     <span className="inline-flex min-w-0 items-center gap-2">
-      <TypeIcon
-        aria-hidden="true"
-        className="size-5 shrink-0 text-neutral-400"
-      />
-      <span className="truncate text-base font-semibold text-neutral-950 dark:text-neutral-50">
+      <TypeIcon aria-hidden="true" className="size-5 shrink-0 text-fg-subtle" />
+      <span className="truncate text-base font-semibold text-fg">
         {props.article.title || t(meta.labelKey)}
       </span>
     </span>
@@ -66,21 +63,21 @@ export function ArticleDetailPane<TItem>(props: ArticleDetailPaneProps<TItem>) {
   return (
     <FocusScope
       className={cn(
-        'outline-hidden flex h-full min-h-0 flex-col bg-background',
+        'outline-hidden flex h-full min-h-0 flex-col bg-surface-card',
       )}
       id={scopeId}
     >
-      <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800">
+      <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-4">
         <div className="flex min-w-0 items-center gap-2">
           <button
             aria-label={t('common.back')}
-            className="inline-flex size-8 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-50"
+            className="inline-flex size-8 items-center justify-center rounded text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg lg:hidden"
             onClick={props.onBack}
             type="button"
           >
             <ArrowLeft aria-hidden="true" className="size-4" />
           </button>
-          <h2 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+          <h2 className="truncate text-sm font-medium text-fg">
             {t(props.config.detailSectionTitleKey)}
           </h2>
         </div>
@@ -102,13 +99,13 @@ export function ArticleDetailPane<TItem>(props: ArticleDetailPaneProps<TItem>) {
           <div className="inline-flex max-w-full">{articleTitleNode}</div>
         )}
 
-        <div className="my-4 h-px bg-neutral-100 dark:bg-neutral-800" />
+        <div className="my-4 h-px bg-surface-inset" />
 
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <h3 className="text-sm font-medium text-fg">
             {t(props.config.detailSectionTitleKey)}
           </h3>
-          <span className="text-xs text-neutral-400">
+          <span className="text-xs text-fg-subtle">
             {t(props.config.itemCountKey, { count: props.items.length })}
           </span>
         </div>
@@ -117,12 +114,12 @@ export function ArticleDetailPane<TItem>(props: ArticleDetailPaneProps<TItem>) {
           <div className="flex justify-center py-8">
             <Loader2
               aria-hidden="true"
-              className="size-5 animate-spin text-neutral-400"
+              className="size-5 animate-spin text-fg-subtle"
             />
           </div>
         ) : props.items.length === 0 ? (
-          <div className="mt-4 flex flex-col items-center gap-3 rounded border border-dashed border-neutral-200 px-4 py-8 text-center dark:border-neutral-800">
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          <div className="mt-4 flex flex-col items-center gap-3 rounded border border-dashed border-border px-4 py-8 text-center">
+            <p className="text-sm text-fg-muted">
               {t(props.config.inlineEmptyKey, {
                 kind: t(props.config.kindKey),
               })}

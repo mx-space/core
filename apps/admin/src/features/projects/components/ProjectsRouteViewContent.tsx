@@ -2,11 +2,11 @@ import { Folder, Plus } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 
-import { ContentListHeader } from '~/features/_shared/components/content-list-toolbar'
 import { useI18n } from '~/i18n'
 import type { ProjectModel } from '~/models/project'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
+import { PageHeader } from '~/ui/layout/page-layout'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 
@@ -111,10 +111,15 @@ export function ProjectsRouteViewContent() {
         emptyDetail={<ProjectSelectPlaceholder />}
         list={
           <section className="flex h-full min-h-0 flex-col">
-            <ContentListHeader
-              action={
-                <Button onClick={startCreate} type="button" variant="subtle">
-                  <Plus aria-hidden="true" className="size-4" />
+            <PageHeader
+              actions={
+                <Button
+                  className="text-xs"
+                  onClick={startCreate}
+                  type="button"
+                  variant="subtle"
+                >
+                  <Plus aria-hidden="true" className="size-3.5" />
                   {t('projects.create')}
                 </Button>
               }

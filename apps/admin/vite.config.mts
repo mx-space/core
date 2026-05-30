@@ -5,13 +5,13 @@ import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
+import type { PluginOption } from 'vite'
 import { loadEnv } from 'vite'
 import { checker } from 'vite-plugin-checker'
 import { defineConfig } from 'vitest/config'
-import type { PluginOption } from 'vite'
 
-import { adminRoutes } from './vite-plugins/admin-routes'
 import PKG from './package.json'
+import { adminRoutes } from './vite-plugins/admin-routes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -142,7 +142,7 @@ const htmlPlugin: (env: any) => PluginOption = (env) => {
           '<!-- MX SPACE ADMIN DASHBOARD VERSION INJECT -->',
           `<script>window.version = '${PKG.version}';</script>`,
         )
-        .replace(/@gh-pages/g, `@page_v${PKG.version}`)
+        .replaceAll('@gh-pages', `@page_v${PKG.version}`)
         .replace(
           '<!-- ENV INJECT -->',
           `<script id="env_injection">window.injectData = {WEB_URL:'${
@@ -164,5 +164,5 @@ function getScopedPackageChunk(id: string, scope: string, prefix: string) {
   const packageName = packagePath.split('/')[0]
   if (!packageName) return
 
-  return `${prefix}-${packageName.replaceAll(/[^a-zA-Z0-9_-]/g, '-')}`
+  return `${prefix}-${packageName.replaceAll(/[^\w-]/g, '-')}`
 }

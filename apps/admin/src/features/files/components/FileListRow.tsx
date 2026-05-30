@@ -58,7 +58,7 @@ export function FileListRow<TRaw>(props: FileListRowProps<TRaw>) {
       selected={props.selected}
     >
       <div className="flex min-w-0 items-center gap-3">
-        <div className="size-9 shrink-0 overflow-hidden rounded border border-neutral-200 bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="size-9 shrink-0 overflow-hidden rounded border border-border bg-surface-inset">
           {showImage ? (
             <FileThumbnail
               alt={props.item.name}

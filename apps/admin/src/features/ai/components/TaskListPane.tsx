@@ -1,5 +1,4 @@
 import type { AITask, AITaskStatus, AITaskType } from '~/api/ai'
-
 import { useI18n } from '~/i18n'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { FocusScope } from '~/ui/focus-scope'
@@ -80,8 +79,8 @@ export function TaskListPane(props: TaskListPaneProps) {
       </Scroll>
 
       {props.pageCount > 1 ? (
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-          <span className="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-4 py-3">
+          <span className="text-xs tabular-nums text-fg-muted">
             {t('ai.page.pageIndex', { page: props.page })}
           </span>
           <CompactPagination

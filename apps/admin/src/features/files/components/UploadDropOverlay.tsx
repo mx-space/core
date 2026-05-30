@@ -1,6 +1,6 @@
 import { Upload } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { cn } from '~/utils/cn'
 
@@ -64,16 +64,13 @@ export function UploadDropZoneShell(props: UploadDropOverlayProps) {
         <div
           className={cn(
             'pointer-events-none absolute inset-0 z-30 m-2 flex flex-col items-center justify-center gap-3',
-            'rounded border-2 border-dashed border-neutral-950 bg-neutral-50/95 text-neutral-950',
-            'dark:border-neutral-50 dark:bg-neutral-900/95 dark:text-neutral-50',
+            'rounded border-2 border-dashed border-accent bg-surface-overlay/95 text-fg',
           )}
         >
           <Upload aria-hidden="true" className="size-7" />
           <p className="text-sm font-medium">{props.label}</p>
           {props.hint ? (
-            <p className="text-xs text-neutral-600 dark:text-neutral-400">
-              {props.hint}
-            </p>
+            <p className="text-xs text-fg-muted">{props.hint}</p>
           ) : null}
         </div>
       ) : null}

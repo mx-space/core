@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react'
-import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 
 import { cn } from '~/utils/cn'
 
@@ -15,10 +15,10 @@ export function CollapsibleSection(props: CollapsibleSectionProps) {
   const [open, setOpen] = useState(props.defaultOpen ?? false)
 
   return (
-    <section className="mt-5 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+    <section className="mt-5 border-t border-border pt-4">
       <button
         aria-expanded={open}
-        className="flex w-full items-center gap-2 text-left text-xs font-medium uppercase tracking-wide text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+        className="flex w-full items-center gap-2 text-left text-xs font-medium uppercase tracking-wide text-fg-muted hover:text-fg"
         onClick={() => setOpen((v) => !v)}
         type="button"
       >
@@ -31,7 +31,7 @@ export function CollapsibleSection(props: CollapsibleSectionProps) {
         />
         <span className="flex-1">{props.title}</span>
         {props.hint ? (
-          <span className="text-xs font-normal normal-case text-neutral-400 dark:text-neutral-500">
+          <span className="text-xs font-normal normal-case text-fg-subtle">
             {props.hint}
           </span>
         ) : null}

@@ -9,23 +9,23 @@ function TrafficGroup(props: {
 }) {
   const { t } = useI18n()
   return (
-    <div className="bg-white p-4 dark:bg-neutral-950">
-      <h3 className="mb-3 text-xs font-medium uppercase text-neutral-500">
+    <div className="bg-surface-card p-4">
+      <h3 className="mb-3 text-xs font-medium uppercase text-fg-muted">
         {props.title}
       </h3>
       <div className="space-y-2">
         {props.items.length === 0 ? (
-          <p className="text-sm text-neutral-500">{t('dashboard.empty')}</p>
+          <p className="text-sm text-fg-muted">{t('dashboard.empty')}</p>
         ) : (
           props.items.slice(0, 6).map((item) => (
             <div
               className="flex items-center justify-between gap-3 text-sm"
               key={item.name}
             >
-              <span className="truncate text-neutral-600 dark:text-neutral-300">
-                {item.name}
+              <span className="truncate text-fg-muted">{item.name}</span>
+              <span className="tabular-nums text-fg">
+                {formatNumber(item.count)}
               </span>
-              <span className="tabular-nums">{formatNumber(item.count)}</span>
             </div>
           ))
         )}
@@ -43,7 +43,7 @@ export function TrafficPanel(props: {
   const { t } = useI18n()
   return (
     <Panel title={t('dashboard.traffic.title')}>
-      <div className="grid gap-px bg-neutral-200 sm:grid-cols-2 dark:bg-neutral-800">
+      <div className="grid gap-px bg-border sm:grid-cols-2">
         <TrafficGroup
           items={props.data?.browser ?? []}
           title={t('dashboard.traffic.browser')}

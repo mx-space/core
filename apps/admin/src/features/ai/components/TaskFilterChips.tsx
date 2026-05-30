@@ -36,7 +36,7 @@ export function TaskFilterChips(props: TaskFilterChipsProps) {
   const { t } = useI18n()
 
   return (
-    <div className="-mx-1 flex shrink-0 items-center gap-1 overflow-x-auto border-b border-neutral-200 px-4 py-2 [scrollbar-width:none] dark:border-neutral-800 [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-1 flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-4 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {statusChips.map((chip) => {
         const active = props.status === chip.value
         const label = t(chip.labelKey)
@@ -47,8 +47,8 @@ export function TaskFilterChips(props: TaskFilterChipsProps) {
             className={cn(
               'inline-flex h-7 shrink-0 items-center gap-1 rounded-full border px-2.5 text-xs font-medium transition-colors',
               active
-                ? 'border-neutral-950 bg-neutral-950 text-white dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
-                : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-200 dark:hover:bg-neutral-900',
+                ? 'border-fg bg-fg text-white dark:bg-surface-inset dark:text-fg'
+                : 'border-border bg-surface-card text-fg hover:bg-surface-inset',
             )}
             key={chip.value || '__all'}
             onClick={() => {

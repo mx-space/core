@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import type { AIInsights } from '~/api/ai'
-import type { EditDrawerBodyProps } from './types'
 
+import type { AIInsights } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
 import { CodeMirrorEditor } from '~/vendor/codemirror'
 
 import { formatDateString } from '../../utils/ai'
+import type { EditDrawerBodyProps } from './types'
 
 export function InsightsEditBody(props: EditDrawerBodyProps<AIInsights>) {
   const { t } = useI18n()
@@ -21,10 +21,10 @@ export function InsightsEditBody(props: EditDrawerBodyProps<AIInsights>) {
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
         <section>
-          <p className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <p className="mb-2 text-sm font-medium text-fg">
             {t('ai.insights.editLabel.content')}
           </p>
-          <div className="rounded border border-neutral-200 dark:border-neutral-800">
+          <div className="rounded border border-border">
             <CodeMirrorEditor
               autoFocus
               embedded
@@ -36,7 +36,7 @@ export function InsightsEditBody(props: EditDrawerBodyProps<AIInsights>) {
         </section>
 
         <section>
-          <p className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <p className="mb-2 text-sm font-medium text-fg">
             {t('ai.insights.editLabel.meta')}
           </p>
           <dl className="grid grid-cols-2 gap-y-1.5 text-xs">
@@ -57,7 +57,7 @@ export function InsightsEditBody(props: EditDrawerBodyProps<AIInsights>) {
           </dl>
         </section>
       </div>
-      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-3">
         <Button onClick={props.onCancel} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
@@ -77,8 +77,8 @@ export function InsightsEditBody(props: EditDrawerBodyProps<AIInsights>) {
 function Row(props: { label: string; value: string }) {
   return (
     <div className="contents">
-      <dt className="text-neutral-500 dark:text-neutral-400">{props.label}</dt>
-      <dd className="text-neutral-700 dark:text-neutral-200">{props.value}</dd>
+      <dt className="text-fg-muted">{props.label}</dt>
+      <dd className="text-fg">{props.value}</dd>
     </div>
   )
 }

@@ -12,7 +12,7 @@ export function AppPage(props: { children: ReactNode; className?: string }) {
   return (
     <section
       className={cn(
-        'flex h-full min-h-0 flex-col bg-surface-card',
+        'flex h-full min-h-0 flex-col bg-background',
         props.className,
       )}
     >
@@ -47,7 +47,9 @@ interface PageHeaderProps {
   actions?: ReactNode | HeaderAction[]
   back?: PageHeaderBackProp
   className?: string
+  count?: ReactNode
   description?: ReactNode
+  icon?: ReactNode
   title: ReactNode
 }
 
@@ -79,18 +81,30 @@ export function PageHeader(props: PageHeaderProps) {
   return (
     <header
       className={cn(
-        'flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-card px-4',
+        'flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-page px-4',
         APP_SHELL_HEADER_HEIGHT_CLASS,
         props.className,
       )}
     >
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 items-center gap-2.5">
         <MobileHamburger />
         {props.back ? <HeaderBackButton {...props.back} /> : null}
-        <div className="min-w-0">
-          <h1 className="truncate text-sm font-medium text-fg">
-            {props.title}
-          </h1>
+        {props.icon ? (
+          <span className="inline-flex size-6 shrink-0 items-center justify-center border border-border bg-surface-inset text-fg-muted">
+            {props.icon}
+          </span>
+        ) : null}
+        <div className="flex min-w-0 flex-col">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <h1 className="truncate text-base font-semibold text-fg">
+              {props.title}
+            </h1>
+            {props.count != null ? (
+              <span className="shrink-0 text-xs tabular-nums text-fg-muted">
+                {props.count}
+              </span>
+            ) : null}
+          </div>
           {props.description ? (
             <p className="mt-0.5 truncate text-xs text-fg-muted">
               {props.description}
@@ -111,6 +125,23 @@ export function PageHeader(props: PageHeaderProps) {
   )
 }
 
+export function HeaderActions(props: {
+  actions: HeaderAction[]
+  className?: string
+}) {
+  if (!props.actions.length) return null
+  return (
+    <div
+      className={cn(
+        'flex shrink-0 flex-wrap items-center gap-2',
+        props.className,
+      )}
+    >
+      {props.actions.map((action, index) => renderHeaderAction(action, index))}
+    </div>
+  )
+}
+
 function renderHeaderAction(action: HeaderAction, index: number) {
   if (action.kind === 'custom') {
     return (
@@ -125,7 +156,7 @@ function renderHeaderAction(action: HeaderAction, index: number) {
 
   const Icon = action.icon
   const baseClasses =
-    'focus-visible:outline-hidden inline-flex items-center justify-center rounded-sm text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50'
+    'focus-visible:outline-hidden inline-flex items-center justify-center rounded-sm text-xs font-medium transition-colors focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50'
   const primaryClasses = 'shadow-xs bg-accent text-white hover:bg-accent-hover'
   const secondaryClasses =
     'shadow-xs border border-border bg-surface-card text-fg hover:bg-surface-inset'
@@ -136,13 +167,13 @@ function renderHeaderAction(action: HeaderAction, index: number) {
       <span key={index} className="contents">
         <button
           aria-label={action.label}
-          className={cn(baseClasses, variantClasses, 'size-9')}
+          className={cn(baseClasses, variantClasses, 'size-8')}
           disabled={action.disabled}
           onClick={action.onClick}
           title={action.label}
           type="button"
         >
-          <Icon aria-hidden="true" className="size-4" />
+          <Icon aria-hidden="true" className="size-3.5" />
         </button>
       </span>
     )
@@ -152,26 +183,26 @@ function renderHeaderAction(action: HeaderAction, index: number) {
     <span key={index} className="contents">
       <button
         aria-label={action.label}
-        className={cn(baseClasses, variantClasses, 'size-9 lg:hidden')}
+        className={cn(baseClasses, variantClasses, 'size-8 lg:hidden')}
         disabled={action.disabled}
         onClick={action.onClick}
         title={action.label}
         type="button"
       >
-        <Icon aria-hidden="true" className="size-4" />
+        <Icon aria-hidden="true" className="size-3.5" />
       </button>
       <button
         aria-label={action.label}
         className={cn(
           baseClasses,
           variantClasses,
-          'hidden h-9 gap-1.5 px-3 lg:inline-flex',
+          'hidden h-8 gap-1.5 px-2.5 lg:inline-flex',
         )}
         disabled={action.disabled}
         onClick={action.onClick}
         type="button"
       >
-        <Icon aria-hidden="true" className="size-4" />
+        <Icon aria-hidden="true" className="size-3.5" />
         <span>{action.label}</span>
       </button>
     </span>

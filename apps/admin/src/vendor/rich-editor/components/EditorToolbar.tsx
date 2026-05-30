@@ -1,5 +1,23 @@
-import { Menu } from '@base-ui/react/menu'
+import {
+  $toggleSpoilerSelection,
+  collectCommandItems,
+} from '@haklex/rich-editor/commands'
+import type { BlockType } from '@haklex/rich-plugin-toolbar'
+import {
+  applyBlockType,
+  applyFontFamily,
+  FONT_FAMILIES,
+  getFontLabel,
+  useToolbarState,
+} from '@haklex/rich-plugin-toolbar'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import {
+  FORMAT_ELEMENT_COMMAND,
+  FORMAT_TEXT_COMMAND,
+  REDO_COMMAND,
+  UNDO_COMMAND,
+} from 'lexical'
+import type { LucideIcon } from 'lucide-react'
 import {
   AlignCenter,
   AlignJustify,
@@ -25,29 +43,10 @@ import {
   Underline,
   Undo,
 } from 'lucide-react'
-import { useMemo } from 'react'
-import {
-  FORMAT_ELEMENT_COMMAND,
-  FORMAT_TEXT_COMMAND,
-  REDO_COMMAND,
-  UNDO_COMMAND,
-} from 'lexical'
-import type { BlockType } from '@haklex/rich-plugin-toolbar'
-import type { LucideIcon } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
+import { useMemo } from 'react'
 
-import {
-  $toggleSpoilerSelection,
-  collectCommandItems,
-} from '@haklex/rich-editor/commands'
-import {
-  applyBlockType,
-  applyFontFamily,
-  FONT_FAMILIES,
-  getFontLabel,
-  useToolbarState,
-} from '@haklex/rich-plugin-toolbar'
-
+import { DropdownMenu } from '~/ui/overlay/dropdown-menu'
 import { cn } from '~/utils/cn'
 
 const MAX_INLINE_INSERT_ITEMS = 5
@@ -312,6 +311,9 @@ function ToolbarDivider() {
   )
 }
 
+const toolbarTriggerClass =
+  'inline-flex h-7 shrink-0 items-center gap-1 rounded-sm px-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg data-[popup-open]:bg-surface-inset'
+
 function BlockMenu(props: {
   activeIcon: LucideIcon
   label: string
@@ -319,23 +321,16 @@ function BlockMenu(props: {
 }) {
   const Icon = props.activeIcon
   return (
-    <Menu.Root>
-      <Menu.Trigger
-        className="focus-visible:outline-hidden inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
-        type="button"
-      >
+    <DropdownMenu>
+      <DropdownMenu.Trigger className={toolbarTriggerClass} type="button">
         <Icon aria-hidden="true" className="size-3.5 shrink-0" />
         <span className="truncate">{props.label}</span>
         <ChevronDown aria-hidden="true" className="size-3 opacity-60" />
-      </Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Positioner align="start" side="bottom" sideOffset={6}>
-          <Menu.Popup className="outline-hidden z-50 min-w-40 overflow-hidden rounded-md border border-neutral-200 bg-white py-1 shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
-            {props.children}
-          </Menu.Popup>
-        </Menu.Positioner>
-      </Menu.Portal>
-    </Menu.Root>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content className="min-w-40">
+        {props.children}
+      </DropdownMenu.Content>
+    </DropdownMenu>
   )
 }
 
@@ -345,38 +340,34 @@ function FontFamilyMenu(props: {
 }) {
   const label = getFontLabel(props.activeValue)
   return (
-    <Menu.Root>
-      <Menu.Trigger
+    <DropdownMenu>
+      <DropdownMenu.Trigger
         aria-label="字体"
-        className="focus-visible:outline-hidden inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
+        className={toolbarTriggerClass}
         title="字体"
         type="button"
       >
         <Type aria-hidden="true" className="size-3.5 shrink-0" />
         <span className="truncate">{label}</span>
         <ChevronDown aria-hidden="true" className="size-3 opacity-60" />
-      </Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Positioner align="start" side="bottom" sideOffset={6}>
-          <Menu.Popup className="outline-hidden z-50 min-w-32 overflow-hidden rounded-md border border-neutral-200 bg-white py-1 shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
-            {FONT_FAMILIES.map((def) => {
-              const style: CSSProperties | undefined = def.value
-                ? { fontFamily: def.value }
-                : undefined
-              return (
-                <ToolbarMenuItem
-                  key={def.label}
-                  active={props.activeValue === def.value}
-                  onClick={() => applyFontFamily(props.editor, def.value)}
-                >
-                  <span style={style}>{def.label}</span>
-                </ToolbarMenuItem>
-              )
-            })}
-          </Menu.Popup>
-        </Menu.Positioner>
-      </Menu.Portal>
-    </Menu.Root>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content className="min-w-32">
+        {FONT_FAMILIES.map((def) => {
+          const style: CSSProperties | undefined = def.value
+            ? { fontFamily: def.value }
+            : undefined
+          return (
+            <ToolbarMenuItem
+              key={def.label}
+              active={props.activeValue === def.value}
+              onClick={() => applyFontFamily(props.editor, def.value)}
+            >
+              <span style={style}>{def.label}</span>
+            </ToolbarMenuItem>
+          )
+        })}
+      </DropdownMenu.Content>
+    </DropdownMenu>
   )
 }
 
@@ -386,15 +377,12 @@ function ToolbarMenuItem(props: {
   onClick: () => void
 }) {
   return (
-    <Menu.Item
-      className={cn(
-        'flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-xs text-neutral-700 outline-none transition-colors hover:bg-neutral-100 data-[highlighted]:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:data-[highlighted]:bg-neutral-900',
-        props.active && 'text-neutral-950 dark:text-neutral-50',
-      )}
+    <DropdownMenu.Item
+      className={cn('text-xs', props.active && 'text-fg')}
       onClick={props.onClick}
     >
       {props.children}
-    </Menu.Item>
+    </DropdownMenu.Item>
   )
 }
 
@@ -402,34 +390,30 @@ function InsertOverflowMenu(props: {
   items: Array<{ icon?: ReactNode; label: string; onClick: () => void }>
 }) {
   return (
-    <Menu.Root>
-      <Menu.Trigger
+    <DropdownMenu>
+      <DropdownMenu.Trigger
         aria-label="更多插入"
-        className="focus-visible:outline-hidden inline-flex size-7 shrink-0 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
+        className="outline-hidden inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg data-[popup-open]:bg-surface-inset"
         title="更多"
         type="button"
       >
         <MoreHorizontal aria-hidden="true" className="size-3.5" />
-      </Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Positioner align="end" side="bottom" sideOffset={6}>
-          <Menu.Popup className="outline-hidden z-50 min-w-44 overflow-hidden rounded-md border border-neutral-200 bg-white py-1 shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
-            {props.items.map((item) => (
-              <ToolbarMenuItem key={item.label} onClick={item.onClick}>
-                {item.icon ? (
-                  <span
-                    aria-hidden="true"
-                    className="inline-flex size-3.5 shrink-0 items-center justify-center [&>svg]:size-3.5"
-                  >
-                    {item.icon}
-                  </span>
-                ) : null}
-                {item.label}
-              </ToolbarMenuItem>
-            ))}
-          </Menu.Popup>
-        </Menu.Positioner>
-      </Menu.Portal>
-    </Menu.Root>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content align="end" className="min-w-44">
+        {props.items.map((item) => (
+          <ToolbarMenuItem key={item.label} onClick={item.onClick}>
+            {item.icon ? (
+              <span
+                aria-hidden="true"
+                className="inline-flex size-3.5 shrink-0 items-center justify-center [&>svg]:size-3.5"
+              >
+                {item.icon}
+              </span>
+            ) : null}
+            {item.label}
+          </ToolbarMenuItem>
+        ))}
+      </DropdownMenu.Content>
+    </DropdownMenu>
   )
 }

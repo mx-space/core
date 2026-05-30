@@ -1,6 +1,5 @@
-import { Combobox } from '@base-ui/react/combobox'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, ChevronDown, Loader2, Settings } from 'lucide-react'
+import { ChevronDown, Loader2, Settings } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -12,13 +11,12 @@ import {
 } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { Drawer } from '~/ui/feedback/drawer'
-import { PortalLayerScope, useFloatingZ } from '~/ui/feedback/portal-layer'
 import { Button } from '~/ui/primitives/button'
+import { Combobox } from '~/ui/primitives/combobox'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
 import { Switch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
-import { cn } from '~/utils/cn'
 
 import { aiProviderTypeOptions } from '../../constants'
 import type {
@@ -269,11 +267,10 @@ function ModelCombobox(props: {
   placeholder?: string
   value: string
 }) {
-  const { z, depth } = useFloatingZ('popover')
   const items = useMemo(() => props.models.map((m) => m.id), [props.models])
 
   return (
-    <Combobox.Root
+    <Combobox
       autoComplete="none"
       disabled={props.disabled}
       inputValue={props.value}
@@ -283,55 +280,32 @@ function ModelCombobox(props: {
         if (typeof next === 'string') props.onChange(next)
       }}
     >
-      <div className="relative">
-        <Combobox.Input
-          className={cn(
-            'outline-hidden flex h-9 w-full items-center rounded border border-neutral-200 bg-white px-3 pr-8 text-left text-sm text-neutral-900 transition-colors hover:bg-neutral-50 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60 data-[focus-visible]:ring-2 data-[focus-visible]:ring-[var(--color-primary-shallow)] dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:hover:bg-neutral-900',
-          )}
-          placeholder={props.placeholder}
-        />
-        <Combobox.Trigger
-          aria-label="Open model list"
-          className="outline-hidden absolute inset-y-0 right-0 flex w-8 items-center justify-center text-neutral-400 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
-        >
+      <Combobox.Control>
+        <Combobox.Input placeholder={props.placeholder} />
+        <Combobox.Trigger aria-label="Open model list">
           {props.loading ? (
             <Loader2 aria-hidden="true" className="size-4 animate-spin" />
           ) : (
             <ChevronDown aria-hidden="true" className="size-4" />
           )}
         </Combobox.Trigger>
-      </div>
-      <Combobox.Portal>
-        <Combobox.Positioner style={{ zIndex: z }}>
-          <PortalLayerScope depth={depth}>
-            <Combobox.Popup className="outline-hidden w-[var(--anchor-width)] rounded border border-neutral-200 bg-white text-sm shadow-lg dark:border-neutral-800 dark:bg-neutral-950">
-              <Combobox.Empty className="px-2 py-1.5 text-xs text-neutral-500">
-                {/* shown when filter yields no matches */}
-              </Combobox.Empty>
-              <Scroll
-                className="max-h-72"
-                innerClassName="p-1"
-                viewportClassName="max-h-72"
-              >
-                <Combobox.List>
-                  {(item: string) => (
-                    <Combobox.Item
-                      className="outline-hidden flex cursor-pointer items-center justify-between gap-2 rounded px-2 py-1.5 text-neutral-700 data-[highlighted]:bg-neutral-100 data-[selected]:text-[var(--color-primary)] dark:text-neutral-200 dark:data-[highlighted]:bg-neutral-800"
-                      key={item}
-                      value={item}
-                    >
-                      <span className="truncate">{item}</span>
-                      <Combobox.ItemIndicator>
-                        <Check aria-hidden="true" className="size-4" />
-                      </Combobox.ItemIndicator>
-                    </Combobox.Item>
-                  )}
-                </Combobox.List>
-              </Scroll>
-            </Combobox.Popup>
-          </PortalLayerScope>
-        </Combobox.Positioner>
-      </Combobox.Portal>
-    </Combobox.Root>
+      </Combobox.Control>
+      <Combobox.Content>
+        <Combobox.Empty />
+        <Scroll
+          className="max-h-72"
+          innerClassName="p-1"
+          viewportClassName="max-h-72"
+        >
+          <Combobox.List>
+            {(item: string) => (
+              <Combobox.Item key={item} value={item}>
+                {item}
+              </Combobox.Item>
+            )}
+          </Combobox.List>
+        </Scroll>
+      </Combobox.Content>
+    </Combobox>
   )
 }

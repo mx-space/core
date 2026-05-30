@@ -266,6 +266,9 @@ importers:
       canvas-confetti:
         specifier: 1.9.4
         version: 1.9.4
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
@@ -356,6 +359,9 @@ importers:
       sonner:
         specifier: 2.0.7
         version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      tailwind-merge:
+        specifier: ^3.6.0
+        version: 3.6.0
       thumbhash:
         specifier: 0.1.1
         version: 0.1.1
@@ -17784,7 +17790,7 @@ snapshots:
       obug: 2.1.1
       std-env: 4.1.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.7(@types/node@25.9.1)(@vitest/coverage-v8@4.1.7)(happy-dom@20.9.0)(vite@8.0.14(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.3)(yaml@2.9.0))
+      vitest: 4.1.7(@types/node@25.9.1)(@vitest/coverage-v8@4.1.7)(happy-dom@15.11.7)(vite@8.0.1(@types/node@25.9.1)(esbuild@0.27.3)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.3)(yaml@2.9.0))
 
   '@vitest/expect@4.1.7':
     dependencies:

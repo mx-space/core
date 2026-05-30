@@ -34,7 +34,7 @@ export function SubTaskList(props: { groupId: string }) {
 
   if (childrenQuery.isLoading) {
     return (
-      <div className="flex items-center gap-2 px-3 py-4 text-xs text-neutral-500 dark:text-neutral-400">
+      <div className="flex items-center gap-2 px-3 py-4 text-xs text-fg-muted">
         <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
         <span>{t('ai.task.stream.waiting')}</span>
       </div>
@@ -53,14 +53,14 @@ export function SubTaskList(props: { groupId: string }) {
 
   if (children.length === 0) {
     return (
-      <div className="rounded border border-dashed border-neutral-200 px-3 py-4 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+      <div className="rounded border border-dashed border-border px-3 py-4 text-xs text-fg-muted">
         {t('ai.tasks.subTaskList.empty')}
       </div>
     )
   }
 
   return (
-    <ul className="divide-y divide-neutral-200 overflow-hidden rounded border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+    <ul className="divide-y divide-border overflow-hidden rounded border border-border">
       {children.map((child) => (
         <SubTaskRow
           key={child.id}
@@ -85,7 +85,7 @@ function SubTaskRow(props: { onOpen: () => void; task: AITask }) {
       <button
         className={cn(
           'flex w-full items-center gap-3 bg-transparent px-3 py-2 text-left transition-colors',
-          'hover:bg-neutral-50 dark:hover:bg-neutral-900/50',
+          'hover:bg-surface-inset/50',
           'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40',
         )}
         onClick={onOpen}
@@ -99,14 +99,12 @@ function SubTaskRow(props: { onOpen: () => void; task: AITask }) {
             statusIconClassName(task.status),
           )}
         />
-        <span className="min-w-0 flex-1 truncate text-sm text-neutral-800 dark:text-neutral-200">
-          {lang}
-        </span>
+        <span className="min-w-0 flex-1 truncate text-sm text-fg">{lang}</span>
         <StatusBadge status={task.status}>
           {t(taskStatusLabelKeys[task.status])}
         </StatusBadge>
         {progress !== null ? (
-          <div className="h-1 w-20 shrink-0 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-900">
+          <div className="h-1 w-20 shrink-0 overflow-hidden rounded-full bg-surface-inset">
             <div
               className="h-full rounded-full bg-[var(--color-primary)] transition-[width]"
               style={{
@@ -116,7 +114,7 @@ function SubTaskRow(props: { onOpen: () => void; task: AITask }) {
           </div>
         ) : null}
         {task.tokensGenerated && task.tokensGenerated > 0 ? (
-          <span className="hidden shrink-0 text-xs tabular-nums text-neutral-400 sm:inline dark:text-neutral-500">
+          <span className="hidden shrink-0 text-xs tabular-nums text-fg-subtle sm:inline dark:text-fg-muted">
             {t('ai.task.tokensGenerated', { count: task.tokensGenerated })}
           </span>
         ) : null}

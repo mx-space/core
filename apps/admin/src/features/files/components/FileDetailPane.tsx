@@ -48,10 +48,10 @@ export function FileDetailPane(props: FileDetailPaneProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background">
+    <div className="flex h-full min-h-0 flex-col bg-surface-card">
       <header
         className={cn(
-          'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+          'flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-page px-4',
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
@@ -60,7 +60,7 @@ export function FileDetailPane(props: FileDetailPaneProps) {
           {props.isMobile && props.onBack ? (
             <HeaderBackButton onClick={props.onBack} />
           ) : null}
-          <h2 className="truncate text-lg font-semibold text-neutral-950 dark:text-neutral-50">
+          <h2 className="truncate text-base font-semibold text-fg">
             {props.name}
           </h2>
         </div>
@@ -74,7 +74,7 @@ export function FileDetailPane(props: FileDetailPaneProps) {
           </IconActionButton>
           <a
             aria-label={t('files.action.open')}
-            className="inline-flex size-9 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+            className="inline-flex size-9 items-center justify-center rounded text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
             href={props.url}
             rel="noreferrer"
             target="_blank"
@@ -143,7 +143,7 @@ function DetailHeroImage(props: {
 
   return (
     <button
-      className="block w-full overflow-hidden rounded border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"
+      className="block w-full overflow-hidden rounded border border-border bg-surface-inset"
       onClick={props.onClick}
       type="button"
     >
@@ -178,9 +178,9 @@ function DetailHeroImage(props: {
 
 function DetailHeroFile(props: { name: string }) {
   return (
-    <div className="flex h-40 items-center justify-center rounded border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="flex flex-col items-center gap-2 text-neutral-500 dark:text-neutral-400">
-        <FileIcon aria-hidden="true" className="size-10 text-neutral-400" />
+    <div className="flex h-40 items-center justify-center rounded border border-border bg-surface-inset">
+      <div className="flex flex-col items-center gap-2 text-fg-muted">
+        <FileIcon aria-hidden="true" className="size-10 text-fg-subtle" />
         <span className="text-sm">{props.name}</span>
       </div>
     </div>
@@ -189,13 +189,11 @@ function DetailHeroFile(props: { name: string }) {
 
 function DetailSectionBlock(props: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
-      <h3 className="border-b border-neutral-200 px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+    <section className="rounded border border-border bg-surface-card">
+      <h3 className="border-b border-border px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-fg-muted">
         {props.title}
       </h3>
-      <div className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-        {props.children}
-      </div>
+      <div className="px-4 py-3 text-sm text-fg">{props.children}</div>
     </section>
   )
 }
@@ -211,10 +209,10 @@ function IconActionButton(props: {
     <button
       aria-label={props.label}
       className={cn(
-        'inline-flex size-9 items-center justify-center rounded text-neutral-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex size-9 items-center justify-center rounded text-fg-muted transition-colors disabled:cursor-not-allowed disabled:opacity-50',
         props.danger
           ? 'hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400'
-          : 'hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100',
+          : 'hover:bg-surface-inset hover:text-fg',
       )}
       disabled={props.disabled}
       onClick={props.onClick}

@@ -1,10 +1,10 @@
-import { Popover } from '@base-ui/react/popover'
 import { ChevronDown, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import type { AgentSessionMeta } from '~/hooks/use-agent-session-manager'
 import { useI18n } from '~/i18n'
 import { confirmDialog } from '~/ui/feedback/confirm'
+import { DropdownMenu } from '~/ui/overlay/dropdown-menu'
 import { cn } from '~/utils/cn'
 
 interface SessionHeaderProps {
@@ -122,9 +122,9 @@ export function SessionHeader(props: SessionHeaderProps) {
             value={value}
           />
         ) : (
-          <Popover.Root onOpenChange={setOpen} open={open}>
-            <Popover.Trigger
-              className="flex min-w-0 items-center gap-1 text-sm font-medium text-neutral-800 dark:text-neutral-200"
+          <DropdownMenu onOpenChange={setOpen} open={open}>
+            <DropdownMenu.Trigger
+              className="flex min-w-0 items-center gap-1 text-sm font-medium text-fg"
               onDoubleClick={() => {
                 setValue(activeTitle ?? '')
                 setEditing(true)
@@ -138,46 +138,43 @@ export function SessionHeader(props: SessionHeaderProps) {
                 aria-hidden="true"
                 className="size-3 shrink-0 opacity-50"
               />
-            </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Positioner align="start" side="bottom" sideOffset={6}>
-                <Popover.Popup className="outline-hidden max-h-64 w-64 overflow-y-auto border border-neutral-200 bg-white p-1 shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center py-6">
-                      <Loader2
-                        aria-hidden="true"
-                        className="size-4 animate-spin text-neutral-400"
-                      />
-                    </div>
-                  ) : sorted.length === 0 ? (
-                    <div className="py-4 text-center text-xs text-neutral-400">
-                      {t('write.agent.session.empty')}
-                    </div>
-                  ) : (
-                    sorted.map((session) => (
-                      <button
-                        className={cn(
-                          'flex w-full flex-col gap-0.5 px-3 py-2 text-left transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50',
-                          session.id === activeSessionId &&
-                            'bg-neutral-100 dark:bg-neutral-800',
-                        )}
-                        key={session.id}
-                        onClick={() => selectSession(session.id)}
-                        type="button"
-                      >
-                        <span className="truncate text-xs font-medium text-neutral-800 dark:text-neutral-200">
-                          {formatSessionLabel(session.id)}
-                        </span>
-                        <span className="text-xs text-neutral-400">
-                          {relativeTime(session.updatedAt)}
-                        </span>
-                      </button>
-                    ))
-                  )}
-                </Popover.Popup>
-              </Popover.Positioner>
-            </Popover.Portal>
-          </Popover.Root>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content className="max-h-64 w-64 overflow-y-auto">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2
+                    aria-hidden="true"
+                    className="size-4 animate-spin text-fg-subtle"
+                  />
+                </div>
+              ) : sorted.length === 0 ? (
+                <DropdownMenu.Empty>
+                  {t('write.agent.session.empty')}
+                </DropdownMenu.Empty>
+              ) : (
+                sorted.map((session) => (
+                  <DropdownMenu.Item
+                    aria-current={
+                      session.id === activeSessionId ? 'true' : undefined
+                    }
+                    className={cn(
+                      'flex-col items-start gap-0.5',
+                      session.id === activeSessionId && 'bg-surface-inset',
+                    )}
+                    key={session.id}
+                    onClick={() => selectSession(session.id)}
+                  >
+                    <span className="w-full truncate text-xs font-medium text-fg">
+                      {formatSessionLabel(session.id)}
+                    </span>
+                    <span className="w-full truncate text-xs text-fg-subtle">
+                      {relativeTime(session.updatedAt)}
+                    </span>
+                  </DropdownMenu.Item>
+                ))
+              )}
+            </DropdownMenu.Content>
+          </DropdownMenu>
         )}
       </div>
 

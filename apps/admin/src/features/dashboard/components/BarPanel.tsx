@@ -20,14 +20,14 @@ export function BarPanel(props: {
               className="grid grid-cols-[8rem_minmax(0,1fr)_4rem] items-center gap-3 text-sm"
               key={item.label}
             >
-              <span className="truncate text-neutral-500">{item.label}</span>
-              <span className="h-2 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-900">
+              <span className="truncate text-fg-muted">{item.label}</span>
+              <span className="h-2 overflow-hidden rounded-sm bg-surface-inset">
                 <span
-                  className="block h-full rounded bg-neutral-900 dark:bg-neutral-100"
+                  className="block h-full rounded-sm bg-fg"
                   style={{ width: `${Math.max((item.value / max) * 100, 2)}%` }}
                 />
               </span>
-              <span className="text-right tabular-nums">
+              <span className="text-right tabular-nums text-fg">
                 {formatNumber(item.value)}
               </span>
             </div>

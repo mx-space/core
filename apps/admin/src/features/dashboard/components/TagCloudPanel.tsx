@@ -15,11 +15,11 @@ export function TagCloudPanel(props: {
         ) : (
           props.tags.map((tag) => (
             <span
-              className="rounded bg-neutral-100 px-2 py-1 text-sm text-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
+              className="rounded-sm bg-surface-inset px-2 py-1 text-sm text-fg-muted"
               key={tag.tag}
             >
               {tag.tag}
-              <span className="ml-1 text-xs text-neutral-500">{tag.count}</span>
+              <span className="ml-1 text-xs text-fg-subtle">{tag.count}</span>
             </span>
           ))
         )}

@@ -1,5 +1,4 @@
 import type { AITask } from '~/api/ai'
-
 import { useI18n } from '~/i18n'
 import { cn } from '~/utils/cn'
 
@@ -15,13 +14,13 @@ export function SubTaskStatsView(props: { task: AITask }) {
 
   return (
     <div className="mb-5">
-      <div className="mb-2 flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+      <div className="mb-2 flex items-center justify-between text-xs text-fg-muted">
         <span>{t('ai.task.subProgress')}</span>
         <span className="tabular-nums">
           {completeOrFailed} / {stats.total}
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-900">
+      <div className="h-2 overflow-hidden rounded bg-surface-inset">
         <div
           className={cn(
             'h-full rounded transition-[width]',
