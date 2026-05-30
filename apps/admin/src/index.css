@@ -17,11 +17,6 @@
     border-color: var(--color-neutral-800, currentColor);
   }
 
-  button:not(:disabled),
-  [role='button']:not(:disabled) {
-    cursor: pointer;
-  }
-
   input::placeholder,
   textarea::placeholder {
     color: var(--color-neutral-400);
