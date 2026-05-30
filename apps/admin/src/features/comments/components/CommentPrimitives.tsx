@@ -1,15 +1,15 @@
 import { Popover } from '@base-ui/react/popover'
 import { Inbox, SmilePlus } from 'lucide-react'
 import { useState } from 'react'
-import type { CommentModel } from '~/models/comment'
 
 import { useI18n } from '~/i18n'
+import type { CommentModel } from '~/models/comment'
 import { cn } from '~/utils/cn'
 
 import { commentQuickEmojis } from '../constants'
 
 export function Avatar(props: { comment: CommentModel; size: 'lg' | 'sm' }) {
-  const sizeClass = props.size === 'lg' ? 'size-12 text-base' : 'size-8 text-sm'
+  const sizeClass = props.size === 'lg' ? 'size-12 text-sm' : 'size-8 text-sm'
 
   if (props.comment.avatar) {
     return (

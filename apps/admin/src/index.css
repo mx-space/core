@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;1,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 @import 'tailwindcss';
+@import './styles/tokens.css';
 @import 'sonner/dist/styles.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -34,11 +35,11 @@
 body,
 html {
   margin: 0;
-  font-size: 14px !important;
   padding: 0;
 
   --sans-font:
-    'Segoe UI', 'Helvetica Neue', sans-serif, -apple-system, system-ui;
+    'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI',
+    system-ui, sans-serif;
 
   font-family: var(--sans-font);
   background: var(--page-bg);
@@ -47,6 +48,8 @@ html {
 body {
   min-height: 100vh;
   background: var(--page-bg);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01', 'cv11';
 
   @apply overflow-hidden;
 }

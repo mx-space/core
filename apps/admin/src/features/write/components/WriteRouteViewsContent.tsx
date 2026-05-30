@@ -894,7 +894,7 @@ function WritePage(props: { kind: WriteKind }) {
   const subtitleNode: ReactNode =
     props.kind === 'page' ? (
       <input
-        className="outline-hidden mt-1 w-full border-0 bg-transparent px-0 text-base text-neutral-500 placeholder:text-neutral-300 dark:text-neutral-400 dark:placeholder:text-neutral-700"
+        className="outline-hidden mt-1 w-full border-0 bg-transparent px-0 text-sm text-neutral-500 placeholder:text-neutral-300 dark:text-neutral-400 dark:placeholder:text-neutral-700"
         onChange={(event) => updateField('subtitle', event.target.value)}
         placeholder={t('write.editor.subtitlePlaceholder')}
         value={state.subtitle}
@@ -3153,6 +3153,7 @@ function buildWriteImages(state: WriteFormState): ImageModel[] {
 
 function pickImagesFromMarkdown(text: string) {
   const images: string[] = []
+  // eslint-disable-next-line unicorn/better-regex -- `[^\]]` form preserved; `[^]]` changes parse semantics
   const imagePattern = /!\[[^\]]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g
 
   for (const match of text.matchAll(imagePattern)) {

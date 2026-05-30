@@ -10,7 +10,7 @@ export function DetailEmpty() {
         <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-neutral-100 text-neutral-400 dark:bg-neutral-900">
           <FolderOpen aria-hidden="true" className="size-7" />
         </div>
-        <h2 className="mt-4 text-base font-medium text-neutral-950 dark:text-neutral-50">
+        <h2 className="mt-4 text-sm font-medium text-neutral-950 dark:text-neutral-50">
           {t('categories.detail.empty.title')}
         </h2>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">

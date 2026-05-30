@@ -1,11 +1,11 @@
 import { ExternalLink, MessageSquare, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { EnrichmentResult } from '~/models/enrichment'
-import type { RecentlyModel } from '~/models/recently'
 
 import { resolveEnrichment } from '~/api/enrichment'
 import { useI18n } from '~/i18n'
+import type { EnrichmentResult } from '~/models/enrichment'
+import type { RecentlyModel } from '~/models/recently'
 import { Button } from '~/ui/primitives/button'
 
 import { refTypeIcons, refTypeLabelKeys } from '../constants'
@@ -52,7 +52,7 @@ export function RecentlyListItem(props: {
 
   return (
     <article className="group px-4 py-5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900/50">
-      <p className="whitespace-pre-wrap break-words text-base leading-7 text-neutral-900 dark:text-neutral-100">
+      <p className="whitespace-pre-wrap break-words text-sm leading-7 text-neutral-900 dark:text-neutral-100">
         {props.item.content}
       </p>
 

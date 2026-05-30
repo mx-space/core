@@ -109,7 +109,7 @@ export function ProjectSelectPlaceholder() {
       </div>
       <div className="flex min-h-[32rem] flex-col items-center justify-center p-8 text-center">
         <Folder aria-hidden="true" className="mb-4 size-10 text-neutral-300" />
-        <h2 className="text-base font-medium">
+        <h2 className="text-sm font-medium">
           {t('projects.detailPlaceholder.title')}
         </h2>
         <p className="mt-1 text-sm text-neutral-500">

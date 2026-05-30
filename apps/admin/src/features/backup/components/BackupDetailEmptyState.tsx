@@ -10,7 +10,7 @@ export function BackupDetailEmptyState() {
         aria-hidden="true"
         className="mb-4 size-10 text-neutral-300 dark:text-neutral-700"
       />
-      <h3 className="mb-1 text-base font-medium text-neutral-900 dark:text-neutral-100">
+      <h3 className="mb-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
         {t('backup.detailEmpty.title')}
       </h3>
       <p className="text-sm text-neutral-500 dark:text-neutral-400">

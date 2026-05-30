@@ -10,13 +10,11 @@ import {
   Settings,
   Sun,
 } from 'lucide-react'
+import type { MouseEvent as ReactMouseEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router'
-import { shellRoutes, sidebarTree } from 'virtual:admin-routes'
-import type { Locale, TranslationKey } from '~/i18n/types'
-import type { ThemeMode } from '~/theme'
-import type { MouseEvent as ReactMouseEvent } from 'react'
 import type { SidebarNode, SidebarSection } from 'virtual:admin-routes'
+import { shellRoutes, sidebarTree } from 'virtual:admin-routes'
 
 import { getOwner } from '~/api/options'
 import { getAppInfo } from '~/api/system'
@@ -25,6 +23,8 @@ import { SESSION_WITH_LOGIN } from '~/constants/keys'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import { SUPPORTED_LOCALES } from '~/i18n/resources'
+import type { Locale, TranslationKey } from '~/i18n/types'
+import type { ThemeMode } from '~/theme'
 import { useThemeMode } from '~/theme'
 import { PortalLayerScope, useFloatingZ } from '~/ui/feedback/portal-layer'
 import {
@@ -225,7 +225,7 @@ export function SidebarBody() {
                 src={owner.avatar}
               />
             ) : (
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-lg bg-neutral-200 text-[11px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-lg bg-neutral-200 text-xs font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
                 {ownerName.slice(0, 1).toUpperCase()}
               </span>
             )}
@@ -364,7 +364,7 @@ export function SidebarBody() {
               key={section.titleKey ?? `section-${sectionIndex}`}
             >
               {section.titleKey ? (
-                <div className="px-3 pb-1 text-[11px] font-medium uppercase text-neutral-400 dark:text-neutral-500">
+                <div className="px-3 pb-1 text-xs font-medium uppercase text-neutral-400 dark:text-neutral-500">
                   {t(section.titleKey)}
                 </div>
               ) : null}

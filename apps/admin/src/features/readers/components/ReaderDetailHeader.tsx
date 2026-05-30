@@ -51,7 +51,7 @@ export function ReaderDetailHeader(props: {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <h2 className="truncate text-base font-semibold leading-tight text-neutral-950 dark:text-neutral-50">
+          <h2 className="truncate text-sm font-semibold leading-tight text-neutral-950 dark:text-neutral-50">
             {displayName}
           </h2>
           {reader.role === 'owner' ? (

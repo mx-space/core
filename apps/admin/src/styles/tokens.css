@@ -1,0 +1,51 @@
+@theme {
+  --color-surface-page: #faf9f7;
+  --color-surface-card: #ffffff;
+  --color-surface-inset: #f5f4f1;
+  --color-surface-overlay: #ffffff;
+
+  --text-primary: #37352f;
+  --text-secondary: #787774;
+  --text-tertiary: #9b9a97;
+
+  --border-default: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.12);
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: #eaf0ff;
+
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-pill: 999px;
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-sm:
+    0 1px 0 rgb(0 0 0 / 0.02), 0 1px 3px rgb(0 0 0 / 0.06);
+  --shadow-md:
+    0 4px 12px -2px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-lg:
+    0 12px 32px -8px rgb(15 23 42 / 0.18),
+    0 2px 8px -2px rgb(15 23 42 / 0.08);
+}
+
+:where(.dark, .dark *) {
+  --color-surface-page: #100f0e;
+  --color-surface-card: #1a1816;
+  --color-surface-inset: #0a0908;
+  --color-surface-overlay: #22201d;
+
+  --text-primary: #fafaf9;
+  --text-secondary: #a8a29e;
+  --text-tertiary: #78716c;
+
+  --border-default: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-soft: rgba(59, 130, 246, 0.12);
+}

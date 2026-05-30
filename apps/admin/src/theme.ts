@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react'
-import type { ThemeMode } from '~/store/theme'
 
+import type { ThemeMode } from '~/store/theme'
 import { useThemeStore } from '~/store/theme'
 
 export const themeColors = {
-  primary: '#1a9cf3',
-  primaryDeep: '#0f7ec4',
-  primaryShallow: '#4fb5f7',
+  primary: '#2563eb',
+  primaryDeep: '#1d4ed8',
+  primaryShallow: '#3b82f6',
 } as const
+
+const ACCENT_SOFT_LIGHT = '#eaf0ff'
 
 export type { ThemeMode }
 
@@ -45,18 +47,13 @@ export function useThemeMode() {
 }
 
 export function installThemeTokens() {
-  document.documentElement.style.setProperty(
-    '--color-primary',
-    themeColors.primary,
-  )
-  document.documentElement.style.setProperty(
-    '--color-primary-shallow',
-    themeColors.primaryShallow,
-  )
-  document.documentElement.style.setProperty(
-    '--color-primary-deep',
-    themeColors.primaryDeep,
-  )
+  const root = document.documentElement.style
+  root.setProperty('--color-primary', themeColors.primary)
+  root.setProperty('--color-primary-shallow', themeColors.primaryShallow)
+  root.setProperty('--color-primary-deep', themeColors.primaryDeep)
+  root.setProperty('--accent', themeColors.primary)
+  root.setProperty('--accent-hover', themeColors.primaryDeep)
+  root.setProperty('--accent-soft', ACCENT_SOFT_LIGHT)
 }
 
 /** Imperative setter for callers outside React. */

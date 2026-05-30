@@ -11,9 +11,9 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import type { UpdateOwnerData } from '~/api/options'
 
 import { uploadFile } from '~/api/files'
+import type { UpdateOwnerData } from '~/api/options'
 import { getOwner, updateOwner } from '~/api/options'
 import { IpInfoPopover } from '~/features/_shared/components/ip-info-popover'
 import { useI18n } from '~/i18n'
@@ -166,7 +166,7 @@ export function OwnerSettings(props: { onSaved: () => Promise<unknown> }) {
             </span>
           </button>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-base font-semibold text-neutral-950 dark:text-neutral-50">
+            <div className="truncate text-sm font-semibold text-neutral-950 dark:text-neutral-50">
               {form.name || t('settings.owner.nameDefault')}
             </div>
             <div className="mt-1 text-sm text-neutral-500">

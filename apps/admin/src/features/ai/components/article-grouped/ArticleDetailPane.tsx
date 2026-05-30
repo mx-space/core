@@ -1,19 +1,19 @@
 import { ArrowLeft, Loader2, Plus } from 'lucide-react'
 import { Link } from 'react-router'
-import type { ArticleInfo } from '~/api/ai'
-import type { ListAction } from '~/ui/list-actions'
-import type { ContextMenuItem } from '~/ui/overlay/context-menu'
-import type { ArticleGroupedConfig } from './types'
 
+import type { ArticleInfo } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { FocusScope } from '~/ui/focus-scope'
+import type { ListAction } from '~/ui/list-actions'
 import { useListKeyboard } from '~/ui/list-actions'
+import type { ContextMenuItem } from '~/ui/overlay/context-menu'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
 import { ItemRow } from './ItemRow'
 import { getRefTypeMeta } from './refTypeMeta'
+import type { ArticleGroupedConfig } from './types'
 
 interface ArticleDetailPaneProps<TItem> {
   config: ArticleGroupedConfig<TItem>
@@ -57,7 +57,7 @@ export function ArticleDetailPane<TItem>(props: ArticleDetailPaneProps<TItem>) {
         aria-hidden="true"
         className="size-5 shrink-0 text-neutral-400"
       />
-      <span className="truncate text-base font-semibold text-neutral-950 dark:text-neutral-50">
+      <span className="truncate text-sm font-semibold text-neutral-950 dark:text-neutral-50">
         {props.article.title || t(meta.labelKey)}
       </span>
     </span>

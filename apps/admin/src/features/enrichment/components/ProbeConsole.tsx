@@ -1,19 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, DatabaseZap, Loader2, Save, Search } from 'lucide-react'
+import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { EnrichmentProbeResult } from '~/models/enrichment'
-import type { FormEvent } from 'react'
-import type { ProbeHistoryEntry } from '../types/enrichment'
 
 import { probeEnrichment, refreshEnrichment } from '~/api/enrichment'
 import { useI18n } from '~/i18n'
+import type { EnrichmentProbeResult } from '~/models/enrichment'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { Scroll } from '~/ui/primitives/scroll'
 import { TextInput } from '~/ui/primitives/text-field'
 
 import { enrichmentQueryKey } from '../constants'
+import type { ProbeHistoryEntry } from '../types/enrichment'
 import { getErrorMessage } from '../utils/enrichment'
 import { DetailEmpty, JsonBlock, SmallBadge } from './EnrichmentPrimitives'
 
@@ -154,7 +154,7 @@ function ProbeResult(props: { result: EnrichmentProbeResult }) {
       ) : null}
       {props.result.result ? (
         <section className="rounded border border-neutral-200 p-4 dark:border-neutral-800">
-          <h3 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
+          <h3 className="text-sm font-semibold text-neutral-950 dark:text-neutral-50">
             {props.result.result.title}
           </h3>
           {props.result.result.description ? (

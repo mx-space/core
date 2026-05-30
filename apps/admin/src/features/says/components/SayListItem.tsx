@@ -1,8 +1,8 @@
 import { Pencil, Quote, Trash2, User } from 'lucide-react'
 import { useState } from 'react'
-import type { SayModel } from '~/models/say'
 
 import { useI18n } from '~/i18n'
+import type { SayModel } from '~/models/say'
 import { Button } from '~/ui/primitives/button'
 
 import { formatSayDate } from '../utils/format'
@@ -23,7 +23,7 @@ export function SayListItem(props: {
           className="mt-0.5 size-5 shrink-0 text-neutral-300 dark:text-neutral-600"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-base leading-relaxed text-neutral-800 dark:text-neutral-200">
+          <p className="text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">
             {props.say.text}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-neutral-500 dark:text-neutral-400">

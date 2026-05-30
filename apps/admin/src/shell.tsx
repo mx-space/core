@@ -140,7 +140,7 @@ function AiTaskFloatingButton(props: {
         ) : null}
       </span>
       <span>{props.title}</span>
-      <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-semibold tabular-nums text-neutral-950 dark:bg-neutral-950 dark:text-white">
+      <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-xs font-semibold tabular-nums text-neutral-950 dark:bg-neutral-950 dark:text-white">
         {props.activeCount > 99 ? '99+' : props.activeCount}
       </span>
     </button>

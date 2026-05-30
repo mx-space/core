@@ -1,8 +1,8 @@
 import { ChevronDown } from 'lucide-react'
 import { NavLink } from 'react-router'
-import type { TranslationKey } from '~/i18n/types'
 import type { AppRoute, SidebarNode } from 'virtual:admin-routes'
 
+import type { TranslationKey } from '~/i18n/types'
 import { cn } from '~/utils/cn'
 
 export type SidebarNavRoute = AppRoute
@@ -35,7 +35,7 @@ export function SidebarNavItem(props: {
   const isSelfRouteActive = props.isRouteActive(props.node.route)
   const parentClassName = cn(
     'grid w-full grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-2 rounded text-left transition-colors',
-    props.depth === 0 ? 'h-9 px-3 text-sm' : 'h-8 px-2 text-[13px]',
+    props.depth === 0 ? 'h-9 px-3 text-sm' : 'h-8 px-2 text-sm',
     isSelfRouteActive
       ? activeLinkClassName
       : props.active

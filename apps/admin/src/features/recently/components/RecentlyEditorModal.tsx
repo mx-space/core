@@ -1,18 +1,19 @@
 import { useMutation } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import type { RecentlyModel } from '~/models/recently'
-import type { UrlPreviewState } from '../types/recently'
 
 import { resolveEnrichment } from '~/api/enrichment'
 import { createRecently, updateRecently } from '~/api/recently'
 import { useI18n } from '~/i18n'
+import type { RecentlyModel } from '~/models/recently'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { TextArea } from '~/ui/primitives/text-field'
 
+import type { UrlPreviewState } from '../types/recently'
 import { cleanErrorMessage, extractUrls } from '../utils/recently'
 import { EnrichmentInlineCard } from './RecentlyPrimitives'
 
@@ -145,7 +146,7 @@ function RecentlyEditorModal(props: RecentlyEditorModalProps) {
                     <span className="shrink-0">
                       {t('recently.editor.urlDetected')}
                     </span>
-                    <code className="truncate rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[11px] dark:bg-neutral-900">
+                    <code className="truncate rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-xs dark:bg-neutral-900">
                       {url}
                     </code>
                     {state?.loading ? (

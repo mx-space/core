@@ -1,5 +1,4 @@
 import { AlertTriangle, RotateCcw, Trash2 } from 'lucide-react'
-import type { ParsedItem } from '../../types/markdown'
 
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
@@ -8,6 +7,8 @@ import { MarkdownRender } from '~/ui/primitives/markdown-render'
 import { Scroll } from '~/ui/primitives/scroll'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
+
+import type { ParsedItem } from '../../types/markdown'
 
 type MetaEdits = Partial<NonNullable<ParsedItem['meta']>>
 
@@ -26,8 +27,8 @@ function slugify(value: string): string {
   return value
     .normalize('NFKD')
     .toLowerCase()
-    .replace(/[^a-z0-9一-龥]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replaceAll(/[^a-z0-9\p{Script=Han}]+/gu, '-')
+    .replaceAll(/^-+|-+$/g, '')
 }
 
 function toDatetimeLocal(value: string | undefined): string {
@@ -63,7 +64,7 @@ export function ParsedPreviewPane(props: ParsedPreviewPaneProps) {
           <div className="flex size-12 items-center justify-center rounded-full bg-red-100 text-red-500 dark:bg-red-950/40 dark:text-red-400">
             <AlertTriangle aria-hidden="true" className="size-6" />
           </div>
-          <h3 className="text-base font-medium text-neutral-900 dark:text-neutral-100">
+          <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
             {t('markdown.import.failPane.title')}
           </h3>
           {props.failureReason ? (
