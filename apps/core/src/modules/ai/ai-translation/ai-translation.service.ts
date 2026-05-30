@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common'
+import pLimit from 'p-limit'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
@@ -13,7 +14,7 @@ import {
   TaskStatus,
 } from '~/processors/task-queue'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { createAbortError } from '~/utils/abort.util'
+import { createAbortError, throwIfAborted } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
@@ -217,44 +218,82 @@ export class AiTranslationService
     }> = []
 
     let failedCount = 0
+    let done = 0
 
-    for (let i = 0; i < languages.length; i++) {
-      this.checkAborted(context)
+    const concurrency = Math.max(
+      1,
+      Math.min(10, aiConfig.translationLangConcurrency ?? 3),
+    )
+    const limit = pLimit(concurrency)
 
-      const lang = languages[i]
-      await context.appendLog(
-        'info',
-        `Translating to ${lang} (${i + 1}/${languages.length})`,
-      )
-
-      try {
-        const result = await this.generateTranslation(
-          payload.refId,
-          lang,
-          context.incrementTokens,
-          context.signal,
-        )
-        translations.push({
-          translationId: result.id,
-          lang: result.lang,
-          title: result.title,
-        })
-      } catch (error: any) {
-        if (error.name === 'AbortError') throw error
-        failedCount++
-        await context.appendLog(
-          'error',
-          `Failed to translate to ${lang}: ${error.message}`,
-        )
+    // Reject when context.signal aborts so in-flight workers stop racing.
+    let abortListener: (() => void) | undefined
+    const abortPromise = new Promise<never>((_, reject) => {
+      if (context.signal.aborted) {
+        reject(createAbortError())
+        return
       }
+      abortListener = () => reject(createAbortError())
+      context.signal.addEventListener('abort', abortListener, { once: true })
+    })
+    // Prevent unhandledRejection warnings when no worker races it (success path).
+    abortPromise.catch(() => {})
 
-      const progress = Math.round(((i + 1) / languages.length) * 100)
-      await context.updateProgress(
-        progress,
-        `Translated ${i + 1}/${languages.length}`,
-        i + 1,
-        languages.length,
+    try {
+      const settled = await Promise.allSettled(
+        languages.map((lang, i) =>
+          limit(async () => {
+            throwIfAborted(context.signal)
+            await context.appendLog(
+              'info',
+              `Translating to ${lang} (${i + 1}/${languages.length})`,
+            )
+            try {
+              const result = await Promise.race([
+                this.generateTranslation(
+                  payload.refId,
+                  lang,
+                  context.incrementTokens,
+                  context.signal,
+                ),
+                abortPromise,
+              ])
+              translations.push({
+                translationId: result.id,
+                lang: result.lang,
+                title: result.title,
+              })
+            } catch (error: any) {
+              if (error?.name === 'AbortError') throw error
+              failedCount++
+              await context.appendLog(
+                'error',
+                `Failed to translate to ${lang}: ${error.message}`,
+              )
+            } finally {
+              if (!context.signal.aborted) {
+                const cur = ++done
+                await context.updateProgress(
+                  Math.round((cur / languages.length) * 100),
+                  `Translated ${cur}/${languages.length}`,
+                  cur,
+                  languages.length,
+                )
+              }
+            }
+          }),
+        ),
       )
+
+      const abortRejection = settled.find(
+        (s): s is PromiseRejectedResult =>
+          s.status === 'rejected' && (s.reason as any)?.name === 'AbortError',
+      )
+      if (abortRejection) throw abortRejection.reason
+    } finally {
+      if (abortListener) {
+        context.signal.removeEventListener('abort', abortListener)
+      }
     }
 
     await context.setResult({ translations })
