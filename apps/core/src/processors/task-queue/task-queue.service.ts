@@ -304,6 +304,70 @@ export class TaskQueueService implements OnModuleDestroy {
     return stats
   }
 
+  /**
+   * Recompute a parent group's subTaskStats from the live child hashes.
+   *
+   * - Reads the group ZSET once, then one pipelined HGET per child (status
+   *   field only). No N+1 across services — a 100-child group costs 1 ZRANGE
+   *   + 1 pipeline RTT.
+   * - Returns the FULL stats object (not a delta), so the admin can do a
+   *   wholesale replace and last-writer-wins is correct.
+   * - Cancelled rolls into `failed` to mirror existing `computeSubTaskStats`
+   *   semantics — keeping admin numerics consistent across REST + socket.
+   */
+  async recomputeGroupStats(groupId: string): Promise<SubTaskStats> {
+    const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(groupId))
+    const taskIds = await this.redis.zrange(indexGroup, 0, -1)
+
+    const stats: SubTaskStats = {
+      total: taskIds.length,
+      completed: 0,
+      partialFailed: 0,
+      failed: 0,
+      running: 0,
+      pending: 0,
+    }
+    if (!taskIds.length) return stats
+
+    const pipeline = this.redis.pipeline()
+    for (const id of taskIds) {
+      pipeline.hget(this.getKey(TASK_QUEUE_KEYS.task(id)), 'status')
+    }
+    const results = await pipeline.exec()
+    if (!results) return stats
+
+    for (const [err, status] of results) {
+      if (err || !status) continue
+      switch (status as string) {
+        case TaskStatus.Completed: {
+          stats.completed++
+          break
+        }
+        case TaskStatus.PartialFailed: {
+          stats.partialFailed++
+          break
+        }
+        case TaskStatus.Failed: {
+          stats.failed++
+          break
+        }
+        case TaskStatus.Running: {
+          stats.running++
+          break
+        }
+        case TaskStatus.Pending: {
+          stats.pending++
+          break
+        }
+        case TaskStatus.Cancelled: {
+          stats.failed++
+          break
+        }
+      }
+    }
+    return stats
+  }
+
   async getTasks(options: {
     status?: TaskStatus
     type?: string
@@ -621,6 +685,11 @@ export class TaskQueueService implements OnModuleDestroy {
       if (message !== undefined) patch.progressMessage = message
       if (completed !== undefined) patch.completedItems = completed
       if (total !== undefined) patch.totalItems = total
+      // Surface running totalCost so admins see live spend ticking up while a
+      // task is in flight. Skipped when the field is absent (pre-spec-2 hash)
+      // or zero — keeps the wire patch minimal.
+      const cost = await this.readTotalCostUsd(taskId)
+      if (cost !== undefined) patch.totalCost = cost
       this.emitter.emitProgress(meta, patch)
     }
   }
@@ -706,9 +775,16 @@ export class TaskQueueService implements OnModuleDestroy {
       completedAt: fresh.completedAt,
       error: fresh.error,
     }
+    // Forward totalCost only when present (pre-spec-2 hashes lack it; zero is
+    // treated as "no spend yet" and elided to keep the wire patch small).
+    if (fresh.totalCost !== undefined) statusPatch.totalCost = fresh.totalCost
     this.emitter.emitStatus(meta, statusPatch)
 
-    if (!isTerminalStatus(status)) return
+    if (!isTerminalStatus(status)) {
+      // Non-terminal status changes (e.g. Running re-emit) — no child→parent
+      // recompute, no throttle cleanup yet.
+      return
+    }
 
     // Always release throttle state when a task reaches a terminal status.
     this.emitter.dispose(taskId)
@@ -720,16 +796,23 @@ export class TaskQueueService implements OnModuleDestroy {
       fresh.result !== null
     if (shouldEmitResult) {
       this.emitter.emitResult(meta, statusPatch, fresh.result)
-      return
-    }
-
-    if (
+    } else if (
       status === TaskStatus.Completed &&
       (fresh.result === undefined || fresh.result === null)
     ) {
       this.logger.warn(
         `Terminal Completed without setResult: id=${taskId} type=${fresh.type}`,
       )
+    }
+
+    // Child terminal transition triggers a parent subTaskStats recompute so the
+    // admin can wholesale-replace its `Partial<Task>.subTaskStats` cache (last-
+    // writer-wins is correct because the recompute produces a full snapshot,
+    // never a delta). SCOPE LIMIT: we DO NOT mutate the parent status here —
+    // the Running → Completed/PartialFailed/Failed transition stays with the
+    // batch/all executor by design (spec 2 step-19).
+    if (fresh.groupId) {
+      await this.emitParentStatsRecompute(fresh.groupId)
     }
   }
 
@@ -844,6 +927,37 @@ export class TaskQueueService implements OnModuleDestroy {
     const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
     const status = await this.redis.hget(taskKey, 'status')
     return status === TaskStatus.Cancelled
+  }
+
+  /**
+   * Read the parent task's emit meta + recomputed stats and fan out a 'status'
+   * phase to the group room. The patch carries ONLY the recomputed
+   * subTaskStats (and unchanged parent status) — admin step-20 will wholesale
+   * replace `prev.subTaskStats` with `patch.subTaskStats`.
+   *
+   * Out of scope (per spec 2 step-19): do NOT mutate the parent's status here.
+   * Running → Completed/PartialFailed/Failed transition stays in the existing
+   * TranslationBatch / TranslationAll executor logic.
+   */
+  private async emitParentStatsRecompute(groupId: string): Promise<void> {
+    const parentMeta = await this.getEmitMeta(groupId)
+    if (!parentMeta) return
+    const stats = await this.recomputeGroupStats(groupId)
+    this.emitter.emitStatus(parentMeta, { subTaskStats: stats })
+  }
+
+  /**
+   * Fetch the current totalCost in USD float, or undefined when the field is
+   * absent (pre-spec-2 task hash) or zero. Used by emit paths so we never
+   * surface noisy `totalCost: 0` patches for cache-hit / unbilled tasks.
+   */
+  private async readTotalCostUsd(taskId: string): Promise<number | undefined> {
+    const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
+    const raw = await this.redis.hget(taskKey, 'totalCost')
+    if (raw === null || raw === '') return undefined
+    const cents = Number(raw)
+    if (!Number.isFinite(cents) || cents <= 0) return undefined
+    return cents / 100
   }
 
   /**
