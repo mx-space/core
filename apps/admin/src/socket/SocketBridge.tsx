@@ -424,6 +424,16 @@ function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
       if (next !== data) queryClient.setQueryData(key, next)
     }
     queryClient.removeQueries({ queryKey: adminQueryKeys.ai.taskDetail(id) })
+    if (groupId) {
+      queryClient.setQueryData<AITask[] | undefined>(
+        adminQueryKeys.ai.tasksByGroup(groupId),
+        (prev) => {
+          if (!prev) return prev
+          const next = prev.filter((t) => t.id !== id)
+          return next.length === prev.length ? prev : next
+        },
+      )
+    }
     return
   }
 
@@ -461,6 +471,33 @@ function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
     queryClient.setQueryData<AITask | undefined>(
       adminQueryKeys.ai.taskDetail(groupId),
       (prev) => (prev ? { ...prev, subTaskStats } : prev),
+    )
+  }
+
+  // Per spec 2 step-25 — keep the parent's child-task list cache live so
+  // SubTaskList rows update in real time. 'deleted' / 'stream' phases are
+  // handled above; here we cover 'created' (append/replace full snapshot)
+  // and every patch phase (status/progress/log/result/started).
+  if (groupId) {
+    queryClient.setQueryData<AITask[] | undefined>(
+      adminQueryKeys.ai.tasksByGroup(groupId),
+      (prev) => {
+        if (!prev) return prev
+        const idx = prev.findIndex((t) => t.id === id)
+        if (phase === 'created') {
+          const fullTask = patch as AITask
+          if (idx < 0) return [...prev, fullTask]
+          const next = prev.slice()
+          next[idx] = fullTask
+          return next
+        }
+        if (idx < 0) return prev
+        const merged = applyTaskPatch(prev[idx], patch, log)
+        if (merged === prev[idx]) return prev
+        const next = prev.slice()
+        next[idx] = merged
+        return next
+      },
     )
   }
 }

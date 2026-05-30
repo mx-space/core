@@ -23,6 +23,7 @@ import {
 } from '../utils/ai'
 import { Code, Field, JsonBlock, SmallBadge, StatusBadge } from './AiPrimitives'
 import { CollapsibleSection } from './CollapsibleSection'
+import { SubTaskList } from './SubTaskList'
 import { SubTaskStatsView } from './SubTaskStatsView'
 import { TaskCostBadge } from './TaskCostBadge'
 import { TaskLogsBlock } from './TaskLogsBlock'
@@ -204,6 +205,7 @@ export function TaskDetail(props: {
             title={t('ai.tasks.sections.subTasks')}
           >
             <SubTaskStatsView task={task} />
+            <SubTaskList groupId={task.id} />
           </CollapsibleSection>
         ) : null}
 

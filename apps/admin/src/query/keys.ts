@@ -12,6 +12,8 @@ export const adminQueryKeys = {
     models: (context: string) => ['ai', 'models', context] as const,
     root: ['ai'] as const,
     taskDetail: (id: string) => ['ai', 'tasks', 'detail', id] as const,
+    tasksByGroup: (groupId: string) =>
+      ['ai', 'tasks', 'byGroup', groupId] as const,
     tasksRoot: ['ai', 'tasks'] as const,
     tasks: (params: {
       page: number
