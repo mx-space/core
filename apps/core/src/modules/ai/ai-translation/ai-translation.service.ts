@@ -248,6 +248,11 @@ export class AiTranslationService
               'info',
               `Translating to ${lang} (${i + 1}/${languages.length})`,
             )
+            const langPush = async (ev: AiStreamEvent) => {
+              if (ev.type === 'token') {
+                context.streamPusher({ lang, chunk: ev.data })
+              }
+            }
             try {
               const result = await Promise.race([
                 this.generateTranslation(
@@ -255,6 +260,7 @@ export class AiTranslationService
                   lang,
                   context.incrementTokens,
                   context.signal,
+                  langPush,
                 ),
                 abortPromise,
               ])
@@ -711,6 +717,7 @@ export class AiTranslationService
     targetLang: string,
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
+    push?: (event: AiStreamEvent) => Promise<void>,
   ): Promise<AITranslationModel> {
     const startedAt = Date.now()
     const aiConfig = await this.configService.get('ai')
@@ -733,6 +740,7 @@ export class AiTranslationService
         document,
         onToken,
         signal,
+        push,
       )
       const translated = await result
       this.logger.log(
@@ -762,6 +770,7 @@ export class AiTranslationService
     document: ArticleDocument,
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
+    taskPush?: (event: AiStreamEvent) => Promise<void>,
   ) {
     const content = this.toArticleContent(document)
     const sourceModified = document.modifiedAt ?? undefined
@@ -782,10 +791,17 @@ export class AiTranslationService
           targetLang,
         )
 
+        const fanoutPush = taskPush
+          ? async (event: AiStreamEvent) => {
+              await push(event)
+              await taskPush(event)
+            }
+          : push
+
         const translated = await this.translateContentStream(
           content,
           targetLang,
-          push,
+          fanoutPush,
           onToken,
           signal,
           existing,
