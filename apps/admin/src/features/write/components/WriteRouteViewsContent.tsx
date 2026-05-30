@@ -43,8 +43,6 @@ import {
   createDraft,
   getDraftById,
   getDraftByRef,
-  getDraftHistory,
-  getDraftHistoryVersion,
   getNewDrafts,
   updateDraft,
 } from '~/api/drafts'
@@ -62,6 +60,7 @@ import {
 import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
+import { DraftPreviewBanner } from '~/features/write/components/DraftPreviewBanner'
 import { MetaPresetSection } from '~/features/write/meta-presets'
 import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
@@ -81,13 +80,13 @@ import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { Drawer } from '~/ui/feedback/drawer'
 import { Modal, ModalHeader } from '~/ui/feedback/modal'
-import { present } from '~/ui/feedback/modal-imperative'
 import {
   AsidePanel,
   ContentLayout,
   ContentLayoutSlot,
 } from '~/ui/layout/content-layout'
 import { HeaderBackButton } from '~/ui/layout/header-back-button'
+import { EmptyState } from '~/ui/patterns/EmptyState'
 import { Button } from '~/ui/primitives/button'
 import { DateTimePicker } from '~/ui/primitives/datetime-picker'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -350,18 +349,26 @@ function WritePage(props: { kind: WriteKind }) {
     contentFormat: preferredContentFormat,
   }))
   useDocumentTitle(state.title)
-  const [asidePanel, setAsidePanel] = useState<'agent' | 'meta' | null>(null)
+  const [asidePanel, setAsidePanel] = useState<
+    'agent' | 'meta' | 'drafts' | null
+  >(null)
   const agentVisible = asidePanel === 'agent'
   const metaPanelOpen = asidePanel === 'meta'
-  const toggleAsidePanel = (panel: 'agent' | 'meta') =>
+  const draftsPanelOpen = asidePanel === 'drafts'
+  const toggleAsidePanel = (panel: 'agent' | 'meta' | 'drafts') =>
     setAsidePanel((current) => (current === panel ? null : panel))
   const [draftId, setDraftId] = useState('')
   const [pageParseDialogOpen, setPageParseDialogOpen] = useState(false)
   const [pageLexicalDebugOpen, setPageLexicalDebugOpen] = useState(false)
-  const [draftListOpen, setDraftListOpen] = useState(false)
   const [draftListHintDismissed, setDraftListHintDismissed] = useState(false)
   const [recoveryHintDismissed, setRecoveryHintDismissed] = useState(false)
-  const applyDraftRef = useRef<(draft: DraftModel) => void>(() => {})
+  const [previewingDraft, setPreviewingDraft] = useState<DraftModel | null>(
+    null,
+  )
+  const previewSnapshotRef = useRef<{
+    state: WriteFormState
+    draftId: string
+  } | null>(null)
   const appliedRouteDraftIdRef = useRef<string | null>(null)
   const acceptedRouteRef = useRef({ pathname: '', route: '' })
   const confirmedNavigationRouteRef = useRef('')
@@ -609,35 +616,6 @@ function WritePage(props: { kind: WriteKind }) {
     return draft
   }, [detailQuery.data, isEditing, refDraftQuery.data, routeDraftId])
 
-  const openRecoveryDialog = (draft: DraftModel) => {
-    if (!publishedContent) return
-    const handle = present(
-      DraftRecoveryDialog,
-      {
-        draft,
-        publishedContent,
-        onRecover: (recovered) => {
-          applyDraftRef.current(recovered)
-          setRecoveryHintDismissed(true)
-          handle.dismiss()
-        },
-        onUsePublished: () => {
-          draftDirtyRef.current = false
-          lastSavedDraftFingerprintRef.current =
-            latestDraftFingerprintRef.current
-          setLastSavedFingerprint(latestDraftFingerprintRef.current)
-          setRecoveryHintDismissed(true)
-          handle.dismiss()
-        },
-      },
-      {
-        modalProps: {
-          popupStyle: { height: 'min(78vh, 38rem)', width: 'min(92vw, 56rem)' },
-        },
-      },
-    )
-  }
-
   useEffect(() => {
     const draft = routeDraftQuery.data
     if (!draft || appliedRouteDraftIdRef.current === draft.id) return
@@ -808,7 +786,45 @@ function WritePage(props: { kind: WriteKind }) {
     setSearchParams(nextParams, { replace: true })
     toast.success(t('write.toast.draftApplied'))
   }
-  applyDraftRef.current = applyDraft
+
+  const enterDraftPreview = (draft: DraftModel) => {
+    if (!previewingDraft) {
+      previewSnapshotRef.current = { state, draftId }
+    }
+    setPreviewingDraft(draft)
+    setState((previous) => fromDraft(props.kind, draft, previous))
+    setDraftId(draft.id)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('draftId', draft.id)
+    if (draft.refId) nextParams.set('id', draft.refId)
+    setSearchParams(nextParams, { replace: true })
+  }
+
+  const commitDraftPreview = () => {
+    draftDirtyRef.current = true
+    previewSnapshotRef.current = null
+    setPreviewingDraft(null)
+    toast.success(t('write.toast.draftApplied'))
+  }
+
+  const cancelDraftPreview = () => {
+    const snap = previewSnapshotRef.current
+    if (snap) {
+      setState(snap.state)
+      setDraftId(snap.draftId)
+      const nextParams = new URLSearchParams(searchParams)
+      if (snap.draftId) nextParams.set('draftId', snap.draftId)
+      else nextParams.delete('draftId')
+      setSearchParams(nextParams, { replace: true })
+    }
+    previewSnapshotRef.current = null
+    setPreviewingDraft(null)
+  }
+
+  const closeDraftsPanel = () => {
+    if (previewingDraft) cancelDraftPreview()
+    setAsidePanel(null)
+  }
 
   const generateTitleOrSlug = () => {
     if (!state.title.trim() && !state.text.trim()) {
@@ -853,8 +869,7 @@ function WritePage(props: { kind: WriteKind }) {
   const latestDraft = draftMutation.data ?? availableDraft
   const draftListHintCount =
     !isEditing && !routeDraftId ? (newDraftsQuery.data?.length ?? 0) : 0
-  const showDraftListHint =
-    draftListHintCount > 0 && !draftListHintDismissed && !draftListOpen
+  const showDraftListHint = draftListHintCount > 0 && !draftListHintDismissed
   const showRecoveryHint = Boolean(
     recoveryHintDraft && publishedContent && !recoveryHintDismissed,
   )
@@ -1030,7 +1045,10 @@ function WritePage(props: { kind: WriteKind }) {
         <ContentLayout
           className="min-h-0 flex-1"
           mainClassName="flex flex-col"
-          onCloseAside={() => setAsidePanel(null)}
+          onCloseAside={() => {
+            if (draftsPanelOpen && previewingDraft) cancelDraftPreview()
+            setAsidePanel(null)
+          }}
           open={asidePanel !== null && !detailQuery.isLoading}
         >
           {detailQuery.isLoading ? (
@@ -1052,7 +1070,7 @@ function WritePage(props: { kind: WriteKind }) {
                           count: draftListHintCount,
                           label: draftKindText,
                         })}
-                        onAction={() => setDraftListOpen(true)}
+                        onAction={() => setAsidePanel('drafts')}
                         onDismiss={() => setDraftListHintDismissed(true)}
                         variant="list"
                       />
@@ -1066,9 +1084,24 @@ function WritePage(props: { kind: WriteKind }) {
                           label: draftKindText,
                           version: recoveryHintDraft.version,
                         })}
-                        onAction={() => openRecoveryDialog(recoveryHintDraft)}
+                        onAction={() => {
+                          setAsidePanel('drafts')
+                          enterDraftPreview(recoveryHintDraft)
+                        }}
                         onDismiss={() => setRecoveryHintDismissed(true)}
                         variant="recovery"
+                      />
+                    </div>
+                  ) : null}
+                  {previewingDraft ? (
+                    <div className="mb-3">
+                      <DraftPreviewBanner
+                        draftLabel={t('write.preview.banner.label', {
+                          version: previewingDraft.version,
+                          time: formatRelativeTime(previewingDraft.updatedAt),
+                        })}
+                        onApply={commitDraftPreview}
+                        onCancel={cancelDraftPreview}
                       />
                     </div>
                   ) : null}
@@ -1153,6 +1186,18 @@ function WritePage(props: { kind: WriteKind }) {
               </main>
             </Scroll>
           )}
+          <ContentLayoutSlot active={draftsPanelOpen} id="drafts">
+            <DraftsAsidePanel
+              drafts={[...(newDraftsQuery.data ?? [])].sort(
+                (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt),
+              )}
+              draftKindLabel={draftKindText}
+              onClose={closeDraftsPanel}
+              onPreview={enterDraftPreview}
+              previewingDraftId={previewingDraft?.id ?? null}
+              recoveryDraftId={recoveryHintDraft?.id ?? null}
+            />
+          </ContentLayoutSlot>
           <ContentLayoutSlot active={metaPanelOpen} id="meta">
             {props.kind === 'page' ? (
               <PageSettingsPanel state={state} updateField={updateField} />
@@ -1223,24 +1268,6 @@ function WritePage(props: { kind: WriteKind }) {
           open={pageLexicalDebugOpen}
         />
       ) : null}
-      <DraftListDialog
-        draftLabel={getDraftKindLabel(props.kind)}
-        drafts={newDraftsQuery.data ?? []}
-        onClose={() => {
-          setDraftListOpen(false)
-          setDraftListHintDismissed(true)
-        }}
-        onCreate={() => {
-          setDraftListOpen(false)
-          setDraftListHintDismissed(true)
-        }}
-        onSelect={(draft) => {
-          applyDraft(draft)
-          setDraftListOpen(false)
-          setDraftListHintDismissed(true)
-        }}
-        open={draftListOpen}
-      />
     </form>
   )
 }
@@ -1384,131 +1411,93 @@ function ContentSettingsPanel(props: {
   )
 }
 
-function DraftListDialog(props: {
-  draftLabel: string
+function DraftsAsidePanel(props: {
   drafts: DraftModel[]
+  draftKindLabel: string
   onClose: () => void
-  onCreate: () => void
-  onSelect: (draft: DraftModel) => void
-  open: boolean
+  onPreview: (draft: DraftModel) => void
+  previewingDraftId: string | null
+  recoveryDraftId: string | null
 }) {
   const { t } = useI18n()
-  const [selectedDraftId, setSelectedDraftId] = useState('')
-  const selectedDraft =
-    props.drafts.find((draft) => draft.id === selectedDraftId) ??
-    props.drafts[0]
-
-  useEffect(() => {
-    if (!props.open) return
-    setSelectedDraftId(props.drafts[0]?.id ?? '')
-  }, [props.drafts, props.open])
-
-  const continueDraft = () => {
-    if (!selectedDraft) return
-    props.onSelect(selectedDraft)
-  }
 
   return (
-    <Modal
-      className="max-h-[88vh]"
+    <AsidePanel
+      icon={History}
       onClose={props.onClose}
-      open={props.open}
-      popupStyle={{ height: 'min(82vh, 38rem)', width: 'min(92vw, 56rem)' }}
+      title={t('write.draftList.title')}
     >
-      <ModalHeader icon={History} title={t('write.draftList.title')} />
-
-      <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[15rem_minmax(0,1fr)]">
+      {props.drafts.length === 0 ? (
+        <div className="flex min-h-0 flex-1 items-center justify-center p-4">
+          <EmptyState
+            description={t('write.draftList.empty.description', {
+              label: props.draftKindLabel,
+            })}
+            icon={History}
+            title={t('write.draftList.empty.title')}
+          />
+        </div>
+      ) : (
         <Scroll
-          className="min-h-0 border-b border-neutral-200 md:border-b-0 md:border-r dark:border-neutral-800"
-          innerClassName="divide-y divide-neutral-100 dark:divide-neutral-900"
+          className="min-h-0 flex-1"
+          innerClassName="flex flex-col gap-1 p-2"
         >
-          {props.drafts.map((draft) => (
-            <button
-              className={cn(
-                'flex w-full min-w-0 items-start gap-3 px-4 py-3 text-left transition-colors',
-                selectedDraft?.id === draft.id
-                  ? 'bg-neutral-100 dark:bg-neutral-900'
-                  : 'hover:bg-neutral-50 dark:hover:bg-neutral-900/60',
-              )}
-              key={draft.id}
-              onClick={() => setSelectedDraftId(draft.id)}
-              type="button"
-            >
-              <span
+          {props.drafts.map((draft) => {
+            const isPreviewing = draft.id === props.previewingDraftId
+            const isRecovery = draft.id === props.recoveryDraftId
+            return (
+              <button
+                aria-current={isPreviewing}
                 className={cn(
-                  'mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-full border',
-                  selectedDraft?.id === draft.id
-                    ? 'border-neutral-900 bg-neutral-900 dark:border-neutral-100 dark:bg-neutral-100'
-                    : 'border-neutral-300 dark:border-neutral-700',
+                  'group relative flex w-full min-w-0 items-center gap-3 rounded-sm px-3 py-2 text-left transition-colors',
+                  'focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15',
+                  isPreviewing
+                    ? 'bg-accent-soft text-fg'
+                    : 'hover:bg-surface-inset',
                 )}
-                aria-hidden="true"
+                key={draft.id}
+                onClick={() => props.onPreview(draft)}
+                type="button"
               >
-                {selectedDraft?.id === draft.id ? (
-                  <span className="size-1.5 rounded-full bg-white dark:bg-neutral-950" />
-                ) : null}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
-                  {draft.title || t('write.editor.untitled')}
-                </span>
-                <span className="mt-1 block text-xs text-neutral-500 dark:text-neutral-400">
-                  {t('write.draftList.summary', {
-                    version: draft.version,
-                    chars: draft.text.length,
-                  })}
-                </span>
-                <span className="mt-0.5 block text-xs text-neutral-400 dark:text-neutral-500">
-                  {formatDateTime(draft.updatedAt)}
-                </span>
-              </span>
-            </button>
-          ))}
-        </Scroll>
-
-        <Scroll className="min-h-0" innerClassName="p-4">
-          {selectedDraft ? (
-            <div className="min-h-full border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900/60">
-              <div className="mb-3 flex min-w-0 items-center justify-between gap-3 border-b border-neutral-200 pb-3 dark:border-neutral-800">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
-                    {selectedDraft.title || t('write.editor.untitled')}
-                  </p>
-                  <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                    {selectedDraft.contentFormat === 'lexical'
-                      ? 'Lexical'
-                      : 'Markdown'}{' '}
-                    ·{' '}
-                    {t('write.draftList.updatedAt', {
-                      time: formatDateTime(selectedDraft.updatedAt),
-                    })}
-                  </p>
-                </div>
-                <FileText
+                <span
                   aria-hidden="true"
-                  className="size-4 shrink-0 text-neutral-400"
+                  className={cn(
+                    'absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-accent',
+                    isPreviewing ? 'opacity-100' : 'opacity-0',
+                  )}
                 />
-              </div>
-              <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-5 text-neutral-800 dark:text-neutral-200">
-                {selectedDraft.text || t('write.draftList.emptyText')}
-              </pre>
-            </div>
-          ) : (
-            <div className="flex h-full min-h-60 items-center justify-center text-sm text-neutral-500 dark:text-neutral-400">
-              {t('write.draftList.selectPrompt')}
-            </div>
-          )}
+                <History
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-fg-muted"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-fg">
+                    {draft.title || t('write.editor.untitled')}
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-fg-muted">
+                    {t('write.draftList.row.meta', {
+                      version: draft.version,
+                      time: formatRelativeTime(draft.updatedAt),
+                    })}
+                  </span>
+                </span>
+                {isRecovery ? (
+                  <span className="flex shrink-0 items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                    <span
+                      aria-hidden="true"
+                      className="size-1.5 rounded-full bg-amber-500"
+                    />
+                    <span className="truncate">
+                      {t('write.draftList.newerLabel')}
+                    </span>
+                  </span>
+                ) : null}
+              </button>
+            )
+          })}
         </Scroll>
-      </div>
-
-      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-        <Button onClick={props.onCreate} type="button" variant="subtle">
-          {t('write.draftList.createNew', { label: props.draftLabel })}
-        </Button>
-        <Button disabled={!selectedDraft} onClick={continueDraft} type="button">
-          {t('write.draftList.continueDraft')}
-        </Button>
-      </div>
-    </Modal>
+      )}
+    </AsidePanel>
   )
 }
 
@@ -1518,228 +1507,6 @@ interface PublishedWriteContent {
   text: string
   title: string
   updatedAt: string
-}
-
-function DraftRecoveryDialog(props: {
-  draft: DraftModel
-  onRecover: (draft: DraftModel) => void
-  onUsePublished: () => void
-  publishedContent: PublishedWriteContent
-}) {
-  const { t } = useI18n()
-  const [selectedVersion, setSelectedVersion] = useState<
-    'current' | 'published' | number
-  >('current')
-  const [selectedDraft, setSelectedDraft] = useState<DraftModel>(props.draft)
-  const historyQuery = useQuery({
-    enabled: Boolean(props.draft.id),
-    queryFn: () => getDraftHistory(props.draft.id),
-    queryKey: adminQueryKeys.drafts.recoveryHistory(props.draft.id),
-  })
-  const selectedVersionQuery = useQuery({
-    enabled:
-      typeof selectedVersion === 'number' &&
-      selectedVersion !== props.draft.version,
-    queryFn: () =>
-      getDraftHistoryVersion(props.draft.id, selectedVersion as number),
-    queryKey: adminQueryKeys.drafts.recoveryVersion({
-      id: props.draft.id,
-      version: typeof selectedVersion === 'number' ? selectedVersion : null,
-    }),
-  })
-  const versionItems = useMemo(
-    () => buildRecoveryVersionItems(props.draft, historyQuery.data),
-    [historyQuery.data, props.draft],
-  )
-  const selectedContent =
-    selectedVersion === 'published'
-      ? props.publishedContent
-      : selectedVersion === 'current' || selectedVersion === props.draft.version
-        ? props.draft
-        : (selectedVersionQuery.data ?? selectedDraft)
-  const diffStats = getDraftDiffStats(props.publishedContent, selectedContent)
-
-  useEffect(() => {
-    setSelectedVersion('current')
-    setSelectedDraft(props.draft)
-  }, [props.draft])
-
-  useEffect(() => {
-    if (selectedVersionQuery.data) {
-      setSelectedDraft(selectedVersionQuery.data)
-    }
-  }, [selectedVersionQuery.data])
-
-  const recoverSelected = () => {
-    if (selectedVersion === 'published') {
-      props.onUsePublished()
-      return
-    }
-
-    props.onRecover(
-      selectedVersion === 'current' || selectedVersion === props.draft.version
-        ? props.draft
-        : selectedDraft,
-    )
-  }
-
-  return (
-    <>
-      <ModalHeader
-        className="h-auto py-3"
-        subtitle={t('write.recovery.dialogSubtitle', {
-          time: formatDateTime(props.draft.updatedAt),
-        })}
-        title={t('write.recovery.dialogTitle')}
-      />
-
-      <div
-        className="grid min-h-0 flex-1"
-        style={{ gridTemplateColumns: '16rem minmax(0, 1fr)' }}
-      >
-        <Scroll className="min-h-0 border-r border-neutral-200 dark:border-neutral-800">
-          <button
-            className={cn(
-              'grid w-full gap-1 border-b border-neutral-100 px-4 py-3 text-left text-sm transition-colors dark:border-neutral-900',
-              selectedVersion === 'current'
-                ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-900 dark:text-neutral-50'
-                : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900/60',
-            )}
-            onClick={() => {
-              setSelectedVersion('current')
-              setSelectedDraft(props.draft)
-            }}
-            type="button"
-          >
-            <span className="font-medium">
-              {t('write.recovery.draftCurrent')}
-            </span>
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
-              v{props.draft.version} · {formatDateTime(props.draft.updatedAt)}
-            </span>
-          </button>
-
-          {versionItems.map((item) => (
-            <button
-              className={cn(
-                'grid w-full gap-1 border-b border-neutral-100 px-4 py-3 text-left text-sm transition-colors dark:border-neutral-900',
-                selectedVersion === item.version
-                  ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-900 dark:text-neutral-50'
-                  : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900/60',
-              )}
-              key={item.version}
-              onClick={() => setSelectedVersion(item.version)}
-              type="button"
-            >
-              <span className="font-medium">
-                {t('write.recovery.historyVersion', { version: item.version })}
-              </span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                {formatDateTime(item.savedAt)}
-              </span>
-            </button>
-          ))}
-
-          <button
-            className={cn(
-              'grid w-full gap-1 px-4 py-3 text-left text-sm transition-colors',
-              selectedVersion === 'published'
-                ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-900 dark:text-neutral-50'
-                : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900/60',
-            )}
-            onClick={() => setSelectedVersion('published')}
-            type="button"
-          >
-            <span className="font-medium">{t('write.recovery.published')}</span>
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
-              {formatDateTime(props.publishedContent.updatedAt)}
-            </span>
-          </button>
-        </Scroll>
-
-        <main className="flex min-h-0 flex-col">
-          <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-4 py-2.5 text-xs dark:border-neutral-800">
-            <div className="min-w-0 truncate text-neutral-500 dark:text-neutral-400">
-              {t('write.recovery.headerArrow')}{' '}
-              {selectedVersion === 'published'
-                ? t('write.recovery.published')
-                : selectedVersion === 'current'
-                  ? t('write.recovery.draftCurrent')
-                  : t('write.recovery.historyVersion', {
-                      version: selectedVersion,
-                    })}
-            </div>
-            <div className="shrink-0 text-neutral-500 dark:text-neutral-400">
-              {diffStats.isSame ? (
-                t('write.recovery.contentSame')
-              ) : (
-                <>
-                  <span className="text-emerald-600 dark:text-emerald-400">
-                    +{diffStats.added}
-                  </span>
-                  <span> / </span>
-                  <span className="text-red-600 dark:text-red-400">
-                    -{diffStats.removed}
-                  </span>
-                  <span>{t('write.recovery.diffWords')}</span>
-                </>
-              )}
-            </div>
-          </div>
-
-          <Scroll
-            className="min-h-0 flex-1"
-            innerClassName="grid grid-cols-[minmax(0,1fr)] gap-3 p-4"
-          >
-            <div>
-              <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                {t('write.editor.titleField')}
-              </div>
-              <div className="mt-1 text-sm text-neutral-950 dark:text-neutral-50">
-                {selectedContent.title || t('write.editor.untitled')}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                {t('write.editor.contentPreview')}
-              </div>
-              <Scroll
-                className="mt-2 border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/60"
-                orientation="both"
-                viewportClassName="max-h-96"
-              >
-                <pre className="whitespace-pre-wrap p-3 text-xs leading-5 text-neutral-700 dark:text-neutral-200">
-                  {selectedContent.text ||
-                    selectedContent.content ||
-                    t('write.editor.contentEmpty')}
-                </pre>
-              </Scroll>
-            </div>
-          </Scroll>
-        </main>
-      </div>
-
-      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-        <Button onClick={props.onUsePublished} type="button" variant="subtle">
-          {t('write.recovery.usePublished')}
-        </Button>
-        <Button
-          disabled={
-            selectedVersion === 'published' || selectedVersionQuery.isLoading
-          }
-          onClick={recoverSelected}
-          type="button"
-        >
-          {selectedVersionQuery.isLoading ? (
-            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-          ) : (
-            <History aria-hidden="true" className="size-4" />
-          )}
-          {t('write.recovery.recoverButton')}
-        </Button>
-      </div>
-    </>
-  )
 }
 
 function WriteHeaderIconButton(props: {
@@ -2022,74 +1789,6 @@ function SlugPill(props: {
       </Popover.Portal>
     </Popover.Root>
   )
-}
-
-function buildRecoveryVersionItems(
-  draft: DraftModel,
-  history:
-    | Array<{
-        savedAt: string
-        title: string
-        version: number
-      }>
-    | undefined,
-) {
-  return [...(history ?? [])]
-    .filter((item) => item.version !== draft.version)
-    .sort((a, b) => b.version - a.version)
-    .map((item) => ({
-      savedAt: item.savedAt,
-      title: item.title,
-      version: item.version,
-    }))
-}
-
-function getDraftDiffStats(
-  publishedContent: PublishedWriteContent,
-  selectedContent: PublishedWriteContent | DraftModel,
-) {
-  const publishedText = publishedContent.text || publishedContent.content || ''
-  const selectedText = selectedContent.text || selectedContent.content || ''
-  const sharedPrefixLength = getSharedPrefixLength(publishedText, selectedText)
-  const publishedRemainder = publishedText.slice(sharedPrefixLength)
-  const selectedRemainder = selectedText.slice(sharedPrefixLength)
-  const sharedSuffixLength = getSharedSuffixLength(
-    publishedRemainder,
-    selectedRemainder,
-  )
-  const removed = Math.max(0, publishedRemainder.length - sharedSuffixLength)
-  const added = Math.max(0, selectedRemainder.length - sharedSuffixLength)
-
-  return {
-    added,
-    isSame: publishedText === selectedText,
-    removed,
-  }
-}
-
-function getSharedPrefixLength(left: string, right: string) {
-  const maxLength = Math.min(left.length, right.length)
-  let index = 0
-
-  while (index < maxLength && left[index] === right[index]) {
-    index += 1
-  }
-
-  return index
-}
-
-function getSharedSuffixLength(left: string, right: string) {
-  const maxLength = Math.min(left.length, right.length)
-  let index = 0
-
-  while (
-    index < maxLength &&
-    left[left.length - 1 - index] === right[right.length - 1 - index]
-  ) {
-    index += 1
-  }
-
-  return index
 }
 
 function PostFields(props: {
