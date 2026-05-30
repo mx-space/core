@@ -8,6 +8,7 @@
     "preview": "vite preview --port 2323",
     "lint": "oxlint src",
     "lint:fix": "oxlint src --fix",
+    "test": "vitest --run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

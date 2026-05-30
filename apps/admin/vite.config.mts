@@ -127,6 +127,7 @@ export default ({ mode }) => {
     },
     test: {
       environment: 'happy-dom',
+      setupFiles: [resolve(__dirname, 'test/setup.ts')],
     },
   })
 }
