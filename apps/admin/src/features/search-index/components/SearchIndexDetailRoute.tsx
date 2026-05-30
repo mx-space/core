@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 
 import { findInListCache } from '~/api/list-cache'
 import type { SearchDocumentAdminRow } from '~/api/search-index'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 
 import { searchIndexQueryKey } from '../constants'
 import { useSearchIndexRouteContext } from './search-index-route-context'
@@ -21,6 +22,8 @@ export function SearchIndexDetailRoute() {
         id,
       )
     : undefined
+
+  useDocumentTitle(row?.title)
 
   if (!id || !row) return <SearchIndexDetailEmptyState />
 

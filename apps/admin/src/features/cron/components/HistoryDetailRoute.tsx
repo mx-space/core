@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 
 import type { CronTask } from '~/api/cron-tasks'
 import { findInListCache } from '~/api/list-cache'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 
 import { taskQueryKey } from '../constants'
 import { TaskDetailEmptyState } from './CronPrimitives'
@@ -17,6 +18,8 @@ export function HistoryDetailRoute() {
   const task = id
     ? findInListCache<CronTask>(queryClient, taskQueryKey, id)
     : undefined
+
+  useDocumentTitle(task?.type)
 
   if (!id || !task) return <TaskDetailEmptyState />
 

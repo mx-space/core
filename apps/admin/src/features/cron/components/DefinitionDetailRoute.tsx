@@ -3,6 +3,7 @@ import { ListTodo } from 'lucide-react'
 import { useParams } from 'react-router'
 
 import { CronTaskType, getCronTaskDefinitions } from '~/api/cron-tasks'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useI18n } from '~/i18n'
 
 import { definitionQueryKey, definitionStaleTime } from '../constants'
@@ -28,6 +29,8 @@ export function DefinitionDetailRoute() {
   const definition = type
     ? ((definitionsQuery.data ?? []).find((d) => d.type === type) ?? null)
     : null
+
+  useDocumentTitle(definition?.name ?? type ?? undefined)
 
   if (!definition) return <DefinitionDetailEmpty />
 

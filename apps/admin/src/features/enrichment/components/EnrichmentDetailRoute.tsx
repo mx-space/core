@@ -1,5 +1,6 @@
 import { useParams } from 'react-router'
 
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useI18n } from '~/i18n'
 
 import { CacheDetailPanel } from './CacheDetailPanel'
@@ -11,6 +12,14 @@ export function EnrichmentDetailRoute() {
   const { id } = useParams<{ id: string }>()
   const { t } = useI18n()
   const ctx = useEnrichmentRouteContext()
+
+  const dynamicTitle =
+    ctx.source === 'screenshots'
+      ? (ctx.captureRows.find((r) => r.enrichmentId === id)?.title ??
+        ctx.captureRows.find((r) => r.enrichmentId === id)?.url)
+      : (ctx.cacheRows.find((r) => r.id === id)?.normalized?.title ??
+        ctx.cacheRows.find((r) => r.id === id)?.url)
+  useDocumentTitle(dynamicTitle)
 
   if (!id) {
     return (

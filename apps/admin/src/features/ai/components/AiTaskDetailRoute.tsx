@@ -4,6 +4,7 @@ import { useParams } from 'react-router'
 import type { AITask } from '~/api/ai'
 import { getAiTask } from '~/api/ai'
 import { findInListCache } from '~/api/list-cache'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import { adminQueryKeys } from '~/query/keys'
 
 import { aiTasksQueryKey } from '../constants'
@@ -28,6 +29,8 @@ export function AiTaskDetailRoute() {
     refetchInterval: 5000,
     staleTime: initialTask ? 5_000 : 0,
   })
+
+  useDocumentTitle(taskQuery.data?.type)
 
   if (!id || !taskQuery.data) return <TaskDetailEmpty />
 

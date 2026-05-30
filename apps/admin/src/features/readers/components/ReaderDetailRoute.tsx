@@ -4,6 +4,7 @@ import { useParams } from 'react-router'
 import { findInListCache } from '~/api/list-cache'
 import type { ReaderModel } from '~/api/readers'
 import { getReader } from '~/api/readers'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import { adminQueryKeys } from '~/query/keys'
 
 import { ReaderDetailEmpty } from './ReaderDetailEmpty'
@@ -38,6 +39,15 @@ export function ReaderDetailRoute() {
       : adminQueryKeys.readers.root,
     staleTime: initialReader ? 30_000 : 0,
   })
+
+  const reader0 = detailQuery.data
+  useDocumentTitle(
+    reader0?.name ||
+      reader0?.username ||
+      reader0?.displayUsername ||
+      reader0?.email ||
+      undefined,
+  )
 
   if (!id) return <ReaderDetailEmpty />
 

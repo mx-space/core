@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useI18n } from '~/i18n'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
@@ -27,15 +28,20 @@ export function SettingsDetailRoute() {
   )
 
   const activeGroup = ctx.groups.find((group) => group.key === section)
+  const activeTitle = activeGroup
+    ? activeGroup.titleKey
+      ? t(activeGroup.titleKey)
+      : (activeGroup.title ?? '')
+    : null
+  const activeDescription = activeGroup
+    ? activeGroup.descriptionKey
+      ? t(activeGroup.descriptionKey)
+      : (activeGroup.description ?? '')
+    : null
+
+  useDocumentTitle(activeTitle)
 
   if (!activeGroup) return <SettingsDetailEmpty />
-
-  const activeTitle = activeGroup.titleKey
-    ? t(activeGroup.titleKey)
-    : (activeGroup.title ?? '')
-  const activeDescription = activeGroup.descriptionKey
-    ? t(activeGroup.descriptionKey)
-    : (activeGroup.description ?? '')
 
   return (
     <SettingsActionBarContext.Provider value={setDirtyAction}>

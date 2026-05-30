@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router'
 
 import { findInListCache } from '~/api/list-cache'
 import { getProject } from '~/api/projects'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import type { ProjectModel } from '~/models/project'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -37,6 +38,8 @@ export function ProjectDetailRoute() {
     queryKey: id ? adminQueryKeys.projects.detail(id) : projectsQueryKey,
     staleTime: initialProject ? 30_000 : 0,
   })
+
+  useDocumentTitle(projectQuery.data?.name)
 
   if (isCreating) {
     return (

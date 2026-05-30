@@ -4,6 +4,7 @@ import { useParams } from 'react-router'
 
 import type { CommentUploadFile, CommentUploadStatus } from '~/api/files'
 import { findInListCache } from '~/api/list-cache'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useI18n } from '~/i18n'
 import { relativeTimeFromNow } from '~/utils/time'
 
@@ -38,6 +39,8 @@ export function CommentImageDetailRoute() {
       extractItems: extractCommentUploads,
     })
   }, [id, queryClient])
+
+  useDocumentTitle(raw?.fileName)
 
   if (!id || !raw) return <FileDetailEmpty />
 

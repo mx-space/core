@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router'
 
 import { findInListCache } from '~/api/list-cache'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import type { CommentModel } from '~/models/comment'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -17,6 +18,8 @@ export function CommentDetailRoute() {
   const comment = id
     ? findInListCache<CommentModel>(queryClient, LIST_PREFIX, id)
     : undefined
+
+  useDocumentTitle(comment?.author)
 
   if (!id || !comment) return <CommentDetailEmpty />
 

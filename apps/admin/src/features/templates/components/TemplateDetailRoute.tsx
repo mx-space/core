@@ -1,8 +1,11 @@
+import { useDocumentTitle } from '~/hooks/use-document-title'
+
 import { TemplateDetailPane } from './TemplateDetailPane'
 import { useTemplatesRouteContext } from './templates-route-context'
 
 export function TemplateDetailRoute() {
   const ctx = useTemplatesRouteContext()
+  useDocumentTitle(ctx.type)
   return (
     <TemplateDetailPane
       defaultProps={ctx.defaultProps}

@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 
 import { getCategories, getCategory, getTags } from '~/api/categories'
 import { findInListCache } from '~/api/list-cache'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import type { CategoryModel, TagModel } from '~/models/category'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -68,6 +69,14 @@ export function CategoryDetailRoute() {
     queryFn: () => getCategories({ type: 'Category' }),
     queryKey: CATEGORY_LIST_KEY,
   })
+
+  const dynamicTitle =
+    parsed?.kind === 'tag'
+      ? (tagsListCacheQuery.data?.find(
+          (entry: TagModel) => entry.name === parsed.value,
+        )?.name ?? parsed.value)
+      : (categoryQuery.data?.name ?? undefined)
+  useDocumentTitle(dynamicTitle)
 
   if (!parsed) return <DetailEmpty />
 

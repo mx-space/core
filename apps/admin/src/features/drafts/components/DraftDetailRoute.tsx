@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 
 import { getDraftById } from '~/api/drafts'
 import { findInListCache } from '~/api/list-cache'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import type { DraftModel } from '~/models/draft'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -28,6 +29,8 @@ export function DraftDetailRoute() {
     queryKey: adminQueryKeys.drafts.detail(id ?? ''),
     staleTime: initialDraft ? 30_000 : 0,
   })
+
+  useDocumentTitle(draftQuery.data?.title)
 
   if (!id || !draftQuery.data) return <DraftDetailEmpty />
 

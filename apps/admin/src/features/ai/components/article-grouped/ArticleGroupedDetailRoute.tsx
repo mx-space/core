@@ -4,6 +4,7 @@ import { useParams } from 'react-router'
 import { toast } from 'sonner'
 
 import type { ArticleInfo } from '~/api/ai'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
@@ -65,6 +66,8 @@ export function ArticleGroupedDetailRoute<TItem>() {
   }, [config.groupedQueryKey, detailQuery.data, id, queryClient])
 
   const detailItems: TItem[] = detailQuery.data?.items ?? []
+
+  useDocumentTitle(detailArticle?.title)
 
   const deleteMutation = useMutation({
     mutationFn: config.deleteItem,

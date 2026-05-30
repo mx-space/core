@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 
 import { findInListCache } from '~/api/list-cache'
 import { getGroupSnippets, getSnippetById } from '~/api/snippets'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import type { SnippetModel } from '~/models/snippet'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -52,6 +53,8 @@ export function SnippetDetailRoute() {
     queryKey: GROUPS_KEY,
     enabled: false,
   })
+
+  useDocumentTitle(detailQuery.data?.name)
 
   if (isCreate) {
     return (

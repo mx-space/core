@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 
 import { findInListCache } from '~/api/list-cache'
 import { getTopic } from '~/api/topics'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import type { TopicModel } from '~/models/topic'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -23,7 +24,7 @@ export function TopicDetailRoute() {
 
   // Prime the detail cache so the inner TopicDetail useQuery resolves
   // synchronously on mount.
-  useQuery({
+  const topicQuery = useQuery({
     enabled: Boolean(id),
     initialData: initialTopic,
     queryFn: () => getTopic(id!),
@@ -32,6 +33,8 @@ export function TopicDetailRoute() {
       : adminQueryKeys.topics.root,
     staleTime: initialTopic ? 30_000 : 0,
   })
+
+  useDocumentTitle(topicQuery.data?.name)
 
   if (!id) return <TopicDetailEmpty />
 

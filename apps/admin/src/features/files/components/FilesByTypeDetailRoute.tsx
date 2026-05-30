@@ -4,6 +4,7 @@ import { useParams } from 'react-router'
 
 import type { FileItem } from '~/api/files'
 import { findInListCache } from '~/api/list-cache'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useI18n } from '~/i18n'
 import { relativeTimeFromNow } from '~/utils/time'
 
@@ -39,6 +40,8 @@ export function FilesByTypeDetailRoute() {
       { idField: 'name', extractItems: extractFiles },
     )
   }, [ctx.fileType, id, queryClient])
+
+  useDocumentTitle(raw?.name ?? id)
 
   if (!id || !raw) return <FileDetailEmpty />
 

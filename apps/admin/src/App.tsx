@@ -4,6 +4,7 @@ import { HashRouter, Navigate, useLocation } from 'react-router'
 import { publicRoutes } from 'virtual:admin-routes'
 
 import { checkLogged } from './api/auth'
+import { DocumentTitleSync } from './hooks/use-document-title'
 import { useI18n } from './i18n'
 import { AppProviders } from './providers'
 import { AppRoutes } from './routes'
@@ -15,13 +16,13 @@ const publicPathSet = new Set(publicRoutes.map((route) => route.path))
 
 function App() {
   useEffect(() => {
-    document.title = 'Mx Space Admin'
     installThemeTokens()
   }, [])
 
   return (
     <AppProviders>
       <HashRouter>
+        <DocumentTitleSync />
         <AppContent />
       </HashRouter>
     </AppProviders>
@@ -74,5 +75,4 @@ function ProtectedAdminApp() {
   )
 }
 
-// eslint-disable-next-line import/no-default-export
 export default App

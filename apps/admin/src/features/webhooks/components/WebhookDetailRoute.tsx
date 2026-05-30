@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 
 import { findInListCache } from '~/api/list-cache'
 import type { WebhookModel } from '~/api/webhooks'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import { adminQueryKeys } from '~/query/keys'
 
 import { WebhookDetail } from './WebhookDetail'
@@ -27,6 +28,8 @@ export function WebhookDetailRoute() {
         extractItems: extractWebhooks,
       })
     : undefined
+
+  useDocumentTitle(webhook?.url)
 
   if (!webhook) return <WebhookDetailEmptyState />
 

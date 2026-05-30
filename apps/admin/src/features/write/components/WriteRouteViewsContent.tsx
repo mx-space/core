@@ -63,6 +63,7 @@ import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
 import { MetaPresetSection } from '~/features/write/meta-presets'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
 import { translate } from '~/i18n/translate'
@@ -348,6 +349,7 @@ function WritePage(props: { kind: WriteKind }) {
     ...emptyState,
     contentFormat: preferredContentFormat,
   }))
+  useDocumentTitle(state.title)
   const [asidePanel, setAsidePanel] = useState<'agent' | 'meta' | null>(null)
   const agentVisible = asidePanel === 'agent'
   const metaPanelOpen = asidePanel === 'meta'

@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 
 import type { BackupFile } from '~/api/backups'
 import { findInListCache } from '~/api/list-cache'
+import { useDocumentTitle } from '~/hooks/use-document-title'
 
 import { useBackupRouteContext } from './backup-route-context'
 import { BackupDetail } from './BackupDetail'
@@ -26,6 +27,8 @@ export function BackupDetailRoute() {
         extractItems: extractBackups,
       })
     : undefined
+
+  useDocumentTitle(item?.filename ?? filename)
 
   if (!item) return <BackupDetailEmptyState />
 
