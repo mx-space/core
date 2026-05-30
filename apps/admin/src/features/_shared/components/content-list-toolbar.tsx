@@ -274,8 +274,8 @@ export function SortMenu<TField extends string = string>(
           style={{ zIndex: z }}
         >
           <PortalLayerScope depth={depth}>
-            <Popover.Popup className="outline-hidden w-48 rounded border border-neutral-200 bg-white p-1 text-xs shadow-lg dark:border-neutral-800 dark:bg-neutral-950">
-              <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
+            <Popover.Popup className="outline-hidden w-48 rounded-lg border border-border bg-surface-overlay p-1 text-xs shadow-md">
+              <div className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-fg-subtle">
                 {t('shared.sortMenu.field')}
               </div>
               {props.options.map((option) => {
@@ -283,10 +283,8 @@ export function SortMenu<TField extends string = string>(
                 return (
                   <button
                     className={cn(
-                      'outline-hidden flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800',
-                      active
-                        ? 'font-medium text-neutral-950 dark:text-neutral-50'
-                        : 'text-neutral-600 dark:text-neutral-300',
+                      'outline-hidden flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-surface-inset',
+                      active ? 'font-medium text-fg' : 'text-fg-muted',
                     )}
                     key={String(option.value)}
                     onClick={() =>
@@ -298,14 +296,12 @@ export function SortMenu<TField extends string = string>(
                     type="button"
                   >
                     <span className="truncate">{option.label}</span>
-                    {active ? (
-                      <span className="text-[var(--color-primary)]">●</span>
-                    ) : null}
+                    {active ? <span className="text-accent">●</span> : null}
                   </button>
                 )
               })}
-              <div className="mx-1 my-1 border-t border-neutral-100 dark:border-neutral-800" />
-              <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
+              <div className="mx-1 my-1 border-t border-border" />
+              <div className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-fg-subtle">
                 {t('shared.sortMenu.direction')}
               </div>
               <div className="grid grid-cols-2 gap-1 p-1">

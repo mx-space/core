@@ -389,3 +389,43 @@ for feedback collection. After completion, `apps/admin/CLAUDE.md` and a new
 
 None at spec acceptance. Any new questions surfacing during implementation should
 update this spec via amendment rather than ad-hoc decisions.
+
+## Follow-ups (post PR4)
+
+The final cross-PR review surfaced long-tail items that fall outside the four
+planned PRs but are worth tracking. None block the DSv2 v2 cutover.
+
+1. **Bare `rounded` (no suffix) — ~333 sites.** Tailwind's default `rounded` is
+   4px and is not remapped by the DSv2 token theme; the spec's radii scale only
+   binds to the explicit `rounded-{xs,sm,md,lg,xl}` utilities. Sites that still
+   use the bare class therefore render with the legacy 4px corner. Decide
+   between: (a) remap globally via `--radius: var(--radius-sm)` in `tokens.css`
+   (risky for genuinely small chips), or (b) sweep `rounded` → `rounded-sm` in
+   `apps/admin/src/features/**`. Prefer (b) on a per-feature basis as those
+   areas get touched.
+2. **features/dashboard cards.** `DashboardPrimitives`, `ActionCard`,
+   `SearchIndexRebuildCard`, `TrafficPanel` still use
+   `bg-white dark:bg-neutral-950`. Migrate to `bg-surface-card` to exercise the
+   three-layer surface stack on the dashboard.
+3. **Other `bg-white` shells.** `apps/admin/src/ui/primitives/panel.tsx`,
+   `code-editor.tsx` outer chrome (the editor inner styling stays per the YAGNI
+   list), and a handful of feature page shells (`features/snippets`,
+   `features/markdown`, `features/drafts`, `features/comments/CommentDetail`,
+   parts of `features/write`) still use raw white/neutral background pairs.
+4. **`features/_shared/components/content-list-toolbar.tsx`** has had its sort
+   popover migrated to tokens; the row toolbar itself is still legacy and is
+   the next obvious target.
+5. **Pre-existing typecheck error** at
+   `apps/admin/src/hooks/use-document-title.tsx:36` (`string | undefined` vs
+   `string | null`) is unrelated to DSv2 but blocks `tsc --noEmit`. Fix
+   alongside any unrelated hooks change.
+6. **Inter self-hosting.** PR1 loaded Inter via Google Fonts CDN to keep the
+   diff binary-free. The long-term plan in §3 is a self-hosted Latin subset.
+7. **Sidebar count column.** The render code is in place; the
+   `virtual:admin-routes` model lacks a count field. Plumb counts (unread
+   comments, pending subscribers, active AI tasks) when the route model grows.
+8. **Spec shorthand cleanup.** Earlier sections of this document use the
+   pre-rename shorthand (`--border-default`, `--accent`); the actual tokens
+   live in the `--color-*` namespace. The §1 token tables and the §3 follow-on
+   addendum carry the authoritative names; leave the older shorthand in place
+   only where they reference the design intent rather than the implementation.

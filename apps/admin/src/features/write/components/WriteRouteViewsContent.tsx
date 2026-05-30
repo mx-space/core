@@ -1751,10 +1751,10 @@ function WriteHeaderIconButton(props: {
     <button
       aria-label={props.title}
       className={cn(
-        'focus-visible:outline-hidden inline-flex size-9 items-center justify-center rounded transition-colors focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 dark:focus-visible:ring-neutral-500 dark:focus-visible:ring-offset-neutral-900',
+        'focus-visible:outline-hidden inline-flex size-9 items-center justify-center rounded-sm transition-colors focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:pointer-events-none disabled:opacity-40',
         props.variant === 'primary'
-          ? 'bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100'
-          : 'bg-neutral-100/80 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-neutral-800/50 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100',
+          ? 'bg-accent text-white hover:bg-accent-hover'
+          : 'bg-surface-inset text-fg-muted hover:bg-surface-card hover:text-fg',
       )}
       disabled={props.disabled}
       onClick={props.onClick}
