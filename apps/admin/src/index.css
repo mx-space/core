@@ -74,7 +74,6 @@ body {
     margin: 0;
     font: inherit;
     color: inherit;
-    cursor: pointer;
   }
 }
 
@@ -271,7 +270,6 @@ html.dark [data-sonner-toast].sonner-toast {
   line-height: 1 !important;
   letter-spacing: -0.005em !important;
   border: 0 !important;
-  cursor: pointer !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -297,7 +295,6 @@ html.dark [data-sonner-toast].sonner-toast {
   font-weight: 500 !important;
   line-height: 1 !important;
   letter-spacing: -0.005em !important;
-  cursor: pointer !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
