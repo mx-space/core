@@ -34,12 +34,12 @@ const variantClassNames: Record<ButtonVariant, string> = {
 const buttonBaseClassName =
   'inline-flex items-center justify-center rounded-sm text-sm font-medium outline-hidden transition-colors focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:pointer-events-none disabled:opacity-50'
 
-const buttonTextClassName = 'h-9 gap-2 px-3'
+const buttonTextClassName = 'h-8 gap-2 px-3'
 
-// Icon-only buttons are square (aspect-square) with zero horizontal padding so
-// the inner icon sits at its declared size (size-4 ≈ 16/36 ≈ 44%). Keeping h-9
-// matches the text variant for inline alignment.
-const buttonIconClassName = 'h-9 w-9 p-0 gap-0'
+// Icon-only buttons are square with zero horizontal padding so the inner
+// icon sits at its declared size (size-4 ≈ 16/32 = 50%). Height matches the
+// text variant for inline alignment.
+const buttonIconClassName = 'h-8 w-8 p-0 gap-0'
 
 function composeClassName(
   iconOnly: boolean,
