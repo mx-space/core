@@ -763,6 +763,18 @@ export const AISchema = section('AI settings', {
         'Target languages for auto-generated translations, using [ISO 639-1 language codes](https://www.w3schools.com/tags/ref_language_codes.asp), e.g. ["en", "ja", "ko"]',
     },
   ),
+  translationLangConcurrency: field.number(
+    z.preprocess(
+      (val) =>
+        val === '' || val === null || val === undefined ? val : Number(val),
+      z.number().int().min(1).max(10).optional(),
+    ),
+    'Per-task translation language concurrency',
+    {
+      description:
+        'Parallel languages per Translation task. Default 3, range 1-10.',
+    },
+  ),
   enableTranslationReview: field.toggle(
     z.boolean().optional(),
     'Enable translation review',

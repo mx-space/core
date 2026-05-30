@@ -125,6 +125,7 @@
     "nodemailer": "8.0.8",
     "object-scan": "^20.0.4",
     "octokit": "^5.0.5",
+    "p-limit": "^3.1.0",
     "pg": "^8.21.0",
     "picocolors": "^1.1.1",
     "pluralize": "^8.0.0",

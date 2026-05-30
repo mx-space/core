@@ -145,6 +145,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     enableAutoGenerateSummaryOnUpdate: false,
     summaryTargetLanguages: [],
     summaryMinTextLength: 100,
+    translationLangConcurrency: 3,
     enableTranslationReview: false,
     translationReviewModel: undefined,
     translationReviewScoreThreshold: 85,
