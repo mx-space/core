@@ -1,6 +1,6 @@
 import { ChevronRight, RotateCcw, Trash2, XCircle } from 'lucide-react'
-import type { CronTask } from '~/api/cron-tasks'
 
+import type { CronTask } from '~/api/cron-tasks'
 import { CronTaskStatus } from '~/api/cron-tasks'
 import { useI18n } from '~/i18n'
 import { cn } from '~/utils/cn'
@@ -46,16 +46,16 @@ export function DefinitionRunRow(props: {
         type="button"
       >
         <div className="min-w-0 flex-1">
-          <div className="truncate text-xs text-neutral-700 dark:text-neutral-300">
+          <div className="truncate text-xs text-fg-muted">
             {props.task.progressMessage || props.task.id}
           </div>
-          <div className="mt-0.5 text-xs tabular-nums text-neutral-400">
+          <div className="mt-0.5 text-xs tabular-nums text-fg-subtle">
             {formatRelativeDate(props.task.createdAt, t)}
           </div>
         </div>
         <ChevronRight
           aria-hidden="true"
-          className="size-3.5 shrink-0 text-neutral-300 transition-colors group-hover:text-neutral-500 dark:text-neutral-700 dark:group-hover:text-neutral-400"
+          className="size-3.5 shrink-0 text-fg-subtle transition-colors group-hover:text-fg-muted"
         />
       </button>
       <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">

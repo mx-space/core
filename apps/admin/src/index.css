@@ -94,27 +94,27 @@ body {
 }
 
 html:not(.dark) *::-webkit-scrollbar-thumb {
-  background-color: rgba(115, 115, 115, 0.4);
+  background-color: rgba(120, 119, 116, 0.4);
 }
 
 html:not(.dark) *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(115, 115, 115, 0.6);
+  background-color: rgba(120, 119, 116, 0.6);
 }
 
 html.dark *::-webkit-scrollbar-thumb {
-  background-color: rgba(163, 163, 163, 0.3);
+  background-color: rgba(168, 162, 158, 0.3);
 }
 
 html.dark *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(163, 163, 163, 0.5);
+  background-color: rgba(168, 162, 158, 0.5);
 }
 
 html:not(.dark) *::-webkit-scrollbar-corner {
-  background: #f5f5f5;
+  background: var(--color-surface-page);
 }
 
 html.dark *::-webkit-scrollbar-corner {
-  background: #171717;
+  background: var(--color-surface-page);
 }
 
 /* Sonner toast styles - Vercel-minimal redesign */
@@ -139,18 +139,18 @@ html.dark *::-webkit-scrollbar-corner {
 }
 
 html:not(.dark) [data-sonner-toast].sonner-toast {
-  background: #ffffff !important;
-  border-color: var(--color-neutral-200) !important;
-  color: var(--color-neutral-900) !important;
+  background: var(--color-surface-card) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-fg) !important;
   box-shadow:
     0 4px 12px -4px rgba(0, 0, 0, 0.08),
     0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
 html.dark [data-sonner-toast].sonner-toast {
-  background: #141414 !important;
-  border-color: var(--color-neutral-800) !important;
-  color: var(--color-neutral-100) !important;
+  background: var(--color-surface-card) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-fg) !important;
   box-shadow:
     0 4px 12px -4px rgba(0, 0, 0, 0.45),
     0 1px 2px rgba(0, 0, 0, 0.25) !important;
@@ -203,17 +203,11 @@ html.dark [data-sonner-toast].sonner-toast {
 }
 
 /* Loading uses neutral tint (state-agnostic) */
-html:not(.dark) [data-sonner-toast][data-type='loading'] [data-icon] {
-  background: rgba(0, 0, 0, 0.05) !important;
+[data-sonner-toast][data-type='loading'] [data-icon] {
+  background: var(--color-surface-inset) !important;
 }
-html.dark [data-sonner-toast][data-type='loading'] [data-icon] {
-  background: rgba(255, 255, 255, 0.06) !important;
-}
-html:not(.dark) [data-sonner-toast][data-type='loading'] [data-icon] svg {
-  color: var(--color-neutral-900, #171717) !important;
-}
-html.dark [data-sonner-toast][data-type='loading'] [data-icon] svg {
-  color: var(--color-neutral-100, #fafafa) !important;
+[data-sonner-toast][data-type='loading'] [data-icon] svg {
+  color: var(--color-fg) !important;
 }
 
 /* Title — 13/600 with tighter tracking, locked to 20px line for baseline grid */
@@ -223,31 +217,17 @@ html.dark [data-sonner-toast][data-type='loading'] [data-icon] svg {
   font-weight: 600 !important;
   line-height: 20px !important;
   letter-spacing: -0.005em !important;
+  color: var(--color-fg) !important;
 }
 
-html:not(.dark) .sonner-title {
-  color: var(--color-neutral-950) !important;
-}
-
-html.dark .sonner-title {
-  color: var(--color-neutral-50) !important;
-}
-
-/* Description — 12/500/18, neutral-600 / neutral-400 for stronger contrast than v1 */
+/* Description — 12/500/18, muted foreground for stronger contrast than v1 */
 .sonner-description {
   margin: 3px 0 0 !important;
   font-size: 12px !important;
   font-weight: 500 !important;
   line-height: 18px !important;
   letter-spacing: -0.003em !important;
-}
-
-html:not(.dark) .sonner-description {
-  color: var(--color-neutral-600) !important;
-}
-
-html.dark .sonner-description {
-  color: var(--color-neutral-400) !important;
+  color: var(--color-fg-muted) !important;
 }
 
 /* Close button — 18x18, optical-centered on title line.
@@ -275,25 +255,16 @@ html.dark .sonner-description {
   opacity: 1 !important;
 }
 
-html:not(.dark) [data-sonner-toast] [data-close-button] {
-  color: var(--color-neutral-600) !important;
+[data-sonner-toast] [data-close-button] {
+  color: var(--color-fg-muted) !important;
 }
 
-html:not(.dark) [data-sonner-toast] [data-close-button]:hover {
-  background: var(--color-neutral-100) !important;
-  color: var(--color-neutral-900) !important;
+[data-sonner-toast] [data-close-button]:hover {
+  background: var(--color-surface-inset) !important;
+  color: var(--color-fg) !important;
 }
 
-html.dark [data-sonner-toast] [data-close-button] {
-  color: var(--color-neutral-400) !important;
-}
-
-html.dark [data-sonner-toast] [data-close-button]:hover {
-  background: var(--color-neutral-800) !important;
-  color: var(--color-neutral-100) !important;
-}
-
-/* Action button — mirrors <Button variant="primary"> */
+/* Action button — mirrors <Button variant="primary"> with accent fill */
 .sonner-action-button {
   margin-top: 8px !important;
   height: 26px !important;
@@ -309,27 +280,15 @@ html.dark [data-sonner-toast] [data-close-button]:hover {
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0 !important;
+  background: var(--color-accent) !important;
+  color: #ffffff !important;
   transition:
     background 0.15s,
     color 0.15s !important;
 }
 
-html:not(.dark) .sonner-action-button {
-  background: var(--color-neutral-950) !important;
-  color: #ffffff !important;
-}
-
-html:not(.dark) .sonner-action-button:hover {
-  background: var(--color-neutral-800) !important;
-}
-
-html.dark .sonner-action-button {
-  background: var(--color-neutral-50) !important;
-  color: var(--color-neutral-950) !important;
-}
-
-html.dark .sonner-action-button:hover {
-  background: var(--color-neutral-200) !important;
+.sonner-action-button:hover {
+  background: var(--color-accent-hover) !important;
 }
 
 /* Cancel button — mirrors <Button variant="subtle"> */
@@ -347,28 +306,15 @@ html.dark .sonner-action-button:hover {
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0 !important;
+  background: var(--color-surface-card) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-fg) !important;
   transition:
     background 0.15s !important;
 }
 
-html:not(.dark) .sonner-cancel-button {
-  background: #ffffff !important;
-  border: 1px solid var(--color-neutral-200) !important;
-  color: var(--color-neutral-700) !important;
-}
-
-html:not(.dark) .sonner-cancel-button:hover {
-  background: var(--color-neutral-50) !important;
-}
-
-html.dark .sonner-cancel-button {
-  background: var(--color-neutral-950) !important;
-  border: 1px solid var(--color-neutral-800) !important;
-  color: var(--color-neutral-200) !important;
-}
-
-html.dark .sonner-cancel-button:hover {
-  background: var(--color-neutral-900) !important;
+.sonner-cancel-button:hover {
+  background: var(--color-surface-inset) !important;
 }
 
 /* Mobile — shrink to viewport with 16px gutters */

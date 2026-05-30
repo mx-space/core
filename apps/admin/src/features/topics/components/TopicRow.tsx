@@ -1,8 +1,8 @@
 import { Hash } from 'lucide-react'
-import type { TopicModel } from '~/models/topic'
-import type { ListAction, ListRowSelectMode } from '~/ui/list-actions'
 
 import { useI18n } from '~/i18n'
+import type { TopicModel } from '~/models/topic'
+import type { ListAction, ListRowSelectMode } from '~/ui/list-actions'
 import { buildMenuItemsFromActions, ListRow } from '~/ui/list-actions'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { cn } from '~/utils/cn'
@@ -49,10 +49,10 @@ export function TopicRow(props: {
       <div className="flex min-w-0 items-center gap-3">
         <TopicAvatar topic={props.topic} />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+          <h3 className="truncate text-sm font-medium text-fg">
             {props.topic.name}
           </h3>
-          <p className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate font-mono text-xs text-neutral-400">
+          <p className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate font-mono text-xs text-fg-subtle">
             <Hash aria-hidden="true" className="size-3 shrink-0" />
             {props.topic.slug}
           </p>

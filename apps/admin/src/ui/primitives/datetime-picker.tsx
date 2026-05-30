@@ -141,7 +141,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
 
   const decadeLabel = useMemo(() => {
     if (years.length === 0) return ''
-    return `${years[0].year} - ${years.at(-1).year}`
+    return `${years[0].year} - ${years.at(-1)?.year ?? years[0].year}`
   }, [years])
 
   const navButtonClass =

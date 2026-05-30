@@ -1,9 +1,9 @@
 import { ExternalLink } from 'lucide-react'
 import { Link } from 'react-router'
-import type { PostModel } from '~/models/post'
 
 import { WEB_URL } from '~/constants/env'
 import { useI18n } from '~/i18n'
+import type { PostModel } from '~/models/post'
 import { relativeTimeFromNow } from '~/utils/time'
 
 export function PostListRow(props: { post: PostModel }) {
@@ -17,10 +17,10 @@ export function PostListRow(props: { post: PostModel }) {
         title={t('categories.postRow.editTitle')}
         to={`/posts/edit?id=${props.post.id}`}
       >
-        <p className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+        <p className="truncate text-sm font-medium text-fg">
           {props.post.title || t('categories.postRow.unnamed')}
         </p>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-fg-muted">
           <time dateTime={props.post.createdAt}>
             {relativeTimeFromNow(props.post.createdAt)}
           </time>

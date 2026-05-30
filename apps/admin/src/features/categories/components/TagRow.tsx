@@ -1,7 +1,7 @@
 import { Tag } from 'lucide-react'
-import type { TagModel } from '~/models/category'
 
 import { useI18n } from '~/i18n'
+import type { TagModel } from '~/models/category'
 import { cn } from '~/utils/cn'
 
 export function TagRow(props: {
@@ -21,16 +21,16 @@ export function TagRow(props: {
       onClick={props.onSelect}
       type="button"
     >
-      <Tag aria-hidden="true" className="size-4 shrink-0 text-neutral-400" />
+      <Tag aria-hidden="true" className="size-4 shrink-0 text-fg-subtle" />
       <div className="min-w-0 flex-1">
-        <h4 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+        <h4 className="truncate text-sm font-medium text-fg">
           {props.tag.name}
         </h4>
-        <p className="mt-0.5 text-xs text-neutral-400">
+        <p className="mt-0.5 text-xs text-fg-subtle">
           {t('categories.section.tagLabel')}
         </p>
       </div>
-      <span className="text-xs tabular-nums text-neutral-400">
+      <span className="text-xs tabular-nums text-fg-subtle">
         {props.tag.count}
       </span>
     </button>

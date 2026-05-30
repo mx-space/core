@@ -3,12 +3,6 @@ import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import type { ThemeMode } from '~/store/theme'
 import { useThemeStore } from '~/store/theme'
 
-export const themeColors = {
-  primary: '#2563eb',
-  primaryDeep: '#1d4ed8',
-  primaryShallow: '#3b82f6',
-} as const
-
 export type { ThemeMode }
 
 const DARK_QUERY = '(prefers-color-scheme: dark)'
@@ -45,10 +39,12 @@ export function useThemeMode() {
 }
 
 export function installThemeTokens() {
+  // Legacy --color-primary* aliases for any code still reading them.
+  // New code uses --color-accent* via tokens.css.
   const root = document.documentElement.style
-  root.setProperty('--color-primary', themeColors.primary)
-  root.setProperty('--color-primary-shallow', themeColors.primaryShallow)
-  root.setProperty('--color-primary-deep', themeColors.primaryDeep)
+  root.setProperty('--color-primary', '#2563eb')
+  root.setProperty('--color-primary-shallow', '#3b82f6')
+  root.setProperty('--color-primary-deep', '#1d4ed8')
 }
 
 /** Imperative setter for callers outside React. */

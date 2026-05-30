@@ -1,6 +1,6 @@
 import { ChevronRight, RefreshCw } from 'lucide-react'
-import type { WebhookEventRecord } from '~/api/webhooks'
 
+import type { WebhookEventRecord } from '~/api/webhooks'
 import { useI18n } from '~/i18n'
 import { Badge } from '~/ui/primitives/badge'
 import { Button } from '~/ui/primitives/button'
@@ -25,7 +25,7 @@ export function DispatchRow(props: {
         <ChevronRight
           aria-hidden="true"
           className={[
-            'size-3.5 shrink-0 text-neutral-400 transition-transform',
+            'size-3.5 shrink-0 text-fg-subtle transition-transform',
             props.expanded ? 'rotate-90' : '',
           ].join(' ')}
         />
@@ -41,7 +41,7 @@ export function DispatchRow(props: {
           {props.dispatch.status}
         </Badge>
         <time
-          className="shrink-0 text-xs text-neutral-400"
+          className="shrink-0 text-xs text-fg-subtle"
           dateTime={props.dispatch.timestamp}
         >
           {formatDateTime(props.dispatch.timestamp)}

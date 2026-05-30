@@ -58,14 +58,12 @@ export function DraftRow(props: {
         </Badge>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
-            <h3 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
-              {title}
-            </h3>
-            <span className="text-xs tabular-nums text-neutral-400">
+            <h3 className="truncate text-sm font-medium text-fg">{title}</h3>
+            <span className="text-xs tabular-nums text-fg-subtle">
               v{props.draft.version}
             </span>
           </div>
-          <div className="mt-1 flex flex-wrap gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="mt-1 flex flex-wrap gap-2 text-xs text-fg-muted">
             <span>
               {props.draft.refId
                 ? t('drafts.row.editing')

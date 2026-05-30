@@ -1,7 +1,7 @@
 import { GripVertical, Lock } from 'lucide-react'
-import type { MetaPresetField } from '~/models/meta-preset'
 
 import { useI18n } from '~/i18n'
+import type { MetaPresetField } from '~/models/meta-preset'
 import { Button } from '~/ui/primitives/button'
 import { Switch } from '~/ui/primitives/switch'
 
@@ -18,16 +18,14 @@ export function MetaPresetRow(props: {
   return (
     <div className="flex items-center gap-3 py-3 pr-4">
       {!props.preset.isBuiltin ? (
-        <GripVertical aria-hidden="true" className="size-4 text-neutral-300" />
+        <GripVertical aria-hidden="true" className="size-4 text-fg-subtle" />
       ) : (
-        <Lock aria-hidden="true" className="size-4 text-neutral-300" />
+        <Lock aria-hidden="true" className="size-4 text-fg-subtle" />
       )}
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium text-neutral-950 dark:text-neutral-50">
-            {props.preset.label}
-          </span>
-          <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-xs text-neutral-500 dark:bg-neutral-900">
+          <span className="font-medium text-fg">{props.preset.label}</span>
+          <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-xs text-fg-muted dark:bg-neutral-900">
             {props.preset.key}
           </code>
           <SmallBadge>{t(fieldTypeLabelKeys[props.preset.type])}</SmallBadge>
@@ -37,7 +35,7 @@ export function MetaPresetRow(props: {
           ) : null}
         </div>
         {props.preset.description ? (
-          <p className="mt-1 truncate text-sm text-neutral-500">
+          <p className="mt-1 truncate text-sm text-fg-muted">
             {props.preset.description}
           </p>
         ) : null}

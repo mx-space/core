@@ -1,6 +1,6 @@
 import * as React from 'react'
-import * as RechartsPrimitive from 'recharts'
 import type { TooltipValueType } from 'recharts'
+import * as RechartsPrimitive from 'recharts'
 
 import { cn } from '~/utils/cn'
 
@@ -54,7 +54,7 @@ function ChartContainer({
   }
 }) {
   const uniqueId = React.useId()
-  const chartId = `chart-${id ?? uniqueId.replace(/:/g, '')}`
+  const chartId = `chart-${id ?? uniqueId.replaceAll(':', '')}`
 
   return (
     <ChartContext.Provider value={{ config }}>
@@ -188,7 +188,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        'grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-neutral-200/60 bg-white px-2.5 py-1.5 text-xs shadow-xl dark:border-neutral-800/60 dark:bg-neutral-950',
+        'grid min-w-[8rem] items-start gap-1.5 rounded-md border border-border/60 bg-surface-overlay px-2.5 py-1.5 text-xs text-fg shadow-md',
         className,
       )}
     >
@@ -205,7 +205,7 @@ function ChartTooltipContent({
               <div
                 key={index}
                 className={cn(
-                  'flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-neutral-500 dark:[&>svg]:text-neutral-400',
+                  'flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-fg-muted',
                   indicator === 'dot' && 'items-center',
                 )}
               >
@@ -243,12 +243,12 @@ function ChartTooltipContent({
                     >
                       <div className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
-                        <span className="text-neutral-500 dark:text-neutral-400">
+                        <span className="text-fg-muted">
                           {itemConfig?.label ?? item.name}
                         </span>
                       </div>
                       {item.value != null && (
-                        <span className="font-mono font-medium tabular-nums text-neutral-900 dark:text-neutral-100">
+                        <span className="font-mono font-medium tabular-nums text-fg">
                           {typeof item.value === 'number'
                             ? item.value.toLocaleString()
                             : String(item.value)}
@@ -286,7 +286,7 @@ function ChartLegendContent({
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-4 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-neutral-500 dark:[&>svg]:text-neutral-400',
+        'flex items-center justify-center gap-4 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-fg-muted',
         verticalAlign === 'top' ? 'pb-3' : 'pt-3',
         className,
       )}

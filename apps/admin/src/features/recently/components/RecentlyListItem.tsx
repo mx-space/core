@@ -52,7 +52,7 @@ export function RecentlyListItem(props: {
 
   return (
     <article className="group px-4 py-5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900/50">
-      <p className="whitespace-pre-wrap break-words text-sm leading-7 text-neutral-900 dark:text-neutral-100">
+      <p className="whitespace-pre-wrap break-words text-sm leading-7 text-fg">
         {props.item.content}
       </p>
 
@@ -84,21 +84,21 @@ export function RecentlyListItem(props: {
         >
           <RefIcon
             aria-hidden="true"
-            className="size-4 shrink-0 text-neutral-400"
+            className="size-4 shrink-0 text-fg-subtle"
           />
-          <span className="shrink-0 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+          <span className="shrink-0 text-xs font-medium text-fg-muted">
             {refLabel}
           </span>
           <span className="truncate">{props.item.ref.title}</span>
           <ExternalLink
             aria-hidden="true"
-            className="size-3.5 shrink-0 text-neutral-400"
+            className="size-3.5 shrink-0 text-fg-subtle"
           />
         </a>
       ) : null}
 
       <footer className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-fg-muted">
           <time dateTime={props.item.createdAt}>
             {formatDate(props.item.createdAt)}
           </time>

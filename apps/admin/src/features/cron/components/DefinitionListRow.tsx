@@ -1,6 +1,6 @@
 import { Play } from 'lucide-react'
-import type { CronTaskDefinition } from '~/api/cron-tasks'
 
+import type { CronTaskDefinition } from '~/api/cron-tasks'
 import { useI18n } from '~/i18n'
 import { ListRow } from '~/ui/list-actions'
 import { cn } from '~/utils/cn'
@@ -34,10 +34,8 @@ export function DefinitionListRow(props: {
       selected={props.selected}
     >
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
-          {label}
-        </div>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="truncate text-sm font-medium text-fg">{label}</div>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-fg-muted">
           <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono dark:bg-neutral-900">
             {props.definition.cronExpression}
           </code>

@@ -1,5 +1,5 @@
-import { Fragment } from 'react'
 import type { ReactNode } from 'react'
+import { Fragment } from 'react'
 
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
@@ -31,7 +31,7 @@ export function ResponsiveDataTable<Row>(props: ResponsiveDataTableProps<Row>) {
 
   if (props.rows.length === 0) {
     const fallback = (
-      <div className="px-4 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+      <div className="px-4 py-12 text-center text-sm text-fg-muted">
         {t('common.noData')}
       </div>
     )
@@ -43,11 +43,11 @@ export function ResponsiveDataTable<Row>(props: ResponsiveDataTableProps<Row>) {
       <div className={props.className}>
         <Scroll innerClassName="min-w-max" orientation="horizontal">
           <table className="min-w-full border-collapse text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-neutral-500">
+            <thead className="text-xs font-medium uppercase tracking-wide text-fg-muted">
               <tr>
                 {props.columns.map((column) => (
                   <th
-                    className="border-b border-neutral-200 px-4 py-3 font-medium dark:border-neutral-800"
+                    className="border-b border-border px-4 py-3 font-medium"
                     key={column.key}
                   >
                     {column.header}
@@ -58,12 +58,12 @@ export function ResponsiveDataTable<Row>(props: ResponsiveDataTableProps<Row>) {
             <tbody>
               {props.rows.map((row) => (
                 <tr
-                  className="border-b border-neutral-100 last:border-0 dark:border-neutral-900"
+                  className="border-b border-border last:border-0 hover:bg-surface-inset"
                   key={props.rowKey(row)}
                 >
                   {props.columns.map((column) => (
                     <td
-                      className="px-4 py-3 text-xs text-neutral-600 dark:text-neutral-300"
+                      className="px-4 py-3 text-xs text-fg-muted"
                       key={column.key}
                     >
                       {column.render(row)}
@@ -104,9 +104,9 @@ export function DefaultRowCard<Row>(props: DefaultRowCardProps<Row>) {
   const [firstColumn, ...remainingColumns] = visible
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="rounded-lg border border-border bg-surface-card p-3 shadow-sm">
       {firstColumn ? (
-        <div className="mb-2 text-sm font-medium text-neutral-950 dark:text-neutral-50">
+        <div className="mb-2 text-sm font-medium text-fg">
           {firstColumn.render(props.row)}
         </div>
       ) : null}
@@ -114,12 +114,8 @@ export function DefaultRowCard<Row>(props: DefaultRowCardProps<Row>) {
         <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
           {remainingColumns.map((column) => (
             <Fragment key={column.key}>
-              <dt className="text-neutral-400 dark:text-neutral-500">
-                {column.header}
-              </dt>
-              <dd className="text-neutral-600 dark:text-neutral-300">
-                {column.render(props.row)}
-              </dd>
+              <dt className="text-fg-subtle">{column.header}</dt>
+              <dd className="text-fg-muted">{column.render(props.row)}</dd>
             </Fragment>
           ))}
         </dl>

@@ -5,12 +5,12 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react'
-import { DragEvent } from 'react'
+import type { DragEvent } from 'react'
 import { Link } from 'react-router'
-import type { PageModel } from '~/models/page'
 
 import { WEB_URL } from '~/constants/env'
 import { useI18n } from '~/i18n'
+import type { PageModel } from '~/models/page'
 import { ButtonLink } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 import { relativeTimeFromNow } from '~/utils/time'
@@ -54,20 +54,20 @@ export function PageRow(props: {
         </button>
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <FileText aria-hidden="true" className="size-4 text-neutral-400" />
+            <FileText aria-hidden="true" className="size-4 text-fg-subtle" />
             <Link
-              className="outline-hidden truncate text-sm font-medium text-neutral-950 transition-colors hover:text-neutral-600 focus-visible:underline dark:text-neutral-50 dark:hover:text-neutral-300"
+              className="outline-hidden truncate text-sm font-medium text-fg transition-colors hover:text-fg-muted focus-visible:underline"
               to={`/pages/edit?id=${encodeURIComponent(page.id)}`}
             >
               {title}
             </Link>
             {typeof page.order === 'number' ? (
-              <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
+              <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-fg-muted dark:bg-neutral-900">
                 #{page.order}
               </span>
             ) : null}
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-muted">
             <span>{t('pages.row.orderIndex', { index: props.index + 1 })}</span>
             <span>/{page.slug}</span>
             {page.subtitle ? <span>{page.subtitle}</span> : null}

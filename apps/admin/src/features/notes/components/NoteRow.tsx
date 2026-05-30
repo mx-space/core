@@ -1,7 +1,4 @@
 import { Bookmark, BookOpen, EyeOff, Heart, MapPin } from 'lucide-react'
-import type { NoteModel } from '~/models/note'
-import type { ListAction } from '~/ui/list-actions'
-import type { NoteMetadataUpdate } from '../types/notes'
 
 import { WEB_URL } from '~/constants/env'
 import {
@@ -9,8 +6,11 @@ import {
   ContentListStatusBadge,
 } from '~/features/_shared/components/content-list-item'
 import { useI18n } from '~/i18n'
+import type { NoteModel } from '~/models/note'
+import type { ListAction } from '~/ui/list-actions'
 import { relativeTimeFromNow } from '~/utils/time'
 
+import type { NoteMetadataUpdate } from '../types/notes'
 import { buildNotePublicPath, formatCompactNumber } from '../utils/format'
 import { buildNoteMenuItems } from './buildNoteMenuItems'
 
@@ -52,13 +52,13 @@ export function NoteRow(props: {
       externalHref={publicHref}
       leading={
         <>
-          <span className="shrink-0 font-mono text-xs text-neutral-400">
+          <span className="shrink-0 font-mono text-xs text-fg-subtle">
             #{note.nid}
           </span>
           {!note.isPublished || isFuture ? (
             <EyeOff
               aria-hidden="true"
-              className="size-3.5 shrink-0 text-neutral-500 dark:text-neutral-400"
+              className="size-3.5 shrink-0 text-fg-muted"
             />
           ) : null}
           {note.bookmark ? (
@@ -73,7 +73,7 @@ export function NoteRow(props: {
       menuItems={menuItems}
       meta={
         <>
-          <span className="font-mono text-xs text-neutral-400 dark:text-neutral-500">
+          <span className="font-mono text-xs text-fg-subtle">
             {note.slug || '-'}
           </span>
           {note.mood ? (

@@ -1,6 +1,6 @@
 import { HardDrive } from 'lucide-react'
-import type { BackupFile } from '~/api/backups'
 
+import type { BackupFile } from '~/api/backups'
 import { useI18n } from '~/i18n'
 import { Checkbox } from '~/ui/primitives/checkbox'
 
@@ -37,10 +37,10 @@ export function BackupListItem(props: {
         <HardDrive aria-hidden="true" className="size-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-neutral-900 dark:text-neutral-100">
+        <div className="truncate text-sm font-medium text-fg">
           {formatBackupDate(props.item.filename)}
         </div>
-        <div className="mt-0.5 text-xs text-neutral-400">{props.item.size}</div>
+        <div className="mt-0.5 text-xs text-fg-subtle">{props.item.size}</div>
       </div>
     </article>
   )

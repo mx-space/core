@@ -1,9 +1,9 @@
 import { Edit3, ExternalLink, Loader2, X } from 'lucide-react'
 import { Link } from 'react-router'
-import type { NoteModel } from '~/models/note'
 
 import { WEB_URL } from '~/constants/env'
 import { useI18n } from '~/i18n'
+import type { NoteModel } from '~/models/note'
 import { relativeTimeFromNow } from '~/utils/time'
 
 export function TopicNoteRow(props: {
@@ -20,16 +20,14 @@ export function TopicNoteRow(props: {
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           {typeof props.note.nid === 'number' ? (
-            <span className="shrink-0 font-mono text-xs text-neutral-400">
+            <span className="shrink-0 font-mono text-xs text-fg-subtle">
               #{props.note.nid}
             </span>
           ) : null}
-          <p className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
-            {title}
-          </p>
+          <p className="truncate text-sm font-medium text-fg">{title}</p>
           {props.note.createdAt ? (
             <time
-              className="shrink-0 text-xs text-neutral-400"
+              className="shrink-0 text-xs text-fg-subtle"
               dateTime={props.note.createdAt}
             >
               {relativeTimeFromNow(props.note.createdAt)}

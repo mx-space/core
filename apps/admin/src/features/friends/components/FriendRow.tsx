@@ -1,12 +1,12 @@
 import { Check, CircleAlert, Mail, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import type { LinkModel } from '~/models/link'
-import type { HealthEntry } from '../types/friends'
 
 import { useI18n } from '~/i18n'
+import type { LinkModel } from '~/models/link'
 import { LinkState, LinkType } from '~/models/link'
 import { Button } from '~/ui/primitives/button'
 
+import type { HealthEntry } from '../types/friends'
 import { formatDate } from '../utils/friends'
 import { Avatar } from './FriendsPrimitives'
 
@@ -27,7 +27,7 @@ export function FriendRow(props: {
         <div className="flex items-center gap-3">
           <Avatar avatar={props.link.avatar} name={props.link.name} />
           <a
-            className="font-medium text-neutral-900 hover:underline dark:text-neutral-100"
+            className="font-medium text-fg hover:underline"
             href={props.link.url}
             rel="noreferrer"
             target="_blank"
@@ -36,13 +36,13 @@ export function FriendRow(props: {
           </a>
         </div>
       </td>
-      <td className="max-w-[18rem] px-4 py-3 text-neutral-600 dark:text-neutral-400">
+      <td className="max-w-[18rem] px-4 py-3 text-fg-muted">
         <span className="line-clamp-2">{props.link.description || '-'}</span>
       </td>
       <td className="max-w-[18rem] px-4 py-3">
         <div className="flex min-w-0 items-center gap-2">
           <a
-            className="truncate text-neutral-700 hover:underline dark:text-neutral-300"
+            className="truncate text-fg-muted hover:underline"
             href={props.link.url}
             rel="noreferrer"
             target="_blank"
@@ -60,7 +60,7 @@ export function FriendRow(props: {
           ) : null}
         </div>
       </td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">
+      <td className="px-4 py-3 text-fg-muted">
         {props.link.type === LinkType.Collection
           ? t('friends.row.typeCollection')
           : t('friends.row.typeFriend')}
@@ -68,17 +68,17 @@ export function FriendRow(props: {
       <td className="px-4 py-3">
         {props.link.email ? (
           <a
-            className="inline-flex items-center gap-1 text-neutral-600 hover:underline dark:text-neutral-400"
+            className="inline-flex items-center gap-1 text-fg-muted hover:underline"
             href={`mailto:${props.link.email}`}
           >
             <Mail aria-hidden="true" className="size-3.5" />
             {props.link.email}
           </a>
         ) : (
-          <span className="text-neutral-400">-</span>
+          <span className="text-fg-subtle">-</span>
         )}
       </td>
-      <td className="whitespace-nowrap px-4 py-3 text-neutral-500 dark:text-neutral-400">
+      <td className="whitespace-nowrap px-4 py-3 text-fg-muted">
         {formatDate(props.link.createdAt)}
       </td>
       <td className="px-4 py-3">

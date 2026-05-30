@@ -20,13 +20,11 @@ export function SayListItem(props: {
       <div className="flex gap-3">
         <Quote
           aria-hidden="true"
-          className="mt-0.5 size-5 shrink-0 text-neutral-300 dark:text-neutral-600"
+          className="mt-0.5 size-5 shrink-0 text-fg-subtle"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">
-            {props.say.text}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="text-sm leading-relaxed text-fg">{props.say.text}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-fg-muted">
             {props.say.author ? (
               <span className="flex items-center gap-1">
                 <User aria-hidden="true" className="size-3.5" />
@@ -34,15 +32,10 @@ export function SayListItem(props: {
               </span>
             ) : null}
             {props.say.source ? (
-              <span className="text-neutral-400 dark:text-neutral-500">
-                -- {props.say.source}
-              </span>
+              <span className="text-fg-subtle">-- {props.say.source}</span>
             ) : null}
             {props.say.createdAt ? (
-              <time
-                className="text-neutral-400 dark:text-neutral-500"
-                dateTime={props.say.createdAt}
-              >
+              <time className="text-fg-subtle" dateTime={props.say.createdAt}>
                 {formatSayDate(props.say.createdAt)}
               </time>
             ) : null}

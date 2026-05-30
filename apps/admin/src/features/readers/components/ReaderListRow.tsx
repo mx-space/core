@@ -58,7 +58,7 @@ export function ReaderListRow(props: ReaderListRowProps) {
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+          <span className="truncate text-sm font-medium text-fg">
             {displayName}
           </span>
           {reader.role === 'owner' ? (
@@ -75,25 +75,19 @@ export function ReaderListRow(props: ReaderListRowProps) {
             </StatusPill>
           ) : null}
         </div>
-        <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-fg-muted">
           {reader.handle ? (
             <span className="shrink-0 truncate">@{reader.handle}</span>
           ) : null}
           {reader.handle && reader.email ? (
-            <span
-              aria-hidden="true"
-              className="text-neutral-300 dark:text-neutral-600"
-            >
+            <span aria-hidden="true" className="text-fg-subtle">
               ·
             </span>
           ) : null}
           {reader.email ? (
             <span className="min-w-0 truncate">{reader.email}</span>
           ) : null}
-          <span
-            aria-hidden="true"
-            className="text-neutral-300 dark:text-neutral-600"
-          >
+          <span aria-hidden="true" className="text-fg-subtle">
             ·
           </span>
           <span className="shrink-0">

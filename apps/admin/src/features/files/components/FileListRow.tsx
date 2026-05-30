@@ -69,16 +69,13 @@ export function FileListRow<TRaw>(props: FileListRowProps<TRaw>) {
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center">
-              <FileIcon
-                aria-hidden="true"
-                className="size-4 text-neutral-400"
-              />
+              <FileIcon aria-hidden="true" className="size-4 text-fg-subtle" />
             </span>
           )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
-            <h3 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+            <h3 className="truncate text-sm font-medium text-fg">
               {props.item.primary}
             </h3>
             {props.item.status ? (
@@ -88,7 +85,7 @@ export function FileListRow<TRaw>(props: FileListRowProps<TRaw>) {
             ) : null}
           </div>
           {props.item.secondary || props.item.tertiary ? (
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-neutral-500 dark:text-neutral-400">
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-fg-muted">
               {props.item.secondary ? (
                 <span>{props.item.secondary}</span>
               ) : null}

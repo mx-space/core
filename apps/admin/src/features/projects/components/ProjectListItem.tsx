@@ -22,23 +22,23 @@ export function ProjectListItem(props: {
       <ProjectAvatar project={props.project} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <span className="truncate text-sm font-medium text-fg">
             {props.project.name}
           </span>
           {props.project.projectUrl ? (
             <ExternalLink
               aria-hidden="true"
-              className="size-3 shrink-0 text-neutral-400"
+              className="size-3 shrink-0 text-fg-subtle"
             />
           ) : null}
         </span>
         {props.project.description ? (
-          <span className="mt-0.5 block truncate text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="mt-0.5 block truncate text-xs text-fg-muted">
             {props.project.description}
           </span>
         ) : null}
         <time
-          className="mt-1 block text-xs text-neutral-400"
+          className="mt-1 block text-xs text-fg-subtle"
           dateTime={props.project.createdAt}
         >
           {formatDate(props.project.createdAt)}

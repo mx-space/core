@@ -33,9 +33,7 @@ export function SubscriberRow(props: {
         onClick={(event) => event.stopPropagation()}
       />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm text-neutral-800 dark:text-neutral-100">
-          {props.subscriber.email}
-        </div>
+        <div className="truncate text-sm text-fg">{props.subscriber.email}</div>
         <div className="mt-1 sm:hidden">
           <SubscribeTags subscribe={props.subscriber.subscribe} />
         </div>
@@ -44,7 +42,7 @@ export function SubscriberRow(props: {
         <SubscribeTags subscribe={props.subscriber.subscribe} />
       </div>
       <time
-        className="w-24 shrink-0 text-right text-xs tabular-nums text-neutral-400"
+        className="w-24 shrink-0 text-right text-xs tabular-nums text-fg-subtle"
         dateTime={props.subscriber.createdAt}
       >
         {formatDate(props.subscriber.createdAt)}

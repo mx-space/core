@@ -1,5 +1,4 @@
 import type { CronTask } from '~/api/cron-tasks'
-
 import { useI18n } from '~/i18n'
 import { ListRow } from '~/ui/list-actions'
 import { cn } from '~/utils/cn'
@@ -42,18 +41,18 @@ export function TaskListItem(props: {
         )}
       />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+        <div className="truncate text-sm font-medium text-fg">
           {taskTypeLabelKeys[props.task.type]
             ? t(taskTypeLabelKeys[props.task.type])
             : props.task.type}
         </div>
-        <div className="mt-1 truncate text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="mt-1 truncate text-xs text-fg-muted">
           {props.task.progressMessage || props.task.id}
         </div>
       </div>
       <div className="shrink-0 text-right">
         <StatusBadge status={props.task.status} />
-        <div className="mt-1 text-xs tabular-nums text-neutral-400">
+        <div className="mt-1 text-xs tabular-nums text-fg-subtle">
           {formatRelativeDate(props.task.createdAt, t)}
         </div>
       </div>

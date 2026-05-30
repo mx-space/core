@@ -31,12 +31,12 @@ const statusDotClassName: Record<AITaskStatus, string> = {
 }
 
 const statusTextClassName: Record<AITaskStatus, string> = {
-  [AITaskStatus.Pending]: 'text-neutral-500 dark:text-neutral-400',
+  [AITaskStatus.Pending]: 'text-fg-muted',
   [AITaskStatus.Running]: 'text-blue-600 dark:text-blue-400',
   [AITaskStatus.Completed]: 'text-emerald-600 dark:text-emerald-400',
   [AITaskStatus.PartialFailed]: 'text-amber-600 dark:text-amber-400',
   [AITaskStatus.Failed]: 'text-red-600 dark:text-red-400',
-  [AITaskStatus.Cancelled]: 'text-neutral-500 dark:text-neutral-400',
+  [AITaskStatus.Cancelled]: 'text-fg-muted',
 }
 
 export function TaskRow(props: {
@@ -74,7 +74,7 @@ export function TaskRow(props: {
             statusIconClassName(effectiveStatus),
           )}
         />
-        <span className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+        <span className="truncate text-sm font-medium text-fg">
           {t(taskTypeLabelKeys[task.type])}
         </span>
         {isBatchTask(task) ? (
@@ -103,16 +103,16 @@ export function TaskRow(props: {
             {t('ai.task.retryBadge', { count: task.retryCount })}
           </span>
         ) : null}
-        <span className="ml-auto shrink-0 text-xs tabular-nums text-neutral-400 dark:text-neutral-500">
+        <span className="ml-auto shrink-0 text-xs tabular-nums text-fg-subtle">
           {formatRelativeTimestamp(task.createdAt)}
         </span>
       </div>
       <div className="pl-5.5 mt-1 flex min-w-0 items-center gap-2">
-        <p className="min-w-0 flex-1 truncate text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="min-w-0 flex-1 truncate text-xs text-fg-muted">
           {getTaskSummary(task, t)}
         </p>
         {progressLabel ? (
-          <span className="shrink-0 text-xs tabular-nums text-neutral-400 dark:text-neutral-500">
+          <span className="shrink-0 text-xs tabular-nums text-fg-subtle">
             {progressLabel}
           </span>
         ) : null}

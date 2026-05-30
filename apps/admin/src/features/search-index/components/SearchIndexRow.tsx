@@ -40,21 +40,21 @@ export function SearchIndexRow(props: {
             <SmallBadge>{t('searchIndex.row.password')}</SmallBadge>
           ) : null}
         </div>
-        <h3 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+        <h3 className="truncate text-sm font-medium text-fg">
           {row.title || (
-            <span className="text-neutral-400">
+            <span className="text-fg-subtle">
               {t('searchIndex.row.untitled')}
             </span>
           )}
         </h3>
-        <div className="text-xs tabular-nums text-neutral-400">
+        <div className="text-xs tabular-nums text-fg-subtle">
           {t('searchIndex.row.titleBodySummary', {
             bodyLen: row.bodyLength,
             titleLen: row.titleLength,
           })}
         </div>
       </div>
-      <div className="shrink-0 text-xs text-neutral-500 dark:text-neutral-400">
+      <div className="shrink-0 text-xs text-fg-muted">
         {formatRelativeDate(row.modifiedAt, t)}
       </div>
     </ListRow>

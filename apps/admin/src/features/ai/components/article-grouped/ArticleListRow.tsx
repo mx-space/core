@@ -38,16 +38,16 @@ export function ArticleListRow(props: ArticleListRowProps) {
       selected={props.selected}
     >
       <div className="flex min-w-0 items-center gap-2">
-        <Icon aria-hidden="true" className="size-4 shrink-0 text-neutral-400" />
-        <h3 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+        <Icon aria-hidden="true" className="size-4 shrink-0 text-fg-subtle" />
+        <h3 className="truncate text-sm font-medium text-fg">
           {props.article.title || t(meta.labelKey)}
         </h3>
       </div>
       <div className="mt-1.5 flex items-center gap-2 pl-6">
-        <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+        <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-fg-muted dark:bg-neutral-800">
           {t(meta.labelKey)}
         </span>
-        <span className="text-xs text-neutral-400">
+        <span className="text-xs text-fg-subtle">
           {t(props.itemCountKey, { count: props.itemCount })}
         </span>
       </div>

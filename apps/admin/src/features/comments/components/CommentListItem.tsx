@@ -90,22 +90,22 @@ export function CommentListItem(props: {
       <Avatar comment={props.comment} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="truncate text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <span className="truncate text-sm font-medium text-fg">
             {props.comment.author || t('comments.anonymous')}
           </span>
           {props.comment.parentCommentId ? (
-            <span className="text-xs text-neutral-400">
+            <span className="text-xs text-fg-subtle">
               {t('comments.list.replyMark')}
             </span>
           ) : null}
           <time
-            className="ml-auto shrink-0 text-xs text-neutral-400"
+            className="ml-auto shrink-0 text-xs text-fg-subtle"
             dateTime={props.comment.createdAt}
           >
             {formatCommentDate(props.comment.createdAt)}
           </time>
         </div>
-        <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-sm text-fg-muted">
           {commentText}
         </p>
         {props.comment.isWhispers ? (

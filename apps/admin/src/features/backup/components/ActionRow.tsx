@@ -33,12 +33,12 @@ export function ActionRow(props: {
           className={
             props.tone === 'red'
               ? 'text-sm font-medium text-red-600 dark:text-red-400'
-              : 'text-sm font-medium text-neutral-900 dark:text-neutral-100'
+              : 'text-sm font-medium text-fg'
           }
         >
           {props.label}
         </div>
-        <div className="text-xs text-neutral-400">{props.description}</div>
+        <div className="text-xs text-fg-subtle">{props.description}</div>
       </div>
     </button>
   )

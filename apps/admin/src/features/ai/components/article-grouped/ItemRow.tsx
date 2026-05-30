@@ -45,7 +45,7 @@ export function ItemRow<TItem>(props: ItemRowProps<TItem>) {
           <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-950 dark:text-blue-400">
             {props.lang.toUpperCase()}
           </span>
-          <span className="inline-flex items-center gap-1 text-xs text-neutral-400">
+          <span className="inline-flex items-center gap-1 text-xs text-fg-subtle">
             <Calendar aria-hidden="true" className="size-3" />
             {formatDateString(props.createdAt)}
           </span>
@@ -53,7 +53,7 @@ export function ItemRow<TItem>(props: ItemRowProps<TItem>) {
         <button
           aria-label={t('ai.action.delete')}
           className={cn(
-            'inline-flex size-7 shrink-0 items-center justify-center rounded text-neutral-400 transition-all',
+            'inline-flex size-7 shrink-0 items-center justify-center rounded text-fg-subtle transition-all',
             'group-data-selected:opacity-100 opacity-0 hover:bg-red-50 hover:text-red-600 focus-visible:opacity-100 group-hover:opacity-100',
             'dark:hover:bg-red-950/40 dark:hover:text-red-400',
           )}
@@ -66,7 +66,7 @@ export function ItemRow<TItem>(props: ItemRowProps<TItem>) {
           <Trash2 aria-hidden="true" className="size-3.5" />
         </button>
       </div>
-      <p className="mt-1.5 line-clamp-2 text-sm text-neutral-700 dark:text-neutral-300">
+      <p className="mt-1.5 line-clamp-2 text-sm text-fg-muted">
         {props.preview || '-'}
       </p>
     </ListRow>
