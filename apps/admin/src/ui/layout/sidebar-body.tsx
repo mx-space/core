@@ -355,14 +355,14 @@ export function SidebarBody() {
         className="min-h-0 flex-1"
         aria-label={t('common.primaryNavigation')}
       >
-        <Scroll className="h-full" innerClassName="flex flex-col gap-3 py-3">
+        <Scroll className="h-full" innerClassName="flex flex-col gap-1.5 py-2">
           {visibleSidebarNavigation.map((section, sectionIndex) => (
             <div
-              className="grid gap-1 px-2"
+              className="grid gap-px px-2"
               key={section.titleKey ?? `section-${sectionIndex}`}
             >
               {section.titleKey ? (
-                <div className="px-3 pb-1 text-xs font-medium uppercase text-fg-subtle">
+                <div className="px-3 pb-0.5 text-xs font-medium uppercase text-fg-subtle">
                   {t(section.titleKey)}
                 </div>
               ) : null}
