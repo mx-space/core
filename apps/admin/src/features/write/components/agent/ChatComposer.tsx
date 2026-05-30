@@ -1,20 +1,16 @@
-import { ArrowUp, Square, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { useStore } from 'zustand'
-import type { AgentStore, AgentStoreStatus } from '@haklex/rich-agent-core'
-import type { ProviderModelsResponse } from '~/api/ai'
+import { ArrowUp, Square } from 'lucide-react'
 import type { KeyboardEvent } from 'react'
-import type { SelectedAgentModel } from './types'
+import { useEffect, useRef, useState } from 'react'
 
-import { agentStoreSelectors } from '@haklex/rich-agent-core'
-
+import type { ProviderModelsResponse } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { cn } from '~/utils/cn'
 
 import { ModelSelector } from './ModelSelector'
+import type { AgentStreamStatus, SelectedAgentModel } from './types'
 
 interface ChatComposerProps {
-  store: AgentStore
+  streamStatus: AgentStreamStatus
   agentReady: boolean
   value: string
   onChange: (value: string) => void
@@ -26,14 +22,8 @@ interface ChatComposerProps {
   onAbort: () => void
 }
 
-const STATUS_LABEL_KEYS = {
-  thinking: 'write.agent.status.thinking',
-  writing: 'write.agent.status.writing',
-  calling_tool: 'write.agent.status.callingTool',
-} as const
-
 export function ChatComposer({
-  store,
+  streamStatus,
   agentReady,
   value,
   onChange,
@@ -45,12 +35,11 @@ export function ChatComposer({
   onAbort,
 }: ChatComposerProps) {
   const { t } = useI18n()
-  const status = useStore(store, agentStoreSelectors.status)
-  const pinnedSelection = useStore(store, agentStoreSelectors.pinnedSelection)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isComposing, setIsComposing] = useState(false)
 
-  const isRunning = status !== 'idle' && status !== 'done'
+  const isRunning =
+    streamStatus === 'connecting' || streamStatus === 'streaming'
   const canSend =
     !isRunning && agentReady && Boolean(selectedModel) && Boolean(value.trim())
 
@@ -80,37 +69,13 @@ export function ChatComposer({
 
   return (
     <div className="flex shrink-0 flex-col border-t border-neutral-200 dark:border-neutral-800">
-      {pinnedSelection && (
-        <div className="mx-2 mt-2 flex items-center gap-1.5 bg-neutral-100 px-2.5 py-1.5 text-xs text-neutral-500 dark:bg-neutral-800">
-          <span className="min-w-0 flex-1 truncate">
-            {pinnedSelection.type === 'text'
-              ? `"${
-                  pinnedSelection.text.length > 60
-                    ? `${pinnedSelection.text.slice(0, 60)}…`
-                    : pinnedSelection.text
-                }"`
-              : t('write.agent.selection.blocks', {
-                  count: pinnedSelection.blockIds.length,
-                })}
-          </span>
-          <button
-            type="button"
-            aria-label={t('write.agent.selection.dismiss')}
-            className="inline-flex size-4 shrink-0 items-center justify-center text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-            onClick={() => store.getState().clearPinnedSelection()}
-          >
-            <X aria-hidden="true" className="size-3" />
-          </button>
-        </div>
-      )}
-
       {isRunning && (
         <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-neutral-400">
           <span className="relative flex size-1.5 shrink-0">
             <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-400 opacity-75" />
             <span className="relative inline-flex size-1.5 rounded-full bg-green-500" />
           </span>
-          <span>{t(resolveStatusKey(status))}</span>
+          <span>{t('write.agent.status.processing')}</span>
         </div>
       )}
 
@@ -171,14 +136,4 @@ export function ChatComposer({
       </div>
     </div>
   )
-}
-
-function resolveStatusKey(status: AgentStoreStatus) {
-  if (
-    status === 'thinking' ||
-    status === 'writing' ||
-    status === 'calling_tool'
-  )
-    return STATUS_LABEL_KEYS[status]
-  return 'write.agent.status.processing'
 }
