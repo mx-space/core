@@ -1,4 +1,34 @@
-# Upcoming — AI SDK migration to pi (step-9)
+# Upcoming — AI SDK migration to pi
+
+## Manual release-blocker checklist (step-20)
+
+Before tagging the AI-migration release, an operator MUST manually verify
+all four items below against a staging deploy. The faux test suite covers
+wire bytes in CI, but these scenarios depend on real provider connectivity
+and a real browser, so they cannot be automated in pre-merge CI.
+
+1. **Admin chat — blocks render in order.** Open the admin agent chat,
+   issue a prompt that triggers a `thinking` + `tool_call` response. Assert
+   the `MessageBubble` renders text, thinking, and toolcall blocks in
+   monotonic `contentIndex` order with no flicker or missing frames.
+2. **Comment spam path — flagged.** Post a comment with obvious spammy
+   content against a staging post. Confirm the AI review pipeline flags it
+   (`hasSensitiveContent: true` / `isSpam: true`) and the admin row shows
+   the flagged state.
+3. **Translation SSE — wire bytes unchanged.** Run a translation on a
+   real Lexical post in admin. With DevTools Network ➜ EventStream open,
+   capture the `event: token` / `event: done` frames and diff them
+   against a pre-migration capture. Token text MUST be raw strings, not
+   JSON-wrapped objects.
+4. **Summary cache hit + miss — wire bytes unchanged.** Generate a fresh
+   summary (cache miss → streamed tokens). Re-request the same hash
+   immediately (cache hit → single synthetic `done` frame). Both paths
+   MUST match the pre-migration wire format byte-for-byte; the cached
+   path bypasses snake_case conversion via `@HTTPDecorators.RawResponse`.
+
+Any deviation in (3) or (4) is a release blocker — Shiroi / Yohaku public
+consumers depend on the byte-exact wire shape and have no api-client major
+bump scheduled in this release.
 
 ## BREAKING CHANGE: `ai_agent_conversations` table rewritten
 

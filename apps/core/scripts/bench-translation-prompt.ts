@@ -41,6 +41,11 @@ interface Options {
   providerId: string
   providerName: string
   providerType: AIProviderType
+  // After step-3a the enum collapsed to 3 values; this script previously
+  // branched on a legacy OpenRouter enum member to switch env vars. The
+  // vendor distinction is now a script-local flag derived from --vendor /
+  // env so the enum stays a routing concern (handled by the pi adapter).
+  vendor: BenchVendor
   targetLang: string
   outDir: string
   temperature: number
@@ -48,6 +53,8 @@ interface Options {
   promptVariants: PromptVariant[]
   judge: boolean
 }
+
+type BenchVendor = 'openrouter' | 'deepseek'
 
 type PromptVariant = 'baseline' | 'current'
 
@@ -257,6 +264,15 @@ function readProviderType(): AIProviderType {
   )
 }
 
+function readVendor(): BenchVendor {
+  const raw =
+    readArg('--vendor') ?? process.env.MX_AI_BENCH_VENDOR ?? 'deepseek'
+  if (raw === 'openrouter' || raw === 'deepseek') return raw
+  throw new Error(
+    `Invalid --vendor value "${raw}". Use "openrouter" or "deepseek".`,
+  )
+}
+
 function parsePromptVariants(): PromptVariant[] {
   const raw =
     readArg('--variant') ??
@@ -353,7 +369,8 @@ async function parseOptions(): Promise<Options> {
     process.env.MX_AI_BENCH_DATA_DIR ??
     ((await pathExists(defaultSimpleDir)) ? defaultSimpleDir : defaultDataRoot)
   const providerType = readProviderType()
-  const isOpenRouter = providerType === AIProviderType.OpenRouter
+  const vendor = readVendor()
+  const isOpenRouter = vendor === 'openrouter'
   const model =
     readArg('--model') ??
     (isOpenRouter
@@ -421,6 +438,7 @@ async function parseOptions(): Promise<Options> {
           process.env.MX_AI_PROVIDER_NAME)) ??
       (isOpenRouter ? 'OpenRouter' : 'DeepSeek'),
     providerType,
+    vendor,
     targetLang: readArg('--target') ?? process.env.MX_AI_TARGET_LANG ?? 'en',
     outDir: resolve(
       process.cwd(),
@@ -468,7 +486,7 @@ function createProviderConfig(
 function createRuntime(options: Options, model: string): RecordingRuntime {
   if (!options.apiKey) {
     throw new Error(
-      options.providerType === AIProviderType.OpenRouter
+      options.vendor === 'openrouter'
         ? 'Missing API key: set OPENROUTER_API_KEY, OPENROUTER_TOKEN, or MX_AI_API_KEY'
         : 'Missing API key: set DEEPSEEK_API_KEY or MX_AI_API_KEY',
     )

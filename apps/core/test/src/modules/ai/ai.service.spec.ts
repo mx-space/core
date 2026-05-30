@@ -28,7 +28,7 @@ describe('AiService', () => {
       {
         id: 'main',
         name: 'Main OpenAI',
-        type: AIProviderType.OpenAI,
+        type: AIProviderType.OpenAICompatible,
         apiKey: 'sk-xxx',
         defaultModel: 'gpt-4o',
         enabled: true,
@@ -36,7 +36,7 @@ describe('AiService', () => {
       {
         id: 'backup',
         name: 'Backup',
-        type: AIProviderType.OpenAI,
+        type: AIProviderType.OpenAICompatible,
         apiKey: 'sk-yyy',
         defaultModel: 'gpt-4o-mini',
         enabled: true,
@@ -44,7 +44,7 @@ describe('AiService', () => {
       {
         id: 'disabled',
         name: 'Disabled Provider',
-        type: AIProviderType.OpenAI,
+        type: AIProviderType.OpenAICompatible,
         apiKey: 'sk-zzz',
         defaultModel: 'gpt-3.5-turbo',
         enabled: false,
@@ -139,7 +139,7 @@ describe('AiService', () => {
           {
             id: 'disabled-first',
             name: 'Disabled First',
-            type: AIProviderType.OpenAI,
+            type: AIProviderType.OpenAICompatible,
             apiKey: 'sk-xxx',
             defaultModel: 'gpt-4o',
             enabled: false,
@@ -147,7 +147,7 @@ describe('AiService', () => {
           {
             id: 'enabled-second',
             name: 'Enabled Second',
-            type: AIProviderType.OpenAI,
+            type: AIProviderType.OpenAICompatible,
             apiKey: 'sk-yyy',
             defaultModel: 'gpt-4o-mini',
             enabled: true,

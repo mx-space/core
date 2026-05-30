@@ -2324,7 +2324,6 @@ export const zhCN = {
   'write.agent.session.deleteTitle': '删除对话',
   'write.agent.session.empty': '暂无历史对话',
   'write.agent.session.loading': '加载对话中...',
-  'write.agent.session.messageCount': '{count} 条',
   'write.agent.session.newSession': '新对话',
   'write.agent.session.newTitle': '新建对话',
   'write.agent.session.relativeDays': '{count} 天前',

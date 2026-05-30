@@ -258,10 +258,9 @@ function targetLangCharRatio(text: string, lang: string): number {
 }
 
 function makeRuntime(env: RuntimeEnv): IModelRuntime {
-  const providerType =
-    env.provider === 'openai-compatible'
-      ? AIProviderType.OpenAICompatible
-      : AIProviderType.OpenRouter
+  // After step-3a the enum collapsed to 3 values; OpenRouter rows are routed
+  // via the OpenAICompatible runtime + endpoint resolution in the pi adapter.
+  const providerType = AIProviderType.OpenAICompatible
   return createModelRuntime({
     id: `smoke-${env.provider}`,
     name: `Smoke ${env.provider}`,

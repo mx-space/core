@@ -138,6 +138,39 @@ Two channels publish the dashboard (full detail in `../../docs/admin-monorepo-mi
 The version baseline is `8.x`+ (above the retired GitHub channel) so a freshly bundled
 build supersedes any copy previously downloaded into the server's data directory.
 
+## AI Agent Chat (post pi-ai migration)
+
+The AI agent chat surface lives under `apps/admin/src/features/write/components/agent/`
+and `apps/admin/src/api/ai-agent.ts`. After the pi-ai migration:
+
+- **Transport** — `apps/admin/src/api/ai-agent.ts` consumes the
+  JSON-framed `AiAgentSseEvent` union via the shared TypeBox schema imported
+  from `@mx-space/api-client` (originating in
+  `packages/api-client/models/ai-agent-sse.ts`). Each SSE line is a single
+  `data: <json>\n\n` event — there is no `event:` prefix line. The transport
+  parses each frame and dispatches typed events to the session manager.
+- **Session manager** — buffers a draft `AssistantMessage` per turn,
+  accumulating text/thinking blocks by `contentIndex`. Tool-call blocks are
+  ONLY committed on `toolcall_end`; partial `toolcall_delta` is dropped on
+  abort or network drop.
+- **Multi-block rendering** — `MessageBubble` renders text, thinking, and
+  toolcall blocks in monotonic `contentIndex` order. Toolcall events for
+  haklex (`insert_node`/`replace_node`) wire back to the lexical editor via
+  a callback prop, NOT global state.
+- **Network drop** — the transport surfaces a `connection lost` UI without
+  crashing. Covered by `apps/admin/src/features/write/components/agent/*.test.tsx`
+  (jsdom vitest integration tests + a 50-frame interleaved fixture).
+- **Provider config** — `AIProviderDrawer` exposes 3 provider types
+  (`OpenAICompatible`, `Anthropic`, `Generic`), with a model `Combobox`
+  sourced from `GET /api/ai/registry/models` (10-minute stale, build-hash
+  cache key). Unknown legacy localStorage values (`openai`, `openrouter`)
+  are rewritten to `openai-compatible` on app boot by
+  `apps/admin/src/bootstrap/migrate-legacy-provider-type.ts`. The
+  `contextWindow` and `maxTokens` numeric inputs only render when the typed
+  model id is NOT in the registry (case-insensitive trim match).
+
+See `apps/core/CLAUDE.md` for the server-side wire-format invariants.
+
 ## Related Projects (within the monorepo)
 
 - **apps/core** — backend API server (NestJS), the sibling workspace app. Serves the built

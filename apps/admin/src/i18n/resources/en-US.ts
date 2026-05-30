@@ -2443,7 +2443,6 @@ export const enUS = {
   'write.agent.session.deleteTitle': 'Delete session',
   'write.agent.session.empty': 'No conversations yet',
   'write.agent.session.loading': 'Loading sessions...',
-  'write.agent.session.messageCount': '{count} msgs',
   'write.agent.session.newSession': 'New session',
   'write.agent.session.newTitle': 'New session',
   'write.agent.session.relativeDays': '{count}d ago',

@@ -53,6 +53,7 @@
     "prepackage": "rm -rf dist",
     "test": "vitest",
     "dev": "vitest",
+    "typecheck": "tsc --noEmit --project tsconfig.consumer-types.json",
     "smoke:diff": "node scripts/smoke-diff.mjs"
   },
   "devDependencies": {
