@@ -23,7 +23,7 @@ export function SayListItem(props: {
           className="mt-0.5 size-5 shrink-0 text-fg-subtle"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-sm leading-relaxed text-fg">{props.say.text}</p>
+          <p className="text-base leading-relaxed text-fg">{props.say.text}</p>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-fg-muted">
             {props.say.author ? (
               <span className="flex items-center gap-1">

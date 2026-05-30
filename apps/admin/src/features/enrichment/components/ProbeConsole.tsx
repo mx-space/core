@@ -154,7 +154,7 @@ function ProbeResult(props: { result: EnrichmentProbeResult }) {
       ) : null}
       {props.result.result ? (
         <section className="rounded border border-neutral-200 p-4 dark:border-neutral-800">
-          <h3 className="text-sm font-semibold text-neutral-950 dark:text-neutral-50">
+          <h3 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
             {props.result.result.title}
           </h3>
           {props.result.result.description ? (

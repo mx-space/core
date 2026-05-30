@@ -52,7 +52,7 @@ export function RecentlyListItem(props: {
 
   return (
     <article className="group px-4 py-5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900/50">
-      <p className="whitespace-pre-wrap break-words text-sm leading-7 text-fg">
+      <p className="whitespace-pre-wrap break-words text-base leading-7 text-fg">
         {props.item.content}
       </p>
 

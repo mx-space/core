@@ -250,7 +250,7 @@ function NormalizedPreview(props: { row: EnrichmentRowDetail }) {
           <SmallBadge>{result.category}</SmallBadge>
           {result.subtype ? <SmallBadge>{result.subtype}</SmallBadge> : null}
         </div>
-        <h3 className="mt-3 text-sm font-semibold text-neutral-950 dark:text-neutral-50">
+        <h3 className="mt-3 text-base font-semibold text-neutral-950 dark:text-neutral-50">
           {result.title || props.row.url}
         </h3>
         {result.description ? (

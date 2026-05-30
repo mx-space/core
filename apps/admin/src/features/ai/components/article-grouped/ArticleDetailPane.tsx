@@ -57,7 +57,7 @@ export function ArticleDetailPane<TItem>(props: ArticleDetailPaneProps<TItem>) {
         aria-hidden="true"
         className="size-5 shrink-0 text-neutral-400"
       />
-      <span className="truncate text-sm font-semibold text-neutral-950 dark:text-neutral-50">
+      <span className="truncate text-base font-semibold text-neutral-950 dark:text-neutral-50">
         {props.article.title || t(meta.labelKey)}
       </span>
     </span>

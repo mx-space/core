@@ -227,12 +227,12 @@ export function CommentDetail(props: {
           </div>
 
           {props.comment.isDeleted ? (
-            <p className="whitespace-pre-wrap text-sm leading-7 text-neutral-900 dark:text-neutral-100">
+            <p className="whitespace-pre-wrap text-base leading-7 text-neutral-900 dark:text-neutral-100">
               {commentText}
             </p>
           ) : (
             <MarkdownRender
-              className="text-sm leading-7 text-neutral-900 dark:text-neutral-100"
+              className="text-base leading-7 text-neutral-900 dark:text-neutral-100"
               text={commentText}
             />
           )}

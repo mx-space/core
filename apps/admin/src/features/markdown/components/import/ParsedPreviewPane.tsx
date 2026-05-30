@@ -64,7 +64,7 @@ export function ParsedPreviewPane(props: ParsedPreviewPaneProps) {
           <div className="flex size-12 items-center justify-center rounded-full bg-red-100 text-red-500 dark:bg-red-950/40 dark:text-red-400">
             <AlertTriangle aria-hidden="true" className="size-6" />
           </div>
-          <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <h3 className="text-base font-medium text-neutral-900 dark:text-neutral-100">
             {t('markdown.import.failPane.title')}
           </h3>
           {props.failureReason ? (
