@@ -1,7 +1,8 @@
-import { AlertCircle, History, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { AlertCircle, History, X } from 'lucide-react'
 
 import { useI18n } from '~/i18n'
+import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
 interface DraftHintBannerProps {
@@ -14,44 +15,77 @@ interface DraftHintBannerProps {
 
 const variantConfig: Record<
   DraftHintBannerProps['variant'],
-  { icon: LucideIcon; iconClass: string }
+  {
+    icon: LucideIcon
+    cardClass: string
+    iconClass: string
+    actionVariant: 'primary' | 'secondary'
+    dismissClass: string
+  }
 > = {
   list: {
     icon: History,
-    iconClass: 'text-neutral-500 dark:text-neutral-400',
+    cardClass: 'bg-surface-inset border-border',
+    iconClass: 'text-fg-muted',
+    actionVariant: 'secondary',
+    dismissClass:
+      'text-fg-subtle hover:bg-black/[0.06] hover:text-fg dark:hover:bg-white/[0.08]',
   },
   recovery: {
     icon: AlertCircle,
+    cardClass:
+      'bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-900/40',
     iconClass: 'text-amber-600 dark:text-amber-400',
+    actionVariant: 'primary',
+    dismissClass:
+      'text-amber-700/70 hover:bg-amber-100 hover:text-amber-900 dark:text-amber-300/70 dark:hover:bg-amber-900/40 dark:hover:text-amber-200',
   },
 }
 
 export function DraftHintBanner(props: DraftHintBannerProps) {
-  const { icon: Icon, iconClass } = variantConfig[props.variant]
+  const {
+    icon: Icon,
+    cardClass,
+    iconClass,
+    actionVariant,
+    dismissClass,
+  } = variantConfig[props.variant]
   const { t } = useI18n()
 
   return (
     <div
-      className="flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-neutral-50/70 py-2 pl-6 pr-4 dark:border-neutral-800 dark:bg-neutral-900/40"
-      role="status"
+      className={cn(
+        'mx-4 my-2 flex shrink-0 items-center gap-3 rounded-lg border px-3 py-2',
+        cardClass,
+      )}
+      role={props.variant === 'recovery' ? 'alert' : 'status'}
     >
-      <div className="flex min-w-0 items-center gap-2">
-        <Icon aria-hidden="true" className={cn('size-4 shrink-0', iconClass)} />
-        <span className="truncate text-sm text-neutral-700 dark:text-neutral-300">
-          {props.message}
-        </span>
-      </div>
+      <Icon aria-hidden="true" className={cn('size-4 shrink-0', iconClass)} />
+      <span
+        className={cn(
+          'min-w-0 flex-1 truncate text-sm',
+          props.variant === 'recovery'
+            ? 'text-amber-900 dark:text-amber-100'
+            : 'text-fg',
+        )}
+      >
+        {props.message}
+      </span>
       <div className="flex shrink-0 items-center gap-1">
-        <button
-          className="inline-flex h-7 items-center rounded border border-neutral-200 bg-white px-2 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-200 dark:hover:bg-neutral-900"
+        <Button
+          className="h-7 px-2.5 text-xs"
           onClick={props.onAction}
           type="button"
+          variant={actionVariant}
         >
           {props.actionLabel}
-        </button>
+        </Button>
         <button
           aria-label={t('write.draftHint.dismissAria')}
-          className="inline-flex size-7 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+          className={cn(
+            'inline-flex size-7 items-center justify-center rounded-sm transition-colors focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15',
+            dismissClass,
+          )}
           onClick={props.onDismiss}
           type="button"
         >
