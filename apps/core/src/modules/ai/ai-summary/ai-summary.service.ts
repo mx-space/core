@@ -106,6 +106,7 @@ export class AiSummaryService implements OnModuleInit {
               payload.refId,
               lang,
               context.incrementTokens,
+              context.incrementCost,
             )
             summaries.push({
               summaryId: result.id!,
@@ -245,6 +246,7 @@ export class AiSummaryService implements OnModuleInit {
     lang: string,
     push?: (event: AiStreamEvent) => Promise<void>,
     onToken?: (count?: number) => Promise<void>,
+    onCost?: (usd: number) => Promise<void>,
   ) {
     const runtime = await this.aiService.getSummaryModel()
     const { systemPrompt, prompt, reasoningEffort } = AI_PROMPTS.summaryStream(
@@ -259,6 +261,7 @@ export class AiSummaryService implements OnModuleInit {
 
     let fullText = ''
     let totalTokens = 0
+    let totalCost = 0
     if (runtime.streamMessage) {
       const events = runtime.streamMessage({
         messages,
@@ -283,6 +286,7 @@ export class AiSummaryService implements OnModuleInit {
           this.logger.debug(`stream non-text event filtered: ${event.type}`)
         } else if (event.type === 'done') {
           totalTokens = event.message.usage?.totalTokens ?? 0
+          totalCost = event.message.usage?.cost?.total ?? 0
         } else if (event.type === 'error') {
           throw new Error(event.error.errorMessage || 'AI summary stream error')
         }
@@ -296,6 +300,7 @@ export class AiSummaryService implements OnModuleInit {
       })
       fullText = result.text
       totalTokens = result.usage?.totalTokens ?? 0
+      totalCost = result.usage?.cost ?? 0
       if (push && result.text) {
         await push({ type: 'token', data: result.text })
       }
@@ -309,6 +314,9 @@ export class AiSummaryService implements OnModuleInit {
     if (onToken) {
       await onToken(totalTokens)
     }
+    if (onCost && totalCost > 0) {
+      await onCost(totalCost)
+    }
 
     return { summary: parsed.summary, rawText: fullText }
   }
@@ -318,6 +326,7 @@ export class AiSummaryService implements OnModuleInit {
     lang: string,
     document: { text: string },
     onToken?: (count?: number) => Promise<void>,
+    onCost?: (usd: number) => Promise<void>,
   ) {
     const text = this.serializeText(document.text)
     const key = this.buildSummaryKey(articleId, lang, text)
@@ -335,6 +344,7 @@ export class AiSummaryService implements OnModuleInit {
           lang,
           push,
           onToken,
+          onCost,
         )
         const contentMd5 = md5(text)
 
@@ -365,6 +375,7 @@ export class AiSummaryService implements OnModuleInit {
     articleId: string,
     lang: string,
     onToken?: (count?: number) => Promise<void>,
+    onCost?: (usd: number) => Promise<void>,
   ) {
     const {
       ai: { enableSummary },
@@ -382,6 +393,7 @@ export class AiSummaryService implements OnModuleInit {
         lang,
         document,
         onToken,
+        onCost,
       )
       return await result
     } catch (error) {

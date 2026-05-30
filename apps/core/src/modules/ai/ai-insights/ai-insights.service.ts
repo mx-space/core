@@ -72,7 +72,11 @@ export class AiInsightsService implements OnModuleInit {
       ) => {
         this.checkAborted(context)
         await context.updateProgress(0, 'Generating insights', 0, 1)
-        const result = await this.generateInsights(payload.refId)
+        const result = await this.generateInsights(
+          payload.refId,
+          context.incrementTokens,
+          context.incrementCost,
+        )
         await context.setResult({ insightsId: result.id, lang: result.lang })
         await context.updateProgress(100, 'Done', 1, 1)
       },
@@ -164,6 +168,7 @@ export class AiInsightsService implements OnModuleInit {
     lang: string,
     push?: (event: AiStreamEvent) => Promise<void>,
     onToken?: (count?: number) => Promise<void>,
+    onCost?: (usd: number) => Promise<void>,
   ): Promise<{
     content: string
     modelInfo?: { provider: string; model: string }
@@ -180,6 +185,7 @@ export class AiInsightsService implements OnModuleInit {
 
     let fullText = ''
     let totalTokens = 0
+    let totalCost = 0
     if (runtime.streamMessage) {
       const events = runtime.streamMessage({
         messages,
@@ -202,6 +208,7 @@ export class AiInsightsService implements OnModuleInit {
           this.logger.debug(`stream non-text event filtered: ${event.type}`)
         } else if (event.type === 'done') {
           totalTokens = event.message.usage?.totalTokens ?? 0
+          totalCost = event.message.usage?.cost?.total ?? 0
         } else if (event.type === 'error') {
           throw new Error(
             event.error.errorMessage || 'AI insights stream error',
@@ -217,9 +224,11 @@ export class AiInsightsService implements OnModuleInit {
       })
       fullText = result.text
       totalTokens = result.usage?.totalTokens ?? 0
+      totalCost = result.usage?.cost ?? 0
       if (push && result.text) await push({ type: 'token', data: result.text })
     }
     if (onToken) await onToken(totalTokens)
+    if (onCost && totalCost > 0) await onCost(totalCost)
     // Strip an accidental top-level code fence if the model wrapped the whole answer.
     const stripped = stripTopLevelCodeFence(fullText)
     return { content: stripped.trim() }
@@ -230,6 +239,7 @@ export class AiInsightsService implements OnModuleInit {
     lang: string,
     article: ArticleForInsights,
     onToken?: (count?: number) => Promise<void>,
+    onCost?: (usd: number) => Promise<void>,
   ) {
     const text = this.serializeText(article.text)
     const key = this.buildInsightsKey(articleId, lang, text)
@@ -247,6 +257,7 @@ export class AiInsightsService implements OnModuleInit {
           lang,
           push,
           onToken,
+          onCost,
         )
         const contentMd5 = md5(text)
         const sourceLang = lang
@@ -291,6 +302,7 @@ export class AiInsightsService implements OnModuleInit {
   async generateInsights(
     articleId: string,
     onToken?: (count?: number) => Promise<void>,
+    onCost?: (usd: number) => Promise<void>,
   ): Promise<AIInsightsModel> {
     const {
       ai: { enableInsights },
@@ -306,6 +318,7 @@ export class AiInsightsService implements OnModuleInit {
         lang,
         article,
         onToken,
+        onCost,
       )
       return await result
     } catch (error) {
