@@ -12,7 +12,17 @@
 // shim is absent, so any module that imports `~/constants/env` (transitively
 // many feature/api modules) throws on first read. Provide an empty default —
 // tests opt back into specific values by reassigning before module import.
-;(window as unknown as { injectData?: Record<string, string> }).injectData ??=
-  {}
+// Guard for node-environment tests (e.g. `@vitest-environment node`) where
+// `window` is undefined; setup files run for every test regardless of env.
+if (typeof window !== 'undefined') {
+  ;(window as unknown as { injectData?: Record<string, string> }).injectData ??=
+    {}
+}
+
+// React 19's `act` from `react` (used by raw `react-dom/client` mounts in
+// `responsive-data-table.test.tsx` etc.) requires this flag at module load.
+;(
+  globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true
 
 export {}
