@@ -4,6 +4,7 @@ import { merge } from 'es-toolkit/compat'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import type { EventBusEvents } from '~/constants/event-bus.constant'
+import { RoomSubsService } from '~/processors/task-queue/task-queue.room-subs.service'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { AdminEventsGateway } from '../gateway/admin/events.gateway'
@@ -35,10 +36,20 @@ export class EventManagerService {
     private readonly adminGateway: AdminEventsGateway,
 
     private readonly emitter2: EventEmitter2,
+    private readonly roomSubs: RoomSubsService,
   ) {
     this.logger = new Logger(EventManagerService.name)
 
     this.listenSystemEvents()
+  }
+
+  async emitToAdminRoom(
+    event: BusinessEvents,
+    data: unknown,
+    room: string,
+  ): Promise<void> {
+    if (!(await this.roomSubs.has(room))) return
+    this.adminGateway.broadcast(event, data, { rooms: [room] })
   }
 
   private get mapScopeToInstance(): Record<
