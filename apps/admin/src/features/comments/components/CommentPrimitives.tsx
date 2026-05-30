@@ -9,7 +9,7 @@ import { cn } from '~/utils/cn'
 import { commentQuickEmojis } from '../constants'
 
 export function Avatar(props: { comment: CommentModel; size: 'lg' | 'sm' }) {
-  const sizeClass = props.size === 'lg' ? 'size-12 text-sm' : 'size-8 text-sm'
+  const sizeClass = props.size === 'lg' ? 'size-12 text-lg' : 'size-8 text-sm'
 
   if (props.comment.avatar) {
     return (

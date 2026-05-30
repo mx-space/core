@@ -9,8 +9,6 @@ export const themeColors = {
   primaryShallow: '#3b82f6',
 } as const
 
-const ACCENT_SOFT_LIGHT = '#eaf0ff'
-
 export type { ThemeMode }
 
 const DARK_QUERY = '(prefers-color-scheme: dark)'
@@ -51,9 +49,6 @@ export function installThemeTokens() {
   root.setProperty('--color-primary', themeColors.primary)
   root.setProperty('--color-primary-shallow', themeColors.primaryShallow)
   root.setProperty('--color-primary-deep', themeColors.primaryDeep)
-  root.setProperty('--accent', themeColors.primary)
-  root.setProperty('--accent-hover', themeColors.primaryDeep)
-  root.setProperty('--accent-soft', ACCENT_SOFT_LIGHT)
 }
 
 /** Imperative setter for callers outside React. */

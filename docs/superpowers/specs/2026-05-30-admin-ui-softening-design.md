@@ -45,30 +45,45 @@ Three-layer surface model replaces the current `bg-white` / `bg-neutral-950` fla
 
 ### Text tokens
 
+All foreground tokens live in the Tailwind v4 `--color-*` namespace so they
+generate `text-fg`, `text-fg-muted`, `text-fg-subtle` utilities. The bare
+`--text-*` namespace is reserved by Tailwind v4 for font-size tokens and must
+not be reused for colors.
+
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `--text-primary` | `#37352f` | `#fafaf9` | Main copy |
-| `--text-secondary` | `#787774` | `#a8a29e` | Labels, sub-copy |
-| `--text-tertiary` | `#9b9a97` | `#78716c` | Placeholders, disabled |
+| `--color-fg` | `#37352f` | `#fafaf9` | Main copy |
+| `--color-fg-muted` | `#787774` | `#a8a29e` | Labels, sub-copy |
+| `--color-fg-subtle` | `#9b9a97` | `#78716c` | Placeholders, disabled |
 
 ### Border tokens (rgba-based for soft hairlines)
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `--border-default` | `rgba(0,0,0,0.06)` | `rgba(255,255,255,0.06)` | Card edges, inputs, dividers |
-| `--border-strong` | `rgba(0,0,0,0.12)` | `rgba(255,255,255,0.12)` | Hover, active, focus |
+| `--color-border` | `rgba(0,0,0,0.06)` | `rgba(255,255,255,0.06)` | Card edges, inputs, dividers |
+| `--color-border-strong` | `rgba(0,0,0,0.12)` | `rgba(255,255,255,0.12)` | Hover, active, focus |
 
 ### Accent tokens
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `--accent` | `#2563eb` | `#3b82f6` | Links, focus ring, primary CTA |
-| `--accent-hover` | `#1d4ed8` | `#2563eb` | Hover states |
-| `--accent-soft` | `#eaf0ff` | `rgba(59,130,246,0.12)` | Selected row tint, soft accent fills |
+| `--color-accent` | `#2563eb` | `#3b82f6` | Links, focus ring, primary CTA |
+| `--color-accent-hover` | `#1d4ed8` | `#2563eb` | Hover states |
+| `--color-accent-soft` | `#eaf0ff` | `rgba(59,130,246,0.12)` | Selected row tint, soft accent fills |
 
 The existing `--color-primary` / `--color-primary-shallow` / `--color-primary-deep`
-remain as **aliases** pointing at the new accent tokens during the transition (to
-avoid touching every existing reference). New code uses `--accent`.
+remain as **aliases** pointing at the new accent palette during the transition (to
+avoid touching every existing reference). New code uses `--color-accent`.
+
+Dark-mode overrides live in a `.dark { … }` block (specificity 0,1,0) rather
+than `:where(.dark)` (specificity 0). The `:where()` form would lose to the
+`:root` declarations generated from `@theme`, leaving dark tokens inert.
+
+Theme tokens are CSS-only — `installThemeTokens` writes only the legacy
+`--color-primary*` aliases (which have no dark CSS counterpart and therefore
+do not collide with the dark cascade). All new `--color-accent*` /
+`--color-fg*` / `--color-border*` / `--color-surface-*` values come from
+`tokens.css` and the `.dark` override block.
 
 ## Section 2 — Radii, Shadow, Spacing Scales
 
