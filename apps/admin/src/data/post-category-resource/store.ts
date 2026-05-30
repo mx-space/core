@@ -6,7 +6,7 @@ import type { PaginateResult, Pager } from '~/models/base'
 import type { CategoryModel } from '~/models/category'
 import type { Category, PostModel } from '~/models/post'
 
-type ResourceCategory = Category | CategoryModel
+export type ResourceCategory = Category | CategoryModel
 
 interface PostListIndex {
   ids: string[]

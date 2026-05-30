@@ -28,7 +28,6 @@ import {
   lazy,
   Suspense,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -84,7 +83,11 @@ import {
   usePostResourcePost,
 } from '~/data/post-category-resource/hooks'
 import {
-  serializeResourceListKey,
+  usePostCategoriesResourceQuery,
+  usePostDetailResourceQuery,
+  usePostListResourceQuery,
+} from '~/data/post-category-resource/queries'
+import {
   usePostCategoryResourceStore,
 } from '~/data/post-category-resource/store'
 import { PostCategoryResourceTransaction } from '~/data/post-category-resource/transaction'
@@ -395,7 +398,7 @@ function WritePage(props: { kind: WriteKind }) {
     [],
   )
 
-  const categoriesQuery = useQuery({
+  usePostCategoriesResourceQuery({
     enabled: props.kind === 'post',
     queryFn: () => getCategories({ type: 'Category' }),
     queryKey: adminQueryKeys.categories.list(),
@@ -410,7 +413,7 @@ function WritePage(props: { kind: WriteKind }) {
     queryFn: getTags,
     queryKey: adminQueryKeys.categories.tags(),
   })
-  const relatedPostsQuery = useQuery({
+  usePostListResourceQuery({
     enabled: props.kind === 'post',
     queryFn: () =>
       getPosts({
@@ -421,11 +424,18 @@ function WritePage(props: { kind: WriteKind }) {
       }),
     queryKey: relatedPostsQueryKey,
   })
-  const detailQuery = useQuery<WriteModel>({
-    enabled: isEditing,
+  const postDetailQuery = usePostDetailResourceQuery({
+    enabled: isEditing && props.kind === 'post',
+    queryFn: () => getPostById(id),
+    queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
+  })
+  const nonPostDetailQuery = useQuery<WriteModel>({
+    enabled: isEditing && props.kind !== 'post',
     queryFn: () => getWriteDetail(props.kind, id),
     queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
   })
+  const detailQuery =
+    props.kind === 'post' ? postDetailQuery : nonPostDetailQuery
   const refDraftQuery = useQuery({
     enabled: isEditing,
     queryFn: () => getDraftByRef(draftRefType, id),
@@ -442,32 +452,8 @@ function WritePage(props: { kind: WriteKind }) {
     queryKey: adminQueryKeys.drafts.newDraft(draftRefType),
   })
 
-  useLayoutEffect(() => {
-    if (!categoriesQuery.data) return
-    usePostCategoryResourceStore
-      .getState()
-      .hydrateCategories(categoriesQuery.data)
-  }, [categoriesQuery.data])
-
-  useLayoutEffect(() => {
-    if (props.kind !== 'post' || !detailQuery.data) return
-    usePostCategoryResourceStore
-      .getState()
-      .hydratePostDetail(detailQuery.data as PostModel)
-  }, [detailQuery.data, props.kind])
-
-  useLayoutEffect(() => {
-    if (!relatedPostsQuery.data) return
-    usePostCategoryResourceStore
-      .getState()
-      .hydratePostList(
-        serializeResourceListKey(relatedPostsQueryKey),
-        relatedPostsQuery.data,
-      )
-  }, [relatedPostsQuery.data, relatedPostsQueryKey])
-
   const detailModel =
-    props.kind === 'post' ? postResource ?? detailQuery.data : detailQuery.data
+    props.kind === 'post' ? postResource : nonPostDetailQuery.data
   const categories =
     props.kind === 'post'
       ? postResourceCategories.filter(isCategoryModel)

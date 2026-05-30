@@ -1,5 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { getCategories } from '~/api/categories'
 import { getPosts, searchPosts } from '~/api/posts'
@@ -8,8 +7,11 @@ import {
   usePostResourceList,
 } from '~/data/post-category-resource/hooks'
 import {
+  usePostCategoriesResourceQuery,
+  usePostListResourceQuery,
+} from '~/data/post-category-resource/queries'
+import {
   serializeResourceListKey,
-  usePostCategoryResourceStore,
 } from '~/data/post-category-resource/store'
 import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
 import { adminQueryKeys } from '~/query/keys'
@@ -62,7 +64,7 @@ export function usePostsList() {
     setKeywordInput(state.keyword)
   }, [state.keyword])
 
-  const categoriesQuery = useQuery({
+  const categoriesQuery = usePostCategoriesResourceQuery({
     queryFn: () => getCategories({ type: 'Category' }),
     queryKey: adminQueryKeys.categories.postFilter(),
   })
@@ -88,8 +90,7 @@ export function usePostsList() {
   const postListResource = usePostResourceList(postsListQueryKey)
   const categories = usePostResourceCategories()
 
-  const postsQuery = useQuery({
-    placeholderData: (previous) => previous,
+  const postsQuery = usePostListResourceQuery({
     queryFn: () =>
       state.keyword
         ? searchPosts({
@@ -109,19 +110,6 @@ export function usePostsList() {
           }),
     queryKey: postsListQueryKey,
   })
-
-  useLayoutEffect(() => {
-    if (!categoriesQuery.data) return
-    getPostResourceListStoreActions().hydrateCategories(categoriesQuery.data)
-  }, [categoriesQuery.data])
-
-  useLayoutEffect(() => {
-    if (!postsQuery.data) return
-    getPostResourceListStoreActions().hydratePostList(
-      serializeResourceListKey(postsListQueryKey),
-      postsQuery.data,
-    )
-  }, [postsQuery.data, postsListQueryKey])
 
   return {
     categories,
@@ -158,8 +146,4 @@ export function usePostsList() {
         page: 1,
       })),
   }
-}
-
-function getPostResourceListStoreActions() {
-  return usePostCategoryResourceStore.getState()
 }

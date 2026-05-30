@@ -1,15 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
-import { useLayoutEffect } from 'react'
 
 import { getCategories, getTags } from '~/api/categories'
 import { usePostResourceCategories } from '~/data/post-category-resource/hooks'
-import { usePostCategoryResourceStore } from '~/data/post-category-resource/store'
+import { usePostCategoriesResourceQuery } from '~/data/post-category-resource/queries'
 import type { CategoryModel } from '~/models/category'
 import { adminQueryKeys } from '~/query/keys'
 
 export function useCategoriesList() {
   const resourceCategories = usePostResourceCategories()
-  const categoriesQuery = useQuery({
+  const categoriesQuery = usePostCategoriesResourceQuery({
     queryFn: () => getCategories({ type: 'Category' }),
     queryKey: adminQueryKeys.categories.list(),
   })
@@ -17,13 +16,6 @@ export function useCategoriesList() {
     queryFn: getTags,
     queryKey: adminQueryKeys.categories.tags(),
   })
-
-  useLayoutEffect(() => {
-    if (!categoriesQuery.data) return
-    usePostCategoryResourceStore
-      .getState()
-      .hydrateCategories(categoriesQuery.data)
-  }, [categoriesQuery.data])
 
   return {
     categories: resourceCategories.filter(isCategoryModel),

@@ -1,14 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
-import { useLayoutEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Edit3, FolderOpen, Loader2, Trash2 } from 'lucide-react'
 import type { CategoryModel } from '~/models/category'
 
 import { getPosts } from '~/api/posts'
 import { usePostResourceCategory } from '~/data/post-category-resource/hooks'
-import {
-  serializeResourceListKey,
-  usePostCategoryResourceStore,
-} from '~/data/post-category-resource/store'
+import { usePostListResourceQuery } from '~/data/post-category-resource/queries'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
@@ -34,7 +30,7 @@ export function CategoryDetail(props: {
     () => adminQueryKeys.posts.categoryDetail(props.categoryId),
     [props.categoryId],
   )
-  const postsQuery = useQuery({
+  const postsQuery = usePostListResourceQuery({
     enabled: !!props.categoryId,
     queryFn: () =>
       getPosts({
@@ -46,13 +42,6 @@ export function CategoryDetail(props: {
       }),
     queryKey: postsQueryKey,
   })
-
-  useLayoutEffect(() => {
-    if (!postsQuery.data) return
-    usePostCategoryResourceStore
-      .getState()
-      .hydratePostList(serializeResourceListKey(postsQueryKey), postsQuery.data)
-  }, [postsQuery.data, postsQueryKey])
 
   if (!category) return null
 
