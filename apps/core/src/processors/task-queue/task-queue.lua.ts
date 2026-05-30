@@ -97,11 +97,16 @@ return 1
  * ARGV[8] = failedIndexKey
  * ARGV[9] = runningIndexKey
  *
- * Returns: number of recovered tasks
+ * Returns: array shaped { recoveredCount, taskId1, taskId2, ... }
+ *   - index 1 (Lua 1-based) is the integer count of recovered tasks
+ *   - indexes 2+ are the recovered task ids (string)
+ *   When zero tasks recover, returns { 0 } so callers can rely on
+ *   `arr[0]` (in JS) being the count.
  */
 export const LUA_RECOVER_STALE = `
 local stale = redis.call('ZRANGEBYSCORE', KEYS[1], '-inf', ARGV[1], 'LIMIT', 0, ARGV[4])
 local recovered = 0
+local recoveredIds = {}
 
 for _, taskId in ipairs(stale) do
   local lockKey = ARGV[5] .. taskId
@@ -154,11 +159,16 @@ for _, taskId in ipairs(stale) do
       end
 
       recovered = recovered + 1
+      table.insert(recoveredIds, taskId)
     end
   end
 end
 
-return recovered
+local result = { recovered }
+for _, id in ipairs(recoveredIds) do
+  table.insert(result, id)
+end
+return result
 `
 
 /**

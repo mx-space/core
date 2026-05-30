@@ -41,6 +41,23 @@ function isTerminalStatus(status: TaskStatus): boolean {
   return TERMINAL_STATUSES.has(status)
 }
 
+/**
+ * Dual-shape handler for LUA_RECOVER_STALE return values.
+ *
+ * The script returns an array whose index 0 holds the integer count of
+ * recovered tasks and indexes 1+ hold the recovered task ids. This helper
+ * tolerates legacy/empty responses (anything non-array → count 0, ids []).
+ */
+export function parseRecoverStaleResult(result: unknown): {
+  count: number
+  ids: string[]
+} {
+  const arr = Array.isArray(result) ? result : []
+  const count = arr.length > 0 ? Number(arr[0]) || 0 : 0
+  const ids = arr.slice(1).map(String)
+  return { count, ids }
+}
+
 export interface CreateTaskOptions {
   type: string
   payload: Record<string, unknown>
@@ -687,12 +704,14 @@ export class TaskQueueService implements OnModuleDestroy {
       this.getKey(TASK_QUEUE_KEYS.indexByStatus(TaskStatus.Running)),
     )
 
-    const recovered = result as number
-    if (recovered > 0) {
-      this.logger.log(`Recovered ${recovered} stale tasks`)
+    const { count, ids } = parseRecoverStaleResult(result)
+    if (count > 0) {
+      this.logger.log(`Recovered ${count} stale tasks`)
     }
+    // ids reserved for step-7 per-task emits
+    void ids
 
-    return recovered
+    return count
   }
 
   async isTaskCancelled(taskId: string): Promise<boolean> {
