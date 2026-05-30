@@ -48,6 +48,7 @@ html {
 body {
   min-height: 100vh;
   background: var(--page-bg);
+  font-size: 0.875rem;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'ss01', 'cv11';
 
