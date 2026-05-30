@@ -147,6 +147,9 @@ export class AiInsightsController {
       let sentToken = false
       for await (const event of events) {
         if (closed) break
+        // Public SSE wire safety: drop spec-2 'partial' frames; only
+        // token/done/error are part of the byte-pinned public envelope.
+        if (event.type === 'partial') continue
         if (event.type === 'token') {
           sendSseEvent(reply, 'token', event.data)
           sentToken = true

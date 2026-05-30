@@ -2,6 +2,15 @@ export type AiStreamEvent =
   | { type: 'token'; data: string }
   | { type: 'done'; data: { resultId: string } }
   | { type: 'error'; data: { message: string } }
+  | {
+      type: 'partial'
+      data: {
+        lang?: string
+        segmentId?: string
+        partial: unknown
+        done?: boolean
+      }
+    }
 
 export interface AiInFlightOptions<T> {
   key: string
