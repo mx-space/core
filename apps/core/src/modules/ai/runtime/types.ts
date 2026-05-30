@@ -37,6 +37,7 @@ export interface GenerateTextResult {
     promptTokens?: number
     completionTokens?: number
     totalTokens?: number
+    cost?: number
   }
 }
 
@@ -62,6 +63,7 @@ export interface GenerateStructuredResult<T> {
     promptTokens?: number
     completionTokens?: number
     totalTokens?: number
+    cost?: number
   }
 }
 
@@ -70,6 +72,12 @@ export interface StructuredStreamChunk<T> {
   delta?: string
   done?: boolean
   final?: T
+  usage?: {
+    promptTokens?: number
+    completionTokens?: number
+    totalTokens?: number
+    cost?: number
+  }
 }
 
 export interface StreamMessageOptions extends Omit<
