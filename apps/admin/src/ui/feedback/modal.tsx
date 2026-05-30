@@ -98,10 +98,9 @@ export const ModalDescription = Dialog.Description
 export const ModalClose = Dialog.Close
 
 /**
- * Modal 头部统一态。
- * 高 h-12，不同于 app shell page header（h-14）。
- * Close 按钮以 `-mr-2.5` 抵其内部 padding（size-9 含 size-4 icon，左右各余 10px），
- * 使 icon 之右缘视觉对齐于父之 `px-4` 内容右缘。
+ * Modal header — h-14 with px-6 internal padding (matches DSv2 modal scale).
+ * The close button uses `-mr-2.5` so its size-9 hit-box optically aligns with
+ * the parent's px-6 right edge (size-9 wraps a size-4 icon with 10px gutters).
  */
 export function ModalHeader(props: {
   actions?: ReactNode
