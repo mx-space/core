@@ -791,8 +791,30 @@ export class TaskQueueService implements OnModuleDestroy {
     if (count > 0) {
       this.logger.log(`Recovered ${count} stale tasks`)
     }
-    // ids reserved for step-7 per-task emits
-    void ids
+
+    // Per-task emits for recovered ids — fan out a 'status' phase with the
+    // post-recovery Pending state + incremented retryCount so admin clients
+    // re-hydrate the row without waiting for the next polling cycle. Drop
+    // any leftover throttle state in case the previous Running incarnation
+    // left a pending progress timer dangling.
+    for (const id of ids) {
+      this.emitter.dispose(id)
+      const taskKey = this.getKey(TASK_QUEUE_KEYS.task(id))
+      const [type, groupId, retryCountRaw] = await this.redis.hmget(
+        taskKey,
+        'type',
+        'groupId',
+        'retryCount',
+      )
+      if (!type) continue
+      this.emitter.emitStatus(
+        { id, type, groupId: groupId || undefined },
+        {
+          status: TaskStatus.Pending,
+          retryCount: Number(retryCountRaw || '0'),
+        },
+      )
+    }
 
     return count
   }
