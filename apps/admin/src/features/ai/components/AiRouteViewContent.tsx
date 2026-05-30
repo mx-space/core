@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { RefreshCw, Trash2 } from 'lucide-react'
+import { CloudOff, RefreshCw, Trash2 } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
@@ -28,6 +28,7 @@ import {
   pageSize,
   typeOptionKeys,
 } from '../constants'
+import { useAiTaskListSubscription } from '../hooks/useAiTaskSubscription'
 import {
   getErrorMessage,
   readPositivePage,
@@ -82,8 +83,7 @@ export function AiRouteViewContent() {
     type: typeFilter || undefined,
   }
 
-  // step-22 will rewire socketConnected from useAiTaskListSubscription
-  const socketConnected = false
+  const { socketConnected } = useAiTaskListSubscription()
   const tasksQuery = useQuery({
     placeholderData: (previous) => previous,
     queryFn: () => getAiTasks(queryParams),
@@ -207,7 +207,27 @@ export function AiRouteViewContent() {
     </div>
   )
 
+  const livePausedNode = !socketConnected ? (
+    <span
+      aria-live="polite"
+      className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
+      title={t('ai.task.live_paused')}
+    >
+      <CloudOff aria-hidden="true" className="size-3.5" />
+      <span className="hidden lg:inline">{t('ai.task.live_paused')}</span>
+    </span>
+  ) : null
+
   const headerActions: HeaderAction[] = [
+    ...(livePausedNode
+      ? [
+          {
+            kind: 'custom' as const,
+            node: livePausedNode,
+            mobileNode: livePausedNode,
+          },
+        ]
+      : []),
     {
       kind: 'custom',
       node: typeSelector,

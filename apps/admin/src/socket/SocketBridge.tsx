@@ -31,6 +31,38 @@ interface GatewayMessage {
   type: EventTypes
 }
 
+// Module-level singleton for hooks (step-22) — allows
+// useAiTaskSubscription to emit ai-task:subscribe/unsubscribe without
+// passing the socket through React context. Set by SocketBridge on mount
+// and cleared on unmount.
+let currentAdminSocket: Socket | null = null
+const socketChangeListeners = new Set<(socket: Socket | null) => void>()
+
+export function getAdminSocket(): Socket | null {
+  return currentAdminSocket
+}
+
+/**
+ * Subscribe to changes in the underlying socket instance (created /
+ * destroyed when SocketBridge mounts / unmounts). Callback fires once
+ * synchronously with the current value, then on every change. Returns
+ * an unsubscribe function.
+ */
+export function subscribeAdminSocket(
+  listener: (socket: Socket | null) => void,
+): () => void {
+  socketChangeListeners.add(listener)
+  listener(currentAdminSocket)
+  return () => {
+    socketChangeListeners.delete(listener)
+  }
+}
+
+function setAdminSocket(socket: Socket | null) {
+  currentAdminSocket = socket
+  for (const listener of socketChangeListeners) listener(socket)
+}
+
 export function SocketBridge() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -46,6 +78,7 @@ export function SocketBridge() {
       transports: ['websocket'],
       withCredentials: true,
     })
+    setAdminSocket(socket)
 
     const handleEvent = (type: EventTypes, payload: unknown, code?: number) => {
       window.dispatchEvent(
@@ -185,6 +218,7 @@ export function SocketBridge() {
     return () => {
       disposed = true
       if (reconnectTimer) window.clearInterval(reconnectTimer)
+      setAdminSocket(null)
       socket.disconnect()
       socket.off('message')
       socket.offAny()
