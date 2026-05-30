@@ -1027,31 +1027,6 @@ function WritePage(props: { kind: WriteKind }) {
           )}
         </div>
 
-        {showDraftListHint ? (
-          <DraftHintBanner
-            actionLabel={t('write.draftList.hintAction')}
-            message={t('write.draftList.hintMessage', {
-              count: draftListHintCount,
-              label: draftKindText,
-            })}
-            onAction={() => setDraftListOpen(true)}
-            onDismiss={() => setDraftListHintDismissed(true)}
-            variant="list"
-          />
-        ) : null}
-        {showRecoveryHint && recoveryHintDraft ? (
-          <DraftHintBanner
-            actionLabel={t('write.recovery.compareAction')}
-            message={t('write.recovery.draftHasNew', {
-              label: draftKindText,
-              version: recoveryHintDraft.version,
-            })}
-            onAction={() => openRecoveryDialog(recoveryHintDraft)}
-            onDismiss={() => setRecoveryHintDismissed(true)}
-            variant="recovery"
-          />
-        ) : null}
-
         <ContentLayout
           className="min-h-0 flex-1"
           mainClassName="flex flex-col"
@@ -1069,6 +1044,34 @@ function WritePage(props: { kind: WriteKind }) {
             >
               <main className="flex min-h-full min-w-0 flex-col bg-white dark:bg-neutral-950">
                 <div className="mx-auto w-full max-w-5xl shrink-0 px-3 pt-8">
+                  {showDraftListHint ? (
+                    <div className="mb-3">
+                      <DraftHintBanner
+                        actionLabel={t('write.draftList.hintAction')}
+                        message={t('write.draftList.hintMessage', {
+                          count: draftListHintCount,
+                          label: draftKindText,
+                        })}
+                        onAction={() => setDraftListOpen(true)}
+                        onDismiss={() => setDraftListHintDismissed(true)}
+                        variant="list"
+                      />
+                    </div>
+                  ) : null}
+                  {showRecoveryHint && recoveryHintDraft ? (
+                    <div className="mb-3">
+                      <DraftHintBanner
+                        actionLabel={t('write.recovery.compareAction')}
+                        message={t('write.recovery.draftHasNew', {
+                          label: draftKindText,
+                          version: recoveryHintDraft.version,
+                        })}
+                        onAction={() => openRecoveryDialog(recoveryHintDraft)}
+                        onDismiss={() => setRecoveryHintDismissed(true)}
+                        variant="recovery"
+                      />
+                    </div>
+                  ) : null}
                   <EditorMetaStrip
                     aiButtonPending={writerGenerateMutation.isPending}
                     aiButtonVisible={aiButtonVisible}

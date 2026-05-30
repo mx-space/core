@@ -55,7 +55,7 @@ export function DraftHintBanner(props: DraftHintBannerProps) {
   return (
     <div
       className={cn(
-        'mx-4 my-2 flex shrink-0 items-center gap-3 rounded-lg border px-3 py-2',
+        'flex items-center gap-3 rounded-lg border px-3 py-2',
         cardClass,
       )}
       role={props.variant === 'recovery' ? 'alert' : 'status'}
