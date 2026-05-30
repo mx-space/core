@@ -1,14 +1,15 @@
 import { ListPlus, Mail, Settings, Shield, User } from 'lucide-react'
+
 import type { ConfigFormField } from '~/api/options'
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
 import type { CreateMetaPresetDto, MetaPresetField } from '~/models/meta-preset'
+
+import { aiProviderTypeOptions, typesWithOptions } from '../constants'
 import type {
   AIConfig,
   AIProviderConfig,
   AIProviderType,
 } from '../types/settings'
-
-import { aiProviderTypeOptions, typesWithOptions } from '../constants'
 
 type Translator = (key: TranslationKey, values?: TranslationValues) => string
 
@@ -112,14 +113,21 @@ export function normalizeAIConfig(value: unknown): AIConfig {
     ...config,
     providers: (config.providers ?? []).map((provider) => ({
       apiKey: provider.apiKey ?? '',
+      contextWindow: provider.contextWindow ?? undefined,
       defaultModel: provider.defaultModel ?? '',
       enabled: Boolean(provider.enabled),
       endpoint: provider.endpoint ?? '',
       id: provider.id || crypto.randomUUID(),
+      maxTokens: provider.maxTokens ?? undefined,
       name: provider.name ?? '',
-      type: provider.type ?? 'openai',
+      type: coerceAIProviderType(provider.type),
     })),
   }
+}
+
+export function coerceAIProviderType(value: unknown): AIProviderType {
+  if (value === 'anthropic' || value === 'generic') return value
+  return 'openai-compatible'
 }
 
 export function formatAIProviderLabel(provider: AIProviderConfig) {
@@ -133,14 +141,15 @@ export function formatAIProviderLabel(provider: AIProviderConfig) {
 
 export function getDefaultAIModel(type: AIProviderType) {
   switch (type) {
-    case 'anthropic':
+    case 'anthropic': {
       return 'claude-sonnet-4.5'
-    case 'openai':
-      return 'gpt-5-mini'
-    case 'openrouter':
-      return 'anthropic/claude-sonnet-4.5'
-    case 'openai-compatible':
+    }
+    case 'generic': {
       return ''
+    }
+    case 'openai-compatible': {
+      return ''
+    }
   }
 }
 
@@ -149,26 +158,27 @@ export function getAIProviderNamePlaceholder(
   type: AIProviderType,
 ) {
   switch (type) {
-    case 'anthropic':
+    case 'anthropic': {
       return t('settings.ai.placeholder.nameAnthropic')
-    case 'openai':
-      return t('settings.ai.placeholder.nameOpenai')
-    case 'openrouter':
-      return t('settings.ai.placeholder.nameOpenrouter')
-    case 'openai-compatible':
+    }
+    case 'generic': {
       return t('settings.ai.placeholder.nameCompatible')
+    }
+    case 'openai-compatible': {
+      return t('settings.ai.placeholder.nameCompatible')
+    }
   }
 }
 
 export function getAIProviderKeyPlaceholder(type: AIProviderType) {
   switch (type) {
-    case 'anthropic':
+    case 'anthropic': {
       return 'sk-ant-...'
-    case 'openrouter':
-      return 'sk-or-...'
-    case 'openai':
-    case 'openai-compatible':
+    }
+    case 'generic':
+    case 'openai-compatible': {
       return 'sk-...'
+    }
   }
 }
 
@@ -177,15 +187,58 @@ export function getAIProviderModelPlaceholder(
   type: AIProviderType,
 ) {
   switch (type) {
-    case 'anthropic':
+    case 'anthropic': {
       return t('settings.ai.placeholder.modelAnthropic')
-    case 'openai':
-      return t('settings.ai.placeholder.modelOpenai')
-    case 'openrouter':
-      return t('settings.ai.placeholder.modelOpenrouter')
-    case 'openai-compatible':
+    }
+    case 'generic': {
       return t('settings.ai.placeholder.modelCompatible')
+    }
+    case 'openai-compatible': {
+      return t('settings.ai.placeholder.modelCompatible')
+    }
   }
+}
+
+const PI_PROVIDER_HOSTNAMES: Record<string, string> = {
+  'api.anthropic.com': 'anthropic',
+  'api.deepseek.com': 'deepseek',
+  'api.openai.com': 'openai',
+  'openrouter.ai': 'openrouter',
+}
+
+export function resolvePiProviderId(provider: {
+  endpoint?: string
+  type: AIProviderType
+}): string | null {
+  const endpoint = provider.endpoint?.trim()
+  if (endpoint) {
+    try {
+      const host = new URL(endpoint).hostname.toLowerCase()
+      if (PI_PROVIDER_HOSTNAMES[host]) return PI_PROVIDER_HOSTNAMES[host]
+    } catch {
+      // not a parseable URL — fall through to type fallback
+    }
+  }
+  switch (provider.type) {
+    case 'anthropic': {
+      return 'anthropic'
+    }
+    case 'openai-compatible': {
+      return 'openai'
+    }
+    case 'generic': {
+      return null
+    }
+  }
+}
+
+export function matchRegistryModel(
+  models: { id: string }[] | undefined,
+  modelId: string,
+): { id: string } | undefined {
+  const target = modelId.trim().toLowerCase()
+  if (!target) return undefined
+  return (models ?? []).find((m) => m.id.trim().toLowerCase() === target)
 }
 
 export function getErrorMessage(error: unknown, fallback: string) {

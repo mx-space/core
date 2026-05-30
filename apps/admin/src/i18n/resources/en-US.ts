@@ -1678,9 +1678,11 @@ export const enUS = {
   'settings.ai.error.fetchModelsFailed': 'Failed to fetch model list',
   'settings.ai.error.testFailed': 'Connection test failed',
   'settings.ai.field.apiKey': 'API Key',
+  'settings.ai.field.contextWindow': 'Context window (tokens)',
   'settings.ai.field.defaultModel': 'Default model',
   'settings.ai.field.displayName': 'Display name',
   'settings.ai.field.endpoint': 'Endpoint',
+  'settings.ai.field.maxTokens': 'Max output tokens',
   'settings.ai.field.providerType': 'Provider type',
   'settings.ai.placeholder.endpointCompatible':
     'Required, e.g. https://api.deepseek.com',

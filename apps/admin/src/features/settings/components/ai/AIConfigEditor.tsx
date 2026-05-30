@@ -1,13 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Pencil, Plus, Settings, Trash2 } from 'lucide-react'
-import { useState } from 'react'
 import type { ReactNode } from 'react'
-import type {
-  AIConfig,
-  AIProviderConfig,
-  AIProviderModel,
-  AIProviderType,
-} from '../../types/settings'
+import { useState } from 'react'
 
 import { getModels } from '~/api/ai'
 import { useI18n } from '~/i18n'
@@ -16,6 +10,12 @@ import { Switch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
+import type {
+  AIConfig,
+  AIProviderConfig,
+  AIProviderModel,
+  AIProviderType,
+} from '../../types/settings'
 import { formatAIProviderLabel, getDefaultAIModel } from '../../utils/settings'
 import { EmptyState, SettingsSection } from '../SettingsPrimitives'
 import { AIModelAssignmentField } from './AIModelAssignmentField'
@@ -36,13 +36,10 @@ export function AIConfigEditor(props: {
     enabled: hasEnabledProvider,
     queryFn: async () => {
       const response = await getModels()
-      return response.reduce<Record<string, AIProviderModel[]>>(
-        (result, provider) => ({
-          ...result,
-          [provider.providerId]: provider.models ?? [],
-        }),
-        {},
+      const entries: Array<[string, AIProviderModel[]]> = response.map(
+        (provider) => [provider.providerId, provider.models ?? []],
       )
+      return Object.fromEntries(entries) as Record<string, AIProviderModel[]>
     },
     queryKey: props.modelCacheKey,
     staleTime: 24 * 60 * 60 * 1000,
@@ -62,7 +59,7 @@ export function AIConfigEditor(props: {
   }
 
   const addProvider = () => {
-    const type: AIProviderType = 'openai'
+    const type: AIProviderType = 'openai-compatible'
     const provider: AIProviderConfig = {
       apiKey: '',
       defaultModel: getDefaultAIModel(type),

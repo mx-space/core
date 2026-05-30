@@ -1593,9 +1593,11 @@ export const zhCN = {
   'settings.ai.error.fetchModelsFailed': '获取模型列表失败',
   'settings.ai.error.testFailed': '连接测试失败',
   'settings.ai.field.apiKey': 'API Key',
+  'settings.ai.field.contextWindow': '上下文窗口 (tokens)',
   'settings.ai.field.defaultModel': '默认模型',
   'settings.ai.field.displayName': '显示名称',
   'settings.ai.field.endpoint': 'Endpoint',
+  'settings.ai.field.maxTokens': '最大输出 tokens',
   'settings.ai.field.providerType': '服务类型',
   'settings.ai.placeholder.endpointCompatible':
     '必填，如 https://api.deepseek.com',

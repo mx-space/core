@@ -133,6 +133,20 @@ export interface ProviderModel {
   name: string
 }
 
+export interface RegistryModelCosts {
+  cachedInputPerMillion: number
+  inputPerMillion: number
+  outputPerMillion: number
+}
+
+export interface RegistryModel {
+  contextWindow: number
+  costs: RegistryModelCosts
+  id: string
+  maxTokens: number
+  name: string
+}
+
 export interface ProviderModelsResponse {
   error?: string
   models: ProviderModel[]
@@ -345,6 +359,10 @@ export function createInsightsTranslationTask(data: {
 
 export function getModels() {
   return getJson<ProviderModelsResponse[]>('/ai/models')
+}
+
+export function getRegistryModels(providerId: string) {
+  return getJson<RegistryModel[]>('/ai/registry/models', { providerId })
 }
 
 export function getModelList(data: AIModelListData) {

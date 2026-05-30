@@ -1,9 +1,12 @@
+import './index.css'
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import App from './App'
+import { migrateLegacyProviderType } from './bootstrap/migrate-legacy-provider-type'
 
-import './index.css'
+migrateLegacyProviderType()
 
 const appRoot = createRootElement()
 
