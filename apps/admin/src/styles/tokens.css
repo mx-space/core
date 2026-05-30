@@ -1,4 +1,6 @@
 @theme {
+  --color-background: #ffffff;
+
   --color-surface-page: #faf9f7;
   --color-surface-card: #ffffff;
   --color-surface-inset: #f5f4f1;
@@ -48,6 +50,8 @@
 }
 
 .dark {
+  --color-background: #0a0a0a;
+
   --color-surface-page: #100f0e;
   --color-surface-card: #1a1816;
   --color-surface-inset: #0a0908;

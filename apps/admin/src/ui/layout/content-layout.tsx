@@ -169,10 +169,7 @@ function DesktopContentLayout(props: {
         }}
         panelRef={asideRef}
       >
-        <div
-          className="relative h-full bg-surface-card"
-          ref={props.setAsideEl}
-        />
+        <div className="relative h-full" ref={props.setAsideEl} />
       </Panel>
     </PanelGroup>
   )
@@ -260,7 +257,7 @@ export function AsidePanel(props: {
     props.title != null || props.headerActions != null || props.onClose != null
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface-card">
+    <div className="flex h-full min-h-0 flex-col bg-background">
       {hasHeader ? (
         <div
           className={cn(
