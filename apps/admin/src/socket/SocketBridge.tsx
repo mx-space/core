@@ -1,15 +1,28 @@
+import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
+import type { NavigateFunction } from 'react-router'
 import { useNavigate } from 'react-router'
+import type { Socket } from 'socket.io-client'
 import { io } from 'socket.io-client'
 import { toast } from 'sonner'
-import type { NavigateFunction } from 'react-router'
-import type { Socket } from 'socket.io-client'
-import type { NotificationTypes } from './types'
+
+import type { AITask } from '~/api/ai'
+import {
+  applyTaskPatch,
+  prependTaskToList,
+  removeTaskFromList,
+  upsertTaskInList,
+} from '~/features/ai/utils/ai'
 
 import { GATEWAY_URL } from '../constants/env'
 import { translate } from '../i18n/translate'
 import { adminQueryKeys } from '../query/keys'
+import type {
+  AiTaskUpdatePayload,
+  AiTaskUpdateStreamFrame,
+  NotificationTypes,
+} from './types'
 import { EventTypes } from './types'
 
 interface GatewayMessage {
@@ -129,8 +142,13 @@ export function SocketBridge() {
           })
           break
         }
+        case EventTypes.AI_TASK_UPDATE: {
+          handleAiTaskUpdate(queryClient, payload)
+          break
+        }
         default: {
           if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console -- dev-only fallthrough trace
             console.debug('[socket]', type, payload, code)
           }
         }
@@ -273,18 +291,22 @@ function notifyAdmin(payload: unknown) {
 
 function notifyByType(type: NotificationTypes | '', message: string) {
   switch (type) {
-    case 'error':
+    case 'error': {
       toast.error(message)
       break
-    case 'success':
+    }
+    case 'success': {
       toast.success(message)
       break
-    case 'warn':
+    }
+    case 'warn': {
       toast.warning(message)
       break
+    }
     case 'info':
-    default:
+    default: {
       toast.info(message)
+    }
   }
 }
 
@@ -324,4 +346,93 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 function readString(value: unknown) {
   return typeof value === 'string' ? value : ''
+}
+
+/**
+ * AI_TASK_UPDATE phase router. Per spec 2 plan step-20:
+ *  - 'created'  : full Task snapshot — PREPEND to every list page-1 cache;
+ *                 also setQueryData for taskDetail(id).
+ *  - 'started' | 'status' | 'result' : upsert in list caches by id; patch
+ *                 the detail cache via applyTaskPatch.
+ *  - 'progress' | 'log' : detail cache only (list shows status, not progress
+ *                 noise).
+ *  - 'stream'   : dispatch a CustomEvent; NEVER touch TanStack cache.
+ *  - 'deleted'  : remove the row from every list cache AND removeQueries
+ *                 on the detail cache entry.
+ *  - When groupId is present on any non-stream phase, ALSO wholesale-replace
+ *    the parent group's subTaskStats on its detail cache (server guarantees
+ *    a full SubTaskStats object per step-19).
+ */
+function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
+  if (!isAiTaskUpdatePayload(payload)) return
+
+  const { id, groupId, phase, patch, log, stream } = payload
+
+  if (phase === 'stream') {
+    window.dispatchEvent(
+      new CustomEvent<{
+        groupId?: string
+        stream?: AiTaskUpdateStreamFrame
+        taskId: string
+      }>('mx-admin:ai-task-stream', {
+        detail: { groupId, stream, taskId: id },
+      }),
+    )
+    return
+  }
+
+  if (phase === 'deleted') {
+    for (const [key, data] of queryClient.getQueriesData({
+      queryKey: adminQueryKeys.ai.tasksRoot,
+    })) {
+      if (!data) continue
+      const next = removeTaskFromList(data, id)
+      if (next !== data) queryClient.setQueryData(key, next)
+    }
+    queryClient.removeQueries({ queryKey: adminQueryKeys.ai.taskDetail(id) })
+    return
+  }
+
+  if (phase === 'created') {
+    const fullTask = patch as AITask
+    queryClient.setQueryData(adminQueryKeys.ai.taskDetail(id), fullTask)
+    for (const [key, data] of queryClient.getQueriesData({
+      queryKey: adminQueryKeys.ai.tasksRoot,
+    })) {
+      if (!data) continue
+      const next = prependTaskToList(data, fullTask)
+      if (next !== data) queryClient.setQueryData(key, next)
+    }
+  } else {
+    queryClient.setQueryData<AITask | undefined>(
+      adminQueryKeys.ai.taskDetail(id),
+      (prev) => (prev ? applyTaskPatch(prev, patch, log) : prev),
+    )
+    if (
+      (phase === 'started' || phase === 'status' || phase === 'result') &&
+      patch
+    ) {
+      for (const [key, data] of queryClient.getQueriesData({
+        queryKey: adminQueryKeys.ai.tasksRoot,
+      })) {
+        if (!data) continue
+        const next = upsertTaskInList(data, id, patch)
+        if (next !== data) queryClient.setQueryData(key, next)
+      }
+    }
+  }
+
+  if (groupId && patch?.subTaskStats) {
+    const { subTaskStats } = patch
+    queryClient.setQueryData<AITask | undefined>(
+      adminQueryKeys.ai.taskDetail(groupId),
+      (prev) => (prev ? { ...prev, subTaskStats } : prev),
+    )
+  }
+}
+
+function isAiTaskUpdatePayload(value: unknown): value is AiTaskUpdatePayload {
+  if (!value || typeof value !== 'object') return false
+  const v = value as Record<string, unknown>
+  return typeof v.id === 'string' && typeof v.phase === 'string'
 }

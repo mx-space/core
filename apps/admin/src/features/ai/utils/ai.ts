@@ -1,6 +1,11 @@
-import type { AIInsights, AISummary, AITask, AITranslation } from '~/api/ai'
-import type { TranslationKey, TranslationValues } from '~/i18n/types'
-
+import type {
+  AIInsights,
+  AISummary,
+  AITask,
+  AITaskLog,
+  AITasksResponse,
+  AITranslation,
+} from '~/api/ai'
 import {
   AITaskStatus,
   AITaskType,
@@ -8,6 +13,7 @@ import {
   updateSummary,
   updateTranslation,
 } from '~/api/ai'
+import type { TranslationKey, TranslationValues } from '~/i18n/types'
 import { relativeTimeFromNow } from '~/utils/time'
 
 import { statusOptionKeys, typeOptionKeys } from '../constants'
@@ -276,4 +282,140 @@ export function readTaskTypeFilter(value: null | string): AITaskType | '' {
 export function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) return error.message
   return fallback
+}
+
+/**
+ * Immutable, pure merge of a partial AI task patch onto a prior snapshot. Used
+ * by the SocketBridge AI_TASK_UPDATE handler to advance the per-task detail
+ * cache for `started` / `status` / `progress` / `log` / `result` phases.
+ *
+ * Merges (only when present on the patch):
+ *   - status, progress, progressMessage
+ *   - tokensGenerated, cost (cost lands in step-21)
+ *   - subTaskStats — wholesale replace (server guarantees full object per
+ *     spec 2 step-19; no delta merge ambiguity)
+ *   - result, error, completedAt, completedItems, totalItems, startedAt, workerId
+ *
+ * The `log` argument (when provided) is appended to a NEW logs array. Returns
+ * `prev` unchanged if neither patch nor log carries any field of interest.
+ */
+export function applyTaskPatch(
+  prev: AITask,
+  patch?: Partial<AITask>,
+  log?: AITaskLog,
+): AITask {
+  if (!patch && !log) return prev
+
+  const next: AITask = { ...prev }
+  let changed = false
+
+  if (patch) {
+    // `cost` is forward-declared here; it lands on AITask in step-21. Using
+    // a string list keeps this helper additive without coupling to the
+    // interface ordering.
+    const fields = [
+      'status',
+      'progress',
+      'progressMessage',
+      'tokensGenerated',
+      'cost',
+      'result',
+      'error',
+      'completedAt',
+      'completedItems',
+      'totalItems',
+      'startedAt',
+      'workerId',
+      'retryCount',
+      'groupId',
+    ] as const
+    const patchRecord = patch as Record<string, unknown>
+    const nextRecord = next as unknown as Record<string, unknown>
+    for (const key of fields) {
+      if (key in patchRecord && patchRecord[key] !== undefined) {
+        nextRecord[key] = patchRecord[key]
+        changed = true
+      }
+    }
+    if (patch.subTaskStats) {
+      next.subTaskStats = patch.subTaskStats
+      changed = true
+    }
+  }
+
+  if (log) {
+    next.logs = [...(prev.logs ?? []), log]
+    changed = true
+  }
+
+  return changed ? next : prev
+}
+
+function isTasksListResponse(value: unknown): value is AITasksResponse {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    Array.isArray((value as AITasksResponse).data) &&
+    typeof (value as AITasksResponse).total === 'number'
+  )
+}
+
+/**
+ * Prepend a freshly-created task to page-1 of a list cache. No-ops when the
+ * cache shape is not a paged AITasksResponse (e.g. detail cache entries that
+ * sit under the same ['ai','tasks'] root).
+ */
+export function prependTaskToList(
+  data: unknown,
+  task: AITask,
+): AITasksResponse | unknown {
+  if (!isTasksListResponse(data)) return data
+  if (data.data.some((t) => t.id === task.id)) {
+    return upsertTaskInList(data, task.id, task)
+  }
+  return {
+    ...data,
+    data: [task, ...data.data],
+    total: data.total + 1,
+  }
+}
+
+/**
+ * Apply a partial patch to a task already present in a list cache. No-op when
+ * the cache shape is not a paged AITasksResponse, or when the id is absent.
+ */
+export function upsertTaskInList(
+  data: unknown,
+  id: string,
+  patch: Partial<AITask>,
+): AITasksResponse | unknown {
+  if (!isTasksListResponse(data)) return data
+  const idx = data.data.findIndex((t) => t.id === id)
+  if (idx < 0) return data
+  const prev = data.data[idx]
+  const merged = applyTaskPatch(prev, patch)
+  if (merged === prev) return data
+  const nextData = data.data.slice()
+  nextData[idx] = merged
+  return { ...data, data: nextData }
+}
+
+/**
+ * Remove a task by id from a list cache, decrementing the total. No-op when
+ * the cache shape is not a paged AITasksResponse, or when the id is absent.
+ */
+export function removeTaskFromList(
+  data: unknown,
+  id: string,
+): AITasksResponse | unknown {
+  if (!isTasksListResponse(data)) return data
+  const idx = data.data.findIndex((t) => t.id === id)
+  if (idx < 0) return data
+  const nextData = data.data.slice()
+  nextData.splice(idx, 1)
+  return {
+    ...data,
+    data: nextData,
+    total: Math.max(0, data.total - 1),
+  }
 }
