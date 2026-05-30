@@ -21,7 +21,7 @@ export function Checkbox(props: CheckboxProps) {
       aria-label={props['aria-label']}
       checked={props.checked}
       className={cn(
-        'outline-hidden inline-flex size-4 items-center justify-center rounded border border-neutral-300 bg-white text-white transition-colors data-[disabled]:cursor-not-allowed data-[checked]:border-neutral-950 data-[indeterminate]:border-neutral-950 data-[checked]:bg-neutral-950 data-[indeterminate]:bg-neutral-950 data-[disabled]:opacity-50 data-[focus-visible]:ring-2 data-[focus-visible]:ring-[var(--color-primary-shallow)] dark:border-neutral-700 dark:bg-neutral-950 dark:data-[checked]:border-neutral-50 dark:data-[indeterminate]:border-neutral-50 dark:data-[checked]:bg-neutral-50 dark:data-[indeterminate]:bg-neutral-50 dark:data-[checked]:text-neutral-950 dark:data-[indeterminate]:text-neutral-950',
+        'outline-hidden inline-flex size-4 items-center justify-center rounded-xs border border-border-strong bg-surface-card text-white transition-colors data-[disabled]:cursor-not-allowed data-[checked]:border-accent data-[indeterminate]:border-accent data-[checked]:bg-accent data-[indeterminate]:bg-accent data-[disabled]:opacity-50 data-[focus-visible]:outline-hidden data-[focus-visible]:ring-[3px] data-[focus-visible]:ring-accent/15',
         props.className,
       )}
       disabled={props.disabled}
@@ -42,7 +42,7 @@ export function Checkbox(props: CheckboxProps) {
   if (!props.label) return control
 
   return (
-    <label className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300">
+    <label className="inline-flex items-center gap-2 text-sm text-fg">
       {control}
       <span>{props.label}</span>
     </label>

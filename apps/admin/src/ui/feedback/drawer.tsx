@@ -89,10 +89,8 @@ export function Drawer(props: {
               aria-labelledby={showHeader ? titleId : undefined}
               aria-modal="true"
               className={cn(
-                'outline-hidden absolute bottom-0 top-0 flex flex-col bg-white dark:bg-neutral-950',
-                side === 'right'
-                  ? 'right-0 border-l border-neutral-200 shadow-[-12px_0_32px_-8px_rgba(15,23,42,0.18),-2px_0_8px_-2px_rgba(15,23,42,0.08)] dark:border-neutral-800 dark:shadow-[-16px_0_40px_-8px_rgba(0,0,0,0.6),-2px_0_8px_-2px_rgba(0,0,0,0.4)]'
-                  : 'left-0 border-r border-neutral-200 shadow-[12px_0_32px_-8px_rgba(15,23,42,0.18),2px_0_8px_-2px_rgba(15,23,42,0.08)] dark:border-neutral-800 dark:shadow-[16px_0_40px_-8px_rgba(0,0,0,0.6),2px_0_8px_-2px_rgba(0,0,0,0.4)]',
+                'outline-hidden shadow-lg absolute bottom-0 top-0 flex flex-col bg-surface-card',
+                side === 'right' ? 'right-0' : 'left-0',
                 widthClassName,
                 props.className,
               )}
@@ -106,12 +104,12 @@ export function Drawer(props: {
               {showHeader ? (
                 <div
                   className={cn(
-                    'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950',
+                    'flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-card px-4',
                     APP_SHELL_HEADER_HEIGHT_CLASS,
                   )}
                 >
                   <h2
-                    className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-950 dark:text-neutral-50"
+                    className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-fg"
                     id={titleId}
                   >
                     {Icon ? (
@@ -123,7 +121,7 @@ export function Drawer(props: {
                     {props.headerActions}
                     <button
                       aria-label={t('ui.modal.closeAria')}
-                      className="inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                      className="inline-flex size-9 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
                       onClick={props.onClose}
                       type="button"
                     >
@@ -141,7 +139,7 @@ export function Drawer(props: {
                 {props.children}
               </div>
               {props.footer ? (
-                <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+                <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-3">
                   {props.footer}
                 </div>
               ) : null}

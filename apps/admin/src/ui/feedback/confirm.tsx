@@ -26,20 +26,21 @@ function ConfirmDialog(props: ConfirmDialogProps) {
     <div className="flex w-full flex-col">
       <ModalHeader showClose={false} title={props.title} />
       {props.description ? (
-        <div className="px-4 py-4 text-sm text-neutral-700 dark:text-neutral-300">
-          {props.description}
-        </div>
+        <div className="px-6 py-4 text-sm text-fg">{props.description}</div>
       ) : (
         <div className="h-2" />
       )}
-      <div className="flex justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-        <Button autoFocus onClick={() => modal.close(false)} variant="subtle">
+      <div className="flex justify-end gap-2 border-t border-border px-6 py-3">
+        <Button
+          autoFocus
+          onClick={() => modal.close(false)}
+          variant="secondary"
+        >
           {cancelText}
         </Button>
         <Button
           className={cn(
-            props.destructive &&
-              'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:text-white dark:hover:bg-red-600',
+            props.destructive && 'bg-red-600 text-white hover:bg-red-700',
           )}
           onClick={() => modal.close(true)}
         >

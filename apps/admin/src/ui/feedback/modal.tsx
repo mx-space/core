@@ -1,9 +1,9 @@
 import { Dialog } from '@base-ui/react/dialog'
+import type { LucideIcon } from 'lucide-react'
 import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useRef } from 'react'
-import type { LucideIcon } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
+import { useRef } from 'react'
 
 import { useI18n } from '~/i18n'
 import { PortalLayerScope, useFloatingZ } from '~/ui/feedback/portal-layer'
@@ -68,7 +68,7 @@ export function Modal(props: ModalProps) {
             />
             <Dialog.Popup
               className={cn(
-                'outline-hidden fixed left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded border border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-950',
+                'outline-hidden shadow-lg fixed left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg bg-surface-card',
                 props.className,
               )}
               initialFocus={props.initialFocus}
@@ -118,19 +118,19 @@ export function ModalHeader(props: {
   return (
     <div
       className={cn(
-        'flex h-12 shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+        'flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-6',
         props.className,
       )}
     >
       <div className="min-w-0">
-        <ModalTitle className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-950 dark:text-neutral-50">
+        <ModalTitle className="inline-flex min-w-0 items-center gap-2 text-lg font-semibold text-fg">
           {Icon ? (
             <Icon aria-hidden="true" className="size-4 shrink-0" />
           ) : null}
           <span className="truncate">{props.title}</span>
         </ModalTitle>
         {props.subtitle ? (
-          <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="mt-0.5 truncate text-xs text-fg-muted">
             {props.subtitle}
           </p>
         ) : null}
@@ -140,7 +140,7 @@ export function ModalHeader(props: {
         {showClose ? (
           <ModalClose
             aria-label={t('ui.modal.closeAria')}
-            className="-mr-2.5 inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+            className="-mr-2.5 inline-flex size-9 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
           >
             <X aria-hidden="true" className="size-4" />
           </ModalClose>

@@ -4,10 +4,10 @@ import type { ReactNode } from 'react'
 import { cn } from '~/utils/cn'
 
 const TOGGLE_ROOT_CLASS =
-  'outline-hidden relative inline-flex h-5 min-w-9 items-center rounded-full bg-neutral-200 px-0.5 transition-colors data-[disabled]:cursor-not-allowed data-[checked]:bg-neutral-950 data-[disabled]:opacity-50 data-[focus-visible]:ring-2 data-[focus-visible]:ring-[var(--color-primary-shallow)] dark:bg-neutral-800 dark:data-[checked]:bg-neutral-50'
+  'outline-hidden relative inline-flex h-5 min-w-9 items-center rounded-full bg-surface-inset px-0.5 transition-colors data-[disabled]:cursor-not-allowed data-[checked]:bg-accent data-[disabled]:opacity-50 data-[focus-visible]:outline-hidden data-[focus-visible]:ring-[3px] data-[focus-visible]:ring-accent/15'
 
 const TOGGLE_THUMB_CLASS =
-  'shadow-xs block size-4 translate-x-0 rounded-full bg-white transition-transform data-[checked]:translate-x-4 dark:data-[checked]:bg-neutral-950'
+  'shadow-xs block size-4 translate-x-0 rounded-full bg-white transition-transform data-[checked]:translate-x-4'
 
 export function Toggle(props: {
   'aria-label'?: string
@@ -45,18 +45,16 @@ export function Switch(props: SwitchProps) {
       className={cn(
         'flex items-center justify-between gap-4 text-sm',
         props.bordered
-          ? 'rounded border border-neutral-200 px-3 py-2 dark:border-neutral-800'
+          ? 'rounded-sm border border-border bg-surface-card px-3 py-2'
           : null,
         props.className,
         props.disabled && 'opacity-60',
       )}
     >
       <span className="min-w-0">
-        <span className="block text-neutral-800 dark:text-neutral-200">
-          {props.label}
-        </span>
+        <span className="block text-fg">{props.label}</span>
         {props.description ? (
-          <span className="mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="mt-0.5 block text-xs text-fg-muted">
             {props.description}
           </span>
         ) : null}

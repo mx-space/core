@@ -1,6 +1,5 @@
 import { Field } from '@base-ui/react/field'
 import { Input as BaseInput } from '@base-ui/react/input'
-import { forwardRef } from 'react'
 import type {
   ComponentPropsWithoutRef,
   CSSProperties,
@@ -8,6 +7,7 @@ import type {
   KeyboardEventHandler,
   ReactNode,
 } from 'react'
+import { forwardRef } from 'react'
 
 import { cn } from '~/utils/cn'
 
@@ -45,7 +45,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         autoComplete={props.autoComplete}
         autoFocus={props.autoFocus}
         className={cn(
-          'outline-hidden h-10 w-full rounded border border-neutral-200 bg-white px-3 text-sm text-neutral-900 transition-colors placeholder:text-neutral-400 focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-shallow)] disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100',
+          'outline-hidden shadow-xs h-9 w-full rounded-sm border border-border bg-surface-card px-3 text-sm text-fg transition-colors placeholder:text-fg-subtle focus:border-accent focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60',
           props.controlClassName,
         )}
         disabled={props.disabled}
@@ -79,10 +79,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     return (
       <Field.Root className={cn('grid gap-1.5 text-sm', props.className)}>
         <Field.Label
-          className={cn(
-            'font-medium text-neutral-700 dark:text-neutral-300',
-            props.labelClassName,
-          )}
+          className={cn('font-medium text-fg', props.labelClassName)}
         >
           {props.label}
           {props.required ? <span className="text-red-500"> *</span> : null}
@@ -118,7 +115,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       <textarea
         autoFocus={props.autoFocus}
         className={cn(
-          'outline-hidden min-h-24 w-full rounded border border-neutral-200 bg-white px-3 py-2 text-sm leading-6 text-neutral-900 transition-colors placeholder:text-neutral-400 focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-shallow)] disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100',
+          'outline-hidden shadow-xs min-h-24 w-full rounded-sm border border-border bg-surface-card px-3 py-2 text-sm leading-6 text-fg transition-colors placeholder:text-fg-subtle focus:border-accent focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60',
           props.controlClassName,
         )}
         disabled={props.disabled}
@@ -141,10 +138,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
     return (
       <Field.Root className={cn('grid gap-1.5 text-sm', props.className)}>
         <Field.Label
-          className={cn(
-            'font-medium text-neutral-700 dark:text-neutral-300',
-            props.labelClassName,
-          )}
+          className={cn('font-medium text-fg', props.labelClassName)}
         >
           {props.label}
           {props.required ? <span className="text-red-500"> *</span> : null}

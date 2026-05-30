@@ -42,7 +42,7 @@ export function SelectField<TValue extends SelectValue = string>(
       <BaseSelect.Trigger
         aria-label={props['aria-label']}
         className={cn(
-          'outline-hidden flex h-9 w-full items-center justify-between gap-2 rounded border border-neutral-200 bg-white px-3 text-left text-sm text-neutral-900 transition-colors hover:bg-neutral-50 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60 data-[focus-visible]:ring-2 data-[focus-visible]:ring-[var(--color-primary-shallow)] dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:hover:bg-neutral-900',
+          'outline-hidden shadow-xs flex h-9 w-full items-center justify-between gap-2 rounded-sm border border-border bg-surface-card px-3 text-left text-sm text-fg transition-colors hover:bg-surface-inset data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60 data-[focus-visible]:outline-hidden data-[focus-visible]:ring-[3px] data-[focus-visible]:ring-accent/15',
           props.triggerClassName,
           props.className,
         )}
@@ -50,7 +50,7 @@ export function SelectField<TValue extends SelectValue = string>(
         <BaseSelect.Value />
         <ChevronDown
           aria-hidden="true"
-          className="size-4 shrink-0 text-neutral-400"
+          className="size-4 shrink-0 text-fg-subtle"
         />
       </BaseSelect.Trigger>
       <BaseSelect.Portal>
@@ -58,7 +58,7 @@ export function SelectField<TValue extends SelectValue = string>(
           <PortalLayerScope depth={depth}>
             <BaseSelect.Popup
               className={cn(
-                'outline-hidden w-[var(--anchor-width)] rounded border border-neutral-200 bg-white text-sm shadow-lg dark:border-neutral-800 dark:bg-neutral-950',
+                'outline-hidden shadow-md w-[var(--anchor-width)] rounded-lg bg-surface-overlay text-sm',
                 props.popupClassName,
               )}
             >
@@ -69,7 +69,7 @@ export function SelectField<TValue extends SelectValue = string>(
               >
                 {props.options.map((option) => (
                   <BaseSelect.Item
-                    className="outline-hidden cursor-pointer rounded px-2 py-1.5 text-neutral-700 data-[highlighted]:bg-neutral-100 data-[selected]:text-[var(--color-primary)] dark:text-neutral-200 dark:data-[highlighted]:bg-neutral-800"
+                    className="outline-hidden cursor-pointer rounded-sm px-2 py-1.5 text-fg data-[highlighted]:bg-surface-inset data-[selected]:bg-accent-soft data-[selected]:text-fg"
                     key={String(option.value)}
                     value={option.value}
                   >

@@ -1,11 +1,11 @@
-import { Button as BaseButton } from '@base-ui/react/button'
-import { Link } from 'react-router'
 import type { ButtonProps as BaseButtonProps } from '@base-ui/react/button'
+import { Button as BaseButton } from '@base-ui/react/button'
 import type { LinkProps } from 'react-router'
+import { Link } from 'react-router'
 
 import { cn } from '~/utils/cn'
 
-type ButtonVariant = 'primary' | 'subtle'
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'subtle'
 
 export interface ButtonProps extends Omit<BaseButtonProps, 'className'> {
   className?: string
@@ -20,15 +20,19 @@ export interface ButtonLinkProps extends Omit<LinkProps, 'className'> {
   iconOnly?: boolean
 }
 
+// `subtle` retained as an alias of `secondary` for backward compatibility with
+// existing consumers; remove after a sweep through call sites in a later PR.
 const variantClassNames: Record<ButtonVariant, string> = {
-  primary:
-    'bg-neutral-950 text-white hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200',
+  primary: 'shadow-xs bg-accent text-white hover:bg-accent-hover',
+  secondary:
+    'shadow-xs border border-border bg-surface-card text-fg hover:bg-surface-inset',
+  ghost: 'bg-transparent text-fg-muted hover:bg-surface-inset hover:text-fg',
   subtle:
-    'border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-200 dark:hover:bg-neutral-900',
+    'shadow-xs border border-border bg-surface-card text-fg hover:bg-surface-inset',
 }
 
 const buttonBaseClassName =
-  'inline-flex items-center justify-center rounded text-sm font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-primary-shallow)] disabled:pointer-events-none disabled:opacity-50'
+  'inline-flex items-center justify-center rounded-sm text-sm font-medium outline-hidden transition-colors focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:pointer-events-none disabled:opacity-50'
 
 const buttonTextClassName = 'h-9 gap-2 px-3'
 

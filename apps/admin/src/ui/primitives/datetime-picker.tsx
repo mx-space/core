@@ -1,14 +1,13 @@
 import { Field } from '@base-ui/react/field'
 import { Popover } from '@base-ui/react/popover'
+import { useDatePicker } from '@rehookify/datepicker'
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
-
-import { useDatePicker } from '@rehookify/datepicker'
+import { useCallback, useMemo, useState } from 'react'
 
 import { useI18n } from '~/i18n'
 import { PortalLayerScope, useFloatingZ } from '~/ui/feedback/portal-layer'
@@ -142,13 +141,13 @@ export function DateTimePicker(props: DateTimePickerProps) {
 
   const decadeLabel = useMemo(() => {
     if (years.length === 0) return ''
-    return `${years[0].year} - ${years[years.length - 1].year}`
+    return `${years[0].year} - ${years.at(-1).year}`
   }, [years])
 
   const navButtonClass =
-    'flex size-7 items-center justify-center rounded text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+    'flex size-7 items-center justify-center rounded-sm text-fg-muted hover:bg-surface-inset'
   const headerTextButtonClass =
-    'rounded px-1.5 py-0.5 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-100 dark:text-neutral-100 dark:hover:bg-neutral-800'
+    'rounded-sm px-1.5 py-0.5 text-sm font-medium text-fg transition-colors hover:bg-surface-inset'
 
   const dayView = (
     <>
@@ -184,7 +183,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
           <ChevronRight aria-hidden="true" className="size-4" />
         </button>
       </div>
-      <div className="grid grid-cols-7 gap-0.5 text-center text-xs text-neutral-400">
+      <div className="grid grid-cols-7 gap-0.5 text-center text-xs text-fg-subtle">
         {weekDays.map((w) => (
           <span key={w}>{w}</span>
         ))}
@@ -194,14 +193,11 @@ export function DateTimePicker(props: DateTimePickerProps) {
           <button
             {...dayButton(day)}
             className={cn(
-              'flex h-8 items-center justify-center rounded text-xs transition-colors',
-              day.inCurrentMonth
-                ? 'text-neutral-700 dark:text-neutral-200'
-                : 'text-neutral-300 dark:text-neutral-600',
-              day.selected &&
-                'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary)]',
-              !day.selected && 'hover:bg-neutral-100 dark:hover:bg-neutral-800',
-              day.now && !day.selected && 'ring-1 ring-[var(--color-primary)]',
+              'flex h-8 items-center justify-center rounded-sm text-xs transition-colors',
+              day.inCurrentMonth ? 'text-fg' : 'text-fg-subtle/60',
+              day.selected && 'bg-accent text-white hover:bg-accent',
+              !day.selected && 'hover:bg-surface-inset',
+              day.now && !day.selected && 'ring-1 ring-accent',
               day.disabled &&
                 'cursor-not-allowed opacity-40 hover:bg-transparent',
             )}
@@ -245,11 +241,11 @@ export function DateTimePicker(props: DateTimePickerProps) {
           <button
             {...monthButton(m, { onClick: () => setView('day') })}
             className={cn(
-              'flex h-10 items-center justify-center rounded text-xs transition-colors',
+              'flex h-10 items-center justify-center rounded-sm text-xs transition-colors',
               m.active
-                ? 'bg-[var(--color-primary)] text-white'
-                : 'text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800',
-              m.now && !m.active && 'ring-1 ring-[var(--color-primary)]',
+                ? 'bg-accent text-white'
+                : 'text-fg hover:bg-surface-inset',
+              m.now && !m.active && 'ring-1 ring-accent',
               m.disabled && 'cursor-not-allowed opacity-40',
             )}
             key={m.$date.toISOString()}
@@ -272,9 +268,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
         </button>
-        <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">
-          {decadeLabel}
-        </span>
+        <span className="text-sm font-medium text-fg">{decadeLabel}</span>
         <button {...nextYearsButton()} className={navButtonClass} type="button">
           <ChevronRight aria-hidden="true" className="size-4" />
         </button>
@@ -284,11 +278,11 @@ export function DateTimePicker(props: DateTimePickerProps) {
           <button
             {...yearButton(y, { onClick: () => setView('month') })}
             className={cn(
-              'flex h-10 items-center justify-center rounded text-xs transition-colors',
+              'flex h-10 items-center justify-center rounded-sm text-xs transition-colors',
               y.active
-                ? 'bg-[var(--color-primary)] text-white'
-                : 'text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800',
-              y.now && !y.active && 'ring-1 ring-[var(--color-primary)]',
+                ? 'bg-accent text-white'
+                : 'text-fg hover:bg-surface-inset',
+              y.now && !y.active && 'ring-1 ring-accent',
               y.disabled && 'cursor-not-allowed opacity-40',
             )}
             key={y.year}
@@ -314,10 +308,8 @@ export function DateTimePicker(props: DateTimePickerProps) {
     >
       <Popover.Trigger
         className={cn(
-          'outline-hidden flex h-10 w-full items-center justify-between rounded border border-neutral-200 bg-white px-3 text-sm transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-shallow)] disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-800 dark:bg-neutral-950',
-          displayValue
-            ? 'text-neutral-900 dark:text-neutral-100'
-            : 'text-neutral-400',
+          'outline-hidden shadow-xs flex h-9 w-full items-center justify-between rounded-sm border border-border bg-surface-card px-3 text-sm transition-colors focus:border-accent focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60',
+          displayValue ? 'text-fg' : 'text-fg-subtle',
           props.controlClassName,
         )}
         disabled={disabled}
@@ -333,7 +325,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
         </span>
         <CalendarIcon
           aria-hidden="true"
-          className="ml-2 size-4 shrink-0 text-neutral-400"
+          className="ml-2 size-4 shrink-0 text-fg-subtle"
         />
       </Popover.Trigger>
       <Popover.Portal>
@@ -344,11 +336,11 @@ export function DateTimePicker(props: DateTimePickerProps) {
           style={{ zIndex: z }}
         >
           <PortalLayerScope depth={depth}>
-            <Popover.Popup className="outline-hidden overflow-hidden rounded border border-neutral-200 bg-white text-sm shadow-xl dark:border-neutral-800 dark:bg-neutral-950">
+            <Popover.Popup className="outline-hidden shadow-md overflow-hidden rounded-lg bg-surface-overlay text-sm">
               <div className="flex">
                 <div className="w-64 p-3">{calendarPane}</div>
-                <div className="flex w-28 flex-col border-l border-neutral-200 dark:border-neutral-800">
-                  <div className="px-3 pb-1 pt-3 text-xs text-neutral-400">
+                <div className="flex w-28 flex-col border-l border-border">
+                  <div className="px-3 pb-1 pt-3 text-xs text-fg-subtle">
                     {t('ui.datetimePicker.time')}
                   </div>
                   <div className="grid max-h-56 grid-cols-1 gap-0.5 overflow-y-auto px-2 pb-2">
@@ -356,10 +348,10 @@ export function DateTimePicker(props: DateTimePickerProps) {
                       <button
                         {...timeButton(t)}
                         className={cn(
-                          'rounded px-2 py-1 text-xs transition-colors',
+                          'rounded-sm px-2 py-1 text-xs transition-colors',
                           t.selected
-                            ? 'bg-[var(--color-primary)] text-white'
-                            : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800',
+                            ? 'bg-accent text-white'
+                            : 'text-fg-muted hover:bg-surface-inset',
                           t.disabled && 'cursor-not-allowed opacity-40',
                         )}
                         key={t.time}
@@ -371,9 +363,9 @@ export function DateTimePicker(props: DateTimePickerProps) {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between border-t border-neutral-200 px-3 py-2 dark:border-neutral-800">
+              <div className="flex items-center justify-between border-t border-border px-3 py-2">
                 <button
-                  className="text-xs text-neutral-500 hover:text-neutral-800 disabled:opacity-40 dark:hover:text-neutral-100"
+                  className="text-xs text-fg-muted hover:text-fg disabled:opacity-40"
                   disabled={!current}
                   onClick={() => {
                     onChange('')
@@ -384,7 +376,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
                   {t('ui.datetimePicker.clear')}
                 </button>
                 <button
-                  className="text-xs text-[var(--color-primary)] hover:underline"
+                  className="text-xs text-accent hover:underline"
                   onClick={() => setOpen(false)}
                   type="button"
                 >
@@ -408,12 +400,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
 
   return (
     <Field.Root className={cn('grid gap-1.5 text-sm', props.className)}>
-      <Field.Label
-        className={cn(
-          'font-medium text-neutral-700 dark:text-neutral-300',
-          props.labelClassName,
-        )}
-      >
+      <Field.Label className={cn('font-medium text-fg', props.labelClassName)}>
         {props.label}
         {required ? <span className="text-red-500"> *</span> : null}
       </Field.Label>

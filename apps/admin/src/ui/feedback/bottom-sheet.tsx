@@ -402,7 +402,7 @@ export function BottomSheet(props: BottomSheetProps) {
         >
           <motion.div
             className={cn(
-              'flex h-full w-full flex-col bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_48px_-16px_rgba(15,23,42,0.28),0_-2px_10px_-2px_rgba(15,23,42,0.10)] will-change-transform dark:bg-neutral-950 dark:shadow-[0_-20px_56px_-16px_rgba(0,0,0,0.72),0_-2px_10px_-2px_rgba(0,0,0,0.44)]',
+              'shadow-lg flex h-full w-full flex-col bg-surface-card pb-[env(safe-area-inset-bottom)] will-change-transform',
               props.className,
             )}
             style={{
@@ -425,11 +425,11 @@ export function BottomSheet(props: BottomSheetProps) {
               onPointerUp={engine.endDrag}
               type="button"
             >
-              <div className="h-1.5 w-10 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+              <div className="h-1.5 w-10 rounded-full bg-border-strong" />
             </button>
-            <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950">
+            <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-card px-4">
               <h2
-                className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-950 dark:text-neutral-50"
+                className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-fg"
                 id={titleId}
               >
                 {Icon ? (
@@ -446,7 +446,7 @@ export function BottomSheet(props: BottomSheetProps) {
                       ? t('ui.bottomSheet.expand')
                       : t('ui.bottomSheet.collapse')
                   }
-                  className="inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                  className="inline-flex size-9 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
                   onClick={toggleSnap}
                   type="button"
                 >
@@ -455,7 +455,7 @@ export function BottomSheet(props: BottomSheetProps) {
                 {props.headerActions}
                 <button
                   aria-label={t('ui.bottomSheet.closeAria')}
-                  className="inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                  className="inline-flex size-9 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
                   onClick={props.onClose}
                   type="button"
                 >
@@ -477,7 +477,7 @@ export function BottomSheet(props: BottomSheetProps) {
               {props.children}
             </div>
             {props.footer ? (
-              <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+              <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-3">
                 {props.footer}
               </div>
             ) : null}
