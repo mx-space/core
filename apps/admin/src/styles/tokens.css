@@ -4,9 +4,9 @@
   --color-surface-inset: #f5f4f1;
   --color-surface-overlay: #ffffff;
 
-  --color-fg: #37352f;
-  --color-fg-muted: #787774;
-  --color-fg-subtle: #9b9a97;
+  --color-fg: #1c1917;
+  --color-fg-muted: #57534e;
+  --color-fg-subtle: #78716c;
 
   --color-border: rgba(0, 0, 0, 0.06);
   --color-border-strong: rgba(0, 0, 0, 0.12);
@@ -14,6 +14,21 @@
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;
   --color-accent-soft: #eaf0ff;
+
+  --text-xs: 0.625rem;
+  --text-xs--line-height: 0.875rem;
+  --text-sm: 0.75rem;
+  --text-sm--line-height: 1.125rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.375rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.625rem;
+  --text-2xl: 1.25rem;
+  --text-2xl--line-height: 1.75rem;
+  --text-3xl: 1.5rem;
+  --text-3xl--line-height: 2rem;
 
   --radius-xs: 6px;
   --radius-sm: 8px;
