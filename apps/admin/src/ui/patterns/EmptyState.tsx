@@ -31,9 +31,9 @@ export function EmptyState({
         </span>
       ) : null}
       <div className="space-y-1">
-        <div className="text-sm font-semibold text-fg">{title}</div>
+        <div className="text-base font-semibold text-fg">{title}</div>
         {description ? (
-          <div className="text-xs text-fg-muted">{description}</div>
+          <div className="text-sm text-fg-muted">{description}</div>
         ) : null}
       </div>
       {action ?? null}
