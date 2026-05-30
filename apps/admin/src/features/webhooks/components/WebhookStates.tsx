@@ -1,6 +1,7 @@
 import { Plus, Webhook } from 'lucide-react'
 
 import { useI18n } from '~/i18n'
+import { EmptyState } from '~/ui/patterns/EmptyState'
 import { Button } from '~/ui/primitives/button'
 
 export function WebhookListSkeleton() {
@@ -25,19 +26,18 @@ export function WebhookListSkeleton() {
 export function WebhookListEmptyState(props: { onCreate: () => void }) {
   const { t } = useI18n()
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <Webhook
-        aria-hidden="true"
-        className="mb-4 size-10 text-neutral-300 dark:text-neutral-700"
+    <div className="flex items-center justify-center py-24">
+      <EmptyState
+        action={
+          <Button onClick={props.onCreate} type="button">
+            <Plus aria-hidden="true" className="size-4" />
+            {t('webhooks.empty.create')}
+          </Button>
+        }
+        description={t('webhooks.empty.description')}
+        icon={Webhook}
+        title={t('webhooks.empty.title')}
       />
-      <p className="text-sm text-neutral-500">{t('webhooks.empty.title')}</p>
-      <p className="mb-4 mt-1 text-xs text-neutral-400">
-        {t('webhooks.empty.description')}
-      </p>
-      <Button onClick={props.onCreate} type="button">
-        <Plus aria-hidden="true" className="size-4" />
-        {t('webhooks.empty.create')}
-      </Button>
     </div>
   )
 }
@@ -45,17 +45,12 @@ export function WebhookListEmptyState(props: { onCreate: () => void }) {
 export function WebhookDetailEmptyState() {
   const { t } = useI18n()
   return (
-    <div className="flex h-full flex-col items-center justify-center bg-neutral-50 text-center dark:bg-neutral-950">
-      <Webhook
-        aria-hidden="true"
-        className="mb-4 size-10 text-neutral-300 dark:text-neutral-700"
+    <div className="flex h-full items-center justify-center bg-surface-card">
+      <EmptyState
+        description={t('webhooks.detailEmpty.description')}
+        icon={Webhook}
+        title={t('webhooks.detailEmpty.title')}
       />
-      <h3 className="mb-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-        {t('webhooks.detailEmpty.title')}
-      </h3>
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">
-        {t('webhooks.detailEmpty.description')}
-      </p>
     </div>
   )
 }

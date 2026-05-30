@@ -32,7 +32,7 @@ export function HeaderBackButton(props: HeaderBackButtonProps) {
     <button
       aria-label={label}
       className={cn(
-        'focus-visible:outline-hidden -ml-1.5 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100 dark:focus-visible:ring-neutral-500 dark:focus-visible:ring-offset-neutral-900',
+        'focus-visible:outline-hidden -ml-1.5 inline-flex size-9 shrink-0 items-center justify-center rounded-sm text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg focus-visible:ring-[3px] focus-visible:ring-accent/15',
         props.className,
       )}
       onClick={handleClick}

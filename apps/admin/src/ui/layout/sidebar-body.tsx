@@ -207,13 +207,11 @@ export function SidebarBody() {
             decoding="async"
             src={faviconUrl}
           />
-          <span className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
-            Mx Space
-          </span>
+          <span className="truncate text-sm font-medium text-fg">Mx Space</span>
         </div>
         <Popover.Root>
           <Popover.Trigger
-            className="outline-hidden flex shrink-0 items-center gap-1 rounded-lg p-1 transition-colors hover:bg-neutral-100 data-[popup-open]:bg-neutral-100 dark:hover:bg-neutral-900 dark:data-[popup-open]:bg-neutral-900"
+            className="outline-hidden flex shrink-0 items-center gap-1 rounded-sm p-1 transition-colors hover:bg-surface-inset data-[popup-open]:bg-surface-inset"
             title={ownerName}
             type="button"
           >
@@ -225,13 +223,13 @@ export function SidebarBody() {
                 src={owner.avatar}
               />
             ) : (
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-lg bg-neutral-200 text-xs font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-surface-inset text-xs font-medium text-fg-muted">
                 {ownerName.slice(0, 1).toUpperCase()}
               </span>
             )}
             <ChevronDown
               aria-hidden="true"
-              className="size-3 shrink-0 text-neutral-400"
+              className="size-3 shrink-0 text-fg-subtle"
             />
           </Popover.Trigger>
           <Popover.Portal>
@@ -242,7 +240,7 @@ export function SidebarBody() {
               style={{ zIndex: userMenuFloat.z }}
             >
               <PortalLayerScope depth={userMenuFloat.depth}>
-                <Popover.Popup className="outline-hidden w-64 rounded border border-neutral-200 bg-white p-1 text-sm shadow-lg dark:border-neutral-800 dark:bg-neutral-950">
+                <Popover.Popup className="shadow-md outline-hidden w-64 rounded-lg bg-surface-overlay p-1 text-sm">
                   <div className="flex min-w-0 items-center gap-3 px-2 py-2">
                     {owner?.avatar ? (
                       <img
@@ -252,24 +250,24 @@ export function SidebarBody() {
                         src={owner.avatar}
                       />
                     ) : (
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-neutral-200 text-sm font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-inset text-sm font-medium text-fg-muted">
                         {ownerName.slice(0, 1).toUpperCase()}
                       </span>
                     )}
                     <div className="min-w-0">
-                      <div className="truncate font-medium text-neutral-950 dark:text-neutral-50">
+                      <div className="truncate font-medium text-fg">
                         {ownerName}
                       </div>
                       {ownerContact ? (
-                        <div className="mt-0.5 truncate text-xs text-neutral-500 dark:text-neutral-400">
+                        <div className="mt-0.5 truncate text-xs text-fg-muted">
                           {ownerContact}
                         </div>
                       ) : null}
                     </div>
                   </div>
-                  <div className="my-1 h-px bg-neutral-100 dark:bg-neutral-800" />
+                  <div className="my-1 h-px bg-border" />
                   <button
-                    className="flex h-8 w-full items-center gap-2 rounded px-2 text-left text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-50"
+                    className="flex h-8 w-full items-center gap-2 rounded-sm px-2 text-left text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
                     onClick={() => navigate('/setting?group=user')}
                     type="button"
                   >
@@ -277,7 +275,7 @@ export function SidebarBody() {
                     {t('ui.layout.accountSettings')}
                   </button>
                   <a
-                    className="flex h-8 w-full items-center gap-2 rounded px-2 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-50"
+                    className="flex h-8 w-full items-center gap-2 rounded-sm px-2 text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
                     href={WEB_URL}
                     rel="noreferrer"
                     target="_blank"
@@ -285,14 +283,14 @@ export function SidebarBody() {
                     <ExternalLink aria-hidden="true" className="size-4" />
                     {t('common.openMainSite')}
                   </a>
-                  <div className="my-1 h-px bg-neutral-100 dark:bg-neutral-800" />
+                  <div className="my-1 h-px bg-border" />
                   <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-                    <span className="shrink-0 text-xs text-neutral-500 dark:text-neutral-400">
+                    <span className="shrink-0 text-xs text-fg-muted">
                       {t('ui.layout.preferences.theme')}
                     </span>
                     <div
                       aria-label={t('shell.theme.label')}
-                      className="grid shrink-0 grid-cols-3 gap-0.5 rounded bg-neutral-100 p-0.5 dark:bg-neutral-900"
+                      className="grid shrink-0 grid-cols-3 gap-0.5 rounded-sm bg-surface-inset p-0.5"
                       role="group"
                     >
                       {themeModeOptions.map((option) => {
@@ -303,9 +301,9 @@ export function SidebarBody() {
                           <button
                             aria-label={t(themeModeLabelKeys[option.value])}
                             className={cn(
-                              'inline-flex size-6 items-center justify-center rounded text-neutral-500 transition-colors hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-neutral-50',
+                              'inline-flex size-6 items-center justify-center rounded-sm text-fg-muted transition-colors hover:text-fg',
                               active
-                                ? 'shadow-xs bg-white text-neutral-950 dark:bg-neutral-800 dark:text-neutral-50'
+                                ? 'shadow-xs bg-surface-card text-fg'
                                 : null,
                             )}
                             key={option.value}
@@ -320,7 +318,7 @@ export function SidebarBody() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-                    <span className="shrink-0 text-xs text-neutral-500 dark:text-neutral-400">
+                    <span className="shrink-0 text-xs text-fg-muted">
                       {t('ui.layout.preferences.language')}
                     </span>
                     <div className="w-20 shrink-0">
@@ -332,14 +330,14 @@ export function SidebarBody() {
                           value,
                         }))}
                         popupClassName="text-xs"
-                        triggerClassName="h-7 border-transparent bg-transparent px-2 text-xs font-medium text-neutral-600 hover:bg-neutral-100 dark:border-transparent dark:bg-transparent dark:text-neutral-300 dark:hover:bg-neutral-900"
+                        triggerClassName="h-7 border-transparent bg-transparent px-2 text-xs font-medium text-fg-muted hover:bg-surface-inset"
                         value={locale}
                       />
                     </div>
                   </div>
-                  <div className="my-1 h-px bg-neutral-100 dark:bg-neutral-800" />
+                  <div className="my-1 h-px bg-border" />
                   <button
-                    className="flex h-8 w-full items-center gap-2 rounded px-2 text-left text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                    className="flex h-8 w-full items-center gap-2 rounded-sm px-2 text-left text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
                     onClick={() => void handleLogout()}
                     type="button"
                   >
@@ -364,7 +362,7 @@ export function SidebarBody() {
               key={section.titleKey ?? `section-${sectionIndex}`}
             >
               {section.titleKey ? (
-                <div className="px-3 pb-1 text-xs font-medium uppercase text-neutral-400 dark:text-neutral-500">
+                <div className="px-3 pb-1 text-xs font-medium uppercase text-fg-subtle">
                   {t(section.titleKey)}
                 </div>
               ) : null}

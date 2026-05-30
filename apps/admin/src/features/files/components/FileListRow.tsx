@@ -1,13 +1,13 @@
 import { FileIcon } from 'lucide-react'
-import type { ListAction, ListRowSelectMode } from '~/ui/list-actions'
 import type { ReactNode } from 'react'
-import type { FileRowItem } from '../utils/adapters'
 
+import type { ListAction, ListRowSelectMode } from '~/ui/list-actions'
 import { buildMenuItemsFromActions, ListRow } from '~/ui/list-actions'
 import { Badge } from '~/ui/primitives/badge'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { cn } from '~/utils/cn'
 
+import type { FileRowItem } from '../utils/adapters'
 import { isImageByName } from '../utils/isImageMime'
 import { FileThumbnail } from './FileThumbnail'
 
@@ -32,12 +32,12 @@ export function FileListRow<TRaw>(props: FileListRowProps<TRaw>) {
       as="article"
       ariaCurrent={props.isDetailTarget}
       className={cn(
-        'group grid cursor-default grid-cols-[auto_minmax(0,1fr)] gap-x-3 border-b border-neutral-100 px-4 py-2.5 last:border-b-0 dark:border-neutral-800/50',
-        'hover:bg-neutral-50 dark:hover:bg-neutral-900/50',
-        'data-popup-open:bg-neutral-100 dark:data-popup-open:bg-neutral-800/60',
-        'data-selected:bg-neutral-100 dark:data-selected:bg-neutral-800/60',
-        'data-selected:hover:bg-neutral-200/60 dark:data-selected:hover:bg-neutral-800/80',
-        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-400 dark:focus-visible:outline-neutral-500',
+        'group grid cursor-default grid-cols-[auto_minmax(0,1fr)] gap-x-3 border-b border-border px-4 py-2.5 last:border-b-0',
+        'hover:bg-surface-inset',
+        'data-popup-open:bg-surface-inset',
+        'data-selected:bg-accent-soft data-selected:text-fg',
+        'data-selected:hover:bg-accent-soft',
+        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40',
       )}
       dataId={props.item.id}
       leading={

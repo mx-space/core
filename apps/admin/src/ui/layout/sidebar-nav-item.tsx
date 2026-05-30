@@ -9,9 +9,9 @@ export type SidebarNavRoute = AppRoute
 export type SidebarNavNode = SidebarNode
 
 const activeLinkClassName =
-  'bg-neutral-950 text-white shadow-xs dark:bg-neutral-50 dark:text-neutral-950'
+  'bg-black/[0.04] text-fg font-medium dark:bg-white/[0.06]'
 const inactiveLinkClassName =
-  'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-50'
+  'font-normal text-fg-muted hover:bg-black/[0.04] hover:text-fg dark:hover:bg-white/[0.06]'
 
 export function SidebarNavItem(props: {
   active: boolean
@@ -34,14 +34,14 @@ export function SidebarNavItem(props: {
     : titleText
   const isSelfRouteActive = props.isRouteActive(props.node.route)
   const parentClassName = cn(
-    'grid w-full grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-2 rounded text-left transition-colors',
+    'grid w-full grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-2 rounded-sm text-left transition-colors',
     props.depth === 0 ? 'h-9 px-3 text-sm' : 'h-8 px-2 text-sm',
     isSelfRouteActive
       ? activeLinkClassName
       : props.active
         ? cn(
-            'bg-neutral-100 text-neutral-950 dark:bg-neutral-900 dark:text-neutral-50',
-            hasChildren ? 'font-medium' : null,
+            'bg-black/[0.04] text-fg dark:bg-white/[0.06]',
+            hasChildren ? 'font-medium' : 'font-normal',
           )
         : inactiveLinkClassName,
   )
@@ -74,10 +74,10 @@ export function SidebarNavItem(props: {
             aria-expanded={expanded}
             aria-label={`${expanded ? 'Collapse' : 'Expand'} ${titleText}`}
             className={cn(
-              'absolute inset-y-0 right-1 my-auto inline-flex h-6 w-6 items-center justify-center rounded transition-colors',
+              'absolute inset-y-0 right-1 my-auto inline-flex h-6 w-6 items-center justify-center rounded-sm transition-colors',
               isSelfRouteActive
-                ? 'text-white/70 hover:bg-white/10 hover:text-white dark:text-neutral-900/70 dark:hover:bg-neutral-900/10 dark:hover:text-neutral-900'
-                : 'text-neutral-400 hover:bg-neutral-200/60 hover:text-neutral-700 dark:hover:bg-neutral-800/60 dark:hover:text-neutral-300',
+                ? 'text-fg-muted hover:bg-black/[0.06] hover:text-fg dark:hover:bg-white/[0.08]'
+                : 'text-fg-subtle hover:bg-black/[0.06] hover:text-fg dark:hover:bg-white/[0.08]',
             )}
             onClick={(event) => {
               event.preventDefault()
@@ -128,7 +128,7 @@ export function SidebarNavItem(props: {
           )}
         >
           <div className="min-h-0">
-            <div className="ml-4 mt-1 grid gap-0.5 border-l border-neutral-200 pl-2 dark:border-neutral-800">
+            <div className="ml-4 mt-1 grid gap-0.5 border-l border-border pl-2">
               {props.node.children?.map((child) => (
                 <SidebarNavItem
                   active={props.isNodeActive(child)}

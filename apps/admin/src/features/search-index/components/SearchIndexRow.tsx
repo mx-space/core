@@ -1,5 +1,4 @@
 import type { SearchDocumentAdminRow } from '~/api/search-index'
-
 import { useI18n } from '~/i18n'
 import { ListRow } from '~/ui/list-actions'
 import { cn } from '~/utils/cn'
@@ -20,10 +19,8 @@ export function SearchIndexRow(props: {
     <ListRow
       ariaCurrent={props.selected}
       className={cn(
-        'flex w-full cursor-pointer items-start gap-3 border-b border-neutral-100 px-4 py-3 text-left transition-colors last:border-b-0 dark:border-neutral-800/50',
-        props.selected
-          ? 'bg-neutral-100 dark:bg-neutral-900'
-          : 'hover:bg-neutral-50 dark:hover:bg-neutral-900/70',
+        'flex w-full cursor-pointer items-start gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0',
+        props.selected ? 'bg-accent-soft text-fg' : 'hover:bg-surface-inset',
       )}
       dataId={row.id}
       onSelect={props.onSelect}

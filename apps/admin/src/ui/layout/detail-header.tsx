@@ -48,7 +48,7 @@ export function DetailHeader(props: DetailHeaderProps) {
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950',
+        'flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-card px-4',
         APP_SHELL_HEADER_HEIGHT_CLASS,
         props.className,
       )}
@@ -65,15 +65,15 @@ export function DetailHeader(props: DetailHeaderProps) {
         ) : null}
         {hasSubtitle ? (
           <div className="min-w-0 flex-1">
-            <h2 className="flex min-w-0 items-center gap-2 truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+            <h2 className="flex min-w-0 items-center gap-2 truncate text-sm font-medium text-fg">
               {props.title}
             </h2>
-            <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-neutral-400">
+            <p className="mt-0.5 truncate text-xs text-fg-muted">
               {props.subtitle}
             </p>
           </div>
         ) : props.title ? (
-          <h2 className="inline-flex min-w-0 items-center gap-2 truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+          <h2 className="inline-flex min-w-0 items-center gap-2 truncate text-sm font-medium text-fg">
             {props.title}
           </h2>
         ) : null}
@@ -83,7 +83,7 @@ export function DetailHeader(props: DetailHeaderProps) {
         {props.onClose ? (
           <button
             aria-label={t('ui.modal.closeAria')}
-            className="hidden size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 lg:inline-flex dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+            className="hidden size-9 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg lg:inline-flex"
             onClick={props.onClose}
             type="button"
           >

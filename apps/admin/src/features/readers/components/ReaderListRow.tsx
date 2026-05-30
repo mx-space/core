@@ -1,8 +1,9 @@
 import { Crown } from 'lucide-react'
-import type { ReaderModel } from '~/api/readers'
-import type { ListRowSelectMode } from '~/ui/list-actions'
 
+import type { ReaderModel } from '~/api/readers'
 import { useI18n } from '~/i18n'
+import { StatusPill } from '~/ui/data/StatusPill'
+import type { ListRowSelectMode } from '~/ui/list-actions'
 import { ListRow } from '~/ui/list-actions'
 import { cn } from '~/utils/cn'
 import { relativeTimeFromNow } from '~/utils/time'
@@ -29,11 +30,11 @@ export function ReaderListRow(props: ReaderListRowProps) {
     <ListRow
       ariaCurrent={props.selected}
       className={cn(
-        'group relative flex cursor-default items-center gap-3 border-b border-neutral-100 px-4 py-3 last:border-b-0 dark:border-neutral-800/50',
-        'hover:bg-neutral-50 dark:hover:bg-neutral-900/50',
-        'data-selected:bg-neutral-100 dark:data-selected:bg-neutral-900',
-        'data-selected:hover:bg-neutral-100 dark:data-selected:hover:bg-neutral-900',
-        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-400 dark:focus-visible:outline-neutral-500',
+        'group relative flex cursor-default items-center gap-3 border-b border-border px-4 py-3 last:border-b-0',
+        'hover:bg-surface-inset',
+        'data-selected:bg-accent-soft data-selected:text-fg',
+        'data-selected:hover:bg-accent-soft',
+        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40',
       )}
       dataId={reader.id}
       onSelect={props.onSelect}
@@ -43,7 +44,7 @@ export function ReaderListRow(props: ReaderListRowProps) {
       <span
         aria-hidden="true"
         className={cn(
-          'absolute inset-y-0 left-0 w-0.5 bg-neutral-950 dark:bg-neutral-50',
+          'absolute inset-y-0 left-0 w-0.5 bg-accent',
           props.selected ? 'opacity-100' : 'opacity-0',
         )}
       />
@@ -69,9 +70,9 @@ export function ReaderListRow(props: ReaderListRowProps) {
             </span>
           ) : null}
           {banned ? (
-            <span className="shrink-0 rounded-full bg-red-500/10 px-1.5 py-0.5 text-xs font-medium text-red-600 dark:text-red-400">
+            <StatusPill className="shrink-0" tone="error">
               {t('readers.row.banned')}
-            </span>
+            </StatusPill>
           ) : null}
         </div>
         <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">

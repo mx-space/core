@@ -4,6 +4,7 @@ import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { ProjectModel } from '~/models/project'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
+import { EmptyState } from '~/ui/patterns/EmptyState'
 import { cn } from '~/utils/cn'
 
 import type { ProjectAvatarSize } from '../types/projects'
@@ -42,12 +43,12 @@ export function ProjectAvatar(props: {
 export function ProjectEmptyState() {
   const { t } = useI18n()
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <Inbox aria-hidden="true" className="mb-4 size-10 text-neutral-300" />
-      <p className="text-sm text-neutral-500">{t('projects.empty.title')}</p>
-      <p className="mt-1 text-xs text-neutral-400">
-        {t('projects.empty.description')}
-      </p>
+    <div className="flex items-center justify-center py-24">
+      <EmptyState
+        description={t('projects.empty.description')}
+        icon={Inbox}
+        title={t('projects.empty.title')}
+      />
     </div>
   )
 }
@@ -95,26 +96,24 @@ export function ProjectDetailSkeleton() {
 export function ProjectSelectPlaceholder() {
   const { t } = useI18n()
   return (
-    <section className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
+    <section className="flex h-full min-h-0 flex-col bg-surface-card">
       <div
         className={cn(
-          'flex shrink-0 items-center border-b border-neutral-200 px-4 dark:border-neutral-800',
+          'flex shrink-0 items-center border-b border-border px-4',
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
         <MobileHeaderAffordance />
-        <h2 className="text-lg font-semibold text-neutral-950 dark:text-neutral-50">
+        <h2 className="text-lg font-semibold text-fg">
           {t('projects.detailPlaceholder.heading')}
         </h2>
       </div>
-      <div className="flex min-h-[32rem] flex-col items-center justify-center p-8 text-center">
-        <Folder aria-hidden="true" className="mb-4 size-10 text-neutral-300" />
-        <h2 className="text-sm font-medium">
-          {t('projects.detailPlaceholder.title')}
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          {t('projects.detailPlaceholder.description')}
-        </p>
+      <div className="flex min-h-[32rem] items-center justify-center p-8">
+        <EmptyState
+          description={t('projects.detailPlaceholder.description')}
+          icon={Folder}
+          title={t('projects.detailPlaceholder.title')}
+        />
       </div>
     </section>
   )

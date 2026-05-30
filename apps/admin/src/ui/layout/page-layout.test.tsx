@@ -155,7 +155,7 @@ describe('PageHeader', () => {
     )
     expect(buttons.length).toBe(2)
     for (const button of buttons) {
-      expect(button.className).toContain('bg-neutral-950')
+      expect(button.className).toContain('bg-accent')
     }
   })
 

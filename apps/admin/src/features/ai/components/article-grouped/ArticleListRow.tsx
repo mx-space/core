@@ -1,7 +1,6 @@
 import type { ArticleInfo } from '~/api/ai'
-import type { ListRowSelectMode } from '~/ui/list-actions'
-
 import { useI18n } from '~/i18n'
+import type { ListRowSelectMode } from '~/ui/list-actions'
 import { ListRow } from '~/ui/list-actions'
 import { cn } from '~/utils/cn'
 
@@ -26,12 +25,12 @@ export function ArticleListRow(props: ArticleListRowProps) {
       as="article"
       ariaCurrent={props.isDetailTarget}
       className={cn(
-        'group block cursor-default border-b border-neutral-100 px-4 py-3 last:border-b-0 dark:border-neutral-800/50',
-        'hover:bg-neutral-50 dark:hover:bg-neutral-900/50',
-        'data-popup-open:bg-neutral-100 dark:data-popup-open:bg-neutral-800/60',
-        'data-selected:bg-neutral-100 dark:data-selected:bg-neutral-800/60',
-        'data-selected:hover:bg-neutral-200/60 dark:data-selected:hover:bg-neutral-800/80',
-        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-400 dark:focus-visible:outline-neutral-500',
+        'group block cursor-default border-b border-border px-4 py-3 last:border-b-0',
+        'hover:bg-surface-inset',
+        'data-popup-open:bg-surface-inset',
+        'data-selected:bg-accent-soft data-selected:text-fg',
+        'data-selected:hover:bg-accent-soft',
+        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40',
       )}
       dataId={props.article.id}
       onSelect={props.onSelect}

@@ -12,7 +12,7 @@ export function AppPage(props: { children: ReactNode; className?: string }) {
   return (
     <section
       className={cn(
-        'flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950',
+        'flex h-full min-h-0 flex-col bg-surface-card',
         props.className,
       )}
     >
@@ -79,7 +79,7 @@ export function PageHeader(props: PageHeaderProps) {
   return (
     <header
       className={cn(
-        'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950',
+        'flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-card px-4',
         APP_SHELL_HEADER_HEIGHT_CLASS,
         props.className,
       )}
@@ -88,11 +88,11 @@ export function PageHeader(props: PageHeaderProps) {
         <MobileHamburger />
         {props.back ? <HeaderBackButton {...props.back} /> : null}
         <div className="min-w-0">
-          <h1 className="truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+          <h1 className="truncate text-sm font-medium text-fg">
             {props.title}
           </h1>
           {props.description ? (
-            <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-neutral-400">
+            <p className="mt-0.5 truncate text-xs text-fg-muted">
               {props.description}
             </p>
           ) : null}
@@ -125,11 +125,10 @@ function renderHeaderAction(action: HeaderAction, index: number) {
 
   const Icon = action.icon
   const baseClasses =
-    'focus-visible:outline-hidden inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-neutral-500 dark:focus-visible:ring-offset-neutral-900'
-  const primaryClasses =
-    'bg-neutral-950 text-white hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200'
+    'focus-visible:outline-hidden inline-flex items-center justify-center rounded-sm text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50'
+  const primaryClasses = 'shadow-xs bg-accent text-white hover:bg-accent-hover'
   const secondaryClasses =
-    'border border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-50 dark:hover:bg-neutral-900'
+    'shadow-xs border border-border bg-surface-card text-fg hover:bg-surface-inset'
   const variantClasses = action.primary ? primaryClasses : secondaryClasses
 
   if (action.iconOnly) {

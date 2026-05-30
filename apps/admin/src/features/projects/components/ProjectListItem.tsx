@@ -1,4 +1,5 @@
 import { ExternalLink } from 'lucide-react'
+
 import type { ProjectModel } from '~/models/project'
 
 import { formatDate } from '../utils/projects'
@@ -12,10 +13,8 @@ export function ProjectListItem(props: {
   return (
     <button
       className={[
-        'flex w-full items-center gap-3 border-b border-neutral-100 px-4 py-3 text-left transition-colors last:border-b-0 dark:border-neutral-800/60',
-        props.selected
-          ? 'bg-neutral-100 dark:bg-neutral-900'
-          : 'hover:bg-neutral-50 dark:hover:bg-neutral-900/50',
+        'flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0',
+        props.selected ? 'bg-accent-soft text-fg' : 'hover:bg-surface-inset',
       ].join(' ')}
       onClick={props.onSelect}
       type="button"

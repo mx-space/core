@@ -1,15 +1,15 @@
+import type { LucideIcon } from 'lucide-react'
 import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import type { ReactNode } from 'react'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Panel, Group as PanelGroup, usePanelRef } from 'react-resizable-panels'
-import type { BottomSheetSnap } from '~/ui/feedback/bottom-sheet'
-import type { LucideIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Group as PanelGroup, Panel, usePanelRef } from 'react-resizable-panels'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
+import type { BottomSheetSnap } from '~/ui/feedback/bottom-sheet'
 import { BottomSheet } from '~/ui/feedback/bottom-sheet'
 import { ResizeHandle } from '~/ui/layout/resize-handle'
 import { cn } from '~/utils/cn'
@@ -142,7 +142,7 @@ function DesktopContentLayout(props: {
         panelRef={asideRef}
       >
         <div
-          className="relative h-full bg-white dark:bg-neutral-950"
+          className="relative h-full bg-surface-card"
           ref={props.setAsideEl}
         />
       </Panel>
@@ -178,7 +178,7 @@ function MobileContentLayout(props: {
         {props.children}
       </div>
       <BottomSheet
-        bodyClassName="relative bg-white dark:bg-neutral-950"
+        bodyClassName="relative bg-surface-card"
         defaultSnap={props.asideMobileSnap ?? 'half'}
         onClose={handleClose}
         open={props.open}
@@ -232,15 +232,15 @@ export function AsidePanel(props: {
     props.title != null || props.headerActions != null || props.onClose != null
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
+    <div className="flex h-full min-h-0 flex-col bg-surface-card">
       {hasHeader ? (
         <div
           className={cn(
-            'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+            'flex shrink-0 items-center justify-between gap-3 border-b border-border px-4',
             APP_SHELL_HEADER_HEIGHT_CLASS,
           )}
         >
-          <h2 className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-950 dark:text-neutral-50">
+          <h2 className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-fg">
             {Icon ? (
               <Icon aria-hidden="true" className="size-4 shrink-0" />
             ) : null}
@@ -253,7 +253,7 @@ export function AsidePanel(props: {
             {props.onClose ? (
               <button
                 aria-label={t('ui.modal.closeAria')}
-                className="inline-flex size-9 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+                className="inline-flex size-9 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
                 onClick={props.onClose}
                 type="button"
               >
@@ -267,7 +267,7 @@ export function AsidePanel(props: {
         {props.children}
       </div>
       {props.footer ? (
-        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-3">
           {props.footer}
         </div>
       ) : null}

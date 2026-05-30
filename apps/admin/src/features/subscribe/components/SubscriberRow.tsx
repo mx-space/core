@@ -1,7 +1,7 @@
 import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import type { Subscriber } from '~/api/subscribe'
 
+import type { Subscriber } from '~/api/subscribe'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
@@ -21,10 +21,8 @@ export function SubscriberRow(props: {
   return (
     <article
       className={[
-        'group relative flex cursor-default items-center gap-4 border-b border-neutral-200 px-4 py-3.5 transition-colors last:border-b-0 dark:border-neutral-800',
-        props.selected
-          ? 'bg-neutral-100 dark:bg-neutral-800'
-          : 'hover:bg-neutral-50 dark:hover:bg-neutral-900/50',
+        'group relative flex cursor-default items-center gap-4 border-b border-border px-4 py-3.5 transition-colors last:border-b-0',
+        props.selected ? 'bg-accent-soft text-fg' : 'hover:bg-surface-inset',
       ].join(' ')}
       onClick={() => props.onSelect(!props.selected)}
     >

@@ -1,9 +1,9 @@
 import { Layers } from 'lucide-react'
-import type { AITask } from '~/api/ai'
-import type { ListRowSelectMode } from '~/ui/list-actions'
 
+import type { AITask } from '~/api/ai'
 import { AITaskStatus } from '~/api/ai'
 import { useI18n } from '~/i18n'
+import type { ListRowSelectMode } from '~/ui/list-actions'
 import { ListRow } from '~/ui/list-actions'
 import { cn } from '~/utils/cn'
 
@@ -54,11 +54,11 @@ export function TaskRow(props: {
     <ListRow
       ariaCurrent={props.selected}
       className={cn(
-        'group block cursor-default border-b border-neutral-100 px-4 py-2.5 last:border-b-0 dark:border-neutral-800/50',
-        'hover:bg-neutral-50 dark:hover:bg-neutral-900/50',
-        'data-selected:bg-neutral-100 dark:data-selected:bg-neutral-800/60',
-        'data-selected:hover:bg-neutral-200/60 dark:data-selected:hover:bg-neutral-800/80',
-        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-400 dark:focus-visible:outline-neutral-500',
+        'group block cursor-default border-b border-border px-4 py-2.5 last:border-b-0',
+        'hover:bg-surface-inset',
+        'data-selected:bg-accent-soft data-selected:text-fg',
+        'data-selected:hover:bg-accent-soft',
+        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40',
       )}
       dataId={task.id}
       onSelect={props.onSelect}

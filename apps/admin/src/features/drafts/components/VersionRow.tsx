@@ -1,10 +1,11 @@
 import { Loader2, RotateCcw } from 'lucide-react'
-import type { DraftDiffStats, VersionItem } from '../types/drafts'
 
 import { useI18n } from '~/i18n'
 import { ListRow } from '~/ui/list-actions'
 import { Button } from '~/ui/primitives/button'
 import { relativeTimeFromNow } from '~/utils/time'
+
+import type { DraftDiffStats, VersionItem } from '../types/drafts'
 
 export function VersionRow(props: {
   diffStats: DraftDiffStats | null
@@ -19,7 +20,7 @@ export function VersionRow(props: {
     <ListRow
       as="article"
       ariaCurrent={props.selected}
-      className="data-selected:bg-neutral-100 dark:data-selected:bg-neutral-900 group flex w-full cursor-default items-center gap-3 border-b border-neutral-100 px-4 py-3 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-400 dark:border-neutral-800/60 dark:hover:bg-neutral-900/70 dark:focus-visible:outline-neutral-500"
+      className="data-selected:bg-accent-soft data-selected:text-fg group flex w-full cursor-default items-center gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-surface-inset focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40"
       dataId={String(props.item.version)}
       onSelect={() => props.onSelect()}
       role="row"

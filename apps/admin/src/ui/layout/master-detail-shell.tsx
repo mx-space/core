@@ -152,7 +152,7 @@ function DesktopShell(props: DesktopShellProps) {
   return (
     <div
       className={cn(
-        'relative h-full min-h-0 overflow-hidden bg-white dark:bg-neutral-950',
+        'relative h-full min-h-0 overflow-hidden bg-surface-card',
         props.className,
       )}
     >
@@ -320,7 +320,7 @@ function MobileShell(props: MobileShellProps) {
   return (
     <div
       className={cn(
-        'relative h-full min-h-0 overflow-hidden bg-white dark:bg-neutral-950',
+        'relative h-full min-h-0 overflow-hidden bg-surface-card',
         props.className,
       )}
       ref={containerRef}
@@ -340,7 +340,7 @@ function MobileShell(props: MobileShellProps) {
       {renderOverlay ? (
         <motion.div
           className={cn(
-            'absolute inset-0 z-30 min-h-0 min-w-0 overflow-hidden bg-white shadow-xl dark:bg-neutral-950',
+            'shadow-lg absolute inset-0 z-30 min-h-0 min-w-0 overflow-hidden bg-surface-card',
             props.detailClassName,
           )}
           drag={edgeDrag ? 'x' : false}
@@ -378,12 +378,12 @@ export function useMasterDetailContext() {
  */
 function DetailSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-neutral-950">
-      <div className="h-14 shrink-0 border-b border-neutral-200 px-4 dark:border-neutral-800" />
+    <div className="flex h-full min-h-0 flex-col bg-surface-card">
+      <div className="h-14 shrink-0 border-b border-border px-4" />
       <div className="flex-1 space-y-3 p-4">
-        <div className="h-4 w-3/4 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
-        <div className="h-4 w-1/2 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
-        <div className="h-4 w-2/3 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900" />
+        <div className="h-4 w-3/4 animate-pulse rounded-sm bg-surface-inset" />
+        <div className="h-4 w-1/2 animate-pulse rounded-sm bg-surface-inset" />
+        <div className="h-4 w-2/3 animate-pulse rounded-sm bg-surface-inset" />
       </div>
     </div>
   )

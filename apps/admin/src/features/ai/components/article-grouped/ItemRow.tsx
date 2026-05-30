@@ -1,9 +1,9 @@
 import { Calendar, Trash2 } from 'lucide-react'
-import type { ListRowSelectMode } from '~/ui/list-actions'
-import type { ContextMenuItem } from '~/ui/overlay/context-menu'
 
 import { useI18n } from '~/i18n'
+import type { ListRowSelectMode } from '~/ui/list-actions'
 import { ListRow } from '~/ui/list-actions'
+import type { ContextMenuItem } from '~/ui/overlay/context-menu'
 import { cn } from '~/utils/cn'
 
 import { formatDateString } from '../../utils/ai'
@@ -28,11 +28,11 @@ export function ItemRow<TItem>(props: ItemRowProps<TItem>) {
     <ListRow
       as="article"
       className={cn(
-        'group block cursor-default border-b border-neutral-100 px-4 py-3 last:border-b-0 dark:border-neutral-800/50',
-        'hover:bg-neutral-50 dark:hover:bg-neutral-900/50',
-        'data-popup-open:bg-neutral-100 dark:data-popup-open:bg-neutral-800/60',
-        'data-selected:bg-neutral-100 dark:data-selected:bg-neutral-800/60',
-        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-400 dark:focus-visible:outline-neutral-500',
+        'group block cursor-default border-b border-border px-4 py-3 last:border-b-0',
+        'hover:bg-surface-inset',
+        'data-popup-open:bg-surface-inset',
+        'data-selected:bg-accent-soft data-selected:text-fg',
+        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40',
       )}
       dataId={props.id}
       menuItems={menuItems}
