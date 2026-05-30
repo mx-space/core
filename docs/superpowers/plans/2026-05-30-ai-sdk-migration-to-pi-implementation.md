@@ -561,34 +561,80 @@ return normalised;
 - Factory spec covers all 3 enum values
 - Hostname derivation covered: 4 known hosts + unknown + empty across all 3 types
 
-### step-18 — Admin: rewrite chat transport + multi-block MessageBubble + ThinkingBlock + ToolCallCard + haklex dispatcher
+### step-18a — Admin: transport + API types + session manager alignment (no UI changes)
 
-**Size:** L | **Depends on:** step-10, step-12
+**Size:** M | **Depends on:** step-10, step-12
 
-**Prompt:** Rewrite `apps/admin/src/features/write/components/agent/agent-transport.ts` to bypass `@haklex/rich-agent-core`'s `TransportAdapter`. Import the shared `AiAgentSseEvent` TypeBox schema from `packages/api-client/models/ai-agent-sse.ts` and parse `data:` lines as JSON, dispatching by `event.type`. Refactor `MessageBubble` to render blocks keyed by `contentIndex`. Add `ThinkingBlock` (collapsed default, label `Thought for {duration}s`, expands to monospace pre accumulating `thinking_delta`). Add `ToolCallCard` (shows `name`, JSON5-highlighted partial args from `toolcall_delta`, finalised args from `toolcall_end`). Update `TypingIndicator` to context-aware status (`Thinking…` / `Calling {toolName}…` / dots). Wire tool_call dispatcher: pass a callback prop to MessageBubble that on `toolcall_end` for known node-edit tools (insert_node/replace_node/delete_node) applies the change to the active lexical editor via `useLexicalComposerContext`. Update `apps/admin/src/api/ai-agent.ts` `AgentConversation` type to drop refId/refType/title/reviewState/diffState/messageCount; add sessionId/model/providerId/messages. Update `apps/admin/src/hooks/use-agent-session-manager.ts` to switch to `sessionId` polling. SWEEP admin for residual imports of dropped fields: `grep -rn 'refId\|refType\|reviewState\|diffState\|messageCount' apps/admin/src` must return zero hits after this step. Add integration test `apps/admin/src/features/write/components/agent/__tests__/agent-transport.integration.test.tsx` (Vitest + jsdom): mock SSE source emits 50-frame canned stream with interleaved text/thinking/toolcall_delta + monotonic contentIndex -> assert DOM blocks render in exact order/indexing. Second test: simulate network drop mid-stream -> assert no crash + visible 'connection lost' state.
+**Prompt:** Backend-facing client glue only — no DOM or UI changes. Rewrite `apps/admin/src/features/write/components/agent/agent-transport.ts` to parse the new `data: <json>\n\n` AiAgentSseEvent frames directly (one event per frame; dispatcher by `event.type`). Drop any `@haklex/rich-agent-core` TransportAdapter import that exists; if the haklex transport API is required by `use-write-agent.ts` for the editor side, keep the wrapping surface but feed it from the parsed events instead of raw SSE bytes. Import the shared event types from `packages/api-client` (use the existing exported type/runtime guard from step-12; if the export does not exist yet under that exact name, import the closest equivalent and add the missing alias in `packages/api-client/models/ai-agent.ts`). Update `apps/admin/src/api/ai-agent.ts` `AgentConversation` to the new backend shape `{id, sessionId, model, providerId, messages, createdAt, updatedAt}` — drop `refId`, `refType`, `title`, `reviewState`, `diffState`, `messageCount` from this file. Update `apps/admin/src/hooks/use-agent-session-manager.ts` to be session-scoped: keep client-generated UUID (or reuse the existing `sessionId` field already present at lines 98/122/etc.) as the primary key; replace any remaining article-scoped lookup with `getAgentConversation(sessionId)` etc. (the API client functions are already session-keyed per current code). Update `apps/admin/src/features/write/components/agent/agent-store.ts` and `types.ts` to mirror the new conversation/message shape — type fields only, no rendering changes. SWEEP scoped to the admin agent feature directory + this hook + this API file: `grep -rn 'refId\|refType\|reviewState\|diffState\|messageCount' apps/admin/src/api/ai-agent.ts apps/admin/src/hooks/use-agent-session-manager.ts apps/admin/src/features/write/components/agent/` must return zero hits. Do NOT widen the grep to all of `apps/admin/src` (unrelated modules legitimately use `refId`/etc.).
 
 **Files:**
 
 - `apps/admin/src/features/write/components/agent/agent-transport.ts`
-- `apps/admin/src/features/write/components/agent/MessageBubble.tsx`
-- `apps/admin/src/features/write/components/agent/ThinkingBlock.tsx`
-- `apps/admin/src/features/write/components/agent/ToolCallCard.tsx`
-- `apps/admin/src/features/write/components/agent/TypingIndicator.tsx`
-- `apps/admin/src/features/write/components/agent/__tests__/agent-transport.integration.test.tsx`
+- `apps/admin/src/features/write/components/agent/agent-store.ts`
+- `apps/admin/src/features/write/components/agent/types.ts`
 - `apps/admin/src/api/ai-agent.ts`
 - `apps/admin/src/hooks/use-agent-session-manager.ts`
+- `packages/api-client/models/ai-agent.ts` (only if a missing AiAgentSseEvent export alias must be added)
 
 **Success criteria:**
 
-- agent-transport.ts no longer imports from `@haklex/rich-agent-core` TransportAdapter; imports shared AiAgentSseEvent schema
-- MessageBubble renders blocks keyed by contentIndex
-- ThinkingBlock / ToolCallCard / context-aware TypingIndicator present
-- Tool-call dispatcher routes insert_node/replace_node/delete_node to lexical editor
-- AgentConversation type has no refId/refType/title/reviewState/diffState/messageCount
-- `grep -rn 'refId\|refType\|reviewState\|diffState\|messageCount' apps/admin/src` returns zero hits
-- Integration test asserts in-order rendering for 50-frame interleaved stream
-- Network-drop test asserts no crash + 'connection lost' visible state
-- Admin lint+typecheck on touched files passes
+- agent-transport.ts parses `data: <json>` frames and dispatches by `event.type`; no raw byte forwarding to a legacy TransportAdapter
+- Shared event types imported from `packages/api-client`
+- AgentConversation type matches backend shape exactly
+- Session manager works against session-keyed API client (no remaining refId-keyed lookups)
+- Scoped grep gate (paths listed above) returns zero hits for the legacy field names
+- `pnpm -C apps/admin exec tsc --noEmit --pretty false` on touched files passes
+- `pnpm -C apps/admin lint <touched files>` passes
+
+### step-18b — Admin: block-aware chat UI (no test infra)
+
+**Size:** M | **Depends on:** step-18a
+
+**Prompt:** UI surface only — no Vitest infrastructure. Refactor `apps/admin/src/features/write/components/agent/messages.tsx` and `MessageList.tsx` to render each assistant message as an ordered list of blocks keyed by `contentIndex` (text / thinking / toolcall). Add `ThinkingBlock.tsx` (collapsed by default; label `Thought for {duration}s`; expands to a monospace pre that accumulates `thinking_delta` chunks). Replace `ToolCallView.tsx` with `ToolCallCard.tsx` (shows `toolName`, partial JSON-highlighted arguments updated on every `toolcall_delta`, finalised arguments after `toolcall_end`). Add `TypingIndicator.tsx` (or extend the existing inline indicator if present in messages.tsx) to a context-aware status: `Thinking…` while a `thinking_*` block is open, `Calling {toolName}…` while a `toolcall_*` block is open, default dots when only `text_*` is open. Update `SessionHeader.tsx` only if it directly references the dropped conversation fields. Wire a `onToolCallEnd?: (toolCall) => void` callback prop on the message renderer so `use-write-agent.ts` can dispatch known node-edit tools (insert_node / replace_node / delete_node) to the lexical editor via `useLexicalComposerContext`. Manual smoke-test by running `pnpm -C apps/admin dev` and exercising the chat panel (no automated DOM test in this step — that lands in step-18c).
+
+**Files:**
+
+- `apps/admin/src/features/write/components/agent/messages.tsx`
+- `apps/admin/src/features/write/components/agent/MessageList.tsx`
+- `apps/admin/src/features/write/components/agent/ToolCallCard.tsx` (renamed/rewritten from `ToolCallView.tsx`)
+- `apps/admin/src/features/write/components/agent/ToolCallView.tsx` (delete after content moves to ToolCallCard)
+- `apps/admin/src/features/write/components/agent/ThinkingBlock.tsx` (new)
+- `apps/admin/src/features/write/components/agent/TypingIndicator.tsx` (new or extracted from messages.tsx)
+- `apps/admin/src/features/write/components/agent/use-write-agent.ts`
+- `apps/admin/src/features/write/components/agent/SessionHeader.tsx` (only if needed)
+- `apps/admin/src/features/write/components/agent/index.ts` (export adjustments)
+
+**Success criteria:**
+
+- Assistant messages render blocks ordered by `contentIndex`; text + thinking + toolcall interleave correctly
+- `ThinkingBlock` collapsed default, expands to thinking content
+- `ToolCallCard` shows partial args during streaming and finalised args after end
+- `TypingIndicator` is context-aware
+- `onToolCallEnd` callback dispatches node-edit tools to lexical editor
+- `pnpm -C apps/admin exec tsc --noEmit --pretty false` on touched files passes
+- `pnpm -C apps/admin lint <touched files>` passes
+- Manual `pnpm -C apps/admin dev` smoke check: chat opens, message bubble renders without runtime errors
+
+### step-18c — Admin: Vitest + jsdom integration tests for agent chat
+
+**Size:** S | **Depends on:** step-18b
+
+**Prompt:** Add the missing Vitest+jsdom infrastructure under `apps/admin` and the two integration tests originally targeted at step-18. Add `apps/admin/vitest.config.ts` (or merge into the existing one if present), add `vitest` + `jsdom` + `@testing-library/react` + `@testing-library/dom` to `apps/admin/package.json` devDeps as needed. Add a `apps/admin/test/setup.ts` that pulls in `@testing-library/jest-dom` and configures jsdom globals. Then add `apps/admin/src/features/write/components/agent/__tests__/agent-transport.integration.test.tsx`: mock an SSE source emitting a 50-frame canned stream with interleaved `text_delta` / `thinking_delta` / `toolcall_delta` events with monotonic `contentIndex`, render `MessageList` with that store, assert DOM blocks render in the exact order. Add a second test that simulates a mid-stream connection drop and asserts no crash plus a visible "connection lost" affordance (if no such affordance exists in step-18b yet, add the minimum string in messages.tsx now and document it). Run `pnpm -C apps/admin test` and confirm green.
+
+**Files:**
+
+- `apps/admin/vitest.config.ts` (new or update)
+- `apps/admin/test/setup.ts` (new)
+- `apps/admin/package.json` (devDeps)
+- `apps/admin/src/features/write/components/agent/__tests__/agent-transport.integration.test.tsx` (new)
+- `apps/admin/src/features/write/components/agent/messages.tsx` (only the connection-lost string if absent)
+
+**Success criteria:**
+
+- `pnpm -C apps/admin test` runs and passes
+- Integration test asserts in-order DOM rendering for the 50-frame interleaved stream
+- Network-drop test asserts no crash + visible "connection lost" UI
+- `pnpm -C apps/admin lint <touched files>` passes
 
 ### step-19 — Admin: AI provider form — 3-value type select + registry combobox + conditional context/maxTokens + legacy localStorage migration
 
@@ -619,7 +665,7 @@ return normalised;
 
 ### step-20 — Final sweep: live tests, docs, type drift, consumer smoke, leftover refs
 
-**Size:** S | **Depends on:** step-3b, step-15, step-16, step-17, step-18, step-19
+**Size:** S | **Depends on:** step-3b, step-15, step-16, step-17, step-18a, step-18b, step-18c, step-19
 
 **Prompt:** Run `pnpm -C apps/core run test:live:local` and (if secrets available) `test:live:mix`, `test:live:deepseek-mix`. Precise sweeps: `sg --pattern 'OpenAICompatibleRuntime'`, `sg --pattern 'AnthropicRuntime'`, `sg --pattern 'withRetry' --not-path 'node_modules'`, `sg --pattern 'AI_PROMPTS\.translation\b'`, `grep -rnE 'AIProviderType\.(OpenAI|OpenRouter)\b' apps packages`, `grep -rnE "'openai'\s*[,}\]]" apps packages` (filter to enum-literal positions), `grep -rn 'refId\|refType\|reviewState\|diffState\|messageCount' apps packages` — all must return zero hits in source. Update `apps/core/CLAUDE.md` AI module section (PiRuntimeAdapter, TypeBox prompts, new SSE protocol) and `apps/admin/CLAUDE.md` (new transport, multi-block render). Reconcile `packages/api-client/models/ai.ts:45` `error.data` type drift (declare as JSON-string of `{message}` OR `string` with explicit comment — pick one without a breaking version bump). Consumer smoke: pull Shiroi/Yohaku public-type fixtures into `packages/api-client/test/fixtures/consumer-types.fixture.ts` and run `pnpm -C packages/api-client run typecheck` against them; ensure AI types still align. Grep gate over `packages/api-client/dist/**` for old AgentConversation shape -> must be absent. Manual release-blocker checklist (documented in CHANGELOG): (1) open admin chat → assert blocks render, (2) post a spammy comment → assert flagged, (3) run translation → assert SSE wire bytes unchanged via DevTools, (4) run summary cache-hit + cache-miss → assert wire bytes unchanged. Run scoped lint + typecheck + the full faux test suite.
 
