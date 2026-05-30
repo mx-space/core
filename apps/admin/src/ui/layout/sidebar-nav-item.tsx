@@ -35,7 +35,7 @@ export function SidebarNavItem(props: {
   const isSelfRouteActive = props.isRouteActive(props.node.route)
   const parentClassName = cn(
     'grid w-full grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-2 rounded-sm text-left transition-colors',
-    props.depth === 0 ? 'h-7 px-3 text-sm' : 'h-7 px-2 text-sm',
+    props.depth === 0 ? 'h-8 px-3 text-sm' : 'h-7 px-2 text-sm',
     isSelfRouteActive
       ? activeLinkClassName
       : props.active
@@ -74,7 +74,7 @@ export function SidebarNavItem(props: {
             aria-expanded={expanded}
             aria-label={`${expanded ? 'Collapse' : 'Expand'} ${titleText}`}
             className={cn(
-              'absolute inset-y-0 right-1 my-auto inline-flex h-5 w-5 items-center justify-center rounded-sm transition-colors',
+              'absolute inset-y-0 right-1 my-auto inline-flex h-6 w-6 items-center justify-center rounded-sm transition-colors',
               isSelfRouteActive
                 ? 'text-fg-muted hover:bg-black/[0.06] hover:text-fg dark:hover:bg-white/[0.08]'
                 : 'text-fg-subtle hover:bg-black/[0.06] hover:text-fg dark:hover:bg-white/[0.08]',
@@ -128,7 +128,7 @@ export function SidebarNavItem(props: {
           )}
         >
           <div className="min-h-0">
-            <div className="ml-4 mt-0.5 grid gap-px border-l border-border pl-2">
+            <div className="ml-4 mt-0.5 grid gap-0.5 border-l border-border pl-2">
               {props.node.children?.map((child) => (
                 <SidebarNavItem
                   active={props.isNodeActive(child)}
