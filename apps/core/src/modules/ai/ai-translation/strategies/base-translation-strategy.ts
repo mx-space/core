@@ -467,7 +467,7 @@ export abstract class BaseTranslationStrategy {
     const { systemPrompt, prompt, schema, reasoningEffort } =
       AI_PROMPTS.translationChunk(targetLang, payload)
 
-    let final: unknown
+    let final: WriterResult | undefined
     let sawDone = false
     let totalCost = 0
     try {
@@ -493,7 +493,17 @@ export abstract class BaseTranslationStrategy {
         }
         if (chunk.done) {
           sawDone = true
-          if (chunk.final !== undefined) final = chunk.final
+          if (chunk.final !== undefined) {
+            const normalised = this.normalizeChunkTranslationResponse(
+              chunk.final as WriterResult,
+            )
+            if (!Value.Check(schema, normalised)) {
+              throw new Error(
+                `callWriterStreaming: translation chunk validation failed at ${firstValidationFailure(schema, normalised)}`,
+              )
+            }
+            final = normalised as WriterResult
+          }
           if (chunk.usage?.cost !== undefined) totalCost = chunk.usage.cost
         }
         if (onToken) await onToken()
@@ -526,15 +536,7 @@ export abstract class BaseTranslationStrategy {
       )
     }
 
-    const normalised = this.normalizeChunkTranslationResponse(
-      final as WriterResult,
-    )
-    if (!Value.Check(schema, normalised)) {
-      throw new Error(
-        `callWriterStreaming: translation chunk validation failed at ${firstValidationFailure(schema, normalised)}`,
-      )
-    }
-    return normalised as WriterResult
+    return final
   }
 
   protected async callWriter(
