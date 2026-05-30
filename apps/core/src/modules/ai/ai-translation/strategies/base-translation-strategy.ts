@@ -432,6 +432,90 @@ export abstract class BaseTranslationStrategy {
     } as T
   }
 
+  protected async callWriterStreaming(
+    targetLang: string,
+    payload: {
+      documentContext: string
+      textEntries: Record<string, unknown>
+      segmentMeta?: Record<string, string>
+    },
+    runtime: IModelRuntime,
+    onPartial?: (partial: unknown) => void | Promise<void>,
+    onToken?: (count?: number) => Promise<void>,
+    signal?: AbortSignal,
+  ): Promise<{
+    sourceLang: string
+    translations: Record<string, string | Record<string, string>>
+  }> {
+    type WriterResult = {
+      sourceLang: string
+      translations: Record<string, string | Record<string, string>>
+    }
+
+    if (typeof runtime.streamStructured !== 'function') {
+      return this.callWriter(targetLang, payload, runtime, onToken, signal)
+    }
+
+    const { systemPrompt, prompt, schema, reasoningEffort } =
+      AI_PROMPTS.translationChunk(targetLang, payload)
+
+    let final: unknown
+    let sawDone = false
+    try {
+      for await (const chunk of runtime.streamStructured({
+        prompt,
+        systemPrompt,
+        schema,
+        reasoningEffort,
+        signal,
+        validate: false,
+      })) {
+        throwIfAborted(signal)
+        if (chunk.partial !== undefined) {
+          try {
+            await onPartial?.(chunk.partial)
+          } catch (cbErr) {
+            this.logger.warn(
+              `callWriterStreaming: onPartial callback threw (${
+                cbErr instanceof Error ? cbErr.message : String(cbErr)
+              })`,
+            )
+          }
+        }
+        if (chunk.done) {
+          sawDone = true
+          if (chunk.final !== undefined) final = chunk.final
+        }
+        if (onToken) await onToken()
+      }
+    } catch (error: any) {
+      if (error?.name === 'AbortError') throw error
+      const message: string =
+        error instanceof Error ? error.message : String(error)
+      if (error instanceof TypeError || /not supported/i.test(message)) {
+        this.logger.warn(`streamStructured fallback: ${message}`)
+        return this.callWriter(targetLang, payload, runtime, onToken, signal)
+      }
+      throw error
+    }
+
+    if (!sawDone || final === undefined) {
+      throw new Error(
+        'callWriterStreaming: stream ended without a terminal chunk',
+      )
+    }
+
+    const normalised = this.normalizeChunkTranslationResponse(
+      final as WriterResult,
+    )
+    if (!Value.Check(schema, normalised)) {
+      throw new Error(
+        `callWriterStreaming: translation chunk validation failed at ${firstValidationFailure(schema, normalised)}`,
+      )
+    }
+    return normalised as WriterResult
+  }
+
   protected async callWriter(
     targetLang: string,
     payload: {

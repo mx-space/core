@@ -92,6 +92,7 @@ export class LexicalTranslationStrategy
     options: TranslationStrategyOptions,
   ): Promise<TranslationResult> {
     const {
+      push,
       onToken,
       signal,
       existing,
@@ -120,6 +121,7 @@ export class LexicalTranslationStrategy
           reviewerRuntime,
           reviewScoreThreshold,
           metrics,
+          push,
         )
       } catch (error: any) {
         if (error.name === 'AbortError') throw error
@@ -140,6 +142,7 @@ export class LexicalTranslationStrategy
       reviewerRuntime,
       reviewScoreThreshold,
       metrics,
+      push,
     )
   }
 
@@ -263,6 +266,7 @@ export class LexicalTranslationStrategy
     reviewerRuntime?: IModelRuntime,
     reviewScoreThreshold?: number,
     metrics?: PipelineMetrics,
+    push?: TranslationStrategyOptions['push'],
   ): Promise<TranslationResult> {
     const parseResult = parseLexicalForTranslation(content.content!)
     const { segments, propertySegments, editorState } = parseResult
@@ -288,6 +292,8 @@ export class LexicalTranslationStrategy
       runtime,
       onToken,
       signal,
+      push,
+      targetLang,
     )
     if (metrics) metrics.writerMs = Date.now() - writerStart
 
@@ -349,6 +355,7 @@ export class LexicalTranslationStrategy
     reviewerRuntime?: IModelRuntime,
     reviewScoreThreshold?: number,
     metrics?: PipelineMetrics,
+    push?: TranslationStrategyOptions['push'],
   ): Promise<TranslationResult> {
     const currentBlocks = this.lexicalService.extractRootBlocks(
       content.content!,
@@ -532,6 +539,8 @@ export class LexicalTranslationStrategy
       runtime,
       onToken,
       signal,
+      push,
+      targetLang,
     )
     if (metrics) metrics.writerMs = Date.now() - writerStart
     if (sl) sourceLang = sl
@@ -824,11 +833,50 @@ export class LexicalTranslationStrategy
     runtime: IModelRuntime,
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
+    push?: TranslationStrategyOptions['push'],
+    lang?: string,
   ): Promise<string> {
     const { documentContext, units } = ctx
     if (units.length === 0) return ''
 
-    const result = await this.callWriter(
+    const seenUnitIds = new Set<string>()
+    const onPartial = push
+      ? async (partial: unknown) => {
+          if (
+            !partial ||
+            typeof partial !== 'object' ||
+            Array.isArray(partial)
+          ) {
+            return
+          }
+          const translations = (partial as { translations?: unknown })
+            .translations
+          if (
+            !translations ||
+            typeof translations !== 'object' ||
+            Array.isArray(translations)
+          ) {
+            return
+          }
+          for (const [unitId, value] of Object.entries(
+            translations as Record<string, unknown>,
+          )) {
+            if (value === undefined) continue
+            if (seenUnitIds.has(unitId)) continue
+            seenUnitIds.add(unitId)
+            await push({
+              type: 'partial',
+              data: {
+                lang: lang ?? targetLang,
+                segmentId: unitId,
+                partial: value,
+              },
+            })
+          }
+        }
+      : undefined
+
+    const result = await this.callWriterStreaming(
       targetLang,
       {
         documentContext,
@@ -836,6 +884,7 @@ export class LexicalTranslationStrategy
         segmentMeta: this.unitsToMeta(units),
       },
       runtime,
+      onPartial,
       onToken,
       signal,
     )
