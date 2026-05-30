@@ -1,32 +1,29 @@
-import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
 import type {
   AgentOperation,
   AgentStore,
   LLMProvider,
   ToolCallGroupItem,
+  TransportAdapter,
 } from '@haklex/rich-agent-core'
-import type { ProviderModelsResponse } from '~/api/ai'
-import type { AgentSessionMeta } from '~/hooks/use-agent-session-manager'
-import type { AgentLoopHandle } from '~/vendor/rich-editor/types'
-import type { LexicalEditor } from 'lexical'
-import type { SelectedAgentModel } from './types'
-
 import { createProvider } from '@haklex/rich-agent-core'
+import { useQuery } from '@tanstack/react-query'
+import type { LexicalEditor } from 'lexical'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
+import type { ProviderModelsResponse } from '~/api/ai'
 import { getModels } from '~/api/ai'
+import type { AgentSessionMeta } from '~/hooks/use-agent-session-manager'
 import { useAgentSessionManager } from '~/hooks/use-agent-session-manager'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
+import type { AgentLoopHandle } from '~/vendor/rich-editor/types'
 
 import { extractAgentOperationFromToolItem } from './agent-operations'
 import { createManagedAgentStore } from './agent-store'
-import {
-  createAdminAgentTransport,
-  mapAgentProviderType,
-} from './agent-transport'
+import { mapAgentProviderType } from './agent-transport'
+import type { SelectedAgentModel } from './types'
 
 export interface WriteAgentController {
   store: AgentStore
@@ -50,9 +47,6 @@ export interface WriteAgentController {
   retryLoadSessions: () => void
   sendMessage: (message: string) => void
   abort: () => void
-  acceptBatch: (batchId: string) => void
-  rejectBatch: (batchId: string) => void
-  reapplyBatch: (batchId: string) => void
   reapplyToolGroup: (items: ToolCallGroupItem[]) => void
 }
 
@@ -68,10 +62,32 @@ function isSelectedAgentModelAvailable(
   return Boolean(provider?.models.some((item) => item.id === model.modelId))
 }
 
+// 18a wires the admin to the new session-keyed backend and SSE event types.
+// The streaming pipeline that consumes those events through Lexical and the
+// haklex agent loop is replaced wholesale in 18b, so the transport handed to
+// `createProvider` here is intentionally inert: it satisfies the haklex
+// signature and lets `useWriteAgent` keep its public shape during the
+// transition.
+function createPlaceholderTransport(): TransportAdapter {
+  return async () =>
+    new Response(new ReadableStream(), {
+      headers: { 'Content-Type': 'text/event-stream' },
+      status: 200,
+    })
+}
+
+function deriveDocumentSessionId(
+  documentKind: 'note' | 'page' | 'post',
+  documentId: string | undefined,
+): string | undefined {
+  if (!documentId) return undefined
+  return `${documentKind}:${documentId}`
+}
+
 export function useWriteAgent(opts: {
   agentVisible: boolean
-  kind: 'note' | 'page' | 'post'
-  refId?: string
+  documentId?: string
+  documentKind: 'note' | 'page' | 'post'
 }): WriteAgentController {
   const { t } = useI18n()
 
@@ -97,7 +113,7 @@ export function useWriteAgent(opts: {
     return createProvider({
       model: selectedModel.modelId,
       providerType: mapAgentProviderType(selectedModel.providerType),
-      transport: createAdminAgentTransport(selectedModel.providerId),
+      transport: createPlaceholderTransport(),
     })
   }, [selectedModel])
 
@@ -148,12 +164,16 @@ export function useWriteAgent(opts: {
     store.getState().setStatus('idle')
   }
 
+  const documentSessionId = deriveDocumentSessionId(
+    opts.documentKind,
+    opts.documentId,
+  )
+
   const sessionManager = useAgentSessionManager({
     abort,
     getModel: () => selectedModel?.modelId ?? '',
     getProviderId: () => selectedModel?.providerId ?? '',
-    refId: opts.refId,
-    refType: opts.kind,
+    sessionId: documentSessionId,
     store,
   })
 
@@ -176,41 +196,6 @@ export function useWriteAgent(opts: {
       store.getState().addBubble({ message: detail, type: 'error' })
       store.getState().setStatus('idle')
     })
-  }
-
-  const applyBatch = (batchId: string, mode: 'accept' | 'reapply') => {
-    const batch = store
-      .getState()
-      .reviewState?.batches.find((item) => item.id === batchId)
-    const editor = lexicalEditorRef.current
-    if (!batch || !editor) return
-
-    const run = async () => {
-      const { applyAgentReviewBatch } =
-        await import('~/vendor/rich-editor/utils/apply-agent-review-batch')
-      applyAgentReviewBatch(editor, batch)
-      if (mode === 'accept') store.getState().acceptReviewBatch(batchId)
-      toast.success(
-        mode === 'accept'
-          ? t('write.agent.toast.suggestionApplied')
-          : t('write.agent.toast.suggestionReapplied'),
-      )
-    }
-
-    void run().catch((error: unknown) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : t('write.agent.toast.applyFailed'),
-      )
-    })
-  }
-
-  const acceptBatch = (batchId: string) => applyBatch(batchId, 'accept')
-  const reapplyBatch = (batchId: string) => applyBatch(batchId, 'reapply')
-
-  const rejectBatch = (batchId: string) => {
-    store.getState().rejectReviewBatch(batchId)
   }
 
   const reapplyToolGroup = (items: ToolCallGroupItem[]) => {
@@ -265,7 +250,6 @@ export function useWriteAgent(opts: {
 
   return {
     abort,
-    acceptBatch,
     activeSessionId: sessionManager.activeSessionId,
     agentReady,
     createSession: sessionManager.createSession,
@@ -278,9 +262,7 @@ export function useWriteAgent(opts: {
     onEditorReady,
     provider,
     providerGroups,
-    reapplyBatch,
     reapplyToolGroup,
-    rejectBatch,
     renameSession: sessionManager.renameSession,
     retryLoadSessions: sessionManager.loadSessions,
     selectModel,

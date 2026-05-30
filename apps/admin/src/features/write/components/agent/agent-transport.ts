@@ -1,109 +1,106 @@
-import type { TransportAdapter } from '@haklex/rich-agent-core'
-// Type-only import pins the admin to the shared SSE event contract emitted by
-// the core controller. Drift between the two surfaces fails the admin
-// typecheck (see packages/api-client/models/ai-agent-sse.ts). The runtime
-// consumer of these frames is wired up in step-18.
 import type { AiAgentSseEvent } from '@mx-space/api-client'
 
 import { API_URL } from '~/constants/env'
 
 export type AdminAiAgentSseEvent = AiAgentSseEvent
 
+export interface AdminAgentChatRequest {
+  messages: Record<string, unknown>[]
+  model: string
+  signal?: AbortSignal
+  tools?: Array<{
+    description: string
+    name: string
+    parameters: Record<string, unknown>
+  }>
+}
+
+export type AdminAgentTransport = (
+  request: AdminAgentChatRequest,
+) => AsyncIterable<AiAgentSseEvent>
+
 export function createAdminAgentTransport(
   providerId: string,
-): TransportAdapter {
-  return async (messages, tools, model, signal) => {
+): AdminAgentTransport {
+  return async function* admin(request) {
     const response = await fetch(`${API_URL}/ai/agent/chat`, {
-      body: JSON.stringify({ messages, model, providerId, tools }),
+      body: JSON.stringify({
+        messages: request.messages,
+        model: request.model,
+        providerId,
+        tools: request.tools,
+      }),
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'x-skip-translation': '1',
       },
       method: 'POST',
-      signal,
+      signal: request.signal,
     })
 
-    if (!response.ok || !response.body) return response
+    if (!response.ok || !response.body) {
+      const text = await safeReadResponseText(response)
+      throw new Error(text || `Agent chat failed: HTTP ${response.status}`)
+    }
 
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
-    const first = await reader.read()
+    let buffer = ''
 
-    if (first.done) {
-      reader.releaseLock()
-      return new Response(new ReadableStream(), {
-        headers: response.headers,
-        status: response.status,
-        statusText: response.statusText,
-      })
-    }
-
-    const firstText = decoder.decode(first.value, { stream: true })
-    if (/(?:^|\n)event:\s*error/.test(firstText)) {
-      let buffer = firstText
+    try {
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
+
         buffer += decoder.decode(value, { stream: true })
-      }
-      reader.releaseLock()
-      throw new Error(extractSseErrorMessage(buffer))
-    }
 
-    const stream = new ReadableStream<Uint8Array>({
-      cancel(reason) {
-        reader.cancel(reason).catch(() => {})
-      },
-      async pull(controller) {
-        try {
-          const { done, value } = await reader.read()
-          if (done) {
-            controller.close()
-            return
-          }
-
-          const text = decoder.decode(value, { stream: true })
-          if (/(?:^|\n)event:\s*error/.test(text)) {
-            let buffer = text
-            while (true) {
-              const { done: d, value: v } = await reader.read()
-              if (d) break
-              buffer += decoder.decode(v, { stream: true })
-            }
-            controller.error(new Error(extractSseErrorMessage(buffer)))
-            return
-          }
-
-          controller.enqueue(value)
-        } catch (error) {
-          controller.error(error)
+        let separatorIndex: number
+        while ((separatorIndex = buffer.indexOf('\n\n')) !== -1) {
+          const frame = buffer.slice(0, separatorIndex)
+          buffer = buffer.slice(separatorIndex + 2)
+          const event = parseSseFrame(frame)
+          if (event) yield event
         }
-      },
-      start(controller) {
-        controller.enqueue(first.value)
-      },
-    })
+      }
 
-    return new Response(stream, {
-      headers: response.headers,
-      status: response.status,
-      statusText: response.statusText,
-    })
+      const tail = buffer.trim()
+      if (tail.length > 0) {
+        const event = parseSseFrame(tail)
+        if (event) yield event
+      }
+    } finally {
+      reader.releaseLock()
+    }
   }
 }
 
-function extractSseErrorMessage(buffer: string): string {
-  const match = buffer.match(/data:\s*(\{[\s\S]*?\})\s*(?:\n|$)/)
-  if (match) {
-    try {
-      const parsed = JSON.parse(match[1]) as { message?: string }
-      if (parsed.message) return parsed.message
-    } catch {
-      // Fall through to a bounded raw message.
+function parseSseFrame(frame: string): AiAgentSseEvent | null {
+  let payload = ''
+  for (const rawLine of frame.split('\n')) {
+    const line = rawLine.replace(/\r$/, '')
+    if (line.length === 0) continue
+    if (line.startsWith(':')) continue
+    if (line.startsWith('data:')) {
+      payload += line.slice(5).replace(/^ /, '')
     }
   }
-  return buffer.slice(0, 500) || 'Unknown SSE error'
+
+  if (payload.length === 0) return null
+
+  try {
+    return JSON.parse(payload) as AiAgentSseEvent
+  } catch {
+    return null
+  }
+}
+
+async function safeReadResponseText(response: Response): Promise<string> {
+  try {
+    return (await response.text()).slice(0, 500)
+  } catch {
+    return ''
+  }
 }
 
 export function mapAgentProviderType(

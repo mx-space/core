@@ -1,26 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   AgentStore,
   AgentStoreSlice,
   ChatBubble,
-  DiffState,
-  ReviewState,
 } from '@haklex/rich-agent-core'
-import type { AgentConversation } from '../api/ai-agent'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
+import type { AgentConversation } from '../api/ai-agent'
 import {
   createAgentConversation,
   deleteAgentConversation,
   getAgentConversation,
   getAgentConversations,
   replaceAgentConversationMessages,
-  updateAgentConversation,
 } from '../api/ai-agent'
 
 export interface AgentSessionMeta {
   id: string
-  messageCount: number
-  title?: string
   updatedAt: string
 }
 
@@ -28,17 +23,13 @@ interface UseAgentSessionManagerOptions {
   abort: () => void
   getModel: () => string
   getProviderId: () => string
-  refId?: string
-  refType: 'note' | 'page' | 'post'
+  sessionId?: string
   store: AgentStore
 }
 
 function toSessionMeta(conversation: AgentConversation): AgentSessionMeta {
   return {
     id: conversation.id,
-    messageCount:
-      conversation.messageCount ?? conversation.messages?.length ?? 0,
-    title: conversation.title,
     updatedAt: conversation.updatedAt,
   }
 }
@@ -68,8 +59,7 @@ export function useAgentSessionManager({
   abort,
   getModel,
   getProviderId,
-  refId,
-  refType,
+  sessionId,
   store,
 }: UseAgentSessionManagerOptions) {
   const [sessions, setSessions] = useState<AgentSessionMeta[]>([])
@@ -80,31 +70,27 @@ export function useAgentSessionManager({
 
   const activeSessionIdRef = useRef<string | null>(null)
   const abortRef = useRef(abort)
-  const diffSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const getModelRef = useRef(getModel)
   const getProviderIdRef = useRef(getProviderId)
   const isHydratingRef = useRef(false)
   const isCreatingSessionRef = useRef(false)
   const isPendingCreationRef = useRef(false)
   const loadSessionsRef = useRef<() => Promise<void>>(async () => {})
-  const refIdRef = useRef(refId)
-  const prevRefIdRef = useRef(refId)
-  const refTypeRef = useRef(refType)
+  const sessionIdRef = useRef(sessionId)
+  const prevSessionIdRef = useRef(sessionId)
   const sessionEpochRef = useRef(0)
   const sessionsRef = useRef(sessions)
-  const titlePollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingSyncRef = useRef<{
     cancel: () => void
-    sessionId: string
+    conversationId: string
   } | null>(null)
 
   useEffect(() => {
     abortRef.current = abort
     getModelRef.current = getModel
     getProviderIdRef.current = getProviderId
-    refIdRef.current = refId
-    refTypeRef.current = refType
-  }, [abort, getModel, getProviderId, refId, refType])
+    sessionIdRef.current = sessionId
+  }, [abort, getModel, getProviderId, sessionId])
 
   useEffect(() => {
     activeSessionIdRef.current = activeSessionId
@@ -119,26 +105,14 @@ export function useAgentSessionManager({
   }, [sessions])
 
   const syncMessages = useCallback(
-    (sessionId: string) => {
+    (conversationId: string) => {
       const bubbles = store.getState().bubbles
       if (bubbles.length === 0) return
 
       replaceAgentConversationMessages(
-        sessionId,
+        conversationId,
         bubbles as unknown as Record<string, unknown>[],
-      )
-        .then(() => {
-          const meta = sessionsRef.current.find(
-            (session) => session.id === sessionId,
-          )
-          if (!meta || meta.title || titlePollTimerRef.current) return
-
-          titlePollTimerRef.current = setTimeout(() => {
-            titlePollTimerRef.current = null
-            void loadSessionsRef.current()
-          }, 6000)
-        })
-        .catch(() => {})
+      ).catch(() => {})
     },
     [store],
   )
@@ -148,23 +122,23 @@ export function useAgentSessionManager({
     if (!pendingSync) return
 
     pendingSync.cancel()
-    syncMessages(pendingSync.sessionId)
+    syncMessages(pendingSync.conversationId)
     pendingSyncRef.current = null
   }, [syncMessages])
 
   const switchSession = useCallback(
-    async (sessionId: string) => {
+    async (conversationId: string) => {
       flushPendingSync()
 
       const epoch = ++sessionEpochRef.current
       abortRef.current()
       isPendingCreationRef.current = false
       setIsHydrating(true)
-      setActiveSessionId(sessionId)
+      setActiveSessionId(conversationId)
       store.getState().reset()
 
       try {
-        const detail = await getAgentConversation(sessionId)
+        const detail = await getAgentConversation(conversationId)
         if (epoch !== sessionEpochRef.current) return
 
         const messages = detail.messages ?? []
@@ -180,24 +154,11 @@ export function useAgentSessionManager({
           status: 'idle',
         } as Partial<AgentStoreSlice>)
 
-        if (detail.reviewState) {
-          store
-            .getState()
-            .setReviewState(detail.reviewState as unknown as ReviewState)
-        }
-        if (detail.diffState) {
-          store
-            .getState()
-            .setDiffState(detail.diffState as unknown as DiffState)
-        }
-
         setSessions((current) =>
           current.map((session) =>
-            session.id === sessionId
+            session.id === conversationId
               ? {
                   ...session,
-                  messageCount: bubbles.length,
-                  title: detail.title,
                   updatedAt: detail.updatedAt,
                 }
               : session,
@@ -216,14 +177,14 @@ export function useAgentSessionManager({
   )
 
   const loadSessions = useCallback(async () => {
-    const currentRefId = refIdRef.current
-    if (!currentRefId) return
+    const currentSessionId = sessionIdRef.current
+    if (!currentSessionId) return
 
     setIsLoading(true)
     setLoadError(false)
     try {
       const list = normalizeConversationList(
-        await getAgentConversations(currentRefId, refTypeRef.current),
+        await getAgentConversations(currentSessionId),
       )
       const metas = list.map(toSessionMeta)
       setSessions(metas)
@@ -254,21 +215,21 @@ export function useAgentSessionManager({
   }, [flushPendingSync, store])
 
   const deleteSession = useCallback(
-    async (sessionId: string) => {
-      if (activeSessionIdRef.current === sessionId) flushPendingSync()
+    async (conversationId: string) => {
+      if (activeSessionIdRef.current === conversationId) flushPendingSync()
 
       try {
-        await deleteAgentConversation(sessionId)
+        await deleteAgentConversation(conversationId)
       } catch {
         return
       }
 
       const remaining = sessionsRef.current.filter(
-        (session) => session.id !== sessionId,
+        (session) => session.id !== conversationId,
       )
       setSessions(remaining)
 
-      if (activeSessionIdRef.current !== sessionId) return
+      if (activeSessionIdRef.current !== conversationId) return
 
       if (remaining.length > 0) {
         await switchSession(remaining[0].id)
@@ -285,64 +246,38 @@ export function useAgentSessionManager({
   )
 
   const renameSession = useCallback(
-    async (sessionId: string, title: string) => {
-      const trimmed = title.trim()
-      if (!trimmed) return
-
-      try {
-        await updateAgentConversation(sessionId, { title: trimmed })
-        setSessions((current) =>
-          current.map((session) =>
-            session.id === sessionId ? { ...session, title: trimmed } : session,
-          ),
-        )
-      } catch {}
+    async (_conversationId: string, _title: string) => {
+      // The new session-scoped backend no longer carries a per-conversation
+      // title — local rename is a no-op until a dedicated title channel lands.
     },
     [],
   )
 
   const scheduleMessagesSync = useCallback(
-    (sessionId: string) => {
+    (conversationId: string) => {
       pendingSyncRef.current?.cancel()
 
       const timer = setTimeout(() => {
-        if (activeSessionIdRef.current === sessionId) syncMessages(sessionId)
+        if (activeSessionIdRef.current === conversationId)
+          syncMessages(conversationId)
         pendingSyncRef.current = null
       }, 2000)
 
       pendingSyncRef.current = {
         cancel: () => clearTimeout(timer),
-        sessionId,
+        conversationId,
       }
     },
     [syncMessages],
   )
-
-  const scheduleDiffSync = useCallback(() => {
-    if (diffSyncTimerRef.current) clearTimeout(diffSyncTimerRef.current)
-
-    const sessionId = activeSessionIdRef.current
-    if (!sessionId) return
-
-    diffSyncTimerRef.current = setTimeout(() => {
-      if (activeSessionIdRef.current !== sessionId) return
-      const state = store.getState()
-      updateAgentConversation(sessionId, {
-        diffState:
-          (state.diffState as unknown as Record<string, unknown>) ?? null,
-        reviewState:
-          (state.reviewState as unknown as Record<string, unknown>) ?? null,
-      }).catch(() => {})
-    }, 2000)
-  }, [store])
 
   useEffect(() => {
     return store.subscribe((state) => {
       if (isHydratingRef.current) return
       if (state.bubbles.length === 0) return
 
-      const currentRefId = refIdRef.current
-      if (!currentRefId) return
+      const currentSessionId = sessionIdRef.current
+      if (!currentSessionId) return
 
       const epoch = sessionEpochRef.current
       const messages = state.bubbles as unknown as Record<string, unknown>[]
@@ -356,8 +291,7 @@ export function useAgentSessionManager({
           messages,
           model: getModelRef.current(),
           providerId: getProviderIdRef.current(),
-          refId: currentRefId,
-          refType: refTypeRef.current,
+          sessionId: currentSessionId,
         })
           .then((conversation) => {
             if (epoch !== sessionEpochRef.current) return
@@ -365,7 +299,6 @@ export function useAgentSessionManager({
             isCreatingSessionRef.current = false
             isPendingCreationRef.current = false
             setSessions((current) => [toSessionMeta(conversation), ...current])
-            setTimeout(() => void loadSessionsRef.current(), 5000)
           })
           .catch(() => {
             isCreatingSessionRef.current = false
@@ -375,20 +308,19 @@ export function useAgentSessionManager({
       }
 
       scheduleMessagesSync(activeSessionIdRef.current)
-      scheduleDiffSync()
     })
-  }, [scheduleDiffSync, scheduleMessagesSync, store])
+  }, [scheduleMessagesSync, store])
 
   useEffect(() => {
-    const previousRefId = prevRefIdRef.current
-    prevRefIdRef.current = refId
+    const previousSessionId = prevSessionIdRef.current
+    prevSessionIdRef.current = sessionId
 
-    // refId only just became available (e.g. a new document acquired its draft
-    // id) while an unsaved conversation is already in memory. Keep it so the
-    // create path persists it under the new ref instead of wiping it.
+    // Session id only just became available (e.g. a new document acquired its
+    // draft id) while an unsaved conversation is already in memory. Keep it so
+    // the create path persists it under the new session instead of wiping it.
     const adoptInMemory =
-      !previousRefId &&
-      Boolean(refId) &&
+      !previousSessionId &&
+      Boolean(sessionId) &&
       !activeSessionIdRef.current &&
       store.getState().bubbles.length > 0
     if (adoptInMemory) return
@@ -402,14 +334,12 @@ export function useAgentSessionManager({
     store.getState().reset()
     sessionEpochRef.current += 1
 
-    if (refId) void loadSessions()
-  }, [flushPendingSync, loadSessions, refId, store])
+    if (sessionId) void loadSessions()
+  }, [flushPendingSync, loadSessions, sessionId, store])
 
   useEffect(() => {
     return () => {
       flushPendingSync()
-      if (diffSyncTimerRef.current) clearTimeout(diffSyncTimerRef.current)
-      if (titlePollTimerRef.current) clearTimeout(titlePollTimerRef.current)
     }
   }, [flushPendingSync])
 

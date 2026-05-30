@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import type { WriteAgentController } from './use-write-agent'
 
 import { ChatComposer } from './ChatComposer'
 import { MessageList } from './MessageList'
 import { SessionHeader } from './SessionHeader'
+import type { WriteAgentController } from './use-write-agent'
 
 interface AgentPanelProps {
   agent: WriteAgentController
@@ -27,10 +27,7 @@ export function AgentPanel({ agent }: AgentPanelProps) {
       />
       <MessageList
         isHydrating={agent.isHydrating}
-        onAcceptBatch={agent.acceptBatch}
-        onReapplyBatch={agent.reapplyBatch}
         onReapplyToolGroup={agent.reapplyToolGroup}
-        onRejectBatch={agent.rejectBatch}
         store={agent.store}
       />
       <ChatComposer

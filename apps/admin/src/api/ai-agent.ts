@@ -2,26 +2,19 @@ import { deleteJson, getJson, patchJson, postJson, putJson } from './http'
 
 export interface AgentConversation {
   createdAt: string
-  diffState?: Record<string, unknown>
   id: string
-  messageCount: number
   messages?: Record<string, unknown>[]
-  model: string
-  providerId: string
-  refId: string
-  refType: string
-  reviewState?: Record<string, unknown>
-  title?: string
+  model: string | null
+  providerId: string | null
+  sessionId: string
   updatedAt: string
 }
 
 export function createAgentConversation(data: {
   messages?: Record<string, unknown>[]
-  model: string
-  providerId: string
-  refId: string
-  refType: 'note' | 'page' | 'post'
-  title?: string
+  model?: string | null
+  providerId?: string | null
+  sessionId: string
 }) {
   return postJson<AgentConversation, typeof data>(
     '/ai/agent/conversations',
@@ -29,18 +22,24 @@ export function createAgentConversation(data: {
   )
 }
 
-export function getAgentConversations(
-  refId: string,
-  refType: 'note' | 'page' | 'post',
-) {
+export function getAgentConversations(sessionId: string) {
   return getJson<AgentConversation[]>('/ai/agent/conversations', {
-    refId,
-    refType,
+    sessionId,
   })
 }
 
 export function getAgentConversation(id: string) {
   return getJson<AgentConversation>(`/ai/agent/conversations/${id}`)
+}
+
+export function appendAgentConversationMessages(
+  id: string,
+  messages: Record<string, unknown>[],
+) {
+  return patchJson<AgentConversation, { messages: Record<string, unknown>[] }>(
+    `/ai/agent/conversations/${id}/messages`,
+    { messages },
+  )
 }
 
 export function replaceAgentConversationMessages(
@@ -56,9 +55,9 @@ export function replaceAgentConversationMessages(
 export function updateAgentConversation(
   id: string,
   data: {
-    diffState?: Record<string, unknown> | null
-    reviewState?: Record<string, unknown> | null
-    title?: string
+    model?: string | null
+    providerId?: string | null
+    sessionId?: string
   },
 ) {
   return patchJson<AgentConversation, typeof data>(

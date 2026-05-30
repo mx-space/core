@@ -3,3 +3,17 @@ export interface SelectedAgentModel {
   providerId: string
   providerType: string
 }
+
+export interface AgentConversationMessage {
+  [key: string]: unknown
+}
+
+export interface AgentConversation {
+  createdAt: string
+  id: string
+  messages?: AgentConversationMessage[]
+  model: string | null
+  providerId: string | null
+  sessionId: string
+  updatedAt: string
+}

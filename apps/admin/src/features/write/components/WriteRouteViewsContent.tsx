@@ -1,5 +1,8 @@
 import { Popover } from '@base-ui/react/popover'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { load } from 'js-yaml'
+import type { SerializedEditorState } from 'lexical'
+import type { LucideIcon } from 'lucide-react'
 import {
   ArrowLeftRight,
   BookOpen,
@@ -23,44 +26,19 @@ import {
   WandSparkles,
   X,
 } from 'lucide-react'
-import {
-  FormEvent,
-  lazy,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import type { CSSProperties, FormEvent, ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import {
   useBeforeUnload,
   useLocation,
   useNavigate,
   useSearchParams,
 } from 'react-router'
-import { load } from 'js-yaml'
 import { toast } from 'sonner'
-import type { CreateDraftData } from '~/api/drafts'
-import type { TranslationKey } from '~/i18n/types'
-import type { Amap, AMapSearch } from '~/models/amap'
-import type { Image as ImageModel } from '~/models/base'
-import type { CategoryModel } from '~/models/category'
-import type { DraftModel } from '~/models/draft'
-import type { NoteModel } from '~/models/note'
-import type { PageModel } from '~/models/page'
-import type { PostModel } from '~/models/post'
-import type { TopicModel } from '~/models/topic'
-import type {
-  RichEditorWithAgentProps,
-  RichEditorWithAgentRef,
-} from '~/vendor/rich-editor/components/RichEditorWithAgent'
-import type { MetaFieldsSchema } from '~/vendor/rich-editor/utils/meta-tools'
-import type { SerializedEditorState } from 'lexical'
-import type { LucideIcon } from 'lucide-react'
-import type { CSSProperties, ReactNode } from 'react'
 
 import { AiQueryType, writerGenerate } from '~/api/ai'
 import { getCategories, getTags } from '~/api/categories'
+import type { CreateDraftData } from '~/api/drafts'
 import {
   createDraft,
   getDraftById,
@@ -88,7 +66,16 @@ import { MetaPresetSection } from '~/features/write/meta-presets'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
 import { translate } from '~/i18n/translate'
+import type { TranslationKey } from '~/i18n/types'
+import type { Amap, AMapSearch } from '~/models/amap'
+import type { Image as ImageModel } from '~/models/base'
+import type { CategoryModel } from '~/models/category'
+import type { DraftModel } from '~/models/draft'
 import { DraftRefType } from '~/models/draft'
+import type { NoteModel } from '~/models/note'
+import type { PageModel } from '~/models/page'
+import type { PostModel } from '~/models/post'
+import type { TopicModel } from '~/models/topic'
 import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { Drawer } from '~/ui/feedback/drawer'
@@ -109,6 +96,11 @@ import { TextArea, TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 import { getDayOfYear } from '~/utils/time'
 import { CodeMirrorEditor, ImageDropZone } from '~/vendor/codemirror'
+import type {
+  RichEditorWithAgentProps,
+  RichEditorWithAgentRef,
+} from '~/vendor/rich-editor/components/RichEditorWithAgent'
+import type { MetaFieldsSchema } from '~/vendor/rich-editor/utils/meta-tools'
 import {
   buildMetaSystemMessages,
   buildMetaTools,
@@ -198,29 +190,29 @@ interface PresetOption {
 // them as escape sequences so this source file stays free of inline CJK while
 // still mapping to the existing API contract. Display labels come from i18n.
 const MOOD_SET: readonly PresetOption[] = [
-  { labelKey: 'write.mood.delight', value: '\u5f00\u5fc3' },
-  { labelKey: 'write.mood.sad', value: '\u4f24\u5fc3' },
-  { labelKey: 'write.mood.determined', value: '\u51b3\u5fc3' },
-  { labelKey: 'write.mood.firm', value: '\u575a\u5b9a' },
-  { labelKey: 'write.mood.hatred', value: '\u75db\u6068' },
-  { labelKey: 'write.mood.irritated', value: '\u751f\u6c14' },
-  { labelKey: 'write.mood.grief', value: '\u60b2\u54c0' },
-  { labelKey: 'write.mood.bitter', value: '\u75db\u82e6' },
-  { labelKey: 'write.mood.scared', value: '\u53ef\u6015' },
-  { labelKey: 'write.mood.unease', value: '\u4e0d\u5feb' },
-  { labelKey: 'write.mood.loathed', value: '\u53ef\u6076' },
-  { labelKey: 'write.mood.dread', value: '\u62c5\u5fc3' },
-  { labelKey: 'write.mood.depressed', value: '\u7edd\u671b' },
+  { labelKey: 'write.mood.delight', value: '\u5F00\u5FC3' },
+  { labelKey: 'write.mood.sad', value: '\u4F24\u5FC3' },
+  { labelKey: 'write.mood.determined', value: '\u51B3\u5FC3' },
+  { labelKey: 'write.mood.firm', value: '\u575A\u5B9A' },
+  { labelKey: 'write.mood.hatred', value: '\u75DB\u6068' },
+  { labelKey: 'write.mood.irritated', value: '\u751F\u6C14' },
+  { labelKey: 'write.mood.grief', value: '\u60B2\u54C0' },
+  { labelKey: 'write.mood.bitter', value: '\u75DB\u82E6' },
+  { labelKey: 'write.mood.scared', value: '\u53EF\u6015' },
+  { labelKey: 'write.mood.unease', value: '\u4E0D\u5FEB' },
+  { labelKey: 'write.mood.loathed', value: '\u53EF\u6076' },
+  { labelKey: 'write.mood.dread', value: '\u62C5\u5FC3' },
+  { labelKey: 'write.mood.depressed', value: '\u7EDD\u671B' },
   { labelKey: 'write.mood.tense', value: '\u7126\u8651' },
-  { labelKey: 'write.mood.excited', value: '\u6fc0\u52a8' },
+  { labelKey: 'write.mood.excited', value: '\u6FC0\u52A8' },
 ] as const
 const WEATHER_SET: readonly PresetOption[] = [
   { labelKey: 'write.weather.sunny', value: '\u6674' },
-  { labelKey: 'write.weather.cloudy', value: '\u591a\u4e91' },
-  { labelKey: 'write.weather.rain', value: '\u96e8' },
+  { labelKey: 'write.weather.cloudy', value: '\u591A\u4E91' },
+  { labelKey: 'write.weather.rain', value: '\u96E8' },
   { labelKey: 'write.weather.overcast', value: '\u9634' },
-  { labelKey: 'write.weather.snow', value: '\u96ea' },
-  { labelKey: 'write.weather.thunderstorm', value: '\u96f7\u96e8' },
+  { labelKey: 'write.weather.snow', value: '\u96EA' },
+  { labelKey: 'write.weather.thunderstorm', value: '\u96F7\u96E8' },
 ] as const
 
 const POST_META_SCHEMA: MetaFieldsSchema = {
@@ -3031,7 +3023,7 @@ function formatLexicalDebugContent(content: string) {
 function parsePageMarkdown(value: string): ParsedPageMarkdown {
   let text = value.trim()
   const parsed: ParsedPageMarkdown = { text: '' }
-  const yamlHeader = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text)
+  const yamlHeader = /^---\r?\n(.*?)\r?\n---/s.exec(text)
 
   if (yamlHeader) {
     const meta = parseYamlMeta(yamlHeader[1])
@@ -3101,7 +3093,7 @@ function getHashRouterRoute(href: string) {
 }
 
 function getRoutePathname(route: string) {
-  return route.split(/[?#]/, 1)[0] || '/'
+  return route.split(/[#?]/, 1)[0] || '/'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -3159,7 +3151,7 @@ function buildWriteImages(state: WriteFormState): ImageModel[] {
 
 function pickImagesFromMarkdown(text: string) {
   const images: string[] = []
-  const imagePattern = /!\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)/g
+  const imagePattern = /!\[[^\]]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g
 
   for (const match of text.matchAll(imagePattern)) {
     if (match[1]) images.push(match[1])
@@ -3169,7 +3161,7 @@ function pickImagesFromMarkdown(text: string) {
 }
 
 function getFileExtension(src: string) {
-  const pathname = src.split(/[?#]/)[0] ?? src
+  const pathname = src.split(/[#?]/)[0] ?? src
   return pathname.split('.').pop() || ''
 }
 
@@ -3695,8 +3687,8 @@ function RichWriteSurface(props: {
   const editorRef = useRef<RichEditorWithAgentRef | null>(null)
   const agent = useWriteAgent({
     agentVisible: Boolean(props.agentVisible),
-    kind: props.kind,
-    refId: props.refId,
+    documentId: props.refId,
+    documentKind: props.kind,
   })
   const latestCallbacks = useRef({
     onContentChange: props.onContentChange,
@@ -3800,7 +3792,7 @@ function parseSerializedEditorState(
 
 async function saveExcalidrawSnapshot(snapshot: object, existingRef?: string) {
   const name = existingRef
-    ? `${existingRef.replace(/[^\w.-]/g, '-')}.json`
+    ? `${existingRef.replaceAll(/[^\w.-]/g, '-')}.json`
     : `excalidraw-${crypto.randomUUID()}.json`
   const file = new File([JSON.stringify(snapshot)], name, {
     type: 'application/json',

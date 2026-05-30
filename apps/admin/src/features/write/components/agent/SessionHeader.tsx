@@ -1,8 +1,8 @@
 import { Popover } from '@base-ui/react/popover'
 import { ChevronDown, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import type { AgentSessionMeta } from '~/hooks/use-agent-session-manager'
 
+import type { AgentSessionMeta } from '~/hooks/use-agent-session-manager'
 import { useI18n } from '~/i18n'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { cn } from '~/utils/cn'
@@ -17,6 +17,10 @@ interface SessionHeaderProps {
   onDelete: (id: string) => void
   onRename: (id: string, title: string) => void
   onRetryLoad: () => void
+}
+
+function formatSessionLabel(id: string) {
+  return id.length > 10 ? `${id.slice(0, 8)}…` : id
 }
 
 export function SessionHeader(props: SessionHeaderProps) {
@@ -34,7 +38,7 @@ export function SessionHeader(props: SessionHeaderProps) {
   const { t } = useI18n()
 
   const activeSession = sessions.find((s) => s.id === activeSessionId)
-  const activeTitle = activeSession?.title
+  const activeTitle = activeSession ? formatSessionLabel(activeSession.id) : ''
 
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -162,14 +166,10 @@ export function SessionHeader(props: SessionHeaderProps) {
                         type="button"
                       >
                         <span className="truncate text-xs font-medium text-neutral-800 dark:text-neutral-200">
-                          {session.title || t('write.agent.session.untitled')}
+                          {formatSessionLabel(session.id)}
                         </span>
                         <span className="text-xs text-neutral-400">
                           {relativeTime(session.updatedAt)}
-                          {' · '}
-                          {t('write.agent.session.messageCount', {
-                            count: session.messageCount,
-                          })}
                         </span>
                       </button>
                     ))
