@@ -33,7 +33,7 @@ function subscribe(fn: () => void) {
 }
 
 function getTopOverride(): string | null {
-  return overrideStack.length ? overrideStack.at(-1) : null
+  return overrideStack.at(-1) ?? null
 }
 
 interface RouteMatch {
