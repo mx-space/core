@@ -26,6 +26,7 @@ import { CollapsibleSection } from './CollapsibleSection'
 import { SubTaskStatsView } from './SubTaskStatsView'
 import { TaskCostBadge } from './TaskCostBadge'
 import { TaskLogsBlock } from './TaskLogsBlock'
+import { shouldMountTaskStreamPanel, TaskStreamPanel } from './TaskStreamPanel'
 import { TaskTimeline } from './TaskTimeline'
 
 export function TaskDetail(props: {
@@ -155,6 +156,10 @@ export function TaskDetail(props: {
         ) : null}
 
         <TaskTimeline task={task} />
+
+        {shouldMountTaskStreamPanel(task) ? (
+          <TaskStreamPanel taskId={task.id} />
+        ) : null}
 
         {progress !== null ? (
           <section className="mb-6">

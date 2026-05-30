@@ -123,7 +123,12 @@ export const enUS = {
   'ai.task.retryBadge': 'Retry {count}',
   'ai.task.slugBackfill.summary': 'Backfill missing slug',
   'ai.task.startedAt': 'Started at',
+  'ai.task.stream.lang': 'Language {lang}',
+  'ai.task.stream.lateHint':
+    'Streaming live updates — earlier output not replayable',
+  'ai.task.stream.segment': 'Segment {segmentId}',
   'ai.task.stream.title': 'Live output',
+  'ai.task.stream.waiting': 'Waiting for first output…',
   'ai.task.subProgress': 'Sub-task progress',
   'ai.task.subStats.completed': '{count} completed',
   'ai.task.subStats.failed': '{count} failed',
