@@ -48,6 +48,7 @@ export class MarkdownTranslationStrategy
     const {
       push,
       onToken,
+      onCost,
       signal,
       reviewerRuntime,
       reviewScoreThreshold,
@@ -71,6 +72,7 @@ export class MarkdownTranslationStrategy
     const writerStart = Date.now()
     let fullText = ''
     let totalTokens = 0
+    let totalCost = 0
     if (runtime.streamMessage) {
       const events = runtime.streamMessage({
         messages,
@@ -97,6 +99,7 @@ export class MarkdownTranslationStrategy
           this.logger.debug(`stream non-text event filtered: ${event.type}`)
         } else if (event.type === 'done') {
           totalTokens = event.message.usage?.totalTokens ?? 0
+          totalCost = event.message.usage?.cost?.total ?? 0
         } else if (event.type === 'error') {
           throw new Error(
             event.error.errorMessage || 'AI translation stream error',
@@ -113,12 +116,16 @@ export class MarkdownTranslationStrategy
       })
       fullText = result.text
       totalTokens = result.usage?.totalTokens ?? 0
+      totalCost = result.usage?.cost ?? 0
       if (push && result.text) {
         await push({ type: 'token', data: result.text })
       }
     }
     if (onToken) {
       await onToken(totalTokens)
+    }
+    if (onCost && totalCost > 0) {
+      await onCost(totalCost)
     }
 
     const parsed = this.parseModelJson<{

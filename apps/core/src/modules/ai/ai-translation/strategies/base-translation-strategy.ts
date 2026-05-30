@@ -443,6 +443,7 @@ export abstract class BaseTranslationStrategy {
     onPartial?: (partial: unknown) => void | Promise<void>,
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
+    onCost?: (usd: number) => Promise<void>,
   ): Promise<{
     sourceLang: string
     translations: Record<string, string | Record<string, string>>
@@ -453,7 +454,14 @@ export abstract class BaseTranslationStrategy {
     }
 
     if (typeof runtime.streamStructured !== 'function') {
-      return this.callWriter(targetLang, payload, runtime, onToken, signal)
+      return this.callWriter(
+        targetLang,
+        payload,
+        runtime,
+        onToken,
+        signal,
+        onCost,
+      )
     }
 
     const { systemPrompt, prompt, schema, reasoningEffort } =
@@ -461,6 +469,7 @@ export abstract class BaseTranslationStrategy {
 
     let final: unknown
     let sawDone = false
+    let totalCost = 0
     try {
       for await (const chunk of runtime.streamStructured({
         prompt,
@@ -485,6 +494,7 @@ export abstract class BaseTranslationStrategy {
         if (chunk.done) {
           sawDone = true
           if (chunk.final !== undefined) final = chunk.final
+          if (chunk.usage?.cost !== undefined) totalCost = chunk.usage.cost
         }
         if (onToken) await onToken()
       }
@@ -494,9 +504,20 @@ export abstract class BaseTranslationStrategy {
         error instanceof Error ? error.message : String(error)
       if (error instanceof TypeError || /not supported/i.test(message)) {
         this.logger.warn(`streamStructured fallback: ${message}`)
-        return this.callWriter(targetLang, payload, runtime, onToken, signal)
+        return this.callWriter(
+          targetLang,
+          payload,
+          runtime,
+          onToken,
+          signal,
+          onCost,
+        )
       }
       throw error
+    }
+
+    if (onCost && totalCost > 0) {
+      await onCost(totalCost)
     }
 
     if (!sawDone || final === undefined) {
@@ -526,6 +547,7 @@ export abstract class BaseTranslationStrategy {
     runtime: IModelRuntime,
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
+    onCost?: (usd: number) => Promise<void>,
   ): Promise<{
     sourceLang: string
     translations: Record<string, string | Record<string, string>>
@@ -559,6 +581,9 @@ export abstract class BaseTranslationStrategy {
             `callWriter: translation chunk validation failed at ${firstValidationFailure(schema, normalised)}`,
           )
         }
+        if (onCost && result.usage?.cost && result.usage.cost > 0) {
+          await onCost(result.usage.cost)
+        }
         return normalised as WriterResult
       } catch (error) {
         this.logger.warn(
@@ -570,6 +595,8 @@ export abstract class BaseTranslationStrategy {
     }
 
     let fullText = ''
+    // NOTE: generateTextStream path is usage-blind (pi adapter does not surface
+    // usage frames on this stream type) — onCost intentionally not invoked here.
     if (runtime.generateTextStream) {
       for await (const c of runtime.generateTextStream({
         messages,
@@ -591,6 +618,9 @@ export abstract class BaseTranslationStrategy {
         signal,
       })
       fullText = result.text
+      if (onCost && result.usage?.cost && result.usage.cost > 0) {
+        await onCost(result.usage.cost)
+      }
     }
 
     const normalisedFallback = this.normalizeChunkTranslationResponse(

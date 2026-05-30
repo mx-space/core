@@ -94,6 +94,7 @@ export class LexicalTranslationStrategy
     const {
       push,
       onToken,
+      onCost,
       signal,
       existing,
       reviewerRuntime,
@@ -122,6 +123,7 @@ export class LexicalTranslationStrategy
           reviewScoreThreshold,
           metrics,
           push,
+          onCost,
         )
       } catch (error: any) {
         if (error.name === 'AbortError') throw error
@@ -143,6 +145,7 @@ export class LexicalTranslationStrategy
       reviewScoreThreshold,
       metrics,
       push,
+      onCost,
     )
   }
 
@@ -267,6 +270,7 @@ export class LexicalTranslationStrategy
     reviewScoreThreshold?: number,
     metrics?: PipelineMetrics,
     push?: TranslationStrategyOptions['push'],
+    onCost?: (usd: number) => Promise<void>,
   ): Promise<TranslationResult> {
     const parseResult = parseLexicalForTranslation(content.content!)
     const { segments, propertySegments, editorState } = parseResult
@@ -294,6 +298,7 @@ export class LexicalTranslationStrategy
       signal,
       push,
       targetLang,
+      onCost,
     )
     if (metrics) metrics.writerMs = Date.now() - writerStart
 
@@ -356,6 +361,7 @@ export class LexicalTranslationStrategy
     reviewScoreThreshold?: number,
     metrics?: PipelineMetrics,
     push?: TranslationStrategyOptions['push'],
+    onCost?: (usd: number) => Promise<void>,
   ): Promise<TranslationResult> {
     const currentBlocks = this.lexicalService.extractRootBlocks(
       content.content!,
@@ -541,6 +547,7 @@ export class LexicalTranslationStrategy
       signal,
       push,
       targetLang,
+      onCost,
     )
     if (metrics) metrics.writerMs = Date.now() - writerStart
     if (sl) sourceLang = sl
@@ -835,6 +842,7 @@ export class LexicalTranslationStrategy
     signal?: AbortSignal,
     push?: TranslationStrategyOptions['push'],
     lang?: string,
+    onCost?: (usd: number) => Promise<void>,
   ): Promise<string> {
     const { documentContext, units } = ctx
     if (units.length === 0) return ''
@@ -887,6 +895,7 @@ export class LexicalTranslationStrategy
       onPartial,
       onToken,
       signal,
+      onCost,
     )
 
     const sourceLang = result.sourceLang
@@ -911,6 +920,7 @@ export class LexicalTranslationStrategy
           runtime,
           onToken,
           signal,
+          onCost,
         )
         this.resolveUnitTranslations(
           retryUnits,

@@ -268,6 +268,7 @@ export class AiTranslationService
                   context.incrementTokens,
                   context.signal,
                   langPush,
+                  context.incrementCost,
                 ),
                 abortPromise,
               ])
@@ -691,6 +692,7 @@ export class AiTranslationService
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
     existing?: AITranslationModel | null,
+    onCost?: (usd: number) => Promise<void>,
   ) {
     const { runtime, info } = await this.aiService.getTranslationModelWithInfo()
     const strategy = this.getStrategy(content.contentFormat)
@@ -712,6 +714,7 @@ export class AiTranslationService
     return strategy.translate(content, targetLang, runtime, info, {
       push,
       onToken,
+      onCost,
       signal,
       existing,
       reviewerRuntime,
@@ -725,6 +728,7 @@ export class AiTranslationService
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
     push?: (event: AiStreamEvent) => Promise<void>,
+    onCost?: (usd: number) => Promise<void>,
   ): Promise<AITranslationModel> {
     const startedAt = Date.now()
     const aiConfig = await this.configService.get('ai')
@@ -748,6 +752,7 @@ export class AiTranslationService
         onToken,
         signal,
         push,
+        onCost,
       )
       const translated = await result
       this.logger.log(
@@ -778,6 +783,7 @@ export class AiTranslationService
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
     taskPush?: (event: AiStreamEvent) => Promise<void>,
+    onCost?: (usd: number) => Promise<void>,
   ) {
     const content = this.toArticleContent(document)
     const sourceModified = document.modifiedAt ?? undefined
@@ -812,6 +818,7 @@ export class AiTranslationService
           onToken,
           signal,
           existing,
+          onCost,
         )
         const { sourceLang } = translated
         const hash = this.computeContentHash(content, sourceLang)

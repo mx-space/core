@@ -182,6 +182,7 @@ export class AiInFlightService {
   // @HTTPDecorators.RawResponse emit the cached blob via sendSseEvent without
   // ResponseInterceptor case-transform — this matches pre-pi-migration wire
   // bytes for cache-hit responses. Do not route this through transformResponseCase.
+  // MUST NOT call incrementCost — cache-hit path
   private async *createImmediateDoneStream(
     resultId: string,
   ): AsyncIterable<AiStreamEvent> {

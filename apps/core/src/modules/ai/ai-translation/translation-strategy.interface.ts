@@ -58,6 +58,7 @@ export interface TranslationResult {
 export interface TranslationStrategyOptions {
   push?: (event: AiStreamEvent) => Promise<void>
   onToken?: (count?: number) => Promise<void>
+  onCost?: (usd: number) => Promise<void>
   signal?: AbortSignal
   existing?: AITranslationModel | null
   reviewerRuntime?: IModelRuntime

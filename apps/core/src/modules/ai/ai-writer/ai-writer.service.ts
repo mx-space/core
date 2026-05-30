@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
+
 import { AI_FALLBACK_SLUG_MAX_LENGTH } from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
@@ -13,7 +14,7 @@ export class AiWriterService {
   private generateFallbackSlug(text: string): string {
     const slug = text
       .toLowerCase()
-      .replaceAll(/[^a-z0-9]+/g, '-')
+      .replaceAll(/[^\da-z]+/g, '-')
       .replaceAll(/^-+|-+$/g, '')
       .slice(0, AI_FALLBACK_SLUG_MAX_LENGTH)
 
@@ -24,6 +25,8 @@ export class AiWriterService {
     const runtime = await this.aiService.getWriterModel()
 
     try {
+      // No TaskExecuteContext available on this synchronous admin call — cost
+      // capture intentionally omitted (call site is not task-queue driven).
       const { output } = await runtime.generateStructured({
         ...AI_PROMPTS.writer.titleAndSlug(text),
         temperature: 0.3,
@@ -54,6 +57,8 @@ export class AiWriterService {
     const runtime = await this.aiService.getWriterModel()
 
     try {
+      // No TaskExecuteContext available on this synchronous admin call — cost
+      // capture intentionally omitted (call site is not task-queue driven).
       const { output } = await runtime.generateStructured({
         ...AI_PROMPTS.writer.slug(title),
         temperature: 0.3,
