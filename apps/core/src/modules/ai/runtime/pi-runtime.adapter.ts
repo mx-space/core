@@ -19,6 +19,8 @@ import {
   validateToolCall,
 } from '@earendil-works/pi-ai'
 import { Logger } from '@nestjs/common'
+import { jsonrepair } from 'jsonrepair'
+import { Value } from 'typebox/value'
 
 import { isDev } from '~/global/env.global'
 
@@ -473,10 +475,99 @@ export class PiRuntimeAdapter implements IModelRuntime {
     return stream(this.model, context, piOptions)
   }
 
-  streamStructured<T extends TSchema>(
-    _options: GenerateStructuredOptions<T>,
+  async *streamStructured<T extends TSchema>(
+    options: GenerateStructuredOptions<T>,
   ): AsyncIterable<StructuredStreamChunk<Static<T>>> {
-    throw new Error('streamStructured reserved for spec 2')
+    const tool: Tool = {
+      name: STRUCTURED_TOOL_NAME,
+      description: 'Generate structured output based on the given schema',
+      parameters: options.schema,
+    }
+    const tools: Tool[] = [tool]
+
+    const context = this.buildContext({
+      prompt: options.prompt,
+      systemPrompt: options.systemPrompt,
+      tools,
+    })
+
+    const piOptions = this.buildStreamOptions({
+      temperature: options.temperature,
+      maxTokens: options.maxTokens,
+      maxRetries: options.maxRetries,
+      signal: options.signal,
+      reasoningEffort: options.reasoningEffort,
+      toolChoice:
+        this.api === 'anthropic-messages'
+          ? { type: 'tool', name: STRUCTURED_TOOL_NAME }
+          : { type: 'function', function: { name: STRUCTURED_TOOL_NAME } },
+    })
+
+    const events = stream(this.model, context, piOptions)
+
+    let buffer = ''
+    let finalParsed: Record<string, unknown> | undefined
+    let terminalUsage: MappedUsage | undefined
+
+    for await (const event of events) {
+      if (event.type === 'error') {
+        const errMsg =
+          (event.error as AssistantMessage | undefined)?.errorMessage ||
+          `pi stream ended with ${event.reason}`
+        throw new Error(errMsg)
+      }
+
+      if (event.type === 'toolcall_delta') {
+        const delta = (event as { delta?: unknown }).delta
+        if (typeof delta !== 'string' || delta.length === 0) continue
+        buffer += delta
+        try {
+          const partial = JSON.parse(jsonrepair(buffer)) as Static<T>
+          yield { partial, delta }
+        } catch {
+          // incremental parse failed — keep accumulating
+        }
+        continue
+      }
+
+      if (event.type === 'toolcall_end') {
+        const evToolCall = (event as { toolCall?: { arguments?: unknown } })
+          .toolCall
+        const fromEvent = evToolCall?.arguments
+        let final: Record<string, unknown>
+        if (isObjectRecord(fromEvent)) {
+          final = fromEvent
+        } else {
+          final = JSON.parse(jsonrepair(buffer)) as Record<string, unknown>
+        }
+        if (options.validate !== false && !Value.Check(options.schema, final)) {
+          const errMessages = [...Value.Errors(options.schema, final)]
+            .map((e) => `${e.instancePath}: ${e.message}`)
+            .join('; ')
+          throw new Error(`Invalid structured output: ${errMessages}`)
+        }
+        finalParsed = final
+        continue
+      }
+
+      if (event.type === 'done') {
+        terminalUsage = mapUsage(
+          (event.message as { usage?: PiUsageLike } | undefined)?.usage,
+        )
+        break
+      }
+    }
+
+    if (finalParsed === undefined) {
+      throw new Error('pi stream ended without a tool call result')
+    }
+
+    yield {
+      partial: finalParsed as Static<T>,
+      done: true,
+      final: finalParsed as Static<T>,
+      usage: terminalUsage,
+    }
   }
 
   async listModels(): Promise<ModelInfo[]> {
