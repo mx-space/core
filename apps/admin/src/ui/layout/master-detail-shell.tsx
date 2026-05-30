@@ -379,7 +379,7 @@ export function useMasterDetailContext() {
 function DetailSkeleton() {
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface-card">
-      <div className="h-14 shrink-0 border-b border-border px-4" />
+      <div className="h-12 shrink-0 border-b border-border px-4" />
       <div className="flex-1 space-y-3 p-4">
         <div className="h-4 w-3/4 animate-pulse rounded-sm bg-surface-inset" />
         <div className="h-4 w-1/2 animate-pulse rounded-sm bg-surface-inset" />

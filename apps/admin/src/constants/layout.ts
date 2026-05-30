@@ -1,2 +1,2 @@
-export const APP_SHELL_HEADER_HEIGHT_CLASS = 'h-14'
-export const APP_SHELL_HEADER_HEIGHT_VALUE = '3.5rem'
+export const APP_SHELL_HEADER_HEIGHT_CLASS = 'h-12'
+export const APP_SHELL_HEADER_HEIGHT_VALUE = '3rem'
