@@ -976,30 +976,77 @@ useEffect(() => {
 - Click on a child row navigates to its detail route
 - Component under 300 LOC
 
-### step-26 — Backend integration tests (emitter throttle, buffer, cost, concurrency, cross-pod, SSE filter)
+### step-26a — Backend tests: emitter throttle + stream buffer + cost storage (3 pure-logic specs)
 
-**Size:** L | **Depends on:** step-19, step-10, step-12
+**Size:** M | **Depends on:** step-19, step-10, step-12
 
-**Prompt:** Add Vitest tests under `apps/core/test/processors/task-queue/` and `apps/core/test/modules/ai/`: (a) `task-queue.emitter.spec.ts` — assert throttle rules: (1) progress 0→4 within 100ms → no emit; (2) progress 0→6 within 100ms → emit (5pp rule); (3) progress 50 then 51 after 1100ms → emit (timer); (4) progress 99→100 → emit immediately; per-phase room targeting; stream phase NEVER targets group room; dispose clears timers; dispose is idempotent. (b) `task-queue.stream-buffer.spec.ts` — assert (1) 10 chunks of 5 chars each within 50ms → exactly 1 emit after 200ms idle; (2) 1 chunk of 100 chars → exactly 1 emit immediately; (3) flushAndDispose drains. (c) `task-queue.cost.spec.ts` — assert incrementCost stores cents and parseTask returns USD float; PRE-SPEC-2 task hash (no totalCost field) parses cleanly as cost: undefined (not NaN); cached-hydrate path produces totalCost === 0 (mock createImmediateDoneStream as cache hit, assert no HINCRBY observed). (d) `executeTranslationTask.concurrency.spec.ts` — assert p-limit honored (<=3 simultaneous); AbortError ends as Cancelled not Failed; NO orphan progress/log emits after cancel timestamp; PartialFailed when subset fails. (e) `task-queue.cross-pod.spec.ts` — spin up two TaskQueueModule instances against the same Redis testcontainer; pod B does roomSubs.add(room); pod A's emitToAdminRoom passes the gate even though pod A has no local socket; conversely, no pod holding the room → no broadcast. (f) `ai-public-sse.spec.ts` — pipe a stream with mixed event types (token, partial, done) through public SSE controllers; assert no `event: partial` frames appear on the wire. Use existing pg-testcontainer + redis-mock helpers. NOTE: skip the AbortError-Cancelled assertion if spec-1's TaskQueueProcessor abort handling has regressed — that's a spec-1 bug, not a spec-2 test failure.
+**Prompt:** Add three Vitest specs covering pure-logic units that need no app harness. (a) `apps/core/test/processors/task-queue/task-queue.emitter.spec.ts` — assert throttle rules with fake timers: progress 0→4 within 100ms → no emit; 0→6 within 100ms → emit (5pp rule); 50 then 51 after 1100ms → emit (timer); 99→100 → emit immediately; per-phase room targeting (status / stream / progress all route correctly); stream phase NEVER targets group room; dispose clears timers; dispose is idempotent. (b) `apps/core/test/processors/task-queue/task-queue.stream-buffer.spec.ts` — 10 chunks of 5 chars within 50ms → exactly 1 emit after 200ms idle; 1 chunk of 100 chars → exactly 1 emit immediately (≥ 80-char trigger); flushAndDispose drains pending buffer. (c) `apps/core/test/processors/task-queue/task-queue.cost.spec.ts` — incrementCost stores cents (integer HINCRBY) and parseTask returns USD float; PRE-SPEC-2 task hash (no totalCost field) parses cleanly as cost: undefined (NOT NaN, NOT 0); cached-hydrate path produces totalCost === 0 (mock createImmediateDoneStream as cache hit, assert no HINCRBY observed). Use existing pg-testcontainer + redis-mock helpers; mock the EventManagerService where the emitter test only needs to observe emit calls.
 
 **Files:**
 
 - `apps/core/test/processors/task-queue/task-queue.emitter.spec.ts`
 - `apps/core/test/processors/task-queue/task-queue.stream-buffer.spec.ts`
 - `apps/core/test/processors/task-queue/task-queue.cost.spec.ts`
-- `apps/core/test/processors/task-queue/task-queue.cross-pod.spec.ts`
-- `apps/core/test/modules/ai/ai-translation/executeTranslationTask.concurrency.spec.ts`
-- `apps/core/test/modules/ai/ai-public-sse.spec.ts`
 
 **Success criteria:**
 
-- All six spec files pass under pnpm -C apps/core test
-- Emitter throttle empirically asserted at 1s windows AND 5pp deltas AND 100% shortcut
-- Buffer flush asserted at 80-char and 200ms thresholds independently
-- Concurrency test asserts <=3 simultaneous in-flight generateTranslation calls AND no late emits post-cancel
-- Cross-pod test proves the Redis SET gate works across two pod instances
-- Public SSE controllers filter out 'partial' events (no leak on the wire)
-- Cost test covers pre-spec-2 hash (no totalCost field) AND cached-hydrate (no incrementCost call)
+- All three spec files pass under `pnpm -C apps/core test -- task-queue.{emitter,stream-buffer,cost}`
+- Throttle empirically asserted at 1s timer, 5pp delta, and 100% shortcut
+- Buffer flush at 80-char AND 200ms thresholds independently
+- Cost test covers pre-spec-2 hash AND cached-hydrate path (no incrementCost call)
+
+### step-26b — Backend test: executeTranslationTask concurrency + cancellation
+
+**Size:** M | **Depends on:** step-26a
+
+**Prompt:** Add `apps/core/test/modules/ai/ai-translation/executeTranslationTask.concurrency.spec.ts`. Avoid mocking all 13 service deps — instead use the existing AI test scaffolding pattern (look at `apps/core/test/src/modules/ai/` for the established mock approach used by spec 1's faux suite; reuse `withFauxAi` helper from spec 1 if it covers translation, otherwise mock only the minimum deps required to exercise executeTranslationTask). Assertions: at most 3 simultaneous in-flight per-language translation calls (observed via a shared counter incremented at entry / decremented at exit of the mocked generateTranslation); AbortError mid-stream ends the task as Cancelled status (NOT Failed); zero orphan progress/log emits fire after the cancel timestamp (record all emit calls with timestamps, assert none later than the abort time); PartialFailed when a strict subset of languages fail. NOTE: if the existing TaskQueueProcessor abort handling has any spec-1 regression that prevents Cancelled status, ANNOTATE the spec with `.todo` and a one-line explanation rather than skipping silently — the workflow expects a deliberate, documented call.
+
+**Files:**
+
+- `apps/core/test/modules/ai/ai-translation/executeTranslationTask.concurrency.spec.ts`
+
+**Success criteria:**
+
+- Spec passes under `pnpm -C apps/core test -- executeTranslationTask.concurrency`
+- Concurrency cap empirically asserted at ≤ 3 simultaneous
+- Cancellation path asserts Cancelled status AND no late emits
+- PartialFailed branch covered
+- No more than 3 service deps mocked (use existing helpers where possible)
+
+### step-26c — Backend test: cross-pod Redis SET subscriber gate
+
+**Size:** M | **Depends on:** step-26a
+
+**Prompt:** Add `apps/core/test/processors/task-queue/task-queue.cross-pod.spec.ts`. Scaffold the missing dual-pod harness: spin up two `TaskQueueModule` test instances (each its own `RoomSubsService` instance) wired to the SAME Redis testcontainer (use the existing `pg-testcontainer.ts` Redis variant or extend `redis-mock.helper.ts` to support shared backend across instances — explicitly note in the test file's header comment which approach was taken). Assertions: pod B calls `roomSubs.add('ai-task:detail:T1')`; pod A's `emitToAdminRoom('AI_TASK_UPDATE', {…}, 'ai-task:detail:T1')` passes the gate (broadcast invoked) even though pod A has no local socket subscriber; conversely, when no pod has added the room, the gate suppresses emit (no broadcast invoked); pod B removing the room reverts the gate to off. If wiring a real Redis testcontainer is infeasible in the time budget, fall back to a `redis-mock` shared-state instance and note the deviation in the file header — do NOT silently skip the cross-pod assertion.
+
+**Files:**
+
+- `apps/core/test/processors/task-queue/task-queue.cross-pod.spec.ts`
+
+**Success criteria:**
+
+- Spec passes under `pnpm -C apps/core test -- task-queue.cross-pod`
+- Two independent module instances proven via separate `RoomSubsService` constructor calls
+- Pod A emit passes gate when pod B holds the room
+- Pod A emit suppressed when no pod holds the room
+- File header comment documents the Redis sharing strategy used
+
+### step-26d — Backend test: public SSE controller 'partial' filter
+
+**Size:** S | **Depends on:** step-26a
+
+**Prompt:** First AUDIT: `grep -rn "partial\|event: partial\|'partial'" apps/core/test/src/modules/ai/` to see whether the spec-1 faux suite already covers the public SSE controllers' filter behaviour. If existing coverage already asserts that the public SSE wire never carries `event: partial` frames, ADD a minimal augmentation only (e.g. extend an existing `it()` with one more assertion) rather than creating a duplicate spec file. If no existing coverage exists, add `apps/core/test/modules/ai/ai-public-sse.spec.ts` with a focused test: pipe a stream from a faux provider that emits mixed token/partial/done events through `/ai/summary/article/:id/generate` (or whichever public SSE controller the leader hook funnels through), capture the response writer's frame sequence, assert no `event: partial` or `data:` with the partial payload appears. Either way: include the audit-grep results in the commit message body for traceability.
+
+**Files:**
+
+- `apps/core/test/modules/ai/ai-public-sse.spec.ts` (only if no existing coverage); OR extend the existing spec the audit identifies (list it in commit body).
+
+**Success criteria:**
+
+- Audit grep run AND result documented in commit body
+- Spec asserts no `event: partial` frames on the public SSE wire
+- No duplicate of the spec-1 byte-pinned wire assertions (extend, don't fork)
+- `pnpm -C apps/core test -- ai-public-sse` (or the existing spec) passes
 
 ### step-27 — Admin integration tests (SocketBridge phase routing + applyTaskPatch + connection fallback)
 
