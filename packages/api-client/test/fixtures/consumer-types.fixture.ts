@@ -14,7 +14,6 @@
  *   - `AITranslationModel`, `AITranslationStreamEvent`
  *   - `AIInsightsModel`, `AIInsightsStreamEvent`
  *   - `AIDeepReadingModel`
- *   - `AiAgentSseEvent` (TypeBox-derived union)
  *
  * Maintenance
  * -----------
@@ -24,7 +23,6 @@
  * is planned and CHANGELOG documents it.
  */
 
-import type { AiAgentSseEvent } from '../../models/ai-agent-sse'
 import type {
   AIDeepReadingModel,
   AIInsightsModel,
@@ -140,26 +138,6 @@ const insightsStream: AIInsightsStreamEvent[] = [
   { type: 'error', data: JSON.stringify({ message: 'fail' }) },
 ]
 
-// AiAgentSseEvent — full discriminated union introduced by step-12.
-const agentEvents: AiAgentSseEvent[] = [
-  { type: 'text_start', contentIndex: 0 },
-  { type: 'text_delta', contentIndex: 0, delta: 'hi' },
-  { type: 'text_end', contentIndex: 0 },
-  { type: 'thinking_start', contentIndex: 1 },
-  { type: 'thinking_delta', contentIndex: 1, delta: 'pondering' },
-  { type: 'thinking_end', contentIndex: 1 },
-  { type: 'toolcall_start', contentIndex: 2, name: 'insert_node' },
-  { type: 'toolcall_delta', contentIndex: 2, partialArgs: { foo: 'bar' } },
-  {
-    type: 'toolcall_end',
-    contentIndex: 2,
-    toolCall: { id: 'tc-1', name: 'insert_node', arguments: { foo: 'bar' } },
-  },
-  { type: 'done', message: { role: 'assistant' } },
-  { type: 'error', reason: 'aborted', message: 'user aborted' },
-  { type: 'error', reason: 'error', message: 'upstream failed' },
-]
-
 // Reference all bindings so tsc treats them as type-asserted, not dead code.
 export const __consumerSmoke = {
   providerTypes,
@@ -173,5 +151,4 @@ export const __consumerSmoke = {
   summaryStream,
   translationStream,
   insightsStream,
-  agentEvents,
 }

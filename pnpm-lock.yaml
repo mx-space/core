@@ -881,13 +881,6 @@ importers:
         version: 6.0.3
 
   packages/api-client:
-    dependencies:
-      rebuild:
-        specifier: ^0.1.2
-        version: 0.1.2
-      typebox:
-        specifier: 1.1.38
-        version: 1.1.38
     devDependencies:
       '@types/cors':
         specifier: 2.8.19

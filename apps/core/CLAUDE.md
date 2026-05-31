@@ -67,12 +67,12 @@ Two distinct SSE protocols live side-by-side; both are byte-pinned.
      never increment. Faux e2e fixtures live in `apps/core/test/fixtures/`.
 
 2. **Admin agent chat** (`POST /ai/agent/chat`) — JSON-framed
-   `AiAgentSseEvent` union, schema declared once in the neutral
-   `@mx-space/ai` package (`packages/ai/src/ai-agent-sse.ts`, TypeBox) and
-   imported by both the controller and `apps/admin`'s transport. The server
-   imports the schema directly from `@mx-space/ai` (no reverse dependency on
-   the client lib); `@mx-space/api-client` re-exports it for external
-   consumers (Shiro/Yohaku). Drift fails tsc.
+   `AiAgentSseEvent` union, TypeBox. The schema lives in ONE place — the
+   neutral `@mx-space/ai` package (`packages/ai/src/ai-agent-sse.ts`) —
+   imported directly by both the controller and `apps/admin`'s transport. The
+   server has NO reverse dependency on the client lib. `@mx-space/api-client`
+   does NOT export this type: it is an admin-only wire contract, not part of
+   the public api-client surface consumed by Shiro/Yohaku. Drift fails tsc.
    - Frames: `text_start | text_delta | text_end | thinking_start |
      thinking_delta | thinking_end | toolcall_start | toolcall_delta |
      toolcall_end | done | error`. Each frame carries a monotonic
