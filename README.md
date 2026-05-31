@@ -32,7 +32,7 @@ MX Space Core is a headless CMS server built with **NestJS**, **PostgreSQL**, an
 | **LLM Providers** | OpenAI, OpenAI-compatible, Anthropic, OpenRouter |
 | **Real-time** | WebSocket via Socket.IO with Redis adapter for multi-instance broadcast |
 | **Distribution** | RSS/Atom feeds, sitemap, local search, aggregate API |
-| **Auth** | JWT sessions, passkeys, OAuth, API keys (via better-auth) |
+| **Auth** | Better Auth sessions, passkeys, OAuth, API keys (`x-api-key` header) |
 | **Deployment** | Docker (multi-arch), PM2, standalone binary |
 
 ## Tech Stack
@@ -45,7 +45,8 @@ MX Space Core is a headless CMS server built with **NestJS**, **PostgreSQL**, an
 - **WebSocket**: Socket.IO + Redis Emitter
 - **AI**: OpenAI SDK, Anthropic SDK
 - **Editor**: Lexical (via @haklex/rich-headless)
-- **Auth**: better-auth (session, passkey, API key)
+- **Auth**: better-auth (session, passkey, OAuth, API key)
+- **Admin SPA**: React 19 + Vite + Base UI + Tailwind v4 (`apps/admin`)
 - **Testing**: Vitest + PostgreSQL testcontainers / Redis memory server
 
 ## Monorepo Structure
@@ -53,10 +54,11 @@ MX Space Core is a headless CMS server built with **NestJS**, **PostgreSQL**, an
 ```
 mx-core/
 ├── apps/
-│   └── core/                 # Main server application (NestJS)
+│   ├── core/                 # Main server application (NestJS + Fastify)
+│   └── admin/                # @mx-admin/admin — React 19 SPA, built locally and served at /proxy/qaqdmin
 ├── packages/
 │   ├── api-client/           # @mx-space/api-client — typed SDK for frontend & third-party clients
-│   ├── cli/                  # @mx-space/cli (mxs) — owner-side CLI for content + config
+│   ├── cli/                  # @mx-space/cli (mxs) — owner-side CLI for content + config (Effect-TS)
 │   ├── db-schema/            # @mx-space/db-schema — shared Drizzle schema + Snowflake utilities (private)
 │   ├── mongo-pg-cli/         # @mx-space/mongo-pg-cli — one-shot v11→v12 (MongoDB→PostgreSQL) data migration
 │   └── webhook/              # @mx-space/webhook — signature-verified webhook handler SDK
@@ -211,14 +213,16 @@ Configuration can also be provided via CLI arguments or YAML files. See `apps/co
 
 ## API Response Format
 
-All responses are automatically transformed by interceptors:
+Every successful JSON response has the shape `{ data, meta? }`; every error has the shape `{ error: { code, message, details? } }`.
 
-- **Array** → `{ data: [...] }`
-- **Object** → returned as-is
-- **Paginated** (via `@Paginator`) → `{ data: [...], pagination: {...} }`
-- **Bypass** (via `@Bypass`) → raw response
+- A controller returning a bare value `T` → `{ data: T }` (via global `ResponseInterceptor`).
+- Returning `withMeta(value, meta)` (see `~/common/response/envelope.types`) → `{ data, meta }`. Detection is by an internal `Symbol`, so returning a literal `{ data, ... }` is double-wrapped — CI enforces this via `scripts/check-controller-response-envelope.ts`.
+- Returning `undefined` → `204 No Content`.
+- `@HTTPDecorators.RawResponse` — opt out of the envelope/casing pipeline for non-JSON (streams, HTML, RSS, redirects).
 
-All response keys are converted to **snake_case** (e.g., `createdAt` → `created_at`).
+**Case conversion** — code is camelCase end-to-end (DTOs, services, Drizzle column TS props). Incoming requests are normalized to camelCase by `RequestCaseNormalizationPipe`; outgoing `data`/`meta` are converted back to snake_case at the wire boundary. The wire format stays **snake_case** (e.g., `createdAt` → `created_at`). Use `@BypassCaseTransform([paths])` to keep free-form JSON subtrees untouched.
+
+**Errors** — throw `AppException` subclasses (`BizException`, `CannotFindException`, etc.) with a stable `SCREAMING_SNAKE` code; `AppExceptionFilter` maps them to the unified error envelope.
 
 ## Upgrading
 
@@ -239,7 +243,7 @@ v10 includes a breaking auth system refactor. See [Upgrading to v10](./docs/migr
 | Project | Description |
 |---------|-------------|
 | [Yohaku](https://github.com/Innei/Yohaku) | Next.js frontend |
-| [mx-admin](https://github.com/mx-space/mx-admin) | Vue 3 admin dashboard |
+| [`apps/admin`](./apps/admin) | `@mx-admin/admin` — React 19 admin dashboard (in-repo, built into the server release) |
 | [@mx-space/api-client](./packages/api-client) | TypeScript API client SDK |
 | [@mx-space/cli](./packages/cli) | `mxs` CLI for posts/notes/pages/config (OIDC device auth) |
 | [@mx-space/mongo-pg-cli](./packages/mongo-pg-cli) | One-shot MongoDB → PostgreSQL migration for v11 → v12 |

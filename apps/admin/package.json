@@ -103,6 +103,7 @@
     "shiki": "3.21.0",
     "socket.io-client": "4.8.3",
     "sonner": "2.0.7",
+    "streamdown": "^2.5.0",
     "tailwind-merge": "^3.6.0",
     "thumbhash": "0.1.1",
     "tinykeys": "4.0.0",

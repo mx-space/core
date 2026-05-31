@@ -87,6 +87,41 @@ export class AiAgentConversationService {
     await this.conversationRepository.deleteById(id)
   }
 
+  async generateAndPersistTitle(id: string) {
+    const existing = await this.conversationRepository.findById(id)
+    if (!existing) {
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Conversation not found',
+      })
+    }
+    if (existing.title) {
+      const { messages: _messages, ...rest } = existing
+      return rest
+    }
+    if (!existing.model || !existing.providerId) {
+      const { messages: _messages, ...rest } = existing
+      return rest
+    }
+
+    const title = await this.generateTitle(
+      existing.messages as Record<string, unknown>[],
+      existing.model,
+      existing.providerId,
+    )
+    if (!title) {
+      const { messages: _messages, ...rest } = existing
+      return rest
+    }
+
+    const updated = await this.conversationRepository.update(id, { title })
+    if (!updated) {
+      const { messages: _messages, ...rest } = existing
+      return rest
+    }
+    const { messages: _messages, ...rest } = updated
+    return rest
+  }
+
   async generateTitle(
     allMessages: Record<string, unknown>[],
     model: string,

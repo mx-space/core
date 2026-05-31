@@ -980,7 +980,7 @@ function WritePage(props: { kind: WriteKind }) {
                     : t('write.pageHeader.pageSettings')
                 }
                 type="button"
-                variant={metaPanelOpen ? 'primary' : 'default'}
+                variant={metaPanelOpen ? 'active' : 'default'}
               >
                 <SlidersHorizontal aria-hidden="true" className="size-4" />
               </WriteHeaderIconButton>
@@ -1006,7 +1006,7 @@ function WritePage(props: { kind: WriteKind }) {
                   agentVisible ? t('write.pill.hideAi') : t('write.pill.showAi')
                 }
                 type="button"
-                variant={agentVisible ? 'primary' : 'default'}
+                variant={agentVisible ? 'active' : 'default'}
               >
                 <Bot aria-hidden="true" className="size-4" />
               </WriteHeaderIconButton>
@@ -1022,7 +1022,7 @@ function WritePage(props: { kind: WriteKind }) {
                       : t('write.pill.noteSettings')
                 }
                 type="button"
-                variant={metaPanelOpen ? 'primary' : 'default'}
+                variant={metaPanelOpen ? 'active' : 'default'}
               >
                 <SlidersHorizontal aria-hidden="true" className="size-4" />
               </WriteHeaderIconButton>
@@ -1515,16 +1515,20 @@ function WriteHeaderIconButton(props: {
   onClick?: () => void
   title: string
   type: 'button' | 'submit'
-  variant?: 'default' | 'primary'
+  variant?: 'default' | 'primary' | 'active'
 }) {
+  const variant = props.variant ?? 'default'
   return (
     <button
       aria-label={props.title}
+      aria-pressed={variant === 'active' ? true : undefined}
       className={cn(
         'focus-visible:outline-hidden inline-flex size-9 items-center justify-center rounded-sm transition-colors focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:pointer-events-none disabled:opacity-40',
-        props.variant === 'primary'
-          ? 'bg-accent text-white hover:bg-accent-hover'
-          : 'bg-surface-inset text-fg-muted hover:bg-black/[0.06] hover:text-fg dark:hover:bg-white/[0.08]',
+        variant === 'primary' && 'bg-accent text-white hover:bg-accent-hover',
+        variant === 'active' &&
+          'bg-accent-soft text-accent ring-1 ring-inset ring-accent/25 hover:bg-accent-soft/80',
+        variant === 'default' &&
+          'bg-surface-inset text-fg-muted hover:bg-black/[0.06] hover:text-fg dark:hover:bg-white/[0.08]',
       )}
       disabled={props.disabled}
       onClick={props.onClick}

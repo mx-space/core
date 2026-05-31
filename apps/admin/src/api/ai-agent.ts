@@ -7,6 +7,7 @@ export interface AgentConversation {
   model: string | null
   providerId: string | null
   sessionId: string
+  title: string | null
   updatedAt: string
 }
 
@@ -68,4 +69,11 @@ export function updateAgentConversation(
 
 export function deleteAgentConversation(id: string) {
   return deleteJson<void>(`/ai/agent/conversations/${id}`)
+}
+
+export function generateAgentConversationTitle(id: string) {
+  return postJson<AgentConversation, Record<string, never>>(
+    `/ai/agent/conversations/${id}/title`,
+    {},
+  )
 }

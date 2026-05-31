@@ -20,6 +20,7 @@ const mapRow = (
   sessionId: row.sessionId,
   model: row.model,
   providerId: row.providerId,
+  title: row.title,
   messages: (row.messages as unknown[] | null) ?? [],
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
@@ -63,6 +64,7 @@ export class AiAgentConversationRepository extends BaseRepository {
   }): Promise<AiAgentConversationRow> {
     const id = this.snowflake.nextId()
     const messages = input.messages ?? []
+    const now = new Date()
     const [row] = await this.db
       .insert(aiAgentConversations)
       .values({
@@ -71,6 +73,7 @@ export class AiAgentConversationRepository extends BaseRepository {
         messages,
         model: input.model ?? null,
         providerId: input.providerId ?? null,
+        updatedAt: now,
       })
       .returning()
     return mapRow(row)
@@ -83,6 +86,7 @@ export class AiAgentConversationRepository extends BaseRepository {
       messages: unknown[]
       model: string | null
       providerId: string | null
+      title: string | null
     }>,
   ): Promise<AiAgentConversationRow | null> {
     const idBig = parseEntityId(id)
@@ -93,6 +97,7 @@ export class AiAgentConversationRepository extends BaseRepository {
     if (patch.messages !== undefined) update.messages = patch.messages
     if (patch.model !== undefined) update.model = patch.model
     if (patch.providerId !== undefined) update.providerId = patch.providerId
+    if (patch.title !== undefined) update.title = patch.title
     const [row] = await this.db
       .update(aiAgentConversations)
       .set(update)

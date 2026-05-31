@@ -1,31 +1,20 @@
+import type { ChatBubble } from '@haklex/rich-agent-core'
 import { ChevronRight, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { cn } from '~/utils/cn'
 
-import type { AssistantThinkingBlock } from './types'
+type ThinkingBubble = Extract<ChatBubble, { type: 'thinking' }>
 
 interface ThinkingBlockProps {
-  block: AssistantThinkingBlock
+  bubble: ThinkingBubble
 }
 
-function formatDuration(ms: number) {
-  if (ms < 1000) return `${ms}ms`
-  const seconds = ms / 1000
-  if (seconds < 10) return `${seconds.toFixed(1)}s`
-  return `${Math.round(seconds)}s`
-}
-
-export function ThinkingBlock({ block }: ThinkingBlockProps) {
+export function ThinkingBlock({ bubble }: ThinkingBlockProps) {
   const [open, setOpen] = useState(false)
-  const isStreaming = block.status === 'streaming'
-  const duration =
-    block.endedAt !== undefined ? block.endedAt - block.startedAt : null
-  const label = isStreaming
-    ? 'Thinking…'
-    : duration !== null
-      ? `Thought for ${formatDuration(duration)}`
-      : 'Thought'
+  const isStreaming = Boolean(bubble.isStreaming)
+  const label = isStreaming ? 'Thinking…' : 'Thought'
+  const text = bubble.rawText ?? bubble.content
 
   return (
     <div className="min-w-0">
@@ -48,9 +37,9 @@ export function ThinkingBlock({ block }: ThinkingBlockProps) {
         <span className="italic">{label}</span>
       </button>
 
-      {open && block.text ? (
-        <pre className="m-0 mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded bg-neutral-50 p-2 font-mono text-xs leading-relaxed text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
-          {block.text}
+      {open && text ? (
+        <pre className="m-0 mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded bg-surface-inset p-2 font-mono text-xs leading-relaxed text-fg-muted">
+          {text}
         </pre>
       ) : null}
     </div>

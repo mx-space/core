@@ -27,9 +27,11 @@ export function AgentPanel({ agent }: AgentPanelProps) {
       />
       <MessageList
         isHydrating={agent.isHydrating}
-        messages={agent.messages}
-        onToolCallEnd={agent.handleToolCallEnd}
-        streamStatus={agent.streamStatus}
+        onAcceptBatch={agent.acceptBatch}
+        onReapplyBatch={agent.reapplyBatch}
+        onReapplyToolGroup={agent.reapplyToolGroup}
+        onRejectBatch={agent.rejectBatch}
+        store={agent.store}
       />
       <ChatComposer
         agentReady={agent.agentReady}
@@ -43,7 +45,7 @@ export function AgentPanel({ agent }: AgentPanelProps) {
         }}
         providerGroups={agent.providerGroups}
         selectedModel={agent.selectedModel}
-        streamStatus={agent.streamStatus}
+        store={agent.store}
         value={input}
       />
     </div>

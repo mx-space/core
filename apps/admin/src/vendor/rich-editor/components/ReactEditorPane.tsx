@@ -1,18 +1,18 @@
-import { useRef } from 'react'
+import './setup-enrichment-linkcard'
+import '@haklex/rich-ext-ai-agent/style.css'
+import '@haklex/rich-ext-nested-doc/style.css'
+import '../core/style'
+
 import type {
   AgentStore,
   AgentToolConfig,
   ChatMessage,
   LLMProvider,
 } from '@haklex/rich-agent-core'
-import type { LexicalEditor } from 'lexical'
-import type { RichEditorProps } from '../core'
-import type { AgentLoopHandle, SaveExcalidrawSnapshot } from '../types'
-import type { EnrichmentFetcher } from './EnrichmentLinkCardContext'
-
 import { DialogStackProvider } from '@haklex/rich-editor-ui'
 import {
   AgentAskAIAction,
+  AgentDiffEditNode,
   AgentSelectionPinPlugin,
   DiffReviewOverlayPlugin,
 } from '@haklex/rich-ext-ai-agent'
@@ -22,19 +22,17 @@ import {
   nestedDocEditNodes,
   NestedDocPlugin,
 } from '@haklex/rich-ext-nested-doc'
+import type { LexicalEditor } from 'lexical'
+import { useRef } from 'react'
 
+import type { RichEditorProps } from '../core'
 import { RichEditor } from '../core'
-import { EditorToolbar } from './EditorToolbar'
-import { EnrichmentFetcherProvider } from './EnrichmentLinkCardContext'
-
-import './setup-enrichment-linkcard'
-
+import type { AgentLoopHandle, SaveExcalidrawSnapshot } from '../types'
 import { AgentLoopCapture } from './AgentLoopCapture'
+import { EditorToolbar } from './EditorToolbar'
+import type { EnrichmentFetcher } from './EnrichmentLinkCardContext'
+import { EnrichmentFetcherProvider } from './EnrichmentLinkCardContext'
 import { NestedDocDialogEditor } from './NestedDocDialogEditor'
-
-import '@haklex/rich-ext-ai-agent/style.css'
-import '@haklex/rich-ext-nested-doc/style.css'
-import '../core/style'
 
 export interface ReactEditorPaneProps {
   editorProps: Omit<RichEditorProps, 'onChange' | 'onSubmit' | 'onEditorReady'>
@@ -85,6 +83,7 @@ export function ReactEditorPane({
               extraNodes={[
                 ...(editorProps.extraNodes || []),
                 ...nestedDocEditNodes,
+                AgentDiffEditNode,
               ]}
               header={<EditorToolbar />}
               floatingToolbarActions={

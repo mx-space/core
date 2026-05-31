@@ -134,6 +134,13 @@
       "when": 1780358400000,
       "tag": "0018_ai_agent_conversations_rewrite",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1780531200000,
+      "tag": "0019_ai_agent_conversation_title",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { applyRawCorsHeaders } from '~/utils/sse.util'
@@ -108,6 +109,7 @@ export class AiAgentController {
 
   @Post('/conversations')
   @Auth()
+  @BypassCaseTransform(['data.messages[]'])
   createConversation(@Body() body: CreateConversationDto) {
     return this.conversationService.create(body)
   }
@@ -120,6 +122,7 @@ export class AiAgentController {
 
   @Get('/conversations/:id')
   @Auth()
+  @BypassCaseTransform(['data.messages[]'])
   getConversation(@Param() params: EntityIdDto) {
     return this.conversationService.getById(params.id)
   }
@@ -155,6 +158,12 @@ export class AiAgentController {
   @Auth()
   deleteConversation(@Param() params: EntityIdDto) {
     return this.conversationService.deleteById(params.id)
+  }
+
+  @Post('/conversations/:id/title')
+  @Auth()
+  generateConversationTitle(@Param() params: EntityIdDto) {
+    return this.conversationService.generateAndPersistTitle(params.id)
   }
 }
 

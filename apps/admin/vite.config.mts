@@ -12,6 +12,7 @@ import { defineConfig } from 'vitest/config'
 
 import PKG from './package.json'
 import { adminRoutes } from './vite-plugins/admin-routes'
+import { esToolkitCompatShim } from './vite-plugins/es-toolkit-compat-shim'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -24,6 +25,7 @@ export default ({ mode }) => {
   return defineConfig({
     plugins: [
       // mkcert(),
+      esToolkitCompatShim(),
       codeInspectorPlugin({ bundler: 'vite' }),
       adminRoutes({ viewsDir: resolve(__dirname, 'src/views') }),
       tailwindcss(),

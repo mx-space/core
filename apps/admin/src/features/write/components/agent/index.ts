@@ -1,6 +1,5 @@
 export { AgentPanel } from './AgentPanel'
 export { ThinkingBlock } from './ThinkingBlock'
-export { ToolCallCard } from './ToolCallCard'
-export { TypingIndicator } from './TypingIndicator'
+export { ToolCallGroupView } from './ToolCallView'
 export type { WriteAgentController } from './use-write-agent'
 export { useWriteAgent } from './use-write-agent'

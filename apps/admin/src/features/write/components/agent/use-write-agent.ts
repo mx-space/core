@@ -1,7 +1,12 @@
-import type { AgentStore, LLMProvider } from '@haklex/rich-agent-core'
+import type {
+  AgentOperation,
+  AgentStore,
+  LLMProvider,
+  ToolCallGroupItem,
+} from '@haklex/rich-agent-core'
 import { useQuery } from '@tanstack/react-query'
 import type { LexicalEditor } from 'lexical'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import type { ProviderModelsResponse } from '~/api/ai'
@@ -13,15 +18,11 @@ import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import type { AgentLoopHandle } from '~/vendor/rich-editor/types'
 
+import { extractAgentOperationFromToolItem } from './agent-operations'
 import { createManagedAgentStore } from './agent-store'
-import { createAdminAgentTransport } from './agent-transport'
-import type {
-  AgentStreamStatus,
-  AgentToolCallFinal,
-  AssistantBlock,
-  ChatMessageEntry,
-  SelectedAgentModel,
-} from './types'
+import type { AbortSignalRef } from './llm-provider'
+import { createSseLlmProvider } from './llm-provider'
+import type { SelectedAgentModel } from './types'
 
 export interface WriteAgentController {
   store: AgentStore
@@ -45,9 +46,10 @@ export interface WriteAgentController {
   retryLoadSessions: () => void
   sendMessage: (message: string) => void
   abort: () => void
-  messages: ChatMessageEntry[]
-  streamStatus: AgentStreamStatus
-  handleToolCallEnd: (toolCall: AgentToolCallFinal) => void
+  acceptBatch: (batchId: string) => void
+  rejectBatch: (batchId: string) => void
+  reapplyBatch: (batchId: string) => void
+  reapplyToolGroup: (items: ToolCallGroupItem[]) => void
 }
 
 function isSelectedAgentModelAvailable(
@@ -69,88 +71,6 @@ function deriveDocumentSessionId(
   if (!documentId) return undefined
   return `${documentKind}:${documentId}`
 }
-
-function generateMessageId() {
-  return `m_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
-}
-
-interface MessageDispatcher {
-  appendUser: (text: string) => string
-  startAssistant: () => string
-  applyBlockUpdate: (
-    assistantId: string,
-    contentIndex: number,
-    updater: (prev: AssistantBlock | undefined) => AssistantBlock,
-  ) => void
-  finalizeStreaming: (assistantId: string) => void
-  appendError: (message: string) => void
-  reset: () => void
-}
-
-function useMessageState(): {
-  messages: ChatMessageEntry[]
-  dispatcher: MessageDispatcher
-} {
-  const [messages, setMessages] = useState<ChatMessageEntry[]>([])
-
-  const dispatcher = useMemo<MessageDispatcher>(() => {
-    return {
-      appendUser(text) {
-        const id = generateMessageId()
-        setMessages((prev) => [...prev, { id, role: 'user', text }])
-        return id
-      },
-      startAssistant() {
-        const id = generateMessageId()
-        setMessages((prev) => [...prev, { id, role: 'assistant', blocks: [] }])
-        return id
-      },
-      applyBlockUpdate(assistantId, contentIndex, updater) {
-        setMessages((prev) =>
-          prev.map((msg) => {
-            if (msg.id !== assistantId || msg.role !== 'assistant') return msg
-            const idx = msg.blocks.findIndex(
-              (b) => b.contentIndex === contentIndex,
-            )
-            const current = idx >= 0 ? msg.blocks[idx] : undefined
-            const next = updater(current)
-            const blocks =
-              idx >= 0
-                ? msg.blocks.map((b, i) => (i === idx ? next : b))
-                : [...msg.blocks, next]
-            return { ...msg, blocks }
-          }),
-        )
-      },
-      finalizeStreaming(assistantId) {
-        setMessages((prev) =>
-          prev.map((msg) => {
-            if (msg.id !== assistantId || msg.role !== 'assistant') return msg
-            return {
-              ...msg,
-              blocks: msg.blocks.map((b) =>
-                b.status === 'streaming' ? { ...b, status: 'done' } : b,
-              ),
-            }
-          }),
-        )
-      },
-      appendError(message) {
-        setMessages((prev) => [
-          ...prev,
-          { id: generateMessageId(), role: 'error', message },
-        ])
-      },
-      reset() {
-        setMessages([])
-      },
-    }
-  }, [])
-
-  return { messages, dispatcher }
-}
-
-const NODE_EDIT_TOOLS = new Set(['insert_node', 'replace_node', 'delete_node'])
 
 export function useWriteAgent(opts: {
   agentVisible: boolean
@@ -176,6 +96,18 @@ export function useWriteAgent(opts: {
   })
   const providerGroups = modelsQuery.data ?? []
 
+  const fetchSignalRef = useRef<AbortSignalRef>({ current: null })
+  const fetchControllerRef = useRef<AbortController | null>(null)
+
+  const provider = useMemo<LLMProvider | null>(() => {
+    if (!selectedModel) return null
+    return createSseLlmProvider({
+      model: selectedModel.modelId,
+      providerId: selectedModel.providerId,
+      signalRef: fetchSignalRef.current,
+    })
+  }, [selectedModel])
+
   useEffect(() => {
     if (!providerGroups.length) return
     if (isSelectedAgentModelAvailable(selectedModel, providerGroups)) return
@@ -196,11 +128,13 @@ export function useWriteAgent(opts: {
     })
   }, [providerGroups, selectedModel, selectModel])
 
+  const agentLoopRef = useRef<AgentLoopHandle | null>(null)
   const lexicalEditorRef = useRef<LexicalEditor | null>(null)
-  const onAgentLoopReady = (_loop: AgentLoopHandle | null) => {
-    // 18b drives streaming directly through the admin SSE transport; the
-    // haklex AgentLoop handle is intentionally ignored here, but the callback
-    // remains so the RichEditorWithAgent contract is unchanged.
+  const [agentReady, setAgentReady] = useState(false)
+
+  const onAgentLoopReady = (loop: AgentLoopHandle | null) => {
+    agentLoopRef.current = loop
+    setAgentReady(Boolean(loop))
   }
 
   const onEditorReady = (editor: LexicalEditor | null) => {
@@ -209,67 +143,20 @@ export function useWriteAgent(opts: {
 
   useEffect(
     () => () => {
+      agentLoopRef.current = null
       lexicalEditorRef.current = null
+      setAgentReady(false)
     },
     [],
   )
 
-  const { messages, dispatcher } = useMessageState()
-  const [streamStatus, setStreamStatus] = useState<AgentStreamStatus>('idle')
-  const abortRef = useRef<AbortController | null>(null)
-  const dispatchedToolsRef = useRef<Set<string>>(new Set())
-
-  const abort = useCallback(() => {
-    abortRef.current?.abort()
-    abortRef.current = null
-    setStreamStatus('idle')
-  }, [])
-
-  useEffect(
-    () => () => {
-      abortRef.current?.abort()
-      abortRef.current = null
-    },
-    [],
-  )
-
-  const handleToolCallEnd = useCallback(
-    (toolCall: AgentToolCallFinal) => {
-      if (!NODE_EDIT_TOOLS.has(toolCall.name)) return
-      if (dispatchedToolsRef.current.has(toolCall.id)) return
-      dispatchedToolsRef.current.add(toolCall.id)
-
-      const editor = lexicalEditorRef.current
-      if (!editor) return
-
-      void (async () => {
-        try {
-          const { applyAgentOperation } =
-            await import('~/vendor/rich-editor/utils/apply-agent-review-batch')
-          const opMap: Record<string, 'insert' | 'replace' | 'delete'> = {
-            insert_node: 'insert',
-            replace_node: 'replace',
-            delete_node: 'delete',
-          }
-          const operation = {
-            op: opMap[toolCall.name],
-            ...toolCall.arguments,
-          } as Parameters<typeof applyAgentOperation>[1]
-          const result = applyAgentOperation(editor, operation)
-          if (result.status === 'error' || result.status === 'conflict') {
-            toast.warning(result.message ?? t('write.agent.toast.applyFailed'))
-          }
-        } catch (error) {
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : t('write.agent.toast.applyFailed'),
-          )
-        }
-      })()
-    },
-    [t],
-  )
+  const abort = () => {
+    fetchControllerRef.current?.abort()
+    fetchControllerRef.current = null
+    fetchSignalRef.current.current = null
+    agentLoopRef.current?.abort()
+    store.getState().setStatus('idle')
+  }
 
   const documentSessionId = deriveDocumentSessionId(
     opts.documentKind,
@@ -284,288 +171,143 @@ export function useWriteAgent(opts: {
     store,
   })
 
-  useEffect(() => {
-    if (!sessionManager.activeSessionId) return
-    dispatcher.reset()
-    dispatchedToolsRef.current.clear()
-  }, [dispatcher, sessionManager.activeSessionId])
+  const sendMessage = (message: string) => {
+    const trimmed = message.trim()
+    if (!trimmed) return
+    if (!selectedModel || !provider) {
+      toast.error(t('write.agent.selectModelFirst'))
+      return
+    }
+    if (!agentLoopRef.current) {
+      toast.error(t('write.agent.notReady'))
+      return
+    }
 
-  const sendMessage = useCallback(
-    (message: string) => {
-      const trimmed = message.trim()
-      if (!trimmed) return
-      if (!selectedModel) {
-        toast.error(t('write.agent.selectModelFirst'))
+    const controller = new AbortController()
+    fetchControllerRef.current = controller
+    fetchSignalRef.current.current = controller.signal
+
+    store.getState().addBubble({ content: trimmed, type: 'user' })
+    agentLoopRef.current
+      .run(trimmed)
+      .catch((error: unknown) => {
+        if ((error as Error)?.name === 'AbortError') return
+        if (controller.signal.aborted) return
+        const detail = error instanceof Error ? error.message : String(error)
+        store.getState().addBubble({ message: detail, type: 'error' })
+        store.getState().setStatus('idle')
+      })
+      .finally(() => {
+        if (fetchControllerRef.current === controller) {
+          fetchControllerRef.current = null
+          fetchSignalRef.current.current = null
+        }
+      })
+  }
+
+  const applyBatch = (batchId: string, mode: 'accept' | 'reapply') => {
+    const batch = store
+      .getState()
+      .reviewState?.batches.find((item) => item.id === batchId)
+    const editor = lexicalEditorRef.current
+    if (!batch || !editor) return
+
+    const run = async () => {
+      const { applyAgentReviewBatch } =
+        await import('~/vendor/rich-editor/utils/apply-agent-review-batch')
+      applyAgentReviewBatch(editor, batch)
+      if (mode === 'accept') store.getState().acceptReviewBatch(batchId)
+      toast.success(
+        mode === 'accept'
+          ? t('write.agent.toast.suggestionApplied')
+          : t('write.agent.toast.suggestionReapplied'),
+      )
+    }
+
+    void run().catch((error: unknown) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t('write.agent.toast.applyFailed'),
+      )
+    })
+  }
+
+  const acceptBatch = (batchId: string) => applyBatch(batchId, 'accept')
+  const reapplyBatch = (batchId: string) => applyBatch(batchId, 'reapply')
+
+  const rejectBatch = (batchId: string) => {
+    store.getState().rejectReviewBatch(batchId)
+  }
+
+  const reapplyToolGroup = (items: ToolCallGroupItem[]) => {
+    const editor = lexicalEditorRef.current
+    if (!editor) {
+      toast.error(t('write.agent.editorNotReady'))
+      return
+    }
+
+    const operations = items
+      .map(extractAgentOperationFromToolItem)
+      .filter((op): op is AgentOperation => Boolean(op))
+    if (operations.length === 0) {
+      toast.error(t('write.agent.toolResults.empty'))
+      return
+    }
+
+    const run = async () => {
+      const { applyAgentOperation } =
+        await import('~/vendor/rich-editor/utils/apply-agent-review-batch')
+      const summary = { conflict: 0, error: 0, success: 0 }
+
+      for (const operation of operations) {
+        const result = applyAgentOperation(editor, operation)
+        summary[result.status] += 1
+      }
+
+      if (summary.error || summary.conflict) {
+        toast.warning(
+          t('write.agent.toast.reapplyPartial', {
+            conflict: summary.conflict,
+            error: summary.error,
+            success: summary.success,
+          }),
+        )
         return
       }
 
-      dispatcher.appendUser(trimmed)
-      const assistantId = dispatcher.startAssistant()
-      setStreamStatus('connecting')
+      toast.success(
+        t('write.agent.toast.reapplySuccess', { count: summary.success }),
+      )
+    }
 
-      const controller = new AbortController()
-      abortRef.current = controller
-
-      const transport = createAdminAgentTransport(selectedModel.providerId)
-      const stream = transport({
-        messages: [{ role: 'user', content: trimmed }],
-        model: selectedModel.modelId,
-        signal: controller.signal,
-      })
-
-      void (async () => {
-        let openedAny = false
-        try {
-          for await (const event of stream) {
-            if (!openedAny) {
-              openedAny = true
-              setStreamStatus('streaming')
-            }
-
-            switch (event.type) {
-              case 'text_start': {
-                dispatcher.applyBlockUpdate(
-                  assistantId,
-                  event.contentIndex,
-                  (prev) =>
-                    prev && prev.kind === 'text'
-                      ? prev
-                      : {
-                          kind: 'text',
-                          contentIndex: event.contentIndex,
-                          text: '',
-                          status: 'streaming',
-                        },
-                )
-                break
-              }
-              case 'text_delta': {
-                dispatcher.applyBlockUpdate(
-                  assistantId,
-                  event.contentIndex,
-                  (prev) => {
-                    const base =
-                      prev && prev.kind === 'text'
-                        ? prev
-                        : {
-                            kind: 'text' as const,
-                            contentIndex: event.contentIndex,
-                            text: '',
-                            status: 'streaming' as const,
-                          }
-                    return { ...base, text: base.text + event.delta }
-                  },
-                )
-                break
-              }
-              case 'text_end': {
-                dispatcher.applyBlockUpdate(
-                  assistantId,
-                  event.contentIndex,
-                  (prev) => {
-                    if (!prev || prev.kind !== 'text') {
-                      return {
-                        kind: 'text',
-                        contentIndex: event.contentIndex,
-                        text: '',
-                        status: 'done',
-                      }
-                    }
-                    return { ...prev, status: 'done' }
-                  },
-                )
-                break
-              }
-              case 'thinking_start': {
-                dispatcher.applyBlockUpdate(
-                  assistantId,
-                  event.contentIndex,
-                  (prev) =>
-                    prev && prev.kind === 'thinking'
-                      ? prev
-                      : {
-                          kind: 'thinking',
-                          contentIndex: event.contentIndex,
-                          text: '',
-                          status: 'streaming',
-                          startedAt: Date.now(),
-                        },
-                )
-                break
-              }
-              case 'thinking_delta': {
-                dispatcher.applyBlockUpdate(
-                  assistantId,
-                  event.contentIndex,
-                  (prev) => {
-                    const base =
-                      prev && prev.kind === 'thinking'
-                        ? prev
-                        : {
-                            kind: 'thinking' as const,
-                            contentIndex: event.contentIndex,
-                            text: '',
-                            status: 'streaming' as const,
-                            startedAt: Date.now(),
-                          }
-                    return { ...base, text: base.text + event.delta }
-                  },
-                )
-                break
-              }
-              case 'thinking_end': {
-                dispatcher.applyBlockUpdate(
-                  assistantId,
-                  event.contentIndex,
-                  (prev) => {
-                    if (!prev || prev.kind !== 'thinking') {
-                      return {
-                        kind: 'thinking',
-                        contentIndex: event.contentIndex,
-                        text: '',
-                        status: 'done',
-                        startedAt: Date.now(),
-                        endedAt: Date.now(),
-                      }
-                    }
-                    return { ...prev, status: 'done', endedAt: Date.now() }
-                  },
-                )
-                break
-              }
-              case 'toolcall_start': {
-                const name = event.name ?? ''
-                dispatcher.applyBlockUpdate(
-                  assistantId,
-                  event.contentIndex,
-                  (prev) =>
-                    prev && prev.kind === 'toolcall'
-                      ? prev
-                      : {
-                          kind: 'toolcall',
-                          contentIndex: event.contentIndex,
-                          toolName: name,
-                          partialArgs: {},
-                          status: 'streaming',
-                        },
-                )
-                break
-              }
-              case 'toolcall_delta': {
-                dispatcher.applyBlockUpdate(
-                  assistantId,
-                  event.contentIndex,
-                  (prev) => {
-                    const base =
-                      prev && prev.kind === 'toolcall'
-                        ? prev
-                        : {
-                            kind: 'toolcall' as const,
-                            contentIndex: event.contentIndex,
-                            toolName: '',
-                            partialArgs: {},
-                            status: 'streaming' as const,
-                          }
-                    return {
-                      ...base,
-                      partialArgs: {
-                        ...base.partialArgs,
-                        ...event.partialArgs,
-                      },
-                    }
-                  },
-                )
-                break
-              }
-              case 'toolcall_end': {
-                dispatcher.applyBlockUpdate(
-                  assistantId,
-                  event.contentIndex,
-                  (prev) => {
-                    const base =
-                      prev && prev.kind === 'toolcall'
-                        ? prev
-                        : {
-                            kind: 'toolcall' as const,
-                            contentIndex: event.contentIndex,
-                            toolName: event.toolCall.name,
-                            partialArgs: {},
-                            status: 'streaming' as const,
-                          }
-                    return {
-                      ...base,
-                      toolName: event.toolCall.name,
-                      toolCallId: event.toolCall.id,
-                      finalArgs: event.toolCall.arguments,
-                      status: 'done',
-                    }
-                  },
-                )
-                handleToolCallEnd({
-                  id: event.toolCall.id,
-                  name: event.toolCall.name,
-                  arguments: event.toolCall.arguments,
-                })
-                break
-              }
-              case 'done': {
-                dispatcher.finalizeStreaming(assistantId)
-                setStreamStatus('idle')
-                break
-              }
-              case 'error': {
-                dispatcher.appendError(event.message || 'Agent error')
-                setStreamStatus('error')
-                break
-              }
-            }
-          }
-
-          if (streamStatusFromController(controller) !== 'aborted') {
-            dispatcher.finalizeStreaming(assistantId)
-            if (abortRef.current === controller) {
-              setStreamStatus('idle')
-            }
-          }
-        } catch (error) {
-          if ((error as Error)?.name === 'AbortError') {
-            dispatcher.finalizeStreaming(assistantId)
-            setStreamStatus('idle')
-            return
-          }
-          dispatcher.finalizeStreaming(assistantId)
-          if (controller.signal.aborted) {
-            setStreamStatus('idle')
-            return
-          }
-          dispatcher.appendError(
-            error instanceof Error ? error.message : String(error),
-          )
-          setStreamStatus('connection_lost')
-        } finally {
-          if (abortRef.current === controller) abortRef.current = null
-        }
-      })()
-    },
-    [dispatcher, handleToolCallEnd, selectedModel, t],
-  )
+    void run().catch((error: unknown) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t('write.agent.toast.reapplyFailed'),
+      )
+    })
+  }
 
   return {
     abort,
+    acceptBatch,
     activeSessionId: sessionManager.activeSessionId,
-    agentReady: true,
+    agentReady,
     createSession: sessionManager.createSession,
     deleteSession: sessionManager.deleteSession,
-    handleToolCallEnd,
     isHydrating: sessionManager.isHydrating,
     isLoadingModels: modelsQuery.isLoading,
     isLoadingSessions: sessionManager.isLoading,
     loadSessionsError: sessionManager.loadError,
-    messages,
     onAgentLoopReady,
     onEditorReady,
-    provider: null,
+    provider,
     providerGroups,
+    reapplyBatch,
+    reapplyToolGroup,
+    rejectBatch,
     renameSession: sessionManager.renameSession,
     retryLoadSessions: sessionManager.loadSessions,
     selectModel,
@@ -573,11 +315,6 @@ export function useWriteAgent(opts: {
     sendMessage,
     sessions: sessionManager.sessions,
     store,
-    streamStatus,
     switchSession: sessionManager.switchSession,
   }
-}
-
-function streamStatusFromController(controller: AbortController) {
-  return controller.signal.aborted ? 'aborted' : 'live'
 }

@@ -9,6 +9,7 @@ import type { AgentConversation } from '../api/ai-agent'
 import {
   createAgentConversation,
   deleteAgentConversation,
+  generateAgentConversationTitle,
   getAgentConversation,
   getAgentConversations,
   replaceAgentConversationMessages,
@@ -16,7 +17,10 @@ import {
 
 export interface AgentSessionMeta {
   id: string
+  createdAt: string
   updatedAt: string
+  title: string | null
+  derivedTitle: string | null
 }
 
 interface UseAgentSessionManagerOptions {
@@ -27,11 +31,51 @@ interface UseAgentSessionManagerOptions {
   store: AgentStore
 }
 
+const TITLE_MAX_CHARS = 28
+
+function deriveTitleFromMessages(
+  messages: AgentConversation['messages'],
+): string | null {
+  if (!messages?.length) return null
+  for (const m of messages) {
+    if ((m as { type?: string }).type === 'user') {
+      const content = String((m as { content?: unknown }).content ?? '').trim()
+      if (!content) continue
+      const oneLine = content.replaceAll(/\s+/g, ' ')
+      return oneLine.length > TITLE_MAX_CHARS
+        ? `${oneLine.slice(0, TITLE_MAX_CHARS)}…`
+        : oneLine
+    }
+    if ((m as { role?: string }).role === 'user') {
+      const content = String((m as { content?: unknown }).content ?? '').trim()
+      if (!content) continue
+      const oneLine = content.replaceAll(/\s+/g, ' ')
+      return oneLine.length > TITLE_MAX_CHARS
+        ? `${oneLine.slice(0, TITLE_MAX_CHARS)}…`
+        : oneLine
+    }
+  }
+  return null
+}
+
 function toSessionMeta(conversation: AgentConversation): AgentSessionMeta {
   return {
     id: conversation.id,
+    createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
+    title: conversation.title,
+    derivedTitle: deriveTitleFromMessages(conversation.messages),
   }
+}
+
+function shouldTriggerTitleGen(
+  bubbles: { type?: string }[],
+  meta: AgentSessionMeta | undefined,
+): boolean {
+  if (!meta || meta.title) return false
+  const hasUser = bubbles.some((b) => b.type === 'user')
+  const hasAssistant = bubbles.some((b) => b.type === 'assistant')
+  return hasUser && hasAssistant
 }
 
 function normalizeConversationList(value: AgentConversation[] | unknown) {
@@ -53,6 +97,46 @@ function normalizeHydratedBubble(message: Record<string, unknown>) {
   if ('streaming' in bubble) bubble.streaming = false
   if ('isStreaming' in bubble) bubble.isStreaming = false
   return bubble as unknown as ChatBubble
+}
+
+// Sentinel envelope: review state batches are NOT bubbles, they live on
+// store.reviewState — but the server's `messages` column is the only piece we
+// persist. Append a sentinel message at the tail on save; extract it on hydrate.
+const REVIEW_STATE_SENTINEL = '__agent_review_state__'
+
+type AgentStoreReviewState = AgentStoreSlice['reviewState']
+
+function withEmbeddedReviewState(
+  bubbles: Record<string, unknown>[],
+  reviewState: AgentStoreReviewState,
+): Record<string, unknown>[] {
+  if (!reviewState || reviewState.batches.length === 0) return bubbles
+  return [
+    ...bubbles,
+    {
+      type: REVIEW_STATE_SENTINEL,
+      reviewState: reviewState as unknown as Record<string, unknown>,
+    },
+  ]
+}
+
+function splitMessagesEnvelope(messages: Record<string, unknown>[]): {
+  bubbles: Record<string, unknown>[]
+  reviewState: AgentStoreReviewState
+} {
+  let reviewState: AgentStoreReviewState = null
+  const bubbles: Record<string, unknown>[] = []
+  for (const message of messages) {
+    if (message && message.type === REVIEW_STATE_SENTINEL) {
+      const payload = (message as { reviewState?: unknown }).reviewState
+      if (payload && typeof payload === 'object') {
+        reviewState = payload as AgentStoreReviewState
+      }
+      continue
+    }
+    bubbles.push(message)
+  }
+  return { bubbles, reviewState }
 }
 
 export function useAgentSessionManager({
@@ -106,13 +190,45 @@ export function useAgentSessionManager({
 
   const syncMessages = useCallback(
     (conversationId: string) => {
-      const bubbles = store.getState().bubbles
+      const state = store.getState()
+      const bubbles = state.bubbles
       if (bubbles.length === 0) return
 
-      replaceAgentConversationMessages(
-        conversationId,
+      const messages = withEmbeddedReviewState(
         bubbles as unknown as Record<string, unknown>[],
-      ).catch(() => {})
+        state.reviewState,
+      )
+
+      replaceAgentConversationMessages(conversationId, messages)
+        .then((updated) => {
+          if (!updated) return
+          const meta = toSessionMeta(updated)
+          setSessions((current) =>
+            current.map((session) =>
+              session.id === conversationId ? meta : session,
+            ),
+          )
+
+          if (
+            shouldTriggerTitleGen(
+              bubbles as unknown as { type?: string }[],
+              meta,
+            )
+          ) {
+            generateAgentConversationTitle(conversationId)
+              .then((withTitle) => {
+                if (!withTitle?.title) return
+                const next = toSessionMeta(withTitle)
+                setSessions((current) =>
+                  current.map((session) =>
+                    session.id === conversationId ? next : session,
+                  ),
+                )
+              })
+              .catch(() => {})
+          }
+        })
+        .catch(() => {})
     },
     [store],
   )
@@ -141,8 +257,10 @@ export function useAgentSessionManager({
         const detail = await getAgentConversation(conversationId)
         if (epoch !== sessionEpochRef.current) return
 
-        const messages = detail.messages ?? []
-        const bubbles = messages
+        const rawMessages = detail.messages ?? []
+        const { bubbles: bubbleMessages, reviewState } =
+          splitMessagesEnvelope(rawMessages)
+        const bubbles = bubbleMessages
           .filter((message): message is Record<string, unknown> => {
             const type = message.type ?? message.role
             return typeof type === 'string' && type.length > 0
@@ -151,6 +269,7 @@ export function useAgentSessionManager({
 
         store.setState({
           bubbles,
+          reviewState,
           status: 'idle',
         } as Partial<AgentStoreSlice>)
 
@@ -280,7 +399,10 @@ export function useAgentSessionManager({
       if (!currentSessionId) return
 
       const epoch = sessionEpochRef.current
-      const messages = state.bubbles as unknown as Record<string, unknown>[]
+      const messages = withEmbeddedReviewState(
+        state.bubbles as unknown as Record<string, unknown>[],
+        state.reviewState,
+      )
 
       if (!activeSessionIdRef.current) {
         if (isCreatingSessionRef.current) return

@@ -114,6 +114,7 @@ export const aiAgentConversations = pgTable(
     sessionId: text('session_id').notNull(),
     model: text('model'),
     providerId: text('provider_id'),
+    title: text('title'),
     messages: jsonb('messages')
       .$type<unknown[]>()
       .notNull()
