@@ -247,6 +247,7 @@ export function NotesRouteViewContent() {
             {notes.map((note) => (
               <NoteRow
                 actions={actions}
+                cursor={selection.isCursor(note.id)}
                 key={note.id}
                 note={note}
                 onMetadataChange={(id, data) =>

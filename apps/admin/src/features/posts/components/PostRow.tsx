@@ -1,6 +1,4 @@
 import { BookOpen, Pin, ThumbsUp } from 'lucide-react'
-import type { PostModel } from '~/models/post'
-import type { ListAction } from '~/ui/list-actions'
 
 import { WEB_URL } from '~/constants/env'
 import {
@@ -8,6 +6,8 @@ import {
   ContentListStatusBadge,
 } from '~/features/_shared/components/content-list-item'
 import { useI18n } from '~/i18n'
+import type { PostModel } from '~/models/post'
+import type { ListAction } from '~/ui/list-actions'
 import { Badge } from '~/ui/primitives/badge'
 import { relativeTimeFromNow } from '~/utils/time'
 
@@ -21,6 +21,7 @@ export interface PostMenuCategoryOption {
 export function PostRow(props: {
   actions: ReadonlyArray<ListAction<PostModel>>
   categories: PostMenuCategoryOption[]
+  cursor?: boolean
   onCategoryChange: (id: string, categoryId: string) => void
   onPinToggle: (id: string, isPinned: boolean) => void
   onPublishChange: (id: string, isPublished: boolean) => void
@@ -51,6 +52,7 @@ export function PostRow(props: {
   return (
     <ContentEntryListItem
       checkboxLabel={t('posts.list.checkboxAria', { title })}
+      cursor={props.cursor}
       dataId={post.id}
       editTitle={t('posts.action.editPost')}
       editTo={editPath}

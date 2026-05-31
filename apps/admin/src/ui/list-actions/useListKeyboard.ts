@@ -195,10 +195,23 @@ export function useListKeyboard<T>(
     // policy.
   }, [defaultExtras, callerExtra, patchedSelection])
 
+  // Action targets: explicit checked set if any, else fall back to the
+  // cursor row. Lets keyboard actions (Enter/Backspace/...) operate on the
+  // implicitly-focused row when the user hasn't Space-checked anything.
+  const getActionTargets = (): T[] => {
+    const explicit = selection.getSelectedTargets()
+    if (explicit.length > 0) return explicit
+    const cid = selection.cursorId
+    if (!cid) return []
+    const getId = getIdRef.current
+    const item = itemsRef.current.find((entry) => getId(entry) === cid)
+    return item ? [item] : []
+  }
+
   useListShortcuts(options.actions, {
     enabled: options.enabled,
     extra: mergedExtra,
-    getTargets: selection.getSelectedTargets,
+    getTargets: getActionTargets,
     scopeId: options.scopeId,
   })
 

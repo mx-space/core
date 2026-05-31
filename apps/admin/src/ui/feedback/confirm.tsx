@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { useI18n } from '~/i18n'
-import { ModalHeader } from '~/ui/feedback/modal'
+import { ModalTitle } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
@@ -24,12 +24,16 @@ function ConfirmDialog(props: ConfirmDialogProps) {
 
   return (
     <div className="flex w-full flex-col">
-      <ModalHeader showClose={false} title={props.title} />
+      <div className="flex shrink-0 items-start px-6 pt-5 pb-4">
+        <ModalTitle className="text-lg leading-snug font-semibold break-words text-fg">
+          {props.title}
+        </ModalTitle>
+      </div>
       {props.description ? (
-        <div className="px-6 py-4 text-sm text-fg">{props.description}</div>
-      ) : (
-        <div className="h-2" />
-      )}
+        <div className="px-6 pb-4 text-sm break-words text-fg-muted">
+          {props.description}
+        </div>
+      ) : null}
       <div className="flex justify-end gap-2 border-t border-border px-6 py-3">
         <Button
           autoFocus

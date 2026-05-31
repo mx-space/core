@@ -254,6 +254,7 @@ export function PostsRouteViewContent() {
               <PostRow
                 actions={actions}
                 categories={rowCategoryOptions}
+                cursor={selection.isCursor(post.id)}
                 key={post.id}
                 onCategoryChange={(id, nextCategoryId) =>
                   categoryMutation.mutate({ categoryId: nextCategoryId, id })

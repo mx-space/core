@@ -1,16 +1,16 @@
 import { ExternalLink, MoreHorizontal, Pencil } from 'lucide-react'
-import { forwardRef } from 'react'
-import { Link } from 'react-router'
-import type { ContextMenuItem } from '~/ui/overlay/context-menu'
 import type {
   ComponentPropsWithoutRef,
   MouseEvent as ReactMouseEvent,
   ReactNode,
   Ref,
 } from 'react'
+import { forwardRef } from 'react'
+import { Link } from 'react-router'
 
 import { useI18n } from '~/i18n'
 import { ListRow } from '~/ui/list-actions'
+import type { ContextMenuItem } from '~/ui/overlay/context-menu'
 import { showContextMenu } from '~/ui/overlay/context-menu'
 import { Badge } from '~/ui/primitives/badge'
 import { Checkbox } from '~/ui/primitives/checkbox'
@@ -21,6 +21,7 @@ export type ContentEntrySelectMode = 'single' | 'toggle' | 'range'
 export interface ContentEntryListItemProps {
   checkboxLabel?: string
   className?: string
+  cursor?: boolean
   /** Stable id of the underlying entity. */
   dataId?: string
   editTitle: string
@@ -83,6 +84,7 @@ export function ContentEntryListItem(props: ContentEntryListItemProps) {
         'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-400 dark:focus-visible:outline-neutral-500',
         props.className,
       )}
+      cursor={props.cursor}
       dataId={props.dataId ?? ''}
       leading={
         selectable ? (
@@ -90,6 +92,7 @@ export function ContentEntryListItem(props: ContentEntryListItemProps) {
             aria-label={props.checkboxLabel}
             checked={props.selected ?? false}
             className="mt-0.5"
+            cursor={props.cursor}
             onCheckedChange={handleSelectedChange}
           />
         ) : null

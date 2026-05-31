@@ -16,6 +16,7 @@ import { buildNoteMenuItems } from './buildNoteMenuItems'
 
 export function NoteRow(props: {
   actions: ReadonlyArray<ListAction<NoteModel>>
+  cursor?: boolean
   note: NoteModel
   onMetadataChange: (id: string, data: NoteMetadataUpdate) => void
   onPublishChange: (id: string, isPublished: boolean) => void
@@ -46,6 +47,7 @@ export function NoteRow(props: {
   return (
     <ContentEntryListItem
       checkboxLabel={t('notes.list.checkboxAria', { title })}
+      cursor={props.cursor}
       dataId={note.id}
       editTitle={t('notes.action.editNote')}
       editTo={editPath}

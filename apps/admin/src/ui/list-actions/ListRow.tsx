@@ -107,11 +107,11 @@ export function ListRow(props: ListRowProps) {
       aria-current={ariaCurrent ? 'true' : undefined}
       aria-selected={selected ? true : undefined}
       className={cn(
-        'outline-hidden relative',
-        // Baseline cursor indicator: a thin accent bar on the left edge.
-        // Feature-row classNames can override or add to this without losing
-        // the cursor visual because pseudo-elements layer above background.
-        'data-cursor:before:absolute data-cursor:before:left-0 data-cursor:before:top-0 data-cursor:before:h-full data-cursor:before:w-0.5 data-cursor:before:bg-accent data-cursor:before:content-[""]',
+        'outline-hidden',
+        // Cursor (implicit) tint. Explicit-checked rows get a stronger tint
+        // from feature-row `data-selected:bg-*` styles + the checkbox tick,
+        // so cursor only needs a soft accent wash to read as "current."
+        'data-cursor:bg-accent-soft/50',
         className,
       )}
       data-cursor={cursor ? '' : undefined}
