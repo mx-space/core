@@ -39,7 +39,7 @@ The existing write agent already provides useful reusable pieces:
 
 | Existing piece | Reuse decision |
 | --- | --- |
-| SSE chat proxy | Reuse as the model streaming channel. |
+| SSE chat proxy | Reuse as the stateless model streaming channel; it never persists conversation state. |
 | Provider/model selection | Extract to a common admin agent contract. |
 | Conversation CRUD and title generation | Reuse with frontend-defined `sessionId` grouping. |
 | Haklex store and loop | Do not use as the common core. Keep behind a compatibility adapter. |
@@ -176,6 +176,46 @@ flowchart TD
 | `BudgetPlanner` | Decide which history and frames to preserve, summarize, trim, or append late under token budget. |
 | `PersistencePlanner` | Decide which generated frames should be appended to conversation messages and which should stay runtime-only. |
 
+### Persisted Schema vs Wire Schema (Compilation)
+
+The conversation record and the model request use **two different message
+schemas**. Conflating them is the single most load-bearing risk in this design.
+
+| Schema | Owner | Shape | Where it lives |
+| --- | --- | --- | --- |
+| Persisted schema (rich) | Frontend engine | Frame-typed entries (`core-system`, `scene-system`, `dry-run-result`, `approval`, `execute-result`, `context-snapshot`, …) plus UIMessage-shaped bubbles | `ai_agent_conversations.messages` JSONB |
+| Wire schema (role-bearing) | Frontend engine → backend | `{ role: 'system' \| 'user' \| 'assistant' \| 'assistant_tool_call' \| 'tool_result', … }` | Request body of `POST /ai/agent/chat` |
+
+The backend translator `toPiMessages`
+(`apps/core/src/modules/ai/ai-agent/ai-agent-chat.service.ts`) recognizes
+**only** those five roles. It has no `default` branch: any entry whose `role` is
+not one of the five is **silently dropped** and never reaches the model. The
+backend never inspects a frame `type` field.
+
+Therefore the engine MUST run a **compile step** that folds rich persisted
+frames into wire role-messages before each request. The persisted array is the
+source the engine recompiles from; the wire array is a derived, per-turn
+projection.
+
+| Persisted frame | Compiled wire role |
+| --- | --- |
+| `core-system`, `scene-system`, `system-reminder` | `system` |
+| `hint`, `document-structure`, `context-snapshot`, `fresh-context` | `system` or `user` (engine choice) |
+| user input | `user` |
+| assistant text / thinking | `assistant` |
+| assistant tool call | `assistant_tool_call` |
+| `tool-result-summary` | `tool_result` |
+| `dry-run-result`, `approval`, `execute-result` | `user` or `tool_result` (rendered as a text summary) |
+
+Compilation invariants:
+
+| Invariant | Decision |
+| --- | --- |
+| Persisted ≠ wire | The stored record holds rich frames; the request holds role-messages. They are never assumed equal. |
+| Engine owns compilation | Folding frames into wire roles happens in the frontend engine, not the backend. |
+| Backend is role-only | `toPiMessages` translates the five roles and drops everything else; do not rely on it to forward frame types. |
+| No frame reaches the model unmapped | Every persisted frame the model must see has an explicit wire-role mapping; unmapped frames stay runtime-only. |
+
 ### Frame Persistence Rules
 
 Some context must be persisted to preserve prompt-cache locality and support
@@ -223,6 +263,7 @@ Default scene policies:
 | Raw data remains outside prompt | The frontend tool cache retains raw payloads; summaries enter messages. |
 | Tool manifest is separate | Tool schemas are sent through the request `tools` parameter, while tool policy reminders may be message frames. |
 | Backend remains scene-agnostic | The backend stores message JSON but does not parse frame semantics. |
+| Backend translator is role-only | `toPiMessages` recognizes only the five wire roles; frames with any other discriminator are dropped before the model, so the engine must emit compiled wire messages, not raw frames. |
 
 ## 7. Tool Execution Model
 
@@ -303,6 +344,32 @@ phase.
 No new backend fields are required for `scene`, `host`, `originRoute`, or
 `originResource`.
 
+### Persistence Write Authority
+
+The frontend admin core is the **sole writer** of `messages[]`. The backend chat
+proxy is stateless and never persists conversation state.
+
+| Rule | Decision |
+| --- | --- |
+| Single writer | The frontend persists the conversation via `PUT /ai/agent/conversations/:id/messages` (whole-array replace). |
+| Stateless chat proxy | `POST /ai/agent/chat` streams model output only; it never writes to the conversation and never receives a `conversationId`. |
+| No server-side append | The model's assistant message is reassembled on the frontend for UIMessage rendering; writing it back is incidental, so no second writer is introduced. |
+
+**Rationale.** Admin runs a single operator and a single session manager, so a
+server-side append path would only add cross-writer sequencing complexity
+(ordering the server's assistant append against the frontend's tool-result
+append) for no real gain. A single frontend writer with whole-array replace
+keeps the write path race-free.
+
+**Dead-code removal.** The dormant server-write path must be deleted so it cannot
+be re-wired by accident:
+
+| Remove | Location |
+| --- | --- |
+| `StreamChatOptions.conversationId`, the `streamChat` finally-block persist, `persistAssistantMessage` | `apps/core/src/modules/ai/ai-agent/ai-agent-chat.service.ts` |
+| PATCH append chain: controller `appendMessages`, service `appendMessages`, api-client `appendAgentConversationMessages` | controller / conversation service / `apps/admin/src/api/ai-agent.ts` |
+| Keep `PUT .../messages` (replace) as the only write entry point | — |
+
 ## 9. Acceptance Scenarios
 
 | Scenario | Goal | Required validation |
@@ -365,3 +432,5 @@ with the common admin agent core.
 | Stable prefix churn | Minimize through versioned, persisted frames. |
 | Context freshness | Append fresh context late rather than mutating the prefix. |
 | Future floating panel | Must be possible without changing backend conversation schema. |
+| Conversation write authority | Frontend only; the backend chat proxy stays stateless and never appends. |
+| Persisted vs wire schema | The engine compiles rich persisted frames into role-bearing wire messages each turn; the backend translates only the five wire roles. |

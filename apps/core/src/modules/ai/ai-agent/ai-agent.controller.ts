@@ -1,5 +1,5 @@
 import type { AssistantMessageEvent } from '@earendil-works/pi-ai'
-import type { AiAgentSseEvent } from '@mx-space/api-client'
+import type { AiAgentSseEvent } from '@mx-space/ai'
 import {
   Body,
   Delete,

@@ -1,4 +1,4 @@
-import type { AiAgentSseEvent } from '@mx-space/api-client'
+import type { AiAgentSseEvent } from '@mx-space/ai'
 
 import { API_URL } from '~/constants/env'
 

@@ -273,8 +273,8 @@ and `apps/admin/src/api/ai-agent.ts`. After the pi-ai migration:
 
 - **Transport** — `apps/admin/src/api/ai-agent.ts` consumes the
   JSON-framed `AiAgentSseEvent` union via the shared TypeBox schema imported
-  from `@mx-space/api-client` (originating in
-  `packages/api-client/models/ai-agent-sse.ts`). Each SSE line is a single
+  from the neutral `@mx-space/ai` package
+  (`packages/ai/src/ai-agent-sse.ts`). Each SSE line is a single
   `data: <json>\n\n` event — there is no `event:` prefix line. The transport
   parses each frame and dispatches typed events to the session manager.
 - **Session manager** — buffers a draft `AssistantMessage` per turn,

@@ -74,6 +74,7 @@
     "@lexical/list": "^0.44.0",
     "@lexical/rich-text": "^0.44.0",
     "@lexical/table": "^0.44.0",
+    "@mx-space/ai": "workspace:*",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/db-schema": "workspace:*",
     "@nestjs/cache-manager": "3.1.2",
