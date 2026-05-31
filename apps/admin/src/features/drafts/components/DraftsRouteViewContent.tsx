@@ -155,6 +155,10 @@ export function DraftsRouteViewContent() {
     actions,
     getId: (draft) => draft.id,
     items: drafts,
+    onItemFocus: (id) => {
+      const draft = drafts.find((d) => d.id === id)
+      if (draft) openDraft(draft)
+    },
     resetOn: [filterType],
     scopeId: FOCUS_SCOPE_ID,
   })
@@ -180,6 +184,7 @@ export function DraftsRouteViewContent() {
   return (
     <DraftsRouteContext.Provider value={routeContextValue}>
       <MasterDetailShell
+        detailScopeId={`${FOCUS_SCOPE_ID}-detail`}
         emptyDetail={<DraftDetailEmpty />}
         list={
           <FocusScope
@@ -307,6 +312,7 @@ export function DraftsRouteViewContent() {
                   <DraftRow
                     actions={actions}
                     checked={selection.isSelected(draft.id)}
+                    cursor={selection.isCursor(draft.id)}
                     draft={draft}
                     isDetailTarget={detailId === draft.id}
                     key={draft.id}
@@ -316,7 +322,7 @@ export function DraftsRouteViewContent() {
                       else if (mode === 'toggle')
                         selection.toggleWithAnchor(draft.id)
                       else {
-                        selection.selectOne(draft.id)
+                        selection.setCursor(draft.id)
                         openDraft(draft)
                       }
                     }}

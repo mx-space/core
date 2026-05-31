@@ -8,9 +8,16 @@ export interface FocusScopeState {
    * the *last* instance unmounts.
    */
   knownScopes: Map<string, number>
+  /**
+   * Per-scope memory of the last item id (the `data-id` attribute) that
+   * received keyboard focus inside the scope. Used by the scope switcher
+   * to restore the cursor when the user returns to a scope.
+   */
+  lastFocusedItemPerScope: Map<string, string>
 }
 
 export const initialFocusScopeState: FocusScopeState = {
   activeScopeId: null,
   knownScopes: new Map(),
+  lastFocusedItemPerScope: new Map(),
 }

@@ -165,6 +165,7 @@ export function HistoryRouteViewContent() {
   return (
     <HistoryRouteContext.Provider value={routeContextValue}>
       <MasterDetailShell
+        detailScopeId={`${FOCUS_SCOPE_ID}-detail`}
         emptyDetail={<TaskDetailEmptyState />}
         list={
           <FocusScope

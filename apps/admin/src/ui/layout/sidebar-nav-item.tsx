@@ -53,6 +53,8 @@ export function SidebarNavItem(props: {
           <NavLink
             className={cn(parentClassName, 'pr-8')}
             data-scope-item="nav"
+            data-nav-path={props.node.route.path}
+            data-has-children="true"
             title={titleTooltip}
             to={props.node.route.path}
           >
@@ -99,6 +101,7 @@ export function SidebarNavItem(props: {
         <NavLink
           className={parentClassName}
           data-scope-item="nav"
+          data-nav-path={props.node.route.path}
           title={titleTooltip}
           to={props.node.route.path}
         >

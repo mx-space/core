@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 
+import { DesktopSidebarHamburger } from '~/ui/layout/desktop-sidebar-hamburger'
 import { MobileHamburger } from '~/ui/layout/mobile-hamburger'
 import { useShellNav } from '~/ui/layout/shell-nav-context'
 
@@ -8,5 +9,10 @@ export function MobileHeaderAffordance() {
   const registerPageHeader = shellNav?.registerPageHeader
   useEffect(() => registerPageHeader?.(), [registerPageHeader])
 
-  return <MobileHamburger />
+  return (
+    <>
+      <MobileHamburger />
+      <DesktopSidebarHamburger />
+    </>
+  )
 }

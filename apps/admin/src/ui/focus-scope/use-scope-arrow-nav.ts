@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
+import type { KeybindingsMap } from 'tinykeys'
 import { tinykeys } from 'tinykeys'
 
-import { getActiveScopeId } from './hooks'
+import { isItemVisible, isTextInputTarget } from './dom-utils'
+import { getActiveScopeId, setLastFocusedItem } from './hooks'
 
 export interface UseScopeArrowNavOptions {
   /** The focus-scope id whose items this set navigates. */
@@ -16,28 +18,12 @@ export interface UseScopeArrowNavOptions {
    * into their own selection state (e.g. `selection.selectOne(el.dataset.id)`).
    */
   onItemFocus?: (target: HTMLElement) => void
-}
-
-function isTextInputTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false
-  if (target.isContentEditable) return true
-  const tag = target.tagName
-  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
-}
-
-type CheckVisibilityFn = (opts?: {
-  checkOpacity?: boolean
-  checkVisibilityCSS?: boolean
-  contentVisibilityAuto?: boolean
-}) => boolean
-
-function isItemVisible(el: HTMLElement): boolean {
-  const cv = (el as unknown as { checkVisibility?: CheckVisibilityFn })
-    .checkVisibility
-  if (typeof cv === 'function') {
-    return cv.call(el, { checkOpacity: true, checkVisibilityCSS: true })
-  }
-  return el.offsetParent !== null
+  /**
+   * Extra keybindings merged into the same tinykeys map. Gated identically
+   * (scope active + non-text-input target). Use for scope-local extras like
+   * fold-toggle (`z`/`Space` on a sidebar).
+   */
+  extra?: KeybindingsMap
 }
 
 /**
@@ -91,10 +77,24 @@ function dispatchItemFocus(scopeId: string, target: HTMLElement) {
     try {
       callback(target)
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('[useScopeArrowNav] onItemFocus threw:', error)
     }
   }
+}
+
+/**
+ * Programmatic equivalent of arrow-nav landing on an item: persists the
+ * last-focused id and fans out to every consumer registered on the scope.
+ * Used by `useScopeSwitcher` so a scope-switch-induced focus runs the same
+ * side-effects as a j/k focus would.
+ */
+export function notifyScopeItemFocus(
+  scopeId: string,
+  target: HTMLElement,
+): void {
+  const dataId = target.getAttribute('data-id')
+  if (dataId) setLastFocusedItem(scopeId, dataId)
+  dispatchItemFocus(scopeId, target)
 }
 
 /**
@@ -114,6 +114,8 @@ export function useScopeArrowNav(options: UseScopeArrowNavOptions): void {
   itemSelectorRef.current = options.itemSelector
   const onItemFocusRef = useRef(options.onItemFocus)
   onItemFocusRef.current = options.onItemFocus
+  const extraRef = useRef(options.extra)
+  extraRef.current = options.extra
 
   // Register this instance's onItemFocus into the per-scope registry so the
   // dedupe-winning listener can dispatch focus events to every sibling.
@@ -164,6 +166,10 @@ export function useScopeArrowNav(options: UseScopeArrowNavOptions): void {
     const focusAt = (target: HTMLElement) => {
       target.focus({ preventScroll: true })
       target.scrollIntoView({ block: 'nearest' })
+      // Persist for cross-scope return: when the user later switches back to
+      // this scope via h/l, the switcher reads this id to restore the cursor.
+      const dataId = target.getAttribute('data-id')
+      if (dataId) setLastFocusedItem(scopeIdRef.current, dataId)
       // Fan out to every registered consumer for this scope (e.g. both
       // mobile + desktop branches of a MasterDetailLayout). Each owns its
       // own React state and needs to stay in sync.
@@ -221,13 +227,25 @@ export function useScopeArrowNav(options: UseScopeArrowNavOptions): void {
         handler(event)
       }
 
-    return tinykeys(window, {
+    const map: KeybindingsMap = {
       ArrowDown: gated(() => move(1)),
       ArrowUp: gated(() => move(-1)),
       End: gated(() => jumpToEdge('last')),
       Home: gated(() => jumpToEdge('first')),
       j: gated(() => move(1)),
       k: gated(() => move(-1)),
-    })
+    }
+    // Read extra handlers through the ref at fire time so callers can swap
+    // closures (e.g. after a re-render) without forcing a rebind.
+    const initialExtra = extraRef.current
+    if (initialExtra) {
+      for (const key of Object.keys(initialExtra)) {
+        map[key] = gated((event) => {
+          const handler = extraRef.current?.[key]
+          if (handler) handler(event)
+        })
+      }
+    }
+    return tinykeys(window, map)
   }, [options.enabled])
 }

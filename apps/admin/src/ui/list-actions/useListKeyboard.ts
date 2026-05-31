@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react'
 import type { KeybindingsMap } from 'tinykeys'
 
-import { setActiveScope, useScopeArrowNav } from '~/ui/focus-scope'
+import {
+  setActiveScope,
+  useActiveFocusScopeId,
+  useScopeArrowNav,
+} from '~/ui/focus-scope'
 
 import type { ListAction } from './types'
 import type { ListSelectionAPI } from './useListSelection'
@@ -30,8 +34,10 @@ export interface UseListKeyboardOptions<T> {
   /** Called immediately before any selection mutation or reset. */
   onBeforeSelectionReset?: () => void
   /**
-   * Called after arrow-nav focus moves to a new item. Default:
-   * `selection.selectOne(id)`. Override to suppress or customize.
+   * Side-effect fired after arrow-nav focus moves to a new item, AFTER the
+   * built-in `selection.selectOne(id)`. Use to push a route, sync external
+   * state, etc. Selection is always updated — there is no way to suppress it
+   * (single-row focus implies single-row selection).
    */
   onItemFocus?: (id: string) => void
 }
@@ -105,6 +111,8 @@ export function useListKeyboard<T>(
         before()
         selection.selectRange(id)
       },
+      // setCursor is implicit-only; explicit set is untouched, no reset hook.
+      setCursor: selection.setCursor,
       toggle: (id) => {
         before()
         selection.toggle(id)
@@ -155,6 +163,25 @@ export function useListKeyboard<T>(
         patchedSelection.clear()
         setActiveScope(null)
       }
+      // Space toggles explicit (checkbox) selection on the cursor row. The
+      // cursor moves implicitly via hjkl / row-body click and does NOT
+      // disturb the checked set — Space is what promotes the cursor to
+      // checked, or demotes a checked row back. Falls back to walking up
+      // from `document.activeElement` when no cursor is set (e.g. user
+      // tabbed into a row without arrow-nav).
+      map['Space'] = (event) => {
+        let id = patchedSelection.cursorId
+        if (!id) {
+          const active = document.activeElement
+          if (active instanceof HTMLElement) {
+            const row = active.closest<HTMLElement>('[data-scope-item="row"]')
+            id = row?.getAttribute('data-id') ?? null
+          }
+        }
+        if (!id) return
+        event.preventDefault()
+        patchedSelection.toggleWithAnchor(id)
+      }
     }
     if (callerExtra) {
       for (const [key, handler] of Object.entries(callerExtra)) {
@@ -181,15 +208,27 @@ export function useListKeyboard<T>(
     onItemFocus: (el) => {
       const id = el.getAttribute('data-id')
       if (!id) return
+      // Arrow-nav sets the cursor (implicit). It does NOT touch the explicit
+      // checked set — pressing j/k after Space-checking a row preserves the
+      // check. Use Space to promote the cursor row to checked.
+      patchedSelection.setCursor(id)
       const custom = onItemFocusRef.current
-      if (custom) {
-        safeCall(() => custom(id), 'onItemFocus')
-        return
-      }
-      patchedSelection.selectOne(id)
+      if (custom) safeCall(() => custom(id), 'onItemFocus')
     },
     scopeId: options.scopeId,
   })
+
+  // Clear the cursor when the user leaves this scope (via h/l, click into
+  // sidebar, etc.). The explicit checked set survives — only the implicit
+  // mark disappears. When the user comes back, the scope switcher restores
+  // focus to the last-focused item which re-fires onItemFocus and re-sets
+  // the cursor.
+  const activeScopeId = useActiveFocusScopeId()
+  useEffect(() => {
+    if (activeScopeId !== options.scopeId) {
+      patchedSelection.setCursor(null)
+    }
+  }, [activeScopeId, options.scopeId, patchedSelection])
 
   const resetOn = options.resetOn
   useEffect(() => {

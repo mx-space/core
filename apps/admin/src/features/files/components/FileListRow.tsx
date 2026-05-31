@@ -15,6 +15,7 @@ interface FileListRowProps<TRaw> {
   item: FileRowItem<TRaw>
   isDetailTarget: boolean
   selected: boolean
+  cursor?: boolean
   selectable?: boolean
   checked?: boolean
   onCheck?: (id: string, checked: boolean) => void
@@ -39,6 +40,7 @@ export function FileListRow<TRaw>(props: FileListRowProps<TRaw>) {
         'data-selected:hover:bg-accent-soft',
         'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40',
       )}
+      cursor={props.cursor}
       dataId={props.item.id}
       leading={
         props.selectable ? (
@@ -46,6 +48,7 @@ export function FileListRow<TRaw>(props: FileListRowProps<TRaw>) {
             aria-label={props.item.name}
             checked={props.checked ?? false}
             className="mt-3"
+            cursor={props.cursor}
             onCheckedChange={(checked) =>
               props.onCheck?.(props.item.id, checked)
             }

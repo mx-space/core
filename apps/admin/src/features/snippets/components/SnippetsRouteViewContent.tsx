@@ -361,6 +361,7 @@ export function SnippetsRouteViewContent() {
   return (
     <SnippetsRouteContext.Provider value={routeContextValue}>
       <MasterDetailShell
+        detailScopeId={`${FOCUS_SCOPE_ID}-detail`}
         emptyDetail={<SnippetDetailEmpty />}
         list={
           <FocusScope

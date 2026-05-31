@@ -1,4 +1,11 @@
-import { ChevronDown, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import {
+  ChevronDown,
+  Download,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react'
 import { useState } from 'react'
 
 import type { AgentSessionMeta } from '~/hooks/use-agent-session-manager'
@@ -17,6 +24,7 @@ interface SessionHeaderProps {
   onDelete: (id: string) => void
   onRename: (id: string, title: string) => void
   onRetryLoad: () => void
+  onExport: () => void
 }
 
 function parseDate(value: string | undefined | null): Date | null {
@@ -39,6 +47,7 @@ export function SessionHeader(props: SessionHeaderProps) {
     onCreate,
     onDelete,
     onRetryLoad,
+    onExport,
   } = props
   const { t } = useI18n()
 
@@ -167,6 +176,14 @@ export function SessionHeader(props: SessionHeaderProps) {
       </div>
 
       <div className="flex items-center gap-0.5">
+        <button
+          className="flex size-7 items-center justify-center rounded-sm text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
+          onClick={onExport}
+          title={t('write.agent.session.export')}
+          type="button"
+        >
+          <Download aria-hidden="true" className="size-3.5" />
+        </button>
         <button
           className="flex size-7 items-center justify-center rounded-sm text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
           onClick={onCreate}

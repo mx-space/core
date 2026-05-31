@@ -1,6 +1,6 @@
-import type { ContextMenuItem } from '~/ui/overlay/context-menu'
 import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react'
 
+import type { ContextMenuItem } from '~/ui/overlay/context-menu'
 import { ContextMenuTrigger } from '~/ui/overlay/context-menu'
 import { cn } from '~/utils/cn'
 
@@ -9,8 +9,15 @@ export type ListRowSelectMode = 'single' | 'toggle' | 'range'
 export interface ListRowProps {
   /** Stable non-empty id. Emitted as data-id; consumed by selection + arrow-nav. */
   dataId: string
-  /** Selection state. Drives data-selected and aria-selected. */
+  /** Explicit (checked) selection state. Drives data-selected and aria-selected. */
   selected?: boolean
+  /**
+   * Implicit cursor state — true when this row is the most recent arrow-nav
+   * / row-body-click target inside its scope. Drives `data-cursor` and a
+   * baseline accent left-bar so the row is distinguishable from explicit
+   * (checkbox-checked) rows. Disappears when the scope is deactivated.
+   */
+  cursor?: boolean
   /**
    * Whether this row is the master-detail "current" row. Renders
    * aria-current="true" in addition to aria-selected.
@@ -65,6 +72,7 @@ export function ListRow(props: ListRowProps) {
     as = 'article',
     children,
     className,
+    cursor,
     dataId,
     leading,
     menuItems,
@@ -98,7 +106,15 @@ export function ListRow(props: ListRowProps) {
     <Tag
       aria-current={ariaCurrent ? 'true' : undefined}
       aria-selected={selected ? true : undefined}
-      className={cn('outline-hidden', className)}
+      className={cn(
+        'outline-hidden relative',
+        // Baseline cursor indicator: a thin accent bar on the left edge.
+        // Feature-row classNames can override or add to this without losing
+        // the cursor visual because pseudo-elements layer above background.
+        'data-cursor:before:absolute data-cursor:before:left-0 data-cursor:before:top-0 data-cursor:before:h-full data-cursor:before:w-0.5 data-cursor:before:bg-accent data-cursor:before:content-[""]',
+        className,
+      )}
+      data-cursor={cursor ? '' : undefined}
       data-id={dataId || undefined}
       data-scope-item="row"
       data-selected={selected ? '' : undefined}

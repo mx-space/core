@@ -78,6 +78,7 @@ export function DefinitionsRouteViewContent() {
   return (
     <DefinitionsRouteContext.Provider value={routeContextValue}>
       <MasterDetailShell
+        detailScopeId={`${FOCUS_SCOPE_ID}-detail`}
         emptyDetail={<DefinitionDetailEmpty />}
         list={
           <FocusScope

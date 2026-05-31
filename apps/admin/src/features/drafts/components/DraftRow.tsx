@@ -12,6 +12,7 @@ import { refTypeMeta } from '../constants'
 export function DraftRow(props: {
   actions: ReadonlyArray<ListAction<DraftModel>>
   checked: boolean
+  cursor?: boolean
   draft: DraftModel
   isDetailTarget: boolean
   onCheck: (id: string, checked: boolean) => void
@@ -37,12 +38,14 @@ export function DraftRow(props: {
         'data-selected:hover:bg-accent-soft',
         'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40',
       )}
+      cursor={props.cursor}
       dataId={props.draft.id}
       leading={
         <Checkbox
           aria-label={t('drafts.list.checkboxAria', { title })}
           checked={props.checked}
           className="mt-1"
+          cursor={props.cursor}
           onCheckedChange={(checked) => props.onCheck(props.draft.id, checked)}
         />
       }

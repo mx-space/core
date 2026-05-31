@@ -2358,6 +2358,8 @@ export const enUS = {
   'ui.datetimePicker.placeholder': 'Select date and time',
   'ui.datetimePicker.time': 'Time',
   'ui.layout.accountSettings': 'Account settings',
+  'ui.layout.collapseSidebar': 'Collapse sidebar',
+  'ui.layout.expandSidebar': 'Expand sidebar',
   'ui.layout.preferences.language': 'Language',
   'ui.layout.preferences.theme': 'Theme',
   'ui.modal.closeAria': 'Close',
@@ -2453,6 +2455,7 @@ export const enUS = {
   'write.agent.selection.dismiss': 'Dismiss selection',
   'write.agent.session.deleteTitle': 'Delete session',
   'write.agent.session.empty': 'No conversations yet',
+  'write.agent.session.export': 'Export conversation JSON',
   'write.agent.session.loading': 'Loading sessions...',
   'write.agent.session.newSession': 'New session',
   'write.agent.session.newTitle': 'New session',
@@ -2468,7 +2471,13 @@ export const enUS = {
   'write.agent.status.processing': 'Processing…',
   'write.agent.status.thinking': 'Thinking…',
   'write.agent.status.writing': 'Writing…',
+  'write.agent.toast.applyAllFailed':
+    'All edits failed to apply: {conflict} conflict, {error} error (likely blockId mismatch)',
   'write.agent.toast.applyFailed': 'Failed to apply suggestion',
+  'write.agent.toast.applyPartial':
+    'Partially applied: {success} succeeded, {conflict} conflict, {error} failed',
+  'write.agent.toast.exportEmpty': 'Conversation is empty, nothing to export',
+  'write.agent.toast.exportSuccess': 'Conversation JSON exported',
   'write.agent.toast.reapplyFailed': 'Reapply failed',
   'write.agent.toast.reapplyPartial':
     'Reapply done: {success} succeeded, {conflict} conflict, {error} failed',

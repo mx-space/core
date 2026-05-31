@@ -1,4 +1,5 @@
 import type { StoreSetter } from '~/store/types'
+
 import type { FocusScopeStore } from './store'
 
 type Setter = StoreSetter<FocusScopeStore>
@@ -30,6 +31,16 @@ export class FocusScopeActionImpl {
     this.#set({ activeScopeId: id }, false, 'setActiveScope')
   }
 
+  setLastFocusedItem = (scopeId: string, itemId: string | null): void => {
+    const current = this.#get().lastFocusedItemPerScope
+    const existing = current.get(scopeId) ?? null
+    if (existing === itemId) return
+    const next = new Map(current)
+    if (itemId === null) next.delete(scopeId)
+    else next.set(scopeId, itemId)
+    this.#set({ lastFocusedItemPerScope: next }, false, 'setLastFocusedItem')
+  }
+
   registerScope = (id: string): (() => void) => {
     const map = new Map(this.#get().knownScopes)
     map.set(id, (map.get(id) ?? 0) + 1)
@@ -44,11 +55,16 @@ export class FocusScopeActionImpl {
     if (count <= 1) {
       next.delete(id)
       this.#set(
-        (state) => ({
-          activeScopeId:
-            state.activeScopeId === id ? null : state.activeScopeId,
-          knownScopes: next,
-        }),
+        (state) => {
+          const nextLastFocused = new Map(state.lastFocusedItemPerScope)
+          nextLastFocused.delete(id)
+          return {
+            activeScopeId:
+              state.activeScopeId === id ? null : state.activeScopeId,
+            knownScopes: next,
+            lastFocusedItemPerScope: nextLastFocused,
+          }
+        },
         false,
         'unregisterScope',
       )

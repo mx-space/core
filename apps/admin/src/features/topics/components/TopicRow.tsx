@@ -12,6 +12,7 @@ import { TopicAvatar } from './TopicAvatar'
 export function TopicRow(props: {
   actions: ReadonlyArray<ListAction<TopicModel>>
   checked: boolean
+  cursor?: boolean
   isDetailTarget: boolean
   onCheck: (id: string, checked: boolean) => void
   onSelect: (mode: ListRowSelectMode) => void
@@ -33,11 +34,13 @@ export function TopicRow(props: {
         'data-selected:hover:bg-neutral-200/60 dark:data-selected:hover:bg-neutral-800/80',
         'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-400 dark:focus-visible:outline-neutral-500',
       )}
+      cursor={props.cursor}
       dataId={props.topic.id}
       leading={
         <Checkbox
           aria-label={t('topics.list.checkboxAria', { name: props.topic.name })}
           checked={props.checked}
+          cursor={props.cursor}
           onCheckedChange={(checked) => props.onCheck(props.topic.id, checked)}
         />
       }

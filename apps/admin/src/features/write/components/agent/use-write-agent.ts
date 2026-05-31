@@ -215,8 +215,31 @@ export function useWriteAgent(opts: {
     const run = async () => {
       const { applyAgentReviewBatch } =
         await import('~/vendor/rich-editor/utils/apply-agent-review-batch')
-      applyAgentReviewBatch(editor, batch)
+      const summary = applyAgentReviewBatch(editor, batch)
+
+      if (summary.success === 0 && summary.total > 0) {
+        toast.error(
+          t('write.agent.toast.applyAllFailed', {
+            conflict: summary.conflict,
+            error: summary.error,
+          }),
+        )
+        return
+      }
+
       if (mode === 'accept') store.getState().acceptReviewBatch(batchId)
+
+      if (summary.error || summary.conflict) {
+        toast.warning(
+          t('write.agent.toast.applyPartial', {
+            conflict: summary.conflict,
+            error: summary.error,
+            success: summary.success,
+          }),
+        )
+        return
+      }
+
       toast.success(
         mode === 'accept'
           ? t('write.agent.toast.suggestionApplied')

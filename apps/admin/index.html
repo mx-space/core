@@ -124,6 +124,30 @@
         }
       })()
     </script>
+    <script>
+      // Seed sidebar width from localStorage before React mounts to avoid first-paint flash.
+      ;(function () {
+        try {
+          var c = JSON.parse(
+            localStorage.getItem('admin:sidebar-collapsed') || 'false',
+          )
+          var w = JSON.parse(
+            localStorage.getItem('admin:sidebar-width') || '240',
+          )
+          var px =
+            typeof w === 'number' && w >= 200 && w <= 360 ? w : 240
+          document.documentElement.style.setProperty(
+            '--sidebar-width',
+            c ? '0px' : px + 'px',
+          )
+        } catch (_) {
+          document.documentElement.style.setProperty(
+            '--sidebar-width',
+            '240px',
+          )
+        }
+      })()
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -17,7 +17,7 @@ import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
 import { cn } from '~/utils/cn'
 
-import { commentsPageSize, getCommentFilters } from '../constants'
+import { getCommentFilters } from '../constants'
 import { useCommentMutations } from '../hooks/use-comment-mutations'
 import { useCommentsList } from '../hooks/use-comments-list'
 import { buildCommentActions } from './buildCommentActions'
@@ -122,6 +122,10 @@ export function CommentsRouteViewContent() {
     getId: (comment) => comment.id,
     items: comments,
     onBeforeSelectionReset: () => setSelectAllMode(false),
+    onItemFocus: (id) => {
+      const comment = comments.find((c) => c.id === id)
+      if (comment) openComment(comment)
+    },
     resetOn: [state, page],
     scopeId: FOCUS_SCOPE_ID,
   })
@@ -180,6 +184,7 @@ export function CommentsRouteViewContent() {
   return (
     <CommentsRouteContext.Provider value={routeContextValue}>
       <MasterDetailShell
+        detailScopeId={`${FOCUS_SCOPE_ID}-detail`}
         emptyDetail={<CommentDetailEmpty />}
         list={
           <FocusScope
@@ -257,6 +262,7 @@ export function CommentsRouteViewContent() {
                     checked={selection.isSelected(comment.id)}
                     comment={comment}
                     currentFilter={state}
+                    cursor={selection.isCursor(comment.id)}
                     isDetailTarget={detailId === comment.id}
                     key={comment.id}
                     onCheck={() => selection.toggleWithAnchor(comment.id)}
@@ -271,7 +277,7 @@ export function CommentsRouteViewContent() {
                       else if (mode === 'toggle')
                         selection.toggleWithAnchor(comment.id)
                       else {
-                        selection.selectOne(comment.id)
+                        selection.setCursor(comment.id)
                         openComment(comment)
                       }
                     }}

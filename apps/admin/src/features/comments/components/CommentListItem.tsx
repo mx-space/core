@@ -17,6 +17,7 @@ export function CommentListItem(props: {
   checked: boolean
   comment: CommentModel
   currentFilter: CommentState
+  cursor?: boolean
   isDetailTarget: boolean
   onCheck: (id: string, checked: boolean) => void
   onMarkJunk: (id: string) => void
@@ -71,12 +72,14 @@ export function CommentListItem(props: {
         'data-selected:hover:bg-accent-soft',
         'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40',
       )}
+      cursor={props.cursor}
       dataId={props.comment.id}
       leading={
         <Checkbox
           aria-label={t('comments.list.selectComment')}
           checked={props.checked}
           className="mt-1"
+          cursor={props.cursor}
           onCheckedChange={(checked) =>
             props.onCheck(props.comment.id, checked)
           }

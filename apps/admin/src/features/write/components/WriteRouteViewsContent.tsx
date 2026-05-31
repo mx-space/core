@@ -1740,9 +1740,6 @@ function SlugPill(props: {
         }
         className={cn(
           '-ml-1 mt-1 inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-xs text-fg-muted transition-opacity duration-150 hover:bg-surface-inset focus-visible:ring-[3px] focus-visible:ring-accent/15',
-          hasSlug
-            ? 'opacity-0 hover:!opacity-100 focus-visible:!opacity-100 group-hover:opacity-70'
-            : 'opacity-0 hover:!opacity-100 focus-visible:!opacity-100 group-hover:opacity-50',
         )}
         type="button"
       >

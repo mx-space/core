@@ -167,10 +167,11 @@ export function OrphanFilesPage() {
     getId: (item) => item.id,
     items: filtered,
     onBeforeSelectionReset: () => setSelectAllAcross(false),
-    resetOn: [page, searchQuery],
     onItemFocus: (id) => {
-      selection.selectOne(id)
+      const item = filtered.find((entry) => entry.id === id)
+      if (item) openItem(item)
     },
+    resetOn: [page, searchQuery],
     scopeId: FOCUS_SCOPE_ID,
   })
   selectionClearRef.current = selection.clear
@@ -223,6 +224,7 @@ export function OrphanFilesPage() {
   return (
     <OrphanFilesRouteContext.Provider value={ctxValue}>
       <MasterDetailShell
+        detailScopeId={`${FOCUS_SCOPE_ID}-detail`}
         emptyDetail={<FileDetailEmpty />}
         list={
           <FocusScope
@@ -362,6 +364,7 @@ export function OrphanFilesPage() {
                   <FileListRow<OrphanFile>
                     actions={actions}
                     checked={selectAllAcross || selection.isSelected(item.id)}
+                    cursor={selection.isCursor(item.id)}
                     isDetailTarget={detailId === item.id}
                     item={item}
                     key={item.id}
@@ -375,7 +378,7 @@ export function OrphanFilesPage() {
                       else if (mode === 'toggle')
                         selection.toggleWithAnchor(item.id)
                       else {
-                        selection.selectOne(item.id)
+                        selection.setCursor(item.id)
                         openItem(item)
                       }
                     }}

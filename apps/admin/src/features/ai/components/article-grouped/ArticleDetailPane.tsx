@@ -45,7 +45,6 @@ export function ArticleDetailPane<TItem>(props: ArticleDetailPaneProps<TItem>) {
     resetOn: [props.article.id],
     actions: props.keyboardActions,
     onItemFocus: (id) => {
-      selection.selectOne(id)
       const item = props.items.find((it) => props.config.getId(it) === id)
       if (item) props.onItemFocus?.(item)
     },
@@ -146,7 +145,7 @@ export function ArticleDetailPane<TItem>(props: ArticleDetailPaneProps<TItem>) {
                     if (mode === 'toggle') selection.toggle(id)
                     else if (mode === 'range') selection.selectRange(id)
                     else {
-                      selection.selectOne(id)
+                      selection.setCursor(id)
                       props.onEdit(item)
                     }
                   }}

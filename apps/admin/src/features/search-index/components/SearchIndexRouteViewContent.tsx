@@ -150,6 +150,7 @@ export function SearchIndexRouteViewContent() {
   return (
     <SearchIndexRouteContext.Provider value={routeContextValue}>
       <MasterDetailShell
+        detailScopeId={`${FOCUS_SCOPE_ID}-detail`}
         emptyDetail={<SearchIndexDetailEmptyState />}
         onDismiss={closeDetail}
         list={

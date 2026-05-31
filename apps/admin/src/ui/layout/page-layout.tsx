@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useEffect } from 'react'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { DesktopSidebarHamburger } from '~/ui/layout/desktop-sidebar-hamburger'
 import { HeaderBackButton } from '~/ui/layout/header-back-button'
 import { MobileHamburger } from '~/ui/layout/mobile-hamburger'
 import { useShellNav } from '~/ui/layout/shell-nav-context'
@@ -88,6 +89,7 @@ export function PageHeader(props: PageHeaderProps) {
     >
       <div className="flex min-w-0 items-center gap-2.5">
         <MobileHamburger />
+        <DesktopSidebarHamburger />
         {props.back ? <HeaderBackButton {...props.back} /> : null}
         {props.icon ? (
           <span className="inline-flex size-6 shrink-0 items-center justify-center border border-border bg-surface-inset text-fg-muted">

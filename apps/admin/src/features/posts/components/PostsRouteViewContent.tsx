@@ -267,7 +267,7 @@ export function PostsRouteViewContent() {
                 onSelect={(id, mode) => {
                   if (mode === 'range') selection.selectRange(id)
                   else if (mode === 'toggle') selection.toggleWithAnchor(id)
-                  else selection.selectOne(id)
+                  else selection.setCursor(id)
                 }}
                 onSelectedChange={() => selection.toggleWithAnchor(post.id)}
                 post={post}

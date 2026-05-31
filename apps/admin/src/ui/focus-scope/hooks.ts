@@ -27,3 +27,18 @@ export function getActiveScopeId(): string | null {
 export function registerFocusScope(id: string): () => void {
   return useFocusScopeStore.getState().registerScope(id)
 }
+
+/** Imperative setter for per-scope last-focused memory. */
+export function setLastFocusedItem(
+  scopeId: string,
+  itemId: string | null,
+): void {
+  useFocusScopeStore.getState().setLastFocusedItem(scopeId, itemId)
+}
+
+/** Imperative read, callable outside React. */
+export function getLastFocusedItem(scopeId: string): string | null {
+  return (
+    useFocusScopeStore.getState().lastFocusedItemPerScope.get(scopeId) ?? null
+  )
+}

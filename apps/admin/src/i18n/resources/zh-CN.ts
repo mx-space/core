@@ -2240,6 +2240,8 @@ export const zhCN = {
   'ui.datetimePicker.placeholder': '选择日期与时间',
   'ui.datetimePicker.time': '时间',
   'ui.layout.accountSettings': '账户设置',
+  'ui.layout.collapseSidebar': '收起侧边栏',
+  'ui.layout.expandSidebar': '展开侧边栏',
   'ui.layout.preferences.language': '语言',
   'ui.layout.preferences.theme': '主题',
   'ui.modal.closeAria': '关闭',
@@ -2333,6 +2335,7 @@ export const zhCN = {
   'write.agent.selection.dismiss': '取消选区',
   'write.agent.session.deleteTitle': '删除对话',
   'write.agent.session.empty': '暂无历史对话',
+  'write.agent.session.export': '导出对话 JSON',
   'write.agent.session.loading': '加载对话中...',
   'write.agent.session.newSession': '新对话',
   'write.agent.session.newTitle': '新建对话',
@@ -2348,7 +2351,13 @@ export const zhCN = {
   'write.agent.status.processing': '处理中…',
   'write.agent.status.thinking': '思考中…',
   'write.agent.status.writing': '写入中…',
+  'write.agent.toast.applyAllFailed':
+    '建议全部应用失败：冲突 {conflict}，错误 {error}（多因目标 blockId 不匹配）',
   'write.agent.toast.applyFailed': '应用建议失败',
+  'write.agent.toast.applyPartial':
+    '部分应用：成功 {success}，冲突 {conflict}，失败 {error}',
+  'write.agent.toast.exportEmpty': '当前对话为空，无可导出内容',
+  'write.agent.toast.exportSuccess': '已导出对话 JSON',
   'write.agent.toast.reapplyFailed': '重新应用失败',
   'write.agent.toast.reapplyPartial':
     '重新应用完成：成功 {success}，冲突 {conflict}，失败 {error}',

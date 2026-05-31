@@ -52,6 +52,15 @@ body {
   @apply overflow-hidden;
 }
 
+/* Suppress grid-template-columns transition while user drags the sidebar handle. */
+body[data-sidebar-resizing='true'] {
+  cursor: col-resize;
+  user-select: none;
+}
+body[data-sidebar-resizing='true'] main {
+  transition: none !important;
+}
+
 @layer base {
   body a {
     color: var(--color-primary);

@@ -258,7 +258,7 @@ export function NotesRouteViewContent() {
                 onSelect={(id, mode) => {
                   if (mode === 'range') selection.selectRange(id)
                   else if (mode === 'toggle') selection.toggleWithAnchor(id)
-                  else selection.selectOne(id)
+                  else selection.setCursor(id)
                 }}
                 onSelectedChange={() => selection.toggleWithAnchor(note.id)}
                 selected={selection.isSelected(note.id)}

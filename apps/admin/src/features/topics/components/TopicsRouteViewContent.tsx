@@ -108,6 +108,10 @@ export function TopicsRouteViewContent() {
     actions,
     getId: (topic) => topic.id,
     items: topics,
+    onItemFocus: (id) => {
+      const topic = topics.find((entry) => entry.id === id)
+      if (topic) openTopic(topic)
+    },
     resetOn: [page],
     scopeId: FOCUS_SCOPE_ID,
   })
@@ -136,6 +140,7 @@ export function TopicsRouteViewContent() {
   return (
     <TopicsRouteContext.Provider value={routeContextValue}>
       <MasterDetailShell
+        detailScopeId={`${FOCUS_SCOPE_ID}-detail`}
         emptyDetail={<TopicDetailEmpty />}
         list={
           <FocusScope
@@ -219,6 +224,7 @@ export function TopicsRouteViewContent() {
                   <TopicRow
                     actions={actions}
                     checked={selection.isSelected(topic.id)}
+                    cursor={selection.isCursor(topic.id)}
                     isDetailTarget={detailId === topic.id}
                     key={topic.id}
                     onCheck={() => selection.toggleWithAnchor(topic.id)}
@@ -227,7 +233,7 @@ export function TopicsRouteViewContent() {
                       else if (mode === 'toggle')
                         selection.toggleWithAnchor(topic.id)
                       else {
-                        selection.selectOne(topic.id)
+                        selection.setCursor(topic.id)
                         openTopic(topic)
                       }
                     }}

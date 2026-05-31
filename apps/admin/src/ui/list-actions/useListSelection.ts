@@ -8,23 +8,37 @@ export interface UseListSelectionOptions<T> {
 }
 
 export interface ListSelectionAPI<T> {
+  /** Explicit (checked) selection set. */
   selectedIds: Set<string>
+  /** True iff id is in the explicit (checked) set. */
   isSelected: (id: string) => boolean
+  /** Explicit selection size. */
   size: number
-  /** Get the resolved targets for the current selection. */
+  /** Get the resolved targets for the explicit selection. */
   getSelectedTargets: () => T[]
-  /** Toggle one id (checkbox click). */
+  /** Toggle one id in the explicit set (checkbox click). */
   toggle: (id: string) => void
-  /** Set selection to a single id. */
+  /** Set the explicit set to a single id. */
   selectOne: (id: string) => void
   /** Range-select from the last anchor to this id; falls back to selectOne if no anchor. */
   selectRange: (id: string) => void
-  /** Toggle and use this id as the new range anchor. */
+  /** Toggle in the explicit set and use this id as the new range anchor. */
   toggleWithAnchor: (id: string) => void
-  /** Select every visible item. */
+  /** Select every visible item (explicit). */
   selectAll: () => void
-  /** Clear selection. */
+  /** Clear BOTH explicit selection and cursor. */
   clear: () => void
+  /**
+   * Implicit "cursor" — the row most recently focused via keyboard / click.
+   * Lives outside the explicit set: arrow nav and row-body clicks update it
+   * without disturbing checked items. `null` when no cursor (e.g. after the
+   * scope is deactivated).
+   */
+  cursorId: string | null
+  /** True iff id is the cursor. */
+  isCursor: (id: string) => boolean
+  /** Set the cursor (pass `null` to clear). */
+  setCursor: (id: string | null) => void
 }
 
 /**
@@ -39,6 +53,7 @@ export function useListSelection<T>(
 ): ListSelectionAPI<T> {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [anchorId, setAnchorId] = useState<string | null>(null)
+  const [cursorId, setCursorIdState] = useState<string | null>(null)
 
   // Hold latest items/getId in a ref so getSelectedTargets is always current
   // without needing to memoize callers around items.
@@ -107,6 +122,13 @@ export function useListSelection<T>(
   const clear = useCallback(() => {
     setSelectedIds(new Set())
     setAnchorId(null)
+    setCursorIdState(null)
+  }, [])
+
+  const isCursor = useCallback((id: string) => cursorId === id, [cursorId])
+
+  const setCursor = useCallback((id: string | null) => {
+    setCursorIdState((current) => (current === id ? current : id))
   }, [])
 
   const getSelectedTargets = useCallback((): T[] => {
@@ -123,24 +145,30 @@ export function useListSelection<T>(
   return useMemo(
     () => ({
       clear,
+      cursorId,
       getSelectedTargets,
+      isCursor,
       isSelected,
       selectAll,
       selectedIds,
       selectOne,
       selectRange,
+      setCursor,
       size: selectedIds.size,
       toggle,
       toggleWithAnchor,
     }),
     [
       clear,
+      cursorId,
       getSelectedTargets,
+      isCursor,
       isSelected,
       selectAll,
       selectedIds,
       selectOne,
       selectRange,
+      setCursor,
       toggle,
       toggleWithAnchor,
     ],

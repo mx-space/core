@@ -19,6 +19,7 @@ import {
 import { useNavigate, useOutlet } from 'react-router'
 
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
+import { FocusScope } from '~/ui/focus-scope'
 import { ResizeHandle } from '~/ui/layout/resize-handle'
 import { cn } from '~/utils/cn'
 
@@ -71,6 +72,12 @@ export interface MasterDetailShellProps {
    * 当 history 起点即 detail（如分享链接直入）时，可传 `() => navigate('/drafts')`。
    */
   onDismiss?: () => void
+  /**
+   * 若传，shell 自动以 `<FocusScope id={detailScopeId}>` 包 detail 内容。
+   * 与 list 之 FocusScope 一同登记，使 h/l/←/→ 之 scope switcher 可在 list ↔ detail
+   * 间切换。空 detail 不渲此 scope。命名约定：list scope `<X>-list` → `<X>-list-detail`。
+   */
+  detailScopeId?: string
 }
 
 /**
@@ -108,6 +115,7 @@ export function MasterDetailShell(props: MasterDetailShellProps) {
           className={props.className}
           defaultSize={props.defaultSize}
           detailClassName={props.detailClassName}
+          detailScopeId={props.detailScopeId}
           emptyDetail={props.emptyDetail}
           hasDetail={outlet != null}
           list={props.list}
@@ -120,6 +128,7 @@ export function MasterDetailShell(props: MasterDetailShellProps) {
         <MobileShell
           className={props.className}
           detailClassName={props.detailClassName}
+          detailScopeId={props.detailScopeId}
           list={props.list}
           listClassName={props.listClassName}
           onDismiss={handleDismiss}
@@ -135,6 +144,7 @@ interface DesktopShellProps {
   className?: string
   defaultSize?: number
   detailClassName?: string
+  detailScopeId?: string
   emptyDetail?: ReactNode
   hasDetail: boolean
   list: ReactNode
@@ -178,7 +188,17 @@ function DesktopShell(props: DesktopShellProps) {
         >
           <div className="relative h-full" ref={props.asideRef}>
             {props.hasDetail ? (
-              <Suspense fallback={<DetailSkeleton />}>{props.outlet}</Suspense>
+              props.detailScopeId ? (
+                <FocusScope className="h-full min-h-0" id={props.detailScopeId}>
+                  <Suspense fallback={<DetailSkeleton />}>
+                    {props.outlet}
+                  </Suspense>
+                </FocusScope>
+              ) : (
+                <Suspense fallback={<DetailSkeleton />}>
+                  {props.outlet}
+                </Suspense>
+              )
             ) : (
               props.emptyDetail
             )}
@@ -192,6 +212,7 @@ function DesktopShell(props: DesktopShellProps) {
 interface MobileShellProps {
   className?: string
   detailClassName?: string
+  detailScopeId?: string
   list: ReactNode
   listClassName?: string
   onDismiss: () => void
@@ -354,9 +375,17 @@ function MobileShell(props: MobileShellProps) {
           onPointerDown={handlePointerDown}
           style={{ x }}
         >
-          <Suspense fallback={<DetailSkeleton />}>
-            {lastOutletRef.current}
-          </Suspense>
+          {props.detailScopeId ? (
+            <FocusScope className="h-full min-h-0" id={props.detailScopeId}>
+              <Suspense fallback={<DetailSkeleton />}>
+                {lastOutletRef.current}
+              </Suspense>
+            </FocusScope>
+          ) : (
+            <Suspense fallback={<DetailSkeleton />}>
+              {lastOutletRef.current}
+            </Suspense>
+          )}
         </motion.div>
       ) : null}
     </div>
