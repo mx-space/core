@@ -2,9 +2,6 @@ import type {
   AssistantMessage,
   AssistantMessageEvent,
   Message as PiMessage,
-  TextContent,
-  ThinkingContent,
-  ToolCall,
   Usage,
 } from '@earendil-works/pi-ai'
 import { Injectable, Logger } from '@nestjs/common'
@@ -16,7 +13,6 @@ import type { AIProviderConfig } from '../ai.types'
 import { AIProviderType } from '../ai.types'
 import { createModelRuntime } from '../runtime'
 import { convert as convertJsonSchema } from '../runtime/json-schema-to-typebox'
-import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
 
 const AI_SDK_ATTRIBUTION_HEADERS = {
   'X-Title': 'Mix Space',
@@ -35,23 +31,13 @@ export interface StreamChatOptions {
   messages: Record<string, unknown>[]
   tools?: ChatToolInput[]
   signal?: AbortSignal
-  conversationId?: string
-}
-
-interface ContentSlot {
-  type: 'text' | 'thinking' | 'toolCall'
-  buffer: string
-  toolCall?: ToolCall
 }
 
 @Injectable()
 export class AiAgentChatService {
   private readonly logger = new Logger(AiAgentChatService.name)
 
-  constructor(
-    private readonly configService: ConfigsService,
-    private readonly conversationRepository: AiAgentConversationRepository,
-  ) {}
+  constructor(private readonly configService: ConfigsService) {}
 
   async resolveProvider(providerId: string): Promise<AIProviderConfig> {
     const aiConfig = await this.configService.get('ai')
@@ -91,103 +77,13 @@ export class AiAgentChatService {
       signal: options.signal,
     })
 
-    const slots = new Map<number, ContentSlot>()
-    let finalUsage: Usage | undefined
-    let finalMessage: AssistantMessage | undefined
-    let terminated: 'done' | 'error' | 'abort' | undefined
-
     try {
       for await (const event of events) {
-        switch (event.type) {
-          case 'text_start': {
-            slots.set(event.contentIndex, { type: 'text', buffer: '' })
-            break
-          }
-          case 'text_delta': {
-            const slot = ensureSlot(slots, event.contentIndex, 'text')
-            slot.buffer += event.delta
-            break
-          }
-          case 'text_end': {
-            const slot = ensureSlot(slots, event.contentIndex, 'text')
-            slot.buffer = event.content
-            break
-          }
-          case 'thinking_start': {
-            slots.set(event.contentIndex, { type: 'thinking', buffer: '' })
-            break
-          }
-          case 'thinking_delta': {
-            const slot = ensureSlot(slots, event.contentIndex, 'thinking')
-            slot.buffer += event.delta
-            break
-          }
-          case 'thinking_end': {
-            const slot = ensureSlot(slots, event.contentIndex, 'thinking')
-            slot.buffer = event.content
-            break
-          }
-          case 'toolcall_start': {
-            slots.set(event.contentIndex, { type: 'toolCall', buffer: '' })
-            break
-          }
-          case 'toolcall_delta': {
-            // partial tool_call payloads are intentionally dropped — only the
-            // toolcall_end event commits a complete ToolCall block.
-            break
-          }
-          case 'toolcall_end': {
-            const slot = ensureSlot(slots, event.contentIndex, 'toolCall')
-            slot.toolCall = event.toolCall
-            break
-          }
-          case 'done': {
-            finalMessage = event.message
-            finalUsage = event.message.usage
-            terminated = 'done'
-            break
-          }
-          case 'error': {
-            finalMessage = event.error
-            finalUsage = event.error.usage
-            terminated =
-              event.reason === 'aborted' || options.signal?.aborted
-                ? 'abort'
-                : 'error'
-            break
-          }
-          default: {
-            break
-          }
-        }
         yield event
       }
     } catch (error) {
-      if (options.signal?.aborted) {
-        terminated = 'abort'
-      } else {
-        terminated = 'error'
-      }
       this.logger.debug(`streamChat caught error: ${(error as Error).message}`)
       throw error
-    } finally {
-      if (options.conversationId) {
-        const draft =
-          finalMessage ??
-          this.buildDraftAssistantMessage({
-            slots,
-            usage: finalUsage,
-            provider,
-            model: options.model,
-            terminated: terminated ?? 'abort',
-          })
-        await this.persistAssistantMessage(options.conversationId, draft).catch(
-          (err) =>
-            this.logger.warn(
-              `Failed to persist assistant message: ${(err as Error).message}`,
-            ),
-        )
-      }
     }
   }
 
@@ -277,62 +173,6 @@ export class AiAgentChatService {
       systemPrompt: systemParts.length > 0 ? systemParts.join('\n') : undefined,
       piMessages,
     }
-  }
-
-  private buildDraftAssistantMessage(args: {
-    slots: Map<number, ContentSlot>
-    usage: Usage | undefined
-    provider: AIProviderConfig
-    model: string
-    terminated: 'done' | 'error' | 'abort'
-  }): AssistantMessage {
-    const indexes = [...args.slots.keys()].sort((a, b) => a - b)
-    const content: AssistantMessage['content'] = []
-    for (const idx of indexes) {
-      const slot = args.slots.get(idx)!
-      if (slot.type === 'text') {
-        if (slot.buffer.length > 0) {
-          content.push({ type: 'text', text: slot.buffer } as TextContent)
-        }
-        continue
-      }
-      if (slot.type === 'thinking') {
-        if (slot.buffer.length > 0) {
-          content.push({
-            type: 'thinking',
-            thinking: slot.buffer,
-          } as ThinkingContent)
-        }
-        continue
-      }
-      if (slot.type === 'toolCall' && slot.toolCall) {
-        content.push(slot.toolCall)
-      }
-    }
-    return {
-      role: 'assistant',
-      content,
-      api:
-        args.provider.type === AIProviderType.Anthropic
-          ? 'anthropic-messages'
-          : 'openai-completions',
-      provider: args.provider.id,
-      model: args.model,
-      usage: args.usage ?? zeroUsage(),
-      stopReason: args.terminated === 'abort' ? 'aborted' : 'stop',
-      timestamp: Date.now(),
-    }
-  }
-
-  private async persistAssistantMessage(
-    conversationId: string,
-    message: AssistantMessage,
-  ): Promise<void> {
-    const existing = await this.conversationRepository.findById(conversationId)
-    if (!existing) return
-    await this.conversationRepository.update(conversationId, {
-      messages: [...existing.messages, message],
-    })
   }
 
   /**
@@ -499,19 +339,6 @@ export class AiAgentChatService {
       body: JSON.stringify(body),
     }
   }
-}
-
-function ensureSlot(
-  slots: Map<number, ContentSlot>,
-  index: number,
-  type: ContentSlot['type'],
-): ContentSlot {
-  let slot = slots.get(index)
-  if (!slot) {
-    slot = { type, buffer: '' }
-    slots.set(index, slot)
-  }
-  return slot
 }
 
 function zeroUsage(): Usage {

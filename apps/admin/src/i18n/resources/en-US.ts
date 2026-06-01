@@ -20,6 +20,26 @@ export const enUS = {
   'ai.action.retryTask': 'Retry task',
   'ai.action.translate': 'Translate',
   'ai.action.translateAll': 'Translate all',
+  'ai.agent.action.abort': 'Abort',
+  'ai.agent.action.approve': 'Approve',
+  'ai.agent.action.delete': 'Delete',
+  'ai.agent.action.new': 'New',
+  'ai.agent.action.send': 'Send',
+  'ai.agent.composer.placeholder': 'Ask about posts, categories, or comments',
+  'ai.agent.dryRun.title': 'Dry run',
+  'ai.agent.empty': 'Start with an operational request.',
+  'ai.agent.model.empty': 'No model available',
+  'ai.agent.model.label': 'Agent model',
+  'ai.agent.model.loading': 'Loading models',
+  'ai.agent.session.empty': 'No conversations',
+  'ai.agent.thinking': 'Thinking',
+  'ai.agent.toast.executeFailed': 'Execution failed.',
+  'ai.agent.toast.noExecuteHandler':
+    'No execute handler is available for this dry run.',
+  'ai.agent.toast.selectModel': 'Select a model before sending.',
+  'ai.agent.toast.turnFailed': 'Agent turn failed.',
+  'ai.agent.toolCall.requested': 'Tool call requested: {payload}',
+  'ai.agent.toolCall.streaming': 'Calling {toolName}',
   'ai.articleGrouped.confirmDelete': 'Delete this {kind}?',
   'ai.articleGrouped.emptyDescription':
     'Generate AI results to see articles here.',
@@ -1428,6 +1448,9 @@ export const enUS = {
 
   'routes.ai.description': 'AI task surfaces and enrichment workflows.',
   'routes.ai.title': 'AI',
+  'routes.aiAgent.description':
+    'General admin agent workbench with controlled tools.',
+  'routes.aiAgent.title': 'Agent',
   'routes.aiInsights.description':
     'AI insights, insight translations, and generation tasks.',
   'routes.aiInsights.title': 'Insights',

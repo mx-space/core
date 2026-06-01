@@ -4,7 +4,7 @@ import {
   fauxThinking,
   fauxToolCall,
 } from '@earendil-works/pi-ai'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { withFauxAi } from '@/helper/faux-ai.helper'
 import { AIProviderType } from '~/modules/ai/ai.types'
@@ -15,12 +15,6 @@ const MODEL_ID = 'faux-agent-model'
 
 interface SetupOpts {
   responses: ReturnType<typeof fauxAssistantMessage>[]
-  conversationId?: string
-}
-
-interface FakeConversation {
-  id: string
-  messages: any[]
 }
 
 function setup(opts: SetupOpts) {
@@ -30,22 +24,6 @@ function setup(opts: SetupOpts) {
     models: [{ id: MODEL_ID, name: MODEL_ID }],
     responses: opts.responses,
   })
-  const conversations = new Map<string, FakeConversation>()
-  if (opts.conversationId) {
-    conversations.set(opts.conversationId, {
-      id: opts.conversationId,
-      messages: [],
-    })
-  }
-  const repository = {
-    findById: vi.fn(async (id: string) => conversations.get(id) ?? null),
-    update: vi.fn(async (id: string, patch: Partial<FakeConversation>) => {
-      const conv = conversations.get(id)
-      if (!conv) return null
-      Object.assign(conv, patch)
-      return conv
-    }),
-  }
   const configService = {
     get: vi.fn(async () => ({
       providers: [
@@ -61,14 +39,9 @@ function setup(opts: SetupOpts) {
       ],
     })),
   }
-  const service = new AiAgentChatService(
-    configService as any,
-    repository as any,
-  )
+  const service = new AiAgentChatService(configService as any)
   return {
     service,
-    repository,
-    conversations,
     teardown: () => handle.teardown(),
   }
 }
@@ -135,10 +108,9 @@ describe('ai-agent faux e2e (streamChat)', () => {
     expect(toolEndPayload.name).toBe('add')
   })
 
-  it('aborted-mid-text: persists partial replayable draft', async () => {
+  it('aborted-mid-text: remains stateless and surfaces abort through stream', async () => {
     // Long text so abort can fire mid-stream
     const ctx = setup({
-      conversationId: 'conv-1',
       responses: [
         fauxAssistantMessage(
           'this is a long stream that should be aborted halfway through',
@@ -153,7 +125,6 @@ describe('ai-agent faux e2e (streamChat)', () => {
         model: MODEL_ID,
         providerId: PROVIDER,
         messages: [{ role: 'user', content: 'hi' }],
-        conversationId: 'conv-1',
         signal: controller.signal,
       })) {
         if (event.type === 'text_delta') {
@@ -164,18 +135,12 @@ describe('ai-agent faux e2e (streamChat)', () => {
     } catch {
       /* aborted */
     }
-    // micro-tasks for persist
-    await new Promise((r) => setTimeout(r, 5))
-    const conv = ctx.conversations.get('conv-1')
-    // Either the draft persisted (partial text) or finalMessage persisted; in
-    // both cases the conversation should have at least one assistant message.
-    expect(conv?.messages.length ?? 0).toBeGreaterThanOrEqual(0)
+    expect(collected.length).toBeGreaterThanOrEqual(5)
   })
 
-  it('aborted-mid-toolcall: partial tool_call is dropped (no committed slot)', async () => {
+  it('aborted-mid-toolcall: does not require a persistence target', async () => {
     // Pipe a tool call response; the abort happens before toolcall_end fires.
     const ctx = setup({
-      conversationId: 'conv-2',
       responses: [fauxAssistantMessage([fauxToolCall('add', { a: 1, b: 2 })])],
     })
     torn.push(ctx.teardown)
@@ -186,7 +151,6 @@ describe('ai-agent faux e2e (streamChat)', () => {
         model: MODEL_ID,
         providerId: PROVIDER,
         messages: [{ role: 'user', content: 'go' }],
-        conversationId: 'conv-2',
         signal: controller.signal,
       })) {
         // consume
@@ -194,16 +158,7 @@ describe('ai-agent faux e2e (streamChat)', () => {
     } catch {
       /* expected */
     }
-    await new Promise((r) => setTimeout(r, 5))
-    const conv = ctx.conversations.get('conv-2')
-    // If anything is persisted, no toolCall block should be present (partial drop)
-    const last = conv?.messages.at(-1)
-    if (last) {
-      const hasToolCall = (last.content ?? []).some(
-        (c: any) => c.type === 'toolCall',
-      )
-      expect(hasToolCall).toBe(false)
-    }
+    expect(controller.signal.aborted).toBe(true)
   })
 
   it('pi error event surfaces as thrown', async () => {
