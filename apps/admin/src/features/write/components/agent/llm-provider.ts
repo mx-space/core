@@ -43,6 +43,14 @@ export function createSseLlmProvider({
         tools,
       })
 
+      interface PendingToolCall {
+        id?: string
+        name?: string
+        args: Record<string, unknown>
+        startEmitted: boolean
+      }
+      const pending = new Map<number, PendingToolCall>()
+
       for await (const ev of stream) {
         switch (ev.type) {
           case 'text_delta': {
@@ -53,7 +61,51 @@ export function createSseLlmProvider({
             yield { type: 'thinking', text: ev.delta } satisfies LLMChunk
             break
           }
+          case 'toolcall_start': {
+            const entry: PendingToolCall = {
+              id: ev.id,
+              name: ev.name,
+              args: {},
+              startEmitted: false,
+            }
+            pending.set(ev.contentIndex, entry)
+            if (entry.id && entry.name) {
+              entry.startEmitted = true
+              yield {
+                type: 'tool_call_start',
+                id: entry.id,
+                name: entry.name,
+              } satisfies LLMChunk
+            }
+            break
+          }
+          case 'toolcall_delta': {
+            const entry = pending.get(ev.contentIndex) ?? {
+              args: {},
+              startEmitted: false,
+            }
+            entry.args = { ...entry.args, ...ev.partialArgs }
+            pending.set(ev.contentIndex, entry)
+            if (entry.id && entry.name) {
+              if (!entry.startEmitted) {
+                entry.startEmitted = true
+                yield {
+                  type: 'tool_call_start',
+                  id: entry.id,
+                  name: entry.name,
+                } satisfies LLMChunk
+              }
+              yield {
+                type: 'tool_call_partial',
+                id: entry.id,
+                name: entry.name,
+                argumentsPartial: JSON.stringify(entry.args),
+              } satisfies LLMChunk
+            }
+            break
+          }
           case 'toolcall_end': {
+            pending.delete(ev.contentIndex)
             yield {
               type: 'tool_call',
               id: ev.toolCall.id,
@@ -69,10 +121,9 @@ export function createSseLlmProvider({
           case 'error': {
             throw new Error(ev.message)
           }
-          // text_start / text_end / thinking_start / thinking_end /
-          // toolcall_start / toolcall_delta are not represented in LLMChunk
-          // and are intentionally dropped — haklex assembles content from
-          // delta + tool_call alone.
+          // text_start / text_end / thinking_start / thinking_end are not
+          // represented in LLMChunk and are intentionally dropped — haklex
+          // assembles content from delta + tool_call alone.
         }
       }
     },

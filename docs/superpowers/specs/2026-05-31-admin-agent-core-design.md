@@ -216,6 +216,34 @@ Compilation invariants:
 | Backend is role-only | `toPiMessages` translates the five roles and drops everything else; do not rely on it to forward frame types. |
 | No frame reaches the model unmapped | Every persisted frame the model must see has an explicit wire-role mapping; unmapped frames stay runtime-only. |
 
+### Legacy Message Compatibility
+
+The current write agent persists Haklex-shaped UI bubbles in the same
+`messages` column. The new engine must therefore normalize both new frame-typed
+entries and legacy `type`-based entries before compiling a model request.
+Hydration may preserve UI-only artifacts; compilation must not send UI artifacts
+to the model by accident.
+
+| Persisted legacy entry | Compiled projection |
+| --- | --- |
+| `{ type: 'user' }` | `role: 'user'` with text content. |
+| `{ type: 'assistant' }` | `role: 'assistant'` with text content. |
+| `{ type: 'thinking' }` | Runtime/UI only by default; summarize only if the policy explicitly requires it. |
+| `{ type: 'tool_call' }` | Runtime/UI only unless a complete assistant tool call can be reconstructed. |
+| `{ type: 'tool_result' }` | `role: 'tool_result'` only when `toolCallId`, `toolName`, and textual result content can be reconstructed. |
+| `{ type: 'tool_call_group' }` | UI-only review artifact; compile only a concise tool summary if required for continuity. |
+| `{ type: 'diff_review' }` | UI-only review artifact; model-visible dry-run state must be represented by `dry-run-result`. |
+| `{ type: '__agent_review_state__' }` | Never model-visible. Extract for UI hydration only. |
+
+Compatibility invariants:
+
+| Invariant | Decision |
+| --- | --- |
+| New frames are preferred | New `/ai/agent` conversations should persist explicit frame entries rather than Haklex review artifacts. |
+| Legacy data is readable | Existing write-agent conversations can still hydrate and can still produce a conservative model projection. |
+| UI-only remains UI-only | Review state sentinels, grouped tool views, and diff review controls are not raw prompt material. |
+| Compatibility is one-way | Legacy projection supports migration; it does not make Haklex bubbles the new canonical schema. |
+
 ### Frame Persistence Rules
 
 Some context must be persisted to preserve prompt-cache locality and support
@@ -269,32 +297,48 @@ Default scene policies:
 
 ```mermaid
 flowchart TD
-  Prompt[User Prompt] --> Core[Agent Core]
-  Core --> Manifest[Tool Manifest]
-  Manifest --> Kind{Tool Kind}
+  User[User Input] --> Compile[Compile Wire Messages]
+  Compile --> Chat[POST /ai/agent/chat]
+  Chat --> Output{Assistant Output}
 
-  Kind -->|Read| ReadTool[Frontend Read Tool]
-  Kind -->|Write Intent| DryRun[Frontend Dry Run]
+  Output -->|Text done| PersistAssistant[Persist Assistant Message]
+  Output -->|Read tool call| ReadTool[Frontend Read Tool]
+  ReadTool --> ToolResult[Append tool_result]
+  ToolResult --> Limit{Iteration Limit?}
+  Limit -->|No| Compile
+  Limit -->|Yes| Stop[Stop With Error Summary]
 
-  ReadTool --> ToolResult[Tool Result Message]
-  DryRun --> Preview[Patch Preview and Impact Report]
-  Preview --> Approve{User Approval}
-  Approve -->|Approve| Execute[Frontend Execute]
-  Approve -->|Reject| Reject[Reject Message]
-
-  Execute --> AdminApi[Admin API]
-  AdminApi --> ExecuteResult[Execute Result Message]
+  Output -->|Write intent| DryRun[Frontend Dry Run]
+  DryRun --> Preview[Persist Dry-run Result]
+  Preview --> Approval{User Approval}
+  Approval -->|Approve| Execute[Frontend Execute]
+  Approval -->|Reject| Reject[Persist Rejection]
+  Execute --> ExecuteResult[Persist Execute Result]
+  ExecuteResult --> Compile
 ```
 
 | Stage | Executor | Rule |
 | --- | --- | --- |
 | Tool declaration | Frontend | Each scene exposes its own tool manifest. |
 | Read tool | Frontend | Can execute directly, subject to pagination, field selection, and redaction. |
+| Read continuation | Frontend loop | After a read tool result is appended, the engine recompiles wire messages and resumes the model turn. |
 | Write intent | Model output | Produces structured intent only; it never calls admin write APIs directly. |
 | Dry run | Frontend | Computes patch, impact, conflict state, and blocking reasons. |
 | Review | User | UI shows diff, affected resources, risk, and intended API calls. |
 | Execute | Frontend | Runs only after approval and against the approved dry-run result. |
-| Persist | Frontend plus conversation API | Stores normalized tool events in the conversation timeline. |
+| Write continuation | Frontend loop | After an approved execute result is appended, the engine may resume the model turn with the execution summary. |
+| Persist | Frontend plus conversation API | Stores normalized tool events in the conversation timeline through the frontend persistence queue. |
+
+### Turn Loop Invariants
+
+| Invariant | Enforcement |
+| --- | --- |
+| Read tools may auto-continue | `tool_result` entries for read calls trigger recompilation and another `POST /ai/agent/chat` call. |
+| Write tools pause at dry run | A dry-run result is persisted and rendered for approval; execution does not occur inside the automatic loop. |
+| Execution resumes only after approval | Approved writes append `execute-result` and may then continue the model turn. |
+| Duplicate tool results are ignored | `toolCallId` is the idempotency key for tool-result insertion. |
+| Loop count is bounded | Each user turn has a `maxToolIterations` limit; exhaustion produces a visible error summary. |
+| Tool calls are scene-scoped | The active scene resolver controls the manifest before each model request. |
 
 ### Tool Categories
 
@@ -316,6 +360,7 @@ flowchart TD
 | User confirms the specific result | The approved hash must match the execution input. |
 | Tool availability is scene-scoped | The scene resolver controls which tools are visible. |
 | Tool events are auditable | Tool call, dry-run, approval, rejection, and execute result enter the timeline. |
+| Tool continuation is explicit | Read and approved execute results may continue the model turn; dry-run results do not execute writes implicitly. |
 
 ## 8. Backend Boundary
 
@@ -351,7 +396,7 @@ proxy is stateless and never persists conversation state.
 
 | Rule | Decision |
 | --- | --- |
-| Single writer | The frontend persists the conversation via `PUT /ai/agent/conversations/:id/messages` (whole-array replace). |
+| Single writer | The frontend persists the conversation via `PUT /ai/agent/conversations/:id/messages` (whole-array replace) through a per-conversation queue. |
 | Stateless chat proxy | `POST /ai/agent/chat` streams model output only; it never writes to the conversation and never receives a `conversationId`. |
 | No server-side append | The model's assistant message is reassembled on the frontend for UIMessage rendering; writing it back is incidental, so no second writer is introduced. |
 
@@ -359,7 +404,48 @@ proxy is stateless and never persists conversation state.
 server-side append path would only add cross-writer sequencing complexity
 (ordering the server's assistant append against the frontend's tool-result
 append) for no real gain. A single frontend writer with whole-array replace
-keeps the write path race-free.
+keeps ownership explicit. Whole-array replace is safe only inside the frontend
+single-writer queue; without that queue, a late stale `PUT` response can
+overwrite a newer snapshot.
+
+### Frontend Persistence Queue
+
+The frontend admin core must serialize persistence per conversation. The queue is
+part of the frontend writer contract, not a backend scene feature.
+
+```mermaid
+flowchart TD
+  Change[Store Changed] --> Snapshot[Build Latest Snapshot]
+  Snapshot --> Enqueue[Enqueue Save]
+  Enqueue --> InFlight{Save In Flight?}
+  InFlight -->|Yes| Coalesce[Coalesce Latest Snapshot]
+  InFlight -->|No| Put[PUT messages]
+  Put --> Pending{Pending Snapshot?}
+  Pending -->|Yes| Put
+  Pending -->|No| Idle[Idle]
+```
+
+| Queue rule | Decision |
+| --- | --- |
+| Per-conversation serialization | At most one `PUT /messages` is in flight for a conversation. |
+| Latest snapshot wins locally | Intermediate snapshots may be coalesced; the final pending snapshot must be written. |
+| Awaitable flush | Session switch, delete, hydrate replacement, and page teardown paths must be able to flush or cancel deliberately. |
+| Stale response isolation | A completed stale request may update metadata only if it still belongs to the current queue generation. |
+| Cross-tab scope | This phase does not claim cross-tab or multi-device write safety. Add generic revision or ETag preconditions only when that scope is required. |
+
+### Title Generation Projection
+
+Conversation title generation remains a generic backend model task, but it must
+not require the backend to understand frontend-private frames. The frontend
+engine provides a compact role-bearing title projection when requesting title
+generation.
+
+| Rule | Decision |
+| --- | --- |
+| Backend remains frame-agnostic | The title endpoint consumes role-bearing title messages, not raw persisted frames. |
+| Frontend owns projection | The engine selects the first useful user/assistant exchange after normalization. |
+| UI-only entries are excluded | Tool views, review sentinels, dry-run controls, and context-only frames are not title prompt material. |
+| Local fallback allowed | If projection is unavailable, the UI may use a derived local title until a model title can be generated. |
 
 **Dead-code removal.** The dormant server-write path must be deleted so it cannot
 be re-wired by accident:
@@ -387,6 +473,9 @@ be re-wired by accident:
 | API compatibility | Current `/ai/agent/chat` and conversation CRUD remain compatible with the existing write agent. |
 | Regression | The current Haklex write agent can still send messages, persist conversations, and generate titles. |
 | E2E-like | Batch article edit fails if dry-run, approval, or hash binding is skipped. |
+| Persistence ordering | Concurrent local save requests are serialized; a stale whole-array replace cannot overwrite the newest queued snapshot. |
+| Tool continuation | Read tool results resume the model loop; dry-run results pause for approval; duplicate `toolCallId` results are ignored. |
+| Title projection | Title generation receives compiled role-bearing messages and never depends on raw frontend frame types. |
 
 Low-signal tests should be avoided:
 
@@ -432,5 +521,6 @@ with the common admin agent core.
 | Stable prefix churn | Minimize through versioned, persisted frames. |
 | Context freshness | Append fresh context late rather than mutating the prefix. |
 | Future floating panel | Must be possible without changing backend conversation schema. |
-| Conversation write authority | Frontend only; the backend chat proxy stays stateless and never appends. |
+| Conversation write authority | Frontend only through a per-conversation persistence queue; the backend chat proxy stays stateless and never appends. |
 | Persisted vs wire schema | The engine compiles rich persisted frames into role-bearing wire messages each turn; the backend translates only the five wire roles. |
+| Title generation | Backend title generation consumes a frontend-compiled role projection, not raw persisted frames. |

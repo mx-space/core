@@ -13,11 +13,6 @@ export class CreateConversationDto extends createZodDto(
   CreateConversationSchema,
 ) {}
 
-export const AppendMessagesSchema = z.object({
-  messages: z.array(z.record(z.string(), z.unknown())).min(1),
-})
-export class AppendMessagesDto extends createZodDto(AppendMessagesSchema) {}
-
 export const ReplaceMessagesSchema = z.object({
   messages: z.array(z.record(z.string(), z.unknown())),
 })
@@ -38,6 +33,13 @@ export const ListConversationsQuerySchema = z.object({
 export class ListConversationsQueryDto extends createZodDto(
   ListConversationsQuerySchema,
 ) {}
+
+export const GenerateTitleSchema = z.object({
+  messages: z.array(z.record(z.string(), z.unknown())).optional(),
+  model: z.string().min(1).nullish(),
+  providerId: z.string().min(1).nullish(),
+})
+export class GenerateTitleDto extends createZodDto(GenerateTitleSchema) {}
 
 // --- Chat Proxy ---
 

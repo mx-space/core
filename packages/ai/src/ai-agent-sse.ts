@@ -40,6 +40,11 @@ const ThinkingEnd = Type.Object({
 const ToolcallStart = Type.Object({
   type: Type.Literal('toolcall_start'),
   contentIndex: Type.Number(),
+  // Tool-call id surfaced from the upstream pi event (extracted from
+  // `event.partial.content[contentIndex].id`). Optional for forward-compat with
+  // pre-existing fixtures and providers that don't surface it; the admin
+  // transport falls back to delaying haklex chunk emission until id is known.
+  id: Type.Optional(Type.String()),
   name: Type.Optional(Type.String()),
 })
 

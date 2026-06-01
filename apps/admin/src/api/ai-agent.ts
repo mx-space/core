@@ -11,6 +11,12 @@ export interface AgentConversation {
   updatedAt: string
 }
 
+export interface AgentTitleProjectionData {
+  messages?: Record<string, unknown>[]
+  model?: string | null
+  providerId?: string | null
+}
+
 export function createAgentConversation(data: {
   messages?: Record<string, unknown>[]
   model?: string | null
@@ -31,16 +37,6 @@ export function getAgentConversations(sessionId: string) {
 
 export function getAgentConversation(id: string) {
   return getJson<AgentConversation>(`/ai/agent/conversations/${id}`)
-}
-
-export function appendAgentConversationMessages(
-  id: string,
-  messages: Record<string, unknown>[],
-) {
-  return patchJson<AgentConversation, { messages: Record<string, unknown>[] }>(
-    `/ai/agent/conversations/${id}/messages`,
-    { messages },
-  )
 }
 
 export function replaceAgentConversationMessages(
@@ -71,9 +67,12 @@ export function deleteAgentConversation(id: string) {
   return deleteJson<void>(`/ai/agent/conversations/${id}`)
 }
 
-export function generateAgentConversationTitle(id: string) {
-  return postJson<AgentConversation, Record<string, never>>(
+export function generateAgentConversationTitle(
+  id: string,
+  data: AgentTitleProjectionData = {},
+) {
+  return postJson<AgentConversation, AgentTitleProjectionData>(
     `/ai/agent/conversations/${id}/title`,
-    {},
+    data,
   )
 }

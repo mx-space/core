@@ -39,22 +39,6 @@ export class AiAgentConversationService {
     return doc
   }
 
-  async appendMessages(id: string, messages: Record<string, unknown>[]) {
-    const existing = await this.conversationRepository.findById(id)
-    const result = existing
-      ? await this.conversationRepository.update(id, {
-          messages: [...existing.messages, ...messages],
-        })
-      : null
-    if (!result) {
-      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
-        message: 'Conversation not found',
-      })
-    }
-    const { messages: _messages, ...rest } = result
-    return rest
-  }
-
   async replaceMessages(id: string, messages: Record<string, unknown>[]) {
     const result = await this.conversationRepository.update(id, { messages })
     if (!result) {
@@ -87,7 +71,14 @@ export class AiAgentConversationService {
     await this.conversationRepository.deleteById(id)
   }
 
-  async generateAndPersistTitle(id: string) {
+  async generateAndPersistTitle(
+    id: string,
+    projection?: {
+      messages?: Record<string, unknown>[]
+      model?: string | null
+      providerId?: string | null
+    },
+  ) {
     const existing = await this.conversationRepository.findById(id)
     if (!existing) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
@@ -98,16 +89,18 @@ export class AiAgentConversationService {
       const { messages: _messages, ...rest } = existing
       return rest
     }
-    if (!existing.model || !existing.providerId) {
+    const messages = projection?.messages?.length
+      ? projection.messages
+      : (existing.messages as Record<string, unknown>[])
+    const model = projection?.model ?? existing.model
+    const providerId = projection?.providerId ?? existing.providerId
+
+    if (!model || !providerId) {
       const { messages: _messages, ...rest } = existing
       return rest
     }
 
-    const title = await this.generateTitle(
-      existing.messages as Record<string, unknown>[],
-      existing.model,
-      existing.providerId,
-    )
+    const title = await this.generateTitle(messages, model, providerId)
     if (!title) {
       const { messages: _messages, ...rest } = existing
       return rest

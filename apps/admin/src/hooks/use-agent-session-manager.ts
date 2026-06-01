@@ -14,6 +14,9 @@ import {
   getAgentConversations,
   replaceAgentConversationMessages,
 } from '../api/ai-agent'
+import { buildTitleProjection } from '../features/agent-core/message-normalizer'
+import type { PersistenceQueue } from '../features/agent-core/persistence-queue'
+import { createPersistenceQueue } from '../features/agent-core/persistence-queue'
 
 export interface AgentSessionMeta {
   id: string
@@ -168,6 +171,12 @@ export function useAgentSessionManager({
     cancel: () => void
     conversationId: string
   } | null>(null)
+  const saveQueuesRef = useRef(
+    new Map<
+      string,
+      PersistenceQueue<Record<string, unknown>[], AgentConversation>
+    >(),
+  )
 
   useEffect(() => {
     abortRef.current = abort
@@ -188,18 +197,34 @@ export function useAgentSessionManager({
     sessionsRef.current = sessions
   }, [sessions])
 
+  const getSaveQueue = useCallback((conversationId: string) => {
+    const existing = saveQueuesRef.current.get(conversationId)
+    if (existing) return existing
+
+    const queue = createPersistenceQueue<
+      Record<string, unknown>[],
+      AgentConversation
+    >({
+      save: (messages) =>
+        replaceAgentConversationMessages(conversationId, messages),
+    })
+    saveQueuesRef.current.set(conversationId, queue)
+    return queue
+  }, [])
+
   const syncMessages = useCallback(
-    (conversationId: string) => {
+    async (conversationId: string) => {
       const state = store.getState()
       const bubbles = state.bubbles
-      if (bubbles.length === 0) return
+      if (bubbles.length === 0) return null
 
       const messages = withEmbeddedReviewState(
         bubbles as unknown as Record<string, unknown>[],
         state.reviewState,
       )
 
-      replaceAgentConversationMessages(conversationId, messages)
+      return getSaveQueue(conversationId)
+        .enqueue(messages)
         .then((updated) => {
           if (!updated) return
           const meta = toSessionMeta(updated)
@@ -215,7 +240,11 @@ export function useAgentSessionManager({
               meta,
             )
           ) {
-            generateAgentConversationTitle(conversationId)
+            generateAgentConversationTitle(conversationId, {
+              messages: buildTitleProjection(messages),
+              model: getModelRef.current(),
+              providerId: getProviderIdRef.current(),
+            })
               .then((withTitle) => {
                 if (!withTitle?.title) return
                 const next = toSessionMeta(withTitle)
@@ -227,24 +256,25 @@ export function useAgentSessionManager({
               })
               .catch(() => {})
           }
+          return updated
         })
-        .catch(() => {})
+        .catch(() => null)
     },
-    [store],
+    [getSaveQueue, store],
   )
 
-  const flushPendingSync = useCallback(() => {
+  const flushPendingSync = useCallback(async () => {
     const pendingSync = pendingSyncRef.current
-    if (!pendingSync) return
+    if (!pendingSync) return null
 
     pendingSync.cancel()
-    syncMessages(pendingSync.conversationId)
     pendingSyncRef.current = null
+    return syncMessages(pendingSync.conversationId)
   }, [syncMessages])
 
   const switchSession = useCallback(
     async (conversationId: string) => {
-      flushPendingSync()
+      await flushPendingSync()
 
       const epoch = ++sessionEpochRef.current
       abortRef.current()
@@ -324,7 +354,7 @@ export function useAgentSessionManager({
   }, [loadSessions])
 
   const createSession = useCallback(() => {
-    flushPendingSync()
+    void flushPendingSync()
     abortRef.current()
     store.getState().reset()
     setActiveSessionId(null)
@@ -335,13 +365,16 @@ export function useAgentSessionManager({
 
   const deleteSession = useCallback(
     async (conversationId: string) => {
-      if (activeSessionIdRef.current === conversationId) flushPendingSync()
+      if (activeSessionIdRef.current === conversationId) {
+        await flushPendingSync()
+      }
 
       try {
         await deleteAgentConversation(conversationId)
       } catch {
         return
       }
+      saveQueuesRef.current.delete(conversationId)
 
       const remaining = sessionsRef.current.filter(
         (session) => session.id !== conversationId,
@@ -378,7 +411,7 @@ export function useAgentSessionManager({
 
       const timer = setTimeout(() => {
         if (activeSessionIdRef.current === conversationId)
-          syncMessages(conversationId)
+          void syncMessages(conversationId)
         pendingSyncRef.current = null
       }, 2000)
 
@@ -447,7 +480,7 @@ export function useAgentSessionManager({
       store.getState().bubbles.length > 0
     if (adoptInMemory) return
 
-    flushPendingSync()
+    void flushPendingSync()
     sessionsRef.current = []
     setSessions([])
     setActiveSessionId(null)
@@ -461,7 +494,7 @@ export function useAgentSessionManager({
 
   useEffect(() => {
     return () => {
-      flushPendingSync()
+      void flushPendingSync()
     }
   }, [flushPendingSync])
 

@@ -22,9 +22,9 @@ import { EntityIdDto } from '~/shared/dto/id.dto'
 import { applyRawCorsHeaders } from '~/utils/sse.util'
 
 import {
-  AppendMessagesDto,
   ChatProxyDto,
   CreateConversationDto,
+  GenerateTitleDto,
   ListConversationsQueryDto,
   ReplaceMessagesDto,
   UpdateConversationDto,
@@ -136,15 +136,6 @@ export class AiAgentController {
     return this.conversationService.updateById(params.id, body)
   }
 
-  @Patch('/conversations/:id/messages')
-  @Auth()
-  appendMessages(
-    @Param() params: EntityIdDto,
-    @Body() body: AppendMessagesDto,
-  ) {
-    return this.conversationService.appendMessages(params.id, body.messages)
-  }
-
   @Put('/conversations/:id/messages')
   @Auth()
   replaceMessages(
@@ -162,8 +153,11 @@ export class AiAgentController {
 
   @Post('/conversations/:id/title')
   @Auth()
-  generateConversationTitle(@Param() params: EntityIdDto) {
-    return this.conversationService.generateAndPersistTitle(params.id)
+  generateConversationTitle(
+    @Param() params: EntityIdDto,
+    @Body() body: GenerateTitleDto,
+  ) {
+    return this.conversationService.generateAndPersistTitle(params.id, body)
   }
 }
 
@@ -196,11 +190,12 @@ function mapPiEventToSse(event: AssistantMessageEvent): AiAgentSseEvent | null {
       return { type: 'thinking_end', contentIndex: event.contentIndex }
     }
     case 'toolcall_start': {
-      const name = extractToolCallName(event.partial, event.contentIndex)
+      const meta = extractToolCallMeta(event.partial, event.contentIndex)
       return {
         type: 'toolcall_start',
         contentIndex: event.contentIndex,
-        ...(name !== undefined ? { name } : {}),
+        ...(meta.id !== undefined ? { id: meta.id } : {}),
+        ...(meta.name !== undefined ? { name: meta.name } : {}),
       }
     }
     case 'toolcall_delta': {
@@ -246,18 +241,19 @@ function mapPiEventToSse(event: AssistantMessageEvent): AiAgentSseEvent | null {
   }
 }
 
-function extractToolCallName(
+function extractToolCallMeta(
   partial: unknown,
   contentIndex: number,
-): string | undefined {
+): { id?: string; name?: string } {
   const blocks = (partial as { content?: Array<Record<string, unknown>> })
     ?.content
-  if (!Array.isArray(blocks)) return undefined
+  if (!Array.isArray(blocks)) return {}
   const block = blocks[contentIndex]
-  if (block && block.type === 'toolCall' && typeof block.name === 'string') {
-    return block.name
-  }
-  return undefined
+  if (!block || block.type !== 'toolCall') return {}
+  const meta: { id?: string; name?: string } = {}
+  if (typeof block.id === 'string') meta.id = block.id
+  if (typeof block.name === 'string') meta.name = block.name
+  return meta
 }
 
 function safeParsePartialArgs(delta: string): Record<string, unknown> {
