@@ -60,7 +60,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@clack/prompts": "^1.4.0",
+    "@clack/prompts": "^1.5.0",
     "@effect/cli": "0.75.1",
     "@effect/platform": "0.96.1",
     "@effect/platform-node": "0.106.0",
@@ -69,7 +69,7 @@
     "@haklex/rich-litexml-cli": "0.18.0",
     "@lexical/headless": "^0.44.0",
     "@mx-space/api-client": "workspace:*",
-    "better-auth": "^1.6.11",
+    "better-auth": "^1.6.13",
     "effect": "3.21.2",
     "fast-xml-parser": "5.8.0",
     "get-east-asian-width": "^1.6.0",
@@ -83,7 +83,7 @@
     "@types/node": "25.9.1",
     "@types/semver": "7.7.1",
     "tsdown": "0.22.0",
-    "tsx": "^4.22.3",
+    "tsx": "^4.22.4",
     "typescript": "6.0.3",
     "vitest": "4.1.7"
   }
