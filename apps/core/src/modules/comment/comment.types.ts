@@ -31,6 +31,8 @@ export interface CommentRow {
   ip: string | null
   agent: string | null
   location: string | null
+  isOwnerReply: boolean
+  countryCode: string | null
   createdAt: Date
 }
 
@@ -65,6 +67,8 @@ export interface CommentCreateInput {
   ip?: string | null
   agent?: string | null
   location?: string | null
+  isOwnerReply?: boolean
+  countryCode?: string | null
 }
 
 export interface CommentFindFilter {
@@ -72,6 +76,68 @@ export interface CommentFindFilter {
   refType?: CommentRefType
   refId?: EntityId | string
   search?: string
+  tab?: CommentTab
+  author?: string
+}
+
+/**
+ * Inbox tabs surfaced by `/comments` admin route. `state` (numeric) is the
+ * deprecated parameter; `tab` semantics supersede it (spec §6.1).
+ */
+export type CommentTab =
+  | 'unread'
+  | 'read'
+  | 'junk'
+  | 'whispers'
+  | 'awaiting'
+  | 'all'
+
+export interface CommentTabCounts {
+  unread: number
+  read: number
+  junk: number
+  whispers: number
+  awaiting: number
+  all: number
+}
+
+export interface CommentTabCountsFilter {
+  refType?: CommentRefType
+  refId?: EntityId | string
+}
+
+export type AuthorThreatLevel = 'trusted' | 'neutral' | 'risk'
+
+export interface AuthorActivityItem {
+  id: EntityId
+  createdAt: Date
+  refType: CommentRefType
+  refId: EntityId
+  textExcerpt: string
+  state: number
+  isDeleted: boolean
+}
+
+export interface AuthorActivity {
+  totalCount: number
+  firstSeenAt: Date | null
+  lastSeenAt: Date | null
+  items: AuthorActivityItem[]
+  threatLevel: AuthorThreatLevel
+  threatReason?: string
+}
+
+export interface AuthorActivityFilter {
+  mail?: string
+  ip?: string
+  limit?: number
+}
+
+export interface CommentSourceCandidate {
+  refType: CommentRefType
+  refId: EntityId
+  count: number
+  latestCommentAt: Date
 }
 
 export type CommentRootSort = 'pinned' | 'newest' | 'oldest'

@@ -11,6 +11,7 @@ import { AppRoutes } from './routes'
 import { AdminShell } from './shell'
 import { SocketBridge } from './socket/SocketBridge'
 import { installThemeTokens } from './theme'
+import { KeyboardShortcutsProvider } from './ui/keyboard-shortcut-overlay'
 
 const publicPathSet = new Set(publicRoutes.map((route) => route.path))
 
@@ -68,10 +69,12 @@ function ProtectedAdminApp() {
   }
 
   return (
-    <AdminShell>
-      <SocketBridge />
-      <AppRoutes />
-    </AdminShell>
+    <KeyboardShortcutsProvider>
+      <AdminShell>
+        <SocketBridge />
+        <AppRoutes />
+      </AdminShell>
+    </KeyboardShortcutsProvider>
   )
 }
 

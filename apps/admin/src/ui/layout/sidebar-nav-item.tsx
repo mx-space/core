@@ -34,7 +34,7 @@ export function SidebarNavItem(props: {
     : titleText
   const isSelfRouteActive = props.isRouteActive(props.node.route)
   const parentClassName = cn(
-    'grid w-full grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-2 rounded-sm text-left transition-colors',
+    'grid w-full cursor-default grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-2 rounded-sm text-left transition-colors',
     props.depth === 0 ? 'h-8 px-3 text-sm' : 'h-8 px-2 text-sm',
     isSelfRouteActive
       ? activeLinkClassName

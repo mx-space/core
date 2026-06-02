@@ -5,13 +5,14 @@ import { toast } from 'sonner'
 import {
   batchDeleteComments,
   batchUpdateCommentState,
+  type CommentListState,
+  type CommentRefType,
   deleteComment,
   replyComment,
   updateCommentState,
 } from '~/api/comments'
 import { useI18n } from '~/i18n'
-import type { CommentModel } from '~/models/comment'
-import { CommentState } from '~/models/comment'
+import type { CommentModel, CommentState } from '~/models/comment'
 
 import { commentsQueryKey } from '../constants'
 
@@ -19,8 +20,11 @@ interface UseCommentMutationsOptions {
   getSelectedTargets: () => CommentModel[]
   onAfterBatchSuccess?: () => void
   onAfterDeleteSuccess?: () => void
+  refId?: string
+  refType?: CommentRefType
+  search?: string
   selectAllMode: boolean
-  state: CommentState
+  state: CommentListState
 }
 
 export function useCommentMutations(options: UseCommentMutationsOptions) {
@@ -54,7 +58,11 @@ export function useCommentMutations(options: UseCommentMutationsOptions) {
       if (options.selectAllMode) {
         return batchUpdateCommentState({
           all: true,
-          currentState: options.state,
+          currentState:
+            typeof options.state === 'number' ? options.state : undefined,
+          refId: options.refId,
+          refType: options.refType,
+          search: options.search,
           state: nextState,
         })
       }
@@ -74,7 +82,13 @@ export function useCommentMutations(options: UseCommentMutationsOptions) {
   const batchDeleteMutation = useMutation({
     mutationFn: () => {
       if (options.selectAllMode) {
-        return batchDeleteComments({ all: true, state: options.state })
+        return batchDeleteComments({
+          all: true,
+          refId: options.refId,
+          refType: options.refType,
+          search: options.search,
+          state: typeof options.state === 'number' ? options.state : undefined,
+        })
       }
 
       return batchDeleteComments({

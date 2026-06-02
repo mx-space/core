@@ -9,6 +9,7 @@ import {
   inArray,
   lte,
   ne,
+  or,
   type SQL,
   sql,
 } from 'drizzle-orm'
@@ -26,6 +27,8 @@ import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import { CommentState } from './comment.enum'
 import type {
+  AuthorActivityFilter,
+  AuthorActivityItem,
   CommentCreateInput,
   CommentFindFilter,
   CommentPublicFilterOptions,
@@ -34,6 +37,10 @@ import type {
   CommentRootSort,
   CommentRow,
   CommentRowWithRelations,
+  CommentSourceCandidate,
+  CommentTab,
+  CommentTabCounts,
+  CommentTabCountsFilter,
 } from './comment.types'
 
 const normalizeCommentRefType = (refType: CommentRefType): CommentRefType =>
@@ -69,6 +76,8 @@ const mapBase = (row: typeof comments.$inferSelect): CommentRow => ({
   ip: row.ip,
   agent: row.agent,
   location: row.location,
+  isOwnerReply: row.isOwnerReply,
+  countryCode: row.countryCode,
   createdAt: row.createdAt,
 })
 
@@ -263,6 +272,26 @@ export class CommentRepository extends BaseRepository {
     return this.findVisibleRepliesForRoots([rootCommentId], options)
   }
 
+  async findAdminThreadByRoot(
+    rootCommentId: EntityId | string,
+  ): Promise<CommentRow[]> {
+    const rootBig = parseEntityId(rootCommentId)
+    const rows = await this.db
+      .select()
+      .from(comments)
+      .where(or(eq(comments.id, rootBig), eq(comments.rootCommentId, rootBig)))
+      .orderBy(asc(comments.createdAt))
+    const mapped = rows.map(mapBase)
+    const rootIndex = mapped.findIndex(
+      (row) => String(row.id) === String(rootBig),
+    )
+    if (rootIndex > 0) {
+      const [root] = mapped.splice(rootIndex, 1)
+      mapped.unshift(root)
+    }
+    return mapped
+  }
+
   async create(input: CommentCreateInput): Promise<CommentRow> {
     const id = this.snowflake.nextId()
     const [row] = await this.db
@@ -292,6 +321,8 @@ export class CommentRepository extends BaseRepository {
         ip: input.ip ?? null,
         agent: input.agent ?? null,
         location: input.location ?? null,
+        isOwnerReply: input.isOwnerReply ?? false,
+        countryCode: input.countryCode ?? null,
       })
       .returning()
     return mapBase(row)
@@ -337,6 +368,8 @@ export class CommentRepository extends BaseRepository {
           ip: input.ip ?? null,
           agent: input.agent ?? null,
           location: input.location ?? null,
+          isOwnerReply: input.isOwnerReply ?? false,
+          countryCode: input.countryCode ?? null,
         })
         .returning()
       await tx
@@ -608,6 +641,18 @@ export class CommentRepository extends BaseRepository {
     return result.length
   }
 
+  async updateStateByFilter(
+    filter: CommentFindFilter,
+    state: number,
+  ): Promise<number> {
+    const result = await this.db
+      .update(comments)
+      .set({ state })
+      .where(this.buildFindFilter(filter))
+      .returning({ id: comments.id })
+    return result.length
+  }
+
   async paginatedFind(
     filter: CommentFindFilter,
     page = 1,
@@ -636,10 +681,55 @@ export class CommentRepository extends BaseRepository {
     }
   }
 
+  async findByFilter(filter: CommentFindFilter): Promise<CommentRow[]> {
+    const rows = await this.db
+      .select()
+      .from(comments)
+      .where(this.buildFindFilter(filter))
+      .orderBy(desc(comments.createdAt))
+    return rows.map(mapBase)
+  }
+
+  async findSourceCandidates(options: {
+    refType?: CommentRefType
+    size?: number
+  }): Promise<CommentSourceCandidate[]> {
+    const filters: SQL[] = []
+    if (options.refType)
+      filters.push(
+        eq(comments.refType, normalizeCommentRefType(options.refType)),
+      )
+    const where = filters.length ? and(...filters) : undefined
+    const rows = await this.db
+      .select({
+        refType: comments.refType,
+        refId: comments.refId,
+        count: sql<number>`count(*)::int`,
+        latestCommentAt: sql<Date>`max(${comments.createdAt})`,
+      })
+      .from(comments)
+      .where(where)
+      .groupBy(comments.refType, comments.refId)
+      .orderBy(desc(sql`max(${comments.createdAt})`))
+      .limit(Math.min(100, Math.max(1, options.size ?? 30)))
+
+    return rows
+      .filter((row) => row.refId)
+      .map((row) => ({
+        refType: row.refType as CommentRefType,
+        refId: toEntityId(row.refId!) as EntityId,
+        count: Number(row.count ?? 0),
+        latestCommentAt: row.latestCommentAt,
+      }))
+  }
+
   private buildFindFilter(filter: CommentFindFilter): SQL | undefined {
     const filters: SQL[] = []
-    if (filter.state !== undefined)
+    if (filter.tab) {
+      filters.push(...this.tabPredicate(filter.tab))
+    } else if (filter.state !== undefined) {
       filters.push(eq(comments.state, filter.state))
+    }
     if (filter.refType)
       filters.push(
         eq(comments.refType, normalizeCommentRefType(filter.refType)),
@@ -647,7 +737,227 @@ export class CommentRepository extends BaseRepository {
     if (filter.refId)
       filters.push(eq(comments.refId, parseEntityId(filter.refId)))
     if (filter.search) filters.push(ilike(comments.text, `%${filter.search}%`))
+    if (filter.author) {
+      const needle = filter.author.trim()
+      if (needle) {
+        // Match either mail or origin IP — used by the spec §6.2 "View all
+        // activity by this author" navigation from the detail sidebar.
+        filters.push(
+          or(eq(comments.mail, needle), eq(comments.ip, needle)) as SQL,
+        )
+      }
+    }
     return filters.length > 0 ? and(...filters) : undefined
+  }
+
+  /**
+   * Tab → SQL predicate fragments. Mirrors the `COUNT(*) FILTER (WHERE …)`
+   * branches in `getTabCounts` so list and counts stay in sync (spec §6.1).
+   */
+  private tabPredicate(tab: CommentTab): SQL[] {
+    switch (tab) {
+      case 'unread': {
+        return [
+          eq(comments.state, CommentState.Unread),
+          eq(comments.isDeleted, false),
+        ]
+      }
+      case 'read': {
+        return [
+          eq(comments.state, CommentState.Read),
+          eq(comments.isDeleted, false),
+        ]
+      }
+      case 'junk': {
+        return [eq(comments.state, CommentState.Junk)]
+      }
+      case 'whispers': {
+        return [eq(comments.isWhispers, true), eq(comments.isDeleted, false)]
+      }
+      case 'awaiting': {
+        return [
+          ne(comments.state, CommentState.Junk),
+          eq(comments.isDeleted, false),
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${comments} AS owner_reply
+            WHERE owner_reply.root_comment_id = COALESCE(${comments.rootCommentId}, ${comments.id})
+              AND owner_reply.is_owner_reply = TRUE
+              AND owner_reply.created_at > ${comments.createdAt}
+          )`,
+        ]
+      }
+      case 'all': {
+        return [eq(comments.isDeleted, false)]
+      }
+    }
+  }
+
+  /**
+   * Single-round-trip tab counts (spec §6.1).
+   *
+   * Uses Postgres `COUNT(*) FILTER (WHERE …)` so every tab share the same
+   * scan + the same `refType`/`refId` predicate.
+   */
+  async getTabCounts(
+    filter: CommentTabCountsFilter = {},
+  ): Promise<CommentTabCounts> {
+    const refTypeValue = filter.refType
+      ? normalizeCommentRefType(filter.refType)
+      : null
+    const refIdValue = filter.refId ? parseEntityId(filter.refId) : null
+
+    const result = await this.db.execute<{
+      unread: number
+      read: number
+      junk: number
+      whispers: number
+      awaiting: number
+      all: number
+    }>(sql`
+      SELECT
+        COUNT(*) FILTER (WHERE state = 0 AND is_deleted = false)::int AS unread,
+        COUNT(*) FILTER (WHERE state = 1 AND is_deleted = false)::int AS read,
+        COUNT(*) FILTER (WHERE state = 2)::int                         AS junk,
+        COUNT(*) FILTER (WHERE is_whispers = true AND is_deleted = false)::int AS whispers,
+        COUNT(*) FILTER (
+          WHERE state != 2 AND is_deleted = false AND NOT EXISTS (
+            SELECT 1 FROM ${comments} AS owner_reply
+            WHERE owner_reply.root_comment_id = COALESCE(${comments.rootCommentId}, ${comments.id})
+              AND owner_reply.is_owner_reply = true
+              AND owner_reply.created_at > ${comments.createdAt}
+          )
+        )::int AS awaiting,
+        COUNT(*) FILTER (WHERE is_deleted = false)::int AS "all"
+      FROM ${comments}
+      WHERE (${refTypeValue}::text IS NULL OR ref_type = ${refTypeValue})
+        AND (${refIdValue}::text IS NULL OR ref_id  = ${refIdValue})
+    `)
+
+    const row = result.rows[0]
+    return {
+      unread: Number(row?.unread ?? 0),
+      read: Number(row?.read ?? 0),
+      junk: Number(row?.junk ?? 0),
+      whispers: Number(row?.whispers ?? 0),
+      awaiting: Number(row?.awaiting ?? 0),
+      all: Number(row?.all ?? 0),
+    }
+  }
+
+  /**
+   * Activity feed for the detail sidebar (spec §6.3).
+   *
+   * `mail` OR `ip` matches; consumers must supply at least one (enforced by
+   * the schema, re-checked at the boundary for callers that bypass DTOs).
+   */
+  async getAuthorActivity(
+    filter: AuthorActivityFilter & { limit?: number },
+  ): Promise<{
+    items: AuthorActivityItem[]
+    totalCount: number
+    firstSeenAt: Date | null
+    lastSeenAt: Date | null
+    junkInLast30Days: number
+    sameNetJunkInLast7Days: number
+  }> {
+    const mail = filter.mail?.trim() || null
+    const ip = filter.ip?.trim() || null
+    if (!mail && !ip) {
+      return {
+        items: [],
+        totalCount: 0,
+        firstSeenAt: null,
+        lastSeenAt: null,
+        junkInLast30Days: 0,
+        sameNetJunkInLast7Days: 0,
+      }
+    }
+
+    const limit = Math.min(50, Math.max(1, filter.limit ?? 5))
+    const identityClauses: SQL[] = []
+    if (mail) identityClauses.push(eq(comments.mail, mail))
+    if (ip) identityClauses.push(eq(comments.ip, ip))
+    const identityFilter =
+      identityClauses.length === 1
+        ? identityClauses[0]!
+        : (or(...identityClauses) as SQL)
+
+    const itemsRows = await this.db
+      .select({
+        id: comments.id,
+        createdAt: comments.createdAt,
+        refType: comments.refType,
+        refId: comments.refId,
+        text: comments.text,
+        state: comments.state,
+        isDeleted: comments.isDeleted,
+      })
+      .from(comments)
+      .where(identityFilter)
+      .orderBy(desc(comments.createdAt))
+      .limit(limit)
+
+    const [aggregateRow] = await this.db
+      .select({
+        total: sql<number>`count(*)::int`,
+        firstSeenAt: sql<Date | null>`min(${comments.createdAt})`,
+        lastSeenAt: sql<Date | null>`max(${comments.createdAt})`,
+        junkInLast30Days: sql<number>`count(*) FILTER (
+          WHERE ${comments.state} = ${CommentState.Junk}
+            AND ${comments.createdAt} > now() - interval '30 days'
+        )::int`,
+      })
+      .from(comments)
+      .where(identityFilter)
+
+    // /24 IP cohort: same first three octets, junk in the last 7 days.
+    let sameNetJunkInLast7Days = 0
+    if (ip) {
+      const slash24 = this.toSlash24Prefix(ip)
+      if (slash24) {
+        const [netRow] = await this.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(comments)
+          .where(
+            and(
+              eq(comments.state, CommentState.Junk),
+              sql`${comments.ip} LIKE ${`${slash24}.%`}`,
+              sql`${comments.createdAt} > now() - interval '7 days'`,
+            )!,
+          )
+        sameNetJunkInLast7Days = Number(netRow?.count ?? 0)
+      }
+    }
+
+    const items: AuthorActivityItem[] = itemsRows.map((row) => ({
+      id: toEntityId(row.id) as EntityId,
+      createdAt: row.createdAt,
+      refType: row.refType as CommentRefType,
+      refId: toEntityId(row.refId) as EntityId,
+      textExcerpt: this.makeExcerpt(row.text, 120),
+      state: row.state,
+      isDeleted: row.isDeleted,
+    }))
+
+    return {
+      items,
+      totalCount: Number(aggregateRow?.total ?? 0),
+      firstSeenAt: aggregateRow?.firstSeenAt ?? null,
+      lastSeenAt: aggregateRow?.lastSeenAt ?? null,
+      junkInLast30Days: Number(aggregateRow?.junkInLast30Days ?? 0),
+      sameNetJunkInLast7Days,
+    }
+  }
+
+  private toSlash24Prefix(ip: string): string | null {
+    const ipv4 = ip.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
+    if (!ipv4) return null
+    return `${ipv4[1]}.${ipv4[2]}.${ipv4[3]}`
+  }
+
+  private makeExcerpt(text: string, max: number): string {
+    const t = text.trim().replaceAll(/\s+/g, ' ')
+    return t.length <= max ? t : `${t.slice(0, max - 1)}…`
   }
 
   private buildPublicThreadFilters({

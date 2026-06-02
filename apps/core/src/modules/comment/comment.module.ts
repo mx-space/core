@@ -12,6 +12,7 @@ import { CommentRepository } from './comment.repository'
 import { CommentService } from './comment.service'
 import { CommentSpamFilterService } from './comment.spam-filter'
 import { CommentAnchorService } from './comment-anchor.service'
+import { CommentCountryService } from './comment-country.service'
 import { CommentReaderFillService } from './comment-reader-fill.service'
 
 @Module({
@@ -22,6 +23,7 @@ import { CommentReaderFillService } from './comment-reader-fill.service'
     CommentLifecycleService,
     CommentSpamFilterService,
     CommentAnchorService,
+    CommentCountryService,
     CommentReaderFillService,
   ],
   exports: [
@@ -30,6 +32,7 @@ import { CommentReaderFillService } from './comment-reader-fill.service'
     CommentLifecycleService,
     CommentSpamFilterService,
     CommentAnchorService,
+    CommentCountryService,
     CommentReaderFillService,
   ],
   imports: [

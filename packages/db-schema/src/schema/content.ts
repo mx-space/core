@@ -311,6 +311,8 @@ export const comments = pgTable(
     }),
     editedAt: tsCol('edited_at'),
     anchor: jsonb('anchor').$type<Record<string, unknown> | null>(),
+    isOwnerReply: boolean('is_owner_reply').notNull().default(false),
+    countryCode: text('country_code'),
   },
   (table) => [
     index('comments_thread_idx').on(

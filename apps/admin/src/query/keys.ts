@@ -55,11 +55,26 @@ export const adminQueryKeys = {
     tags: () => ['categories', 'tags'] as const,
   },
   comments: {
+    authorActivity: (params: { mail?: string; ip?: string }) =>
+      ['comments', 'author-activity', params] as const,
     listRoot: ['comments', 'list'] as const,
-    list: (params: { page: number; size: number; state: number }) =>
-      ['comments', 'list', params] as const,
+    list: (params: {
+      author?: string
+      page: number
+      refId?: string
+      refType?: string
+      search?: string
+      size: number
+      state: number | 'all'
+      tab?: string
+    }) => ['comments', 'list', params] as const,
     owner: () => ['comments', 'owner'] as const,
     root: ['comments'] as const,
+    sourceCandidates: (params: { refType?: string; search?: string }) =>
+      ['comments', 'source-candidates', params] as const,
+    tabCounts: (filter: { refType?: string; refId?: string } = {}) =>
+      ['comments', 'tab-counts', filter] as const,
+    thread: (id: string) => ['comments', 'thread', id] as const,
   },
   cron: {
     definitionRoot: ['cron-task-definitions'] as const,

@@ -135,4 +135,56 @@ describe('CommentService thread queries', () => {
       author: 'Reader Nine',
     })
   })
+
+  it('returns source candidates from commented refs', async () => {
+    const { repository, service } = createCommentServiceFixture()
+    repository.findSourceCandidates.mockResolvedValue([
+      {
+        refId: 'post-1',
+        refType: 'post',
+        count: 3,
+        latestCommentAt: new Date('2026-06-01T00:00:00.000Z'),
+      },
+    ])
+
+    const candidates = await service.getSourceCandidates({ search: 'post' })
+
+    expect(repository.findSourceCandidates).toHaveBeenCalledWith({
+      refType: undefined,
+      size: 100,
+    })
+    expect(candidates).toMatchObject([
+      {
+        id: 'post-1',
+        type: 'post',
+        title: 'Post',
+        commentCount: 3,
+      },
+    ])
+  })
+
+  it('loads an admin thread from a child comment and preserves the selected item', async () => {
+    const { repository, service } = createCommentServiceFixture()
+    const root = createCommentRow({ id: 'root-1' })
+    const child = createCommentRow({
+      id: 'child-1',
+      parentCommentId: 'root-1',
+      rootCommentId: 'root-1',
+      state: 2,
+    })
+    repository.findById.mockResolvedValue(child)
+    repository.findAdminThreadByRoot.mockResolvedValue([root, child])
+    repository.findManyByIds.mockResolvedValue([root])
+
+    const result = await service.getAdminThreadForComment('child-1')
+
+    expect(repository.findAdminThreadByRoot).toHaveBeenCalledWith('root-1')
+    expect(result).toMatchObject({
+      currentCommentId: 'child-1',
+      rootCommentId: 'root-1',
+      current: { id: 'child-1', state: 2 },
+      root: { id: 'root-1' },
+      thread: [{ id: 'root-1' }, { id: 'child-1' }],
+    })
+  })
 })

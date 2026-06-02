@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '~/utils/cn'
 
 export type BadgeTone =
+  | 'accent'
   | 'danger'
   | 'info'
   | 'neutral'
@@ -29,6 +30,7 @@ const sizeClass: Record<BadgeSize, string> = {
 }
 
 const borderedToneClass: Record<BadgeTone, string> = {
+  accent: 'border-accent/40 bg-accent-soft text-accent',
   danger:
     'border-red-200 bg-red-50 text-red-700 dark:border-red-950 dark:bg-red-950/40 dark:text-red-300',
   info: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300',
@@ -41,6 +43,7 @@ const borderedToneClass: Record<BadgeTone, string> = {
 }
 
 const softToneClass: Record<BadgeTone, string> = {
+  accent: 'bg-accent-soft text-accent',
   danger: 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300',
   info: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300',
   neutral:
@@ -52,8 +55,8 @@ const softToneClass: Record<BadgeTone, string> = {
 }
 
 const outlineToneClass: Record<BadgeTone, string> = {
-  danger:
-    'border-red-200 text-red-700 dark:border-red-900 dark:text-red-300',
+  accent: 'border-accent text-accent',
+  danger: 'border-red-200 text-red-700 dark:border-red-900 dark:text-red-300',
   info: 'border-blue-200 text-blue-700 dark:border-blue-900 dark:text-blue-300',
   neutral:
     'border-neutral-200 text-neutral-600 dark:border-neutral-800 dark:text-neutral-300',

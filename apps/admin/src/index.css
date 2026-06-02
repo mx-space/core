@@ -7,6 +7,11 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Responsive variants — phone / tablet (max-width) and desktop (min-width). */
+@custom-variant phone (@media (max-width: 768px));
+@custom-variant tablet (@media (max-width: 1023px));
+@custom-variant desktop (@media (min-width: 1024px));
+
 @layer base {
   *,
   ::after,

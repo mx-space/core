@@ -8,9 +8,11 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseInterceptors,
 } from '@nestjs/common'
 import { isUndefined, keyBy } from 'es-toolkit/compat'
+import type { FastifyReply } from 'fastify'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -36,16 +38,23 @@ import {
   BatchCommentDeleteDto,
   BatchCommentStateDto,
   CommentAdminPagerDto,
+  CommentAuthorActivityQueryDto,
   CommentDto,
   CommentRefTypesDto,
+  CommentSourceCandidatesQueryDto,
   CommentStatePatchDto,
+  CommentTabCountsQueryDto,
   EditCommentDto,
   ReaderCommentDto,
   ReaderReplyCommentDto,
   ReplyCommentDto,
 } from './comment.schema'
 import { CommentService } from './comment.service'
-import type { CommentModel } from './comment.types'
+import type {
+  CommentFindFilter,
+  CommentModel,
+  CommentTab,
+} from './comment.types'
 
 const idempotenceMessage = 'Whoops, you already said this'
 
@@ -60,6 +69,30 @@ export class CommentController {
     @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
   ) {}
+
+  private buildAdminCommentFilter(input: {
+    currentState?: number
+    refId?: string
+    refType?: string
+    search?: string
+    state?: number | 'all'
+    tab?: CommentTab
+    author?: string
+  }): CommentFindFilter {
+    const filter: CommentFindFilter = {}
+    if (input.tab) {
+      filter.tab = input.tab
+    } else {
+      const state = input.currentState ?? input.state
+      if (!isUndefined(state) && state !== 'all') filter.state = state
+    }
+    if (input.refType)
+      filter.refType = input.refType as CommentFindFilter['refType']
+    if (input.refId) filter.refId = input.refId
+    if (input.search) filter.search = input.search
+    if (input.author) filter.author = input.author
+    return filter
+  }
 
   private async createCommentWithBody(
     params: EntityIdDto,
@@ -113,12 +146,21 @@ export class CommentController {
 
   @Get('/')
   @Auth()
-  async getRecentlyComments(@Query() query: CommentAdminPagerDto) {
-    const { size = 10, page = 1, state = 0 } = query
+  async getRecentlyComments(
+    @Query() query: CommentAdminPagerDto,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const { size = 10, page = 1 } = query
+    // Spec §6.2: legacy `?state=` is honored for one release with a
+    // `Deprecation: true` response header so api-client can warn at the
+    // boundary. `?tab=` takes precedence when both are present.
+    if (!query.tab && query.state !== undefined) {
+      reply.header('Deprecation', 'true')
+    }
     const comments = await this.commentService.getComments({
       size,
       page,
-      state,
+      filter: this.buildAdminCommentFilter(query),
     })
     const readers = await this.readerService.findReaderInIds(
       comments.data.map((doc) => doc.readerId).filter(Boolean) as string[],
@@ -133,6 +175,36 @@ export class CommentController {
       data,
       new MetaObjectBuilder().pagination(comments.pagination).build(),
     )
+  }
+
+  @Get('/tab-counts')
+  @Auth()
+  async getTabCounts(@Query() query: CommentTabCountsQueryDto) {
+    return this.commentService.getTabCounts({
+      refType: query.refType,
+      refId: query.refId,
+    })
+  }
+
+  @Get('/author-activity')
+  @Auth()
+  async getAuthorActivity(@Query() query: CommentAuthorActivityQueryDto) {
+    return this.commentService.getAuthorActivity({
+      mail: query.mail,
+      ip: query.ip,
+      limit: query.limit,
+    })
+  }
+
+  @Get('/source-candidates')
+  @Auth()
+  async getSourceCandidates(@Query() query: CommentSourceCandidatesQueryDto) {
+    const candidates = await this.commentService.getSourceCandidates({
+      refType: query.refType,
+      search: query.search,
+      size: query.size,
+    })
+    return withMeta(candidates, new MetaObjectBuilder().build())
   }
 
   @Get('/ref/:id')
@@ -201,6 +273,18 @@ export class CommentController {
       done: result.done,
       nextCursor: result.nextCursor ?? null,
     }
+  }
+
+  @Get('/:id/thread')
+  @Auth()
+  async getAdminThread(@Param() params: EntityIdDto) {
+    const thread = await this.commentService.getAdminThreadForComment(params.id)
+    if (!thread) {
+      throw createAppException(AppErrorCode.COMMENT_NOT_FOUND, {
+        id: params.id,
+      })
+    }
+    return thread
   }
 
   @Get('/:id')
@@ -359,12 +443,11 @@ export class CommentController {
   @Patch('/batch/state')
   @Auth()
   async batchUpdateState(@Body() body: BatchCommentStateDto) {
-    const { ids, all, state, currentState } = body
+    const { ids, all, state } = body
 
     let affected: string[] = []
     if (all) {
-      const filter: Record<string, any> = {}
-      if (!isUndefined(currentState)) filter.state = currentState
+      const filter = this.buildAdminCommentFilter(body)
       const matched = await this.commentService.findByFilter(filter)
       affected = matched.map((c) => String(c.id))
       await this.commentService.updateStateByFilter(filter, state)
@@ -381,11 +464,10 @@ export class CommentController {
   @Delete('/batch')
   @Auth()
   async batchDelete(@Body() body: BatchCommentDeleteDto) {
-    const { ids, all, state } = body
+    const { ids, all } = body
 
     if (all) {
-      const filter: Record<string, any> = {}
-      if (!isUndefined(state)) filter.state = state
+      const filter = this.buildAdminCommentFilter(body)
       const comments = await this.commentService.findByFilter(filter)
       await Promise.all(
         comments.map((comment) =>

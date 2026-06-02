@@ -124,6 +124,14 @@ export function useListKeyboard<T>(
     }
   }, [selection])
 
+  // The shortcut binding in useListShortcuts is locked to its first-mount
+  // closure (effect deps key off shortcut keys, not patched identity). Route
+  // every default-extra handler through this ref so subsequent renders see
+  // the latest selection state (cursorId, anchorId-driven selectRange, etc.)
+  // without forcing a re-bind on every state change.
+  const selectionRef = useRef(patchedSelection)
+  selectionRef.current = patchedSelection
+
   const defaultExtras = options.defaultExtras !== false
   const callerExtra = options.extra
 
@@ -153,14 +161,14 @@ export function useListKeyboard<T>(
         event.preventDefault()
         const items = itemsRef.current
         const getId = getIdRef.current
+        const sel = selectionRef.current
         const allSelected =
-          items.length > 0 &&
-          items.every((item) => patchedSelection.isSelected(getId(item)))
-        if (allSelected) patchedSelection.clear()
-        else patchedSelection.selectAll()
+          items.length > 0 && items.every((item) => sel.isSelected(getId(item)))
+        if (allSelected) sel.clear()
+        else sel.selectAll()
       }
       map['Escape'] = () => {
-        patchedSelection.clear()
+        selectionRef.current.clear()
         setActiveScope(null)
       }
       // Space toggles explicit (checkbox) selection on the cursor row. The
@@ -170,7 +178,8 @@ export function useListKeyboard<T>(
       // from `document.activeElement` when no cursor is set (e.g. user
       // tabbed into a row without arrow-nav).
       map['Space'] = (event) => {
-        let id = patchedSelection.cursorId
+        const sel = selectionRef.current
+        let id = sel.cursorId
         if (!id) {
           const active = document.activeElement
           if (active instanceof HTMLElement) {
@@ -180,8 +189,31 @@ export function useListKeyboard<T>(
         }
         if (!id) return
         event.preventDefault()
-        patchedSelection.toggleWithAnchor(id)
+        sel.toggleWithAnchor(id)
       }
+      // Cursor-anchored range extension. Shift+Arrow / Shift+J / Shift+K moves
+      // the cursor to the neighbour row and extends the explicit selection
+      // from the previous range anchor to that neighbour. No-ops when the
+      // cursor is unset or already at the list boundary.
+      const advanceRange = (dir: 1 | -1) => (event: KeyboardEvent) => {
+        const items = itemsRef.current
+        const getId = getIdRef.current
+        const sel = selectionRef.current
+        const cursor = sel.cursorId
+        if (!cursor) return
+        const idx = items.findIndex((it) => getId(it) === cursor)
+        if (idx < 0) return
+        const nextIdx = idx + dir
+        if (nextIdx < 0 || nextIdx >= items.length) return
+        event.preventDefault()
+        const nextId = getId(items[nextIdx])
+        sel.setCursor(nextId)
+        sel.selectRange(nextId)
+      }
+      map['Shift+ArrowDown'] = advanceRange(1)
+      map['Shift+ArrowUp'] = advanceRange(-1)
+      map['Shift+j'] = advanceRange(1)
+      map['Shift+k'] = advanceRange(-1)
     }
     if (callerExtra) {
       for (const [key, handler] of Object.entries(callerExtra)) {

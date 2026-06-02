@@ -35,6 +35,8 @@ export const createCommentRow = (
     isWhispers: false,
     isDeleted: false,
     pin: false,
+    isOwnerReply: false,
+    countryCode: null,
     createdAt: now,
     updatedAt: null,
     editedAt: null,
@@ -79,6 +81,26 @@ export const createCommentServiceFixture = () => {
   const eventManager = { broadcast: vi.fn() }
   const readerService = { findReaderInIds: vi.fn().mockResolvedValue([]) }
   const fileReferenceService = { hardDeleteFilesForComment: vi.fn() }
+  const commentCountryService = {
+    lookupCountryCode: vi.fn().mockResolvedValue(null),
+  }
+  const redisStore = new Map<string, string>()
+  const redisClient = {
+    get: vi.fn(async (key: string) => redisStore.get(key) ?? null),
+    set: vi.fn(async (key: string, value: string) => {
+      redisStore.set(key, value)
+      return 'OK'
+    }),
+    del: vi.fn(async (key: string) => {
+      redisStore.delete(key)
+      return 1
+    }),
+    keys: vi.fn(async (pattern: string) => {
+      const prefix = pattern.replace(/\*$/, '')
+      return [...redisStore.keys()].filter((key) => key.startsWith(prefix))
+    }),
+  }
+  const redisService = { getClient: () => redisClient } as any
   const service = new CommentService(
     repository as any,
     databaseService as any,
@@ -86,12 +108,18 @@ export const createCommentServiceFixture = () => {
     eventManager as any,
     readerService as any,
     fileReferenceService as any,
+    commentCountryService as any,
+    redisService,
   )
   return {
+    commentCountryService,
     databaseService,
     eventManager,
     fileReferenceService,
     repository,
+    redisClient,
+    redisService,
+    redisStore,
     service,
   }
 }

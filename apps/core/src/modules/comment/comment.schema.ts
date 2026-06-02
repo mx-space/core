@@ -170,16 +170,86 @@ export const CommentListQuerySchema = z.object({
 
 export class CommentListQueryDto extends createZodDto(CommentListQuerySchema) {}
 
+export const CommentTabSchema = z.enum([
+  'unread',
+  'read',
+  'junk',
+  'whispers',
+  'awaiting',
+  'all',
+])
+
 /**
- * Admin pager query for `GET /comments` — adds optional `state` filter on top
- * of the basic pager.
+ * Admin pager query for `GET /comments`.
+ *
+ * - `tab` (spec §6.2): inbox filter. Supersedes the numeric `state` parameter.
+ * - `state` (deprecated): legacy numeric filter kept as an alias for one
+ *   release. When both are supplied, `tab` wins.
+ * - `author`: restricts results to comments authored by the given mail OR
+ *   originating IP (either matches).
  */
 export const CommentAdminPagerSchema = BasicPagerSchema.extend({
-  state: z.coerce.number().int().optional(),
+  state: z
+    .union([
+      z.literal('all'),
+      z.coerce
+        .number()
+        .int()
+        .refine((val) => [0, 1, 2].includes(val)),
+    ])
+    .optional(),
+  tab: CommentTabSchema.optional(),
+  author: z.string().trim().min(1).optional(),
+  refType: z.enum(CollectionRefTypes).optional(),
+  refId: z.string().trim().min(1).optional(),
+  search: z.string().trim().min(1).optional(),
 })
 
 export class CommentAdminPagerDto extends createZodDto(
   CommentAdminPagerSchema,
+) {}
+
+/**
+ * Query schema for `GET /comments/tab-counts` (spec §6.1).
+ */
+export const CommentTabCountsQuerySchema = z.object({
+  refType: z.enum(CollectionRefTypes).optional(),
+  refId: z.string().trim().min(1).optional(),
+})
+
+export class CommentTabCountsQueryDto extends createZodDto(
+  CommentTabCountsQuerySchema,
+) {}
+
+/**
+ * Query schema for `GET /comments/author-activity` (spec §6.3).
+ * Validation rejects requests with neither `mail` nor `ip` — the handler
+ * re-throws as VALIDATION_FAILED so the wire error shape matches the global
+ * Zod path.
+ */
+export const CommentAuthorActivityQuerySchema = z
+  .object({
+    mail: z.string().trim().min(1).optional(),
+    ip: z.string().trim().min(1).optional(),
+    limit: z.coerce.number().int().min(1).max(50).optional(),
+  })
+  .refine((data) => Boolean(data.mail) || Boolean(data.ip), {
+    message: 'At least one of mail or ip must be provided',
+    path: ['mail'],
+  })
+
+export class CommentAuthorActivityQueryDto extends createZodDto(
+  CommentAuthorActivityQuerySchema,
+) {}
+
+export const CommentSourceCandidatesQuerySchema = z.object({
+  refType: z.enum(CollectionRefTypes).optional(),
+  search: z.string().trim().min(1).optional(),
+  size: z.coerce.number().int().min(1).max(50).optional(),
+})
+
+export class CommentSourceCandidatesQueryDto extends createZodDto(
+  CommentSourceCandidatesQuerySchema,
 ) {}
 
 /**
@@ -214,6 +284,9 @@ export const BatchCommentStateSchema = z
       .int()
       .refine((val) => [0, 1, 2].includes(val))
       .optional(),
+    refType: z.enum(CollectionRefTypes).optional(),
+    refId: z.string().trim().min(1).optional(),
+    search: z.string().trim().min(1).optional(),
   })
   .refine((data) => data.ids?.length || data.all, {
     message: 'Either ids or all must be provided',
@@ -235,6 +308,9 @@ export const BatchCommentDeleteSchema = z
       .int()
       .refine((val) => [0, 1, 2].includes(val))
       .optional(),
+    refType: z.enum(CollectionRefTypes).optional(),
+    refId: z.string().trim().min(1).optional(),
+    search: z.string().trim().min(1).optional(),
   })
   .refine((data) => data.ids?.length || data.all, {
     message: 'Either ids or all must be provided',

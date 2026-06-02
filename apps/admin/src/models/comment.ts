@@ -42,6 +42,7 @@ export interface CommentModel {
   replies?: CommentModel[]
   replyWindow?: CommentReplyWindow
   ref?: Record<string, any>
+  countryCode?: string
 }
 
 export interface CommentsResponse {
@@ -49,8 +50,66 @@ export interface CommentsResponse {
   pagination: Pager
 }
 
+export interface CommentSourceCandidate {
+  id: string
+  type: CommentModel['refType']
+  title?: string
+  slug?: string | null
+  nid?: number
+  category?: { name: string; slug: string } | null
+  commentCount: number
+  latestCommentAt: string
+}
+
+export interface CommentThreadResponse {
+  currentCommentId: string
+  rootCommentId: string
+  root: CommentModel | null
+  thread: CommentModel[]
+  current: CommentModel
+  ref: CommentSourceCandidate | null
+}
+
 export enum CommentState {
   Unread,
   Read,
   Junk,
+}
+
+export type CommentTab =
+  | 'unread'
+  | 'awaiting'
+  | 'whispers'
+  | 'read'
+  | 'junk'
+  | 'all'
+
+export interface CommentTabCounts {
+  unread: number
+  read: number
+  junk: number
+  whispers: number
+  awaiting: number
+  all: number
+}
+
+export interface CommentAuthorActivityItem {
+  id: string
+  createdAt: string
+  refType: CommentModel['refType']
+  refTitle?: string
+  refLink?: string
+  textExcerpt: string
+  state: number
+}
+
+export type CommentThreatLevel = 'trusted' | 'neutral' | 'risk'
+
+export interface CommentAuthorActivity {
+  totalCount: number
+  firstSeenAt: string
+  lastSeenAt: string
+  items: CommentAuthorActivityItem[]
+  threatLevel: CommentThreatLevel
+  threatReason?: string
 }
