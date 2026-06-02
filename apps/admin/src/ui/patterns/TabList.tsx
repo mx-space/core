@@ -1,3 +1,6 @@
+import { motion, useReducedMotion } from 'motion/react'
+import { useId } from 'react'
+
 import { cn } from '~/utils/cn'
 
 export interface TabListItem<K extends string> {
@@ -19,10 +22,18 @@ export interface TabListProps<K extends string> {
    * Prefix for per-item `data-testid` attributes:
    *   tab button → `${testidPrefix}-${key}`
    *   count pill → `${testidPrefix}-count-${key}`
+   *   active pill indicator → `${testidPrefix}-indicator`
    */
   testidPrefix?: string
   /** ARIA controls id pattern — applied per tab as `${ariaControlsId}-panel`. */
   ariaControlsId?: string
+  /**
+   * Optional explicit id for the shared motion layoutId behind the
+   * active-tab pill indicator. When omitted, a stable id is generated via
+   * React.useId() so multiple TabList instances on the same route do not
+   * collide.
+   */
+  indicatorId?: string
 }
 
 function formatCount(n: number) {
@@ -31,19 +42,25 @@ function formatCount(n: number) {
 }
 
 /**
- * Inbox-style tab strip with optional numeric counts. Underline-on-active,
- * horizontally scrollable (scrollbar hidden), 32px (h-8) row height so it
- * stacks predictably with sibling controls.
+ * Inbox-style tab strip with optional numeric counts. Active state is a soft
+ * inset pill (`bg-surface-inset`) that animates between tabs via a shared
+ * motion `layoutId`. 48px row, 32px pill (inset-y-2). Horizontally
+ * scrollable (scrollbar hidden) so it stacks predictably with sibling
+ * controls.
  *
  * Generic over a string key union so consumers retain type-safety on
  * activeKey / onSelect.
  */
 export function TabList<K extends string>(props: TabListProps<K>) {
+  const autoId = useId()
+  const indicatorId = props.indicatorId ?? `tablist-indicator-${autoId}`
+  const reducedMotion = useReducedMotion()
+
   return (
     <div
       aria-label={props.ariaLabel}
       className={cn(
-        'flex h-full min-w-0 flex-1 items-stretch overflow-x-auto',
+        'relative flex h-full min-w-0 flex-1 items-stretch overflow-x-auto',
         '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         props.className,
       )}
@@ -59,11 +76,9 @@ export function TabList<K extends string>(props: TabListProps<K>) {
             }
             aria-selected={isActive}
             className={cn(
-              'inline-flex h-full shrink-0 items-center gap-1 border-b-2 px-2 text-sm transition-colors',
+              'relative inline-flex h-full shrink-0 items-center gap-1.5 px-3 text-sm transition-colors',
               'focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15',
-              isActive
-                ? 'border-accent font-semibold text-fg'
-                : 'border-transparent text-fg-muted hover:text-fg',
+              isActive ? 'text-fg' : 'text-fg-muted hover:text-fg',
             )}
             data-active={isActive ? '' : undefined}
             data-testid={
@@ -76,11 +91,28 @@ export function TabList<K extends string>(props: TabListProps<K>) {
             role="tab"
             type="button"
           >
-            <span>{item.label}</span>
+            {isActive ? (
+              <motion.span
+                aria-hidden="true"
+                className="absolute inset-x-0 inset-y-2 rounded-sm bg-surface-inset"
+                data-testid={
+                  props.testidPrefix
+                    ? `${props.testidPrefix}-indicator`
+                    : undefined
+                }
+                layoutId={indicatorId}
+                transition={
+                  reducedMotion
+                    ? { duration: 0 }
+                    : { type: 'spring', stiffness: 380, damping: 32 }
+                }
+              />
+            ) : null}
+            <span className="relative z-10">{item.label}</span>
             {countLabel ? (
               <span
                 className={cn(
-                  'text-xs font-medium tabular-nums',
+                  'relative z-10 text-xs font-medium tabular-nums',
                   isActive ? 'text-accent' : 'text-fg-subtle',
                 )}
                 data-testid={

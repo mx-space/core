@@ -81,11 +81,17 @@ describe('TopBar tabs', () => {
     // Counts > 99 render as 99+.
     expect(q('comments-tab-count-junk')?.textContent).toBe('99+')
 
-    // Active tab is semibold + bottom border.
+    // Active tab carries the pill indicator and text-fg color.
     const active = q('comments-tab-unread')
     expect(active?.getAttribute('aria-selected')).toBe('true')
-    expect(active?.className).toContain('font-semibold')
-    expect(active?.className).toContain('border-accent')
+    expect(active?.className).toContain('text-fg')
+    expect(active?.className).not.toContain('font-semibold')
+    expect(q('comments-tab-indicator')).not.toBeNull()
+    // Inactive tabs do not mount the indicator.
+    const inactive = q('comments-tab-awaiting')
+    expect(
+      inactive?.querySelector('[data-testid="comments-tab-indicator"]'),
+    ).toBeNull()
   })
 
   it('fires onSelect with the tab key when clicked', () => {
