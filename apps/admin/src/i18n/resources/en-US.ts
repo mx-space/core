@@ -613,6 +613,7 @@ export const enUS = {
   'comments.sidebar.viewAll': 'View all {count}',
   'comments.reply.mentionHint': 'Mention with @',
   'comments.reply.mentionLabel': 'Thread participants',
+  'comments.toast.copied': 'Copied',
   'comments.toast.deleted': 'Deleted',
   'comments.toast.replied': 'Reply sent',
   'comments.toast.updated': 'Updated',

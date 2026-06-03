@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronUp, Info } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { getOwner } from '~/api/options'
@@ -14,7 +14,6 @@ import { adminQueryKeys } from '~/query/keys'
 import { Drawer } from '~/ui/feedback/drawer'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
-import { cn } from '~/utils/cn'
 
 import type { LocalReply } from '../types/comments'
 import { useOptionalCommentsRouteContext } from './comments-route-context'
@@ -41,7 +40,6 @@ export function CommentDetail(props: CommentDetailProps) {
   const { t } = useI18n()
   const [localReplies, setLocalReplies] = useState<LocalReply[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const composerRef = useRef<ReplyComposerHandle | null>(null)
   const ownerQuery = useQuery({
     queryFn: getOwner,
@@ -71,7 +69,7 @@ export function CommentDetail(props: CommentDetailProps) {
 
   useEffect(() => {
     setLocalReplies([])
-    setMobileSidebarOpen(false)
+    setDrawerOpen(false)
   }, [props.comment.id])
 
   const routeCtx = useOptionalCommentsRouteContext()
@@ -153,70 +151,48 @@ export function CommentDetail(props: CommentDetailProps) {
         }
       />
 
-      <Scroll className="flex-1" innerClassName="px-4 py-6">
-        <div className="mx-auto grid w-full max-w-5xl gap-6 desktop:grid-cols-[1fr_220px]">
-          <div className="min-w-0 space-y-4">
-            <div className="desktop:hidden">
-              <button
-                aria-controls="comment-mobile-meta"
-                aria-expanded={mobileSidebarOpen}
-                className="flex w-full items-center justify-between rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-fg"
-                onClick={() => setMobileSidebarOpen((open) => !open)}
-                type="button"
-              >
-                <span className="font-medium">
-                  {t('comments.sidebar.meta')}
-                </span>
-                {mobileSidebarOpen ? (
-                  <ChevronUp aria-hidden="true" className="size-4" />
-                ) : (
-                  <ChevronDown aria-hidden="true" className="size-4" />
-                )}
-              </button>
-              {mobileSidebarOpen ? (
-                <div
-                  className="mt-2 rounded-md border border-border bg-surface-card p-3"
-                  id="comment-mobile-meta"
-                >
-                  {sidebarContent}
-                </div>
-              ) : null}
-            </div>
-
+      <div className="flex min-h-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Scroll className="flex-1" innerClassName="px-4 py-6">
             {props.threadLoading && !props.thread ? (
               <div className="flex justify-center py-12">
                 <div className="size-6 animate-spin rounded-full border-2 border-border border-t-accent" />
               </div>
             ) : (
-              <ThreadColumn
-                comment={props.comment}
-                ownerName={ownerName}
-                pendingMessages={pendingMessages}
-                thread={props.thread}
-              />
+              <div className="mx-auto w-full max-w-3xl">
+                <ThreadColumn
+                  comment={props.comment}
+                  ownerName={ownerName}
+                  pendingMessages={pendingMessages}
+                  thread={props.thread}
+                />
+              </div>
             )}
-          </div>
+          </Scroll>
 
-          <aside
-            aria-label={t('comments.sidebar.meta')}
-            className={cn('hidden min-w-0 desktop:block')}
-          >
+          {props.comment.state !== CommentState.Junk &&
+          !props.comment.isDeleted ? (
+            <div className="shrink-0 border-t border-border bg-surface-card">
+              <ReplyComposer
+                handleRef={composerRef}
+                onSubmit={handleReply}
+                ownerName={ownerName}
+                pending={props.replyPending}
+                threadParticipants={threadParticipants}
+              />
+            </div>
+          ) : null}
+        </div>
+
+        <aside
+          aria-label={t('comments.sidebar.meta')}
+          className="hidden w-[260px] shrink-0 border-l border-border desktop:flex desktop:min-h-0 desktop:flex-col"
+        >
+          <Scroll className="flex-1" innerClassName="px-4 py-4">
             {sidebarContent}
-          </aside>
-        </div>
-      </Scroll>
-
-      {props.comment.state !== CommentState.Junk && !props.comment.isDeleted ? (
-        <div className="shrink-0 border-t border-border bg-surface-card">
-          <ReplyComposer
-            handleRef={composerRef}
-            onSubmit={handleReply}
-            ownerName={ownerName}
-            pending={props.replyPending}
-            threadParticipants={threadParticipants}
-          />
-        </div>
-      ) : null}
+          </Scroll>
+        </aside>
+      </div>
 
       <Drawer
         icon={Info}

@@ -1,14 +1,8 @@
-import {
-  ArrowUpRight,
-  Globe,
-  Hash,
-  Mail,
-  MapPin,
-  Monitor,
-  Smartphone,
-} from 'lucide-react'
+import { Collapsible } from '@base-ui/react/collapsible'
+import { ArrowUpRight, ChevronRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 
 import { IpInfoPopover } from '~/features/_shared/components/ip-info-popover'
 import { useI18n } from '~/i18n'
@@ -44,46 +38,72 @@ export function MetaSidebar(props: MetaSidebarProps) {
     navigate(`/comments?author=${encodeURIComponent(authorKey)}`)
   }
 
+  const activityCount = props.activity?.totalCount ?? 0
+
   return (
-    <div className="space-y-3 text-sm">
-      <Section title={t('comments.sidebar.identity')}>
+    <div className="flex flex-col">
+      <DisclosureGroup defaultOpen title={t('comments.sidebar.identity')}>
         <IdentityBlock comment={props.comment} />
-      </Section>
+      </DisclosureGroup>
 
-      <Section title={t('comments.sidebar.origin')}>
+      <DisclosureGroup defaultOpen title={t('comments.sidebar.origin')}>
         <OriginBlock comment={props.comment} />
-      </Section>
+      </DisclosureGroup>
 
-      <Section
+      <DisclosureGroup
+        suffix={activityCount > 0 ? `· ${activityCount}` : undefined}
         title={t('comments.sidebar.activityBy', {
           author: props.comment.author || t('comments.anonymous'),
         })}
       >
         <ActivityBlock
           activity={props.activity}
-          authorKey={authorKey}
           comment={props.comment}
           loading={props.activityLoading}
           onViewAll={authorKey ? handleViewAll : undefined}
         />
-      </Section>
+      </DisclosureGroup>
 
-      <Section title={t('comments.sidebar.threatSignal')}>
-        <ThreatBlock
-          activity={props.activity}
-          loading={props.activityLoading}
-        />
-      </Section>
+      <ThreatDisclosure
+        activity={props.activity}
+        loading={props.activityLoading}
+        title={t('comments.sidebar.threatSignal')}
+      />
     </div>
   )
 }
 
-function Section(props: { title: string; children: ReactNode }) {
+function DisclosureGroup(props: {
+  title: string
+  suffix?: string
+  defaultOpen?: boolean
+  children: ReactNode
+}) {
   return (
-    <section className="space-y-2 border-t border-border pt-3 first:border-t-0 first:pt-0">
-      <h3 className="text-xs font-medium text-fg-subtle">{props.title}</h3>
-      <div className="space-y-1.5 text-sm">{props.children}</div>
-    </section>
+    <Collapsible.Root
+      className="border-t border-border/60 first:border-t-0"
+      defaultOpen={props.defaultOpen}
+    >
+      <Collapsible.Trigger
+        className={cn(
+          'group flex w-full items-center gap-2 py-2 text-left',
+          'text-[11px] font-medium uppercase tracking-wide text-fg-subtle',
+          'hover:text-fg',
+        )}
+      >
+        <ChevronRight
+          aria-hidden="true"
+          className="size-3 text-fg-subtle transition-transform duration-150 group-data-[panel-open]:rotate-90"
+        />
+        <span className="truncate">{props.title}</span>
+        {props.suffix ? (
+          <span className="ml-1 text-fg-muted normal-case">{props.suffix}</span>
+        ) : null}
+      </Collapsible.Trigger>
+      <Collapsible.Panel className="overflow-hidden text-[13px] text-fg">
+        <div className="pb-3">{props.children}</div>
+      </Collapsible.Panel>
+    </Collapsible.Root>
   )
 }
 
@@ -91,39 +111,33 @@ function IdentityBlock(props: { comment: CommentModel }) {
   const { t } = useI18n()
   const { comment } = props
 
-  if (!comment.mail && !comment.url) {
-    return <p className="text-sm text-fg-muted">{t('comments.anonymous')}</p>
+  if (!comment.mail && !comment.url && !comment.id) {
+    return (
+      <p className="text-[13px] text-fg-muted">{t('comments.anonymous')}</p>
+    )
   }
 
   return (
-    <ul className="space-y-1.5">
+    <ul className="space-y-1">
       {comment.mail ? (
         <li>
           <a
-            className="inline-flex min-w-0 items-center gap-1.5 text-fg hover:underline"
+            className="block min-w-0 truncate text-fg hover:underline"
             href={`mailto:${comment.mail}`}
           >
-            <Mail
-              aria-hidden="true"
-              className="size-3.5 shrink-0 text-fg-subtle"
-            />
-            <span className="truncate">{comment.mail}</span>
+            {comment.mail}
           </a>
         </li>
       ) : null}
       {comment.url ? (
         <li>
           <a
-            className="inline-flex min-w-0 items-center gap-1.5 text-fg hover:underline"
+            className="block min-w-0 truncate text-[12px] text-fg-muted hover:text-fg hover:underline"
             href={comment.url}
             rel="noreferrer"
             target="_blank"
           >
-            <Globe
-              aria-hidden="true"
-              className="size-3.5 shrink-0 text-fg-subtle"
-            />
-            <span className="truncate">{comment.url}</span>
+            {comment.url}
           </a>
         </li>
       ) : null}
@@ -138,16 +152,16 @@ function CopyableId(props: { id: string }) {
   const { t } = useI18n()
   const handleCopy = () => {
     void navigator.clipboard?.writeText(props.id)
+    toast.success(t('comments.toast.copied'))
   }
   return (
     <button
       aria-label={t('common.copy')}
-      className="inline-flex items-center gap-1.5 text-fg-muted hover:text-fg"
+      className="block w-full min-w-0 truncate text-left font-mono text-[11px] text-fg-muted hover:text-fg"
       onClick={handleCopy}
       type="button"
     >
-      <Hash aria-hidden="true" className="size-3.5 shrink-0 text-fg-subtle" />
-      <span className="truncate">{props.id}</span>
+      #{props.id}
     </button>
   )
 }
@@ -159,51 +173,31 @@ function OriginBlock(props: { comment: CommentModel }) {
   const flag = comment.countryCode ? countryFlag(comment.countryCode) : ''
 
   return (
-    <ul className="space-y-1.5">
+    <ul className="space-y-1">
       <li>
         {comment.ip ? (
           <IpInfoPopover
-            className="inline-flex min-w-0 items-center gap-1.5 text-fg hover:underline"
+            className="block min-w-0 truncate text-fg hover:underline"
             ip={comment.ip}
             trigger={
-              <>
-                <MapPin
-                  aria-hidden="true"
-                  className="size-3.5 shrink-0 text-fg-subtle"
-                />
-                <span className="truncate">
-                  {flag ? `${flag} ` : ''}
-                  {comment.ip}
-                </span>
-              </>
+              <span className="truncate">
+                {flag ? `${flag} ` : ''}
+                {comment.ip}
+              </span>
             }
           />
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-fg-muted">
-            <MapPin
-              aria-hidden="true"
-              className="size-3.5 shrink-0 text-fg-subtle"
-            />
+          <span className="block text-fg-muted">
             {t('comments.meta.unknown')}
           </span>
         )}
       </li>
       <li>
-        <span className="inline-flex min-w-0 items-center gap-1.5 text-fg-muted">
-          {device.isMobile ? (
-            <Smartphone
-              aria-hidden="true"
-              className="size-3.5 shrink-0 text-fg-subtle"
-            />
-          ) : (
-            <Monitor
-              aria-hidden="true"
-              className="size-3.5 shrink-0 text-fg-subtle"
-            />
-          )}
-          <span className="truncate" title={comment.agent}>
-            {device.label}
-          </span>
+        <span
+          className="block min-w-0 truncate text-[12px] text-fg-muted"
+          title={comment.agent}
+        >
+          {device.label}
         </span>
       </li>
     </ul>
@@ -212,7 +206,6 @@ function OriginBlock(props: { comment: CommentModel }) {
 
 function ActivityBlock(props: {
   activity: CommentAuthorActivity | undefined
-  authorKey: string
   comment: CommentModel
   loading?: boolean
   onViewAll?: () => void
@@ -224,15 +217,15 @@ function ActivityBlock(props: {
   }
 
   if (!props.activity) {
-    return <p className="text-sm text-fg-muted">{t('common.noData')}</p>
+    return <p className="text-[13px] text-fg-muted">{t('common.noData')}</p>
   }
 
   const { totalCount, items } = props.activity
   const visible = items.slice(0, 4)
 
   return (
-    <div className="space-y-1.5">
-      <ul className="space-y-1">
+    <div className="space-y-2">
+      <ul className="space-y-0.5">
         {visible.map((item) => (
           <ActivityRow
             current={item.id === props.comment.id}
@@ -241,14 +234,14 @@ function ActivityBlock(props: {
           />
         ))}
         {visible.length === 0 ? (
-          <li className="text-sm text-fg-muted">
+          <li className="text-[13px] text-fg-muted">
             {t('comments.sidebar.activityEmpty')}
           </li>
         ) : null}
       </ul>
       {totalCount > visible.length && props.onViewAll ? (
         <button
-          className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+          className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
           onClick={props.onViewAll}
           type="button"
         >
@@ -265,71 +258,94 @@ function ActivityRow(props: {
   current: boolean
 }) {
   const { t } = useI18n()
-  const dotClass = props.current
-    ? 'bg-accent'
-    : 'border border-border-strong bg-transparent'
-
   return (
-    <li className="flex items-baseline gap-2">
+    <li
+      className={cn(
+        'border-l-2 pl-2 py-0.5',
+        props.current ? 'border-accent' : 'border-transparent',
+      )}
+    >
       <span
-        aria-hidden="true"
         className={cn(
-          'mt-1 inline-block size-2 shrink-0 rounded-full',
-          dotClass,
+          'block min-w-0 truncate text-[12px]',
+          props.current ? 'text-fg' : 'text-fg-muted',
         )}
-      />
-      <span className="min-w-0 flex-1 truncate text-xs text-fg-muted">
+      >
         {props.item.refTitle || t('comments.meta.unknown')}
-        {' · '}
-        {formatCommentDate(props.item.createdAt)}
+        <span className="text-fg-subtle">
+          {' · '}
+          {formatCommentDate(props.item.createdAt)}
+        </span>
       </span>
     </li>
   )
 }
 
-function ThreatBlock(props: {
+function ThreatDisclosure(props: {
+  title: string
   activity: CommentAuthorActivity | undefined
   loading?: boolean
 }) {
   const { t } = useI18n()
-  if (props.loading && !props.activity) {
-    return <SkeletonLines lines={1} />
-  }
-  if (!props.activity) {
-    return <p className="text-sm text-fg-muted">{t('common.noData')}</p>
-  }
-  const tone =
-    props.activity.threatLevel === 'trusted'
-      ? 'text-emerald-700 dark:text-emerald-400'
-      : props.activity.threatLevel === 'risk'
-        ? 'text-red-700 dark:text-red-400'
-        : 'text-fg-muted'
+  const level = props.activity?.threatLevel
 
-  const dotClass =
-    props.activity.threatLevel === 'trusted'
+  const chipTone =
+    level === 'trusted'
+      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+      : level === 'risk'
+        ? 'bg-red-500/10 text-red-700 dark:text-red-400'
+        : 'bg-surface-inset text-fg-muted'
+
+  const dotTone =
+    level === 'trusted'
       ? 'bg-emerald-500'
-      : props.activity.threatLevel === 'risk'
+      : level === 'risk'
         ? 'bg-red-500'
         : 'bg-fg-subtle'
 
+  const summaryLabel = level
+    ? t(`comments.threat.${level}`)
+    : t('comments.meta.unknown')
+
   return (
-    <div className="space-y-1">
-      <p
+    <Collapsible.Root className="border-t border-border/60" defaultOpen>
+      <Collapsible.Trigger
         className={cn(
-          'inline-flex items-center gap-1.5 text-sm font-medium',
-          tone,
+          'group flex w-full items-center gap-2 py-2 text-left',
+          'text-[11px] font-medium uppercase tracking-wide text-fg-subtle',
+          'hover:text-fg',
         )}
       >
-        <span
+        <ChevronRight
           aria-hidden="true"
-          className={cn('inline-block size-2 rounded-full', dotClass)}
+          className="size-3 text-fg-subtle transition-transform duration-150 group-data-[panel-open]:rotate-90"
         />
-        {t(`comments.threat.${props.activity.threatLevel}`)}
-      </p>
-      {props.activity.threatReason ? (
-        <p className="text-xs text-fg-subtle">{props.activity.threatReason}</p>
-      ) : null}
-    </div>
+        <span className="flex-1 truncate">{props.title}</span>
+        <span
+          className={cn(
+            'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium normal-case',
+            chipTone,
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className={cn('inline-block size-1.5 rounded-full', dotTone)}
+          />
+          {summaryLabel}
+        </span>
+      </Collapsible.Trigger>
+      <Collapsible.Panel className="overflow-hidden">
+        <div className="pb-3 text-[12px] text-fg-muted">
+          {props.loading && !props.activity ? (
+            <SkeletonLines lines={1} />
+          ) : props.activity?.threatReason ? (
+            props.activity.threatReason
+          ) : (
+            t('common.noData')
+          )}
+        </div>
+      </Collapsible.Panel>
+    </Collapsible.Root>
   )
 }
 

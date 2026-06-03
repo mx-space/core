@@ -1,4 +1,11 @@
-import { AtSign, Send } from 'lucide-react'
+import {
+  AtSign,
+  Bold,
+  Command,
+  CornerDownLeft,
+  Loader2,
+  Send,
+} from 'lucide-react'
 import type { FormEvent, KeyboardEvent, Ref } from 'react'
 import { useEffect, useImperativeHandle, useRef, useState } from 'react'
 
@@ -209,43 +216,59 @@ export function ReplyComposer(props: ReplyComposerProps) {
     }
   }
 
+  const canSend = !!value.trim() && !props.pending
+
   return (
     <form className="relative px-4 py-3" onSubmit={handleFormSubmit}>
-      <div
-        className={cn(
-          'overflow-hidden rounded-lg border border-border bg-surface-card',
-          'focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent/15',
+      <TextArea
+        controlClassName={cn(
+          'min-h-16 resize-none border-0 bg-transparent px-0 py-1 shadow-none',
+          'placeholder:text-fg-subtle/80 focus:border-transparent focus:ring-0',
+          'dark:border-0',
         )}
-      >
-        <TextArea
-          controlClassName="min-h-20 resize-y border-0 bg-transparent shadow-none focus:border-transparent focus:ring-0 dark:border-0"
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder={t('comments.reply.placeholder')}
-          ref={textareaRef}
-          value={value}
-        />
-        <div className="flex items-center justify-between gap-2 border-t border-border bg-surface-inset px-2 py-1.5">
-          <div className="flex items-center gap-1">
-            <EmojiPopover onSelect={insertEmoji} />
-            <span
-              aria-hidden="true"
-              className="inline-flex size-8 items-center justify-center rounded-sm text-fg-subtle"
-              title={t('comments.reply.mentionHint')}
-            >
-              <AtSign className="size-4" />
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-xs text-fg-subtle sm:block">
-              {t('comments.reply.shortcutHint')}
-            </span>
-            <Button disabled={!value.trim() || props.pending} type="submit">
-              <Send aria-hidden="true" className="size-4" />
-              {t('comments.reply.submit')}
-            </Button>
-          </div>
-        </div>
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        placeholder={t('comments.reply.placeholder')}
+        ref={textareaRef}
+        value={value}
+      />
+
+      <div className="mt-1 flex items-center gap-2">
+        <EmojiPopover onSelect={insertEmoji} />
+        <span className="flex-1" />
+        <span
+          aria-label={t('comments.reply.shortcutHint')}
+          className="hidden items-center gap-1.5 text-fg-subtle sm:inline-flex"
+        >
+          <AtSign aria-hidden="true" className="size-3" />
+          <span aria-hidden="true" className="text-fg-subtle/50">
+            ·
+          </span>
+          <span className="inline-flex items-center gap-0.5">
+            <Command aria-hidden="true" className="size-3" />
+            <Bold aria-hidden="true" className="size-3" />
+          </span>
+          <span aria-hidden="true" className="text-fg-subtle/50">
+            ·
+          </span>
+          <span className="inline-flex items-center gap-0.5">
+            <Command aria-hidden="true" className="size-3" />
+            <CornerDownLeft aria-hidden="true" className="size-3" />
+          </span>
+        </span>
+        <Button
+          className="h-8 gap-1.5 px-2.5"
+          disabled={!canSend}
+          type="submit"
+          variant="ghost"
+        >
+          {props.pending ? (
+            <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
+          ) : (
+            <Send aria-hidden="true" className="size-3.5" />
+          )}
+          <span className="text-[12px]">{t('comments.reply.submit')}</span>
+        </Button>
       </div>
 
       {mentionOpen && filteredParticipants.length > 0 ? (

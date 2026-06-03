@@ -595,6 +595,7 @@ export const zhCN = {
   'comments.sidebar.viewAll': '查看全部 {count}',
   'comments.reply.mentionHint': '使用 @ 提及',
   'comments.reply.mentionLabel': '本串参与者',
+  'comments.toast.copied': '已复制',
   'comments.toast.deleted': '删除成功',
   'comments.toast.replied': '回复成功',
   'comments.toast.updated': '操作成功',
