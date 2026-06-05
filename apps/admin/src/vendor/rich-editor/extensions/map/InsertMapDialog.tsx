@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { Loader2, Upload } from 'lucide-react'
+import { Loader2, Upload, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -7,7 +7,6 @@ import { uploadFile } from '~/api/files'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
-import { Switch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 
 import {
@@ -17,51 +16,35 @@ import {
 } from './gps-compress'
 import { MapBlockReadonly } from './MapBlockReadonly'
 import type { MapNodePayload } from './MapNode'
-import type { MapTrackData } from './types'
 
 interface InsertMapDialogProps {
   initial?: MapNodePayload
   onSubmit: (payload: MapNodePayload) => void
 }
 
-const LOSSLESS_SAMPLE_TARGET = null
-const LOSSY_SAMPLE_TARGET = 450
+interface PendingUpload {
+  blobUrl: string
+  file: File
+}
 
 function InsertMapDialog(props: InsertMapDialogProps) {
   const modal = useModal<void>()
   const [title, setTitle] = useState(props.initial?.title ?? '')
   const [trackUrl, setTrackUrl] = useState(props.initial?.track?.url ?? '')
-  const [previewTrack, setPreviewTrack] = useState<MapTrackData | null>(null)
-  const [lossless, setLossless] = useState(false)
+  const [pending, setPending] = useState<PendingUpload | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!trackUrl) {
-      setPreviewTrack(null)
-      return
-    }
-    let cancelled = false
-    fetch(trackUrl)
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return response.json() as Promise<MapTrackData>
-      })
-      .then((payload) => {
-        if (!cancelled) setPreviewTrack(payload)
-      })
-      .catch(() => {
-        if (!cancelled) setPreviewTrack(null)
-      })
     return () => {
-      cancelled = true
+      if (pending) URL.revokeObjectURL(pending.blobUrl)
     }
-  }, [trackUrl])
+  }, [pending])
 
-  const uploadMutation = useMutation({
+  const prepareMutation = useMutation({
     mutationFn: async (file: File) => {
       const text = await file.text()
       if (!isGpx(text, file.name)) {
-        return uploadFile(file, 'file')
+        return { blob: file, fileName: file.name }
       }
       const points = parseGpx(text)
       if (points.length === 0) {
@@ -72,50 +55,84 @@ function InsertMapDialog(props: InsertMapDialogProps) {
         points,
         file.name.replace(/\.gpx$/i, ''),
         {
-          sampleTarget: lossless ? LOSSLESS_SAMPLE_TARGET : LOSSY_SAMPLE_TARGET,
+          sampleTarget: null,
           timezoneOffsetMinutes: tzOffsetMinutes,
         },
       )
       const jsonBlob = new Blob([JSON.stringify(trackData)], {
         type: 'application/json',
       })
-      const jsonFile = new File(
-        [jsonBlob],
-        `${file.name.replace(/\.gpx$/i, '')}.json`,
-        { type: 'application/json' },
-      )
-      return uploadFile(jsonFile, 'file')
+      return {
+        blob: jsonBlob,
+        fileName: `${file.name.replace(/\.gpx$/i, '')}.json`,
+      }
     },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error)
+      toast.error(`Failed to read file: ${message}`)
+    },
+    onSuccess: ({ blob, fileName }) => {
+      const preparedFile = new File([blob], fileName, { type: blob.type })
+      const blobUrl = URL.createObjectURL(blob)
+      setPending((prev) => {
+        if (prev) URL.revokeObjectURL(prev.blobUrl)
+        return { blobUrl, file: preparedFile }
+      })
+      setTrackUrl('')
+    },
+  })
+
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => uploadFile(file, 'file'),
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : String(error)
       toast.error(`Failed to upload track: ${message}`)
     },
-    onSuccess: (result) => {
-      setTrackUrl(result.url)
-      if (!title) setTitle(result.name.replace(/\.(gpx|json)$/i, ''))
-      toast.success('Track uploaded')
-    },
   })
 
+  const previewUrl = pending?.blobUrl || trackUrl
   const previewSlot = useMemo(
     () => ({
-      track: trackUrl ? { url: trackUrl } : undefined,
+      track: previewUrl ? { url: previewUrl } : undefined,
       title: title || 'Map preview',
     }),
-    [title, trackUrl],
+    [title, previewUrl],
   )
 
-  const onSubmit = () => {
-    if (!trackUrl) {
+  const onTrackUrlChange = (value: string) => {
+    setTrackUrl(value)
+    if (pending) {
+      URL.revokeObjectURL(pending.blobUrl)
+      setPending(null)
+    }
+  }
+
+  const clearPending = () => {
+    if (pending) {
+      URL.revokeObjectURL(pending.blobUrl)
+      setPending(null)
+    }
+  }
+
+  const onSubmit = async () => {
+    let finalUrl = trackUrl
+    if (pending) {
+      const result = await uploadMutation.mutateAsync(pending.file)
+      finalUrl = result.url
+    }
+    if (!finalUrl) {
       toast.error('Track URL is required')
       return
     }
     props.onSubmit({
       title: title || 'Map',
-      track: { url: trackUrl },
+      track: { url: finalUrl },
     })
     modal.close()
   }
+
+  const busy = prepareMutation.isPending || uploadMutation.isPending
+  const canInsert = (!!pending || !!trackUrl) && !busy
 
   return (
     <div className="flex w-full flex-col">
@@ -133,8 +150,11 @@ function InsertMapDialog(props: InsertMapDialogProps) {
           <div className="flex items-stretch gap-2">
             <div className="flex-1">
               <TextInput
-                onChange={setTrackUrl}
-                placeholder="https://…/track.json"
+                disabled={!!pending}
+                onChange={onTrackUrlChange}
+                placeholder={
+                  pending ? pending.file.name : 'https://…/track.json'
+                }
                 value={trackUrl}
               />
             </div>
@@ -144,51 +164,63 @@ function InsertMapDialog(props: InsertMapDialogProps) {
               onChange={(event) => {
                 const file = event.target.files?.[0]
                 event.target.value = ''
-                if (file) uploadMutation.mutate(file)
+                if (file) prepareMutation.mutate(file)
               }}
               ref={fileInputRef}
               type="file"
             />
-            <Button
-              aria-label="Upload track"
-              disabled={uploadMutation.isPending}
-              onClick={() => fileInputRef.current?.click()}
-              title="Upload .gpx or .json"
-              type="button"
-              variant="subtle"
-            >
-              {uploadMutation.isPending ? (
-                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-              ) : (
-                <Upload aria-hidden="true" className="size-4" />
-              )}
-            </Button>
+            {pending ? (
+              <Button
+                aria-label="Clear selected file"
+                className="h-9 w-9"
+                iconOnly
+                onClick={clearPending}
+                title="Clear selected file"
+                type="button"
+                variant="subtle"
+              >
+                <X aria-hidden="true" className="size-4" />
+              </Button>
+            ) : (
+              <Button
+                aria-label="Select track file"
+                className="h-9 w-9"
+                disabled={prepareMutation.isPending}
+                iconOnly
+                onClick={() => fileInputRef.current?.click()}
+                title="Select .gpx or .json"
+                type="button"
+                variant="subtle"
+              >
+                {prepareMutation.isPending ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <Upload aria-hidden="true" className="size-4" />
+                )}
+              </Button>
+            )}
           </div>
           <p className="text-xs text-fg-muted">
-            Upload a .gpx file to auto-compress, or a pre-built track JSON.
+            {pending
+              ? `Selected: ${pending.file.name} · uploads on insert`
+              : 'Select a .gpx file (full track preserved) or paste a pre-built track JSON URL.'}
           </p>
         </div>
-        <Switch
-          checked={lossless}
-          description="Keep all GPS points (larger file). Off uses ~450 points via RDP."
-          label="Lossless"
-          onCheckedChange={setLossless}
-        />
-        {trackUrl ? (
+        {previewUrl ? (
           <div className="rounded-sm border border-border bg-surface-inset">
             <MapBlockReadonly {...previewSlot} className="my-0" />
           </div>
-        ) : null}
-        {!previewTrack && trackUrl ? (
-          <p className="text-xs text-fg-muted">Loading preview…</p>
         ) : null}
       </div>
       <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           Cancel
         </Button>
-        <Button disabled={!trackUrl} onClick={onSubmit} type="button">
-          Insert
+        <Button disabled={!canInsert} onClick={onSubmit} type="button">
+          {uploadMutation.isPending ? (
+            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+          ) : null}
+          {uploadMutation.isPending ? 'Uploading…' : 'Insert'}
         </Button>
       </div>
     </div>
