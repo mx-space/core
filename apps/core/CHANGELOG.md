@@ -1,3 +1,17 @@
+# [13.5.0](https://github.com/mx-space/core/compare/v13.4.0...v13.5.0) (2026-06-05)
+
+
+### Bug Fixes
+
+* **deps,admin:** revert kysely override and repair admin tests after upgrade ([b4aab3f](https://github.com/mx-space/core/commit/b4aab3f29c104958a02222ea691bdac2eaf74ad5))
+
+
+### Features
+
+* **admin:** add afilmory rich-editor extension (node + picker) ([28781df](https://github.com/mx-space/core/commit/28781df00e258728afb88873f0f4d2cbe1784ca3))
+
+
+
 # [13.4.0](https://github.com/mx-space/core/compare/v13.3.1...v13.4.0) (2026-06-05)
 
 
