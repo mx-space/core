@@ -1,12 +1,7 @@
-import { useCallback, useMemo } from 'react'
 import type { RichEditorProps as BaseRichEditorProps } from '@haklex/rich-editor'
-import type { MentionPlatformDef } from '@haklex/rich-plugin-mention'
-import type { Klass, LexicalNode, SerializedEditorState } from 'lexical'
-import type { ReactNode } from 'react'
-
 import {
-  RichEditor as BaseRichEditor,
   NestedContentRendererProvider,
+  RichEditor as BaseRichEditor,
 } from '@haklex/rich-editor'
 import { chatEditNodes } from '@haklex/rich-ext-chat'
 import { codeSnippetEditNodes } from '@haklex/rich-ext-code-snippet'
@@ -20,6 +15,7 @@ import { BlockHandlePlugin } from '@haklex/rich-plugin-block-handle'
 import { FloatingToolbarPlugin } from '@haklex/rich-plugin-floating-toolbar'
 import { FloatingLinkEditorPlugin } from '@haklex/rich-plugin-link-edit'
 import { LiteXmlPastePlugin } from '@haklex/rich-plugin-litexml-paste'
+import type { MentionPlatformDef } from '@haklex/rich-plugin-mention'
 import { MentionMenuPlugin } from '@haklex/rich-plugin-mention'
 import { SlashMenuPlugin } from '@haklex/rich-plugin-slash-menu'
 import {
@@ -32,7 +28,11 @@ import {
   linkCardEditNodes,
   PasteLinkCardPlugin,
 } from '@haklex/rich-renderer-linkcard'
+import type { Klass, LexicalNode, SerializedEditorState } from 'lexical'
+import type { ReactNode } from 'react'
+import { useCallback, useMemo } from 'react'
 
+import { MapNode, MapPlugin } from '../extensions/map'
 import { enhancedEditRendererConfig } from './configs/enhanced-edit-renderer-config'
 import { RichRenderer } from './RichRenderer'
 
@@ -44,6 +44,7 @@ const defaultExtraNodes = [
   ...galleryEditNodes,
   ...codeSnippetEditNodes,
   ...chatEditNodes,
+  MapNode,
 ]
 
 export interface RichEditorProps extends Omit<
@@ -127,6 +128,7 @@ export function RichEditor({
         <FloatingLinkEditorPlugin renderExtraActions={renderLinkExtraActions} />
         <ExcalidrawPlugin />
         <EmbedPlugin selfHostnames={selfHostnames} />
+        <MapPlugin />
         <PasteLinkCardPlugin />
         <TableRowColumnHandlesPlugin />
         <TableCellResizerPlugin />

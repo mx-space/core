@@ -1,9 +1,6 @@
-import { useCallback, useMemo } from 'react'
 import type { RichRendererProps as BaseRichRendererProps } from '@haklex/rich-compose'
-import type { RendererConfig, RichEditorVariant } from '@haklex/rich-editor'
-import type { Klass, LexicalNode, SerializedEditorState } from 'lexical'
-
 import { RichRenderer as BaseRichRenderer } from '@haklex/rich-compose'
+import type { RendererConfig, RichEditorVariant } from '@haklex/rich-editor'
 import { NestedContentRendererProvider } from '@haklex/rich-editor'
 import { chatNodes } from '@haklex/rich-ext-chat/static'
 import { codeSnippetNodes } from '@haklex/rich-ext-code-snippet/static'
@@ -11,7 +8,10 @@ import { embedNodes } from '@haklex/rich-ext-embed/static'
 import { ExcalidrawNode } from '@haklex/rich-ext-excalidraw/static'
 import { galleryNodes } from '@haklex/rich-ext-gallery/static'
 import { nestedDocNodes } from '@haklex/rich-ext-nested-doc/static'
+import type { Klass, LexicalNode, SerializedEditorState } from 'lexical'
+import { useCallback, useMemo } from 'react'
 
+import { MapNode } from '../extensions/map'
 import { enhancedRendererConfig } from './configs/enhanced-renderer-config'
 
 const defaultExtraNodes = [
@@ -21,6 +21,7 @@ const defaultExtraNodes = [
   ...codeSnippetNodes,
   ...chatNodes,
   ...nestedDocNodes,
+  MapNode,
 ]
 
 export interface RichRendererProps extends Omit<

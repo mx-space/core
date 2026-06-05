@@ -1,5 +1,4 @@
 import type { RendererConfig } from '@haklex/rich-editor'
-
 import {
   ALERT_NODE_KEY,
   BANNER_NODE_KEY,
@@ -27,6 +26,8 @@ import { MermaidRenderer } from '@haklex/rich-renderer-mermaid/static'
 import { RubyRenderer } from '@haklex/rich-renderer-ruby/static'
 import { VideoRenderer } from '@haklex/rich-renderer-video/static'
 
+import { MAP_NODE_KEY, MapBlockReadonly } from '../../extensions/map'
+
 export const enhancedRendererConfig: RendererConfig = {
   [ALERT_NODE_KEY]: AlertRenderer,
   [BANNER_NODE_KEY]: BannerRenderer,
@@ -36,6 +37,7 @@ export const enhancedRendererConfig: RendererConfig = {
   [GALLERY_NODE_KEY]: GalleryRenderer,
   [IMAGE_NODE_KEY]: ImageRenderer,
   [LINK_CARD_NODE_KEY]: LinkCardRenderer,
+  [MAP_NODE_KEY]: MapBlockReadonly,
   [MENTION_NODE_KEY]: MentionRenderer,
   [MERMAID_NODE_KEY]: MermaidRenderer,
   [RUBY_NODE_KEY]: RubyRenderer,

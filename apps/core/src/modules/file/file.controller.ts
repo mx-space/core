@@ -216,13 +216,13 @@ export class FileController {
     const { type = 'file' } = query
 
     const uploadConfig = await this.configsService.get('fileUploadOptions')
-    const imageStorageConfig =
-      type === 'image'
-        ? await this.configsService.get('imageStorageOptions')
-        : null
+    const imageStorageConfig = await this.configsService.get(
+      'imageStorageOptions',
+    )
+    const s3Enabled = imageStorageConfig?.enable === true
 
-    if (type === 'image' && imageStorageConfig?.enable) {
-      const config = imageStorageConfig
+    const uploadToS3 = async () => {
+      const config = imageStorageConfig!
       if (
         !config.endpoint ||
         !config.secretId ||
@@ -245,7 +245,7 @@ export class FileController {
       if (config.prefix) {
         prefixPath = replaceFilenameTemplate(config.prefix, {
           originalFilename: file.filename,
-          fileType: 'image',
+          fileType: type,
         })
         prefixPath = prefixPath.replace(/\/+$/, '')
       }
@@ -283,6 +283,10 @@ export class FileController {
       )
 
       return { url: s3Url, name: filename }
+    }
+
+    if (s3Enabled && (type === 'image' || type === 'file')) {
+      return uploadToS3()
     }
 
     const file = await this.uploadService.getAndValidMultipartField(
