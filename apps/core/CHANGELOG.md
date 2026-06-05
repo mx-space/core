@@ -1,82 +1,78 @@
-# Upcoming — AI SDK migration to pi
-
-## Manual release-blocker checklist (step-20)
-
-Before tagging the AI-migration release, an operator MUST manually verify
-all four items below against a staging deploy. The faux test suite covers
-wire bytes in CI, but these scenarios depend on real provider connectivity
-and a real browser, so they cannot be automated in pre-merge CI.
-
-1. **Admin chat — blocks render in order.** Open the admin agent chat,
-   issue a prompt that triggers a `thinking` + `tool_call` response. Assert
-   the `MessageBubble` renders text, thinking, and toolcall blocks in
-   monotonic `contentIndex` order with no flicker or missing frames.
-2. **Comment spam path — flagged.** Post a comment with obvious spammy
-   content against a staging post. Confirm the AI review pipeline flags it
-   (`hasSensitiveContent: true` / `isSpam: true`) and the admin row shows
-   the flagged state.
-3. **Translation SSE — wire bytes unchanged.** Run a translation on a
-   real Lexical post in admin. With DevTools Network ➜ EventStream open,
-   capture the `event: token` / `event: done` frames and diff them
-   against a pre-migration capture. Token text MUST be raw strings, not
-   JSON-wrapped objects.
-4. **Summary cache hit + miss — wire bytes unchanged.** Generate a fresh
-   summary (cache miss → streamed tokens). Re-request the same hash
-   immediately (cache hit → single synthetic `done` frame). Both paths
-   MUST match the pre-migration wire format byte-for-byte; the cached
-   path bypasses snake_case conversion via `@HTTPDecorators.RawResponse`.
-
-Any deviation in (3) or (4) is a release blocker — Shiroi / Yohaku public
-consumers depend on the byte-exact wire shape and have no api-client major
-bump scheduled in this release.
-
-## BREAKING CHANGE: `ai_agent_conversations` table rewritten
-
-The `ai_agent_conversations` table is dropped and recreated with a new shape
-`{ id, sessionId, model, providerId, messages, createdAt, updatedAt }`. The
-legacy columns `refId`, `refType`, `title`, `reviewState`, `diffState`, and
-`messageCount` are gone, and existing rows are not preserved. The companion
-`@OnEvent(POST_DELETE | NOTE_DELETE | PAGE_DELETE)` cascade is removed; orphan
-conversation rows after an article delete are accepted as known data debt.
-
-Operational requirements:
-
-- This migration MUST run as a pre-deploy step (Dokploy `mx-migrate` job).
-  Both replicas of `mx-core` MUST be stopped or in cutover before it executes
-  — `DROP TABLE` is incompatible with a hot replica still reading the old
-  schema.
-- The admin agent chat endpoint (`/api/ai/agent/*`) is unavailable for the
-  duration of the cutover (≤ 5 minutes, acceptable per design discussion).
-- The legacy article-scoped “conversations for this post” admin UX is
-  REMOVED (no `sessionId ↔ articleId` mapping is retained server-side).
-- Title generation is no longer persisted on the conversation row; if a
-  caller needs a title it must store it client-side via the existing
-  `generateTitle` helper on `AiAgentConversationService`.
-
-## [13.3.1](https://github.com/mx-space/core/compare/v13.3.0...v13.3.1) (2026-05-29)
+# [13.4.0](https://github.com/mx-space/core/compare/v13.3.1...v13.4.0) (2026-06-05)
 
 
 ### Bug Fixes
 
-* **admin:** raise dashboard version baseline to 8.2.0 so the bundled build supersedes stale runtime-downloaded copies ([69e7657](https://github.com/mx-space/core/commit/69e76578))
-
-
-
-# [13.3.0](https://github.com/mx-space/core/compare/v13.2.0...v13.3.0) (2026-05-29)
+* **ai:** inline Value.Check in callWriterStreaming done branch ([587903e](https://github.com/mx-space/core/commit/587903ec90d845ad897a9eb6b5e4e7bac93bac61))
+* **core:** resolve stale conflict markers in migration journal ([19e2517](https://github.com/mx-space/core/commit/19e25178357fa0f4921632312b80f655841749e0))
 
 
 ### Features
 
-* **admin:** integrate admin SPA into the monorepo ([#2740](https://github.com/mx-space/core/issues/2740)) ([76ca444](https://github.com/mx-space/core/commit/76ca4445))
-* **reader:** add ban support and role-filtered pagination ([91acc5d](https://github.com/mx-space/core/commit/91acc5d3))
+* add Map Lexical node and S3 file uploads ([45b4a47](https://github.com/mx-space/core/commit/45b4a4760f76d8be008a6e0cbe055be27f6b6f24))
+* **admin:** /comments redesign — inbox tabs, R3 rows, thread stream, meta sidebar ([9c2345b](https://github.com/mx-space/core/commit/9c2345bda3a5d700ebb32f0f2a6bfb9143b8ccfa))
+* **admin:** URL-driven master-detail with iOS push nav stack ([a5b9dff](https://github.com/mx-space/core/commit/a5b9dff3a40d450b253bfc00c814d1d5d7067954))
+* **ai-agent:** conversation title + admin panel refactor ([ccddc78](https://github.com/mx-space/core/commit/ccddc78432da776f128bdc89f7a907926130ab34))
+* **packages:** extract @mx-space/ai for shared AiAgentSseEvent + finish haklex 0.16.1 bump ([108ccd9](https://github.com/mx-space/core/commit/108ccd95d3830d155dfc6284abc3bd3d77c04fdf))
+* **spec1:** step-1 — add @earendil-works/pi-ai dependency ([969c36a](https://github.com/mx-space/core/commit/969c36adc09fe1549767a9c8f5eb8985745eca8f))
+* **spec1:** step-11 — migrate AiAgentChatService to streamMessage with accumulator + abort persistence ([676041b](https://github.com/mx-space/core/commit/676041bf30b6dd00a0e8e93157e1bf860280b842))
+* **spec1:** step-12 — rewrite ai-agent SSE controller with JSON-frame protocol ([4f83662](https://github.com/mx-space/core/commit/4f836620fd94ca5e2458be4bf9a91f8405caa978))
+* **spec1:** step-13 — wire AiInFlightService leader source from pi streamMessage ([d3b064b](https://github.com/mx-space/core/commit/d3b064b68491aad2f5a47aa554e3d0e9b9490020))
+* **spec1:** step-14 — GET /api/ai/registry/models endpoint with cache + auth + pinned wire shape ([815de31](https://github.com/mx-space/core/commit/815de31c45e8af6a759fc6787d0e3905faf41f87))
+* **spec1:** step-15 — faux-ai helper + pi-runtime adapter spec + per-service faux e2e ([17acc4c](https://github.com/mx-space/core/commit/17acc4c53f78c9db9da0865fb4702fd396c67bc2))
+* **spec1:** step-16 — byte-exact SSE envelope + leader/follower parity regression ([6786dee](https://github.com/mx-space/core/commit/6786deebc262b3033386629c5b291dde69390689))
+* **spec1:** step-17 — rewrite AI provider factory spec; drop legacy OpenAI runtime spec ([93431f8](https://github.com/mx-space/core/commit/93431f8df9185a51be1467e43b0c5a0bbc1b9396))
+* **spec1:** step-2 — expand IModelRuntime additively for pi-ai migration ([c8013f2](https://github.com/mx-space/core/commit/c8013f22df96b7f0c9d82846d869635c47d8ce32))
+* **spec1:** step-20 — final sweep: docs, type drift, consumer smoke ([d3c00a4](https://github.com/mx-space/core/commit/d3c00a4b9832d6bb91c180a2d0d03b1d96ec9122))
+* **spec1:** step-3a — reduce AIProviderType to 3 values + jsonb config migration ([501ff20](https://github.com/mx-space/core/commit/501ff207e14480706040c87af398003d973c51fd))
+* **spec1:** step-4 — port ai.prompts.ts structured schemas to TypeBox ([98c44f3](https://github.com/mx-space/core/commit/98c44f3e3e28e0e626cc038b7103b8a3f1f7f37c))
+* **spec1:** step-5 — implement PiRuntimeAdapter (model resolve, generate/stream/message, usage mapping) ([25586d2](https://github.com/mx-space/core/commit/25586d2e9728cd8cfbab6c70941646cb724a3ff4))
+* **spec1:** step-6 — JSON-Schema -> TypeBox converter for chat tools ([711badc](https://github.com/mx-space/core/commit/711badc1fd589c063a1566f6c1088e7301459d28))
+* **spec1:** step-7 — collapse runtime factory to PiRuntimeAdapter; drop legacy ai-sdk + openai/anthropic deps ([c7a0e9b](https://github.com/mx-space/core/commit/c7a0e9b16f4df6ad80cd6c9607a81e1a5f475b3c))
+* **spec1:** step-8 — migrate structured-output call sites to TypeBox Value.Check ([aa126ce](https://github.com/mx-space/core/commit/aa126ce86c16c9d4e0d84b8ab45c0b66067fbaca))
+* **spec1:** step-9 — rewrite ai_agent_conversations to session-scoped pi schema ([1189565](https://github.com/mx-space/core/commit/1189565c7419ff74c557ba96371ef7e4cfacd11e))
+* **spec2:** step-1 — add AI_TASK_UPDATE BusinessEvent + payload type ([bf5ea39](https://github.com/mx-space/core/commit/bf5ea3941d35f8930a74f1dcf9405172ec131178))
+* **spec2:** step-10 — rewrite executeTranslationTask with p-limit + abort cancels orphans ([73ecf36](https://github.com/mx-space/core/commit/73ecf36a248360f1e1673bdadbb45b2e40a444a0))
+* **spec2:** step-11 — implement PiRuntimeAdapter.streamStructured ([a441231](https://github.com/mx-space/core/commit/a441231265127e67b530c75293bbd214031d56d4))
+* **spec2:** step-12 — widen AiStreamEvent + filter partial at public SSE controllers ([948c827](https://github.com/mx-space/core/commit/948c8278286ed7458d06c8d6228afc167f220960))
+* **spec2:** step-13 — thread push callback to strategy.translate site (markdown wiring) ([79408f9](https://github.com/mx-space/core/commit/79408f948023a9573630f2d95e56bf3401b07712))
+* **spec2:** step-14 — callWriterStreaming + lexical strategy push wiring ([727c140](https://github.com/mx-space/core/commit/727c1401725360b6345cb77166d51196a65f67f3))
+* **spec2:** step-15 — widen langPush to forward partial events to streamPusher ([ba3f0c4](https://github.com/mx-space/core/commit/ba3f0c4c632ff25bdeb5378934fe8fd9f132cf3f))
+* **spec2:** step-16 — task cost capture via incrementCost helper (HINCRBY cents) ([ceaa49c](https://github.com/mx-space/core/commit/ceaa49c820f963c6fcf1b3bf72edfabf8598e873))
+* **spec2:** step-17 — adapter usage type: add cost to result.usage shapes ([ced2297](https://github.com/mx-space/core/commit/ced2297841721a23c0c3bc0133726741d78ed945))
+* **spec2:** step-18a — cost forwarding through translation strategies + service ([c922764](https://github.com/mx-space/core/commit/c922764172792ad44ba89081248bd7e7b66116df))
+* **spec2:** step-18b — cost forwarding through summary + insights services ([ff5974c](https://github.com/mx-space/core/commit/ff5974cd7596e964525021d1583b617cc9dee701))
+* **spec2:** step-19 — totalCost + parent group recompute in emits ([bec39a0](https://github.com/mx-space/core/commit/bec39a088cc615d91c54c427bfd5ec4fb36840e9))
+* **spec2:** step-2 — RoomSubsService (Redis SET + heartbeat + TTL gate) ([7875a62](https://github.com/mx-space/core/commit/7875a62e3d800217769a4666849a7dfd556f6800))
+* **spec2:** step-26a — backend pure-logic specs (emitter / stream-buffer / cost) ([eecadc4](https://github.com/mx-space/core/commit/eecadc489aee481662fc90b6f4233949fb84dcde))
+* **spec2:** step-26b — executeTranslationTask concurrency + cancellation spec ([b451d78](https://github.com/mx-space/core/commit/b451d7811adb6e8b7521760cc55b66ece8b42271))
+* **spec2:** step-26c — cross-pod Redis SET subscriber gate test ([3892c16](https://github.com/mx-space/core/commit/3892c16dd7d299c190babeeb80c2f2f9e3807750))
+* **spec2:** step-26d — augment public SSE controllers spec with data-line partial-payload guards ([375d2b8](https://github.com/mx-space/core/commit/375d2b83f007d2e4d1edef07fc6e9af3d0ccace5))
+* **spec2:** step-3 — add emitToAdminRoom helper on EventManagerService ([f450887](https://github.com/mx-space/core/commit/f45088705543cdc72661679153bcfdd703d8bed5))
+* **spec2:** step-4 — ai-task subscribe/unsubscribe + disconnect cleanup ([5b8a11e](https://github.com/mx-space/core/commit/5b8a11e1299aae26ed40bd4cff46b7dec276bf61))
+* **spec2:** step-5 — TaskQueueEmitter (throttled progress) + TaskStreamBuffer ([b30f093](https://github.com/mx-space/core/commit/b30f093d6b5851fe2f65359b6560397ec619f8b0))
+* **spec2:** step-6 — wire TaskQueueEmitter into TaskQueueService ([f98eb17](https://github.com/mx-space/core/commit/f98eb172feb3d0d5ccfd8142308d8cf69523f484))
+* **spec2:** step-6a — LUA_RECOVER_STALE returns { count, ...ids } with dual-shape handler ([190ff39](https://github.com/mx-space/core/commit/190ff39ab10491632eff638e780e54569e4001dc))
+* **spec2:** step-7 — wire recoverStaleTasks per-task emits ([d8a4a65](https://github.com/mx-space/core/commit/d8a4a65a8c89c0fea82d0b2a35b686b81a454b6c))
+* **spec2:** step-8 — wire streamPusher + TaskStreamBuffer into processor ([65c59cb](https://github.com/mx-space/core/commit/65c59cb2e2bcfd20d8317ae9526a945fc6ffe5b1))
+* **spec2:** step-9 — add p-limit + jsonrepair deps and translationLangConcurrency config ([bc0a3ce](https://github.com/mx-space/core/commit/bc0a3ce2a3c18184cc40d040d71275a0f4edc9e1))
+
+## [13.3.1](https://github.com/mx-space/core/compare/v13.3.0...v13.3.1) (2026-05-29)
+
+# [13.3.0](https://github.com/mx-space/core/compare/v13.2.0...v13.3.0) (2026-05-29)
 
 
 ### Bug Fixes
 
-* **comment:** keep reader replies as unread instead of inheriting read state ([7332443](https://github.com/mx-space/core/commit/73324431))
+* **comment:** keep reader replies as unread instead of inheriting read state ([7332443](https://github.com/mx-space/core/commit/733244313259bb6b6b3c9e8c1a84902f28542e47))
 
 
-# [13.2.0](https://github.com/mx-space/core/compare/v13.1.2...v13.2.0) (2026-05-28)
+### Features
+
+* **admin:** integrate admin SPA into the monorepo ([#2740](https://github.com/mx-space/core/issues/2740)) ([76ca444](https://github.com/mx-space/core/commit/76ca444547323bca63306cc0e59f0f4986773793))
+* **reader:** add ban support and role-filtered pagination ([91acc5d](https://github.com/mx-space/core/commit/91acc5d3018222a60fd68fc6e1ae5e1180a5afeb))
+
+# [13.2.0](https://github.com/mx-space/core/compare/v13.1.2...v13.2.0) (2026-05-27)
 
 
 ### Features
@@ -299,7 +295,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 
 * **recently:** URL-keyed enrichment map, drop typed entries ([#2726](https://github.com/mx-space/core/issues/2726)) ([91b8a47](https://github.com/mx-space/core/commit/91b8a47469e9b9f96016b7aa3651a2ffa6669719))
 
-# [12.6.0](https://github.com/mx-space/core/compare/v0.7.0...v12.6.0) (2026-05-15)
+# [12.6.0](https://github.com/mx-space/core/compare/v12.5.4...v12.6.0) (2026-05-15)
 
 
 ### Features
@@ -960,7 +956,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 * **schema:** enhance partial schemas for notes, pages, and posts with new fields ([f66c9ed](https://github.com/mx-space/core/commit/f66c9ed9cca1091730985813334adccb9462affd))
 * 更新文件上传前缀支持模板占位符，增强灵活性 ([#2584](https://github.com/mx-space/core/issues/2584)) ([2b5354a](https://github.com/mx-space/core/commit/2b5354a6f907947993dda64733e8bbd62c6cc62d))
 
-# [10.2.0](https://github.com/mx-space/core/compare/v10.1.10...v10.2.0) (2026-03-08)
+# [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
 
 
 ### Features
