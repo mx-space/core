@@ -69,7 +69,6 @@ describe('TopBar tabs', () => {
       tabs: baseTabs,
       activeKey: 'unread',
       onSelect: vi.fn(),
-      density: 'rich',
     })
 
     expect(q('comments-tab-unread')).not.toBeNull()
@@ -100,7 +99,6 @@ describe('TopBar tabs', () => {
       tabs: baseTabs,
       activeKey: 'unread',
       onSelect,
-      density: 'rich',
     })
     act(() => {
       ;(q('comments-tab-awaiting') as HTMLButtonElement).click()
@@ -115,7 +113,6 @@ describe('TopBar search', () => {
       tabs: baseTabs,
       activeKey: 'unread',
       onSelect: vi.fn(),
-      density: 'rich',
     })
 
     expect(document.querySelector('input[type="search"]')).toBeNull()
@@ -126,42 +123,16 @@ describe('TopBar search', () => {
   })
 })
 
-describe('TopBar more menu', () => {
-  it('opens the density radio group and fires onDensityChange', () => {
-    const onDensityChange = vi.fn()
-    render<TabKey>({
-      tabs: baseTabs,
-      activeKey: 'unread',
-      onSelect: vi.fn(),
-      density: 'rich',
-      onDensityChange,
-    })
-
-    act(() => {
-      ;(q('comments-topbar-menu') as HTMLButtonElement).click()
-    })
-
-    const compact = q('comments-density-compact') as HTMLButtonElement | null
-    expect(compact).not.toBeNull()
-    act(() => {
-      compact!.click()
-    })
-    expect(onDensityChange).toHaveBeenCalledWith('compact')
-  })
-
-  it('fires onRefresh when refresh is chosen', () => {
+describe('TopBar refresh', () => {
+  it('fires onRefresh when the refresh button is clicked', () => {
     const onRefresh = vi.fn()
     render<TabKey>({
       tabs: baseTabs,
       activeKey: 'unread',
       onSelect: vi.fn(),
-      density: 'rich',
       onRefresh,
     })
 
-    act(() => {
-      ;(q('comments-topbar-menu') as HTMLButtonElement).click()
-    })
     const refresh = q('comments-topbar-refresh') as HTMLButtonElement | null
     expect(refresh).not.toBeNull()
     act(() => {

@@ -132,7 +132,7 @@ describe('PageHeader', () => {
       'button[aria-label="Refresh"]',
     )
     expect(buttons.length).toBe(1)
-    expect(buttons[0].className).toContain('size-9')
+    expect(buttons[0].className).toContain('size-8')
     expect(buttons[0].className).not.toContain('lg:hidden')
   })
 

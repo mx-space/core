@@ -20,7 +20,7 @@ allowBuilds:
 overrides:
   "eslint-plugin-react-compiler>zod": 3.25.76
   "get-pixels@^3>request": ./external/request
-  kysely: 0.29.2
+  kysely: 0.28.17
   mongodb: ~7.2.0
   pino: ./external/pino
   rolldown: 1.1.0

@@ -22,6 +22,7 @@ export interface BadgeProps {
   title?: string
   tone?: BadgeTone
   variant?: BadgeVariant
+  'data-testid'?: string
 }
 
 const sizeClass: Record<BadgeSize, string> = {
@@ -88,6 +89,7 @@ export function Badge(props: BadgeProps) {
         toneClassFor(variant, tone),
         props.className,
       )}
+      data-testid={props['data-testid']}
       title={props.title}
     >
       {props.children}

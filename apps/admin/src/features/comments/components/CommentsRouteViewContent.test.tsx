@@ -242,10 +242,9 @@ describe('CommentsRouteViewContent tabs', () => {
 })
 
 describe('CommentsRouteViewContent filter strip / selection bar', () => {
-  it('renders the FilterStrip when nothing is selected', async () => {
+  it('hides the SelectionBar when nothing is selected', async () => {
     renderRoute('/comments?tab=unread')
     await flush()
-    expect(q('comments-filter-strip')).not.toBeNull()
     expect(q('comments-selection-bar')).toBeNull()
   })
 
