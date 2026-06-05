@@ -79,9 +79,6 @@ export function PostRow(props: {
             <ThumbsUp aria-hidden="true" className="size-3" />
             {post.likeCount ?? 0}
           </span>
-          <time className="ml-auto" dateTime={post.createdAt}>
-            {relativeTimeFromNow(post.createdAt)}
-          </time>
         </>
       }
       onSelect={(mode) => props.onSelect(post.id, mode)}
@@ -95,6 +92,11 @@ export function PostRow(props: {
       }
       title={title}
       titleTo={editPath}
+      trailingFooter={
+        <time dateTime={post.createdAt}>
+          {relativeTimeFromNow(post.createdAt)}
+        </time>
+      }
     />
   )
 }

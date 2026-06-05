@@ -54,17 +54,24 @@ export function ContentListToolbar(props: ContentListToolbarProps) {
         props.className,
       )}
     >
+      {selection ? (
+        <ContentListToolbarSelectionControls
+          hasSelection={hasSelection}
+          selection={selection}
+        />
+      ) : null}
+
       <form
         className="relative flex h-full min-w-0 flex-1 items-center self-stretch"
         onSubmit={props.onSearch}
       >
         <Search
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-1/2 size-3.5 -translate-y-1/2 text-neutral-400"
+          className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-neutral-400"
         />
         <input
           className={cn(
-            'outline-hidden focus:outline-hidden h-7 w-full border-0 bg-transparent pl-6 text-xs text-neutral-900 placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100',
+            'outline-hidden focus:outline-hidden h-7 w-full border-0 bg-transparent pl-8 text-xs text-neutral-900 placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100',
             props.hasSearch ? 'pr-6' : 'pr-0',
           )}
           onChange={(event) => props.onSearchValueChange(event.target.value)}
@@ -103,13 +110,6 @@ export function ContentListToolbar(props: ContentListToolbarProps) {
           </div>
         </>
       ) : null}
-
-      {selection ? (
-        <ContentListToolbarSelectionControls
-          hasSelection={hasSelection}
-          selection={selection}
-        />
-      ) : null}
     </div>
   )
 }
@@ -146,7 +146,7 @@ function ContentListToolbarSelectionControls(props: {
     return (
       <label
         aria-label={selection.selectAllLabel}
-        className="inline-flex h-7 shrink-0 cursor-pointer items-center justify-center px-1 text-neutral-500 transition-colors hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-neutral-50"
+        className="inline-flex h-7 shrink-0 cursor-pointer items-center justify-center text-neutral-500 transition-colors hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-neutral-50"
         title={selection.selectAllLabel}
       >
         <Checkbox
@@ -161,7 +161,7 @@ function ContentListToolbarSelectionControls(props: {
 
   return (
     <>
-      <label className="inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded bg-neutral-100 px-2 text-xs tabular-nums text-neutral-700 dark:bg-neutral-900 dark:text-neutral-200">
+      <label className="inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded pr-2 text-xs tabular-nums text-neutral-700 dark:text-neutral-200">
         <Checkbox
           aria-label={selection.selectAllLabel}
           checked={selection.allVisibleSelected}

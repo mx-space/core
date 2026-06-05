@@ -38,6 +38,11 @@ export interface ContentEntryListItemProps {
   status?: ReactNode
   title: ReactNode
   titleTo: string
+  /**
+   * Slot rendered under the action icons on the right rail (e.g. relative time).
+   * Keeps the right column visually aligned as a single vertical axis.
+   */
+  trailingFooter?: ReactNode
 }
 
 /**
@@ -121,29 +126,40 @@ export function ContentEntryListItem(props: ContentEntryListItemProps) {
 
       <div
         className={cn(
-          'row-start-1 flex shrink-0 items-center gap-0.5 self-start text-neutral-300',
-          'group-hover:text-neutral-600 group-data-[popup-open]:text-neutral-600 group-data-[selected]:text-neutral-600',
-          'dark:text-neutral-700 dark:group-hover:text-neutral-300 dark:group-data-[popup-open]:text-neutral-300 dark:group-data-[selected]:text-neutral-300',
+          'row-start-1 flex shrink-0 flex-col items-end gap-1 self-start',
           selectable ? 'col-start-3' : 'col-start-2',
         )}
       >
-        <ActionLink title={props.editTitle} to={props.editTo}>
-          <Pencil aria-hidden="true" className="size-4" />
-        </ActionLink>
-        <ActionLink
-          href={props.externalHref}
-          rel="noreferrer"
-          target="_blank"
-          title={props.openTitle}
+        <div
+          className={cn(
+            'flex items-center gap-0.5 text-neutral-300',
+            'group-hover:text-neutral-600 group-data-[popup-open]:text-neutral-600 group-data-[selected]:text-neutral-600',
+            'dark:text-neutral-700 dark:group-hover:text-neutral-300 dark:group-data-[popup-open]:text-neutral-300 dark:group-data-[selected]:text-neutral-300',
+          )}
         >
-          <ExternalLink aria-hidden="true" className="size-4" />
-        </ActionLink>
-        <ActionButton
-          onClick={onMoreClick}
-          title={t('shared.contentListItem.moreActions')}
-        >
-          <MoreHorizontal aria-hidden="true" className="size-4" />
-        </ActionButton>
+          <ActionLink title={props.editTitle} to={props.editTo}>
+            <Pencil aria-hidden="true" className="size-4" />
+          </ActionLink>
+          <ActionLink
+            href={props.externalHref}
+            rel="noreferrer"
+            target="_blank"
+            title={props.openTitle}
+          >
+            <ExternalLink aria-hidden="true" className="size-4" />
+          </ActionLink>
+          <ActionButton
+            onClick={onMoreClick}
+            title={t('shared.contentListItem.moreActions')}
+          >
+            <MoreHorizontal aria-hidden="true" className="size-4" />
+          </ActionButton>
+        </div>
+        {props.trailingFooter ? (
+          <div className="text-xs text-fg-subtle tabular-nums">
+            {props.trailingFooter}
+          </div>
+        ) : null}
       </div>
     </ListRow>
   )

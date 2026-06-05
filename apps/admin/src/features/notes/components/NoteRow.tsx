@@ -98,9 +98,6 @@ export function NoteRow(props: {
             <Heart aria-hidden="true" className="size-3" />
             {formatCompactNumber(note.likeCount ?? 0)}
           </span>
-          <time className="ml-auto" dateTime={note.createdAt}>
-            {relativeTimeFromNow(note.createdAt)}
-          </time>
         </>
       }
       onSelect={(mode) => props.onSelect(note.id, mode)}
@@ -118,6 +115,11 @@ export function NoteRow(props: {
       }
       title={title}
       titleTo={editPath}
+      trailingFooter={
+        <time dateTime={note.createdAt}>
+          {relativeTimeFromNow(note.createdAt)}
+        </time>
+      }
     />
   )
 }
