@@ -26,9 +26,11 @@ import { MermaidRenderer } from '@haklex/rich-renderer-mermaid/static'
 import { RubyRenderer } from '@haklex/rich-renderer-ruby/static'
 import { VideoRenderer } from '@haklex/rich-renderer-video/static'
 
+import { AFILMORY_NODE_KEY, AfilmoryBlock } from '../../extensions/afilmory'
 import { MAP_NODE_KEY, MapBlockReadonly } from '../../extensions/map'
 
 export const enhancedRendererConfig: RendererConfig = {
+  [AFILMORY_NODE_KEY]: AfilmoryBlock,
   [ALERT_NODE_KEY]: AlertRenderer,
   [BANNER_NODE_KEY]: BannerRenderer,
   [CHAT_NODE_KEY]: ChatRenderer,

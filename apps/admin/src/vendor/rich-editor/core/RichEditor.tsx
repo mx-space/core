@@ -32,6 +32,7 @@ import type { Klass, LexicalNode, SerializedEditorState } from 'lexical'
 import type { ReactNode } from 'react'
 import { useCallback, useMemo } from 'react'
 
+import { AfilmoryNode, AfilmoryPlugin } from '../extensions/afilmory'
 import { MapNode, MapPlugin } from '../extensions/map'
 import { enhancedEditRendererConfig } from './configs/enhanced-edit-renderer-config'
 import { RichRenderer } from './RichRenderer'
@@ -45,6 +46,7 @@ const defaultExtraNodes = [
   ...codeSnippetEditNodes,
   ...chatEditNodes,
   MapNode,
+  AfilmoryNode,
 ]
 
 export interface RichEditorProps extends Omit<
@@ -129,6 +131,7 @@ export function RichEditor({
         <ExcalidrawPlugin />
         <EmbedPlugin selfHostnames={selfHostnames} />
         <MapPlugin />
+        <AfilmoryPlugin />
         <PasteLinkCardPlugin />
         <TableRowColumnHandlesPlugin />
         <TableCellResizerPlugin />

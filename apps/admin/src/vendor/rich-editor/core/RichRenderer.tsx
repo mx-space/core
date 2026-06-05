@@ -11,6 +11,7 @@ import { nestedDocNodes } from '@haklex/rich-ext-nested-doc/static'
 import type { Klass, LexicalNode, SerializedEditorState } from 'lexical'
 import { useCallback, useMemo } from 'react'
 
+import { AfilmoryNode } from '../extensions/afilmory'
 import { MapNode } from '../extensions/map'
 import { enhancedRendererConfig } from './configs/enhanced-renderer-config'
 
@@ -22,6 +23,7 @@ const defaultExtraNodes = [
   ...chatNodes,
   ...nestedDocNodes,
   MapNode,
+  AfilmoryNode,
 ]
 
 export interface RichRendererProps extends Omit<
