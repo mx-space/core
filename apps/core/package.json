@@ -23,7 +23,7 @@
     "migrate:app": "cross-env NODE_ENV=development vite-node src/app-migrate.ts",
     "lint:migrations": "tsx --tsconfig tsconfig.json scripts/lint-migrations.ts",
     "bench:translation-prompt": "vite-node scripts/bench-translation-prompt.ts",
-    "bundle": "vite build --config build.config.ts",
+    "bundle": "vite build",
     "start": "cross-env NODE_ENV=development nodemon --signal SIGKILL --watch src --ext ts,json --exec \"vite-node src/dev.ts\"",
     "start:debug": "cross-env NODE_ENV=development nodemon --signal SIGKILL --watch src --ext ts,json --exec \"node --inspect --import vite-node/register src/dev.ts\"",
     "start:cluster": "cross-env NODE_ENV=development nodemon --signal SIGKILL --watch src --ext ts,json --exec \"vite-node src/dev.ts -- --cluster --cluster_workers 2\"",
