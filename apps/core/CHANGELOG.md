@@ -1,3 +1,9 @@
+## [13.5.1](https://github.com/mx-space/core/compare/v13.5.0...v13.5.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* **admin:** defer map track upload until insert and simplify dialog ([8274418](https://github.com/mx-space/core/commit/82744184006ea7efd857305dfd80eeb90b604a4e))
 # [13.5.0](https://github.com/mx-space/core/compare/v13.4.0...v13.5.0) (2026-06-05)
 
 
