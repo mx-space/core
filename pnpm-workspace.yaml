@@ -20,11 +20,11 @@ allowBuilds:
 overrides:
   "eslint-plugin-react-compiler>zod": 3.25.76
   "get-pixels@^3>request": ./external/request
-  kysely: 0.28.17
+  kysely: 0.29.2
   mongodb: ~7.2.0
   pino: ./external/pino
-  rolldown: 1.0.1
-  semver: 7.8.1
+  rolldown: 1.1.0
+  semver: 7.8.2
   typescript: 6.0.3
   whatwg-url: 16.0.1
   zod: 4.4.3
@@ -33,9 +33,9 @@ overrides:
   "nanoid@>=4.0.0 <5.0.9": 5.1.11
   "tmp@<0.2.6": 0.2.6
   "uuid@<11.1.1": 11.1.1
-  lucide-react: 1.8.0
+  lucide-react: 1.17.0
   "@codemirror/state": 6.6.0
-  "@codemirror/view": 6.42.1
+  "@codemirror/view": 6.43.0
   "@codemirror/commands": 6.10.3
   "@codemirror/language": 6.12.3
 publicHoistPattern:

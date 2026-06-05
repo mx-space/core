@@ -72,7 +72,7 @@
     "drizzle-orm": "^0.45.2",
     "mongodb": "~7.2.0",
     "pg": "^8.21.0",
-    "tsdown": "0.22.1",
+    "tsdown": "0.22.2",
     "tsx": "^4.22.4",
     "typescript": "6.0.3",
     "vitest": "4.1.8"
