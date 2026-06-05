@@ -24,7 +24,7 @@ export function LiveCard(props: {
   const Icon = props.icon
 
   return (
-    <div className="rounded-sm border border-border bg-surface-card p-4">
+    <div className="bg-surface-card p-4">
       <div className="flex items-center gap-4">
         <div className="relative">
           {props.live ? (

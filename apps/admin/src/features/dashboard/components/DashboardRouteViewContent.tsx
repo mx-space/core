@@ -266,7 +266,7 @@ export function DashboardRouteViewContent() {
         className="min-h-0 flex-1 bg-background"
         innerClassName="flex flex-col p-4"
       >
-        <section className="grid gap-3 md:grid-cols-3">
+        <section className="grid gap-px bg-border-strong md:grid-cols-3">
           <LiveCard
             icon={Radio}
             label={t('dashboard.live.online')}
@@ -292,7 +292,7 @@ export function DashboardRouteViewContent() {
           })}
           title={t('dashboard.panel.quickActions.title')}
         >
-          <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-px bg-border-strong sm:grid-cols-2 lg:grid-cols-4">
             <ActionCard
               icon={FileText}
               label={t('dashboard.action.label.posts')}
@@ -329,7 +329,7 @@ export function DashboardRouteViewContent() {
         </Panel>
 
         <Panel className="mt-6" title={t('dashboard.panel.stats.title')}>
-          <div className="grid gap-px bg-border sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+          <div className="grid gap-px bg-border-strong sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
             <StatCell
               icon={File}
               label={t('dashboard.stat.pages')}
@@ -407,7 +407,7 @@ export function DashboardRouteViewContent() {
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 aria-hidden="true"
-                className="bg-background"
+                className="bg-surface-card"
                 key={`stat-spacer-${i}`}
               />
             ))}
@@ -442,7 +442,7 @@ export function DashboardRouteViewContent() {
         </section>
 
         <Panel className="mt-6" title={t('dashboard.panel.maintenance.title')}>
-          <div className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-px bg-border-strong sm:grid-cols-2 xl:grid-cols-3">
             <MaintenanceCard
               disabled={cleanCacheMutation.isPending}
               icon={BrushCleaning}
