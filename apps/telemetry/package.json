@@ -9,8 +9,8 @@
     "db:migrate:remote": "wrangler d1 execute mx-telemetry --remote --file=./schema.sql"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260601.1",
-    "wrangler": "^4.95.0"
+    "@cloudflare/workers-types": "^4.20260604.1",
+    "wrangler": "^4.97.0"
   },
   "dependencies": {
     "rebuild": "^0.1.2"
