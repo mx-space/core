@@ -74,6 +74,16 @@ export interface PhotoFilter {
   dateTo: string
 }
 
+export const EMPTY_FILTER: PhotoFilter = {
+  cameras: [],
+  dateFrom: '',
+  dateTo: '',
+  lenses: [],
+  search: '',
+  tagMode: 'union',
+  tags: [],
+}
+
 export function applyClientFilter(
   photos: AfilmoryManifestPhoto[],
   f: PhotoFilter,
@@ -141,18 +151,20 @@ export function ChipButton({
   count,
   label,
   onClick,
+  onRemove,
 }: {
   active: boolean
   count?: number
   label: string
-  onClick: () => void
+  onClick?: () => void
+  onRemove?: () => void
 }) {
   return (
     <button
-      className={`inline-flex max-w-[260px] items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] transition ${
+      className={`inline-flex max-w-[260px] items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition ${
         active
           ? 'border-accent bg-accent/10 text-accent'
-          : 'border-border bg-surface text-fg-muted hover:border-fg-muted hover:text-fg'
+          : 'border-border bg-surface-card text-fg-muted hover:border-border-strong hover:text-fg'
       }`}
       onClick={onClick}
       title={label}
@@ -160,7 +172,21 @@ export function ChipButton({
     >
       <span className="min-w-0 truncate">{label}</span>
       {count !== undefined ? (
-        <span className="shrink-0 text-[9px] opacity-60">·{count}</span>
+        <span className="shrink-0 text-xs opacity-60">·{count}</span>
+      ) : null}
+      {onRemove ? (
+        <span
+          aria-label={`Remove ${label}`}
+          className="-mr-0.5 ml-0.5 inline-flex size-3.5 items-center justify-center rounded-full text-xs hover:bg-accent/20"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove()
+          }}
+          role="button"
+          tabIndex={-1}
+        >
+          ✕
+        </span>
       ) : null}
     </button>
   )
@@ -172,22 +198,24 @@ export function FacetGroup({
   suffix,
 }: {
   children: ReactNode
-  label: string
+  label: ReactNode
   suffix?: ReactNode
 }) {
   return (
-    <div className="grid gap-1">
+    <div className="grid gap-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] font-medium tracking-wider text-fg-muted uppercase">
+        <span className="text-xs font-medium uppercase tracking-wider text-fg-muted">
           {label}
         </span>
         {suffix}
       </div>
-      <div className="flex flex-wrap gap-1">{children}</div>
+      <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>
   )
 }
 
+// Legacy compact toggle, kept for any external consumers; the new dialog uses a
+// segmented control inline. Safe to remove once nothing imports it.
 export function TagModeToggle({
   mode,
   onChange,
@@ -197,7 +225,7 @@ export function TagModeToggle({
 }) {
   return (
     <button
-      className="font-mono text-[10px] text-fg-muted underline hover:text-fg"
+      className="font-mono text-xs text-fg-muted underline hover:text-fg"
       onClick={() => onChange(mode === 'union' ? 'intersection' : 'union')}
       type="button"
     >
