@@ -57,6 +57,7 @@
     "@haklex/rich-renderer-video": "0.20.0",
     "@lexical/markdown": "^0.45.0",
     "@lexical/react": "^0.45.0",
+    "@lexical/rich-text": "^0.45.0",
     "@lezer/highlight": "1.2.3",
     "@monaco-editor/react": "4.7.0",
     "@mx-space/ai": "workspace:*",

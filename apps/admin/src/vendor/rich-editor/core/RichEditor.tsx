@@ -34,6 +34,7 @@ import { useCallback, useMemo } from 'react'
 
 import { AfilmoryNode, AfilmoryPlugin } from '../extensions/afilmory'
 import { MapNode, MapPlugin } from '../extensions/map'
+import type { TrackUpload } from '../types'
 import { enhancedEditRendererConfig } from './configs/enhanced-edit-renderer-config'
 import { RichRenderer } from './RichRenderer'
 
@@ -59,6 +60,8 @@ export interface RichEditorProps extends Omit<
   /** Extra controls rendered in the floating selection toolbar (e.g. Ask AI). */
   floatingToolbarActions?: ReactNode
   selfHostnames?: string[]
+  /** Strategy for uploading dropped/pasted GPX tracks. Returns the public URL. */
+  trackUpload?: TrackUpload
 }
 
 export function RichEditor({
@@ -68,6 +71,7 @@ export function RichEditor({
   children,
   selfHostnames,
   extraMentionPlatforms,
+  trackUpload,
   variant = 'article',
   theme = 'light',
   ...props
@@ -130,7 +134,7 @@ export function RichEditor({
         <FloatingLinkEditorPlugin renderExtraActions={renderLinkExtraActions} />
         <ExcalidrawPlugin />
         <EmbedPlugin selfHostnames={selfHostnames} />
-        <MapPlugin />
+        <MapPlugin trackUpload={trackUpload} />
         <AfilmoryPlugin />
         <PasteLinkCardPlugin />
         <TableRowColumnHandlesPlugin />

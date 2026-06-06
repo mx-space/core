@@ -222,6 +222,9 @@ importers:
       '@lexical/react':
         specifier: ^0.45.0
         version: 0.45.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(yjs@13.6.30)
+      '@lexical/rich-text':
+        specifier: ^0.45.0
+        version: 0.45.0
       '@lezer/highlight':
         specifier: 1.2.3
         version: 1.2.3

@@ -1144,13 +1144,13 @@ function WritePage(props: { kind: WriteKind }) {
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col pb-[200px]">
-                  <div className="mx-auto w-full max-w-5xl px-3">
+                  <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3">
                     {state.contentFormat === 'lexical' ? (
                       <RichWriteSurface
                         agentVisible={agentVisible}
                         autoFocus={isEditing}
                         content={state.content}
-                        contentClassName="min-h-120 px-0 py-3"
+                        contentClassName="!min-h-[60vh] flex-1 px-0 py-3"
                         kind={props.kind}
                         key={`${props.kind}:${id || 'new'}:${state.contentFormat}`}
                         getMetaFields={getAgentMetaFields}
@@ -1161,10 +1161,9 @@ function WritePage(props: { kind: WriteKind }) {
                         onMetaFieldsUpdate={applyAgentMetaUpdates}
                         onTextChange={(text) => updateField('text', text)}
                         refId={isEditing ? id : routeDraftId || undefined}
-                        surfaceClassName="min-h-136 rounded-none border-0 bg-transparent dark:bg-transparent"
+                        surfaceClassName="flex min-h-[70vh] flex-1 flex-col rounded-none border-0 bg-transparent dark:bg-transparent"
                         surfaceStyle={
                           {
-                            minHeight: '34rem',
                             '--rc-max-width': 'none',
                           } as CSSProperties
                         }
@@ -3416,6 +3415,10 @@ function RichWriteSurface(props: {
     imageUpload: async (file) => {
       const result = await uploadFile(file, 'image')
       return { src: result.url }
+    },
+    trackUpload: async (file) => {
+      const result = await uploadFile(file, 'file')
+      return { url: result.url }
     },
     initialValue: parseSerializedEditorState(props.content),
     systemMessages: props.metaFieldsSchema

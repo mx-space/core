@@ -9,11 +9,8 @@ import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
 
-import {
-  buildTrackJson,
-  extractTimezoneOffsetMinutes,
-  parseGpx,
-} from './gps-compress'
+import type { GpxPoint } from './gps-compress'
+import { buildTrackFile, isGpxFile, readGpxFile } from './gps-compress'
 import { MapBlockReadonly } from './MapBlockReadonly'
 import type { MapNodePayload } from './MapNode'
 
@@ -22,63 +19,48 @@ interface InsertMapDialogProps {
   onSubmit: (payload: MapNodePayload) => void
 }
 
-interface PendingUpload {
-  blobUrl: string
-  file: File
-}
+type RawPick =
+  | {
+      file: File
+      points: GpxPoint[]
+      tzOffsetMinutes: number | null
+      type: 'gpx'
+    }
+  | { file: File; type: 'json' }
+
+const DEFAULT_CLUSTER_RADIUS_M = 80
+const DEFAULT_DWELL_MINUTES = 10
 
 function InsertMapDialog(props: InsertMapDialogProps) {
   const modal = useModal<void>()
   const [title, setTitle] = useState(props.initial?.title ?? '')
   const [trackUrl, setTrackUrl] = useState(props.initial?.track?.url ?? '')
-  const [pending, setPending] = useState<PendingUpload | null>(null)
+  const [raw, setRaw] = useState<RawPick | null>(null)
+  const [clusterRadiusM, setClusterRadiusM] = useState(DEFAULT_CLUSTER_RADIUS_M)
+  const [dwellMinutes, setDwellMinutes] = useState(DEFAULT_DWELL_MINUTES)
+  const [blobUrl, setBlobUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    return () => {
-      if (pending) URL.revokeObjectURL(pending.blobUrl)
-    }
-  }, [pending])
-
   const prepareMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const text = await file.text()
-      if (!isGpx(text, file.name)) {
-        return { blob: file, fileName: file.name }
+    mutationFn: async (file: File): Promise<RawPick> => {
+      if (!isGpxFile(file)) {
+        const text = await file.text()
+        if (!/<gpx\b/i.test(text)) return { file, type: 'json' }
+        const { points, tzOffsetMinutes } = await readGpxFile(
+          new File([text], file.name, { type: 'application/gpx+xml' }),
+        )
+        return { file, points, tzOffsetMinutes, type: 'gpx' }
       }
-      const points = parseGpx(text)
-      if (points.length === 0) {
-        throw new Error('No valid GPS points found in file')
-      }
-      const tzOffsetMinutes = extractTimezoneOffsetMinutes(text)
-      const trackData = buildTrackJson(
-        points,
-        file.name.replace(/\.gpx$/i, ''),
-        {
-          sampleTarget: null,
-          timezoneOffsetMinutes: tzOffsetMinutes,
-        },
-      )
-      const jsonBlob = new Blob([JSON.stringify(trackData)], {
-        type: 'application/json',
-      })
-      return {
-        blob: jsonBlob,
-        fileName: `${file.name.replace(/\.gpx$/i, '')}.json`,
-      }
+      const { points, tzOffsetMinutes } = await readGpxFile(file)
+      return { file, points, tzOffsetMinutes, type: 'gpx' }
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : String(error)
       toast.error(`Failed to read file: ${message}`)
     },
-    onSuccess: ({ blob, fileName }) => {
-      const preparedFile = new File([blob], fileName, { type: blob.type })
-      const blobUrl = URL.createObjectURL(blob)
-      setPending((prev) => {
-        if (prev) URL.revokeObjectURL(prev.blobUrl)
-        return { blobUrl, file: preparedFile }
-      })
+    onSuccess: (next) => {
       setTrackUrl('')
+      setRaw(next)
     },
   })
 
@@ -90,7 +72,37 @@ function InsertMapDialog(props: InsertMapDialogProps) {
     },
   })
 
-  const previewUrl = pending?.blobUrl || trackUrl
+  const prepared = useMemo(() => {
+    if (!raw) return null
+    if (raw.type === 'json') {
+      return { file: raw.file, stopCount: null as number | null }
+    }
+    const baseFileName = raw.file.name.replace(/\.gpx$/i, '')
+    const { file, trackData } = buildTrackFile(baseFileName, raw.points, {
+      detectStopsOptions: {
+        clusterRadiusM,
+        minMergedSec: dwellMinutes * 60,
+      },
+      sampleTarget: null,
+      timezoneOffsetMinutes: raw.tzOffsetMinutes,
+    })
+    return {
+      file,
+      stopCount: trackData.stops?.length ?? 0,
+    }
+  }, [raw, clusterRadiusM, dwellMinutes])
+
+  useEffect(() => {
+    if (!prepared) {
+      setBlobUrl(null)
+      return
+    }
+    const url = URL.createObjectURL(prepared.file)
+    setBlobUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [prepared])
+
+  const previewUrl = blobUrl || trackUrl
   const previewSlot = useMemo(
     () => ({
       track: previewUrl ? { url: previewUrl } : undefined,
@@ -101,23 +113,13 @@ function InsertMapDialog(props: InsertMapDialogProps) {
 
   const onTrackUrlChange = (value: string) => {
     setTrackUrl(value)
-    if (pending) {
-      URL.revokeObjectURL(pending.blobUrl)
-      setPending(null)
-    }
-  }
-
-  const clearPending = () => {
-    if (pending) {
-      URL.revokeObjectURL(pending.blobUrl)
-      setPending(null)
-    }
+    if (raw) setRaw(null)
   }
 
   const onSubmit = async () => {
     let finalUrl = trackUrl
-    if (pending) {
-      const result = await uploadMutation.mutateAsync(pending.file)
+    if (prepared) {
+      const result = await uploadMutation.mutateAsync(prepared.file)
       finalUrl = result.url
     }
     if (!finalUrl) {
@@ -132,7 +134,7 @@ function InsertMapDialog(props: InsertMapDialogProps) {
   }
 
   const busy = prepareMutation.isPending || uploadMutation.isPending
-  const canInsert = (!!pending || !!trackUrl) && !busy
+  const canInsert = (!!raw || !!trackUrl) && !busy
 
   return (
     <div className="flex w-full flex-col">
@@ -150,11 +152,9 @@ function InsertMapDialog(props: InsertMapDialogProps) {
           <div className="flex items-stretch gap-2">
             <div className="flex-1">
               <TextInput
-                disabled={!!pending}
+                disabled={!!raw}
                 onChange={onTrackUrlChange}
-                placeholder={
-                  pending ? pending.file.name : 'https://…/track.json'
-                }
+                placeholder={raw ? raw.file.name : 'https://…/track.json'}
                 value={trackUrl}
               />
             </div>
@@ -169,12 +169,12 @@ function InsertMapDialog(props: InsertMapDialogProps) {
               ref={fileInputRef}
               type="file"
             />
-            {pending ? (
+            {raw ? (
               <Button
                 aria-label="Clear selected file"
                 className="h-9 w-9"
                 iconOnly
-                onClick={clearPending}
+                onClick={() => setRaw(null)}
                 title="Clear selected file"
                 type="button"
                 variant="subtle"
@@ -201,11 +201,46 @@ function InsertMapDialog(props: InsertMapDialogProps) {
             )}
           </div>
           <p className="text-xs text-fg-muted">
-            {pending
-              ? `Selected: ${pending.file.name} · uploads on insert`
+            {raw
+              ? `Selected: ${raw.file.name} · uploads on insert`
               : 'Select a .gpx file (full track preserved) or paste a pre-built track JSON URL.'}
           </p>
         </div>
+        {raw?.type === 'gpx' ? (
+          <div className="grid gap-2 rounded-sm border border-border bg-surface-inset p-3">
+            <div className="text-xs font-medium text-fg">Stop detection</div>
+            <div className="grid grid-cols-2 gap-3">
+              <TextInput
+                inputMode="numeric"
+                label="Cluster radius (m)"
+                min={1}
+                onChange={(value) => {
+                  const next = Number.parseInt(value, 10)
+                  if (Number.isFinite(next) && next > 0) setClusterRadiusM(next)
+                }}
+                type="number"
+                value={String(clusterRadiusM)}
+              />
+              <TextInput
+                inputMode="numeric"
+                label="Min dwell (minutes)"
+                min={1}
+                onChange={(value) => {
+                  const next = Number.parseInt(value, 10)
+                  if (Number.isFinite(next) && next > 0) setDwellMinutes(next)
+                }}
+                type="number"
+                value={String(dwellMinutes)}
+              />
+            </div>
+            <p className="text-xs text-fg-muted">
+              Group GPS samples within {clusterRadiusM} m and surface clusters
+              dwelt in for at least {dwellMinutes} minute
+              {dwellMinutes === 1 ? '' : 's'} as stops. Detected:{' '}
+              {prepared?.stopCount ?? 0}.
+            </p>
+          </div>
+        ) : null}
         {previewUrl ? (
           <div className="rounded-sm border border-border bg-surface-inset">
             <MapBlockReadonly {...previewSlot} className="my-0" />
@@ -225,11 +260,6 @@ function InsertMapDialog(props: InsertMapDialogProps) {
       </div>
     </div>
   )
-}
-
-function isGpx(text: string, filename: string): boolean {
-  if (/\.gpx$/i.test(filename)) return true
-  return /<gpx\b/i.test(text)
 }
 
 export function presentInsertMapDialog(props: InsertMapDialogProps) {

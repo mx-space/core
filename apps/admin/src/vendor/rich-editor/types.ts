@@ -1,4 +1,5 @@
 import type { useAgentLoop } from '@haklex/rich-ext-ai-agent'
+
 import type { RichEditorProps } from './core'
 
 export type SaveExcalidrawSnapshot = (
@@ -8,6 +9,8 @@ export type SaveExcalidrawSnapshot = (
 
 // Admin-safe alias so consumers don't need to depend on React-bound types
 export type ImageUpload = NonNullable<RichEditorProps['imageUpload']>
+
+export type TrackUpload = (file: File) => Promise<{ url: string }>
 
 export type AgentLoopHandle = ReturnType<typeof useAgentLoop>
 

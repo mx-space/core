@@ -313,6 +313,37 @@ export function buildTrackJson(
   }
 }
 
+export function isGpxFile(file: { name: string; type: string }): boolean {
+  return /\.gpx$/i.test(file.name) || file.type === 'application/gpx+xml'
+}
+
+export async function readGpxFile(file: File): Promise<{
+  points: GpxPoint[]
+  tzOffsetMinutes: number | null
+}> {
+  const text = await file.text()
+  const points = parseGpx(text)
+  if (points.length === 0) {
+    throw new Error('No valid GPS points found in file')
+  }
+  return { points, tzOffsetMinutes: extractTimezoneOffsetMinutes(text) }
+}
+
+export function buildTrackFile(
+  baseFileName: string,
+  points: GpxPoint[],
+  options: BuildTrackJsonOptions = {},
+): { file: File; trackData: MapTrackData } {
+  const trackData = buildTrackJson(points, baseFileName, options)
+  const jsonBlob = new Blob([JSON.stringify(trackData)], {
+    type: 'application/json',
+  })
+  const file = new File([jsonBlob], `${baseFileName}.json`, {
+    type: 'application/json',
+  })
+  return { file, trackData }
+}
+
 function firstFinite(values: Array<number | null | undefined>): number | null {
   for (const v of values)
     if (typeof v === 'number' && Number.isFinite(v)) return v
