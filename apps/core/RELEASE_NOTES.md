@@ -1,12 +1,19 @@
 ## TL;DR
 
-Patch release with admin map dialog upload fix and content list toolbar polish.
+Admin rich editor now accepts a dropped `.gpx` file and inserts a ready-to-render map node, with stop-detection parameters tunable from the insert dialog.
+
+## Highlights
+
+The map extension previously required clicking through a slash-menu picker to add a track; now the editor catches drag-and-drop and paste of `.gpx` files directly, parses the GPS points client-side, compresses them via the existing stop-detection pipeline, uploads the resulting JSON track, and inserts the map node — all behind a single toast. The `InsertMapDialog` was also rewritten so the upload only happens when you click Insert, not the moment you pick a file, and exposes the two stop-detection knobs (cluster radius in metres and minimum dwell in minutes) that used to be hard-coded constants.
+
+The editor surface in `Write` grows to fill the visible viewport, so the drop target is large enough to land a file on without precision-aiming the toolbar strip.
 
 ## Changes
 
-- Map insert dialog now defers the GPX upload until you click **Insert**, parses the file locally for preview, drops the lossless toggle (full track is always preserved), removes the noisy filename auto-fill for the title, and aligns the upload button height with the URL input. ([8274418](https://github.com/mx-space/core/commit/82744184006ea7efd857305dfd80eeb90b604a4e))
-- Content list toolbar selection control moves to the leftmost slot so the select-all checkbox lines up with each row's checkbox, and timestamps in PostRow / NoteRow now stack with action icons in a single right-aligned vertical rail for clearer scanning. ([c705547](https://github.com/mx-space/core/commit/c705547192e73b7e78379678a01c749299236f4e))
+### Features
+
+- Drag a `.gpx` file onto the rich editor to insert a map node — same compression and stop-detection pipeline as the existing dialog. ([9174971](https://github.com/mx-space/core/commit/9174971ef917020a394c01dfbbaf15716047f105))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.5.0...v13.5.1
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.5.1...v13.5.2

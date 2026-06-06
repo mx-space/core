@@ -1,3 +1,9 @@
+## [13.5.2](https://github.com/mx-space/core/compare/v13.5.1...v13.5.2) (2026-06-06)
+
+
+### Features
+
+* **admin:** add GPX drag-drop to rich editor ([9174971](https://github.com/mx-space/core/commit/9174971ef917020a394c01dfbbaf15716047f105))
 ## [13.5.1](https://github.com/mx-space/core/compare/v13.5.0...v13.5.1) (2026-06-05)
 
 
