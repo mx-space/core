@@ -32,12 +32,24 @@ export interface MapTrackData {
   version?: number
 }
 
+export interface MapMerchant {
+  address?: string
+  phone?: string
+  website?: string
+  openingHours?: string
+  category?: string
+  priceRange?: string
+  socialHandles?: { instagram?: string; twitter?: string }
+  tags?: string[]
+}
+
 export interface MapPoi {
   description?: string
   icon?: 'pin'
   lat: number
   lon: number
   title?: string
+  merchant?: MapMerchant
 }
 
 export interface MapView {
