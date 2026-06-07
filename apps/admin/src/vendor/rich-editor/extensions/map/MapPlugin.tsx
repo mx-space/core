@@ -11,7 +11,12 @@ import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 
 import { buildTrackFile, isGpxFile, readGpxFile } from './gps-compress'
+import { presentInsertLocationDialog } from './InsertLocationDialog'
 import { presentInsertMapDialog } from './InsertMapDialog'
+import {
+  registerLocationDialogOpener,
+  unregisterLocationDialogOpener,
+} from './location-plugin-bridge'
 import {
   registerMapDialogOpener,
   unregisterMapDialogOpener,
@@ -40,7 +45,16 @@ export function MapPlugin({ trackUpload }: MapPluginProps = {}): null {
         onSubmit: (next) => payload.onSubmit(next),
       })
     })
-    return () => unregisterMapDialogOpener(editor)
+    registerLocationDialogOpener(editor, (payload) => {
+      void presentInsertLocationDialog({
+        initial: payload.initial,
+        onSubmit: (next) => payload.onSubmit(next),
+      })
+    })
+    return () => {
+      unregisterMapDialogOpener(editor)
+      unregisterLocationDialogOpener(editor)
+    }
   }, [editor])
 
   useEffect(() => {

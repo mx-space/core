@@ -1,3 +1,4 @@
+export { presentInsertLocationDialog } from './InsertLocationDialog'
 export { presentInsertMapDialog } from './InsertMapDialog'
 export type { MapSlotProps } from './map-augment'
 export { MAP_NODE_KEY } from './map-augment'

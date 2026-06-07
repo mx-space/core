@@ -2,7 +2,22 @@ import { Modal } from '~/ui/feedback/modal'
 import { PortalLayerScope } from '~/ui/feedback/portal-layer'
 
 import { ModalInstanceProvider } from './context'
+import { getDismissGuard } from './dismiss-guard'
 import { modalStore, useModalStore } from './store'
+import type { ModalHandle } from './types'
+
+async function confirmThenDismiss(handle: ModalHandle) {
+  const { confirmDialog } = await import('~/ui/feedback/confirm')
+  const ok = await confirmDialog({
+    title: 'Discard unsaved changes?',
+    description:
+      'You have unsaved changes. Closing this dialog will discard them.',
+    confirmText: 'Discard',
+    cancelText: 'Keep editing',
+    destructive: true,
+  })
+  if (ok) handle.dismiss()
+}
 
 /**
  * Z-stack stride: each modal reserves this many depth steps so its descendants
@@ -31,6 +46,12 @@ export function ModalRoot() {
                   if (open) return
                   if (!isTop || !inst.options.dismissable) {
                     eventDetails.cancel()
+                    return
+                  }
+                  const guard = getDismissGuard(inst.id)
+                  if (guard && guard()) {
+                    eventDetails.cancel()
+                    void confirmThenDismiss(inst.handle)
                     return
                   }
                   inst.handle.dismiss()

@@ -15,9 +15,10 @@ import {
   createCommand,
   DecoratorNode,
 } from 'lexical'
-import { MapPin } from 'lucide-react'
+import { MapPin, Navigation } from 'lucide-react'
 import { createElement, type ReactElement } from 'react'
 
+import { openLocationDialog } from './location-plugin-bridge'
 import { MAP_NODE_KEY, type MapSlotProps } from './map-augment'
 import { openMapDialog } from './map-plugin-bridge'
 import { MapBlockConnected } from './MapBlockConnected'
@@ -138,10 +139,30 @@ export class MapNode extends DecoratorNode<ReactElement> {
 
   static commandItems: CommandItemConfig[] = [
     {
-      title: 'Map',
+      title: 'Location',
       icon: createElement(MapPin, { size: 20 }),
-      description: 'Embed a GPS track or place pins on a map',
-      keywords: ['map', 'gps', 'track', 'location'],
+      description: 'Pin a single place on a map',
+      keywords: ['location', 'place', 'pin', 'poi', 'map'],
+      section: 'MEDIA',
+      placement: ['slash', 'toolbar'],
+      group: 'insert',
+      onSelect: (editor: LexicalEditor) => {
+        openLocationDialog(editor, {
+          onSubmit: (payload) => {
+            editor.update(() => {
+              const node = $createMapNode(payload)
+              const selection = $getSelection()
+              if (selection) $insertNodes([node])
+            })
+          },
+        })
+      },
+    },
+    {
+      title: 'Map (GPX track)',
+      icon: createElement(Navigation, { size: 20 }),
+      description: 'Embed a GPS track from a .gpx file or track JSON URL',
+      keywords: ['map', 'gps', 'gpx', 'track', 'route'],
       section: 'MEDIA',
       placement: ['slash', 'toolbar'],
       group: 'insert',

@@ -6,6 +6,8 @@ import { PortalLayerScope, useFloatingZ } from '~/ui/feedback/portal-layer'
 import { menuStyles } from '~/ui/overlay/menu-styles'
 import { cn } from '~/utils/cn'
 
+import { inputBaseClassName } from './input-styles'
+
 type RootProps = ComponentPropsWithoutRef<typeof BaseCombobox.Root>
 
 function ComboboxRoot(props: RootProps) {
@@ -21,10 +23,7 @@ function ComboboxInput({ className, ...rest }: InputProps) {
   return (
     <BaseCombobox.Input
       {...rest}
-      className={cn(
-        'outline-hidden flex h-9 w-full items-center rounded-sm border border-border bg-surface-card px-3 pr-8 text-left text-sm text-fg transition-colors hover:border-border-strong focus-visible:ring-[3px] focus-visible:ring-accent/15 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60',
-        className,
-      )}
+      className={cn(inputBaseClassName, 'pr-9', className)}
     />
   )
 }
@@ -148,12 +147,15 @@ type EmptyProps = Omit<
   'className'
 > & { className?: string }
 
-function ComboboxEmpty({ className, ...rest }: EmptyProps) {
+function ComboboxEmpty({ children, className, ...rest }: EmptyProps) {
   return (
-    <BaseCombobox.Empty
-      {...rest}
-      className={cn('px-2 py-3 text-center text-xs text-fg-subtle', className)}
-    />
+    <BaseCombobox.Empty {...rest} className={className}>
+      {children == null ? null : (
+        <div className="px-2 py-3 text-center text-xs text-fg-subtle">
+          {children}
+        </div>
+      )}
+    </BaseCombobox.Empty>
   )
 }
 

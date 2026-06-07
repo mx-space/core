@@ -1,0 +1,2 @@
+export const inputBaseClassName =
+  'outline-hidden shadow-xs h-9 w-full rounded-sm border border-border bg-surface-card px-3 text-sm text-fg transition-colors placeholder:text-fg-subtle focus:border-accent focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60'

@@ -4,6 +4,7 @@ import { Pencil } from 'lucide-react'
 
 import { useThemeMode } from '~/theme'
 
+import { openLocationDialog } from './location-plugin-bridge'
 import type { MapSlotProps } from './map-augment'
 import { openMapDialog } from './map-plugin-bridge'
 import { MapBlock } from './MapBlock'
@@ -21,8 +22,13 @@ export function MapBlockConnected(props: MapSlotProps) {
       if ($isMapNode(node)) initial = node.getPayload()
     })
     if (!initial) return
-    openMapDialog(editor, {
-      initial,
+    const payload: MapNodePayload = initial
+    const opener =
+      !payload.track && payload.pois && payload.pois.length === 1
+        ? openLocationDialog
+        : openMapDialog
+    opener(editor, {
+      initial: payload,
       onSubmit: (next) => {
         editor.update(() => {
           const node = $getNodeByKey(props.nodeKey!)

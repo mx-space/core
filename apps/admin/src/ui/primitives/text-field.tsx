@@ -11,6 +11,8 @@ import { forwardRef } from 'react'
 
 import { cn } from '~/utils/cn'
 
+import { inputBaseClassName } from './input-styles'
+
 type TextInputType = ComponentPropsWithoutRef<'input'>['type']
 
 interface TextInputProps {
@@ -44,10 +46,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       <BaseInput
         autoComplete={props.autoComplete}
         autoFocus={props.autoFocus}
-        className={cn(
-          'outline-hidden shadow-xs h-9 w-full rounded-sm border border-border bg-surface-card px-3 text-sm text-fg transition-colors placeholder:text-fg-subtle focus:border-accent focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60',
-          props.controlClassName,
-        )}
+        className={cn(inputBaseClassName, props.controlClassName)}
         disabled={props.disabled}
         id={props.id}
         inputMode={props.inputMode}
