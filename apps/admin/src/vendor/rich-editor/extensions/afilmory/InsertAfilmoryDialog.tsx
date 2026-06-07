@@ -19,6 +19,7 @@ import { cn } from '~/utils/cn'
 import type {
   AfilmoryFilter,
   AfilmoryLayout,
+  AfilmoryListItem,
   AfilmorySource,
 } from './afilmory-augment'
 import type { AfilmoryPayload } from './afilmory-bridge'
@@ -97,11 +98,13 @@ function InsertAfilmoryDialog(props: InsertAfilmoryDialogProps) {
   const [displayExpanded, setDisplayExpanded] = useState(false)
 
   const [filter, setFilter] = useState<PhotoFilter>(() =>
-    sourceFilterToPicker(props.initial?.source ?? { ids: [], kind: 'list' }),
+    sourceFilterToPicker(props.initial?.source ?? { items: [], kind: 'list' }),
   )
 
   const initialIds =
-    props.initial?.source.kind === 'list' ? props.initial.source.ids : []
+    props.initial?.source.kind === 'list'
+      ? props.initial.source.items.map((i) => i.id)
+      : []
   const [selectedIds, setSelectedIds] = useState<string[]>(initialIds)
   const [keepLive, setKeepLive] = useState(
     props.initial?.source.kind === 'filter',
@@ -145,7 +148,20 @@ function InsertAfilmoryDialog(props: InsertAfilmoryDialogProps) {
     let source: AfilmorySource
     if (mode === 'list') {
       if (!hasSelection) return
-      source = { ids: selectedIds, kind: 'list' }
+      const photoById = new Map(allPhotos.map((p) => [p.id, p] as const))
+      const items: AfilmoryListItem[] = []
+      for (const id of selectedIds) {
+        const p = photoById.get(id)
+        if (!p) continue
+        items.push({
+          id,
+          w: p.width,
+          h: p.height,
+          ...(p.thumbHash ? { hash: p.thumbHash } : {}),
+        })
+      }
+      if (items.length === 0) return
+      source = { items, kind: 'list' }
     } else {
       const f = pickerFilterToSource(filter)
       if (Object.keys(f).length === 0) return

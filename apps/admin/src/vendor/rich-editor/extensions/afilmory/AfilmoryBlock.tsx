@@ -1,7 +1,7 @@
 import { Camera, Images, Loader2 } from 'lucide-react'
 import { useMemo } from 'react'
 
-import type { AfilmorySlotProps } from './afilmory-augment'
+import type { AfilmoryListItem, AfilmorySlotProps } from './afilmory-augment'
 import type { AfilmoryManifestPhoto } from './types'
 import type { AfilmorySearchParams } from './use-afilmory-manifest'
 import {
@@ -14,25 +14,30 @@ const DEFAULT_LIMIT_FILTER = 12
 const DEFAULT_LIMIT_LIST = 24
 const PREVIEW_MAX = 8
 
-function getDisplayAspect(p: AfilmoryManifestPhoto): string {
-  if (p.width && p.height) return `${p.width} / ${p.height}`
+function aspectFromDims(w: number, h: number): string {
+  if (w > 0 && h > 0) return `${w} / ${h}`
   return '3 / 2'
 }
 
+function aspectFromPhoto(p: AfilmoryManifestPhoto): string {
+  return aspectFromDims(p.width, p.height)
+}
+
 function isSinglePhoto(props: AfilmorySlotProps): props is AfilmorySlotProps & {
-  source: { kind: 'list'; ids: string[] }
+  source: { kind: 'list'; items: AfilmoryListItem[] }
 } {
-  return props.source.kind === 'list' && props.source.ids.length === 1
+  return props.source.kind === 'list' && props.source.items.length === 1
 }
 
 export function AfilmoryBlock(props: AfilmorySlotProps) {
   if (isSinglePhoto(props)) {
+    const item = props.source.items[0]!
     return (
       <SingleBlock
         alt={props.alt}
         baseUrl={props.baseUrl}
         caption={props.caption}
-        id={props.source.ids[0]!}
+        item={item}
       />
     )
   }
@@ -43,18 +48,19 @@ function SingleBlock({
   alt,
   baseUrl,
   caption,
-  id,
+  item,
 }: {
   alt?: string
   baseUrl: string
   caption?: string
-  id: string
+  item: AfilmoryListItem
 }) {
   const { data, error, isError, isLoading } = useAfilmoryPhotoDirect(
     baseUrl,
-    id,
+    item.id,
   )
-  const aspect = data ? getDisplayAspect(data) : '3 / 2'
+  const aspect = aspectFromDims(item.w, item.h)
+  const id = item.id
 
   return (
     <figure className="my-4 mx-auto block w-full max-w-md overflow-hidden border border-border bg-surface-inset">
@@ -96,7 +102,7 @@ function SingleBlock({
 
 function useGalleryPhotos(props: AfilmorySlotProps) {
   const { baseUrl, limit, source } = props
-  const ids = source.kind === 'list' ? source.ids : []
+  const ids = source.kind === 'list' ? source.items.map((i) => i.id) : []
   const listQuery = useAfilmoryPhotosByIds(baseUrl, ids)
 
   const searchParams = useMemo<AfilmorySearchParams>(() => {
@@ -115,7 +121,7 @@ function useGalleryPhotos(props: AfilmorySlotProps) {
       isError: listQuery.isError,
       isLoading: listQuery.isLoading,
       photos: cap && photos.length > cap ? photos.slice(0, cap) : photos,
-      total: photos.length,
+      total: source.items.length,
     }
   }
   return {
@@ -145,11 +151,40 @@ function summarize(props: AfilmorySlotProps, total: number): string {
   return parts.length > 0 ? `${count} · ${parts.join(' · ')}` : count
 }
 
+interface GalleryTile {
+  id: string
+  aspect: string
+  thumbnailUrl?: string
+  title?: string
+}
+
 function GalleryBlock(props: AfilmorySlotProps) {
-  const { caption, title } = props
+  const { caption, source, title } = props
   const { error, isError, isLoading, photos, total } = useGalleryPhotos(props)
-  const preview = photos.slice(0, PREVIEW_MAX)
-  const summary = summarize(props, total || preview.length)
+  const photoById = useMemo(
+    () => new Map(photos.map((p) => [p.id, p] as const)),
+    [photos],
+  )
+  const tiles: GalleryTile[] = useMemo(() => {
+    if (source.kind === 'list') {
+      return source.items.slice(0, PREVIEW_MAX).map((item) => {
+        const p = photoById.get(item.id)
+        return {
+          id: item.id,
+          aspect: aspectFromDims(item.w, item.h),
+          thumbnailUrl: p?.thumbnailUrl,
+          title: p?.title,
+        }
+      })
+    }
+    return photos.slice(0, PREVIEW_MAX).map((p) => ({
+      id: p.id,
+      aspect: aspectFromPhoto(p),
+      thumbnailUrl: p.thumbnailUrl,
+      title: p.title,
+    }))
+  }, [source, photos, photoById])
+  const summary = summarize(props, total || tiles.length)
 
   return (
     <figure className="my-4 mx-auto block w-full max-w-2xl overflow-hidden border border-border bg-surface-inset">
@@ -172,16 +207,16 @@ function GalleryBlock(props: AfilmorySlotProps) {
         </span>
       </header>
       <div className="p-2">
-        {isLoading ? (
+        {tiles.length === 0 && isLoading ? (
           <div className="flex items-center justify-center gap-2 py-10 text-fg-muted">
             <Loader2 aria-hidden className="size-4 animate-spin" />
             <span className="font-mono text-[11px]">Loading…</span>
           </div>
-        ) : isError ? (
+        ) : tiles.length === 0 && isError ? (
           <div className="py-6 text-center font-mono text-[11px] text-fg-muted">
             {error instanceof Error ? error.message : 'Failed to load'}
           </div>
-        ) : preview.length === 0 ? (
+        ) : tiles.length === 0 ? (
           <div className="py-6 text-center font-mono text-[11px] text-fg-muted">
             No photos matched
           </div>
@@ -192,26 +227,25 @@ function GalleryBlock(props: AfilmorySlotProps) {
               gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
             }}
           >
-            {preview.map((p) => {
-              const aspect = getDisplayAspect(p)
-              return (
-                <div
-                  className="relative overflow-hidden bg-bg"
-                  key={p.id}
-                  style={{ aspectRatio: aspect }}
-                >
+            {tiles.map((t) => (
+              <div
+                className="relative overflow-hidden bg-bg"
+                key={t.id}
+                style={{ aspectRatio: t.aspect }}
+              >
+                {t.thumbnailUrl ? (
                   <img
-                    alt={p.title ?? p.id}
+                    alt={t.title ?? t.id}
                     className="absolute inset-0 size-full object-cover"
                     decoding="async"
                     draggable={false}
                     loading="lazy"
-                    src={p.thumbnailUrl}
+                    src={t.thumbnailUrl}
                     style={{ borderRadius: 0 }}
                   />
-                </div>
-              )
-            })}
+                ) : null}
+              </div>
+            ))}
           </div>
         )}
       </div>

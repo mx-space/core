@@ -1,6 +1,7 @@
 export type {
   AfilmoryFilter,
   AfilmoryLayout,
+  AfilmoryListItem,
   AfilmorySlotProps,
   AfilmorySource,
 } from './afilmory-augment'

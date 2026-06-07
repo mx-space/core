@@ -13,8 +13,15 @@ export interface AfilmoryFilter {
   search?: string
 }
 
+export type AfilmoryListItem = {
+  id: string
+  w: number
+  h: number
+  hash?: string
+}
+
 export type AfilmorySource =
-  | { kind: 'list'; ids: string[] }
+  | { kind: 'list'; items: AfilmoryListItem[] }
   | { kind: 'filter'; filter: AfilmoryFilter }
 
 export type AfilmoryLayout = 'grid' | 'masonry' | 'carousel'
@@ -36,5 +43,3 @@ declare module '@haklex/rich-editor' {
     Afilmory?: ComponentType<AfilmorySlotProps>
   }
 }
-
-export {}
