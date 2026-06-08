@@ -1,7 +1,8 @@
+import type { AfilmoryListItem } from '@mx-space/editor'
 import { Camera, Images, Loader2 } from 'lucide-react'
 import { useMemo } from 'react'
 
-import type { AfilmoryListItem, AfilmorySlotProps } from './afilmory-augment'
+import type { AfilmorySlotProps } from './afilmory-augment'
 import type { AfilmoryManifestPhoto } from './types'
 import type { AfilmorySearchParams } from './use-afilmory-manifest'
 import {

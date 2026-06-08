@@ -77,6 +77,7 @@
     "@mx-space/ai": "workspace:*",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/db-schema": "workspace:*",
+    "@mx-space/editor": "workspace:*",
     "@nestjs/cache-manager": "3.1.2",
     "@nestjs/common": "11.1.24",
     "@nestjs/core": "11.1.24",

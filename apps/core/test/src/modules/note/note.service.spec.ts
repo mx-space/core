@@ -44,7 +44,7 @@ const createService = () => {
     updateReferencesForDocument: vi.fn(),
   }
   const eventManager = { emit: vi.fn() }
-  const lexicalService = { populateText: vi.fn() }
+  const lexicalService = { normalizeContentForStorage: vi.fn() }
   const slugTrackerService = {
     createTracker: vi.fn(),
     findTrackerBySlug: vi.fn(),

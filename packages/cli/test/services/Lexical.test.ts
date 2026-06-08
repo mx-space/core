@@ -38,6 +38,24 @@ describe('Lexical service', () => {
     }).pipe(Effect.provide(Lexical.Default)),
   )
 
+  it.effect('round-trips mx custom nodes through LiteXML fallback nodes', () =>
+    Effect.gen(function* () {
+      const lexical = yield* Lexical
+      const state = yield* lexical.litexmlToPayload(
+        '<node type="map" id="map-1" data="{&quot;title&quot;:&quot;Shanghai&quot;,&quot;pois&quot;:[{&quot;title&quot;:&quot;Bund&quot;}]}" />',
+      )
+      const mapNode = state.root.children[0] as any
+      expect(mapNode.type).toBe('map')
+      expect(mapNode.$?.blockId).toBe('map-1')
+      expect(mapNode.title).toBe('Shanghai')
+
+      const xml = yield* lexical.payloadToLitexml(state)
+      expect(xml).toContain('<node type="map" id="map-1"')
+      expect(xml).toContain('&quot;title&quot;:&quot;Shanghai&quot;')
+      expect(xml).toContain('&quot;title&quot;:&quot;Bund&quot;')
+    }).pipe(Effect.provide(Lexical.Default)),
+  )
+
   it.effect('renders markdown from lexical state', () =>
     Effect.gen(function* () {
       const lexical = yield* Lexical

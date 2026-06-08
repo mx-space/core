@@ -127,6 +127,28 @@ describe('AiTranslationService', () => {
     )
   })
 
+  it('preserves supplied text when updating lexical content and text together', async () => {
+    const { lexicalService, repository, service } = createService()
+    repository.findById.mockResolvedValue(row())
+    repository.updateById.mockResolvedValue(
+      row({ content: '{"root":{}}', text: 'supplied text' }),
+    )
+
+    await service.updateTranslation('translation-1', {
+      content: '{"root":{}}',
+      text: 'supplied text',
+    })
+
+    expect(lexicalService.lexicalToMarkdown).not.toHaveBeenCalled()
+    expect(repository.updateById).toHaveBeenCalledWith(
+      'translation-1',
+      expect.objectContaining({
+        content: '{"root":{}}',
+        text: 'supplied text',
+      }),
+    )
+  })
+
   it('throws when deleting a missing translation row', async () => {
     const { repository, service } = createService()
     repository.deleteById.mockResolvedValue(0)
@@ -359,7 +381,10 @@ describe('AiTranslationService', () => {
       document: articleDocument(),
       type: CollectionRefTypes.Post,
     })
-    repository.listByRefId.mockResolvedValue([validTranslation, staleTranslation])
+    repository.listByRefId.mockResolvedValue([
+      validTranslation,
+      staleTranslation,
+    ])
     translationConsistencyService.evaluateTranslationFreshness.mockImplementation(
       (_snapshot: unknown, translation: AiTranslationRow) =>
         translation.lang === 'ja' ? 'stale' : 'valid',

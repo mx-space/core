@@ -411,7 +411,7 @@ const buildSnippets = (
     }
     return positions
   })
-  const cursors = Array.from({ length: terms.length }).fill(0)
+  const cursors: number[] = Array.from({ length: terms.length }, () => 0)
   const out: string[] = []
   let progressed = true
   while (out.length < 3 && progressed) {

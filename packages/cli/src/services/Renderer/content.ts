@@ -1,4 +1,7 @@
-import { createDefaultRegistry, serializeToXml } from '@haklex/rich-litexml'
+import {
+  serializeMxLexicalToLitexml,
+  stripMxLitexmlDocWrapper,
+} from '@mx-space/editor'
 
 export const asRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === 'object' && !Array.isArray(value)
@@ -90,29 +93,11 @@ export const pickArticleTranslationMeta = (
   return Object.keys(article).length > 0 ? article : undefined
 }
 
-// Synchronous Lexical → LiteXML helper kept inline so the Renderer can match
-// legacy `document-output.ts` behaviour without depending on the Lexical
-// service. The Lexical service still owns Markdown derivation (`--output llm`)
-// and stateful round-trips; here we only need the cheap XML serialization.
-let cachedRegistry: ReturnType<typeof createDefaultRegistry> | null = null
-const getRegistry = () => {
-  if (!cachedRegistry) cachedRegistry = createDefaultRegistry()
-  return cachedRegistry
-}
-
-const stripDocWrapper = (xml: string): string => {
-  const trimmed = xml.trim()
-  if (trimmed.startsWith('<doc>') && trimmed.endsWith('</doc>')) {
-    return trimmed.slice('<doc>'.length, trimmed.length - '</doc>'.length)
-  }
-  return trimmed
-}
-
 export const tryLexicalToLitexml = (jsonStr: string): string | null => {
   try {
     const parsed = JSON.parse(jsonStr) as unknown
-    const xml = serializeToXml(parsed as any, getRegistry(), { compact: false })
-    return stripDocWrapper(xml).trim()
+    const xml = serializeMxLexicalToLitexml(parsed as any, { compact: false })
+    return stripMxLitexmlDocWrapper(xml).trim()
   } catch {
     return null
   }

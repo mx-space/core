@@ -1,0 +1,61 @@
+{
+  "name": "@mx-space/editor",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Mx-space business editor contracts and projection utilities built on Lexical",
+  "license": "MIT",
+  "author": "Innei <https://innei.in>",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./core": {
+      "types": "./src/core/index.ts",
+      "import": "./src/core/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./core": {
+        "types": "./dist/core/index.d.ts",
+        "import": "./dist/core/index.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@haklex/rich-headless": "0.20.0",
+    "@haklex/rich-litexml": "0.21.0",
+    "@lexical/headless": "^0.45.0",
+    "lexical": "^0.45.0"
+  },
+  "devDependencies": {
+    "tsdown": "0.22.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.8"
+  }
+}

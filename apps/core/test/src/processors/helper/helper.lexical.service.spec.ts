@@ -780,18 +780,18 @@ describe('LexicalService', () => {
     })
   })
 
-  // ── populateText ──
+  // ── normalizeContentForStorage ──
 
-  describe('populateText', () => {
-    it('returns true and sets text for Lexical content', () => {
+  describe('normalizeContentForStorage', () => {
+    it('returns true, normalizes block ids, and preserves text for Lexical content', () => {
       const state = makeEditorState([paragraph(textNode('Hello'))])
       const doc = {
         contentFormat: ContentFormat.Lexical,
         content: state,
-        text: '',
+        text: 'writer-owned text',
       }
-      expect(service.populateText(doc)).toBe(true)
-      expect(doc.text).toContain('Hello')
+      expect(service.normalizeContentForStorage(doc)).toBe(true)
+      expect(doc.text).toBe('writer-owned text')
       const parsed = JSON.parse(doc.content!)
       expect(parsed.root.children[0].$.blockId).toMatch(/^[\w-]{8}$/)
     })
@@ -802,7 +802,7 @@ describe('LexicalService', () => {
         content: '# hi',
         text: '',
       }
-      expect(service.populateText(doc)).toBe(false)
+      expect(service.normalizeContentForStorage(doc)).toBe(false)
       expect(doc.text).toBe('')
     })
 
@@ -812,7 +812,7 @@ describe('LexicalService', () => {
         content: '',
         text: '',
       }
-      expect(service.populateText(doc)).toBe(false)
+      expect(service.normalizeContentForStorage(doc)).toBe(false)
     })
 
     it('returns false when content is undefined', () => {
@@ -821,12 +821,12 @@ describe('LexicalService', () => {
         content: undefined,
         text: '',
       }
-      expect(service.populateText(doc)).toBe(false)
+      expect(service.normalizeContentForStorage(doc)).toBe(false)
     })
 
     it('returns false when contentFormat is missing', () => {
       const doc = { content: 'x', text: '' } as any
-      expect(service.populateText(doc)).toBe(false)
+      expect(service.normalizeContentForStorage(doc)).toBe(false)
     })
   })
 
@@ -1031,6 +1031,48 @@ describe('LexicalService', () => {
       expect(() =>
         service.lexicalToMarkdown(JSON.stringify({ root: null })),
       ).toThrow()
+    })
+
+    it('projects mx business nodes through @mx-space/editor', () => {
+      const state = JSON.stringify({
+        root: {
+          children: [
+            {
+              type: 'map',
+              version: 1,
+              title: 'Shanghai',
+              pois: [{ icon: 'pin', title: 'Bund' }],
+            },
+            {
+              type: 'afilmory',
+              version: 1,
+              baseUrl: 'https://example.com',
+              source: { kind: 'list', items: [] },
+              layout: 'grid',
+            },
+          ],
+          direction: null,
+          format: '',
+          indent: 0,
+          type: 'root',
+          version: 1,
+        },
+      })
+      const result = service.lexicalToMarkdown(state)
+      expect(result).toContain('<node type="map"')
+      expect(result).toContain('&quot;title&quot;:&quot;Shanghai&quot;')
+      expect(result).toContain('&quot;title&quot;:&quot;Bund&quot;')
+      expect(result).toContain('<node type="afilmory"')
+      expect(result).toContain(
+        '&quot;baseUrl&quot;:&quot;https://example.com&quot;',
+      )
+    })
+
+    it('throws on unknown node types', () => {
+      const state = makeEditorState([{ type: 'private-node', version: 1 }])
+      expect(() => service.lexicalToMarkdown(state)).toThrow(
+        'Unknown editor node type: private-node',
+      )
     })
   })
 

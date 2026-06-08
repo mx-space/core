@@ -1,5 +1,10 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
 
+import type {
+  MapBlockProps,
+  MapTrackData,
+  MapTrackStop,
+} from '@mx-space/editor'
 import { ArrowRight } from 'lucide-react'
 import type { LngLatBoundsLike, Map as MapLibreMap } from 'maplibre-gl'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -17,7 +22,6 @@ import {
   setStopsData,
   unionBounds,
 } from './map-layers'
-import type { MapBlockProps, MapTrackData, MapTrackStop } from './types'
 
 const LIGHT_STYLE = 'https://tiles.openfreemap.org/styles/positron'
 const DARK_STYLE = 'https://tiles.openfreemap.org/styles/dark'

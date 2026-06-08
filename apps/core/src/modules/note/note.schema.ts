@@ -11,7 +11,11 @@ import {
   zTransformEmptyNull,
 } from '~/common/zod'
 import { createPagerSchema } from '~/shared/dto/pager.dto'
-import { WriteBaseSchema } from '~/shared/schema'
+import {
+  validateLexicalCreateContentPair,
+  validateLexicalPartialContentPair,
+  WriteBaseSchema,
+} from '~/shared/schema'
 import { ImageArraySchema } from '~/shared/schema/image.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
@@ -26,7 +30,7 @@ export const CoordinateSchema = z.object({
 /**
  * Note schema for API validation
  */
-export const NoteSchema = WriteBaseSchema.extend({
+const NoteBaseSchema = WriteBaseSchema.extend({
   title: z
     .string()
     .transform((val) => (val.length === 0 ? 'Untitled' : val))
@@ -57,13 +61,17 @@ export const NoteSchema = WriteBaseSchema.extend({
   draftId: zEntityId.optional(),
 })
 
+export const NoteSchema = NoteBaseSchema.superRefine(
+  validateLexicalCreateContentPair,
+)
+
 export class NoteDto extends createZodDto(NoteSchema) {}
 
 /**
  * Partial note schema for PATCH operations
  * Override fields with .default() to prevent defaults from being applied during partial updates
  */
-export const PartialNoteSchema = NoteSchema.extend({
+export const PartialNoteSchema = NoteBaseSchema.extend({
   title: z
     .string()
     .transform((val) => (val.length === 0 ? 'Untitled' : val))
@@ -75,7 +83,9 @@ export const PartialNoteSchema = NoteSchema.extend({
   isPublished: z.boolean().optional(),
   bookmark: z.boolean().optional(),
   images: ImageArraySchema.optional(),
-}).partial()
+})
+  .partial()
+  .superRefine(validateLexicalPartialContentPair)
 
 export class PartialNoteDto extends createZodDto(PartialNoteSchema) {}
 

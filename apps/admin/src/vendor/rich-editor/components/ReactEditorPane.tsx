@@ -27,7 +27,11 @@ import { useRef } from 'react'
 
 import type { RichEditorProps } from '../core'
 import { RichEditor } from '../core'
-import type { AgentLoopHandle, SaveExcalidrawSnapshot } from '../types'
+import type {
+  AgentLitexmlRegistryProvider,
+  AgentLoopHandle,
+  SaveExcalidrawSnapshot,
+} from '../types'
 import { AgentLoopCapture } from './AgentLoopCapture'
 import { EditorToolbar } from './EditorToolbar'
 import type { EnrichmentFetcher } from './EnrichmentLinkCardContext'
@@ -46,6 +50,7 @@ export interface ReactEditorPaneProps {
   onEditorReady?: (editor: LexicalEditor | null) => void
   onAgentLoopReady: (loop: AgentLoopHandle | null) => void
   tools?: AgentToolConfig[]
+  litexmlRegistry?: AgentLitexmlRegistryProvider
   systemMessages?: ChatMessage[]
 }
 
@@ -61,6 +66,7 @@ export function ReactEditorPane({
   onEditorReady,
   onAgentLoopReady,
   tools,
+  litexmlRegistry,
   systemMessages,
 }: ReactEditorPaneProps) {
   const editorRef = useRef<LexicalEditor | null>(null)
@@ -101,6 +107,7 @@ export function ReactEditorPane({
                 provider={provider}
                 store={store}
                 tools={tools}
+                litexmlRegistry={litexmlRegistry}
                 systemMessages={systemMessages}
               />
               <NestedDocPlugin />

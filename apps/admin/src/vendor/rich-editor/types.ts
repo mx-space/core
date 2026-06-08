@@ -1,3 +1,4 @@
+import type { LitexmlRegistryProvider } from '@haklex/rich-agent-core'
 import type { useAgentLoop } from '@haklex/rich-ext-ai-agent'
 
 import type { RichEditorProps } from './core'
@@ -13,6 +14,8 @@ export type ImageUpload = NonNullable<RichEditorProps['imageUpload']>
 export type TrackUpload = (file: File) => Promise<{ url: string }>
 
 export type AgentLoopHandle = ReturnType<typeof useAgentLoop>
+
+export type AgentLitexmlRegistryProvider = LitexmlRegistryProvider
 
 export interface EnrichmentImagePalette {
   dominant: string

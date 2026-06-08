@@ -1,7 +1,6 @@
 import type {} from '@haklex/rich-editor'
+import type { MapPoi, MapView } from '@mx-space/editor'
 import type { ComponentType } from 'react'
-
-import type { MapPoi, MapView } from './types'
 
 export const MAP_NODE_KEY = 'Map' as const
 

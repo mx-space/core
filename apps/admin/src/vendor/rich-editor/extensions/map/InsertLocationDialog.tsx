@@ -1,5 +1,6 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
 
+import type { MapMerchant, MapPoi } from '@mx-space/editor'
 import { useMutation } from '@tanstack/react-query'
 import {
   ChevronDown,
@@ -33,7 +34,6 @@ import {
 } from './geocode'
 import type { MapNodePayload } from './MapNode'
 import { formatLatLon, parseLocationInput } from './parse-location'
-import type { MapMerchant, MapPoi } from './types'
 
 const LIGHT_STYLE = 'https://tiles.openfreemap.org/styles/positron'
 const DARK_STYLE = 'https://tiles.openfreemap.org/styles/dark'

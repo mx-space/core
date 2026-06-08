@@ -1,5 +1,6 @@
 import type { CommandItemConfig } from '@haklex/rich-editor/commands'
 import { createRendererDecoration } from '@haklex/rich-editor/static'
+import type { AfilmoryLayout, AfilmorySource } from '@mx-space/editor'
 import type {
   EditorConfig,
   LexicalCommand,
@@ -18,12 +19,7 @@ import {
 import { Images } from 'lucide-react'
 import { createElement, type ReactElement } from 'react'
 
-import {
-  AFILMORY_NODE_KEY,
-  type AfilmoryLayout,
-  type AfilmorySlotProps,
-  type AfilmorySource,
-} from './afilmory-augment'
+import { AFILMORY_NODE_KEY, type AfilmorySlotProps } from './afilmory-augment'
 import { type AfilmoryPayload, openAfilmoryDialog } from './afilmory-bridge'
 import { AfilmoryBlockConnected } from './AfilmoryBlockConnected'
 

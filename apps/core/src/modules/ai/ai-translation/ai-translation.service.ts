@@ -1095,7 +1095,10 @@ export class AiTranslationService
 
     if (data.content !== undefined) {
       patch.content = data.content
-      patch.text = this.lexicalService.lexicalToMarkdown(data.content)
+      patch.text =
+        data.text !== undefined
+          ? data.text
+          : this.lexicalService.lexicalToMarkdown(data.content)
     } else if (data.text !== undefined) {
       patch.text = data.text
     }

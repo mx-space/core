@@ -1,3 +1,4 @@
+import type { MapPoi, MapView } from '@mx-space/editor'
 import type { LexicalEditor } from 'lexical'
 
 export interface MapDialogPayload {
@@ -6,10 +7,10 @@ export interface MapDialogPayload {
 }
 
 export interface MapNodePayload {
-  pois?: import('./types').MapPoi[]
+  pois?: MapPoi[]
   title: string
   track?: { url: string }
-  view?: import('./types').MapView
+  view?: MapView
 }
 
 export type MapDialogOpener = (payload: MapDialogPayload) => void

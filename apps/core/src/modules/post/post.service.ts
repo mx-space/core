@@ -150,7 +150,7 @@ export class PostService implements OnApplicationBootstrap {
   }
 
   async create(post: PostModel & { draftId?: string }) {
-    this.lexicalService.populateText(post)
+    this.lexicalService.normalizeContentForStorage(post)
 
     const { categoryId, draftId } = post
     const category = await this.categoryService.findCategoryById(
@@ -313,7 +313,7 @@ export class PostService implements OnApplicationBootstrap {
     id: string,
     data: Partial<PostModel> & { draftId?: string },
   ) {
-    this.lexicalService.populateText(data as any)
+    this.lexicalService.normalizeContentForStorage(data)
 
     const oldDocument = await this.findById(id)
     if (!oldDocument) {

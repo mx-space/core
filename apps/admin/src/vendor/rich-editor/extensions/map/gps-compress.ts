@@ -1,4 +1,4 @@
-import type { MapTrackData, MapTrackStop } from './types'
+import type { MapTrackData, MapTrackStop } from '@mx-space/editor'
 
 export interface GpxPoint {
   ele: number | null

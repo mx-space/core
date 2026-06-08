@@ -1,14 +1,9 @@
 import {
-  $toMarkdown,
-  allHeadlessNodes,
-  sanitizeSerializedJSON,
-} from '@haklex/rich-headless'
-import {
-  createDefaultRegistry,
-  deserializeFromXml,
-  serializeToXml,
-} from '@haklex/rich-litexml'
-import { createHeadlessEditor } from '@lexical/headless'
+  deserializeMxLitexmlToLexical,
+  mxLexicalToMarkdown,
+  serializeMxLexicalToLitexml,
+  stripMxLitexmlDocWrapper,
+} from '@mx-space/editor'
 import { Context, Effect, Layer } from 'effect'
 
 import { ValidationXml } from '../domain/errors'
@@ -41,21 +36,6 @@ export interface LexicalService {
   readonly emptyState: Effect.Effect<LexicalState>
 }
 
-// Single shared registry to avoid re-initialising node tables on every call.
-let cachedRegistry: ReturnType<typeof createDefaultRegistry> | null = null
-const getRegistry = () => {
-  if (!cachedRegistry) cachedRegistry = createDefaultRegistry()
-  return cachedRegistry
-}
-
-const stripDocWrapper = (xml: string): string => {
-  const trimmed = xml.trim()
-  if (trimmed.startsWith('<doc>') && trimmed.endsWith('</doc>')) {
-    return trimmed.slice('<doc>'.length, trimmed.length - '</doc>'.length)
-  }
-  return trimmed
-}
-
 const messageOf = (err: unknown): string => {
   if (err instanceof Error) return err.message
   if (typeof err === 'string') return err
@@ -67,7 +47,7 @@ const makeService = (): LexicalService => ({
     Effect.try({
       try: () => {
         const wrapped = xml.includes('<doc') ? xml : `<doc>${xml}</doc>`
-        return deserializeFromXml(wrapped, getRegistry()) as LexicalState
+        return deserializeMxLitexmlToLexical(wrapped) as LexicalState
       },
       catch: (err) =>
         new ValidationXml({
@@ -79,10 +59,10 @@ const makeService = (): LexicalService => ({
   payloadToLitexml: (state) =>
     Effect.try({
       try: () => {
-        const xml = serializeToXml(state as any, getRegistry(), {
+        const xml = serializeMxLexicalToLitexml(state as any, {
           compact: false,
         })
-        return stripDocWrapper(xml).trim()
+        return stripMxLitexmlDocWrapper(xml).trim()
       },
       catch: (err) =>
         new ValidationXml({
@@ -94,23 +74,7 @@ const makeService = (): LexicalService => ({
   lexicalJsonToMarkdown: (state) =>
     Effect.try({
       try: () => {
-        const editor = createHeadlessEditor({
-          nodes: allHeadlessNodes,
-          onError: (err) => {
-            throw err
-          },
-        })
-        const serialized = JSON.stringify(state)
-        const sanitized = sanitizeSerializedJSON(serialized, {
-          nodes: allHeadlessNodes,
-        })
-        const parsed = editor.parseEditorState(sanitized)
-        editor.setEditorState(parsed)
-        let markdown = ''
-        editor.read(() => {
-          markdown = $toMarkdown()
-        })
-        return markdown
+        return mxLexicalToMarkdown(state)
       },
       catch: (err) =>
         new ValidationXml({

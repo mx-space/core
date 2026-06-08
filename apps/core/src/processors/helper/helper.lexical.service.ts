@@ -1,10 +1,5 @@
-import {
-  $toMarkdown,
-  allHeadlessNodes,
-  sanitizeSerializedJSON,
-} from '@haklex/rich-headless'
-import { createHeadlessEditor } from '@lexical/headless'
-import { Injectable, Logger } from '@nestjs/common'
+import { mxLexicalToMarkdown } from '@mx-space/editor'
+import { Injectable } from '@nestjs/common'
 import { nanoid } from 'nanoid'
 
 import {
@@ -50,8 +45,6 @@ export interface LexicalRootBlock {
 
 @Injectable()
 export class LexicalService {
-  private readonly logger = new Logger(LexicalService.name)
-
   private createBlockId() {
     return nanoid(8)
   }
@@ -270,32 +263,7 @@ export class LexicalService {
   }
 
   lexicalToMarkdown(editorState: string): string {
-    const editor = createHeadlessEditor({
-      nodes: allHeadlessNodes,
-      onError: (error) => {
-        throw error
-      },
-    })
-
-    const sanitized = sanitizeSerializedJSON(editorState, {
-      nodes: allHeadlessNodes,
-      onUnknown: (type) => {
-        this.logger.warn(
-          `lexicalToMarkdown: unknown node type "${type}" dropped — ` +
-            `bump @haklex/rich-headless if this type was added upstream`,
-        )
-      },
-    })
-
-    const parsed = editor.parseEditorState(sanitized)
-    editor.setEditorState(parsed)
-
-    let markdown = ''
-    editor.read(() => {
-      markdown = $toMarkdown()
-    })
-
-    return markdown
+    return mxLexicalToMarkdown(editorState)
   }
 
   /**
@@ -341,11 +309,10 @@ export class LexicalService {
     return truncateAtBoundary(firstNonEmpty, maxLength, locale)
   }
 
-  populateText<
+  normalizeContentForStorage<
     T extends {
       contentFormat?: ContentFormat | string | null
       content?: string | null
-      text: string
     },
   >(doc: T): boolean {
     if (doc.contentFormat === ContentFormat.Lexical && doc.content) {
@@ -353,8 +320,7 @@ export class LexicalService {
       if (normalized.changed) {
         doc.content = normalized.content
       }
-      doc.text = this.lexicalToMarkdown(doc.content ?? '')
-      return true
+      return normalized.changed
     }
     return false
   }

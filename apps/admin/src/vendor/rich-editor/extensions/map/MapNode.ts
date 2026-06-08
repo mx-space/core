@@ -1,5 +1,6 @@
 import type { CommandItemConfig } from '@haklex/rich-editor/commands'
 import { createRendererDecoration } from '@haklex/rich-editor/static'
+import type { MapPoi, MapView } from '@mx-space/editor'
 import type {
   EditorConfig,
   LexicalCommand,
@@ -22,7 +23,6 @@ import { openLocationDialog } from './location-plugin-bridge'
 import { MAP_NODE_KEY, type MapSlotProps } from './map-augment'
 import { openMapDialog } from './map-plugin-bridge'
 import { MapBlockConnected } from './MapBlockConnected'
-import type { MapPoi, MapView } from './types'
 
 export interface MapNodePayload {
   pois?: MapPoi[]
