@@ -1,4 +1,3 @@
-import { rm } from 'node:fs/promises'
 import { hostname } from 'node:os'
 
 import {
@@ -10,15 +9,21 @@ import {
 import pc from 'picocolors'
 import { Observable, ReplaySubject } from 'rxjs'
 
-import { ADMIN_DASHBOARD_REPO } from '~/constants/admin.constant'
+import { ADMIN_UPDATE } from '~/app.config'
 import { RedisService } from '~/processors/redis/redis.service'
 
 import { UpdateDownloadService } from './update-download.service'
 import { UpdateInstallService } from './update-install.service'
 
-const repo = ADMIN_DASHBOARD_REPO
-
 const REDIS_KEY_PREFIX = 'update:admin'
+
+interface AdminUpdateManifest {
+  version: string
+  file: string
+  url: string
+  sha256?: string
+  tag?: string
+}
 
 const LUA_RELEASE_LOCK = `
 if redis.call("get", KEYS[1]) == ARGV[1] then
@@ -196,46 +201,21 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
           .catch(() => {})
       }
 
-      const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}`
-      await pushProgress(`Getting release info from ${endpoint}.\n`)
-
-      const releaseInfo = await this.downloadService.fetchWithRetry(endpoint, {
-        timeout: 30000,
-        headers: {
-          'User-Agent': 'Mix-Space-Admin-Updater',
-          Accept: 'application/vnd.github.v3+json',
-        },
-      })
-
-      if (!releaseInfo?.assets) {
-        throw new Error('Release assets not found')
+      const manifest = await this.fetchAdminManifest()
+      if (manifest.version !== version) {
+        throw new Error(
+          `Admin manifest version mismatch: requested ${version}, got ${manifest.version}`,
+        )
       }
-
-      const asset = releaseInfo.assets.find(
-        (asset: any) => asset.name === 'release.zip',
-      )
-
-      if (!asset) {
-        const msg = `release.zip not found. Available: ${releaseInfo.assets.map((a: any) => a.name).join(', ')}`
-        throw new Error(msg)
-      }
-
-      const downloadUrl = asset.browser_download_url
-      const fileSize = asset.size
-
       await pushProgress(
-        `Found release.zip (${this.downloadService.formatBytes(fileSize)})\n`,
+        `Resolved admin v${manifest.version} → ${manifest.url}\n`,
       )
 
-      const buffer = await this.downloadService.downloadWithMirrors(
-        downloadUrl,
-        fileSize,
+      const buffer = await this.downloadService.downloadDirect(
+        manifest.url,
         async (msg: string) => pushProgress(msg),
+        { sha256: manifest.sha256 },
       )
-
-      if (!buffer) {
-        throw new Error('All download sources failed')
-      }
 
       await pushProgress('Storing buffer to Redis for other instances...\n')
       await this.redis.setex(
@@ -300,7 +280,6 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
         .catch(() => {})
 
       subscriber.next(pc.red(`Download failed: ${errorMsg}\n`))
-      await rm('admin-release.zip', { force: true }).catch(() => {})
     } finally {
       clearInterval(heartbeat)
       await this.redis
@@ -548,24 +527,31 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getLatestAdminVersion() {
-    const endpoint = `https://api.github.com/repos/${repo}/releases/latest`
+    const manifest = await this.fetchAdminManifest()
+    return manifest.version
+  }
 
+  private async fetchAdminManifest(): Promise<AdminUpdateManifest> {
+    const baseUrl = ADMIN_UPDATE.s3BaseUrl?.replace(/\/+$/, '')
+    if (!baseUrl) {
+      throw new Error(
+        'Admin update source is not configured (ADMIN_UPDATE_S3_BASE_URL)',
+      )
+    }
+    const endpoint = `${baseUrl}/latest.json`
     try {
-      const data = await this.downloadService.fetchWithRetry(endpoint, {
-        headers: {
-          'User-Agent': 'Mix-Space-Admin-Updater',
-          Accept: 'application/vnd.github.v3+json',
-        },
-      })
+      const data = (await this.downloadService.fetchWithRetry(endpoint, {
+        timeout: 30000,
+        headers: { Accept: 'application/json' },
+      })) as Partial<AdminUpdateManifest> | undefined
 
-      const tag = data?.tag_name
-      if (!tag) {
-        throw new Error('tag_name not found in release info')
+      if (!data?.version || !data.url) {
+        throw new Error('latest.json missing required fields (version, url)')
       }
-      return tag.replace(/^v/, '')
+      return data as AdminUpdateManifest
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error)
-      throw new Error(`Failed to get latest version: ${errorMsg}`, {
+      throw new Error(`Failed to fetch admin manifest: ${errorMsg}`, {
         cause: error,
       })
     }

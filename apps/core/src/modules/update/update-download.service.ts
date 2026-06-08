@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import { Injectable } from '@nestjs/common'
 import axios, { AxiosRequestConfig } from 'axios'
 import pc from 'picocolors'
@@ -65,14 +67,15 @@ export class UpdateDownloadService {
     config: AxiosRequestConfig = {},
     retries = this.MAX_RETRIES,
   ): Promise<any> {
+    const isGitHubApiRequest = this.shouldAttachGitHubAuth(url)
     const thirdParty = await this.configService.get(
       'thirdPartyServiceIntegration',
     )
-    const githubToken = thirdParty.github?.token
+    const githubToken = thirdParty?.github?.token
     const token = githubToken || process.env.GITHUB_TOKEN
     const headers = {
       ...config.headers,
-      ...(token && { Authorization: `Bearer ${token}` }),
+      ...(token && isGitHubApiRequest && { Authorization: `Bearer ${token}` }),
     }
 
     for (let attempt = 1; attempt <= retries; attempt++) {
@@ -88,7 +91,11 @@ export class UpdateDownloadService {
 
         if (attempt === retries) {
           let finalMsg = `Failed after ${retries} attempts: ${errorMsg}`
-          if (axios.isAxiosError(error) && error.response?.status === 403) {
+          if (
+            isGitHubApiRequest &&
+            axios.isAxiosError(error) &&
+            error.response?.status === 403
+          ) {
             finalMsg +=
               ' (API Rate Limit Exceeded. Please configure GitHub Token in settings or env GITHUB_TOKEN)'
           }
@@ -98,6 +105,14 @@ export class UpdateDownloadService {
         const delay = Math.min(1000 * 2 ** (attempt - 1), 10000)
         await this.sleep(delay)
       }
+    }
+  }
+
+  private shouldAttachGitHubAuth(url: string) {
+    try {
+      return new URL(url).hostname === 'api.github.com'
+    } catch {
+      return false
     }
   }
 
@@ -137,6 +152,27 @@ export class UpdateDownloadService {
     }
 
     return null
+  }
+
+  async downloadDirect(
+    url: string,
+    pushProgress: (msg: string) => Promise<void>,
+    opts: { sha256?: string } = {},
+  ): Promise<ArrayBuffer> {
+    await pushProgress(`Downloading ${url}\n`)
+    const buffer = await this.downloadWithProgress(url, pushProgress)
+    if (opts.sha256) {
+      const actual = createHash('sha256')
+        .update(Buffer.from(buffer))
+        .digest('hex')
+      if (actual !== opts.sha256.toLowerCase()) {
+        throw new Error(
+          `Checksum mismatch: expected sha256 ${opts.sha256}, got ${actual}`,
+        )
+      }
+      await pushProgress(pc.green('Checksum verified.\n'))
+    }
+    return buffer
   }
 
   private async downloadWithProgress(

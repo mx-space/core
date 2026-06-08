@@ -5,7 +5,6 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { parseHTML } from 'linkedom'
 
 import { API_VERSION } from '~/app.config'
-import { ADMIN_DASHBOARD_REPO } from '~/constants/admin.constant'
 
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerService } from '../owner/owner.service'
@@ -20,26 +19,6 @@ export class PageProxyService {
   async checkCanAccessAdminProxy() {
     const { adminExtra } = await this.configs.waitForConfigReady()
     return adminExtra.enableAdminProxy || isDev
-  }
-
-  /**
-   * @returns {Promise<string>} version `x.y.z` , not startwith `v`
-   * @throws {Error}
-   */
-  async getAdminLastestVersionFromGHRelease(): Promise<string> {
-    const thirdParty = await this.configs.get(
-      'thirdPartyServiceIntegration',
-    )
-    const githubToken = thirdParty.github?.token
-    const response = await fetch(
-      `https://api.github.com/repos/${ADMIN_DASHBOARD_REPO}/releases/latest`,
-      {
-        headers: githubToken ? { Authorization: `Bearer ${githubToken}` } : {},
-      },
-    )
-    const { tag_name } = await response.json()
-
-    return tag_name.replace(/^v/, '')
   }
 
   async injectAdminEnv(

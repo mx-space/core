@@ -114,11 +114,13 @@ jobs:
           ADMIN_ZIP="admin-${ADMIN_VERSION}.zip"
           # Package the locally-built admin (apps/admin/dist) with a top-level dist/ wrapper.
           ( cd apps/admin && zip -r "../../${ADMIN_ZIP}" dist )
+          SHA="$(sha256sum "${ADMIN_ZIP}" | awk '{print $1}')"
           cat > latest.json <<EOF
           {
             "version": "${ADMIN_VERSION}",
             "file": "${ADMIN_ZIP}",
             "url": "${ADMIN_PUBLIC_BASE%/}/${ADMIN_ZIP}",
+            "sha256": "${SHA}",
             "tag": "${{ github.ref_name }}"
           }
           EOF

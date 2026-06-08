@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UpdateService } from '~/modules/update/update.service'
@@ -115,6 +115,81 @@ function subscribeOnce(obs$: import('rxjs').Observable<string>) {
   })
 }
 
+function manifest(version: string, overrides: Record<string, unknown> = {}) {
+  return {
+    version,
+    file: `admin-${version}.zip`,
+    url: `https://admin-r2.example/admin-${version}.zip`,
+    tag: `admin-v${version}`,
+    ...overrides,
+  }
+}
+
+const originalGithubToken = process.env.GITHUB_TOKEN
+
+afterEach(() => {
+  if (originalGithubToken === undefined) {
+    delete process.env.GITHUB_TOKEN
+  } else {
+    process.env.GITHUB_TOKEN = originalGithubToken
+  }
+})
+
+describe('UpdateDownloadService', () => {
+  it('does not attach GitHub auth to non-GitHub manifest hosts', async () => {
+    process.env.GITHUB_TOKEN = 'env-token'
+    const get = vi.fn().mockResolvedValue({ data: { ok: true } })
+    const downloadService = new UpdateDownloadService(
+      { axiosRef: { get } } as any,
+      {
+        get: vi.fn().mockResolvedValue({ github: { token: 'stored-token' } }),
+      } as any,
+    )
+
+    await downloadService.fetchWithRetry(
+      'https://admin-r2.example/latest.json',
+      {
+        headers: { Accept: 'application/json' },
+      },
+    )
+
+    expect(get).toHaveBeenCalledWith(
+      'https://admin-r2.example/latest.json',
+      expect.objectContaining({
+        headers: { Accept: 'application/json' },
+      }),
+    )
+    expect(get.mock.calls[0]![1].headers).not.toHaveProperty('Authorization')
+  })
+
+  it('attaches GitHub auth to GitHub API hosts', async () => {
+    const get = vi.fn().mockResolvedValue({ data: { ok: true } })
+    const downloadService = new UpdateDownloadService(
+      { axiosRef: { get } } as any,
+      {
+        get: vi.fn().mockResolvedValue({ github: { token: 'stored-token' } }),
+      } as any,
+    )
+
+    await downloadService.fetchWithRetry(
+      'https://api.github.com/repos/mx-space/core/releases/latest',
+      {
+        headers: { Accept: 'application/vnd.github.v3+json' },
+      },
+    )
+
+    expect(get).toHaveBeenCalledWith(
+      'https://api.github.com/repos/mx-space/core/releases/latest',
+      expect.objectContaining({
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          Authorization: 'Bearer stored-token',
+        },
+      }),
+    )
+  })
+})
+
 describe('UpdateService', () => {
   let service: UpdateService
   let downloadService: UpdateDownloadService
@@ -152,16 +227,10 @@ describe('UpdateService', () => {
 
   describe('leader election', () => {
     it('first caller becomes leader and completes', async () => {
-      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
-        assets: [
-          {
-            name: 'release.zip',
-            browser_download_url: 'https://example.com/r.zip',
-            size: 100,
-          },
-        ],
-      })
-      vi.spyOn(downloadService, 'downloadWithMirrors').mockResolvedValue(
+      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue(
+        manifest('1.0.0'),
+      )
+      vi.spyOn(downloadService, 'downloadDirect').mockResolvedValue(
         new ArrayBuffer(100),
       )
 
@@ -189,17 +258,11 @@ describe('UpdateService', () => {
     })
 
     it('reuses the same in-flight job on the same instance', async () => {
-      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
-        assets: [
-          {
-            name: 'release.zip',
-            browser_download_url: 'https://example.com/r.zip',
-            size: 100,
-          },
-        ],
-      })
+      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue(
+        manifest('1.0.1'),
+      )
       const downloadSpy = vi
-        .spyOn(downloadService, 'downloadWithMirrors')
+        .spyOn(downloadService, 'downloadDirect')
         .mockResolvedValue(new ArrayBuffer(100))
 
       const stream1$ = service.downloadAdminAsset('1.0.1')
@@ -219,16 +282,10 @@ describe('UpdateService', () => {
 
   describe('cluster broadcast', () => {
     it('marks target version once for a new local job', async () => {
-      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
-        assets: [
-          {
-            name: 'release.zip',
-            browser_download_url: 'https://example.com/r.zip',
-            size: 100,
-          },
-        ],
-      })
-      vi.spyOn(downloadService, 'downloadWithMirrors').mockResolvedValue(
+      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue(
+        manifest('1.2.0'),
+      )
+      vi.spyOn(downloadService, 'downloadDirect').mockResolvedValue(
         new ArrayBuffer(100),
       )
 
@@ -243,17 +300,11 @@ describe('UpdateService', () => {
     })
 
     it('starts local update when reconciling remote target version', async () => {
-      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
-        assets: [
-          {
-            name: 'release.zip',
-            browser_download_url: 'https://example.com/r.zip',
-            size: 100,
-          },
-        ],
-      })
+      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue(
+        manifest('1.3.0'),
+      )
       const downloadSpy = vi
-        .spyOn(downloadService, 'downloadWithMirrors')
+        .spyOn(downloadService, 'downloadDirect')
         .mockResolvedValue(new ArrayBuffer(100))
 
       fakeRedis._set(
@@ -331,29 +382,50 @@ describe('UpdateService', () => {
       )
     })
 
-    it('writes error when release.zip not found', async () => {
+    it('writes error when manifest is missing required fields', async () => {
       vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
-        assets: [{ name: 'other.zip' }],
+        version: '7.0.0',
       })
 
       const messages = await subscribeOnce(service.downloadAdminAsset('7.0.0'))
 
       expect(messages.some((m) => m.includes('Download failed'))).toBe(true)
+      expect(await fakeRedis.get('update:admin:error:7.0.0')).toContain(
+        'latest.json missing required fields',
+      )
+    })
+
+    it('rejects a manifest version that differs from the requested version', async () => {
+      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue(
+        manifest('7.1.0'),
+      )
+      const downloadSpy = vi
+        .spyOn(downloadService, 'downloadDirect')
+        .mockResolvedValue(new ArrayBuffer(10))
+
+      const messages = await subscribeOnce(service.downloadAdminAsset('7.0.0'))
+
+      expect(messages.some((m) => m.includes('Download failed'))).toBe(true)
+      expect(await fakeRedis.get('update:admin:error:7.0.0')).toContain(
+        'Admin manifest version mismatch: requested 7.0.0, got 7.1.0',
+      )
+      expect(downloadSpy).not.toHaveBeenCalled()
+      expect(installService.extractAndInstall).not.toHaveBeenCalled()
     })
   })
 
   describe('getLatestAdminVersion', () => {
-    it('strips v prefix', async () => {
-      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
-        tag_name: 'v2.5.0',
-      })
+    it('returns manifest version', async () => {
+      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue(
+        manifest('2.5.0'),
+      )
       expect(await service.getLatestAdminVersion()).toBe('2.5.0')
     })
 
-    it('throws when tag_name missing', async () => {
+    it('throws when manifest fields missing', async () => {
       vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({})
       await expect(service.getLatestAdminVersion()).rejects.toThrow(
-        'tag_name not found',
+        'latest.json missing required fields',
       )
     })
   })
@@ -377,10 +449,10 @@ describe('UpdateService', () => {
       fakeRedis._set('update:admin:done:8.0.0', 'stale')
       fakeRedis._set('update:admin:error:8.0.0', 'stale error')
 
-      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
-        assets: [{ name: 'release.zip', browser_download_url: 'u', size: 10 }],
-      })
-      vi.spyOn(downloadService, 'downloadWithMirrors').mockResolvedValue(
+      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue(
+        manifest('8.0.0'),
+      )
+      vi.spyOn(downloadService, 'downloadDirect').mockResolvedValue(
         new ArrayBuffer(10),
       )
 

@@ -5,7 +5,7 @@ import path from 'node:path'
 import { Query, Sse } from '@nestjs/common'
 import pc from 'picocolors'
 import { catchError, Observable } from 'rxjs'
-import { lt, major, minor } from 'semver'
+import { lt, major } from 'semver'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -48,9 +48,20 @@ export class UpdateController {
           path.join(adminAssetRoot, 'index.html'),
         )
 
+        let latestVersion: string
+        try {
+          latestVersion = await this.service.getLatestAdminVersion()
+        } catch (error: any) {
+          observer.next(
+            pc.red(`Fetching latest admin version error: ${error.message}\n`),
+          )
+          observer.complete()
+          return
+        }
+
         if (!isExistLocalAdmin) {
           await pipeStream(
-            this.service.startClusterAdminAssetUpdate(currentVersion),
+            this.service.startClusterAdminAssetUpdate(latestVersion),
           )
           observer.complete()
           return
@@ -70,29 +81,16 @@ export class UpdateController {
           }
         }
 
-        let latestVersion: string
-        try {
-          latestVersion = await this.service.getLatestAdminVersion()
-        } catch (error: any) {
-          observer.next(
-            pc.red(`Fetching latest admin version error: ${error.message}\n`),
-          )
-          observer.complete()
-          return
-        }
-
         if (!lt(currentVersion, latestVersion)) {
           observer.next(pc.green(`Admin dashboard is up to date.\n`))
           observer.complete()
           return
         }
-        const isCrossVersion =
-          minor(currentVersion) !== minor(latestVersion) ||
-          major(currentVersion) !== major(latestVersion)
-        if (!force && !isDev && isCrossVersion) {
+        const isMajorJump = major(currentVersion) !== major(latestVersion)
+        if (!force && !isDev && isMajorJump) {
           observer.next(
             pc.red(
-              `The latest version is ${latestVersion}, current version is ${currentVersion}, can not cross-version upgrade.\n`,
+              `Major version jump ${currentVersion} -> ${latestVersion} requires force=true.\n`,
             ),
           )
           observer.complete()

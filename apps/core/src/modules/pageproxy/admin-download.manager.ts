@@ -89,13 +89,6 @@ export class AdminDownloadManager {
   private startDownload(): void {
     this.initialize()
 
-    // TODO(admin-update S3): future electron-style update source.
-    // When `ADMIN_UPDATE.s3BaseUrl` (env ADMIN_UPDATE_S3_BASE_URL) is set, fetch a
-    // `latest.json` manifest from S3 to resolve the newest admin version + zip URL,
-    // download that zip, and install it via the existing extract/install path —
-    // instead of querying GitHub releases. This is only RESERVED for now: the
-    // built-in admin (built locally at core build time) is the default served asset,
-    // and the GitHub upgrade path below remains the unchanged active behavior.
     this.updateService
       .getLatestAdminVersion()
       .then((version) => {

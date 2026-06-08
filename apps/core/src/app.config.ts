@@ -199,10 +199,10 @@ const commander = program
   .option('--pg_max_pool_size <number>', 'PostgreSQL pool size')
   .option('--pg_ssl', 'enable PostgreSQL TLS')
 
-  // admin asset update (reserved)
+  // admin asset update — R2 manifest base URL (default points at the public bucket)
   .option(
     '--admin_update_s3_base_url <string>',
-    'reserved: S3 base URL for admin asset updates (empty = disabled, falls back to GitHub releases)',
+    'S3/R2 base URL hosting latest.json + admin-<version>.zip',
   )
 
 commander.parse()
@@ -388,12 +388,12 @@ export const POSTGRES = {
       : false,
 }
 
-// Reserved for the future electron-style admin asset update source.
-// When `s3BaseUrl` is non-empty, the admin updater will fetch a `latest.json`
-// manifest + admin zip from S3 instead of GitHub releases. Empty string is the
-// "disabled" sentinel, keeping the current GitHub upgrade path as the default.
+// Admin asset update source. `latest.json` and `admin-<version>.zip` are read
+// from this base URL. Default points at the public R2 bucket that release.yml
+// and admin-release.yml publish to; override with --admin_update_s3_base_url or
+// ADMIN_UPDATE_S3_BASE_URL when self-hosting the bucket.
 export const ADMIN_UPDATE = {
   s3BaseUrl: (argv.admin_update_s3_base_url ||
     process.env.ADMIN_UPDATE_S3_BASE_URL ||
-    '') as string,
+    'https://admin-r2.innei.dev') as string,
 }
