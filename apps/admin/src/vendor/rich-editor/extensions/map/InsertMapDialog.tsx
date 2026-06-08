@@ -242,9 +242,7 @@ function InsertMapDialog(props: InsertMapDialogProps) {
           </div>
         ) : null}
         {previewUrl ? (
-          <div className="rounded-sm border border-border bg-surface-inset">
-            <MapBlockReadonly {...previewSlot} className="my-0" />
-          </div>
+          <MapBlockReadonly {...previewSlot} className="my-0" />
         ) : null}
       </div>
       <div className="flex justify-end gap-2 border-t border-border px-5 py-4">

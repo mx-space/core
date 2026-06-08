@@ -242,14 +242,26 @@ export function MapBlock({
       if (!hasTrack && hasPois) return `${pois.length} places`
       return null
     }
+    const tzOffsetMin = data.timezoneOffsetMinutes
+    const useTrackTz = typeof tzOffsetMin === 'number'
+    const target = useTrackTz
+      ? new Date(data.startTimeMs + tzOffsetMin * 60_000)
+      : new Date(data.startTimeMs)
     try {
       return new Intl.DateTimeFormat(undefined, {
         dateStyle: 'long',
-      }).format(new Date(data.startTimeMs))
+        ...(useTrackTz && { timeZone: 'UTC' }),
+      }).format(target)
     } catch {
-      return new Date(data.startTimeMs).toLocaleDateString()
+      return target.toLocaleDateString()
     }
-  }, [data?.startTimeMs, hasPois, hasTrack, pois.length])
+  }, [
+    data?.startTimeMs,
+    data?.timezoneOffsetMinutes,
+    hasPois,
+    hasTrack,
+    pois.length,
+  ])
 
   const stopsCount = stops.length
   const hasSecondary = !!(
