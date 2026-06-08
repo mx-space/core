@@ -39,7 +39,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "typebox": "1.1.39"
+    "typebox": "1.2.1"
   },
   "devDependencies": {
     "tsdown": "0.22.2",

@@ -65,7 +65,7 @@
     "@effect/platform": "0.96.1",
     "@effect/platform-node": "0.107.0",
     "@haklex/rich-headless": "0.20.0",
-    "@haklex/rich-litexml": "0.20.0",
+    "@haklex/rich-litexml": "0.21.0",
     "@haklex/rich-litexml-cli": "0.20.0",
     "@lexical/headless": "^0.45.0",
     "@mx-space/api-client": "workspace:*",
@@ -77,7 +77,7 @@
     "lexical": "^0.45.0",
     "minisearch": "^7.2.0",
     "open": "^11.0.0",
-    "semver": "7.8.1"
+    "semver": "7.8.2"
   },
   "devDependencies": {
     "@effect/vitest": "0.29.0",
