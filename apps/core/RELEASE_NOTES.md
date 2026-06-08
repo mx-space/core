@@ -1,23 +1,24 @@
 ## TL;DR
 
-Admin write surface gains mx-editor LiteXML authoring, and Lexical write APIs now require `content` and `text` to be submitted together.
+In-app admin dashboard upgrades now resolve through the R2 `latest.json` manifest instead of the archived `mx-space/mx-admin` GitHub Releases, so the upgrade button actually downloads the current admin again.
 
 ## Highlights
 
-The admin write panel now accepts LiteXML envelopes (`<mxpost>`, `<mxnote>`) as a first-class authoring format. Content is parsed into Lexical JSON on submit, so the server-side storage shape is unchanged — operators see the same lexical content rows, with a richer authoring loop on the admin side via `@haklex/rich-litexml`.
+The admin updater no longer talks to `api.github.com`. `UpdateService` reads `latest.json` from `ADMIN_UPDATE.s3BaseUrl` (default `https://admin-r2.innei.dev`, the bucket both `release.yml` and `admin-release.yml` publish to), downloads the resolved `admin-<version>.zip` directly, and verifies the manifest's `sha256` before installing. Self-hosted operators can point at their own bucket by setting `ADMIN_UPDATE_S3_BASE_URL` or `--admin_update_s3_base_url`.
 
-Server-side validation for lexical writes is tightened: `content` (Lexical JSON) and `text` (plain-text projection) must now be sent as a pair. Creates require both; partial updates accept neither or both, never one alone. This prevents stale `text` from drifting out of sync with `content` after a write, which previously could happen when callers patched only one side.
+The cross-version gate in `GET /update/upgrade/dashboard` is relaxed: minor and patch upgrades no longer require `force=true`. Only true major-version jumps are still blocked behind the flag. This matches the new reality where admin ships its own `8.x` semver track decoupled from core's `13.x`, and admin's in-repo monorepo cadence produces frequent patch/minor releases.
 
-## Upgrade Notes
-
-If you have any external integrations that POST/PATCH lexical posts, notes, or pages directly to the server, update them to submit `content` and `text` together. The official `@mx-space/api-client` v5.3.1 (published alongside this release) and admin are already aligned. Clients sending only `content` (or only `text`) for `contentFormat: lexical` writes will now receive a 400 `VALIDATION_FAILED`.
+The `release.yml` workflow now emits `sha256` in `latest.json` alongside the existing fields, matching `admin-release.yml`'s schema. Both publish paths populate the same manifest contract that the new updater expects.
 
 ## Changes
 
 ### Features
-- Admin rich editor: author posts in LiteXML (`<mxpost>`, `<mxnote>`) — parsed to Lexical on submit ([#2743](https://github.com/mx-space/core/pull/2743))
-- Lexical write validation: enforce paired `content` + `text` submission across post / note / page / draft ([#2743](https://github.com/mx-space/core/pull/2743))
+- Admin in-app updater consumes R2 `latest.json` (with sha256 verification) instead of GitHub Releases. ([31b6e33](https://github.com/mx-space/core/commit/31b6e33c7a5249ea8d3b3ddda12144f07672a9f0))
+
+## Upgrade Notes
+
+No action required for users on the default deployment — the new manifest URL ships baked in. Operators running self-hosted admin buckets should set `ADMIN_UPDATE_S3_BASE_URL` (or `--admin_update_s3_base_url`) to their bucket root before this release lands.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.5.2...v13.6.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.6.0...v13.7.0

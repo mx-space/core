@@ -1,3 +1,10 @@
+# [13.7.0](https://github.com/mx-space/core/compare/v13.6.0...v13.7.0) (2026-06-08)
+
+
+### Features
+
+* **core:** migrate admin updater to R2 latest.json manifest ([31b6e33](https://github.com/mx-space/core/commit/31b6e33c7a5249ea8d3b3ddda12144f07672a9f0))
+
 # [13.6.0](https://github.com/mx-space/core/compare/v13.5.2...v13.6.0) (2026-06-08)
 
 
@@ -5,33 +12,11 @@
 
 * add mx editor litexml integration ([#2743](https://github.com/mx-space/core/issues/2743)) ([8b9cf34](https://github.com/mx-space/core/commit/8b9cf34a3dc2d936566c7a60fd6d66aea11255a8))
 
-
-
 ## [13.5.2](https://github.com/mx-space/core/compare/v13.5.1...v13.5.2) (2026-06-06)
 
-
-### Features
-
-* **admin:** add GPX drag-drop to rich editor ([9174971](https://github.com/mx-space/core/commit/9174971ef917020a394c01dfbbaf15716047f105))
 ## [13.5.1](https://github.com/mx-space/core/compare/v13.5.0...v13.5.1) (2026-06-05)
 
-
-### Bug Fixes
-
-* **admin:** defer map track upload until insert and simplify dialog ([8274418](https://github.com/mx-space/core/commit/82744184006ea7efd857305dfd80eeb90b604a4e))
 # [13.5.0](https://github.com/mx-space/core/compare/v13.4.0...v13.5.0) (2026-06-05)
-
-
-### Bug Fixes
-
-* **deps,admin:** revert kysely override and repair admin tests after upgrade ([b4aab3f](https://github.com/mx-space/core/commit/b4aab3f29c104958a02222ea691bdac2eaf74ad5))
-
-
-### Features
-
-* **admin:** add afilmory rich-editor extension (node + picker) ([28781df](https://github.com/mx-space/core/commit/28781df00e258728afb88873f0f4d2cbe1784ca3))
-
-
 
 # [13.4.0](https://github.com/mx-space/core/compare/v13.3.1...v13.4.0) (2026-06-05)
 
@@ -330,7 +315,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 
 * **recently:** URL-keyed enrichment map, drop typed entries ([#2726](https://github.com/mx-space/core/issues/2726)) ([91b8a47](https://github.com/mx-space/core/commit/91b8a47469e9b9f96016b7aa3651a2ffa6669719))
 
-# [12.6.0](https://github.com/mx-space/core/compare/v12.5.4...v12.6.0) (2026-05-15)
+# [12.6.0](https://github.com/mx-space/core/compare/v0.7.0...v12.6.0) (2026-05-15)
 
 
 ### Features
@@ -991,7 +976,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 * **schema:** enhance partial schemas for notes, pages, and posts with new fields ([f66c9ed](https://github.com/mx-space/core/commit/f66c9ed9cca1091730985813334adccb9462affd))
 * 更新文件上传前缀支持模板占位符，增强灵活性 ([#2584](https://github.com/mx-space/core/issues/2584)) ([2b5354a](https://github.com/mx-space/core/commit/2b5354a6f907947993dda64733e8bbd62c6cc62d))
 
-# [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
+# [10.2.0](https://github.com/mx-space/core/compare/v10.1.10...v10.2.0) (2026-03-08)
 
 
 ### Features
