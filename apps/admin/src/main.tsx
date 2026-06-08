@@ -5,8 +5,10 @@ import { createRoot } from 'react-dom/client'
 
 import App from './App'
 import { migrateLegacyProviderType } from './bootstrap/migrate-legacy-provider-type'
+import { registerChunkErrorHandler } from './bootstrap/register-chunk-error-handler'
 
 migrateLegacyProviderType()
+registerChunkErrorHandler()
 
 const appRoot = createRootElement()
 
