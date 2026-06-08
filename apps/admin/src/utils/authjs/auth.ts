@@ -1,12 +1,13 @@
+import { passkeyClient } from '@better-auth/passkey/client'
 import { createAuthClient } from 'better-auth/client'
 import { usernameClient } from 'better-auth/client/plugins'
 
-import { passkeyClient } from '@better-auth/passkey/client'
-
 import { API_URL } from '~/constants/env'
 
+import { resolveAuthBaseURL } from './auth-base-url'
+
 export const authClient = createAuthClient({
-  baseURL: `${API_URL}/auth`,
+  baseURL: resolveAuthBaseURL(API_URL),
   fetchOptions: {
     credentials: 'include',
   },
