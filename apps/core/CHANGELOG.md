@@ -1,3 +1,12 @@
+# [13.6.0](https://github.com/mx-space/core/compare/v13.5.2...v13.6.0) (2026-06-08)
+
+
+### Features
+
+* add mx editor litexml integration ([#2743](https://github.com/mx-space/core/issues/2743)) ([8b9cf34](https://github.com/mx-space/core/commit/8b9cf34a3dc2d936566c7a60fd6d66aea11255a8))
+
+
+
 ## [13.5.2](https://github.com/mx-space/core/compare/v13.5.1...v13.5.2) (2026-06-06)
 
 

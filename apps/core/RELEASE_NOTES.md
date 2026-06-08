@@ -1,19 +1,23 @@
 ## TL;DR
 
-Admin rich editor now accepts a dropped `.gpx` file and inserts a ready-to-render map node, with stop-detection parameters tunable from the insert dialog.
+Admin write surface gains mx-editor LiteXML authoring, and Lexical write APIs now require `content` and `text` to be submitted together.
 
 ## Highlights
 
-The map extension previously required clicking through a slash-menu picker to add a track; now the editor catches drag-and-drop and paste of `.gpx` files directly, parses the GPS points client-side, compresses them via the existing stop-detection pipeline, uploads the resulting JSON track, and inserts the map node — all behind a single toast. The `InsertMapDialog` was also rewritten so the upload only happens when you click Insert, not the moment you pick a file, and exposes the two stop-detection knobs (cluster radius in metres and minimum dwell in minutes) that used to be hard-coded constants.
+The admin write panel now accepts LiteXML envelopes (`<mxpost>`, `<mxnote>`) as a first-class authoring format. Content is parsed into Lexical JSON on submit, so the server-side storage shape is unchanged — operators see the same lexical content rows, with a richer authoring loop on the admin side via `@haklex/rich-litexml`.
 
-The editor surface in `Write` grows to fill the visible viewport, so the drop target is large enough to land a file on without precision-aiming the toolbar strip.
+Server-side validation for lexical writes is tightened: `content` (Lexical JSON) and `text` (plain-text projection) must now be sent as a pair. Creates require both; partial updates accept neither or both, never one alone. This prevents stale `text` from drifting out of sync with `content` after a write, which previously could happen when callers patched only one side.
+
+## Upgrade Notes
+
+If you have any external integrations that POST/PATCH lexical posts, notes, or pages directly to the server, update them to submit `content` and `text` together. The official `@mx-space/api-client` v5.3.1 (published alongside this release) and admin are already aligned. Clients sending only `content` (or only `text`) for `contentFormat: lexical` writes will now receive a 400 `VALIDATION_FAILED`.
 
 ## Changes
 
 ### Features
-
-- Drag a `.gpx` file onto the rich editor to insert a map node — same compression and stop-detection pipeline as the existing dialog. ([9174971](https://github.com/mx-space/core/commit/9174971ef917020a394c01dfbbaf15716047f105))
+- Admin rich editor: author posts in LiteXML (`<mxpost>`, `<mxnote>`) — parsed to Lexical on submit ([#2743](https://github.com/mx-space/core/pull/2743))
+- Lexical write validation: enforce paired `content` + `text` submission across post / note / page / draft ([#2743](https://github.com/mx-space/core/pull/2743))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.5.1...v13.5.2
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.5.2...v13.6.0
