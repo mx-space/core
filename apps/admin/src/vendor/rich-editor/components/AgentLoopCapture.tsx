@@ -1,16 +1,16 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { useEffect } from 'react'
 import type {
   AgentStore,
   AgentToolConfig,
   ChatMessage,
   LLMProvider,
 } from '@haklex/rich-agent-core'
+import { useAgentLoop } from '@haklex/rich-ext-ai-agent'
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import type { LexicalEditor } from 'lexical'
 import type { RefObject } from 'react'
-import type { AgentLoopHandle } from '../types'
+import { useEffect } from 'react'
 
-import { useAgentLoop } from '@haklex/rich-ext-ai-agent'
+import type { AgentLitexmlRegistryProvider, AgentLoopHandle } from '../types'
 
 interface AgentLoopCaptureInnerProps {
   editorRef: RefObject<LexicalEditor | null>
@@ -18,6 +18,7 @@ interface AgentLoopCaptureInnerProps {
   provider: LLMProvider
   store: AgentStore
   tools?: AgentToolConfig[]
+  litexmlRegistry?: AgentLitexmlRegistryProvider
   systemMessages?: ChatMessage[]
 }
 
@@ -27,9 +28,17 @@ function AgentLoopCaptureInner({
   provider,
   store,
   tools,
+  litexmlRegistry,
   systemMessages,
 }: AgentLoopCaptureInnerProps) {
-  const loop = useAgentLoop({ provider, store, tools, systemMessages })
+  const loopOptions = {
+    provider,
+    store,
+    tools,
+    litexmlRegistry,
+    systemMessages,
+  }
+  const loop = useAgentLoop(loopOptions)
   const [editor] = useLexicalComposerContext()
 
   useEffect(() => {
@@ -50,6 +59,7 @@ export interface AgentLoopCaptureProps {
   provider: LLMProvider | null
   store: AgentStore
   tools?: AgentToolConfig[]
+  litexmlRegistry?: AgentLitexmlRegistryProvider
   systemMessages?: ChatMessage[]
 }
 
@@ -59,6 +69,7 @@ export function AgentLoopCapture({
   provider,
   store,
   tools,
+  litexmlRegistry,
   systemMessages,
 }: AgentLoopCaptureProps) {
   useEffect(() => {
@@ -75,6 +86,7 @@ export function AgentLoopCapture({
       provider={provider}
       store={store}
       tools={tools}
+      litexmlRegistry={litexmlRegistry}
       systemMessages={systemMessages}
     />
   )

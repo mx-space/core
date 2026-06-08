@@ -13,12 +13,3 @@ export {
   MapNode,
 } from './MapNode'
 export { MapPlugin } from './MapPlugin'
-export type {
-  MapBlockProps,
-  MapPoi,
-  MapTrackBounds,
-  MapTrackData,
-  MapTrackPointTuple,
-  MapTrackStop,
-  MapView,
-} from './types'

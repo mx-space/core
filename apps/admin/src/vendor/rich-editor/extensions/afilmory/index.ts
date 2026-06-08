@@ -1,10 +1,4 @@
-export type {
-  AfilmoryFilter,
-  AfilmoryLayout,
-  AfilmoryListItem,
-  AfilmorySlotProps,
-  AfilmorySource,
-} from './afilmory-augment'
+export type { AfilmorySlotProps } from './afilmory-augment'
 export { AFILMORY_NODE_KEY } from './afilmory-augment'
 export type { AfilmoryPayload } from './afilmory-bridge'
 export { AfilmoryBlock } from './AfilmoryBlock'

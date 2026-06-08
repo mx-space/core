@@ -76,7 +76,7 @@ const createService = () => {
     findTrackerBySlug: vi.fn(),
     deleteAllTracker: vi.fn(),
   }
-  const lexicalService = { populateText: vi.fn() }
+  const lexicalService = { normalizeContentForStorage: vi.fn() }
   const enrichmentService = { scheduleDocPrefetch: vi.fn() }
   const service = new PostService(
     repository as any,

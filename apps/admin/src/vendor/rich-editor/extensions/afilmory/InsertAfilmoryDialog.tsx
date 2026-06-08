@@ -1,3 +1,9 @@
+import type {
+  AfilmoryFilter,
+  AfilmoryLayout,
+  AfilmoryListItem,
+  AfilmorySource,
+} from '@mx-space/editor'
 import {
   ChevronDown,
   ChevronRight,
@@ -16,12 +22,6 @@ import { Checkbox } from '~/ui/primitives/checkbox'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
-import type {
-  AfilmoryFilter,
-  AfilmoryLayout,
-  AfilmoryListItem,
-  AfilmorySource,
-} from './afilmory-augment'
 import type { AfilmoryPayload } from './afilmory-bridge'
 import { FilterPopover } from './FilterPopover'
 import { PhotoGrid } from './PhotoGrid'

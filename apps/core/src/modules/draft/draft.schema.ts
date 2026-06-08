@@ -8,6 +8,10 @@ import {
   zPaginationSize,
   zSortOrder,
 } from '~/common/zod'
+import {
+  validateLexicalCreateContentPair,
+  validateLexicalPartialContentPair,
+} from '~/shared/schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 import { DraftRefType } from './draft.enum'
@@ -17,7 +21,7 @@ const ImageModelSchema = z.object({
   alt: z.string().optional(),
 })
 
-export const CreateDraftSchema = z.object({
+const DraftBaseSchema = z.object({
   refType: z.enum(DraftRefType),
   refId: zEntityId.optional(),
   title: z.string().optional(),
@@ -32,9 +36,15 @@ export const CreateDraftSchema = z.object({
   typeSpecificData: z.record(z.string(), z.any()).optional(),
 })
 
+export const CreateDraftSchema = DraftBaseSchema.superRefine(
+  validateLexicalCreateContentPair,
+)
+
 export class CreateDraftDto extends createZodDto(CreateDraftSchema) {}
 
-export const UpdateDraftSchema = CreateDraftSchema.partial()
+export const UpdateDraftSchema = DraftBaseSchema.partial().superRefine(
+  validateLexicalPartialContentPair,
+)
 
 export class UpdateDraftDto extends createZodDto(UpdateDraftSchema) {}
 

@@ -275,7 +275,7 @@ export class NoteService {
   }
 
   public async create(document: NoteCreateDocument) {
-    this.lexicalService.populateText(document)
+    this.lexicalService.normalizeContentForStorage(document)
     const { draftId } = document
     const normalizedSlug = this.normalizeSlug(document.slug)
     await this.ensureSlugAvailable(normalizedSlug)
@@ -357,7 +357,7 @@ export class NoteService {
     id: string,
     data: Partial<NoteModel> & { draftId?: string },
   ) {
-    this.lexicalService.populateText(data as any)
+    this.lexicalService.normalizeContentForStorage(data)
     const oldDoc = await this.findById(id)
     if (!oldDoc) throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
 

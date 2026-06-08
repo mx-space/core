@@ -1,3 +1,4 @@
+import { createMxLitexmlRegistry, mxLexicalToMarkdown } from '@mx-space/editor'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { load } from 'js-yaml'
 import type { SerializedEditorState } from 'lexical'
@@ -100,6 +101,7 @@ import type {
   RichEditorWithAgentProps,
   RichEditorWithAgentRef,
 } from '~/vendor/rich-editor/components/RichEditorWithAgent'
+import { buildMxEditorLitexmlSystemMessages } from '~/vendor/rich-editor/utils/agent-litexml-prompt'
 import type { MetaFieldsSchema } from '~/vendor/rich-editor/utils/meta-tools'
 import {
   buildMetaSystemMessages,
@@ -463,7 +465,9 @@ function WritePage(props: { kind: WriteKind }) {
   const draftFingerprint = useMemo(
     () =>
       JSON.stringify(
-        toDraftData(props.kind, state, isEditing ? id : undefined),
+        toDraftData(props.kind, state, isEditing ? id : undefined, {
+          project: false,
+        }),
       ),
     [id, isEditing, props.kind, state],
   )
@@ -1630,7 +1634,7 @@ function EditorMetaStrip(props: {
       : t('write.format.toLexical')
 
   return (
-    <div className="group mb-3 flex items-center justify-between opacity-60 transition-opacity duration-200 hover:opacity-100">
+    <div className="group mb-3 flex min-h-7 items-center justify-between opacity-60 transition-opacity duration-200 hover:opacity-100">
       <div className="flex min-w-0 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
         <span
           aria-hidden="true"
@@ -3234,6 +3238,8 @@ function saveWrite(
   state: WriteFormState,
   draftId?: string,
 ): Promise<WriteModel> {
+  state = projectWriteState(state)
+
   if (kind === 'post') {
     const data = {
       categoryId: state.categoryId,
@@ -3306,7 +3312,12 @@ function toDraftData(
   kind: WriteKind,
   state: WriteFormState,
   refId?: string,
+  options: { project?: boolean } = {},
 ): CreateDraftData {
+  if (options.project !== false) {
+    state = projectWriteState(state)
+  }
+
   const base = {
     content: state.contentFormat === 'lexical' ? state.content : undefined,
     contentFormat: state.contentFormat,
@@ -3367,6 +3378,15 @@ function toDraftData(
   }
 }
 
+function projectWriteState(state: WriteFormState): WriteFormState {
+  if (state.contentFormat !== 'lexical') return state
+  if (!state.content.trim()) return state
+  return {
+    ...state,
+    text: mxLexicalToMarkdown(state.content),
+  }
+}
+
 function RichWriteSurface(props: {
   agentVisible?: boolean
   autoFocus?: boolean
@@ -3421,9 +3441,13 @@ function RichWriteSurface(props: {
       return { url: result.url }
     },
     initialValue: parseSerializedEditorState(props.content),
-    systemMessages: props.metaFieldsSchema
-      ? buildMetaSystemMessages(props.metaFieldsSchema)
-      : undefined,
+    litexmlRegistry: createMxLitexmlRegistry,
+    systemMessages: [
+      ...buildMxEditorLitexmlSystemMessages(),
+      ...(props.metaFieldsSchema
+        ? buildMetaSystemMessages(props.metaFieldsSchema)
+        : []),
+    ],
     tools:
       props.metaFieldsSchema && props.getMetaFields && props.onMetaFieldsUpdate
         ? buildMetaTools({
@@ -3529,7 +3553,11 @@ function validateState(
 ) {
   if (kind !== 'note' && !state.title.trim())
     return translate('write.validation.titleRequired')
-  if (!state.text.trim()) return translate('write.validation.textRequired')
+  const hasBody =
+    state.contentFormat === 'lexical'
+      ? state.text.trim().length > 0 || state.content.trim().length > 0
+      : state.text.trim().length > 0
+  if (!hasBody) return translate('write.validation.textRequired')
   if (kind !== 'note' && !state.slug.trim())
     return translate('write.validation.slugRequired')
   if (kind === 'post' && !state.categoryId) {

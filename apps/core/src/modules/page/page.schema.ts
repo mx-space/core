@@ -2,14 +2,18 @@ import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zCoerceInt, zEntityId, zNonEmptyString, zPrefer } from '~/common/zod'
-import { WriteBaseSchema } from '~/shared/schema'
+import {
+  validateLexicalCreateContentPair,
+  validateLexicalPartialContentPair,
+  WriteBaseSchema,
+} from '~/shared/schema'
 import { ImageArraySchema } from '~/shared/schema/image.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
  * Page schema for API validation
  */
-export const PageSchema = WriteBaseSchema.extend({
+const PageBaseSchema = WriteBaseSchema.extend({
   slug: zNonEmptyString,
   subtitle: z.string().nullable().optional(),
   order: z.preprocess(
@@ -22,13 +26,17 @@ export const PageSchema = WriteBaseSchema.extend({
   draftId: zEntityId.optional(),
 })
 
+export const PageSchema = PageBaseSchema.superRefine(
+  validateLexicalCreateContentPair,
+)
+
 export class PageDto extends createZodDto(PageSchema) {}
 
 /**
  * Partial page schema for PATCH operations
  * Override fields with .default() to prevent defaults from being applied during partial updates
  */
-export const PartialPageSchema = PageSchema.extend({
+export const PartialPageSchema = PageBaseSchema.extend({
   contentFormat: z
     .enum([ContentFormat.Markdown, ContentFormat.Lexical])
     .optional(),
@@ -38,7 +46,9 @@ export const PartialPageSchema = PageSchema.extend({
       typeof val === 'string' ? Number.parseInt(val, 10) : (val as number),
     z.number().int().min(0).optional(),
   ),
-}).partial()
+})
+  .partial()
+  .superRefine(validateLexicalPartialContentPair)
 
 export class PartialPageDto extends createZodDto(PartialPageSchema) {}
 

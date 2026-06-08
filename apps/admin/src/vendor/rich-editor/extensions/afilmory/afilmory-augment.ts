@@ -1,30 +1,8 @@
 import type {} from '@haklex/rich-editor'
+import type { AfilmoryLayout, AfilmorySource } from '@mx-space/editor'
 import type { ComponentType } from 'react'
 
 export const AFILMORY_NODE_KEY = 'Afilmory' as const
-
-export interface AfilmoryFilter {
-  tags?: string[]
-  tagMode?: 'union' | 'intersection'
-  cameras?: string[]
-  lenses?: string[]
-  dateFrom?: string
-  dateTo?: string
-  search?: string
-}
-
-export type AfilmoryListItem = {
-  id: string
-  w: number
-  h: number
-  hash?: string
-}
-
-export type AfilmorySource =
-  | { kind: 'list'; items: AfilmoryListItem[] }
-  | { kind: 'filter'; filter: AfilmoryFilter }
-
-export type AfilmoryLayout = 'grid' | 'masonry' | 'carousel'
 
 export interface AfilmorySlotProps {
   nodeKey?: string

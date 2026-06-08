@@ -1,3 +1,11 @@
+import type {
+  AgentStore,
+  AgentToolConfig,
+  ChatMessage,
+  LLMProvider,
+} from '@haklex/rich-agent-core'
+import { $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown'
+import type { LexicalEditor, SerializedEditorState } from 'lexical'
 import {
   forwardRef,
   useCallback,
@@ -6,20 +14,15 @@ import {
   useRef,
   useState,
 } from 'react'
+
 import type {
-  AgentStore,
-  AgentToolConfig,
-  ChatMessage,
-  LLMProvider,
-} from '@haklex/rich-agent-core'
-import type { LexicalEditor, SerializedEditorState } from 'lexical'
-import type { AgentLoopHandle, SaveExcalidrawSnapshot } from '../types'
+  AgentLitexmlRegistryProvider,
+  AgentLoopHandle,
+  SaveExcalidrawSnapshot,
+} from '../types'
 import type { BuildRichEditorPropsInput } from '../utils/build-rich-editor-props'
-import type { EnrichmentFetcher } from './EnrichmentLinkCardContext'
-
-import { $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown'
-
 import { buildRichEditorProps } from '../utils/build-rich-editor-props'
+import type { EnrichmentFetcher } from './EnrichmentLinkCardContext'
 import { ReactEditorPane } from './ReactEditorPane'
 
 export interface RichEditorWithAgentProps extends BuildRichEditorPropsInput {
@@ -33,6 +36,7 @@ export interface RichEditorWithAgentProps extends BuildRichEditorPropsInput {
   provider: LLMProvider | null
   saveExcalidrawSnapshot: SaveExcalidrawSnapshot
   store: AgentStore
+  litexmlRegistry?: AgentLitexmlRegistryProvider
   systemMessages?: ChatMessage[]
   theme: 'dark' | 'light'
   tools?: AgentToolConfig[]
@@ -139,6 +143,7 @@ export const RichEditorWithAgent = forwardRef<
       store={props.store}
       systemMessages={props.systemMessages}
       tools={props.tools}
+      litexmlRegistry={props.litexmlRegistry}
     />
   )
 })

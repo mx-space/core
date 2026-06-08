@@ -11,14 +11,18 @@ import {
   zPrefer,
 } from '~/common/zod'
 import { createPagerSchema } from '~/shared/dto/pager.dto'
-import { WriteBaseSchema } from '~/shared/schema'
+import {
+  validateLexicalCreateContentPair,
+  validateLexicalPartialContentPair,
+  WriteBaseSchema,
+} from '~/shared/schema'
 import { ImageArraySchema } from '~/shared/schema/image.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
  * Post schema for API validation
  */
-export const PostSchema = WriteBaseSchema.extend({
+const PostBaseSchema = WriteBaseSchema.extend({
   slug: zNonEmptyString,
   summary: z
     .preprocess((val) => (val === '' ? null : val), z.string().nullable())
@@ -38,20 +42,26 @@ export const PostSchema = WriteBaseSchema.extend({
   draftId: zEntityId.optional(),
 })
 
+export const PostSchema = PostBaseSchema.superRefine(
+  validateLexicalCreateContentPair,
+)
+
 export class PostDto extends createZodDto(PostSchema) {}
 
 /**
  * Partial post schema for PATCH operations
  * Override fields with .default() to prevent defaults from being applied during partial updates
  */
-export const PartialPostSchema = PostSchema.extend({
+export const PartialPostSchema = PostBaseSchema.extend({
   contentFormat: z
     .enum([ContentFormat.Markdown, ContentFormat.Lexical])
     .optional(),
   meta: z.record(z.string(), z.any()).optional().nullable(),
   copyright: z.boolean().optional(),
   isPublished: z.boolean().optional(),
-}).partial()
+})
+  .partial()
+  .superRefine(validateLexicalPartialContentPair)
 
 export class PartialPostDto extends createZodDto(PartialPostSchema) {}
 

@@ -1,3 +1,6 @@
+import type { MxBlockProjection } from '../types'
+import { serializeLiteXmlFallbackNode } from './litexml'
+
 export type MapTrackPointTuple =
   | [number, number]
   | [number, number, number | null]
@@ -66,4 +69,23 @@ export interface MapBlockProps {
   title?: string
   track?: MapTrackData
   view?: MapView
+}
+
+export interface SerializedMapNode {
+  $?: {
+    blockId?: unknown
+  }
+  type: 'map'
+  version?: number
+  title?: string
+  pois?: MapPoi[]
+  track?: { url?: string }
+  view?: MapView
+}
+
+export const mapBlockProjection: MxBlockProjection<SerializedMapNode> = {
+  type: 'map',
+  toMarkdown(node) {
+    return serializeLiteXmlFallbackNode(node)
+  },
 }

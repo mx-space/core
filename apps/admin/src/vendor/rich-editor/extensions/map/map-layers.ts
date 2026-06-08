@@ -1,6 +1,5 @@
+import type { MapPoi, MapTrackStop } from '@mx-space/editor'
 import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl'
-
-import type { MapPoi, MapTrackStop } from './types'
 
 export const ROUTE_SOURCE = 'map-block-route'
 export const ROUTE_LAYER_CASING = 'map-block-route-casing'

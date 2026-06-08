@@ -1,6 +1,5 @@
+import type { AfilmoryLayout, AfilmorySource } from '@mx-space/editor'
 import type { LexicalEditor } from 'lexical'
-
-import type { AfilmoryLayout, AfilmorySource } from './afilmory-augment'
 
 export interface AfilmoryPayload {
   baseUrl: string

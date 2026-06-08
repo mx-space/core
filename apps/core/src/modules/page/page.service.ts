@@ -72,7 +72,7 @@ export class PageService {
   }
 
   public async create(doc: PageModel & { draftId?: string }) {
-    this.lexicalService.populateText(doc as any)
+    this.lexicalService.normalizeContentForStorage(doc)
 
     const { draftId } = doc
     const count = await this.pageRepository.count()
@@ -139,7 +139,7 @@ export class PageService {
     id: string,
     doc: Partial<PageModel> & { draftId?: string },
   ) {
-    this.lexicalService.populateText(doc as any)
+    this.lexicalService.normalizeContentForStorage(doc)
 
     const { draftId } = doc
 

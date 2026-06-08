@@ -1,54 +1,34 @@
 import { Effect } from 'effect'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const richLitexmlMock = vi.hoisted(() => ({
-  createDefaultRegistry: vi.fn(() => ({})),
-  deserializeFromXml: vi.fn(),
-  serializeToXml: vi.fn(),
+const editorMock = vi.hoisted(() => ({
+  deserializeMxLitexmlToLexical: vi.fn(),
+  mxLexicalToMarkdown: vi.fn(() => ''),
+  serializeMxLexicalToLitexml: vi.fn(),
+  stripMxLitexmlDocWrapper: vi.fn((xml: string) => xml),
 }))
 
-const richHeadlessMock = vi.hoisted(() => ({
-  sanitizeSerializedJSON: vi.fn((value: string) => value),
-  toMarkdown: vi.fn(() => ''),
-}))
-
-vi.mock('@haklex/rich-litexml', () => ({
-  createDefaultRegistry: richLitexmlMock.createDefaultRegistry,
-  deserializeFromXml: richLitexmlMock.deserializeFromXml,
-  serializeToXml: richLitexmlMock.serializeToXml,
-}))
-
-vi.mock('@haklex/rich-headless', () => ({
-  allHeadlessNodes: [],
-  sanitizeSerializedJSON: richHeadlessMock.sanitizeSerializedJSON,
-  $toMarkdown: richHeadlessMock.toMarkdown,
-}))
-
-vi.mock('@lexical/headless', () => ({
-  createHeadlessEditor: () => ({
-    parseEditorState: () => ({}),
-    read: (fn: () => void) => fn(),
-    setEditorState: () => undefined,
-  }),
+vi.mock('@mx-space/editor', () => ({
+  deserializeMxLitexmlToLexical: editorMock.deserializeMxLitexmlToLexical,
+  mxLexicalToMarkdown: editorMock.mxLexicalToMarkdown,
+  serializeMxLexicalToLitexml: editorMock.serializeMxLexicalToLitexml,
+  stripMxLitexmlDocWrapper: editorMock.stripMxLitexmlDocWrapper,
 }))
 
 import { Lexical } from '../../src/services/Lexical'
 
 describe('Lexical service dependency failures', () => {
   beforeEach(() => {
-    richLitexmlMock.createDefaultRegistry.mockReturnValue({})
-    richLitexmlMock.deserializeFromXml.mockReturnValue({
+    editorMock.deserializeMxLitexmlToLexical.mockReturnValue({
       root: { type: 'root', children: [] },
     })
-    richLitexmlMock.serializeToXml.mockReturnValue('<doc />')
-    richHeadlessMock.sanitizeSerializedJSON.mockImplementation(
-      (value: string) => value,
-    )
-    richHeadlessMock.toMarkdown.mockReturnValue('')
+    editorMock.serializeMxLexicalToLitexml.mockReturnValue('<doc />')
+    editorMock.stripMxLitexmlDocWrapper.mockImplementation((xml: string) => xml)
+    editorMock.mxLexicalToMarkdown.mockReturnValue('')
   })
 
   it('maps LiteXML parse dependency failures to ValidationXml', async () => {
-    richLitexmlMock.deserializeFromXml.mockImplementation(() => {
+    editorMock.deserializeMxLitexmlToLexical.mockImplementation(() => {
       throw 'parse failed'
     })
     const err = await Effect.runPromise(
@@ -62,7 +42,7 @@ describe('Lexical service dependency failures', () => {
   })
 
   it('maps LiteXML serialization dependency failures to ValidationXml', async () => {
-    richLitexmlMock.serializeToXml.mockImplementation(() => {
+    editorMock.serializeMxLexicalToLitexml.mockImplementation(() => {
       throw new Error('serialize failed')
     })
     const err = await Effect.runPromise(
@@ -78,7 +58,7 @@ describe('Lexical service dependency failures', () => {
   })
 
   it('maps Markdown rendering dependency failures to ValidationXml', async () => {
-    richHeadlessMock.sanitizeSerializedJSON.mockImplementation(() => {
+    editorMock.mxLexicalToMarkdown.mockImplementation(() => {
       throw { message: 'sanitize failed' }
     })
     const err = await Effect.runPromise(

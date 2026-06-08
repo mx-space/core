@@ -1,4 +1,4 @@
-import type { MapMerchant } from './types'
+import type { MapMerchant } from '@mx-space/editor'
 
 export interface GeocodeResult {
   displayName: string
