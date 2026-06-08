@@ -111,7 +111,13 @@ export default ({ mode }) => {
     optimizeDeps: {
       // Vite 8 esbuild optimizer drops re-export aliases in barrel modules;
       // these trigger "Export 'X' is not defined" at runtime.
-      exclude: ['lucide-react', '@haklex/rich-compose'],
+      exclude: [
+        'lucide-react',
+        '@haklex/rich-compose',
+        'better-auth/client',
+        'better-auth/client/plugins',
+        '@better-auth/passkey/client',
+      ],
       include: [
         '@base-ui/react/button',
         '@base-ui/react/checkbox',
