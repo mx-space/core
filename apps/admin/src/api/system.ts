@@ -1,6 +1,5 @@
-import type { AppInfo } from '~/models/system'
-
 import { API_URL } from '~/constants/env'
+import type { AppInfo } from '~/models/system'
 
 import {
   buildAdminRequestHeaders,
@@ -45,12 +44,12 @@ export async function checkInit() {
     return (await response.json()) as { isInit: boolean }
   } catch (error) {
     if (error instanceof Error) throw error
-    throw new Error('Init check failed')
+    throw new Error('Init check failed', { cause: error })
   }
 }
 
 export function getAppInfo() {
-  return getJson<AppInfo>('/')
+  return getJson<AppInfo>('/info')
 }
 
 export function getInitDefaultConfigs() {
