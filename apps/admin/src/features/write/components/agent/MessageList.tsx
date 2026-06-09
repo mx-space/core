@@ -31,15 +31,21 @@ export function MessageList(props: MessageListProps) {
 
   const actionsLocked = status !== 'idle' && status !== 'done'
 
-  // Pin diff_review ("edit suggestion") cards to the bottom: the stream seeds
-  // the review bubble at the first op, but it reads best after the reply.
-  const orderedBubbles = bubbles
-    .map((bubble, index) => ({ bubble, index }))
-    .sort(
-      (a, b) =>
-        (a.bubble.type === 'diff_review' ? 1 : 0) -
-        (b.bubble.type === 'diff_review' ? 1 : 0),
-    )
+  // The stream seeds the diff_review card at the first op, before the reply
+  // finishes. Move each card to the end of its own turn (delimited by the
+  // next user bubble) so multi-turn sessions keep cards next to their turn.
+  const orderedBubbles: { bubble: (typeof bubbles)[number]; index: number }[] =
+    []
+  let deferredReviews: typeof orderedBubbles = []
+  for (const [index, bubble] of bubbles.entries()) {
+    if (bubble.type === 'user') {
+      orderedBubbles.push(...deferredReviews)
+      deferredReviews = []
+    }
+    if (bubble.type === 'diff_review') deferredReviews.push({ bubble, index })
+    else orderedBubbles.push({ bubble, index })
+  }
+  orderedBubbles.push(...deferredReviews)
 
   const getBatch = (id: string) =>
     reviewState?.batches.find((batch) => batch.id === id)
