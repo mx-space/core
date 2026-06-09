@@ -7,7 +7,7 @@ import { Api, type ApiError, type ApiService } from './Api'
 // Public types
 // ---------------------------------------------------------------------------
 
-export type ResolverKind = 'category' | 'topic'
+export type ResolverKind = 'category' | 'topic' | 'project'
 
 export interface ResolvableItem {
   readonly id: string
@@ -42,6 +42,10 @@ export interface ResolverService {
   /** Resolve a category slug to its snowflake id (via /categories/:slug). */
   readonly resolveCategoryId: (
     slugOrId: string,
+  ) => Effect.Effect<string, ResourceNotFound | ValidationFailed | Generic>
+  /** Resolve a project name or snowflake id to its id (via /projects/all). */
+  readonly resolveProjectId: (
+    nameOrId: string,
   ) => Effect.Effect<string, ResourceNotFound | ValidationFailed | Generic>
   /** Bust cache for a given kind, or all if omitted. */
   readonly invalidate: (kind?: ResolverKind) => Effect.Effect<void>
@@ -169,15 +173,22 @@ export const make = (
   const cache = new Map<string, CacheEntry>()
   const ttlMs = deps.ttlMs ?? DEFAULT_TTL_MS
 
+  const URLS_BY_KIND: Record<ResolverKind, string> = {
+    category: '/categories',
+    topic: '/topics/all',
+    project: '/projects/all',
+  }
+
   const load = (
-    kind: 'category' | 'topic',
+    kind: ResolverKind,
   ): Effect.Effect<ResolvableItem[], ValidationFailed | Generic> =>
     Effect.gen(function* () {
       const cached = cache.get(kind)
       const t = Date.now()
       if (cached && cached.expiresAt > t) return cached.items
-      const url = kind === 'category' ? '/categories' : '/topics/all'
-      const raw = yield* api.raw(url).pipe(Effect.mapError(mapApiError))
+      const raw = yield* api
+        .raw(URLS_BY_KIND[kind])
+        .pipe(Effect.mapError(mapApiError))
       const items = unwrapArrayEnvelope(raw)
       cache.set(kind, { items, expiresAt: t + ttlMs })
       return items
@@ -318,6 +329,26 @@ export const make = (
       return id
     })
 
+  const resolveProjectId = (
+    nameOrId: string,
+  ): Effect.Effect<string, ResourceNotFound | ValidationFailed | Generic> =>
+    Effect.gen(function* () {
+      if (isSnowflakeId(nameOrId)) return nameOrId
+      const items = yield* load('project')
+      const hit = matchItem(items, nameOrId)
+      if (hit) return hit.id
+      const suggestions = fuzzySuggest(items, nameOrId)
+      return yield* Effect.fail(
+        new ResourceNotFound({
+          message: `project not found: ${nameOrId}`,
+          kind: 'project',
+          ref: nameOrId,
+          ...(suggestions.length ? { details: { suggestions } } : {}),
+          hint: 'run `mxs project list` to see available projects',
+        }),
+      )
+    })
+
   const invalidate = (kind?: ResolverKind): Effect.Effect<void> =>
     Effect.sync(() => {
       if (!kind) {
@@ -335,6 +366,7 @@ export const make = (
     resolvePostReadPath,
     resolveNoteId,
     resolveCategoryId,
+    resolveProjectId,
     invalidate,
   }
 }

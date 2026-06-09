@@ -2,7 +2,7 @@
 slug: commands-topic
 title: Topic commands
 description: topic list/get/create/update/delete syntax
-order: 35
+order: 36
 ---
 
 # Topic commands

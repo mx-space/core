@@ -288,6 +288,36 @@ URL follows the admin-vue3 hash-router convention
 
 Page edit and page file payloads currently reuse the `<mxpost>` envelope shape.
 
+## Projects
+
+| Command                          | Description                                                                                                |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `mxs project list`               | List projects.                                                                                             |
+| `mxs project get <nameOrId>`     | Read a project by Snowflake id or unique `name` (raw envelope).                                            |
+| `mxs project view <nameOrId>`    | Show a project rendered for terminal / LLM consumption.                                                    |
+| `mxs project create`             | Create a project. `--name` and `--description` are required.                                               |
+| `mxs project edit <nameOrId>`    | Edit through `$EDITOR` using a JSON envelope of editable fields. No change → no PATCH; malformed JSON exits with `validation.json`. |
+| `mxs project update <nameOrId>`  | Patch selected project fields. Missing flags leave the field untouched.                                    |
+| `mxs project delete <nameOrId>`  | Delete a project. Requires `--force` in non-TTY contexts.                                                  |
+
+### Project Write Flags
+
+| Flag                   | Field           | Notes                                          |
+| ---------------------- | --------------- | ---------------------------------------------- |
+| `--name <text>`        | `name`          | Required on `create`. Unique server-side.       |
+| `--description <text>` | `description`   | Required on `create`.                          |
+| `--preview-url <url>`  | `previewUrl`    | http(s) URL.                                   |
+| `--project-url <url>`  | `projectUrl`    | http(s) URL.                                   |
+| `--doc-url <url>`      | `docUrl`        | http(s) URL.                                   |
+| `--avatar <url>`       | `avatar`        | http(s) URL.                                   |
+| `--images <csv>`       | `images`        | Comma-separated list of URLs (≤ 20).            |
+| `--text <text>`        | `text`          | Free-form plain text.                          |
+| `--file <path>`        | (merge)         | JSON file whose recognised keys merge in first; per-flag values override. |
+| `--open`               | —               | After success, open the admin edit page.       |
+| `--silent`             | —               | On success, emit `{ ok: true }` instead of the full row. |
+
+Resolver: `<nameOrId>` accepts a Snowflake id directly, or a `name` resolved via `GET /projects/all`. Duplicate names surface from the server as `PROJECT_NAME_TAKEN` (409).
+
 ## Categories
 
 | Command                                           | Description                                                       |

@@ -16,6 +16,7 @@ Use this reference for every mutation, deletion, publication change, or failed c
 | Create post/note/page               | Confirm target and run `--dry-run` when practical.                          | `get <slugOrId>` and compare metadata plus body sample.     |
 | Update post/note/page               | Prefer partial flags when body is unchanged.                                | Confirm changed fields and unchanged body when applicable.  |
 | Edit post/note/page                 | Avoid `$EDITOR` in non-interactive workflows unless explicitly requested.   | Read back the full document.                                |
+| Create/update project               | `name` is server-unique; duplicates fail with `PROJECT_NAME_TAKEN` (409). Prefer `update` with partial flags over `edit` in non-interactive runs. | `project get <nameOrId>` and compare fields.                |
 | Publish/unpublish                   | Confirm publication intent and target.                                      | Read back `state` or `isPublished`.                         |
 | Delete                              | Confirm destructive intent and target; prefer `--dry-run`; use `--force` only when non-interactive deletion is intentional. | Confirm `get` fails with not found or list no longer includes the resource. |
 | Config set/edit                     | Confirm target because changes affect server behavior.                      | `config get <key>` or `config list`.                        |
@@ -94,6 +95,15 @@ mxs page get <slugOrId> --json
 ```
 
 Verify `title`, `slug`, `subtitle`, `order`, and representative body text.
+
+### Project
+
+```bash
+mxs project get <nameOrId> --output llm
+mxs project get <nameOrId> --json
+```
+
+Verify `name`, `description`, link URLs (`previewUrl`, `projectUrl`, `docUrl`), avatar, image count, and representative `text`.
 
 ### Config
 

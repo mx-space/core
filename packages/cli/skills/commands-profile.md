@@ -2,7 +2,7 @@
 slug: commands-profile
 title: Profile commands
 description: local CLI profiles — profile ls/show/use/mark/rm
-order: 38
+order: 39
 ---
 
 # Profile commands

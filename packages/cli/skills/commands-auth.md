@@ -2,7 +2,7 @@
 slug: commands-auth
 title: Auth commands
 description: auth login/logout/whoami/status
-order: 37
+order: 38
 ---
 
 # Auth commands

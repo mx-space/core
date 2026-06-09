@@ -2,7 +2,7 @@
 slug: commands-category
 title: Category commands
 description: category list/get/create/update/delete syntax
-order: 34
+order: 35
 ---
 
 # Category commands

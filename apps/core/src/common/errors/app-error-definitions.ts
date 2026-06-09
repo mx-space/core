@@ -565,6 +565,21 @@ export const APP_ERROR_DEFINITIONS = {
     details: (p) => (p?.id ? { id: p.id } : undefined),
   },
 
+  // project
+  [AppErrorCode.PROJECT_NOT_FOUND]: {
+    status: 404,
+    message: 'Project not found',
+    details: (p) => (p?.id ? { id: p.id } : undefined),
+  },
+  [AppErrorCode.PROJECT_NAME_TAKEN]: {
+    status: 409,
+    message: (p) =>
+      p?.name
+        ? `A project with the name "${p.name}" already exists`
+        : 'A project with this name already exists',
+    details: (p) => (p?.name ? { name: p.name } : undefined),
+  },
+
   // post
   [AppErrorCode.POST_NOT_FOUND]: {
     status: 404,

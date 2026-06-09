@@ -2,7 +2,7 @@
 slug: commands-comment
 title: Comment commands
 description: comment list/get/approve/reject/delete + moderation safety
-order: 33
+order: 34
 ---
 
 # Comment commands

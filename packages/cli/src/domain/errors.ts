@@ -67,6 +67,13 @@ export class ValidationXml extends Data.TaggedError('ValidationXml')<{
   readonly cause?: unknown
 }> {}
 
+export class ValidationJson extends Data.TaggedError('ValidationJson')<{
+  readonly message?: string
+  readonly details?: unknown
+  readonly hint?: string
+  readonly cause?: unknown
+}> {}
+
 // server.error
 export class ServerError extends Data.TaggedError('ServerError')<{
   readonly message?: string
@@ -236,6 +243,7 @@ export type CliError =
   | NetworkRefused
   | ValidationFailed
   | ValidationXml
+  | ValidationJson
   | ServerError
   | ResourceNotFound
   | ConfigMissingApiUrl
@@ -272,6 +280,7 @@ export const tagToCode: Record<CliErrorTag, string> = {
   NetworkRefused: 'network.refused',
   ValidationFailed: 'validation.failed',
   ValidationXml: 'validation.xml',
+  ValidationJson: 'validation.json',
   ServerError: 'server.error',
   ResourceNotFound: 'resource.not_found',
   ConfigMissingApiUrl: 'config.missing.api_url',
@@ -320,6 +329,7 @@ export const exitCodeForTag = (tag: CliErrorTag): number => {
     }
     case 'ValidationFailed':
     case 'ValidationXml':
+    case 'ValidationJson':
     case 'ProfileInvalidName':
     case 'ConfigMissingApiUrl':
     case 'ConfigMissingToken': {
@@ -374,6 +384,7 @@ const defaultMessages: Record<CliErrorTag, string> = {
   NetworkRefused: 'connection refused',
   ValidationFailed: 'validation failed',
   ValidationXml: 'failed to parse LiteXML',
+  ValidationJson: 'failed to parse JSON',
   ServerError: 'server error',
   ResourceNotFound: 'resource not found',
   ConfigMissingApiUrl: 'API URL is not configured',

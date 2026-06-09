@@ -64,6 +64,7 @@ const makeResolver = (): ResolverService => ({
   resolvePostReadPath: () => Effect.succeed('/posts/post'),
   resolveNoteId: () => Effect.succeed('123456789012346'),
   resolveCategoryId: () => Effect.succeed('cat-id'),
+  resolveProjectId: () => Effect.succeed('123456789012347'),
   invalidate: () => Effect.void,
 })
 

@@ -35,6 +35,7 @@ import '../page'
 import '../post'
 import '../preview'
 import '../profile'
+import '../project'
 import '../skill'
 import '../topic'
 import '../update'
@@ -74,6 +75,7 @@ export const GROUP_NAMES = [
   'post',
   'note',
   'page',
+  'project',
   'category',
   'topic',
   'comment',

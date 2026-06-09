@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { desc, eq, sql } from 'drizzle-orm'
 
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { projects } from '~/database/schema'
 import {
@@ -12,11 +13,20 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-import type {
-  ProjectCreateInput,
-  ProjectPatchInput,
-  ProjectRow,
-} from './project.types'
+import type { ProjectCreateInput, ProjectPatchInput } from './project.dto'
+import type { ProjectRow } from './project.types'
+
+const PG_UNIQUE_VIOLATION = '23505'
+
+const isUniqueNameViolation = (err: unknown): err is { code: string } => {
+  if (!err || typeof err !== 'object') return false
+  const e = err as { code?: unknown; constraint_name?: unknown }
+  return (
+    e.code === PG_UNIQUE_VIOLATION &&
+    (e.constraint_name === undefined ||
+      e.constraint_name === 'projects_name_uniq')
+  )
+}
 
 const mapRow = (row: typeof projects.$inferSelect): ProjectRow => ({
   id: toEntityId(row.id) as EntityId,
@@ -79,21 +89,30 @@ export class ProjectRepository extends BaseRepository {
 
   async create(input: ProjectCreateInput): Promise<ProjectRow> {
     const id = this.snowflake.nextId()
-    const [row] = await this.db
-      .insert(projects)
-      .values({
-        id,
-        name: input.name,
-        description: input.description,
-        previewUrl: input.previewUrl ?? null,
-        docUrl: input.docUrl ?? null,
-        projectUrl: input.projectUrl ?? null,
-        images: input.images ?? null,
-        avatar: input.avatar ?? null,
-        text: input.text ?? null,
-      })
-      .returning()
-    return mapRow(row)
+    try {
+      const [row] = await this.db
+        .insert(projects)
+        .values({
+          id,
+          name: input.name,
+          description: input.description,
+          previewUrl: input.previewUrl ?? null,
+          docUrl: input.docUrl ?? null,
+          projectUrl: input.projectUrl ?? null,
+          images: input.images ?? null,
+          avatar: input.avatar ?? null,
+          text: input.text ?? null,
+        })
+        .returning()
+      return mapRow(row)
+    } catch (error) {
+      if (isUniqueNameViolation(error)) {
+        throw createAppException(AppErrorCode.PROJECT_NAME_TAKEN, {
+          name: input.name,
+        })
+      }
+      throw error
+    }
   }
 
   async update(
@@ -110,12 +129,21 @@ export class ProjectRepository extends BaseRepository {
     if (patch.images !== undefined) update.images = patch.images
     if (patch.avatar !== undefined) update.avatar = patch.avatar
     if (patch.text !== undefined) update.text = patch.text
-    const [row] = await this.db
-      .update(projects)
-      .set(update)
-      .where(eq(projects.id, idBig))
-      .returning()
-    return row ? mapRow(row) : null
+    try {
+      const [row] = await this.db
+        .update(projects)
+        .set(update)
+        .where(eq(projects.id, idBig))
+        .returning()
+      return row ? mapRow(row) : null
+    } catch (error) {
+      if (isUniqueNameViolation(error) && patch.name !== undefined) {
+        throw createAppException(AppErrorCode.PROJECT_NAME_TAKEN, {
+          name: patch.name,
+        })
+      }
+      throw error
+    }
   }
 
   async deleteById(id: EntityId | string): Promise<ProjectRow | null> {

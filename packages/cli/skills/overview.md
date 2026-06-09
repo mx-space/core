@@ -7,7 +7,7 @@ order: 0
 
 # mxs CLI — AI agent skill bundle
 
-`mxs` is the deterministic interface for managing an `mx-core` deployment from the command line — authentication, content (posts, notes, pages), moderation, configuration. This skill bundle is shipped inside the published `@mx-space/cli` package so any agent with the installed binary can read it via `mxs skill <slug>`.
+`mxs` is the deterministic interface for managing an `mx-core` deployment from the command line — authentication, content (posts, notes, pages, projects), moderation, configuration. This skill bundle is shipped inside the published `@mx-space/cli` package so any agent with the installed binary can read it via `mxs skill <slug>`.
 
 The audience is **AI agents**. Pass `--output llm` for raw markdown suitable for direct context injection. Default output is `readable` (markdown rendered as ANSI for a terminal).
 
@@ -20,6 +20,7 @@ The audience is **AI agents**. Pass `--output llm` for raw markdown suitable for
 | Exact command syntax for posts                | `commands-post`                  |
 | Notes                                         | `commands-note`                  |
 | Pages                                         | `commands-page`                  |
+| Portfolio projects                            | `commands-project`               |
 | Comments / moderation                         | `commands-comment`               |
 | Categories                                    | `commands-category`              |
 | Topics                                        | `commands-topic`                 |

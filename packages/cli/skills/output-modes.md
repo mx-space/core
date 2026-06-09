@@ -2,7 +2,7 @@
 slug: output-modes
 title: Output modes
 description: --json / --output (readable, llm, xml, pretty-json) and global flags
-order: 40
+order: 41
 ---
 
 # Output modes

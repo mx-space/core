@@ -21,6 +21,7 @@ import { pageCmd } from '../cli/page'
 import { postCmd } from '../cli/post'
 import { previewCmd } from '../cli/preview'
 import { profileCmd } from '../cli/profile'
+import { projectCmd } from '../cli/project'
 import { skillCmd } from '../cli/skill'
 import { topicCmd } from '../cli/topic'
 import { updateCmd } from '../cli/update'
@@ -120,6 +121,7 @@ const rootCmd = Command.make('mxs', {}, () =>
     postCmd,
     noteCmd,
     pageCmd,
+    projectCmd,
     categoryCmd,
     topicCmd,
     commentCmd,

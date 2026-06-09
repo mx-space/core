@@ -161,6 +161,10 @@ export type AppErrorPayloadMap = {
   // page
   [AppErrorCode.PAGE_NOT_FOUND]: WithId
 
+  // project
+  [AppErrorCode.PROJECT_NOT_FOUND]: WithId
+  [AppErrorCode.PROJECT_NAME_TAKEN]: { name?: string } | undefined
+
   // post
   [AppErrorCode.POST_NOT_FOUND]: WithId
   [AppErrorCode.POST_UNPUBLISHED]: WithId

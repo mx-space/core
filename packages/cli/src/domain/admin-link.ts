@@ -4,7 +4,7 @@ import open from 'open'
 import { Api } from '../services/Api'
 import { Renderer } from '../services/Renderer'
 
-export type AdminEditKind = 'posts' | 'notes' | 'pages'
+export type AdminEditKind = 'posts' | 'notes' | 'pages' | 'projects'
 
 // `/options/url` returns `{ data: { admin_url, web_url, ws_url, server_url } }`
 // — mx-core wraps single-object responses with an outer `data` key.
@@ -20,10 +20,12 @@ const buildEditUrl = (
   kind: AdminEditKind,
   id: string,
 ): string => {
-  // admin-vue3 uses hash-based vue-router; edit views live at
-  // `${adminUrl}#/<kind>/edit?id=<id>`. No `/` between base and `#` so the
-  // path stays canonical when the admin is mounted under a subpath.
+  // Admin uses hash-based react-router. posts/notes/pages route at
+  // `#/<kind>/edit?id=<id>`; projects route at `#/projects/<id>`.
   const base = adminUrl.replace(/\/+$/, '')
+  if (kind === 'projects') {
+    return `${base}#/projects/${encodeURIComponent(id)}`
+  }
   return `${base}#/${kind}/edit?id=${encodeURIComponent(id)}`
 }
 
