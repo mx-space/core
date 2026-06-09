@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import {
   mkdirSync,
+  openSync,
   readFileSync,
   realpathSync,
   renameSync,
@@ -366,6 +367,47 @@ async function defaultSpawnUpgrade(
   })
 }
 
+export type SpawnDetached = (
+  cmd: string,
+  args: string[],
+  logPath: string,
+) => void
+
+function defaultSpawnDetached(
+  cmd: string,
+  args: string[],
+  logPath: string,
+): void {
+  try {
+    mkdirSync(path.dirname(logPath), { recursive: true })
+  } catch {
+    // ignore
+  }
+  let out: number
+  try {
+    out = openSync(logPath, 'a')
+  } catch {
+    out = openSync(os.platform() === 'win32' ? 'NUL' : '/dev/null', 'a')
+  }
+  try {
+    const child = spawn(cmd, args, {
+      stdio: ['ignore', out, out],
+      cwd: process.cwd(),
+      shell: os.platform() === 'win32',
+      detached: true,
+      env: { ...process.env, MXS_NO_UPDATE_CHECK: '1' },
+    })
+    child.on('error', () => {
+      // Best-effort: child failed to spawn (e.g. pm not on PATH). Next mxs
+      // invocation will emit the legacy notify line again after the 24h
+      // throttle expires.
+    })
+    child.unref()
+  } catch {
+    // ignore: detached spawn is best-effort.
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Cache helpers
 // ---------------------------------------------------------------------------
@@ -374,6 +416,12 @@ export interface CachedState {
   last_check_ts: number
   latest_version?: string
   etag?: string
+  /**
+   * Timestamp of the most recent background auto-update spawn. Used to throttle
+   * silent installs so a single new release doesn't trigger an `npm i -g` on
+   * every `mxs <cmd>` invocation within the 24h check window.
+   */
+  last_auto_update_ts?: number
 }
 
 function defaultConfigDir(): string {
@@ -438,9 +486,49 @@ export interface UpdateNotifierDeps {
     cmd: string,
     args: string[],
   ) => Promise<SpawnUpgradeResult>
+  /**
+   * Fire-and-forget detached spawn used by the background auto-update path.
+   * Unit tests can inject a spy to verify that an install was triggered
+   * without actually running the package manager.
+   */
+  readonly spawnDetached?: SpawnDetached
+  /**
+   * @deprecated The interactive confirm prompt was removed when `mxs update`
+   * became auto-install by default. Accepted for backward compatibility with
+   * older `make()` call sites; never invoked.
+   */
   readonly confirmImpl?: (message: string) => Promise<boolean>
   readonly emitInfo?: (msg: string) => void
   readonly configDir?: string
+  /**
+   * Override `process.argv[1]` for the background auto-update path's pm
+   * detection. Production callers leave this unset and the helper reads
+   * argv directly.
+   */
+  readonly entrypoint?: string
+}
+
+const AUTO_UPDATE_LOG = 'auto-update.log'
+
+const isAutoUpdateDisabled = (env: NodeJS.ProcessEnv): boolean =>
+  env.MXS_NO_AUTO_UPDATE === '1' ||
+  env.MXS_NO_AUTO_UPDATE === 'true' ||
+  env.MXS_NO_AUTO_UPDATE === 'yes'
+
+interface AutoUpdatePlan {
+  readonly pm: PmKind
+  readonly cmd: string
+  readonly args: string[]
+}
+
+const planAutoUpdate = (
+  entry: string,
+  channel: UpdateChannel,
+): AutoUpdatePlan | null => {
+  const detection = detectPackageManager(entry)
+  if (detection.kind !== 'global') return null
+  const { cmd, args } = buildUpgradeCommand(detection.pm, channel)
+  return { pm: detection.pm, cmd, args }
 }
 
 const KNOWN_PMS: ReadonlySet<PmKind> = new Set<PmKind>([
@@ -454,12 +542,50 @@ export const make = (deps: UpdateNotifierDeps = {}): UpdateNotifierService => {
   const now = () => (deps.now ? deps.now() : Date.now())
   const fetchImpl = deps.fetchImpl
   const spawnImpl = deps.spawnImpl ?? defaultSpawnUpgrade
+  const spawnDetached = deps.spawnDetached ?? defaultSpawnDetached
   const emitInfo =
     deps.emitInfo ?? ((msg: string) => process.stderr.write(`${msg}\n`))
   const baseConfigDir = deps.configDir
 
   const resolvedConfigDir = (opts: NotifyOptions) =>
     opts.configDir ?? baseConfigDir ?? defaultConfigDir()
+
+  const triggerAutoUpdate = (
+    opts: NotifyOptions,
+    latest: string,
+    cache: CachedState | null,
+    dir: string,
+    ts: number,
+  ): boolean => {
+    const env = opts.env ?? process.env
+    if (isAutoUpdateDisabled(env)) return false
+    if (
+      cache?.last_auto_update_ts !== undefined &&
+      ts - cache.last_auto_update_ts < THROTTLE_MS
+    ) {
+      return false
+    }
+    const channel: UpdateChannel =
+      opts.channel ?? readChannelFromEnv(env)
+    const entry = deps.entrypoint ?? process.argv[1] ?? ''
+    const plan = planAutoUpdate(entry, channel)
+    if (!plan) return false
+    try {
+      spawnDetached(plan.cmd, plan.args, path.join(dir, AUTO_UPDATE_LOG))
+    } catch {
+      return false
+    }
+    writeCacheAtomic(
+      {
+        last_check_ts: ts,
+        latest_version: latest,
+        etag: cache?.etag,
+        last_auto_update_ts: ts,
+      },
+      dir,
+    )
+    return true
+  }
 
   const maybeNotify = (opts: NotifyOptions): Effect.Effect<void> =>
     Effect.tryPromise({
@@ -478,8 +604,17 @@ export const make = (deps: UpdateNotifierDeps = {}): UpdateNotifierService => {
             cache.latest_version &&
             compareSemver(opts.currentVersion, cache.latest_version) < 0
           ) {
+            const triggered = triggerAutoUpdate(
+              opts,
+              cache.latest_version,
+              cache,
+              dir,
+              ts,
+            )
             emit(
-              `mxs update available: ${opts.currentVersion} → ${cache.latest_version}   run 'mxs update' to upgrade`,
+              triggered
+                ? `mxs: auto-updating ${opts.currentVersion} → ${cache.latest_version} in background (set MXS_NO_AUTO_UPDATE=1 to disable)`
+                : `mxs update available: ${opts.currentVersion} → ${cache.latest_version}   run 'mxs update' to upgrade`,
             )
           }
           return
@@ -514,9 +649,29 @@ export const make = (deps: UpdateNotifierDeps = {}): UpdateNotifierService => {
               last_check_ts: ts,
               latest_version: hit.version,
               etag: hit.etag,
+              last_auto_update_ts: cache?.last_auto_update_ts,
             },
             dir,
           )
+          if (compareSemver(opts.currentVersion, hit.version) < 0) {
+            const triggered = triggerAutoUpdate(
+              opts,
+              hit.version,
+              {
+                last_check_ts: ts,
+                latest_version: hit.version,
+                etag: hit.etag,
+                last_auto_update_ts: cache?.last_auto_update_ts,
+              },
+              dir,
+              ts,
+            )
+            if (triggered) {
+              emit(
+                `mxs: auto-updating ${opts.currentVersion} → ${hit.version} in background (set MXS_NO_AUTO_UPDATE=1 to disable)`,
+              )
+            }
+          }
         } catch {
           clearTimeout(timer)
           writeCacheAtomic(
@@ -677,41 +832,11 @@ export const make = (deps: UpdateNotifierDeps = {}): UpdateNotifierService => {
         }
       }
 
-      // 5. Confirmation
-      const interactive =
-        Boolean(process.stdin.isTTY) &&
-        Boolean(process.stderr.isTTY) &&
-        !opts.json
-      if (!opts.yes && interactive && deps.confirmImpl) {
-        const confirm = deps.confirmImpl
-        const ok = yield* Effect.tryPromise({
-          try: () => confirm(`Run \`${shown}\` to upgrade?`),
-          catch: (cause) =>
-            new UpdateSpawnFailed({
-              message: 'failed to prompt for confirmation',
-              details: {
-                cause: cause instanceof Error ? cause.message : cause,
-              },
-            }),
-        })
-        if (!ok) {
-          emitInfo('mxs: update cancelled')
-          return {
-            fromVersion: opts.currentVersion,
-            toVersion: hit.version,
-            pm,
-            channel,
-            status: 0,
-            upgraded: false,
-            dryRun: true,
-            upToDate: false,
-            command: shown,
-            cancelled: true,
-          }
-        }
-      }
+      // 5. Spawn (auto-install — the legacy confirm prompt was removed when
+      //    `mxs update` became automatic; `opts.yes` is now a no-op kept for
+      //    backward compat with older invocations).
+      if (!opts.json) emitInfo(`mxs: running ${shown}`)
 
-      // 6. Spawn
       const result = yield* Effect.tryPromise({
         try: () => spawnImpl(cmd, args),
         catch: (cause) =>

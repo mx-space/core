@@ -569,6 +569,144 @@ describe('maybeNotify', () => {
     expect(readCache(tmpDir)).toBeNull()
   })
 
+  it('triggers a background auto-update spawn when cache shows a newer version', async () => {
+    const t = 1_000_000_000_000
+    writeCacheAtomic(
+      { last_check_ts: t - 1000, latest_version: '9.9.9' },
+      tmpDir,
+    )
+    const lines: string[] = []
+    const spawnDetached = vi.fn<
+      (cmd: string, args: string[], logPath: string) => void
+    >()
+    const svc = make({
+      now: () => t,
+      spawnDetached,
+      entrypoint:
+        '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+    })
+    await Effect.runPromise(
+      svc.maybeNotify({
+        currentVersion: '0.2.0',
+        isTTY: true,
+        env: {},
+        configDir: tmpDir,
+        emit: (m) => lines.push(m),
+      }),
+    )
+    expect(spawnDetached).toHaveBeenCalledOnce()
+    const [cmd, args, logPath] = spawnDetached.mock.calls[0]!
+    expect(cmd).toBe('npm')
+    expect(args.join(' ')).toBe('install -g @mx-space/cli@latest')
+    expect(logPath).toBe(path.join(tmpDir, 'auto-update.log'))
+    expect(lines[0]).toMatch(/auto-updating 0\.2\.0 → 9\.9\.9 in background/)
+    expect(readCache(tmpDir)?.last_auto_update_ts).toBe(t)
+  })
+
+  it('throttles auto-update within 24h of the previous spawn', async () => {
+    const t = 1_000_000_000_000
+    writeCacheAtomic(
+      {
+        last_check_ts: t - 1000,
+        latest_version: '9.9.9',
+        last_auto_update_ts: t - 60_000,
+      },
+      tmpDir,
+    )
+    const lines: string[] = []
+    const spawnDetached = vi.fn()
+    const svc = make({
+      now: () => t,
+      spawnDetached,
+      entrypoint:
+        '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+    })
+    await Effect.runPromise(
+      svc.maybeNotify({
+        currentVersion: '0.2.0',
+        isTTY: true,
+        env: {},
+        configDir: tmpDir,
+        emit: (m) => lines.push(m),
+      }),
+    )
+    expect(spawnDetached).not.toHaveBeenCalled()
+    expect(lines[0]).toMatch(/run 'mxs update' to upgrade/)
+  })
+
+  it('honours MXS_NO_AUTO_UPDATE=1 by reverting to the legacy notify line', async () => {
+    const t = 1_000_000_000_000
+    writeCacheAtomic(
+      { last_check_ts: t - 1000, latest_version: '9.9.9' },
+      tmpDir,
+    )
+    const lines: string[] = []
+    const spawnDetached = vi.fn()
+    const svc = make({
+      now: () => t,
+      spawnDetached,
+      entrypoint:
+        '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+    })
+    await Effect.runPromise(
+      svc.maybeNotify({
+        currentVersion: '0.2.0',
+        isTTY: true,
+        env: { MXS_NO_AUTO_UPDATE: '1' },
+        configDir: tmpDir,
+        emit: (m) => lines.push(m),
+      }),
+    )
+    expect(spawnDetached).not.toHaveBeenCalled()
+    expect(lines[0]).toMatch(/run 'mxs update' to upgrade/)
+  })
+
+  it('does not auto-update when running from a transient install', async () => {
+    const t = 1_000_000_000_000
+    writeCacheAtomic(
+      { last_check_ts: t - 1000, latest_version: '9.9.9' },
+      tmpDir,
+    )
+    const spawnDetached = vi.fn()
+    const svc = make({
+      now: () => t,
+      spawnDetached,
+      entrypoint:
+        '/Users/x/.npm/_npx/abc/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+    })
+    await Effect.runPromise(
+      svc.maybeNotify({
+        currentVersion: '0.2.0',
+        isTTY: true,
+        env: {},
+        configDir: tmpDir,
+      }),
+    )
+    expect(spawnDetached).not.toHaveBeenCalled()
+  })
+
+  it('triggers auto-update on the fresh-fetch path when registry returns a newer version', async () => {
+    const t = 1_000_000_000_000
+    const spawnDetached = vi.fn()
+    const svc = make({
+      now: () => t,
+      fetchImpl: makeFetchOK('0.3.0'),
+      spawnDetached,
+      entrypoint:
+        '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+    })
+    await Effect.runPromise(
+      svc.maybeNotify({
+        currentVersion: '0.2.0',
+        isTTY: true,
+        env: {},
+        configDir: tmpDir,
+      }),
+    )
+    expect(spawnDetached).toHaveBeenCalledOnce()
+    expect(readCache(tmpDir)?.last_auto_update_ts).toBe(t)
+  })
+
   it('never throws even when the cache dir is unwritable', async () => {
     const svc = make({
       now: () => 1,
@@ -769,18 +907,27 @@ describe('runUpdate', () => {
     }
   })
 
-  it('returns cancelled result when interactive confirmation rejects', async () => {
+  it('auto-installs without prompting even when stdin/stderr are TTYs', async () => {
     const stdinTty = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY')
     const stderrTty = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY')
-    Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: true })
-    Object.defineProperty(process.stderr, 'isTTY', { configurable: true, value: true })
-    const lines: string[] = []
-    const svc = make({
-      fetchImpl: makeFetchOK('9.9.9'),
-      confirmImpl: async () => false,
-      emitInfo: (line) => lines.push(line),
+    Object.defineProperty(process.stdin, 'isTTY', {
+      configurable: true,
+      value: true,
     })
+    Object.defineProperty(process.stderr, 'isTTY', {
+      configurable: true,
+      value: true,
+    })
+    const confirmImpl = vi.fn(async () => false)
+    const spawnImpl = vi.fn<
+      (cmd: string, args: string[]) => Promise<SpawnUpgradeResult>
+    >(async () => ({ status: 0, stderr: '' }))
     try {
+      const svc = make({
+        fetchImpl: makeFetchOK('9.9.9'),
+        spawnImpl,
+        confirmImpl,
+      })
       const res = await Effect.runPromise(
         svc.runUpdate({
           currentVersion: '0.2.0',
@@ -790,44 +937,17 @@ describe('runUpdate', () => {
           json: false,
         }),
       )
-      expect(res.cancelled).toBe(true)
-      expect(lines.join('\n')).toContain('update cancelled')
+      expect(res.upgraded).toBe(true)
+      expect(res.cancelled).toBeUndefined()
+      expect(confirmImpl).not.toHaveBeenCalled()
+      expect(spawnImpl).toHaveBeenCalledOnce()
     } finally {
       if (stdinTty) Object.defineProperty(process.stdin, 'isTTY', stdinTty)
       if (stderrTty) Object.defineProperty(process.stderr, 'isTTY', stderrTty)
     }
   })
 
-  it('maps confirmation and spawn failures to UpdateSpawnFailed', async () => {
-    const stdinTty = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY')
-    const stderrTty = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY')
-    Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: true })
-    Object.defineProperty(process.stderr, 'isTTY', { configurable: true, value: true })
-    try {
-      const promptSvc = make({
-        fetchImpl: makeFetchOK('9.9.9'),
-        confirmImpl: async () => {
-          throw new Error('prompt failed')
-        },
-      })
-      const promptExit = await Effect.runPromiseExit(
-        promptSvc.runUpdate({
-          currentVersion: '0.2.0',
-          entrypoint:
-            '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
-          yes: false,
-          json: false,
-        }),
-      )
-      expect(promptExit._tag).toBe('Failure')
-      if (promptExit._tag === 'Failure') {
-        expect(extractTag(promptExit.cause)).toBe('UpdateSpawnFailed')
-      }
-    } finally {
-      if (stdinTty) Object.defineProperty(process.stdin, 'isTTY', stdinTty)
-      if (stderrTty) Object.defineProperty(process.stderr, 'isTTY', stderrTty)
-    }
-
+  it('maps spawn failures to UpdateSpawnFailed', async () => {
     const spawnSvc = make({
       fetchImpl: makeFetchOK('9.9.9'),
       spawnImpl: async () => {

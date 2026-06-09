@@ -200,7 +200,7 @@ describe('help registry', () => {
     expect(all.map((entry) => entry.name)).toEqual(
       expect.arrayContaining([...ALL_SUBCOMMANDS]),
     )
-    expect(getCommandHelp('update')?.description).toContain('newer mxs')
+    expect(getCommandHelp('update')?.description).toContain('newest mxs')
     expect(isLeafCommand('update')).toBe(true)
     expect(isLeafCommand('post')).toBe(false)
   })

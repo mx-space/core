@@ -3,7 +3,6 @@ import { createRequire } from 'node:module'
 import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
 
-import { Editor } from '../../services/Editor'
 import { Renderer } from '../../services/Renderer'
 import {
   make as makeUpdater,
@@ -14,7 +13,7 @@ import { bold, dim, fail, ok, star } from '../ui'
 
 registerCommandHelp({
   name: 'update',
-  description: 'check for and install a newer mxs release',
+  description: 'install the newest mxs release (auto, no prompt)',
   isLeaf: true,
   leafOptions: [
     { flag: '--check', description: 'compare versions only; do not install' },
@@ -24,7 +23,11 @@ registerCommandHelp({
       description: 'force package manager (one of: npm, pnpm, yarn, bun)',
     },
     { flag: '--force', description: 'bypass the 24h passive-check cache' },
-    { flag: '--yes', description: 'skip the confirmation prompt' },
+    {
+      flag: '--yes',
+      description:
+        'deprecated no-op (kept for back-compat; updates run without a prompt by default)',
+    },
   ],
 })
 
@@ -71,23 +74,14 @@ export const updateCmd = Command.make(
   { check, prerelease, pm, force, yes },
   ({ check, prerelease, pm, force, yes }) =>
     Effect.gen(function* () {
-      const editor = yield* Editor
       const renderer = yield* Renderer
       const outOpts = yield* renderer.options
 
-      // Build a fresh UpdateNotifier instance with Editor.confirm wired in.
-      // The bin's AppLayer also registers a default UpdateNotifier (used by
-      // the passive `maybeNotify`), but the interactive `runUpdate` path
-      // needs the user-facing confirm prompt — Effect-based on the Editor
-      // service, which is itself layered on FileSystem / Terminal.
-      const updater = makeUpdater({
-        confirmImpl: (message: string) =>
-          Effect.runPromise(
-            editor
-              .confirm(message)
-              .pipe(Effect.catchAll(() => Effect.succeed(false))),
-          ),
-      })
+      // Auto-install: `mxs update` no longer prompts. Foreground runs go
+      // through the same notifier as the passive background path; we do not
+      // wire `Editor.confirm` here because `runUpdate` itself stopped calling
+      // any confirmImpl.
+      const updater = makeUpdater()
 
       const opts: RunUpdateOptions = {
         currentVersion: CLI_VERSION,

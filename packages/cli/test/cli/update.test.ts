@@ -2,7 +2,7 @@ import { Effect, Exit, Layer, Option } from 'effect'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { updateCmd as update } from '../../src/cli/update'
-import { Generic, UpdatePmUnknown } from '../../src/domain/errors'
+import { UpdatePmUnknown } from '../../src/domain/errors'
 import { Editor, type EditorService } from '../../src/services/Editor'
 import { Renderer } from '../../src/services/Renderer'
 import * as UpdaterMod from '../../src/services/UpdateNotifier'
@@ -280,28 +280,26 @@ describe('update command', () => {
     }
   })
 
-  it('wires update confirmation through the Editor service', async () => {
-    const confirm = vi.fn(() =>
-      Effect.fail(new Generic({ message: 'prompt unavailable' })),
-    )
-    vi.spyOn(UpdaterMod, 'make').mockImplementation((deps = {}) => ({
-      maybeNotify: () => Effect.void,
-      runUpdate: () =>
-        Effect.promise(() => deps.confirmImpl!('Install update?')).pipe(
-          Effect.map((accepted) => ({
+  it('runs the upgrade without prompting (auto-install default)', async () => {
+    let confirmImplPassed: unknown = 'sentinel'
+    vi.spyOn(UpdaterMod, 'make').mockImplementation((deps = {}) => {
+      confirmImplPassed = deps.confirmImpl
+      return {
+        maybeNotify: () => Effect.void,
+        runUpdate: () =>
+          Effect.succeed({
             fromVersion: '0.3.0',
             toVersion: '0.4.0',
             pm: 'npm',
             channel: 'stable',
             status: 0,
-            upgraded: false,
-            dryRun: true,
+            upgraded: true,
+            dryRun: false,
             upToDate: false,
             command: 'npm install -g @mx-space/cli@latest',
-            cancelled: accepted === false,
-          })),
-        ),
-    }))
+          }),
+      }
+    })
 
     const cap = captureStdout()
     try {
@@ -315,7 +313,7 @@ describe('update command', () => {
             yes: Option.none(),
           })
           .pipe(
-            Effect.provide(buildLayer({ confirm })),
+            Effect.provide(buildLayer()),
             Renderer.withOptions({
               json: true,
               output: 'json',
@@ -325,9 +323,11 @@ describe('update command', () => {
           ),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
-      expect(confirm).toHaveBeenCalledWith('Install update?')
+      // The controller no longer threads Editor.confirm into the notifier —
+      // updates proceed without a prompt.
+      expect(confirmImplPassed).toBeUndefined()
       const parsed = JSON.parse(cap.data.join('').trim())
-      expect(parsed.data.cancelled).toBe(true)
+      expect(parsed.data).toMatchObject({ upgraded: true, latest: '0.4.0' })
     } finally {
       cap.restore()
     }
