@@ -2,15 +2,15 @@ import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, Plus, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+
+import { getMetaPresets } from '~/api/meta-presets'
+import { useI18n } from '~/i18n'
 import type {
   MetaFieldOption,
   MetaPresetChild,
   MetaPresetField,
   MetaPresetScope,
 } from '~/models/meta-preset'
-
-import { getMetaPresets } from '~/api/meta-presets'
-import { useI18n } from '~/i18n'
 import { Modal, ModalHeader } from '~/ui/feedback/modal'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
@@ -152,7 +152,7 @@ export function MetaPresetSection(props: MetaPresetSectionProps) {
 
       {expanded ? (
         <div className="rounded border border-neutral-200 p-3 dark:border-neutral-800">
-          <div className="mb-3 inline-flex gap-1 rounded border border-neutral-200 bg-neutral-50 p-0.5 text-xs dark:border-neutral-800 dark:bg-neutral-900/60">
+          <div className="mb-3 inline-flex gap-1 rounded-sm border border-neutral-200 bg-neutral-50 p-0.5 text-xs dark:border-neutral-800 dark:bg-neutral-900/60">
             {(
               [
                 ['preset', t('write.meta.tab.preset')],
@@ -161,7 +161,7 @@ export function MetaPresetSection(props: MetaPresetSectionProps) {
             ).map(([key, label]) => (
               <button
                 className={cn(
-                  'rounded px-3 py-1 transition-colors',
+                  'rounded-xs px-3 py-1 transition-colors',
                   activeTab === key
                     ? 'shadow-xs bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100'
                     : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200',
@@ -286,7 +286,7 @@ function FieldControl(props: {
   const { field, onChange, value } = props
   switch (field.type) {
     case 'text':
-    case 'url':
+    case 'url': {
       return (
         <TextInput
           controlClassName="h-9 focus:border-neutral-400"
@@ -297,7 +297,8 @@ function FieldControl(props: {
           value={typeof value === 'string' ? value : ''}
         />
       )
-    case 'textarea':
+    }
+    case 'textarea': {
       return (
         <TextArea
           controlClassName="min-h-20 focus:border-neutral-400"
@@ -306,7 +307,8 @@ function FieldControl(props: {
           value={typeof value === 'string' ? value : ''}
         />
       )
-    case 'number':
+    }
+    case 'number': {
       return (
         <TextInput
           controlClassName="h-9 focus:border-neutral-400"
@@ -321,7 +323,8 @@ function FieldControl(props: {
           }
         />
       )
-    case 'boolean':
+    }
+    case 'boolean': {
       return (
         <Switch
           checked={value === true}
@@ -329,6 +332,7 @@ function FieldControl(props: {
           onCheckedChange={onChange}
         />
       )
+    }
     case 'select': {
       const options = field.options ?? []
       return (
@@ -342,7 +346,7 @@ function FieldControl(props: {
         />
       )
     }
-    case 'multi-select':
+    case 'multi-select': {
       return (
         <MultiSelectField
           allowCustom={false}
@@ -351,7 +355,8 @@ function FieldControl(props: {
           value={value}
         />
       )
-    case 'checkbox':
+    }
+    case 'checkbox': {
       return (
         <MultiSelectField
           allowCustom={Boolean(field.allowCustomOption)}
@@ -360,9 +365,11 @@ function FieldControl(props: {
           value={value}
         />
       )
-    case 'tags':
+    }
+    case 'tags': {
       return <TagsInput onChange={onChange} value={normalizeToArray(value)} />
-    default:
+    }
+    default: {
       return (
         <TextInput
           controlClassName="h-9 focus:border-neutral-400"
@@ -371,6 +378,7 @@ function FieldControl(props: {
           value={typeof value === 'string' ? value : ''}
         />
       )
+    }
   }
 }
 
@@ -431,7 +439,7 @@ function ChildFieldRenderer(props: {
   const { child, onChange, value } = props
   const control = () => {
     switch (child.type) {
-      case 'textarea':
+      case 'textarea': {
         return (
           <TextArea
             controlClassName="min-h-16 focus:border-neutral-400"
@@ -440,7 +448,8 @@ function ChildFieldRenderer(props: {
             value={typeof value === 'string' ? value : ''}
           />
         )
-      case 'number':
+      }
+      case 'number': {
         return (
           <TextInput
             controlClassName="h-9 focus:border-neutral-400"
@@ -455,6 +464,7 @@ function ChildFieldRenderer(props: {
             }
           />
         )
+      }
       case 'select': {
         const options = child.options ?? []
         return (
@@ -468,7 +478,7 @@ function ChildFieldRenderer(props: {
           />
         )
       }
-      default:
+      default: {
         return (
           <TextInput
             controlClassName="h-9 focus:border-neutral-400"
@@ -477,6 +487,7 @@ function ChildFieldRenderer(props: {
             value={typeof value === 'string' ? value : ''}
           />
         )
+      }
     }
   }
 
@@ -513,8 +524,7 @@ function MultiSelectField(props: {
   ) as string[]
   const [customInput, setCustomInput] = useState('')
 
-  const isChecked = (option: MetaFieldOption) =>
-    all.some((v) => v === option.value)
+  const isChecked = (option: MetaFieldOption) => all.includes(option.value)
 
   const toggleOption = (option: MetaFieldOption, checked: boolean) => {
     let next = all.filter((v) => v !== option.value)

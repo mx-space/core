@@ -22,7 +22,7 @@ export function CompactPagination(props: CompactPaginationProps) {
     <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
       <button
         aria-label={t('common.pagination.previousPage')}
-        className="flex size-6 items-center justify-center rounded transition-colors hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent dark:hover:bg-neutral-800"
+        className="flex size-6 items-center justify-center rounded-sm transition-colors hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent dark:hover:bg-neutral-800"
         disabled={!canPrev}
         onClick={() => {
           if (canPrev) props.onPageChange(props.page - 1)
@@ -42,7 +42,7 @@ export function CompactPagination(props: CompactPaginationProps) {
 
       <button
         aria-label={t('common.pagination.nextPage')}
-        className="flex size-6 items-center justify-center rounded transition-colors hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent dark:hover:bg-neutral-800"
+        className="flex size-6 items-center justify-center rounded-sm transition-colors hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent dark:hover:bg-neutral-800"
         disabled={!canNext}
         onClick={() => {
           if (canNext) props.onPageChange(props.page + 1)

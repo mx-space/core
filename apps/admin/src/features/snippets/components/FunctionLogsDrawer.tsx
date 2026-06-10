@@ -1,12 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import type { ServerlessLogEntry } from '~/api/serverless'
-import type { SnippetModel } from '~/models/snippet'
-import type { StatusFilter } from '../types/snippets'
 
+import type { ServerlessLogEntry } from '~/api/serverless'
 import { getInvocationLogDetail, getInvocationLogs } from '~/api/serverless'
 import { useI18n } from '~/i18n'
+import type { SnippetModel } from '~/models/snippet'
 import { adminQueryKeys } from '~/query/keys'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -14,6 +13,7 @@ import { cn } from '~/utils/cn'
 import { relativeTimeFromNow } from '~/utils/time'
 
 import { logPageSize } from '../constants'
+import type { StatusFilter } from '../types/snippets'
 import {
   formatLogArgs,
   getErrorMessage,
@@ -75,7 +75,7 @@ export function FunctionLogsDrawer(props: {
       }
     >
       <div className="flex h-full min-h-0 flex-col gap-3">
-        <div className="grid grid-cols-3 gap-1 rounded bg-neutral-100 p-1 dark:bg-neutral-900">
+        <div className="grid grid-cols-3 gap-1 rounded-sm bg-neutral-100 p-1 dark:bg-neutral-900">
           {[
             { label: t('snippets.dialog.logs.filter.all'), value: 'all' },
             {
@@ -86,7 +86,7 @@ export function FunctionLogsDrawer(props: {
           ].map((item) => (
             <button
               className={cn(
-                'rounded px-3 py-1.5 text-xs font-medium transition-colors',
+                'rounded-xs px-3 py-1.5 text-xs font-medium transition-colors',
                 statusFilter === item.value
                   ? 'shadow-xs bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
                   : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200',

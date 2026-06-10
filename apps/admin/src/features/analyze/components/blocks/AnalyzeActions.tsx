@@ -37,7 +37,7 @@ export function AnalyzeActions(props: {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex rounded border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="flex rounded-sm border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-950">
         {(
           [
             ['today', t('analyze.timeRange.today')],
@@ -47,7 +47,7 @@ export function AnalyzeActions(props: {
         ).map(([value, label]) => (
           <button
             className={cn(
-              'h-8 rounded px-3 text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-neutral-50',
+              'h-8 rounded-xs px-3 text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-neutral-50',
               props.range === value &&
                 'bg-neutral-950 text-white hover:text-white dark:bg-neutral-50 dark:text-neutral-950 dark:hover:text-neutral-950',
             )}
