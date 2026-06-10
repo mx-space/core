@@ -1,3 +1,17 @@
+# [13.10.0](https://github.com/mx-space/core/compare/v13.9.0...v13.10.0) (2026-06-11)
+
+
+### Bug Fixes
+
+* **ai-summary:** attach stored summary to public meta regardless of content hash ([17a511e](https://github.com/mx-space/core/commit/17a511e0c2277e7ab40682e66148e5cc816f5dc0))
+* **ai-translation:** never reuse block translations identical to source ([b4c8640](https://github.com/mx-space/core/commit/b4c8640855a5aede3665e4443c267d4308c7c099))
+* **ai:** populate article list in translation-all task ([240dae7](https://github.com/mx-space/core/commit/240dae7395895b0138222057263477efdd0e1a1f)), closes [#2745](https://github.com/mx-space/core/issues/2745) [#2744](https://github.com/mx-space/core/issues/2744)
+
+
+### Features
+
+* unified task queue ([#2746](https://github.com/mx-space/core/issues/2746)) ([57a19c8](https://github.com/mx-space/core/commit/57a19c872058d60d0acf7597a427a1134cd518a1))
+
 # [13.9.0](https://github.com/mx-space/core/compare/v13.8.0...v13.9.0) (2026-06-10)
 
 
