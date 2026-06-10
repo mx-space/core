@@ -9,6 +9,7 @@ import { authCmd } from '../cli/auth'
 import { categoryCmd } from '../cli/category'
 import { commentCmd } from '../cli/comment'
 import { configCmd } from '../cli/config'
+import { fileCmd } from '../cli/file'
 import {
   buildRootHelpData,
   emitGroupHelp,
@@ -126,6 +127,7 @@ const rootCmd = Command.make('mxs', {}, () =>
     topicCmd,
     commentCmd,
     configCmd,
+    fileCmd,
     skillCmd,
     previewCmd,
     updateCmd,
