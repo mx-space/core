@@ -551,7 +551,9 @@ export class AiSummaryService implements OnModuleInit {
     lang: string,
   ): Promise<AISummaryModel | null> {
     try {
-      return await this.getSummaryByArticleId(articleId, lang)
+      return this.toSummaryDoc(
+        await this.aiSummaryRepository.findByRefAndLang(articleId, lang),
+      )
     } catch (error) {
       this.logger.warn(
         `summary meta lookup failed: article=${articleId} lang=${lang} ${
