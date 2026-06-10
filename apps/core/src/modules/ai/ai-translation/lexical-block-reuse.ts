@@ -57,13 +57,36 @@ export function canReuseBlockTranslations(
     return false
   }
 
-  return currentBlock.propertySegments.every((segment, index) => {
-    const translatedSegment = translatedBlock.propertySegments[index]
-    return (
-      translatedSegment.property === segment.property &&
-      translatedSegment.key === segment.key
+  const propertyShapeMatches = currentBlock.propertySegments.every(
+    (segment, index) => {
+      const translatedSegment = translatedBlock.propertySegments[index]
+      return (
+        translatedSegment.property === segment.property &&
+        translatedSegment.key === segment.key
+      )
+    },
+  )
+  if (!propertyShapeMatches) {
+    return false
+  }
+
+  // A stored "translation" byte-identical to the current source means the
+  // block was never actually translated (writer echo or fallback-to-original).
+  // Reusing it would freeze the untranslated text across every future
+  // incremental run, so force a retranslation instead.
+  const hasAnySegment =
+    currentBlock.segments.length > 0 || currentBlock.propertySegments.length > 0
+  const identicalToSource =
+    hasAnySegment &&
+    currentBlock.segments.every(
+      (segment, index) => translatedBlock.segments[index].text === segment.text,
+    ) &&
+    currentBlock.propertySegments.every(
+      (segment, index) =>
+        translatedBlock.propertySegments[index].text === segment.text,
     )
-  })
+
+  return !identicalToSource
 }
 
 export function backfillReusableBlockTranslations(

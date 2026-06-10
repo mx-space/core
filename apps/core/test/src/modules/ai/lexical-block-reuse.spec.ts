@@ -104,6 +104,72 @@ describe('lexical-block-reuse', () => {
     expect(canReuseBlockTranslations(currentBlock, translatedBlock)).toBe(false)
   })
 
+  it('rejects block reuse when the stored translation is byte-identical to the source', () => {
+    const currentBlock: BlockTranslationSegments = {
+      segments: [textSegment('t_0', '诚实地说，这组数据测不出结论', 'block-a')],
+      propertySegments: [
+        propertySegment('p_0', '折叠摘要', 'block-a', 'summary'),
+      ],
+    }
+    const translatedBlock: BlockTranslationSegments = {
+      segments: [textSegment('t_9', '诚实地说，这组数据测不出结论', 'block-a')],
+      propertySegments: [
+        propertySegment('p_9', '折叠摘要', 'block-a', 'summary'),
+      ],
+    }
+
+    expect(canReuseBlockTranslations(currentBlock, translatedBlock)).toBe(false)
+  })
+
+  it('allows block reuse when at least one segment was actually translated', () => {
+    const currentBlock: BlockTranslationSegments = {
+      segments: [
+        textSegment('t_0', 'API', 'block-a'),
+        textSegment('t_1', '诚实地说', 'block-a'),
+      ],
+      propertySegments: [],
+    }
+    const translatedBlock: BlockTranslationSegments = {
+      segments: [
+        textSegment('t_8', 'API', 'block-a'),
+        textSegment('t_9', '正直に言うと', 'block-a'),
+      ],
+      propertySegments: [],
+    }
+
+    expect(canReuseBlockTranslations(currentBlock, translatedBlock)).toBe(true)
+  })
+
+  it('skips backfill for blocks whose stored translation equals the source', () => {
+    const currentResult = translationResult(
+      [
+        textSegment('t_0', '未译块', 'block-a'),
+        textSegment('t_1', 'Beta', 'block-b'),
+      ],
+      [],
+    )
+    const translatedResult = translationResult(
+      [
+        textSegment('t_8', '未译块', 'block-a'),
+        textSegment('t_9', 'Beta translated', 'block-b'),
+      ],
+      [],
+    )
+    const output = new Map<string, string>()
+
+    const result = backfillReusableBlockTranslations(
+      currentResult,
+      translatedResult,
+      new Set(['block-a', 'block-b']),
+      output,
+    )
+
+    expect(result.reusedBlockIds).toEqual(['block-b'])
+    expect(result.skippedBlockIds).toEqual(['block-a'])
+    expect(output.has('t_0')).toBe(false)
+    expect(output.get('t_1')).toBe('Beta translated')
+  })
+
   it('backfills only unchanged reusable blocks and returns reuse stats', () => {
     const currentResult = translationResult(
       [
