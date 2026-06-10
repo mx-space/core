@@ -205,7 +205,7 @@ export function useWriteAgent(opts: {
       })
   }
 
-  const applyBatch = (batchId: string, mode: 'accept' | 'reapply') => {
+  const reapplyBatch = (batchId: string) => {
     const batch = store
       .getState()
       .reviewState?.batches.find((item) => item.id === batchId)
@@ -227,8 +227,6 @@ export function useWriteAgent(opts: {
         return
       }
 
-      if (mode === 'accept') store.getState().acceptReviewBatch(batchId)
-
       if (summary.error || summary.conflict) {
         toast.warning(
           t('write.agent.toast.applyPartial', {
@@ -240,11 +238,7 @@ export function useWriteAgent(opts: {
         return
       }
 
-      toast.success(
-        mode === 'accept'
-          ? t('write.agent.toast.suggestionApplied')
-          : t('write.agent.toast.suggestionReapplied'),
-      )
+      toast.success(t('write.agent.toast.suggestionReapplied'))
     }
 
     void run().catch((error: unknown) => {
@@ -256,8 +250,14 @@ export function useWriteAgent(opts: {
     })
   }
 
-  const acceptBatch = (batchId: string) => applyBatch(batchId, 'accept')
-  const reapplyBatch = (batchId: string) => applyBatch(batchId, 'reapply')
+  // Accept must go through the store only: DiffReviewOverlayPlugin already
+  // owns the inline AgentDiff nodes and materializes them on batch
+  // resolution. Applying ops to the document here as well double-applies
+  // (or conflicts, since pending blocks are replaced by diff decorators).
+  const acceptBatch = (batchId: string) => {
+    store.getState().acceptReviewBatch(batchId)
+    toast.success(t('write.agent.toast.suggestionApplied'))
+  }
 
   const rejectBatch = (batchId: string) => {
     store.getState().rejectReviewBatch(batchId)
