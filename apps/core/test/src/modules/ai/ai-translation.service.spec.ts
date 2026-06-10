@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { AppException } from '~/common/errors/exception.types'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { AITaskType } from '~/modules/ai/ai-task/ai-task.types'
 import type {
   AiTranslationRepository,
   AiTranslationRow,
@@ -51,7 +52,11 @@ const articleDocument = (overrides: Record<string, unknown> = {}) => ({
 
 const createService = () => {
   const repository = createPgRepositoryMock<AiTranslationRepository>()
-  const databaseService = { findGlobalById: vi.fn(), findGlobalByIds: vi.fn() }
+  const databaseService = {
+    findGlobalById: vi.fn(),
+    findGlobalByIds: vi.fn(),
+    findAllArticlesForTranslation: vi.fn(),
+  }
   const translationConsistencyService = {
     evaluateTranslationFreshness: vi.fn(() => 'valid'),
     filterTrulyStaleTranslations: vi.fn(),
@@ -69,7 +74,10 @@ const createService = () => {
   const eventManager = { emit: vi.fn() }
   const taskProcessor = { registerHandler: vi.fn() }
   const lexicalService = { lexicalToMarkdown: vi.fn(() => 'markdown') }
-  const aiTaskService = { createTranslationTask: vi.fn() }
+  const aiTaskService = {
+    createTranslationTask: vi.fn(),
+    crud: { createTask: vi.fn() },
+  }
   const lexicalStrategy = {}
   const markdownStrategy = {}
   const service = new AiTranslationService(
@@ -95,11 +103,60 @@ const createService = () => {
     partialBuilder,
     repository,
     service,
+    taskProcessor,
     translationConsistencyService,
   }
 }
 
 describe('AiTranslationService', () => {
+  it('creates one translation task per article in the translation-all task', async () => {
+    const {
+      aiTaskService,
+      configService,
+      databaseService,
+      service,
+      taskProcessor,
+    } = createService()
+    configService.get.mockResolvedValue({
+      translationTargetLanguages: ['en'],
+    } as any)
+    databaseService.findAllArticlesForTranslation.mockResolvedValue({
+      posts: [{ id: 'post-1', title: 'Post' }],
+      notes: [{ id: 'note-1', title: 'Note' }],
+      pages: [{ id: 'page-1', title: 'Page' }],
+    })
+    aiTaskService.crud.createTask.mockImplementation(
+      async ({ payload }: any) => ({
+        created: true,
+        taskId: `task-${payload.refId}`,
+      }),
+    )
+
+    service.onModuleInit()
+    const handler = taskProcessor.registerHandler.mock.calls
+      .map(([registered]) => registered)
+      .find(
+        (registered: any) => registered.type === AITaskType.TranslationAll,
+      ) as any
+
+    const context = {
+      taskId: 'group-1',
+      isAborted: () => false,
+      signal: new AbortController().signal,
+      appendLog: vi.fn(),
+      updateProgress: vi.fn(),
+      setResult: vi.fn(),
+      setStatus: vi.fn(),
+    }
+    await handler.execute({}, context as any)
+
+    expect(databaseService.findAllArticlesForTranslation).toHaveBeenCalled()
+    expect(aiTaskService.crud.createTask).toHaveBeenCalledTimes(3)
+    expect(context.setResult).toHaveBeenCalledWith(
+      expect.objectContaining({ total: 3, createdCount: 3 }),
+    )
+  })
+
   it('loads translations with their source article from PG-backed services', async () => {
     const { databaseService, repository, service } = createService()
     databaseService.findGlobalById.mockResolvedValue({ id: 'post-1' })

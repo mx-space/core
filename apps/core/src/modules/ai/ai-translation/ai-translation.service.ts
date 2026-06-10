@@ -411,11 +411,8 @@ export class AiTranslationService
 
     await context.appendLog('info', 'Fetching all articles for translation')
 
-    // TODO(wave 3 follow-up): provide producer-level list methods for the
-    // translation-all task.
-    const posts: Array<{ id: string; title: string }> = []
-    const notes: Array<{ id: string; title: string }> = []
-    const pages: Array<{ id: string; title: string }> = []
+    const { posts, notes, pages } =
+      await this.databaseService.findAllArticlesForTranslation()
 
     const articleMap = this.mapArticlesByRefId({ posts, notes, pages })
 

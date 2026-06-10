@@ -94,6 +94,21 @@ export class DatabaseService {
     return [...new Set([...posts, ...notes])]
   }
 
+  public async findAllArticlesForTranslation(): Promise<{
+    posts: Array<{ id: string; title: string }>
+    notes: Array<{ id: string; title: string }>
+    pages: Array<{ id: string; title: string }>
+  }> {
+    const [posts, notes, pages] = await Promise.all([
+      this.postRepository.findPublishedForSitemap(),
+      this.noteRepository.findVisibleForSitemap(),
+      this.pageRepository.findAll(),
+    ])
+    const pick = (rows: Array<{ id: string; title: string }>) =>
+      rows.map(({ id, title }) => ({ id, title }))
+    return { posts: pick(posts), notes: pick(notes), pages: pick(pages) }
+  }
+
   flatCollectionToMap(combinedCollection: IdsCollection) {
     const all = {} as Record<string, PostRow | NoteRow | PageRow | RecentlyRow>
     for (const collection of Object.values(combinedCollection)) {
