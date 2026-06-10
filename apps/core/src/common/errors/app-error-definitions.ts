@@ -436,6 +436,10 @@ export const APP_ERROR_DEFINITIONS = {
     status: 400,
     message: 'File rename failed',
   },
+  [AppErrorCode.FILE_TOO_LARGE]: {
+    status: 413,
+    message: 'File size exceeds the limit',
+  },
   [AppErrorCode.FILE_STORAGE_NOT_CONFIGURED]: {
     status: 400,
     message: 'S3 image storage is not configured',

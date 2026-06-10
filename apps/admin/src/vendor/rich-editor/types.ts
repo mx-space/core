@@ -13,6 +13,11 @@ export type ImageUpload = NonNullable<RichEditorProps['imageUpload']>
 
 export type TrackUpload = (file: File) => Promise<{ url: string }>
 
+export type VideoUpload = (
+  file: File,
+  opts?: { onProgress?: (percent: number) => void },
+) => Promise<{ src: string }>
+
 export type AgentLoopHandle = ReturnType<typeof useAgentLoop>
 
 export type AgentLitexmlRegistryProvider = LitexmlRegistryProvider

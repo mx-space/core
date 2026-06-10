@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { resolveEnrichment } from '~/api/enrichment'
-import { uploadFile } from '~/api/files'
+import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import { API_URL } from '~/constants/env'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
@@ -132,6 +132,14 @@ function RichDebugSurface(props: {
         fetchEnrichment: (url) => resolveEnrichment(url).catch(() => null),
         imageUpload: async (file) => {
           const result = await uploadFile(file, 'image')
+
+          return { src: result.url }
+        },
+        videoUpload: async (file, opts) => {
+          const result = await uploadFileWithProgress(file, {
+            type: 'video',
+            onProgress: (percent) => opts?.onProgress?.(percent),
+          })
 
           return { src: result.url }
         },

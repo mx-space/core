@@ -48,8 +48,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@haklex/rich-headless": "0.21.1",
-    "@haklex/rich-litexml": "0.21.1",
+    "@haklex/rich-headless": "0.22.0",
+    "@haklex/rich-litexml": "0.22.0",
     "@lexical/headless": "^0.45.0",
     "lexical": "^0.45.0"
   },

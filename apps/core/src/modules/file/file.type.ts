@@ -3,5 +3,6 @@ export enum FileTypeEnum {
   file = 'file',
   avatar = 'avatar',
   image = 'image',
+  video = 'video',
 }
 export type FileType = keyof typeof FileTypeEnum

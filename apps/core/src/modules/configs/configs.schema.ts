@@ -364,6 +364,18 @@ export const FileUploadOptionsSchema = section('File upload settings', {
     description:
       'Same placeholders as the filename template, plus {type} for file type and {localFolder:<n>} for the n-th original folder level',
   }),
+  videoMaxSize: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(1).optional(),
+    ),
+    'Max video upload size on local storage (MB)',
+    {
+      'ui:options': { halfGrid: true },
+      description:
+        'Default 100. Applies to local-disk storage only; S3 storage uploads are unlimited',
+    },
+  ),
 })
 export class FileUploadOptionsDto extends createZodDto(
   FileUploadOptionsSchema,

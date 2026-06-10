@@ -30,6 +30,7 @@ describe('buildRichEditorProps', () => {
       placeholder: 'Write here',
       selfHostnames: ['mx-space.local'],
       variant: 'article',
+      videoUpload: (() => Promise.resolve({ src: 'ok' })) as any,
     })
 
     expect(result).toMatchObject({
@@ -44,6 +45,7 @@ describe('buildRichEditorProps', () => {
       style: { minHeight: 120 },
       theme: 'dark',
       variant: 'article',
+      videoUpload: expect.any(Function),
     })
     expect(result).not.toHaveProperty('editorStyle')
   })

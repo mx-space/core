@@ -46,7 +46,7 @@ import {
   getNewDrafts,
   updateDraft,
 } from '~/api/drafts'
-import { uploadFile } from '~/api/files'
+import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import { createNote, getNoteById, updateNote } from '~/api/notes'
 import { createPage, getPageById, updatePage } from '~/api/pages'
 import { createPost, getPostById, getPosts, updatePost } from '~/api/posts'
@@ -1147,14 +1147,19 @@ function WritePage(props: { kind: WriteKind }) {
                   <hr className="my-4 border-0 border-t border-neutral-100 dark:border-neutral-900" />
                 </div>
 
-                <div className="flex min-h-0 flex-1 flex-col pb-[200px]">
+                <div
+                  className={cn(
+                    'flex min-h-0 flex-1 flex-col',
+                    state.contentFormat !== 'lexical' && 'pb-[200px]',
+                  )}
+                >
                   <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3">
                     {state.contentFormat === 'lexical' ? (
                       <RichWriteSurface
                         agentVisible={agentVisible}
                         autoFocus={isEditing}
                         content={state.content}
-                        contentClassName="!min-h-[60vh] flex-1 px-0 py-3"
+                        contentClassName="!min-h-[60vh] flex-1 px-0 pt-3 pb-[200px]"
                         kind={props.kind}
                         key={`${props.kind}:${id || 'new'}:${state.contentFormat}`}
                         getMetaFields={getAgentMetaFields}
@@ -3439,6 +3444,13 @@ function RichWriteSurface(props: {
     trackUpload: async (file) => {
       const result = await uploadFile(file, 'file')
       return { url: result.url }
+    },
+    videoUpload: async (file, opts) => {
+      const result = await uploadFileWithProgress(file, {
+        type: 'video',
+        onProgress: (percent) => opts?.onProgress?.(percent),
+      })
+      return { src: result.url }
     },
     initialValue: parseSerializedEditorState(props.content),
     litexmlRegistry: createMxLitexmlRegistry,

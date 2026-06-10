@@ -1,4 +1,5 @@
 import * as crypto from 'node:crypto'
+import type { Readable } from 'node:stream'
 
 import { isDev } from '~/global/env.global'
 
@@ -238,6 +239,224 @@ export class S3Uploader {
   ): Promise<string> {
     await this.uploadToS3(objectKey, buffer, contentType)
     return this.getPublicUrl(objectKey)
+  }
+
+  async uploadStream(
+    stream: Readable,
+    objectKey: string,
+    contentType: string,
+  ): Promise<string> {
+    // S3 requires every part except the last to be at least 5MB
+    const PART_SIZE = 8 * 1024 * 1024
+
+    const initRes = await this.signedRequest({
+      method: 'POST',
+      objectKey,
+      query: { uploads: '' },
+      contentType,
+    })
+    const initBody = await initRes.text()
+    if (!initRes.ok) {
+      throw new Error(
+        `Multipart upload init failed with status code: ${initRes.status} - ${initBody}`,
+      )
+    }
+    const uploadId = /<UploadId>([^<]+)<\/UploadId>/.exec(initBody)?.[1]
+    if (!uploadId) {
+      throw new Error('Multipart upload init response missing UploadId')
+    }
+
+    try {
+      const etags: string[] = []
+
+      const uploadPart = async (body: Buffer) => {
+        const partNumber = etags.length + 1
+        const res = await this.signedRequest({
+          method: 'PUT',
+          objectKey,
+          query: { partNumber: String(partNumber), uploadId },
+          body,
+        })
+        if (!res.ok) {
+          throw new Error(
+            `Multipart part ${partNumber} failed with status code: ${res.status} - ${await res.text()}`,
+          )
+        }
+        const etag = res.headers.get('etag')
+        if (!etag) {
+          throw new Error(`Multipart part ${partNumber} response missing ETag`)
+        }
+        etags.push(etag)
+      }
+
+      let pending: Buffer[] = []
+      let pendingSize = 0
+      for await (const chunk of stream) {
+        const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+        pending.push(buf)
+        pendingSize += buf.length
+        if (pendingSize >= PART_SIZE) {
+          await uploadPart(Buffer.concat(pending))
+          pending = []
+          pendingSize = 0
+        }
+      }
+      if (pendingSize > 0 || etags.length === 0) {
+        await uploadPart(Buffer.concat(pending))
+      }
+
+      const completeXml = `<CompleteMultipartUpload>${etags
+        .map(
+          (etag, index) =>
+            `<Part><PartNumber>${index + 1}</PartNumber><ETag>${etag}</ETag></Part>`,
+        )
+        .join('')}</CompleteMultipartUpload>`
+      const completeRes = await this.signedRequest({
+        method: 'POST',
+        objectKey,
+        query: { uploadId },
+        body: Buffer.from(completeXml),
+        contentType: 'application/xml',
+      })
+      const completeBody = await completeRes.text()
+      if (!completeRes.ok || completeBody.includes('<Error>')) {
+        throw new Error(
+          `Multipart upload completion failed with status code: ${completeRes.status} - ${completeBody}`,
+        )
+      }
+
+      return this.getPublicUrl(objectKey)
+    } catch (err) {
+      await this.signedRequest({
+        method: 'DELETE',
+        objectKey,
+        query: { uploadId },
+      }).catch(() => void 0)
+      throw err
+    }
+  }
+
+  private async signedRequest(options: {
+    method: string
+    objectKey: string
+    query?: Record<string, string>
+    body?: Buffer
+    contentType?: string
+  }): Promise<Response> {
+    const { method, objectKey, query = {}, body, contentType } = options
+    const service = 's3'
+    const date = new Date()
+    const xAmzDate = date.toISOString().replaceAll(/[:-]|\.\d{3}/g, '')
+    const dateStamp = xAmzDate.slice(0, 8)
+
+    const hashedPayload = crypto
+      .createHash('sha256')
+      .update(body ?? '')
+      .digest('hex')
+
+    const url = new URL(this.endpoint)
+
+    const encodedObjectKey = objectKey
+      .split('/')
+      .map((seg) => encodeURIComponent(seg))
+      .join('/')
+
+    const resolved = this.resolveEndpoint(
+      url.host,
+      encodedObjectKey,
+      url.protocol,
+    )
+    const { requestHost, canonicalUri } = resolved
+
+    const canonicalQuery = Object.keys(query)
+      .sort()
+      .map(
+        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(query[key])}`,
+      )
+      .join('&')
+
+    const headers: Record<string, string> = {
+      Host: requestHost,
+      'x-amz-date': xAmzDate,
+      'x-amz-content-sha256': hashedPayload,
+    }
+    if (contentType) {
+      headers['Content-Type'] = contentType
+    }
+    if (body) {
+      headers['Content-Length'] = body.length.toString()
+    }
+
+    const sortedHeaders = Object.keys(headers).sort()
+    const canonicalHeaders = sortedHeaders
+      .map((key) => `${key.toLowerCase()}:${headers[key].trim()}`)
+      .join('\n')
+    const signedHeaders = sortedHeaders
+      .map((key) => key.toLowerCase())
+      .join(';')
+
+    const canonicalRequest = [
+      method,
+      canonicalUri,
+      canonicalQuery,
+      String(canonicalHeaders),
+      '',
+      signedHeaders,
+      hashedPayload,
+    ].join('\n')
+
+    const algorithm = 'AWS4-HMAC-SHA256'
+    const credentialScope = `${dateStamp}/${this.region}/${service}/aws4_request`
+    const hashedCanonicalRequest = crypto
+      .createHash('sha256')
+      .update(canonicalRequest)
+      .digest('hex')
+    const stringToSign = [
+      algorithm,
+      xAmzDate,
+      credentialScope,
+      hashedCanonicalRequest,
+    ].join('\n')
+
+    const kSecret = Buffer.from(`AWS4${this.secretKey}`)
+    const kDate = this.hmacSha256(kSecret, dateStamp)
+    const kRegion = this.hmacSha256(kDate, this.region)
+    const kService = this.hmacSha256(kRegion, service)
+    const kSigning = this.hmacSha256(kService, 'aws4_request')
+    const signature = this.hmacSha256(kSigning, stringToSign).toString('hex')
+
+    const authorization = `${algorithm} Credential=${this.accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
+
+    const requestUrl = `${resolved.baseUrl}${canonicalUri}${
+      canonicalQuery ? `?${canonicalQuery}` : ''
+    }`
+
+    const fetchOptions: RequestInit = {
+      method,
+      headers: {
+        ...headers,
+        Authorization: authorization,
+      },
+      body: body ? new Uint8Array(body) : undefined,
+    }
+
+    let originalTlsReject: string | undefined
+    if (isDev) {
+      originalTlsReject = process.env.NODE_TLS_REJECT_UNAUTHORIZED
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+    }
+
+    try {
+      return await fetch(requestUrl, fetchOptions)
+    } finally {
+      if (isDev) {
+        if (originalTlsReject === undefined) {
+          delete process.env.NODE_TLS_REJECT_UNAUTHORIZED
+        } else {
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = originalTlsReject
+        }
+      }
+    }
   }
 
   async uploadFile(

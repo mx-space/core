@@ -123,6 +123,7 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.FILE_NOT_FOUND]: { name?: string; extra?: string } | undefined
   [AppErrorCode.FILE_EXISTS]: undefined
   [AppErrorCode.FILE_RENAME_FAILED]: undefined
+  [AppErrorCode.FILE_TOO_LARGE]: undefined
   [AppErrorCode.FILE_STORAGE_NOT_CONFIGURED]: undefined
   [AppErrorCode.FILE_UPLOAD_DISABLED]: undefined
   [AppErrorCode.FILE_UPLOAD_NOT_AUTHORIZED]: undefined

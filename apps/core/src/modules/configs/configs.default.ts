@@ -82,6 +82,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     enableCustomNaming: false,
     filenameTemplate: '{Y}{m}{d}/{md5-16}{ext}',
     pathTemplate: '{type}',
+    videoMaxSize: 100,
   },
   commentUploadOptions: {
     enable: true,

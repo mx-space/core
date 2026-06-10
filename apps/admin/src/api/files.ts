@@ -75,7 +75,7 @@ export interface CommentUploadListResponse {
   pagination: FileListPagination
 }
 
-export type FileType = 'avatar' | 'file' | 'icon' | 'image'
+export type FileType = 'avatar' | 'file' | 'icon' | 'image' | 'video'
 export type CommentUploadStatus = '' | 'active' | 'detached' | 'pending'
 
 export function getFilesByType(type: FileType) {
