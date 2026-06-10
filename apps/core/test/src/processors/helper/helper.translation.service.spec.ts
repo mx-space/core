@@ -524,28 +524,6 @@ describe('TranslationService', () => {
       expect((translated as any).translationMeta).toBeUndefined()
     })
 
-    it('should build correct select string', async () => {
-      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        createTranslationLookup(),
-      )
-
-      await service.translateArticleList({
-        articles,
-        targetLang: 'en',
-        translationFields: ['title', 'summary', 'translationMeta'] as const,
-      })
-
-      expect(
-        mockAiTranslationService.getValidTranslationsForArticles,
-      ).toHaveBeenCalledWith(
-        articles,
-        'en',
-        expect.objectContaining({
-          select: expect.stringContaining('title'),
-        }),
-      )
-    })
-
     it('should normalize various language code formats', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
         createTranslationLookup(),
@@ -558,7 +536,7 @@ describe('TranslationService', () => {
 
       expect(
         mockAiTranslationService.getValidTranslationsForArticles,
-      ).toHaveBeenCalledWith(articles, 'en', expect.any(Object))
+      ).toHaveBeenCalledWith(articles, 'en')
     })
 
     it('should handle articles with empty text', async () => {

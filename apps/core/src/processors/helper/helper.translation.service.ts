@@ -332,34 +332,6 @@ export class TranslationService {
     }
   }
 
-  private static readonly TRANSLATION_SELECT_BASE = [
-    'refId',
-    'hash',
-    'sourceLang',
-    'sourceModifiedAt',
-  ]
-
-  private static readonly TRANSLATION_SELECT_BY_FIELD: Partial<
-    Record<TranslationField, readonly string[]>
-  > = {
-    title: ['title'],
-    text: ['text'],
-    subtitle: ['subtitle'],
-    summary: ['summary'],
-    tags: ['tags'],
-    content: ['content', 'contentFormat'],
-    translationMeta: ['lang', 'created', 'aiModel'],
-  }
-
-  private buildTranslationSelect(fields: readonly TranslationField[]): string {
-    const selectFields = new Set(TranslationService.TRANSLATION_SELECT_BASE)
-    for (const field of fields) {
-      const extra = TranslationService.TRANSLATION_SELECT_BY_FIELD[field]
-      if (extra) extra.forEach((f) => selectFields.add(f))
-    }
-    return [...selectFields].join(' ')
-  }
-
   async translateArticleList<
     Fields extends TranslationField = TranslationField,
   >(options: {
@@ -403,7 +375,6 @@ export class TranslationService {
         await this.aiTranslationService.getValidTranslationsForArticles(
           articles,
           normalizedTarget,
-          { select: this.buildTranslationSelect(translationFieldList) },
         )
 
       return new Map(

@@ -3,13 +3,12 @@ import { Injectable } from '@nestjs/common'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { extractDocumentContext } from '~/utils/content.util'
-import { md5 } from '~/utils/tool.util'
 
 import type { IModelRuntime } from '../../runtime'
 import type { ArticleContent } from '../ai-translation.types'
 import type { AITranslationModel } from '../ai-translation.types-model'
 import {
-  backfillReusableBlockTranslations,
+  buildReusableTranslationOverlay,
   guardMermaidTranslations,
 } from '../lexical-block-reuse'
 import {
@@ -18,6 +17,16 @@ import {
   type TranslationSegment,
 } from '../lexical-translation-parser'
 import { TranslationReviewerService } from '../reviewer.service'
+import {
+  decodeTags,
+  encodeTags,
+  isMetaFieldUnchanged,
+  META_SUBTITLE_KEY,
+  META_SUMMARY_KEY,
+  META_TAGS_KEY,
+  META_TITLE_KEY,
+  type SourceMetaHashes,
+} from '../translation-meta'
 import type {
   ITranslationStrategy,
   PipelineMetrics,
@@ -26,7 +35,6 @@ import type {
 } from '../translation-strategy.interface'
 import {
   BaseTranslationStrategy,
-  buildReviewerMetrics,
   DEFAULT_REVIEW_SCORE_THRESHOLD,
   emptyEditorMetrics,
   emptyReviewerMetrics,
@@ -44,21 +52,6 @@ interface TranslationUnit {
   memberIds?: string[]
 }
 
-interface LexicalTranslationInput {
-  title?: string | null
-  subtitle?: string | null
-  summary?: string | null
-  tags?: string[] | null
-  [key: string]: unknown
-}
-
-interface LexicalSourceMetaHashes extends Omit<
-  LexicalTranslationInput,
-  'tags'
-> {
-  tags?: string | null
-}
-
 interface LexicalSourceBlockSnapshot {
   id: string
   fingerprint: string
@@ -68,9 +61,6 @@ interface LexicalSourceBlockSnapshot {
 }
 
 const GROUP_UNIT_PREFIX = '__inline_group__'
-const REMOVED_SUBTITLE_KEY = '__subtitle__'
-const REMOVED_SUMMARY_KEY = '__summary__'
-const REMOVED_TAGS_KEY = '__tags__'
 
 @Injectable()
 export class LexicalTranslationStrategy
@@ -172,91 +162,34 @@ export class LexicalTranslationStrategy
       fullTranslations[id] = text
     }
 
-    const reviewerStart = Date.now()
-    const review = await this.reviewerService.callReviewer(
-      reviewerRuntime,
+    const allowedSet = new Set(writtenIds)
+    await this.runReviewAndEditPipeline({
       targetLang,
-      { allowedIds: [...writtenIds], fullTranslations },
-      signal,
-    )
-    const reviewerMs = Date.now() - reviewerStart
-
-    if (!review) {
-      this.logger.warn('Reviewer returned null; persisting writer output as-is')
-      if (metrics) {
-        metrics.reviewer = {
-          ...emptyReviewerMetrics('reviewer-failed'),
-          invoked: true,
-          durationMs: reviewerMs,
-        }
-        metrics.editor = emptyEditorMetrics('reviewer-failed')
-      }
-      return
-    }
-
-    if (review.score >= scoreThreshold || review.issues.length === 0) {
-      this.logger.log(
-        `Review pass: score=${review.score} issues=${review.issues.length}; edit skipped`,
-      )
-      if (metrics) {
-        metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
-        metrics.editor = emptyEditorMetrics(
-          review.issues.length === 0 ? 'empty-issues' : 'score-above-threshold',
-        )
-      }
-      return
-    }
-
-    const editorStart = Date.now()
-    const editor = await this.callEditor(
-      targetLang,
-      { fullTranslations, issues: review.issues },
       translatorRuntime,
+      reviewerRuntime,
+      reviewerService: this.reviewerService,
+      fullTranslations,
+      allowedIds: writtenIds,
+      scoreThreshold,
       signal,
-    )
-    const editorMs = Date.now() - editorStart
-
-    const patchKeysApplied: string[] = []
-    const patchKeysDropped: string[] = []
-    const patchKeysRequested = editor ? Object.keys(editor.patches) : []
-    const patches: Array<{ id: string; before: string; after: string }> = []
-
-    if (editor) {
-      const allowedSet = new Set(writtenIds)
-      for (const [id, patched] of Object.entries(editor.patches)) {
-        if (allowedSet.has(id) && allTranslations.has(id)) {
-          const before = allTranslations.get(id) ?? ''
-          allTranslations.set(id, patched)
-          patchKeysApplied.push(id)
-          patches.push({ id, before, after: patched })
-        } else {
-          patchKeysDropped.push(id)
+      metrics,
+      applyPatches: (rawPatches) => {
+        const patchKeysApplied: string[] = []
+        const patchKeysDropped: string[] = []
+        const patches: Array<{ id: string; before: string; after: string }> = []
+        for (const [id, patched] of Object.entries(rawPatches)) {
+          if (allowedSet.has(id) && allTranslations.has(id)) {
+            const before = allTranslations.get(id) ?? ''
+            allTranslations.set(id, patched)
+            patchKeysApplied.push(id)
+            patches.push({ id, before, after: patched })
+          } else {
+            patchKeysDropped.push(id)
+          }
         }
-      }
-      if (patchKeysDropped.length > 0) {
-        this.logger.warn(
-          `Editor produced ${patchKeysDropped.length} out-of-set patches: ${patchKeysDropped.slice(0, 5).join(', ')}`,
-        )
-      }
-      this.logger.log(
-        `Edit applied: ${patchKeysApplied.length}/${review.issues.length} issues addressed`,
-      )
-    } else {
-      this.logger.warn('Editor returned null; persisting writer output as-is')
-    }
-
-    if (metrics) {
-      metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
-      metrics.editor = {
-        invoked: !!editor,
-        durationMs: editorMs,
-        skippedReason: editor ? null : 'editor-failed',
-        patchKeysRequested,
-        patchKeysApplied,
-        patchKeysDropped,
-        patches,
-      }
-    }
+        return { patchKeysApplied, patchKeysDropped, patches }
+      },
+    })
   }
 
   private async translateFull(
@@ -327,13 +260,13 @@ export class LexicalTranslationStrategy
       parseResult,
       allTranslations,
     )
-    const title = allTranslations.get('__title__') ?? content.title
+    const title = allTranslations.get(META_TITLE_KEY) ?? content.title
     const subtitle =
-      allTranslations.get('__subtitle__') ?? content.subtitle ?? null
+      allTranslations.get(META_SUBTITLE_KEY) ?? content.subtitle ?? null
     const summary =
-      allTranslations.get('__summary__') ?? content.summary ?? null
-    const tagsStr = allTranslations.get('__tags__')
-    const tags = tagsStr ? tagsStr.split('|||') : (content.tags ?? null)
+      allTranslations.get(META_SUMMARY_KEY) ?? content.summary ?? null
+    const tagsStr = allTranslations.get(META_TAGS_KEY)
+    const tags = tagsStr ? decodeTags(tagsStr) : (content.tags ?? null)
 
     return {
       sourceLang,
@@ -368,49 +301,30 @@ export class LexicalTranslationStrategy
     )
     const oldSnapshots =
       existing.sourceBlockSnapshots as LexicalSourceBlockSnapshot[]
-    const oldFpMap = new Map(oldSnapshots.map((s) => [s.id, s.fingerprint]))
 
-    const changedBlockIds = new Set<string | null>()
-    const unchangedBlockIds = new Set<string>()
-
-    for (const block of currentBlocks) {
-      if (
-        block.id &&
-        oldFpMap.has(block.id) &&
-        oldFpMap.get(block.id) === block.fingerprint
-      ) {
-        unchangedBlockIds.add(block.id)
-      } else {
-        changedBlockIds.add(block.id)
-      }
-    }
-
-    this.logger.log(
-      `Incremental diff: totalBlocks=${currentBlocks.length} changed=${changedBlockIds.size} reused=${unchangedBlockIds.size}`,
-    )
-
-    const parseResult = parseLexicalForTranslation(content.content!)
-    const { segments, propertySegments, editorState } = parseResult
-    const allTranslations = new Map<string, string>()
-    const removedMetaKeys = new Set<string>()
-    let sourceLang = existing.sourceLang || ''
-
+    let overlay: ReturnType<typeof buildReusableTranslationOverlay>
     try {
-      const translatedParseResult = parseLexicalForTranslation(
+      overlay = buildReusableTranslationOverlay(
+        content.content!,
         existing.content!,
-      )
-      const backfillResult = backfillReusableBlockTranslations(
-        parseResult,
-        translatedParseResult,
-        unchangedBlockIds,
-        allTranslations,
-      )
-      this.logger.log(
-        `Incremental reuse: reused=${backfillResult.reusedBlockIds.length} skipped=${backfillResult.skippedBlockIds.length}`,
+        currentBlocks,
+        oldSnapshots,
       )
     } catch {
       throw new Error('Failed to parse existing translated content')
     }
+
+    const { parseResult, translations: allTranslations } = overlay
+    const { segments, propertySegments, editorState } = parseResult
+    const removedMetaKeys = new Set<string>()
+    let sourceLang = existing.sourceLang || ''
+
+    this.logger.log(
+      `Incremental diff: totalBlocks=${currentBlocks.length} changed=${currentBlocks.length - overlay.unchangedBlockIds.size} reused=${overlay.unchangedBlockIds.size}`,
+    )
+    this.logger.log(
+      `Incremental reuse: reused=${overlay.backfill.reusedBlockIds.length} skipped=${overlay.backfill.skippedBlockIds.length}`,
+    )
 
     const documentContext = extractDocumentContext(
       editorState.root?.children ?? [],
@@ -431,66 +345,61 @@ export class LexicalTranslationStrategy
 
     const metaUnits: TranslationUnit[] = []
     const oldMetaHashes = existing.sourceMetaHashes as
-      | LexicalSourceMetaHashes
+      | SourceMetaHashes
       | null
       | undefined
 
-    const currentTitleHash = md5(content.title)
-    if (!oldMetaHashes || oldMetaHashes.title !== currentTitleHash) {
+    if (!isMetaFieldUnchanged(oldMetaHashes, 'title', content.title)) {
       metaUnits.push({
-        id: '__title__',
+        id: META_TITLE_KEY,
         payload: content.title,
         meta: 'meta.title',
       })
     } else {
-      allTranslations.set('__title__', existing.title)
+      allTranslations.set(META_TITLE_KEY, existing.title)
     }
 
     if (content.subtitle) {
-      const currentSubtitleHash = md5(content.subtitle)
-      if (!oldMetaHashes || oldMetaHashes.subtitle !== currentSubtitleHash) {
+      if (!isMetaFieldUnchanged(oldMetaHashes, 'subtitle', content.subtitle)) {
         metaUnits.push({
-          id: REMOVED_SUBTITLE_KEY,
+          id: META_SUBTITLE_KEY,
           payload: content.subtitle,
           meta: 'meta.subtitle',
         })
       } else if (existing.subtitle) {
-        allTranslations.set(REMOVED_SUBTITLE_KEY, existing.subtitle)
+        allTranslations.set(META_SUBTITLE_KEY, existing.subtitle)
       }
     } else if (oldMetaHashes?.subtitle || existing.subtitle) {
-      removedMetaKeys.add(REMOVED_SUBTITLE_KEY)
+      removedMetaKeys.add(META_SUBTITLE_KEY)
     }
 
     if (content.summary) {
-      const currentSummaryHash = md5(content.summary)
-      if (!oldMetaHashes || oldMetaHashes.summary !== currentSummaryHash) {
+      if (!isMetaFieldUnchanged(oldMetaHashes, 'summary', content.summary)) {
         metaUnits.push({
-          id: REMOVED_SUMMARY_KEY,
+          id: META_SUMMARY_KEY,
           payload: content.summary,
           meta: 'meta.summary',
         })
       } else if (existing.summary) {
-        allTranslations.set(REMOVED_SUMMARY_KEY, existing.summary)
+        allTranslations.set(META_SUMMARY_KEY, existing.summary)
       }
     } else if (oldMetaHashes?.summary || existing.summary) {
-      removedMetaKeys.add(REMOVED_SUMMARY_KEY)
+      removedMetaKeys.add(META_SUMMARY_KEY)
     }
 
     if (content.tags?.length) {
-      const currentTagsHash = md5(content.tags.join('|||'))
-      const oldTagsHash =
-        typeof oldMetaHashes?.tags === 'string' ? oldMetaHashes.tags : undefined
-      if (!oldMetaHashes || oldTagsHash !== currentTagsHash) {
+      const encodedTags = encodeTags(content.tags)
+      if (!isMetaFieldUnchanged(oldMetaHashes, 'tags', encodedTags)) {
         metaUnits.push({
-          id: REMOVED_TAGS_KEY,
-          payload: content.tags.join('|||'),
+          id: META_TAGS_KEY,
+          payload: encodedTags,
           meta: 'meta.tags',
         })
       } else if (existing.tags?.length) {
-        allTranslations.set(REMOVED_TAGS_KEY, existing.tags.join('|||'))
+        allTranslations.set(META_TAGS_KEY, encodeTags(existing.tags))
       }
     } else if (oldMetaHashes?.tags || existing.tags?.length) {
-      removedMetaKeys.add(REMOVED_TAGS_KEY)
+      removedMetaKeys.add(META_TAGS_KEY)
     }
 
     const totalEntries = contentUnits.length + metaUnits.length
@@ -506,23 +415,23 @@ export class LexicalTranslationStrategy
       )
       return {
         sourceLang,
-        title: allTranslations.get('__title__') ?? existing.title,
+        title: allTranslations.get(META_TITLE_KEY) ?? existing.title,
         text: this.lexicalService.lexicalToMarkdown(translatedContent),
         contentFormat: ContentFormat.Lexical,
         content: translatedContent,
         subtitle: this.resolveOptionalMeta(
-          REMOVED_SUBTITLE_KEY,
+          META_SUBTITLE_KEY,
           removedMetaKeys,
           allTranslations,
           existing.subtitle,
         ),
         summary: this.resolveOptionalMeta(
-          REMOVED_SUMMARY_KEY,
+          META_SUMMARY_KEY,
           removedMetaKeys,
           allTranslations,
           existing.summary,
         ),
-        tags: removedMetaKeys.has(REMOVED_TAGS_KEY)
+        tags: removedMetaKeys.has(META_TAGS_KEY)
           ? null
           : (existing.tags ?? null),
         aiModel: info.model,
@@ -584,15 +493,15 @@ export class LexicalTranslationStrategy
       parseResult,
       allTranslations,
     )
-    const title = allTranslations.get('__title__') ?? existing.title
+    const title = allTranslations.get(META_TITLE_KEY) ?? existing.title
     const subtitle = this.resolveOptionalMeta(
-      REMOVED_SUBTITLE_KEY,
+      META_SUBTITLE_KEY,
       removedMetaKeys,
       allTranslations,
       existing.subtitle,
     )
     const summary = this.resolveOptionalMeta(
-      REMOVED_SUMMARY_KEY,
+      META_SUMMARY_KEY,
       removedMetaKeys,
       allTranslations,
       existing.summary,
@@ -632,9 +541,9 @@ export class LexicalTranslationStrategy
     allTranslations: Map<string, string>,
     fallback: string[] | null,
   ): string[] | null {
-    if (removedMetaKeys.has(REMOVED_TAGS_KEY)) return null
-    const tagsStr = allTranslations.get(REMOVED_TAGS_KEY)
-    if (tagsStr) return tagsStr.split('|||')
+    if (removedMetaKeys.has(META_TAGS_KEY)) return null
+    const tagsStr = allTranslations.get(META_TAGS_KEY)
+    if (tagsStr) return decodeTags(tagsStr)
     return fallback
   }
 
@@ -733,27 +642,27 @@ export class LexicalTranslationStrategy
     content: ArticleContent,
   ): TranslationUnit[] {
     const units: TranslationUnit[] = [
-      { id: '__title__', payload: content.title, meta: 'meta.title' },
+      { id: META_TITLE_KEY, payload: content.title, meta: 'meta.title' },
     ]
 
     if (content.subtitle) {
       units.push({
-        id: '__subtitle__',
+        id: META_SUBTITLE_KEY,
         payload: content.subtitle,
         meta: 'meta.subtitle',
       })
     }
     if (content.summary) {
       units.push({
-        id: '__summary__',
+        id: META_SUMMARY_KEY,
         payload: content.summary,
         meta: 'meta.summary',
       })
     }
     if (content.tags?.length) {
       units.push({
-        id: '__tags__',
-        payload: content.tags.join('|||'),
+        id: META_TAGS_KEY,
+        payload: encodeTags(content.tags),
         meta: 'meta.tags',
       })
     }

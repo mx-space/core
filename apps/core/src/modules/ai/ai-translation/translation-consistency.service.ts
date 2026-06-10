@@ -7,9 +7,6 @@ import { AITranslationModel } from './ai-translation.types-model'
 import { BaseTranslationService } from './base-translation.service'
 import { type TranslationSourceSnapshot } from './translation-consistency.types'
 
-const TRANSLATION_VALIDATION_DEFAULT_SELECT =
-  'refId hash sourceLang title text subtitle summary tags lang sourceModifiedAt createdAt aiModel aiProvider'
-
 export type FreshnessStatus = 'valid' | 'stale' | 'unknown'
 type TranslationSnapshot = Pick<
   AITranslationModel,
@@ -20,10 +17,6 @@ type TranslationSnapshot = Pick<
 export class TranslationConsistencyService extends BaseTranslationService {
   constructor(private readonly databaseService: DatabaseService) {
     super()
-  }
-
-  buildValidationSelect(select?: string): string {
-    return select ?? TRANSLATION_VALIDATION_DEFAULT_SELECT
   }
 
   partitionValidAndStaleTranslations(
@@ -95,6 +88,9 @@ export class TranslationConsistencyService extends BaseTranslationService {
     const articleMap = this.databaseService.flatCollectionToMap(groupedArticles)
     const staleRefIds = new Set<string>()
 
+    // Several translation rows often share a refId; hash each (article, lang)
+    // pair once — canonicalizing a large lexical document is the costly part.
+    const hashCache = new Map<string, string>()
     for (const translation of translations) {
       if (!translation.refId) {
         continue
@@ -106,10 +102,15 @@ export class TranslationConsistencyService extends BaseTranslationService {
 
       const sourceLang =
         this.getMetaLang(document) || translation.sourceLang || 'unknown'
-      const currentHash = this.computeContentHash(
-        this.toArticleContent(document),
-        sourceLang,
-      )
+      const cacheKey = `${translation.refId}:${sourceLang}`
+      let currentHash = hashCache.get(cacheKey)
+      if (currentHash === undefined) {
+        currentHash = this.computeContentHash(
+          this.toArticleContent(document),
+          sourceLang,
+        )
+        hashCache.set(cacheKey, currentHash)
+      }
 
       if (translation.hash !== currentHash) {
         staleRefIds.add(translation.refId)
@@ -147,7 +148,32 @@ export class TranslationConsistencyService extends BaseTranslationService {
     }
 
     const sourceLang = article.meta?.lang || translation.sourceLang || 'unknown'
-    const currentHash = this.computeContentHash(
+    return translation.hash === this.hashSnapshot(article, sourceLang)
+      ? 'valid'
+      : 'stale'
+  }
+
+  // Callers evaluate one snapshot object against many translation rows;
+  // hashing canonicalizes the full lexical document, so memoize per
+  // (snapshot identity, sourceLang) to pay that cost once per request.
+  private readonly snapshotHashCache = new WeakMap<
+    TranslationSourceSnapshot,
+    Map<string, string>
+  >()
+
+  private hashSnapshot(
+    article: TranslationSourceSnapshot,
+    sourceLang: string,
+  ): string {
+    let perLang = this.snapshotHashCache.get(article)
+    if (!perLang) {
+      perLang = new Map()
+      this.snapshotHashCache.set(article, perLang)
+    }
+    const cached = perLang.get(sourceLang)
+    if (cached !== undefined) return cached
+
+    const hash = this.computeContentHash(
       {
         title: article.title,
         text: article.text ?? '',
@@ -159,8 +185,8 @@ export class TranslationConsistencyService extends BaseTranslationService {
       },
       sourceLang,
     )
-
-    return translation.hash === currentHash ? 'valid' : 'stale'
+    perLang.set(sourceLang, hash)
+    return hash
   }
 
   private hasComparableSource(article: TranslationSourceSnapshot): boolean {

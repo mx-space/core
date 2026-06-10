@@ -10,6 +10,14 @@ import {
   splitMarkdownIntoParagraphs,
 } from '../markdown-paragraph-splitter'
 import { TranslationReviewerService } from '../reviewer.service'
+import {
+  decodeTags,
+  encodeTags,
+  META_SUBTITLE_KEY,
+  META_SUMMARY_KEY,
+  META_TAGS_KEY,
+  META_TITLE_KEY,
+} from '../translation-meta'
 import type {
   ITranslationStrategy,
   PipelineMetrics,
@@ -18,16 +26,10 @@ import type {
 } from '../translation-strategy.interface'
 import {
   BaseTranslationStrategy,
-  buildReviewerMetrics,
   DEFAULT_REVIEW_SCORE_THRESHOLD,
   emptyEditorMetrics,
   emptyReviewerMetrics,
 } from './base-translation-strategy'
-
-const META_TITLE_KEY = '__title__'
-const META_SUBTITLE_KEY = '__subtitle__'
-const META_SUMMARY_KEY = '__summary__'
-const META_TAGS_KEY = '__tags__'
 
 @Injectable()
 export class MarkdownTranslationStrategy
@@ -219,158 +221,85 @@ export class MarkdownTranslationStrategy
       fullTranslations[META_SUMMARY_KEY] = initial.summary
     }
     if (initial.tags?.length) {
-      fullTranslations[META_TAGS_KEY] = initial.tags.join('|||')
+      fullTranslations[META_TAGS_KEY] = encodeTags(initial.tags)
     }
     for (const paragraph of paragraphs) {
       fullTranslations[paragraph.id] = paragraph.text
     }
 
     const allowedIds = Object.keys(fullTranslations)
-    const reviewerStart = Date.now()
-    const review = await this.reviewerService.callReviewer(
-      reviewerRuntime,
-      targetLang,
-      { allowedIds, fullTranslations },
-      signal,
-    )
-    const reviewerMs = Date.now() - reviewerStart
-
-    if (!review) {
-      this.logger.warn('Reviewer returned null; persisting writer output as-is')
-      if (metrics) {
-        metrics.reviewer = {
-          ...emptyReviewerMetrics('reviewer-failed'),
-          invoked: true,
-          durationMs: reviewerMs,
-        }
-        metrics.editor = emptyEditorMetrics('reviewer-failed')
-      }
-      return initial
-    }
-
-    if (review.score >= scoreThreshold || review.issues.length === 0) {
-      this.logger.log(
-        `Review pass: score=${review.score} issues=${review.issues.length}; edit skipped`,
-      )
-      if (metrics) {
-        metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
-        metrics.editor = emptyEditorMetrics(
-          review.issues.length === 0 ? 'empty-issues' : 'score-above-threshold',
-        )
-      }
-      return initial
-    }
-
-    const editorStart = Date.now()
-    const editor = await this.callEditor(
-      targetLang,
-      { fullTranslations, issues: review.issues },
-      translatorRuntime,
-      signal,
-    )
-    const editorMs = Date.now() - editorStart
-
-    if (!editor) {
-      this.logger.warn('Editor returned null; persisting writer output as-is')
-      if (metrics) {
-        metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
-        metrics.editor = {
-          ...emptyEditorMetrics('editor-failed'),
-          durationMs: editorMs,
-        }
-      }
-      return initial
-    }
-
-    let nextTitle = initial.title
-    let nextSubtitle = initial.subtitle
-    let nextSummary = initial.summary
-    let nextTags = initial.tags
-    const paragraphPatches: Record<string, string> = {}
-    const dropped: string[] = []
-    const applied: string[] = []
-    const patchSamples: Array<{ id: string; before: string; after: string }> =
-      []
     const allowedSet = new Set(allowedIds)
-    const patchKeysRequested = Object.keys(editor.patches)
+    const next = { ...initial }
 
-    for (const [id, patched] of Object.entries(editor.patches)) {
-      if (!allowedSet.has(id)) {
-        dropped.push(id)
-        continue
-      }
-      let handled = true
-      switch (id) {
-        case META_TITLE_KEY: {
-          nextTitle = patched
-          break
-        }
-        case META_SUBTITLE_KEY: {
-          nextSubtitle = patched
-          break
-        }
-        case META_SUMMARY_KEY: {
-          nextSummary = patched
-          break
-        }
-        case META_TAGS_KEY: {
-          nextTags = patched.split('|||')
-          break
-        }
-        default: {
-          if (id.startsWith('text:p')) {
-            paragraphPatches[id] = patched
-          } else {
-            handled = false
+    await this.runReviewAndEditPipeline({
+      targetLang,
+      translatorRuntime,
+      reviewerRuntime,
+      reviewerService: this.reviewerService,
+      fullTranslations,
+      allowedIds,
+      scoreThreshold,
+      signal,
+      metrics,
+      applyPatches: (rawPatches) => {
+        const paragraphPatches: Record<string, string> = {}
+        const patchKeysDropped: string[] = []
+        const patchKeysApplied: string[] = []
+        const patches: Array<{ id: string; before: string; after: string }> = []
+
+        for (const [id, patched] of Object.entries(rawPatches)) {
+          if (!allowedSet.has(id)) {
+            patchKeysDropped.push(id)
+            continue
+          }
+          let handled = true
+          switch (id) {
+            case META_TITLE_KEY: {
+              next.title = patched
+              break
+            }
+            case META_SUBTITLE_KEY: {
+              next.subtitle = patched
+              break
+            }
+            case META_SUMMARY_KEY: {
+              next.summary = patched
+              break
+            }
+            case META_TAGS_KEY: {
+              next.tags = decodeTags(patched)
+              break
+            }
+            default: {
+              if (id.startsWith('text:p')) {
+                paragraphPatches[id] = patched
+              } else {
+                handled = false
+              }
+            }
+          }
+          if (handled) {
+            patchKeysApplied.push(id)
+            patches.push({
+              id,
+              before: fullTranslations[id] ?? '',
+              after: patched,
+            })
           }
         }
-      }
-      if (handled) {
-        applied.push(id)
-        patchSamples.push({
-          id,
-          before: fullTranslations[id] ?? '',
-          after: patched,
-        })
-      }
-    }
 
-    let nextText = initial.text
-    if (Object.keys(paragraphPatches).length > 0) {
-      const result = applyParagraphPatches(initial.text, paragraphPatches)
-      nextText = result.joined
-      for (const unknown of result.unknownIds) dropped.push(unknown)
-    }
+        if (Object.keys(paragraphPatches).length > 0) {
+          const result = applyParagraphPatches(initial.text, paragraphPatches)
+          next.text = result.joined
+          for (const unknown of result.unknownIds) {
+            patchKeysDropped.push(unknown)
+          }
+        }
 
-    if (dropped.length > 0) {
-      this.logger.warn(
-        `Editor produced ${dropped.length} out-of-set patches: ${dropped.slice(0, 5).join(', ')}`,
-      )
-    }
+        return { patchKeysApplied, patchKeysDropped, patches }
+      },
+    })
 
-    if (metrics) {
-      metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
-      metrics.editor = {
-        invoked: true,
-        durationMs: editorMs,
-        skippedReason: null,
-        patchKeysRequested,
-        patchKeysApplied: applied,
-        patchKeysDropped: dropped,
-        patches: patchSamples,
-      }
-    }
-
-    this.logger.log(
-      `Edit applied: title=${nextTitle !== initial.title} text=${nextText !== initial.text} subtitle=${nextSubtitle !== initial.subtitle} summary=${nextSummary !== initial.summary} tags=${nextTags !== initial.tags}`,
-    )
-
-    return {
-      title: nextTitle,
-      text: nextText,
-      subtitle: nextSubtitle,
-      summary: nextSummary,
-      tags: nextTags,
-    }
+    return next
   }
 }

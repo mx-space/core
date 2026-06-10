@@ -51,6 +51,7 @@ import { BaseTranslationService } from './base-translation.service'
 import { LexicalPartialTranslationBuilder } from './lexical-partial-translation.builder'
 import { TranslationConsistencyService } from './translation-consistency.service'
 import type { TranslationSourceSnapshot } from './translation-consistency.types'
+import { buildSourceMetaHashes } from './translation-meta'
 import type { ITranslationStrategy } from './translation-strategy.interface'
 import {
   LEXICAL_TRANSLATION_STRATEGY,
@@ -66,31 +67,6 @@ function isIdEvent(event: ArticleEventPayload): event is { id: string } {
 }
 
 const TRANSLATION_LANGUAGE_CONCURRENCY = 3
-
-/**
- * Run an async mapper over `items` with bounded concurrency, preserving the
- * input order in the returned results array.
- */
-async function runWithConcurrency<T, R>(
-  items: readonly T[],
-  limit: number,
-  fn: (item: T, index: number) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = Array.from({ length: items.length })
-  let cursor = 0
-  const workers = Array.from(
-    { length: Math.min(limit, items.length) },
-    async () => {
-      while (true) {
-        const index = cursor++
-        if (index >= items.length) return
-        results[index] = await fn(items[index], index)
-      }
-    },
-  )
-  await Promise.all(workers)
-  return results
-}
 
 @Injectable()
 export class AiTranslationService
@@ -557,11 +533,8 @@ export class AiTranslationService
     if (isIdEvent(event)) {
       return event.id
     }
-    const doc = event as ArticleEventDocument
-    if (typeof doc.id === 'string') {
-      return doc.id
-    }
-    return (doc.id as { toString?: () => string })?.toString?.() ?? null
+    const { id } = event as ArticleEventDocument
+    return (id as { toString?: () => string })?.toString?.() ?? null
   }
 
   /**
@@ -675,13 +648,9 @@ export class AiTranslationService
   private buildSourceMetaHashes(
     content: ArticleContent,
   ): AITranslationModel['sourceMetaHashes'] {
-    return {
-      title: md5(content.title),
-      subtitle: content.subtitle ? md5(content.subtitle) : undefined,
-      summary: content.summary ? md5(content.summary) : undefined,
-      tags: content.tags?.length ? md5(content.tags.join('|||')) : undefined,
-    }
+    return buildSourceMetaHashes(content)
   }
+
   private async translateContentStream(
     content: ArticleContent,
     targetLang: string,
@@ -953,19 +922,20 @@ export class AiTranslationService
       return []
     }
 
-    const settled = await runWithConcurrency(
-      languages,
-      TRANSLATION_LANGUAGE_CONCURRENCY,
-      async (lang) => {
-        try {
-          return await this.generateTranslation(articleId, lang)
-        } catch (error: any) {
-          this.logger.error(
-            `Failed to generate translation for ${articleId} to ${lang}: ${error.message}`,
-          )
-          return null
-        }
-      },
+    const limit = pLimit(TRANSLATION_LANGUAGE_CONCURRENCY)
+    const settled = await Promise.all(
+      languages.map((lang) =>
+        limit(async () => {
+          try {
+            return await this.generateTranslation(articleId, lang)
+          } catch (error: any) {
+            this.logger.error(
+              `Failed to generate translation for ${articleId} to ${lang}: ${error.message}`,
+            )
+            return null
+          }
+        }),
+      ),
     )
 
     return settled.filter((t): t is AITranslationModel => t !== null)
@@ -1147,7 +1117,10 @@ export class AiTranslationService
     targetLang: string,
     options?: { ignoreVisibility?: boolean },
   ): Promise<AITranslationModel | null> {
-    const article = await this.databaseService.findGlobalById(articleId)
+    const [article, translation] = await Promise.all([
+      this.databaseService.findGlobalById(articleId),
+      this.aiTranslationRepository.findByRefAndLang(articleId, targetLang),
+    ])
     if (!article || !article.document) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, {
         id: articleId,
@@ -1162,10 +1135,6 @@ export class AiTranslationService
     }
 
     const document = article.document as ArticleDocument
-    const translation = await this.aiTranslationRepository.findByRefAndLang(
-      articleId,
-      targetLang,
-    )
 
     if (!translation) {
       return null
@@ -1199,9 +1168,6 @@ export class AiTranslationService
   async getValidTranslationsForArticles(
     articles: TranslationSourceSnapshot[],
     targetLang: string,
-    _options?: {
-      select?: string
-    },
   ): Promise<{
     validTranslations: Map<string, AITranslationModel>
     staleRefIds: string[]
@@ -1261,14 +1227,15 @@ export class AiTranslationService
   }
 
   async getAvailableLanguagesForArticle(articleId: string): Promise<string[]> {
-    const article = await this.databaseService.findGlobalById(articleId)
+    const [article, translations] = await Promise.all([
+      this.databaseService.findGlobalById(articleId),
+      this.aiTranslationRepository.listByRefId(articleId),
+    ])
     if (!article || !article.document || !this.isArticleVisible(article)) {
       return []
     }
 
     const document = article.document as ArticleDocument
-    const translations =
-      await this.aiTranslationRepository.listByRefId(articleId)
 
     if (!translations.length) {
       return []
@@ -1291,18 +1258,13 @@ export class AiTranslationService
     articleId: string,
     document: ArticleDocument,
   ): TranslationSourceSnapshot {
+    const content = this.toArticleContent(document)
     return {
+      ...content,
       id: articleId,
-      title: document.title,
-      text: document.text,
-      subtitle:
-        'subtitle' in document ? (document.subtitle ?? undefined) : undefined,
-      summary:
-        'summary' in document ? (document.summary ?? undefined) : undefined,
-      tags: 'tags' in document ? document.tags : undefined,
+      subtitle: content.subtitle ?? undefined,
+      summary: content.summary ?? undefined,
       meta: (document.meta ?? undefined) as { lang?: string } | undefined,
-      contentFormat: document.contentFormat,
-      content: document.content,
       modifiedAt: document.modifiedAt,
       createdAt: document.createdAt,
     }
@@ -1317,7 +1279,10 @@ export class AiTranslationService
     sourceLang: string | null
     translation: AITranslationModel | null
   }> {
-    const article = await this.databaseService.findGlobalById(articleId)
+    const [article, translations] = await Promise.all([
+      this.databaseService.findGlobalById(articleId),
+      this.aiTranslationRepository.listByRefId(articleId),
+    ])
     if (!article || !article.document) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, {
         id: articleId,
@@ -1332,8 +1297,6 @@ export class AiTranslationService
     }
 
     const document = article.document as ArticleDocument
-    const translations =
-      await this.aiTranslationRepository.listByRefId(articleId)
 
     if (!translations.length) {
       return { availableTranslations: [], sourceLang: null, translation: null }

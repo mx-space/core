@@ -1,7 +1,8 @@
-import type {
-  LexicalTranslationResult,
-  PropertySegment,
-  TranslationSegment,
+import {
+  type LexicalTranslationResult,
+  parseLexicalForTranslation,
+  type PropertySegment,
+  type TranslationSegment,
 } from './lexical-translation-parser'
 import { validateMermaidTranslation } from './mermaid-translation-guard'
 
@@ -128,6 +129,50 @@ export function backfillReusableBlockTranslations(
   }
 
   return { reusedBlockIds, skippedBlockIds }
+}
+
+export interface TranslationOverlay {
+  parseResult: LexicalTranslationResult
+  translations: Map<string, string>
+  unchangedBlockIds: Set<string>
+  backfill: BackfillReusableBlockResult
+}
+
+// Shared zero-LLM prefix of incremental translation: diff current root-block
+// fingerprints against the stored snapshots, parse both documents, and
+// backfill translations for unchanged blocks. Consumed by both the
+// incremental strategy (which then sends the rest to the writer) and the
+// read-path partial overlay builder (which restores with the backfill only).
+export function buildReusableTranslationOverlay(
+  currentContent: string,
+  translatedContent: string,
+  currentBlocks: ReadonlyArray<{ id: string | null; fingerprint: string }>,
+  oldSnapshots: ReadonlyArray<{ id: string; fingerprint: string }>,
+): TranslationOverlay {
+  const oldFingerprintByBlockId = new Map(
+    oldSnapshots.map((snapshot) => [snapshot.id, snapshot.fingerprint]),
+  )
+  const unchangedBlockIds = new Set<string>()
+  for (const block of currentBlocks) {
+    if (
+      block.id &&
+      oldFingerprintByBlockId.get(block.id) === block.fingerprint
+    ) {
+      unchangedBlockIds.add(block.id)
+    }
+  }
+
+  const parseResult = parseLexicalForTranslation(currentContent)
+  const translatedParseResult = parseLexicalForTranslation(translatedContent)
+  const translations = new Map<string, string>()
+  const backfill = backfillReusableBlockTranslations(
+    parseResult,
+    translatedParseResult,
+    unchangedBlockIds,
+    translations,
+  )
+
+  return { parseResult, translations, unchangedBlockIds, backfill }
 }
 
 export function guardMermaidTranslations(

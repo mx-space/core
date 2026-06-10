@@ -145,6 +145,36 @@ function extractPollSegments(
   }
 }
 
+// Registry for node types whose translatable text lives in an opaque payload
+// rather than children/whitelisted properties. `extract` replaces the normal
+// walk for that node; `restore` runs over the whole tree after translations
+// are applied (e.g. re-stringifying a parsed snapshot). Adding a new complex
+// node type means adding one entry here — the walker and the restorer pick
+// it up automatically.
+interface ComplexNodeExtractor {
+  extract: (
+    node: any,
+    propertySegments: PropertySegment[],
+    counter: { t: number; p: number },
+    ctx: BlockContext,
+  ) => void
+  restore?: (node: any) => void
+}
+
+const COMPLEX_NODE_EXTRACTORS: Record<string, ComplexNodeExtractor> = {
+  [LEXICAL_CONTEXT_EXCALIDRAW_TYPE]: {
+    extract: extractExcalidrawTexts,
+    restore: (node) => {
+      if (node.__excalidrawParsed) {
+        node.snapshot = JSON.stringify(node.__excalidrawParsed)
+        delete node.__excalidrawParsed
+      }
+    },
+  },
+  [LEXICAL_CONTEXT_MERMAID_TYPE]: { extract: extractMermaidSegments },
+  poll: { extract: extractPollSegments },
+}
+
 function walkNode(
   node: any,
   segments: TranslationSegment[],
@@ -155,19 +185,9 @@ function walkNode(
 ): void {
   if (!node) return
 
-  // Handle excalidraw: extract text from shapes within snapshot
-  if (node.type === LEXICAL_CONTEXT_EXCALIDRAW_TYPE) {
-    extractExcalidrawTexts(node, propertySegments, counter, ctx)
-    return
-  }
-
-  if (node.type === LEXICAL_CONTEXT_MERMAID_TYPE) {
-    extractMermaidSegments(node, propertySegments, counter, ctx)
-    return
-  }
-
-  if (node.type === 'poll') {
-    extractPollSegments(node, propertySegments, counter, ctx)
+  const complexExtractor = COMPLEX_NODE_EXTRACTORS[node.type]
+  if (complexExtractor) {
+    complexExtractor.extract(node, propertySegments, counter, ctx)
     return
   }
 
@@ -281,15 +301,12 @@ export function parseLexicalForTranslation(
 
 // ── Restorer ──
 
-function reStringifyExcalidrawSnapshots(node: any): void {
+function applyComplexNodeRestoreHooks(node: any): void {
   if (!node) return
-  if (node.__excalidrawParsed) {
-    node.snapshot = JSON.stringify(node.__excalidrawParsed)
-    delete node.__excalidrawParsed
-  }
+  COMPLEX_NODE_EXTRACTORS[node.type]?.restore?.(node)
   if (Array.isArray(node.children)) {
     for (const child of node.children) {
-      reStringifyExcalidrawSnapshots(child)
+      applyComplexNodeRestoreHooks(child)
     }
   }
   // Scan nested editor states
@@ -307,14 +324,14 @@ function reStringifyExcalidrawSnapshots(node: any): void {
       (val as any).root?.children
     ) {
       for (const child of (val as any).root.children) {
-        reStringifyExcalidrawSnapshots(child)
+        applyComplexNodeRestoreHooks(child)
       }
     }
     if (Array.isArray(val)) {
       for (const item of val) {
         if (item?.root?.children) {
           for (const child of item.root.children) {
-            reStringifyExcalidrawSnapshots(child)
+            applyComplexNodeRestoreHooks(child)
           }
         }
       }
@@ -340,8 +357,8 @@ export function restoreLexicalTranslation(
     }
   }
 
-  // Re-stringify excalidraw snapshots after translation applied
-  reStringifyExcalidrawSnapshots(result.editorState.root)
+  // Run registry restore hooks (e.g. re-stringify excalidraw snapshots)
+  applyComplexNodeRestoreHooks(result.editorState.root)
 
   return JSON.stringify(result.editorState)
 }
