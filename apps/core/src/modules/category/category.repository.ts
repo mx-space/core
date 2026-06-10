@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { categories, posts } from '~/database/schema'
@@ -65,8 +65,14 @@ export class CategoryRepository extends BaseRepository {
   }
 
   async findById(id: EntityId | string): Promise<CategoryWithCount | null> {
-    const idBig = parseEntityId(id)
-    const [row] = await this.db
+    const [row] = await this.findByIds([id])
+    return row ?? null
+  }
+
+  async findByIds(ids: Array<EntityId | string>): Promise<CategoryWithCount[]> {
+    if (ids.length === 0) return []
+    const idBigs = ids.map((id) => parseEntityId(id))
+    const rows = await this.db
       .select({
         id: categories.id,
         name: categories.name,
@@ -80,18 +86,16 @@ export class CategoryRepository extends BaseRepository {
         )`,
       })
       .from(categories)
-      .where(eq(categories.id, idBig))
-      .limit(1)
+      .where(inArray(categories.id, idBigs))
 
-    if (!row) return null
-    return {
+    return rows.map((row) => ({
       id: toEntityId(row.id) as EntityId,
       name: row.name,
       slug: row.slug,
       type: row.type as CategoryType,
       createdAt: row.createdAt,
       count: Number(row.count ?? 0),
-    }
+    }))
   }
 
   async findBySlug(slug: string): Promise<CategoryRow | null> {

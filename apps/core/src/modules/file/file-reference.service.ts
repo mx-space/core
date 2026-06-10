@@ -295,30 +295,24 @@ export class FileReferenceService {
 
     const diff = this.diffReaderImages(allRefs, newUrls, commentId)
 
-    let attachedCount = 0
-    for (const ref of diff.toAttach) {
-      await this.fileReferenceRepository.markActive(
-        ref.id,
-        commentId,
-        FileReferenceType.Comment,
-      )
-      attachedCount++
-    }
-    for (const ref of diff.toRevive) {
-      await this.fileReferenceRepository.markActive(
-        ref.id,
-        commentId,
-        FileReferenceType.Comment,
-      )
-      attachedCount++
-    }
-    let detachedCount = 0
-    for (const ref of diff.toDetach) {
-      await this.fileReferenceRepository.markDetached(ref.id)
-      detachedCount++
-    }
+    const toActivate = [...diff.toAttach, ...diff.toRevive]
+    await Promise.all([
+      ...toActivate.map((ref) =>
+        this.fileReferenceRepository.markActive(
+          ref.id,
+          commentId,
+          FileReferenceType.Comment,
+        ),
+      ),
+      ...diff.toDetach.map((ref) =>
+        this.fileReferenceRepository.markDetached(ref.id),
+      ),
+    ])
 
-    return { attachedCount, detachedCount }
+    return {
+      attachedCount: toActivate.length,
+      detachedCount: diff.toDetach.length,
+    }
   }
 
   async countReaderUploadsSince(

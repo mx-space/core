@@ -54,7 +54,7 @@ const createService = () => {
   const repository = createPgRepositoryMock<AiTranslationRepository>()
   const databaseService = {
     findGlobalById: vi.fn(),
-    findGlobalByIds: vi.fn(),
+    getRefArticleMap: vi.fn().mockResolvedValue({}),
     findAllArticlesForTranslation: vi.fn(),
   }
   const translationConsistencyService = {

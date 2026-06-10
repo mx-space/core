@@ -75,6 +75,10 @@ export class CategoryController {
 
       const categoryObjects: Array<{ id: string; cat: any }> = []
 
+      const categoriesPromise = joint
+        ? null
+        : this.categoryService.repository.findByIds(ids)
+
       await Promise.all(
         ids.map(async (id) => {
           const rawPosts = await this.postService.listByCategory(id, {
@@ -86,13 +90,17 @@ export class CategoryController {
             return cloned
           })
           for (const post of posts) allPosts.push({ categoryId: id, post })
-
-          if (!joint) {
-            const category = await this.categoryService.findCategoryById(id)
-            categoryObjects.push({ id, cat: category })
-          }
         }),
       )
+
+      const categoriesById = await categoriesPromise
+
+      if (categoriesById) {
+        const catMap = new Map(categoriesById.map((c) => [String(c.id), c]))
+        for (const id of ids) {
+          categoryObjects.push({ id, cat: catMap.get(id) ?? null })
+        }
+      }
 
       if (lang) {
         const articles = allPosts.map(({ post }) => ({

@@ -7,7 +7,9 @@ import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { AiTranslationRepository } from '~/modules/ai/ai-translation/ai-translation.repository'
 import type { AiTranslationRow } from '~/modules/ai/ai-translation/ai-translation.types'
 import type { SearchDto } from '~/modules/search/search.schema'
-import type { Pagination } from '~/shared/interface/paginator.interface'
+import type { PaginationResult } from '~/processors/database/base.repository'
+import { paginationOf } from '~/processors/database/base.repository'
+import { AsyncQueue } from '~/utils/queue.util'
 
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
@@ -69,6 +71,22 @@ type RebuildStats = {
 
 const SOURCE_LANG_CACHE_LIMIT = 200
 const ARTICLE_PAGE_SIZE = 50
+// pg pool max is 20 — keep headroom for concurrent requests
+const REBUILD_WRITE_CONCURRENCY = 10
+
+async function runAllOrThrow<T>(
+  items: T[],
+  task: (item: T) => Promise<unknown>,
+) {
+  const { errors } = await AsyncQueue.runAll(
+    items,
+    task,
+    REBUILD_WRITE_CONCURRENCY,
+  )
+  if (errors.size > 0) {
+    throw errors.values().next().value
+  }
+}
 
 @Injectable()
 export class SearchService {
@@ -126,11 +144,10 @@ export class SearchService {
   private async rebuildForce(): Promise<RebuildStats> {
     const documents = await this.collectAllExpectedDocuments()
     await this.searchRepository.deleteAll()
-    let created = 0
-    for (const doc of documents) {
-      await this.searchRepository.upsert(doc as any)
-      created++
-    }
+    await runAllOrThrow(documents, (doc) =>
+      this.searchRepository.upsert(doc as any),
+    )
+    const created = documents.length
     this.logger.log(
       `rebuilt search index (force), upserted ${created} documents`,
     )
@@ -151,6 +168,7 @@ export class SearchService {
     let created = 0
     let updated = 0
     let skipped = 0
+    const toUpsert: typeof expected = []
     for (const doc of expected) {
       const key = `${doc.refType}:${doc.refId}:${doc.lang}`
       expectedKeys.add(key)
@@ -159,26 +177,29 @@ export class SearchService {
         skipped++
         continue
       }
-      await this.searchRepository.upsert(doc as any)
+      toUpsert.push(doc)
       if (prevHash === undefined) {
         created++
       } else {
         updated++
       }
     }
+    await runAllOrThrow(toUpsert, (doc) =>
+      this.searchRepository.upsert(doc as any),
+    )
 
     let deleted = 0
+    const toDelete: Array<[SearchDocumentRefType, string, string]> = []
     for (const key of existing.keys()) {
       if (expectedKeys.has(key)) continue
       const [refType, refId, lang] = key.split(':')
       if (!refType || !refId || lang === undefined) continue
-      await this.searchRepository.deleteByRef(
-        refType as SearchDocumentRefType,
-        refId,
-        lang,
-      )
+      toDelete.push([refType as SearchDocumentRefType, refId, lang])
       deleted++
     }
+    await runAllOrThrow(toDelete, ([refType, refId, lang]) =>
+      this.searchRepository.deleteByRef(refType, refId, lang),
+    )
 
     this.logger.log(
       `rebuilt search index (incremental): total=${expected.length} created=${created} updated=${updated} deleted=${deleted} skipped=${skipped}`,
@@ -200,7 +221,12 @@ export class SearchService {
   private async collectAllExpectedDocuments() {
     const docs: Array<Omit<SearchDocumentModel, 'id'>> = []
 
-    // Articles → source-language documents
+    // Articles → source-language documents; the same fetch also feeds the
+    // translation overlay below.
+    const articleCache = new Map<
+      string,
+      { article: any; refType: SearchDocumentRefType }
+    >()
     for (const refType of ['post', 'note', 'page'] as const) {
       const articles = await this.collectAllArticles(refType)
       const sourceLangs = await this.resolveSourceLangs(
@@ -211,20 +237,11 @@ export class SearchService {
         const lang =
           sourceLangs.get(article.id) ?? SEARCH_DOCUMENT_DEFAULT_SOURCE_LANG
         docs.push(buildSearchDocument(refType, article as any, lang))
+        articleCache.set(`${refType}:${article.id}`, { article, refType })
       }
     }
 
     // Translations → per-language documents (overlay article visibility)
-    const articleCache = new Map<
-      string,
-      { article: any; refType: SearchDocumentRefType }
-    >()
-    for (const refType of ['post', 'note', 'page'] as const) {
-      const articles = await this.collectAllArticles(refType)
-      for (const article of articles) {
-        articleCache.set(`${refType}:${article.id}`, { article, refType })
-      }
-    }
 
     let page = 1
 
@@ -511,7 +528,7 @@ export class SearchService {
   private async searchIndex(
     searchOption: SearchDto,
     refType: SearchDocumentRefType | undefined,
-  ): Promise<Pagination<any>> {
+  ): Promise<PaginationResult<any>> {
     const hasAdminAccess = RequestContext.hasAdminAccess()
     const { keyword, page, size } = searchOption
     const searchTerms = this.buildSearchTerms(keyword)
@@ -585,14 +602,7 @@ export class SearchService {
 
     return {
       data: output,
-      pagination: {
-        total: merged.length,
-        currentPage: page,
-        totalPage: Math.ceil(merged.length / size) || 1,
-        size,
-        hasNextPage: start + size < merged.length,
-        hasPrevPage: page > 1,
-      },
+      pagination: paginationOf(merged.length, page, size),
     }
   }
 

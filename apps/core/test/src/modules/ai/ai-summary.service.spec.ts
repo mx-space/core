@@ -7,7 +7,10 @@ import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 
 const createService = () => {
   const repository = createPgRepositoryMock<AiSummaryRepository>()
-  const databaseService = { findGlobalById: vi.fn(), findGlobalByIds: vi.fn() }
+  const databaseService = {
+    findGlobalById: vi.fn(),
+    getRefArticleMap: vi.fn().mockResolvedValue({}),
+  }
   const configService = { get: vi.fn() }
   const aiService = {}
   const aiInFlightService = {}

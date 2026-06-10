@@ -6,6 +6,7 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { paginationOf } from '~/processors/database/base.repository'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   type TaskExecuteContext,
@@ -436,14 +437,7 @@ export class AiInsightsService implements OnModuleInit {
     if (search && searchableRefIds?.length === 0) {
       return {
         data: [],
-        pagination: {
-          total: 0,
-          currentPage: page,
-          totalPage: 0,
-          size,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
+        pagination: paginationOf(0, page, size),
       }
     }
 
@@ -457,14 +451,7 @@ export class AiInsightsService implements OnModuleInit {
     if (!groupedRefIds.length) {
       return {
         data: [],
-        pagination: {
-          total: 0,
-          currentPage: page,
-          totalPage: 0,
-          size,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
+        pagination: paginationOf(0, page, size),
       }
     }
 
@@ -472,25 +459,7 @@ export class AiInsightsService implements OnModuleInit {
     const insights = this.toInsightsDocs(
       await this.aiInsightsRepository.listByRefIds(refIds),
     )
-    const articles = await this.databaseService.findGlobalByIds(refIds)
-    const articleMap: Record<
-      string,
-      { title: string; id: string; type: CollectionRefTypes }
-    > = {}
-    for (const a of articles.notes) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Note,
-      }
-    }
-    for (const a of articles.posts) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Post,
-      }
-    }
+    const articleMap = await this.databaseService.getRefArticleMap(refIds)
     const insightsByRef = insights.reduce(
       (acc, ins) => {
         ;(acc[ins.refId] ||= []).push(ins)
@@ -505,43 +474,14 @@ export class AiInsightsService implements OnModuleInit {
         return { article, insights: insightsByRef[refId] || [] }
       })
       .filter(Boolean)
-    const totalPage = Math.ceil(total / size)
     return {
       data: groupedData,
-      pagination: {
-        total,
-        currentPage: page,
-        totalPage,
-        size,
-        hasNextPage: page < totalPage,
-        hasPrevPage: page > 1,
-      },
+      pagination: paginationOf(total, page, size),
     }
   }
 
   private async getRefArticles(docs: AIInsightsModel[]) {
-    const articles = await this.databaseService.findGlobalByIds(
-      docs.map((d) => d.refId),
-    )
-    const articleMap: Record<
-      string,
-      { title: string; id: string; type: CollectionRefTypes }
-    > = {}
-    for (const a of articles.notes) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Note,
-      }
-    }
-    for (const a of articles.posts) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Post,
-      }
-    }
-    return articleMap
+    return this.databaseService.getRefArticleMap(docs.map((d) => d.refId))
   }
 
   async updateInsightsInDb(id: string, content: string) {

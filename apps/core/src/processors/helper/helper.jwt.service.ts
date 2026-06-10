@@ -100,10 +100,11 @@ export class JWTService {
 
     const allMd5Tokens = await redis.hkeys(key)
     const excludedMd5Tokens = new Set(excludeTokens.map((t) => md5(t)))
-    for (const md5Token of allMd5Tokens) {
-      if (!excludedMd5Tokens.has(md5Token)) {
-        await redis.hdel(key, md5Token)
-      }
+    const fieldsToDelete = allMd5Tokens.filter(
+      (md5Token) => !excludedMd5Tokens.has(md5Token),
+    )
+    if (fieldsToDelete.length > 0) {
+      await redis.hdel(key, ...fieldsToDelete)
     }
   }
 

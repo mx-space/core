@@ -922,32 +922,10 @@ export type ConfigSchemaMapping = typeof configSchemaMapping
 export type ConfigKeys = keyof ConfigSchemaMapping
 
 // ==================== Full Config Schema ====================
-export const FullConfigSchema = withMeta(
-  z.object({
-    url: UrlSchema,
-    seo: SeoSchema,
-    adminExtra: AdminExtraSchema,
-    mailOptions: MailOptionsSchema,
-    commentOptions: CommentOptionsSchema,
-    barkOptions: BarkOptionsSchema,
-    friendLinkOptions: FriendLinkOptionsSchema,
-    backupOptions: BackupOptionsSchema,
-    imageStorageOptions: ImageStorageOptionsSchema,
-    fileUploadOptions: FileUploadOptionsSchema,
-    commentUploadOptions: CommentUploadOptionsSchema,
-    baiduSearchOptions: BaiduSearchOptionsSchema,
-    bingSearchOptions: BingSearchOptionsSchema,
-    featureList: FeatureListSchema,
-    thirdPartyServiceIntegration: ThirdPartyServiceIntegrationSchema,
-    authSecurity: AuthSecuritySchema,
-    ai: AISchema,
-    oauth: OAuthSchema,
-  }),
-  {
-    title: 'Settings',
-    description:
-      '* Sensitive fields are hidden; the backend does not return them by default, so they appear empty',
-  },
-)
+export const FullConfigSchema = withMeta(z.object(configSchemaMapping), {
+  title: 'Settings',
+  description:
+    '* Sensitive fields are hidden; the backend does not return them by default, so they appear empty',
+})
 
 export type FullConfig = z.infer<typeof FullConfigSchema>

@@ -6,6 +6,7 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { paginationOf } from '~/processors/database/base.repository'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   type TaskExecuteContext,
@@ -468,14 +469,7 @@ export class AiSummaryService implements OnModuleInit {
     if (search && searchableRefIds?.length === 0) {
       return {
         data: [],
-        pagination: {
-          total: 0,
-          currentPage: page,
-          totalPage: 0,
-          size,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
+        pagination: paginationOf(0, page, size),
       }
     }
 
@@ -490,14 +484,7 @@ export class AiSummaryService implements OnModuleInit {
     if (groupedRefIds.length === 0) {
       return {
         data: [],
-        pagination: {
-          total: 0,
-          currentPage: page,
-          totalPage: 0,
-          size,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
+        pagination: paginationOf(0, page, size),
       }
     }
 
@@ -508,25 +495,7 @@ export class AiSummaryService implements OnModuleInit {
     )
 
     // Get article info
-    const articles = await this.databaseService.findGlobalByIds(refIds)
-    const articleMap = {} as Record<
-      string,
-      { title: string; id: string; type: CollectionRefTypes }
-    >
-    for (const a of articles.notes) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Note,
-      }
-    }
-    for (const a of articles.posts) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Post,
-      }
-    }
+    const articleMap = await this.databaseService.getRefArticleMap(refIds)
 
     // Group summaries by refId
     const summariesByRefId = summaries.reduce(
@@ -552,44 +521,14 @@ export class AiSummaryService implements OnModuleInit {
       })
       .filter(Boolean)
 
-    const totalPage = Math.ceil(total / size)
-
     return {
       data: groupedData,
-      pagination: {
-        total,
-        currentPage: page,
-        totalPage,
-        size,
-        hasNextPage: page < totalPage,
-        hasPrevPage: page > 1,
-      },
+      pagination: paginationOf(total, page, size),
     }
   }
 
   private async getRefArticles(docs: AISummaryModel[]) {
-    const articles = await this.databaseService.findGlobalByIds(
-      docs.map((d) => d.refId),
-    )
-    const articleMap = {} as Record<
-      string,
-      { title: string; id: string; type: CollectionRefTypes }
-    >
-    for (const a of articles.notes) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Note,
-      }
-    }
-    for (const a_1 of articles.posts) {
-      articleMap[a_1.id] = {
-        title: a_1.title,
-        id: a_1.id,
-        type: CollectionRefTypes.Post,
-      }
-    }
-    return articleMap
+    return this.databaseService.getRefArticleMap(docs.map((d) => d.refId))
   }
 
   async updateSummaryInDb(id: string, summary: string) {

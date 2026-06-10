@@ -24,9 +24,23 @@ describe('ai-language.util', () => {
       expect(parseLanguageCode('zh')).toBe('zh')
     })
 
-    it('should return default when empty or undefined', () => {
+    it('should remap legacy aliases to canonical codes', () => {
+      expect(parseLanguageCode('jp')).toBe('ja')
+      expect(parseLanguageCode('cn')).toBe('zh')
+      expect(parseLanguageCode('kr')).toBe('ko')
+    })
+
+    it('should pass through unknown but valid base codes', () => {
+      expect(parseLanguageCode('fil')).toBe('fil')
+      expect(parseLanguageCode('yue')).toBe('yue')
+      expect(parseLanguageCode('FIL-PH')).toBe('fil')
+    })
+
+    it('should return default when empty, garbage, or undefined', () => {
       expect(parseLanguageCode('')).toBe('zh')
       expect(parseLanguageCode(undefined)).toBe('zh')
+      expect(parseLanguageCode('1234')).toBe('zh')
+      expect(parseLanguageCode('not a lang')).toBe('zh')
     })
 
     it('should convert to lowercase', () => {

@@ -180,19 +180,20 @@ export class NoteController {
       throw createAppException(AppErrorCode.NOTE_FORBIDDEN)
     }
 
-    const liked = await this.countingService
-      .getThisRecordIsLiked(current.id!, ip)
-      .catch(() => false)
-
-    const translationResult = await this.translationService.translateArticle({
-      articleId: current.id!,
-      targetLang: lang,
-      allowHidden: Boolean(isAuthenticated || current.password),
-      originalData: {
-        title: current.title,
-        text: current.text,
-      },
-    })
+    const [liked, translationResult] = await Promise.all([
+      this.countingService
+        .getThisRecordIsLiked(current.id!, ip)
+        .catch(() => false),
+      this.translationService.translateArticle({
+        articleId: current.id!,
+        targetLang: lang,
+        allowHidden: Boolean(isAuthenticated || current.password),
+        originalData: {
+          title: current.title,
+          text: current.text,
+        },
+      }),
+    ])
 
     applyArticleTranslationInPlace(current, translationResult)
 
@@ -364,14 +365,26 @@ export class NoteController {
       }
     }
 
-    const { results: translationResults, meta: translationMeta } =
-      await this.translationService.collectArticleTranslations({
+    const [
+      { results: translationResults, meta: translationMeta },
+      summaryMap,
+      entryMaps,
+    ] = await Promise.all([
+      this.translationService.collectArticleTranslations({
         articles: result.data
           .filter((doc) => typeof doc.text === 'string')
           .map((doc) => this.toArticleTranslationInput(doc)),
         targetLang: lang,
         fields: ['title', 'text', 'content', 'contentFormat'],
-      })
+      }),
+      withSummary
+        ? this.aiSummaryService.batchGetSummariesByRefIds(
+            result.data.map((d) => d.id),
+            lang || DEFAULT_SUMMARY_LANG,
+          )
+        : null,
+      lang ? this.batchEntryTranslations(lang, result.data) : null,
+    ])
 
     for (const doc of result.data) {
       const tr = translationResults.get(String(doc.id))
@@ -380,13 +393,8 @@ export class NoteController {
       }
     }
 
-    if (withSummary) {
+    if (summaryMap) {
       const SUMMARY_MAX_LENGTH = 150
-      const ids = result.data.map((d) => d.id)
-      const summaryMap = await this.aiSummaryService.batchGetSummariesByRefIds(
-        ids,
-        lang || DEFAULT_SUMMARY_LANG,
-      )
       for (const doc of result.data) {
         const plain = doc as any
         plain.summary =
@@ -398,8 +406,7 @@ export class NoteController {
       }
     }
 
-    if (lang) {
-      const entryMaps = await this.batchEntryTranslations(lang, result.data)
+    if (entryMaps) {
       for (const doc of result.data) {
         applyTranslationEntriesInPlace(doc, entryMaps, NOTE_ENTRY_RULES)
       }

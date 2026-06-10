@@ -1,6 +1,5 @@
-import dayjs from 'dayjs'
-
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { isNoteSecret } from '~/utils/biz.util'
 import { computeContentHash as computeContentHashUtil } from '~/utils/content.util'
 
 import type { NoteModel } from '../../note/note.types'
@@ -76,9 +75,7 @@ export abstract class BaseTranslationService {
       const document = article.document
       if (document.isPublished === false) return false
       if (document.password) return false
-      if (document.publicAt && dayjs(document.publicAt).isAfter(new Date())) {
-        return false
-      }
+      if (isNoteSecret(document)) return false
       return true
     }
 

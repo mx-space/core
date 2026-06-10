@@ -52,6 +52,22 @@ export function toDbIdOrNull(
   return parseEntityId(value)
 }
 
+export function paginationOf(
+  total: number,
+  page: number,
+  size: number,
+): PaginationResult<never>['pagination'] {
+  const totalPage = Math.max(1, Math.ceil(total / size))
+  return {
+    currentPage: page,
+    totalPage,
+    total,
+    size,
+    hasNextPage: page < totalPage,
+    hasPrevPage: page > 1,
+  }
+}
+
 /**
  * Common base for PostgreSQL-backed repositories. Subclasses receive the
  * shared drizzle handle through DI and use the helpers above to validate
@@ -64,19 +80,5 @@ export abstract class BaseRepository {
   protected toDbIdOrNull = toDbIdOrNull
   protected toEntityId = toEntityId
 
-  protected paginationOf(
-    total: number,
-    page: number,
-    size: number,
-  ): PaginationResult<never>['pagination'] {
-    const totalPage = Math.max(1, Math.ceil(total / size))
-    return {
-      currentPage: page,
-      totalPage,
-      total,
-      size,
-      hasNextPage: page < totalPage,
-      hasPrevPage: page > 1,
-    }
-  }
+  protected paginationOf = paginationOf
 }

@@ -1,4 +1,11 @@
+import dayjs from 'dayjs'
+
 import { CollectionRefTypes } from '~/constants/db.constant'
+
+export const isNoteSecret = (note: { publicAt?: Date | null }): boolean => {
+  if (!note.publicAt) return false
+  return dayjs(note.publicAt).isAfter(new Date())
+}
 
 export const checkRefModelCollectionType = (ref: any) => {
   if (!ref && typeof ref !== 'object')

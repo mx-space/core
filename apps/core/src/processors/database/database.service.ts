@@ -11,6 +11,30 @@ import { RecentlyRepository } from '~/modules/recently/recently.repository'
 import type { RecentlyRow } from '~/modules/recently/recently.types'
 import { isEntityIdString, parseEntityId } from '~/shared/id/entity-id'
 
+export type RefArticleInfo = {
+  id: string
+  title: string
+  type: CollectionRefTypes
+}
+
+export const buildRefArticleMap = (articles: {
+  posts: Array<{ id: string; title: string }>
+  notes: Array<{ id: string; title: string }>
+  pages: Array<{ id: string; title: string }>
+}): Record<string, RefArticleInfo> => {
+  const map: Record<string, RefArticleInfo> = {}
+  for (const a of articles.posts) {
+    map[a.id] = { id: a.id, title: a.title, type: CollectionRefTypes.Post }
+  }
+  for (const a of articles.notes) {
+    map[a.id] = { id: a.id, title: a.title, type: CollectionRefTypes.Note }
+  }
+  for (const a of articles.pages) {
+    map[a.id] = { id: a.id, title: a.title, type: CollectionRefTypes.Page }
+  }
+  return map
+}
+
 type GlobalDocumentResult =
   | { document: PostRow; type: CollectionRefTypes.Post }
   | { document: NoteRow; type: CollectionRefTypes.Note }
@@ -63,6 +87,13 @@ export class DatabaseService {
       pages,
       recentlies,
     }
+  }
+
+  public async getRefArticleMap(
+    refIds: string[],
+  ): Promise<Record<string, RefArticleInfo>> {
+    const { posts, notes, pages } = await this.findGlobalByIds(refIds)
+    return buildRefArticleMap({ posts, notes, pages })
   }
 
   public findPostBySlug(slug: string) {

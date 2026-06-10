@@ -1,9 +1,4 @@
-import {
-  execSync,
-  type ExecSyncOptions,
-  spawn,
-  type SpawnOptions,
-} from 'node:child_process'
+import { spawn, type SpawnOptions } from 'node:child_process'
 
 export interface ShellResult {
   stdout: string
@@ -78,18 +73,4 @@ export async function $throw(
     throw error
   }
   return result
-}
-
-/**
- * Execute a shell command synchronously
- */
-export function $sync(command: string, options?: ExecSyncOptions): string {
-  return execSync(command, { encoding: 'utf-8', ...options }) as string
-}
-
-/**
- * Sleep for a specified number of milliseconds
- */
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }

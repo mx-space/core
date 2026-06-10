@@ -61,7 +61,7 @@ export const MultiCategoriesQuerySchema = z.object({
         return [...new Set(val.split(','))]
       }
       return val
-    }, z.array(zEntityId))
+    }, z.array(zEntityId).max(50))
     .optional(),
   joint: zCoerceBoolean.optional(),
   type: z

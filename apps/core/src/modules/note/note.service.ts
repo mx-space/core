@@ -1,7 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
-import dayjs from 'dayjs'
 import { debounce, omit } from 'es-toolkit/compat'
-import slugify from 'slugify'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { ArticleTypeEnum } from '~/constants/article.constant'
@@ -15,8 +13,10 @@ import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import type { EntityId } from '~/shared/id/entity-id'
 import { ContentFormat } from '~/shared/types/content-format.type'
+import { isNoteSecret } from '~/utils/biz.util'
 import { isLexical } from '~/utils/content.util'
 import { scheduleManager } from '~/utils/schedule.util'
+import { normalizeSlug } from '~/utils/slug.util'
 import { getLessThanNow } from '~/utils/time.util'
 import { isDefined } from '~/utils/validator.util'
 
@@ -81,14 +81,11 @@ export class NoteService {
   }
 
   public checkNoteIsSecret(note: { publicAt?: Date | null }) {
-    if (!note.publicAt) return false
-    return dayjs(note.publicAt).isAfter(new Date())
+    return isNoteSecret(note)
   }
 
   private normalizeSlug(slug?: string | null) {
-    if (!slug) return undefined
-    const normalized = slugify(slug, { lower: true, strict: true, trim: true })
-    return normalized || undefined
+    return normalizeSlug(slug)
   }
 
   private getDateRange(year: number, month: number, day: number) {

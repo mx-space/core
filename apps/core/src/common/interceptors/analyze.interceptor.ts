@@ -51,9 +51,9 @@ export class AnalyzeInterceptor implements NestInterceptor {
       return call$
     }
 
-    const shouldSkipLogging = this.reflector.get(
+    const shouldSkipLogging = this.reflector.getAllAndOverride(
       SYSTEM.SKIP_LOGGING_METADATA,
-      context.getHandler(),
+      [context.getHandler(), context.getClass()],
     )
     if (shouldSkipLogging) return call$
 
@@ -72,10 +72,6 @@ export class AnalyzeInterceptor implements NestInterceptor {
     }
 
     const url = request.url.replace(/^\/api(\/v\d)?/, '')
-
-    if (url.startsWith('/proxy')) {
-      return call$
-    }
 
     scheduleManager.schedule(async () => {
       try {

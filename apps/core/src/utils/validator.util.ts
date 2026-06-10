@@ -40,19 +40,6 @@ export function isURL(
 }
 
 /**
- * Check if value is a valid JWT token format
- * JWT consists of three base64url-encoded parts separated by dots
- */
-export function isJWT(value: unknown): boolean {
-  if (typeof value !== 'string') return false
-  const parts = value.split('.')
-  if (parts.length !== 3) return false
-  // Check if each part is valid base64url
-  const base64urlRegex = /^[\w-]*$/
-  return parts.every((part) => base64urlRegex.test(part) && part.length > 0)
-}
-
-/**
  * Check if value is a valid semver version
  */
 export function isSemVer(value: unknown): boolean {

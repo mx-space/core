@@ -58,25 +58,22 @@ export class AiTranslationEventHandlerService {
     await this.aiTranslationService.deleteTranslationsByRefId(id)
   }
 
-  @OnEvent(BusinessEvents.POST_CREATE)
-  @OnEvent(BusinessEvents.NOTE_CREATE)
-  @OnEvent(BusinessEvents.PAGE_CREATE)
-  async handleCreateArticle(event: ArticleEventPayload) {
+  private async resolveAutoTranslationContext(event: ArticleEventPayload) {
     const aiConfig = await this.configService.get('ai')
 
     if (
       !aiConfig.enableAutoGenerateTranslation ||
       !aiConfig.enableTranslation
     ) {
-      return
+      return null
     }
 
     const id = this.aiTranslationService.extractIdFromEvent(event)
-    if (!id) return
+    if (!id) return null
 
     const article = await this.databaseService.findGlobalById(id)
     if (!article || !this.aiTranslationService.isArticleVisible(article)) {
-      return
+      return null
     }
 
     const targetLanguages = resolveTargetLanguages(
@@ -84,8 +81,19 @@ export class AiTranslationEventHandlerService {
       aiConfig.translationTargetLanguages,
     )
     if (!targetLanguages.length) {
-      return
+      return null
     }
+
+    return { id, article, targetLanguages }
+  }
+
+  @OnEvent(BusinessEvents.POST_CREATE)
+  @OnEvent(BusinessEvents.NOTE_CREATE)
+  @OnEvent(BusinessEvents.PAGE_CREATE)
+  async handleCreateArticle(event: ArticleEventPayload) {
+    const context = await this.resolveAutoTranslationContext(event)
+    if (!context) return
+    const { id, targetLanguages } = context
 
     await this.aiTranslationService.cancelActiveTranslationTasks(id)
 
@@ -102,29 +110,9 @@ export class AiTranslationEventHandlerService {
   @OnEvent(BusinessEvents.NOTE_UPDATE)
   @OnEvent(BusinessEvents.PAGE_UPDATE)
   async handleUpdateArticle(event: ArticleEventPayload) {
-    const aiConfig = await this.configService.get('ai')
-    if (
-      !aiConfig.enableAutoGenerateTranslation ||
-      !aiConfig.enableTranslation
-    ) {
-      return
-    }
-
-    const id = this.aiTranslationService.extractIdFromEvent(event)
-    if (!id) return
-
-    const article = await this.databaseService.findGlobalById(id)
-    if (!article || !this.aiTranslationService.isArticleVisible(article)) {
-      return
-    }
-
-    const targetLanguages = resolveTargetLanguages(
-      undefined,
-      aiConfig.translationTargetLanguages,
-    )
-    if (!targetLanguages.length) {
-      return
-    }
+    const context = await this.resolveAutoTranslationContext(event)
+    if (!context) return
+    const { id, article, targetLanguages } = context
 
     const existingTranslations =
       await this.aiTranslationRepository.listByRefId(id)

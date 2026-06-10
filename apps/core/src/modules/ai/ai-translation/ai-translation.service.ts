@@ -5,7 +5,11 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { DatabaseService } from '~/processors/database/database.service'
+import { paginationOf } from '~/processors/database/base.repository'
+import {
+  buildRefArticleMap,
+  DatabaseService,
+} from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import {
@@ -314,32 +318,20 @@ export class AiTranslationService
     )
 
     // Fetch article info for all refIds
-    const articles = await this.databaseService.findGlobalByIds(refIds)
-    const articleMap = this.mapArticlesByRefId(articles)
+    const articleMap = await this.databaseService.getRefArticleMap(refIds)
 
     const createdTaskIds: string[] = []
 
     for (const refId of refIds) {
       this.checkAborted(context)
 
-      const articleInfo = articleMap.get(refId)
-      const taskPayload: TranslationTaskPayload = {
+      const articleInfo = articleMap[refId]
+      const result = await this.createTranslationSubTask(
         refId,
         targetLanguages,
-        title: articleInfo?.title,
-        refType: articleInfo?.type,
-      }
-
-      const dedupKey = computeAITaskDedupKey(
-        AITaskType.Translation,
-        taskPayload,
+        articleInfo,
+        context.taskId,
       )
-      const result = await this.aiTaskService.crud.createTask({
-        type: AITaskType.Translation,
-        payload: taskPayload as unknown as Record<string, unknown>,
-        dedupKey,
-        groupId: context.taskId,
-      })
 
       if (result.created) {
         createdTaskIds.push(result.taskId)
@@ -390,9 +382,9 @@ export class AiTranslationService
     const { posts, notes, pages } =
       await this.databaseService.findAllArticlesForTranslation()
 
-    const articleMap = this.mapArticlesByRefId({ posts, notes, pages })
+    const articleMap = buildRefArticleMap({ posts, notes, pages })
 
-    const allArticleIds = Array.from(articleMap.keys())
+    const allArticleIds = Object.keys(articleMap)
     const total = allArticleIds.length
 
     if (total === 0) {
@@ -418,26 +410,14 @@ export class AiTranslationService
       this.checkAborted(context)
 
       const refId = allArticleIds[i]
-      const articleInfo = articleMap.get(refId)
+      const articleInfo = articleMap[refId]
 
-      const taskPayload: TranslationTaskPayload = {
+      const result = await this.createTranslationSubTask(
         refId,
-        targetLanguages: languages,
-        title: articleInfo?.title,
-        refType: articleInfo?.type,
-      }
-
-      const dedupKey = computeAITaskDedupKey(
-        AITaskType.Translation,
-        taskPayload,
+        languages,
+        articleInfo,
+        context.taskId,
       )
-      const result = await this.aiTaskService.crud.createTask({
-        type: AITaskType.Translation,
-        payload: taskPayload as unknown as Record<string, unknown>,
-        dedupKey,
-        groupId: context.taskId,
-      })
-
       if (result.created) {
         createdTaskIds.push(result.taskId)
       }
@@ -467,25 +447,26 @@ export class AiTranslationService
     )
   }
 
-  // Article ref-type is normalized to `CollectionRefTypes` enum values
-  // everywhere (post/note/page collection names), avoiding 'Post'/'Note'/'Page'
-  // string literals that previously diverged from the enum form.
-  private mapArticlesByRefId(articles: {
-    posts: Array<{ id: string; title: string }>
-    notes: Array<{ id: string; title: string }>
-    pages: Array<{ id: string; title: string }>
-  }): Map<string, { title: string; type: CollectionRefTypes }> {
-    const map = new Map<string, { title: string; type: CollectionRefTypes }>()
-    for (const post of articles.posts) {
-      map.set(post.id, { title: post.title, type: CollectionRefTypes.Post })
+  private async createTranslationSubTask(
+    refId: string,
+    targetLanguages: string[] | undefined,
+    articleInfo: { title: string; type: CollectionRefTypes } | undefined,
+    groupId: string,
+  ) {
+    const taskPayload: TranslationTaskPayload = {
+      refId,
+      targetLanguages,
+      title: articleInfo?.title,
+      refType: articleInfo?.type,
     }
-    for (const note of articles.notes) {
-      map.set(note.id, { title: note.title, type: CollectionRefTypes.Note })
-    }
-    for (const page of articles.pages) {
-      map.set(page.id, { title: page.title, type: CollectionRefTypes.Page })
-    }
-    return map
+
+    const dedupKey = computeAITaskDedupKey(AITaskType.Translation, taskPayload)
+    return this.aiTaskService.crud.createTask({
+      type: AITaskType.Translation,
+      payload: taskPayload as unknown as Record<string, unknown>,
+      dedupKey,
+      groupId,
+    })
   }
 
   private checkAborted(context: TaskExecuteContext) {
@@ -990,24 +971,15 @@ export class AiTranslationService
     if (grouped.data.length === 0) {
       return {
         data: [],
-        pagination: {
-          total: grouped.pagination.total,
-          currentPage: page,
-          totalPage: 0,
-          size,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
+        pagination: paginationOf(grouped.pagination.total, page, size),
       }
     }
 
     const refIds = grouped.data.map((g) => g.refId as string)
-    const [translations, articles] = await Promise.all([
+    const [translations, articleMap] = await Promise.all([
       this.aiTranslationRepository.listByRefIds(refIds),
-      this.databaseService.findGlobalByIds(refIds),
+      this.databaseService.getRefArticleMap(refIds),
     ])
-
-    const articleMap = this.mapArticlesByRefId(articles)
 
     const translationsByRefId = translations.reduce(
       (acc, trans) => {
@@ -1022,10 +994,10 @@ export class AiTranslationService
 
     const groupedData = refIds
       .map((refId) => {
-        const info = articleMap.get(refId)
+        const info = articleMap[refId]
         if (!info) return null
         return {
-          article: { id: refId, title: info.title, type: info.type },
+          article: info,
           translations: translationsByRefId[refId] || [],
         }
       })
@@ -1112,15 +1084,11 @@ export class AiTranslationService
     }
   }
 
-  async getTranslationForArticle(
+  private async loadVisibleArticleOrThrow(
     articleId: string,
-    targetLang: string,
     options?: { ignoreVisibility?: boolean },
-  ): Promise<AITranslationModel | null> {
-    const [article, translation] = await Promise.all([
-      this.databaseService.findGlobalById(articleId),
-      this.aiTranslationRepository.findByRefAndLang(articleId, targetLang),
-    ])
+  ) {
+    const article = await this.databaseService.findGlobalById(articleId)
     if (!article || !article.document) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, {
         id: articleId,
@@ -1134,7 +1102,18 @@ export class AiTranslationService
       throw createAppException(AppErrorCode.NOTE_FORBIDDEN)
     }
 
-    const document = article.document as ArticleDocument
+    return { article, document: article.document as ArticleDocument }
+  }
+
+  async getTranslationForArticle(
+    articleId: string,
+    targetLang: string,
+    options?: { ignoreVisibility?: boolean },
+  ): Promise<AITranslationModel | null> {
+    const [{ document }, translation] = await Promise.all([
+      this.loadVisibleArticleOrThrow(articleId, options),
+      this.aiTranslationRepository.findByRefAndLang(articleId, targetLang),
+    ])
 
     if (!translation) {
       return null
@@ -1279,24 +1258,10 @@ export class AiTranslationService
     sourceLang: string | null
     translation: AITranslationModel | null
   }> {
-    const [article, translations] = await Promise.all([
-      this.databaseService.findGlobalById(articleId),
+    const [{ document }, translations] = await Promise.all([
+      this.loadVisibleArticleOrThrow(articleId, options),
       this.aiTranslationRepository.listByRefId(articleId),
     ])
-    if (!article || !article.document) {
-      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, {
-        id: articleId,
-      })
-    }
-
-    if (!options?.ignoreVisibility && !this.isArticleVisible(article)) {
-      if (article.type === CollectionRefTypes.Post) {
-        throw createAppException(AppErrorCode.POST_HIDDEN_OR_ENCRYPTED)
-      }
-      throw createAppException(AppErrorCode.NOTE_FORBIDDEN)
-    }
-
-    const document = article.document as ArticleDocument
 
     if (!translations.length) {
       return { availableTranslations: [], sourceLang: null, translation: null }

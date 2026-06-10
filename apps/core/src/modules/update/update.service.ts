@@ -11,6 +11,7 @@ import { Observable, ReplaySubject } from 'rxjs'
 
 import { ADMIN_UPDATE } from '~/app.config'
 import { RedisService } from '~/processors/redis/redis.service'
+import { sleep } from '~/utils/tool.util'
 
 import { UpdateDownloadService } from './update-download.service'
 import { UpdateInstallService } from './update-install.service'
@@ -488,7 +489,7 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
       if (Date.now() - startAt > this.INSTALL_LOCK_TTL_SEC * 1000) {
         throw new Error('Install lock acquisition timeout')
       }
-      await this.sleep(500)
+      await sleep(500)
     }
   }
 
@@ -555,9 +556,5 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
         cause: error,
       })
     }
-  }
-
-  private sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
