@@ -1,5 +1,4 @@
 import type { ReadingRankItem } from '~/api/activity'
-
 import { useI18n } from '~/i18n'
 import { cn } from '~/utils/cn'
 

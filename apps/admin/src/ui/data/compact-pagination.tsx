@@ -52,17 +52,21 @@ export function CompactPagination(props: CompactPaginationProps) {
         <ChevronRight aria-hidden="true" className="size-3.5" />
       </button>
 
-      <SelectField
-        aria-label={t('common.pagination.pageSize', { count: props.pageSize })}
-        onValueChange={props.onPageSizeChange}
-        options={pageSizes.map((size) => ({
-          label: t('common.pagination.pageSize', { count: size }),
-          value: size,
-        }))}
-        popupClassName="text-xs"
-        triggerClassName="ml-1 h-auto w-auto border-0 bg-transparent px-1.5 py-0.5 text-xs tabular-nums hover:bg-neutral-100 dark:bg-transparent dark:hover:bg-neutral-800"
-        value={props.pageSize}
-      />
+      {pageSizes.length > 1 ? (
+        <SelectField
+          aria-label={t('common.pagination.pageSize', {
+            count: props.pageSize,
+          })}
+          onValueChange={props.onPageSizeChange}
+          options={pageSizes.map((size) => ({
+            label: t('common.pagination.pageSize', { count: size }),
+            value: size,
+          }))}
+          popupClassName="text-xs"
+          triggerClassName="ml-1 h-auto w-auto border-0 bg-transparent px-1.5 py-0.5 text-xs tabular-nums hover:bg-neutral-100 dark:bg-transparent dark:hover:bg-neutral-800"
+          value={props.pageSize}
+        />
+      ) : null}
     </div>
   )
 }

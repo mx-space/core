@@ -3,12 +3,13 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query'
-import { Loader2, RefreshCw, Trash2 } from 'lucide-react'
+import { Loader2, RefreshCw, Table2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deleteAllAnalyzeRecords } from '~/api/analyze'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
+import { SegmentedControl } from '~/ui/primitives/segmented-control'
 import { cn } from '~/utils/cn'
 
 import { analyzeQueryKey } from '../../constants'
@@ -16,8 +17,9 @@ import type { TimeRange } from '../../types/analyze'
 import { getErrorMessage } from '../../utils/analyze'
 
 export function AnalyzeActions(props: {
-  range: TimeRange
+  onOpenRecords: () => void
   onRangeChange: (next: TimeRange) => void
+  range: TimeRange
 }) {
   const { t } = useI18n()
   const queryClient = useQueryClient()
@@ -36,29 +38,26 @@ export function AnalyzeActions(props: {
   })
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex rounded-sm border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-950">
-        {(
-          [
-            ['today', t('analyze.timeRange.today')],
-            ['7d', t('analyze.timeRange.week')],
-            ['30d', t('analyze.timeRange.month')],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            className={cn(
-              'h-8 rounded-xs px-3 text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-neutral-50',
-              props.range === value &&
-                'bg-neutral-950 text-white hover:text-white dark:bg-neutral-50 dark:text-neutral-950 dark:hover:text-neutral-950',
-            )}
-            key={value}
-            onClick={() => props.onRangeChange(value)}
-            type="button"
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-wrap items-center gap-2">
+      <SegmentedControl
+        aria-label={t('analyze.trend.title')}
+        onValueChange={props.onRangeChange}
+        options={[
+          { label: t('analyze.timeRange.today'), value: 'today' },
+          { label: t('analyze.timeRange.week'), value: '7d' },
+          { label: t('analyze.timeRange.month'), value: '30d' },
+        ]}
+        value={props.range}
+      />
+      <Button
+        className="text-xs"
+        onClick={props.onOpenRecords}
+        type="button"
+        variant="subtle"
+      >
+        <Table2 aria-hidden="true" className="size-3.5" />
+        {t('analyze.records.title')}
+      </Button>
       <Button
         className="text-xs"
         disabled={isAnyFetching}

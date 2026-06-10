@@ -1,5 +1,6 @@
 import type { DeviceDistributionResponse, IPAggregate } from '~/api/analyze'
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
+
 import type {
   ActivityListResponseObjects,
   AnalyzePeriod,
@@ -83,19 +84,6 @@ export function formatMonthDate(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return `${date.getMonth() + 1}/${date.getDate()}`
-}
-
-export function formatDateTime(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  return new Intl.DateTimeFormat('zh-CN', {
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(date)
 }
 
 export function formatNumber(value?: number) {

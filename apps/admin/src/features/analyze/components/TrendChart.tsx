@@ -1,7 +1,6 @@
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import type { ChartConfig } from '~/ui/data/chart'
-import type { TrendPoint } from '../types/analyze'
 
+import type { ChartConfig } from '~/ui/data/chart'
 import {
   ChartContainer,
   ChartLegend,
@@ -9,6 +8,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '~/ui/data/chart'
+
+import type { TrendPoint } from '../types/analyze'
 
 const chartConfig = {
   pv: {

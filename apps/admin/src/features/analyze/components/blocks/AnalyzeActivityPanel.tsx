@@ -7,7 +7,7 @@ import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { Panel } from '~/ui/primitives/panel'
-import { cn } from '~/utils/cn'
+import { SegmentedControl } from '~/ui/primitives/segmented-control'
 
 import { activityPageSize } from '../../constants'
 import { buildRefObjectMap } from '../../utils/analyze'
@@ -49,30 +49,24 @@ export function AnalyzeActivityPanel() {
             <Heart aria-hidden="true" className="size-4" />
             {t('analyze.activity.title')}
           </span>
-          <div className="flex rounded-sm border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-950">
-            {(
-              [
-                [ActivityType.Like, t('analyze.activity.likeRecord')],
-                [ActivityType.ReadDuration, t('analyze.activity.readRecord')],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                className={cn(
-                  'h-8 rounded-xs px-3 text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-neutral-50',
-                  activityType === value &&
-                    'bg-neutral-950 text-white hover:text-white dark:bg-neutral-50 dark:text-neutral-950 dark:hover:text-neutral-950',
-                )}
-                key={value}
-                onClick={() => {
-                  setActivityType(value)
-                  setActivityPage(1)
-                }}
-                type="button"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            aria-label={t('analyze.activity.title')}
+            onValueChange={(value) => {
+              setActivityType(Number(value) as ActivityType)
+              setActivityPage(1)
+            }}
+            options={[
+              {
+                label: t('analyze.activity.likeRecord'),
+                value: String(ActivityType.Like),
+              },
+              {
+                label: t('analyze.activity.readRecord'),
+                value: String(ActivityType.ReadDuration),
+              },
+            ]}
+            value={String(activityType)}
+          />
         </div>
       }
     >

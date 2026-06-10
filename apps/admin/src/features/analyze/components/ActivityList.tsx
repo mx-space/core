@@ -1,9 +1,9 @@
 import { Heart, Timer } from 'lucide-react'
-import type { ActivityItem } from '~/api/activity'
-import type { ActivityReadDurationType } from '~/models/activity'
 
+import type { ActivityItem } from '~/api/activity'
 import { ActivityType } from '~/api/activity'
 import { useI18n } from '~/i18n'
+import type { ActivityReadDurationType } from '~/models/activity'
 import { relativeTimeFromNow } from '~/utils/time'
 
 import { formatDuration } from '../utils/analyze'
@@ -42,27 +42,25 @@ function LikeActivityRow(props: { item: ActivityItem }) {
   const title = props.item.ref?.title ?? t('analyze.likedContent.deleted')
 
   return (
-    <article className="px-4 py-3">
-      <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-1.5 rounded bg-red-50 px-2 py-1 text-xs font-medium text-red-600 dark:bg-red-950/40 dark:text-red-400">
-          <Heart aria-hidden="true" className="size-3.5" />
-          {t('analyze.activity.like')}
-        </span>
-        <time
-          className="text-xs text-neutral-400"
-          dateTime={props.item.createdAt}
-        >
-          {relativeTimeFromNow(props.item.createdAt)}
-        </time>
-      </div>
-      <div className="mt-3">
+    <article className="flex items-center gap-3 px-4 py-2.5">
+      <Heart
+        aria-label={t('analyze.activity.like')}
+        className="size-3.5 shrink-0 text-red-500"
+      />
+      <div className="min-w-0 flex-1">
         <ReferenceButton id={refId} title={title} />
       </div>
       {props.item.payload.ip ? (
-        <div className="mt-2">
+        <span className="phone:hidden shrink-0">
           <IpInfoButton ip={props.item.payload.ip} />
-        </div>
+        </span>
       ) : null}
+      <time
+        className="shrink-0 text-xs text-fg-subtle"
+        dateTime={props.item.createdAt}
+      >
+        {relativeTimeFromNow(props.item.createdAt)}
+      </time>
     </article>
   )
 }
@@ -74,62 +72,44 @@ function ReadDurationActivityRow(props: {
   const { t } = useI18n()
   const durationMs =
     props.item.payload.operationTime - props.item.payload.connectedAt
-  const durationPercent = Math.min(Math.max(durationMs / 3_600_000, 0), 1) * 100
   const title = props.refObject?.title ?? t('analyze.activity.unknownContent')
+  const visitor = props.item.payload.displayName || props.item.payload.identity
 
   return (
-    <article className="px-4 py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
-            <Timer aria-hidden="true" className="size-3.5" />
-            {t('analyze.activity.read')}
-          </span>
-          {props.item.payload.displayName || props.item.payload.identity ? (
-            <span className="truncate text-xs text-neutral-500 dark:text-neutral-400">
-              {props.item.payload.displayName || props.item.payload.identity}
-            </span>
-          ) : null}
-        </div>
-        <time
-          className="shrink-0 text-xs text-neutral-400"
-          dateTime={props.item.createdAt}
-        >
-          {relativeTimeFromNow(props.item.createdAt)}
-        </time>
-      </div>
-
-      <div className="mt-3">
+    <article className="flex items-center gap-3 px-4 py-2.5">
+      <Timer
+        aria-label={t('analyze.activity.read')}
+        className="size-3.5 shrink-0 text-blue-500"
+      />
+      <div className="min-w-0 flex-1">
         <ReferenceButton id={props.refObject?.id} title={title} />
       </div>
-
-      <div className="mt-3">
-        <div className="mb-1 flex items-center justify-between text-xs">
-          <span className="text-neutral-500 dark:text-neutral-400">
-            {t('analyze.activity.readDuration')}
-          </span>
-          <span className="font-medium text-neutral-700 dark:text-neutral-200">
-            {formatDuration(durationMs, t)}
-          </span>
-        </div>
-        <div className="h-1.5 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-900">
-          <div
-            className="h-full rounded bg-neutral-950 dark:bg-neutral-50"
-            style={{ width: `${durationPercent}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="mt-2 flex flex-wrap gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+      {visitor ? (
+        <span className="phone:hidden max-w-32 shrink-0 truncate text-xs text-fg-muted">
+          {visitor}
+        </span>
+      ) : null}
+      <span
+        className="shrink-0 text-xs font-medium tabular-nums text-fg"
+        title={
+          props.item.payload.position > 0
+            ? t('analyze.activity.position', {
+                value: props.item.payload.position,
+              })
+            : undefined
+        }
+      >
+        {formatDuration(durationMs, t)}
+      </span>
+      <span className="phone:hidden shrink-0">
         <IpInfoButton ip={props.item.payload.ip} />
-        {props.item.payload.position > 0 ? (
-          <span>
-            {t('analyze.activity.position', {
-              value: props.item.payload.position,
-            })}
-          </span>
-        ) : null}
-      </div>
+      </span>
+      <time
+        className="shrink-0 text-xs text-fg-subtle"
+        dateTime={props.item.createdAt}
+      >
+        {relativeTimeFromNow(props.item.createdAt)}
+      </time>
     </article>
   )
 }

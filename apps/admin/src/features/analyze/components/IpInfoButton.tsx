@@ -1,11 +1,11 @@
 import { Globe2 } from 'lucide-react'
-import { useState } from 'react'
 import type { ReactNode } from 'react'
-import type { IPInfo } from '../types/analyze'
+import { useState } from 'react'
 
 import { callBuiltInFunction } from '~/api/system'
 import { useI18n } from '~/i18n'
 
+import type { IPInfo } from '../types/analyze'
 import { getErrorMessage } from '../utils/analyze'
 
 export function IpInfoButton(props: { ip: string }) {
