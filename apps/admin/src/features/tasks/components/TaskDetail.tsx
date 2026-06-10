@@ -137,12 +137,14 @@ export function TaskDetail(props: {
             </StatusBadge>
             <TaskCostBadge cost={task.cost} />
             {task.retryCount > 0 ? (
-              <SmallBadge tone="warning">
+              <SmallBadge size="sm" tone="warning">
                 {t('tasks.task.retryBadge', { count: task.retryCount })}
               </SmallBadge>
             ) : null}
             {isBatchTask(task) ? (
-              <SmallBadge tone="info">{t('tasks.task.batch')}</SmallBadge>
+              <SmallBadge size="sm" tone="info">
+                {t('tasks.task.batch')}
+              </SmallBadge>
             ) : null}
           </>
         }

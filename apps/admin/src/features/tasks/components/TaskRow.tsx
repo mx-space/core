@@ -11,6 +11,7 @@ import { cn } from '~/utils/cn'
 import { scopeLabelKeys, statusIcon, taskStatusLabelKeys } from '../constants'
 import {
   formatRelativeTimestamp,
+  formatTaskDuration,
   getEffectiveStatus,
   getTaskProgressLabel,
   getTaskSummary,
@@ -51,12 +52,17 @@ export function TaskRow(props: {
   const typeLabel = getTaskTypeLabel(task.type, t)
   const summary = getTaskSummary(task, t)
   const summaryVisible = summary !== typeLabel && summary !== task.type
+  const duration = formatTaskDuration(task)
+  const failed =
+    effectiveStatus === AITaskStatus.Failed ||
+    effectiveStatus === AITaskStatus.PartialFailed
+  const detailText = failed && task.error ? task.error : summary
 
   return (
     <ListRow
       ariaCurrent={props.selected}
       className={cn(
-        'group block cursor-default border-b border-border px-4 py-2.5 last:border-b-0',
+        'group block cursor-default border-b border-border px-3 py-2 last:border-b-0',
         'hover:bg-surface-inset',
         'data-selected:bg-accent-soft data-selected:text-fg',
         'data-selected:hover:bg-accent-soft',
@@ -90,6 +96,11 @@ export function TaskRow(props: {
             className="size-3 shrink-0 text-blue-500"
           />
         ) : null}
+        <span className="ml-auto shrink-0 text-xs tabular-nums text-fg-subtle">
+          {formatRelativeTimestamp(task.createdAt)}
+        </span>
+      </div>
+      <div className="pl-5.5 mt-1 flex min-w-0 items-center gap-2">
         <span
           className={cn(
             'inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs',
@@ -110,26 +121,31 @@ export function TaskRow(props: {
             {t('tasks.task.retryBadge', { count: task.retryCount })}
           </span>
         ) : null}
-        <span className="ml-auto shrink-0 text-xs tabular-nums text-fg-subtle">
-          {formatRelativeTimestamp(task.createdAt)}
-        </span>
+        {duration ? (
+          <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-fg-subtle">
+            {duration}
+          </span>
+        ) : null}
+        {detailText && (summaryVisible || (failed && task.error)) ? (
+          <p
+            className={cn(
+              'min-w-0 flex-1 truncate text-xs',
+              failed && task.error
+                ? 'text-red-600/80 dark:text-red-400/80'
+                : 'text-fg-muted',
+            )}
+          >
+            {detailText}
+          </p>
+        ) : (
+          <span className="flex-1" />
+        )}
+        {progressLabel ? (
+          <span className="shrink-0 text-xs tabular-nums text-fg-subtle">
+            {progressLabel}
+          </span>
+        ) : null}
       </div>
-      {summaryVisible || progressLabel ? (
-        <div className="pl-5.5 mt-1 flex min-w-0 items-center gap-2">
-          {summaryVisible ? (
-            <p className="min-w-0 flex-1 truncate text-xs text-fg-muted">
-              {summary}
-            </p>
-          ) : (
-            <span className="flex-1" />
-          )}
-          {progressLabel ? (
-            <span className="shrink-0 text-xs tabular-nums text-fg-subtle">
-              {progressLabel}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
     </ListRow>
   )
 }

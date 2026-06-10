@@ -6,8 +6,8 @@ import { useI18n } from '~/i18n'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { FocusScope } from '~/ui/focus-scope'
 import { useListKeyboard } from '~/ui/list-actions'
-import { TabList } from '~/ui/patterns/TabList'
 import { Scroll } from '~/ui/primitives/scroll'
+import { SegmentedControl } from '~/ui/primitives/segmented-control'
 import { SelectField } from '~/ui/primitives/select'
 
 import type { TaskStatusCategory } from '../constants'
@@ -70,8 +70,8 @@ export function TaskListPane(props: TaskListPaneProps) {
   const scopeTabs = useMemo(
     () =>
       scopeOptionKeys.map((option) => ({
-        key: option.value || ALL_TAB_KEY,
         label: t(option.labelKey),
+        value: option.value || ALL_TAB_KEY,
       })),
     [t],
   )
@@ -90,19 +90,20 @@ export function TaskListPane(props: TaskListPaneProps) {
       className="outline-hidden flex h-full min-h-0 flex-col"
       id={SCOPE_ID}
     >
-      <div className="h-12 shrink-0 border-b border-border px-2">
-        <TabList
-          activeKey={props.scope || ALL_TAB_KEY}
-          ariaLabel={t('tasks.filter.scopeTabsAria')}
-          items={scopeTabs}
-          onSelect={(key) =>
+      <div className="shrink-0 px-3 pt-2">
+        <SegmentedControl
+          aria-label={t('tasks.filter.scopeTabsAria')}
+          className="-mx-1 w-[calc(100%+0.5rem)]"
+          fill
+          onValueChange={(key) =>
             props.onScopeChange(key === ALL_TAB_KEY ? '' : (key as TaskScope))
           }
-          testidPrefix="tasks-scope-tab"
+          options={scopeTabs}
+          value={props.scope || ALL_TAB_KEY}
         />
       </div>
 
-      <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
+      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
         <div className="min-w-24 max-w-36 flex-1">
           <SelectField
             aria-label={t('tasks.filter.statusAria')}
@@ -157,7 +158,7 @@ export function TaskListPane(props: TaskListPaneProps) {
       </Scroll>
 
       {props.pageCount > 1 ? (
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-3 py-2">
           <span className="text-xs tabular-nums text-fg-muted">
             {t('tasks.page.pageIndex', { page: props.page })}
           </span>

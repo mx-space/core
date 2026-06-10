@@ -17,7 +17,7 @@ import {
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
-import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
+import { AppPage } from '~/ui/layout/page-layout'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
@@ -33,14 +33,10 @@ import { formatBytes, isEnrichmentSource } from '../utils/enrichment'
 import { CacheListPanel } from './CacheListPanel'
 import { CaptureListPanel } from './CaptureListPanel'
 import { EnrichmentRouteContext } from './enrichment-route-context'
+import { CaptureControls, FilterSegment } from './EnrichmentControls'
+import { EnrichmentHeader } from './EnrichmentHeader'
 import { DetailEmpty } from './EnrichmentPrimitives'
 import { ProbeListPanel } from './ProbeListPanel'
-import {
-  CaptureControls,
-  FilterSegment,
-  ProviderStatusBar,
-  SourceSwitcher,
-} from './SourceSwitcher'
 
 export function EnrichmentRouteViewContent() {
   const { t } = useI18n()
@@ -112,7 +108,6 @@ export function EnrichmentRouteViewContent() {
   })
 
   const providersQuery = useQuery({
-    enabled: source === 'cache',
     queryFn: getEnrichmentProviders,
     queryKey: adminQueryKeys.enrichment.providers(),
     staleTime: 30_000,
@@ -213,36 +208,38 @@ export function EnrichmentRouteViewContent() {
   )
 
   return (
-    <EnrichmentRouteContext.Provider value={routeContextValue}>
-      <MasterDetailShell
-        emptyDetail={<DetailEmpty label={t('enrichment.detail.emptyCache')} />}
-        onDismiss={closeDetail}
-        list={
-          <section className="flex h-full min-h-0 flex-col">
-            <div className="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-              <div className="flex items-center gap-2">
-                <MobileHeaderAffordance />
-                <SourceSwitcher onChange={switchSource} value={source} />
-              </div>
+    <AppPage>
+      <EnrichmentHeader
+        onSourceChange={switchSource}
+        providers={providersQuery.data ?? null}
+        source={source}
+      />
+
+      <EnrichmentRouteContext.Provider value={routeContextValue}>
+        <MasterDetailShell
+          emptyDetail={
+            <DetailEmpty label={t('enrichment.detail.emptyCache')} />
+          }
+          onDismiss={closeDetail}
+          list={
+            <section className="flex h-full min-h-0 flex-col">
               {source === 'cache' ? (
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <FilterSegment
-                      onChange={(next) => {
-                        setFilterMode(next)
-                        setCachePage(1)
-                      }}
-                      value={filterMode}
-                    />
-                    {providersQuery.data ? (
-                      <ProviderStatusBar providers={providersQuery.data} />
-                    ) : null}
-                  </div>
+                <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2">
+                  <FilterSegment
+                    onChange={(next) => {
+                      setFilterMode(next)
+                      setCachePage(1)
+                    }}
+                    value={filterMode}
+                  />
                   <Button
+                    aria-label={t('common.refresh')}
                     disabled={cacheQuery.isFetching}
+                    iconOnly
                     onClick={() => void cacheQuery.refetch()}
+                    title={t('common.refresh')}
                     type="button"
-                    variant="subtle"
+                    variant="ghost"
                   >
                     <RefreshCw
                       aria-hidden="true"
@@ -251,12 +248,12 @@ export function EnrichmentRouteViewContent() {
                         cacheQuery.isFetching && 'animate-spin',
                       )}
                     />
-                    {t('common.refresh')}
                   </Button>
                 </div>
               ) : null}
+
               {source === 'screenshots' ? (
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2">
                   <CaptureControls
                     onOrderChange={(next) => {
                       setCaptureOrder(next)
@@ -270,13 +267,15 @@ export function EnrichmentRouteViewContent() {
                     sort={captureSort}
                   />
                   <Button
+                    aria-label={t('common.refresh')}
                     disabled={captureQuery.isFetching}
+                    iconOnly
                     onClick={() => {
                       void captureQuery.refetch()
                       void quotaQuery.refetch()
                     }}
                     type="button"
-                    variant="subtle"
+                    variant="ghost"
                   >
                     <RefreshCw
                       aria-hidden="true"
@@ -285,70 +284,69 @@ export function EnrichmentRouteViewContent() {
                         captureQuery.isFetching && 'animate-spin',
                       )}
                     />
-                    {t('common.refresh')}
                   </Button>
                 </div>
               ) : null}
-            </div>
 
-            {source === 'cache' ? (
-              <CacheListPanel
-                filterMode={filterMode}
-                loading={cacheQuery.isLoading}
-                onPageChange={setCachePage}
-                onPageSizeChange={(size) => {
-                  setCachePageSize(size)
-                  setCachePage(1)
-                }}
-                onSelect={(row) => openCacheRow(row.id)}
-                page={cachePage}
-                pageCount={cachePager?.totalPage ?? 1}
-                pageSize={cachePageSize}
-                rows={cacheRows}
-                selectedId={selectedCacheId}
-                total={cachePager?.total ?? 0}
-              />
-            ) : null}
+              {source === 'cache' ? (
+                <CacheListPanel
+                  filterMode={filterMode}
+                  loading={cacheQuery.isLoading}
+                  onPageChange={setCachePage}
+                  onPageSizeChange={(size) => {
+                    setCachePageSize(size)
+                    setCachePage(1)
+                  }}
+                  onSelect={(row) => openCacheRow(row.id)}
+                  page={cachePage}
+                  pageCount={cachePager?.totalPage ?? 1}
+                  pageSize={cachePageSize}
+                  rows={cacheRows}
+                  selectedId={selectedCacheId}
+                  total={cachePager?.total ?? 0}
+                />
+              ) : null}
 
-            {source === 'screenshots' ? (
-              <CaptureListPanel
-                loading={captureQuery.isLoading}
-                onPageChange={setCapturePage}
-                onPageSizeChange={(size) => {
-                  setCapturePageSize(size)
-                  setCapturePage(1)
-                }}
-                onSelect={(row) => openCaptureRow(row.enrichmentId)}
-                page={capturePage}
-                pageCount={capturePager?.totalPage ?? 1}
-                pageSize={capturePageSize}
-                quota={
-                  quotaQuery.data
-                    ? `${formatBytes(quotaQuery.data.used.totalBytes)} / ${formatBytes(
-                        quotaQuery.data.cap.maxTotalBytes,
-                      )}`
-                    : null
-                }
-                rows={captureRows}
-                selectedId={selectedCaptureId}
-                total={capturePager?.total ?? 0}
-              />
-            ) : null}
+              {source === 'screenshots' ? (
+                <CaptureListPanel
+                  loading={captureQuery.isLoading}
+                  onPageChange={setCapturePage}
+                  onPageSizeChange={(size) => {
+                    setCapturePageSize(size)
+                    setCapturePage(1)
+                  }}
+                  onSelect={(row) => openCaptureRow(row.enrichmentId)}
+                  page={capturePage}
+                  pageCount={capturePager?.totalPage ?? 1}
+                  pageSize={capturePageSize}
+                  quota={
+                    quotaQuery.data
+                      ? `${formatBytes(quotaQuery.data.used.totalBytes)} / ${formatBytes(
+                          quotaQuery.data.cap.maxTotalBytes,
+                        )}`
+                      : null
+                  }
+                  rows={captureRows}
+                  selectedId={selectedCaptureId}
+                  total={capturePager?.total ?? 0}
+                />
+              ) : null}
 
-            {source === 'probe' ? (
-              <ProbeListPanel
-                history={probeHistory}
-                onClear={() => {
-                  setProbeHistory([])
-                  setSelectedProbeId(null)
-                }}
-                onSelect={(entry) => setSelectedProbeId(entry.id)}
-                selectedId={selectedProbeId}
-              />
-            ) : null}
-          </section>
-        }
-      />
-    </EnrichmentRouteContext.Provider>
+              {source === 'probe' ? (
+                <ProbeListPanel
+                  history={probeHistory}
+                  onClear={() => {
+                    setProbeHistory([])
+                    setSelectedProbeId(null)
+                  }}
+                  onSelect={(entry) => setSelectedProbeId(entry.id)}
+                  selectedId={selectedProbeId}
+                />
+              ) : null}
+            </section>
+          }
+        />
+      </EnrichmentRouteContext.Provider>
+    </AppPage>
   )
 }

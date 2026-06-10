@@ -19,7 +19,11 @@ export function StatusBadge(props: {
   children: ReactNode
   status: AITaskStatusType
 }) {
-  return <Badge tone={statusToneMap[props.status]}>{props.children}</Badge>
+  return (
+    <Badge size="sm" tone={statusToneMap[props.status]}>
+      {props.children}
+    </Badge>
+  )
 }
 
 export { Badge as SmallBadge } from '~/ui/primitives/badge'

@@ -8,6 +8,7 @@ export function TaskCostBadge(props: {
   return (
     <Badge
       className={props.className}
+      size="sm"
       title={`${props.cost.toFixed(6)} USD`}
       tone="neutral"
       variant="outline"

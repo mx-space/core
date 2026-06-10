@@ -144,6 +144,17 @@ export function statusIconClassName(status: AITaskStatus) {
   }[status]
 }
 
+export function formatTaskDuration(task: AITask) {
+  if (!task.startedAt || !task.completedAt) return null
+  const ms = task.completedAt - task.startedAt
+  if (ms < 0) return null
+  if (ms < 1000) return `${ms}ms`
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`
+  const minutes = Math.floor(ms / 60_000)
+  const seconds = Math.round((ms % 60_000) / 1000)
+  return `${minutes}m ${seconds}s`
+}
+
 export function formatRelativeTimestamp(timestamp?: number) {
   if (!timestamp) return '-'
   return relativeTimeFromNow(new Date(timestamp))

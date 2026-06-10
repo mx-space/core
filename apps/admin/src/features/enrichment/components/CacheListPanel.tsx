@@ -1,12 +1,11 @@
-import type { EnrichmentRow } from '~/models/enrichment'
-import type { CacheFilterMode } from '../types/enrichment'
-
 import { useI18n } from '~/i18n'
+import type { EnrichmentRow } from '~/models/enrichment'
 import { CompactPagination } from '~/ui/data/compact-pagination'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 import { relativeTimeFromNow } from '~/utils/time'
 
+import type { CacheFilterMode } from '../types/enrichment'
 import { ListEmpty, ListLoading, ProviderBadge } from './EnrichmentPrimitives'
 
 export function CacheListPanel(props: {
@@ -25,8 +24,19 @@ export function CacheListPanel(props: {
   const { t } = useI18n()
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="border-b border-neutral-200 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-        {t('enrichment.cache.totalSuffix', { count: props.total })}
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-1.5 text-xs text-fg-muted">
+        <span className="truncate">
+          {t('enrichment.cache.totalSuffix', { count: props.total })}
+        </span>
+        {props.pageCount > 1 ? (
+          <CompactPagination
+            onPageChange={props.onPageChange}
+            onPageSizeChange={props.onPageSizeChange}
+            page={props.page}
+            pageCount={props.pageCount}
+            pageSize={props.pageSize}
+          />
+        ) : null}
       </div>
       <Scroll className="flex-1">
         {props.loading && props.rows.length === 0 ? (
@@ -50,17 +60,6 @@ export function CacheListPanel(props: {
           ))
         )}
       </Scroll>
-      {props.pageCount > 1 ? (
-        <div className="flex shrink-0 items-center justify-end border-t border-neutral-200 px-3 py-2 dark:border-neutral-800">
-          <CompactPagination
-            onPageChange={props.onPageChange}
-            onPageSizeChange={props.onPageSizeChange}
-            page={props.page}
-            pageCount={props.pageCount}
-            pageSize={props.pageSize}
-          />
-        </div>
-      ) : null}
     </div>
   )
 }
