@@ -31,7 +31,7 @@ export function EnrichmentHeader(props: {
   return (
     <header
       className={cn(
-        'flex shrink-0 items-stretch gap-2 border-b border-border bg-surface-page px-4',
+        'flex shrink-0 items-stretch gap-2 border-b border-border bg-surface-card px-4',
         APP_SHELL_HEADER_HEIGHT_CLASS,
       )}
     >
