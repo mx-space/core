@@ -5,6 +5,8 @@ import axios, { AxiosRequestConfig } from 'axios'
 import pc from 'picocolors'
 
 import { HttpService } from '~/processors/helper/helper.http.service'
+import { formatByteSize } from '~/utils/system.util'
+import { sleep } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
 
@@ -103,7 +105,7 @@ export class UpdateDownloadService {
         }
 
         const delay = Math.min(1000 * 2 ** (attempt - 1), 10000)
-        await this.sleep(delay)
+        await sleep(delay)
       }
     }
   }
@@ -193,8 +195,8 @@ export class UpdateDownloadService {
               const percentage = Math.round(
                 (progressEvent.loaded * 100) / progressEvent.total,
               )
-              const downloaded = this.formatBytes(progressEvent.loaded)
-              const total = this.formatBytes(progressEvent.total)
+              const downloaded = formatByteSize(progressEvent.loaded)
+              const total = formatByteSize(progressEvent.total)
               pushProgress(
                 `Download progress: ${percentage}% (${downloaded}/${total})\n`,
               ).catch(() => {})
@@ -210,21 +212,5 @@ export class UpdateDownloadService {
           reject(error)
         })
     })
-  }
-
-  formatBytes(bytes: number, decimals = 2) {
-    if (bytes === 0) return '0 Bytes'
-
-    const k = 1024
-    const dm = Math.max(decimals, 0)
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-    return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`
-  }
-
-  private sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }

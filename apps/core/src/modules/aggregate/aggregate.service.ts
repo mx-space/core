@@ -163,15 +163,15 @@ export class AggregateService {
       createdAt?: Date | null
     }) => doc.modifiedAt ?? doc.createdAt ?? null
     const pageEntries = pages.map((p) => ({
-      url: `${baseUrl}/${p.slug}`,
+      url: `${baseUrl}${this.urlBuilder.build(p as any)}`,
       published_at: pickPublishedAt(p),
     }))
     const postEntries = posts.map((p) => ({
-      url: `${baseUrl}/posts/${p.category?.slug ?? 'unknown'}/${p.slug}`,
+      url: `${baseUrl}${this.urlBuilder.build(p as any)}`,
       published_at: pickPublishedAt(p),
     }))
     const noteEntries = notes.map((n) => ({
-      url: `${baseUrl}/notes/${n.nid}`,
+      url: `${baseUrl}${this.urlBuilder.build(n as any)}`,
       published_at: pickPublishedAt(n),
     }))
     return [...pageEntries, ...postEntries, ...noteEntries].sort((a, b) => {

@@ -292,17 +292,19 @@ export class EnrichmentService implements OnModuleInit {
   ): Promise<void> {
     if (lang === undefined) {
       const rows = await this.repository.findAllLocalesByRef(providerName, id)
-      for (const row of rows) {
-        await this.deleteFromRedis(row.url, row.locale)
-        // S3 cleanup runs before the cache row is removed — the FK CASCADE
-        // would drop the capture row but leave the object behind. Failure
-        // is swallowed (see CaptureStorageService.delete contract).
-        await this.captureStorage.delete(row.id).catch((error) => {
-          this.logger.warn(
-            `capture delete failed for ${row.id}: ${(error as Error).message}`,
-          )
-        })
-      }
+      await Promise.all(
+        rows.flatMap((row) => [
+          this.deleteFromRedis(row.url, row.locale),
+          // S3 cleanup runs before the cache row is removed — the FK CASCADE
+          // would drop the capture row but leave the object behind. Failure
+          // is swallowed (see CaptureStorageService.delete contract).
+          this.captureStorage.delete(row.id).catch((error) => {
+            this.logger.warn(
+              `capture delete failed for ${row.id}: ${(error as Error).message}`,
+            )
+          }),
+        ]),
+      )
       await this.repository.deleteByProviderAndExternalId(providerName, id)
       return
     }

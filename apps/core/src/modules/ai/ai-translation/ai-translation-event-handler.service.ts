@@ -58,25 +58,22 @@ export class AiTranslationEventHandlerService {
     await this.aiTranslationService.deleteTranslationsByRefId(id)
   }
 
-  @OnEvent(BusinessEvents.POST_CREATE)
-  @OnEvent(BusinessEvents.NOTE_CREATE)
-  @OnEvent(BusinessEvents.PAGE_CREATE)
-  async handleCreateArticle(event: ArticleEventPayload) {
+  private async resolveAutoTranslationContext(event: ArticleEventPayload) {
     const aiConfig = await this.configService.get('ai')
 
     if (
       !aiConfig.enableAutoGenerateTranslation ||
       !aiConfig.enableTranslation
     ) {
-      return
+      return null
     }
 
     const id = this.aiTranslationService.extractIdFromEvent(event)
-    if (!id) return
+    if (!id) return null
 
     const article = await this.databaseService.findGlobalById(id)
     if (!article || !this.aiTranslationService.isArticleVisible(article)) {
-      return
+      return null
     }
 
     const targetLanguages = resolveTargetLanguages(
@@ -84,8 +81,19 @@ export class AiTranslationEventHandlerService {
       aiConfig.translationTargetLanguages,
     )
     if (!targetLanguages.length) {
-      return
+      return null
     }
+
+    return { id, article, targetLanguages }
+  }
+
+  @OnEvent(BusinessEvents.POST_CREATE)
+  @OnEvent(BusinessEvents.NOTE_CREATE)
+  @OnEvent(BusinessEvents.PAGE_CREATE)
+  async handleCreateArticle(event: ArticleEventPayload) {
+    const context = await this.resolveAutoTranslationContext(event)
+    if (!context) return
+    const { id, targetLanguages } = context
 
     await this.aiTranslationService.cancelActiveTranslationTasks(id)
 
@@ -102,29 +110,9 @@ export class AiTranslationEventHandlerService {
   @OnEvent(BusinessEvents.NOTE_UPDATE)
   @OnEvent(BusinessEvents.PAGE_UPDATE)
   async handleUpdateArticle(event: ArticleEventPayload) {
-    const aiConfig = await this.configService.get('ai')
-    if (
-      !aiConfig.enableAutoGenerateTranslation ||
-      !aiConfig.enableTranslation
-    ) {
-      return
-    }
-
-    const id = this.aiTranslationService.extractIdFromEvent(event)
-    if (!id) return
-
-    const article = await this.databaseService.findGlobalById(id)
-    if (!article || !this.aiTranslationService.isArticleVisible(article)) {
-      return
-    }
-
-    const targetLanguages = resolveTargetLanguages(
-      undefined,
-      aiConfig.translationTargetLanguages,
-    )
-    if (!targetLanguages.length) {
-      return
-    }
+    const context = await this.resolveAutoTranslationContext(event)
+    if (!context) return
+    const { id, article, targetLanguages } = context
 
     const existingTranslations =
       await this.aiTranslationRepository.listByRefId(id)
@@ -230,32 +218,7 @@ export class AiTranslationEventHandlerService {
   async handleTopicCreate(event: TopicEventPayload) {
     if (!(await this.isAutoEntryEnabled())) return
     if (!event.id) return
-    const values: Parameters<TranslationEntryService['generateForValues']>[0] =
-      []
-    if (event.name) {
-      values.push({
-        keyPath: 'topic.name',
-        keyType: 'entity',
-        lookupKey: event.id,
-        sourceText: event.name,
-      })
-    }
-    if (event.introduce) {
-      values.push({
-        keyPath: 'topic.introduce',
-        keyType: 'entity',
-        lookupKey: event.id,
-        sourceText: event.introduce,
-      })
-    }
-    if (event.description) {
-      values.push({
-        keyPath: 'topic.description',
-        keyType: 'entity',
-        lookupKey: event.id,
-        sourceText: event.description,
-      })
-    }
+    const values = this.collectTopicValues(event)
     if (!values.length) return
     this.logger.log(
       `Auto-generating translation entries for topic: ${event.id}`,
@@ -293,38 +256,31 @@ export class AiTranslationEventHandlerService {
     }
 
     if (!(await this.isAutoEntryEnabled())) return
-    const values: Parameters<TranslationEntryService['generateForValues']>[0] =
-      []
-    if (event.name) {
-      values.push({
-        keyPath: 'topic.name',
-        keyType: 'entity',
-        lookupKey: event.id,
-        sourceText: event.name,
-      })
-    }
-    if (event.introduce) {
-      values.push({
-        keyPath: 'topic.introduce',
-        keyType: 'entity',
-        lookupKey: event.id,
-        sourceText: event.introduce,
-      })
-    }
-    if (event.description) {
-      values.push({
-        keyPath: 'topic.description',
-        keyType: 'entity',
-        lookupKey: event.id,
-        sourceText: event.description,
-      })
-    }
+    const values = this.collectTopicValues(event)
     if (!values.length) return
     try {
       await this.translationEntryService.generateForValues(values)
     } catch (err: any) {
       this.logger.error(`Topic entry re-generation failed: ${err.message}`)
     }
+  }
+
+  private collectTopicValues(
+    event: TopicEventPayload,
+  ): Parameters<TranslationEntryService['generateForValues']>[0] {
+    const fields = [
+      ['topic.name', event.name],
+      ['topic.introduce', event.introduce],
+      ['topic.description', event.description],
+    ] as const
+    return fields
+      .filter(([, sourceText]) => !!sourceText)
+      .map(([keyPath, sourceText]) => ({
+        keyPath,
+        keyType: 'entity',
+        lookupKey: event.id,
+        sourceText: sourceText!,
+      }))
   }
 
   @OnEvent(BusinessEvents.TOPIC_DELETE)
@@ -344,22 +300,8 @@ export class AiTranslationEventHandlerService {
   // === Translation Entry: Note mood/weather ===
 
   @OnEvent(BusinessEvents.NOTE_CREATE)
-  async handleNoteCreateEntry(event: NoteEventPayload) {
-    if (!(await this.isAutoEntryEnabled())) return
-    if (!event.id) return
-    const note = await this.databaseService.findGlobalById(event.id)
-    if (!note) return
-    const values = this.collectNoteDictValues(note.document)
-    if (!values.length) return
-    try {
-      await this.translationEntryService.generateForValues(values)
-    } catch (err: any) {
-      this.logger.error(`Note entry generation failed: ${err.message}`)
-    }
-  }
-
   @OnEvent(BusinessEvents.NOTE_UPDATE)
-  async handleNoteUpdateEntry(event: NoteEventPayload) {
+  async handleNoteEntry(event: NoteEventPayload) {
     if (!(await this.isAutoEntryEnabled())) return
     if (!event.id) return
     const note = await this.databaseService.findGlobalById(event.id)

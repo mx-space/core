@@ -1,4 +1,3 @@
-import type { Static, TSchema } from '@earendil-works/pi-ai'
 import { Injectable, Logger } from '@nestjs/common'
 import JSON5 from 'json5'
 import { jsonrepair } from 'jsonrepair'
@@ -8,12 +7,7 @@ import { extractFirstJsonObject } from '~/utils/json.util'
 
 import { AI_PROMPTS } from '../ai.prompts'
 import type { IModelRuntime } from '../runtime'
-
-function firstValidationFailure(schema: TSchema, value: unknown): string {
-  const [first] = [...Value.Errors(schema, value)]
-  if (!first) return 'unknown validation failure'
-  return `${first.instancePath || '/'}: ${first.message}`
-}
+import { firstValidationFailure } from './strategies/base-translation-strategy'
 
 export interface ReviewerIssue {
   id: string
@@ -25,10 +19,6 @@ export interface ReviewerIssue {
 export interface ReviewerOutput {
   score: number
   issues: ReviewerIssue[]
-}
-
-export interface EditorOutput {
-  patches: Record<string, string>
 }
 
 function stripCodeFence(input: string): string {
@@ -178,15 +168,3 @@ export class TranslationReviewerService {
     }
   }
 }
-
-export type ReviewerSchema = ReturnType<
-  typeof AI_PROMPTS.translationReviewer
->['schema']
-export type EditorSchema = ReturnType<
-  typeof AI_PROMPTS.translationEditor
->['schema']
-
-export type ReviewerSchemaType = Static<ReviewerSchema>
-export type EditorSchemaType = Static<EditorSchema>
-
-export const __test_only__ = { parseLooseJson }

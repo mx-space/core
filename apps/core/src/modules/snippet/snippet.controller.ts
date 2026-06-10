@@ -25,14 +25,7 @@ export class SnippetController {
     const { pagination } = result
     return withMeta(
       this.snippetService.transformLeanSnippetList(result.data),
-      new MetaObjectBuilder()
-        .pagination({
-          page: pagination.currentPage,
-          size: pagination.size,
-          total: pagination.total,
-          totalPages: pagination.totalPage,
-        })
-        .build(),
+      new MetaObjectBuilder().pagination(pagination).build(),
     )
   }
 
@@ -64,14 +57,7 @@ export class SnippetController {
     const { pagination } = result
     return withMeta(
       result.data,
-      new MetaObjectBuilder()
-        .pagination({
-          page: pagination.currentPage,
-          size: pagination.size,
-          total: pagination.total,
-          totalPages: pagination.totalPage,
-        })
-        .build(),
+      new MetaObjectBuilder().pagination(pagination).build(),
     )
   }
 

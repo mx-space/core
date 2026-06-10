@@ -13,12 +13,17 @@ import {
 
 import { AI_PROMPTS } from '../../ai.prompts'
 import type { IModelRuntime } from '../../runtime'
+import type { TranslationReviewerService } from '../reviewer.service'
 import type {
   PipelineEditorMetrics,
+  PipelineMetrics,
   PipelineReviewerMetrics,
 } from '../translation-strategy.interface'
 
-function firstValidationFailure(schema: TSchema, value: unknown): string {
+export function firstValidationFailure(
+  schema: TSchema,
+  value: unknown,
+): string {
   const [first] = [...Value.Errors(schema, value)]
   if (!first) return 'unknown validation failure'
   return `${first.instancePath || '/'}: ${first.message}`
@@ -237,6 +242,57 @@ export abstract class BaseTranslationStrategy {
     return result
   }
 
+  // Tolerant parse of a single candidate string: JSON → JSON5 → heuristic
+  // string repair → jsonrepair. Throws if every parser fails.
+  private parseCandidateTolerantly(
+    candidate: string,
+    context: string,
+  ): unknown {
+    try {
+      return JSON.parse(candidate)
+    } catch {
+      // Ignore and continue with more tolerant parsers.
+    }
+
+    try {
+      return JSON5.parse(candidate)
+    } catch {
+      // Ignore and continue with more tolerant parsers.
+    }
+
+    const heuristicCandidate = this.repairCommonJsonStringIssues(candidate)
+    if (heuristicCandidate !== candidate) {
+      try {
+        const parsed = JSON.parse(heuristicCandidate)
+        this.logger.warn(`${context}: repaired malformed model JSON`)
+        return parsed
+      } catch {
+        // Ignore and continue with more tolerant parsers.
+      }
+
+      try {
+        return JSON5.parse(heuristicCandidate)
+      } catch {
+        // Ignore and continue with more tolerant parsers.
+      }
+    }
+
+    const repairedCandidate = jsonrepair(heuristicCandidate)
+    if (repairedCandidate !== candidate) {
+      this.logger.warn(
+        `${context}: repaired malformed model JSON via jsonrepair`,
+      )
+    }
+
+    try {
+      return JSON.parse(repairedCandidate)
+    } catch {
+      // Ignore and continue with the final JSON5 parser.
+    }
+
+    return JSON5.parse(repairedCandidate)
+  }
+
   protected parseModelJson<T extends Record<string, any>>(
     rawText: string,
     context: string,
@@ -265,62 +321,11 @@ export abstract class BaseTranslationStrategy {
     }
 
     let lastError: unknown
-    const tryParse = <R>(parser: () => R): R | undefined => {
+    for (const candidate of candidates) {
       try {
-        return parser()
+        return this.parseCandidateTolerantly(candidate, context) as T
       } catch (error) {
         lastError = error
-        return undefined
-      }
-    }
-
-    for (const candidate of candidates) {
-      const parsedJson = tryParse(() => JSON.parse(candidate) as T)
-      if (parsedJson !== undefined) {
-        return parsedJson
-      }
-
-      const parsedJson5 = tryParse(() => JSON5.parse(candidate) as T)
-      if (parsedJson5 !== undefined) {
-        return parsedJson5
-      }
-
-      const heuristicCandidate = this.repairCommonJsonStringIssues(candidate)
-      if (heuristicCandidate !== candidate) {
-        const repairedJson = tryParse(() => {
-          this.logger.warn(`${context}: repaired malformed model JSON`)
-          return JSON.parse(heuristicCandidate) as T
-        })
-        if (repairedJson !== undefined) {
-          return repairedJson
-        }
-
-        const repairedJson5 = tryParse(
-          () => JSON5.parse(heuristicCandidate) as T,
-        )
-        if (repairedJson5 !== undefined) {
-          return repairedJson5
-        }
-      }
-
-      const repairedCandidateJson = tryParse(() => {
-        const repairedCandidate = jsonrepair(heuristicCandidate)
-        if (repairedCandidate !== candidate) {
-          this.logger.warn(
-            `${context}: repaired malformed model JSON via jsonrepair`,
-          )
-        }
-        return JSON.parse(repairedCandidate) as T
-      })
-      if (repairedCandidateJson !== undefined) {
-        return repairedCandidateJson
-      }
-
-      const repairedCandidateJson5 = tryParse(
-        () => JSON5.parse(jsonrepair(heuristicCandidate)) as T,
-      )
-      if (repairedCandidateJson5 !== undefined) {
-        return repairedCandidateJson5
       }
     }
 
@@ -338,50 +343,7 @@ export abstract class BaseTranslationStrategy {
   }
 
   private parseNestedJsonValue(rawText: string, context: string): unknown {
-    const trimmed = rawText.trim()
-
-    try {
-      return JSON.parse(trimmed)
-    } catch {
-      // Ignore and continue with more tolerant parsers.
-    }
-
-    try {
-      return JSON5.parse(trimmed)
-    } catch {
-      // Ignore and continue with more tolerant parsers.
-    }
-
-    const heuristicCandidate = this.repairCommonJsonStringIssues(trimmed)
-    if (heuristicCandidate !== trimmed) {
-      try {
-        this.logger.warn(`${context}: repaired nested malformed model JSON`)
-        return JSON.parse(heuristicCandidate)
-      } catch {
-        // Ignore and continue with more tolerant parsers.
-      }
-
-      try {
-        return JSON5.parse(heuristicCandidate)
-      } catch {
-        // Ignore and continue with more tolerant parsers.
-      }
-    }
-
-    const repairedCandidate = jsonrepair(heuristicCandidate)
-    if (repairedCandidate !== trimmed) {
-      this.logger.warn(
-        `${context}: repaired nested malformed model JSON via jsonrepair`,
-      )
-    }
-
-    try {
-      return JSON.parse(repairedCandidate)
-    } catch {
-      // Ignore and continue with the final JSON5 parser.
-    }
-
-    return JSON5.parse(repairedCandidate)
+    return this.parseCandidateTolerantly(rawText.trim(), context)
   }
 
   private normalizeTranslationTree(value: unknown, context: string): unknown {
@@ -634,6 +596,122 @@ export abstract class BaseTranslationStrategy {
       )
     }
     return normalisedFallback as WriterResult
+  }
+
+  // Shared reviewer → editor orchestration. Strategy-specific patch
+  // application is injected via `applyPatches`, which is only invoked when
+  // the editor produced output.
+  protected async runReviewAndEditPipeline(opts: {
+    targetLang: string
+    translatorRuntime: IModelRuntime
+    reviewerRuntime: IModelRuntime
+    reviewerService: TranslationReviewerService
+    fullTranslations: Record<string, string>
+    allowedIds: readonly string[]
+    scoreThreshold: number
+    signal?: AbortSignal
+    metrics?: PipelineMetrics
+    applyPatches: (patches: Record<string, string>) => {
+      patchKeysApplied: string[]
+      patchKeysDropped: string[]
+      patches: Array<{ id: string; before: string; after: string }>
+    }
+  }): Promise<void> {
+    const {
+      targetLang,
+      translatorRuntime,
+      reviewerRuntime,
+      reviewerService,
+      fullTranslations,
+      allowedIds,
+      scoreThreshold,
+      signal,
+      metrics,
+      applyPatches,
+    } = opts
+
+    const reviewerStart = Date.now()
+    const review = await reviewerService.callReviewer(
+      reviewerRuntime,
+      targetLang,
+      { allowedIds: [...allowedIds], fullTranslations },
+      signal,
+    )
+    const reviewerMs = Date.now() - reviewerStart
+
+    if (!review) {
+      this.logger.warn('Reviewer returned null; persisting writer output as-is')
+      if (metrics) {
+        metrics.reviewer = {
+          ...emptyReviewerMetrics('reviewer-failed'),
+          invoked: true,
+          durationMs: reviewerMs,
+        }
+        metrics.editor = emptyEditorMetrics('reviewer-failed')
+      }
+      return
+    }
+
+    if (review.score >= scoreThreshold || review.issues.length === 0) {
+      this.logger.log(
+        `Review pass: score=${review.score} issues=${review.issues.length}; edit skipped`,
+      )
+      if (metrics) {
+        metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
+        metrics.editor = emptyEditorMetrics(
+          review.issues.length === 0 ? 'empty-issues' : 'score-above-threshold',
+        )
+      }
+      return
+    }
+
+    const editorStart = Date.now()
+    const editor = await this.callEditor(
+      targetLang,
+      { fullTranslations, issues: review.issues },
+      translatorRuntime,
+      signal,
+    )
+    const editorMs = Date.now() - editorStart
+
+    if (!editor) {
+      this.logger.warn('Editor returned null; persisting writer output as-is')
+      if (metrics) {
+        metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
+        metrics.editor = {
+          ...emptyEditorMetrics('editor-failed'),
+          durationMs: editorMs,
+        }
+      }
+      return
+    }
+
+    const patchKeysRequested = Object.keys(editor.patches)
+    const { patchKeysApplied, patchKeysDropped, patches } = applyPatches(
+      editor.patches,
+    )
+
+    if (patchKeysDropped.length > 0) {
+      this.logger.warn(
+        `Editor produced ${patchKeysDropped.length} out-of-set patches: ${patchKeysDropped.slice(0, 5).join(', ')}`,
+      )
+    }
+    this.logger.log(
+      `Edit applied: ${patchKeysApplied.length}/${review.issues.length} issues addressed`,
+    )
+
+    if (metrics) {
+      metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
+      metrics.editor = {
+        invoked: true,
+        durationMs: editorMs,
+        skippedReason: null,
+        patchKeysRequested,
+        patchKeysApplied,
+        patchKeysDropped,
+        patches,
+      }
+    }
   }
 
   protected async callEditor(

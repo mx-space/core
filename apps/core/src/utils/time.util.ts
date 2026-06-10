@@ -1,13 +1,5 @@
 import dayjs from 'dayjs'
 
-/** Get Time, format `12:00:00`  */
-export const getShortTime = (date: Date) => {
-  return Intl.DateTimeFormat('en-US', {
-    timeStyle: 'medium',
-    hour12: false,
-  }).format(date)
-}
-
 export const getShortDate = (date: Date) => {
   return Intl.DateTimeFormat('en-US', {
     dateStyle: 'short',

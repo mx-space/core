@@ -93,69 +93,11 @@ export class PageController {
     return withMeta(result.data, metaBuilder.build())
   }
 
-  @Get('/:id')
-  @Auth()
-  async getPageById(@Param() params: EntityIdDto, @Lang() lang?: string) {
-    const page = await this.pageService.findById(params.id)
-    if (!page) {
-      throw createAppException(AppErrorCode.PAGE_NOT_FOUND, { id: params.id })
-    }
-
-    const translationResult = await this.translationService.translateArticle({
-      articleId: String(page.id),
-      targetLang: lang,
-      originalData: {
-        title: page.title,
-        text: page.text,
-        subtitle: page.subtitle,
-      },
-    })
-
-    applyArticleTranslationInPlace(
-      page as Record<string, any>,
-      translationResult,
-      {
-        fields: ['title', 'text', 'subtitle', 'content', 'contentFormat'],
-      },
-    )
-
-    const { enrichments, ...pageData } =
-      await this.enrichmentService.attachEnrichments(page)
-
-    const metaBuilder = new MetaObjectBuilder().enrichments(
-      enrichments as Record<string, EnrichmentEntry>,
-    )
-
-    const translationMap = new Map([
-      [
-        String(page.id),
-        {
-          article: buildArticleTranslationMeta(
-            translationResult,
-            lang,
-          ) as ArticleTranslation,
-        },
-      ],
-    ])
-    metaBuilder.translation(translationMap)
-
-    return withMeta(pageData, metaBuilder.build())
-  }
-
-  @Get('/slug/:slug')
-  async getPageBySlug(
-    @Param('slug') slug: string,
-    @Query() query: PageDetailQueryDto,
-    @Lang() lang?: string,
+  private async buildPageDetailResponse(
+    page: NonNullable<Awaited<ReturnType<PageService['findById']>>>,
+    lang: string | undefined,
+    view?: string,
   ) {
-    if (typeof slug !== 'string') {
-      throw createAppException(AppErrorCode.PAGE_NOT_FOUND)
-    }
-    const page = await this.pageService.findBySlug(slug)
-    if (!page) {
-      throw createAppException(AppErrorCode.PAGE_NOT_FOUND)
-    }
-
     const translationResult = await this.translationService.translateArticle({
       articleId: String(page.id),
       targetLang: lang,
@@ -178,8 +120,8 @@ export class PageController {
       await this.enrichmentService.attachEnrichments(page)
 
     const metaBuilder = new MetaObjectBuilder()
-      .view('detail')
-      .enrichments(enrichments as Record<string, EnrichmentEntry>)
+    if (view) metaBuilder.view(view)
+    metaBuilder.enrichments(enrichments as Record<string, EnrichmentEntry>)
 
     const translationMap = new Map([
       [
@@ -195,6 +137,34 @@ export class PageController {
     metaBuilder.translation(translationMap)
 
     return withMeta(pageData, metaBuilder.build())
+  }
+
+  @Get('/:id')
+  @Auth()
+  async getPageById(@Param() params: EntityIdDto, @Lang() lang?: string) {
+    const page = await this.pageService.findById(params.id)
+    if (!page) {
+      throw createAppException(AppErrorCode.PAGE_NOT_FOUND, { id: params.id })
+    }
+
+    return this.buildPageDetailResponse(page, lang)
+  }
+
+  @Get('/slug/:slug')
+  async getPageBySlug(
+    @Param('slug') slug: string,
+    @Query() query: PageDetailQueryDto,
+    @Lang() lang?: string,
+  ) {
+    if (typeof slug !== 'string') {
+      throw createAppException(AppErrorCode.PAGE_NOT_FOUND)
+    }
+    const page = await this.pageService.findBySlug(slug)
+    if (!page) {
+      throw createAppException(AppErrorCode.PAGE_NOT_FOUND)
+    }
+
+    return this.buildPageDetailResponse(page, lang, 'detail')
   }
 
   @Post('/')

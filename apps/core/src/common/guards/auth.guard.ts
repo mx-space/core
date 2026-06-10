@@ -39,13 +39,8 @@ export class AuthGuard implements CanActivate {
       throw createAppException(AppErrorCode.AUTH_TOKEN_INVALID)
     }
 
-    const isOwner = await this.authService.isOwnerReaderId(result.referenceId)
-    if (!isOwner) {
-      throw createAppException(AppErrorCode.AUTH_TOKEN_INVALID)
-    }
-
     const readerUser = await this.authService.getReaderById(result.referenceId)
-    if (!readerUser) {
+    if (!readerUser || readerUser.role !== 'owner') {
       throw createAppException(AppErrorCode.AUTH_TOKEN_INVALID)
     }
     this.attachUserAndToken(request, readerUser, apiKey.key)

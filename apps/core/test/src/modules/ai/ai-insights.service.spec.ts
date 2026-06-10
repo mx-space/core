@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { AppException } from '~/common/errors/exception.types'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import type { AiInsightsRepository } from '~/modules/ai/ai-insights/ai-insights.repository'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 
@@ -22,7 +23,7 @@ const createService = () => {
   const repository = createPgRepositoryMock<AiInsightsRepository>()
   const databaseService = {
     findGlobalById: vi.fn(),
-    findGlobalByIds: vi.fn().mockResolvedValue({ notes: [], posts: [] }),
+    getRefArticleMap: vi.fn().mockResolvedValue({}),
   }
   const configService = { get: vi.fn() }
   const aiService = {}
@@ -84,9 +85,8 @@ describe('AiInsightsService', () => {
       pagination: { total: 1 },
     })
     repository.listByRefIds.mockResolvedValue([row] as any)
-    databaseService.findGlobalByIds.mockResolvedValue({
-      notes: [],
-      posts: [{ id: 'post-1', title: 'Post' }],
+    databaseService.getRefArticleMap.mockResolvedValue({
+      'post-1': { id: 'post-1', title: 'Post', type: CollectionRefTypes.Post },
     })
 
     await expect(

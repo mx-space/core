@@ -8,6 +8,7 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { alphabet } from '~/constants/other.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { validateImageBuffer } from '~/utils/image.util'
+import { AsyncQueue } from '~/utils/queue.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { FileService } from '../file/file.service'
@@ -16,6 +17,8 @@ import { LinkRepository } from './link.repository'
 import { type LinkRow, LinkState } from './link.types'
 
 const AVATAR_TYPE: FileType = 'avatar'
+
+const MIGRATE_CONCURRENCY = 4
 
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
   'image/jpeg',
@@ -155,22 +158,29 @@ export class LinkAvatarService {
     }
 
     const links = await this.linkRepository.findByState(LinkState.Pass)
-    const updatedIds: string[] = []
 
-    for (const link of links) {
-      try {
-        if (this.isExternalAvatar(link.avatar)) {
-          const converted = await this.convertToInternal(link.id)
-          if (converted) {
-            updatedIds.push(link.id)
+    const { results } = await AsyncQueue.runAll(
+      links,
+      async (link) => {
+        try {
+          if (
+            this.isExternalAvatar(link.avatar) &&
+            (await this.convertToInternal(link.id))
+          ) {
+            return link.id
           }
+        } catch (error: any) {
+          this.logger.error(
+            `Failed to migrate friend link avatar: ${link.id} - ${error?.message || String(error)}`,
+          )
         }
-      } catch (error: any) {
-        this.logger.error(
-          `Failed to migrate friend link avatar: ${link.id} - ${error?.message || String(error)}`,
-        )
-      }
-    }
+        return null
+      },
+      MIGRATE_CONCURRENCY,
+    )
+    const updatedIds = results.filter(
+      (id): id is string => typeof id === 'string',
+    )
 
     return { updatedCount: updatedIds.length, updatedIds }
   }

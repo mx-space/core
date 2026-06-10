@@ -261,73 +261,14 @@ export class TaskQueueService implements OnModuleDestroy {
       return undefined
     }
 
-    const stats: SubTaskStats = {
-      total: taskIds.length,
-      completed: 0,
-      partialFailed: 0,
-      failed: 0,
-      running: 0,
-      pending: 0,
-    }
-
-    // Batch fetch all task statuses
-    const pipeline = this.redis.pipeline()
-    for (const id of taskIds) {
-      const taskKey = this.getKey(TASK_QUEUE_KEYS.task(id))
-      pipeline.hget(taskKey, 'status')
-    }
-
-    const results = await pipeline.exec()
-    if (!results) return stats
-
-    for (const [err, status] of results) {
-      if (err || !status) continue
-      switch (status as string) {
-        case TaskStatus.Completed: {
-          stats.completed++
-          break
-        }
-        case TaskStatus.PartialFailed: {
-          stats.partialFailed++
-          break
-        }
-        case TaskStatus.Failed: {
-          stats.failed++
-          break
-        }
-        case TaskStatus.Running: {
-          stats.running++
-          break
-        }
-        case TaskStatus.Pending: {
-          stats.pending++
-          break
-        }
-        case TaskStatus.Cancelled: {
-          stats.failed++ // Count cancelled as failed for simplicity
-          break
-        }
-      }
-    }
-
-    return stats
+    return this.tallyStatuses(taskIds)
   }
 
   /**
-   * Recompute a parent group's subTaskStats from the live child hashes.
-   *
-   * - Reads the group ZSET once, then one pipelined HGET per child (status
-   *   field only). No N+1 across services — a 100-child group costs 1 ZRANGE
-   *   + 1 pipeline RTT.
-   * - Returns the FULL stats object (not a delta), so the admin can do a
-   *   wholesale replace and last-writer-wins is correct.
-   * - Cancelled rolls into `failed` to mirror existing `computeSubTaskStats`
-   *   semantics — keeping admin numerics consistent across REST + socket.
+   * Tally child task statuses with one pipelined HGET per id. Cancelled
+   * rolls into `failed` for simplicity.
    */
-  async recomputeGroupStats(groupId: string): Promise<SubTaskStats> {
-    const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(groupId))
-    const taskIds = await this.redis.zrange(indexGroup, 0, -1)
-
+  private async tallyStatuses(taskIds: string[]): Promise<SubTaskStats> {
     const stats: SubTaskStats = {
       total: taskIds.length,
       completed: 0,
@@ -374,7 +315,25 @@ export class TaskQueueService implements OnModuleDestroy {
         }
       }
     }
+
     return stats
+  }
+
+  /**
+   * Recompute a parent group's subTaskStats from the live child hashes.
+   *
+   * - Reads the group ZSET once, then one pipelined HGET per child (status
+   *   field only). No N+1 across services — a 100-child group costs 1 ZRANGE
+   *   + 1 pipeline RTT.
+   * - Returns the FULL stats object (not a delta), so the admin can do a
+   *   wholesale replace and last-writer-wins is correct.
+   * - Cancelled rolls into `failed` to mirror existing `computeSubTaskStats`
+   *   semantics — keeping admin numerics consistent across REST + socket.
+   */
+  async recomputeGroupStats(groupId: string): Promise<SubTaskStats> {
+    const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(groupId))
+    const taskIds = await this.redis.zrange(indexGroup, 0, -1)
+    return this.tallyStatuses(taskIds)
   }
 
   async getTasks(options: {
@@ -494,17 +453,13 @@ export class TaskQueueService implements OnModuleDestroy {
       return 0
     }
 
-    let cancelled = 0
-    for (const taskId of taskIds) {
-      try {
-        const success = await this.cancelTask(taskId)
-        if (success) {
-          cancelled++
-        }
-      } catch {
-        // Task may already be completed or not exist
-      }
-    }
+    // Failures are ignored: a task may already be completed or not exist
+    const results = await Promise.allSettled(
+      taskIds.map((taskId) => this.cancelTask(taskId)),
+    )
+    const cancelled = results.filter(
+      (r) => r.status === 'fulfilled' && r.value,
+    ).length
 
     this.logger.log(
       `Tasks cancelled by group: groupId=${groupId} cancelled=${cancelled}/${taskIds.length}`,

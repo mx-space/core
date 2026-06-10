@@ -4,19 +4,6 @@ import { resolveRequestedLanguage } from '~/utils/lang.util'
 
 export const zBooleanOrString = z.union([z.boolean(), z.string()])
 
-export const zTransformEmptyNull = <T extends z.ZodTypeAny>(schema: T) =>
-  z.preprocess(
-    (val) => (String(val).length === 0 ? null : val),
-    schema.nullable().optional(),
-  )
-
-export const zTransformBoolean = z.preprocess((val) => {
-  if (typeof val === 'boolean') return val
-  if (val === 'true' || val === '1' || val === 1) return true
-  if (val === 'false' || val === '0' || val === 0) return false
-  return undefined
-}, z.boolean().optional())
-
 export const zPinDate = z.preprocess((val) => {
   if (val === null || val === undefined) return val
   if (val instanceof Date) return val
@@ -36,9 +23,6 @@ export const zSlug = z
 
 export const zEmail = (message = 'Please enter a valid email address') =>
   z.string().email({ message })
-
-export const zUrl = (message = 'Please enter a valid URL') =>
-  z.string().url({ message })
 
 export const zMaxLengthString = (max: number, message?: string) =>
   z.string().max(max, message || `Must not exceed ${max} characters`)

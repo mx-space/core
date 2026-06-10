@@ -2,17 +2,18 @@ import { Injectable, Logger } from '@nestjs/common'
 
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { md5 } from '~/utils/tool.util'
 
 import type { AiTranslationRow, ArticleContent } from './ai-translation.types'
 import {
-  backfillReusableBlockTranslations,
+  buildReusableTranslationOverlay,
   guardMermaidTranslations,
 } from './lexical-block-reuse'
+import { restoreLexicalTranslation } from './lexical-translation-parser'
 import {
-  parseLexicalForTranslation,
-  restoreLexicalTranslation,
-} from './lexical-translation-parser'
+  encodeTags,
+  isMetaFieldUnchanged,
+  type SourceMetaHashes,
+} from './translation-meta'
 
 export interface PartialLexicalTranslationStats {
   totalBlockCount: number
@@ -31,13 +32,6 @@ interface LexicalSourceBlockSnapshot {
   fingerprint: string
 }
 
-interface LexicalSourceMetaHashes {
-  title?: unknown
-  subtitle?: unknown
-  summary?: unknown
-  tags?: unknown
-}
-
 function isLexicalSourceBlockSnapshotArray(
   value: unknown,
 ): value is LexicalSourceBlockSnapshot[] {
@@ -54,9 +48,9 @@ function isLexicalSourceBlockSnapshotArray(
   )
 }
 
-function getMetaHashes(value: unknown): LexicalSourceMetaHashes | null {
+function getMetaHashes(value: unknown): SourceMetaHashes | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as LexicalSourceMetaHashes
+  return value as SourceMetaHashes
 }
 
 @Injectable()
@@ -86,33 +80,16 @@ export class LexicalPartialTranslationBuilder {
       return null
     }
 
-    const oldFingerprintByBlockId = new Map(
-      existing.sourceBlockSnapshots.map((snapshot) => [
-        snapshot.id,
-        snapshot.fingerprint,
-      ]),
-    )
-    const unchangedBlockIds = new Set<string>()
-
-    for (const block of currentBlocks) {
-      if (
-        block.id &&
-        oldFingerprintByBlockId.has(block.id) &&
-        oldFingerprintByBlockId.get(block.id) === block.fingerprint
-      ) {
-        unchangedBlockIds.add(block.id)
-      }
-    }
-
     try {
-      const currentParseResult = parseLexicalForTranslation(content.content)
-      const translatedParseResult = parseLexicalForTranslation(existing.content)
-      const translations = new Map<string, string>()
-      const backfillResult = backfillReusableBlockTranslations(
-        currentParseResult,
-        translatedParseResult,
-        unchangedBlockIds,
+      const {
+        parseResult: currentParseResult,
         translations,
+        backfill: backfillResult,
+      } = buildReusableTranslationOverlay(
+        content.content,
+        existing.content,
+        currentBlocks,
+        existing.sourceBlockSnapshots,
       )
 
       guardMermaidTranslations(currentParseResult, translations, (message) =>
@@ -140,21 +117,22 @@ export class LexicalPartialTranslationBuilder {
       return {
         translation: {
           ...existing,
-          title:
-            metaHashes?.title === md5(content.title)
-              ? existing.title
-              : content.title,
+          title: isMetaFieldUnchanged(metaHashes, 'title', content.title)
+            ? existing.title
+            : content.title,
           subtitle:
-            content.subtitle && metaHashes?.subtitle === md5(content.subtitle)
+            content.subtitle &&
+            isMetaFieldUnchanged(metaHashes, 'subtitle', content.subtitle)
               ? existing.subtitle
               : (content.subtitle ?? null),
           summary:
-            content.summary && metaHashes?.summary === md5(content.summary)
+            content.summary &&
+            isMetaFieldUnchanged(metaHashes, 'summary', content.summary)
               ? existing.summary
               : (content.summary ?? null),
           tags:
             content.tags?.length &&
-            metaHashes?.tags === md5(content.tags.join('|||'))
+            isMetaFieldUnchanged(metaHashes, 'tags', encodeTags(content.tags))
               ? existing.tags
               : (content.tags ?? []),
           text,

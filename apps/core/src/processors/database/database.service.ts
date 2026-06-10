@@ -11,6 +11,30 @@ import { RecentlyRepository } from '~/modules/recently/recently.repository'
 import type { RecentlyRow } from '~/modules/recently/recently.types'
 import { isEntityIdString, parseEntityId } from '~/shared/id/entity-id'
 
+export type RefArticleInfo = {
+  id: string
+  title: string
+  type: CollectionRefTypes
+}
+
+export const buildRefArticleMap = (articles: {
+  posts: Array<{ id: string; title: string }>
+  notes: Array<{ id: string; title: string }>
+  pages: Array<{ id: string; title: string }>
+}): Record<string, RefArticleInfo> => {
+  const map: Record<string, RefArticleInfo> = {}
+  for (const a of articles.posts) {
+    map[a.id] = { id: a.id, title: a.title, type: CollectionRefTypes.Post }
+  }
+  for (const a of articles.notes) {
+    map[a.id] = { id: a.id, title: a.title, type: CollectionRefTypes.Note }
+  }
+  for (const a of articles.pages) {
+    map[a.id] = { id: a.id, title: a.title, type: CollectionRefTypes.Page }
+  }
+  return map
+}
+
 type GlobalDocumentResult =
   | { document: PostRow; type: CollectionRefTypes.Post }
   | { document: NoteRow; type: CollectionRefTypes.Note }
@@ -65,6 +89,13 @@ export class DatabaseService {
     }
   }
 
+  public async getRefArticleMap(
+    refIds: string[],
+  ): Promise<Record<string, RefArticleInfo>> {
+    const { posts, notes, pages } = await this.findGlobalByIds(refIds)
+    return buildRefArticleMap({ posts, notes, pages })
+  }
+
   public findPostBySlug(slug: string) {
     return this.postRepository.findBySlug(slug)
   }
@@ -92,6 +123,21 @@ export class DatabaseService {
       this.noteRepository.findIdsByTitle(normalizedSearch),
     ])
     return [...new Set([...posts, ...notes])]
+  }
+
+  public async findAllArticlesForTranslation(): Promise<{
+    posts: Array<{ id: string; title: string }>
+    notes: Array<{ id: string; title: string }>
+    pages: Array<{ id: string; title: string }>
+  }> {
+    const [posts, notes, pages] = await Promise.all([
+      this.postRepository.findPublishedForSitemap(),
+      this.noteRepository.findVisibleForSitemap(),
+      this.pageRepository.findAll(),
+    ])
+    const pick = (rows: Array<{ id: string; title: string }>) =>
+      rows.map(({ id, title }) => ({ id, title }))
+    return { posts: pick(posts), notes: pick(notes), pages: pick(pages) }
   }
 
   flatCollectionToMap(combinedCollection: IdsCollection) {

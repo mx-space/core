@@ -42,17 +42,9 @@ export class SayController {
     const size = pager.size ?? 10
     const page = pager.page ?? 1
     const result = await this.repository.list(page, size)
-    const p = result.pagination
     return withMeta(
       result.data,
-      new MetaObjectBuilder()
-        .pagination({
-          page: p.currentPage,
-          size: p.size,
-          total: p.total,
-          totalPages: p.totalPage,
-        })
-        .build(),
+      new MetaObjectBuilder().pagination(result.pagination).build(),
     )
   }
 

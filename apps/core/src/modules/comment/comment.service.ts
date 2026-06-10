@@ -138,10 +138,6 @@ export class CommentService {
     return this.commentRepository
   }
 
-  private normalizeRefType(type: CollectionRefTypes | CommentRefType) {
-    return type as CommentRefType
-  }
-
   private async assignReaderToComment(): Promise<
     (ReaderModel & { id: string }) | null
   > {
@@ -299,20 +295,14 @@ export class CommentService {
     refType: CollectionRefTypes | CommentRefType,
     refId: string,
   ) {
-    return this.commentRepository.deleteForRef(
-      this.normalizeRefType(refType),
-      refId,
-    )
+    return this.commentRepository.deleteForRef(refType as CommentRefType, refId)
   }
 
   async countByRef(
     refType: CollectionRefTypes | CommentRefType,
     refId: string,
   ) {
-    return this.commentRepository.countByRef(
-      this.normalizeRefType(refType),
-      refId,
-    )
+    return this.commentRepository.countByRef(refType as CommentRefType, refId)
   }
 
   async countManyByRef(
@@ -320,7 +310,7 @@ export class CommentService {
     refIds: Array<string>,
   ): Promise<Map<string, number>> {
     return this.commentRepository.countManyByRef(
-      this.normalizeRefType(refType),
+      refType as CommentRefType,
       refIds,
     )
   }
@@ -381,7 +371,7 @@ export class CommentService {
         ? CommentState.Read
         : CommentState.Unread,
       refId: id,
-      refType: this.normalizeRefType(refType),
+      refType: refType as CommentRefType,
       parentCommentId: null,
       rootCommentId: null,
       readerId: reader ? reader.id : undefined,

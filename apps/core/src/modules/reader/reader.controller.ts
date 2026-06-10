@@ -39,17 +39,9 @@ export class ReaderAuthController {
       search,
       role,
     )
-    const p = result.pagination
     return withMeta(
       result.data,
-      new MetaObjectBuilder()
-        .pagination({
-          page: p.currentPage,
-          size: p.size,
-          total: p.total,
-          totalPages: p.totalPage,
-        })
-        .build(),
+      new MetaObjectBuilder().pagination(result.pagination).build(),
     )
   }
 

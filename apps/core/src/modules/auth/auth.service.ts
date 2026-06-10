@@ -281,10 +281,27 @@ export class AuthService {
     return 'OK'
   }
 
-  async getSessionUser(req: IncomingMessage) {
-    return this.getSessionUserFromHeaders(
+  private readonly sessionUserPromiseByRequest = new WeakMap<
+    IncomingMessage,
+    ReturnType<AuthService['getSessionUserFromHeaders']>
+  >()
+
+  getSessionUser(req: IncomingMessage) {
+    const cached = this.sessionUserPromiseByRequest.get(req)
+    if (cached) return cached
+
+    const promise = this.getSessionUserFromHeaders(
       this.buildHeadersFromRequest(req.headers),
     )
+    // Only memoize in-flight/successful resolutions: callers (e.g. RolesGuard)
+    // swallow transient failures and retry, so a rejection must not be cached.
+    promise.catch(() => {
+      if (this.sessionUserPromiseByRequest.get(req) === promise) {
+        this.sessionUserPromiseByRequest.delete(req)
+      }
+    })
+    this.sessionUserPromiseByRequest.set(req, promise)
+    return promise
   }
 
   async getSessionUserFromHeaders(headers: Headers) {

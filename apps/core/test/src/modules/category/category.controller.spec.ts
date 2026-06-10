@@ -63,6 +63,15 @@ const createController = (
     getCategoryTagsSum: vi.fn().mockResolvedValue([]),
     findArticleWithTag: vi.fn().mockResolvedValue([]),
   }
+  Object.defineProperty(categoryService, 'repository', {
+    value: {
+      findByIds: vi.fn().mockImplementation(async (ids: string[]) => {
+        return ids
+          .map((id) => categories.find((c) => String(c.id) === String(id)))
+          .filter(Boolean)
+      }),
+    },
+  })
 
   const postService = {
     listByCategory: vi.fn().mockImplementation(async (id: string) => {

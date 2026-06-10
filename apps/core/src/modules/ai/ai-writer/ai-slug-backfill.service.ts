@@ -1,5 +1,4 @@
 import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common'
-import slugify from 'slugify'
 
 import { NOTE_SERVICE_TOKEN } from '~/constants/injection.constant'
 import {
@@ -7,6 +6,7 @@ import {
   TaskQueueProcessor,
 } from '~/processors/task-queue'
 import { createAbortError } from '~/utils/abort.util'
+import { normalizeSlug } from '~/utils/slug.util'
 
 import type { NoteService } from '../../note/note.service'
 import { AiTaskService } from '../ai-task/ai-task.service'
@@ -31,12 +31,6 @@ export class AiSlugBackfillService implements OnModuleInit {
 
   onModuleInit() {
     this.registerTaskHandler()
-  }
-
-  private normalizeSlug(slug?: string | null) {
-    if (!slug) return undefined
-    const normalized = slugify(slug, { lower: true, strict: true, trim: true })
-    return normalized || undefined
   }
 
   private async ensureSlugAvailable(slug: string): Promise<boolean> {
@@ -128,7 +122,7 @@ export class AiSlugBackfillService implements OnModuleInit {
               await this.aiWriterService.generateSlugByTitleViaOpenAI(
                 note.title,
               )
-            const slug = this.normalizeSlug(result.slug)
+            const slug = normalizeSlug(result.slug)
 
             if (!slug) {
               skipped++

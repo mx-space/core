@@ -1,4 +1,4 @@
-import { sleep } from './shell.util'
+import { sleep } from './tool.util'
 
 export function scheduleMicrotask(callback: () => void) {
   sleep(0).then(callback)

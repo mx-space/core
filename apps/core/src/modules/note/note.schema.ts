@@ -4,11 +4,11 @@ import { z } from 'zod'
 import {
   zCoerceBoolean,
   zCoerceInt,
+  zEmptyStringToNull,
   zEntityId,
   zLang,
   zNonEmptyString,
   zPrefer,
-  zTransformEmptyNull,
 } from '~/common/zod'
 import { createPagerSchema } from '~/shared/dto/pager.dto'
 import {
@@ -43,7 +43,7 @@ const NoteBaseSchema = WriteBaseSchema.extend({
     return trimmed.length === 0 ? undefined : trimmed
   }, z.string().optional()),
   isPublished: z.boolean().default(true).optional(),
-  password: zTransformEmptyNull(z.string()).optional(),
+  password: zEmptyStringToNull.optional(),
   publicAt: z
     .preprocess(
       (val) => (val ? new Date(val as string | number | Date) : null),

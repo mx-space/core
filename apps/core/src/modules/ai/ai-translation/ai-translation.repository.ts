@@ -109,23 +109,6 @@ export class AiTranslationRepository extends BaseRepository {
     return row ? mapTranslation(row) : null
   }
 
-  async listForRef(
-    refId: EntityId | string,
-    refType: string,
-  ): Promise<AiTranslationRow[]> {
-    const refBig = parseEntityId(refId)
-    const rows = await this.db
-      .select()
-      .from(aiTranslations)
-      .where(
-        and(
-          eq(aiTranslations.refId, refBig),
-          eq(aiTranslations.refType, refType),
-        )!,
-      )
-    return rows.map(mapTranslation)
-  }
-
   async listByRefId(refId: EntityId | string): Promise<AiTranslationRow[]> {
     const rows = await this.db
       .select()
@@ -244,62 +227,38 @@ export class AiTranslationRepository extends BaseRepository {
     },
   ): Promise<AiTranslationRow> {
     const refBig = parseEntityId(input.refId)
-    const [existing] = await this.db
-      .select()
-      .from(aiTranslations)
-      .where(
-        and(
-          eq(aiTranslations.refId, refBig),
-          eq(aiTranslations.refType, input.refType),
-          eq(aiTranslations.lang, input.lang),
-        )!,
-      )
-      .limit(1)
-    if (existing) {
-      const [row] = await this.db
-        .update(aiTranslations)
-        .set({
-          hash: input.hash,
-          sourceLang: input.sourceLang,
-          title: input.title,
-          text: input.text,
-          subtitle: input.subtitle,
-          summary: input.summary,
-          tags: input.tags,
-          sourceModifiedAt: input.sourceModifiedAt,
-          aiModel: input.aiModel,
-          aiProvider: input.aiProvider,
-          contentFormat: input.contentFormat,
-          content: input.content,
-          sourceBlockSnapshots: input.sourceBlockSnapshots,
-          sourceMetaHashes: input.sourceMetaHashes,
-        })
-        .where(eq(aiTranslations.id, existing.id))
-        .returning()
-      return mapTranslation(row)
+    const updatableColumns = {
+      hash: input.hash,
+      sourceLang: input.sourceLang,
+      title: input.title,
+      text: input.text,
+      subtitle: input.subtitle,
+      summary: input.summary,
+      tags: input.tags ?? [],
+      sourceModifiedAt: input.sourceModifiedAt,
+      aiModel: input.aiModel,
+      aiProvider: input.aiProvider,
+      contentFormat: input.contentFormat,
+      content: input.content,
+      sourceBlockSnapshots: input.sourceBlockSnapshots,
+      sourceMetaHashes: input.sourceMetaHashes,
     }
-    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(aiTranslations)
       .values({
-        id,
-        hash: input.hash,
+        id: this.snowflake.nextId(),
         refId: refBig,
         refType: input.refType,
         lang: input.lang,
-        sourceLang: input.sourceLang,
-        title: input.title,
-        text: input.text,
-        subtitle: input.subtitle,
-        summary: input.summary,
-        tags: input.tags ?? [],
-        sourceModifiedAt: input.sourceModifiedAt,
-        aiModel: input.aiModel,
-        aiProvider: input.aiProvider,
-        contentFormat: input.contentFormat,
-        content: input.content,
-        sourceBlockSnapshots: input.sourceBlockSnapshots,
-        sourceMetaHashes: input.sourceMetaHashes,
+        ...updatableColumns,
+      })
+      .onConflictDoUpdate({
+        target: [
+          aiTranslations.refId,
+          aiTranslations.refType,
+          aiTranslations.lang,
+        ],
+        set: updatableColumns,
       })
       .returning()
     return mapTranslation(row)
@@ -339,23 +298,6 @@ export class AiTranslationRepository extends BaseRepository {
     return row ? mapTranslation(row) : null
   }
 
-  async deleteForRef(
-    refId: EntityId | string,
-    refType: string,
-  ): Promise<number> {
-    const refBig = parseEntityId(refId)
-    const result = await this.db
-      .delete(aiTranslations)
-      .where(
-        and(
-          eq(aiTranslations.refId, refBig),
-          eq(aiTranslations.refType, refType),
-        )!,
-      )
-      .returning({ id: aiTranslations.id })
-    return result.length
-  }
-
   async deleteForRefId(refId: EntityId | string): Promise<number> {
     const result = await this.db
       .delete(aiTranslations)
@@ -380,43 +322,6 @@ export class TranslationEntryRepository extends BaseRepository {
     private readonly snowflake: SnowflakeService,
   ) {
     super(db)
-  }
-
-  async lookup(
-    keyPath: string,
-    lang: string,
-    keyType: string,
-    lookupKey: string,
-  ): Promise<TranslationEntryRow | null> {
-    const [row] = await this.db
-      .select()
-      .from(translationEntries)
-      .where(
-        and(
-          eq(translationEntries.keyPath, keyPath),
-          eq(translationEntries.lang, lang),
-          eq(translationEntries.keyType, keyType),
-          eq(translationEntries.lookupKey, lookupKey),
-        )!,
-      )
-      .limit(1)
-    return row ? mapEntry(row) : null
-  }
-
-  async listByPathLang(
-    keyPath: string,
-    lang: string,
-  ): Promise<TranslationEntryRow[]> {
-    const rows = await this.db
-      .select()
-      .from(translationEntries)
-      .where(
-        and(
-          eq(translationEntries.keyPath, keyPath),
-          eq(translationEntries.lang, lang),
-        )!,
-      )
-    return rows.map(mapEntry)
   }
 
   async listByBatch(
@@ -485,35 +390,10 @@ export class TranslationEntryRepository extends BaseRepository {
     translatedText: string
     sourceUpdatedAt?: Date | null
   }): Promise<TranslationEntryRow> {
-    const [existing] = await this.db
-      .select()
-      .from(translationEntries)
-      .where(
-        and(
-          eq(translationEntries.keyPath, input.keyPath),
-          eq(translationEntries.lang, input.lang),
-          eq(translationEntries.keyType, input.keyType),
-          eq(translationEntries.lookupKey, input.lookupKey),
-        )!,
-      )
-      .limit(1)
-    if (existing) {
-      const [row] = await this.db
-        .update(translationEntries)
-        .set({
-          sourceText: input.sourceText,
-          translatedText: input.translatedText,
-          sourceUpdatedAt: input.sourceUpdatedAt ?? existing.sourceUpdatedAt,
-        })
-        .where(eq(translationEntries.id, existing.id))
-        .returning()
-      return mapEntry(row)
-    }
-    const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(translationEntries)
       .values({
-        id,
+        id: this.snowflake.nextId(),
         keyPath: input.keyPath,
         lang: input.lang,
         keyType: input.keyType,
@@ -522,15 +402,25 @@ export class TranslationEntryRepository extends BaseRepository {
         translatedText: input.translatedText,
         sourceUpdatedAt: input.sourceUpdatedAt ?? null,
       })
+      .onConflictDoUpdate({
+        target: [
+          translationEntries.keyPath,
+          translationEntries.lang,
+          translationEntries.keyType,
+          translationEntries.lookupKey,
+        ],
+        set: {
+          sourceText: input.sourceText,
+          translatedText: input.translatedText,
+          // Preserve the stored sourceUpdatedAt when the caller does not
+          // provide one (entity updates stamp it, dict entries do not).
+          ...(input.sourceUpdatedAt != null
+            ? { sourceUpdatedAt: input.sourceUpdatedAt }
+            : {}),
+        },
+      })
       .returning()
     return mapEntry(row)
-  }
-
-  async count(): Promise<number> {
-    const [row] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(translationEntries)
-    return Number(row?.count ?? 0)
   }
 
   async listFiltered(

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { asc, eq, inArray, sql } from 'drizzle-orm'
+import { asc, eq, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { metaPresets } from '~/database/schema'
@@ -163,19 +163,23 @@ export class MetaPresetRepository extends BaseRepository {
   }
 
   async updateOrder(ids: string[]): Promise<void> {
-    const rows = await this.db
-      .select()
-      .from(metaPresets)
-      .where(
-        inArray(
-          metaPresets.id,
-          ids.map((id) => parseEntityId(id)),
-        ),
-      )
-    for (const row of rows) {
-      const index = ids.indexOf(toEntityId(row.id) as EntityId)
-      if (index < 0) continue
-      await this.update(toEntityId(row.id) as EntityId, { order: index })
+    const orderById = new Map<EntityId, number>()
+    for (const [index, id] of ids.entries()) {
+      const parsed = parseEntityId(id)
+      if (!orderById.has(parsed)) orderById.set(parsed, index)
     }
+    if (orderById.size === 0) return
+    const values = sql.join(
+      [...orderById].map(([id, order]) => sql`(${id}::text, ${order}::int)`),
+      sql`, `,
+    )
+    await this.db.execute(sql`
+      update ${metaPresets} as m
+      set
+        fields = jsonb_set(m.fields, '{0,order}', to_jsonb(v.ord)),
+        updated_at = now()
+      from (values ${values}) as v(id, ord)
+      where m.id = v.id
+    `)
   }
 }

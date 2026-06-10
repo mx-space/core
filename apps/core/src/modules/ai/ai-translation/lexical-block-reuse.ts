@@ -1,7 +1,8 @@
-import type {
-  LexicalTranslationResult,
-  PropertySegment,
-  TranslationSegment,
+import {
+  type LexicalTranslationResult,
+  parseLexicalForTranslation,
+  type PropertySegment,
+  type TranslationSegment,
 } from './lexical-translation-parser'
 import { validateMermaidTranslation } from './mermaid-translation-guard'
 
@@ -57,13 +58,36 @@ export function canReuseBlockTranslations(
     return false
   }
 
-  return currentBlock.propertySegments.every((segment, index) => {
-    const translatedSegment = translatedBlock.propertySegments[index]
-    return (
-      translatedSegment.property === segment.property &&
-      translatedSegment.key === segment.key
+  const propertyShapeMatches = currentBlock.propertySegments.every(
+    (segment, index) => {
+      const translatedSegment = translatedBlock.propertySegments[index]
+      return (
+        translatedSegment.property === segment.property &&
+        translatedSegment.key === segment.key
+      )
+    },
+  )
+  if (!propertyShapeMatches) {
+    return false
+  }
+
+  // A stored "translation" byte-identical to the current source means the
+  // block was never actually translated (writer echo or fallback-to-original).
+  // Reusing it would freeze the untranslated text across every future
+  // incremental run, so force a retranslation instead.
+  const hasAnySegment =
+    currentBlock.segments.length > 0 || currentBlock.propertySegments.length > 0
+  const identicalToSource =
+    hasAnySegment &&
+    currentBlock.segments.every(
+      (segment, index) => translatedBlock.segments[index].text === segment.text,
+    ) &&
+    currentBlock.propertySegments.every(
+      (segment, index) =>
+        translatedBlock.propertySegments[index].text === segment.text,
     )
-  })
+
+  return !identicalToSource
 }
 
 export function backfillReusableBlockTranslations(
@@ -105,6 +129,50 @@ export function backfillReusableBlockTranslations(
   }
 
   return { reusedBlockIds, skippedBlockIds }
+}
+
+export interface TranslationOverlay {
+  parseResult: LexicalTranslationResult
+  translations: Map<string, string>
+  unchangedBlockIds: Set<string>
+  backfill: BackfillReusableBlockResult
+}
+
+// Shared zero-LLM prefix of incremental translation: diff current root-block
+// fingerprints against the stored snapshots, parse both documents, and
+// backfill translations for unchanged blocks. Consumed by both the
+// incremental strategy (which then sends the rest to the writer) and the
+// read-path partial overlay builder (which restores with the backfill only).
+export function buildReusableTranslationOverlay(
+  currentContent: string,
+  translatedContent: string,
+  currentBlocks: ReadonlyArray<{ id: string | null; fingerprint: string }>,
+  oldSnapshots: ReadonlyArray<{ id: string; fingerprint: string }>,
+): TranslationOverlay {
+  const oldFingerprintByBlockId = new Map(
+    oldSnapshots.map((snapshot) => [snapshot.id, snapshot.fingerprint]),
+  )
+  const unchangedBlockIds = new Set<string>()
+  for (const block of currentBlocks) {
+    if (
+      block.id &&
+      oldFingerprintByBlockId.get(block.id) === block.fingerprint
+    ) {
+      unchangedBlockIds.add(block.id)
+    }
+  }
+
+  const parseResult = parseLexicalForTranslation(currentContent)
+  const translatedParseResult = parseLexicalForTranslation(translatedContent)
+  const translations = new Map<string, string>()
+  const backfill = backfillReusableBlockTranslations(
+    parseResult,
+    translatedParseResult,
+    unchangedBlockIds,
+    translations,
+  )
+
+  return { parseResult, translations, unchangedBlockIds, backfill }
 }
 
 export function guardMermaidTranslations(

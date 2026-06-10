@@ -27,6 +27,12 @@ export const update = Command.make(
         delete payload.text
         delete payload.contentFormat
       }
+      // Envelope <state> must not flip publish state on update: envelopes are
+      // routinely reused from `post create` (where <state>draft</state> is the
+      // norm), and a published post silently reverting to draft makes it
+      // vanish for readers. Only the explicit --state flag (or the dedicated
+      // publish/unpublish commands) changes publish state.
+      if (flags.state === undefined) delete payload.isPublished
       const resolved = yield* resolveCategoryRefs(payload)
       const resolver = yield* Resolver
       const id = yield* resolver.resolvePostId(slugOrId)

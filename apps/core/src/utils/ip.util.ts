@@ -3,7 +3,6 @@
  * @description IP utility functions
  */
 import type { IncomingMessage } from 'node:http'
-import { URL } from 'node:url'
 
 import type { FastifyRequest } from 'fastify'
 
@@ -32,11 +31,4 @@ export const getIp = (request: FastifyRequest | IncomingMessage) => {
     ip = ip.split(',')[0]
   }
   return ip
-}
-
-export const parseRelativeUrl = (path: string) => {
-  if (!path || !path.startsWith('/')) {
-    return new URL('http://a.com')
-  }
-  return new URL(`http://a.com${path}`)
 }

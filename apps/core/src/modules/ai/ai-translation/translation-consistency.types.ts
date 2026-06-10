@@ -11,14 +11,3 @@ export interface TranslationSourceSnapshot {
   modifiedAt?: Date | null
   createdAt?: Date | null
 }
-
-export const TRANSLATION_VALIDATION_REQUIRED_SELECT_FIELDS = [
-  'refId',
-  'hash',
-  'sourceLang',
-  'sourceModifiedAt',
-  'createdAt',
-] as const
-
-export const TRANSLATION_VALIDATION_DEFAULT_SELECT =
-  'refId refType lang sourceLang title text subtitle summary tags hash sourceModifiedAt createdAt aiModel aiProvider'

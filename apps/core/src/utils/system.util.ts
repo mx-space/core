@@ -1,6 +1,5 @@
 import cdp, { exec } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { builtinModules } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
@@ -33,14 +32,6 @@ export const formatByteSize = (byteSize: number) => {
   return unitIndex === 0
     ? `${value} ${BYTE_UNITS[unitIndex]}`
     : `${value.toFixed(2)} ${BYTE_UNITS[unitIndex]}`
-}
-
-const BUILTIN_MODULE_INTERNAL_RE = /^_|^(?:internal|v8|node-inspect)\/|\//
-
-export const isBuiltinModule = (module: string, ignoreList: string[] = []) => {
-  if (ignoreList.includes(module)) return false
-  if (BUILTIN_MODULE_INTERNAL_RE.test(module)) return false
-  return builtinModules.includes(module)
 }
 
 export type PackageManager = 'pnpm' | 'yarn' | 'npm'

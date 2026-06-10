@@ -17,6 +17,7 @@ import { EmailService } from '~/processors/helper/helper.email.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
+import { truncateAtBoundary } from '~/utils/text-summary.util'
 import { hashString, md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -34,7 +35,7 @@ import { SubscribeRepository } from './subscribe.repository'
 import { SubscribeMailType } from './subscribe-mail.enum'
 
 type Email = string
-type SubscribeBit = number
+type SubscriberEntry = { subscribe: number; cancelToken: string }
 
 @Injectable()
 export class SubscribeService implements OnModuleInit, OnModuleDestroy {
@@ -48,7 +49,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     private readonly ownerService: OwnerService,
   ) {}
 
-  private subscribeMap = new Map<Email, SubscribeBit>()
+  private subscribeMap = new Map<Email, SubscriberEntry>()
 
   public get repository() {
     return this.subscribeRepository
@@ -95,17 +96,13 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     const docs = await this.subscribeRepository.findAll()
 
     for (const doc of docs) {
-      this.subscribeMap.set(doc.email, doc.subscribe)
+      this.subscribeMap.set(doc.email, {
+        subscribe: doc.subscribe,
+        cancelToken: doc.cancelToken,
+      })
     }
 
     const scopeCfg = { scope: EventScope.TO_VISITOR }
-
-    const getUnsubscribeLink = async (email: string) => {
-      const document = await this.subscribeRepository.findByEmail(email)
-      if (!document) return ''
-      const { serverUrl } = await this.configService.get('url')
-      return `${serverUrl}/subscribe/unsubscribe?email=${email}&cancelToken=${document.cancelToken}`
-    }
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this
@@ -120,37 +117,41 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       noteOrPost: NoteModel | PostModel,
     ) {
       const owner = await self.ownerService.getOwner()
-      for (const [email, subscribe] of self.subscribeMap.entries()) {
-        const unsubscribeLink = await getUnsubscribeLink(email)
-        if (!unsubscribeLink) continue
-        const isNote = self.urlBuilderService.isNoteModel(noteOrPost)
-        if (
-          subscribe & (isNote ? SubscribeNoteCreateBit : SubscribePostCreateBit)
-        ) {
-          self.sendEmail(
-            email,
-            {
-              author: owner.name,
-              detail_link:
-                await self.urlBuilderService.buildWithBaseUrl(noteOrPost),
-              text: `${noteOrPost.text.slice(0, 150)}...`,
-              title: noteOrPost.title,
-              unsubscribe_link: unsubscribeLink,
-              owner: owner.name,
-              aggregate: {
-                owner,
-                subscriber: { subscribe, email },
-                post: {
-                  text: noteOrPost.text,
-                  created: new Date(noteOrPost.createdAt!).toISOString(),
-                  id: noteOrPost.id!,
-                  title: noteOrPost.title,
-                },
+      const isNote = self.urlBuilderService.isNoteModel(noteOrPost)
+      const subscribeBit = isNote
+        ? SubscribeNoteCreateBit
+        : SubscribePostCreateBit
+      const { serverUrl } = await self.configService.get('url')
+      const detailLink =
+        await self.urlBuilderService.buildWithBaseUrl(noteOrPost)
+      for (const [
+        email,
+        { subscribe, cancelToken },
+      ] of self.subscribeMap.entries()) {
+        if (!(subscribe & subscribeBit)) continue
+        const unsubscribeLink = `${serverUrl}/subscribe/unsubscribe?email=${email}&cancelToken=${cancelToken}`
+        self.sendEmail(
+          email,
+          {
+            author: owner.name,
+            detail_link: detailLink,
+            text: truncateAtBoundary(noteOrPost.text, 150),
+            title: noteOrPost.title,
+            unsubscribe_link: unsubscribeLink,
+            owner: owner.name,
+            aggregate: {
+              owner,
+              subscriber: { subscribe, email },
+              post: {
+                text: noteOrPost.text,
+                created: new Date(noteOrPost.createdAt!).toISOString(),
+                id: noteOrPost.id!,
+                title: noteOrPost.title,
               },
             },
-            unsubscribeLink,
-          )
-        }
+          },
+          unsubscribeLink,
+        )
       }
     }
 
@@ -188,16 +189,19 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
 
   async subscribe(email: string, subscribe: number) {
     const isExist = await this.subscribeRepository.findByEmail(email)
+    let cancelToken: string
     if (isExist) {
       await this.subscribeRepository.updateByEmail(email, { subscribe })
+      cancelToken = isExist.cancelToken
     } else {
+      cancelToken = String(this.createCancelToken(email))
       await this.subscribeRepository.create({
         email,
-        cancelToken: String(this.createCancelToken(email)),
+        cancelToken,
         subscribe,
       })
     }
-    this.subscribeMap.set(email, subscribe)
+    this.subscribeMap.set(email, { subscribe, cancelToken })
   }
 
   async unsubscribe(email: string, token: string) {

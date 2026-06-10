@@ -10,6 +10,7 @@ import { lookup } from 'mime-types'
 
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { resolveAdminAssetRoot } from '~/constants/path.constant'
+import { isDev } from '~/global/env.global'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 
 import { AdminDownloadManager } from './admin-download.manager'
@@ -17,6 +18,7 @@ import { PageProxyService } from './pageproxy.service'
 
 @Controller('/')
 @SkipThrottle()
+@HTTPDecorators.SkipLogging
 export class PageProxyController {
   constructor(
     private readonly service: PageProxyService,
@@ -59,7 +61,6 @@ export class PageProxyController {
         .type('text/html')
         .send(this.service.rewriteAdminEntryAssetPath(injectEnv))
     } catch (error) {
-      const isDev = process.env.NODE_ENV === 'development'
       isDev && console.error(error)
       return reply.code(500).send({
         message: error.message,

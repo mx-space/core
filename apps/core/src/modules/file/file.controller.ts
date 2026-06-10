@@ -82,14 +82,7 @@ export class FileController {
         detachedAt: file.detachedAt,
         createdAt: file.createdAt,
       })),
-      new MetaObjectBuilder()
-        .pagination({
-          page: pagination.currentPage,
-          size: pagination.size,
-          total: pagination.total,
-          totalPages: pagination.totalPage,
-        })
-        .build(),
+      new MetaObjectBuilder().pagination(pagination).build(),
     )
   }
 
