@@ -47,12 +47,12 @@ export function SelectField<TValue extends SelectValue = string>(
       <BaseSelect.Trigger
         aria-label={props['aria-label']}
         className={cn(
-          'outline-hidden shadow-xs flex h-9 w-full items-center justify-between gap-2 rounded-sm border border-border bg-surface-card px-3 text-left text-sm text-fg transition-colors hover:bg-surface-inset data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60 data-[focus-visible]:outline-hidden data-[focus-visible]:ring-[3px] data-[focus-visible]:ring-accent/15',
+          'outline-hidden shadow-xs flex h-8 w-full items-center justify-between gap-2 rounded-sm border border-border bg-surface-card pl-3 pr-2 text-left text-sm text-fg transition-colors hover:bg-surface-inset data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60 data-[focus-visible]:outline-hidden data-[focus-visible]:ring-[3px] data-[focus-visible]:ring-accent/15',
           props.triggerClassName,
           props.className,
         )}
       >
-        <BaseSelect.Value />
+        <BaseSelect.Value className="truncate whitespace-nowrap" />
         <ChevronDown
           aria-hidden="true"
           className="size-4 shrink-0 text-fg-subtle"
