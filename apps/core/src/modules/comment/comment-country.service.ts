@@ -49,7 +49,11 @@ export class CommentCountryService {
     if (cached !== undefined) return cached
 
     const fetched = await this.fetchFromUpstream(trimmed)
-    await this.writeCache(trimmed, fetched).catch(() => {})
+    await this.writeCache(trimmed, fetched).catch((err) => {
+      this.logger.warn(
+        `geoip cache write failed for ${trimmed}: ${err instanceof Error ? err.message : String(err)}`,
+      )
+    })
     return fetched
   }
 

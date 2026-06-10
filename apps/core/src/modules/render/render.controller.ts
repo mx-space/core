@@ -11,7 +11,7 @@ import {
 import dayjs from 'dayjs'
 import ejs from 'ejs'
 import { isNil } from 'es-toolkit/compat'
-import xss from 'xss'
+import xss, { escapeAttrValue, escapeHtml } from 'xss'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -97,16 +97,16 @@ export class RenderEjsController {
       ...structure,
       info: isPrivateOrEncrypt ? 'This article is not yet public.' : undefined,
 
-      title: document.title,
+      title: xss(document.title),
       footer: `<div>Rendered on ${getShortDateTime(
         new Date(),
       )} by marked.js, in ${(performance.now() - now).toFixed(2)}ms</div>
-      <div>Author: ${username}, written on ${dayjs(document.createdAt).format(
-        'llll',
-      )}</div>
-        <div>Original URL: <a href="${url}">${decodeURIComponent(
+      <div>Author: ${escapeHtml(username)}, written on ${dayjs(
+        document.createdAt,
+      ).format('llll')}</div>
+        <div>Original URL: <a href="${escapeAttrValue(
           url.toString(),
-        )}</a></div>
+        )}">${escapeHtml(decodeURIComponent(url.toString()))}</a></div>
         `,
     })
 

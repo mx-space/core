@@ -65,6 +65,7 @@ export class InitController {
 
   @Post('/restore')
   async uploadAndRestore(@Req() req: FastifyRequest) {
+    await this.assertNotInitialized()
     const data = await this.uploadService.getAndValidMultipartField(req, {
       maxFileSize: 1024 * 1024 * 100,
     })

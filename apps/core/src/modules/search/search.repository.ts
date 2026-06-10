@@ -28,6 +28,11 @@ import type {
   SearchDocumentUpsertInput,
 } from './search-document.types'
 
+// Escape LIKE/ILIKE wildcards so user keywords match literally. Postgres treats
+// backslash as the default LIKE escape char, so `\%`, `\_`, `\\` are literal.
+const escapeLikePattern = (value: string): string =>
+  value.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_')
+
 const mapRow = (
   row: typeof searchDocuments.$inferSelect,
 ): SearchDocumentRow => ({
@@ -188,7 +193,7 @@ export class SearchRepository extends BaseRepository {
     limit = 100,
   ): Promise<SearchDocumentRow[]> {
     if (!keyword.trim()) return []
-    const pattern = `%${keyword.trim()}%`
+    const pattern = `%${escapeLikePattern(keyword.trim())}%`
     const filters: SQL[] = [
       or(
         ilike(searchDocuments.title, pattern),
@@ -408,7 +413,7 @@ export class SearchRepository extends BaseRepository {
     if (query.refType) filters.push(eq(searchDocuments.refType, query.refType))
     if (query.lang) filters.push(eq(searchDocuments.lang, query.lang))
     if (query.keyword?.trim()) {
-      const pattern = `%${query.keyword.trim()}%`
+      const pattern = `%${escapeLikePattern(query.keyword.trim())}%`
       filters.push(
         or(
           ilike(searchDocuments.title, pattern),

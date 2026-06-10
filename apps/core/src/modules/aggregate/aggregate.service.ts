@@ -1,5 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc.js'
 
 import { CacheKeys, RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
@@ -28,6 +30,8 @@ import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
 import type { RSSProps } from './aggregate.interface'
 import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.schema'
+
+dayjs.extend(utc)
 
 const omitArticleBody = <T extends { text?: unknown; content?: unknown }>(
   row: T,
@@ -362,9 +366,7 @@ export class AggregateService {
 
   async getPublicationTrend() {
     const now = new Date()
-    const from = new Date(now)
-    from.setMonth(from.getMonth() - 12)
-    from.setHours(0, 0, 0, 0)
+    const from = dayjs.utc().subtract(12, 'months').startOf('month').toDate()
     const [posts, notes] = await Promise.all([
       this.postService.repository.aggregateMonthlyTrend({
         from,

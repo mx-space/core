@@ -1,6 +1,5 @@
 import cdp, { exec } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
@@ -83,14 +82,10 @@ export const installPKG = async (name: string, cwd: string) => {
       throw new Error('No package manager found')
     }
   }
-  process.chdir(cwd)
-  // await $`${manager} ${INSTALL_COMMANDS[manager]} ${name}`
-  const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash'
-  const pty = spawnShell(
-    shell,
-    ['-c', `${manager} ${INSTALL_COMMANDS[manager]} ${name}`],
-    {},
-  )
+  const names = name.split(/\s+/).filter(Boolean)
+  const pty = spawnShell(manager, [INSTALL_COMMANDS[manager], ...names], {
+    cwd,
+  })
 
   return pty
 }

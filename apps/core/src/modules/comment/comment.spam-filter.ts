@@ -31,8 +31,17 @@ export type SpamFilter = (
   ctx: SpamFilterContext,
 ) => Promise<SpamFilterResult> | SpamFilterResult
 
+// Keywords were historically regex patterns; matching is now literal substring
+// (ReDoS-safe), but `|` alternation was the common legacy form — split on it so
+// existing `foo|bar` configs keep matching.
 function testKeywords(text: string, keywords: string[]): boolean {
-  return keywords.some((kw) => new RegExp(kw, 'gi').test(text))
+  const lowered = text.toLowerCase()
+  return keywords.some((kw) =>
+    kw.split('|').some((part) => {
+      const needle = part.trim().toLowerCase()
+      return needle.length > 0 && lowered.includes(needle)
+    }),
+  )
 }
 
 const meaninglessWordsSet = new Set(
@@ -54,9 +63,7 @@ const builtinKeywordsFilter: SpamFilter = ({ doc }) => {
 
 const systemSettingsFilter: SpamFilter = ({ doc, commentOptions }) => {
   if (commentOptions.blockIps?.length && doc.ip) {
-    const blocked = commentOptions.blockIps.some((ip) =>
-      new RegExp(ip, 'gi').test(doc.ip!),
-    )
+    const blocked = commentOptions.blockIps.includes(doc.ip)
     if (blocked) return { isSpam: true, reason: 'blocked-ip' }
   }
 

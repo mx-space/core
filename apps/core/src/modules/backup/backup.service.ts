@@ -1,5 +1,5 @@
 import { createReadStream, existsSync, statSync } from 'node:fs'
-import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path, { join, resolve } from 'node:path'
 
 import {
@@ -8,6 +8,7 @@ import {
   Logger,
 } from '@nestjs/common'
 import { CronExpression } from '@nestjs/schedule'
+import JSZip from 'jszip'
 import { mkdirp } from 'mkdirp'
 
 import { POSTGRES } from '~/app.config'
@@ -21,7 +22,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { S3Uploader } from '~/utils/s3.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { $, $throw } from '~/utils/shell.util'
-import { getFolderSize, installPKG } from '~/utils/system.util'
+import { getFolderSize } from '~/utils/system.util'
 import { getMediumDateTime } from '~/utils/time.util'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -77,6 +78,57 @@ export class BackupService {
 
   private shellQuote(value: string | number) {
     return `'${String(value).replaceAll("'", `'\\''`)}'`
+  }
+
+  // Resolve `candidate` against `dir` and assert it stays inside `dir`.
+  // Rejects zip-slip (`../`), absolute paths, and any escape attempt.
+  private assertContained(dir: string, candidate: string): string {
+    const base = resolve(dir)
+    const target = resolve(base, candidate)
+    if (target !== base && !target.startsWith(base + path.sep)) {
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: `Path escapes target directory: ${candidate}`,
+      })
+    }
+    return target
+  }
+
+  // Safe in-process zip extraction (replaces shell `unzip`).
+  // Validates every entry against zip-slip; rejects absolute paths and symlinks.
+  private async safeUnzip(zipFilePath: string, destDir: string) {
+    const base = resolve(destDir)
+    const buffer = await readFile(zipFilePath)
+    const zip = await new JSZip().loadAsync(buffer)
+
+    const entries = Object.values(zip.files)
+    for (const entry of entries) {
+      const name = entry.name
+      if (path.isAbsolute(name) || /^[a-z]:[/\\]/i.test(name)) {
+        throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+          message: `Absolute path entry rejected: ${name}`,
+        })
+      }
+      // Symlink entries carry unix mode bits with the symlink flag (0o120000).
+      const unixMode = (entry as any).unixPermissions as number | null
+      if (typeof unixMode === 'number' && (unixMode & 0o170000) === 0o120000) {
+        throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+          message: `Symlink entry rejected: ${name}`,
+        })
+      }
+      // assertContained throws if the entry escapes destDir.
+      this.assertContained(base, name)
+    }
+
+    for (const entry of entries) {
+      const target = this.assertContained(base, entry.name)
+      if (entry.dir) {
+        await mkdir(target, { recursive: true })
+        continue
+      }
+      await mkdir(path.dirname(target), { recursive: true })
+      const content = await entry.async('nodebuffer')
+      await writeFile(target, Uint8Array.from(content))
+    }
   }
 
   private pgPasswordEnv() {
@@ -292,15 +344,10 @@ export class BackupService {
       }),
     )
 
-    // Unzip
+    // Unzip — in-process, zip-slip-safe extraction (no shell `unzip`).
     try {
-      await $throw(`unzip ${restoreFilePath}`, { cwd: dirPath })
+      await this.safeUnzip(restoreFilePath, dirPath)
     } catch (error: any) {
-      if (error?.exitCode === 127) {
-        throw new InternalServerErrorException(
-          'unzip command not found on server',
-        )
-      }
       this.logger.error(
         `unzip failed: ${error?.message || error}\n\n${error?.stderr || ''}`,
       )
@@ -343,33 +390,44 @@ export class BackupService {
 
     await Promise.all(
       backupDataDirFilenames.map(async (filename) => {
-        const fullpath = join(dirPath, 'backup_data', filename)
-        const targetPath = join(DATA_DIR, filename)
+        // Containment: source must stay within the extracted backup_data dir,
+        // destination within DATA_DIR. Rejects `..`/absolute filenames.
+        const fullpath = this.assertContained(backupDataDir, filename)
+        const targetPath = this.assertContained(DATA_DIR, filename)
 
         await rm(targetPath, { recursive: true, force: true })
 
-        await $throw(`cp -r ${fullpath} ${targetPath}`)
+        await $throw(
+          `cp -r ${this.shellQuote(fullpath)} ${this.shellQuote(targetPath)}`,
+        )
       }),
     )
 
+    // SECURITY: never auto-install dependencies from a restored archive.
+    // An uploaded archive is attacker-controlled; running `npm install` on its
+    // declared deps is arbitrary-code-execution via install scripts. Instead we
+    // surface the package list so an admin can review and install manually.
     try {
       const packageJson = await readFile(join(backupDataDir, 'package.json'), {
         encoding: 'utf8',
       })
       const pkg = JSON.parse(packageJson)
-      if (pkg.dependencies) {
-        await Promise.all(
-          Object.entries(pkg.dependencies).map(([name, version]) => {
-            this.logger.log(`--> Installing dependency ${name}@${version}`)
-            return installPKG(`${name}@${version}`, DATA_DIR).catch((error) => {
-              this.logger.error(
-                `--> Dependency installation failed: ${error.message}`,
-              )
-            })
-          }),
+      const deps = pkg?.dependencies
+      if (deps && typeof deps === 'object' && Object.keys(deps).length > 0) {
+        const list = Object.entries(deps)
+          .map(([name, version]) => `${name}@${version}`)
+          .join(', ')
+        this.logger.warn(
+          `--> Restored archive declares ${
+            Object.keys(deps).length
+          } dependencies. Automatic installation is disabled for security ` +
+            `(install scripts can execute arbitrary code). Review and install ` +
+            `manually if required: ${list}`,
         )
       }
-    } catch {}
+    } catch {
+      // package.json absent or unpar. Restores without a manifest are valid.
+    }
 
     await Promise.all([
       this.redisService.cleanAllRedisKey(),

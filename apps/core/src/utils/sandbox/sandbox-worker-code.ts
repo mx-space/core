@@ -28,6 +28,206 @@ if (!parentPort) {
 const port = parentPort;
 const pendingRequests = new Map();
 
+const dnsPromises = require('node:dns').promises;
+const net = require('node:net');
+
+// ===== SSRF egress guard (self-contained; the Worker runs as eval'd string
+// code and cannot import app modules) =====
+// Mirrors the range checks in apps/core/src/processors/agent-browser/url-guard.ts.
+
+function ipv4ToParts(ip) {
+  const parts = ip.split('.').map((p) => Number(p));
+  if (parts.length !== 4 || parts.some((p) => !Number.isInteger(p) || p < 0 || p > 255)) {
+    return null;
+  }
+  return parts;
+}
+
+function isPrivateIpv4(ip) {
+  const p = ipv4ToParts(ip);
+  if (!p) return false;
+  const [a, b] = p;
+  if (a === 0) return true;                 // 0.0.0.0/8
+  if (a === 10) return true;                // 10.0.0.0/8 RFC1918
+  if (a === 127) return true;               // 127.0.0.0/8 loopback
+  if (a === 169 && b === 254) return true;  // 169.254.0.0/16 link-local (+ metadata 169.254.169.254)
+  if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12 RFC1918
+  if (a === 192 && b === 168) return true;  // 192.168.0.0/16 RFC1918
+  if (a === 100 && b >= 64 && b <= 127) return true; // 100.64.0.0/10 CGNAT
+  if (a >= 224) return true;                // 224.0.0.0/4 multicast + 240.0.0.0/4 reserved
+  return false;
+}
+
+function isPrivateIpv6(ip) {
+  let addr = ip.toLowerCase();
+  if (addr.startsWith('[') && addr.endsWith(']')) addr = addr.slice(1, -1);
+  // strip zone id
+  const pct = addr.indexOf('%');
+  if (pct !== -1) addr = addr.slice(0, pct);
+  if (addr === '::1' || addr === '::') return true;                 // loopback / unspecified
+  if (addr.startsWith('fe8') || addr.startsWith('fe9') ||
+      addr.startsWith('fea') || addr.startsWith('feb')) return true; // fe80::/10 link-local
+  if (addr.startsWith('fc') || addr.startsWith('fd')) return true;   // fc00::/7 ULA
+  if (addr.startsWith('ff')) return true;                            // ff00::/8 multicast
+  // IPv4-mapped / -compatible: ::ffff:a.b.c.d or ::a.b.c.d
+  const mapped = addr.match(/(?:::ffff:|::)(\\d+\\.\\d+\\.\\d+\\.\\d+)$/);
+  if (mapped) return isPrivateIpv4(mapped[1]);
+  return false;
+}
+
+function isPrivateIp(ip) {
+  const kind = net.isIP(ip);
+  if (kind === 4) return isPrivateIpv4(ip);
+  if (kind === 6) return isPrivateIpv6(ip);
+  // Not a literal IP — be conservative if it somehow reaches here.
+  return false;
+}
+
+async function assertEgressUrlSafe(input) {
+  let url;
+  try {
+    url = input instanceof URL ? input : new URL(String(input && input.url ? input.url : input));
+  } catch {
+    throw new Error('SSRF guard: invalid URL');
+  }
+  const protocol = url.protocol;
+  if (protocol !== 'http:' && protocol !== 'https:') {
+    throw new Error('SSRF guard: disallowed protocol "' + protocol + '"');
+  }
+  let hostname = url.hostname;
+  if (hostname.startsWith('[') && hostname.endsWith(']')) hostname = hostname.slice(1, -1);
+
+  // Literal IP target — check directly (no DNS).
+  if (net.isIP(hostname)) {
+    if (isPrivateIp(hostname)) {
+      throw new Error('SSRF guard: blocked private/loopback address ' + hostname);
+    }
+    return url;
+  }
+
+  // Hostname — resolve every A/AAAA record and reject if ANY is private.
+  let resolved;
+  try {
+    resolved = await dnsPromises.lookup(hostname, { all: true });
+  } catch (error) {
+    throw new Error('SSRF guard: DNS lookup failed for ' + hostname + ': ' + (error && error.message));
+  }
+  if (!resolved || resolved.length === 0) {
+    throw new Error('SSRF guard: no addresses resolved for ' + hostname);
+  }
+  for (const entry of resolved) {
+    if (isPrivateIp(entry.address)) {
+      throw new Error('SSRF guard: ' + hostname + ' resolves to blocked address ' + entry.address);
+    }
+  }
+  return url;
+}
+
+// Wrap the real fetch so every sandbox egress is validated first. Redirects
+// ARE followed (so legit http→https / apex→www / canonicalization 3xx work),
+// but EVERY hop is re-validated against the egress guard to keep the
+// redirect-to-internal SSRF bypass closed.
+//
+// Implementation: we force redirect:'manual' on the underlying undici fetch so
+// each 3xx surfaces as a real response (in Node/undici, redirect:'manual'
+// returns the actual 3xx with a readable Location header and a 300-399 status,
+// unlike the browser's opaque status-0 response). We inspect Location, resolve
+// it against the current URL, re-validate, and re-issue — up to MAX_REDIRECTS.
+const MAX_REDIRECTS = 20;
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
+function createGuardedFetch() {
+  const realFetch = globalThis.fetch;
+  if (typeof realFetch !== 'function') return realFetch;
+  return async function guardedFetch(input, init) {
+    const userRedirect = init && init.redirect;
+
+    // Honor an explicit non-follow choice: don't auto-follow, just validate the
+    // first target and hand back the raw response (manual: caller inspects 3xx;
+    // error: undici throws on redirect).
+    if (userRedirect === 'manual' || userRedirect === 'error') {
+      await assertEgressUrlSafe(input);
+      return realFetch(input, init);
+    }
+
+    // Auto-follow path (redirect unspecified or 'follow').
+    let currentUrl =
+      input instanceof URL
+        ? input.href
+        : input && typeof input === 'object' && input.url
+          ? input.url
+          : String(input);
+    let currentInput = input;
+    let currentInit = init ? { ...init } : {};
+    currentInit.redirect = 'manual';
+
+    for (let hop = 0; ; hop++) {
+      await assertEgressUrlSafe(currentUrl);
+      const res = await realFetch(currentInput, currentInit);
+
+      const location = res.headers.get('location');
+      if (!REDIRECT_STATUSES.has(res.status) || !location) {
+        return res;
+      }
+
+      if (hop >= MAX_REDIRECTS) {
+        throw new Error('SSRF guard: too many redirects (max ' + MAX_REDIRECTS + ')');
+      }
+
+      // Resolve the (possibly relative) Location against the current URL.
+      let nextUrl;
+      try {
+        nextUrl = new URL(location, currentUrl).href;
+      } catch {
+        throw new Error('SSRF guard: invalid redirect Location "' + location + '"');
+      }
+
+      // Drain the redirect body so the underlying socket can be reused/freed.
+      try { await res.body?.cancel(); } catch {}
+
+      // Method/body handling per fetch spec, pragmatically:
+      //   307/308 — preserve method AND body (no downgrade).
+      //   301/302/303 — follow as GET and drop the body (browser default; the
+      //     vast majority of canonicalization/apex→www redirects are 301/302).
+      const next = { ...currentInit, redirect: 'manual' };
+      if (res.status === 301 || res.status === 302 || res.status === 303) {
+        next.method = 'GET';
+        delete next.body;
+      }
+
+      currentUrl = nextUrl;
+      currentInput = nextUrl;
+      currentInit = next;
+    }
+  };
+}
+
+// Wrap WebSocket so the connection target is validated before the handshake.
+function createGuardedWebSocket() {
+  const RealWebSocket = globalThis.WebSocket;
+  if (typeof RealWebSocket !== 'function') return RealWebSocket;
+  return new Proxy(RealWebSocket, {
+    construct(target, args) {
+      const rawUrl = args[0];
+      let url;
+      try {
+        url = new URL(String(rawUrl));
+      } catch {
+        throw new Error('SSRF guard: invalid WebSocket URL');
+      }
+      let hostname = url.hostname;
+      if (hostname.startsWith('[') && hostname.endsWith(']')) hostname = hostname.slice(1, -1);
+      if (net.isIP(hostname) && isPrivateIp(hostname)) {
+        throw new Error('SSRF guard: blocked private WebSocket target ' + hostname);
+      }
+      // Async DNS resolution can't be awaited in a synchronous constructor;
+      // literal-IP targets are blocked above, hostnames pass through. The
+      // fetch path remains the fully-guarded egress channel.
+      return Reflect.construct(target, args);
+    },
+  });
+}
+
 function generateId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
@@ -53,13 +253,57 @@ async function requestBridgeCall(method, args) {
 
 // ===== The following features are implemented directly inside the Worker =====
 
-const BANNED_MODULES = new Set([
-  'child_process', 'cluster', 'dgram', 'dns', 'fs', 'fs/promises',
-  'inspector', 'os', 'process',
-  'repl', 'sys', 'tls', 'v8', 'vm', 'worker_threads',
-  // Prevent bypassing sandbox restrictions via module.createRequire
-  'module',
+// ALLOWLIST of built-in module specifiers the snippet runtime may require.
+// A denylist is bypassable (transitive re-exports, node: prefixes, sub-path
+// requires). Anything not listed here is rejected. Keep this minimal — adding
+// a module here grants the snippet its full surface, so prefer wrappers
+// (see restrictedNetModule) for modules with dangerous capabilities.
+const ALLOWED_BUILTIN_MODULES = new Set([
+  'url',         // URL / URLSearchParams (WHATWG-overlapping, safe)
+  'querystring',
+  'string_decoder',
+  'punycode',
+  'events',
+  'util',
+  'assert',
+  'buffer',
+  'path',
+  'crypto',      // hashing / random; safe surface
+  'zlib',
+  'stream',
+  'timers',
 ]);
+
+// 'net' is needed by built-in snippets ONLY for isIP/isIPv4/isIPv6. The full
+// module exposes raw TCP sockets (Socket/createConnection/Server) which would
+// bypass the fetch SSRF egress guard entirely. Hand back a restricted facade
+// exposing only the pure address-classification helpers.
+function restrictedNetModule() {
+  const realNet = require('node:net');
+  return {
+    isIP: realNet.isIP.bind(realNet),
+    isIPv4: realNet.isIPv4.bind(realNet),
+    isIPv6: realNet.isIPv6.bind(realNet),
+  };
+}
+
+// Normalize a specifier so 'node:fs', 'fs', 'fs/promises', and 'FS' can't be
+// used to slip past the allowlist. Returns the base built-in name (lowercased,
+// node: prefix stripped, sub-path dropped) or null if it is not a bare
+// built-in specifier (relative/absolute/package paths fall through to the
+// normal resolver, which is jailed to requireBasePath).
+function normalizeBuiltinId(moduleId) {
+  let id = moduleId;
+  if (id.startsWith('node:')) id = id.slice(5);
+  // Bare specifiers only (no path separators in the first segment, no relative).
+  if (id.startsWith('.') || id.startsWith('/')) return null;
+  const base = id.split('/')[0].toLowerCase();
+  return base;
+}
+
+// Node's exhaustive built-in module list — used to reject ANY built-in that is
+// not explicitly allowlisted, regardless of node: prefix or sub-path form.
+const NODE_BUILTIN_MODULES = new Set(require('node:module').builtinModules.map((m) => m.replace(/^node:/, '')));
 
 // require runs directly inside the Worker
 function createSandboxRequire(basePath) {
@@ -70,17 +314,35 @@ function createSandboxRequire(basePath) {
       throw new Error('require: module id must be a non-empty string');
     }
 
-    const normalizedId = moduleId.startsWith('node:') ? moduleId.slice(5) : moduleId;
-
-    if (BANNED_MODULES.has(normalizedId)) {
-      throw new Error('require: module "' + moduleId + '" is not allowed');
-    }
-
     // Remote modules are loaded through the bridge
     if (moduleId.startsWith('http://') || moduleId.startsWith('https://')) {
       throw new Error('Remote modules must use async require: await require("' + moduleId + '")');
     }
 
+    const builtinBase = normalizeBuiltinId(moduleId);
+
+    if (builtinBase !== null) {
+      if (builtinBase === 'net') {
+        return restrictedNetModule();
+      }
+      if (ALLOWED_BUILTIN_MODULES.has(builtinBase)) {
+        // Resolve via the canonical node: name so an attacker-shadowed local
+        // package of the same name under requireBasePath cannot be loaded.
+        return baseRequire('node:' + builtinBase);
+      }
+      // A Node built-in that is NOT allowlisted (covers every node: prefix and
+      // sub-path form, e.g. 'fs', 'node:fs', 'fs/promises') — always rejected.
+      if (NODE_BUILTIN_MODULES.has(builtinBase)) {
+        throw new Error('require: built-in module "' + moduleId + '" is not allowed');
+      }
+      // Otherwise it is a bare third-party package specifier (e.g. 'axios',
+      // '@mx-space/extra'). Requiring user-installed packages from the data
+      // dir's node_modules is a documented snippet feature, so resolve it
+      // through the normal resolver jailed to requireBasePath.
+      return baseRequire(moduleId);
+    }
+
+    // Relative / absolute paths resolve against requireBasePath as before.
     return baseRequire(moduleId);
   };
 }
@@ -136,8 +398,9 @@ function createSandboxConsole(namespace) {
 
 // Create the HTTP service (implemented directly inside the Worker)
 function createHttpService() {
+  const guardedFetch = createGuardedFetch();
   const request = async (url, options = {}) => {
-    const res = await fetch(url, options);
+    const res = await guardedFetch(url, options);
     const contentType = res.headers.get('content-type') || '';
     let data;
     if (contentType.includes('application/json')) {
@@ -302,7 +565,9 @@ async function executeCode(payload) {
       __filename: '',
 
       // ===== Network APIs =====
-      fetch: globalThis.fetch,
+      // fetch/WebSocket are wrapped with an SSRF egress guard that blocks
+      // private/loopback/link-local/metadata targets (see createGuardedFetch).
+      fetch: createGuardedFetch(),
       URL: globalThis.URL,
       URLSearchParams: globalThis.URLSearchParams,
       Headers: globalThis.Headers,
@@ -311,7 +576,7 @@ async function executeCode(payload) {
       Blob: globalThis.Blob,
       File: globalThis.File,
       FormData: globalThis.FormData,
-      WebSocket: globalThis.WebSocket,
+      WebSocket: createGuardedWebSocket(),
 
       // ===== Encoding APIs =====
       TextEncoder: globalThis.TextEncoder,

@@ -27,7 +27,6 @@ export class AuthGuard implements CanActivate {
 
     const apiKey = this.authService.getApiKeyFromRequest({
       headers: request.headers,
-      query: request.query as any,
     })
 
     if (!apiKey) {

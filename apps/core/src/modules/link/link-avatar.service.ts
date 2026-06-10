@@ -2,6 +2,7 @@ import { Readable } from 'node:stream'
 import { URL } from 'node:url'
 
 import { Injectable, Logger } from '@nestjs/common'
+import type { AxiosResponse } from 'axios'
 import { customAlphabet } from 'nanoid'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -9,6 +10,7 @@ import { alphabet } from '~/constants/other.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { validateImageBuffer } from '~/utils/image.util'
 import { AsyncQueue } from '~/utils/queue.util'
+import { assertPublicHttpUrl } from '~/utils/ssrf.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { FileService } from '../file/file.service'
@@ -88,15 +90,36 @@ export class LinkAvatarService {
       return webUrl
     })()
 
-    const response = await this.http.axiosRef.get<ArrayBuffer>(avatar, {
-      responseType: 'arraybuffer',
-      timeout: 10_000,
-      headers: {
-        'user-agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
-        referer: refererHeader,
-      },
-    })
+    // SSRF guard: the avatar URL is applicant-controlled. Reject targets that
+    // resolve to internal/metadata addresses before issuing the request, and
+    // disable redirect following so a public host cannot 30x us into one.
+    try {
+      await assertPublicHttpUrl(avatar, { allowHttp: true })
+    } catch (error: any) {
+      this.logger.warn(
+        `Friend link ${doc.id} avatar URL was rejected by the SSRF guard; skipping internalization: ${error?.message || String(error)}`,
+      )
+      return false
+    }
+
+    let response: AxiosResponse<ArrayBuffer>
+    try {
+      response = await this.http.axiosRef.get<ArrayBuffer>(avatar, {
+        responseType: 'arraybuffer',
+        timeout: 10_000,
+        maxRedirects: 0,
+        headers: {
+          'user-agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
+          referer: refererHeader,
+        },
+      })
+    } catch (error: any) {
+      this.logger.warn(
+        `Failed to fetch friend link ${doc.id} avatar; skipping internalization: ${error?.message || String(error)}`,
+      )
+      return false
+    }
 
     const buffer = Buffer.from(response.data as any)
     const contentType = (response.headers['content-type'] ||

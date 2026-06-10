@@ -1,10 +1,10 @@
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { isNoteSecret } from '~/utils/biz.util'
 import { computeContentHash as computeContentHashUtil } from '~/utils/content.util'
 
 import type { NoteModel } from '../../note/note.types'
 import type { PageModel } from '../../page/page.types'
 import type { PostModel } from '../../post/post.types'
+import { isGlobalArticleVisible } from '../ai-article-visibility.util'
 import type {
   ArticleContent,
   ArticleDocument,
@@ -67,22 +67,6 @@ export abstract class BaseTranslationService {
   }
 
   isArticleVisible(article: GlobalArticle): boolean {
-    if (this.isPostArticle(article)) {
-      return article.document.isPublished !== false
-    }
-
-    if (this.isNoteArticle(article)) {
-      const document = article.document
-      if (document.isPublished === false) return false
-      if (document.password) return false
-      if (isNoteSecret(document)) return false
-      return true
-    }
-
-    if (this.isPageArticle(article)) {
-      return true
-    }
-
-    return false
+    return isGlobalArticleVisible(article)
   }
 }

@@ -676,10 +676,7 @@ export class CommentService {
    */
   async invalidateTabCountsCache(): Promise<void> {
     try {
-      const client = this.redisService.getClient()
-      const keys = await client.keys(`${TAB_COUNTS_KEY_PREFIX}*`)
-      if (keys.length === 0) return
-      await Promise.all(keys.map((key) => client.del(key)))
+      await this.redisService.deleteKeysByPattern(`${TAB_COUNTS_KEY_PREFIX}*`)
     } catch (err) {
       this.logger.warn(
         `tab-counts cache invalidation failed: ${err instanceof Error ? err.message : err}`,

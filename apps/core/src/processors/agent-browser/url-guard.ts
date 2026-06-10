@@ -106,7 +106,8 @@ function isPrivateIpv4(addr: string): boolean {
 function isPrivateIpv6(addr: string): boolean {
   const lower = addr.toLowerCase()
   if (lower === '::' || lower === '::1') return true
-  const v4mapped = /^:{2}f{4}:((?:\d+\.){3}\d+)$/i.exec(addr)
+  // IPv4-mapped (::ffff:a.b.c.d) and IPv4-compatible (::a.b.c.d) forms
+  const v4mapped = /^::(?:ffff:)?((?:\d+\.){3}\d+)$/i.exec(addr)
   if (v4mapped) return isPrivateIpv4(v4mapped[1])
   if (lower.startsWith('fe8') || lower.startsWith('fe9')) return true
   if (lower.startsWith('fea') || lower.startsWith('feb')) return true

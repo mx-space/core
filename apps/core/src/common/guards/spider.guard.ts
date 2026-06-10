@@ -49,10 +49,9 @@ export class SpiderGuard implements CanActivate {
       const session = await this.authService.getSessionUser(request.raw)
       if (session?.user?.role === 'owner') return true
 
-      // API key (x-api-key header or `api_key` query).
+      // API key (x-api-key header only).
       const apiKey = this.authService.getApiKeyFromRequest({
         headers: request.headers,
-        query: request.query as any,
       })
       if (!apiKey) return false
       const verified = await this.authService.verifyApiKey(apiKey.key)

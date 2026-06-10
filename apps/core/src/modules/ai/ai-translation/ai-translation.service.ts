@@ -880,8 +880,11 @@ export class AiTranslationService
       throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
 
-    const { document, type } =
-      await this.resolveArticleForTranslation(articleId)
+    // Gate the public stream path on visibility, matching the read path
+    // (`getTranslationForArticle`) so drafts / protected articles never leak.
+    const { article, document } =
+      await this.loadVisibleArticleOrThrow(articleId)
+    const { type } = article
 
     // Check whether a valid translation (matching hash) already exists in the database.
     const existingTranslation = await this.findValidTranslation(

@@ -73,32 +73,30 @@ export class CategoryController {
 
       const allPosts: { categoryId: string; post: any }[] = []
 
-      const categoryObjects: Array<{ id: string; cat: any }> = []
+      const categoryObjects = new Map<string, any>()
 
       const categoriesPromise = joint
         ? null
         : this.categoryService.repository.findByIds(ids)
 
-      await Promise.all(
-        ids.map(async (id) => {
-          const rawPosts = await this.postService.listByCategory(id, {
-            includeCategory: false,
-          })
-          const posts: any[] = rawPosts.map((post) => {
-            const cloned = { ...post }
-            for (const field of omitKeys) delete cloned[field]
-            return cloned
-          })
-          for (const post of posts) allPosts.push({ categoryId: id, post })
-        }),
-      )
+      const postsByCategory = await this.postService.listByCategoryIds(ids, {
+        includeCategory: false,
+      })
+      for (const id of ids) {
+        const rawPosts = postsByCategory.get(id) ?? []
+        for (const post of rawPosts) {
+          const cloned: any = { ...post }
+          for (const field of omitKeys) delete cloned[field]
+          allPosts.push({ categoryId: id, post: cloned })
+        }
+      }
 
       const categoriesById = await categoriesPromise
 
       if (categoriesById) {
         const catMap = new Map(categoriesById.map((c) => [String(c.id), c]))
         for (const id of ids) {
-          categoryObjects.push({ id, cat: catMap.get(id) ?? null })
+          categoryObjects.set(id, catMap.get(id) ?? null)
         }
       }
 
@@ -122,12 +120,12 @@ export class CategoryController {
                 results: new Map<string, any>(),
                 meta: new Map<string, any>(),
               }),
-          !joint && categoryObjects.length
+          !joint && categoryObjects.size
             ? this.translationEntryService.getTranslationsBatch(lang, {
                 entityLookups: [
                   {
                     keyPath: 'category.name',
-                    lookupKeys: new Set(categoryObjects.map((c) => c.id)),
+                    lookupKeys: new Set(categoryObjects.keys()),
                   },
                 ],
               })
@@ -150,19 +148,24 @@ export class CategoryController {
           idsMetaMap.set(id, entry)
         }
 
-        for (const { cat } of categoryObjects) {
+        for (const cat of categoryObjects.values()) {
           applyTranslationEntriesInPlace(cat, entryMaps, CATEGORY_NAME_RULES)
         }
       }
 
+      const postsForIdMap = new Map<string, any[]>()
+      for (const { categoryId, post } of allPosts) {
+        const bucket = postsForIdMap.get(categoryId)
+        if (bucket) bucket.push(post)
+        else postsForIdMap.set(categoryId, [post])
+      }
+
       for (const id of ids) {
-        const postsForId = allPosts
-          .filter((p) => p.categoryId === id)
-          .map((p) => p.post)
+        const postsForId = postsForIdMap.get(id) ?? []
         if (joint) {
           map[id] = postsForId
         } else {
-          const catObj = categoryObjects.find((c) => c.id === id)?.cat
+          const catObj = categoryObjects.get(id)
           map[id] = { ...catObj, children: postsForId }
         }
       }

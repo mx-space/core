@@ -74,6 +74,19 @@ export class RecentlyController {
     return res
   }
 
+  @Post('/attitude/:id')
+  async attitudePost(
+    @Param() { id }: EntityIdDto,
+    @Query() { attitude }: RecentlyAttitudeDto,
+    @IpLocation() { ip }: IpRecord,
+  ) {
+    return this.attitude({ id }, { attitude }, { ip } as IpRecord)
+  }
+
+  /**
+   * @deprecated state-changing GET kept as an alias for legacy clients
+   * (@mx-space/api-client calls this as GET). Prefer POST /attitude/:id.
+   */
   @Get('/attitude/:id')
   async attitude(
     @Param() { id }: EntityIdDto,

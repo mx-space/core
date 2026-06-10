@@ -8,6 +8,7 @@ import {
   gte,
   ilike,
   inArray,
+  isNull,
   lt,
   lte,
   ne,
@@ -217,6 +218,7 @@ const defaultVisibleNoteListSql = `
     from notes
     where is_published = true
       and (public_at is null or public_at <= now())
+      and password is null
     order by created_at desc nulls last
     limit 10
     offset 0
@@ -227,6 +229,7 @@ const defaultVisibleNoteListSql = `
     from notes
     where is_published = true
       and (public_at is null or public_at <= now())
+      and password is null
   ) c
   order by n.created_at desc nulls last
 `
@@ -268,6 +271,7 @@ const latestVisiblePairSql = `
     left join topics t on t.id = n.topic_id
     where n.is_published = true
       and (n.public_at is null or n.public_at <= now())
+      and n.password is null
     order by n.created_at desc nulls last
     limit 1
   ),
@@ -307,6 +311,7 @@ const latestVisiblePairSql = `
     left join topics t on t.id = n.topic_id
     where n.is_published = true
       and (n.public_at is null or n.public_at <= now())
+      and n.password is null
       and n.created_at < (select "createdAt" from latest)
     order by n.created_at desc nulls last
     limit 1
@@ -379,12 +384,15 @@ export class NoteRepository extends BaseRepository {
 
   /**
    * Visibility predicate matching service behavior: only published notes
-   * whose `publicAt` (if set) is in the past.
+   * whose `publicAt` (if set) is in the past, and which are not
+   * password-protected (password-protected notes must never leak through
+   * public list/feed/sitemap/timeline surfaces).
    */
   private visibleClause(): SQL {
     return and(
       eq(notes.isPublished, true),
       or(sql`${notes.publicAt} is null`, lte(notes.publicAt, new Date()))!,
+      isNull(notes.password),
     )!
   }
 
@@ -408,7 +416,7 @@ export class NoteRepository extends BaseRepository {
     const pool = this.pgPool
     if (!pool) return null
     const result = await pool.query<RawNoteWithTopic>({
-      name: 'notes_default_visible_list_v1',
+      name: 'notes_default_visible_list_v2',
       text: defaultVisibleNoteListSql,
     })
     const count = result.rows[0]?.totalCount ?? 0
@@ -762,7 +770,7 @@ export class NoteRepository extends BaseRepository {
     const pool = this.pgPool
     const result = pool
       ? await pool.query<RawNoteWithTopic>({
-          name: 'notes_latest_visible_pair_v1',
+          name: 'notes_latest_visible_pair_v2',
           text: latestVisiblePairSql,
         })
       : await this.db.execute<RawNoteWithTopic>(sql.raw(latestVisiblePairSql))
