@@ -1,3 +1,10 @@
+# [13.8.0](https://github.com/mx-space/core/compare/v13.7.0...v13.8.0) (2026-06-10)
+
+
+### Features
+
+* **cli:** mxs project management surface ([cc7a38d](https://github.com/mx-space/core/commit/cc7a38d438e9cc75b372857a16ee0eafd24a5b29))
+
 # [13.7.0](https://github.com/mx-space/core/compare/v13.6.0...v13.7.0) (2026-06-08)
 
 

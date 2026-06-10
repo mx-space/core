@@ -1,24 +1,28 @@
 ## TL;DR
 
-In-app admin dashboard upgrades now resolve through the R2 `latest.json` manifest instead of the archived `mx-space/mx-admin` GitHub Releases, so the upgrade button actually downloads the current admin again.
+Projects gain a full write API with proper conflict handling, and the bundled admin dashboard fixes update checks, agent diff rendering, and stale-chunk crashes.
 
 ## Highlights
 
-The admin updater no longer talks to `api.github.com`. `UpdateService` reads `latest.json` from `ADMIN_UPDATE.s3BaseUrl` (default `https://admin-r2.innei.dev`, the bucket both `release.yml` and `admin-release.yml` publish to), downloads the resolved `admin-<version>.zip` directly, and verifies the manifest's `sha256` before installing. Self-hosted operators can point at their own bucket by setting `ADMIN_UPDATE_S3_BASE_URL` or `--admin_update_s3_base_url`.
+The Project API is now fully manageable from the outside: a typed `PATCH /projects/:id` route lands alongside the existing PUT, with Zod-validated create/patch DTOs. Duplicate project names now return a clean `PROJECT_NAME_TAKEN` 409 instead of a raw database error, and get/patch/delete return `PROJECT_NOT_FOUND` when the row is missing. This backs the new `mxs project` command group in @mx-space/cli (list/get/view/create/edit/update/delete), released separately on npm.
 
-The cross-version gate in `GET /update/upgrade/dashboard` is relaxed: minor and patch upgrades no longer require `force=true`. Only true major-version jumps are still blocked behind the flag. This matches the new reality where admin ships its own `8.x` semver track decoupled from core's `13.x`, and admin's in-repo monorepo cadence produces frequent patch/minor releases.
+The bundled admin dashboard catches up with the monorepo era. Update checks now look at `mx-space/core` releases and tell core (`v*`) and dashboard (`admin-v*`) tags apart — the archived `mx-server`/`mx-admin` repos are no longer consulted, so version banners are accurate again. The system info panel also resolves through the correct `/info` endpoint, restoring the server version display.
 
-The `release.yml` workflow now emits `sha256` in `latest.json` alongside the existing fields, matching `admin-release.yml`'s schema. Both publish paths populate the same manifest contract that the new updater expects.
+Dashboard resilience and editor polish round things out: when a deploy invalidates old JS chunks, the dashboard now detects the dynamic-import failure and reloads itself once instead of white-screening. The AI agent editor (via @haklex 0.21.1) keeps diff review cards inside their own conversation turn, renders diff hunks as nested rich content, and scopes the dark theme tokens correctly.
 
 ## Changes
 
 ### Features
-- Admin in-app updater consumes R2 `latest.json` (with sha256 verification) instead of GitHub Releases. ([31b6e33](https://github.com/mx-space/core/commit/31b6e33c7a5249ea8d3b3ddda12144f07672a9f0))
+- Project API: Zod-validated create/patch DTOs, new `PATCH /projects/:id` route, name-uniqueness conflicts surfaced as `PROJECT_NAME_TAKEN` (409), missing rows as `PROJECT_NOT_FOUND` (404). ([cc7a38d](https://github.com/mx-space/core/commit/cc7a38d438e9cc75b372857a16ee0eafd24a5b29))
+- Admin dashboard auto-reloads once when a stale deployment makes dynamic chunks unloadable, instead of crashing. ([1d7c110](https://github.com/mx-space/core/commit/1d7c1105ccca2bedc31bc507cc3c536a6e34f1db))
 
-## Upgrade Notes
+### Bug Fixes
+- Admin update checks now target `mx-space/core` and discriminate core vs dashboard release tags; system info resolves via `/info`, restoring the version display. ([8a269ea](https://github.com/mx-space/core/commit/8a269ea25c951136f3bf4536013594f272c1c451))
+- AI agent diff review cards stay within their own conversation turn instead of leaking into adjacent ones. ([6dcff54](https://github.com/mx-space/core/commit/6dcff54029482ae5e85100257e48da8237aaaae0))
 
-No action required for users on the default deployment — the new manifest URL ships baked in. Operators running self-hosted admin buckets should set `ADMIN_UPDATE_S3_BASE_URL` (or `--admin_update_s3_base_url`) to their bucket root before this release lands.
+### Other
+- @haklex editor packages bumped to 0.21.1: diff hunks render as nested rich content, occupied block ids stay resolvable during diff review, and dark theme variables no longer leak outside their scope. ([0fa60a8](https://github.com/mx-space/core/commit/0fa60a826971bd1198f9590d3ce252514229fbf8))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.6.0...v13.7.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.7.0...v13.8.0
