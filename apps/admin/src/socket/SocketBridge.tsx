@@ -7,21 +7,21 @@ import type { Socket } from 'socket.io-client'
 import { io } from 'socket.io-client'
 import { toast } from 'sonner'
 
-import type { AITask } from '~/api/ai'
+import type { AITask } from '~/api/tasks'
 import {
   applyTaskPatch,
   prependTaskToList,
   removeTaskFromList,
   upsertTaskInList,
-} from '~/features/ai/utils/ai'
+} from '~/features/tasks/utils/tasks'
 
 import { GATEWAY_URL } from '../constants/env'
 import { translate } from '../i18n/translate'
 import { adminQueryKeys } from '../query/keys'
 import type {
-  AiTaskUpdatePayload,
-  AiTaskUpdateStreamFrame,
   NotificationTypes,
+  TaskUpdatePayload,
+  TaskUpdateStreamFrame,
 } from './types'
 import { EventTypes } from './types'
 
@@ -32,7 +32,7 @@ interface GatewayMessage {
 }
 
 // Module-level singleton for hooks (step-22) — allows
-// useAiTaskSubscription to emit ai-task:subscribe/unsubscribe without
+// useTaskSubscription to emit ai-task:subscribe/unsubscribe without
 // passing the socket through React context. Set by SocketBridge on mount
 // and cleared on unmount.
 let currentAdminSocket: Socket | null = null
@@ -175,8 +175,8 @@ export function SocketBridge() {
           })
           break
         }
-        case EventTypes.AI_TASK_UPDATE: {
-          handleAiTaskUpdate(queryClient, payload)
+        case EventTypes.TASK_UPDATE: {
+          handleTaskUpdate(queryClient, payload)
           break
         }
         default: {
@@ -383,7 +383,7 @@ function readString(value: unknown) {
 }
 
 /**
- * AI_TASK_UPDATE phase router. Per spec 2 plan step-20:
+ * TASK_UPDATE phase router. Per spec 2 plan step-20:
  *  - 'created'  : full Task snapshot — PREPEND to every list page-1 cache;
  *                 also setQueryData for taskDetail(id).
  *  - 'started' | 'status' | 'result' : upsert in list caches by id; patch
@@ -397,16 +397,16 @@ function readString(value: unknown) {
  *    the parent group's subTaskStats on its detail cache (server guarantees
  *    a full SubTaskStats object per step-19).
  */
-export function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
-  if (!isAiTaskUpdatePayload(payload)) return
+export function handleTaskUpdate(queryClient: QueryClient, payload: unknown) {
+  if (!isTaskUpdatePayload(payload)) return
 
-  const { id, groupId, phase, patch, log, stream } = payload
+  const { id, groupId, phase, patch, log, stream, scope } = payload
 
   if (phase === 'stream') {
     window.dispatchEvent(
       new CustomEvent<{
         groupId?: string
-        stream?: AiTaskUpdateStreamFrame
+        stream?: TaskUpdateStreamFrame
         taskId: string
       }>('mx-admin:ai-task-stream', {
         detail: { groupId, stream, taskId: id },
@@ -417,16 +417,16 @@ export function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
 
   if (phase === 'deleted') {
     for (const [key, data] of queryClient.getQueriesData({
-      queryKey: adminQueryKeys.ai.tasksRoot,
+      queryKey: adminQueryKeys.tasks.tasksRoot,
     })) {
       if (!data) continue
       const next = removeTaskFromList(data, id)
       if (next !== data) queryClient.setQueryData(key, next)
     }
-    queryClient.removeQueries({ queryKey: adminQueryKeys.ai.taskDetail(id) })
+    queryClient.removeQueries({ queryKey: adminQueryKeys.tasks.taskDetail(id) })
     if (groupId) {
       queryClient.setQueryData<AITask[] | undefined>(
-        adminQueryKeys.ai.tasksByGroup(groupId),
+        adminQueryKeys.tasks.tasksByGroup(groupId),
         (prev) => {
           if (!prev) return prev
           const next = prev.filter((t) => t.id !== id)
@@ -439,17 +439,18 @@ export function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
 
   if (phase === 'created') {
     const fullTask = patch as AITask
-    queryClient.setQueryData(adminQueryKeys.ai.taskDetail(id), fullTask)
+    queryClient.setQueryData(adminQueryKeys.tasks.taskDetail(id), fullTask)
     for (const [key, data] of queryClient.getQueriesData({
-      queryKey: adminQueryKeys.ai.tasksRoot,
+      queryKey: adminQueryKeys.tasks.tasksRoot,
     })) {
       if (!data) continue
+      if (!createdMatchesListFilters(key[1], scope, fullTask)) continue
       const next = prependTaskToList(data, fullTask)
       if (next !== data) queryClient.setQueryData(key, next)
     }
   } else {
     queryClient.setQueryData<AITask | undefined>(
-      adminQueryKeys.ai.taskDetail(id),
+      adminQueryKeys.tasks.taskDetail(id),
       (prev) => (prev ? applyTaskPatch(prev, patch, log) : prev),
     )
     if (
@@ -457,7 +458,7 @@ export function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
       patch
     ) {
       for (const [key, data] of queryClient.getQueriesData({
-        queryKey: adminQueryKeys.ai.tasksRoot,
+        queryKey: adminQueryKeys.tasks.tasksRoot,
       })) {
         if (!data) continue
         const next = upsertTaskInList(data, id, patch)
@@ -469,7 +470,7 @@ export function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
   if (groupId && patch?.subTaskStats) {
     const { subTaskStats } = patch
     queryClient.setQueryData<AITask | undefined>(
-      adminQueryKeys.ai.taskDetail(groupId),
+      adminQueryKeys.tasks.taskDetail(groupId),
       (prev) => (prev ? { ...prev, subTaskStats } : prev),
     )
   }
@@ -480,7 +481,7 @@ export function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
   // and every patch phase (status/progress/log/result/started).
   if (groupId) {
     queryClient.setQueryData<AITask[] | undefined>(
-      adminQueryKeys.ai.tasksByGroup(groupId),
+      adminQueryKeys.tasks.tasksByGroup(groupId),
       (prev) => {
         if (!prev) return prev
         const idx = prev.findIndex((t) => t.id === id)
@@ -502,7 +503,33 @@ export function handleAiTaskUpdate(queryClient: QueryClient, payload: unknown) {
   }
 }
 
-function isAiTaskUpdatePayload(value: unknown): value is AiTaskUpdatePayload {
+// 'created' prepends would otherwise leak cross-scope rows into filter-keyed
+// list caches (e.g. an enrichment task atop /tasks?scope=cron). A cache only
+// receives the new row when its key params don't contradict the payload;
+// a missing param means no constraint.
+function createdMatchesListFilters(
+  keyParams: unknown,
+  scope: string | undefined,
+  task: AITask,
+): boolean {
+  if (!keyParams || typeof keyParams !== 'object') return true
+  const params = keyParams as {
+    scope?: string
+    status?: string | string[]
+    type?: string
+  }
+  if (params.scope && scope && params.scope !== scope) return false
+  if (params.status && task.status) {
+    const statuses = Array.isArray(params.status)
+      ? params.status
+      : [params.status]
+    if (statuses.length > 0 && !statuses.includes(task.status)) return false
+  }
+  if (params.type && task.type && params.type !== task.type) return false
+  return true
+}
+
+function isTaskUpdatePayload(value: unknown): value is TaskUpdatePayload {
   if (!value || typeof value !== 'object') return false
   const v = value as Record<string, unknown>
   return typeof v.id === 'string' && typeof v.phase === 'string'

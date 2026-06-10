@@ -1,8 +1,8 @@
+import type { OnMount } from '@monaco-editor/react'
 import Editor, { loader } from '@monaco-editor/react'
 import { AlertCircle, CheckCircle2, Code2, Loader2, Save } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
 import * as monaco from 'monaco-editor'
-import type { OnMount } from '@monaco-editor/react'
+import { useEffect, useMemo } from 'react'
 
 import { useI18n } from '~/i18n'
 import { useThemeMode } from '~/theme'
@@ -99,7 +99,7 @@ export function CodeEditor({
           {onSave ? (
             <button
               aria-label={t('ui.codeEditor.saveAria')}
-              className="inline-flex size-6 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+              className="inline-flex size-6 items-center justify-center rounded-sm text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
               onClick={onSave}
               type="button"
             >

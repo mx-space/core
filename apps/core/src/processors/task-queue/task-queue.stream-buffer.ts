@@ -1,4 +1,4 @@
-import type { AiTaskUpdateStreamFrame } from './task-queue.types'
+import type { TaskUpdateStreamFrame } from './task-queue.types'
 
 const STREAM_FLUSH_IDLE_MS = 200
 const STREAM_FLUSH_CHAR_THRESHOLD = 80
@@ -28,9 +28,7 @@ export class TaskStreamBuffer {
   private readonly buckets = new Map<string, BufferEntry>()
   private disposed = false
 
-  constructor(
-    private readonly emit: (frame: AiTaskUpdateStreamFrame) => void,
-  ) {}
+  constructor(private readonly emit: (frame: TaskUpdateStreamFrame) => void) {}
 
   push(
     lang: string | undefined,
@@ -104,7 +102,7 @@ export class TaskStreamBuffer {
       return
     }
 
-    const frame: AiTaskUpdateStreamFrame = {}
+    const frame: TaskUpdateStreamFrame = {}
     if (entry.lang !== undefined) frame.lang = entry.lang
     if (entry.segmentId !== undefined) frame.segmentId = entry.segmentId
     if (hasText) frame.chunk = entry.text

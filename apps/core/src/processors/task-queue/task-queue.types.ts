@@ -1,3 +1,5 @@
+import type { CreateTaskOptions } from './task-queue.service'
+
 export enum TaskStatus {
   Pending = 'pending',
   Running = 'running',
@@ -121,14 +123,17 @@ export interface TaskExecuteContext {
 export interface TaskHandler<TPayload = Record<string, unknown>> {
   type: string
   execute: (payload: TPayload, context: TaskExecuteContext) => Promise<void>
+  buildRetryTask?: (
+    task: Task,
+  ) => CreateTaskOptions | Promise<CreateTaskOptions>
 }
 
 /**
- * Frozen phase union for AI_TASK_UPDATE realtime fan-out (spec 2).
+ * Frozen phase union for TASK_UPDATE realtime fan-out (spec 2).
  * Adding a new phase is a wire-contract break — admin EventTypes mirror must
  * also be updated in apps/admin/src/socket/types.ts.
  */
-export type AiTaskUpdatePhase =
+export type TaskUpdatePhase =
   | 'created'
   | 'started'
   | 'progress'
@@ -138,7 +143,7 @@ export type AiTaskUpdatePhase =
   | 'stream'
   | 'deleted'
 
-export interface AiTaskUpdateStreamFrame {
+export interface TaskUpdateStreamFrame {
   lang?: string
   segmentId?: string
   chunk?: string
@@ -146,23 +151,24 @@ export interface AiTaskUpdateStreamFrame {
   done?: boolean
 }
 
-interface AiTaskUpdatePayloadBase {
+interface TaskUpdatePayloadBase {
   id: string
   type: string
+  scope: string
   groupId?: string
   log?: TaskLog
-  stream?: AiTaskUpdateStreamFrame
+  stream?: TaskUpdateStreamFrame
   result?: unknown
 }
 
-export type AiTaskUpdatePayload =
-  | (AiTaskUpdatePayloadBase & {
+export type TaskUpdatePayload =
+  | (TaskUpdatePayloadBase & {
       phase: 'created'
       // On 'created', patch is the FULL task snapshot.
       patch: Task
     })
-  | (AiTaskUpdatePayloadBase & {
-      phase: Exclude<AiTaskUpdatePhase, 'created'>
+  | (TaskUpdatePayloadBase & {
+      phase: Exclude<TaskUpdatePhase, 'created'>
       // On all other phases, patch is a partial diff (or omitted entirely).
       patch?: Partial<Task>
     })

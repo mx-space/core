@@ -1,4 +1,4 @@
-import type { AITask, AITaskLog } from '~/api/ai'
+import type { AITask, AITaskLog } from '~/api/tasks'
 
 export enum EventTypes {
   GATEWAY_CONNECT = 'GATEWAY_CONNECT',
@@ -35,18 +35,18 @@ export enum EventTypes {
 
   ADMIN_NOTIFICATION = 'ADMIN_NOTIFICATION',
 
-  // AI Task Queue realtime fan-out (spec 2). Hand-duplicated from
+  // Unified Task Queue realtime fan-out. Hand-duplicated from
   // apps/core/src/constants/business-event.constant.ts — no monorepo import.
-  AI_TASK_UPDATE = 'AI_TASK_UPDATE',
+  TASK_UPDATE = 'TASK_UPDATE',
 }
 
 /**
- * Frozen phase union for AI_TASK_UPDATE — verbatim mirror of the server-side
- * AiTaskUpdatePhase declared in
+ * Frozen phase union for TASK_UPDATE — verbatim mirror of the server-side
+ * TaskUpdatePhase declared in
  * apps/core/src/processors/task-queue/task-queue.types.ts. Keep in sync by
  * hand; there is intentionally no cross-package import.
  */
-export type AiTaskUpdatePhase =
+export type TaskUpdatePhase =
   | 'created'
   | 'started'
   | 'progress'
@@ -56,7 +56,7 @@ export type AiTaskUpdatePhase =
   | 'stream'
   | 'deleted'
 
-export interface AiTaskUpdateStreamFrame {
+export interface TaskUpdateStreamFrame {
   lang?: string
   segmentId?: string
   chunk?: string
@@ -64,23 +64,24 @@ export interface AiTaskUpdateStreamFrame {
   done?: boolean
 }
 
-interface AiTaskUpdatePayloadBase {
+interface TaskUpdatePayloadBase {
   id: string
   type: string
+  scope: string
   groupId?: string
   log?: AITaskLog
-  stream?: AiTaskUpdateStreamFrame
+  stream?: TaskUpdateStreamFrame
   result?: unknown
 }
 
-export type AiTaskUpdatePayload =
-  | (AiTaskUpdatePayloadBase & {
+export type TaskUpdatePayload =
+  | (TaskUpdatePayloadBase & {
       phase: 'created'
       // On 'created', patch is the FULL task snapshot.
       patch: AITask
     })
-  | (AiTaskUpdatePayloadBase & {
-      phase: Exclude<AiTaskUpdatePhase, 'created'>
+  | (TaskUpdatePayloadBase & {
+      phase: Exclude<TaskUpdatePhase, 'created'>
       // On all other phases, patch is a partial diff (or omitted entirely).
       patch?: Partial<AITask>
     })

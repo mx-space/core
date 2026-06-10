@@ -1,6 +1,5 @@
-import type { LinkStateCount } from '~/models/link'
-
 import { useI18n } from '~/i18n'
+import type { LinkStateCount } from '~/models/link'
 import { LinkState } from '~/models/link'
 
 import { stateTabs } from '../constants'
@@ -12,7 +11,7 @@ export function FriendsTabBar(props: {
 }) {
   const { t } = useI18n()
   return (
-    <div className="inline-flex flex-wrap gap-1 rounded border border-neutral-200 bg-white p-1 dark:border-neutral-800 dark:bg-neutral-950">
+    <div className="inline-flex flex-wrap gap-1 rounded-sm border border-neutral-200 bg-white p-1 dark:border-neutral-800 dark:bg-neutral-950">
       {stateTabs.map((tab) => {
         const active = props.value === tab.value
         const count = props.counts?.[tab.countKey] ?? 0
@@ -20,7 +19,7 @@ export function FriendsTabBar(props: {
         return (
           <button
             className={[
-              'inline-flex h-8 items-center gap-2 rounded px-3 text-sm transition-colors',
+              'inline-flex h-8 items-center gap-2 rounded-xs px-3 text-sm transition-colors',
               active
                 ? 'bg-neutral-950 text-white dark:bg-neutral-50 dark:text-neutral-950'
                 : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-900',

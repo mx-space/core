@@ -1,4 +1,6 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
   Logger,
   type OnModuleDestroy,
@@ -28,6 +30,7 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
   private lastRedisUnavailableWarnAt = 0
 
   constructor(
+    @Inject(forwardRef(() => TaskQueueService))
     private readonly taskService: TaskQueueService,
     private readonly emitter: TaskQueueEmitter,
   ) {
@@ -52,6 +55,10 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
   unregisterHandler(type: string): void {
     this.handlers.delete(type)
     this.logger.log(`Unregistered handler for task type: ${type}`)
+  }
+
+  getRetryBuilder(type: string): TaskHandler['buildRetryTask'] | undefined {
+    return this.handlers.get(type)?.buildRetryTask
   }
 
   start() {
@@ -167,6 +174,7 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
     const streamMeta = {
       id: task.id,
       type: task.type,
+      scope: task.scope ?? '',
       groupId: task.groupId,
     }
     const buffer = new TaskStreamBuffer((frame) =>

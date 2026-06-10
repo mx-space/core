@@ -73,10 +73,14 @@ const createService = () => {
   const aiInFlightService = {}
   const eventManager = { emit: vi.fn() }
   const taskProcessor = { registerHandler: vi.fn() }
+  const taskQueueService = {
+    createTask: vi.fn(),
+    getTasks: vi.fn(async () => ({ data: [], total: 0 })),
+    cancelTask: vi.fn(),
+  }
   const lexicalService = { lexicalToMarkdown: vi.fn(() => 'markdown') }
   const aiTaskService = {
     createTranslationTask: vi.fn(),
-    crud: { createTask: vi.fn() },
   }
   const lexicalStrategy = {}
   const markdownStrategy = {}
@@ -90,6 +94,7 @@ const createService = () => {
     aiInFlightService as any,
     eventManager as any,
     taskProcessor as any,
+    taskQueueService as any,
     lexicalService as any,
     aiTaskService as any,
     lexicalStrategy as any,
@@ -104,6 +109,7 @@ const createService = () => {
     repository,
     service,
     taskProcessor,
+    taskQueueService,
     translationConsistencyService,
   }
 }
@@ -111,11 +117,11 @@ const createService = () => {
 describe('AiTranslationService', () => {
   it('creates one translation task per article in the translation-all task', async () => {
     const {
-      aiTaskService,
       configService,
       databaseService,
       service,
       taskProcessor,
+      taskQueueService,
     } = createService()
     configService.get.mockResolvedValue({
       translationTargetLanguages: ['en'],
@@ -125,7 +131,7 @@ describe('AiTranslationService', () => {
       notes: [{ id: 'note-1', title: 'Note' }],
       pages: [{ id: 'page-1', title: 'Page' }],
     })
-    aiTaskService.crud.createTask.mockImplementation(
+    taskQueueService.createTask.mockImplementation(
       async ({ payload }: any) => ({
         created: true,
         taskId: `task-${payload.refId}`,
@@ -151,7 +157,7 @@ describe('AiTranslationService', () => {
     await handler.execute({}, context as any)
 
     expect(databaseService.findAllArticlesForTranslation).toHaveBeenCalled()
-    expect(aiTaskService.crud.createTask).toHaveBeenCalledTimes(3)
+    expect(taskQueueService.createTask).toHaveBeenCalledTimes(3)
     expect(context.setResult).toHaveBeenCalledWith(
       expect.objectContaining({ total: 3, createdCount: 3 }),
     )

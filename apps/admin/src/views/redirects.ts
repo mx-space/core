@@ -1,6 +1,10 @@
 import type { RedirectEntry } from 'virtual:admin-routes'
 
-import { LegacyExtraRedirect, LegacyPageRedirect } from '~/lib/legacy-redirects'
+import {
+  LegacyExtraRedirect,
+  LegacyPageRedirect,
+  LegacyTaskDetailRedirect,
+} from '~/lib/legacy-redirects'
 
 const redirects: RedirectEntry[] = [
   { from: '/posts/view', to: '/posts' },
@@ -16,6 +20,10 @@ const redirects: RedirectEntry[] = [
   { from: '/extra-features/assets/template', to: '/assets/template' },
   { from: '/extra-features/subscribe', to: '/subscribe' },
   { from: '/ai', to: '/ai/summary' },
+  { from: '/ai/tasks', to: '/tasks' },
+  { from: '/ai/tasks/:id', element: LegacyTaskDetailRedirect },
+  { from: '/maintenance/cron/history', to: '/tasks?scope=cron' },
+  { from: '/maintenance/cron/history/:id', element: LegacyTaskDetailRedirect },
   { from: '/page/*', element: LegacyPageRedirect },
   { from: '/extra/*', element: LegacyExtraRedirect },
 ]

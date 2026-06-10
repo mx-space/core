@@ -11,6 +11,7 @@ import {
   updateTranslationEntry,
 } from '~/api/ai'
 import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
+import { Code, SmallBadge } from '~/features/tasks/components/TaskPrimitives'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { CompactPagination } from '~/ui/data/compact-pagination'
@@ -23,7 +24,6 @@ import { SelectField } from '~/ui/primitives/select'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
-import { Code, SmallBadge } from '../components/AiPrimitives'
 import {
   GroupedResourceSkeleton,
   ResourceEmpty,

@@ -308,7 +308,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
     >
       <Popover.Trigger
         className={cn(
-          'outline-hidden shadow-xs flex h-9 w-full items-center justify-between rounded-sm border border-border bg-surface-card px-3 text-sm transition-colors focus:border-accent focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60',
+          'outline-hidden shadow-xs flex h-8 w-full items-center justify-between rounded-sm border border-border bg-surface-card px-3 text-sm transition-colors focus:border-accent focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60',
           displayValue ? 'text-fg' : 'text-fg-subtle',
           props.controlClassName,
         )}

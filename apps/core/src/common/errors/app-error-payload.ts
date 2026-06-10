@@ -49,9 +49,9 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.AI_REVIEW_NOT_ENABLED]: undefined
   [AppErrorCode.AI_RESULT_PARSING_ERROR]: OptMessage
   [AppErrorCode.AI_SERVICE_ERROR]: OptMessage
-  [AppErrorCode.AI_TASK_NOT_FOUND]: WithId
-  [AppErrorCode.AI_TASK_ALREADY_COMPLETED]: undefined
-  [AppErrorCode.AI_TASK_CANNOT_RETRY]: { reason?: string } | undefined
+  [AppErrorCode.TASK_NOT_FOUND]: WithId
+  [AppErrorCode.TASK_ALREADY_COMPLETED]: undefined
+  [AppErrorCode.TASK_CANNOT_RETRY]: { reason?: string } | undefined
   [AppErrorCode.AI_TRANSLATION_NOT_FOUND]: undefined
 
   // auth

@@ -84,7 +84,7 @@ export function Badge(props: BadgeProps) {
       className={cn(
         'inline-flex shrink-0 items-center gap-1 font-medium leading-none',
         hasBorder && 'border',
-        props.pill ? 'rounded-full' : 'rounded',
+        props.pill ? 'rounded-full' : 'rounded-xs',
         sizeClass[size],
         toneClassFor(variant, tone),
         props.className,

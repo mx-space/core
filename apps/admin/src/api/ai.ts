@@ -1,4 +1,5 @@
-import { deleteJson, getJson, patchJson, postJson, requestJson } from './http'
+import { deleteJson, getJson, patchJson, postJson } from './http'
+import type { CreateTaskResponse } from './tasks'
 
 export enum AiQueryType {
   Slug = 'slug',
@@ -214,71 +215,7 @@ export interface GenerateEntriesResponse {
   skipped: number
 }
 
-export enum AITaskType {
-  Summary = 'ai:summary',
-  Translation = 'ai:translation',
-  TranslationBatch = 'ai:translation:batch',
-  TranslationAll = 'ai:translation:all',
-  SlugBackfill = 'ai:slug:backfill',
-  Insights = 'ai:insights',
-  InsightsTranslation = 'ai:insights:translation',
-}
-
-export enum AITaskStatus {
-  Pending = 'pending',
-  Running = 'running',
-  Completed = 'completed',
-  PartialFailed = 'partial_failed',
-  Failed = 'failed',
-  Cancelled = 'cancelled',
-}
-
-export interface AITaskLog {
-  level: 'error' | 'info' | 'warn'
-  message: string
-  timestamp: number
-}
-
-export interface SubTaskStats {
-  completed: number
-  failed: number
-  pending: number
-  running: number
-  total: number
-}
-
-export interface AITask {
-  completedAt?: number
-  completedItems?: number
-  cost?: number
-  createdAt: number
-  error?: string
-  groupId?: string
-  id: string
-  logs: AITaskLog[]
-  payload: Record<string, unknown>
-  progress?: number
-  progressMessage?: string
-  result?: unknown
-  retryCount: number
-  startedAt?: number
-  status: AITaskStatus
-  subTaskStats?: SubTaskStats
-  tokensGenerated?: number
-  totalItems?: number
-  type: AITaskType
-  workerId?: string
-}
-
-export interface AITasksResponse {
-  data: AITask[]
-  total: number
-}
-
-export interface CreateTaskResponse {
-  created: boolean
-  taskId: string
-}
+export type { CreateTaskResponse }
 
 export function testCommentReview(data: AICommentReviewTestData) {
   return postJson<AICommentReviewTestResponse, AICommentReviewTestData>(
@@ -434,65 +371,6 @@ export function createTranslationAllTask(data: { targetLanguages?: string[] }) {
   )
 }
 
-export interface GetAiTasksParams {
-  page?: number
-  size?: number
-  status?: AITaskStatus
-  type?: AITaskType
-}
-
-export function getAiTasks(params: GetAiTasksParams = {}) {
-  return getJson<AITasksResponse | AITask[]>('/ai/tasks', {
-    page: params.page,
-    size: params.size,
-    status: params.status,
-    type: params.type,
-  }).then(normalizeTasksResponse)
-}
-
-export function getAiTask(taskId: string) {
-  return getJson<AITask>(`/ai/tasks/${taskId}`)
-}
-
-export function retryAiTask(taskId: string) {
-  return requestJson<CreateTaskResponse>(`/ai/tasks/${taskId}/retry`, {
-    method: 'POST',
-  })
-}
-
-export function cancelAiTask(taskId: string) {
-  return requestJson<{ success: boolean }>(`/ai/tasks/${taskId}/cancel`, {
-    method: 'POST',
-  })
-}
-
-export function deleteAiTask(taskId: string) {
-  return deleteJson<{ success: boolean }>(`/ai/tasks/${taskId}`)
-}
-
-export function deleteAiTasks(params: {
-  before: number
-  status?: AITaskStatus
-  type?: AITaskType
-}) {
-  const searchParams = new URLSearchParams()
-  searchParams.set('before', String(params.before))
-  if (params.status) searchParams.set('status', params.status)
-  if (params.type) searchParams.set('type', params.type)
-
-  return requestJson<{ deleted: number }>(`/ai/tasks?${searchParams}`, {
-    method: 'DELETE',
-  })
-}
-
-export function getAiTasksByGroupId(groupId: string) {
-  return getJson<AITask[]>(`/ai/tasks/group/${groupId}`)
-}
-
-export function cancelAiTasksByGroupId(groupId: string) {
-  return deleteJson<{ cancelled: number }>(`/ai/tasks/group/${groupId}`)
-}
-
 export function getTranslationEntries(params?: {
   keyPath?: TranslationEntryKeyPath
   lang?: string
@@ -524,17 +402,4 @@ export function updateTranslationEntry(
 
 export function deleteTranslationEntry(id: string) {
   return deleteJson<void>(`/ai/translations/entries/${id}`)
-}
-
-function normalizeTasksResponse(
-  response: AITasksResponse | AITask[],
-): AITasksResponse {
-  if (Array.isArray(response)) {
-    return {
-      data: response,
-      total: response.length,
-    }
-  }
-
-  return response
 }

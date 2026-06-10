@@ -62,6 +62,7 @@ import { SitemapModule } from './modules/sitemap/sitemap.module'
 import { SlugTrackerModule } from './modules/slug-tracker/slug-tracker.module'
 import { SnippetModule } from './modules/snippet/snippet.module'
 import { SubscribeModule } from './modules/subscribe/subscribe.module'
+import { TaskModule } from './modules/task/task.module'
 import { TopicModule } from './modules/topic/topic.module'
 import { UpdateModule } from './modules/update/update.module'
 import { WebhookModule } from './modules/webhook/webhook.module'
@@ -120,6 +121,7 @@ import { SampleResponseInterceptor } from './shared/sample/sample-response.inter
     SlugTrackerModule,
     SnippetModule,
     SubscribeModule,
+    TaskModule,
     TopicModule,
     UpdateModule,
     OwnerModule,

@@ -1,14 +1,14 @@
 import { ListTodo } from 'lucide-react'
-import type { CronTaskLog, CronTaskStatus } from '~/api/cron-tasks'
 import type { ReactNode } from 'react'
-import type { SelectOption } from '../types/cron'
 
+import type { CronTaskLog, CronTaskStatus } from '~/api/cron-tasks'
 import { useI18n } from '~/i18n'
 import { Badge } from '~/ui/primitives/badge'
 import { SelectField } from '~/ui/primitives/select'
 import { cn } from '~/utils/cn'
 
 import { taskStatusLabelKeys, taskStatusTones } from '../constants'
+import type { SelectOption } from '../types/cron'
 import { formatLogTime } from '../utils/cron'
 
 export function StatusBadge(props: { status: CronTaskStatus }) {

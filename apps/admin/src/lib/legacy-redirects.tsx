@@ -1,9 +1,26 @@
-import { Navigate, useLocation } from 'react-router'
+import { Navigate, useLocation, useParams } from 'react-router'
 
 export function LegacyStaticRedirect(props: { to: string }) {
   const location = useLocation()
+  const [toPath, toQuery] = props.to.split('?')
+  const merged = new URLSearchParams(location.search)
+  for (const [key, value] of new URLSearchParams(toQuery)) {
+    merged.set(key, value)
+  }
+  const search = merged.toString()
   return (
-    <Navigate replace to={`${props.to}${location.search}${location.hash}`} />
+    <Navigate
+      replace
+      to={`${toPath}${search ? `?${search}` : ''}${location.hash}`}
+    />
+  )
+}
+
+export function LegacyTaskDetailRedirect() {
+  const location = useLocation()
+  const { id } = useParams<{ id: string }>()
+  return (
+    <Navigate replace to={`/tasks/${id}${location.search}${location.hash}`} />
   )
 }
 

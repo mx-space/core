@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { TaskStreamBuffer } from '~/processors/task-queue/task-queue.stream-buffer'
-import type { AiTaskUpdateStreamFrame } from '~/processors/task-queue/task-queue.types'
+import type { TaskUpdateStreamFrame } from '~/processors/task-queue/task-queue.types'
 
 /**
  * Pure-logic verification of TaskStreamBuffer coalescing:
@@ -18,7 +18,7 @@ describe('TaskStreamBuffer', () => {
   })
 
   function makeBuffer() {
-    const frames: AiTaskUpdateStreamFrame[] = []
+    const frames: TaskUpdateStreamFrame[] = []
     const buffer = new TaskStreamBuffer((f) => frames.push(f))
     return { buffer, frames }
   }

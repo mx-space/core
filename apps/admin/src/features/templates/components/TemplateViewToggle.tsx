@@ -1,10 +1,11 @@
-import { Code2, Columns, Eye } from 'lucide-react'
-import type { TranslationKey } from '~/i18n/types'
 import type { LucideIcon } from 'lucide-react'
-import type { TemplateViewMode } from '../types/templates'
+import { Code2, Columns, Eye } from 'lucide-react'
 
 import { useI18n } from '~/i18n'
+import type { TranslationKey } from '~/i18n/types'
 import { cn } from '~/utils/cn'
+
+import type { TemplateViewMode } from '../types/templates'
 
 interface ToggleEntry {
   value: TemplateViewMode
@@ -33,7 +34,7 @@ export function TemplateViewToggle(props: TemplateViewToggleProps) {
   return (
     <div
       aria-label={t('templates.view.aria')}
-      className="inline-flex items-center rounded border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-950"
+      className="inline-flex items-center rounded-sm border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-950"
       role="radiogroup"
     >
       {visible.map((entry) => {
@@ -43,7 +44,7 @@ export function TemplateViewToggle(props: TemplateViewToggleProps) {
           <button
             aria-checked={active}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors',
+              'inline-flex items-center gap-1.5 rounded-xs px-2.5 py-1 text-xs font-medium transition-colors',
               active
                 ? 'bg-neutral-900 text-white dark:bg-neutral-50 dark:text-neutral-950'
                 : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100',

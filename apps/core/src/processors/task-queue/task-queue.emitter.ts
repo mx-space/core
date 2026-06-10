@@ -4,10 +4,10 @@ import { BusinessEvents } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import type {
-  AiTaskUpdatePayload,
-  AiTaskUpdateStreamFrame,
   Task,
   TaskLog,
+  TaskUpdatePayload,
+  TaskUpdateStreamFrame,
 } from './task-queue.types'
 
 /**
@@ -27,7 +27,7 @@ const PROGRESS_DELTA_PCT = 5
 interface ThrottleState {
   lastEmitAt: number
   lastEmitProgress: number
-  pendingPayload?: AiTaskUpdatePayload
+  pendingPayload?: TaskUpdatePayload
   pendingGroupId?: string
   timer?: NodeJS.Timeout
 }
@@ -35,11 +35,12 @@ interface ThrottleState {
 interface EmitTaskMeta {
   id: string
   type: string
+  scope: string
   groupId?: string
 }
 
 /**
- * TaskQueueEmitter centralises every `AI_TASK_UPDATE` fan-out so callers in
+ * TaskQueueEmitter centralises every `TASK_UPDATE` fan-out so callers in
  * TaskQueueService / TaskQueueProcessor don't have to know room targeting or
  * throttle rules. All emits route through `EventManagerService.emitToAdminRoom`
  * which short-circuits when no admin pod holds the room.
@@ -52,9 +53,10 @@ export class TaskQueueEmitter {
   constructor(private readonly eventManager: EventManagerService) {}
 
   emitCreated(task: Task): void {
-    const payload: AiTaskUpdatePayload = {
+    const payload: TaskUpdatePayload = {
       id: task.id,
       type: task.type,
+      scope: task.scope ?? '',
       groupId: task.groupId,
       phase: 'created',
       patch: task,
@@ -63,9 +65,10 @@ export class TaskQueueEmitter {
   }
 
   emitStarted(meta: EmitTaskMeta, patch: Partial<Task>): void {
-    const payload: AiTaskUpdatePayload = {
+    const payload: TaskUpdatePayload = {
       id: meta.id,
       type: meta.type,
+      scope: meta.scope,
       groupId: meta.groupId,
       phase: 'started',
       patch,
@@ -74,9 +77,10 @@ export class TaskQueueEmitter {
   }
 
   emitStatus(meta: EmitTaskMeta, patch: Partial<Task>): void {
-    const payload: AiTaskUpdatePayload = {
+    const payload: TaskUpdatePayload = {
       id: meta.id,
       type: meta.type,
+      scope: meta.scope,
       groupId: meta.groupId,
       phase: 'status',
       patch,
@@ -85,9 +89,10 @@ export class TaskQueueEmitter {
   }
 
   emitResult(meta: EmitTaskMeta, patch: Partial<Task>, result: unknown): void {
-    const payload: AiTaskUpdatePayload = {
+    const payload: TaskUpdatePayload = {
       id: meta.id,
       type: meta.type,
+      scope: meta.scope,
       groupId: meta.groupId,
       phase: 'result',
       patch,
@@ -97,9 +102,10 @@ export class TaskQueueEmitter {
   }
 
   emitDeleted(meta: EmitTaskMeta): void {
-    const payload: AiTaskUpdatePayload = {
+    const payload: TaskUpdatePayload = {
       id: meta.id,
       type: meta.type,
+      scope: meta.scope,
       groupId: meta.groupId,
       phase: 'deleted',
     }
@@ -107,32 +113,34 @@ export class TaskQueueEmitter {
   }
 
   emitLog(meta: EmitTaskMeta, log: TaskLog): void {
-    const payload: AiTaskUpdatePayload = {
+    const payload: TaskUpdatePayload = {
       id: meta.id,
       type: meta.type,
+      scope: meta.scope,
       groupId: meta.groupId,
       phase: 'log',
       log,
     }
     // Logs target detail room only — no group fanout, no throttle.
     void this.eventManager.emitToAdminRoom(
-      BusinessEvents.AI_TASK_UPDATE,
+      BusinessEvents.TASK_UPDATE,
       payload,
       aiTaskRooms.detail(meta.id),
     )
   }
 
-  emitStream(meta: EmitTaskMeta, frame: AiTaskUpdateStreamFrame): void {
-    const payload: AiTaskUpdatePayload = {
+  emitStream(meta: EmitTaskMeta, frame: TaskUpdateStreamFrame): void {
+    const payload: TaskUpdatePayload = {
       id: meta.id,
       type: meta.type,
+      scope: meta.scope,
       groupId: meta.groupId,
       phase: 'stream',
       stream: frame,
     }
     // Stream phase NEVER targets the group room — groupId is informational.
     void this.eventManager.emitToAdminRoom(
-      BusinessEvents.AI_TASK_UPDATE,
+      BusinessEvents.TASK_UPDATE,
       payload,
       aiTaskRooms.detail(meta.id),
     )
@@ -147,9 +155,10 @@ export class TaskQueueEmitter {
    * Progress targets detail room only (never list / never group).
    */
   emitProgress(meta: EmitTaskMeta, patch: Partial<Task>): void {
-    const payload: AiTaskUpdatePayload = {
+    const payload: TaskUpdatePayload = {
       id: meta.id,
       type: meta.type,
+      scope: meta.scope,
       groupId: meta.groupId,
       phase: 'progress',
       patch,
@@ -199,7 +208,7 @@ export class TaskQueueEmitter {
 
   private flushProgress(
     taskId: string,
-    payload: AiTaskUpdatePayload,
+    payload: TaskUpdatePayload,
     state: ThrottleState,
     now: number,
   ): void {
@@ -214,7 +223,7 @@ export class TaskQueueEmitter {
       payload.phase === 'progress' ? (payload.patch?.progress ?? 0) : 0
     this.throttle.set(taskId, state)
     void this.eventManager.emitToAdminRoom(
-      BusinessEvents.AI_TASK_UPDATE,
+      BusinessEvents.TASK_UPDATE,
       payload,
       aiTaskRooms.detail(taskId),
     )
@@ -226,12 +235,12 @@ export class TaskQueueEmitter {
    *   - the detail room (single-task pane)
    *   - the group room (if groupId present)
    */
-  private broadcastLifecycle(payload: AiTaskUpdatePayload): void {
+  private broadcastLifecycle(payload: TaskUpdatePayload): void {
     const rooms: string[] = [aiTaskRooms.list, aiTaskRooms.detail(payload.id)]
     if (payload.groupId) rooms.push(aiTaskRooms.group(payload.groupId))
     for (const room of rooms) {
       void this.eventManager.emitToAdminRoom(
-        BusinessEvents.AI_TASK_UPDATE,
+        BusinessEvents.TASK_UPDATE,
         payload,
         room,
       )

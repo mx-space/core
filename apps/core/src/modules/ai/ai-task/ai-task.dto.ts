@@ -1,10 +1,6 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { TaskStatus } from '~/processors/task-queue'
-
-import { AITaskType } from './ai-task.types'
-
 export const CreateSummaryTaskSchema = z.object({
   refId: z.string(),
   targetLanguages: z.array(z.string()).optional(),
@@ -40,49 +36,6 @@ export class CreateTranslationAllTaskDto extends createZodDto(
   CreateTranslationAllTaskSchema,
 ) {}
 
-export const GetTasksQuerySchema = z.object({
-  status: z
-    .enum([
-      TaskStatus.Pending,
-      TaskStatus.Running,
-      TaskStatus.Completed,
-      TaskStatus.Failed,
-      TaskStatus.Cancelled,
-    ])
-    .optional(),
-  type: z
-    .enum([
-      AITaskType.Summary,
-      AITaskType.Translation,
-      AITaskType.TranslationBatch,
-      AITaskType.TranslationAll,
-      AITaskType.SlugBackfill,
-    ])
-    .optional(),
-  page: z.coerce.number().int().min(1).default(1),
-  size: z.coerce.number().int().min(1).max(50).default(20),
-})
-
-export class GetTasksQueryDto extends createZodDto(GetTasksQuerySchema) {}
-
-export const DeleteTasksQuerySchema = z.object({
-  status: z
-    .enum([TaskStatus.Completed, TaskStatus.Failed, TaskStatus.Cancelled])
-    .optional(),
-  type: z
-    .enum([
-      AITaskType.Summary,
-      AITaskType.Translation,
-      AITaskType.TranslationBatch,
-      AITaskType.TranslationAll,
-      AITaskType.SlugBackfill,
-    ])
-    .optional(),
-  before: z.coerce.number().int().positive(),
-})
-
-export class DeleteTasksQueryDto extends createZodDto(DeleteTasksQuerySchema) {}
-
 export type CreateSummaryTaskInput = z.infer<typeof CreateSummaryTaskSchema>
 export type CreateTranslationTaskInput = z.infer<
   typeof CreateTranslationTaskSchema
@@ -93,5 +46,3 @@ export type CreateTranslationBatchTaskInput = z.infer<
 export type CreateTranslationAllTaskInput = z.infer<
   typeof CreateTranslationAllTaskSchema
 >
-export type GetTasksQueryInput = z.infer<typeof GetTasksQuerySchema>
-export type DeleteTasksQueryInput = z.infer<typeof DeleteTasksQuerySchema>
