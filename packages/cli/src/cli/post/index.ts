@@ -1,12 +1,14 @@
 import { Command } from '@effect/cli'
 
 import { registerCommandHelp } from '../help/registry'
+import { apply } from './apply'
 import { create } from './create'
 import { del } from './delete'
 import { edit } from './edit'
 import { get } from './get'
 import { list } from './list'
 import { publish } from './publish'
+import { stage } from './stage'
 import { unpublish } from './unpublish'
 import { update } from './update'
 
@@ -46,6 +48,16 @@ const help = registerCommandHelp({
       args: ['<slugOrId>'],
       description: 'unpublish a post',
     },
+    {
+      name: 'stage',
+      args: ['<slugOrId>', '[--file <path>]', '...'],
+      description: 'stage changes as a draft; the live post stays untouched',
+    },
+    {
+      name: 'apply',
+      args: ['<slugOrId>'],
+      description: 'apply the staged draft to the live post',
+    },
   ],
 })
 
@@ -60,5 +72,7 @@ export const postCmd = Command.make('post').pipe(
     del,
     publish,
     unpublish,
+    stage,
+    apply,
   ]),
 )
