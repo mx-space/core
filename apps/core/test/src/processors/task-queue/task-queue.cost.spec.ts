@@ -155,7 +155,7 @@ describe('TaskQueueService — cost capture', () => {
 
       // Confirm parseTask of the resulting cached hash (totalCost left at '0'
       // by createTask seed) produces undefined cost — i.e. nothing leaks onto
-      // the AI_TASK_UPDATE wire.
+      // the TASK_UPDATE wire.
       const cached = parseTask(
         {
           id: 'cached',

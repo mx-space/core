@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
-import { ScopedTaskService, TaskQueueService } from '~/processors/task-queue'
-import { TaskStatus } from '~/processors/task-queue/task-queue.types'
+import { TaskQueueService } from '~/processors/task-queue'
 
 import {
   type AITaskPayload,
@@ -20,14 +19,10 @@ import {
 
 @Injectable()
 export class AiTaskService {
-  readonly crud: ScopedTaskService
-
   constructor(
-    taskQueueService: TaskQueueService,
+    private readonly taskQueueService: TaskQueueService,
     private readonly databaseService: DatabaseService,
-  ) {
-    this.crud = new ScopedTaskService(taskQueueService, 'ai')
-  }
+  ) {}
 
   async createSummaryTask(
     payload: SummaryTaskPayload,
@@ -75,64 +70,16 @@ export class AiTaskService {
     return this.createTask(AITaskType.InsightsTranslation, payload)
   }
 
-  async retryTaskWithFailedOnly(
-    taskId: string,
-  ): Promise<{ taskId: string; created: boolean }> {
-    return this.crud.retryTask(taskId, async (task) => {
-      if (
-        task.type === AITaskType.Translation &&
-        task.status === TaskStatus.PartialFailed
-      ) {
-        const payload = task.payload as unknown as TranslationTaskPayload
-        const result = task.result as {
-          translations?: Array<{ lang: string }>
-        }
-        const targetLangs = payload.targetLanguages || []
-        const successLangs = new Set(
-          result?.translations?.map((t) => t.lang) || [],
-        )
-        const failedLangs = targetLangs.filter(
-          (lang) => !successLangs.has(lang),
-        )
-
-        if (failedLangs.length > 0) {
-          const retryPayload: TranslationTaskPayload = {
-            refId: payload.refId,
-            targetLanguages: failedLangs,
-            title: payload.title,
-            refType: payload.refType,
-          }
-          const dedupKey = computeAITaskDedupKey(
-            AITaskType.Translation,
-            retryPayload,
-          )
-          return this.crud.createTask({
-            type: AITaskType.Translation,
-            payload: retryPayload as unknown as Record<string, unknown>,
-            dedupKey,
-            groupId: task.groupId,
-          })
-        }
-      }
-
-      return this.crud.createTask({
-        type: task.type,
-        payload: task.payload as Record<string, unknown>,
-        dedupKey: `${task.type}:retry:${Date.now()}`,
-        groupId: task.groupId,
-      })
-    })
-  }
-
   private async createTask(
     type: AITaskType,
     payload: AITaskPayload,
   ): Promise<{ taskId: string; created: boolean }> {
     const dedupKey = computeAITaskDedupKey(type, payload)
-    return this.crud.createTask({
+    return this.taskQueueService.createTask({
       type,
       payload: payload as Record<string, unknown>,
       dedupKey,
+      scope: 'ai',
     })
   }
 

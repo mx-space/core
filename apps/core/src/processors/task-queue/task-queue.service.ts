@@ -1,4 +1,10 @@
-import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common'
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  type OnModuleDestroy,
+} from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { getRedisKey } from '~/utils/redis.util'
@@ -19,6 +25,7 @@ import {
   LUA_RECOVER_STALE,
   LUA_UPDATE_STATUS,
 } from './task-queue.lua'
+import { TaskQueueProcessor } from './task-queue.processor'
 import {
   parseTask,
   type SubTaskStats,
@@ -75,6 +82,8 @@ export class TaskQueueService implements OnModuleDestroy {
   constructor(
     private readonly redisService: RedisService,
     private readonly emitter: TaskQueueEmitter,
+    @Inject(forwardRef(() => TaskQueueProcessor))
+    private readonly processor: TaskQueueProcessor,
   ) {}
 
   async onModuleDestroy() {}
@@ -369,7 +378,7 @@ export class TaskQueueService implements OnModuleDestroy {
   }
 
   async getTasks(options: {
-    status?: TaskStatus
+    status?: TaskStatus | TaskStatus[]
     type?: string
     scope?: string
     page: number
@@ -378,7 +387,14 @@ export class TaskQueueService implements OnModuleDestroy {
   }): Promise<{ data: Task[]; total: number }> {
     const { status, type, scope, page, size, includeSubTasks = false } = options
 
-    const indexKey = this.pickIndexKeyByOption({ type, scope, status })
+    const statuses = Array.isArray(status) ? status : status ? [status] : []
+    const singleStatus = statuses.length === 1 ? statuses[0] : undefined
+
+    const indexKey = this.pickIndexKeyByOption({
+      type,
+      scope,
+      status: singleStatus,
+    })
 
     // Get all task IDs from the index first, then filter
     const allTaskIds = await this.redis.zrevrange(indexKey, 0, -1)
@@ -392,10 +408,14 @@ export class TaskQueueService implements OnModuleDestroy {
     let filteredTasks = allTasks.filter((t): t is Task => t !== null)
 
     if (
-      status &&
-      indexKey !== this.getKey(TASK_QUEUE_KEYS.indexByStatus(status))
+      statuses.length > 0 &&
+      !(
+        singleStatus &&
+        indexKey === this.getKey(TASK_QUEUE_KEYS.indexByStatus(singleStatus))
+      )
     ) {
-      filteredTasks = filteredTasks.filter((t) => t.status === status)
+      const statusSet = new Set(statuses)
+      filteredTasks = filteredTasks.filter((t) => statusSet.has(t.status))
     }
     if (
       scope &&
@@ -419,11 +439,11 @@ export class TaskQueueService implements OnModuleDestroy {
   async cancelTask(taskId: string): Promise<boolean> {
     const task = await this.getTask(taskId)
     if (!task) {
-      throw createAppException(AppErrorCode.AI_TASK_NOT_FOUND, { id: taskId })
+      throw createAppException(AppErrorCode.TASK_NOT_FOUND, { id: taskId })
     }
 
     if (isTerminalStatus(task.status)) {
-      throw createAppException(AppErrorCode.AI_TASK_ALREADY_COMPLETED)
+      throw createAppException(AppErrorCode.TASK_ALREADY_COMPLETED)
     }
 
     if (task.status === TaskStatus.Pending) {
@@ -441,7 +461,12 @@ export class TaskQueueService implements OnModuleDestroy {
         await this.appendLog(taskId, 'info', 'Task cancelled by user')
         this.logger.log(`Task cancelled (pending): id=${taskId}`)
         this.emitter.emitStatus(
-          { id: taskId, type: task.type, groupId: task.groupId },
+          {
+            id: taskId,
+            type: task.type,
+            scope: task.scope ?? '',
+            groupId: task.groupId,
+          },
           { status: TaskStatus.Cancelled },
         )
         this.emitter.dispose(taskId)
@@ -499,10 +524,44 @@ export class TaskQueueService implements OnModuleDestroy {
     return tasks.filter((t): t is Task => t !== null)
   }
 
+  async retryTask(
+    taskId: string,
+  ): Promise<{ taskId: string; created: boolean }> {
+    const task = await this.getTask(taskId)
+    if (!task) {
+      throw createAppException(AppErrorCode.TASK_NOT_FOUND, { id: taskId })
+    }
+
+    if (
+      task.status !== TaskStatus.Failed &&
+      task.status !== TaskStatus.PartialFailed &&
+      task.status !== TaskStatus.Cancelled
+    ) {
+      throw createAppException(AppErrorCode.TASK_CANNOT_RETRY, {
+        reason:
+          'Only failed, partial_failed, or cancelled tasks can be retried',
+      })
+    }
+
+    const buildRetryTask = this.processor.getRetryBuilder(task.type)
+    if (buildRetryTask) {
+      const options = await buildRetryTask(task)
+      return this.createTask({ ...options, scope: options.scope ?? task.scope })
+    }
+
+    return this.createTask({
+      type: task.type,
+      payload: task.payload as Record<string, unknown>,
+      groupId: task.groupId,
+      scope: task.scope,
+      dedupKey: `${task.type}:retry:${Date.now()}`,
+    })
+  }
+
   async deleteTask(taskId: string): Promise<void> {
     const task = await this.getTask(taskId)
     if (!task) {
-      throw createAppException(AppErrorCode.AI_TASK_NOT_FOUND, { id: taskId })
+      throw createAppException(AppErrorCode.TASK_NOT_FOUND, { id: taskId })
     }
 
     const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
@@ -540,6 +599,7 @@ export class TaskQueueService implements OnModuleDestroy {
     this.emitter.emitDeleted({
       id: taskId,
       type: task.type,
+      scope: task.scope ?? '',
       groupId: task.groupId,
     })
     this.emitter.dispose(taskId)
@@ -612,7 +672,12 @@ export class TaskQueueService implements OnModuleDestroy {
         await this.redis.zrem(indexPending, taskId)
         await this.redis.zadd(indexRunning, task.createdAt, taskId)
         this.emitter.emitStarted(
-          { id: task.id, type: task.type, groupId: task.groupId },
+          {
+            id: task.id,
+            type: task.type,
+            scope: task.scope ?? '',
+            groupId: task.groupId,
+          },
           {
             status: TaskStatus.Running,
             workerId: task.workerId,
@@ -767,7 +832,12 @@ export class TaskQueueService implements OnModuleDestroy {
     // vanished mid-update (e.g. concurrent delete).
     const fresh = await this.getTask(taskId)
     if (!fresh) return
-    const meta = { id: fresh.id, type: fresh.type, groupId: fresh.groupId }
+    const meta = {
+      id: fresh.id,
+      type: fresh.type,
+      scope: fresh.scope ?? '',
+      groupId: fresh.groupId,
+    }
     const statusPatch: Partial<Task> = {
       status: fresh.status,
       progress: fresh.progress,
@@ -904,15 +974,16 @@ export class TaskQueueService implements OnModuleDestroy {
     for (const id of ids) {
       this.emitter.dispose(id)
       const taskKey = this.getKey(TASK_QUEUE_KEYS.task(id))
-      const [type, groupId, retryCountRaw] = await this.redis.hmget(
+      const [type, scope, groupId, retryCountRaw] = await this.redis.hmget(
         taskKey,
         'type',
+        'scope',
         'groupId',
         'retryCount',
       )
       if (!type) continue
       this.emitter.emitStatus(
-        { id, type, groupId: groupId || undefined },
+        { id, type, scope: scope || '', groupId: groupId || undefined },
         {
           status: TaskStatus.Pending,
           retryCount: Number(retryCountRaw || '0'),
@@ -961,19 +1032,28 @@ export class TaskQueueService implements OnModuleDestroy {
   }
 
   /**
-   * Fetch the minimal task metadata needed for an AI_TASK_UPDATE emit
-   * (id / type / groupId). Returns null when the task hash no longer exists,
-   * so callers can skip the emit silently.
+   * Fetch the minimal task metadata needed for a TASK_UPDATE emit
+   * (id / type / scope / groupId). Returns null when the task hash no longer
+   * exists, so callers can skip the emit silently.
    */
-  private async getEmitMeta(
-    taskId: string,
-  ): Promise<{ id: string; type: string; groupId?: string } | null> {
+  private async getEmitMeta(taskId: string): Promise<{
+    id: string
+    type: string
+    scope: string
+    groupId?: string
+  } | null> {
     const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
-    const [type, groupId] = await this.redis.hmget(taskKey, 'type', 'groupId')
+    const [type, scope, groupId] = await this.redis.hmget(
+      taskKey,
+      'type',
+      'scope',
+      'groupId',
+    )
     if (!type) return null
     return {
       id: taskId,
       type,
+      scope: scope || '',
       groupId: groupId || undefined,
     }
   }

@@ -1,55 +1,34 @@
-import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, ListTodo, Play } from 'lucide-react'
-import { Link, useNavigate } from 'react-router'
+import { Link } from 'react-router'
 
-import type { CronTask, CronTaskDefinition } from '~/api/cron-tasks'
-import { getCronTasks } from '~/api/cron-tasks'
+import type { CronTaskDefinition } from '~/api/cron-tasks'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
-import { adminQueryKeys } from '~/query/keys'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
-import { taskRefetchInterval, taskTypeLabelKeys } from '../constants'
+import { taskTypeLabelKeys } from '../constants'
 import { useCronMutations } from '../hooks/useCronMutations'
 import { formatDateTime, formatNullableDate } from '../utils/cron'
-import { DefinitionRunRow } from './DefinitionRunRow'
-
-const RECENT_RUNS_LIMIT = 10
 
 export function DefinitionDetail(props: {
   definition: CronTaskDefinition
   onBack: () => void
 }) {
   const { t } = useI18n()
-  const navigate = useNavigate()
-  const { cancel, remove, retry, run } = useCronMutations()
+  const { run } = useCronMutations()
   const definition = props.definition
   const label = definition.description || t(taskTypeLabelKeys[definition.type])
-
-  const recentRunsQuery = useQuery({
-    queryFn: () =>
-      getCronTasks({ page: 1, size: RECENT_RUNS_LIMIT, type: definition.type }),
-    queryKey: adminQueryKeys.cron.recentRuns({
-      limit: RECENT_RUNS_LIMIT,
-      type: definition.type,
-    }),
-    refetchInterval: taskRefetchInterval,
-  })
-
-  const runs: CronTask[] = recentRunsQuery.data?.data ?? []
-  const total = recentRunsQuery.data?.total ?? 0
-
-  const busy =
-    cancel.isPending || retry.isPending || remove.isPending || run.isPending
 
   const handleRun = () => {
     if (window.confirm(t('cron.definitions.confirmRun'))) {
       run.mutate(definition.type)
     }
   }
+
+  const runsHref = `/tasks?scope=cron&type=${encodeURIComponent(definition.type)}`
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -113,70 +92,13 @@ export function DefinitionDetail(props: {
         </section>
 
         <section>
-          <div className="mb-2 flex items-baseline justify-between gap-2">
-            <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-              {t('cron.definitions.recentRuns')}
-              <span className="ml-1 tabular-nums text-neutral-500">
-                ({total})
-              </span>
-            </h3>
-            {total > 0 ? (
-              <Link
-                className="text-xs text-neutral-500 underline-offset-4 hover:text-neutral-950 hover:underline dark:text-neutral-400 dark:hover:text-neutral-50"
-                to={`/maintenance/cron/history?type=${encodeURIComponent(definition.type)}`}
-              >
-                {t('cron.definitions.viewAll')}
-              </Link>
-            ) : null}
-          </div>
-
-          {recentRunsQuery.isLoading && runs.length === 0 ? (
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  className="h-12 animate-pulse rounded bg-neutral-100 dark:bg-neutral-900"
-                  key={index}
-                />
-              ))}
-            </div>
-          ) : runs.length === 0 ? (
-            <div className="flex min-h-32 flex-col items-center justify-center rounded border border-dashed border-neutral-200 px-4 text-center dark:border-neutral-800">
-              <ListTodo
-                aria-hidden="true"
-                className="mb-2 size-8 text-neutral-300 dark:text-neutral-700"
-              />
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                {t('cron.definitions.recentRunsEmpty')}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded border border-neutral-200 dark:border-neutral-800">
-              {runs.map((task) => (
-                <DefinitionRunRow
-                  busy={busy}
-                  key={task.id}
-                  onCancel={() => {
-                    if (window.confirm(t('cron.detail.confirmCancel'))) {
-                      cancel.mutate(task.id)
-                    }
-                  }}
-                  onDelete={() => {
-                    if (window.confirm(t('cron.detail.confirmDelete'))) {
-                      remove.mutate(task.id)
-                    }
-                  }}
-                  onOpen={() => {
-                    const params = new URLSearchParams()
-                    params.set('type', definition.type)
-                    params.set('taskId', task.id)
-                    navigate(`/maintenance/cron/history?${params.toString()}`)
-                  }}
-                  onRetry={() => retry.mutate(task.id)}
-                  task={task}
-                />
-              ))}
-            </div>
-          )}
+          <Link
+            className="inline-flex items-center gap-2 rounded-sm border border-border bg-surface-card px-3 py-2 text-sm text-fg transition-colors hover:bg-surface-inset"
+            to={runsHref}
+          >
+            <ListTodo aria-hidden="true" className="size-4" />
+            {t('cron.definitions.viewRuns')}
+          </Link>
         </section>
       </Scroll>
     </div>

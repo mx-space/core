@@ -1,0 +1,135 @@
+import { Layers } from 'lucide-react'
+
+import type { AITask } from '~/api/tasks'
+import { AITaskStatus } from '~/api/tasks'
+import { useI18n } from '~/i18n'
+import type { ListRowSelectMode } from '~/ui/list-actions'
+import { ListRow } from '~/ui/list-actions'
+import { Badge } from '~/ui/primitives/badge'
+import { cn } from '~/utils/cn'
+
+import { scopeLabelKeys, statusIcon, taskStatusLabelKeys } from '../constants'
+import {
+  formatRelativeTimestamp,
+  getEffectiveStatus,
+  getTaskProgressLabel,
+  getTaskSummary,
+  getTaskTypeLabel,
+  isBatchTask,
+  statusIconClassName,
+} from '../utils/tasks'
+
+const statusDotClassName: Record<AITaskStatus, string> = {
+  [AITaskStatus.Pending]: 'bg-border-strong',
+  [AITaskStatus.Running]: 'bg-blue-500',
+  [AITaskStatus.Completed]: 'bg-emerald-500',
+  [AITaskStatus.PartialFailed]: 'bg-amber-500',
+  [AITaskStatus.Failed]: 'bg-red-500',
+  [AITaskStatus.Cancelled]: 'bg-fg-subtle',
+}
+
+const statusTextClassName: Record<AITaskStatus, string> = {
+  [AITaskStatus.Pending]: 'text-fg-muted',
+  [AITaskStatus.Running]: 'text-blue-600 dark:text-blue-400',
+  [AITaskStatus.Completed]: 'text-emerald-600 dark:text-emerald-400',
+  [AITaskStatus.PartialFailed]: 'text-amber-600 dark:text-amber-400',
+  [AITaskStatus.Failed]: 'text-red-600 dark:text-red-400',
+  [AITaskStatus.Cancelled]: 'text-fg-muted',
+}
+
+export function TaskRow(props: {
+  task: AITask
+  selected: boolean
+  showScope?: boolean
+  onSelect: (mode: ListRowSelectMode) => void
+}) {
+  const { t } = useI18n()
+  const task = props.task
+  const effectiveStatus = getEffectiveStatus(task)
+  const Icon = statusIcon[effectiveStatus]
+  const progressLabel = getTaskProgressLabel(task)
+  const typeLabel = getTaskTypeLabel(task.type, t)
+  const summary = getTaskSummary(task, t)
+  const summaryVisible = summary !== typeLabel && summary !== task.type
+
+  return (
+    <ListRow
+      ariaCurrent={props.selected}
+      className={cn(
+        'group block cursor-default border-b border-border px-4 py-2.5 last:border-b-0',
+        'hover:bg-surface-inset',
+        'data-selected:bg-accent-soft data-selected:text-fg',
+        'data-selected:hover:bg-accent-soft',
+        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent/40',
+      )}
+      dataId={task.id}
+      onSelect={props.onSelect}
+      role="row"
+      selected={props.selected}
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <Icon
+          aria-hidden="true"
+          className={cn(
+            'size-3.5 shrink-0',
+            effectiveStatus === AITaskStatus.Running && 'animate-spin',
+            statusIconClassName(effectiveStatus),
+          )}
+        />
+        <span className="truncate text-sm font-medium text-fg">
+          {typeLabel}
+        </span>
+        {props.showScope !== false && task.scope ? (
+          <Badge tone="neutral" variant="outline">
+            {t(scopeLabelKeys[task.scope])}
+          </Badge>
+        ) : null}
+        {isBatchTask(task) ? (
+          <Layers
+            aria-hidden="true"
+            className="size-3 shrink-0 text-blue-500"
+          />
+        ) : null}
+        <span
+          className={cn(
+            'inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs',
+            statusTextClassName[effectiveStatus],
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className={cn(
+              'size-1.5 rounded-full',
+              statusDotClassName[effectiveStatus],
+            )}
+          />
+          {t(taskStatusLabelKeys[effectiveStatus])}
+        </span>
+        {task.retryCount > 0 ? (
+          <span className="shrink-0 whitespace-nowrap text-xs text-amber-600 dark:text-amber-400">
+            {t('tasks.task.retryBadge', { count: task.retryCount })}
+          </span>
+        ) : null}
+        <span className="ml-auto shrink-0 text-xs tabular-nums text-fg-subtle">
+          {formatRelativeTimestamp(task.createdAt)}
+        </span>
+      </div>
+      {summaryVisible || progressLabel ? (
+        <div className="pl-5.5 mt-1 flex min-w-0 items-center gap-2">
+          {summaryVisible ? (
+            <p className="min-w-0 flex-1 truncate text-xs text-fg-muted">
+              {summary}
+            </p>
+          ) : (
+            <span className="flex-1" />
+          )}
+          {progressLabel ? (
+            <span className="shrink-0 text-xs tabular-nums text-fg-subtle">
+              {progressLabel}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+    </ListRow>
+  )
+}

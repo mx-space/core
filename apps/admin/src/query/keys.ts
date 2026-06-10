@@ -1,3 +1,16 @@
+const adminTaskKeys = {
+  taskDetail: (id: string) => ['tasks', 'detail', id] as const,
+  tasks: (params: {
+    page: number
+    scope?: string
+    size: number
+    status?: string | string[]
+    type?: string
+  }) => ['tasks', params] as const,
+  tasksByGroup: (groupId: string) => ['tasks', 'byGroup', groupId] as const,
+  tasksRoot: ['tasks'] as const,
+}
+
 export const adminQueryKeys = {
   aggregate: {
     root: ['aggregate'] as const,
@@ -11,16 +24,6 @@ export const adminQueryKeys = {
     groupedListRoot: (group: string) => ['ai', group, 'grouped'] as const,
     models: (context: string) => ['ai', 'models', context] as const,
     root: ['ai'] as const,
-    taskDetail: (id: string) => ['ai', 'tasks', 'detail', id] as const,
-    tasksByGroup: (groupId: string) =>
-      ['ai', 'tasks', 'byGroup', groupId] as const,
-    tasksRoot: ['ai', 'tasks'] as const,
-    tasks: (params: {
-      page: number
-      size: number
-      status?: string
-      type?: string
-    }) => ['ai', 'tasks', params] as const,
     translationEntriesRoot: ['ai', 'translation-entries'] as const,
     translationEntries: (params: {
       keyPath?: string
@@ -272,6 +275,12 @@ export const adminQueryKeys = {
     group: (reference: string) => ['snippets', 'group', reference] as const,
     groups: () => ['snippets', 'groups'] as const,
     root: ['snippets'] as const,
+  },
+  tasks: {
+    taskDetail: adminTaskKeys.taskDetail,
+    tasks: adminTaskKeys.tasks,
+    tasksByGroup: adminTaskKeys.tasksByGroup,
+    tasksRoot: adminTaskKeys.tasksRoot,
   },
   templates: {
     email: (type: string) => ['templates', 'email', type] as const,

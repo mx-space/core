@@ -3,7 +3,6 @@ import { SchedulerRegistry } from '@nestjs/schedule'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import {
-  ScopedTaskService,
   type TaskExecuteContext,
   TaskQueueProcessor,
   TaskQueueService,
@@ -19,16 +18,13 @@ import {
 @Injectable()
 export class CronTaskService implements OnModuleInit {
   private readonly logger = new Logger(CronTaskService.name)
-  readonly crud: ScopedTaskService
 
   constructor(
-    taskQueueService: TaskQueueService,
+    private readonly taskQueueService: TaskQueueService,
     private readonly taskQueueProcessor: TaskQueueProcessor,
     private readonly cronBusinessService: CronBusinessService,
     private readonly schedulerRegistry: SchedulerRegistry,
-  ) {
-    this.crud = new ScopedTaskService(taskQueueService, 'cron')
-  }
+  ) {}
 
   onModuleInit() {
     this.registerTaskHandlers()
@@ -44,6 +40,12 @@ export class CronTaskService implements OnModuleInit {
         ) => {
           await this.executeCronTask(type as CronTaskTypeValue, context)
         },
+        buildRetryTask: () => ({
+          type,
+          payload: {},
+          dedupKey: type,
+          scope: 'cron',
+        }),
       })
     }
     this.logger.log(
@@ -93,10 +95,11 @@ export class CronTaskService implements OnModuleInit {
       throw createAppException(AppErrorCode.CRON_NOT_FOUND, { extra: type })
     }
 
-    return this.crud.createTask({
+    return this.taskQueueService.createTask({
       type,
       payload: {},
       dedupKey: type,
+      scope: 'cron',
     })
   }
 

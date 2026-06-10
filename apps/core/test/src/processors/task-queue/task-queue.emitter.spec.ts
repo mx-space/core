@@ -44,7 +44,7 @@ describe('TaskQueueEmitter', () => {
   describe('throttle — progress emits', () => {
     it('progress 0→4 within 100ms does NOT emit (no rule satisfied)', () => {
       const { emitter, calls } = makeHarness()
-      const meta = { id: 'T1', type: 'ai:summary' }
+      const meta = { id: 'T1', type: 'ai:summary', scope: 'ai' }
 
       emitter.emitProgress(meta, { progress: 0 })
       // first emit always fires (dueByTime: now - 0 >= 1000ms)
@@ -59,7 +59,7 @@ describe('TaskQueueEmitter', () => {
 
     it('progress 0→6 within 100ms emits (5pp delta rule)', () => {
       const { emitter, calls } = makeHarness()
-      const meta = { id: 'T2', type: 'ai:summary' }
+      const meta = { id: 'T2', type: 'ai:summary', scope: 'ai' }
 
       emitter.emitProgress(meta, { progress: 0 })
       expect(calls.length).toBe(1)
@@ -73,7 +73,7 @@ describe('TaskQueueEmitter', () => {
 
     it('progress 50 then 51 after 1100ms emits (timer rule)', () => {
       const { emitter, calls } = makeHarness()
-      const meta = { id: 'T3', type: 'ai:summary' }
+      const meta = { id: 'T3', type: 'ai:summary', scope: 'ai' }
 
       emitter.emitProgress(meta, { progress: 50 })
       expect(calls.length).toBe(1)
@@ -87,7 +87,7 @@ describe('TaskQueueEmitter', () => {
 
     it('progress 99→100 emits immediately (completion shortcut)', () => {
       const { emitter, calls } = makeHarness()
-      const meta = { id: 'T4', type: 'ai:summary' }
+      const meta = { id: 'T4', type: 'ai:summary', scope: 'ai' }
 
       emitter.emitProgress(meta, { progress: 99 })
       expect(calls.length).toBe(1)
@@ -100,7 +100,7 @@ describe('TaskQueueEmitter', () => {
 
     it('pending payload flushes after trailing timer fires', () => {
       const { emitter, calls } = makeHarness()
-      const meta = { id: 'T5', type: 'ai:summary' }
+      const meta = { id: 'T5', type: 'ai:summary', scope: 'ai' }
 
       emitter.emitProgress(meta, { progress: 0 })
       expect(calls.length).toBe(1)
@@ -118,11 +118,51 @@ describe('TaskQueueEmitter', () => {
     })
   })
 
+  describe('scope in payload', () => {
+    it('carries scope on lifecycle, log, stream, and progress payloads', () => {
+      const { emitter, calls } = makeHarness()
+      const meta = {
+        id: 'S1',
+        type: 'cron:run',
+        scope: 'cron',
+        groupId: 'G9',
+      }
+
+      emitter.emitStatus(meta, { status: 'running' as any })
+      emitter.emitLog(meta, { timestamp: 0, level: 'info', message: 'x' })
+      emitter.emitStream(meta, { chunk: 'c' })
+      emitter.emitProgress(meta, { progress: 0 })
+
+      expect(calls.length).toBeGreaterThan(0)
+      for (const c of calls) {
+        expect((c.payload as any).scope).toBe('cron')
+      }
+    })
+
+    it('created payload carries scope from the task snapshot', () => {
+      const { emitter, calls } = makeHarness()
+      emitter.emitCreated({
+        id: 'S2',
+        type: 'enrichment:embed',
+        scope: 'enrichment',
+        status: 'pending' as any,
+        payload: {},
+        createdAt: 0,
+        logs: [],
+        retryCount: 0,
+      })
+      expect(calls.length).toBeGreaterThan(0)
+      for (const c of calls) {
+        expect((c.payload as any).scope).toBe('enrichment')
+      }
+    })
+  })
+
   describe('per-phase room targeting', () => {
     it('status phase fans out to list + detail + group when groupId present', () => {
       const { emitter, calls } = makeHarness()
       emitter.emitStatus(
-        { id: 'T10', type: 'ai:translation', groupId: 'G1' },
+        { id: 'T10', type: 'ai:translation', scope: 'ai', groupId: 'G1' },
         { status: 'running' as any },
       )
       const rooms = calls.map((c) => c.room)
@@ -132,14 +172,14 @@ describe('TaskQueueEmitter', () => {
         aiTaskRooms.group('G1'),
       ])
       for (const c of calls) {
-        expect(c.event).toBe(BusinessEvents.AI_TASK_UPDATE)
+        expect(c.event).toBe(BusinessEvents.TASK_UPDATE)
       }
     })
 
     it('status phase skips group room when groupId absent', () => {
       const { emitter, calls } = makeHarness()
       emitter.emitStatus(
-        { id: 'T11', type: 'ai:summary' },
+        { id: 'T11', type: 'ai:summary', scope: 'ai' },
         { status: 'completed' as any },
       )
       const rooms = calls.map((c) => c.room)
@@ -148,7 +188,12 @@ describe('TaskQueueEmitter', () => {
 
     it('progress phase routes ONLY to detail room (never list / never group)', () => {
       const { emitter, calls } = makeHarness()
-      const meta = { id: 'T12', type: 'ai:translation', groupId: 'G2' }
+      const meta = {
+        id: 'T12',
+        type: 'ai:translation',
+        scope: 'ai',
+        groupId: 'G2',
+      }
       emitter.emitProgress(meta, { progress: 0 })
       expect(calls).toHaveLength(1)
       expect(calls[0].room).toBe(aiTaskRooms.detail('T12'))
@@ -156,7 +201,12 @@ describe('TaskQueueEmitter', () => {
 
     it('stream phase NEVER targets group room — detail only', () => {
       const { emitter, calls } = makeHarness()
-      const meta = { id: 'T13', type: 'ai:translation', groupId: 'G3' }
+      const meta = {
+        id: 'T13',
+        type: 'ai:translation',
+        scope: 'ai',
+        groupId: 'G3',
+      }
       emitter.emitStream(meta, { lang: 'en', chunk: 'hello' })
       expect(calls).toHaveLength(1)
       expect(calls[0].room).toBe(aiTaskRooms.detail('T13'))
@@ -168,7 +218,7 @@ describe('TaskQueueEmitter', () => {
 
     it('log phase routes ONLY to detail room', () => {
       const { emitter, calls } = makeHarness()
-      const meta = { id: 'T14', type: 'ai:summary', groupId: 'G4' }
+      const meta = { id: 'T14', type: 'ai:summary', scope: 'ai', groupId: 'G4' }
       emitter.emitLog(meta, {
         timestamp: Date.now(),
         level: 'info',
@@ -182,7 +232,7 @@ describe('TaskQueueEmitter', () => {
   describe('dispose', () => {
     it('clears pending throttle timer so no late emit fires', () => {
       const { emitter, calls } = makeHarness()
-      const meta = { id: 'T20', type: 'ai:summary' }
+      const meta = { id: 'T20', type: 'ai:summary', scope: 'ai' }
 
       emitter.emitProgress(meta, { progress: 0 })
       expect(calls.length).toBe(1)
@@ -200,7 +250,10 @@ describe('TaskQueueEmitter', () => {
 
     it('is idempotent — second dispose is a no-op', () => {
       const { emitter } = makeHarness()
-      emitter.emitProgress({ id: 'T21', type: 'ai:summary' }, { progress: 0 })
+      emitter.emitProgress(
+        { id: 'T21', type: 'ai:summary', scope: 'ai' },
+        { progress: 0 },
+      )
       expect(() => {
         emitter.dispose('T21')
         emitter.dispose('T21')

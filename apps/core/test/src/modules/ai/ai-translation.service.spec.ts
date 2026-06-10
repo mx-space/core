@@ -68,6 +68,11 @@ const createService = () => {
   const aiInFlightService = {}
   const eventManager = { emit: vi.fn() }
   const taskProcessor = { registerHandler: vi.fn() }
+  const taskQueueService = {
+    createTask: vi.fn(),
+    getTasks: vi.fn(async () => ({ data: [], total: 0 })),
+    cancelTask: vi.fn(),
+  }
   const lexicalService = { lexicalToMarkdown: vi.fn(() => 'markdown') }
   const aiTaskService = { createTranslationTask: vi.fn() }
   const lexicalStrategy = {}
@@ -82,6 +87,7 @@ const createService = () => {
     aiInFlightService as any,
     eventManager as any,
     taskProcessor as any,
+    taskQueueService as any,
     lexicalService as any,
     aiTaskService as any,
     lexicalStrategy as any,

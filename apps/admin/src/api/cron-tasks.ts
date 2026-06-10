@@ -1,4 +1,7 @@
-import { deleteJson, getJson, requestJson } from './http'
+import { getJson, requestJson } from './http'
+import type { CreateTaskResponse } from './tasks'
+
+export type { CreateTaskResponse }
 
 export enum CronTaskType {
   CleanAccessRecord = 'cron:clean-access-record',
@@ -58,11 +61,6 @@ export interface CronTasksResponse {
   total: number
 }
 
-export interface CreateTaskResponse {
-  created: boolean
-  taskId: string
-}
-
 export interface CronTaskFilters {
   page?: number
   size?: number
@@ -74,55 +72,8 @@ export function getCronTaskDefinitions() {
   return getJson<CronTaskDefinition[]>('/cron-task')
 }
 
-export function getCronTasks(filters?: CronTaskFilters) {
-  return getJson<CronTasksResponse>('/cron-task/tasks', {
-    page: filters?.page,
-    size: filters?.size,
-    status: filters?.status,
-    type: filters?.type,
-  })
-}
-
 export function runCronTask(type: CronTaskType) {
   return requestJson<CreateTaskResponse>(`/cron-task/run/${type}`, {
     method: 'POST',
   })
-}
-
-export function cancelCronTask(taskId: string) {
-  return requestJson<{ success: boolean }>(
-    `/cron-task/tasks/${taskId}/cancel`,
-    {
-      method: 'POST',
-    },
-  )
-}
-
-export function retryCronTask(taskId: string) {
-  return requestJson<CreateTaskResponse>(`/cron-task/tasks/${taskId}/retry`, {
-    method: 'POST',
-  })
-}
-
-export function deleteCronTask(taskId: string) {
-  return deleteJson<{ success: boolean }>(`/cron-task/tasks/${taskId}`)
-}
-
-export function deleteCronTasks(params: {
-  before: number
-  status?: CronTaskStatus
-  type?: CronTaskType
-}) {
-  const searchParams = new URLSearchParams()
-
-  searchParams.set('before', String(params.before))
-  if (params.status) searchParams.set('status', params.status)
-  if (params.type) searchParams.set('type', params.type)
-
-  return requestJson<{ deleted: number }>(
-    `/cron-task/tasks?${searchParams.toString()}`,
-    {
-      method: 'DELETE',
-    },
-  )
 }

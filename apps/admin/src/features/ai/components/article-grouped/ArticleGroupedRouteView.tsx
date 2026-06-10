@@ -85,7 +85,7 @@ export function ArticleGroupedRouteView<TItem>(
       queryKey: adminQueryKeys.ai.groupedRoot(config.groupedQueryKey),
     })
     await queryClient.invalidateQueries({
-      queryKey: adminQueryKeys.ai.tasksRoot,
+      queryKey: adminQueryKeys.tasks.tasksRoot,
     })
   }
 

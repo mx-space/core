@@ -20,7 +20,7 @@ import {
 } from '~/ui/layout/sidebar-layout'
 import { cn } from '~/utils/cn'
 
-import { AITaskStatus, getAiTasks } from './api/ai'
+import { AITaskStatus, getTasks } from './api/tasks'
 import { useI18n } from './i18n'
 
 export function AdminShell(props: PropsWithChildren) {
@@ -39,8 +39,9 @@ export function AdminShell(props: PropsWithChildren) {
   }, [])
   const pendingAiTasksQuery = useQuery({
     queryFn: () =>
-      getAiTasks({
+      getTasks({
         page: 1,
+        scope: 'ai',
         size: 1,
         status: AITaskStatus.Pending,
       }),
@@ -49,8 +50,9 @@ export function AdminShell(props: PropsWithChildren) {
   })
   const runningAiTasksQuery = useQuery({
     queryFn: () =>
-      getAiTasks({
+      getTasks({
         page: 1,
+        scope: 'ai',
         size: 1,
         status: AITaskStatus.Running,
       }),
@@ -137,7 +139,7 @@ export function AdminShell(props: PropsWithChildren) {
               <AiTaskFloatingButton
                 activeCount={activeAiTaskCount}
                 fetching={isFetchingAiTaskCount}
-                onClick={() => navigate('/ai/tasks')}
+                onClick={() => navigate('/tasks?scope=ai')}
                 title={t('shell.aiTask.title')}
                 ariaLabel={t('shell.aiTask.ariaLabel', {
                   count: activeAiTaskCount,

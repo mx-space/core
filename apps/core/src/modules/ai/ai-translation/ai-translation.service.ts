@@ -9,8 +9,11 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import {
+  type CreateTaskOptions,
+  type Task,
   type TaskExecuteContext,
   TaskQueueProcessor,
+  TaskQueueService,
   TaskStatus,
 } from '~/processors/task-queue'
 import { ContentFormat } from '~/shared/types/content-format.type'
@@ -109,6 +112,7 @@ export class AiTranslationService
     private readonly aiInFlightService: AiInFlightService,
     private readonly eventManager: EventManagerService,
     private readonly taskProcessor: TaskQueueProcessor,
+    private readonly taskQueueService: TaskQueueService,
     private readonly lexicalService: LexicalService,
     private readonly aiTaskService: AiTaskService,
     @Inject(LEXICAL_TRANSLATION_STRATEGY)
@@ -154,6 +158,7 @@ export class AiTranslationService
       ) => {
         await this.executeTranslationTask(payload, context)
       },
+      buildRetryTask: (task) => this.buildTranslationRetryTask(task),
     })
 
     // Translation batch handler
@@ -179,6 +184,42 @@ export class AiTranslationService
     })
 
     this.logger.log('AI translation task handlers registered')
+  }
+
+  private buildTranslationRetryTask(task: Task): CreateTaskOptions {
+    if (task.status === TaskStatus.PartialFailed) {
+      const payload = task.payload as unknown as TranslationTaskPayload
+      const result = task.result as {
+        translations?: Array<{ lang: string }>
+      }
+      const targetLangs = payload.targetLanguages || []
+      const successLangs = new Set(
+        result?.translations?.map((t) => t.lang) || [],
+      )
+      const failedLangs = targetLangs.filter((lang) => !successLangs.has(lang))
+
+      if (failedLangs.length > 0) {
+        const retryPayload: TranslationTaskPayload = {
+          refId: payload.refId,
+          targetLanguages: failedLangs,
+          title: payload.title,
+          refType: payload.refType,
+        }
+        return {
+          type: AITaskType.Translation,
+          payload: retryPayload as unknown as Record<string, unknown>,
+          dedupKey: computeAITaskDedupKey(AITaskType.Translation, retryPayload),
+          groupId: task.groupId,
+        }
+      }
+    }
+
+    return {
+      type: task.type,
+      payload: task.payload as Record<string, unknown>,
+      dedupKey: `${task.type}:retry:${Date.now()}`,
+      groupId: task.groupId,
+    }
   }
 
   // NOTE: `executeTranslationTask` and `executeTranslationAllTask` share a
@@ -358,11 +399,12 @@ export class AiTranslationService
         AITaskType.Translation,
         taskPayload,
       )
-      const result = await this.aiTaskService.crud.createTask({
+      const result = await this.taskQueueService.createTask({
         type: AITaskType.Translation,
         payload: taskPayload as unknown as Record<string, unknown>,
         dedupKey,
         groupId: context.taskId,
+        scope: 'ai',
       })
 
       if (result.created) {
@@ -458,11 +500,12 @@ export class AiTranslationService
         AITaskType.Translation,
         taskPayload,
       )
-      const result = await this.aiTaskService.crud.createTask({
+      const result = await this.taskQueueService.createTask({
         type: AITaskType.Translation,
         payload: taskPayload as unknown as Record<string, unknown>,
         dedupKey,
         groupId: context.taskId,
+        scope: 'ai',
       })
 
       if (result.created) {
@@ -524,9 +567,10 @@ export class AiTranslationService
   async cancelActiveTranslationTasks(refId: string) {
     const results = await Promise.all(
       [TaskStatus.Running, TaskStatus.Pending].map((status) =>
-        this.aiTaskService.crud.getTasks({
+        this.taskQueueService.getTasks({
           type: AITaskType.Translation,
           status,
+          scope: 'ai',
           page: 1,
           size: 100,
           includeSubTasks: true,
@@ -543,7 +587,7 @@ export class AiTranslationService
       )
         continue
       try {
-        await this.aiTaskService.crud.cancelTask(task.id)
+        await this.taskQueueService.cancelTask(task.id)
         this.logger.log(
           `Cancelled stale translation task ${task.id} for article=${refId}`,
         )

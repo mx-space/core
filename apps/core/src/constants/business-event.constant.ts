@@ -80,8 +80,8 @@ export enum BusinessEvents {
   AI_AGENT_CONFIRM_RESULT = 'AI_AGENT_CONFIRM_RESULT',
   AI_AGENT_SESSION_STATE = 'AI_AGENT_SESSION_STATE',
 
-  // AI Task Queue realtime fan-out (spec 2)
-  AI_TASK_UPDATE = 'AI_TASK_UPDATE',
+  // Task Queue realtime fan-out (spec 2)
+  TASK_UPDATE = 'TASK_UPDATE',
 }
 export enum EventScope {
   TO_VISITOR = 1 << 0,

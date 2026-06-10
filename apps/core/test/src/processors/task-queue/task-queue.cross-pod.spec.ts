@@ -74,7 +74,7 @@ describe('emitToAdminRoom — cross-pod Redis SET gate', () => {
   it('pod A emit is SUPPRESSED when no pod holds the room', async () => {
     podA.adminGateway.broadcast.mockClear()
     await podA.eventManager.emitToAdminRoom(
-      BusinessEvents.AI_TASK_UPDATE,
+      BusinessEvents.TASK_UPDATE,
       { hello: 'world' },
       ROOM,
     )
@@ -89,14 +89,14 @@ describe('emitToAdminRoom — cross-pod Redis SET gate', () => {
     await podB.roomSubs.add(ROOM)
 
     await podA.eventManager.emitToAdminRoom(
-      BusinessEvents.AI_TASK_UPDATE,
+      BusinessEvents.TASK_UPDATE,
       { phase: 'progress', taskId: 'T1' },
       ROOM,
     )
 
     expect(podA.adminGateway.broadcast).toHaveBeenCalledTimes(1)
     expect(podA.adminGateway.broadcast).toHaveBeenCalledWith(
-      BusinessEvents.AI_TASK_UPDATE,
+      BusinessEvents.TASK_UPDATE,
       { phase: 'progress', taskId: 'T1' },
       { rooms: [ROOM] },
     )
@@ -110,7 +110,7 @@ describe('emitToAdminRoom — cross-pod Redis SET gate', () => {
     await podB.roomSubs.remove(ROOM)
 
     await podA.eventManager.emitToAdminRoom(
-      BusinessEvents.AI_TASK_UPDATE,
+      BusinessEvents.TASK_UPDATE,
       { phase: 'progress', taskId: 'T1' },
       ROOM,
     )

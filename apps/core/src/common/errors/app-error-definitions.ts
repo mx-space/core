@@ -191,18 +191,18 @@ export const APP_ERROR_DEFINITIONS = {
     status: 500,
     message: (p) => p?.message ?? 'AI service error',
   },
-  [AppErrorCode.AI_TASK_NOT_FOUND]: {
+  [AppErrorCode.TASK_NOT_FOUND]: {
     status: 404,
-    message: 'AI task not found',
+    message: 'Task not found',
     details: (p) => (p?.id ? { id: p.id } : undefined),
   },
-  [AppErrorCode.AI_TASK_ALREADY_COMPLETED]: {
+  [AppErrorCode.TASK_ALREADY_COMPLETED]: {
     status: 400,
-    message: 'AI task is already completed and cannot be cancelled',
+    message: 'Task is already completed and cannot be cancelled',
   },
-  [AppErrorCode.AI_TASK_CANNOT_RETRY]: {
+  [AppErrorCode.TASK_CANNOT_RETRY]: {
     status: 400,
-    message: (p) => p?.reason ?? 'AI task cannot be retried',
+    message: (p) => p?.reason ?? 'Task cannot be retried',
   },
   [AppErrorCode.AI_TRANSLATION_NOT_FOUND]: {
     status: 404,
