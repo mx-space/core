@@ -1,3 +1,10 @@
+# [13.9.0](https://github.com/mx-space/core/compare/v13.8.0...v13.9.0) (2026-06-10)
+
+
+### Features
+
+* video upload in the admin rich editor ([4d0194c](https://github.com/mx-space/core/commit/4d0194c5fb4042ea0f0e2ade348041cc7aec0dfb))
+
 # [13.8.0](https://github.com/mx-space/core/compare/v13.7.0...v13.8.0) (2026-06-10)
 
 
