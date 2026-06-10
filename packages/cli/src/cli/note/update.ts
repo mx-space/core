@@ -23,6 +23,10 @@ export const update = Command.make(
         delete payload.text
         delete payload.contentFormat
       }
+      // Envelope <state> must not flip publish state on update; only the
+      // explicit --state flag (or publish/unpublish) changes it. See the same
+      // guard in post/update.ts.
+      if (flags.state === undefined) delete payload.isPublished
       const resolved = yield* resolveTopicRefs(payload)
       const resolver = yield* Resolver
       const id = yield* resolver.resolveNoteId(slugOrId)
