@@ -1,4 +1,11 @@
-## [13.10.3](https://github.com/mx-space/core/compare/v13.10.2...v13.10.3) (2026-06-12)
+## [13.10.4](https://github.com/mx-space/core/compare/v13.10.3...v13.10.4) (2026-06-12)
+
+
+### Bug Fixes
+
+* **ai-translation:** include rich-quote in inline translation flow grouping ([9b79e28](https://github.com/mx-space/core/commit/9b79e284a9c53df834573c238f0b4967a3d190b2))
+
+## [13.10.3](https://github.com/mx-space/core/compare/v13.10.2...v13.10.3) (2026-06-11)
 
 
 ### Bug Fixes
@@ -19,7 +26,7 @@
 
 ## [13.10.1](https://github.com/mx-space/core/compare/v13.10.0...v13.10.1) (2026-06-11)
 
-# [13.10.0](https://github.com/mx-space/core/compare/v13.9.0...v13.10.0) (2026-06-11)
+# [13.10.0](https://github.com/mx-space/core/compare/v13.9.0...v13.10.0) (2026-06-10)
 
 
 ### Bug Fixes
@@ -52,7 +59,7 @@
 
 ### Features
 
-* **core:** migrate admin updater to R2 latest.json manifest ([31b6e33](https://github.com/mx-space/core/commit/31b6e33c7a5249ea8d3b3ddda12144f07672a9f0))
+* **core:** migrate admin updater to R2 latest.json manifest ([31b6e33](https://github.com/mx-space/core/commit/31b6e33c7a5249ea8d3b3ddda12144f07672a9f0)), closes [#release](https://github.com/mx-space/core/issues/release)
 
 # [13.6.0](https://github.com/mx-space/core/compare/v13.5.2...v13.6.0) (2026-06-08)
 
@@ -364,7 +371,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 
 * **recently:** URL-keyed enrichment map, drop typed entries ([#2726](https://github.com/mx-space/core/issues/2726)) ([91b8a47](https://github.com/mx-space/core/commit/91b8a47469e9b9f96016b7aa3651a2ffa6669719))
 
-# [12.6.0](https://github.com/mx-space/core/compare/v0.7.0...v12.6.0) (2026-05-15)
+# [12.6.0](https://github.com/mx-space/core/compare/v12.5.4...v12.6.0) (2026-05-15)
 
 
 ### Features
@@ -1025,7 +1032,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 * **schema:** enhance partial schemas for notes, pages, and posts with new fields ([f66c9ed](https://github.com/mx-space/core/commit/f66c9ed9cca1091730985813334adccb9462affd))
 * 更新文件上传前缀支持模板占位符，增强灵活性 ([#2584](https://github.com/mx-space/core/issues/2584)) ([2b5354a](https://github.com/mx-space/core/commit/2b5354a6f907947993dda64733e8bbd62c6cc62d))
 
-# [10.2.0](https://github.com/mx-space/core/compare/v10.1.10...v10.2.0) (2026-03-08)
+# [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
 
 
 ### Features
