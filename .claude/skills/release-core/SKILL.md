@@ -5,464 +5,158 @@ description: Use when releasing mx-core server (apps/core), @mx-space/api-client
 
 # mx-core Release (Agent-native)
 
-## Why this skill skips `bump`
-
-The repo has historically used `bump` (nbump) — an interactive CLI that bundles ~6 steps behind a single prompt. It's great for humans, hostile for agents: every step is hidden, prompts must be fed via stdin, and a mid-run error leaves the working tree in an unknown state.
-
-This skill replicates the **same end state** (commit, tag, changelog) by driving the underlying git/file operations directly. Each step is observable, individually verifiable, and individually retryable.
-
-If a teammate insists on `bump`, fall back to it — but it's not needed for any agent-driven release.
+Helper scripts live in `.claude/skills/release-core/scripts/` (each `cd`s to repo root, runs fine from anywhere). They print compact, verifiable output — read it instead of re-deriving state with ad-hoc commands.
 
 ## Three pipelines (confirm which one with the user)
 
-| Pipeline | Where | What ships | What auto-fires after `git push` |
-|----------|-------|------------|-----------------------------------|
+| Pipeline | Where | What ships | After `git push` |
+|----------|-------|------------|------------------|
 | **A. Server** | `apps/core` | DockerHub `innei/mx-server` + GitHub Release zip + Dokploy redeploy | `release.yml` triggers on tag `v*` |
-| **B. api-client** | `packages/api-client` | npm package `@mx-space/api-client` | `api-client.yml` runs CI only (no publish); the agent runs `npm publish` locally |
-| **C. cli (mxs)** | `packages/cli` | npm package `@mx-space/cli` (binary `mxs`) | No dedicated workflow; the agent runs `npm publish` locally |
+| **B. api-client** | `packages/api-client` | npm `@mx-space/api-client` | `api-client.yml` runs CI only; agent publishes locally |
+| **C. cli** | `packages/cli` | npm `@mx-space/cli` (binary `mxs`) | no workflow; agent publishes locally |
 
-## Pre-flight (BOTH pipelines)
+CI runs lint, typecheck, and smoke tests on the tag — don't re-run them locally before tagging; fix forward via a follow-up patch if CI fails.
 
-Run all of these. Stop and confirm with the user on any red.
+Safety invariant: never use `git reset --hard`, `git checkout --`, `git restore`, force-push, or any destructive equivalent in this release flow. If recovery is needed, inspect the working tree, preserve diffs, and ask the user before touching existing files.
 
-```bash
-# In repo root
-git status                       # working tree must be clean
-git fetch origin && git status   # confirm relationship with origin/master (ahead = will publish; behind/diverged = stop)
-```
+## A. Server release
 
-CI (`release.yml`'s `quality` + `build` jobs) runs lint, typecheck, the bundled-server smoke, and the Docker smoke. Don't re-run them locally before tagging — fix-forward via a follow-up patch if CI fails.
-
-For the server pipeline, also enumerate what's about to ship:
+### Step 1 — Preflight + decide version
 
 ```bash
-CURRENT=$(node -p "require('./apps/core/package.json').version")
-git log v${CURRENT}..HEAD --no-merges --pretty='%h %s'
+bash .claude/skills/release-core/scripts/preflight.sh core
 ```
 
-Sanity-check the commit list before deciding the version bump.
+Prints tree/branch/origin checks, current version, the unreleased commit list (subjects + bodies — this is also the source material for step 3), and whether `apps/admin` changed. Any `RED` line → stop and confirm with the user.
 
-## A. Server Release (`apps/core`)
-
-### Step 1 — Decide the version
-
-Read current version: `node -p "require('./apps/core/package.json').version"`.
-
-Inspect the unreleased commits (above) and choose:
+Choose the bump from the commit list:
 
 | Bump | Trigger |
 |------|---------|
-| `patch` (X.Y.**Z+1**) | only `fix:` / `docs:` / `chore:` / `refactor:` / `test:` |
-| `minor` (X.**Y+1**.0) | any `feat:` |
-| `major` (**X+1**.0.0) | any `BREAKING CHANGE:` or `feat!:` / `fix!:` — **always confirm with user** |
-| `prerelease` (X.Y.Z-**N**) | RC / canary; appends/increments numeric suffix |
+| `patch` | only `fix:` / `docs:` / `chore:` / `refactor:` / `test:` |
+| `minor` | any `feat:` |
+| `major` | `BREAKING CHANGE:` or `feat!:` / `fix!:` — **always confirm with user** |
+| `prerelease` | RC / canary numeric suffix |
 
-State the chosen version explicitly to the user before running step 2.
+State the chosen version explicitly to the user, then continue.
 
-### Step 2 — Sync with origin
-
-```bash
-git pull --rebase
-pnpm i                           # only if pnpm-lock.yaml changed since last release; harmless to skip
-```
-
-### Step 3 — Bump admin version if admin changed
-
-The admin SPA lives in-repo at `apps/admin` and ships with every core release (`release.yml` builds it, bundles it into the server zip + Docker image, and publishes `admin-<version>.zip` + `latest.json` to Cloudflare R2). If `apps/admin` changed since the previous core release but its version stays the same, R2 silently overwrites the old `admin-X.Y.Z.zip` with different content — so the admin version MUST move whenever admin changed.
-
-This is the step nbump ran via `bump.before`; the agent-native flow must run it explicitly:
+### Step 2 — Prepare
 
 ```bash
-node apps/core/scripts/bump-admin-version.js
+bash .claude/skills/release-core/scripts/prepare-server.sh X.Y.Z
 ```
 
-Effect: diffs `apps/admin` against the previous `v*` tag; if changed, patch-bumps `apps/admin/package.json` in place. If unchanged, logs `admin unchanged since <tag>, no bump` and writes nothing. No network or token needed.
+Does, in order: verifies no tracked files are already changed → fetches origin and aborts if `origin/master` moved since preflight → `node apps/core/scripts/bump-admin-version.js` (patch-bumps `apps/admin/package.json` iff admin changed since the last `v*` tag — mandatory, otherwise R2 silently overwrites the published `admin-X.Y.Z.zip` with different content) → sets core version → regenerates `apps/core/CHANGELOG.md` (conventional-changelog, Angular preset, scoped to `apps/core`) → backs up old release notes to `/tmp` and empties `apps/core/RELEASE_NOTES.md`. Prints changed files, version diffs, and the head of the new changelog block.
 
-Verify: `git diff apps/admin/package.json` shows only the `version` field changing (or no diff when admin is untouched). Cross-check the script's verdict yourself: `git diff --stat v${CURRENT} HEAD -- apps/admin` — if this is non-empty, the admin version must have moved.
+Check the printed changelog block: header `## [X.Y.Z](compare-link) (YYYY-MM-DD)`, entries grouped under `### Bug Fixes` / `### Features`, only feat/fix/breaking commits, each `* **scope:** subject ([sha7](link))`. If wrong: stop, inspect `git diff apps/core/CHANGELOG.md`, then edit the changelog manually while preserving unrelated hunks.
 
-(Independent admin-only releases — no core release — use `scripts/release-admin.sh` + the `admin-v*` tag instead; that is out of scope for this skill.)
+If preflight showed `apps/admin` changed but the script logged `admin unchanged`, stop and fix before tagging.
 
-### Step 4 — Bump version in package.json
+### Step 3 — Author `apps/core/RELEASE_NOTES.md`
 
-Use the Edit tool (do **not** use `npm version`, which would create its own commit/tag).
+This file becomes the GitHub Release body (CI reads it via `body_path`). Step 2 empties the file after copying the old content to `/tmp`; write the new content fresh and do not reuse the previous release body.
 
-```jsonc
-// apps/core/package.json
-"version": "11.4.8",  // → "11.4.9"
-```
+**Select** from the commit list preflight printed:
 
-Verify: `git diff apps/core/package.json` shows only the `version` field.
+1. Always: `feat:`, `fix:`, anything breaking (`BREAKING CHANGE:` footer, `feat!:` / `fix!:`).
+2. Only if user-visible: `refactor:` / `chore:` / `perf:` / `docs:` (dependency major, behaviour change, performance, public API). Skip the rest.
+3. Never: `style:`, `test:`, tooling with no runtime impact.
 
-### Step 5 — Generate the CHANGELOG entry
+**Structure**: any feat or breaking, or ≥4 selected entries → **full**. All selected entries internal-only → **simple** with TL;DR `Internal maintenance release; no user-facing changes.` Otherwise → **simple**.
 
-Format used by the existing CHANGELOG.md is **conventional-changelog / Angular preset**. Reproduce it with one command:
-
-```bash
-npx -y conventional-changelog-cli@5 -p angular \
-  -i apps/core/CHANGELOG.md -s -r 0 --commit-path apps/core
-```
-
-`-s` writes in place. `-r 0` regenerates only the unreleased section (since the last `release: v*` tag). `--commit-path apps/core` scopes commits to the server app, matching nbump's behaviour.
-
-Then **read the diff** and sanity-check it:
-
-```bash
-git diff apps/core/CHANGELOG.md
-```
-
-The new block should:
-- Start with `## [X.Y.Z](https://github.com/mx-space/core/compare/v<prev>...vX.Y.Z) (YYYY-MM-DD)`
-- Group entries under `### Bug Fixes` / `### Features` / `### BREAKING CHANGES`
-- List only `feat`/`fix`/breaking commits — `docs`/`chore`/`refactor`/`test`/`style` are skipped (this matches nbump)
-- Each entry: `* **scope:** subject ([sha7](commit-link))`
-
-If the block looks wrong, `git checkout -- apps/core/CHANGELOG.md` and either re-run with corrected flags or write the block manually.
-
-### Step 5.5 — Generate the user-facing release notes
-
-`apps/core/CHANGELOG.md` (above) is for developers — Angular preset, commit-style. The GitHub Release body uses a different document: a human-narrative file at `apps/core/RELEASE_NOTES.md`, written by the agent and committed alongside the version bump. CI reads this file directly (no more `changelogithub`).
-
-**Source material**:
-
-```bash
-git log v${CURRENT}..HEAD --no-merges --pretty='%H %s%n%b' -- apps/core
-```
-
-Use full subjects + bodies (the body surfaces `BREAKING CHANGE:` footers and PR refs).
-
-**Selection rules**:
-
-1. Always include: `feat:`, `fix:`, anything with `BREAKING CHANGE:` footer or `feat!:` / `fix!:` markers — same scope `changelogithub` used to ship.
-2. Conditionally include: `refactor:`, `chore:`, `perf:`, `docs:` — only those whose subject/body indicates a **user-visible** effect (dependency major bump, behaviour change, performance improvement, public API tweak). Skip the rest.
-3. Never include: pure formatting (`style:`), test-only (`test:`), tooling chores with no runtime impact.
-
-**Structure auto-selection**:
-
-| Condition | Use |
-|-----------|-----|
-| Any `feat:` OR any breaking change in selection | **full** |
-| Else ≥ 4 entries selected | **full** |
-| Else all selected entries are internal-only (chore/dep bump, no user effect) | **simple** with "Internal maintenance release" TL;DR (see rule 9 below) |
-| Otherwise | **simple** |
-
-**Full structure** (`apps/core/RELEASE_NOTES.md`):
+**Full**:
 
 ```markdown
 ## TL;DR
 
-<One sentence, 15–25 words, naming the headline change and its user impact.>
+<one sentence>
 
-## Breaking Changes   ← only when present, rendered at top
+## Breaking Changes   <!-- only when present -->
 
-- **<area>**: <what changed + why>. **Migration**: <concrete action operator must take>.
+- **<area>**: <what + why>. **Migration**: <concrete operator action>.
 
 ## Highlights
 
-<2–3 prose paragraphs, ~40–80 words each. One topic per paragraph. Describe
-user-visible behaviour and value — not commit subjects. Note constraints or
-follow-ups.>
+<2–3 prose paragraphs, one topic each — user-visible behaviour and value>
 
 ## Changes
 
 ### Features
-- <Human description of what users can now do.> ([#PR] or [sha])
+- <what users can now do> ([#PR] or [sha])
 
 ### Bug Fixes
-- <Human description of what is fixed.> ([#PR] or [sha])
+- <what is fixed> ([#PR] or [sha])
 
-### Other   ← only when user-visible refactor/chore/perf was selected
-- <Human description.> ([#PR] or [sha])
+### Other   <!-- only for selected user-visible refactor/chore/perf -->
 
-## Upgrade Notes   ← only when manual operator action is required
-
-<env var / migration / config changes; cite exact commands or file paths>
+## Upgrade Notes   <!-- only when manual operator action is required -->
 
 ---
 
 **Full Changelog**: https://github.com/mx-space/core/compare/v<prev>...v<this>
 ```
 
-**Simple structure**:
+**Simple**: just `## TL;DR` + `## Changes` (flat list) + the Full Changelog link.
 
-```markdown
-## TL;DR
+**Rules**: rewrite in user-facing language, never copy a commit subject verbatim; link priority PR `#NNNN` > issue > 7-char sha with commit URL; every Breaking entry MUST carry a `**Migration**:` clause; TL;DR is one sentence, 15–25 words; Highlights paragraphs 40–80 words; omit empty sections entirely.
 
-<One sentence.>
+Print the rendered file to chat as a status update (visibility, not approval) and proceed — the flow runs unattended; only stop if a step 1 red flag is unresolved.
 
-## Changes
-
-- <Human description.> ([#PR] or [sha])
-
----
-
-**Full Changelog**: https://github.com/mx-space/core/compare/v<prev>...v<this>
-```
-
-**Authoring rules** (self-discipline; verify each before showing the user):
-
-1. Use user-facing language. Translate `refactor pool` → "Connection pool now reuses sockets across requests, reducing handshake latency."
-2. Never copy a commit subject verbatim into an entry — rewrite it.
-3. Link priority: PR number (`#2708`) > issue number > short sha (7 chars + commit URL). Prefer PR when commit message contains `(#NNNN)`.
-4. Every `Breaking Changes` entry MUST include a `**Migration**:` clause with a concrete action — even if the action is "no action required, just observe the new behaviour".
-5. TL;DR is exactly one sentence, 15–25 words, naming the headline change and its user impact.
-6. Highlights paragraphs: 40–80 words each, 2–3 total in full structure.
-7. (See structure selection table above.)
-8. Empty sections are omitted entirely — do not render placeholder text like "No breaking changes."
-9. If selection is internal-only, TL;DR is `Internal maintenance release; no user-facing changes.` Highlights is omitted; `Changes` (or `Other`) lists the chore items.
-
-**Write**:
-
-1. Write `apps/core/RELEASE_NOTES.md` (overwrite any previous content).
-2. Print the full rendered file to chat as a status update — for visibility, not approval. Proceed directly to step 7 without asking.
-
-The release flow runs unattended: if the agent has enough information to choose a version (step 1) and run the prior steps, it has enough to author the notes. Only stop and ask the user if a red flag in step 1 is unresolved (e.g. ambiguous breaking change scope).
-
-Verify: `apps/core/RELEASE_NOTES.md` exists and is non-empty (`test -s apps/core/RELEASE_NOTES.md`).
-
-### Step 6 — Commit
+### Step 4 — Finalize + watch CI
 
 ```bash
-git add apps/core/package.json apps/core/CHANGELOG.md apps/core/RELEASE_NOTES.md
-git add apps/admin/package.json   # only when step 3 bumped it
-git commit -m "release: vX.Y.Z" --no-verify
+bash .claude/skills/release-core/scripts/finalize-server.sh X.Y.Z
 ```
 
-`--no-verify` skips the lint-staged pre-commit hook — release commits don't need it (CHANGELOG/RELEASE_NOTES aren't lintable, package.json change is mechanical), and matches the historical commit pattern.
+Does: assert notes non-empty → commit `release: vX.Y.Z` with `--no-verify` → annotated tag `vX.Y.Z` → push commit + tag (the tag push triggers `release.yml`) → print the commit stat and the matching tag-triggered run.
 
-Verify: `git log -1 --stat` shows exactly three files changed (four when step 3 bumped the admin version).
-
-### Step 7 — Tag
+Verify the printed stat shows exactly 3 files (4 when admin was bumped). Then:
 
 ```bash
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
+gh run watch <run-id>
 ```
 
-Annotated tag (`-a`) — `release.yml` trigger condition is just `tags: v*`, but annotated matches history.
+`release.yml`: quality → build (GitHub Release with the notes; admin zip to R2) → docker (multi-arch to DockerHub) → dokploy redeploy. If it fails: fix forward with the next patch; **never** delete or move a published tag.
 
-Verify: `git tag -l vX.Y.Z` returns the tag.
+## B/C. npm package release (api-client / cli)
 
-### Step 8 — Push
+No tag, no changelog file. Decide the version via `preflight.sh api-client` or `preflight.sh cli` — same conventional rules, except cli is `0.y.z`: treat `feat:` AND breaking both as minor; `1.0.0` is reserved for the deliberate API freeze. Preflight uses the package's current version commit as the baseline; if it prints a baseline warning, inspect the recent commits manually before choosing. State the version to the user, then:
 
 ```bash
-git push                         # commit
-git push origin vX.Y.Z           # tag — this is what triggers release.yml
+bash .claude/skills/release-core/scripts/release-package.sh api-client X.Y.Z
+# or
+bash .claude/skills/release-core/scripts/release-package.sh cli X.Y.Z
 ```
 
-Both are required. Pushing the commit alone does nothing visible; pushing the tag without the commit gets a tag pointing at a sha that origin doesn't have yet.
+Does: assert `npm whoami` (if not logged in, ask the user to `npm login` — don't bypass) → verify no tracked files are already changed → fetch origin and abort if `origin/master` moved since preflight → run package `typecheck` and `test` → rebuild `dist/` → (cli only) smoke-test `bin/mxs.cjs --version` and `npm pack --dry-run` with a hard check that `bin/mxs.cjs` is in the tarball → set version → commit `chore(release): bump <name> to vX.Y.Z` → push → `pnpm publish --access=public --no-git-checks` → `npm view <name> version`.
 
-### Step 9 — Watch CI
+Why those flags: `pnpm publish` (not npm) rewrites `workspace:*` deps to real ranges — npm ships them verbatim and the package breaks on install. `--no-git-checks` because unrelated untracked files (surfaced as `WARN` in preflight — confirm they're unrelated before running) would abort the publish.
 
-```bash
-gh run list --workflow=release.yml --limit 1
-gh run watch <run-id>            # blocks until the run finishes; or omit and check periodically
-```
+cli extras: never edit the `bin` map (`mxs` → `./bin/mxs.cjs` is load-bearing). After ~60s propagation, `npx --yes @mx-space/cli@X.Y.Z --version` should print `X.Y.Z`; if `command not found: mxs`, inspect `npm view @mx-space/cli bin` before publishing a fix.
 
-`release.yml` runs:
-1. **quality** — lint + typecheck
-2. **build** — verify `apps/core/RELEASE_NOTES.md` present → `pnpm bundle` → `scripts/workflow/test-server.sh` → publish admin assets (`admin-<version>.zip` + `latest.json`) to Cloudflare R2 → zip → upload as GitHub Release asset with `body_path: apps/core/RELEASE_NOTES.md` (this is what populates the Release notes; `changelogithub` is no longer used)
-3. **docker** (matrix `linux/amd64` + `linux/arm64`) — build, `scripts/workflow/test-docker.sh`, push by digest to DockerHub `innei/mx-server`
-4. **merge** — combine digests into multi-arch manifest, tag `latest` / `vX.Y.Z` / `X.Y` / `X` / sha
-5. **dokploy** — POST to `secrets.DOKPLOY_WEBHOOK_URL` (silently skipped if unset) — this is what redeploys production
-
-If quality/build fails: fix forward, bump again with the next patch number. **Never** delete or move the published tag.
-
-## B. api-client Release (`packages/api-client`)
-
-Simpler — no tag, no changelog file, just bump → commit → push → publish.
-
-### Step 1 — Decide the version
-
-```bash
-node -p "require('./packages/api-client/package.json').version"
-git log --pretty='%h %s' -- packages/api-client | head -30
-```
-
-Same conventional-commits rules as the server.
-
-### Step 2 — Sync + rebuild
-
-```bash
-git pull --rebase
-pnpm i                           # if needed
-pnpm -C packages/api-client run package
-```
-
-`package` is `rm -rf dist && tsdown` — rebuilds `dist/` (gitignored) so the upcoming `npm publish` ships fresh artifacts.
-
-Verify: `ls packages/api-client/dist` lists `.cjs` / `.mjs` / `.d.mts` files.
-
-### Step 3 — Bump version
-
-Edit `packages/api-client/package.json` `version` field.
-
-### Step 4 — Commit + push
-
-```bash
-git add packages/api-client/package.json
-git commit -m "chore(release): bump @mx-space/api-client to vX.Y.Z" --no-verify
-git push
-```
-
-**No git tag.** The api-client pipeline does not use the `v*` namespace (which is server-only). `api-client.yml` runs `pnpm test && pnpm run package` on the push as a sanity check — it does **not** publish.
-
-### Step 5 — Publish to npm
-
-```bash
-cd packages/api-client && pnpm publish --access=public
-```
-
-Use `pnpm publish`, **not** `npm publish`. pnpm rewrites any `workspace:`
-protocol dependency to a real version range in the published manifest;
-`npm publish` ships `workspace:*` verbatim and the package breaks on install.
-pnpm's git-checks abort the publish if the repo root has unrelated untracked
-files — after confirming those files are unrelated to this release, re-run with
-`--no-git-checks`.
-
-Requires publish rights on `@mx-space/api-client` (org `mx-space`). If `npm whoami` shows nothing, ask the user to log in — don't try to bypass.
-
-Verify: `npm view @mx-space/api-client version` returns the new version (may take 30–60s to propagate).
-
-### Step 6 — Notify consumers (optional, with user's call)
-
-`@mx-space/api-client` is consumed by Yohaku (`apps/web/package.json`) and admin-vue3 by pinned version. Bumping those is a separate change and only needed if consumers depend on the new behaviour. Don't do it as part of this skill unless the user asks.
-
-## C. cli Release (`packages/cli`, binary `mxs`)
-
-Same shape as api-client — no tag, no CHANGELOG file, just bump → commit → push → publish. Two extra cares: the `bin` field must remain executable, and the package was un-released until v0.1.x, so the first publish is a real first publish (not a re-publish).
-
-### Step 1 — Decide the version
-
-```bash
-node -p "require('./packages/cli/package.json').version"
-git log --pretty='%h %s' -- packages/cli | head -30
-```
-
-Same conventional-commits rules. Note: while in `0.y.z`, treat `feat:` as minor (`0.Y+1.0`) and breaking as minor too — `1.0.0` is reserved for the deliberate API freeze.
-
-### Step 2 — Sync + rebuild
-
-```bash
-git pull --rebase
-pnpm i                           # if needed
-pnpm -C packages/cli run package
-```
-
-`package` is `rm -rf dist && tsdown` — same as api-client. Builds `dist/` (gitignored).
-
-Verify:
-- `ls packages/cli/dist` lists `.mjs` / `.d.mts` (CLI ships ESM; `bin/mxs.cjs` is a thin shim into the bundle).
-- `node packages/cli/bin/mxs.cjs --version` prints the about-to-bump version (i.e. still the current one until step 3). Confirms the shim resolves `dist/` after a clean build.
-
-### Step 3 — Bump version
-
-Edit `packages/cli/package.json` `version` field. Do NOT touch the `bin` map — the `mxs` → `./bin/mxs.cjs` mapping is load-bearing.
-
-### Step 4 — Sanity-check the publish surface
-
-```bash
-cd packages/cli && npm pack --dry-run 2>&1 | tail -40
-```
-
-Run from inside `packages/cli`, not the repo root with `-w @mx-space/cli` — in
-this pnpm workspace the `-w` form resolves to pnpm and aborts with
-`ERR_PNPM_PACKAGE_NAME_NOT_FOUND` (the root package.json has no `name`).
-
-What to check in the output:
-- `bin/mxs.cjs` present
-- `dist/` present and non-empty (.mjs/.d.mts)
-- `README.md` + `ROADMAP.md` present
-- `src/` NOT present (would inflate tarball; `files` field already excludes it, just confirming)
-
-Skip pack if the consumer trusts the `files` array — but for a first publish, run it.
-
-### Step 5 — Commit + push
-
-```bash
-git add packages/cli/package.json
-git commit -m "chore(release): bump @mx-space/cli to vX.Y.Z" --no-verify
-git push
-```
-
-**No git tag.** Like api-client, CLI does not use the `v*` namespace (server-only). No CI workflow runs for CLI on push.
-
-### Step 6 — Publish to npm
-
-```bash
-cd packages/cli && pnpm publish --access=public
-```
-
-Use `pnpm publish`, **not** `npm publish`. `@mx-space/cli` depends on
-`@mx-space/api-client` via `workspace:*`; pnpm rewrites that to a real version
-range when publishing, whereas `npm publish` ships `workspace:*` verbatim and
-breaks the package on install.
-
-- `npm whoami` returns a user with publish rights on the `mx-space` org (same as api-client).
-- `--access=public` is required because `@mx-space/cli` is a scoped package; npm defaults scoped packages to private. (Already set in `publishConfig.access`, but passing the flag is belt-and-suspenders.)
-- pnpm's git-checks abort the publish if the repo root has unrelated untracked files. After confirming those files are unrelated to this release, re-run with `--no-git-checks`.
-
-If `npm whoami` is empty, ask the user to `npm login`. Don't attempt `--otp=...` guessing.
-
-Verify:
-- `npm view @mx-space/cli version` returns the new version (30–60s propagation).
-- After propagation, smoke-test the published binary:
-  ```bash
-  npx --yes @mx-space/cli@X.Y.Z --version
-  ```
-  Should print `X.Y.Z`. If it errors with `command not found: mxs`, the `bin` field is broken in the published manifest — investigate `npm view @mx-space/cli bin` before publishing a fix.
-
-### Step 7 — Notify consumers (optional)
-
-CLI has no in-repo consumers (it's an end-user tool, not a workspace dep). Skip the consumer-bump step.
+Consumer bumps (Yohaku pins `@mx-space/api-client`) are out of scope unless the user asks.
 
 ## Rollback / recovery
 
 | Situation | Action |
 |-----------|--------|
-| Failed before `git push` | `git reset --hard HEAD~1` (after confirming nothing else uncommitted), `git tag -d vX.Y.Z`. Confirm with user before resetting. |
-| Pushed commit but tag push failed | Push the tag: `git push origin vX.Y.Z`. The commit alone won't trigger CI. |
-| Tag pushed, CI quality/build failed | Fix forward with a new patch release. Don't delete the published tag. |
-| Tag pushed, Docker built, but bug critical | Cut a new patch with the fix. Don't re-tag the same version. |
-| api-client `pnpm publish` failed after commit/push | Re-run `pnpm publish --access=public` once the issue is resolved. The commit already records the intent. |
-| cli `pnpm publish` failed after commit/push | Re-run `pnpm publish --access=public` from `packages/cli`. If failure is missing `dist/`, re-run `pnpm -C packages/cli run package` first. |
-| Published cli but `mxs` binary missing on install | The `bin` field was likely stripped or the shim path is wrong. Cut a new patch with `bin/mxs.cjs` restored — do **not** unpublish unless within 24h and no installs. |
-| Wrong version published to npm | npm allows `npm unpublish` only within 72h, only if no one depends on it. Usually faster to publish a corrected next version. |
-| Release notes need a fix after tag is published | `gh release edit vX.Y.Z --notes-file apps/core/RELEASE_NOTES.md` (or `--notes "..."`) — updates the Release body only. Tag and assets are untouched. |
+| Failed before `git push` | stop; show `git status` and `git diff`; preserve release edits for inspection; ask the user before manually reversing release-only hunks or deleting a local-only tag |
+| Commit pushed, tag push failed | `git push origin vX.Y.Z` |
+| Tag pushed, CI failed or critical bug shipped | fix forward with the next patch — never re-tag or delete |
+| npm publish failed after commit/push | resolve, re-run `pnpm publish --access=public --no-git-checks` from the package dir (rebuild `dist/` first if missing) |
+| Wrong version on npm | publish a corrected next version; do not use `npm unpublish` without explicit user approval and package-impact verification |
+| Release notes wrong after publish | `gh release edit vX.Y.Z --notes-file apps/core/RELEASE_NOTES.md` — tag and assets untouched |
 
-**Never** force-push `master` and **never** delete a published tag without explicit user approval — release tags are referenced by Docker manifests and changelog tooling.
+**Never** force-push `master`, reset the branch, restore files destructively, or delete a published tag without explicit user approval — tags are referenced by Docker manifests and changelog tooling.
 
 ## Red flags — STOP and confirm
 
-- Working tree dirty before step 1
-- Asked to bump `major` (breaking) — confirm scope
-- On a non-`master` branch
-- `apps/admin` changed since the previous `v*` tag but `apps/admin/package.json` version did not move (step 3 skipped or its script misjudged) — fix before tagging, or R2 overwrites the published `admin-X.Y.Z.zip` in place
-- `npm whoami` empty when about to publish api-client or cli
-- Pipelines mixed up (e.g. tagging `v*` for an api-client- or cli-only change, or bumping CLI version when only api-client changed)
-- `packages/cli/dist` missing or stale before `pnpm publish` (skipped step 2 rebuild)
-- `packages/cli/package.json` `bin` field accidentally removed or path renamed
+- Any `RED` from preflight
+- Major bump — confirm breaking scope with the user
+- `apps/admin` changed but its version didn't move
+- `npm whoami` empty before a package publish
+- Pipelines mixed up (e.g. `v*` tag for a package-only change)
 
-## File reference
+## Fallback
 
-- `apps/core/package.json` — server version
-- `apps/admin/package.json` — admin SPA version (bumped by step 3 when admin changed; names the R2 artifact `admin-<version>.zip`)
-- `apps/core/scripts/bump-admin-version.js` — diffs `apps/admin` vs previous `v*` tag, patch-bumps admin version (was nbump's `bump.before` hook)
-- `apps/core/CHANGELOG.md` — server changelog (Angular preset, developer-facing, machine-generated)
-- `apps/core/RELEASE_NOTES.md` — user-facing GitHub Release body (narrative, agent-authored, overwritten each release; CI reads via `body_path`)
-- `packages/api-client/package.json` — npm package version
-- `packages/cli/package.json` — npm package version + `bin.mxs` map (do not edit `bin` during a release)
-- `packages/cli/bin/mxs.cjs` — CommonJS shim that re-exports `dist/`; shipped in the tarball
-- `.github/workflows/release.yml` — server tag → Docker + GitHub Release + Dokploy
-- `.github/workflows/api-client.yml` — api-client CI (test/build only, no publish)
-- (No dedicated workflow for `packages/cli` — root `ci.yml` covers typecheck/test.)
-- `scripts/workflow/test-server.sh` / `test-docker.sh` — smoke tests CI runs
-
-## Manual `bump` fallback
-
-If for some reason this flow can't proceed (e.g. CHANGELOG generator failing), the historical interactive path still works:
-
-```bash
-cd apps/core
-yes "" | pnpm exec bump patch    # nbump prompts Continue? — yes "" auto-accepts
-```
-
-This collapses steps 2–8 into one opaque run. Use only as a last resort; the agent-native flow above is preferred because each step is observable.
+If the script flow cannot proceed, stop with the current `git status` and `git diff` visible. Do not fall back to opaque interactive release tooling unless the user explicitly asks for it after reviewing the working tree.
