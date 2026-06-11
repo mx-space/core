@@ -28,7 +28,7 @@ if [ -f apps/core/RELEASE_NOTES.md ]; then
   cp apps/core/RELEASE_NOTES.md "$backup"
   echo "previous RELEASE_NOTES.md backed up to $backup"
 fi
-: > apps/core/RELEASE_NOTES.md
+rm -f apps/core/RELEASE_NOTES.md
 
 echo "--- changed files ---"
 git status --porcelain --untracked-files=no

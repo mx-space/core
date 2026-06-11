@@ -46,7 +46,7 @@ State the chosen version explicitly to the user, then continue.
 bash .claude/skills/release-core/scripts/prepare-server.sh X.Y.Z
 ```
 
-Does, in order: verifies no tracked files are already changed → fetches origin and aborts if `origin/master` moved since preflight → `node apps/core/scripts/bump-admin-version.js` (patch-bumps `apps/admin/package.json` iff admin changed since the last `v*` tag — mandatory, otherwise R2 silently overwrites the published `admin-X.Y.Z.zip` with different content) → sets core version → regenerates `apps/core/CHANGELOG.md` (conventional-changelog, Angular preset, scoped to `apps/core`) → backs up old release notes to `/tmp` and empties `apps/core/RELEASE_NOTES.md`. Prints changed files, version diffs, and the head of the new changelog block.
+Does, in order: verifies no tracked files are already changed → fetches origin and aborts if `origin/master` moved since preflight → `node apps/core/scripts/bump-admin-version.js` (patch-bumps `apps/admin/package.json` iff admin changed since the last `v*` tag — mandatory, otherwise R2 silently overwrites the published `admin-X.Y.Z.zip` with different content) → sets core version → regenerates `apps/core/CHANGELOG.md` (conventional-changelog, Angular preset, scoped to `apps/core`) → backs up old release notes to `/tmp` and deletes `apps/core/RELEASE_NOTES.md`. Prints changed files, version diffs, and the head of the new changelog block.
 
 Check the printed changelog block: header `## [X.Y.Z](compare-link) (YYYY-MM-DD)`, entries grouped under `### Bug Fixes` / `### Features`, only feat/fix/breaking commits, each `* **scope:** subject ([sha7](link))`. If wrong: stop, inspect `git diff apps/core/CHANGELOG.md`, then edit the changelog manually while preserving unrelated hunks.
 
@@ -54,7 +54,7 @@ If preflight showed `apps/admin` changed but the script logged `admin unchanged`
 
 ### Step 3 — Author `apps/core/RELEASE_NOTES.md`
 
-This file becomes the GitHub Release body (CI reads it via `body_path`). Step 2 empties the file after copying the old content to `/tmp`; write the new content fresh and do not reuse the previous release body.
+This file becomes the GitHub Release body (CI reads it via `body_path`). Step 2 deletes the file after copying the old content to `/tmp` — it does not exist at this point. Create it with the Write tool directly; do not read the `/tmp` backup or reuse the previous release body.
 
 **Select** from the commit list preflight printed:
 
