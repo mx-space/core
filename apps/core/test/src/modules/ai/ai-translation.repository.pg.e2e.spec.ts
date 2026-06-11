@@ -1,9 +1,6 @@
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
-import {
-  startPgTestContainer,
-  stopPgTestContainer,
-} from 'test/helper/pg-testcontainer'
+import { createIsolatedPgDatabase } from 'test/helper/pg-testcontainer'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import {
@@ -15,12 +12,13 @@ import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 describe('ai-translation repositories upsert (real PG, ON CONFLICT)', () => {
   let pool: Pool
+  let database: Awaited<ReturnType<typeof createIsolatedPgDatabase>>
   let translationRepo: AiTranslationRepository
   let entryRepo: TranslationEntryRepository
 
   beforeAll(async () => {
-    const container = await startPgTestContainer()
-    pool = new Pool({ connectionString: container.getConnectionUri() })
+    database = await createIsolatedPgDatabase()
+    pool = new Pool({ connectionString: database.getConnectionUri() })
     const db = drizzle(pool) as unknown as AppDatabase
     const snowflake = new SnowflakeService()
     translationRepo = new AiTranslationRepository(db, snowflake)
@@ -29,7 +27,7 @@ describe('ai-translation repositories upsert (real PG, ON CONFLICT)', () => {
 
   afterAll(async () => {
     await pool?.end()
-    await stopPgTestContainer()
+    await database?.drop()
   })
 
   it('inserts then updates an ai_translations row on the same (refId, refType, lang)', async () => {
