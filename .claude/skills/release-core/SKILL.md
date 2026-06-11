@@ -66,15 +66,21 @@ git pull --rebase
 pnpm i                           # only if pnpm-lock.yaml changed since last release; harmless to skip
 ```
 
-### Step 3 — Sync mx-admin version
+### Step 3 — Bump admin version if admin changed
+
+The admin SPA lives in-repo at `apps/admin` and ships with every core release (`release.yml` builds it, bundles it into the server zip + Docker image, and publishes `admin-<version>.zip` + `latest.json` to Cloudflare R2). If `apps/admin` changed since the previous core release but its version stays the same, R2 silently overwrites the old `admin-X.Y.Z.zip` with different content — so the admin version MUST move whenever admin changed.
+
+This is the step nbump ran via `bump.before`; the agent-native flow must run it explicitly:
 
 ```bash
-node apps/core/get-latest-admin-version.js
+node apps/core/scripts/bump-admin-version.js
 ```
 
-Effect: queries `https://api.github.com/repos/mx-space/mx-admin/releases/latest` and writes the latest tag into `apps/core/package.json` → `dashboard.version`. Needs a GitHub token (env `GH_TOKEN`/`GITHUB_TOKEN`, falls back to `gh auth token`).
+Effect: diffs `apps/admin` against the previous `v*` tag; if changed, patch-bumps `apps/admin/package.json` in place. If unchanged, logs `admin unchanged since <tag>, no bump` and writes nothing. No network or token needed.
 
-Verify: `git diff apps/core/package.json` shows only `dashboard.version` changing (or no diff if already current).
+Verify: `git diff apps/admin/package.json` shows only the `version` field changing (or no diff when admin is untouched). Cross-check the script's verdict yourself: `git diff --stat v${CURRENT} HEAD -- apps/admin` — if this is non-empty, the admin version must have moved.
+
+(Independent admin-only releases — no core release — use `scripts/release-admin.sh` + the `admin-v*` tag instead; that is out of scope for this skill.)
 
 ### Step 4 — Bump version in package.json
 
@@ -85,7 +91,7 @@ Use the Edit tool (do **not** use `npm version`, which would create its own comm
 "version": "11.4.8",  // → "11.4.9"
 ```
 
-Verify: `git diff apps/core/package.json` shows only the `version` field (and possibly `dashboard.version` from step 3).
+Verify: `git diff apps/core/package.json` shows only the `version` field.
 
 ### Step 5 — Generate the CHANGELOG entry
 
@@ -217,12 +223,13 @@ Verify: `apps/core/RELEASE_NOTES.md` exists and is non-empty (`test -s apps/core
 
 ```bash
 git add apps/core/package.json apps/core/CHANGELOG.md apps/core/RELEASE_NOTES.md
+git add apps/admin/package.json   # only when step 3 bumped it
 git commit -m "release: vX.Y.Z" --no-verify
 ```
 
 `--no-verify` skips the lint-staged pre-commit hook — release commits don't need it (CHANGELOG/RELEASE_NOTES aren't lintable, package.json change is mechanical), and matches the historical commit pattern.
 
-Verify: `git log -1 --stat` shows exactly three files changed.
+Verify: `git log -1 --stat` shows exactly three files changed (four when step 3 bumped the admin version).
 
 ### Step 7 — Tag
 
@@ -252,7 +259,7 @@ gh run watch <run-id>            # blocks until the run finishes; or omit and ch
 
 `release.yml` runs:
 1. **quality** — lint + typecheck
-2. **build** — verify `apps/core/RELEASE_NOTES.md` present → `pnpm bundle` → `scripts/workflow/test-server.sh` → zip → upload as GitHub Release asset with `body_path: apps/core/RELEASE_NOTES.md` (this is what populates the Release notes; `changelogithub` is no longer used)
+2. **build** — verify `apps/core/RELEASE_NOTES.md` present → `pnpm bundle` → `scripts/workflow/test-server.sh` → publish admin assets (`admin-<version>.zip` + `latest.json`) to Cloudflare R2 → zip → upload as GitHub Release asset with `body_path: apps/core/RELEASE_NOTES.md` (this is what populates the Release notes; `changelogithub` is no longer used)
 3. **docker** (matrix `linux/amd64` + `linux/arm64`) — build, `scripts/workflow/test-docker.sh`, push by digest to DockerHub `innei/mx-server`
 4. **merge** — combine digests into multi-arch manifest, tag `latest` / `vX.Y.Z` / `X.Y` / `X` / sha
 5. **dokploy** — POST to `secrets.DOKPLOY_WEBHOOK_URL` (silently skipped if unset) — this is what redeploys production
@@ -428,7 +435,7 @@ CLI has no in-repo consumers (it's an end-user tool, not a workspace dep). Skip 
 - Working tree dirty before step 1
 - Asked to bump `major` (breaking) — confirm scope
 - On a non-`master` branch
-- `node get-latest-admin-version.js` fails (likely missing `gh auth` / token)
+- `apps/admin` changed since the previous `v*` tag but `apps/admin/package.json` version did not move (step 3 skipped or its script misjudged) — fix before tagging, or R2 overwrites the published `admin-X.Y.Z.zip` in place
 - `npm whoami` empty when about to publish api-client or cli
 - Pipelines mixed up (e.g. tagging `v*` for an api-client- or cli-only change, or bumping CLI version when only api-client changed)
 - `packages/cli/dist` missing or stale before `pnpm publish` (skipped step 2 rebuild)
@@ -436,10 +443,11 @@ CLI has no in-repo consumers (it's an end-user tool, not a workspace dep). Skip 
 
 ## File reference
 
-- `apps/core/package.json` — server version + `dashboard.version` (mx-admin pin)
+- `apps/core/package.json` — server version
+- `apps/admin/package.json` — admin SPA version (bumped by step 3 when admin changed; names the R2 artifact `admin-<version>.zip`)
+- `apps/core/scripts/bump-admin-version.js` — diffs `apps/admin` vs previous `v*` tag, patch-bumps admin version (was nbump's `bump.before` hook)
 - `apps/core/CHANGELOG.md` — server changelog (Angular preset, developer-facing, machine-generated)
 - `apps/core/RELEASE_NOTES.md` — user-facing GitHub Release body (narrative, agent-authored, overwritten each release; CI reads via `body_path`)
-- `apps/core/get-latest-admin-version.js` — fetches latest mx-admin release tag
 - `packages/api-client/package.json` — npm package version
 - `packages/cli/package.json` — npm package version + `bin.mxs` map (do not edit `bin` during a release)
 - `packages/cli/bin/mxs.cjs` — CommonJS shim that re-exports `dist/`; shipped in the tarball
