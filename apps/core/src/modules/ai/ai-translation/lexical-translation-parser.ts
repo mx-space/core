@@ -52,6 +52,7 @@ const INLINE_FLOW_ROOT_TYPES = new Set([
   'paragraph',
   'heading',
   'quote',
+  'rich-quote',
   'listitem',
   'tablecell',
 ])
