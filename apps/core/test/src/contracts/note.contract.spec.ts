@@ -103,6 +103,9 @@ const noteServiceProvider = {
     async findByNid(nid: number) {
       return fixtureNote({ nid, isPublished: noteState.byNidIsPublished })
     },
+    async findManyByIds(ids: string[]) {
+      return ids.map((id) => fixtureNote({ id }))
+    },
     async listPaginated(
       page = 1,
       size = 10,
