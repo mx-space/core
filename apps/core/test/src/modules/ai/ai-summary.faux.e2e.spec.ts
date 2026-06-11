@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { withFauxAi } from '@/helper/faux-ai.helper'
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import type { AiStreamEvent } from '~/modules/ai/ai-inflight/ai-inflight.types'
 import type { AiSummaryRepository } from '~/modules/ai/ai-summary/ai-summary.repository'
@@ -45,7 +46,13 @@ function createService(runtime: PiRuntimeAdapter) {
   const databaseService = {
     findGlobalById: vi.fn(async () => ({
       id: 'post-1',
-      document: { id: 'post-1', text: 'source text', title: 'Title' },
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        text: 'source text',
+        title: 'Title',
+        isPublished: true,
+      },
     })),
     findGlobalByIds: vi.fn(),
   }

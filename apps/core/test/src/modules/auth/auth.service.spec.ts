@@ -71,18 +71,15 @@ describe('AuthService', () => {
     ).rejects.toThrow(AppException)
   })
 
-  it('extracts API keys from current and deprecated request locations', () => {
+  it('extracts API keys from the x-api-key header only', () => {
     const { service } = createService()
 
     expect(
       service.getApiKeyFromRequest({ headers: { 'x-api-key': 'current' } }),
-    ).toEqual({ key: 'current', deprecated: false })
-    expect(service.getApiKeyFromRequest({ query: { token: 'query' } })).toEqual(
-      {
-        key: 'query',
-        deprecated: true,
-      },
-    )
+    ).toEqual({ key: 'current' })
+    expect(
+      service.getApiKeyFromRequest({ query: { token: 'query' } } as any),
+    ).toBeNull()
   })
 
   it('ignores Authorization: Bearer api-key fallback after narrowing', () => {

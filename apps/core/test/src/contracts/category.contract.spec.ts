@@ -68,6 +68,9 @@ const postServiceProvider = {
     async listByCategory() {
       return []
     },
+    async listByCategoryIds() {
+      return new Map()
+    },
   },
 }
 
