@@ -18,7 +18,7 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { EntityIdDto } from '~/shared/dto/id.dto'
-import { getSandboxTypeDeclaration } from '~/utils/sandbox'
+import sandboxTypeDeclaration from '~/utils/sandbox/sandbox-type-declaration.runtime.d.ts?raw'
 
 import { createMockedContextResponse } from './mock-response.util'
 import {
@@ -36,7 +36,7 @@ export class ServerlessController {
   @HTTPDecorators.RawResponse
   @CacheTTL(60 * 60 * 24)
   getCodeDefined() {
-    return getSandboxTypeDeclaration()
+    return sandboxTypeDeclaration
   }
 
   @Get('/logs/:id')

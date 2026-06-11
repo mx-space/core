@@ -42,6 +42,7 @@
   "exclude": [
     "dist",
     "tmp",
-    "assets/types/type.declare.ts"
+    "assets/types/type.declare.ts",
+    "src/utils/sandbox/sandbox-type-declaration.runtime.d.ts"
   ]
 }

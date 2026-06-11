@@ -18,6 +18,10 @@ export default defineConfig(
       'packages/*/esm',
       'packages/*/types',
       'test/**/*.db.ts',
+      // Raw-eval'd worker script (`?raw` import), not a compiled module
+      'apps/core/src/utils/sandbox/sandbox-worker.runtime.js',
+      // Ambient declarations served raw to Monaco, excluded from tsc
+      'apps/core/src/utils/sandbox/sandbox-type-declaration.runtime.d.ts',
     ],
     sortKeys: false,
     typescript: true,

@@ -1,14 +1,11 @@
-/**
- * Type declarations for serverless functions, used by Monaco Editor for code completion.
- * These must stay in sync with sandboxGlobals in sandbox-worker-code.ts.
- *
- * Update this file whenever the sandbox API surface changes.
- */
-export function getSandboxTypeDeclaration(): string {
-  return `
+// Ambient type declarations for serverless functions, served raw to Monaco
+// Editor for code completion (imported via Vite `?raw`, excluded from tsc so
+// these globals do not leak into the project).
+// These must stay in sync with sandboxGlobals in sandbox-worker.runtime.js —
+// update this file whenever the sandbox API surface changes.
 // ===== Serverless Function Type Declaration =====
 // Generated from sandbox runtime API surface
-// See: src/utils/sandbox/sandbox-worker-code.ts
+// See: src/utils/sandbox/sandbox-worker.runtime.js
 
 declare interface FunctionContextRequest {
   query: Record<string, string>
@@ -42,12 +39,32 @@ declare interface IStorage {
 }
 
 declare interface HttpAxios {
-  get(url: string, config?: any): Promise<{ data: any; status: number; headers: Record<string, string> }>
-  post(url: string, data?: any, config?: any): Promise<{ data: any; status: number; headers: Record<string, string> }>
-  put(url: string, data?: any, config?: any): Promise<{ data: any; status: number; headers: Record<string, string> }>
-  delete(url: string, config?: any): Promise<{ data: any; status: number; headers: Record<string, string> }>
-  patch(url: string, data?: any, config?: any): Promise<{ data: any; status: number; headers: Record<string, string> }>
-  request(config: any): Promise<{ data: any; status: number; headers: Record<string, string> }>
+  get(
+    url: string,
+    config?: any,
+  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
+  post(
+    url: string,
+    data?: any,
+    config?: any,
+  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
+  put(
+    url: string,
+    data?: any,
+    config?: any,
+  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
+  delete(
+    url: string,
+    config?: any,
+  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
+  patch(
+    url: string,
+    data?: any,
+    config?: any,
+  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
+  request(
+    config: any,
+  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
 }
 
 declare interface HttpService {
@@ -121,6 +138,7 @@ declare const process: {
 
 declare function require(id: string): Promise<any>
 
-declare function handler(context: Context, require: (id: string) => Promise<any>): any
-`
-}
+declare function handler(
+  context: Context,
+  require: (id: string) => Promise<any>,
+): any

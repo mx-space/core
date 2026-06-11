@@ -8,7 +8,7 @@ import type {
   WorkerMessage,
 } from './sandbox.types'
 import { WorkerMessageType } from './sandbox.types'
-import { createSandboxWorkerCode } from './sandbox-worker-code'
+import sandboxWorkerCode from './sandbox-worker.runtime.js?raw'
 
 interface BridgeHandlers {
   'storage.cache.get': (key: string) => Promise<unknown>
@@ -74,7 +74,7 @@ export class SandboxService {
   private workers: PooledWorker[] = []
   private pendingExecutions = new Map<string, PendingExecution>()
   private options: Required<SandboxServiceOptions>
-  private workerCode: string
+  private workerCode = sandboxWorkerCode
   private initialized = false
   private idleCleanupInterval: ReturnType<typeof setInterval> | null = null
 
@@ -87,8 +87,6 @@ export class SandboxService {
       bridgeHandlers: options.bridgeHandlers,
       idleTimeout: options.idleTimeout ?? 60000, // Default 1 minute
     }
-
-    this.workerCode = createSandboxWorkerCode()
   }
 
   async initialize(): Promise<void> {
