@@ -78,6 +78,7 @@ export interface PostListParams {
   year?: number
   sortBy?: keyof PostRow
   sortOrder?: 1 | -1
+  truncateText?: number
 }
 
 export interface PostTagCount {
@@ -90,6 +91,7 @@ export interface PostListByCategoryOptions {
   includeCategory?: boolean
   limit?: number
   publishedOnly?: boolean
+  metaOnly?: boolean
 }
 
 export type PostModel = PostRow & {

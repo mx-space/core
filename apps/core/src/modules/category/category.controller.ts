@@ -81,6 +81,7 @@ export class CategoryController {
 
       const postsByCategory = await this.postService.listByCategoryIds(ids, {
         includeCategory: false,
+        metaOnly: true,
       })
       for (const id of ids) {
         const rawPosts = postsByCategory.get(id) ?? []

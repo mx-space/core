@@ -356,6 +356,9 @@ export class NoteController {
         | undefined,
       sortOrder: sortOrder === 'asc' ? 1 : -1,
       year,
+      // Bodies are deleted from the response below when withSummary — skip
+      // fetching them; notes missing a stored summary are backfilled by id.
+      metaOnly: !!withSummary,
     })
 
     if (!isAuthenticated) {
@@ -395,12 +398,35 @@ export class NoteController {
 
     if (summaryMap) {
       const SUMMARY_MAX_LENGTH = 150
+      const missingIds = result.data
+        .filter((doc) => !summaryMap.get(doc.id))
+        .map((doc) => doc.id)
+      const bodyById = new Map(
+        missingIds.length
+          ? (await this.noteService.findManyByIds(missingIds)).map(
+              (note) => [note.id, note] as const,
+            )
+          : [],
+      )
       for (const doc of result.data) {
         const plain = doc as any
-        plain.summary =
-          summaryMap.get(doc.id) ??
-          this.fallbackSummary(doc, SUMMARY_MAX_LENGTH) ??
-          ''
+        const stored = summaryMap.get(doc.id)
+        if (stored == null) {
+          const source = bodyById.get(doc.id)
+          if (source) {
+            const tr = translationResults.get(String(doc.id))
+            if (tr?.isTranslated) {
+              applyArticleTranslationInPlace(source as any, tr as any)
+            }
+          }
+          plain.summary =
+            this.fallbackSummary(
+              (source ?? doc) as NoteModel,
+              SUMMARY_MAX_LENGTH,
+            ) ?? ''
+        } else {
+          plain.summary = stored
+        }
         delete plain.text
         delete plain.content
       }

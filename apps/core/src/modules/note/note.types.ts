@@ -88,4 +88,5 @@ export interface NoteSortOptions {
 
 export interface NoteListFilter {
   year?: number
+  metaOnly?: boolean
 }

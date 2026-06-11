@@ -78,8 +78,14 @@ export class AggregateService {
 
   async topActivity(size = 6, isAuthenticated = false) {
     const [notes, posts, says, recently] = await Promise.all([
-      this.noteService.findRecent(size, { visibleOnly: !isAuthenticated }),
-      this.postService.findRecent(size, { publishedOnly: !isAuthenticated }),
+      this.noteService.findRecent(size, {
+        visibleOnly: !isAuthenticated,
+        metaOnly: true,
+      }),
+      this.postService.findRecent(size, {
+        publishedOnly: !isAuthenticated,
+        metaOnly: true,
+      }),
       this.sayService.findRecent(size),
       this.recentlyService.findRecent(size),
     ])
@@ -148,7 +154,10 @@ export class AggregateService {
           })
         : [],
     ])
-    return { posts, notes }
+    return {
+      posts: posts.map(omitArticleBody),
+      notes: notes.map(omitArticleBody),
+    }
   }
 
   async getSiteMapContent(): Promise<

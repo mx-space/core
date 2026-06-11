@@ -4,6 +4,7 @@ import {
   asc,
   desc,
   eq,
+  getTableColumns,
   gt,
   gte,
   ilike,
@@ -37,13 +38,16 @@ import type {
   NoteSortOptions,
 } from './note.types'
 
-const mapBase = (row: typeof notes.$inferSelect): NoteRow => ({
+type NoteRowSource = Omit<typeof notes.$inferSelect, 'text' | 'content'> &
+  Partial<Pick<typeof notes.$inferSelect, 'text' | 'content'>>
+
+const mapBase = (row: NoteRowSource): NoteRow => ({
   id: toEntityId(row.id) as EntityId,
   nid: row.nid,
   title: row.title ?? '',
   slug: row.slug,
   text: row.text ?? '',
-  content: row.content,
+  content: row.content ?? null,
   contentFormat: row.contentFormat,
   images: row.images,
   meta: row.meta,
@@ -61,6 +65,13 @@ const mapBase = (row: typeof notes.$inferSelect): NoteRow => ({
   createdAt: row.createdAt,
   modifiedAt: row.modifiedAt,
 })
+
+const noteColumns = getTableColumns(notes)
+const {
+  text: _noteText,
+  content: _noteContent,
+  ...noteMetaColumns
+} = noteColumns
 
 const yearRange = (year: number) => ({
   end: new Date(Date.UTC(year + 1, 0, 1)),
@@ -137,7 +148,7 @@ const mapTopic = (topic: TopicProjection): NoteRow['topic'] => {
 }
 
 const mapWithTopic = (
-  note: typeof notes.$inferSelect,
+  note: NoteRowSource,
   topic: TopicProjection,
 ): NoteRow => {
   const row = mapBase(note)
@@ -181,14 +192,19 @@ const mapRawNoteWithTopic = (row: RawNoteWithTopic): NoteRow => ({
   modifiedAt: row.modifiedAt,
 })
 
-const defaultVisibleNoteListSql = `
+const buildDefaultVisibleNoteListSql = (metaOnly: boolean) => `
   select
     n.id as "id",
     n.nid as "nid",
     n.title as "title",
     n.slug as "slug",
-    n.text as "text",
-    n.content as "content",
+    ${
+      metaOnly
+        ? `null::text as "text",
+    null::text as "content",`
+        : `n.text as "text",
+    n.content as "content",`
+    }
     n.content_format as "contentFormat",
     n.images as "images",
     n.meta as "meta",
@@ -233,6 +249,9 @@ const defaultVisibleNoteListSql = `
   ) c
   order by n.created_at desc nulls last
 `
+
+const defaultVisibleNoteListSql = buildDefaultVisibleNoteListSql(false)
+const defaultVisibleNoteListMetaSql = buildDefaultVisibleNoteListSql(true)
 
 const latestVisiblePairSql = `
   with latest as (
@@ -406,18 +425,22 @@ export class NoteRepository extends BaseRepository {
       options.sortBy === undefined &&
       options.sortOrder === undefined
     if (page === 1 && size === 10 && hasDefaultOptions) {
-      const fastResult = await this.listDefaultVisibleFast()
+      const fastResult = await this.listDefaultVisibleFast(options.metaOnly)
       if (fastResult) return fastResult
     }
     return this.listInternal(page, size, options, this.visibleClause())
   }
 
-  private async listDefaultVisibleFast(): Promise<PaginationResult<NoteRow> | null> {
+  private async listDefaultVisibleFast(
+    metaOnly = false,
+  ): Promise<PaginationResult<NoteRow> | null> {
     const pool = this.pgPool
     if (!pool) return null
     const result = await pool.query<RawNoteWithTopic>({
-      name: 'notes_default_visible_list_v2',
-      text: defaultVisibleNoteListSql,
+      name: metaOnly
+        ? 'notes_default_visible_list_meta_v2'
+        : 'notes_default_visible_list_v2',
+      text: metaOnly ? defaultVisibleNoteListMetaSql : defaultVisibleNoteListSql,
     })
     const count = result.rows[0]?.totalCount ?? 0
     return {
@@ -439,7 +462,10 @@ export class NoteRepository extends BaseRepository {
     const orderBy = this.resolveOrderBy(options)
     const [rows, [{ count }]] = await Promise.all([
       this.db
-        .select({ note: notes, topic: topicProjection })
+        .select({
+          note: options.metaOnly ? noteMetaColumns : noteColumns,
+          topic: topicProjection,
+        })
         .from(notes)
         .leftJoin(topics, eq(notes.topicId, topics.id))
         .where(where)
@@ -587,11 +613,14 @@ export class NoteRepository extends BaseRepository {
 
   async findRecent(
     size: number,
-    options: { visibleOnly?: boolean } = {},
+    options: { visibleOnly?: boolean; metaOnly?: boolean } = {},
   ): Promise<NoteRow[]> {
     const where = options.visibleOnly ? this.visibleClause() : undefined
     const rows = await this.db
-      .select({ note: notes, topic: topicProjection })
+      .select({
+        note: options.metaOnly ? noteMetaColumns : noteColumns,
+        topic: topicProjection,
+      })
       .from(notes)
       .leftJoin(topics, eq(notes.topicId, topics.id))
       .where(where)
@@ -880,7 +909,7 @@ export class NoteRepository extends BaseRepository {
     const orderBy =
       options.sort === 'asc' ? asc(notes.createdAt) : createdAtDescNullsLast
     const rows = await this.db
-      .select({ note: notes, topic: topicProjection })
+      .select({ note: noteMetaColumns, topic: topicProjection })
       .from(notes)
       .leftJoin(topics, eq(notes.topicId, topics.id))
       .where(filters.length ? and(...filters) : undefined)
@@ -890,7 +919,7 @@ export class NoteRepository extends BaseRepository {
 
   async findVisibleForSitemap(): Promise<NoteRow[]> {
     const rows = await this.db
-      .select()
+      .select(noteMetaColumns)
       .from(notes)
       .where(this.visibleClause())
       .orderBy(desc(notes.createdAt))

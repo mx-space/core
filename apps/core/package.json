@@ -22,6 +22,7 @@
     "migrate": "vite-node src/migrate.ts",
     "migrate:app": "cross-env NODE_ENV=development vite-node src/app-migrate.ts",
     "lint:migrations": "tsx --tsconfig tsconfig.json scripts/lint-migrations.ts",
+    "bench:aggregate-projection": "vite-node scripts/bench-aggregate-projection.ts",
     "bench:translation-prompt": "vite-node scripts/bench-translation-prompt.ts",
     "bundle": "vite build",
     "start": "cross-env NODE_ENV=development nodemon --signal SIGKILL --watch src --ext ts,json --exec \"vite-node src/dev.ts\"",

@@ -98,7 +98,10 @@ export class PostService implements OnApplicationBootstrap {
     })
   }
 
-  async findRecent(size: number, options: { publishedOnly?: boolean } = {}) {
+  async findRecent(
+    size: number,
+    options: { publishedOnly?: boolean; metaOnly?: boolean } = {},
+  ) {
     return this.postRepository.findRecent(size, options)
   }
 
@@ -120,6 +123,7 @@ export class PostService implements OnApplicationBootstrap {
       includeCategory?: boolean
       limit?: number
       publishedOnly?: boolean
+      metaOnly?: boolean
     } = {},
   ) {
     return this.postRepository.listByCategory(categoryId, options)
@@ -130,6 +134,7 @@ export class PostService implements OnApplicationBootstrap {
     options: {
       includeCategory?: boolean
       publishedOnly?: boolean
+      metaOnly?: boolean
     } = {},
   ) {
     return this.postRepository.listByCategoryIds(categoryIds, options)
@@ -139,7 +144,10 @@ export class PostService implements OnApplicationBootstrap {
     return this.listByCategory(categoryId)
   }
 
-  async findByTag(tag: string, options: { includeCategory?: boolean } = {}) {
+  async findByTag(
+    tag: string,
+    options: { includeCategory?: boolean; metaOnly?: boolean } = {},
+  ) {
     return this.postRepository.findByTag(tag, options)
   }
 

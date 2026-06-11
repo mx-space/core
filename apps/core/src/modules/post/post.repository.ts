@@ -4,6 +4,7 @@ import {
   asc,
   desc,
   eq,
+  getTableColumns,
   gte,
   ilike,
   inArray,
@@ -34,12 +35,15 @@ import type {
   PostTagCount,
 } from './post.types'
 
-const mapBase = (row: typeof posts.$inferSelect): PostRow => ({
+type PostRowSource = Omit<typeof posts.$inferSelect, 'text' | 'content'> &
+  Partial<Pick<typeof posts.$inferSelect, 'text' | 'content'>>
+
+const mapBase = (row: PostRowSource): PostRow => ({
   id: toEntityId(row.id) as EntityId,
   title: row.title,
   slug: row.slug,
   text: row.text ?? '',
-  content: row.content,
+  content: row.content ?? null,
   contentFormat: row.contentFormat,
   summary: row.summary,
   images: row.images,
@@ -55,6 +59,13 @@ const mapBase = (row: typeof posts.$inferSelect): PostRow => ({
   pinOrder: row.pinOrder,
   createdAt: row.createdAt,
 })
+
+const postColumns = getTableColumns(posts)
+const {
+  text: _postText,
+  content: _postContent,
+  ...postMetaColumns
+} = postColumns
 
 const pinAtDescNullsLast = sql`${posts.pinAt} desc nulls last`
 
@@ -139,9 +150,15 @@ export class PostRepository extends BaseRepository {
               : pinAtDescNullsLast
             : null
 
+    const selection = params.truncateText
+      ? {
+          ...postMetaColumns,
+          text: sql<string | null>`left(${posts.text}, ${params.truncateText})`,
+        }
+      : postColumns
     const [rows, [{ count }]] = await Promise.all([
       this.db
-        .select()
+        .select(selection)
         .from(posts)
         .where(whereClause)
         .orderBy(orderBy ?? pinAtDescNullsLast, desc(posts.createdAt))
@@ -261,19 +278,19 @@ export class PostRepository extends BaseRepository {
 
   async findRecent(
     size: number,
-    options: { publishedOnly?: boolean } = {},
+    options: { publishedOnly?: boolean; metaOnly?: boolean } = {},
   ): Promise<PostRow[]> {
     const where = options.publishedOnly
       ? eq(posts.isPublished, true)
       : undefined
     const rows = await this.db
-      .select()
+      .select(options.metaOnly ? postMetaColumns : postColumns)
       .from(posts)
       .where(where)
       .orderBy(desc(posts.createdAt))
       .limit(Math.max(1, size))
     const withCategory = await this.attachCategories(rows.map(mapBase))
-    return this.attachRelated(withCategory)
+    return options.metaOnly ? withCategory : this.attachRelated(withCategory)
   }
 
   async findManyByIds(ids: Array<EntityId | string>): Promise<PostRow[]> {
@@ -325,10 +342,10 @@ export class PostRepository extends BaseRepository {
 
   async findByTag(
     tag: string,
-    options: { includeCategory?: boolean } = {},
+    options: { includeCategory?: boolean; metaOnly?: boolean } = {},
   ): Promise<PostRow[]> {
     const rows = await this.db
-      .select()
+      .select(options.metaOnly ? postMetaColumns : postColumns)
       .from(posts)
       .where(sql`${posts.tags} @> array[${tag}]::text[]`)
       .orderBy(pinAtDescNullsLast, desc(posts.createdAt))
@@ -346,7 +363,7 @@ export class PostRepository extends BaseRepository {
     if (options.publishedOnly) filters.push(eq(posts.isPublished, true))
 
     const query = this.db
-      .select()
+      .select(options.metaOnly ? postMetaColumns : postColumns)
       .from(posts)
       .where(and(...filters))
       .orderBy(pinAtDescNullsLast, desc(posts.createdAt))
@@ -372,7 +389,7 @@ export class PostRepository extends BaseRepository {
     if (options.publishedOnly) filters.push(eq(posts.isPublished, true))
 
     const rows = await this.db
-      .select()
+      .select(options.metaOnly ? postMetaColumns : postColumns)
       .from(posts)
       .where(and(...filters))
       .orderBy(pinAtDescNullsLast, desc(posts.createdAt))
@@ -601,7 +618,7 @@ export class PostRepository extends BaseRepository {
 
   async findPublishedForSitemap(): Promise<PostRow[]> {
     const rows = await this.db
-      .select()
+      .select(postMetaColumns)
       .from(posts)
       .where(eq(posts.isPublished, true))
       .orderBy(desc(posts.createdAt))
@@ -622,7 +639,7 @@ export class PostRepository extends BaseRepository {
     const orderBy =
       options.sort === 'asc' ? asc(posts.createdAt) : desc(posts.createdAt)
     const rows = await this.db
-      .select()
+      .select(postMetaColumns)
       .from(posts)
       .where(filters.length ? and(...filters) : undefined)
       .orderBy(orderBy)

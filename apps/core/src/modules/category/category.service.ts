@@ -81,6 +81,7 @@ export class CategoryService implements OnApplicationBootstrap {
   ): Promise<TagDetailMapped[]> {
     const posts = await this.postService.findByTag(tag, {
       includeCategory: true,
+      metaOnly: true,
     })
     const filtered =
       condition.isPublished === undefined
@@ -123,9 +124,13 @@ export class CategoryService implements OnApplicationBootstrap {
     const posts = await this.postService.listByCategory(categoryId, {
       includeCategory: false,
       publishedOnly: condition.isPublished,
+      metaOnly: true,
     })
     const tag = condition.tags
-    return tag ? posts.filter((post) => post.tags?.includes(tag)) : posts
+    const matched = tag
+      ? posts.filter((post) => post.tags?.includes(tag))
+      : posts
+    return matched.map((post) => omit(post, ['text', 'content']))
   }
 
   async findPostsInCategory(id: string) {

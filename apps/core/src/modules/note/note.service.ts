@@ -159,7 +159,10 @@ export class NoteService {
     return this.noteRepository.findManyByIds(ids)
   }
 
-  async findRecent(size: number, options: { visibleOnly?: boolean } = {}) {
+  async findRecent(
+    size: number,
+    options: { visibleOnly?: boolean; metaOnly?: boolean } = {},
+  ) {
     return this.noteRepository.findRecent(size, options)
   }
 

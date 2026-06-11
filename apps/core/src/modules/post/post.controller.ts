@@ -103,17 +103,21 @@ export class PostController {
       publishedOnly: !isAuthenticated,
       sortBy: sortBy as any,
       sortOrder: sortOrder === 'asc' ? 1 : -1,
+      truncateText: truncate,
     })
 
+    // With SQL-side truncation the snapshot text is partial — hand the
+    // freshness check empty sources so it re-verifies hashes from the DB
+    // instead of mismatching against truncated text.
     const articleInputs: ArticleTranslationInput[] = res.data
       .filter((doc) => typeof doc.text === 'string')
       .map((doc) => ({
         id: String(doc.id),
         title: doc.title,
-        text: doc.text,
+        text: truncate ? '' : doc.text,
         meta: doc.meta as { lang?: string } | undefined,
         contentFormat: doc.contentFormat,
-        content: doc.content,
+        content: truncate ? undefined : doc.content,
         modifiedAt: doc.modifiedAt,
         createdAt: doc.createdAt,
       }))
