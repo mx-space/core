@@ -246,7 +246,9 @@ export class S3Uploader {
     objectKey: string,
     contentType: string,
   ): Promise<string> {
-    // S3 requires every part except the last to be at least 5MB
+    // S3 requires non-trailing parts >= 5MB; R2 additionally requires all
+    // non-trailing parts to be exactly the same length, so parts are sliced
+    // to exactly PART_SIZE instead of flushing on overflow
     const PART_SIZE = 8 * 1024 * 1024
 
     const initRes = await this.signedRequest({
@@ -295,10 +297,12 @@ export class S3Uploader {
         const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
         pending.push(buf)
         pendingSize += buf.length
-        if (pendingSize >= PART_SIZE) {
-          await uploadPart(Buffer.concat(pending))
-          pending = []
-          pendingSize = 0
+        while (pendingSize >= PART_SIZE) {
+          const merged = Buffer.concat(pending)
+          await uploadPart(merged.subarray(0, PART_SIZE))
+          const rest = merged.subarray(PART_SIZE)
+          pending = rest.length > 0 ? [rest] : []
+          pendingSize = rest.length
         }
       }
       if (pendingSize > 0 || etags.length === 0) {
