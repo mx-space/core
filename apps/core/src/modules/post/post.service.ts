@@ -125,6 +125,16 @@ export class PostService implements OnApplicationBootstrap {
     return this.postRepository.listByCategory(categoryId, options)
   }
 
+  async listByCategoryIds(
+    categoryIds: ReadonlyArray<string>,
+    options: {
+      includeCategory?: boolean
+      publishedOnly?: boolean
+    } = {},
+  ) {
+    return this.postRepository.listByCategoryIds(categoryIds, options)
+  }
+
   async findByCategoryId(categoryId: string) {
     return this.listByCategory(categoryId)
   }

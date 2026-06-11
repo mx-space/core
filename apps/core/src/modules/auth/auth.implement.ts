@@ -15,6 +15,7 @@ import { toNodeHandler } from 'better-auth/node'
 import { bearer, deviceAuthorization, username } from 'better-auth/plugins'
 import { and, eq } from 'drizzle-orm'
 import { customAlphabet } from 'nanoid'
+import wcmatch from 'wildcard-match'
 
 import { API_VERSION, CROSS_DOMAIN } from '~/app.config'
 import { SECURITY } from '~/app.config.test'
@@ -38,6 +39,42 @@ const normalizeOrigin = (url: string | undefined): string | null => {
   } catch {
     return null
   }
+}
+
+// Mirror bootstrap.ts CORS host matching: the configured allowlist entries are
+// matched against an Origin's host (not the full origin) with wildcard support.
+// Matchers are compiled once per allowlist instance, not per request.
+let compiledOriginMatchers: {
+  patterns: string[]
+  matchers: ReturnType<typeof wcmatch>[]
+} | null = null
+
+const getOriginMatchers = (patterns: string[]) => {
+  if (!compiledOriginMatchers || compiledOriginMatchers.patterns !== patterns) {
+    compiledOriginMatchers = {
+      patterns,
+      matchers: patterns.map((pattern) => wcmatch(pattern)),
+    }
+  }
+  return compiledOriginMatchers.matchers
+}
+
+const isAllowedOrigin = (origin: string | undefined): boolean => {
+  if (!origin) return false
+  // Dev mirrors bootstrap.ts `allowAllCors`: reflect any origin (LAN IP, tunnel
+  // host, localhost) so local development against proxies/tunnels works.
+  if (isDev) return true
+  const allowed = CROSS_DOMAIN.allowedOrigins
+  if (!Array.isArray(allowed) || allowed.length === 0) {
+    return false
+  }
+  let host: string
+  try {
+    host = new URL(origin).host
+  } catch {
+    return false
+  }
+  return getOriginMatchers(allowed).some((match) => match(host))
 }
 
 export async function CreateAuth(
@@ -293,13 +330,19 @@ export async function CreateAuth(
 
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     try {
-      res.setHeader(
-        'Access-Control-Allow-Origin',
-        req.headers.origin || req.headers.referer || req.headers.host || '*',
-      )
+      // Only reflect the Origin (with credentials) when it matches the
+      // configured allowlist. Never echo an arbitrary Origin or `*` alongside
+      // `Allow-Credentials: true` — that would let any site perform
+      // credentialed cross-origin reads of session/account data, bypassing the
+      // Nest CORS allowlist in bootstrap.ts.
+      const requestOrigin = req.headers.origin
+      if (isAllowedOrigin(requestOrigin)) {
+        res.setHeader('Access-Control-Allow-Origin', requestOrigin!)
+        res.setHeader('Access-Control-Allow-Credentials', 'true')
+        res.setHeader('Vary', 'Origin')
+      }
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-      res.setHeader('Access-Control-Allow-Credentials', 'true')
       res.setHeader('Access-Control-Max-Age', '86400')
 
       const clonedRequest = new IncomingMessage(req.socket)

@@ -71,8 +71,8 @@ export class AuthController {
   @Auth()
   async deleteToken(@Query() query: StringIdDto) {
     const { id } = query
-    const models = await this.authService.getAllAccessToken()
-    const token = models.find((model) => model.id === id)?.token
+    const secret = await this.authService.getTokenSecret(id)
+    const token = secret?.token
 
     if (!token) {
       throw createAppException(AppErrorCode.AUTH_TOKEN_NOT_FOUND)

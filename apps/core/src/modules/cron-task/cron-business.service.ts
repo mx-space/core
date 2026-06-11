@@ -73,8 +73,8 @@ export class CronBusinessService {
 
     const allKeys = (
       await Promise.all([
-        redis.keys(getRedisKey(RedisKeys.Like, '*')),
-        redis.keys(getRedisKey(RedisKeys.Read, '*')),
+        this.redisService.scanKeys(getRedisKey(RedisKeys.Like, '*')),
+        this.redisService.scanKeys(getRedisKey(RedisKeys.Read, '*')),
       ])
     ).flat()
     await Promise.all(allKeys.map((key) => redis.del(key)))
@@ -187,26 +187,26 @@ export class CronBusinessService {
     const redis = this.redisService.getClient()
     const storeKey = getRedisKey(RedisKeys.JWTStore)
     const keys = await redis.hkeys(storeKey)
-    let deleteCount = 0
-    await Promise.all(
+    const results = await Promise.all(
       keys.map(async (key) => {
         const value = await redis.hget(storeKey, key)
-        if (!value) return
+        if (!value) return 0
         const parsed = JSON.safeParse(value) as StoreJWTPayload
-        if (!parsed) return
+        if (!parsed) return 0
 
         const date = dayjs(new Date(parsed.date))
         if (date.add(JWTService.expiresDay, 'd').diff(new Date(), 'd') >= 0) {
-          return
+          return 0
         }
 
         this.logger.debug(
           `--> Deleting expired token: ${key}, issued at ${date.format('YYYY-MM-DD H:mm:ss')}`,
         )
         await redis.hdel(storeKey, key)
-        deleteCount += 1
+        return 1
       }),
     )
+    const deleteCount = results.reduce((a, b) => a + b, 0)
 
     this.logger.log(`--> Deleted ${deleteCount} expired tokens`)
     return { deletedCount: deleteCount }

@@ -361,13 +361,19 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     serializedPresenceData.joinedAt = roomJoinedAtMap[roomName]
 
-    this.webGateway.broadcast(
-      BusinessEvents.ACTIVITY_UPDATE_PRESENCE,
-      serializedPresenceData,
-      {
-        rooms: [roomName],
-      },
-    )
+    try {
+      this.webGateway.broadcast(
+        BusinessEvents.ACTIVITY_UPDATE_PRESENCE,
+        serializedPresenceData,
+        {
+          rooms: [roomName],
+        },
+      )
+    } catch (err) {
+      this.logger.warn(
+        `presence broadcast failed for room ${roomName}: ${err instanceof Error ? err.message : String(err)}`,
+      )
+    }
 
     await this.gatewayService.setSocketMetadata(socket, {
       presence: presenceData,

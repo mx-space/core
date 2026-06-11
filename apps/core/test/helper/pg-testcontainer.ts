@@ -71,6 +71,53 @@ export async function startPgTestContainer(): Promise<PgTestDatabase> {
   return container
 }
 
+// In CI every vitest worker shares one external PG (PG_VERIFY_URL), and the
+// per-file afterAll in setupFiles/lifecycle.ts truncates ALL public tables.
+// Specs that assert cross-statement state on real PG must run in their own
+// database or a concurrently finishing file wipes their rows mid-test.
+export async function createIsolatedPgDatabase(): Promise<{
+  getConnectionUri: () => string
+  drop: () => Promise<void>
+}> {
+  const base = await startPgTestContainer()
+  const baseUri = base.getConnectionUri()
+  const dbName = `mx_isolated_${process.pid}_${Date.now()}`
+
+  const admin = new Pool({ connectionString: baseUri, max: 1 })
+  try {
+    await admin.query(`CREATE DATABASE ${dbName}`)
+  } finally {
+    await admin.end()
+  }
+
+  const url = new URL(baseUri)
+  url.pathname = `/${dbName}`
+  const connectionUri = url.toString()
+
+  const migrationsFolder = path.resolve(
+    __dirname,
+    '../../src/database/migrations',
+  )
+  const pool = new Pool({ connectionString: connectionUri, max: 2 })
+  try {
+    await runSchemaMigrationFiles(pool, migrationsFolder)
+  } finally {
+    await pool.end()
+  }
+
+  return {
+    getConnectionUri: () => connectionUri,
+    drop: async () => {
+      const cleaner = new Pool({ connectionString: baseUri, max: 1 })
+      try {
+        await cleaner.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`)
+      } finally {
+        await cleaner.end()
+      }
+    },
+  }
+}
+
 export async function stopPgTestContainer() {
   if (!container) {
     externalDatabase = undefined

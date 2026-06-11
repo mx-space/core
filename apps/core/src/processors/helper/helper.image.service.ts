@@ -7,6 +7,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import type { ImageModel } from '~/shared/types/legacy-model.type'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
 import { AsyncQueue } from '~/utils/queue.util'
+import { assertPublicHttpUrl } from '~/utils/ssrf.util'
 import { requireDepsWithInstall } from '~/utils/tool.util'
 
 import { HttpService } from './helper.http.service'
@@ -112,8 +113,13 @@ export class ImageService implements OnModuleInit {
     const {
       url: { webUrl },
     } = await this.configsService.waitForConfigReady()
+    // Markdown image URLs are author-supplied; guard the outbound fetch and
+    // disable redirect following so a public host cannot 30x us into one.
+    await assertPublicHttpUrl(image, { allowHttp: true })
     const { data, headers } = await this.httpService.axiosRef.get<any>(image, {
       responseType: 'arraybuffer',
+      timeout: 10_000,
+      maxRedirects: 0,
       headers: {
         'user-agent':
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',

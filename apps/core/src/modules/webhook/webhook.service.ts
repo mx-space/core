@@ -1,4 +1,6 @@
 import { createHmac } from 'node:crypto'
+import { lookup as dnsLookup } from 'node:dns/promises'
+import { isIP } from 'node:net'
 
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
@@ -10,6 +12,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EventPayloadEnricherService } from '~/processors/helper/helper.event-payload.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { BasicPagerInput } from '~/shared/dto/pager.dto'
+import { isPrivateIp } from '~/utils/ssrf.util'
 
 import { WebhookRepository } from './webhook.repository'
 import type { WebhookRow } from './webhook.types'
@@ -54,6 +57,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   }
 
   async createWebhook(model: WebhookModel) {
+    await this.assertWebhookUrlAllowed(model.payloadUrl)
     const document = await this.webhookRepository.create({
       payloadUrl: model.payloadUrl,
       events: model.events,
@@ -71,6 +75,19 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     )
   }
 
+  // Best-effort early rejection of obviously-internal targets. The real gate is
+  // the delivery-time check in `sendWebhookEvent`, since DNS can change/rebind
+  // between persistence and dispatch.
+  private async assertWebhookUrlAllowed(payloadUrl: string) {
+    try {
+      await assertWebhookTargetIsPublic(payloadUrl)
+    } catch (error: any) {
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: error?.message ?? 'Webhook URL is not allowed',
+      })
+    }
+  }
+
   transformEvents(events: string[]) {
     if (events.includes('all')) return ['all']
     return events.filter((event) => ACCEPT_EVENTS.has(event as any))
@@ -82,6 +99,9 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   }
 
   async updateWebhook(id: string, model: Partial<WebhookModel>) {
+    if (model.payloadUrl !== undefined) {
+      await this.assertWebhookUrlAllowed(model.payloadUrl)
+    }
     await this.webhookRepository.update(id, model)
     const document = await this.webhookRepository.findById(id)
     if (document)
@@ -121,6 +141,9 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     webhook: WebhookRow & { secret: string },
     source: WebhookEventSource = 'system',
   ) {
+    // One stringify for HMAC signing; the dispatched body is parsed back from
+    // that same string so the signed bytes and the sent body never diverge, and
+    // a non-cloneable value can never throw here.
     const stringifyPayload = JSON.stringify(payload)
     const clonedPayload = JSON.parse(stringifyPayload)
 
@@ -147,11 +170,26 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       response: null,
     })
     try {
+      await assertWebhookTargetIsPublic(webhook.payloadUrl)
+    } catch (error: any) {
+      await this.webhookRepository.updateEvent(webhookEvent.id, {
+        response: {
+          error: 'SSRF_BLOCKED',
+          message: error?.message ?? 'Webhook target rejected',
+          timestamp: Date.now(),
+        },
+        status: 0,
+        success: false,
+      })
+      return
+    }
+    try {
       const response = await this.httpService.axiosRef.post(
         webhook.payloadUrl,
         clonedPayload,
         {
           headers,
+          maxRedirects: 0,
           'axios-retry': {
             retries: 10,
           },
@@ -211,6 +249,85 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   clearDispatchEvents(hookId: string) {
     return this.webhookRepository.deleteEventsByHookId(hookId)
   }
+}
+
+const ALLOWED_PROTOCOLS = new Set(['http:', 'https:'])
+
+class WebhookTargetRejectedError extends Error {}
+
+// Range checks delegate to the shared SSRF guard (url-guard.ts) so the blocked
+// CIDR list has a single source of truth across webhook / link-avatar / agent-browser.
+function isBlockedIP(rawIp: string): boolean {
+  const zoneIdx = rawIp.indexOf('%')
+  const ip = zoneIdx === -1 ? rawIp : rawIp.slice(0, zoneIdx)
+  const family = isIP(ip)
+  if (family === 0) return true
+  return isPrivateIp(ip, family)
+}
+
+/**
+ * SSRF guard. Validates protocol and resolves the hostname, rejecting any
+ * webhook target that points at loopback / link-local / private / metadata
+ * addresses. Returns the resolved IP that the request will actually hit.
+ *
+ * NOTE: this is checked at delivery time (the real gate). A DNS-rebinding
+ * attacker can still pass this check and then re-point the hostname before the
+ * HTTP socket connects; `maxRedirects: 0` removes the redirect-based bypass but
+ * not rebinding. Pinning the connection to `resolvedIp` would be needed to
+ * fully close that window.
+ */
+async function assertWebhookTargetIsPublic(rawUrl: string): Promise<string> {
+  let url: URL
+  try {
+    url = new URL(rawUrl)
+  } catch {
+    throw new WebhookTargetRejectedError(`Invalid webhook URL: ${rawUrl}`)
+  }
+  if (!ALLOWED_PROTOCOLS.has(url.protocol)) {
+    throw new WebhookTargetRejectedError(
+      `Webhook protocol not allowed: ${url.protocol}`,
+    )
+  }
+  let hostname = url.hostname
+  if (hostname.startsWith('[') && hostname.endsWith(']')) {
+    hostname = hostname.slice(1, -1)
+  }
+
+  // Hostname is already a literal IP — validate directly.
+  if (isIP(hostname)) {
+    if (isBlockedIP(hostname)) {
+      throw new WebhookTargetRejectedError(
+        `Webhook target resolves to a blocked address: ${hostname}`,
+      )
+    }
+    return hostname
+  }
+
+  if (hostname.toLowerCase() === 'localhost') {
+    throw new WebhookTargetRejectedError('Webhook target localhost is blocked')
+  }
+
+  let resolved: { address: string }[]
+  try {
+    resolved = await dnsLookup(hostname, { all: true })
+  } catch {
+    throw new WebhookTargetRejectedError(
+      `Webhook target hostname could not be resolved: ${hostname}`,
+    )
+  }
+  if (resolved.length === 0) {
+    throw new WebhookTargetRejectedError(
+      `Webhook target hostname did not resolve: ${hostname}`,
+    )
+  }
+  for (const { address } of resolved) {
+    if (isBlockedIP(address)) {
+      throw new WebhookTargetRejectedError(
+        `Webhook target resolves to a blocked address: ${address}`,
+      )
+    }
+  }
+  return resolved[0].address
 }
 
 function generateSha1Signature(secret: string, payload: string): string {

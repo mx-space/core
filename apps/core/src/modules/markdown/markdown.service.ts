@@ -6,6 +6,7 @@ import {
 import { omit } from 'es-toolkit/compat'
 import { dump } from 'js-yaml'
 import JSZip from 'jszip'
+import { escapeHtml } from 'xss'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -247,7 +248,7 @@ ${text.trim()}
       { encoding: 'utf-8' },
     )
     return {
-      body: [`<article><h1>${title}</h1>${html}</article>`],
+      body: [`<article><h1>${escapeHtml(title)}</h1>${html}</article>`],
       extraScripts: [
         '<script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.9.0/mermaid.min.js"></script>',
         '<script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/prism/1.23.0/components/prism-core.min.js"></script>',

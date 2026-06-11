@@ -360,6 +360,38 @@ export class PostRepository extends BaseRepository {
     return this.attachCategories(mapped)
   }
 
+  async listByCategoryIds(
+    categoryIds: ReadonlyArray<EntityId | string>,
+    options: Omit<PostListByCategoryOptions, 'limit'> = {},
+  ): Promise<Map<string, PostRow[]>> {
+    const grouped = new Map<string, PostRow[]>()
+    if (categoryIds.length === 0) return grouped
+
+    const parsedIds = categoryIds.map((id) => parseEntityId(id))
+    const filters: SQL[] = [inArray(posts.categoryId, parsedIds)]
+    if (options.publishedOnly) filters.push(eq(posts.isPublished, true))
+
+    const rows = await this.db
+      .select()
+      .from(posts)
+      .where(and(...filters))
+      .orderBy(pinAtDescNullsLast, desc(posts.createdAt))
+
+    const mapped = rows.map(mapBase)
+    const withCategory =
+      options.includeCategory === false
+        ? mapped
+        : await this.attachCategories(mapped)
+
+    for (const post of withCategory) {
+      const key = String(post.categoryId)
+      const bucket = grouped.get(key)
+      if (bucket) bucket.push(post)
+      else grouped.set(key, [post])
+    }
+    return grouped
+  }
+
   async findByCategoryAndSlug(
     categoryId: EntityId | string,
     slug: string,

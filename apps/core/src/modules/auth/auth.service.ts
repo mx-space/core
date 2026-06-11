@@ -88,11 +88,25 @@ export class AuthService {
 
     return keys.map((token) => ({
       id: token.id,
-      token: token.key,
+      // Never re-expose the full secret on list responses. The plaintext key is
+      // shown once at creation; afterwards the list only carries a masked
+      // display value. The full secret is fetched on demand via getTokenSecret.
+      token: this.maskApiKey(token),
       name: token.name,
       createdAt: token.createdAt,
       expired: token.expiresAt ?? undefined,
     }))
+  }
+
+  private maskApiKey(token: {
+    key?: string | null
+    start?: string | null
+    prefix?: string | null
+  }): string {
+    const prefix = token.prefix || ''
+    const start = token.start || token.key?.slice(0, 6) || ''
+    const visible = `${prefix}${start}`
+    return visible ? `${visible}••••••••` : '••••••••••••••••••••••••'
   }
 
   async getTokenSecret(id: string) {
@@ -472,18 +486,15 @@ export class AuthService {
 
   getApiKeyFromRequest(req: {
     headers?: Record<string, string | string[] | undefined>
-    query?: Record<string, any>
   }) {
     const headers = req.headers || {}
-    const query = req.query || {}
 
+    // Only the `x-api-key` header is honored. The legacy `?token=` query path
+    // was removed: query strings leak into access logs, the Referer header, and
+    // browser history, and are trivially replayable for full owner access.
     const apiKeyHeader = this.pickFirstHeader(headers, 'x-api-key', 'X-API-Key')
     if (apiKeyHeader) {
-      return { key: apiKeyHeader, deprecated: false }
-    }
-
-    if (typeof query.token === 'string') {
-      return { key: query.token, deprecated: true }
+      return { key: apiKeyHeader }
     }
 
     return null

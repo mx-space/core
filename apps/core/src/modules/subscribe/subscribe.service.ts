@@ -1,4 +1,5 @@
 import cluster from 'node:cluster'
+import { randomBytes } from 'node:crypto'
 
 import type { CoAction } from '@innei/next-async'
 import { Co } from '@innei/next-async'
@@ -6,7 +7,6 @@ import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 import ejs from 'ejs'
 import { LRUCache } from 'lru-cache'
-import { nanoid } from 'nanoid'
 import type Mail from 'nodemailer/lib/mailer'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -18,7 +18,6 @@ import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.ev
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { truncateAtBoundary } from '~/utils/text-summary.util'
-import { hashString, md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import type { NoteModel } from '../note/note.types'
@@ -129,7 +128,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
         { subscribe, cancelToken },
       ] of self.subscribeMap.entries()) {
         if (!(subscribe & subscribeBit)) continue
-        const unsubscribeLink = `${serverUrl}/subscribe/unsubscribe?email=${email}&cancelToken=${cancelToken}`
+        const unsubscribeLink = `${serverUrl}/subscribe/unsubscribe?email=${encodeURIComponent(email)}&cancelToken=${encodeURIComponent(cancelToken)}`
         self.sendEmail(
           email,
           {
@@ -230,8 +229,8 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     return count
   }
 
-  createCancelToken(email: string) {
-    return hashString(md5(email) + nanoid(8))
+  createCancelToken(_email: string) {
+    return randomBytes(32).toString('hex')
   }
 
   subscribeTypeToBit(type: keyof typeof SubscribeTypeToBitMap) {

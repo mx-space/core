@@ -77,6 +77,16 @@ const createController = (
     listByCategory: vi.fn().mockImplementation(async (id: string) => {
       return (posts[id] ?? []).map((p) => ({ ...p }))
     }),
+    listByCategoryIds: vi.fn().mockImplementation(async (ids: string[]) => {
+      const grouped = new Map<string, any[]>()
+      for (const id of ids) {
+        grouped.set(
+          id,
+          (posts[id] ?? []).map((p) => ({ ...p })),
+        )
+      }
+      return grouped
+    }),
     countByCategoryId: vi.fn().mockResolvedValue(0),
   }
 

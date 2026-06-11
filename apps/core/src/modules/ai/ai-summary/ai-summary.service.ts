@@ -28,6 +28,7 @@ import {
 } from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
+import { isGlobalArticleVisible } from '../ai-article-visibility.util'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { resolveTargetLanguages } from '../ai-language.util'
@@ -201,6 +202,12 @@ export class AiSummaryService implements OnModuleInit {
       article.type === CollectionRefTypes.Recently ||
       article.type === CollectionRefTypes.Page
     ) {
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
+    }
+
+    // Never expose summaries for draft / password-protected / future-dated
+    // content. Public endpoints and background tasks both flow through here.
+    if (!isGlobalArticleVisible(article)) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
 

@@ -1,5 +1,5 @@
 import { marked } from 'marked'
-import xss from 'xss'
+import xss, { FilterXSS, getDefaultWhiteList } from 'xss'
 
 marked.use({
   extensions: [
@@ -16,7 +16,7 @@ marked.use({
         )}\n</span>`
       },
       tokenizer(src) {
-        const rule = /^\|\|([\s\S]+?)\|\|(?!\|)/
+        const rule = /^\|\|(.+?)\|\|(?!\|)/s
         const match = rule.exec(src)
         if (match) {
           return {
@@ -39,7 +39,7 @@ marked.use({
         return `<span class="katex-render">${token.text}</span>`
       },
       tokenizer(src) {
-        const rule = /^\$([\s\S]+?)\$(?!\$)/
+        const rule = /^\$(.+?)\$(?!\$)/s
         const match = rule.exec(src)
         if (match) {
           return {
@@ -70,6 +70,7 @@ marked.use({
         return `<a target="_blank" class="mention" rel="noreferrer nofollow" href="${urlPrefix}${username}">${username}</a>`
       },
       tokenizer(src) {
+        // eslint-disable-next-line unicorn/better-regex -- its autofix (`\]` -> `]`) conflicts with regexp/strict
         const rule = /^(?<prefix>GH|TW|TG)@(?<name>\w+)\s?(?!\[.*?\])/
         const match = rule.exec(src)
         if (match) {
@@ -94,14 +95,16 @@ marked.use({
         const { params, name } = groups
 
         switch (name) {
-          case 'gallery':
+          case 'gallery': {
             return `<div class="container">${this.parser.parseInline(
               images,
             )}</div>`
-          case 'banner':
+          }
+          case 'banner': {
             return `<div class="container ${name} ${params}">${this.parser.parse(
               paragraph,
             )}</div>`
+          }
         }
         return ''
       },
@@ -112,7 +115,8 @@ marked.use({
           /* 'carousel', */
         ].join('|')
         const match = new RegExp(
-          `^\\s*::: *(?<name>(${shouldCatchContainerName})) *({(?<params>(.*?))})? *\n(?<content>[\\s\\S]+?)\\s*::: *(?:\n *)+\n?`,
+          `^\\s*::: *(?<name>${shouldCatchContainerName})(?: *\\{(?<params>[^}\n]*)\\})? *\n(?<content>.+?)\n[^\\S\n]*::: *(?:\n *)+`,
+          's',
         ).exec(src)
         if (match) {
           const { groups } = match
@@ -160,6 +164,61 @@ marked.use({
   },
 })
 
+const withCommonAttrs = (...extra: string[]) => [
+  'class',
+  'style',
+  'id',
+  ...extra,
+]
+
+// Sanitizer for the full HTML output of the marked pipeline. The renderer can
+// emit untrusted user content unescaped (notably the katex extension, which
+// inlines `token.text` verbatim into `<span class="katex-render">`), so the
+// whole rendered document is filtered before it is templated or served.
+// `css: false` keeps the renderer's own constant inline styles (e.g. the
+// spoiler `filter: invert(25%)`) intact; no user-controlled value reaches a
+// `style` attribute in this pipeline.
+const defaultWhiteList = getDefaultWhiteList()
+const htmlSanitizer = new FilterXSS({
+  css: false,
+  whiteList: {
+    ...defaultWhiteList,
+    a: [...(defaultWhiteList.a ?? []), 'rel', 'class', 'style', 'id'],
+    img: [...(defaultWhiteList.img ?? []), 'class', 'style', 'id'],
+    span: withCommonAttrs(),
+    div: withCommonAttrs(),
+    figure: withCommonAttrs(),
+    figcaption: withCommonAttrs(),
+    pre: withCommonAttrs(),
+    code: withCommonAttrs(),
+    p: withCommonAttrs(),
+    h1: withCommonAttrs(),
+    h2: withCommonAttrs(),
+    h3: withCommonAttrs(),
+    h4: withCommonAttrs(),
+    h5: withCommonAttrs(),
+    h6: withCommonAttrs(),
+    ul: withCommonAttrs(),
+    ol: withCommonAttrs(),
+    li: withCommonAttrs(),
+    blockquote: withCommonAttrs(),
+    table: withCommonAttrs(),
+    thead: withCommonAttrs(),
+    tbody: withCommonAttrs(),
+    tr: withCommonAttrs(),
+    td: withCommonAttrs('colspan', 'rowspan', 'align'),
+    th: withCommonAttrs('colspan', 'rowspan', 'align'),
+    hr: withCommonAttrs(),
+    br: withCommonAttrs(),
+    em: withCommonAttrs(),
+    strong: withCommonAttrs(),
+    del: withCommonAttrs(),
+  },
+})
+
+export const sanitizeRenderedHtml = (html: string) =>
+  htmlSanitizer.process(html)
+
 export const markdownToHtml = (markdown: string) => {
-  return marked(markdown, { gfm: true }) as string
+  return sanitizeRenderedHtml(marked(markdown, { gfm: true }) as string)
 }

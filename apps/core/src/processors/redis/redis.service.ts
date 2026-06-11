@@ -135,10 +135,58 @@ export class RedisService {
     return this._emitter
   }
 
-  public async cleanCatch() {
+  /**
+   * Iterate the keyspace with a non-blocking cursor (`SCAN`) instead of the
+   * O(N) blocking `KEYS`. Collects every key matching `pattern`. Use this on
+   * hot/scheduled/public paths where `KEYS` would stall the whole Redis.
+   */
+  public async scanKeys(
+    pattern: string,
+    count = 100,
+    client: IORedis = this.redisClient,
+  ): Promise<string[]> {
+    const keys: string[] = []
+    const stream = client.scanStream({ match: pattern, count })
+    for await (const batch of stream) {
+      if ((batch as string[]).length > 0) keys.push(...(batch as string[]))
+    }
+    return keys
+  }
+
+  /**
+   * Delete every key matching `pattern` using a cursor scan, deleting in
+   * batches with `UNLINK` (non-blocking reclaim) to avoid stalling Redis on
+   * large key sets.
+   */
+  public async deleteKeysByPattern(
+    pattern: string,
+    options: { count?: number; batchSize?: number } = {},
+  ): Promise<number> {
+    const { count = 100, batchSize = 500 } = options
     const redis = this.getClient()
-    const keys: string[] = await redis.keys(`${API_CACHE_PREFIX}*`)
-    await Promise.all(keys.map((key) => redis.del(key)))
+    let deleted = 0
+    let buffer: string[] = []
+
+    const flush = async () => {
+      if (buffer.length === 0) return
+      deleted += await redis.unlink(...buffer)
+      buffer = []
+    }
+
+    const stream = redis.scanStream({ match: pattern, count })
+    for await (const batch of stream) {
+      const keys = batch as string[]
+      if (keys.length === 0) continue
+      buffer.push(...keys)
+      if (buffer.length >= batchSize) await flush()
+    }
+    await flush()
+
+    return deleted
+  }
+
+  public async cleanCatch() {
+    await this.deleteKeysByPattern(`${API_CACHE_PREFIX}*`)
 
     return
   }
@@ -151,10 +199,7 @@ export class RedisService {
   }
 
   public async cleanAllRedisKey() {
-    const redis = this.getClient()
-    const keys: string[] = await redis.keys(getRedisKey('*'))
-
-    await Promise.all(keys.map((key) => redis.del(key)))
+    await this.deleteKeysByPattern(getRedisKey('*'))
 
     return
   }

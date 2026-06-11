@@ -5,12 +5,11 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
-import type { BasicPagerInput } from '~/shared/dto/pager.dto'
 import { SampleResponse } from '~/shared/sample/sample-response.decorator'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 
-import { AnalyzeDto } from './analyze.schema'
+import { AnalyzeDto, AnalyzePagerDto } from './analyze.schema'
 import { AnalyzeService } from './analyze.service'
 import { AnalyzeSampleService } from './sample/analyze-sample.service'
 
@@ -53,7 +52,7 @@ export class AnalyzeController {
 
   @Get('/')
   @SampleResponse(AnalyzeSampleService, 'list')
-  getAnalyze(@Query() query: AnalyzeDto & Partial<BasicPagerInput>) {
+  getAnalyze(@Query() query: AnalyzePagerDto) {
     const { from, to = new Date(), page = 1, size = 50 } = query
     return this.service.getRangeAnalyzeData(from, to, {
       limit: Math.trunc(size),
@@ -62,7 +61,7 @@ export class AnalyzeController {
   }
 
   @Get('/today')
-  getAnalyzeToday(@Query() query: Partial<BasicPagerInput>) {
+  getAnalyzeToday(@Query() query: AnalyzePagerDto) {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const todayEarly = getTodayEarly(today)
@@ -73,7 +72,7 @@ export class AnalyzeController {
   }
 
   @Get('/week')
-  getAnalyzeWeek(@Query() query: Partial<BasicPagerInput>) {
+  getAnalyzeWeek(@Query() query: AnalyzePagerDto) {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const weekStart = getWeekStart(today)
@@ -164,7 +163,9 @@ export class AnalyzeController {
   @Get('/like')
   async getTodayLikedArticle() {
     const client = this.redisService.getClient()
-    const keys = await client.keys(getRedisKey(RedisKeys.Like, '*'))
+    const keys = await this.redisService.scanKeys(
+      getRedisKey(RedisKeys.Like, '*'),
+    )
 
     const data = await Promise.all(
       keys.map(async (key) => {
