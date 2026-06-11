@@ -1,6 +1,6 @@
 {
   "private": true,
-  "packageManager": "pnpm@11.1.2",
+  "packageManager": "pnpm@11.5.3",
   "engines": {
     "node": ">=22"
   },
@@ -34,11 +34,11 @@
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",
     "@lobehub/eslint-config": "^2.1.5",
     "@mx-space/cli": "workspace:*",
-    "@types/node": "25.9.1",
+    "@types/node": "25.9.3",
     "cross-env": "10.1.0",
     "eslint": "^10.4.1",
     "lint-staged": "17.0.7",
-    "prettier": "3.8.3",
+    "prettier": "3.8.4",
     "prettier-package-json": "2.8.0",
     "prettier-plugin-ember-template-tag": "2.1.6",
     "redis-memory-server": "0.16.1",
@@ -51,14 +51,14 @@
     "vite-tsconfig-paths": "6.1.1"
   },
   "resolutions": {
-    "rolldown": "1.1.0",
+    "eslint-plugin-react-compiler>zod": "3.25.76",
     "get-pixels@^3>request": "./external/request",
     "pino": "./external/pino",
-    "semver": "7.8.2",
+    "rolldown": "1.1.0",
+    "semver": "7.8.4",
     "typescript": "6.0.3",
     "whatwg-url": "16.0.1",
-    "zod": "4.4.3",
-    "eslint-plugin-react-compiler>zod": "3.25.76"
+    "zod": "4.4.3"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"

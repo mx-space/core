@@ -70,18 +70,18 @@
     "@lexical/headless": "^0.45.0",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/editor": "workspace:*",
-    "better-auth": "^1.6.14",
-    "effect": "3.21.2",
+    "better-auth": "^1.6.16",
+    "effect": "3.21.3",
     "fast-xml-parser": "5.8.0",
     "get-east-asian-width": "^1.6.0",
     "lexical": "^0.45.0",
     "minisearch": "^7.2.0",
     "open": "^11.0.0",
-    "semver": "7.8.2"
+    "semver": "7.8.4"
   },
   "devDependencies": {
     "@effect/vitest": "0.29.0",
-    "@types/node": "25.9.1",
+    "@types/node": "25.9.3",
     "@types/semver": "7.7.1",
     "tsdown": "0.22.2",
     "tsx": "^4.22.4",
