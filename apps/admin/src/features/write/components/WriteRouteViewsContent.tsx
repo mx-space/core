@@ -1,3 +1,4 @@
+import { projectAgentDiffNodesToFactualState } from '@haklex/rich-ext-ai-agent/static'
 import { createMxLitexmlRegistry, mxLexicalToMarkdown } from '@mx-space/editor'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { load } from 'js-yaml'
@@ -3383,12 +3384,26 @@ function toDraftData(
   }
 }
 
+// Pending AI diff decorators (agent-diff) are transient review UI and must
+// never be persisted — project them back to their factual (original) side.
+function stripPendingAgentDiffs(content: string): string {
+  if (!content.includes('"agent-diff"')) return content
+  try {
+    const editorState = JSON.parse(content) as SerializedEditorState
+    return JSON.stringify(projectAgentDiffNodesToFactualState(editorState))
+  } catch {
+    return content
+  }
+}
+
 function projectWriteState(state: WriteFormState): WriteFormState {
   if (state.contentFormat !== 'lexical') return state
   if (!state.content.trim()) return state
+  const content = stripPendingAgentDiffs(state.content)
   return {
     ...state,
-    text: mxLexicalToMarkdown(state.content),
+    content,
+    text: mxLexicalToMarkdown(content),
   }
 }
 
