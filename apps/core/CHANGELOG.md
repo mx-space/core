@@ -1,3 +1,10 @@
+## [13.10.3](https://github.com/mx-space/core/compare/v13.10.2...v13.10.3) (2026-06-12)
+
+
+### Bug Fixes
+
+* **s3:** slice multipart stream parts to a fixed size ([a39b24f](https://github.com/mx-space/core/commit/a39b24f57c0bb0d593f9bac7a6ddbb438218ee79))
+
 ## [13.10.2](https://github.com/mx-space/core/compare/v13.10.1...v13.10.2) (2026-06-11)
 
 
