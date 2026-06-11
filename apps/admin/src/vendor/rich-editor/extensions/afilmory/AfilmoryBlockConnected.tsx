@@ -30,7 +30,7 @@ export function AfilmoryBlockConnected(props: AfilmorySlotProps) {
   }
 
   return (
-    <div className="group relative">
+    <div className="group relative font-sans">
       <AfilmoryBlock {...props} />
       {props.nodeKey && editor.isEditable() && (
         <button

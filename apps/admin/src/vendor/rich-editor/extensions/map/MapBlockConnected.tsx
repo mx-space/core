@@ -39,7 +39,7 @@ export function MapBlockConnected(props: MapSlotProps) {
   }
 
   return (
-    <div className="group relative">
+    <div className="group relative font-sans">
       <MapBlock
         isDark={isDark}
         pois={props.pois}
