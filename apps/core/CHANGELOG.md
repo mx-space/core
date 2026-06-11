@@ -1,3 +1,15 @@
+## [13.10.2](https://github.com/mx-space/core/compare/v13.10.1...v13.10.2) (2026-06-11)
+
+
+### Bug Fixes
+
+* **core:** security and performance audit — SSRF guards, IP handling, hot-path cleanups ([915d0e3](https://github.com/mx-space/core/commit/915d0e320333231c62c7f13a5e089f4a3c70b80d))
+
+
+### Performance Improvements
+
+* **api:** project article bodies out of hot list endpoints ([64cb110](https://github.com/mx-space/core/commit/64cb110ab844f06f471a40125e3e54f8290753cc))
+
 ## [13.10.1](https://github.com/mx-space/core/compare/v13.10.0...v13.10.1) (2026-06-11)
 
 # [13.10.0](https://github.com/mx-space/core/compare/v13.9.0...v13.10.0) (2026-06-11)
