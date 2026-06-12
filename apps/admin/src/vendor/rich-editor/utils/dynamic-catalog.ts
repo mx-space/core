@@ -16,10 +16,13 @@ export interface DynamicCatalog {
   version: number
 }
 
-const CATALOG_FILE_NAME = 'dynamic-widgets-catalog.json'
+// Data snippet (admin-editable JSON) with this customPath. Snippets serve
+// fresh on every edit; the file module's year-long strong cache would make
+// a file-hosted catalog effectively immutable.
+const CATALOG_SNIPPET_PATH = 'dynamic-widgets-catalog'
 
 export function getDynamicCatalogUrl(): string {
-  return `${API_URL}/objects/file/${CATALOG_FILE_NAME}`
+  return `${API_URL}/s/${CATALOG_SNIPPET_PATH}`
 }
 
 export function isAllowedDynamicUrl(url: string): boolean {
@@ -53,7 +56,7 @@ export function buildDynamicCatalogSystemMessage(
 let cachedCatalogPromise: Promise<DynamicCatalog | null> | null = null
 
 function fetchDynamicCatalog(): Promise<DynamicCatalog | null> {
-  cachedCatalogPromise ??= fetch(getDynamicCatalogUrl())
+  cachedCatalogPromise ??= fetch(getDynamicCatalogUrl(), { cache: 'no-store' })
     .then((res) => (res.ok ? (res.json() as Promise<DynamicCatalog>) : null))
     .catch(() => null)
   return cachedCatalogPromise
