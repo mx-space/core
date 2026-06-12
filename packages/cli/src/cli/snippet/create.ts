@@ -23,7 +23,7 @@ export const create = Command.make(
       const flags = toSnippetFlagInputs(rest)
       const api = yield* Api
       const renderer = yield* Renderer
-      let raw = yield* resolveRawSource(flags)
+      let raw = yield* resolveRawSource(flags, { implicitStdin: true })
       if (raw === undefined) {
         if (!process.stdin.isTTY) {
           return yield* Effect.fail(

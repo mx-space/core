@@ -428,9 +428,9 @@ Snippets are addressed by Snowflake id or `<reference>/<name>`. A bare name with
 | `--name <name>`            | `name` (required for `create`)                              |
 | `--reference <r>`          | `reference` (defaults to `root` server-side)                |
 | `--type <t>`               | `type`: `json`, `json5`, `function`, `text`, or `yaml`      |
-| `--file <path>`            | Read `raw` content from a file (`-` for stdin)              |
+| `--file <path\|->`          | Read `raw` content from a file; `-` reads stdin             |
 | `--raw <text>`             | Inline `raw` content                                        |
-| `--private`                | `private: true`                                             |
+| `--private` / `--no-private` | `private`                                                 |
 | `--comment <text>`         | `comment`                                                   |
 | `--enable` / `--no-enable` | `enable`                                                    |
 | `--method <m>`             | `method`: `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, or `ALL` |
@@ -439,7 +439,7 @@ Snippets are addressed by Snowflake id or `<reference>/<name>`. A bare name with
 | `--custom-path <p>`        | `customPath`                                                |
 | `--secret <k=v>`           | `secret` (qs string)                                        |
 
-Raw content sources are mutually exclusive and resolve in order: `--file`, then `--raw`, then piped stdin. `create` with no source opens `$EDITOR` on an empty buffer when interactive, and fails otherwise.
+Raw content sources are mutually exclusive and resolve in order: `--file`, then `--raw`. `create` additionally falls back to piped stdin when stdin is not a TTY, and with no source at all opens `$EDITOR` on an empty buffer when interactive (fails otherwise). `update` never reads stdin implicitly — pass `--file -` to read stdin explicitly.
 
 ```bash
 mxs snippet create --name theme --reference web --type json --file theme.json

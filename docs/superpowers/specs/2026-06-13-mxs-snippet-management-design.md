@@ -47,10 +47,13 @@ A bare token without `/` that is not a Snowflake id is treated as
 
 ### Raw content input
 
-`create` / `update` accept content from three sources (mutually exclusive,
-first match wins): `--file <path>`, `--raw <text>`, or piped stdin (when not
-a TTY). `create` with none of the three opens `$EDITOR` on an empty buffer
-when interactive, else fails with `ValidationFailed`.
+`create` accepts content from three sources (mutually exclusive, first match
+wins): `--file <path>`, `--raw <text>`, or piped stdin (when not a TTY).
+`update` takes raw content only via `--file <path>`, `--raw <text>`, or
+`--file -` (stdin) — it never reads stdin implicitly, so ambient stdin data
+cannot clobber `raw` in the full-body PUT. `create` with no source opens
+`$EDITOR` on an empty buffer when interactive, else fails with
+`ValidationFailed`.
 
 `edit` opens the current `raw` in `$EDITOR` with a file extension derived
 from `type`: `json` → `.json`, `json5` → `.json5`, `function` → `.js`,
@@ -71,8 +74,9 @@ the existing snippet, strip server-managed fields (`id`, `created`,
 mxs snippet list [--page <n>] [--size <n>] [--grouped]
 mxs snippet get <id|ref/name>
 mxs snippet create --name <n> [--reference <r>] [--type <t>]
-                   [--file <path> | --raw <text> | stdin]
-                   [--private] [--comment <c>] [--enable | --no-enable]
+                   [--file <path|-> | --raw <text> | stdin]
+                   [--private | --no-private] [--comment <c>]
+                   [--enable | --no-enable]
                    [--method <m>] [--metatype <m>] [--schema <s>]
                    [--custom-path <p>] [--secret <k=v qs string>]
 mxs snippet update <id|ref/name> [same flags as create, all optional]

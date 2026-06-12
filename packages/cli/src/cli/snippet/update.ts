@@ -28,7 +28,7 @@ export const update = Command.make(
       const current = pickSnippetFields(
         unwrapDoc(yield* api.request(`/snippets/${id}`)),
       )
-      const raw = yield* resolveRawSource(flags)
+      const raw = yield* resolveRawSource(flags, { implicitStdin: false })
       const body: Record<string, unknown> = {
         ...current,
         ...snippetFieldsOf(flags),

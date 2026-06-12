@@ -44,6 +44,7 @@ const schema = optional(Options.text('schema'))
 const customPath = optional(Options.text('custom-path'))
 const secret = optional(Options.text('secret'))
 const privateFlag = Options.boolean('private')
+const noPrivateFlag = Options.boolean('no-private')
 const enableFlag = Options.boolean('enable')
 const noEnableFlag = Options.boolean('no-enable')
 
@@ -59,6 +60,7 @@ export const snippetWriteOptions = {
   customPath,
   secret,
   private: privateFlag,
+  noPrivate: noPrivateFlag,
   enable: enableFlag,
   noEnable: noEnableFlag,
 }
@@ -75,6 +77,7 @@ export interface SnippetWriteOptionsParsed {
   readonly customPath: Option.Option<string>
   readonly secret: Option.Option<string>
   readonly private: boolean
+  readonly noPrivate: boolean
   readonly enable: boolean
   readonly noEnable: boolean
 }
@@ -107,7 +110,7 @@ export const toSnippetFlagInputs = (
   schema: unwrap(opts.schema),
   customPath: unwrap(opts.customPath),
   secret: unwrap(opts.secret),
-  private: opts.private ? true : undefined,
+  private: opts.private ? true : opts.noPrivate ? false : undefined,
   enable: opts.enable ? true : opts.noEnable ? false : undefined,
 })
 
@@ -128,17 +131,20 @@ export const snippetFieldsOf = (
   return out
 }
 
-export const resolveRawSource = (flags: {
-  readonly file?: string
-  readonly raw?: string
-}): Effect.Effect<string | undefined, ValidationFailed | Generic, Editor> =>
+export const resolveRawSource = (
+  flags: {
+    readonly file?: string
+    readonly raw?: string
+  },
+  opts: { readonly implicitStdin: boolean },
+): Effect.Effect<string | undefined, ValidationFailed | Generic, Editor> =>
   Effect.gen(function* () {
     if (flags.file !== undefined) {
       const editor = yield* Editor
       return yield* editor.readFileOrStdin(flags.file)
     }
     if (flags.raw !== undefined) return flags.raw
-    if (!process.stdin.isTTY) {
+    if (opts.implicitStdin && !process.stdin.isTTY) {
       const editor = yield* Editor
       const piped = yield* editor.readFileOrStdin(undefined)
       return piped.trim() ? piped : undefined

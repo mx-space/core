@@ -28,14 +28,14 @@ const help = registerCommandHelp({
         '--name <n>',
         '[--reference <r>]',
         '[--type <t>]',
-        '[--file <path> | --raw <text> | stdin]',
+        '[--file <path|-> | --raw <text> | stdin]',
         '...',
       ],
       description: 'create a snippet',
     },
     {
       name: 'update',
-      args: ['<id|ref/name>', '[--name ...]', '...'],
+      args: ['<id|ref/name>', '[--file <path|-> | --raw <text>]', '...'],
       description: 'update a snippet',
     },
     {

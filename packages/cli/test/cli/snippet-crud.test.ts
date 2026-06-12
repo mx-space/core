@@ -122,6 +122,7 @@ const writeFlags = {
   customPath: none<string>(),
   secret: none<string>(),
   private: false,
+  noPrivate: false,
   enable: false,
   noEnable: false,
 }
@@ -500,6 +501,117 @@ describe('snippet command handlers', () => {
         .body
       expect(body.raw).toBe('{"a":2}')
       expect(body.name).toBe('config')
+    } finally {
+      stdout.restore()
+    }
+  })
+
+  it('update ignores piped stdin without explicit flags', async () => {
+    const calls: Array<{ path: string; options: unknown }> = []
+    const responses = {
+      [`/snippets/${SNIPPET_ID}`]: fullSnippet,
+    }
+    const reads: Array<string | undefined> = []
+    const editor = makeEditor({
+      readFileOrStdin: (p) =>
+        Effect.sync(() => {
+          reads.push(p)
+          return 'ambient stdin'
+        }),
+    })
+    const restoreTty = withStdinTty(false)
+    const stdout = captureStdout()
+    try {
+      const exit = await Effect.runPromiseExit(
+        updateSnippet
+          .handler({
+            target: SNIPPET_ID,
+            name: none<string>(),
+            ...writeFlags,
+            comment: Option.some('only metadata'),
+          })
+          .pipe(
+            Effect.provide(buildLayer(calls, responses, editor)),
+            Renderer.withOptions(rendererJson),
+          ),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      expect(reads).toEqual([])
+      const body = (calls[1]!.options as { body: Record<string, unknown> })
+        .body
+      expect(body.raw).toBe('{"a":1}')
+      expect(body.comment).toBe('only metadata')
+    } finally {
+      stdout.restore()
+      restoreTty()
+    }
+  })
+
+  it('update reads stdin via explicit --file -', async () => {
+    const calls: Array<{ path: string; options: unknown }> = []
+    const responses = {
+      [`/snippets/${SNIPPET_ID}`]: fullSnippet,
+    }
+    const reads: Array<string | undefined> = []
+    const editor = makeEditor({
+      readFileOrStdin: (p) =>
+        Effect.sync(() => {
+          reads.push(p)
+          return 'from stdin'
+        }),
+    })
+    const restoreTty = withStdinTty(false)
+    const stdout = captureStdout()
+    try {
+      const exit = await Effect.runPromiseExit(
+        updateSnippet
+          .handler({
+            target: SNIPPET_ID,
+            name: none<string>(),
+            ...writeFlags,
+            file: Option.some('-'),
+          })
+          .pipe(
+            Effect.provide(buildLayer(calls, responses, editor)),
+            Renderer.withOptions(rendererJson),
+          ),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      expect(reads).toEqual(['-'])
+      const body = (calls[1]!.options as { body: Record<string, unknown> })
+        .body
+      expect(body.raw).toBe('from stdin')
+    } finally {
+      stdout.restore()
+      restoreTty()
+    }
+  })
+
+  it('update flips private to false via --no-private', async () => {
+    const calls: Array<{ path: string; options: unknown }> = []
+    const responses = {
+      [`/snippets/${SNIPPET_ID}`]: fullSnippet,
+    }
+    const stdout = captureStdout()
+    try {
+      const exit = await Effect.runPromiseExit(
+        updateSnippet
+          .handler({
+            target: SNIPPET_ID,
+            name: none<string>(),
+            ...writeFlags,
+            noPrivate: true,
+          })
+          .pipe(
+            Effect.provide(buildLayer(calls, responses)),
+            Renderer.withOptions(rendererJson),
+          ),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      const body = (calls[1]!.options as { body: Record<string, unknown> })
+        .body
+      expect(body.private).toBe(false)
+      expect(body.raw).toBe('{"a":1}')
     } finally {
       stdout.restore()
     }
