@@ -56,7 +56,12 @@ export function buildDynamicCatalogSystemMessage(
 let cachedCatalogPromise: Promise<DynamicCatalog | null> | null = null
 
 function fetchDynamicCatalog(): Promise<DynamicCatalog | null> {
-  cachedCatalogPromise ??= fetch(getDynamicCatalogUrl(), { cache: 'no-store' })
+  // no-store beats the browser cache; the random query beats any CDN in
+  // front of the API that ignores request cache directives
+  cachedCatalogPromise ??= fetch(
+    `${getDynamicCatalogUrl()}?_t=${Date.now()}`,
+    { cache: 'no-store' },
+  )
     .then((res) => (res.ok ? (res.json() as Promise<DynamicCatalog>) : null))
     .catch(() => null)
   return cachedCatalogPromise
