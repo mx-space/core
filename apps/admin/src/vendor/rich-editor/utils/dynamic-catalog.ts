@@ -25,7 +25,12 @@ export function getDynamicCatalogUrl(): string {
   return `${API_URL}/s/${CATALOG_SNIPPET_PATH}`
 }
 
+const catalogUrls = new Set<string>()
+
 export function isAllowedDynamicUrl(url: string): boolean {
+  // primary allowlist: exact membership in the fetched catalog (covers S3/CDN
+  // hosted widgets whose origin differs from the API)
+  if (catalogUrls.has(url)) return true
   try {
     const api = new URL(API_URL)
     const resolved = new URL(url, api.origin)
@@ -55,15 +60,28 @@ export function buildDynamicCatalogSystemMessage(
 
 let cachedCatalogPromise: Promise<DynamicCatalog | null> | null = null
 
+async function requestCatalog(url: string): Promise<DynamicCatalog | null> {
+  try {
+    const res = await fetch(url, { cache: 'no-store' })
+    return res.ok ? ((await res.json()) as DynamicCatalog) : null
+  } catch {
+    return null
+  }
+}
+
 function fetchDynamicCatalog(): Promise<DynamicCatalog | null> {
   // no-store beats the browser cache; the random query beats any CDN in
-  // front of the API that ignores request cache directives
-  cachedCatalogPromise ??= fetch(
+  // front of the API that ignores request cache directives. Servers
+  // predating the snippet-route query-strip fix 404 on the query form, so
+  // fall back to the bare URL.
+  cachedCatalogPromise ??= requestCatalog(
     `${getDynamicCatalogUrl()}?_t=${Date.now()}`,
-    { cache: 'no-store' },
   )
-    .then((res) => (res.ok ? (res.json() as Promise<DynamicCatalog>) : null))
-    .catch(() => null)
+    .then((catalog) => catalog ?? requestCatalog(getDynamicCatalogUrl()))
+    .then((catalog) => {
+      for (const c of catalog?.components ?? []) catalogUrls.add(c.url)
+      return catalog
+    })
   return cachedCatalogPromise
 }
 

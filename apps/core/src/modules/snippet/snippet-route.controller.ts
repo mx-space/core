@@ -34,7 +34,7 @@ export class SnippetRouteController {
     @Request() req: FastifyRequest,
     @Response() reply: FastifyReply,
   ) {
-    const rawPath = req.url
+    const rawPath = req.url.split('?')[0]
     const sPrefixIndex = rawPath.indexOf('/s')
     const subPath = rawPath.slice(Math.max(0, sPrefixIndex + 2))
     const path = subPath.replaceAll(/^\/+|\/+$/g, '')
