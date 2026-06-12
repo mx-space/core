@@ -49,6 +49,7 @@ export interface ReactEditorPaneProps {
   onSubmit?: RichEditorProps['onSubmit']
   onEditorReady?: (editor: LexicalEditor | null) => void
   onAgentLoopReady: (loop: AgentLoopHandle | null) => void
+  onPinSelection?: () => void
   tools?: AgentToolConfig[]
   litexmlRegistry?: AgentLitexmlRegistryProvider
   systemMessages?: ChatMessage[]
@@ -65,6 +66,7 @@ export function ReactEditorPane({
   onSubmit,
   onEditorReady,
   onAgentLoopReady,
+  onPinSelection,
   tools,
   litexmlRegistry,
   systemMessages,
@@ -93,7 +95,7 @@ export function ReactEditorPane({
               ]}
               header={<EditorToolbar />}
               floatingToolbarActions={
-                provider ? <AgentAskAIAction /> : undefined
+                provider ? <AgentAskAIAction onPin={onPinSelection} /> : undefined
               }
               onChange={onChange}
               onSubmit={onSubmit}

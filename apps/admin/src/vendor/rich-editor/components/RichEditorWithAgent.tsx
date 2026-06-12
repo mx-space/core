@@ -31,6 +31,7 @@ export interface RichEditorWithAgentProps extends BuildRichEditorPropsInput {
   onAgentLoopReady?: (loop: AgentLoopHandle | null) => void
   onChange?: (value: SerializedEditorState) => void
   onEditorReady?: (editor: LexicalEditor | null) => void
+  onPinSelection?: () => void
   onSubmit?: () => void
   onTextChange?: (text: string) => void
   provider: LLMProvider | null
@@ -137,6 +138,7 @@ export const RichEditorWithAgent = forwardRef<
       onAgentLoopReady={handleAgentLoopReady}
       onChange={handleChange}
       onEditorReady={handleEditorReady}
+      onPinSelection={props.onPinSelection}
       onSubmit={handleSubmit}
       provider={props.provider}
       saveExcalidrawSnapshot={props.saveExcalidrawSnapshot}

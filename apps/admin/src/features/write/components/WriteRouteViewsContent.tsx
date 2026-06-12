@@ -1169,6 +1169,7 @@ function WritePage(props: { kind: WriteKind }) {
                           updateField('content', content)
                         }
                         onMetaFieldsUpdate={applyAgentMetaUpdates}
+                        onPinSelection={() => setAsidePanel('agent')}
                         onTextChange={(text) => updateField('text', text)}
                         refId={isEditing ? id : routeDraftId || undefined}
                         surfaceClassName="flex min-h-[70vh] flex-1 flex-col rounded-none border-0 bg-transparent dark:bg-transparent"
@@ -3420,6 +3421,7 @@ function RichWriteSurface(props: {
   onMetaFieldsUpdate?: (
     updates: Record<string, unknown>,
   ) => Promise<void> | void
+  onPinSelection?: () => void
   refId?: string
   surfaceClassName?: string
   surfaceStyle?: CSSProperties
@@ -3488,6 +3490,7 @@ function RichWriteSurface(props: {
       latestCallbacks.current.onContentChange(JSON.stringify(value))
     },
     onEditorReady: agent.onEditorReady,
+    onPinSelection: props.onPinSelection,
     onTextChange: (text) => {
       latestCallbacks.current.onTextChange(text)
     },

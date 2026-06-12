@@ -11,6 +11,7 @@ import { Button } from '~/ui/primitives/button'
 
 import { ThinkingBlock } from './ThinkingBlock'
 import { ToolCallGroupView } from './ToolCallView'
+import type { UserChatBubble } from './types'
 
 interface AgentMessageItemProps {
   actionsLocked: boolean
@@ -28,10 +29,22 @@ export function AgentMessageItem(props: AgentMessageItemProps) {
 
   switch (bubble.type) {
     case 'user': {
+      const selection = (bubble as UserChatBubble).selection
       return (
         <div className="flex justify-end">
-          <div className="max-w-[82%] whitespace-pre-wrap break-words rounded-md bg-accent-soft px-2.5 py-1.5 text-sm leading-relaxed text-fg">
-            {bubble.content}
+          <div className="max-w-[82%] rounded-md bg-accent-soft px-2.5 py-1.5 text-sm leading-relaxed text-fg">
+            {selection && (
+              <div className="mb-1 truncate border-l-2 border-border pl-2 text-xs text-fg-muted">
+                {selection.type === 'text'
+                  ? `"${selection.text}"`
+                  : t('write.agent.selection.blocks', {
+                      count: selection.blockIds.length,
+                    })}
+              </div>
+            )}
+            <div className="whitespace-pre-wrap break-words">
+              {bubble.content}
+            </div>
           </div>
         </div>
       )

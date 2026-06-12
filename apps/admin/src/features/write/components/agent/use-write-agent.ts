@@ -22,7 +22,7 @@ import { extractAgentOperationFromToolItem } from './agent-operations'
 import { createManagedAgentStore } from './agent-store'
 import type { AbortSignalRef } from './llm-provider'
 import { createSseLlmProvider } from './llm-provider'
-import type { SelectedAgentModel } from './types'
+import type { SelectedAgentModel, UserChatBubble } from './types'
 
 export interface WriteAgentController {
   store: AgentStore
@@ -187,7 +187,11 @@ export function useWriteAgent(opts: {
     fetchControllerRef.current = controller
     fetchSignalRef.current.current = controller.signal
 
-    store.getState().addBubble({ content: trimmed, type: 'user' })
+    const pinnedSelection = store.getState().pinnedSelection
+    const userBubble: UserChatBubble = pinnedSelection
+      ? { content: trimmed, selection: pinnedSelection, type: 'user' }
+      : { content: trimmed, type: 'user' }
+    store.getState().addBubble(userBubble)
     agentLoopRef.current
       .run(trimmed)
       .catch((error: unknown) => {
