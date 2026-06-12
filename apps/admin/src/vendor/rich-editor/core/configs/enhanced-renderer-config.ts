@@ -14,6 +14,7 @@ import { CHAT_NODE_KEY } from '@haklex/rich-ext-chat/node'
 import { ChatRenderer } from '@haklex/rich-ext-chat/renderer'
 import { CODE_SNIPPET_NODE_KEY } from '@haklex/rich-ext-code-snippet/node'
 import { CodeSnippetRenderer } from '@haklex/rich-ext-code-snippet/renderer'
+import { DYNAMIC_NODE_KEY } from '@haklex/rich-ext-dynamic/static'
 import { GALLERY_NODE_KEY } from '@haklex/rich-ext-gallery/node'
 import { GalleryRenderer } from '@haklex/rich-ext-gallery/renderer'
 import { AlertRenderer } from '@haklex/rich-renderer-alert/static'
@@ -28,6 +29,7 @@ import { VideoRenderer } from '@haklex/rich-renderer-video/static'
 
 import { AFILMORY_NODE_KEY, AfilmoryBlock } from '../../extensions/afilmory'
 import { MAP_NODE_KEY, MapBlockReadonly } from '../../extensions/map'
+import { MxDynamicRenderer } from './DynamicRenderer'
 
 export const enhancedRendererConfig: RendererConfig = {
   [AFILMORY_NODE_KEY]: AfilmoryBlock,
@@ -36,6 +38,7 @@ export const enhancedRendererConfig: RendererConfig = {
   [CHAT_NODE_KEY]: ChatRenderer,
   [CODE_BLOCK_NODE_KEY]: CodeBlockRenderer,
   [CODE_SNIPPET_NODE_KEY]: CodeSnippetRenderer,
+  [DYNAMIC_NODE_KEY]: MxDynamicRenderer,
   [GALLERY_NODE_KEY]: GalleryRenderer,
   [IMAGE_NODE_KEY]: ImageRenderer,
   [LINK_CARD_NODE_KEY]: LinkCardRenderer,

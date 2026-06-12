@@ -5,6 +5,7 @@ import {
 } from '@haklex/rich-editor'
 import { chatEditNodes } from '@haklex/rich-ext-chat'
 import { codeSnippetEditNodes } from '@haklex/rich-ext-code-snippet'
+import { DynamicEditNode, DynamicPlugin } from '@haklex/rich-ext-dynamic'
 import { embedEditNodes, EmbedPlugin } from '@haklex/rich-ext-embed'
 import {
   ExcalidrawEditNode,
@@ -39,6 +40,7 @@ import { enhancedEditRendererConfig } from './configs/enhanced-edit-renderer-con
 import { RichRenderer } from './RichRenderer'
 
 const defaultExtraNodes = [
+  DynamicEditNode,
   ExcalidrawEditNode,
   ...embedEditNodes,
   ...linkCardEditNodes,
@@ -132,6 +134,7 @@ export function RichEditor({
         <LiteXmlPastePlugin />
         <FloatingToolbarPlugin actions={floatingToolbarActions} />
         <FloatingLinkEditorPlugin renderExtraActions={renderLinkExtraActions} />
+        <DynamicPlugin />
         <ExcalidrawPlugin />
         <EmbedPlugin selfHostnames={selfHostnames} />
         <MapPlugin trackUpload={trackUpload} />

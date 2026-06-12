@@ -103,6 +103,7 @@ import type {
   RichEditorWithAgentRef,
 } from '~/vendor/rich-editor/components/RichEditorWithAgent'
 import { buildMxEditorLitexmlSystemMessages } from '~/vendor/rich-editor/utils/agent-litexml-prompt'
+import { useDynamicCatalogSystemMessages } from '~/vendor/rich-editor/utils/dynamic-catalog'
 import type { MetaFieldsSchema } from '~/vendor/rich-editor/utils/meta-tools'
 import {
   buildMetaSystemMessages,
@@ -3428,6 +3429,7 @@ function RichWriteSurface(props: {
 }) {
   const { t } = useI18n()
   const editorRef = useRef<RichEditorWithAgentRef | null>(null)
+  const dynamicCatalogMessages = useDynamicCatalogSystemMessages()
   const agent = useWriteAgent({
     agentVisible: Boolean(props.agentVisible),
     documentId: props.refId,
@@ -3473,6 +3475,7 @@ function RichWriteSurface(props: {
     litexmlRegistry: createMxLitexmlRegistry,
     systemMessages: [
       ...buildMxEditorLitexmlSystemMessages(),
+      ...dynamicCatalogMessages,
       ...(props.metaFieldsSchema
         ? buildMetaSystemMessages(props.metaFieldsSchema)
         : []),

@@ -4,6 +4,7 @@ import type { RendererConfig, RichEditorVariant } from '@haklex/rich-editor'
 import { NestedContentRendererProvider } from '@haklex/rich-editor'
 import { chatNodes } from '@haklex/rich-ext-chat/static'
 import { codeSnippetNodes } from '@haklex/rich-ext-code-snippet/static'
+import { DynamicNode } from '@haklex/rich-ext-dynamic/static'
 import { embedNodes } from '@haklex/rich-ext-embed/static'
 import { ExcalidrawNode } from '@haklex/rich-ext-excalidraw/static'
 import { galleryNodes } from '@haklex/rich-ext-gallery/static'
@@ -16,6 +17,7 @@ import { MapNode } from '../extensions/map'
 import { enhancedRendererConfig } from './configs/enhanced-renderer-config'
 
 const defaultExtraNodes = [
+  DynamicNode,
   ExcalidrawNode,
   ...embedNodes,
   ...galleryNodes,
