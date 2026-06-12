@@ -37,6 +37,7 @@ import '../preview'
 import '../profile'
 import '../project'
 import '../skill'
+import '../snippet'
 import '../topic'
 import '../update'
 
@@ -79,6 +80,7 @@ export const GROUP_NAMES = [
   'category',
   'topic',
   'comment',
+  'snippet',
   'config',
   'skill',
   'preview',

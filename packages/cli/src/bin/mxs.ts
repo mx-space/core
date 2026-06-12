@@ -24,6 +24,7 @@ import { previewCmd } from '../cli/preview'
 import { profileCmd } from '../cli/profile'
 import { projectCmd } from '../cli/project'
 import { skillCmd } from '../cli/skill'
+import { snippetCmd } from '../cli/snippet'
 import { topicCmd } from '../cli/topic'
 import { updateCmd } from '../cli/update'
 import {
@@ -126,6 +127,7 @@ const rootCmd = Command.make('mxs', {}, () =>
     categoryCmd,
     topicCmd,
     commentCmd,
+    snippetCmd,
     configCmd,
     fileCmd,
     skillCmd,

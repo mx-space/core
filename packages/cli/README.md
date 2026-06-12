@@ -408,6 +408,45 @@ Guard summary:
 - Any `--all` invocation (`approve`, `reject`, `delete`) refuses to run in a non-TTY context without `--force`.
 - `approve` and `reject` of explicit ids run without confirmation.
 
+## Snippets
+
+Snippets are addressed by Snowflake id or `<reference>/<name>`. A bare name without `/` resolves as `root/<name>`.
+
+| Command                             | Description                                                                |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| `mxs snippet list`                  | List snippets (`--page` / `--size`); `--grouped` groups by reference.      |
+| `mxs snippet get <id\|ref/name>`    | Show a single snippet, including `raw`.                                    |
+| `mxs snippet create --name <name>`  | Create a snippet.                                                          |
+| `mxs snippet update <id\|ref/name>` | Update a snippet (full-body merge onto the existing snippet).              |
+| `mxs snippet edit <id\|ref/name>`   | Open the snippet `raw` content in `$EDITOR` (extension derived from type). |
+| `mxs snippet delete <id\|ref/name>` | Delete a snippet. Requires `--force` in non-TTY contexts.                  |
+
+### Snippet Write Flags
+
+| Flag                       | Field                                                       |
+| -------------------------- | ----------------------------------------------------------- |
+| `--name <name>`            | `name` (required for `create`)                              |
+| `--reference <r>`          | `reference` (defaults to `root` server-side)                |
+| `--type <t>`               | `type`: `json`, `json5`, `function`, `text`, or `yaml`      |
+| `--file <path>`            | Read `raw` content from a file (`-` for stdin)              |
+| `--raw <text>`             | Inline `raw` content                                        |
+| `--private`                | `private: true`                                             |
+| `--comment <text>`         | `comment`                                                   |
+| `--enable` / `--no-enable` | `enable`                                                    |
+| `--method <m>`             | `method`: `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, or `ALL` |
+| `--metatype <text>`        | `metatype`                                                  |
+| `--schema <text>`          | `schema`                                                    |
+| `--custom-path <p>`        | `customPath`                                                |
+| `--secret <k=v>`           | `secret` (qs string)                                        |
+
+Raw content sources are mutually exclusive and resolve in order: `--file`, then `--raw`, then piped stdin. `create` with no source opens `$EDITOR` on an empty buffer when interactive, and fails otherwise.
+
+```bash
+mxs snippet create --name theme --reference web --type json --file theme.json
+echo '{"a":1}' | mxs snippet create --name config
+mxs snippet edit web/theme
+```
+
 ## Configuration
 
 | Command                        | Description                                                    |
