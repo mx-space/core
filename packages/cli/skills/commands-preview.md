@@ -2,7 +2,7 @@
 slug: commands-preview
 title: Preview command
 description: render LiteXML / envelope to HTML and open it in a browser
-order: 40
+order: 41
 ---
 
 # Preview command

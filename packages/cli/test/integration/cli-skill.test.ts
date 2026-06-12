@@ -59,6 +59,7 @@ describe('mxs skill', () => {
         'commands-comment',
         'commands-category',
         'commands-topic',
+        'commands-snippet',
         'commands-config',
         'commands-auth',
         'commands-profile',

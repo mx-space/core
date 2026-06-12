@@ -24,6 +24,7 @@ The audience is **AI agents**. Pass `--output llm` for raw markdown suitable for
 | Comments / moderation                         | `commands-comment`               |
 | Categories                                    | `commands-category`              |
 | Topics                                        | `commands-topic`                 |
+| Snippets (server data / functions)            | `commands-snippet`               |
 | Server-side options                           | `commands-config`                |
 | Authentication                                | `commands-auth`                  |
 | Local profile management                      | `commands-profile`               |

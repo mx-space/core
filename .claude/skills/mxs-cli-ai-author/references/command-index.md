@@ -158,6 +158,21 @@ Current mx-core compatibility note: verify the live note list query contract bef
 | `mxs topic update <slugOrId>` | Patch topic fields. | `--name <s>`, `--slug <s>`, `--description <s>`, `--icon <s>` |
 | `mxs topic delete <slugOrId>` | Delete a topic. | `--force`; use `--dry-run` first when possible. |
 
+## Snippet Commands
+
+Snippets are addressed by Snowflake id or `<reference>/<name>`; a bare name without `/` resolves as `root/<name>`.
+
+| Command | Purpose | Flags |
+| --- | --- | --- |
+| `mxs snippet list` | List snippets (lean, no `raw`). | `--page <n>`, `--size <n>`, `--grouped` (group by reference) |
+| `mxs snippet get <id\|ref/name>` | Read one snippet in full, including `raw`. | global flags |
+| `mxs snippet create` | Create a snippet. | required: `--name <s>`; optional: `--reference <r>`, `--type json\|json5\|function\|text\|yaml`, `--file <path\|->`, `--raw <text>`, `--private`/`--no-private`, `--comment <s>`, `--enable`/`--no-enable`, `--method <m>`, `--metatype <s>`, `--schema <s>`, `--custom-path <p>`, `--secret <k=v>` |
+| `mxs snippet update <id\|ref/name>` | Full-body merge update; missing flags leave fields untouched. | same flags as create, all optional |
+| `mxs snippet edit <id\|ref/name>` | Open `raw` in `$EDITOR` (extension derived from type); PUT on change. | global flags |
+| `mxs snippet delete <id\|ref/name>` | Delete a snippet. | `--force`; required in non-TTY contexts |
+
+Raw content sources resolve in order `--file`, then `--raw`. `create` also falls back to piped stdin when stdin is not a TTY (interactive with no source opens `$EDITOR`). `update` never reads stdin implicitly — pass `--file -` to read stdin explicitly.
+
 ## Comment Commands
 
 Moderation surface for the comment queue. State codes: `unread=0`, `read=1`, `junk=2`. The CLI accepts the *names* (`unread`, `read`, `junk`) on `--state`. Single-id verbs and `--all` invocations all route through the server's batch endpoints (`PATCH /comments/batch/state`, `DELETE /comments/batch`) — there is one unified code path.
@@ -217,5 +232,6 @@ Without `--type`, `config set` attempts JSON parsing first and falls back to str
 | Pages | `create`, `edit`, `update`, `delete` |
 | Categories | `create`, `update`, `delete` |
 | Topics | `create`, `update`, `delete` |
+| Snippets | `create`, `update`, `edit`, `delete` |
 | Comments | `approve`, `reject`, `delete` (single id or `--all`; verbs route through the batch endpoint) |
 | Config | `set`, `edit` |

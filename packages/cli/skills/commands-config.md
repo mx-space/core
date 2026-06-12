@@ -2,7 +2,7 @@
 slug: commands-config
 title: Config commands
 description: server-side options — config list/get/set/edit
-order: 37
+order: 38
 ---
 
 # Config commands
