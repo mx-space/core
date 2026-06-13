@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { FormEvent, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
-import type { WebhookModel } from '~/api/webhooks'
 
+import type { WebhookModel } from '~/api/webhooks'
 import {
   createWebhook,
   EventScope,
@@ -11,7 +12,7 @@ import {
 } from '~/api/webhooks'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
-import { ModalHeader } from '~/ui/feedback/modal'
+import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
@@ -187,14 +188,14 @@ function WebhookEditorModal(props: WebhookEditorModalProps) {
         {error ? <span className="text-xs text-red-500">{error}</span> : null}
       </Scroll>
 
-      <div className="flex items-center justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
+      <ModalFooter>
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
         <Button disabled={mutation.isPending} type="submit">
           {isEdit ? t('common.save') : t('common.create')}
         </Button>
-      </div>
+      </ModalFooter>
     </form>
   )
 }

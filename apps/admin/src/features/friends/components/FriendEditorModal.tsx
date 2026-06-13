@@ -1,12 +1,13 @@
 import { useMutation } from '@tanstack/react-query'
-import { FormEvent, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
-import type { LinkModel } from '~/models/link'
 
 import { createLink, updateLink } from '~/api/links'
 import { useI18n } from '~/i18n'
+import type { LinkModel } from '~/models/link'
 import { LinkState, LinkStateNameKeys, LinkType } from '~/models/link'
-import { ModalHeader } from '~/ui/feedback/modal'
+import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { SelectField } from '~/ui/primitives/select'
@@ -137,14 +138,14 @@ function FriendEditorModal(props: FriendEditorModalProps) {
         {error ? <span className="text-xs text-red-500">{error}</span> : null}
       </div>
 
-      <div className="flex items-center justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
+      <ModalFooter>
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
         <Button disabled={mutation.isPending} type="submit">
           {t('friends.editor.submit')}
         </Button>
-      </div>
+      </ModalFooter>
     </form>
   )
 }

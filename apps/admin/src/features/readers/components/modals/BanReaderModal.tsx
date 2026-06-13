@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import type { ReaderModel } from '~/api/readers'
 
+import type { ReaderModel } from '~/api/readers'
 import { useI18n } from '~/i18n'
-import { ModalHeader } from '~/ui/feedback/modal'
+import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { TextArea } from '~/ui/primitives/text-field'
@@ -38,7 +38,7 @@ function BanReaderModal(props: BanReaderModalProps) {
           value={reason}
         />
       </div>
-      <div className="flex items-center justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
+      <ModalFooter>
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
@@ -49,7 +49,7 @@ function BanReaderModal(props: BanReaderModalProps) {
         >
           {t('readers.ban.submit')}
         </Button>
-      </div>
+      </ModalFooter>
     </div>
   )
 }

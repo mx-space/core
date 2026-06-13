@@ -1,11 +1,12 @@
 import { useMutation } from '@tanstack/react-query'
-import { FormEvent, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
-import type { SayModel } from '~/models/say'
 
 import { createSay, updateSay } from '~/api/says'
 import { useI18n } from '~/i18n'
-import { ModalHeader } from '~/ui/feedback/modal'
+import type { SayModel } from '~/models/say'
+import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { TextArea, TextInput } from '~/ui/primitives/text-field'
@@ -100,8 +101,8 @@ function SayEditorModal(props: SayEditorModalProps) {
         />
       </div>
 
-      <div className="flex items-center justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
-        <span className="mr-auto text-xs text-neutral-400">
+      <ModalFooter>
+        <span className="mr-auto text-xs text-fg-subtle">
           {t('says.dialog.shortcut')}
         </span>
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
@@ -110,7 +111,7 @@ function SayEditorModal(props: SayEditorModalProps) {
         <Button disabled={mutation.isPending} type="submit">
           {isEdit ? t('common.save') : t('says.dialog.publish')}
         </Button>
-      </div>
+      </ModalFooter>
     </form>
   )
 }

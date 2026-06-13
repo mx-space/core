@@ -1,20 +1,21 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Loader2, Save, Upload } from 'lucide-react'
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import type { CreateTopicData } from '~/api/topics'
-import type { TopicModel } from '~/models/topic'
-import type { TopicFormMode } from '../types/topics'
 
 import { uploadFile } from '~/api/files'
+import type { CreateTopicData } from '~/api/topics'
 import { createTopic, getTopic, updateTopic } from '~/api/topics'
 import { useI18n } from '~/i18n'
+import type { TopicModel } from '~/models/topic'
 import { adminQueryKeys } from '~/query/keys'
-import { ModalHeader } from '~/ui/feedback/modal'
+import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { TextArea, TextInput } from '~/ui/primitives/text-field'
 
+import type { TopicFormMode } from '../types/topics'
 import { getErrorMessage } from '../utils/errors'
 import { validateTopicForm } from '../utils/topic-form'
 
@@ -186,7 +187,7 @@ function TopicFormModal(props: TopicFormModalProps) {
         </div>
       )}
 
-      <div className="flex justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
+      <ModalFooter>
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
@@ -201,7 +202,7 @@ function TopicFormModal(props: TopicFormModalProps) {
           )}
           {t('common.save')}
         </Button>
-      </div>
+      </ModalFooter>
     </form>
   )
 }

@@ -97,11 +97,6 @@ export const ModalTitle = Dialog.Title
 export const ModalDescription = Dialog.Description
 export const ModalClose = Dialog.Close
 
-/**
- * Modal header — h-14 with px-6 internal padding (matches DSv2 modal scale).
- * The close button uses `-mr-2.5` so its size-9 hit-box optically aligns with
- * the parent's px-6 right edge (size-9 wraps a size-4 icon with 10px gutters).
- */
 export function ModalHeader(props: {
   actions?: ReactNode
   className?: string
@@ -117,12 +112,12 @@ export function ModalHeader(props: {
   return (
     <div
       className={cn(
-        'flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-6',
+        'flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-4',
         props.className,
       )}
     >
       <div className="min-w-0">
-        <ModalTitle className="inline-flex min-w-0 items-center gap-2 text-lg font-semibold text-fg">
+        <ModalTitle className="inline-flex min-w-0 items-center gap-2 text-base font-semibold text-fg">
           {Icon ? (
             <Icon aria-hidden="true" className="size-4 shrink-0" />
           ) : null}
@@ -139,12 +134,28 @@ export function ModalHeader(props: {
         {showClose ? (
           <ModalClose
             aria-label={t('ui.modal.closeAria')}
-            className="-mr-2.5 inline-flex size-9 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
+            className="-mr-1.5 inline-flex size-7 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
           >
             <X aria-hidden="true" className="size-4" />
           </ModalClose>
         ) : null}
       </div>
+    </div>
+  )
+}
+
+export function ModalFooter(props: {
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-2',
+        props.className,
+      )}
+    >
+      {props.children}
     </div>
   )
 }

@@ -8,7 +8,7 @@ import { resolveEnrichment } from '~/api/enrichment'
 import { createRecently, updateRecently } from '~/api/recently'
 import { useI18n } from '~/i18n'
 import type { RecentlyModel } from '~/models/recently'
-import { ModalHeader } from '~/ui/feedback/modal'
+import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { TextArea } from '~/ui/primitives/text-field'
@@ -181,8 +181,8 @@ function RecentlyEditorModal(props: RecentlyEditorModalProps) {
         ) : null}
       </div>
 
-      <div className="flex items-center justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
-        <span className="mr-auto text-xs text-neutral-400">
+      <ModalFooter>
+        <span className="mr-auto text-xs text-fg-subtle">
           {t('recently.editor.shortcut')}
         </span>
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
@@ -191,7 +191,7 @@ function RecentlyEditorModal(props: RecentlyEditorModalProps) {
         <Button disabled={mutation.isPending} type="submit">
           {t('common.save')}
         </Button>
-      </div>
+      </ModalFooter>
     </form>
   )
 }

@@ -1,18 +1,19 @@
 import { useMutation } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
-import { FormEvent, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
-import type { CreateCategoryData } from '~/api/categories'
-import type { CategoryModel } from '~/models/category'
-import type { CategoryFormMode } from '../types/categories'
 
+import type { CreateCategoryData } from '~/api/categories'
 import { createCategory, updateCategory } from '~/api/categories'
 import { useI18n } from '~/i18n'
-import { ModalHeader } from '~/ui/feedback/modal'
+import type { CategoryModel } from '~/models/category'
+import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
 
+import type { CategoryFormMode } from '../types/categories'
 import { getErrorMessage } from '../utils/errors'
 
 interface CategoryFormModalProps {
@@ -84,7 +85,7 @@ function CategoryFormModal(props: CategoryFormModalProps) {
           value={slug}
         />
       </div>
-      <div className="flex justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
+      <ModalFooter>
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
@@ -94,7 +95,7 @@ function CategoryFormModal(props: CategoryFormModalProps) {
           ) : null}
           {t('common.save')}
         </Button>
-      </div>
+      </ModalFooter>
     </form>
   )
 }

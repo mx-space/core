@@ -80,7 +80,7 @@ import type { TopicModel } from '~/models/topic'
 import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { Drawer } from '~/ui/feedback/drawer'
-import { Modal, ModalHeader } from '~/ui/feedback/modal'
+import { Modal, ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import {
   AsidePanel,
   ContentLayout,
@@ -2660,19 +2660,17 @@ function PageParseMarkdownDialog(props: {
           value={value}
         />
       </div>
-      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-        <p className="min-w-0 text-xs text-neutral-500 dark:text-neutral-400">
+      <ModalFooter>
+        <p className="mr-auto min-w-0 text-xs text-fg-muted">
           {t('write.parseMd.hint')}
         </p>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button onClick={() => setValue('')} type="button" variant="subtle">
-            {t('write.parseMd.reset')}
-          </Button>
-          <Button onClick={apply} type="button">
-            {t('write.parseMd.ok')}
-          </Button>
-        </div>
-      </div>
+        <Button onClick={() => setValue('')} type="button" variant="subtle">
+          {t('write.parseMd.reset')}
+        </Button>
+        <Button onClick={apply} type="button">
+          {t('write.parseMd.ok')}
+        </Button>
+      </ModalFooter>
     </Modal>
   )
 }

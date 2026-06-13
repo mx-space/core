@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import { useI18n } from '~/i18n'
-import { ModalHeader } from '~/ui/feedback/modal'
+import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 
@@ -42,12 +42,12 @@ function NoteMetaEditDialog(props: NoteMetaEditDialogProps) {
           value={value}
         />
       </div>
-      <div className="flex justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+      <ModalFooter>
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
         <Button type="submit">{t('common.save')}</Button>
-      </div>
+      </ModalFooter>
     </form>
   )
 }

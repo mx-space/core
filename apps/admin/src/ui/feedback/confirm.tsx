@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { useI18n } from '~/i18n'
-import { ModalTitle } from '~/ui/feedback/modal'
+import { ModalFooter, ModalTitle } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
@@ -34,7 +34,7 @@ function ConfirmDialog(props: ConfirmDialogProps) {
           {props.description}
         </div>
       ) : null}
-      <div className="flex justify-end gap-2 border-t border-border px-6 py-3">
+      <ModalFooter>
         <Button
           autoFocus
           onClick={() => modal.close(false)}
@@ -50,7 +50,7 @@ function ConfirmDialog(props: ConfirmDialogProps) {
         >
           {confirmText}
         </Button>
-      </div>
+      </ModalFooter>
     </div>
   )
 }

@@ -11,7 +11,7 @@ import type {
   MetaPresetField,
   MetaPresetScope,
 } from '~/models/meta-preset'
-import { Modal, ModalHeader } from '~/ui/feedback/modal'
+import { Modal, ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { CodeEditor } from '~/ui/primitives/code-editor'
@@ -854,14 +854,14 @@ function JsonEditorDialog(props: {
           value={value}
         />
       </div>
-      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+      <ModalFooter>
         <Button onClick={props.onClose} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
         <Button onClick={submit} type="button">
           {t('common.submit')}
         </Button>
-      </div>
+      </ModalFooter>
     </Modal>
   )
 }

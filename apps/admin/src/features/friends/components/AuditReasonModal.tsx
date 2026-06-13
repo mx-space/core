@@ -1,12 +1,12 @@
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { LinkModel } from '~/models/link'
 
 import { auditLinkWithReason } from '~/api/links'
 import { useI18n } from '~/i18n'
+import type { LinkModel } from '~/models/link'
 import { LinkState, LinkStateNameKeys } from '~/models/link'
-import { ModalHeader } from '~/ui/feedback/modal'
+import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { SelectField } from '~/ui/primitives/select'
@@ -59,7 +59,7 @@ function AuditReasonModal(props: AuditReasonModalProps) {
           value={reason}
         />
       </div>
-      <div className="flex items-center justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
+      <ModalFooter>
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
@@ -70,7 +70,7 @@ function AuditReasonModal(props: AuditReasonModalProps) {
         >
           {t('friends.audit.send')}
         </Button>
-      </div>
+      </ModalFooter>
     </div>
   )
 }

@@ -104,7 +104,8 @@ Tailwind classes:
 |---------|-------|------|----------|
 | Page title | `text-2xl` | 24px | Main page titles |
 | Section title | `text-xl` | 20px | Section headers |
-| Card/Modal title | `text-lg` | 18px | Card titles, modal headers |
+| Card title | `text-lg` | 18px | Card titles |
+| Modal header | `text-base` | 16px | Modal headers |
 | Secondary title | `text-base` | 16px | Sub-headings, stats |
 | Body text | `text-sm` | 14px | List items, form labels, buttons |
 | Metadata | `text-xs` | 12px | Timestamps, badges, descriptions |
