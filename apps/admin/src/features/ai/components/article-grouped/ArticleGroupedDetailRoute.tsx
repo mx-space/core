@@ -15,6 +15,7 @@ import { useArticleGroupedRouteContext } from './article-grouped-route-context'
 import { ArticleDetailEmptyState } from './ArticleDetailEmptyState'
 import { ArticleDetailPane } from './ArticleDetailPane'
 import { ArticleEditPanel } from './ArticleEditPanel'
+import { presentGeneratePrompt } from './GeneratePromptModal'
 import { useItemActions } from './useItemActions'
 
 export function ArticleGroupedDetailRoute<TItem>() {
@@ -25,7 +26,6 @@ export function ArticleGroupedDetailRoute<TItem>() {
   const { config } = ctx
 
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
-  const [generating, setGenerating] = useState(false)
 
   const detailQuery = useQuery({
     enabled: Boolean(id),
@@ -100,7 +100,6 @@ export function ArticleGroupedDetailRoute<TItem>() {
       toast.success(
         result.created ? t('ai.toast.taskCreated') : t('ai.toast.taskExists'),
       )
-      setGenerating(false)
       await ctx.invalidate()
     },
   })
@@ -126,6 +125,18 @@ export function ArticleGroupedDetailRoute<TItem>() {
     deleteMutation.mutate(config.getId(item))
   }
 
+  const handleGenerate = async () => {
+    if (!id) return
+    const result = await presentGeneratePrompt({
+      inlineEmpty: t(config.inlineEmptyKey, { kind: t(config.kindKey) }),
+      langLabel: t('ai.translation.langLabel'),
+      promptForLang: Boolean(config.generate.promptForLang),
+      title: t(config.generate.labelKey),
+    })
+    if (!result) return
+    await generateMutation.mutateAsync({ refId: id, lang: result.lang })
+  }
+
   const { keyboardActions, buildMenu } = useItemActions<TItem>({
     config,
     onEdit: (item) => setEditingItemId(config.getId(item)),
@@ -140,10 +151,7 @@ export function ArticleGroupedDetailRoute<TItem>() {
     )
   }, [detailItems, editingItemId, config])
 
-  const closeEditPanel = () => {
-    setEditingItemId(null)
-    setGenerating(false)
-  }
+  const closeEditPanel = () => setEditingItemId(null)
 
   if (!id || !detailArticle) {
     return (
@@ -159,13 +167,11 @@ export function ArticleGroupedDetailRoute<TItem>() {
       asideDefaultSize="70%"
       asideMaxSize="85%"
       asideMinSize="480px"
-      asideMobileTitle={
-        editingItem ? t(config.editTitleKey) : t(config.generate.labelKey)
-      }
+      asideMobileTitle={t(config.editTitleKey)}
       className="h-full"
       mainMinSize="280px"
       onCloseAside={closeEditPanel}
-      open={Boolean(editingItem) || generating}
+      open={Boolean(editingItem)}
     >
       <ArticleDetailPane<TItem>
         article={detailArticle}
@@ -177,36 +183,28 @@ export function ArticleGroupedDetailRoute<TItem>() {
         onBack={ctx.onBack}
         onDelete={(item) => void confirmAndDelete(item)}
         onEdit={(item) => setEditingItemId(config.getId(item))}
-        onGenerate={() => setGenerating(true)}
+        onGenerate={() => void handleGenerate()}
         onItemFocus={(item) => {
           if (editingItemId !== null) {
             setEditingItemId(config.getId(item))
           }
         }}
       />
-      <ContentLayoutSlot
-        active={Boolean(editingItem) || generating}
-        id="ai-article-edit"
-      >
-        <ArticleEditPanel<TItem>
-          config={config}
-          editingItem={editingItem}
-          generateSubmitting={generateMutation.isPending}
-          mode={editingItem ? 'edit' : 'generate'}
-          onClose={closeEditPanel}
-          onGenerate={async (lang) => {
-            if (!id) return
-            await generateMutation.mutateAsync({ refId: id, lang })
-          }}
-          onUpdate={async (next) => {
-            await updateMutation.mutateAsync({
-              id: config.getId(next),
-              next,
-            })
-          }}
-          selectedArticleId={id}
-          updateSubmitting={updateMutation.isPending}
-        />
+      <ContentLayoutSlot active={Boolean(editingItem)} id="ai-article-edit">
+        {editingItem ? (
+          <ArticleEditPanel<TItem>
+            config={config}
+            editingItem={editingItem}
+            onClose={closeEditPanel}
+            onUpdate={async (next) => {
+              await updateMutation.mutateAsync({
+                id: config.getId(next),
+                next,
+              })
+            }}
+            updateSubmitting={updateMutation.isPending}
+          />
+        ) : null}
       </ContentLayoutSlot>
     </ContentLayout>
   )

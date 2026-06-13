@@ -2,31 +2,26 @@ import { X } from 'lucide-react'
 
 import { useI18n } from '~/i18n'
 
-import { GeneratePromptBody } from './GeneratePromptBody'
 import type { ArticleGroupedConfig } from './types'
 
 interface ArticleEditPanelProps<TItem> {
   config: ArticleGroupedConfig<TItem>
-  mode: 'edit' | 'generate'
-  editingItem: TItem | null
-  selectedArticleId: string | null
-  generateSubmitting: boolean
+  editingItem: TItem
   updateSubmitting: boolean
   onClose: () => void
-  onGenerate: (lang?: string) => Promise<unknown>
   onUpdate: (next: TItem) => Promise<void>
 }
 
 export function ArticleEditPanel<TItem>(props: ArticleEditPanelProps<TItem>) {
   const { t } = useI18n()
-  const { config, mode } = props
-  const title =
-    mode === 'generate' ? t(config.generate.labelKey) : t(config.editTitleKey)
+  const { config } = props
 
   return (
     <section className="flex h-full min-h-0 flex-col bg-surface-card">
       <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-4">
-        <h3 className="truncate text-sm font-medium text-fg">{title}</h3>
+        <h3 className="truncate text-sm font-medium text-fg">
+          {t(config.editTitleKey)}
+        </h3>
         <button
           aria-label={t('ui.modal.closeAria')}
           className="inline-flex size-8 items-center justify-center rounded text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
@@ -37,27 +32,13 @@ export function ArticleEditPanel<TItem>(props: ArticleEditPanelProps<TItem>) {
         </button>
       </header>
       <div className="min-h-0 flex-1">
-        {mode === 'generate' && props.selectedArticleId ? (
-          <GeneratePromptBody
-            generateLabel={t(config.generate.labelKey)}
-            inlineEmpty={t(config.inlineEmptyKey, { kind: t(config.kindKey) })}
-            langLabel={t('ai.translation.langLabel')}
-            onCancel={props.onClose}
-            onSubmit={async ({ lang }) => {
-              await props.onGenerate(lang)
-            }}
-            promptForLang={Boolean(config.generate.promptForLang)}
-            submitting={props.generateSubmitting}
-          />
-        ) : mode === 'edit' && props.editingItem ? (
-          <config.EditDrawerBody
-            item={props.editingItem}
-            key={config.getId(props.editingItem)}
-            onCancel={props.onClose}
-            onSubmit={props.onUpdate}
-            submitting={props.updateSubmitting}
-          />
-        ) : null}
+        <config.EditDrawerBody
+          item={props.editingItem}
+          key={config.getId(props.editingItem)}
+          onCancel={props.onClose}
+          onSubmit={props.onUpdate}
+          submitting={props.updateSubmitting}
+        />
       </div>
     </section>
   )
