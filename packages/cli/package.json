@@ -1,7 +1,7 @@
 {
   "name": "@mx-space/cli",
   "version": "0.12.0",
-  "description": "Command line interface for mx-space (mx-core) — auth, content, configuration",
+  "description": "Command line interface for mx-space (mx-core) \u2014 auth, content, configuration",
   "keywords": [
     "mx-space",
     "mx-core",
@@ -64,9 +64,9 @@
     "@effect/cli": "0.75.2",
     "@effect/platform": "0.96.1",
     "@effect/platform-node": "0.107.0",
-    "@haklex/rich-headless": "0.26.5",
-    "@haklex/rich-litexml": "0.26.5",
-    "@haklex/rich-litexml-cli": "0.26.5",
+    "@haklex/rich-headless": "0.26.6",
+    "@haklex/rich-litexml": "0.26.6",
+    "@haklex/rich-litexml-cli": "0.26.6",
     "@lexical/headless": "^0.45.0",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/editor": "workspace:*",

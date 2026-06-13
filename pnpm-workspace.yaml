@@ -63,3 +63,4 @@ minimumReleaseAgeExclude:
   - code-inspector-plugin@1.5.4
   - jotai@2.20.1
   - nodemailer@8.0.11
+  - '@innei/react-tweet@3.4.3'
