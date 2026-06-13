@@ -31,7 +31,7 @@ import type { CSSProperties, FormEvent, ReactNode } from 'react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import {
   useBeforeUnload,
-  useLocation,
+  useBlocker,
   useNavigate,
   useSearchParams,
 } from 'react-router'
@@ -337,7 +337,6 @@ function WritePage(props: { kind: WriteKind }) {
   const config = getKindConfig(props.kind)
   const Icon = config.icon
   const queryClient = useQueryClient()
-  const location = useLocation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const id = searchParams.get('id') ?? ''
@@ -374,9 +373,6 @@ function WritePage(props: { kind: WriteKind }) {
     draftId: string
   } | null>(null)
   const appliedRouteDraftIdRef = useRef<string | null>(null)
-  const acceptedRouteRef = useRef({ pathname: '', route: '' })
-  const confirmedNavigationRouteRef = useRef('')
-  const isConfirmingNavRef = useRef(false)
   const draftDirtyRef = useRef(false)
   const lastSavedDraftFingerprintRef = useRef('')
   const latestDraftFingerprintRef = useRef('')
@@ -496,98 +492,23 @@ function WritePage(props: { kind: WriteKind }) {
     { capture: true },
   )
 
-  useEffect(() => {
-    const onClickCapture = (event: MouseEvent) => {
-      if (event.defaultPrevented) return
-      if (event.button !== 0) return
-      if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
-        return
-      if (!hasUnsavedDraftChanges()) return
-
-      const target = event.target
-      const anchor =
-        target instanceof Element
-          ? target.closest<HTMLAnchorElement>('a')
-          : null
-      if (!anchor) return
-      if (anchor.target && anchor.target !== '_self') return
-      if (anchor.hasAttribute('download')) return
-
-      const nextRoute = getHashRouterRoute(anchor.href)
-      if (!nextRoute) return
-      const nextPathname = getRoutePathname(nextRoute)
-      if (nextPathname === location.pathname) return
-
-      event.preventDefault()
-      event.stopPropagation()
-
-      if (isConfirmingNavRef.current) return
-      isConfirmingNavRef.current = true
-      void confirmDialog({
-        title: t('write.confirmLeave.title'),
-        description: t('write.confirmLeave.description'),
-        confirmText: t('common.leave'),
-      }).then((ok) => {
-        isConfirmingNavRef.current = false
-        if (!ok) return
-        confirmedNavigationRouteRef.current = nextRoute
-        navigate(nextRoute)
-      })
-    }
-
-    document.addEventListener('click', onClickCapture, true)
-    return () => document.removeEventListener('click', onClickCapture, true)
-  }, [hasDraftAutosaveContent, location.pathname, navigate, t])
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      hasUnsavedDraftChanges() &&
+      currentLocation.pathname !== nextLocation.pathname,
+  )
 
   useEffect(() => {
-    const currentRoute = `${location.pathname}${location.search}${location.hash}`
-    const acceptedRoute = acceptedRouteRef.current
-
-    if (!acceptedRoute.route) {
-      acceptedRouteRef.current = {
-        pathname: location.pathname,
-        route: currentRoute,
-      }
-      return
-    }
-
-    if (acceptedRoute.route === currentRoute) return
-
-    if (confirmedNavigationRouteRef.current === currentRoute) {
-      confirmedNavigationRouteRef.current = ''
-      acceptedRouteRef.current = {
-        pathname: location.pathname,
-        route: currentRoute,
-      }
-      return
-    }
-
-    if (
-      acceptedRoute.pathname !== location.pathname &&
-      hasUnsavedDraftChanges()
-    ) {
-      const targetRoute = currentRoute
-      navigate(acceptedRoute.route, { replace: true })
-      if (isConfirmingNavRef.current) return
-      isConfirmingNavRef.current = true
-      void confirmDialog({
-        title: t('write.confirmLeave.title'),
-        description: t('write.confirmLeave.description'),
-        confirmText: t('common.leave'),
-      }).then((ok) => {
-        isConfirmingNavRef.current = false
-        if (!ok) return
-        confirmedNavigationRouteRef.current = targetRoute
-        navigate(targetRoute)
-      })
-      return
-    }
-
-    acceptedRouteRef.current = {
-      pathname: location.pathname,
-      route: currentRoute,
-    }
-  }, [location.hash, location.pathname, location.search, navigate])
+    if (blocker.state !== 'blocked') return
+    void confirmDialog({
+      title: t('write.confirmLeave.title'),
+      description: t('write.confirmLeave.description'),
+      confirmText: t('common.leave'),
+    }).then((ok) => {
+      if (ok) blocker.proceed()
+      else blocker.reset()
+    })
+  }, [blocker, t])
 
   useEffect(() => {
     if (!detailQuery.data) {
@@ -2788,22 +2709,6 @@ function optionalString(value: unknown) {
   if (value == null) return undefined
 
   return String(value)
-}
-
-function getHashRouterRoute(href: string) {
-  try {
-    const url = new URL(href, window.location.href)
-    if (url.origin !== window.location.origin) return ''
-    if (!url.hash.startsWith('#/')) return ''
-
-    return url.hash.slice(1) || '/'
-  } catch {
-    return ''
-  }
-}
-
-function getRoutePathname(route: string) {
-  return route.split(/[#?]/, 1)[0] || '/'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
