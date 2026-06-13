@@ -24,6 +24,7 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
+  Bug,
   ChevronDown,
   Code,
   EyeOff,
@@ -48,6 +49,8 @@ import { useMemo } from 'react'
 
 import { DropdownMenu } from '~/ui/overlay/dropdown-menu'
 import { cn } from '~/utils/cn'
+
+import { presentEditorDebugDialog } from './EditorDebugDialog'
 
 const MAX_INLINE_INSERT_ITEMS = 5
 
@@ -255,6 +258,20 @@ export function EditorToolbar(props: { className?: string }) {
           ) : null}
         </>
       ) : null}
+
+      <div aria-hidden="true" className="ml-auto" />
+      <button
+        aria-label="调试 · 导出 Editor State"
+        className="focus-visible:outline-hidden inline-flex size-7 shrink-0 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-100"
+        onClick={() => {
+          const json = JSON.stringify(editor.getEditorState().toJSON(), null, 2)
+          presentEditorDebugDialog(json)
+        }}
+        title="调试 · 导出 Editor State"
+        type="button"
+      >
+        <Bug aria-hidden="true" className="size-3.5" />
+      </button>
     </div>
   )
 }
