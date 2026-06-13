@@ -3158,7 +3158,8 @@ function saveWrite(
       contentFormat: state.contentFormat,
       copyright: state.copyright,
       draftId,
-      images: buildWriteImages(state),
+      images:
+        state.contentFormat === 'lexical' ? undefined : buildWriteImages(state),
       isPublished: state.isPublished,
       meta: state.meta,
       pin: state.pin ? new Date().toISOString() : null,
@@ -3184,7 +3185,8 @@ function saveWrite(
       contentFormat: state.contentFormat,
       coordinates: parseCoordinates(state),
       draftId,
-      images: buildWriteImages(state),
+      images:
+        state.contentFormat === 'lexical' ? undefined : buildWriteImages(state),
       isPublished: state.isPublished,
       location: state.location || null,
       meta: state.meta,
@@ -3207,7 +3209,8 @@ function saveWrite(
     content: state.contentFormat === 'lexical' ? state.content : undefined,
     contentFormat: state.contentFormat,
     draftId,
-    images: buildWriteImages(state),
+    images:
+      state.contentFormat === 'lexical' ? undefined : buildWriteImages(state),
     meta: state.meta,
     order: state.order ? Number(state.order) : undefined,
     slug: state.slug,
@@ -3232,7 +3235,8 @@ function toDraftData(
   const base = {
     content: state.contentFormat === 'lexical' ? state.content : undefined,
     contentFormat: state.contentFormat,
-    images: buildWriteImages(state),
+    images:
+      state.contentFormat === 'lexical' ? undefined : buildWriteImages(state),
     meta: state.meta,
     refId,
     refType: draftRefTypeByKind[kind],
