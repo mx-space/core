@@ -1,5 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
-import { Loader2, Sparkles } from 'lucide-react'
 import type { CSSProperties, PropsWithChildren } from 'react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
@@ -20,7 +18,6 @@ import {
 } from '~/ui/layout/sidebar-layout'
 import { cn } from '~/utils/cn'
 
-import { AITaskStatus, getTasks } from './api/tasks'
 import { useI18n } from './i18n'
 
 export function AdminShell(props: PropsWithChildren) {
@@ -37,34 +34,6 @@ export function AdminShell(props: PropsWithChildren) {
     const id = requestAnimationFrame(() => setSidebarTransitionsEnabled(true))
     return () => cancelAnimationFrame(id)
   }, [])
-  const pendingAiTasksQuery = useQuery({
-    queryFn: () =>
-      getTasks({
-        page: 1,
-        scope: 'ai',
-        size: 1,
-        status: AITaskStatus.Pending,
-      }),
-    queryKey: ['shell', 'ai-tasks', AITaskStatus.Pending],
-    refetchInterval: 5000,
-  })
-  const runningAiTasksQuery = useQuery({
-    queryFn: () =>
-      getTasks({
-        page: 1,
-        scope: 'ai',
-        size: 1,
-        status: AITaskStatus.Running,
-      }),
-    queryKey: ['shell', 'ai-tasks', AITaskStatus.Running],
-    refetchInterval: 5000,
-  })
-  const activeAiTaskCount =
-    (pendingAiTasksQuery.data?.total ?? 0) +
-    (runningAiTasksQuery.data?.total ?? 0)
-  const isFetchingAiTaskCount =
-    pendingAiTasksQuery.isFetching || runningAiTasksQuery.isFetching
-
   // Sidebar HJKL / arrow-key navigation. One binding is enough — the hook
   // looks up the scope's DOM element at fire time, so whichever sidebar
   // (desktop aside or mobile Drawer) is currently mounted handles the keys.
@@ -135,17 +104,6 @@ export function AdminShell(props: PropsWithChildren) {
         <section className="relative flex h-screen min-h-0 min-w-0 flex-col bg-background">
           <div className="relative min-h-0 flex-1 overflow-hidden">
             {props.children}
-            {activeAiTaskCount > 0 ? (
-              <AiTaskFloatingButton
-                activeCount={activeAiTaskCount}
-                fetching={isFetchingAiTaskCount}
-                onClick={() => navigate('/tasks?scope=ai')}
-                title={t('shell.aiTask.title')}
-                ariaLabel={t('shell.aiTask.ariaLabel', {
-                  count: activeAiTaskCount,
-                })}
-              />
-            ) : null}
           </div>
         </section>
 
@@ -179,36 +137,4 @@ function toggleFocusedNavItem(event: KeyboardEvent) {
   if (!path) return
   event.preventDefault()
   useSidebarExpandStore.getState().toggle(path)
-}
-
-function AiTaskFloatingButton(props: {
-  activeCount: number
-  fetching: boolean
-  onClick: () => void
-  title: string
-  ariaLabel: string
-}) {
-  return (
-    <button
-      aria-label={props.ariaLabel}
-      className="outline-hidden absolute bottom-4 right-4 z-30 inline-flex h-10 items-center gap-2 rounded-full border border-neutral-950 bg-neutral-950 px-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-[var(--color-primary-shallow)] dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-neutral-200"
-      onClick={props.onClick}
-      title={props.title}
-      type="button"
-    >
-      <span className="relative inline-flex size-4 items-center justify-center">
-        <Sparkles aria-hidden="true" className="size-4" />
-        {props.fetching ? (
-          <Loader2
-            aria-hidden="true"
-            className="absolute -right-1 -top-1 size-2.5 animate-spin"
-          />
-        ) : null}
-      </span>
-      <span>{props.title}</span>
-      <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-xs font-semibold tabular-nums text-neutral-950 dark:bg-neutral-950 dark:text-white">
-        {props.activeCount > 99 ? '99+' : props.activeCount}
-      </span>
-    </button>
-  )
 }
