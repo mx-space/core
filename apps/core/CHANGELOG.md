@@ -1,9 +1,11 @@
-## [13.10.6](https://github.com/mx-space/core/compare/v13.10.5...v13.10.6) (2026-06-13)
+## [13.10.7](https://github.com/mx-space/core/compare/v13.10.6...v13.10.7) (2026-06-14)
 
 
 ### Bug Fixes
 
-* **admin:** bump @haklex/* to 0.26.2 to fix rich-ext-dynamic style import ([515b669](https://github.com/mx-space/core/commit/515b669491f3a01da6b2dcdf86d8081f2b4f9d12))
+* **core:** honor search query on grouped AI translations endpoint ([d0d9f8c](https://github.com/mx-space/core/commit/d0d9f8cb8785ffbe351ca7c3dc9688509cbef2aa))
+
+## [13.10.6](https://github.com/mx-space/core/compare/v13.10.5...v13.10.6) (2026-06-13)
 
 ## [13.10.5](https://github.com/mx-space/core/compare/v13.10.4...v13.10.5) (2026-06-12)
 
