@@ -298,8 +298,8 @@ function ToolbarIconButton(props: {
       disabled={props.disabled}
       onMouseDown={(event) => {
         event.preventDefault()
-        props.onClick()
       }}
+      onClick={props.onClick}
       title={
         props.shortcut ? `${props.label} (${props.shortcut})` : props.label
       }
