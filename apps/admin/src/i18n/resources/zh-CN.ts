@@ -458,6 +458,18 @@ export const zhCN = {
   'common.update': '更新',
   'common.view': '查看',
 
+  'imageUploadPrivacy.dialog.description':
+    '这张图片包含 GPS 位置信息。请选择在上传前保留原始元数据，或先移除定位信息。',
+  'imageUploadPrivacy.dialog.coordinatesTitle': '图片中的 GPS 坐标',
+  'imageUploadPrivacy.dialog.keepGps': '保留 GPS',
+  'imageUploadPrivacy.dialog.openMap': '查看地图',
+  'imageUploadPrivacy.dialog.safetyDescription':
+    '移除 GPS 会在上传前仅重写定位元数据；在 ExifTool 能安全保留时，其他相机元数据会继续保留。',
+  'imageUploadPrivacy.dialog.safetyTitle': '隐私建议',
+  'imageUploadPrivacy.dialog.stripGps': '移除 GPS',
+  'imageUploadPrivacy.dialog.title': '检测到 GPS 元数据',
+  'imageUploadPrivacy.toast.stripFailed': '无法移除 GPS 元数据，图片未上传。',
+
   'commandPalette.empty': '无匹配项',
   'commandPalette.hint': '打开命令面板',
   'commandPalette.placeholder': '搜索命令或页面…',

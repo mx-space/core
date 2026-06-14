@@ -460,7 +460,7 @@ const CommandRoot = React.forwardRef<HTMLDivElement, CommandProps>(
     function updateSelectedByItem(change: 1 | -1) {
       const selected = getSelectedItem()
       const items = getValidItems()
-      const index = items.indexOf(selected)
+      const index = selected ? items.indexOf(selected) : -1
 
       let newSelected = items[index + change] as HTMLElement | undefined
 

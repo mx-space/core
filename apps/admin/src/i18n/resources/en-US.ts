@@ -472,6 +472,19 @@ export const enUS = {
   'common.update': 'Update',
   'common.view': 'View',
 
+  'imageUploadPrivacy.dialog.description':
+    'This image contains GPS location metadata. Choose whether to preserve the original metadata or remove the location information before upload.',
+  'imageUploadPrivacy.dialog.coordinatesTitle': 'GPS coordinates in this image',
+  'imageUploadPrivacy.dialog.keepGps': 'Keep GPS',
+  'imageUploadPrivacy.dialog.openMap': 'Open map',
+  'imageUploadPrivacy.dialog.safetyDescription':
+    'GPS removal rewrites only the location metadata before upload. Other camera metadata is preserved when ExifTool can safely keep it.',
+  'imageUploadPrivacy.dialog.safetyTitle': 'Privacy recommendation',
+  'imageUploadPrivacy.dialog.stripGps': 'Remove GPS',
+  'imageUploadPrivacy.dialog.title': 'GPS metadata detected',
+  'imageUploadPrivacy.toast.stripFailed':
+    'Failed to remove GPS metadata. The image was not uploaded.',
+
   'commandPalette.empty': 'No matches',
   'commandPalette.hint': 'Open command palette',
   'commandPalette.placeholder': 'Search commands or pages…',

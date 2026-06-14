@@ -1,15 +1,16 @@
-import { toast } from 'sonner'
 import type { EditorView } from '@codemirror/view'
-import type { StoreSetter } from '~/store/types'
-import type { EditorStore } from './store'
+import { toast } from 'sonner'
 
 import { uploadFile } from '~/api/files'
+import { prepareImageFileForUpload } from '~/lib/image-upload-privacy'
+import type { StoreSetter } from '~/store/types'
 
 import {
   addPendingUpload,
   removePendingUpload,
   setPendingUploadError,
 } from '../upload-store'
+import type { EditorStore } from './store'
 
 type Setter = StoreSetter<EditorStore>
 
@@ -56,12 +57,15 @@ export class EditorStoreActionImpl {
     const view = this.#get().editorView
     if (!view) return
 
+    const preparedFile = await prepareImageFileForUpload(file)
+    if (!preparedFile) return
+
     const uploadId = generateUploadId()
     const placeholder = `![上传中...](${uploadId})`
 
     try {
-      const base64 = await readFileAsBase64(file)
-      addPendingUpload(uploadId, base64, file.name)
+      const base64 = await readFileAsBase64(preparedFile)
+      addPendingUpload(uploadId, base64, preparedFile.name)
     } catch {
       /* preview unavailable */
     }
@@ -80,7 +84,7 @@ export class EditorStoreActionImpl {
     })
 
     try {
-      const result = await uploadFile(file, 'image')
+      const result = await uploadFile(preparedFile, 'image')
 
       const currentDoc = view.state.doc.toString()
       const placeholderIndex = currentDoc.indexOf(placeholder)

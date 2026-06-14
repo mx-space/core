@@ -68,6 +68,7 @@ import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
 import { translate } from '~/i18n/translate'
 import type { TranslationKey } from '~/i18n/types'
+import { prepareImageFileForUpload } from '~/lib/image-upload-privacy'
 import type { Amap, AMapSearch } from '~/models/amap'
 import type { Image as ImageModel } from '~/models/base'
 import type { CategoryModel } from '~/models/category'
@@ -3364,7 +3365,10 @@ function RichWriteSurface(props: {
     debounceMs: 250,
     editorStyle,
     imageUpload: async (file) => {
-      const result = await uploadFile(file, 'image')
+      const preparedFile = await prepareImageFileForUpload(file)
+      if (!preparedFile) throw new Error('Image upload canceled')
+
+      const result = await uploadFile(preparedFile, 'image')
       return { src: result.url }
     },
     trackUpload: async (file) => {
