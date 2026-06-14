@@ -81,7 +81,7 @@ jobs:
       REDISMS_DISABLE_POSTINSTALL: 1
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: mx
           POSTGRES_PASSWORD: mx
@@ -131,7 +131,7 @@ jobs:
         shard: [1, 2, 3]
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: mx
           POSTGRES_PASSWORD: mx
