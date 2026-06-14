@@ -6,6 +6,7 @@ import { checkLogged } from '~/api/auth'
 import { useI18n } from '~/i18n'
 import { AdminShell } from '~/shell'
 import { SocketBridge } from '~/socket/SocketBridge'
+import { CommandPaletteProvider } from '~/ui/command-palette'
 import { KeyboardShortcutsProvider } from '~/ui/keyboard-shortcut-overlay'
 
 export function ProtectedLayout() {
@@ -38,12 +39,14 @@ export function ProtectedLayout() {
 
   return (
     <KeyboardShortcutsProvider>
-      <AdminShell>
-        <SocketBridge />
-        <Suspense fallback={<ShellContentLoader />}>
-          <Outlet />
-        </Suspense>
-      </AdminShell>
+      <CommandPaletteProvider>
+        <AdminShell>
+          <SocketBridge />
+          <Suspense fallback={<ShellContentLoader />}>
+            <Outlet />
+          </Suspense>
+        </AdminShell>
+      </CommandPaletteProvider>
     </KeyboardShortcutsProvider>
   )
 }

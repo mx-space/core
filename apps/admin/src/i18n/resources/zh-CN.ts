@@ -458,6 +458,11 @@ export const zhCN = {
   'common.update': '更新',
   'common.view': '查看',
 
+  'commandPalette.empty': '无匹配项',
+  'commandPalette.hint': '打开命令面板',
+  'commandPalette.placeholder': '搜索命令或页面…',
+  'commandPalette.title': '命令面板',
+
   'comments.action.backToList': '返回评论列表',
   'comments.action.bulkDelete': '删除',
   'comments.action.bulkMarkJunk': '标记垃圾',

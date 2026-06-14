@@ -472,6 +472,11 @@ export const enUS = {
   'common.update': 'Update',
   'common.view': 'View',
 
+  'commandPalette.empty': 'No matches',
+  'commandPalette.hint': 'Open command palette',
+  'commandPalette.placeholder': 'Search commands or pages…',
+  'commandPalette.title': 'Command palette',
+
   'comments.action.backToList': 'Back to comment list',
   'comments.action.bulkDelete': 'Delete',
   'comments.action.bulkMarkJunk': 'Junk',
