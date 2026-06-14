@@ -23,7 +23,7 @@ overrides:
   kysely: 0.28.17
   mongodb: ~7.3.0
   pino: ./external/pino
-  rolldown: 1.1.0
+  rolldown: 1.1.1
   semver: 7.8.4
   typescript: 6.0.3
   whatwg-url: 16.0.1
