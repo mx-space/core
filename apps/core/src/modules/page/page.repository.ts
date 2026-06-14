@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { asc, desc, eq, inArray, sql } from 'drizzle-orm'
+import { asc, desc, eq, ilike, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { pages } from '~/database/schema'
@@ -44,6 +44,14 @@ export class PageRepository extends BaseRepository {
       .from(pages)
       .orderBy(asc(pages.order), asc(pages.createdAt))
     return rows.map(mapRow)
+  }
+
+  async findIdsByTitle(search: string): Promise<EntityId[]> {
+    const rows = await this.db
+      .select({ id: pages.id })
+      .from(pages)
+      .where(ilike(pages.title, `%${search}%`))
+    return rows.map((row) => toEntityId(row.id) as EntityId)
   }
 
   async list(page = 1, size = 10): Promise<PaginationResult<PageRow>> {

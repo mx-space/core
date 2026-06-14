@@ -115,14 +115,15 @@ export class DatabaseService {
     return this.noteRepository.findOneByDateAndSlug(start, end, slug)
   }
 
-  public async findPostAndNoteIdsByTitle(search: string): Promise<string[]> {
+  public async findArticleIdsByTitle(search: string): Promise<string[]> {
     const normalizedSearch = search.trim()
     if (!normalizedSearch) return []
-    const [posts, notes] = await Promise.all([
+    const [posts, notes, pages] = await Promise.all([
       this.postRepository.findIdsByTitle(normalizedSearch),
       this.noteRepository.findIdsByTitle(normalizedSearch),
+      this.pageRepository.findIdsByTitle(normalizedSearch),
     ])
-    return [...new Set([...posts, ...notes])]
+    return [...new Set([...posts, ...notes, ...pages])]
   }
 
   public async findAllArticlesForTranslation(): Promise<{

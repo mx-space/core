@@ -33,6 +33,7 @@ export class UpdateTranslationDto extends createZodDto(
 export const GetTranslationsGroupedQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   size: z.coerce.number().int().min(1).max(50).default(20),
+  search: z.string().optional(),
 })
 
 export class GetTranslationsGroupedQueryDto extends createZodDto(

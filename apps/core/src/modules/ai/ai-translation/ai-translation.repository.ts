@@ -159,6 +159,7 @@ export class AiTranslationRepository extends BaseRepository {
   async groupByRefIdPaginated(
     page = 1,
     size = 20,
+    refIds?: Array<EntityId | string>,
   ): Promise<
     PaginationResult<{
       refId: EntityId
@@ -171,6 +172,12 @@ export class AiTranslationRepository extends BaseRepository {
     const offset = (page - 1) * size
     const latestCreatedAtCol = sql<Date>`max(${aiTranslations.createdAt})`
     const countCol = sql<number>`count(*)::int`
+    const where = refIds?.length
+      ? inArray(
+          aiTranslations.refId,
+          refIds.map((id) => parseEntityId(id)),
+        )
+      : undefined
     const [rows, [{ total }]] = await Promise.all([
       this.db
         .select({
@@ -179,6 +186,7 @@ export class AiTranslationRepository extends BaseRepository {
           translationCount: countCol,
         })
         .from(aiTranslations)
+        .where(where)
         .groupBy(aiTranslations.refId)
         .orderBy(desc(latestCreatedAtCol))
         .limit(size)
@@ -187,7 +195,8 @@ export class AiTranslationRepository extends BaseRepository {
         .select({
           total: sql<number>`count(distinct ${aiTranslations.refId})::int`,
         })
-        .from(aiTranslations),
+        .from(aiTranslations)
+        .where(where),
     ])
     return {
       data: rows.map((row) => ({

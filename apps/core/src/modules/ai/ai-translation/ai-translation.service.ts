@@ -1008,10 +1008,22 @@ export class AiTranslationService
 
   async getAllTranslationsGrouped(query: GetTranslationsGroupedQueryInput) {
     const { page, size } = query
+    const search = query.search?.trim()
+    const searchableRefIds = search
+      ? await this.databaseService.findArticleIdsByTitle(search)
+      : undefined
+
+    if (search && searchableRefIds?.length === 0) {
+      return {
+        data: [],
+        pagination: paginationOf(0, page, size),
+      }
+    }
 
     const grouped = await this.aiTranslationRepository.groupByRefIdPaginated(
       page,
       size,
+      searchableRefIds,
     )
 
     if (grouped.data.length === 0) {

@@ -437,7 +437,7 @@ export class AiInsightsService implements OnModuleInit {
     const { page, size } = query
     const search = query.search?.trim()
     const searchableRefIds = search
-      ? await this.databaseService.findPostAndNoteIdsByTitle(search)
+      ? await this.databaseService.findArticleIdsByTitle(search)
       : undefined
 
     if (search && searchableRefIds?.length === 0) {
