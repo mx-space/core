@@ -177,6 +177,7 @@ export const extractId = (res: unknown): string | undefined => {
   const r = res as Record<string, unknown>
   if (typeof r.id === 'string') return r.id
   if (typeof r._id === 'string') return r._id
+  if (r.data && typeof r.data === 'object') return extractId(r.data)
   return undefined
 }
 

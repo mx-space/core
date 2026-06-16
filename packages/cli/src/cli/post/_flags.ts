@@ -133,11 +133,16 @@ export const toPostFlagInputs = (
   file: unwrap(opts.file),
 })
 
-/** Extract the id from a server response — handles both `id` and `_id`. */
+/**
+ * Extract the id from a server response — handles both `id` and `_id`,
+ * and unwraps the outer `data` envelope mx-core wraps single-object
+ * responses with (so `--open` works after `post create`).
+ */
 export const extractId = (res: unknown): string | undefined => {
   if (!res || typeof res !== 'object') return undefined
   const r = res as Record<string, unknown>
   if (typeof r.id === 'string') return r.id
   if (typeof r._id === 'string') return r._id
+  if (r.data && typeof r.data === 'object') return extractId(r.data)
   return undefined
 }
