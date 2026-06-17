@@ -193,6 +193,29 @@ describe('PostController — skill attachment (getByCateAndSlug)', () => {
       expect(body.data.skills).toBeUndefined()
     })
   })
+
+  describe('meta.skillIds case transform bypass', () => {
+    beforeEach(() => {
+      currentPost = makePost({
+        slug: SLUG,
+        meta: { skillIds: ['pub-1', 'priv-2'] },
+      })
+      skillsOverride = null
+    })
+
+    it('meta.skillIds preserved as camelCase (not skill_ids) on wire', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `/posts/${CATEGORY}/${SLUG}`,
+        headers: authPassHeader,
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = JSON.parse(res.body)
+      expect(body.data.meta.skillIds).toEqual(['pub-1', 'priv-2'])
+      expect(body.data.meta.skill_ids).toBeUndefined()
+    })
+  })
 })
 
 describe('PostController — skill attachment (getById)', () => {
