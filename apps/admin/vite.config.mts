@@ -219,6 +219,23 @@ export default ({ mode }) => {
     server: {
       // https: true,
       port: 9528,
+      warmup: {
+        clientFiles: isDev
+          ? [
+              './src/main.tsx',
+              './src/App.tsx',
+              './src/shell.tsx',
+              './src/router.tsx',
+              './src/layouts/protected-layout.tsx',
+              './src/views/dashboard/page.tsx',
+              './src/views/(content)/posts/page.tsx',
+              './src/views/(content)/notes/page.tsx',
+              './src/views/(content)/pages/page.tsx',
+              './src/views/(content)/drafts/page.tsx',
+              './src/views/(community)/comments/page.tsx',
+            ]
+          : [],
+      },
     },
     oxc: {
       jsx: {
