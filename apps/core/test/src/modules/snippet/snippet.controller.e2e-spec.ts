@@ -2,11 +2,15 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { AppException } from '~/common/errors/exception.types'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
+import { SnippetType } from '~/modules/snippet/snippet.schema'
+
+const skillRow = { id: '2', type: SnippetType.Skill }
+const jsonRow = { id: '1', type: SnippetType.JSON }
 
 const createController = () => {
   const repository = {
     list: vi.fn().mockResolvedValue({
-      data: [{ id: '1' }],
+      data: [jsonRow],
       pagination: {
         currentPage: 1,
         totalPage: 1,
@@ -58,7 +62,52 @@ describe('SnippetController', () => {
       size: 10,
     })
 
-    expect(service.transformLeanSnippetList).toHaveBeenCalledWith([{ id: '1' }])
+    expect(service.transformLeanSnippetList).toHaveBeenCalledWith([jsonRow])
+  })
+
+  it('passes type=skill to repository.list', async () => {
+    const { controller, repository } = createController()
+    repository.list.mockResolvedValue({
+      data: [skillRow],
+      pagination: {
+        currentPage: 1,
+        totalPage: 1,
+        total: 1,
+        size: 10,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    })
+
+    await controller.getList({
+      page: 1,
+      size: 10,
+      type: SnippetType.Skill,
+    } as any)
+    expect(repository.list).toHaveBeenCalledWith(1, 10, SnippetType.Skill)
+  })
+
+  it('passes type=json to repository.list and excludes Skill rows', async () => {
+    const { controller, repository } = createController()
+    repository.list.mockResolvedValue({
+      data: [jsonRow],
+      pagination: {
+        currentPage: 1,
+        totalPage: 1,
+        total: 1,
+        size: 10,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    })
+
+    const result = await controller.getList({
+      page: 1,
+      size: 10,
+      type: SnippetType.JSON,
+    } as any)
+    expect(repository.list).toHaveBeenCalledWith(1, 10, SnippetType.JSON)
+    expect(result.data.every((r: any) => r !== SnippetType.Skill)).toBe(true)
   })
 
   it('rejects the removed aggregate endpoint in PG mode', async () => {

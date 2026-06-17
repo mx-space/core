@@ -243,18 +243,27 @@ export class SnippetRepository extends BaseRepository {
     }))
   }
 
-  async list(page = 1, size = 20): Promise<PaginationResult<SnippetRow>> {
+  async list(
+    page = 1,
+    size = 20,
+    type?: SnippetType,
+  ): Promise<PaginationResult<SnippetRow>> {
     page = Math.max(1, page)
     size = Math.min(100, Math.max(1, size))
     const offset = (page - 1) * size
+    const where = type ? eq(snippets.type, type) : undefined
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
         .from(snippets)
+        .where(where)
         .orderBy(asc(snippets.reference), desc(snippets.createdAt))
         .limit(size)
         .offset(offset),
-      this.db.select({ count: sql<number>`count(*)::int` }).from(snippets),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(snippets)
+        .where(where),
     ])
     return {
       data: rows.map(mapRow),
