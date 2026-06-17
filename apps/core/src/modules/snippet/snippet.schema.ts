@@ -79,7 +79,7 @@ export const SnippetMoreSchema = z.object({
 export class SnippetMoreDto extends createZodDto(SnippetMoreSchema) {}
 
 export const SnippetListSchema = BasicPagerSchema.extend({
-  type: z.nativeEnum(SnippetType).optional(),
+  type: z.enum(SnippetType).optional(),
 })
 
 export class SnippetListDto extends createZodDto(SnippetListSchema) {}
