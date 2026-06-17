@@ -182,6 +182,10 @@ export const renderRootHelp = (data: RootHelpData): string => {
   const lines: string[] = [
     data.description,
     '',
+    '## For AI agents — read the bundled skill first',
+    '',
+    `Run \`${data.programName} skill\` to list every bundled chapter (auth, content authoring, command syntax, AI artifacts, output modes, safety). \`${data.programName} skill get <slug>\` prints one chapter as raw markdown; \`${data.programName} skill all\` concatenates everything for a single-shot context injection. Pass \`--output llm\` for raw markdown without ANSI.`,
+    '',
     '## Usage',
     '',
     `    ${data.programName} [global-options] <command> [command-options] [args]`,
