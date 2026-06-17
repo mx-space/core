@@ -282,7 +282,7 @@ export class SnippetService {
     description: string
     rest: Record<string, unknown>
   } {
-    const match = raw.match(/^---\r?\n(.*?)\r?\n---\r?\n/s)
+    const match = raw.match(/^---[\t ]*\r?\n(.*?)\r?\n---[\t ]*\r?\n/s)
     if (!match) {
       throw createAppException(AppErrorCode.SNIPPET_SKILL_INVALID_FRONTMATTER)
     }
