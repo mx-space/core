@@ -48,8 +48,18 @@ export function SkillFrontmatterPreview({ form }: { form: CreateSnippetData }) {
           <p className="text-xs text-fg-muted">
             {t('snippets.editor.skill.description')}
           </p>
-          {!result.ok || result.description === undefined ? (
+          {!result.ok || result.name === undefined ? (
             <p className="text-sm text-fg-subtle">—</p>
+          ) : !result.description ? (
+            <div>
+              <span className="flex items-center gap-1 text-sm text-fg">
+                <X className="size-4 shrink-0 text-red-600 dark:text-red-400" />
+                —
+              </span>
+              <p className="mt-0.5 text-xs text-red-600 dark:text-red-400">
+                {t('snippets.editor.skill.descriptionRequired')}
+              </p>
+            </div>
           ) : (
             <p className="truncate text-sm text-fg">{result.description}</p>
           )}

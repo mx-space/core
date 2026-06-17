@@ -2273,6 +2273,8 @@ export const enUS = {
   'snippets.editor.skill.name': 'Name',
   'snippets.editor.skill.nameMismatch':
     'Frontmatter `name` must equal `{value}`.',
+  'snippets.editor.skill.descriptionRequired':
+    'frontmatter `description` is required',
   'snippets.editor.skill.parseError': 'Cannot parse frontmatter',
   'snippets.editor.skill.unknownKeys': 'Other keys',
   'snippets.editor.unnamed': 'Untitled snippet',

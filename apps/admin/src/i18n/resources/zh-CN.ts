@@ -2164,6 +2164,8 @@ export const zhCN = {
   'snippets.editor.skill.name': '名称',
   'snippets.editor.skill.nameMismatch':
     'Frontmatter `name` 须与 `{value}` 相等。',
+  'snippets.editor.skill.descriptionRequired':
+    'frontmatter `description` 为必填项',
   'snippets.editor.skill.parseError': '无法解析 frontmatter',
   'snippets.editor.skill.unknownKeys': '其他键',
   'snippets.editor.unnamed': '未命名片段',
