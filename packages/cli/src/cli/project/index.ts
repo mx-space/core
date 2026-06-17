@@ -12,6 +12,7 @@ import { viewCmd } from './view-cmd'
 const help = registerCommandHelp({
   name: 'project',
   description: 'manage portfolio projects',
+  skillChapter: 'commands-project',
   verbs: [
     {
       name: 'list',

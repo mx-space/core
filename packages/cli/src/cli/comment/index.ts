@@ -12,6 +12,7 @@ import { unread } from './unread'
 const help = registerCommandHelp({
   name: 'comment',
   description: 'list and moderate comments',
+  skillChapter: 'commands-comment',
   verbs: [
     {
       name: 'list',

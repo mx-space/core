@@ -10,6 +10,7 @@ import { update } from './update'
 const help = registerCommandHelp({
   name: 'topic',
   description: 'manage topics',
+  skillChapter: 'commands-topic',
   verbs: [
     { name: 'list', description: 'list topics' },
     { name: 'get', args: ['<slugOrId>'], description: 'show a single topic' },

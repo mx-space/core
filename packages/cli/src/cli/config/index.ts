@@ -9,6 +9,7 @@ import { set } from './set'
 const help = registerCommandHelp({
   name: 'config',
   description: 'manage server options',
+  skillChapter: 'commands-config',
   verbs: [
     { name: 'list', description: 'list all server options' },
     { name: 'get', args: ['<key>'], description: 'read one server option' },

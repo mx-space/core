@@ -24,15 +24,18 @@
 
 State map: `unread=0`, `read=1`, `junk=2`. Routes single-id verbs through the server's batch endpoints (`PATCH /comments/batch/state`, `DELETE /comments/batch`) for one unified path.
 
-## v2 — AI
+## Shipped in v0.13
 
-> **Note (v0.3):** Service interface placeholders for AI, Backup, and Cache are reserved in `src/services/{Ai,Backup,Cache}.ts` and threaded through the layer composition. Implementation is pending.
+- `mxs ai` — full management surface for AI artifacts.
+  - `mxs ai summary {regen,list,get,by-article,edit,delete}`
+  - `mxs ai translate {run,list,get,by-article,languages,edit,delete}`
+  - `mxs ai translate entries {list,generate,edit,delete}`
+  - `mxs ai insights {refresh,list,get,by-article,edit,delete}`
+  - Generate verbs enqueue a task on the server and poll `GET /tasks/:id` until terminal; `--no-wait` returns the `taskId` immediately. Dedup-aware: `created: false` joins the in-flight task.
 
-- AI module commands
-  - `mxs ai summary regen <id>`
-  - `mxs ai translate <id> --to <locale>`
-  - `mxs ai insights refresh`
-  - `mxs ai tokens`
+## v2 — AI tokens / usage
+
+- `mxs ai tokens` — aggregate `totalCost` and `totalTokens` across recent AI tasks. Pending a final decision on client-side aggregation vs. a dedicated `/ai/usage` endpoint on the server.
 
 ## v3
 
