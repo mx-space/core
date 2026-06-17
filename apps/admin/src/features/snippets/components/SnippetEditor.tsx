@@ -31,6 +31,7 @@ import {
   normalizeSnippet,
   prepareSnippetPayload,
 } from '../utils/snippets'
+import { SkillFrontmatterPreview } from './SkillFrontmatterPreview'
 import { SnippetMetaPopover } from './SnippetMetaPopover'
 
 export function SnippetEditor(props: {
@@ -87,6 +88,7 @@ export function SnippetEditor(props: {
   const editSnippet =
     props.mode === 'edit' ? (props.initialValue as SnippetModel) : null
   const isFunction = form.type === SnippetType.Function
+  const isSkill = form.type === SnippetType.Skill
   const isBuiltInFunction = Boolean(editSnippet?.builtIn && isFunction)
   const typeDisabled = Boolean(
     editSnippet && editSnippet.type === SnippetType.Function,
@@ -174,6 +176,7 @@ export function SnippetEditor(props: {
             form={form}
             isBuiltInFunction={isBuiltInFunction}
             isFunction={isFunction}
+            isSkill={isSkill}
             onChange={setForm}
             onTypeChange={changeType}
             typeDisabled={typeDisabled}
@@ -225,16 +228,34 @@ export function SnippetEditor(props: {
         </Scroll>
       </div>
 
-      <div className="min-h-0 flex-1">
-        <CodeEditor
-          className="h-full"
-          language={SnippetTypeToLanguage[form.type]}
-          onChange={(raw) => setForm((current) => ({ ...current, raw }))}
-          onSave={save}
-          title={SnippetTypeToLanguage[form.type]}
-          value={form.raw}
-        />
-      </div>
+      {isSkill ? (
+        <div className="flex min-h-0 flex-1 flex-col gap-4 desktop:flex-row">
+          <div className="min-h-0 desktop:flex-1">
+            <CodeEditor
+              className="h-full"
+              language={SnippetTypeToLanguage[form.type]}
+              onChange={(raw) => setForm((current) => ({ ...current, raw }))}
+              onSave={save}
+              title="SKILL.md"
+              value={form.raw}
+            />
+          </div>
+          <div className="shrink-0 overflow-auto desktop:w-[36%]">
+            <SkillFrontmatterPreview form={form} />
+          </div>
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1">
+          <CodeEditor
+            className="h-full"
+            language={SnippetTypeToLanguage[form.type]}
+            onChange={(raw) => setForm((current) => ({ ...current, raw }))}
+            onSave={save}
+            title={SnippetTypeToLanguage[form.type]}
+            value={form.raw}
+          />
+        </div>
+      )}
     </form>
   )
 }

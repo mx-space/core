@@ -10,7 +10,7 @@ import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
-import { SnippetDto, SnippetMoreDto } from './snippet.schema'
+import { SnippetDto, SnippetListDto, SnippetMoreDto } from './snippet.schema'
 import { SnippetService } from './snippet.service'
 
 @ApiController('snippets')
@@ -19,9 +19,9 @@ export class SnippetController {
 
   @Get('/')
   @Auth()
-  async getList(@Query() query: BasicPagerDto) {
-    const { page, size } = query
-    const result = await this.snippetService.repository.list(page, size)
+  async getList(@Query() query: SnippetListDto) {
+    const { page, size, type } = query
+    const result = await this.snippetService.repository.list(page, size, type)
     const { pagination } = result
     return withMeta(
       this.snippetService.transformLeanSnippetList(result.data),

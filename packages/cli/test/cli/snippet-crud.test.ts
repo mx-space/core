@@ -287,6 +287,49 @@ describe('snippet command handlers', () => {
     }
   })
 
+  it('creates a skill snippet from --raw with markdown body', async () => {
+    const calls: Array<{ path: string; options: unknown }> = []
+    const stdout = captureStdout()
+    const skillRaw = [
+      '---',
+      'name: db-migration-author',
+      'description: Expand-contract migrations.',
+      '---',
+      '',
+      '## When to use',
+      'Use when authoring a Postgres migration.',
+    ].join('\n')
+    try {
+      const exit = await Effect.runPromiseExit(
+        createSnippet
+          .handler({
+            name: 'db-migration-author',
+            ...writeFlags,
+            type: Option.some('skill' as const),
+            raw: Option.some(skillRaw),
+          })
+          .pipe(
+            Effect.provide(buildLayer(calls)),
+            Renderer.withOptions(rendererJson),
+          ),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      expect(calls[0]).toMatchObject({
+        path: '/snippets',
+        options: { method: 'POST' },
+      })
+      const body = (calls[0]!.options as { body: Record<string, unknown> })
+        .body
+      expect(body).toEqual({
+        name: 'db-migration-author',
+        type: 'skill',
+        raw: skillRaw,
+      })
+    } finally {
+      stdout.restore()
+    }
+  })
+
   it('prefers --file over --raw and stdin', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const reads: Array<string | undefined> = []

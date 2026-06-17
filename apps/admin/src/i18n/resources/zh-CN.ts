@@ -2157,6 +2157,17 @@ export const zhCN = {
   'snippets.editor.field.private': '私有',
   'snippets.editor.field.type': '类型',
   'snippets.editor.newTitle': '新建片段',
+  'snippets.editor.skill.commentReadOnly':
+    '保存时自动填入 frontmatter description。',
+  'snippets.editor.skill.description': '描述',
+  'snippets.editor.skill.frontmatter': 'Frontmatter',
+  'snippets.editor.skill.name': '名称',
+  'snippets.editor.skill.nameMismatch':
+    'Frontmatter `name` 须与 `{value}` 相等。',
+  'snippets.editor.skill.descriptionRequired':
+    'frontmatter `description` 为必填项',
+  'snippets.editor.skill.parseError': '无法解析 frontmatter',
+  'snippets.editor.skill.unknownKeys': '其他键',
   'snippets.editor.unnamed': '未命名片段',
   'snippets.empty': '暂无片段',
   'snippets.error.fetchPackageJson': '无法获取 package.json',
@@ -2670,6 +2681,14 @@ export const zhCN = {
   'write.section.draft.title': '草稿',
   'write.section.draft.untitled': '未命名草稿',
   'write.section.draft.versionLine': '版本 {version} · {time}',
+  'write.section.skill.title': '关联 Skill',
+  'write.section.skill.placeholder': '搜索 skill...',
+  'write.section.skill.empty': '尚无 skill，先去 Snippets 创建。',
+  'write.section.skill.helper':
+    '读者将于文章上方见到关联 skill 之卡片与一行 install 命令。',
+  'write.section.skill.removeAria': '移除 skill {name}',
+  'write.section.skill.unavailable': 'Skill 已不可用',
+  'write.section.skill.loading': '加载中...',
   'write.section.image.candidateHint':
     '正文、编辑器或封面图中的图片会在保存时写入图片信息。',
   'write.section.image.coverAlt': '封面预览',

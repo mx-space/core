@@ -3,6 +3,7 @@ import { createZodDto } from 'nestjs-zod'
 import qs from 'qs'
 import { z } from 'zod'
 
+import { BasicPagerSchema } from '~/shared/dto/pager.dto'
 import { BaseSchema } from '~/shared/schema'
 
 export enum SnippetType {
@@ -11,6 +12,7 @@ export enum SnippetType {
   Function = 'function',
   Text = 'text',
   YAML = 'yaml',
+  Skill = 'skill',
 }
 
 export const SnippetSchema = BaseSchema.extend({
@@ -76,7 +78,14 @@ export const SnippetMoreSchema = z.object({
 
 export class SnippetMoreDto extends createZodDto(SnippetMoreSchema) {}
 
+export const SnippetListSchema = BasicPagerSchema.extend({
+  type: z.enum(SnippetType).optional(),
+})
+
+export class SnippetListDto extends createZodDto(SnippetListSchema) {}
+
 // Type exports
 export type SnippetInput = z.infer<typeof SnippetSchema>
 export type PartialSnippetInput = z.infer<typeof PartialSnippetSchema>
 export type SnippetMoreInput = z.infer<typeof SnippetMoreSchema>
+export type SnippetListInput = z.infer<typeof SnippetListSchema>

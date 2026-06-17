@@ -8,6 +8,7 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { EncryptUtil } from '~/utils/encrypt.util'
@@ -17,6 +18,8 @@ import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetRepository } from './snippet.repository'
 import { SnippetType } from './snippet.schema'
 import type { SnippetRow } from './snippet.types'
+import type { PublicSkillView } from './snippet.views'
+import { toPublicSkillView } from './snippet.views'
 
 export interface SnippetCreateInput {
   type?: SnippetType
@@ -45,6 +48,7 @@ export class SnippetService {
     private readonly serverlessService: ServerlessService,
     private readonly redisService: RedisService,
     private readonly eventManager: EventManagerService,
+    private readonly configsService: ConfigsService,
   ) {}
 
   get repository() {
@@ -107,6 +111,13 @@ export class SnippetService {
 
     await this.validateTypeAndCleanup(model)
 
+    if (
+      model.type === SnippetType.Skill &&
+      (!model.reference || model.reference === 'root')
+    ) {
+      model.reference = 'skill'
+    }
+
     if (model.type === SnippetType.Function) {
       const compiled = await this.serverlessService.compileTypescriptCode(
         model.raw,
@@ -121,7 +132,7 @@ export class SnippetService {
       private: model.private ?? false,
       raw: model.raw,
       name: model.name,
-      reference,
+      reference: model.reference ?? reference,
       comment: model.comment ?? null,
       metatype: model.metatype ?? null,
       schema: model.schema ?? null,
@@ -212,7 +223,7 @@ export class SnippetService {
       private: newModel.private ?? old.private,
       raw: newModel.raw,
       name: newModel.name,
-      reference: newModel.reference ?? 'root',
+      reference: newModel.reference ?? old.reference ?? 'root',
       comment: newModel.comment ?? null,
       metatype: newModel.metatype ?? null,
       schema: newModel.schema ?? null,
@@ -265,6 +276,34 @@ export class SnippetService {
     }
   }
 
+  private parseSkillFrontmatter(raw: string): {
+    name: string
+    description: string
+    rest: Record<string, unknown>
+  } {
+    const match = raw.match(/^---[\t ]*\r?\n(.*?)\r?\n---[\t ]*\r?\n/s)
+    if (!match) {
+      throw createAppException(AppErrorCode.SNIPPET_SKILL_INVALID_FRONTMATTER)
+    }
+    let parsed: unknown
+    try {
+      parsed = load(match[1])
+    } catch {
+      throw createAppException(AppErrorCode.SNIPPET_SKILL_INVALID_FRONTMATTER)
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw createAppException(AppErrorCode.SNIPPET_SKILL_INVALID_FRONTMATTER)
+    }
+    const { name, description, ...rest } = parsed as Record<string, unknown>
+    if (typeof name !== 'string') {
+      throw createAppException(AppErrorCode.SNIPPET_SKILL_NAME_MISMATCH)
+    }
+    if (!description || typeof description !== 'string') {
+      throw createAppException(AppErrorCode.SNIPPET_SKILL_DESCRIPTION_REQUIRED)
+    }
+    return { name, description, rest }
+  }
+
   private async validateTypeAndCleanup(model: SnippetCreateInput) {
     switch (model.type) {
       case SnippetType.JSON: {
@@ -302,6 +341,17 @@ export class SnippetService {
         }
         if (!isValid) {
           throw createAppException(AppErrorCode.SNIPPET_INVALID_FUNCTION)
+        }
+        break
+      }
+      case SnippetType.Skill: {
+        const fm = this.parseSkillFrontmatter(model.raw)
+        if (fm.name !== model.name) {
+          throw createAppException(AppErrorCode.SNIPPET_SKILL_NAME_MISMATCH)
+        }
+        model.comment = fm.description
+        if (!model.customPath) {
+          model.customPath = `sk/${model.name}`
         }
         break
       }
@@ -394,9 +444,31 @@ export class SnippetService {
         Reflect.set(model, 'data', model.raw)
         break
       }
+      case SnippetType.Skill: {
+        Reflect.set(model, 'data', model.raw)
+        break
+      }
     }
 
     return model as T & { data: any }
+  }
+
+  async findSkillsByIds(
+    ids: string[],
+    options: { includePrivate?: boolean } = {},
+  ): Promise<PublicSkillView[]> {
+    if (ids.length === 0) return []
+    const rows = await this.snippetRepository.findSkillsByIds(
+      ids,
+      options.includePrivate ?? false,
+    )
+    const urlConfig = await this.configsService.get('url')
+    const serverUrl = urlConfig?.serverUrl ?? ''
+    const rowMap = new Map(rows.map((r) => [String(r.id), r]))
+    return ids
+      .map((id) => rowMap.get(id))
+      .filter((r): r is SnippetRow => r !== undefined)
+      .map((r) => toPublicSkillView(r, serverUrl))
   }
 
   private snippetCacheKey(prefix: string, isPrivate: boolean) {

@@ -11,6 +11,7 @@ import {
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
@@ -40,6 +41,7 @@ import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
 import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
 import { EnrichmentService } from '../enrichment/enrichment.service'
+import { SnippetService } from '../snippet/snippet.service'
 import {
   CategoryAndSlugDto,
   PartialPostDto,
@@ -70,6 +72,7 @@ export class PostController {
     private readonly aiSummaryService: AiSummaryService,
     private readonly enrichmentService: EnrichmentService,
     private readonly translationEntryService: TranslationEntryService,
+    private readonly snippetService: SnippetService,
   ) {}
 
   private async batchCategoryEntryTranslations(
@@ -211,6 +214,7 @@ export class PostController {
   }
 
   @Get('/:id')
+  @BypassCaseTransform(['meta'])
   async getById(
     @Param() params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
@@ -257,6 +261,14 @@ export class PostController {
     const { enrichments, ...docData } =
       await this.enrichmentService.attachEnrichments(doc)
 
+    const skillIds =
+      Array.isArray(doc.meta?.skillIds) && doc.meta.skillIds.length > 0
+        ? (doc.meta.skillIds as string[])
+        : []
+    const skills = await this.snippetService
+      .findSkillsByIds(skillIds, { includePrivate: !!isAuthenticated })
+      .catch(() => [])
+
     const metaBuilder = new MetaObjectBuilder()
       .view('detail')
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
@@ -274,10 +286,12 @@ export class PostController {
     ])
     metaBuilder.translation(translationMap)
 
-    return withMeta(docData, metaBuilder.build())
+    const result = skills.length > 0 ? { ...docData, skills } : docData
+    return withMeta(result, metaBuilder.build())
   }
 
   @Get('/:category/:slug')
+  @BypassCaseTransform(['meta'])
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
     @Query() query: PostDetailQueryDto,
@@ -366,6 +380,15 @@ export class PostController {
     const { enrichments, ...postData } =
       await this.enrichmentService.attachEnrichments(postEntity)
 
+    const skillIds =
+      Array.isArray(postDocument.meta?.skillIds) &&
+      postDocument.meta.skillIds.length > 0
+        ? (postDocument.meta.skillIds as string[])
+        : []
+    const skills = await this.snippetService
+      .findSkillsByIds(skillIds, { includePrivate: !!isAuthenticated })
+      .catch(() => [])
+
     const metaBuilder = new MetaObjectBuilder()
       .view('detail')
       .interaction({ isLiked: liked })
@@ -395,7 +418,8 @@ export class PostController {
     ])
     metaBuilder.translation(translationMap)
 
-    return withMeta(postData, metaBuilder.build())
+    const result = skills.length > 0 ? { ...postData, skills } : postData
+    return withMeta(result, metaBuilder.build())
   }
 
   @Post('/')

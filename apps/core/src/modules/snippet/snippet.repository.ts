@@ -12,6 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
+import { SnippetType } from './snippet.schema'
 import type { SnippetGroupRow, SnippetRow } from './snippet.types'
 
 const mapRow = (row: typeof snippets.$inferSelect): SnippetRow => ({
@@ -242,18 +243,27 @@ export class SnippetRepository extends BaseRepository {
     }))
   }
 
-  async list(page = 1, size = 20): Promise<PaginationResult<SnippetRow>> {
+  async list(
+    page = 1,
+    size = 20,
+    type?: SnippetType,
+  ): Promise<PaginationResult<SnippetRow>> {
     page = Math.max(1, page)
     size = Math.min(100, Math.max(1, size))
     const offset = (page - 1) * size
+    const where = type ? eq(snippets.type, type) : undefined
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
         .from(snippets)
+        .where(where)
         .orderBy(asc(snippets.reference), desc(snippets.createdAt))
         .limit(size)
         .offset(offset),
-      this.db.select({ count: sql<number>`count(*)::int` }).from(snippets),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(snippets)
+        .where(where),
     ])
     return {
       data: rows.map(mapRow),
@@ -337,5 +347,22 @@ export class SnippetRepository extends BaseRepository {
       .where(eq(snippets.id, idBig))
       .returning()
     return row ? mapRow(row) : null
+  }
+
+  async findSkillsByIds(
+    ids: string[],
+    includePrivate: boolean,
+  ): Promise<SnippetRow[]> {
+    if (ids.length === 0) return []
+    const bigIds = ids.map((id) => parseEntityId(id))
+    const filter = includePrivate
+      ? and(inArray(snippets.id, bigIds), eq(snippets.type, SnippetType.Skill))!
+      : and(
+          inArray(snippets.id, bigIds),
+          eq(snippets.type, SnippetType.Skill),
+          eq(snippets.private, false),
+        )!
+    const rows = await this.db.select().from(snippets).where(filter)
+    return rows.map(mapRow)
   }
 }

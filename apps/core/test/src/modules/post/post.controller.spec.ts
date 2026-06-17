@@ -106,6 +106,10 @@ const createController = (opts: CreateControllerOptions = {}) => {
     getSummaryForPublicMeta: vi.fn(async () => null),
   }
 
+  const snippetService = {
+    findSkillsByIds: vi.fn(async () => []),
+  }
+
   const controller = new PostController(
     postService as any,
     countingService as any,
@@ -114,6 +118,7 @@ const createController = (opts: CreateControllerOptions = {}) => {
     aiSummaryService as any,
     enrichmentService as any,
     translationEntryService as any,
+    snippetService as any,
   )
 
   return {
@@ -122,6 +127,7 @@ const createController = (opts: CreateControllerOptions = {}) => {
     translationService,
     enrichmentService,
     translationEntryService,
+    snippetService,
   }
 }
 

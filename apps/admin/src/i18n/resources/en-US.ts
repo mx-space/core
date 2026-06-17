@@ -2266,6 +2266,17 @@ export const enUS = {
   'snippets.editor.field.private': 'Private',
   'snippets.editor.field.type': 'Type',
   'snippets.editor.newTitle': 'New snippet',
+  'snippets.editor.skill.commentReadOnly':
+    'Auto-populated from frontmatter description on save.',
+  'snippets.editor.skill.description': 'Description',
+  'snippets.editor.skill.frontmatter': 'Frontmatter',
+  'snippets.editor.skill.name': 'Name',
+  'snippets.editor.skill.nameMismatch':
+    'Frontmatter `name` must equal `{value}`.',
+  'snippets.editor.skill.descriptionRequired':
+    'frontmatter `description` is required',
+  'snippets.editor.skill.parseError': 'Cannot parse frontmatter',
+  'snippets.editor.skill.unknownKeys': 'Other keys',
   'snippets.editor.unnamed': 'Untitled snippet',
   'snippets.empty': 'No snippets',
   'snippets.error.fetchPackageJson': 'Failed to fetch package.json',
@@ -2797,6 +2808,14 @@ export const enUS = {
   'write.section.draft.title': 'Draft',
   'write.section.draft.untitled': 'Untitled draft',
   'write.section.draft.versionLine': 'v{version} · {time}',
+  'write.section.skill.title': 'Skill attachments',
+  'write.section.skill.placeholder': 'Search a skill...',
+  'write.section.skill.empty': 'No skills yet — create one under Snippets.',
+  'write.section.skill.helper':
+    'Readers will see attached skills as cards above the article body, with a one-line install command.',
+  'write.section.skill.removeAria': 'Remove skill {name}',
+  'write.section.skill.unavailable': 'Skill no longer available',
+  'write.section.skill.loading': 'Loading...',
   'write.section.image.candidateHint':
     'Images in body, editor, and cover will be persisted on save.',
   'write.section.image.coverAlt': 'Cover preview',
