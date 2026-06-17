@@ -18,11 +18,14 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
   const [inputValue, setInputValue] = useState('')
 
   const skillsQuery = useQuery({
-    queryFn: () => getSnippets({ type: SnippetType.Skill, size: 200 }),
+    queryFn: () => getSnippets({ type: SnippetType.Skill, size: 100 }),
     queryKey: ['snippets', 'skills'],
     staleTime: 60_000,
-    select: (res: any) =>
-      (Array.isArray(res?.data) ? res.data : []) as SnippetModel[],
+    select: (res: any) => {
+      if (Array.isArray(res)) return res as SnippetModel[]
+      if (Array.isArray(res?.data)) return res.data as SnippetModel[]
+      return [] as SnippetModel[]
+    },
   })
 
   const skillMap = useMemo(() => {
