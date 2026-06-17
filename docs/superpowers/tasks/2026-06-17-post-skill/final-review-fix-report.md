@@ -102,3 +102,43 @@ Date: 2026-06-17
 
 ### Admin lint (`pnpm -C apps/admin run lint`)
 - BLOCKED: `oxlint` binary not found in the environment. The dependency is declared but not installed. This is a pre-existing environment issue; all code changes are clean per typecheck.
+
+---
+
+## Fix pass 2 — final reviewer follow-through
+
+### I1 — `update()` preserves stored reference on PATCH
+
+**Files touched:**
+- `apps/core/src/modules/snippet/snippet.service.ts:154–155` — removed `const reference = newModel.reference ?? 'root'` line that ran before `old` was loaded; changed line 227 from `newModel.reference ?? reference` to `newModel.reference ?? old.reference ?? 'root'`
+- `apps/core/test/src/modules/snippet/snippet.skill.service.spec.ts:388` — tightened assertion from `expect(callArg.reference).not.toBe('skill')` to `expect(callArg.reference).toBe('theme')` (matches the `existing` fixture's `reference: 'theme'`)
+
+**Before → after assertion:** `expect(callArg.reference).not.toBe('skill')` → `expect(callArg.reference).toBe('theme')`
+
+**Commit:** `84e5bb59 fix(snippet): update preserves stored reference on PATCH`
+
+---
+
+### Minor — unify zod enum style in `snippet.schema.ts`
+
+**Files touched:**
+- `apps/core/src/modules/snippet/snippet.schema.ts:82` — changed `z.nativeEnum(SnippetType)` to `z.enum(SnippetType)` in `SnippetListSchema`; `z.enum` is the project-dominant pattern (51 vs 2 usages across modules)
+
+**Commit:** `e1e34f6b chore(snippet): unify zod enum style in schema`
+
+---
+
+### Minor — meta bypass assertion on `getByCateAndSlug`
+
+**Files touched:**
+- `apps/core/test/src/modules/post/post-skill.e2e-spec.ts` — added `meta.skillIds case transform bypass` describe block inside the `getByCateAndSlug` top-level describe, with 1 test asserting `body.data.meta.skillIds` is camelCase array and `body.data.meta.skill_ids` is undefined; mirrors the same describe block already present in `getById`
+
+**Commit:** `e58ec015 test(post): cover meta bypass on getByCateAndSlug response`
+
+---
+
+### Aggregated results (fix pass 2)
+
+**Backend (`pnpm -C apps/core test`):** 222 passed | 2 skipped | 1650 tests passed | 8 skipped. No failures.
+
+**Admin typecheck (`pnpm -C apps/admin run typecheck`):** Exit 0. No errors.
