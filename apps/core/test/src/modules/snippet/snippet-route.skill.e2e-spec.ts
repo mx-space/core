@@ -61,8 +61,8 @@ const snippetService = {
   getFunctionSnippetByCustomPathPrefix: vi.fn().mockResolvedValue(null),
   getCachedSnippetByCustomPath: vi
     .fn()
-    .mockImplementation(async (path: string) => {
-      if (path === 'sk/cached') return SKILL_RAW
+    .mockImplementation(async (path: string, type: 'public' | 'private') => {
+      if (path === 'sk/cached' && type === 'public') return SKILL_RAW
       return null
     }),
   attachSnippet: vi
