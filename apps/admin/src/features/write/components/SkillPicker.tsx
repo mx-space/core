@@ -52,6 +52,26 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
         <div className="flex flex-wrap gap-1.5">
           {value.map((id) => {
             const skill = skillMap.get(id)
+            if (skillsQuery.isLoading) {
+              return (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-surface-inset px-2 py-0.5 font-mono text-xs text-fg-subtle"
+                  key={id}
+                >
+                  <span className="animate-pulse">…</span>
+                  <button
+                    aria-label={t('write.section.skill.removeAria', {
+                      name: id,
+                    })}
+                    className="inline-flex h-3 w-3 items-center justify-center rounded-full text-fg-subtle/70 hover:text-fg-subtle"
+                    onClick={() => onChange(value.filter((v) => v !== id))}
+                    type="button"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              )
+            }
             return skill ? (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 font-mono text-xs text-accent"
