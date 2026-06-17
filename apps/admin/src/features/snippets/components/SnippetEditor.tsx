@@ -240,7 +240,7 @@ export function SnippetEditor(props: {
               value={form.raw}
             />
           </div>
-          <div className="shrink-0 overflow-auto p-4 desktop:w-[36%]">
+          <div className="shrink-0 overflow-auto desktop:w-[36%]">
             <SkillFrontmatterPreview form={form} />
           </div>
         </div>

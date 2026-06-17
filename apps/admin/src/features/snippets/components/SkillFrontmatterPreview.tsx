@@ -22,7 +22,7 @@ export function SkillFrontmatterPreview({ form }: { form: CreateSnippetData }) {
           </p>
           {!result.ok ? (
             <p className="text-xs text-red-600 dark:text-red-400">
-              {t('snippets.editor.skill.parseError')}
+              {t('snippets.editor.skill.parseError')}: {result.errorMessage}
             </p>
           ) : result.name === undefined ? (
             <p className="text-sm text-fg-subtle">—</p>

@@ -296,10 +296,11 @@ export function parseSkillFrontmatter(raw: string):
   const unknownKeys: Array<{ key: string; preview: string }> = []
   for (const key of Object.keys(obj)) {
     if (key === 'name' || key === 'description') continue
-    const raw = JSON.stringify(obj[key])
+    const serialized = JSON.stringify(obj[key])
     unknownKeys.push({
       key,
-      preview: raw.length > 60 ? raw.slice(0, 60) + '…' : raw,
+      preview:
+        serialized.length > 60 ? serialized.slice(0, 60) + '…' : serialized,
     })
   }
 
