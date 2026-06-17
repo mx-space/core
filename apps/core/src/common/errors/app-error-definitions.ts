@@ -661,6 +661,18 @@ export const APP_ERROR_DEFINITIONS = {
     status: 400,
     message: withExtra('Invalid serverless function'),
   },
+  [AppErrorCode.SNIPPET_SKILL_INVALID_FRONTMATTER]: {
+    status: 400,
+    message: 'Skill content must start with a valid YAML frontmatter block',
+  },
+  [AppErrorCode.SNIPPET_SKILL_NAME_MISMATCH]: {
+    status: 400,
+    message: 'Frontmatter name does not match the snippet name',
+  },
+  [AppErrorCode.SNIPPET_SKILL_DESCRIPTION_REQUIRED]: {
+    status: 400,
+    message: 'Skill frontmatter must include a non-empty description',
+  },
 
   // subscribe
   [AppErrorCode.SUBSCRIBE_NOT_ENABLED]: {

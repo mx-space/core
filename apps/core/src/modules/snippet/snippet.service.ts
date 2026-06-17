@@ -121,7 +121,7 @@ export class SnippetService {
       private: model.private ?? false,
       raw: model.raw,
       name: model.name,
-      reference,
+      reference: model.reference ?? reference,
       comment: model.comment ?? null,
       metatype: model.metatype ?? null,
       schema: model.schema ?? null,
@@ -265,6 +265,32 @@ export class SnippetService {
     }
   }
 
+  private parseSkillFrontmatter(raw: string): {
+    name: string
+    description: string
+    rest: Record<string, unknown>
+  } {
+    const match = raw.match(/^---\r?\n(.*?)\r?\n---\r?\n/s)
+    if (!match) {
+      throw createAppException(AppErrorCode.SNIPPET_SKILL_INVALID_FRONTMATTER)
+    }
+    let parsed: unknown
+    try {
+      parsed = load(match[1])
+    } catch {
+      throw createAppException(AppErrorCode.SNIPPET_SKILL_INVALID_FRONTMATTER)
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw createAppException(AppErrorCode.SNIPPET_SKILL_INVALID_FRONTMATTER)
+    }
+    const { name, description, ...rest } = parsed as Record<string, unknown>
+    return {
+      name: name as string,
+      description: description as string,
+      rest,
+    }
+  }
+
   private async validateTypeAndCleanup(model: SnippetCreateInput) {
     switch (model.type) {
       case SnippetType.JSON: {
@@ -302,6 +328,25 @@ export class SnippetService {
         }
         if (!isValid) {
           throw createAppException(AppErrorCode.SNIPPET_INVALID_FUNCTION)
+        }
+        break
+      }
+      case SnippetType.Skill: {
+        const fm = this.parseSkillFrontmatter(model.raw)
+        if (fm.name !== model.name) {
+          throw createAppException(AppErrorCode.SNIPPET_SKILL_NAME_MISMATCH)
+        }
+        if (!fm.description || typeof fm.description !== 'string') {
+          throw createAppException(
+            AppErrorCode.SNIPPET_SKILL_DESCRIPTION_REQUIRED,
+          )
+        }
+        model.comment = fm.description
+        if (!model.customPath) {
+          model.customPath = `sk/${model.name}`
+        }
+        if (!model.reference || model.reference === 'root') {
+          model.reference = 'skill'
         }
         break
       }
@@ -391,6 +436,10 @@ export class SnippetService {
         break
       }
       case SnippetType.Text: {
+        Reflect.set(model, 'data', model.raw)
+        break
+      }
+      case SnippetType.Skill: {
         Reflect.set(model, 'data', model.raw)
         break
       }

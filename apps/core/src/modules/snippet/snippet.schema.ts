@@ -11,6 +11,7 @@ export enum SnippetType {
   Function = 'function',
   Text = 'text',
   YAML = 'yaml',
+  Skill = 'skill',
 }
 
 export const SnippetSchema = BaseSchema.extend({

@@ -191,6 +191,9 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.SNIPPET_INVALID_JSON5]: undefined
   [AppErrorCode.SNIPPET_INVALID_YAML]: undefined
   [AppErrorCode.SNIPPET_INVALID_FUNCTION]: WithExtra
+  [AppErrorCode.SNIPPET_SKILL_INVALID_FRONTMATTER]: undefined
+  [AppErrorCode.SNIPPET_SKILL_NAME_MISMATCH]: undefined
+  [AppErrorCode.SNIPPET_SKILL_DESCRIPTION_REQUIRED]: undefined
 
   // subscribe
   [AppErrorCode.SUBSCRIBE_NOT_ENABLED]: undefined
