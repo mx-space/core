@@ -6,11 +6,86 @@ import { getSnippets } from '~/api/snippets'
 import { useI18n } from '~/i18n'
 import type { SnippetModel } from '~/models/snippet'
 import { SnippetType } from '~/models/snippet'
+import { Popover } from '~/ui/overlay/popover'
 import { Combobox } from '~/ui/primitives/combobox'
+import { MarkdownRender } from '~/ui/primitives/markdown-render'
 
 interface SkillPickerProps {
   value: string[]
   onChange: (next: string[]) => void
+}
+
+function stripFrontmatter(raw: string): string {
+  const match = raw.match(/^---.*?\n---\s*\n/s)
+  return match ? raw.slice(match[0].length) : raw
+}
+
+function previewSlice(raw: string, max = 1200): string {
+  const body = stripFrontmatter(raw).trimStart()
+  if (body.length <= max) return body
+  const cut = body.slice(0, max)
+  const lastBreak = cut.lastIndexOf('\n\n')
+  return `${lastBreak > max * 0.6 ? cut.slice(0, lastBreak) : cut}\n\n…`
+}
+
+interface SkillPillProps {
+  skill: SnippetModel
+  removeLabel: string
+  onRemove: () => void
+}
+
+function SkillPill({ skill, removeLabel, onRemove }: SkillPillProps) {
+  const preview = useMemo(() => previewSlice(skill.raw), [skill.raw])
+  return (
+    <Popover>
+      <Popover.Trigger
+        closeDelay={120}
+        delay={200}
+        nativeButton={false}
+        openOnHover
+        render={(triggerProps) => (
+          <span
+            {...triggerProps}
+            className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 font-mono text-xs text-accent"
+          >
+            {skill.name}
+            <button
+              aria-label={removeLabel}
+              className="inline-flex h-3 w-3 items-center justify-center rounded-full text-accent/70 hover:text-accent"
+              onClick={(event) => {
+                event.stopPropagation()
+                onRemove()
+              }}
+              type="button"
+            >
+              <X size={12} />
+            </button>
+          </span>
+        )}
+      />
+      <Popover.Content
+        align="start"
+        className="flex max-h-[28rem] flex-col overflow-hidden"
+        side="left"
+        sideOffset={8}
+        width="lg"
+      >
+        <Popover.Header>
+          <span className="font-mono normal-case tracking-normal text-fg">
+            {skill.name}
+          </span>
+        </Popover.Header>
+        <Popover.Body className="min-h-0 flex-1 space-y-3 overflow-y-auto">
+          {skill.comment ? (
+            <p className="text-xs leading-relaxed text-fg-muted">
+              {skill.comment}
+            </p>
+          ) : null}
+          <MarkdownRender text={preview} />
+        </Popover.Body>
+      </Popover.Content>
+    </Popover>
+  )
 }
 
 export function SkillPicker({ value, onChange }: SkillPickerProps) {
@@ -49,6 +124,8 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
     setInputValue('')
   }
 
+  const remove = (id: string) => onChange(value.filter((v) => v !== id))
+
   return (
     <div className="grid gap-2">
       {value.length > 0 && (
@@ -67,7 +144,7 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
                       name: id,
                     })}
                     className="inline-flex h-3 w-3 items-center justify-center rounded-full text-fg-subtle/70 hover:text-fg-subtle"
-                    onClick={() => onChange(value.filter((v) => v !== id))}
+                    onClick={() => remove(id)}
                     type="button"
                   >
                     <X size={12} />
@@ -76,22 +153,14 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
               )
             }
             return skill ? (
-              <span
-                className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 font-mono text-xs text-accent"
+              <SkillPill
                 key={id}
-              >
-                {skill.name}
-                <button
-                  aria-label={t('write.section.skill.removeAria', {
-                    name: skill.name,
-                  })}
-                  className="inline-flex h-3 w-3 items-center justify-center rounded-full text-accent/70 hover:text-accent"
-                  onClick={() => onChange(value.filter((v) => v !== id))}
-                  type="button"
-                >
-                  <X size={12} />
-                </button>
-              </span>
+                onRemove={() => remove(id)}
+                removeLabel={t('write.section.skill.removeAria', {
+                  name: skill.name,
+                })}
+                skill={skill}
+              />
             ) : (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 font-mono text-xs text-fg-subtle"
@@ -102,7 +171,7 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
                 <button
                   aria-label={t('write.section.skill.removeAria', { name: id })}
                   className="inline-flex h-3 w-3 items-center justify-center rounded-full text-fg-subtle/70 hover:text-fg-subtle"
-                  onClick={() => onChange(value.filter((v) => v !== id))}
+                  onClick={() => remove(id)}
                   type="button"
                 >
                   <X size={12} />
