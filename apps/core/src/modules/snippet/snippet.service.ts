@@ -141,6 +141,7 @@ export class SnippetService {
   }
 
   async update(id: string, newModel: SnippetUpdateInput): Promise<SnippetRow> {
+    const reference = newModel.reference ?? 'root'
     await this.validateTypeAndCleanup(newModel)
 
     const old = await this.snippetRepository.findById(id)
@@ -212,7 +213,7 @@ export class SnippetService {
       private: newModel.private ?? old.private,
       raw: newModel.raw,
       name: newModel.name,
-      reference: newModel.reference ?? 'root',
+      reference: newModel.reference ?? reference,
       comment: newModel.comment ?? null,
       metatype: newModel.metatype ?? null,
       schema: newModel.schema ?? null,
@@ -284,11 +285,13 @@ export class SnippetService {
       throw createAppException(AppErrorCode.SNIPPET_SKILL_INVALID_FRONTMATTER)
     }
     const { name, description, ...rest } = parsed as Record<string, unknown>
-    return {
-      name: name as string,
-      description: description as string,
-      rest,
+    if (typeof name !== 'string') {
+      throw createAppException(AppErrorCode.SNIPPET_SKILL_NAME_MISMATCH)
     }
+    if (!description || typeof description !== 'string') {
+      throw createAppException(AppErrorCode.SNIPPET_SKILL_DESCRIPTION_REQUIRED)
+    }
+    return { name, description, rest }
   }
 
   private async validateTypeAndCleanup(model: SnippetCreateInput) {
@@ -335,11 +338,6 @@ export class SnippetService {
         const fm = this.parseSkillFrontmatter(model.raw)
         if (fm.name !== model.name) {
           throw createAppException(AppErrorCode.SNIPPET_SKILL_NAME_MISMATCH)
-        }
-        if (!fm.description || typeof fm.description !== 'string') {
-          throw createAppException(
-            AppErrorCode.SNIPPET_SKILL_DESCRIPTION_REQUIRED,
-          )
         }
         model.comment = fm.description
         if (!model.customPath) {
