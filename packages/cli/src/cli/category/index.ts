@@ -10,6 +10,7 @@ import { update } from './update'
 const help = registerCommandHelp({
   name: 'category',
   description: 'manage categories / tags',
+  skillChapter: 'commands-category',
   verbs: [
     { name: 'list', description: 'list categories and tags' },
     {

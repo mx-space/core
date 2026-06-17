@@ -11,6 +11,7 @@ import { update } from './update'
 const help = registerCommandHelp({
   name: 'page',
   description: 'manage pages',
+  skillChapter: 'commands-page',
   verbs: [
     { name: 'list', description: 'list pages' },
     { name: 'get', args: ['<slugOrId>'], description: 'show a single page' },

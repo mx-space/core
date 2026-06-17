@@ -9,6 +9,7 @@ import { whoami } from './whoami'
 const help = registerCommandHelp({
   name: 'auth',
   description: 'authentication',
+  skillChapter: 'commands-auth',
   verbs: [
     {
       name: 'login',

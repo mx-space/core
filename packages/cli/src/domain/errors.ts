@@ -221,6 +221,30 @@ export class SkillCorpusEmpty extends Data.TaggedError('SkillCorpusEmpty')<{
   readonly cause?: unknown
 }> {}
 
+// ai.*
+export class AiTaskCreateFailed extends Data.TaggedError('AiTaskCreateFailed')<{
+  readonly message?: string
+  readonly details?: unknown
+  readonly hint?: string
+  readonly cause?: unknown
+}> {}
+
+export class AiTaskFailed extends Data.TaggedError('AiTaskFailed')<{
+  readonly message?: string
+  readonly taskId?: string
+  readonly status?: string
+  readonly details?: unknown
+  readonly hint?: string
+}> {}
+
+export class AiRecordNotFound extends Data.TaggedError('AiRecordNotFound')<{
+  readonly message?: string
+  readonly kind?: string
+  readonly ref?: string
+  readonly details?: unknown
+  readonly hint?: string
+}> {}
+
 // generic
 export class Generic extends Data.TaggedError('Generic')<{
   readonly message?: string
@@ -263,6 +287,9 @@ export type CliError =
   | ArgvParse
   | ChapterNotFound
   | SkillCorpusEmpty
+  | AiTaskCreateFailed
+  | AiTaskFailed
+  | AiRecordNotFound
   | Generic
 
 export type CliErrorTag = CliError['_tag']
@@ -300,6 +327,9 @@ export const tagToCode: Record<CliErrorTag, string> = {
   ArgvParse: 'argv.parse',
   ChapterNotFound: 'skill.chapter_not_found',
   SkillCorpusEmpty: 'skill.corpus_empty',
+  AiTaskCreateFailed: 'ai.task.create_failed',
+  AiTaskFailed: 'ai.task.failed',
+  AiRecordNotFound: 'ai.record.not_found',
   Generic: 'generic',
 }
 
@@ -339,7 +369,8 @@ export const exitCodeForTag = (tag: CliErrorTag): number => {
       return 6
     }
     case 'ResourceNotFound':
-    case 'ChapterNotFound': {
+    case 'ChapterNotFound':
+    case 'AiRecordNotFound': {
       return 7
     }
     case 'UpdatePmUnknown': {
@@ -405,6 +436,9 @@ const defaultMessages: Record<CliErrorTag, string> = {
   ArgvParse: 'failed to parse arguments',
   ChapterNotFound: 'skill chapter not found',
   SkillCorpusEmpty: 'skill corpus is empty',
+  AiTaskCreateFailed: 'failed to create AI task',
+  AiTaskFailed: 'AI task did not succeed',
+  AiRecordNotFound: 'AI record not found',
   Generic: 'mxs error',
 }
 

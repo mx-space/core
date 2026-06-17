@@ -5,6 +5,7 @@ import { Command } from '@effect/cli'
 import { NodeContext, NodeHttpClient, NodeRuntime } from '@effect/platform-node'
 import { Effect, Layer } from 'effect'
 
+import { aiCmd } from '../cli/ai'
 import { authCmd } from '../cli/auth'
 import { categoryCmd } from '../cli/category'
 import { commentCmd } from '../cli/comment'
@@ -46,6 +47,7 @@ import {
   parseGlobalFlags,
 } from '../domain/runtime-flags'
 import { AppLayer } from '../layers/App'
+import { Ai } from '../services/Ai'
 import { Api } from '../services/Api'
 import { Comment } from '../services/Comment'
 import {
@@ -128,6 +130,7 @@ const rootCmd = Command.make('mxs', {}, () =>
     topicCmd,
     commentCmd,
     snippetCmd,
+    aiCmd,
     configCmd,
     fileCmd,
     skillCmd,
@@ -337,7 +340,8 @@ export const run = (argv: readonly string[]): Promise<void> => {
   const resolverWithDeps = Resolver.Default.pipe(
     Layer.provideMerge(commentWithDeps),
   )
-  const fullAppLayer = resolverWithDeps
+  const aiWithDeps = Ai.Default.pipe(Layer.provideMerge(resolverWithDeps))
+  const fullAppLayer = aiWithDeps
 
   const cli = Command.run(rootCmd, { name: 'mxs', version: CLI_VERSION })
 

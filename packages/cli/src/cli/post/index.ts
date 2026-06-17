@@ -15,6 +15,7 @@ import { update } from './update'
 const help = registerCommandHelp({
   name: 'post',
   description: 'manage posts',
+  skillChapter: 'commands-post',
   verbs: [
     {
       name: 'list',

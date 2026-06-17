@@ -469,6 +469,65 @@ description: Expand-contract Postgres migrations safe for rolling deploys.
 Use when authoring or reviewing any Postgres migration in this codebase.
 ```
 
+## AI
+
+Manage AI artifacts (summary, translation, insights) produced by the core AI module. Article references accept Snowflake id, post slug, or note nid — the CLI resolves to an article id via post-then-note lookup. Record references (`<recordId>`) are raw Snowflakes.
+
+Generate verbs (`summary regen`, `translate run`, `insights refresh`) enqueue a task on the server, then poll `GET /tasks/:id` until the task reaches a terminal status (`completed`, `partial_failed`, `failed`, `cancelled`). Progress lines write to stderr. Pass `--no-wait` to return immediately with `status: pending` after the task is created. If the server reports `created: false`, an in-flight deduplicated task already exists and the CLI joins it instead of erroring. The polling cadence is 1000 ms by default; override via `MXS_AI_POLL_MS=<n>` for tests.
+
+### Summary
+
+| Command                                            | Description                                                       |
+| -------------------------------------------------- | ----------------------------------------------------------------- |
+| `mxs ai summary regen <id> [--to <lang>...]`       | Regenerate an article's summary (optionally for given languages). |
+| `mxs ai summary list [--page <n>] [--size <n>] [--grouped]` | List summaries (flat or grouped by article).             |
+| `mxs ai summary get <recordId>`                    | Get one summary by record id.                                     |
+| `mxs ai summary by-article <id> [--lang <l>] [--only-db]` | Show an article's summary; `--only-db` skips auto-generate. |
+| `mxs ai summary edit <recordId>`                   | Edit the `summary` field via `$EDITOR` (JSON envelope).           |
+| `mxs ai summary delete <recordId> [--force]`       | Delete a summary record.                                          |
+
+### Translate
+
+| Command                                                  | Description                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------- |
+| `mxs ai translate run <id> --to <lang>... [--no-wait]`   | Translate an article into one or more languages (`--to` required, repeatable). |
+| `mxs ai translate list [--page <n>] [--size <n>]`        | List translations (always grouped by article — no flat list server-side). |
+| `mxs ai translate get <recordId>`                        | Get one translation by record id.                             |
+| `mxs ai translate by-article <id> [--lang <l>]`          | Show an article's translations (single lang or all).          |
+| `mxs ai translate languages <id>`                        | List languages an article has been translated into.           |
+| `mxs ai translate edit <recordId>`                       | Edit translation fields via `$EDITOR` (JSON envelope).        |
+| `mxs ai translate delete <recordId> [--force]`           | Delete a translation record.                                  |
+
+### Translation Entries
+
+The i18n dictionary entries layer used by category / topic / note metadata. `--key-path` accepts only the server-validated set: `category.name`, `topic.name`, `topic.introduce`, `topic.description`, `note.mood`, `note.weather`.
+
+| Command                                                                       | Description                                            |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `mxs ai translate entries list [--page <n>] [--size <n>] [--key-path <p>] [--lang <l>]` | List entries with optional filters.       |
+| `mxs ai translate entries generate [--key-path <p>...] [--to <lang>...]`      | Trigger regeneration of entries.                       |
+| `mxs ai translate entries edit <recordId>`                                    | Edit `translatedText` via `$EDITOR` (JSON envelope).   |
+| `mxs ai translate entries delete <recordId> [--force]`                        | Delete an entry.                                       |
+
+### Insights
+
+| Command                                                | Description                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------------- |
+| `mxs ai insights refresh <id> [--no-wait]`             | Refresh AI insights for an article.                                 |
+| `mxs ai insights list [--page <n>] [--size <n>] [--grouped]` | List insights (flat or grouped by article).                   |
+| `mxs ai insights get <recordId>`                       | Get one insights record by record id.                               |
+| `mxs ai insights by-article <id> [--lang <l>] [--only-db]` | Show an article's insights; `--only-db` skips auto-generate.    |
+| `mxs ai insights edit <recordId>`                      | Edit the `content` field via `$EDITOR` (JSON envelope).             |
+| `mxs ai insights delete <recordId> [--force]`          | Delete an insights record.                                          |
+
+```bash
+mxs ai summary regen my-post --to en --to ja
+mxs ai translate run my-post --to en
+mxs ai insights refresh my-post
+mxs ai summary list --grouped
+mxs ai translate languages my-post
+```
+
 ## Configuration
 
 | Command                        | Description                                                    |
