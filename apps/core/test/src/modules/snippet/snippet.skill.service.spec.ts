@@ -351,3 +351,40 @@ describe('SnippetService.findSkillsByIds', () => {
     expect(result[0].rawUrl).toBe('/api/v3/s/sk/my-skill')
   })
 })
+
+describe('SnippetService — Skill update reference preservation', () => {
+  it('PATCH with reference=theme preserves theme (not reset to skill)', async () => {
+    const { repository, service } = createService()
+    const existing = createSnippet({ reference: 'theme' })
+    repository.findById.mockResolvedValue(existing)
+    repository.update.mockResolvedValue(existing)
+
+    await service.update('1', {
+      type: SnippetType.Skill,
+      raw: VALID_SKILL_RAW,
+      name: 'my-skill',
+      reference: 'theme',
+    })
+
+    expect(repository.update).toHaveBeenCalledWith(
+      '1',
+      expect.objectContaining({ reference: 'theme' }),
+    )
+  })
+
+  it('PATCH without reference does not reset stored reference to skill', async () => {
+    const { repository, service } = createService()
+    const existing = createSnippet({ reference: 'theme' })
+    repository.findById.mockResolvedValue(existing)
+    repository.update.mockResolvedValue(existing)
+
+    await service.update('1', {
+      type: SnippetType.Skill,
+      raw: VALID_SKILL_RAW,
+      name: 'my-skill',
+    })
+
+    const callArg = repository.update.mock.calls[0][1]
+    expect(callArg.reference).not.toBe('skill')
+  })
+})

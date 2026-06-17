@@ -111,6 +111,13 @@ export class SnippetService {
 
     await this.validateTypeAndCleanup(model)
 
+    if (
+      model.type === SnippetType.Skill &&
+      (!model.reference || model.reference === 'root')
+    ) {
+      model.reference = 'skill'
+    }
+
     if (model.type === SnippetType.Function) {
       const compiled = await this.serverlessService.compileTypescriptCode(
         model.raw,
@@ -346,9 +353,6 @@ export class SnippetService {
         model.comment = fm.description
         if (!model.customPath) {
           model.customPath = `sk/${model.name}`
-        }
-        if (!model.reference || model.reference === 'root') {
-          model.reference = 'skill'
         }
         break
       }
