@@ -1,5 +1,4 @@
 import type { CreateSnippetData } from '~/api/snippets'
-
 import { SnippetType } from '~/models/snippet'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -11,6 +10,7 @@ export const snippetTypes: SnippetType[] = [
   SnippetType.JSON5,
   SnippetType.YAML,
   SnippetType.Text,
+  SnippetType.Skill,
   SnippetType.Function,
 ]
 

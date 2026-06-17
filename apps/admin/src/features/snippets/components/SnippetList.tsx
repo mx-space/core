@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react'
 import {
   ChevronDown,
   ChevronRight,
@@ -13,10 +14,9 @@ import {
   Lock,
   Trash2,
 } from 'lucide-react'
-import type { SnippetModel } from '~/models/snippet'
-import type { LucideIcon } from 'lucide-react'
 
 import { useI18n } from '~/i18n'
+import type { SnippetModel } from '~/models/snippet'
 import { SnippetType } from '~/models/snippet'
 import { ListRow } from '~/ui/list-actions'
 import { cn } from '~/utils/cn'
@@ -128,6 +128,7 @@ const typeIconMap: Record<SnippetType, LucideIcon> = {
   [SnippetType.JSON]: FileJson,
   [SnippetType.JSON5]: Code,
   [SnippetType.Function]: FunctionSquare,
+  [SnippetType.Skill]: FileText,
   [SnippetType.Text]: FileText,
   [SnippetType.YAML]: FileCode,
 }
@@ -136,6 +137,7 @@ const typeIconColorMap: Record<SnippetType, string> = {
   [SnippetType.JSON]: 'text-orange-500',
   [SnippetType.JSON5]: 'text-purple-500',
   [SnippetType.Function]: 'text-blue-500',
+  [SnippetType.Skill]: 'text-teal-500',
   [SnippetType.Text]: 'text-neutral-500',
   [SnippetType.YAML]: 'text-red-500',
 }

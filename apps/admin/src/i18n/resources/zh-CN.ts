@@ -2157,6 +2157,15 @@ export const zhCN = {
   'snippets.editor.field.private': '私有',
   'snippets.editor.field.type': '类型',
   'snippets.editor.newTitle': '新建片段',
+  'snippets.editor.skill.commentReadOnly':
+    '保存时自动填入 frontmatter description。',
+  'snippets.editor.skill.description': '描述',
+  'snippets.editor.skill.frontmatter': 'Frontmatter',
+  'snippets.editor.skill.name': '名称',
+  'snippets.editor.skill.nameMismatch':
+    'Frontmatter `name` 须与 `{value}` 相等。',
+  'snippets.editor.skill.parseError': '无法解析 frontmatter',
+  'snippets.editor.skill.unknownKeys': '其他键',
   'snippets.editor.unnamed': '未命名片段',
   'snippets.empty': '暂无片段',
   'snippets.error.fetchPackageJson': '无法获取 package.json',

@@ -2266,6 +2266,15 @@ export const enUS = {
   'snippets.editor.field.private': 'Private',
   'snippets.editor.field.type': 'Type',
   'snippets.editor.newTitle': 'New snippet',
+  'snippets.editor.skill.commentReadOnly':
+    'Auto-populated from frontmatter description on save.',
+  'snippets.editor.skill.description': 'Description',
+  'snippets.editor.skill.frontmatter': 'Frontmatter',
+  'snippets.editor.skill.name': 'Name',
+  'snippets.editor.skill.nameMismatch':
+    'Frontmatter `name` must equal `{value}`.',
+  'snippets.editor.skill.parseError': 'Cannot parse frontmatter',
+  'snippets.editor.skill.unknownKeys': 'Other keys',
   'snippets.editor.unnamed': 'Untitled snippet',
   'snippets.empty': 'No snippets',
   'snippets.error.fetchPackageJson': 'Failed to fetch package.json',

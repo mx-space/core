@@ -20,12 +20,14 @@ interface SnippetMetaPopoverProps {
   onTypeChange: (type: SnippetType) => void
   isFunction: boolean
   isBuiltInFunction: boolean
+  isSkill: boolean
   typeDisabled: boolean
 }
 
 export function SnippetMetaPopover(props: SnippetMetaPopoverProps) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
+  const { isSkill } = props
 
   const patch = (next: Partial<CreateSnippetData>) =>
     props.onChange({ ...props.form, ...next })
@@ -85,17 +87,25 @@ export function SnippetMetaPopover(props: SnippetMetaPopoverProps) {
               <Field label={t('snippets.editor.field.comment')}>
                 <TextInput
                   controlClassName="h-9"
+                  disabled={isSkill}
                   onChange={(comment) => patch({ comment })}
                   value={props.form.comment ?? ''}
                 />
+                {isSkill && (
+                  <p className="mt-1 text-xs text-fg-muted">
+                    {t('snippets.editor.skill.commentReadOnly')}
+                  </p>
+                )}
               </Field>
-              <Field label="Metatype">
-                <TextInput
-                  controlClassName="h-9"
-                  onChange={(metatype) => patch({ metatype })}
-                  value={props.form.metatype ?? ''}
-                />
-              </Field>
+              {!isSkill && (
+                <Field label="Metatype">
+                  <TextInput
+                    controlClassName="h-9"
+                    onChange={(metatype) => patch({ metatype })}
+                    value={props.form.metatype ?? ''}
+                  />
+                </Field>
+              )}
             </div>
 
             <SectionDivider />
@@ -117,48 +127,52 @@ export function SnippetMetaPopover(props: SnippetMetaPopoverProps) {
               ) : null}
             </div>
 
-            <SectionDivider />
+            {!isSkill && (
+              <>
+                <SectionDivider />
 
-            <div className="space-y-4">
-              {props.isFunction ? (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Method">
-                      <TextInput
-                        controlClassName="h-9"
-                        disabled={props.isBuiltInFunction}
-                        onChange={(method) => patch({ method })}
-                        value={props.form.method ?? ''}
+                <div className="space-y-4">
+                  {props.isFunction ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field label="Method">
+                          <TextInput
+                            controlClassName="h-9"
+                            disabled={props.isBuiltInFunction}
+                            onChange={(method) => patch({ method })}
+                            value={props.form.method ?? ''}
+                          />
+                        </Field>
+                        <Field label="Path">
+                          <TextInput
+                            controlClassName="h-9"
+                            onChange={(customPath) => patch({ customPath })}
+                            value={props.form.customPath ?? ''}
+                          />
+                        </Field>
+                      </div>
+                      <Field label="Secret">
+                        <TextArea
+                          controlClassName="min-h-24 resize-y font-mono text-xs"
+                          onChange={(secret) => patch({ secret })}
+                          spellCheck={false}
+                          value={serializeSnippetSecret(props.form.secret)}
+                        />
+                      </Field>
+                    </>
+                  ) : (
+                    <Field label="Schema">
+                      <TextArea
+                        controlClassName="min-h-24 resize-y font-mono text-xs"
+                        onChange={(schema) => patch({ schema })}
+                        spellCheck={false}
+                        value={props.form.schema ?? ''}
                       />
                     </Field>
-                    <Field label="Path">
-                      <TextInput
-                        controlClassName="h-9"
-                        onChange={(customPath) => patch({ customPath })}
-                        value={props.form.customPath ?? ''}
-                      />
-                    </Field>
-                  </div>
-                  <Field label="Secret">
-                    <TextArea
-                      controlClassName="min-h-24 resize-y font-mono text-xs"
-                      onChange={(secret) => patch({ secret })}
-                      spellCheck={false}
-                      value={serializeSnippetSecret(props.form.secret)}
-                    />
-                  </Field>
-                </>
-              ) : (
-                <Field label="Schema">
-                  <TextArea
-                    controlClassName="min-h-24 resize-y font-mono text-xs"
-                    onChange={(schema) => patch({ schema })}
-                    spellCheck={false}
-                    value={props.form.schema ?? ''}
-                  />
-                </Field>
-              )}
-            </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </Popover.Content>

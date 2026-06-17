@@ -8,15 +8,17 @@ export enum SnippetType {
   JSON5 = 'json5',
   Function = 'function',
   Text = 'text',
+  Skill = 'skill',
   YAML = 'yaml',
 }
 
-export enum SnippetTypeToLanguage {
-  json = 'json',
-  json5 = 'plaintext',
-  function = 'typescript',
-  text = 'markdown',
-  yaml = 'yaml',
+export const SnippetTypeToLanguage: Record<SnippetType, string> = {
+  [SnippetType.JSON]: 'json',
+  [SnippetType.JSON5]: 'plaintext',
+  [SnippetType.Function]: 'typescript',
+  [SnippetType.Text]: 'markdown',
+  [SnippetType.Skill]: 'markdown',
+  [SnippetType.YAML]: 'yaml',
 }
 
 export class SnippetModel {
