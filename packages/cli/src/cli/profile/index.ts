@@ -10,6 +10,7 @@ import { use } from './use'
 const help = registerCommandHelp({
   name: 'profile',
   description: 'manage mxs profiles',
+  skillChapter: 'commands-profile',
   verbs: [
     { name: 'ls', description: 'list all known profiles' },
     {

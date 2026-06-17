@@ -15,6 +15,7 @@ registerCommandHelp({
   description:
     'render a LiteXML fragment or <mxpost>/<mxnote> envelope to HTML and open it in a browser',
   isLeaf: true,
+  skillChapter: 'commands-preview',
   leafOptions: [
     {
       flag: '--theme <light|dark>',

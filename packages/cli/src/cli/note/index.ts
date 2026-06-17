@@ -13,6 +13,7 @@ import { update } from './update'
 const help = registerCommandHelp({
   name: 'note',
   description: 'manage notes',
+  skillChapter: 'commands-note',
   verbs: [
     {
       name: 'list',

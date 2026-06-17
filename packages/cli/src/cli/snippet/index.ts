@@ -11,6 +11,7 @@ import { update } from './update'
 const help = registerCommandHelp({
   name: 'snippet',
   description: 'manage snippets',
+  skillChapter: 'commands-snippet',
   verbs: [
     {
       name: 'list',

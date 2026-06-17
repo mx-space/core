@@ -8,6 +8,7 @@ import { translateCmd } from './translate'
 const help = registerCommandHelp({
   name: 'ai',
   description: 'manage AI artifacts (summary, translation, insights)',
+  skillChapter: 'commands-ai',
   verbs: [
     {
       name: 'summary',

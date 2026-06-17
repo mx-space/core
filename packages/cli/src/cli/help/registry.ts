@@ -34,6 +34,9 @@ export interface CommandHelp {
   // flag table for the group help renderer.
   readonly isLeaf?: boolean
   readonly leafOptions?: readonly LeafOptionHelp[]
+  // Bundled skill chapter slug, if any. Surfaces in `mxs <group> --help` as a
+  // pointer for AI agents. Leave undefined when no dedicated chapter exists.
+  readonly skillChapter?: string
 }
 
 const REGISTRY = new Map<string, CommandHelp>()

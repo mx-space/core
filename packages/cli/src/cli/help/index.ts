@@ -287,6 +287,7 @@ export interface GroupHelpData {
   readonly verbs: readonly VerbDescriptor[]
   readonly isLeaf?: boolean
   readonly leafOptions?: readonly LeafOptionHelp[]
+  readonly skillChapter?: string
 }
 
 const renderVerbSignature = (verb: VerbDescriptor): string => {
@@ -310,6 +311,7 @@ export const groupHelpDataFor = (
     verbs: entry.verbs ?? [],
     isLeaf: entry.isLeaf,
     leafOptions: entry.leafOptions,
+    skillChapter: entry.skillChapter,
   }
 }
 
@@ -364,12 +366,17 @@ export const renderGroupHelp = (data: GroupHelpData): string => {
     lines.push('')
   }
 
-  const chapter = `commands-${data.groupName}`
   lines.push('## Bundled skill (for AI agents)')
   lines.push('')
-  lines.push(
-    `For deeper reference: \`${data.programName} skill get ${chapter}\` (or \`${data.programName} skill\` for the full list).`,
-  )
+  if (data.skillChapter) {
+    lines.push(
+      `For deeper reference: \`${data.programName} skill get ${data.skillChapter}\` (or \`${data.programName} skill\` for the full list).`,
+    )
+  } else {
+    lines.push(
+      `For deeper reference run \`${data.programName} skill\` to see the bundled chapter list.`,
+    )
+  }
   lines.push('')
 
   return lines.join('\n')
