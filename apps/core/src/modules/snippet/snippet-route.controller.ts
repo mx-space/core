@@ -9,6 +9,7 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
+import { SnippetType } from './snippet.schema'
 import { SnippetService } from './snippet.service'
 import type { SnippetRow } from './snippet.types'
 
@@ -62,6 +63,9 @@ export class SnippetRouteController {
 
       if (cached) {
         const json = JSON.safeParse(cached)
+        if (dataSnippet.type === SnippetType.Skill) {
+          this.applySkillResponseHeaders(reply)
+        }
         return reply.send(json || cached)
       }
 
@@ -71,6 +75,9 @@ export class SnippetRouteController {
         !!attached.private,
         attached.data,
       )
+      if (dataSnippet.type === SnippetType.Skill) {
+        this.applySkillResponseHeaders(reply)
+      }
       return reply.send(attached.data)
     }
 
@@ -106,6 +113,14 @@ export class SnippetRouteController {
     }
 
     throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
+  }
+
+  private applySkillResponseHeaders(reply: FastifyReply) {
+    reply.header('Content-Type', 'text/markdown; charset=utf-8')
+    reply.header(
+      'Cache-Control',
+      'public, max-age=300, stale-while-revalidate=3600',
+    )
   }
 
   private async executeFunction(
