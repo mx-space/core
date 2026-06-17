@@ -26,6 +26,7 @@
 // through `bin/mxs.ts`.
 // ---------------------------------------------------------------------------
 
+import '../ai'
 import '../auth'
 import '../category'
 import '../comment'
@@ -81,6 +82,7 @@ export const GROUP_NAMES = [
   'topic',
   'comment',
   'snippet',
+  'ai',
   'config',
   'skill',
   'preview',
