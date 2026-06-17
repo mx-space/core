@@ -385,6 +385,6 @@ describe('SnippetService — Skill update reference preservation', () => {
     })
 
     const callArg = repository.update.mock.calls[0][1]
-    expect(callArg.reference).not.toBe('skill')
+    expect(callArg.reference).toBe('theme')
   })
 })

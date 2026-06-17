@@ -152,7 +152,6 @@ export class SnippetService {
   }
 
   async update(id: string, newModel: SnippetUpdateInput): Promise<SnippetRow> {
-    const reference = newModel.reference ?? 'root'
     await this.validateTypeAndCleanup(newModel)
 
     const old = await this.snippetRepository.findById(id)
@@ -224,7 +223,7 @@ export class SnippetService {
       private: newModel.private ?? old.private,
       raw: newModel.raw,
       name: newModel.name,
-      reference: newModel.reference ?? reference,
+      reference: newModel.reference ?? old.reference ?? 'root',
       comment: newModel.comment ?? null,
       metatype: newModel.metatype ?? null,
       schema: newModel.schema ?? null,
