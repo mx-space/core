@@ -39,10 +39,10 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
   )
 
   const handleSelect = (selected: unknown) => {
-    if (typeof selected !== 'string' || !selected) return
-    const skill = availableItems.find((s) => s.name === selected)
-    if (!skill) return
-    onChange([...value, skill.id])
+    if (!selected || typeof selected !== 'object') return
+    const { value: id } = selected as { value: string }
+    if (!id || !skillMap.has(id)) return
+    onChange([...value, id])
     setInputValue('')
   }
 
@@ -66,7 +66,7 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
                   onClick={() => onChange(value.filter((v) => v !== id))}
                   type="button"
                 >
-                  <X size={10} />
+                  <X size={12} />
                 </button>
               </span>
             ) : (
@@ -82,7 +82,7 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
                   onClick={() => onChange(value.filter((v) => v !== id))}
                   type="button"
                 >
-                  <X size={10} />
+                  <X size={12} />
                 </button>
               </span>
             )
@@ -92,7 +92,7 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
 
       <Combobox
         inputValue={inputValue}
-        items={availableItems.map((s) => s.name)}
+        items={availableItems.map((s) => ({ value: s.id, label: s.name }))}
         onInputValueChange={setInputValue}
         onValueChange={handleSelect}
         value={null}
@@ -112,13 +112,13 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
               : t('write.section.skill.empty')}
           </Combobox.Empty>
           <Combobox.List>
-            {(item: string) => {
-              const skill = availableItems.find((s) => s.name === item)
+            {(item: { value: string; label: string }) => {
+              const skill = skillMap.get(item.value)
               return (
-                <Combobox.Item key={item} value={item}>
-                  <span className="font-mono">{item}</span>
+                <Combobox.Item key={item.value} value={item}>
+                  <span className="font-mono">{item.label}</span>
                   {skill?.comment ? (
-                    <span className="ml-2 truncate text-fg-muted">
+                    <span className="ml-2 truncate text-xs text-fg-muted">
                       {skill.comment}
                     </span>
                   ) : null}
