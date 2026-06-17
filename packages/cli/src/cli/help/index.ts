@@ -364,6 +364,14 @@ export const renderGroupHelp = (data: GroupHelpData): string => {
     lines.push('')
   }
 
+  const chapter = `commands-${data.groupName}`
+  lines.push('## Bundled skill (for AI agents)')
+  lines.push('')
+  lines.push(
+    `For deeper reference: \`${data.programName} skill get ${chapter}\` (or \`${data.programName} skill\` for the full list).`,
+  )
+  lines.push('')
+
   return lines.join('\n')
 }
 
