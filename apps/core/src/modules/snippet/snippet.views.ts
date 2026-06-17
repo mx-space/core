@@ -1,3 +1,5 @@
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
+
 import type { SnippetRow } from './snippet.types'
 
 export type PublicSkillView = {
@@ -13,9 +15,8 @@ export function toPublicSkillView(
   serverUrl: string,
 ): PublicSkillView {
   const base = serverUrl.replace(/\/$/, '')
-  const rawUrl = base
-    ? `${base}/api/v3/s/sk/${row.name}`
-    : `/api/v3/s/sk/${row.name}`
+  const path = `${apiRoutePrefix}/s/sk/${row.name}`
+  const rawUrl = base ? `${base}${path}` : path
   return {
     id: String(row.id),
     name: row.name,
