@@ -37,7 +37,7 @@ const createSnippet = (overrides: Partial<SnippetRow> = {}): SnippetRow => ({
   ...overrides,
 })
 
-const createService = () => {
+const createService = (serverUrl = 'http://localhost:2333') => {
   const repository = createPgRepositoryMock<SnippetRepository>()
   const serverlessService = {
     isValidServerlessFunction: vi.fn().mockResolvedValue(true),
@@ -46,15 +46,26 @@ const createService = () => {
   const redis = { hset: vi.fn(), hget: vi.fn(), hdel: vi.fn() }
   const redisService = { getClient: vi.fn(() => redis) }
   const eventManager = { emit: vi.fn() }
+  const configsService = {
+    get: vi.fn().mockResolvedValue({ serverUrl }),
+  }
 
   const service = new SnippetService(
     repository as any,
     serverlessService as any,
     redisService as any,
     eventManager as any,
+    configsService as any,
   )
 
-  return { eventManager, redis, repository, serverlessService, service }
+  return {
+    configsService,
+    eventManager,
+    redis,
+    repository,
+    serverlessService,
+    service,
+  }
 }
 
 describe('SnippetService — Skill type', () => {
@@ -244,5 +255,99 @@ describe('SnippetService — Skill type', () => {
     const result = await service.attachSnippet(row)
 
     expect(result.data).toBe(row.raw)
+  })
+})
+
+describe('SnippetService.findSkillsByIds', () => {
+  it('returns empty array when ids is empty', async () => {
+    const { service, repository } = createService()
+
+    const result = await service.findSkillsByIds([])
+
+    expect(result).toEqual([])
+    expect(repository.findSkillsByIds).not.toHaveBeenCalled()
+  })
+
+  it('preserves input order against rows returned in a different order', async () => {
+    const { service, repository } = createService()
+    const row1 = createSnippet({
+      id: '1' as any,
+      name: 'skill-a',
+      comment: 'A',
+    })
+    const row2 = createSnippet({
+      id: '2' as any,
+      name: 'skill-b',
+      comment: 'B',
+    })
+    const row3 = createSnippet({
+      id: '3' as any,
+      name: 'skill-c',
+      comment: 'C',
+    })
+    repository.findSkillsByIds.mockResolvedValue([row3, row1, row2])
+
+    const result = await service.findSkillsByIds(['1', '2', '3'])
+
+    expect(result.map((r) => r.name)).toEqual(['skill-a', 'skill-b', 'skill-c'])
+  })
+
+  it('drops ids that did not resolve to a row', async () => {
+    const { service, repository } = createService()
+    const row = createSnippet({ id: '1' as any, name: 'skill-a' })
+    repository.findSkillsByIds.mockResolvedValue([row])
+
+    const result = await service.findSkillsByIds(['1', 'nonexistent'])
+
+    expect(result).toHaveLength(1)
+    expect(result[0].name).toBe('skill-a')
+  })
+
+  it('non-skill rows are excluded (repository enforces this; verify via includePrivate passthrough)', async () => {
+    const { service, repository } = createService()
+    repository.findSkillsByIds.mockResolvedValue([])
+
+    await service.findSkillsByIds(['99'], { includePrivate: false })
+
+    expect(repository.findSkillsByIds).toHaveBeenCalledWith(['99'], false)
+  })
+
+  it('passes includePrivate=true to repository when option is set', async () => {
+    const { service, repository } = createService()
+    repository.findSkillsByIds.mockResolvedValue([])
+
+    await service.findSkillsByIds(['1'], { includePrivate: true })
+
+    expect(repository.findSkillsByIds).toHaveBeenCalledWith(['1'], true)
+  })
+
+  it('builds rawUrl from serverUrl', async () => {
+    const { service, repository } = createService('https://example.com')
+    const row = createSnippet({ id: '1' as any, name: 'my-skill' })
+    repository.findSkillsByIds.mockResolvedValue([row])
+
+    const result = await service.findSkillsByIds(['1'])
+
+    expect(result[0].rawUrl).toBe('https://example.com/api/v3/s/sk/my-skill')
+  })
+
+  it('strips trailing slash from serverUrl before building rawUrl', async () => {
+    const { service, repository } = createService('https://example.com/')
+    const row = createSnippet({ id: '1' as any, name: 'my-skill' })
+    repository.findSkillsByIds.mockResolvedValue([row])
+
+    const result = await service.findSkillsByIds(['1'])
+
+    expect(result[0].rawUrl).toBe('https://example.com/api/v3/s/sk/my-skill')
+  })
+
+  it('falls back to relative url when serverUrl is empty', async () => {
+    const { service, repository } = createService('')
+    const row = createSnippet({ id: '1' as any, name: 'my-skill' })
+    repository.findSkillsByIds.mockResolvedValue([row])
+
+    const result = await service.findSkillsByIds(['1'])
+
+    expect(result[0].rawUrl).toBe('/api/v3/s/sk/my-skill')
   })
 })

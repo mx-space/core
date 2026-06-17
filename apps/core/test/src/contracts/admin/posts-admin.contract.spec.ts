@@ -31,6 +31,7 @@ import {
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { authPassHeader } from '../../../mock/guard/auth.guard'
 import { enrichmentProvider } from '../../../mock/modules/enrichment.mock'
+import { snippetProvider } from '../../../mock/modules/snippet.mock'
 import { countingServiceProvider } from '../../../mock/processors/counting.mock'
 import {
   translationEntryProvider,
@@ -155,6 +156,7 @@ describe('PostController admin contract (e2e)', () => {
       enrichmentProvider,
       aiInsightsProvider,
       aiSummaryProvider,
+      snippetProvider,
     ],
   })
 

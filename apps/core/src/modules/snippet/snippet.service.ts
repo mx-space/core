@@ -8,6 +8,7 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { EncryptUtil } from '~/utils/encrypt.util'
@@ -17,6 +18,8 @@ import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetRepository } from './snippet.repository'
 import { SnippetType } from './snippet.schema'
 import type { SnippetRow } from './snippet.types'
+import type { PublicSkillView } from './snippet.views'
+import { toPublicSkillView } from './snippet.views'
 
 export interface SnippetCreateInput {
   type?: SnippetType
@@ -45,6 +48,7 @@ export class SnippetService {
     private readonly serverlessService: ServerlessService,
     private readonly redisService: RedisService,
     private readonly eventManager: EventManagerService,
+    private readonly configsService: ConfigsService,
   ) {}
 
   get repository() {
@@ -444,6 +448,24 @@ export class SnippetService {
     }
 
     return model as T & { data: any }
+  }
+
+  async findSkillsByIds(
+    ids: string[],
+    options: { includePrivate?: boolean } = {},
+  ): Promise<PublicSkillView[]> {
+    if (ids.length === 0) return []
+    const rows = await this.snippetRepository.findSkillsByIds(
+      ids,
+      options.includePrivate ?? false,
+    )
+    const urlConfig = await this.configsService.get('url')
+    const serverUrl = urlConfig?.serverUrl ?? ''
+    const rowMap = new Map(rows.map((r) => [String(r.id), r]))
+    return ids
+      .map((id) => rowMap.get(id))
+      .filter((r): r is SnippetRow => r !== undefined)
+      .map((r) => toPublicSkillView(r, serverUrl))
   }
 
   private snippetCacheKey(prefix: string, isPrivate: boolean) {

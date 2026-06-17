@@ -338,4 +338,21 @@ export class SnippetRepository extends BaseRepository {
       .returning()
     return row ? mapRow(row) : null
   }
+
+  async findSkillsByIds(
+    ids: string[],
+    includePrivate: boolean,
+  ): Promise<SnippetRow[]> {
+    if (ids.length === 0) return []
+    const bigIds = ids.map((id) => parseEntityId(id))
+    const filter = includePrivate
+      ? and(inArray(snippets.id, bigIds), eq(snippets.type, 'skill'))!
+      : and(
+          inArray(snippets.id, bigIds),
+          eq(snippets.type, 'skill'),
+          eq(snippets.private, false),
+        )!
+    const rows = await this.db.select().from(snippets).where(filter)
+    return rows.map(mapRow)
+  }
 }
