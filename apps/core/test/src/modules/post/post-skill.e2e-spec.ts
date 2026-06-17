@@ -123,6 +123,78 @@ const makePost = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
+describe('PostController — skill attachment (getByCateAndSlug)', () => {
+  const CATEGORY = 'tech'
+  const SLUG = 'test-post'
+
+  describe('post with two skillIds (public + private)', () => {
+    beforeEach(() => {
+      currentPost = makePost({
+        slug: SLUG,
+        meta: { skillIds: ['pub-1', 'priv-2'] },
+      })
+      skillsOverride = null
+    })
+
+    it('anonymous: data.skills contains only public skill', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `/posts/${CATEGORY}/${SLUG}`,
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = JSON.parse(res.body)
+      expect(body.data.skills).toHaveLength(1)
+      expect(body.data.skills[0].id).toBe('pub-1')
+    })
+
+    it('admin: data.skills contains both skills in input order [pub-1, priv-2]', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `/posts/${CATEGORY}/${SLUG}`,
+        headers: authPassHeader,
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = JSON.parse(res.body)
+      expect(body.data.skills).toHaveLength(2)
+      expect(body.data.skills[0].id).toBe('pub-1')
+      expect(body.data.skills[1].id).toBe('priv-2')
+    })
+
+    it('public skill raw_url matches expected URL', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `/posts/${CATEGORY}/${SLUG}`,
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = JSON.parse(res.body)
+      expect(body.data.skills[0].raw_url).toBe(
+        `${SERVER_URL}/api/v3/s/sk/public-skill`,
+      )
+    })
+  })
+
+  describe('post with no meta.skillIds', () => {
+    beforeEach(() => {
+      currentPost = makePost({ slug: SLUG, meta: null })
+      skillsOverride = null
+    })
+
+    it('returns 200 with no skills field on data', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `/posts/${CATEGORY}/${SLUG}`,
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = JSON.parse(res.body)
+      expect(body.data.skills).toBeUndefined()
+    })
+  })
+})
+
 describe('PostController — skill attachment (getById)', () => {
   describe('post with two skillIds (public + private)', () => {
     beforeEach(() => {

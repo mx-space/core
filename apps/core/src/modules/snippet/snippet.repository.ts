@@ -12,6 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
+import { SnippetType } from './snippet.schema'
 import type { SnippetGroupRow, SnippetRow } from './snippet.types'
 
 const mapRow = (row: typeof snippets.$inferSelect): SnippetRow => ({
@@ -346,10 +347,10 @@ export class SnippetRepository extends BaseRepository {
     if (ids.length === 0) return []
     const bigIds = ids.map((id) => parseEntityId(id))
     const filter = includePrivate
-      ? and(inArray(snippets.id, bigIds), eq(snippets.type, 'skill'))!
+      ? and(inArray(snippets.id, bigIds), eq(snippets.type, SnippetType.Skill))!
       : and(
           inArray(snippets.id, bigIds),
-          eq(snippets.type, 'skill'),
+          eq(snippets.type, SnippetType.Skill),
           eq(snippets.private, false),
         )!
     const rows = await this.db.select().from(snippets).where(filter)
