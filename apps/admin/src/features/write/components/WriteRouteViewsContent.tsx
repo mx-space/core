@@ -24,6 +24,7 @@ import {
   Search,
   Send,
   SlidersHorizontal,
+  Sparkles,
   WandSparkles,
   X,
 } from 'lucide-react'
@@ -62,6 +63,7 @@ import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
 import { DraftPreviewBanner } from '~/features/write/components/DraftPreviewBanner'
+import { SkillPicker } from '~/features/write/components/SkillPicker'
 import { MetaPresetSection } from '~/features/write/meta-presets'
 import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
@@ -2447,6 +2449,30 @@ function MediaAndMetaFields(props: {
           </p>
         )}
       </PanelBlock>
+
+      {props.kind === 'post' && (
+        <PanelBlock icon={Sparkles} title={t('write.section.skill.title')}>
+          <SkillPicker
+            onChange={(next) => {
+              const meta = { ...props.state.meta }
+              if (next.length === 0) {
+                delete meta.skillIds
+                props.updateField('meta', meta)
+              } else {
+                props.updateField('meta', { ...meta, skillIds: next })
+              }
+            }}
+            value={
+              Array.isArray(props.state.meta?.skillIds) &&
+              (props.state.meta.skillIds as unknown[]).every(
+                (v) => typeof v === 'string',
+              )
+                ? (props.state.meta.skillIds as string[])
+                : []
+            }
+          />
+        </PanelBlock>
+      )}
 
       <PanelBlock icon={Braces} title={t('write.section.image.metaTitle')}>
         {props.kind === 'page' ? (

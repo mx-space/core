@@ -2679,6 +2679,14 @@ export const zhCN = {
   'write.section.draft.title': '草稿',
   'write.section.draft.untitled': '未命名草稿',
   'write.section.draft.versionLine': '版本 {version} · {time}',
+  'write.section.skill.title': '关联 Skill',
+  'write.section.skill.placeholder': '搜索 skill...',
+  'write.section.skill.empty': '尚无 skill，先去 Snippets 创建。',
+  'write.section.skill.helper':
+    '读者将于文章上方见到关联 skill 之卡片与一行 install 命令。',
+  'write.section.skill.removeAria': '移除 skill {name}',
+  'write.section.skill.unavailable': 'Skill 已不可用',
+  'write.section.skill.loading': '加载中...',
   'write.section.image.candidateHint':
     '正文、编辑器或封面图中的图片会在保存时写入图片信息。',
   'write.section.image.coverAlt': '封面预览',
