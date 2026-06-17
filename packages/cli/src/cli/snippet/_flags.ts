@@ -14,6 +14,7 @@ export const SNIPPET_TYPES = [
   'function',
   'text',
   'yaml',
+  'skill',
 ] as const
 
 export const SNIPPET_KEYS = [
@@ -177,6 +178,7 @@ const EXT_BY_TYPE: Record<string, string> = {
   function: 'js',
   yaml: 'yaml',
   text: 'txt',
+  skill: 'md',
 }
 
 export const extForType = (type: unknown): string =>

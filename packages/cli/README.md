@@ -427,7 +427,7 @@ Snippets are addressed by Snowflake id or `<reference>/<name>`. A bare name with
 | -------------------------- | ----------------------------------------------------------- |
 | `--name <name>`            | `name` (required for `create`)                              |
 | `--reference <r>`          | `reference` (defaults to `root` server-side)                |
-| `--type <t>`               | `type`: `json`, `json5`, `function`, `text`, or `yaml`      |
+| `--type <t>`               | `type`: `json`, `json5`, `function`, `text`, `yaml`, or `skill` |
 | `--file <path\|->`          | Read `raw` content from a file; `-` reads stdin             |
 | `--raw <text>`             | Inline `raw` content                                        |
 | `--private` / `--no-private` | `private`                                                 |
@@ -445,6 +445,28 @@ Raw content sources are mutually exclusive and resolve in order: `--file`, then 
 mxs snippet create --name theme --reference web --type json --file theme.json
 echo '{"a":1}' | mxs snippet create --name config
 mxs snippet edit web/theme
+```
+
+### Skill snippets
+
+The `skill` type stores a Claude Code-style skill bundle (YAML frontmatter + markdown body). On create/update the server parses the frontmatter, enforces that frontmatter `name` matches the snippet `name`, requires a non-empty `description`, copies the description into `comment`, and auto-fills `customPath` to `sk/<name>` when not set. The raw markdown (including frontmatter) is served at `/api/v3/s/sk/<name>` with `Content-Type: text/markdown`.
+
+```bash
+mxs snippet create --name db-migration-author --type skill --file SKILL.md
+# attach to a post via meta.skillIds on `mxs post create`/`update`
+```
+
+A minimal `SKILL.md`:
+
+```markdown
+---
+name: db-migration-author
+description: Expand-contract Postgres migrations safe for rolling deploys.
+---
+
+## When to use
+
+Use when authoring or reviewing any Postgres migration in this codebase.
 ```
 
 ## Configuration
