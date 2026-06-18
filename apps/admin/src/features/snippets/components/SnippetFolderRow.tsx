@@ -145,6 +145,7 @@ export function SnippetFolderRow(props: SnippetFolderRowProps) {
               onClick={() => {
                 props.onFocus?.()
                 props.onSelectFolder(folder.path)
+                props.onToggleFolder(folder.path)
               }}
               onDoubleClick={() => props.onStartRename(folder.path)}
               type="button"
