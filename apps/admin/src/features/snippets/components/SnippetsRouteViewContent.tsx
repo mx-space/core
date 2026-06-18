@@ -415,35 +415,37 @@ export function SnippetsRouteViewContent() {
   }, [])
 
   const handleDraftCommit = useCallback(() => {
-    setFileDraft((current) => {
-      if (!current) return current
-      const name = current.name.trim()
-      if (!name) return null
-      if (name.includes('/')) {
-        toast.error(t('snippets.toast.renameInvalid'))
-        return current
-      }
-      const fullPath = `${current.parentPrefix}${name}`
-      if (snippets.some((snippet) => snippet.path === fullPath)) {
-        toast.error(t('snippets.toast.renameConflict'))
-        return current
-      }
-      const initialRaw =
-        current.type === SnippetType.JSON || current.type === SnippetType.JSON5
-          ? '{}'
-          : ''
-      createMutation.mutate({
-        ...emptySnippet,
-        comment: '',
-        enable: true,
-        path: fullPath,
-        private: false,
-        raw: initialRaw,
-        type: current.type,
-      })
-      return current
+    if (!fileDraft) return
+    if (createMutation.isPending) return
+    const name = fileDraft.name.trim()
+    if (!name) {
+      setFileDraft(null)
+      return
+    }
+    if (name.includes('/')) {
+      toast.error(t('snippets.toast.renameInvalid'))
+      return
+    }
+    const fullPath = `${fileDraft.parentPrefix}${name}`
+    if (snippets.some((snippet) => snippet.path === fullPath)) {
+      toast.error(t('snippets.toast.renameConflict'))
+      return
+    }
+    const initialRaw =
+      fileDraft.type === SnippetType.JSON ||
+      fileDraft.type === SnippetType.JSON5
+        ? '{}'
+        : ''
+    createMutation.mutate({
+      ...emptySnippet,
+      comment: '',
+      enable: true,
+      path: fullPath,
+      private: false,
+      raw: initialRaw,
+      type: fileDraft.type,
     })
-  }, [createMutation, snippets, t])
+  }, [createMutation, fileDraft, snippets, t])
 
   const startCreateFolder = useCallback((parentPrefix: string) => {
     const normalizedParent = normalizeFolderPrefix(parentPrefix)
