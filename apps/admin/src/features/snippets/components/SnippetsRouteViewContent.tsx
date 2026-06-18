@@ -428,13 +428,17 @@ export function SnippetsRouteViewContent() {
         toast.error(t('snippets.toast.renameConflict'))
         return current
       }
+      const initialRaw =
+        current.type === SnippetType.JSON || current.type === SnippetType.JSON5
+          ? '{}'
+          : ''
       createMutation.mutate({
         ...emptySnippet,
         comment: '',
         enable: true,
         path: fullPath,
         private: false,
-        raw: '',
+        raw: initialRaw,
         type: current.type,
       })
       return current

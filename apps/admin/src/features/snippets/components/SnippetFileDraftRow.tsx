@@ -50,10 +50,25 @@ export function SnippetFileDraftRow(props: SnippetFileDraftRowProps) {
   useEffect(() => {
     const el = inputRef.current
     if (!el) return
-    el.focus()
-    const firstDot = el.value.indexOf('.')
-    const end = firstDot <= 0 ? el.value.length : firstDot
-    el.setSelectionRange(0, end)
+    // Reclaim focus from Base UI's menu focus-restore by retrying for ~300ms.
+    let cancelled = false
+    let attempts = 0
+    const tick = () => {
+      if (cancelled) return
+      el.focus()
+      if (document.activeElement === el) {
+        const firstDot = el.value.indexOf('.')
+        const end = firstDot <= 0 ? el.value.length : firstDot
+        el.setSelectionRange(0, end)
+        return
+      }
+      attempts += 1
+      if (attempts < 8) window.setTimeout(tick, 40)
+    }
+    window.setTimeout(tick, 0)
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const commit = () => {

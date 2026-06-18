@@ -226,8 +226,22 @@ function FolderRenameField(props: FolderRenameFieldProps) {
   useEffect(() => {
     const el = inputRef.current
     if (!el) return
-    el.focus()
-    el.setSelectionRange(0, el.value.length)
+    let cancelled = false
+    let attempts = 0
+    const tick = () => {
+      if (cancelled) return
+      el.focus()
+      if (document.activeElement === el) {
+        el.setSelectionRange(0, el.value.length)
+        return
+      }
+      attempts += 1
+      if (attempts < 8) window.setTimeout(tick, 40)
+    }
+    window.setTimeout(tick, 0)
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const commit = () => {

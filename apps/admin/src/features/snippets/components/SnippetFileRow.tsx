@@ -205,13 +205,24 @@ function FileRenameField(props: FileRenameFieldProps) {
   useEffect(() => {
     const el = inputRef.current
     if (!el) return
-    el.focus()
-    // Select everything before the first dot in the basename. The whole input
-    // stays editable — this is a default convenience. For dotfiles (e.g.
-    // `.env`) or no-extension names (e.g. `README`), select the whole value.
-    const firstDot = el.value.indexOf('.')
-    const end = firstDot <= 0 ? el.value.length : firstDot
-    el.setSelectionRange(0, end)
+    let cancelled = false
+    let attempts = 0
+    const tick = () => {
+      if (cancelled) return
+      el.focus()
+      if (document.activeElement === el) {
+        const firstDot = el.value.indexOf('.')
+        const end = firstDot <= 0 ? el.value.length : firstDot
+        el.setSelectionRange(0, end)
+        return
+      }
+      attempts += 1
+      if (attempts < 8) window.setTimeout(tick, 40)
+    }
+    window.setTimeout(tick, 0)
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const commit = () => {
