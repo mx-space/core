@@ -65,6 +65,7 @@ import {
   SnippetList,
   type SnippetTreeFolder,
 } from './SnippetList'
+import { basenameOf, SnippetMovePicker } from './SnippetMovePicker'
 import { SnippetsRouteContext } from './snippets-route-context'
 import {
   SnippetDetailEmpty,
@@ -138,6 +139,10 @@ export function SnippetsRouteViewContent() {
   const [focusedPath, setFocusedPath] = useState<string | null>(null)
   // Owned by Task 2; consumed by the rename infra (Task 3).
   const [renamingPath, setRenamingPath] = useState<string | null>(null)
+  const [movePicker, setMovePicker] = useState<{
+    isFolder: boolean
+    paths: string[]
+  } | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const listQuery = useQuery({
@@ -478,7 +483,8 @@ export function SnippetsRouteViewContent() {
         const multiItems = buildMultiSelectFileMenuItems({
           count: checked.size,
           onDelete: () => void runBatchDelete(),
-          onMoveTo: () => toast.info(t('snippets.toast.moveComingSoon')),
+          onMoveTo: () =>
+            setMovePicker({ isFolder: false, paths: [...checked] }),
           t,
         })
         showContextMenu(multiItems)
@@ -494,7 +500,8 @@ export function SnippetsRouteViewContent() {
         onCopyRawUrl: () =>
           void copyToClipboard(buildSnippetExternalUrl(snippet)),
         onDelete: () => requestDelete(snippet),
-        onMoveTo: () => toast.info(t('snippets.toast.moveComingSoon')),
+        onMoveTo: () =>
+          setMovePicker({ isFolder: false, paths: [snippet.path] }),
         onOpen: () => selectSnippet(snippet),
         onOpenExternal: () =>
           window.open(buildSnippetExternalUrl(snippet), '_blank'),
@@ -551,7 +558,7 @@ export function SnippetsRouteViewContent() {
             return next
           })
         },
-        onMoveTo: () => toast.info(t('snippets.toast.moveComingSoon')),
+        onMoveTo: () => setMovePicker({ isFolder: true, paths: [folder.path] }),
         onNewFile: () => {
           setSelectedPrefix(folder.path)
           const path = nextUntitledFilePath(folder.path, snippets)
@@ -618,6 +625,49 @@ export function SnippetsRouteViewContent() {
       void invalidateSnippets()
     },
     [invalidateSnippets, navigate],
+  )
+
+  const handleMoveCommit = useCallback(
+    async (targetPrefix: string) => {
+      if (!movePicker) return
+      const { isFolder, paths } = movePicker
+      if (paths.length === 0) return
+      if (paths.length === 1) {
+        const from = paths[0]
+        const base = basenameOf(from)
+        const to = isFolder
+          ? `${targetPrefix}${base}/`
+          : `${targetPrefix}${base}`
+        try {
+          await vfs.move({ from, recursive: isFolder, to })
+          toast.success(t('snippets.toast.moved', { target: targetPrefix }))
+        } catch (error) {
+          toast.error(
+            getErrorMessage(error, t('snippets.toast.renameConflict')),
+          )
+        }
+        return
+      }
+      // multi: files only
+      const moves = paths.map((from) => ({
+        from,
+        to: `${targetPrefix}${basenameOf(from)}`,
+      }))
+      const result = await vfs.batchMove(moves)
+      if (result.failed.length === 0) {
+        toast.success(t('snippets.toast.movedN', { count: result.ok }))
+      } else {
+        toast.error(
+          t('snippets.toast.movedPartial', {
+            failed: result.failed.length,
+            ok: result.ok,
+            total: paths.length,
+          }),
+        )
+      }
+      if (result.ok > 0) clearChecked()
+    },
+    [clearChecked, movePicker, t, vfs],
   )
 
   const handleInstallDependency = useCallback(() => {
@@ -918,6 +968,14 @@ export function SnippetsRouteViewContent() {
         onClose={() => setLogsTarget(null)}
         open={logsTarget !== null}
         snippet={logsTarget?.type === SnippetType.Function ? logsTarget : null}
+      />
+      <SnippetMovePicker
+        isFolderSource={movePicker?.isFolder ?? false}
+        onClose={() => setMovePicker(null)}
+        onCommit={handleMoveCommit}
+        open={movePicker !== null}
+        sourcePaths={movePicker?.paths ?? []}
+        treeNodes={treeNodes}
       />
     </SnippetsRouteContext.Provider>
   )
