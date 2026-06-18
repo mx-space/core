@@ -64,3 +64,4 @@ minimumReleaseAgeExclude:
   - jotai@2.20.1
   - nodemailer@8.0.11
   - '@innei/react-tweet@3.4.3'
+  - react-router@8.0.0
