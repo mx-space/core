@@ -7,18 +7,16 @@ export interface RedisTestContainer {
   stop: () => Promise<void>
 }
 
+/**
+ * Always allocate a dedicated Redis instance per backend. ConfigsService caches
+ * the merged config under a fixed `mx:config:cache` key; sharing a single Redis
+ * across vitest workers lets one backend's `configInit` overwrite another's
+ * `patchAndValid` write, which surfaced as config-rw flakiness in CI where the
+ * REDIS_VERIFY_URL service container was shared. The per-worker testcontainer
+ * uses a dynamically mapped port so it does not conflict with the CI service
+ * container Redis that still listens on 6379.
+ */
 export async function startRedisTestContainer(): Promise<RedisTestContainer> {
-  const external = process.env.REDIS_VERIFY_URL?.trim()
-  if (external) {
-    const url = new URL(external)
-    return {
-      uri: external,
-      host: url.hostname,
-      port: Number(url.port || 6379),
-      stop: async () => {},
-    }
-  }
-
   const container = await new GenericContainer('redis:7-alpine')
     .withExposedPorts(6379)
     .start()
