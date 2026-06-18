@@ -45,6 +45,7 @@ interface SnippetListProps {
   nodes: SnippetTreeNode[]
   onCreateFileInFolder: (prefix: string) => void
   onDelete: (snippet: SnippetModel) => void
+  onFocusPath?: (path: string) => void
   onOpenExternal: (snippet: SnippetModel) => void
   onSelect: (snippet: SnippetModel) => void
   onSelectFolder: (prefix: string) => void
@@ -82,6 +83,7 @@ function SnippetTreeNodeRow(
         focusedPath={props.focusedPath ?? null}
         level={props.level}
         onDelete={() => props.onDelete(fileNode.snippet)}
+        onFocus={() => props.onFocusPath?.(fileNode.path)}
         onOpenExternal={() => props.onOpenExternal(fileNode.snippet)}
         onSelect={() => props.onSelect(fileNode.snippet)}
         selected={props.selectedId === fileNode.snippet.id}
@@ -98,6 +100,7 @@ function SnippetTreeNodeRow(
       folder={props.node}
       level={props.level}
       onCreateFileInFolder={props.onCreateFileInFolder}
+      onFocus={() => props.onFocusPath?.(props.node.path)}
       onSelectFolder={props.onSelectFolder}
       onToggleFolder={props.onToggleFolder}
       selected={props.selectedPrefix === props.node.path}
@@ -123,6 +126,7 @@ function SnippetFolderRow(props: {
   folder: SnippetTreeFolder
   level: number
   onCreateFileInFolder: (prefix: string) => void
+  onFocus?: () => void
   onSelectFolder: (prefix: string) => void
   onToggleFolder: (prefix: string) => void
   selected: boolean
@@ -151,7 +155,10 @@ function SnippetFolderRow(props: {
         <button
           aria-label={props.expanded ? 'Collapse folder' : 'Expand folder'}
           className="flex size-5 shrink-0 items-center justify-center rounded text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-          onClick={() => props.onToggleFolder(folder.path)}
+          onClick={() => {
+            props.onFocus?.()
+            props.onToggleFolder(folder.path)
+          }}
           type="button"
         >
           {props.expanded ? (
@@ -162,7 +169,10 @@ function SnippetFolderRow(props: {
         </button>
         <button
           className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
-          onClick={() => props.onSelectFolder(folder.path)}
+          onClick={() => {
+            props.onFocus?.()
+            props.onSelectFolder(folder.path)
+          }}
           type="button"
         >
           {props.expanded ? (
@@ -246,6 +256,7 @@ function SnippetFileRow(props: {
   focusedPath: string | null
   level: number
   onDelete: () => void
+  onFocus?: () => void
   onOpenExternal: () => void
   onSelect: () => void
   selected: boolean
@@ -275,7 +286,10 @@ function SnippetFileRow(props: {
           props.selected ? 'bg-neutral-100 dark:bg-neutral-800' : null,
         )}
         dataId={snippet.id}
-        onSelect={props.onSelect}
+        onSelect={() => {
+          props.onFocus?.()
+          props.onSelect()
+        }}
         selected={props.selected}
       >
         {props.level > 0 ? (

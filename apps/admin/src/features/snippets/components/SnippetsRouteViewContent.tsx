@@ -11,7 +11,7 @@ import {
   Search,
   X,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
@@ -19,6 +19,7 @@ import { getDependencyInstallUrl } from '~/api/dependencies'
 import {
   type CreateSnippetData,
   deleteSnippet,
+  deleteSnippetByPath,
   getSnippets,
   resetFunctionSnippet,
   type SnippetObject,
@@ -32,7 +33,6 @@ import { adminQueryKeys } from '~/query/keys'
 import { FocusScope } from '~/ui/focus-scope'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
-import { useListKeyboard } from '~/ui/list-actions'
 import type { ContextMenuItem } from '~/ui/overlay/context-menu'
 import { showContextMenu } from '~/ui/overlay/context-menu'
 import { Button } from '~/ui/primitives/button'
@@ -41,6 +41,7 @@ import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
 import { emptySnippet, snippetsQueryKey } from '../constants'
+import { useTreeKeyboard } from '../hooks/use-tree-keyboard'
 import { getErrorMessage } from '../utils/snippets'
 import { CompiledCodeModal } from './CompiledCodeModal'
 import { FunctionLogsDrawer } from './FunctionLogsDrawer'
@@ -122,6 +123,10 @@ export function SnippetsRouteViewContent() {
     null,
   )
   const [folderDraftName, setFolderDraftName] = useState('')
+  const [focusedPath, setFocusedPath] = useState<string | null>(null)
+  // Owned by Task 2; consumed by the rename infra (Task 3).
+  const [renamingPath, setRenamingPath] = useState<string | null>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const listQuery = useQuery({
     placeholderData: (previous) => previous,
@@ -133,22 +138,6 @@ export function SnippetsRouteViewContent() {
     () => (listQuery.data?.objects ?? []).map(toSnippetModel),
     [listQuery.data?.objects],
   )
-
-  const focusedPath = useMemo(() => {
-    if (selectedId && selectedId !== 'new') {
-      const match = snippets.find((s) => s.id === selectedId)
-      if (match) return match.path
-    }
-    return selectedPrefix || null
-  }, [selectedId, selectedPrefix, snippets])
-
-  useEffect(() => {
-    if (!focusedPath) return
-    const el = document.querySelector<HTMLElement>(
-      `[data-tree-path=${CSS.escape(focusedPath)}]`,
-    )
-    el?.focus()
-  }, [focusedPath])
 
   const treeNodes = useMemo(
     () => buildSnippetTree(snippets, stagedPrefixes),
@@ -164,6 +153,34 @@ export function SnippetsRouteViewContent() {
     () => flattenVisibleSnippets(displayTreeNodes, expandedPrefixes),
     [displayTreeNodes, expandedPrefixes],
   )
+
+  // Lazy-initialize focusedPath once the tree is hydrated: prefer the file
+  // matching :id, then the current folder selection, then the first visible
+  // node. Subsequent navigation updates focusedPath directly.
+  useEffect(() => {
+    if (focusedPath !== null) return
+    if (selectedId && selectedId !== 'new') {
+      const match = snippets.find((s) => s.id === selectedId)
+      if (match) {
+        setFocusedPath(match.path)
+        return
+      }
+    }
+    if (selectedPrefix) {
+      setFocusedPath(selectedPrefix)
+      return
+    }
+    const firstVisible = flatItems[0]
+    if (firstVisible) setFocusedPath(firstVisible.path)
+  }, [flatItems, focusedPath, selectedId, selectedPrefix, snippets])
+
+  useEffect(() => {
+    if (!focusedPath) return
+    const el = document.querySelector<HTMLElement>(
+      `[data-tree-path=${CSS.escape(focusedPath)}]`,
+    )
+    el?.focus()
+  }, [focusedPath])
 
   const invalidateSnippets = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: snippetsQueryKey })
@@ -184,6 +201,16 @@ export function SnippetsRouteViewContent() {
     },
   })
 
+  const deleteFolderMutation = useMutation({
+    mutationFn: (path: string) => deleteSnippetByPath(path, true),
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, t('snippets.toast.deleteFailed'))),
+    onSuccess: async () => {
+      toast.success(t('snippets.toast.deleted'))
+      await invalidateSnippets()
+    },
+  })
+
   const resetMutation = useMutation({
     mutationFn: resetFunctionSnippet,
     onError: (error: unknown) =>
@@ -197,6 +224,7 @@ export function SnippetsRouteViewContent() {
   const selectSnippet = useCallback(
     (snippet: SnippetModel) => {
       setSelectedPrefix(getParentPrefix(snippet.path))
+      setFocusedPath(snippet.path)
       navigate(`/snippets/${snippet.id}`)
     },
     [navigate],
@@ -251,6 +279,7 @@ export function SnippetsRouteViewContent() {
 
   const selectFolder = useCallback((prefix: string) => {
     setSelectedPrefix(prefix)
+    setFocusedPath(prefix)
   }, [])
 
   const requestDelete = useCallback(
@@ -271,16 +300,35 @@ export function SnippetsRouteViewContent() {
     [deleteMutation, resetMutation, t],
   )
 
-  useListKeyboard<SnippetModel>({
-    actions: [],
-    getId: (snippet) => snippet.id,
-    items: flatItems,
-    onItemFocus: (id) => {
-      const snippet = flatItems.find((entry) => entry.id === id)
-      if (snippet) selectSnippet(snippet)
+  const handleTreeDelete = useCallback(
+    (path: string) => {
+      const file = snippets.find((entry) => entry.path === path)
+      if (file) {
+        requestDelete(file)
+        return
+      }
+      // folder
+      const confirmed = window.confirm(
+        t('snippets.confirm.delete', { name: path }),
+      )
+      if (!confirmed) return
+      deleteFolderMutation.mutate(path)
     },
-    resetOn: [search],
+    [deleteFolderMutation, requestDelete, snippets, t],
+  )
+
+  useTreeKeyboard({
+    disabled: renamingPath !== null,
+    expandedPrefixes,
+    focusedPath,
+    nodes: displayTreeNodes,
+    onDelete: handleTreeDelete,
+    onRename: (path) => setRenamingPath(path),
+    onSelectFile: selectSnippet,
+    onToggleExpand: toggleFolder,
     scopeId: FOCUS_SCOPE_ID,
+    searchInputRef,
+    setFocusedPath,
   })
 
   const overflowMenuItems: ContextMenuItem[] = [
@@ -375,6 +423,7 @@ export function SnippetsRouteViewContent() {
                   controlClassName="h-8 pl-7 text-sm focus:border-neutral-400 focus:ring-0"
                   onChange={setSearch}
                   placeholder={t('snippets.list.searchPlaceholder')}
+                  ref={searchInputRef}
                   value={search}
                 />
               </div>
@@ -528,6 +577,7 @@ export function SnippetsRouteViewContent() {
                     navigate('/snippets/new')
                   }}
                   onDelete={requestDelete}
+                  onFocusPath={setFocusedPath}
                   onOpenExternal={(snippet) =>
                     window.open(buildSnippetExternalUrl(snippet), '_blank')
                   }
