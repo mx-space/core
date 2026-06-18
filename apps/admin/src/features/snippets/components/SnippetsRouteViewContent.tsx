@@ -266,16 +266,19 @@ export function SnippetsRouteViewContent() {
         }
         queryClient.setQueryData(vfsQueryKey, patched)
       }
-      setRenamingPath(null)
       return { previous }
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: vfsQueryKey })
     },
+    onSuccess: () => {
+      setRenamingPath(null)
+    },
   })
 
   const commitRename = useCallback(
     (path: string, draftRaw: string) => {
+      if (renameMutation.isPending) return
       const draft = draftRaw.trim()
       const isFolder = path.endsWith('/')
       const parentPrefix = isFolder
