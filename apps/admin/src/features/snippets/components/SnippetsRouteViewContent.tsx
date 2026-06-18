@@ -30,6 +30,7 @@ import { presentTerminalOutput } from '~/features/snippets/components/terminal-o
 import { useI18n } from '~/i18n'
 import { SnippetModel, SnippetType } from '~/models/snippet'
 import { adminQueryKeys } from '~/query/keys'
+import { confirmDialog } from '~/ui/feedback/confirm'
 import { FocusScope } from '~/ui/focus-scope'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
@@ -353,9 +354,10 @@ export function SnippetsRouteViewContent() {
   const runBatchDelete = useCallback(async () => {
     const paths = [...checked]
     if (paths.length === 0) return
-    const confirmed = window.confirm(
-      t('snippets.confirm.batchDelete', { count: paths.length }),
-    )
+    const confirmed = await confirmDialog({
+      destructive: true,
+      title: t('snippets.confirm.batchDelete', { count: paths.length }),
+    })
     if (!confirmed) return
     const result = await vfs.batchDelete(paths)
     if (result.failed.length === 0) {
@@ -428,13 +430,14 @@ export function SnippetsRouteViewContent() {
   )
 
   const requestDelete = useCallback(
-    (snippet: SnippetModel) => {
+    async (snippet: SnippetModel) => {
       const isReset = snippet.builtIn && snippet.type === SnippetType.Function
-      const confirmed = window.confirm(
-        isReset
+      const confirmed = await confirmDialog({
+        destructive: !isReset,
+        title: isReset
           ? t('snippets.confirm.resetBuiltIn', { name: snippet.path })
           : t('snippets.confirm.delete', { name: snippet.path }),
-      )
+      })
       if (!confirmed) return
       if (isReset) {
         resetMutation.mutate(snippet.id)
@@ -446,7 +449,7 @@ export function SnippetsRouteViewContent() {
   )
 
   const handleTreeDelete = useCallback(
-    (path: string) => {
+    async (path: string) => {
       // Batch path: focused row is part of the multi-select.
       if (checked.size > 0 && checked.has(path)) {
         void runBatchDelete()
@@ -454,13 +457,14 @@ export function SnippetsRouteViewContent() {
       }
       const file = snippets.find((entry) => entry.path === path)
       if (file) {
-        requestDelete(file)
+        void requestDelete(file)
         return
       }
       // folder
-      const confirmed = window.confirm(
-        t('snippets.confirm.delete', { name: path }),
-      )
+      const confirmed = await confirmDialog({
+        destructive: true,
+        title: t('snippets.confirm.delete', { name: path }),
+      })
       if (!confirmed) return
       deleteFolderMutation.mutate(path)
     },
@@ -546,13 +550,16 @@ export function SnippetsRouteViewContent() {
         },
         onCopyPath: () => void copyToClipboard(folder.path),
         onDelete: () => {
-          const confirmed = window.confirm(
-            t('snippets.confirm.delete', {
-              name: `${folder.path} (${fileCount})`,
-            }),
-          )
-          if (!confirmed) return
-          deleteFolderMutation.mutate(folder.path)
+          void (async () => {
+            const confirmed = await confirmDialog({
+              destructive: true,
+              title: t('snippets.confirm.delete', {
+                name: `${folder.path} (${fileCount})`,
+              }),
+            })
+            if (!confirmed) return
+            deleteFolderMutation.mutate(folder.path)
+          })()
         },
         onExpandAll: () => {
           setExpandedPrefixes((current) => {
