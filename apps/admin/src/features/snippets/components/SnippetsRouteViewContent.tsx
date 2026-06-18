@@ -884,18 +884,18 @@ export function SnippetsRouteViewContent() {
           >
             <div
               className={cn(
-                'flex shrink-0 items-center justify-between gap-2 border-b border-neutral-200 px-2 dark:border-neutral-800',
+                'flex shrink-0 items-center gap-1 border-b border-border px-2',
                 APP_SHELL_HEADER_HEIGHT_CLASS,
               )}
             >
               <MobileHeaderAffordance />
-              <div className="relative min-w-0 flex-1">
+              <div className="relative flex min-w-0 flex-1 items-center">
                 <Search
                   aria-hidden="true"
-                  className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-neutral-400"
+                  className="pointer-events-none absolute left-1.5 size-3.5 text-fg-subtle"
                 />
                 <TextInput
-                  controlClassName="h-8 pl-7 text-sm focus:border-neutral-400 focus:ring-0"
+                  controlClassName="h-8 border-0 bg-transparent pl-7 text-sm shadow-none focus:border-0 focus:ring-0 focus:shadow-none"
                   onChange={setSearch}
                   onKeyDown={(event) => {
                     if (event.key !== 'Escape') return
@@ -917,7 +917,7 @@ export function SnippetsRouteViewContent() {
                   value={search}
                 />
               </div>
-              <div className="flex shrink-0 items-center gap-0.5">
+              <div className="flex shrink-0 items-center">
                 <Button
                   aria-label={t('snippets.action.createMenu')}
                   className="h-8 w-8"
@@ -925,6 +925,7 @@ export function SnippetsRouteViewContent() {
                   onClick={() => showContextMenu(createMenuItems)}
                   title={t('snippets.action.createMenu')}
                   type="button"
+                  variant="ghost"
                 >
                   <Plus aria-hidden="true" className="size-4" />
                 </Button>
@@ -935,19 +936,19 @@ export function SnippetsRouteViewContent() {
                   onClick={() => showContextMenu(overflowMenuItems)}
                   title={t('shared.contentListItem.moreActions')}
                   type="button"
-                  variant="subtle"
+                  variant="ghost"
                 >
                   <MoreHorizontal aria-hidden="true" className="size-4" />
                 </Button>
               </div>
             </div>
 
-            <div className="shrink-0 border-b border-neutral-200 px-2 py-1.5 dark:border-neutral-800">
+            <div className="shrink-0 border-b border-border px-2 py-1.5">
               <div className="flex min-h-7 items-center justify-between gap-2">
                 <button
                   className={cn(
-                    'flex min-w-0 items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs transition-colors',
-                    'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100',
+                    'flex min-w-0 items-center gap-1.5 rounded-sm px-1.5 py-1 text-left text-xs transition-colors',
+                    'text-fg-muted hover:bg-surface-card hover:text-fg',
                   )}
                   onClick={() => setSelectedPrefix('')}
                   title={selectedPrefixLabel}
@@ -958,7 +959,7 @@ export function SnippetsRouteViewContent() {
                     {selectedPrefixLabel}
                   </span>
                 </button>
-                <span className="shrink-0 text-xs tabular-nums text-neutral-400">
+                <span className="shrink-0 text-xs tabular-nums text-fg-subtle">
                   {snippets.length}
                 </span>
               </div>
@@ -973,11 +974,11 @@ export function SnippetsRouteViewContent() {
                 >
                   <FolderPlus
                     aria-hidden="true"
-                    className="size-3.5 shrink-0 text-neutral-400"
+                    className="size-3.5 shrink-0 text-fg-subtle"
                   />
                   <TextInput
                     autoFocus
-                    controlClassName="h-7 min-w-0 flex-1 px-2 text-xs focus:border-neutral-400 focus:ring-0"
+                    controlClassName="h-7 min-w-0 flex-1 border-0 bg-transparent px-2 text-xs shadow-none focus:border-0 focus:ring-0 focus:shadow-none"
                     onChange={setFolderDraftName}
                     onKeyDown={(event) => {
                       if (event.key === 'Escape') {
