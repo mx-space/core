@@ -103,7 +103,8 @@ describe('mxs comment moderation against real core', () => {
         `guest comment submit failed (${res.statusCode}): ${res.body}`,
       )
     }
-    return extractId(JSON.parse(res.body).data ?? JSON.parse(res.body))
+    const body = JSON.parse(res.body)
+    return extractId(body.data ?? body)
   }
 
   it('lists, approves, rejects, and deletes comments', async () => {

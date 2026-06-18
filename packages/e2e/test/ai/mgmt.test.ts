@@ -1,3 +1,6 @@
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { createE2EBackend, type E2EBackend } from '../../src/helpers/e2e-app'
@@ -55,7 +58,7 @@ describe('mxs ai management against real core', () => {
       const envelope = parseEnvelope(res.stdout)
       expect(envelope.ok).toBe(true)
       const payload = getPayload(envelope.data) as Record<string, unknown>
-      expect(typeof payload.summary === 'string' || typeof (payload as any).summary === 'string').toBe(true)
+      expect(typeof payload.summary).toBe('string')
     }, 60_000)
 
     it('by-article returns summary for post', async () => {
@@ -73,6 +76,28 @@ describe('mxs ai management against real core', () => {
       expect(res.code, res.stderr).toBe(0)
       const envelope = parseEnvelope(res.stdout)
       expect(envelope.ok).toBe(true)
+    }, 60_000)
+
+    it('edit roundtrips a new summary via $EDITOR override', async () => {
+      const scriptPath = join(tmpHome.path, 'editor-summary.sh')
+      writeFileSync(
+        scriptPath,
+        `#!/bin/sh\ncat > "$1" <<'EOF'\n{"summary":"e2e edited summary"}\nEOF\n`,
+        { mode: 0o755 },
+      )
+      const res = await runMxs(
+        ['--json', 'ai', 'summary', 'edit', fixture.summaryId],
+        { ...env(), EDITOR: scriptPath },
+      )
+      expect(res.code, res.stderr).toBe(0)
+      const reGet = await runMxs(
+        ['--json', 'ai', 'summary', 'get', fixture.summaryId],
+        env(),
+      )
+      const payload = getPayload(
+        parseEnvelope(reGet.stdout).data,
+      ) as Record<string, unknown>
+      expect(payload.summary).toBe('e2e edited summary')
     }, 60_000)
 
     it('delete removes the summary', async () => {

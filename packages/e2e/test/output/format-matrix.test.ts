@@ -6,7 +6,7 @@ import { extractId, getItems, parseEnvelope, runMxs } from '../../src/helpers/mx
 import { seedOwnerAndWriteProfile } from '../../src/helpers/seed-auth'
 import { makeTmpHome, type TmpHome } from '../../src/helpers/tmp-home'
 
-describe('output format matrix', () => {
+describe('mxs output format matrix', () => {
   let backend: E2EBackend
   let tmpHome: TmpHome
 

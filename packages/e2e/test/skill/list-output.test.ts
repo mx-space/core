@@ -3,6 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { runAcrossModes } from '../../src/helpers/assert-view'
 import { makeTmpHome, type TmpHome } from '../../src/helpers/tmp-home'
 
+// `mxs skill` reads bundled markdown without touching the server, so no
+// MXS_PROFILE is needed; the isolated XDG_CONFIG_HOME is enough.
 describe('mxs skill list output modes', () => {
   let tmpHome: TmpHome
 

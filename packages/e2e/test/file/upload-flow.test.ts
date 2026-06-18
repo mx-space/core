@@ -21,6 +21,8 @@ describe('mxs file upload flow against real core', () => {
   let backend: E2EBackend
   let tmpHome: TmpHome
   let sourcePath: string
+  let fileName: string
+  let renamedName: string
 
   beforeAll(async () => {
     backend = await createE2EBackend()
@@ -32,6 +34,9 @@ describe('mxs file upload flow against real core', () => {
     cleanStaticFiles()
     sourcePath = join(tmpHome.path, 'upload-source.txt')
     writeFileSync(sourcePath, 'e2e upload fixture content')
+    const stamp = Date.now()
+    fileName = `e2e-upload-${stamp}.txt`
+    renamedName = `e2e-renamed-${stamp}.txt`
   }, 120_000)
 
   afterAll(async () => {
@@ -44,9 +49,6 @@ describe('mxs file upload flow against real core', () => {
     XDG_CONFIG_HOME: tmpHome.path,
     MXS_PROFILE: 'file-upload',
   })
-
-  const fileName = `e2e-upload-${Date.now()}.txt`
-  const renamedName = `e2e-renamed-${Date.now()}.txt`
 
   it('uploads a file and returns url + name', async () => {
     const res = await runMxs(
