@@ -25,13 +25,11 @@ export interface E2EBackend {
 }
 
 export async function createE2EBackend(): Promise<E2EBackend> {
-  // pg-testcontainer transitively pulls in ~/app.config (via the alias),
-  // which freezes POSTGRES connection params at module-load time. Dynamic
-  // import here delays that read until AFTER seedProcessEnv has written the
-  // testcontainer's URI into env, so the Pool actually targets the right
-  // database instead of falling back to 127.0.0.1:5432.
-  const { createIsolatedPgDatabase } =
-    await import('test/helper/pg-testcontainer')
+  // Dynamic import so ~/app.config (transitively loaded by schema-migrator)
+  // freezes AFTER seedProcessEnv has written the testcontainer URI into env.
+  // Use our own helper so the BASE DB is never migrated — CI's shared service
+  // container raced parallel workers through Drizzle's migration table.
+  const { createIsolatedPgDatabase } = await import('./pg-isolated')
   const pg = await createIsolatedPgDatabase()
   const redis = await startRedisTestContainer()
 
