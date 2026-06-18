@@ -1,5 +1,6 @@
 import { useI18n } from '~/i18n'
 import type { SnippetModel } from '~/models/snippet'
+import type { ListRowSelectMode } from '~/ui/list-actions'
 
 import { SnippetFileRow } from './SnippetFileRow'
 import { SnippetFolderRow } from './SnippetFolderRow'
@@ -26,6 +27,7 @@ export interface SnippetTreeFile {
 export type SnippetTreeNode = SnippetTreeFolder | SnippetTreeFile
 
 interface SnippetListProps {
+  checked: Set<string>
   expandedPrefixes: Record<string, boolean>
   focusedPath?: string | null
   nodes: SnippetTreeNode[]
@@ -37,7 +39,7 @@ interface SnippetListProps {
   onOpenExternal: (snippet: SnippetModel) => void
   onRenameCancel: () => void
   onRenameCommit: (path: string, draft: string) => void
-  onSelect: (snippet: SnippetModel) => void
+  onSelect: (snippet: SnippetModel, mode: ListRowSelectMode) => void
   onSelectFolder: (prefix: string) => void
   onStartRename: (path: string) => void
   onToggleFolder: (prefix: string) => void
@@ -72,15 +74,17 @@ function SnippetTreeNodeRow(
     const fileNode = props.node
     return (
       <SnippetFileRow
+        checked={props.checked.has(fileNode.path)}
         focusedPath={props.focusedPath ?? null}
         level={props.level}
+        multiSelectActive={props.checked.size > 0}
         onContextMenu={props.onFileContextMenu}
         onDelete={() => props.onDelete(fileNode.snippet)}
         onFocus={() => props.onFocusPath?.(fileNode.path)}
         onOpenExternal={() => props.onOpenExternal(fileNode.snippet)}
         onRenameCancel={props.onRenameCancel}
         onRenameCommit={props.onRenameCommit}
-        onSelect={() => props.onSelect(fileNode.snippet)}
+        onSelect={(mode) => props.onSelect(fileNode.snippet, mode)}
         onStartRename={props.onStartRename}
         renamingPath={props.renamingPath}
         selected={props.selectedId === fileNode.snippet.id}

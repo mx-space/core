@@ -43,7 +43,9 @@ import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
 import { emptySnippet, snippetsQueryKey } from '../constants'
+import { useSnippetVfs } from '../hooks/use-snippet-vfs'
 import { useTreeKeyboard } from '../hooks/use-tree-keyboard'
+import { useTreeSelection } from '../hooks/use-tree-selection'
 import { getErrorMessage } from '../utils/snippets'
 import { CompiledCodeModal } from './CompiledCodeModal'
 import { FunctionLogsDrawer } from './FunctionLogsDrawer'
@@ -52,6 +54,7 @@ import { InstallDependencyModal } from './InstallDependencyModal'
 import {
   buildFileMenuItems,
   buildFolderMenuItems,
+  buildMultiSelectFileMenuItems,
 } from './SnippetContextMenuItems'
 import {
   buildSnippetTree,
@@ -332,6 +335,34 @@ export function SnippetsRouteViewContent() {
     [navigate],
   )
 
+  const vfs = useSnippetVfs()
+  const selection = useTreeSelection({
+    onSelectFile: selectSnippet,
+    visibleFiles: flatItems,
+  })
+  const { checked, clearChecked } = selection
+
+  const runBatchDelete = useCallback(async () => {
+    const paths = [...checked]
+    if (paths.length === 0) return
+    const confirmed = window.confirm(
+      t('snippets.confirm.batchDelete', { count: paths.length }),
+    )
+    if (!confirmed) return
+    const result = await vfs.batchDelete(paths)
+    if (result.failed.length === 0) {
+      toast.success(t('snippets.toast.batchDeleted', { ok: result.ok }))
+    } else {
+      toast.error(
+        t('snippets.toast.batchDeletedPartial', {
+          failed: result.failed.length,
+          ok: result.ok,
+        }),
+      )
+    }
+    clearChecked()
+  }, [checked, clearChecked, t, vfs])
+
   const startCreate = useCallback(() => {
     const path = nextUntitledFilePath(selectedPrefix, snippets)
     setCreateDraft({
@@ -379,10 +410,14 @@ export function SnippetsRouteViewContent() {
     }))
   }, [])
 
-  const selectFolder = useCallback((prefix: string) => {
-    setSelectedPrefix(prefix)
-    setFocusedPath(prefix)
-  }, [])
+  const selectFolder = useCallback(
+    (prefix: string) => {
+      setSelectedPrefix(prefix)
+      setFocusedPath(prefix)
+      clearChecked()
+    },
+    [clearChecked],
+  )
 
   const requestDelete = useCallback(
     (snippet: SnippetModel) => {
@@ -404,6 +439,11 @@ export function SnippetsRouteViewContent() {
 
   const handleTreeDelete = useCallback(
     (path: string) => {
+      // Batch path: focused row is part of the multi-select.
+      if (checked.size > 0 && checked.has(path)) {
+        void runBatchDelete()
+        return
+      }
       const file = snippets.find((entry) => entry.path === path)
       if (file) {
         requestDelete(file)
@@ -416,7 +456,7 @@ export function SnippetsRouteViewContent() {
       if (!confirmed) return
       deleteFolderMutation.mutate(path)
     },
-    [deleteFolderMutation, requestDelete, snippets, t],
+    [checked, deleteFolderMutation, requestDelete, runBatchDelete, snippets, t],
   )
 
   const copyToClipboard = useCallback(
@@ -433,6 +473,22 @@ export function SnippetsRouteViewContent() {
 
   const handleFileContextMenu = useCallback(
     (snippet: SnippetModel) => {
+      // Multi-select branch: right-click on a checked file with >1 selection.
+      if (checked.has(snippet.path) && checked.size > 1) {
+        const multiItems = buildMultiSelectFileMenuItems({
+          count: checked.size,
+          onDelete: () => void runBatchDelete(),
+          onMoveTo: () => toast.info(t('snippets.toast.moveComingSoon')),
+          t,
+        })
+        showContextMenu(multiItems)
+        return
+      }
+      // Right-click on an unchecked file while multi-select is active clears it
+      // first, then falls through to the single-row menu.
+      if (checked.size > 0 && !checked.has(snippet.path)) {
+        clearChecked()
+      }
       const items = buildFileMenuItems({
         onCopyPath: () => void copyToClipboard(snippet.path),
         onCopyRawUrl: () =>
@@ -453,7 +509,15 @@ export function SnippetsRouteViewContent() {
       })
       showContextMenu(items)
     },
-    [copyToClipboard, requestDelete, selectSnippet, t],
+    [
+      checked,
+      clearChecked,
+      copyToClipboard,
+      requestDelete,
+      runBatchDelete,
+      selectSnippet,
+      t,
+    ],
   )
 
   const handleFolderContextMenu = useCallback(
@@ -516,6 +580,11 @@ export function SnippetsRouteViewContent() {
     focusedPath,
     nodes: displayTreeNodes,
     onDelete: handleTreeDelete,
+    onEscape: () => {
+      if (checked.size === 0) return false
+      clearChecked()
+      return true
+    },
     onRename: (path) => setRenamingPath(path),
     onSelectFile: selectSnippet,
     onToggleExpand: toggleFolder,
@@ -757,6 +826,7 @@ export function SnippetsRouteViewContent() {
                 </div>
               ) : (
                 <SnippetList
+                  checked={checked}
                   expandedPrefixes={expandedPrefixes}
                   focusedPath={focusedPath}
                   nodes={displayTreeNodes}
@@ -778,7 +848,7 @@ export function SnippetsRouteViewContent() {
                   }
                   onRenameCancel={cancelRename}
                   onRenameCommit={commitRename}
-                  onSelect={selectSnippet}
+                  onSelect={selection.handleFileClick}
                   onSelectFolder={selectFolder}
                   onStartRename={startRename}
                   onToggleFolder={toggleFolder}

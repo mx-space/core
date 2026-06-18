@@ -17,6 +17,7 @@ interface UseTreeKeyboardArgs {
   onSelectFile: (snippet: SnippetModel) => void
   onRename: (path: string) => void
   onDelete: (path: string) => void
+  onEscape?: () => boolean
   searchInputRef: React.RefObject<HTMLInputElement | null>
   disabled?: boolean
 }
@@ -74,6 +75,7 @@ export function useTreeKeyboard(args: UseTreeKeyboardArgs): void {
     focusedPath,
     nodes,
     onDelete,
+    onEscape,
     onRename,
     onSelectFile,
     onToggleExpand,
@@ -183,7 +185,9 @@ export function useTreeKeyboard(args: UseTreeKeyboardArgs): void {
           return
         }
         case 'Escape': {
-          // Task 5 will handle checked-clear here.
+          if (onEscape?.()) {
+            event.preventDefault()
+          }
           return
         }
       }
@@ -197,6 +201,7 @@ export function useTreeKeyboard(args: UseTreeKeyboardArgs): void {
     focusedPath,
     nodes,
     onDelete,
+    onEscape,
     onRename,
     onSelectFile,
     onToggleExpand,

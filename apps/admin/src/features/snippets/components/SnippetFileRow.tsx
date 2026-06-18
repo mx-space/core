@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '~/i18n'
 import type { SnippetModel } from '~/models/snippet'
 import { SnippetType } from '~/models/snippet'
+import type { ListRowSelectMode } from '~/ui/list-actions'
 import { ListRow } from '~/ui/list-actions'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
@@ -37,15 +38,17 @@ const typeIconColorMap: Record<SnippetType, string> = {
 }
 
 interface SnippetFileRowProps {
+  checked: boolean
   focusedPath: string | null
   level: number
+  multiSelectActive: boolean
   onContextMenu?: (snippet: SnippetModel) => void
   onDelete: () => void
   onFocus?: () => void
   onOpenExternal: () => void
   onRenameCancel: () => void
   onRenameCommit: (path: string, draft: string) => void
-  onSelect: () => void
+  onSelect: (mode: ListRowSelectMode) => void
   onStartRename: (path: string) => void
   renamingPath: string | null
   selected: boolean
@@ -64,8 +67,10 @@ export function SnippetFileRow(props: SnippetFileRowProps) {
 
   return (
     <div
+      aria-checked={props.multiSelectActive ? props.checked : undefined}
       aria-level={props.level + 1}
       aria-selected={isFocused}
+      data-checked={props.checked ? 'true' : undefined}
       data-tree-path={snippet.path}
       onContextMenu={(event) => {
         if (!props.onContextMenu) return
@@ -82,12 +87,14 @@ export function SnippetFileRow(props: SnippetFileRowProps) {
           'group flex h-8 w-full cursor-pointer items-center gap-1.5 px-2 transition-colors',
           'hover:bg-neutral-100 dark:hover:bg-neutral-800/50',
           props.selected ? 'bg-neutral-100 dark:bg-neutral-800' : null,
+          props.checked &&
+            'bg-accent-soft shadow-[inset_2px_0_0_var(--color-accent)] hover:bg-accent-soft',
         )}
         dataId={snippet.id}
-        onSelect={() => {
+        onSelect={(mode) => {
           if (isRenaming) return
           props.onFocus?.()
-          props.onSelect()
+          props.onSelect(mode)
         }}
         selected={props.selected}
       >

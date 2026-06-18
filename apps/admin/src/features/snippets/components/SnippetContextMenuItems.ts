@@ -97,6 +97,35 @@ export function buildFileMenuItems(
   ]
 }
 
+export interface BuildMultiSelectFileMenuItemsArgs {
+  count: number
+  onDelete: () => void
+  onMoveTo: () => void
+  t: Translator
+}
+
+export function buildMultiSelectFileMenuItems(
+  args: BuildMultiSelectFileMenuItemsArgs,
+): ContextMenuItem[] {
+  const { count, t } = args
+  return [
+    {
+      icon: FolderInput,
+      key: 'moveTo',
+      label: t('snippets.menu.moveToN', { count }),
+      onClick: args.onMoveTo,
+    },
+    { key: 'sep-1', type: 'divider' },
+    {
+      danger: true,
+      icon: Trash2,
+      key: 'delete',
+      label: t('snippets.menu.deleteN', { count }),
+      onClick: args.onDelete,
+    },
+  ]
+}
+
 export interface BuildFolderMenuItemsArgs {
   fileCount: number
   folder: SnippetTreeFolder
