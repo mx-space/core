@@ -77,6 +77,38 @@ import {
 import { UpdateDependenciesModal } from './UpdateDependenciesModal'
 
 const FOCUS_SCOPE_ID = 'snippets-list'
+const EXPANDED_STORAGE_KEY = 'snippets:expanded-prefixes'
+
+function hydrateExpandedPrefixes(): Record<string, boolean> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = window.localStorage.getItem(EXPANDED_STORAGE_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+      return {}
+    const out: Record<string, boolean> = {}
+    for (const [k, v] of Object.entries(parsed)) {
+      if (typeof v === 'boolean') out[k] = v
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
+function collectAncestorPrefixes(path: string): string[] {
+  const out: string[] = []
+  let cursor = path
+  while (true) {
+    const idx = cursor.lastIndexOf('/')
+    if (idx === -1) break
+    cursor = cursor.slice(0, idx)
+    if (!cursor) break
+    out.push(`${cursor}/`)
+  }
+  return out
+}
 
 function toSnippetModel(object: SnippetObject): SnippetModel {
   return {
@@ -131,7 +163,7 @@ export function SnippetsRouteViewContent() {
   const [createDraft, setCreateDraft] = useState<CreateSnippetData | null>(null)
   const [expandedPrefixes, setExpandedPrefixes] = useState<
     Record<string, boolean>
-  >({})
+  >(() => hydrateExpandedPrefixes())
   const [selectedPrefix, setSelectedPrefix] = useState('')
   const [stagedPrefixes, setStagedPrefixes] = useState<string[]>([])
   const [folderDraftParent, setFolderDraftParent] = useState<string | null>(
@@ -198,7 +230,7 @@ export function SnippetsRouteViewContent() {
         parentPath,
         path: node.path,
       })
-      const expanded = expandedPrefixes[node.path] ?? true
+      const expanded = expandedPrefixes[node.path] === true
       if (expanded) {
         for (const child of node.children) visit(child, node.path)
       }
@@ -234,6 +266,34 @@ export function SnippetsRouteViewContent() {
     )
     el?.focus()
   }, [focusedPath])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      window.localStorage.setItem(
+        EXPANDED_STORAGE_KEY,
+        JSON.stringify(expandedPrefixes),
+      )
+    } catch {
+      // storage may be full or disabled; persistence is best-effort
+    }
+  }, [expandedPrefixes])
+
+  const revealOnMountRef = useRef(false)
+  useEffect(() => {
+    if (revealOnMountRef.current) return
+    if (!selectedId || selectedId === 'new') return
+    const match = snippets.find((s) => s.id === selectedId)
+    if (!match) return
+    revealOnMountRef.current = true
+    const ancestors = collectAncestorPrefixes(match.path)
+    if (ancestors.length === 0) return
+    setExpandedPrefixes((current) => {
+      const next = { ...current }
+      for (const prefix of ancestors) next[prefix] = true
+      return next
+    })
+  }, [selectedId, snippets])
 
   const invalidateSnippets = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: snippetsQueryKey })
@@ -354,7 +414,7 @@ export function SnippetsRouteViewContent() {
   const toggleFolder = useCallback((prefix: string) => {
     setExpandedPrefixes((state) => ({
       ...state,
-      [prefix]: !(state[prefix] ?? true),
+      [prefix]: !(state[prefix] === true),
     }))
   }, [])
 
@@ -572,7 +632,34 @@ export function SnippetsRouteViewContent() {
     snippets,
   ])
 
+  const createMenuItems: ContextMenuItem[] = [
+    {
+      icon: Plus,
+      key: 'new-file',
+      label: t('snippets.action.create'),
+      onClick: startCreate,
+    },
+    {
+      icon: FolderPlus,
+      key: 'new-folder',
+      label: t('snippets.list.newFolder'),
+      onClick: () => startCreateFolder(selectedPrefix),
+    },
+  ]
+
   const overflowMenuItems: ContextMenuItem[] = [
+    {
+      disabled: listQuery.isFetching,
+      icon: (
+        <RefreshCw
+          aria-hidden="true"
+          className={cn('size-4', listQuery.isFetching && 'animate-spin')}
+        />
+      ),
+      key: 'refresh',
+      label: t('snippets.action.refresh'),
+      onClick: () => void listQuery.refetch(),
+    },
     {
       icon: Import,
       key: 'import',
@@ -764,43 +851,14 @@ export function SnippetsRouteViewContent() {
               </div>
               <div className="flex shrink-0 items-center gap-0.5">
                 <Button
-                  aria-label={t('snippets.action.create')}
+                  aria-label={t('snippets.action.createMenu')}
                   className="h-8 w-8"
                   iconOnly
-                  onClick={startCreate}
-                  title={t('snippets.action.create')}
+                  onClick={() => showContextMenu(createMenuItems)}
+                  title={t('snippets.action.createMenu')}
                   type="button"
                 >
                   <Plus aria-hidden="true" className="size-4" />
-                </Button>
-                <Button
-                  aria-label={t('snippets.list.newFolder')}
-                  className="h-8 w-8"
-                  iconOnly
-                  onClick={() => startCreateFolder(selectedPrefix)}
-                  title={t('snippets.list.newFolder')}
-                  type="button"
-                  variant="subtle"
-                >
-                  <FolderPlus aria-hidden="true" className="size-4" />
-                </Button>
-                <Button
-                  aria-label={t('snippets.action.refresh')}
-                  className="h-8 w-8"
-                  disabled={listQuery.isFetching}
-                  iconOnly
-                  onClick={() => void listQuery.refetch()}
-                  title={t('snippets.action.refresh')}
-                  type="button"
-                  variant="subtle"
-                >
-                  <RefreshCw
-                    aria-hidden="true"
-                    className={cn(
-                      'size-4',
-                      listQuery.isFetching && 'animate-spin',
-                    )}
-                  />
                 </Button>
                 <Button
                   aria-label={t('shared.contentListItem.moreActions')}

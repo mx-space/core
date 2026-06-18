@@ -2192,6 +2192,7 @@ export const enUS = {
   'shared.sortMenu.label': 'Sort',
 
   'snippets.action.create': 'Create',
+  'snippets.action.createMenu': 'Create',
   'snippets.action.importPackage': 'Import package',
   'snippets.action.refresh': 'Refresh',
   'snippets.action.updateDeps': 'Update dependencies',

@@ -101,7 +101,7 @@ function SnippetTreeNodeRow(
     )
   }
 
-  const expanded = props.expandedPrefixes[props.node.path] ?? true
+  const expanded = props.expandedPrefixes[props.node.path] === true
   return (
     <SnippetFolderRow
       busy={props.pendingPaths?.has(props.node.path) ?? false}
@@ -216,7 +216,7 @@ export function flattenVisibleSnippets(
       out.push(node.snippet)
       return
     }
-    if (expandedPrefixes[node.path] ?? true) {
+    if (expandedPrefixes[node.path] === true) {
       node.children.forEach(visit)
     }
   }

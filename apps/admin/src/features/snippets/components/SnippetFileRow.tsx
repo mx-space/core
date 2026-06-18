@@ -153,9 +153,6 @@ export function SnippetFileRow(props: SnippetFileRowProps) {
             className="size-3 shrink-0 text-neutral-400"
           />
         ) : null}
-        <span className="shrink-0 rounded bg-neutral-100 px-1 py-0.5 text-[10px] uppercase text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
-          {snippet.type}
-        </span>
         <button
           aria-label={t('snippets.list.openExternal')}
           className="rounded p-0.5 text-neutral-400 opacity-0 transition-opacity hover:bg-neutral-200 hover:text-neutral-700 group-hover:opacity-100 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"

@@ -2083,6 +2083,7 @@ export const zhCN = {
   'shared.sortMenu.label': '排序',
 
   'snippets.action.create': '新建',
+  'snippets.action.createMenu': '新建',
   'snippets.action.importPackage': '下载扩展包',
   'snippets.action.refresh': '刷新',
   'snippets.action.updateDeps': '更新依赖',
