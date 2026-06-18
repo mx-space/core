@@ -110,14 +110,13 @@ export class ServerlessController {
   ) {
     const requestMethod = req.method.toUpperCase()
     const { name, reference } = param
-    const snippet =
-      await this.serverlessService.repository.findFunctionByNameReference(
-        name,
-        reference,
-        requestMethod,
-      )
+    const combinedPath = `${reference}/${name}`.replaceAll(/^\/+|\/+$/g, '')
+    const snippet = await this.serverlessService.repository.findFunctionByPath(
+      combinedPath,
+      requestMethod,
+    )
 
-    const errorPath = `/${reference}/${name}`
+    const errorPath = `/${combinedPath}`
     if (!snippet) {
       throw createAppException(AppErrorCode.FUNCTION_NOT_FOUND, {
         path: errorPath,
