@@ -2,25 +2,21 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { AppException } from '~/common/errors/exception.types'
-import type {
-  SnippetRepository,
-  SnippetRow,
-} from '~/modules/snippet/snippet.repository'
+import type { SnippetRepository } from '~/modules/snippet/snippet.repository'
 import { SnippetType } from '~/modules/snippet/snippet.schema'
 import { SnippetService } from '~/modules/snippet/snippet.service'
+import type { SnippetRow } from '~/modules/snippet/snippet.types'
 
 const createSnippet = (overrides: Partial<SnippetRow> = {}): SnippetRow => ({
   id: '1' as any,
   type: SnippetType.JSON,
   private: false,
   raw: '{"enabled":true}',
-  name: 'feature-flags',
-  reference: 'root',
+  path: 'root/feature-flags.json',
   comment: null,
   metatype: null,
   schema: null,
   method: null,
-  customPath: null,
   secret: null,
   enable: true,
   builtIn: false,
@@ -47,28 +43,32 @@ const createService = () => {
   const eventManager = {
     emit: vi.fn(),
   }
+  const configsService = {
+    get: vi.fn().mockResolvedValue({ serverUrl: '' }),
+  }
 
   const service = new SnippetService(
     repository as any,
     serverlessService as any,
     redisService as any,
     eventManager as any,
+    configsService as any,
   )
 
-  return { eventManager, redis, repository, serverlessService, service }
+  return { redis, repository, serverlessService, service }
 }
 
 describe('SnippetService', () => {
-  it('creates JSON snippets through the PG repository with normalized defaults', async () => {
+  it('creates JSON snippets through the PG repository with path defaults', async () => {
     const { repository, service } = createService()
     const created = createSnippet()
-    repository.countByNameReferenceMethod.mockResolvedValue(0)
+    repository.countByPathMethod.mockResolvedValue(0)
     repository.create.mockResolvedValue(created)
 
     await expect(
       service.create({
         raw: '{"enabled":true}',
-        name: 'feature-flags',
+        path: 'root/feature-flags.json',
       }),
     ).resolves.toEqual(created)
 
@@ -76,44 +76,34 @@ describe('SnippetService', () => {
       expect.objectContaining({
         type: SnippetType.JSON,
         private: false,
-        reference: 'root',
+        path: 'root/feature-flags.json',
         raw: '{"enabled":true}',
         secret: null,
       }),
     )
   })
 
-  it('rejects duplicate snippets before writing to the PG repository', async () => {
+  it('rejects duplicate path/method pairs before writing', async () => {
     const { repository, service } = createService()
-    repository.countByNameReferenceMethod.mockResolvedValue(1)
+    repository.countByPathMethod.mockResolvedValue(1)
 
     await expect(
       service.create({
         raw: '{}',
-        name: 'feature-flags',
+        path: 'root/feature-flags.json',
       }),
     ).rejects.toThrow(AppException)
 
     expect(repository.create).not.toHaveBeenCalled()
   })
 
-  it('compiles function snippets and rejects reserved references', async () => {
+  it('compiles function snippets and defaults method to GET', async () => {
     const { repository, serverlessService, service } = createService()
-    repository.countByNameReferenceMethod.mockResolvedValue(0)
-
-    await expect(
-      service.create({
-        type: SnippetType.Function,
-        raw: 'export default async function handler() {}',
-        name: 'handler',
-        reference: 'system',
-      }),
-    ).rejects.toThrow(AppException)
-
+    repository.countByPathMethod.mockResolvedValue(0)
     repository.create.mockResolvedValue(
       createSnippet({
         type: SnippetType.Function,
-        name: 'handler',
+        path: 'fn/handler',
         raw: 'export default async function handler() {}',
         compiledCode: 'compiled:export default async function handler() {}',
       }),
@@ -122,8 +112,7 @@ describe('SnippetService', () => {
     await service.create({
       type: SnippetType.Function,
       raw: 'export default async function handler() {}',
-      name: 'handler',
-      reference: 'root',
+      path: 'fn/handler',
     })
 
     expect(serverlessService.compileTypescriptCode).toHaveBeenCalled()
@@ -136,16 +125,14 @@ describe('SnippetService', () => {
     )
   })
 
-  it('invalidates name and custom-path caches when deleting a snippet', async () => {
+  it('invalidates public and private path cache keys when deleting a snippet', async () => {
     const { redis, repository, service } = createService()
-    repository.findById.mockResolvedValue(
-      createSnippet({ customPath: '/api/example' }),
-    )
+    repository.findById.mockResolvedValue(createSnippet())
     repository.deleteById.mockResolvedValue(createSnippet())
 
     await service.delete('1')
 
     expect(repository.deleteById).toHaveBeenCalledWith('1')
-    expect(redis.hdel).toHaveBeenCalledTimes(4)
+    expect(redis.hdel).toHaveBeenCalledTimes(2)
   })
 })

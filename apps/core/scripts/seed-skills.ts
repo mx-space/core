@@ -102,7 +102,7 @@ Return findings as a JSON array of \`{file, line, severity, summary}\` where
 async function main() {
   const { drizzle } = await import('drizzle-orm/node-postgres')
   const { Pool } = await import('pg')
-  const { eq, desc, and } = await import('drizzle-orm')
+  const { eq, desc } = await import('drizzle-orm')
   const schema = await import('../src/database/schema')
   const { POSTGRES } = await import('../src/app.config')
   const { SnowflakeGenerator } = await import('@mx-space/db-schema/id')
@@ -125,15 +125,11 @@ async function main() {
 
     const insertedIds: string[] = []
     for (const skill of SKILLS) {
+      const skillPath = `sk/${skill.name}/SKILL.md`
       const existing = await db
         .select({ id: schema.snippets.id })
         .from(schema.snippets)
-        .where(
-          and(
-            eq(schema.snippets.name, skill.name),
-            eq(schema.snippets.reference, 'skill'),
-          ),
-        )
+        .where(eq(schema.snippets.path, skillPath))
         .limit(1)
 
       const raw = `---\nname: ${skill.name}\ndescription: ${skill.description}\n---\n\n${skill.body}`
@@ -146,8 +142,7 @@ async function main() {
             comment: skill.description,
             type: 'skill',
             private: false,
-            reference: 'skill',
-            customPath: `sk/${skill.name}`,
+            path: skillPath,
             enable: true,
             updatedAt: new Date(),
           })
@@ -158,12 +153,10 @@ async function main() {
         const id = ids.nextId()
         await db.insert(schema.snippets).values({
           id,
-          name: skill.name,
           type: 'skill',
-          reference: 'skill',
+          path: skillPath,
           raw,
           comment: skill.description,
-          customPath: `sk/${skill.name}`,
           private: false,
           enable: true,
         })

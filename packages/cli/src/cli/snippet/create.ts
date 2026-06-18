@@ -1,4 +1,4 @@
-import { Command, Options } from '@effect/cli'
+import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
 
 import { ValidationFailed } from '../../domain/errors'
@@ -13,12 +13,12 @@ import {
   toSnippetFlagInputs,
 } from './_flags'
 
-const name = Options.text('name')
+const path = Args.text({ name: 'path' })
 
 export const create = Command.make(
-  'create',
-  { name, ...snippetWriteOptions },
-  ({ name, ...rest }) =>
+  'put',
+  { path, ...snippetWriteOptions },
+  ({ path, ...rest }) =>
     Effect.gen(function* () {
       const flags = toSnippetFlagInputs(rest)
       const api = yield* Api
@@ -35,7 +35,7 @@ export const create = Command.make(
         }
         const editor = yield* Editor
         raw = yield* editor.openEditor({
-          filename: `snippet-${name}.${extForType(flags.type ?? 'json')}`,
+          filename: `snippet.${extForType(flags.type ?? 'json')}`,
           initialContent: '',
         })
       }
@@ -44,11 +44,11 @@ export const create = Command.make(
           new ValidationFailed({ message: 'snippet content is empty' }),
         )
       }
-      const body = { ...snippetFieldsOf(flags), name, raw }
-      const res = yield* api.request('/snippets', {
-        method: 'POST',
+      const body = { ...snippetFieldsOf(flags), path, raw }
+      const res = yield* api.request('/snippets/by-path', {
+        method: 'PUT',
         body,
       })
       yield* renderer.emitSuccess(res)
     }),
-).pipe(Command.withDescription('create a snippet'))
+).pipe(Command.withDescription('write a snippet by path'))

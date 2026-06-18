@@ -1,12 +1,12 @@
 import { Effect, Exit, Layer, Option } from 'effect'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { create as createSnippet } from '../../src/cli/snippet/create'
+import { create as putSnippet } from '../../src/cli/snippet/create'
 import { del as deleteSnippet } from '../../src/cli/snippet/delete'
 import { edit as editSnippet } from '../../src/cli/snippet/edit'
 import { get as getSnippet } from '../../src/cli/snippet/get'
 import { list as listSnippet } from '../../src/cli/snippet/list'
-import { update as updateSnippet } from '../../src/cli/snippet/update'
+import { update as moveSnippet } from '../../src/cli/snippet/update'
 import { Api, type ApiService } from '../../src/services/Api'
 import { Editor, type EditorService } from '../../src/services/Editor'
 import { Renderer, type OutputOptions } from '../../src/services/Renderer'
@@ -19,15 +19,10 @@ const rendererJson: OutputOptions = {
   verbose: false,
 }
 
-const captureStdout = (): { restore: () => void; data: string[] } => {
-  const data: string[] = []
+const captureStdout = (): { restore: () => void } => {
   const orig = process.stdout.write.bind(process.stdout)
-  ;(process.stdout as any).write = (s: any) => {
-    data.push(typeof s === 'string' ? s : s.toString())
-    return true
-  }
+  ;(process.stdout as any).write = () => true
   return {
-    data,
     restore: () => {
       ;(process.stdout as any).write = orig
     },
@@ -38,20 +33,16 @@ const SNIPPET_ID = '900000000000000001'
 
 const fullSnippet = {
   id: SNIPPET_ID,
-  name: 'config',
-  reference: 'root',
+  path: 'root/config.json',
   type: 'json',
   raw: '{"a":1}',
   private: true,
   comment: 'old comment',
   metatype: null,
   schema: null,
-  method: 'GET',
-  customPath: null,
+  method: null,
   secret: null,
   enable: true,
-  created: '2026-01-01T00:00:00.000Z',
-  modified: '2026-01-02T00:00:00.000Z',
 }
 
 const makeApi = (
@@ -111,7 +102,6 @@ afterEach(() => {
 const none = <A>() => Option.none<A>()
 
 const writeFlags = {
-  reference: none<string>(),
   type: Option.none(),
   file: none<string>(),
   raw: none<string>(),
@@ -119,7 +109,6 @@ const writeFlags = {
   method: Option.none(),
   metatype: none<string>(),
   schema: none<string>(),
-  customPath: none<string>(),
   secret: none<string>(),
   private: false,
   noPrivate: false,
@@ -127,14 +116,18 @@ const writeFlags = {
   noEnable: false,
 }
 
-describe('snippet command handlers', () => {
-  it('lists snippets with pagination flags', async () => {
+describe('snippet VFS command handlers', () => {
+  it('lists snippet paths by prefix', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
         listSnippet
-          .handler({ page: Option.some(2), size: Option.some(20), grouped: false })
+          .handler({
+            prefix: Option.some('sk/'),
+            limit: Option.some(20),
+            recursive: true,
+          })
           .pipe(
             Effect.provide(buildLayer(calls)),
             Renderer.withOptions(rendererJson),
@@ -143,27 +136,28 @@ describe('snippet command handlers', () => {
       expect(Exit.isSuccess(exit)).toBe(true)
       expect(calls[0]).toMatchObject({
         path: '/snippets',
-        options: { query: { page: 2, size: 20 } },
+        options: { query: { prefix: 'sk/', limit: 20, recursive: true } },
       })
     } finally {
       stdout.restore()
     }
   })
 
-  it('lists grouped snippets via /snippets/group', async () => {
+  it('gets a snippet by path', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        listSnippet
-          .handler({ page: none(), size: none(), grouped: true })
-          .pipe(
-            Effect.provide(buildLayer(calls)),
-            Renderer.withOptions(rendererJson),
-          ),
+        getSnippet.handler({ target: 'root/config.json' }).pipe(
+          Effect.provide(buildLayer(calls)),
+          Renderer.withOptions(rendererJson),
+        ),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
-      expect(calls[0]!.path).toBe('/snippets/group')
+      expect(calls[0]).toMatchObject({
+        path: '/snippets/by-path',
+        options: { query: { path: 'root/config.json' } },
+      })
     } finally {
       stdout.restore()
     }
@@ -180,87 +174,24 @@ describe('snippet command handlers', () => {
         ),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
-      expect(calls).toHaveLength(1)
       expect(calls[0]!.path).toBe(`/snippets/${SNIPPET_ID}`)
     } finally {
       stdout.restore()
     }
   })
 
-  it('resolves ref/name through the group listing', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const responses = {
-      '/snippets/group/web': {
-        data: [{ id: SNIPPET_ID, name: 'config' }],
-      },
-    }
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        getSnippet.handler({ target: 'web/config' }).pipe(
-          Effect.provide(buildLayer(calls, responses)),
-          Renderer.withOptions(rendererJson),
-        ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      expect(calls[0]!.path).toBe('/snippets/group/web')
-      expect(calls[1]!.path).toBe(`/snippets/${SNIPPET_ID}`)
-    } finally {
-      stdout.restore()
-    }
-  })
-
-  it('treats a bare non-snowflake token as root/<name>', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const responses = {
-      '/snippets/group/root': [{ id: SNIPPET_ID, name: 'config' }],
-    }
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        getSnippet.handler({ target: 'config' }).pipe(
-          Effect.provide(buildLayer(calls, responses)),
-          Renderer.withOptions(rendererJson),
-        ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      expect(calls[0]!.path).toBe('/snippets/group/root')
-      expect(calls[1]!.path).toBe(`/snippets/${SNIPPET_ID}`)
-    } finally {
-      stdout.restore()
-    }
-  })
-
-  it('fails with ResourceNotFound when no name matches', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const responses = {
-      '/snippets/group/root': [{ id: SNIPPET_ID, name: 'other' }],
-    }
-    const exit = await Effect.runPromiseExit(
-      getSnippet
-        .handler({ target: 'missing' })
-        .pipe(Effect.provide(buildLayer(calls, responses))),
-    )
-    expect(Exit.isFailure(exit)).toBe(true)
-    if (Exit.isFailure(exit)) {
-      expect(exit.cause.toString()).toContain('ResourceNotFound')
-    }
-  })
-
-  it('creates a snippet from --raw', async () => {
+  it('puts a snippet from --raw', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        createSnippet
+        putSnippet
           .handler({
-            name: 'config',
+            path: 'root/config.json',
             ...writeFlags,
-            reference: Option.some('web'),
             type: Option.some('json' as const),
             raw: Option.some('{"b":2}'),
             private: true,
-            enable: true,
           })
           .pipe(
             Effect.provide(buildLayer(calls)),
@@ -269,44 +200,56 @@ describe('snippet command handlers', () => {
       )
       expect(Exit.isSuccess(exit)).toBe(true)
       expect(calls[0]).toMatchObject({
-        path: '/snippets',
-        options: { method: 'POST' },
+        path: '/snippets/by-path',
+        options: { method: 'PUT' },
       })
       const body = (calls[0]!.options as { body: Record<string, unknown> })
         .body
       expect(body).toEqual({
-        name: 'config',
-        reference: 'web',
+        path: 'root/config.json',
         type: 'json',
         raw: '{"b":2}',
         private: true,
-        enable: true,
       })
     } finally {
       stdout.restore()
     }
   })
 
-  it('creates a skill snippet from --raw with markdown body', async () => {
+  it('put falls back to piped stdin when no source flag is given', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
+    const editor = makeEditor({
+      readFileOrStdin: () => Effect.succeed('from stdin'),
+    })
+    const restoreTty = withStdinTty(false)
     const stdout = captureStdout()
-    const skillRaw = [
-      '---',
-      'name: db-migration-author',
-      'description: Expand-contract migrations.',
-      '---',
-      '',
-      '## When to use',
-      'Use when authoring a Postgres migration.',
-    ].join('\n')
     try {
       const exit = await Effect.runPromiseExit(
-        createSnippet
+        putSnippet.handler({ path: 'root/config.txt', ...writeFlags }).pipe(
+          Effect.provide(buildLayer(calls, {}, editor)),
+          Renderer.withOptions(rendererJson),
+        ),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      const body = (calls[0]!.options as { body: Record<string, unknown> })
+        .body
+      expect(body.raw).toBe('from stdin')
+    } finally {
+      stdout.restore()
+      restoreTty()
+    }
+  })
+
+  it('moves a snippet path', async () => {
+    const calls: Array<{ path: string; options: unknown }> = []
+    const stdout = captureStdout()
+    try {
+      const exit = await Effect.runPromiseExit(
+        moveSnippet
           .handler({
-            name: 'db-migration-author',
-            ...writeFlags,
-            type: Option.some('skill' as const),
-            raw: Option.some(skillRaw),
+            from: 'sk/foo/',
+            to: 'sk/bar/',
+            recursive: true,
           })
           .pipe(
             Effect.provide(buildLayer(calls)),
@@ -315,346 +258,12 @@ describe('snippet command handlers', () => {
       )
       expect(Exit.isSuccess(exit)).toBe(true)
       expect(calls[0]).toMatchObject({
-        path: '/snippets',
-        options: { method: 'POST' },
+        path: '/snippets/move',
+        options: {
+          method: 'POST',
+          body: { from: 'sk/foo/', to: 'sk/bar/', recursive: true },
+        },
       })
-      const body = (calls[0]!.options as { body: Record<string, unknown> })
-        .body
-      expect(body).toEqual({
-        name: 'db-migration-author',
-        type: 'skill',
-        raw: skillRaw,
-      })
-    } finally {
-      stdout.restore()
-    }
-  })
-
-  it('prefers --file over --raw and stdin', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const reads: Array<string | undefined> = []
-    const editor = makeEditor({
-      readFileOrStdin: (p) =>
-        Effect.sync(() => {
-          reads.push(p)
-          return 'from file'
-        }),
-    })
-    const restoreTty = withStdinTty(false)
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        createSnippet
-          .handler({
-            name: 'config',
-            ...writeFlags,
-            file: Option.some('/tmp/snippet.json'),
-            raw: Option.some('from raw'),
-          })
-          .pipe(
-            Effect.provide(buildLayer(calls, {}, editor)),
-            Renderer.withOptions(rendererJson),
-          ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      expect(reads).toEqual(['/tmp/snippet.json'])
-      const body = (calls[0]!.options as { body: Record<string, unknown> })
-        .body
-      expect(body.raw).toBe('from file')
-    } finally {
-      stdout.restore()
-      restoreTty()
-    }
-  })
-
-  it('prefers --raw over stdin', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const editor = makeEditor({
-      readFileOrStdin: () => Effect.succeed('from stdin'),
-    })
-    const restoreTty = withStdinTty(false)
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        createSnippet
-          .handler({
-            name: 'config',
-            ...writeFlags,
-            raw: Option.some('from raw'),
-          })
-          .pipe(
-            Effect.provide(buildLayer(calls, {}, editor)),
-            Renderer.withOptions(rendererJson),
-          ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      const body = (calls[0]!.options as { body: Record<string, unknown> })
-        .body
-      expect(body.raw).toBe('from raw')
-    } finally {
-      stdout.restore()
-      restoreTty()
-    }
-  })
-
-  it('falls back to piped stdin when no flag source is given', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const editor = makeEditor({
-      readFileOrStdin: () => Effect.succeed('from stdin'),
-    })
-    const restoreTty = withStdinTty(false)
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        createSnippet
-          .handler({ name: 'config', ...writeFlags })
-          .pipe(
-            Effect.provide(buildLayer(calls, {}, editor)),
-            Renderer.withOptions(rendererJson),
-          ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      const body = (calls[0]!.options as { body: Record<string, unknown> })
-        .body
-      expect(body.raw).toBe('from stdin')
-    } finally {
-      stdout.restore()
-      restoreTty()
-    }
-  })
-
-  it('create fails with ValidationFailed when non-interactive and no source', async () => {
-    const restoreTty = withStdinTty(false)
-    try {
-      const exit = await Effect.runPromiseExit(
-        createSnippet
-          .handler({ name: 'config', ...writeFlags })
-          .pipe(Effect.provide(buildLayer([]))),
-      )
-      expect(Exit.isFailure(exit)).toBe(true)
-      if (Exit.isFailure(exit)) {
-        expect(exit.cause.toString()).toContain('ValidationFailed')
-      }
-    } finally {
-      restoreTty()
-    }
-  })
-
-  it('create opens $EDITOR when interactive and no source', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const editor = makeEditor({
-      openEditor: () => Effect.succeed('typed in editor'),
-    })
-    const restoreTty = withStdinTty(true)
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        createSnippet
-          .handler({ name: 'config', ...writeFlags })
-          .pipe(
-            Effect.provide(buildLayer(calls, {}, editor)),
-            Renderer.withOptions(rendererJson),
-          ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      const body = (calls[0]!.options as { body: Record<string, unknown> })
-        .body
-      expect(body.raw).toBe('typed in editor')
-    } finally {
-      stdout.restore()
-      restoreTty()
-    }
-  })
-
-  it('update merges changed fields onto the full snippet and PUTs', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const responses = {
-      '/snippets/group/root': [{ id: SNIPPET_ID, name: 'config' }],
-      [`/snippets/${SNIPPET_ID}`]: fullSnippet,
-    }
-    const restoreTty = withStdinTty(true)
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        updateSnippet
-          .handler({
-            target: 'config',
-            name: none<string>(),
-            ...writeFlags,
-            comment: Option.some('new comment'),
-            noEnable: true,
-          })
-          .pipe(
-            Effect.provide(buildLayer(calls, responses)),
-            Renderer.withOptions(rendererJson),
-          ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      expect(calls[2]).toMatchObject({
-        path: `/snippets/${SNIPPET_ID}`,
-        options: { method: 'PUT' },
-      })
-      const body = (calls[2]!.options as { body: Record<string, unknown> })
-        .body
-      expect(body).toEqual({
-        name: 'config',
-        reference: 'root',
-        type: 'json',
-        raw: '{"a":1}',
-        private: true,
-        comment: 'new comment',
-        metatype: null,
-        schema: null,
-        method: 'GET',
-        customPath: null,
-        secret: null,
-        enable: false,
-      })
-      expect(body.id).toBeUndefined()
-      expect(body.created).toBeUndefined()
-      expect(body.modified).toBeUndefined()
-    } finally {
-      stdout.restore()
-      restoreTty()
-    }
-  })
-
-  it('update replaces raw from --raw', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const responses = {
-      [`/snippets/${SNIPPET_ID}`]: fullSnippet,
-    }
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        updateSnippet
-          .handler({
-            target: SNIPPET_ID,
-            name: none<string>(),
-            ...writeFlags,
-            raw: Option.some('{"a":2}'),
-          })
-          .pipe(
-            Effect.provide(buildLayer(calls, responses)),
-            Renderer.withOptions(rendererJson),
-          ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      const body = (calls[1]!.options as { body: Record<string, unknown> })
-        .body
-      expect(body.raw).toBe('{"a":2}')
-      expect(body.name).toBe('config')
-    } finally {
-      stdout.restore()
-    }
-  })
-
-  it('update ignores piped stdin without explicit flags', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const responses = {
-      [`/snippets/${SNIPPET_ID}`]: fullSnippet,
-    }
-    const reads: Array<string | undefined> = []
-    const editor = makeEditor({
-      readFileOrStdin: (p) =>
-        Effect.sync(() => {
-          reads.push(p)
-          return 'ambient stdin'
-        }),
-    })
-    const restoreTty = withStdinTty(false)
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        updateSnippet
-          .handler({
-            target: SNIPPET_ID,
-            name: none<string>(),
-            ...writeFlags,
-            comment: Option.some('only metadata'),
-          })
-          .pipe(
-            Effect.provide(buildLayer(calls, responses, editor)),
-            Renderer.withOptions(rendererJson),
-          ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      expect(reads).toEqual([])
-      const body = (calls[1]!.options as { body: Record<string, unknown> })
-        .body
-      expect(body.raw).toBe('{"a":1}')
-      expect(body.comment).toBe('only metadata')
-    } finally {
-      stdout.restore()
-      restoreTty()
-    }
-  })
-
-  it('update reads stdin via explicit --file -', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const responses = {
-      [`/snippets/${SNIPPET_ID}`]: fullSnippet,
-    }
-    const reads: Array<string | undefined> = []
-    const editor = makeEditor({
-      readFileOrStdin: (p) =>
-        Effect.sync(() => {
-          reads.push(p)
-          return 'from stdin'
-        }),
-    })
-    const restoreTty = withStdinTty(false)
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        updateSnippet
-          .handler({
-            target: SNIPPET_ID,
-            name: none<string>(),
-            ...writeFlags,
-            file: Option.some('-'),
-          })
-          .pipe(
-            Effect.provide(buildLayer(calls, responses, editor)),
-            Renderer.withOptions(rendererJson),
-          ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      expect(reads).toEqual(['-'])
-      const body = (calls[1]!.options as { body: Record<string, unknown> })
-        .body
-      expect(body.raw).toBe('from stdin')
-    } finally {
-      stdout.restore()
-      restoreTty()
-    }
-  })
-
-  it('update flips private to false via --no-private', async () => {
-    const calls: Array<{ path: string; options: unknown }> = []
-    const responses = {
-      [`/snippets/${SNIPPET_ID}`]: fullSnippet,
-    }
-    const stdout = captureStdout()
-    try {
-      const exit = await Effect.runPromiseExit(
-        updateSnippet
-          .handler({
-            target: SNIPPET_ID,
-            name: none<string>(),
-            ...writeFlags,
-            noPrivate: true,
-          })
-          .pipe(
-            Effect.provide(buildLayer(calls, responses)),
-            Renderer.withOptions(rendererJson),
-          ),
-      )
-      expect(Exit.isSuccess(exit)).toBe(true)
-      const body = (calls[1]!.options as { body: Record<string, unknown> })
-        .body
-      expect(body.private).toBe(false)
-      expect(body.raw).toBe('{"a":1}')
     } finally {
       stdout.restore()
     }
@@ -683,16 +292,16 @@ describe('snippet command handlers', () => {
       )
       expect(Exit.isSuccess(exit)).toBe(true)
       expect(calls).toHaveLength(1)
-      expect(filenames).toEqual([`snippet-${SNIPPET_ID}.json`])
+      expect(filenames).toEqual(['snippet.json'])
     } finally {
       stdout.restore()
     }
   })
 
-  it('edit: changed buffer PUTs the full body with new raw', async () => {
+  it('edit: changed path buffer PUTs by path', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const responses = {
-      [`/snippets/${SNIPPET_ID}`]: fullSnippet,
+      '/snippets/by-path': fullSnippet,
     }
     const editor = makeEditor({
       openEditor: () => Effect.succeed('{"a":3}'),
@@ -700,33 +309,32 @@ describe('snippet command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        editSnippet.handler({ target: SNIPPET_ID }).pipe(
+        editSnippet.handler({ target: 'root/config.json' }).pipe(
           Effect.provide(buildLayer(calls, responses, editor)),
           Renderer.withOptions(rendererJson),
         ),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
       expect(calls[1]).toMatchObject({
-        path: `/snippets/${SNIPPET_ID}`,
+        path: '/snippets/by-path',
         options: { method: 'PUT' },
       })
       const body = (calls[1]!.options as { body: Record<string, unknown> })
         .body
       expect(body.raw).toBe('{"a":3}')
-      expect(body.name).toBe('config')
-      expect(body.id).toBeUndefined()
+      expect(body.path).toBe('root/config.json')
     } finally {
       stdout.restore()
     }
   })
 
-  it('deletes a snippet when --force is supplied', async () => {
+  it('deletes a snippet path when --force is supplied', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
         deleteSnippet
-          .handler({ target: SNIPPET_ID, force: true })
+          .handler({ target: 'sk/foo/', force: true, recursive: true })
           .pipe(
             Effect.provide(buildLayer(calls)),
             Renderer.withOptions(rendererJson),
@@ -734,8 +342,11 @@ describe('snippet command handlers', () => {
       )
       expect(Exit.isSuccess(exit)).toBe(true)
       expect(calls[0]).toMatchObject({
-        path: `/snippets/${SNIPPET_ID}`,
-        options: { method: 'DELETE' },
+        path: '/snippets/by-path',
+        options: {
+          method: 'DELETE',
+          query: { path: 'sk/foo/', recursive: true },
+        },
       })
     } finally {
       stdout.restore()
@@ -747,7 +358,7 @@ describe('snippet command handlers', () => {
     try {
       const exit = await Effect.runPromiseExit(
         deleteSnippet
-          .handler({ target: SNIPPET_ID, force: false })
+          .handler({ target: SNIPPET_ID, force: false, recursive: false })
           .pipe(Effect.provide(buildLayer([]))),
       )
       expect(Exit.isFailure(exit)).toBe(true)

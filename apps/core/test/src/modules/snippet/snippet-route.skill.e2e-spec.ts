@@ -22,13 +22,11 @@ const publicSkillRow = {
   type: SnippetType.Skill,
   private: false,
   raw: SKILL_RAW,
-  name: 'test-skill',
-  reference: 'root',
+  path: 'sk/public/SKILL.md',
   comment: null,
   metatype: null,
   schema: null,
   method: null,
-  customPath: 'sk/public',
   secret: null,
   enable: true,
   builtIn: false,
@@ -41,34 +39,34 @@ const privateSkillRow = {
   ...publicSkillRow,
   id: '2',
   private: true,
-  customPath: 'sk/private',
+  path: 'sk/private/SKILL.md',
 }
 
 const cachedSkillRow = {
   ...publicSkillRow,
   id: '3',
-  customPath: 'sk/cached',
+  path: 'sk/cached/SKILL.md',
 }
 
 const snippetService = {
-  getSnippetByCustomPath: vi.fn().mockImplementation(async (path: string) => {
-    if (path === 'sk/public') return publicSkillRow
-    if (path === 'sk/private') return privateSkillRow
-    if (path === 'sk/cached') return cachedSkillRow
+  getSnippetByPath: vi.fn().mockImplementation(async (path: string) => {
+    if (path === 'sk/public/SKILL.md') return publicSkillRow
+    if (path === 'sk/private/SKILL.md') return privateSkillRow
+    if (path === 'sk/cached/SKILL.md') return cachedSkillRow
     return null
   }),
-  getFunctionSnippetByCustomPath: vi.fn().mockResolvedValue(null),
-  getFunctionSnippetByCustomPathPrefix: vi.fn().mockResolvedValue(null),
-  getCachedSnippetByCustomPath: vi
+  getFunctionSnippetByPath: vi.fn().mockResolvedValue(null),
+  getFunctionSnippetByPathPrefix: vi.fn().mockResolvedValue(null),
+  getCachedSnippetByPath: vi
     .fn()
     .mockImplementation(async (path: string, type: 'public' | 'private') => {
-      if (path === 'sk/cached' && type === 'public') return SKILL_RAW
+      if (path === 'sk/cached/SKILL.md' && type === 'public') return SKILL_RAW
       return null
     }),
   attachSnippet: vi
     .fn()
     .mockImplementation(async (row: any) => ({ ...row, data: row.raw })),
-  cacheSnippetByCustomPath: vi.fn().mockResolvedValue(undefined),
+  cacheSnippet: vi.fn().mockResolvedValue(undefined),
 }
 
 const proxy = createE2EApp({
@@ -86,7 +84,7 @@ describe('SnippetRouteController — Skill type', () => {
   it('returns text/markdown with cache headers for a public Skill snippet', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
-      url: '/s/sk/public',
+      url: '/s/sk/public/SKILL.md',
     })
 
     expect(res.statusCode).toBe(200)
@@ -101,7 +99,7 @@ describe('SnippetRouteController — Skill type', () => {
   it('returns 403 for unauthenticated request to a private Skill snippet', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
-      url: '/s/sk/private',
+      url: '/s/sk/private/SKILL.md',
     })
 
     expect(res.statusCode).toBe(403)
@@ -110,7 +108,7 @@ describe('SnippetRouteController — Skill type', () => {
   it('returns 200 with Skill headers for admin access to a private Skill snippet', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
-      url: '/s/sk/private',
+      url: '/s/sk/private/SKILL.md',
       headers: authPassHeader,
     })
 
@@ -126,7 +124,7 @@ describe('SnippetRouteController — Skill type', () => {
   it('returns Skill headers from the redis-cached path', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
-      url: '/s/sk/cached',
+      url: '/s/sk/cached/SKILL.md',
     })
 
     expect(res.statusCode).toBe(200)
@@ -136,5 +134,15 @@ describe('SnippetRouteController — Skill type', () => {
       'public, max-age=300, stale-while-revalidate=3600',
     )
     expect(res.body).toBe(SKILL_RAW)
+  })
+
+  it('redirects a skill bundle root to SKILL.md', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: '/s/sk/public',
+    })
+
+    expect(res.statusCode).toBe(302)
+    expect(res.headers.location).toBe('/s/sk/public/SKILL.md')
   })
 })

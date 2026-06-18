@@ -22,14 +22,12 @@ type Translator = (key: TranslationKey, values?: TranslationValues) => string
 export function normalizeSnippet(snippet: CreateSnippetData | SnippetModel) {
   return {
     comment: snippet.comment ?? '',
-    customPath: snippet.customPath ?? '',
     enable: Boolean(snippet.enable),
     metatype: snippet.metatype ?? '',
     method: snippet.method ?? '',
-    name: snippet.name ?? '',
+    path: snippet.path ?? '',
     private: Boolean(snippet.private),
     raw: snippet.raw ?? '',
-    reference: snippet.reference ?? 'root',
     schema: snippet.schema ?? '',
     secret: serializeSnippetSecret(snippet.secret),
     type: snippet.type ?? SnippetType.JSON,
@@ -47,7 +45,6 @@ export function prepareSnippetPayload(
 
   if (!payload.metatype) delete payload.metatype
   if (!payload.schema) delete payload.schema
-  if (!payload.customPath) delete payload.customPath
   if (!payload.method) delete payload.method
   if (payload.secret) payload.secret = parseSnippetSecret(payload.secret)
   else delete payload.secret

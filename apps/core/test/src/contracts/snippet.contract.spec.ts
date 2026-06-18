@@ -4,23 +4,19 @@ import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetService } from '~/modules/snippet/snippet.service'
 
-import { assertNoLegacyKeys, assertPgTimestamps } from '../../helper/api-shape'
+import { assertNoLegacyKeys } from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
 import { authPassHeader } from '../../mock/guard/auth.guard'
 
-const fixtureSnippet = (overrides: Record<string, unknown> = {}) => ({
+const fixtureObject = (overrides: Record<string, unknown> = {}) => ({
   id: '7000000000000000070',
-  name: 'demo',
-  reference: 'pkg',
+  path: 'pkg/demo.json',
   type: 'json',
-  raw: '{}',
   enable: true,
   private: false,
-  method: 'GET',
-  metadata: null,
-  comments: '',
-  createdAt: new Date('2024-07-01T00:00:00.000Z'),
-  modifiedAt: null,
+  method: null,
+  comment: null,
+  updatedAt: new Date('2024-07-01T00:00:00.000Z'),
   ...overrides,
 })
 
@@ -28,38 +24,19 @@ const snippetServiceProvider = {
   provide: SnippetService,
   useValue: {
     repository: {
-      async list(page = 1, size = 10) {
-        return {
-          data: [fixtureSnippet()],
-          pagination: {
-            total: 1,
-            currentPage: page,
-            totalPage: 1,
-            size,
-            hasNextPage: false,
-            hasPrevPage: false,
-          },
-        }
-      },
-      async listGrouped(page = 1, size = 30) {
-        return {
-          data: [{ reference: 'pkg', snippets: [fixtureSnippet()] }],
-          pagination: {
-            total: 1,
-            currentPage: page,
-            totalPage: 1,
-            size,
-            hasNextPage: false,
-            hasPrevPage: false,
-          },
-        }
-      },
-      async findAll() {
-        return [fixtureSnippet()]
+      async findAnyByPath() {
+        return { ...fixtureObject(), raw: '{}', createdAt: new Date() }
       },
     },
-    transformLeanSnippetList<T>(rows: T[]): T[] {
-      return rows
+    listVfs() {
+      return {
+        prefix: '',
+        objects: [fixtureObject()],
+        commonPrefixes: ['pkg/'],
+      }
+    },
+    transformLeanSnippet<T>(row: T): T {
+      return row
     },
   },
 }
@@ -70,7 +47,7 @@ describe('SnippetController contract (e2e)', () => {
     providers: [snippetServiceProvider],
   })
 
-  test('GET /snippets — admin list, no legacy keys', async () => {
+  test('GET /snippets — VFS list, no legacy keys', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
       url: `${apiRoutePrefix}/snippets`,
@@ -78,32 +55,20 @@ describe('SnippetController contract (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    expect(Array.isArray(body.data)).toBe(true)
+    expect(Array.isArray(body.data.objects)).toBe(true)
+    expect(body.data.objects[0].path).toBe('pkg/demo.json')
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body.data[0])
   })
 
-  test('GET /snippets/group — grouped list, no legacy keys', async () => {
+  test('GET /snippets/by-path — path lookup, no legacy keys', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
-      url: `${apiRoutePrefix}/snippets/group`,
+      url: `${apiRoutePrefix}/snippets/by-path?path=pkg/demo.json`,
       headers: authPassHeader,
     })
     expect(res.statusCode).toBe(200)
     const body = res.json()
+    expect(body.data.path).toBe('pkg/demo.json')
     assertNoLegacyKeys(body)
-  })
-
-  test('GET /snippets/group/:reference — by reference, no legacy keys', async () => {
-    const res = await proxy.app.inject({
-      method: 'GET',
-      url: `${apiRoutePrefix}/snippets/group/pkg`,
-      headers: authPassHeader,
-    })
-    expect(res.statusCode).toBe(200)
-    const body = res.json()
-    expect(Array.isArray(body.data)).toBe(true)
-    assertNoLegacyKeys(body)
-    assertPgTimestamps(body.data[0])
   })
 })

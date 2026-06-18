@@ -1,29 +1,33 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  Check,
+  Folder,
+  FolderPlus,
   Import,
   MoreHorizontal,
   PackagePlus,
   Plus,
   RefreshCw,
   Search,
+  X,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { getDependencyInstallUrl } from '~/api/dependencies'
 import {
+  type CreateSnippetData,
   deleteSnippet,
-  getGroupSnippets,
-  getSnippetGroups,
+  getSnippets,
   resetFunctionSnippet,
+  type SnippetObject,
 } from '~/api/snippets'
 import { API_URL } from '~/constants/env'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { presentTerminalOutput } from '~/features/snippets/components/terminal-output-modal'
 import { useI18n } from '~/i18n'
-import type { SnippetModel } from '~/models/snippet'
-import { SnippetType } from '~/models/snippet'
+import { SnippetModel, SnippetType } from '~/models/snippet'
 import { adminQueryKeys } from '~/query/keys'
 import { FocusScope } from '~/ui/focus-scope'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
@@ -42,9 +46,9 @@ import { CompiledCodeModal } from './CompiledCodeModal'
 import { FunctionLogsDrawer } from './FunctionLogsDrawer'
 import { ImportSnippetModal } from './ImportSnippetModal'
 import { InstallDependencyModal } from './InstallDependencyModal'
-import type { SnippetGroupState } from './SnippetList'
 import {
-  filterGroupsBySearch,
+  buildSnippetTree,
+  filterTreeBySearch,
   flattenVisibleSnippets,
   SnippetList,
 } from './SnippetList'
@@ -58,19 +62,39 @@ import { UpdateDependenciesModal } from './UpdateDependenciesModal'
 
 const FOCUS_SCOPE_ID = 'snippets-list'
 
-interface GroupRuntimeState {
-  expanded: boolean
-  loading: boolean
-  snippets: SnippetModel[] | null
+function toSnippetModel(object: SnippetObject): SnippetModel {
+  return {
+    ...new SnippetModel(),
+    ...object,
+    raw: '',
+    type: object.type ?? SnippetType.Text,
+  }
 }
 
 function buildSnippetExternalUrl(snippet: SnippetModel) {
-  if (snippet.customPath) return `${API_URL}/s/${snippet.customPath}`
-  const path =
-    snippet.type === SnippetType.Function
-      ? `/fn/${snippet.reference}/${snippet.name}`
-      : `/snippets/${snippet.reference}/${snippet.name}`
-  return `${API_URL}${path}`
+  return `${API_URL}/s/${snippet.path}`
+}
+
+function normalizeFolderPrefix(prefix: string) {
+  const normalized = prefix.trim().replaceAll(/^\/+|\/+$/g, '')
+  return normalized ? `${normalized}/` : ''
+}
+
+function getParentPrefix(path: string) {
+  const index = path.lastIndexOf('/')
+  return index === -1 ? '' : path.slice(0, index + 1)
+}
+
+function nextUntitledFilePath(prefix: string, snippets: SnippetModel[]) {
+  const normalizedPrefix = normalizeFolderPrefix(prefix)
+  const existing = new Set(snippets.map((snippet) => snippet.path))
+  const base = `${normalizedPrefix}new.json`
+  if (!existing.has(base)) return base
+  for (let i = 2; i < 1000; i++) {
+    const candidate = `${normalizedPrefix}new-${i}.json`
+    if (!existing.has(candidate)) return candidate
+  }
+  return `${normalizedPrefix}new-${Date.now()}.json`
 }
 
 export function SnippetsRouteViewContent() {
@@ -79,7 +103,6 @@ export function SnippetsRouteViewContent() {
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
   const selectedId = params.id ?? null
-  const isCreating = selectedId === 'new'
   const [search, setSearch] = useState('')
   const [importOpen, setImportOpen] = useState(false)
   const [installOpen, setInstallOpen] = useState(false)
@@ -89,146 +112,46 @@ export function SnippetsRouteViewContent() {
     null,
   )
   const [logsTarget, setLogsTarget] = useState<SnippetModel | null>(null)
-  const [runtime, setRuntime] = useState<Record<string, GroupRuntimeState>>({})
+  const [createDraft, setCreateDraft] = useState<CreateSnippetData | null>(null)
+  const [expandedPrefixes, setExpandedPrefixes] = useState<
+    Record<string, boolean>
+  >({})
+  const [selectedPrefix, setSelectedPrefix] = useState('')
+  const [stagedPrefixes, setStagedPrefixes] = useState<string[]>([])
+  const [folderDraftParent, setFolderDraftParent] = useState<string | null>(
+    null,
+  )
+  const [folderDraftName, setFolderDraftName] = useState('')
 
-  const groupsQuery = useQuery({
+  const listQuery = useQuery({
     placeholderData: (previous) => previous,
-    queryFn: () => getSnippetGroups({ page: 1, size: 50 }),
-    queryKey: adminQueryKeys.snippets.groups(),
+    queryFn: () => getSnippets({ limit: 1000, recursive: true }),
+    queryKey: adminQueryKeys.snippets.vfs('', true),
   })
 
-  // Detail's reference for auto-expanding the owning group — read from cache.
-  const detailRef = useMemo(() => {
-    if (!selectedId || isCreating) return undefined
-    const detail = queryClient.getQueryData<SnippetModel>(
-      adminQueryKeys.snippets.detail(selectedId),
-    )
-    return detail?.reference
-  }, [isCreating, queryClient, selectedId])
-
-  const baseGroups = groupsQuery.data?.data ?? []
-
-  useEffect(() => {
-    if (!detailRef) return
-    setRuntime((state) => {
-      const current = state[detailRef]
-      if (current?.expanded) return state
-      return {
-        ...state,
-        [detailRef]: {
-          expanded: true,
-          loading: current?.loading ?? false,
-          snippets: current?.snippets ?? null,
-        },
-      }
-    })
-  }, [detailRef])
-
-  const fetchGroup = useCallback(
-    async (reference: string) => {
-      setRuntime((state) => ({
-        ...state,
-        [reference]: {
-          expanded: state[reference]?.expanded ?? true,
-          loading: true,
-          snippets: state[reference]?.snippets ?? null,
-        },
-      }))
-      try {
-        const snippets = await getGroupSnippets(reference)
-        // Mirror into a stable query cache so list-cache findInListCache
-        // can locate snippets by id when the detail route mounts.
-        queryClient.setQueryData(
-          adminQueryKeys.snippets.group(reference),
-          snippets,
-        )
-        setRuntime((state) => ({
-          ...state,
-          [reference]: {
-            expanded: state[reference]?.expanded ?? true,
-            loading: false,
-            snippets,
-          },
-        }))
-      } catch (error) {
-        setRuntime((state) => ({
-          ...state,
-          [reference]: {
-            expanded: state[reference]?.expanded ?? true,
-            loading: false,
-            snippets: state[reference]?.snippets ?? [],
-          },
-        }))
-        toast.error(getErrorMessage(error, t('snippets.toast.deleteFailed')))
-      }
-    },
-    [queryClient, t],
+  const snippets = useMemo(
+    () => (listQuery.data?.objects ?? []).map(toSnippetModel),
+    [listQuery.data?.objects],
   )
 
-  useEffect(() => {
-    if (!detailRef) return
-    const state = runtime[detailRef]
-    if (state?.snippets == null && !state?.loading) {
-      void fetchGroup(detailRef)
-    }
-    // fetchGroup reads latest runtime via setState updater.
-  }, [detailRef])
-
-  const toggleGroup = (reference: string) => {
-    const current = runtime[reference]
-    const nextExpanded = !(current?.expanded ?? false)
-    setRuntime((state) => ({
-      ...state,
-      [reference]: {
-        expanded: nextExpanded,
-        loading: state[reference]?.loading ?? false,
-        snippets: state[reference]?.snippets ?? null,
-      },
-    }))
-    if (nextExpanded && current?.snippets == null && !current?.loading) {
-      void fetchGroup(reference)
-    }
-  }
-
-  const groups: SnippetGroupState[] = useMemo(
-    () =>
-      baseGroups
-        .map((group) => {
-          const state = runtime[group.reference]
-          return {
-            count: group.count,
-            expanded: state?.expanded ?? false,
-            loading: state?.loading ?? false,
-            reference: group.reference,
-            snippets: state?.snippets ?? [],
-          }
-        })
-        .sort((left, right) => left.reference.localeCompare(right.reference)),
-    [baseGroups, runtime],
+  const treeNodes = useMemo(
+    () => buildSnippetTree(snippets, stagedPrefixes),
+    [snippets, stagedPrefixes],
   )
 
-  const displayGroups = useMemo(
-    () => filterGroupsBySearch(groups, search),
-    [groups, search],
+  const displayTreeNodes = useMemo(
+    () => filterTreeBySearch(treeNodes, search),
+    [search, treeNodes],
   )
 
   const flatItems = useMemo(
-    () => flattenVisibleSnippets(displayGroups),
-    [displayGroups],
+    () => flattenVisibleSnippets(displayTreeNodes, expandedPrefixes),
+    [displayTreeNodes, expandedPrefixes],
   )
 
-  const invalidateGroups = useCallback(async () => {
+  const invalidateSnippets = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: snippetsQueryKey })
   }, [queryClient])
-
-  const refreshAll = useCallback(async () => {
-    await invalidateGroups()
-    await Promise.all(
-      Object.entries(runtime)
-        .filter(([, state]) => state.expanded)
-        .map(([reference]) => fetchGroup(reference)),
-    )
-  }, [fetchGroup, invalidateGroups, runtime])
 
   const closeDetail = useCallback(() => {
     navigate('/snippets')
@@ -241,7 +164,7 @@ export function SnippetsRouteViewContent() {
     onSuccess: async () => {
       toast.success(t('snippets.toast.deleted'))
       closeDetail()
-      await invalidateGroups()
+      await invalidateSnippets()
     },
   })
 
@@ -251,45 +174,86 @@ export function SnippetsRouteViewContent() {
       toast.error(getErrorMessage(error, t('snippets.toast.resetFailed'))),
     onSuccess: async () => {
       toast.success(t('snippets.toast.reset'))
-      await invalidateGroups()
+      await invalidateSnippets()
     },
   })
 
   const selectSnippet = useCallback(
     (snippet: SnippetModel) => {
+      setSelectedPrefix(getParentPrefix(snippet.path))
       navigate(`/snippets/${snippet.id}`)
     },
     [navigate],
   )
 
   const startCreate = useCallback(() => {
+    const path = nextUntitledFilePath(selectedPrefix, snippets)
+    setCreateDraft({
+      ...emptySnippet,
+      path,
+    })
     navigate('/snippets/new')
-  }, [navigate])
+  }, [navigate, selectedPrefix, snippets])
+
+  const startCreateFolder = useCallback((parentPrefix: string) => {
+    const normalizedParent = normalizeFolderPrefix(parentPrefix)
+    setSelectedPrefix(normalizedParent)
+    setFolderDraftParent(normalizedParent)
+    setFolderDraftName('')
+  }, [])
+
+  const cancelCreateFolder = useCallback(() => {
+    setFolderDraftParent(null)
+    setFolderDraftName('')
+  }, [])
+
+  const commitCreateFolder = useCallback(() => {
+    if (folderDraftParent === null) return
+    const nextPrefix = normalizeFolderPrefix(
+      `${folderDraftParent}${folderDraftName}`,
+    )
+    if (!nextPrefix) return
+    setStagedPrefixes((current) =>
+      current.includes(nextPrefix) ? current : [...current, nextPrefix],
+    )
+    setExpandedPrefixes((current) => ({
+      ...current,
+      [folderDraftParent]: true,
+      [nextPrefix]: true,
+    }))
+    setSelectedPrefix(nextPrefix)
+    setFolderDraftParent(null)
+    setFolderDraftName('')
+  }, [folderDraftName, folderDraftParent])
+
+  const toggleFolder = useCallback((prefix: string) => {
+    setExpandedPrefixes((state) => ({
+      ...state,
+      [prefix]: !(state[prefix] ?? true),
+    }))
+  }, [])
+
+  const selectFolder = useCallback((prefix: string) => {
+    setSelectedPrefix(prefix)
+  }, [])
 
   const requestDelete = useCallback(
     (snippet: SnippetModel) => {
       const isReset = snippet.builtIn && snippet.type === SnippetType.Function
       const confirmed = window.confirm(
         isReset
-          ? t('snippets.confirm.resetBuiltIn', { name: snippet.name })
-          : t('snippets.confirm.delete', { name: snippet.name }),
+          ? t('snippets.confirm.resetBuiltIn', { name: snippet.path })
+          : t('snippets.confirm.delete', { name: snippet.path }),
       )
       if (!confirmed) return
-      const refetchAfter = () => {
-        if (snippet.reference) void fetchGroup(snippet.reference)
-      }
       if (isReset) {
-        resetMutation.mutate(snippet.id, { onSuccess: refetchAfter })
+        resetMutation.mutate(snippet.id)
       } else {
-        deleteMutation.mutate(snippet.id, { onSuccess: refetchAfter })
+        deleteMutation.mutate(snippet.id)
       }
     },
-    [deleteMutation, fetchGroup, resetMutation, t],
+    [deleteMutation, resetMutation, t],
   )
-
-  const openExternal = (snippet: SnippetModel) => {
-    window.open(buildSnippetExternalUrl(snippet), '_blank', 'noopener')
-  }
 
   useListKeyboard<SnippetModel>({
     actions: [],
@@ -318,16 +282,16 @@ export function SnippetsRouteViewContent() {
     },
   ]
 
-  const listHasGroups = groups.length > 0
-  const visibleHasContent = displayGroups.length > 0
-
   const handleSaved = useCallback(
     (snippet: SnippetModel) => {
       navigate(`/snippets/${snippet.id}`)
-      void invalidateGroups()
-      if (snippet.reference) void fetchGroup(snippet.reference)
+      setStagedPrefixes((current) =>
+        current.filter((prefix) => !snippet.path.startsWith(prefix)),
+      )
+      setCreateDraft(null)
+      void invalidateSnippets()
     },
-    [fetchGroup, invalidateGroups, navigate],
+    [invalidateSnippets, navigate],
   )
 
   const handleInstallDependency = useCallback(() => {
@@ -338,7 +302,10 @@ export function SnippetsRouteViewContent() {
   const routeContextValue = useMemo(
     () => ({
       deleting: deleteMutation.isPending,
-      emptySnippet,
+      emptySnippet: createDraft ?? {
+        ...emptySnippet,
+        path: nextUntitledFilePath(selectedPrefix, snippets),
+      },
       onBack: closeDetail,
       onDelete: requestDelete,
       onInstallDependency: handleInstallDependency,
@@ -350,13 +317,21 @@ export function SnippetsRouteViewContent() {
     }),
     [
       closeDetail,
+      createDraft,
       deleteMutation.isPending,
       handleInstallDependency,
       handleSaved,
       requestDelete,
       resetMutation.isPending,
+      selectedPrefix,
+      snippets,
     ],
   )
+
+  const listHasContent = treeNodes.length > 0
+  const visibleHasContent = displayTreeNodes.length > 0
+  const selectedPrefixLabel =
+    selectedPrefix.length > 0 ? selectedPrefix : t('snippets.list.root')
 
   return (
     <SnippetsRouteContext.Provider value={routeContextValue}>
@@ -399,11 +374,22 @@ export function SnippetsRouteViewContent() {
                   <Plus aria-hidden="true" className="size-4" />
                 </Button>
                 <Button
+                  aria-label={t('snippets.list.newFolder')}
+                  className="h-8 w-8"
+                  iconOnly
+                  onClick={() => startCreateFolder(selectedPrefix)}
+                  title={t('snippets.list.newFolder')}
+                  type="button"
+                  variant="subtle"
+                >
+                  <FolderPlus aria-hidden="true" className="size-4" />
+                </Button>
+                <Button
                   aria-label={t('snippets.action.refresh')}
                   className="h-8 w-8"
-                  disabled={groupsQuery.isFetching}
+                  disabled={listQuery.isFetching}
                   iconOnly
-                  onClick={() => void refreshAll()}
+                  onClick={() => void listQuery.refetch()}
                   title={t('snippets.action.refresh')}
                   type="button"
                   variant="subtle"
@@ -412,7 +398,7 @@ export function SnippetsRouteViewContent() {
                     aria-hidden="true"
                     className={cn(
                       'size-4',
-                      groupsQuery.isFetching && 'animate-spin',
+                      listQuery.isFetching && 'animate-spin',
                     )}
                   />
                 </Button>
@@ -430,10 +416,82 @@ export function SnippetsRouteViewContent() {
               </div>
             </div>
 
+            <div className="shrink-0 border-b border-neutral-200 px-2 py-1.5 dark:border-neutral-800">
+              <div className="flex min-h-7 items-center justify-between gap-2">
+                <button
+                  className={cn(
+                    'flex min-w-0 items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs transition-colors',
+                    'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100',
+                  )}
+                  onClick={() => setSelectedPrefix('')}
+                  title={selectedPrefixLabel}
+                  type="button"
+                >
+                  <Folder aria-hidden="true" className="size-3.5 shrink-0" />
+                  <span className="min-w-0 truncate">
+                    {selectedPrefixLabel}
+                  </span>
+                </button>
+                <span className="shrink-0 text-xs tabular-nums text-neutral-400">
+                  {snippets.length}
+                </span>
+              </div>
+
+              {folderDraftParent !== null ? (
+                <form
+                  className="mt-1.5 flex items-center gap-1.5"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    commitCreateFolder()
+                  }}
+                >
+                  <FolderPlus
+                    aria-hidden="true"
+                    className="size-3.5 shrink-0 text-neutral-400"
+                  />
+                  <TextInput
+                    autoFocus
+                    controlClassName="h-7 min-w-0 flex-1 px-2 text-xs focus:border-neutral-400 focus:ring-0"
+                    onChange={setFolderDraftName}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') {
+                        event.preventDefault()
+                        cancelCreateFolder()
+                      }
+                    }}
+                    placeholder={t('snippets.list.newFolderPlaceholder')}
+                    value={folderDraftName}
+                  />
+                  <Button
+                    aria-label={t('snippets.list.confirmFolder')}
+                    className="h-7 w-7"
+                    disabled={!folderDraftName.trim()}
+                    iconOnly
+                    title={t('snippets.list.confirmFolder')}
+                    type="submit"
+                    variant="subtle"
+                  >
+                    <Check aria-hidden="true" className="size-3.5" />
+                  </Button>
+                  <Button
+                    aria-label={t('snippets.list.cancelFolder')}
+                    className="h-7 w-7"
+                    iconOnly
+                    onClick={cancelCreateFolder}
+                    title={t('snippets.list.cancelFolder')}
+                    type="button"
+                    variant="ghost"
+                  >
+                    <X aria-hidden="true" className="size-3.5" />
+                  </Button>
+                </form>
+              ) : null}
+            </div>
+
             <Scroll className="flex-1">
-              {groupsQuery.isLoading && !listHasGroups ? (
+              {listQuery.isLoading && !listHasContent ? (
                 <SnippetSkeleton />
-              ) : !listHasGroups ? (
+              ) : !listHasContent ? (
                 <SnippetEmpty />
               ) : !visibleHasContent ? (
                 <div className="flex min-h-[12rem] items-center justify-center px-4 text-center text-sm text-neutral-400">
@@ -441,16 +499,30 @@ export function SnippetsRouteViewContent() {
                 </div>
               ) : (
                 <SnippetList
-                  groups={displayGroups}
+                  expandedPrefixes={expandedPrefixes}
+                  nodes={displayTreeNodes}
+                  onCreateFileInFolder={(prefix) => {
+                    setSelectedPrefix(prefix)
+                    const path = nextUntitledFilePath(prefix, snippets)
+                    setCreateDraft({
+                      ...emptySnippet,
+                      path,
+                    })
+                    navigate('/snippets/new')
+                  }}
                   onDelete={requestDelete}
-                  onOpenExternal={openExternal}
+                  onOpenExternal={(snippet) =>
+                    window.open(buildSnippetExternalUrl(snippet), '_blank')
+                  }
                   onSelect={selectSnippet}
-                  onToggleGroup={toggleGroup}
+                  onSelectFolder={selectFolder}
+                  onToggleFolder={toggleFolder}
                   selectedId={
                     typeof selectedId === 'string' && selectedId !== 'new'
                       ? selectedId
                       : null
                   }
+                  selectedPrefix={selectedPrefix}
                 />
               )}
             </Scroll>
@@ -461,7 +533,7 @@ export function SnippetsRouteViewContent() {
       <ImportSnippetModal
         onClose={() => setImportOpen(false)}
         onImported={(packages) => {
-          void invalidateGroups()
+          void invalidateSnippets()
           closeDetail()
           if (packages.length > 0) {
             setInstallInitialPackages(packages.join('\n'))

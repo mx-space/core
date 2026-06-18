@@ -6,11 +6,11 @@ import {
   ExternalLink,
   FileCode,
   FileJson,
+  FilePlus,
   FileText,
   Folder,
   FolderOpen,
   FunctionSquare,
-  Loader2,
   Lock,
   Trash2,
 } from 'lucide-react'
@@ -21,105 +21,188 @@ import { SnippetType } from '~/models/snippet'
 import { ListRow } from '~/ui/list-actions'
 import { cn } from '~/utils/cn'
 
-export interface SnippetGroupState {
-  reference: string
+export interface SnippetTreeFolder {
+  kind: 'folder'
+  name: string
+  path: string
   count: number
-  snippets: SnippetModel[]
-  expanded: boolean
-  loading: boolean
+  staged: boolean
+  children: SnippetTreeNode[]
 }
 
+export interface SnippetTreeFile {
+  kind: 'file'
+  name: string
+  path: string
+  snippet: SnippetModel
+}
+
+export type SnippetTreeNode = SnippetTreeFolder | SnippetTreeFile
+
 interface SnippetListProps {
-  groups: SnippetGroupState[]
-  selectedId: string | null
-  onSelect: (snippet: SnippetModel) => void
-  onToggleGroup: (reference: string) => void
-  onOpenExternal: (snippet: SnippetModel) => void
+  expandedPrefixes: Record<string, boolean>
+  nodes: SnippetTreeNode[]
+  onCreateFileInFolder: (prefix: string) => void
   onDelete: (snippet: SnippetModel) => void
+  onOpenExternal: (snippet: SnippetModel) => void
+  onSelect: (snippet: SnippetModel) => void
+  onSelectFolder: (prefix: string) => void
+  onToggleFolder: (prefix: string) => void
+  selectedId: string | null
+  selectedPrefix: string
 }
 
 export function SnippetList(props: SnippetListProps) {
   return (
-    <div>
-      {props.groups.map((group) => (
-        <SnippetGroupSection
-          group={group}
-          key={group.reference}
-          onDelete={props.onDelete}
-          onOpenExternal={props.onOpenExternal}
-          onSelect={props.onSelect}
-          onToggle={() => props.onToggleGroup(group.reference)}
-          selectedId={props.selectedId}
-        />
+    <div className="py-1">
+      {props.nodes.map((node) => (
+        <SnippetTreeNodeRow key={node.path} level={0} node={node} {...props} />
       ))}
     </div>
   )
 }
 
-function SnippetGroupSection(props: {
-  group: SnippetGroupState
-  selectedId: string | null
-  onSelect: (snippet: SnippetModel) => void
-  onToggle: () => void
-  onOpenExternal: (snippet: SnippetModel) => void
-  onDelete: (snippet: SnippetModel) => void
+function SnippetTreeNodeRow(
+  props: SnippetListProps & {
+    level: number
+    node: SnippetTreeNode
+  },
+) {
+  if (props.node.kind === 'file') {
+    const fileNode = props.node
+    return (
+      <SnippetFileRow
+        level={props.level}
+        onDelete={() => props.onDelete(fileNode.snippet)}
+        onOpenExternal={() => props.onOpenExternal(fileNode.snippet)}
+        onSelect={() => props.onSelect(fileNode.snippet)}
+        selected={props.selectedId === fileNode.snippet.id}
+        snippet={fileNode.snippet}
+      />
+    )
+  }
+
+  const expanded = props.expandedPrefixes[props.node.path] ?? true
+  return (
+    <SnippetFolderRow
+      expanded={expanded}
+      folder={props.node}
+      level={props.level}
+      onCreateFileInFolder={props.onCreateFileInFolder}
+      onSelectFolder={props.onSelectFolder}
+      onToggleFolder={props.onToggleFolder}
+      selected={props.selectedPrefix === props.node.path}
+    >
+      {expanded
+        ? props.node.children.map((child) => (
+            <SnippetTreeNodeRow
+              key={child.path}
+              {...props}
+              level={props.level + 1}
+              node={child}
+            />
+          ))
+        : null}
+    </SnippetFolderRow>
+  )
+}
+
+function SnippetFolderRow(props: {
+  children: React.ReactNode
+  expanded: boolean
+  folder: SnippetTreeFolder
+  level: number
+  onCreateFileInFolder: (prefix: string) => void
+  onSelectFolder: (prefix: string) => void
+  onToggleFolder: (prefix: string) => void
+  selected: boolean
 }) {
+  const { folder } = props
   const { t } = useI18n()
-  const { group } = props
   return (
     <div>
-      <button
-        className="flex w-full select-none items-center gap-1 px-2 py-1.5 text-sm text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800/50"
-        onClick={props.onToggle}
-        type="button"
+      <div
+        className={cn(
+          'group flex h-8 w-full select-none items-center gap-1.5 pr-2 text-sm transition-colors',
+          'hover:bg-neutral-100 dark:hover:bg-neutral-800/50',
+          props.selected
+            ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-800 dark:text-neutral-50'
+            : 'text-neutral-700 dark:text-neutral-300',
+        )}
+        style={{ paddingLeft: 8 + props.level * 14 }}
       >
-        <span className="flex size-4 items-center justify-center">
-          {group.expanded ? (
+        <button
+          aria-label={props.expanded ? 'Collapse folder' : 'Expand folder'}
+          className="flex size-5 shrink-0 items-center justify-center rounded text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+          onClick={() => props.onToggleFolder(folder.path)}
+          type="button"
+        >
+          {props.expanded ? (
             <ChevronDown aria-hidden="true" className="size-3.5" />
           ) : (
             <ChevronRight aria-hidden="true" className="size-3.5" />
           )}
-        </span>
-        {group.expanded ? (
-          <FolderOpen aria-hidden="true" className="size-4 text-amber-500" />
-        ) : (
-          <Folder aria-hidden="true" className="size-4 text-amber-500" />
-        )}
-        <span className="flex-1 truncate text-left font-medium">
-          {group.reference || 'root'}
-        </span>
-        <span className="rounded bg-neutral-200 px-1.5 py-0.5 text-xs tabular-nums dark:bg-neutral-700">
-          {group.count}
-        </span>
-      </button>
-
-      {group.expanded ? (
-        <div className="pl-4">
-          {group.loading ? (
-            <div className="flex items-center justify-center py-3">
-              <Loader2
-                aria-hidden="true"
-                className="size-4 animate-spin text-neutral-400"
-              />
-            </div>
-          ) : group.snippets.length === 0 ? (
-            <div className="py-2 pl-6 text-xs text-neutral-400">
-              {t('snippets.list.emptyGroup')}
-            </div>
+        </button>
+        <button
+          className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+          onClick={() => props.onSelectFolder(folder.path)}
+          type="button"
+        >
+          {props.expanded ? (
+            <FolderOpen
+              aria-hidden="true"
+              className={cn(
+                'size-4',
+                props.selected
+                  ? 'text-neutral-800 dark:text-neutral-100'
+                  : 'text-neutral-500 dark:text-neutral-400',
+              )}
+            />
           ) : (
-            group.snippets.map((snippet) => (
-              <SnippetRow
-                key={snippet.id}
-                onDelete={() => props.onDelete(snippet)}
-                onOpenExternal={() => props.onOpenExternal(snippet)}
-                onSelect={() => props.onSelect(snippet)}
-                selected={props.selectedId === snippet.id}
-                snippet={snippet}
-              />
-            ))
+            <Folder
+              aria-hidden="true"
+              className={cn(
+                'size-4',
+                props.selected
+                  ? 'text-neutral-800 dark:text-neutral-100'
+                  : 'text-neutral-500 dark:text-neutral-400',
+              )}
+            />
           )}
-        </div>
-      ) : null}
+          <span
+            className={cn(
+              'min-w-0 flex-1 truncate',
+              props.selected
+                ? 'font-medium text-neutral-950 dark:text-neutral-50'
+                : 'text-neutral-700 dark:text-neutral-300',
+            )}
+          >
+            {folder.name}
+          </span>
+          {folder.staged ? (
+            <span
+              aria-label={t('snippets.list.pendingFolder')}
+              className="size-1.5 shrink-0 rounded-full bg-amber-500"
+              title={t('snippets.list.pendingFolder')}
+            />
+          ) : null}
+          {folder.count > 0 ? (
+            <span className="text-xs tabular-nums text-neutral-400">
+              {folder.count}
+            </span>
+          ) : null}
+        </button>
+        <button
+          aria-label={t('snippets.list.newFile')}
+          className="rounded p-0.5 text-neutral-400 opacity-0 transition-opacity hover:bg-neutral-200 hover:text-neutral-700 group-hover:opacity-100 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
+          onClick={() => props.onCreateFileInFolder(folder.path)}
+          title={t('snippets.list.newFile')}
+          type="button"
+        >
+          <FilePlus aria-hidden="true" className="size-3.5" />
+        </button>
+      </div>
+      {props.children}
     </div>
   )
 }
@@ -142,7 +225,8 @@ const typeIconColorMap: Record<SnippetType, string> = {
   [SnippetType.YAML]: 'text-red-500',
 }
 
-function SnippetRow(props: {
+function SnippetFileRow(props: {
+  level: number
   onDelete: () => void
   onOpenExternal: () => void
   onSelect: () => void
@@ -154,12 +238,13 @@ function SnippetRow(props: {
   const Icon = typeIconMap[snippet.type] ?? FileText
   const iconColor = typeIconColorMap[snippet.type] ?? 'text-neutral-500'
   const disabled = snippet.enable === false
+  const fileName = snippet.path.split('/').at(-1) || snippet.path
 
   return (
     <ListRow
       ariaCurrent={props.selected}
       className={cn(
-        'group flex w-full cursor-pointer items-center gap-1.5 px-2 py-1.5 transition-colors',
+        'group flex h-8 w-full cursor-pointer items-center gap-1.5 px-2 transition-colors',
         'hover:bg-neutral-100 dark:hover:bg-neutral-800/50',
         props.selected ? 'bg-neutral-100 dark:bg-neutral-800' : null,
       )}
@@ -168,21 +253,33 @@ function SnippetRow(props: {
       role="option"
       selected={props.selected}
     >
+      {props.level > 0 ? (
+        <span
+          aria-hidden="true"
+          className="shrink-0"
+          style={{ width: 25 + props.level * 14 }}
+        />
+      ) : (
+        <span aria-hidden="true" className="w-[25px] shrink-0" />
+      )}
       <Icon aria-hidden="true" className={cn('size-3 shrink-0', iconColor)} />
       <span
         className={cn(
-          'flex-1 truncate text-sm',
+          'min-w-0 flex-1 truncate text-sm',
           disabled
             ? 'text-neutral-400 line-through dark:text-neutral-500'
             : 'text-neutral-700 dark:text-neutral-300',
           props.selected && 'font-medium text-neutral-900 dark:text-white',
         )}
       >
-        {snippet.name || t('snippets.list.unnamed')}
+        {fileName || t('snippets.list.unnamed')}
       </span>
       {snippet.private ? (
         <Lock aria-hidden="true" className="size-3 shrink-0 text-neutral-400" />
       ) : null}
+      <span className="shrink-0 rounded bg-neutral-100 px-1 py-0.5 text-[10px] uppercase text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+        {snippet.type}
+      </span>
       <button
         aria-label={t('snippets.list.openExternal')}
         className="rounded p-0.5 text-neutral-400 opacity-0 transition-opacity hover:bg-neutral-200 hover:text-neutral-700 group-hover:opacity-100 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
@@ -219,27 +316,138 @@ function SnippetRow(props: {
   )
 }
 
-export function flattenVisibleSnippets(groups: SnippetGroupState[]) {
-  return groups.flatMap((group) => (group.expanded ? group.snippets : []))
+export function buildSnippetTree(
+  snippets: SnippetModel[],
+  stagedPrefixes: string[],
+): SnippetTreeNode[] {
+  const root = new Map<string, SnippetTreeNode>()
+
+  const ensureFolder = (
+    siblings: Map<string, SnippetTreeNode>,
+    name: string,
+    path: string,
+    staged = false,
+  ) => {
+    const existing = siblings.get(path)
+    if (existing?.kind === 'folder') {
+      existing.staged &&= staged
+      return existing
+    }
+    const folder: SnippetTreeFolder = {
+      children: [],
+      count: 0,
+      kind: 'folder',
+      name,
+      path,
+      staged,
+    }
+    siblings.set(path, folder)
+    return folder
+  }
+
+  const insertFolder = (prefix: string, staged: boolean) => {
+    const segments = prefix
+      .replaceAll(/^\/+|\/+$/g, '')
+      .split('/')
+      .filter(Boolean)
+    let siblings = root
+    let currentPath = ''
+    for (const segment of segments) {
+      currentPath = `${currentPath}${segment}/`
+      const folder = ensureFolder(siblings, segment, currentPath, staged)
+      siblings = childrenMap(folder)
+    }
+  }
+
+  const insertFile = (snippet: SnippetModel) => {
+    const segments = snippet.path.split('/').filter(Boolean)
+    let siblings = root
+    let currentPath = ''
+    for (const segment of segments.slice(0, -1)) {
+      currentPath = `${currentPath}${segment}/`
+      const folder = ensureFolder(siblings, segment, currentPath)
+      folder.count += 1
+      siblings = childrenMap(folder)
+    }
+    const fileName = segments.at(-1) || snippet.path
+    siblings.set(snippet.path, {
+      kind: 'file',
+      name: fileName,
+      path: snippet.path,
+      snippet,
+    })
+  }
+
+  for (const prefix of stagedPrefixes) insertFolder(prefix, true)
+  for (const snippet of snippets) insertFile(snippet)
+
+  return sortNodes([...root.values()])
 }
 
-export function filterGroupsBySearch(
-  groups: SnippetGroupState[],
-  search: string,
-): SnippetGroupState[] {
-  const query = search.trim().toLowerCase()
-  if (!query) return groups
-  const out: SnippetGroupState[] = []
-  for (const group of groups) {
-    const matched = group.snippets.filter(
-      (snippet) =>
-        snippet.name.toLowerCase().includes(query) ||
-        snippet.comment?.toLowerCase().includes(query),
-    )
-    const referenceMatches = group.reference.toLowerCase().includes(query)
-    if (matched.length === 0 && !(referenceMatches && group.snippets.length))
-      continue
-    out.push({ ...group, expanded: true, snippets: matched })
+export function flattenVisibleSnippets(
+  nodes: SnippetTreeNode[],
+  expandedPrefixes: Record<string, boolean>,
+): SnippetModel[] {
+  const out: SnippetModel[] = []
+  const visit = (node: SnippetTreeNode) => {
+    if (node.kind === 'file') {
+      out.push(node.snippet)
+      return
+    }
+    if (expandedPrefixes[node.path] ?? true) {
+      node.children.forEach(visit)
+    }
   }
+  nodes.forEach(visit)
   return out
+}
+
+export function filterTreeBySearch(
+  nodes: SnippetTreeNode[],
+  search: string,
+): SnippetTreeNode[] {
+  const query = search.trim().toLowerCase()
+  if (!query) return nodes
+
+  const filterNode = (node: SnippetTreeNode): SnippetTreeNode | null => {
+    if (node.kind === 'file') {
+      const matched =
+        node.snippet.path.toLowerCase().includes(query) ||
+        node.snippet.comment?.toLowerCase().includes(query)
+      return matched ? node : null
+    }
+
+    const children = node.children
+      .map(filterNode)
+      .filter((child): child is SnippetTreeNode => child !== null)
+    const matched = node.path.toLowerCase().includes(query)
+    if (!matched && children.length === 0) return null
+    return { ...node, children }
+  }
+
+  return nodes
+    .map(filterNode)
+    .filter((node): node is SnippetTreeNode => node !== null)
+}
+
+function childrenMap(folder: SnippetTreeFolder) {
+  const map = new Map<string, SnippetTreeNode>()
+  for (const child of folder.children) map.set(child.path, child)
+  folder.children = [...map.values()]
+  return {
+    get: map.get.bind(map),
+    set(path: string, node: SnippetTreeNode) {
+      map.set(path, node)
+      folder.children = sortNodes([...map.values()])
+      return map
+    },
+    values: map.values.bind(map),
+  } as Map<string, SnippetTreeNode>
+}
+
+function sortNodes(nodes: SnippetTreeNode[]) {
+  return nodes.sort((left, right) => {
+    if (left.kind !== right.kind) return left.kind === 'folder' ? -1 : 1
+    return left.name.localeCompare(right.name)
+  })
 }

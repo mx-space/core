@@ -275,6 +275,8 @@ export const adminQueryKeys = {
     group: (reference: string) => ['snippets', 'group', reference] as const,
     groups: () => ['snippets', 'groups'] as const,
     root: ['snippets'] as const,
+    vfs: (prefix: string, recursive: boolean) =>
+      ['snippets', 'vfs', prefix, recursive] as const,
   },
   tasks: {
     taskDetail: adminTaskKeys.taskDetail,

@@ -1,32 +1,30 @@
-import { Command, Options } from '@effect/cli'
+import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 
-const page = Options.integer('page').pipe(Options.optional)
-const size = Options.integer('size').pipe(Options.optional)
-const grouped = Options.boolean('grouped')
+const prefix = Args.text({ name: 'prefix' }).pipe(Args.optional)
+const limit = Options.integer('limit').pipe(Options.optional)
+const recursive = Options.boolean('recursive')
 
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>
   Option.getOrUndefined(value)
 
 export const list = Command.make(
-  'list',
-  { page, size, grouped },
-  ({ page, size, grouped }) =>
+  'ls',
+  { prefix, limit, recursive },
+  ({ prefix, limit, recursive }) =>
     Effect.gen(function* () {
       const api = yield* Api
       const renderer = yield* Renderer
-      const res = yield* api.request(
-        grouped ? '/snippets/group' : '/snippets',
-        {
-          query: {
-            page: unwrap(page),
-            size: unwrap(size),
-          },
+      const res = yield* api.request('/snippets', {
+        query: {
+          prefix: unwrap(prefix),
+          limit: unwrap(limit),
+          recursive,
         },
-      )
+      })
       yield* renderer.emitSuccess(res)
     }),
-).pipe(Command.withDescription('list snippets'))
+).pipe(Command.withDescription('list snippet VFS paths'))

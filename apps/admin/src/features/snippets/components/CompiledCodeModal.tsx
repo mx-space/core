@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import type { SnippetModel } from '~/models/snippet'
 
 import { getCompiledCode } from '~/api/serverless'
 import { useI18n } from '~/i18n'
+import type { SnippetModel } from '~/models/snippet'
 import { adminQueryKeys } from '~/query/keys'
 import { Scroll } from '~/ui/primitives/scroll'
 
@@ -26,9 +26,9 @@ export function CompiledCodeModal(props: {
       onClose={props.onClose}
       open={props.open}
       title={
-        props.snippet?.name
+        props.snippet?.path
           ? t('snippets.dialog.compiled.titleWithName', {
-              name: props.snippet.name,
+              name: props.snippet.path,
             })
           : t('snippets.dialog.compiled.title')
       }

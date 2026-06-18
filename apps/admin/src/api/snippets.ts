@@ -1,33 +1,42 @@
-import type { PaginateResult } from '~/models/base'
 import type { SnippetModel, SnippetType } from '~/models/snippet'
 
 import { deleteJson, getJson, postJson, putJson } from './http'
 
 export interface GetSnippetsParams {
-  page?: number
-  reference?: string
-  size?: number
+  limit?: number
+  prefix?: string
+  recursive?: boolean
   type?: SnippetType
 }
 
 export interface CreateSnippetData {
   comment?: string
-  customPath?: string
   enable?: boolean
   metatype?: string
   method?: string
-  name: string
+  path: string
   private?: boolean
   raw: string
-  reference?: string
   schema?: string
   secret?: Record<string, unknown> | string | null
   type: SnippetType
 }
 
-export interface SnippetGroup {
-  count: number
-  reference: string
+export interface SnippetObject {
+  id: string
+  path: string
+  type: SnippetType
+  comment?: string | null
+  private: boolean
+  enable: boolean
+  method?: string | null
+  updatedAt?: string | null
+}
+
+export interface SnippetVfsList {
+  prefix: string
+  objects: SnippetObject[]
+  commonPrefixes: string[]
 }
 
 export interface ImportSnippetsData {
@@ -36,10 +45,10 @@ export interface ImportSnippetsData {
 }
 
 export function getSnippets(params: GetSnippetsParams = {}) {
-  return getJson<PaginateResult<SnippetModel>>('/snippets', {
-    page: params.page,
-    reference: params.reference,
-    size: params.size,
+  return getJson<SnippetVfsList>('/snippets', {
+    limit: params.limit,
+    prefix: params.prefix,
+    recursive: params.recursive,
     type: params.type,
   })
 }
@@ -61,19 +70,6 @@ export function updateSnippet(id: string, data: Partial<CreateSnippetData>) {
 
 export function deleteSnippet(id: string) {
   return deleteJson<void>(`/snippets/${id}`)
-}
-
-export function getSnippetGroups(params?: { page?: number; size?: number }) {
-  return getJson<PaginateResult<SnippetGroup>>('/snippets/group', {
-    page: params?.page,
-    size: params?.size,
-  })
-}
-
-export function getGroupSnippets(reference: string) {
-  return getJson<SnippetModel[]>(
-    `/snippets/group/${encodeURIComponent(reference)}`,
-  )
 }
 
 export function resetFunctionSnippet(id: string) {

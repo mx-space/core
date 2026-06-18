@@ -983,13 +983,20 @@ export const stepSimpleCollections: MigrationStep[] = [
         type: d.type ?? null,
         private: Boolean(d.private ?? false),
         raw: d.raw ?? '',
-        name: d.name,
-        reference: d.reference ?? 'root',
+        path:
+          d.reference === 'skill'
+            ? `sk/${d.name}/SKILL.md`
+            : d.customPath
+              ? String(d.customPath).replaceAll(/^\/+|\/+$/g, '')
+              : d.reference === 'theme'
+                ? `theme/${d.name}`
+                : (d.reference ?? 'root') === 'root'
+                  ? `root/${d.name}`
+                  : `${d.reference}/${d.name}`,
         comment: d.comment ?? null,
         metatype: d.metatype ?? null,
         schema: d.schema ?? null,
         method: d.method ?? null,
-        customPath: d.customPath ?? null,
         secret: d.secret ?? null,
         enable: d.enable ?? true,
         builtIn: Boolean(d.builtIn ?? false),

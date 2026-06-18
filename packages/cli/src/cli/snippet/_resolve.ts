@@ -6,7 +6,7 @@ import { isSnowflakeId } from '../../services/Resolver'
 
 interface SnippetListItem {
   readonly id?: string
-  readonly name?: string
+  readonly path?: string
 }
 
 const unwrapList = (res: unknown): readonly SnippetListItem[] => {
@@ -24,13 +24,13 @@ export const resolveSnippetId = (
 ): Effect.Effect<string, ResourceNotFound> =>
   Effect.gen(function* () {
     if (isSnowflakeId(ref)) return ref
-    const slash = ref.indexOf('/')
-    const reference = slash === -1 ? 'root' : ref.slice(0, slash)
-    const name = slash === -1 ? ref : ref.slice(slash + 1)
     const res = yield* api
-      .request(`/snippets/group/${encodeURIComponent(reference)}`)
+      .request('/snippets/by-path', { query: { path: ref } })
       .pipe(Effect.catchAll(() => Effect.succeed(null)))
-    const match = unwrapList(res).find((s) => s.name === name)
+    const doc = res && typeof res === 'object' ? (res as any).data || res : null
+    const match = Array.isArray(doc)
+      ? unwrapList(doc).find((s) => s.path === ref)
+      : (doc as SnippetListItem | null)
     if (!match?.id) {
       return yield* Effect.fail(
         new ResourceNotFound({

@@ -18,8 +18,7 @@ export const SNIPPET_TYPES = [
 ] as const
 
 export const SNIPPET_KEYS = [
-  'name',
-  'reference',
+  'path',
   'type',
   'raw',
   'private',
@@ -27,12 +26,10 @@ export const SNIPPET_KEYS = [
   'metatype',
   'schema',
   'method',
-  'customPath',
   'secret',
   'enable',
 ] as const
 
-const reference = optional(Options.text('reference'))
 const type = optional(Options.choice('type', SNIPPET_TYPES))
 const file = optional(Options.text('file'))
 const raw = optional(Options.text('raw'))
@@ -42,7 +39,6 @@ const method = optional(
 )
 const metatype = optional(Options.text('metatype'))
 const schema = optional(Options.text('schema'))
-const customPath = optional(Options.text('custom-path'))
 const secret = optional(Options.text('secret'))
 const privateFlag = Options.boolean('private')
 const noPrivateFlag = Options.boolean('no-private')
@@ -50,7 +46,6 @@ const enableFlag = Options.boolean('enable')
 const noEnableFlag = Options.boolean('no-enable')
 
 export const snippetWriteOptions = {
-  reference,
   type,
   file,
   raw,
@@ -58,7 +53,6 @@ export const snippetWriteOptions = {
   method,
   metatype,
   schema,
-  customPath,
   secret,
   private: privateFlag,
   noPrivate: noPrivateFlag,
@@ -67,7 +61,6 @@ export const snippetWriteOptions = {
 }
 
 export interface SnippetWriteOptionsParsed {
-  readonly reference: Option.Option<string>
   readonly type: Option.Option<string>
   readonly file: Option.Option<string>
   readonly raw: Option.Option<string>
@@ -75,7 +68,6 @@ export interface SnippetWriteOptionsParsed {
   readonly method: Option.Option<string>
   readonly metatype: Option.Option<string>
   readonly schema: Option.Option<string>
-  readonly customPath: Option.Option<string>
   readonly secret: Option.Option<string>
   readonly private: boolean
   readonly noPrivate: boolean
@@ -84,7 +76,6 @@ export interface SnippetWriteOptionsParsed {
 }
 
 export interface SnippetFlagInputs {
-  readonly reference?: string
   readonly type?: string
   readonly file?: string
   readonly raw?: string
@@ -92,7 +83,6 @@ export interface SnippetFlagInputs {
   readonly method?: string
   readonly metatype?: string
   readonly schema?: string
-  readonly customPath?: string
   readonly secret?: string
   readonly private?: boolean
   readonly enable?: boolean
@@ -101,7 +91,6 @@ export interface SnippetFlagInputs {
 export const toSnippetFlagInputs = (
   opts: SnippetWriteOptionsParsed,
 ): SnippetFlagInputs => ({
-  reference: unwrap(opts.reference),
   type: unwrap(opts.type),
   file: unwrap(opts.file),
   raw: unwrap(opts.raw),
@@ -109,7 +98,6 @@ export const toSnippetFlagInputs = (
   method: unwrap(opts.method),
   metatype: unwrap(opts.metatype),
   schema: unwrap(opts.schema),
-  customPath: unwrap(opts.customPath),
   secret: unwrap(opts.secret),
   private: opts.private ? true : opts.noPrivate ? false : undefined,
   enable: opts.enable ? true : opts.noEnable ? false : undefined,
@@ -119,13 +107,11 @@ export const snippetFieldsOf = (
   flags: SnippetFlagInputs,
 ): Record<string, unknown> => {
   const out: Record<string, unknown> = {}
-  if (flags.reference !== undefined) out.reference = flags.reference
   if (flags.type !== undefined) out.type = flags.type
   if (flags.comment !== undefined) out.comment = flags.comment
   if (flags.method !== undefined) out.method = flags.method
   if (flags.metatype !== undefined) out.metatype = flags.metatype
   if (flags.schema !== undefined) out.schema = flags.schema
-  if (flags.customPath !== undefined) out.customPath = flags.customPath
   if (flags.secret !== undefined) out.secret = flags.secret
   if (flags.private !== undefined) out.private = flags.private
   if (flags.enable !== undefined) out.enable = flags.enable
