@@ -2313,6 +2313,8 @@ export const enUS = {
   'snippets.toast.installComplete': 'Dependency installation complete',
   'snippets.toast.nameRequired': 'Please enter a snippet name',
   'snippets.toast.packageNameRequired': 'Please enter a package name',
+  'snippets.toast.renameConflict': 'Rename failed',
+  'snippets.toast.renameInvalid': 'Name cannot contain "/"',
   'snippets.toast.reset': 'Function snippet reset',
   'snippets.toast.resetFailed': 'Reset failed',
   'snippets.toast.saveFailed': 'Save failed',

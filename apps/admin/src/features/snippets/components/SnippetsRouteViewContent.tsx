@@ -21,8 +21,10 @@ import {
   deleteSnippet,
   deleteSnippetByPath,
   getSnippets,
+  moveSnippet,
   resetFunctionSnippet,
   type SnippetObject,
+  type SnippetVfsList,
 } from '~/api/snippets'
 import { API_URL } from '~/constants/env'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
@@ -220,6 +222,96 @@ export function SnippetsRouteViewContent() {
       await invalidateSnippets()
     },
   })
+
+  const vfsQueryKey = adminQueryKeys.snippets.vfs('', true)
+
+  interface RenameMutationVars {
+    from: string
+    isFolder: boolean
+    to: string
+  }
+
+  const renameMutation = useMutation<
+    void,
+    unknown,
+    RenameMutationVars,
+    { previous: SnippetVfsList | undefined }
+  >({
+    mutationFn: ({ from, isFolder, to }) =>
+      moveSnippet({ from, recursive: isFolder, to }),
+    onError: (error, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(vfsQueryKey, context.previous)
+      }
+      toast.error(getErrorMessage(error, t('snippets.toast.renameConflict')))
+    },
+    onMutate: async ({ from, isFolder, to }) => {
+      await queryClient.cancelQueries({ queryKey: vfsQueryKey })
+      const previous = queryClient.getQueryData<SnippetVfsList>(vfsQueryKey)
+      if (previous) {
+        const patched: SnippetVfsList = {
+          ...previous,
+          objects: previous.objects.map((object) => {
+            if (isFolder) {
+              if (object.path.startsWith(from)) {
+                return { ...object, path: to + object.path.slice(from.length) }
+              }
+              return object
+            }
+            if (object.path === from) {
+              return { ...object, path: to }
+            }
+            return object
+          }),
+        }
+        queryClient.setQueryData(vfsQueryKey, patched)
+      }
+      setRenamingPath(null)
+      return { previous }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: vfsQueryKey })
+    },
+  })
+
+  const commitRename = useCallback(
+    (path: string, draftRaw: string) => {
+      const draft = draftRaw.trim()
+      const isFolder = path.endsWith('/')
+      const parentPrefix = isFolder
+        ? getParentPrefix(path.slice(0, -1))
+        : getParentPrefix(path)
+      const originalSegment = isFolder
+        ? path.slice(parentPrefix.length, -1)
+        : path.slice(parentPrefix.length)
+
+      if (!draft) {
+        setRenamingPath(null)
+        return
+      }
+      if (draft.includes('/')) {
+        toast.error(t('snippets.toast.renameInvalid'))
+        return
+      }
+      if (draft === originalSegment) {
+        setRenamingPath(null)
+        return
+      }
+      const to = isFolder
+        ? `${parentPrefix}${draft}/`
+        : `${parentPrefix}${draft}`
+      renameMutation.mutate({ from: path, isFolder, to })
+    },
+    [renameMutation, t],
+  )
+
+  const cancelRename = useCallback(() => {
+    setRenamingPath(null)
+  }, [])
+
+  const startRename = useCallback((path: string) => {
+    setRenamingPath(path)
+  }, [])
 
   const selectSnippet = useCallback(
     (snippet: SnippetModel) => {
@@ -581,9 +673,13 @@ export function SnippetsRouteViewContent() {
                   onOpenExternal={(snippet) =>
                     window.open(buildSnippetExternalUrl(snippet), '_blank')
                   }
+                  onRenameCancel={cancelRename}
+                  onRenameCommit={commitRename}
                   onSelect={selectSnippet}
                   onSelectFolder={selectFolder}
+                  onStartRename={startRename}
                   onToggleFolder={toggleFolder}
+                  renamingPath={renamingPath}
                   selectedId={
                     typeof selectedId === 'string' && selectedId !== 'new'
                       ? selectedId

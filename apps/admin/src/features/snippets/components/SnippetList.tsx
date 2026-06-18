@@ -1,25 +1,11 @@
-import type { LucideIcon } from 'lucide-react'
-import {
-  ChevronDown,
-  ChevronRight,
-  Code,
-  ExternalLink,
-  FileCode,
-  FileJson,
-  FilePlus,
-  FileText,
-  Folder,
-  FolderOpen,
-  FunctionSquare,
-  Lock,
-  Trash2,
-} from 'lucide-react'
-
 import { useI18n } from '~/i18n'
 import type { SnippetModel } from '~/models/snippet'
-import { SnippetType } from '~/models/snippet'
-import { ListRow } from '~/ui/list-actions'
-import { cn } from '~/utils/cn'
+
+import { SnippetFileRow } from './SnippetFileRow'
+import { SnippetFolderRow } from './SnippetFolderRow'
+
+export { SnippetFileRow } from './SnippetFileRow'
+export { SnippetFolderRow } from './SnippetFolderRow'
 
 export interface SnippetTreeFolder {
   kind: 'folder'
@@ -47,9 +33,13 @@ interface SnippetListProps {
   onDelete: (snippet: SnippetModel) => void
   onFocusPath?: (path: string) => void
   onOpenExternal: (snippet: SnippetModel) => void
+  onRenameCancel: () => void
+  onRenameCommit: (path: string, draft: string) => void
   onSelect: (snippet: SnippetModel) => void
   onSelectFolder: (prefix: string) => void
+  onStartRename: (path: string) => void
   onToggleFolder: (prefix: string) => void
+  renamingPath: string | null
   selectedId: string | null
   selectedPrefix: string
 }
@@ -85,7 +75,11 @@ function SnippetTreeNodeRow(
         onDelete={() => props.onDelete(fileNode.snippet)}
         onFocus={() => props.onFocusPath?.(fileNode.path)}
         onOpenExternal={() => props.onOpenExternal(fileNode.snippet)}
+        onRenameCancel={props.onRenameCancel}
+        onRenameCommit={props.onRenameCommit}
         onSelect={() => props.onSelect(fileNode.snippet)}
+        onStartRename={props.onStartRename}
+        renamingPath={props.renamingPath}
         selected={props.selectedId === fileNode.snippet.id}
         snippet={fileNode.snippet}
       />
@@ -101,8 +95,12 @@ function SnippetTreeNodeRow(
       level={props.level}
       onCreateFileInFolder={props.onCreateFileInFolder}
       onFocus={() => props.onFocusPath?.(props.node.path)}
+      onRenameCancel={props.onRenameCancel}
+      onRenameCommit={props.onRenameCommit}
       onSelectFolder={props.onSelectFolder}
+      onStartRename={props.onStartRename}
       onToggleFolder={props.onToggleFolder}
+      renamingPath={props.renamingPath}
       selected={props.selectedPrefix === props.node.path}
     >
       {expanded
@@ -116,246 +114,6 @@ function SnippetTreeNodeRow(
           ))
         : null}
     </SnippetFolderRow>
-  )
-}
-
-function SnippetFolderRow(props: {
-  children: React.ReactNode
-  expanded: boolean
-  focusedPath: string | null
-  folder: SnippetTreeFolder
-  level: number
-  onCreateFileInFolder: (prefix: string) => void
-  onFocus?: () => void
-  onSelectFolder: (prefix: string) => void
-  onToggleFolder: (prefix: string) => void
-  selected: boolean
-}) {
-  const { folder } = props
-  const { t } = useI18n()
-  const isFocused = props.focusedPath === folder.path
-  return (
-    <div>
-      <div
-        aria-expanded={props.expanded}
-        aria-level={props.level + 1}
-        aria-selected={isFocused}
-        className={cn(
-          'group flex h-8 w-full select-none items-center gap-1.5 pr-2 text-sm transition-colors',
-          'hover:bg-neutral-100 dark:hover:bg-neutral-800/50',
-          props.selected
-            ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-800 dark:text-neutral-50'
-            : 'text-neutral-700 dark:text-neutral-300',
-        )}
-        data-tree-path={folder.path}
-        role="treeitem"
-        style={{ paddingLeft: 8 + props.level * 14 }}
-        tabIndex={isFocused ? 0 : -1}
-      >
-        <button
-          aria-label={props.expanded ? 'Collapse folder' : 'Expand folder'}
-          className="flex size-5 shrink-0 items-center justify-center rounded text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-          onClick={() => {
-            props.onFocus?.()
-            props.onToggleFolder(folder.path)
-          }}
-          type="button"
-        >
-          {props.expanded ? (
-            <ChevronDown aria-hidden="true" className="size-3.5" />
-          ) : (
-            <ChevronRight aria-hidden="true" className="size-3.5" />
-          )}
-        </button>
-        <button
-          className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
-          onClick={() => {
-            props.onFocus?.()
-            props.onSelectFolder(folder.path)
-          }}
-          type="button"
-        >
-          {props.expanded ? (
-            <FolderOpen
-              aria-hidden="true"
-              className={cn(
-                'size-4',
-                props.selected
-                  ? 'text-neutral-800 dark:text-neutral-100'
-                  : 'text-neutral-500 dark:text-neutral-400',
-              )}
-            />
-          ) : (
-            <Folder
-              aria-hidden="true"
-              className={cn(
-                'size-4',
-                props.selected
-                  ? 'text-neutral-800 dark:text-neutral-100'
-                  : 'text-neutral-500 dark:text-neutral-400',
-              )}
-            />
-          )}
-          <span
-            className={cn(
-              'min-w-0 flex-1 truncate',
-              props.selected
-                ? 'font-medium text-neutral-950 dark:text-neutral-50'
-                : 'text-neutral-700 dark:text-neutral-300',
-            )}
-          >
-            {folder.name}
-          </span>
-          {folder.staged ? (
-            <span
-              aria-label={t('snippets.list.pendingFolder')}
-              className="size-1.5 shrink-0 rounded-full bg-amber-500"
-              title={t('snippets.list.pendingFolder')}
-            />
-          ) : null}
-          {folder.count > 0 ? (
-            <span className="text-xs tabular-nums text-neutral-400">
-              {folder.count}
-            </span>
-          ) : null}
-        </button>
-        <button
-          aria-label={t('snippets.list.newFile')}
-          className="rounded p-0.5 text-neutral-400 opacity-0 transition-opacity hover:bg-neutral-200 hover:text-neutral-700 group-hover:opacity-100 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
-          onClick={() => props.onCreateFileInFolder(folder.path)}
-          title={t('snippets.list.newFile')}
-          type="button"
-        >
-          <FilePlus aria-hidden="true" className="size-3.5" />
-        </button>
-      </div>
-      {props.children}
-    </div>
-  )
-}
-
-const typeIconMap: Record<SnippetType, LucideIcon> = {
-  [SnippetType.JSON]: FileJson,
-  [SnippetType.JSON5]: Code,
-  [SnippetType.Function]: FunctionSquare,
-  [SnippetType.Skill]: FileText,
-  [SnippetType.Text]: FileText,
-  [SnippetType.YAML]: FileCode,
-}
-
-const typeIconColorMap: Record<SnippetType, string> = {
-  [SnippetType.JSON]: 'text-orange-500',
-  [SnippetType.JSON5]: 'text-purple-500',
-  [SnippetType.Function]: 'text-blue-500',
-  [SnippetType.Skill]: 'text-teal-500',
-  [SnippetType.Text]: 'text-neutral-500',
-  [SnippetType.YAML]: 'text-red-500',
-}
-
-function SnippetFileRow(props: {
-  focusedPath: string | null
-  level: number
-  onDelete: () => void
-  onFocus?: () => void
-  onOpenExternal: () => void
-  onSelect: () => void
-  selected: boolean
-  snippet: SnippetModel
-}) {
-  const { t } = useI18n()
-  const { snippet } = props
-  const Icon = typeIconMap[snippet.type] ?? FileText
-  const iconColor = typeIconColorMap[snippet.type] ?? 'text-neutral-500'
-  const disabled = snippet.enable === false
-  const fileName = snippet.path.split('/').at(-1) || snippet.path
-  const isFocused = props.focusedPath === snippet.path
-
-  return (
-    <div
-      aria-level={props.level + 1}
-      aria-selected={isFocused}
-      data-tree-path={snippet.path}
-      role="treeitem"
-      tabIndex={isFocused ? 0 : -1}
-    >
-      <ListRow
-        ariaCurrent={props.selected}
-        className={cn(
-          'group flex h-8 w-full cursor-pointer items-center gap-1.5 px-2 transition-colors',
-          'hover:bg-neutral-100 dark:hover:bg-neutral-800/50',
-          props.selected ? 'bg-neutral-100 dark:bg-neutral-800' : null,
-        )}
-        dataId={snippet.id}
-        onSelect={() => {
-          props.onFocus?.()
-          props.onSelect()
-        }}
-        selected={props.selected}
-      >
-        {props.level > 0 ? (
-          <span
-            aria-hidden="true"
-            className="shrink-0"
-            style={{ width: 25 + props.level * 14 }}
-          />
-        ) : (
-          <span aria-hidden="true" className="w-[25px] shrink-0" />
-        )}
-        <Icon aria-hidden="true" className={cn('size-3 shrink-0', iconColor)} />
-        <span
-          className={cn(
-            'min-w-0 flex-1 truncate text-sm',
-            disabled
-              ? 'text-neutral-400 line-through dark:text-neutral-500'
-              : 'text-neutral-700 dark:text-neutral-300',
-            props.selected && 'font-medium text-neutral-900 dark:text-white',
-          )}
-        >
-          {fileName || t('snippets.list.unnamed')}
-        </span>
-        {snippet.private ? (
-          <Lock
-            aria-hidden="true"
-            className="size-3 shrink-0 text-neutral-400"
-          />
-        ) : null}
-        <span className="shrink-0 rounded bg-neutral-100 px-1 py-0.5 text-[10px] uppercase text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
-          {snippet.type}
-        </span>
-        <button
-          aria-label={t('snippets.list.openExternal')}
-          className="rounded p-0.5 text-neutral-400 opacity-0 transition-opacity hover:bg-neutral-200 hover:text-neutral-700 group-hover:opacity-100 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
-          onClick={(event) => {
-            event.stopPropagation()
-            props.onOpenExternal()
-          }}
-          title={t('snippets.list.openExternal')}
-          type="button"
-        >
-          <ExternalLink aria-hidden="true" className="size-3" />
-        </button>
-        <button
-          aria-label={
-            snippet.builtIn && snippet.type === SnippetType.Function
-              ? t('snippets.editor.action.reset')
-              : t('snippets.editor.action.delete')
-          }
-          className="rounded p-0.5 text-red-500 opacity-0 transition-opacity hover:bg-red-100 group-hover:opacity-100 dark:hover:bg-red-900/50"
-          onClick={(event) => {
-            event.stopPropagation()
-            props.onDelete()
-          }}
-          title={
-            snippet.builtIn && snippet.type === SnippetType.Function
-              ? t('snippets.editor.action.reset')
-              : t('snippets.editor.action.delete')
-          }
-          type="button"
-        >
-          <Trash2 aria-hidden="true" className="size-3" />
-        </button>
-      </ListRow>
-    </div>
   )
 }
 

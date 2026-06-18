@@ -2203,6 +2203,8 @@ export const zhCN = {
   'snippets.toast.installComplete': '依赖安装完成',
   'snippets.toast.nameRequired': '请填写片段名称',
   'snippets.toast.packageNameRequired': '请输入包名',
+  'snippets.toast.renameConflict': '重命名失败',
+  'snippets.toast.renameInvalid': '名称不能包含 "/"',
   'snippets.toast.reset': '函数片段已重置',
   'snippets.toast.resetFailed': '重置失败',
   'snippets.toast.saveFailed': '保存失败',
