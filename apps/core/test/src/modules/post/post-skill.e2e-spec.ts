@@ -2,7 +2,6 @@ import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { describe, expect, it, vi } from 'vitest'
 
-import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
@@ -13,9 +12,9 @@ import { SnippetService } from '~/modules/snippet/snippet.service'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 
-const SERVER_URL = 'http://localhost:2333'
-const PUBLIC_SKILL_RAW_URL = `${SERVER_URL}${apiRoutePrefix}/s/sk/public-skill`
-const PRIVATE_SKILL_RAW_URL = `${SERVER_URL}${apiRoutePrefix}/s/sk/private-skill`
+const SERVER_URL = 'http://localhost:2333/api/v3'
+const PUBLIC_SKILL_RAW_URL = `${SERVER_URL}/s/sk/public-skill`
+const PRIVATE_SKILL_RAW_URL = `${SERVER_URL}/s/sk/private-skill`
 
 const publicSkill = {
   id: 'pub-1',
