@@ -39,6 +39,7 @@ const typeIconColorMap: Record<SnippetType, string> = {
 interface SnippetFileRowProps {
   focusedPath: string | null
   level: number
+  onContextMenu?: (snippet: SnippetModel) => void
   onDelete: () => void
   onFocus?: () => void
   onOpenExternal: () => void
@@ -66,6 +67,12 @@ export function SnippetFileRow(props: SnippetFileRowProps) {
       aria-level={props.level + 1}
       aria-selected={isFocused}
       data-tree-path={snippet.path}
+      onContextMenu={(event) => {
+        if (!props.onContextMenu) return
+        event.preventDefault()
+        props.onFocus?.()
+        props.onContextMenu(snippet)
+      }}
       role="treeitem"
       tabIndex={isFocused ? 0 : -1}
     >

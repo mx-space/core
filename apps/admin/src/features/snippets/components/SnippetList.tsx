@@ -31,7 +31,9 @@ interface SnippetListProps {
   nodes: SnippetTreeNode[]
   onCreateFileInFolder: (prefix: string) => void
   onDelete: (snippet: SnippetModel) => void
+  onFileContextMenu?: (snippet: SnippetModel) => void
   onFocusPath?: (path: string) => void
+  onFolderContextMenu?: (folder: SnippetTreeFolder) => void
   onOpenExternal: (snippet: SnippetModel) => void
   onRenameCancel: () => void
   onRenameCommit: (path: string, draft: string) => void
@@ -72,6 +74,7 @@ function SnippetTreeNodeRow(
       <SnippetFileRow
         focusedPath={props.focusedPath ?? null}
         level={props.level}
+        onContextMenu={props.onFileContextMenu}
         onDelete={() => props.onDelete(fileNode.snippet)}
         onFocus={() => props.onFocusPath?.(fileNode.path)}
         onOpenExternal={() => props.onOpenExternal(fileNode.snippet)}
@@ -93,6 +96,7 @@ function SnippetTreeNodeRow(
       focusedPath={props.focusedPath ?? null}
       folder={props.node}
       level={props.level}
+      onContextMenu={props.onFolderContextMenu}
       onCreateFileInFolder={props.onCreateFileInFolder}
       onFocus={() => props.onFocusPath?.(props.node.path)}
       onRenameCancel={props.onRenameCancel}
@@ -229,6 +233,32 @@ export function filterTreeBySearch(
   return nodes
     .map(filterNode)
     .filter((node): node is SnippetTreeNode => node !== null)
+}
+
+export function collectDescendantFolderPaths(
+  folder: SnippetTreeFolder,
+): string[] {
+  const out: string[] = [folder.path]
+  const visit = (node: SnippetTreeNode) => {
+    if (node.kind !== 'folder') return
+    out.push(node.path)
+    node.children.forEach(visit)
+  }
+  folder.children.forEach(visit)
+  return out
+}
+
+export function countDescendantFiles(folder: SnippetTreeFolder): number {
+  let n = 0
+  const visit = (node: SnippetTreeNode) => {
+    if (node.kind === 'file') {
+      n += 1
+      return
+    }
+    node.children.forEach(visit)
+  }
+  folder.children.forEach(visit)
+  return n
 }
 
 function childrenMap(folder: SnippetTreeFolder) {

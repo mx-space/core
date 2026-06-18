@@ -50,10 +50,17 @@ import { FunctionLogsDrawer } from './FunctionLogsDrawer'
 import { ImportSnippetModal } from './ImportSnippetModal'
 import { InstallDependencyModal } from './InstallDependencyModal'
 import {
+  buildFileMenuItems,
+  buildFolderMenuItems,
+} from './SnippetContextMenuItems'
+import {
   buildSnippetTree,
+  collectDescendantFolderPaths,
+  countDescendantFiles,
   filterTreeBySearch,
   flattenVisibleSnippets,
   SnippetList,
+  type SnippetTreeFolder,
 } from './SnippetList'
 import { SnippetsRouteContext } from './snippets-route-context'
 import {
@@ -412,6 +419,97 @@ export function SnippetsRouteViewContent() {
     [deleteFolderMutation, requestDelete, snippets, t],
   )
 
+  const copyToClipboard = useCallback(
+    async (value: string) => {
+      try {
+        await navigator.clipboard.writeText(value)
+        toast.success(t('snippets.toast.copied'))
+      } catch {
+        toast.error(t('snippets.toast.copied'))
+      }
+    },
+    [t],
+  )
+
+  const handleFileContextMenu = useCallback(
+    (snippet: SnippetModel) => {
+      const items = buildFileMenuItems({
+        onCopyPath: () => void copyToClipboard(snippet.path),
+        onCopyRawUrl: () =>
+          void copyToClipboard(buildSnippetExternalUrl(snippet)),
+        onDelete: () => requestDelete(snippet),
+        onMoveTo: () => toast.info(t('snippets.toast.moveComingSoon')),
+        onOpen: () => selectSnippet(snippet),
+        onOpenExternal: () =>
+          window.open(buildSnippetExternalUrl(snippet), '_blank'),
+        onRename: () => setRenamingPath(snippet.path),
+        onRevealInParent: () => {
+          const parent = getParentPrefix(snippet.path)
+          setSelectedPrefix(parent)
+          setFocusedPath(parent || snippet.path)
+        },
+        snippet,
+        t,
+      })
+      showContextMenu(items)
+    },
+    [copyToClipboard, requestDelete, selectSnippet, t],
+  )
+
+  const handleFolderContextMenu = useCallback(
+    (folder: SnippetTreeFolder) => {
+      const descendantPaths = collectDescendantFolderPaths(folder)
+      const fileCount = countDescendantFiles(folder)
+      const items = buildFolderMenuItems({
+        fileCount,
+        folder,
+        onCollapseAll: () => {
+          setExpandedPrefixes((current) => {
+            const next = { ...current }
+            for (const path of descendantPaths) next[path] = false
+            return next
+          })
+        },
+        onCopyPath: () => void copyToClipboard(folder.path),
+        onDelete: () => {
+          const confirmed = window.confirm(
+            t('snippets.confirm.delete', {
+              name: `${folder.path} (${fileCount})`,
+            }),
+          )
+          if (!confirmed) return
+          deleteFolderMutation.mutate(folder.path)
+        },
+        onExpandAll: () => {
+          setExpandedPrefixes((current) => {
+            const next = { ...current }
+            for (const path of descendantPaths) next[path] = true
+            return next
+          })
+        },
+        onMoveTo: () => toast.info(t('snippets.toast.moveComingSoon')),
+        onNewFile: () => {
+          setSelectedPrefix(folder.path)
+          const path = nextUntitledFilePath(folder.path, snippets)
+          setCreateDraft({ ...emptySnippet, path })
+          navigate('/snippets/new')
+        },
+        onNewFolder: () => startCreateFolder(folder.path),
+        onRename: () => setRenamingPath(folder.path),
+        t,
+      })
+      showContextMenu(items)
+    },
+    [
+      copyToClipboard,
+      deleteFolderMutation,
+      navigate,
+      snippets,
+      startCreateFolder,
+      t,
+    ],
+  )
+
   useTreeKeyboard({
     disabled: renamingPath !== null,
     expandedPrefixes,
@@ -672,7 +770,9 @@ export function SnippetsRouteViewContent() {
                     navigate('/snippets/new')
                   }}
                   onDelete={requestDelete}
+                  onFileContextMenu={handleFileContextMenu}
                   onFocusPath={setFocusedPath}
+                  onFolderContextMenu={handleFolderContextMenu}
                   onOpenExternal={(snippet) =>
                     window.open(buildSnippetExternalUrl(snippet), '_blank')
                   }

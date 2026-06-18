@@ -19,6 +19,7 @@ interface SnippetFolderRowProps {
   focusedPath: string | null
   folder: SnippetTreeFolder
   level: number
+  onContextMenu?: (folder: SnippetTreeFolder) => void
   onCreateFileInFolder: (prefix: string) => void
   onFocus?: () => void
   onRenameCancel: () => void
@@ -49,6 +50,12 @@ export function SnippetFolderRow(props: SnippetFolderRowProps) {
             : 'text-neutral-700 dark:text-neutral-300',
         )}
         data-tree-path={folder.path}
+        onContextMenu={(event) => {
+          if (!props.onContextMenu) return
+          event.preventDefault()
+          props.onFocus?.()
+          props.onContextMenu(folder)
+        }}
         role="treeitem"
         style={{ paddingLeft: 8 + props.level * 14 }}
         tabIndex={isFocused ? 0 : -1}
