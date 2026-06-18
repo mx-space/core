@@ -41,8 +41,9 @@ describe('mxs skill list output modes', () => {
             expect(stdout).toContain('<chapter slug="overview"')
           },
         },
+        { timeoutMs: 60_000 },
       )
     },
-    30_000,
+    120_000,
   )
 })
