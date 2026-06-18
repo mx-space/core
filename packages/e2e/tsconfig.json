@@ -1,0 +1,18 @@
+{
+  "extends": "../../apps/core/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "ignoreDeprecations": "6.0",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "~": ["apps/core/src"],
+      "~/app.config": ["packages/e2e/src/helpers/core-app-config.ts"],
+      "~/*": ["apps/core/src/*"],
+      "test": ["apps/core/test"],
+      "test/*": ["apps/core/test/*"]
+    },
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "../../apps/core/global.d.ts"]
+}
