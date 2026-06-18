@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
+import { SnowflakeGenerator } from '@mx-space/db-schema/id'
+
 import type { E2EBackend } from './e2e-app'
 
 export interface AiFixture {
@@ -13,14 +15,19 @@ export interface AiFixture {
   insightId: string
 }
 
+const snowflake = new SnowflakeGenerator({
+  workerId: Number(process.env.SNOWFLAKE_WORKER_ID ?? 1),
+  epochMs: 1746144000000n,
+})
+
 export async function seedAiFixture(backend: E2EBackend): Promise<AiFixture> {
   const suffix = randomUUID().replaceAll('-', '').slice(0, 10)
-  const categoryId = `cat_${suffix}`
-  const postId = `post_${suffix}`
-  const summaryId = `sum_${suffix}`
-  const translationId = `tr_${suffix}`
-  const translationEntryId = `tre_${suffix}`
-  const insightId = `ins_${suffix}`
+  const categoryId = snowflake.nextId()
+  const postId = snowflake.nextId()
+  const summaryId = snowflake.nextId()
+  const translationId = snowflake.nextId()
+  const translationEntryId = snowflake.nextId()
+  const insightId = snowflake.nextId()
   const postSlug = `e2e-ai-${suffix}`
   const translationLang = 'zh-CN'
 

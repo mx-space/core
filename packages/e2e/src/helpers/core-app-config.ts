@@ -31,7 +31,7 @@ const parseRedisUrl = (input: string | undefined) => {
   }
 }
 
-const redis = parseRedisUrl(process.env.REDIS_CONNECTION_STRING)
+const currentRedis = () => parseRedisUrl(process.env.REDIS_CONNECTION_STRING)
 
 export const PORT = process.env.PORT || 2333
 export const API_VERSION = 3
@@ -43,14 +43,30 @@ export const CROSS_DOMAIN = {
     : ['localhost:*', '127.0.0.1'],
 }
 
+// REDIS likewise read lazily so testcontainer-driven URIs win over the
+// defaults that core-app-config froze on first import.
 export const REDIS = {
-  host: redis?.host || process.env.REDIS_HOST || '127.0.0.1',
-  port: redis?.port || Number(process.env.REDIS_PORT || 6379),
-  username: redis?.username,
-  password: redis?.password ?? process.env.REDIS_PASSWORD ?? null,
-  db: redis?.db,
-  url: redis?.url,
-  tls: redis?.tls ?? false,
+  get host(): string {
+    return currentRedis()?.host || process.env.REDIS_HOST || '127.0.0.1'
+  },
+  get port(): number {
+    return currentRedis()?.port || Number(process.env.REDIS_PORT || 6379)
+  },
+  get username(): string | undefined {
+    return currentRedis()?.username
+  },
+  get password(): string | null {
+    return currentRedis()?.password ?? process.env.REDIS_PASSWORD ?? null
+  },
+  get db(): number | undefined {
+    return currentRedis()?.db
+  },
+  get url(): string | undefined {
+    return currentRedis()?.url
+  },
+  get tls(): boolean {
+    return currentRedis()?.tls ?? false
+  },
   ttl: null,
   max: 20,
   disableApiCache: false,
@@ -104,15 +120,37 @@ export const SNOWFLAKE = {
   epochMs: 1746144000000,
 }
 
+// Dynamic getters so seedProcessEnv (called inside createE2EBackend AFTER
+// this module is loaded) can still influence the Pool's connection params.
+// A frozen object literal would lock in defaults (127.0.0.1:5432) before
+// the testcontainer URI is known.
 export const POSTGRES = {
-  connectionString: process.env.PG_URL || process.env.PG_CONNECTION_STRING,
-  host: process.env.PG_HOST || '127.0.0.1',
-  port: Number(process.env.PG_PORT || 5432),
-  user: process.env.PG_USER || 'mx',
-  password: process.env.PG_PASSWORD || 'mx',
-  database: process.env.PG_DATABASE || 'mx_core_test',
-  maxPoolSize: Number(process.env.PG_MAX_POOL_SIZE || 5),
-  ssl: parseBoolean(process.env.PG_SSL) ? { rejectUnauthorized: false } : false,
+  get connectionString(): string | undefined {
+    return process.env.PG_URL || process.env.PG_CONNECTION_STRING || undefined
+  },
+  get host(): string {
+    return process.env.PG_HOST || '127.0.0.1'
+  },
+  get port(): number {
+    return Number(process.env.PG_PORT || 5432)
+  },
+  get user(): string {
+    return process.env.PG_USER || 'mx'
+  },
+  get password(): string {
+    return process.env.PG_PASSWORD || 'mx'
+  },
+  get database(): string {
+    return process.env.PG_DATABASE || 'mx_core_test'
+  },
+  get maxPoolSize(): number {
+    return Number(process.env.PG_MAX_POOL_SIZE || 5)
+  },
+  get ssl(): false | { rejectUnauthorized: boolean } {
+    return parseBoolean(process.env.PG_SSL)
+      ? { rejectUnauthorized: false }
+      : false
+  },
 }
 
 export const ADMIN_UPDATE = {

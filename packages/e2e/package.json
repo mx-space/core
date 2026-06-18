@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "@mx-space/cli": "workspace:*",
-    "@mx-space/core": "workspace:*"
+    "@mx-space/core": "workspace:*",
+    "@mx-space/db-schema": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/testing": "11.1.26",

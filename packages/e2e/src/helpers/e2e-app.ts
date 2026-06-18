@@ -1,6 +1,5 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import type { Pool } from 'pg'
-import { createIsolatedPgDatabase } from 'test/helper/pg-testcontainer'
 
 import {
   type RedisTestContainer,
@@ -26,6 +25,13 @@ export interface E2EBackend {
 }
 
 export async function createE2EBackend(): Promise<E2EBackend> {
+  // pg-testcontainer transitively pulls in ~/app.config (via the alias),
+  // which freezes POSTGRES connection params at module-load time. Dynamic
+  // import here delays that read until AFTER seedProcessEnv has written the
+  // testcontainer's URI into env, so the Pool actually targets the right
+  // database instead of falling back to 127.0.0.1:5432.
+  const { createIsolatedPgDatabase } =
+    await import('test/helper/pg-testcontainer')
   const pg = await createIsolatedPgDatabase()
   const redis = await startRedisTestContainer()
 

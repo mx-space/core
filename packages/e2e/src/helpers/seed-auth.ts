@@ -4,10 +4,14 @@ import { join } from 'node:path'
 
 import { hashPassword } from 'better-auth/crypto'
 
-import { API_VERSION } from '~/app.config'
-
 import { ownerFixture } from '../fixtures/owner'
 import type { E2EBackend } from './e2e-app'
+
+// Mirrors `~/app.config`'s API_VERSION. Inlined to keep this helper free of
+// static apps/core imports — any static `~/app.config` import would load the
+// real (non-aliased) module before seedProcessEnv runs, freezing POSTGRES
+// connection params with empty env.
+const API_VERSION = 3
 
 // The CLI's `local-dev` endpoint mode (Config.ts `useLocalDevEndpoint`) is
 // what skips the production `/api/v<N>` route prefix that the server only
