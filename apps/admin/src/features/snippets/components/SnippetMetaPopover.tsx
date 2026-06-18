@@ -55,12 +55,9 @@ export function SnippetMetaPopover(props: SnippetMetaPopoverProps) {
           <div className="max-h-[70vh] overflow-auto px-4 py-4">
             <div className="space-y-4">
               <Field label="Path">
-                <TextInput
-                  controlClassName="h-9"
-                  disabled={props.isBuiltInFunction}
-                  onChange={(path) => patch({ path })}
-                  value={props.form.path}
-                />
+                <div className="text-sm text-fg-muted break-all">
+                  {props.form.path}
+                </div>
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label={t('snippets.editor.field.type')}>

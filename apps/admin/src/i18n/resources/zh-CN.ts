@@ -2200,6 +2200,7 @@ export const zhCN = {
   'snippets.list.treeLabel': '片段',
   'snippets.list.unnamed': '未命名片段',
   'snippets.toast.convertFallback': '当前内容无法转换，已使用默认内容',
+  'snippets.toast.createFailed': '创建失败',
   'snippets.toast.dependencyNameRequired': '请输入依赖包名',
   'snippets.toast.deleteFailed': '删除失败',
   'snippets.toast.deleted': '片段已删除',

@@ -1,9 +1,16 @@
 import { useI18n } from '~/i18n'
-import type { SnippetModel } from '~/models/snippet'
+import type { SnippetModel, SnippetType } from '~/models/snippet'
 import type { ListRowSelectMode } from '~/ui/list-actions'
 
+import { SnippetFileDraftRow } from './SnippetFileDraftRow'
 import { SnippetFileRow } from './SnippetFileRow'
 import { SnippetFolderRow } from './SnippetFolderRow'
+
+export interface SnippetFileDraft {
+  parentPrefix: string
+  name: string
+  type: SnippetType
+}
 
 export { SnippetFileRow } from './SnippetFileRow'
 export { SnippetFolderRow } from './SnippetFolderRow'
@@ -51,10 +58,18 @@ interface SnippetListProps {
   selectedId: string | null
   selectedPrefix: string
   shouldAcceptDrop?: (targetPrefix: string) => boolean
+  fileDraft?: SnippetFileDraft | null
+  onDraftChange?: (name: string) => void
+  onDraftCommit?: () => void
+  onDraftCancel?: () => void
 }
 
 export function SnippetList(props: SnippetListProps) {
   const { t } = useI18n()
+  const rootDraft =
+    props.fileDraft && props.fileDraft.parentPrefix === ''
+      ? props.fileDraft
+      : null
   return (
     <div
       aria-label={t('snippets.list.treeLabel')}
@@ -62,6 +77,16 @@ export function SnippetList(props: SnippetListProps) {
       className="py-1"
       role="tree"
     >
+      {rootDraft ? (
+        <SnippetFileDraftRow
+          level={0}
+          name={rootDraft.name}
+          onCancel={() => props.onDraftCancel?.()}
+          onChange={(name) => props.onDraftChange?.(name)}
+          onCommit={() => props.onDraftCommit?.()}
+          type={rootDraft.type}
+        />
+      ) : null}
       {props.nodes.map((node) => (
         <SnippetTreeNodeRow key={node.path} level={0} node={node} {...props} />
       ))}
@@ -102,6 +127,12 @@ function SnippetTreeNodeRow(
   }
 
   const expanded = props.expandedPrefixes[props.node.path] === true
+  const folderDraft =
+    expanded &&
+    props.fileDraft &&
+    props.fileDraft.parentPrefix === props.node.path
+      ? props.fileDraft
+      : null
   return (
     <SnippetFolderRow
       busy={props.pendingPaths?.has(props.node.path) ?? false}
@@ -124,16 +155,28 @@ function SnippetTreeNodeRow(
       selected={props.selectedPrefix === props.node.path}
       shouldAcceptDrop={props.shouldAcceptDrop}
     >
-      {expanded
-        ? props.node.children.map((child) => (
+      {expanded ? (
+        <>
+          {folderDraft ? (
+            <SnippetFileDraftRow
+              level={props.level + 1}
+              name={folderDraft.name}
+              onCancel={() => props.onDraftCancel?.()}
+              onChange={(name) => props.onDraftChange?.(name)}
+              onCommit={() => props.onDraftCommit?.()}
+              type={folderDraft.type}
+            />
+          ) : null}
+          {props.node.children.map((child) => (
             <SnippetTreeNodeRow
               key={child.path}
               {...props}
               level={props.level + 1}
               node={child}
             />
-          ))
-        : null}
+          ))}
+        </>
+      ) : null}
     </SnippetFolderRow>
   )
 }

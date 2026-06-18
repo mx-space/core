@@ -2310,6 +2310,7 @@ export const enUS = {
   'snippets.list.unnamed': 'Untitled snippet',
   'snippets.toast.convertFallback':
     'Cannot convert current content; default content used',
+  'snippets.toast.createFailed': 'Failed to create',
   'snippets.toast.dependencyNameRequired': 'Please enter dependency name(s)',
   'snippets.toast.deleteFailed': 'Delete failed',
   'snippets.toast.deleted': 'Snippet deleted',

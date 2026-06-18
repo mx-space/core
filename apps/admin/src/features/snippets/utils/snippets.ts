@@ -206,6 +206,24 @@ export function basenameWithoutExt(name: string) {
   return name.replace(/\.[^.]+$/, '')
 }
 
+export function inferSnippetType(name: string): SnippetType {
+  const lower = name.toLowerCase()
+  if (lower.endsWith('.skill.mdx') || lower.endsWith('.skill.md')) {
+    return SnippetType.Skill
+  }
+  if (
+    lower.endsWith('.fn') ||
+    lower.endsWith('.fn.ts') ||
+    lower.endsWith('.fn.js')
+  ) {
+    return SnippetType.Function
+  }
+  if (lower.endsWith('.json')) return SnippetType.JSON
+  if (lower.endsWith('.json5')) return SnippetType.JSON5
+  if (lower.endsWith('.yaml') || lower.endsWith('.yml')) return SnippetType.YAML
+  return SnippetType.Text
+}
+
 export function parsePackageInput(input: string) {
   return input
     .split(/[\s,;]+/)

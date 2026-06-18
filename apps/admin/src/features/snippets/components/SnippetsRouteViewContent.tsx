@@ -17,6 +17,7 @@ import { toast } from 'sonner'
 
 import { getDependencyInstallUrl } from '~/api/dependencies'
 import {
+  createSnippet,
   type CreateSnippetData,
   deleteSnippet,
   deleteSnippetByPath,
@@ -48,7 +49,7 @@ import { useTreeDrag } from '../hooks/use-tree-drag'
 import type { TreeFlatVisibleEntry } from '../hooks/use-tree-keyboard'
 import { useTreeKeyboard } from '../hooks/use-tree-keyboard'
 import { useTreeSelection } from '../hooks/use-tree-selection'
-import { getErrorMessage } from '../utils/snippets'
+import { getErrorMessage, inferSnippetType } from '../utils/snippets'
 import { CompiledCodeModal } from './CompiledCodeModal'
 import { FunctionLogsDrawer } from './FunctionLogsDrawer'
 import { ImportSnippetModal } from './ImportSnippetModal'
@@ -64,6 +65,7 @@ import {
   countDescendantFiles,
   filterTreeBySearch,
   flattenVisibleSnippets,
+  type SnippetFileDraft,
   SnippetList,
   type SnippetTreeFolder,
   type SnippetTreeNode,
@@ -134,16 +136,20 @@ function getParentPrefix(path: string) {
   return index === -1 ? '' : path.slice(0, index + 1)
 }
 
-function nextUntitledFilePath(prefix: string, snippets: SnippetModel[]) {
+function nextUntitledFileBasename(prefix: string, snippets: SnippetModel[]) {
   const normalizedPrefix = normalizeFolderPrefix(prefix)
   const existing = new Set(snippets.map((snippet) => snippet.path))
   const base = `${normalizedPrefix}new.json`
-  if (!existing.has(base)) return base
+  if (!existing.has(base)) return 'new.json'
   for (let i = 2; i < 1000; i++) {
     const candidate = `${normalizedPrefix}new-${i}.json`
-    if (!existing.has(candidate)) return candidate
+    if (!existing.has(candidate)) return `new-${i}.json`
   }
-  return `${normalizedPrefix}new-${Date.now()}.json`
+  return `new-${Date.now()}.json`
+}
+
+function nextUntitledFilePath(prefix: string, snippets: SnippetModel[]) {
+  return `${normalizeFolderPrefix(prefix)}${nextUntitledFileBasename(prefix, snippets)}`
 }
 
 export function SnippetsRouteViewContent() {
@@ -162,6 +168,7 @@ export function SnippetsRouteViewContent() {
   )
   const [logsTarget, setLogsTarget] = useState<SnippetModel | null>(null)
   const [createDraft, setCreateDraft] = useState<CreateSnippetData | null>(null)
+  const [fileDraft, setFileDraft] = useState<SnippetFileDraft | null>(null)
   const [expandedPrefixes, setExpandedPrefixes] = useState<
     Record<string, boolean>
   >(() => hydrateExpandedPrefixes())
@@ -373,14 +380,66 @@ export function SnippetsRouteViewContent() {
     clearChecked()
   }, [checked, clearChecked, t, vfs])
 
-  const startCreate = useCallback(() => {
-    const path = nextUntitledFilePath(selectedPrefix, snippets)
-    setCreateDraft({
-      ...emptySnippet,
-      path,
+  const createMutation = useMutation({
+    mutationFn: createSnippet,
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, t('snippets.toast.createFailed'))),
+    onSuccess: async (created) => {
+      setFileDraft(null)
+      await invalidateSnippets()
+      navigate(`/snippets/${created.id}`)
+    },
+  })
+
+  const startInlineCreate = useCallback(
+    (prefix: string) => {
+      const parentPrefix = normalizeFolderPrefix(prefix)
+      setSelectedPrefix(parentPrefix)
+      if (parentPrefix) {
+        setExpandedPrefixes((state) => ({ ...state, [parentPrefix]: true }))
+      }
+      const name = nextUntitledFileBasename(parentPrefix, snippets)
+      setFileDraft({ parentPrefix, name, type: inferSnippetType(name) })
+    },
+    [snippets],
+  )
+
+  const handleDraftChange = useCallback((name: string) => {
+    setFileDraft((current) =>
+      current ? { ...current, name, type: inferSnippetType(name) } : current,
+    )
+  }, [])
+
+  const handleDraftCancel = useCallback(() => {
+    setFileDraft(null)
+  }, [])
+
+  const handleDraftCommit = useCallback(() => {
+    setFileDraft((current) => {
+      if (!current) return current
+      const name = current.name.trim()
+      if (!name) return null
+      if (name.includes('/')) {
+        toast.error(t('snippets.toast.renameInvalid'))
+        return current
+      }
+      const fullPath = `${current.parentPrefix}${name}`
+      if (snippets.some((snippet) => snippet.path === fullPath)) {
+        toast.error(t('snippets.toast.renameConflict'))
+        return current
+      }
+      createMutation.mutate({
+        ...emptySnippet,
+        comment: '',
+        enable: true,
+        path: fullPath,
+        private: false,
+        raw: '',
+        type: current.type,
+      })
+      return current
     })
-    navigate('/snippets/new')
-  }, [navigate, selectedPrefix, snippets])
+  }, [createMutation, snippets, t])
 
   const startCreateFolder = useCallback((parentPrefix: string) => {
     const normalizedParent = normalizeFolderPrefix(parentPrefix)
@@ -569,12 +628,7 @@ export function SnippetsRouteViewContent() {
           })
         },
         onMoveTo: () => setMovePicker({ isFolder: true, paths: [folder.path] }),
-        onNewFile: () => {
-          setSelectedPrefix(folder.path)
-          const path = nextUntitledFilePath(folder.path, snippets)
-          setCreateDraft({ ...emptySnippet, path })
-          navigate('/snippets/new')
-        },
+        onNewFile: () => startInlineCreate(folder.path),
         onNewFolder: () => startCreateFolder(folder.path),
         onRename: () => startRename(folder.path),
         t,
@@ -584,15 +638,16 @@ export function SnippetsRouteViewContent() {
     [
       copyToClipboard,
       deleteFolderMutation,
-      navigate,
-      snippets,
       startCreateFolder,
+      startInlineCreate,
+      startRename,
       t,
     ],
   )
 
   useTreeKeyboard({
-    disabled: renamingPath !== null || movePicker !== null,
+    disabled:
+      renamingPath !== null || movePicker !== null || fileDraft !== null,
     expandedPrefixes,
     flatVisible: treeFlatVisible,
     focusedPath,
@@ -644,7 +699,7 @@ export function SnippetsRouteViewContent() {
       icon: Plus,
       key: 'new-file',
       label: t('snippets.action.create'),
-      onClick: startCreate,
+      onClick: () => startInlineCreate(selectedPrefix),
     },
     {
       icon: FolderPlus,
@@ -970,17 +1025,13 @@ export function SnippetsRouteViewContent() {
                 <SnippetList
                   checked={checked}
                   expandedPrefixes={expandedPrefixes}
+                  fileDraft={fileDraft}
                   focusedPath={focusedPath}
                   nodes={displayTreeNodes}
-                  onCreateFileInFolder={(prefix) => {
-                    setSelectedPrefix(prefix)
-                    const path = nextUntitledFilePath(prefix, snippets)
-                    setCreateDraft({
-                      ...emptySnippet,
-                      path,
-                    })
-                    navigate('/snippets/new')
-                  }}
+                  onCreateFileInFolder={startInlineCreate}
+                  onDraftCancel={handleDraftCancel}
+                  onDraftChange={handleDraftChange}
+                  onDraftCommit={handleDraftCommit}
                   onDelete={requestDelete}
                   onDragEnd={treeDrag.endDrag}
                   onDragStart={treeDrag.startDrag}
