@@ -4,17 +4,18 @@ import { Effect } from 'effect'
 import { ValidationFailed } from '../../domain/errors'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
-import { resolveSnippetId } from './_resolve'
+import { isSnowflakeId } from '../../services/Resolver'
 
-const target = Args.text({ name: 'idOrRefName' })
+const target = Args.text({ name: 'pathOrId' })
 const force = Options.boolean('force').pipe(
   Options.withDescription('skip the non-TTY guard'),
 )
+const recursive = Options.boolean('recursive')
 
 export const del = Command.make(
-  'delete',
-  { target, force },
-  ({ target, force }) =>
+  'rm',
+  { target, force, recursive },
+  ({ target, force, recursive }) =>
     Effect.gen(function* () {
       if (!force && !process.stdin.isTTY) {
         return yield* Effect.fail(
@@ -25,8 +26,14 @@ export const del = Command.make(
       }
       const api = yield* Api
       const renderer = yield* Renderer
-      const id = yield* resolveSnippetId(api, target)
-      yield* api.request(`/snippets/${id}`, { method: 'DELETE' })
-      yield* renderer.emitSuccess({ deleted: id })
+      if (isSnowflakeId(target)) {
+        yield* api.request(`/snippets/${target}`, { method: 'DELETE' })
+      } else {
+        yield* api.request('/snippets/by-path', {
+          method: 'DELETE',
+          query: { path: target, recursive },
+        })
+      }
+      yield* renderer.emitSuccess({ deleted: target })
     }),
-).pipe(Command.withDescription('delete a snippet'))
+).pipe(Command.withDescription('delete a snippet path'))

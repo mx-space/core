@@ -4,11 +4,14 @@ import { useMemo, useState } from 'react'
 
 import { getSnippets } from '~/api/snippets'
 import { useI18n } from '~/i18n'
-import type { SnippetModel } from '~/models/snippet'
-import { SnippetType } from '~/models/snippet'
+import { SnippetModel, SnippetType } from '~/models/snippet'
 import { Popover } from '~/ui/overlay/popover'
 import { Combobox } from '~/ui/primitives/combobox'
 import { MarkdownRender } from '~/ui/primitives/markdown-render'
+
+function displaySkillName(skill: Pick<SnippetModel, 'path'>) {
+  return skill.path.split('/').at(-2) || skill.path
+}
 
 interface SkillPickerProps {
   value: string[]
@@ -48,7 +51,7 @@ function SkillPill({ skill, removeLabel, onRemove }: SkillPillProps) {
             {...triggerProps}
             className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 font-mono text-xs text-accent"
           >
-            {skill.name}
+            {displaySkillName(skill)}
             <button
               aria-label={removeLabel}
               className="inline-flex h-3 w-3 items-center justify-center rounded-full text-accent/70 hover:text-accent"
@@ -72,7 +75,7 @@ function SkillPill({ skill, removeLabel, onRemove }: SkillPillProps) {
       >
         <Popover.Header>
           <span className="font-mono normal-case tracking-normal text-fg">
-            {skill.name}
+            {displaySkillName(skill)}
           </span>
         </Popover.Header>
         <Popover.Body className="min-h-0 flex-1 space-y-3 overflow-y-auto">
@@ -93,7 +96,20 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
   const [inputValue, setInputValue] = useState('')
 
   const skillsQuery = useQuery({
-    queryFn: () => getSnippets({ type: SnippetType.Skill, size: 100 }),
+    queryFn: () =>
+      getSnippets({ limit: 100, prefix: 'sk/', recursive: true }).then((res) =>
+        res.objects
+          .filter((object) => object.type === SnippetType.Skill)
+          .map(
+            (object) =>
+              ({
+                ...new SnippetModel(),
+                ...object,
+                raw: '',
+                type: object.type,
+              }) satisfies SnippetModel,
+          ),
+      ),
     queryKey: ['snippets', 'skills'],
     staleTime: 60_000,
     select: (res: any) => {
@@ -157,7 +173,7 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
                 key={id}
                 onRemove={() => remove(id)}
                 removeLabel={t('write.section.skill.removeAria', {
-                  name: skill.name,
+                  name: displaySkillName(skill),
                 })}
                 skill={skill}
               />
@@ -184,7 +200,10 @@ export function SkillPicker({ value, onChange }: SkillPickerProps) {
 
       <Combobox
         inputValue={inputValue}
-        items={availableItems.map((s) => ({ value: s.id, label: s.name }))}
+        items={availableItems.map((s) => ({
+          value: s.id,
+          label: displaySkillName(s),
+        }))}
         onInputValueChange={setInputValue}
         onValueChange={handleSelect}
         value={null}

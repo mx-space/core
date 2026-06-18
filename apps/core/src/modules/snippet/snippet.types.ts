@@ -5,13 +5,11 @@ export interface SnippetRow {
   type: string | null
   private: boolean
   raw: string
-  name: string
-  reference: string
+  path: string
   comment: string | null
   metatype: string | null
   schema: string | null
   method: string | null
-  customPath: string | null
   secret: string | null
   enable: boolean
   builtIn: boolean
@@ -20,7 +18,19 @@ export interface SnippetRow {
   updatedAt: Date | null
 }
 
-export interface SnippetGroupRow {
-  reference: string
-  count: number
+export interface SnippetObjectView {
+  id: EntityId
+  path: string
+  type: string | null
+  comment: string | null
+  private: boolean
+  enable: boolean
+  method: string | null
+  updatedAt: Date | null
+}
+
+export interface SnippetVfsList {
+  prefix: string
+  objects: SnippetObjectView[]
+  commonPrefixes: string[]
 }

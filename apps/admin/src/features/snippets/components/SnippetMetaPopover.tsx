@@ -54,13 +54,10 @@ export function SnippetMetaPopover(props: SnippetMetaPopoverProps) {
           </Popover.Header>
           <div className="max-h-[70vh] overflow-auto px-4 py-4">
             <div className="space-y-4">
-              <Field label={t('snippets.editor.field.name')}>
-                <TextInput
-                  controlClassName="h-9"
-                  disabled={props.isBuiltInFunction}
-                  onChange={(name) => patch({ name })}
-                  value={props.form.name}
-                />
+              <Field label="Path">
+                <div className="text-sm text-fg-muted break-all">
+                  {props.form.path}
+                </div>
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label={t('snippets.editor.field.type')}>
@@ -75,14 +72,7 @@ export function SnippetMetaPopover(props: SnippetMetaPopoverProps) {
                     value={props.form.type}
                   />
                 </Field>
-                <Field label={t('snippets.editor.field.group')}>
-                  <TextInput
-                    controlClassName="h-9"
-                    disabled={props.isBuiltInFunction}
-                    onChange={(reference) => patch({ reference })}
-                    value={props.form.reference ?? ''}
-                  />
-                </Field>
+                <div />
               </div>
               <Field label={t('snippets.editor.field.comment')}>
                 <TextInput
@@ -143,13 +133,7 @@ export function SnippetMetaPopover(props: SnippetMetaPopoverProps) {
                             value={props.form.method ?? ''}
                           />
                         </Field>
-                        <Field label="Path">
-                          <TextInput
-                            controlClassName="h-9"
-                            onChange={(customPath) => patch({ customPath })}
-                            value={props.form.customPath ?? ''}
-                          />
-                        </Field>
+                        <div />
                       </div>
                       <Field label="Secret">
                         <TextArea

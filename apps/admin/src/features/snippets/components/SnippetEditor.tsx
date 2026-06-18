@@ -18,7 +18,7 @@ import { createSnippet, updateSnippet } from '~/api/snippets'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { SnippetModel } from '~/models/snippet'
-import { SnippetType, SnippetTypeToLanguage } from '~/models/snippet'
+import { getSnippetLanguage, SnippetType } from '~/models/snippet'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { CodeEditor } from '~/ui/primitives/code-editor'
@@ -73,7 +73,7 @@ export function SnippetEditor(props: {
   })
 
   const save = () => {
-    if (!form.name.trim()) {
+    if (!form.path.trim()) {
       toast.error(t('snippets.toast.nameRequired'))
       return
     }
@@ -124,7 +124,7 @@ export function SnippetEditor(props: {
           <h2 className="truncate text-lg font-semibold text-neutral-950 dark:text-neutral-50">
             {props.mode === 'create'
               ? t('snippets.editor.newTitle')
-              : form.name || t('snippets.editor.unnamed')}
+              : form.path || t('snippets.editor.unnamed')}
           </h2>
           <span className="shrink-0 rounded bg-neutral-100 px-1.5 py-0.5 text-xs uppercase tabular-nums text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
             {form.type}
@@ -233,10 +233,10 @@ export function SnippetEditor(props: {
           <div className="min-h-0 desktop:flex-1">
             <CodeEditor
               className="h-full"
-              language={SnippetTypeToLanguage[form.type]}
+              language={getSnippetLanguage(form.path, form.type)}
               onChange={(raw) => setForm((current) => ({ ...current, raw }))}
               onSave={save}
-              title="SKILL.md"
+              title={form.path}
               value={form.raw}
             />
           </div>
@@ -248,10 +248,10 @@ export function SnippetEditor(props: {
         <div className="min-h-0 flex-1">
           <CodeEditor
             className="h-full"
-            language={SnippetTypeToLanguage[form.type]}
+            language={getSnippetLanguage(form.path, form.type)}
             onChange={(raw) => setForm((current) => ({ ...current, raw }))}
             onSave={save}
-            title={SnippetTypeToLanguage[form.type]}
+            title={form.path}
             value={form.raw}
           />
         </div>

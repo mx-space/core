@@ -17,28 +17,30 @@ import { getRedisKey } from '~/utils/redis.util'
 import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetRepository } from './snippet.repository'
 import { SnippetType } from './snippet.schema'
-import type { SnippetRow } from './snippet.types'
+import type {
+  SnippetObjectView,
+  SnippetRow,
+  SnippetVfsList,
+} from './snippet.types'
 import type { PublicSkillView } from './snippet.views'
-import { toPublicSkillView } from './snippet.views'
+import { deriveSkillName, toPublicSkillView } from './snippet.views'
 
 export interface SnippetCreateInput {
   type?: SnippetType
   private?: boolean
   raw: string
-  name: string
-  reference?: string
-  comment?: string
-  metatype?: string
-  schema?: string
+  path: string
+  comment?: string | null
+  metatype?: string | null
+  schema?: string | null
   method?: string | null
-  customPath?: string | null
-  secret?: string
+  secret?: string | null
   enable?: boolean
   builtIn?: boolean
   compiledCode?: string | null
 }
 
-export type SnippetUpdateInput = SnippetCreateInput
+export type SnippetUpdateInput = Partial<SnippetCreateInput> & { path?: string }
 
 @Injectable()
 export class SnippetService {
@@ -55,7 +57,13 @@ export class SnippetService {
     return this.snippetRepository
   }
 
-  private readonly reservedReferenceKeys = ['system', 'built-in']
+  private normalizePath(path: string) {
+    return path.replaceAll(/^\/+|\/+$/g, '')
+  }
+
+  private isThemePath(path: string) {
+    return path === 'theme' || path.startsWith('theme/')
+  }
 
   private async notifyAggregateThemeUpdate() {
     await Promise.all([
@@ -75,98 +83,131 @@ export class SnippetService {
     ])
   }
 
-  async create(model: SnippetCreateInput): Promise<SnippetRow> {
-    if (model.type === SnippetType.Function) {
-      model.method ??= 'GET'
-      model.enable ??= true
+  private toObjectView(row: SnippetRow): SnippetObjectView {
+    return {
+      id: row.id,
+      path: row.path,
+      type: row.type,
+      comment: row.comment,
+      private: row.private,
+      enable: row.enable,
+      method: row.method,
+      updatedAt: row.updatedAt,
+    }
+  }
 
-      const reference = model.reference ?? 'root'
-      if (this.reservedReferenceKeys.includes(reference)) {
-        throw createAppException(AppErrorCode.INVALID_PARAMETER, {
-          message: `"${reference}" as reference is reserved`,
-        })
+  async listVfs(options: {
+    prefix?: string
+    recursive?: boolean
+    limit?: number
+  }): Promise<SnippetVfsList> {
+    const prefix = options.prefix ? this.normalizePath(options.prefix) : ''
+    const effectivePrefix =
+      prefix && !prefix.endsWith('/') ? `${prefix}/` : prefix
+    const rows = await this.snippetRepository.findByPrefix(
+      effectivePrefix,
+      options.limit,
+    )
+    if (options.recursive) {
+      return {
+        prefix: effectivePrefix,
+        objects: rows.map((row) => this.toObjectView(row)),
+        commonPrefixes: [],
       }
     }
 
-    const reference = model.reference ?? 'root'
-    const exists = await this.snippetRepository.countByNameReferenceMethod(
-      model.name,
-      reference,
-      model.method ?? null,
+    const objects: SnippetObjectView[] = []
+    const commonPrefixes = new Set<string>()
+    for (const row of rows) {
+      const rest = row.path.slice(effectivePrefix.length)
+      const slashIndex = rest.indexOf('/')
+      if (slashIndex === -1) {
+        objects.push(this.toObjectView(row))
+      } else {
+        commonPrefixes.add(`${effectivePrefix}${rest.slice(0, slashIndex + 1)}`)
+      }
+    }
+
+    return {
+      prefix: effectivePrefix,
+      objects,
+      commonPrefixes: [...commonPrefixes].sort(),
+    }
+  }
+
+  async create(model: SnippetCreateInput): Promise<SnippetRow> {
+    const next = await this.prepareInput(model)
+    const exists = await this.snippetRepository.countByPathMethod(
+      next.path,
+      next.method ?? null,
     )
     if (exists > 0) {
       throw createAppException(AppErrorCode.SNIPPET_EXISTS)
     }
 
-    if (model.customPath) {
-      const cpExists = await this.snippetRepository.countByCustomPath(
-        model.customPath,
-      )
-      if (cpExists > 0) {
-        throw createAppException(AppErrorCode.INVALID_PARAMETER, {
-          message: 'customPath already exists',
-        })
-      }
-    }
-
-    await this.validateTypeAndCleanup(model)
-
-    if (
-      model.type === SnippetType.Skill &&
-      (!model.reference || model.reference === 'root')
-    ) {
-      model.reference = 'skill'
-    }
-
-    if (model.type === SnippetType.Function) {
-      const compiled = await this.serverlessService.compileTypescriptCode(
-        model.raw,
-      )
-      if (compiled) {
-        model.compiledCode = compiled
-      }
-    }
-
-    const created = await this.snippetRepository.create({
-      type: model.type ?? SnippetType.JSON,
-      private: model.private ?? false,
-      raw: model.raw,
-      name: model.name,
-      reference: model.reference ?? reference,
-      comment: model.comment ?? null,
-      metatype: model.metatype ?? null,
-      schema: model.schema ?? null,
-      method: model.method ?? null,
-      customPath: model.customPath ?? null,
-      secret: model.secret ? EncryptUtil.encrypt(model.secret) : null,
-      enable: model.enable ?? true,
-      builtIn: model.builtIn ?? false,
-      compiledCode: model.compiledCode ?? null,
-    })
-
-    if (reference === 'theme') {
+    const created = await this.snippetRepository.create(next)
+    if (this.isThemePath(created.path)) {
       await this.notifyAggregateThemeUpdate()
     }
-
     return created
   }
 
-  async update(id: string, newModel: SnippetUpdateInput): Promise<SnippetRow> {
-    await this.validateTypeAndCleanup(newModel)
+  async upsertByPath(model: SnippetCreateInput): Promise<SnippetRow> {
+    const next = await this.prepareInput(model)
+    const old = await this.snippetRepository.findAnyByPath(
+      next.path,
+      next.method ?? null,
+    )
+    if (old) {
+      await this.deleteCachedSnippetByPath(old.path)
+    }
+    const saved = await this.snippetRepository.upsertByPath(next)
+    if (this.isThemePath(saved.path) || (old && this.isThemePath(old.path))) {
+      await this.notifyAggregateThemeUpdate()
+    }
+    return this.transformLeanSnippetModel(saved)
+  }
 
+  async update(id: string, newModel: SnippetUpdateInput): Promise<SnippetRow> {
     const old = await this.snippetRepository.findById(id)
     if (!old) {
       throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
 
+    const merged: SnippetCreateInput = {
+      type: newModel.type ?? (old.type as SnippetType),
+      private: newModel.private ?? old.private,
+      raw: newModel.raw ?? old.raw,
+      path: newModel.path ?? old.path,
+      comment: newModel.comment ?? old.comment,
+      metatype: newModel.metatype ?? old.metatype,
+      schema: newModel.schema ?? old.schema,
+      method: newModel.method ?? old.method,
+      secret: newModel.secret ?? undefined,
+      enable: newModel.enable ?? old.enable,
+      builtIn: newModel.builtIn ?? old.builtIn,
+      compiledCode: newModel.compiledCode ?? old.compiledCode,
+    }
+
     if (
       old.type === SnippetType.Function &&
-      newModel.type !== SnippetType.Function
+      merged.type !== SnippetType.Function
     ) {
       throw createAppException(AppErrorCode.INVALID_PARAMETER, {
         message:
           '`type` is not allowed to change if this snippet set to Function type.',
       })
+    }
+
+    if (merged.path !== old.path || (merged.method ?? null) !== old.method) {
+      const exists = await this.snippetRepository.countByPathMethod(
+        merged.path,
+        merged.method ?? null,
+        id,
+      )
+      if (exists > 0) {
+        throw createAppException(AppErrorCode.SNIPPET_EXISTS)
+      }
     }
 
     let mergedSecret = newModel.secret
@@ -189,64 +230,32 @@ export class SnippetService {
       mergedSecret = qs.stringify({ ...oldSecret, ...newSecret })
     }
 
-    if (newModel.customPath !== undefined) {
-      if (newModel.customPath) {
-        const cpExists = await this.snippetRepository.countByCustomPath(
-          newModel.customPath,
-          id,
-        )
-        if (cpExists > 0) {
-          throw createAppException(AppErrorCode.INVALID_PARAMETER, {
-            message: 'customPath already exists',
-          })
-        }
-      }
-
-      if (old.customPath) {
-        await this.deleteCachedSnippetByCustomPath(old.customPath)
-      }
-    }
-
-    await this.deleteCachedSnippet(old.reference, old.name)
-
-    if (newModel.type === SnippetType.Function && newModel.raw) {
-      const compiled = await this.serverlessService.compileTypescriptCode(
-        newModel.raw,
-      )
-      if (compiled) {
-        newModel.compiledCode = compiled
-      }
-    }
-
+    const next = await this.prepareInput(merged)
     const patch: Record<string, unknown> = {
-      type: newModel.type ?? old.type,
-      private: newModel.private ?? old.private,
-      raw: newModel.raw,
-      name: newModel.name,
-      reference: newModel.reference ?? old.reference ?? 'root',
-      comment: newModel.comment ?? null,
-      metatype: newModel.metatype ?? null,
-      schema: newModel.schema ?? null,
-      method: newModel.method ?? null,
-      enable: newModel.enable ?? old.enable,
-      builtIn: newModel.builtIn ?? old.builtIn,
-      compiledCode: newModel.compiledCode ?? old.compiledCode,
+      type: next.type,
+      private: next.private,
+      raw: next.raw,
+      path: next.path,
+      comment: next.comment ?? null,
+      metatype: next.metatype ?? null,
+      schema: next.schema ?? null,
+      method: next.method ?? null,
+      enable: next.enable,
+      builtIn: next.builtIn,
+      compiledCode: next.compiledCode ?? null,
     }
 
     if (mergedSecret !== undefined) {
       patch.secret = mergedSecret ? EncryptUtil.encrypt(mergedSecret) : null
     }
 
-    if ('customPath' in newModel) {
-      patch.customPath = newModel.customPath || null
-    }
-
+    await this.deleteCachedSnippetByPath(old.path)
     const updated = await this.snippetRepository.update(id, patch)
     if (!updated) {
       throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
 
-    if (old.reference === 'theme' || newModel.reference === 'theme') {
+    if (this.isThemePath(old.path) || this.isThemePath(updated.path)) {
       await this.notifyAggregateThemeUpdate()
     }
 
@@ -259,21 +268,69 @@ export class SnippetService {
       throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
 
-    if (doc.type === SnippetType.Function && doc.reference === 'built-in') {
+    if (doc.type === SnippetType.Function && doc.builtIn) {
       throw createAppException(AppErrorCode.INVALID_PARAMETER, {
         message: 'built-in function snippet is not allowed to delete',
       })
     }
 
     await this.snippetRepository.deleteById(id)
-
-    await this.deleteCachedSnippet(doc.reference, doc.name)
-    if (doc.customPath) {
-      await this.deleteCachedSnippetByCustomPath(doc.customPath)
-    }
-    if (doc.reference === 'theme') {
+    await this.deleteCachedSnippetByPath(doc.path)
+    if (this.isThemePath(doc.path)) {
       await this.notifyAggregateThemeUpdate()
     }
+  }
+
+  async deleteByPath(path: string, recursive: boolean): Promise<void> {
+    const normalizedPath = this.normalizePath(path)
+    if (normalizedPath.endsWith('/') && !recursive) {
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'recursive=true is required to delete a prefix',
+      })
+    }
+    const effectivePath =
+      recursive && !normalizedPath.endsWith('/')
+        ? `${normalizedPath}/`
+        : normalizedPath
+    const deleted = await this.snippetRepository.deleteByPath(
+      effectivePath,
+      recursive,
+    )
+    await Promise.all(
+      deleted.map((row) => this.deleteCachedSnippetByPath(row.path)),
+    )
+    if (deleted.some((row) => this.isThemePath(row.path))) {
+      await this.notifyAggregateThemeUpdate()
+    }
+  }
+
+  async movePath(from: string, to: string, recursive: boolean) {
+    const normalizedFrom = this.normalizePath(from)
+    const normalizedTo = this.normalizePath(to)
+    const effectiveFrom =
+      recursive && !normalizedFrom.endsWith('/')
+        ? `${normalizedFrom}/`
+        : normalizedFrom
+    const effectiveTo =
+      recursive && !normalizedTo.endsWith('/')
+        ? `${normalizedTo}/`
+        : normalizedTo
+    const moved = await this.snippetRepository.movePath(
+      effectiveFrom,
+      effectiveTo,
+      recursive,
+    )
+    await Promise.all(
+      moved.map((row) => this.deleteCachedSnippetByPath(row.path)),
+    )
+    if (
+      moved.some(
+        (row) => this.isThemePath(row.path) || this.isThemePath(effectiveFrom),
+      )
+    ) {
+      await this.notifyAggregateThemeUpdate()
+    }
+    return moved.map((row) => this.transformLeanSnippetModel(row))
   }
 
   private parseSkillFrontmatter(raw: string): {
@@ -304,11 +361,14 @@ export class SnippetService {
     return { name, description, rest }
   }
 
-  private async validateTypeAndCleanup(model: SnippetCreateInput) {
-    switch (model.type) {
+  private async prepareInput(model: SnippetCreateInput) {
+    const next = { ...model, path: this.normalizePath(model.path) }
+    next.type ??= SnippetType.JSON
+
+    switch (next.type) {
       case SnippetType.JSON: {
         try {
-          JSON.parse(model.raw)
+          JSON.parse(next.raw)
         } catch {
           throw createAppException(AppErrorCode.SNIPPET_INVALID_JSON)
         }
@@ -316,7 +376,7 @@ export class SnippetService {
       }
       case SnippetType.JSON5: {
         try {
-          JSON5.parse(model.raw)
+          JSON5.parse(next.raw)
         } catch {
           throw createAppException(AppErrorCode.SNIPPET_INVALID_JSON5)
         }
@@ -324,15 +384,17 @@ export class SnippetService {
       }
       case SnippetType.YAML: {
         try {
-          load(model.raw)
+          load(next.raw)
         } catch {
           throw createAppException(AppErrorCode.SNIPPET_INVALID_YAML)
         }
         break
       }
       case SnippetType.Function: {
+        next.method ??= 'GET'
+        next.enable ??= true
         const isValid = await this.serverlessService.isValidServerlessFunction(
-          model.raw,
+          next.raw,
         )
         if (typeof isValid === 'string') {
           throw createAppException(AppErrorCode.SNIPPET_INVALID_FUNCTION, {
@@ -342,17 +404,25 @@ export class SnippetService {
         if (!isValid) {
           throw createAppException(AppErrorCode.SNIPPET_INVALID_FUNCTION)
         }
+        const compiled = await this.serverlessService.compileTypescriptCode(
+          next.raw,
+        )
+        if (compiled) {
+          next.compiledCode = compiled
+        }
         break
       }
       case SnippetType.Skill: {
-        const fm = this.parseSkillFrontmatter(model.raw)
-        if (fm.name !== model.name) {
+        if (!next.path.endsWith('/SKILL.md')) {
+          throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+            message: 'skill snippet path must end with /SKILL.md',
+          })
+        }
+        const fm = this.parseSkillFrontmatter(next.raw)
+        if (fm.name !== deriveSkillName(next.path)) {
           throw createAppException(AppErrorCode.SNIPPET_SKILL_NAME_MISMATCH)
         }
-        model.comment = fm.description
-        if (!model.customPath) {
-          model.customPath = `sk/${model.name}`
-        }
+        next.comment = fm.description
         break
       }
 
@@ -360,10 +430,28 @@ export class SnippetService {
         break
       }
     }
-    if (model.type !== SnippetType.Function) {
-      delete model.enable
-      delete model.method
-      delete model.secret
+
+    if (next.type !== SnippetType.Function) {
+      delete next.enable
+      delete next.method
+      delete next.secret
+    } else if (next.secret) {
+      next.secret = EncryptUtil.encrypt(next.secret)
+    }
+
+    return {
+      type: next.type,
+      private: next.private ?? false,
+      raw: next.raw,
+      path: next.path,
+      comment: next.comment ?? null,
+      metatype: next.metatype ?? null,
+      schema: next.schema ?? null,
+      method: next.method ?? null,
+      secret: next.secret ?? null,
+      enable: next.enable ?? true,
+      builtIn: next.builtIn ?? false,
+      compiledCode: next.compiledCode ?? null,
     }
   }
 
@@ -384,7 +472,6 @@ export class SnippetService {
       }
       next.secret = secretObj as any
     } else if (snippet.secret) {
-      // Never expose stored encrypted secret payload outside Function type.
       next.secret = null
     }
     return next
@@ -398,17 +485,18 @@ export class SnippetService {
     return rows.map((row) => this.transformLeanSnippetModel(row))
   }
 
-  async getSnippetByName(name: string, reference: string): Promise<SnippetRow> {
-    const doc = await this.snippetRepository.findPublicByName(name, reference)
-    if (!doc) {
-      throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
-    }
-    return doc
+  async getSnippetByPath(path: string): Promise<SnippetRow | null> {
+    const row = await this.snippetRepository.findByPath(
+      this.normalizePath(path),
+    )
+    if (!row) return null
+    if (row.type === SnippetType.Function) return null
+    return row
   }
 
-  async getPublicSnippetByName(name: string, reference: string) {
-    const snippet = await this.getSnippetByName(name, reference)
-    if (snippet.type === SnippetType.Function) {
+  async getPublicSnippetByPath(path: string) {
+    const snippet = await this.getSnippetByPath(path)
+    if (!snippet) {
       throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)
     }
 
@@ -417,7 +505,7 @@ export class SnippetService {
     }
 
     const res = await this.attachSnippet(snippet)
-    this.cacheSnippet(res, res.data)
+    await this.cacheSnippet(res, res.data)
     return res.data
   }
 
@@ -440,10 +528,7 @@ export class SnippetService {
         Reflect.set(model, 'data', load(model.raw))
         break
       }
-      case SnippetType.Text: {
-        Reflect.set(model, 'data', model.raw)
-        break
-      }
+      case SnippetType.Text:
       case SnippetType.Skill: {
         Reflect.set(model, 'data', model.raw)
         break
@@ -471,8 +556,8 @@ export class SnippetService {
       .map((r) => toPublicSkillView(r, serverUrl))
   }
 
-  private snippetCacheKey(prefix: string, isPrivate: boolean) {
-    return `${prefix}:${isPrivate ? 'private' : ''}`
+  private snippetCacheKey(path: string, isPrivate: boolean) {
+    return `path:${path}:${isPrivate ? 'private' : ''}`
   }
 
   private async cacheRedisValue(key: string, value: any) {
@@ -484,91 +569,53 @@ export class SnippetService {
     )
   }
 
-  private async deleteCachedKeyVariants(prefix: string) {
+  private async deleteCachedKeyVariants(path: string) {
     const client = this.redisService.getClient()
     const cacheKey = getRedisKey(RedisKeys.SnippetCache)
     await Promise.all(
-      [`${prefix}:`, `${prefix}:private`].map((key) =>
+      [`path:${path}:`, `path:${path}:private`].map((key) =>
         client.hdel(cacheKey, key),
       ),
     )
   }
 
   async cacheSnippet(model: SnippetRow, value: any) {
-    const { reference, name } = model
     await this.cacheRedisValue(
-      this.snippetCacheKey(`${reference}:${name}`, !!model.private),
+      this.snippetCacheKey(model.path, !!model.private),
       value,
     )
   }
 
-  async getCachedSnippet(
-    reference: string,
-    name: string,
-    accessType: 'public' | 'private',
-  ) {
+  async getCachedSnippetByPath(path: string, accessType: 'public' | 'private') {
     const key = this.snippetCacheKey(
-      `${reference}:${name}`,
+      this.normalizePath(path),
       accessType === 'private',
     )
     const client = this.redisService.getClient()
     return client.hget(getRedisKey(RedisKeys.SnippetCache), key)
   }
 
-  async deleteCachedSnippet(reference: string, name: string) {
-    await this.deleteCachedKeyVariants(`${reference}:${name}`)
+  async deleteCachedSnippetByPath(path: string) {
+    await this.deleteCachedKeyVariants(this.normalizePath(path))
   }
 
-  // --- customPath methods ---
-
-  async getSnippetByCustomPath(customPath: string): Promise<SnippetRow | null> {
-    const row = await this.snippetRepository.findByCustomPath(customPath)
-    if (!row) return null
-    if (row.type === SnippetType.Function) return null
-    return row
-  }
-
-  async getFunctionSnippetByCustomPath(
-    customPath: string,
+  async getFunctionSnippetByPath(
+    path: string,
     method: string,
   ): Promise<SnippetRow | null> {
-    return this.snippetRepository.findFunctionByCustomPath(customPath, method)
-  }
-
-  async getFunctionSnippetByCustomPathPrefix(
-    candidatePaths: string[],
-    method: string,
-  ): Promise<SnippetRow | null> {
-    return this.snippetRepository.findFunctionByCustomPathPrefix(
-      candidatePaths,
+    return this.snippetRepository.findFunctionByPath(
+      this.normalizePath(path),
       method,
     )
   }
 
-  async cacheSnippetByCustomPath(
-    customPath: string,
-    isPrivate: boolean,
-    value: any,
-  ) {
-    await this.cacheRedisValue(
-      this.snippetCacheKey(`cp:${customPath}`, isPrivate),
-      value,
+  async getFunctionSnippetByPathPrefix(
+    candidatePaths: string[],
+    method: string,
+  ): Promise<SnippetRow | null> {
+    return this.snippetRepository.findFunctionByPathPrefix(
+      candidatePaths.map((path) => this.normalizePath(path)),
+      method,
     )
-  }
-
-  async getCachedSnippetByCustomPath(
-    customPath: string,
-    accessType: 'public' | 'private',
-  ) {
-    const key = this.snippetCacheKey(
-      `cp:${customPath}`,
-      accessType === 'private',
-    )
-    const client = this.redisService.getClient()
-    return client.hget(getRedisKey(RedisKeys.SnippetCache), key)
-  }
-
-  async deleteCachedSnippetByCustomPath(customPath: string) {
-    await this.deleteCachedKeyVariants(`cp:${customPath}`)
   }
 }

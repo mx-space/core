@@ -43,7 +43,7 @@ export class SnippetRouteController {
     const method = req.method.toUpperCase()
 
     // 1. Exact match — data type snippet
-    const dataSnippet = await this.snippetService.getSnippetByCustomPath(path)
+    const dataSnippet = await this.snippetService.getSnippetByPath(path)
 
     if (dataSnippet) {
       if (dataSnippet.private && !hasAdminAccess) {
@@ -55,11 +55,11 @@ export class SnippetRouteController {
         ? (
             await Promise.all(
               (['public', 'private'] as const).map((type) =>
-                this.snippetService.getCachedSnippetByCustomPath(path, type),
+                this.snippetService.getCachedSnippetByPath(path, type),
               ),
             )
           ).find(Boolean) || null
-        : await this.snippetService.getCachedSnippetByCustomPath(path, 'public')
+        : await this.snippetService.getCachedSnippetByPath(path, 'public')
 
       if (cached) {
         const json = JSON.safeParse(cached)
@@ -70,11 +70,7 @@ export class SnippetRouteController {
       }
 
       const attached = await this.snippetService.attachSnippet(dataSnippet)
-      await this.snippetService.cacheSnippetByCustomPath(
-        path,
-        !!attached.private,
-        attached.data,
-      )
+      await this.snippetService.cacheSnippet(attached, attached.data)
       if (dataSnippet.type === SnippetType.Skill) {
         this.applySkillResponseHeaders(reply)
       }
@@ -82,7 +78,7 @@ export class SnippetRouteController {
     }
 
     // 2. Exact match — function type snippet
-    const fnSnippet = await this.snippetService.getFunctionSnippetByCustomPath(
+    const fnSnippet = await this.snippetService.getFunctionSnippetByPath(
       path,
       method,
     )
@@ -103,13 +99,19 @@ export class SnippetRouteController {
 
     if (candidatePaths.length > 0) {
       const prefixSnippet =
-        await this.snippetService.getFunctionSnippetByCustomPathPrefix(
+        await this.snippetService.getFunctionSnippetByPathPrefix(
           candidatePaths,
           method,
         )
       if (prefixSnippet) {
         return this.executeFunction(prefixSnippet, hasAdminAccess, req, reply)
       }
+    }
+
+    const skillIndex = `${path}/SKILL.md`
+    const skillSnippet = await this.snippetService.getSnippetByPath(skillIndex)
+    if (skillSnippet) {
+      return reply.redirect(`/s/${skillIndex}`, 302)
     }
 
     throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)

@@ -22,14 +22,12 @@ type Translator = (key: TranslationKey, values?: TranslationValues) => string
 export function normalizeSnippet(snippet: CreateSnippetData | SnippetModel) {
   return {
     comment: snippet.comment ?? '',
-    customPath: snippet.customPath ?? '',
     enable: Boolean(snippet.enable),
     metatype: snippet.metatype ?? '',
     method: snippet.method ?? '',
-    name: snippet.name ?? '',
+    path: snippet.path ?? '',
     private: Boolean(snippet.private),
     raw: snippet.raw ?? '',
-    reference: snippet.reference ?? 'root',
     schema: snippet.schema ?? '',
     secret: serializeSnippetSecret(snippet.secret),
     type: snippet.type ?? SnippetType.JSON,
@@ -47,7 +45,6 @@ export function prepareSnippetPayload(
 
   if (!payload.metatype) delete payload.metatype
   if (!payload.schema) delete payload.schema
-  if (!payload.customPath) delete payload.customPath
   if (!payload.method) delete payload.method
   if (payload.secret) payload.secret = parseSnippetSecret(payload.secret)
   else delete payload.secret
@@ -207,6 +204,24 @@ export function parseSnippetSecret(secret: CreateSnippetData['secret']) {
 
 export function basenameWithoutExt(name: string) {
   return name.replace(/\.[^.]+$/, '')
+}
+
+export function inferSnippetType(name: string): SnippetType {
+  const lower = name.toLowerCase()
+  if (lower.endsWith('.skill.mdx') || lower.endsWith('.skill.md')) {
+    return SnippetType.Skill
+  }
+  if (
+    lower.endsWith('.fn') ||
+    lower.endsWith('.fn.ts') ||
+    lower.endsWith('.fn.js')
+  ) {
+    return SnippetType.Function
+  }
+  if (lower.endsWith('.json')) return SnippetType.JSON
+  if (lower.endsWith('.json5')) return SnippetType.JSON5
+  if (lower.endsWith('.yaml') || lower.endsWith('.yml')) return SnippetType.YAML
+  return SnippetType.Text
 }
 
 export function parsePackageInput(input: string) {

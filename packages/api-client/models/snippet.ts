@@ -4,6 +4,7 @@ export enum SnippetType {
   Function = 'function',
   Text = 'text',
   YAML = 'yaml',
+  Skill = 'skill',
 }
 
 export interface SnippetModel<T = unknown> {
@@ -13,13 +14,11 @@ export interface SnippetModel<T = unknown> {
   type: SnippetType
   private: boolean
   raw: string
-  name: string
-  reference: string
+  path: string
   comment?: string | null
   metatype?: string | null
   schema?: string | null
   method?: string | null
-  customPath?: string | null
   /** Encrypted on list endpoints; cleared key-value object on detail endpoints. */
   secret?: string | Record<string, unknown> | null
   enable: boolean

@@ -26,7 +26,7 @@ export function SkillFrontmatterPreview({ form }: { form: CreateSnippetData }) {
             </p>
           ) : result.name === undefined ? (
             <p className="text-sm text-fg-subtle">—</p>
-          ) : result.name === form.name.trim() ? (
+          ) : result.name === (form.path.split('/').at(-2) ?? '').trim() ? (
             <span className="flex items-center gap-1 text-sm text-fg">
               <Check className="size-4 shrink-0 text-green-600 dark:text-green-400" />
               {result.name}
@@ -38,7 +38,9 @@ export function SkillFrontmatterPreview({ form }: { form: CreateSnippetData }) {
                 {result.name}
               </span>
               <p className="mt-0.5 text-xs text-red-600 dark:text-red-400">
-                {t('snippets.editor.skill.nameMismatch', { value: form.name })}
+                {t('snippets.editor.skill.nameMismatch', {
+                  value: form.path.split('/').at(-2) ?? '',
+                })}
               </p>
             </div>
           )}

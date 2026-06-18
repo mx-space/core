@@ -129,24 +129,25 @@ export const snippets = pgTable(
     type: text('type'),
     private: boolean('private').notNull().default(false),
     raw: text('raw').notNull(),
-    name: text('name').notNull(),
-    reference: text('reference').notNull().default('root'),
+    path: text('path').notNull(),
     comment: text('comment'),
     metatype: text('metatype'),
     schema: text('schema'),
     method: text('method'),
-    customPath: text('custom_path'),
     secret: text('secret'),
     enable: boolean('enable').notNull().default(true),
     builtIn: boolean('built_in').notNull().default(false),
     compiledCode: text('compiled_code'),
   },
   (table) => [
-    index('snippets_name_reference_idx').on(table.name, table.reference),
+    index('snippets_path_prefix_idx').on(table.path),
     index('snippets_type_idx').on(table.type),
-    uniqueIndex('snippets_custom_path_uniq')
-      .on(table.customPath)
-      .where(sql`${table.customPath} is not null`),
+    uniqueIndex('snippets_path_idx')
+      .on(table.path)
+      .where(sql`${table.method} is null`),
+    uniqueIndex('snippets_path_method_idx')
+      .on(table.path, table.method)
+      .where(sql`${table.method} is not null`),
   ],
 )
 

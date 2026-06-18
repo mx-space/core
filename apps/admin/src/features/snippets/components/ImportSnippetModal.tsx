@@ -2,7 +2,6 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Download, ExternalLink, Import, Loader2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import type { ImportFunctionPreview } from '../types/snippets'
 
 import { importSnippets } from '~/api/snippets'
 import { useI18n } from '~/i18n'
@@ -11,6 +10,7 @@ import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
 
+import type { ImportFunctionPreview } from '../types/snippets'
 import {
   fetchAvailableSnippetPackages,
   loadSnippetPackage,
@@ -61,10 +61,9 @@ export function ImportSnippetModal(props: {
       importSnippets({
         packages: dependencies,
         snippets: functions.map((item) => ({
-          name: basenameWithoutExt(item.name),
+          path: `${item.reference}/${basenameWithoutExt(item.name)}`,
           private: false,
           raw: item.raw,
-          reference: item.reference,
           type: SnippetType.Function,
         })),
       }),

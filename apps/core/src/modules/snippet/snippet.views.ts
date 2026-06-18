@@ -13,12 +13,17 @@ export function toPublicSkillView(
   serverUrl: string,
 ): PublicSkillView {
   const base = serverUrl.replace(/\/$/, '')
-  const rawUrl = base ? `${base}/s/sk/${row.name}` : `/s/sk/${row.name}`
+  const rawUrl = base ? `${base}/s/${row.path}` : `/s/${row.path}`
   return {
     id: String(row.id),
-    name: row.name,
+    name: deriveSkillName(row.path),
     description: row.comment ?? '',
     rawUrl,
     raw: row.raw,
   }
+}
+
+export function deriveSkillName(path: string): string {
+  const segments = path.split('/')
+  return segments.at(-2) ?? ''
 }

@@ -15,8 +15,7 @@ export const snippetTypes: SnippetType[] = [
 ]
 
 export const emptySnippet: CreateSnippetData = {
-  name: '',
+  path: 'root/new.json',
   raw: '{}',
-  reference: 'root',
   type: SnippetType.JSON,
 }

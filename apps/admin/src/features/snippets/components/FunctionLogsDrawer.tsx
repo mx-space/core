@@ -67,9 +67,9 @@ export function FunctionLogsDrawer(props: {
       onClose={props.onClose}
       open={props.open}
       title={
-        props.snippet?.name
+        props.snippet?.path
           ? t('snippets.dialog.logs.titleWithName', {
-              name: props.snippet.name,
+              name: props.snippet.path,
             })
           : t('snippets.dialog.logs.title')
       }

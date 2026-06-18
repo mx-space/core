@@ -24,13 +24,10 @@ describe('test Snippet client', () => {
   //   expect(data.raw).toEqual('{}')
   // })
 
-  test('GET /:reference/:name', async () => {
-    const mocked = mockResponse('/snippets/theme/config', {})
+  test('GET /by-path', async () => {
+    const mocked = mockResponse('/snippets/by-path', {})
 
-    const data = await client.snippet.getByReferenceAndName<{}>(
-      'theme',
-      'config',
-    )
+    const data = await client.snippet.getByPath<{}>('theme/config')
 
     expect(data).toEqual(mocked)
     expect(data.$raw.data.data).toEqual(mocked)

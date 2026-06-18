@@ -13,20 +13,18 @@ import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import { SnippetType } from './snippet.schema'
-import type { SnippetGroupRow, SnippetRow } from './snippet.types'
+import type { SnippetRow } from './snippet.types'
 
 const mapRow = (row: typeof snippets.$inferSelect): SnippetRow => ({
   id: toEntityId(row.id) as EntityId,
   type: row.type,
   private: row.private,
   raw: row.raw,
-  name: row.name,
-  reference: row.reference,
+  path: row.path,
   comment: row.comment,
   metatype: row.metatype,
   schema: row.schema,
   method: row.method,
-  customPath: row.customPath,
   secret: row.secret,
   enable: row.enable,
   builtIn: row.builtIn,
@@ -44,16 +42,6 @@ export class SnippetRepository extends BaseRepository {
     super(db)
   }
 
-  async findAll(reference?: string): Promise<SnippetRow[]> {
-    const where = reference ? eq(snippets.reference, reference) : undefined
-    const rows = await this.db
-      .select()
-      .from(snippets)
-      .where(where)
-      .orderBy(desc(snippets.createdAt))
-    return rows.map(mapRow)
-  }
-
   async findById(id: EntityId | string): Promise<SnippetRow | null> {
     const idBig = parseEntityId(id)
     const [row] = await this.db
@@ -64,46 +52,27 @@ export class SnippetRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
-  async findByNameAndReference(
-    name: string,
-    reference: string,
+  async findByPath(path: string): Promise<SnippetRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(snippets)
+      .where(and(eq(snippets.path, path), ne(snippets.type, 'function'))!)
+      .limit(1)
+    return row ? mapRow(row) : null
+  }
+
+  async findAnyByPath(
+    path: string,
+    method?: string | null,
   ): Promise<SnippetRow | null> {
-    const [row] = await this.db
-      .select()
-      .from(snippets)
-      .where(and(eq(snippets.name, name), eq(snippets.reference, reference))!)
-      .limit(1)
+    const filter = method
+      ? and(eq(snippets.path, path), eq(snippets.method, method))!
+      : eq(snippets.path, path)
+    const [row] = await this.db.select().from(snippets).where(filter).limit(1)
     return row ? mapRow(row) : null
   }
 
-  async findByCustomPath(path: string): Promise<SnippetRow | null> {
-    const [row] = await this.db
-      .select()
-      .from(snippets)
-      .where(eq(snippets.customPath, path))
-      .limit(1)
-    return row ? mapRow(row) : null
-  }
-
-  async findPublicByName(
-    name: string,
-    reference: string,
-  ): Promise<SnippetRow | null> {
-    const [row] = await this.db
-      .select()
-      .from(snippets)
-      .where(
-        and(
-          eq(snippets.name, name),
-          eq(snippets.reference, reference),
-          ne(snippets.type, 'function'),
-        )!,
-      )
-      .limit(1)
-    return row ? mapRow(row) : null
-  }
-
-  async findFunctionByCustomPath(
+  async findFunctionByPath(
     path: string,
     method: string,
   ): Promise<SnippetRow | null> {
@@ -112,7 +81,7 @@ export class SnippetRepository extends BaseRepository {
       .from(snippets)
       .where(
         and(
-          eq(snippets.customPath, path),
+          eq(snippets.path, path),
           eq(snippets.type, 'function'),
           or(eq(snippets.method, 'ALL'), eq(snippets.method, method))!,
         )!,
@@ -121,7 +90,7 @@ export class SnippetRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
-  async findFunctionByCustomPathPrefix(
+  async findFunctionByPathPrefix(
     candidatePaths: string[],
     method: string,
   ): Promise<SnippetRow | null> {
@@ -131,116 +100,47 @@ export class SnippetRepository extends BaseRepository {
       .from(snippets)
       .where(
         and(
-          inArray(snippets.customPath, candidatePaths),
+          inArray(snippets.path, candidatePaths),
           eq(snippets.type, 'function'),
           or(eq(snippets.method, 'ALL'), eq(snippets.method, method))!,
         )!,
       )
     if (rows.length === 0) return null
     const longest = rows.reduce((a, b) =>
-      (a.customPath?.length ?? 0) >= (b.customPath?.length ?? 0) ? a : b,
+      a.path.length >= b.path.length ? a : b,
     )
     return mapRow(longest)
   }
 
-  async countByNameReferenceMethod(
-    name: string,
-    reference: string,
-    method: string | null | undefined,
-  ): Promise<number> {
-    const baseFilters = [
-      eq(snippets.name, name),
-      eq(snippets.reference, reference),
-    ]
-    const filter =
-      method == null
-        ? and(...baseFilters)!
-        : and(...baseFilters, eq(snippets.method, method))!
-    const [{ count }] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(snippets)
-      .where(filter)
-    return Number(count ?? 0)
-  }
-
-  async countByCustomPath(
-    customPath: string,
-    excludeId?: EntityId | string,
-  ): Promise<number> {
-    const filter = excludeId
-      ? and(
-          eq(snippets.customPath, customPath),
-          ne(snippets.id, parseEntityId(excludeId)),
-        )!
-      : eq(snippets.customPath, customPath)
-    const [{ count }] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(snippets)
-      .where(filter)
-    return Number(count ?? 0)
-  }
-
-  async findFunctionByNameReference(
-    name: string,
-    reference: string,
-    method?: string,
-  ): Promise<SnippetRow | null> {
-    const baseFilter = and(
-      eq(snippets.name, name),
-      eq(snippets.reference, reference),
-      eq(snippets.type, 'function'),
-    )!
-    const filter = method
-      ? and(
-          baseFilter,
-          or(eq(snippets.method, 'ALL'), eq(snippets.method, method))!,
-        )!
-      : baseFilter
-    const [row] = await this.db.select().from(snippets).where(filter).limit(1)
-    return row ? mapRow(row) : null
-  }
-
-  async findFunctionsByNamesReferences(
-    names: string[],
-    references: string[],
-  ): Promise<SnippetRow[]> {
-    if (names.length === 0 || references.length === 0) return []
+  async findFunctionsByPaths(paths: string[]): Promise<SnippetRow[]> {
+    if (paths.length === 0) return []
     const rows = await this.db
       .select()
       .from(snippets)
-      .where(
-        and(
-          inArray(snippets.name, names),
-          inArray(snippets.reference, references),
-          eq(snippets.type, 'function'),
-        )!,
-      )
+      .where(and(inArray(snippets.path, paths), eq(snippets.type, 'function'))!)
     return rows.map(mapRow)
   }
 
-  async updateByName(
-    name: string,
-    patch: Partial<typeof snippets.$inferInsert>,
-  ): Promise<void> {
-    await this.db
-      .update(snippets)
-      .set({ ...patch, updatedAt: new Date() })
-      .where(eq(snippets.name, name))
-  }
+  async countByPathMethod(
+    path: string,
+    method: string | null | undefined,
+    excludeId?: EntityId | string,
+  ): Promise<number> {
+    const filters = [eq(snippets.path, path)]
+    if (method == null) {
+      filters.push(sql`${snippets.method} is null` as any)
+    } else {
+      filters.push(eq(snippets.method, method))
+    }
+    if (excludeId) {
+      filters.push(ne(snippets.id, parseEntityId(excludeId)))
+    }
 
-  async groupByReference(): Promise<SnippetGroupRow[]> {
-    const rows = await this.db
-      .select({
-        reference: snippets.reference,
-        count: sql<number>`count(*)::int`,
-      })
+    const [{ count }] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
       .from(snippets)
-      .groupBy(snippets.reference)
-      .orderBy(asc(snippets.reference))
-    return rows.map((r) => ({
-      reference: r.reference,
-      count: Number(r.count ?? 0),
-    }))
+      .where(and(...filters)!)
+    return Number(count ?? 0)
   }
 
   async list(
@@ -257,7 +157,7 @@ export class SnippetRepository extends BaseRepository {
         .select()
         .from(snippets)
         .where(where)
-        .orderBy(asc(snippets.reference), desc(snippets.createdAt))
+        .orderBy(asc(snippets.path), desc(snippets.createdAt))
         .limit(size)
         .offset(offset),
       this.db
@@ -271,33 +171,29 @@ export class SnippetRepository extends BaseRepository {
     }
   }
 
-  async listGrouped(
-    page = 1,
-    size = 30,
-  ): Promise<PaginationResult<SnippetGroupRow>> {
-    page = Math.max(1, page)
-    size = Math.min(100, Math.max(1, size))
-    const offset = (page - 1) * size
-    const all = await this.groupByReference()
-    const total = all.length
-    const data = all.slice(offset, offset + size)
-    return {
-      data,
-      pagination: this.paginationOf(total, page, size),
-    }
+  async findByPrefix(prefix: string, limit = 1000): Promise<SnippetRow[]> {
+    const normalizedLimit = Math.min(1000, Math.max(1, limit))
+    const filter = prefix
+      ? sql`${snippets.path} like ${`${prefix}%`}`
+      : undefined
+    const rows = await this.db
+      .select()
+      .from(snippets)
+      .where(filter)
+      .orderBy(asc(snippets.path), asc(snippets.method))
+      .limit(normalizedLimit)
+    return rows.map(mapRow)
   }
 
   async create(input: {
     type?: string | null
     private?: boolean
     raw: string
-    name: string
-    reference?: string
+    path: string
     comment?: string | null
     metatype?: string | null
     schema?: string | null
     method?: string | null
-    customPath?: string | null
     secret?: string | null
     enable?: boolean
     builtIn?: boolean
@@ -311,13 +207,11 @@ export class SnippetRepository extends BaseRepository {
         type: input.type ?? null,
         private: input.private ?? false,
         raw: input.raw,
-        name: input.name,
-        reference: input.reference ?? 'root',
+        path: input.path,
         comment: input.comment ?? null,
         metatype: input.metatype ?? null,
         schema: input.schema ?? null,
         method: input.method ?? null,
-        customPath: input.customPath ?? null,
         secret: input.secret ?? null,
         enable: input.enable ?? true,
         builtIn: input.builtIn ?? false,
@@ -325,6 +219,16 @@ export class SnippetRepository extends BaseRepository {
       })
       .returning()
     return mapRow(row)
+  }
+
+  async upsertByPath(
+    input: Parameters<SnippetRepository['create']>[0],
+  ): Promise<SnippetRow> {
+    const existing = await this.findAnyByPath(input.path, input.method ?? null)
+    if (!existing) return this.create(input)
+
+    const updated = await this.update(existing.id, input)
+    return updated ?? existing
   }
 
   async update(
@@ -340,6 +244,16 @@ export class SnippetRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
+  async updateByPath(
+    path: string,
+    patch: Partial<typeof snippets.$inferInsert>,
+  ): Promise<void> {
+    await this.db
+      .update(snippets)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(snippets.path, path))
+  }
+
   async deleteById(id: EntityId | string): Promise<SnippetRow | null> {
     const idBig = parseEntityId(id)
     const [row] = await this.db
@@ -349,20 +263,60 @@ export class SnippetRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
+  async deleteByPath(path: string, recursive: boolean): Promise<SnippetRow[]> {
+    const filter = recursive
+      ? sql`${snippets.path} like ${`${path}%`}`
+      : eq(snippets.path, path)
+    const rows = await this.db.delete(snippets).where(filter).returning()
+    return rows.map(mapRow)
+  }
+
+  async movePath(
+    from: string,
+    to: string,
+    recursive: boolean,
+  ): Promise<SnippetRow[]> {
+    if (!recursive) {
+      const row = await this.findAnyByPath(from)
+      if (!row) return []
+      const updated = await this.update(row.id, { path: to })
+      return updated ? [updated] : []
+    }
+
+    const rows = await this.findByPrefix(from, 1000)
+    if (rows.length === 0) return []
+    return this.db.transaction(async (tx) => {
+      const moved: SnippetRow[] = []
+      for (const row of rows) {
+        const nextPath = `${to}${row.path.slice(from.length)}`
+        const [updated] = await tx
+          .update(snippets)
+          .set({ path: nextPath, updatedAt: new Date() })
+          .where(eq(snippets.id, parseEntityId(row.id)))
+          .returning()
+        if (updated) moved.push(mapRow(updated))
+      }
+      return moved
+    })
+  }
+
   async findSkillsByIds(
     ids: string[],
     includePrivate: boolean,
   ): Promise<SnippetRow[]> {
     if (ids.length === 0) return []
     const bigIds = ids.map((id) => parseEntityId(id))
-    const filter = includePrivate
-      ? and(inArray(snippets.id, bigIds), eq(snippets.type, SnippetType.Skill))!
-      : and(
-          inArray(snippets.id, bigIds),
-          eq(snippets.type, SnippetType.Skill),
-          eq(snippets.private, false),
-        )!
-    const rows = await this.db.select().from(snippets).where(filter)
+    const filters = [
+      inArray(snippets.id, bigIds),
+      eq(snippets.type, SnippetType.Skill),
+      sql`${snippets.path} like ${'%/SKILL.md'}`,
+    ]
+    if (!includePrivate) filters.push(eq(snippets.private, false))
+
+    const rows = await this.db
+      .select()
+      .from(snippets)
+      .where(and(...filters)!)
     return rows.map(mapRow)
   }
 }
