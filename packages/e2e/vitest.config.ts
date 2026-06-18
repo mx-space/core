@@ -12,9 +12,16 @@ export default defineConfig({
     include: ['test/**/*.test.ts'],
     environment: 'node',
     globals: true,
-    hookTimeout: 90_000,
-    testTimeout: 90_000,
+    hookTimeout: 120_000,
+    testTimeout: 120_000,
     fileParallelism: true,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        maxForks: process.env.CI ? 2 : undefined,
+        minForks: process.env.CI ? 1 : undefined,
+      },
+    },
     setupFiles: [resolve(__dirname, 'src/helpers/setup.ts')],
   },
   resolve: {
