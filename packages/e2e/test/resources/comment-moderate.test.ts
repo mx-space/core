@@ -81,7 +81,7 @@ describe('mxs comment moderation against real core', () => {
   const submitGuestComment = async (text: string): Promise<string> => {
     const res = await backend.app.inject({
       method: 'POST',
-      url: `/api/v3/comments/guest/${postId}?ref=post`,
+      url: `/comments/guest/${postId}?ref=post`,
       headers: { 'content-type': 'application/json' },
       payload: JSON.stringify({
         author: 'e2e-guest',

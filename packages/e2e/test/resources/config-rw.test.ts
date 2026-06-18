@@ -48,10 +48,9 @@ describe('mxs config read-write against real core', () => {
       env(),
     )
     expect(seoResult.code, seoResult.stderr || seoResult.stdout).toBe(0)
-    const currentSeo = parseEnvelope(seoResult.stdout).data as Record<
-      string,
-      unknown
-    >
+    const seoEnvelope = parseEnvelope(seoResult.stdout)
+    const rawSeo = (seoEnvelope.data as Record<string, unknown>)?.data ?? seoEnvelope.data
+    const currentSeo = rawSeo as Record<string, unknown>
 
     const updated = { ...(currentSeo ?? {}), title: newTitle }
     const setResult = await runMxs(
@@ -71,6 +70,7 @@ describe('mxs config read-write against real core', () => {
     const readback = await runMxs(['--json', 'config', 'get', 'seo'], env())
     expect(readback.code, readback.stderr || readback.stdout).toBe(0)
     const readEnvelope = parseEnvelope(readback.stdout)
-    expect((readEnvelope.data as Record<string, unknown>)?.title).toBe(newTitle)
+    const seoData = (readEnvelope.data as Record<string, unknown>)?.data ?? readEnvelope.data
+    expect((seoData as Record<string, unknown>)?.title).toBe(newTitle)
   }, 90_000)
 })

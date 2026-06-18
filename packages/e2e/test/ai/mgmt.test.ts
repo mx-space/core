@@ -39,11 +39,17 @@ describe('mxs ai management against real core', () => {
 
   describe('summary', () => {
     it('list includes seeded summary', async () => {
-      const res = await runMxs(['--json', 'ai', 'summary', 'list'], env())
+      const res = await runMxs(['--json', 'ai', 'summary', 'list', '--grouped'], env())
       expect(res.code, res.stderr).toBe(0)
       const envelope = parseEnvelope(res.stdout)
       expect(envelope.ok).toBe(true)
-      expect(getItems(envelope.data).map(extractId)).toContain(fixture.summaryId)
+      const groups = getItems(envelope.data) as Array<Record<string, unknown>>
+      const ids = groups.flatMap((group) =>
+        Array.isArray(group.summaries)
+          ? (group.summaries as unknown[]).map(extractId)
+          : [],
+      )
+      expect(ids).toContain(fixture.summaryId)
     }, 60_000)
 
     it('get returns seeded summary content', async () => {
@@ -116,7 +122,13 @@ describe('mxs ai management against real core', () => {
       expect(res.code, res.stderr).toBe(0)
       const envelope = parseEnvelope(res.stdout)
       expect(envelope.ok).toBe(true)
-      const ids = getItems(envelope.data).map(extractId)
+      // translate list returns grouped: [{ article, translations: [...] }, ...]
+      const groups = getItems(envelope.data) as Array<Record<string, unknown>>
+      const ids = groups.flatMap((group) =>
+        Array.isArray(group.translations)
+          ? (group.translations as unknown[]).map(extractId)
+          : [],
+      )
       expect(ids).toContain(fixture.translationId)
     }, 60_000)
 
@@ -206,11 +218,16 @@ describe('mxs ai management against real core', () => {
 
   describe('insights', () => {
     it('list includes seeded insights', async () => {
-      const res = await runMxs(['--json', 'ai', 'insights', 'list'], env())
+      const res = await runMxs(['--json', 'ai', 'insights', 'list', '--grouped'], env())
       expect(res.code, res.stderr).toBe(0)
       const envelope = parseEnvelope(res.stdout)
       expect(envelope.ok).toBe(true)
-      const ids = getItems(envelope.data).map(extractId)
+      const groups = getItems(envelope.data) as Array<Record<string, unknown>>
+      const ids = groups.flatMap((group) =>
+        Array.isArray(group.insights)
+          ? (group.insights as unknown[]).map(extractId)
+          : [],
+      )
       expect(ids).toContain(fixture.insightId)
     }, 60_000)
 

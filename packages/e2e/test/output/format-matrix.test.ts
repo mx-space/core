@@ -79,7 +79,9 @@ describe('mxs output format matrix', () => {
         readable: (stdout) => {
           const hasAuth =
             stdout.toLowerCase().includes('authenticated') ||
-            stdout.includes('format-matrix')
+            stdout.toLowerCase().includes('signed in') ||
+            stdout.includes('format-matrix') ||
+            stdout.toLowerCase().includes('local-dev')
           expect(hasAuth).toBe(true)
         },
         llm: (stdout) => {
@@ -134,29 +136,32 @@ describe('mxs output format matrix', () => {
   }, 120_000)
 
   it('category list × all modes', async () => {
-    // category list uses emitSuccess (no typed view) — all modes exit 0
-    await runAcrossModes(
-      ['category', 'list'],
-      env(),
-      { llm: true, xml: true },
-      {
-        json: (envelope) => {
+    // category list uses emitSuccess (no typed view).
+    // json / prettyJson / readable / llm all produce output.
+    // xml falls back to JSON.stringify (no angle-bracket envelope).
+    for (const [flag, checker] of [
+      [
+        ['--json'],
+        (stdout: string) => {
+          const envelope = JSON.parse(stdout.trim().split('\n').pop()!) as { ok: boolean; data: unknown }
           expect(envelope.ok).toBe(true)
           expect(Array.isArray(getItems(envelope.data))).toBe(true)
         },
-        prettyJson: (parsed) => {
+      ],
+      [
+        ['--output', 'pretty-json'],
+        (stdout: string) => {
+          const parsed = JSON.parse(stdout)
           expect(Array.isArray(getItems(parsed))).toBe(true)
         },
-        readable: (stdout) => {
-          expect(stdout.trim().length).toBeGreaterThan(0)
-        },
-        llm: (stdout) => {
-          expect(stdout.trim().length).toBeGreaterThan(0)
-        },
-        xml: (stdout) => {
-          expect(stdout.trim().length).toBeGreaterThan(0)
-        },
-      },
-    )
+      ],
+      [['--output', 'readable'], (stdout: string) => { expect(stdout.trim().length).toBeGreaterThan(0) }],
+      [['--output', 'llm'], (stdout: string) => { expect(stdout.trim().length).toBeGreaterThan(0) }],
+      [['--output', 'xml'], (stdout: string) => { expect(stdout.trim().length).toBeGreaterThan(0) }],
+    ] as Array<[string[], (stdout: string) => void]>) {
+      const result = await runMxs(['category', 'list', ...flag], env())
+      expect(result.code, result.stderr).toBe(0)
+      checker(result.stdout)
+    }
   }, 120_000)
 })

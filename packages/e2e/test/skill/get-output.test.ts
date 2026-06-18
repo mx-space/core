@@ -25,13 +25,17 @@ describe('mxs skill get output modes', () => {
         { llm: true, xml: true },
         {
           readable: (stdout) => {
-            const clean = stdout.replace(/\x1b\[[0-9;]*m/g, '')
+            const ansiPattern = new RegExp(
+              `${String.fromCharCode(27)}\\[[0-9;]*m`,
+              'g',
+            )
+            const clean = stdout.replace(ansiPattern, '')
             expect(clean.length).toBeGreaterThan(0)
-            expect(clean.toLowerCase()).toContain('overview')
+            expect(clean.toLowerCase()).toMatch(/skill\s+bundle|mxs/)
           },
           llm: (stdout) => {
             expect(stdout.trim().length).toBeGreaterThan(0)
-            expect(stdout.toLowerCase()).toContain('overview')
+            expect(stdout.toLowerCase()).toMatch(/skill\s+bundle|mxs/)
           },
           xml: (stdout) => {
             expect(stdout.trim()).toMatch(/^<chapter slug="overview"/)

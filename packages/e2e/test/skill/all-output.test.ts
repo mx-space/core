@@ -26,7 +26,7 @@ describe('mxs skill all output modes', () => {
         {
           readable: (stdout) => {
             const clean = stdout.replace(/\x1b\[[0-9;]*m/g, '')
-            expect(clean).toContain('overview')
+            expect(clean.toLowerCase()).toContain('overview')
           },
           llm: (stdout) => {
             expect(stdout).toContain('overview')

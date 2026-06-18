@@ -39,6 +39,7 @@ describe('mxs snippet CRUD against real core', () => {
         '--json',
         'snippet',
         'create',
+        '--name',
         name,
         '--type',
         'text',

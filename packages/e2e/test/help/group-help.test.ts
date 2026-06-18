@@ -45,7 +45,9 @@ describe('mxs group help', () => {
       const hasVerb =
         result.stdout.includes('Verb') ||
         result.stdout.includes('Options') ||
-        result.stdout.includes('Flag')
+        result.stdout.includes('Flag') ||
+        result.stdout.includes('OPTIONS') ||
+        result.stdout.includes('COMMANDS')
       expect(hasVerb, `no verb/option table found in ${group} --help`).toBe(
         true,
       )

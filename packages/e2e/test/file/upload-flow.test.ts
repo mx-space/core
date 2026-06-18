@@ -21,8 +21,8 @@ describe('mxs file upload flow against real core', () => {
   let backend: E2EBackend
   let tmpHome: TmpHome
   let sourcePath: string
-  let fileName: string
-  let renamedName: string
+  let actualName: string
+  let actualRenamedName: string
 
   beforeAll(async () => {
     backend = await createE2EBackend()
@@ -34,9 +34,6 @@ describe('mxs file upload flow against real core', () => {
     cleanStaticFiles()
     sourcePath = join(tmpHome.path, 'upload-source.txt')
     writeFileSync(sourcePath, 'e2e upload fixture content')
-    const stamp = Date.now()
-    fileName = `e2e-upload-${stamp}.txt`
-    renamedName = `e2e-renamed-${stamp}.txt`
   }, 120_000)
 
   afterAll(async () => {
@@ -56,8 +53,6 @@ describe('mxs file upload flow against real core', () => {
         sourcePath,
         '--type',
         'file',
-        '--name',
-        fileName,
       ],
       env(),
     )
@@ -67,10 +62,12 @@ describe('mxs file upload flow against real core', () => {
     const payload = getPayload(envelope.data) as Record<string, unknown>
     expect(typeof payload.url).toBe('string')
     expect(typeof payload.name).toBe('string')
+    actualName = payload.name as string
+    actualRenamedName = `e2e-renamed-${Date.now()}.txt`
   }, 60_000)
 
   it('file exists on disk after upload', () => {
-    expect(existsSync(staticFilePath('file', fileName))).toBe(true)
+    expect(existsSync(staticFilePath('file', actualName))).toBe(true)
   })
 
   it('list shows the uploaded file', async () => {
@@ -84,7 +81,7 @@ describe('mxs file upload flow against real core', () => {
     const names = getItems(envelope.data).map(
       (item) => (item as Record<string, unknown>).name,
     )
-    expect(names).toContain(fileName)
+    expect(names).toContain(actualName)
   }, 60_000)
 
   it('rename moves the file on disk', async () => {
@@ -93,8 +90,8 @@ describe('mxs file upload flow against real core', () => {
         '--json',
         'file',
         'rename',
-        fileName,
-        renamedName,
+        actualName,
+        actualRenamedName,
         '--type',
         'file',
       ],
@@ -103,8 +100,8 @@ describe('mxs file upload flow against real core', () => {
     expect(res.code, res.stderr).toBe(0)
     const envelope = parseEnvelope(res.stdout)
     expect(envelope.ok).toBe(true)
-    expect(existsSync(staticFilePath('file', fileName))).toBe(false)
-    expect(existsSync(staticFilePath('file', renamedName))).toBe(true)
+    expect(existsSync(staticFilePath('file', actualName))).toBe(false)
+    expect(existsSync(staticFilePath('file', actualRenamedName))).toBe(true)
   }, 60_000)
 
   it('delete removes the renamed file from disk', async () => {
@@ -113,7 +110,7 @@ describe('mxs file upload flow against real core', () => {
         '--json',
         'file',
         'delete',
-        renamedName,
+        actualRenamedName,
         '--type',
         'file',
         '--force',
@@ -123,6 +120,6 @@ describe('mxs file upload flow against real core', () => {
     expect(res.code, res.stderr).toBe(0)
     const envelope = parseEnvelope(res.stdout)
     expect(envelope.ok).toBe(true)
-    expect(existsSync(staticFilePath('file', renamedName))).toBe(false)
+    expect(existsSync(staticFilePath('file', actualRenamedName))).toBe(false)
   }, 60_000)
 })

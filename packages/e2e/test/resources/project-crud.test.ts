@@ -35,7 +35,7 @@ describe('mxs project CRUD against real core', () => {
     const name = `E2E Project ${Date.now()}`
 
     const created = await runMxs(
-      ['--json', 'project', 'create', '--name', name],
+      ['--json', 'project', 'create', '--name', name, '--description', 'e2e project description'],
       env(),
     )
     expect(created.code, created.stderr || created.stdout).toBe(0)
