@@ -11,7 +11,7 @@ import {
   Search,
   X,
 } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
@@ -133,6 +133,22 @@ export function SnippetsRouteViewContent() {
     () => (listQuery.data?.objects ?? []).map(toSnippetModel),
     [listQuery.data?.objects],
   )
+
+  const focusedPath = useMemo(() => {
+    if (selectedId && selectedId !== 'new') {
+      const match = snippets.find((s) => s.id === selectedId)
+      if (match) return match.path
+    }
+    return selectedPrefix || null
+  }, [selectedId, selectedPrefix, snippets])
+
+  useEffect(() => {
+    if (!focusedPath) return
+    const el = document.querySelector<HTMLElement>(
+      `[data-tree-path=${CSS.escape(focusedPath)}]`,
+    )
+    el?.focus()
+  }, [focusedPath])
 
   const treeNodes = useMemo(
     () => buildSnippetTree(snippets, stagedPrefixes),
@@ -500,6 +516,7 @@ export function SnippetsRouteViewContent() {
               ) : (
                 <SnippetList
                   expandedPrefixes={expandedPrefixes}
+                  focusedPath={focusedPath}
                   nodes={displayTreeNodes}
                   onCreateFileInFolder={(prefix) => {
                     setSelectedPrefix(prefix)

@@ -44,6 +44,12 @@ export interface ImportSnippetsData {
   snippets: Array<CreateSnippetData | SnippetModel>
 }
 
+export interface MoveSnippetData {
+  from: string
+  recursive: boolean
+  to: string
+}
+
 export function getSnippets(params: GetSnippetsParams = {}) {
   return getJson<SnippetVfsList>('/snippets', {
     limit: params.limit,
@@ -78,4 +84,14 @@ export function resetFunctionSnippet(id: string) {
 
 export function importSnippets(data: ImportSnippetsData) {
   return postJson<void, ImportSnippetsData>('/snippets/import', data)
+}
+
+export function moveSnippet(data: MoveSnippetData) {
+  return postJson<void, MoveSnippetData>('/snippets/move', data)
+}
+
+export function deleteSnippetByPath(path: string, recursive = true) {
+  return deleteJson<void>(
+    `/snippets/by-path?path=${encodeURIComponent(path)}&recursive=${recursive}`,
+  )
 }

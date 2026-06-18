@@ -2192,6 +2192,7 @@ export const zhCN = {
   'snippets.list.pendingFolder': '保存目录内片段后生效',
   'snippets.list.root': '根目录',
   'snippets.list.searchPlaceholder': '搜索…',
+  'snippets.list.treeLabel': '片段',
   'snippets.list.unnamed': '未命名片段',
   'snippets.toast.convertFallback': '当前内容无法转换，已使用默认内容',
   'snippets.toast.dependencyNameRequired': '请输入依赖包名',

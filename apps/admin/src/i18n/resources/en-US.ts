@@ -2301,6 +2301,7 @@ export const enUS = {
   'snippets.list.pendingFolder': 'Pending until a snippet is saved inside',
   'snippets.list.root': 'Root',
   'snippets.list.searchPlaceholder': 'Search…',
+  'snippets.list.treeLabel': 'Snippets',
   'snippets.list.unnamed': 'Untitled snippet',
   'snippets.toast.convertFallback':
     'Cannot convert current content; default content used',
