@@ -44,6 +44,8 @@ interface SnippetFileRowProps {
   multiSelectActive: boolean
   onContextMenu?: (snippet: SnippetModel) => void
   onDelete: () => void
+  onDragEnd?: () => void
+  onDragStart?: (path: string, kind: 'file') => void
   onFocus?: () => void
   onOpenExternal: () => void
   onRenameCancel: () => void
@@ -72,11 +74,22 @@ export function SnippetFileRow(props: SnippetFileRowProps) {
       aria-selected={isFocused}
       data-checked={props.checked ? 'true' : undefined}
       data-tree-path={snippet.path}
+      draggable={!isRenaming}
       onContextMenu={(event) => {
         if (!props.onContextMenu) return
         event.preventDefault()
         props.onFocus?.()
         props.onContextMenu(snippet)
+      }}
+      onDragEnd={() => props.onDragEnd?.()}
+      onDragStart={(event) => {
+        if (isRenaming) {
+          event.preventDefault()
+          return
+        }
+        event.dataTransfer.setData('application/x-snippet-path', snippet.path)
+        event.dataTransfer.effectAllowed = 'move'
+        props.onDragStart?.(snippet.path, 'file')
       }}
       role="treeitem"
       tabIndex={isFocused ? 0 : -1}

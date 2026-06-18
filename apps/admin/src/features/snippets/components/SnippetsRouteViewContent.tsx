@@ -44,6 +44,7 @@ import { cn } from '~/utils/cn'
 
 import { emptySnippet, snippetsQueryKey } from '../constants'
 import { useSnippetVfs } from '../hooks/use-snippet-vfs'
+import { useTreeDrag } from '../hooks/use-tree-drag'
 import { useTreeKeyboard } from '../hooks/use-tree-keyboard'
 import { useTreeSelection } from '../hooks/use-tree-selection'
 import { getErrorMessage } from '../utils/snippets'
@@ -627,6 +628,22 @@ export function SnippetsRouteViewContent() {
     [invalidateSnippets, navigate],
   )
 
+  const commitSingleMove = useCallback(
+    async (args: { from: string; recursive: boolean; to: string }) => {
+      const targetPrefix = getParentPrefix(
+        args.to.endsWith('/') ? args.to.slice(0, -1) : args.to,
+      )
+      try {
+        await vfs.move(args)
+        toast.success(t('snippets.toast.moved', { target: targetPrefix }))
+      } catch (error) {
+        toast.error(getErrorMessage(error, t('snippets.toast.moveFailed')))
+        throw error
+      }
+    },
+    [t, vfs],
+  )
+
   const handleMoveCommit = useCallback(
     async (targetPrefix: string) => {
       if (!movePicker) return
@@ -638,14 +655,7 @@ export function SnippetsRouteViewContent() {
         const to = isFolder
           ? `${targetPrefix}${base}/`
           : `${targetPrefix}${base}`
-        try {
-          await vfs.move({ from, recursive: isFolder, to })
-          toast.success(t('snippets.toast.moved', { target: targetPrefix }))
-        } catch (error) {
-          toast.error(getErrorMessage(error, t('snippets.toast.moveFailed')))
-          // Re-throw so the picker stays open for retry.
-          throw error
-        }
+        await commitSingleMove({ from, recursive: isFolder, to })
         return
       }
       // multi: files only
@@ -667,7 +677,34 @@ export function SnippetsRouteViewContent() {
       }
       if (result.ok > 0) clearChecked()
     },
-    [clearChecked, movePicker, t, vfs],
+    [clearChecked, commitSingleMove, movePicker, t, vfs],
+  )
+
+  const treeDrag = useTreeDrag({
+    checkedSize: checked.size,
+    clearChecked,
+    isChecked: useCallback((path: string) => checked.has(path), [checked]),
+    onCommitMove: commitSingleMove,
+  })
+
+  const handleRootDragOver = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (event.target !== event.currentTarget) return
+      if (!treeDrag.isLegalTarget('')) return
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'move'
+    },
+    [treeDrag],
+  )
+
+  const handleRootDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (event.target !== event.currentTarget) return
+      if (!treeDrag.isLegalTarget('')) return
+      event.preventDefault()
+      void treeDrag.onDropTo('')
+    },
+    [treeDrag],
   )
 
   const handleInstallDependency = useCallback(() => {
@@ -865,7 +902,11 @@ export function SnippetsRouteViewContent() {
               ) : null}
             </div>
 
-            <Scroll className="flex-1">
+            <Scroll
+              className="flex-1"
+              onDragOver={handleRootDragOver}
+              onDrop={handleRootDrop}
+            >
               {listQuery.isLoading && !listHasContent ? (
                 <SnippetSkeleton />
               ) : !listHasContent ? (
@@ -890,6 +931,11 @@ export function SnippetsRouteViewContent() {
                     navigate('/snippets/new')
                   }}
                   onDelete={requestDelete}
+                  onDragEnd={treeDrag.endDrag}
+                  onDragStart={treeDrag.startDrag}
+                  onDropTo={(targetPrefix) =>
+                    void treeDrag.onDropTo(targetPrefix)
+                  }
                   onFileContextMenu={handleFileContextMenu}
                   onFocusPath={setFocusedPath}
                   onFolderContextMenu={handleFolderContextMenu}
@@ -903,6 +949,7 @@ export function SnippetsRouteViewContent() {
                   onStartRename={startRename}
                   onToggleFolder={toggleFolder}
                   renamingPath={renamingPath}
+                  shouldAcceptDrop={treeDrag.isLegalTarget}
                   selectedId={
                     typeof selectedId === 'string' && selectedId !== 'new'
                       ? selectedId

@@ -33,6 +33,9 @@ interface SnippetListProps {
   nodes: SnippetTreeNode[]
   onCreateFileInFolder: (prefix: string) => void
   onDelete: (snippet: SnippetModel) => void
+  onDragEnd?: () => void
+  onDragStart?: (path: string, kind: 'file' | 'folder') => void
+  onDropTo?: (targetPrefix: string) => void
   onFileContextMenu?: (snippet: SnippetModel) => void
   onFocusPath?: (path: string) => void
   onFolderContextMenu?: (folder: SnippetTreeFolder) => void
@@ -46,6 +49,7 @@ interface SnippetListProps {
   renamingPath: string | null
   selectedId: string | null
   selectedPrefix: string
+  shouldAcceptDrop?: (targetPrefix: string) => boolean
 }
 
 export function SnippetList(props: SnippetListProps) {
@@ -80,6 +84,8 @@ function SnippetTreeNodeRow(
         multiSelectActive={props.checked.size > 0}
         onContextMenu={props.onFileContextMenu}
         onDelete={() => props.onDelete(fileNode.snippet)}
+        onDragEnd={props.onDragEnd}
+        onDragStart={(path) => props.onDragStart?.(path, 'file')}
         onFocus={() => props.onFocusPath?.(fileNode.path)}
         onOpenExternal={() => props.onOpenExternal(fileNode.snippet)}
         onRenameCancel={props.onRenameCancel}
@@ -102,6 +108,9 @@ function SnippetTreeNodeRow(
       level={props.level}
       onContextMenu={props.onFolderContextMenu}
       onCreateFileInFolder={props.onCreateFileInFolder}
+      onDragEnd={props.onDragEnd}
+      onDragStart={(path) => props.onDragStart?.(path, 'folder')}
+      onDropTo={props.onDropTo}
       onFocus={() => props.onFocusPath?.(props.node.path)}
       onRenameCancel={props.onRenameCancel}
       onRenameCommit={props.onRenameCommit}
@@ -110,6 +119,7 @@ function SnippetTreeNodeRow(
       onToggleFolder={props.onToggleFolder}
       renamingPath={props.renamingPath}
       selected={props.selectedPrefix === props.node.path}
+      shouldAcceptDrop={props.shouldAcceptDrop}
     >
       {expanded
         ? props.node.children.map((child) => (
