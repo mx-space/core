@@ -2,14 +2,19 @@ import { useEffect } from 'react'
 
 import type { SnippetModel } from '~/models/snippet'
 
-import type {
-  SnippetTreeFolder,
-  SnippetTreeNode,
-} from '../components/SnippetList'
+import type { SnippetTreeFolder } from '../components/SnippetList'
+
+export interface TreeFlatVisibleEntry {
+  path: string
+  kind: 'file' | 'folder'
+  folder?: SnippetTreeFolder
+  file?: SnippetModel
+  parentPath: string | null
+}
 
 interface UseTreeKeyboardArgs {
   scopeId: string
-  nodes: SnippetTreeNode[]
+  flatVisible: TreeFlatVisibleEntry[]
   expandedPrefixes: Record<string, boolean>
   focusedPath: string | null
   setFocusedPath: (path: string | null) => void
@@ -20,44 +25,6 @@ interface UseTreeKeyboardArgs {
   onEscape?: () => boolean
   searchInputRef: React.RefObject<HTMLInputElement | null>
   disabled?: boolean
-}
-
-interface VisibleEntry {
-  path: string
-  kind: 'file' | 'folder'
-  folder?: SnippetTreeFolder
-  file?: SnippetModel
-  parentPath: string | null
-}
-
-function flattenVisible(
-  nodes: SnippetTreeNode[],
-  expandedPrefixes: Record<string, boolean>,
-): VisibleEntry[] {
-  const out: VisibleEntry[] = []
-  const visit = (node: SnippetTreeNode, parentPath: string | null) => {
-    if (node.kind === 'file') {
-      out.push({
-        file: node.snippet,
-        kind: 'file',
-        parentPath,
-        path: node.path,
-      })
-      return
-    }
-    out.push({
-      folder: node,
-      kind: 'folder',
-      parentPath,
-      path: node.path,
-    })
-    const expanded = expandedPrefixes[node.path] ?? true
-    if (expanded) {
-      for (const child of node.children) visit(child, node.path)
-    }
-  }
-  for (const node of nodes) visit(node, null)
-  return out
 }
 
 function isTextInputTarget(el: EventTarget | null): boolean {
@@ -72,8 +39,8 @@ export function useTreeKeyboard(args: UseTreeKeyboardArgs): void {
   const {
     disabled,
     expandedPrefixes,
+    flatVisible,
     focusedPath,
-    nodes,
     onDelete,
     onEscape,
     onRename,
@@ -107,7 +74,7 @@ export function useTreeKeyboard(args: UseTreeKeyboardArgs): void {
       // Don't intercept keystrokes inside text inputs.
       if (isTextInputTarget(active)) return
 
-      const visible = flattenVisible(nodes, expandedPrefixes)
+      const visible = flatVisible
       if (visible.length === 0) return
 
       const currentIndex = focusedPath
@@ -198,8 +165,8 @@ export function useTreeKeyboard(args: UseTreeKeyboardArgs): void {
   }, [
     disabled,
     expandedPrefixes,
+    flatVisible,
     focusedPath,
-    nodes,
     onDelete,
     onEscape,
     onRename,

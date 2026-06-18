@@ -38,6 +38,7 @@ const typeIconColorMap: Record<SnippetType, string> = {
 }
 
 interface SnippetFileRowProps {
+  busy?: boolean
   checked: boolean
   focusedPath: string | null
   level: number
@@ -69,6 +70,7 @@ export function SnippetFileRow(props: SnippetFileRowProps) {
 
   return (
     <div
+      aria-busy={props.busy ? 'true' : undefined}
       aria-checked={props.multiSelectActive ? props.checked : undefined}
       aria-level={props.level + 1}
       aria-selected={isFocused}
@@ -123,6 +125,7 @@ export function SnippetFileRow(props: SnippetFileRowProps) {
         <Icon aria-hidden="true" className={cn('size-3 shrink-0', iconColor)} />
         {isRenaming ? (
           <FileRenameField
+            ariaLabel={t('snippets.aria.renaming', { name: fileName })}
             onCancel={props.onRenameCancel}
             onCommit={(draft) => props.onRenameCommit(snippet.path, draft)}
             originalName={fileName}
@@ -191,6 +194,7 @@ export function SnippetFileRow(props: SnippetFileRowProps) {
 }
 
 interface FileRenameFieldProps {
+  ariaLabel: string
   onCancel: () => void
   onCommit: (draft: string) => void
   originalName: string
@@ -221,6 +225,7 @@ function FileRenameField(props: FileRenameFieldProps) {
 
   return (
     <TextInput
+      aria-label={props.ariaLabel}
       autoComplete="off"
       controlClassName="h-7 min-w-0 flex-1 px-1.5 text-sm focus:border-neutral-400 focus:ring-0"
       onBlur={commit}

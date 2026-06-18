@@ -46,6 +46,7 @@ interface SnippetListProps {
   onSelectFolder: (prefix: string) => void
   onStartRename: (path: string) => void
   onToggleFolder: (prefix: string) => void
+  pendingPaths?: Set<string>
   renamingPath: string | null
   selectedId: string | null
   selectedPrefix: string
@@ -78,6 +79,7 @@ function SnippetTreeNodeRow(
     const fileNode = props.node
     return (
       <SnippetFileRow
+        busy={props.pendingPaths?.has(fileNode.path) ?? false}
         checked={props.checked.has(fileNode.path)}
         focusedPath={props.focusedPath ?? null}
         level={props.level}
@@ -102,6 +104,7 @@ function SnippetTreeNodeRow(
   const expanded = props.expandedPrefixes[props.node.path] ?? true
   return (
     <SnippetFolderRow
+      busy={props.pendingPaths?.has(props.node.path) ?? false}
       expanded={expanded}
       focusedPath={props.focusedPath ?? null}
       folder={props.node}

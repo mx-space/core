@@ -15,6 +15,7 @@ import { cn } from '~/utils/cn'
 import type { SnippetTreeFolder } from './SnippetList'
 
 interface SnippetFolderRowProps {
+  busy?: boolean
   children: React.ReactNode
   expanded: boolean
   focusedPath: string | null
@@ -68,6 +69,7 @@ export function SnippetFolderRow(props: SnippetFolderRowProps) {
   return (
     <div>
       <div
+        aria-busy={props.busy ? 'true' : undefined}
         aria-expanded={props.expanded}
         aria-level={props.level + 1}
         aria-selected={isFocused}
@@ -111,7 +113,11 @@ export function SnippetFolderRow(props: SnippetFolderRowProps) {
         tabIndex={isFocused ? 0 : -1}
       >
         <button
-          aria-label={props.expanded ? 'Collapse folder' : 'Expand folder'}
+          aria-label={
+            props.expanded
+              ? t('snippets.aria.collapseFolder')
+              : t('snippets.aria.expandFolder')
+          }
           className="flex size-5 shrink-0 items-center justify-center rounded text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-700"
           onClick={() => {
             props.onFocus?.()
@@ -127,6 +133,7 @@ export function SnippetFolderRow(props: SnippetFolderRowProps) {
         </button>
         {isRenaming ? (
           <FolderRenameField
+            ariaLabel={t('snippets.aria.renaming', { name: folder.name })}
             onCancel={props.onRenameCancel}
             onCommit={(draft) => props.onRenameCommit(folder.path, draft)}
             originalName={folder.name}
@@ -204,6 +211,7 @@ export function SnippetFolderRow(props: SnippetFolderRowProps) {
 }
 
 interface FolderRenameFieldProps {
+  ariaLabel: string
   onCancel: () => void
   onCommit: (draft: string) => void
   originalName: string
@@ -229,6 +237,7 @@ function FolderRenameField(props: FolderRenameFieldProps) {
 
   return (
     <TextInput
+      aria-label={props.ariaLabel}
       autoComplete="off"
       controlClassName="h-7 min-w-0 flex-1 px-1.5 text-sm focus:border-neutral-400 focus:ring-0"
       onBlur={commit}

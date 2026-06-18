@@ -16,6 +16,7 @@ import { inputBaseClassName } from './input-styles'
 type TextInputType = ComponentPropsWithoutRef<'input'>['type']
 
 interface TextInputProps {
+  'aria-label'?: string
   autoComplete?: string
   autoFocus?: boolean
   className?: string
@@ -44,6 +45,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   function TextInput(props, ref) {
     const control = (
       <BaseInput
+        aria-label={props['aria-label']}
         autoComplete={props.autoComplete}
         autoFocus={props.autoFocus}
         className={cn(inputBaseClassName, props.controlClassName)}

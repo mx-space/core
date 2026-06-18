@@ -21,10 +21,8 @@ import {
   deleteSnippet,
   deleteSnippetByPath,
   getSnippets,
-  moveSnippet,
   resetFunctionSnippet,
   type SnippetObject,
-  type SnippetVfsList,
 } from '~/api/snippets'
 import { API_URL } from '~/constants/env'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
@@ -43,8 +41,10 @@ import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
 import { emptySnippet, snippetsQueryKey } from '../constants'
+import { useSnippetRename } from '../hooks/use-snippet-rename'
 import { useSnippetVfs } from '../hooks/use-snippet-vfs'
 import { useTreeDrag } from '../hooks/use-tree-drag'
+import type { TreeFlatVisibleEntry } from '../hooks/use-tree-keyboard'
 import { useTreeKeyboard } from '../hooks/use-tree-keyboard'
 import { useTreeSelection } from '../hooks/use-tree-selection'
 import { getErrorMessage } from '../utils/snippets'
@@ -65,6 +65,7 @@ import {
   flattenVisibleSnippets,
   SnippetList,
   type SnippetTreeFolder,
+  type SnippetTreeNode,
 } from './SnippetList'
 import { basenameOf, SnippetMovePicker } from './SnippetMovePicker'
 import { SnippetsRouteContext } from './snippets-route-context'
@@ -138,13 +139,20 @@ export function SnippetsRouteViewContent() {
   )
   const [folderDraftName, setFolderDraftName] = useState('')
   const [focusedPath, setFocusedPath] = useState<string | null>(null)
-  // Owned by Task 2; consumed by the rename infra (Task 3).
-  const [renamingPath, setRenamingPath] = useState<string | null>(null)
   const [movePicker, setMovePicker] = useState<{
     isFolder: boolean
     paths: string[]
   } | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const rename = useSnippetRename({ queryClient, t })
+  const {
+    cancelRename,
+    commitRename,
+    pendingRenamePath,
+    renamingPath,
+    startRename,
+  } = rename
 
   const listQuery = useQuery({
     placeholderData: (previous) => previous,
@@ -171,6 +179,33 @@ export function SnippetsRouteViewContent() {
     () => flattenVisibleSnippets(displayTreeNodes, expandedPrefixes),
     [displayTreeNodes, expandedPrefixes],
   )
+
+  const treeFlatVisible = useMemo<TreeFlatVisibleEntry[]>(() => {
+    const out: TreeFlatVisibleEntry[] = []
+    const visit = (node: SnippetTreeNode, parentPath: string | null) => {
+      if (node.kind === 'file') {
+        out.push({
+          file: node.snippet,
+          kind: 'file',
+          parentPath,
+          path: node.path,
+        })
+        return
+      }
+      out.push({
+        folder: node,
+        kind: 'folder',
+        parentPath,
+        path: node.path,
+      })
+      const expanded = expandedPrefixes[node.path] ?? true
+      if (expanded) {
+        for (const child of node.children) visit(child, node.path)
+      }
+    }
+    for (const node of displayTreeNodes) visit(node, null)
+    return out
+  }, [displayTreeNodes, expandedPrefixes])
 
   // Lazy-initialize focusedPath once the tree is hydrated: prefer the file
   // matching :id, then the current folder selection, then the first visible
@@ -238,99 +273,6 @@ export function SnippetsRouteViewContent() {
       await invalidateSnippets()
     },
   })
-
-  const vfsQueryKey = adminQueryKeys.snippets.vfs('', true)
-
-  interface RenameMutationVars {
-    from: string
-    isFolder: boolean
-    to: string
-  }
-
-  const renameMutation = useMutation<
-    void,
-    unknown,
-    RenameMutationVars,
-    { previous: SnippetVfsList | undefined }
-  >({
-    mutationFn: ({ from, isFolder, to }) =>
-      moveSnippet({ from, recursive: isFolder, to }),
-    onError: (error, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(vfsQueryKey, context.previous)
-      }
-      toast.error(getErrorMessage(error, t('snippets.toast.renameConflict')))
-    },
-    onMutate: async ({ from, isFolder, to }) => {
-      await queryClient.cancelQueries({ queryKey: vfsQueryKey })
-      const previous = queryClient.getQueryData<SnippetVfsList>(vfsQueryKey)
-      if (previous) {
-        const patched: SnippetVfsList = {
-          ...previous,
-          objects: previous.objects.map((object) => {
-            if (isFolder) {
-              if (object.path.startsWith(from)) {
-                return { ...object, path: to + object.path.slice(from.length) }
-              }
-              return object
-            }
-            if (object.path === from) {
-              return { ...object, path: to }
-            }
-            return object
-          }),
-        }
-        queryClient.setQueryData(vfsQueryKey, patched)
-      }
-      return { previous }
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: vfsQueryKey })
-    },
-    onSuccess: () => {
-      setRenamingPath(null)
-    },
-  })
-
-  const commitRename = useCallback(
-    (path: string, draftRaw: string) => {
-      if (renameMutation.isPending) return
-      const draft = draftRaw.trim()
-      const isFolder = path.endsWith('/')
-      const parentPrefix = isFolder
-        ? getParentPrefix(path.slice(0, -1))
-        : getParentPrefix(path)
-      const originalSegment = isFolder
-        ? path.slice(parentPrefix.length, -1)
-        : path.slice(parentPrefix.length)
-
-      if (!draft) {
-        setRenamingPath(null)
-        return
-      }
-      if (draft.includes('/')) {
-        toast.error(t('snippets.toast.renameInvalid'))
-        return
-      }
-      if (draft === originalSegment) {
-        setRenamingPath(null)
-        return
-      }
-      const to = isFolder
-        ? `${parentPrefix}${draft}/`
-        : `${parentPrefix}${draft}`
-      renameMutation.mutate({ from: path, isFolder, to })
-    },
-    [renameMutation, t],
-  )
-
-  const cancelRename = useCallback(() => {
-    setRenamingPath(null)
-  }, [])
-
-  const startRename = useCallback((path: string) => {
-    setRenamingPath(path)
-  }, [])
 
   const selectSnippet = useCallback(
     (snippet: SnippetModel) => {
@@ -506,7 +448,7 @@ export function SnippetsRouteViewContent() {
         onOpen: () => selectSnippet(snippet),
         onOpenExternal: () =>
           window.open(buildSnippetExternalUrl(snippet), '_blank'),
-        onRename: () => setRenamingPath(snippet.path),
+        onRename: () => startRename(snippet.path),
         onRevealInParent: () => {
           const parent = getParentPrefix(snippet.path)
           setSelectedPrefix(parent)
@@ -567,7 +509,7 @@ export function SnippetsRouteViewContent() {
           navigate('/snippets/new')
         },
         onNewFolder: () => startCreateFolder(folder.path),
-        onRename: () => setRenamingPath(folder.path),
+        onRename: () => startRename(folder.path),
         t,
       })
       showContextMenu(items)
@@ -583,23 +525,52 @@ export function SnippetsRouteViewContent() {
   )
 
   useTreeKeyboard({
-    disabled: renamingPath !== null,
+    disabled: renamingPath !== null || movePicker !== null,
     expandedPrefixes,
+    flatVisible: treeFlatVisible,
     focusedPath,
-    nodes: displayTreeNodes,
     onDelete: handleTreeDelete,
     onEscape: () => {
       if (checked.size === 0) return false
       clearChecked()
       return true
     },
-    onRename: (path) => setRenamingPath(path),
+    onRename: (path) => startRename(path),
     onSelectFile: selectSnippet,
     onToggleExpand: toggleFolder,
     scopeId: FOCUS_SCOPE_ID,
     searchInputRef,
     setFocusedPath,
   })
+
+  const pendingPaths = useMemo(() => {
+    const out = new Set<string>()
+    if (pendingRenamePath) {
+      out.add(pendingRenamePath)
+      if (pendingRenamePath.endsWith('/')) {
+        // optimistic patch already moved descendant paths; still mark prefix busy
+        for (const snippet of snippets) {
+          if (snippet.path.startsWith(pendingRenamePath)) out.add(snippet.path)
+        }
+      }
+    }
+    if (deleteMutation.isPending) {
+      const id = deleteMutation.variables
+      const file = snippets.find((entry) => entry.id === id)
+      if (file) out.add(file.path)
+    }
+    if (deleteFolderMutation.isPending && deleteFolderMutation.variables) {
+      out.add(deleteFolderMutation.variables)
+    }
+    return out
+  }, [
+    deleteFolderMutation.isPending,
+    deleteFolderMutation.variables,
+    deleteMutation.isPending,
+    deleteMutation.variables,
+    pendingRenamePath,
+    snippets,
+  ])
 
   const overflowMenuItems: ContextMenuItem[] = [
     {
@@ -771,6 +742,21 @@ export function SnippetsRouteViewContent() {
                 <TextInput
                   controlClassName="h-8 pl-7 text-sm focus:border-neutral-400 focus:ring-0"
                   onChange={setSearch}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Escape') return
+                    if (search) {
+                      event.preventDefault()
+                      setSearch('')
+                      return
+                    }
+                    event.preventDefault()
+                    searchInputRef.current?.blur()
+                    if (!focusedPath) return
+                    const el = document.querySelector<HTMLElement>(
+                      `[data-tree-path=${CSS.escape(focusedPath)}]`,
+                    )
+                    el?.focus()
+                  }}
                   placeholder={t('snippets.list.searchPlaceholder')}
                   ref={searchInputRef}
                   value={search}
@@ -948,6 +934,7 @@ export function SnippetsRouteViewContent() {
                   onSelectFolder={selectFolder}
                   onStartRename={startRename}
                   onToggleFolder={toggleFolder}
+                  pendingPaths={pendingPaths}
                   renamingPath={renamingPath}
                   shouldAcceptDrop={treeDrag.isLegalTarget}
                   selectedId={
