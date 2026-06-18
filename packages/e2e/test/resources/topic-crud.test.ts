@@ -29,10 +29,7 @@ describe('mxs topic CRUD against real core', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'topic-crud',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   it('creates, lists, gets, updates, and deletes a topic', async () => {
     const slug = `e2e-topic-${Date.now()}`

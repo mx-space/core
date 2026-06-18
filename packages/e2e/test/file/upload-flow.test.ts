@@ -45,10 +45,7 @@ describe('mxs file upload flow against real core', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'file-upload',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   it('uploads a file and returns url + name', async () => {
     const res = await runMxs(

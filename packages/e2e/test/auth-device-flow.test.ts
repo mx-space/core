@@ -19,23 +19,23 @@ describe('mxs auth device flow against real core', () => {
     await backend?.stop()
   })
 
-  it('logs in through the real device flow and persists the target profile', async () => {
+  it('logs in through the real device flow and persists the local-dev profile', async () => {
     const result = await runDeviceFlow(backend, {
-      profile: 'device',
+      profile: 'local-dev',
       tmpHome: tmpHome.path,
     })
 
     expect(result.code).toBe(0)
-    expect(result.stdout).toContain('"profile":"device"')
+    expect(result.stdout).toContain('"profile":"local-dev"')
 
-    const status = await runMxs(['--json', 'auth', 'status'], {
-      XDG_CONFIG_HOME: tmpHome.path,
-      MXS_PROFILE: 'device',
-    })
+    const status = await runMxs(
+      ['--json', 'auth', 'status'],
+      backend.backendEnv(tmpHome.path),
+    )
     expect(status.code).toBe(0)
     expect(parseEnvelope(status.stdout).data).toMatchObject({
       authenticated: true,
-      profile: 'device',
+      profile: 'local-dev',
     })
   }, 90_000)
 })

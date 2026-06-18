@@ -12,11 +12,8 @@ export async function runDeviceFlow(
   })
 
   const spawned = spawnMxs(
-    ['--json', '--api-url', backend.apiBase, 'auth', 'login'],
-    {
-      XDG_CONFIG_HOME: opts.tmpHome,
-      MXS_PROFILE: opts.profile,
-    },
+    ['--json', 'auth', 'login'],
+    backend.backendEnv(opts.tmpHome),
   )
 
   const line = await spawned.waitForStdoutLine((candidate) => {

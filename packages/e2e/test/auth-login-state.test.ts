@@ -13,7 +13,7 @@ describe('mxs auth state commands against real core', () => {
     backend = await createE2EBackend()
     tmpHome = makeTmpHome()
     await seedOwnerAndWriteProfile(backend, {
-      profile: 'auth-state',
+      profile: 'local-dev',
       tmpHome: tmpHome.path,
     })
   }, 90_000)
@@ -23,23 +23,20 @@ describe('mxs auth state commands against real core', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'auth-state',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   it('reports status, whoami, and logout state', async () => {
     const status = await runMxs(['--json', 'auth', 'status'], env())
     expect(status.code, status.stderr || status.stdout).toBe(0)
     expect(parseEnvelope(status.stdout).data).toMatchObject({
       authenticated: true,
-      profile: 'auth-state',
+      profile: 'local-dev',
     })
 
     const whoami = await runMxs(['--json', 'auth', 'whoami'], env())
     expect(whoami.code, whoami.stderr || whoami.stdout).toBe(0)
     expect(parseEnvelope(whoami.stdout).data).toMatchObject({
-      profile: 'auth-state',
+      profile: 'local-dev',
     })
 
     const logout = await runMxs(['--json', 'auth', 'logout'], env())
@@ -49,7 +46,7 @@ describe('mxs auth state commands against real core', () => {
     expect(loggedOut.code, loggedOut.stderr || loggedOut.stdout).toBe(0)
     expect(parseEnvelope(loggedOut.stdout).data).toMatchObject({
       authenticated: false,
-      profile: 'auth-state',
+      profile: 'local-dev',
     })
   }, 60_000)
 })

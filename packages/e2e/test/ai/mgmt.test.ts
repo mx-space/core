@@ -35,10 +35,7 @@ describe('mxs ai management against real core', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'ai-mgmt',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   describe('summary', () => {
     it('list includes seeded summary', async () => {

@@ -31,10 +31,7 @@ describe('mxs post CRUD against real core', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'post-crud',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   it('creates, lists, gets, updates, and deletes a post', async () => {
     const category = await runMxs(

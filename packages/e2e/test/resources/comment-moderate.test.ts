@@ -37,10 +37,7 @@ describe('mxs comment moderation against real core', () => {
         '--slug',
         catSlug,
       ],
-      {
-        XDG_CONFIG_HOME: tmpHome.path,
-        MXS_PROFILE: 'comment-moderate',
-      },
+      backend.backendEnv(tmpHome.path),
     )
     if (catResult.code !== 0) {
       throw new Error(
@@ -64,10 +61,7 @@ describe('mxs comment moderation against real core', () => {
         '--content',
         'target post for comment tests',
       ],
-      {
-        XDG_CONFIG_HOME: tmpHome.path,
-        MXS_PROFILE: 'comment-moderate',
-      },
+      backend.backendEnv(tmpHome.path),
     )
     if (postResult.code !== 0) {
       throw new Error(
@@ -82,10 +76,7 @@ describe('mxs comment moderation against real core', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'comment-moderate',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   const submitGuestComment = async (text: string): Promise<string> => {
     const res = await backend.app.inject({

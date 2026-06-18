@@ -13,12 +13,12 @@ describe('mxs profile commands against real profile files', () => {
     backend = await createE2EBackend()
     tmpHome = makeTmpHome()
     await seedOwnerAndWriteProfile(backend, {
-      profile: 'one',
       tmpHome: tmpHome.path,
+      forceProfileName: 'one',
     })
     await seedOwnerAndWriteProfile(backend, {
-      profile: 'two',
       tmpHome: tmpHome.path,
+      forceProfileName: 'two',
     })
   }, 90_000)
 

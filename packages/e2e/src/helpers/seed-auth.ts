@@ -9,6 +9,13 @@ import { API_VERSION } from '~/app.config'
 import { ownerFixture } from '../fixtures/owner'
 import type { E2EBackend } from './e2e-app'
 
+// The CLI's `local-dev` endpoint mode (Config.ts `useLocalDevEndpoint`) is
+// what skips the production `/api/v<N>` route prefix that the server only
+// mounts in non-dev mode. The harness boots core in dev mode (route prefix
+// = '') so credentials are always written under the synthetic `local-dev`
+// profile name regardless of what callers pass for `opts.profile`.
+const LOCAL_DEV_PROFILE = 'local-dev'
+
 export interface SeededOwner {
   email: string
   password: string
@@ -20,7 +27,17 @@ export interface SeededOwner {
 
 export async function seedOwnerAndWriteProfile(
   backend: E2EBackend,
-  opts: { profile: string; tmpHome: string; suffix?: string },
+  opts: {
+    profile?: string
+    tmpHome: string
+    suffix?: string
+    /**
+     * Override the on-disk profile directory name. Defaults to the synthetic
+     * `local-dev` profile used by `MXS_CLI_LOCAL_DEV` mode; profile-switch
+     * specs need real per-profile dirs and pass their own names.
+     */
+    forceProfileName?: string
+  } = { tmpHome: '' },
 ): Promise<SeededOwner> {
   const suffix = opts.suffix ?? randomUUID().replaceAll('-', '').slice(0, 8)
   const userId = `usr_${suffix}`
@@ -70,8 +87,8 @@ export async function seedOwnerAndWriteProfile(
     throw new Error(`failed to mint owner bearer token for ${username}`)
   }
 
-  writeProfile(opts.tmpHome, opts.profile, {
-    apiUrl: backend.apiBase,
+  writeProfile(opts.tmpHome, opts.forceProfileName ?? LOCAL_DEV_PROFILE, {
+    apiUrl: backend.siteUrl,
     token,
     user: {
       id: userId,

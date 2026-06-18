@@ -23,10 +23,7 @@ describe('mxs config read-write against real core', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'config-rw',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   it('lists config keys', async () => {
     const result = await runMxs(['--json', 'config', 'list'], env())

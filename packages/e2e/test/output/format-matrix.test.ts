@@ -60,10 +60,7 @@ describe('mxs output format matrix', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'format-matrix',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   it('auth status × all modes', async () => {
     await runAcrossModes(

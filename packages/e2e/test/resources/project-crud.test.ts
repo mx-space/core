@@ -29,10 +29,7 @@ describe('mxs project CRUD against real core', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'project-crud',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   it('creates, lists, gets, updates, and deletes a project', async () => {
     const name = `E2E Project ${Date.now()}`

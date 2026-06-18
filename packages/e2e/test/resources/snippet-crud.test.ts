@@ -29,10 +29,7 @@ describe('mxs snippet CRUD against real core', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'snippet-crud',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   it('creates, lists, gets, updates, and deletes a text snippet', async () => {
     const name = `e2e-snippet-${Date.now()}`

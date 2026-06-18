@@ -16,6 +16,7 @@ export interface E2EBackend {
   port: number
   siteUrl: string
   apiBase: string
+  backendEnv: (tmpHomePath: string) => Record<string, string>
   app: NestFastifyApplication
   authApi: Record<string, any>
   pgUri: string
@@ -86,6 +87,13 @@ export async function createE2EBackend(): Promise<E2EBackend> {
     port: address.port,
     siteUrl,
     apiBase,
+    backendEnv(tmpHomePath: string): Record<string, string> {
+      return {
+        XDG_CONFIG_HOME: tmpHomePath,
+        MXS_CLI_LOCAL_DEV: '1',
+        MXS_CLI_LOCAL_DEV_API_URL: siteUrl,
+      }
+    },
     app,
     authApi: authHolder.get().api,
     pgUri,

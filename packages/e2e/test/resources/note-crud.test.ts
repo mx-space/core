@@ -29,10 +29,7 @@ describe('mxs note CRUD against real core', () => {
     await backend?.stop()
   })
 
-  const env = () => ({
-    XDG_CONFIG_HOME: tmpHome.path,
-    MXS_PROFILE: 'note-crud',
-  })
+  const env = () => backend.backendEnv(tmpHome.path)
 
   it('creates, lists, gets, updates, and deletes a note', async () => {
     const slug = `e2e-note-${Date.now()}`
