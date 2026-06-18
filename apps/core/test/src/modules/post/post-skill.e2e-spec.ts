@@ -2,6 +2,7 @@ import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { describe, expect, it, vi } from 'vitest'
 
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
@@ -13,12 +14,14 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 
 const SERVER_URL = 'http://localhost:2333'
+const PUBLIC_SKILL_RAW_URL = `${SERVER_URL}${apiRoutePrefix}/s/sk/public-skill`
+const PRIVATE_SKILL_RAW_URL = `${SERVER_URL}${apiRoutePrefix}/s/sk/private-skill`
 
 const publicSkill = {
   id: 'pub-1',
   name: 'public-skill',
   description: 'A public skill',
-  rawUrl: `${SERVER_URL}/api/v3/s/sk/public-skill`,
+  rawUrl: PUBLIC_SKILL_RAW_URL,
   raw: '---\nname: public-skill\ndescription: A public skill\n---\nbody',
 }
 
@@ -26,7 +29,7 @@ const privateSkill = {
   id: 'priv-2',
   name: 'private-skill',
   description: 'A private skill',
-  rawUrl: `${SERVER_URL}/api/v3/s/sk/private-skill`,
+  rawUrl: PRIVATE_SKILL_RAW_URL,
   raw: '---\nname: private-skill\ndescription: A private skill\n---\nbody',
 }
 
@@ -170,9 +173,7 @@ describe('PostController — skill attachment (getByCateAndSlug)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
-      expect(body.data.skills[0].raw_url).toBe(
-        `${SERVER_URL}/api/v3/s/sk/public-skill`,
-      )
+      expect(body.data.skills[0].raw_url).toBe(PUBLIC_SKILL_RAW_URL)
     })
   })
 
@@ -259,9 +260,7 @@ describe('PostController — skill attachment (getById)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
-      expect(body.data.skills[0].raw_url).toBe(
-        `${SERVER_URL}/api/v3/s/sk/public-skill`,
-      )
+      expect(body.data.skills[0].raw_url).toBe(PUBLIC_SKILL_RAW_URL)
     })
   })
 

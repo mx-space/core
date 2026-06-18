@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AppException } from '~/common/errors/exception.types'
 import type {
   SnippetRepository,
@@ -328,7 +329,9 @@ describe('SnippetService.findSkillsByIds', () => {
 
     const result = await service.findSkillsByIds(['1'])
 
-    expect(result[0].rawUrl).toBe('https://example.com/api/v3/s/sk/my-skill')
+    expect(result[0].rawUrl).toBe(
+      `https://example.com${apiRoutePrefix}/s/sk/my-skill`,
+    )
   })
 
   it('strips trailing slash from serverUrl before building rawUrl', async () => {
@@ -338,7 +341,9 @@ describe('SnippetService.findSkillsByIds', () => {
 
     const result = await service.findSkillsByIds(['1'])
 
-    expect(result[0].rawUrl).toBe('https://example.com/api/v3/s/sk/my-skill')
+    expect(result[0].rawUrl).toBe(
+      `https://example.com${apiRoutePrefix}/s/sk/my-skill`,
+    )
   })
 
   it('falls back to relative url when serverUrl is empty', async () => {
@@ -348,7 +353,7 @@ describe('SnippetService.findSkillsByIds', () => {
 
     const result = await service.findSkillsByIds(['1'])
 
-    expect(result[0].rawUrl).toBe('/api/v3/s/sk/my-skill')
+    expect(result[0].rawUrl).toBe(`${apiRoutePrefix}/s/sk/my-skill`)
   })
 })
 
