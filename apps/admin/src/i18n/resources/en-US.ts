@@ -2335,6 +2335,7 @@ export const enUS = {
   'snippets.toast.moved': 'Moved to {target}',
   'snippets.toast.movedN': 'Moved {count} items',
   'snippets.toast.movedPartial': 'Moved {ok} of {total}; {failed} failed',
+  'snippets.toast.moveFailed': 'Move failed',
   'snippets.move.title': 'Move to…',
   'snippets.move.placeholder': 'Target path, e.g. ai/skills/',
   'snippets.move.root': '/ (root)',

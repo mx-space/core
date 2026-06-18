@@ -642,9 +642,9 @@ export function SnippetsRouteViewContent() {
           await vfs.move({ from, recursive: isFolder, to })
           toast.success(t('snippets.toast.moved', { target: targetPrefix }))
         } catch (error) {
-          toast.error(
-            getErrorMessage(error, t('snippets.toast.renameConflict')),
-          )
+          toast.error(getErrorMessage(error, t('snippets.toast.moveFailed')))
+          // Re-throw so the picker stays open for retry.
+          throw error
         }
         return
       }

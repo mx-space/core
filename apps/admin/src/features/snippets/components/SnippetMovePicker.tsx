@@ -151,9 +151,12 @@ export function SnippetMovePicker(props: SnippetMovePickerProps) {
     setSubmitting(true)
     try {
       await onCommit(prefix)
+      onClose()
+    } catch {
+      // Keep picker open on hard failure so the user can adjust the target
+      // and retry. The route surfaces the toast.
     } finally {
       setSubmitting(false)
-      onClose()
     }
   }
 
@@ -236,9 +239,7 @@ export function SnippetMovePicker(props: SnippetMovePickerProps) {
               }}
               type="button"
             >
-              <span className="truncate font-mono text-xs">
-                {row.isRoot ? row.label : row.label}
-              </span>
+              <span className="truncate font-mono text-xs">{row.label}</span>
               {index === highlight && !row.illegal ? (
                 <CornerDownLeft
                   aria-hidden="true"

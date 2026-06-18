@@ -2225,6 +2225,7 @@ export const zhCN = {
   'snippets.toast.moved': '已移动至 {target}',
   'snippets.toast.movedN': '已移动 {count} 项',
   'snippets.toast.movedPartial': '已移动 {ok}/{total}；{failed} 项失败',
+  'snippets.toast.moveFailed': '移动失败',
   'snippets.move.title': '移动到…',
   'snippets.move.placeholder': '目标路径，如 ai/skills/',
   'snippets.move.root': '/ (根目录)',
