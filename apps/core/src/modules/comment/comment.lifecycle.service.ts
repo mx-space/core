@@ -382,11 +382,10 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const model = await this.commentService.findById(id)
     if (!model) return
 
-    const fnModel =
-      await this.serverlessService.repository.findFunctionByNameReference(
-        'ip',
-        'built-in',
-      )
+    const fnModel = await this.serverlessService.repository.findFunctionByPath(
+      'built-in/ip',
+      'GET',
+    )
 
     if (!fnModel) {
       this.logger.error('[Serverless Fn] ip query function is missing.')

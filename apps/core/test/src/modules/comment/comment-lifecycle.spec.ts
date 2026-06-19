@@ -25,7 +25,7 @@ const createService = () => {
   }
   const serverlessService = {
     repository: {
-      findFunctionByNameReference: vi.fn().mockResolvedValue({ id: 'fn-1' }),
+      findFunctionByPath: vi.fn().mockResolvedValue({ id: 'fn-1' }),
     },
     injectContextIntoServerlessFunctionAndCall: vi.fn().mockResolvedValue({
       countryName: 'CN',

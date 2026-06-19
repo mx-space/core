@@ -55,16 +55,14 @@ export class DebugController {
   ) {
     const model: SnippetRow = {
       id: '' as any,
-      name: 'debug',
+      path: 'root/debug',
       raw: functionString,
       private: false,
       type: SnippetType.Function,
-      reference: 'root',
       comment: null,
       metatype: null,
       schema: null,
       method: null,
-      customPath: null,
       secret: null,
       enable: true,
       builtIn: false,

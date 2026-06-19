@@ -53,6 +53,18 @@ type ScopeContext = {
   hasAdminAccess: boolean
 }
 
+const splitSnippetPath = (raw: string): { reference: string; name: string } => {
+  const path = raw.replaceAll(/^\/+|\/+$/g, '')
+  const slash = path.indexOf('/')
+  if (slash < 0) return { reference: '', name: path }
+  return { reference: path.slice(0, slash), name: path.slice(slash + 1) }
+}
+
+const joinSnippetPath = (reference: string, name: string): string => {
+  if (!reference) return name
+  return `${reference}/${name}`
+}
+
 @Injectable()
 export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   private readonly logger: Logger
@@ -275,7 +287,10 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     context: ScopeContext,
   ): Promise<any> {
     const { raw: functionString } = model
-    const scope = `${model.reference}/${model.name}`
+    const scope = model.path
+    const { reference: modelReference, name: modelName } = splitSnippetPath(
+      model.path,
+    )
 
     let compiledCode = model.compiledCode ?? undefined
     if (!compiledCode) {
@@ -330,8 +345,8 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
       secret: secretObj as Record<string, unknown>,
       model: {
         id: model.id ?? '',
-        name: model.name,
-        reference: model.reference,
+        name: modelName,
+        reference: modelReference,
       },
     }
 
@@ -377,10 +392,11 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     context: ScopeContext,
     result: SandboxResult,
   ) {
+    const { reference, name } = splitSnippetPath(model.path)
     await this.logRepository.record({
       functionId: model.id || null,
-      reference: model.reference,
-      name: model.name,
+      reference,
+      name,
       method: context.req.method,
       ip: context.req.ip,
       status: result.success ? 'success' : 'error',
@@ -445,25 +461,20 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async pourBuiltInFunctions() {
-    const paths = [] as string[]
-    const references = new Set<string>()
+    const combinedPaths: string[] = []
     const pathCodeMap = new Map<string, BuiltInFunctionObject>()
     for (const s of builtInSnippets) {
-      paths.push(s.path)
-      pathCodeMap.set(s.path, s)
-      if (s.reference) {
-        references.add(s.reference)
-      }
+      const combined = joinSnippetPath(s.reference || 'built-in', s.path)
+      combinedPaths.push(combined)
+      pathCodeMap.set(combined, s)
     }
 
-    const result = await this.snippetRepository.findFunctionsByNamesReferences(
-      paths,
-      ['built-in', ...Array.from(references.values())],
-    )
+    const result =
+      await this.snippetRepository.findFunctionsByPaths(combinedPaths)
 
-    const migrationTasks = [] as Promise<any>[]
+    const migrationTasks: Promise<any>[] = []
     for (const doc of result) {
-      pathCodeMap.delete(doc.name)
+      pathCodeMap.delete(doc.path)
 
       if (!doc.builtIn) {
         migrationTasks.push(
@@ -473,13 +484,12 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     }
     await Promise.all(migrationTasks)
 
-    for (const [path, { code, method, name, reference }] of pathCodeMap) {
+    for (const [combinedPath, { code, method, name }] of pathCodeMap) {
       this.logger.log(`pour built-in function: ${name}`)
       const compiledCode = await this.compileTypescriptCode(code)
       await this.snippetRepository.create({
         type: SnippetType.Function,
-        name: path,
-        reference: reference || 'built-in',
+        path: combinedPath,
         raw: code,
         compiledCode: compiledCode ?? null,
         method: method || 'get',
@@ -494,12 +504,12 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     const document = await this.snippetRepository.findById(id)
     if (!document) return false
     const isBuiltin = document.type == SnippetType.Function && document.builtIn
-    return isBuiltin
-      ? {
-          name: document.name,
-          reference: document.reference || 'built-in',
-        }
-      : false
+    if (!isBuiltin) return false
+    const { reference, name } = splitSnippetPath(document.path)
+    return {
+      name,
+      reference: reference || 'built-in',
+    }
   }
 
   async resetBuiltInFunction(model: { name: string; reference: string }) {
@@ -512,10 +522,13 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     }
 
     const compiledCode = await this.compileTypescriptCode(builtInSnippet.code)
-    await this.snippetRepository.updateByName(name, {
-      raw: builtInSnippet.code,
-      compiledCode: compiledCode ?? null,
-    })
+    await this.snippetRepository.updateByPath(
+      joinSnippetPath(reference, name),
+      {
+        raw: builtInSnippet.code,
+        compiledCode: compiledCode ?? null,
+      },
+    )
   }
 }
 

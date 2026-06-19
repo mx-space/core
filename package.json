@@ -21,6 +21,7 @@
     "build": "pnpm -C \"apps/core\" run build",
     "dev": "pnpm -C \"apps/core\" run dev",
     "bundle": "pnpm -C \"apps/core\" run bundle",
+    "e2e": "pnpm -C \"packages/e2e\" run test",
     "test": "pnpm -C \"apps/core\" run test",
     "lint": "pnpm -C \"apps/core\" run lint",
     "typecheck": "pnpm check:controller-response-envelope && pnpm check:validate-false-paired && pnpm -C \"apps/core\" run typecheck",

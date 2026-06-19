@@ -73,12 +73,11 @@ export class AggregateController {
       .map((s) => s.trim())
       .filter(Boolean)
     for (const candidate of candidates) {
-      const baseConfig = await this.getSnippetData('theme', candidate)
+      const baseConfig = await this.getSnippetData(`theme/${candidate}`)
       if (!baseConfig) continue
       if (!lang) return baseConfig
       const langOverlay = await this.getSnippetData(
-        'theme',
-        `${candidate}.${lang}`,
+        `theme/${candidate}.${lang}`,
       )
       if (
         !langOverlay ||
@@ -169,17 +168,16 @@ export class AggregateController {
     return translationMeta
   }
 
-  private async getSnippetData(reference: string, name: string) {
-    const cached = await this.snippetService.getCachedSnippet(
-      reference,
-      name,
+  private async getSnippetData(path: string) {
+    const cached = await this.snippetService.getCachedSnippetByPath(
+      path,
       'public',
     )
     if (cached) {
       return JSON.safeParse(cached) || cached
     }
     try {
-      return await this.snippetService.getPublicSnippetByName(name, reference)
+      return await this.snippetService.getPublicSnippetByPath(path)
     } catch {
       return null
     }

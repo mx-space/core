@@ -139,7 +139,7 @@ const createController = (
     } as any,
     {
       getCachedSnippet: vi.fn(async () => null),
-      getPublicSnippetByName: vi.fn(async () => null),
+      getPublicSnippetByPath: vi.fn(async () => null),
     } as any,
     {
       getOwner: vi.fn(async () => ({ id: '1', name: 'Owner', socialIds: {} })),
@@ -170,7 +170,7 @@ describe('AggregateController', () => {
       { getLatestNoteId: vi.fn(async () => 17) } as any,
       {
         getCachedSnippet: vi.fn(async () => null),
-        getPublicSnippetByName: vi.fn(async () => null),
+        getPublicSnippetByPath: vi.fn(async () => null),
       } as any,
       {
         getOwner: vi.fn(async () => ({
@@ -191,9 +191,8 @@ describe('AggregateController', () => {
 
 describe('AggregateController.aggregate theme fallback', () => {
   const buildController = (snippets: Record<string, unknown>) => {
-    const getPublicSnippetByName = vi.fn(async (name: string, ref: string) => {
-      const key = `${ref}/${name}`
-      if (key in snippets) return snippets[key]
+    const getPublicSnippetByPath = vi.fn(async (path: string) => {
+      if (path in snippets) return snippets[path]
       throw new Error('not found')
     })
 
@@ -212,8 +211,8 @@ describe('AggregateController.aggregate theme fallback', () => {
         {} as any,
         { getLatestNoteId: vi.fn(async () => 1) } as any,
         {
-          getCachedSnippet: vi.fn(async () => null),
-          getPublicSnippetByName,
+          getCachedSnippetByPath: vi.fn(async () => null),
+          getPublicSnippetByPath,
         } as any,
         {
           getOwner: vi.fn(async () => ({ id: '1', name: 'o', socialIds: {} })),
@@ -221,15 +220,15 @@ describe('AggregateController.aggregate theme fallback', () => {
         {} as any,
         {} as any,
       ),
-      getPublicSnippetByName,
+      getPublicSnippetByPath,
     }
   }
 
   it('returns undefined when no theme requested', async () => {
-    const { controller, getPublicSnippetByName } = buildController({})
+    const { controller, getPublicSnippetByPath } = buildController({})
     const res = await controller.aggregate({} as any)
     expect(res.theme).toBeUndefined()
-    expect(getPublicSnippetByName).not.toHaveBeenCalled()
+    expect(getPublicSnippetByPath).not.toHaveBeenCalled()
   })
 
   it('returns single theme config when found', async () => {
@@ -250,19 +249,19 @@ describe('AggregateController.aggregate theme fallback', () => {
   })
 
   it('falls back to second candidate when first is missing', async () => {
-    const { controller, getPublicSnippetByName } = buildController({
+    const { controller, getPublicSnippetByPath } = buildController({
       'theme/default': { color: 'blue' },
     })
     const res = await controller.aggregate({
       theme: 'shiro|default',
     } as any)
     expect(res.theme).toEqual({ color: 'blue' })
-    expect(getPublicSnippetByName).toHaveBeenCalledWith('shiro', 'theme')
-    expect(getPublicSnippetByName).toHaveBeenCalledWith('default', 'theme')
+    expect(getPublicSnippetByPath).toHaveBeenCalledWith('theme/shiro')
+    expect(getPublicSnippetByPath).toHaveBeenCalledWith('theme/default')
   })
 
   it('uses first hit and skips remaining candidates', async () => {
-    const { controller, getPublicSnippetByName } = buildController({
+    const { controller, getPublicSnippetByPath } = buildController({
       'theme/shiro': { color: 'red' },
       'theme/default': { color: 'blue' },
     })
@@ -270,14 +269,14 @@ describe('AggregateController.aggregate theme fallback', () => {
       theme: 'shiro|default|fallback',
     } as any)
     expect(res.theme).toEqual({ color: 'red' })
-    const names = getPublicSnippetByName.mock.calls.map((c) => c[0])
-    expect(names).toContain('shiro')
-    expect(names).not.toContain('default')
-    expect(names).not.toContain('fallback')
+    const names = getPublicSnippetByPath.mock.calls.map((c) => c[0])
+    expect(names).toContain('theme/shiro')
+    expect(names).not.toContain('theme/default')
+    expect(names).not.toContain('theme/fallback')
   })
 
   it('applies lang overlay scoped to the matched candidate', async () => {
-    const { controller, getPublicSnippetByName } = buildController({
+    const { controller, getPublicSnippetByPath } = buildController({
       'theme/default': { color: 'blue', title: 'zh' },
       'theme/default.ja': { title: 'ja' },
       'theme/shiro.ja': { title: 'shouldNotUse' },
@@ -287,8 +286,8 @@ describe('AggregateController.aggregate theme fallback', () => {
       'ja',
     )
     expect(res.theme).toEqual({ color: 'blue', title: 'ja' })
-    const calls = getPublicSnippetByName.mock.calls.map((c) => c[0])
-    expect(calls).not.toContain('shiro.ja')
+    const calls = getPublicSnippetByPath.mock.calls.map((c) => c[0])
+    expect(calls).not.toContain('theme/shiro.ja')
   })
 
   it('returns undefined when all candidates miss', async () => {
