@@ -1,4 +1,11 @@
-# [](https://github.com/mx-space/core/compare/v13.10.10...v) (2026-06-19)
+# [13.11.1](https://github.com/mx-space/core/compare/v13.11.0...v13.11.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* **translation:** honor empty-source signal so truncated list snapshots re-verify from DB ([d5f322b](https://github.com/mx-space/core/commit/d5f322b18eb5b91d662489c015f7fb6dbb495b9c))
+
+# [13.11.0](https://github.com/mx-space/core/compare/v13.10.10...v13.11.0) (2026-06-19)
 
 
 ### Features
