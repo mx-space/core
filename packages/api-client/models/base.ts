@@ -76,14 +76,50 @@ export interface SummaryMeta {
   createdAt: string
 }
 
-export interface ResponseMeta {
+export interface SkillAssetView {
+  path: string
+  rawUrl: string
+  type: string
+  size: number
+}
+
+export interface SkillBundleView {
+  id: string
+  name: string
+  description: string
+  rawUrl: string
+  assets: SkillAssetView[]
+}
+
+export interface BaseResponseMeta {
   pagination?: PaginationMeta
   view?: string
   translation?: EntryTranslation | Record<string, EntryTranslation>
   interaction?: InteractionMeta | Record<string, InteractionMeta>
   enrichments?: Record<string, EnrichmentResult>
+}
+
+export interface PostResponseMeta extends BaseResponseMeta {
+  insights?: InsightsMeta
+  related?: RelatedRef[]
+  articles?: Record<string, RelatedRef>
+  summary?: SummaryMeta
+  skills?: SkillBundleView[]
+}
+
+export interface NoteResponseMeta extends BaseResponseMeta {
+  insights?: InsightsMeta
+  summary?: SummaryMeta
+}
+
+/**
+ * @deprecated Use `BaseResponseMeta`, `PostResponseMeta`, or
+ * `NoteResponseMeta` from `@mx-space/api-client` instead.
+ */
+export interface ResponseMeta extends BaseResponseMeta {
   related?: RelatedRef[]
   articles?: Record<string, RelatedRef>
   insights?: InsightsMeta
   summary?: SummaryMeta
+  skills?: SkillBundleView[]
 }

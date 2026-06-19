@@ -115,7 +115,7 @@ describe('SnippetService — Skill type', () => {
   })
 })
 
-describe('SnippetService.findSkillsByIds', () => {
+describe('SnippetService.findSkillBundlesByIds', () => {
   it('preserves input order and derives names from paths', async () => {
     const { service, repository } = createService()
     const row1 = createSnippet({
@@ -129,8 +129,9 @@ describe('SnippetService.findSkillsByIds', () => {
       comment: 'B',
     })
     repository.findSkillsByIds.mockResolvedValue([row2, row1])
+    repository.findAssetsByDirs.mockResolvedValue([])
 
-    const result = await service.findSkillsByIds(['1', '2'])
+    const result = await service.findSkillBundlesByIds(['1', '2'])
 
     expect(result.map((r) => r.name)).toEqual(['skill-a', 'skill-b'])
   })
@@ -138,8 +139,9 @@ describe('SnippetService.findSkillsByIds', () => {
   it('builds rawUrl from serverUrl and points at the SKILL.md leaf', async () => {
     const { service, repository } = createService('https://example.com/api/v3/')
     repository.findSkillsByIds.mockResolvedValue([createSnippet()])
+    repository.findAssetsByDirs.mockResolvedValue([])
 
-    const result = await service.findSkillsByIds(['1'])
+    const result = await service.findSkillBundlesByIds(['1'])
 
     expect(result[0].rawUrl).toBe(
       'https://example.com/api/v3/s/sk/my-skill/SKILL.md',
@@ -149,9 +151,137 @@ describe('SnippetService.findSkillsByIds', () => {
   it('falls back to a relative SKILL.md url when serverUrl is empty', async () => {
     const { service, repository } = createService('')
     repository.findSkillsByIds.mockResolvedValue([createSnippet()])
+    repository.findAssetsByDirs.mockResolvedValue([])
 
-    const result = await service.findSkillsByIds(['1'])
+    const result = await service.findSkillBundlesByIds(['1'])
 
     expect(result[0].rawUrl).toBe('/s/sk/my-skill/SKILL.md')
+  })
+
+  it('groups asset rows under the right bundle dir', async () => {
+    const { service, repository } = createService('https://example.com')
+    const root = createSnippet({
+      id: '1' as any,
+      path: 'sk/my-skill/SKILL.md',
+    })
+    const asset1 = createSnippet({
+      id: '2' as any,
+      type: SnippetType.Text,
+      path: 'sk/my-skill/references/foo.md',
+      raw: 'asset body',
+      comment: null,
+    })
+    const asset2 = createSnippet({
+      id: '3' as any,
+      type: SnippetType.JSON,
+      path: 'sk/my-skill/config.json',
+      raw: '{}',
+      comment: null,
+    })
+    repository.findSkillsByIds.mockResolvedValue([root])
+    repository.findAssetsByDirs.mockResolvedValue([asset2, asset1])
+
+    const result = await service.findSkillBundlesByIds(['1'])
+
+    expect(result).toHaveLength(1)
+    expect(result[0].assets.map((a) => a.path)).toEqual([
+      'config.json',
+      'references/foo.md',
+    ])
+    expect(result[0].assets[0].rawUrl).toBe(
+      'https://example.com/s/sk/my-skill/config.json',
+    )
+    expect(result[0].assets[1].size).toBe(
+      Buffer.byteLength('asset body', 'utf8'),
+    )
+  })
+
+  it('passes includePrivate flag through to both repository calls', async () => {
+    const { service, repository } = createService()
+    repository.findSkillsByIds.mockResolvedValue([createSnippet()])
+    repository.findAssetsByDirs.mockResolvedValue([])
+
+    await service.findSkillBundlesByIds(['1'], { includePrivate: true })
+
+    expect(repository.findSkillsByIds).toHaveBeenCalledWith(['1'], true)
+    expect(repository.findAssetsByDirs).toHaveBeenCalledWith(['sk/my-skill'], {
+      includePrivate: true,
+    })
+  })
+})
+
+describe('SnippetService.importSnippets', () => {
+  it('returns early with empty totals when there are no inputs', async () => {
+    const { service, repository } = createService()
+
+    const result = await service.importSnippets([])
+
+    expect(result).toEqual({ created: 0, updated: 0, snippets: [] })
+    expect(repository.upsertManyByPath).not.toHaveBeenCalled()
+  })
+
+  it('prepares every input before calling upsertManyByPath', async () => {
+    const { service, repository } = createService()
+    const created = createSnippet({
+      id: '1' as any,
+      type: SnippetType.JSON,
+      path: 'cfg/a.json',
+      raw: '{"a":1}',
+      comment: null,
+    })
+    repository.upsertManyByPath.mockResolvedValue({
+      created: 1,
+      updated: 0,
+      snippets: [created],
+    })
+
+    const result = await service.importSnippets([
+      { type: SnippetType.JSON, raw: '{"a":1}', path: 'cfg/a.json' },
+    ])
+
+    expect(repository.upsertManyByPath).toHaveBeenCalledTimes(1)
+    const call = repository.upsertManyByPath.mock.calls[0][0]
+    expect(call[0]).toMatchObject({
+      type: SnippetType.JSON,
+      path: 'cfg/a.json',
+    })
+    expect(result.created).toBe(1)
+    expect(result.updated).toBe(0)
+    expect(result.snippets).toHaveLength(1)
+  })
+
+  it('throws synchronously when any input fails validation; repo is not touched', async () => {
+    const { service, repository } = createService()
+
+    await expect(
+      service.importSnippets([
+        { type: SnippetType.JSON, raw: '{"a":1}', path: 'cfg/a.json' },
+        { type: SnippetType.JSON, raw: 'not-json', path: 'cfg/b.json' },
+      ]),
+    ).rejects.toThrow(AppException)
+
+    expect(repository.upsertManyByPath).not.toHaveBeenCalled()
+  })
+
+  it('invalidates the snippet cache for each affected path after a successful import', async () => {
+    const { service, repository, redis } = createService()
+    const row = createSnippet({
+      id: '1' as any,
+      type: SnippetType.JSON,
+      path: 'cfg/a.json',
+      raw: '{}',
+      comment: null,
+    })
+    repository.upsertManyByPath.mockResolvedValue({
+      created: 0,
+      updated: 1,
+      snippets: [row],
+    })
+
+    await service.importSnippets([
+      { type: SnippetType.JSON, raw: '{}', path: 'cfg/a.json' },
+    ])
+
+    expect(redis.hdel).toHaveBeenCalled()
   })
 })

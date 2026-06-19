@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { SkillBundleViewSchema } from '~/modules/snippet/snippet.views'
+
 export const PaginationSchema = z.object({
   page: z.number().int().positive(),
   size: z.number().int().positive(),
@@ -112,7 +114,7 @@ export const SummaryMetaSchema = z
   })
   .strict()
 
-export const ResponseMetaSchema = z.object({
+export const BaseResponseMetaSchema = z.object({
   pagination: PaginationSchema.optional(),
   view: z.string().optional(),
   translation: z
@@ -125,11 +127,28 @@ export const ResponseMetaSchema = z.object({
     .union([InteractionMetaSchema, z.record(z.string(), InteractionMetaSchema)])
     .optional(),
   enrichments: z.record(z.string().url(), EnrichmentEntrySchema).optional(),
+})
+
+export const PostResponseMetaSchema = BaseResponseMetaSchema.extend({
+  insights: InsightsMetaSchema.optional(),
   related: z.array(RelatedRefSchema).optional(),
   articles: z.record(z.string(), RelatedRefSchema).optional(),
+  summary: SummaryMetaSchema.optional(),
+  skills: z.array(SkillBundleViewSchema).optional(),
+})
+
+export const NoteResponseMetaSchema = BaseResponseMetaSchema.extend({
   insights: InsightsMetaSchema.optional(),
   summary: SummaryMetaSchema.optional(),
 })
+
+/**
+ * @deprecated Use `BaseResponseMetaSchema` plus a per-resource schema
+ * (`PostResponseMetaSchema`, `NoteResponseMetaSchema`) instead.
+ */
+export const ResponseMetaSchema = PostResponseMetaSchema.merge(
+  NoteResponseMetaSchema,
+)
 
 export type Pagination = z.infer<typeof PaginationSchema>
 export type ArticleTranslation = z.infer<typeof ArticleTranslationSchema>
@@ -140,4 +159,13 @@ export type RelatedRef = z.infer<typeof RelatedRefSchema>
 export type ArticleRefMap = Record<string, RelatedRef>
 export type InsightsMeta = z.infer<typeof InsightsMetaSchema>
 export type SummaryMeta = z.infer<typeof SummaryMetaSchema>
+export type BaseResponseMeta = z.infer<typeof BaseResponseMetaSchema>
+export type PostResponseMeta = z.infer<typeof PostResponseMetaSchema>
+export type NoteResponseMeta = z.infer<typeof NoteResponseMetaSchema>
+
+/**
+ * @deprecated Use `BaseResponseMeta`, `PostResponseMeta`, or `NoteResponseMeta`.
+ */
 export type ResponseMeta = z.infer<typeof ResponseMetaSchema>
+
+export { SkillBundleViewSchema }

@@ -1,14 +1,11 @@
+import type { z } from 'zod'
+
 import type {
-  ArticleRefMap,
   EnrichmentEntry,
   EntryTranslation,
-  InsightsMeta,
   InteractionMeta,
-  RelatedRef,
-  ResponseMeta,
-  SummaryMeta,
 } from './meta.types'
-import { ResponseMetaSchema } from './meta.types'
+import { BaseResponseMetaSchema } from './meta.types'
 
 type LegacyPaginationLike = {
   currentPage?: number
@@ -36,57 +33,44 @@ const normalizePagination = (pagination: LegacyPaginationLike) => {
   }
 }
 
-export class MetaObjectBuilder {
-  private readonly meta: Partial<ResponseMeta> = {}
+export class MetaObjectBuilder<
+  TSchema extends z.ZodTypeAny = typeof BaseResponseMetaSchema,
+> {
+  protected readonly meta: Partial<z.infer<TSchema>> = {}
+
+  constructor(
+    protected readonly schema: TSchema = BaseResponseMetaSchema as unknown as TSchema,
+  ) {}
 
   pagination(value: LegacyPaginationLike): this {
-    this.meta.pagination = normalizePagination(value)
+    ;(this.meta as Record<string, unknown>).pagination =
+      normalizePagination(value)
     return this
   }
 
   view(name: string): this {
-    this.meta.view = name
+    ;(this.meta as Record<string, unknown>).view = name
     return this
   }
 
   translation(value: EntryTranslation | Map<string, EntryTranslation>): this {
-    this.meta.translation =
+    ;(this.meta as Record<string, unknown>).translation =
       value instanceof Map ? Object.fromEntries(value) : value
     return this
   }
 
   interaction(value: InteractionMeta | Map<string, InteractionMeta>): this {
-    this.meta.interaction =
+    ;(this.meta as Record<string, unknown>).interaction =
       value instanceof Map ? Object.fromEntries(value) : value
     return this
   }
 
   enrichments(value: Record<string, EnrichmentEntry>): this {
-    this.meta.enrichments = value
+    ;(this.meta as Record<string, unknown>).enrichments = value
     return this
   }
 
-  related(value: RelatedRef[]): this {
-    this.meta.related = value
-    return this
-  }
-
-  articles(value: ArticleRefMap): this {
-    this.meta.articles = value
-    return this
-  }
-
-  insights(value: InsightsMeta): this {
-    this.meta.insights = value
-    return this
-  }
-
-  summary(value: SummaryMeta): this {
-    this.meta.summary = value
-    return this
-  }
-
-  build(): ResponseMeta {
-    return ResponseMetaSchema.parse(this.meta)
+  build(): z.infer<TSchema> {
+    return this.schema.parse(this.meta) as z.infer<TSchema>
   }
 }

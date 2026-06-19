@@ -319,4 +319,111 @@ export class SnippetRepository extends BaseRepository {
       .where(and(...filters)!)
     return rows.map(mapRow)
   }
+
+  async findAssetsByDirs(
+    dirs: string[],
+    opts: { includePrivate: boolean },
+  ): Promise<SnippetRow[]> {
+    if (dirs.length === 0) return []
+    const perDir = dirs
+      .map((dir) =>
+        and(
+          sql`${snippets.path} like ${`${dir}/%`}`,
+          ne(snippets.path, `${dir}/SKILL.md`),
+        ),
+      )
+      .filter((c): c is NonNullable<typeof c> => c != null)
+    if (perDir.length === 0) return []
+    const combined = or(...perDir)
+    if (!combined) return []
+    const where = opts.includePrivate
+      ? combined
+      : and(combined, eq(snippets.private, false))
+    const rows = await this.db
+      .select()
+      .from(snippets)
+      .where(where!)
+      .orderBy(asc(snippets.path))
+    return rows.map(mapRow)
+  }
+
+  async upsertManyByPath(
+    inputs: Array<Parameters<SnippetRepository['create']>[0]>,
+  ): Promise<{
+    created: number
+    updated: number
+    snippets: SnippetRow[]
+  }> {
+    if (inputs.length === 0) {
+      return { created: 0, updated: 0, snippets: [] }
+    }
+    return this.db.transaction(async (tx) => {
+      let created = 0
+      let updated = 0
+      const result: SnippetRow[] = []
+      for (const input of inputs) {
+        const filter = input.method
+          ? and(
+              eq(snippets.path, input.path),
+              eq(snippets.method, input.method),
+            )!
+          : eq(snippets.path, input.path)
+        const [existing] = await tx
+          .select()
+          .from(snippets)
+          .where(filter)
+          .limit(1)
+        if (existing) {
+          const [row] = await tx
+            .update(snippets)
+            .set({
+              type: input.type ?? existing.type,
+              private: input.private ?? existing.private,
+              raw: input.raw,
+              path: input.path,
+              comment: input.comment ?? null,
+              metatype: input.metatype ?? null,
+              schema: input.schema ?? null,
+              method: input.method ?? null,
+              secret: input.secret ?? null,
+              enable: input.enable ?? true,
+              builtIn: input.builtIn ?? false,
+              compiledCode: input.compiledCode ?? null,
+              updatedAt: new Date(),
+            })
+            .where(eq(snippets.id, existing.id))
+            .returning()
+          if (row) {
+            updated += 1
+            result.push(mapRow(row))
+          }
+        } else {
+          const id = this.snowflake.nextId()
+          const [row] = await tx
+            .insert(snippets)
+            .values({
+              id,
+              type: input.type ?? null,
+              private: input.private ?? false,
+              raw: input.raw,
+              path: input.path,
+              comment: input.comment ?? null,
+              metatype: input.metatype ?? null,
+              schema: input.schema ?? null,
+              method: input.method ?? null,
+              secret: input.secret ?? null,
+              enable: input.enable ?? true,
+              builtIn: input.builtIn ?? false,
+              compiledCode: input.compiledCode ?? null,
+            })
+            .returning()
+          if (row) {
+            created += 1
+            result.push(mapRow(row))
+          }
+        }
+      }
+      return { created, updated, snippets: result }
+    })
+  }
 }

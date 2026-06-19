@@ -59,11 +59,7 @@ export class SnippetController {
   @Post('/import')
   @Auth()
   async importSnippets(@Body() body: SnippetMoreDto) {
-    const { snippets } = body
-    await Promise.all(
-      snippets.map((snippet) => this.snippetService.create(snippet as any)),
-    )
-    return 'OK'
+    return this.snippetService.importSnippets(body.snippets as any)
   }
 
   @Post('/')

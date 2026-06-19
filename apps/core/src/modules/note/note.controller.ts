@@ -56,6 +56,7 @@ import {
 } from './note.schema'
 import { NoteService } from './note.service'
 import type { NoteModel } from './note.types'
+import { NoteMetaBuilder } from './note-meta-builder'
 
 const NOTE_ENTRY_RULES: ReadonlyArray<EntryRule> = [
   { path: 'topic.name', keyPath: 'topic.name', mode: 'entity', idField: 'id' },
@@ -205,7 +206,7 @@ export class NoteController {
       this.aiSummaryService.getSummaryForPublicMeta(current.id!, insightsLang),
     ])
 
-    const metaBuilder = new MetaObjectBuilder()
+    const metaBuilder = new NoteMetaBuilder()
       .view('detail')
       .interaction({ isLiked: liked })
       .insights({ hasInLocale: hasInsightsInLocale })
@@ -674,7 +675,7 @@ export class NoteController {
     const { enrichments, ...latestData } =
       await this.enrichmentService.attachEnrichments(latest)
 
-    const metaBuilder = new MetaObjectBuilder()
+    const metaBuilder = new NoteMetaBuilder()
       .view('detail')
       .insights({ hasInLocale: hasInsightsInLocale })
       .enrichments(enrichments as Record<string, EnrichmentEntry>)

@@ -17,6 +17,7 @@ import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { CreateSummaryTaskDto } from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
+import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { BasicPagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
@@ -56,7 +57,7 @@ export class AiSummaryController {
     const result = await this.service.getAllSummaries(query)
     return withMeta(
       result.data,
-      new MetaObjectBuilder()
+      new PostMetaBuilder()
         .pagination(result.pagination)
         .articles(result.articles)
         .build(),

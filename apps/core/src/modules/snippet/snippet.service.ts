@@ -18,12 +18,16 @@ import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetRepository } from './snippet.repository'
 import { SnippetType } from './snippet.schema'
 import type {
+  SkillBundleView,
   SnippetObjectView,
   SnippetRow,
   SnippetVfsList,
 } from './snippet.types'
-import type { PublicSkillView } from './snippet.views'
-import { deriveSkillName, toPublicSkillView } from './snippet.views'
+import {
+  deriveSkillName,
+  stripSkillSuffix,
+  toSkillBundleView,
+} from './snippet.views'
 
 export interface SnippetCreateInput {
   type?: SnippetType
@@ -538,22 +542,75 @@ export class SnippetService {
     return model as T & { data: any }
   }
 
-  async findSkillsByIds(
+  async findSkillBundlesByIds(
     ids: string[],
     options: { includePrivate?: boolean } = {},
-  ): Promise<PublicSkillView[]> {
+  ): Promise<SkillBundleView[]> {
     if (ids.length === 0) return []
-    const rows = await this.snippetRepository.findSkillsByIds(
+    const includePrivate = options.includePrivate ?? false
+    const skillRows = await this.snippetRepository.findSkillsByIds(
       ids,
-      options.includePrivate ?? false,
+      includePrivate,
     )
+    if (skillRows.length === 0) return []
+
+    const dirs = skillRows.map((row) => stripSkillSuffix(row.path))
+    const assetRows = await this.snippetRepository.findAssetsByDirs(dirs, {
+      includePrivate,
+    })
+
     const urlConfig = await this.configsService.get('url')
     const serverUrl = urlConfig?.serverUrl ?? ''
-    const rowMap = new Map(rows.map((r) => [String(r.id), r]))
+
+    const assetsByDir = new Map<string, SnippetRow[]>()
+    for (const dir of dirs) assetsByDir.set(dir, [])
+    for (const asset of assetRows) {
+      for (const dir of dirs) {
+        if (asset.path.startsWith(`${dir}/`)) {
+          assetsByDir.get(dir)!.push(asset)
+          break
+        }
+      }
+    }
+
+    const rowMap = new Map(skillRows.map((r) => [String(r.id), r]))
     return ids
       .map((id) => rowMap.get(id))
       .filter((r): r is SnippetRow => r !== undefined)
-      .map((r) => toPublicSkillView(r, serverUrl))
+      .map((row) =>
+        toSkillBundleView(
+          row,
+          assetsByDir.get(stripSkillSuffix(row.path)) ?? [],
+          serverUrl,
+        ),
+      )
+  }
+
+  async importSnippets(inputs: SnippetCreateInput[]): Promise<{
+    created: number
+    updated: number
+    snippets: SnippetRow[]
+  }> {
+    if (inputs.length === 0) {
+      return { created: 0, updated: 0, snippets: [] }
+    }
+    const prepared = await Promise.all(
+      inputs.map((input) => this.prepareInput(input)),
+    )
+    const result = await this.snippetRepository.upsertManyByPath(prepared)
+    await Promise.all(
+      result.snippets.map((row) => this.deleteCachedSnippetByPath(row.path)),
+    )
+    if (result.snippets.some((row) => this.isThemePath(row.path))) {
+      await this.notifyAggregateThemeUpdate()
+    }
+    return {
+      created: result.created,
+      updated: result.updated,
+      snippets: result.snippets.map((row) =>
+        this.transformLeanSnippetModel(row),
+      ),
+    }
   }
 
   private snippetCacheKey(path: string, isPrivate: boolean) {

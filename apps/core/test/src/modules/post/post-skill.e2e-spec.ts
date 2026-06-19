@@ -13,15 +13,15 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 
 const SERVER_URL = 'http://localhost:2333/api/v3'
-const PUBLIC_SKILL_RAW_URL = `${SERVER_URL}/s/sk/public-skill`
-const PRIVATE_SKILL_RAW_URL = `${SERVER_URL}/s/sk/private-skill`
+const PUBLIC_SKILL_RAW_URL = `${SERVER_URL}/s/sk/public-skill/SKILL.md`
+const PRIVATE_SKILL_RAW_URL = `${SERVER_URL}/s/sk/private-skill/SKILL.md`
 
 const publicSkill = {
   id: 'pub-1',
   name: 'public-skill',
   description: 'A public skill',
   rawUrl: PUBLIC_SKILL_RAW_URL,
-  raw: '---\nname: public-skill\ndescription: A public skill\n---\nbody',
+  assets: [],
 }
 
 const privateSkill = {
@@ -29,7 +29,7 @@ const privateSkill = {
   name: 'private-skill',
   description: 'A private skill',
   rawUrl: PRIVATE_SKILL_RAW_URL,
-  raw: '---\nname: private-skill\ndescription: A private skill\n---\nbody',
+  assets: [],
 }
 
 let currentPost: Record<string, unknown> | null = null
@@ -44,7 +44,7 @@ const postService = {
 }
 
 const snippetService = {
-  findSkillsByIds: vi.fn(
+  findSkillBundlesByIds: vi.fn(
     async (ids: string[], opts: { includePrivate?: boolean } = {}) => {
       if (skillsOverride) return skillsOverride(ids, opts)
       const all = opts.includePrivate
@@ -138,7 +138,7 @@ describe('PostController — skill attachment (getByCateAndSlug)', () => {
       skillsOverride = null
     })
 
-    it('anonymous: data.skills contains only public skill', async () => {
+    it('anonymous: meta.skills contains only public skill', async () => {
       const res = await proxy.app.inject({
         method: 'GET',
         url: `/posts/${CATEGORY}/${SLUG}`,
@@ -146,11 +146,12 @@ describe('PostController — skill attachment (getByCateAndSlug)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
-      expect(body.data.skills).toHaveLength(1)
-      expect(body.data.skills[0].id).toBe('pub-1')
+      expect(body.data.skills).toBeUndefined()
+      expect(body.meta.skills).toHaveLength(1)
+      expect(body.meta.skills[0].id).toBe('pub-1')
     })
 
-    it('admin: data.skills contains both skills in input order [pub-1, priv-2]', async () => {
+    it('admin: meta.skills contains both skills in input order [pub-1, priv-2]', async () => {
       const res = await proxy.app.inject({
         method: 'GET',
         url: `/posts/${CATEGORY}/${SLUG}`,
@@ -159,9 +160,10 @@ describe('PostController — skill attachment (getByCateAndSlug)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
-      expect(body.data.skills).toHaveLength(2)
-      expect(body.data.skills[0].id).toBe('pub-1')
-      expect(body.data.skills[1].id).toBe('priv-2')
+      expect(body.data.skills).toBeUndefined()
+      expect(body.meta.skills).toHaveLength(2)
+      expect(body.meta.skills[0].id).toBe('pub-1')
+      expect(body.meta.skills[1].id).toBe('priv-2')
     })
 
     it('public skill raw_url matches expected URL', async () => {
@@ -172,7 +174,7 @@ describe('PostController — skill attachment (getByCateAndSlug)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
-      expect(body.data.skills[0].raw_url).toBe(PUBLIC_SKILL_RAW_URL)
+      expect(body.meta.skills[0].raw_url).toBe(PUBLIC_SKILL_RAW_URL)
     })
   })
 
@@ -182,7 +184,7 @@ describe('PostController — skill attachment (getByCateAndSlug)', () => {
       skillsOverride = null
     })
 
-    it('returns 200 with no skills field on data', async () => {
+    it('returns 200 with no skills field on data or meta', async () => {
       const res = await proxy.app.inject({
         method: 'GET',
         url: `/posts/${CATEGORY}/${SLUG}`,
@@ -191,6 +193,7 @@ describe('PostController — skill attachment (getByCateAndSlug)', () => {
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
       expect(body.data.skills).toBeUndefined()
+      expect(body.meta?.skills).toBeUndefined()
     })
   })
 
@@ -225,7 +228,7 @@ describe('PostController — skill attachment (getById)', () => {
       skillsOverride = null
     })
 
-    it('anonymous: data.skills contains only public skill', async () => {
+    it('anonymous: meta.skills contains only public skill', async () => {
       const res = await proxy.app.inject({
         method: 'GET',
         url: `/posts/${(currentPost as any).id}`,
@@ -233,11 +236,12 @@ describe('PostController — skill attachment (getById)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
-      expect(body.data.skills).toHaveLength(1)
-      expect(body.data.skills[0].id).toBe('pub-1')
+      expect(body.data.skills).toBeUndefined()
+      expect(body.meta.skills).toHaveLength(1)
+      expect(body.meta.skills[0].id).toBe('pub-1')
     })
 
-    it('admin: data.skills contains both skills in input order [pub-1, priv-2]', async () => {
+    it('admin: meta.skills contains both skills in input order [pub-1, priv-2]', async () => {
       const res = await proxy.app.inject({
         method: 'GET',
         url: `/posts/${(currentPost as any).id}`,
@@ -246,9 +250,10 @@ describe('PostController — skill attachment (getById)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
-      expect(body.data.skills).toHaveLength(2)
-      expect(body.data.skills[0].id).toBe('pub-1')
-      expect(body.data.skills[1].id).toBe('priv-2')
+      expect(body.data.skills).toBeUndefined()
+      expect(body.meta.skills).toHaveLength(2)
+      expect(body.meta.skills[0].id).toBe('pub-1')
+      expect(body.meta.skills[1].id).toBe('priv-2')
     })
 
     it('public skill raw_url matches expected URL', async () => {
@@ -259,7 +264,7 @@ describe('PostController — skill attachment (getById)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
-      expect(body.data.skills[0].raw_url).toBe(PUBLIC_SKILL_RAW_URL)
+      expect(body.meta.skills[0].raw_url).toBe(PUBLIC_SKILL_RAW_URL)
     })
   })
 
@@ -269,7 +274,7 @@ describe('PostController — skill attachment (getById)', () => {
       skillsOverride = async () => []
     })
 
-    it('returns 200 with no skills field on data', async () => {
+    it('returns 200 with no skills field on data or meta', async () => {
       const res = await proxy.app.inject({
         method: 'GET',
         url: `/posts/${(currentPost as any).id}`,
@@ -278,6 +283,7 @@ describe('PostController — skill attachment (getById)', () => {
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
       expect(body.data.skills).toBeUndefined()
+      expect(body.meta?.skills).toBeUndefined()
     })
   })
 
@@ -287,7 +293,7 @@ describe('PostController — skill attachment (getById)', () => {
       skillsOverride = null
     })
 
-    it('returns 200 with no skills field on data', async () => {
+    it('returns 200 with no skills field on data or meta', async () => {
       const res = await proxy.app.inject({
         method: 'GET',
         url: `/posts/${(currentPost as any).id}`,
@@ -296,6 +302,7 @@ describe('PostController — skill attachment (getById)', () => {
       expect(res.statusCode).toBe(200)
       const body = JSON.parse(res.body)
       expect(body.data.skills).toBeUndefined()
+      expect(body.meta?.skills).toBeUndefined()
     })
   })
 

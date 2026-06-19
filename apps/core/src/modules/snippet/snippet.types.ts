@@ -1,5 +1,7 @@
 import type { EntityId } from '~/shared/id/entity-id'
 
+import type { SnippetType } from './snippet.schema'
+
 export interface SnippetRow {
   id: EntityId
   type: string | null
@@ -33,4 +35,19 @@ export interface SnippetVfsList {
   prefix: string
   objects: SnippetObjectView[]
   commonPrefixes: string[]
+}
+
+export interface SkillAssetView {
+  path: string
+  rawUrl: string
+  type: SnippetType | string
+  size: number
+}
+
+export interface SkillBundleView {
+  id: string
+  name: string
+  description: string
+  rawUrl: string
+  assets: SkillAssetView[]
 }

@@ -19,6 +19,11 @@ const createController = () => {
     transformLeanSnippet: vi.fn((row) => row),
     create: vi.fn().mockResolvedValue(objectRow),
     upsertByPath: vi.fn().mockResolvedValue(objectRow),
+    importSnippets: vi.fn().mockResolvedValue({
+      created: 1,
+      updated: 0,
+      snippets: [objectRow],
+    }),
     getSnippetById: vi.fn().mockResolvedValue(objectRow),
     update: vi.fn().mockResolvedValue(objectRow),
     delete: vi.fn(),
@@ -90,5 +95,23 @@ describe('SnippetController', () => {
 
     expect(service.deleteByPath).toHaveBeenCalledWith('sk/foo/', true)
     expect(service.movePath).toHaveBeenCalledWith('sk/foo/', 'sk/bar/', true)
+  })
+
+  it('returns transactional import totals from POST /snippets/import', async () => {
+    const { controller, service } = createController()
+
+    const body = {
+      snippets: [
+        { path: 'root/config.json', raw: '{}', type: SnippetType.JSON },
+      ],
+    }
+    const result = await controller.importSnippets(body as any)
+
+    expect(service.importSnippets).toHaveBeenCalledWith(body.snippets)
+    expect(result).toEqual({
+      created: 1,
+      updated: 0,
+      snippets: [objectRow],
+    })
   })
 })

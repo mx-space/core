@@ -16,6 +16,7 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { BasicPagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
@@ -80,7 +81,7 @@ export class AiInsightsController {
     const result = await this.service.getAllInsights(query)
     return withMeta(
       result.data,
-      new MetaObjectBuilder()
+      new PostMetaBuilder()
         .pagination(result.pagination)
         .articles(result.articles)
         .build(),

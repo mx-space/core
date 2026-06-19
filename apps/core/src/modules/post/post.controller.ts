@@ -52,6 +52,7 @@ import {
 } from './post.schema'
 import { PostService } from './post.service'
 import type { PostModel } from './post.types'
+import { PostMetaBuilder } from './post-meta-builder'
 
 const CATEGORY_NAME_RULES: ReadonlyArray<EntryRule> = [
   {
@@ -266,10 +267,10 @@ export class PostController {
         ? (doc.meta.skillIds as string[])
         : []
     const skills = await this.snippetService
-      .findSkillsByIds(skillIds, { includePrivate: !!isAuthenticated })
+      .findSkillBundlesByIds(skillIds, { includePrivate: !!isAuthenticated })
       .catch(() => [])
 
-    const metaBuilder = new MetaObjectBuilder()
+    const metaBuilder = new PostMetaBuilder()
       .view('detail')
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
@@ -286,8 +287,8 @@ export class PostController {
     ])
     metaBuilder.translation(translationMap)
 
-    const result = skills.length > 0 ? { ...docData, skills } : docData
-    return withMeta(result, metaBuilder.build())
+    if (skills.length > 0) metaBuilder.skills(skills)
+    return withMeta(docData, metaBuilder.build())
   }
 
   @Get('/:category/:slug')
@@ -386,10 +387,10 @@ export class PostController {
         ? (postDocument.meta.skillIds as string[])
         : []
     const skills = await this.snippetService
-      .findSkillsByIds(skillIds, { includePrivate: !!isAuthenticated })
+      .findSkillBundlesByIds(skillIds, { includePrivate: !!isAuthenticated })
       .catch(() => [])
 
-    const metaBuilder = new MetaObjectBuilder()
+    const metaBuilder = new PostMetaBuilder()
       .view('detail')
       .interaction({ isLiked: liked })
       .related(translatedRelated)
@@ -418,8 +419,8 @@ export class PostController {
     ])
     metaBuilder.translation(translationMap)
 
-    const result = skills.length > 0 ? { ...postData, skills } : postData
-    return withMeta(result, metaBuilder.build())
+    if (skills.length > 0) metaBuilder.skills(skills)
+    return withMeta(postData, metaBuilder.build())
   }
 
   @Post('/')

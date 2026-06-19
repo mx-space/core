@@ -107,7 +107,7 @@ const createController = (opts: CreateControllerOptions = {}) => {
   }
 
   const snippetService = {
-    findSkillsByIds: vi.fn(async () => []),
+    findSkillBundlesByIds: vi.fn(async () => []),
   }
 
   const controller = new PostController(

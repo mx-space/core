@@ -1,16 +1,18 @@
 import {
+  BaseResponseMetaSchema,
   type EntryTranslation,
   type InteractionMeta,
-  ResponseMetaSchema,
 } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { NoteMetaBuilder } from '~/modules/note/note-meta-builder'
+import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
 
 describe('MetaObjectBuilder', () => {
   test('empty build produces an empty object that validates', () => {
     const meta = new MetaObjectBuilder().build()
 
     expect(meta).toEqual({})
-    expect(ResponseMetaSchema.safeParse(meta).success).toBe(true)
+    expect(BaseResponseMetaSchema.safeParse(meta).success).toBe(true)
   })
 
   test('pagination sets the pagination key only', () => {
@@ -110,16 +112,16 @@ describe('MetaObjectBuilder', () => {
     expect(meta.enrichments?.['https://example.com']?.title).toBe('Example')
   })
 
-  test('related sets an array of refs', () => {
-    const meta = new MetaObjectBuilder()
+  test('PostMetaBuilder.related sets an array of refs', () => {
+    const meta = new PostMetaBuilder()
       .related([{ id: '1', title: 'Related post' }])
       .build()
 
     expect(meta.related).toEqual([{ id: '1', title: 'Related post' }])
   })
 
-  test('articles sets a ref map', () => {
-    const meta = new MetaObjectBuilder()
+  test('PostMetaBuilder.articles sets a ref map', () => {
+    const meta = new PostMetaBuilder()
       .articles({
         1: { id: '1', title: 'Article', type: 'post' },
       })
@@ -137,7 +139,7 @@ describe('MetaObjectBuilder', () => {
       .interaction({ isLiked: false })
       .build()
 
-    expect(ResponseMetaSchema.safeParse(meta).success).toBe(true)
+    expect(BaseResponseMetaSchema.safeParse(meta).success).toBe(true)
     expect(meta.view).toBe('detail')
     expect(meta.pagination?.page).toBe(2)
     expect(meta.interaction).toEqual({ isLiked: false })
@@ -154,10 +156,37 @@ describe('MetaObjectBuilder', () => {
     expect(() => builder.build()).toThrow()
   })
 
-  test('insights sets the insights key', () => {
-    const meta = new MetaObjectBuilder().insights({ hasInLocale: true }).build()
+  test('PostMetaBuilder.insights sets the insights key', () => {
+    const meta = new PostMetaBuilder().insights({ hasInLocale: true }).build()
 
     expect(meta.insights).toEqual({ hasInLocale: true })
     expect(Object.keys(meta)).toEqual(['insights'])
+  })
+
+  test('NoteMetaBuilder.summary sets the summary key', () => {
+    const createdAt = new Date('2024-01-01T00:00:00.000Z')
+    const meta = new NoteMetaBuilder()
+      .summary({ id: 's1', text: 'note summary', lang: 'en', createdAt })
+      .build()
+
+    expect(meta.summary).toEqual({
+      id: 's1',
+      text: 'note summary',
+      lang: 'en',
+      createdAt,
+    })
+  })
+
+  test('PostMetaBuilder.skills sets a skill bundle list', () => {
+    const bundle = {
+      id: '1',
+      name: 'my-skill',
+      description: 'desc',
+      rawUrl: '/s/sk/my-skill/SKILL.md',
+      assets: [],
+    }
+    const meta = new PostMetaBuilder().skills([bundle]).build()
+
+    expect(meta.skills).toEqual([bundle])
   })
 })
