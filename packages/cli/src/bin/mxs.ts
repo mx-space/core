@@ -97,6 +97,22 @@ const resolveCliVersion = (): string => {
 }
 const CLI_VERSION = resolveCliVersion()
 
+// Force stdout/stderr into blocking mode on POSIX pipes so writes drain
+// before `process.exit()` returns. Without this, output produced just before
+// exit (help text, JSON envelopes, error frames) is silently dropped under
+// pipe pressure — observable as empty-stdout flake when the CLI is spawned
+// from another process (e2e harness, scripts, CI).
+for (const stream of [process.stdout, process.stderr]) {
+  const handle = (
+    stream as unknown as {
+      _handle?: { setBlocking?: (blocking: boolean) => void }
+    }
+  )._handle
+  if (handle && typeof handle.setBlocking === 'function') {
+    handle.setBlocking(true)
+  }
+}
+
 // Mirror the v0.2.x convenience: when running this file directly from source,
 // enable the local-dev default profile so the bare `mxs ...` invocation does
 // not require explicit configuration.
