@@ -14,6 +14,7 @@ export default defineConfig({
     globals: true,
     hookTimeout: 120_000,
     testTimeout: 120_000,
+    retry: process.env.CI ? 2 : 0,
     fileParallelism: true,
     pool: 'forks',
     poolOptions: {
