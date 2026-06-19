@@ -81,8 +81,7 @@ describe('ServerlessService', () => {
       id: 'fn-1',
       type: SnippetType.Function,
       builtIn: true,
-      name: 'health',
-      reference: 'built-in',
+      path: 'built-in/health',
     })
 
     await expect(service.isBuiltInFunction('fn-1')).resolves.toEqual({
