@@ -148,6 +148,38 @@ describe('TranslationConsistencyService', () => {
       expect(result.unknownTranslations.has('article-1')).toBe(true)
       expect(result.staleRefIds).toEqual([])
     })
+
+    it('should keep status unknown when truncated list snapshot sends empty text and content', () => {
+      // Mirrors the post-list / truncated-aggregate path: when callers cannot
+      // supply a usable body for hashing, they zero the source so freshness
+      // routes through the DB re-verification pass rather than mismarking
+      // up-to-date translations as stale.
+      const result = service.partitionValidAndStaleTranslations(
+        [
+          {
+            id: 'article-1',
+            title: 'Title',
+            text: '',
+            content: '',
+            meta: { lang: 'zh' },
+            modifiedAt: new Date('2024-06-15T00:00:00.000Z'),
+          },
+        ],
+        [
+          {
+            refId: 'article-1',
+            hash: 'irrelevant-hash',
+            sourceLang: 'zh',
+            sourceModifiedAt: new Date('2024-06-10T00:00:00.000Z'),
+            createdAt: new Date('2024-06-10T00:00:00.000Z'),
+          } as any,
+        ],
+      )
+
+      expect(result.validTranslations.size).toBe(0)
+      expect(result.unknownTranslations.has('article-1')).toBe(true)
+      expect(result.staleRefIds).toEqual([])
+    })
   })
 
   describe('evaluateTranslationFreshness', () => {
@@ -215,6 +247,27 @@ describe('TranslationConsistencyService', () => {
         sourceLang: 'zh',
         sourceModifiedAt: undefined as any,
         created: undefined as any,
+      }
+
+      expect(service.evaluateTranslationFreshness(article, translation)).toBe(
+        'unknown',
+      )
+    })
+
+    it('should return unknown when text and content are empty strings', () => {
+      const article = {
+        id: 'a1',
+        title: 'T',
+        text: '',
+        content: '',
+        modifiedAt: new Date('2024-06-15T00:00:00.000Z'),
+      }
+      const translation = {
+        refId: 'a1',
+        hash: 'some-hash',
+        sourceLang: 'zh',
+        sourceModifiedAt: new Date('2024-06-10T00:00:00.000Z'),
+        createdAt: new Date('2024-06-10T00:00:00.000Z'),
       }
 
       expect(service.evaluateTranslationFreshness(article, translation)).toBe(

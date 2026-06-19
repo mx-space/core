@@ -190,9 +190,13 @@ export class TranslationConsistencyService extends BaseTranslationService {
   }
 
   private hasComparableSource(article: TranslationSourceSnapshot): boolean {
-    return (
-      typeof article.text === 'string' || typeof article.content === 'string'
-    )
+    // Empty string is the documented signal from list endpoints whose SQL-side
+    // truncation leaves no usable body to hash — fall through to 'unknown' so
+    // the caller can re-verify against the full document loaded from the DB.
+    const hasText = typeof article.text === 'string' && article.text.length > 0
+    const hasContent =
+      typeof article.content === 'string' && article.content.length > 0
+    return hasText || hasContent
   }
 
   private isTranslatableDocument(
