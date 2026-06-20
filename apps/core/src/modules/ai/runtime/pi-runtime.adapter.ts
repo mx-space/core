@@ -169,12 +169,22 @@ export class PiRuntimeAdapter implements IModelRuntime {
     contextWindow?: number,
     maxTokens?: number,
   ): Model<Api> {
+    const baseUrl = endpoint?.trim()
     try {
       const registered = getModel(
         this.piProviderId as never,
         modelId as never,
       ) as Model<Api> | undefined
-      if (registered) return registered
+      if (registered) {
+        if (!baseUrl) return registered
+
+        return {
+          ...registered,
+          api: this.api,
+          provider: this.piProviderId,
+          baseUrl,
+        } as Model<Api>
+      }
     } catch {
       // miss falls through to custom literal
     }
@@ -183,7 +193,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       name: modelId,
       api: this.api,
       provider: this.piProviderId,
-      baseUrl: endpoint ?? '',
+      baseUrl: baseUrl ?? '',
       reasoning: false,
       input: ['text'],
       cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },

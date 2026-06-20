@@ -25,6 +25,18 @@ interface AdapterHandle {
   teardown: () => void
 }
 
+interface AdapterInternals {
+  model: {
+    api: string
+    baseUrl: string
+    provider: string
+  }
+}
+
+function inspect(adapter: unknown): AdapterInternals {
+  return adapter as unknown as AdapterInternals
+}
+
 function makeAdapter(
   opts: {
     providerType?: AIProviderType
@@ -362,6 +374,34 @@ describe('PiRuntimeAdapter', () => {
       // Adapter constructor calls resolveModel; registered = faux model
       const { adapter } = track(makeAdapter())
       expect(adapter.providerInfo.model).toBe(MODEL_ID)
+    })
+
+    it('honors a custom endpoint even when a registered OpenAI model matches', () => {
+      const faux = withFauxAi({
+        api: FAUX_API,
+        provider: 'openai',
+        models: [
+          {
+            id: 'gpt-5.5',
+            name: 'gpt-5.5',
+            baseUrl: 'https://api.openai.com/v1',
+          },
+        ],
+      })
+      const adapter = new PiRuntimeAdapter({
+        apiKey: 'faux-api-key',
+        endpoint: 'https://api.example.com/v1',
+        model: 'gpt-5.5',
+        providerType: AIProviderType.OpenAICompatible,
+        providerId: 'custom-openai-compatible',
+      })
+      track({ adapter, teardown: () => faux.teardown() })
+
+      expect(inspect(adapter).model).toMatchObject({
+        api: FAUX_API,
+        baseUrl: 'https://api.example.com/v1',
+        provider: 'openai',
+      })
     })
 
     it('falls back to custom literal when pi registry misses', () => {

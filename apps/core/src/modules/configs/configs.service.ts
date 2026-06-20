@@ -472,18 +472,8 @@ export class ConfigsService implements OnModuleInit {
       return null
     }
 
-    const row = await this.optionsRepository.get<{
-      providers?: AIProviderConfig[]
-    }>('ai')
-    const providers = row?.providers
-    const storedProvider = providers?.find((p) => p.id === providerId)
-
-    if (storedProvider) {
-      return storedProvider
-    }
-
-    const cached = await this.get('ai')
-    const cachedProvider = cached.providers?.find((p) => p.id === providerId)
+    const aiConfig = await this.get('ai')
+    const cachedProvider = aiConfig.providers?.find((p) => p.id === providerId)
 
     return cachedProvider || null
   }

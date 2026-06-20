@@ -1,4 +1,5 @@
 import { RedisKeys } from '~/constants/cache.constant'
+import { AIProviderType } from '~/modules/ai/ai.types'
 import { generateDefaultConfig } from '~/modules/configs/configs.default'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { getRedisKey } from '~/utils/redis.util'
@@ -88,5 +89,59 @@ describe('ConfigsService', () => {
     expect(redisClient.get).toHaveBeenCalledWith(
       getRedisKey(RedisKeys.ConfigCache),
     )
+  })
+
+  it('resolves AI providers from decrypted config cache', async () => {
+    const config = generateDefaultConfig()
+    config.ai.providers = [
+      {
+        id: 'custom-provider',
+        name: 'Custom Provider',
+        type: AIProviderType.OpenAICompatible,
+        apiKey: 'sk-decrypted',
+        endpoint: 'https://api.example.com/v1',
+        defaultModel: 'gpt-5.5',
+        enabled: true,
+      },
+    ]
+    const redisClient = {
+      get: vi.fn().mockResolvedValue(JSON.stringify(config)),
+      set: vi.fn().mockResolvedValue('OK'),
+    }
+    const redisService = {
+      getClient: vi.fn(() => redisClient),
+      waitForReady: vi.fn().mockResolvedValue(undefined),
+    }
+    const optionsRepository = {
+      findAll: vi.fn().mockResolvedValue([
+        {
+          name: 'ai',
+          value: {
+            providers: [
+              {
+                ...config.ai.providers[0],
+                apiKey: '$${mx}$$encrypted',
+              },
+            ],
+          },
+        },
+      ]),
+      get: vi.fn(),
+    }
+
+    const service = new ConfigsService(
+      optionsRepository as any,
+      redisService as any,
+      {} as any,
+      { emit: vi.fn() } as any,
+    )
+
+    await expect(
+      service.getAiProviderById('custom-provider'),
+    ).resolves.toMatchObject({
+      id: 'custom-provider',
+      apiKey: 'sk-decrypted',
+    })
+    expect(optionsRepository.get).not.toHaveBeenCalled()
   })
 })
