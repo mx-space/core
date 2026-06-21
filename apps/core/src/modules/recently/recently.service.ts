@@ -224,13 +224,14 @@ export class RecentlyService {
       refId,
       refType: refType as any,
     })
-    this.enrichmentService.schedulePrefetchUrls(urls)
+    await this.warmEnrichments(urls)
+    const [hydrated] = await this.attachEnrichments([withRef])
     scheduleManager.schedule(async () => {
-      await this.eventManager.emit(BusinessEvents.RECENTLY_CREATE, withRef, {
+      await this.eventManager.emit(BusinessEvents.RECENTLY_CREATE, hydrated, {
         scope: EventScope.TO_SYSTEM_VISITOR,
       })
     })
-    return withRef
+    return hydrated
   }
 
   async delete(id: string) {
@@ -265,15 +266,14 @@ export class RecentlyService {
       modifiedAt: new Date(),
     })
     if (!withRef) return null
-    if (contentChanged) {
-      this.enrichmentService.schedulePrefetchUrls(urls)
-    }
+    if (contentChanged) await this.warmEnrichments(urls)
+    const [hydrated] = await this.attachEnrichments([withRef])
     scheduleManager.schedule(async () => {
-      await this.eventManager.emit(BusinessEvents.RECENTLY_UPDATE, withRef, {
+      await this.eventManager.emit(BusinessEvents.RECENTLY_UPDATE, hydrated, {
         scope: EventScope.TO_SYSTEM_VISITOR,
       })
     })
-    return withRef
+    return hydrated
   }
 
   async updateAttitude({
@@ -336,6 +336,33 @@ export class RecentlyService {
     } else {
       await this.recentlyRepository.incrementDown(id, -1)
       await this.recentlyRepository.incrementUp(id, 1)
+    }
+  }
+
+  /**
+   * Owner-side write path: ensure every URL has a cached enrichment row
+   * before we hydrate and return. Reads the cache first via
+   * {@link EnrichmentService.hydrateUrls} (SWR — DB hit returns immediately,
+   * stale rows trigger async refresh), then synchronously fetches only the
+   * URLs that truly missed. Warm cache → zero network. Cold URL → one fetch.
+   */
+  private async warmEnrichments(urls: readonly string[]): Promise<void> {
+    if (urls.length === 0) return
+    let cached: EnrichmentMap = {}
+    try {
+      cached = await this.enrichmentService.hydrateUrls(
+        urls,
+        RequestContext.currentLang(),
+      )
+    } catch {
+      // hydration probe failure falls through to a full prefetch attempt
+    }
+    const missing = urls.filter((u) => !cached[u])
+    if (missing.length === 0) return
+    try {
+      await this.enrichmentService.prefetchUrls(missing)
+    } catch {
+      // resolve failure must never block the write response
     }
   }
 
