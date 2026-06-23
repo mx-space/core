@@ -1,10 +1,10 @@
-import type { TransformOptions } from '@babel/core'
+import type { InputOptions, NodePath } from '@babel/core'
 import BabelPluginTransformCommonJS from '@babel/plugin-transform-modules-commonjs'
 import BabelPluginTransformTS from '@babel/plugin-transform-typescript'
 import type * as t from '@babel/types'
 import type { VariableDeclaration } from '@babel/types'
 
-export const complieTypeScriptBabelOptions: TransformOptions = {
+export const complieTypeScriptBabelOptions: InputOptions = {
   comments: false,
   plugins: [
     BabelPluginTransformTS,
@@ -15,7 +15,7 @@ export const complieTypeScriptBabelOptions: TransformOptions = {
     function transformImport() {
       return {
         visitor: {
-          VariableDeclaration(path: babel.NodePath) {
+          VariableDeclaration(path: NodePath) {
             const node = path.node as VariableDeclaration
             if (
               node.kind === 'var' &&

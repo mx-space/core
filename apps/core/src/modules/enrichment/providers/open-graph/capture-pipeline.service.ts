@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import sharp from 'sharp'
+import sharp, { type OutputInfo, type Sharp } from 'sharp'
 import { rgbaToThumbHash } from 'thumbhash'
 
 export interface CapturePalette {
@@ -108,7 +108,7 @@ function rgbToHex(r: number, g: number, b: number): string {
  * If fewer than 3 distinct colors survive, returns whatever exists (callers
  * MUST tolerate a shorter array). Returns `[]` for fully-degenerate input.
  */
-async function extractSwatches(source: sharp.Sharp): Promise<string[]> {
+async function extractSwatches(source: Sharp): Promise<string[]> {
   const { data, info } = await source
     .clone()
     .removeAlpha()
@@ -169,7 +169,7 @@ function euclideanDistance(
   return Math.sqrt(dr * dr + dg * dg + db * db)
 }
 
-async function encodeThumbhash(source: sharp.Sharp): Promise<string> {
+async function encodeThumbhash(source: Sharp): Promise<string> {
   const { data, info } = await source
     .clone()
     .raw()
@@ -181,10 +181,10 @@ async function encodeThumbhash(source: sharp.Sharp): Promise<string> {
 }
 
 async function encodeWebpWithRetry(
-  source: sharp.Sharp,
+  source: Sharp,
   quality: number,
   maxBytes: number,
-): Promise<{ data: Buffer; info: sharp.OutputInfo } | null> {
+): Promise<{ data: Buffer; info: OutputInfo } | null> {
   const first = await source
     .clone()
     .webp({ quality })
