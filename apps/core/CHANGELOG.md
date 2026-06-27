@@ -1,4 +1,14 @@
-# [13.11.1](https://github.com/mx-space/core/compare/v13.11.0...v13.11.1) (2026-06-19)
+## [13.11.2](https://github.com/mx-space/core/compare/v13.11.1...v13.11.2) (2026-06-27)
+
+
+### Bug Fixes
+
+* **ai:** honor custom provider endpoints ([29e082a](https://github.com/mx-space/core/commit/29e082ad7ad9092603b8b5c1ead4c4c46c6236fe))
+* **ai:** seed translation glossary from every visible note, not just the last 100 ([49aa04f](https://github.com/mx-space/core/commit/49aa04f17120596f1e29582695a6c9b1aa209cdf)), closes [#2758](https://github.com/mx-space/core/issues/2758)
+* **ai:** surface orphan articles in summary/insights/translation grouped lists ([e51621a](https://github.com/mx-space/core/commit/e51621afd535c8b4c337d00e0ef82b061ed45c91)), closes [#2758](https://github.com/mx-space/core/issues/2758)
+* **recently:** hydrate enrichments on create/update so link cards survive the write path ([0c62e08](https://github.com/mx-space/core/commit/0c62e080680a8442194ea01d61178dba9e397cb4))
+
+## [13.11.1](https://github.com/mx-space/core/compare/v13.11.0...v13.11.1) (2026-06-19)
 
 
 ### Bug Fixes
@@ -424,7 +434,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 
 * **recently:** URL-keyed enrichment map, drop typed entries ([#2726](https://github.com/mx-space/core/issues/2726)) ([91b8a47](https://github.com/mx-space/core/commit/91b8a47469e9b9f96016b7aa3651a2ffa6669719))
 
-# [12.6.0](https://github.com/mx-space/core/compare/v0.7.0...v12.6.0) (2026-05-15)
+# [12.6.0](https://github.com/mx-space/core/compare/v12.5.4...v12.6.0) (2026-05-15)
 
 
 ### Features
@@ -1085,7 +1095,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 * **schema:** enhance partial schemas for notes, pages, and posts with new fields ([f66c9ed](https://github.com/mx-space/core/commit/f66c9ed9cca1091730985813334adccb9462affd))
 * 更新文件上传前缀支持模板占位符，增强灵活性 ([#2584](https://github.com/mx-space/core/issues/2584)) ([2b5354a](https://github.com/mx-space/core/commit/2b5354a6f907947993dda64733e8bbd62c6cc62d))
 
-# [10.2.0](https://github.com/mx-space/core/compare/v10.1.10...v10.2.0) (2026-03-08)
+# [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
 
 
 ### Features
