@@ -134,6 +134,22 @@ export class AiSummaryRepository extends BaseRepository {
     }
   }
 
+  async findDistinctRefIds(
+    refIds?: Array<EntityId | string>,
+  ): Promise<EntityId[]> {
+    const where = refIds?.length
+      ? inArray(
+          aiSummaries.refId,
+          refIds.map((id) => parseEntityId(id)),
+        )
+      : undefined
+    const rows = await this.db
+      .selectDistinct({ refId: aiSummaries.refId })
+      .from(aiSummaries)
+      .where(where)
+    return rows.map((r) => toEntityId(r.refId) as EntityId)
+  }
+
   async groupedByRef(
     page = 1,
     size = 20,

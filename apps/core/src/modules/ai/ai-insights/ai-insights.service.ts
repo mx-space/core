@@ -6,7 +6,6 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { paginationOf } from '~/processors/database/base.repository'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   type TaskExecuteContext,
@@ -32,6 +31,7 @@ import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
+import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import { AiInsightsRepository } from './ai-insights.repository'
 import type { GetInsightsGroupedQueryInput } from './ai-insights.schema'
 import type { AiInsightsRow } from './ai-insights.types'
@@ -434,55 +434,31 @@ export class AiInsightsService implements OnModuleInit {
   }
 
   async getAllInsightsGrouped(query: GetInsightsGroupedQueryInput) {
-    const { page, size } = query
-    const search = query.search?.trim()
-    const searchableRefIds = search
-      ? await this.databaseService.findArticleIdsByTitle(search)
-      : undefined
-
-    if (search && searchableRefIds?.length === 0) {
-      return {
-        data: [],
-        pagination: paginationOf(0, page, size),
-      }
-    }
-
-    const grouped = await this.aiInsightsRepository.groupedByRef(
-      page,
-      size,
-      searchableRefIds,
-    )
-    const groupedRefIds = grouped.data
-    const total = grouped.pagination.total
-    if (!groupedRefIds.length) {
-      return {
-        data: [],
-        pagination: paginationOf(0, page, size),
-      }
-    }
-
-    const refIds = groupedRefIds.map((g) => g.refId)
-    const insights = this.toInsightsDocs(
-      await this.aiInsightsRepository.listByRefIds(refIds),
-    )
-    const articleMap = await this.databaseService.getRefArticleMap(refIds)
-    const insightsByRef = insights.reduce(
-      (acc, ins) => {
-        ;(acc[ins.refId] ||= []).push(ins)
-        return acc
+    const { data, pagination } = await buildGroupedWithOrphans<AIInsightsModel>(
+      {
+        page: query.page,
+        size: query.size,
+        search: query.search,
+        databaseService: this.databaseService,
+        fetchCandidateArticles: () =>
+          this.databaseService.findAllArticlesForAIText(),
+        fetchRecordsPage: (page, size, refIds) =>
+          this.aiInsightsRepository.groupedByRef(page, size, refIds),
+        fetchRecordsDistinctRefIds: (refIds) =>
+          this.aiInsightsRepository.findDistinctRefIds(refIds),
+        fetchItemsByRefIds: async (refIds) =>
+          this.toInsightsDocs(
+            await this.aiInsightsRepository.listByRefIds(refIds),
+          ),
+        getItemRefId: (item) => item.refId,
       },
-      {} as Record<string, AIInsightsModel[]>,
     )
-    const groupedData = refIds
-      .map((refId: string) => {
-        const article = articleMap[refId]
-        if (!article) return null
-        return { article, insights: insightsByRef[refId] || [] }
-      })
-      .filter(Boolean)
     return {
-      data: groupedData,
-      pagination: paginationOf(total, page, size),
+      data: data.map((row) => ({
+        article: row.article,
+        insights: row.items,
+      })),
+      pagination,
     }
   }
 

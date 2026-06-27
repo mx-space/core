@@ -20,7 +20,7 @@ export type RefArticleInfo = {
 export const buildRefArticleMap = (articles: {
   posts: Array<{ id: string; title: string }>
   notes: Array<{ id: string; title: string }>
-  pages: Array<{ id: string; title: string }>
+  pages?: Array<{ id: string; title: string }>
 }): Record<string, RefArticleInfo> => {
   const map: Record<string, RefArticleInfo> = {}
   for (const a of articles.posts) {
@@ -29,7 +29,7 @@ export const buildRefArticleMap = (articles: {
   for (const a of articles.notes) {
     map[a.id] = { id: a.id, title: a.title, type: CollectionRefTypes.Note }
   }
-  for (const a of articles.pages) {
+  for (const a of articles.pages ?? []) {
     map[a.id] = { id: a.id, title: a.title, type: CollectionRefTypes.Page }
   }
   return map
@@ -139,6 +139,23 @@ export class DatabaseService {
     const pick = (rows: Array<{ id: string; title: string }>) =>
       rows.map(({ id, title }) => ({ id, title }))
     return { posts: pick(posts), notes: pick(notes), pages: pick(pages) }
+  }
+
+  /**
+   * Visible posts + notes for AI features (summary / insights) that do not
+   * apply to pages.
+   */
+  public async findAllArticlesForAIText(): Promise<{
+    posts: Array<{ id: string; title: string }>
+    notes: Array<{ id: string; title: string }>
+  }> {
+    const [posts, notes] = await Promise.all([
+      this.postRepository.findPublishedForSitemap(),
+      this.noteRepository.findVisibleForSitemap(),
+    ])
+    const pick = (rows: Array<{ id: string; title: string }>) =>
+      rows.map(({ id, title }) => ({ id, title }))
+    return { posts: pick(posts), notes: pick(notes) }
   }
 
   flatCollectionToMap(combinedCollection: IdsCollection) {

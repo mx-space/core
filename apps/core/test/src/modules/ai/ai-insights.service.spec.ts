@@ -24,6 +24,10 @@ const createService = () => {
   const databaseService = {
     findGlobalById: vi.fn(),
     getRefArticleMap: vi.fn().mockResolvedValue({}),
+    findArticleIdsByTitle: vi.fn().mockResolvedValue([]),
+    findAllArticlesForAIText: vi
+      .fn()
+      .mockResolvedValue({ posts: [], notes: [] }),
   }
   const configService = { get: vi.fn() }
   const aiService = {}
@@ -84,7 +88,12 @@ describe('AiInsightsService', () => {
       data: [{ refId: 'post-1' }],
       pagination: { total: 1 },
     })
+    repository.findDistinctRefIds.mockResolvedValue(['post-1'])
     repository.listByRefIds.mockResolvedValue([row] as any)
+    databaseService.findAllArticlesForAIText.mockResolvedValue({
+      posts: [{ id: 'post-1', title: 'Post' }],
+      notes: [],
+    })
     databaseService.getRefArticleMap.mockResolvedValue({
       'post-1': { id: 'post-1', title: 'Post', type: CollectionRefTypes.Post },
     })
@@ -92,8 +101,62 @@ describe('AiInsightsService', () => {
     await expect(
       service.getAllInsightsGrouped({ page: 1, size: 10 }),
     ).resolves.toMatchObject({
-      data: [{ article: { id: 'post-1', title: 'Post' } }],
+      data: [{ article: { id: 'post-1', title: 'Post' }, insights: [row] }],
       pagination: { total: 1, currentPage: 1, size: 10 },
     })
+  })
+
+  it('includes orphan articles with zero insights alongside records', async () => {
+    const { databaseService, repository, service } = createService()
+    repository.groupedByRef.mockResolvedValue({
+      data: [{ refId: 'post-1' }],
+      pagination: { total: 1 },
+    })
+    repository.findDistinctRefIds.mockResolvedValue(['post-1'])
+    repository.listByRefIds.mockResolvedValue([row] as any)
+    databaseService.findAllArticlesForAIText.mockResolvedValue({
+      posts: [
+        { id: 'post-1', title: 'Has Insight' },
+        { id: 'post-2', title: 'Orphan Post' },
+      ],
+      notes: [{ id: 'note-9', title: 'Orphan Note' }],
+    })
+    databaseService.getRefArticleMap.mockResolvedValue({
+      'post-1': {
+        id: 'post-1',
+        title: 'Has Insight',
+        type: CollectionRefTypes.Post,
+      },
+    })
+
+    const result = await service.getAllInsightsGrouped({ page: 1, size: 10 })
+
+    expect(result.pagination).toMatchObject({ total: 3, currentPage: 1 })
+    expect(result.data).toEqual([
+      {
+        article: {
+          id: 'post-1',
+          title: 'Has Insight',
+          type: CollectionRefTypes.Post,
+        },
+        insights: [row],
+      },
+      {
+        article: {
+          id: 'post-2',
+          title: 'Orphan Post',
+          type: CollectionRefTypes.Post,
+        },
+        insights: [],
+      },
+      {
+        article: {
+          id: 'note-9',
+          title: 'Orphan Note',
+          type: CollectionRefTypes.Note,
+        },
+        insights: [],
+      },
+    ])
   })
 })

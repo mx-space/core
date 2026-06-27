@@ -122,6 +122,22 @@ export class AiInsightsRepository extends BaseRepository {
     }
   }
 
+  async findDistinctRefIds(
+    refIds?: Array<EntityId | string>,
+  ): Promise<EntityId[]> {
+    const where = refIds?.length
+      ? inArray(
+          aiInsights.refId,
+          refIds.map((id) => parseEntityId(id)),
+        )
+      : undefined
+    const rows = await this.db
+      .selectDistinct({ refId: aiInsights.refId })
+      .from(aiInsights)
+      .where(where)
+    return rows.map((r) => toEntityId(r.refId) as EntityId)
+  }
+
   async groupedByRef(
     page = 1,
     size = 20,

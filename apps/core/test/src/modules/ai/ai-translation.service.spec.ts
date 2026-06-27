@@ -56,6 +56,7 @@ const createService = () => {
     findGlobalById: vi.fn(),
     getRefArticleMap: vi.fn().mockResolvedValue({}),
     findAllArticlesForTranslation: vi.fn(),
+    findArticleIdsByTitle: vi.fn().mockResolvedValue([]),
   }
   const translationConsistencyService = {
     evaluateTranslationFreshness: vi.fn(() => 'valid'),
@@ -161,6 +162,46 @@ describe('AiTranslationService', () => {
     expect(context.setResult).toHaveBeenCalledWith(
       expect.objectContaining({ total: 3, createdCount: 3 }),
     )
+  })
+
+  it('includes orphan articles with zero translations in the grouped list', async () => {
+    const { databaseService, repository, service } = createService()
+    repository.groupByRefIdPaginated.mockResolvedValue({
+      data: [{ refId: 'post-1' }],
+      pagination: { total: 1, currentPage: 1, totalPage: 1, size: 10 },
+    } as any)
+    repository.findDistinctRefIds.mockResolvedValue(['post-1'])
+    repository.listByRefIds.mockResolvedValue([row()])
+    databaseService.findAllArticlesForTranslation.mockResolvedValue({
+      posts: [
+        { id: 'post-1', title: 'Has Translation' },
+        { id: 'post-2', title: 'Orphan Post' },
+      ],
+      notes: [],
+      pages: [{ id: 'page-1', title: 'Orphan Page' }],
+    })
+    databaseService.getRefArticleMap.mockResolvedValue({
+      'post-1': {
+        id: 'post-1',
+        title: 'Has Translation',
+        type: CollectionRefTypes.Post,
+      },
+    })
+
+    const result = await service.getAllTranslationsGrouped({
+      page: 1,
+      size: 10,
+    })
+
+    expect(result.pagination).toMatchObject({ total: 3, currentPage: 1 })
+    expect(result.data.map((row) => row.article.id)).toEqual([
+      'post-1',
+      'post-2',
+      'page-1',
+    ])
+    expect(result.data[0].translations).toEqual([row()])
+    expect(result.data[1].translations).toEqual([])
+    expect(result.data[2].translations).toEqual([])
   })
 
   it('loads translations with their source article from PG-backed services', async () => {

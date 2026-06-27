@@ -6,7 +6,6 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { paginationOf } from '~/processors/database/base.repository'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   type TaskExecuteContext,
@@ -34,6 +33,7 @@ import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
+import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import { AiSummaryRepository } from './ai-summary.repository'
 import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
 import type { AiSummaryRow } from './ai-summary.types'
@@ -467,70 +467,27 @@ export class AiSummaryService implements OnModuleInit {
   }
 
   async getAllSummariesGrouped(query: GetSummariesGroupedQueryInput) {
-    const { page, size } = query
-    const search = query.search?.trim()
-    const searchableRefIds = search
-      ? await this.databaseService.findArticleIdsByTitle(search)
-      : undefined
-
-    if (search && searchableRefIds?.length === 0) {
-      return {
-        data: [],
-        pagination: paginationOf(0, page, size),
-      }
-    }
-
-    const grouped = await this.aiSummaryRepository.groupedByRef(
-      page,
-      size,
-      searchableRefIds,
-    )
-    const groupedRefIds = grouped.data
-    const total = grouped.pagination.total
-
-    if (groupedRefIds.length === 0) {
-      return {
-        data: [],
-        pagination: paginationOf(0, page, size),
-      }
-    }
-
-    // Get all summaries for these refIds
-    const refIds = groupedRefIds.map((g) => g.refId)
-    const summaries = this.toSummaryDocs(
-      await this.aiSummaryRepository.listByRefIds(refIds),
-    )
-
-    // Get article info
-    const articleMap = await this.databaseService.getRefArticleMap(refIds)
-
-    // Group summaries by refId
-    const summariesByRefId = summaries.reduce(
-      (acc, summary) => {
-        if (!acc[summary.refId]) {
-          acc[summary.refId] = []
-        }
-        acc[summary.refId].push(summary)
-        return acc
-      },
-      {} as Record<string, AISummaryModel[]>,
-    )
-
-    // Build grouped data maintaining the order from aggregation
-    const groupedData = refIds
-      .map((refId: string) => {
-        const article = articleMap[refId]
-        if (!article) return null
-        return {
-          article,
-          summaries: summariesByRefId[refId] || [],
-        }
-      })
-      .filter(Boolean)
-
+    const { data, pagination } = await buildGroupedWithOrphans<AISummaryModel>({
+      page: query.page,
+      size: query.size,
+      search: query.search,
+      databaseService: this.databaseService,
+      fetchCandidateArticles: () =>
+        this.databaseService.findAllArticlesForAIText(),
+      fetchRecordsPage: (page, size, refIds) =>
+        this.aiSummaryRepository.groupedByRef(page, size, refIds),
+      fetchRecordsDistinctRefIds: (refIds) =>
+        this.aiSummaryRepository.findDistinctRefIds(refIds),
+      fetchItemsByRefIds: async (refIds) =>
+        this.toSummaryDocs(await this.aiSummaryRepository.listByRefIds(refIds)),
+      getItemRefId: (item) => item.refId,
+    })
     return {
-      data: groupedData,
-      pagination: paginationOf(total, page, size),
+      data: data.map((row) => ({
+        article: row.article,
+        summaries: row.items,
+      })),
+      pagination,
     }
   }
 

@@ -5,7 +5,6 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { paginationOf } from '~/processors/database/base.repository'
 import {
   buildRefArticleMap,
   DatabaseService,
@@ -44,6 +43,7 @@ import {
   type TranslationBatchTaskPayload,
   type TranslationTaskPayload,
 } from '../ai-task/ai-task.types'
+import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import type { IModelRuntime } from '../runtime'
 import { AiTranslationRepository } from './ai-translation.repository'
 import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
@@ -1007,63 +1007,32 @@ export class AiTranslationService
   }
 
   async getAllTranslationsGrouped(query: GetTranslationsGroupedQueryInput) {
-    const { page, size } = query
-    const search = query.search?.trim()
-    const searchableRefIds = search
-      ? await this.databaseService.findArticleIdsByTitle(search)
-      : undefined
-
-    if (search && searchableRefIds?.length === 0) {
-      return {
-        data: [],
-        pagination: paginationOf(0, page, size),
-      }
-    }
-
-    const grouped = await this.aiTranslationRepository.groupByRefIdPaginated(
-      page,
-      size,
-      searchableRefIds,
-    )
-
-    if (grouped.data.length === 0) {
-      return {
-        data: [],
-        pagination: paginationOf(grouped.pagination.total, page, size),
-      }
-    }
-
-    const refIds = grouped.data.map((g) => g.refId as string)
-    const [translations, articleMap] = await Promise.all([
-      this.aiTranslationRepository.listByRefIds(refIds),
-      this.databaseService.getRefArticleMap(refIds),
-    ])
-
-    const translationsByRefId = translations.reduce(
-      (acc, trans) => {
-        if (!acc[trans.refId]) {
-          acc[trans.refId] = []
-        }
-        acc[trans.refId].push(trans)
-        return acc
-      },
-      {} as Record<string, AITranslationModel[]>,
-    )
-
-    const groupedData = refIds
-      .map((refId) => {
-        const info = articleMap[refId]
-        if (!info) return null
-        return {
-          article: info,
-          translations: translationsByRefId[refId] || [],
-        }
+    const { data, pagination } =
+      await buildGroupedWithOrphans<AITranslationModel>({
+        page: query.page,
+        size: query.size,
+        search: query.search,
+        databaseService: this.databaseService,
+        fetchCandidateArticles: () =>
+          this.databaseService.findAllArticlesForTranslation(),
+        fetchRecordsPage: (page, size, refIds) =>
+          this.aiTranslationRepository.groupByRefIdPaginated(
+            page,
+            size,
+            refIds,
+          ),
+        fetchRecordsDistinctRefIds: (refIds) =>
+          this.aiTranslationRepository.findDistinctRefIds(refIds),
+        fetchItemsByRefIds: (refIds) =>
+          this.aiTranslationRepository.listByRefIds(refIds),
+        getItemRefId: (item) => item.refId,
       })
-      .filter(Boolean)
-
     return {
-      data: groupedData,
-      pagination: grouped.pagination,
+      data: data.map((row) => ({
+        article: row.article,
+        translations: row.items,
+      })),
+      pagination,
     }
   }
 

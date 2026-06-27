@@ -156,6 +156,22 @@ export class AiTranslationRepository extends BaseRepository {
     return rows.map(mapTranslation)
   }
 
+  async findDistinctRefIds(
+    refIds?: Array<EntityId | string>,
+  ): Promise<EntityId[]> {
+    const where = refIds?.length
+      ? inArray(
+          aiTranslations.refId,
+          refIds.map((id) => parseEntityId(id)),
+        )
+      : undefined
+    const rows = await this.db
+      .selectDistinct({ refId: aiTranslations.refId })
+      .from(aiTranslations)
+      .where(where)
+    return rows.map((r) => toEntityId(r.refId) as EntityId)
+  }
+
   async groupByRefIdPaginated(
     page = 1,
     size = 20,
