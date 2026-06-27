@@ -7,7 +7,12 @@ import { TranslationEntryService } from '~/modules/ai/ai-translation/translation
 const createService = () => {
   const repository = createPgRepositoryMock<TranslationEntryRepository>()
   const categoryService = { findAllCategory: vi.fn().mockResolvedValue([]) }
-  const noteService = { findRecent: vi.fn().mockResolvedValue([]) }
+  const noteService = {
+    findRecent: vi.fn().mockResolvedValue([]),
+    findDistinctMoodsAndWeathers: vi
+      .fn()
+      .mockResolvedValue({ moods: [], weathers: [] }),
+  }
   const topicRepository = { findAll: vi.fn().mockResolvedValue([]) }
   const aiService = {}
   const configService = {}
@@ -31,7 +36,7 @@ const createService = () => {
     configService as any,
     redisService as any,
   )
-  return { pipeline, redis, repository, service }
+  return { noteService, pipeline, redis, repository, service }
 }
 
 describe('TranslationEntryService', () => {
@@ -72,6 +77,27 @@ describe('TranslationEntryService', () => {
 
     expect(repository.listByBatch).not.toHaveBeenCalled()
     expect(result.get('晴')).toBe('Sunny')
+  })
+
+  it('seeds glossary entries from every distinct mood/weather across all visible notes', async () => {
+    const { noteService, service } = createService() as any
+    noteService.findDistinctMoodsAndWeathers.mockResolvedValue({
+      moods: ['happy', 'sad'],
+      weathers: ['sunny'],
+    })
+
+    const values = await service.collectSourceValues()
+
+    expect(noteService.findDistinctMoodsAndWeathers).toHaveBeenCalledOnce()
+    expect(noteService.findRecent).not.toHaveBeenCalled()
+    const moods = values
+      .filter((v: any) => v.keyPath === 'note.mood')
+      .map((v: any) => v.sourceText)
+    const weathers = values
+      .filter((v: any) => v.keyPath === 'note.weather')
+      .map((v: any) => v.sourceText)
+    expect(moods.sort()).toEqual(['happy', 'sad'])
+    expect(weathers).toEqual(['sunny'])
   })
 
   it('updates dictionary cache after PG dictionary entry updates', async () => {

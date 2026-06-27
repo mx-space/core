@@ -166,6 +166,10 @@ export class NoteService {
     return this.noteRepository.findRecent(size, options)
   }
 
+  async findDistinctMoodsAndWeathers() {
+    return this.noteRepository.findDistinctMoodsAndWeathers()
+  }
+
   async listPaginated(
     page: number,
     size: number,

@@ -242,31 +242,23 @@ export class TranslationEntryService {
       }
     }
 
-    const notes = await this.noteService.findRecent(100)
-    const moods = [...new Set(notes.map((note) => note.mood).filter(Boolean))]
+    const { moods, weathers } =
+      await this.noteService.findDistinctMoodsAndWeathers()
     for (const mood of moods) {
-      if (mood) {
-        values.push({
-          keyPath: 'note.mood',
-          keyType: 'dict',
-          lookupKey: TranslationEntryService.hashSourceText(mood),
-          sourceText: mood,
-        })
-      }
+      values.push({
+        keyPath: 'note.mood',
+        keyType: 'dict',
+        lookupKey: TranslationEntryService.hashSourceText(mood),
+        sourceText: mood,
+      })
     }
-
-    const weathers = [
-      ...new Set(notes.map((note) => note.weather).filter(Boolean)),
-    ]
     for (const weather of weathers) {
-      if (weather) {
-        values.push({
-          keyPath: 'note.weather',
-          keyType: 'dict',
-          lookupKey: TranslationEntryService.hashSourceText(weather),
-          sourceText: weather,
-        })
-      }
+      values.push({
+        keyPath: 'note.weather',
+        keyType: 'dict',
+        lookupKey: TranslationEntryService.hashSourceText(weather),
+        sourceText: weather,
+      })
     }
 
     return values

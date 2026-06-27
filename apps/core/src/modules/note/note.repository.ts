@@ -9,6 +9,7 @@ import {
   gte,
   ilike,
   inArray,
+  isNotNull,
   isNull,
   lt,
   lte,
@@ -147,10 +148,7 @@ const mapTopic = (topic: TopicProjection): NoteRow['topic'] => {
   }
 }
 
-const mapWithTopic = (
-  note: NoteRowSource,
-  topic: TopicProjection,
-): NoteRow => {
+const mapWithTopic = (note: NoteRowSource, topic: TopicProjection): NoteRow => {
   const row = mapBase(note)
   row.topic = mapTopic(topic)
   return row
@@ -440,7 +438,9 @@ export class NoteRepository extends BaseRepository {
       name: metaOnly
         ? 'notes_default_visible_list_meta_v2'
         : 'notes_default_visible_list_v2',
-      text: metaOnly ? defaultVisibleNoteListMetaSql : defaultVisibleNoteListSql,
+      text: metaOnly
+        ? defaultVisibleNoteListMetaSql
+        : defaultVisibleNoteListSql,
     })
     const count = result.rows[0]?.totalCount ?? 0
     return {
@@ -609,6 +609,35 @@ export class NoteRepository extends BaseRepository {
     options: NoteSortOptions & NoteListFilter = {},
   ): Promise<PaginationResult<NoteRow>> {
     return this.listInternal(page, size, options)
+  }
+
+  /**
+   * Collect every distinct mood / weather string from visible notes —
+   * used by the translation glossary so historical entries are also seeded.
+   */
+  async findDistinctMoodsAndWeathers(): Promise<{
+    moods: string[]
+    weathers: string[]
+  }> {
+    const visible = this.visibleClause()
+    const [moodRows, weatherRows] = await Promise.all([
+      this.db
+        .selectDistinct({ value: notes.mood })
+        .from(notes)
+        .where(and(visible, isNotNull(notes.mood))!),
+      this.db
+        .selectDistinct({ value: notes.weather })
+        .from(notes)
+        .where(and(visible, isNotNull(notes.weather))!),
+    ])
+    const pick = (rows: Array<{ value: string | null }>): string[] =>
+      rows
+        .map((row) => row.value)
+        .filter((value): value is string => Boolean(value))
+    return {
+      moods: pick(moodRows),
+      weathers: pick(weatherRows),
+    }
   }
 
   async findRecent(
