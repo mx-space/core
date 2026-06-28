@@ -1,6 +1,11 @@
 import type { CommandItemConfig } from '@haklex/rich-editor/commands'
 import { createRendererDecoration } from '@haklex/rich-editor/static'
 import type {
+  StockKLineRange,
+  StockNodePayload,
+  StockVariant,
+} from '@mx-space/editor'
+import type {
   EditorConfig,
   LexicalCommand,
   LexicalEditor,
@@ -18,26 +23,11 @@ import {
 import { LineChart } from 'lucide-react'
 import { createElement, type ReactElement } from 'react'
 
-import {
-  STOCK_NODE_KEY,
-  type StockKLineRange,
-  type StockSlotProps,
-  type StockVariant,
-} from './stock-augment'
+import { STOCK_NODE_KEY, type StockSlotProps } from './stock-augment'
 import { openStockDialog } from './stock-plugin-bridge'
 import { StockBlockConnected } from './StockBlockConnected'
 
-export type StockNodePayload =
-  | {
-      variant: 'snapshot'
-      symbol: string
-    }
-  | {
-      variant: 'kline'
-      symbol: string
-      range: StockKLineRange
-      ema?: [number, number] | false
-    }
+export type { StockNodePayload }
 
 export const INSERT_STOCK_COMMAND: LexicalCommand<StockNodePayload> =
   createCommand('INSERT_STOCK_COMMAND')

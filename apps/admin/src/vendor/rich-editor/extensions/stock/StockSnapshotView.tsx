@@ -11,7 +11,7 @@ import {
   UP_STROKE,
 } from './_shared'
 import type { Quote, SparklinePoint, StockMeta } from './types'
-import { useStockQuote } from './use-stock-data'
+import { isStockNotFound, useStockQuote } from './use-stock-data'
 
 const SPARK_W = 220
 const SPARK_H = 56
@@ -51,7 +51,15 @@ function buildSparkPath(points: SparklinePoint[]): string {
   return segs.join(' ')
 }
 
-function Unavailable({ symbol, message }: { symbol: string; message: string }) {
+function Unavailable({
+  symbol,
+  message,
+  onRetry,
+}: {
+  symbol: string
+  message: string
+  onRetry?: () => void
+}) {
   return (
     <PaperCardChrome>
       <header className="mb-4">
@@ -63,6 +71,15 @@ function Unavailable({ symbol, message }: { symbol: string; message: string }) {
         </div>
       </header>
       <p className="text-fg-muted text-[13px]">{message}</p>
+      {onRetry ? (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="text-fg-muted hover:text-fg border-border hover:border-border-strong mt-3 rounded-sm border px-2 py-1 text-[11px] transition-colors"
+        >
+          Retry
+        </button>
+      ) : null}
     </PaperCardChrome>
   )
 }
@@ -144,13 +161,20 @@ function SnapshotCard({ quote, locale }: { quote: Quote; locale: string }) {
 
 export function StockSnapshotView({ symbol }: { symbol: string }) {
   const { locale } = useI18n()
-  const { data, isLoading, isError } = useStockQuote(symbol)
+  const { data, isLoading, isError, error, refetch } = useStockQuote(symbol)
 
   if (isLoading) {
     return <Unavailable message="Loading quote…" symbol={symbol} />
   }
   if (isError || !data) {
-    return <Unavailable message="Quote unavailable" symbol={symbol} />
+    const notFound = isStockNotFound(error)
+    return (
+      <Unavailable
+        message={notFound ? 'Symbol not found' : 'Failed to load quote'}
+        symbol={symbol}
+        onRetry={notFound ? undefined : () => void refetch()}
+      />
+    )
   }
   return <SnapshotCard locale={locale} quote={data} />
 }

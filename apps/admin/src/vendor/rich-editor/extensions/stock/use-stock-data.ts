@@ -8,6 +8,19 @@ function normalizeHost(url: string): string {
   return url.replace(/\/$/, '')
 }
 
+export class StockFetchError extends Error {
+  readonly status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'StockFetchError'
+    this.status = status
+  }
+}
+
+export function isStockNotFound(error: unknown): boolean {
+  return error instanceof StockFetchError && error.status === 404
+}
+
 async function fetchQuote(symbol: string): Promise<Quote> {
   const params = new URLSearchParams({ symbol })
   const res = await fetch(
@@ -15,7 +28,10 @@ async function fetchQuote(symbol: string): Promise<Quote> {
     { headers: { Accept: 'application/json' } },
   )
   if (!res.ok) {
-    throw new Error(`Failed to fetch quote (${res.status})`)
+    throw new StockFetchError(
+      `Failed to fetch quote (${res.status})`,
+      res.status,
+    )
   }
   return (await res.json()) as Quote
 }
@@ -37,7 +53,10 @@ async function fetchBars(args: {
     { headers: { Accept: 'application/json' } },
   )
   if (!res.ok) {
-    throw new Error(`Failed to fetch bars (${res.status})`)
+    throw new StockFetchError(
+      `Failed to fetch bars (${res.status})`,
+      res.status,
+    )
   }
   return (await res.json()) as BarsResult
 }

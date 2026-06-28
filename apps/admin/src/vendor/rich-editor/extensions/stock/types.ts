@@ -1,4 +1,4 @@
-export type StockKLineInterval = '5m' | '15m' | '1h' | '1d'
+export type { StockKLineInterval } from '@mx-space/editor'
 
 export type MarketState = 'pre' | 'regular' | 'post' | 'closed'
 

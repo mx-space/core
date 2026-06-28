@@ -15,7 +15,7 @@ import {
   UP_STROKE,
 } from './_shared'
 import type { Bar, StockKLineInterval, StockMeta } from './types'
-import { useStockBars } from './use-stock-data'
+import { isStockNotFound, useStockBars } from './use-stock-data'
 
 type Props = {
   symbol: string
@@ -318,10 +318,12 @@ function FallbackChrome({
   symbol,
   rangeLabel,
   message,
+  onRetry,
 }: {
   symbol: string
   rangeLabel: string
   message: string
+  onRetry?: () => void
 }) {
   return (
     <PaperCardChrome>
@@ -331,8 +333,17 @@ function FallbackChrome({
           {rangeLabel}
         </span>
       </div>
-      <div className="text-fg-muted flex h-[200px] w-full items-center justify-center text-[12px] italic">
-        {message}
+      <div className="text-fg-muted flex h-[200px] w-full flex-col items-center justify-center gap-3 text-[12px] italic">
+        <span>{message}</span>
+        {onRetry ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="text-fg-muted hover:text-fg border-border hover:border-border-strong rounded-sm border px-2 py-1 text-[11px] not-italic transition-colors"
+          >
+            Retry
+          </button>
+        ) : null}
       </div>
     </PaperCardChrome>
   )
@@ -503,7 +514,7 @@ function KLineCard({
 export function StockKLineView({ symbol, range, ema }: Props) {
   const { locale } = useI18n()
   const rangeLabel = formatRange(range.from, range.to, locale)
-  const { data, isLoading, isError } = useStockBars({
+  const { data, isLoading, isError, error, refetch } = useStockBars({
     symbol,
     from: range.from,
     to: range.to,
@@ -520,11 +531,13 @@ export function StockKLineView({ symbol, range, ema }: Props) {
     )
   }
   if (isError || !data) {
+    const notFound = isStockNotFound(error)
     return (
       <FallbackChrome
-        message="Quote unavailable"
+        message={notFound ? 'Symbol not found' : 'Failed to load chart'}
         rangeLabel={rangeLabel}
         symbol={symbol}
+        onRetry={notFound ? undefined : () => void refetch()}
       />
     )
   }
