@@ -8,10 +8,10 @@ describe('note translation-entry collection', () => {
   it('collects note mood and weather dictionary values without Mongoose models', async () => {
     const entryRepository = createPgRepositoryMock<TranslationEntryRepository>()
     const noteService = {
-      findRecent: vi.fn().mockResolvedValue([
-        { id: 'note-1', mood: '开心', weather: '晴' },
-        { id: 'note-2', mood: '开心', weather: null },
-      ]),
+      findDistinctMoodsAndWeathers: vi.fn().mockResolvedValue({
+        moods: ['开心'],
+        weathers: ['晴'],
+      }),
     }
     const service = new TranslationEntryService(
       entryRepository as any,
