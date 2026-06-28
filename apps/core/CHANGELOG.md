@@ -1,3 +1,16 @@
+## [13.11.4](https://github.com/mx-space/core/compare/v13.11.3...v13.11.4) (2026-06-28)
+
+
+### Features
+
+* **stock:** built-in serverless stock_quote + stock_bars + admin Lexical node ([00a8f86](https://github.com/mx-space/core/commit/00a8f86fc))
+
+
+### Bug Fixes
+
+* **admin:** refresh auth state after login ([068b545](https://github.com/mx-space/core/commit/068b545d5))
+
+
 ## [13.11.3](https://github.com/mx-space/core/compare/v13.11.2...v13.11.3) (2026-06-28)
 
 

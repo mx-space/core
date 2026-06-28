@@ -1,7 +1,7 @@
 {
   "name": "@mx-admin/admin",
   "private": true,
-  "version": "8.3.21",
+  "version": "8.3.22",
   "scripts": {
     "dev": "NODE_ENV=development vite --mode development --open --host",
     "build": "NODE_ENV=production vite build --mode production",
