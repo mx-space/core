@@ -1,3 +1,10 @@
+## [13.11.7](https://github.com/mx-space/core/compare/v13.11.6...v13.11.7) (2026-06-28)
+
+
+### Bug Fixes
+
+* **serverless:** drop fake axios stub, switch built-ins to native fetch ([b34034e](https://github.com/mx-space/core/commit/b34034e3a5ab892b0b6edc6b29f170af54d4b4e2))
+
 ## [13.11.6](https://github.com/mx-space/core/compare/v13.11.5...v13.11.6) (2026-06-28)
 
 
