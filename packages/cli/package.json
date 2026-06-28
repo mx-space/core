@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/cli",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "description": "Command line interface for mx-space (mx-core) — auth, content, configuration",
   "keywords": [
     "mx-space",
