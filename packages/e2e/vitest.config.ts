@@ -17,12 +17,7 @@ export default defineConfig({
     retry: process.env.CI ? 2 : 0,
     fileParallelism: true,
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        maxForks: process.env.CI ? 2 : undefined,
-        minForks: process.env.CI ? 1 : undefined,
-      },
-    },
+    maxWorkers: process.env.CI ? 2 : undefined,
     setupFiles: [resolve(__dirname, 'src/helpers/setup.ts')],
   },
   resolve: {
