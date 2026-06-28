@@ -1,3 +1,10 @@
+## [13.11.8](https://github.com/mx-space/core/compare/v13.11.7...v13.11.8) (2026-06-28)
+
+
+### Bug Fixes
+
+* **stock:** switch bars source from Twelve Data to Polygon.io ([c72cd47](https://github.com/mx-space/core/commit/c72cd47bdebdf29f75efc728135f77ca117d3c2d))
+
 ## [13.11.7](https://github.com/mx-space/core/compare/v13.11.6...v13.11.7) (2026-06-28)
 
 
