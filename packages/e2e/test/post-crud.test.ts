@@ -14,7 +14,6 @@ import { makeTmpHome, type TmpHome } from '../src/helpers/tmp-home'
 describe('mxs post CRUD against real core', () => {
   let backend: E2EBackend
   let tmpHome: TmpHome
-  let categoryName: string
 
   beforeAll(async () => {
     backend = await createE2EBackend()
@@ -23,7 +22,6 @@ describe('mxs post CRUD against real core', () => {
       profile: 'post-crud',
       tmpHome: tmpHome.path,
     })
-    categoryName = `E2E ${Date.now()}`
   }, 90_000)
 
   afterAll(async () => {
@@ -34,6 +32,8 @@ describe('mxs post CRUD against real core', () => {
   const env = () => backend.backendEnv(tmpHome.path)
 
   it('creates, lists, gets, updates, and deletes a post', async () => {
+    const unique = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`
+    const categoryName = `E2E ${unique}`
     const category = await runMxs(
       [
         '--json',
@@ -42,7 +42,7 @@ describe('mxs post CRUD against real core', () => {
         '--name',
         categoryName,
         '--slug',
-        `e2e-${Date.now()}`,
+        `e2e-${unique}`,
       ],
       env(),
     )
