@@ -1,14 +1,36 @@
-const SERIES_URL = 'https://api.twelvedata.com/time_series'
-const INTERVAL_MAP = { '5m': '5min', '15m': '15min', '1h': '1h', '1d': '1day' }
+const AGGS_URL = 'https://api.polygon.io/v2/aggs/ticker'
+const TICKER_URL = 'https://api.polygon.io/v3/reference/tickers'
+const INTERVAL_MAP = {
+  '5m': { mult: 5, span: 'minute' },
+  '15m': { mult: 15, span: 'minute' },
+  '1h': { mult: 1, span: 'hour' },
+  '1d': { mult: 1, span: 'day' },
+}
 const ALLOWED_INTERVALS = Object.keys(INTERVAL_MAP)
-const DEFAULT_OUTPUTSIZE = '120'
+const DEFAULT_LOOKBACK_DAYS = { '5m': 5, '15m': 5, '1h': 30, '1d': 180 }
 const TTL_LIVE_SEC = 600
 const TTL_FROZEN_SEC = 60 * 60 * 24 * 365
 const FREEZE_THRESHOLD_MS = 60_000
+const TICKER_CACHE_TTL_SEC = 60 * 60 * 24
+const EXCHANGE_NAME = {
+  XNAS: 'NASDAQ',
+  XNYS: 'NYSE',
+  ARCX: 'NYSE Arca',
+  BATS: 'CBOE BZX',
+  XASE: 'NYSE American',
+  IEXG: 'IEX',
+}
 
 const num = (v) => {
   const n = Number(v)
   return Number.isFinite(n) ? n : undefined
+}
+
+const ymd = (ms) => {
+  const d = new Date(ms)
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  return `${d.getUTCFullYear()}-${m}-${day}`
 }
 
 export default async function handler(ctx) {
@@ -17,7 +39,7 @@ export default async function handler(ctx) {
   if (!ALLOWED_INTERVALS.includes(interval)) ctx.throws(422, 'invalid interval')
 
   const sym = String(symbol).toUpperCase()
-  const tdInterval = INTERVAL_MAP[interval]
+  const { mult, span } = INTERVAL_MAP[interval]
 
   const cacheKey = `stock:bars:${sym}:${interval}:${from || ''}:${to || ''}`
   const cached = await ctx.storage.cache.get(cacheKey)
@@ -25,78 +47,104 @@ export default async function handler(ctx) {
 
   const config = await ctx.getService('config')
   const thirdParty = await config.get('thirdPartyServiceIntegration')
-  const apiKey = String(thirdParty?.twelveData?.apiKey ?? '').trim()
+  const apiKey = String(thirdParty?.polygon?.apiKey ?? '').trim()
   if (!apiKey) {
     ctx.throws(
       500,
-      'Twelve Data API key not configured (Settings → Third-party integrations)',
+      'Polygon.io API key not configured (Settings → Third-party integrations)',
     )
   }
 
-  const params = {
-    symbol: sym,
-    interval: tdInterval,
-    apikey: apiKey,
-    order: 'ASC',
-    ...(from && to
-      ? {
-          start_date: String(from).slice(0, 10),
-          end_date: String(to).slice(0, 10),
-        }
-      : { outputsize: DEFAULT_OUTPUTSIZE }),
+  const now = Date.now()
+  let fromMs
+  let toMs
+  if (from && to) {
+    fromMs = new Date(from).getTime()
+    toMs = new Date(to).getTime()
+    if (!Number.isFinite(fromMs) || !Number.isFinite(toMs)) {
+      ctx.throws(422, 'invalid from/to')
+    }
+  } else {
+    toMs = now
+    fromMs = now - DEFAULT_LOOKBACK_DAYS[interval] * 86_400_000
   }
+
+  const aggsUrl =
+    `${AGGS_URL}/${encodeURIComponent(sym)}/range/${mult}/${span}/` +
+    `${ymd(fromMs)}/${ymd(toMs)}` +
+    `?adjusted=true&sort=asc&limit=5000&apiKey=${encodeURIComponent(apiKey)}`
 
   let payload
   try {
-    const res = await fetch(`${SERIES_URL}?${new URLSearchParams(params)}`, {
-      headers: { Accept: 'application/json' },
-    })
+    const res = await fetch(aggsUrl, { headers: { Accept: 'application/json' } })
     payload = await res.json()
   } catch (e) {
-    ctx.throws(502, `Twelve Data: ${e.message || 'unknown'}`)
-  }
-  if (
-    payload?.status === 'error' ||
-    (typeof payload?.code === 'number' && payload.code >= 400)
-  ) {
-    ctx.throws(502, `Twelve Data: ${payload.message || 'unknown'}`)
-  }
-  if (!Array.isArray(payload?.values) || payload.values.length === 0) {
-    ctx.throws(404, `no bars for ${sym}`)
+    ctx.throws(502, `Polygon.io: ${e.message || 'unknown'}`)
   }
 
+  if (payload?.status && payload.status !== 'OK' && payload.status !== 'DELAYED') {
+    ctx.throws(
+      502,
+      `Polygon.io: ${payload.error || payload.message || payload.status}`,
+    )
+  }
+
+  const results = Array.isArray(payload?.results) ? payload.results : []
   const bars = []
-  for (const b of payload.values) {
-    const open = num(b.open)
-    const high = num(b.high)
-    const low = num(b.low)
-    const close = num(b.close)
+  for (const r of results) {
+    if (r.t < fromMs || r.t > toMs) continue
+    const open = num(r.o)
+    const high = num(r.h)
+    const low = num(r.l)
+    const close = num(r.c)
     if (open == null || high == null || low == null || close == null) continue
     bars.push({
-      timestamp: new Date(`${b.datetime.replace(' ', 'T')}Z`).getTime(),
+      timestamp: r.t,
       open,
       high,
       low,
       close,
-      volume: num(b.volume),
+      volume: num(r.v),
     })
   }
+  if (bars.length === 0) ctx.throws(404, `no bars for ${sym}`)
 
-  const metaSym = payload.meta?.symbol || sym
+  const tickerCacheKey = `stock:ticker:${sym}`
+  let tickerInfo = await ctx.storage.cache.get(tickerCacheKey)
+  if (tickerInfo && typeof tickerInfo === 'string') tickerInfo = JSON.parse(tickerInfo)
+  if (!tickerInfo) {
+    try {
+      const tRes = await fetch(
+        `${TICKER_URL}/${encodeURIComponent(sym)}?apiKey=${encodeURIComponent(apiKey)}`,
+        { headers: { Accept: 'application/json' } },
+      )
+      const tJson = await tRes.json()
+      tickerInfo = tJson?.results || {}
+      await ctx.storage.cache.set(
+        tickerCacheKey,
+        JSON.stringify(tickerInfo),
+        TICKER_CACHE_TTL_SEC,
+      )
+    } catch {
+      tickerInfo = {}
+    }
+  }
+
+  const exchangeCode = tickerInfo?.primary_exchange
   const meta = {
-    symbol: metaSym,
-    exchange: payload.meta?.exchange,
-    currency: payload.meta?.currency,
-    timezone: payload.meta?.exchange_timezone,
-    longName: metaSym,
-    shortName: metaSym,
-    asOf: bars.length ? Math.floor(bars.at(-1).timestamp / 1000) : undefined,
+    symbol: tickerInfo?.ticker || sym,
+    exchange:
+      (exchangeCode && (EXCHANGE_NAME[exchangeCode] || exchangeCode)) || undefined,
+    currency: (tickerInfo?.currency_name || 'USD').toUpperCase(),
+    timezone: 'America/New_York',
+    longName: tickerInfo?.name || sym,
+    shortName: tickerInfo?.name || sym,
+    asOf: Math.floor(bars.at(-1).timestamp / 1000),
   }
 
   const result = { meta, bars }
 
-  const toMs = to ? new Date(to).getTime() : Date.now()
-  const isFrozen = Number.isFinite(toMs) && toMs < Date.now() - FREEZE_THRESHOLD_MS
+  const isFrozen = Number.isFinite(toMs) && toMs < now - FREEZE_THRESHOLD_MS
   const ttl = isFrozen ? TTL_FROZEN_SEC : TTL_LIVE_SEC
   await ctx.storage.cache.set(cacheKey, JSON.stringify(result), ttl)
   return result

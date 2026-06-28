@@ -511,7 +511,14 @@ const ArxivIntegrationSchema = section('Arxiv', {
 const TwelveDataIntegrationSchema = section('Twelve Data', {
   enabled: field.toggle(z.boolean().optional().default(false), 'Enabled'),
   apiKey: field.password(z.string().optional(), 'API Key', {
-    description: 'Stock quote + bars data source, https://twelvedata.com',
+    description: 'Stock quote data source, https://twelvedata.com',
+  }),
+})
+
+const PolygonIntegrationSchema = section('Polygon.io', {
+  enabled: field.toggle(z.boolean().optional().default(false), 'Enabled'),
+  apiKey: field.password(z.string().optional(), 'API Key', {
+    description: 'Stock bars data source, https://polygon.io',
   }),
 })
 
@@ -639,6 +646,7 @@ export const ThirdPartyServiceIntegrationSchema = section(
     qqMusic: QQMusicIntegrationSchema.optional(),
     openGraph: OpenGraphIntegrationSchema.optional(),
     twelveData: TwelveDataIntegrationSchema.optional(),
+    polygon: PolygonIntegrationSchema.optional(),
   },
 )
 export class ThirdPartyServiceIntegrationDto extends createZodDto(

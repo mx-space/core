@@ -132,6 +132,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
       },
     },
     twelveData: { enabled: false, apiKey: '' },
+    polygon: { enabled: false, apiKey: '' },
   },
 
   authSecurity: {
