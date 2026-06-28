@@ -15,6 +15,9 @@ export const adminQueryKeys = {
   aggregate: {
     root: ['aggregate'] as const,
   },
+  auth: {
+    loggedStatus: () => ['auth', 'check-logged'] as const,
+  },
   ai: {
     grouped: (params: { group: string; search: string }) =>
       ['ai', params.group, 'grouped', params.search] as const,

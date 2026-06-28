@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 
 import { checkLogged } from '~/api/auth'
+import { loggedStatusQueryKey } from '~/features/auth/constants'
 import { useI18n } from '~/i18n'
 import { AdminShell } from '~/shell'
 import { SocketBridge } from '~/socket/SocketBridge'
@@ -14,7 +15,7 @@ export function ProtectedLayout() {
   const { t } = useI18n()
   const loggedQuery = useQuery({
     queryFn: checkLogged,
-    queryKey: ['auth', 'check-logged'],
+    queryKey: loggedStatusQueryKey,
     retry: false,
     staleTime: 1000 * 60 * 5,
   })
