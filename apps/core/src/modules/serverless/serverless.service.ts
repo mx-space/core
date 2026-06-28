@@ -474,12 +474,21 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
 
     const migrationTasks: Promise<any>[] = []
     for (const doc of result) {
+      const expected = pathCodeMap.get(doc.path)
       pathCodeMap.delete(doc.path)
+      if (!expected) continue
 
-      if (!doc.builtIn) {
-        migrationTasks.push(
-          this.snippetRepository.update(doc.id, { builtIn: true }),
-        )
+      const patch: Record<string, unknown> = {}
+      if (!doc.builtIn) patch.builtIn = true
+      if (doc.raw !== expected.code) {
+        patch.raw = expected.code
+        patch.compiledCode = null
+      }
+      if (Object.keys(patch).length > 0) {
+        migrationTasks.push(this.snippetRepository.update(doc.id, patch))
+        if (patch.raw) {
+          this.logger.log(`refresh built-in function: ${expected.name}`)
+        }
       }
     }
     await Promise.all(migrationTasks)
