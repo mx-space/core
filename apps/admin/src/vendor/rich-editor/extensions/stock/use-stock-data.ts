@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { WEB_URL } from '~/constants/env'
+import { API_URL } from '~/constants/env'
 
 import type { BarsResult, Quote, StockKLineInterval } from './types'
 
@@ -11,7 +11,7 @@ function normalizeHost(url: string): string {
 async function fetchQuote(symbol: string): Promise<Quote> {
   const params = new URLSearchParams({ symbol })
   const res = await fetch(
-    `${normalizeHost(WEB_URL)}/api/stock/quote?${params.toString()}`,
+    `${normalizeHost(API_URL)}/serverless/built-in/stock_quote?${params.toString()}`,
     { headers: { Accept: 'application/json' } },
   )
   if (!res.ok) {
@@ -33,7 +33,7 @@ async function fetchBars(args: {
     interval: args.interval,
   })
   const res = await fetch(
-    `${normalizeHost(WEB_URL)}/api/stock/bars?${params.toString()}`,
+    `${normalizeHost(API_URL)}/serverless/built-in/stock_bars?${params.toString()}`,
     { headers: { Accept: 'application/json' } },
   )
   if (!res.ok) {
