@@ -101,7 +101,7 @@ Through this context you can access the request's parameters, URL, query, and ot
 
 `context.getOwner()` `Promise<OwnerModel>` — fetches the owner's information
 
-`context.getService(name: string)` `Promise<unknown>` — currently supports `axios` and `config`
+`context.getService(name: string)` `Promise<unknown>` — currently supports `config`. For HTTP calls, use the global `fetch` directly (it is SSRF-guarded).
 
 `context.secret` Secret object
 

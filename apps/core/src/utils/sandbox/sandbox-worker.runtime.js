@@ -463,55 +463,6 @@ function createSandboxConsole(namespace) {
 
 // ===== The following features need to reach the main thread via the Bridge =====
 
-// Create the HTTP service (implemented directly inside the Worker)
-function createHttpService() {
-  const guardedFetch = createGuardedFetch()
-  const request = async (url, options = {}) => {
-    const res = await guardedFetch(url, options)
-    const contentType = res.headers.get('content-type') || ''
-    let data
-    if (contentType.includes('application/json')) {
-      data = await res.json()
-    } else {
-      data = await res.text()
-    }
-    return {
-      data,
-      status: res.status,
-      headers: Object.fromEntries(res.headers.entries()),
-    }
-  }
-
-  return {
-    axios: {
-      get: (url, config) => request(url, { method: 'GET', ...config }),
-      post: (url, data, config) =>
-        request(url, {
-          method: 'POST',
-          body: JSON.stringify(data),
-          headers: { 'Content-Type': 'application/json' },
-          ...config,
-        }),
-      put: (url, data, config) =>
-        request(url, {
-          method: 'PUT',
-          body: JSON.stringify(data),
-          headers: { 'Content-Type': 'application/json' },
-          ...config,
-        }),
-      delete: (url, config) => request(url, { method: 'DELETE', ...config }),
-      patch: (url, data, config) =>
-        request(url, {
-          method: 'PATCH',
-          body: JSON.stringify(data),
-          headers: { 'Content-Type': 'application/json' },
-          ...config,
-        }),
-      request: (config) => request(config.url, config),
-    },
-  }
-}
-
 function createBridgeContext(namespace) {
   return {
     storage: {
@@ -536,7 +487,6 @@ function createBridgeContext(namespace) {
     },
     getOwner: () => requestBridgeCall('getOwner', []),
     getService: async (name) => {
-      if (name === 'http') return createHttpService()
       if (name === 'config')
         return { get: (key) => requestBridgeCall('config.get', [key]) }
       throw new Error('Service "' + name + '" not available')

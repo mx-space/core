@@ -2,7 +2,6 @@ const REGEO_URL = 'https://restapi.amap.com/v3/geocode/regeo'
 
 export default async function handler(ctx) {
   const { latitude, longitude } = ctx.query
-  const { axios } = await ctx.getService('http')
   const config = await ctx.getService('config')
   const adminExtra = await config.get('adminExtra')
   const gaodemapKey = adminExtra?.gaodemapKey || ctx.secret?.gaodemapKey
@@ -11,10 +10,14 @@ export default async function handler(ctx) {
     ctx.throws(400, 'Amap (Gaode) API key is not configured')
   }
 
+  const url = `${REGEO_URL}?${new URLSearchParams({
+    key: gaodemapKey,
+    location: `${longitude},${latitude}`,
+  })}`
+
   try {
-    const { data } = await axios.get(REGEO_URL, {
-      params: { key: gaodemapKey, location: `${longitude},${latitude}` },
-    })
+    const res = await fetch(url)
+    const data = await res.json()
     if (!data) ctx.throws(500, 'Amap (Gaode) API request failed')
     return data
   } catch (e) {

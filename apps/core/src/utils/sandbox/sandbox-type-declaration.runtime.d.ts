@@ -38,39 +38,6 @@ declare interface IStorage {
   db: IDb
 }
 
-declare interface HttpAxios {
-  get(
-    url: string,
-    config?: any,
-  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
-  post(
-    url: string,
-    data?: any,
-    config?: any,
-  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
-  put(
-    url: string,
-    data?: any,
-    config?: any,
-  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
-  delete(
-    url: string,
-    config?: any,
-  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
-  patch(
-    url: string,
-    data?: any,
-    config?: any,
-  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
-  request(
-    config: any,
-  ): Promise<{ data: any; status: number; headers: Record<string, string> }>
-}
-
-declare interface HttpService {
-  axios: HttpAxios
-}
-
 declare interface ConfigService {
   get(key: string): Promise<any>
 }
@@ -117,7 +84,6 @@ declare interface Context {
   storage: IStorage
 
   getOwner(): Promise<OwnerModel>
-  getService(name: 'http'): Promise<HttpService>
   getService(name: 'config'): Promise<ConfigService>
 
   broadcast(event: string, data: any): void

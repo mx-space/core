@@ -28,13 +28,10 @@ export default async function handler(ctx) {
     )
   }
 
-  const { axios } = await ctx.getService('http')
-
   const safeFetch = async (url, params) => {
-    const { data } = await axios.get(url, {
-      params,
-      headers: { Accept: 'application/json' },
-    })
+    const qs = new URLSearchParams(params).toString()
+    const res = await fetch(`${url}?${qs}`, { headers: { Accept: 'application/json' } })
+    const data = await res.json()
     if (data?.status === 'error' || (typeof data?.code === 'number' && data.code >= 400)) {
       throw new Error(`Twelve Data: ${data.message || 'unknown'}`)
     }

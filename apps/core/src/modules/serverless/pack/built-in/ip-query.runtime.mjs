@@ -12,10 +12,9 @@ export default async function handler(ctx) {
 
   if (!isIPv4(ip) && !isIPv6(ip)) ctx.throws(422, 'Invalid IP')
 
-  const { axios } = await ctx.getService('http')
-
   try {
-    const { data } = await axios.get(`${FREEIPAPI_URL}/${ip}`)
+    const res = await fetch(`${FREEIPAPI_URL}/${encodeURIComponent(ip)}`)
+    const data = await res.json()
     const result = {
       cityName: data.cityName,
       countryName: data.countryName,

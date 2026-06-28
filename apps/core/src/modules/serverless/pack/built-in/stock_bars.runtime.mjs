@@ -33,8 +33,6 @@ export default async function handler(ctx) {
     )
   }
 
-  const { axios } = await ctx.getService('http')
-
   const params = {
     symbol: sym,
     interval: tdInterval,
@@ -50,8 +48,10 @@ export default async function handler(ctx) {
 
   let payload
   try {
-    const res = await axios.get(SERIES_URL, { params })
-    payload = res.data
+    const res = await fetch(`${SERIES_URL}?${new URLSearchParams(params)}`, {
+      headers: { Accept: 'application/json' },
+    })
+    payload = await res.json()
   } catch (e) {
     ctx.throws(502, `Twelve Data: ${e.message || 'unknown'}`)
   }
