@@ -1,33 +1,25 @@
-import { URLSearchParams } from 'url'
+const PLACE_URL = 'https://restapi.amap.com/v3/place/text'
 
 export default async function handler(ctx) {
-  let { keywords } = ctx.query
-  keywords = keywords.replace(/\s/g, '|')
+  const { keywords } = ctx.query
+  if (!keywords) ctx.throws(422, 'keywords is required')
 
   const { axios } = await ctx.getService('http')
   const config = await ctx.getService('config')
-
   const adminExtra = await config.get('adminExtra')
-  const gaodemapKey = adminExtra?.gaodemapKey || secret.gaodemapKey
+  const gaodemapKey = adminExtra?.gaodemapKey || ctx.secret?.gaodemapKey
 
   if (!gaodemapKey) {
     ctx.throws(422, 'Amap (Gaode) API key is not configured')
   }
 
-  const params = new URLSearchParams([
-    ['key', gaodemapKey],
-    ['keywords', keywords],
-  ])
-
-  let errorMessage = ''
-
-  const { data } = await axios
-    .get(`https://restapi.amap.com/v3/place/text?${params.toString()}`)
-    .catch((error) => {
-      errorMessage = error.message
+  try {
+    const { data } = await axios.get(PLACE_URL, {
+      params: { key: gaodemapKey, keywords: keywords.replace(/\s/g, '|') },
     })
-  if (!data) {
-    ctx.throws(500, `Amap (Gaode) API request failed: ${errorMessage}`)
+    if (!data) ctx.throws(500, 'Amap (Gaode) API request failed')
+    return data
+  } catch (e) {
+    ctx.throws(500, `Amap (Gaode) API request failed: ${e.message || 'unknown'}`)
   }
-  return data
 }

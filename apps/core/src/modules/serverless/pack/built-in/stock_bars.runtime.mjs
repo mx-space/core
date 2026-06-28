@@ -1,12 +1,23 @@
+const SERIES_URL = 'https://api.twelvedata.com/time_series'
+const INTERVAL_MAP = { '5m': '5min', '15m': '15min', '1h': '1h', '1d': '1day' }
+const ALLOWED_INTERVALS = Object.keys(INTERVAL_MAP)
+const DEFAULT_OUTPUTSIZE = '120'
+const TTL_LIVE_SEC = 600
+const TTL_FROZEN_SEC = 60 * 60 * 24 * 365
+const FREEZE_THRESHOLD_MS = 60_000
+
+const num = (v) => {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : undefined
+}
+
 export default async function handler(ctx) {
   const { symbol, interval, from, to } = ctx.query
   if (!symbol) ctx.throws(422, 'symbol is required')
-  const allowed = ['5m', '15m', '1h', '1d']
-  if (!allowed.includes(interval)) ctx.throws(422, 'invalid interval')
+  if (!ALLOWED_INTERVALS.includes(interval)) ctx.throws(422, 'invalid interval')
 
-  const tdMap = { '5m': '5min', '15m': '15min', '1h': '1h', '1d': '1day' }
   const sym = String(symbol).toUpperCase()
-  const tdInterval = tdMap[interval]
+  const tdInterval = INTERVAL_MAP[interval]
 
   const cacheKey = `stock:bars:${sym}:${interval}:${from || ''}:${to || ''}`
   const cached = await ctx.storage.cache.get(cacheKey)
@@ -14,14 +25,13 @@ export default async function handler(ctx) {
 
   const config = await ctx.getService('config')
   const thirdParty = await config.get('thirdPartyServiceIntegration')
-  const rawApiKey =
-    thirdParty && thirdParty.twelveData && thirdParty.twelveData.apiKey
-  const apiKey = typeof rawApiKey === 'string' ? rawApiKey.trim() : ''
-  if (!apiKey)
+  const apiKey = String(thirdParty?.twelveData?.apiKey ?? '').trim()
+  if (!apiKey) {
     ctx.throws(
       500,
       'Twelve Data API key not configured (Settings → Third-party integrations)',
     )
+  }
 
   const { axios } = await ctx.getService('http')
 
@@ -30,47 +40,40 @@ export default async function handler(ctx) {
     interval: tdInterval,
     apikey: apiKey,
     order: 'ASC',
-  }
-  if (from && to) {
-    params.start_date = String(from).slice(0, 10)
-    params.end_date = String(to).slice(0, 10)
-  } else {
-    params.outputsize = '120'
+    ...(from && to
+      ? {
+          start_date: String(from).slice(0, 10),
+          end_date: String(to).slice(0, 10),
+        }
+      : { outputsize: DEFAULT_OUTPUTSIZE }),
   }
 
-  let j
+  let payload
   try {
-    const res = await axios.get('https://api.twelvedata.com/time_series', {
-      params,
-    })
-    j = res.data
+    const res = await axios.get(SERIES_URL, { params })
+    payload = res.data
   } catch (e) {
     ctx.throws(502, `Twelve Data: ${e.message || 'unknown'}`)
   }
   if (
-    j &&
-    (j.status === 'error' || (typeof j.code === 'number' && j.code >= 400))
+    payload?.status === 'error' ||
+    (typeof payload?.code === 'number' && payload.code >= 400)
   ) {
-    ctx.throws(502, `Twelve Data: ${j.message || 'unknown'}`)
+    ctx.throws(502, `Twelve Data: ${payload.message || 'unknown'}`)
   }
-  if (!j || !Array.isArray(j.values) || j.values.length === 0) {
+  if (!Array.isArray(payload?.values) || payload.values.length === 0) {
     ctx.throws(404, `no bars for ${sym}`)
   }
 
-  const num = (v) => {
-    const n = Number(v)
-    return Number.isFinite(n) ? n : undefined
-  }
-
   const bars = []
-  for (const b of j.values) {
+  for (const b of payload.values) {
     const open = num(b.open)
     const high = num(b.high)
     const low = num(b.low)
     const close = num(b.close)
     if (open == null || high == null || low == null || close == null) continue
     bars.push({
-      timestamp: new Date(b.datetime.replace(' ', 'T') + 'Z').getTime(),
+      timestamp: new Date(`${b.datetime.replace(' ', 'T')}Z`).getTime(),
       open,
       high,
       low,
@@ -79,24 +82,22 @@ export default async function handler(ctx) {
     })
   }
 
-  const metaSym = (j.meta && j.meta.symbol) || sym
+  const metaSym = payload.meta?.symbol || sym
   const meta = {
     symbol: metaSym,
-    exchange: j.meta && j.meta.exchange,
-    currency: j.meta && j.meta.currency,
-    timezone: j.meta && j.meta.exchange_timezone,
+    exchange: payload.meta?.exchange,
+    currency: payload.meta?.currency,
+    timezone: payload.meta?.exchange_timezone,
     longName: metaSym,
     shortName: metaSym,
-    asOf: bars.length
-      ? Math.floor(bars[bars.length - 1].timestamp / 1000)
-      : undefined,
+    asOf: bars.length ? Math.floor(bars.at(-1).timestamp / 1000) : undefined,
   }
 
   const result = { meta, bars }
 
   const toMs = to ? new Date(to).getTime() : Date.now()
-  const isFrozen = Number.isFinite(toMs) && toMs < Date.now() - 60_000
-  const ttl = isFrozen ? 60 * 60 * 24 * 365 : 600
+  const isFrozen = Number.isFinite(toMs) && toMs < Date.now() - FREEZE_THRESHOLD_MS
+  const ttl = isFrozen ? TTL_FROZEN_SEC : TTL_LIVE_SEC
   await ctx.storage.cache.set(cacheKey, JSON.stringify(result), ttl)
   return result
 }

@@ -1,34 +1,22 @@
 import { isIPv4, isIPv6 } from 'net'
 
-const TIMEOUT = 5000
+const FREEIPAPI_URL = 'https://freeipapi.com/api/json'
 
-export default async function handler(ctx, timeout = TIMEOUT) {
+export default async function handler(ctx) {
   const { ip } = ctx.req.query
+  if (!ip) ctx.res.throws(422, 'ip is empty')
 
-  if (!ip) {
-    ctx.res.throws(422, 'ip is empty')
-  }
   const cache = ctx.storage.cache
-  const hasCatch = await cache.get(ip)
-  if (hasCatch) return hasCatch
+  const cached = await cache.get(ip)
+  if (cached) return cached
 
-  const result = await getIp(ctx, ip)
-  await cache.set(ip, result)
-  return result
-}
+  if (!isIPv4(ip) && !isIPv6(ip)) ctx.throws(422, 'Invalid IP')
 
-async function getIp(ctx, ip, timeout = TIMEOUT) {
-  const isV4 = isIPv4(ip)
-  const isV6 = isIPv6(ip)
   const { axios } = await ctx.getService('http')
-  if (!isV4 && !isV6) {
-    ctx.throws(422, 'Invalid IP')
-  }
+
   try {
-    const data = await axios
-      .get('https://freeipapi.com/api/json/' + ip)
-      .then((data) => data.data)
-    return {
+    const { data } = await axios.get(`${FREEIPAPI_URL}/${ip}`)
+    const result = {
       cityName: data.cityName,
       countryName: data.countryName,
       ip: data.ipAddress,
@@ -36,6 +24,8 @@ async function getIp(ctx, ip, timeout = TIMEOUT) {
       ownerDomain: data.asnOrganization || '',
       regionName: data.regionName,
     }
+    await cache.set(ip, result)
+    return result
   } catch (e) {
     ctx.throws(500, `IP API request failed: ${e.message}`)
   }
