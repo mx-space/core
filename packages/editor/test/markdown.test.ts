@@ -116,6 +116,44 @@ describe('mxLexicalToMarkdown', () => {
     )
   })
 
+  it('projects stock snapshot node as LiteXML fallback', () => {
+    const markdown = mxLexicalToMarkdown(
+      state([
+        {
+          type: 'stock',
+          version: 1,
+          variant: 'snapshot',
+          symbol: 'AAPL',
+        },
+      ]),
+    )
+
+    expect(markdown).toContain('<node type="stock"')
+    expect(markdown).toContain('&quot;variant&quot;:&quot;snapshot&quot;')
+    expect(markdown).toContain('&quot;symbol&quot;:&quot;AAPL&quot;')
+  })
+
+  it('projects stock kline node carrying range + ema as LiteXML fallback', () => {
+    const markdown = mxLexicalToMarkdown(
+      state([
+        {
+          type: 'stock',
+          version: 1,
+          variant: 'kline',
+          symbol: 'TSLA',
+          range: { interval: '1day', from: '2026-01-01', to: '2026-06-01' },
+          ema: [12, 26],
+        },
+      ]),
+    )
+
+    expect(markdown).toContain('<node type="stock"')
+    expect(markdown).toContain('&quot;variant&quot;:&quot;kline&quot;')
+    expect(markdown).toContain('&quot;symbol&quot;:&quot;TSLA&quot;')
+    expect(markdown).toContain('&quot;interval&quot;:&quot;1day&quot;')
+    expect(markdown).toContain('&quot;ema&quot;:[12,26]')
+  })
+
   it('throws on unknown node types', () => {
     expect(() =>
       mxLexicalToMarkdown(state([{ type: 'unknown-private', version: 1 }])),

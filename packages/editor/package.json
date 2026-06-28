@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Mx-space business editor contracts and projection utilities built on Lexical",
   "license": "MIT",
