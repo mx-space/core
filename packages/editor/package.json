@@ -50,8 +50,8 @@
   "dependencies": {
     "@haklex/rich-headless": "0.29.0",
     "@haklex/rich-litexml": "0.29.0",
-    "@lexical/headless": "^0.45.0",
-    "lexical": "^0.45.0"
+    "@lexical/headless": "^0.46.0",
+    "lexical": "^0.46.0"
   },
   "devDependencies": {
     "tsdown": "0.22.3",
