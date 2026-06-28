@@ -1,3 +1,11 @@
+## [13.11.3](https://github.com/mx-space/core/compare/v13.11.2...v13.11.3) (2026-06-28)
+
+
+### Bug Fixes
+
+* **deps:** unify lexical to ^0.46.0 across the workspace ([81cf2c5](https://github.com/mx-space/core/commit/81cf2c5c8))
+
+
 ## [13.11.2](https://github.com/mx-space/core/compare/v13.11.1...v13.11.2) (2026-06-27)
 
 
