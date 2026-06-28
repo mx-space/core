@@ -13,7 +13,10 @@ export function TopicNoteRow(props: {
 }) {
   const { t } = useI18n()
   const title = props.note.title || t('topics.notes.unnamed')
-  const externalHref = props.note.id ? `${WEB_URL}/notes/${props.note.id}` : '#'
+  const externalHref =
+    typeof props.note.nid === 'number'
+      ? `${WEB_URL}/notes/${props.note.nid}`
+      : '#'
 
   return (
     <div className="group flex items-center justify-between gap-4 border-b border-neutral-100 px-4 py-3 last:border-b-0 dark:border-neutral-800">
