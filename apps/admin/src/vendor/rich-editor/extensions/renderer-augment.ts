@@ -5,6 +5,8 @@ import type { DYNAMIC_NODE_KEY } from '@haklex/rich-ext-dynamic/static'
 import type { GALLERY_NODE_KEY } from '@haklex/rich-ext-gallery/node'
 import type { ComponentType } from 'react'
 
+import type {} from './stock/stock-augment'
+
 declare module '@haklex/rich-editor' {
   interface RendererConfig {
     [CHAT_NODE_KEY]?: ComponentType<any>

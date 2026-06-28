@@ -35,6 +35,7 @@ import { useCallback, useMemo } from 'react'
 
 import { AfilmoryNode, AfilmoryPlugin } from '../extensions/afilmory'
 import { MapNode, MapPlugin } from '../extensions/map'
+import { StockNode, StockPlugin } from '../extensions/stock'
 import type { TrackUpload } from '../types'
 import { enhancedEditRendererConfig } from './configs/enhanced-edit-renderer-config'
 import { RichRenderer } from './RichRenderer'
@@ -48,8 +49,9 @@ const defaultExtraNodes = [
   ...galleryEditNodes,
   ...codeSnippetEditNodes,
   ...chatEditNodes,
-  MapNode,
   AfilmoryNode,
+  MapNode,
+  StockNode,
 ]
 
 export interface RichEditorProps extends Omit<
@@ -139,6 +141,7 @@ export function RichEditor({
         <EmbedPlugin selfHostnames={selfHostnames} />
         <MapPlugin trackUpload={trackUpload} />
         <AfilmoryPlugin />
+        <StockPlugin />
         <PasteLinkCardPlugin />
         <TableRowColumnHandlesPlugin />
         <TableCellResizerPlugin />

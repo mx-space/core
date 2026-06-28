@@ -89,6 +89,7 @@
     "js-yaml": "5.0.0",
     "json5": "2.2.3",
     "katex": "^0.17.0",
+    "klinecharts": "10.0.0-beta3",
     "lexical": "^0.46.0",
     "lit": "3.3.3",
     "lodash.transform": "4.6.0",

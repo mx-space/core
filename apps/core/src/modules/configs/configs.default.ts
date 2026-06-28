@@ -131,6 +131,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
         webpQuality: 75,
       },
     },
+    twelveData: { enabled: false, apiKey: '' },
   },
 
   authSecurity: {
