@@ -2,8 +2,8 @@ import { Readable } from 'node:stream'
 import { URL } from 'node:url'
 
 import { Injectable, Logger } from '@nestjs/common'
-import type { AxiosResponse } from 'axios'
 import { customAlphabet } from 'nanoid'
+import type { FetchResponse } from 'ofetch'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { alphabet } from '~/constants/other.constant'
@@ -102,12 +102,13 @@ export class LinkAvatarService {
       return false
     }
 
-    let response: AxiosResponse<ArrayBuffer>
+    let response: FetchResponse<ArrayBuffer>
     try {
-      response = await this.http.axiosRef.get<ArrayBuffer>(avatar, {
-        responseType: 'arraybuffer',
+      response = await this.http.fetch.raw<ArrayBuffer, 'arrayBuffer'>(avatar, {
+        responseType: 'arrayBuffer',
         timeout: 10_000,
-        maxRedirects: 0,
+        redirect: 'error',
+        retry: 0,
         headers: {
           'user-agent':
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
@@ -121,9 +122,8 @@ export class LinkAvatarService {
       return false
     }
 
-    const buffer = Buffer.from(response.data as any)
-    const contentType = (response.headers['content-type'] ||
-      response.headers['Content-Type']) as string | undefined
+    const buffer = Buffer.from(response._data as ArrayBuffer)
+    const contentType = response.headers.get('content-type') ?? undefined
     const normalizedContentType = this.normalizeMimeType(contentType)
 
     if (

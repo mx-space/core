@@ -184,37 +184,34 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       return
     }
     try {
-      const response = await this.httpService.axiosRef.post(
-        webhook.payloadUrl,
-        clonedPayload,
-        {
-          headers,
-          maxRedirects: 0,
-          'axios-retry': {
-            retries: 10,
-          },
-        },
-      )
+      const response = await this.httpService.fetch.raw(webhook.payloadUrl, {
+        method: 'POST',
+        body: clonedPayload,
+        headers,
+        redirect: 'error',
+        retry: 10,
+      })
       await this.webhookRepository.updateEvent(webhookEvent.id, {
         response: {
-          headers: response.headers,
-          data: response.data,
+          headers: Object.fromEntries(response.headers.entries()),
+          data: response._data,
           timestamp: Date.now(),
         },
         status: response.status,
         success: true,
       })
     } catch (error: any) {
-      if (!error.response) {
+      const errResponse = error?.response
+      if (!errResponse) {
         return
       }
       this.webhookRepository.updateEvent(webhookEvent.id, {
         response: {
-          headers: error.response.headers,
-          data: error.response.data,
+          headers: Object.fromEntries(errResponse.headers.entries()),
+          data: errResponse._data ?? error.data,
           timestamp: Date.now(),
         },
-        status: error.response.status,
+        status: errResponse.status,
         success: false,
       })
     }

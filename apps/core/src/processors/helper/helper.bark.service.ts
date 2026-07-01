@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common'
-import { ConfigsService } from '~/modules/configs/configs.service'
 import { throttle } from 'es-toolkit/compat'
+
+import { ConfigsService } from '~/modules/configs/configs.service'
+
 import { HttpService } from './helper.http.service'
 
 export type BarkPushOptions = {
@@ -37,14 +39,16 @@ export class BarkPushService {
     }
     const { title, ...rest } = options
 
-    const response = await this.httpService.axiosRef.post(`${serverUrl}/push`, {
-      device_key: key,
-      title: `[${siteTitle}] ${title}`,
-      category: siteTitle,
-      group: siteTitle,
-      ...rest,
+    return this.httpService.fetch(`${serverUrl}/push`, {
+      method: 'POST',
+      body: {
+        device_key: key,
+        title: `[${siteTitle}] ${title}`,
+        category: siteTitle,
+        group: siteTitle,
+        ...rest,
+      },
     })
-    return response.data
   }
 
   throttlePush = throttle((options: BarkPushOptions) => {

@@ -116,10 +116,14 @@ export class ImageService implements OnModuleInit {
     // Markdown image URLs are author-supplied; guard the outbound fetch and
     // disable redirect following so a public host cannot 30x us into one.
     await assertPublicHttpUrl(image, { allowHttp: true })
-    const { data, headers } = await this.httpService.axiosRef.get<any>(image, {
-      responseType: 'arraybuffer',
+    const response = await this.httpService.fetch.raw<
+      ArrayBuffer,
+      'arrayBuffer'
+    >(image, {
+      responseType: 'arrayBuffer',
       timeout: 10_000,
-      maxRedirects: 0,
+      redirect: 'error',
+      retry: 0,
       headers: {
         'user-agent':
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
@@ -127,9 +131,9 @@ export class ImageService implements OnModuleInit {
       },
     })
 
-    const imageType = headers['content-type'] as string
+    const imageType = response.headers.get('content-type') ?? ''
 
-    const buffer = Buffer.from(data)
+    const buffer = Buffer.from(response._data as ArrayBuffer)
     const sharp = await requireDepsWithInstall('sharp')
     const sharped = sharp(buffer) as Sharp
     const metadata = await sharped.metadata()

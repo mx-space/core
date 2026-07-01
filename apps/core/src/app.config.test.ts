@@ -1,5 +1,3 @@
-import type { AxiosRequestConfig } from 'axios'
-
 export const PORT = process.env.PORT || 2333
 export const API_VERSION = 3
 
@@ -29,10 +27,6 @@ export const REDIS = {
   httpCacheTTL: 5,
   max: 5,
   disableApiCache: true,
-}
-
-export const AXIOS_CONFIG: AxiosRequestConfig = {
-  timeout: 10000,
 }
 
 export const SECURITY = {

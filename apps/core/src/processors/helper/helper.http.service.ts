@@ -1,180 +1,94 @@
 import { inspect } from 'node:util'
 
 import { Injectable, Logger } from '@nestjs/common'
-import type { AxiosInstance, AxiosRequestConfig } from 'axios'
-import axios from 'axios'
-import axiosRetry, { exponentialDelay } from 'axios-retry'
+import { $Fetch, createFetch, FetchOptions } from 'ofetch'
 import pc from 'picocolors'
+import { Agent } from 'undici'
 
-import { AXIOS_CONFIG, DEBUG_MODE } from '~/app.config'
-import { RedisKeys } from '~/constants/cache.constant'
+import { DEBUG_MODE } from '~/app.config'
+import { isDev } from '~/global/env.global'
 import { PKG } from '~/utils/pkg.util'
-import { getRedisKey } from '~/utils/redis.util'
-
-import { RedisService } from '../redis/redis.service'
 
 const DEFAULT_UA = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${PKG.version}`
-declare module 'axios' {
-  interface AxiosRequestConfig {
-    __requestStartedAt?: number
-    __requestEndedAt?: number
-    __requestDuration?: number
 
-    __debugLogger?: boolean
-  }
-}
+const DEFAULT_TIMEOUT_MS = 10_000
+const DEFAULT_RETRIES = 5
+
+const devInsecureDispatcher = isDev
+  ? new Agent({ connect: { rejectUnauthorized: false } })
+  : undefined
 
 @Injectable()
 export class HttpService {
-  private readonly http: AxiosInstance
-  private readonly logger: Logger
-  constructor(private readonly redisService: RedisService) {
-    this.logger = new Logger(HttpService.name)
+  private readonly logger = new Logger(HttpService.name)
+  private readonly instance: $Fetch
 
-    this.http = this.bindInterceptors(
-      axios.create({
-        ...AXIOS_CONFIG,
-        headers: {
-          'user-agent': DEFAULT_UA,
-        },
-      }),
-    )
+  constructor() {
+    this.instance = this.createInstance()
+  }
 
-    axiosRetry(this.http, {
-      // retries: 3,
-      // retryDelay: (count) => {
-      //   return 1000 * count
-      // },
-      // shouldResetTimeout: true,
-      retryDelay: exponentialDelay,
-      retries: 5,
-      onRetry: (retryCount, error, requestConfig) => {
-        this.logger.warn(
-          `HTTP Request Retry ${retryCount} times: [${requestConfig.method?.toUpperCase()}] ${
-            requestConfig.baseURL || ''
-          }${requestConfig.url}`,
-        )
-        this.logger.warn(`HTTP Request Retry Error: ${error.message}`)
+  get fetch(): $Fetch {
+    return this.instance
+  }
+
+  private createInstance(): $Fetch {
+    const requestStartAt = new WeakMap<object, number>()
+    const debugEnabled = DEBUG_MODE.httpRequestVerbose
+
+    const defaults: FetchOptions = {
+      timeout: DEFAULT_TIMEOUT_MS,
+      retry: DEFAULT_RETRIES,
+      retryDelay: ({ options }) => {
+        const attempt =
+          DEFAULT_RETRIES - ((options.retry as number | undefined) ?? 0)
+        return Math.min(1000 * 2 ** attempt, 30_000)
       },
-    })
-  }
-
-  private axiosDefaultConfig: AxiosRequestConfig<any> = {
-    ...AXIOS_CONFIG,
-    headers: {
-      'user-agent': DEFAULT_UA,
-    },
-    'axios-retry': {
-      retries: 3,
-      retryDelay: (count) => {
-        return 1000 * count
+      dispatcher: devInsecureDispatcher,
+      headers: {
+        'user-agent': DEFAULT_UA,
       },
-      shouldResetTimeout: true,
-    },
-  }
-
-  extend(config: AxiosRequestConfig<any>) {
-    return this.bindDebugVerboseInterceptor(
-      axios.create({ ...this.axiosDefaultConfig, ...config }),
-    )
-  }
-
-  /**
-   * Cache request data. Currently supports text responses.
-   * @param url
-   */
-  public async getAndCacheRequest(url: string) {
-    this.logger.debug(`--> GET: ${url}`)
-    const client = this.redisService.getClient()
-    const has = await client.hget(getRedisKey(RedisKeys.HTTPCache), url)
-    if (has) {
-      this.logger.debug(`--> GET: ${url} from redis`)
-      return has
-    }
-    const { data } = await this.http.get(url, {
-      responseType: 'text',
-    })
-    this.logger.debug(`--> GET: ${url} from remote`)
-
-    await client.hset(getRedisKey(RedisKeys.HTTPCache), url, data)
-    return data
-  }
-
-  public get axiosRef() {
-    return this.http
-  }
-
-  private bindDebugVerboseInterceptor($http: AxiosInstance) {
-    if (!DEBUG_MODE.httpRequestVerbose) {
-      return $http
-    }
-    $http.interceptors.request.use((req) => {
-      if (!req.__debugLogger) {
-        return req
-      }
-      req.__requestStartedAt = Date.now()
-
-      this.logger.log(
-        `HTTP Request: [${req.method?.toUpperCase()}] ${req.baseURL || ''}${
-          req.url
-        } 
-params: ${this.prettyStringify(req.params)}
-data: ${this.prettyStringify(req.data)}`,
-      )
-
-      return req
-    })
-    $http.interceptors.response.use(
-      (res) => {
-        if (!res.config.__debugLogger) {
-          return res
-        }
-        const endAt = Date.now()
-        res.config.__requestEndedAt = endAt
-        res.config.__requestDuration =
-          res.config?.__requestStartedAt ??
-          endAt - res.config!.__requestStartedAt!
+      onRequest: (ctx) => {
+        requestStartAt.set(ctx.options, Date.now())
+        if (!debugEnabled) return
         this.logger.log(
-          `HTTP Response ${`${res.config.baseURL || ''}${
-            res.config.url
-          }`} +${res.config.__requestDuration.toFixed(
-            2,
-          )}ms: \n${this.prettyStringify(res.data)} `,
+          `HTTP Request: [${(ctx.options.method || 'GET').toUpperCase()}] ${String(ctx.request)}
+query: ${this.prettyStringify(ctx.options.query)}
+body: ${this.prettyStringify(ctx.options.body)}`,
         )
-        return res
       },
-      (err) => {
-        const res = err.response
-
-        const error = Promise.reject(err)
+      onResponse: (ctx) => {
+        if (!debugEnabled) return
+        const startedAt = requestStartAt.get(ctx.options)
+        const duration = startedAt ? Date.now() - startedAt : 0
+        this.logger.log(
+          `HTTP Response ${String(ctx.request)} +${duration}ms:\n${this.prettyStringify(ctx.response?._data)}`,
+        )
+      },
+      onRequestError: (ctx) => {
+        this.logger.warn(
+          `HTTP Retry: [${(ctx.options.method || 'GET').toUpperCase()}] ${String(ctx.request)} — ${ctx.error?.message ?? 'network error'}`,
+        )
+      },
+      onResponseError: (ctx) => {
+        const res = ctx.response
         if (!res) {
           this.logger.error(
-            `HTTP Response Failed ${err.config.url || ''}, Network Error: ${
-              err.message
-            }`,
+            `HTTP Response Failed ${String(ctx.request)}, Network Error: ${ctx.error?.message ?? 'unknown'}`,
           )
-          return error
+          return
         }
         this.logger.error(
           pc.red(
-            `HTTP Response Failed ${`${res.config.baseURL || ''}${
-              res.config.url
-            }`}\n${this.prettyStringify(res.data)}`,
+            `HTTP Response Failed ${String(ctx.request)} ${res.status}\n${this.prettyStringify(res._data)}`,
           ),
         )
-
-        return error
       },
-    )
-    return $http
+    }
+
+    return createFetch({ defaults })
   }
 
-  private bindInterceptors($http: AxiosInstance) {
-    this.bindDebugVerboseInterceptor($http)
-    return $http
-  }
-
-  private prettyStringify(data: any) {
+  private prettyStringify(data: unknown) {
     return inspect(data, { colors: true })
   }
 }

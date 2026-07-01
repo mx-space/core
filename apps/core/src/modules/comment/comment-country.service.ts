@@ -82,7 +82,7 @@ export class CommentCountryService {
 
   private async fetchFromUpstream(ip: string): Promise<string | null> {
     try {
-      const { data } = await this.httpService.axiosRef.get<FreeIpApiResponse>(
+      const data = await this.httpService.fetch<FreeIpApiResponse>(
         `${FREEIPAPI_BASE}${ip}`,
         { timeout: LOOKUP_TIMEOUT_MS },
       )

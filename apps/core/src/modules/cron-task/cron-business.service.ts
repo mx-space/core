@@ -115,15 +115,18 @@ export class CronBusinessService {
     const urls = pushUrls.map((item) => item.url).join('\n')
 
     try {
-      const res = await this.http.axiosRef.post(
+      const data = await this.http.fetch<any>(
         `http://data.zz.baidu.com/urls?site=${webUrl}&token=${token}`,
-        urls,
-        { headers: { 'Content-Type': 'text/plain' } },
+        {
+          method: 'POST',
+          body: urls,
+          headers: { 'Content-Type': 'text/plain' },
+        },
       )
       this.logger.log(
-        `Baidu Webmaster submission result: ${JSON.stringify(res.data)}`,
+        `Baidu Webmaster submission result: ${JSON.stringify(data)}`,
       )
-      return { response: res.data }
+      return { response: data }
     } catch (error) {
       this.logger.error(`Baidu push error: ${error.message}`)
       throw error
@@ -152,27 +155,25 @@ export class CronBusinessService {
     const urls = pushUrls.map((item) => item.url)
 
     try {
-      const res = await this.http.axiosRef.post(
+      const data = await this.http.fetch<any>(
         `https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch?apikey=${apiKey}`,
         {
-          siteUrl: webUrl,
-          urlList: urls,
-        },
-        {
+          method: 'POST',
+          body: { siteUrl: webUrl, urlList: urls },
           headers: {
             'Content-Type': 'application/json',
             charset: 'utf-8',
           },
         },
       )
-      if (res?.data?.d === null) {
+      if (data?.d === null) {
         this.logger.log('Bing Webmaster submission succeeded')
       } else {
         this.logger.log(
-          `Bing Webmaster submission result: ${JSON.stringify(res.data)}`,
+          `Bing Webmaster submission result: ${JSON.stringify(data)}`,
         )
       }
-      return { response: res.data }
+      return { response: data }
     } catch (error) {
       this.logger.error(`Bing push error: ${error.message}`)
       throw error

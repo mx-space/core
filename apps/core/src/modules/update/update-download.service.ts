@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 
 import { Injectable } from '@nestjs/common'
-import axios, { AxiosRequestConfig } from 'axios'
+import { FetchError, FetchOptions, ofetch } from 'ofetch'
 import pc from 'picocolors'
 
 import { HttpService } from '~/processors/helper/helper.http.service'
@@ -66,7 +66,7 @@ export class UpdateDownloadService {
 
   async fetchWithRetry(
     url: string,
-    config: AxiosRequestConfig = {},
+    config: FetchOptions = {},
     retries = this.MAX_RETRIES,
   ): Promise<any> {
     const isGitHubApiRequest = this.shouldAttachGitHubAuth(url)
@@ -76,18 +76,18 @@ export class UpdateDownloadService {
     const githubToken = thirdParty?.github?.token
     const token = githubToken || process.env.GITHUB_TOKEN
     const headers = {
-      ...config.headers,
+      ...(config.headers as Record<string, string> | undefined),
       ...(token && isGitHubApiRequest && { Authorization: `Bearer ${token}` }),
     }
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const response = await this.httpService.axiosRef.get(url, {
+        return await this.httpService.fetch(url, {
           timeout: this.DOWNLOAD_TIMEOUT,
+          retry: 0,
           ...config,
           headers,
         })
-        return response.data
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error)
 
@@ -95,7 +95,7 @@ export class UpdateDownloadService {
           let finalMsg = `Failed after ${retries} attempts: ${errorMsg}`
           if (
             isGitHubApiRequest &&
-            axios.isAxiosError(error) &&
+            error instanceof FetchError &&
             error.response?.status === 403
           ) {
             finalMsg +=
@@ -181,36 +181,59 @@ export class UpdateDownloadService {
     url: string,
     pushProgress: (msg: string) => Promise<void>,
   ): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Download timeout'))
-      }, this.DOWNLOAD_TIMEOUT)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => {
+      controller.abort(new Error('Download timeout'))
+    }, this.DOWNLOAD_TIMEOUT)
 
-      axios
-        .get(url, {
-          responseType: 'arraybuffer',
-          timeout: this.DOWNLOAD_TIMEOUT,
-          onDownloadProgress: (progressEvent) => {
-            if (progressEvent.total) {
-              const percentage = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total,
-              )
-              const downloaded = formatByteSize(progressEvent.loaded)
-              const total = formatByteSize(progressEvent.total)
-              pushProgress(
-                `Download progress: ${percentage}% (${downloaded}/${total})\n`,
-              ).catch(() => {})
-            }
-          },
-        })
-        .then((response) => {
-          clearTimeout(timeout)
-          resolve(response.data as ArrayBuffer)
-        })
-        .catch((error) => {
-          clearTimeout(timeout)
-          reject(error)
-        })
-    })
+    try {
+      const response = await ofetch.raw(url, {
+        responseType: 'stream',
+        signal: controller.signal,
+        retry: 0,
+      })
+
+      const body = response.body as ReadableStream<Uint8Array> | null
+      if (!body) {
+        throw new Error('Empty response body')
+      }
+
+      const total = Number(response.headers.get('content-length')) || 0
+      const reader = body.getReader()
+      const chunks: Uint8Array[] = []
+      let loaded = 0
+      let lastReportedPercent = -1
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        if (!value) continue
+
+        chunks.push(value)
+        loaded += value.byteLength
+
+        if (total) {
+          const percent = Math.floor((loaded * 100) / total)
+          if (percent !== lastReportedPercent) {
+            lastReportedPercent = percent
+            const downloaded = formatByteSize(loaded)
+            const totalStr = formatByteSize(total)
+            pushProgress(
+              `Download progress: ${percent}% (${downloaded}/${totalStr})\n`,
+            ).catch(() => {})
+          }
+        }
+      }
+
+      const merged = new Uint8Array(loaded)
+      let offset = 0
+      for (const chunk of chunks) {
+        merged.set(chunk, offset)
+        offset += chunk.byteLength
+      }
+      return merged.buffer
+    } finally {
+      clearTimeout(timeout)
+    }
   }
 }

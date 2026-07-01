@@ -1,9 +1,7 @@
 import { readFileSync } from 'node:fs'
-import https from 'node:https'
 import path from 'node:path'
 
 import { seconds } from '@nestjs/throttler'
-import type { AxiosRequestConfig } from 'axios'
 import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
 import nodeMachineId from 'node-machine-id'
@@ -279,13 +277,6 @@ export const HTTP_CACHE = {
       (argv.http_cache_enable_force_cache_header ??
         FORCE_CACHE_HEADER) as unknown as string | boolean | undefined,
     ) ?? false, // cache-control: max-age
-}
-
-export const AXIOS_CONFIG: AxiosRequestConfig = {
-  timeout: 10000,
-  ...(isDev && {
-    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-  }),
 }
 
 export const SECURITY = {
