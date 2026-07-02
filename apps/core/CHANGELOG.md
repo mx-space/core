@@ -1,3 +1,10 @@
+## [13.11.9](https://github.com/mx-space/core/compare/v13.11.8...v13.11.9) (2026-07-02)
+
+
+### Bug Fixes
+
+* **ai:** configurable model list URL and /v1 suffix for compat providers ([4d4565b](https://github.com/mx-space/core/commit/4d4565b1f745dd5edec9a2521611c0975759c4bd)), closes [#2761](https://github.com/mx-space/core/issues/2761)
+
 ## [13.11.8](https://github.com/mx-space/core/compare/v13.11.7...v13.11.8) (2026-06-28)
 
 

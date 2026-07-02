@@ -1,17 +1,16 @@
+# v13.11.9
+
 ## TL;DR
 
-Swaps the `stock_bars` serverless built-in from Twelve Data to Polygon.io after Twelve Data moved hourly intraday for individual symbols behind its Grow/Venture plan.
+Fixes AI providers on custom OpenAI-compatible endpoints such as Gemini, with new per-provider model list URL and /v1 settings.
 
 ## Changes
 
-### Bug Fixes
-
-- **stock**: rewrite `stock_bars` against the Polygon.io aggregates endpoint (`/v2/aggs/ticker/.../range/{mult}/{span}/{from}/{to}`); display meta (exchange, name, currency) is now resolved through `/v3/reference/tickers/{sym}` with a 24h cache. A new `thirdPartyServiceIntegration.polygon` config section (Settings → Third-party integrations) holds the API key. The wire shape (`{ meta, bars }`), cache key, and TTLs are unchanged, so `@mx-space/api-client` and `apps/admin` need no updates ([c72cd47](https://github.com/mx-space/core/commit/c72cd47bdebdf29f75efc728135f77ca117d3c2d)).
-
-## Upgrade Notes
-
-After upgrading, open Settings → Third-party integrations → **Polygon.io**, enable it, and paste a Polygon.io API key (the free tier covers 5 req/min and 2 years of history, which is sufficient for the rich-editor stock K-line block). The legacy **Twelve Data** field is retained for `stock_quote`, which still uses Twelve Data and will be migrated in a follow-up release.
+- AI providers pointing at custom OpenAI-compatible endpoints (e.g. Gemini's `/v1beta/openai/`) work again: each provider now has a **Model list URL** field (fetches models straight from your endpoint; empty keeps the built-in registry) and an **Append /v1 to base URL** toggle, and the OpenAI-only `store` field is no longer sent to third-party hosts — previously the source of `400 status code (no body)` failures in summary, insights, translation, and connection tests ([#2761](https://github.com/mx-space/core/issues/2761))
+- Admin: the provider drawer exposes the two new settings; the model dropdown lists models fetched from your endpoint ahead of registry presets; model-fetch toasts now report errors and empty results instead of always claiming success ([4d4565b](https://github.com/mx-space/core/commit/4d4565b1f745dd5edec9a2521611c0975759c4bd))
+- Provider **context window** and **max output tokens** values are now actually persisted — they were silently dropped when saving AI settings ([4d4565b](https://github.com/mx-space/core/commit/4d4565b1f745dd5edec9a2521611c0975759c4bd))
+- Internal: the HTTP client layer moved from axios to ofetch with retry/backoff ([fc49c01](https://github.com/mx-space/core/commit/fc49c0175)), and workspace dependencies were refreshed (pi-ai 0.80, vite 8.1.2, better-auth 1.6.23, nodemailer 9, …) ([06ded90](https://github.com/mx-space/core/commit/06ded90d3))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.11.7...v13.11.8
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.11.8...v13.11.9
