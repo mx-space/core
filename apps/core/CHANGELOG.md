@@ -1,3 +1,10 @@
+## [13.11.10](https://github.com/mx-space/core/compare/v13.11.9...v13.11.10) (2026-07-02)
+
+
+### Bug Fixes
+
+* **admin:** resolve route imports by absolute path in admin-routes plugin ([91357b9](https://github.com/mx-space/core/commit/91357b947))
+
 ## [13.11.9](https://github.com/mx-space/core/compare/v13.11.8...v13.11.9) (2026-07-02)
 
 
