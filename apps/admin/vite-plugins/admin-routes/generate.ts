@@ -1,4 +1,4 @@
-import { relative, sep } from 'node:path'
+import { sep } from 'node:path'
 
 import type { ScannedPage, ScannedSection, ScanResult } from './scan'
 
@@ -13,9 +13,11 @@ interface RouteEntry {
   sourcePath: string
 }
 
-function toViewImportPath(viewsRoot: string, absPath: string): string {
-  const rel = relative(viewsRoot, absPath).split(sep).join('/')
-  return `~/views/${rel.replace(/\.tsx?$/, '')}`
+// absolute specifiers, not `~` alias: the tsconfig-paths resolution behind
+// the alias is skipped for imports issued from a \0-virtual module since
+// vite 8.1 / rolldown 1.1.3
+function toViewImportPath(_viewsRoot: string, absPath: string): string {
+  return absPath.split(sep).join('/')
 }
 
 function escapeString(value: string): string {
