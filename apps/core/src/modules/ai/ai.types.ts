@@ -25,6 +25,10 @@ export interface AIProviderConfig {
   apiKey: string
   /** Custom endpoint (required for OpenAI-compatible) */
   endpoint?: string
+  /** Full URL to fetch the model list from; falls back to the pi registry when empty */
+  modelListUrl?: string
+  /** Append /v1 to the base URL when missing; defaults to true */
+  appendV1?: boolean
   /** Default model name */
   defaultModel: string
   /** Whether this provider is enabled */

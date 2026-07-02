@@ -83,6 +83,24 @@ export function deriveProviderId(
   }
 }
 
+export function resolveOpenAICompatibleBaseUrl(
+  endpoint: string | undefined,
+  appendV1 = true,
+): string {
+  const trimmed = endpoint?.trim().replace(/\/+$/, '')
+  if (!trimmed) return 'https://api.openai.com/v1'
+  if (appendV1 && !trimmed.endsWith('/v1')) return `${trimmed}/v1`
+  return trimmed
+}
+
+function isNonOpenAIHost(endpoint: string): boolean {
+  try {
+    return new URL(endpoint).hostname.toLowerCase() !== 'api.openai.com'
+  } catch {
+    return false
+  }
+}
+
 function providerTypeToApi(type: AIProviderType): Api {
   return type === AIProviderType.Anthropic
     ? 'anthropic-messages'
@@ -143,6 +161,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
   private readonly piProviderId: string
   private readonly model: Model<Api>
   private readonly apiKey: string
+  private readonly modelListUrl?: string
 
   constructor(config: PiRuntimeAdapterConfig) {
     this.providerInfo = {
@@ -151,11 +170,13 @@ export class PiRuntimeAdapter implements IModelRuntime {
       model: config.model,
     }
     this.apiKey = config.apiKey
+    this.modelListUrl = config.modelListUrl?.trim() || undefined
     this.api = providerTypeToApi(config.providerType)
     this.piProviderId = deriveProviderId(config.endpoint, config.providerType)
     this.model = this.resolveModel(
       config.model,
       config.endpoint,
+      config.appendV1 ?? true,
       config.contextWindow ?? undefined,
       config.maxTokens ?? undefined,
     )
@@ -164,10 +185,21 @@ export class PiRuntimeAdapter implements IModelRuntime {
   private resolveModel(
     modelId: string,
     endpoint: string | undefined,
+    appendV1: boolean,
     contextWindow?: number,
     maxTokens?: number,
   ): Model<Api> {
-    const baseUrl = endpoint?.trim()
+    const trimmedEndpoint = endpoint?.trim()
+    const baseUrl =
+      trimmedEndpoint && this.api === 'openai-completions'
+        ? resolveOpenAICompatibleBaseUrl(trimmedEndpoint, appendV1)
+        : trimmedEndpoint
+    // pi treats provider 'openai' as genuine OpenAI and sends OpenAI-only
+    // fields (`store`) that compat endpoints like Gemini reject with 400
+    const compatOverride =
+      baseUrl && this.api === 'openai-completions' && isNonOpenAIHost(baseUrl)
+        ? { supportsStore: false }
+        : undefined
     try {
       const registered = getBuiltinModel(
         this.piProviderId as never,
@@ -181,6 +213,9 @@ export class PiRuntimeAdapter implements IModelRuntime {
           api: this.api,
           provider: this.piProviderId,
           baseUrl,
+          compat: compatOverride
+            ? { ...registered.compat, ...compatOverride }
+            : registered.compat,
         } as Model<Api>
       }
     } catch {
@@ -197,7 +232,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
       contextWindow: contextWindow ?? DEFAULT_CONTEXT_WINDOW,
       maxTokens: maxTokens ?? DEFAULT_MAX_TOKENS,
-      compat: undefined,
+      compat: compatOverride,
     } as Model<Api>
   }
 
@@ -579,6 +614,9 @@ export class PiRuntimeAdapter implements IModelRuntime {
   }
 
   async listModels(): Promise<ModelInfo[]> {
+    if (this.modelListUrl) {
+      return this.fetchModelList(this.modelListUrl)
+    }
     try {
       const models = getBuiltinModels(
         this.piProviderId as never,
@@ -592,5 +630,30 @@ export class PiRuntimeAdapter implements IModelRuntime {
       )
       return []
     }
+  }
+
+  private async fetchModelList(url: string): Promise<ModelInfo[]> {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${this.apiKey}` },
+    })
+    if (!response.ok) {
+      throw new Error(
+        `Model list request failed with status ${response.status}`,
+      )
+    }
+    const payload = (await response.json()) as {
+      data?: Array<{ id?: unknown; created?: unknown }>
+    }
+    if (!Array.isArray(payload.data)) return []
+    return payload.data
+      .filter(
+        (item): item is { id: string; created?: unknown } =>
+          typeof item.id === 'string' && item.id.length > 0,
+      )
+      .map((item) => ({
+        id: item.id,
+        name: item.id,
+        created: typeof item.created === 'number' ? item.created : undefined,
+      }))
   }
 }

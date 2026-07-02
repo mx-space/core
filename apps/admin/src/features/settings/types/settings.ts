@@ -7,12 +7,14 @@ export type AIProviderType = 'anthropic' | 'generic' | 'openai-compatible'
 
 export interface AIProviderConfig {
   apiKey: string
+  appendV1?: boolean
   contextWindow?: number | null
   defaultModel: string
   enabled: boolean
   endpoint?: string
   id: string
   maxTokens?: number | null
+  modelListUrl?: string
   name: string
   type: AIProviderType
 }

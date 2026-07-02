@@ -103,6 +103,8 @@ export interface ModelInfo {
 export interface RuntimeConfig {
   apiKey: string
   endpoint?: string
+  modelListUrl?: string
+  appendV1?: boolean
   model: string
   providerType: AIProviderType
   providerId: string

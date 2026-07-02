@@ -30,6 +30,7 @@ interface FetchModelsDto {
   type?: AIProviderType
   apiKey?: string
   endpoint?: string
+  modelListUrl?: string
 }
 
 interface ProviderModelsResponse {
@@ -46,6 +47,7 @@ interface TestConnectionDto {
   apiKey?: string
   endpoint?: string
   model?: string
+  appendV1?: boolean
 }
 
 interface TestCommentReviewDto {
@@ -107,7 +109,8 @@ export class AiController {
   async fetchModelsList(
     @Body() body: FetchModelsDto,
   ): Promise<{ models: ModelInfo[]; error?: string }> {
-    const { type, apiKey, endpoint } = await this.resolveModelListConfig(body)
+    const { type, apiKey, endpoint, modelListUrl } =
+      await this.resolveModelListConfig(body)
 
     if (!type) {
       throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
@@ -122,7 +125,12 @@ export class AiController {
     }
 
     try {
-      const runtime = createRuntimeForModelList(type, apiKey, endpoint)
+      const runtime = createRuntimeForModelList(
+        type,
+        apiKey,
+        endpoint,
+        modelListUrl,
+      )
       const models = await this.fetchModelsFromRuntime(runtime)
       return { models }
     } catch (error: any) {
@@ -139,7 +147,8 @@ export class AiController {
     @Body() body: TestConnectionDto,
   ): Promise<{ ok: boolean }> {
     const { providerId } = body
-    const { type, apiKey, endpoint, model } = await this.resolveTestConfig(body)
+    const { type, apiKey, endpoint, model, appendV1 } =
+      await this.resolveTestConfig(body)
 
     if (!type) {
       throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
@@ -166,6 +175,7 @@ export class AiController {
         type,
         apiKey,
         endpoint,
+        appendV1,
         defaultModel: model,
         enabled: true,
       })
@@ -253,7 +263,8 @@ export class AiController {
 
   private async resolveModelListConfig(body: FetchModelsDto) {
     const needsLookup =
-      !!body.providerId && (!body.apiKey || !body.type || !body.endpoint)
+      !!body.providerId &&
+      (!body.apiKey || !body.type || !body.endpoint || !body.modelListUrl)
     const storedProvider = needsLookup
       ? await this.configsService.getAiProviderById(body.providerId)
       : undefined
@@ -263,13 +274,18 @@ export class AiController {
       type: body.type ?? storedProvider?.type,
       apiKey: body.apiKey || storedProvider?.apiKey,
       endpoint: body.endpoint ?? storedProvider?.endpoint,
+      modelListUrl: body.modelListUrl ?? storedProvider?.modelListUrl,
     }
   }
 
   private async resolveTestConfig(body: TestConnectionDto) {
     const needsLookup =
       !!body.providerId &&
-      (!body.apiKey || !body.type || !body.endpoint || !body.model)
+      (!body.apiKey ||
+        !body.type ||
+        !body.endpoint ||
+        !body.model ||
+        body.appendV1 === undefined)
     const storedProvider = needsLookup
       ? await this.configsService.getAiProviderById(body.providerId)
       : undefined
@@ -279,6 +295,7 @@ export class AiController {
       apiKey: body.apiKey || storedProvider?.apiKey,
       endpoint: body.endpoint ?? storedProvider?.endpoint,
       model: body.model ?? storedProvider?.defaultModel,
+      appendV1: body.appendV1 ?? storedProvider?.appendV1,
     }
   }
 

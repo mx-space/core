@@ -3,8 +3,25 @@ import { describe, expect, it } from 'vitest'
 import {
   coerceAIProviderType,
   matchRegistryModel,
+  mergeModelOptions,
   resolvePiProviderId,
 } from './settings'
+
+describe('mergeModelOptions', () => {
+  it('keeps fetched models first and de-duplicates case-insensitively', () => {
+    expect(
+      mergeModelOptions(
+        [{ id: 'gemini-2.5-pro' }, { id: 'gemini-2.5-flash' }],
+        [{ id: 'GEMINI-2.5-PRO' }, { id: 'gpt-4o' }],
+      ),
+    ).toEqual(['gemini-2.5-pro', 'gemini-2.5-flash', 'gpt-4o'])
+  })
+
+  it('handles missing inputs', () => {
+    expect(mergeModelOptions(undefined, [{ id: 'gpt-4o' }])).toEqual(['gpt-4o'])
+    expect(mergeModelOptions([], undefined)).toEqual([])
+  })
+})
 
 describe('resolvePiProviderId', () => {
   it('maps known hostnames to registry provider ids', () => {

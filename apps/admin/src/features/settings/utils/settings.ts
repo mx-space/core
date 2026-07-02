@@ -113,12 +113,14 @@ export function normalizeAIConfig(value: unknown): AIConfig {
     ...config,
     providers: (config.providers ?? []).map((provider) => ({
       apiKey: provider.apiKey ?? '',
+      appendV1: provider.appendV1 ?? true,
       contextWindow: provider.contextWindow ?? undefined,
       defaultModel: provider.defaultModel ?? '',
       enabled: Boolean(provider.enabled),
       endpoint: provider.endpoint ?? '',
       id: provider.id || crypto.randomUUID(),
       maxTokens: provider.maxTokens ?? undefined,
+      modelListUrl: provider.modelListUrl ?? '',
       name: provider.name ?? '',
       type: coerceAIProviderType(provider.type),
     })),
@@ -239,6 +241,23 @@ export function matchRegistryModel(
   const target = modelId.trim().toLowerCase()
   if (!target) return undefined
   return (models ?? []).find((m) => m.id.trim().toLowerCase() === target)
+}
+
+export function mergeModelOptions(
+  fetchedModels: { id: string }[] | undefined,
+  registryModels: { id: string }[] | undefined,
+): string[] {
+  const seen = new Set<string>()
+  const merged: string[] = []
+  for (const model of [...(fetchedModels ?? []), ...(registryModels ?? [])]) {
+    const id = model.id.trim()
+    if (!id) continue
+    const key = id.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    merged.push(id)
+  }
+  return merged
 }
 
 export function getErrorMessage(error: unknown, fallback: string) {

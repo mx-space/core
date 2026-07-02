@@ -14,7 +14,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 
 import type { AIProviderConfig } from '../ai.types'
 import { AIProviderType } from '../ai.types'
-import { createModelRuntime } from '../runtime'
+import { createModelRuntime, resolveOpenAICompatibleBaseUrl } from '../runtime'
 import { convert as convertJsonSchema } from '../runtime/json-schema-to-typebox'
 import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
 
@@ -479,15 +479,10 @@ export class AiAgentChatService {
       body.tools = openaiTools
     }
 
-    let baseUrl: string
-    if (provider.endpoint) {
-      baseUrl = provider.endpoint
-      if (!baseUrl.endsWith('/v1')) {
-        baseUrl = `${baseUrl.replace(/\/+$/, '')}/v1`
-      }
-    } else {
-      baseUrl = 'https://api.openai.com/v1'
-    }
+    const baseUrl = resolveOpenAICompatibleBaseUrl(
+      provider.endpoint,
+      provider.appendV1 ?? true,
+    )
 
     return {
       url: `${baseUrl}/chat/completions`,

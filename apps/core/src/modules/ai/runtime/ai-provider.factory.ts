@@ -13,6 +13,8 @@ export function createModelRuntime(
   const runtimeConfig: RuntimeConfig = {
     apiKey: config.apiKey,
     endpoint: config.endpoint,
+    modelListUrl: config.modelListUrl,
+    appendV1: config.appendV1,
     model,
     providerType: config.type,
     providerId: config.id,
@@ -39,6 +41,7 @@ export function createRuntimeForModelList(
   type: AIProviderType,
   apiKey: string,
   endpoint?: string,
+  modelListUrl?: string,
 ): IModelRuntime {
   const config: AIProviderConfig = {
     id: 'temp',
@@ -46,6 +49,7 @@ export function createRuntimeForModelList(
     type,
     apiKey,
     endpoint,
+    modelListUrl,
     defaultModel: 'temp',
     enabled: true,
   }

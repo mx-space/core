@@ -1796,16 +1796,20 @@ export const enUS = {
   'settings.ai.error.fetchModelsFailed': 'Failed to fetch model list',
   'settings.ai.error.testFailed': 'Connection test failed',
   'settings.ai.field.apiKey': 'API Key',
+  'settings.ai.field.appendV1': 'Append /v1 to base URL',
   'settings.ai.field.contextWindow': 'Context window (tokens)',
   'settings.ai.field.defaultModel': 'Default model',
   'settings.ai.field.displayName': 'Display name',
   'settings.ai.field.endpoint': 'Endpoint',
   'settings.ai.field.maxTokens': 'Max output tokens',
+  'settings.ai.field.modelListUrl': 'Model list URL',
   'settings.ai.field.providerType': 'Provider type',
   'settings.ai.placeholder.endpointCompatible':
     'Required, e.g. https://api.deepseek.com',
   'settings.ai.placeholder.endpointDefault':
     'Optional, leave empty for default',
+  'settings.ai.placeholder.modelListUrl':
+    'Optional, e.g. https://generativelanguage.googleapis.com/v1beta/openai/models',
   'settings.ai.placeholder.modelAnthropic': 'e.g. claude-sonnet-4.5',
   'settings.ai.placeholder.modelCompatible': 'e.g. deepseek-chat',
   'settings.ai.placeholder.modelOpenai': 'e.g. gpt-5-mini',
@@ -1865,8 +1869,9 @@ export const enUS = {
     'Use an ISO 639-1 language code (2 letters)',
   'settings.ai.test.languageExists': 'Language {language} already exists',
   'settings.ai.test.placeholder': 'e.g. en, ja, ko',
+  'settings.ai.toast.modelListEmpty': 'No models returned',
   'settings.ai.toast.modelListError': 'Fetch model list: {message}',
-  'settings.ai.toast.modelListUpdated': 'Model list updated',
+  'settings.ai.toast.modelListUpdated': 'Model list updated ({count})',
   'settings.ai.toast.needDefaultModel':
     'Please fill in the default model first',
   'settings.ai.toast.testSuccess': 'Connection works',

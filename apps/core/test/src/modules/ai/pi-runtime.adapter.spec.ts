@@ -5,13 +5,14 @@ import {
   fauxToolCall,
   Type,
 } from '@earendil-works/pi-ai'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { withFauxAi } from '@/helper/faux-ai.helper'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import {
   deriveProviderId,
   PiRuntimeAdapter,
+  resolveOpenAICompatibleBaseUrl,
 } from '~/modules/ai/runtime/pi-runtime.adapter'
 
 const MODEL_ID = 'faux-model'
@@ -30,6 +31,7 @@ interface AdapterInternals {
     api: string
     baseUrl: string
     provider: string
+    compat?: { supportsStore?: boolean }
   }
 }
 
@@ -77,6 +79,7 @@ function track<T extends AdapterHandle>(handle: T): T {
 
 afterEach(() => {
   while (handles.length) handles.pop()!.teardown()
+  vi.restoreAllMocks()
 })
 
 function adapterWithResponses(
@@ -417,6 +420,130 @@ describe('PiRuntimeAdapter', () => {
       )
       expect(adapter.providerInfo.id).toBe('totally-not-registered')
       // No throw on construction is the contract; behaviour covered in generateText
+    })
+
+    it('appends /v1 to custom endpoint by default', () => {
+      const { adapter } = track(
+        makeAdapter({
+          providerId: 'not-registered-v1',
+          endpoint: 'https://unknown.example.com/openai/',
+        }),
+      )
+      expect(inspect(adapter).model.baseUrl).toBe(
+        'https://unknown.example.com/openai/v1',
+      )
+    })
+
+    it('keeps custom endpoint verbatim when appendV1 is false', () => {
+      const faux = withFauxAi({
+        api: FAUX_API,
+        provider: PROVIDER_ID,
+        models: [{ id: MODEL_ID, name: MODEL_ID }],
+      })
+      const adapter = new PiRuntimeAdapter({
+        apiKey: 'faux-api-key',
+        endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+        appendV1: false,
+        model: MODEL_ID,
+        providerType: AIProviderType.OpenAICompatible,
+        providerId: 'gemini-compat',
+      })
+      track({ adapter, teardown: () => faux.teardown() })
+      expect(inspect(adapter).model.baseUrl).toBe(
+        'https://generativelanguage.googleapis.com/v1beta/openai',
+      )
+    })
+
+    it('disables supportsStore for non-OpenAI compat hosts', () => {
+      const { adapter } = track(
+        makeAdapter({
+          providerId: 'not-registered-store',
+          endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+        }),
+      )
+      expect(inspect(adapter).model.compat).toMatchObject({
+        supportsStore: false,
+      })
+    })
+
+    it('keeps compat untouched for api.openai.com', () => {
+      const { adapter } = track(
+        makeAdapter({
+          providerId: 'not-registered-openai',
+          endpoint: 'https://api.openai.com/v1',
+        }),
+      )
+      expect(inspect(adapter).model.compat).toBeUndefined()
+    })
+  })
+
+  describe('resolveOpenAICompatibleBaseUrl', () => {
+    it('defaults to the OpenAI base URL on empty endpoint', () => {
+      expect(resolveOpenAICompatibleBaseUrl(undefined)).toBe(
+        'https://api.openai.com/v1',
+      )
+      expect(resolveOpenAICompatibleBaseUrl('  ')).toBe(
+        'https://api.openai.com/v1',
+      )
+    })
+
+    it('appends /v1 when missing and enabled', () => {
+      expect(resolveOpenAICompatibleBaseUrl('https://example.com')).toBe(
+        'https://example.com/v1',
+      )
+      expect(resolveOpenAICompatibleBaseUrl('https://example.com/v1/')).toBe(
+        'https://example.com/v1',
+      )
+    })
+
+    it('only trims trailing slashes when disabled', () => {
+      expect(
+        resolveOpenAICompatibleBaseUrl('https://example.com/openai/', false),
+      ).toBe('https://example.com/openai')
+    })
+  })
+
+  describe('listModels', () => {
+    function adapterWithModelListUrl() {
+      return new PiRuntimeAdapter({
+        apiKey: 'faux-api-key',
+        endpoint: 'https://example.com/openai',
+        modelListUrl: 'https://example.com/openai/models',
+        model: MODEL_ID,
+        providerType: AIProviderType.OpenAICompatible,
+        providerId: 'model-list-test',
+      })
+    }
+
+    it('fetches from modelListUrl when configured', async () => {
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: [{ id: 'models/gemini-2.5-flash' }, { id: 'gemini-pro' }],
+        }),
+      } as Response)
+
+      await expect(adapterWithModelListUrl().listModels()).resolves.toEqual([
+        { id: 'models/gemini-2.5-flash', name: 'models/gemini-2.5-flash' },
+        { id: 'gemini-pro', name: 'gemini-pro' },
+      ])
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://example.com/openai/models',
+        expect.objectContaining({
+          headers: { Authorization: 'Bearer faux-api-key' },
+        }),
+      )
+    })
+
+    it('propagates a non-2xx modelListUrl response as an error', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: false,
+        status: 401,
+      } as Response)
+
+      await expect(adapterWithModelListUrl().listModels()).rejects.toThrow(
+        /401/,
+      )
     })
   })
 

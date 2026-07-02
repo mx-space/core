@@ -3,12 +3,7 @@ import { ChevronDown, Loader2, Settings } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-import {
-  getModelList,
-  getRegistryModels,
-  type RegistryModel,
-  testConfig,
-} from '~/api/ai'
+import { getModelList, getRegistryModels, testConfig } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { Drawer } from '~/ui/feedback/drawer'
 import { Button } from '~/ui/primitives/button'
@@ -32,6 +27,7 @@ import {
   getDefaultAIModel,
   getErrorMessage,
   matchRegistryModel,
+  mergeModelOptions,
   resolvePiProviderId,
 } from '../../utils/settings'
 import { FieldShell } from '../SettingsPrimitives'
@@ -64,7 +60,11 @@ export function AIProviderDrawer(props: {
   })
 
   const registryModels = registryQuery.data ?? []
-  const registryDisabled = piProviderId === null
+  const modelOptions = useMemo(
+    () => mergeModelOptions(props.providerModels, registryModels),
+    [props.providerModels, registryModels],
+  )
+  const modelsDisabled = piProviderId === null && modelOptions.length === 0
   const modelMatch = useMemo(
     () =>
       provider
@@ -83,18 +83,27 @@ export function AIProviderDrawer(props: {
       const response = await getModelList({
         apiKey: provider.apiKey || undefined,
         endpoint: provider.endpoint || undefined,
+        modelListUrl: provider.modelListUrl || undefined,
         providerId: provider.id,
         type: provider.type,
       })
+      const fetchedModels = response.models ?? []
       queryClient.setQueryData<Record<string, AIProviderModel[]>>(
         props.modelCacheKey,
-        (current) => ({ ...current, [provider.id]: response.models ?? [] }),
+        (current) => ({ ...current, [provider.id]: fetchedModels }),
       )
       if (response.error)
         toast.warning(
           t('settings.ai.toast.modelListError', { message: response.error }),
         )
-      else toast.success(t('settings.ai.toast.modelListUpdated'))
+      else if (fetchedModels.length === 0)
+        toast.info(t('settings.ai.toast.modelListEmpty'))
+      else
+        toast.success(
+          t('settings.ai.toast.modelListUpdated', {
+            count: fetchedModels.length,
+          }),
+        )
     } catch (error) {
       toast.error(
         getErrorMessage(error, t('settings.ai.error.fetchModelsFailed')),
@@ -114,6 +123,7 @@ export function AIProviderDrawer(props: {
     try {
       await testConfig({
         apiKey: provider.apiKey || undefined,
+        appendV1: provider.appendV1,
         endpoint: provider.endpoint || undefined,
         model: provider.defaultModel,
         providerId: provider.id,
@@ -211,11 +221,26 @@ export function AIProviderDrawer(props: {
               value={provider.endpoint ?? ''}
             />
           ) : null}
+          {provider.type !== 'anthropic' ? (
+            <>
+              <TextInput
+                label={t('settings.ai.field.modelListUrl')}
+                onChange={(modelListUrl) => props.onChange({ modelListUrl })}
+                placeholder={t('settings.ai.placeholder.modelListUrl')}
+                value={provider.modelListUrl ?? ''}
+              />
+              <Switch
+                checked={provider.appendV1 ?? true}
+                label={t('settings.ai.field.appendV1')}
+                onCheckedChange={(appendV1) => props.onChange({ appendV1 })}
+              />
+            </>
+          ) : null}
           <FieldShell label={t('settings.ai.field.defaultModel')}>
             <ModelCombobox
-              disabled={registryDisabled}
+              disabled={modelsDisabled}
               loading={registryQuery.isFetching}
-              models={registryModels}
+              models={modelOptions}
               onChange={(defaultModel) => props.onChange({ defaultModel })}
               placeholder={getAIProviderModelPlaceholder(t, provider.type)}
               value={provider.defaultModel}
@@ -262,19 +287,17 @@ export function AIProviderDrawer(props: {
 function ModelCombobox(props: {
   disabled?: boolean
   loading?: boolean
-  models: RegistryModel[]
+  models: string[]
   onChange: (value: string) => void
   placeholder?: string
   value: string
 }) {
-  const items = useMemo(() => props.models.map((m) => m.id), [props.models])
-
   return (
     <Combobox
       autoComplete="none"
       disabled={props.disabled}
       inputValue={props.value}
-      items={items}
+      items={props.models}
       onInputValueChange={(next) => props.onChange(next)}
       onValueChange={(next) => {
         if (typeof next === 'string') props.onChange(next)
