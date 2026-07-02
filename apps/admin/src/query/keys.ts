@@ -78,6 +78,7 @@ export const adminQueryKeys = {
     root: ['comments'] as const,
     sourceCandidates: (params: { refType?: string; search?: string }) =>
       ['comments', 'source-candidates', params] as const,
+    tabCountsRoot: ['comments', 'tab-counts'] as const,
     tabCounts: (filter: { refType?: string; refId?: string } = {}) =>
       ['comments', 'tab-counts', filter] as const,
     thread: (id: string) => ['comments', 'thread', id] as const,

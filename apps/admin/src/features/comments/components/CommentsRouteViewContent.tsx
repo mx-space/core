@@ -102,6 +102,7 @@ export function CommentsRouteViewContent() {
     batchDeleteMutation,
     batchStateMutation,
     deleteMutation,
+    markReadOnOpenMutation,
     replyMutation,
     stateMutation,
   } = useCommentMutations({
@@ -125,15 +126,12 @@ export function CommentsRouteViewContent() {
       // Mark as read when opening — only fires for genuinely unread rows so
       // we don't spam the server when navigating among already-read items.
       if (comment.state === CommentState.Unread) {
-        stateMutation.mutate({
-          id: comment.id,
-          nextState: CommentState.Read,
-        })
+        markReadOnOpenMutation.mutate(comment.id)
       }
       const qs = searchParams.toString()
       navigate(`/comments/${comment.id}${qs ? `?${qs}` : ''}`)
     },
-    [navigate, searchParams, stateMutation],
+    [markReadOnOpenMutation, navigate, searchParams],
   )
 
   // The list snapshot can change between an action firing and resolving (e.g.

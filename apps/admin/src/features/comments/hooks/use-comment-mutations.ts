@@ -12,7 +12,9 @@ import {
   updateCommentState,
 } from '~/api/comments'
 import { useI18n } from '~/i18n'
-import type { CommentModel, CommentState } from '~/models/comment'
+import type { CommentModel, CommentsResponse } from '~/models/comment'
+import { CommentState } from '~/models/comment'
+import { adminQueryKeys } from '~/query/keys'
 
 import { commentsQueryKey } from '../constants'
 
@@ -41,6 +43,30 @@ export function useCommentMutations(options: UseCommentMutationsOptions) {
     onSuccess: async () => {
       toast.success(t('comments.toast.updated'))
       await invalidateComments()
+    },
+  })
+
+  // Marking read on open must not disturb the list the user is scanning:
+  // patch the cached rows in place instead of invalidating, so the row stays
+  // visible in the unread tab until the next natural refetch. No toast.
+  const markReadOnOpenMutation = useMutation({
+    mutationFn: (id: string) => updateCommentState(id, CommentState.Read),
+    onSuccess: (_data, id) => {
+      queryClient.setQueriesData<CommentsResponse>(
+        { queryKey: adminQueryKeys.comments.listRoot },
+        (cached) =>
+          cached && {
+            ...cached,
+            data: cached.data.map((comment) =>
+              comment.id === id
+                ? { ...comment, state: CommentState.Read }
+                : comment,
+            ),
+          },
+      )
+      void queryClient.invalidateQueries({
+        queryKey: adminQueryKeys.comments.tabCountsRoot,
+      })
     },
   })
 
@@ -116,6 +142,7 @@ export function useCommentMutations(options: UseCommentMutationsOptions) {
     batchStateMutation,
     deleteMutation,
     invalidateComments,
+    markReadOnOpenMutation,
     replyMutation,
     stateMutation,
   }
