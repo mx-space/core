@@ -26,9 +26,9 @@ const createFakeRedis = () => {
 }
 
 const createFakeHttp = (data: { countryCode?: string }) => {
-  const get = vi.fn().mockResolvedValue({ data })
+  const get = vi.fn().mockResolvedValue(data)
   return {
-    httpService: { axiosRef: { get } } as any,
+    httpService: { fetch: get } as any,
     get,
   }
 }
@@ -136,7 +136,7 @@ describe('CommentCountryService', () => {
   it('returns null and warns when the upstream call throws', async () => {
     const { redisService } = createFakeRedis()
     const get = vi.fn().mockRejectedValue(new Error('boom'))
-    const httpService = { axiosRef: { get } } as any
+    const httpService = { fetch: get } as any
     const service = new CommentCountryService(redisService, httpService)
 
     const result = await service.lookupCountryCode('1.1.1.1')

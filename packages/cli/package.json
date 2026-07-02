@@ -70,7 +70,7 @@
     "@lexical/headless": "^0.46.0",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/editor": "workspace:*",
-    "better-auth": "^1.6.20",
+    "better-auth": "^1.6.23",
     "effect": "3.21.4",
     "fast-xml-parser": "5.9.3",
     "get-east-asian-width": "^1.6.0",
@@ -81,7 +81,7 @@
   },
   "devDependencies": {
     "@effect/vitest": "0.29.0",
-    "@types/node": "26.0.0",
+    "@types/node": "26.0.1",
     "@types/semver": "7.7.1",
     "tsdown": "0.22.3",
     "tsx": "^4.22.4",

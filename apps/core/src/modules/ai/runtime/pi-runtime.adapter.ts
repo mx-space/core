@@ -10,14 +10,12 @@ import type {
   Tool,
   TSchema,
 } from '@earendil-works/pi-ai'
+import { isContextOverflow, validateToolCall } from '@earendil-works/pi-ai'
+import { complete, stream } from '@earendil-works/pi-ai/compat'
 import {
-  complete,
-  getModel,
-  getModels,
-  isContextOverflow,
-  stream,
-  validateToolCall,
-} from '@earendil-works/pi-ai'
+  getBuiltinModel,
+  getBuiltinModels,
+} from '@earendil-works/pi-ai/providers/all'
 import { Logger } from '@nestjs/common'
 import { jsonrepair } from 'jsonrepair'
 import { Value } from 'typebox/value'
@@ -171,7 +169,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
   ): Model<Api> {
     const baseUrl = endpoint?.trim()
     try {
-      const registered = getModel(
+      const registered = getBuiltinModel(
         this.piProviderId as never,
         modelId as never,
       ) as Model<Api> | undefined
@@ -582,11 +580,13 @@ export class PiRuntimeAdapter implements IModelRuntime {
 
   async listModels(): Promise<ModelInfo[]> {
     try {
-      const models = getModels(this.piProviderId as never) as Model<Api>[]
+      const models = getBuiltinModels(
+        this.piProviderId as never,
+      ) as Model<Api>[]
       return models.map((m) => ({ id: m.id, name: m.name }))
     } catch (error) {
       this.logger.warn(
-        `pi getModels failed for provider ${this.piProviderId}: ${
+        `pi getBuiltinModels failed for provider ${this.piProviderId}: ${
           (error as Error).message
         }`,
       )

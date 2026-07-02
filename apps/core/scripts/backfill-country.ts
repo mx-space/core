@@ -155,7 +155,7 @@ async function main() {
   const { Pool } = await import('pg')
   const { POSTGRES, REDIS } = await import('../src/app.config')
   const { default: IORedis } = await import('ioredis')
-  const axiosMod = await import('axios')
+  const { ofetch } = await import('ofetch')
   const { CommentCountryService } =
     await import('../src/modules/comment/comment-country.service')
 
@@ -186,7 +186,7 @@ async function main() {
       })
 
   const redisStub = { getClient: () => redis } as any
-  const httpStub = { axiosRef: axiosMod.default ?? axiosMod } as any
+  const httpStub = { fetch: ofetch } as any
   const service = new CommentCountryService(redisStub, httpStub)
 
   try {

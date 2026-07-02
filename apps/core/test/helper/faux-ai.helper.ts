@@ -3,7 +3,7 @@ import type {
   FauxProviderRegistration,
   FauxResponseStep,
 } from '@earendil-works/pi-ai'
-import { registerFauxProvider } from '@earendil-works/pi-ai'
+import { registerFauxProvider } from '@earendil-works/pi-ai/compat'
 
 export interface WithFauxAiOptions {
   api?: string

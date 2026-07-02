@@ -1,5 +1,5 @@
 import type { Api, Model } from '@earendil-works/pi-ai'
-import { getModels } from '@earendil-works/pi-ai'
+import { getBuiltinModels } from '@earendil-works/pi-ai/providers/all'
 import { Body, Get, Logger, Param, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -379,7 +379,7 @@ export class AiController {
   private loadRegistryModels(providerId: string): RegistryModelView[] {
     let models: Model<Api>[]
     try {
-      models = getModels(providerId as never) as Model<Api>[]
+      models = getBuiltinModels(providerId as never) as Model<Api>[]
     } catch {
       return []
     }

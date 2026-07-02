@@ -138,9 +138,9 @@ afterEach(() => {
 describe('UpdateDownloadService', () => {
   it('does not attach GitHub auth to non-GitHub manifest hosts', async () => {
     process.env.GITHUB_TOKEN = 'env-token'
-    const get = vi.fn().mockResolvedValue({ data: { ok: true } })
+    const fetch = vi.fn().mockResolvedValue({ ok: true })
     const downloadService = new UpdateDownloadService(
-      { axiosRef: { get } } as any,
+      { fetch } as any,
       {
         get: vi.fn().mockResolvedValue({ github: { token: 'stored-token' } }),
       } as any,
@@ -153,19 +153,19 @@ describe('UpdateDownloadService', () => {
       },
     )
 
-    expect(get).toHaveBeenCalledWith(
+    expect(fetch).toHaveBeenCalledWith(
       'https://admin-r2.example/latest.json',
       expect.objectContaining({
         headers: { Accept: 'application/json' },
       }),
     )
-    expect(get.mock.calls[0]![1].headers).not.toHaveProperty('Authorization')
+    expect(fetch.mock.calls[0]![1].headers).not.toHaveProperty('Authorization')
   })
 
   it('attaches GitHub auth to GitHub API hosts', async () => {
-    const get = vi.fn().mockResolvedValue({ data: { ok: true } })
+    const fetch = vi.fn().mockResolvedValue({ ok: true })
     const downloadService = new UpdateDownloadService(
-      { axiosRef: { get } } as any,
+      { fetch } as any,
       {
         get: vi.fn().mockResolvedValue({ github: { token: 'stored-token' } }),
       } as any,
@@ -178,7 +178,7 @@ describe('UpdateDownloadService', () => {
       },
     )
 
-    expect(get).toHaveBeenCalledWith(
+    expect(fetch).toHaveBeenCalledWith(
       'https://api.github.com/repos/mx-space/core/releases/latest',
       expect.objectContaining({
         headers: {
@@ -200,7 +200,7 @@ describe('UpdateService', () => {
     fakeRedis = new FakeRedis()
 
     const mockHttpService = {
-      axiosRef: { get: vi.fn() },
+      fetch: vi.fn(),
     }
 
     const mockConfigsService = {
