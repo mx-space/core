@@ -8,6 +8,7 @@ import {
   ConfigVersionScopes,
   ConfigVersionService,
 } from '~/processors/redis/config-version.service'
+import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import { ConfigsService } from '../configs/configs.service'
 import { AuthInstanceInjectKey } from './auth.constant'
@@ -33,6 +34,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
     private readonly configService: ConfigsService,
     @Inject(AuthInstanceInjectKey)
     private readonly authInstance: InjectAuthInstance,
+    private readonly snowflakeService: SnowflakeService,
   ) {}
 
   async onModuleInit() {
@@ -124,6 +126,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
         providers,
         passkeyOptions,
         urls.serverUrl,
+        this.snowflakeService,
       )
       this.authHandler = handler
 

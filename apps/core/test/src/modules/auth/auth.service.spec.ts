@@ -35,11 +35,15 @@ const createService = () => {
   const authInstance = {
     get: vi.fn(() => auth),
   }
+  const snowflakeService = {
+    nextId: vi.fn(() => '740375270589665280'),
+  }
   const service = new AuthService(
     authRepository as any,
     readerRepository as any,
     ownerRepository as any,
     authInstance as any,
+    snowflakeService as any,
   )
   return { authInstance, authRepository, readerRepository, service }
 }

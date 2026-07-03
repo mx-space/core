@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto'
 import { IncomingMessage } from 'node:http'
 
 import {
@@ -12,6 +11,7 @@ import { customAlphabet } from 'nanoid'
 import { RequestContext } from '~/common/contexts/request.context'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { alphabet } from '~/constants/other.constant'
+import { SnowflakeService } from '~/shared/id/snowflake.service'
 import { getAvatar } from '~/utils/tool.util'
 
 import { OwnerRepository } from '../owner/owner.repository'
@@ -41,6 +41,7 @@ export class AuthService {
     private readonly ownerRepository: OwnerRepository,
     @Inject(AuthInstanceInjectKey)
     private readonly authInstance: InjectAuthInstance,
+    private readonly snowflakeService: SnowflakeService,
   ) {}
 
   private normalizeOptional(value?: string | null) {
@@ -186,7 +187,7 @@ export class AuthService {
     const start = model.token.slice(0, 6)
     const prefix = model.token.startsWith('txo') ? 'txo' : undefined
     await this.authRepository.createApiKey({
-      id: randomUUID(),
+      id: this.snowflakeService.nextId(),
       name: model.name,
       start,
       prefix,
@@ -241,7 +242,7 @@ export class AuthService {
       this.normalizeOptional(input.username) || normalizedUsername
     const displayName = this.normalizeOptional(input.name) || rawUsername
     const avatar = this.normalizeOptional(input.avatar) || getAvatar(mail)
-    const readerId = randomUUID()
+    const readerId = this.snowflakeService.nextId()
     const passwordHash = await hashPassword(input.password)
 
     const profilePatch: Record<string, any> = {
@@ -273,7 +274,7 @@ export class AuthService {
       })
 
       await this.authRepository.createAccount({
-        id: randomUUID(),
+        id: this.snowflakeService.nextId(),
         providerAccountId: readerId,
         providerId: 'credential',
         userId: readerId,

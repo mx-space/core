@@ -64,6 +64,7 @@ const buildAuthService = () => {
     reader as any,
     ownerRepository as any,
     authInstance as any,
+    { nextId: () => '740375270589665280' } as any,
   )
   vi.spyOn(service, 'getSessionUser').mockResolvedValue(null)
   vi.spyOn(service, 'isOwnerReaderId').mockImplementation(

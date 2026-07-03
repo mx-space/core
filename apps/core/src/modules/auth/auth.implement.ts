@@ -4,6 +4,7 @@ import { IncomingMessage } from 'node:http'
 import { apiKey } from '@better-auth/api-key'
 import type { PasskeyOptions } from '@better-auth/passkey'
 import { passkey } from '@better-auth/passkey'
+import type { SnowflakeGenerator } from '@mx-space/db-schema/id'
 import * as authSchema from '@mx-space/db-schema/schema'
 import { compare } from 'bcryptjs'
 import type { BetterAuthOptions } from 'better-auth'
@@ -81,6 +82,7 @@ export async function CreateAuth(
   providers: BetterAuthOptions['socialProviders'],
   passkeyOptions?: PasskeyOptions,
   serverUrl?: string,
+  idGenerator?: SnowflakeGenerator,
 ) {
   const deviceVerificationPath = isDev
     ? '/device'
@@ -155,6 +157,12 @@ export async function CreateAuth(
         },
       },
     },
+    // Better Auth's default ids are mixed-case random strings, which get
+    // mangled when used as record keys by the snake_case response transform.
+    // Digit-only Snowflake ids survive both server and client case passes.
+    advanced: idGenerator
+      ? { database: { generateId: () => idGenerator.nextId() } }
+      : undefined,
     appName: 'mx-core',
     secret: SECURITY.jwtSecret,
     plugins: [
