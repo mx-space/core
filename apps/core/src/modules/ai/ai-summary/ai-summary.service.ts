@@ -681,6 +681,19 @@ export class AiSummaryService implements OnModuleInit {
       await this.aiSummaryRepository.listForRef(id),
     )
     if (!existingSummaries.length) {
+      const targetLanguages = resolveTargetLanguages(
+        undefined,
+        aiConfig.summaryTargetLanguages,
+      )
+      if (!targetLanguages.length) {
+        return
+      }
+
+      this.logger.log(`AI auto summary task created (update init): article=${id}`)
+      await this.aiTaskService.createSummaryTask({
+        refId: id,
+        targetLanguages,
+      })
       return
     }
 

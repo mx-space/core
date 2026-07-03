@@ -177,6 +177,15 @@ const optionalNumber = (raw: string): number | undefined =>
   raw ? Number(raw) : undefined
 const optionalString = (raw: string): string | undefined => raw || undefined
 
+function parseJsonOr<T>(raw: string | undefined, fallback: T): T {
+  if (!raw) return fallback
+  try {
+    return JSON.parse(raw) as T
+  } catch {
+    return fallback
+  }
+}
+
 export function parseTask(raw: TaskRedis, logs: string[]): Task {
   // Defensive: pre-spec-2 task hashes have no `totalCost` field. Guard against
   // empty string / undefined / NaN — only expose USD float when cents>0.
@@ -187,7 +196,7 @@ export function parseTask(raw: TaskRedis, logs: string[]): Task {
     id: raw.id,
     type: raw.type,
     status: raw.status as TaskStatus,
-    payload: JSON.parse(raw.payload || '{}'),
+    payload: parseJsonOr(raw.payload, {}),
     groupId: optionalString(raw.groupId),
     scope: optionalString(raw.scope),
     progress: optionalNumber(raw.progress),
@@ -199,9 +208,11 @@ export function parseTask(raw: TaskRedis, logs: string[]): Task {
     createdAt: Number(raw.createdAt),
     startedAt: optionalNumber(raw.startedAt),
     completedAt: optionalNumber(raw.completedAt),
-    result: raw.result ? JSON.parse(raw.result) : undefined,
+    result: parseJsonOr(raw.result, undefined),
     error: optionalString(raw.error),
-    logs: logs.map((l) => JSON.parse(l) as TaskLog),
+    logs: logs
+      .map((l) => parseJsonOr<TaskLog | null>(l, null))
+      .filter((l): l is TaskLog => l !== null),
     workerId: optionalString(raw.workerId),
     retryCount: Number(raw.retryCount || '0'),
   }

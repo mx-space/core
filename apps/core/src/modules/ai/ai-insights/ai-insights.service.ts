@@ -546,7 +546,13 @@ export class AiInsightsService implements OnModuleInit {
     }
     const newHash = this.computeContentHash(article.text)
     const existing = await this.aiInsightsRepository.findSourceForRef(event.id)
-    if (!existing) return
+    if (!existing) {
+      this.logger.log(
+        `AI auto insights task created (update init): article=${event.id}`,
+      )
+      await this.aiTaskService.createInsightsTask({ refId: event.id })
+      return
+    }
     const stale = existing.hash !== newHash
     if (!stale) return
     this.logger.log(

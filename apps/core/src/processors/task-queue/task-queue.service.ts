@@ -36,6 +36,7 @@ import {
 } from './task-queue.types'
 
 const BATCH_TASK_TYPES = ['ai:translation:batch', 'ai:translation:all']
+const TASK_LIST_SCAN_BATCH_SIZE = 200
 
 const TERMINAL_STATUSES: ReadonlySet<TaskStatus> = new Set([
   TaskStatus.Completed,
@@ -355,42 +356,68 @@ export class TaskQueueService implements OnModuleDestroy {
       status: singleStatus,
     })
 
-    // Get all task IDs from the index first, then filter
-    const allTaskIds = await this.redis.zrevrange(indexKey, 0, -1)
-
-    if (!allTaskIds.length) {
-      return { data: [], total: 0 }
-    }
-
-    // Fetch all tasks to filter sub-tasks
-    const allTasks = await Promise.all(allTaskIds.map((id) => this.getTask(id)))
-    let filteredTasks = allTasks.filter((t): t is Task => t !== null)
-
-    if (
-      statuses.length > 0 &&
-      !(
-        singleStatus &&
-        indexKey === this.getKey(TASK_QUEUE_KEYS.indexByStatus(singleStatus))
-      )
-    ) {
-      const statusSet = new Set(statuses)
-      filteredTasks = filteredTasks.filter((t) => statusSet.has(t.status))
-    }
-    if (
-      scope &&
-      indexKey !== this.getKey(TASK_QUEUE_KEYS.indexByScope(scope))
-    ) {
-      filteredTasks = filteredTasks.filter((t) => t.scope === scope)
-    }
-
-    // Exclude sub-tasks (tasks with groupId) unless explicitly included
-    if (!includeSubTasks) {
-      filteredTasks = filteredTasks.filter((t) => !t.groupId)
-    }
-
-    const total = filteredTasks.length
     const start = (page - 1) * size
-    const paginatedTasks = filteredTasks.slice(start, start + size)
+    const pageTaskIds: string[] = []
+    let total = 0
+    let offset = 0
+    const statusSet = new Set(statuses)
+    const statusAlreadyIndexed =
+      !!singleStatus &&
+      indexKey === this.getKey(TASK_QUEUE_KEYS.indexByStatus(singleStatus))
+    const scopeAlreadyIndexed =
+      !!scope && indexKey === this.getKey(TASK_QUEUE_KEYS.indexByScope(scope))
+
+    while (true) {
+      const taskIds = await this.redis.zrevrange(
+        indexKey,
+        offset,
+        offset + TASK_LIST_SCAN_BATCH_SIZE - 1,
+      )
+      if (!taskIds.length) break
+
+      const pipeline = this.redis.pipeline()
+      for (const taskId of taskIds) {
+        pipeline.hmget(
+          this.getKey(TASK_QUEUE_KEYS.task(taskId)),
+          'status',
+          'scope',
+          'groupId',
+        )
+      }
+      const rows = await pipeline.exec()
+
+      for (let i = 0; i < taskIds.length; i++) {
+        const row = rows?.[i]
+        if (!row || row[0]) continue
+        const [taskStatus, taskScope, groupId] = row[1] as [
+          string | null,
+          string | null,
+          string | null,
+        ]
+        if (!taskStatus) continue
+        if (
+          statusSet.size > 0 &&
+          !statusAlreadyIndexed &&
+          !statusSet.has(taskStatus as TaskStatus)
+        ) {
+          continue
+        }
+        if (scope && !scopeAlreadyIndexed && taskScope !== scope) continue
+        if (!includeSubTasks && groupId) continue
+
+        if (total >= start && pageTaskIds.length < size) {
+          pageTaskIds.push(taskIds[i])
+        }
+        total++
+      }
+
+      offset += taskIds.length
+      if (taskIds.length < TASK_LIST_SCAN_BATCH_SIZE) break
+    }
+
+    const paginatedTasks = (
+      await Promise.all(pageTaskIds.map((id) => this.getTask(id)))
+    ).filter((t): t is Task => t !== null)
 
     return { data: paginatedTasks, total }
   }

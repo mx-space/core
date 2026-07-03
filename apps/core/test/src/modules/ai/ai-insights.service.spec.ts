@@ -33,7 +33,7 @@ const createService = () => {
   const aiService = {}
   const aiInFlightService = {}
   const taskProcessor = { registerHandler: vi.fn() }
-  const aiTaskService = {}
+  const aiTaskService = { createInsightsTask: vi.fn() }
   const eventEmitter = { emit: vi.fn() }
   const service = new AiInsightsService(
     repository as any,
@@ -45,7 +45,7 @@ const createService = () => {
     aiTaskService as any,
     eventEmitter as any,
   )
-  return { databaseService, repository, service }
+  return { aiTaskService, configService, databaseService, repository, service }
 }
 
 describe('AiInsightsService', () => {
@@ -158,5 +158,31 @@ describe('AiInsightsService', () => {
         insights: [],
       },
     ])
+  })
+
+  it('creates an initial insights task on update when no source insight exists', async () => {
+    const { aiTaskService, configService, databaseService, repository, service } =
+      createService()
+    configService.get.mockResolvedValue({
+      enableInsights: true,
+      enableAutoGenerateInsightsOnUpdate: true,
+      insightsMinTextLength: 0,
+    })
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'Published Post',
+        text: 'Long enough text',
+        isPublished: true,
+      },
+    })
+    repository.findSourceForRef.mockResolvedValue(null)
+
+    await service.handleUpdateArticle({ id: 'post-1' })
+
+    expect(aiTaskService.createInsightsTask).toHaveBeenCalledWith({
+      refId: 'post-1',
+    })
   })
 })

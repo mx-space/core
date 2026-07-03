@@ -134,6 +134,34 @@ describe('TaskQueueService — cost capture', () => {
       const task = parseTask({ ...baseHash(), totalCost: '' }, [])
       expect(task.totalCost).toBeUndefined()
     })
+
+    it('tolerates malformed JSON fields from stale Redis hashes', () => {
+      const task = parseTask(
+        {
+          ...baseHash(),
+          payload: '{bad',
+          result: '{bad',
+        },
+        [
+          JSON.stringify({
+            timestamp: 1,
+            level: 'info',
+            message: 'valid log',
+          }),
+          '{bad',
+        ],
+      )
+
+      expect(task.payload).toEqual({})
+      expect(task.result).toBeUndefined()
+      expect(task.logs).toEqual([
+        {
+          timestamp: 1,
+          level: 'info',
+          message: 'valid log',
+        },
+      ])
+    })
   })
 
   describe('cached-hydrate path', () => {

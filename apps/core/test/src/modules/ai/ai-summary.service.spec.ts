@@ -20,7 +20,7 @@ const createService = () => {
   const aiService = {}
   const aiInFlightService = {}
   const taskProcessor = { registerHandler: vi.fn() }
-  const aiTaskService = {}
+  const aiTaskService = { createSummaryTask: vi.fn() }
   const service = new AiSummaryService(
     repository as any,
     databaseService as any,
@@ -30,7 +30,7 @@ const createService = () => {
     taskProcessor as any,
     aiTaskService as any,
   )
-  return { databaseService, repository, service, taskProcessor }
+  return { aiTaskService, configService, databaseService, repository, service }
 }
 
 describe('AiSummaryService', () => {
@@ -138,5 +138,33 @@ describe('AiSummaryService', () => {
         summaries: [],
       },
     ])
+  })
+
+  it('creates an initial summary task on update when no summaries exist', async () => {
+    const { aiTaskService, configService, databaseService, repository, service } =
+      createService()
+    configService.get.mockResolvedValue({
+      enableSummary: true,
+      enableAutoGenerateSummaryOnUpdate: true,
+      summaryTargetLanguages: ['en', 'ja'],
+      summaryMinTextLength: 0,
+    })
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'Published Post',
+        text: 'Long enough text',
+        isPublished: true,
+      },
+    })
+    repository.listForRef.mockResolvedValue([])
+
+    await service.handleUpdateArticle({ id: 'post-1' })
+
+    expect(aiTaskService.createSummaryTask).toHaveBeenCalledWith({
+      refId: 'post-1',
+      targetLanguages: ['en', 'ja'],
+    })
   })
 })
