@@ -1,6 +1,11 @@
 # CHANGELOG
 
 
+## <small>13.11.12 (2026-07-03)</small>
+
+* fix(core): stabilize task listing and ai publish hooks ([8bba4da](https://github.com/mx-space/core/commit/8bba4da))
+
+
 ## <small>13.11.11 (2026-07-03)</small>
 
 * release: v13.11.11 ([6c9f664](https://github.com/mx-space/core/commit/6c9f664))
