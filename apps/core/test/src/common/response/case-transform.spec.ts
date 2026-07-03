@@ -87,6 +87,19 @@ describe('transformResponseCase', () => {
     })
   })
 
+  it('preserves mixed-case id record keys under bypass (activity presence)', () => {
+    const readerId = 'wKpLmN3qRsTuVwXyZ0'
+    const input = {
+      presence: { owner_123: { readerId } },
+      readers: { [readerId]: { emailVerified: true } },
+    }
+    expect(transformResponseCase(input, ['presence', 'readers'])).toEqual(input)
+    expect(transformResponseCase(input)).not.toHaveProperty([
+      'readers',
+      readerId,
+    ])
+  })
+
   it('only bypasses an exact path, not its prefixes', () => {
     expect(
       transformResponseCase({ outerField: { innerField: { deepKey: 1 } } }, [

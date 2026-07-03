@@ -3,6 +3,7 @@ import { keyBy, pick } from 'es-toolkit/compat'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
@@ -108,6 +109,9 @@ export class ActivityController {
 
   @Get('/presence')
   @HTTPDecorators.SkipLogging
+  // `presence` is keyed by visitor identity and `readers` by reader id; the
+  // snake_case pass would mangle mixed-case id keys and break client lookups.
+  @BypassCaseTransform(['presence', 'readers'])
   async getPresence(@Query() query: GetPresenceQueryDto) {
     const roomPresence = await this.service.getRoomPresence(query.roomName)
 
