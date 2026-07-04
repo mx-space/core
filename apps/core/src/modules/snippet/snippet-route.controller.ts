@@ -2,7 +2,10 @@ import { All, Request, Response } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
-import { ApiController } from '~/common/decorators/api-controller.decorator'
+import {
+  ApiController,
+  apiRoutePrefix,
+} from '~/common/decorators/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -111,7 +114,7 @@ export class SnippetRouteController {
     const skillIndex = `${path}/SKILL.md`
     const skillSnippet = await this.snippetService.getSnippetByPath(skillIndex)
     if (skillSnippet) {
-      return reply.redirect(`/s/${skillIndex}`, 302)
+      return reply.redirect(`${apiRoutePrefix}/s/${skillIndex}`, 302)
     }
 
     throw createAppException(AppErrorCode.SNIPPET_NOT_FOUND)

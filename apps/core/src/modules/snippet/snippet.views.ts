@@ -24,6 +24,19 @@ export const SkillBundleViewSchema = z.object({
 
 const SKILL_LEAF = '/SKILL.md'
 
+export const SKILL_ROOT = 'sk'
+
+const LEGACY_SKILL_ROOTS = new Set(['skill', 'skills'])
+
+export function normalizeSkillPath(path: string): string {
+  const segments = path.split('/')
+  if (segments[0] === SKILL_ROOT) return path
+  if (LEGACY_SKILL_ROOTS.has(segments[0])) {
+    return [SKILL_ROOT, ...segments.slice(1)].join('/')
+  }
+  return `${SKILL_ROOT}/${path}`
+}
+
 export function stripSkillSuffix(path: string): string {
   return path.endsWith(SKILL_LEAF) ? path.slice(0, -SKILL_LEAF.length) : path
 }

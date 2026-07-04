@@ -25,6 +25,7 @@ import type {
 } from './snippet.types'
 import {
   deriveSkillName,
+  normalizeSkillPath,
   stripSkillSuffix,
   toSkillBundleView,
 } from './snippet.views'
@@ -417,6 +418,7 @@ export class SnippetService {
         break
       }
       case SnippetType.Skill: {
+        next.path = normalizeSkillPath(next.path)
         if (!next.path.endsWith('/SKILL.md')) {
           throw createAppException(AppErrorCode.INVALID_PARAMETER, {
             message: 'skill snippet path must end with /SKILL.md',

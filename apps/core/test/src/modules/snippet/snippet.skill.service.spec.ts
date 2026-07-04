@@ -79,6 +79,26 @@ describe('SnippetService — Skill type', () => {
     )
   })
 
+  it.each([
+    'skill/my-skill/SKILL.md',
+    'skills/my-skill/SKILL.md',
+    'my-skill/SKILL.md',
+  ])('normalizes %s to the canonical sk/ root', async (path) => {
+    const { repository, service } = createService()
+    repository.countByPathMethod.mockResolvedValue(0)
+    repository.create.mockResolvedValue(createSnippet())
+
+    await service.create({
+      type: SnippetType.Skill,
+      raw: VALID_SKILL_RAW,
+      path,
+    })
+
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'sk/my-skill/SKILL.md' }),
+    )
+  })
+
   it('throws when the skill path does not end in /SKILL.md', async () => {
     const { repository, service } = createService()
     repository.countByPathMethod.mockResolvedValue(0)
