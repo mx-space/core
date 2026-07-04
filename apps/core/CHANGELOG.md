@@ -1,14 +1,21 @@
 # CHANGELOG
 
 
+## <small>13.11.13 (2026-07-04)</small>
+
+* release: v13.11.13 ([5588ae0](https://github.com/mx-space/core/commit/5588ae0))
+* fix(admin): polish ai settings layout ([f7002ac](https://github.com/mx-space/core/commit/f7002ac))
+* fix(core): canonicalize skill snippet paths under sk/ root ([4541eca](https://github.com/mx-space/core/commit/4541eca))
+
 ## <small>13.11.12 (2026-07-03)</small>
 
+* release: v13.11.12 ([d61016a](https://github.com/mx-space/core/commit/d61016a))
 * fix(core): stabilize task listing and ai publish hooks ([8bba4da](https://github.com/mx-space/core/commit/8bba4da))
-
+* chore: fix vite ([660637d](https://github.com/mx-space/core/commit/660637d))
 
 ## <small>13.11.11 (2026-07-03)</small>
 
-* release: v13.11.11 ([6c9f664](https://github.com/mx-space/core/commit/6c9f664))
+* release: v13.11.11 ([b2a18e3](https://github.com/mx-space/core/commit/b2a18e3))
 * docs(core): release notes for v13.11.11 ([f381556](https://github.com/mx-space/core/commit/f381556))
 * feat(auth): generate digit-only snowflake ids for auth rows ([2aa0771](https://github.com/mx-space/core/commit/2aa0771))
 * fix(activity): emit presence record keys verbatim in getPresence ([d366de1](https://github.com/mx-space/core/commit/d366de1))
