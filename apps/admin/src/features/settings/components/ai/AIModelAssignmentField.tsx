@@ -1,13 +1,12 @@
+import { useI18n } from '~/i18n'
+import { SelectField } from '~/ui/primitives/select'
+import { TextInput } from '~/ui/primitives/text-field'
+
 import type {
   AIModelAssignment,
   AIProviderConfig,
   AIProviderModel,
 } from '../../types/settings'
-
-import { useI18n } from '~/i18n'
-import { SelectField } from '~/ui/primitives/select'
-import { TextInput } from '~/ui/primitives/text-field'
-
 import { formatAIProviderLabel } from '../../utils/settings'
 
 export function AIModelAssignmentField(props: {
@@ -24,7 +23,7 @@ export function AIModelAssignmentField(props: {
   const providerModels = providerId ? (props.models[providerId] ?? []) : []
 
   return (
-    <div className="grid gap-2 text-sm md:grid-cols-[12rem_minmax(0,1fr)]">
+    <div className="grid items-center gap-2 text-sm md:grid-cols-[12rem_minmax(0,1fr)]">
       <div>
         <div className="font-medium text-neutral-700 dark:text-neutral-300">
           {props.label}
@@ -33,7 +32,7 @@ export function AIModelAssignmentField(props: {
           <p className="mt-1 text-xs text-neutral-500">{props.description}</p>
         ) : null}
       </div>
-      <div className="grid gap-2 md:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
+      <div className="grid items-center gap-2 md:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
         <SelectField<string>
           aria-label={t('settings.ai.assignment.providerAriaLabel', {
             label: props.label,

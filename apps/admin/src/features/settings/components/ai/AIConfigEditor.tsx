@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { getModels } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
-import { Switch } from '~/ui/primitives/switch'
+import { Switch, Toggle } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
@@ -390,9 +390,9 @@ function ProviderRow(props: {
           {provider.defaultModel || t('settings.ai.provider.row.empty')}
         </div>
       </div>
-      <Switch
+      <Toggle
+        aria-label={t('settings.oauth.switch.enabled')}
         checked={provider.enabled}
-        label={t('settings.oauth.switch.enabled')}
         onCheckedChange={props.onToggle}
       />
       <Button

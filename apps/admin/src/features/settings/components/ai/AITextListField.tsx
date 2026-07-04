@@ -51,6 +51,7 @@ export function AITextListField(props: {
             value={draft}
           />
           <Button
+            className="shrink-0 whitespace-nowrap"
             disabled={props.disabled || !draft.trim()}
             onClick={add}
             type="button"
