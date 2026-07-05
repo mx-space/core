@@ -20,3 +20,5 @@ runs:
       with:
         run_install: true
         cache: true
+      env:
+        REDISMS_DISABLE_POSTINSTALL: 1
