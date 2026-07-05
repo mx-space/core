@@ -59,17 +59,21 @@
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "dependencies": {
+  "devDependencies": {
     "@clack/prompts": "^1.6.0",
     "@effect/cli": "0.75.2",
     "@effect/platform": "0.96.2",
     "@effect/platform-node": "0.107.0",
+    "@effect/vitest": "0.29.0",
+    "@haklex/rich-compose": "0.29.2",
     "@haklex/rich-headless": "0.29.1",
     "@haklex/rich-litexml": "0.29.0",
-    "@haklex/rich-litexml-cli": "0.29.0",
+    "@haklex/rich-litexml-cli": "0.29.3",
     "@lexical/headless": "^0.46.0",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/editor": "workspace:*",
+    "@types/node": "26.0.1",
+    "@types/semver": "7.7.1",
     "better-auth": "^1.6.23",
     "effect": "3.21.4",
     "fast-xml-parser": "5.9.3",
@@ -77,12 +81,7 @@
     "lexical": "^0.46.0",
     "minisearch": "^7.2.0",
     "open": "^11.0.0",
-    "semver": "7.8.5"
-  },
-  "devDependencies": {
-    "@effect/vitest": "0.29.0",
-    "@types/node": "26.0.1",
-    "@types/semver": "7.7.1",
+    "semver": "7.8.5",
     "tsdown": "0.22.3",
     "tsx": "^4.22.4",
     "typescript": "6.0.3",

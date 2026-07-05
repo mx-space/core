@@ -1,5 +1,8 @@
 import { spawn } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
@@ -57,7 +60,39 @@ const openOpt = Options.boolean('open').pipe(Options.optional)
 
 const requireFrom = createRequire(import.meta.url)
 
+const findCliPackageRoot = (): string | null => {
+  let dir = dirname(fileURLToPath(import.meta.url))
+  for (let i = 0; i < 8; i++) {
+    if (!dir || dir === dirname(dir)) break
+    try {
+      const pkg = requireFrom(join(dir, 'package.json')) as {
+        name?: string
+      }
+      if (pkg.name === '@mx-space/cli') return dir
+    } catch {
+      // keep walking
+    }
+    dir = dirname(dir)
+  }
+  return null
+}
+
+const resolveBundledLitexmlBin = (): string | null => {
+  const root = findCliPackageRoot()
+  if (!root) return null
+  const candidate = join(root, 'dist', 'vendor', 'litexml', 'cli.mjs')
+  return existsSync(candidate) ? candidate : null
+}
+
+const isSourcePreviewModule = (): boolean =>
+  /[\\/]src[\\/]cli[\\/]preview[\\/]index\.ts$/.test(
+    fileURLToPath(import.meta.url),
+  )
+
 const resolveLitexmlBin = (): string => {
+  const bundled = resolveBundledLitexmlBin()
+  if (!isSourcePreviewModule() && bundled) return bundled
+
   try {
     return requireFrom.resolve('@haklex/rich-litexml-cli/dist/cli.mjs')
   } catch {
@@ -69,19 +104,15 @@ const resolveLitexmlBin = (): string => {
   let dir = filePath.slice(0, Math.max(0, filePath.lastIndexOf('/')))
   for (let i = 0; i < 8; i++) {
     const candidate = `${dir}/node_modules/@haklex/rich-litexml-cli/dist/cli.mjs`
-    try {
-      requireFrom(`${candidate}`)
-      return candidate
-    } catch {
-      // not here
-    }
+    if (existsSync(candidate)) return candidate
     const next = dir.slice(0, Math.max(0, dir.lastIndexOf('/')))
     if (next === dir) break
     dir = next
   }
+  if (bundled) return bundled
   throw new Generic({
-    message: 'cannot resolve @haklex/rich-litexml-cli binary',
-    hint: 'reinstall mxs or run `pnpm install` so the dependency is present',
+    message: 'cannot resolve LiteXML preview renderer',
+    hint: 'rebuild @mx-space/cli or reinstall mxs so the vendored preview renderer is present',
   })
 }
 

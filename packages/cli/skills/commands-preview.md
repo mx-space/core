@@ -7,7 +7,7 @@ order: 41
 
 # Preview command
 
-`mxs preview` renders a LiteXML fragment or `<mxpost>` / `<mxnote>` envelope to HTML and (by default) opens it in the system browser. It is a thin wrapper around the `@haklex/rich-litexml-cli` `litexml --format html` pipeline, so the output matches what the editor would render once published.
+`mxs preview` renders a LiteXML fragment or `<mxpost>` / `<mxnote>` envelope to HTML and (by default) opens it in the system browser. It uses the LiteXML preview renderer vendored into the published CLI bundle, so the output matches what the editor would render once published without requiring runtime package dependencies.
 
 | Command                                  | Behavior                                                                    |
 | ---------------------------------------- | --------------------------------------------------------------------------- |
@@ -56,7 +56,7 @@ mxs preview ./post.xml --print > preview.html
 
 | Symptom                                                  | Likely cause                                                                                   |
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `cannot resolve @haklex/rich-litexml-cli binary`         | Installed dep is broken; reinstall `@mx-space/cli` or run `pnpm install`.                      |
-| `Cannot resolve @haklex/rich-compose asset "style.css"`  | Outdated `@haklex/rich-compose` (< 0.15.2). Upgrade or reinstall.                              |
+| `cannot resolve LiteXML preview renderer`               | Published package is incomplete; reinstall `@mx-space/cli` or rebuild the CLI package.          |
+| `Cannot resolve @haklex/rich-compose asset "style.css"`  | Vendored preview assets are missing; reinstall `@mx-space/cli` or rebuild the CLI package.      |
 | `expected root <mxpost>` / `expected root <mxnote>`      | Input begins with the wrong envelope root, or the envelope is malformed. Check the root tag.   |
 | Browser does not open                                    | `--open` shells out to the system `open`/`xdg-open`/`start`. Use `--save` or `--print` instead. |

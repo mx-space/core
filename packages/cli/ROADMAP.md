@@ -11,7 +11,7 @@
 ## Shipped in v0.6
 
 - `mxs skill` — bundled AI-agent documentation. List, get, all, search across chapters shipped inside the CLI (`packages/cli/skills/*.md`); liteXML chapters loaded live from the installed `@haklex/rich-litexml` package. Default output is raw markdown for direct context injection.
-- `mxs preview <file>` — local HTML preview of a LiteXML fragment or `<mxpost>` / `<mxnote>` envelope. Wraps `@haklex/rich-litexml-cli` so the output matches the editor renderer.
+- `mxs preview <file>` — local HTML preview of a LiteXML fragment or `<mxpost>` / `<mxnote>` envelope. Uses the vendored LiteXML preview renderer so the output matches the editor renderer without runtime package dependencies.
 - `mxs project` — full CRUD for portfolio projects: `list`, `get`, `view`, `create`, `edit` ($EDITOR JSON envelope), `update`, `delete`. Resolver accepts unique `name` or Snowflake id. Server adds `PATCH /projects/:id`, a Zod DTO on create/update, and a `PROJECT_NAME_TAKEN` (409) error on duplicate names.
 
 ## Next — Comment moderation

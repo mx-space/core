@@ -666,7 +666,7 @@ mxs preview ./post.xml --save out.html # write HTML to file
 mxs preview ./post.xml --print         # emit HTML to stdout
 ```
 
-The variant (`article` / `note`) is auto-detected from the envelope root. Override with `--variant` for raw LiteXML fragments. The command does not contact `mx-core` — it's a pure local render via `@haklex/rich-litexml-cli`.
+The variant (`article` / `note`) is auto-detected from the envelope root. Override with `--variant` for raw LiteXML fragments. The command does not contact `mx-core` — it uses the LiteXML preview renderer vendored into the published CLI bundle.
 
 ## Skill bundle
 
