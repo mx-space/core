@@ -39,6 +39,9 @@ overrides:
   "@codemirror/view": 6.43.4
   "@codemirror/commands": 6.10.4
   "@codemirror/language": 6.12.4
+  # @haklex/rich-ext-chat -> @streamdown/code hard-deps shiki@^3.x while
+  # @haklex/rich-editor peers shiki>=4.0.0; force one runtime copy.
+  shiki: ^4.3.0
 publicHoistPattern:
   - "*fastify*"
   - mongodb
