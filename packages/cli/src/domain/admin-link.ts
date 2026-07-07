@@ -29,13 +29,20 @@ const buildEditUrl = (
   return `${base}#/${kind}/edit?id=${encodeURIComponent(id)}`
 }
 
-/**
- * Resolve the server's admin URL from `/options/url`, build the admin
- * edit-page URL for the given resource, and open it in the user's browser.
- * Non-fatal: missing admin_url or browser-launch failures emit a warning
- * and the parent effect continues.
- */
-export const openAdminEdit = (kind: AdminEditKind, id: string) =>
+const buildDraftEditUrl = (
+  adminUrl: string,
+  kind: AdminEditKind,
+  draftId: string,
+  refId?: string,
+): string => {
+  const base = adminUrl.replace(/\/+$/, '')
+  const params = new URLSearchParams()
+  params.set('draftId', draftId)
+  if (refId) params.set('id', refId)
+  return `${base}#/${kind}/edit?${params.toString()}`
+}
+
+const openAdminUrl = (buildUrl: (adminUrl: string) => string) =>
   Effect.gen(function* () {
     const renderer = yield* Renderer
     const api = yield* Api
@@ -47,7 +54,7 @@ export const openAdminEdit = (kind: AdminEditKind, id: string) =>
       )
       return
     }
-    const url = buildEditUrl(adminUrl, kind, id)
+    const url = buildUrl(adminUrl)
     yield* renderer.emitInfo(`opening admin: ${url}`)
     yield* Effect.tryPromise({
       try: () => open(url),
@@ -60,3 +67,19 @@ export const openAdminEdit = (kind: AdminEditKind, id: string) =>
       ),
     )
   })
+
+/**
+ * Resolve the server's admin URL from `/options/url`, build the admin
+ * edit-page URL for the given resource, and open it in the user's browser.
+ * Non-fatal: missing admin_url or browser-launch failures emit a warning
+ * and the parent effect continues.
+ */
+export const openAdminEdit = (kind: AdminEditKind, id: string) =>
+  openAdminUrl((adminUrl) => buildEditUrl(adminUrl, kind, id))
+
+export const openAdminDraftEdit = (
+  kind: AdminEditKind,
+  draftId: string,
+  refId?: string,
+) =>
+  openAdminUrl((adminUrl) => buildDraftEditUrl(adminUrl, kind, draftId, refId))
