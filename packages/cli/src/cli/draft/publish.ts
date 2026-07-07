@@ -7,7 +7,9 @@ import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { extractId, openFlag, silentFlag } from '../post/_flags'
 import {
+  camelizeDeep,
   type DraftRow,
+  normalizeDraftRow,
   parseTypeSpecificData,
   REF_TYPE_TO_RESOURCE,
   unwrapData,
@@ -22,8 +24,10 @@ export const publish = Command.make(
     Effect.gen(function* () {
       const api = yield* Api
       const renderer = yield* Renderer
-      const draft = unwrapData<DraftRow>(
-        yield* api.request(`/drafts/${encodeURIComponent(id)}`),
+      const draft = normalizeDraftRow(
+        unwrapData<DraftRow>(
+          yield* api.request(`/drafts/${encodeURIComponent(id)}`),
+        ),
       )
       if (!draft?.id || !draft.refType) {
         return yield* Effect.fail(
@@ -49,7 +53,7 @@ export const publish = Command.make(
       if (draft.contentFormat !== undefined)
         body.contentFormat = draft.contentFormat
       if (draft.meta !== undefined && draft.meta !== null)
-        body.meta = draft.meta
+        body.meta = camelizeDeep(draft.meta)
       // Sending draftId makes the server link the draft to the created
       // resource and mark its current version as published; the draft is
       // retained with its history.
