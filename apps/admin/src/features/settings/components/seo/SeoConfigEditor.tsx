@@ -48,9 +48,13 @@ export function SeoConfigEditor(props: {
     const rest =
       i18n && typeof i18n === 'object' ? (i18n as Record<string, unknown>) : {}
 
+    const definedEnEntries = Object.entries(nextEn).filter(
+      ([, value]) => value !== undefined,
+    )
+
     const next: Record<string, unknown> =
-      Object.keys(nextEn).length > 0
-        ? { ...rest, en: nextEn }
+      definedEnEntries.length > 0
+        ? { ...rest, en: Object.fromEntries(definedEnEntries) }
         : Object.fromEntries(
             Object.entries(rest).filter(([key]) => key !== 'en'),
           )
