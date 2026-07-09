@@ -1,15 +1,12 @@
-# v13.11.12
-
 ## TL;DR
 
-Fixes task-list timeouts and restores AI artifact generation when draft posts are published.
+Internal maintenance release; no user-facing changes.
 
 ## Changes
 
-- Task listing no longer scans and parses the full Redis task index before returning a page, preventing `/api/v3/tasks` from timing out on large task histories ([8bba4da](https://github.com/mx-space/core/commit/8bba4da1b9ffe092a0ba5ba492fcd06db5a3e7e0)).
-- Stale or malformed task payload, result, or log JSON now degrades gracefully instead of taking down the whole task list response ([8bba4da](https://github.com/mx-space/core/commit/8bba4da1b9ffe092a0ba5ba492fcd06db5a3e7e0)).
-- AI Summary and AI Insight update hooks now create initial tasks when an unpublished article is later published and has no existing AI artifact yet ([8bba4da](https://github.com/mx-space/core/commit/8bba4da1b9ffe092a0ba5ba492fcd06db5a3e7e0)).
+- Updated the rich-text engine to `@haklex/*` 0.30.1, picking up upstream fixes for remote extension loading, preview rendering, and Mermaid diagram sizing, and deduplicating the bundled `shiki` highlighter to a single copy ([a340826](https://github.com/mx-space/core/commit/a34082678))
+- Refreshed dependencies across all workspaces (vite 8.1.3, rolldown 1.1.4, shiki 4.3.1, sharp 0.35.3, resend 6.17.1, and more); `undici` intentionally stays on v7 for Node fetch compatibility ([187cc34](https://github.com/mx-space/core/commit/187cc3444))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.11.11...v13.11.12
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.11.13...v13.11.14
