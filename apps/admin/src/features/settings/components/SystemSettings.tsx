@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Mail } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import type { ConfigFormGroup, ConfigFormSchema } from '~/api/options'
 
 import { sendTestEmail } from '~/api/health'
+import type { ConfigFormGroup, ConfigFormSchema } from '~/api/options'
 import { getAllOptions, patchOption } from '~/api/options'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
@@ -21,6 +21,7 @@ import {
 import { AIConfigEditor } from './ai/AIConfigEditor'
 import { ConfigSectionFields } from './config/ConfigSectionFields'
 import { presentTestAiReview } from './modals/TestAiReviewModal'
+import { SeoConfigEditor } from './seo/SeoConfigEditor'
 import { useSettingsActionBarSetter } from './SettingsActionBar'
 import { SettingsSection, SettingsSkeleton } from './SettingsPrimitives'
 
@@ -91,6 +92,17 @@ export function SystemSettings(props: {
     setConfigs((current) => setPathImmutable(current, path, value))
   }
 
+  const handleFieldAction = useCallback(
+    (actionId: string) => {
+      if (actionId === 'test-ai-review') void presentTestAiReview()
+      else
+        toast.warning(
+          t('settings.common.section.unknownAction', { action: actionId }),
+        )
+    },
+    [t],
+  )
+
   const discardChanges = useCallback(() => {
     setConfigs(cloneJson(origin))
   }, [origin])
@@ -154,19 +166,19 @@ export function SystemSettings(props: {
                 onChange={(value) => updateValue(section.key, value)}
                 value={normalizeAIConfig(configs[section.key])}
               />
+            ) : section.key === 'seo' ? (
+              <SeoConfigEditor
+                fields={section.fields}
+                formData={configs}
+                onAction={handleFieldAction}
+                prefix={section.key}
+                updateValue={updateValue}
+              />
             ) : (
               <ConfigSectionFields
                 fields={section.fields}
                 formData={configs}
-                onAction={(actionId) => {
-                  if (actionId === 'test-ai-review') void presentTestAiReview()
-                  else
-                    toast.warning(
-                      t('settings.common.section.unknownAction', {
-                        action: actionId,
-                      }),
-                    )
-                }}
+                onAction={handleFieldAction}
                 prefix={section.key}
                 updateValue={updateValue}
               />

@@ -56,6 +56,12 @@ export interface AIProviderModel {
   name: string
 }
 
+export interface SeoI18nOverlay {
+  description?: string
+  keywords?: string[]
+  title?: string
+}
+
 export type SettingsGroupType = 'account' | 'meta-preset' | 'system' | 'user'
 export type OauthProviderType = 'github' | 'google'
 
