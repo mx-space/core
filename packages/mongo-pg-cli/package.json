@@ -70,10 +70,10 @@
     "@mx-space/db-schema": "workspace:*",
     "@types/pg": "^8.20.0",
     "drizzle-orm": "^0.45.2",
-    "mongodb": "~7.4.0",
+    "mongodb": "~7.5.0",
     "pg": "^8.22.0",
     "tsdown": "0.22.3",
-    "tsx": "^4.22.4",
+    "tsx": "^4.23.0",
     "typescript": "6.0.3",
     "vitest": "4.1.9"
   }

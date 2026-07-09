@@ -60,7 +60,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@clack/prompts": "^1.6.0",
+    "@clack/prompts": "^1.7.0",
     "@effect/cli": "0.75.2",
     "@effect/platform": "0.96.2",
     "@effect/platform-node": "0.107.0",
@@ -83,7 +83,7 @@
     "open": "^11.0.0",
     "semver": "7.8.5",
     "tsdown": "0.22.3",
-    "tsx": "^4.22.4",
+    "tsx": "^4.23.0",
     "typescript": "6.0.3",
     "vitest": "4.1.9"
   }

@@ -21,9 +21,9 @@ overrides:
   "eslint-plugin-react-compiler>zod": 3.25.76
   "get-pixels@^3>request": ./external/request
   kysely: 0.28.17
-  mongodb: ~7.4.0
+  mongodb: ~7.5.0
   pino: ./external/pino
-  rolldown: 1.1.3
+  rolldown: 1.1.4
   semver: 7.8.5
   typescript: 6.0.3
   undici: ^7.28.0
@@ -34,14 +34,14 @@ overrides:
   "nanoid@>=4.0.0 <5.0.9": 5.1.11
   "tmp@<0.2.6": 0.2.7
   "uuid@<11.1.1": 11.1.1
-  lucide-react: 1.22.0
+  lucide-react: 1.23.0
   "@codemirror/state": 6.7.0
   "@codemirror/view": 6.43.4
   "@codemirror/commands": 6.10.4
   "@codemirror/language": 6.12.4
   # @haklex/rich-ext-chat -> @streamdown/code hard-deps shiki@^3.x while
   # @haklex/rich-editor peers shiki>=4.0.0; force one runtime copy.
-  shiki: ^4.3.0
+  shiki: ^4.3.1
 publicHoistPattern:
   - "*fastify*"
   - mongodb
@@ -53,19 +53,19 @@ minimumReleaseAgeExclude:
   - "@haklex/*"
   - "@mx-space/*"
   - "@babel/*"
-  - '@cloudflare/workers-types@4.20260611.1'
-  - '@code-inspector/core@1.5.4'
-  - '@code-inspector/esbuild@1.5.4'
-  - '@code-inspector/mako@1.5.4'
-  - '@code-inspector/turbopack@1.5.4'
-  - '@code-inspector/vite@1.5.4'
-  - '@code-inspector/webpack@1.5.4'
-  - '@nestjs/cache-manager@3.1.3'
-  - '@pierre/theming@0.0.1'
-  - '@types/node@25.9.3'
-  - '@types/nodemailer@8.0.1'
+  - "@cloudflare/workers-types@4.20260611.1"
+  - "@code-inspector/core@1.5.4"
+  - "@code-inspector/esbuild@1.5.4"
+  - "@code-inspector/mako@1.5.4"
+  - "@code-inspector/turbopack@1.5.4"
+  - "@code-inspector/vite@1.5.4"
+  - "@code-inspector/webpack@1.5.4"
+  - "@nestjs/cache-manager@3.1.3"
+  - "@pierre/theming@0.0.1"
+  - "@types/node@25.9.3"
+  - "@types/nodemailer@8.0.1"
   - code-inspector-plugin@1.5.4
   - jotai@2.20.1
   - nodemailer@8.0.11
-  - '@innei/react-tweet@3.4.3'
+  - "@innei/react-tweet@3.4.3"
   - react-router@8.0.0
