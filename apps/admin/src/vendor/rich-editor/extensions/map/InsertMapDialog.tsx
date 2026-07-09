@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { Loader2, Upload, X } from 'lucide-react'
+import type { FormEvent } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -116,7 +117,9 @@ function InsertMapDialog(props: InsertMapDialogProps) {
     if (raw) setRaw(null)
   }
 
-  const onSubmit = async () => {
+  const onSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!canInsert) return
     let finalUrl = trackUrl
     if (prepared) {
       const result = await uploadMutation.mutateAsync(prepared.file)
@@ -137,7 +140,7 @@ function InsertMapDialog(props: InsertMapDialogProps) {
   const canInsert = (!!raw || !!trackUrl) && !busy
 
   return (
-    <div className="flex w-full flex-col">
+    <form className="flex w-full flex-col" onSubmit={onSubmit}>
       <ModalHeader title="Insert map" />
       <div className="grid gap-4 px-5 py-4">
         <TextInput
@@ -249,14 +252,14 @@ function InsertMapDialog(props: InsertMapDialogProps) {
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           Cancel
         </Button>
-        <Button disabled={!canInsert} onClick={onSubmit} type="button">
+        <Button disabled={!canInsert} type="submit">
           {uploadMutation.isPending ? (
             <Loader2 aria-hidden="true" className="size-4 animate-spin" />
           ) : null}
           {uploadMutation.isPending ? 'Uploading…' : 'Insert'}
         </Button>
       </div>
-    </div>
+    </form>
   )
 }
 

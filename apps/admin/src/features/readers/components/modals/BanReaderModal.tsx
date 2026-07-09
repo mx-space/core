@@ -34,6 +34,11 @@ function BanReaderModal(props: BanReaderModalProps) {
           label={t('readers.ban.reasonLabel')}
           maxLength={200}
           onChange={setReason}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+              modal.close(reason.trim())
+            }
+          }}
           placeholder={t('readers.ban.reasonPlaceholder')}
           value={reason}
         />

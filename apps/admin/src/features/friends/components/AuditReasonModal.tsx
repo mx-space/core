@@ -55,6 +55,15 @@ function AuditReasonModal(props: AuditReasonModalProps) {
           label={t('friends.audit.reason')}
           maxLength={200}
           onChange={setReason}
+          onKeyDown={(event) => {
+            if (
+              event.key === 'Enter' &&
+              (event.metaKey || event.ctrlKey) &&
+              !mutation.isPending
+            ) {
+              mutation.mutate()
+            }
+          }}
           placeholder={t('friends.audit.reasonPlaceholder')}
           value={reason}
         />

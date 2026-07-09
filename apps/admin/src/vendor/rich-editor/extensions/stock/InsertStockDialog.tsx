@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -173,7 +174,8 @@ function InsertStockDialog(props: InsertStockDialogProps) {
 
   const canInsert = variant === 'snapshot' ? hasSymbol : hasSymbol && hasRange
 
-  const onInsert = () => {
+  const onInsert = (event: FormEvent) => {
+    event.preventDefault()
     if (!hasSymbol) {
       toast.error('Symbol is required')
       return
@@ -203,7 +205,7 @@ function InsertStockDialog(props: InsertStockDialogProps) {
   }
 
   return (
-    <div className="flex w-full flex-col">
+    <form className="flex w-full flex-col" onSubmit={onInsert}>
       <ModalHeader title="Insert stock" />
       <div className="grid w-full grid-cols-1 gap-5 px-5 py-5 md:h-[520px] md:grid-cols-[20rem_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-4 md:min-h-0 md:overflow-y-auto md:pr-1">
@@ -245,11 +247,11 @@ function InsertStockDialog(props: InsertStockDialogProps) {
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           Cancel
         </Button>
-        <Button disabled={!canInsert} onClick={onInsert} type="button">
+        <Button disabled={!canInsert} type="submit">
           Insert
         </Button>
       </div>
-    </div>
+    </form>
   )
 }
 

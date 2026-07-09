@@ -41,6 +41,14 @@ function TestAiReviewModal() {
     },
   })
 
+  const submit = () => {
+    if (!text.trim()) {
+      toast.warning(t('settings.system.section.testInputRequired'))
+      return
+    }
+    mutation.mutate()
+  }
+
   return (
     <div className="flex w-full flex-col">
       <ModalHeader title={t('settings.system.section.testAiModal')} />
@@ -48,17 +56,22 @@ function TestAiReviewModal() {
         className="space-y-4 px-5 py-4"
         onSubmit={(event) => {
           event.preventDefault()
-          if (!text.trim()) {
-            toast.warning(t('settings.system.section.testInputRequired'))
-            return
-          }
-          mutation.mutate()
+          submit()
         }}
       >
         <TextArea
           controlClassName="min-h-28"
           label={t('settings.system.section.commentLabel')}
           onChange={setText}
+          onKeyDown={(event) => {
+            if (
+              event.key === 'Enter' &&
+              (event.metaKey || event.ctrlKey) &&
+              !mutation.isPending
+            ) {
+              submit()
+            }
+          }}
           placeholder={t('settings.system.placeholder.testAi')}
           value={text}
         />

@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react'
 import { useState } from 'react'
 
 import { useI18n } from '~/i18n'
@@ -22,7 +23,8 @@ function GeneratePromptModal(props: GeneratePromptModalProps) {
   const modal = useModal<GeneratePromptResult>()
   const [lang, setLang] = useState('zh')
 
-  const handleSubmit = () => {
+  const handleSubmit = (event?: FormEvent) => {
+    event?.preventDefault()
     if (props.promptForLang) {
       const trimmed = lang.trim().toLowerCase()
       if (!trimmed) return
@@ -33,7 +35,7 @@ function GeneratePromptModal(props: GeneratePromptModalProps) {
   }
 
   return (
-    <div className="flex w-full flex-col">
+    <form className="flex w-full flex-col" onSubmit={handleSubmit}>
       <ModalHeader title={props.title} />
       <div className="space-y-4 px-5 py-4">
         {props.promptForLang ? (
@@ -54,11 +56,11 @@ function GeneratePromptModal(props: GeneratePromptModalProps) {
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
-        <Button onClick={handleSubmit} type="button" variant="primary">
+        <Button type="submit" variant="primary">
           {props.title}
         </Button>
       </ModalFooter>
-    </div>
+    </form>
   )
 }
 
