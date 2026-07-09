@@ -309,6 +309,86 @@ describe('AggregateController.aggregate theme fallback', () => {
   })
 })
 
+describe('AggregateController seo resolution', () => {
+  const seoWithI18n = {
+    title: 'Base Title',
+    description: 'Base Description',
+    keywords: ['base1', 'base2'],
+    i18n: {
+      en: { description: 'EN Description', keywords: ['en1', 'en2'] },
+    },
+  }
+
+  const buildController = () =>
+    new AggregateController(
+      {} as any,
+      {
+        get: vi.fn(async (key: string) => {
+          if (key === 'url') return { webUrl: 'https://x.test' }
+          if (key === 'seo') return seoWithI18n
+          if (key === 'commentOptions') return {}
+          if (key === 'ai') return {}
+          return {}
+        }),
+      } as any,
+      {} as any,
+      { getLatestNoteId: vi.fn(async () => 1) } as any,
+      {
+        getCachedSnippetByPath: vi.fn(async () => null),
+        getPublicSnippetByPath: vi.fn(async () => null),
+      } as any,
+      {
+        getOwner: vi.fn(async () => ({ id: '1', name: 'o', socialIds: {} })),
+      } as any,
+      {} as any,
+      {} as any,
+    )
+
+  it('aggregate() resolves seo for the request language and strips i18n', async () => {
+    const controller = buildController()
+    const res = await controller.aggregate({} as any, 'en')
+    expect(res.seo).toEqual({
+      title: 'Base Title',
+      description: 'EN Description',
+      keywords: ['en1', 'en2'],
+    })
+    expect(res.seo).not.toHaveProperty('i18n')
+  })
+
+  it('aggregate() falls back to base seo when lang is absent', async () => {
+    const controller = buildController()
+    const res = await controller.aggregate({} as any)
+    expect(res.seo).toEqual({
+      title: 'Base Title',
+      description: 'Base Description',
+      keywords: ['base1', 'base2'],
+    })
+    expect(res.seo).not.toHaveProperty('i18n')
+  })
+
+  it('site() resolves seo for the request language and strips i18n', async () => {
+    const controller = buildController()
+    const res = await controller.site('en')
+    expect(res.seo).toEqual({
+      title: 'Base Title',
+      description: 'EN Description',
+      keywords: ['en1', 'en2'],
+    })
+    expect(res.seo).not.toHaveProperty('i18n')
+  })
+
+  it('site() falls back to base seo when lang is absent', async () => {
+    const controller = buildController()
+    const res = await controller.site()
+    expect(res.seo).toEqual({
+      title: 'Base Title',
+      description: 'Base Description',
+      keywords: ['base1', 'base2'],
+    })
+    expect(res.seo).not.toHaveProperty('i18n')
+  })
+})
+
 describe('AggregateController.top', () => {
   it('returns raw result when lang is absent', async () => {
     const { controller, aggregateService } = createController({
