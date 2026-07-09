@@ -44,10 +44,18 @@ export function SeoConfigEditor(props: {
   const enOverlay = readEnOverlay(props.formData, props.prefix)
 
   const commitEnOverlay = (nextEn: SeoI18nOverlay) => {
-    props.updateValue(
-      `${props.prefix}.i18n`,
-      Object.keys(nextEn).length > 0 ? { en: nextEn } : {},
-    )
+    const i18n = getPath(props.formData, `${props.prefix}.i18n`)
+    const rest =
+      i18n && typeof i18n === 'object' ? (i18n as Record<string, unknown>) : {}
+
+    const next: Record<string, unknown> =
+      Object.keys(nextEn).length > 0
+        ? { ...rest, en: nextEn }
+        : Object.fromEntries(
+            Object.entries(rest).filter(([key]) => key !== 'en'),
+          )
+
+    props.updateValue(`${props.prefix}.i18n`, next)
   }
 
   const updateEnTitle = (value: string) => {
