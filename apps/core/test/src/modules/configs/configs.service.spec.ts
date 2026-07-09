@@ -144,4 +144,68 @@ describe('ConfigsService', () => {
     })
     expect(optionsRepository.get).not.toHaveBeenCalled()
   })
+
+  describe('seo.i18n patch semantics', () => {
+    function createService(
+      currentConfig: ReturnType<typeof generateDefaultConfig>,
+    ) {
+      const redisClient = {
+        get: vi.fn().mockResolvedValue(JSON.stringify(currentConfig)),
+        set: vi.fn().mockResolvedValue('OK'),
+      }
+      const redisService = {
+        getClient: vi.fn(() => redisClient),
+        waitForReady: vi.fn().mockResolvedValue(undefined),
+      }
+      const optionsRepository = {
+        findAll: vi.fn().mockResolvedValue([]),
+        upsert: vi.fn(async (name: string, value: unknown) => ({
+          id: '1' as any,
+          name,
+          value,
+        })),
+      }
+      const eventManager = { emit: vi.fn() }
+
+      const service = new ConfigsService(
+        optionsRepository as any,
+        redisService as any,
+        {} as any,
+        eventManager as any,
+      )
+
+      return { service, redisClient, optionsRepository, eventManager }
+    }
+
+    it('replaces stored seo.i18n wholesale, dropping locale keys absent from the patch', async () => {
+      const currentConfig = generateDefaultConfig()
+      currentConfig.seo.i18n = {
+        zh: { title: 'zh title', description: 'zh desc' },
+        en: { title: 'en title' },
+      }
+      const { service } = createService(currentConfig)
+
+      const result = await service.patchAndValid('seo', {
+        i18n: { en: { title: 'new en title' } },
+      })
+
+      expect(result.i18n).toEqual({ en: { title: 'new en title' } })
+    })
+
+    it('leaves stored seo.i18n untouched when patching seo without i18n', async () => {
+      const currentConfig = generateDefaultConfig()
+      currentConfig.seo.i18n = {
+        zh: { title: 'zh title', description: 'zh desc' },
+        en: { title: 'en title' },
+      }
+      const { service } = createService(currentConfig)
+
+      const result = await service.patchAndValid('seo', {
+        title: 'Updated title',
+      })
+
+      expect(result.title).toBe('Updated title')
+      expect(result.i18n).toEqual(currentConfig.seo.i18n)
+    })
+  })
 })

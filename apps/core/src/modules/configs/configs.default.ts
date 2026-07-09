@@ -7,6 +7,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     icon: '',
     iconDark: '',
     keywords: [],
+    i18n: {},
   },
   url: {
     wsUrl: 'http://localhost:2333', // todo

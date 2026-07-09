@@ -32,12 +32,7 @@ export interface UIConfig {
   actionId?: string
   actionLabel?: string
   actionVariant?:
-    | 'default'
-    | 'primary'
-    | 'info'
-    | 'success'
-    | 'warning'
-    | 'error'
+    'default' | 'primary' | 'info' | 'success' | 'warning' | 'error'
 }
 
 export interface FormField {
@@ -339,6 +334,7 @@ function extractFields(schema: z.ZodObject<any>): FormField[] {
 
   for (const [key, propSchema] of Object.entries(shape)) {
     const field = extractField(key, propSchema as z.ZodTypeAny)
+    if (field.ui.hidden) continue
     fields.push(field)
   }
 

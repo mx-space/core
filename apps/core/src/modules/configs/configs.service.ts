@@ -245,9 +245,14 @@ export class ConfigsService implements OnModuleInit {
     const config = await this.getConfig()
     const updatedConfigRow = await this.optionsRepository.upsert(
       key as string,
-      mergeWith(cloneDeep(config[key]), data, (old, newer) => {
+      mergeWith(cloneDeep(config[key]), data, (old, newer, field) => {
         // Arrays are not merged
         if (Array.isArray(old)) {
+          return newer
+        }
+        // seo.i18n is replaced wholesale, otherwise a shallow object merge
+        // could never drop a locale key that was removed in the patch
+        if (field === 'i18n') {
           return newer
         }
         // Objects are merged

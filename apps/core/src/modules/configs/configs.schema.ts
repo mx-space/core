@@ -13,6 +13,19 @@ export const SeoSchema = section('SEO', {
   icon: field.halfGrid(z.string().optional(), 'Light icon URL'),
   iconDark: field.halfGrid(z.string().optional(), 'Dark icon URL'),
   keywords: field.array(z.array(z.string()).optional(), 'Keywords'),
+  i18n: field.hidden(
+    z
+      .record(
+        z.string().length(2),
+        z.object({
+          title: z.string().min(1).optional(),
+          description: z.string().min(1).optional(),
+          keywords: z.array(z.string()).optional(),
+        }),
+      )
+      .optional(),
+    'Per-locale SEO overrides',
+  ),
 })
 export class SeoDto extends createZodDto(SeoSchema) {}
 export type SeoConfig = z.infer<typeof SeoSchema>
