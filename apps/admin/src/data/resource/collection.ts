@@ -65,6 +65,20 @@ function applyRecipe<T extends object>(base: T, recipe: (draft: T) => void): T {
   return produce(base, recipe as (draft: T) => void) as T
 }
 
+export function deriveUpdate<T extends object>(
+  current: T,
+  recipe: (draft: T) => void,
+): { next: T; patch: Partial<T> } {
+  const next = applyRecipe(current, recipe)
+  const patch: Partial<T> = {}
+  for (const key of Object.keys(next) as (keyof T)[]) {
+    if (!Object.is(next[key], current[key])) {
+      patch[key] = next[key]
+    }
+  }
+  return { next, patch }
+}
+
 export function defineCollection<T extends object>(
   config: CollectionConfig<T>,
 ): Collection<T> {
@@ -103,7 +117,6 @@ export function defineCollection<T extends object>(
     for (const op of ops) {
       switch (op.kind) {
         case 'update': {
-          if (visible === undefined) continue
           visible = { ...visible, ...op.patch }
           break
         }
@@ -227,6 +240,7 @@ export function defineCollection<T extends object>(
     const { entityId } = found
 
     removeOp(entityId, opId)
+    if (error === undefined) return
     store.setState((state) => ({
       errorsByKey: { ...state.errorsByKey, [entityId]: error },
     }))
@@ -241,13 +255,7 @@ export function defineCollection<T extends object>(
       throw new Error(`[collection:${name}] update on unknown entity ${id}`)
     }
 
-    const next = applyRecipe(current, recipe)
-    const patch: Partial<T> = {}
-    for (const key of Object.keys(next) as (keyof T)[]) {
-      if (!Object.is(next[key], current[key])) {
-        patch[key] = next[key]
-      }
-    }
+    const { next, patch } = deriveUpdate(current, recipe)
 
     const opId = begin({ kind: 'update', entityId: id, patch })
 

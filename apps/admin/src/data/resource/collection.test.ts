@@ -251,6 +251,24 @@ describe('defineCollection: version bumps', () => {
     const afterRollback = collection.store.getState().versionByKey['1']
     expect(afterRollback).toBe(3)
   })
+
+  it('strictly increases across a successful commit', async () => {
+    const collection = defineCollection<TestEntity>({
+      name: 'test',
+      getKey: (e) => e.id,
+      onUpdate: ({ next }) => Promise.resolve(next),
+    })
+
+    collection.hydrate([{ id: '1', title: 'a' }])
+    const beforeUpdate = collection.store.getState().versionByKey['1']
+
+    await collection.update('1', (draft) => {
+      draft.title = 'b'
+    })
+
+    const afterCommit = collection.store.getState().versionByKey['1']
+    expect(afterCommit).toBeGreaterThan(beforeUpdate)
+  })
 })
 
 describe('defineCollection: reset', () => {
@@ -353,6 +371,54 @@ describe('createTransaction: registration after commit', () => {
     await tx.commit(async () => ({}))
 
     await expect(tx.commit(async () => ({}))).rejects.toThrow()
+  })
+})
+
+describe('createTransaction: partial success does not record an error for the rolled-back entity', () => {
+  it('leaves errorsByKey untouched for the entity rolled back without an error', async () => {
+    const collection = defineCollection<TestEntity>({
+      name: 'test',
+      getKey: (e) => e.id,
+    })
+
+    collection.hydrate([
+      { id: '1', title: 'a' },
+      { id: '2', title: 'b' },
+    ])
+
+    const tx = createTransaction()
+    tx.delete(collection, '1')
+    tx.delete(collection, '2')
+
+    await tx.commit(async () => ({ fulfilledKeys: ['1'] }))
+
+    const state = collection.store.getState()
+    expect('2' in state.errorsByKey).toBe(false)
+  })
+})
+
+describe('createTransaction: update with partial fulfilledKeys', () => {
+  it('lands the optimistic value in base after commit and clears the pending op', async () => {
+    const collection = defineCollection<TestEntity>({
+      name: 'test',
+      getKey: (e) => e.id,
+    })
+
+    collection.hydrate([
+      { id: '1', title: 'a' },
+      { id: '2', title: 'b' },
+    ])
+
+    const tx = createTransaction()
+    tx.update(collection, '1', (draft) => {
+      draft.title = 'updated a'
+    })
+    tx.delete(collection, '2')
+
+    await tx.commit(async () => ({ fulfilledKeys: ['1'] }))
+
+    expect(collection.getBase('1')?.title).toBe('updated a')
+    expect(collection.store.getState().pendingOpsByKey['1']).toBeUndefined()
   })
 })
 

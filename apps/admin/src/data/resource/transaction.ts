@@ -1,6 +1,5 @@
-import { produce } from 'immer'
-
 import type { Collection } from './collection'
+import { deriveUpdate } from './collection'
 
 export interface TransactionResult {
   fulfilledKeys?: string[]
@@ -49,13 +48,7 @@ export function createTransaction(): ResourceTransaction {
         )
       }
 
-      const next = produce(current, recipe as (draft: T) => void) as T
-      const patch: Partial<T> = {}
-      for (const key of Object.keys(next) as (keyof T)[]) {
-        if (!Object.is(next[key], current[key])) {
-          patch[key] = next[key]
-        }
-      }
+      const { next, patch } = deriveUpdate(current, recipe)
 
       const opId = collection._ops.begin({
         kind: 'update',
