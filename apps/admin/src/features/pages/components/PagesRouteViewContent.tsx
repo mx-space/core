@@ -1,10 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { FileText, Plus, RefreshCw } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-import { deletePage, getPages, reorderPages } from '~/api/pages'
+import { getPages } from '~/api/pages'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { useCollectionListQuery, useEntityList } from '~/data/resource/hooks'
+import { pages } from '~/data/resources/page'
+import {
+  removePage,
+  reorderPagesOptimistic,
+} from '~/data/resources/page.mutations'
 import { useI18n } from '~/i18n'
 import type { PageModel } from '~/models/page'
 import { adminQueryKeys } from '~/query/keys'
@@ -22,18 +28,29 @@ import { PagesEmpty } from './PagesEmpty'
 import { PagesError } from './PagesError'
 import { PagesSkeleton } from './PagesSkeleton'
 
+const pagesListQueryKey = adminQueryKeys.pages.list({ page: 1, size: 100 })
+
 export function PagesRouteViewContent() {
   const { t } = useI18n()
   const queryClient = useQueryClient()
-  const [orderedPages, setOrderedPages] = useState<PageModel[]>([])
   const [draggingId, setDraggingId] = useState('')
-  const pagesQuery = useQuery({
+
+  const pagesQuery = useCollectionListQuery(pages, {
     queryFn: () => getPages({ page: 1, size: 100 }),
-    queryKey: adminQueryKeys.pages.list({ page: 1, size: 100 }),
+    queryKey: pagesListQueryKey,
+    toPage: (result) => ({
+      items: result.data,
+      pagination: result.pagination,
+    }),
   })
+  const pagesList = useEntityList(pages, pagesListQueryKey)
+  const orderedPages = useMemo(
+    () => [...pagesList.items].sort((a, b) => (b.order ?? 0) - (a.order ?? 0)),
+    [pagesList.items],
+  )
 
   const deleteMutation = useMutation({
-    mutationFn: deletePage,
+    mutationFn: removePage,
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('pages.toast.deleteFailed'))),
     onSuccess: async () => {
@@ -42,18 +59,10 @@ export function PagesRouteViewContent() {
     },
   })
 
-  const pages = pagesQuery.data?.data ?? []
-
-  useEffect(() => {
-    setOrderedPages(pages)
-  }, [pages])
-
   const reorderMutation = useMutation({
-    mutationFn: reorderPages,
-    onError: (error: unknown) => {
-      setOrderedPages(pages)
-      toast.error(getErrorMessage(error, t('pages.toast.reorderFailed')))
-    },
+    mutationFn: reorderPagesOptimistic,
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, t('pages.toast.reorderFailed'))),
     onSuccess: async () => {
       toast.success(t('pages.toast.reorderSaved'))
       await queryClient.invalidateQueries({ queryKey: pagesQueryKey })
@@ -61,7 +70,6 @@ export function PagesRouteViewContent() {
   })
 
   const commitReorder = (nextPages: PageModel[]) => {
-    setOrderedPages(nextPages)
     const seq = [...nextPages]
       .reverse()
       .map((page, index) => ({ id: page.id, order: index + 1 }))
@@ -97,7 +105,7 @@ export function PagesRouteViewContent() {
         <div className="flex shrink-0 items-center gap-2">
           <span className="hidden text-xs text-neutral-500 sm:inline dark:text-neutral-400">
             {t('pages.header.count', {
-              count: pagesQuery.data?.pagination.total ?? 0,
+              count: pagesList.pagination?.total ?? 0,
             })}
           </span>
           <ButtonLink aria-label={t('pages.action.newPage')} to="/pages/edit">
@@ -123,7 +131,7 @@ export function PagesRouteViewContent() {
       </div>
 
       <Scroll className="min-h-0 flex-1">
-        {pagesQuery.isLoading ? (
+        {pagesQuery.isLoading && orderedPages.length === 0 ? (
           <PagesSkeleton />
         ) : pagesQuery.isError ? (
           <PagesError onRetry={() => void pagesQuery.refetch()} />

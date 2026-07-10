@@ -51,7 +51,8 @@ import {
 import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import type { CreateNoteData } from '~/api/notes'
 import { getNoteById } from '~/api/notes'
-import { createPage, getPageById, updatePage } from '~/api/pages'
+import type { CreatePageData } from '~/api/pages'
+import { getPageById } from '~/api/pages'
 import type { CreatePostData } from '~/api/posts'
 import { getPostById, getPosts } from '~/api/posts'
 import { callBuiltInFunction } from '~/api/system'
@@ -71,6 +72,8 @@ import type { CategoryEntity } from '~/data/resources/category'
 import { categories as categoriesCollection } from '~/data/resources/category'
 import { notes as notesCollection } from '~/data/resources/note'
 import { saveNote } from '~/data/resources/note.mutations'
+import { pages as pagesCollection } from '~/data/resources/page'
+import { savePage } from '~/data/resources/page.mutations'
 import { posts as postsCollection } from '~/data/resources/post'
 import { savePost } from '~/data/resources/post.mutations'
 import { topics as topicsCollection } from '~/data/resources/topic'
@@ -460,24 +463,30 @@ function WritePage(props: { kind: WriteKind }) {
     notesCollection,
     props.kind === 'note' && isEditing ? id : undefined,
   )
-  const nonPostDetailQuery = useQuery<WriteModel>({
+  const pageDetailQuery = useCollectionDetailQuery(pagesCollection, {
     enabled: isEditing && props.kind === 'page',
-    queryFn: () => getWriteDetail(props.kind, id),
+    queryFn: () => getPageById(id),
     queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
   })
-  const storeEntity = props.kind === 'note' ? noteEntity : postEntity
+  const pageEntity = useEntity(
+    pagesCollection,
+    props.kind === 'page' && isEditing ? id : undefined,
+  )
+  const storeEntity =
+    props.kind === 'note'
+      ? noteEntity
+      : props.kind === 'page'
+        ? pageEntity
+        : postEntity
   const storeDetailQuery =
-    props.kind === 'note' ? noteDetailQuery : postDetailQuery
-  const detailModel: WriteModel | undefined =
-    props.kind === 'page' ? nonPostDetailQuery.data : storeEntity
-  const isDetailLoaded =
-    props.kind === 'page'
-      ? nonPostDetailQuery.isSuccess
-      : storeDetailQuery.isSuccess
-  const detailLoading =
-    props.kind === 'page'
-      ? nonPostDetailQuery.isLoading
-      : storeDetailQuery.isLoading
+    props.kind === 'note'
+      ? noteDetailQuery
+      : props.kind === 'page'
+        ? pageDetailQuery
+        : postDetailQuery
+  const detailModel: WriteModel | undefined = storeEntity
+  const isDetailLoaded = storeDetailQuery.isSuccess
+  const detailLoading = storeDetailQuery.isLoading
   const refDraftQuery = useQuery({
     enabled: isEditing,
     queryFn: () => getDraftByRef(draftRefType, id),
@@ -3005,12 +3014,6 @@ const draftRefTypeByKind: Record<WriteKind, DraftRefType> = {
   post: DraftRefType.Post,
 }
 
-function getWriteDetail(kind: WriteKind, id: string): Promise<WriteModel> {
-  if (kind === 'post') return getPostById(id)
-  if (kind === 'note') return getNoteById(id, { single: true })
-  return getPageById(id)
-}
-
 function getPublishedContent(model: WriteModel): PublishedWriteContent {
   return {
     content: model.content ?? undefined,
@@ -3308,6 +3311,29 @@ function buildNoteWriteData(
   }
 }
 
+function buildPageWriteData(
+  state: WriteFormState,
+  draftId?: string,
+): CreatePageData {
+  const projected = projectWriteState(state)
+  return {
+    content:
+      projected.contentFormat === 'lexical' ? projected.content : undefined,
+    contentFormat: projected.contentFormat,
+    draftId,
+    images:
+      projected.contentFormat === 'lexical'
+        ? undefined
+        : buildWriteImages(projected),
+    meta: projected.meta,
+    order: projected.order ? Number(projected.order) : undefined,
+    slug: projected.slug,
+    subtitle: projected.subtitle,
+    text: projected.text,
+    title: projected.title,
+  }
+}
+
 function saveWrite(
   kind: WriteKind,
   id: string,
@@ -3322,23 +3348,7 @@ function saveWrite(
     return saveNote(id, buildNoteWriteData(state, draftId))
   }
 
-  state = projectWriteState(state)
-
-  const data = {
-    content: state.contentFormat === 'lexical' ? state.content : undefined,
-    contentFormat: state.contentFormat,
-    draftId,
-    images:
-      state.contentFormat === 'lexical' ? undefined : buildWriteImages(state),
-    meta: state.meta,
-    order: state.order ? Number(state.order) : undefined,
-    slug: state.slug,
-    subtitle: state.subtitle,
-    text: state.text,
-    title: state.title,
-  }
-
-  return id ? updatePage(id, data) : createPage(data)
+  return savePage(id, buildPageWriteData(state, draftId))
 }
 
 function toDraftData(
