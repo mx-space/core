@@ -13,9 +13,15 @@ export interface ResourceTransaction {
   ) => this
   delete: <T extends object>(collection: Collection<T>, id: string) => this
   insert: <T extends object>(collection: Collection<T>, entity: T) => this
-  commit: <R extends TransactionResult | void>(
-    request: () => Promise<R>,
-  ) => Promise<R>
+  commit: <R>(request: () => Promise<R>) => Promise<R>
+}
+
+function extractFulfilledKeys(result: unknown): string[] | undefined {
+  if (typeof result !== 'object' || result === null) return undefined
+  if (!('fulfilledKeys' in result)) return undefined
+  const keys = result.fulfilledKeys
+  if (!Array.isArray(keys)) return undefined
+  return keys.filter((key): key is string => typeof key === 'string')
 }
 
 interface Registration {
@@ -87,9 +93,7 @@ export function createTransaction(): ResourceTransaction {
       })
       return tx
     },
-    async commit<R extends TransactionResult | void>(
-      request: () => Promise<R>,
-    ) {
+    async commit<R>(request: () => Promise<R>) {
       assertNotCommitted()
       committed = true
 
@@ -103,10 +107,7 @@ export function createTransaction(): ResourceTransaction {
         throw error
       }
 
-      const fulfilledKeys =
-        result && typeof result === 'object' && 'fulfilledKeys' in result
-          ? result.fulfilledKeys
-          : undefined
+      const fulfilledKeys = extractFulfilledKeys(result)
 
       for (const registration of registrations) {
         if (!fulfilledKeys || fulfilledKeys.includes(registration.entityId)) {

@@ -1,7 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
-import { deletePost, patchPost } from '~/api/posts'
+import { deletePost } from '~/api/posts'
+import { createTransaction } from '~/data/resource/transaction'
+import { posts } from '~/data/resources/post'
 import { useI18n } from '~/i18n'
 
 import { postsQueryKey } from '../constants'
@@ -21,13 +23,17 @@ export function usePostMutations(options: UsePostMutationsOptions = {}) {
 
   const publishMutation = useMutation({
     mutationFn: (payload: { id: string; isPublished: boolean }) =>
-      patchPost(payload.id, { isPublished: payload.isPublished }),
+      posts.update(payload.id, (draft) => {
+        draft.isPublished = payload.isPublished
+      }),
     onSuccess: invalidatePosts,
   })
 
   const categoryMutation = useMutation({
     mutationFn: (payload: { categoryId: string; id: string }) =>
-      patchPost(payload.id, { categoryId: payload.categoryId }),
+      posts.update(payload.id, (draft) => {
+        draft.categoryId = payload.categoryId
+      }),
     onError: (error: unknown) =>
       toast.error(
         getErrorMessage(error, t('posts.toast.categoryUpdateFailed')),
@@ -36,7 +42,7 @@ export function usePostMutations(options: UsePostMutationsOptions = {}) {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: deletePost,
+    mutationFn: (id: string) => posts.delete(id),
     onSuccess: async () => {
       toast.success(t('posts.toast.deleted'))
       await invalidatePosts()
@@ -45,16 +51,24 @@ export function usePostMutations(options: UsePostMutationsOptions = {}) {
 
   const batchDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => deletePost(id)))
-      const successfulIds = ids.filter(
-        (_, index) => results[index].status === 'fulfilled',
-      )
+      const tx = createTransaction()
+      ids.forEach((id) => tx.delete(posts, id))
 
-      return {
-        failedCount: ids.length - successfulIds.length,
-        successfulIds,
-        successCount: successfulIds.length,
-      }
+      return tx.commit(async () => {
+        const results = await Promise.allSettled(
+          ids.map((id) => deletePost(id)),
+        )
+        const successfulIds = ids.filter(
+          (_, index) => results[index].status === 'fulfilled',
+        )
+
+        return {
+          failedCount: ids.length - successfulIds.length,
+          fulfilledKeys: successfulIds,
+          successfulIds,
+          successCount: successfulIds.length,
+        }
+      })
     },
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('posts.toast.batchDeleteFailed'))),
@@ -78,8 +92,8 @@ export function usePostMutations(options: UsePostMutationsOptions = {}) {
 
   const pinMutation = useMutation({
     mutationFn: (payload: { id: string; isPinned: boolean }) =>
-      patchPost(payload.id, {
-        pinAt: payload.isPinned ? new Date().toISOString() : null,
+      posts.update(payload.id, (draft) => {
+        draft.pinAt = payload.isPinned ? new Date().toISOString() : null
       }),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('posts.toast.pinFailed'))),

@@ -59,6 +59,16 @@ import {
   APP_SHELL_HEADER_HEIGHT_CLASS,
   APP_SHELL_HEADER_HEIGHT_VALUE,
 } from '~/constants/layout'
+import {
+  useCollectionDetailQuery,
+  useCollectionListQuery,
+  useEntity,
+  useEntityList,
+} from '~/data/resource/hooks'
+import { createTransaction } from '~/data/resource/transaction'
+import type { CategoryEntity } from '~/data/resources/category'
+import { categories as categoriesCollection } from '~/data/resources/category'
+import { posts as postsCollection } from '~/data/resources/post'
 import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
@@ -73,7 +83,6 @@ import type { TranslationKey } from '~/i18n/types'
 import { prepareImageFileForUpload } from '~/lib/image-upload-privacy'
 import type { Amap, AMapSearch } from '~/models/amap'
 import type { Image as ImageModel } from '~/models/base'
-import type { CategoryModel } from '~/models/category'
 import type { DraftModel } from '~/models/draft'
 import { DraftRefType } from '~/models/draft'
 import type { NoteModel } from '~/models/note'
@@ -177,7 +186,6 @@ const emptyState: WriteFormState = {
   weather: '',
 }
 
-const emptyCategories: CategoryModel[] = []
 const emptyTopics: TopicModel[] = []
 const PREFERRED_CONTENT_FORMAT_STORAGE_KEY = 'preferred-content-format'
 const RichEditorWithAgent = lazy(() =>
@@ -376,17 +384,23 @@ function WritePage(props: { kind: WriteKind }) {
     draftId: string
   } | null>(null)
   const appliedRouteDraftIdRef = useRef<string | null>(null)
+  const formSeededKeyRef = useRef<string | null>(null)
   const draftDirtyRef = useRef(false)
   const lastSavedDraftFingerprintRef = useRef('')
   const latestDraftFingerprintRef = useRef('')
   const [lastSavedFingerprint, setLastSavedFingerprint] = useState('')
   const draftRefType = draftRefTypeByKind[props.kind]
 
-  const categoriesQuery = useQuery({
+  useCollectionListQuery(categoriesCollection, {
     enabled: props.kind === 'post',
     queryFn: () => getCategories({ type: 'Category' }),
     queryKey: adminQueryKeys.categories.list(),
+    toPage: (result) => ({ items: result }),
   })
+  const categoriesList = useEntityList(
+    categoriesCollection,
+    adminQueryKeys.categories.list(),
+  )
   const topicsQuery = useQuery({
     enabled: props.kind === 'note',
     queryFn: () => getTopics({ page: 1, size: 100 }),
@@ -397,7 +411,7 @@ function WritePage(props: { kind: WriteKind }) {
     queryFn: getTags,
     queryKey: adminQueryKeys.categories.tags(),
   })
-  const relatedPostsQuery = useQuery({
+  useCollectionListQuery(postsCollection, {
     enabled: props.kind === 'post',
     queryFn: () =>
       getPosts({
@@ -407,12 +421,39 @@ function WritePage(props: { kind: WriteKind }) {
         sort_order: 'desc',
       }),
     queryKey: adminQueryKeys.posts.relatedOptions('write'),
+    toPage: (result) => ({
+      items: result.data,
+      pagination: result.pagination,
+    }),
   })
-  const detailQuery = useQuery<WriteModel>({
-    enabled: isEditing,
+  const relatedPostsList = useEntityList(
+    postsCollection,
+    adminQueryKeys.posts.relatedOptions('write'),
+  )
+  const postDetailQuery = useCollectionDetailQuery(postsCollection, {
+    enabled: isEditing && props.kind === 'post',
+    queryFn: () => getPostById(id),
+    queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
+  })
+  const postEntity = useEntity(
+    postsCollection,
+    props.kind === 'post' && isEditing ? id : undefined,
+  )
+  const nonPostDetailQuery = useQuery<WriteModel>({
+    enabled: isEditing && props.kind !== 'post',
     queryFn: () => getWriteDetail(props.kind, id),
     queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
   })
+  const detailModel: WriteModel | undefined =
+    props.kind === 'post' ? postEntity : nonPostDetailQuery.data
+  const isDetailLoaded =
+    props.kind === 'post'
+      ? postDetailQuery.isSuccess
+      : nonPostDetailQuery.isSuccess
+  const detailLoading =
+    props.kind === 'post'
+      ? postDetailQuery.isLoading
+      : nonPostDetailQuery.isLoading
   const refDraftQuery = useQuery({
     enabled: isEditing,
     queryFn: () => getDraftByRef(draftRefType, id),
@@ -429,10 +470,10 @@ function WritePage(props: { kind: WriteKind }) {
     queryKey: adminQueryKeys.drafts.newDraft(draftRefType),
   })
 
-  const categories = categoriesQuery.data ?? emptyCategories
+  const categories = categoriesList.items
   const tags = tagsQuery.data ?? []
   const topics = topicsQuery.data?.data ?? emptyTopics
-  const relatedPosts = relatedPostsQuery.data?.data ?? []
+  const relatedPosts = relatedPostsList.items
   const firstCategoryId = categories[0]?.id ?? ''
   const activeCategory =
     categories.find((category) => category.id === state.categoryId) ??
@@ -445,21 +486,19 @@ function WritePage(props: { kind: WriteKind }) {
     )[0]
   }, [newDraftsQuery.data, refDraftQuery.data])
   const publishedContent = useMemo(
-    () => (detailQuery.data ? getPublishedContent(detailQuery.data) : null),
-    [detailQuery.data],
+    () => (detailModel ? getPublishedContent(detailModel) : null),
+    [detailModel],
   )
   const defaultNoteTitle = useMemo(() => {
-    if (props.kind === 'note' && detailQuery.data) {
-      return getDefaultNoteTitle(
-        new Date((detailQuery.data as NoteModel).createdAt),
-      )
+    if (props.kind === 'note' && detailModel) {
+      return getDefaultNoteTitle(new Date((detailModel as NoteModel).createdAt))
     }
 
     return getDefaultNoteTitle()
-  }, [detailQuery.data, props.kind])
+  }, [detailModel, props.kind])
   const notePublicPath =
     props.kind === 'note'
-      ? buildNotePublicPath(state, detailQuery.data as NoteModel | undefined)
+      ? buildNotePublicPath(state, detailModel as NoteModel | undefined)
       : ''
   const postPublicPath =
     props.kind === 'post' ? buildPostPublicPath(state, activeCategory) : ''
@@ -514,7 +553,7 @@ function WritePage(props: { kind: WriteKind }) {
   }, [blocker, t])
 
   useEffect(() => {
-    if (!detailQuery.data) {
+    if (!detailModel || !isDetailLoaded) {
       if (props.kind !== 'post' || !firstCategoryId) return
       setState((previous) =>
         previous.categoryId
@@ -527,10 +566,23 @@ function WritePage(props: { kind: WriteKind }) {
       return
     }
 
-    if (!routeDraftId) {
-      setState(fromModel(props.kind, detailQuery.data))
+    if (routeDraftId) return
+
+    if (props.kind === 'post') {
+      const seedKey = `post:${id}`
+      if (formSeededKeyRef.current === seedKey) return
+      formSeededKeyRef.current = seedKey
     }
-  }, [detailQuery.data, firstCategoryId, props.kind, routeDraftId])
+
+    setState(fromModel(props.kind, detailModel))
+  }, [
+    detailModel,
+    firstCategoryId,
+    id,
+    isDetailLoaded,
+    props.kind,
+    routeDraftId,
+  ])
 
   useEffect(() => {
     if (refDraftQuery.data && !draftId) {
@@ -540,11 +592,11 @@ function WritePage(props: { kind: WriteKind }) {
 
   const recoveryHintDraft = useMemo(() => {
     const draft = refDraftQuery.data
-    const published = detailQuery.data
+    const published = detailModel
     if (!isEditing || routeDraftId || !draft || !published) return null
     if (!isDraftNewerThanPublished(draft, published)) return null
     return draft
-  }, [detailQuery.data, isEditing, refDraftQuery.data, routeDraftId])
+  }, [detailModel, isEditing, refDraftQuery.data, routeDraftId])
 
   useEffect(() => {
     const draft = routeDraftQuery.data
@@ -811,8 +863,8 @@ function WritePage(props: { kind: WriteKind }) {
     isEditing,
     isPendingDraftSave: draftMutation.isPending,
     latestDraft,
-    publishedUpdatedAt: detailQuery.data
-      ? getPublishedContent(detailQuery.data).updatedAt
+    publishedUpdatedAt: detailModel
+      ? getPublishedContent(detailModel).updatedAt
       : undefined,
   })
 
@@ -915,7 +967,7 @@ function WritePage(props: { kind: WriteKind }) {
                 <SlidersHorizontal aria-hidden="true" className="size-4" />
               </WriteHeaderIconButton>
               <WriteHeaderIconButton
-                disabled={saveMutation.isPending || detailQuery.isLoading}
+                disabled={saveMutation.isPending || detailLoading}
                 title={t('write.header.publish')}
                 type="submit"
                 variant="primary"
@@ -957,7 +1009,7 @@ function WritePage(props: { kind: WriteKind }) {
                 <SlidersHorizontal aria-hidden="true" className="size-4" />
               </WriteHeaderIconButton>
               <WriteHeaderIconButton
-                disabled={saveMutation.isPending || detailQuery.isLoading}
+                disabled={saveMutation.isPending || detailLoading}
                 title={t('write.header.publish')}
                 type="submit"
                 variant="primary"
@@ -979,9 +1031,9 @@ function WritePage(props: { kind: WriteKind }) {
             if (draftsPanelOpen && previewingDraft) cancelDraftPreview()
             setAsidePanel(null)
           }}
-          open={asidePanel !== null && !detailQuery.isLoading}
+          open={asidePanel !== null && !detailLoading}
         >
-          {detailQuery.isLoading ? (
+          {detailLoading ? (
             <div className="min-h-0 flex-1">
               <WriteSkeleton kind={props.kind} />
             </div>
@@ -1724,7 +1776,7 @@ function SlugPill(props: {
 }
 
 function PostFields(props: {
-  categories: CategoryModel[]
+  categories: CategoryEntity[]
   currentPostId: string
   relatedPosts: PostModel[]
   state: WriteFormState
@@ -3170,40 +3222,81 @@ function resolveDraftPasswordProtected(
   return previous.passwordProtected
 }
 
+function buildPostWriteData(state: WriteFormState, draftId?: string) {
+  const projected = projectWriteState(state)
+  return {
+    categoryId: projected.categoryId,
+    content:
+      projected.contentFormat === 'lexical' ? projected.content : undefined,
+    contentFormat: projected.contentFormat,
+    copyright: projected.copyright,
+    draftId,
+    images:
+      projected.contentFormat === 'lexical'
+        ? undefined
+        : buildWriteImages(projected),
+    isPublished: projected.isPublished,
+    meta: projected.meta,
+    pin: projected.pin ? new Date().toISOString() : null,
+    pinOrder: projected.pin ? Number(projected.pinOrder) || 1 : null,
+    relatedId: splitCommaList(projected.relatedId),
+    slug: projected.slug,
+    summary: projected.summary || null,
+    tags: projected.tags
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean),
+    text: projected.text,
+    title: projected.title,
+  }
+}
+
+async function savePostWrite(
+  id: string,
+  state: WriteFormState,
+  draftId?: string,
+): Promise<PostModel> {
+  const data = buildPostWriteData(state, draftId)
+
+  if (!id) {
+    const result = await createPost(data)
+    postsCollection.upsert(result)
+    return result
+  }
+
+  const tx = createTransaction()
+  tx.update(postsCollection, id, (draft) => {
+    draft.title = data.title
+    draft.text = data.text
+    draft.slug = data.slug
+    draft.categoryId = data.categoryId
+    draft.copyright = data.copyright
+    draft.isPublished = data.isPublished
+    draft.contentFormat = data.contentFormat
+    draft.meta = data.meta
+    draft.summary = data.summary
+    draft.tags = data.tags
+    draft.pinAt = data.pin
+    draft.pinOrder = data.pinOrder
+    if (data.content !== undefined) draft.content = data.content
+    if (data.images !== undefined) draft.images = data.images
+  })
+  const result = await tx.commit(() => updatePost(id, data))
+  postsCollection.hydrate([result])
+  return result
+}
+
 function saveWrite(
   kind: WriteKind,
   id: string,
   state: WriteFormState,
   draftId?: string,
 ): Promise<WriteModel> {
-  state = projectWriteState(state)
-
   if (kind === 'post') {
-    const data = {
-      categoryId: state.categoryId,
-      content: state.contentFormat === 'lexical' ? state.content : undefined,
-      contentFormat: state.contentFormat,
-      copyright: state.copyright,
-      draftId,
-      images:
-        state.contentFormat === 'lexical' ? undefined : buildWriteImages(state),
-      isPublished: state.isPublished,
-      meta: state.meta,
-      pin: state.pin ? new Date().toISOString() : null,
-      pinOrder: state.pin ? Number(state.pinOrder) || 1 : null,
-      relatedId: splitCommaList(state.relatedId),
-      slug: state.slug,
-      summary: state.summary || null,
-      tags: state.tags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean),
-      text: state.text,
-      title: state.title,
-    }
-
-    return id ? updatePost(id, data) : createPost(data)
+    return savePostWrite(id, state, draftId)
   }
+
+  state = projectWriteState(state)
 
   if (kind === 'note') {
     const data = {
@@ -3518,7 +3611,7 @@ function formatDateTime(value: string | null | undefined) {
 function validateState(
   kind: WriteKind,
   state: WriteFormState,
-  categories: CategoryModel[],
+  categories: CategoryEntity[],
   isEditing: boolean,
 ) {
   if (kind !== 'note' && !state.title.trim())
@@ -3727,7 +3820,7 @@ function buildNotePublicPath(
 
 function buildPostPublicPath(
   state: Pick<WriteFormState, 'slug'>,
-  category: CategoryModel | undefined,
+  category: CategoryEntity | undefined,
 ) {
   if (!state.slug.trim() || !category?.slug) return ''
   return `/posts/${category.slug}/${state.slug.trim()}`
