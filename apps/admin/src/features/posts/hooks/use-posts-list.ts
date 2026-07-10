@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 
 import { getCategories } from '~/api/categories'
@@ -6,6 +7,8 @@ import { useCollectionListQuery, useEntityList } from '~/data/resource/hooks'
 import { categories } from '~/data/resources/category'
 import { posts } from '~/data/resources/post'
 import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
+import type { Pager } from '~/models/base'
+import type { PostModel } from '~/models/post'
 import { adminQueryKeys } from '~/query/keys'
 
 import { allCategoriesValue, postsPageSize, postsQueryKey } from '../constants'
@@ -74,24 +77,19 @@ export function usePostsList() {
     sortKey: state.sortKey,
     sortOrder: state.sortOrder,
   })
-  const postsQuery = useCollectionListQuery(posts, {
+  const collectionQuery = useCollectionListQuery(posts, {
+    enabled: !state.keyword,
     queryFn: () =>
-      state.keyword
-        ? searchPosts({
-            keyword: state.keyword,
-            page: state.page,
-            size: postsPageSize,
-          })
-        : getPosts({
-            categoryIds:
-              state.categoryId === allCategoriesValue
-                ? undefined
-                : [state.categoryId],
-            page: state.page,
-            size: postsPageSize,
-            sort_by: state.sortKey,
-            sort_order: state.sortOrder,
-          }),
+      getPosts({
+        categoryIds:
+          state.categoryId === allCategoriesValue
+            ? undefined
+            : [state.categoryId],
+        page: state.page,
+        size: postsPageSize,
+        sort_by: state.sortKey,
+        sort_order: state.sortOrder,
+      }),
     queryKey: postsListKey,
     toPage: (result) => ({
       items: result.data,
@@ -99,6 +97,26 @@ export function usePostsList() {
     }),
   })
   const postsList = useEntityList(posts, postsListKey, { keepPrevious: true })
+
+  const searchQuery = useQuery({
+    enabled: !!state.keyword,
+    placeholderData: (previous) => previous,
+    queryFn: () =>
+      searchPosts({
+        keyword: state.keyword,
+        page: state.page,
+        size: postsPageSize,
+      }),
+    queryKey: postsListKey,
+  })
+
+  const postsQuery = state.keyword ? searchQuery : collectionQuery
+  const searchItems: PostModel[] = state.keyword
+    ? (searchQuery.data?.data ?? [])
+    : []
+  const searchPagination: Pager | undefined = state.keyword
+    ? searchQuery.data?.pagination
+    : undefined
 
   return {
     categories: categoriesList.items,
@@ -111,8 +129,8 @@ export function usePostsList() {
     keyword: state.keyword,
     keywordInput,
     page: state.page,
-    pagination: postsList.pagination,
-    posts: postsList.items,
+    pagination: state.keyword ? searchPagination : postsList.pagination,
+    posts: state.keyword ? searchItems : postsList.items,
     postsQuery,
     rootQueryKey: postsQueryKey,
     setCategoryId: (categoryId: string) =>

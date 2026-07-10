@@ -2,8 +2,8 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Globe, Shield } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { AccountSession } from '../../types/settings'
 
+import { resetAllCollections } from '~/data/resource/collection'
 import { IpInfoPopover } from '~/features/_shared/components/ip-info-popover'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
@@ -11,6 +11,7 @@ import { Button } from '~/ui/primitives/button'
 import { authClient } from '~/utils/authjs/auth'
 import { cn } from '~/utils/cn'
 
+import type { AccountSession } from '../../types/settings'
 import { listSessions } from '../../utils/account-sessions'
 import { formatDateTime, getErrorMessage } from '../../utils/settings'
 import { SettingsSection } from '../SettingsPrimitives'
@@ -31,6 +32,7 @@ export function SessionSection() {
           throw new Error(
             result.error.message || t('settings.session.error.revokeFailed'),
           )
+        resetAllCollections()
       } else {
         const result = await authClient.revokeSession({ token: session.token })
         if (result.error)

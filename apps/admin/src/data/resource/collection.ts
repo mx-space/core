@@ -55,6 +55,18 @@ export interface Collection<T extends object> {
 
 let opCounter = 0
 
+interface Resettable {
+  reset: () => void
+}
+
+const registeredCollections = new Set<Resettable>()
+
+export function resetAllCollections(): void {
+  for (const collection of registeredCollections) {
+    collection.reset()
+  }
+}
+
 function createInitialState<T extends object>(): CollectionState<T> {
   return {
     entitiesById: {},
@@ -318,7 +330,7 @@ export function defineCollection<T extends object>(
     store.setState(createInitialState<T>(), true)
   }
 
-  return {
+  const collection: Collection<T> = {
     name,
     store,
     getKey,
@@ -332,4 +344,8 @@ export function defineCollection<T extends object>(
     reset,
     _ops: { begin, commit, rollback },
   }
+
+  registeredCollections.add(collection)
+
+  return collection
 }

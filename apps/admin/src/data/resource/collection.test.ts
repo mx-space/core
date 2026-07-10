@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest'
 
-import { defineCollection } from './collection'
+import { defineCollection, resetAllCollections } from './collection'
 import { serializeListKey } from './key'
 import { createTransaction } from './transaction'
 
@@ -288,6 +288,34 @@ describe('defineCollection: reset', () => {
       errorsByKey: {},
       listIndexes: {},
     })
+  })
+})
+
+describe('resetAllCollections', () => {
+  it('resets every collection registered via defineCollection', () => {
+    const collectionA = defineCollection<TestEntity>({
+      name: 'reset-all-a',
+      getKey: (e) => e.id,
+    })
+    const collectionB = defineCollection<TestEntity>({
+      name: 'reset-all-b',
+      getKey: (e) => e.id,
+    })
+
+    collectionA.hydrate([{ id: '1', title: 'a' }])
+    collectionB.hydrate([{ id: '2', title: 'b' }])
+
+    resetAllCollections()
+
+    const initialState = {
+      entitiesById: {},
+      versionByKey: {},
+      pendingOpsByKey: {},
+      errorsByKey: {},
+      listIndexes: {},
+    }
+    expect(collectionA.store.getState()).toEqual(initialState)
+    expect(collectionB.store.getState()).toEqual(initialState)
   })
 })
 
