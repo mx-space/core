@@ -286,6 +286,7 @@ describe('defineCollection: reset', () => {
       versionByKey: {},
       pendingOpsByKey: {},
       errorsByKey: {},
+      listIndexes: {},
     })
   })
 })

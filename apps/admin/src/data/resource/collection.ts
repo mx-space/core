@@ -2,6 +2,8 @@ import { produce } from 'immer'
 import type { StoreApi } from 'zustand/vanilla'
 import { createStore } from 'zustand/vanilla'
 
+import type { ListIndex } from './list-index'
+
 export interface CollectionConfig<T extends object> {
   name: string
   getKey: (entity: T) => string
@@ -29,6 +31,7 @@ export interface CollectionState<T extends object> {
   versionByKey: Record<string, number>
   pendingOpsByKey: Record<string, PendingOp<T>[]>
   errorsByKey: Record<string, unknown>
+  listIndexes: Record<string, ListIndex>
 }
 
 export interface Collection<T extends object> {
@@ -58,6 +61,7 @@ function createInitialState<T extends object>(): CollectionState<T> {
     versionByKey: {},
     pendingOpsByKey: {},
     errorsByKey: {},
+    listIndexes: {},
   }
 }
 
