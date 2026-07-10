@@ -2,6 +2,7 @@ import type { CreateNoteData, PatchNoteData } from '~/api/notes'
 import {
   createNote,
   deleteNote,
+  getNoteById,
   patchNotePublish,
   updateNote,
 } from '~/api/notes'
@@ -10,10 +11,17 @@ import type { NoteModel } from '~/models/note'
 
 import { notes } from './note'
 
+async function ensureNoteHydrated(id: string): Promise<void> {
+  if (notes.get(id) !== undefined) return
+  const entity = await getNoteById(id, { single: true })
+  notes.hydrate([entity])
+}
+
 export async function publishNote(
   id: string,
   isPublished: boolean,
 ): Promise<NoteModel> {
+  await ensureNoteHydrated(id)
   const tx = createTransaction()
   tx.update(notes, id, (draft) => {
     draft.isPublished = isPublished
@@ -23,10 +31,11 @@ export async function publishNote(
   return result
 }
 
-export function patchNoteFields(
+export async function patchNoteFields(
   id: string,
   patch: PatchNoteData,
 ): Promise<NoteModel | void> {
+  await ensureNoteHydrated(id)
   return notes.update(id, (draft) => {
     Object.assign(draft, patch)
   })
@@ -91,6 +100,7 @@ export async function saveNote(
     return result
   }
 
+  await ensureNoteHydrated(id)
   const patch = toOptimisticNotePatch(data)
   const tx = createTransaction()
   tx.update(notes, id, (draft) => {

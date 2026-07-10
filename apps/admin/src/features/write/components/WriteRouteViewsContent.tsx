@@ -448,7 +448,7 @@ function WritePage(props: { kind: WriteKind }) {
   const postDetailQuery = useCollectionDetailQuery(postsCollection, {
     enabled: isEditing && props.kind === 'post',
     queryFn: () => getPostById(id),
-    queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
+    queryKey: adminQueryKeys.write.detail({ id, kind: 'post' }),
   })
   const postEntity = useEntity(
     postsCollection,
@@ -457,7 +457,7 @@ function WritePage(props: { kind: WriteKind }) {
   const noteDetailQuery = useCollectionDetailQuery(notesCollection, {
     enabled: isEditing && props.kind === 'note',
     queryFn: () => getNoteById(id, { single: true }),
-    queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
+    queryKey: adminQueryKeys.write.detail({ id, kind: 'note' }),
   })
   const noteEntity = useEntity(
     notesCollection,
@@ -466,7 +466,7 @@ function WritePage(props: { kind: WriteKind }) {
   const pageDetailQuery = useCollectionDetailQuery(pagesCollection, {
     enabled: isEditing && props.kind === 'page',
     queryFn: () => getPageById(id),
-    queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
+    queryKey: adminQueryKeys.write.detail({ id, kind: 'page' }),
   })
   const pageEntity = useEntity(
     pagesCollection,

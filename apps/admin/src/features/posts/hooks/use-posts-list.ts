@@ -107,7 +107,7 @@ export function usePostsList() {
         page: state.page,
         size: postsPageSize,
       }),
-    queryKey: postsListKey,
+    queryKey: [...postsListKey, 'search'],
   })
 
   const postsQuery = state.keyword ? searchQuery : collectionQuery

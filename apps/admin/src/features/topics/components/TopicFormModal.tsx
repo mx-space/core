@@ -33,7 +33,7 @@ function TopicFormModal(props: TopicFormModalProps) {
     enabled: isEdit,
     queryFn: () => getTopic(editId ?? ''),
     queryKey: editId
-      ? adminQueryKeys.topics.detail(editId)
+      ? [...adminQueryKeys.topics.detail(editId), 'form']
       : adminQueryKeys.topics.root,
   })
   const [name, setName] = useState('')

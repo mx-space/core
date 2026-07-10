@@ -1,32 +1,41 @@
 import type { CreatePostData } from '~/api/posts'
-import { createPost, deletePost, updatePost } from '~/api/posts'
+import { createPost, deletePost, getPostById, updatePost } from '~/api/posts'
 import { createTransaction } from '~/data/resource/transaction'
 import type { PostModel } from '~/models/post'
 
 import { posts } from './post'
 
-export function publishPost(
+async function ensurePostHydrated(id: string): Promise<void> {
+  if (posts.get(id) !== undefined) return
+  const entity = await getPostById(id)
+  posts.hydrate([entity])
+}
+
+export async function publishPost(
   id: string,
   isPublished: boolean,
 ): Promise<PostModel | void> {
+  await ensurePostHydrated(id)
   return posts.update(id, (draft) => {
     draft.isPublished = isPublished
   })
 }
 
-export function pinPost(
+export async function pinPost(
   id: string,
   isPinned: boolean,
 ): Promise<PostModel | void> {
+  await ensurePostHydrated(id)
   return posts.update(id, (draft) => {
     draft.pinAt = isPinned ? new Date().toISOString() : null
   })
 }
 
-export function movePostCategory(
+export async function movePostCategory(
   id: string,
   categoryId: string,
 ): Promise<PostModel | void> {
+  await ensurePostHydrated(id)
   return posts.update(id, (draft) => {
     draft.categoryId = categoryId
   })
@@ -90,6 +99,7 @@ export async function savePost(
     return result
   }
 
+  await ensurePostHydrated(id)
   const patch = toOptimisticPostPatch(data)
   const tx = createTransaction()
   tx.update(posts, id, (draft) => {
