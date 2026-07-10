@@ -1,5 +1,5 @@
 import type { CreateTopicData } from '~/api/topics'
-import { createTopic, deleteTopic } from '~/api/topics'
+import { createTopic, deleteTopic, updateTopic } from '~/api/topics'
 import { createTransaction } from '~/data/resource/transaction'
 import type { TopicModel } from '~/models/topic'
 
@@ -8,15 +8,20 @@ import { topics } from './topic'
 export async function saveTopic(
   mode: { kind: 'create' } | { id: string; kind: 'edit' },
   form: CreateTopicData,
-): Promise<TopicModel | void> {
+): Promise<TopicModel> {
   if (mode.kind === 'edit') {
-    return topics.update(mode.id, (draft) => {
+    const { id } = mode
+    const tx = createTransaction()
+    tx.update(topics, id, (draft) => {
       draft.name = form.name
       draft.slug = form.slug
       draft.introduce = form.introduce
       draft.description = form.description ?? ''
       draft.icon = form.icon ?? null
     })
+    const result = await tx.commit(() => updateTopic(id, form))
+    topics.hydrate([result])
+    return result
   }
 
   const result = await createTopic(form)
