@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { toast } from 'sonner'
 
-import { categories } from '~/data/resources/category'
+import { removeCategory } from '~/data/resources/category.mutations'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -25,7 +25,7 @@ export function useCategoryMutations(
   }, [queryClient])
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => categories.delete(id),
+    mutationFn: (id: string) => removeCategory(id),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('categories.toast.deleteFailed'))),
     onSuccess: async () => {

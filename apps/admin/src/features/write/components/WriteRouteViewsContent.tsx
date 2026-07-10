@@ -51,7 +51,8 @@ import {
 import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import { createNote, getNoteById, updateNote } from '~/api/notes'
 import { createPage, getPageById, updatePage } from '~/api/pages'
-import { createPost, getPostById, getPosts, updatePost } from '~/api/posts'
+import type { CreatePostData } from '~/api/posts'
+import { getPostById, getPosts } from '~/api/posts'
 import { callBuiltInFunction } from '~/api/system'
 import { getTopics } from '~/api/topics'
 import { API_URL, WEB_URL } from '~/constants/env'
@@ -65,10 +66,10 @@ import {
   useEntity,
   useEntityList,
 } from '~/data/resource/hooks'
-import { createTransaction } from '~/data/resource/transaction'
 import type { CategoryEntity } from '~/data/resources/category'
 import { categories as categoriesCollection } from '~/data/resources/category'
 import { posts as postsCollection } from '~/data/resources/post'
+import { savePost } from '~/data/resources/post.mutations'
 import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
@@ -3222,7 +3223,10 @@ function resolveDraftPasswordProtected(
   return previous.passwordProtected
 }
 
-function buildPostWriteData(state: WriteFormState, draftId?: string) {
+function buildPostWriteData(
+  state: WriteFormState,
+  draftId?: string,
+): CreatePostData {
   const projected = projectWriteState(state)
   return {
     categoryId: projected.categoryId,
@@ -3251,41 +3255,6 @@ function buildPostWriteData(state: WriteFormState, draftId?: string) {
   }
 }
 
-async function savePostWrite(
-  id: string,
-  state: WriteFormState,
-  draftId?: string,
-): Promise<PostModel> {
-  const data = buildPostWriteData(state, draftId)
-
-  if (!id) {
-    const result = await createPost(data)
-    postsCollection.upsert(result)
-    return result
-  }
-
-  const tx = createTransaction()
-  tx.update(postsCollection, id, (draft) => {
-    draft.title = data.title
-    draft.text = data.text
-    draft.slug = data.slug
-    draft.categoryId = data.categoryId
-    draft.copyright = data.copyright
-    draft.isPublished = data.isPublished
-    draft.contentFormat = data.contentFormat
-    draft.meta = data.meta
-    draft.summary = data.summary
-    draft.tags = data.tags
-    draft.pinAt = data.pin
-    draft.pinOrder = data.pinOrder
-    if (data.content !== undefined) draft.content = data.content
-    if (data.images !== undefined) draft.images = data.images
-  })
-  const result = await tx.commit(() => updatePost(id, data))
-  postsCollection.hydrate([result])
-  return result
-}
-
 function saveWrite(
   kind: WriteKind,
   id: string,
@@ -3293,7 +3262,7 @@ function saveWrite(
   draftId?: string,
 ): Promise<WriteModel> {
   if (kind === 'post') {
-    return savePostWrite(id, state, draftId)
+    return savePost(id, buildPostWriteData(state, draftId))
   }
 
   state = projectWriteState(state)

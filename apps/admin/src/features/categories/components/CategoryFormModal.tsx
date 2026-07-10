@@ -4,9 +4,8 @@ import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import type { CreateCategoryData } from '~/api/categories'
-import { createCategory } from '~/api/categories'
-import { categories, type CategoryEntity } from '~/data/resources/category'
+import type { CategoryEntity } from '~/data/resources/category'
+import { saveCategory } from '~/data/resources/category.mutations'
 import { useI18n } from '~/i18n'
 import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
@@ -35,18 +34,17 @@ function CategoryFormModal(props: CategoryFormModalProps) {
       : t('categories.form.createTitle')
 
   const mutation = useMutation({
-    mutationFn: (data: CreateCategoryData) =>
-      props.mode.kind === 'edit'
-        ? categories.update(props.mode.category.id, (draft) => {
-            draft.name = data.name
-            draft.slug = data.slug
-          })
-        : createCategory(data),
+    mutationFn: (data: { name: string; slug: string }) =>
+      saveCategory(
+        props.mode.kind === 'edit'
+          ? { id: props.mode.category.id, kind: 'edit' }
+          : { kind: 'create' },
+        data,
+      ),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('categories.form.saveFailed'))),
     onSuccess: (category) => {
       if (!category) return
-      if (props.mode.kind === 'create') categories.upsert(category)
       toast.success(
         props.mode.kind === 'edit'
           ? t('categories.form.updated')
