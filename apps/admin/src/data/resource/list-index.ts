@@ -16,17 +16,39 @@ export interface ListPage<T> {
 
 const MAX_LIST_KEYS = 50
 
+export interface HydrateListOptions {
+  mode?: 'append' | 'replace'
+}
+
+function dedupeConcat(existingIds: string[], incomingIds: string[]): string[] {
+  const seen = new Set(existingIds)
+  const appended = incomingIds.filter((id) => {
+    if (seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
+  return [...existingIds, ...appended]
+}
+
 export function hydrateList<T extends object>(
   collection: Collection<T>,
   listKey: string,
   page: ListPage<T>,
+  options?: HydrateListOptions,
 ): void {
   collection.hydrate(page.items)
 
-  const ids = page.items.map((item) => collection.getKey(item))
+  const incomingIds = page.items.map((item) => collection.getKey(item))
+  const mode = options?.mode ?? 'replace'
   const now = Date.now()
 
   collection.store.setState((state) => {
+    const existing = state.listIndexes[listKey]
+    const ids =
+      mode === 'append' && existing
+        ? dedupeConcat(existing.ids, incomingIds)
+        : incomingIds
+
     const listIndexes = {
       ...state.listIndexes,
       [listKey]: {

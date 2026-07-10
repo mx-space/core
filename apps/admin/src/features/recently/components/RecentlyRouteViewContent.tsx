@@ -1,16 +1,20 @@
-import type { InfiniteData } from '@tanstack/react-query'
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, StickyNote } from 'lucide-react'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
-import { deleteRecently, getRecentlyList } from '~/api/recently'
+import { getRecentlyList } from '~/api/recently'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import {
+  useCollectionInfiniteQuery,
+  useEntityList,
+} from '~/data/resource/hooks'
+import { recentlies } from '~/data/resources/recently'
+import {
+  applyRecentlyEnrichment,
+  removeRecently,
+} from '~/data/resources/recently.mutations'
 import { useI18n } from '~/i18n'
 import type { EnrichmentResult } from '~/models/enrichment'
 import type { RecentlyModel } from '~/models/recently'
@@ -40,28 +44,28 @@ export function RecentlyRouteViewContent() {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
-  const recentlyQuery = useInfiniteQuery<
+  const recentlyQuery = useCollectionInfiniteQuery<
+    RecentlyModel,
     RecentlyModel[],
-    Error,
-    InfiniteData<RecentlyModel[], null | string>,
-    typeof recentlyListQueryKey,
     null | string
-  >({
-    getNextPageParam: (lastPage) =>
-      lastPage.length >= RECENTLY_PAGE_SIZE
-        ? (lastPage.at(-1)?.id ?? null)
-        : null,
+  >(recentlies, {
+    getNextPageParam: (lastResult) =>
+      lastResult.length >= RECENTLY_PAGE_SIZE
+        ? (lastResult.at(-1)?.id ?? undefined)
+        : undefined,
     initialPageParam: null as null | string,
-    queryFn: ({ pageParam }) =>
+    queryFn: (pageParam) =>
       getRecentlyList({
         before: pageParam ?? undefined,
         size: RECENTLY_PAGE_SIZE,
       }),
     queryKey: recentlyListQueryKey,
+    toItems: (result) => result,
   })
+  const recentlyList = useEntityList(recentlies, recentlyListQueryKey)
 
   const deleteMutation = useMutation({
-    mutationFn: deleteRecently,
+    mutationFn: removeRecently,
     onSuccess: async () => {
       toast.success(t('recently.deleteSuccess'))
       await queryClient.invalidateQueries({ queryKey: recentlyQueryKey })
@@ -90,34 +94,10 @@ export function RecentlyRouteViewContent() {
     url: string,
     enrichment: EnrichmentResult,
   ) => {
-    queryClient.setQueryData<InfiniteData<RecentlyModel[], null | string>>(
-      recentlyListQueryKey,
-      (current) =>
-        current
-          ? {
-              ...current,
-              pages: current.pages.map((page) =>
-                page.map((item) =>
-                  item.id === itemId
-                    ? {
-                        ...item,
-                        enrichments: {
-                          ...item.enrichments,
-                          [url]: enrichment,
-                        },
-                      }
-                    : item,
-                ),
-              ),
-            }
-          : current,
-    )
+    applyRecentlyEnrichment(itemId, url, enrichment)
   }
 
-  const items = useMemo(
-    () => recentlyQuery.data?.pages.flat() ?? [],
-    [recentlyQuery.data],
-  )
+  const items = recentlyList.items
   const hasNextPage = Boolean(recentlyQuery.hasNextPage)
 
   useEffect(() => {

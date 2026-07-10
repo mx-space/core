@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, createElement, useEffect } from 'react'
 import type { Root } from 'react-dom/client'
 import { createRoot } from 'react-dom/client'
@@ -6,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Collection } from './collection'
 import { defineCollection } from './collection'
 import type { EntityListResult } from './hooks'
-import { useEntity, useEntityList } from './hooks'
+import { useCollectionInfiniteQuery, useEntity, useEntityList } from './hooks'
 import { serializeListKey } from './key'
 import { hydrateList, readList } from './list-index'
 
@@ -143,6 +144,68 @@ describe('hydrateList / readList', () => {
     expect(
       readList(collection.store.getState(), collection, 'missing'),
     ).toBeUndefined()
+  })
+})
+
+describe('hydrateList append mode', () => {
+  it('dedupe-concats incoming ids onto the existing index, preserving order', () => {
+    const collection = makeCollection()
+
+    hydrateList(collection, 'feed', {
+      items: [
+        { id: '1', title: 'a' },
+        { id: '2', title: 'b' },
+      ],
+    })
+    hydrateList(
+      collection,
+      'feed',
+      {
+        items: [
+          { id: '2', title: 'b-updated' },
+          { id: '3', title: 'c' },
+        ],
+      },
+      { mode: 'append' },
+    )
+
+    const index = readList(collection.store.getState(), collection, 'feed')
+    expect(index?.ids).toEqual(['1', '2', '3'])
+    expect(collection.get('2')).toEqual({ id: '2', title: 'b-updated' })
+  })
+
+  it('behaves like a replace when there is no existing index yet', () => {
+    const collection = makeCollection()
+
+    hydrateList(
+      collection,
+      'feed',
+      { items: [{ id: '1', title: 'a' }] },
+      { mode: 'append' },
+    )
+
+    const index = readList(collection.store.getState(), collection, 'feed')
+    expect(index?.ids).toEqual(['1'])
+  })
+
+  it('leaves replace mode (default and explicit) unchanged', () => {
+    const collection = makeCollection()
+
+    hydrateList(collection, 'feed', {
+      items: [
+        { id: '1', title: 'a' },
+        { id: '2', title: 'b' },
+      ],
+    })
+    hydrateList(
+      collection,
+      'feed',
+      { items: [{ id: '3', title: 'c' }] },
+      { mode: 'replace' },
+    )
+
+    const index = readList(collection.store.getState(), collection, 'feed')
+    expect(index?.ids).toEqual(['3'])
   })
 })
 
@@ -304,5 +367,66 @@ describe('useEntity reference stability', () => {
       collection.upsert({ id: 'irrelevant' })
     })
     expect(harness.value).toBeUndefined()
+  })
+})
+
+describe('useCollectionInfiniteQuery', () => {
+  it('replaces the list index on the first page and appends on later pages', async () => {
+    const collection = makeCollection()
+    const queryClient = new QueryClient()
+    const queryKey = ['feed'] as const
+    const firstPage: TestEntity[] = [{ id: '1' }, { id: '2' }]
+    const secondPage: TestEntity[] = [{ id: '2' }, { id: '3' }]
+
+    const box: { fetchNextPage: (() => Promise<unknown>) | undefined } = {
+      fetchNextPage: undefined,
+    }
+
+    function Probe() {
+      const query = useCollectionInfiniteQuery(collection, {
+        queryKey,
+        initialPageParam: null as null | string,
+        queryFn: (pageParam) =>
+          Promise.resolve(pageParam === null ? firstPage : secondPage),
+        getNextPageParam: (_lastResult, pageParam) =>
+          pageParam === null ? '2' : undefined,
+        toItems: (result) => result,
+      })
+      useEffect(() => {
+        box.fetchNextPage = () => query.fetchNextPage()
+      })
+      return null
+    }
+
+    const container = document.createElement('div')
+    document.body.append(container)
+    const root: Root = createRoot(container)
+
+    await act(async () => {
+      root.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(Probe),
+        ),
+      )
+      await Promise.resolve()
+    })
+
+    const listKey = serializeListKey(queryKey)
+    expect(
+      readList(collection.store.getState(), collection, listKey)?.ids,
+    ).toEqual(['1', '2'])
+
+    await act(async () => {
+      await box.fetchNextPage?.()
+    })
+
+    expect(
+      readList(collection.store.getState(), collection, listKey)?.ids,
+    ).toEqual(['1', '2', '3'])
+
+    act(() => root.unmount())
+    container.remove()
   })
 })

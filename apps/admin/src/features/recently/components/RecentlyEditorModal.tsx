@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { resolveEnrichment } from '~/api/enrichment'
-import { createRecently, updateRecently } from '~/api/recently'
+import { saveRecently } from '~/data/resources/recently.mutations'
 import { useI18n } from '~/i18n'
 import type { RecentlyModel } from '~/models/recently'
 import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
@@ -82,8 +82,12 @@ function RecentlyEditorModal(props: RecentlyEditorModalProps) {
   const mutation = useMutation({
     mutationFn: async () => {
       const data = { content: content.trim() }
-      if (props.item?.id) return updateRecently(props.item.id, data)
-      return createRecently(data)
+      return saveRecently(
+        props.item?.id
+          ? { id: props.item.id, kind: 'edit' }
+          : { kind: 'create' },
+        data,
+      )
     },
     onSuccess: () => {
       toast.success(t('recently.editor.saveSuccess'))

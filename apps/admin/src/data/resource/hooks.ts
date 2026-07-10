@@ -1,5 +1,10 @@
-import type { QueryKey, UseQueryResult } from '@tanstack/react-query'
-import { useQuery } from '@tanstack/react-query'
+import type {
+  InfiniteData,
+  QueryKey,
+  UseInfiniteQueryResult,
+  UseQueryResult,
+} from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import {
   useCallback,
   useEffect,
@@ -196,6 +201,67 @@ export function useCollectionListQuery<T extends object, TResult>(
       hydrateList(collection, listKey, page)
       return { hydratedAt: Date.now() }
     },
+  })
+}
+
+export interface CollectionInfiniteReceipt<TPageParam> {
+  hydratedAt: number
+  nextPageParam: TPageParam | undefined
+}
+
+export function useCollectionInfiniteQuery<
+  T extends object,
+  TResult,
+  TPageParam,
+>(
+  collection: Collection<T>,
+  options: {
+    queryKey: QueryKey
+    queryFn: (pageParam: TPageParam) => Promise<TResult>
+    getNextPageParam: (
+      lastResult: TResult,
+      pageParam: TPageParam,
+    ) => TPageParam | undefined
+    initialPageParam: TPageParam
+    toItems: (result: TResult) => T[]
+    enabled?: boolean
+  },
+): UseInfiniteQueryResult<
+  InfiniteData<CollectionInfiniteReceipt<TPageParam>, TPageParam>
+> {
+  const listKey = useMemo(
+    () => serializeListKey(options.queryKey),
+    [options.queryKey],
+  )
+
+  return useInfiniteQuery<
+    CollectionInfiniteReceipt<TPageParam>,
+    Error,
+    InfiniteData<CollectionInfiniteReceipt<TPageParam>, TPageParam>,
+    QueryKey,
+    TPageParam
+  >({
+    queryKey: options.queryKey,
+    enabled: options.enabled,
+    initialPageParam: options.initialPageParam,
+    queryFn: async (context: {
+      pageParam?: unknown
+    }): Promise<CollectionInfiniteReceipt<TPageParam>> => {
+      const pageParam = context.pageParam as TPageParam
+      const result = await options.queryFn(pageParam)
+      const items = options.toItems(result)
+      hydrateList(
+        collection,
+        listKey,
+        { items },
+        { mode: pageParam ? 'append' : 'replace' },
+      )
+      return {
+        hydratedAt: Date.now(),
+        nextPageParam: options.getNextPageParam(result, pageParam),
+      }
+    },
+    getNextPageParam: (lastPage) => lastPage.nextPageParam,
   })
 }
 
