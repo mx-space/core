@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { createLink, updateLink } from '~/api/links'
+import { saveLink } from '~/data/resources/link.mutations'
 import { useI18n } from '~/i18n'
 import type { LinkModel } from '~/models/link'
 import { LinkState, LinkStateNameKeys, LinkType } from '~/models/link'
@@ -41,8 +41,11 @@ function FriendEditorModal(props: FriendEditorModalProps) {
         url: url.trim(),
       }
 
-      if (props.link?.id) return updateLink(props.link.id, data)
-      return createLink(data)
+      const mode = props.link?.id
+        ? { id: props.link.id, kind: 'edit' as const }
+        : { kind: 'create' as const }
+
+      return saveLink(mode, data)
     },
     onSuccess: () => {
       toast.success(t('friends.toast.saved'))

@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import type { GithubRepo } from '~/api/github-repo'
-import { createProject, updateProject } from '~/api/projects'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { saveProject } from '~/data/resources/project.mutations'
 import { useI18n } from '~/i18n'
 import type { ProjectModel } from '~/models/project'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
@@ -42,10 +42,11 @@ export function ProjectFormPanel(props: {
   const mutation = useMutation({
     mutationFn: async () => {
       const payload = formToPayload(form)
+      const mode = props.project?.id
+        ? { id: props.project.id, kind: 'edit' as const }
+        : { kind: 'create' as const }
 
-      if (props.project?.id) return updateProject(props.project.id, payload)
-
-      return createProject(payload)
+      return saveProject(mode, payload)
     },
     onSuccess: async (project) => {
       toast.success(

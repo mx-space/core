@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
 import { getLinks, getLinkStateCount } from '~/api/links'
+import { useCollectionListQuery, useEntityList } from '~/data/resource/hooks'
+import { links } from '~/data/resources/link'
 import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
 import type { LinkState } from '~/models/link'
 import { adminQueryKeys } from '~/query/keys'
@@ -33,20 +35,27 @@ export function useFriendsList() {
 
   const [state, setState] = useUrlListState(urlStateOptions)
 
-  const linksQuery = useQuery({
-    placeholderData: (previous) => previous,
+  const linksListKey = adminQueryKeys.links.list({
+    page: state.page,
+    size: friendsPageSize,
+    state: state.state,
+  })
+
+  const linksQuery = useCollectionListQuery(links, {
     queryFn: () =>
       getLinks({
         page: state.page,
         size: friendsPageSize,
         state: state.state,
       }),
-    queryKey: adminQueryKeys.links.list({
-      page: state.page,
-      size: friendsPageSize,
-      state: state.state,
+    queryKey: linksListKey,
+    toPage: (result) => ({
+      items: result.data,
+      pagination: result.pagination,
     }),
   })
+
+  const linksList = useEntityList(links, linksListKey, { keepPrevious: true })
 
   const countsQuery = useQuery({
     queryFn: getLinkStateCount,
@@ -56,10 +65,10 @@ export function useFriendsList() {
   return {
     counts: countsQuery.data,
     countsQuery,
-    links: linksQuery.data?.data ?? [],
+    links: linksList.items,
     linksQuery,
     page: state.page,
-    pagination: linksQuery.data?.pagination,
+    pagination: linksList.pagination,
     setPage: (page: number | ((current: number) => number)) => {
       setState((current) => ({
         ...current,

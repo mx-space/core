@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
 import { getProjects } from '~/api/projects'
+import { useCollectionListQuery, useEntityList } from '~/data/resource/hooks'
+import { projects } from '~/data/resources/project'
 import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -29,19 +30,28 @@ export function useProjectsList() {
 
   const [state, setState] = useUrlListState(urlStateOptions)
 
-  const projectsQuery = useQuery({
-    placeholderData: (previous) => previous,
+  const projectsListKey = adminQueryKeys.projects.list({
+    page: state.page,
+    size: projectsPageSize,
+  })
+
+  const projectsQuery = useCollectionListQuery(projects, {
     queryFn: () => getProjects({ page: state.page, size: projectsPageSize }),
-    queryKey: adminQueryKeys.projects.list({
-      page: state.page,
-      size: projectsPageSize,
+    queryKey: projectsListKey,
+    toPage: (result) => ({
+      items: result.data,
+      pagination: result.pagination,
     }),
+  })
+
+  const projectsList = useEntityList(projects, projectsListKey, {
+    keepPrevious: true,
   })
 
   return {
     page: state.page,
-    pagination: projectsQuery.data?.pagination,
-    projects: projectsQuery.data?.data ?? [],
+    pagination: projectsList.pagination,
+    projects: projectsList.items,
     projectsQuery,
     setPage: (page: number) => setState({ page }),
   }

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { toast } from 'sonner'
 
-import { deleteProject } from '~/api/projects'
+import { removeProject } from '~/data/resources/project.mutations'
 import { useI18n } from '~/i18n'
 
 import { projectsQueryKey } from '../constants'
@@ -20,7 +20,7 @@ export function useProjectMutations(options: UseProjectMutationsOptions = {}) {
   }, [queryClient])
 
   const deleteMutation = useMutation({
-    mutationFn: deleteProject,
+    mutationFn: removeProject,
     onSuccess: async () => {
       toast.success(t('projects.detail.deleteSuccess'))
       await options.onDeleted?.()
