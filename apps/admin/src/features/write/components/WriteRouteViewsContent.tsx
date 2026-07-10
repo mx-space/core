@@ -49,7 +49,8 @@ import {
   updateDraft,
 } from '~/api/drafts'
 import { uploadFile, uploadFileWithProgress } from '~/api/files'
-import { createNote, getNoteById, updateNote } from '~/api/notes'
+import type { CreateNoteData } from '~/api/notes'
+import { getNoteById } from '~/api/notes'
 import { createPage, getPageById, updatePage } from '~/api/pages'
 import type { CreatePostData } from '~/api/posts'
 import { getPostById, getPosts } from '~/api/posts'
@@ -68,8 +69,11 @@ import {
 } from '~/data/resource/hooks'
 import type { CategoryEntity } from '~/data/resources/category'
 import { categories as categoriesCollection } from '~/data/resources/category'
+import { notes as notesCollection } from '~/data/resources/note'
+import { saveNote } from '~/data/resources/note.mutations'
 import { posts as postsCollection } from '~/data/resources/post'
 import { savePost } from '~/data/resources/post.mutations'
+import { topics as topicsCollection } from '~/data/resources/topic'
 import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
@@ -187,7 +191,6 @@ const emptyState: WriteFormState = {
   weather: '',
 }
 
-const emptyTopics: TopicModel[] = []
 const PREFERRED_CONTENT_FORMAT_STORAGE_KEY = 'preferred-content-format'
 const RichEditorWithAgent = lazy(() =>
   import('~/vendor/rich-editor/components/RichEditorWithAgent').then(
@@ -402,11 +405,19 @@ function WritePage(props: { kind: WriteKind }) {
     categoriesCollection,
     adminQueryKeys.categories.list(),
   )
-  const topicsQuery = useQuery({
+  useCollectionListQuery(topicsCollection, {
     enabled: props.kind === 'note',
     queryFn: () => getTopics({ page: 1, size: 100 }),
     queryKey: adminQueryKeys.topics.list({ page: 1, size: 100 }),
+    toPage: (result) => ({
+      items: result.data,
+      pagination: result.pagination,
+    }),
   })
+  const topicsList = useEntityList(
+    topicsCollection,
+    adminQueryKeys.topics.list({ page: 1, size: 100 }),
+  )
   const tagsQuery = useQuery({
     enabled: props.kind === 'post',
     queryFn: getTags,
@@ -440,21 +451,33 @@ function WritePage(props: { kind: WriteKind }) {
     postsCollection,
     props.kind === 'post' && isEditing ? id : undefined,
   )
+  const noteDetailQuery = useCollectionDetailQuery(notesCollection, {
+    enabled: isEditing && props.kind === 'note',
+    queryFn: () => getNoteById(id, { single: true }),
+    queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
+  })
+  const noteEntity = useEntity(
+    notesCollection,
+    props.kind === 'note' && isEditing ? id : undefined,
+  )
   const nonPostDetailQuery = useQuery<WriteModel>({
-    enabled: isEditing && props.kind !== 'post',
+    enabled: isEditing && props.kind === 'page',
     queryFn: () => getWriteDetail(props.kind, id),
     queryKey: adminQueryKeys.write.detail({ id, kind: props.kind }),
   })
+  const storeEntity = props.kind === 'note' ? noteEntity : postEntity
+  const storeDetailQuery =
+    props.kind === 'note' ? noteDetailQuery : postDetailQuery
   const detailModel: WriteModel | undefined =
-    props.kind === 'post' ? postEntity : nonPostDetailQuery.data
+    props.kind === 'page' ? nonPostDetailQuery.data : storeEntity
   const isDetailLoaded =
-    props.kind === 'post'
-      ? postDetailQuery.isSuccess
-      : nonPostDetailQuery.isSuccess
+    props.kind === 'page'
+      ? nonPostDetailQuery.isSuccess
+      : storeDetailQuery.isSuccess
   const detailLoading =
-    props.kind === 'post'
-      ? postDetailQuery.isLoading
-      : nonPostDetailQuery.isLoading
+    props.kind === 'page'
+      ? nonPostDetailQuery.isLoading
+      : storeDetailQuery.isLoading
   const refDraftQuery = useQuery({
     enabled: isEditing,
     queryFn: () => getDraftByRef(draftRefType, id),
@@ -473,7 +496,7 @@ function WritePage(props: { kind: WriteKind }) {
 
   const categories = categoriesList.items
   const tags = tagsQuery.data ?? []
-  const topics = topicsQuery.data?.data ?? emptyTopics
+  const topics = topicsList.items
   const relatedPosts = relatedPostsList.items
   const firstCategoryId = categories[0]?.id ?? ''
   const activeCategory =
@@ -569,11 +592,9 @@ function WritePage(props: { kind: WriteKind }) {
 
     if (routeDraftId) return
 
-    if (props.kind === 'post') {
-      const seedKey = `post:${id}`
-      if (formSeededKeyRef.current === seedKey) return
-      formSeededKeyRef.current = seedKey
-    }
+    const seedKey = `${props.kind}:${id}`
+    if (formSeededKeyRef.current === seedKey) return
+    formSeededKeyRef.current = seedKey
 
     setState(fromModel(props.kind, detailModel))
   }, [
@@ -3255,6 +3276,38 @@ function buildPostWriteData(
   }
 }
 
+function buildNoteWriteData(
+  state: WriteFormState,
+  draftId?: string,
+): CreateNoteData {
+  const projected = projectWriteState(state)
+  return {
+    bookmark: projected.bookmark,
+    content:
+      projected.contentFormat === 'lexical' ? projected.content : undefined,
+    contentFormat: projected.contentFormat,
+    coordinates: parseCoordinates(projected),
+    draftId,
+    images:
+      projected.contentFormat === 'lexical'
+        ? undefined
+        : buildWriteImages(projected),
+    isPublished: projected.isPublished,
+    location: projected.location || null,
+    meta: projected.meta,
+    mood: projected.mood || undefined,
+    password: projected.passwordProtected
+      ? projected.password.trim() || undefined
+      : null,
+    publicAt: normalizeFutureDatetimeIso(projected.publicAt),
+    slug: projected.slug || undefined,
+    text: projected.text,
+    title: resolveWriteTitle('note', projected),
+    topicId: projected.topicId || null,
+    weather: projected.weather || undefined,
+  }
+}
+
 function saveWrite(
   kind: WriteKind,
   id: string,
@@ -3265,34 +3318,11 @@ function saveWrite(
     return savePost(id, buildPostWriteData(state, draftId))
   }
 
-  state = projectWriteState(state)
-
   if (kind === 'note') {
-    const data = {
-      bookmark: state.bookmark,
-      content: state.contentFormat === 'lexical' ? state.content : undefined,
-      contentFormat: state.contentFormat,
-      coordinates: parseCoordinates(state),
-      draftId,
-      images:
-        state.contentFormat === 'lexical' ? undefined : buildWriteImages(state),
-      isPublished: state.isPublished,
-      location: state.location || null,
-      meta: state.meta,
-      mood: state.mood || undefined,
-      password: state.passwordProtected
-        ? state.password.trim() || undefined
-        : null,
-      publicAt: normalizeFutureDatetimeIso(state.publicAt),
-      slug: state.slug || undefined,
-      text: state.text,
-      title: resolveWriteTitle(kind, state),
-      topicId: state.topicId || null,
-      weather: state.weather || undefined,
-    }
-
-    return id ? updateNote(id, data) : createNote(data)
+    return saveNote(id, buildNoteWriteData(state, draftId))
   }
+
+  state = projectWriteState(state)
 
   const data = {
     content: state.contentFormat === 'lexical' ? state.content : undefined,

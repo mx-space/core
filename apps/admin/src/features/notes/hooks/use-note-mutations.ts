@@ -1,7 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
-import { deleteNote, patchNote, patchNotePublish } from '~/api/notes'
+import {
+  patchNoteFields,
+  publishNote,
+  removeNote,
+  removeNotes,
+} from '~/data/resources/note.mutations'
 import { useI18n } from '~/i18n'
 
 import { notesQueryKey } from '../constants'
@@ -22,7 +27,7 @@ export function useNoteMutations(options: UseNoteMutationsOptions = {}) {
 
   const publishMutation = useMutation({
     mutationFn: (payload: { id: string; isPublished: boolean }) =>
-      patchNotePublish(payload.id, payload.isPublished),
+      publishNote(payload.id, payload.isPublished),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('notes.toast.updateFailed'))),
     onSuccess: invalidateNotes,
@@ -30,14 +35,14 @@ export function useNoteMutations(options: UseNoteMutationsOptions = {}) {
 
   const patchMutation = useMutation({
     mutationFn: (payload: { data: NoteMetadataUpdate; id: string }) =>
-      patchNote(payload.id, payload.data),
+      patchNoteFields(payload.id, payload.data),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('notes.toast.updateFailed'))),
     onSuccess: invalidateNotes,
   })
 
   const deleteMutation = useMutation({
-    mutationFn: deleteNote,
+    mutationFn: (id: string) => removeNote(id),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('notes.toast.deleteFailed'))),
     onSuccess: async () => {
@@ -47,18 +52,7 @@ export function useNoteMutations(options: UseNoteMutationsOptions = {}) {
   })
 
   const batchDeleteMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => deleteNote(id)))
-      const successfulIds = ids.filter(
-        (_, index) => results[index].status === 'fulfilled',
-      )
-
-      return {
-        failedCount: ids.length - successfulIds.length,
-        successfulIds,
-        successCount: successfulIds.length,
-      }
-    },
+    mutationFn: (ids: string[]) => removeNotes(ids),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('notes.toast.batchDeleteFailed'))),
     onSuccess: async ({ failedCount, successCount }) => {
