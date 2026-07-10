@@ -1,10 +1,10 @@
 import { FolderOpen, Hash } from 'lucide-react'
 
-import type { CategoryModel } from '~/models/category'
+import type { CategoryEntity } from '~/data/resources/category'
 import { cn } from '~/utils/cn'
 
 export function CategoryRow(props: {
-  category: CategoryModel
+  category: CategoryEntity
   onSelect: () => void
   selected: boolean
 }) {
@@ -33,7 +33,7 @@ export function CategoryRow(props: {
         </p>
       </div>
       <span className="text-xs tabular-nums text-fg-subtle">
-        {props.category.count}
+        {props.category.count ?? 0}
       </span>
     </button>
   )

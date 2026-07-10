@@ -3,8 +3,8 @@ import { useCallback, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import type { CategoryEntity } from '~/data/resources/category'
 import { useI18n } from '~/i18n'
-import type { CategoryModel } from '~/models/category'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
@@ -81,14 +81,14 @@ export function CategoriesRouteViewContent() {
     () => ({
       deleting: deleteMutation.isPending,
       onBack: closeDetail,
-      onDelete: (category: CategoryModel) => {
+      onDelete: (category: CategoryEntity) => {
         if (
           window.confirm(t('categories.confirmDelete', { name: category.name }))
         ) {
           deleteMutation.mutate(category.id)
         }
       },
-      onEdit: (category: CategoryModel) =>
+      onEdit: (category: CategoryEntity) =>
         void openForm({ category, kind: 'edit' }),
     }),
     [closeDetail, deleteMutation, openForm, t],

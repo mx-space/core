@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { Edit3, FolderOpen, Loader2, Trash2 } from 'lucide-react'
-import type { CategoryModel } from '~/models/category'
 
 import { getPosts } from '~/api/posts'
+import type { CategoryEntity } from '~/data/resources/category'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
@@ -14,11 +14,11 @@ import { EntitySummary } from './EntitySummary'
 import { PostListSection } from './PostListSection'
 
 export function CategoryDetail(props: {
-  category: CategoryModel
+  category: CategoryEntity
   deleting: boolean
   onBack: () => void
-  onDelete: (category: CategoryModel) => void
-  onEdit: (category: CategoryModel) => void
+  onDelete: (category: CategoryEntity) => void
+  onEdit: (category: CategoryEntity) => void
 }) {
   const { t } = useI18n()
   const postsQuery = useQuery({
@@ -64,7 +64,7 @@ export function CategoryDetail(props: {
       <Scroll className="min-h-0 flex-1" innerClassName="p-5">
         <EntitySummary
           countLabel={t('categories.detail.postCount', {
-            count: props.category.count,
+            count: props.category.count ?? 0,
           })}
           icon={<FolderOpen aria-hidden="true" className="size-6" />}
           meta={props.category.slug}
