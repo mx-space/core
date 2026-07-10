@@ -15,7 +15,6 @@ import { Drawer } from '~/ui/feedback/drawer'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 
-import type { LocalReply } from '../types/comments'
 import { useOptionalCommentsRouteContext } from './comments-route-context'
 import { DetailHeader } from './DetailHeader'
 import { MetaSidebar } from './MetaSidebar'
@@ -27,7 +26,7 @@ interface CommentDetailProps {
   comment: CommentModel
   onBack: () => void
   onDelete: (id: string) => void
-  onReply: (id: string, text: string) => Promise<unknown>
+  onReply: (id: string, text: string) => Promise<CommentModel>
   onStateChange: (id: string, state: CommentState) => void
   replyPending: boolean
   thread?: CommentThreadResponse
@@ -38,9 +37,11 @@ interface CommentDetailProps {
 
 export function CommentDetail(props: CommentDetailProps) {
   const { t } = useI18n()
-  const [localReplies, setLocalReplies] = useState<LocalReply[]>([])
+  const [pendingReplies, setPendingReplies] = useState<CommentModel[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const composerRef = useRef<ReplyComposerHandle | null>(null)
+  const activeCommentIdRef = useRef(props.comment.id)
+  activeCommentIdRef.current = props.comment.id
   const ownerQuery = useQuery({
     queryFn: getOwner,
     queryKey: adminQueryKeys.comments.owner(),
@@ -68,7 +69,7 @@ export function CommentDetail(props: CommentDetailProps) {
   }, [props.thread?.thread, props.comment.author])
 
   useEffect(() => {
-    setLocalReplies([])
+    setPendingReplies([])
     setDrawerOpen(false)
   }, [props.comment.id])
 
@@ -81,40 +82,23 @@ export function CommentDetail(props: CommentDetailProps) {
   }, [routeCtx])
 
   const handleReply = async (text: string) => {
-    await props.onReply(props.comment.id, text)
-    setLocalReplies((current) => [
-      ...current,
-      {
-        createdAt: new Date().toISOString(),
-        id: `${Date.now()}`,
-        text,
-      },
-    ])
+    const commentId = props.comment.id
+    const reply = await props.onReply(commentId, text)
+    if (activeCommentIdRef.current !== commentId) return
+
+    setPendingReplies((current) =>
+      current.some((entry) => entry.id === reply.id)
+        ? current
+        : [...current, reply],
+    )
   }
 
-  const pendingMessages = useMemo<CommentModel[]>(
-    () =>
-      localReplies.map((reply) => ({
-        id: `local-${reply.id}`,
-        createdAt: reply.createdAt,
-        refType: props.comment.refType,
-        state: CommentState.Read,
-        author: ownerName,
-        text: reply.text,
-        avatar: ownerQuery.data?.avatar || ownerQuery.data?.image || undefined,
-        parentCommentId: props.comment.id,
-        rootCommentId: props.comment.rootCommentId ?? props.comment.id,
-      })),
-    [
-      localReplies,
-      ownerName,
-      ownerQuery.data?.avatar,
-      ownerQuery.data?.image,
-      props.comment.id,
-      props.comment.refType,
-      props.comment.rootCommentId,
-    ],
-  )
+  const pendingMessages = useMemo(() => {
+    const persistedIds = new Set(
+      props.thread?.thread.map((entry) => entry.id) ?? [],
+    )
+    return pendingReplies.filter((reply) => !persistedIds.has(reply.id))
+  }, [pendingReplies, props.thread?.thread])
 
   const sidebarContent = (
     <MetaSidebar

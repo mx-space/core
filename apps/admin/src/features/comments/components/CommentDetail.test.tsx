@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, createElement } from 'react'
+import { act, createElement, useState } from 'react'
 import type { Root } from 'react-dom/client'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router'
@@ -14,6 +14,14 @@ import type {
 import { CommentState } from '~/models/comment'
 
 import { CommentDetail } from './CommentDetail'
+
+vi.mock('~/api/options', () => ({
+  getOwner: vi.fn(() => new Promise(() => {})),
+}))
+
+vi.mock('~/ui/primitives/markdown-render', () => ({
+  MarkdownRender: ({ text }: { text: string }) => text,
+}))
 
 interface Harness {
   container: HTMLDivElement
@@ -130,7 +138,7 @@ function renderDetail(
               comment: current,
               onBack: vi.fn(),
               onDelete: vi.fn(),
-              onReply: vi.fn(async () => undefined),
+              onReply: vi.fn(async () => current),
               onStateChange: vi.fn(),
               replyPending: false,
               thread: makeThread(makeSiblings(5)),
@@ -180,5 +188,206 @@ describe('CommentDetail', () => {
   it('renders the threat reason from activity', () => {
     renderDetail(harness)
     expect(harness.container.textContent ?? '').toContain('30d clean')
+  })
+
+  it('renders a reply once when the thread refreshes before the reply mutation resolves', async () => {
+    const persistedReply: CommentModel = {
+      id: 'reply-1',
+      createdAt: '2026-01-03T00:00:00Z',
+      refType: 'post',
+      state: CommentState.Read,
+      author: 'Owner',
+      parentCommentId: current.id,
+      rootCommentId: parent.id,
+      text: 'a reply that must appear once',
+    }
+
+    function ReplyReconciliationHarness() {
+      const [thread, setThread] = useState(makeThread([]))
+
+      return createElement(CommentDetail, {
+        activity,
+        comment: current,
+        onBack: vi.fn(),
+        onDelete: vi.fn(),
+        onReply: async () => {
+          setThread((previous) => ({
+            ...previous,
+            thread: [...previous.thread, persistedReply],
+          }))
+          return persistedReply
+        },
+        onStateChange: vi.fn(),
+        replyPending: false,
+        thread,
+      })
+    }
+
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+    })
+    act(() => {
+      harness.root.render(
+        createElement(
+          QueryClientProvider,
+          { client: qc },
+          createElement(
+            MemoryRouter,
+            null,
+            createElement(
+              I18nProvider,
+              null,
+              createElement(ReplyReconciliationHarness),
+            ),
+          ),
+        ),
+      )
+    })
+
+    const textarea = harness.container.querySelector('textarea')
+    if (!textarea) throw new Error('reply textarea missing')
+    const setter = Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype,
+      'value',
+    )?.set
+    act(() => {
+      setter?.call(textarea, persistedReply.text)
+      textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+
+    const form = textarea.closest('form')
+    if (!form) throw new Error('reply form missing')
+    await act(async () => {
+      form.dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true }),
+      )
+      await Promise.resolve()
+    })
+
+    const matchingMessages = Array.from(
+      harness.container.querySelectorAll(
+        '[data-testid="comments-thread-message"]',
+      ),
+    ).filter((message) => message.textContent?.includes(persistedReply.text))
+    expect(matchingMessages).toHaveLength(1)
+  })
+
+  it('does not render a late reply after navigating to another comment', async () => {
+    const nextComment: CommentModel = {
+      id: 'next-comment',
+      createdAt: '2026-01-04T00:00:00Z',
+      refType: 'post',
+      state: CommentState.Read,
+      author: 'Carol',
+      rootCommentId: null,
+      text: 'the next thread',
+    }
+    const nextThread: CommentThreadResponse = {
+      currentCommentId: nextComment.id,
+      rootCommentId: nextComment.id,
+      root: nextComment,
+      thread: [nextComment],
+      current: nextComment,
+      ref: null,
+    }
+    const lateReply: CommentModel = {
+      id: 'late-reply',
+      createdAt: '2026-01-03T00:00:00Z',
+      refType: 'post',
+      state: CommentState.Read,
+      author: 'Owner',
+      parentCommentId: current.id,
+      rootCommentId: parent.id,
+      text: 'a late reply from the first thread',
+    }
+    let resolveReply!: (reply: CommentModel) => void
+    const replyPromise = new Promise<CommentModel>((resolve) => {
+      resolveReply = resolve
+    })
+
+    function ReplyNavigationHarness() {
+      const [showNextComment, setShowNextComment] = useState(false)
+      const comment = showNextComment ? nextComment : current
+      const thread = showNextComment ? nextThread : makeThread([])
+
+      return createElement(
+        'div',
+        null,
+        createElement(
+          'button',
+          {
+            'data-testid': 'switch-comment',
+            onClick: () => setShowNextComment(true),
+            type: 'button',
+          },
+          'Switch comment',
+        ),
+        createElement(CommentDetail, {
+          activity,
+          comment,
+          onBack: vi.fn(),
+          onDelete: vi.fn(),
+          onReply: () => replyPromise,
+          onStateChange: vi.fn(),
+          replyPending: false,
+          thread,
+        }),
+      )
+    }
+
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+    })
+    act(() => {
+      harness.root.render(
+        createElement(
+          QueryClientProvider,
+          { client: qc },
+          createElement(
+            MemoryRouter,
+            null,
+            createElement(
+              I18nProvider,
+              null,
+              createElement(ReplyNavigationHarness),
+            ),
+          ),
+        ),
+      )
+    })
+
+    const textarea = harness.container.querySelector('textarea')
+    if (!textarea) throw new Error('reply textarea missing')
+    const setter = Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype,
+      'value',
+    )?.set
+    act(() => {
+      setter?.call(textarea, lateReply.text)
+      textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+
+    const form = textarea.closest('form')
+    if (!form) throw new Error('reply form missing')
+    await act(async () => {
+      form.dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true }),
+      )
+      await Promise.resolve()
+    })
+
+    const switchComment = harness.container.querySelector(
+      '[data-testid="switch-comment"]',
+    )
+    if (!switchComment) throw new Error('switch button missing')
+    act(() => {
+      switchComment.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    await act(async () => {
+      resolveReply(lateReply)
+      await Promise.resolve()
+    })
+
+    expect(harness.container.textContent).not.toContain(lateReply.text)
   })
 })

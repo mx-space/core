@@ -223,7 +223,7 @@ export function ReplyComposer(props: ReplyComposerProps) {
       <TextArea
         controlClassName={cn(
           'min-h-16 resize-none border-0 bg-transparent px-0 py-1 shadow-none',
-          'placeholder:text-fg-subtle/80 focus:border-transparent focus:ring-0',
+          'placeholder:text-fg-subtle/80 focus:border-transparent focus:ring-0 focus-visible:ring-0',
           'dark:border-0',
         )}
         onChange={handleChange}

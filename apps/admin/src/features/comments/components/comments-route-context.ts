@@ -8,7 +8,7 @@ export interface CommentsRouteContextValue {
   replyPending: boolean
   onBack: () => void
   onDelete: (comment: CommentModel) => void
-  onReply: (id: string, text: string) => Promise<unknown>
+  onReply: (id: string, text: string) => Promise<CommentModel>
   onStateChange: (id: string, state: CommentState) => void
   /**
    * Register a callback that focuses the reply composer. The list route uses
