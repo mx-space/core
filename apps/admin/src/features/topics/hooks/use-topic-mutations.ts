@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { toast } from 'sonner'
 
-import { deleteTopic } from '~/api/topics'
+import { removeTopic, removeTopics } from '~/data/resources/topic.mutations'
 import { useI18n } from '~/i18n'
 
 import { topicsQueryKey } from '../constants'
@@ -21,7 +21,7 @@ export function useTopicMutations(options: UseTopicMutationsOptions = {}) {
   }, [queryClient])
 
   const deleteMutation = useMutation({
-    mutationFn: deleteTopic,
+    mutationFn: removeTopic,
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('topics.list.deleteFailed'))),
     onSuccess: async () => {
@@ -32,13 +32,7 @@ export function useTopicMutations(options: UseTopicMutationsOptions = {}) {
   })
 
   const batchDeleteMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => deleteTopic(id)))
-      return {
-        failedCount: results.filter((r) => r.status === 'rejected').length,
-        successCount: results.filter((r) => r.status === 'fulfilled').length,
-      }
-    },
+    mutationFn: (ids: string[]) => removeTopics(ids),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('topics.list.deleteFailed'))),
     onSuccess: async ({ failedCount, successCount }) => {

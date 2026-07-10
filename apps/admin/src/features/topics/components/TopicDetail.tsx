@@ -6,6 +6,8 @@ import { toast } from 'sonner'
 import { patchNote } from '~/api/notes'
 import { getNotesByTopic, getTopic } from '~/api/topics'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { useCollectionDetailQuery, useEntity } from '~/data/resource/hooks'
+import { topics } from '~/data/resources/topic'
 import { useI18n } from '~/i18n'
 import type { TopicModel } from '~/models/topic'
 import { adminQueryKeys } from '~/query/keys'
@@ -33,7 +35,8 @@ export function TopicDetail(props: {
   const queryClient = useQueryClient()
   const [notesPage, setNotesPage] = useState(1)
 
-  const topicQuery = useQuery({
+  const topic = useEntity(topics, props.topicId)
+  const topicQuery = useCollectionDetailQuery(topics, {
     queryFn: () => getTopic(props.topicId),
     queryKey: adminQueryKeys.topics.detail(props.topicId),
   })
@@ -55,7 +58,6 @@ export function TopicDetail(props: {
     setNotesPage(1)
   }, [props.topicId])
 
-  const topic = topicQuery.data
   const notes = notesQuery.data?.data ?? []
   const notesPagination = notesQuery.data?.pagination
 
