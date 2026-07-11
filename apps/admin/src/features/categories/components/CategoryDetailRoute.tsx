@@ -1,10 +1,15 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router'
 
 import { getCategories, getCategory, getTags } from '~/api/categories'
-import { findInListCache } from '~/api/list-cache'
+import {
+  useCollectionDetailQuery,
+  useCollectionListQuery,
+  useEntity,
+} from '~/data/resource/hooks'
+import { categories } from '~/data/resources/category'
 import { useDocumentTitle } from '~/hooks/use-document-title'
-import type { CategoryModel, TagModel } from '~/models/category'
+import type { TagModel } from '~/models/category'
 import { adminQueryKeys } from '~/query/keys'
 
 import { useCategoriesRouteContext } from './categories-route-context'
@@ -32,42 +37,34 @@ function parseId(raw: string | undefined): ParsedTarget | null {
 
 export function CategoryDetailRoute() {
   const { id } = useParams<{ id: string }>()
-  const queryClient = useQueryClient()
   const ctx = useCategoriesRouteContext()
 
   const parsed = parseId(id)
 
-  const initialCategory =
-    parsed?.kind === 'category'
-      ? findInListCache<CategoryModel>(
-          queryClient,
-          CATEGORY_LIST_KEY,
-          parsed.value,
-        )
-      : undefined
+  const category = useEntity(
+    categories,
+    parsed?.kind === 'category' ? parsed.value : undefined,
+  )
 
-  const categoryQuery = useQuery({
+  useCollectionDetailQuery(categories, {
     enabled: parsed?.kind === 'category',
-    initialData: initialCategory,
     queryFn: () => getCategory(parsed!.value),
     queryKey: parsed?.value
       ? adminQueryKeys.categories.detail(parsed.value)
       : adminQueryKeys.categories.root,
-    staleTime: initialCategory ? 30_000 : 0,
   })
 
-  // Tag detail isn't fetched by id; reach into the list cache to find it.
   const tagsListCacheQuery = useQuery({
     enabled: parsed?.kind === 'tag',
     queryFn: getTags,
     queryKey: TAGS_LIST_KEY,
   })
 
-  // Keep the categories list warm in case the user opened a deep link directly.
-  useQuery({
-    enabled: parsed?.kind === 'category' && !initialCategory,
+  useCollectionListQuery(categories, {
+    enabled: parsed?.kind === 'category' && !category,
     queryFn: () => getCategories({ type: 'Category' }),
     queryKey: CATEGORY_LIST_KEY,
+    toPage: (result) => ({ items: result }),
   })
 
   const dynamicTitle =
@@ -75,7 +72,7 @@ export function CategoryDetailRoute() {
       ? (tagsListCacheQuery.data?.find(
           (entry: TagModel) => entry.name === parsed.value,
         )?.name ?? parsed.value)
-      : (categoryQuery.data?.name ?? undefined)
+      : (category?.name ?? undefined)
   useDocumentTitle(dynamicTitle)
 
   if (!parsed) return <DetailEmpty />
@@ -89,7 +86,6 @@ export function CategoryDetailRoute() {
     return <TagDetail onBack={ctx.onBack} tag={tag} />
   }
 
-  const category = categoryQuery.data
   if (!category) return <DetailEmpty />
 
   return (

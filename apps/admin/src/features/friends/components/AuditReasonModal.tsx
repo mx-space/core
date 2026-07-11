@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { auditLinkWithReason } from '~/api/links'
+import { auditWithReason } from '~/data/resources/link.mutations'
 import { useI18n } from '~/i18n'
 import type { LinkModel } from '~/models/link'
 import { LinkState, LinkStateNameKeys } from '~/models/link'
@@ -23,7 +23,7 @@ function AuditReasonModal(props: AuditReasonModalProps) {
   const [reason, setReason] = useState('')
 
   const mutation = useMutation({
-    mutationFn: () => auditLinkWithReason(props.link.id, { reason, state }),
+    mutationFn: () => auditWithReason(props.link.id, reason, state),
     onSuccess: () => {
       toast.success(t('friends.toast.auditSent'))
       modal.close(true)

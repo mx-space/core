@@ -1,13 +1,11 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'react-router'
 
-import { findInListCache } from '~/api/list-cache'
 import { getProject } from '~/api/projects'
+import { useCollectionDetailQuery, useEntity } from '~/data/resource/hooks'
+import { projects } from '~/data/resources/project'
 import { useDocumentTitle } from '~/hooks/use-document-title'
-import type { ProjectModel } from '~/models/project'
 import { adminQueryKeys } from '~/query/keys'
 
-import { projectsQueryKey } from '../constants'
 import { ProjectDetailPanel } from './ProjectDetailPanel'
 import { ProjectFormPanel } from './ProjectFormPanel'
 import {
@@ -16,30 +14,24 @@ import {
 } from './ProjectPrimitives'
 import { useProjectsRouteContext } from './projects-route-context'
 
-const LIST_PREFIX = [...projectsQueryKey, 'list'] as const
-
 export function ProjectDetailRoute() {
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
-  const queryClient = useQueryClient()
   const ctx = useProjectsRouteContext()
   const isCreating = id === 'new'
   const isEditing = !isCreating && searchParams.get('edit') === '1'
 
-  const initialProject =
-    !isCreating && id
-      ? findInListCache<ProjectModel>(queryClient, LIST_PREFIX, id)
-      : undefined
+  const project = useEntity(projects, isCreating ? undefined : id)
 
-  const projectQuery = useQuery({
+  const projectQuery = useCollectionDetailQuery(projects, {
     enabled: Boolean(id) && !isCreating,
-    initialData: initialProject,
     queryFn: () => getProject(id!),
-    queryKey: id ? adminQueryKeys.projects.detail(id) : projectsQueryKey,
-    staleTime: initialProject ? 30_000 : 0,
+    queryKey: id
+      ? adminQueryKeys.projects.detail(id)
+      : adminQueryKeys.projects.root,
   })
 
-  useDocumentTitle(projectQuery.data?.name)
+  useDocumentTitle(project?.name)
 
   if (isCreating) {
     return (
@@ -57,7 +49,7 @@ export function ProjectDetailRoute() {
 
   if (!id) return <ProjectSelectPlaceholder />
 
-  if (projectQuery.isLoading && !projectQuery.data) {
+  if (projectQuery.isLoading && !project) {
     return (
       <section className="h-full min-h-0">
         <ProjectDetailSkeleton />
@@ -65,7 +57,7 @@ export function ProjectDetailRoute() {
     )
   }
 
-  if (!projectQuery.data) return <ProjectSelectPlaceholder />
+  if (!project) return <ProjectSelectPlaceholder />
 
   if (isEditing) {
     return (
@@ -75,7 +67,7 @@ export function ProjectDetailRoute() {
           onCancel={ctx.onStopEditing}
           onMobileBack={ctx.onMobileBack}
           onSuccess={ctx.onSaved}
-          project={projectQuery.data}
+          project={project}
         />
       </section>
     )
@@ -88,7 +80,7 @@ export function ProjectDetailRoute() {
         onDeleted={ctx.onDeleted}
         onEdit={ctx.onEdit}
         onMobileBack={ctx.onMobileBack}
-        project={projectQuery.data}
+        project={project}
       />
     </section>
   )

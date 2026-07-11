@@ -2,12 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { toast } from 'sonner'
 
-import {
-  auditPassLink,
-  checkLinksHealth,
-  deleteLink,
-  migrateLinkAvatars,
-} from '~/api/links'
+import { checkLinksHealth, migrateLinkAvatars } from '~/api/links'
+import { auditPass, removeLink } from '~/data/resources/link.mutations'
 import { useI18n } from '~/i18n'
 
 import { friendsQueryKey } from '../constants'
@@ -27,7 +23,7 @@ export function useFriendMutations(options: UseFriendMutationsOptions = {}) {
   }, [queryClient])
 
   const deleteMutation = useMutation({
-    mutationFn: deleteLink,
+    mutationFn: removeLink,
     onSuccess: async () => {
       toast.success(t('friends.toast.deleted'))
       await invalidateFriends()
@@ -35,7 +31,7 @@ export function useFriendMutations(options: UseFriendMutationsOptions = {}) {
   })
 
   const auditPassMutation = useMutation({
-    mutationFn: auditPassLink,
+    mutationFn: auditPass,
     onSuccess: async () => {
       toast.success(t('friends.toast.auditPass'))
       await invalidateFriends()

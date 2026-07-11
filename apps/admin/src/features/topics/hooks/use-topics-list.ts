@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
 import { getTopics } from '~/api/topics'
+import { useCollectionListQuery, useEntityList } from '~/data/resource/hooks'
+import { topics } from '~/data/resources/topic'
 import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -29,20 +30,26 @@ export function useTopicsList() {
 
   const [state, setState] = useUrlListState(urlStateOptions)
 
-  const topicsQuery = useQuery({
-    placeholderData: (previous) => previous,
+  const listKey = adminQueryKeys.topics.list({
+    page: state.page,
+    size: topicPageSize,
+  })
+
+  const topicsQuery = useCollectionListQuery(topics, {
     queryFn: () => getTopics({ page: state.page, size: topicPageSize }),
-    queryKey: adminQueryKeys.topics.list({
-      page: state.page,
-      size: topicPageSize,
+    queryKey: listKey,
+    toPage: (result) => ({
+      items: result.data,
+      pagination: result.pagination,
     }),
   })
+  const topicsList = useEntityList(topics, listKey, { keepPrevious: true })
 
   return {
     page: state.page,
-    pagination: topicsQuery.data?.pagination,
+    pagination: topicsList.pagination,
     setPage: (page: number) => setState({ page }),
-    topics: topicsQuery.data?.data ?? [],
+    topics: topicsList.items,
     topicsQuery,
   }
 }

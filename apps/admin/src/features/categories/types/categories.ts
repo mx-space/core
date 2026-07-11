@@ -1,4 +1,4 @@
-import type { CategoryModel } from '~/models/category'
+import type { CategoryEntity } from '~/data/resources/category'
 
 export type SelectedItem =
   | {
@@ -15,6 +15,6 @@ export type CategoryFormMode =
       kind: 'create'
     }
   | {
-      category: CategoryModel
+      category: CategoryEntity
       kind: 'edit'
     }

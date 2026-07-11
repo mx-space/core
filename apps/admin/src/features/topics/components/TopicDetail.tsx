@@ -1,12 +1,21 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Edit3, Loader2, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { patchNote } from '~/api/notes'
 import { getNotesByTopic, getTopic } from '~/api/topics'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import {
+  useCollectionDetailQuery,
+  useCollectionListQuery,
+  useEntity,
+  useEntityList,
+} from '~/data/resource/hooks'
+import { notes as notesCollection } from '~/data/resources/note'
+import { patchNoteFields } from '~/data/resources/note.mutations'
+import { topics } from '~/data/resources/topic'
 import { useI18n } from '~/i18n'
+import type { NoteModel } from '~/models/note'
 import type { TopicModel } from '~/models/topic'
 import { adminQueryKeys } from '~/query/keys'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
@@ -33,34 +42,41 @@ export function TopicDetail(props: {
   const queryClient = useQueryClient()
   const [notesPage, setNotesPage] = useState(1)
 
-  const topicQuery = useQuery({
+  const topic = useEntity(topics, props.topicId)
+  const topicQuery = useCollectionDetailQuery(topics, {
     queryFn: () => getTopic(props.topicId),
     queryKey: adminQueryKeys.topics.detail(props.topicId),
   })
-  const notesQuery = useQuery({
-    placeholderData: (previous) => previous,
+  const topicNotesKey = adminQueryKeys.topics.notes({
+    page: notesPage,
+    size: topicNotesPageSize,
+    topicId: props.topicId,
+  })
+  const notesQuery = useCollectionListQuery(notesCollection, {
     queryFn: () =>
       getNotesByTopic(props.topicId, {
         page: notesPage,
         size: topicNotesPageSize,
       }),
-    queryKey: adminQueryKeys.topics.notes({
-      page: notesPage,
-      size: topicNotesPageSize,
-      topicId: props.topicId,
+    queryKey: topicNotesKey,
+    toPage: (result) => ({
+      items: result.data as NoteModel[],
+      pagination: result.pagination,
     }),
+  })
+  const notesList = useEntityList(notesCollection, topicNotesKey, {
+    keepPrevious: true,
   })
 
   useEffect(() => {
     setNotesPage(1)
   }, [props.topicId])
 
-  const topic = topicQuery.data
-  const notes = notesQuery.data?.data ?? []
-  const notesPagination = notesQuery.data?.pagination
+  const notes = notesList.items
+  const notesPagination = notesList.pagination
 
   const removeNoteMutation = useMutation({
-    mutationFn: (noteId: string) => patchNote(noteId, { topicId: null }),
+    mutationFn: (noteId: string) => patchNoteFields(noteId, { topicId: null }),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('topics.detail.removeRefFailed'))),
     onSuccess: async () => {

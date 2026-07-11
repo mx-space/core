@@ -1,12 +1,12 @@
 import { createContext, useContext } from 'react'
 
-import type { CategoryModel } from '~/models/category'
+import type { CategoryEntity } from '~/data/resources/category'
 
 export interface CategoriesRouteContextValue {
   deleting: boolean
   onBack: () => void
-  onDelete: (category: CategoryModel) => void
-  onEdit: (category: CategoryModel) => void
+  onDelete: (category: CategoryEntity) => void
+  onEdit: (category: CategoryEntity) => void
 }
 
 export const CategoriesRouteContext =

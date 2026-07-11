@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { createSay, updateSay } from '~/api/says'
+import { saveSay } from '~/data/resources/say.mutations'
 import { useI18n } from '~/i18n'
 import type { SayModel } from '~/models/say'
 import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
@@ -32,9 +32,10 @@ function SayEditorModal(props: SayEditorModalProps) {
         text: text.trim(),
       }
 
-      if (props.say?.id) return updateSay(props.say.id, data)
-
-      return createSay(data)
+      return saveSay(
+        props.say?.id ? { id: props.say.id, kind: 'edit' } : { kind: 'create' },
+        data,
+      )
     },
     onSuccess: () => {
       toast.success(

@@ -4,10 +4,9 @@ import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import type { CreateCategoryData } from '~/api/categories'
-import { createCategory, updateCategory } from '~/api/categories'
+import type { CategoryEntity } from '~/data/resources/category'
+import { saveCategory } from '~/data/resources/category.mutations'
 import { useI18n } from '~/i18n'
-import type { CategoryModel } from '~/models/category'
 import { ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
@@ -22,7 +21,7 @@ interface CategoryFormModalProps {
 
 function CategoryFormModal(props: CategoryFormModalProps) {
   const { t } = useI18n()
-  const modal = useModal<CategoryModel>()
+  const modal = useModal<CategoryEntity>()
   const [name, setName] = useState(
     props.mode.kind === 'edit' ? props.mode.category.name : '',
   )
@@ -35,13 +34,17 @@ function CategoryFormModal(props: CategoryFormModalProps) {
       : t('categories.form.createTitle')
 
   const mutation = useMutation({
-    mutationFn: (data: CreateCategoryData) =>
-      props.mode.kind === 'edit'
-        ? updateCategory(props.mode.category.id, { ...data, type: 0 })
-        : createCategory(data),
+    mutationFn: (data: { name: string; slug: string }) =>
+      saveCategory(
+        props.mode.kind === 'edit'
+          ? { id: props.mode.category.id, kind: 'edit' }
+          : { kind: 'create' },
+        data,
+      ),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('categories.form.saveFailed'))),
     onSuccess: (category) => {
+      if (!category) return
       toast.success(
         props.mode.kind === 'edit'
           ? t('categories.form.updated')
@@ -105,8 +108,8 @@ function CategoryFormModal(props: CategoryFormModalProps) {
  */
 export async function presentCategoryForm(
   mode: CategoryFormMode,
-): Promise<CategoryModel | undefined> {
-  const handle = present<CategoryFormModalProps, CategoryModel>(
+): Promise<CategoryEntity | undefined> {
+  const handle = present<CategoryFormModalProps, CategoryEntity>(
     CategoryFormModal,
     { mode },
     {

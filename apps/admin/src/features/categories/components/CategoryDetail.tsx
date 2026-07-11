@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
 import { Edit3, FolderOpen, Loader2, Trash2 } from 'lucide-react'
-import type { CategoryModel } from '~/models/category'
 
 import { getPosts } from '~/api/posts'
+import { useCollectionListQuery, useEntityList } from '~/data/resource/hooks'
+import type { CategoryEntity } from '~/data/resources/category'
+import { posts } from '~/data/resources/post'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
@@ -14,14 +15,15 @@ import { EntitySummary } from './EntitySummary'
 import { PostListSection } from './PostListSection'
 
 export function CategoryDetail(props: {
-  category: CategoryModel
+  category: CategoryEntity
   deleting: boolean
   onBack: () => void
-  onDelete: (category: CategoryModel) => void
-  onEdit: (category: CategoryModel) => void
+  onDelete: (category: CategoryEntity) => void
+  onEdit: (category: CategoryEntity) => void
 }) {
   const { t } = useI18n()
-  const postsQuery = useQuery({
+  const postsListKey = adminQueryKeys.posts.categoryDetail(props.category.id)
+  const postsQuery = useCollectionListQuery(posts, {
     enabled: !!props.category.id,
     queryFn: () =>
       getPosts({
@@ -30,9 +32,14 @@ export function CategoryDetail(props: {
         size: categoryDetailPostPageSize,
         sort_by: 'createdAt',
         sort_order: 'desc',
-      }).then((result) => result.data),
-    queryKey: adminQueryKeys.posts.categoryDetail(props.category.id),
+      }),
+    queryKey: postsListKey,
+    toPage: (result) => ({
+      items: result.data,
+      pagination: result.pagination,
+    }),
   })
+  const postsList = useEntityList(posts, postsListKey)
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -64,7 +71,7 @@ export function CategoryDetail(props: {
       <Scroll className="min-h-0 flex-1" innerClassName="p-5">
         <EntitySummary
           countLabel={t('categories.detail.postCount', {
-            count: props.category.count,
+            count: props.category.count ?? 0,
           })}
           icon={<FolderOpen aria-hidden="true" className="size-6" />}
           meta={props.category.slug}
@@ -73,7 +80,7 @@ export function CategoryDetail(props: {
         <PostListSection
           emptyText={t('categories.detail.postsByCategoryEmpty')}
           loading={postsQuery.isLoading}
-          posts={postsQuery.data ?? []}
+          posts={postsList.items}
           title={t('categories.detail.postsByCategory')}
         />
       </Scroll>

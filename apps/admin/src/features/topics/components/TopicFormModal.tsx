@@ -6,7 +6,8 @@ import { toast } from 'sonner'
 
 import { uploadFile } from '~/api/files'
 import type { CreateTopicData } from '~/api/topics'
-import { createTopic, getTopic, updateTopic } from '~/api/topics'
+import { getTopic } from '~/api/topics'
+import { saveTopic } from '~/data/resources/topic.mutations'
 import { useI18n } from '~/i18n'
 import type { TopicModel } from '~/models/topic'
 import { adminQueryKeys } from '~/query/keys'
@@ -32,7 +33,7 @@ function TopicFormModal(props: TopicFormModalProps) {
     enabled: isEdit,
     queryFn: () => getTopic(editId ?? ''),
     queryKey: editId
-      ? adminQueryKeys.topics.detail(editId)
+      ? [...adminQueryKeys.topics.detail(editId), 'form']
       : adminQueryKeys.topics.root,
   })
   const [name, setName] = useState('')
@@ -63,10 +64,14 @@ function TopicFormModal(props: TopicFormModalProps) {
 
   const mutation = useMutation({
     mutationFn: (data: CreateTopicData) =>
-      editId ? updateTopic(editId, data) : createTopic(data),
+      saveTopic(
+        editId ? { id: editId, kind: 'edit' } : { kind: 'create' },
+        data,
+      ),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('topics.form.saveFailed'))),
     onSuccess: (topic) => {
+      if (!topic) return
       toast.success(
         isEdit ? t('topics.form.savedUpdated') : t('topics.form.savedCreated'),
       )

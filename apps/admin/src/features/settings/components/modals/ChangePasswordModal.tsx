@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
+import { resetAllCollections } from '~/data/resource/collection'
 import { useI18n } from '~/i18n'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
@@ -42,6 +43,7 @@ function ChangePasswordModal() {
       toast.success(t('settings.password.success'))
       modal.close(true)
       await authClient.signOut()
+      resetAllCollections()
       navigate('/login')
     },
   })

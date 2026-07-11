@@ -1,15 +1,17 @@
+import type { InfiniteData } from '@tanstack/react-query'
 import { useInfiniteQuery, useMutation } from '@tanstack/react-query'
 import { Check, Inbox, Loader2, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import type { InfiniteData } from '@tanstack/react-query'
+
+import { getNotes } from '~/api/notes'
+import { notes as notesCollection } from '~/data/resources/note'
+import { patchNoteFields } from '~/data/resources/note.mutations'
+import { useI18n } from '~/i18n'
 import type { PaginateResult } from '~/models/base'
 import type { NoteModel } from '~/models/note'
-
-import { getNotes, patchNote } from '~/api/notes'
-import { useI18n } from '~/i18n'
-import { ModalHeader } from '~/ui/feedback/modal'
 import { adminQueryKeys } from '~/query/keys'
+import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -41,11 +43,14 @@ function AddNotesToTopicModal(props: AddNotesToTopicModalProps) {
         ? lastPage.pagination.page + 1
         : undefined,
     initialPageParam: 1,
-    queryFn: ({ pageParam }) =>
-      getNotes({
+    queryFn: async ({ pageParam }) => {
+      const result = await getNotes({
         page: pageParam,
         size: topicPickerPageSize,
-      }),
+      })
+      notesCollection.hydrate(result.data)
+      return result
+    },
     queryKey: adminQueryKeys.notes.topicPicker(props.topicId),
   })
 
@@ -74,7 +79,9 @@ function AddNotesToTopicModal(props: AddNotesToTopicModalProps) {
     mutationFn: async () => {
       const noteIds = Array.from(selectedIds)
       await Promise.all(
-        noteIds.map((noteId) => patchNote(noteId, { topicId: props.topicId })),
+        noteIds.map((noteId) =>
+          patchNoteFields(noteId, { topicId: props.topicId }),
+        ),
       )
     },
     onError: (error: unknown) =>

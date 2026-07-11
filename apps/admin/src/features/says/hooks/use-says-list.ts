@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
 import { getSays } from '~/api/says'
+import { useCollectionListQuery, useEntityList } from '~/data/resource/hooks'
+import { says } from '~/data/resources/say'
 import { useUrlListState } from '~/features/_shared/hooks/use-url-list-state'
 import { adminQueryKeys } from '~/query/keys'
 
@@ -29,19 +30,25 @@ export function useSaysList() {
 
   const [state, setState] = useUrlListState(urlStateOptions)
 
-  const saysQuery = useQuery({
-    placeholderData: (previous) => previous,
+  const listKey = adminQueryKeys.says.list({
+    page: state.page,
+    size: saysPageSize,
+  })
+
+  const saysQuery = useCollectionListQuery(says, {
     queryFn: () => getSays({ page: state.page, size: saysPageSize }),
-    queryKey: adminQueryKeys.says.list({
-      page: state.page,
-      size: saysPageSize,
+    queryKey: listKey,
+    toPage: (result) => ({
+      items: result.data,
+      pagination: result.pagination,
     }),
   })
+  const saysList = useEntityList(says, listKey, { keepPrevious: true })
 
   return {
     page: state.page,
-    pagination: saysQuery.data?.pagination,
-    says: saysQuery.data?.data ?? [],
+    pagination: saysList.pagination,
+    says: saysList.items,
     saysQuery,
     setPage: (page: number) => setState({ page }),
   }
