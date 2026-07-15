@@ -9,6 +9,15 @@ const adaptorNames = readdirSync(path.resolve(__dirname, './adaptors')).map(
   (i) => path.parse(i).name,
 )
 
+function isThirdPartyPackageId(id: string): boolean {
+  if (id.includes('node_modules')) return true
+  if (id.startsWith('.') || id.startsWith('/') || path.isAbsolute(id)) {
+    return false
+  }
+  if (id.startsWith('@core') || id.startsWith('@mx-space')) return false
+  return id.startsWith('@') || /^[a-z]/i.test(id)
+}
+
 export default defineConfig({
   clean: true,
   target: 'es2020',
@@ -17,13 +26,15 @@ export default defineConfig({
     'legacy/index.ts',
     ...adaptorNames.map((name) => `adaptors/${name}.ts`),
   ],
-  external: adaptorNames,
-  // `eager: true` runs the TypeScript compiler directly to emit declarations
-  // instead of relying on rolldown-plugin-dts's bundler. The bundler chokes
-  // on the long re-export chain `@core/constants/db.constant → @mx-space/db-schema`
-  // (see "Export 'CollectionRefTypes' is not defined" — sxzz/rolldown-plugin-dts
-  // can't follow workspace re-exports through a private package), and `eager`
-  // sidesteps the issue cleanly.
+  deps: {
+    neverBundle: adaptorNames,
+    // rolldown-plugin-dts treats type-only re-exports in third-party .d.ts as
+    // value imports (drizzle-orm NeonAuthToken, zod locales, axios AxiosInstance,
+    // …) and fails the dts bundle. Keep workspace types inlined; externalize the rest.
+    dts: {
+      neverBundle: (id) => isThirdPartyPackageId(id),
+    },
+  },
   dts: { eager: true },
   format: ['cjs', 'esm'],
   onSuccess() {
@@ -42,11 +53,15 @@ export default defineConfig({
       readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
         const resolved = path.join(dir, entry.name)
         if (entry.isDirectory()) return walk(resolved)
-        return /\.d\.(c|m)?ts$/.test(entry.name) ? [resolved] : []
+        return /\.d\.[cm]?ts$/.test(entry.name) ? [resolved] : []
       })
 
+    const escapedPkg = PKG.name.replaceAll(
+      /[$()*+./?[\\\]^{|}-]/g,
+      String.raw`\$&`,
+    )
     const augmentPattern = new RegExp(
-      `declare module ['"](?:\\.\\./core/client|${PKG.name.replace(/[/\\\\^$*+?.()|[\\]{}]/g, '\\$&')})['"]\\s*\\{[\\s\\S]*?^\\}`,
+      `declare module ['"](?:\\.\\./core/client|${escapedPkg})['"]\\s*\\{[\\s\\S]*?^\\}`,
       'gm',
     )
     const collected = new Set<string>()
@@ -58,7 +73,7 @@ export default defineConfig({
       let content = readFileSync(file, 'utf-8')
 
       content = content.replaceAll(
-        /declare module ['"]\.\.\/core\/client['"]/g,
+        /declare module ["']\.\.\/core\/client["']/g,
         `declare module '${PKG.name}'`,
       )
 
@@ -66,7 +81,9 @@ export default defineConfig({
         const matches = content.match(augmentPattern)
         if (matches?.length) {
           matches.forEach((m) => collected.add(m.trim()))
-          content = content.replaceAll(augmentPattern, '').replace(/\n{3,}/g, '\n\n')
+          content = content
+            .replaceAll(augmentPattern, '')
+            .replaceAll(/\n{3,}/g, '\n\n')
         }
       }
 
@@ -78,7 +95,11 @@ export default defineConfig({
     for (const root of ['index.d.cts', 'index.d.mts']) {
       const file = path.join(distRoot, root)
       const content = readFileSync(file, 'utf-8')
-      const block = ['', '// --- HTTPClient augmentations (inlined) ---', ...collected].join('\n')
+      const block = [
+        '',
+        '// --- HTTPClient augmentations (inlined) ---',
+        ...collected,
+      ].join('\n')
       writeFileSync(file, content.trimEnd() + '\n' + block + '\n')
     }
   },
