@@ -410,10 +410,12 @@ function KLineCard({
       })
 
       if (emaPeriods) {
-        chart.createIndicator(
-          { name: 'EMA', calcParams: [...emaPeriods], shortName: 'EMA' },
-          { pane: { id: 'candle_pane' } },
-        )
+        chart.createIndicator({
+          name: 'EMA',
+          calcParams: [...emaPeriods],
+          shortName: 'EMA',
+          paneId: 'candle_pane',
+        })
       }
 
       chart.setScrollEnabled(false)

@@ -2,6 +2,7 @@ packages:
   - packages/*
   - apps/*
 allowBuilds:
+  "@code-inspector/core": false
   "@google/genai": false
   "@nestjs/core": true
   "@parcel/watcher": false
@@ -10,6 +11,7 @@ allowBuilds:
   esbuild: true
   mongodb-memory-server: true
   msgpackr-extract: false
+  node-pty: true
   protobufjs: false
   redis-memory-server: true
   sharp: true
@@ -20,23 +22,23 @@ allowBuilds:
 overrides:
   "eslint-plugin-react-compiler>zod": 3.25.76
   "get-pixels@^3>request": ./external/request
-  kysely: 0.28.17
+  kysely: 0.29.3
   mongodb: ~7.5.0
   pino: ./external/pino
-  rolldown: 1.1.4
+  rolldown: 1.2.0
   semver: 7.8.5
   typescript: 6.0.3
-  undici: ^7.28.0
-  whatwg-url: 16.0.1
+  undici: ^8.7.0
+  whatwg-url: 17.1.0
   zod: 4.4.3
   "lodash-es@<4.18.0": 4.18.1
   "nanoid@<3.3.8": 3.3.12
   "nanoid@>=4.0.0 <5.0.9": 5.1.11
   "tmp@<0.2.6": 0.2.7
   "uuid@<11.1.1": 11.1.1
-  lucide-react: 1.23.0
-  "@codemirror/state": 6.7.0
-  "@codemirror/view": 6.43.4
+  lucide-react: 1.24.0
+  "@codemirror/state": 6.7.1
+  "@codemirror/view": 6.43.6
   "@codemirror/commands": 6.10.4
   "@codemirror/language": 6.12.4
   # @haklex/rich-ext-chat -> @streamdown/code hard-deps shiki@^3.x while
@@ -53,7 +55,7 @@ minimumReleaseAgeExclude:
   - "@haklex/*"
   - "@mx-space/*"
   - "@babel/*"
-  - "@cloudflare/workers-types@4.20260611.1"
+  - '@cloudflare/workers-types@4.20260611.1 || 5.20260715.1'
   - "@code-inspector/core@1.5.4"
   - "@code-inspector/esbuild@1.5.4"
   - "@code-inspector/mako@1.5.4"
@@ -65,7 +67,28 @@ minimumReleaseAgeExclude:
   - "@types/node@25.9.3"
   - "@types/nodemailer@8.0.1"
   - code-inspector-plugin@1.5.4
-  - jotai@2.20.1
+  - jotai@2.20.1 || 2.20.2
   - nodemailer@8.0.11
   - "@innei/react-tweet@3.4.3"
   - react-router@8.0.0
+  - '@codemirror/lang-markdown@6.5.1'
+  - '@earendil-works/pi-ai@0.80.7'
+  - '@rolldown/binding-android-arm64@1.2.0'
+  - '@rolldown/binding-darwin-arm64@1.2.0'
+  - '@rolldown/binding-darwin-x64@1.2.0'
+  - '@rolldown/binding-freebsd-x64@1.2.0'
+  - '@rolldown/binding-linux-arm-gnueabihf@1.2.0'
+  - '@rolldown/binding-linux-arm64-gnu@1.2.0'
+  - '@rolldown/binding-linux-arm64-musl@1.2.0'
+  - '@rolldown/binding-linux-ppc64-gnu@1.2.0'
+  - '@rolldown/binding-linux-s390x-gnu@1.2.0'
+  - '@rolldown/binding-linux-x64-gnu@1.2.0'
+  - '@rolldown/binding-linux-x64-musl@1.2.0'
+  - '@rolldown/binding-openharmony-arm64@1.2.0'
+  - '@rolldown/binding-wasm32-wasi@1.2.0'
+  - '@rolldown/binding-win32-arm64-msvc@1.2.0'
+  - '@rolldown/binding-win32-x64-msvc@1.2.0'
+  - miniflare@4.20260710.0
+  - rolldown@1.2.0
+  - tsdown@0.22.8
+  - wrangler@4.111.0

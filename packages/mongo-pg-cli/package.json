@@ -66,15 +66,15 @@
     "commit_message": "chore(release): bump @mx-space/mongo-pg-cli to v${NEW_VERSION}"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20260701.1",
+    "@cloudflare/workers-types": "5.20260715.1",
     "@mx-space/db-schema": "workspace:*",
     "@types/pg": "^8.20.0",
     "drizzle-orm": "^0.45.2",
     "mongodb": "~7.5.0",
     "pg": "^8.22.0",
-    "tsdown": "0.22.3",
-    "tsx": "^4.23.0",
+    "tsdown": "0.22.8",
+    "tsx": "^4.23.1",
     "typescript": "6.0.3",
-    "vitest": "4.1.9"
+    "vitest": "4.1.10"
   }
 }

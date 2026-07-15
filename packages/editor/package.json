@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/editor",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "Mx-space business editor contracts and projection utilities built on Lexical",
   "license": "MIT",
@@ -48,14 +48,14 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@haklex/rich-headless": "0.30.0",
-    "@haklex/rich-litexml": "0.30.0",
-    "@lexical/headless": "^0.46.0",
-    "lexical": "^0.46.0"
+    "@haklex/rich-headless": "0.31.0",
+    "@haklex/rich-litexml": "0.31.0",
+    "@lexical/headless": "^0.47.0",
+    "lexical": "^0.47.0"
   },
   "devDependencies": {
-    "tsdown": "0.22.3",
+    "tsdown": "0.22.8",
     "typescript": "6.0.3",
-    "vitest": "4.1.9"
+    "vitest": "4.1.10"
   }
 }
