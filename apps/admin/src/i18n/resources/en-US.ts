@@ -528,8 +528,6 @@ export const enUS = {
   'companion.pairing.creating': 'Generating',
   'companion.pairing.description':
     'Issue a short-lived, one-time Live Desk credential for macOS Companion.',
-  'companion.pairing.disabledNotice':
-    'Live Desk is not enabled on this server. Set COMPANION_LIVE_DESK_ENABLED=true and restart Core before generating a pairing code. Existing devices can still be revoked below.',
   'companion.pairing.empty':
     'After generating a code, enter it in macOS Companion. A claimed device will appear in the list below.',
   'companion.pairing.expired': 'Expired',

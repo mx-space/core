@@ -513,8 +513,6 @@ export const zhCN = {
   'companion.pairing.creating': '生成中',
   'companion.pairing.description':
     '为 macOS Companion 签发短期、一次性的 Live Desk 配对凭证。',
-  'companion.pairing.disabledNotice':
-    '服务器尚未启用 Live Desk。请设置 COMPANION_LIVE_DESK_ENABLED=true 并重启 Core 后再生成配对码；既有设备仍可在下方撤销。',
   'companion.pairing.empty':
     '生成后，请在 macOS Companion 中输入配对码。领取成功的设备会自动出现在下方列表。',
   'companion.pairing.expired': '已过期',

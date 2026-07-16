@@ -11,16 +11,9 @@ const readBooleanEnvironmentFlag = (
   return normalizedValue ? normalizedValue === 'true' : defaultValue
 }
 
-// A production deployment must opt in explicitly. Capabilities and the
-// server-side feature policy consume the same immutable startup value.
-export const COMPANION_LIVE_DESK_ENABLED = readBooleanEnvironmentFlag(
-  process.env.COMPANION_LIVE_DESK_ENABLED,
-  false,
-)
-
 // Presence v2 already transports timeline anchors. Keep this available for
 // existing local integrations while allowing staged deployments to suppress
-// the capability explicitly. The advertised value is still gated by Live Desk.
+// the capability explicitly.
 export const COMPANION_MEDIA_TIMELINE_ENABLED = readBooleanEnvironmentFlag(
   process.env.COMPANION_MEDIA_TIMELINE_ENABLED,
   true,

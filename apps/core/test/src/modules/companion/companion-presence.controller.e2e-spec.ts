@@ -2,7 +2,6 @@ import { Body, Controller, Post } from '@nestjs/common'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { vi } from 'vitest'
 
-import { AppException } from '~/common/errors/exception.types'
 import { COMPANION_CLIENT_VERSION_HEADER } from '~/modules/companion/companion.constants'
 import {
   CompanionFailureResponseV2Schema,
@@ -12,7 +11,6 @@ import {
 import { CompanionCredentialService } from '~/modules/companion/companion-credential.service'
 import { CompanionDeviceGuard } from '~/modules/companion/companion-device.guard'
 import { CompanionDeviceRepository } from '~/modules/companion/companion-device.repository'
-import { CompanionFeaturePolicy } from '~/modules/companion/companion-feature.policy'
 import { CompanionPresenceController } from '~/modules/companion/companion-presence.controller'
 import {
   CompanionPresenceStore,
@@ -46,7 +44,6 @@ const store = {
   getPublicState: vi.fn().mockResolvedValue(state),
 }
 const rateLimiter = { consume: vi.fn().mockResolvedValue(undefined) }
-const featurePolicy = { assertLiveDeskAvailable: vi.fn() }
 const deviceRepository = {
   findDeviceById: vi.fn().mockResolvedValue({
     id: DEVICE_ID,
@@ -98,7 +95,6 @@ describe('Companion presence protocol endpoints', () => {
     providers: [
       { provide: CompanionPresenceStore, useValue: store },
       { provide: CompanionPresenceRateLimiter, useValue: rateLimiter },
-      { provide: CompanionFeaturePolicy, useValue: featurePolicy },
       CompanionPresenceTransportGuard,
       CompanionDeviceGuard,
       { provide: CompanionDeviceRepository, useValue: deviceRepository },
@@ -320,32 +316,6 @@ describe('Companion presence protocol endpoints', () => {
     const body = CompanionPublicPresenceResponseV2Schema.parse(response.json())
     expect(body.data.state).toEqual(state)
     expect(body.meta.requestId).toMatch(/^[\da-f-]{36}$/)
-  })
-
-  it('hard-gates public state while the server feature is unavailable', async () => {
-    featurePolicy.assertLiveDeskAvailable.mockImplementationOnce(() => {
-      throw new AppException(
-        'COMPANION_FEATURE_UNAVAILABLE',
-        'Companion Live Desk is not enabled on this server.',
-        503,
-      )
-    })
-
-    const response = await proxy.app.inject({
-      method: 'GET',
-      url: '/companion/presence/public',
-    })
-
-    expect(response.statusCode).toBe(503)
-    expect(
-      CompanionFailureResponseV2Schema.parse(response.json()),
-    ).toMatchObject({
-      error: {
-        code: 'COMPANION_FEATURE_UNAVAILABLE',
-        retryable: true,
-      },
-    })
-    expect(store.getPublicState).not.toHaveBeenCalled()
   })
 
   it('collapses a token-to-device mismatch into the revoked-device boundary', async () => {

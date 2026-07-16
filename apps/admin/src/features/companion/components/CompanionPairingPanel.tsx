@@ -1,10 +1,4 @@
-import {
-  AlertTriangle,
-  Check,
-  Clipboard,
-  KeyRound,
-  Loader2,
-} from 'lucide-react'
+import { Check, Clipboard, KeyRound, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import type { CompanionPairingResult } from '~/api/companion'
@@ -14,7 +8,6 @@ import { Button } from '~/ui/primitives/button'
 import { Panel } from '~/ui/primitives/panel'
 
 interface CompanionPairingPanelProps {
-  featureEnabled: boolean | null
   isCreating: boolean
   onCopy: (code: string) => void
   onCreate: () => void
@@ -47,7 +40,7 @@ export function CompanionPairingPanel(props: CompanionPairingPanelProps) {
       )
     : 0
   const hasActivePairing = Boolean(props.pairing && remainingSeconds > 0)
-  const canCreate = props.featureEnabled === true && !hasActivePairing
+  const canCreate = !hasActivePairing
 
   return (
     <Panel
@@ -56,21 +49,6 @@ export function CompanionPairingPanel(props: CompanionPairingPanelProps) {
       title={t('companion.pairing.title')}
     >
       <div className="space-y-4 p-4">
-        {props.featureEnabled === false ? (
-          <div
-            className="flex items-start gap-3 rounded-sm border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
-            data-testid="companion-disabled-notice"
-          >
-            <AlertTriangle
-              aria-hidden="true"
-              className="mt-0.5 size-4 shrink-0"
-            />
-            <p className="text-xs leading-5">
-              {t('companion.pairing.disabledNotice')}
-            </p>
-          </div>
-        ) : null}
-
         {props.pairing ? (
           <div className="rounded-sm border border-border bg-surface-inset p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">

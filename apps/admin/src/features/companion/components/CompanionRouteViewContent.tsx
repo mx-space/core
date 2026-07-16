@@ -38,9 +38,6 @@ export function CompanionRouteViewContent() {
     queryKey: adminQueryKeys.companion.capabilities(),
     retry: false,
   })
-  const liveDeskEnabled = capabilitiesQuery.data
-    ? capabilitiesQuery.data.features.liveDesk
-    : null
   const liveDeskRefetchInterval = Math.min(
     LIVE_DESK_REFETCH_INTERVAL_MAX_MS,
     Math.max(
@@ -57,7 +54,6 @@ export function CompanionRouteViewContent() {
         : false,
   })
   const publicPresenceQuery = useQuery({
-    enabled: liveDeskEnabled === true,
     queryFn: getCompanionPublicPresence,
     queryKey: adminQueryKeys.companion.publicPresence(),
     refetchInterval: liveDeskRefetchInterval,
@@ -95,7 +91,7 @@ export function CompanionRouteViewContent() {
     await Promise.all([
       capabilitiesQuery.refetch(),
       devicesQuery.refetch(),
-      ...(liveDeskEnabled ? [publicPresenceQuery.refetch()] : []),
+      publicPresenceQuery.refetch(),
     ])
   }
 
@@ -162,19 +158,12 @@ export function CompanionRouteViewContent() {
           onRetry={() => void capabilitiesQuery.refetch()}
         />
         <CompanionLiveDeskPanel
-          isError={
-            capabilitiesQuery.isError ||
-            (liveDeskEnabled === true && publicPresenceQuery.isError)
-          }
-          isLoading={
-            capabilitiesQuery.isLoading ||
-            (liveDeskEnabled === true && publicPresenceQuery.isLoading)
-          }
+          isError={publicPresenceQuery.isError}
+          isLoading={publicPresenceQuery.isLoading}
           onRetry={() => void handleRefresh()}
           presence={publicPresenceQuery.data}
         />
         <CompanionPairingPanel
-          featureEnabled={liveDeskEnabled}
           isCreating={createPairingMutation.isPending}
           key={pairing?.pairingId ?? 'no-pairing'}
           onCopy={(code) => void handleCopyPairingCode(code)}

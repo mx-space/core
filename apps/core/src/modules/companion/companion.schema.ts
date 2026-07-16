@@ -8,7 +8,6 @@ import {
   COMPANION_ACTIVITY_CUSTOM_LABEL_MAX_SCALARS,
   COMPANION_APPLICATION_DISPLAY_NAME_MAX_SCALARS,
   COMPANION_ICON_URL_MAX_BYTES,
-  COMPANION_LIVE_DESK_ENABLED,
   COMPANION_MAXIMUM_CLOCK_SKEW_SECONDS,
   COMPANION_MEDIA_POSITION_TOLERANCE_MS,
   COMPANION_MEDIA_TEXT_MAX_SCALARS,
@@ -495,12 +494,10 @@ export const CompanionCapabilitiesV2Schema = z
   })
 
 export interface CompanionCapabilityFeatureConfiguration {
-  liveDeskEnabled: boolean
   mediaTimelineEnabled: boolean
 }
 
 export const createCompanionCapabilities = ({
-  liveDeskEnabled,
   mediaTimelineEnabled,
 }: CompanionCapabilityFeatureConfiguration) =>
   CompanionCapabilitiesV2Schema.parse({
@@ -508,8 +505,8 @@ export const createCompanionCapabilities = ({
     presenceSchemaVersions: [COMPANION_PRESENCE_SCHEMA_VERSION],
     momentSchemaVersions: [],
     features: {
-      liveDesk: liveDeskEnabled,
-      mediaTimeline: liveDeskEnabled && mediaTimelineEnabled,
+      liveDesk: true,
+      mediaTimeline: mediaTimelineEnabled,
       moments: false,
       readingSessions: false,
     },
@@ -524,7 +521,6 @@ export const createCompanionCapabilities = ({
   })
 
 export const COMPANION_CAPABILITIES = createCompanionCapabilities({
-  liveDeskEnabled: COMPANION_LIVE_DESK_ENABLED,
   mediaTimelineEnabled: COMPANION_MEDIA_TIMELINE_ENABLED,
 })
 

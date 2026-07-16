@@ -280,28 +280,7 @@ describe('CompanionRouteViewContent', () => {
     }
   })
 
-  it('disables pairing while Live Desk is unavailable but keeps device management visible', async () => {
-    vi.mocked(getCompanionCapabilities).mockResolvedValue({
-      ...enabledCapabilities,
-      features: { ...enabledCapabilities.features, liveDesk: false },
-    })
-    vi.mocked(getCompanionDevices).mockResolvedValue([activeDevice])
-
-    renderRoute(harness)
-    await flush()
-
-    expect(getButton(harness, 'companion-create-pairing')?.disabled).toBe(true)
-    expect(
-      harness.container.querySelector(
-        '[data-testid="companion-disabled-notice"]',
-      ),
-    ).not.toBeNull()
-    expect(
-      getButton(harness, `companion-revoke-${activeDevice.id}`)?.disabled,
-    ).toBe(false)
-  })
-
-  it('does not report Live Desk as disabled when capability loading fails', async () => {
+  it('keeps Live Desk reporting and pairing independent from capability metadata loading', async () => {
     vi.mocked(getCompanionCapabilities).mockRejectedValue(
       new Error('capabilities unavailable'),
     )
@@ -309,12 +288,13 @@ describe('CompanionRouteViewContent', () => {
     renderRoute(harness)
     await flush()
 
-    expect(getButton(harness, 'companion-create-pairing')?.disabled).toBe(true)
+    expect(getCompanionPublicPresence).toHaveBeenCalledOnce()
+    expect(getButton(harness, 'companion-create-pairing')?.disabled).toBe(false)
     expect(
       harness.container.querySelector(
-        '[data-testid="companion-disabled-notice"]',
-      ),
-    ).toBeNull()
+        '[data-testid="companion-public-presence-status"]',
+      )?.textContent,
+    ).toBe('No report')
     expect(harness.container.querySelector('[role="alert"]')).not.toBeNull()
   })
 

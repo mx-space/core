@@ -7,7 +7,6 @@ import { CompanionDeviceGuard } from './companion-device.guard'
 import { CompanionDeviceReconciler } from './companion-device.reconciler'
 import { CompanionDeviceRepository } from './companion-device.repository'
 import { CompanionDeviceService } from './companion-device.service'
-import { CompanionFeaturePolicy } from './companion-feature.policy'
 import { CompanionPresenceController } from './companion-presence.controller'
 import { CompanionPresenceReaper } from './companion-presence.reaper'
 import { CompanionPresenceStore } from './companion-presence.store'
@@ -29,7 +28,6 @@ import { COMPANION_PRESENCE_REVOCATION_PORT } from './companion-presence-revocat
     CompanionDeviceReconciler,
     CompanionDeviceRepository,
     CompanionDeviceService,
-    CompanionFeaturePolicy,
     CompanionPresenceRateLimiter,
     CompanionPresenceTransportGuard,
     CompanionPresenceReaper,

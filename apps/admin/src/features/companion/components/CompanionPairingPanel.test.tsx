@@ -44,7 +44,6 @@ describe('CompanionPairingPanel', () => {
           I18nProvider,
           null,
           createElement(CompanionPairingPanel, {
-            featureEnabled: true,
             isCreating: false,
             onCopy,
             onCreate,

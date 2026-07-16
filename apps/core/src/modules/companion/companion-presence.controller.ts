@@ -27,7 +27,6 @@ import {
   CurrentCompanionDevice,
 } from './companion-device.decorator'
 import type { CompanionDevicePrincipal } from './companion-device.guard'
-import { CompanionFeaturePolicy } from './companion-feature.policy'
 import {
   CompanionPresenceClearRequestV2Dto,
   CompanionPresenceRequestV2Dto,
@@ -67,7 +66,6 @@ export class CompanionPresenceController {
   constructor(
     private readonly store: CompanionPresenceStore,
     private readonly rateLimiter: CompanionPresenceRateLimiter,
-    private readonly featurePolicy: CompanionFeaturePolicy,
   ) {}
 
   @Put('/presence')
@@ -82,7 +80,6 @@ export class CompanionPresenceController {
     @CurrentCompanionDevice() principal: CompanionDevicePrincipal,
     @Body() request: CompanionPresenceRequestV2Dto,
   ) {
-    this.featurePolicy.assertLiveDeskAvailable()
     assertBoundDevice(principal, request.meta.deviceId)
     await this.rateLimiter.consume(principal.deviceId)
     const data = await this.store.putSnapshot(request)
@@ -104,7 +101,6 @@ export class CompanionPresenceController {
     @CurrentCompanionDevice() principal: CompanionDevicePrincipal,
     @Body() request: CompanionPresenceClearRequestV2Dto,
   ) {
-    this.featurePolicy.assertLiveDeskAvailable()
     assertBoundDevice(principal, request.meta.deviceId)
     await this.rateLimiter.consume(principal.deviceId)
     const data = await this.store.clear(request)
@@ -117,7 +113,6 @@ export class CompanionPresenceController {
   @Get('/presence/public')
   @HttpCache({ disable: true })
   async getPublicPresence() {
-    this.featurePolicy.assertLiveDeskAvailable()
     const state = await this.store.getPublicState()
     return withMeta({ state }, asResponseMeta(createCompanionResponseMeta()))
   }

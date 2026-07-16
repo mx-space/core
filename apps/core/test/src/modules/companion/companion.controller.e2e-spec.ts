@@ -42,20 +42,11 @@ describe('Companion capabilities', () => {
     'advertises mediaTimeline=$expected when its configuration is $configured',
     ({ configured, expected }) => {
       const capabilities = createCompanionCapabilities({
-        liveDeskEnabled: true,
         mediaTimelineEnabled: configured,
       })
 
+      expect(capabilities.features.liveDesk).toBe(true)
       expect(capabilities.features.mediaTimeline).toBe(expected)
     },
   )
-
-  it('does not advertise media timeline while Live Desk is unavailable', () => {
-    const capabilities = createCompanionCapabilities({
-      liveDeskEnabled: false,
-      mediaTimelineEnabled: true,
-    })
-
-    expect(capabilities.features.mediaTimeline).toBe(false)
-  })
 })
