@@ -24,11 +24,15 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "bun scripts/extract-models.ts && node scripts/generate.js && tsdown"
+    "build": "bun scripts/extract-models.ts && node scripts/generate.js && tsdown",
+    "test": "vitest run"
   },
   "devDependencies": {
+    "@types/node": "26.1.1",
     "express": "5.2.1",
-    "tsdown": "0.22.8"
+    "tsdown": "0.22.8",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   },
   "bump": {
     "before": [
