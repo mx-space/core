@@ -7,6 +7,7 @@ import type {
   NormalizedNote,
   NormalizedPost,
   PageModel,
+  PublicLiveDeskStateV2,
   ReaderModel,
   RecentlyModel,
   SayModel,
@@ -68,6 +69,9 @@ export interface EventPayloadMapping {
     type: 'post' | 'note'
     id: string
   }
+
+  [BusinessEvents.COMPANION_PRESENCE_CHANGED]: PublicLiveDeskStateV2
+
   health_check: {}
 }
 
@@ -102,10 +106,7 @@ export type GenericEvent =
   | { type: BusinessEvents.AGGREGATE_UPDATE; payload: AggregateUpdatePayload }
   | { type: BusinessEvents.ACTIVITY_LIKE; payload: IActivityLike }
   | { type: BusinessEvents.LINK_APPLY; payload: LinkModel }
-  | {
-      type: BusinessEvents.COMMENT_CREATE
-      payload: CommentModel
-    }
+  | { type: BusinessEvents.COMMENT_CREATE; payload: CommentModel }
   | {
       type: BusinessEvents.COMMENT_UPDATE
       payload: {
@@ -120,5 +121,9 @@ export type GenericEvent =
         type: 'post' | 'note'
         id: string
       }
+    }
+  | {
+      type: BusinessEvents.COMPANION_PRESENCE_CHANGED
+      payload: PublicLiveDeskStateV2
     }
   | { type: 'health_check'; payload: {} }

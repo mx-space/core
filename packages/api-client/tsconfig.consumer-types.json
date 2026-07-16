@@ -14,7 +14,10 @@
   },
   "include": [
     "test/fixtures/consumer-types.fixture.ts",
+    "test/fixtures/companion-types.fixture.ts",
     "models/ai.ts",
-    "models/ai-agent-sse.ts"
+    "models/ai-agent-sse.ts",
+    "models/companion.ts",
+    "dtos/companion.ts"
   ]
 }

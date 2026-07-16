@@ -4,6 +4,10 @@ import { Logger } from '@nestjs/common'
 import { FastifyAdapter } from '@nestjs/platform-fastify'
 import type { FastifyRequest } from 'fastify'
 
+import {
+  FASTIFY_ROUTE_OPTIONS_CONFIG,
+  type FastifyRouteOptions,
+} from '~/common/decorators/fastify-route-options.decorator'
 import { getIp } from '~/utils/ip.util'
 
 const logger = new Logger('Fastify')
@@ -38,6 +42,21 @@ const app: FastifyAdapter = new FastifyAdapter({
   logger: false,
 })
 export { app as fastifyApp }
+
+// Nest places RouteConfig metadata under Fastify's inert `config` object.
+// Promote the small, explicitly supported subset that must run before Nest's
+// controller pipeline, while keeping protocol-specific handlers in modules.
+app.getInstance().addHook('onRoute', (route) => {
+  const config = route.config as Record<PropertyKey, unknown> | undefined
+  const options = config?.[FASTIFY_ROUTE_OPTIONS_CONFIG] as
+    FastifyRouteOptions | undefined
+  if (!options) return
+
+  if (options.bodyLimit !== undefined) route.bodyLimit = options.bodyLimit
+  if (options.errorHandler !== undefined) {
+    route.errorHandler = options.errorHandler
+  }
+})
 
 app.register(FastifyMultipart, {
   limits: {

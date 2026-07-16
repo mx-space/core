@@ -83,6 +83,12 @@ export const adminQueryKeys = {
       ['comments', 'tab-counts', filter] as const,
     thread: (id: string) => ['comments', 'thread', id] as const,
   },
+  companion: {
+    capabilities: () => ['companion', 'capabilities'] as const,
+    devices: () => ['companion', 'devices'] as const,
+    publicPresence: () => ['companion', 'public-presence'] as const,
+    root: ['companion'] as const,
+  },
   cron: {
     definitionRoot: ['cron-task-definitions'] as const,
     definitions: () => ['cron-task-definitions'] as const,

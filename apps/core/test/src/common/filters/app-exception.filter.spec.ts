@@ -32,11 +32,14 @@ const createReply = (): FakeReply => {
   return reply
 }
 
-const createHost = (reply: FakeReply): ArgumentsHost =>
+const createHost = (
+  reply: FakeReply,
+  request: Record<string, unknown> = {},
+): ArgumentsHost =>
   ({
     switchToHttp: () => ({
       getResponse: () => reply,
-      getRequest: () => ({}),
+      getRequest: () => request,
     }),
   }) as unknown as ArgumentsHost
 
@@ -88,6 +91,23 @@ describe('AppExceptionFilter', () => {
     expect(reply.statusCode).toBe(400)
     expect(reply.body.error.code).toBe('HTTP_ERROR')
     expect(reply.body.error.message).toBe('bad input')
+  })
+
+  test('does not infer a feature protocol from the request path', () => {
+    const reply = createReply()
+    filter.catch(
+      new BadRequestException('bad input'),
+      createHost(reply, {
+        method: 'PUT',
+        url: '/companion/presence',
+        raw: { url: '/companion/presence' },
+      }),
+    )
+
+    expect(reply.statusCode).toBe(400)
+    expect(reply.body).toEqual({
+      error: { code: 'HTTP_ERROR', message: 'bad input' },
+    })
   })
 
   test('maps an unknown error to a 500 INTERNAL_ERROR envelope', () => {

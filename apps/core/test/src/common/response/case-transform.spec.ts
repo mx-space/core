@@ -60,6 +60,15 @@ describe('transformResponseCase', () => {
     })
   })
 
+  it('emits the response root verbatim when explicitly bypassed', () => {
+    const input = {
+      minimumClientVersion: '1.7.3',
+      limits: { presencePayloadBytes: 32_768 },
+    }
+
+    expect(transformResponseCase(input, ['$'])).toBe(input)
+  })
+
   it('matches bypass paths through array segments', () => {
     expect(
       transformResponseCase(

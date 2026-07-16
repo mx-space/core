@@ -80,6 +80,9 @@ export enum BusinessEvents {
   AI_AGENT_CONFIRM_RESULT = 'AI_AGENT_CONFIRM_RESULT',
   AI_AGENT_SESSION_STATE = 'AI_AGENT_SESSION_STATE',
 
+  // Companion public presence projection
+  COMPANION_PRESENCE_CHANGED = 'companion.presence.changed',
+
   // Task Queue realtime fan-out (spec 2)
   TASK_UPDATE = 'TASK_UPDATE',
 }

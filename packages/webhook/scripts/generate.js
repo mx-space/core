@@ -3,6 +3,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
 import prettier from 'prettier'
 import ts from 'typescript'
 
@@ -95,17 +96,29 @@ function replaceGenericEventType(fileName, newGenericEventType) {
 const newFileContent = replaceGenericEventType(fileName, newGenericEventType)
 
 async function main() {
-  fs.writeFileSync(
-    path.resolve(__dirname, '../src/types.ts'),
-    await prettier.format(newFileContent, {
-      parser: 'typescript',
-      semi: false,
-      tabWidth: 2,
-      printWidth: 80,
-      singleQuote: true,
-      trailingComma: 'all',
-    }),
-  )
+  const outputPath = path.resolve(__dirname, '../src/types.ts')
+  const formatted = await prettier.format(newFileContent, {
+    parser: 'typescript',
+    semi: false,
+    tabWidth: 2,
+    printWidth: 80,
+    singleQuote: true,
+    trailingComma: 'all',
+  })
+
+  if (process.argv.includes('--check')) {
+    if (fs.readFileSync(outputPath, 'utf8') !== formatted) {
+      console.error(
+        '[generate] GenericEvent is stale. Run `node scripts/generate.js`.',
+      )
+      process.exitCode = 1
+      return
+    }
+    console.log(`✓ GenericEvent is current: ${outputPath}`)
+    return
+  }
+
+  fs.writeFileSync(outputPath, formatted)
 }
 
 main()

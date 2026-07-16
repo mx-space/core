@@ -4,6 +4,7 @@ import { AggregateController } from './aggregate'
 import { AIController } from './ai'
 import { CategoryController } from './category'
 import { CommentController } from './comment'
+import { CompanionController } from './companion'
 import { EnrichmentController } from './enrichment'
 import { LinkController } from './link'
 import type {
@@ -36,6 +37,7 @@ export const allControllers = [
   AIController,
   CategoryController,
   CommentController,
+  CompanionController,
   EnrichmentController,
   LinkController,
   NoteController,
@@ -59,6 +61,7 @@ export const allControllerNames = [
   'aggregate',
   'category',
   'comment',
+  'companion',
   'enrichment',
   'link',
   'note',
@@ -86,6 +89,7 @@ export {
   AIController,
   CategoryController,
   CommentController,
+  CompanionController,
   EnrichmentController,
   LinkController,
   NoteController,

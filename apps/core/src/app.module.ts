@@ -29,6 +29,7 @@ import { AuthModule } from './modules/auth/auth.module'
 import { BackupModule } from './modules/backup/backup.module'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
+import { CompanionModule } from './modules/companion/companion.module'
 import { ConfigsModule } from './modules/configs/configs.module'
 import { CronTaskModule } from './modules/cron-task/cron-task.module'
 import { DebugModule } from './modules/debug/debug.module'
@@ -94,6 +95,7 @@ import { SampleResponseInterceptor } from './shared/sample/sample-response.inter
     BizHelperModule,
     CategoryModule,
     CommentModule,
+    CompanionModule,
     ConfigsModule,
     CronTaskModule,
 

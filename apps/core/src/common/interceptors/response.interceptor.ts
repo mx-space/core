@@ -8,7 +8,10 @@ import { Reflector } from '@nestjs/core'
 import type { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 
-import { transformResponseCase } from '~/common/response/case-transform'
+import {
+  BYPASS_CASE_TRANSFORM_ROOT,
+  transformResponseCase,
+} from '~/common/response/case-transform'
 import {
   isExplicitSuccessEnvelope,
   type SuccessEnvelope,
@@ -57,6 +60,9 @@ export class ResponseInterceptor implements NestInterceptor {
         if (envelope.meta !== undefined) {
           result.meta = transformResponseCase(
             envelope.meta,
+            bypassPaths.includes(BYPASS_CASE_TRANSFORM_ROOT)
+              ? [BYPASS_CASE_TRANSFORM_ROOT]
+              : [],
           ) as SuccessEnvelope['meta']
         }
         return result

@@ -1,4 +1,5 @@
 const ARRAY_SEGMENT = '[]'
+export const BYPASS_CASE_TRANSFORM_ROOT = '$'
 const IDENTIFIER_RE = /^[a-z][\dA-Za-z]*$/
 const UPPER_RE = /[A-Z]/
 const LOWER_UPPER_RE = /([\da-z])([A-Z])/g
@@ -14,8 +15,10 @@ const snakeKey = (key: string): string => {
     .toLowerCase()
 }
 
-const parseBypassPath = (path: string): string[] =>
-  path
+const parseBypassPath = (path: string): string[] => {
+  if (path === BYPASS_CASE_TRANSFORM_ROOT) return []
+
+  return path
     .split('.')
     .flatMap((segment) =>
       segment.endsWith(ARRAY_SEGMENT)
@@ -23,6 +26,7 @@ const parseBypassPath = (path: string): string[] =>
         : [segment],
     )
     .filter(Boolean)
+}
 
 const isExactBypass = (segments: string[], bypass: string[][]): boolean =>
   bypass.some(
@@ -56,4 +60,7 @@ const transform = (
 export const transformResponseCase = (
   value: unknown,
   bypassPaths: string[] = [],
-): unknown => transform(value, [], bypassPaths.map(parseBypassPath))
+): unknown => {
+  const bypass = bypassPaths.map(parseBypassPath)
+  return isExactBypass([], bypass) ? value : transform(value, [], bypass)
+}

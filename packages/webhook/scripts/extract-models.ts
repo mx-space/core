@@ -21,9 +21,11 @@ const coreRoot = path.resolve(__dirname, '../../../apps/core/src')
 // Source manifest
 // ---------------------------------------------------------------------------
 interface SourceEntry {
+  derivedTypes?: Record<string, string>
   file: string
   enums?: string[]
   interfaces?: string[]
+  resolvedTypes?: string[]
   types?: string[]
   typeAliases?: string[]
 }
@@ -97,10 +99,10 @@ const sources: SourceEntry[] = [
     file: 'modules/note/note.types.ts',
     interfaces: ['NoteRow'],
     typeAliases: ['NoteModel'],
-  },
-  {
-    file: 'modules/note/note.type.ts',
-    typeAliases: ['NormalizedNote'],
+    derivedTypes: {
+      NormalizedNote:
+        "Omit<NoteModel, 'password' | 'topic'> & { topic: TopicModel }",
+    },
   },
   {
     file: 'modules/page/page.types.ts',
@@ -111,10 +113,10 @@ const sources: SourceEntry[] = [
     file: 'modules/post/post.types.ts',
     interfaces: ['PostRow', 'PostRelatedSummary'],
     typeAliases: ['PostModel'],
-  },
-  {
-    file: 'modules/post/post.type.ts',
-    typeAliases: ['NormalizedPost'],
+    derivedTypes: {
+      NormalizedPost:
+        "Omit<PostModel, 'category'> & { category: CategoryModel }",
+    },
   },
   {
     file: 'modules/recently/recently.types.ts',
@@ -129,6 +131,10 @@ const sources: SourceEntry[] = [
   {
     file: 'modules/reader/reader.types.ts',
     interfaces: ['ReaderModel'],
+  },
+  {
+    file: 'modules/companion/companion.types.ts',
+    resolvedTypes: ['PublicLiveDeskStateV2'],
   },
 ]
 
@@ -161,6 +167,44 @@ function transformTypeText(text: string): string {
 function parseSource(filePath: string): ts.SourceFile {
   const content = fs.readFileSync(filePath, 'utf-8')
   return ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true)
+}
+
+const resolveCoreCompilerOptions = (): ts.CompilerOptions => {
+  const configPath = path.resolve(coreRoot, '../tsconfig.json')
+  const config = ts.readConfigFile(configPath, ts.sys.readFile)
+  if (config.error) {
+    throw new Error(
+      ts.flattenDiagnosticMessageText(config.error.messageText, '\n'),
+    )
+  }
+
+  return ts.parseJsonConfigFileContent(
+    config.config,
+    ts.sys,
+    path.dirname(configPath),
+  ).options
+}
+
+const coreCompilerOptions = resolveCoreCompilerOptions()
+
+function loadSource(
+  filePath: string,
+  resolveTypes: boolean,
+): { checker?: ts.TypeChecker; sourceFile: ts.SourceFile } {
+  if (!resolveTypes) {
+    return { sourceFile: parseSource(filePath) }
+  }
+
+  const program = ts.createProgram({
+    rootNames: [filePath],
+    options: coreCompilerOptions,
+  })
+  const sourceFile = program.getSourceFile(filePath)
+  if (!sourceFile) {
+    throw new Error(`[extract-models] Cannot load source: ${filePath}`)
+  }
+
+  return { checker: program.getTypeChecker(), sourceFile }
 }
 
 /** Collect top-level `const x = 'value'` bindings (for enum initializers). */
@@ -270,6 +314,21 @@ function extractTypeAlias(
   return text
 }
 
+/** Resolve an inferred type alias into a self-contained structural type. */
+function extractResolvedTypeAlias(
+  checker: ts.TypeChecker,
+  node: ts.TypeAliasDeclaration,
+): string {
+  const type = checker.getTypeAtLocation(node)
+  const typeText = checker.typeToString(
+    type,
+    node,
+    ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.InTypeAlias,
+  )
+
+  return `export type ${node.name.text} = ${transformTypeText(typeText)}`
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -288,12 +347,16 @@ async function main() {
       continue
     }
 
-    const sourceFile = parseSource(filePath)
+    const { checker, sourceFile } = loadSource(
+      filePath,
+      Boolean(source.resolvedTypes?.length),
+    )
     const constValues = collectConstValues(sourceFile)
 
     const wanted = new Set([
       ...(source.enums ?? []),
       ...(source.interfaces ?? []),
+      ...(source.resolvedTypes ?? []),
       ...(source.types ?? []),
       ...(source.typeAliases ?? []),
     ])
@@ -321,6 +384,20 @@ async function main() {
 
       if (
         ts.isTypeAliasDeclaration(node) &&
+        source.resolvedTypes?.includes(node.name.text)
+      ) {
+        if (!checker) {
+          throw new Error(
+            `[extract-models] Missing type checker for ${node.name.text}`,
+          )
+        }
+        output.push(extractResolvedTypeAlias(checker, node))
+        output.push('')
+        found = true
+      }
+
+      if (
+        ts.isTypeAliasDeclaration(node) &&
         (source.types?.includes(node.name.text) ||
           source.typeAliases?.includes(node.name.text))
       ) {
@@ -329,6 +406,11 @@ async function main() {
         found = true
       }
     })
+
+    for (const [name, typeText] of Object.entries(source.derivedTypes ?? {})) {
+      output.push(`export type ${name} = ${typeText}`)
+      output.push('')
+    }
 
     if (!found && wanted.size > 0) {
       console.warn(
@@ -347,6 +429,19 @@ async function main() {
   })
 
   const outputPath = path.resolve(__dirname, '../src/models.generated.ts')
+  if (process.argv.includes('--check')) {
+    const current = fs.readFileSync(outputPath, 'utf-8')
+    if (current !== formatted) {
+      console.error(
+        '[extract-models] Generated models are stale. Run `bun scripts/extract-models.ts`.',
+      )
+      process.exitCode = 1
+      return
+    }
+    console.log(`✓ Generated models are current: ${outputPath}`)
+    return
+  }
+
   fs.writeFileSync(outputPath, formatted)
   console.log(`✓ Generated ${outputPath}`)
 }

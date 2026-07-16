@@ -472,6 +472,89 @@ export const enUS = {
   'common.update': 'Update',
   'common.view': 'View',
 
+  'companion.action.refresh': 'Refresh',
+  'companion.action.retry': 'Retry',
+  'companion.devices.confirmDescription':
+    'Revoking “{name}” immediately removes Companion access. The device must be paired again to reconnect.',
+  'companion.devices.confirmTitle': 'Revoke Companion device?',
+  'companion.devices.createdAt': 'Created',
+  'companion.devices.description':
+    'Review paired devices and granted access. The last authenticated request confirms connectivity, not a successful Live Desk publication.',
+  'companion.devices.emptyDescription':
+    'Generate a pairing code and claim it in the macOS client to connect a device.',
+  'companion.devices.emptyTitle': 'No paired devices',
+  'companion.devices.lastSeen': 'Last authenticated request',
+  'companion.devices.loadFailed': 'Failed to load Companion devices.',
+  'companion.devices.loading': 'Loading Companion devices',
+  'companion.devices.never': 'No authenticated request',
+  'companion.devices.paired': 'Paired',
+  'companion.devices.revoke': 'Revoke',
+  'companion.devices.revokeFailed':
+    'The revoke request did not complete cleanly. Device state has been synchronized again.',
+  'companion.devices.revokeSuccess': 'Device access revoked',
+  'companion.devices.revoked': 'Revoked',
+  'companion.devices.revoking': 'Revoking',
+  'companion.devices.title': 'Paired devices ({count})',
+  'companion.liveDesk.application': 'Sanitized application',
+  'companion.liveDesk.description':
+    'Reads the sanitized projection currently served by Core. This is the authoritative signal that a Live Desk report was accepted and published.',
+  'companion.liveDesk.expired': 'Expired',
+  'companion.liveDesk.expiredDescription':
+    'A previous public lease ended or was explicitly cleared.',
+  'companion.liveDesk.expiresAt': 'Lease expires',
+  'companion.liveDesk.live': 'Live',
+  'companion.liveDesk.liveDescription':
+    'Core is currently serving an accepted, unexpired projection.',
+  'companion.liveDesk.loadFailed':
+    'Failed to read the public Live Desk projection.',
+  'companion.liveDesk.loading': 'Loading public Live Desk projection',
+  'companion.liveDesk.noReport': 'No report',
+  'companion.liveDesk.noReportDescription':
+    'Core has not published a Live Desk projection in this epoch.',
+  'companion.liveDesk.notShared': 'Not shared',
+  'companion.liveDesk.publicProjection': 'Public projection',
+  'companion.liveDesk.revision': 'Revision {revision}',
+  'companion.liveDesk.title': 'Live Desk report',
+  'companion.liveDesk.unavailable': 'Unavailable',
+  'companion.liveDesk.updatedAt': 'Last accepted update',
+  'companion.pairing.active': 'Pairing code active',
+  'companion.pairing.codeLabel': 'One-time pairing code',
+  'companion.pairing.copied': 'Pairing code copied',
+  'companion.pairing.copy': 'Copy pairing code',
+  'companion.pairing.copyFailed': 'Could not copy the pairing code',
+  'companion.pairing.create': 'Generate pairing code',
+  'companion.pairing.createFailed': 'Failed to generate a pairing code',
+  'companion.pairing.created': 'Pairing code generated',
+  'companion.pairing.creating': 'Generating',
+  'companion.pairing.description':
+    'Issue a short-lived, one-time Live Desk credential for macOS Companion.',
+  'companion.pairing.disabledNotice':
+    'Live Desk is not enabled on this server. Set COMPANION_LIVE_DESK_ENABLED=true and restart Core before generating a pairing code. Existing devices can still be revoked below.',
+  'companion.pairing.empty':
+    'After generating a code, enter it in macOS Companion. A claimed device will appear in the list below.',
+  'companion.pairing.expired': 'Expired',
+  'companion.pairing.expiresAt': 'Valid until {time}',
+  'companion.pairing.expiresIn': 'Expires in {count}s',
+  'companion.pairing.showOnce':
+    'The code is shown only in this page session and cannot be recovered after a refresh. Share it only with a trusted device.',
+  'companion.pairing.title': 'Connect a device',
+  'companion.scope.momentWrite': 'Write Moments',
+  'companion.scope.presenceWrite': 'Write Live Desk',
+  'companion.scope.readingRead': 'Read shared reading',
+  'companion.scope.readingWrite': 'Write shared reading',
+  'companion.status.description':
+    'Companion protocol capabilities and runtime flags reported by this Core instance.',
+  'companion.status.disabled': 'Disabled',
+  'companion.status.enabled': 'Enabled',
+  'companion.status.heartbeat': 'Recommended heartbeat',
+  'companion.status.liveDesk': 'Live Desk',
+  'companion.status.loadFailed': 'Failed to read Companion capabilities.',
+  'companion.status.loading': 'Loading Companion capabilities',
+  'companion.status.minimumClient': 'Minimum client version',
+  'companion.status.presenceSchema': 'Presence protocol',
+  'companion.status.seconds': '{count}s',
+  'companion.status.title': 'Server capability',
+
   'imageUploadPrivacy.dialog.description':
     'This image contains GPS location metadata. Choose whether to preserve the original metadata or remove the location information before upload.',
   'imageUploadPrivacy.dialog.coordinatesTitle': 'GPS coordinates in this image',
@@ -1568,6 +1651,9 @@ export const enUS = {
   'routes.comments.description':
     'Comments, moderation, and reader-facing feedback.',
   'routes.comments.title': 'Comments',
+  'routes.companion.description':
+    'Connect macOS Companion and manage device access.',
+  'routes.companion.title': 'Companion',
   'routes.cron.description':
     'Scheduled task definitions, schedules, and one-off triggers.',
   'routes.cron.title': 'Cron',
@@ -2167,7 +2253,7 @@ export const enUS = {
   'shell.nav.intelligence.description': 'AI, analytics, and data enrichment.',
   'shell.nav.integrations': 'Integrations',
   'shell.nav.integrations.description':
-    'Snippets, webhooks, and Markdown import/export.',
+    'Companion, snippets, webhooks, and Markdown import/export.',
   'shell.nav.system': 'System',
   'shell.nav.system.description': 'Settings and background maintenance.',
   'shell.owner.fallback': 'User',

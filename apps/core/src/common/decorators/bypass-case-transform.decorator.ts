@@ -2,11 +2,14 @@ import { SetMetadata } from '@nestjs/common'
 
 import { BYPASS_CASE_TRANSFORM_METADATA } from '~/constants/system.constant'
 
+export { BYPASS_CASE_TRANSFORM_ROOT } from '~/common/response/case-transform'
+
 /**
  * Opt a field subtree out of snake_case key conversion.
  *
  * Paths root at the response `data`. Use dotted segments to descend objects,
  * and `[]` to descend an array (e.g. `'items[].rawPayload'`).
+ * Use `'$'` to preserve the complete response `data` and `meta` roots.
  *
  * When a path matches, the entire matched subtree is emitted **verbatim** —
  * every nested key inside is preserved as-is, regardless of depth. Only the
