@@ -1,19 +1,17 @@
 ## TL;DR
 
-Live Desk now accepts versioned album artwork URLs, enabling Yohaku Companion to publish cache-safe cover images alongside current media presence.
+Companion clients can now publish verified QQ Music and NetEase song links for direct playback from Live Desk.
 
 ## Highlights
 
-Companion Presence v2 now negotiates a dedicated media-artwork capability and validates a single HTTPS cover URL with an explicit SHA-256 cache version. Clients can replace one stable object while consumers receive a versioned URL, avoiding unbounded object growth and stale CDN content without adding another deployment setting.
-
-The public presence projection and admin client now carry artwork when available. Artwork remains optional: an unavailable or invalid cover does not prevent sanitized media text, playback state, or timeline updates from reaching Live Desk, preserving the existing fail-soft presence behavior.
+Yohaku Companion can attach a validated provider song URL to the current media presence. Core advertises the capability during negotiation, accepts legacy clients without the field, validates exact QQ Music and NetEase URL shapes, and preserves the link in public Live Desk projections for compatible web and API consumers.
 
 ## Changes
 
 ### Features
 
-- Added negotiated Live Desk album artwork support across Companion validation, public projection, and the admin API contract ([1af22ad](https://github.com/mx-space/core/commit/1af22adac0c6d997cbd916ea13d5ddfe2d35d583)).
+- Added capability-gated media playback links to Companion Protocol v2 and exposed validated links through public Presence projections. ([7f09010](https://github.com/mx-space/core/commit/7f0901006a88126603993baddfbdf109bcda7722))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.13.1...v13.14.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.14.0...v13.14.1

@@ -1,3 +1,10 @@
+# [13.14.1](https://github.com/mx-space/core/compare/v13.14.0...v13.14.1) (2026-07-17)
+
+
+### Features
+
+* **companion:** add media playback links ([7f09010](https://github.com/mx-space/core/commit/7f0901006a88126603993baddfbdf109bcda7722))
+
 # [13.14.0](https://github.com/mx-space/core/compare/v13.13.1...v13.14.0) (2026-07-17)
 
 
