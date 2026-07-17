@@ -9,9 +9,9 @@ import {
   COMPANION_APPLICATION_DISPLAY_NAME_MAX_SCALARS,
   COMPANION_ICON_URL_MAX_BYTES,
   COMPANION_MAXIMUM_CLOCK_SKEW_SECONDS,
+  COMPANION_MEDIA_ARTWORK_URL_MAX_BYTES,
   COMPANION_MEDIA_POSITION_TOLERANCE_MS,
   COMPANION_MEDIA_TEXT_MAX_SCALARS,
-  COMPANION_MEDIA_TIMELINE_ENABLED,
   COMPANION_MINIMUM_CLIENT_VERSION,
   COMPANION_PLAYER_DISPLAY_NAME_MAX_SCALARS,
   COMPANION_PRESENCE_LEASE_MAX_SECONDS,
@@ -55,6 +55,22 @@ const hasValidHttpsURL = (value: string) => {
       Boolean(url.hostname) &&
       !url.username &&
       !url.password
+    )
+  } catch {
+    return false
+  }
+}
+
+const hasValidMediaArtworkURL = (value: string) => {
+  if (!hasValidHttpsURL(value)) return false
+  try {
+    const url = new URL(value)
+    const parameters = Array.from(url.searchParams.entries())
+    return (
+      !url.hash &&
+      parameters.length === 1 &&
+      parameters[0]?.[0] === 'v' &&
+      /^[\da-f]{64}$/.test(parameters[0]?.[1] ?? '')
     )
   } catch {
     return false
@@ -276,6 +292,25 @@ const NullableMediaTextSchema = normalizedUnicodeString(
   COMPANION_MEDIA_TEXT_MAX_SCALARS,
 ).nullable()
 
+export const CompanionMediaArtworkV2Schema = z
+  .object({
+    url: normalizedUnicodeString(
+      'Media artwork URL',
+      COMPANION_MEDIA_ARTWORK_URL_MAX_BYTES,
+    )
+      .refine(
+        (value) =>
+          Buffer.byteLength(value, 'utf8') <=
+          COMPANION_MEDIA_ARTWORK_URL_MAX_BYTES,
+        'Media artwork URL exceeds its byte limit.',
+      )
+      .refine(
+        hasValidMediaArtworkURL,
+        'Media artwork requires an HTTPS URL with one lowercase SHA-256 v query parameter.',
+      ),
+  })
+  .strict()
+
 export const CompanionMediaContextV2Schema = z
   .object({
     sessionId: CompanionIdentifierSchema,
@@ -285,6 +320,7 @@ export const CompanionMediaContextV2Schema = z
     album: NullableMediaTextSchema,
     player: CompanionPlayerV2Schema.nullable(),
     playback: CompanionMediaPlaybackV2Schema,
+    artwork: CompanionMediaArtworkV2Schema.nullable().optional().default(null),
   })
   .strict()
   .superRefine((value, context) => {
@@ -353,6 +389,7 @@ export const PublicMediaPresenceV2Schema = z
     album: NullableMediaTextSchema,
     player: CompanionPlayerV2Schema.nullable(),
     playback: PublicMediaPlaybackV2Schema,
+    artwork: CompanionMediaArtworkV2Schema.nullable().optional().default(null),
   })
   .strict()
   .superRefine((value, context) => {
@@ -456,6 +493,7 @@ export const CompanionCapabilitiesV2Schema = z
       .object({
         liveDesk: z.boolean(),
         mediaTimeline: z.boolean(),
+        mediaArtwork: z.boolean(),
         moments: z.boolean(),
         readingSessions: z.boolean(),
       })
@@ -493,35 +531,25 @@ export const CompanionCapabilitiesV2Schema = z
     }
   })
 
-export interface CompanionCapabilityFeatureConfiguration {
-  mediaTimelineEnabled: boolean
-}
-
-export const createCompanionCapabilities = ({
-  mediaTimelineEnabled,
-}: CompanionCapabilityFeatureConfiguration) =>
-  CompanionCapabilitiesV2Schema.parse({
-    minimumClientVersion: COMPANION_MINIMUM_CLIENT_VERSION,
-    presenceSchemaVersions: [COMPANION_PRESENCE_SCHEMA_VERSION],
-    momentSchemaVersions: [],
-    features: {
-      liveDesk: true,
-      mediaTimeline: mediaTimelineEnabled,
-      moments: false,
-      readingSessions: false,
-    },
-    limits: {
-      presencePayloadBytes: COMPANION_PRESENCE_PAYLOAD_BYTES,
-      presenceRequestsPerMinute: COMPANION_PRESENCE_REQUESTS_PER_MINUTE,
-      presenceLeaseMinSeconds: COMPANION_PRESENCE_LEASE_MIN_SECONDS,
-      presenceLeaseMaxSeconds: COMPANION_PRESENCE_LEASE_MAX_SECONDS,
-      recommendedHeartbeatSeconds: COMPANION_RECOMMENDED_HEARTBEAT_SECONDS,
-      maximumClockSkewSeconds: COMPANION_MAXIMUM_CLOCK_SKEW_SECONDS,
-    },
-  })
-
-export const COMPANION_CAPABILITIES = createCompanionCapabilities({
-  mediaTimelineEnabled: COMPANION_MEDIA_TIMELINE_ENABLED,
+export const COMPANION_CAPABILITIES = CompanionCapabilitiesV2Schema.parse({
+  minimumClientVersion: COMPANION_MINIMUM_CLIENT_VERSION,
+  presenceSchemaVersions: [COMPANION_PRESENCE_SCHEMA_VERSION],
+  momentSchemaVersions: [],
+  features: {
+    liveDesk: true,
+    mediaTimeline: true,
+    mediaArtwork: true,
+    moments: false,
+    readingSessions: false,
+  },
+  limits: {
+    presencePayloadBytes: COMPANION_PRESENCE_PAYLOAD_BYTES,
+    presenceRequestsPerMinute: COMPANION_PRESENCE_REQUESTS_PER_MINUTE,
+    presenceLeaseMinSeconds: COMPANION_PRESENCE_LEASE_MIN_SECONDS,
+    presenceLeaseMaxSeconds: COMPANION_PRESENCE_LEASE_MAX_SECONDS,
+    recommendedHeartbeatSeconds: COMPANION_RECOMMENDED_HEARTBEAT_SECONDS,
+    maximumClockSkewSeconds: COMPANION_MAXIMUM_CLOCK_SKEW_SECONDS,
+  },
 })
 
 export const CompanionCapabilitiesResponseV2Schema = z

@@ -26,6 +26,7 @@ const makeMedia = () => ({
   title: 'Track title',
   artist: 'Artist',
   album: null,
+  artwork: null,
   player: { displayName: 'Music' },
   playback: {
     state: 'playing',
@@ -144,6 +145,28 @@ describe('CompanionPresenceRequestV2Schema', () => {
     ).toBe(false)
   })
 
+  it('accepts legacy media without artwork and validates cache-versioned artwork URLs', () => {
+    const legacy = structuredClone(makeSnapshot()) as any
+    delete legacy.data.media.artwork
+    expect(
+      CompanionPresenceRequestV2Schema.parse(legacy).data.media?.artwork,
+    ).toBeNull()
+
+    const versioned = structuredClone(makeSnapshot())
+    versioned.data.media.artwork = {
+      url: `https://assets.example.com/media/current.png?v=${'a'.repeat(64)}`,
+    }
+    expect(CompanionPresenceRequestV2Schema.safeParse(versioned).success).toBe(
+      true,
+    )
+
+    versioned.data.media.artwork.url =
+      'https://assets.example.com/media/current.png'
+    expect(CompanionPresenceRequestV2Schema.safeParse(versioned).success).toBe(
+      false,
+    )
+  })
+
   it('measures display-name limits by Unicode scalar and requires millisecond UTC timestamps', () => {
     const scalarBoundary = structuredClone(makeSnapshot())
     scalarBoundary.data.application.displayName = '😀'.repeat(120)
@@ -221,6 +244,30 @@ describe('PublicLiveDeskStateV2Schema', () => {
         projection: null,
       }).success,
     ).toBe(true)
+  })
+
+  it('normalizes a stored pre-artwork media projection to explicit null', () => {
+    const legacy = makePublicState() as any
+    legacy.projection.application = null
+    legacy.projection.media = {
+      album: null,
+      artist: 'Artist',
+      kind: 'music',
+      playback: {
+        anchorAt: '2026-07-16T12:00:00.180Z',
+        durationMs: 100_000,
+        positionMs: 50_000,
+        rate: 1,
+        state: 'playing',
+      },
+      player: { displayName: 'Music' },
+      sessionId: '01K0A5PXA7KPKN6VBYF6M52M2R',
+      title: 'Track title',
+    }
+
+    expect(
+      PublicLiveDeskStateV2Schema.parse(legacy).projection?.media?.artwork,
+    ).toBeNull()
   })
 
   it('rejects expired chronology and private device fields', () => {

@@ -50,6 +50,7 @@ vi.mock('~/ui/primitives/scroll', () => ({
 const enabledCapabilities: CompanionCapabilities = {
   features: {
     liveDesk: true,
+    mediaArtwork: false,
     mediaTimeline: false,
     moments: false,
     readingSessions: false,

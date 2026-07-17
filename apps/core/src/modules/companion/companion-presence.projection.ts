@@ -95,6 +95,7 @@ const normalizeMedia = (
     title: media.title,
     artist: media.artist,
     album: media.album,
+    artwork: media.artwork,
     player: media.player,
     playback: {
       state: playback.state,

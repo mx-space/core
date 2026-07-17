@@ -32,6 +32,7 @@ const makeRequest = () =>
         title: 'Track title',
         artist: 'Artist',
         album: null,
+        artwork: null,
         player: { displayName: 'Music' },
         playback: {
           state: 'playing',
@@ -110,5 +111,23 @@ describe('Companion public projection normalization', () => {
     expect(() =>
       assertCompanionProjectionPolicy(request, new Set(['assets.example.com'])),
     ).not.toThrow()
+  })
+
+  it('preserves a schema-validated HTTPS artwork URL', () => {
+    const request = makeRequest()
+    request.data.media!.artwork = {
+      url: `https://media.example.com/current.png?v=${'b'.repeat(64)}`,
+    }
+
+    expect(() =>
+      assertCompanionProjectionPolicy(request, new Set()),
+    ).not.toThrow()
+
+    const projection = createPublicLiveDeskProjection(
+      request,
+      new Date('2026-07-16T12:00:00.180Z'),
+      new Set(),
+    )
+    expect(projection.media?.artwork).toEqual(request.data.media!.artwork)
   })
 })

@@ -4,7 +4,6 @@ import { CompanionController } from '~/modules/companion/companion.controller'
 import {
   COMPANION_CAPABILITIES,
   CompanionCapabilitiesResponseV2Schema,
-  createCompanionCapabilities,
 } from '~/modules/companion/companion.schema'
 
 describe('Companion capabilities', () => {
@@ -21,6 +20,8 @@ describe('Companion capabilities', () => {
     const body = CompanionCapabilitiesResponseV2Schema.parse(response.json())
     expect(body.data.presenceSchemaVersions).toContain(2)
     expect(body.data.features).toEqual(COMPANION_CAPABILITIES.features)
+    expect(body.data.features.mediaTimeline).toBe(true)
+    expect(body.data.features.mediaArtwork).toBe(true)
     expect(body.data.limits.recommendedHeartbeatSeconds).toBeGreaterThanOrEqual(
       body.data.limits.presenceLeaseMinSeconds,
     )
@@ -34,19 +35,4 @@ describe('Companion capabilities', () => {
     expect(rawBody.meta).toHaveProperty('requestId')
     expect(rawBody.meta).not.toHaveProperty('request_id')
   })
-
-  it.each([
-    { configured: true, expected: true },
-    { configured: false, expected: false },
-  ])(
-    'advertises mediaTimeline=$expected when its configuration is $configured',
-    ({ configured, expected }) => {
-      const capabilities = createCompanionCapabilities({
-        mediaTimelineEnabled: configured,
-      })
-
-      expect(capabilities.features.liveDesk).toBe(true)
-      expect(capabilities.features.mediaTimeline).toBe(expected)
-    },
-  )
 })
