@@ -1,3 +1,10 @@
+# [13.14.0](https://github.com/mx-space/core/compare/v13.13.1...v13.14.0) (2026-07-17)
+
+
+### Features
+
+* **companion:** support Live Desk artwork ([1af22ad](https://github.com/mx-space/core/commit/1af22adac0c6d997cbd916ea13d5ddfe2d35d583))
+
 # [13.13.1](https://github.com/mx-space/core/compare/v13.13.0...v13.13.1) (2026-07-17)
 
 
