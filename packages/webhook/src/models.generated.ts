@@ -407,6 +407,8 @@ export type PublicLiveDeskStateV2 = {
         anchorAt: string
         rate: number
       }
+      artwork: { url: string } | null
+      link: { url: string } | null
     } | null
   } | null
 }

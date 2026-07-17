@@ -51,6 +51,7 @@ const enabledCapabilities: CompanionCapabilities = {
   features: {
     liveDesk: true,
     mediaArtwork: false,
+    mediaPlaybackLinks: false,
     mediaTimeline: false,
     moments: false,
     readingSessions: false,

@@ -60,6 +60,7 @@ describe('test Companion client', () => {
       features: {
         liveDesk: true,
         mediaTimeline: true,
+        mediaPlaybackLinks: true,
         moments: true,
         readingSessions: false,
       },
@@ -80,6 +81,7 @@ describe('test Companion client', () => {
       features: {
         liveDesk: true,
         mediaTimeline: true,
+        mediaPlaybackLinks: true,
         moments: true,
         readingSessions: false,
       },

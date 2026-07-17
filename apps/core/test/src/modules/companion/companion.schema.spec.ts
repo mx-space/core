@@ -167,6 +167,46 @@ describe('CompanionPresenceRequestV2Schema', () => {
     )
   })
 
+  it('accepts legacy media without a link and restricts links to canonical provider song URLs', () => {
+    const legacy = structuredClone(makeSnapshot()) as any
+    delete legacy.data.media.link
+    expect(
+      CompanionPresenceRequestV2Schema.parse(legacy).data.media?.link,
+    ).toBeNull()
+
+    const qqMusic = structuredClone(makeSnapshot()) as any
+    qqMusic.data.media.link = {
+      url: 'https://y.qq.com/n/ryqq/songDetail/001lzbAN14boA4',
+    }
+    expect(CompanionPresenceRequestV2Schema.safeParse(qqMusic).success).toBe(
+      true,
+    )
+
+    const netEaseMusic = structuredClone(makeSnapshot()) as any
+    netEaseMusic.data.media.link = {
+      url: 'https://music.163.com/song?id=3339827986',
+    }
+    expect(
+      CompanionPresenceRequestV2Schema.safeParse(netEaseMusic).success,
+    ).toBe(true)
+
+    const spoofedHost = structuredClone(makeSnapshot()) as any
+    spoofedHost.data.media.link = {
+      url: 'https://y.qq.com.example.com/n/ryqq/songDetail/001lzbAN14boA4',
+    }
+    expect(
+      CompanionPresenceRequestV2Schema.safeParse(spoofedHost).success,
+    ).toBe(false)
+
+    const trackingQuery = structuredClone(makeSnapshot()) as any
+    trackingQuery.data.media.link = {
+      url: 'https://music.163.com/song?id=3339827986&utm_source=tracker',
+    }
+    expect(
+      CompanionPresenceRequestV2Schema.safeParse(trackingQuery).success,
+    ).toBe(false)
+  })
+
   it('measures display-name limits by Unicode scalar and requires millisecond UTC timestamps', () => {
     const scalarBoundary = structuredClone(makeSnapshot())
     scalarBoundary.data.application.displayName = '😀'.repeat(120)

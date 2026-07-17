@@ -30,6 +30,7 @@ export interface CompanionMediaContext {
     sampledAt: string
     rate: number
   }
+  link?: { url: string } | null
 }
 
 export interface PublicMediaPresenceV2 {
@@ -46,6 +47,7 @@ export interface PublicMediaPresenceV2 {
     anchorAt: string
     rate: number
   }
+  link?: { url: string } | null
 }
 
 export type PublicApplicationPresenceV2 = CompanionApplicationContext
@@ -72,6 +74,7 @@ export interface CompanionCapabilities {
   features: {
     liveDesk: boolean
     mediaTimeline: boolean
+    mediaPlaybackLinks?: boolean
     moments: boolean
     readingSessions: boolean
   }

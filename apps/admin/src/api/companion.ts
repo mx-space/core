@@ -14,6 +14,7 @@ export interface CompanionCapabilities {
     liveDesk: boolean
     mediaTimeline: boolean
     mediaArtwork: boolean
+    mediaPlaybackLinks: boolean
     moments: boolean
     readingSessions: boolean
   }
@@ -66,6 +67,7 @@ export interface CompanionPublicMediaPresence {
   artist: null | string
   album: null | string
   artwork: { url: string } | null
+  link: { url: string } | null
   player: { displayName: string } | null
   playback: {
     state: 'paused' | 'playing'

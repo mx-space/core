@@ -10,6 +10,7 @@ import {
   COMPANION_ICON_URL_MAX_BYTES,
   COMPANION_MAXIMUM_CLOCK_SKEW_SECONDS,
   COMPANION_MEDIA_ARTWORK_URL_MAX_BYTES,
+  COMPANION_MEDIA_LINK_URL_MAX_BYTES,
   COMPANION_MEDIA_POSITION_TOLERANCE_MS,
   COMPANION_MEDIA_TEXT_MAX_SCALARS,
   COMPANION_MINIMUM_CLIENT_VERSION,
@@ -72,6 +73,35 @@ const hasValidMediaArtworkURL = (value: string) => {
       parameters[0]?.[0] === 'v' &&
       /^[\da-f]{64}$/.test(parameters[0]?.[1] ?? '')
     )
+  } catch {
+    return false
+  }
+}
+
+const hasValidMediaLinkURL = (value: string) => {
+  if (!hasValidHttpsURL(value)) return false
+  try {
+    const url = new URL(value)
+    if (url.port || url.hash) return false
+
+    if (url.hostname === 'y.qq.com') {
+      return (
+        !url.search &&
+        /^\/n\/ryqq\/songDetail\/[\dA-Za-z]{14}$/.test(url.pathname)
+      )
+    }
+
+    if (url.hostname === 'music.163.com') {
+      const parameters = Array.from(url.searchParams.entries())
+      return (
+        url.pathname === '/song' &&
+        parameters.length === 1 &&
+        parameters[0]?.[0] === 'id' &&
+        /^(?!0$)\d{1,20}$/.test(parameters[0]?.[1] ?? '')
+      )
+    }
+
+    return false
   } catch {
     return false
   }
@@ -311,6 +341,25 @@ export const CompanionMediaArtworkV2Schema = z
   })
   .strict()
 
+export const CompanionMediaLinkV2Schema = z
+  .object({
+    url: normalizedUnicodeString(
+      'Media playback URL',
+      COMPANION_MEDIA_LINK_URL_MAX_BYTES,
+    )
+      .refine(
+        (value) =>
+          Buffer.byteLength(value, 'utf8') <=
+          COMPANION_MEDIA_LINK_URL_MAX_BYTES,
+        'Media playback URL exceeds its byte limit.',
+      )
+      .refine(
+        hasValidMediaLinkURL,
+        'Media playback URL must be a canonical QQ Music or NetEase Music song URL.',
+      ),
+  })
+  .strict()
+
 export const CompanionMediaContextV2Schema = z
   .object({
     sessionId: CompanionIdentifierSchema,
@@ -321,6 +370,7 @@ export const CompanionMediaContextV2Schema = z
     player: CompanionPlayerV2Schema.nullable(),
     playback: CompanionMediaPlaybackV2Schema,
     artwork: CompanionMediaArtworkV2Schema.nullable().optional().default(null),
+    link: CompanionMediaLinkV2Schema.nullable().optional().default(null),
   })
   .strict()
   .superRefine((value, context) => {
@@ -390,6 +440,7 @@ export const PublicMediaPresenceV2Schema = z
     player: CompanionPlayerV2Schema.nullable(),
     playback: PublicMediaPlaybackV2Schema,
     artwork: CompanionMediaArtworkV2Schema.nullable().optional().default(null),
+    link: CompanionMediaLinkV2Schema.nullable().optional().default(null),
   })
   .strict()
   .superRefine((value, context) => {
@@ -494,6 +545,7 @@ export const CompanionCapabilitiesV2Schema = z
         liveDesk: z.boolean(),
         mediaTimeline: z.boolean(),
         mediaArtwork: z.boolean(),
+        mediaPlaybackLinks: z.boolean(),
         moments: z.boolean(),
         readingSessions: z.boolean(),
       })
@@ -539,6 +591,7 @@ export const COMPANION_CAPABILITIES = CompanionCapabilitiesV2Schema.parse({
     liveDesk: true,
     mediaTimeline: true,
     mediaArtwork: true,
+    mediaPlaybackLinks: true,
     moments: false,
     readingSessions: false,
   },

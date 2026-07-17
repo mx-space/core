@@ -130,4 +130,18 @@ describe('Companion public projection normalization', () => {
     )
     expect(projection.media?.artwork).toEqual(request.data.media!.artwork)
   })
+
+  it('preserves a schema-validated provider song link', () => {
+    const request = makeRequest()
+    request.data.media!.link = {
+      url: 'https://y.qq.com/n/ryqq/songDetail/001lzbAN14boA4',
+    }
+
+    const projection = createPublicLiveDeskProjection(
+      request,
+      new Date('2026-07-16T12:00:00.180Z'),
+      new Set(),
+    )
+    expect(projection.media?.link).toEqual(request.data.media!.link)
+  })
 })

@@ -22,6 +22,7 @@ describe('Companion capabilities', () => {
     expect(body.data.features).toEqual(COMPANION_CAPABILITIES.features)
     expect(body.data.features.mediaTimeline).toBe(true)
     expect(body.data.features.mediaArtwork).toBe(true)
+    expect(body.data.features.mediaPlaybackLinks).toBe(true)
     expect(body.data.limits.recommendedHeartbeatSeconds).toBeGreaterThanOrEqual(
       body.data.limits.presenceLeaseMinSeconds,
     )
