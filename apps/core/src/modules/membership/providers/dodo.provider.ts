@@ -8,8 +8,26 @@ import { ConfigsService } from '../../configs/configs.service'
 import type { MembershipPlan } from '../membership.types'
 import type {
   NormalizedBillingEvent,
+  NormalizedPlanPricing,
   PaymentProviderAdapter,
 } from './provider.interface'
+
+const PRICING_TTL_MS = 10 * 60 * 1000
+
+const normalizeInterval = (
+  interval: unknown,
+): NormalizedPlanPricing['interval'] | null => {
+  const value = String(interval).toLowerCase()
+  if (
+    value === 'day' ||
+    value === 'week' ||
+    value === 'month' ||
+    value === 'year'
+  ) {
+    return value
+  }
+  return null
+}
 
 type DodoSubscriptionEvent = {
   type:
@@ -55,6 +73,10 @@ export class DodoProvider implements PaymentProviderAdapter {
   private client: DodoPayments | null = null
   private cachedApiKey: string | null = null
   private cachedEnvironment: 'test_mode' | 'live_mode' | null = null
+  private readonly pricingCache = new Map<
+    string,
+    { value: NormalizedPlanPricing | null; expiresAt: number }
+  >()
 
   constructor(private readonly configsService: ConfigsService) {}
 
@@ -112,6 +134,56 @@ export class DodoProvider implements PaymentProviderAdapter {
     }
 
     return { checkoutUrl: session.checkout_url }
+  }
+
+  async getPlanPricing(
+    productId: string,
+  ): Promise<NormalizedPlanPricing | null> {
+    const cached = this.pricingCache.get(productId)
+    if (cached && cached.expiresAt > Date.now()) return cached.value
+
+    const membershipConfig = await this.configsService.get('membership')
+    if (!membershipConfig.dodoApiKey) return null
+
+    const client = this.getClient(
+      membershipConfig.dodoApiKey,
+      membershipConfig.dodoEnvironment,
+    )
+
+    let value: NormalizedPlanPricing | null = null
+    try {
+      const product = await client.products.retrieve(productId)
+      const price = product.price as
+        | {
+            price?: number
+            currency?: string
+            payment_frequency_interval?: unknown
+            payment_frequency_count?: number
+          }
+        | undefined
+      const interval = normalizeInterval(price?.payment_frequency_interval)
+      if (
+        price &&
+        typeof price.price === 'number' &&
+        price.currency &&
+        interval
+      ) {
+        value = {
+          amount: price.price,
+          currency: price.currency,
+          interval,
+          intervalCount: price.payment_frequency_count ?? 1,
+        }
+      }
+    } catch {
+      value = null
+    }
+
+    this.pricingCache.set(productId, {
+      value,
+      expiresAt: Date.now() + PRICING_TTL_MS,
+    })
+    return value
   }
 
   async verifyAndParseWebhook(

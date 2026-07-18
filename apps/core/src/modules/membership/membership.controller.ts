@@ -100,7 +100,28 @@ export class MembershipController {
   @Get('/plans')
   async plans() {
     const membershipConfig = await this.configsService.get('membership')
-    return resolveMembershipAvailability(membershipConfig)
+    const availability = resolveMembershipAvailability(membershipConfig)
+    if (!availability.enabled) return { enabled: false, plans: [] }
+
+    const adapter =
+      membershipConfig.provider === 'dodo' ? this.dodoProvider : undefined
+    const productIdByPlan: Record<string, string | undefined> = {
+      monthly: membershipConfig.monthlyProductId,
+      yearly: membershipConfig.yearlyProductId,
+    }
+
+    const plans = await Promise.all(
+      availability.plans.map(async (plan) => {
+        const productId = productIdByPlan[plan]
+        const pricing =
+          adapter?.getPlanPricing && productId
+            ? await adapter.getPlanPricing(productId).catch(() => null)
+            : null
+        return { plan, pricing: pricing ?? undefined }
+      }),
+    )
+
+    return { enabled: true, plans }
   }
 
   @ReaderAuth()

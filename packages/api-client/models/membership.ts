@@ -9,9 +9,21 @@ export interface MembershipCheckoutResult {
   checkoutUrl: string
 }
 
+export interface MembershipPlanPricing {
+  amount: number
+  currency: string
+  interval: 'day' | 'week' | 'month' | 'year'
+  intervalCount: number
+}
+
+export interface MembershipPlanInfo {
+  plan: MembershipPlan
+  pricing?: MembershipPlanPricing
+}
+
 export interface MembershipPlansResult {
   enabled: boolean
-  plans: MembershipPlan[]
+  plans: MembershipPlanInfo[]
 }
 
 export interface MembershipStatusResultNone {

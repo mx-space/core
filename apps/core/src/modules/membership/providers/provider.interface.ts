@@ -11,12 +11,21 @@ export interface NormalizedBillingEvent {
   readerId: string
 }
 
+export interface NormalizedPlanPricing {
+  amount: number
+  currency: string
+  interval: 'day' | 'week' | 'month' | 'year'
+  intervalCount: number
+}
+
 export interface PaymentProviderAdapter {
   createCheckout: (input: {
     reader: { id: string; email?: string | null; name?: string | null }
     plan: MembershipPlan
     returnUrl?: string
   }) => Promise<{ checkoutUrl: string }>
+
+  getPlanPricing?: (productId: string) => Promise<NormalizedPlanPricing | null>
 
   verifyAndParseWebhook: (
     rawBody: Buffer | string,
