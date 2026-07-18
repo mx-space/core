@@ -186,14 +186,21 @@ describe('post stage / apply', () => {
         {
           status: 200,
           body: {
-            id: 'draft-1',
-            title: 't2',
-            text: 'staged body',
-            content: '{"root":{}}',
-            contentFormat: 'lexical',
-            typeSpecificData: { slug: 's2' },
-            version: 2,
-            publishedVersion: 1,
+            data: {
+              id: 'draft-1',
+              title: 't2',
+              text: 'staged body',
+              content: '{"root":{}}',
+              content_format: 'lexical',
+              meta: { skill_ids: ['skill-1'] },
+              type_specific_data: {
+                slug: 's2',
+                category_id: 'category-1',
+                tags: ['tag-1'],
+              },
+              version: 2,
+              published_version: 1,
+            },
           },
         },
       [`PATCH https://blog.example.com/api/v2/posts/${SNOWFLAKE}`]: {
@@ -212,7 +219,11 @@ describe('post stage / apply', () => {
       expect(body.draftId).toBe('draft-1')
       expect(body.title).toBe('t2')
       expect(body.content).toBe('{"root":{}}')
+      expect(body.contentFormat).toBe('lexical')
       expect(body.slug).toBe('s2')
+      expect(body.category_id).toBe('category-1')
+      expect(body.tags).toEqual(['tag-1'])
+      expect(body.meta).toEqual({ skillIds: ['skill-1'] })
       // apply never touches publish state either
       expect(body.isPublished).toBeUndefined()
     } finally {
@@ -225,7 +236,7 @@ describe('post stage / apply', () => {
       [`GET https://blog.example.com/api/v2/drafts/by-ref/post/${SNOWFLAKE}`]:
         {
           status: 200,
-          body: null,
+          body: { data: null },
         },
     })
     const program = apply.handler({ slugOrId: SNOWFLAKE })

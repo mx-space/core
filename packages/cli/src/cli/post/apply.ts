@@ -4,27 +4,28 @@ import { Effect } from 'effect'
 import { Generic } from '../../domain/errors'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
+import {
+  asRecord,
+  first,
+  unwrapDocument,
+} from '../../services/Renderer/content'
 import { Resolver } from '../../services/Resolver'
+import { camelizeDeep } from '../draft/_shared'
 
 const slugOrId = Args.text({ name: 'slugOrId' })
 
-interface StagedDraft {
-  id?: string
-  title?: string
-  text?: string
-  content?: string | null
-  contentFormat?: string
-  typeSpecificData?: Record<string, unknown> | string | null
-}
-
-const parseTypeSpecificData = (
-  raw: StagedDraft['typeSpecificData'],
-): Record<string, unknown> => {
+const parseTypeSpecificData = (raw: unknown): Record<string, unknown> => {
   if (!raw) return {}
-  if (typeof raw === 'object') return raw
+  if (typeof raw === 'object' && !Array.isArray(raw))
+    return raw as Record<string, unknown>
+  if (typeof raw !== 'string') return {}
   try {
     const parsed = JSON.parse(raw)
-    return typeof parsed === 'object' && parsed !== null ? parsed : {}
+    return typeof parsed === 'object' &&
+      parsed !== null &&
+      !Array.isArray(parsed)
+      ? parsed
+      : {}
   } catch {
     return {}
   }
@@ -39,11 +40,11 @@ export const apply = Command.make('apply', { slugOrId }, ({ slugOrId }) =>
 
     // The server returns null when there is no draft for this post or when
     // the draft has no pending changes (publishedVersion === version).
-    const draft = (yield* api.request(`/drafts/by-ref/post/${id}`)) as
-      | StagedDraft
-      | null
-      | undefined
-    if (!draft || !draft.id) {
+    const draft = asRecord(
+      unwrapDocument(yield* api.request(`/drafts/by-ref/post/${id}`)),
+    )
+    const draftId = first(draft, 'id')
+    if (typeof draftId !== 'string' || !draftId) {
       return yield* Effect.fail(
         new Generic({
           message: `no staged changes for post ${slugOrId}`,
@@ -53,17 +54,23 @@ export const apply = Command.make('apply', { slugOrId }, ({ slugOrId }) =>
     }
 
     const body: Record<string, unknown> = {
-      ...parseTypeSpecificData(draft.typeSpecificData),
+      ...parseTypeSpecificData(
+        first(draft, 'type_specific_data', 'typeSpecificData'),
+      ),
     }
-    if (draft.title !== undefined) body.title = draft.title
-    if (draft.text !== undefined) body.text = draft.text
-    if (draft.content !== undefined && draft.content !== null)
-      body.content = draft.content
-    if (draft.contentFormat !== undefined)
-      body.contentFormat = draft.contentFormat
+    const title = first(draft, 'title')
+    const text = first(draft, 'text')
+    const content = first(draft, 'content')
+    const contentFormat = first(draft, 'content_format', 'contentFormat')
+    const meta = first(draft, 'meta')
+    if (title !== undefined) body.title = title
+    if (text !== undefined) body.text = text
+    if (content !== undefined) body.content = content
+    if (contentFormat !== undefined) body.contentFormat = contentFormat
+    if (meta !== undefined) body.meta = camelizeDeep(meta)
     // Sending draftId makes the server mark the draft's current version as
     // published; the draft itself is retained (with its history).
-    body.draftId = draft.id
+    body.draftId = draftId
 
     const res = yield* api.request(`/posts/${id}`, {
       method: 'PATCH',
