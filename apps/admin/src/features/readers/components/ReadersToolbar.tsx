@@ -1,13 +1,21 @@
 import { RefreshCw, Search } from 'lucide-react'
 
+import type { ReaderMembershipStatusFilter } from '~/api/readers'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
+import { SelectField } from '~/ui/primitives/select'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
+
+import { MEMBERSHIP_STATUS_FILTERS } from '../constants'
 
 interface ReadersToolbarProps {
   search: string
   onSearchChange: (value: string) => void
+  membershipStatus: 'all' | ReaderMembershipStatusFilter
+  onMembershipStatusChange: (
+    value: 'all' | ReaderMembershipStatusFilter,
+  ) => void
   onRefresh: () => void
   isFetching: boolean
 }
@@ -29,6 +37,16 @@ export function ReadersToolbar(props: ReadersToolbarProps) {
           value={props.search}
         />
       </div>
+      <SelectField
+        aria-label={t('readers.membership.filter.label')}
+        onValueChange={props.onMembershipStatusChange}
+        options={MEMBERSHIP_STATUS_FILTERS.map((filter) => ({
+          label: t(filter.labelKey),
+          value: filter.value,
+        }))}
+        triggerClassName="w-36 shrink-0"
+        value={props.membershipStatus}
+      />
       <Button
         aria-label={t('readers.refresh')}
         disabled={props.isFetching}

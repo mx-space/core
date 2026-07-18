@@ -8,6 +8,14 @@ import { ListRow } from '~/ui/list-actions'
 import { cn } from '~/utils/cn'
 import { relativeTimeFromNow } from '~/utils/time'
 
+import {
+  effectiveMembershipStatus,
+  MEMBERSHIP_PLAN_LABEL_KEY,
+  MEMBERSHIP_STATUS_LABEL_KEY,
+  MEMBERSHIP_STATUS_TONE,
+  providerLabel,
+} from '../utils/membership-status'
+
 interface ReaderListRowProps {
   reader: ReaderModel
   selected: boolean
@@ -25,6 +33,7 @@ export function ReaderListRow(props: ReaderListRowProps) {
   const banned = Boolean(reader.bannedAt)
   const displayName =
     reader.name || reader.username || reader.handle || reader.id
+  const membershipStatus = effectiveMembershipStatus(reader.membership)
 
   return (
     <ListRow
@@ -74,8 +83,27 @@ export function ReaderListRow(props: ReaderListRowProps) {
               {t('readers.row.banned')}
             </StatusPill>
           ) : null}
+          {membershipStatus !== 'none' ? (
+            <StatusPill
+              className="shrink-0"
+              tone={MEMBERSHIP_STATUS_TONE[membershipStatus]}
+            >
+              {t(MEMBERSHIP_STATUS_LABEL_KEY[membershipStatus])}
+            </StatusPill>
+          ) : null}
         </div>
         <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-fg-muted">
+          {reader.membership ? (
+            <>
+              <span className="shrink-0 truncate">
+                {t(MEMBERSHIP_PLAN_LABEL_KEY[reader.membership.plan])} ·{' '}
+                {providerLabel(reader.membership.provider)}
+              </span>
+              <span aria-hidden="true" className="text-fg-subtle">
+                ·
+              </span>
+            </>
+          ) : null}
           {reader.handle ? (
             <span className="shrink-0 truncate">@{reader.handle}</span>
           ) : null}

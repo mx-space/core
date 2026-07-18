@@ -1,4 +1,9 @@
-import type { ReaderModel, ReaderRoleFilter, ReaderStats } from '~/api/readers'
+import type {
+  ReaderMembershipStatusFilter,
+  ReaderModel,
+  ReaderRoleFilter,
+  ReaderStats,
+} from '~/api/readers'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { Pager } from '~/models/base'
@@ -29,6 +34,10 @@ interface ReadersListPanelProps {
   onSearchChange: (value: string) => void
   role: ReaderRoleFilter
   onRoleChange: (role: ReaderRoleFilter) => void
+  membershipStatus: 'all' | ReaderMembershipStatusFilter
+  onMembershipStatusChange: (
+    value: 'all' | ReaderMembershipStatusFilter,
+  ) => void
   page: number
   onPageChange: (page: number) => void
   onRefresh: () => void
@@ -94,6 +103,8 @@ export function ReadersListPanel(props: ReadersListPanelProps) {
 
       <ReadersToolbar
         isFetching={props.isFetching}
+        membershipStatus={props.membershipStatus}
+        onMembershipStatusChange={props.onMembershipStatusChange}
         onRefresh={props.onRefresh}
         onSearchChange={props.onSearchChange}
         search={props.search}

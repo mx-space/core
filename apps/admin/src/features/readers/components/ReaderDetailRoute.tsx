@@ -57,13 +57,18 @@ export function ReaderDetailRoute() {
     return <ReaderDetailEmpty />
   }
 
+  const readerWithMembership: ReaderModel =
+    reader.membership !== undefined
+      ? reader
+      : { ...reader, membership: initialReader?.membership ?? null }
+
   return (
     <ReadersDetailPane
       currentUserId={ctx.currentUserId}
       isLoading={detailQuery.isLoading && !reader}
       mutations={ctx.mutations}
       onBack={ctx.onBack}
-      reader={reader}
+      reader={readerWithMembership}
     />
   )
 }
