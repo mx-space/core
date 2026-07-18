@@ -6,6 +6,7 @@ import { AiModule } from '../ai/ai.module'
 import { CommentModule } from '../comment/comment.module'
 import { DraftModule } from '../draft/draft.module'
 import { EnrichmentModule } from '../enrichment/enrichment.module'
+import { MembershipModule } from '../membership/membership.module'
 import { SlugTrackerModule } from '../slug-tracker/slug-tracker.module'
 import { SnippetModule } from '../snippet/snippet.module'
 import { PostController } from './post.controller'
@@ -20,6 +21,7 @@ import { PostService } from './post.service'
     AiModule,
     EnrichmentModule,
     SnippetModule,
+    MembershipModule,
     forwardRef(() => CommentModule),
   ],
   controllers: [PostController],

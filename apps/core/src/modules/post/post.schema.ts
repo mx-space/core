@@ -38,6 +38,7 @@ const PostBaseSchema = WriteBaseSchema.extend({
   ),
   relatedId: z.array(zEntityId).optional(),
   images: ImageArraySchema.optional(),
+  isPremium: z.boolean().optional(),
   /** ID of the associated draft; marked as published when this post is published */
   draftId: zEntityId.optional(),
 })

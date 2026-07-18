@@ -170,6 +170,11 @@ export class PostService implements OnApplicationBootstrap {
   async create(post: PostModel & { draftId?: string }) {
     this.lexicalService.normalizeContentForStorage(post)
 
+    const effectiveContentFormat = post.contentFormat ?? ContentFormat.Markdown
+    if (post.isPremium && effectiveContentFormat !== ContentFormat.Lexical) {
+      throw createAppException(AppErrorCode.PREMIUM_REQUIRES_LEXICAL)
+    }
+
     const { categoryId, draftId } = post
     const category = await this.categoryService.findCategoryById(
       categoryId as any as string,
@@ -200,6 +205,7 @@ export class PostService implements OnApplicationBootstrap {
       categoryId: category.id,
       copyright: post.copyright,
       isPublished: post.isPublished,
+      isPremium: post.isPremium,
       pinAt,
       pinOrder: post.pinOrder,
     })
@@ -338,6 +344,19 @@ export class PostService implements OnApplicationBootstrap {
       throw createAppException(AppErrorCode.POST_NOT_FOUND, { id })
     }
 
+    const effectiveIsPremium =
+      data.isPremium !== undefined ? data.isPremium : oldDocument.isPremium
+    const effectiveContentFormat =
+      data.contentFormat !== undefined
+        ? data.contentFormat
+        : oldDocument.contentFormat
+    if (
+      effectiveIsPremium &&
+      effectiveContentFormat !== ContentFormat.Lexical
+    ) {
+      throw createAppException(AppErrorCode.PREMIUM_REQUIRES_LEXICAL)
+    }
+
     const { draftId } = data
     const { categoryId } = data
     if (categoryId && String(categoryId) !== String(oldDocument.categoryId)) {
@@ -393,6 +412,7 @@ export class PostService implements OnApplicationBootstrap {
       categoryId: patch.categoryId as string | undefined,
       copyright: patch.copyright,
       isPublished: patch.isPublished,
+      isPremium: patch.isPremium,
       pinAt,
       pinOrder: patch.pinOrder,
       modifiedAt: data.modifiedAt,

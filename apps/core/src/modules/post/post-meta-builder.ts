@@ -1,6 +1,7 @@
 import type {
   ArticleRefMap,
   InsightsMeta,
+  PaywallMeta,
   PostResponseMeta,
   RelatedRef,
   SummaryMeta,
@@ -38,6 +39,11 @@ export class PostMetaBuilder extends MetaObjectBuilder<
 
   skills(value: SkillBundleView[]): this {
     ;(this.meta as PostResponseMeta).skills = value
+    return this
+  }
+
+  paywall(value: PaywallMeta): this {
+    ;(this.meta as PostResponseMeta).paywall = value
     return this
   }
 }

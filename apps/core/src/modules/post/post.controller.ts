@@ -12,6 +12,7 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
+import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
@@ -25,6 +26,7 @@ import type {
 } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
+import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
   applyArticleTranslationInPlace,
@@ -35,6 +37,10 @@ import {
   type EntryRule,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
+import {
+  renderTeaserText,
+  truncateLexicalContent,
+} from '~/processors/helper/lexical-truncate.util'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
@@ -74,7 +80,33 @@ export class PostController {
     private readonly enrichmentService: EnrichmentService,
     private readonly translationEntryService: TranslationEntryService,
     private readonly snippetService: SnippetService,
+    private readonly entitlementService: EntitlementService,
   ) {}
+
+  private async applyPaywall(
+    doc: Record<string, any>,
+    metaBuilder: PostMetaBuilder,
+    isOwner: boolean,
+    readerId?: string,
+  ) {
+    if (!doc.isPremium) return
+
+    const isEntitled =
+      isOwner ||
+      (readerId
+        ? await this.entitlementService.isActiveMember(readerId)
+        : false)
+
+    if (isEntitled) {
+      metaBuilder.paywall({ locked: false })
+      return
+    }
+
+    const previewBlocks = (doc.meta as any)?.paywall?.previewBlocks ?? 3
+    doc.content = truncateLexicalContent(doc.content, previewBlocks)
+    doc.text = renderTeaserText(doc.content)
+    metaBuilder.paywall({ locked: true, previewBlocks })
+  }
 
   private async batchCategoryEntryTranslations(
     lang: string,
@@ -196,6 +228,7 @@ export class PostController {
     @IpLocation() ip: IpRecord,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
+    @CurrentReaderId() readerId?: string,
   ) {
     const [last] = await this.postService.findRecent(1, {
       publishedOnly: !isAuthenticated,
@@ -211,6 +244,7 @@ export class PostController {
       ip,
       isAuthenticated,
       lang,
+      readerId,
     )
   }
 
@@ -220,6 +254,7 @@ export class PostController {
     @Param() params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
+    @CurrentReaderId() readerId?: string,
   ) {
     const { id } = params
     const doc = await this.postService.findById(id)
@@ -288,6 +323,14 @@ export class PostController {
     metaBuilder.translation(translationMap)
 
     if (skills.length > 0) metaBuilder.skills(skills)
+
+    await this.applyPaywall(
+      docData as Record<string, any>,
+      metaBuilder,
+      !!isAuthenticated,
+      readerId,
+    )
+
     return withMeta(docData, metaBuilder.build())
   }
 
@@ -299,6 +342,7 @@ export class PostController {
     @IpLocation() { ip }: IpRecord,
     @HasAdminAccess() isAuthenticated?: boolean,
     @Lang() lang?: string,
+    @CurrentReaderId() readerId?: string,
   ) {
     const { category, slug } = params
     const postDocument = await this.postService.getPostBySlug(
@@ -420,6 +464,14 @@ export class PostController {
     metaBuilder.translation(translationMap)
 
     if (skills.length > 0) metaBuilder.skills(skills)
+
+    await this.applyPaywall(
+      postData as Record<string, any>,
+      metaBuilder,
+      !!isAuthenticated,
+      readerId,
+    )
+
     return withMeta(postData, metaBuilder.build())
   }
 

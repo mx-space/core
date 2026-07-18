@@ -53,6 +53,7 @@ const mapBase = (row: PostRowSource): PostRow => ({
   categoryId: toEntityId(row.categoryId) as EntityId,
   copyright: row.copyright,
   isPublished: row.isPublished,
+  isPremium: row.isPremium,
   readCount: row.readCount,
   likeCount: row.likeCount,
   pinAt: row.pinAt,
@@ -197,6 +198,7 @@ export class PostRepository extends BaseRepository {
         categoryId: parseEntityId(input.categoryId),
         copyright: input.copyright ?? true,
         isPublished: input.isPublished ?? true,
+        isPremium: input.isPremium ?? false,
         pinAt: input.pinAt ?? null,
         pinOrder: input.pinOrder ?? null,
       })
@@ -225,6 +227,7 @@ export class PostRepository extends BaseRepository {
       update.categoryId = parseEntityId(patch.categoryId)
     if (patch.copyright !== undefined) update.copyright = patch.copyright
     if (patch.isPublished !== undefined) update.isPublished = patch.isPublished
+    if (patch.isPremium !== undefined) update.isPremium = patch.isPremium
     if (patch.pinAt !== undefined) update.pinAt = patch.pinAt
     if (patch.pinOrder !== undefined) update.pinOrder = patch.pinOrder
     update.modifiedAt = patch.modifiedAt ?? new Date()

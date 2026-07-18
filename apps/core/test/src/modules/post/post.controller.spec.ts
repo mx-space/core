@@ -110,6 +110,10 @@ const createController = (opts: CreateControllerOptions = {}) => {
     findSkillBundlesByIds: vi.fn(async () => []),
   }
 
+  const entitlementService = {
+    isActiveMember: vi.fn(async () => false),
+  }
+
   const controller = new PostController(
     postService as any,
     countingService as any,
@@ -119,6 +123,7 @@ const createController = (opts: CreateControllerOptions = {}) => {
     enrichmentService as any,
     translationEntryService as any,
     snippetService as any,
+    entitlementService as any,
   )
 
   return {
@@ -128,6 +133,7 @@ const createController = (opts: CreateControllerOptions = {}) => {
     enrichmentService,
     translationEntryService,
     snippetService,
+    entitlementService,
   }
 }
 
