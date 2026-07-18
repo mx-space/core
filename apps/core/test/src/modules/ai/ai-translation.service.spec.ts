@@ -8,6 +8,7 @@ import type {
   AiTranslationRepository,
   AiTranslationRow,
 } from '~/modules/ai/ai-translation/ai-translation.repository'
+import { UpdateTranslationSchema } from '~/modules/ai/ai-translation/ai-translation.schema'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
@@ -251,6 +252,23 @@ describe('AiTranslationService', () => {
         text: 'supplied text',
       }),
     )
+  })
+
+  it('treats null content as omitted when updating markdown text', async () => {
+    const { lexicalService, repository, service } = createService()
+    repository.findById.mockResolvedValue(row())
+    repository.updateById.mockResolvedValue(row({ text: 'Edited text' }))
+
+    const input = UpdateTranslationSchema.parse({
+      content: null,
+      text: 'Edited text',
+    })
+    await service.updateTranslation('translation-1', input)
+
+    expect(lexicalService.lexicalToMarkdown).not.toHaveBeenCalled()
+    expect(repository.updateById).toHaveBeenCalledWith('translation-1', {
+      text: 'Edited text',
+    })
   })
 
   it('throws when deleting a missing translation row', async () => {

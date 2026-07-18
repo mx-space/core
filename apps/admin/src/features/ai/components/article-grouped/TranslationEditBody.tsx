@@ -15,7 +15,7 @@ const LexicalEmbeddedEditor = lazy(async () => {
   return import('./LexicalEmbeddedEditor')
 })
 
-function parseLexical(raw?: string): SerializedEditorState | undefined {
+function parseLexical(raw?: string | null): SerializedEditorState | undefined {
   if (!raw || !raw.trim()) return undefined
   try {
     const parsed = JSON.parse(raw)
@@ -42,7 +42,7 @@ export function TranslationEditBody(props: EditDrawerBodyProps<AITranslation>) {
   const useLexical =
     props.item.contentFormat === 'lexical' && Boolean(initialLexical)
   const [lexicalContent, setLexicalContent] = useState<string | undefined>(
-    props.item.content,
+    props.item.content ?? undefined,
   )
 
   const submit = () => {

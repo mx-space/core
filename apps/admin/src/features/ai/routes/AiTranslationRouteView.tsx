@@ -1,10 +1,8 @@
 import { Languages, Plus } from 'lucide-react'
 import { useMemo } from 'react'
 import { toast } from 'sonner'
-import type { AITranslation } from '~/api/ai'
-import type { HeaderAction } from '~/ui/layout/page-layout'
-import type { ArticleGroupedConfig } from '../components/article-grouped/types'
 
+import type { AITranslation } from '~/api/ai'
 import {
   createTranslationAllTask,
   createTranslationTask,
@@ -14,9 +12,11 @@ import {
   updateTranslation,
 } from '~/api/ai'
 import { useI18n } from '~/i18n'
+import type { HeaderAction } from '~/ui/layout/page-layout'
 
 import { ArticleGroupedRouteView } from '../components/article-grouped/ArticleGroupedRouteView'
 import { TranslationEditBody } from '../components/article-grouped/TranslationEditBody'
+import type { ArticleGroupedConfig } from '../components/article-grouped/types'
 import { getErrorMessage } from '../utils/ai'
 
 export function AiTranslationRouteView() {
@@ -61,7 +61,7 @@ export function AiTranslationRouteView() {
           subtitle: next.subtitle,
           summary: next.summary,
           text: next.text,
-          content: next.content,
+          content: next.content ?? undefined,
         }),
 
       generate: {

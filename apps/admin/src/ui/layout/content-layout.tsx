@@ -6,6 +6,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -18,6 +19,7 @@ import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
 import type { BottomSheetSnap } from '~/ui/feedback/bottom-sheet'
 import { BottomSheet } from '~/ui/feedback/bottom-sheet'
+import { Drawer } from '~/ui/feedback/drawer'
 import { ResizeHandle } from '~/ui/layout/resize-handle'
 import { cn } from '~/utils/cn'
 
@@ -39,6 +41,7 @@ export function ContentLayout(props: {
   asideMobileTitle?: ReactNode
   children: ReactNode
   className?: string
+  compactAtWidth?: number
   mainClassName?: string
   mainMinSize?: number | string
   onCloseAside?: () => void
@@ -46,6 +49,33 @@ export function ContentLayout(props: {
 }) {
   const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY)
   const [asideEl, setAsideEl] = useState<HTMLDivElement | null>(null)
+  const [layoutEl, setLayoutEl] = useState<HTMLDivElement | null>(null)
+  const [layoutWidth, setLayoutWidth] = useState<number | null>(null)
+
+  const compactAtWidth = props.compactAtWidth
+  const observeContainer = isDesktop && compactAtWidth !== undefined
+  useLayoutEffect(() => {
+    if (!observeContainer || !layoutEl) return
+
+    const updateWidth = () => {
+      const nextWidth = layoutEl.clientWidth
+      setLayoutWidth((currentWidth) =>
+        currentWidth === nextWidth ? currentWidth : nextWidth,
+      )
+    }
+    updateWidth()
+
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(updateWidth)
+    observer.observe(layoutEl)
+    return () => observer.disconnect()
+  }, [layoutEl, observeContainer])
+
+  const compact =
+    observeContainer &&
+    layoutWidth !== null &&
+    compactAtWidth !== undefined &&
+    layoutWidth < compactAtWidth
 
   const value = useMemo<ContentLayoutContextValue>(
     () => ({ asideEl }),
@@ -54,7 +84,7 @@ export function ContentLayout(props: {
 
   return (
     <ContentLayoutContext.Provider value={value}>
-      {isDesktop ? (
+      {isDesktop && !compact ? (
         <DesktopContentLayout
           asideDefaultSize={props.asideDefaultSize}
           asideMaxSize={props.asideMaxSize}
@@ -62,12 +92,33 @@ export function ContentLayout(props: {
           className={props.className}
           mainClassName={props.mainClassName}
           mainMinSize={props.mainMinSize}
-          onCloseAside={props.onCloseAside}
+          onCloseAside={() => {
+            if (
+              compactAtWidth !== undefined &&
+              (layoutEl === null || layoutEl.clientWidth < compactAtWidth)
+            ) {
+              return
+            }
+            props.onCloseAside?.()
+          }}
           open={props.open}
           setAsideEl={setAsideEl}
+          setLayoutEl={setLayoutEl}
         >
           {props.children}
         </DesktopContentLayout>
+      ) : isDesktop ? (
+        <CompactContentLayout
+          asideTitle={props.asideMobileTitle}
+          className={props.className}
+          mainClassName={props.mainClassName}
+          onCloseAside={props.onCloseAside}
+          open={props.open}
+          setAsideEl={setAsideEl}
+          setLayoutEl={setLayoutEl}
+        >
+          {props.children}
+        </CompactContentLayout>
       ) : (
         <MobileContentLayout
           asideMobileSnap={props.asideMobileSnap}
@@ -77,6 +128,7 @@ export function ContentLayout(props: {
           onCloseAside={props.onCloseAside}
           open={props.open}
           setAsideEl={setAsideEl}
+          setLayoutEl={setLayoutEl}
         >
           {props.children}
         </MobileContentLayout>
@@ -96,6 +148,7 @@ function DesktopContentLayout(props: {
   onCloseAside?: () => void
   open: boolean
   setAsideEl: (el: HTMLDivElement | null) => void
+  setLayoutEl: (el: HTMLDivElement | null) => void
 }) {
   const asideRef = usePanelRef()
   const [resizing, setResizing] = useState(false)
@@ -140,6 +193,7 @@ function DesktopContentLayout(props: {
       className={cn('flex min-h-0 min-w-0 flex-1', props.className)}
       data-content-layout=""
       data-resizing={resizing ? 'true' : 'false'}
+      elementRef={props.setLayoutEl}
       orientation="horizontal"
     >
       <Panel
@@ -175,6 +229,44 @@ function DesktopContentLayout(props: {
   )
 }
 
+function CompactContentLayout(props: {
+  asideTitle?: ReactNode
+  children: ReactNode
+  className?: string
+  mainClassName?: string
+  onCloseAside?: () => void
+  open: boolean
+  setAsideEl: (el: HTMLDivElement | null) => void
+  setLayoutEl: (el: HTMLDivElement | null) => void
+}) {
+  return (
+    <>
+      <div
+        className={cn(
+          'flex min-h-0 min-w-0 flex-1 flex-col',
+          props.className,
+          props.mainClassName,
+        )}
+        data-content-layout=""
+        data-content-layout-mode="compact"
+        ref={props.setLayoutEl}
+      >
+        {props.children}
+      </div>
+      <Drawer
+        bodyClassName="relative bg-surface-card"
+        onClose={() => props.onCloseAside?.()}
+        open={props.open}
+        showHeader={false}
+        title={props.asideTitle}
+        widthClassName="w-[min(90vw,30rem)]"
+      >
+        <div className="relative h-full" ref={props.setAsideEl} />
+      </Drawer>
+    </>
+  )
+}
+
 function MobileContentLayout(props: {
   asideMobileSnap?: BottomSheetSnap
   asideMobileTitle?: ReactNode
@@ -184,6 +276,7 @@ function MobileContentLayout(props: {
   onCloseAside?: () => void
   open: boolean
   setAsideEl: (el: HTMLDivElement | null) => void
+  setLayoutEl: (el: HTMLDivElement | null) => void
 }) {
   const handleClose = () => {
     props.onCloseAside?.()
@@ -199,6 +292,7 @@ function MobileContentLayout(props: {
         )}
         data-content-layout=""
         data-content-layout-mode="mobile"
+        ref={props.setLayoutEl}
       >
         {props.children}
       </div>

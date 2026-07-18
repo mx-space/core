@@ -18,6 +18,8 @@ import { ArticleEditPanel } from './ArticleEditPanel'
 import { presentGeneratePrompt } from './GeneratePromptModal'
 import { useItemActions } from './useItemActions'
 
+const EDIT_SPLIT_MIN_WIDTH = 800
+
 export function ArticleGroupedDetailRoute<TItem>() {
   const { id } = useParams<{ id: string }>()
   const { t } = useI18n()
@@ -169,6 +171,7 @@ export function ArticleGroupedDetailRoute<TItem>() {
       asideMinSize="480px"
       asideMobileTitle={t(config.editTitleKey)}
       className="h-full"
+      compactAtWidth={EDIT_SPLIT_MIN_WIDTH}
       mainMinSize="280px"
       onCloseAside={closeEditPanel}
       open={Boolean(editingItem)}

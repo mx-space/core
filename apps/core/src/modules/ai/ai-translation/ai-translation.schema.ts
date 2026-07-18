@@ -23,7 +23,10 @@ export const UpdateTranslationSchema = z.object({
   subtitle: z.string().nullable().optional(),
   summary: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  content: z.string().optional(),
+  content: z
+    .string()
+    .nullish()
+    .transform((content) => content ?? undefined),
 })
 
 export class UpdateTranslationDto extends createZodDto(
