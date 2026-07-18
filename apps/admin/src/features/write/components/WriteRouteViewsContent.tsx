@@ -2889,6 +2889,30 @@ function withPaywallPreviewBlocks(
   return { ...meta, paywall: { ...paywall, previewBlocks } }
 }
 
+function withoutPaywallPreviewBlocks(meta: Record<string, unknown>) {
+  if (!isRecord(meta.paywall)) {
+    return meta
+  }
+
+  const { previewBlocks, ...restPaywall } = meta.paywall
+  if (Object.keys(restPaywall).length === 0) {
+    const { paywall, ...restMeta } = meta
+    return restMeta
+  }
+
+  return { ...meta, paywall: restPaywall }
+}
+
+function resolvePaywallMeta(
+  meta: Record<string, unknown>,
+  isPremium: boolean,
+  previewBlocks: number,
+) {
+  return isPremium
+    ? withPaywallPreviewBlocks(meta, previewBlocks)
+    : withoutPaywallPreviewBlocks(meta)
+}
+
 function formatMetaJson(meta: Record<string, unknown>) {
   return Object.keys(meta).length > 0 ? JSON.stringify(meta, null, 2) : ''
 }
@@ -3320,8 +3344,9 @@ function buildPostWriteData(
         : buildWriteImages(projected),
     isPremium: projected.isPremium,
     isPublished: projected.isPublished,
-    meta: withPaywallPreviewBlocks(
+    meta: resolvePaywallMeta(
       projected.meta,
+      projected.isPremium,
       Math.max(1, Number(projected.previewBlocks) || 3),
     ),
     pin: projected.pin ? new Date().toISOString() : null,
@@ -3435,8 +3460,9 @@ function toDraftData(
   if (kind === 'post') {
     return {
       ...base,
-      meta: withPaywallPreviewBlocks(
+      meta: resolvePaywallMeta(
         state.meta,
+        state.isPremium,
         Math.max(1, Number(state.previewBlocks) || 3),
       ),
       typeSpecificData: {
