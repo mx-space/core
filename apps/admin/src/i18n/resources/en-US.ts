@@ -2906,6 +2906,10 @@ export const enUS = {
   'write.postFields.copyright': 'Copyright',
   'write.postFields.pin': 'Pin',
   'write.postFields.pinOrder': 'Pin order',
+  'write.postFields.premium': 'Premium (paywalled)',
+  'write.postFields.premiumPreviewBlocks': 'Free preview blocks',
+  'write.postFields.premiumRequiresLexical':
+    'Switch to the Lexical editor to enable premium content.',
   'write.postFields.related.addAria': 'Add related post',
   'write.postFields.related.empty': 'No posts to relate.',
   'write.postFields.related.idLabel': 'Related post IDs',

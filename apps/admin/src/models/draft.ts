@@ -61,6 +61,7 @@ export interface PostSpecificData {
   pinOrder?: number
   relatedId?: string[]
   isPublished?: boolean
+  isPremium?: boolean
 }
 
 export interface NoteSpecificData {
@@ -86,6 +87,4 @@ export interface PageSpecificData {
 }
 
 export type TypeSpecificData =
-  | PostSpecificData
-  | NoteSpecificData
-  | PageSpecificData
+  PostSpecificData | NoteSpecificData | PageSpecificData

@@ -2777,6 +2777,10 @@ export const zhCN = {
   'write.postFields.copyright': '版权声明',
   'write.postFields.pin': '置顶',
   'write.postFields.pinOrder': '置顶顺序',
+  'write.postFields.premium': '付费内容（会员解锁）',
+  'write.postFields.premiumPreviewBlocks': '免费预览段落数',
+  'write.postFields.premiumRequiresLexical':
+    '切换到 Lexical 编辑器后可启用付费内容。',
   'write.postFields.related.addAria': '添加关联文章',
   'write.postFields.related.empty': '暂无可关联文章。',
   'write.postFields.related.idLabel': '相关文章 ID',

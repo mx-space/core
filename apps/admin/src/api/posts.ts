@@ -27,6 +27,7 @@ export interface CreatePostData {
   copyright?: boolean
   draftId?: string
   images?: Image[]
+  isPremium?: boolean
   isPublished?: boolean
   meta?: Record<string, unknown>
   pin?: null | string
