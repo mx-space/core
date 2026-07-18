@@ -44,6 +44,33 @@ overrides:
   # @haklex/rich-ext-chat -> @streamdown/code hard-deps shiki@^3.x while
   # @haklex/rich-editor peers shiki>=4.0.0; force one runtime copy.
   shiki: ^4.3.1
+  # @mx-space/editor@0.2.1 + downstream direct pins hold lexical@^0.47 while
+  # @haklex/* 0.31.1 requires @lexical/*@^0.48; force one runtime copy.
+  lexical: 0.48.0
+  "@lexical/a11y": 0.48.0
+  "@lexical/clipboard": 0.48.0
+  "@lexical/code-core": 0.48.0
+  "@lexical/devtools-core": 0.48.0
+  "@lexical/dragon": 0.48.0
+  "@lexical/extension": 0.48.0
+  "@lexical/hashtag": 0.48.0
+  "@lexical/headless": 0.48.0
+  "@lexical/history": 0.48.0
+  "@lexical/html": 0.48.0
+  "@lexical/internal": 0.48.0
+  "@lexical/link": 0.48.0
+  "@lexical/list": 0.48.0
+  "@lexical/mark": 0.48.0
+  "@lexical/markdown": 0.48.0
+  "@lexical/overflow": 0.48.0
+  "@lexical/plain-text": 0.48.0
+  "@lexical/react": 0.48.0
+  "@lexical/rich-text": 0.48.0
+  "@lexical/selection": 0.48.0
+  "@lexical/table": 0.48.0
+  "@lexical/text": 0.48.0
+  "@lexical/utils": 0.48.0
+  "@lexical/yjs": 0.48.0
 publicHoistPattern:
   - "*fastify*"
   - mongodb
