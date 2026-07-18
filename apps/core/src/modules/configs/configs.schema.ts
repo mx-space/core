@@ -941,6 +941,19 @@ export const MembershipSchema = section('Membership', {
     z.string().optional(),
     'Yearly plan product ID',
   ),
+  dodoApiKey: field.password(z.string().optional(), 'Dodo API key'),
+  dodoWebhookKey: field.password(
+    z.string().optional(),
+    'Dodo webhook signing key',
+  ),
+  dodoEnvironment: field.select(
+    z.enum(['test_mode', 'live_mode']).optional(),
+    'Dodo environment',
+    [
+      { label: 'Live mode', value: 'live_mode' },
+      { label: 'Test mode', value: 'test_mode' },
+    ],
+  ),
 })
 export class MembershipDto extends createZodDto(MembershipSchema) {}
 export type MembershipConfig = z.infer<typeof MembershipSchema>

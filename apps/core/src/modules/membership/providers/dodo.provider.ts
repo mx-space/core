@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common'
 import DodoPayments from 'dodopayments'
 import { Webhook } from 'standardwebhooks'
 
-import { MEMBERSHIP } from '~/app.config'
 import { AppErrorCode, createAppException } from '~/common/errors'
 
 import { ConfigsService } from '../../configs/configs.service'
@@ -54,14 +53,24 @@ const planFromInterval = (
 @Injectable()
 export class DodoProvider implements PaymentProviderAdapter {
   private client: DodoPayments | null = null
+  private cachedApiKey: string | null = null
+  private cachedEnvironment: 'test_mode' | 'live_mode' | null = null
 
   constructor(private readonly configsService: ConfigsService) {}
 
-  private getClient(): DodoPayments {
-    if (!MEMBERSHIP.dodoApiKey) {
-      throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
+  private getClient(
+    apiKey: string,
+    environment: 'test_mode' | 'live_mode',
+  ): DodoPayments {
+    if (
+      !this.client ||
+      this.cachedApiKey !== apiKey ||
+      this.cachedEnvironment !== environment
+    ) {
+      this.client = new DodoPayments({ bearerToken: apiKey, environment })
+      this.cachedApiKey = apiKey
+      this.cachedEnvironment = environment
     }
-    this.client ??= new DodoPayments({ bearerToken: MEMBERSHIP.dodoApiKey })
     return this.client
   }
 
@@ -79,7 +88,16 @@ export class DodoProvider implements PaymentProviderAdapter {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
     }
 
-    const session = await this.getClient().checkoutSessions.create({
+    if (!membershipConfig.dodoApiKey) {
+      throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
+    }
+
+    const client = this.getClient(
+      membershipConfig.dodoApiKey,
+      membershipConfig.dodoEnvironment,
+    )
+
+    const session = await client.checkoutSessions.create({
       product_cart: [{ product_id: productId, quantity: 1 }],
       metadata: { readerId: input.reader.id },
       customer: input.reader.email
@@ -98,13 +116,14 @@ export class DodoProvider implements PaymentProviderAdapter {
     rawBody: Buffer | string,
     headers: Record<string, string>,
   ): Promise<NormalizedBillingEvent> {
-    if (!MEMBERSHIP.dodoWebhookKey) {
+    const membershipConfig = await this.configsService.get('membership')
+    if (!membershipConfig.dodoWebhookKey) {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
     }
 
     const payload =
       typeof rawBody === 'string' ? rawBody : rawBody.toString('utf8')
-    const webhook = new Webhook(MEMBERSHIP.dodoWebhookKey)
+    const webhook = new Webhook(membershipConfig.dodoWebhookKey)
 
     let event: DodoSubscriptionEvent
     try {

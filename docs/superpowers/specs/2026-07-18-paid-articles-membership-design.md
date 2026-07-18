@@ -128,10 +128,20 @@ The paywall touches many surfaces; coupling is contained by four rules:
 
 ## Configuration
 
-- Secrets via environment / `app.config.ts`: `DODO_API_KEY`,
-  `DODO_WEBHOOK_KEY` (per-provider naming as adapters are added).
-- Configs module (admin-editable) gains a `membership` section: `enabled`,
-  `provider` (single choice), `monthlyProductId`, `yearlyProductId`.
+- Configs module (admin-editable, `apps/core/src/modules/configs/`) gains a
+  `membership` section: `enabled`, `provider` (single choice),
+  `monthlyProductId`, `yearlyProductId`, `dodoApiKey`, `dodoWebhookKey`,
+  `dodoEnvironment` (`test_mode` | `live_mode`, defaults to `live_mode`).
+  There are no `DODO_*` environment variables — all Dodo settings live in
+  this section and are editable at runtime from the admin settings UI.
+  `dodoApiKey` and `dodoWebhookKey` use the same `field.password` helper as
+  other secret fields (SMTP password, AI provider API keys): encrypted at
+  rest, masked to empty string on read, and rendered as password inputs in
+  the schema-driven admin settings form.
+- `DodoProvider` reads the section via `ConfigsService.get('membership')` on
+  every call and rebuilds its cached `DodoPayments` client whenever the API
+  key or environment differs from what it last built with, so changes made
+  in the admin UI take effect without a restart.
 
 ## API (new `membership` module)
 

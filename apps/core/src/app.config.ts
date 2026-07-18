@@ -386,8 +386,3 @@ export const ADMIN_UPDATE = {
     process.env.ADMIN_UPDATE_S3_BASE_URL ||
     'https://admin-r2.innei.dev') as string,
 }
-
-export const MEMBERSHIP = {
-  dodoApiKey: process.env.DODO_API_KEY as string | undefined,
-  dodoWebhookKey: process.env.DODO_WEBHOOK_KEY as string | undefined,
-}

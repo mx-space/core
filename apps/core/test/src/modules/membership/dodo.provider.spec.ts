@@ -31,6 +31,9 @@ describe('DodoProvider', () => {
         provider: 'dodo',
         monthlyProductId: 'prod_monthly',
         yearlyProductId: 'prod_yearly',
+        dodoApiKey: 'test-dodo-api-key',
+        dodoWebhookKey: 'test-dodo-webhook-key',
+        dodoEnvironment: 'test_mode',
       }),
     }
   })
@@ -76,6 +79,63 @@ describe('DodoProvider', () => {
           product_cart: [{ product_id: 'prod_yearly', quantity: 1 }],
         }),
       )
+    })
+
+    it('throws MEMBERSHIP_PROVIDER_NOT_CONFIGURED when dodoApiKey is empty', async () => {
+      configsService.get.mockResolvedValue({
+        enabled: true,
+        provider: 'dodo',
+        monthlyProductId: 'prod_monthly',
+        yearlyProductId: 'prod_yearly',
+        dodoApiKey: '',
+        dodoWebhookKey: 'test-dodo-webhook-key',
+        dodoEnvironment: 'test_mode',
+      })
+
+      const provider = new DodoProvider(configsService as any)
+
+      await expect(
+        provider.createCheckout({
+          reader: { id: 'reader-1' },
+          plan: 'monthly',
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED,
+      })
+    })
+
+    it('rebuilds the client when the configured api key or environment changes', async () => {
+      const DodoPayments = (await import('dodopayments')).default as any
+
+      checkoutCreateMock.mockResolvedValue({
+        session_id: 'sess_1',
+        checkout_url: 'https://checkout.dodopayments.com/sess_1',
+      })
+
+      const provider = new DodoProvider(configsService as any)
+      await provider.createCheckout({
+        reader: { id: 'reader-1' },
+        plan: 'monthly',
+      })
+      const firstClient = (provider as any).client
+
+      configsService.get.mockResolvedValue({
+        enabled: true,
+        provider: 'dodo',
+        monthlyProductId: 'prod_monthly',
+        yearlyProductId: 'prod_yearly',
+        dodoApiKey: 'rotated-dodo-api-key',
+        dodoWebhookKey: 'test-dodo-webhook-key',
+        dodoEnvironment: 'live_mode',
+      })
+      await provider.createCheckout({
+        reader: { id: 'reader-1' },
+        plan: 'monthly',
+      })
+      const secondClient = (provider as any).client
+
+      expect(secondClient).not.toBe(firstClient)
+      expect(secondClient).toBeInstanceOf(DodoPayments)
     })
   })
 
@@ -140,6 +200,26 @@ describe('DodoProvider', () => {
 
       expect(event.type).toBe(expectedType)
       expect(event.plan).toBe('yearly')
+    })
+
+    it('throws MEMBERSHIP_PROVIDER_NOT_CONFIGURED when dodoWebhookKey is empty', async () => {
+      configsService.get.mockResolvedValue({
+        enabled: true,
+        provider: 'dodo',
+        monthlyProductId: 'prod_monthly',
+        yearlyProductId: 'prod_yearly',
+        dodoApiKey: 'test-dodo-api-key',
+        dodoWebhookKey: '',
+        dodoEnvironment: 'test_mode',
+      })
+
+      const provider = new DodoProvider(configsService as any)
+
+      await expect(
+        provider.verifyAndParseWebhook('{}', headers),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED,
+      })
     })
 
     it('throws WebhookVerifyFailed when signature verification fails', async () => {
