@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { desc, eq, sql } from 'drizzle-orm'
+import { desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { memberships, readers } from '~/database/schema'
@@ -86,6 +86,17 @@ export class MembershipRepository extends BaseRepository {
       .where(eq(memberships.readerId, parseEntityId(readerId)))
       .limit(1)
     return row ? mapRow(row) : null
+  }
+
+  async findByReaderIds(
+    readerIds: (EntityId | string)[],
+  ): Promise<MembershipRow[]> {
+    if (readerIds.length === 0) return []
+    const rows = await this.db
+      .select()
+      .from(memberships)
+      .where(inArray(memberships.readerId, readerIds.map(parseEntityId)))
+    return rows.map(mapRow)
   }
 
   async findByProviderSubscriptionId(

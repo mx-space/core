@@ -112,6 +112,45 @@ describe('EntitlementService.isActiveMember', () => {
   })
 })
 
+describe('EntitlementService.getActiveMemberIds', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(now)
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('returns only reader ids with a live membership', async () => {
+    const { service, membershipRepository } = createService()
+    membershipRepository.findByReaderIds.mockResolvedValue([
+      createMembership({ readerId: 'r-active' as any, status: 'active' }),
+      createMembership({
+        readerId: 'r-expired' as any,
+        status: 'active',
+        currentPeriodEnd: new Date(now.getTime() - 1000),
+      }),
+      createMembership({ readerId: 'r-cancelled' as any, status: 'cancelled' }),
+    ])
+
+    const result = await service.getActiveMemberIds([
+      'r-active',
+      'r-expired',
+      'r-cancelled',
+      'r-none',
+    ])
+
+    expect([...result]).toEqual(['r-active'])
+  })
+
+  it('returns an empty set for no ids without hitting the repository', async () => {
+    const { service, membershipRepository } = createService()
+    const result = await service.getActiveMemberIds([])
+    expect(result.size).toBe(0)
+    expect(membershipRepository.findByReaderIds).not.toHaveBeenCalled()
+  })
+})
+
 describe('EntitlementService.getAvailability', () => {
   it('reports enabled with both plans when fully configured', async () => {
     const { service } = createService()
