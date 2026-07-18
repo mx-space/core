@@ -1,8 +1,13 @@
-import { createEditor } from 'lexical'
+import { $createParagraphNode, $getRoot, createEditor } from 'lexical'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  registerStockDialogOpener,
+  unregisterStockDialogOpener,
+} from '../stock-plugin-bridge'
+import {
   $createStockNode,
+  $isStockNode,
   type SerializedStockNode,
   StockNode,
   type StockNodePayload,
@@ -73,9 +78,47 @@ describe('StockNode', () => {
     expect(restoredPayload).toEqual(original)
   })
 
-  it('exposes exactly two commandItems for snapshot and kline', () => {
-    expect(StockNode.commandItems.length).toBe(2)
-    expect(StockNode.commandItems[0]!.title).toContain('snapshot')
-    expect(StockNode.commandItems[1]!.title).toContain('K-line')
+  it('opens the stock dialog and inserts the submitted stock selection', async () => {
+    const editor = createEditor({ nodes: [StockNode], onError: () => {} })
+    editor.update(
+      () => {
+        const paragraph = $createParagraphNode()
+        $getRoot().append(paragraph)
+        paragraph.select()
+      },
+      { discrete: true },
+    )
+
+    const openDialog = vi.fn()
+    registerStockDialogOpener(editor, openDialog)
+
+    const commandItem = StockNode.commandItems.find((item) =>
+      item.keywords?.includes('stock'),
+    )
+    expect(commandItem).toBeDefined()
+
+    commandItem!.onSelect(editor, '')
+    expect(openDialog).toHaveBeenCalledOnce()
+
+    const payload: StockNodePayload = {
+      variant: 'snapshot',
+      symbol: 'MSFT',
+    }
+    const update = new Promise<void>((resolve) => {
+      const unregister = editor.registerUpdateListener(() => {
+        unregister()
+        resolve()
+      })
+    })
+    openDialog.mock.calls[0]![0].onSubmit(payload)
+    await update
+
+    const insertedPayload = editor.getEditorState().read(() => {
+      const stockNode = $getRoot().getChildren().find($isStockNode)
+      return stockNode?.getPayload()
+    })
+    expect(insertedPayload).toEqual(payload)
+
+    unregisterStockDialogOpener(editor)
   })
 })
