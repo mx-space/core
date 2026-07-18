@@ -31,6 +31,24 @@ export function effectiveMembershipStatus(
     : 'expired'
 }
 
+export interface MembershipAvailability {
+  enabled: boolean
+  plans: MembershipPlan[]
+}
+
+export function resolveMembershipAvailability(config: {
+  enabled?: boolean
+  provider?: string
+  monthlyProductId?: string
+  yearlyProductId?: string
+}): MembershipAvailability {
+  const plans: MembershipPlan[] = []
+  if (config.monthlyProductId) plans.push('monthly')
+  if (config.yearlyProductId) plans.push('yearly')
+  const enabled = !!config.enabled && !!config.provider && plans.length > 0
+  return { enabled, plans: enabled ? plans : [] }
+}
+
 export function resolveMembershipReturnUrl(
   returnPath: string | undefined,
   webUrl: string | undefined,

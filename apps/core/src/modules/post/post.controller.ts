@@ -92,6 +92,8 @@ export class PostController {
   ) {
     if (!doc.isPremium) return
 
+    if (!(await this.entitlementService.isMembershipPurchasable())) return
+
     const isEntitled =
       isOwner ||
       (readerId

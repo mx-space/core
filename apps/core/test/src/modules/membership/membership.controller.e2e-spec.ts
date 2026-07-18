@@ -283,6 +283,32 @@ describe('MembershipController (e2e)', () => {
     })
   })
 
+  describe('GET /membership/plans', () => {
+    it('returns availability without auth when configured', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/plans',
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({
+        data: { enabled: true, plans: ['monthly', 'yearly'] },
+      })
+    })
+
+    it('reports disabled with empty plans when membership is off', async () => {
+      membershipConfig.enabled = false
+
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/plans',
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({ data: { enabled: false, plans: [] } })
+    })
+  })
+
   describe('GET /membership/status', () => {
     it('returns a none shape when the reader has no membership', async () => {
       const res = await proxy.app.inject({

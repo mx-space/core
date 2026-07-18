@@ -144,6 +144,19 @@ const readerRoleById: Record<string, { id: string; role: 'reader' | 'owner' }> =
     [expiredMemberReaderId]: { id: expiredMemberReaderId, role: 'reader' },
   }
 
+const membershipConfig: Record<string, unknown> = {
+  enabled: true,
+  provider: 'dodo',
+  monthlyProductId: 'prod_monthly',
+  yearlyProductId: 'prod_yearly',
+}
+
+const configsServiceMock = {
+  get: vi.fn(async (key: string) =>
+    key === 'membership' ? membershipConfig : {},
+  ),
+}
+
 const authServiceMock = {
   getSessionUser: vi.fn(async (req: { headers?: Record<string, unknown> }) => {
     const readerId = req?.headers?.['x-test-reader-id'] as string | undefined
@@ -216,7 +229,7 @@ const postModule: ModuleMetadata = {
     MembershipRepository,
     { provide: SnowflakeService, useValue: snowflake },
     { provide: AuthService, useValue: authServiceMock },
-    { provide: ConfigsService, useValue: {} },
+    { provide: ConfigsService, useValue: configsServiceMock },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 }
@@ -314,6 +327,27 @@ describe('Post paywall enforcement (e2e)', () => {
         expect(body.data.text).toBe(FIVE_BLOCKS.join('\n\n'))
       }
     })
+  })
+
+  it('guards a premium post to full content when membership is not purchasable', async () => {
+    currentPost = { ...premiumPostFixture }
+    membershipConfig.enabled = false
+    try {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `/posts/${premiumPostFixture.category.slug}/${premiumPostFixture.slug}`,
+        headers: headerFor(nonMemberReaderId),
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.meta.paywall).toBeUndefined()
+      const fullContent = JSON.parse(body.data.content)
+      expect(fullContent.root.children).toHaveLength(5)
+      expect(body.data.text).toBe(FIVE_BLOCKS.join('\n\n'))
+    } finally {
+      membershipConfig.enabled = true
+    }
   })
 
   it('boundary: a post with exactly N=3 blocks is a strict subset (2 blocks, locked:true) for a non-member', async () => {

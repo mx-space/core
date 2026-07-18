@@ -1,6 +1,48 @@
 import { describe, expect, it } from 'vitest'
 
-import { resolveMembershipReturnUrl } from '~/modules/membership/membership.types'
+import {
+  resolveMembershipAvailability,
+  resolveMembershipReturnUrl,
+} from '~/modules/membership/membership.types'
+
+describe('resolveMembershipAvailability', () => {
+  it('is enabled with both plans when fully configured', () => {
+    expect(
+      resolveMembershipAvailability({
+        enabled: true,
+        provider: 'dodo',
+        monthlyProductId: 'm',
+        yearlyProductId: 'y',
+      }),
+    ).toEqual({ enabled: true, plans: ['monthly', 'yearly'] })
+  })
+
+  it('lists only the plans whose product id is set', () => {
+    expect(
+      resolveMembershipAvailability({
+        enabled: true,
+        provider: 'dodo',
+        yearlyProductId: 'y',
+      }),
+    ).toEqual({ enabled: true, plans: ['yearly'] })
+  })
+
+  it('is disabled (empty plans) when toggle off, provider missing, or no product id', () => {
+    expect(
+      resolveMembershipAvailability({
+        enabled: false,
+        provider: 'dodo',
+        monthlyProductId: 'm',
+      }),
+    ).toEqual({ enabled: false, plans: [] })
+    expect(
+      resolveMembershipAvailability({ enabled: true, monthlyProductId: 'm' }),
+    ).toEqual({ enabled: false, plans: [] })
+    expect(
+      resolveMembershipAvailability({ enabled: true, provider: 'dodo' }),
+    ).toEqual({ enabled: false, plans: [] })
+  })
+})
 
 describe('resolveMembershipReturnUrl', () => {
   const web = 'https://blog.example.com'

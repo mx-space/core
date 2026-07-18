@@ -28,6 +28,7 @@ import { ConfigsService } from '../configs/configs.service'
 import { MembershipService } from './membership.service'
 import {
   effectiveMembershipStatus,
+  resolveMembershipAvailability,
   resolveMembershipReturnUrl,
 } from './membership.types'
 import { DodoProvider } from './providers/dodo.provider'
@@ -94,6 +95,12 @@ export class MembershipController {
       plan: body.plan,
       returnUrl,
     })
+  }
+
+  @Get('/plans')
+  async plans() {
+    const membershipConfig = await this.configsService.get('membership')
+    return resolveMembershipAvailability(membershipConfig)
   }
 
   @ReaderAuth()

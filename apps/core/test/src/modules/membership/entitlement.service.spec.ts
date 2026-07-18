@@ -21,10 +21,23 @@ const createMembership = (
   ...overrides,
 })
 
-const createService = () => {
+const createService = (
+  membershipConfig: Record<string, unknown> = {
+    enabled: true,
+    provider: 'dodo',
+    monthlyProductId: 'prod_monthly',
+    yearlyProductId: 'prod_yearly',
+  },
+) => {
   const membershipRepository = createPgRepositoryMock<MembershipRepository>()
-  const service = new EntitlementService(membershipRepository)
-  return { service, membershipRepository }
+  const configsService = {
+    get: vi.fn().mockResolvedValue(membershipConfig),
+  }
+  const service = new EntitlementService(
+    membershipRepository,
+    configsService as any,
+  )
+  return { service, membershipRepository, configsService }
 }
 
 describe('EntitlementService.isActiveMember', () => {
@@ -96,5 +109,54 @@ describe('EntitlementService.isActiveMember', () => {
     )
 
     expect(await service.isActiveMember('reader-1')).toBe(false)
+  })
+})
+
+describe('EntitlementService.getAvailability', () => {
+  it('reports enabled with both plans when fully configured', async () => {
+    const { service } = createService()
+    expect(await service.getAvailability()).toEqual({
+      enabled: true,
+      plans: ['monthly', 'yearly'],
+    })
+    expect(await service.isMembershipPurchasable()).toBe(true)
+  })
+
+  it('reports only configured plans', async () => {
+    const { service } = createService({
+      enabled: true,
+      provider: 'dodo',
+      monthlyProductId: 'prod_monthly',
+    })
+    expect(await service.getAvailability()).toEqual({
+      enabled: true,
+      plans: ['monthly'],
+    })
+  })
+
+  it('is not purchasable when disabled', async () => {
+    const { service } = createService({
+      enabled: false,
+      provider: 'dodo',
+      monthlyProductId: 'prod_monthly',
+    })
+    expect(await service.getAvailability()).toEqual({
+      enabled: false,
+      plans: [],
+    })
+    expect(await service.isMembershipPurchasable()).toBe(false)
+  })
+
+  it('is not purchasable when no product id is set', async () => {
+    const { service } = createService({ enabled: true, provider: 'dodo' })
+    expect(await service.isMembershipPurchasable()).toBe(false)
+  })
+
+  it('is not purchasable when provider is missing', async () => {
+    const { service } = createService({
+      enabled: true,
+      monthlyProductId: 'prod_monthly',
+    })
+    expect(await service.isMembershipPurchasable()).toBe(false)
   })
 })
