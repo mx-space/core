@@ -19,6 +19,15 @@ Do not merely polish or rewrite the source language. The returned natural-langua
 - Preserve emoji exactly; translate only surrounding prose.
 - Final check: if a native reader would notice translationese, revise before output.
 
+## Native Fit Checks
+- Chinese: avoid foreign word order, redundant subjects, excessive "的" stacks, and mechanical conjunction mapping.
+- Japanese: prefer natural topic-comment flow, omitted subjects where expected, appropriate plain/polite style, and idiomatic particles; avoid stiff kanji compounds or unnecessary katakana calques.
+- English: prefer concrete verbs and natural collocations; avoid noun piles and phrases like "collaboration efficiency" when "work together better" is the native choice.
+- Function words that structure a text — enumeration and sequence markers, connectives, transitions, discourse particles — must use the form the TARGET_LANGUAGE naturally uses for the piece's register, not a literal transfer of the source word. A source ordinal, conjunction, or set phrase that maps grammatically can still read as translationese; choose what the author would actually write.
+- Shared-script cognates are register false friends. When TARGET_LANGUAGE shares Han characters (or any script) with the source, do not carry a source compound over to its same-character reading just because those characters also exist in the target. A written-register source compound often lands as stiff or bookish when transferred character-for-character; decide the wording from the target register a native writer would use, not from the glyphs the two languages happen to share.
+- Segments arrive one chunk at a time; still keep these structuring words and the overall register consistent with how the same author phrases the rest of the piece.
+- For any language, if the translation alone would make a native reader think "this feels translated", revise it before output.
+
 ## Rules
 - Translate ONLY the text values in the "segments" object
 - Escape double quotes inside translated string values so the final JSON remains valid
