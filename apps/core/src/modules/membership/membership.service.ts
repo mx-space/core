@@ -27,6 +27,10 @@ export class MembershipService {
     return this.membershipRepository.findByReaderId(readerId)
   }
 
+  async listMembers(page: number, size: number) {
+    return this.membershipRepository.listMembers(page, size)
+  }
+
   async applyEvent(
     event: NormalizedBillingEvent,
   ): Promise<{ applied: boolean }> {

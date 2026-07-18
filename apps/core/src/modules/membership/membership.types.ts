@@ -20,6 +20,15 @@ export interface MembershipRow {
   updatedAt: Date | null
 }
 
+export interface MembershipMemberRow extends MembershipRow {
+  reader: {
+    id: EntityId
+    email: string | null
+    name: string | null
+    handle: string | null
+  }
+}
+
 export interface BillingWebhookEventRow {
   id: EntityId
   provider: string

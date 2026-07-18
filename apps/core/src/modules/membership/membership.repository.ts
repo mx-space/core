@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { eq } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { memberships } from '~/database/schema'
+import { memberships, readers } from '~/database/schema'
 import {
   BaseRepository,
+  type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -12,6 +13,7 @@ import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import type {
+  MembershipMemberRow,
   MembershipPlan,
   MembershipProvider,
   MembershipRow,
@@ -134,5 +136,50 @@ export class MembershipRepository extends BaseRepository {
       .where(eq(memberships.id, parseEntityId(id)))
       .returning()
     return row ? mapRow(row) : null
+  }
+
+  async listMembers(
+    page: number,
+    size: number,
+  ): Promise<PaginationResult<MembershipMemberRow>> {
+    const normalizedPage = Math.max(1, page)
+    const normalizedSize = Math.min(100, Math.max(1, size))
+    const offset = (normalizedPage - 1) * normalizedSize
+
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select({
+          membership: memberships,
+          reader: {
+            id: readers.id,
+            email: readers.email,
+            name: readers.name,
+            handle: readers.handle,
+          },
+        })
+        .from(memberships)
+        .innerJoin(readers, eq(memberships.readerId, readers.id))
+        .orderBy(desc(memberships.createdAt))
+        .limit(normalizedSize)
+        .offset(offset),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(memberships),
+    ])
+
+    return {
+      data: rows.map((row) => ({
+        ...mapRow(row.membership),
+        reader: {
+          id: toEntityId(row.reader.id) as EntityId,
+          email: row.reader.email,
+          name: row.reader.name,
+          handle: row.reader.handle,
+        },
+      })),
+      pagination: this.paginationOf(
+        Number(count ?? 0),
+        normalizedPage,
+        normalizedSize,
+      ),
+    }
   }
 }

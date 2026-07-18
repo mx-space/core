@@ -1,3 +1,5 @@
+import { Readable } from 'node:stream'
+
 import fastifyCookie from '@fastify/cookie'
 import FastifyMultipart from '@fastify/multipart'
 import { Logger } from '@nestjs/common'
@@ -64,6 +66,23 @@ app.register(FastifyMultipart, {
     files: 1,
     fileSize: 1024 * 1024 * 6,
   },
+})
+
+const MEMBERSHIP_WEBHOOK_PATH_SEGMENT = '/membership/webhook/'
+
+app.getInstance().addHook('preParsing', async (request, _reply, payload) => {
+  if (!request.url.includes(MEMBERSHIP_WEBHOOK_PATH_SEGMENT)) {
+    return payload
+  }
+
+  const chunks: Buffer[] = []
+  for await (const chunk of payload) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  }
+  const rawBody = Buffer.concat(chunks)
+  Object.assign(request, { rawBody })
+
+  return Readable.from(rawBody)
 })
 
 app.getInstance().addHook('onRequest', (request, reply, done) => {
