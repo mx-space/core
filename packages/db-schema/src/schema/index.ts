@@ -1,5 +1,6 @@
 export * from './ai'
 export * from './auth'
+export * from './billing'
 export * from './companion'
 export * from './content'
 export * from './enrichment'

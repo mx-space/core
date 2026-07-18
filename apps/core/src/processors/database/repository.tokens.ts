@@ -39,6 +39,8 @@ export const POSTGRES_REPOSITORY_TOKENS = {
   webhookEvent: Symbol('WebhookEventRepository'),
   options: Symbol('OptionsRepository'),
   metaPreset: Symbol('MetaPresetRepository'),
+  membership: Symbol('MembershipRepository'),
+  billingWebhookEvent: Symbol('BillingWebhookEventRepository'),
 } as const
 
 export type PostgresRepositoryToken =

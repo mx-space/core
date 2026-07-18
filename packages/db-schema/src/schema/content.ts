@@ -68,6 +68,7 @@ export const posts = pgTable(
       .references(() => categories.id, { onDelete: 'restrict' }),
     copyright: boolean('copyright').notNull().default(true),
     isPublished: boolean('is_published').notNull().default(true),
+    isPremium: boolean('is_premium').notNull().default(false),
     readCount: integer('read_count').notNull().default(0),
     likeCount: integer('like_count').notNull().default(0),
     pinAt: tsCol('pin_at'),

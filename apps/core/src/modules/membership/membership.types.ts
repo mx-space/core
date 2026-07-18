@@ -1,0 +1,31 @@
+import type { EntityId } from '~/shared/id/entity-id'
+
+export type MembershipProvider =
+  'dodo' | 'creem' | 'lemonsqueezy' | 'stripe' | 'manual'
+
+export type MembershipPlan = 'monthly' | 'yearly'
+
+export type MembershipStatus = 'active' | 'on_hold' | 'cancelled' | 'expired'
+
+export interface MembershipRow {
+  id: EntityId
+  readerId: EntityId
+  provider: MembershipProvider
+  providerCustomerId: string | null
+  providerSubscriptionId: string | null
+  plan: MembershipPlan
+  status: MembershipStatus
+  currentPeriodEnd: Date
+  createdAt: Date
+  updatedAt: Date | null
+}
+
+export interface BillingWebhookEventRow {
+  id: EntityId
+  provider: string
+  eventId: string
+  type: string
+  payload: unknown
+  processedAt: Date | null
+  receivedAt: Date
+}
