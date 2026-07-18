@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { CircleAlert, Loader2 } from 'lucide-react'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -19,6 +20,7 @@ import { Checkbox } from '~/ui/primitives/checkbox'
 import { Scroll } from '~/ui/primitives/scroll'
 import { Switch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
+import { cn } from '~/utils/cn'
 
 import { scopeOptions } from '../constants'
 
@@ -48,6 +50,11 @@ function WebhookEditorModal(props: WebhookEditorModalProps) {
   })
   const availableEvents = eventsQuery.data ?? []
   const allEventsChecked = events.includes('all')
+  const selectedEventCount = allEventsChecked
+    ? availableEvents.length
+    : events.filter((event) => availableEvents.includes(event)).length
+  const someEventsChecked = !allEventsChecked && selectedEventCount > 0
+  const clearError = () => setError('')
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -62,6 +69,13 @@ function WebhookEditorModal(props: WebhookEditorModalProps) {
       if (props.webhook?.id) return updateWebhook(props.webhook.id, data)
       return createWebhook({ ...data, secret: secret.trim() || '' })
     },
+    onError: (mutationError: unknown) => {
+      setError(
+        mutationError instanceof Error && mutationError.message
+          ? mutationError.message
+          : t('webhooks.editor.saveFailed'),
+      )
+    },
     onSuccess: (webhook) => {
       toast.success(
         isEdit ? t('webhooks.toast.updated') : t('webhooks.toast.created'),
@@ -69,6 +83,9 @@ function WebhookEditorModal(props: WebhookEditorModalProps) {
       modal.close(webhook)
     },
   })
+  const submitLabel = isEdit
+    ? t(mutation.isPending ? 'webhooks.editor.saving' : 'common.save')
+    : t(mutation.isPending ? 'webhooks.editor.creating' : 'common.create')
 
   const handleSubmit = (event?: FormEvent) => {
     event?.preventDefault()
@@ -88,7 +105,11 @@ function WebhookEditorModal(props: WebhookEditorModalProps) {
   }
 
   return (
-    <form className="flex max-h-[90vh] flex-col" onSubmit={handleSubmit}>
+    <form
+      aria-busy={mutation.isPending}
+      className="flex h-[min(90svh,52rem)] min-h-0 flex-col"
+      onSubmit={handleSubmit}
+    >
       <ModalHeader
         title={
           isEdit
@@ -97,17 +118,23 @@ function WebhookEditorModal(props: WebhookEditorModalProps) {
         }
       />
 
-      <Scroll className="flex-1" innerClassName="grid gap-4 px-5 py-4">
+      <Scroll className="flex-1" innerClassName="grid gap-5 px-5 py-5">
         <TextInput
           label="Payload URL"
-          onChange={setPayloadUrl}
+          onChange={(value) => {
+            clearError()
+            setPayloadUrl(value)
+          }}
           placeholder="https://example.com/webhook"
           required
           value={payloadUrl}
         />
         <TextInput
           label="Secret"
-          onChange={setSecret}
+          onChange={(value) => {
+            clearError()
+            setSecret(value)
+          }}
           placeholder={
             isEdit
               ? t('webhooks.editor.placeholder.secret.edit')
@@ -117,61 +144,101 @@ function WebhookEditorModal(props: WebhookEditorModalProps) {
           value={secret}
         />
 
-        <fieldset className="grid gap-2">
-          <legend className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <fieldset className="grid gap-2.5">
+          <legend className="text-sm font-medium text-fg">
             {t('webhooks.editor.events')}{' '}
             <span className="text-red-500">*</span>
           </legend>
-          <label className="flex items-center gap-2 rounded border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-800">
+          <p className="text-xs text-fg-muted">
+            {t('webhooks.editor.eventsDescription')}
+          </p>
+          <label className="flex min-h-10 cursor-pointer items-center gap-2 rounded-sm border border-border bg-surface-card px-3 py-2 text-sm text-fg transition-colors hover:bg-surface-inset">
             <Checkbox
               checked={allEventsChecked}
-              onCheckedChange={(checked) => setEvents(checked ? ['all'] : [])}
+              indeterminate={someEventsChecked}
+              onCheckedChange={(checked) => {
+                clearError()
+                setEvents(checked ? ['all'] : [])
+              }}
             />
-            {t('webhooks.editor.allEvents')}
+            <span className="font-medium">
+              {t('webhooks.editor.allEvents')}
+            </span>
+            {!eventsQuery.isPending && availableEvents.length > 0 ? (
+              <span className="ml-auto text-xs tabular-nums text-fg-muted">
+                {t('webhooks.editor.selectedEvents', {
+                  selected: selectedEventCount,
+                  total: availableEvents.length,
+                })}
+              </span>
+            ) : null}
           </label>
-          <Scroll
-            className="rounded border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/50"
-            innerClassName="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2"
-            viewportClassName="max-h-56"
-          >
-            {availableEvents.map((event) => (
-              <label className="flex items-center gap-2 text-sm" key={event}>
-                <Checkbox
-                  checked={allEventsChecked || events.includes(event)}
-                  disabled={allEventsChecked}
-                  onCheckedChange={(checked) => {
-                    setEvents((current) =>
-                      checked
-                        ? [...current, event]
-                        : current.filter((value) => value !== event),
-                    )
-                  }}
-                />
-                {event}
-              </label>
-            ))}
-          </Scroll>
+          <div className="rounded-sm border border-border bg-surface-inset/50 p-1.5">
+            {eventsQuery.isPending ? (
+              <div className="px-2 py-6 text-center text-sm text-fg-muted">
+                {t('common.loading')}
+              </div>
+            ) : availableEvents.length > 0 ? (
+              <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-2">
+                {availableEvents.map((event) => (
+                  <label
+                    className={cn(
+                      'flex min-h-9 items-center gap-2 rounded-sm px-2.5 py-2 font-mono text-xs transition-colors',
+                      allEventsChecked
+                        ? 'cursor-not-allowed text-fg-subtle'
+                        : 'cursor-pointer text-fg hover:bg-surface-card',
+                    )}
+                    key={event}
+                  >
+                    <Checkbox
+                      checked={allEventsChecked || events.includes(event)}
+                      disabled={allEventsChecked}
+                      onCheckedChange={(checked) => {
+                        clearError()
+                        setEvents((current) =>
+                          checked
+                            ? [...current, event]
+                            : current.filter((value) => value !== event),
+                        )
+                      }}
+                    />
+                    <span className="min-w-0 truncate">{event}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <div className="px-2 py-6 text-center text-sm text-fg-muted">
+                {eventsQuery.isError
+                  ? t('webhooks.editor.eventsLoadFailed')
+                  : t('common.empty')}
+              </div>
+            )}
+          </div>
         </fieldset>
 
-        <fieldset className="grid gap-2">
-          <legend className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <fieldset className="grid gap-2.5">
+          <legend className="text-sm font-medium text-fg">
             {t('webhooks.editor.scope')}
           </legend>
-          <div className="flex flex-wrap gap-3">
+          <p className="text-xs text-fg-muted">
+            {t('webhooks.editor.scopeDescription')}
+          </p>
+          <div className="grid grid-cols-1 gap-1 sm:grid-cols-3">
             {scopeOptions.map((option) => (
               <label
-                className="flex items-center gap-2 text-sm"
+                className="flex min-h-9 cursor-pointer items-center gap-2 rounded-sm px-2.5 py-2 text-sm text-fg transition-colors hover:bg-surface-inset"
                 key={option.value}
               >
                 <Checkbox
                   checked={(scope & option.value) === option.value}
-                  onCheckedChange={(checked) =>
+                  onCheckedChange={(checked) => {
+                    clearError()
                     setScope((current) =>
                       checked
                         ? current | option.value
                         : current & ~option.value,
                     )
-                  }
+                  }}
                 />
                 {t(option.labelKey)}
               </label>
@@ -180,20 +247,39 @@ function WebhookEditorModal(props: WebhookEditorModalProps) {
         </fieldset>
 
         <Switch
+          bordered
           checked={enabled}
+          description={t('webhooks.editor.enabledDescription')}
           label={t('webhooks.editor.enabled')}
-          onCheckedChange={setEnabled}
+          onCheckedChange={(checked) => {
+            clearError()
+            setEnabled(checked)
+          }}
         />
-
-        {error ? <span className="text-xs text-red-500">{error}</span> : null}
       </Scroll>
+
+      {error ? (
+        <div
+          className="flex shrink-0 items-start gap-2 border-t border-red-500/20 bg-red-500/10 px-5 py-2.5 text-xs text-red-600 dark:text-red-400"
+          role="alert"
+        >
+          <CircleAlert
+            aria-hidden="true"
+            className="mt-0.5 size-3.5 shrink-0"
+          />
+          <span className="min-w-0 break-words">{error}</span>
+        </div>
+      ) : null}
 
       <ModalFooter>
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
         <Button disabled={mutation.isPending} type="submit">
-          {isEdit ? t('common.save') : t('common.create')}
+          {mutation.isPending ? (
+            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+          ) : null}
+          {submitLabel}
         </Button>
       </ModalFooter>
     </form>
@@ -211,8 +297,8 @@ export async function presentWebhookEditor(
     { webhook },
     {
       modalProps: {
-        className: 'max-h-[90vh]',
-        popupStyle: { width: 'min(92vw, 42rem)' },
+        className: 'max-h-[90svh]',
+        popupStyle: { width: 'min(94vw, 46rem)' },
       },
     },
   )
