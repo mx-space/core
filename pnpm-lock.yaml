@@ -482,8 +482,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       code-inspector-plugin:
-        specifier: 2.0.1
-        version: 2.0.1(supports-color@5.5.0)
+        specifier: 2.0.3
+        version: 2.0.3
       cors:
         specifier: 2.8.6
         version: 2.8.6
@@ -1866,8 +1866,8 @@ packages:
   '@cloudflare/workers-types@5.20260715.1':
     resolution: {integrity: sha512-saxo/nMqQJ1dKDUXp1a2y/+IjKENFVD9+QRefHg5EjJZY20OG3xcEge4PGljbqZiF3AiU4o5ZLS3Vm7cayQIxg==}
 
-  '@code-inspector/core@2.0.1':
-    resolution: {integrity: sha512-pVW1FM7OTlsWDq3WKDMGDc9Fk8Jf4+xg3kLrKg4opk2PpNNvYvNjWr+air64UDwzojxcozQQipZNvCRspkeyOQ==}
+  '@code-inspector/core@2.0.3':
+    resolution: {integrity: sha512-FOybKbJc/1DbZps5v1KPIg9Nc1H9Ga++2/d4h6FWASVpwhFAUM3ULdrNBWWAvn3OXHoVSuN8OfC9C1ZDnOGUVg==}
     peerDependencies:
       '@anthropic-ai/claude-agent-sdk': ^0.2.29
       '@openai/codex-sdk': ^0.106.0
@@ -1880,20 +1880,20 @@ packages:
       '@opencode-ai/sdk':
         optional: true
 
-  '@code-inspector/esbuild@2.0.1':
-    resolution: {integrity: sha512-95bWhxkRxUC9cH6HyDaHp+n1LGJ636D+lhTnI4NTj5E2ryv4XebcaklLPFI6oHGqkS1LnhBmeGAv/w9Y8qHCew==}
+  '@code-inspector/esbuild@2.0.3':
+    resolution: {integrity: sha512-qnCLJOBnXrnBZLqtkhAxdN/V5QE+RsDMAQ44dHDKBITIGIf3D1YST0c0gWY8c2UVOpz0pbftzElpiSiMM+DhSQ==}
 
-  '@code-inspector/mako@2.0.1':
-    resolution: {integrity: sha512-QrX8CscLkSm4czC0IFa/8qnFWruZJSrWqrViryl27glaw3kHOoHItxMqztnonoHZzZnl9+wpmLbkF12XAY1eiQ==}
+  '@code-inspector/mako@2.0.3':
+    resolution: {integrity: sha512-f1WWhh//kq8VUunhwqSUd5Mvix5DeNzfFLlPhvBnmtXopnMXUYihV9ccxbh1pywLEE+EpkZ5ycnXPwAX2Xn7zw==}
 
-  '@code-inspector/turbopack@2.0.1':
-    resolution: {integrity: sha512-5HUtnKDtDsl+dYf+qFGRI62M6fLPhVpjLfXze0lQgZStgoxeRjBl3WLgZ4Tno2mbK6Av3PLjMNbtYIIcD9jfqA==}
+  '@code-inspector/turbopack@2.0.3':
+    resolution: {integrity: sha512-bSpRz3vk41/57iutJt965dkbUim46aAs8QRpCaX0F6WZGNXV3VqnkiP0U3KCiyJFpBKC359JuEW8QSPNhdBtAg==}
 
-  '@code-inspector/vite@2.0.1':
-    resolution: {integrity: sha512-cmbycJnDhoLjQCvlRx3HtamLu+w3PmUCtdob2VqLcN1bTeDh+fuBGjeoDbFjzn4Ap0R2KVRe/M7kDODk+4zF4Q==}
+  '@code-inspector/vite@2.0.3':
+    resolution: {integrity: sha512-odnqmtRwxYTeBf9/8YARj+RK5xUqv1EfqW+3GFW7qW5zXeNkqERB0S9lm5YGpn3sGTsy2XzmdU/WGKrltU+Hig==}
 
-  '@code-inspector/webpack@2.0.1':
-    resolution: {integrity: sha512-qPMkGyshsCOW2t0p3RINFrTFWM2kgqULxzL7AGgXrDaXnA0xOq8yVWxurAzCTHEYPTcvCTZCK3aGQI9YoMjHfA==}
+  '@code-inspector/webpack@2.0.3':
+    resolution: {integrity: sha512-+/QpTl66Zgbb1n6wGRZsOoushd10ylnc+9u6WR0/Lr6NFRzFaO6ucB3vkQ9LcRAT4uDqxhvF+P3gs0w/5/gB5A==}
 
   '@codemirror/autocomplete@6.20.3':
     resolution: {integrity: sha512-tlosUqb+3BbxCxZdu4tKeRghPFC+QM7q4X5YhKV2eCmPG+1r2F3f4AaSz5sCrFqUtX4Jh20VFTKecl16MgiV9g==}
@@ -6537,9 +6537,6 @@ packages:
   '@xterm/addon-fit@0.11.0':
     resolution: {integrity: sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g==}
 
-  '@xterm/addon-web-links@0.12.0':
-    resolution: {integrity: sha512-4Smom3RPyVp7ZMYOYDoC/9eGJJJqYhnPLGGqJ6wOBfB8VxPViJNSKdgRYb8NpaM6YSelEKbA2SStD7lGyqaobw==}
-
   '@xterm/xterm@6.0.0':
     resolution: {integrity: sha512-TQwDdQGtwwDt+2cgKDLn0IRaSxYu1tSUjgKarSDkUM0ZNiSRXFpjxEsvc/Zgc5kq5omJ+V0a8/kIM2WD3sMOYg==}
 
@@ -7337,8 +7334,8 @@ packages:
     resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
     engines: {node: '>=0.10.0'}
 
-  code-inspector-plugin@2.0.1:
-    resolution: {integrity: sha512-m1CS5otAi6D9vlJ59HA0+OkLJXlARpi3DqtgwlhejenJOq9QT+6SCUU73jdPgcqnGQnxVdFx3915NrYO+0FITg==}
+  code-inspector-plugin@2.0.3:
+    resolution: {integrity: sha512-6NyvbJoIiba2Q4fFCEJQS1CXbIOtWSqr55liZC2Z2Pvz3nFOP9kh8YN6K8FMhuiNcTrwqgWGuv/j0ishNkEkgQ==}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -13466,37 +13463,23 @@ snapshots:
 
   '@cloudflare/workers-types@5.20260715.1': {}
 
-  '@code-inspector/core@2.0.1(supports-color@5.5.0)':
+  '@code-inspector/core@2.0.3':
     dependencies:
       '@vue/compiler-dom': 3.5.38
-      '@xterm/addon-fit': 0.11.0
-      '@xterm/addon-web-links': 0.12.0
-      '@xterm/xterm': 6.0.0
       chalk: 4.1.2
-      dotenv: 16.6.1
       launch-ide: 1.4.5
-      node-pty: 1.1.0
-      portfinder: 1.0.38(supports-color@5.5.0)
+      portfinder: 1.0.38
       ws: 8.21.0
+    optionalDependencies:
+      node-pty: 1.1.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@code-inspector/esbuild@2.0.1':
+  '@code-inspector/esbuild@2.0.3':
     dependencies:
-      '@code-inspector/core': 2.0.1(supports-color@5.5.0)
-    transitivePeerDependencies:
-      - '@anthropic-ai/claude-agent-sdk'
-      - '@openai/codex-sdk'
-      - '@opencode-ai/sdk'
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
-  '@code-inspector/mako@2.0.1':
-    dependencies:
-      '@code-inspector/core': 2.0.1(supports-color@5.5.0)
+      '@code-inspector/core': 2.0.3
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'
       - '@openai/codex-sdk'
@@ -13505,10 +13488,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@code-inspector/turbopack@2.0.1':
+  '@code-inspector/mako@2.0.3':
     dependencies:
-      '@code-inspector/core': 2.0.1(supports-color@5.5.0)
-      '@code-inspector/webpack': 2.0.1
+      '@code-inspector/core': 2.0.3
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'
       - '@openai/codex-sdk'
@@ -13517,9 +13499,21 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@code-inspector/vite@2.0.1':
+  '@code-inspector/turbopack@2.0.3':
     dependencies:
-      '@code-inspector/core': 2.0.1(supports-color@5.5.0)
+      '@code-inspector/core': 2.0.3
+      '@code-inspector/webpack': 2.0.3
+    transitivePeerDependencies:
+      - '@anthropic-ai/claude-agent-sdk'
+      - '@openai/codex-sdk'
+      - '@opencode-ai/sdk'
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  '@code-inspector/vite@2.0.3':
+    dependencies:
+      '@code-inspector/core': 2.0.3
       chalk: 4.1.1
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'
@@ -13529,9 +13523,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@code-inspector/webpack@2.0.1':
+  '@code-inspector/webpack@2.0.3':
     dependencies:
-      '@code-inspector/core': 2.0.1(supports-color@5.5.0)
+      '@code-inspector/core': 2.0.3
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'
       - '@openai/codex-sdk'
@@ -18403,8 +18397,6 @@ snapshots:
 
   '@xterm/addon-fit@0.11.0': {}
 
-  '@xterm/addon-web-links@0.12.0': {}
-
   '@xterm/xterm@6.0.0': {}
 
   '@xtuc/ieee754@1.2.0': {}
@@ -19113,14 +19105,14 @@ snapshots:
 
   cluster-key-slot@1.1.2: {}
 
-  code-inspector-plugin@2.0.1(supports-color@5.5.0):
+  code-inspector-plugin@2.0.3:
     dependencies:
-      '@code-inspector/core': 2.0.1(supports-color@5.5.0)
-      '@code-inspector/esbuild': 2.0.1
-      '@code-inspector/mako': 2.0.1
-      '@code-inspector/turbopack': 2.0.1
-      '@code-inspector/vite': 2.0.1
-      '@code-inspector/webpack': 2.0.1
+      '@code-inspector/core': 2.0.3
+      '@code-inspector/esbuild': 2.0.3
+      '@code-inspector/mako': 2.0.3
+      '@code-inspector/turbopack': 2.0.3
+      '@code-inspector/vite': 2.0.3
+      '@code-inspector/webpack': 2.0.3
       chalk: 4.1.1
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'
@@ -22546,6 +22538,7 @@ snapshots:
   node-pty@1.1.0:
     dependencies:
       node-addon-api: 7.1.1
+    optional: true
 
   node-releases@2.0.48: {}
 
@@ -22931,7 +22924,7 @@ snapshots:
       path-data-parser: 0.1.0
       points-on-curve: 0.2.0
 
-  portfinder@1.0.38(supports-color@5.5.0):
+  portfinder@1.0.38:
     dependencies:
       async: 3.2.6
       debug: 4.4.3(supports-color@5.5.0)
