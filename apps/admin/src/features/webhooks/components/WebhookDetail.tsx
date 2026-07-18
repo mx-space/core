@@ -102,7 +102,7 @@ export function WebhookDetail(props: {
                   className="size-7 text-neutral-500 dark:text-neutral-400"
                 />
               </div>
-              <div className="absolute -bottom-1 -right-1 rounded-full border-2 border-white bg-white dark:border-neutral-950 dark:bg-neutral-950">
+              <div className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full border-2 border-white bg-white dark:border-neutral-950 dark:bg-neutral-950">
                 <StatusDot enabled={props.webhook.enabled} />
               </div>
             </div>
