@@ -9,6 +9,11 @@ export interface MembershipCheckoutResult {
   checkoutUrl: string
 }
 
+export interface MembershipPlansResult {
+  enabled: boolean
+  plans: MembershipPlan[]
+}
+
 export interface MembershipStatusResultNone {
   status: 'none'
 }

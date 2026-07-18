@@ -4,6 +4,7 @@ import type { IRequestHandler } from '~/interfaces/request'
 import type {
   MembershipCheckoutResult,
   MembershipPlan,
+  MembershipPlansResult,
   MembershipStatusResult,
 } from '~/models/membership'
 import { autoBind } from '~/utils/auto-bind'
@@ -39,5 +40,9 @@ export class MembershipController<ResponseWrapper> implements IController {
 
   status() {
     return this.proxy.status.get<MembershipStatusResult>()
+  }
+
+  plans() {
+    return this.proxy.plans.get<MembershipPlansResult>()
   }
 }
