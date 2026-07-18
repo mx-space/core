@@ -33,11 +33,7 @@ export interface ReaderModel {
   createdAt: string
   updatedAt: string | null
   lastLoginAt: string | null
-  /**
-   * Only present on list rows (`GET /readers`). The single-reader detail
-   * endpoint (`GET /readers/:id`) does not include membership.
-   */
-  membership?: ReaderMembership | null
+  membership: ReaderMembership | null
 }
 
 export interface ReaderStats {

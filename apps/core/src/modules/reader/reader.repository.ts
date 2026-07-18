@@ -295,14 +295,29 @@ export class ReaderRepository extends BaseRepository {
     const [row] = await this.db
       .select({
         ...readerSelection,
+        ...membershipSelection,
         lastLoginAt,
       })
       .from(readers)
       .leftJoin(sessions, eq(sessions.userId, readers.id))
+      .leftJoin(memberships, eq(memberships.readerId, readers.id))
       .where(eq(readers.id, id))
-      .groupBy(readers.id)
+      .groupBy(
+        readers.id,
+        memberships.id,
+        memberships.status,
+        memberships.plan,
+        memberships.provider,
+        memberships.currentPeriodEnd,
+      )
       .limit(1)
-    return row ? { ...mapRow(row), lastLoginAt: row.lastLoginAt } : null
+    return row
+      ? {
+          ...mapRow(row),
+          lastLoginAt: row.lastLoginAt,
+          membership: mapMembership(row),
+        }
+      : null
   }
 
   async setBanned(

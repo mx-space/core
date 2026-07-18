@@ -160,4 +160,18 @@ describe('ReaderRepository membership summary + filter (real PG)', () => {
     })
     expect(result.data.map((row) => row.id)).toEqual([noMembershipReaderId])
   })
+
+  it('carries a membership summary on the single-reader detail fetch', async () => {
+    const member = await readerRepository.findByIdDetailed(activeReaderId)
+    expect(member?.membership).toEqual({
+      status: 'active',
+      plan: 'monthly',
+      provider: 'dodo',
+      currentPeriodEnd: future,
+    })
+
+    const nonMember =
+      await readerRepository.findByIdDetailed(noMembershipReaderId)
+    expect(nonMember?.membership).toBeNull()
+  })
 })
