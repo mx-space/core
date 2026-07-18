@@ -40,7 +40,7 @@ export class BillingWebhookEventRepository extends BaseRepository {
     type: string
     payload: unknown
     receivedAt?: Date
-  }): Promise<BillingWebhookEventRow> {
+  }): Promise<BillingWebhookEventRow | null> {
     const id = this.snowflake.nextId()
     const [row] = await this.db
       .insert(billingWebhookEvents)
@@ -52,8 +52,11 @@ export class BillingWebhookEventRepository extends BaseRepository {
         payload: input.payload as Record<string, unknown>,
         receivedAt: input.receivedAt ?? new Date(),
       })
+      .onConflictDoNothing({
+        target: [billingWebhookEvents.provider, billingWebhookEvents.eventId],
+      })
       .returning()
-    return mapRow(row)
+    return row ? mapRow(row) : null
   }
 
   async findByProviderAndEventId(

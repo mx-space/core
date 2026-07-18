@@ -30,19 +30,13 @@ export class MembershipService {
   async applyEvent(
     event: NormalizedBillingEvent,
   ): Promise<{ applied: boolean }> {
-    const existingWebhookEvent =
-      await this.billingWebhookEventRepository.findByProviderAndEventId(
-        event.provider,
-        event.eventId,
-      )
-    if (existingWebhookEvent) return { applied: false }
-
     const webhookEventRow = await this.billingWebhookEventRepository.create({
       provider: event.provider,
       eventId: event.eventId,
       type: event.type,
       payload: event,
     })
+    if (!webhookEventRow) return { applied: false }
 
     await this.applyMembershipState(event)
     await this.billingWebhookEventRepository.markProcessed(

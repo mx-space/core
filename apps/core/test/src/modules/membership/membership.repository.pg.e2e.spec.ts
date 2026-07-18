@@ -150,21 +150,47 @@ describe('Membership + billing webhook event repositories (real PG)', () => {
     )
   })
 
-  it('rejects a duplicate (provider, event_id) pair', async () => {
-    await billingWebhookEventRepository.create({
+  it('skips a duplicate (provider, event_id) insert without throwing', async () => {
+    const first = await billingWebhookEventRepository.create({
       provider: 'dodo',
       eventId: 'evt_dup',
       type: 'subscription.renewed',
       payload: {},
     })
+    expect(first).not.toBeNull()
 
-    await expect(
+    const second = await billingWebhookEventRepository.create({
+      provider: 'dodo',
+      eventId: 'evt_dup',
+      type: 'subscription.renewed',
+      payload: {},
+    })
+    expect(second).toBeNull()
+
+    const results = await Promise.allSettled([
       billingWebhookEventRepository.create({
         provider: 'dodo',
-        eventId: 'evt_dup',
+        eventId: 'evt_concurrent',
         type: 'subscription.renewed',
         payload: {},
       }),
-    ).rejects.toThrow()
+      billingWebhookEventRepository.create({
+        provider: 'dodo',
+        eventId: 'evt_concurrent',
+        type: 'subscription.renewed',
+        payload: {},
+      }),
+    ])
+
+    const fulfilled = results.filter((r) => r.status === 'fulfilled') as Array<
+      PromiseFulfilledResult<
+        Awaited<ReturnType<typeof billingWebhookEventRepository.create>>
+      >
+    >
+    expect(fulfilled).toHaveLength(2)
+    const wins = fulfilled.filter((r) => r.value !== null)
+    const losses = fulfilled.filter((r) => r.value === null)
+    expect(wins).toHaveLength(1)
+    expect(losses).toHaveLength(1)
   })
 })

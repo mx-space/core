@@ -74,23 +74,16 @@ describe('MembershipService', () => {
   })
 
   describe('applyEvent idempotency', () => {
-    it('skips processing when (provider, event_id) already exists', async () => {
+    it('skips processing when the insert loses the (provider, event_id) conflict race', async () => {
       const { service, billingWebhookEventRepository, membershipRepository } =
         createService()
-      billingWebhookEventRepository.findByProviderAndEventId.mockResolvedValue({
-        id: 'event-1' as any,
-        provider: 'dodo',
-        eventId: 'evt_1',
-        type: 'activated',
-        payload: {},
-        processedAt: now,
-        receivedAt: now,
-      })
+      billingWebhookEventRepository.create.mockResolvedValue(null)
 
       const result = await service.applyEvent(createEvent())
 
       expect(result).toEqual({ applied: false })
-      expect(billingWebhookEventRepository.create).not.toHaveBeenCalled()
+      expect(billingWebhookEventRepository.create).toHaveBeenCalled()
+      expect(billingWebhookEventRepository.markProcessed).not.toHaveBeenCalled()
       expect(membershipRepository.create).not.toHaveBeenCalled()
       expect(membershipRepository.update).not.toHaveBeenCalled()
     })

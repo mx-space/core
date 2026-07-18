@@ -14,11 +14,6 @@ import { DodoProvider } from './providers/dodo.provider'
     BillingWebhookEventRepository,
     DodoProvider,
   ],
-  exports: [
-    MembershipService,
-    EntitlementService,
-    MembershipRepository,
-    DodoProvider,
-  ],
+  exports: [EntitlementService],
 })
 export class MembershipModule {}
