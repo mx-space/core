@@ -77,6 +77,7 @@ export class DodoProvider implements PaymentProviderAdapter {
   async createCheckout(input: {
     reader: { id: string; email?: string | null; name?: string | null }
     plan: MembershipPlan
+    returnUrl?: string
   }): Promise<{ checkoutUrl: string }> {
     const membershipConfig = await this.configsService.get('membership')
     const productId =
@@ -103,6 +104,7 @@ export class DodoProvider implements PaymentProviderAdapter {
       customer: input.reader.email
         ? { email: input.reader.email, name: input.reader.name ?? undefined }
         : undefined,
+      return_url: input.returnUrl,
     })
 
     if (!session.checkout_url) {

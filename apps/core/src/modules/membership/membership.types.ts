@@ -31,6 +31,29 @@ export function effectiveMembershipStatus(
     : 'expired'
 }
 
+export function resolveMembershipReturnUrl(
+  returnPath: string | undefined,
+  webUrl: string | undefined,
+): string | undefined {
+  if (!returnPath || !webUrl) return undefined
+  if (!returnPath.startsWith('/') || returnPath.startsWith('//'))
+    return undefined
+  if (returnPath.includes('\\')) return undefined
+
+  let base: URL
+  try {
+    base = new URL(webUrl)
+  } catch {
+    return undefined
+  }
+
+  const resolved = new URL(returnPath, base)
+  if (resolved.origin !== base.origin) return undefined
+
+  resolved.searchParams.set('membership', 'success')
+  return resolved.toString()
+}
+
 export interface MembershipMemberRow extends MembershipRow {
   reader: {
     id: EntityId

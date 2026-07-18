@@ -61,10 +61,14 @@ const membershipConfig: {
   yearlyProductId: 'prod_yearly',
 }
 
+const urlConfig: { webUrl: string | undefined } = { webUrl: undefined }
+
 const configsServiceMock = {
-  get: vi.fn(async (key: string) =>
-    key === 'membership' ? membershipConfig : {},
-  ),
+  get: vi.fn(async (key: string) => {
+    if (key === 'membership') return membershipConfig
+    if (key === 'url') return urlConfig
+    return {}
+  }),
 }
 
 const authServiceMock = {
@@ -156,6 +160,7 @@ describe('MembershipController (e2e)', () => {
   beforeEach(() => {
     membershipConfig.enabled = true
     membershipConfig.provider = 'dodo'
+    urlConfig.webUrl = undefined
     createCheckoutMock.mockClear()
     verifyAndParseWebhookMock.mockClear()
   })
@@ -184,6 +189,47 @@ describe('MembershipController (e2e)', () => {
         },
         plan: 'monthly',
       })
+    })
+
+    it('resolves returnPath against webUrl and forwards it to the adapter', async () => {
+      urlConfig.webUrl = 'https://blog.example.com'
+
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/checkout',
+        headers: {
+          'x-test-reader': 'reader',
+          'content-type': 'application/json',
+        },
+        payload: { plan: 'monthly', returnPath: '/posts/tech/foo' },
+      })
+
+      expect(res.statusCode).toBe(201)
+      expect(createCheckoutMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          returnUrl:
+            'https://blog.example.com/posts/tech/foo?membership=success',
+        }),
+      )
+    })
+
+    it('drops an off-origin returnPath (open redirect guard)', async () => {
+      urlConfig.webUrl = 'https://blog.example.com'
+
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/checkout',
+        headers: {
+          'x-test-reader': 'reader',
+          'content-type': 'application/json',
+        },
+        payload: { plan: 'monthly', returnPath: '//evil.com/phish' },
+      })
+
+      expect(res.statusCode).toBe(201)
+      expect(createCheckoutMock).toHaveBeenCalledWith(
+        expect.objectContaining({ returnUrl: undefined }),
+      )
     })
 
     it('rejects anonymous callers with 401', async () => {

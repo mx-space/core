@@ -62,6 +62,34 @@ describe('DodoProvider', () => {
       )
     })
 
+    it('forwards returnUrl as return_url and omits it when absent', async () => {
+      checkoutCreateMock.mockResolvedValue({
+        session_id: 'sess_r',
+        checkout_url: 'https://checkout.dodopayments.com/sess_r',
+      })
+
+      const provider = new DodoProvider(configsService as any)
+      await provider.createCheckout({
+        reader: { id: 'reader-1' },
+        plan: 'monthly',
+        returnUrl: 'https://blog.example.com/posts/tech/foo?membership=success',
+      })
+      expect(checkoutCreateMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          return_url:
+            'https://blog.example.com/posts/tech/foo?membership=success',
+        }),
+      )
+
+      await provider.createCheckout({
+        reader: { id: 'reader-1' },
+        plan: 'monthly',
+      })
+      expect(checkoutCreateMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ return_url: undefined }),
+      )
+    })
+
     it('uses the yearly product id for the yearly plan', async () => {
       checkoutCreateMock.mockResolvedValue({
         session_id: 'sess_2',

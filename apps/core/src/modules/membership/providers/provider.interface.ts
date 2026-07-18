@@ -15,6 +15,7 @@ export interface PaymentProviderAdapter {
   createCheckout: (input: {
     reader: { id: string; email?: string | null; name?: string | null }
     plan: MembershipPlan
+    returnUrl?: string
   }) => Promise<{ checkoutUrl: string }>
 
   verifyAndParseWebhook: (

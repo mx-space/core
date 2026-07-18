@@ -26,12 +26,16 @@ import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import type { SessionUser } from '../auth/auth.types'
 import { ConfigsService } from '../configs/configs.service'
 import { MembershipService } from './membership.service'
-import { effectiveMembershipStatus } from './membership.types'
+import {
+  effectiveMembershipStatus,
+  resolveMembershipReturnUrl,
+} from './membership.types'
 import { DodoProvider } from './providers/dodo.provider'
 import type { PaymentProviderAdapter } from './providers/provider.interface'
 
 const CheckoutSchema = z.object({
   plan: z.enum(['monthly', 'yearly']),
+  returnPath: z.string().max(2048).optional(),
 })
 class CheckoutDto extends createZodDto(CheckoutSchema) {}
 
@@ -81,10 +85,14 @@ export class MembershipController {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
     }
 
+    const { webUrl } = await this.configsService.get('url')
+    const returnUrl = resolveMembershipReturnUrl(body.returnPath, webUrl)
+
     const adapter = this.resolveProvider(membershipConfig.provider)
     return adapter.createCheckout({
       reader: { id: user.id, email: user.email, name: user.name },
       plan: body.plan,
+      returnUrl,
     })
   }
 
