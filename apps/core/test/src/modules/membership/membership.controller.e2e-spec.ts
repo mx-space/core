@@ -400,6 +400,20 @@ describe('MembershipController (e2e)', () => {
       })
     })
 
+    it('returns 422 for a malformed readerId path param', async () => {
+      const res = await proxy.app.inject({
+        method: 'PUT',
+        url: '/membership/members/not-a-valid-id',
+        headers: { 'test-token': '1', 'content-type': 'application/json' },
+        payload: {
+          plan: 'monthly',
+          expiresAt: new Date(Date.now() + 1000 * 60).toISOString(),
+        },
+      })
+
+      expect(res.statusCode).toBe(422)
+    })
+
     it('rejects manual grant/revoke callers without the owner test-token header', async () => {
       const res = await proxy.app.inject({
         method: 'PUT',
@@ -424,6 +438,16 @@ describe('MembershipController (e2e)', () => {
       expect(res.json()).toMatchObject({
         data: { status: 'cancelled', provider: 'manual' },
       })
+    })
+
+    it('returns 422 for a malformed readerId path param', async () => {
+      const res = await proxy.app.inject({
+        method: 'DELETE',
+        url: '/membership/members/not-a-valid-id',
+        headers: { 'test-token': '1' },
+      })
+
+      expect(res.statusCode).toBe(422)
     })
   })
 })

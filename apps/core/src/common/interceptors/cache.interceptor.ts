@@ -46,7 +46,12 @@ export class HttpCacheInterceptor implements NestInterceptor {
       context.getHandler(),
     )
 
-    if ((request.hasAdminAccess ?? request.isAuthenticated) && !cacheOptions?.force) {
+    const hasIdentity =
+      request.hasAdminAccess ||
+      request.hasReaderIdentity ||
+      request.isAuthenticated
+
+    if (hasIdentity && !cacheOptions?.force) {
       this.setPrivateCacheHeader(res)
       return call$
     }
@@ -87,7 +92,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
         ? of(value)
         : call$.pipe(
             tap((response) => {
-              if (response) {
+              if (response && !this.isEntitledFullContent(response)) {
                 this.cacheManager.set(key, response, ttl * 1000)
               }
               this.setCacheHeader(res, ttl)
@@ -97,6 +102,10 @@ export class HttpCacheInterceptor implements NestInterceptor {
       this.logger.warn(`Cache get failed for key=${key}: ${error}`)
       return call$
     }
+  }
+
+  private isEntitledFullContent(response: any): boolean {
+    return response?.meta?.paywall?.locked === false
   }
 
   private setPrivateCacheHeader(res: FastifyReply) {

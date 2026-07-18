@@ -88,6 +88,62 @@ describe('MembershipService', () => {
       expect(membershipRepository.update).not.toHaveBeenCalled()
     })
 
+    it('retries and applies state when the first delivery fails mid-apply and processed_at is still null', async () => {
+      const { service, billingWebhookEventRepository, membershipRepository } =
+        createService()
+
+      membershipRepository.create.mockRejectedValueOnce(
+        new Error('transient db error'),
+      )
+
+      await expect(service.applyEvent(createEvent())).rejects.toThrow(
+        'transient db error',
+      )
+      expect(billingWebhookEventRepository.markProcessed).not.toHaveBeenCalled()
+
+      billingWebhookEventRepository.create.mockResolvedValue(null)
+      billingWebhookEventRepository.findByProviderAndEventId.mockResolvedValue({
+        id: 'event-1' as any,
+        provider: 'dodo',
+        eventId: 'evt_1',
+        type: 'activated',
+        payload: {},
+        processedAt: null,
+        receivedAt: now,
+      })
+
+      const result = await service.applyEvent(createEvent())
+
+      expect(result).toEqual({ applied: true })
+      expect(membershipRepository.create).toHaveBeenCalledTimes(2)
+      expect(billingWebhookEventRepository.markProcessed).toHaveBeenCalledWith(
+        'event-1',
+        expect.any(Date),
+      )
+    })
+
+    it('skips retry when the existing event row is already processed', async () => {
+      const { service, billingWebhookEventRepository, membershipRepository } =
+        createService()
+
+      billingWebhookEventRepository.create.mockResolvedValue(null)
+      billingWebhookEventRepository.findByProviderAndEventId.mockResolvedValue({
+        id: 'event-1' as any,
+        provider: 'dodo',
+        eventId: 'evt_1',
+        type: 'activated',
+        payload: {},
+        processedAt: now,
+        receivedAt: now,
+      })
+
+      const result = await service.applyEvent(createEvent())
+
+      expect(result).toEqual({ applied: false })
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(billingWebhookEventRepository.markProcessed).not.toHaveBeenCalled()
+    })
+
     it('inserts the webhook event before applying state and marks it processed', async () => {
       const { service, billingWebhookEventRepository, membershipRepository } =
         createService()

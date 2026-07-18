@@ -40,7 +40,22 @@ export class MembershipService {
       type: event.type,
       payload: event,
     })
-    if (!webhookEventRow) return { applied: false }
+
+    if (!webhookEventRow) {
+      const existingRow =
+        await this.billingWebhookEventRepository.findByProviderAndEventId(
+          event.provider,
+          event.eventId,
+        )
+      if (!existingRow || existingRow.processedAt) return { applied: false }
+
+      await this.applyMembershipState(event)
+      await this.billingWebhookEventRepository.markProcessed(
+        existingRow.id,
+        new Date(),
+      )
+      return { applied: true }
+    }
 
     await this.applyMembershipState(event)
     await this.billingWebhookEventRepository.markProcessed(

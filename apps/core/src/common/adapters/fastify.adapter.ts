@@ -69,20 +69,50 @@ app.register(FastifyMultipart, {
 })
 
 const MEMBERSHIP_WEBHOOK_PATH_SEGMENT = '/membership/webhook/'
+const MEMBERSHIP_WEBHOOK_RAW_BODY_LIMIT = 1024 * 1024
 
-app.getInstance().addHook('preParsing', async (request, _reply, payload) => {
-  if (!request.url.includes(MEMBERSHIP_WEBHOOK_PATH_SEGMENT)) {
-    return payload
-  }
+export function isMembershipWebhookRequest(url: string): boolean {
+  const path = url.split('?', 1)[0]
+  return path.includes(MEMBERSHIP_WEBHOOK_PATH_SEGMENT)
+}
 
+export async function membershipWebhookRawBodyPreParsingHook(
+  request: FastifyRequest,
+  reply: { code: (statusCode: number) => { send: (payload: unknown) => void } },
+  payload: AsyncIterable<Buffer | string>,
+): Promise<Readable> {
   const chunks: Buffer[] = []
+  let total = 0
+
   for await (const chunk of payload) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+    const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+    total += buf.byteLength
+
+    if (total > MEMBERSHIP_WEBHOOK_RAW_BODY_LIMIT) {
+      reply.code(413).send({
+        error: {
+          code: 'PAYLOAD_TOO_LARGE',
+          message: 'Request body exceeds the allowed size',
+        },
+      })
+      return Readable.from(Buffer.alloc(0))
+    }
+
+    chunks.push(buf)
   }
+
   const rawBody = Buffer.concat(chunks)
   Object.assign(request, { rawBody })
 
   return Readable.from(rawBody)
+}
+
+app.getInstance().addHook('preParsing', async (request, reply, payload) => {
+  if (!isMembershipWebhookRequest(request.url)) {
+    return payload
+  }
+
+  return membershipWebhookRawBodyPreParsingHook(request, reply, payload)
 })
 
 app.getInstance().addHook('onRequest', (request, reply, done) => {

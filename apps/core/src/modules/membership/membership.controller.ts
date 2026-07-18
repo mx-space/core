@@ -20,6 +20,7 @@ import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { zEntityId } from '~/common/zod'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import type { SessionUser } from '../auth/auth.types'
@@ -44,6 +45,11 @@ const MembersListQuerySchema = z.object({
   size: z.coerce.number().int().positive().max(100).default(20),
 })
 class MembersListQueryDto extends createZodDto(MembersListQuerySchema) {}
+
+const ReaderIdParamSchema = z.object({
+  readerId: zEntityId,
+})
+class ReaderIdParamDto extends createZodDto(ReaderIdParamSchema) {}
 
 const assertNotDemoMode = () => {
   if (DEMO_MODE) {
@@ -131,11 +137,8 @@ export class MembershipController {
 
   @Auth()
   @Put('/members/:readerId')
-  async grant(
-    @Param('readerId') readerId: string,
-    @Body() body: ManualGrantDto,
-  ) {
-    return this.membershipService.grantManual(readerId, {
+  async grant(@Param() params: ReaderIdParamDto, @Body() body: ManualGrantDto) {
+    return this.membershipService.grantManual(params.readerId, {
       plan: body.plan,
       expiresAt: body.expiresAt,
     })
@@ -143,7 +146,7 @@ export class MembershipController {
 
   @Auth()
   @Delete('/members/:readerId')
-  async revoke(@Param('readerId') readerId: string) {
-    return this.membershipService.revokeManual(readerId)
+  async revoke(@Param() params: ReaderIdParamDto) {
+    return this.membershipService.revokeManual(params.readerId)
   }
 }
