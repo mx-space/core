@@ -857,7 +857,10 @@ export class SearchService {
 
     const map = new Map<string, any>()
     for (const post of posts) {
-      map.set(`post:${post.id}`, { ...post, type: 'post' as const })
+      const publicPost = hasAdminAccess
+        ? post
+        : this.toPublicArticleFields(post as any)
+      map.set(`post:${post.id}`, { ...publicPost, type: 'post' as const })
     }
     for (const note of notes) {
       map.set(`note:${note.id}`, { ...note, type: 'note' as const })
