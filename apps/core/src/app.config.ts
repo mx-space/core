@@ -268,9 +268,7 @@ export const HTTP_CACHE = {
   enableCDNHeader:
     parseBooleanishValue(
       (argv.http_cache_enable_cdn_header ?? CDN_CACHE_HEADER) as unknown as
-        | string
-        | boolean
-        | undefined,
+        string | boolean | undefined,
     ) ?? true, // s-maxage
   enableForceCacheHeader:
     parseBooleanishValue(
@@ -387,4 +385,9 @@ export const ADMIN_UPDATE = {
   s3BaseUrl: (argv.admin_update_s3_base_url ||
     process.env.ADMIN_UPDATE_S3_BASE_URL ||
     'https://admin-r2.innei.dev') as string,
+}
+
+export const MEMBERSHIP = {
+  dodoApiKey: process.env.DODO_API_KEY as string | undefined,
+  dodoWebhookKey: process.env.DODO_WEBHOOK_KEY as string | undefined,
 }

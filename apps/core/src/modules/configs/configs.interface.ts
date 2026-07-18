@@ -16,6 +16,7 @@ import {
   type FriendLinkOptionsSchema,
   type ImageStorageOptionsSchema,
   type MailOptionsSchema,
+  type MembershipSchema,
   type OAuthSchema,
   type SeoSchema,
   type ThirdPartyServiceIntegrationSchema,
@@ -52,6 +53,7 @@ export abstract class IConfig {
   authSecurity: z.infer<typeof AuthSecuritySchema>
   ai: z.infer<typeof AISchema>
   oauth: z.infer<typeof OAuthSchema>
+  membership: Required<z.infer<typeof MembershipSchema>>
 }
 
 export type IConfigKeys = keyof IConfig

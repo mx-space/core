@@ -167,4 +167,10 @@ export const generateDefaultConfig: () => IConfig = () => ({
     secrets: {},
     public: {},
   },
+  membership: {
+    enabled: false,
+    provider: 'dodo',
+    monthlyProductId: '',
+    yearlyProductId: '',
+  },
 })

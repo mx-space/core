@@ -12,8 +12,7 @@ type AppErrorDefinition<C extends AppErrorCode> =
     ? {
         status: number
         message:
-          | string
-          | ((payload: PresentPayloadFor<C> | undefined) => string)
+          string | ((payload: PresentPayloadFor<C> | undefined) => string)
         details?: (
           payload: PresentPayloadFor<C> | undefined,
         ) => Record<string, unknown> | undefined
@@ -560,6 +559,24 @@ export const APP_ERROR_DEFINITIONS = {
   [AppErrorCode.USER_ALREADY_EXISTS]: {
     status: 400,
     message: 'An owner already exists',
+  },
+
+  // membership
+  [AppErrorCode.MEMBERSHIP_REQUIRED]: {
+    status: 403,
+    message: 'An active membership is required',
+  },
+  [AppErrorCode.WEBHOOK_VERIFY_FAILED]: {
+    status: 400,
+    message: 'Webhook signature verification failed',
+  },
+  [AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED]: {
+    status: 400,
+    message: 'No membership payment provider is configured',
+  },
+  [AppErrorCode.PREMIUM_REQUIRES_LEXICAL]: {
+    status: 400,
+    message: 'Only Lexical-format posts can be marked as premium',
   },
 
   // page

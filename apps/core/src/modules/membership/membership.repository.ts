@@ -100,6 +100,7 @@ export class MembershipRepository extends BaseRepository {
   async update(
     id: EntityId | string,
     patch: Partial<{
+      provider: MembershipProvider
       providerCustomerId: string | null
       providerSubscriptionId: string | null
       plan: MembershipPlan
@@ -110,6 +111,7 @@ export class MembershipRepository extends BaseRepository {
     const update: Partial<typeof memberships.$inferInsert> = {
       updatedAt: new Date(),
     }
+    if (patch.provider !== undefined) update.provider = patch.provider
     if (patch.providerCustomerId !== undefined)
       update.providerCustomerId = patch.providerCustomerId
     if (patch.providerSubscriptionId !== undefined)

@@ -920,6 +920,31 @@ export const AISchema = section('AI settings', {
 export class AIDto extends createZodDto(AISchema) {}
 export type AIConfig = z.infer<typeof AISchema>
 
+// ==================== Membership ====================
+export const MembershipSchema = section('Membership', {
+  enabled: field.toggle(z.boolean().optional(), 'Enable paid membership'),
+  provider: field.select(
+    z.enum(['dodo', 'creem', 'lemonsqueezy', 'stripe']).optional(),
+    'Payment provider',
+    [
+      { label: 'Dodo Payments', value: 'dodo' },
+      { label: 'Creem', value: 'creem' },
+      { label: 'Lemon Squeezy', value: 'lemonsqueezy' },
+      { label: 'Stripe', value: 'stripe' },
+    ],
+  ),
+  monthlyProductId: field.halfGrid(
+    z.string().optional(),
+    'Monthly plan product ID',
+  ),
+  yearlyProductId: field.halfGrid(
+    z.string().optional(),
+    'Yearly plan product ID',
+  ),
+})
+export class MembershipDto extends createZodDto(MembershipSchema) {}
+export type MembershipConfig = z.infer<typeof MembershipSchema>
+
 // ==================== OAuth ====================
 const OAuthProviderSchema = z.object({
   type: z.string().min(1),
@@ -961,6 +986,7 @@ export const configSchemaMapping = {
   authSecurity: AuthSecuritySchema,
   ai: AISchema,
   oauth: OAuthSchema,
+  membership: MembershipSchema,
 } as const
 
 export type ConfigSchemaMapping = typeof configSchemaMapping

@@ -1,0 +1,100 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
+import { EntitlementService } from '~/modules/membership/entitlement.service'
+import type { MembershipRepository } from '~/modules/membership/membership.repository'
+import type { MembershipRow } from '~/modules/membership/membership.types'
+
+const createMembership = (
+  overrides: Partial<MembershipRow> = {},
+): MembershipRow => ({
+  id: 'membership-1' as any,
+  readerId: 'reader-1' as any,
+  provider: 'dodo',
+  providerCustomerId: 'cus_1',
+  providerSubscriptionId: 'sub_1',
+  plan: 'monthly',
+  status: 'active',
+  currentPeriodEnd: new Date(now.getTime() + 1000 * 60 * 60),
+  createdAt: now,
+  updatedAt: now,
+  ...overrides,
+})
+
+const createService = () => {
+  const membershipRepository = createPgRepositoryMock<MembershipRepository>()
+  const service = new EntitlementService(membershipRepository)
+  return { service, membershipRepository }
+}
+
+describe('EntitlementService.isActiveMember', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(now)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('returns false when the reader has no membership row', async () => {
+    const { service, membershipRepository } = createService()
+    membershipRepository.findByReaderId.mockResolvedValue(null)
+
+    expect(await service.isActiveMember('reader-1')).toBe(false)
+  })
+
+  it('returns true for an active membership within the period', async () => {
+    const { service, membershipRepository } = createService()
+    membershipRepository.findByReaderId.mockResolvedValue(
+      createMembership({ status: 'active' }),
+    )
+
+    expect(await service.isActiveMember('reader-1')).toBe(true)
+  })
+
+  it('returns true for an on_hold membership still within its grace period', async () => {
+    const { service, membershipRepository } = createService()
+    membershipRepository.findByReaderId.mockResolvedValue(
+      createMembership({
+        status: 'on_hold',
+        currentPeriodEnd: new Date(now.getTime() + 1000 * 60),
+      }),
+    )
+
+    expect(await service.isActiveMember('reader-1')).toBe(true)
+  })
+
+  it('returns false for a cancelled membership', async () => {
+    const { service, membershipRepository } = createService()
+    membershipRepository.findByReaderId.mockResolvedValue(
+      createMembership({ status: 'cancelled' }),
+    )
+
+    expect(await service.isActiveMember('reader-1')).toBe(false)
+  })
+
+  it('returns false when the period has expired, even if status is active', async () => {
+    const { service, membershipRepository } = createService()
+    membershipRepository.findByReaderId.mockResolvedValue(
+      createMembership({
+        status: 'active',
+        currentPeriodEnd: new Date(now.getTime() - 1000),
+      }),
+    )
+
+    expect(await service.isActiveMember('reader-1')).toBe(false)
+  })
+
+  it('returns false when on_hold and the grace period has expired', async () => {
+    const { service, membershipRepository } = createService()
+    membershipRepository.findByReaderId.mockResolvedValue(
+      createMembership({
+        status: 'on_hold',
+        currentPeriodEnd: new Date(now.getTime() - 1000),
+      }),
+    )
+
+    expect(await service.isActiveMember('reader-1')).toBe(false)
+  })
+})

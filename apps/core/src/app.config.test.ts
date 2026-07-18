@@ -59,6 +59,11 @@ export const SNOWFLAKE = {
   epochMs: 1746144000000,
 }
 
+export const MEMBERSHIP = {
+  dodoApiKey: process.env.DODO_API_KEY,
+  dodoWebhookKey: process.env.DODO_WEBHOOK_KEY,
+}
+
 export const POSTGRES = {
   connectionString: process.env.PG_URL || process.env.PG_CONNECTION_STRING,
   host: process.env.PG_HOST || '127.0.0.1',
