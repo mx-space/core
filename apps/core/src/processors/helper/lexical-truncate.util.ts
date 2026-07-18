@@ -58,3 +58,42 @@ export function resolveEffectivePreviewBlocks(
       : 3
   return Math.max(0, Math.min(configured, blockCount - 1))
 }
+
+interface PublicPostSource {
+  isPremium?: boolean | null
+  text?: string | null
+  content?: string | null
+  meta?: { paywall?: { previewBlocks?: unknown } } | null
+}
+
+function truncatedContentOf(post: PublicPostSource): string | null {
+  if (typeof post.content !== 'string' || !post.content) return null
+  try {
+    const effectiveN = resolveEffectivePreviewBlocks(
+      post.content,
+      post.meta?.paywall?.previewBlocks,
+    )
+    return truncateLexicalContent(post.content, effectiveN)
+  } catch {
+    return null
+  }
+}
+
+export function getPublicText(post: PublicPostSource): string {
+  if (!post.isPremium) return post.text ?? ''
+
+  const truncated = truncatedContentOf(post)
+  if (!truncated) return ''
+  try {
+    return renderTeaserText(truncated)
+  } catch {
+    return ''
+  }
+}
+
+export function getPublicContent(post: PublicPostSource): string | null {
+  if (!post.isPremium) {
+    return typeof post.content === 'string' ? post.content : null
+  }
+  return truncatedContentOf(post)
+}

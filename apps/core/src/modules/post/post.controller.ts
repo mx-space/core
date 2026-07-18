@@ -200,6 +200,8 @@ export class PostController {
       if (doc.isPremium) {
         if (typeof doc.content === 'string') {
           this.applyPaywallTeaser(doc as Record<string, any>)
+        } else {
+          doc.text = ''
         }
         continue
       }

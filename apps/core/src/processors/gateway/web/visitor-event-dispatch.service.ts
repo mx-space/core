@@ -21,6 +21,10 @@ import {
   type EntryRule,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
+import {
+  getPublicContent,
+  getPublicText,
+} from '~/processors/helper/lexical-truncate.util'
 
 import { GatewayService } from '../gateway.service'
 import { WebEventsGateway } from './events.gateway'
@@ -108,6 +112,15 @@ export class VisitorEventDispatchService implements OnModuleInit {
 
   // --- Post ---
 
+  private toPublicPostPayload<T extends Record<string, any>>(doc: T): T {
+    if (!doc?.isPremium) return doc
+    return {
+      ...doc,
+      text: getPublicText(doc),
+      content: getPublicContent(doc),
+    }
+  }
+
   @OnVisitorEvent(BusinessEvents.POST_CREATE)
   async onPostCreate(payload: { id: string }) {
     const doc = await this.enricher.enrichPayload(
@@ -115,7 +128,10 @@ export class VisitorEventDispatchService implements OnModuleInit {
       payload,
     )
     if (!doc || doc === payload) return
-    this.webGateway.broadcast(BusinessEvents.POST_CREATE, doc)
+    this.webGateway.broadcast(
+      BusinessEvents.POST_CREATE,
+      this.toPublicPostPayload(doc),
+    )
   }
 
   @OnVisitorEvent(BusinessEvents.POST_UPDATE)
@@ -392,7 +408,9 @@ export class VisitorEventDispatchService implements OnModuleInit {
       }
 
       // The socket ID is the room socket.io auto-joins, so we can target it directly
-      this.webGateway.broadcast(event, data, { rooms: socketIds })
+      this.webGateway.broadcast(event, this.toPublicPostPayload(data), {
+        rooms: socketIds,
+      })
     }
   }
 

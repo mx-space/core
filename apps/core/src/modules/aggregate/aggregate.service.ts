@@ -11,6 +11,10 @@ import {
 } from '~/constants/injection.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
+import {
+  getPublicContent,
+  getPublicText,
+} from '~/processors/helper/lexical-truncate.util'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
@@ -213,11 +217,11 @@ export class AggregateService {
         modified: item.modifiedAt ?? null,
         link: baseURL + this.urlBuilder.build(item as any),
         title: item.title ?? '',
-        text: item.text ?? '',
+        text: getPublicText(item as any),
         id: item.id,
         images: item.images ?? [],
         contentFormat: item.contentFormat,
-        content: item.content,
+        content: getPublicContent(item as any) ?? undefined,
       })),
     }
   }

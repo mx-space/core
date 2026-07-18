@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   countTopLevelBlocks,
+  getPublicContent,
+  getPublicText,
   renderTeaserText,
   resolveEffectivePreviewBlocks,
   truncateLexicalContent,
@@ -164,5 +166,75 @@ describe('resolveEffectivePreviewBlocks', () => {
 
   it('ignores non-numeric configured values and falls back to default', () => {
     expect(resolveEffectivePreviewBlocks(threeBlockContent, 'nope')).toBe(2)
+  })
+})
+
+describe('getPublicText', () => {
+  const threeBlockContent = makeEditorState([
+    paragraph(textNode('one')),
+    paragraph(textNode('two')),
+    paragraph(textNode('three')),
+  ])
+
+  it('returns full text for a non-premium post', () => {
+    expect(
+      getPublicText({ isPremium: false, text: 'full text', content: null }),
+    ).toBe('full text')
+  })
+
+  it('returns the teaser for a premium post', () => {
+    expect(
+      getPublicText({
+        isPremium: true,
+        text: 'full text',
+        content: threeBlockContent,
+      }),
+    ).toBe('one\n\ntwo')
+  })
+
+  it('fails closed to an empty string when premium content is not a lexical JSON string', () => {
+    expect(
+      getPublicText({ isPremium: true, text: 'full text', content: null }),
+    ).toBe('')
+    expect(
+      getPublicText({
+        isPremium: true,
+        text: 'full text',
+        content: 'not json',
+      }),
+    ).toBe('')
+  })
+})
+
+describe('getPublicContent', () => {
+  const threeBlockContent = makeEditorState([
+    paragraph(textNode('one')),
+    paragraph(textNode('two')),
+    paragraph(textNode('three')),
+  ])
+
+  it('returns full content for a non-premium post', () => {
+    expect(
+      getPublicContent({
+        isPremium: false,
+        text: '',
+        content: threeBlockContent,
+      }),
+    ).toBe(threeBlockContent)
+  })
+
+  it('returns the truncated content for a premium post', () => {
+    const truncated = getPublicContent({
+      isPremium: true,
+      text: '',
+      content: threeBlockContent,
+    })
+    expect(JSON.parse(truncated!).root.children).toHaveLength(2)
+  })
+
+  it('fails closed to null when premium content is not a lexical JSON string', () => {
+    expect(
+      getPublicContent({ isPremium: true, text: '', content: null }),
+    ).toBeNull()
   })
 })

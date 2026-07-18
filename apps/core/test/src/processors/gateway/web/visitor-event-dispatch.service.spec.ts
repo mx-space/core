@@ -148,3 +148,72 @@ describe('VisitorEventDispatchService socket localization', () => {
     })
   })
 })
+
+describe('VisitorEventDispatchService premium paywall', () => {
+  const premiumContent = JSON.stringify({
+    root: {
+      children: [
+        {
+          type: 'paragraph',
+          direction: 'ltr',
+          format: '',
+          indent: 0,
+          version: 1,
+          children: [
+            {
+              type: 'text',
+              text: 'visible teaser',
+              detail: 0,
+              format: 0,
+              mode: 'normal',
+              style: '',
+              version: 1,
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          direction: 'ltr',
+          format: '',
+          indent: 0,
+          version: 1,
+          children: [
+            {
+              type: 'text',
+              text: 'secret paywalled body',
+              detail: 0,
+              format: 0,
+              mode: 'normal',
+              style: '',
+              version: 1,
+            },
+          ],
+        },
+      ],
+    },
+  })
+
+  it('broadcasts a teaser, not the full body, for a premium post update', async () => {
+    const { broadcasts, service } = createService()
+
+    await (service as any).broadcastWithTranslation(
+      BusinessEvents.POST_UPDATE,
+      {
+        id: 'post-1',
+        isPremium: true,
+        text: 'secret paywalled body full text',
+        content: premiumContent,
+        meta: null,
+        title: '中文标题',
+      },
+      'article-post-1',
+    )
+
+    const jaPayload = broadcasts.find((item) =>
+      item.rooms?.includes('socket-ja'),
+    )?.data
+
+    expect(jaPayload.text).not.toContain('secret')
+    expect(JSON.parse(jaPayload.content).root.children).toHaveLength(1)
+  })
+})

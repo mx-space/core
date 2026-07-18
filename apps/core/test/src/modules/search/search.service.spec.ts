@@ -198,6 +198,72 @@ describe('SearchService', () => {
     )
   })
 
+  it('indexes only the teaser body for a premium post', async () => {
+    const premiumContent = JSON.stringify({
+      root: {
+        children: [
+          {
+            type: 'paragraph',
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
+            children: [
+              {
+                type: 'text',
+                text: 'visible teaser',
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                version: 1,
+              },
+            ],
+          },
+          {
+            type: 'paragraph',
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
+            children: [
+              {
+                type: 'text',
+                text: 'secret paywalled body',
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                version: 1,
+              },
+            ],
+          },
+        ],
+      },
+    })
+    const premiumArticle = {
+      ...baseArticle,
+      isPremium: true,
+      contentFormat: ContentFormat.Lexical,
+      text: 'secret paywalled body full text',
+      content: premiumContent,
+      meta: null,
+    }
+    const { service, searchRepo } = makeService({
+      postFindById: premiumArticle,
+    })
+
+    await service.onPostCreate({ id: 'post-1' })
+
+    expect(searchRepo.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        searchText: expect.stringContaining('visible teaser'),
+      }),
+    )
+    const upserted = searchRepo.upsert.mock.calls[0][0]
+    expect(upserted.searchText).not.toContain('secret')
+  })
+
   it('defaults source lang to zh when nothing else resolves', async () => {
     const { service, searchRepo } = makeService({})
     await service.onPostCreate({ id: 'post-1' })
