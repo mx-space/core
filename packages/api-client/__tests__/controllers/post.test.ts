@@ -70,6 +70,21 @@ describe('test post client', () => {
     expect(data.$raw).toBeDefined()
   })
 
+  it('should expose paywall meta for a locked premium post', async () => {
+    mockResponse(
+      '/posts/613c91d0326cfffc61923ea2',
+      { title: '1', is_premium: true },
+      'get',
+      undefined,
+      { paywall: { locked: true, preview_blocks: 2 } },
+    )
+
+    const data = await client.post.getPost('613c91d0326cfffc61923ea2')
+
+    expect(data.isPremium).toBe(true)
+    expect(data.$meta?.paywall).toEqual({ locked: true, previewBlocks: 2 })
+  })
+
   it('GET /posts/get-url/:slug', async () => {
     mockResponse('/posts/get-url/host-an-entire-Mix-Space-using-Docker', {
       path: '/website/host-an-entire-Mix-Space-using-Docker',

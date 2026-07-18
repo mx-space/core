@@ -7,6 +7,7 @@ import { CommentController } from './comment'
 import { CompanionController } from './companion'
 import { EnrichmentController } from './enrichment'
 import { LinkController } from './link'
+import { MembershipController } from './membership'
 import type {
   NoteMiddleListOptions,
   NoteTimelineItem,
@@ -40,6 +41,7 @@ export const allControllers = [
   CompanionController,
   EnrichmentController,
   LinkController,
+  MembershipController,
   NoteController,
   PageController,
   PostController,
@@ -64,6 +66,7 @@ export const allControllerNames = [
   'companion',
   'enrichment',
   'link',
+  'membership',
   'note',
   'page',
   'post',
@@ -92,6 +95,7 @@ export {
   CompanionController,
   EnrichmentController,
   LinkController,
+  MembershipController,
   NoteController,
   PageController,
   PostController,
