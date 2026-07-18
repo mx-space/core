@@ -33,11 +33,19 @@ const snowflake = new SnowflakeService()
 const readerId = snowflake.nextId()
 const otherReaderId = snowflake.nextId()
 const liveSubReaderId = snowflake.nextId()
+const expiredReaderId = snowflake.nextId()
 
 const readerUser = {
   id: readerId,
   email: 'reader@example.com',
   name: 'Reader One',
+  role: 'reader' as const,
+}
+
+const expiredReaderUser = {
+  id: expiredReaderId,
+  email: 'expired-reader@example.com',
+  name: 'Reader Expired',
   role: 'reader' as const,
 }
 
@@ -64,6 +72,9 @@ const authServiceMock = {
     const header = req?.headers?.['x-test-reader']
     if (header === 'reader') {
       return { user: readerUser, session: { token: 'reader-token' } }
+    }
+    if (header === 'expired-reader') {
+      return { user: expiredReaderUser, session: { token: 'expired-token' } }
     }
     return null
   }),
@@ -130,6 +141,7 @@ beforeAll(async () => {
     { id: readerId, name: 'Reader One', role: 'reader' },
     { id: otherReaderId, name: 'Reader Two', role: 'reader' },
     { id: liveSubReaderId, name: 'Reader Three', role: 'reader' },
+    { id: expiredReaderId, name: 'Reader Expired', role: 'reader' },
   ])
 }, 120_000)
 
@@ -244,6 +256,30 @@ describe('MembershipController (e2e)', () => {
       })
 
       expect(res.statusCode).toBe(401)
+    })
+
+    it('reports expired for a stored-active membership past its currentPeriodEnd', async () => {
+      const membershipRepository = proxy.app.get(MembershipRepository)
+      await membershipRepository.create({
+        readerId: expiredReaderId,
+        provider: 'dodo',
+        providerCustomerId: 'cus_expired',
+        providerSubscriptionId: 'sub_expired',
+        plan: 'monthly',
+        status: 'active',
+        currentPeriodEnd: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      })
+
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/status',
+        headers: { 'x-test-reader': 'expired-reader' },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toMatchObject({
+        data: { status: 'expired', plan: 'monthly', provider: 'dodo' },
+      })
     })
   })
 

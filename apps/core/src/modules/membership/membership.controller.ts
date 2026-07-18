@@ -26,6 +26,7 @@ import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import type { SessionUser } from '../auth/auth.types'
 import { ConfigsService } from '../configs/configs.service'
 import { MembershipService } from './membership.service'
+import { effectiveMembershipStatus } from './membership.types'
 import { DodoProvider } from './providers/dodo.provider'
 import type { PaymentProviderAdapter } from './providers/provider.interface'
 
@@ -97,7 +98,7 @@ export class MembershipController {
     }
 
     return {
-      status: membership.status,
+      status: effectiveMembershipStatus(membership),
       plan: membership.plan,
       provider: membership.provider,
       currentPeriodEnd: membership.currentPeriodEnd,

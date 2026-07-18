@@ -20,6 +20,17 @@ export interface MembershipRow {
   updatedAt: Date | null
 }
 
+export function effectiveMembershipStatus(
+  membership: Pick<MembershipRow, 'status' | 'currentPeriodEnd'>,
+): MembershipStatus {
+  if (membership.status !== 'active' && membership.status !== 'on_hold') {
+    return membership.status
+  }
+  return membership.currentPeriodEnd.getTime() > Date.now()
+    ? membership.status
+    : 'expired'
+}
+
 export interface MembershipMemberRow extends MembershipRow {
   reader: {
     id: EntityId
