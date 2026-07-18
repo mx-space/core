@@ -31,8 +31,7 @@ import {
   resolveMembershipAvailability,
   resolveMembershipReturnUrl,
 } from './membership.types'
-import { DodoProvider } from './providers/dodo.provider'
-import type { PaymentProviderAdapter } from './providers/provider.interface'
+import { PaymentProviderRegistry } from './providers/provider.registry'
 
 const CheckoutSchema = z.object({
   plan: z.enum(['monthly', 'yearly']),
@@ -68,13 +67,8 @@ export class MembershipController {
   constructor(
     private readonly membershipService: MembershipService,
     private readonly configsService: ConfigsService,
-    private readonly dodoProvider: DodoProvider,
+    private readonly providers: PaymentProviderRegistry,
   ) {}
-
-  private resolveProvider(provider: string): PaymentProviderAdapter {
-    if (provider === 'dodo') return this.dodoProvider
-    throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
-  }
 
   @ReaderAuth()
   @Post('/checkout')
@@ -89,7 +83,7 @@ export class MembershipController {
     const { webUrl } = await this.configsService.get('url')
     const returnUrl = resolveMembershipReturnUrl(body.returnPath, webUrl)
 
-    const adapter = this.resolveProvider(membershipConfig.provider)
+    const adapter = this.providers.resolve(membershipConfig.provider)
     return adapter.createCheckout({
       reader: { id: user.id, email: user.email, name: user.name },
       plan: body.plan,
@@ -103,8 +97,7 @@ export class MembershipController {
     const availability = resolveMembershipAvailability(membershipConfig)
     if (!availability.enabled) return { enabled: false, plans: [] }
 
-    const adapter =
-      membershipConfig.provider === 'dodo' ? this.dodoProvider : undefined
+    const adapter = this.providers.get(membershipConfig.provider)
     const productIdByPlan: Record<string, string | undefined> = {
       monthly: membershipConfig.monthlyProductId,
       yearly: membershipConfig.yearlyProductId,
@@ -149,10 +142,10 @@ export class MembershipController {
   ) {
     assertNotDemoMode()
 
-    if (provider !== 'dodo') {
+    const adapter = this.providers.get(provider)
+    if (!adapter) {
       throw createAppException(AppErrorCode.WEBHOOK_VERIFY_FAILED)
     }
-    const adapter = this.dodoProvider
     const rawBody = req.rawBody ?? Buffer.alloc(0)
     const event = await adapter.verifyAndParseWebhook(rawBody, headers)
     const result = await this.membershipService.applyEvent(event)

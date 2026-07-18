@@ -23,6 +23,7 @@ import { MembershipController } from '~/modules/membership/membership.controller
 import { MembershipRepository } from '~/modules/membership/membership.repository'
 import { MembershipService } from '~/modules/membership/membership.service'
 import { DodoProvider } from '~/modules/membership/providers/dodo.provider'
+import { PaymentProviderRegistry } from '~/modules/membership/providers/provider.registry'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
@@ -109,9 +110,17 @@ const verifyAndParseWebhookMock = vi.fn(
   },
 )
 
+const getPlanPricingMock = vi.fn(async (productId: string) => ({
+  amount: productId === 'prod_monthly' ? 500 : 5000,
+  currency: 'USD',
+  interval: productId === 'prod_monthly' ? 'month' : 'year',
+  intervalCount: 1,
+}))
+
 const dodoProviderMock = {
   createCheckout: createCheckoutMock,
   verifyAndParseWebhook: verifyAndParseWebhookMock,
+  getPlanPricing: getPlanPricingMock,
 }
 
 const membershipModule: ModuleMetadata = {
@@ -123,6 +132,7 @@ const membershipModule: ModuleMetadata = {
     EntitlementService,
     { provide: SnowflakeService, useValue: snowflake },
     { provide: DodoProvider, useValue: dodoProviderMock },
+    PaymentProviderRegistry,
     { provide: AuthService, useValue: authServiceMock },
     { provide: ConfigsService, useValue: configsServiceMock },
   ],
@@ -284,7 +294,7 @@ describe('MembershipController (e2e)', () => {
   })
 
   describe('GET /membership/plans', () => {
-    it('returns availability without auth when configured', async () => {
+    it('returns availability with pricing, without auth, when configured', async () => {
       const res = await proxy.app.inject({
         method: 'GET',
         url: '/membership/plans',
@@ -292,8 +302,44 @@ describe('MembershipController (e2e)', () => {
 
       expect(res.statusCode).toBe(200)
       expect(res.json()).toEqual({
-        data: { enabled: true, plans: ['monthly', 'yearly'] },
+        data: {
+          enabled: true,
+          plans: [
+            {
+              plan: 'monthly',
+              pricing: {
+                amount: 500,
+                currency: 'USD',
+                interval: 'month',
+                interval_count: 1,
+              },
+            },
+            {
+              plan: 'yearly',
+              pricing: {
+                amount: 5000,
+                currency: 'USD',
+                interval: 'year',
+                interval_count: 1,
+              },
+            },
+          ],
+        },
       })
+    })
+
+    it('omits pricing for a plan when the provider lookup fails', async () => {
+      getPlanPricingMock.mockResolvedValueOnce(null as any)
+
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/plans',
+      })
+
+      expect(res.statusCode).toBe(200)
+      const plans = res.json().data.plans
+      expect(plans[0]).toEqual({ plan: 'monthly' })
+      expect(plans[1].pricing).toBeDefined()
     })
 
     it('reports disabled with empty plans when membership is off', async () => {

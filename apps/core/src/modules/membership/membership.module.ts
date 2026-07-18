@@ -6,6 +6,7 @@ import { MembershipController } from './membership.controller'
 import { MembershipRepository } from './membership.repository'
 import { MembershipService } from './membership.service'
 import { DodoProvider } from './providers/dodo.provider'
+import { PaymentProviderRegistry } from './providers/provider.registry'
 
 @Module({
   controllers: [MembershipController],
@@ -15,6 +16,7 @@ import { DodoProvider } from './providers/dodo.provider'
     MembershipRepository,
     BillingWebhookEventRepository,
     DodoProvider,
+    PaymentProviderRegistry,
   ],
   exports: [EntitlementService],
 })

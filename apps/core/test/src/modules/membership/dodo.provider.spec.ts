@@ -5,6 +5,7 @@ import { DodoProvider } from '~/modules/membership/providers/dodo.provider'
 
 const verifyMock = vi.fn()
 const checkoutCreateMock = vi.fn()
+const productsRetrieveMock = vi.fn()
 
 vi.mock('standardwebhooks', () => ({
   Webhook: class MockWebhook {
@@ -15,6 +16,7 @@ vi.mock('standardwebhooks', () => ({
 vi.mock('dodopayments', () => ({
   default: class MockDodoPayments {
     checkoutSessions = { create: checkoutCreateMock }
+    products = { retrieve: productsRetrieveMock }
   },
 }))
 
@@ -24,6 +26,7 @@ describe('DodoProvider', () => {
   beforeEach(() => {
     verifyMock.mockReset()
     checkoutCreateMock.mockReset()
+    productsRetrieveMock.mockReset()
 
     configsService = {
       get: vi.fn().mockResolvedValue({
@@ -164,6 +167,49 @@ describe('DodoProvider', () => {
 
       expect(secondClient).not.toBe(firstClient)
       expect(secondClient).toBeInstanceOf(DodoPayments)
+    })
+  })
+
+  describe('getPlanPricing', () => {
+    it('normalizes a recurring price and caches it', async () => {
+      productsRetrieveMock.mockResolvedValue({
+        name: 'VIP',
+        price: {
+          price: 500,
+          currency: 'USD',
+          payment_frequency_interval: 'Month',
+          payment_frequency_count: 1,
+        },
+      })
+
+      const provider = new DodoProvider(configsService as any)
+      const first = await provider.getPlanPricing('prod_monthly')
+      const second = await provider.getPlanPricing('prod_monthly')
+
+      expect(first).toEqual({
+        amount: 500,
+        currency: 'USD',
+        interval: 'month',
+        intervalCount: 1,
+      })
+      expect(second).toEqual(first)
+      expect(productsRetrieveMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('returns null when the provider call throws', async () => {
+      productsRetrieveMock.mockRejectedValue(new Error('boom'))
+
+      const provider = new DodoProvider(configsService as any)
+      expect(await provider.getPlanPricing('prod_x')).toBeNull()
+    })
+
+    it('returns null when the price is not recurring', async () => {
+      productsRetrieveMock.mockResolvedValue({
+        price: { price: 500, currency: 'USD', type: 'one_time_price' },
+      })
+
+      const provider = new DodoProvider(configsService as any)
+      expect(await provider.getPlanPricing('prod_y')).toBeNull()
     })
   })
 
