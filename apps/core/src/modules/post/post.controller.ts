@@ -39,6 +39,7 @@ import {
 } from '~/processors/helper/helper.translation.service'
 import {
   renderTeaserText,
+  resolveEffectivePreviewBlocks,
   truncateLexicalContent,
 } from '~/processors/helper/lexical-truncate.util'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -102,10 +103,18 @@ export class PostController {
       return
     }
 
-    const previewBlocks = (doc.meta as any)?.paywall?.previewBlocks ?? 3
-    doc.content = truncateLexicalContent(doc.content, previewBlocks)
-    doc.text = renderTeaserText(doc.content)
+    const previewBlocks = this.applyPaywallTeaser(doc)
     metaBuilder.paywall({ locked: true, previewBlocks })
+  }
+
+  private applyPaywallTeaser(doc: Record<string, any>): number {
+    const effectiveN = resolveEffectivePreviewBlocks(
+      doc.content,
+      (doc.meta as any)?.paywall?.previewBlocks,
+    )
+    doc.content = truncateLexicalContent(doc.content, effectiveN)
+    doc.text = renderTeaserText(doc.content)
+    return effectiveN
   }
 
   private async batchCategoryEntryTranslations(
@@ -188,6 +197,13 @@ export class PostController {
     }
 
     for (const doc of res.data) {
+      if (doc.isPremium) {
+        if (typeof doc.content === 'string') {
+          this.applyPaywallTeaser(doc as Record<string, any>)
+        }
+        continue
+      }
+
       if (truncate) {
         doc.text = doc.text.slice(0, truncate)
         doc.content = null

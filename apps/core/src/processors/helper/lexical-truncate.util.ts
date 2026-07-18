@@ -41,3 +41,20 @@ export function renderTeaserText(truncatedJson: string): string {
   parseLexicalState(truncatedJson)
   return mxLexicalToMarkdown(truncatedJson)
 }
+
+export function countTopLevelBlocks(contentJson: string): number {
+  return parseLexicalState(contentJson).root.children.length
+}
+
+export function resolveEffectivePreviewBlocks(
+  contentJson: string,
+  configuredPreviewBlocks: unknown,
+): number {
+  const blockCount = countTopLevelBlocks(contentJson)
+  const configured =
+    typeof configuredPreviewBlocks === 'number' &&
+    Number.isFinite(configuredPreviewBlocks)
+      ? Math.max(1, Math.floor(configuredPreviewBlocks))
+      : 3
+  return Math.max(0, Math.min(configured, blockCount - 1))
+}

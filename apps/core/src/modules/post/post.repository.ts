@@ -153,7 +153,7 @@ export class PostRepository extends BaseRepository {
 
     const selection = params.truncateText
       ? {
-          ...postMetaColumns,
+          ...postColumns,
           text: sql<string | null>`left(${posts.text}, ${params.truncateText})`,
         }
       : postColumns

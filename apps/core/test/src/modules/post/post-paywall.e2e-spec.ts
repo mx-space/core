@@ -72,6 +72,7 @@ function editorState(blocks: string[]) {
 
 const FIVE_BLOCKS = ['one', 'two', 'three', 'four', 'five']
 const THREE_BLOCKS = ['alpha', 'beta', 'gamma']
+const ONE_BLOCK = ['solo']
 
 const premiumPostFixture = {
   id: '7100000000000000001',
@@ -99,6 +100,14 @@ const boundaryPostFixture = {
   content: editorState(THREE_BLOCKS),
 }
 
+const oneBlockPostFixture = {
+  ...premiumPostFixture,
+  id: '7100000000000000004',
+  slug: 'premium-one-block-post',
+  text: ONE_BLOCK.join('\n\n'),
+  content: editorState(ONE_BLOCK),
+}
+
 const freePostFixture = {
   ...premiumPostFixture,
   id: '7100000000000000003',
@@ -110,11 +119,20 @@ const freePostFixture = {
 }
 
 let currentPost: Record<string, unknown> | null = premiumPostFixture
+let currentListData: Record<string, unknown>[] = []
 
 const postService = {
   findById: vi.fn(async () => currentPost),
   getPostBySlug: vi.fn(async () => currentPost),
-  listPaginated: vi.fn(async () => ({ data: [], pagination: {} })),
+  listPaginated: vi.fn(async () => ({
+    data: currentListData.map((doc) => ({ ...doc })),
+    pagination: {
+      currentPage: 1,
+      size: currentListData.length,
+      total: currentListData.length,
+      totalPage: 1,
+    },
+  })),
 }
 
 const readerRoleById: Record<string, { id: string; role: 'reader' | 'owner' }> =
@@ -156,6 +174,10 @@ const postModule: ModuleMetadata = {
           tags: [],
           sourceLang: 'zh',
           availableTranslations: [],
+        })),
+        collectArticleTranslations: vi.fn(async () => ({
+          results: new Map(),
+          meta: new Map(),
         })),
         getCachedTitles: vi.fn(async () => new Map()),
       },
@@ -294,7 +316,7 @@ describe('Post paywall enforcement (e2e)', () => {
     })
   })
 
-  it('boundary: a post with exactly N blocks is still locked:true for a non-member', async () => {
+  it('boundary: a post with exactly N=3 blocks is a strict subset (2 blocks, locked:true) for a non-member', async () => {
     currentPost = { ...boundaryPostFixture }
 
     const res = await proxy.app.inject({
@@ -306,9 +328,28 @@ describe('Post paywall enforcement (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     expect(body.meta.paywall.locked).toBe(true)
-    expect(body.meta.paywall.preview_blocks).toBe(3)
+    expect(body.meta.paywall.preview_blocks).toBe(2)
     const truncatedContent = JSON.parse(body.data.content)
-    expect(truncatedContent.root.children).toHaveLength(3)
+    expect(truncatedContent.root.children).toHaveLength(2)
+    expect(body.data.text).toBe('alpha\n\nbeta')
+  })
+
+  it('a 1-block premium post yields an empty preview, still locked:true for a non-member', async () => {
+    currentPost = { ...oneBlockPostFixture }
+
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `/posts/${oneBlockPostFixture.category.slug}/${oneBlockPostFixture.slug}`,
+      headers: headerFor(nonMemberReaderId),
+    })
+
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.meta.paywall.locked).toBe(true)
+    expect(body.meta.paywall.preview_blocks).toBe(0)
+    const truncatedContent = JSON.parse(body.data.content)
+    expect(truncatedContent.root.children).toHaveLength(0)
+    expect(body.data.text).toBe('')
   })
 
   it('non-premium post carries no paywall meta', async () => {
@@ -338,5 +379,55 @@ describe('Post paywall enforcement (e2e)', () => {
     const body = res.json()
     expect(body.meta.paywall.locked).toBe(true)
     expect(body.meta.paywall.preview_blocks).toBe(3)
+  })
+
+  describe('GET /posts list route always teasers premium rows', () => {
+    it('without ?truncate: premium row content/text are teasers, non-premium row is untouched', async () => {
+      currentListData = [{ ...premiumPostFixture }, { ...freePostFixture }]
+
+      const res = await proxy.app.inject({ method: 'GET', url: '/posts' })
+
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      const premiumRow = body.data.find(
+        (row: any) => row.id === premiumPostFixture.id,
+      )
+      const freeRow = body.data.find(
+        (row: any) => row.id === freePostFixture.id,
+      )
+
+      const truncatedContent = JSON.parse(premiumRow.content)
+      expect(truncatedContent.root.children).toHaveLength(3)
+      expect(premiumRow.text).toBe('one\n\ntwo\n\nthree')
+
+      expect(freeRow.content).toBe(freePostFixture.content)
+      expect(freeRow.text).toBe(freePostFixture.text)
+    })
+
+    it('with ?truncate: premium row is still a teaser (not the client-controlled slice), non-premium row is nulled/sliced as before', async () => {
+      currentListData = [{ ...premiumPostFixture }, { ...freePostFixture }]
+
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/posts?truncate=500',
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      const premiumRow = body.data.find(
+        (row: any) => row.id === premiumPostFixture.id,
+      )
+      const freeRow = body.data.find(
+        (row: any) => row.id === freePostFixture.id,
+      )
+
+      const truncatedContent = JSON.parse(premiumRow.content)
+      expect(truncatedContent.root.children).toHaveLength(3)
+      expect(premiumRow.text).toBe('one\n\ntwo\n\nthree')
+      expect(premiumRow.text).not.toBe(premiumPostFixture.text)
+
+      expect(freeRow.content).toBeNull()
+      expect(freeRow.text).toBe(freePostFixture.text.slice(0, 500))
+    })
   })
 })

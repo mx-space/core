@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  countTopLevelBlocks,
   renderTeaserText,
+  resolveEffectivePreviewBlocks,
   truncateLexicalContent,
 } from '~/processors/helper/lexical-truncate.util'
 
@@ -110,5 +112,57 @@ describe('renderTeaserText', () => {
 
   it('throws on invalid JSON', () => {
     expect(() => renderTeaserText('not json')).toThrow()
+  })
+})
+
+describe('countTopLevelBlocks', () => {
+  it('counts root.children length', () => {
+    const content = makeEditorState([
+      paragraph(textNode('one')),
+      paragraph(textNode('two')),
+      paragraph(textNode('three')),
+    ])
+
+    expect(countTopLevelBlocks(content)).toBe(3)
+  })
+})
+
+describe('resolveEffectivePreviewBlocks', () => {
+  const threeBlockContent = makeEditorState([
+    paragraph(textNode('one')),
+    paragraph(textNode('two')),
+    paragraph(textNode('three')),
+  ])
+
+  it('clamps configured N to blockCount - 1', () => {
+    expect(resolveEffectivePreviewBlocks(threeBlockContent, 3)).toBe(2)
+    expect(resolveEffectivePreviewBlocks(threeBlockContent, 100)).toBe(2)
+  })
+
+  it('defaults to 3 when unconfigured', () => {
+    const fiveBlockContent = makeEditorState([
+      paragraph(textNode('a')),
+      paragraph(textNode('b')),
+      paragraph(textNode('c')),
+      paragraph(textNode('d')),
+      paragraph(textNode('e')),
+    ])
+
+    expect(resolveEffectivePreviewBlocks(fiveBlockContent, undefined)).toBe(3)
+  })
+
+  it('clamps configured N below 1 up to 1', () => {
+    expect(resolveEffectivePreviewBlocks(threeBlockContent, 0)).toBe(1)
+    expect(resolveEffectivePreviewBlocks(threeBlockContent, -5)).toBe(1)
+  })
+
+  it('floors at 0 for a single-block post', () => {
+    const oneBlockContent = makeEditorState([paragraph(textNode('solo'))])
+
+    expect(resolveEffectivePreviewBlocks(oneBlockContent, 3)).toBe(0)
+  })
+
+  it('ignores non-numeric configured values and falls back to default', () => {
+    expect(resolveEffectivePreviewBlocks(threeBlockContent, 'nope')).toBe(2)
   })
 })
