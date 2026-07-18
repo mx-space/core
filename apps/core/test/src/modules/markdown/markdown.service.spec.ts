@@ -1,9 +1,46 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { MarkdownService } from '~/modules/markdown/markdown.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
-const createService = () => {
+const premiumContent = JSON.stringify({
+  root: {
+    children: [
+      {
+        type: 'paragraph',
+        children: [],
+        direction: null,
+        format: '',
+        indent: 0,
+        version: 1,
+      },
+      {
+        type: 'paragraph',
+        children: [],
+        direction: null,
+        format: '',
+        indent: 0,
+        version: 1,
+      },
+      {
+        type: 'paragraph',
+        children: [],
+        direction: null,
+        format: '',
+        indent: 0,
+        version: 1,
+      },
+    ],
+    direction: 'ltr',
+    format: '',
+    indent: 0,
+    type: 'root',
+    version: 1,
+  },
+})
+
+const createService = ({ findGlobalById }: { findGlobalById?: any } = {}) => {
   const assetService = {}
   const categoryService = {
     findAllCategory: vi
@@ -18,7 +55,7 @@ const createService = () => {
     create: vi.fn(async (note) => ({ id: 'note-1', ...note })),
   }
   const pageService = {}
-  const databaseService = {}
+  const databaseService = { findGlobalById }
   const service = new MarkdownService(
     assetService as any,
     categoryService as any,
@@ -64,5 +101,62 @@ describe('MarkdownService', () => {
         text: 'note body',
       }),
     )
+  })
+})
+
+describe('MarkdownService.renderArticle', () => {
+  const premiumPost = {
+    id: 'post-1',
+    title: 'Premium Post',
+    isPremium: true,
+    text: 'full premium body',
+    content: premiumContent,
+  }
+  const freePost = {
+    id: 'post-2',
+    title: 'Free Post',
+    isPremium: false,
+    text: 'full free body',
+    content: premiumContent,
+  }
+
+  it('renders only the teaser for a premium post by default', async () => {
+    const findGlobalById = vi.fn(async () => ({
+      document: premiumPost,
+      type: CollectionRefTypes.Post,
+    }))
+    const { service } = createService({ findGlobalById })
+
+    const { html } = await service.renderArticle('post-1')
+
+    expect(html).not.toContain('full premium body')
+  })
+
+  it('renders the full body for a premium post when asOwner is true', async () => {
+    const findGlobalById = vi.fn(async () => ({
+      document: premiumPost,
+      type: CollectionRefTypes.Post,
+    }))
+    const { service } = createService({ findGlobalById })
+
+    const { html } = await service.renderArticle('post-1', { asOwner: true })
+
+    expect(html).toContain('full premium body')
+  })
+
+  it('renders the full body for a free post regardless of asOwner', async () => {
+    const findGlobalById = vi.fn(async () => ({
+      document: freePost,
+      type: CollectionRefTypes.Post,
+    }))
+    const { service } = createService({ findGlobalById })
+
+    const { html: teaserHtml } = await service.renderArticle('post-2')
+    const { html: ownerHtml } = await service.renderArticle('post-2', {
+      asOwner: true,
+    })
+
+    expect(teaserHtml).toContain('full free body')
+    expect(ownerHtml).toContain('full free body')
   })
 })
