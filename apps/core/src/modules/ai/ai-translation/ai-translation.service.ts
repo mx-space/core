@@ -882,8 +882,10 @@ export class AiTranslationService
 
     // Gate the public stream path on visibility, matching the read path
     // (`getTranslationForArticle`) so drafts / protected articles never leak.
-    const { article, document } =
-      await this.loadVisibleArticleOrThrow(articleId)
+    const { article, document } = await this.loadVisibleArticleOrThrow(
+      articleId,
+      { blockPremium: true },
+    )
     const { type } = article
 
     // Check whether a valid translation (matching hash) already exists in the database.
@@ -1113,7 +1115,7 @@ export class AiTranslationService
 
   private async loadVisibleArticleOrThrow(
     articleId: string,
-    options?: { ignoreVisibility?: boolean },
+    options?: { ignoreVisibility?: boolean; blockPremium?: boolean },
   ) {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article || !article.document) {
@@ -1129,6 +1131,15 @@ export class AiTranslationService
       throw createAppException(AppErrorCode.NOTE_FORBIDDEN)
     }
 
+    if (
+      options?.blockPremium &&
+      article.type === CollectionRefTypes.Post &&
+      (article.document as ArticleDocument as { isPremium?: boolean | null })
+        .isPremium
+    ) {
+      throw createAppException(AppErrorCode.POST_HIDDEN_OR_ENCRYPTED)
+    }
+
     return { article, document: article.document as ArticleDocument }
   }
 
@@ -1138,7 +1149,10 @@ export class AiTranslationService
     options?: { ignoreVisibility?: boolean },
   ): Promise<AITranslationModel | null> {
     const [{ document }, translation] = await Promise.all([
-      this.loadVisibleArticleOrThrow(articleId, options),
+      this.loadVisibleArticleOrThrow(articleId, {
+        ...options,
+        blockPremium: true,
+      }),
       this.aiTranslationRepository.findByRefAndLang(articleId, targetLang),
     ])
 
