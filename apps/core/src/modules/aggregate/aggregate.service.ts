@@ -114,9 +114,14 @@ export class AggregateService {
         ? this.noteService.findRecent(limit, { visibleOnly: true })
         : undefined,
     ])
+    const publicPosts = posts?.map((post) => ({
+      ...post,
+      text: getPublicText(post),
+      content: getPublicContent(post),
+    }))
     if (combined) {
       return [
-        ...(posts ?? []).map((item) => ({ ...item, type: 'post' })),
+        ...(publicPosts ?? []).map((item) => ({ ...item, type: 'post' })),
         ...(notes ?? []).map((item) => ({ ...item, type: 'note' })),
       ]
         .sort(
@@ -126,7 +131,7 @@ export class AggregateService {
         .slice(0, limit)
     }
     return {
-      ...(posts ? { posts } : {}),
+      ...(publicPosts ? { posts: publicPosts } : {}),
       ...(notes ? { notes } : {}),
     }
   }
@@ -217,11 +222,11 @@ export class AggregateService {
         modified: item.modifiedAt ?? null,
         link: baseURL + this.urlBuilder.build(item as any),
         title: item.title ?? '',
-        text: getPublicText(item as any),
+        text: item.text ?? '',
         id: item.id,
         images: item.images ?? [],
         contentFormat: item.contentFormat,
-        content: getPublicContent(item as any) ?? undefined,
+        content: item.content ?? undefined,
       })),
     }
   }
