@@ -2883,6 +2883,10 @@ export const enUS = {
   'write.field.publicAtPreset.week': 'In a week',
   'write.format.toLexical': 'Switch to Lexical',
   'write.format.toMarkdown': 'Switch to Markdown',
+  'write.format.toCodeMirror': 'Switch to CodeMirror',
+  'write.format.switchUnavailable.title': 'Editor switching is unavailable',
+  'write.format.switchUnavailable.description':
+    'CodeMirror edits Markdown source, while Lexical stores rich-text structure. Converting an article that already has content can lose formatting, special nodes, or source syntax, so switching is disabled. Choose the editor you need before writing in a new, empty article.',
   'write.header.backToList': 'Back to list',
   'write.header.editPage': 'Edit page',
   'write.header.newPage': 'New page',
