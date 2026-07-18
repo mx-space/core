@@ -4,9 +4,12 @@ import {
   asc,
   desc,
   eq,
+  gt,
   ilike,
   inArray,
   isNotNull,
+  isNull,
+  lte,
   ne,
   or,
   type SQL,
@@ -14,14 +17,14 @@ import {
 } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { readers, sessions } from '~/database/schema'
+import { memberships, readers, sessions } from '~/database/schema'
 import {
   BaseRepository,
   type PaginationResult,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 
-import type { ReaderRow } from './reader.types'
+import type { ReaderMembershipStatusFilter, ReaderRow } from './reader.types'
 
 export type ReaderRoleFilter = 'all' | 'owner' | 'reader'
 
@@ -30,6 +33,7 @@ export interface ReaderListParams {
   size?: number
   search?: string
   role?: ReaderRoleFilter
+  membershipStatus?: ReaderMembershipStatusFilter
 }
 
 export interface ReaderRoleCounts {
@@ -70,6 +74,32 @@ const readerSelection = {
   createdAt: readers.createdAt,
   updatedAt: readers.updatedAt,
 } as const
+
+const membershipSelection = {
+  membershipId: memberships.id,
+  membershipStatus: memberships.status,
+  membershipPlan: memberships.plan,
+  membershipProvider: memberships.provider,
+  membershipCurrentPeriodEnd: memberships.currentPeriodEnd,
+} as const
+
+type MembershipSelectionRow = {
+  membershipId: string | null
+  membershipStatus: string | null
+  membershipPlan: string | null
+  membershipProvider: string | null
+  membershipCurrentPeriodEnd: Date | null
+}
+
+const mapMembership = (row: MembershipSelectionRow) =>
+  row.membershipId
+    ? {
+        status: row.membershipStatus!,
+        plan: row.membershipPlan!,
+        provider: row.membershipProvider!,
+        currentPeriodEnd: row.membershipCurrentPeriodEnd!,
+      }
+    : null
 
 @Injectable()
 export class ReaderRepository extends BaseRepository {
@@ -174,6 +204,38 @@ export class ReaderRepository extends BaseRepository {
       )
       if (searchClause) conditions.push(searchClause)
     }
+    if (params.membershipStatus) {
+      const now = new Date()
+      switch (params.membershipStatus) {
+        case 'active':
+        case 'on_hold': {
+          conditions.push(
+            and(
+              eq(memberships.status, params.membershipStatus),
+              gt(memberships.currentPeriodEnd, now),
+            )!,
+          )
+          break
+        }
+        case 'cancelled': {
+          conditions.push(eq(memberships.status, 'cancelled'))
+          break
+        }
+        case 'expired': {
+          conditions.push(
+            or(
+              lte(memberships.currentPeriodEnd, now),
+              eq(memberships.status, 'expired'),
+            )!,
+          )
+          break
+        }
+        case 'none': {
+          conditions.push(isNull(memberships.id))
+          break
+        }
+      }
+    }
     if (conditions.length === 0) return undefined
     return conditions.length === 1 ? conditions[0] : and(...conditions)
   }
@@ -190,12 +252,21 @@ export class ReaderRepository extends BaseRepository {
       this.db
         .select({
           ...readerSelection,
+          ...membershipSelection,
           lastLoginAt,
         })
         .from(readers)
         .leftJoin(sessions, eq(sessions.userId, readers.id))
+        .leftJoin(memberships, eq(memberships.readerId, readers.id))
         .where(where)
-        .groupBy(readers.id)
+        .groupBy(
+          readers.id,
+          memberships.id,
+          memberships.status,
+          memberships.plan,
+          memberships.provider,
+          memberships.currentPeriodEnd,
+        )
         .orderBy(
           sql`${lastLoginAt} desc nulls last`,
           desc(readers.createdAt),
@@ -206,12 +277,14 @@ export class ReaderRepository extends BaseRepository {
       this.db
         .select({ count: sql<number>`count(*)::int` })
         .from(readers)
+        .leftJoin(memberships, eq(memberships.readerId, readers.id))
         .where(where),
     ])
     return {
       data: rows.map((row) => ({
         ...mapRow(row),
         lastLoginAt: row.lastLoginAt,
+        membership: mapMembership(row),
       })),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }

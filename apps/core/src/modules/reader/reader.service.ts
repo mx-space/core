@@ -5,7 +5,12 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { AuthService } from '../auth/auth.service'
 import type { ReaderRoleFilter } from './reader.repository'
 import { ReaderRepository } from './reader.repository'
-import type { ReaderModel, ReaderRow } from './reader.types'
+import type {
+  ReaderMembershipStatusFilter,
+  ReaderMembershipSummary,
+  ReaderModel,
+  ReaderRow,
+} from './reader.types'
 
 type ReaderShape = ReaderModel & {
   id: string
@@ -22,6 +27,7 @@ type ReaderShape = ReaderModel & {
   createdAt: Date
   updatedAt: Date | null
   lastLoginAt: Date | null
+  membership: ReaderMembershipSummary | null
 }
 
 @Injectable()
@@ -38,6 +44,7 @@ export class ReaderService {
       bannedAt: row.bannedAt ?? null,
       banReason: row.banReason ?? null,
       lastLoginAt: row.lastLoginAt ?? null,
+      membership: row.membership ?? null,
     } as ReaderShape
   }
 
@@ -51,12 +58,14 @@ export class ReaderService {
     size: number,
     search?: string,
     role?: ReaderRoleFilter,
+    membershipStatus?: ReaderMembershipStatusFilter,
   ) {
     const result = await this.readerRepository.list({
       page,
       size,
       search,
       role,
+      membershipStatus,
     })
 
     return {

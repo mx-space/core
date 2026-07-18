@@ -15,6 +15,9 @@ const ReaderListQuerySchema = z.object({
   size: z.coerce.number().int().positive().max(100).default(20),
   search: z.string().trim().optional(),
   role: z.enum(['all', 'owner', 'reader']).optional(),
+  membershipStatus: z
+    .enum(['active', 'on_hold', 'cancelled', 'expired', 'none'])
+    .optional(),
 })
 
 class ReaderListQueryDto extends createZodDto(ReaderListQuerySchema) {}
@@ -32,12 +35,13 @@ export class ReaderAuthController {
 
   @Get('/')
   async find(@Query() query: ReaderListQueryDto) {
-    const { page = 1, size = 20, search, role } = query
+    const { page = 1, size = 20, search, role, membershipStatus } = query
     const result = await this.readerService.findPaginated(
       page,
       size,
       search,
       role,
+      membershipStatus,
     )
     return withMeta(
       result.data,
