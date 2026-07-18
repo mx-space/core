@@ -139,6 +139,13 @@ const groupConfigs: GroupConfig[] = [
     icon: 'settings',
     sectionKeys: ['adminExtra', 'featureList'],
   },
+  {
+    key: 'membership',
+    title: 'Membership',
+    description: 'Paid membership, payment provider',
+    icon: 'credit-card',
+    sectionKeys: ['membership'],
+  },
 ]
 
 // ==================== Type Inference Utilities ====================
