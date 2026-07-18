@@ -35,7 +35,7 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "bin": {
-    "mxs": "./bin/mxs.cjs"
+    "mxs": "bin/mxs.cjs"
   },
   "exports": {
     ".": {
