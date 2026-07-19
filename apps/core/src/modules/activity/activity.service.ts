@@ -13,6 +13,10 @@ import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import {
+  getPublicContent,
+  getPublicText,
+} from '~/processors/helper/lexical-truncate.util'
 import { checkRefModelCollectionType } from '~/utils/biz.util'
 import { camelcaseKeys } from '~/utils/tool.util'
 
@@ -169,8 +173,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const readerIds: string[] = []
     for (const item of activities.data) {
       const payload = toObjectPayload(item.payload) as
-        | Partial<ActivityLikePayload>
-        | undefined
+        Partial<ActivityLikePayload> | undefined
       if (!payload) continue
       const { type, id, readerId } = payload
       if (typeof type === 'string' && typeof id === 'string') {
@@ -199,8 +202,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const docsWithRefModel = activities.data.map((ac) => {
       const nextAc = { ...ac } as ActivityWithRef
       const payload = toObjectPayload(ac.payload) as
-        | ActivityPayloadWithRef
-        | undefined
+        ActivityPayloadWithRef | undefined
       if (!payload) return nextAc
 
       const refModel = payload.id ? refModelData.get(payload.id) : undefined
@@ -230,8 +232,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const articleIds: string[] = []
     for (const item of data.data) {
       const payload = toObjectPayload(item.payload) as
-        | ActivityPayloadWithRef
-        | undefined
+        ActivityPayloadWithRef | undefined
       if (!payload || typeof payload.roomName !== 'string') continue
       const refId = extractArticleIdFromRoomName(payload.roomName)
       articleIds.push(refId)
@@ -444,8 +445,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const countMap = new Map<string, number>()
     for (const item of activities) {
       const payload = toObjectPayload(item.payload) as
-        | ActivityPayloadWithRef
-        | undefined
+        ActivityPayloadWithRef | undefined
       if (!payload || typeof payload.roomName !== 'string') continue
       const refId = extractArticleIdFromRoomName(payload.roomName)
       if (!refId) continue
@@ -502,14 +502,18 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getRecentPublish() {
-    const [post, note] = await Promise.all([
-      this.postService.findRecent(3),
+    const [posts, note] = await Promise.all([
+      this.postService.findRecent(3, { publishedOnly: true }),
       this.noteService.findRecent(3, { visibleOnly: true }),
     ])
 
     return {
       recent: [],
-      post,
+      post: posts.map((post) => ({
+        ...post,
+        text: getPublicText(post),
+        content: getPublicContent(post),
+      })),
       note,
     }
   }
@@ -520,10 +524,16 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   async getLastYearPublication() {
     const $gte = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
     const [allPosts, allNotes] = await Promise.all([
-      this.postService.findRecent(50),
+      this.postService.findRecent(50, { publishedOnly: true }),
       this.noteService.findRecent(50),
     ])
-    const posts = allPosts.filter((row) => row.createdAt >= $gte)
+    const posts = allPosts
+      .filter((row) => row.createdAt >= $gte)
+      .map((post) => ({
+        ...post,
+        text: getPublicText(post),
+        content: getPublicContent(post),
+      }))
     const notes = allNotes
       .filter((row) => row.createdAt >= $gte)
       .map((note) => {

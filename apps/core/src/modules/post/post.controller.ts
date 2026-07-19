@@ -12,6 +12,7 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
+import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
@@ -25,6 +26,7 @@ import type {
 } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
+import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
   applyArticleTranslationInPlace,
@@ -35,6 +37,11 @@ import {
   type EntryRule,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
+import {
+  renderTeaserText,
+  resolveEffectivePreviewBlocks,
+  truncateLexicalContent,
+} from '~/processors/helper/lexical-truncate.util'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
@@ -74,7 +81,41 @@ export class PostController {
     private readonly enrichmentService: EnrichmentService,
     private readonly translationEntryService: TranslationEntryService,
     private readonly snippetService: SnippetService,
+    private readonly entitlementService: EntitlementService,
   ) {}
+
+  private async applyPaywall(
+    doc: Record<string, any>,
+    isOwner: boolean,
+    readerId?: string,
+  ): Promise<{ locked: boolean; previewBlocks?: number } | null> {
+    if (!doc.isPremium) return null
+
+    if (!(await this.entitlementService.isMembershipPurchasable())) return null
+
+    const isEntitled =
+      isOwner ||
+      (readerId
+        ? await this.entitlementService.isActiveMember(readerId)
+        : false)
+
+    if (isEntitled) {
+      return { locked: false }
+    }
+
+    const previewBlocks = this.applyPaywallTeaser(doc)
+    return { locked: true, previewBlocks }
+  }
+
+  private applyPaywallTeaser(doc: Record<string, any>): number {
+    const effectiveN = resolveEffectivePreviewBlocks(
+      doc.content,
+      (doc.meta as any)?.paywall?.previewBlocks,
+    )
+    doc.content = truncateLexicalContent(doc.content, effectiveN)
+    doc.text = renderTeaserText(doc.content)
+    return effectiveN
+  }
 
   private async batchCategoryEntryTranslations(
     lang: string,
@@ -156,6 +197,15 @@ export class PostController {
     }
 
     for (const doc of res.data) {
+      if (doc.isPremium) {
+        if (typeof doc.content === 'string') {
+          this.applyPaywallTeaser(doc as Record<string, any>)
+        } else {
+          doc.text = ''
+        }
+        continue
+      }
+
       if (truncate) {
         doc.text = doc.text.slice(0, truncate)
         doc.content = null
@@ -196,6 +246,7 @@ export class PostController {
     @IpLocation() ip: IpRecord,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
+    @CurrentReaderId() readerId?: string,
   ) {
     const [last] = await this.postService.findRecent(1, {
       publishedOnly: !isAuthenticated,
@@ -211,6 +262,7 @@ export class PostController {
       ip,
       isAuthenticated,
       lang,
+      readerId,
     )
   }
 
@@ -220,6 +272,7 @@ export class PostController {
     @Param() params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
+    @CurrentReaderId() readerId?: string,
   ) {
     const { id } = params
     const doc = await this.postService.findById(id)
@@ -259,6 +312,12 @@ export class PostController {
       )
     }
 
+    const paywall = await this.applyPaywall(
+      doc as Record<string, any>,
+      !!isAuthenticated,
+      readerId,
+    )
+
     const { enrichments, ...docData } =
       await this.enrichmentService.attachEnrichments(doc)
 
@@ -288,6 +347,9 @@ export class PostController {
     metaBuilder.translation(translationMap)
 
     if (skills.length > 0) metaBuilder.skills(skills)
+
+    if (paywall) metaBuilder.paywall(paywall)
+
     return withMeta(docData, metaBuilder.build())
   }
 
@@ -299,6 +361,7 @@ export class PostController {
     @IpLocation() { ip }: IpRecord,
     @HasAdminAccess() isAuthenticated?: boolean,
     @Lang() lang?: string,
+    @CurrentReaderId() readerId?: string,
   ) {
     const { category, slug } = params
     const postDocument = await this.postService.getPostBySlug(
@@ -378,6 +441,11 @@ export class PostController {
       : relatedList
 
     const { related: _related, ...postEntity } = postDocument
+    const paywall = await this.applyPaywall(
+      postEntity as Record<string, any>,
+      !!isAuthenticated,
+      readerId,
+    )
     const { enrichments, ...postData } =
       await this.enrichmentService.attachEnrichments(postEntity)
 
@@ -397,7 +465,7 @@ export class PostController {
       .insights({ hasInLocale: hasInsightsInLocale })
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
-    if (summaryDoc) {
+    if (summaryDoc && !paywall?.locked) {
       metaBuilder.summary({
         id: summaryDoc.id,
         text: summaryDoc.summary,
@@ -420,6 +488,9 @@ export class PostController {
     metaBuilder.translation(translationMap)
 
     if (skills.length > 0) metaBuilder.skills(skills)
+
+    if (paywall) metaBuilder.paywall(paywall)
+
     return withMeta(postData, metaBuilder.build())
   }
 

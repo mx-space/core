@@ -114,6 +114,13 @@ export const SummaryMetaSchema = z
   })
   .strict()
 
+export const PaywallMetaSchema = z
+  .object({
+    locked: z.boolean(),
+    previewBlocks: z.number().optional(),
+  })
+  .strict()
+
 export const BaseResponseMetaSchema = z.object({
   pagination: PaginationSchema.optional(),
   view: z.string().optional(),
@@ -135,6 +142,7 @@ export const PostResponseMetaSchema = BaseResponseMetaSchema.extend({
   articles: z.record(z.string(), RelatedRefSchema).optional(),
   summary: SummaryMetaSchema.optional(),
   skills: z.array(SkillBundleViewSchema).optional(),
+  paywall: PaywallMetaSchema.optional(),
 })
 
 export const NoteResponseMetaSchema = BaseResponseMetaSchema.extend({
@@ -159,6 +167,7 @@ export type RelatedRef = z.infer<typeof RelatedRefSchema>
 export type ArticleRefMap = Record<string, RelatedRef>
 export type InsightsMeta = z.infer<typeof InsightsMetaSchema>
 export type SummaryMeta = z.infer<typeof SummaryMetaSchema>
+export type PaywallMeta = z.infer<typeof PaywallMetaSchema>
 export type BaseResponseMeta = z.infer<typeof BaseResponseMetaSchema>
 export type PostResponseMeta = z.infer<typeof PostResponseMetaSchema>
 export type NoteResponseMeta = z.infer<typeof NoteResponseMetaSchema>

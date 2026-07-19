@@ -1,15 +1,21 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ReaderModel } from '~/api/readers'
-import type { TranslationKey } from '~/i18n/types'
 
+import type {
+  MembershipPlan,
+  ReaderMembership,
+  ReaderModel,
+} from '~/api/readers'
 import {
   banReader,
+  grantMembership,
+  revokeMembership,
   revokeOwner,
   transferOwner,
   unbanReader,
 } from '~/api/readers'
 import { useI18n } from '~/i18n'
+import type { TranslationKey } from '~/i18n/types'
 import { adminQueryKeys } from '~/query/keys'
 
 import { readersQueryKey } from '../constants'
@@ -22,6 +28,12 @@ function getErrorMessage(error: unknown, fallback: string) {
 interface BanVariables {
   id: string
   reason?: string
+}
+
+interface GrantMembershipVariables {
+  readerId: string
+  plan: MembershipPlan
+  expiresAt: string
 }
 
 interface DetailMutationContext {
@@ -123,8 +135,45 @@ export function useReaderMutations() {
     },
   })
 
+  const grantMembershipMutation = useMutation<
+    ReaderMembership,
+    unknown,
+    GrantMembershipVariables
+  >({
+    mutationFn: ({ readerId, plan, expiresAt }) =>
+      grantMembership(readerId, { expiresAt, plan }),
+    onError: (error) =>
+      failureToast(error, 'readers.toast.membershipGrantFailed'),
+    onSuccess: async (membership, { readerId }) => {
+      successToast('readers.toast.membershipGranted')
+      await invalidate()
+      queryClient.setQueryData<ReaderModel>(detailKey(readerId), (current) =>
+        current ? { ...current, membership } : current,
+      )
+    },
+  })
+
+  const revokeMembershipMutation = useMutation<
+    ReaderMembership,
+    unknown,
+    string
+  >({
+    mutationFn: (readerId: string) => revokeMembership(readerId),
+    onError: (error) =>
+      failureToast(error, 'readers.toast.membershipRevokeFailed'),
+    onSuccess: async (membership, readerId) => {
+      successToast('readers.toast.membershipRevoked')
+      await invalidate()
+      queryClient.setQueryData<ReaderModel>(detailKey(readerId), (current) =>
+        current ? { ...current, membership } : current,
+      )
+    },
+  })
+
   return {
     banReader: banMutation,
+    grantMembership: grantMembershipMutation,
+    revokeMembership: revokeMembershipMutation,
     revokeOwner: revokeOwnerMutation,
     transferOwner: transferOwnerMutation,
     unbanReader: unbanMutation,

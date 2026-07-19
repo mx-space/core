@@ -91,6 +91,11 @@ export interface SkillBundleView {
   assets: SkillAssetView[]
 }
 
+export interface PaywallMeta {
+  locked: boolean
+  previewBlocks?: number
+}
+
 export interface BaseResponseMeta {
   pagination?: PaginationMeta
   view?: string
@@ -105,6 +110,7 @@ export interface PostResponseMeta extends BaseResponseMeta {
   articles?: Record<string, RelatedRef>
   summary?: SummaryMeta
   skills?: SkillBundleView[]
+  paywall?: PaywallMeta
 }
 
 export interface NoteResponseMeta extends BaseResponseMeta {

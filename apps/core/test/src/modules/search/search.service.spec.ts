@@ -198,6 +198,72 @@ describe('SearchService', () => {
     )
   })
 
+  it('indexes only the teaser body for a premium post', async () => {
+    const premiumContent = JSON.stringify({
+      root: {
+        children: [
+          {
+            type: 'paragraph',
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
+            children: [
+              {
+                type: 'text',
+                text: 'visible teaser',
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                version: 1,
+              },
+            ],
+          },
+          {
+            type: 'paragraph',
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
+            children: [
+              {
+                type: 'text',
+                text: 'secret paywalled body',
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                version: 1,
+              },
+            ],
+          },
+        ],
+      },
+    })
+    const premiumArticle = {
+      ...baseArticle,
+      isPremium: true,
+      contentFormat: ContentFormat.Lexical,
+      text: 'secret paywalled body full text',
+      content: premiumContent,
+      meta: null,
+    }
+    const { service, searchRepo } = makeService({
+      postFindById: premiumArticle,
+    })
+
+    await service.onPostCreate({ id: 'post-1' })
+
+    expect(searchRepo.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        searchText: expect.stringContaining('visible teaser'),
+      }),
+    )
+    const upserted = searchRepo.upsert.mock.calls[0][0]
+    expect(upserted.searchText).not.toContain('secret')
+  })
+
   it('defaults source lang to zh when nothing else resolves', async () => {
     const { service, searchRepo } = makeService({})
     await service.onPostCreate({ id: 'post-1' })
@@ -358,5 +424,115 @@ describe('SearchService', () => {
     expect(en?.isFallback).toBe(false)
     expect(zh?.lang).toBe('zh')
     expect(zh?.isFallback).toBe(true)
+  })
+
+  it('teases the full content of a premium post for public search results', async () => {
+    const premiumContent = JSON.stringify({
+      root: {
+        children: [
+          {
+            type: 'paragraph',
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
+            children: [
+              {
+                type: 'text',
+                text: 'visible teaser',
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                version: 1,
+              },
+            ],
+          },
+          {
+            type: 'paragraph',
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
+            children: [
+              {
+                type: 'text',
+                text: 'secret paywalled body',
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                version: 1,
+              },
+            ],
+          },
+        ],
+      },
+    })
+    const premiumHit = {
+      id: 's3',
+      refType: 'post',
+      refId: 'post-premium',
+      lang: 'en',
+      sourceHash: '',
+      title: 'premium hit',
+      searchText: 'visible teaser',
+      terms: ['premium'],
+      titleTermFreq: { premium: 1 },
+      bodyTermFreq: {},
+      titleLength: 1,
+      bodyLength: 1,
+      slug: null,
+      nid: null,
+      isPublished: true,
+      publicAt: null,
+      hasPassword: false,
+      createdAt: now,
+      modifiedAt: null,
+    }
+
+    const findByTerms = vi.fn().mockResolvedValue([premiumHit])
+    const findByKeyword = vi.fn().mockResolvedValue([])
+    const findAll = vi.fn().mockResolvedValue([])
+    const findCorpusStatsByLang = vi.fn().mockResolvedValue({
+      totalDocs: 1,
+      avgTitleLength: 1,
+      avgBodyLength: 1,
+    })
+
+    const { service, postService } = makeService({
+      searchRepoOverrides: {
+        findByTerms,
+        findByKeyword,
+        findAll,
+        findCorpusStatsByLang,
+      },
+    })
+
+    postService.findManyByIds.mockResolvedValue([
+      {
+        id: 'post-premium',
+        title: 'premium hit',
+        isPublished: true,
+        isPremium: true,
+        contentFormat: ContentFormat.Lexical,
+        text: 'secret paywalled body full text',
+        content: premiumContent,
+        meta: null,
+      },
+    ])
+
+    const result = (await service.search({
+      keyword: 'premium',
+      page: 1,
+      size: 10,
+      lang: 'en',
+    } as any)) as any
+
+    const hit = result.data.find((d: any) => d.id === 'post-premium')
+    expect(hit).toBeDefined()
+    expect(hit.text).not.toContain('secret')
+    expect(hit.content).not.toContain('secret paywalled body')
+    expect(hit.content).toContain('visible teaser')
   })
 })

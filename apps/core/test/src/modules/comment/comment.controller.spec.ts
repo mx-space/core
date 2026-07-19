@@ -11,6 +11,7 @@ import { CommentController } from '~/modules/comment/comment.controller'
 import { CommentLifecycleService } from '~/modules/comment/comment.lifecycle.service'
 import { CommentService } from '~/modules/comment/comment.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { ReaderService } from '~/modules/reader/reader.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import type { BizIncomingMessage } from '~/transformers/get-req.transformer'
@@ -78,6 +79,12 @@ describe('CommentController permission gating', () => {
           provide: ReaderService,
           useValue: {
             findReaderInIds: vi.fn().mockResolvedValue([]),
+          },
+        },
+        {
+          provide: EntitlementService,
+          useValue: {
+            getActiveMemberIds: vi.fn().mockResolvedValue(new Set()),
           },
         },
       ],

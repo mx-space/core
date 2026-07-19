@@ -1,13 +1,14 @@
 import { Loader2 } from 'lucide-react'
-import type { ReaderModel } from '~/api/readers'
-import type { useReaderMutations } from '../hooks/useReaderMutations'
 
+import type { ReaderModel } from '~/api/readers'
 import { Scroll } from '~/ui/primitives/scroll'
 
+import type { useReaderMutations } from '../hooks/useReaderMutations'
 import { ReaderActionsFooter } from './ReaderActionsFooter'
 import { ReaderActivityBlock } from './ReaderActivityBlock'
 import { ReaderDetailHeader } from './ReaderDetailHeader'
 import { ReaderIdentityBlock } from './ReaderIdentityBlock'
+import { ReaderMembershipBlock } from './ReaderMembershipBlock'
 import { ReaderStatusBanner } from './ReaderStatusBanner'
 
 export function ReadersDetailPane(props: {
@@ -39,6 +40,7 @@ export function ReadersDetailPane(props: {
             unbanPending={mutations.unbanReader.isPending}
           />
           <ReaderIdentityBlock reader={reader} />
+          <ReaderMembershipBlock mutations={mutations} reader={reader} />
           <ReaderActivityBlock reader={reader} />
         </Scroll>
       </div>

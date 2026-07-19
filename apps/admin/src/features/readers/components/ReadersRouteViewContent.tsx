@@ -68,6 +68,8 @@ export function ReadersRouteViewContent() {
             detailId={detailId}
             isFetching={list.isFetching}
             isLoading={list.isLoading}
+            membershipStatus={list.membershipStatus}
+            onMembershipStatusChange={list.setMembershipStatus}
             onPageChange={list.setPage}
             onRefresh={list.refetch}
             onRoleChange={list.setRole}

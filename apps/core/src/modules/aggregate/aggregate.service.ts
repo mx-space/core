@@ -11,6 +11,10 @@ import {
 } from '~/constants/injection.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
+import {
+  getPublicContent,
+  getPublicText,
+} from '~/processors/helper/lexical-truncate.util'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
@@ -110,9 +114,14 @@ export class AggregateService {
         ? this.noteService.findRecent(limit, { visibleOnly: true })
         : undefined,
     ])
+    const publicPosts = posts?.map((post) => ({
+      ...post,
+      text: getPublicText(post),
+      content: getPublicContent(post),
+    }))
     if (combined) {
       return [
-        ...(posts ?? []).map((item) => ({ ...item, type: 'post' })),
+        ...(publicPosts ?? []).map((item) => ({ ...item, type: 'post' })),
         ...(notes ?? []).map((item) => ({ ...item, type: 'note' })),
       ]
         .sort(
@@ -122,7 +131,7 @@ export class AggregateService {
         .slice(0, limit)
     }
     return {
-      ...(posts ? { posts } : {}),
+      ...(publicPosts ? { posts: publicPosts } : {}),
       ...(notes ? { notes } : {}),
     }
   }
@@ -217,7 +226,7 @@ export class AggregateService {
         id: item.id,
         images: item.images ?? [],
         contentFormat: item.contentFormat,
-        content: item.content,
+        content: item.content ?? undefined,
       })),
     }
   }

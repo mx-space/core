@@ -76,6 +76,24 @@ describe('search-document.util', () => {
     expect(computeTranslationSourceHash({ hash: 'abc' })).toBe('abc')
   })
 
+  it('changes the translation source hash when premium state or preview config changes', () => {
+    const plain = computeTranslationSourceHash({ hash: 'abc' })
+    const premium = computeTranslationSourceHash(
+      { hash: 'abc' },
+      { isPremium: true },
+    )
+    const premiumWithConfig = computeTranslationSourceHash(
+      { hash: 'abc' },
+      { isPremium: true, meta: { paywall: { previewBlocks: 2 } } },
+    )
+
+    expect(premium).not.toBe(plain)
+    expect(premiumWithConfig).not.toBe(premium)
+    expect(
+      computeTranslationSourceHash({ hash: 'abc' }, { isPremium: false }),
+    ).toBe(plain)
+  })
+
   it('builds english documents in their declared lang', () => {
     const document = buildSearchDocument(
       'post',

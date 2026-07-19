@@ -46,7 +46,12 @@ export class HttpCacheInterceptor implements NestInterceptor {
       context.getHandler(),
     )
 
-    if ((request.hasAdminAccess ?? request.isAuthenticated) && !cacheOptions?.force) {
+    const hasIdentity =
+      request.hasAdminAccess ||
+      request.hasReaderIdentity ||
+      request.isAuthenticated
+
+    if (hasIdentity && !cacheOptions?.force) {
       this.setPrivateCacheHeader(res)
       return call$
     }
@@ -78,15 +83,21 @@ export class HttpCacheInterceptor implements NestInterceptor {
         ),
       ])
 
-      if (value) {
+      const hasSafeCachedValue = !!value && !this.isUnsafeForSharedCache(value)
+
+      if (hasSafeCachedValue) {
         this.logger.debug(`hit cache:${key}`)
         this.setCacheHeader(res, ttl)
       }
 
-      return value
+      return hasSafeCachedValue
         ? of(value)
         : call$.pipe(
             tap((response) => {
+              if (response && this.isUnsafeForSharedCache(response)) {
+                this.setPrivateCacheHeader(res)
+                return
+              }
               if (response) {
                 this.cacheManager.set(key, response, ttl * 1000)
               }
@@ -97,6 +108,15 @@ export class HttpCacheInterceptor implements NestInterceptor {
       this.logger.warn(`Cache get failed for key=${key}: ${error}`)
       return call$
     }
+  }
+
+  private isUnsafeForSharedCache(response: any): boolean {
+    if (response?.meta?.paywall?.locked === false) return true
+
+    return (
+      response?.data?.isPremium === true &&
+      response?.meta?.paywall?.locked !== true
+    )
   }
 
   private setPrivateCacheHeader(res: FastifyReply) {

@@ -169,6 +169,13 @@
       "when": 1784178270027,
       "tag": "0023_companion_devices_pairings",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784371077025,
+      "tag": "0024_membership_billing_tables",
+      "breakpoints": true
     }
   ]
 }

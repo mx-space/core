@@ -1,7 +1,10 @@
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
-import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
-import type { PaginateResult } from '~/models/base'
+import type {
+  IRequestHandler,
+  RequestProxyResultWithMeta,
+} from '~/interfaces/request'
+import type { PaginateResult, PostResponseMeta } from '~/models/base'
 import type { PostModel } from '~/models/post'
 import { autoBind } from '~/utils/auto-bind'
 
@@ -57,8 +60,10 @@ export class PostController<ResponseWrapper> implements IController {
     categoryName: string,
     slug: string,
     options?: { lang?: string; prefer?: 'lexical' },
-  ): RequestProxyResult<PostModel, ResponseWrapper>
-  getPost(id: string): RequestProxyResult<PostModel, ResponseWrapper>
+  ): RequestProxyResultWithMeta<PostModel, ResponseWrapper, PostResponseMeta>
+  getPost(
+    id: string,
+  ): RequestProxyResultWithMeta<PostModel, ResponseWrapper, PostResponseMeta>
   getPost(
     idOrCategoryName: string,
     slug?: string,

@@ -3,6 +3,7 @@ import { forwardRef, Module } from '@nestjs/common'
 import { GatewayModule } from '~/processors/gateway/gateway.module'
 
 import { AiModule } from '../ai/ai.module'
+import { MembershipModule } from '../membership/membership.module'
 import { OwnerModule } from '../owner/owner.module'
 import { ReaderModule } from '../reader/reader.module'
 import { ServerlessModule } from '../serverless/serverless.module'
@@ -38,6 +39,7 @@ import { CommentReaderFillService } from './comment-reader-fill.service'
   imports: [
     OwnerModule,
     GatewayModule,
+    MembershipModule,
     forwardRef(() => ServerlessModule),
     forwardRef(() => ReaderModule),
     forwardRef(() => AiModule),

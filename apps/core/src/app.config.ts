@@ -268,9 +268,7 @@ export const HTTP_CACHE = {
   enableCDNHeader:
     parseBooleanishValue(
       (argv.http_cache_enable_cdn_header ?? CDN_CACHE_HEADER) as unknown as
-        | string
-        | boolean
-        | undefined,
+        string | boolean | undefined,
     ) ?? true, // s-maxage
   enableForceCacheHeader:
     parseBooleanishValue(

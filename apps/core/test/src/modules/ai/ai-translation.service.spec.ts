@@ -271,6 +271,46 @@ describe('AiTranslationService', () => {
     })
   })
 
+  it('blocks the public article-translation read for a premium post', async () => {
+    const { databaseService, service } = createService()
+    databaseService.findGlobalById.mockResolvedValue({
+      document: articleDocument({ isPremium: true }),
+      type: CollectionRefTypes.Post,
+    })
+
+    await expect(
+      service.getTranslationForArticle('post-1', 'en'),
+    ).rejects.toThrow(AppException)
+  })
+
+  it('does not block the owner-authenticated translation lookup for a premium post', async () => {
+    const { databaseService, repository, service } = createService()
+    const validTranslation = row({ lang: 'en' })
+    databaseService.findGlobalById.mockResolvedValue({
+      document: articleDocument({ isPremium: true }),
+      type: CollectionRefTypes.Post,
+    })
+    repository.listByRefId.mockResolvedValue([validTranslation])
+
+    await expect(
+      service.getTranslationAndAvailableLanguages('post-1', 'en', {
+        ignoreVisibility: true,
+      }),
+    ).resolves.toMatchObject({ translation: validTranslation })
+  })
+
+  it('blocks the public streamed translation for a premium post', async () => {
+    const { databaseService, service } = createService()
+    databaseService.findGlobalById.mockResolvedValue({
+      document: articleDocument({ isPremium: true }),
+      type: CollectionRefTypes.Post,
+    })
+
+    await expect(
+      service.streamTranslationForArticle('post-1', 'en'),
+    ).rejects.toThrow(AppException)
+  })
+
   it('throws when deleting a missing translation row', async () => {
     const { repository, service } = createService()
     repository.deleteById.mockResolvedValue(0)

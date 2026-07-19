@@ -15,6 +15,7 @@ type BizRequest = {
   isAuthenticated: boolean
   token?: string
   readerId?: string
+  rawBody?: Buffer
 }
 
 export type FastifyBizRequest = FastifyRequest & BizRequest

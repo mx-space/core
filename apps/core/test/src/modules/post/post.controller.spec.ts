@@ -110,6 +110,10 @@ const createController = (opts: CreateControllerOptions = {}) => {
     findSkillBundlesByIds: vi.fn(async () => []),
   }
 
+  const entitlementService = {
+    isActiveMember: vi.fn(async () => false),
+  }
+
   const controller = new PostController(
     postService as any,
     countingService as any,
@@ -119,6 +123,7 @@ const createController = (opts: CreateControllerOptions = {}) => {
     enrichmentService as any,
     translationEntryService as any,
     snippetService as any,
+    entitlementService as any,
   )
 
   return {
@@ -128,6 +133,7 @@ const createController = (opts: CreateControllerOptions = {}) => {
     enrichmentService,
     translationEntryService,
     snippetService,
+    entitlementService,
   }
 }
 
@@ -282,6 +288,21 @@ describe('PostController.getPaginate', () => {
 
     expect(res.data[0].title).toBe('A translated')
     expect(res.data[1].title).toBe('B')
+  })
+
+  it('fails closed to an empty teaser for a premium post whose content is not a string', async () => {
+    const post = makePost({
+      isPremium: true,
+      content: null,
+      text: 'full premium body leaked',
+    })
+
+    const { controller } = createController({ posts: [post] })
+
+    const res = await controller.getPaginate({} as any, false)
+
+    expect(res.data[0].text).toBe('')
+    expect(res.data[0].content).toBeFalsy()
   })
 })
 

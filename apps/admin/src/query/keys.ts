@@ -196,6 +196,7 @@ export const adminQueryKeys = {
     detail: (id: string) => ['readers', 'detail', id] as const,
     listRoot: ['readers', 'list'] as const,
     list: (params: {
+      membershipStatus: string
       page: number
       role: string
       search: string

@@ -35,6 +35,7 @@ export interface PostModelMarkdown {
   pinOrder?: number | null
   related?: PostRelatedSummary[]
   enrichments?: EnrichmentMap
+  isPremium: boolean
 }
 
 export interface PostModelLexical {
@@ -60,6 +61,7 @@ export interface PostModelLexical {
   pinOrder?: number | null
   related?: PostRelatedSummary[]
   enrichments?: EnrichmentMap
+  isPremium: boolean
 }
 
 export type PostModel = PostModelMarkdown | PostModelLexical

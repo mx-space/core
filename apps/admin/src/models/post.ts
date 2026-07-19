@@ -37,6 +37,7 @@ export interface PostModel {
   >[]
   meta?: any
   isPublished?: boolean
+  isPremium?: boolean
 }
 
 export interface Category {

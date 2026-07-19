@@ -27,6 +27,7 @@ const createPost = (overrides: Partial<PostRow> = {}): PostRow => ({
   category: null,
   copyright: true,
   isPublished: true,
+  isPremium: false,
   readCount: 0,
   likeCount: 0,
   pinAt: null,
@@ -212,5 +213,88 @@ describe('PostService', () => {
     await expect(
       service.checkRelated({ relatedId: ['missing'] } as any),
     ).rejects.toThrow(AppException)
+  })
+
+  it('rejects creating an isPremium markdown post with PREMIUM_REQUIRES_LEXICAL', async () => {
+    const { repository, service } = createService()
+    repository.findBySlug.mockResolvedValue(null)
+
+    await expect(
+      service.create({
+        title: 'Post',
+        text: 'body',
+        categoryId: 'cat-1',
+        contentFormat: ContentFormat.Markdown,
+        isPremium: true,
+      } as any),
+    ).rejects.toThrow(AppException)
+
+    expect(repository.create).not.toHaveBeenCalled()
+  })
+
+  it('allows creating an isPremium lexical post', async () => {
+    const { repository, service } = createService()
+    repository.findBySlug.mockResolvedValue(null)
+    repository.create.mockResolvedValue(
+      createPost({ isPremium: true, contentFormat: ContentFormat.Lexical }),
+    )
+
+    await service.create({
+      title: 'Post',
+      text: 'body',
+      content: '{}',
+      categoryId: 'cat-1',
+      contentFormat: ContentFormat.Lexical,
+      isPremium: true,
+    } as any)
+
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ isPremium: true }),
+    )
+  })
+
+  it('rejects flipping isPremium true on an existing markdown post', async () => {
+    const { repository, service } = createService()
+    repository.findById.mockResolvedValue(
+      createPost({ contentFormat: ContentFormat.Markdown, isPremium: false }),
+    )
+
+    await expect(
+      service.updateById('post-1', { isPremium: true } as any),
+    ).rejects.toThrow(AppException)
+
+    expect(repository.update).not.toHaveBeenCalled()
+  })
+
+  it('rejects flipping contentFormat away from lexical while isPremium stays true', async () => {
+    const { repository, service } = createService()
+    repository.findById.mockResolvedValue(
+      createPost({ contentFormat: ContentFormat.Lexical, isPremium: true }),
+    )
+
+    await expect(
+      service.updateById('post-1', {
+        contentFormat: ContentFormat.Markdown,
+      } as any),
+    ).rejects.toThrow(AppException)
+
+    expect(repository.update).not.toHaveBeenCalled()
+  })
+
+  it('allows updating a lexical post to isPremium true', async () => {
+    const { repository, service } = createService()
+    repository.findById.mockResolvedValue(
+      createPost({ contentFormat: ContentFormat.Lexical, isPremium: false }),
+    )
+    repository.update.mockResolvedValue(
+      createPost({ contentFormat: ContentFormat.Lexical, isPremium: true }),
+    )
+
+    await service.updateById('post-1', { isPremium: true } as any)
+
+    expect(repository.update).toHaveBeenCalledWith(
+      'post-1',
+      expect.objectContaining({ isPremium: true }),
+    )
   })
 })

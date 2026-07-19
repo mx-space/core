@@ -31,6 +31,7 @@ import { EntityIdDto } from '~/shared/dto/id.dto'
 import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { ConfigsService } from '../configs/configs.service'
+import { EntitlementService } from '../membership/entitlement.service'
 import { ReaderService } from '../reader/reader.service'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
 import { CommentLifecycleService } from './comment.lifecycle.service'
@@ -68,7 +69,20 @@ export class CommentController {
     private readonly configsService: ConfigsService,
     @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
+    private readonly entitlementService: EntitlementService,
   ) {}
+
+  private async withMembership<T extends { id: unknown }>(
+    readers: T[],
+  ): Promise<(T & { isMember: boolean })[]> {
+    const memberIds = await this.entitlementService.getActiveMemberIds(
+      readers.map((reader) => String(reader.id)),
+    )
+    return readers.map((reader) => ({
+      ...reader,
+      isMember: memberIds.has(String(reader.id)),
+    }))
+  }
 
   private buildAdminCommentFilter(input: {
     currentState?: number
@@ -166,7 +180,7 @@ export class CommentController {
       comments.data.map((doc) => doc.readerId).filter(Boolean) as string[],
     )
 
-    const readerMap = keyBy(readers, 'id')
+    const readerMap = keyBy(await this.withMembership(readers), 'id')
     const data = comments.data.map((doc) => ({
       ...doc,
       reader: readerMap[(doc as any).readerId] ?? null,
@@ -240,7 +254,7 @@ export class CommentController {
     const readerIds = this.commentService.collectThreadReaderIds(comments.data)
     const readers = await this.readerService.findReaderInIds(readerIds)
 
-    const readerMap2 = keyBy(readers, 'id')
+    const readerMap2 = keyBy(await this.withMembership(readers), 'id')
     const refData = comments.data.map((doc) => ({
       ...doc,
       reader: readerMap2[(doc as any).readerId] ?? null,
@@ -305,7 +319,9 @@ export class CommentController {
 
     await this.commentService.fillAndReplaceAvatarUrl([data])
     if (data.readerId) {
-      const reader = await this.readerService.findReaderInIds([data.readerId])
+      const reader = await this.withMembership(
+        await this.readerService.findReaderInIds([data.readerId]),
+      )
       Object.assign(data, { reader: reader[0] })
     }
 

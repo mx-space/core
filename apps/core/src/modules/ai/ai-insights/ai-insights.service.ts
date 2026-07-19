@@ -121,7 +121,10 @@ export class AiInsightsService implements OnModuleInit {
     )
   }
 
-  private async resolveArticleForInsights(articleId: string): Promise<{
+  private async resolveArticleForInsights(
+    articleId: string,
+    options?: { blockPremium?: boolean },
+  ): Promise<{
     article: ArticleForInsights
     type: CollectionRefTypes.Post | CollectionRefTypes.Note
   }> {
@@ -135,10 +138,15 @@ export class AiInsightsService implements OnModuleInit {
     ) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
-    // Never expose insights for draft / password-protected / future-dated
-    // content. Public endpoints and background tasks both flow through here.
     if (!isGlobalArticleVisible(article)) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
+    }
+    if (
+      options?.blockPremium &&
+      article.type === CollectionRefTypes.Post &&
+      (article.document as { isPremium?: boolean | null }).isPremium
+    ) {
+      throw createAppException(AppErrorCode.POST_HIDDEN_OR_ENCRYPTED)
     }
     const doc = article.document as any
     return {
@@ -361,7 +369,9 @@ export class AiInsightsService implements OnModuleInit {
     if (!aiConfig?.enableInsights) {
       throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
-    const { article } = await this.resolveArticleForInsights(articleId)
+    const { article } = await this.resolveArticleForInsights(articleId, {
+      blockPremium: true,
+    })
     const lang = options.lang || this.resolveSourceLang(article)
     const existing = await this.findValidInsights(articleId, lang, article.text)
     if (existing) {
@@ -375,7 +385,9 @@ export class AiInsightsService implements OnModuleInit {
     articleId: string,
     options: { lang: string; onlyDb?: boolean },
   ): Promise<AIInsightsModel | null> {
-    const { article } = await this.resolveArticleForInsights(articleId)
+    const { article } = await this.resolveArticleForInsights(articleId, {
+      blockPremium: true,
+    })
     const lang = options.lang || this.resolveSourceLang(article)
     const existing = await this.findValidInsights(articleId, lang, article.text)
     if (existing) return existing

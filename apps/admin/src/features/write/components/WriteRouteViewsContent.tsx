@@ -142,6 +142,7 @@ interface WriteFormState {
   coordinatesLat: string
   coordinatesLng: string
   copyright: boolean
+  isPremium: boolean
   isPublished: boolean
   images: NonNullable<DraftModel['images']>
   location: string
@@ -152,6 +153,7 @@ interface WriteFormState {
   passwordProtected: boolean
   pin: boolean
   pinOrder: string
+  previewBlocks: string
   publicAt: string
   relatedId: string
   slug: string
@@ -172,6 +174,7 @@ const emptyState: WriteFormState = {
   coordinatesLat: '',
   coordinatesLng: '',
   copyright: true,
+  isPremium: false,
   isPublished: true,
   images: [],
   location: '',
@@ -182,6 +185,7 @@ const emptyState: WriteFormState = {
   passwordProtected: false,
   pin: false,
   pinOrder: '1',
+  previewBlocks: '3',
   publicAt: '',
   relatedId: '',
   slug: '',
@@ -778,6 +782,9 @@ function WritePage(props: { kind: WriteKind }) {
   const updateContentFormat = (format: ContentFormat) => {
     setPreferredContentFormat(format)
     updateField('contentFormat', format)
+    if (format !== 'lexical' && state.isPremium) {
+      updateField('isPremium', false)
+    }
   }
 
   const getAgentMetaFields = () => getWriteAgentMetaFields(props.kind, state)
@@ -1916,6 +1923,27 @@ function PostFields(props: {
             value={props.state.pinOrder}
           />
         ) : null}
+        <Switch
+          checked={props.state.isPremium}
+          description={
+            props.state.contentFormat === 'lexical'
+              ? undefined
+              : t('write.postFields.premiumRequiresLexical')
+          }
+          disabled={props.state.contentFormat !== 'lexical'}
+          label={t('write.postFields.premium')}
+          onCheckedChange={(checked) => props.updateField('isPremium', checked)}
+        />
+        {props.state.isPremium ? (
+          <TextInput
+            controlClassName="h-9 focus:border-neutral-400"
+            inputMode="numeric"
+            label={t('write.postFields.premiumPreviewBlocks')}
+            min={1}
+            onChange={(value) => props.updateField('previewBlocks', value)}
+            value={props.state.previewBlocks}
+          />
+        ) : null}
       </PanelBlock>
 
       <PanelBlock title={t('write.postFields.section.related')}>
@@ -2846,6 +2874,45 @@ function setMetaValue(
   return next
 }
 
+function getPaywallPreviewBlocks(meta: Record<string, unknown>) {
+  const paywall = isRecord(meta.paywall) ? meta.paywall : undefined
+  return typeof paywall?.previewBlocks === 'number'
+    ? paywall.previewBlocks
+    : undefined
+}
+
+function withPaywallPreviewBlocks(
+  meta: Record<string, unknown>,
+  previewBlocks: number,
+) {
+  const paywall = isRecord(meta.paywall) ? meta.paywall : {}
+  return { ...meta, paywall: { ...paywall, previewBlocks } }
+}
+
+function withoutPaywallPreviewBlocks(meta: Record<string, unknown>) {
+  if (!isRecord(meta.paywall)) {
+    return meta
+  }
+
+  const { previewBlocks, ...restPaywall } = meta.paywall
+  if (Object.keys(restPaywall).length === 0) {
+    const { paywall, ...restMeta } = meta
+    return restMeta
+  }
+
+  return { ...meta, paywall: restPaywall }
+}
+
+function resolvePaywallMeta(
+  meta: Record<string, unknown>,
+  isPremium: boolean,
+  previewBlocks: number,
+) {
+  return isPremium
+    ? withPaywallPreviewBlocks(meta, previewBlocks)
+    : withoutPaywallPreviewBlocks(meta)
+}
+
 function formatMetaJson(meta: Record<string, unknown>) {
   return Object.keys(meta).length > 0 ? JSON.stringify(meta, null, 2) : ''
 }
@@ -3045,10 +3112,14 @@ function fromModel(kind: WriteKind, model: WriteModel) {
       contentFormat: post.contentFormat ?? 'markdown',
       copyright: post.copyright,
       images: post.images ?? [],
+      isPremium: Boolean(post.isPremium),
       isPublished: post.isPublished ?? true,
       meta: isRecord(post.meta) ? post.meta : {},
       pin: Boolean(post.pinAt),
       pinOrder: String(post.pinOrder ?? 1),
+      previewBlocks: String(
+        getPaywallPreviewBlocks(isRecord(post.meta) ? post.meta : {}) ?? 3,
+      ),
       relatedId: post.related?.map((item) => item.id).join(', ') ?? '',
       slug: post.slug,
       summary: post.summary ?? '',
@@ -3132,6 +3203,10 @@ function fromDraft(
         typeof specific.copyright === 'boolean'
           ? specific.copyright
           : previous.copyright,
+      isPremium:
+        typeof specific.isPremium === 'boolean'
+          ? specific.isPremium
+          : previous.isPremium,
       isPublished:
         typeof specific.isPublished === 'boolean'
           ? specific.isPublished
@@ -3141,6 +3216,10 @@ function fromDraft(
         typeof specific.pinOrder === 'number'
           ? String(specific.pinOrder)
           : previous.pinOrder,
+      previewBlocks: String(
+        getPaywallPreviewBlocks(base.meta) ??
+          (Number(previous.previewBlocks) || 3),
+      ),
       relatedId: Array.isArray(specific.relatedId)
         ? specific.relatedId.map((id) => String(id)).join(', ')
         : previous.relatedId,
@@ -3263,8 +3342,13 @@ function buildPostWriteData(
       projected.contentFormat === 'lexical'
         ? undefined
         : buildWriteImages(projected),
+    isPremium: projected.isPremium,
     isPublished: projected.isPublished,
-    meta: projected.meta,
+    meta: resolvePaywallMeta(
+      projected.meta,
+      projected.isPremium,
+      Math.max(1, Number(projected.previewBlocks) || 3),
+    ),
     pin: projected.pin ? new Date().toISOString() : null,
     pinOrder: projected.pin ? Number(projected.pinOrder) || 1 : null,
     relatedId: splitCommaList(projected.relatedId),
@@ -3376,9 +3460,15 @@ function toDraftData(
   if (kind === 'post') {
     return {
       ...base,
+      meta: resolvePaywallMeta(
+        state.meta,
+        state.isPremium,
+        Math.max(1, Number(state.previewBlocks) || 3),
+      ),
       typeSpecificData: {
         categoryId: state.categoryId,
         copyright: state.copyright,
+        isPremium: state.isPremium,
         isPublished: state.isPublished,
         pin: state.pin ? new Date().toISOString() : null,
         pinOrder: state.pin ? Number(state.pinOrder) || 1 : undefined,

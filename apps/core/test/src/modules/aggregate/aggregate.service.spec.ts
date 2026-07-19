@@ -89,3 +89,168 @@ describe('AggregateService.topActivity', () => {
     })
   })
 })
+
+describe('AggregateService.getLatest', () => {
+  const premiumContent = JSON.stringify({
+    root: {
+      children: [
+        {
+          type: 'paragraph',
+          children: [],
+          direction: null,
+          format: '',
+          indent: 0,
+          version: 1,
+        },
+        {
+          type: 'paragraph',
+          children: [],
+          direction: null,
+          format: '',
+          indent: 0,
+          version: 1,
+        },
+        {
+          type: 'paragraph',
+          children: [],
+          direction: null,
+          format: '',
+          indent: 0,
+          version: 1,
+        },
+      ],
+      direction: 'ltr',
+      format: '',
+      indent: 0,
+      type: 'root',
+      version: 1,
+    },
+  })
+  const premiumPost = {
+    ...postRow,
+    isPremium: true,
+    text: 'full premium body',
+    content: premiumContent,
+  }
+
+  const createServiceWithPremiumPost = () => {
+    const postService = { findRecent: vi.fn(async () => [premiumPost]) }
+    const noteService = { findRecent: vi.fn(async () => [noteRow]) }
+
+    const service = new AggregateService(
+      postService as any,
+      noteService as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    )
+    return { service }
+  }
+
+  it('teasers a premium post in the { posts, notes } branch', async () => {
+    const { service } = createServiceWithPremiumPost()
+    const result = await service.getLatest(5)
+
+    expect(result.posts![0].text).not.toContain('full premium body')
+    expect(JSON.parse(result.posts![0].content!).root.children).toHaveLength(2)
+  })
+
+  it('teasers a premium post in the combined branch', async () => {
+    const { service } = createServiceWithPremiumPost()
+    const result = await service.getLatest(5, undefined, true)
+
+    const post = result.find((item: any) => item.type === 'post')!
+    expect((post as any).text).not.toContain('full premium body')
+    expect(JSON.parse((post as any).content).root.children).toHaveLength(2)
+  })
+})
+
+describe('AggregateService.buildRssStructure', () => {
+  const premiumContent = JSON.stringify({
+    root: {
+      children: [
+        {
+          type: 'paragraph',
+          children: [],
+          direction: null,
+          format: '',
+          indent: 0,
+          version: 1,
+        },
+        {
+          type: 'paragraph',
+          children: [],
+          direction: null,
+          format: '',
+          indent: 0,
+          version: 1,
+        },
+        {
+          type: 'paragraph',
+          children: [],
+          direction: null,
+          format: '',
+          indent: 0,
+          version: 1,
+        },
+      ],
+      direction: 'ltr',
+      format: '',
+      indent: 0,
+      type: 'root',
+      version: 1,
+    },
+  })
+
+  it('emits a teaser, not the full body, for a premium post', async () => {
+    const premiumPost = {
+      ...postRow,
+      isPremium: true,
+      text: 'full premium body',
+      content: premiumContent,
+    }
+    const postService = { findRecent: vi.fn(async () => [premiumPost]) }
+    const noteService = { findRecent: vi.fn(async () => []) }
+    const ownerService = { getOwner: vi.fn(async () => ({ name: 'Owner' })) }
+    const configs = {
+      get: vi.fn(async (key: string) =>
+        key === 'seo'
+          ? { title: 'Blog', description: 'desc' }
+          : { webUrl: 'https://example.com' },
+      ),
+    }
+    const urlBuilder = { build: vi.fn(() => '/tech/a-post') }
+
+    const service = new AggregateService(
+      postService as any,
+      noteService as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      ownerService as any,
+      configs as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      urlBuilder as any,
+    )
+
+    const { data } = await service.buildRssStructure()
+
+    expect(data).toHaveLength(1)
+    expect(data[0].text).not.toContain('full premium body')
+    expect(JSON.parse(data[0].content!).root.children).toHaveLength(2)
+  })
+})

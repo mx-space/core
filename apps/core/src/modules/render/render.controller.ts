@@ -56,7 +56,7 @@ export class RenderEjsController {
       },
       { name: username },
     ] = await Promise.all([
-      this.service.renderArticle(id),
+      this.service.renderArticle(id, { asOwner: hasAdminAccess }),
       this.configs.waitForConfigReady(),
       this.ownerService.getOwner(),
     ])

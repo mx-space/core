@@ -1,3 +1,5 @@
+import { Readable } from 'node:stream'
+
 import fastifyCookie from '@fastify/cookie'
 import FastifyMultipart from '@fastify/multipart'
 import { Logger } from '@nestjs/common'
@@ -64,6 +66,61 @@ app.register(FastifyMultipart, {
     files: 1,
     fileSize: 1024 * 1024 * 6,
   },
+})
+
+const DEFAULT_RAW_BODY_LIMIT = 1024 * 1024
+
+export function isRawBodyRoute(request: FastifyRequest): boolean {
+  const config = request.routeOptions?.config as unknown as
+    Record<PropertyKey, unknown> | undefined
+  const options = config?.[FASTIFY_ROUTE_OPTIONS_CONFIG] as
+    FastifyRouteOptions | undefined
+  return options?.rawBody === true
+}
+
+export async function collectRawBodyPreParsingHook(
+  request: FastifyRequest,
+  reply: { code: (statusCode: number) => { send: (payload: unknown) => void } },
+  payload: AsyncIterable<Buffer | string>,
+  limit = DEFAULT_RAW_BODY_LIMIT,
+): Promise<Readable> {
+  const chunks: Buffer[] = []
+  let total = 0
+
+  for await (const chunk of payload) {
+    const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+    total += buf.byteLength
+
+    if (total > limit) {
+      reply.code(413).send({
+        error: {
+          code: 'PAYLOAD_TOO_LARGE',
+          message: 'Request body exceeds the allowed size',
+        },
+      })
+      return Readable.from(Buffer.alloc(0))
+    }
+
+    chunks.push(buf)
+  }
+
+  const rawBody = Buffer.concat(chunks)
+  Object.assign(request, { rawBody })
+
+  return Readable.from(rawBody)
+}
+
+app.getInstance().addHook('preParsing', async (request, reply, payload) => {
+  if (!isRawBodyRoute(request)) {
+    return payload
+  }
+
+  return collectRawBodyPreParsingHook(
+    request,
+    reply,
+    payload,
+    request.routeOptions?.bodyLimit ?? DEFAULT_RAW_BODY_LIMIT,
+  )
 })
 
 app.getInstance().addHook('onRequest', (request, reply, done) => {

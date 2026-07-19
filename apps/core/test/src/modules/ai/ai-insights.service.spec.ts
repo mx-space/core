@@ -160,9 +160,83 @@ describe('AiInsightsService', () => {
     ])
   })
 
+  it('blocks the public article-insights read for a premium post', async () => {
+    const { databaseService, service } = createService()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'Premium Post',
+        text: 'Premium text',
+        isPublished: true,
+        isPremium: true,
+      },
+    })
+
+    await expect(
+      service.getOrGenerateInsightsForArticle('post-1', { lang: 'zh' }),
+    ).rejects.toThrow(AppException)
+  })
+
+  it('blocks the public streamed article-insights for a premium post', async () => {
+    const { configService, databaseService, service } = createService()
+    configService.get.mockResolvedValue({ enableInsights: true })
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'Premium Post',
+        text: 'Premium text',
+        isPublished: true,
+        isPremium: true,
+      },
+    })
+
+    await expect(
+      service.streamInsightsForArticle('post-1', { lang: 'zh' }),
+    ).rejects.toThrow(AppException)
+  })
+
+  it('does not block background insight regeneration for a premium post', async () => {
+    const {
+      aiTaskService,
+      configService,
+      databaseService,
+      repository,
+      service,
+    } = createService()
+    configService.get.mockResolvedValue({
+      enableInsights: true,
+      enableAutoGenerateInsightsOnUpdate: true,
+      insightsMinTextLength: 0,
+    })
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'Premium Post',
+        text: 'Long enough premium text',
+        isPublished: true,
+        isPremium: true,
+      },
+    })
+    repository.findSourceForRef.mockResolvedValue(null)
+
+    await service.handleUpdateArticle({ id: 'post-1' })
+
+    expect(aiTaskService.createInsightsTask).toHaveBeenCalledWith({
+      refId: 'post-1',
+    })
+  })
+
   it('creates an initial insights task on update when no source insight exists', async () => {
-    const { aiTaskService, configService, databaseService, repository, service } =
-      createService()
+    const {
+      aiTaskService,
+      configService,
+      databaseService,
+      repository,
+      service,
+    } = createService()
     configService.get.mockResolvedValue({
       enableInsights: true,
       enableAutoGenerateInsightsOnUpdate: true,

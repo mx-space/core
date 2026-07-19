@@ -5,6 +5,7 @@ import { CommentController } from '~/modules/comment/comment.controller'
 import { CommentLifecycleService } from '~/modules/comment/comment.lifecycle.service'
 import { CommentService } from '~/modules/comment/comment.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { ReaderService } from '~/modules/reader/reader.service'
 
 import {
@@ -197,6 +198,15 @@ const readerServiceProvider = {
   },
 }
 
+const entitlementServiceProvider = {
+  provide: EntitlementService,
+  useValue: {
+    async getActiveMemberIds() {
+      return new Set<string>()
+    },
+  },
+}
+
 const getResponseData = (body: any) =>
   Array.isArray(body.data) ? body.data : body.data?.data
 
@@ -208,6 +218,7 @@ describe('CommentController contract (e2e)', () => {
       lifecycleProvider,
       configsProvider,
       readerServiceProvider,
+      entitlementServiceProvider,
       ...eventEmitterProvider,
     ],
   })

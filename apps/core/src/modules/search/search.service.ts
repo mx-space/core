@@ -9,6 +9,10 @@ import type { AiTranslationRow } from '~/modules/ai/ai-translation/ai-translatio
 import type { SearchDto } from '~/modules/search/search.schema'
 import type { PaginationResult } from '~/processors/database/base.repository'
 import { paginationOf } from '~/processors/database/base.repository'
+import {
+  getPublicContent,
+  getPublicText,
+} from '~/processors/helper/lexical-truncate.util'
 import { AsyncQueue } from '~/utils/queue.util'
 
 import { NoteService } from '../note/note.service'
@@ -113,6 +117,15 @@ export class SearchService {
     @Inject(forwardRef(() => AiTranslationRepository))
     private readonly aiTranslationRepository: AiTranslationRepository,
   ) {}
+
+  private toPublicArticleFields<T extends Record<string, any>>(article: T): T {
+    if (!article?.isPremium) return article
+    return {
+      ...article,
+      text: getPublicText(article),
+      content: getPublicContent(article),
+    }
+  }
 
   async search(searchOption: SearchDto) {
     return this.searchIndex(searchOption, undefined)
@@ -236,7 +249,13 @@ export class SearchService {
       for (const article of articles) {
         const lang =
           sourceLangs.get(article.id) ?? SEARCH_DOCUMENT_DEFAULT_SOURCE_LANG
-        docs.push(buildSearchDocument(refType, article as any, lang))
+        docs.push(
+          buildSearchDocument(
+            refType,
+            this.toPublicArticleFields(article as any),
+            lang,
+          ),
+        )
         articleCache.set(`${refType}:${article.id}`, { article, refType })
       }
     }
@@ -385,7 +404,11 @@ export class SearchService {
     let rebuilt = 0
     const sourceLang = await this.resolveSourceLang(refType, refId)
     await this.searchRepository.upsert(
-      buildSearchDocument(refType, article as any, sourceLang) as any,
+      buildSearchDocument(
+        refType,
+        this.toPublicArticleFields(article as any),
+        sourceLang,
+      ) as any,
     )
     rebuilt++
 
@@ -413,8 +436,22 @@ export class SearchService {
 
     const sourceLang = await this.resolveSourceLang(refType, id)
     await this.searchRepository.upsert(
-      buildSearchDocument(refType, sourceDocument as any, sourceLang) as any,
+      buildSearchDocument(
+        refType,
+        this.toPublicArticleFields(sourceDocument as any),
+        sourceLang,
+      ) as any,
     )
+
+    // Translated documents embed the article's paywall projection, so an
+    // article update (e.g. premium toggle) must refresh them too.
+    const translations = await this.aiTranslationRepository.listByRefId(id)
+    for (const t of translations) {
+      if (t.refType !== refType) continue
+      await this.searchRepository.upsert(
+        this.buildTranslationSearchDocument(refType, sourceDocument, t) as any,
+      )
+    }
   }
 
   private async upsertTranslationSearchDocument(translation: AiTranslationRow) {
@@ -451,6 +488,8 @@ export class SearchService {
       text: translation.text,
       contentFormat: translation.contentFormat,
       content: translation.content,
+      isPremium: article.isPremium,
+      meta: article.meta,
       tags: translation.tags ?? [],
       slug: article.slug ?? null,
       nid: article.nid ?? null,
@@ -460,9 +499,13 @@ export class SearchService {
       hasPassword: article.hasPassword,
       createdAt: article.createdAt ?? new Date(),
       modifiedAt: article.modifiedAt ?? null,
-      sourceHash: computeTranslationSourceHash(translation),
+      sourceHash: computeTranslationSourceHash(translation, article),
     }
-    return buildSearchDocument(refType, merged, translation.lang)
+    return buildSearchDocument(
+      refType,
+      this.toPublicArticleFields(merged),
+      translation.lang,
+    )
   }
 
   // ───────────────────────────────────────────────── source lang resolve ──
@@ -824,7 +867,10 @@ export class SearchService {
 
     const map = new Map<string, any>()
     for (const post of posts) {
-      map.set(`post:${post.id}`, { ...post, type: 'post' as const })
+      const publicPost = hasAdminAccess
+        ? post
+        : this.toPublicArticleFields(post as any)
+      map.set(`post:${post.id}`, { ...publicPost, type: 'post' as const })
     }
     for (const note of notes) {
       map.set(`note:${note.id}`, { ...note, type: 'note' as const })

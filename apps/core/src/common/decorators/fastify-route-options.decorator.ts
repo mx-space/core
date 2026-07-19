@@ -8,7 +8,9 @@ export const FASTIFY_ROUTE_OPTIONS_CONFIG = Symbol(
 export type FastifyRouteOptions = Pick<
   RouteShorthandOptions,
   'bodyLimit' | 'errorHandler'
->
+> & {
+  rawBody?: boolean
+}
 
 export const WithFastifyRouteOptions = (options: FastifyRouteOptions) =>
   RouteConfig({ [FASTIFY_ROUTE_OPTIONS_CONFIG]: options })

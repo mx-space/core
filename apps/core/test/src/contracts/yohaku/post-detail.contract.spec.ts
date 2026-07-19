@@ -33,6 +33,7 @@ import {
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { enrichmentProvider } from '../../../mock/modules/enrichment.mock'
+import { entitlementProvider } from '../../../mock/modules/entitlement.mock'
 import { snippetProvider } from '../../../mock/modules/snippet.mock'
 import { countingServiceProvider } from '../../../mock/processors/counting.mock'
 import {
@@ -134,6 +135,7 @@ describe('Yohaku contract — post detail (e2e)', () => {
       aiInsightsProvider,
       aiSummaryProvider,
       snippetProvider,
+      entitlementProvider,
     ],
   })
 

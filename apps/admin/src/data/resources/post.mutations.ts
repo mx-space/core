@@ -74,6 +74,7 @@ function toOptimisticPostPatch(data: CreatePostData): Partial<PostModel> {
     categoryId: data.categoryId,
     contentFormat: data.contentFormat,
     copyright: data.copyright,
+    isPremium: data.isPremium,
     isPublished: data.isPublished,
     meta: data.meta,
     pinAt: data.pin,

@@ -1,9 +1,22 @@
 import type { PaginateResult } from '~/models/base'
 
-import { getJson, patchJson } from './http'
+import { deleteJson, getJson, patchJson, putJson } from './http'
 
 export type ReaderRole = 'reader' | 'owner'
 export type ReaderRoleFilter = 'all' | 'owner' | 'reader'
+
+export type MembershipProvider =
+  'creem' | 'dodo' | 'lemonsqueezy' | 'manual' | 'stripe'
+export type MembershipPlan = 'monthly' | 'yearly'
+export type MembershipStatus = 'active' | 'cancelled' | 'expired' | 'on_hold'
+export type ReaderMembershipStatusFilter = 'none' | MembershipStatus
+
+export interface ReaderMembership {
+  status: MembershipStatus
+  plan: MembershipPlan
+  provider: MembershipProvider
+  currentPeriodEnd: string
+}
 
 export interface ReaderModel {
   id: string
@@ -20,6 +33,7 @@ export interface ReaderModel {
   createdAt: string
   updatedAt: string | null
   lastLoginAt: string | null
+  membership: ReaderMembership | null
 }
 
 export interface ReaderStats {
@@ -34,10 +48,12 @@ export interface ReaderListParams {
   size: number
   search?: string
   role?: ReaderRoleFilter
+  membershipStatus?: ReaderMembershipStatusFilter
 }
 
 export function getReaders(params: ReaderListParams) {
   return getJson<PaginateResult<ReaderModel>>('/readers', {
+    membershipStatus: params.membershipStatus,
     page: params.page,
     role: params.role,
     search: params.search,
@@ -72,4 +88,18 @@ export function unbanReader(id: string) {
     `/readers/${id}/unban`,
     {},
   )
+}
+
+export function grantMembership(
+  readerId: string,
+  data: { plan: MembershipPlan; expiresAt: string },
+) {
+  return putJson<ReaderMembership, typeof data>(
+    `/membership/members/${readerId}`,
+    data,
+  )
+}
+
+export function revokeMembership(readerId: string) {
+  return deleteJson<ReaderMembership>(`/membership/members/${readerId}`)
 }

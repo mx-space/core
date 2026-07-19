@@ -159,6 +159,13 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.USER_NOT_EXISTS]: undefined
   [AppErrorCode.USER_ALREADY_EXISTS]: undefined
 
+  // membership
+  [AppErrorCode.MEMBERSHIP_REQUIRED]: undefined
+  [AppErrorCode.WEBHOOK_VERIFY_FAILED]: undefined
+  [AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED]: undefined
+  [AppErrorCode.MEMBERSHIP_ALREADY_ACTIVE]: undefined
+  [AppErrorCode.PREMIUM_REQUIRES_LEXICAL]: undefined
+
   // page
   [AppErrorCode.PAGE_NOT_FOUND]: WithId
 

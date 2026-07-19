@@ -6,6 +6,7 @@ import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import { EnrichmentService } from '~/modules/enrichment/enrichment.service'
+import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { PostController } from '~/modules/post/post.controller'
 import { PostService } from '~/modules/post/post.service'
 import { SnippetService } from '~/modules/snippet/snippet.service'
@@ -105,6 +106,10 @@ const proxy = createE2EApp({
       },
     },
     { provide: SnippetService, useValue: snippetService },
+    {
+      provide: EntitlementService,
+      useValue: { isActiveMember: vi.fn(async () => false) },
+    },
   ],
 })
 
