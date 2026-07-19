@@ -68,18 +68,21 @@ app.register(FastifyMultipart, {
   },
 })
 
-const MEMBERSHIP_WEBHOOK_PATH_SEGMENT = '/membership/webhook/'
-const MEMBERSHIP_WEBHOOK_RAW_BODY_LIMIT = 1024 * 1024
+const DEFAULT_RAW_BODY_LIMIT = 1024 * 1024
 
-export function isMembershipWebhookRequest(url: string): boolean {
-  const path = url.split('?', 1)[0]
-  return path.includes(MEMBERSHIP_WEBHOOK_PATH_SEGMENT)
+export function isRawBodyRoute(request: FastifyRequest): boolean {
+  const config = request.routeOptions?.config as unknown as
+    Record<PropertyKey, unknown> | undefined
+  const options = config?.[FASTIFY_ROUTE_OPTIONS_CONFIG] as
+    FastifyRouteOptions | undefined
+  return options?.rawBody === true
 }
 
-export async function membershipWebhookRawBodyPreParsingHook(
+export async function collectRawBodyPreParsingHook(
   request: FastifyRequest,
   reply: { code: (statusCode: number) => { send: (payload: unknown) => void } },
   payload: AsyncIterable<Buffer | string>,
+  limit = DEFAULT_RAW_BODY_LIMIT,
 ): Promise<Readable> {
   const chunks: Buffer[] = []
   let total = 0
@@ -88,7 +91,7 @@ export async function membershipWebhookRawBodyPreParsingHook(
     const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
     total += buf.byteLength
 
-    if (total > MEMBERSHIP_WEBHOOK_RAW_BODY_LIMIT) {
+    if (total > limit) {
       reply.code(413).send({
         error: {
           code: 'PAYLOAD_TOO_LARGE',
@@ -108,11 +111,16 @@ export async function membershipWebhookRawBodyPreParsingHook(
 }
 
 app.getInstance().addHook('preParsing', async (request, reply, payload) => {
-  if (!isMembershipWebhookRequest(request.url)) {
+  if (!isRawBodyRoute(request)) {
     return payload
   }
 
-  return membershipWebhookRawBodyPreParsingHook(request, reply, payload)
+  return collectRawBodyPreParsingHook(
+    request,
+    reply,
+    payload,
+    request.routeOptions?.bodyLimit ?? DEFAULT_RAW_BODY_LIMIT,
+  )
 })
 
 app.getInstance().addHook('onRequest', (request, reply, done) => {

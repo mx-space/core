@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
-  isMembershipWebhookRequest,
-  membershipWebhookRawBodyPreParsingHook,
+  collectRawBodyPreParsingHook,
+  isRawBodyRoute,
 } from '~/common/adapters/fastify.adapter'
+import { FASTIFY_ROUTE_OPTIONS_CONFIG } from '~/common/decorators/fastify-route-options.decorator'
 
 const createPayload = (chunks: Buffer[]) => ({
   async *[Symbol.asyncIterator]() {
@@ -28,31 +29,32 @@ const createReply = () => {
   }
 }
 
-describe('isMembershipWebhookRequest', () => {
-  it('matches the membership webhook path prefix', () => {
-    expect(isMembershipWebhookRequest('/membership/webhook/dodo')).toBe(true)
+describe('isRawBodyRoute', () => {
+  it('matches a route whose config opts into rawBody', () => {
+    const request: any = {
+      routeOptions: {
+        config: { [FASTIFY_ROUTE_OPTIONS_CONFIG]: { rawBody: true } },
+      },
+    }
+    expect(isRawBodyRoute(request)).toBe(true)
   })
 
-  it('matches even when a query string is present', () => {
-    expect(
-      isMembershipWebhookRequest(
-        '/membership/webhook/dodo?foo=/membership/webhook/',
-      ),
-    ).toBe(true)
+  it('does not match a route with options but no rawBody flag', () => {
+    const request: any = {
+      routeOptions: {
+        config: { [FASTIFY_ROUTE_OPTIONS_CONFIG]: { bodyLimit: 1024 } },
+      },
+    }
+    expect(isRawBodyRoute(request)).toBe(false)
   })
 
-  it('does not match an unrelated path that merely contains the segment in its query string', () => {
-    expect(
-      isMembershipWebhookRequest('/other/route?next=/membership/webhook/dodo'),
-    ).toBe(false)
-  })
-
-  it('does not match unrelated paths', () => {
-    expect(isMembershipWebhookRequest('/posts/1')).toBe(false)
+  it('does not match a route without route options config', () => {
+    expect(isRawBodyRoute({ routeOptions: { config: {} } } as any)).toBe(false)
+    expect(isRawBodyRoute({} as any)).toBe(false)
   })
 })
 
-describe('membershipWebhookRawBodyPreParsingHook', () => {
+describe('collectRawBodyPreParsingHook', () => {
   it('buffers the full body and attaches it as request.rawBody', async () => {
     const request: any = {}
     const reply = createReply()
@@ -61,7 +63,7 @@ describe('membershipWebhookRawBodyPreParsingHook', () => {
       Buffer.from('"evt_1"}'),
     ])
 
-    const stream = await membershipWebhookRawBodyPreParsingHook(
+    const stream = await collectRawBodyPreParsingHook(
       request,
       reply as any,
       payload as any,
@@ -79,14 +81,14 @@ describe('membershipWebhookRawBodyPreParsingHook', () => {
     expect(reply.code).not.toHaveBeenCalled()
   })
 
-  it('aborts with 413 once the accumulated body exceeds 1 MiB', async () => {
+  it('aborts with 413 once the accumulated body exceeds the limit', async () => {
     const request: any = {}
     const reply = createReply()
     const oneMib = 1024 * 1024
     const chunks = [Buffer.alloc(oneMib, 'a'), Buffer.alloc(16, 'b')]
     const payload = createPayload(chunks)
 
-    const stream = await membershipWebhookRawBodyPreParsingHook(
+    const stream = await collectRawBodyPreParsingHook(
       request,
       reply as any,
       payload as any,
@@ -103,5 +105,21 @@ describe('membershipWebhookRawBodyPreParsingHook', () => {
       collected.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
     }
     expect(Buffer.concat(collected).length).toBe(0)
+  })
+
+  it('respects a route-level limit override', async () => {
+    const request: any = {}
+    const reply = createReply()
+    const payload = createPayload([Buffer.alloc(32, 'a')])
+
+    await collectRawBodyPreParsingHook(
+      request,
+      reply as any,
+      payload as any,
+      16,
+    )
+
+    expect(reply.code).toHaveBeenCalledWith(413)
+    expect(request.rawBody).toBeUndefined()
   })
 })

@@ -16,6 +16,7 @@ import { DEMO_MODE } from '~/app.config'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { CurrentUser } from '~/common/decorators/current-user.decorator'
+import { WithFastifyRouteOptions } from '~/common/decorators/fastify-route-options.decorator'
 import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
@@ -135,6 +136,7 @@ export class MembershipController {
   }
 
   @Post('/webhook/:provider')
+  @WithFastifyRouteOptions({ rawBody: true })
   async webhook(
     @Param('provider') provider: string,
     @Req() req: FastifyBizRequest,
