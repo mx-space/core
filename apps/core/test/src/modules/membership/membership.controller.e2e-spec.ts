@@ -71,15 +71,15 @@ const membershipConfig: {
   provider: string | undefined
   monthlyProductId: string
   yearlyProductId: string
-  dodoApiKey: string
-  dodoWebhookKey: string
+  apiKey: string
+  webhookSigningKey: string
 } = {
   enabled: true,
   provider: 'dodo',
   monthlyProductId: 'prod_monthly',
   yearlyProductId: 'prod_yearly',
-  dodoApiKey: 'api-key',
-  dodoWebhookKey: 'webhook-key',
+  apiKey: 'api-key',
+  webhookSigningKey: 'webhook-key',
 }
 
 const urlConfig: { webUrl: string | undefined } = { webUrl: undefined }
@@ -206,11 +206,43 @@ const proxy = createE2EApp(membershipModule)
 
 describe('MembershipController (e2e)', () => {
   beforeEach(() => {
+    membershipConfig.apiKey = 'api-key'
     membershipConfig.enabled = true
     membershipConfig.provider = 'dodo'
+    membershipConfig.webhookSigningKey = 'webhook-key'
     urlConfig.webUrl = undefined
     createCheckoutMock.mockClear()
     verifyAndParseWebhookMock.mockClear()
+  })
+
+  describe('GET /membership/config-status', () => {
+    it('reports secret presence without exposing secret values', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/config-status',
+        headers: { 'test-token': '1' },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({
+        data: {
+          api_key_configured: true,
+          supported_providers: ['dodo'],
+          webhook_signing_key_configured: true,
+        },
+      })
+      expect(res.body).not.toContain('api-key')
+      expect(res.body).not.toContain('webhook-key')
+    })
+
+    it('requires owner authentication', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/config-status',
+      })
+
+      expect(res.statusCode).toBe(401)
+    })
   })
 
   describe('POST /membership/checkout', () => {

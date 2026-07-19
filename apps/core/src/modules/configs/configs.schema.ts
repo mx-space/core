@@ -941,14 +941,14 @@ export const MembershipSchema = section('Membership', {
     z.string().optional(),
     'Yearly plan product ID',
   ),
-  dodoApiKey: field.password(z.string().optional(), 'Dodo API key'),
-  dodoWebhookKey: field.password(
+  apiKey: field.password(z.string().optional(), 'API key'),
+  webhookSigningKey: field.password(
     z.string().optional(),
-    'Dodo webhook signing key',
+    'Webhook signing key',
   ),
-  dodoEnvironment: field.select(
+  environment: field.select(
     z.enum(['test_mode', 'live_mode']).optional(),
-    'Dodo environment',
+    'Environment',
     [
       { label: 'Live mode', value: 'live_mode' },
       { label: 'Test mode', value: 'test_mode' },

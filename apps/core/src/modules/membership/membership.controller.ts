@@ -29,6 +29,7 @@ import { ConfigsService } from '../configs/configs.service'
 import { MembershipService } from './membership.service'
 import {
   effectiveMembershipStatus,
+  REGISTERED_PAYMENT_PROVIDERS,
   resolveMembershipAvailability,
   resolveMembershipReturnUrl,
 } from './membership.types'
@@ -131,6 +132,18 @@ export class MembershipController {
     )
 
     return { enabled: true, plans }
+  }
+
+  @Auth()
+  @Get('/config-status')
+  async configStatus() {
+    const membershipConfig = await this.configsService.get('membership')
+
+    return {
+      apiKeyConfigured: Boolean(membershipConfig.apiKey),
+      supportedProviders: REGISTERED_PAYMENT_PROVIDERS,
+      webhookSigningKeyConfigured: Boolean(membershipConfig.webhookSigningKey),
+    }
   }
 
   @ReaderAuth()

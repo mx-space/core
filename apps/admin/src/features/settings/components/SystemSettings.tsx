@@ -11,6 +11,7 @@ import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 
 import { settingsQueryKey } from '../constants'
+import type { MembershipConfigValue } from '../utils/membership'
 import {
   cloneJson,
   getErrorMessage,
@@ -20,6 +21,7 @@ import {
 } from '../utils/settings'
 import { AIConfigEditor } from './ai/AIConfigEditor'
 import { ConfigSectionFields } from './config/ConfigSectionFields'
+import { MembershipConfigEditor } from './membership/MembershipConfigEditor'
 import { presentTestAiReview } from './modals/TestAiReviewModal'
 import { SeoConfigEditor } from './seo/SeoConfigEditor'
 import { useSettingsActionBarSetter } from './SettingsActionBar'
@@ -173,6 +175,12 @@ export function SystemSettings(props: {
                 onAction={handleFieldAction}
                 prefix={section.key}
                 updateValue={updateValue}
+              />
+            ) : section.key === 'membership' ? (
+              <MembershipConfigEditor
+                fields={section.fields}
+                onChange={(value) => updateValue(section.key, value)}
+                value={(configs[section.key] ?? {}) as MembershipConfigValue}
               />
             ) : (
               <ConfigSectionFields

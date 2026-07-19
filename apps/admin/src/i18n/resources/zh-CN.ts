@@ -1951,6 +1951,66 @@ export const zhCN = {
   'settings.meta.validation.needKey': '请输入字段 Key',
   'settings.meta.validation.needLabel': '请输入显示名称',
   'settings.meta.validation.needOption': '请至少添加一个选项',
+  'settings.membership.apiKey.description':
+    '在所选支付平台的开发者设置中创建 API Key。已保存的密钥不会再次显示。',
+  'settings.membership.apiKey.label': 'API Key',
+  'settings.membership.apiKey.placeholder': '粘贴支付平台 API Key',
+  'settings.membership.configuration.complete': '可以启用',
+  'settings.membership.configuration.incomplete':
+    '完成必要配置后才能启用付费会员。',
+  'settings.membership.configuration.progress':
+    '已完成 {complete}/{total} 个必要步骤',
+  'settings.membership.credential.configured': '已配置',
+  'settings.membership.credential.keep': '留空将保留已经保存的值。',
+  'settings.membership.enable.description':
+    '完成全部必要步骤后，将已配置的订阅套餐展示给读者。',
+  'settings.membership.enable.label': '启用付费会员',
+  'settings.membership.environment.label': '运行环境',
+  'settings.membership.environment.live': '正式环境',
+  'settings.membership.environment.description':
+    'API Key、商品 ID 与 Webhook Secret 必须全部来自同一个测试或正式环境。',
+  'settings.membership.environment.test': '测试环境',
+  'settings.membership.products.description':
+    '先在支付平台创建周期订阅商品，再把各自的 Product ID 复制到这里；月付和年付至少配置一个。',
+  'settings.membership.products.docs': '查看订阅商品配置说明',
+  'settings.membership.products.monthly.description':
+    '选择 Subscription 类型，并设置为每 1 个月重复扣款。',
+  'settings.membership.products.monthly.label': '月付商品 ID',
+  'settings.membership.products.monthly.placeholder': 'prod_monthly…',
+  'settings.membership.products.title': '订阅商品',
+  'settings.membership.products.yearly.description':
+    '选择 Subscription 类型，并设置为每 1 年重复扣款。',
+  'settings.membership.products.yearly.label': '年付商品 ID',
+  'settings.membership.products.yearly.placeholder': 'prod_yearly…',
+  'settings.membership.provider.description':
+    '支付平台负责收银台、周期扣款与订阅生命周期事件。',
+  'settings.membership.provider.label': '支付平台',
+  'settings.membership.provider.notSupported':
+    '{provider} 尚未实现运行时适配器。可以保存配置，但暂时无法发起结账。',
+  'settings.membership.provider.soon': '暂不可用',
+  'settings.membership.provider.title': '支付平台连接',
+  'settings.membership.setup.apiKey': 'API Key',
+  'settings.membership.setup.product': '至少一个订阅商品',
+  'settings.membership.setup.provider': '平台适配器可用',
+  'settings.membership.setup.webhookKey': 'Webhook Signing Key',
+  'settings.membership.webhook.copyAria': '复制 Webhook Endpoint URL',
+  'settings.membership.webhook.copyFailed': '复制 Webhook URL 失败',
+  'settings.membership.webhook.copySuccess': 'Webhook URL 已复制',
+  'settings.membership.webhook.description':
+    '进入支付平台的 Developer → Webhooks，新增 Endpoint 时粘贴下面的公网 HTTPS 地址，并订阅列出的全部事件。',
+  'settings.membership.webhook.docs': '查看 Webhook 配置说明',
+  'settings.membership.webhook.endpointLabel': 'Endpoint URL',
+  'settings.membership.webhook.eventsDescription':
+    '请为这个 Endpoint 完整勾选以下订阅事件。',
+  'settings.membership.webhook.eventsTitle': '需要订阅的事件',
+  'settings.membership.webhook.publicHint':
+    '该域名来自当前管理后台连接的 API；它必须能够通过公网 HTTPS 访问。',
+  'settings.membership.webhook.signingKeyDescription':
+    '从这个 Webhook Endpoint 的详情页复制 Secret Key；它不是 API Key。',
+  'settings.membership.webhook.signingKeyLabel': 'Webhook Signing Key',
+  'settings.membership.webhook.signingKeyPlaceholder':
+    '粘贴该 Endpoint 的 Secret Key',
+  'settings.membership.webhook.title': 'Webhook 回调',
   'settings.oauth.action.save': '保存配置',
   'settings.oauth.action.validate': '验证连接',
   'settings.oauth.callbackCopyAria': '复制 Callback URL',

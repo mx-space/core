@@ -2051,6 +2051,67 @@ export const enUS = {
   'settings.meta.validation.needKey': 'Enter a field key',
   'settings.meta.validation.needLabel': 'Enter a display name',
   'settings.meta.validation.needOption': 'Add at least one option',
+  'settings.membership.apiKey.description':
+    'Create an API key in the selected provider dashboard. Saved keys remain hidden.',
+  'settings.membership.apiKey.label': 'API key',
+  'settings.membership.apiKey.placeholder': 'Paste the provider API key',
+  'settings.membership.configuration.complete': 'Ready to enable',
+  'settings.membership.configuration.incomplete':
+    'Complete the required setup before enabling memberships.',
+  'settings.membership.configuration.progress':
+    '{complete} of {total} required steps complete',
+  'settings.membership.credential.configured': 'Configured',
+  'settings.membership.credential.keep':
+    'Leave this field blank to keep the saved value.',
+  'settings.membership.enable.description':
+    'Publish configured subscription plans to readers after all required steps are complete.',
+  'settings.membership.enable.label': 'Enable paid membership',
+  'settings.membership.environment.label': 'Environment',
+  'settings.membership.environment.live': 'Live mode',
+  'settings.membership.environment.description':
+    'API keys, product IDs, and webhook secrets must all come from the same Test or Live environment.',
+  'settings.membership.environment.test': 'Test mode',
+  'settings.membership.products.description':
+    'Create recurring subscription products in the provider dashboard, then copy each Product ID here. At least one plan is required.',
+  'settings.membership.products.docs': 'Read the subscription guide',
+  'settings.membership.products.monthly.description':
+    'Use a Subscription product that repeats every 1 month.',
+  'settings.membership.products.monthly.label': 'Monthly product ID',
+  'settings.membership.products.monthly.placeholder': 'prod_monthly…',
+  'settings.membership.products.title': 'Subscription products',
+  'settings.membership.products.yearly.description':
+    'Use a Subscription product that repeats every 1 year.',
+  'settings.membership.products.yearly.label': 'Yearly product ID',
+  'settings.membership.products.yearly.placeholder': 'prod_yearly…',
+  'settings.membership.provider.description':
+    'The provider processes checkout, recurring billing, and subscription lifecycle events.',
+  'settings.membership.provider.label': 'Payment provider',
+  'settings.membership.provider.notSupported':
+    '{provider} does not have a runtime adapter yet. Its settings may be saved, but checkout remains unavailable.',
+  'settings.membership.provider.soon': 'not available yet',
+  'settings.membership.provider.title': 'Provider connection',
+  'settings.membership.setup.apiKey': 'API key',
+  'settings.membership.setup.product': 'At least one product',
+  'settings.membership.setup.provider': 'Supported provider',
+  'settings.membership.setup.webhookKey': 'Webhook signing key',
+  'settings.membership.webhook.copyAria': 'Copy webhook endpoint URL',
+  'settings.membership.webhook.copyFailed': 'Failed to copy webhook URL',
+  'settings.membership.webhook.copySuccess': 'Webhook URL copied',
+  'settings.membership.webhook.description':
+    'Open Developer → Webhooks in the provider dashboard, add this public HTTPS endpoint, then subscribe to every event listed below.',
+  'settings.membership.webhook.docs': 'Read the webhook guide',
+  'settings.membership.webhook.endpointLabel': 'Endpoint URL',
+  'settings.membership.webhook.eventsDescription':
+    'Select exactly these subscription events for the endpoint.',
+  'settings.membership.webhook.eventsTitle': 'Subscribed events',
+  'settings.membership.webhook.publicHint':
+    'The generated domain is the API currently connected to this admin. It must be publicly reachable over HTTPS.',
+  'settings.membership.webhook.signingKeyDescription':
+    'Copy the Secret Key from this specific webhook endpoint. It is different from the API key.',
+  'settings.membership.webhook.signingKeyLabel': 'Webhook signing key',
+  'settings.membership.webhook.signingKeyPlaceholder':
+    'Paste the endpoint Secret Key',
+  'settings.membership.webhook.title': 'Webhook delivery',
   'settings.oauth.action.save': 'Save config',
   'settings.oauth.action.validate': 'Validate connection',
   'settings.oauth.callbackCopyAria': 'Copy callback URL',

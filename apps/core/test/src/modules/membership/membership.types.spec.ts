@@ -5,9 +5,9 @@ import {
   resolveMembershipReturnUrl,
 } from '~/modules/membership/membership.types'
 
-const dodoCredentials = {
-  dodoApiKey: 'api-key',
-  dodoWebhookKey: 'webhook-key',
+const providerCredentials = {
+  apiKey: 'api-key',
+  webhookSigningKey: 'webhook-key',
 }
 
 describe('resolveMembershipAvailability', () => {
@@ -18,7 +18,7 @@ describe('resolveMembershipAvailability', () => {
         provider: 'dodo',
         monthlyProductId: 'm',
         yearlyProductId: 'y',
-        ...dodoCredentials,
+        ...providerCredentials,
       }),
     ).toEqual({ enabled: true, plans: ['monthly', 'yearly'] })
   })
@@ -29,7 +29,7 @@ describe('resolveMembershipAvailability', () => {
         enabled: true,
         provider: 'dodo',
         yearlyProductId: 'y',
-        ...dodoCredentials,
+        ...providerCredentials,
       }),
     ).toEqual({ enabled: true, plans: ['yearly'] })
   })
@@ -40,7 +40,7 @@ describe('resolveMembershipAvailability', () => {
         enabled: false,
         provider: 'dodo',
         monthlyProductId: 'm',
-        ...dodoCredentials,
+        ...providerCredentials,
       }),
     ).toEqual({ enabled: false, plans: [] })
     expect(
@@ -61,13 +61,13 @@ describe('resolveMembershipAvailability', () => {
     ).toEqual({ enabled: false, plans: [] })
   })
 
-  it('is disabled when a required Dodo credential is absent', () => {
+  it('is disabled when a required provider credential is absent', () => {
     expect(
       resolveMembershipAvailability({
         enabled: true,
         provider: 'dodo',
         monthlyProductId: 'm',
-        dodoWebhookKey: 'webhook-key',
+        webhookSigningKey: 'webhook-key',
       }),
     ).toEqual({ enabled: false, plans: [] })
     expect(
@@ -75,7 +75,7 @@ describe('resolveMembershipAvailability', () => {
         enabled: true,
         provider: 'dodo',
         monthlyProductId: 'm',
-        dodoApiKey: 'api-key',
+        apiKey: 'api-key',
       }),
     ).toEqual({ enabled: false, plans: [] })
   })

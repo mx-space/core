@@ -43,14 +43,13 @@ export function resolveMembershipAvailability(config: {
   provider?: string
   monthlyProductId?: string
   yearlyProductId?: string
-  dodoApiKey?: string
-  dodoWebhookKey?: string
+  apiKey?: string
+  webhookSigningKey?: string
 }): MembershipAvailability {
   const plans: MembershipPlan[] = []
   if (config.monthlyProductId) plans.push('monthly')
   if (config.yearlyProductId) plans.push('yearly')
-  const hasProviderCredentials =
-    config.provider === 'dodo' && !!config.dodoApiKey && !!config.dodoWebhookKey
+  const hasProviderCredentials = !!config.apiKey && !!config.webhookSigningKey
   const enabled =
     !!config.enabled &&
     !!config.provider &&

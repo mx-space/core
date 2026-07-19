@@ -154,6 +154,11 @@ export class ConfigsService implements OnModuleInit {
           field.value as Record<string, any>,
         )
         mergeStoredConfig(name, normalized)
+      } else if (name === 'membership') {
+        const normalized = this.normalizeMembershipConfig(
+          field.value as Record<string, any>,
+        )
+        mergeStoredConfig(name, normalized)
       } else {
         mergeStoredConfig(name, field.value)
       }
@@ -184,6 +189,21 @@ export class ConfigsService implements OnModuleInit {
       neteaseMusic: { enabled: true },
       qqMusic: { enabled: true },
     } as IConfig['thirdPartyServiceIntegration']
+  }
+
+  private normalizeMembershipConfig(
+    raw: Record<string, any>,
+  ): IConfig['membership'] {
+    const { dodoApiKey, dodoEnvironment, dodoWebhookKey, ...providerConfig } =
+      raw
+
+    return {
+      ...providerConfig,
+      apiKey: providerConfig.apiKey ?? dodoApiKey ?? '',
+      webhookSigningKey:
+        providerConfig.webhookSigningKey ?? dodoWebhookKey ?? '',
+      environment: providerConfig.environment ?? dodoEnvironment ?? 'live_mode',
+    } as IConfig['membership']
   }
 
   public async get<T extends keyof IConfig>(

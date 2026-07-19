@@ -130,11 +130,12 @@ The paywall touches many surfaces; coupling is contained by four rules:
 
 - Configs module (admin-editable, `apps/core/src/modules/configs/`) gains a
   `membership` section: `enabled`, `provider` (single choice),
-  `monthlyProductId`, `yearlyProductId`, `dodoApiKey`, `dodoWebhookKey`,
-  `dodoEnvironment` (`test_mode` | `live_mode`, defaults to `live_mode`).
-  There are no `DODO_*` environment variables — all Dodo settings live in
-  this section and are editable at runtime from the admin settings UI.
-  `dodoApiKey` and `dodoWebhookKey` use the same `field.password` helper as
+  `monthlyProductId`, `yearlyProductId`, `apiKey`, `webhookSigningKey`,
+  `environment` (`test_mode` | `live_mode`, defaults to `live_mode`).
+  Provider credentials live in this section and are editable at runtime from
+  the admin settings UI rather than through provider-specific environment
+  variables.
+  `apiKey` and `webhookSigningKey` use the same `field.password` helper as
   other secret fields (SMTP password, AI provider API keys): encrypted at
   rest, masked to empty string on read, and rendered as password inputs in
   the schema-driven admin settings form.
@@ -188,6 +189,17 @@ Truncation happens server-side; full content never leaves the server for
 unentitled requests.
 
 ## Admin UI
+
+### Membership settings
+
+`apps/admin/src/features/settings/` renders the `membership` config section
+with a dedicated guided editor rather than the generic schema field list. It
+shows configuration readiness, explains the provider environment and recurring
+product IDs, derives the public webhook endpoint from the admin's active API
+base, lists the exact subscription events required by the selected adapter, and
+links to the provider documentation. An owner-only status endpoint exposes only
+whether encrypted credentials exist so the editor can distinguish an omitted
+secret from an unconfigured secret without returning the credential value.
 
 ### Post editor
 

@@ -122,13 +122,13 @@ export class DodoProvider implements PaymentProviderAdapter {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
     }
 
-    if (!membershipConfig.dodoApiKey) {
+    if (!membershipConfig.apiKey) {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
     }
 
     const client = this.getClient(
-      membershipConfig.dodoApiKey,
-      membershipConfig.dodoEnvironment,
+      membershipConfig.apiKey,
+      membershipConfig.environment,
     )
 
     const session = await client.checkoutSessions.create({
@@ -154,11 +154,11 @@ export class DodoProvider implements PaymentProviderAdapter {
     if (cached && cached.expiresAt > Date.now()) return cached.value
 
     const membershipConfig = await this.configsService.get('membership')
-    if (!membershipConfig.dodoApiKey) return null
+    if (!membershipConfig.apiKey) return null
 
     const client = this.getClient(
-      membershipConfig.dodoApiKey,
-      membershipConfig.dodoEnvironment,
+      membershipConfig.apiKey,
+      membershipConfig.environment,
     )
 
     let value: NormalizedPlanPricing | null = null
@@ -202,13 +202,13 @@ export class DodoProvider implements PaymentProviderAdapter {
     headers: Record<string, string>,
   ): Promise<VerifiedBillingEvent> {
     const membershipConfig = await this.configsService.get('membership')
-    if (!membershipConfig.dodoWebhookKey) {
+    if (!membershipConfig.webhookSigningKey) {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
     }
 
     const payload =
       typeof rawBody === 'string' ? rawBody : rawBody.toString('utf8')
-    const webhook = new Webhook(membershipConfig.dodoWebhookKey)
+    const webhook = new Webhook(membershipConfig.webhookSigningKey)
 
     let event: DodoSubscriptionEvent
     try {

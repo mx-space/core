@@ -51,6 +51,49 @@ describe('ConfigsService', () => {
     )
   })
 
+  it('migrates legacy Dodo credential names into provider-neutral fields', async () => {
+    const redisClient = {
+      set: vi.fn().mockResolvedValue('OK'),
+    }
+    const redisService = {
+      getClient: vi.fn(() => redisClient),
+      waitForReady: vi.fn().mockResolvedValue(undefined),
+    }
+    const optionsRepository = {
+      findAll: vi.fn().mockResolvedValue([
+        {
+          name: 'membership',
+          value: {
+            enabled: true,
+            provider: 'dodo',
+            dodoApiKey: 'legacy-api-key',
+            dodoWebhookKey: 'legacy-webhook-key',
+            dodoEnvironment: 'test_mode',
+          },
+        },
+      ]),
+    }
+
+    const service = new ConfigsService(
+      optionsRepository as any,
+      redisService as any,
+      {} as any,
+      { emit: vi.fn() } as any,
+    )
+
+    await service.onModuleInit()
+
+    const cachedConfig = JSON.parse(redisClient.set.mock.calls[0][1])
+    expect(cachedConfig.membership).toMatchObject({
+      apiKey: 'legacy-api-key',
+      environment: 'test_mode',
+      webhookSigningKey: 'legacy-webhook-key',
+    })
+    expect(cachedConfig.membership).not.toHaveProperty('dodoApiKey')
+    expect(cachedConfig.membership).not.toHaveProperty('dodoWebhookKey')
+    expect(cachedConfig.membership).not.toHaveProperty('dodoEnvironment')
+  })
+
   it('waits for redis before reading config cache', async () => {
     const initReady = Promise.resolve()
     const readReady = createDeferred()

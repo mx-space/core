@@ -149,8 +149,8 @@ const membershipConfig: Record<string, unknown> = {
   provider: 'dodo',
   monthlyProductId: 'prod_monthly',
   yearlyProductId: 'prod_yearly',
-  dodoApiKey: 'api-key',
-  dodoWebhookKey: 'webhook-key',
+  apiKey: 'api-key',
+  webhookSigningKey: 'webhook-key',
 }
 
 const configsServiceMock = {

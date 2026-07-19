@@ -1,4 +1,11 @@
-import { ListPlus, Mail, Settings, Shield, User } from 'lucide-react'
+import {
+  CreditCard,
+  ListPlus,
+  Mail,
+  Settings,
+  Shield,
+  User,
+} from 'lucide-react'
 
 import type { ConfigFormField } from '~/api/options'
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
@@ -16,6 +23,7 @@ type Translator = (key: TranslationKey, values?: TranslationValues) => string
 export function getGroupIcon(icon: string) {
   const iconMap: Record<string, typeof User> = {
     bell: Mail,
+    'credit-card': CreditCard,
     database: Settings,
     globe: Settings,
     search: Settings,

@@ -34,9 +34,9 @@ describe('DodoProvider', () => {
         provider: 'dodo',
         monthlyProductId: 'prod_monthly',
         yearlyProductId: 'prod_yearly',
-        dodoApiKey: 'test-dodo-api-key',
-        dodoWebhookKey: 'test-dodo-webhook-key',
-        dodoEnvironment: 'test_mode',
+        apiKey: 'test-dodo-api-key',
+        webhookSigningKey: 'test-dodo-webhook-key',
+        environment: 'test_mode',
       }),
     }
   })
@@ -112,15 +112,15 @@ describe('DodoProvider', () => {
       )
     })
 
-    it('throws MEMBERSHIP_PROVIDER_NOT_CONFIGURED when dodoApiKey is empty', async () => {
+    it('throws MEMBERSHIP_PROVIDER_NOT_CONFIGURED when apiKey is empty', async () => {
       configsService.get.mockResolvedValue({
         enabled: true,
         provider: 'dodo',
         monthlyProductId: 'prod_monthly',
         yearlyProductId: 'prod_yearly',
-        dodoApiKey: '',
-        dodoWebhookKey: 'test-dodo-webhook-key',
-        dodoEnvironment: 'test_mode',
+        apiKey: '',
+        webhookSigningKey: 'test-dodo-webhook-key',
+        environment: 'test_mode',
       })
 
       const provider = new DodoProvider(configsService as any)
@@ -155,9 +155,9 @@ describe('DodoProvider', () => {
         provider: 'dodo',
         monthlyProductId: 'prod_monthly',
         yearlyProductId: 'prod_yearly',
-        dodoApiKey: 'rotated-dodo-api-key',
-        dodoWebhookKey: 'test-dodo-webhook-key',
-        dodoEnvironment: 'live_mode',
+        apiKey: 'rotated-dodo-api-key',
+        webhookSigningKey: 'test-dodo-webhook-key',
+        environment: 'live_mode',
       })
       await provider.createCheckout({
         reader: { id: 'reader-1' },
@@ -305,15 +305,15 @@ describe('DodoProvider', () => {
       expect(event.event.plan).toBe('yearly')
     })
 
-    it('throws MEMBERSHIP_PROVIDER_NOT_CONFIGURED when dodoWebhookKey is empty', async () => {
+    it('throws MEMBERSHIP_PROVIDER_NOT_CONFIGURED when webhookSigningKey is empty', async () => {
       configsService.get.mockResolvedValue({
         enabled: true,
         provider: 'dodo',
         monthlyProductId: 'prod_monthly',
         yearlyProductId: 'prod_yearly',
-        dodoApiKey: 'test-dodo-api-key',
-        dodoWebhookKey: '',
-        dodoEnvironment: 'test_mode',
+        apiKey: 'test-dodo-api-key',
+        webhookSigningKey: '',
+        environment: 'test_mode',
       })
 
       const provider = new DodoProvider(configsService as any)
