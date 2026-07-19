@@ -1,3 +1,16 @@
+# [13.15.0](https://github.com/mx-space/core/compare/v13.14.1...v13.15.0) (2026-07-19)
+
+
+### Bug Fixes
+
+* **ai:** curb zh→ja translationese in chunk translation prompt ([ef8d085](https://github.com/mx-space/core/commit/ef8d08503963a166487e93cb20bf3925238ac88c))
+* **ai:** stabilize translation editing ([1793aa3](https://github.com/mx-space/core/commit/1793aa3200f39321e5f707b274ca4e4d8829ce2a))
+
+
+### Features
+
+* paid articles via membership subscription ([#2769](https://github.com/mx-space/core/issues/2769)) ([04c082f](https://github.com/mx-space/core/commit/04c082f3faa8a97e44bd4ed3753abccb6d384f74))
+
 # [13.14.1](https://github.com/mx-space/core/compare/v13.14.0...v13.14.1) (2026-07-17)
 
 
