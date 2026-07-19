@@ -14,6 +14,9 @@ import {
   COMPANION_MEDIA_POSITION_TOLERANCE_MS,
   COMPANION_MEDIA_TEXT_MAX_SCALARS,
   COMPANION_MINIMUM_CLIENT_VERSION,
+  COMPANION_MOMENT_CONTENT_MAX_SCALARS,
+  COMPANION_MOMENT_SCHEMA,
+  COMPANION_MOMENT_SCHEMA_VERSION,
   COMPANION_PLAYER_DISPLAY_NAME_MAX_SCALARS,
   COMPANION_PRESENCE_LEASE_MAX_SECONDS,
   COMPANION_PRESENCE_LEASE_MIN_SECONDS,
@@ -72,6 +75,22 @@ const hasValidMediaArtworkURL = (value: string) => {
       parameters.length === 1 &&
       parameters[0]?.[0] === 'v' &&
       /^[\da-f]{64}$/.test(parameters[0]?.[1] ?? '')
+    )
+  } catch {
+    return false
+  }
+}
+
+const hasValidMomentArtworkURL = (value: string) => {
+  if (!hasValidHttpsURL(value)) return false
+  try {
+    const url = new URL(value)
+    const match = /\/([\da-f]{2})\/([\da-f]{64})\.png$/.exec(url.pathname)
+    return (
+      !url.search &&
+      !url.hash &&
+      match !== null &&
+      match[1] === match[2]?.slice(0, 2)
     )
   } catch {
     return false
@@ -400,6 +419,115 @@ export const CompanionPresenceRequestV2Schema = z
   })
   .strict()
 
+export const CompanionMomentRequestMetaV1Schema = z
+  .object({
+    schema: z.literal(COMPANION_MOMENT_SCHEMA),
+    schemaVersion: z.literal(COMPANION_MOMENT_SCHEMA_VERSION),
+    requestId: CompanionIdentifierSchema,
+    observedAt: CompanionWireTimestampSchema,
+  })
+  .strict()
+
+export const CompanionMomentPlaybackV1Schema = z
+  .object({
+    state: CompanionMediaPlaybackStateV2Schema,
+    durationMs: NullableNonNegativeSafeIntegerSchema,
+    positionMs: NullableNonNegativeSafeIntegerSchema,
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      value.durationMs !== null &&
+      value.positionMs !== null &&
+      value.positionMs > value.durationMs
+    ) {
+      addCustomIssue(
+        context,
+        ['positionMs'],
+        'Moment playback position cannot exceed its duration.',
+      )
+    }
+  })
+
+export const CompanionMomentArtworkV1Schema = z
+  .object({
+    url: normalizedUnicodeString(
+      'Moment artwork URL',
+      COMPANION_MEDIA_ARTWORK_URL_MAX_BYTES,
+    )
+      .refine(
+        (value) =>
+          Buffer.byteLength(value, 'utf8') <=
+          COMPANION_MEDIA_ARTWORK_URL_MAX_BYTES,
+        'Moment artwork URL exceeds its byte limit.',
+      )
+      .refine(
+        hasValidMomentArtworkURL,
+        'Moment artwork must be an immutable HTTPS SHA-256 PNG path.',
+      ),
+  })
+  .strict()
+
+export const CompanionMomentMediaV1Schema = z
+  .object({
+    kind: CompanionMediaKindV2Schema,
+    title: NullableMediaTextSchema,
+    artist: NullableMediaTextSchema,
+    album: NullableMediaTextSchema,
+    player: CompanionPlayerV2Schema.nullable(),
+    playback: CompanionMomentPlaybackV1Schema,
+    artwork: CompanionMomentArtworkV1Schema.nullable().optional().default(null),
+    link: CompanionMediaLinkV2Schema.nullable().optional().default(null),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.title === null && value.artist === null) {
+      addCustomIssue(
+        context,
+        ['title'],
+        'Moment media requires a title or artist.',
+      )
+    }
+  })
+
+export const CompanionMomentDataV1Schema = z
+  .object({
+    content: z
+      .string()
+      .refine(
+        (value) => value === value.trim(),
+        'Moment content must be trimmed.',
+      )
+      .refine(
+        (value) => value === value.normalize('NFC'),
+        'Moment content must use Unicode NFC normalization.',
+      )
+      .refine(
+        (value) =>
+          Array.from(value).length <= COMPANION_MOMENT_CONTENT_MAX_SCALARS,
+        'Moment content exceeds its Unicode scalar limit.',
+      ),
+    application: CompanionApplicationContextV2Schema.nullable(),
+    media: CompanionMomentMediaV1Schema.nullable(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (!value.content && value.application === null && value.media === null) {
+      addCustomIssue(
+        context,
+        ['content'],
+        'A moment requires text, application context, or media context.',
+      )
+    }
+  })
+
+export const CompanionMomentRequestV1Schema = z
+  .object({
+    meta: CompanionMomentRequestMetaV1Schema,
+    data: CompanionMomentDataV1Schema,
+  })
+  .strict()
+
 export const CompanionPresenceClearReasonV2Schema = z.enum([
   'paused',
   'sleep',
@@ -586,13 +714,13 @@ export const CompanionCapabilitiesV2Schema = z
 export const COMPANION_CAPABILITIES = CompanionCapabilitiesV2Schema.parse({
   minimumClientVersion: COMPANION_MINIMUM_CLIENT_VERSION,
   presenceSchemaVersions: [COMPANION_PRESENCE_SCHEMA_VERSION],
-  momentSchemaVersions: [],
+  momentSchemaVersions: [COMPANION_MOMENT_SCHEMA_VERSION],
   features: {
     liveDesk: true,
     mediaTimeline: true,
     mediaArtwork: true,
     mediaPlaybackLinks: true,
-    moments: false,
+    moments: true,
     readingSessions: false,
   },
   limits: {

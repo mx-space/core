@@ -42,7 +42,7 @@ export class CompanionPresenceExceptionFilter implements ExceptionFilter {
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR
     let code = 'COMPANION_INTERNAL_ERROR'
-    let message = 'Companion presence request failed.'
+    let message = 'Companion request failed.'
     let acceptedSequence: number | null = null
     let fields: string[] = []
     let retryAfterMs: number | null = null

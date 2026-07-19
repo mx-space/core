@@ -12,6 +12,7 @@ export const COMPANION_DEVICE_SCOPES = [
 
 export const DEFAULT_COMPANION_DEVICE_SCOPES = [
   'companion:presence:write',
+  'companion:moment:write',
 ] as const satisfies readonly CompanionDeviceScope[]
 
 export const CompanionDeviceErrorCode = {

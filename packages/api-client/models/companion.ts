@@ -1,4 +1,5 @@
 export type CompanionPresenceSchema = 'yohaku.companion.presence'
+export type CompanionMomentSchema = 'yohaku.companion.moment'
 
 export type LiveDeskAvailability = 'idle' | 'active'
 
@@ -30,7 +31,29 @@ export interface CompanionMediaContext {
     sampledAt: string
     rate: number
   }
+  artwork?: { url: string } | null
   link?: { url: string } | null
+}
+
+export interface CompanionMomentMediaContext {
+  kind: MediaKind
+  title: string | null
+  artist: string | null
+  album: string | null
+  player: { displayName: string } | null
+  playback: {
+    state: MediaPlaybackState
+    durationMs: number | null
+    positionMs: number | null
+  }
+  artwork?: { url: string } | null
+  link?: { url: string } | null
+}
+
+export interface CompanionMomentMutationResultV1 {
+  id: string
+  createdAt: string
+  url: string | null
 }
 
 export interface PublicMediaPresenceV2 {

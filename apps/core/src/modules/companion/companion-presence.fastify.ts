@@ -33,7 +33,7 @@ export const companionPresenceFastifyErrorHandler = (
       .send(
         createCompanionFailureResponse({
           code: 'COMPANION_MEDIA_TYPE_UNSUPPORTED',
-          message: 'Companion presence requests require application/json.',
+          message: 'Companion requests require application/json.',
         }),
       )
   }
@@ -45,7 +45,7 @@ export const companionPresenceFastifyErrorHandler = (
       .send(
         createCompanionFailureResponse({
           code: 'COMPANION_PAYLOAD_TOO_LARGE',
-          message: 'Companion presence payload exceeds the negotiated limit.',
+          message: 'Companion payload exceeds the negotiated limit.',
         }),
       )
   }

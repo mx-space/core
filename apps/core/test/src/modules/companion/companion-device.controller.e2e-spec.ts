@@ -21,7 +21,7 @@ describe('Companion device routes', () => {
     vi.clearAllMocks()
   })
 
-  it('requires an owner session to create a pairing and defaults to the minimum scope', async () => {
+  it('requires an owner session and grants both Live Desk and Moment publishing by default', async () => {
     service.createPairing.mockResolvedValue({
       pairingId: '018f3d68-0c82-7df5-8fb1-f07df2e3b16f',
       pairingCode: '01234-56789',
@@ -44,6 +44,7 @@ describe('Companion device routes', () => {
     expect(response.statusCode).toBe(201)
     expect(service.createPairing).toHaveBeenCalledWith('1', [
       'companion:presence:write',
+      'companion:moment:write',
     ])
     expect(response.json()).toMatchObject({
       data: {

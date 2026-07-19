@@ -3,6 +3,7 @@ import { mockResponse } from '~/__tests__/helpers/response'
 import { axiosAdaptor } from '~/adaptors/axios'
 import { CompanionController } from '~/controllers'
 import type {
+  CompanionMomentRequestV1,
   CompanionPresenceClearRequestV2,
   CompanionPresenceRequestV2,
 } from '~/dtos/companion'
@@ -228,6 +229,48 @@ describe('test Companion client', () => {
         projection: null,
       },
     })
+  })
+
+  test('POST /recently sends a stable moment request', async () => {
+    const request: CompanionMomentRequestV1 = {
+      meta: {
+        schema: 'yohaku.companion.moment',
+        schemaVersion: 1,
+        requestId: '5a7252b8-e260-4db8-b6f6-2f0b1083e034',
+        observedAt: '2026-07-16T12:00:03.000Z',
+      },
+      data: {
+        content: 'A concise progress note.',
+        application: {
+          displayName: 'Xcode',
+          activity: { key: 'editing', customLabel: null },
+          window: null,
+          icon: null,
+        },
+        media: null,
+      },
+    }
+
+    mockResponse(
+      '/companion/recently',
+      {
+        id: '123456789',
+        createdAt: '2026-07-16T12:00:03.180Z',
+        url: 'https://example.com/thinking/123456789',
+      },
+      'post',
+      request,
+    )
+
+    await expect(
+      client.companion.publishRecently(request, '1.7.3'),
+    ).resolves.toMatchObject({ id: '123456789' })
+    expect(axiosAdaptor.post).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: { [COMPANION_CLIENT_VERSION_HEADER]: '1.7.3' },
+      }),
+    )
   })
 
   test('GET /presence/public returns an initialized empty state', async () => {

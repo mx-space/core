@@ -1,6 +1,7 @@
 import {
   type ClaimCompanionPairingInput,
   COMPANION_CLIENT_VERSION_HEADER,
+  type CompanionMomentRequestV1,
   type CompanionPresenceClearRequestV2,
   type CompanionPresenceRequestV2,
   type CreateCompanionPairingInput,
@@ -16,6 +17,7 @@ import type {
   CompanionCapabilities,
   CompanionDevice,
   CompanionDeviceRevocationResult,
+  CompanionMomentMutationResultV1,
   CompanionPairingClaimResult,
   CompanionPairingResult,
   CompanionPresenceMutationResultV2,
@@ -104,6 +106,20 @@ export class CompanionController<ResponseWrapper> implements IController {
     CompanionResponseMetaV2
   > {
     return this.proxy.presence.clear.post<CompanionPresenceMutationResultV2>({
+      data: request,
+      headers: { [COMPANION_CLIENT_VERSION_HEADER]: clientVersion },
+    })
+  }
+
+  publishRecently(
+    request: CompanionMomentRequestV1,
+    clientVersion: string,
+  ): RequestProxyResultWithMeta<
+    CompanionMomentMutationResultV1,
+    ResponseWrapper,
+    CompanionResponseMetaV2
+  > {
+    return this.proxy.recently.post<CompanionMomentMutationResultV1>({
       data: request,
       headers: { [COMPANION_CLIENT_VERSION_HEADER]: clientVersion },
     })

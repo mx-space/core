@@ -17,7 +17,11 @@ import type { EnrichmentResult } from '../enrichment/enrichment.types'
 import { UrlExtractorService } from '../enrichment/url-extractor.service'
 import { RecentlyRepository } from './recently.repository'
 import { RecentlyAttitudeEnum, RecentlyTypeEnum } from './recently.schema'
-import { RecentlyModel, type RecentlyRow } from './recently.types'
+import {
+  type RecentlyCreateModel,
+  RecentlyModel,
+  type RecentlyRow,
+} from './recently.types'
 
 type EnrichmentMap = Record<string, EnrichmentResult>
 
@@ -204,9 +208,9 @@ export class RecentlyService {
     return rows
   }
 
-  async create(model: RecentlyModel) {
+  async create(model: RecentlyCreateModel) {
     let refType = model.refType
-    const refId = model.refId ?? (model as any).ref
+    const refId = model.refId ?? model.ref
     if (refId) {
       const existModel = await this.databaseService.findGlobalById(refId)
       if (!existModel || !existModel.type) {
@@ -221,6 +225,7 @@ export class RecentlyService {
     const withRef = await this.recentlyRepository.create({
       content,
       type: urls.length > 0 ? RecentlyTypeEnum.Link : RecentlyTypeEnum.Text,
+      metadata: model.metadata,
       refId,
       refType: refType as any,
     })

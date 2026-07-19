@@ -2,6 +2,8 @@ import type {
   CompanionApplicationContext,
   CompanionDeviceScope,
   CompanionMediaContext,
+  CompanionMomentMediaContext,
+  CompanionMomentSchema,
   CompanionPresenceSchema,
   LiveDeskAvailability,
 } from '../models/companion'
@@ -40,6 +42,24 @@ export interface CompanionPresenceDataV2 {
 
 export type CompanionPresenceRequestV2 =
   OrderedCompanionRequestV2<CompanionPresenceDataV2>
+
+export interface CompanionMomentRequestMetaV1 {
+  schema: CompanionMomentSchema
+  schemaVersion: 1
+  requestId: string
+  observedAt: string
+}
+
+export interface CompanionMomentDataV1 {
+  content: string
+  application: CompanionApplicationContext | null
+  media: CompanionMomentMediaContext | null
+}
+
+export interface CompanionMomentRequestV1 {
+  meta: CompanionMomentRequestMetaV1
+  data: CompanionMomentDataV1
+}
 
 export type CompanionPresenceClearReason =
   'paused' | 'sleep' | 'shutdown' | 'privacyChanged' | 'connectionRemoved'

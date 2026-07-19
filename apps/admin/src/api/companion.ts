@@ -97,6 +97,7 @@ export interface CompanionPublicPresenceResult {
 
 const LIVE_DESK_SCOPES = [
   'companion:presence:write',
+  'companion:moment:write',
 ] as const satisfies readonly CompanionDeviceScope[]
 
 export function getCompanionCapabilities() {

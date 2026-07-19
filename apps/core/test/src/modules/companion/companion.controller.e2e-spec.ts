@@ -19,10 +19,12 @@ describe('Companion capabilities', () => {
 
     const body = CompanionCapabilitiesResponseV2Schema.parse(response.json())
     expect(body.data.presenceSchemaVersions).toContain(2)
+    expect(body.data.momentSchemaVersions).toContain(1)
     expect(body.data.features).toEqual(COMPANION_CAPABILITIES.features)
     expect(body.data.features.mediaTimeline).toBe(true)
     expect(body.data.features.mediaArtwork).toBe(true)
     expect(body.data.features.mediaPlaybackLinks).toBe(true)
+    expect(body.data.features.moments).toBe(true)
     expect(body.data.limits.recommendedHeartbeatSeconds).toBeGreaterThanOrEqual(
       body.data.limits.presenceLeaseMinSeconds,
     )

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 
+import { RecentlyModule } from '../recently/recently.module'
 import { CompanionController } from './companion.controller'
 import { CompanionCredentialService } from './companion-credential.service'
 import { CompanionDeviceController } from './companion-device.controller'
@@ -7,6 +8,8 @@ import { CompanionDeviceGuard } from './companion-device.guard'
 import { CompanionDeviceReconciler } from './companion-device.reconciler'
 import { CompanionDeviceRepository } from './companion-device.repository'
 import { CompanionDeviceService } from './companion-device.service'
+import { CompanionMomentController } from './companion-moment.controller'
+import { CompanionMomentService } from './companion-moment.service'
 import { CompanionPresenceController } from './companion-presence.controller'
 import { CompanionPresenceReaper } from './companion-presence.reaper'
 import { CompanionPresenceStore } from './companion-presence.store'
@@ -20,6 +23,7 @@ import { COMPANION_PRESENCE_REVOCATION_PORT } from './companion-presence-revocat
   controllers: [
     CompanionController,
     CompanionDeviceController,
+    CompanionMomentController,
     CompanionPresenceController,
   ],
   providers: [
@@ -28,6 +32,7 @@ import { COMPANION_PRESENCE_REVOCATION_PORT } from './companion-presence-revocat
     CompanionDeviceReconciler,
     CompanionDeviceRepository,
     CompanionDeviceService,
+    CompanionMomentService,
     CompanionPresenceRateLimiter,
     CompanionPresenceTransportGuard,
     CompanionPresenceReaper,
@@ -44,5 +49,6 @@ import { COMPANION_PRESENCE_REVOCATION_PORT } from './companion-presence-revocat
     CompanionDeviceService,
     CompanionPresenceStore,
   ],
+  imports: [RecentlyModule],
 })
 export class CompanionModule {}

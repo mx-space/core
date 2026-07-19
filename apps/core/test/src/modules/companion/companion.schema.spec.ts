@@ -1,4 +1,5 @@
 import {
+  CompanionMomentRequestV1Schema,
   CompanionPresenceClearRequestV2Schema,
   CompanionPresenceRequestV2Schema,
   PublicLiveDeskStateV2Schema,
@@ -255,6 +256,63 @@ describe('CompanionPresenceClearRequestV2Schema', () => {
     }
 
     expect(CompanionPresenceClearRequestV2Schema.safeParse(clear).success).toBe(
+      false,
+    )
+  })
+})
+
+describe('CompanionMomentRequestV1Schema', () => {
+  const makeMoment = () => ({
+    meta: {
+      schema: 'yohaku.companion.moment',
+      schemaVersion: 1,
+      requestId: '01K0A5Q2R7Y5VXG4H7Q0F4M9J2',
+      observedAt: '2026-07-16T12:00:00.000Z',
+    },
+    data: {
+      content: '',
+      application: makeApplication(),
+      media: null,
+    },
+  })
+
+  it('accepts a context-only moment and rejects an entirely empty moment', () => {
+    const contextOnly = makeMoment()
+    const empty = structuredClone(contextOnly)
+    empty.data.application = null as any
+
+    expect(CompanionMomentRequestV1Schema.safeParse(contextOnly).success).toBe(
+      true,
+    )
+    expect(CompanionMomentRequestV1Schema.safeParse(empty).success).toBe(false)
+  })
+
+  it('accepts immutable hash-addressed artwork and rejects mutable artwork URLs', () => {
+    const immutable = makeMoment() as any
+    immutable.data.media = {
+      kind: 'music',
+      title: 'Track title',
+      artist: 'Artist',
+      album: null,
+      player: { displayName: 'Music' },
+      playback: {
+        state: 'paused',
+        durationMs: 100_000,
+        positionMs: 72_000,
+      },
+      artwork: {
+        url: `https://assets.example.com/recently/media-artwork/aa/${'a'.repeat(64)}.png`,
+      },
+      link: null,
+    }
+
+    expect(CompanionMomentRequestV1Schema.safeParse(immutable).success).toBe(
+      true,
+    )
+
+    immutable.data.media.artwork.url =
+      'https://assets.example.com/recently/media-artwork/current.png'
+    expect(CompanionMomentRequestV1Schema.safeParse(immutable).success).toBe(
       false,
     )
   })
