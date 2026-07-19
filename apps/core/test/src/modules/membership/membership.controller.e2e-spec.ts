@@ -71,11 +71,15 @@ const membershipConfig: {
   provider: string | undefined
   monthlyProductId: string
   yearlyProductId: string
+  dodoApiKey: string
+  dodoWebhookKey: string
 } = {
   enabled: true,
   provider: 'dodo',
   monthlyProductId: 'prod_monthly',
   yearlyProductId: 'prod_yearly',
+  dodoApiKey: 'api-key',
+  dodoWebhookKey: 'webhook-key',
 }
 
 const urlConfig: { webUrl: string | undefined } = { webUrl: undefined }
@@ -126,14 +130,18 @@ const verifyAndParseWebhookMock = vi.fn(
     }
     const body = JSON.parse(rawBody.toString('utf8'))
     return {
-      eventId: body.eventId,
-      provider: 'dodo',
-      type: body.type,
-      customerId: body.customerId,
-      subscriptionId: body.subscriptionId,
-      plan: body.plan,
-      currentPeriodEnd: new Date(body.currentPeriodEnd),
-      readerId: body.readerId,
+      event: {
+        eventId: body.eventId,
+        provider: 'dodo',
+        type: body.type,
+        customerId: body.customerId,
+        subscriptionId: body.subscriptionId,
+        plan: body.plan,
+        currentPeriodEnd: new Date(body.currentPeriodEnd),
+        readerId: body.readerId,
+      },
+      rawType: body.providerEventType ?? body.type,
+      rawPayload: body,
     }
   },
 )
@@ -325,6 +333,10 @@ describe('MembershipController (e2e)', () => {
 
       expect(res.statusCode).toBe(201)
       expect(createCheckoutMock).toHaveBeenCalled()
+      expect(
+        (await membershipRepository.findByReaderId(checkoutExpiredReaderId))
+          ?.providerSubscriptionId,
+      ).toBeNull()
     })
 
     it('rejects anonymous callers with 401', async () => {
@@ -491,6 +503,8 @@ describe('MembershipController (e2e)', () => {
       const payload = {
         eventId: 'evt_checkout_1',
         type: 'activated',
+        providerEventType: 'subscription.active',
+        timestamp: '2026-07-19T00:00:00.000Z',
         customerId: 'cus_1',
         subscriptionId: 'sub_1',
         plan: 'monthly',
@@ -518,6 +532,21 @@ describe('MembershipController (e2e)', () => {
       expect(second.statusCode).toBe(201)
       expect(second.json()).toMatchObject({
         data: { ok: true, applied: false },
+      })
+
+      const webhookEventRepository = proxy.app.get(
+        BillingWebhookEventRepository,
+      )
+      const auditRow = await webhookEventRepository.findByProviderAndEventId(
+        'dodo',
+        payload.eventId,
+      )
+      expect(auditRow).toMatchObject({
+        type: 'subscription.active',
+        payload: expect.objectContaining({
+          timestamp: '2026-07-19T00:00:00.000Z',
+          providerEventType: 'subscription.active',
+        }),
       })
 
       const status = await proxy.app.inject({

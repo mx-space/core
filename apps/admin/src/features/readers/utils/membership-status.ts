@@ -51,8 +51,7 @@ export function hasLiveProviderManagedMembership(
   membership: ReaderMembership | null | undefined,
 ): boolean {
   if (!membership || membership.provider === 'manual') return false
-  if (membership.status === 'active') return true
-  if (membership.status === 'on_hold') {
+  if (membership.status === 'active' || membership.status === 'on_hold') {
     return new Date(membership.currentPeriodEnd).getTime() > Date.now()
   }
   return false

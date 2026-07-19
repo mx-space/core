@@ -27,6 +27,8 @@ const createService = (
     provider: 'dodo',
     monthlyProductId: 'prod_monthly',
     yearlyProductId: 'prod_yearly',
+    dodoApiKey: 'api-key',
+    dodoWebhookKey: 'webhook-key',
   },
 ) => {
   const membershipRepository = createPgRepositoryMock<MembershipRepository>()
@@ -166,6 +168,8 @@ describe('EntitlementService.getAvailability', () => {
       enabled: true,
       provider: 'dodo',
       monthlyProductId: 'prod_monthly',
+      dodoApiKey: 'api-key',
+      dodoWebhookKey: 'webhook-key',
     })
     expect(await service.getAvailability()).toEqual({
       enabled: true,
@@ -178,6 +182,8 @@ describe('EntitlementService.getAvailability', () => {
       enabled: false,
       provider: 'dodo',
       monthlyProductId: 'prod_monthly',
+      dodoApiKey: 'api-key',
+      dodoWebhookKey: 'webhook-key',
     })
     expect(await service.getAvailability()).toEqual({
       enabled: false,

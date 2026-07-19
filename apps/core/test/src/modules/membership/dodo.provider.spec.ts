@@ -221,7 +221,7 @@ describe('DodoProvider', () => {
     }
 
     it('maps subscription.active to activated', async () => {
-      verifyMock.mockReturnValue({
+      const rawEvent = {
         type: 'subscription.active',
         business_id: 'biz_1',
         timestamp: '2026-01-01T00:00:00Z',
@@ -232,20 +232,25 @@ describe('DodoProvider', () => {
           next_billing_date: '2026-02-01T00:00:00Z',
           payment_frequency_interval: 'Month',
         },
-      })
+      }
+      verifyMock.mockReturnValue(rawEvent)
 
       const provider = new DodoProvider(configsService as any)
       const event = await provider.verifyAndParseWebhook('{}', headers)
 
       expect(event).toEqual({
-        eventId: 'evt_1',
-        provider: 'dodo',
-        type: 'activated',
-        customerId: 'cus_1',
-        subscriptionId: 'sub_1',
-        plan: 'monthly',
-        currentPeriodEnd: new Date('2026-02-01T00:00:00Z'),
-        readerId: 'reader-1',
+        event: {
+          eventId: 'evt_1',
+          provider: 'dodo',
+          type: 'activated',
+          customerId: 'cus_1',
+          subscriptionId: 'sub_1',
+          plan: 'monthly',
+          currentPeriodEnd: new Date('2026-02-01T00:00:00Z'),
+          readerId: 'reader-1',
+        },
+        rawType: 'subscription.active',
+        rawPayload: rawEvent,
       })
     })
 
@@ -272,8 +277,13 @@ describe('DodoProvider', () => {
       const provider = new DodoProvider(configsService as any)
       const event = await provider.verifyAndParseWebhook('{}', headers)
 
-      expect(event.type).toBe(expectedType)
-      expect(event.plan).toBe('yearly')
+      expect(event.event.type).toBe(expectedType)
+      expect(event.event.plan).toBe('yearly')
+      expect(event.rawType).toBe(dodoType)
+      expect(event.rawPayload).toMatchObject({
+        type: dodoType,
+        timestamp: '2026-01-01T00:00:00Z',
+      })
     })
 
     it('prefers the checkout metadata plan when the interval field is absent', async () => {
@@ -292,7 +302,7 @@ describe('DodoProvider', () => {
       const provider = new DodoProvider(configsService as any)
       const event = await provider.verifyAndParseWebhook('{}', headers)
 
-      expect(event.plan).toBe('yearly')
+      expect(event.event.plan).toBe('yearly')
     })
 
     it('throws MEMBERSHIP_PROVIDER_NOT_CONFIGURED when dodoWebhookKey is empty', async () => {

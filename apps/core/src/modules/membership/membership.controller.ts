@@ -93,11 +93,18 @@ export class MembershipController {
     const returnUrl = resolveMembershipReturnUrl(body.returnPath, webUrl)
 
     const adapter = this.providers.resolve(membershipConfig.provider)
-    return adapter.createCheckout({
+    const checkout = await adapter.createCheckout({
       reader: { id: user.id, email: user.email, name: user.name },
       plan: body.plan,
       returnUrl,
     })
+    if (existing) {
+      await this.membershipService.prepareForCheckout(
+        existing,
+        membershipConfig.provider,
+      )
+    }
+    return checkout
   }
 
   @Get('/plans')

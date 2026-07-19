@@ -34,7 +34,7 @@ export class MembershipController<ResponseWrapper> implements IController {
 
   checkout(plan: MembershipPlan, returnPath?: string) {
     return this.proxy.checkout.post<MembershipCheckoutResult>({
-      data: { plan, returnPath },
+      data: returnPath === undefined ? { plan } : { plan, returnPath },
     })
   }
 

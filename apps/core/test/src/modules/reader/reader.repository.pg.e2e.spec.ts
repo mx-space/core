@@ -75,7 +75,7 @@ describe('ReaderRepository membership summary + filter (real PG)', () => {
         provider: 'manual',
         plan: 'yearly',
         status: 'cancelled',
-        currentPeriodEnd: future,
+        currentPeriodEnd: past,
       },
       {
         id: snowflake.nextId(),

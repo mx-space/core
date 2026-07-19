@@ -10,6 +10,7 @@ import type {
   NormalizedBillingEvent,
   NormalizedPlanPricing,
   PaymentProviderAdapter,
+  VerifiedBillingEvent,
 } from './provider.interface'
 
 const PRICING_TTL_MS = 10 * 60 * 1000
@@ -199,7 +200,7 @@ export class DodoProvider implements PaymentProviderAdapter {
   async verifyAndParseWebhook(
     rawBody: Buffer | string,
     headers: Record<string, string>,
-  ): Promise<NormalizedBillingEvent> {
+  ): Promise<VerifiedBillingEvent> {
     const membershipConfig = await this.configsService.get('membership')
     if (!membershipConfig.dodoWebhookKey) {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
@@ -227,14 +228,18 @@ export class DodoProvider implements PaymentProviderAdapter {
     }
 
     return {
-      eventId: headers['webhook-id'],
-      provider: 'dodo',
-      type,
-      customerId: event.data.customer.customer_id,
-      subscriptionId: event.data.subscription_id,
-      plan: planFromEvent(event),
-      currentPeriodEnd: new Date(event.data.next_billing_date),
-      readerId,
+      event: {
+        eventId: headers['webhook-id'],
+        provider: 'dodo',
+        type,
+        customerId: event.data.customer.customer_id,
+        subscriptionId: event.data.subscription_id,
+        plan: planFromEvent(event),
+        currentPeriodEnd: new Date(event.data.next_billing_date),
+        readerId,
+      },
+      rawType: event.type,
+      rawPayload: event,
     }
   }
 }

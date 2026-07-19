@@ -17,6 +17,21 @@ describe('test Membership client', () => {
     expect(data).toEqual({ checkoutUrl: mocked.checkout_url })
   })
 
+  test('POST /membership/checkout with a return path', async () => {
+    const mocked = mockResponse(
+      '/membership/checkout',
+      { checkout_url: 'https://pay.example.com/session/return' },
+      'post',
+      { plan: 'yearly', returnPath: '/posts/member-only' },
+    )
+
+    const data = await client.membership.checkout(
+      'yearly',
+      '/posts/member-only',
+    )
+    expect(data).toEqual({ checkoutUrl: mocked.checkout_url })
+  })
+
   test('GET /membership/status returns active membership', async () => {
     const mocked = mockResponse('/membership/status', {
       status: 'active',

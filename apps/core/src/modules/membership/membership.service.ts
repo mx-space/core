@@ -5,8 +5,15 @@ import type { EntityId } from '~/shared/id/entity-id'
 
 import { BillingWebhookEventRepository } from './billing-webhook-event.repository'
 import { MembershipRepository } from './membership.repository'
-import type { MembershipPlan, MembershipRow } from './membership.types'
-import type { NormalizedBillingEvent } from './providers/provider.interface'
+import type {
+  MembershipPlan,
+  MembershipProvider,
+  MembershipRow,
+} from './membership.types'
+import type {
+  NormalizedBillingEvent,
+  VerifiedBillingEvent,
+} from './providers/provider.interface'
 
 const isLiveProviderSubscription = (row: MembershipRow): boolean => {
   if (row.provider === 'manual') return false
@@ -32,13 +39,14 @@ export class MembershipService {
   }
 
   async applyEvent(
-    event: NormalizedBillingEvent,
+    verifiedEvent: VerifiedBillingEvent,
   ): Promise<{ applied: boolean }> {
+    const { event, rawPayload, rawType } = verifiedEvent
     const webhookEventRow = await this.billingWebhookEventRepository.create({
       provider: event.provider,
       eventId: event.eventId,
-      type: event.type,
-      payload: event,
+      type: rawType,
+      payload: rawPayload,
     })
 
     if (!webhookEventRow) {
@@ -49,30 +57,43 @@ export class MembershipService {
         )
       if (!existingRow || existingRow.processedAt) return { applied: false }
 
-      await this.applyMembershipState(event)
+      const applied = await this.applyMembershipState(event)
       await this.billingWebhookEventRepository.markProcessed(
         existingRow.id,
         new Date(),
       )
-      return { applied: true }
+      return { applied }
     }
 
-    await this.applyMembershipState(event)
+    const applied = await this.applyMembershipState(event)
     await this.billingWebhookEventRepository.markProcessed(
       webhookEventRow.id,
       new Date(),
     )
 
-    return { applied: true }
+    return { applied }
   }
 
   private async applyMembershipState(
     event: NormalizedBillingEvent,
-  ): Promise<void> {
-    const existing =
-      (await this.membershipRepository.findByProviderSubscriptionId(
-        event.subscriptionId,
-      )) ?? (await this.membershipRepository.findByReaderId(event.readerId))
+  ): Promise<boolean> {
+    let existing = await this.membershipRepository.findByProviderSubscriptionId(
+      event.subscriptionId,
+    )
+
+    if (!existing) {
+      const byReader = await this.membershipRepository.findByReaderId(
+        event.readerId,
+      )
+      if (byReader) {
+        const canBindInitialSubscription =
+          byReader.provider === event.provider &&
+          byReader.providerSubscriptionId === null &&
+          event.type === 'activated'
+        if (!canBindInitialSubscription) return false
+        existing = byReader
+      }
+    }
 
     if (event.type === 'plan_changed') {
       if (existing && event.plan) {
@@ -80,7 +101,7 @@ export class MembershipService {
           plan: event.plan,
         })
       }
-      return
+      return true
     }
 
     const status =
@@ -99,7 +120,7 @@ export class MembershipService {
         status,
         currentPeriodEnd: event.currentPeriodEnd,
       })
-      return
+      return true
     }
 
     await this.membershipRepository.create({
@@ -110,6 +131,21 @@ export class MembershipService {
       plan: event.plan ?? 'monthly',
       status,
       currentPeriodEnd: event.currentPeriodEnd,
+    })
+    return true
+  }
+
+  async prepareForCheckout(
+    membership: MembershipRow,
+    provider: MembershipProvider,
+  ): Promise<void> {
+    if (isLiveProviderSubscription(membership)) return
+
+    await this.membershipRepository.update(membership.id, {
+      provider,
+      providerCustomerId: null,
+      providerSubscriptionId: null,
+      status: 'expired',
     })
   }
 

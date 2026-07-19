@@ -83,16 +83,22 @@ export class HttpCacheInterceptor implements NestInterceptor {
         ),
       ])
 
-      if (value) {
+      const hasSafeCachedValue = !!value && !this.isUnsafeForSharedCache(value)
+
+      if (hasSafeCachedValue) {
         this.logger.debug(`hit cache:${key}`)
         this.setCacheHeader(res, ttl)
       }
 
-      return value
+      return hasSafeCachedValue
         ? of(value)
         : call$.pipe(
             tap((response) => {
-              if (response && !this.isEntitledFullContent(response)) {
+              if (response && this.isUnsafeForSharedCache(response)) {
+                this.setPrivateCacheHeader(res)
+                return
+              }
+              if (response) {
                 this.cacheManager.set(key, response, ttl * 1000)
               }
               this.setCacheHeader(res, ttl)
@@ -104,8 +110,13 @@ export class HttpCacheInterceptor implements NestInterceptor {
     }
   }
 
-  private isEntitledFullContent(response: any): boolean {
-    return response?.meta?.paywall?.locked === false
+  private isUnsafeForSharedCache(response: any): boolean {
+    if (response?.meta?.paywall?.locked === false) return true
+
+    return (
+      response?.data?.isPremium === true &&
+      response?.meta?.paywall?.locked !== true
+    )
   }
 
   private setPrivateCacheHeader(res: FastifyReply) {

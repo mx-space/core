@@ -193,6 +193,55 @@ describe('HttpCacheInterceptor entitlement-keyed caching', () => {
     expect(store.size).toBe(0)
   })
 
+  it('keeps an unguarded premium response out of shared caches when membership is unavailable', async () => {
+    const store = new Map<string, unknown>()
+    const { interceptor } = createInterceptor(store)
+    const reply = createReply()
+    const premiumResponse = {
+      data: { isPremium: true, title: 'Full premium content' },
+      meta: {},
+    }
+
+    const result = await firstValueFrom(
+      (await interceptor.intercept(
+        createContext(baseRequest(), reply),
+        createHandler(premiumResponse),
+      )) as any,
+    )
+
+    expect(result).toEqual(premiumResponse)
+    expect(store.size).toBe(0)
+    expect(reply.headers['cache-control']).toContain('private')
+    expect(reply.headers['cdn-cache-control']).toContain('private')
+  })
+
+  it('does not replay an unguarded premium response left by an earlier configuration', async () => {
+    const stalePremiumResponse = {
+      data: { isPremium: true, title: 'Full premium content' },
+      meta: {},
+    }
+    const store = new Map<string, unknown>([
+      ['mx-api-cache:/posts/paywalled-post', stalePremiumResponse],
+    ])
+    const { interceptor } = createInterceptor(store)
+    const teaserResponse = {
+      data: { isPremium: true, title: 'Teaser' },
+      meta: { paywall: { locked: true } },
+    }
+    const handler = vi.fn(() => of(teaserResponse))
+
+    const result = await firstValueFrom(
+      (await interceptor.intercept(
+        createContext(baseRequest(), createReply()),
+        { handle: handler },
+      )) as any,
+    )
+
+    expect(handler).toHaveBeenCalled()
+    expect(result).toEqual(teaserResponse)
+    expect([...store.values()]).toContainEqual(teaserResponse)
+  })
+
   it('sends private cache-control headers for any reader-identified request regardless of route', async () => {
     const store = new Map<string, unknown>()
     const { interceptor, cacheManager } = createInterceptor(store)

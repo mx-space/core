@@ -5,7 +5,10 @@ import type { BillingWebhookEventRepository } from '~/modules/membership/billing
 import type { MembershipRepository } from '~/modules/membership/membership.repository'
 import { MembershipService } from '~/modules/membership/membership.service'
 import type { MembershipRow } from '~/modules/membership/membership.types'
-import type { NormalizedBillingEvent } from '~/modules/membership/providers/provider.interface'
+import type {
+  NormalizedBillingEvent,
+  VerifiedBillingEvent,
+} from '~/modules/membership/providers/provider.interface'
 
 const createMembership = (
   overrides: Partial<MembershipRow> = {},
@@ -25,16 +28,24 @@ const createMembership = (
 
 const createEvent = (
   overrides: Partial<NormalizedBillingEvent> = {},
-): NormalizedBillingEvent => ({
-  eventId: 'evt_1',
-  provider: 'dodo',
-  type: 'activated',
-  customerId: 'cus_1',
-  subscriptionId: 'sub_1',
-  plan: 'monthly',
-  currentPeriodEnd: new Date(now.getTime() + 1000 * 60 * 60),
-  readerId: 'reader-1',
-  ...overrides,
+): VerifiedBillingEvent => ({
+  event: {
+    eventId: 'evt_1',
+    provider: 'dodo',
+    type: 'activated',
+    customerId: 'cus_1',
+    subscriptionId: 'sub_1',
+    plan: 'monthly',
+    currentPeriodEnd: new Date(now.getTime() + 1000 * 60 * 60),
+    readerId: 'reader-1',
+    ...overrides,
+  },
+  rawType: 'subscription.active',
+  rawPayload: {
+    type: 'subscription.active',
+    timestamp: '2026-07-19T00:00:00.000Z',
+    data: { subscription_id: overrides.subscriptionId ?? 'sub_1' },
+  },
 })
 
 const createService = () => {
@@ -154,8 +165,11 @@ describe('MembershipService', () => {
       expect(billingWebhookEventRepository.create).toHaveBeenCalledWith({
         provider: 'dodo',
         eventId: 'evt_1',
-        type: 'activated',
-        payload: expect.objectContaining({ eventId: 'evt_1' }),
+        type: 'subscription.active',
+        payload: expect.objectContaining({
+          type: 'subscription.active',
+          timestamp: '2026-07-19T00:00:00.000Z',
+        }),
       })
       expect(membershipRepository.create).toHaveBeenCalled()
       expect(billingWebhookEventRepository.markProcessed).toHaveBeenCalledWith(
@@ -252,6 +266,70 @@ describe('MembershipService', () => {
 
       expect(membershipRepository.update).not.toHaveBeenCalled()
       expect(membershipRepository.create).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      {
+        name: 'a replacement provider subscription',
+        membership: createMembership({
+          providerSubscriptionId: 'sub_current',
+          status: 'active',
+        }),
+      },
+      {
+        name: 'a manual grant',
+        membership: createMembership({
+          provider: 'manual',
+          providerCustomerId: null,
+          providerSubscriptionId: null,
+        }),
+      },
+    ])(
+      'rejects a stale cancellation when the reader now has $name',
+      async ({ membership }) => {
+        const { service, membershipRepository } = createService()
+        membershipRepository.findByReaderId.mockResolvedValue(membership)
+
+        const result = await service.applyEvent(
+          createEvent({
+            eventId: 'evt_old_cancel',
+            type: 'cancelled',
+            subscriptionId: 'sub_old',
+          }),
+        )
+
+        expect(result).toEqual({ applied: false })
+        expect(membershipRepository.update).not.toHaveBeenCalled()
+        expect(membershipRepository.create).not.toHaveBeenCalled()
+      },
+    )
+
+    it('binds an activation to the provider row prepared for a replacement checkout', async () => {
+      const { service, membershipRepository } = createService()
+      const prepared = createMembership({
+        providerSubscriptionId: null,
+        status: 'expired',
+        currentPeriodEnd: new Date(now.getTime() - 1000),
+      })
+      membershipRepository.findByReaderId.mockResolvedValue(prepared)
+
+      const newPeriodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+      const result = await service.applyEvent(
+        createEvent({
+          subscriptionId: 'sub_replacement',
+          currentPeriodEnd: newPeriodEnd,
+        }),
+      )
+
+      expect(result).toEqual({ applied: true })
+      expect(membershipRepository.update).toHaveBeenCalledWith(
+        prepared.id,
+        expect.objectContaining({
+          providerSubscriptionId: 'sub_replacement',
+          status: 'active',
+          currentPeriodEnd: newPeriodEnd,
+        }),
+      )
     })
   })
 

@@ -11,6 +11,12 @@ export interface NormalizedBillingEvent {
   readerId: string
 }
 
+export interface VerifiedBillingEvent {
+  event: NormalizedBillingEvent
+  rawType: string
+  rawPayload: unknown
+}
+
 export interface NormalizedPlanPricing {
   amount: number
   currency: string
@@ -30,7 +36,7 @@ export interface PaymentProviderAdapter {
   verifyAndParseWebhook: (
     rawBody: Buffer | string,
     headers: Record<string, string>,
-  ) => Promise<NormalizedBillingEvent>
+  ) => Promise<VerifiedBillingEvent>
 
   getPortalUrl?: (customerId: string) => Promise<string>
 }

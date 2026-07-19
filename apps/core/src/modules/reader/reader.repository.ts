@@ -224,8 +224,11 @@ export class ReaderRepository extends BaseRepository {
         case 'expired': {
           conditions.push(
             or(
-              lte(memberships.currentPeriodEnd, now),
               eq(memberships.status, 'expired'),
+              and(
+                inArray(memberships.status, ['active', 'on_hold']),
+                lte(memberships.currentPeriodEnd, now),
+              ),
             )!,
           )
           break
