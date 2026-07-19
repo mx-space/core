@@ -1,3 +1,10 @@
+## [13.15.1](https://github.com/mx-space/core/compare/v13.15.0...v13.15.1) (2026-07-19)
+
+
+### Bug Fixes
+
+* **membership:** guide payment provider setup ([c13093f](https://github.com/mx-space/core/commit/c13093f6893646e6486063d0d87c3ab9472ee1c6))
+
 # [13.15.0](https://github.com/mx-space/core/compare/v13.14.1...v13.15.0) (2026-07-19)
 
 
