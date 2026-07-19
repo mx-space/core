@@ -1,3 +1,10 @@
+## [13.16.1](https://github.com/mx-space/core/compare/v13.16.0...v13.16.1) (2026-07-19)
+
+
+### Bug Fixes
+
+* **ai:** omit reasoning param for OpenRouter mandatory-reasoning models ([e899ef0](https://github.com/mx-space/core/commit/e899ef0899bbb70298380ed292382460004e5278))
+
 # [13.16.0](https://github.com/mx-space/core/compare/v13.15.1...v13.16.0) (2026-07-19)
 
 
