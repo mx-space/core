@@ -17,6 +17,7 @@ import { CommentController } from '~/modules/comment/comment.controller'
 import { CommentLifecycleService } from '~/modules/comment/comment.lifecycle.service'
 import { CommentService } from '~/modules/comment/comment.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { ReaderService } from '~/modules/reader/reader.service'
 
 import {
@@ -169,6 +170,15 @@ const readerServiceProvider = {
   },
 }
 
+const entitlementServiceProvider = {
+  provide: EntitlementService,
+  useValue: {
+    async getActiveMemberIds() {
+      return new Set<string>()
+    },
+  },
+}
+
 // `pin: boolean` is the new PG-shape replacement for the legacy `pin: Date`
 // field. The legacy-key guard must allow it.
 const ALLOWED_LEGACY_KEYS = ['pin']
@@ -210,6 +220,7 @@ describe('CommentController admin contract (e2e)', () => {
       lifecycleProvider,
       configsProvider,
       readerServiceProvider,
+      entitlementServiceProvider,
       ...eventEmitterProvider,
     ],
   })
