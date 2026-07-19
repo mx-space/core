@@ -1,3 +1,10 @@
+# [13.16.0](https://github.com/mx-space/core/compare/v13.15.1...v13.16.0) (2026-07-19)
+
+
+### Features
+
+* **companion:** publish moments to recently ([87ae308](https://github.com/mx-space/core/commit/87ae308e5f54199b4fa65cdc849e643b141d2254))
+
 ## [13.15.1](https://github.com/mx-space/core/compare/v13.15.0...v13.15.1) (2026-07-19)
 
 
@@ -18,7 +25,7 @@
 
 * paid articles via membership subscription ([#2769](https://github.com/mx-space/core/issues/2769)) ([04c082f](https://github.com/mx-space/core/commit/04c082f3faa8a97e44bd4ed3753abccb6d384f74))
 
-# [13.14.1](https://github.com/mx-space/core/compare/v13.14.0...v13.14.1) (2026-07-17)
+## [13.14.1](https://github.com/mx-space/core/compare/v13.14.0...v13.14.1) (2026-07-17)
 
 
 ### Features
@@ -32,7 +39,7 @@
 
 * **companion:** support Live Desk artwork ([1af22ad](https://github.com/mx-space/core/commit/1af22adac0c6d997cbd916ea13d5ddfe2d35d583))
 
-# [13.13.1](https://github.com/mx-space/core/compare/v13.13.0...v13.13.1) (2026-07-17)
+## [13.13.1](https://github.com/mx-space/core/compare/v13.13.0...v13.13.1) (2026-07-16)
 
 
 ### Bug Fixes
