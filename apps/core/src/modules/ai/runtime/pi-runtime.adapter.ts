@@ -200,15 +200,27 @@ export class PiRuntimeAdapter implements IModelRuntime {
       baseUrl && this.api === 'openai-completions' && isNonOpenAIHost(baseUrl)
         ? { supportsStore: false }
         : undefined
+    // OpenRouter rejects `reasoning: { effort: "none" }` on models whose
+    // reasoning is mandatory (e.g. Gemini 3.1 Pro); marking `off` unsupported
+    // makes pi omit the reasoning param instead of asking to disable it
+    const markReasoningOffUnsupported = (model: Model<Api>): Model<Api> =>
+      model.reasoning &&
+      (model.compat as { thinkingFormat?: string } | undefined)
+        ?.thinkingFormat === 'openrouter'
+        ? {
+            ...model,
+            thinkingLevelMap: { ...model.thinkingLevelMap, off: null },
+          }
+        : model
     try {
       const registered = getBuiltinModel(
         this.piProviderId as never,
         modelId as never,
       ) as Model<Api> | undefined
       if (registered) {
-        if (!baseUrl) return registered
+        if (!baseUrl) return markReasoningOffUnsupported(registered)
 
-        return {
+        return markReasoningOffUnsupported({
           ...registered,
           api: this.api,
           provider: this.piProviderId,
@@ -216,7 +228,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
           compat: compatOverride
             ? { ...registered.compat, ...compatOverride }
             : registered.compat,
-        } as Model<Api>
+        } as Model<Api>)
       }
     } catch {
       // miss falls through to custom literal
