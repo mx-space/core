@@ -81,6 +81,14 @@ export class MembershipController {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
     }
 
+    const existing = await this.membershipService.getByReaderId(user.id)
+    if (existing) {
+      const status = effectiveMembershipStatus(existing)
+      if (status === 'active' || status === 'on_hold') {
+        throw createAppException(AppErrorCode.MEMBERSHIP_ALREADY_ACTIVE)
+      }
+    }
+
     const { webUrl } = await this.configsService.get('url')
     const returnUrl = resolveMembershipReturnUrl(body.returnPath, webUrl)
 

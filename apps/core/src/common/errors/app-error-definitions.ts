@@ -574,6 +574,10 @@ export const APP_ERROR_DEFINITIONS = {
     status: 400,
     message: 'No membership payment provider is configured',
   },
+  [AppErrorCode.MEMBERSHIP_ALREADY_ACTIVE]: {
+    status: 409,
+    message: 'Reader already has an active membership',
+  },
   [AppErrorCode.PREMIUM_REQUIRES_LEXICAL]: {
     status: 400,
     message: 'Only Lexical-format posts can be marked as premium',

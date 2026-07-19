@@ -35,6 +35,8 @@ const readerId = snowflake.nextId()
 const otherReaderId = snowflake.nextId()
 const liveSubReaderId = snowflake.nextId()
 const expiredReaderId = snowflake.nextId()
+const checkoutActiveReaderId = snowflake.nextId()
+const checkoutExpiredReaderId = snowflake.nextId()
 
 const readerUser = {
   id: readerId,
@@ -47,6 +49,20 @@ const expiredReaderUser = {
   id: expiredReaderId,
   email: 'expired-reader@example.com',
   name: 'Reader Expired',
+  role: 'reader' as const,
+}
+
+const checkoutActiveReaderUser = {
+  id: checkoutActiveReaderId,
+  email: 'checkout-active@example.com',
+  name: 'Reader Checkout Active',
+  role: 'reader' as const,
+}
+
+const checkoutExpiredReaderUser = {
+  id: checkoutExpiredReaderId,
+  email: 'checkout-expired@example.com',
+  name: 'Reader Checkout Expired',
   role: 'reader' as const,
 }
 
@@ -80,6 +96,18 @@ const authServiceMock = {
     }
     if (header === 'expired-reader') {
       return { user: expiredReaderUser, session: { token: 'expired-token' } }
+    }
+    if (header === 'checkout-active') {
+      return {
+        user: checkoutActiveReaderUser,
+        session: { token: 'checkout-active-token' },
+      }
+    }
+    if (header === 'checkout-expired') {
+      return {
+        user: checkoutExpiredReaderUser,
+        session: { token: 'checkout-expired-token' },
+      }
     }
     return null
   }),
@@ -156,6 +184,8 @@ beforeAll(async () => {
     { id: otherReaderId, name: 'Reader Two', role: 'reader' },
     { id: liveSubReaderId, name: 'Reader Three', role: 'reader' },
     { id: expiredReaderId, name: 'Reader Expired', role: 'reader' },
+    { id: checkoutActiveReaderId, name: 'Checkout Active', role: 'reader' },
+    { id: checkoutExpiredReaderId, name: 'Checkout Expired', role: 'reader' },
   ])
 }, 120_000)
 
@@ -240,6 +270,61 @@ describe('MembershipController (e2e)', () => {
       expect(createCheckoutMock).toHaveBeenCalledWith(
         expect.objectContaining({ returnUrl: undefined }),
       )
+    })
+
+    it('refuses checkout when the reader already has a live membership', async () => {
+      const membershipRepository = proxy.app.get(MembershipRepository)
+      await membershipRepository.create({
+        readerId: checkoutActiveReaderId,
+        provider: 'dodo',
+        providerCustomerId: 'cus_checkout_active',
+        providerSubscriptionId: 'sub_checkout_active',
+        plan: 'monthly',
+        status: 'active',
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      })
+
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/checkout',
+        headers: {
+          'x-test-reader': 'checkout-active',
+          'content-type': 'application/json',
+        },
+        payload: { plan: 'monthly' },
+      })
+
+      expect(res.statusCode).toBe(409)
+      expect(res.json()).toMatchObject({
+        error: { code: 'MEMBERSHIP_ALREADY_ACTIVE' },
+      })
+      expect(createCheckoutMock).not.toHaveBeenCalled()
+    })
+
+    it('allows checkout again after the stored membership has expired', async () => {
+      const membershipRepository = proxy.app.get(MembershipRepository)
+      await membershipRepository.create({
+        readerId: checkoutExpiredReaderId,
+        provider: 'dodo',
+        providerCustomerId: 'cus_checkout_expired',
+        providerSubscriptionId: 'sub_checkout_expired',
+        plan: 'monthly',
+        status: 'active',
+        currentPeriodEnd: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      })
+
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/checkout',
+        headers: {
+          'x-test-reader': 'checkout-expired',
+          'content-type': 'application/json',
+        },
+        payload: { plan: 'monthly' },
+      })
+
+      expect(res.statusCode).toBe(201)
+      expect(createCheckoutMock).toHaveBeenCalled()
     })
 
     it('rejects anonymous callers with 401', async () => {

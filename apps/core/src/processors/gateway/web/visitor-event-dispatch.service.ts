@@ -326,19 +326,37 @@ export class VisitorEventDispatchService implements OnModuleInit {
   // --- Translation events ---
 
   @OnVisitorEvent(BusinessEvents.TRANSLATION_CREATE)
-  onTranslationCreate(data: any) {
+  async onTranslationCreate(data: any) {
     if (!data.refId) return
-    this.webGateway.broadcast(BusinessEvents.TRANSLATION_CREATE, data, {
-      rooms: [buildArticleRoomName(data.refId)],
-    })
+    this.webGateway.broadcast(
+      BusinessEvents.TRANSLATION_CREATE,
+      await this.toPublicTranslationPayload(data),
+      {
+        rooms: [buildArticleRoomName(data.refId)],
+      },
+    )
   }
 
   @OnVisitorEvent(BusinessEvents.TRANSLATION_UPDATE)
-  onTranslationUpdate(data: any) {
+  async onTranslationUpdate(data: any) {
     if (!data.refId) return
-    this.webGateway.broadcast(BusinessEvents.TRANSLATION_UPDATE, data, {
-      rooms: [buildArticleRoomName(data.refId)],
-    })
+    this.webGateway.broadcast(
+      BusinessEvents.TRANSLATION_UPDATE,
+      await this.toPublicTranslationPayload(data),
+      {
+        rooms: [buildArticleRoomName(data.refId)],
+      },
+    )
+  }
+
+  private async toPublicTranslationPayload(data: any) {
+    const isPremium = await this.enricher.isPremiumPost(
+      data.refType,
+      data.refId,
+    )
+    if (!isPremium) return data
+    const { text: _text, summary: _summary, ...rest } = data
+    return rest
   }
 
   // --- Helpers ---

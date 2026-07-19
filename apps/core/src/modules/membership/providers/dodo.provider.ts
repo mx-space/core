@@ -68,6 +68,16 @@ const planFromInterval = (
   return undefined
 }
 
+const planFromEvent = (
+  event: DodoSubscriptionEvent,
+): MembershipPlan | undefined => {
+  const metadataPlan = event.data.metadata?.plan
+  if (metadataPlan === 'monthly' || metadataPlan === 'yearly') {
+    return metadataPlan
+  }
+  return planFromInterval(event.data.payment_frequency_interval)
+}
+
 @Injectable()
 export class DodoProvider implements PaymentProviderAdapter {
   private client: DodoPayments | null = null
@@ -122,7 +132,7 @@ export class DodoProvider implements PaymentProviderAdapter {
 
     const session = await client.checkoutSessions.create({
       product_cart: [{ product_id: productId, quantity: 1 }],
-      metadata: { readerId: input.reader.id },
+      metadata: { readerId: input.reader.id, plan: input.plan },
       customer: input.reader.email
         ? { email: input.reader.email, name: input.reader.name ?? undefined }
         : undefined,
@@ -222,7 +232,7 @@ export class DodoProvider implements PaymentProviderAdapter {
       type,
       customerId: event.data.customer.customer_id,
       subscriptionId: event.data.subscription_id,
-      plan: planFromInterval(event.data.payment_frequency_interval),
+      plan: planFromEvent(event),
       currentPeriodEnd: new Date(event.data.next_billing_date),
       readerId,
     }

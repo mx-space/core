@@ -3,6 +3,8 @@ import type { EntityId } from '~/shared/id/entity-id'
 export type MembershipProvider =
   'dodo' | 'creem' | 'lemonsqueezy' | 'stripe' | 'manual'
 
+export const REGISTERED_PAYMENT_PROVIDERS: readonly string[] = ['dodo']
+
 export type MembershipPlan = 'monthly' | 'yearly'
 
 export type MembershipStatus = 'active' | 'on_hold' | 'cancelled' | 'expired'
@@ -45,7 +47,11 @@ export function resolveMembershipAvailability(config: {
   const plans: MembershipPlan[] = []
   if (config.monthlyProductId) plans.push('monthly')
   if (config.yearlyProductId) plans.push('yearly')
-  const enabled = !!config.enabled && !!config.provider && plans.length > 0
+  const enabled =
+    !!config.enabled &&
+    !!config.provider &&
+    REGISTERED_PAYMENT_PROVIDERS.includes(config.provider) &&
+    plans.length > 0
   return { enabled, plans: enabled ? plans : [] }
 }
 

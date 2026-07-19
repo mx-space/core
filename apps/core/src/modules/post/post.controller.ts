@@ -86,13 +86,12 @@ export class PostController {
 
   private async applyPaywall(
     doc: Record<string, any>,
-    metaBuilder: PostMetaBuilder,
     isOwner: boolean,
     readerId?: string,
-  ) {
-    if (!doc.isPremium) return
+  ): Promise<{ locked: boolean; previewBlocks?: number } | null> {
+    if (!doc.isPremium) return null
 
-    if (!(await this.entitlementService.isMembershipPurchasable())) return
+    if (!(await this.entitlementService.isMembershipPurchasable())) return null
 
     const isEntitled =
       isOwner ||
@@ -101,12 +100,11 @@ export class PostController {
         : false)
 
     if (isEntitled) {
-      metaBuilder.paywall({ locked: false })
-      return
+      return { locked: false }
     }
 
     const previewBlocks = this.applyPaywallTeaser(doc)
-    metaBuilder.paywall({ locked: true, previewBlocks })
+    return { locked: true, previewBlocks }
   }
 
   private applyPaywallTeaser(doc: Record<string, any>): number {
@@ -314,6 +312,12 @@ export class PostController {
       )
     }
 
+    const paywall = await this.applyPaywall(
+      doc as Record<string, any>,
+      !!isAuthenticated,
+      readerId,
+    )
+
     const { enrichments, ...docData } =
       await this.enrichmentService.attachEnrichments(doc)
 
@@ -344,12 +348,7 @@ export class PostController {
 
     if (skills.length > 0) metaBuilder.skills(skills)
 
-    await this.applyPaywall(
-      docData as Record<string, any>,
-      metaBuilder,
-      !!isAuthenticated,
-      readerId,
-    )
+    if (paywall) metaBuilder.paywall(paywall)
 
     return withMeta(docData, metaBuilder.build())
   }
@@ -442,6 +441,11 @@ export class PostController {
       : relatedList
 
     const { related: _related, ...postEntity } = postDocument
+    const paywall = await this.applyPaywall(
+      postEntity as Record<string, any>,
+      !!isAuthenticated,
+      readerId,
+    )
     const { enrichments, ...postData } =
       await this.enrichmentService.attachEnrichments(postEntity)
 
@@ -461,7 +465,7 @@ export class PostController {
       .insights({ hasInLocale: hasInsightsInLocale })
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
-    if (summaryDoc) {
+    if (summaryDoc && !paywall?.locked) {
       metaBuilder.summary({
         id: summaryDoc.id,
         text: summaryDoc.summary,
@@ -485,12 +489,7 @@ export class PostController {
 
     if (skills.length > 0) metaBuilder.skills(skills)
 
-    await this.applyPaywall(
-      postData as Record<string, any>,
-      metaBuilder,
-      !!isAuthenticated,
-      readerId,
-    )
+    if (paywall) metaBuilder.paywall(paywall)
 
     return withMeta(postData, metaBuilder.build())
   }

@@ -163,6 +163,7 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.MEMBERSHIP_REQUIRED]: undefined
   [AppErrorCode.WEBHOOK_VERIFY_FAILED]: undefined
   [AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED]: undefined
+  [AppErrorCode.MEMBERSHIP_ALREADY_ACTIVE]: undefined
   [AppErrorCode.PREMIUM_REQUIRES_LEXICAL]: undefined
 
   // page

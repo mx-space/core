@@ -60,7 +60,7 @@ describe('DodoProvider', () => {
       expect(checkoutCreateMock).toHaveBeenCalledWith(
         expect.objectContaining({
           product_cart: [{ product_id: 'prod_monthly', quantity: 1 }],
-          metadata: { readerId: 'reader-1' },
+          metadata: { readerId: 'reader-1', plan: 'monthly' },
         }),
       )
     })
@@ -273,6 +273,25 @@ describe('DodoProvider', () => {
       const event = await provider.verifyAndParseWebhook('{}', headers)
 
       expect(event.type).toBe(expectedType)
+      expect(event.plan).toBe('yearly')
+    })
+
+    it('prefers the checkout metadata plan when the interval field is absent', async () => {
+      verifyMock.mockReturnValue({
+        type: 'subscription.active',
+        business_id: 'biz_1',
+        timestamp: '2026-01-01T00:00:00Z',
+        data: {
+          subscription_id: 'sub_1',
+          customer: { customer_id: 'cus_1' },
+          metadata: { readerId: 'reader-1', plan: 'yearly' },
+          next_billing_date: '2026-02-01T00:00:00Z',
+        },
+      })
+
+      const provider = new DodoProvider(configsService as any)
+      const event = await provider.verifyAndParseWebhook('{}', headers)
+
       expect(event.plan).toBe('yearly')
     })
 

@@ -400,6 +400,57 @@ describe('Post paywall enforcement (e2e)', () => {
     expect(body.meta.paywall).toBeUndefined()
   })
 
+  it('omits the ai summary and builds enrichments from the teaser when locked', async () => {
+    currentPost = { ...premiumPostFixture }
+    const summaryService = proxy.app.get(AiSummaryService) as any
+    const enrichmentService = proxy.app.get(EnrichmentService) as any
+    summaryService.getSummaryForPublicMeta.mockResolvedValueOnce({
+      id: 'summary-1',
+      summary: 'summary generated from the full article',
+      lang: 'zh',
+      createdAt: new Date('2024-01-02'),
+    })
+
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `/posts/${premiumPostFixture.category.slug}/${premiumPostFixture.slug}`,
+      headers: headerFor(nonMemberReaderId),
+    })
+
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.meta.paywall.locked).toBe(true)
+    expect(body.meta.summary).toBeUndefined()
+
+    const enrichedDoc =
+      enrichmentService.attachEnrichments.mock.calls.at(-1)![0]
+    expect(JSON.parse(enrichedDoc.content).root.children).toHaveLength(3)
+  })
+
+  it('keeps the ai summary for an entitled member', async () => {
+    currentPost = { ...premiumPostFixture }
+    const summaryService = proxy.app.get(AiSummaryService) as any
+    summaryService.getSummaryForPublicMeta.mockResolvedValueOnce({
+      id: 'summary-1',
+      summary: 'summary generated from the full article',
+      lang: 'zh',
+      createdAt: new Date('2024-01-02'),
+    })
+
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `/posts/${premiumPostFixture.category.slug}/${premiumPostFixture.slug}`,
+      headers: headerFor(activeMemberReaderId),
+    })
+
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.meta.paywall.locked).toBe(false)
+    expect(body.meta.summary.text).toBe(
+      'summary generated from the full article',
+    )
+  })
+
   it('getById applies the same gate for a non-member reader', async () => {
     currentPost = { ...premiumPostFixture }
 

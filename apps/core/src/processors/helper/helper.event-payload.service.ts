@@ -74,4 +74,10 @@ export class EventPayloadEnricherService {
       }
     }
   }
+
+  async isPremiumPost(refType: string, refId: string): Promise<boolean> {
+    if (refType !== 'post') return false
+    const post = await this.postService.findById(refId)
+    return !!post?.isPremium
+  }
 }

@@ -442,6 +442,16 @@ export class SearchService {
         sourceLang,
       ) as any,
     )
+
+    // Translated documents embed the article's paywall projection, so an
+    // article update (e.g. premium toggle) must refresh them too.
+    const translations = await this.aiTranslationRepository.listByRefId(id)
+    for (const t of translations) {
+      if (t.refType !== refType) continue
+      await this.searchRepository.upsert(
+        this.buildTranslationSearchDocument(refType, sourceDocument, t) as any,
+      )
+    }
   }
 
   private async upsertTranslationSearchDocument(translation: AiTranslationRow) {
@@ -489,7 +499,7 @@ export class SearchService {
       hasPassword: article.hasPassword,
       createdAt: article.createdAt ?? new Date(),
       modifiedAt: article.modifiedAt ?? null,
-      sourceHash: computeTranslationSourceHash(translation),
+      sourceHash: computeTranslationSourceHash(translation, article),
     }
     return buildSearchDocument(
       refType,

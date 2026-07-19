@@ -42,6 +42,16 @@ describe('resolveMembershipAvailability', () => {
       resolveMembershipAvailability({ enabled: true, provider: 'dodo' }),
     ).toEqual({ enabled: false, plans: [] })
   })
+
+  it('is disabled when the provider has no registered adapter', () => {
+    expect(
+      resolveMembershipAvailability({
+        enabled: true,
+        provider: 'stripe',
+        monthlyProductId: 'm',
+      }),
+    ).toEqual({ enabled: false, plans: [] })
+  })
 })
 
 describe('resolveMembershipReturnUrl', () => {

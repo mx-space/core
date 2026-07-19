@@ -338,6 +338,23 @@ describe('MembershipService', () => {
       ).rejects.toThrow()
     })
 
+    it('allows granting when an active provider subscription is past its period end', async () => {
+      const existing = createMembership({
+        provider: 'dodo',
+        status: 'active',
+        currentPeriodEnd: new Date(now.getTime() - 1000),
+      })
+      membershipRepository.findByReaderId.mockResolvedValue(existing)
+      membershipRepository.update.mockResolvedValue(existing)
+
+      await service.grantManual('reader-1', {
+        plan: 'monthly',
+        expiresAt: new Date(now.getTime() + 1000),
+      })
+
+      expect(membershipRepository.update).toHaveBeenCalled()
+    })
+
     it('allows granting when the provider subscription has expired', async () => {
       const existing = createMembership({
         provider: 'dodo',

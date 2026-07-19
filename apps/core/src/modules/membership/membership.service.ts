@@ -10,8 +10,8 @@ import type { NormalizedBillingEvent } from './providers/provider.interface'
 
 const isLiveProviderSubscription = (row: MembershipRow): boolean => {
   if (row.provider === 'manual') return false
-  if (row.status === 'active') return true
-  return row.status === 'on_hold' && row.currentPeriodEnd.getTime() > Date.now()
+  if (row.status !== 'active' && row.status !== 'on_hold') return false
+  return row.currentPeriodEnd.getTime() > Date.now()
 }
 
 @Injectable()

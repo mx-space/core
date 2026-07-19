@@ -1,7 +1,7 @@
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { VisitorEventDispatchService } from '~/processors/gateway/web/visitor-event-dispatch.service'
 
-const createService = () => {
+const createService = (enricher: Record<string, any> = {}) => {
   const broadcasts: Array<{
     data: any
     event: BusinessEvents
@@ -64,7 +64,7 @@ const createService = () => {
   }
 
   const service = new VisitorEventDispatchService(
-    {} as any,
+    enricher as any,
     webGateway as any,
     {} as any,
     translationService as any,
@@ -215,5 +215,42 @@ describe('VisitorEventDispatchService premium paywall', () => {
 
     expect(jaPayload.text).not.toContain('secret')
     expect(JSON.parse(jaPayload.content).root.children).toHaveLength(1)
+  })
+
+  it('strips translated text and summary when broadcasting for a premium post', async () => {
+    const { broadcasts, service } = createService({
+      isPremiumPost: vi.fn(async () => true),
+    })
+
+    await (service as any).onTranslationUpdate({
+      id: 'tr-1',
+      refId: 'post-1',
+      refType: 'post',
+      lang: 'ja',
+      text: 'secret paywalled translated body',
+      summary: 'summary of the full article',
+      title: '日本語タイトル',
+    })
+
+    expect(broadcasts).toHaveLength(1)
+    expect(broadcasts[0].data.text).toBeUndefined()
+    expect(broadcasts[0].data.summary).toBeUndefined()
+    expect(broadcasts[0].data.title).toBe('日本語タイトル')
+  })
+
+  it('keeps translated text for non-premium posts', async () => {
+    const { broadcasts, service } = createService({
+      isPremiumPost: vi.fn(async () => false),
+    })
+
+    await (service as any).onTranslationUpdate({
+      id: 'tr-2',
+      refId: 'post-2',
+      refType: 'post',
+      lang: 'ja',
+      text: 'plain translated body',
+    })
+
+    expect(broadcasts[0].data.text).toBe('plain translated body')
   })
 })

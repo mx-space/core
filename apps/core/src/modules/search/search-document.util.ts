@@ -185,13 +185,22 @@ export function computeSourceHash(parts: {
 
 /**
  * Source hash for a translation row. The translation table already stores a
- * `hash` of its source snapshot — wrap it as an explicit accessor so callers
- * don't conflate translation hash with the article's content hash.
+ * `hash` of its source snapshot; the paywall projection also shapes the
+ * indexed body, so premium state and preview-block config must be folded in
+ * or incremental rebuilds skip translated rows after a premium toggle.
  */
-export function computeTranslationSourceHash(translation: {
-  hash: string
-}): string {
-  return translation.hash
+export function computeTranslationSourceHash(
+  translation: { hash: string },
+  article?: {
+    isPremium?: boolean | null
+    meta?: { paywall?: { previewBlocks?: unknown } } | null
+  },
+): string {
+  if (!article?.isPremium) return translation.hash
+  const previewBlocks = article.meta?.paywall?.previewBlocks
+  return createHash('sha1')
+    .update(`${translation.hash}\npremium:${previewBlocks ?? ''}`)
+    .digest('hex')
 }
 
 export const SEARCH_DOCUMENT_DEFAULT_SOURCE_LANG = 'zh'
