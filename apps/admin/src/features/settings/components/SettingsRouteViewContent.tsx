@@ -17,6 +17,7 @@ import {
   settingsQueryKey,
   staticGroupsAfter,
   staticGroupsBefore,
+  systemGroupTranslationKeys,
 } from '../constants'
 import type { SettingsGroupSummary } from '../types/settings'
 import { getGroupIcon } from '../utils/settings'
@@ -43,10 +44,12 @@ export function SettingsRouteViewContent() {
     const systemGroups: SettingsGroupSummary[] =
       schemaQuery.data?.groups.map((group) => ({
         description: group.description,
+        descriptionKey: systemGroupTranslationKeys[group.key]?.descriptionKey,
         icon: getGroupIcon(group.icon),
         key: group.key,
         systemGroup: group,
         title: group.title,
+        titleKey: systemGroupTranslationKeys[group.key]?.titleKey,
         type: 'system',
       })) ?? []
 

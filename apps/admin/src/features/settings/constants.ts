@@ -14,13 +14,58 @@ export const settingsQueryKey = adminQueryKeys.settings.root
 export const metaPresetsQueryKey = adminQueryKeys.metaPresets.root
 export const accountQueryKey = adminQueryKeys.settings.accountRoot
 
+export const systemGroupTranslationKeys: Record<
+  string,
+  { descriptionKey: TranslationKey; titleKey: TranslationKey }
+> = {
+  ai: {
+    descriptionKey: 'settings.group.ai.description',
+    titleKey: 'settings.group.ai.title',
+  },
+  content: {
+    descriptionKey: 'settings.group.content.description',
+    titleKey: 'settings.group.content.title',
+  },
+  integrations: {
+    descriptionKey: 'settings.group.integrations.description',
+    titleKey: 'settings.group.integrations.title',
+  },
+  membership: {
+    descriptionKey: 'settings.group.membership.description',
+    titleKey: 'settings.group.membership.title',
+  },
+  notification: {
+    descriptionKey: 'settings.group.notification.description',
+    titleKey: 'settings.group.notification.title',
+  },
+  search: {
+    descriptionKey: 'settings.group.search.description',
+    titleKey: 'settings.group.search.title',
+  },
+  site: {
+    descriptionKey: 'settings.group.site.description',
+    titleKey: 'settings.group.site.title',
+  },
+  storage: {
+    descriptionKey: 'settings.group.storage.description',
+    titleKey: 'settings.group.storage.title',
+  },
+  system: {
+    descriptionKey: 'settings.group.system.description',
+    titleKey: 'settings.group.system.title',
+  },
+}
+
 export const aiProviderTypeOptions: Array<{
-  label: string
+  labelKey: TranslationKey
   value: AIProviderType
 }> = [
-  { label: 'OpenAI Compatible', value: 'openai-compatible' },
-  { label: 'Anthropic', value: 'anthropic' },
-  { label: 'Generic', value: 'generic' },
+  {
+    labelKey: 'settings.ai.providerType.openaiCompatible',
+    value: 'openai-compatible',
+  },
+  { labelKey: 'settings.ai.providerType.anthropic', value: 'anthropic' },
+  { labelKey: 'settings.ai.providerType.generic', value: 'generic' },
 ]
 
 type SocialOption =

@@ -173,7 +173,7 @@ export function AIProviderDrawer(props: {
       icon={Settings}
       onClose={props.onClose}
       open={Boolean(provider)}
-      title={provider ? formatAIProviderLabel(provider) : ''}
+      title={provider ? formatAIProviderLabel(provider, t) : ''}
       widthClassName="w-[min(90vw,32rem)]"
     >
       {provider ? (
@@ -192,7 +192,10 @@ export function AIProviderDrawer(props: {
                   type,
                 })
               }
-              options={aiProviderTypeOptions}
+              options={aiProviderTypeOptions.map((option) => ({
+                label: t(option.labelKey),
+                value: option.value,
+              }))}
               value={provider.type}
             />
           </FieldShell>

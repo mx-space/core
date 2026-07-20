@@ -47,7 +47,7 @@ export function AIModelAssignmentField(props: {
           options={[
             { label: t('settings.ai.assignment.providerNone'), value: '' },
             ...props.providers.map((provider) => ({
-              label: formatAIProviderLabel(provider),
+              label: formatAIProviderLabel(provider, t),
               value: provider.id,
             })),
           ]}

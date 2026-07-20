@@ -7,10 +7,12 @@ import { sendTestEmail } from '~/api/health'
 import type { ConfigFormGroup, ConfigFormSchema } from '~/api/options'
 import { getAllOptions, patchOption } from '~/api/options'
 import { useI18n } from '~/i18n'
+import { messages } from '~/i18n/resources'
+import type { TranslationKey } from '~/i18n/types'
 import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 
-import { settingsQueryKey } from '../constants'
+import { settingsQueryKey, systemGroupTranslationKeys } from '../constants'
 import type { MembershipConfigValue } from '../utils/membership'
 import {
   cloneJson,
@@ -31,7 +33,7 @@ export function SystemSettings(props: {
   activeGroup: ConfigFormGroup
   schema?: ConfigFormSchema
 }) {
-  const { t } = useI18n()
+  const { locale, t } = useI18n()
   const queryClient = useQueryClient()
   const setDirtyAction = useSettingsActionBarSetter()
   const [configs, setConfigs] = useState<Record<string, unknown>>({})
@@ -128,71 +130,91 @@ export function SystemSettings(props: {
     return () => setDirtyAction(null)
   }, [hasDirty, dirtyCount, saving, saveMutate, discardChanges, setDirtyAction])
 
-  if (optionsQuery.isLoading)
-    return <SettingsSkeleton title={props.activeGroup.title} />
+  if (optionsQuery.isLoading) {
+    const titleKey = systemGroupTranslationKeys[props.activeGroup.key]?.titleKey
+    return (
+      <SettingsSkeleton
+        title={titleKey ? t(titleKey) : props.activeGroup.title}
+      />
+    )
+  }
 
   return (
     <div className="space-y-10">
       {props.activeGroup.sections
         .filter((section) => !section.hidden)
-        .map((section) => (
-          <SettingsSection
-            actions={
-              section.key === 'mailOptions' ? (
-                <Button
-                  disabled={testEmailMutation.isPending}
-                  onClick={() => testEmailMutation.mutate()}
-                  type="button"
-                  variant="subtle"
-                >
-                  {testEmailMutation.isPending ? (
-                    <Loader2
-                      aria-hidden="true"
-                      className="size-4 animate-spin"
-                    />
-                  ) : (
-                    <Mail aria-hidden="true" className="size-4" />
-                  )}
-                  {t('settings.system.section.sendTestEmail')}
-                </Button>
-              ) : null
-            }
-            description={section.description}
-            dirty={dirtySections.includes(section.key)}
-            key={section.key}
-            title={section.title}
-          >
-            {section.key === 'ai' ? (
-              <AIConfigEditor
-                modelCacheKey={adminQueryKeys.settings.aiModels()}
-                onChange={(value) => updateValue(section.key, value)}
-                value={normalizeAIConfig(configs[section.key])}
-              />
-            ) : section.key === 'seo' ? (
-              <SeoConfigEditor
-                fields={section.fields}
-                formData={configs}
-                onAction={handleFieldAction}
-                prefix={section.key}
-                updateValue={updateValue}
-              />
-            ) : section.key === 'membership' ? (
-              <MembershipConfigEditor
-                fields={section.fields}
-                onChange={(value) => updateValue(section.key, value)}
-                value={(configs[section.key] ?? {}) as MembershipConfigValue}
-              />
-            ) : (
-              <ConfigSectionFields
-                fields={section.fields}
-                formData={configs}
-                onAction={handleFieldAction}
-                prefix={section.key}
-                updateValue={updateValue}
-              />
-            )}
-          </SettingsSection>
-        ))}
+        .map((section) => {
+          const titleKey =
+            `settings.schema.${section.key}.title` as TranslationKey
+          const descriptionKey =
+            `settings.schema.${section.key}.description` as TranslationKey
+          return (
+            <SettingsSection
+              actions={
+                section.key === 'mailOptions' ? (
+                  <Button
+                    disabled={testEmailMutation.isPending}
+                    onClick={() => testEmailMutation.mutate()}
+                    type="button"
+                    variant="subtle"
+                  >
+                    {testEmailMutation.isPending ? (
+                      <Loader2
+                        aria-hidden="true"
+                        className="size-4 animate-spin"
+                      />
+                    ) : (
+                      <Mail aria-hidden="true" className="size-4" />
+                    )}
+                    {t('settings.system.section.sendTestEmail')}
+                  </Button>
+                ) : null
+              }
+              description={
+                Object.hasOwn(messages[locale], descriptionKey)
+                  ? t(descriptionKey)
+                  : section.description
+              }
+              dirty={dirtySections.includes(section.key)}
+              key={section.key}
+              title={
+                Object.hasOwn(messages[locale], titleKey)
+                  ? t(titleKey)
+                  : section.title
+              }
+            >
+              {section.key === 'ai' ? (
+                <AIConfigEditor
+                  modelCacheKey={adminQueryKeys.settings.aiModels()}
+                  onChange={(value) => updateValue(section.key, value)}
+                  value={normalizeAIConfig(configs[section.key])}
+                />
+              ) : section.key === 'seo' ? (
+                <SeoConfigEditor
+                  fields={section.fields}
+                  formData={configs}
+                  onAction={handleFieldAction}
+                  prefix={section.key}
+                  updateValue={updateValue}
+                />
+              ) : section.key === 'membership' ? (
+                <MembershipConfigEditor
+                  fields={section.fields}
+                  onChange={(value) => updateValue(section.key, value)}
+                  value={(configs[section.key] ?? {}) as MembershipConfigValue}
+                />
+              ) : (
+                <ConfigSectionFields
+                  fields={section.fields}
+                  formData={configs}
+                  onAction={handleFieldAction}
+                  prefix={section.key}
+                  updateValue={updateValue}
+                />
+              )}
+            </SettingsSection>
+          )
+        })}
     </div>
   )
 }

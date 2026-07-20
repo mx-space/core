@@ -384,7 +384,7 @@ function ProviderRow(props: {
     <div className="flex items-center gap-3 py-3">
       <div className={cn('min-w-0 flex-1', !provider.enabled && 'opacity-60')}>
         <div className="truncate text-sm font-medium">
-          {formatAIProviderLabel(provider)}
+          {formatAIProviderLabel(provider, t)}
         </div>
         <div className="mt-1 truncate text-xs text-neutral-500">
           {provider.defaultModel || t('settings.ai.provider.row.empty')}
