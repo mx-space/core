@@ -173,7 +173,7 @@ export function AIProviderDrawer(props: {
       icon={Settings}
       onClose={props.onClose}
       open={Boolean(provider)}
-      title={provider ? formatAIProviderLabel(provider, t) : ''}
+      title={provider ? formatAIProviderLabel(provider) : ''}
       widthClassName="w-[min(90vw,32rem)]"
     >
       {provider ? (

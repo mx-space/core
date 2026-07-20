@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 
 import type { ConfigFormField } from '~/api/options'
+import { translate as t } from '~/i18n/translate'
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
 import type { CreateMetaPresetDto, MetaPresetField } from '~/models/meta-preset'
 
@@ -140,10 +141,7 @@ export function coerceAIProviderType(value: unknown): AIProviderType {
   return 'openai-compatible'
 }
 
-export function formatAIProviderLabel(
-  provider: AIProviderConfig,
-  t: Translator,
-) {
+export function formatAIProviderLabel(provider: AIProviderConfig) {
   const name = provider.name.trim()
   if (name) return name
   const option = aiProviderTypeOptions.find(
