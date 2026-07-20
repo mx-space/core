@@ -2752,6 +2752,10 @@ export const zhCN = {
   'write.field.publicAtPreset.week': '一周后',
   'write.format.toLexical': '切换到 Lexical',
   'write.format.toMarkdown': '切换到 Markdown',
+  'write.format.toCodeMirror': '切换到 CodeMirror',
+  'write.format.switchUnavailable.title': '暂时无法切换编辑器',
+  'write.format.switchUnavailable.description':
+    'CodeMirror 直接编辑 Markdown 源码，Lexical 则保存富文本结构。正文已有内容时，在两者之间转换可能丢失格式、特殊节点或原始写法，因此当前文章不支持切换。请在新建文章且正文为空时选择所需编辑器，再开始写作。',
   'write.header.backToList': '返回列表',
   'write.header.editPage': '修改页面',
   'write.header.newPage': '新建页面',

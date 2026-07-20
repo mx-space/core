@@ -11,6 +11,7 @@ import {
   Braces,
   Bug,
   Check,
+  CircleHelp,
   Clock,
   Copy,
   File as FileIcon,
@@ -367,7 +368,7 @@ function WritePage(props: { kind: WriteKind }) {
   const [preferredContentFormat, setPreferredContentFormat] =
     useLocalStorageState<ContentFormat>(
       PREFERRED_CONTENT_FORMAT_STORAGE_KEY,
-      'markdown',
+      'lexical',
     )
   const [state, setState] = useState<WriteFormState>(() => ({
     ...emptyState,
@@ -552,7 +553,10 @@ function WritePage(props: { kind: WriteKind }) {
     state.title.trim().length > 0 ||
     state.text.trim().length > 0 ||
     state.content.trim().length > 0
-  const canSwitchEditorType = !state.text.trim() && !state.content.trim()
+  const canSwitchEditorType =
+    state.contentFormat === 'lexical'
+      ? !hasLexicalContent(state.content)
+      : !state.text.trim()
 
   useEffect(() => {
     latestDraftFingerprintRef.current = draftFingerprint
@@ -1652,7 +1656,7 @@ function EditorMetaStrip(props: {
         : 'bg-neutral-300 dark:bg-neutral-600'
   const formatLabel =
     props.format === 'lexical'
-      ? t('write.format.toMarkdown')
+      ? t('write.format.toCodeMirror')
       : t('write.format.toLexical')
 
   return (
@@ -1671,14 +1675,34 @@ function EditorMetaStrip(props: {
         {props.canSwitchFormat ? (
           <button
             aria-label={formatLabel}
-            className="focus-visible:outline-hidden inline-flex size-7 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-500 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+            className="focus-visible:outline-hidden inline-flex h-7 items-center gap-1 rounded-md px-2 text-xs text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
             onClick={props.onToggleFormat}
             title={formatLabel}
             type="button"
           >
             <ArrowLeftRight aria-hidden="true" className="size-3.5" />
+            <span>{formatLabel}</span>
           </button>
-        ) : null}
+        ) : (
+          <Popover>
+            <Popover.Trigger
+              aria-label={t('write.format.switchUnavailable.title')}
+              className="focus-visible:outline-hidden inline-flex size-7 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-500 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
+              title={t('write.format.switchUnavailable.title')}
+              type="button"
+            >
+              <CircleHelp aria-hidden="true" className="size-3.5" />
+            </Popover.Trigger>
+            <Popover.Content align="end" className="space-y-1.5 p-3" width="sm">
+              <div className="text-sm font-medium text-fg">
+                {t('write.format.switchUnavailable.title')}
+              </div>
+              <p className="text-xs leading-relaxed text-fg-muted">
+                {t('write.format.switchUnavailable.description')}
+              </p>
+            </Popover.Content>
+          </Popover>
+        )}
         {props.aiButtonVisible ? (
           <button
             aria-label={t('write.pill.aiGenerate')}
@@ -3185,7 +3209,9 @@ function fromDraft(
   const base = {
     ...previous,
     content: draft.content ?? '',
-    contentFormat: draft.contentFormat ?? 'markdown',
+    contentFormat:
+      draft.contentFormat ??
+      (draft.text || draft.content ? 'markdown' : previous.contentFormat),
     images: draft.images ?? previous.images,
     meta: isRecord(draft.meta) ? draft.meta : previous.meta,
     text: draft.text ?? '',
@@ -3676,6 +3702,26 @@ function parseSerializedEditorState(
   }
 
   return undefined
+}
+
+function hasLexicalContent(content: string) {
+  const state = parseSerializedEditorState(content)
+  if (!state) return false
+
+  return lexicalNodeHasContent(state.root)
+}
+
+function lexicalNodeHasContent(node: unknown): boolean {
+  if (!node || typeof node !== 'object') return false
+
+  const record = node as Record<string, unknown>
+  if (typeof record.text === 'string' && record.text.trim()) return true
+
+  if (Array.isArray(record.children)) {
+    return record.children.some(lexicalNodeHasContent)
+  }
+
+  return record.type !== 'root' && record.type !== 'paragraph'
 }
 
 async function saveExcalidrawSnapshot(snapshot: object, existingRef?: string) {
