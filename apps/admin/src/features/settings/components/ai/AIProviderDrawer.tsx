@@ -192,7 +192,10 @@ export function AIProviderDrawer(props: {
                   type,
                 })
               }
-              options={aiProviderTypeOptions}
+              options={aiProviderTypeOptions.map((option) => ({
+                label: t(option.labelKey),
+                value: option.value,
+              }))}
               value={provider.type}
             />
           </FieldShell>

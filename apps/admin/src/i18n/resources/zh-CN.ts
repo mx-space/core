@@ -1844,6 +1844,9 @@ export const zhCN = {
     '配置 AI 服务提供商、密钥、Endpoint 与默认模型。',
   'settings.ai.provider.editAction': '编辑',
   'settings.ai.provider.row.empty': '未指定模型',
+  'settings.ai.providerType.anthropic': 'Anthropic',
+  'settings.ai.providerType.generic': '通用兼容服务',
+  'settings.ai.providerType.openaiCompatible': 'OpenAI 兼容服务',
   'settings.ai.section.featureToggles': '功能开关',
   'settings.ai.section.insights': 'AI 精读',
   'settings.ai.section.insightsDescription':
@@ -1909,10 +1912,279 @@ export const zhCN = {
   'settings.fieldType.url': 'URL',
   'settings.group.account.description': '登录、认证、凭证',
   'settings.group.account.title': '账号安全',
+  'settings.group.ai.description': 'AI 摘要、写作助手',
+  'settings.group.ai.title': 'AI',
+  'settings.group.content.description': '评论、友链',
+  'settings.group.content.title': '内容',
+  'settings.group.integrations.description': 'GitHub、TMDB、Bangumi 等',
+  'settings.group.integrations.title': '第三方集成',
+  'settings.group.membership.description': '付费会员、支付服务商',
+  'settings.group.membership.title': '会员',
   'settings.group.metaPreset.description': '预设模板',
   'settings.group.metaPreset.title': 'Meta 预设',
+  'settings.group.notification.description': '邮件、Bark 推送',
+  'settings.group.notification.title': '通知',
+  'settings.group.search.description': '搜索引擎、全文搜索',
+  'settings.group.search.title': '搜索推送',
+  'settings.group.site.description': '站点地址、SEO',
+  'settings.group.site.title': '站点',
+  'settings.group.storage.description': '备份、图床、评论图片上传',
+  'settings.group.storage.title': '存储',
+  'settings.group.system.description': '管理端设置、功能开关',
+  'settings.group.system.title': '系统',
   'settings.group.user.description': '个人资料',
   'settings.group.user.title': '用户',
+  'settings.schema.ai.title': 'AI 设置',
+  'settings.schema.adminExtra.background.title': '登录页背景图',
+  'settings.schema.adminExtra.enableAdminProxy.description':
+    '控制管理面板是否可通过 API 反向代理访问',
+  'settings.schema.adminExtra.enableAdminProxy.title': '启用管理面板反向代理',
+  'settings.schema.adminExtra.gaodemapKey.description': '用于日记地点查询',
+  'settings.schema.adminExtra.gaodemapKey.title': '高德地图查询 API 密钥',
+  'settings.schema.adminExtra.title': '管理端附加设置',
+  'settings.schema.backupOptions.enable.description':
+    '填写下方 S3 信息后，备份也会上传到 S3',
+  'settings.schema.backupOptions.enable.title': '启用自动备份',
+  'settings.schema.backupOptions.endpoint.title': 'S3 Endpoint',
+  'settings.schema.backupOptions.region.title': '区域',
+  'settings.schema.backupOptions.bucket.title': '存储桶',
+  'settings.schema.backupOptions.secretId.title': '密钥 ID',
+  'settings.schema.backupOptions.secretKey.title': '密钥',
+  'settings.schema.backupOptions.title': '备份',
+  'settings.schema.baiduSearchOptions.enable.title': '启用推送',
+  'settings.schema.baiduSearchOptions.title': '百度推送设置',
+  'settings.schema.baiduSearchOptions.token.title': '推送令牌',
+  'settings.schema.barkOptions.enable.title': '启用 Bark 通知',
+  'settings.schema.barkOptions.enableComment.title': '启用评论通知',
+  'settings.schema.barkOptions.enableThrottleGuard.description':
+    '请求被限流时发送通知，可作为遭受攻击的早期预警',
+  'settings.schema.barkOptions.enableThrottleGuard.title': '限流请求通知',
+  'settings.schema.barkOptions.key.title': '设备密钥',
+  'settings.schema.barkOptions.serverUrl.description':
+    '留空时默认使用公共服务器 https://day.app',
+  'settings.schema.barkOptions.serverUrl.title': '服务器 URL',
+  'settings.schema.barkOptions.title': 'Bark 通知',
+  'settings.schema.bingSearchOptions.enable.title': '启用推送',
+  'settings.schema.bingSearchOptions.title': 'Bing 推送设置',
+  'settings.schema.bingSearchOptions.token.title': 'Bing API 密钥',
+  'settings.schema.commentOptions.aiReview.title': '启用 AI 审核',
+  'settings.schema.commentOptions.aiReviewThreshold.description':
+    '评分高于此值的评论会被判为垃圾内容。范围 1-10，默认 5',
+  'settings.schema.commentOptions.aiReviewThreshold.title': 'AI 审核阈值',
+  'settings.schema.commentOptions.aiReviewType.description':
+    '默认为二元审核，也可使用评分模式',
+  'settings.schema.commentOptions.aiReviewType.option.binary': '二元审核',
+  'settings.schema.commentOptions.aiReviewType.option.score': '评分',
+  'settings.schema.commentOptions.aiReviewType.title': 'AI 审核模式',
+  'settings.schema.commentOptions.allowGuestComment.description':
+    '关闭后，仅登录读者或站长可发表评论和回复',
+  'settings.schema.commentOptions.allowGuestComment.title': '允许游客评论',
+  'settings.schema.commentOptions.antiSpam.title': '反垃圾评论',
+  'settings.schema.commentOptions.blockIps.title': '自定义封禁 IP',
+  'settings.schema.commentOptions.commentShouldAudit.title': '仅展示已审核评论',
+  'settings.schema.commentOptions.disableComment.description': '适用于敏感时期',
+  'settings.schema.commentOptions.disableComment.title': '全站关闭评论',
+  'settings.schema.commentOptions.disableNoChinese.title': '拒绝非中文评论',
+  'settings.schema.commentOptions.recordIpLocation.title': '公开显示评论地区',
+  'settings.schema.commentOptions.spamKeywords.title': '自定义拦截关键词',
+  'settings.schema.commentOptions.testAiReview.actionLabel': '测试',
+  'settings.schema.commentOptions.testAiReview.description':
+    '输入测试内容，验证 AI 审核是否正常工作',
+  'settings.schema.commentOptions.testAiReview.title': '测试 AI 审核',
+  'settings.schema.commentOptions.title': '评论设置',
+  'settings.schema.commentUploadOptions.commentImageMaxCount.description':
+    '默认 4 张',
+  'settings.schema.commentUploadOptions.commentImageMaxCount.title':
+    '每条评论最多图片数',
+  'settings.schema.commentUploadOptions.cronIntervalMinutes.description':
+    '默认 15 分钟',
+  'settings.schema.commentUploadOptions.cronIntervalMinutes.title':
+    '清理间隔（分钟）',
+  'settings.schema.commentUploadOptions.deleteFilesOnSpam.description':
+    '默认启用。关闭后只删除评论，图片会保留以供人工复核',
+  'settings.schema.commentUploadOptions.deleteFilesOnSpam.title':
+    '评论标为垃圾内容时删除图片',
+  'settings.schema.commentUploadOptions.detachedTtlMinutes.description':
+    '评论编辑移除的图片保留时间。默认 30 分钟',
+  'settings.schema.commentUploadOptions.detachedTtlMinutes.title':
+    '脱离引用保留时间（分钟）',
+  'settings.schema.commentUploadOptions.enable.description':
+    '关闭后前端会隐藏上传入口，后端返回 503',
+  'settings.schema.commentUploadOptions.enable.title': '启用读者评论图片上传',
+  'settings.schema.commentUploadOptions.mimeWhitelist.description':
+    '默认为 image/jpeg、image/png、image/webp、image/gif，修改立即生效',
+  'settings.schema.commentUploadOptions.mimeWhitelist.title': 'MIME 白名单',
+  'settings.schema.commentUploadOptions.pendingTtlMinutes.description':
+    '尚未被评论引用的图片保留时间，过期后删除。默认 120 分钟',
+  'settings.schema.commentUploadOptions.pendingTtlMinutes.title':
+    '待引用保留时间（分钟）',
+  'settings.schema.commentUploadOptions.readerHourlyUploadCount.description':
+    '默认 10 次',
+  'settings.schema.commentUploadOptions.readerHourlyUploadCount.title':
+    '每位读者每小时最多上传次数',
+  'settings.schema.commentUploadOptions.readerMinAccountAgeHours.description':
+    '资格门槛；0 表示不限。默认 0',
+  'settings.schema.commentUploadOptions.readerMinAccountAgeHours.title':
+    '读者账号最小注册时长（小时）',
+  'settings.schema.commentUploadOptions.readerMinCommentCount.description':
+    '资格门槛；0 表示不限。默认 0',
+  'settings.schema.commentUploadOptions.readerMinCommentCount.title':
+    '读者最少已发布评论数',
+  'settings.schema.commentUploadOptions.readerTotalActiveBytesMB.description':
+    '默认 50 MB',
+  'settings.schema.commentUploadOptions.readerTotalActiveBytesMB.title':
+    '每位读者最多有效图片存储量（MB）',
+  'settings.schema.commentUploadOptions.singleFileSizeMB.description':
+    '默认 5 MB',
+  'settings.schema.commentUploadOptions.singleFileSizeMB.title':
+    '每张图片最大尺寸（MB）',
+  'settings.schema.commentUploadOptions.title': '评论图片上传',
+  'settings.schema.featureList.emailSubscribe.title': '启用邮件订阅',
+  'settings.schema.featureList.title': '功能开关',
+  'settings.schema.friendLinkOptions.allowApply.title': '允许友链申请',
+  'settings.schema.friendLinkOptions.allowSubPath.description':
+    '例如 /blog 这样的子路径',
+  'settings.schema.friendLinkOptions.allowSubPath.title': '允许友链使用子路径',
+  'settings.schema.friendLinkOptions.enableAvatarInternalization.description':
+    '审核通过后下载友链头像并转为站内链接。仅支持常见图片格式，其他格式不会转换',
+  'settings.schema.friendLinkOptions.enableAvatarInternalization.title':
+    '本地化友链头像',
+  'settings.schema.friendLinkOptions.title': '友链设置',
+  'settings.schema.imageStorageOptions.bucket.title': '存储桶',
+  'settings.schema.imageStorageOptions.commentUploadPrefix.description':
+    '读者评论上传图片专用路径前缀。留空时默认 comments/{readerId}/{Y}/{m}/{md5}.{ext}。除 prefix 支持的占位符外，还支持 {readerId}',
+  'settings.schema.imageStorageOptions.commentUploadPrefix.title':
+    '评论图片路径前缀',
+  'settings.schema.imageStorageOptions.customDomain.description':
+    '用于替换默认 S3 URL，例如 CDN 域名',
+  'settings.schema.imageStorageOptions.customDomain.title': '自定义域名（CDN）',
+  'settings.schema.imageStorageOptions.enable.title': '启用 S3 图片存储',
+  'settings.schema.imageStorageOptions.endpoint.title': 'S3 Endpoint',
+  'settings.schema.imageStorageOptions.prefix.description':
+    '上传到 S3 的文件路径前缀。支持占位符：{Y} 四位年份、{y} 两位年份、{m} 月、{d} 日、{h} 时、{i} 分、{s} 秒、{md5} 随机 MD5、{type} 文件类型等。例如 blog/{Y}/{m}/{d} 或 images/',
+  'settings.schema.imageStorageOptions.prefix.title': '文件路径前缀',
+  'settings.schema.imageStorageOptions.region.title': '区域',
+  'settings.schema.imageStorageOptions.secretId.title': '访问密钥 ID',
+  'settings.schema.imageStorageOptions.secretKey.title': '访问密钥',
+  'settings.schema.imageStorageOptions.title': '图片存储',
+  'settings.schema.mailOptions.enable.title': '启用邮件通知',
+  'settings.schema.mailOptions.from.description':
+    'Resend 必填；SMTP 可选（留空时默认使用 SMTP 用户名）',
+  'settings.schema.mailOptions.from.title': '发件人邮箱地址',
+  'settings.schema.mailOptions.provider.option.resend': 'Resend',
+  'settings.schema.mailOptions.provider.option.smtp': 'SMTP',
+  'settings.schema.mailOptions.provider.title': '邮件服务商',
+  'settings.schema.mailOptions.rateLimit.description':
+    '每秒最多发送数，默认 10',
+  'settings.schema.mailOptions.rateLimit.title': '发送速率限制',
+  'settings.schema.mailOptions.resend.apiKey.title': 'Resend API 密钥',
+  'settings.schema.mailOptions.resend.title': 'Resend 配置',
+  'settings.schema.mailOptions.retryCount.description':
+    '发送失败后最多重试次数，默认 3',
+  'settings.schema.mailOptions.retryCount.title': '发送失败重试次数',
+  'settings.schema.mailOptions.smtp.host.title': 'SMTP 主机',
+  'settings.schema.mailOptions.smtp.pass.title': 'SMTP 密码',
+  'settings.schema.mailOptions.smtp.port.title': 'SMTP 端口',
+  'settings.schema.mailOptions.smtp.secure.title': '使用 SSL/TLS',
+  'settings.schema.mailOptions.smtp.title': 'SMTP 配置',
+  'settings.schema.mailOptions.smtp.user.title': 'SMTP 用户名',
+  'settings.schema.mailOptions.title': '邮件通知',
+  'settings.schema.membership.title': '会员',
+  'settings.schema.seo.description.title': '站点描述',
+  'settings.schema.seo.icon.title': '浅色图标 URL',
+  'settings.schema.seo.iconDark.title': '深色图标 URL',
+  'settings.schema.seo.keywords.title': '关键词',
+  'settings.schema.seo.title': 'SEO',
+  'settings.schema.seo.title.title': '站点标题',
+  'settings.schema.thirdPartyServiceIntegration.github.enabled.title': '启用',
+  'settings.schema.thirdPartyServiceIntegration.github.title': 'GitHub',
+  'settings.schema.thirdPartyServiceIntegration.github.token.description':
+    '调用 GitHub API 时使用；遇到速率限制时填写',
+  'settings.schema.thirdPartyServiceIntegration.github.token.title':
+    '个人访问令牌',
+  'settings.schema.thirdPartyServiceIntegration.tmdb.apiKey.title': 'API 密钥',
+  'settings.schema.thirdPartyServiceIntegration.tmdb.enabled.title': '启用',
+  'settings.schema.thirdPartyServiceIntegration.tmdb.title': 'TMDB',
+  'settings.schema.thirdPartyServiceIntegration.bangumi.accessToken.title':
+    '访问令牌',
+  'settings.schema.thirdPartyServiceIntegration.bangumi.enabled.title': '启用',
+  'settings.schema.thirdPartyServiceIntegration.bangumi.title': 'Bangumi',
+  'settings.schema.thirdPartyServiceIntegration.neodb.enabled.title': '启用',
+  'settings.schema.thirdPartyServiceIntegration.neodb.title': 'NeoDB',
+  'settings.schema.thirdPartyServiceIntegration.arxiv.enabled.title': '启用',
+  'settings.schema.thirdPartyServiceIntegration.arxiv.title': 'Arxiv',
+  'settings.schema.thirdPartyServiceIntegration.leetcode.enabled.title': '启用',
+  'settings.schema.thirdPartyServiceIntegration.leetcode.title': 'Leetcode',
+  'settings.schema.thirdPartyServiceIntegration.neteaseMusic.enabled.title':
+    '启用',
+  'settings.schema.thirdPartyServiceIntegration.neteaseMusic.title':
+    '网易云音乐',
+  'settings.schema.thirdPartyServiceIntegration.qqMusic.enabled.title': '启用',
+  'settings.schema.thirdPartyServiceIntegration.qqMusic.title': 'QQ 音乐',
+  'settings.schema.thirdPartyServiceIntegration.twelveData.apiKey.description':
+    '股票报价数据源，https://twelvedata.com',
+  'settings.schema.thirdPartyServiceIntegration.twelveData.apiKey.title':
+    'API 密钥',
+  'settings.schema.thirdPartyServiceIntegration.twelveData.enabled.title':
+    '启用',
+  'settings.schema.thirdPartyServiceIntegration.twelveData.title':
+    'Twelve Data',
+  'settings.schema.thirdPartyServiceIntegration.polygon.apiKey.description':
+    '股票 K 线数据源，https://polygon.io',
+  'settings.schema.thirdPartyServiceIntegration.polygon.apiKey.title':
+    'API 密钥',
+  'settings.schema.thirdPartyServiceIntegration.polygon.enabled.title': '启用',
+  'settings.schema.thirdPartyServiceIntegration.polygon.title': 'Polygon.io',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.enabled.description':
+    '为未由专用服务商处理的 URL 获取 Open Graph / oEmbed 元数据，作为链接卡片的回退',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.enabled.title':
+    '启用',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.fetchMode.description':
+    '默认使用 HTTP 请求。受 Cloudflare 保护或反爬的网站可改用浏览器模式，通过 Docker 内置 Chromium 渲染；浏览器模式更慢且资源开销更高。',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.fetchMode.option.browser':
+    '无头浏览器（agent-browser）',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.fetchMode.option.fetch':
+    'HTTP 请求',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.fetchMode.title':
+    '获取模式',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.maxBodyBytes.description':
+    '默认 524288（512KB），范围 16KB-4MB；仅扫描 <head>',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.maxBodyBytes.title':
+    '最大响应大小（字节）',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.enabled.description':
+    '当获取模式为浏览器时抓取页面截图，仅在浏览器模式生效。',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.enabled.title':
+    '启用截图',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxBytesPerImage.description':
+    '默认 524288（512KB），最小 1KB',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxBytesPerImage.title':
+    '每张图片最大尺寸（字节）',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxItems.description':
+    '默认 500，范围 10-10000',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxItems.title':
+    '最大缓存项目数',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxTotalBytes.description':
+    '默认 104857600（100MB），最小 1MB',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxTotalBytes.title':
+    '最大总存储量（字节）',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.title':
+    '截图',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.webpQuality.description':
+    '默认 75，范围 40-100',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.webpQuality.title':
+    'WebP 质量',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.timeoutMs.description':
+    '获取模式默认 8000 毫秒，浏览器模式默认 25000 毫秒。范围 1000-60000',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.timeoutMs.title':
+    '获取超时（毫秒）',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.title':
+    'Open Graph / oEmbed 回退',
+  'settings.schema.thirdPartyServiceIntegration.title': '第三方集成',
+  'settings.schema.url.adminUrl.title': '管理面板 URL',
+  'settings.schema.url.serverUrl.title': 'API URL',
+  'settings.schema.url.title': '站点地址',
+  'settings.schema.url.webUrl.title': '前端 URL',
+  'settings.schema.url.wsUrl.title': '网关 URL',
   'settings.meta.action.addChild': '添加子字段',
   'settings.meta.action.addOption': '添加选项',
   'settings.meta.action.addPreset': '新增预设',
@@ -2792,6 +3064,30 @@ export const zhCN = {
   'write.meta.json.label': 'Meta JSON',
   'write.meta.json.parseError': 'JSON 解析失败',
   'write.meta.json.submit': '提交',
+  'write.meta.builtin.aiGen.description': '声明创作过程中 AI 的参与程度',
+  'write.meta.builtin.aiGen.label': 'AI 参与说明',
+  'write.meta.builtin.aiGen.option.dictation': '语音输入',
+  'write.meta.builtin.aiGen.option.fullyGenerated': '完全由 AI 生成',
+  'write.meta.builtin.aiGen.option.generatedImagery': 'AI 生成的图像',
+  'write.meta.builtin.aiGen.option.inspirationSource': '灵感来源',
+  'write.meta.builtin.aiGen.option.noAi': '未使用 AI（人工创作）',
+  'write.meta.builtin.aiGen.option.polishing': '润色',
+  'write.meta.builtin.aiGen.option.proofreading': '校对',
+  'write.meta.builtin.aiGen.option.rewriting': '改写',
+  'write.meta.builtin.aiGen.option.storyOrganization': '故事编排',
+  'write.meta.builtin.aiGen.option.titleGeneration': '标题生成',
+  'write.meta.builtin.aiGen.option.writingAssistance': '写作辅助',
+  'write.meta.builtin.banner.className.label': '自定义类名',
+  'write.meta.builtin.banner.className.placeholder': '可选的 CSS 类名',
+  'write.meta.builtin.banner.description': '显示在文章顶部的提示横幅',
+  'write.meta.builtin.banner.label': '横幅',
+  'write.meta.builtin.banner.message.label': '内容',
+  'write.meta.builtin.banner.type.label': '类型',
+  'write.meta.builtin.cover.label': '封面图片',
+  'write.meta.builtin.keywords.label': 'SEO 关键词',
+  'write.meta.builtin.keywords.placeholder': '输入关键词后按回车添加',
+  'write.meta.builtin.style.label': '文章样式',
+  'write.meta.builtin.style.placeholder': '输入样式名称',
   'write.meta.kvList.addField': '添加字段',
   'write.meta.kvList.deleteFieldAria': '删除字段',
   'write.meta.kvList.empty': '暂无自定义字段',

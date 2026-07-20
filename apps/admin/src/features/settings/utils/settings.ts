@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 
 import type { ConfigFormField } from '~/api/options'
+import { translate as t } from '~/i18n/translate'
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
 import type { CreateMetaPresetDto, MetaPresetField } from '~/models/meta-preset'
 
@@ -143,10 +144,10 @@ export function coerceAIProviderType(value: unknown): AIProviderType {
 export function formatAIProviderLabel(provider: AIProviderConfig) {
   const name = provider.name.trim()
   if (name) return name
-  return (
-    aiProviderTypeOptions.find((option) => option.value === provider.type)
-      ?.label ?? provider.type
+  const option = aiProviderTypeOptions.find(
+    (option) => option.value === provider.type,
   )
+  return option ? t(option.labelKey) : provider.type
 }
 
 export function getDefaultAIModel(type: AIProviderType) {

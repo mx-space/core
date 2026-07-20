@@ -1935,6 +1935,9 @@ export const enUS = {
     'Configure AI providers, keys, endpoint, and default model.',
   'settings.ai.provider.editAction': 'Edit',
   'settings.ai.provider.row.empty': 'No model assigned',
+  'settings.ai.providerType.anthropic': 'Anthropic',
+  'settings.ai.providerType.generic': 'Generic',
+  'settings.ai.providerType.openaiCompatible': 'OpenAI compatible',
   'settings.ai.section.featureToggles': 'Feature toggles',
   'settings.ai.section.insights': 'AI insights',
   'settings.ai.section.insightsDescription':
@@ -2009,10 +2012,303 @@ export const enUS = {
   'settings.fieldType.url': 'URL',
   'settings.group.account.description': 'Login, auth, credentials',
   'settings.group.account.title': 'Account security',
+  'settings.group.ai.description': 'AI summary, writing assistant',
+  'settings.group.ai.title': 'AI',
+  'settings.group.content.description': 'Comments, friend links',
+  'settings.group.content.title': 'Content',
+  'settings.group.integrations.description': 'GitHub, TMDB, Bangumi, etc.',
+  'settings.group.integrations.title': 'Third-party integrations',
+  'settings.group.membership.description': 'Paid membership, payment provider',
+  'settings.group.membership.title': 'Membership',
   'settings.group.metaPreset.description': 'Preset templates',
   'settings.group.metaPreset.title': 'Meta presets',
+  'settings.group.notification.description': 'Email, Bark push',
+  'settings.group.notification.title': 'Notifications',
+  'settings.group.search.description': 'Search engines, full-text search',
+  'settings.group.search.title': 'Search push',
+  'settings.group.site.description': 'Site URL, SEO',
+  'settings.group.site.title': 'Site',
+  'settings.group.storage.description':
+    'Backup, image hosting, comment image uploads',
+  'settings.group.storage.title': 'Storage',
+  'settings.group.system.description': 'Admin settings, feature toggles',
+  'settings.group.system.title': 'System',
   'settings.group.user.description': 'Profile',
   'settings.group.user.title': 'User',
+  'settings.schema.ai.title': 'AI settings',
+  'settings.schema.adminExtra.background.title': 'Login page background',
+  'settings.schema.adminExtra.enableAdminProxy.description':
+    'Whether the admin dashboard can be accessed through the API',
+  'settings.schema.adminExtra.enableAdminProxy.title':
+    'Enable admin reverse proxy',
+  'settings.schema.adminExtra.gaodemapKey.description':
+    'Location lookup for diary entries',
+  'settings.schema.adminExtra.gaodemapKey.title': 'Amap query API key',
+  'settings.schema.adminExtra.title': 'Admin extras',
+  'settings.schema.backupOptions.enable.description':
+    'Fill in the S3 information below to also upload backups to S3',
+  'settings.schema.backupOptions.enable.title': 'Enable automatic backup',
+  'settings.schema.backupOptions.endpoint.title': 'S3 endpoint',
+  'settings.schema.backupOptions.region.title': 'Region',
+  'settings.schema.backupOptions.bucket.title': 'Bucket',
+  'settings.schema.backupOptions.secretId.title': 'Secret ID',
+  'settings.schema.backupOptions.secretKey.title': 'Secret key',
+  'settings.schema.backupOptions.title': 'Backup',
+  'settings.schema.baiduSearchOptions.enable.title': 'Enable push',
+  'settings.schema.baiduSearchOptions.title': 'Baidu push settings',
+  'settings.schema.baiduSearchOptions.token.title': 'Token',
+  'settings.schema.barkOptions.enable.title': 'Enable Bark notifications',
+  'settings.schema.barkOptions.enableComment.title':
+    'Enable comment notifications',
+  'settings.schema.barkOptions.enableThrottleGuard.description':
+    'Sends a notification when requests are rate-limited; can serve as an early warning for attacks',
+  'settings.schema.barkOptions.enableThrottleGuard.title':
+    'Notify on rate-limited requests',
+  'settings.schema.barkOptions.key.title': 'Device key',
+  'settings.schema.barkOptions.serverUrl.description':
+    'Defaults to the public server, https://day.app, when empty',
+  'settings.schema.barkOptions.serverUrl.title': 'Server URL',
+  'settings.schema.barkOptions.title': 'Bark notifications',
+  'settings.schema.bingSearchOptions.enable.title': 'Enable push',
+  'settings.schema.bingSearchOptions.title': 'Bing push settings',
+  'settings.schema.bingSearchOptions.token.title': 'Bing API key',
+  'settings.schema.commentOptions.aiReview.title': 'Enable AI review',
+  'settings.schema.commentOptions.aiReviewThreshold.description':
+    'Scores above this value are classified as spam. Range 1-10, default 5',
+  'settings.schema.commentOptions.aiReviewThreshold.title':
+    'AI review threshold',
+  'settings.schema.commentOptions.aiReviewType.description':
+    'Defaults to binary; score mode is also available',
+  'settings.schema.commentOptions.aiReviewType.option.binary': 'Binary',
+  'settings.schema.commentOptions.aiReviewType.option.score': 'Score',
+  'settings.schema.commentOptions.aiReviewType.title': 'AI review mode',
+  'settings.schema.commentOptions.allowGuestComment.description':
+    'When disabled, only signed-in readers or the owner can comment and reply',
+  'settings.schema.commentOptions.allowGuestComment.title':
+    'Allow comments without login',
+  'settings.schema.commentOptions.antiSpam.title': 'Anti-spam',
+  'settings.schema.commentOptions.blockIps.title': 'Custom blocked IPs',
+  'settings.schema.commentOptions.commentShouldAudit.title':
+    'Only show approved comments',
+  'settings.schema.commentOptions.disableComment.description':
+    'Reserved for sensitive periods',
+  'settings.schema.commentOptions.disableComment.title':
+    'Disable comments site-wide',
+  'settings.schema.commentOptions.disableNoChinese.title':
+    'Reject non-Chinese comments',
+  'settings.schema.commentOptions.recordIpLocation.title':
+    'Publicly display comment location',
+  'settings.schema.commentOptions.spamKeywords.title':
+    'Custom blocked keywords',
+  'settings.schema.commentOptions.testAiReview.actionLabel': 'Test',
+  'settings.schema.commentOptions.testAiReview.description':
+    'Enter test content to verify whether AI review is working correctly',
+  'settings.schema.commentOptions.testAiReview.title': 'Test AI review',
+  'settings.schema.commentOptions.title': 'Comment settings',
+  'settings.schema.commentUploadOptions.commentImageMaxCount.description':
+    'Default 4',
+  'settings.schema.commentUploadOptions.commentImageMaxCount.title':
+    'Max images per comment',
+  'settings.schema.commentUploadOptions.cronIntervalMinutes.description':
+    'Default 15',
+  'settings.schema.commentUploadOptions.cronIntervalMinutes.title':
+    'Cleanup interval (minutes)',
+  'settings.schema.commentUploadOptions.deleteFilesOnSpam.description':
+    'Enabled by default. When disabled, only the comment is removed and images are kept for manual review',
+  'settings.schema.commentUploadOptions.deleteFilesOnSpam.title':
+    'Delete images when comment is marked as spam',
+  'settings.schema.commentUploadOptions.detachedTtlMinutes.description':
+    'Retention time for images removed by a comment edit. Default 30',
+  'settings.schema.commentUploadOptions.detachedTtlMinutes.title':
+    'Detached TTL (minutes)',
+  'settings.schema.commentUploadOptions.enable.description':
+    'When disabled, the frontend hides the upload entry and the backend returns 503',
+  'settings.schema.commentUploadOptions.enable.title':
+    'Enable reader comment image uploads',
+  'settings.schema.commentUploadOptions.mimeWhitelist.description':
+    'Defaults to image/jpeg, image/png, image/webp, image/gif. Changes take effect immediately',
+  'settings.schema.commentUploadOptions.mimeWhitelist.title': 'MIME whitelist',
+  'settings.schema.commentUploadOptions.pendingTtlMinutes.description':
+    'Retention time for uploaded images not yet referenced by a comment; expired ones are removed. Default 120',
+  'settings.schema.commentUploadOptions.pendingTtlMinutes.title':
+    'Pending TTL (minutes)',
+  'settings.schema.commentUploadOptions.readerHourlyUploadCount.description':
+    'Default 10',
+  'settings.schema.commentUploadOptions.readerHourlyUploadCount.title':
+    'Max uploads per reader per hour',
+  'settings.schema.commentUploadOptions.readerMinAccountAgeHours.description':
+    'Eligibility threshold; 0 means no limit. Default 0',
+  'settings.schema.commentUploadOptions.readerMinAccountAgeHours.title':
+    'Minimum reader account age (hours)',
+  'settings.schema.commentUploadOptions.readerMinCommentCount.description':
+    'Eligibility threshold; 0 means no limit. Default 0',
+  'settings.schema.commentUploadOptions.readerMinCommentCount.title':
+    'Minimum comments posted by reader',
+  'settings.schema.commentUploadOptions.readerTotalActiveBytesMB.description':
+    'Default 50',
+  'settings.schema.commentUploadOptions.readerTotalActiveBytesMB.title':
+    'Max total active image storage per reader (MB)',
+  'settings.schema.commentUploadOptions.singleFileSizeMB.description':
+    'Default 5',
+  'settings.schema.commentUploadOptions.singleFileSizeMB.title':
+    'Max size per image (MB)',
+  'settings.schema.commentUploadOptions.title': 'Comment image uploads',
+  'settings.schema.featureList.emailSubscribe.title':
+    'Enable email subscription',
+  'settings.schema.featureList.title': 'Feature toggles',
+  'settings.schema.friendLinkOptions.allowApply.title':
+    'Allow friend link applications',
+  'settings.schema.friendLinkOptions.allowSubPath.description':
+    'For example, a /blog sub-path',
+  'settings.schema.friendLinkOptions.allowSubPath.title':
+    'Allow sub-path friend links',
+  'settings.schema.friendLinkOptions.enableAvatarInternalization.description':
+    'After approval, the friend link avatar is downloaded and converted to an internal link. Only common image formats are supported; other formats are not converted',
+  'settings.schema.friendLinkOptions.enableAvatarInternalization.title':
+    'Internalize friend link avatars',
+  'settings.schema.friendLinkOptions.title': 'Friend link settings',
+  'settings.schema.imageStorageOptions.bucket.title': 'Bucket',
+  'settings.schema.imageStorageOptions.commentUploadPrefix.description':
+    'Path prefix dedicated to reader comment uploads. Defaults to comments/{readerId}/{Y}/{m}/{md5}.{ext} when empty. Placeholders are the same as prefix, with additional support for {readerId}',
+  'settings.schema.imageStorageOptions.commentUploadPrefix.title':
+    'Comment image path prefix',
+  'settings.schema.imageStorageOptions.customDomain.description':
+    'Used to replace the default S3 URL, e.g. a CDN domain',
+  'settings.schema.imageStorageOptions.customDomain.title':
+    'Custom domain (CDN)',
+  'settings.schema.imageStorageOptions.enable.title': 'Enable S3 image storage',
+  'settings.schema.imageStorageOptions.endpoint.title': 'S3 endpoint',
+  'settings.schema.imageStorageOptions.prefix.description':
+    'Path prefix for files uploaded to S3. Supports placeholders: {Y} 4-digit year, {y} 2-digit year, {m} month, {d} day, {h} hour, {i} minute, {s} second, {md5} random MD5, {type} file type, etc. Example: blog/{Y}/{m}/{d} or images/',
+  'settings.schema.imageStorageOptions.prefix.title': 'File path prefix',
+  'settings.schema.imageStorageOptions.region.title': 'Region',
+  'settings.schema.imageStorageOptions.secretId.title': 'Access Key ID',
+  'settings.schema.imageStorageOptions.secretKey.title': 'Secret access key',
+  'settings.schema.imageStorageOptions.title': 'Image storage',
+  'settings.schema.mailOptions.enable.title': 'Enable email notifications',
+  'settings.schema.mailOptions.from.description':
+    'Required for Resend; optional for SMTP (defaults to the SMTP username if omitted)',
+  'settings.schema.mailOptions.from.title': 'Sender email address',
+  'settings.schema.mailOptions.provider.option.resend': 'Resend',
+  'settings.schema.mailOptions.provider.option.smtp': 'SMTP',
+  'settings.schema.mailOptions.provider.title': 'Email provider',
+  'settings.schema.mailOptions.rateLimit.description':
+    'Maximum sends per second; defaults to 10',
+  'settings.schema.mailOptions.rateLimit.title': 'Send rate limit',
+  'settings.schema.mailOptions.resend.apiKey.title': 'Resend API key',
+  'settings.schema.mailOptions.resend.title': 'Resend configuration',
+  'settings.schema.mailOptions.retryCount.description':
+    'Maximum retries after a send failure; defaults to 3',
+  'settings.schema.mailOptions.retryCount.title': 'Send failure retry count',
+  'settings.schema.mailOptions.smtp.host.title': 'SMTP host',
+  'settings.schema.mailOptions.smtp.pass.title': 'SMTP password',
+  'settings.schema.mailOptions.smtp.port.title': 'SMTP port',
+  'settings.schema.mailOptions.smtp.secure.title': 'Use SSL/TLS',
+  'settings.schema.mailOptions.smtp.title': 'SMTP configuration',
+  'settings.schema.mailOptions.smtp.user.title': 'SMTP username',
+  'settings.schema.mailOptions.title': 'Email notifications',
+  'settings.schema.membership.title': 'Membership',
+  'settings.schema.seo.description.title': 'Site description',
+  'settings.schema.seo.icon.title': 'Light icon URL',
+  'settings.schema.seo.iconDark.title': 'Dark icon URL',
+  'settings.schema.seo.keywords.title': 'Keywords',
+  'settings.schema.seo.title': 'SEO',
+  'settings.schema.seo.title.title': 'Site title',
+  'settings.schema.thirdPartyServiceIntegration.github.enabled.title':
+    'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.github.title': 'GitHub',
+  'settings.schema.thirdPartyServiceIntegration.github.token.description':
+    'Used when calling the GitHub API; fill in when you hit rate limits',
+  'settings.schema.thirdPartyServiceIntegration.github.token.title':
+    'Personal access token',
+  'settings.schema.thirdPartyServiceIntegration.tmdb.apiKey.title': 'API key',
+  'settings.schema.thirdPartyServiceIntegration.tmdb.enabled.title': 'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.tmdb.title': 'TMDB',
+  'settings.schema.thirdPartyServiceIntegration.bangumi.accessToken.title':
+    'Access token',
+  'settings.schema.thirdPartyServiceIntegration.bangumi.enabled.title':
+    'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.bangumi.title': 'Bangumi',
+  'settings.schema.thirdPartyServiceIntegration.neodb.enabled.title': 'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.neodb.title': 'NeoDB',
+  'settings.schema.thirdPartyServiceIntegration.arxiv.enabled.title': 'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.arxiv.title': 'Arxiv',
+  'settings.schema.thirdPartyServiceIntegration.leetcode.enabled.title':
+    'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.leetcode.title': 'Leetcode',
+  'settings.schema.thirdPartyServiceIntegration.neteaseMusic.enabled.title':
+    'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.neteaseMusic.title':
+    'NetEase Cloud Music',
+  'settings.schema.thirdPartyServiceIntegration.qqMusic.enabled.title':
+    'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.qqMusic.title': 'QQ Music',
+  'settings.schema.thirdPartyServiceIntegration.twelveData.apiKey.description':
+    'Stock quote data source, https://twelvedata.com',
+  'settings.schema.thirdPartyServiceIntegration.twelveData.apiKey.title':
+    'API key',
+  'settings.schema.thirdPartyServiceIntegration.twelveData.enabled.title':
+    'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.twelveData.title':
+    'Twelve Data',
+  'settings.schema.thirdPartyServiceIntegration.polygon.apiKey.description':
+    'Stock bars data source, https://polygon.io',
+  'settings.schema.thirdPartyServiceIntegration.polygon.apiKey.title':
+    'API key',
+  'settings.schema.thirdPartyServiceIntegration.polygon.enabled.title':
+    'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.polygon.title': 'Polygon.io',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.enabled.description':
+    'Fetches Open Graph / oEmbed metadata as a link card fallback for URLs not handled by a dedicated provider',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.enabled.title':
+    'Enabled',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.fetchMode.description':
+    'Defaults to HTTP fetch. For Cloudflare-protected or anti-bot sites, switch to browser mode to render via the chromium bundled in Docker. Browser mode is slower and more expensive.',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.fetchMode.option.browser':
+    'Headless browser (agent-browser)',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.fetchMode.option.fetch':
+    'HTTP fetch',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.fetchMode.title':
+    'Fetch mode',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.maxBodyBytes.description':
+    'Defaults to 524288 (512KB); range 16KB-4MB; only the <head> is scanned',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.maxBodyBytes.title':
+    'Max response size (bytes)',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.enabled.description':
+    'Capture page screenshots when fetchMode is browser. Only effective in browser mode.',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.enabled.title':
+    'Enable screenshots',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxBytesPerImage.description':
+    'Default 524288 (512KB); minimum 1KB',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxBytesPerImage.title':
+    'Max size per image (bytes)',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxItems.description':
+    'Default 500; range 10-10000',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxItems.title':
+    'Max cached items',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxTotalBytes.description':
+    'Default 104857600 (100MB); minimum 1MB',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.maxTotalBytes.title':
+    'Max total storage (bytes)',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.title':
+    'Screenshot',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.webpQuality.description':
+    'Default 75; range 40-100',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.screenshot.webpQuality.title':
+    'WebP quality',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.timeoutMs.description':
+    'Defaults to 8000 in fetch mode and 25000 in browser mode. Range 1000-60000',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.timeoutMs.title':
+    'Fetch timeout (milliseconds)',
+  'settings.schema.thirdPartyServiceIntegration.openGraph.title':
+    'Open Graph / oEmbed fallback',
+  'settings.schema.thirdPartyServiceIntegration.title':
+    'Third-party integrations',
+  'settings.schema.url.adminUrl.title': 'Admin dashboard URL',
+  'settings.schema.url.serverUrl.title': 'API URL',
+  'settings.schema.url.title': 'Site URLs',
+  'settings.schema.url.webUrl.title': 'Frontend URL',
+  'settings.schema.url.wsUrl.title': 'Gateway URL',
   'settings.meta.action.addChild': 'Add child field',
   'settings.meta.action.addOption': 'Add option',
   'settings.meta.action.addPreset': 'Add preset',
@@ -2926,6 +3222,32 @@ export const enUS = {
   'write.meta.json.label': 'Meta JSON',
   'write.meta.json.parseError': 'JSON parse failed',
   'write.meta.json.submit': 'Submit',
+  'write.meta.builtin.aiGen.description':
+    'Declare how much AI was involved during creation',
+  'write.meta.builtin.aiGen.label': 'AI involvement disclosure',
+  'write.meta.builtin.aiGen.option.dictation': 'Dictation',
+  'write.meta.builtin.aiGen.option.fullyGenerated': 'Fully AI-generated',
+  'write.meta.builtin.aiGen.option.generatedImagery': 'AI-generated imagery',
+  'write.meta.builtin.aiGen.option.inspirationSource': 'Inspiration source',
+  'write.meta.builtin.aiGen.option.noAi': 'No AI (handcrafted)',
+  'write.meta.builtin.aiGen.option.polishing': 'Polishing',
+  'write.meta.builtin.aiGen.option.proofreading': 'Proofreading',
+  'write.meta.builtin.aiGen.option.rewriting': 'Rewriting',
+  'write.meta.builtin.aiGen.option.storyOrganization': 'Story organization',
+  'write.meta.builtin.aiGen.option.titleGeneration': 'Title generation',
+  'write.meta.builtin.aiGen.option.writingAssistance': 'Writing assistance',
+  'write.meta.builtin.banner.className.label': 'Custom class name',
+  'write.meta.builtin.banner.className.placeholder': 'Optional CSS class name',
+  'write.meta.builtin.banner.description':
+    'Notice banner displayed at the top of an article',
+  'write.meta.builtin.banner.label': 'Banner',
+  'write.meta.builtin.banner.message.label': 'Message',
+  'write.meta.builtin.banner.type.label': 'Type',
+  'write.meta.builtin.cover.label': 'Cover image',
+  'write.meta.builtin.keywords.label': 'SEO keywords',
+  'write.meta.builtin.keywords.placeholder': 'Type a keyword and press Enter',
+  'write.meta.builtin.style.label': 'Article style',
+  'write.meta.builtin.style.placeholder': 'Enter a style name',
   'write.meta.kvList.addField': 'Add field',
   'write.meta.kvList.deleteFieldAria': 'Delete field',
   'write.meta.kvList.empty': 'No custom fields',
