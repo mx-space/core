@@ -21,7 +21,6 @@ import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { zEntityId } from '~/common/zod'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import type { SessionUser } from '../auth/auth.types'
@@ -54,7 +53,7 @@ const MembersListQuerySchema = z.object({
 class MembersListQueryDto extends createZodDto(MembersListQuerySchema) {}
 
 const ReaderIdParamSchema = z.object({
-  readerId: zEntityId,
+  readerId: z.string().min(1),
 })
 class ReaderIdParamDto extends createZodDto(ReaderIdParamSchema) {}
 

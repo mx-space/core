@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common'
 
-import type { EntityId } from '~/shared/id/entity-id'
-
 import { ConfigsService } from '../configs/configs.service'
 import { MembershipRepository } from './membership.repository'
 import {
@@ -16,7 +14,7 @@ export class EntitlementService {
     private readonly configsService: ConfigsService,
   ) {}
 
-  async isActiveMember(readerId: EntityId | string): Promise<boolean> {
+  async isActiveMember(readerId: string): Promise<boolean> {
     const membership = await this.membershipRepository.findByReaderId(readerId)
     if (!membership) return false
     if (membership.status !== 'active' && membership.status !== 'on_hold')
@@ -24,9 +22,7 @@ export class EntitlementService {
     return membership.currentPeriodEnd.getTime() > Date.now()
   }
 
-  async getActiveMemberIds(
-    readerIds: (EntityId | string)[],
-  ): Promise<Set<string>> {
+  async getActiveMemberIds(readerIds: string[]): Promise<Set<string>> {
     const unique = [...new Set(readerIds.map(String))]
     if (unique.length === 0) return new Set()
     const rows = await this.membershipRepository.findByReaderIds(unique)

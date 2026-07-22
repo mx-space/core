@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
-import type { EntityId } from '~/shared/id/entity-id'
 
 import { BillingWebhookEventRepository } from './billing-webhook-event.repository'
 import { MembershipRepository } from './membership.repository'
@@ -28,9 +27,7 @@ export class MembershipService {
     private readonly billingWebhookEventRepository: BillingWebhookEventRepository,
   ) {}
 
-  async getByReaderId(
-    readerId: EntityId | string,
-  ): Promise<MembershipRow | null> {
+  async getByReaderId(readerId: string): Promise<MembershipRow | null> {
     return this.membershipRepository.findByReaderId(readerId)
   }
 
@@ -150,7 +147,7 @@ export class MembershipService {
   }
 
   async grantManual(
-    readerId: EntityId | string,
+    readerId: string,
     input: { plan: MembershipPlan; expiresAt: Date },
   ): Promise<MembershipRow> {
     const existing = await this.membershipRepository.findByReaderId(readerId)
@@ -182,7 +179,7 @@ export class MembershipService {
     })
   }
 
-  async revokeManual(readerId: EntityId | string): Promise<MembershipRow> {
+  async revokeManual(readerId: string): Promise<MembershipRow> {
     const existing = await this.membershipRepository.findByReaderId(readerId)
     if (!existing || existing.provider !== 'manual') {
       throw createAppException(AppErrorCode.INVALID_PARAMETER, {

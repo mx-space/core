@@ -22,7 +22,7 @@ import type {
 
 const mapRow = (row: typeof memberships.$inferSelect): MembershipRow => ({
   id: toEntityId(row.id) as EntityId,
-  readerId: toEntityId(row.readerId) as EntityId,
+  readerId: row.readerId,
   provider: row.provider as MembershipProvider,
   providerCustomerId: row.providerCustomerId,
   providerSubscriptionId: row.providerSubscriptionId,
@@ -43,7 +43,7 @@ export class MembershipRepository extends BaseRepository {
   }
 
   async create(input: {
-    readerId: EntityId | string
+    readerId: string
     provider: MembershipProvider
     providerCustomerId?: string | null
     providerSubscriptionId?: string | null
@@ -56,7 +56,7 @@ export class MembershipRepository extends BaseRepository {
       .insert(memberships)
       .values({
         id,
-        readerId: parseEntityId(input.readerId),
+        readerId: input.readerId,
         provider: input.provider,
         providerCustomerId: input.providerCustomerId ?? null,
         providerSubscriptionId: input.providerSubscriptionId ?? null,
@@ -77,25 +77,21 @@ export class MembershipRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
-  async findByReaderId(
-    readerId: EntityId | string,
-  ): Promise<MembershipRow | null> {
+  async findByReaderId(readerId: string): Promise<MembershipRow | null> {
     const [row] = await this.db
       .select()
       .from(memberships)
-      .where(eq(memberships.readerId, parseEntityId(readerId)))
+      .where(eq(memberships.readerId, readerId))
       .limit(1)
     return row ? mapRow(row) : null
   }
 
-  async findByReaderIds(
-    readerIds: (EntityId | string)[],
-  ): Promise<MembershipRow[]> {
+  async findByReaderIds(readerIds: string[]): Promise<MembershipRow[]> {
     if (readerIds.length === 0) return []
     const rows = await this.db
       .select()
       .from(memberships)
-      .where(inArray(memberships.readerId, readerIds.map(parseEntityId)))
+      .where(inArray(memberships.readerId, readerIds))
     return rows.map(mapRow)
   }
 
@@ -180,7 +176,7 @@ export class MembershipRepository extends BaseRepository {
       data: rows.map((row) => ({
         ...mapRow(row.membership),
         reader: {
-          id: toEntityId(row.reader.id) as EntityId,
+          id: row.reader.id,
           email: row.reader.email,
           name: row.reader.name,
           handle: row.reader.handle,

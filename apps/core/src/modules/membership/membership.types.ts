@@ -11,7 +11,7 @@ export type MembershipStatus = 'active' | 'on_hold' | 'cancelled' | 'expired'
 
 export interface MembershipRow {
   id: EntityId
-  readerId: EntityId
+  readerId: string
   provider: MembershipProvider
   providerCustomerId: string | null
   providerSubscriptionId: string | null
@@ -84,7 +84,7 @@ export function resolveMembershipReturnUrl(
 
 export interface MembershipMemberRow extends MembershipRow {
   reader: {
-    id: EntityId
+    id: string
     email: string | null
     name: string | null
     handle: string | null
