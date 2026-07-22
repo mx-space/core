@@ -1,3 +1,10 @@
+# [](https://github.com/mx-space/core/compare/v13.16.1...v) (2026-07-22)
+
+
+### Bug Fixes
+
+* **membership:** treat reader IDs as opaque strings, not Snowflake EntityId ([7c54268](https://github.com/mx-space/core/commit/7c5426801fac7cd374a7a7762400a94b15c0141b)), closes [#2774](https://github.com/mx-space/core/issues/2774)
+
 ## [13.16.1](https://github.com/mx-space/core/compare/v13.16.0...v13.16.1) (2026-07-19)
 
 
