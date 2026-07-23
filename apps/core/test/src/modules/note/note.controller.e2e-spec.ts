@@ -80,6 +80,7 @@ const createController = (
       text: '',
     }),
     translateArticleList: vi.fn().mockResolvedValue(new Map()),
+    getCachedTitles: vi.fn().mockResolvedValue(new Map()),
     collectArticleTranslations: vi.fn().mockResolvedValue({
       results: new Map(),
       meta: new Map(),
@@ -180,7 +181,7 @@ describe('NoteController', () => {
   })
 
   describe('GET /nid/:nid?lang=en — translation in place', () => {
-    it('overwrites title/text/mood/weather in data and emits slim meta for current + next', async () => {
+    it('overwrites title/text/mood/weather in data; adjacent titles via getCachedTitles', async () => {
       const currentNote = makeNote({
         id: 'note-current',
         title: 'Original Title',
@@ -216,55 +217,39 @@ describe('NoteController', () => {
       const moodDictMap = new Map([['happy', 'Happy (EN)']])
       const topicNameEntityMap = new Map([['topic-1', 'Translated Topic']])
 
-      const { controller, enrichmentService } = createController({
-        noteService: {
-          findByNid: vi.fn().mockResolvedValue(currentNote),
-          checkNoteIsSecret: vi.fn().mockReturnValue(false),
-          checkPasswordToAccess: vi.fn().mockResolvedValue(true),
-          findByCreatedWindow: vi
-            .fn()
-            .mockResolvedValueOnce([])
-            .mockResolvedValueOnce([nextNote]),
-        },
-        translationService: {
-          translateArticle: vi.fn().mockResolvedValue(currentTranslationResult),
-          translateArticleList: vi.fn().mockResolvedValue(
-            new Map([
-              [
-                'note-next',
-                {
-                  isTranslated: true,
-                  title: 'Next Translated',
-                  text: 'Next translated text',
-                  content: null,
-                  contentFormat: null,
-                  sourceLang: 'zh',
-                  translationMeta: {
-                    sourceLang: 'zh',
-                    targetLang: 'en',
-                    translatedAt: new Date('2026-01-02'),
-                    model: 'claude-haiku',
-                  },
-                  availableTranslations: ['en'],
-                },
-              ],
-            ]),
-          ),
-        },
-        translationEntryService: {
-          getTranslationsBatch: vi.fn().mockResolvedValue({
-            entityMaps: new Map([
-              ['topic.name', topicNameEntityMap],
-              ['topic.introduce', new Map()],
-              ['topic.description', new Map()],
-            ]),
-            dictMaps: new Map([
-              ['note.mood', moodDictMap],
-              ['note.weather', new Map()],
-            ]),
-          }),
-        },
-      })
+      const { controller, enrichmentService, translationService } =
+        createController({
+          noteService: {
+            findByNid: vi.fn().mockResolvedValue(currentNote),
+            checkNoteIsSecret: vi.fn().mockReturnValue(false),
+            checkPasswordToAccess: vi.fn().mockResolvedValue(true),
+            findByCreatedWindow: vi
+              .fn()
+              .mockResolvedValueOnce([])
+              .mockResolvedValueOnce([nextNote]),
+          },
+          translationService: {
+            translateArticle: vi
+              .fn()
+              .mockResolvedValue(currentTranslationResult),
+            getCachedTitles: vi
+              .fn()
+              .mockResolvedValue(new Map([['note-next', 'Next Translated']])),
+          },
+          translationEntryService: {
+            getTranslationsBatch: vi.fn().mockResolvedValue({
+              entityMaps: new Map([
+                ['topic.name', topicNameEntityMap],
+                ['topic.introduce', new Map()],
+                ['topic.description', new Map()],
+              ]),
+              dictMaps: new Map([
+                ['note.mood', moodDictMap],
+                ['note.weather', new Map()],
+              ]),
+            }),
+          },
+        })
 
       const response = await controller.getNoteByNid(
         { nid: 1 } as any,
@@ -279,7 +264,18 @@ describe('NoteController', () => {
       expect(response.data.mood).toBe('Happy (EN)')
       expect(response.data.topic.name).toBe('Translated Topic')
 
+      expect(translationService.getCachedTitles).toHaveBeenCalledWith(
+        ['note-next'],
+        'en',
+      )
       expect(response.data.next.title).toBe('Next Translated')
+      expect(response.data.next).not.toHaveProperty('text')
+      expect(response.data.next).not.toHaveProperty('content')
+      expect(response.data.next).toMatchObject({
+        id: 'note-next',
+        nid: nextNote.nid,
+        slug: nextNote.slug,
+      })
 
       expect(
         response.meta.translation['note-current'].article.isTranslated,
@@ -290,10 +286,7 @@ describe('NoteController', () => {
       expect(response.meta.translation['note-current'].article.targetLang).toBe(
         'en',
       )
-
-      expect(response.meta.translation['note-next'].article.isTranslated).toBe(
-        true,
-      )
+      expect(response.meta.translation).not.toHaveProperty('note-next')
 
       expect(
         response.meta.translation['note-current'].article,
@@ -343,7 +336,7 @@ describe('NoteController', () => {
   })
 
   describe('GET /latest?lang=en — translation in place for latest + next', () => {
-    it('translates latest and next in place with slim meta for both', async () => {
+    it('translates latest in place; next title via getCachedTitles only', async () => {
       const latestNote = makeNote({
         id: 'note-latest',
         title: 'Latest ZH',
@@ -359,12 +352,8 @@ describe('NoteController', () => {
         title: 'Latest EN',
         text: 'latest translated',
       })
-      const nextTranslation = buildTranslationResult({
-        title: 'Next EN',
-        text: 'next translated',
-      })
 
-      const { controller } = createController({
+      const { controller, translationService } = createController({
         noteService: {
           getLatestOne: vi
             .fn()
@@ -372,10 +361,10 @@ describe('NoteController', () => {
           checkNoteIsSecret: vi.fn().mockReturnValue(false),
         },
         translationService: {
-          translateArticle: vi
+          translateArticle: vi.fn().mockResolvedValue(latestTranslation),
+          getCachedTitles: vi
             .fn()
-            .mockResolvedValueOnce(latestTranslation)
-            .mockResolvedValueOnce(nextTranslation),
+            .mockResolvedValue(new Map([['note-next-latest', 'Next EN']])),
         },
       })
 
@@ -383,15 +372,23 @@ describe('NoteController', () => {
 
       expect(response.data.title).toBe('Latest EN')
       expect(response.data.text).toBe('latest translated')
+      expect(translationService.getCachedTitles).toHaveBeenCalledWith(
+        ['note-next-latest'],
+        'en',
+      )
       expect(response.data.next.title).toBe('Next EN')
-      expect(response.data.next.text).toBe('next translated')
+      expect(response.data.next).not.toHaveProperty('text')
+      expect(response.data.next).not.toHaveProperty('content')
+      expect(response.data.next).toMatchObject({
+        id: 'note-next-latest',
+        nid: nextNote.nid,
+        slug: nextNote.slug,
+      })
 
       expect(
         response.meta.translation['note-latest'].article.isTranslated,
       ).toBe(true)
-      expect(
-        response.meta.translation['note-next-latest'].article.isTranslated,
-      ).toBe(true)
+      expect(response.meta.translation).not.toHaveProperty('note-next-latest')
 
       expect(
         response.meta.translation['note-latest'].article,

@@ -102,6 +102,43 @@ export class NoteController {
     }
   }
 
+  private toAdjacentNavNote(
+    note: NoteModel | null | undefined,
+  ): Pick<
+    NoteModel,
+    'id' | 'nid' | 'title' | 'slug' | 'createdAt' | 'isPublished'
+  > | null {
+    if (!note) return null
+    return {
+      id: note.id,
+      nid: note.nid,
+      title: note.title,
+      slug: note.slug,
+      createdAt: note.createdAt,
+      isPublished: note.isPublished,
+    }
+  }
+
+  private async applyCachedAdjacentTitles(
+    notes: Array<NoteModel | null | undefined>,
+    lang?: string,
+  ): Promise<void> {
+    if (!lang) return
+    const ids = notes
+      .filter((n): n is NoteModel => Boolean(n?.id))
+      .map((n) => String(n.id))
+    if (!ids.length) return
+
+    const titleMap = await this.translationService.getCachedTitles(ids, lang)
+    if (!titleMap.size) return
+
+    for (const note of notes) {
+      if (!note?.id) continue
+      const title = titleMap.get(String(note.id))
+      if (title) note.title = title
+    }
+  }
+
   private fallbackSummary(doc: NoteModel, maxLength: number): string | null {
     const locale =
       typeof (doc.meta as { lang?: unknown } | undefined)?.lang === 'string'
@@ -256,14 +293,6 @@ export class NoteController {
       }),
     ])
 
-    if (!isAuthenticated) {
-      for (const adj of [prev, next]) {
-        if (!adj) continue
-        adj.location = null
-        adj.coordinates = null
-      }
-    }
-
     const translationMap = new Map([
       [
         String(current.id),
@@ -277,49 +306,10 @@ export class NoteController {
     ])
 
     if (lang) {
-      const adjacents = [prev, next].filter(Boolean) as NoteModel[]
-      if (adjacents.length > 0) {
-        const adjResults = await this.translationService.translateArticleList({
-          articles: adjacents.map((n) => this.toArticleTranslationInput(n)),
-          targetLang: lang,
-          translationFields: [
-            'title',
-            'text',
-            'content',
-            'contentFormat',
-            'translationMeta',
-            'sourceLang',
-            'availableTranslations',
-          ],
-        })
-        for (const adj of adjacents) {
-          const adjResult = adjResults.get(String(adj.id))
-          if (adjResult) {
-            applyArticleTranslationInPlace(adj, adjResult as any, {
-              fields: ['title', 'text', 'content', 'contentFormat'],
-            })
-            if (adjResult.isTranslated) {
-              translationMap.set(String(adj.id), {
-                article: buildArticleTranslationMeta(
-                  adjResult as any,
-                  lang,
-                ) as ArticleTranslation,
-              })
-            }
-          }
-        }
-      }
+      await this.applyCachedAdjacentTitles([prev, next], lang)
 
-      const entryMaps = await this.batchEntryTranslations(lang, [
-        current,
-        prev,
-        next,
-      ])
+      const entryMaps = await this.batchEntryTranslations(lang, [current])
       applyTranslationEntriesInPlace(current, entryMaps, NOTE_ENTRY_RULES)
-      if (prev)
-        applyTranslationEntriesInPlace(prev, entryMaps, NOTE_ENTRY_RULES)
-      if (next)
-        applyTranslationEntriesInPlace(next, entryMaps, NOTE_ENTRY_RULES)
     }
 
     metaBuilder.translation(translationMap)
@@ -331,8 +321,8 @@ export class NoteController {
     return withMeta(
       {
         ...noteData,
-        next: next ?? null,
-        prev: prev ?? null,
+        next: this.toAdjacentNavNote(next),
+        prev: this.toAdjacentNavNote(prev),
       },
       metaBuilder.build(),
     )
@@ -349,12 +339,7 @@ export class NoteController {
     const result = await this.noteService.listPaginated(page, size, {
       visibleOnly: !isAuthenticated,
       sortBy: sortBy as
-        | 'createdAt'
-        | 'modifiedAt'
-        | 'title'
-        | 'mood'
-        | 'weather'
-        | undefined,
+        'createdAt' | 'modifiedAt' | 'title' | 'mood' | 'weather' | undefined,
       sortOrder: sortOrder === 'asc' ? 1 : -1,
       year,
       // Bodies are deleted from the response below when withSummary — skip
@@ -627,10 +612,6 @@ export class NoteController {
     if (!isAuthenticated) {
       latest.location = null
       latest.coordinates = null
-      if (next) {
-        next.location = null
-        next.coordinates = null
-      }
     }
     latest.text = this.noteService.checkNoteIsSecret(latest) ? '' : latest.text
 
@@ -646,25 +627,11 @@ export class NoteController {
 
     applyArticleTranslationInPlace(latest, translationResult)
 
-    let nextTranslationResult: Awaited<
-      ReturnType<TranslationService['translateArticle']>
-    > | null = null
-
-    if (lang && next) {
-      nextTranslationResult = await this.translationService.translateArticle({
-        articleId: String(next.id),
-        targetLang: lang,
-        allowHidden: Boolean(isAuthenticated),
-        originalData: { title: next.title, text: next.text ?? '' },
-      })
-      applyArticleTranslationInPlace(next, nextTranslationResult)
-    }
-
     if (lang) {
-      const entryMaps = await this.batchEntryTranslations(lang, [latest, next])
+      await this.applyCachedAdjacentTitles([next], lang)
+
+      const entryMaps = await this.batchEntryTranslations(lang, [latest])
       applyTranslationEntriesInPlace(latest, entryMaps, NOTE_ENTRY_RULES)
-      if (next)
-        applyTranslationEntriesInPlace(next, entryMaps, NOTE_ENTRY_RULES)
     }
 
     const insightsLang = parseLanguageCode(lang)
@@ -691,20 +658,12 @@ export class NoteController {
         },
       ],
     ])
-    if (nextTranslationResult) {
-      translationMap.set(String(next!.id), {
-        article: buildArticleTranslationMeta(
-          nextTranslationResult,
-          lang,
-        ) as ArticleTranslation,
-      })
-    }
     metaBuilder.translation(translationMap)
 
     return withMeta(
       {
         ...latestData,
-        next: next ?? null,
+        next: this.toAdjacentNavNote(next),
       },
       metaBuilder.build(),
     )
