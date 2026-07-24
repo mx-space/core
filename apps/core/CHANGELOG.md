@@ -1,4 +1,12 @@
-# [](https://github.com/mx-space/core/compare/v13.16.1...v) (2026-07-22)
+## [13.16.3](https://github.com/mx-space/core/compare/v13.16.2...v13.16.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **companion:** remove application icon host allowlist ([05853ef](https://github.com/mx-space/core/commit/05853efe5b82576c4228ce4d253bd020b7a81e1e))
+* **note:** slim adjacent next/prev and cache-title only ([6a3ab51](https://github.com/mx-space/core/commit/6a3ab51911bf3f1dbdc99a51247e2c888cd912cc))
+
+## [13.16.2](https://github.com/mx-space/core/compare/v13.16.1...v13.16.2) (2026-07-22)
 
 
 ### Bug Fixes
