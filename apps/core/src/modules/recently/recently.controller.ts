@@ -1,4 +1,13 @@
-import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
+import {
+  Body,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -75,6 +84,7 @@ export class RecentlyController {
   }
 
   @Post('/attitude/:id')
+  @HttpCode(200)
   async attitudePost(
     @Param() { id }: EntityIdDto,
     @Query() { attitude }: RecentlyAttitudeDto,

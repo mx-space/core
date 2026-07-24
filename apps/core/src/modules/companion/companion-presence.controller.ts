@@ -1,6 +1,7 @@
 import {
   Body,
   Get,
+  HttpCode,
   HttpStatus,
   Post,
   Put,
@@ -90,6 +91,7 @@ export class CompanionPresenceController {
   }
 
   @Post('/presence/clear')
+  @HttpCode(200)
   @SkipThrottle()
   @WithFastifyRouteOptions({
     bodyLimit: COMPANION_PRESENCE_PAYLOAD_BYTES,

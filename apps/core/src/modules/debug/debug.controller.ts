@@ -1,4 +1,12 @@
-import { Body, Get, Post, Query, Request, Response } from '@nestjs/common'
+import {
+  Body,
+  Get,
+  HttpCode,
+  Post,
+  Query,
+  Request,
+  Response,
+} from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
@@ -27,6 +35,7 @@ export class DebugController {
   }
 
   @Post('/events')
+  @HttpCode(200)
   async sendEvent(
     @Query('type') type: 'web' | 'admin' | 'all',
     @Query('event') event: BusinessEvents,
@@ -47,6 +56,7 @@ export class DebugController {
   }
 
   @Post('/function')
+  @HttpCode(200)
   @HTTPDecorators.RawResponse
   async runFunction(
     @Body('function') functionString: string,

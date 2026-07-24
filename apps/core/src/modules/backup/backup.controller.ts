@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Header,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -68,6 +69,7 @@ export class BackupController {
   }
 
   @Post(['/rollback/', '/'])
+  @HttpCode(200)
   async uploadAndRestore(@Req() req: FastifyRequest) {
     const data = await this.uploadService.getAndValidMultipartField(req, {
       maxFileSize: 1024 * 1024 * 100,
@@ -119,6 +121,7 @@ export class BackupController {
   }
 
   @Post('/upload-to-s3')
+  @HttpCode(200)
   async backupAndUploadToS3() {
     this.backupService.backupDB()
   }

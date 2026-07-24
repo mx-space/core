@@ -1,4 +1,4 @@
-import { Body, Delete, Get, Param, Post, Query } from '@nestjs/common'
+import { Body, Delete, Get, HttpCode, Param, Post, Query } from '@nestjs/common'
 import { keyBy, pick } from 'es-toolkit/compat'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -59,6 +59,7 @@ export class ActivityController {
   ) {}
 
   @Post('/like')
+  @HttpCode(200)
   async thumbsUpArticle(
     @Body() body: LikeBodyDto,
     @IpLocation() location: IpRecord,
@@ -99,6 +100,7 @@ export class ActivityController {
   }
 
   @Post('/presence/update')
+  @HttpCode(200)
   async updatePresence(
     @Body() body: UpdatePresenceDto,
     @IpLocation() location: IpRecord,

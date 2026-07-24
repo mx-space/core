@@ -1,6 +1,6 @@
 import type { Api, Model } from '@earendil-works/pi-ai'
 import { getBuiltinModels } from '@earendil-works/pi-ai/providers/all'
-import { Body, Get, Logger, Param, Post, Query } from '@nestjs/common'
+import { Body, Get, HttpCode, Logger, Param, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -105,6 +105,7 @@ export class AiController {
   }
 
   @Post('/models/list')
+  @HttpCode(200)
   @Auth()
   async fetchModelsList(
     @Body() body: FetchModelsDto,
@@ -142,6 +143,7 @@ export class AiController {
   }
 
   @Post('/test')
+  @HttpCode(200)
   @Auth()
   async testProviderConnection(
     @Body() body: TestConnectionDto,
@@ -194,6 +196,7 @@ export class AiController {
   }
 
   @Post('/comment-review/test')
+  @HttpCode(200)
   @Auth()
   async testCommentReview(
     @Body() body: TestCommentReviewDto,

@@ -1,4 +1,13 @@
-import { Body, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
+import {
+  Body,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -60,6 +69,7 @@ export class WebhookController {
   }
 
   @Post('/redispatch/:id')
+  @HttpCode(200)
   @HTTPDecorators.Idempotence()
   redispatch(@Param() { id }: EntityIdDto) {
     return this.service.redispatch(id)

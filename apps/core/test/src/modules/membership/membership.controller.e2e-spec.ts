@@ -257,7 +257,7 @@ describe('MembershipController (e2e)', () => {
         payload: { plan: 'monthly' },
       })
 
-      expect(res.statusCode).toBe(201)
+      expect(res.statusCode).toBe(200)
       expect(res.json()).toMatchObject({
         data: { checkout_url: expect.stringContaining('monthly') },
       })
@@ -284,7 +284,7 @@ describe('MembershipController (e2e)', () => {
         payload: { plan: 'monthly', returnPath: '/posts/tech/foo' },
       })
 
-      expect(res.statusCode).toBe(201)
+      expect(res.statusCode).toBe(200)
       expect(createCheckoutMock).toHaveBeenCalledWith(
         expect.objectContaining({
           returnUrl:
@@ -306,7 +306,7 @@ describe('MembershipController (e2e)', () => {
         payload: { plan: 'monthly', returnPath: '//evil.com/phish' },
       })
 
-      expect(res.statusCode).toBe(201)
+      expect(res.statusCode).toBe(200)
       expect(createCheckoutMock).toHaveBeenCalledWith(
         expect.objectContaining({ returnUrl: undefined }),
       )
@@ -363,7 +363,7 @@ describe('MembershipController (e2e)', () => {
         payload: { plan: 'monthly' },
       })
 
-      expect(res.statusCode).toBe(201)
+      expect(res.statusCode).toBe(200)
       expect(createCheckoutMock).toHaveBeenCalled()
       expect(
         (await membershipRepository.findByReaderId(checkoutExpiredReaderId))
@@ -552,7 +552,7 @@ describe('MembershipController (e2e)', () => {
         headers: { 'x-signature': 'valid', 'content-type': 'application/json' },
         payload,
       })
-      expect(first.statusCode).toBe(201)
+      expect(first.statusCode).toBe(200)
       expect(first.json()).toMatchObject({ data: { ok: true, applied: true } })
 
       const second = await proxy.app.inject({
@@ -561,7 +561,7 @@ describe('MembershipController (e2e)', () => {
         headers: { 'x-signature': 'valid', 'content-type': 'application/json' },
         payload,
       })
-      expect(second.statusCode).toBe(201)
+      expect(second.statusCode).toBe(200)
       expect(second.json()).toMatchObject({
         data: { ok: true, applied: false },
       })

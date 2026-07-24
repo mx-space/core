@@ -1,4 +1,4 @@
-import { Get, Param, Post } from '@nestjs/common'
+import { Get, HttpCode, Param, Post } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -19,6 +19,7 @@ export class CronDefinitionController {
   }
 
   @Post('/run/:type')
+  @HttpCode(200)
   async runCronTask(@Param('type') type: string) {
     if (!isString(type)) {
       throw createAppException(AppErrorCode.INVALID_PARAMETER, {

@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Header,
+  HttpCode,
   Param,
   Post,
   Query,
@@ -114,6 +115,7 @@ export class RenderEjsController {
   }
 
   @Post('/markdown')
+  @HttpCode(200)
   @HTTPDecorators.RawResponse
   @HttpCache.disable
   @Auth()

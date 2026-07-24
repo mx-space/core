@@ -96,7 +96,7 @@ export class LinkController {
 
   @Post('/audit/reason/:id')
   @Auth()
-  @HttpCode(201)
+  @HttpCode(200)
   async sendReasonByEmail(
     @Param() params: EntityIdDto,
     @Body() body: AuditReasonDto,
@@ -114,6 +114,7 @@ export class LinkController {
   }
 
   @Post('/avatar/migrate')
+  @HttpCode(200)
   @Auth()
   migrateExternalAvatars() {
     return this.linkService.migrateExternalAvatarsForPassedLinks()

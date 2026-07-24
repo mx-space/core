@@ -3,6 +3,7 @@ import {
   Delete,
   Get,
   Headers,
+  HttpCode,
   Param,
   Post,
   Put,
@@ -73,6 +74,7 @@ export class MembershipController {
 
   @ReaderAuth()
   @Post('/checkout')
+  @HttpCode(200)
   async checkout(@Body() body: CheckoutDto, @CurrentUser() user: SessionUser) {
     assertNotDemoMode()
 
@@ -163,6 +165,7 @@ export class MembershipController {
   }
 
   @Post('/webhook/:provider')
+  @HttpCode(200)
   @WithFastifyRouteOptions({ rawBody: true })
   async webhook(
     @Param('provider') provider: string,

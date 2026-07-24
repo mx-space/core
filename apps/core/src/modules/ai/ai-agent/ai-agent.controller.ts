@@ -4,6 +4,7 @@ import {
   Body,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -42,6 +43,7 @@ export class AiAgentController {
   ) {}
 
   @Post('/chat')
+  @HttpCode(200)
   @Auth()
   @HTTPDecorators.RawResponse
   async chatProxy(
@@ -161,6 +163,7 @@ export class AiAgentController {
   }
 
   @Post('/conversations/:id/title')
+  @HttpCode(200)
   @Auth()
   generateConversationTitle(@Param() params: EntityIdDto) {
     return this.conversationService.generateAndPersistTitle(params.id)

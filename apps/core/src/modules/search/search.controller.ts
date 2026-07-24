@@ -1,4 +1,4 @@
-import { Get, Param, Post, Query } from '@nestjs/common'
+import { Get, HttpCode, Param, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -78,6 +78,7 @@ export class SearchController {
   }
 
   @Post('/rebuild')
+  @HttpCode(200)
   @Auth()
   rebuild(@Query() query: SearchRebuildQueryDto) {
     return this.searchService.rebuildSearchDocuments({
@@ -86,6 +87,7 @@ export class SearchController {
   }
 
   @Post('/rebuild/:refType/:refId')
+  @HttpCode(200)
   @Auth()
   rebuildOne(@Param() params: SearchRebuildRefParamDto) {
     return this.searchService.rebuildSingleRef(params.refType, params.refId)

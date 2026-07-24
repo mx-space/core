@@ -1,4 +1,4 @@
-import { Body, Get, Post } from '@nestjs/common'
+import { Body, Get, HttpCode, Post } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -16,6 +16,7 @@ export class AiWriterController {
   ) {}
 
   @Post('generate')
+  @HttpCode(200)
   @Auth()
   async generate(@Body() body: GenerateAiDto) {
     switch (body.type) {
@@ -42,6 +43,7 @@ export class AiWriterController {
   }
 
   @Post('backfill-slugs')
+  @HttpCode(200)
   @Auth()
   async backfillSlugs() {
     return this.aiSlugBackfillService.createBackfillTask()

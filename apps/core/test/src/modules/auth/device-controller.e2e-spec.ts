@@ -166,7 +166,7 @@ describe('DeviceController (e2e)', () => {
       payload: { user_code: 'ABCD1234', action: 'approve' },
     })
 
-    expect(res.statusCode).toBe(201)
+    expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ ok: true, action: 'approve' })
     expect(deviceApprove).toHaveBeenCalledTimes(1)
     expect(deviceApprove.mock.calls[0]![0]).toMatchObject({
@@ -185,7 +185,7 @@ describe('DeviceController (e2e)', () => {
       payload: { user_code: 'ABCD1234', action: 'deny' },
     })
 
-    expect(res.statusCode).toBe(201)
+    expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ ok: true, action: 'deny' })
     expect(deviceDeny).toHaveBeenCalledTimes(1)
     expect(deviceApprove).not.toHaveBeenCalled()
@@ -224,7 +224,7 @@ describe('DeviceController (e2e)', () => {
       payload: { user_code: 'ABCD1234', action: 'approve' },
     })
 
-    expect(res.statusCode).toBe(201)
+    expect(res.statusCode).toBe(200)
     expect(res.json()).toMatchObject({
       ok: false,
       code: 'invalid_request',

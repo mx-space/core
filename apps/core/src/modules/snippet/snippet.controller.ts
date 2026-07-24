@@ -1,4 +1,13 @@
-import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
+import {
+  Body,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -47,6 +56,7 @@ export class SnippetController {
   }
 
   @Post('/move')
+  @HttpCode(200)
   @Auth()
   async move(@Body() body: SnippetMoveDto) {
     return this.snippetService.movePath(

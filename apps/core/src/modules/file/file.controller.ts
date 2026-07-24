@@ -5,6 +5,7 @@ import {
   Body,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -94,6 +95,7 @@ export class FileController {
   }
 
   @Post('/orphans/cleanup')
+  @HttpCode(200)
   @Auth()
   async cleanupOrphanFiles(@Query('maxAgeMinutes') maxAgeMinutes?: number) {
     return this.fileReferenceService.cleanupOrphanFiles(maxAgeMinutes || 60)

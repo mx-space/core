@@ -1,4 +1,4 @@
-import { Get, Param, Post, Query, Res } from '@nestjs/common'
+import { Get, HttpCode, Param, Post, Query, Res } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import type { FastifyReply } from 'fastify'
 
@@ -55,6 +55,7 @@ export class HelperController {
   }
 
   @Post('/refresh-images')
+  @HttpCode(200)
   @Auth()
   async refreshImages() {
     const postService = this.moduleRef.get(PostService, { strict: false })

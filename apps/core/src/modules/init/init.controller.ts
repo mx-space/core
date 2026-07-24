@@ -1,4 +1,13 @@
-import { Body, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common'
 import type { FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -64,6 +73,7 @@ export class InitController {
   }
 
   @Post('/restore')
+  @HttpCode(200)
   async uploadAndRestore(@Req() req: FastifyRequest) {
     await this.assertNotInitialized()
     const data = await this.uploadService.getAndValidMultipartField(req, {

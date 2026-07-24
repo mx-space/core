@@ -1,4 +1,4 @@
-import { Delete, Get, Param, Post, Query } from '@nestjs/common'
+import { Delete, Get, HttpCode, Param, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -54,12 +54,14 @@ export class TaskController {
   }
 
   @Post('/:id/cancel')
+  @HttpCode(200)
   async cancelTask(@Param() params: StringIdDto) {
     await this.taskQueueService.cancelTask(params.id)
     return { success: true }
   }
 
   @Post('/:id/retry')
+  @HttpCode(200)
   async retryTask(@Param() params: StringIdDto) {
     return this.taskQueueService.retryTask(params.id)
   }

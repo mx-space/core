@@ -1,4 +1,4 @@
-import { Body, Get, Param, Post, Query } from '@nestjs/common'
+import { Body, Get, HttpCode, Param, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
@@ -40,6 +40,7 @@ export class PollController {
   }
 
   @Post('/:pollId/vote')
+  @HttpCode(200)
   async vote(
     @Param() params: PollIdDto,
     @Body() body: SubmitPollDto,

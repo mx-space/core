@@ -236,7 +236,7 @@ describe('TaskController (e2e)', () => {
         url: `${apiRoutePrefix}/tasks/${id}/retry`,
         headers: authPassHeader,
       })
-      expect(res.statusCode).toBe(201)
+      expect(res.statusCode).toBe(200)
       const newId = res.json().data.task_id
       expect(newId).toBeTruthy()
       expect(newId).not.toBe(id)
@@ -328,7 +328,7 @@ describe('TaskController (e2e)', () => {
         url: `${apiRoutePrefix}/tasks/${id}/retry`,
         headers: authPassHeader,
       })
-      expect(res.statusCode).toBe(201)
+      expect(res.statusCode).toBe(200)
 
       const created = await service.getTask(res.json().data.task_id)
       expect((created?.payload as any).targetLanguages).toEqual(['ja', 'ko'])
@@ -373,7 +373,7 @@ describe('TaskController (e2e)', () => {
         url: `${apiRoutePrefix}/tasks/${id}/retry`,
         headers: authPassHeader,
       })
-      expect(res.statusCode).toBe(201)
+      expect(res.statusCode).toBe(200)
 
       const created = await service.getTask(res.json().data.task_id)
       expect((created?.payload as any).targetLanguages).toEqual(['en'])
@@ -399,7 +399,7 @@ describe('TaskController (e2e)', () => {
         url: `${apiRoutePrefix}/tasks/${id}/retry`,
         headers: authPassHeader,
       })
-      expect(res.statusCode).toBe(201)
+      expect(res.statusCode).toBe(200)
 
       const created = await service.getTask(res.json().data.task_id)
       expect((created?.payload as any).targetLanguages).toEqual(['en', 'ja'])
@@ -414,7 +414,7 @@ describe('TaskController (e2e)', () => {
         url: `${apiRoutePrefix}/tasks/${id}/cancel`,
         headers: authPassHeader,
       })
-      expect(res.statusCode).toBe(201)
+      expect(res.statusCode).toBe(200)
       expect(res.json().data.success).toBe(true)
 
       const task = await service.getTask(id)

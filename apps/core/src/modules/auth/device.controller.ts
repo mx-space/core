@@ -2,6 +2,7 @@ import {
   Body,
   Get,
   Headers as RequestHeaders,
+  HttpCode,
   Inject,
   Post,
   Query,
@@ -86,6 +87,7 @@ export class DeviceController {
   }
 
   @Post('verify')
+  @HttpCode(200)
   @HTTPDecorators.RawResponse
   async verify(
     @Body() body: DeviceVerifyDto,
