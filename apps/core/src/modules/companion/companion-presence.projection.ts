@@ -9,16 +9,6 @@ import type {
 const MAX_POSITION_ADVANCE_MS = 5_000
 const MAX_CLOCK_SKEW_MS = 30_000
 
-export class CompanionProjectionPolicyError extends Error {
-  readonly code = 'COMPANION_ICON_HOST_NOT_ALLOWED'
-  readonly fields = ['data.application.icon.url'] as const
-
-  constructor() {
-    super('The application icon host is not allowed for public projection.')
-    this.name = CompanionProjectionPolicyError.name
-  }
-}
-
 const canonicalize = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(canonicalize)
   if (value === null || typeof value !== 'object') return value
@@ -40,29 +30,6 @@ export const fingerprintCompanionMutation = (
   createHash('sha256')
     .update(canonicalJSONStringify({ kind, request }))
     .digest('hex')
-
-export const parseCompanionIconAllowedHosts = (
-  source = process.env.COMPANION_ICON_ALLOWED_HOSTS,
-) =>
-  new Set(
-    (source ?? '')
-      .split(',')
-      .map((host) => host.trim().toLowerCase())
-      .filter(Boolean),
-  )
-
-export const assertCompanionProjectionPolicy = (
-  request: CompanionPresenceRequestV2,
-  allowedIconHosts = parseCompanionIconAllowedHosts(),
-) => {
-  const iconURL = request.data.application?.icon?.url
-  if (!iconURL) return
-
-  const hostname = new URL(iconURL).hostname.toLowerCase()
-  if (!allowedIconHosts.has(hostname)) {
-    throw new CompanionProjectionPolicyError()
-  }
-}
 
 const normalizeMedia = (
   media: NonNullable<CompanionPresenceRequestV2['data']['media']>,
@@ -111,10 +78,7 @@ const normalizeMedia = (
 export const createPublicLiveDeskProjection = (
   request: CompanionPresenceRequestV2,
   receivedAt: Date,
-  allowedIconHosts = parseCompanionIconAllowedHosts(),
 ): PublicLiveDeskProjectionV2 => {
-  assertCompanionProjectionPolicy(request, allowedIconHosts)
-
   return {
     availability: request.data.availability,
     updatedAt: receivedAt.toISOString(),

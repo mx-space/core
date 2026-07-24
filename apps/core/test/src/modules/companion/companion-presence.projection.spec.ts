@@ -1,8 +1,6 @@
 import { CompanionPresenceRequestV2Schema } from '~/modules/companion/companion.schema'
 import {
-  assertCompanionProjectionPolicy,
   canonicalJSONStringify,
-  CompanionProjectionPolicyError,
   createPublicLiveDeskProjection,
   fingerprintCompanionMutation,
 } from '~/modules/companion/companion-presence.projection'
@@ -99,18 +97,17 @@ describe('Companion public projection normalization', () => {
     )
   })
 
-  it('rejects arbitrary tracking hosts and accepts only an explicit icon allowlist', () => {
+  it('preserves a schema-validated HTTPS application icon URL', () => {
     const request = makeRequest()
     request.data.application!.icon = {
       url: 'https://assets.example.com/apps/xcode.png',
     }
 
-    expect(() => assertCompanionProjectionPolicy(request, new Set())).toThrow(
-      CompanionProjectionPolicyError,
+    const projection = createPublicLiveDeskProjection(
+      request,
+      new Date('2026-07-16T12:00:00.180Z'),
     )
-    expect(() =>
-      assertCompanionProjectionPolicy(request, new Set(['assets.example.com'])),
-    ).not.toThrow()
+    expect(projection.application?.icon).toEqual(request.data.application!.icon)
   })
 
   it('preserves a schema-validated HTTPS artwork URL', () => {
@@ -119,14 +116,9 @@ describe('Companion public projection normalization', () => {
       url: `https://media.example.com/current.png?v=${'b'.repeat(64)}`,
     }
 
-    expect(() =>
-      assertCompanionProjectionPolicy(request, new Set()),
-    ).not.toThrow()
-
     const projection = createPublicLiveDeskProjection(
       request,
       new Date('2026-07-16T12:00:00.180Z'),
-      new Set(),
     )
     expect(projection.media?.artwork).toEqual(request.data.media!.artwork)
   })
@@ -140,7 +132,6 @@ describe('Companion public projection normalization', () => {
     const projection = createPublicLiveDeskProjection(
       request,
       new Date('2026-07-16T12:00:00.180Z'),
-      new Set(),
     )
     expect(projection.media?.link).toEqual(request.data.media!.link)
   })

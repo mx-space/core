@@ -6,7 +6,6 @@ import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common'
 import { AppException, ErrorCodes } from '~/common/errors/exception.types'
 
 import { CompanionIdentifierSchema } from './companion.schema'
-import { CompanionProjectionPolicyError } from './companion-presence.projection'
 import {
   CompanionDeviceRevokedError,
   CompanionSequenceError,
@@ -56,11 +55,6 @@ export class CompanionPresenceExceptionFilter implements ExceptionFilter {
       code = exception.code
       message = exception.message
       acceptedSequence = exception.acceptedSequence
-    } else if (exception instanceof CompanionProjectionPolicyError) {
-      status = HttpStatus.UNPROCESSABLE_ENTITY
-      code = exception.code
-      message = exception.message
-      fields = [...exception.fields]
     } else if (exception instanceof AppException) {
       status = exception.getStatus()
       code =
