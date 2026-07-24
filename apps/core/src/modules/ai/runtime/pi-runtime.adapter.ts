@@ -162,6 +162,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
   private readonly model: Model<Api>
   private readonly apiKey: string
   private readonly modelListUrl?: string
+  private readonly inferredModelListUrl?: string
 
   constructor(config: PiRuntimeAdapterConfig) {
     this.providerInfo = {
@@ -173,6 +174,10 @@ export class PiRuntimeAdapter implements IModelRuntime {
     this.modelListUrl = config.modelListUrl?.trim() || undefined
     this.api = providerTypeToApi(config.providerType)
     this.piProviderId = deriveProviderId(config.endpoint, config.providerType)
+    this.inferredModelListUrl = this.inferModelListUrl(
+      config.endpoint,
+      config.appendV1 ?? true,
+    )
     this.model = this.resolveModel(
       config.model,
       config.endpoint,
@@ -180,6 +185,17 @@ export class PiRuntimeAdapter implements IModelRuntime {
       config.contextWindow ?? undefined,
       config.maxTokens ?? undefined,
     )
+  }
+
+  private inferModelListUrl(
+    endpoint: string | undefined,
+    appendV1: boolean,
+  ): string | undefined {
+    if (this.api !== 'openai-completions') return undefined
+    const trimmed = endpoint?.trim()
+    if (!trimmed) return undefined
+    const baseUrl = resolveOpenAICompatibleBaseUrl(trimmed, appendV1)
+    return `${baseUrl.replace(/\/+$/, '')}/models`
   }
 
   private resolveModel(
@@ -626,8 +642,18 @@ export class PiRuntimeAdapter implements IModelRuntime {
   }
 
   async listModels(): Promise<ModelInfo[]> {
-    if (this.modelListUrl) {
-      return this.fetchModelList(this.modelListUrl)
+    const remoteUrl = this.modelListUrl ?? this.inferredModelListUrl
+    if (remoteUrl) {
+      try {
+        return await this.fetchModelList(remoteUrl)
+      } catch (error) {
+        if (this.modelListUrl) throw error
+        this.logger.warn(
+          `live model list failed for ${remoteUrl}, falling back to builtin: ${
+            (error as Error).message
+          }`,
+        )
+      }
     }
     try {
       const models = getBuiltinModels(

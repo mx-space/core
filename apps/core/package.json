@@ -60,7 +60,7 @@
     "@babel/types": "^8.0.4",
     "@better-auth/api-key": "^1.6.23",
     "@better-auth/passkey": "^1.6.23",
-    "@earendil-works/pi-ai": "0.80.7",
+    "@earendil-works/pi-ai": "0.82.0",
     "@fastify/cookie": "11.1.1",
     "@fastify/multipart": "10.1.0",
     "@fastify/static": "10.1.0",

@@ -545,6 +545,52 @@ describe('PiRuntimeAdapter', () => {
         /401/,
       )
     })
+
+    it('infers {endpoint}/models when modelListUrl is omitted', async () => {
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: [{ id: 'google/gemini-3.6-flash' }],
+        }),
+      } as Response)
+
+      const adapter = new PiRuntimeAdapter({
+        apiKey: 'faux-api-key',
+        endpoint: 'https://openrouter.ai/api/v1',
+        model: MODEL_ID,
+        providerType: AIProviderType.OpenAICompatible,
+        providerId: 'openrouter',
+      })
+
+      await expect(adapter.listModels()).resolves.toEqual([
+        { id: 'google/gemini-3.6-flash', name: 'google/gemini-3.6-flash' },
+      ])
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://openrouter.ai/api/v1/models',
+        expect.objectContaining({
+          headers: { Authorization: 'Bearer faux-api-key' },
+        }),
+      )
+    })
+
+    it('falls back to builtin models when inferred list fails', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: false,
+        status: 500,
+      } as Response)
+
+      const adapter = new PiRuntimeAdapter({
+        apiKey: 'faux-api-key',
+        endpoint: 'https://openrouter.ai/api/v1',
+        model: MODEL_ID,
+        providerType: AIProviderType.OpenAICompatible,
+        providerId: 'openrouter',
+      })
+
+      const models = await adapter.listModels()
+      expect(models.length).toBeGreaterThan(0)
+      expect(models.every((m) => typeof m.id === 'string')).toBe(true)
+    })
   })
 
   describe('prompt cache placeholder', () => {
