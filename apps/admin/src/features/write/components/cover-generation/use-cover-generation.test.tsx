@@ -1,4 +1,8 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from '@tanstack/react-query'
 import { act, createElement } from 'react'
 import type { Root } from 'react-dom/client'
 import { createRoot } from 'react-dom/client'
@@ -6,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiRequestError } from '~/api/http'
 import { I18nProvider } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 
 import { useCoverGeneration } from './use-cover-generation'
 
@@ -40,6 +45,11 @@ vi.mock('~/api/tasks', async (importOriginal) => {
 vi.mock('~/features/tasks/hooks/useTaskSubscription', () => ({
   useTaskDetailSubscription: () => ({ socketConnected: false }),
 }))
+
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>()
+  return { ...actual, useQuery: vi.fn(actual.useQuery) }
+})
 
 interface Harness {
   container: HTMLDivElement
@@ -121,15 +131,13 @@ beforeEach(() => {
   draftImagePromptMock.mockReset()
   generateImageMock.mockReset()
   getImageModelsMock.mockReset().mockResolvedValue([])
-  getImagePresetsMock
-    .mockReset()
-    .mockResolvedValue([
-      {
-        defaultAspectRatio: '16:9',
-        id: 'signal-geometry',
-        label: 'Signal Geometry',
-      },
-    ])
+  getImagePresetsMock.mockReset().mockResolvedValue([
+    {
+      defaultAspectRatio: '16:9',
+      id: 'signal-geometry',
+      label: 'Signal Geometry',
+    },
+  ])
 })
 
 afterEach(() => {
@@ -263,6 +271,37 @@ describe('useCoverGeneration mode transitions', () => {
     expect(payload.prompt).toBeUndefined()
     expect(payload.presetId).toBe('signal-geometry')
     expect(payload.refId).toBe('article-1')
+  })
+
+  it('the task-status poll keeps running while the tab is backgrounded (refetchIntervalInBackground)', async () => {
+    generateImageMock.mockResolvedValueOnce({ created: true, taskId: 'task-1' })
+    renderProbe(harness, client, baseProps())
+    await flush()
+    act(() => {
+      latest!.openDrawer()
+    })
+    await flush()
+
+    act(() => {
+      latest!.onGenerate()
+    })
+    await flush()
+
+    const taskDetailKey = adminQueryKeys.tasks.taskDetail('task-1')
+    const call = vi
+      .mocked(useQuery)
+      .mock.calls.find(
+        ([options]) =>
+          JSON.stringify((options as { queryKey?: unknown }).queryKey) ===
+          JSON.stringify(taskDetailKey),
+      )
+
+    expect(call).toBeDefined()
+    const [options] = call!
+    expect(
+      (options as { refetchIntervalInBackground?: boolean })
+        .refetchIntervalInBackground,
+    ).toBe(true)
   })
 
   it('preset mode without a refId disables generate until switched to manual', async () => {

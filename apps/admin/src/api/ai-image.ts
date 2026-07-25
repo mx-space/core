@@ -100,7 +100,12 @@ export type ImageTaskOutcome =
 export function resolveImageTaskOutcome(task: AITask): ImageTaskOutcome {
   if (task.status === AITaskStatus.Completed) {
     const result = task.result as { prompt?: string; url?: string } | undefined
-    if (!result?.url) return { reason: 'missing_url', status: 'failed' }
+    // The server broadcasts the terminal status and its result as two
+    // separate socket phases — a completed snapshot can briefly arrive with
+    // no result attached yet, so treat that gap as still pending rather than
+    // a hard failure.
+    if (!result) return { status: 'pending' }
+    if (!result.url) return { reason: 'missing_url', status: 'failed' }
     return {
       completedAt: task.completedAt ?? Date.now(),
       prompt: result.prompt,

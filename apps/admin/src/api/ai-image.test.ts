@@ -48,9 +48,16 @@ describe('resolveImageTaskOutcome', () => {
     })
   })
 
-  it('returns failed with missing_url when completed without a result url', () => {
+  it('returns pending when completed but the result has not attached yet (status/result are separate socket phases)', () => {
     const outcome = resolveImageTaskOutcome(
       task({ status: AITaskStatus.Completed }),
+    )
+    expect(outcome).toEqual({ status: 'pending' })
+  })
+
+  it('returns failed with missing_url when completed with a result that has no url', () => {
+    const outcome = resolveImageTaskOutcome(
+      task({ result: { prompt: 'a cat' }, status: AITaskStatus.Completed }),
     )
     expect(outcome).toEqual({ reason: 'missing_url', status: 'failed' })
   })

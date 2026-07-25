@@ -153,6 +153,7 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     queryKey: adminQueryKeys.tasks.taskDetail(pendingTaskId ?? ''),
     refetchInterval: () =>
       socketConnected ? liveSubscribeIntervalMs : fallbackPollingIntervalMs,
+    refetchIntervalInBackground: true,
   })
 
   useEffect(() => {
