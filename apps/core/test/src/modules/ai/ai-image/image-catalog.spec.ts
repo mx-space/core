@@ -103,7 +103,10 @@ describe('fetchImageCatalog', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       'https://custom.example.com/v1/images/models',
-      { headers: { Authorization: 'Bearer test-api-key' } },
+      {
+        headers: { Authorization: 'Bearer test-api-key' },
+        signal: expect.any(AbortSignal),
+      },
     )
   })
 
@@ -116,7 +119,7 @@ describe('fetchImageCatalog', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       'https://openrouter.ai/api/v1/images/models',
-      { headers: {} },
+      { headers: {}, signal: expect.any(AbortSignal) },
     )
   })
 
@@ -124,6 +127,26 @@ describe('fetchImageCatalog', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(jsonResponse({}, 500))
 
     await expect(fetchImageCatalog({})).rejects.toThrow(/500/)
+  })
+
+  it('passes an AbortSignal that rejects the request instead of hanging forever when the upstream never responds', async () => {
+    let capturedSignal: AbortSignal | undefined
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          capturedSignal = (init as RequestInit)?.signal as AbortSignal
+          capturedSignal.addEventListener('abort', () => {
+            reject(new Error('image models catalog request timed out'))
+          })
+        }),
+    )
+
+    const pending = fetchImageCatalog({})
+
+    expect(capturedSignal).toBeInstanceOf(AbortSignal)
+    capturedSignal!.dispatchEvent(new Event('abort'))
+
+    await expect(pending).rejects.toThrow('timed out')
   })
 
   it('returns an empty list when data is missing or not an array', async () => {

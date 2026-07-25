@@ -438,7 +438,10 @@ describe('AiImageController (faux e2e)', () => {
       ])
       expect(fetchMock).toHaveBeenCalledWith(
         'https://models-test-1.example.com/v1/images/models',
-        { headers: { Authorization: 'Bearer test-api-key' } },
+        {
+          headers: { Authorization: 'Bearer test-api-key' },
+          signal: expect.any(AbortSignal),
+        },
       )
     })
 

@@ -20,6 +20,7 @@ export interface ImageCatalogFetchConfig {
 
 const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
 const CATALOG_CACHE_TTL_MS = 5 * 60 * 1000
+const CATALOG_FETCH_TIMEOUT_MS = 5000
 
 export function resolveOpenRouterImagesBaseUrl(endpoint?: string): string {
   const trimmed = endpoint?.trim()
@@ -32,6 +33,7 @@ export async function fetchImageCatalog(
   const baseUrl = resolveOpenRouterImagesBaseUrl(config.endpoint)
   const response = await fetch(`${baseUrl}/images/models`, {
     headers: config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {},
+    signal: AbortSignal.timeout(CATALOG_FETCH_TIMEOUT_MS),
   })
   if (!response.ok) {
     throw new Error(

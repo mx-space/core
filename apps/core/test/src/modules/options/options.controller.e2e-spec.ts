@@ -44,7 +44,7 @@ describe('OptionController (e2e)', () => {
         ).toBeTruthy()
         expect(fetchMock).toHaveBeenCalledWith(
           'https://openrouter.ai/api/v1/images/models',
-          { headers: {} },
+          { headers: {}, signal: expect.any(AbortSignal) },
         )
       })
   })
