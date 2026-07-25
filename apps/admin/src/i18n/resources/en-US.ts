@@ -3417,6 +3417,10 @@ export const enUS = {
   'write.coverGeneration.toast.generateFailed': 'Failed to generate image',
   'write.coverGeneration.toast.missingResult':
     'Generated image is missing a URL',
+  'write.coverGeneration.writerProviderMissingHint':
+    'Drafting a prompt needs a text AI provider — a separate setup from the image generation provider above — and it is not configured yet. You can still write a prompt below by hand.',
+  'write.coverGeneration.writerProviderMissingLink':
+    'Configure in Settings → AI',
   'write.section.lexicalDebug.copyButton': 'Copy',
   'write.section.lexicalDebug.copyOk': 'Lexical State copied',
   'write.section.lexicalDebug.footer':

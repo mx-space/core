@@ -3253,6 +3253,9 @@ export const zhCN = {
   'write.coverGeneration.toast.draftFailed': '生成提示词失败',
   'write.coverGeneration.toast.generateFailed': '生成图片失败',
   'write.coverGeneration.toast.missingResult': '生成结果缺少图片地址',
+  'write.coverGeneration.writerProviderMissingHint':
+    '生成提示词需要文本 AI provider——与上方的生图 provider 是两套独立配置，目前尚未配置。也可以直接在下方手写提示词。',
+  'write.coverGeneration.writerProviderMissingLink': '前往「设置 → AI」配置',
   'write.section.lexicalDebug.copyButton': '复制',
   'write.section.lexicalDebug.copyOk': 'Lexical State 已复制',
   'write.section.lexicalDebug.footer': '只读查看当前页面富文本序列化状态。',

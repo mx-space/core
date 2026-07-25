@@ -1,4 +1,5 @@
 import { Loader2, Sparkles } from 'lucide-react'
+import { Link } from 'react-router'
 
 import { useI18n } from '~/i18n'
 import { Drawer } from '~/ui/feedback/drawer'
@@ -95,6 +96,17 @@ export function CoverGenerationDrawer(props: CoverGenerationDrawerProps) {
           {!props.canDraftPrompt ? (
             <p className="text-xs text-amber-600 dark:text-amber-400">
               {t('write.coverGeneration.needTitleHint')}
+            </p>
+          ) : null}
+          {props.writerProviderMissing ? (
+            <p className="text-xs leading-5 text-amber-600 dark:text-amber-400">
+              {t('write.coverGeneration.writerProviderMissingHint')}{' '}
+              <Link
+                className="underline underline-offset-2 hover:text-fg"
+                to="/setting/ai"
+              >
+                {t('write.coverGeneration.writerProviderMissingLink')}
+              </Link>
             </p>
           ) : null}
         </div>

@@ -9,6 +9,7 @@ import {
   getImagePresets,
   resolveImageTaskOutcome,
 } from '~/api/ai-image'
+import { ApiRequestError } from '~/api/http'
 import { getTask } from '~/api/tasks'
 import {
   fallbackPollingIntervalMs,
@@ -19,6 +20,7 @@ import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 
 const DRAFT_PROMPT_SUMMARY_FALLBACK_LENGTH = 800
+const AI_NOT_ENABLED_ERROR_CODE = 'AI_NOT_ENABLED'
 
 export interface CoverCandidate {
   createdAt: number
@@ -46,6 +48,7 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
   const [selectedModel, setSelectedModel] = useState('')
   const [candidates, setCandidates] = useState<CoverCandidate[]>([])
   const [pendingTaskId, setPendingTaskId] = useState<null | string>(null)
+  const [writerProviderMissing, setWriterProviderMissing] = useState(false)
   const hasDraftedRef = useRef(false)
 
   const presetsQuery = useQuery({
@@ -85,6 +88,13 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
   const { isPending: isDraftingPrompt, mutate: draftPrompt } = useMutation({
     mutationFn: draftImagePrompt,
     onError: (error) => {
+      if (
+        error instanceof ApiRequestError &&
+        error.code === AI_NOT_ENABLED_ERROR_CODE
+      ) {
+        setWriterProviderMissing(true)
+        return
+      }
       toast.error(
         getErrorMessage(error, t('write.coverGeneration.toast.draftFailed')),
       )
@@ -95,6 +105,7 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
   useEffect(() => {
     if (!open) {
       hasDraftedRef.current = false
+      setWriterProviderMissing(false)
       return
     }
     if (hasDraftedRef.current || !presetId || !canDraftPrompt) return
@@ -194,6 +205,7 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     setPresetId,
     setPromptText,
     setSelectedModel,
+    writerProviderMissing,
   }
 }
 
