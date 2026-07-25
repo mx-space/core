@@ -355,6 +355,14 @@ export class ConfigsService implements OnModuleInit {
       this.validateMailProvider(nextConfig)
     }
 
+    if (key === 'imageGenerationOptions') {
+      const nextConfig = await this.buildNextConfigForValidation(
+        key,
+        instanceValue,
+      )
+      this.validateImageGenerationProvider(nextConfig)
+    }
+
     encryptObject(instanceValue, key)
 
     switch (key) {
@@ -471,6 +479,20 @@ export class ConfigsService implements OnModuleInit {
     if (errors.length > 0) {
       throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
         message: errors.join('; '),
+      })
+    }
+  }
+
+  private validateImageGenerationProvider(config: IConfig) {
+    const { imageGenerationOptions } = config
+
+    if (
+      imageGenerationOptions.provider === 'custom' &&
+      !imageGenerationOptions.endpoint
+    ) {
+      throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+        message:
+          'imageGenerationOptions.endpoint: required when provider is "custom"',
       })
     }
   }

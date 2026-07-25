@@ -1,3 +1,4 @@
+import { AppErrorCode } from '~/common/errors'
 import { RedisKeys } from '~/constants/cache.constant'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import { generateDefaultConfig } from '~/modules/configs/configs.default'
@@ -281,6 +282,84 @@ describe('ConfigsService', () => {
 
       expect(result.title).toBe('Updated title')
       expect(result.i18n).toEqual(currentConfig.seo.i18n)
+    })
+  })
+
+  describe('imageGenerationOptions provider validation', () => {
+    function createService(
+      currentConfig: ReturnType<typeof generateDefaultConfig>,
+    ) {
+      const redisClient = {
+        get: vi.fn().mockResolvedValue(JSON.stringify(currentConfig)),
+        set: vi.fn().mockResolvedValue('OK'),
+      }
+      const redisService = {
+        getClient: vi.fn(() => redisClient),
+        waitForReady: vi.fn().mockResolvedValue(undefined),
+      }
+      const optionsRepository = {
+        findAll: vi.fn().mockResolvedValue([]),
+        upsert: vi.fn(async (name: string, value: unknown) => ({
+          id: '1' as any,
+          name,
+          value,
+        })),
+      }
+      const eventManager = { emit: vi.fn() }
+
+      const service = new ConfigsService(
+        optionsRepository as any,
+        redisService as any,
+        {} as any,
+        eventManager as any,
+      )
+
+      return { service }
+    }
+
+    it('rejects provider: "custom" with a blank endpoint', async () => {
+      const { service } = createService(generateDefaultConfig())
+
+      await expect(
+        service.patchAndValid('imageGenerationOptions', {
+          provider: 'custom',
+        }),
+      ).rejects.toMatchObject({ code: AppErrorCode.CONFIG_VALIDATION_FAILED })
+    })
+
+    it('accepts provider: "custom" when an endpoint is already configured', async () => {
+      const currentConfig = generateDefaultConfig()
+      currentConfig.imageGenerationOptions.endpoint =
+        'https://existing.example.com/v1'
+      const { service } = createService(currentConfig)
+
+      const result = await service.patchAndValid('imageGenerationOptions', {
+        provider: 'custom',
+      })
+
+      expect(result.provider).toBe('custom')
+    })
+
+    it('accepts provider: "custom" together with a newly-supplied endpoint in the same patch', async () => {
+      const { service } = createService(generateDefaultConfig())
+
+      const result = await service.patchAndValid('imageGenerationOptions', {
+        provider: 'custom',
+        endpoint: 'https://new-custom.example.com/v1',
+      })
+
+      expect(result.provider).toBe('custom')
+      expect(result.endpoint).toBe('https://new-custom.example.com/v1')
+    })
+
+    it('leaves the default "openrouter" provider unaffected by the custom-endpoint check', async () => {
+      const { service } = createService(generateDefaultConfig())
+
+      const result = await service.patchAndValid('imageGenerationOptions', {
+        provider: 'openrouter',
+      })
+
+      expect(result.provider).toBe('openrouter')
     })
   })
 })
