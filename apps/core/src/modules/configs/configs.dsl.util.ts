@@ -259,6 +259,9 @@ function getSelectOptions(
 function isRequired(schema: z.ZodTypeAny): boolean {
   if (schema instanceof z.ZodOptional) return false
   if (schema instanceof z.ZodDefault) return false
+  if (schema instanceof z.ZodPipe) {
+    return !schema.safeParse(undefined).success
+  }
   return true
 }
 

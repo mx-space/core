@@ -259,13 +259,32 @@ export const ImageGenerationOptionsSchema = section('AI image generation', {
         'Endpoint preset — determines where generation requests are sent. "custom" requires Endpoint to be set.',
     },
   ),
-  apiKey: field.password(z.string().optional(), 'API Key'),
-  endpoint: field.plain(z.string().optional(), 'Endpoint', {
-    'ui:options': { showWhen: { provider: 'custom' } },
-  }),
-  model: field.plain(z.string().optional(), 'Model', {
-    description: 'Image generation model id',
-  }),
+  apiKey: field.password(
+    z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => (v === null ? '' : v)),
+    'API Key',
+  ),
+  endpoint: field.plain(
+    z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => (v === null ? '' : v)),
+    'Endpoint',
+    { 'ui:options': { showWhen: { provider: 'custom' } } },
+  ),
+  model: field.plain(
+    z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => (v === null ? '' : v)),
+    'Model',
+    { description: 'Image generation model id' },
+  ),
   defaultAspectRatio: field.halfGrid(
     z.string().optional().default('16:9'),
     'Default aspect ratio',

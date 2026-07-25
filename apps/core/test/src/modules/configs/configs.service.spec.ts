@@ -412,14 +412,27 @@ describe('ConfigsService', () => {
       })
     })
 
-    it('still rejects an explicit endpoint: null — the schema is right to refuse it, only the seeded default was wrong', async () => {
+    it('accepts an explicit null for apiKey/endpoint/model and normalizes each to "" rather than throwing', async () => {
+      const { service } = createService(generateDefaultConfig())
+
+      const result = await service.patchAndValid('imageGenerationOptions', {
+        apiKey: null,
+        endpoint: null,
+        model: null,
+      } as any)
+
+      expect(result).toMatchObject({ apiKey: '', endpoint: '', model: '' })
+    })
+
+    it('still rejects provider: "custom" when endpoint arrives as null (normalizes to "" first, then the custom-endpoint check still fires)', async () => {
       const { service } = createService(generateDefaultConfig())
 
       await expect(
         service.patchAndValid('imageGenerationOptions', {
+          provider: 'custom',
           endpoint: null,
         } as any),
-      ).rejects.toThrow()
+      ).rejects.toMatchObject({ code: AppErrorCode.CONFIG_VALIDATION_FAILED })
     })
   })
 })

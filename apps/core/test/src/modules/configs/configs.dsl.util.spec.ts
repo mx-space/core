@@ -65,6 +65,19 @@ describe('generateFormDSL', () => {
       { label: 'Custom', value: 'custom' },
     ])
   })
+
+  test('imageGenerationOptions apiKey/endpoint/model stay non-required despite the null-coercing transform', () => {
+    const dsl = generateFormDSL()
+
+    const imageSection = dsl.groups
+      .find((group) => group.key === 'ai')
+      ?.sections.find((section) => section.key === 'imageGenerationOptions')
+
+    for (const key of ['apiKey', 'endpoint', 'model']) {
+      const field = imageSection?.fields.find((f) => f.key === key)
+      expect(field?.required).toBeFalsy()
+    }
+  })
 })
 
 describe('attachImageModelOptionsToFormDSL', () => {
