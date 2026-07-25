@@ -44,14 +44,6 @@ export async function fetchImageCatalog(
     .filter((item): item is ImageCatalogModel => item !== null)
 }
 
-export async function fetchImageCatalogModel(
-  config: ImageCatalogFetchConfig,
-  modelId: string,
-): Promise<ImageCatalogModel | undefined> {
-  const models = await fetchImageCatalog(config)
-  return models.find((model) => model.id === modelId)
-}
-
 interface ImageCatalogCacheEntry {
   value: ImageCatalogModel[]
   expiresAt: number
@@ -64,9 +56,6 @@ export function clearImageCatalogCache(): void {
   catalogCache.clear()
 }
 
-// Stale-while-revalidate wrapper over fetchImageCatalog, shared by both
-// GET /ai/image/models and the generate-path capability lookup so one
-// 5-minute-cached fetch serves both call sites instead of one per generation.
 export async function getImageCatalog(
   config: ImageCatalogFetchConfig,
 ): Promise<ImageCatalogModel[]> {

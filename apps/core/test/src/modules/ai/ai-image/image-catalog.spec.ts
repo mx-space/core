@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   clearImageCatalogCache,
   fetchImageCatalog,
-  fetchImageCatalogModel,
   getImageCatalog,
   getImageCatalogModel,
   resolveOpenRouterImagesBaseUrl,
@@ -127,45 +126,6 @@ describe('fetchImageCatalog', () => {
   })
 })
 
-describe('fetchImageCatalogModel', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  it('finds the model by id from the fetched catalog', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      jsonResponse({
-        data: [
-          { id: 'openai/gpt-image-1', supported_parameters: {} },
-          {
-            id: 'google/gemini-3-pro-image',
-            supported_parameters: {
-              aspect_ratio: { type: 'enum', values: ['1:1', '16:9'] },
-            },
-          },
-        ],
-      }),
-    )
-
-    const model = await fetchImageCatalogModel({}, 'google/gemini-3-pro-image')
-
-    expect(model).toEqual({
-      id: 'google/gemini-3-pro-image',
-      supportedParameters: {
-        aspect_ratio: { type: 'enum', values: ['1:1', '16:9'] },
-      },
-    })
-  })
-
-  it('returns undefined when the model id is not in the catalog', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      jsonResponse({ data: [] }),
-    )
-
-    expect(await fetchImageCatalogModel({}, 'unknown/model')).toBeUndefined()
-  })
-})
-
 describe('getImageCatalog (shared cache)', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -214,6 +174,40 @@ describe('getImageCatalog (shared cache)', () => {
     const third = await getImageCatalog(config)
     expect(third).toEqual([{ id: 'm2', supportedParameters: {} }])
     expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('resets the refreshing flag on a failed background refresh so a later request can retry', async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        jsonResponse({ data: [{ id: 'm1', supported_parameters: {} }] }),
+      )
+      .mockRejectedValueOnce(new Error('network blip'))
+      .mockResolvedValueOnce(
+        jsonResponse({ data: [{ id: 'm2', supported_parameters: {} }] }),
+      )
+    const config = { endpoint: 'https://cache-test-retry.example.com/v1' }
+
+    const first = await getImageCatalog(config)
+    expect(first).toEqual([{ id: 'm1', supportedParameters: {} }])
+
+    await vi.advanceTimersByTimeAsync(5 * 60 * 1000 + 1)
+    const second = await getImageCatalog(config)
+    expect(second).toEqual([{ id: 'm1', supportedParameters: {} }])
+
+    // Let the failed background refresh settle; it must reset `refreshing`
+    // rather than leaving the entry permanently stale-locked.
+    await vi.advanceTimersByTimeAsync(0)
+
+    const third = await getImageCatalog(config)
+    expect(third).toEqual([{ id: 'm1', supportedParameters: {} }])
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    const fourth = await getImageCatalog(config)
+    expect(fourth).toEqual([{ id: 'm2', supportedParameters: {} }])
+    expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
   it('keys the cache by resolved base URL, not by an opaque provider id', async () => {

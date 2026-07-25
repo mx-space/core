@@ -127,9 +127,7 @@ async function resolveSupportedParameters(
     }
     return catalogModel?.supportedParameters ?? {}
   } catch (error) {
-    // Catalog lookup failing means "unknown support" — fail closed to an
-    // empty map so optional params get dropped rather than sent on a guess.
-    // The generation POST below still proceeds.
+    // Fail closed rather than rethrow — the generation POST still proceeds.
     logger.warn(
       `image capability lookup failed for model ${model.id}: ${(error as Error).message}; treating as unsupported (optional params will be dropped)`,
     )
@@ -221,7 +219,10 @@ function parseImageItem(
   return {
     type: 'image',
     data: item.b64_json,
-    mimeType: item.media_type || DEFAULT_IMAGE_MIME_TYPE,
+    mimeType:
+      typeof item.media_type === 'string' && item.media_type.length > 0
+        ? item.media_type
+        : DEFAULT_IMAGE_MIME_TYPE,
   }
 }
 

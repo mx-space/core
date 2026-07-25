@@ -110,8 +110,7 @@ describe('buildOpenRouterImageParams', () => {
   })
 
   it('drops aspectRatio when the key is supported but the specific value is not enumerated', () => {
-    // gemini-3-pro-image's real aspect_ratio enum has no 21:9 — an admin
-    // free-typing defaultAspectRatio must not leak an unsupported value.
+    // gemini's real aspect_ratio enum has no 21:9; admins can free-type defaultAspectRatio.
     expect(
       buildOpenRouterImageParams(
         { aspectRatio: '21:9' as never },

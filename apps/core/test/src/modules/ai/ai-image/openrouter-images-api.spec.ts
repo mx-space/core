@@ -366,4 +366,24 @@ describe('generateOpenRouterImages', () => {
     expect(result.stopReason).toBe('stop')
     expect(result.output).toEqual([])
   })
+
+  it('falls back to the default mime type instead of propagating a non-string media_type', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse(CATALOG_RESPONSE))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [{ b64_json: 'AAAA', media_type: 123 as unknown as string }],
+        }),
+      )
+
+    const model = createModel('openai/gpt-image-1')
+    const context: ImagesContext = { input: [{ type: 'text', text: 'a cat' }] }
+    const result = await generateOpenRouterImages(model, context, {
+      apiKey: 'test-api-key',
+    })
+
+    expect(result.output).toEqual([
+      { type: 'image', data: 'AAAA', mimeType: 'image/png' },
+    ])
+  })
 })
