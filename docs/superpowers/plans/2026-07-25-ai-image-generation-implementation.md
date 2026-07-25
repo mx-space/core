@@ -467,3 +467,62 @@ agent tool `generate_image`，让编辑器内的 AI agent 能生成图片并插�
 **验收**：`pnpm --filter @mx-admin/admin exec tsc --noEmit --pretty false` 对改动
 文件无新增错误；eslint 通过。若 `agent/` 目录下已有 jsdom vitest 测试，为新 tool
 补一个最小用例。
+
+---
+
+## Task 9: 改走 OpenRouter Images API，删除静态 vendor 映射
+
+终审发现 `image-param-mapping.ts` 的两张 vendor 映射表是**空转的**：唯一可达的传输
+是 pi 内置的 `openrouter-images`，它构造 chat-completions 形状的载荷，映射出的
+`size` / `output_format` / `generationConfig` 等键只是无人认领的顶层字段。
+
+实证（`curl`，无需 key）：
+
+```
+POST /api/v1/images                                      → 401（存在，只收 POST）
+GET  /api/v1/images/models                               → 200，38 个模型
+GET  /api/v1/images/models/openai/gpt-image-1/endpoints  → 200
+```
+
+每个模型自带类型化能力描述符，且两家分歧被如实申报而非抹平：
+
+| 模型 | supported_parameters |
+|---|---|
+| `openai/gpt-image-*` | `quality` `background` `n` `input_references` `output_compression` |
+| `google/gemini-3*-image` | `resolution` `aspect_ratio` `n` `input_references` |
+
+即 OpenAI 系不吃 `aspect_ratio`、Google 系不吃 `quality`。当下抽屉恒发
+`aspectRatio`，换到 OpenAI 系模型即是发对方不认的参数。
+
+### 要做的
+
+1. **自写一个 `ImagesApiProvider`** 打 `POST /api/v1/images`，经
+   `registerImagesApiProvider({ api, generateImages })` 注册，守住
+   `apps/core/CLAUDE.md`「尽走 pi runtime」之不变量。
+   pi 的 `ImagesContext` 只有 `{ input }` 容不下画面参数，但注册表是泛型的
+   （`ImagesApiProvider<TApi, TOptions extends ImagesOptions>`）——自定义
+   `TOptions` 承载参数，不必再靠 `onPayload` 打补丁。
+2. **按模型能力过滤参数**。发请求前取该模型的 `supported_parameters`，只发它认的；
+   不认的丢弃而非赌对方忽略。`providerParams` 仍原样透传（对应
+   `allowed_passthrough_parameters`）。
+3. **删** `mapOpenAIImageParams`、`mapGeminiImageParams`、
+   `resolveImageParamMappingKind` 及其静态表。
+4. **`GET /ai/image/models` 改取实时目录** `/api/v1/images/models`，并透出
+   `supported_parameters`。它现在的缓存机制摊销的是一次静态数组 map，改成真网络
+   请求后那套 stale-while-revalidate 才名副其实。
+5. **`referenceImages` 接上 `input_references`**，死码复活。
+6. `resolveBaseUrl` 随之简化——端点由本 provider 自己持有。
+
+### 边界
+
+- admin 侧按能力自适应 UI **不在本任务**，另议。后端先把 `supported_parameters`
+  透出即可。
+- 响应形状无法离线验证（需真 key）。解析须防御性编写，且在报告中写明哪些字段是
+  推断而非实测。
+
+### 验收
+
+- `image-param-mapping.spec.ts` 重写：钉住「按能力过滤」的行为，而非静态表
+- **新增一条断言实际出站载荷的用例**——今日之洞正在于没有任何测试检查
+  `onPayload` 的产物
+- 既有 51 项测试不得回归
