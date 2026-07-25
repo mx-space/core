@@ -256,11 +256,13 @@ export const ImageGenerationOptionsSchema = section('AI image generation', {
     ],
     {
       description:
-        'Endpoint preset — determines where generation requests are sent. "openrouter" resolves Endpoint automatically (falls back to the default OpenRouter API when empty); "custom" requires Endpoint to be set.',
+        'Endpoint preset — determines where generation requests are sent. "custom" requires Endpoint to be set.',
     },
   ),
   apiKey: field.password(z.string().optional(), 'API Key'),
-  endpoint: field.plain(z.string().optional(), 'Endpoint'),
+  endpoint: field.plain(z.string().optional(), 'Endpoint', {
+    'ui:options': { showWhen: { provider: 'custom' } },
+  }),
   model: field.plain(z.string().optional(), 'Model', {
     description: 'Image generation model id',
   }),

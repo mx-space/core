@@ -511,7 +511,7 @@ export async function attachImageModelOptionsToFormDSL(
   dsl: FormDSL,
   imageConfig: any,
 ): Promise<void> {
-  if (!imageConfig?.enable) return
+  if (!imageConfig) return
 
   const modelField = findImageModelField(dsl)
   if (!modelField) return
