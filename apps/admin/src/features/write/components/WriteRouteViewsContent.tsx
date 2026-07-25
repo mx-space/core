@@ -52,6 +52,7 @@ import {
 import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import type { CreateNoteData } from '~/api/notes'
 import { getNoteById } from '~/api/notes'
+import { getOption } from '~/api/options'
 import type { CreatePageData } from '~/api/pages'
 import { getPageById } from '~/api/pages'
 import type { CreatePostData } from '~/api/posts'
@@ -126,6 +127,7 @@ import type {
 } from '~/vendor/rich-editor/components/RichEditorWithAgent'
 import { buildMxEditorLitexmlSystemMessages } from '~/vendor/rich-editor/utils/agent-litexml-prompt'
 import { useDynamicCatalogSystemMessages } from '~/vendor/rich-editor/utils/dynamic-catalog'
+import { buildImageTools } from '~/vendor/rich-editor/utils/image-tools'
 import type { MetaFieldsSchema } from '~/vendor/rich-editor/utils/meta-tools'
 import {
   buildMetaSystemMessages,
@@ -3606,6 +3608,14 @@ function RichWriteSurface(props: {
   const { t } = useI18n()
   const editorRef = useRef<RichEditorWithAgentRef | null>(null)
   const dynamicCatalogMessages = useDynamicCatalogSystemMessages()
+  const imageGenerationOptionsQuery = useQuery({
+    queryFn: () => getOption<{ enable?: boolean }>('imageGenerationOptions'),
+    queryKey: adminQueryKeys.ai.imageGenerationOptions(),
+    staleTime: 60_000,
+  })
+  const imageGenerationEnabled = Boolean(
+    imageGenerationOptionsQuery.data?.enable,
+  )
   const agent = useWriteAgent({
     agentVisible: Boolean(props.agentVisible),
     documentId: props.refId,
@@ -3659,14 +3669,20 @@ function RichWriteSurface(props: {
         ? buildMetaSystemMessages(props.metaFieldsSchema)
         : []),
     ],
-    tools:
-      props.metaFieldsSchema && props.getMetaFields && props.onMetaFieldsUpdate
+    tools: [
+      ...(props.metaFieldsSchema &&
+      props.getMetaFields &&
+      props.onMetaFieldsUpdate
         ? buildMetaTools({
             getFields: props.getMetaFields,
             schema: props.metaFieldsSchema,
             setFields: props.onMetaFieldsUpdate,
           })
-        : undefined,
+        : []),
+      ...(imageGenerationEnabled
+        ? buildImageTools({ refId: props.refId })
+        : []),
+    ],
     onAgentLoopReady: agent.onAgentLoopReady,
     onChange: (value) => {
       latestCallbacks.current.onContentChange(JSON.stringify(value))

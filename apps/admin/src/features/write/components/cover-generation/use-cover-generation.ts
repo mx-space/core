@@ -6,8 +6,9 @@ import {
   draftImagePrompt,
   generateImage,
   getImagePresets,
+  resolveImageTaskOutcome,
 } from '~/api/ai-image'
-import { AITaskStatus, getTask } from '~/api/tasks'
+import { getTask } from '~/api/tasks'
 import {
   fallbackPollingIntervalMs,
   liveSubscribeIntervalMs,
@@ -119,36 +120,30 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     const task = taskQuery.data
     if (!task || !pendingTaskId || task.id !== pendingTaskId) return
 
-    if (task.status === AITaskStatus.Completed) {
-      const result = task.result as
-        { prompt?: string; url?: string } | undefined
-      if (result?.url) {
-        setCandidates((prev) => [
-          {
-            createdAt: task.completedAt ?? Date.now(),
-            prompt: result.prompt ?? promptText,
-            taskId: task.id,
-            url: result.url!,
-          },
-          ...prev,
-        ])
-      } else {
-        toast.error(t('write.coverGeneration.toast.missingResult'))
-      }
-      setPendingTaskId(null)
-    } else if (
-      task.status === AITaskStatus.Failed ||
-      task.status === AITaskStatus.PartialFailed ||
-      task.status === AITaskStatus.Cancelled
-    ) {
+    const outcome = resolveImageTaskOutcome(task)
+    if (outcome.status === 'pending') return
+
+    if (outcome.status === 'success') {
+      setCandidates((prev) => [
+        {
+          createdAt: outcome.completedAt,
+          prompt: outcome.prompt ?? promptText,
+          taskId: task.id,
+          url: outcome.url,
+        },
+        ...prev,
+      ])
+    } else if (outcome.reason === 'missing_url') {
+      toast.error(t('write.coverGeneration.toast.missingResult'))
+    } else {
       toast.error(
         getErrorMessage(
-          task.error ? new Error(task.error) : undefined,
+          outcome.error ? new Error(outcome.error) : undefined,
           t('write.coverGeneration.toast.generateFailed'),
         ),
       )
-      setPendingTaskId(null)
     }
+    setPendingTaskId(null)
   }, [taskQuery.data, pendingTaskId, promptText, t])
 
   return {
