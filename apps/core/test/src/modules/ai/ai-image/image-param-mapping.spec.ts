@@ -108,6 +108,44 @@ describe('buildOpenRouterImageParams', () => {
       ),
     ).toEqual({})
   })
+
+  it('drops aspectRatio when the key is supported but the specific value is not enumerated', () => {
+    // gemini-3-pro-image's real aspect_ratio enum has no 21:9 — an admin
+    // free-typing defaultAspectRatio must not leak an unsupported value.
+    expect(
+      buildOpenRouterImageParams(
+        { aspectRatio: '21:9' as never },
+        GOOGLE_GEMINI_3_PRO_IMAGE,
+      ),
+    ).toEqual({})
+  })
+
+  it('drops quality when the mapped wire value is not in the model-declared enum', () => {
+    const supported: SupportedImageParameters = {
+      quality: { type: 'enum', values: ['auto', 'low', 'high'] },
+    }
+    expect(
+      buildOpenRouterImageParams({ quality: 'standard' }, supported),
+    ).toEqual({})
+  })
+
+  it('drops format when the value is not in the model-declared output_format enum', () => {
+    const supported: SupportedImageParameters = {
+      output_format: { type: 'enum', values: ['png', 'jpeg'] },
+    }
+    expect(buildOpenRouterImageParams({ format: 'webp' }, supported)).toEqual(
+      {},
+    )
+  })
+
+  it('sends a range or boolean descriptor value without enumerated-value checking', () => {
+    const supported: SupportedImageParameters = {
+      aspect_ratio: { type: 'boolean' },
+    }
+    expect(
+      buildOpenRouterImageParams({ aspectRatio: '16:9' }, supported),
+    ).toEqual({ aspect_ratio: '16:9' })
+  })
 })
 
 describe('supportsInputReferences', () => {

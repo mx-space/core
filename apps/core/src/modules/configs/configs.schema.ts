@@ -250,7 +250,10 @@ export const ImageGenerationOptionsSchema = section('AI image generation', {
   provider: field.plain(
     z.string().optional().default('openrouter'),
     'Provider',
-    { description: 'pi images provider id, e.g. openrouter' },
+    {
+      description:
+        'Display label only — requests always go to Endpoint (OpenRouter by default). Changing this does not switch backends.',
+    },
   ),
   apiKey: field.password(z.string().optional(), 'API Key'),
   endpoint: field.plain(z.string().optional(), 'Endpoint'),

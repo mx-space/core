@@ -1,6 +1,8 @@
 import type { ImagesContext, ImagesModel } from '@earendil-works/pi-ai'
+import { Logger } from '@nestjs/common'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { clearImageCatalogCache } from '~/modules/ai/ai-image/image-catalog'
 import {
   generateOpenRouterImages,
   OPENROUTER_IMAGES_API,
@@ -59,6 +61,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 describe('generateOpenRouterImages', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    clearImageCatalogCache()
   })
 
   it('builds the exact outbound request body, filtered by the model capability catalog', async () => {
@@ -238,6 +241,69 @@ describe('generateOpenRouterImages', () => {
       prompt: 'a cat',
     })
     expect(result.stopReason).toBe('stop')
+  })
+
+  it('warns naming the model and the dropped keys when the capability catalog fetch fails', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse({}, 500))
+      .mockResolvedValueOnce(jsonResponse({ data: [] }))
+    const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {})
+
+    const model = createModel('openai/gpt-image-1')
+    const context: ImagesContext = { input: [{ type: 'text', text: 'a cat' }] }
+
+    try {
+      await generateOpenRouterImages(model, context, {
+        apiKey: 'test-api-key',
+        aspectRatio: '16:9',
+        quality: 'high',
+      })
+
+      const messages = warn.mock.calls.map((call) => String(call[0]))
+      expect(
+        messages.some((message) => message.includes('openai/gpt-image-1')),
+      ).toBe(true)
+      expect(
+        messages.some(
+          (message) =>
+            message.includes('aspectRatio=16:9') &&
+            message.includes('quality=high'),
+        ),
+      ).toBe(true)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  it('warns naming the model and the dropped key when a supported model simply lacks that parameter', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse(CATALOG_RESPONSE))
+      .mockResolvedValueOnce(jsonResponse({ data: [] }))
+    const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {})
+
+    const model = createModel('google/gemini-3-pro-image')
+    const context: ImagesContext = {
+      input: [{ type: 'text', text: 'a landscape' }],
+    }
+
+    try {
+      await generateOpenRouterImages(model, context, {
+        apiKey: 'test-api-key',
+        aspectRatio: '16:9',
+        quality: 'high',
+      })
+
+      const messages = warn.mock.calls.map((call) => String(call[0]))
+      expect(
+        messages.some(
+          (message) =>
+            message.includes('google/gemini-3-pro-image') &&
+            message.includes('quality=high'),
+        ),
+      ).toBe(true)
+    } finally {
+      warn.mockRestore()
+    }
   })
 
   it('returns stopReason: error with the upstream message when the generation request fails', async () => {

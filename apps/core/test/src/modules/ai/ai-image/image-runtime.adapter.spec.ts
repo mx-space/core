@@ -67,6 +67,81 @@ describe('ImageRuntimeAdapter.generateImage', () => {
     expect(options.apiKey).toBe('test-api-key')
   })
 
+  it('drops a non-string data field instead of crashing or returning a corrupt buffer', async () => {
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images-api',
+      provider: 'openrouter',
+      model: 'google/gemini-3-flash-image',
+      output: [
+        {
+          type: 'image',
+          data: 123 as unknown as string,
+          mimeType: 'image/png',
+        },
+        {
+          type: 'image',
+          data: ['a'] as unknown as string,
+          mimeType: 'image/png',
+        },
+      ],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+
+    const adapter = createAdapter()
+    const result = await adapter.generateImage({ prompt: 'a cat' })
+
+    expect(result.images).toEqual([])
+  })
+
+  it('drops a base64 string that decodes to zero bytes instead of returning an empty-file image', async () => {
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images-api',
+      provider: 'openrouter',
+      model: 'google/gemini-3-flash-image',
+      output: [{ type: 'image', data: '!!!', mimeType: 'image/png' }],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+
+    const adapter = createAdapter()
+    const result = await adapter.generateImage({ prompt: 'a cat' })
+
+    expect(result.images).toEqual([])
+  })
+
+  it('keeps valid images while dropping malformed ones from the same response', async () => {
+    const pngBytes = Buffer.from('fake-png-bytes')
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images-api',
+      provider: 'openrouter',
+      model: 'google/gemini-3-flash-image',
+      output: [
+        {
+          type: 'image',
+          data: 123 as unknown as string,
+          mimeType: 'image/png',
+        },
+        {
+          type: 'image',
+          data: pngBytes.toString('base64'),
+          mimeType: 'image/png',
+        },
+      ],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+
+    const adapter = createAdapter()
+    const result = await adapter.generateImage({ prompt: 'a cat' })
+
+    expect(result.images).toHaveLength(1)
+    expect(result.images[0].buffer).toEqual(pngBytes)
+  })
+
   it('throws IMAGE_GENERATION_FAILED with the upstream message when the transport reports stopReason: error', async () => {
     const assistantImages: AssistantImages = {
       api: 'openrouter-images-api',

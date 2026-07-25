@@ -8,14 +8,20 @@ import type {
   TextContent,
   Usage,
 } from '@earendil-works/pi-ai'
+import { Logger } from '@nestjs/common'
 
-import { fetchImageCatalogModel } from './image-catalog'
-import type { SupportedImageParameters } from './image-param-mapping'
+import { getImageCatalogModel } from './image-catalog'
+import type {
+  OpenRouterImageRequestParams,
+  SupportedImageParameters,
+} from './image-param-mapping'
 import {
   buildOpenRouterImageParams,
   supportsInputReferences,
 } from './image-param-mapping'
 import type { ImageGenerateOptions } from './image-runtime.interface'
+
+const logger = new Logger('OpenRouterImagesApi')
 
 export const OPENROUTER_IMAGES_API = 'openrouter-images-api' as const
 export type OpenRouterImagesApi = typeof OPENROUTER_IMAGES_API
@@ -79,11 +85,6 @@ export const generateOpenRouterImages: ImagesFunction<
     }
 
     const payload = (await response.json()) as OpenRouterImagesResponse
-    // A well-formed 2xx with a missing/empty `data` array is a real failure
-    // mode (seen twice before this task), not a legitimate zero-image
-    // success — keep stopReason: 'stop' here and let the empty `output`
-    // propagate; ai-image.service.ts already turns "stop with no images"
-    // into IMAGE_GENERATION_FAILED.
     const items = Array.isArray(payload.data) ? payload.data : []
 
     return {
@@ -115,15 +116,23 @@ async function resolveSupportedParameters(
   apiKey: string,
 ): Promise<SupportedImageParameters> {
   try {
-    const catalogModel = await fetchImageCatalogModel(
+    const catalogModel = await getImageCatalogModel(
       { endpoint: model.baseUrl, apiKey },
       model.id,
     )
+    if (!catalogModel) {
+      logger.warn(
+        `model ${model.id} is not in the OpenRouter images catalog; treating as unsupported (optional params will be dropped)`,
+      )
+    }
     return catalogModel?.supportedParameters ?? {}
-  } catch {
-    // Catalog lookup failing (or the model being unlisted) means "unknown
-    // support" — fail closed to an empty map so optional params get dropped
-    // rather than sent on a guess. The generation POST below still proceeds.
+  } catch (error) {
+    // Catalog lookup failing means "unknown support" — fail closed to an
+    // empty map so optional params get dropped rather than sent on a guess.
+    // The generation POST below still proceeds.
+    logger.warn(
+      `image capability lookup failed for model ${model.id}: ${(error as Error).message}; treating as unsupported (optional params will be dropped)`,
+    )
     return {}
   }
 }
@@ -141,20 +150,31 @@ function buildRequestBody(
     (item): item is ImageContent => item.type === 'image',
   )
 
+  const params = buildOpenRouterImageParams(
+    {
+      aspectRatio: options?.aspectRatio,
+      quality: options?.quality,
+      format: options?.outputFormat,
+    },
+    supportedParameters,
+  )
+  const hasReferenceImages =
+    imageParts.length > 0 && supportsInputReferences(supportedParameters)
+  logDroppedParams(
+    model,
+    options,
+    params,
+    imageParts.length > 0,
+    hasReferenceImages,
+  )
+
   const body: Record<string, unknown> = {
     model: model.id,
     prompt: textParts.map((item) => item.text).join('\n'),
-    ...buildOpenRouterImageParams(
-      {
-        aspectRatio: options?.aspectRatio,
-        quality: options?.quality,
-        format: options?.outputFormat,
-      },
-      supportedParameters,
-    ),
+    ...params,
   }
 
-  if (imageParts.length > 0 && supportsInputReferences(supportedParameters)) {
+  if (hasReferenceImages) {
     body.input_references = imageParts.map((item) => ({
       type: 'image_url',
       image_url: {
@@ -165,6 +185,33 @@ function buildRequestBody(
 
   Object.assign(body, options?.providerParams)
   return body
+}
+
+function logDroppedParams(
+  model: ImagesModel<OpenRouterImagesApi>,
+  options: OpenRouterImagesOptions | undefined,
+  params: OpenRouterImageRequestParams,
+  requestedReferenceImages: boolean,
+  hasReferenceImages: boolean,
+): void {
+  const dropped: string[] = []
+  if (options?.aspectRatio && params.aspect_ratio === undefined) {
+    dropped.push(`aspectRatio=${options.aspectRatio}`)
+  }
+  if (options?.quality && params.quality === undefined) {
+    dropped.push(`quality=${options.quality}`)
+  }
+  if (options?.outputFormat && params.output_format === undefined) {
+    dropped.push(`format=${options.outputFormat}`)
+  }
+  if (requestedReferenceImages && !hasReferenceImages) {
+    dropped.push('referenceImages')
+  }
+  if (dropped.length > 0) {
+    logger.warn(
+      `model ${model.id} does not support [${dropped.join(', ')}] — dropped from the request`,
+    )
+  }
 }
 
 function parseImageItem(
@@ -202,8 +249,6 @@ async function readErrorMessage(response: Response): Promise<string> {
     if (typeof payload.error?.message === 'string') {
       return payload.error.message
     }
-  } catch {
-    // response body wasn't JSON; fall through to the status-based message
-  }
+  } catch {}
   return `image generation request failed with status ${response.status}`
 }

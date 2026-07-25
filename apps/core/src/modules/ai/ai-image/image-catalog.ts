@@ -1,3 +1,7 @@
+import { Logger } from '@nestjs/common'
+
+const logger = new Logger('ImageCatalog')
+
 export type ImageParameterDescriptor =
   | { type: 'enum'; values: string[] }
   | { type: 'range'; min: number; max: number }
@@ -14,6 +18,7 @@ export interface ImageCatalogFetchConfig {
 }
 
 const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
+const CATALOG_CACHE_TTL_MS = 5 * 60 * 1000
 
 export function resolveOpenRouterImagesBaseUrl(endpoint?: string): string {
   const trimmed = endpoint?.trim()
@@ -44,6 +49,68 @@ export async function fetchImageCatalogModel(
   modelId: string,
 ): Promise<ImageCatalogModel | undefined> {
   const models = await fetchImageCatalog(config)
+  return models.find((model) => model.id === modelId)
+}
+
+interface ImageCatalogCacheEntry {
+  value: ImageCatalogModel[]
+  expiresAt: number
+  refreshing: boolean
+}
+
+const catalogCache = new Map<string, ImageCatalogCacheEntry>()
+
+export function clearImageCatalogCache(): void {
+  catalogCache.clear()
+}
+
+// Stale-while-revalidate wrapper over fetchImageCatalog, shared by both
+// GET /ai/image/models and the generate-path capability lookup so one
+// 5-minute-cached fetch serves both call sites instead of one per generation.
+export async function getImageCatalog(
+  config: ImageCatalogFetchConfig,
+): Promise<ImageCatalogModel[]> {
+  const cacheKey = resolveOpenRouterImagesBaseUrl(config.endpoint)
+  const now = Date.now()
+  const cached = catalogCache.get(cacheKey)
+
+  if (cached && cached.expiresAt > now) {
+    return cached.value
+  }
+
+  if (cached && !cached.refreshing) {
+    cached.refreshing = true
+    void fetchImageCatalog(config)
+      .then((value) => {
+        catalogCache.set(cacheKey, {
+          value,
+          expiresAt: Date.now() + CATALOG_CACHE_TTL_MS,
+          refreshing: false,
+        })
+      })
+      .catch((error) => {
+        logger.warn(
+          `image catalog background refresh failed for ${cacheKey}: ${(error as Error).message}`,
+        )
+        cached.refreshing = false
+      })
+    return cached.value
+  }
+
+  const fresh = await fetchImageCatalog(config)
+  catalogCache.set(cacheKey, {
+    value: fresh,
+    expiresAt: now + CATALOG_CACHE_TTL_MS,
+    refreshing: false,
+  })
+  return fresh
+}
+
+export async function getImageCatalogModel(
+  config: ImageCatalogFetchConfig,
+  modelId: string,
+): Promise<ImageCatalogModel | undefined> {
+  const models = await getImageCatalog(config)
   return models.find((model) => model.id === modelId)
 }
 

@@ -13,6 +13,7 @@ import { AiService } from '~/modules/ai/ai.service'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import { AiImageController } from '~/modules/ai/ai-image/ai-image.controller'
 import { AiImageService } from '~/modules/ai/ai-image/ai-image.service'
+import { clearImageCatalogCache } from '~/modules/ai/ai-image/image-catalog'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -200,6 +201,7 @@ describe('AiImageController (faux e2e)', () => {
   afterEach(() => {
     while (torn.length) torn.pop()!()
     vi.restoreAllMocks()
+    clearImageCatalogCache()
   })
 
   it('POST /ai/image/generate enqueues a task and returns { taskId, created } with status 200', async () => {

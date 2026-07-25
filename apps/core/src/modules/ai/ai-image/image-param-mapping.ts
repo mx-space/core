@@ -28,16 +28,33 @@ export function buildOpenRouterImageParams(
   supportedParameters: SupportedImageParameters,
 ): OpenRouterImageRequestParams {
   const params: OpenRouterImageRequestParams = {}
-  if (input.aspectRatio && 'aspect_ratio' in supportedParameters) {
+  if (
+    input.aspectRatio &&
+    isValueSupported(supportedParameters.aspect_ratio, input.aspectRatio)
+  ) {
     params.aspect_ratio = input.aspectRatio
   }
-  if (input.quality && 'quality' in supportedParameters) {
-    params.quality = QUALITY_TO_WIRE[input.quality]
+  if (input.quality) {
+    const wireQuality = QUALITY_TO_WIRE[input.quality]
+    if (isValueSupported(supportedParameters.quality, wireQuality)) {
+      params.quality = wireQuality
+    }
   }
-  if (input.format && 'output_format' in supportedParameters) {
+  if (
+    input.format &&
+    isValueSupported(supportedParameters.output_format, input.format)
+  ) {
     params.output_format = input.format
   }
   return params
+}
+
+function isValueSupported(
+  descriptor: ImageParameterDescriptor | undefined,
+  value: string,
+): boolean {
+  if (!descriptor) return false
+  return descriptor.type !== 'enum' || descriptor.values.includes(value)
 }
 
 export function supportsInputReferences(

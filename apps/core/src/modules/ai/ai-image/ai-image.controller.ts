@@ -1,4 +1,4 @@
-import { Body, Get, HttpCode, Logger, Post } from '@nestjs/common'
+import { Body, Get, HttpCode, Post } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -18,31 +18,12 @@ import {
 } from './ai-image.dto'
 import type { ImageModelView } from './ai-image.views'
 import { AiImageViews } from './ai-image.views'
-import {
-  fetchImageCatalog,
-  resolveOpenRouterImagesBaseUrl,
-} from './image-catalog'
+import { getImageCatalog } from './image-catalog'
 
-const IMAGE_MODELS_CACHE_TTL_MS = 5 * 60 * 1000
 const DRAFT_PROMPT_FALLBACK_SUMMARY_MAX_LENGTH = 800
-
-interface ImageModelsCacheEntry {
-  value: ImageModelView[]
-  expiresAt: number
-  refreshing: boolean
-}
-
-interface ImageModelsConfig {
-  provider: string
-  endpoint?: string
-  apiKey?: string
-}
 
 @ApiController('ai/image')
 export class AiImageController {
-  private readonly logger = new Logger(AiImageController.name)
-  private readonly imageModelsCache = new Map<string, ImageModelsCacheEntry>()
-
   constructor(
     private readonly aiService: AiService,
     private readonly aiTaskService: AiTaskService,
@@ -109,30 +90,17 @@ export class AiImageController {
   @Auth()
   async getModels(): Promise<ImageModelView[]> {
     const config = await this.configsService.get('imageGenerationOptions')
-    const cacheKey = resolveOpenRouterImagesBaseUrl(config.endpoint)
-    const now = Date.now()
-    const cached = this.imageModelsCache.get(cacheKey)
-
-    if (cached && cached.expiresAt > now) {
-      return cached.value
-    }
-
-    if (cached && !cached.refreshing) {
-      cached.refreshing = true
-      void this.refreshImageModelsCache(cacheKey, config).finally(() => {
-        const entry = this.imageModelsCache.get(cacheKey)
-        if (entry) entry.refreshing = false
-      })
-      return cached.value
-    }
-
-    const fresh = await this.loadImageModels(config)
-    this.imageModelsCache.set(cacheKey, {
-      value: fresh,
-      expiresAt: now + IMAGE_MODELS_CACHE_TTL_MS,
-      refreshing: false,
+    const models = await getImageCatalog({
+      endpoint: config.endpoint,
+      apiKey: config.apiKey,
     })
-    return fresh
+    return models.map((m) =>
+      AiImageViews.model.parse({
+        id: m.id,
+        provider: config.provider,
+        supportedParameters: m.supportedParameters,
+      }),
+    )
   }
 
   private resolveCoverPreset(presetId: string): CoverStylePreset {
@@ -161,41 +129,5 @@ export class AiImageController {
           '')
 
     return { title: document.title, summary }
-  }
-
-  private async refreshImageModelsCache(
-    cacheKey: string,
-    config: ImageModelsConfig,
-  ): Promise<void> {
-    try {
-      const fresh = await this.loadImageModels(config)
-      this.imageModelsCache.set(cacheKey, {
-        value: fresh,
-        expiresAt: Date.now() + IMAGE_MODELS_CACHE_TTL_MS,
-        refreshing: false,
-      })
-    } catch (error) {
-      this.logger.warn(
-        `image models cache refresh failed for ${cacheKey}: ${
-          (error as Error).message
-        }`,
-      )
-    }
-  }
-
-  private async loadImageModels(
-    config: ImageModelsConfig,
-  ): Promise<ImageModelView[]> {
-    const models = await fetchImageCatalog({
-      endpoint: config.endpoint,
-      apiKey: config.apiKey,
-    })
-    return models.map((m) =>
-      AiImageViews.model.parse({
-        id: m.id,
-        provider: config.provider,
-        supportedParameters: m.supportedParameters,
-      }),
-    )
   }
 }

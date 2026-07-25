@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  clearImageCatalogCache,
   fetchImageCatalog,
   fetchImageCatalogModel,
+  getImageCatalog,
+  getImageCatalogModel,
   resolveOpenRouterImagesBaseUrl,
 } from '~/modules/ai/ai-image/image-catalog'
 
@@ -160,5 +163,104 @@ describe('fetchImageCatalogModel', () => {
     )
 
     expect(await fetchImageCatalogModel({}, 'unknown/model')).toBeUndefined()
+  })
+})
+
+describe('getImageCatalog (shared cache)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.useRealTimers()
+    clearImageCatalogCache()
+  })
+
+  it('serves a fresh cache entry without calling fetch again', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        jsonResponse({ data: [{ id: 'm1', supported_parameters: {} }] }),
+      )
+    const config = { endpoint: 'https://cache-test-fresh.example.com/v1' }
+
+    const first = await getImageCatalog(config)
+    const second = await getImageCatalog(config)
+
+    expect(first).toEqual([{ id: 'm1', supportedParameters: {} }])
+    expect(second).toEqual(first)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('serves a stale entry immediately, then refreshes it in the background', async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        jsonResponse({ data: [{ id: 'm1', supported_parameters: {} }] }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({ data: [{ id: 'm2', supported_parameters: {} }] }),
+      )
+    const config = { endpoint: 'https://cache-test-stale.example.com/v1' }
+
+    const first = await getImageCatalog(config)
+    expect(first).toEqual([{ id: 'm1', supportedParameters: {} }])
+
+    await vi.advanceTimersByTimeAsync(5 * 60 * 1000 + 1)
+
+    const second = await getImageCatalog(config)
+    expect(second).toEqual([{ id: 'm1', supportedParameters: {} }])
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    const third = await getImageCatalog(config)
+    expect(third).toEqual([{ id: 'm2', supportedParameters: {} }])
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('keys the cache by resolved base URL, not by an opaque provider id', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        jsonResponse({ data: [{ id: 'm1', supported_parameters: {} }] }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({ data: [{ id: 'm2', supported_parameters: {} }] }),
+      )
+
+    const first = await getImageCatalog({
+      endpoint: 'https://cache-test-key-a.example.com/v1',
+    })
+    const second = await getImageCatalog({
+      endpoint: 'https://cache-test-key-b.example.com/v1',
+    })
+
+    expect(first).toEqual([{ id: 'm1', supportedParameters: {} }])
+    expect(second).toEqual([{ id: 'm2', supportedParameters: {} }])
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('getImageCatalogModel (shared cache)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    clearImageCatalogCache()
+  })
+
+  it('finds the model by id via the cached catalog', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      jsonResponse({
+        data: [{ id: 'openai/gpt-image-1', supported_parameters: {} }],
+      }),
+    )
+    const config = { endpoint: 'https://cache-test-model.example.com/v1' }
+
+    const first = await getImageCatalogModel(config, 'openai/gpt-image-1')
+    const second = await getImageCatalogModel(config, 'openai/gpt-image-1')
+
+    expect(first).toEqual({
+      id: 'openai/gpt-image-1',
+      supportedParameters: {},
+    })
+    expect(second).toEqual(first)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })

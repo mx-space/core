@@ -70,10 +70,18 @@ export class ImageRuntimeAdapter implements IImageRuntime {
 
     const images = result.output
       .filter((content): content is ImageContent => content.type === 'image')
-      .map((content) => ({
-        buffer: Buffer.from(content.data, 'base64'),
-        mimeType: content.mimeType,
-      }))
+      .map((content): GeneratedImage | null => {
+        // content.data is only typed as string — the transport asserts pi's
+        // AssistantImages shape onto whatever JSON an upstream API returned,
+        // so a malformed field reaches here as an untyped value at runtime.
+        // Decoding it (or a string that decodes to nothing) must not crash
+        // or silently upload garbage as a "successful" image.
+        if (typeof content.data !== 'string') return null
+        const buffer = Buffer.from(content.data, 'base64')
+        if (buffer.length === 0) return null
+        return { buffer, mimeType: content.mimeType }
+      })
+      .filter((image): image is GeneratedImage => image !== null)
 
     return { images }
   }
