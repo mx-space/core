@@ -216,7 +216,7 @@ export class FileController {
     )
     const s3Enabled = imageStorageConfig?.enable === true
 
-    const uploadToS3 = async () => {
+    if (type === 'video' && s3Enabled) {
       const config = imageStorageConfig!
       if (
         !config.endpoint ||
@@ -227,12 +227,9 @@ export class FileController {
         throw createAppException(AppErrorCode.FILE_STORAGE_NOT_CONFIGURED)
       }
 
-      const file = await this.uploadService.getAndValidMultipartField(
-        req,
-        type === 'video'
-          ? { maxFileSize: Number.MAX_SAFE_INTEGER }
-          : { maxFileSize: 20 * 1024 * 1024 },
-      )
+      const file = await this.uploadService.getAndValidMultipartField(req, {
+        maxFileSize: Number.MAX_SAFE_INTEGER,
+      })
 
       const filename = generateFilename(uploadConfig, {
         originalFilename: file.filename,
@@ -262,21 +259,11 @@ export class FileController {
       }
 
       const contentType = lookup(file.filename) || 'application/octet-stream'
-
-      let s3Url: string
-      if (type === 'video') {
-        s3Url = await s3Uploader.uploadStream(file.file, objectKey, contentType)
-      } else {
-        const chunks: Buffer[] = []
-        for await (const chunk of file.file) {
-          chunks.push(chunk)
-        }
-        s3Url = await s3Uploader.uploadBuffer(
-          Buffer.concat(chunks),
-          objectKey,
-          contentType,
-        )
-      }
+      const s3Url = await s3Uploader.uploadStream(
+        file.file,
+        objectKey,
+        contentType,
+      )
 
       await this.fileReferenceService.createPendingReference(
         s3Url,
@@ -287,60 +274,67 @@ export class FileController {
       return { url: s3Url, name: filename }
     }
 
-    if (
-      s3Enabled &&
-      (type === 'image' || type === 'file' || type === 'video')
-    ) {
-      return uploadToS3()
+    if (type === 'video') {
+      const file = await this.uploadService.getAndValidMultipartField(req, {
+        maxFileSize: (uploadConfig.videoMaxSize ?? 100) * 1024 * 1024,
+      })
+
+      const rawFilename = generateFilename(uploadConfig, {
+        originalFilename: file.filename,
+        fileType: type,
+      })
+
+      const basePath = generateFilePath(uploadConfig, {
+        originalFilename: file.filename,
+        fileType: type,
+      })
+
+      let relativePath: string
+      if (basePath === type || !basePath) {
+        relativePath = rawFilename
+      } else {
+        const pathWithoutType = basePath.startsWith(`${type}/`)
+          ? basePath.slice(Math.max(0, type.length + 1))
+          : basePath
+        relativePath = path.join(pathWithoutType, rawFilename)
+      }
+
+      await this.service.writeFile(type, relativePath, file.file)
+      if (file.file.truncated) {
+        await this.service.deleteFile(type, relativePath).catch(() => void 0)
+        throw createAppException(AppErrorCode.FILE_TOO_LARGE)
+      }
+      const fileUrl = await this.service.resolveFileUrl(type, relativePath)
+
+      return { url: fileUrl, name: path.basename(relativePath) }
     }
+
+    const isS3Routed = s3Enabled && (type === 'image' || type === 'file')
+    const maxFileSize =
+      type === 'image' || isS3Routed ? 20 * 1024 * 1024 : undefined
 
     const file = await this.uploadService.getAndValidMultipartField(
       req,
-      type === 'image'
-        ? {
-            maxFileSize: 20 * 1024 * 1024,
-          }
-        : type === 'video'
-          ? {
-              maxFileSize: (uploadConfig.videoMaxSize ?? 100) * 1024 * 1024,
-            }
-          : undefined,
+      maxFileSize === undefined ? undefined : { maxFileSize },
     )
 
-    const rawFilename = generateFilename(uploadConfig, {
-      originalFilename: file.filename,
-      fileType: type,
-    })
-
-    const basePath = generateFilePath(uploadConfig, {
-      originalFilename: file.filename,
-      fileType: type,
-    })
-
-    let relativePath: string
-    if (basePath === type || !basePath) {
-      relativePath = rawFilename
-    } else {
-      const pathWithoutType = basePath.startsWith(`${type}/`)
-        ? basePath.slice(Math.max(0, type.length + 1))
-        : basePath
-      relativePath = path.join(pathWithoutType, rawFilename)
+    const chunks: Buffer[] = []
+    for await (const chunk of file.file) {
+      chunks.push(chunk)
     }
+    const buffer = Buffer.concat(chunks)
 
-    await this.service.writeFile(type, relativePath, file.file)
-    if (file.file.truncated) {
-      await this.service.deleteFile(type, relativePath).catch(() => void 0)
+    if (!isS3Routed && file.file.truncated) {
       throw createAppException(AppErrorCode.FILE_TOO_LARGE)
     }
-    const fileUrl = await this.service.resolveFileUrl(type, relativePath)
-    if (type === 'image') {
-      await this.fileReferenceService.createPendingReference(
-        fileUrl,
-        relativePath,
-      )
-    }
 
-    return { url: fileUrl, name: path.basename(relativePath) }
+    const contentType = lookup(file.filename) || 'application/octet-stream'
+
+    return this.service.uploadBuffer(buffer, {
+      type,
+      originalFilename: file.filename,
+      contentType,
+    })
   }
 
   @Put('/:type/:name')

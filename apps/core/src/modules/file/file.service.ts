@@ -8,7 +8,7 @@ import {
   unlink,
 } from 'node:fs/promises'
 import path, { resolve } from 'node:path'
-import type { Readable } from 'node:stream'
+import { Readable } from 'node:stream'
 
 import {
   Injectable,
@@ -21,14 +21,24 @@ import {
   STATIC_FILE_DIR,
   STATIC_FILE_TRASH_DIR,
 } from '~/constants/path.constant'
+import {
+  generateFilename,
+  generateFilePath,
+  replaceFilenameTemplate,
+} from '~/utils/filename-template.util'
+import { S3Uploader } from '~/utils/s3.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import type { FileType } from './file.type'
+import { FileReferenceService } from './file-reference.service'
 
 @Injectable()
 export class FileService {
   private readonly logger: Logger
-  constructor(private readonly configService: ConfigsService) {
+  constructor(
+    private readonly configService: ConfigsService,
+    private readonly fileReferenceService: FileReferenceService,
+  ) {
     this.logger = new Logger(FileService.name)
   }
 
@@ -169,5 +179,109 @@ export class FileService {
       this.logger.error('Failed to rename file', error.message)
       throw createAppException(AppErrorCode.FILE_RENAME_FAILED)
     }
+  }
+
+  async uploadBuffer(
+    buffer: Buffer,
+    opts: {
+      type: FileType
+      originalFilename: string
+      contentType: string
+    },
+  ): Promise<{ url: string; name: string }> {
+    const { type, originalFilename, contentType } = opts
+
+    const uploadConfig = await this.configService.get('fileUploadOptions')
+    const imageStorageConfig = await this.configService.get(
+      'imageStorageOptions',
+    )
+    const s3Enabled = imageStorageConfig?.enable === true
+
+    if (
+      s3Enabled &&
+      (type === 'image' || type === 'file' || type === 'video')
+    ) {
+      const config = imageStorageConfig!
+      if (
+        !config.endpoint ||
+        !config.secretId ||
+        !config.secretKey ||
+        !config.bucket
+      ) {
+        throw createAppException(AppErrorCode.FILE_STORAGE_NOT_CONFIGURED)
+      }
+
+      const filename = generateFilename(uploadConfig, {
+        originalFilename,
+        fileType: type,
+      })
+
+      let prefixPath = ''
+      if (config.prefix) {
+        prefixPath = replaceFilenameTemplate(config.prefix, {
+          originalFilename,
+          fileType: type,
+        })
+        prefixPath = prefixPath.replace(/\/+$/, '')
+      }
+
+      const objectKey = prefixPath ? `${prefixPath}/${filename}` : filename
+
+      const s3Uploader = new S3Uploader({
+        endpoint: config.endpoint,
+        accessKey: config.secretId,
+        secretKey: config.secretKey,
+        bucket: config.bucket,
+        region: config.region || 'auto',
+      })
+      if (config.customDomain) {
+        s3Uploader.setCustomDomain(config.customDomain)
+      }
+
+      const s3Url = await s3Uploader.uploadBuffer(
+        buffer,
+        objectKey,
+        contentType,
+      )
+
+      await this.fileReferenceService.createPendingReference(
+        s3Url,
+        filename,
+        objectKey,
+      )
+
+      return { url: s3Url, name: filename }
+    }
+
+    const rawFilename = generateFilename(uploadConfig, {
+      originalFilename,
+      fileType: type,
+    })
+
+    const basePath = generateFilePath(uploadConfig, {
+      originalFilename,
+      fileType: type,
+    })
+
+    let relativePath: string
+    if (basePath === type || !basePath) {
+      relativePath = rawFilename
+    } else {
+      const pathWithoutType = basePath.startsWith(`${type}/`)
+        ? basePath.slice(Math.max(0, type.length + 1))
+        : basePath
+      relativePath = path.join(pathWithoutType, rawFilename)
+    }
+
+    await this.writeFile(type, relativePath, Readable.from(buffer))
+    const fileUrl = await this.resolveFileUrl(type, relativePath)
+    if (type === 'image') {
+      await this.fileReferenceService.createPendingReference(
+        fileUrl,
+        relativePath,
+      )
+    }
+
+    return { url: fileUrl, name: path.basename(relativePath) }
   }
 }
