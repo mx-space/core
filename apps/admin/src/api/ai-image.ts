@@ -40,10 +40,27 @@ export type ImageAspectRatio =
 export interface GenerateImageData {
   prompt: string
   aspectRatio?: ImageAspectRatio
+  model?: string
   presetId?: string
   purpose: ImageGeneratePurpose
   refId?: string
   requestId: string
+}
+
+export type ImageParameterDescriptor =
+  | { type: 'enum'; values: string[] }
+  | { type: 'range'; min: number; max: number }
+  | { type: 'boolean' }
+
+export interface ImageModel {
+  id: string
+  name: string
+  provider: string
+  supportedParameters: Record<string, ImageParameterDescriptor>
+}
+
+export function getImageModels() {
+  return getJson<ImageModel[]>('/ai/image/models')
 }
 
 export interface GenerateImageResponse {

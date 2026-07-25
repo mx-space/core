@@ -4,6 +4,7 @@ import { useI18n } from '~/i18n'
 import { Drawer } from '~/ui/feedback/drawer'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
+import { SelectField } from '~/ui/primitives/select'
 import { TextArea } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
@@ -25,6 +26,23 @@ export function CoverGenerationDrawer(props: CoverGenerationDrawerProps) {
       widthClassName="w-[min(90vw,28rem)]"
     >
       <Scroll className="min-h-0 flex-1" innerClassName="space-y-4 p-4">
+        {props.models.length > 0 ? (
+          <div className="space-y-1.5">
+            <span className="text-xs font-medium text-fg-muted">
+              {t('write.coverGeneration.modelLabel')}
+            </span>
+            <SelectField
+              aria-label={t('write.coverGeneration.modelLabel')}
+              onValueChange={props.setSelectedModel}
+              options={props.models.map((model) => ({
+                label: model.name,
+                value: model.id,
+              }))}
+              value={props.selectedModel}
+            />
+          </div>
+        ) : null}
+
         <div className="space-y-1.5">
           <span className="text-xs font-medium text-fg-muted">
             {t('write.coverGeneration.presetLabel')}

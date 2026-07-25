@@ -63,6 +63,7 @@ export interface ImageGenerationTaskPayload {
   aspectRatio?: string
   quality?: string
   format?: string
+  model?: string
   providerParams?: Record<string, unknown>
   refId?: string
   requestId: string

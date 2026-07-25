@@ -49,7 +49,8 @@ export class AiImageService implements OnModuleInit {
           throw createAppException(AppErrorCode.IMAGE_GENERATION_DISABLED)
         }
 
-        const { apiKey, model } = config
+        const { apiKey } = config
+        const model = payload.model ?? config.model
         if (!apiKey || !model) {
           throw createAppException(AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED)
         }

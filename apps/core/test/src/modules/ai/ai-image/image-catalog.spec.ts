@@ -47,12 +47,13 @@ describe('fetchImageCatalog', () => {
     vi.restoreAllMocks()
   })
 
-  it('parses id + supported_parameters for each model, dropping unrecognized descriptor shapes', async () => {
+  it('parses id + name (falling back to id when absent) + supported_parameters, dropping unrecognized descriptor shapes', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       jsonResponse({
         data: [
           {
             id: 'openai/gpt-image-1',
+            name: 'GPT Image 1',
             supported_parameters: {
               quality: {
                 type: 'enum',
@@ -75,13 +76,18 @@ describe('fetchImageCatalog', () => {
     expect(models).toEqual([
       {
         id: 'openai/gpt-image-1',
+        name: 'GPT Image 1',
         supportedParameters: {
           quality: { type: 'enum', values: ['auto', 'low', 'medium', 'high'] },
           n: { type: 'range', min: 1, max: 10 },
           seed: { type: 'boolean' },
         },
       },
-      { id: 'no-supported-parameters-field', supportedParameters: {} },
+      {
+        id: 'no-supported-parameters-field',
+        name: 'no-supported-parameters-field',
+        supportedParameters: {},
+      },
     ])
   })
 
@@ -144,7 +150,7 @@ describe('getImageCatalog (shared cache)', () => {
     const first = await getImageCatalog(config)
     const second = await getImageCatalog(config)
 
-    expect(first).toEqual([{ id: 'm1', supportedParameters: {} }])
+    expect(first).toEqual([{ id: 'm1', name: 'm1', supportedParameters: {} }])
     expect(second).toEqual(first)
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
@@ -162,17 +168,17 @@ describe('getImageCatalog (shared cache)', () => {
     const config = { endpoint: 'https://cache-test-stale.example.com/v1' }
 
     const first = await getImageCatalog(config)
-    expect(first).toEqual([{ id: 'm1', supportedParameters: {} }])
+    expect(first).toEqual([{ id: 'm1', name: 'm1', supportedParameters: {} }])
 
     await vi.advanceTimersByTimeAsync(5 * 60 * 1000 + 1)
 
     const second = await getImageCatalog(config)
-    expect(second).toEqual([{ id: 'm1', supportedParameters: {} }])
+    expect(second).toEqual([{ id: 'm1', name: 'm1', supportedParameters: {} }])
 
     await vi.advanceTimersByTimeAsync(0)
 
     const third = await getImageCatalog(config)
-    expect(third).toEqual([{ id: 'm2', supportedParameters: {} }])
+    expect(third).toEqual([{ id: 'm2', name: 'm2', supportedParameters: {} }])
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
@@ -190,23 +196,23 @@ describe('getImageCatalog (shared cache)', () => {
     const config = { endpoint: 'https://cache-test-retry.example.com/v1' }
 
     const first = await getImageCatalog(config)
-    expect(first).toEqual([{ id: 'm1', supportedParameters: {} }])
+    expect(first).toEqual([{ id: 'm1', name: 'm1', supportedParameters: {} }])
 
     await vi.advanceTimersByTimeAsync(5 * 60 * 1000 + 1)
     const second = await getImageCatalog(config)
-    expect(second).toEqual([{ id: 'm1', supportedParameters: {} }])
+    expect(second).toEqual([{ id: 'm1', name: 'm1', supportedParameters: {} }])
 
     // Let the failed background refresh settle; it must reset `refreshing`
     // rather than leaving the entry permanently stale-locked.
     await vi.advanceTimersByTimeAsync(0)
 
     const third = await getImageCatalog(config)
-    expect(third).toEqual([{ id: 'm1', supportedParameters: {} }])
+    expect(third).toEqual([{ id: 'm1', name: 'm1', supportedParameters: {} }])
 
     await vi.advanceTimersByTimeAsync(0)
 
     const fourth = await getImageCatalog(config)
-    expect(fourth).toEqual([{ id: 'm2', supportedParameters: {} }])
+    expect(fourth).toEqual([{ id: 'm2', name: 'm2', supportedParameters: {} }])
     expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
@@ -227,8 +233,8 @@ describe('getImageCatalog (shared cache)', () => {
       endpoint: 'https://cache-test-key-b.example.com/v1',
     })
 
-    expect(first).toEqual([{ id: 'm1', supportedParameters: {} }])
-    expect(second).toEqual([{ id: 'm2', supportedParameters: {} }])
+    expect(first).toEqual([{ id: 'm1', name: 'm1', supportedParameters: {} }])
+    expect(second).toEqual([{ id: 'm2', name: 'm2', supportedParameters: {} }])
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 })
@@ -252,6 +258,7 @@ describe('getImageCatalogModel (shared cache)', () => {
 
     expect(first).toEqual({
       id: 'openai/gpt-image-1',
+      name: 'openai/gpt-image-1',
       supportedParameters: {},
     })
     expect(second).toEqual(first)

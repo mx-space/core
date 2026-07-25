@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import {
   draftImagePrompt,
   generateImage,
+  getImageModels,
   getImagePresets,
   resolveImageTaskOutcome,
 } from '~/api/ai-image'
@@ -28,6 +29,7 @@ export interface CoverCandidate {
 
 interface UseCoverGenerationParams {
   currentCover: string
+  defaultModel?: string
   enabled: boolean
   onSelectCover: (url: string) => void
   refId?: string
@@ -41,6 +43,7 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
   const [open, setOpen] = useState(false)
   const [presetId, setPresetId] = useState('')
   const [promptText, setPromptText] = useState('')
+  const [selectedModel, setSelectedModel] = useState('')
   const [candidates, setCandidates] = useState<CoverCandidate[]>([])
   const [pendingTaskId, setPendingTaskId] = useState<null | string>(null)
   const hasDraftedRef = useRef(false)
@@ -58,6 +61,20 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     if (presetId || presets.length === 0) return
     setPresetId(presets[0].id)
   }, [presetId, presets])
+
+  const modelsQuery = useQuery({
+    enabled: params.enabled,
+    queryFn: getImageModels,
+    queryKey: adminQueryKeys.ai.imageModels(),
+    select: (res: any) => (Array.isArray(res) ? res : (res?.data ?? [])),
+    staleTime: 5 * 60_000,
+  })
+  const models = modelsQuery.data ?? []
+
+  useEffect(() => {
+    if (selectedModel || !params.defaultModel) return
+    setSelectedModel(params.defaultModel)
+  }, [selectedModel, params.defaultModel])
 
   const summaryFallback =
     params.summary.trim() ||
@@ -153,9 +170,12 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     currentCover: params.currentCover,
     isDraftingPrompt,
     isGenerating: generateMutation.isPending || Boolean(pendingTaskId),
+    models,
+    modelsLoading: modelsQuery.isLoading,
     onGenerate: () => {
       if (!promptText.trim()) return
       generateMutation.mutate({
+        model: selectedModel || undefined,
         prompt: promptText.trim(),
         presetId: presetId || undefined,
         purpose: 'cover',
@@ -170,8 +190,10 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     presets,
     presetsLoading: presetsQuery.isLoading,
     promptText,
+    selectedModel,
     setPresetId,
     setPromptText,
+    setSelectedModel,
   }
 }
 

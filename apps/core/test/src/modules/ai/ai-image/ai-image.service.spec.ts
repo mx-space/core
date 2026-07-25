@@ -132,6 +132,65 @@ describe('AiImageService image generation task handler', () => {
     expect(generateOpenRouterImagesMock).not.toHaveBeenCalled()
   })
 
+  it('uses payload.model to override config.model as the outbound request model', async () => {
+    const { getHandler } = createService({ model: 'config-default-model' })
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images-api',
+      provider: 'openrouter',
+      model: 'payload-override-model',
+      output: [
+        {
+          type: 'image',
+          data: Buffer.from('fake-png-bytes').toString('base64'),
+          mimeType: 'image/png',
+        },
+      ],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+
+    await getHandler().execute(
+      {
+        prompt: 'a cat',
+        purpose: 'cover',
+        requestId: 'req-override',
+        model: 'payload-override-model',
+      },
+      createContext(),
+    )
+
+    const [requestedModel] = generateOpenRouterImagesMock.mock.calls[0]
+    expect(requestedModel.id).toBe('payload-override-model')
+  })
+
+  it('falls back to config.model when payload.model is absent', async () => {
+    const { getHandler } = createService({ model: 'config-default-model' })
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images-api',
+      provider: 'openrouter',
+      model: 'config-default-model',
+      output: [
+        {
+          type: 'image',
+          data: Buffer.from('fake-png-bytes').toString('base64'),
+          mimeType: 'image/png',
+        },
+      ],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+
+    await getHandler().execute(
+      { prompt: 'a cat', purpose: 'cover', requestId: 'req-default' },
+      createContext(),
+    )
+
+    const [requestedModel] = generateOpenRouterImagesMock.mock.calls[0]
+    expect(requestedModel.id).toBe('config-default-model')
+  })
+
   it('uploads the first returned image and records a task result on success', async () => {
     const { getHandler, fileService } = createService()
     const pngBytes = Buffer.from('fake-png-bytes')

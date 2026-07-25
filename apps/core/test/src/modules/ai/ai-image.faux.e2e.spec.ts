@@ -250,6 +250,26 @@ describe('AiImageController (faux e2e)', () => {
     expect(first.json().data.task_id).not.toBe(second.json().data.task_id)
   })
 
+  it('POST /ai/image/generate with a model override persists it on the task payload', async () => {
+    const res = await proxy.app.inject({
+      method: 'POST',
+      url: `${apiRoutePrefix}/ai/image/generate`,
+      headers: authPassHeader,
+      payload: {
+        prompt: 'a cat wearing sunglasses',
+        purpose: 'cover',
+        requestId: 'req-model-override',
+        model: 'openai/gpt-image-1',
+      },
+    })
+    const taskId = res.json().data.task_id
+    const task = await taskQueueService.getTask(taskId)
+
+    expect((task!.payload as { model?: string }).model).toBe(
+      'openai/gpt-image-1',
+    )
+  })
+
   it('executing the queued task while image generation is disabled fails with IMAGE_GENERATION_DISABLED', async () => {
     const enqueued = await proxy.app.inject({
       method: 'POST',
@@ -382,6 +402,7 @@ describe('AiImageController (faux e2e)', () => {
           data: [
             {
               id: 'openai/gpt-image-1',
+              name: 'GPT Image 1',
               supported_parameters: {
                 quality: {
                   type: 'enum',
@@ -404,6 +425,7 @@ describe('AiImageController (faux e2e)', () => {
       expect(res.json().data).toEqual([
         {
           id: 'openai/gpt-image-1',
+          name: 'GPT Image 1',
           provider: 'openrouter',
           supported_parameters: {
             quality: {

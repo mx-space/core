@@ -3404,6 +3404,7 @@ export const enUS = {
   'write.coverGeneration.entry': 'AI Generate Cover',
   'write.coverGeneration.generate': 'Generate',
   'write.coverGeneration.generating': 'Generating...',
+  'write.coverGeneration.modelLabel': 'Model',
   'write.coverGeneration.needTitleHint':
     'Add a title and some content first so a prompt can be drafted.',
   'write.coverGeneration.presetLabel': 'Style preset',

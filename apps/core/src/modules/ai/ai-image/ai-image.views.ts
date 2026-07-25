@@ -36,6 +36,7 @@ const ImageParameterDescriptorSchema = z.discriminatedUnion('type', [
 
 const ImageModelSchema = z.object({
   id: z.string(),
+  name: z.string(),
   provider: z.string(),
   supportedParameters: z.record(z.string(), ImageParameterDescriptorSchema),
 })

@@ -247,12 +247,16 @@ export type ImageStorageOptionsConfig = z.infer<
 // ==================== Image Generation Options ====================
 export const ImageGenerationOptionsSchema = section('AI image generation', {
   enable: field.toggle(z.boolean().optional(), 'Enable AI image generation'),
-  provider: field.plain(
-    z.string().optional().default('openrouter'),
+  provider: field.select(
+    z.enum(['openrouter', 'custom']).optional().default('openrouter'),
     'Provider',
+    [
+      { label: 'OpenRouter', value: 'openrouter' },
+      { label: 'Custom', value: 'custom' },
+    ],
     {
       description:
-        'Display label only — requests always go to Endpoint (OpenRouter by default). Changing this does not switch backends.',
+        'Endpoint preset — determines where generation requests are sent. "openrouter" resolves Endpoint automatically (falls back to the default OpenRouter API when empty); "custom" requires Endpoint to be set.',
     },
   ),
   apiKey: field.password(z.string().optional(), 'API Key'),

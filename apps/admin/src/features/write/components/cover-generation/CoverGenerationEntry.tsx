@@ -20,7 +20,8 @@ export function CoverGenerationEntry(props: {
   const { t } = useI18n()
 
   const optionsQuery = useQuery({
-    queryFn: () => getOption<{ enable?: boolean }>('imageGenerationOptions'),
+    queryFn: () =>
+      getOption<{ enable?: boolean; model?: string }>('imageGenerationOptions'),
     queryKey: adminQueryKeys.ai.imageGenerationOptions(),
     staleTime: 60_000,
   })
@@ -28,6 +29,7 @@ export function CoverGenerationEntry(props: {
 
   const generation = useCoverGeneration({
     currentCover: props.currentCover,
+    defaultModel: optionsQuery.data?.model,
     enabled,
     onSelectCover: props.onSelectCover,
     refId: props.refId,

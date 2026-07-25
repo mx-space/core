@@ -22,6 +22,7 @@ export const GenerateImageSchema = z.object({
     .optional(),
   quality: z.enum(['low', 'standard', 'high']).optional(),
   format: z.enum(['png', 'jpeg', 'webp']).optional(),
+  model: z.string().optional(),
   providerParams: z.record(z.string(), z.unknown()).optional(),
   purpose: z.enum(['cover', 'inline']),
   refId: z.string().optional(),

@@ -3,6 +3,7 @@ import { Body, Get, Param, Patch } from '@nestjs/common'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import {
   attachAiProviderOptionsToFormDSL,
+  attachImageModelOptionsToFormDSL,
   generateFormDSL,
 } from '~/modules/configs/configs.dsl.util'
 import { sanitizeConfigForResponse } from '~/modules/configs/configs.encrypt.util'
@@ -27,6 +28,9 @@ export class BaseOptionController {
 
     const aiConfig = await this.configsService.get('ai')
     attachAiProviderOptionsToFormDSL(schema, aiConfig)
+
+    const imageConfig = await this.configsService.get('imageGenerationOptions')
+    await attachImageModelOptionsToFormDSL(schema, imageConfig)
 
     return schema
   }

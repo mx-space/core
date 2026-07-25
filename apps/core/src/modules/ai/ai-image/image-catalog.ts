@@ -9,6 +9,7 @@ export type ImageParameterDescriptor =
 
 export interface ImageCatalogModel {
   id: string
+  name: string
   supportedParameters: Record<string, ImageParameterDescriptor>
 }
 
@@ -105,10 +106,11 @@ export async function getImageCatalogModel(
 
 function parseImageCatalogModel(raw: unknown): ImageCatalogModel | null {
   if (typeof raw !== 'object' || raw === null) return null
-  const { id, supported_parameters } = raw as Record<string, unknown>
+  const { id, name, supported_parameters } = raw as Record<string, unknown>
   if (typeof id !== 'string' || id.length === 0) return null
   return {
     id,
+    name: typeof name === 'string' && name.length > 0 ? name : id,
     supportedParameters: parseSupportedParameters(supported_parameters),
   }
 }

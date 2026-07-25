@@ -3242,6 +3242,7 @@ export const zhCN = {
   'write.coverGeneration.entry': 'AI 生成封面',
   'write.coverGeneration.generate': '生成',
   'write.coverGeneration.generating': '生成中…',
+  'write.coverGeneration.modelLabel': '模型',
   'write.coverGeneration.needTitleHint': '请先填写标题与正文，才能生成提示词。',
   'write.coverGeneration.presetLabel': '风格预设',
   'write.coverGeneration.presetsEmpty': '暂无可用预设',

@@ -26,6 +26,7 @@ export const adminQueryKeys = {
     groupedRoot: (group: string) => ['ai', group] as const,
     groupedListRoot: (group: string) => ['ai', group, 'grouped'] as const,
     imageGenerationOptions: () => ['ai', 'image', 'options'] as const,
+    imageModels: () => ['ai', 'image', 'models'] as const,
     imagePresets: () => ['ai', 'image', 'presets'] as const,
     models: (context: string) => ['ai', 'models', context] as const,
     root: ['ai'] as const,

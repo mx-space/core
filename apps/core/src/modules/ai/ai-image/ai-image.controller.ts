@@ -66,6 +66,7 @@ export class AiImageController {
       aspectRatio,
       quality: body.quality,
       format: body.format,
+      model: body.model,
       providerParams: body.providerParams,
       refId: body.refId,
       requestId: body.requestId,
@@ -97,6 +98,7 @@ export class AiImageController {
     return models.map((m) =>
       AiImageViews.model.parse({
         id: m.id,
+        name: m.name,
         provider: config.provider,
         supportedParameters: m.supportedParameters,
       }),
