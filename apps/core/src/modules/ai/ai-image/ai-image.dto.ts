@@ -30,5 +30,4 @@ export const GenerateImageSchema = z.object({
 
 export class GenerateImageDto extends createZodDto(GenerateImageSchema) {}
 
-export type DraftImagePromptInput = z.infer<typeof DraftImagePromptSchema>
 export type GenerateImageInput = z.infer<typeof GenerateImageSchema>

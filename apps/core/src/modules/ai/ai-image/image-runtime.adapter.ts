@@ -5,6 +5,7 @@ import type {
   ImagesOptions,
   TextContent,
 } from '@earendil-works/pi-ai'
+import { builtinImagesModels } from '@earendil-works/pi-ai/providers/all'
 import { generateImagesOpenRouter } from '@earendil-works/pi-ai/providers/images/register-builtins'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -40,7 +41,7 @@ export class ImageRuntimeAdapter implements IImageRuntime {
       name: config.model,
       api: 'openrouter-images',
       provider: config.provider,
-      baseUrl: config.endpoint?.trim() || '',
+      baseUrl: this.resolveBaseUrl(config),
       input: ['text', 'image'],
       output: ['image'],
       cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
@@ -83,6 +84,15 @@ export class ImageRuntimeAdapter implements IImageRuntime {
 
   async listModels(): Promise<{ id: string; provider: string }[]> {
     return [{ id: this.model.id, provider: this.model.provider }]
+  }
+
+  private resolveBaseUrl(config: ImageRuntimeAdapterConfig): string {
+    const trimmed = config.endpoint?.trim()
+    if (trimmed) return trimmed
+    return (
+      builtinImagesModels().getModel(config.provider, config.model)?.baseUrl ??
+      ''
+    )
   }
 
   private buildInput(

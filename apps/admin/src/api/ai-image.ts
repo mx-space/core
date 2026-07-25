@@ -104,6 +104,7 @@ export function resolveImageTaskOutcome(task: AITask): ImageTaskOutcome {
 }
 
 const DEFAULT_IMAGE_TASK_POLL_INTERVAL_MS = 5000
+const DEFAULT_IMAGE_TASK_TIMEOUT_MS = 3 * 60_000
 
 function delay(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -121,12 +122,17 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
 
 export async function waitForImageTask(
   taskId: string,
-  options?: { intervalMs?: number; signal?: AbortSignal },
+  options?: { intervalMs?: number; signal?: AbortSignal; timeoutMs?: number },
 ): Promise<ImageTaskResult> {
   const intervalMs = options?.intervalMs ?? DEFAULT_IMAGE_TASK_POLL_INTERVAL_MS
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_IMAGE_TASK_TIMEOUT_MS
+  const deadline = Date.now() + timeoutMs
 
   for (;;) {
     options?.signal?.throwIfAborted()
+    if (Date.now() >= deadline) {
+      throw new Error(`Image task ${taskId} timed out after ${timeoutMs}ms`)
+    }
     const task = await getTask(taskId)
     const outcome = resolveImageTaskOutcome(task)
 

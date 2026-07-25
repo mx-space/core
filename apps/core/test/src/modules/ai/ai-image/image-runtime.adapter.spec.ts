@@ -80,6 +80,35 @@ describe('ImageRuntimeAdapter.generateImage', () => {
     })
   })
 
+  it('resolves baseUrl from the OpenRouter catalog when endpoint is blank', async () => {
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images',
+      provider: 'openrouter',
+      model: 'openai/gpt-image-1',
+      output: [
+        {
+          type: 'image',
+          data: Buffer.from('fake-png-bytes').toString('base64'),
+          mimeType: 'image/png',
+        },
+      ],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateImagesOpenRouterMock.mockResolvedValueOnce(assistantImages)
+
+    const adapter = new ImageRuntimeAdapter({
+      provider: 'openrouter',
+      apiKey: 'test-api-key',
+      endpoint: '',
+      model: 'openai/gpt-image-1',
+    })
+    await adapter.generateImage({ prompt: 'a cat' })
+
+    const [model] = generateImagesOpenRouterMock.mock.calls[0]
+    expect(model.baseUrl).toBe('https://openrouter.ai/api/v1')
+  })
+
   it('throws IMAGE_GENERATION_FAILED with a synthesized message when pi reports stopReason: aborted without an errorMessage', async () => {
     const assistantImages: AssistantImages = {
       api: 'openrouter-images',

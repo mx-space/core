@@ -322,8 +322,13 @@ GET  /ai/image/models         → pi ImagesModels 列表，仿 /ai/registry/mode
 本就该出两张不同的图，幂等在此处是反功能。
 
 **`providerParams` 无需 `@BypassCaseTransform`**——请求体只在顶层折驼峰，嵌套
-对象原样透传，故 `{ output_compression: 50 }` 能完好抵达 vendor。但响应中不回显
-`providerParams`，否则出站转换会把 vendor 键改形。
+对象原样透传，故 `{ output_compression: 50 }` 能完好抵达 vendor。但
+`GET /task/:id`（`task.controller.ts:47`）裸返回整个 task（含 `payload`），未加
+`@BypassCaseTransform`，出站转换会递归深入 —— 故 task 详情接口其实会将
+`payload` 原样回显，嵌套的 vendor 键在响应中会被转 snake_case。当前两个入口均
+不发送 `providerParams`，重试也只读 Redis 中的原始 payload，故此路径暂无实际
+影响；但日后若要在响应中回显 `providerParams`，`task.controller.ts` 需补
+`@BypassCaseTransform`。
 
 **视图**：新建 `ai-image.views.ts`，controller 层解析后返回，不裸传 service 结果。
 

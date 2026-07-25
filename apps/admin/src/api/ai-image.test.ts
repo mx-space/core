@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { resolveImageTaskOutcome, waitForImageTask } from './ai-image'
 import type { AITask } from './tasks'
-import { AITaskStatus } from './tasks'
+import { AITaskStatus, AITaskType } from './tasks'
 
 const getTask = vi.fn()
 
@@ -22,7 +22,7 @@ function task(overrides: Partial<AITask> = {}): AITask {
     payload: {},
     retryCount: 0,
     status: AITaskStatus.Running,
-    type: overrides.type ?? ('ai:image:generate' as AITask['type']),
+    type: overrides.type ?? AITaskType.ImageGeneration,
     ...overrides,
   }
 }
@@ -95,5 +95,13 @@ describe('waitForImageTask', () => {
     await expect(waitForImageTask('task-1', { intervalMs: 0 })).rejects.toThrow(
       'provider down',
     )
+  })
+
+  it('throws a timeout error instead of polling forever when the task stays pending', async () => {
+    getTask.mockResolvedValue(task())
+
+    await expect(
+      waitForImageTask('task-1', { intervalMs: 0, timeoutMs: -1 }),
+    ).rejects.toThrow(/timed out/)
   })
 })

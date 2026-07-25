@@ -186,4 +186,31 @@ describe('AiImageService image generation task handler', () => {
     expect(fileService.uploadBuffer).not.toHaveBeenCalled()
     expect(context.setResult).not.toHaveBeenCalled()
   })
+
+  it('throws IMAGE_GENERATION_FAILED when stopReason is stop but no images are returned', async () => {
+    const { getHandler, fileService } = createService()
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images',
+      provider: 'openrouter',
+      model: 'google/gemini-3-flash-image',
+      output: [{ type: 'text', text: 'I cannot generate that image.' }],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateImagesOpenRouterMock.mockResolvedValueOnce(assistantImages)
+    const context = createContext()
+
+    await expect(
+      getHandler().execute(
+        { prompt: 'a cat', purpose: 'cover', requestId: 'req-1' },
+        context,
+      ),
+    ).rejects.toMatchObject({
+      code: AppErrorCode.IMAGE_GENERATION_FAILED,
+      message: 'image runtime returned no images',
+    })
+
+    expect(fileService.uploadBuffer).not.toHaveBeenCalled()
+    expect(context.setResult).not.toHaveBeenCalled()
+  })
 })

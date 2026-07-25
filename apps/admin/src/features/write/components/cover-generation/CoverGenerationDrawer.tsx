@@ -14,8 +14,7 @@ type CoverGenerationDrawerProps = ReturnType<typeof useCoverGeneration>
 
 export function CoverGenerationDrawer(props: CoverGenerationDrawerProps) {
   const { t } = useI18n()
-  const canGenerate =
-    Boolean(props.promptText.trim()) && Boolean(props.presetId)
+  const canGenerate = Boolean(props.promptText.trim())
 
   return (
     <Drawer

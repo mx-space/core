@@ -10,6 +10,7 @@ export enum AITaskType {
   SlugBackfill = 'ai:slug:backfill',
   Insights = 'ai:insights',
   InsightsTranslation = 'ai:insights:translation',
+  ImageGeneration = 'ai:image:generation',
 }
 
 export enum AITaskStatus {

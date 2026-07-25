@@ -154,10 +154,10 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     isDraftingPrompt,
     isGenerating: generateMutation.isPending || Boolean(pendingTaskId),
     onGenerate: () => {
-      if (!promptText.trim() || !presetId) return
+      if (!promptText.trim()) return
       generateMutation.mutate({
         prompt: promptText.trim(),
-        presetId,
+        presetId: presetId || undefined,
         purpose: 'cover',
         refId: params.refId,
         requestId: crypto.randomUUID(),
