@@ -268,4 +268,36 @@ describe('generateOpenRouterImages', () => {
     expect(result.stopReason).toBe('error')
     expect(result.errorMessage).toContain('No API key')
   })
+
+  it('does not crash on a well-formed 200 with a missing data array — output is empty, not an image', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse(CATALOG_RESPONSE))
+      .mockResolvedValueOnce(jsonResponse({}))
+
+    const model = createModel('openai/gpt-image-1')
+    const context: ImagesContext = { input: [{ type: 'text', text: 'a cat' }] }
+    const result = await generateOpenRouterImages(model, context, {
+      apiKey: 'test-api-key',
+    })
+
+    expect(result.stopReason).toBe('stop')
+    expect(result.output).toEqual([])
+  })
+
+  it('drops response items with no b64_json instead of producing a broken image', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse(CATALOG_RESPONSE))
+      .mockResolvedValueOnce(
+        jsonResponse({ data: [{ media_type: 'image/png' }, {}] }),
+      )
+
+    const model = createModel('openai/gpt-image-1')
+    const context: ImagesContext = { input: [{ type: 'text', text: 'a cat' }] }
+    const result = await generateOpenRouterImages(model, context, {
+      apiKey: 'test-api-key',
+    })
+
+    expect(result.stopReason).toBe('stop')
+    expect(result.output).toEqual([])
+  })
 })

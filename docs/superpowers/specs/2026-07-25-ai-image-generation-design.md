@@ -51,6 +51,23 @@ ImagesContext = { input: (TextContent | ImageContent)[] }   // 仅提示词与�
 
 **故欲直连 OpenAI / Gemini，须自写 `ImagesApiProvider`，非配置了事。此为实工。**
 
+**订正（task 9 实施期发现，本节原判有误）**：`registerImagesApiProvider`
+实非公开导出。`index.ts`/`providers/*`/`api/*` 皆未重导出
+`images-api-registry.ts`；`package.json#exports` 亦未列该子路径，深层导入
+触发 `ERR_PACKAGE_PATH_NOT_EXPORTED`（0.82.0 与最新 0.82.1 皆然，非 typecheck
+之限，Node ESM loader 强制）。另一公开注册面
+`createImagesModels`/`createImagesProvider`（`images-models.ts`）亦无助——其
+`ProviderImages.generateImages` 签名固定收 `ImagesOptions`，非泛型
+`TOptions`，画面参数仍无处安放，且多背一层 auth/model-listing 抽象。
+
+故改为：自写的 `generateOpenRouterImages`（`openrouter-images-api.ts`）由
+`ImageRuntimeAdapter` 直调，不经 pi 的 `generateImages()` 派发；仍用 pi 公开
+类型（`ImagesModel`/`ImagesContext`/`ImagesOptions`/`AssistantImages`/
+`ImageContent`/`TextContent`）保持形状相容，并以
+`ImagesFunction<TApi, TOptions>` 自持泛型。「尽走 pi runtime」不变量之实质
+——不手写整套 SDK 客户端，恒守 pi 类型契约——仍立，唯注册表这一层间接不复
+存在。详见 `.superpowers/sdd/2026-07-25-ai-image-generation-implementation/task-9-report.md`。
+
 ### 两家 vendor 的参数实况
 
 OpenAI `POST /v1/images/generations`（`gpt-image-1` / `-mini` / `1.5`）：

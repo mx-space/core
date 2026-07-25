@@ -28,17 +28,18 @@ export interface OpenRouterImagesOptions extends ImagesOptions {
 }
 
 interface OpenRouterImageResponseItem {
-  b64_json?: unknown
-  media_type?: unknown
+  b64_json?: string
+  media_type?: string
 }
 
 interface OpenRouterImagesResponse {
+  created?: number
   data?: OpenRouterImageResponseItem[]
   usage?: {
-    prompt_tokens?: unknown
-    completion_tokens?: unknown
-    total_tokens?: unknown
-    cost?: unknown
+    prompt_tokens?: number
+    completion_tokens?: number
+    total_tokens?: number
+    cost?: number
   }
 }
 
@@ -78,6 +79,11 @@ export const generateOpenRouterImages: ImagesFunction<
     }
 
     const payload = (await response.json()) as OpenRouterImagesResponse
+    // A well-formed 2xx with a missing/empty `data` array is a real failure
+    // mode (seen twice before this task), not a legitimate zero-image
+    // success — keep stopReason: 'stop' here and let the empty `output`
+    // propagate; ai-image.service.ts already turns "stop with no images"
+    // into IMAGE_GENERATION_FAILED.
     const items = Array.isArray(payload.data) ? payload.data : []
 
     return {
@@ -164,27 +170,20 @@ function buildRequestBody(
 function parseImageItem(
   item: OpenRouterImageResponseItem,
 ): ImageContent | null {
-  if (typeof item.b64_json !== 'string' || item.b64_json.length === 0) {
-    return null
-  }
+  if (!item.b64_json) return null
   return {
     type: 'image',
     data: item.b64_json,
-    mimeType:
-      typeof item.media_type === 'string' && item.media_type.length > 0
-        ? item.media_type
-        : DEFAULT_IMAGE_MIME_TYPE,
+    mimeType: item.media_type || DEFAULT_IMAGE_MIME_TYPE,
   }
 }
 
 function parseUsage(raw: OpenRouterImagesResponse['usage']): Usage | undefined {
   if (!raw) return undefined
-  const input = typeof raw.prompt_tokens === 'number' ? raw.prompt_tokens : 0
-  const output =
-    typeof raw.completion_tokens === 'number' ? raw.completion_tokens : 0
-  const totalTokens =
-    typeof raw.total_tokens === 'number' ? raw.total_tokens : input + output
-  const total = typeof raw.cost === 'number' ? raw.cost : 0
+  const input = raw.prompt_tokens ?? 0
+  const output = raw.completion_tokens ?? 0
+  const totalTokens = raw.total_tokens ?? input + output
+  const total = raw.cost ?? 0
   return {
     input,
     output,

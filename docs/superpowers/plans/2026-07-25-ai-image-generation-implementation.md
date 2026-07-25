@@ -513,6 +513,13 @@ GET  /api/v1/images/models/openai/gpt-image-1/endpoints  → 200
 5. **`referenceImages` 接上 `input_references`**，死码复活。
 6. `resolveBaseUrl` 随之简化——端点由本 provider 自己持有。
 
+**订正（task 9 实施期发现，第 1 条原判有误）**：`registerImagesApiProvider`
+实非 pi-ai 公开导出（0.82.0/0.82.1 均验证过，`exports` map 未列该子路径，深层
+导入触发 `ERR_PACKAGE_PATH_NOT_EXPORTED`）。改为 `ImageRuntimeAdapter` 直调
+自写的 `generateOpenRouterImages`，不经 pi 的 `generateImages()` 派发，仍用
+pi 公开类型保持形状相容。详见
+`.superpowers/sdd/2026-07-25-ai-image-generation-implementation/task-9-report.md`。
+
 ### 边界
 
 - admin 侧按能力自适应 UI **不在本任务**，另议。后端先把 `supported_parameters`
