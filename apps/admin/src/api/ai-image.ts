@@ -38,7 +38,7 @@ export type ImageAspectRatio =
   '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '9:16' | '16:9'
 
 export interface GenerateImageData {
-  prompt: string
+  prompt?: string
   aspectRatio?: ImageAspectRatio
   model?: string
   presetId?: string

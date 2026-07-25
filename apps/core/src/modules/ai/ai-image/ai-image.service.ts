@@ -2,6 +2,7 @@ import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { extension } from 'mime-types'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
+import { DatabaseService } from '~/processors/database/database.service'
 import {
   type TaskExecuteContext,
   TaskQueueProcessor,
@@ -10,10 +11,13 @@ import { throwIfAborted } from '~/utils/abort.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { FileService } from '../../file/file.service'
+import { AI_PROMPTS } from '../ai.prompts'
+import { AiService } from '../ai.service'
 import {
   AITaskType,
   type ImageGenerationTaskPayload,
 } from '../ai-task/ai-task.types'
+import { resolveCoverArticle, resolveCoverPreset } from './cover-preset.util'
 import { ImageRuntimeAdapter } from './image-runtime.adapter'
 import type {
   IImageRuntime,
@@ -28,6 +32,8 @@ export class AiImageService implements OnModuleInit {
     private readonly configService: ConfigsService,
     private readonly fileService: FileService,
     private readonly taskProcessor: TaskQueueProcessor,
+    private readonly aiService: AiService,
+    private readonly databaseService: DatabaseService,
   ) {}
 
   onModuleInit() {
@@ -55,6 +61,9 @@ export class AiImageService implements OnModuleInit {
           throw createAppException(AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED)
         }
 
+        const prompt =
+          payload.prompt ?? (await this.compileCoverPrompt(payload, context))
+
         const runtime: IImageRuntime = new ImageRuntimeAdapter({
           provider: config.provider,
           apiKey,
@@ -68,7 +77,7 @@ export class AiImageService implements OnModuleInit {
         )
 
         const { images } = await runtime.generateImage({
-          prompt: payload.prompt,
+          prompt,
           aspectRatio: (payload.aspectRatio ??
             config.defaultAspectRatio) as ImageGenerateOptions['aspectRatio'],
           quality: (payload.quality ??
@@ -96,11 +105,43 @@ export class AiImageService implements OnModuleInit {
         await context.setResult({
           url,
           mimeType: image.mimeType,
-          prompt: payload.prompt,
+          prompt,
         })
       },
     })
 
     this.logger.log('AI image generation task handler registered')
+  }
+
+  private async compileCoverPrompt(
+    payload: ImageGenerationTaskPayload,
+    context: TaskExecuteContext,
+  ): Promise<string> {
+    if (!payload.presetId || !payload.refId) {
+      throw createAppException(AppErrorCode.AI_INVALID_PARAMETER, {
+        message: 'presetId and refId are required when prompt is omitted',
+      })
+    }
+
+    const preset = resolveCoverPreset(payload.presetId)
+    const article = await resolveCoverArticle(
+      this.databaseService,
+      payload.refId,
+    )
+
+    try {
+      const runtime = await this.aiService.getWriterModel()
+      const { output } = await runtime.generateStructured({
+        ...AI_PROMPTS.cover.compile(preset, article),
+        maxRetries: 2,
+      })
+      return output.prompt
+    } catch (error) {
+      await context.appendLog(
+        'warn',
+        `Cover prompt compile failed, using a minimal fallback prompt: ${(error as Error).message}`,
+      )
+      return `${article.title}\n\n${preset.hardConstraints}`
+    }
   }
 }

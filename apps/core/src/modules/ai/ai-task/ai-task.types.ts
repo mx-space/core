@@ -58,7 +58,8 @@ export interface InsightsTranslationTaskPayload {
 }
 
 export interface ImageGenerationTaskPayload {
-  prompt: string
+  prompt?: string
+  presetId?: string
   purpose: 'cover' | 'inline'
   aspectRatio?: string
   quality?: string

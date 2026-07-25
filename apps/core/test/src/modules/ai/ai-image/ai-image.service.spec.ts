@@ -2,6 +2,8 @@ import type { AssistantImages } from '@earendil-works/pi-ai'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppErrorCode } from '~/common/errors'
+import { CollectionRefTypes } from '~/constants/db.constant'
+import { SIGNAL_GEOMETRY_PRESET } from '~/modules/ai/ai.prompts'
 import { AiImageService } from '~/modules/ai/ai-image/ai-image.service'
 import { AITaskType } from '~/modules/ai/ai-task/ai-task.types'
 import type { TaskExecuteContext } from '~/processors/task-queue'
@@ -42,7 +44,10 @@ function createContext(
   }
 }
 
-function createService(configOverrides: Record<string, unknown> = {}) {
+function createService(
+  configOverrides: Record<string, unknown> = {},
+  deps: { aiService?: unknown; databaseService?: unknown } = {},
+) {
   const config = {
     enable: true,
     provider: 'openrouter',
@@ -61,6 +66,8 @@ function createService(configOverrides: Record<string, unknown> = {}) {
       name: 'x.png',
     }),
   }
+  const aiService = deps.aiService ?? { getWriterModel: vi.fn() }
+  const databaseService = deps.databaseService ?? { findGlobalById: vi.fn() }
 
   let registeredHandler:
     | {
@@ -82,6 +89,8 @@ function createService(configOverrides: Record<string, unknown> = {}) {
     configService as any,
     fileService as any,
     taskProcessor as any,
+    aiService as any,
+    databaseService as any,
   )
   service.onModuleInit()
 
@@ -89,6 +98,8 @@ function createService(configOverrides: Record<string, unknown> = {}) {
     service,
     fileService,
     taskProcessor,
+    aiService,
+    databaseService,
     getHandler: () => registeredHandler!,
   }
 }
@@ -281,5 +292,129 @@ describe('AiImageService image generation task handler', () => {
 
     expect(fileService.uploadBuffer).not.toHaveBeenCalled()
     expect(context.setResult).not.toHaveBeenCalled()
+  })
+
+  describe('preset-mode compilation (no prompt in the payload)', () => {
+    function articleFixture() {
+      return {
+        document: { title: 'A note about orbital mechanics', summary: 'x' },
+        type: CollectionRefTypes.Post,
+      }
+    }
+
+    it('compiles a prompt via the writer model and uses it as the generation prompt', async () => {
+      const generateStructured = vi.fn().mockResolvedValue({
+        output: { prompt: 'A calm orbital composition, compiled server-side.' },
+      })
+      const aiService = {
+        getWriterModel: vi.fn().mockResolvedValue({
+          generateStructured,
+        }),
+      }
+      const databaseService = {
+        findGlobalById: vi.fn().mockResolvedValue(articleFixture()),
+      }
+      const { getHandler, fileService } = createService(
+        {},
+        { aiService, databaseService },
+      )
+      const assistantImages: AssistantImages = {
+        api: 'openrouter-images-api',
+        provider: 'openrouter',
+        model: 'google/gemini-3-flash-image',
+        output: [
+          {
+            type: 'image',
+            data: Buffer.from('fake-png-bytes').toString('base64'),
+            mimeType: 'image/png',
+          },
+        ],
+        stopReason: 'stop',
+        timestamp: Date.now(),
+      }
+      generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+      const context = createContext()
+
+      await getHandler().execute(
+        {
+          presetId: SIGNAL_GEOMETRY_PRESET.id,
+          refId: 'article-1',
+          purpose: 'cover',
+          requestId: 'req-preset',
+        },
+        context,
+      )
+
+      expect(databaseService.findGlobalById).toHaveBeenCalledWith('article-1')
+      expect(fileService.uploadBuffer).toHaveBeenCalled()
+      expect(context.setResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: 'A calm orbital composition, compiled server-side.',
+        }),
+      )
+    })
+
+    it('falls back to title + hardConstraints and logs a warn when the writer model fails, but the image still completes', async () => {
+      const aiService = {
+        getWriterModel: vi
+          .fn()
+          .mockRejectedValue(new Error('no provider configured')),
+      }
+      const databaseService = {
+        findGlobalById: vi.fn().mockResolvedValue(articleFixture()),
+      }
+      const { getHandler, fileService } = createService(
+        {},
+        { aiService, databaseService },
+      )
+      const assistantImages: AssistantImages = {
+        api: 'openrouter-images-api',
+        provider: 'openrouter',
+        model: 'google/gemini-3-flash-image',
+        output: [
+          {
+            type: 'image',
+            data: Buffer.from('fake-png-bytes').toString('base64'),
+            mimeType: 'image/png',
+          },
+        ],
+        stopReason: 'stop',
+        timestamp: Date.now(),
+      }
+      generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+      const context = createContext()
+
+      await getHandler().execute(
+        {
+          presetId: SIGNAL_GEOMETRY_PRESET.id,
+          refId: 'article-1',
+          purpose: 'cover',
+          requestId: 'req-degrade',
+        },
+        context,
+      )
+
+      const fallbackPrompt = `A note about orbital mechanics\n\n${SIGNAL_GEOMETRY_PRESET.hardConstraints}`
+      expect(context.appendLog).toHaveBeenCalledWith(
+        'warn',
+        expect.stringContaining('no provider configured'),
+      )
+      expect(fileService.uploadBuffer).toHaveBeenCalled()
+      expect(context.setResult).toHaveBeenCalledWith(
+        expect.objectContaining({ prompt: fallbackPrompt }),
+      )
+    })
+
+    it('throws AI_INVALID_PARAMETER when prompt is omitted and presetId/refId are missing', async () => {
+      const { getHandler } = createService()
+
+      await expect(
+        getHandler().execute(
+          { purpose: 'cover', requestId: 'req-invalid' },
+          createContext(),
+        ),
+      ).rejects.toMatchObject({ code: AppErrorCode.AI_INVALID_PARAMETER })
+      expect(generateOpenRouterImagesMock).not.toHaveBeenCalled()
+    })
   })
 })

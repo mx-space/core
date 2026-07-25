@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
@@ -22,6 +22,8 @@ import { adminQueryKeys } from '~/query/keys'
 const DRAFT_PROMPT_SUMMARY_FALLBACK_LENGTH = 800
 const AI_NOT_ENABLED_ERROR_CODE = 'AI_NOT_ENABLED'
 
+export type CoverGenerationMode = 'manual' | 'preset'
+
 export interface CoverCandidate {
   createdAt: number
   prompt: string
@@ -43,13 +45,13 @@ interface UseCoverGenerationParams {
 export function useCoverGeneration(params: UseCoverGenerationParams) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState<CoverGenerationMode>('preset')
   const [presetId, setPresetId] = useState('')
   const [promptText, setPromptText] = useState('')
   const [selectedModel, setSelectedModel] = useState('')
   const [candidates, setCandidates] = useState<CoverCandidate[]>([])
   const [pendingTaskId, setPendingTaskId] = useState<null | string>(null)
   const [writerProviderMissing, setWriterProviderMissing] = useState(false)
-  const hasDraftedRef = useRef(false)
 
   const presetsQuery = useQuery({
     enabled: params.enabled,
@@ -79,6 +81,13 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     setSelectedModel(params.defaultModel)
   }, [selectedModel, params.defaultModel])
 
+  useEffect(() => {
+    if (open) return
+    setMode('preset')
+    setPromptText('')
+    setWriterProviderMissing(false)
+  }, [open])
+
   const summaryFallback =
     params.summary.trim() ||
     params.text.trim().slice(0, DRAFT_PROMPT_SUMMARY_FALLBACK_LENGTH)
@@ -99,31 +108,33 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
         getErrorMessage(error, t('write.coverGeneration.toast.draftFailed')),
       )
     },
-    onSuccess: (result) => setPromptText(result.prompt),
+    onSuccess: (result) => {
+      setPromptText(result.prompt)
+      setWriterProviderMissing(false)
+      setMode('manual')
+    },
   })
 
-  useEffect(() => {
-    if (!open) {
-      hasDraftedRef.current = false
-      setWriterProviderMissing(false)
-      return
-    }
-    if (hasDraftedRef.current || !presetId || !canDraftPrompt) return
-    hasDraftedRef.current = true
+  const onViewEditPrompt = () => {
+    if (!presetId || !canDraftPrompt) return
+    setWriterProviderMissing(false)
     draftPrompt(
       params.refId
         ? { presetId, refId: params.refId }
         : { presetId, summary: summaryFallback, title: params.title },
     )
-  }, [
-    open,
-    presetId,
-    canDraftPrompt,
-    draftPrompt,
-    params.refId,
-    params.title,
-    summaryFallback,
-  ])
+  }
+
+  const onWriteManually = () => {
+    setWriterProviderMissing(false)
+    setPromptText('')
+    setMode('manual')
+  }
+
+  const onUsePreset = () => {
+    setPromptText('')
+    setMode('preset')
+  }
 
   const generateMutation = useMutation({
     mutationFn: generateImage,
@@ -174,30 +185,53 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     setPendingTaskId(null)
   }, [taskQuery.data, pendingTaskId, promptText, t])
 
+  const presetNeedsSavedArticle =
+    mode === 'preset' && Boolean(presetId) && !params.refId
+  const canGenerate =
+    mode === 'manual'
+      ? Boolean(promptText.trim())
+      : Boolean(presetId) && Boolean(params.refId)
+
   return {
     canDraftPrompt,
+    canGenerate,
     candidates,
     closeDrawer: () => setOpen(false),
     currentCover: params.currentCover,
     isDraftingPrompt,
     isGenerating: generateMutation.isPending || Boolean(pendingTaskId),
+    mode,
     models,
     modelsLoading: modelsQuery.isLoading,
     onGenerate: () => {
-      if (!promptText.trim()) return
+      if (!canGenerate) return
+      if (mode === 'manual') {
+        generateMutation.mutate({
+          model: selectedModel || undefined,
+          prompt: promptText.trim(),
+          presetId: presetId || undefined,
+          purpose: 'cover',
+          refId: params.refId,
+          requestId: crypto.randomUUID(),
+        })
+        return
+      }
       generateMutation.mutate({
         model: selectedModel || undefined,
-        prompt: promptText.trim(),
-        presetId: presetId || undefined,
+        presetId,
         purpose: 'cover',
         refId: params.refId,
         requestId: crypto.randomUUID(),
       })
     },
     onSelectCandidate: params.onSelectCover,
+    onUsePreset,
+    onViewEditPrompt,
+    onWriteManually,
     open,
     openDrawer: () => setOpen(true),
     presetId,
+    presetNeedsSavedArticle,
     presets,
     presetsLoading: presetsQuery.isLoading,
     promptText,

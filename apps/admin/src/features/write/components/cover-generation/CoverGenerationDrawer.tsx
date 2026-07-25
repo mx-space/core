@@ -6,17 +6,16 @@ import { Drawer } from '~/ui/feedback/drawer'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
-import { TextArea } from '~/ui/primitives/text-field'
-import { cn } from '~/utils/cn'
 
 import { CoverGenerationCandidates } from './CoverGenerationCandidates'
+import { CoverPresetPicker } from './CoverPresetPicker'
+import { CoverPromptEditor } from './CoverPromptEditor'
 import type { useCoverGeneration } from './use-cover-generation'
 
 type CoverGenerationDrawerProps = ReturnType<typeof useCoverGeneration>
 
 export function CoverGenerationDrawer(props: CoverGenerationDrawerProps) {
   const { t } = useI18n()
-  const canGenerate = Boolean(props.promptText.trim())
 
   return (
     <Drawer
@@ -44,76 +43,70 @@ export function CoverGenerationDrawer(props: CoverGenerationDrawerProps) {
           </div>
         ) : null}
 
-        <div className="space-y-1.5">
-          <span className="text-xs font-medium text-fg-muted">
-            {t('write.coverGeneration.presetLabel')}
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {props.presets.map((preset) => {
-              const active = preset.id === props.presetId
-              return (
+        <CoverPresetPicker
+          mode={props.mode}
+          presetId={props.presetId}
+          presets={props.presets}
+          presetsLoading={props.presetsLoading}
+          setPresetId={props.setPresetId}
+        />
+
+        {props.mode === 'manual' ? (
+          <CoverPromptEditor
+            onUsePreset={props.onUsePreset}
+            promptText={props.promptText}
+            setPromptText={props.setPromptText}
+          />
+        ) : (
+          <div className="space-y-1.5">
+            <Button
+              className="w-full"
+              disabled={!props.canDraftPrompt || props.isDraftingPrompt}
+              onClick={props.onViewEditPrompt}
+              type="button"
+              variant="secondary"
+            >
+              {props.isDraftingPrompt ? (
+                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+              ) : null}
+              {props.isDraftingPrompt
+                ? t('write.coverGeneration.draftingHint')
+                : t('write.coverGeneration.viewEditPrompt')}
+            </Button>
+            {!props.canDraftPrompt ? (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                {t('write.coverGeneration.needTitleHint')}
+              </p>
+            ) : null}
+            {props.writerProviderMissing ? (
+              <p className="text-xs leading-5 text-amber-600 dark:text-amber-400">
+                {t('write.coverGeneration.writerProviderMissingHint')}{' '}
+                <Link
+                  className="underline underline-offset-2 hover:text-fg"
+                  to="/setting/ai"
+                >
+                  {t('write.coverGeneration.writerProviderMissingLink')}
+                </Link>{' '}
                 <button
-                  className={cn(
-                    'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-                    'focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15',
-                    active
-                      ? 'border-accent bg-accent-soft text-accent'
-                      : 'border-border bg-surface-card text-fg-muted hover:text-fg',
-                  )}
-                  key={preset.id}
-                  onClick={() => props.setPresetId(preset.id)}
+                  className="underline underline-offset-2 hover:text-fg"
+                  onClick={props.onWriteManually}
                   type="button"
                 >
-                  {preset.label}
+                  {t('write.coverGeneration.writeManuallyLink')}
                 </button>
-              )
-            })}
-            {props.presets.length === 0 ? (
-              <span className="text-xs text-fg-subtle">
-                {props.presetsLoading
-                  ? t('write.coverGeneration.presetsLoading')
-                  : t('write.coverGeneration.presetsEmpty')}
-              </span>
+              </p>
+            ) : null}
+            {props.presetNeedsSavedArticle ? (
+              <p className="text-xs text-fg-subtle">
+                {t('write.coverGeneration.saveFirstHint')}
+              </p>
             ) : null}
           </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <TextArea
-            controlClassName="min-h-32 leading-6"
-            disabled={props.isDraftingPrompt}
-            label={t('write.coverGeneration.promptLabel')}
-            onChange={props.setPromptText}
-            placeholder={t('write.coverGeneration.promptPlaceholder')}
-            value={props.promptText}
-          />
-          {props.isDraftingPrompt ? (
-            <p className="inline-flex items-center gap-1.5 text-xs text-fg-muted">
-              <Loader2 aria-hidden="true" className="size-3 animate-spin" />
-              {t('write.coverGeneration.draftingHint')}
-            </p>
-          ) : null}
-          {!props.canDraftPrompt ? (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              {t('write.coverGeneration.needTitleHint')}
-            </p>
-          ) : null}
-          {props.writerProviderMissing ? (
-            <p className="text-xs leading-5 text-amber-600 dark:text-amber-400">
-              {t('write.coverGeneration.writerProviderMissingHint')}{' '}
-              <Link
-                className="underline underline-offset-2 hover:text-fg"
-                to="/setting/ai"
-              >
-                {t('write.coverGeneration.writerProviderMissingLink')}
-              </Link>
-            </p>
-          ) : null}
-        </div>
+        )}
 
         <Button
           className="w-full"
-          disabled={!canGenerate || props.isGenerating}
+          disabled={!props.canGenerate || props.isGenerating}
           onClick={props.onGenerate}
           type="button"
         >

@@ -106,6 +106,8 @@ function createStandaloneImageService(
     localConfigService as any,
     fileService as any,
     taskProcessor as any,
+    aiServiceMock as any,
+    databaseServiceMock as any,
   )
   service.onModuleInit()
   return { fileService, getHandler: () => registeredHandler! }
@@ -267,6 +269,126 @@ describe('AiImageController (faux e2e)', () => {
 
     expect((task!.payload as { model?: string }).model).toBe(
       'openai/gpt-image-1',
+    )
+  })
+
+  it('POST /ai/image/generate in preset mode (no prompt) enqueues and, on execution, compiles the prompt server-side', async () => {
+    databaseServiceMock.findGlobalById.mockResolvedValueOnce({
+      document: { title: 'Orbital drift', summary: 'about orbits' },
+      type: CollectionRefTypes.Post,
+    })
+    const handle = mountFauxWriter(
+      SIGNAL_GEOMETRY_RECIPE,
+      'A calm orbital composition on charcoal matte paper.',
+    )
+    torn.push(() => handle.teardown())
+
+    const enqueued = await proxy.app.inject({
+      method: 'POST',
+      url: `${apiRoutePrefix}/ai/image/generate`,
+      headers: authPassHeader,
+      payload: {
+        presetId: 'signal-geometry',
+        refId: 'article-preset-mode',
+        purpose: 'cover',
+        requestId: 'req-preset-mode',
+      },
+    })
+    expect(enqueued.statusCode).toBe(200)
+    const taskId = enqueued.json().data.task_id
+    const task = await taskQueueService.getTask(taskId)
+    expect((task!.payload as { prompt?: string }).prompt).toBeUndefined()
+    expect((task!.payload as { presetId?: string }).presetId).toBe(
+      'signal-geometry',
+    )
+
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images-api',
+      provider: 'openrouter',
+      model: baseImageConfig().model,
+      output: [
+        {
+          type: 'image',
+          data: Buffer.from('fake-png-bytes').toString('base64'),
+          mimeType: 'image/png',
+        },
+      ],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+
+    const { getHandler, fileService } =
+      createStandaloneImageService(baseImageConfig())
+    const context = createTaskContext({ taskId })
+
+    await getHandler().execute(task!.payload, context)
+
+    expect(databaseServiceMock.findGlobalById).toHaveBeenCalledWith(
+      'article-preset-mode',
+    )
+    expect(fileService.uploadBuffer).toHaveBeenCalled()
+    expect(context.setResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: 'A calm orbital composition on charcoal matte paper.',
+      }),
+    )
+  })
+
+  it('preset-mode generation degrades to a minimal prompt and logs a warn when compilation fails, but still produces an image', async () => {
+    databaseServiceMock.findGlobalById.mockResolvedValueOnce({
+      document: { title: 'Orbital drift', summary: 'about orbits' },
+      type: CollectionRefTypes.Post,
+    })
+    aiServiceMock.getWriterModel.mockRejectedValueOnce(
+      new Error('No AI provider configured'),
+    )
+
+    const enqueued = await proxy.app.inject({
+      method: 'POST',
+      url: `${apiRoutePrefix}/ai/image/generate`,
+      headers: authPassHeader,
+      payload: {
+        presetId: 'signal-geometry',
+        refId: 'article-degrade',
+        purpose: 'cover',
+        requestId: 'req-degrade-mode',
+      },
+    })
+    const taskId = enqueued.json().data.task_id
+    const task = await taskQueueService.getTask(taskId)
+
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images-api',
+      provider: 'openrouter',
+      model: baseImageConfig().model,
+      output: [
+        {
+          type: 'image',
+          data: Buffer.from('fake-png-bytes').toString('base64'),
+          mimeType: 'image/png',
+        },
+      ],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+
+    const { getHandler, fileService } =
+      createStandaloneImageService(baseImageConfig())
+    const context = createTaskContext({ taskId })
+
+    await getHandler().execute(task!.payload, context)
+
+    expect(context.appendLog).toHaveBeenCalledWith(
+      'warn',
+      expect.stringContaining('No AI provider configured'),
+    )
+    expect(fileService.uploadBuffer).toHaveBeenCalled()
+    expect(context.setResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining('Orbital drift'),
+      }),
     )
   })
 
