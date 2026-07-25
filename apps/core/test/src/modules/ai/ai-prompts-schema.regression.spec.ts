@@ -5,7 +5,7 @@ import { Value } from 'typebox/value'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { AI_PROMPTS, COVER_STYLE_PRESETS } from '~/modules/ai/ai.prompts'
+import { AI_PROMPTS, SIGNAL_GEOMETRY_PRESET } from '~/modules/ai/ai.prompts'
 
 const FIXTURE_DIR = resolve(__dirname, '../../../fixtures/ai-prompts')
 
@@ -272,13 +272,10 @@ describe('ai-prompts schema regression (zod -> typebox parity)', () => {
 
   describe('cover.compile (signal-geometry)', () => {
     const fixtures = loadFixtures('cover-signal-geometry.json')
-    const tb = AI_PROMPTS.cover.compile(
-      COVER_STYLE_PRESETS['signal-geometry'],
-      {
-        title: 'title',
-        summary: 'summary',
-      },
-    ).schema
+    const tb = AI_PROMPTS.cover.compile(SIGNAL_GEOMETRY_PRESET, {
+      title: 'title',
+      summary: 'summary',
+    }).schema
 
     for (const fx of fixtures) {
       it(`${fx.name}: zod ⇔ typebox agree`, () => {

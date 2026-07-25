@@ -333,13 +333,15 @@ export interface CoverStylePreset {
   hardConstraints: string
 }
 
+const SIGNAL_GEOMETRY_ASPECT_RATIO = '16:9'
+
 // Signal Geometry preset adapted from CaliCastle/skills, MIT
-const SIGNAL_GEOMETRY_PRESET: CoverStylePreset = {
+export const SIGNAL_GEOMETRY_PRESET: CoverStylePreset = {
   id: 'signal-geometry',
   label: 'Signal Geometry',
-  defaultAspectRatio: '16:9',
+  defaultAspectRatio: SIGNAL_GEOMETRY_ASPECT_RATIO,
   compileSystemPrompt: renderPromptTemplate(COVER_SIGNAL_GEOMETRY_SYSTEM, {
-    ASPECT_RATIO: '16:9',
+    ASPECT_RATIO: SIGNAL_GEOMETRY_ASPECT_RATIO,
   }),
   hardConstraints: COVER_SIGNAL_GEOMETRY_HARD_CONSTRAINTS,
 }
