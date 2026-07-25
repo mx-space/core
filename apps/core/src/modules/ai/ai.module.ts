@@ -8,6 +8,7 @@ import { AiAgentController } from './ai-agent/ai-agent.controller'
 import { AiAgentChatService } from './ai-agent/ai-agent-chat.service'
 import { AiAgentConversationRepository } from './ai-agent/ai-agent-conversation.repository'
 import { AiAgentConversationService } from './ai-agent/ai-agent-conversation.service'
+import { AiImageModule } from './ai-image/ai-image.module'
 import { AiInFlightService } from './ai-inflight/ai-inflight.service'
 import { AiInsightsController } from './ai-insights/ai-insights.controller'
 import { AiInsightsRepository } from './ai-insights/ai-insights.repository'
@@ -40,7 +41,12 @@ import { AiWriterController } from './ai-writer/ai-writer.controller'
 import { AiWriterService } from './ai-writer/ai-writer.service'
 
 @Module({
-  imports: [AiTaskModule, TopicModule, forwardRef(() => NoteModule)],
+  imports: [
+    AiTaskModule,
+    AiImageModule,
+    TopicModule,
+    forwardRef(() => NoteModule),
+  ],
   providers: [
     AiSummaryService,
     AiSummaryRepository,

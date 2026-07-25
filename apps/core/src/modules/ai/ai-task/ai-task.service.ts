@@ -8,6 +8,7 @@ import {
   type AITaskPayload,
   AITaskType,
   computeAITaskDedupKey,
+  type ImageGenerationTaskPayload,
   type InsightsTaskPayload,
   type InsightsTranslationTaskPayload,
   type SlugBackfillTaskPayload,
@@ -68,6 +69,12 @@ export class AiTaskService {
   ): Promise<{ taskId: string; created: boolean }> {
     await this.fillArticleInfo(payload)
     return this.createTask(AITaskType.InsightsTranslation, payload)
+  }
+
+  async createImageGenerationTask(
+    payload: ImageGenerationTaskPayload,
+  ): Promise<{ taskId: string; created: boolean }> {
+    return this.createTask(AITaskType.ImageGeneration, payload)
   }
 
   private async createTask(
