@@ -82,9 +82,9 @@ export const generateDefaultConfig: () => IConfig = () => ({
   imageGenerationOptions: {
     enable: false,
     provider: 'openrouter',
-    apiKey: null!,
-    endpoint: null!,
-    model: null!,
+    apiKey: '',
+    endpoint: '',
+    model: '',
     defaultAspectRatio: '16:9',
     defaultQuality: 'standard',
     defaultFormat: 'png',

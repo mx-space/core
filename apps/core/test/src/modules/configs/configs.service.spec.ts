@@ -75,9 +75,9 @@ describe('ConfigsService', () => {
     await expect(service.get('imageGenerationOptions')).resolves.toEqual({
       enable: false,
       provider: 'openrouter',
-      apiKey: null,
-      endpoint: null,
-      model: null,
+      apiKey: '',
+      endpoint: '',
+      model: '',
       defaultAspectRatio: '16:9',
       defaultQuality: 'standard',
       defaultFormat: 'png',
@@ -360,6 +360,66 @@ describe('ConfigsService', () => {
       })
 
       expect(result.provider).toBe('openrouter')
+    })
+  })
+
+  describe('imageGenerationOptions save round-trip (admin form re-submits the whole section)', () => {
+    function createService(
+      currentConfig: ReturnType<typeof generateDefaultConfig>,
+    ) {
+      const redisClient = {
+        get: vi.fn().mockResolvedValue(JSON.stringify(currentConfig)),
+        set: vi.fn().mockResolvedValue('OK'),
+      }
+      const redisService = {
+        getClient: vi.fn(() => redisClient),
+        waitForReady: vi.fn().mockResolvedValue(undefined),
+      }
+      const optionsRepository = {
+        findAll: vi.fn().mockResolvedValue([]),
+        upsert: vi.fn(async (name: string, value: unknown) => ({
+          id: '1' as any,
+          name,
+          value,
+        })),
+      }
+      const eventManager = { emit: vi.fn() }
+
+      const service = new ConfigsService(
+        optionsRepository as any,
+        redisService as any,
+        {} as any,
+        eventManager as any,
+      )
+
+      return { service }
+    }
+
+    it('accepts the section re-submitted verbatim as fetched, with apiKey/endpoint/model still "" — the exact shape the admin form sends when it never touches a hidden field', async () => {
+      const { service } = createService(generateDefaultConfig())
+      const fetched = await service.get('imageGenerationOptions')
+
+      const result = await service.patchAndValid('imageGenerationOptions', {
+        ...fetched,
+        enable: true,
+      })
+
+      expect(result).toMatchObject({
+        enable: true,
+        apiKey: '',
+        endpoint: '',
+        model: '',
+      })
+    })
+
+    it('still rejects an explicit endpoint: null — the schema is right to refuse it, only the seeded default was wrong', async () => {
+      const { service } = createService(generateDefaultConfig())
+
+      await expect(
+        service.patchAndValid('imageGenerationOptions', {
+          endpoint: null,
+        } as any),
+      ).rejects.toThrow()
     })
   })
 })
