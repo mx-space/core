@@ -533,3 +533,77 @@ pi 公开类型保持形状相容。详见
 - **新增一条断言实际出站载荷的用例**——今日之洞正在于没有任何测试检查
   `onPayload` 的产物
 - 既有 51 项测试不得回归
+
+---
+
+## Task 10: 生图模型可选、Provider 变端点预设
+
+当前 `imageGenerationOptions` 只有一个自由文本的 `model`，须手敲 `openai/gpt-image-1`
+这类 id；`provider` 自 Task 9 起已纯属装饰（路由全由 endpoint 决定）。而生图任务
+永远用配置里那一个模型，两个入口（封面 / 插图）无法各用其宜。
+
+文本侧早已是「多 provider + 按用途指派模型」。生图这边补齐，但**不照搬指派表**——
+生图用途只有两种，指派表几乎必然只有两行，是纯负担。改用「配置存默认值 + 单次生成
+可覆盖」。
+
+### 1. `provider` → 端点预设下拉
+
+值域 `openrouter`（默认）| `custom`。选 `openrouter` 时 endpoint 可留空，由
+`resolveOpenRouterImagesBaseUrl` 解析；选 `custom` 时 endpoint 必填。
+
+**不要**把 OpenAI / Gemini 列进这个下拉。当前传输只会说 OpenRouter 的
+`/api/v1/images`，列了也发不出去——那正是 Task 9 刚删掉的「看着能选、实则空转」。
+日后真加了别家传输再追加选项，语义不变。
+
+同时更新该字段的 description：它现在真的决定端点了，不再是显示标签。
+
+### 2. `model` → 目录 Combobox
+
+照文本侧 `attachAiProviderOptionsToFormDSL`（`configs.dsl.util.ts:439-486`）的做法：
+在 `BaseOptionController.getFormSchema` 里于运行时把选项注入 DSL——找到
+`imageGenerationOptions` section 的 `model` 字段，设 `field.ui.component = 'select'`
+与 `field.ui.options`。
+
+选项来自已有的目录缓存（`image-catalog.ts` 的 `getImageCatalog`），38 个模型。
+label 用模型的 `name`，value 用 `id`。
+
+目录取不到时（网络失败）**不要**把字段变成空下拉——保持自由文本，否则配置页会
+锁死。这与传输层「fail closed 但要能诊断」同理，同样落一条 warn。
+
+### 3. 单次生成可覆盖模型
+
+- `GenerateImageSchema`（`ai-image.dto.ts`）加 `model?: string`
+- `ImageGenerationTaskPayload`（`ai-task.types.ts`）加 `model?: string`
+- `AiImageService` 取 `payload.model ?? config.model`；两者皆空才抛
+  `IMAGE_PROVIDER_NOT_CONFIGURED`
+
+`requestId` 仍是去重键的全部，不受影响。
+
+### 4. admin 封面抽屉加模型选择
+
+抽屉顶部一个下拉，选项同样来自 `GET /ai/image/models`，默认值取配置里的 `model`。
+选中后随 `POST /ai/image/generate` 一并发出。
+
+`generate_image` agent tool **不加**模型参数——agent 用默认即可，多一个参数只会
+让模型在无谓处纠结。
+
+### 5. 按能力显示参数（同一份数据，顺手做）
+
+`/ai/image/models` 每个模型都带 `supported_parameters`。抽屉里依当前所选模型，只显示
+它认的控件：gemini 系显示比例、不显示 quality；gpt-image 系反之。
+
+这消掉一个已知的糙处——今天选 jpeg 配 OpenAI 模型会被静默丢弃（有日志，但用户看
+不到）。若此项让改动明显变大，可单独拆出，但不要留着「显示了却不生效」的控件。
+
+### 边界
+
+- 不新增数据库字段、不做迁移
+- 不加 OpenRouter 上游路由（`provider_slug`）选择——用途未现
+- 不动去重、不动传输层的能力过滤逻辑（那是最后一道闸，UI 过滤只是提前告知）
+
+### 验收
+
+- 配置页 model 为下拉且能选中 38 项之一；目录取不到时退回自由文本且有 warn
+- 传 `model` 的生成请求确实用该模型（断言出站载荷，不是断言 mock）
+- 不传 `model` 时回落配置默认值
+- 既有 68 项测试不回归
