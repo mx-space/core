@@ -37,9 +37,7 @@ export const AiImageViews = {
   draftPrompt: DraftPromptSchema,
   generate: GenerateImageResultSchema,
   preset: PresetSchema,
-  presetList: z.array(PresetSchema),
   model: ImageModelSchema,
-  modelList: z.array(ImageModelSchema),
 } as const
 
 export type DraftPromptView = z.infer<typeof DraftPromptSchema>

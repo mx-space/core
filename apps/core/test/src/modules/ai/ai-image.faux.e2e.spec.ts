@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { withFauxAi } from '@/helper/faux-ai.helper'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AppErrorCode } from '~/common/errors'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { AiService } from '~/modules/ai/ai.service'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import { AiImageController } from '~/modules/ai/ai-image/ai-image.controller'
@@ -115,6 +116,43 @@ function createTaskContext(
     streamPusher: vi.fn(),
     ...overrides,
   }
+}
+
+function mountFauxWriter(recipe: Record<string, string>, prompt: string) {
+  const handle = withFauxAi({
+    api: 'openai-completions',
+    provider: 'faux-cover',
+    models: [{ id: 'faux-cover-model', name: 'faux-cover-model' }],
+    responses: [
+      fauxAssistantMessage([
+        fauxToolCall('structured_output', { recipe, prompt }),
+      ]),
+    ],
+  })
+
+  aiServiceMock.getWriterModel.mockResolvedValueOnce(
+    new PiRuntimeAdapter({
+      apiKey: 'k',
+      endpoint: 'https://faux-cover.example.com',
+      model: 'faux-cover-model',
+      providerType: AIProviderType.OpenAICompatible,
+      providerId: 'faux-cover',
+    }),
+  )
+
+  return handle
+}
+
+const SIGNAL_GEOMETRY_RECIPE = {
+  format: '16:9',
+  polarity: 'dark',
+  family: 'orbital',
+  transformation: 'converging',
+  geometry: 'radial',
+  scaffold: 'open field',
+  anchor: 'central node',
+  accent: 'none',
+  text: 'none',
 }
 
 let taskQueueService: TaskQueueService
@@ -262,40 +300,11 @@ describe('AiImageController (faux e2e)', () => {
   })
 
   it('POST /ai/image/draft-prompt compiles a prompt + recipe with status 200', async () => {
-    const handle = withFauxAi({
-      api: 'openai-completions',
-      provider: 'faux-cover',
-      models: [{ id: 'faux-cover-model', name: 'faux-cover-model' }],
-      responses: [
-        fauxAssistantMessage([
-          fauxToolCall('structured_output', {
-            recipe: {
-              format: '16:9',
-              polarity: 'dark',
-              family: 'orbital',
-              transformation: 'converging',
-              geometry: 'radial',
-              scaffold: 'open field',
-              anchor: 'central node',
-              accent: 'none',
-              text: 'none',
-            },
-            prompt: 'A calm orbital composition on charcoal matte paper.',
-          }),
-        ]),
-      ],
-    })
-    torn.push(() => handle.teardown())
-
-    aiServiceMock.getWriterModel.mockResolvedValueOnce(
-      new PiRuntimeAdapter({
-        apiKey: 'k',
-        endpoint: 'https://faux-cover.example.com',
-        model: 'faux-cover-model',
-        providerType: AIProviderType.OpenAICompatible,
-        providerId: 'faux-cover',
-      }),
+    const handle = mountFauxWriter(
+      SIGNAL_GEOMETRY_RECIPE,
+      'A calm orbital composition on charcoal matte paper.',
     )
+    torn.push(() => handle.teardown())
 
     const res = await proxy.app.inject({
       method: 'POST',
@@ -314,5 +323,36 @@ describe('AiImageController (faux e2e)', () => {
       'A calm orbital composition on charcoal matte paper.',
     )
     expect(body.data.recipe.family).toBe('orbital')
+  })
+
+  it('POST /ai/image/draft-prompt with refId falls back to an empty summary when the article has no text (no crash on null text)', async () => {
+    databaseServiceMock.findGlobalById.mockResolvedValueOnce({
+      document: { title: 'Draft in progress', text: null },
+      type: CollectionRefTypes.Note,
+    })
+
+    const handle = mountFauxWriter(
+      SIGNAL_GEOMETRY_RECIPE,
+      'A minimal composition anchored by a single title.',
+    )
+    torn.push(() => handle.teardown())
+
+    const res = await proxy.app.inject({
+      method: 'POST',
+      url: `${apiRoutePrefix}/ai/image/draft-prompt`,
+      headers: authPassHeader,
+      payload: {
+        presetId: 'signal-geometry',
+        refId: 'note-empty-body',
+      },
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(databaseServiceMock.findGlobalById).toHaveBeenCalledWith(
+      'note-empty-body',
+    )
+    expect(res.json().data.prompt).toBe(
+      'A minimal composition anchored by a single title.',
+    )
   })
 })

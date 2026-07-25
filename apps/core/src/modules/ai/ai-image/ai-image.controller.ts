@@ -148,7 +148,8 @@ export class AiImageController {
     const summary =
       'summary' in document && document.summary
         ? document.summary
-        : document.text.slice(0, DRAFT_PROMPT_FALLBACK_SUMMARY_MAX_LENGTH)
+        : (document.text?.slice(0, DRAFT_PROMPT_FALLBACK_SUMMARY_MAX_LENGTH) ??
+          '')
 
     return { title: document.title, summary }
   }
