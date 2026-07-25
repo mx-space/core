@@ -6,7 +6,7 @@ export enum AITaskType {
   SlugBackfill = 'ai:slug:backfill',
   Insights = 'ai:insights',
   InsightsTranslation = 'ai:insights:translation',
-  ImageGeneration = 'image-generation',
+  ImageGeneration = 'ai:image:generation',
 }
 
 export interface SummaryTaskPayload {

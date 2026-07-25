@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
+import { AITaskType } from '~/modules/ai/ai-task/ai-task.types'
 
 function createService() {
   const taskQueueService = {
@@ -48,7 +49,7 @@ describe('AiTaskService.createImageGenerationTask', () => {
 
     expect(taskQueueService.createTask).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: 'image-generation',
+        type: AITaskType.ImageGeneration,
         dedupKey: 'req-42',
       }),
     )
