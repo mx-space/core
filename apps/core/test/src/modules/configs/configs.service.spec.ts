@@ -71,9 +71,16 @@ describe('ConfigsService', () => {
       { emit: vi.fn() } as any,
     )
 
-    await expect(service.get('imageGenerationOptions')).resolves.toEqual(
-      generateDefaultConfig().imageGenerationOptions,
-    )
+    await expect(service.get('imageGenerationOptions')).resolves.toEqual({
+      enable: false,
+      provider: 'openrouter',
+      apiKey: null,
+      endpoint: null,
+      model: null,
+      defaultAspectRatio: '16:9',
+      defaultQuality: 'standard',
+      defaultFormat: 'png',
+    })
   })
 
   it('migrates legacy Dodo credential names into provider-neutral fields', async () => {
