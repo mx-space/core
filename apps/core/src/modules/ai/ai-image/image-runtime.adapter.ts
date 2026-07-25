@@ -2,24 +2,23 @@ import type {
   ImageContent,
   ImagesContext,
   ImagesModel,
-  ImagesOptions,
   TextContent,
 } from '@earendil-works/pi-ai'
-import { builtinImagesModels } from '@earendil-works/pi-ai/providers/all'
-import { generateImagesOpenRouter } from '@earendil-works/pi-ai/providers/images/register-builtins'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 
-import type { ImageParamMappingKind } from './image-param-mapping'
-import {
-  mapImageParams,
-  resolveImageParamMappingKind,
-} from './image-param-mapping'
+import { resolveOpenRouterImagesBaseUrl } from './image-catalog'
 import type {
   GeneratedImage,
   IImageRuntime,
   ImageGenerateOptions,
 } from './image-runtime.interface'
+import {
+  generateOpenRouterImages,
+  OPENROUTER_IMAGES_API,
+  type OpenRouterImagesApi,
+  type OpenRouterImagesOptions,
+} from './openrouter-images-api'
 
 export interface ImageRuntimeAdapterConfig {
   provider: string
@@ -29,19 +28,17 @@ export interface ImageRuntimeAdapterConfig {
 }
 
 export class ImageRuntimeAdapter implements IImageRuntime {
-  private readonly model: ImagesModel<'openrouter-images'>
+  private readonly model: ImagesModel<OpenRouterImagesApi>
   private readonly apiKey: string
-  private readonly mappingKind: ImageParamMappingKind
 
   constructor(config: ImageRuntimeAdapterConfig) {
     this.apiKey = config.apiKey
-    this.mappingKind = resolveImageParamMappingKind(config.provider)
     this.model = {
       id: config.model,
       name: config.model,
-      api: 'openrouter-images',
+      api: OPENROUTER_IMAGES_API,
       provider: config.provider,
-      baseUrl: this.resolveBaseUrl(config),
+      baseUrl: resolveOpenRouterImagesBaseUrl(config.endpoint),
       input: ['text', 'image'],
       output: ['image'],
       cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
@@ -52,17 +49,16 @@ export class ImageRuntimeAdapter implements IImageRuntime {
     opts: ImageGenerateOptions,
   ): Promise<{ images: GeneratedImage[] }> {
     const context: ImagesContext = { input: this.buildInput(opts) }
-    const options: ImagesOptions = {
+    const options: OpenRouterImagesOptions = {
       apiKey: this.apiKey,
       signal: opts.signal,
-      onPayload: (payload) => ({
-        ...(payload as Record<string, unknown>),
-        ...mapImageParams(this.mappingKind, opts),
-        ...opts.providerParams,
-      }),
+      aspectRatio: opts.aspectRatio,
+      quality: opts.quality,
+      outputFormat: opts.format,
+      providerParams: opts.providerParams,
     }
 
-    const result = await generateImagesOpenRouter(this.model, context, options)
+    const result = await generateOpenRouterImages(this.model, context, options)
 
     if (result.stopReason !== 'stop') {
       throw createAppException(AppErrorCode.IMAGE_GENERATION_FAILED, {
@@ -84,17 +80,6 @@ export class ImageRuntimeAdapter implements IImageRuntime {
 
   async listModels(): Promise<{ id: string; provider: string }[]> {
     return [{ id: this.model.id, provider: this.model.provider }]
-  }
-
-  private resolveBaseUrl(config: ImageRuntimeAdapterConfig): string {
-    const trimmed = config.endpoint?.trim()
-    if (trimmed) return trimmed
-
-    const baseUrl = builtinImagesModels().getModels(config.provider)[0]?.baseUrl
-    if (!baseUrl) {
-      throw createAppException(AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED)
-    }
-    return baseUrl
   }
 
   private buildInput(

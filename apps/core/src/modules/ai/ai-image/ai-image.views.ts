@@ -28,9 +28,16 @@ const PresetSchema = z.object({
   defaultAspectRatio: z.string(),
 })
 
+const ImageParameterDescriptorSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('enum'), values: z.array(z.string()) }),
+  z.object({ type: z.literal('range'), min: z.number(), max: z.number() }),
+  z.object({ type: z.literal('boolean') }),
+])
+
 const ImageModelSchema = z.object({
   id: z.string(),
   provider: z.string(),
+  supportedParameters: z.record(z.string(), ImageParameterDescriptorSchema),
 })
 
 export const AiImageViews = {

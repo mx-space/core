@@ -20,13 +20,23 @@ import { DatabaseService } from '~/processors/database/database.service'
 import type { TaskExecuteContext } from '~/processors/task-queue'
 import { TaskQueueService } from '~/processors/task-queue'
 
-const { generateImagesOpenRouterMock } = vi.hoisted(() => ({
-  generateImagesOpenRouterMock: vi.fn(),
+const { generateOpenRouterImagesMock } = vi.hoisted(() => ({
+  generateOpenRouterImagesMock: vi.fn(),
 }))
 
-vi.mock('@earendil-works/pi-ai/providers/images/register-builtins', () => ({
-  generateImagesOpenRouter: generateImagesOpenRouterMock,
-}))
+vi.mock(
+  '~/modules/ai/ai-image/openrouter-images-api',
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('~/modules/ai/ai-image/openrouter-images-api')
+      >()
+    return {
+      ...actual,
+      generateOpenRouterImages: generateOpenRouterImagesMock,
+    }
+  },
+)
 
 const noopEmitter = {
   emitCreated: vi.fn(),
@@ -183,12 +193,13 @@ describe('AiImageController (faux e2e)', () => {
     await redis.getClient().flushall()
     taskQueueService = proxy.app.get(TaskQueueService)
     imageConfig = baseImageConfig()
-    generateImagesOpenRouterMock.mockReset()
+    generateOpenRouterImagesMock.mockReset()
     vi.clearAllMocks()
   })
 
   afterEach(() => {
     while (torn.length) torn.pop()!()
+    vi.restoreAllMocks()
   })
 
   it('POST /ai/image/generate enqueues a task and returns { taskId, created } with status 200', async () => {
@@ -259,7 +270,7 @@ describe('AiImageController (faux e2e)', () => {
     await expect(
       getHandler().execute(task!.payload, createTaskContext({ taskId })),
     ).rejects.toMatchObject({ code: AppErrorCode.IMAGE_GENERATION_DISABLED })
-    expect(generateImagesOpenRouterMock).not.toHaveBeenCalled()
+    expect(generateOpenRouterImagesMock).not.toHaveBeenCalled()
   })
 
   it('runtime stopReason: error fails the task with errorMessage and uploads no image', async () => {
@@ -277,7 +288,7 @@ describe('AiImageController (faux e2e)', () => {
     const task = await taskQueueService.getTask(taskId)
 
     const assistantImages: AssistantImages = {
-      api: 'openrouter-images',
+      api: 'openrouter-images-api',
       provider: 'openrouter',
       model: baseImageConfig().model,
       output: [],
@@ -285,7 +296,7 @@ describe('AiImageController (faux e2e)', () => {
       errorMessage: 'rate limited by upstream',
       timestamp: Date.now(),
     }
-    generateImagesOpenRouterMock.mockResolvedValueOnce(assistantImages)
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
 
     const { getHandler, fileService } =
       createStandaloneImageService(baseImageConfig())
@@ -354,5 +365,87 @@ describe('AiImageController (faux e2e)', () => {
     expect(res.json().data.prompt).toBe(
       'A minimal composition anchored by a single title.',
     )
+  })
+
+  describe('GET /ai/image/models', () => {
+    it('fetches the live OpenRouter catalog and exposes supported_parameters', async () => {
+      imageConfig = {
+        ...baseImageConfig(),
+        endpoint: 'https://models-test-1.example.com/v1',
+      }
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: [
+            {
+              id: 'openai/gpt-image-1',
+              supported_parameters: {
+                quality: {
+                  type: 'enum',
+                  values: ['auto', 'low', 'medium', 'high'],
+                },
+                input_references: { type: 'range', min: 0, max: 16 },
+              },
+            },
+          ],
+        }),
+      } as Response)
+
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `${apiRoutePrefix}/ai/image/models`,
+        headers: authPassHeader,
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json().data).toEqual([
+        {
+          id: 'openai/gpt-image-1',
+          provider: 'openrouter',
+          supported_parameters: {
+            quality: {
+              type: 'enum',
+              values: ['auto', 'low', 'medium', 'high'],
+            },
+            input_references: { type: 'range', min: 0, max: 16 },
+          },
+        },
+      ])
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://models-test-1.example.com/v1/images/models',
+        { headers: { Authorization: 'Bearer test-api-key' } },
+      )
+    })
+
+    it('serves the cached list on a second request within the TTL without calling fetch again', async () => {
+      imageConfig = {
+        ...baseImageConfig(),
+        endpoint: 'https://models-test-2.example.com/v1',
+      }
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: [{ id: 'openai/gpt-image-1', supported_parameters: {} }],
+        }),
+      } as Response)
+
+      const first = await proxy.app.inject({
+        method: 'GET',
+        url: `${apiRoutePrefix}/ai/image/models`,
+        headers: authPassHeader,
+      })
+      const second = await proxy.app.inject({
+        method: 'GET',
+        url: `${apiRoutePrefix}/ai/image/models`,
+        headers: authPassHeader,
+      })
+
+      expect(first.statusCode).toBe(200)
+      expect(second.statusCode).toBe(200)
+      expect(second.json()).toEqual(first.json())
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
   })
 })

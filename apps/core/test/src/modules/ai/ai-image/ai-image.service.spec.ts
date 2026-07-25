@@ -6,13 +6,23 @@ import { AiImageService } from '~/modules/ai/ai-image/ai-image.service'
 import { AITaskType } from '~/modules/ai/ai-task/ai-task.types'
 import type { TaskExecuteContext } from '~/processors/task-queue'
 
-const { generateImagesOpenRouterMock } = vi.hoisted(() => ({
-  generateImagesOpenRouterMock: vi.fn(),
+const { generateOpenRouterImagesMock } = vi.hoisted(() => ({
+  generateOpenRouterImagesMock: vi.fn(),
 }))
 
-vi.mock('@earendil-works/pi-ai/providers/images/register-builtins', () => ({
-  generateImagesOpenRouter: generateImagesOpenRouterMock,
-}))
+vi.mock(
+  '~/modules/ai/ai-image/openrouter-images-api',
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('~/modules/ai/ai-image/openrouter-images-api')
+      >()
+    return {
+      ...actual,
+      generateOpenRouterImages: generateOpenRouterImagesMock,
+    }
+  },
+)
 
 function createContext(
   overrides: Partial<TaskExecuteContext> = {},
@@ -85,7 +95,7 @@ function createService(configOverrides: Record<string, unknown> = {}) {
 
 describe('AiImageService image generation task handler', () => {
   beforeEach(() => {
-    generateImagesOpenRouterMock.mockReset()
+    generateOpenRouterImagesMock.mockReset()
   })
 
   it('registers a handler for AITaskType.ImageGeneration on module init', () => {
@@ -105,7 +115,7 @@ describe('AiImageService image generation task handler', () => {
         createContext(),
       ),
     ).rejects.toMatchObject({ code: AppErrorCode.IMAGE_GENERATION_DISABLED })
-    expect(generateImagesOpenRouterMock).not.toHaveBeenCalled()
+    expect(generateOpenRouterImagesMock).not.toHaveBeenCalled()
   })
 
   it('throws IMAGE_PROVIDER_NOT_CONFIGURED when apiKey/model are missing', async () => {
@@ -119,14 +129,14 @@ describe('AiImageService image generation task handler', () => {
     ).rejects.toMatchObject({
       code: AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED,
     })
-    expect(generateImagesOpenRouterMock).not.toHaveBeenCalled()
+    expect(generateOpenRouterImagesMock).not.toHaveBeenCalled()
   })
 
   it('uploads the first returned image and records a task result on success', async () => {
     const { getHandler, fileService } = createService()
     const pngBytes = Buffer.from('fake-png-bytes')
     const assistantImages: AssistantImages = {
-      api: 'openrouter-images',
+      api: 'openrouter-images-api',
       provider: 'openrouter',
       model: 'google/gemini-3-flash-image',
       output: [
@@ -139,7 +149,7 @@ describe('AiImageService image generation task handler', () => {
       stopReason: 'stop',
       timestamp: Date.now(),
     }
-    generateImagesOpenRouterMock.mockResolvedValueOnce(assistantImages)
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
     const context = createContext()
 
     await getHandler().execute(
@@ -162,7 +172,7 @@ describe('AiImageService image generation task handler', () => {
   it('throws instead of silently succeeding when the runtime reports stopReason: error', async () => {
     const { getHandler, fileService } = createService()
     const assistantImages: AssistantImages = {
-      api: 'openrouter-images',
+      api: 'openrouter-images-api',
       provider: 'openrouter',
       model: 'google/gemini-3-flash-image',
       output: [],
@@ -170,7 +180,7 @@ describe('AiImageService image generation task handler', () => {
       errorMessage: 'rate limited by upstream',
       timestamp: Date.now(),
     }
-    generateImagesOpenRouterMock.mockResolvedValueOnce(assistantImages)
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
     const context = createContext()
 
     await expect(
@@ -190,14 +200,14 @@ describe('AiImageService image generation task handler', () => {
   it('throws IMAGE_GENERATION_FAILED when stopReason is stop but no images are returned', async () => {
     const { getHandler, fileService } = createService()
     const assistantImages: AssistantImages = {
-      api: 'openrouter-images',
+      api: 'openrouter-images-api',
       provider: 'openrouter',
       model: 'google/gemini-3-flash-image',
       output: [{ type: 'text', text: 'I cannot generate that image.' }],
       stopReason: 'stop',
       timestamp: Date.now(),
     }
-    generateImagesOpenRouterMock.mockResolvedValueOnce(assistantImages)
+    generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
     const context = createContext()
 
     await expect(
