@@ -89,10 +89,12 @@ export class ImageRuntimeAdapter implements IImageRuntime {
   private resolveBaseUrl(config: ImageRuntimeAdapterConfig): string {
     const trimmed = config.endpoint?.trim()
     if (trimmed) return trimmed
-    return (
-      builtinImagesModels().getModel(config.provider, config.model)?.baseUrl ??
-      ''
-    )
+
+    const baseUrl = builtinImagesModels().getModels(config.provider)[0]?.baseUrl
+    if (!baseUrl) {
+      throw createAppException(AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED)
+    }
+    return baseUrl
   }
 
   private buildInput(

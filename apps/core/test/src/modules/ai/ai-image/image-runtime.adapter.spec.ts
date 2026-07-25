@@ -1,5 +1,5 @@
 import type { AssistantImages } from '@earendil-works/pi-ai'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppErrorCode } from '~/common/errors'
 import { ImageRuntimeAdapter } from '~/modules/ai/ai-image/image-runtime.adapter'
@@ -22,6 +22,10 @@ function createAdapter() {
 }
 
 describe('ImageRuntimeAdapter.generateImage', () => {
+  beforeEach(() => {
+    generateImagesOpenRouterMock.mockReset()
+  })
+
   it('returns decoded buffers when pi reports stopReason: stop', async () => {
     const pngBytes = Buffer.from('fake-png-bytes')
     const assistantImages: AssistantImages = {
@@ -107,6 +111,80 @@ describe('ImageRuntimeAdapter.generateImage', () => {
 
     const [model] = generateImagesOpenRouterMock.mock.calls[0]
     expect(model.baseUrl).toBe('https://openrouter.ai/api/v1')
+  })
+
+  it('resolves the OpenRouter baseUrl from the catalog even when the specific model is not in the pi snapshot', async () => {
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images',
+      provider: 'openrouter',
+      model: 'google/gemini-3-flash-image',
+      output: [
+        {
+          type: 'image',
+          data: Buffer.from('fake-png-bytes').toString('base64'),
+          mimeType: 'image/png',
+        },
+      ],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateImagesOpenRouterMock.mockResolvedValueOnce(assistantImages)
+
+    const adapter = new ImageRuntimeAdapter({
+      provider: 'openrouter',
+      apiKey: 'test-api-key',
+      endpoint: '',
+      model: 'google/gemini-3-flash-image',
+    })
+    await adapter.generateImage({ prompt: 'a cat' })
+
+    const [model] = generateImagesOpenRouterMock.mock.calls[0]
+    expect(model.baseUrl).toBe('https://openrouter.ai/api/v1')
+  })
+
+  it('keeps an explicitly configured endpoint over the catalog baseUrl', async () => {
+    const assistantImages: AssistantImages = {
+      api: 'openrouter-images',
+      provider: 'openrouter',
+      model: 'google/gemini-3-flash-image',
+      output: [
+        {
+          type: 'image',
+          data: Buffer.from('fake-png-bytes').toString('base64'),
+          mimeType: 'image/png',
+        },
+      ],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    }
+    generateImagesOpenRouterMock.mockResolvedValueOnce(assistantImages)
+
+    const adapter = new ImageRuntimeAdapter({
+      provider: 'openrouter',
+      apiKey: 'test-api-key',
+      endpoint: 'https://custom.example.com/v1',
+      model: 'google/gemini-3-flash-image',
+    })
+    await adapter.generateImage({ prompt: 'a cat' })
+
+    const [model] = generateImagesOpenRouterMock.mock.calls[0]
+    expect(model.baseUrl).toBe('https://custom.example.com/v1')
+  })
+
+  it('throws IMAGE_PROVIDER_NOT_CONFIGURED when the provider has no catalog entry and no endpoint was given', () => {
+    expect(
+      () =>
+        new ImageRuntimeAdapter({
+          provider: 'not-a-real-provider',
+          apiKey: 'test-api-key',
+          endpoint: '',
+          model: 'whatever',
+        }),
+    ).toThrow(
+      expect.objectContaining({
+        code: AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED,
+      }),
+    )
   })
 
   it('throws IMAGE_GENERATION_FAILED with a synthesized message when pi reports stopReason: aborted without an errorMessage', async () => {

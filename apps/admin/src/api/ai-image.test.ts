@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { resolveImageTaskOutcome, waitForImageTask } from './ai-image'
 import type { AITask } from './tasks'
@@ -68,6 +68,10 @@ describe('resolveImageTaskOutcome', () => {
 })
 
 describe('waitForImageTask', () => {
+  beforeEach(() => {
+    getTask.mockReset()
+  })
+
   it('polls until the task succeeds and returns the result', async () => {
     getTask.mockResolvedValueOnce(task()).mockResolvedValueOnce(
       task({

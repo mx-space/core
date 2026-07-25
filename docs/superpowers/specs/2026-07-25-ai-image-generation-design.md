@@ -315,7 +315,7 @@ GET  /ai/image/models         → pi ImagesModels 列表，仿 /ai/registry/mode
 两个 POST 皆动作式非创建式，故须 `@HttpCode(200)`（见 `49a257221`，NestJS 默认
 201）。
 
-**任务查询不新增**：`GET /task/:id` 已在（`task.controller.ts:47`），实时更新走
+**任务查询不新增**：`GET /tasks/:id` 已在（`task.controller.ts:47`），实时更新走
 既有 room-subs。生图只是又一种 task，不该有自己的一套查询。
 
 **刻意不加 `@HTTPDecorators.Idempotence()`**。此与去重那条同源：连点两次「生成」
@@ -323,7 +323,7 @@ GET  /ai/image/models         → pi ImagesModels 列表，仿 /ai/registry/mode
 
 **`providerParams` 无需 `@BypassCaseTransform`**——请求体只在顶层折驼峰，嵌套
 对象原样透传，故 `{ output_compression: 50 }` 能完好抵达 vendor。但
-`GET /task/:id`（`task.controller.ts:47`）裸返回整个 task（含 `payload`），未加
+`GET /tasks/:id`（`task.controller.ts:47`）裸返回整个 task（含 `payload`），未加
 `@BypassCaseTransform`，出站转换会递归深入 —— 故 task 详情接口其实会将
 `payload` 原样回显，嵌套的 vendor 键在响应中会被转 snake_case。当前两个入口均
 不发送 `providerParams`，重试也只读 Redis 中的原始 payload，故此路径暂无实际
