@@ -13,8 +13,10 @@ Spec: `docs/superpowers/specs/2026-07-25-ai-image-generation-design.md`
    唯一例外是 Task 5 的 license attribution 行。
 
 2. **响应信封**。controller 返回裸值 `T` → `{ data: T }`；需要 meta 时用
-   `withMeta(data, meta)`。绝不返回顶层含 `data` 键的对象字面量。错误一律抛
-   `AppException` 子类或 `BizException(ErrorCodeEnum.X)`。
+   `withMeta(data, meta)`。绝不返回顶层含 `data` 键的对象字面量。错误一律用
+   `createAppException(AppErrorCode.X, payload)`（自 `~/common/errors` 导入）。
+   注意：根 CLAUDE.md 中提到的 `ErrorCodeEnum` / `BizException` 在本仓**不存在**，
+   是过时文档，勿照其写。真实模式见 `apps/core/src/common/errors/`。
 
 3. **动作式 POST 须 `@HttpCode(200)`**。NestJS 默认 201，仅创建资源才用 201。
    见 commit `49a257221`。
@@ -82,11 +84,12 @@ Task 5 (preset + 拟词) → Task 6 (controller + e2e)
 apiKey 须走既有的加密字段处理方式——先读 `configs.encrypt.util.ts` 看现有 secret
 字段（如 `imageStorageOptions.secretKey`）如何声明，照做。
 
-在 `apps/core/src/constants/error-code.constant.ts` 中新增三条 `ErrorCodeEnum`：
+在 `apps/core/src/common/errors/` 中新增三条 `AppErrorCode`（SCREAMING_SNAKE_CASE，须同时改 `app-error-code.ts`、`app-error-definitions.ts`、`app-error-payload.ts`）：
 
-- `ImageGenerationDisabled` — 未开启 `imageGenerationOptions.enable`，HTTP 400
-- `ImageProviderNotConfigured` — 缺 apiKey 或 model，HTTP 400
-- `ImageGenerationFailed` — 生成失败，HTTP 500
+- `IMAGE_GENERATION_DISABLED` — 未开启 `imageGenerationOptions.enable`，HTTP 400
+- `IMAGE_PROVIDER_NOT_CONFIGURED` — 缺 apiKey 或 model，HTTP 400
+- `IMAGE_GENERATION_FAILED` — 生成失败，HTTP 500，payload 用 `OptMessage` 承载
+  底层错误信息
 
 照文件中既有条目的格式（消息文案、状态码）添加。
 
@@ -138,8 +141,9 @@ export interface IImageRuntime {
 - 从 `AssistantImages.output` 中筛出 `ImageContent` 转为 Buffer。
 - **失败判定**：pi 生成失败不抛异常，而是返回
   `{ stopReason: 'error', errorMessage, output: [] }`。必须先判
-  `stopReason !== 'stop'`，然后抛 `BizException(ErrorCodeEnum.ImageGenerationFailed)`
-  并把 `errorMessage` 放进 details。若不判，会静默落一张零字节图。
+  `stopReason !== 'stop'`，然后抛
+  `createAppException(AppErrorCode.IMAGE_GENERATION_FAILED, { message: errorMessage })`
+  （该错误码的 payload 类型是 `OptMessage`）。若不判，会静默落一张零字节图。
 
 `image-param-mapping.ts`：纯函数，中立参数 → vendor 载荷片段。
 
@@ -261,8 +265,8 @@ export interface ImageGenerationTaskPayload {
 
 ```
 payload
-  → 校验 imageGenerationOptions.enable（否则抛 ImageGenerationDisabled）
-  → 校验 apiKey/model（否则抛 ImageProviderNotConfigured）
+  → 校验 imageGenerationOptions.enable（否则抛 AppErrorCode.IMAGE_GENERATION_DISABLED）
+  → 校验 apiKey/model（否则抛 AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED）
   → IImageRuntime.generateImage()
   → 取首张 { buffer, mimeType }
   → FileService.uploadBuffer(buffer, { type: 'image', originalFilename, contentType: mimeType })
@@ -397,7 +401,7 @@ stand-in 替代 pi images（参考 `ai.controller.faux.e2e.spec.ts` 的 mock 方
 1. `POST /ai/image/generate` 入队并返回 taskId
 2. 同一 prompt、不同 requestId 的两次请求得到两个**不同的** taskId
 3. runtime 返回 `stopReason: 'error'` 时任务失败并带 `errorMessage`，不产生零字节图
-4. 未开 `enable` 时返回 `ImageGenerationDisabled`
+4. 未开 `enable` 时返回 `IMAGE_GENERATION_DISABLED`
 5. 两个 POST 的成功响应状态码是 **200**
 
 ---
