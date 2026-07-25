@@ -3395,6 +3395,25 @@ export const enUS = {
   'write.section.image.metaTitle': 'Extra fields',
   'write.section.image.moreCount': '{count} more image(s).',
   'write.section.image.title': 'Image settings',
+  'write.coverGeneration.candidates.empty':
+    'Generated images will appear here.',
+  'write.coverGeneration.candidatesTitle': 'Candidates',
+  'write.coverGeneration.draftingHint': 'Drafting a prompt...',
+  'write.coverGeneration.entry': 'AI Generate Cover',
+  'write.coverGeneration.generate': 'Generate',
+  'write.coverGeneration.generating': 'Generating...',
+  'write.coverGeneration.needTitleHint':
+    'Add a title and some content first so a prompt can be drafted.',
+  'write.coverGeneration.presetLabel': 'Style preset',
+  'write.coverGeneration.presetsEmpty': 'No presets available',
+  'write.coverGeneration.presetsLoading': 'Loading presets...',
+  'write.coverGeneration.promptLabel': 'Prompt',
+  'write.coverGeneration.promptPlaceholder': 'Describe the cover image...',
+  'write.coverGeneration.title': 'AI Cover Generation',
+  'write.coverGeneration.toast.draftFailed': 'Failed to draft a prompt',
+  'write.coverGeneration.toast.generateFailed': 'Failed to generate image',
+  'write.coverGeneration.toast.missingResult':
+    'Generated image is missing a URL',
   'write.section.lexicalDebug.copyButton': 'Copy',
   'write.section.lexicalDebug.copyOk': 'Lexical State copied',
   'write.section.lexicalDebug.footer':

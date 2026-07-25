@@ -80,6 +80,7 @@ import { savePost } from '~/data/resources/post.mutations'
 import { topics as topicsCollection } from '~/data/resources/topic'
 import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
+import { CoverGenerationEntry } from '~/features/write/components/cover-generation/CoverGenerationEntry'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
 import { DraftPreviewBanner } from '~/features/write/components/DraftPreviewBanner'
 import { SkillPicker } from '~/features/write/components/SkillPicker'
@@ -1229,7 +1230,11 @@ function WritePage(props: { kind: WriteKind }) {
           </ContentLayoutSlot>
           <ContentLayoutSlot active={metaPanelOpen} id="meta">
             {props.kind === 'page' ? (
-              <PageSettingsPanel state={state} updateField={updateField} />
+              <PageSettingsPanel
+                refId={isEditing ? id : undefined}
+                state={state}
+                updateField={updateField}
+              />
             ) : (
               <ContentSettingsPanel
                 availableDraft={availableDraft}
@@ -1269,6 +1274,7 @@ function WritePage(props: { kind: WriteKind }) {
                       ? `${WEB_URL}${postPublicPath}`
                       : t('write.postPublicPath.fallback')
                 }
+                refId={isEditing ? id : undefined}
                 saveResultId={saveMutation.data?.id}
                 state={state}
                 updateField={updateField}
@@ -1312,6 +1318,7 @@ function ContentSettingsPanel(props: {
   onSaveDraft: () => void
   postFields: ReactNode
   publicPath: string
+  refId?: string
   saveResultId?: string
   state: WriteFormState
   updateField: <TKey extends keyof WriteFormState>(
@@ -1432,6 +1439,7 @@ function ContentSettingsPanel(props: {
         {props.noteFields}
         <MediaAndMetaFields
           kind={props.kind}
+          refId={props.refId}
           state={props.state}
           updateField={props.updateField}
         />
@@ -2508,6 +2516,7 @@ function PageFields(props: {
 
 function MediaAndMetaFields(props: {
   kind: WriteKind
+  refId?: string
   state: WriteFormState
   updateField: <TKey extends keyof WriteFormState>(
     key: TKey,
@@ -2554,6 +2563,19 @@ function MediaAndMetaFields(props: {
             />
           </div>
         ) : null}
+        <CoverGenerationEntry
+          currentCover={cover}
+          onSelectCover={(url) =>
+            props.updateField(
+              'meta',
+              setMetaValue(props.state.meta, 'cover', url),
+            )
+          }
+          refId={props.refId}
+          summary={props.state.summary}
+          text={props.state.text}
+          title={props.state.title}
+        />
         {images.length > 0 ? (
           <div className="space-y-2">
             <div className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -2998,6 +3020,7 @@ function applyParsedPageMarkdown(
 }
 
 function PageSettingsPanel(props: {
+  refId?: string
   state: WriteFormState
   updateField: <TKey extends keyof WriteFormState>(
     key: TKey,
@@ -3013,6 +3036,7 @@ function PageSettingsPanel(props: {
         <PageFields state={props.state} updateField={props.updateField} />
         <MediaAndMetaFields
           kind="page"
+          refId={props.refId}
           state={props.state}
           updateField={props.updateField}
         />
