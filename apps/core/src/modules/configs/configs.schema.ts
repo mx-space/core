@@ -244,6 +244,54 @@ export type ImageStorageOptionsConfig = z.infer<
   typeof ImageStorageOptionsSchema
 >
 
+// ==================== Image Generation Options ====================
+export const ImageGenerationOptionsSchema = section('AI image generation', {
+  enable: field.toggle(z.boolean().optional(), 'Enable AI image generation'),
+  provider: field
+    .plain(z.string().optional(), 'Provider', {
+      description: 'pi images provider id, e.g. openrouter',
+    })
+    .default('openrouter'),
+  apiKey: field.password(z.string().optional(), 'API Key'),
+  endpoint: field.plain(z.string().optional(), 'Endpoint'),
+  model: field.plain(z.string().optional(), 'Model', {
+    description: 'Image generation model id',
+  }),
+  defaultAspectRatio: field
+    .halfGrid(z.string().optional(), 'Default aspect ratio')
+    .default('16:9'),
+  defaultQuality: field
+    .select(
+      z.enum(['low', 'standard', 'high']).optional(),
+      'Default quality',
+      [
+        { label: 'Low', value: 'low' },
+        { label: 'Standard', value: 'standard' },
+        { label: 'High', value: 'high' },
+      ],
+      { 'ui:options': { halfGrid: true } },
+    )
+    .default('standard'),
+  defaultFormat: field
+    .select(
+      z.enum(['png', 'jpeg', 'webp']).optional(),
+      'Default format',
+      [
+        { label: 'PNG', value: 'png' },
+        { label: 'JPEG', value: 'jpeg' },
+        { label: 'WebP', value: 'webp' },
+      ],
+      { 'ui:options': { halfGrid: true } },
+    )
+    .default('png'),
+})
+export class ImageGenerationOptionsDto extends createZodDto(
+  ImageGenerationOptionsSchema,
+) {}
+export type ImageGenerationOptionsConfig = z.infer<
+  typeof ImageGenerationOptionsSchema
+>
+
 // ==================== Comment Upload Options ====================
 export const CommentUploadOptionsSchema = section('Comment image uploads', {
   enable: field.toggle(
@@ -990,6 +1038,7 @@ export const configSchemaMapping = {
   friendLinkOptions: FriendLinkOptionsSchema,
   backupOptions: BackupOptionsSchema,
   imageStorageOptions: ImageStorageOptionsSchema,
+  imageGenerationOptions: ImageGenerationOptionsSchema,
   fileUploadOptions: FileUploadOptionsSchema,
   commentUploadOptions: CommentUploadOptionsSchema,
   baiduSearchOptions: BaiduSearchOptionsSchema,

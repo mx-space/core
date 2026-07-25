@@ -51,6 +51,31 @@ describe('ConfigsService', () => {
     )
   })
 
+  it('reads imageGenerationOptions defaults via get()', async () => {
+    const redisClient = {
+      get: vi.fn().mockResolvedValue(JSON.stringify(generateDefaultConfig())),
+      set: vi.fn().mockResolvedValue('OK'),
+    }
+    const redisService = {
+      getClient: vi.fn(() => redisClient),
+      waitForReady: vi.fn().mockResolvedValue(undefined),
+    }
+    const optionsRepository = {
+      findAll: vi.fn().mockResolvedValue([]),
+    }
+
+    const service = new ConfigsService(
+      optionsRepository as any,
+      redisService as any,
+      {} as any,
+      { emit: vi.fn() } as any,
+    )
+
+    await expect(service.get('imageGenerationOptions')).resolves.toEqual(
+      generateDefaultConfig().imageGenerationOptions,
+    )
+  })
+
   it('migrates legacy Dodo credential names into provider-neutral fields', async () => {
     const redisClient = {
       set: vi.fn().mockResolvedValue('OK'),
