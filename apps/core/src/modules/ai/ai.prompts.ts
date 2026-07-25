@@ -8,6 +8,8 @@ import {
 } from './ai.constants'
 import COMMENT_SCORE_SYSTEM from './prompts/comment-score.system.md?raw'
 import COMMENT_SPAM_SYSTEM from './prompts/comment-spam.system.md?raw'
+import COVER_SIGNAL_GEOMETRY_SYSTEM from './prompts/cover-signal-geometry.system.md?raw'
+import COVER_SIGNAL_GEOMETRY_HARD_CONSTRAINTS from './prompts/cover-signal-geometry-hard-constraints.partial.md?raw'
 import FIELD_TRANSLATION_SYSTEM from './prompts/field-translation.system.md?raw'
 import INSIGHTS_BASE_TEMPLATE from './prompts/insights-base.system.md?raw'
 import INSIGHTS_STREAM_REMINDER from './prompts/insights-stream-reminder.partial.md?raw'
@@ -323,6 +325,101 @@ const buildInsightsTranslationSystem = (
   return system
 }
 
+export interface CoverStylePreset {
+  id: string
+  label: string
+  defaultAspectRatio: string
+  compileSystemPrompt: string
+  hardConstraints: string
+}
+
+// Signal Geometry preset adapted from CaliCastle/skills, MIT
+const SIGNAL_GEOMETRY_PRESET: CoverStylePreset = {
+  id: 'signal-geometry',
+  label: 'Signal Geometry',
+  defaultAspectRatio: '16:9',
+  compileSystemPrompt: renderPromptTemplate(COVER_SIGNAL_GEOMETRY_SYSTEM, {
+    ASPECT_RATIO: '16:9',
+  }),
+  hardConstraints: COVER_SIGNAL_GEOMETRY_HARD_CONSTRAINTS,
+}
+
+export const COVER_STYLE_PRESETS: Record<string, CoverStylePreset> = {
+  [SIGNAL_GEOMETRY_PRESET.id]: SIGNAL_GEOMETRY_PRESET,
+}
+
+const buildCoverCompileSystem = (preset: CoverStylePreset) =>
+  `${preset.compileSystemPrompt.trimEnd()}\n${preset.hardConstraints}`
+
+const buildCoverPrompt = (article: { title: string; summary: string }) =>
+  `<<<TITLE
+${article.title}
+TITLE
+
+<<<SUMMARY
+${article.summary}
+SUMMARY`
+
+const buildCoverRecipeSchema = (preset: CoverStylePreset) =>
+  Type.Object(
+    {
+      format: Type.Literal(preset.defaultAspectRatio),
+      polarity: Type.Union([Type.Literal('light'), Type.Literal('dark')]),
+      family: Type.Union([
+        Type.Literal('orbital'),
+        Type.Literal('flow'),
+        Type.Literal('signal'),
+        Type.Literal('topology'),
+        Type.Literal('layered'),
+      ]),
+      transformation: Type.String({
+        description:
+          'One concise active verb naming what moves, changes, or relates',
+      }),
+      geometry: Type.Union([
+        Type.Literal('radial'),
+        Type.Literal('bilateral'),
+        Type.Literal('directional'),
+        Type.Literal('paired'),
+        Type.Literal('distributed'),
+        Type.Literal('vertically staged'),
+      ]),
+      scaffold: Type.Union([
+        Type.Literal('open field'),
+        Type.Literal('faint grid'),
+        Type.Literal('framed region'),
+        Type.Literal('baseline'),
+      ]),
+      anchor: Type.Union([
+        Type.Literal('off-white endpoint'),
+        Type.Literal('central node'),
+        Type.Literal('contrast line'),
+        Type.Literal('structural void'),
+        Type.Literal('none'),
+      ]),
+      accent: Type.Union([
+        Type.Literal('none'),
+        Type.Literal('coral'),
+        Type.Literal('orange-red'),
+        Type.Literal('cobalt'),
+      ]),
+      text: Type.Literal('none'),
+    },
+    { additionalProperties: false },
+  )
+
+const buildCoverCompileSchema = (preset: CoverStylePreset) =>
+  Type.Object(
+    {
+      recipe: buildCoverRecipeSchema(preset),
+      prompt: Type.String({
+        description:
+          'The compiled four-paragraph Signal Geometry image-generation prompt, in English',
+      }),
+    },
+    { additionalProperties: false },
+  )
+
 export const AI_PROMPTS = {
   summary: (lang: string, text: string) => {
     const targetLanguage =
@@ -577,6 +674,18 @@ COMMENT`,
       schema: EDITOR_OUTPUT_SCHEMA,
       reasoningEffort: NO_REASONING,
     }
+  },
+
+  cover: {
+    compile: (
+      preset: CoverStylePreset,
+      article: { title: string; summary: string },
+    ) => ({
+      systemPrompt: buildCoverCompileSystem(preset),
+      prompt: buildCoverPrompt(article),
+      schema: buildCoverCompileSchema(preset),
+      reasoningEffort: NO_REASONING,
+    }),
   },
 
   fieldTranslation: (targetLang: string, fields: Record<string, string>) => {

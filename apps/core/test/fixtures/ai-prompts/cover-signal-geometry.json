@@ -1,0 +1,344 @@
+[
+  {
+    "name": "happy-light-orbital-none-accent",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": true
+  },
+  {
+    "name": "happy-dark-layered-cobalt",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "dark",
+        "family": "layered",
+        "transformation": "compressing",
+        "geometry": "vertically staged",
+        "scaffold": "framed region",
+        "anchor": "structural void",
+        "accent": "cobalt",
+        "text": "none"
+      },
+      "prompt": "A 16:9 charcoal matte paper canvas..."
+    },
+    "expected": true
+  },
+  {
+    "name": "happy-flow-coral",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "flow",
+        "transformation": "filtering",
+        "geometry": "distributed",
+        "scaffold": "faint grid",
+        "anchor": "central node",
+        "accent": "coral",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": true
+  },
+  {
+    "name": "happy-signal-orange-red",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "dark",
+        "family": "signal",
+        "transformation": "oscillating",
+        "geometry": "paired",
+        "scaffold": "baseline",
+        "anchor": "contrast line",
+        "accent": "orange-red",
+        "text": "none"
+      },
+      "prompt": "A 16:9 charcoal matte paper canvas..."
+    },
+    "expected": true
+  },
+  {
+    "name": "happy-topology-anchor-none",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "topology",
+        "transformation": "linking",
+        "geometry": "bilateral",
+        "scaffold": "open field",
+        "anchor": "none",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": true
+  },
+  {
+    "name": "missing-prompt",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none"
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "missing-recipe-field-accent",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": false
+  },
+  {
+    "name": "extra-key-in-recipe",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none",
+        "notes": "extra"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": false
+  },
+  {
+    "name": "extra-top-level-key",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas...",
+      "status": "DONE"
+    },
+    "expected": false
+  },
+  {
+    "name": "wrong-format",
+    "value": {
+      "recipe": {
+        "format": "4:5",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": "A 4:5 off-white matte paper canvas..."
+    },
+    "expected": false
+  },
+  {
+    "name": "wrong-polarity",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "neutral",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": false
+  },
+  {
+    "name": "wrong-family",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "abstract",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": false
+  },
+  {
+    "name": "wrong-geometry",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "diagonal",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": false
+  },
+  {
+    "name": "wrong-scaffold",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "grid-lines",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": false
+  },
+  {
+    "name": "wrong-anchor",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "top-left",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": false
+  },
+  {
+    "name": "wrong-accent",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "red",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": false
+  },
+  {
+    "name": "text-gate-violated",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "Q3 Report"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": false
+  },
+  {
+    "name": "wrong-type-prompt",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": "converging",
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": 12345
+    },
+    "expected": false
+  },
+  {
+    "name": "wrong-type-transformation",
+    "value": {
+      "recipe": {
+        "format": "16:9",
+        "polarity": "light",
+        "family": "orbital",
+        "transformation": ["converging"],
+        "geometry": "radial",
+        "scaffold": "open field",
+        "anchor": "off-white endpoint",
+        "accent": "none",
+        "text": "none"
+      },
+      "prompt": "A 16:9 off-white matte paper canvas..."
+    },
+    "expected": false
+  }
+]
