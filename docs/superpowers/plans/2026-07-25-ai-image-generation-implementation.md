@@ -232,7 +232,7 @@ pending reference 登记。
 
 在 `apps/core/src/modules/ai/ai-task/ai-task.types.ts`：
 
-1. `AITaskType` 枚举增 `ImageGeneration = 'image-generation'`（照既有条目的命名
+1. `AITaskType` 枚举增 `ImageGeneration = 'ai:image:generation'`（照既有条目的命名
    风格）
 2. 新增 payload 类型：
 
