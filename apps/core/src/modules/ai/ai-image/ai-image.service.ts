@@ -139,9 +139,9 @@ export class AiImageService implements OnModuleInit {
     } catch (error) {
       await context.appendLog(
         'warn',
-        `Cover prompt compile failed, using a minimal fallback prompt: ${(error as Error).message}`,
+        `Cover prompt compile failed, using the preset fallback prompt: ${(error as Error).message}`,
       )
-      return `${article.title}\n\n${preset.hardConstraints}`
+      return preset.fallbackPrompt
     }
   }
 }

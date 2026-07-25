@@ -354,7 +354,7 @@ describe('AiImageService image generation task handler', () => {
       )
     })
 
-    it('falls back to title + hardConstraints and logs a warn when the writer model fails, but the image still completes', async () => {
+    it('falls back to the preset fallback prompt and logs a warn when the writer model fails, but the image still completes', async () => {
       const aiService = {
         getWriterModel: vi
           .fn()
@@ -394,14 +394,80 @@ describe('AiImageService image generation task handler', () => {
         context,
       )
 
-      const fallbackPrompt = `A note about orbital mechanics\n\n${SIGNAL_GEOMETRY_PRESET.hardConstraints}`
       expect(context.appendLog).toHaveBeenCalledWith(
         'warn',
         expect.stringContaining('no provider configured'),
       )
       expect(fileService.uploadBuffer).toHaveBeenCalled()
       expect(context.setResult).toHaveBeenCalledWith(
-        expect.objectContaining({ prompt: fallbackPrompt }),
+        expect.objectContaining({
+          prompt: SIGNAL_GEOMETRY_PRESET.fallbackPrompt,
+        }),
+      )
+    })
+
+    it('degrade-path fallback prompt is a self-contained positive description, not the bare constraints block', () => {
+      const { fallbackPrompt, hardConstraints } = SIGNAL_GEOMETRY_PRESET
+
+      expect(fallbackPrompt.length).toBeGreaterThan(0)
+      expect(fallbackPrompt).not.toBe(hardConstraints)
+      expect(fallbackPrompt).not.toContain(hardConstraints)
+      expect(fallbackPrompt).toMatch(/matte paper/i)
+      expect(fallbackPrompt).toMatch(/grayscale/i)
+      expect(fallbackPrompt).not.toMatch(/\p{Script=Han}/u)
+    })
+
+    it('degrade path never interpolates the raw article title into the fallback prompt', async () => {
+      const aiService = {
+        getWriterModel: vi
+          .fn()
+          .mockRejectedValue(new Error('no provider configured')),
+      }
+      const databaseService = {
+        findGlobalById: vi.fn().mockResolvedValue({
+          document: {
+            title: '单机 4 GB VPS 上把 GitLab CE 跑起来',
+            summary: 'x',
+          },
+          type: CollectionRefTypes.Post,
+        }),
+      }
+      const { getHandler, fileService } = createService(
+        {},
+        { aiService, databaseService },
+      )
+      const assistantImages: AssistantImages = {
+        api: 'openrouter-images-api',
+        provider: 'openrouter',
+        model: 'google/gemini-3-flash-image',
+        output: [
+          {
+            type: 'image',
+            data: Buffer.from('fake-png-bytes').toString('base64'),
+            mimeType: 'image/png',
+          },
+        ],
+        stopReason: 'stop',
+        timestamp: Date.now(),
+      }
+      generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+      const context = createContext()
+
+      await getHandler().execute(
+        {
+          presetId: SIGNAL_GEOMETRY_PRESET.id,
+          refId: 'article-cn-title',
+          purpose: 'cover',
+          requestId: 'req-degrade-cn',
+        },
+        context,
+      )
+
+      expect(fileService.uploadBuffer).toHaveBeenCalled()
+      expect(context.setResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: SIGNAL_GEOMETRY_PRESET.fallbackPrompt,
+        }),
       )
     })
 

@@ -9,6 +9,7 @@ import {
 import COMMENT_SCORE_SYSTEM from './prompts/comment-score.system.md?raw'
 import COMMENT_SPAM_SYSTEM from './prompts/comment-spam.system.md?raw'
 import COVER_SIGNAL_GEOMETRY_SYSTEM from './prompts/cover-signal-geometry.system.md?raw'
+import COVER_SIGNAL_GEOMETRY_FALLBACK from './prompts/cover-signal-geometry-fallback.partial.md?raw'
 import COVER_SIGNAL_GEOMETRY_HARD_CONSTRAINTS from './prompts/cover-signal-geometry-hard-constraints.partial.md?raw'
 import FIELD_TRANSLATION_SYSTEM from './prompts/field-translation.system.md?raw'
 import INSIGHTS_BASE_TEMPLATE from './prompts/insights-base.system.md?raw'
@@ -331,6 +332,7 @@ export interface CoverStylePreset {
   defaultAspectRatio: string
   compileSystemPrompt: string
   hardConstraints: string
+  fallbackPrompt: string
 }
 
 const SIGNAL_GEOMETRY_ASPECT_RATIO = '16:9'
@@ -344,6 +346,9 @@ export const SIGNAL_GEOMETRY_PRESET: CoverStylePreset = {
     ASPECT_RATIO: SIGNAL_GEOMETRY_ASPECT_RATIO,
   }),
   hardConstraints: COVER_SIGNAL_GEOMETRY_HARD_CONSTRAINTS,
+  fallbackPrompt: renderPromptTemplate(COVER_SIGNAL_GEOMETRY_FALLBACK, {
+    ASPECT_RATIO: SIGNAL_GEOMETRY_ASPECT_RATIO,
+  }),
 }
 
 export const COVER_STYLE_PRESETS: Record<string, CoverStylePreset> = {

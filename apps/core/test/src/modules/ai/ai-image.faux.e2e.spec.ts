@@ -9,6 +9,7 @@ import { withFauxAi } from '@/helper/faux-ai.helper'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AppErrorCode } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { SIGNAL_GEOMETRY_PRESET } from '~/modules/ai/ai.prompts'
 import { AiService } from '~/modules/ai/ai.service'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import { AiImageController } from '~/modules/ai/ai-image/ai-image.controller'
@@ -335,9 +336,12 @@ describe('AiImageController (faux e2e)', () => {
     )
   })
 
-  it('preset-mode generation degrades to a minimal prompt and logs a warn when compilation fails, but still produces an image', async () => {
+  it('preset-mode generation degrades to the preset fallback prompt and logs a warn when compilation fails, but still produces an image', async () => {
     databaseServiceMock.findGlobalById.mockResolvedValueOnce({
-      document: { title: 'Orbital drift', summary: 'about orbits' },
+      document: {
+        title: '单机 4 GB VPS 上把 GitLab CE 跑起来',
+        summary: 'about orbits',
+      },
       type: CollectionRefTypes.Post,
     })
     aiServiceMock.getWriterModel.mockRejectedValueOnce(
@@ -387,9 +391,11 @@ describe('AiImageController (faux e2e)', () => {
     expect(fileService.uploadBuffer).toHaveBeenCalled()
     expect(context.setResult).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: expect.stringContaining('Orbital drift'),
+        prompt: SIGNAL_GEOMETRY_PRESET.fallbackPrompt,
       }),
     )
+    const [calledResult] = vi.mocked(context.setResult).mock.calls[0]
+    expect((calledResult as { prompt: string }).prompt).not.toContain('单机')
   })
 
   it('executing the queued task while image generation is disabled fails with IMAGE_GENERATION_DISABLED', async () => {
