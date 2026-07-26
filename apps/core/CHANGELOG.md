@@ -1,3 +1,10 @@
+## [13.17.1](https://github.com/mx-space/core/compare/v13.17.0...v13.17.1) (2026-07-26)
+
+
+### Bug Fixes
+
+* **admin:** keep select popup scroll viewport within the popup box ([2394cc9](https://github.com/mx-space/core/commit/2394cc905845b59a73ce4e87cd2eb489d35b31c2))
+
 ## [13.17.0](https://github.com/mx-space/core/compare/v13.16.3...v13.17.0) (2026-07-26)
 
 
