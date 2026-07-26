@@ -31,35 +31,50 @@ async get(@CurrentUser() user: UserModel) {}
 
 ## Response Transformation
 
-ResponseInterceptor automatically handles response format:
+`ResponseInterceptor` (global `APP_INTERCEPTOR`) wraps every controller return value:
 
-| Return Type | Transformed Result |
+| Return value | Emitted |
 |-------------|-------------------|
-| `Array` | `{ data: [...] }` |
-| `Object` | Returned directly |
+| bare value `T` | `{ data: T }` |
+| `withMeta(data, meta)` | `{ data, meta }` |
 | `undefined` | 204 No Content |
-| `@Bypass` | Returned as-is, skips transformation |
+| `@HTTPDecorators.RawResponse` | untouched — skips envelope and case conversion |
 
-JSONTransformInterceptor converts all fields to snake_case:
+`withMeta` (from `~/common/response/envelope.types`) is detected by an internal `Symbol`,
+**not** by the presence of a `data` key — returning an object literal whose top-level keys
+include `data` gets double-wrapped. CI enforces this via
+`scripts/check-controller-response-envelope.ts`.
+
+`transformResponseCase` (`~/common/response/case-transform.ts`) converts the response
+`data`/`meta` to snake_case at the wire boundary:
 - `createdAt` → `created_at`
 - `categoryId` → `category_id`
 
+Opt a field subtree out with `@BypassCaseTransform(['items[].rawPayload'])`.
+
 ## Pagination
 
+Pagination belongs in `meta`, never merged into `data`. Build it with `MetaObjectBuilder`:
+
 ```typescript
-// Controller: return PaginationResult<T> from the repository
 @Get('/')
 async list(@Query() query: PagerDto) {
-  return this.postRepository.list({
+  const result = await this.postRepository.list({
     page: query.page,
     size: query.size,
     sortBy: query.sortBy,
     sortOrder: query.sortOrder,
   })
-}
 
-// Repository returns { data: T[], pagination: {...} } directly
-// The ResponseInterceptor auto-wraps this as { data: [...], pagination: {...} }
+  const metaBuilder = new MetaObjectBuilder().view('card').pagination({
+    page: result.pagination.currentPage,
+    size: result.pagination.size,
+    total: result.pagination.total,
+    totalPages: result.pagination.totalPage,
+  })
+
+  return withMeta(result.data, metaBuilder.build())
+}
 ```
 
 For CRUD boilerplate, use `BasePgCrudFactory`:

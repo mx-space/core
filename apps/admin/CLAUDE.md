@@ -13,17 +13,9 @@ Query, Sonner, and a Tailwind v4 layer.
 
 ## Development Commands
 
-Run from the monorepo root (the workspace install is governed by the root):
-
-```bash
-pnpm -C apps/admin dev        # Start Vite dev server (opens browser automatically)
-pnpm -C apps/admin build      # Production build → apps/admin/dist
-pnpm -C apps/admin lint       # oxlint
-pnpm -C apps/admin lint:fix   # oxlint --fix
-pnpm -C apps/admin typecheck  # tsc --noEmit
-```
-
-Equivalently, target the package directly: `pnpm --filter @mx-admin/admin run build`.
+Run from the monorepo root (the workspace install is governed by the root) — see
+`apps/admin/package.json` scripts, or target the package directly with
+`pnpm --filter @mx-admin/admin run <script>`.
 
 Scope checks to changed files only — never run lint/typecheck/build over the whole
 tree just to verify a small edit. One-off file typecheck:
@@ -35,30 +27,13 @@ so a build with empty env will not crash.
 
 ## Architecture Overview
 
-### Technology Stack
-
-- **React 19** + TSX, react-compiler enabled via Babel (`@rolldown/plugin-babel`)
-- **Base UI** (`@base-ui/react`) — headless primitives; UI wrappers live in `apps/admin/src/ui/`
-- **React Router 7** (`HashRouter`) — `apps/admin/src/routes.tsx` maps route → lazy view
-- **Tailwind v4** via `@tailwindcss/vite` (`@import 'tailwindcss'` in `src/index.css`)
-- **TanStack Query** — created in `apps/admin/src/query-client.ts`, mounted in `providers.tsx`
-- **Sonner** — toast layer mounted alongside the query provider
-- **Socket.IO** — `src/socket/SocketBridge` hangs off the authenticated shell
-- **better-auth** + passkey for login; auth gate in `App.tsx` (`checkLogged` query) wraps
-  everything except `/setup`, `/setup-api`, `/login`
-
 ### Entry & Shell
 
 `main.tsx` → `App.tsx` (mounts providers, `HashRouter`, auth gate, installs theme tokens
 via `installThemeTokens`) → admin shell (nav chrome + `SocketBridge` + routes). All views
 in `routes.tsx` are `lazy()`-loaded and wrapped in `<Suspense>`; add new pages by
-registering a lazy import there.
-
-### Path Aliases
-
-```typescript
-import { something } from '~/utils/...'  // ~ → apps/admin/src
-```
+registering a lazy import there. The `checkLogged` auth gate wraps everything except
+`/setup`, `/setup-api`, `/login`. Headless UI wrappers live in `apps/admin/src/ui/`.
 
 ### API Layer (`apps/admin/src/api/`)
 
@@ -249,8 +224,6 @@ shells live in `apps/admin/src/ui/layout/`:
 - `apps/admin/vite.config.mts` — Vite + react-compiler + Tailwind + checker; `base` uses
   `VITE_APP_PUBLIC_URL` in production (empty = relative paths, the safe default); the html
   plugin injects `WEB_URL`/`GATEWAY`/`BASE_API` into `window.injectData`
-- `apps/admin/src/theme.ts` — CSS token installation for the shell
-- `apps/admin/src/index.css` — global stylesheet + Tailwind layer
 - `apps/admin/src/constants/env.ts` — resolves API/web/gateway URLs (injected env first,
   then `VITE_APP_*`)
 

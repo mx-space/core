@@ -231,13 +231,14 @@ export function MetaPresetSection(props: MetaPresetSectionProps) {
             )}
           />
         </button>
-        <button
-          className="inline-flex h-7 shrink-0 items-center rounded px-2 text-xs font-medium text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary-shallow)]"
+        <Button
+          className="h-7 shrink-0 px-2 text-xs"
           onClick={() => setShowJsonModal(true)}
           type="button"
+          variant="ghost"
         >
           {t('write.meta.section.jsonEdit')}
-        </button>
+        </Button>
       </div>
 
       {expanded ? (
