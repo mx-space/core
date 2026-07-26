@@ -1,3 +1,16 @@
+## [13.17.0](https://github.com/mx-space/core/compare/v13.16.3...v13.17.0) (2026-07-26)
+
+
+### Bug Fixes
+
+* **ai:** live model list from endpoint and bump pi-ai to 0.82.0 ([a28bdf5](https://github.com/mx-space/core/commit/a28bdf5685e6cc3e5a0abf5d9f0aa879ebff4c9d))
+* **api:** return 200 for non-create POST action endpoints ([49a2572](https://github.com/mx-space/core/commit/49a257221b7c299b5201f56e7cd56efa6072498f))
+
+
+### Features
+
+* **ai-image:** AI 封面图生成链路（配置 / 运行时 / 任务队列 / 后台抽屉） ([#2775](https://github.com/mx-space/core/issues/2775)) ([f9d2b6c](https://github.com/mx-space/core/commit/f9d2b6c72679d923b3360872c073916257eedbe8))
+
 ## [13.16.3](https://github.com/mx-space/core/compare/v13.16.2...v13.16.3) (2026-07-24)
 
 
