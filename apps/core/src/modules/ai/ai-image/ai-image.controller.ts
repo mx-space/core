@@ -1,0 +1,104 @@
+import { Body, Get, HttpCode, Post } from '@nestjs/common'
+
+import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
+import { DatabaseService } from '~/processors/database/database.service'
+
+import { ConfigsService } from '../../configs/configs.service'
+import { AI_PROMPTS, COVER_STYLE_PRESETS } from '../ai.prompts'
+import { AiService } from '../ai.service'
+import { AiTaskService } from '../ai-task/ai-task.service'
+import {
+  DraftImagePromptDto,
+  type GenerateImageDto,
+  type GenerateImageInput,
+} from './ai-image.dto'
+import type { ImageModelView } from './ai-image.views'
+import { AiImageViews } from './ai-image.views'
+import { resolveCoverArticle, resolveCoverPreset } from './cover-preset.util'
+import { getImageCatalog } from './image-catalog'
+
+@ApiController('ai/image')
+export class AiImageController {
+  constructor(
+    private readonly aiService: AiService,
+    private readonly aiTaskService: AiTaskService,
+    private readonly configsService: ConfigsService,
+    private readonly databaseService: DatabaseService,
+  ) {}
+
+  @Post('draft-prompt')
+  @HttpCode(200)
+  @Auth()
+  async draftPrompt(@Body() body: DraftImagePromptDto) {
+    const preset = resolveCoverPreset(body.presetId)
+    const article = body.refId
+      ? await resolveCoverArticle(this.databaseService, body.refId)
+      : { title: body.title!, summary: body.summary! }
+
+    const runtime = await this.aiService.getWriterModel()
+    const { output } = await runtime.generateStructured({
+      ...AI_PROMPTS.cover.compile(preset, article),
+      maxRetries: 2,
+    })
+
+    return AiImageViews.draftPrompt.parse(output)
+  }
+
+  @Post('generate')
+  @HttpCode(200)
+  @Auth()
+  async generate(@Body() body: GenerateImageDto) {
+    let aspectRatio = body.aspectRatio
+    if (body.presetId) {
+      const preset = resolveCoverPreset(body.presetId)
+      aspectRatio ??=
+        preset.defaultAspectRatio as GenerateImageInput['aspectRatio']
+    }
+
+    const result = await this.aiTaskService.createImageGenerationTask({
+      prompt: body.prompt,
+      presetId: body.presetId,
+      purpose: body.purpose,
+      aspectRatio,
+      quality: body.quality,
+      format: body.format,
+      model: body.model,
+      providerParams: body.providerParams,
+      refId: body.refId,
+      requestId: body.requestId,
+    })
+
+    return AiImageViews.generate.parse(result)
+  }
+
+  @Get('presets')
+  @Auth()
+  getPresets() {
+    return Object.values(COVER_STYLE_PRESETS).map((preset) =>
+      AiImageViews.preset.parse({
+        id: preset.id,
+        label: preset.label,
+        defaultAspectRatio: preset.defaultAspectRatio,
+      }),
+    )
+  }
+
+  @Get('models')
+  @Auth()
+  async getModels(): Promise<ImageModelView[]> {
+    const config = await this.configsService.get('imageGenerationOptions')
+    const models = await getImageCatalog({
+      endpoint: config.endpoint,
+      apiKey: config.apiKey,
+    })
+    return models.map((m) =>
+      AiImageViews.model.parse({
+        id: m.id,
+        name: m.name,
+        provider: config.provider,
+        supportedParameters: m.supportedParameters,
+      }),
+    )
+  }
+}

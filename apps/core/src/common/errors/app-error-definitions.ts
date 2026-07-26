@@ -208,6 +208,20 @@ export const APP_ERROR_DEFINITIONS = {
     message: 'Translation not found',
   },
 
+  // image generation
+  [AppErrorCode.IMAGE_GENERATION_DISABLED]: {
+    status: 400,
+    message: 'AI image generation is not enabled',
+  },
+  [AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED]: {
+    status: 400,
+    message: 'Image generation provider is not configured',
+  },
+  [AppErrorCode.IMAGE_GENERATION_FAILED]: {
+    status: 500,
+    message: (p) => p?.message ?? 'Image generation failed',
+  },
+
   // auth
   [AppErrorCode.AUTH_DEVICE_FLOW_PENDING]: {
     status: 202,

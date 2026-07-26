@@ -68,6 +68,10 @@ export function getTaskSummary(task: AITask, t: Translator) {
     return t('tasks.task.insights.generation')
   if (task.type === AITaskType.InsightsTranslation)
     return t('tasks.task.insights.translation')
+  if (task.type === AITaskType.ImageGeneration) {
+    const prompt = payload.prompt as string | undefined
+    return prompt || t('tasks.task.imageGeneration.task')
+  }
 
   const refId = task.payload.refId
   if (typeof refId === 'string' && refId) return refId

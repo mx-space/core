@@ -54,6 +54,11 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.TASK_CANNOT_RETRY]: { reason?: string } | undefined
   [AppErrorCode.AI_TRANSLATION_NOT_FOUND]: undefined
 
+  // image generation
+  [AppErrorCode.IMAGE_GENERATION_DISABLED]: undefined
+  [AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED]: undefined
+  [AppErrorCode.IMAGE_GENERATION_FAILED]: OptMessage
+
   // auth
   [AppErrorCode.AUTH_DEVICE_FLOW_PENDING]: undefined
   [AppErrorCode.AUTH_INVALID_CREDENTIALS]: undefined

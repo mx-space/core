@@ -1,7 +1,9 @@
-import { EncryptUtil } from '~/utils/encrypt.util'
 import { isArrayLike, isObject } from 'es-toolkit/compat'
 import { LRUCache } from 'lru-cache'
 import type { z } from 'zod'
+
+import { EncryptUtil } from '~/utils/encrypt.util'
+
 import { configSchemaMapping } from './configs.schema'
 import { getMeta } from './configs.zod-schema.util'
 
@@ -318,8 +320,8 @@ export const sanitizeConfigForResponse = <T extends object>(
 }
 
 /**
- * Remove empty string values from encrypted fields
- * This prevents empty values from overwriting existing encrypted data during merge
+ * Remove blank (empty string or null) values from encrypted fields
+ * This prevents blank values from overwriting existing encrypted data during merge
  */
 export const removeEmptyEncryptedFields = <T extends object>(
   target: T,
@@ -351,8 +353,7 @@ export const removeEmptyEncryptedFields = <T extends object>(
     } else if (isObject(value) && !isArrayLike(value)) {
       ;(result as any)[key] = removeEmptyEncryptedFields(value, currentPath)
     } else if (
-      typeof value === 'string' &&
-      value === '' &&
+      (value === '' || value === null) &&
       isEncryptedPath(currentPath)
     ) {
       delete (result as any)[key]

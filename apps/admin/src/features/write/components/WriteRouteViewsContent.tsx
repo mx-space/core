@@ -52,6 +52,7 @@ import {
 import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import type { CreateNoteData } from '~/api/notes'
 import { getNoteById } from '~/api/notes'
+import { getOption } from '~/api/options'
 import type { CreatePageData } from '~/api/pages'
 import { getPageById } from '~/api/pages'
 import type { CreatePostData } from '~/api/posts'
@@ -80,6 +81,7 @@ import { savePost } from '~/data/resources/post.mutations'
 import { topics as topicsCollection } from '~/data/resources/topic'
 import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
+import { CoverGenerationEntry } from '~/features/write/components/cover-generation/CoverGenerationEntry'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
 import { DraftPreviewBanner } from '~/features/write/components/DraftPreviewBanner'
 import { SkillPicker } from '~/features/write/components/SkillPicker'
@@ -125,6 +127,7 @@ import type {
 } from '~/vendor/rich-editor/components/RichEditorWithAgent'
 import { buildMxEditorLitexmlSystemMessages } from '~/vendor/rich-editor/utils/agent-litexml-prompt'
 import { useDynamicCatalogSystemMessages } from '~/vendor/rich-editor/utils/dynamic-catalog'
+import { buildImageTools } from '~/vendor/rich-editor/utils/image-tools'
 import type { MetaFieldsSchema } from '~/vendor/rich-editor/utils/meta-tools'
 import {
   buildMetaSystemMessages,
@@ -1229,7 +1232,11 @@ function WritePage(props: { kind: WriteKind }) {
           </ContentLayoutSlot>
           <ContentLayoutSlot active={metaPanelOpen} id="meta">
             {props.kind === 'page' ? (
-              <PageSettingsPanel state={state} updateField={updateField} />
+              <PageSettingsPanel
+                refId={isEditing ? id : undefined}
+                state={state}
+                updateField={updateField}
+              />
             ) : (
               <ContentSettingsPanel
                 availableDraft={availableDraft}
@@ -1269,6 +1276,7 @@ function WritePage(props: { kind: WriteKind }) {
                       ? `${WEB_URL}${postPublicPath}`
                       : t('write.postPublicPath.fallback')
                 }
+                refId={isEditing ? id : undefined}
                 saveResultId={saveMutation.data?.id}
                 state={state}
                 updateField={updateField}
@@ -1312,6 +1320,7 @@ function ContentSettingsPanel(props: {
   onSaveDraft: () => void
   postFields: ReactNode
   publicPath: string
+  refId?: string
   saveResultId?: string
   state: WriteFormState
   updateField: <TKey extends keyof WriteFormState>(
@@ -1432,6 +1441,7 @@ function ContentSettingsPanel(props: {
         {props.noteFields}
         <MediaAndMetaFields
           kind={props.kind}
+          refId={props.refId}
           state={props.state}
           updateField={props.updateField}
         />
@@ -2508,6 +2518,7 @@ function PageFields(props: {
 
 function MediaAndMetaFields(props: {
   kind: WriteKind
+  refId?: string
   state: WriteFormState
   updateField: <TKey extends keyof WriteFormState>(
     key: TKey,
@@ -2554,6 +2565,19 @@ function MediaAndMetaFields(props: {
             />
           </div>
         ) : null}
+        <CoverGenerationEntry
+          currentCover={cover}
+          onSelectCover={(url) =>
+            props.updateField(
+              'meta',
+              setMetaValue(props.state.meta, 'cover', url),
+            )
+          }
+          refId={props.refId}
+          summary={props.state.summary}
+          text={props.state.text}
+          title={props.state.title}
+        />
         {images.length > 0 ? (
           <div className="space-y-2">
             <div className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -2998,6 +3022,7 @@ function applyParsedPageMarkdown(
 }
 
 function PageSettingsPanel(props: {
+  refId?: string
   state: WriteFormState
   updateField: <TKey extends keyof WriteFormState>(
     key: TKey,
@@ -3013,6 +3038,7 @@ function PageSettingsPanel(props: {
         <PageFields state={props.state} updateField={props.updateField} />
         <MediaAndMetaFields
           kind="page"
+          refId={props.refId}
           state={props.state}
           updateField={props.updateField}
         />
@@ -3582,6 +3608,14 @@ function RichWriteSurface(props: {
   const { t } = useI18n()
   const editorRef = useRef<RichEditorWithAgentRef | null>(null)
   const dynamicCatalogMessages = useDynamicCatalogSystemMessages()
+  const imageGenerationOptionsQuery = useQuery({
+    queryFn: () => getOption<{ enable?: boolean }>('imageGenerationOptions'),
+    queryKey: adminQueryKeys.ai.imageGenerationOptions(),
+    staleTime: 60_000,
+  })
+  const imageGenerationEnabled = Boolean(
+    imageGenerationOptionsQuery.data?.enable,
+  )
   const agent = useWriteAgent({
     agentVisible: Boolean(props.agentVisible),
     documentId: props.refId,
@@ -3635,14 +3669,20 @@ function RichWriteSurface(props: {
         ? buildMetaSystemMessages(props.metaFieldsSchema)
         : []),
     ],
-    tools:
-      props.metaFieldsSchema && props.getMetaFields && props.onMetaFieldsUpdate
+    tools: [
+      ...(props.metaFieldsSchema &&
+      props.getMetaFields &&
+      props.onMetaFieldsUpdate
         ? buildMetaTools({
             getFields: props.getMetaFields,
             schema: props.metaFieldsSchema,
             setFields: props.onMetaFieldsUpdate,
           })
-        : undefined,
+        : []),
+      ...(imageGenerationEnabled
+        ? buildImageTools({ refId: props.refId })
+        : []),
+    ],
     onAgentLoopReady: agent.onAgentLoopReady,
     onChange: (value) => {
       latestCallbacks.current.onContentChange(JSON.stringify(value))

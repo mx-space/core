@@ -5,7 +5,7 @@ import { Value } from 'typebox/value'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { AI_PROMPTS } from '~/modules/ai/ai.prompts'
+import { AI_PROMPTS, SIGNAL_GEOMETRY_PRESET } from '~/modules/ai/ai.prompts'
 
 const FIXTURE_DIR = resolve(__dirname, '../../../fixtures/ai-prompts')
 
@@ -77,6 +77,40 @@ const zodTranslationReviewer = z
 const zodTranslationEditor = z
   .object({
     patches: z.record(z.string(), z.string()),
+  })
+  .strict()
+
+const zodCoverSignalGeometryRecipe = z
+  .object({
+    format: z.literal('16:9'),
+    polarity: z.enum(['light', 'dark']),
+    family: z.enum(['orbital', 'flow', 'signal', 'topology', 'layered']),
+    transformation: z.string(),
+    geometry: z.enum([
+      'radial',
+      'bilateral',
+      'directional',
+      'paired',
+      'distributed',
+      'vertically staged',
+    ]),
+    scaffold: z.enum(['open field', 'faint grid', 'framed region', 'baseline']),
+    anchor: z.enum([
+      'off-white endpoint',
+      'central node',
+      'contrast line',
+      'structural void',
+      'none',
+    ]),
+    accent: z.enum(['none', 'coral', 'orange-red', 'cobalt']),
+    text: z.literal('none'),
+  })
+  .strict()
+
+const zodCoverSignalGeometry = z
+  .object({
+    recipe: zodCoverSignalGeometryRecipe,
+    prompt: z.string(),
   })
   .strict()
 
@@ -229,6 +263,23 @@ describe('ai-prompts schema regression (zod -> typebox parity)', () => {
     for (const fx of fixtures) {
       it(`${fx.name}: zod ⇔ typebox agree`, () => {
         const zOk = zodFieldTranslation.safeParse(fx.value).success
+        const tOk = Value.Check(tb, fx.value)
+        expect(zOk).toBe(fx.expected)
+        expect(tOk).toBe(zOk)
+      })
+    }
+  })
+
+  describe('cover.compile (signal-geometry)', () => {
+    const fixtures = loadFixtures('cover-signal-geometry.json')
+    const tb = AI_PROMPTS.cover.compile(SIGNAL_GEOMETRY_PRESET, {
+      title: 'title',
+      summary: 'summary',
+    }).schema
+
+    for (const fx of fixtures) {
+      it(`${fx.name}: zod ⇔ typebox agree`, () => {
+        const zOk = zodCoverSignalGeometry.safeParse(fx.value).success
         const tOk = Value.Check(tb, fx.value)
         expect(zOk).toBe(fx.expected)
         expect(tOk).toBe(zOk)

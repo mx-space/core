@@ -79,6 +79,16 @@ export const generateDefaultConfig: () => IConfig = () => ({
     prefix: '',
     commentUploadPrefix: '',
   },
+  imageGenerationOptions: {
+    enable: false,
+    provider: 'openrouter',
+    apiKey: '',
+    endpoint: '',
+    model: '',
+    defaultAspectRatio: '16:9',
+    defaultQuality: 'standard',
+    defaultFormat: 'png',
+  },
   fileUploadOptions: {
     enableCustomNaming: false,
     filenameTemplate: '{Y}{m}{d}/{md5-16}{ext}',

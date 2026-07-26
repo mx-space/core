@@ -8,6 +8,8 @@ import { AiAgentController } from './ai-agent/ai-agent.controller'
 import { AiAgentChatService } from './ai-agent/ai-agent-chat.service'
 import { AiAgentConversationRepository } from './ai-agent/ai-agent-conversation.repository'
 import { AiAgentConversationService } from './ai-agent/ai-agent-conversation.service'
+import { AiImageController } from './ai-image/ai-image.controller'
+import { AiImageService } from './ai-image/ai-image.service'
 import { AiInFlightService } from './ai-inflight/ai-inflight.service'
 import { AiInsightsController } from './ai-insights/ai-insights.controller'
 import { AiInsightsRepository } from './ai-insights/ai-insights.repository'
@@ -49,6 +51,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiInsightsTranslationService,
     AiInFlightService,
     AiService,
+    AiImageService,
     AiWriterService,
     AiSlugBackfillService,
     {
@@ -73,6 +76,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
   ],
   controllers: [
     AiController,
+    AiImageController,
     AiSummaryController,
     AiInsightsController,
     AiWriterController,

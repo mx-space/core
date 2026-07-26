@@ -244,6 +244,79 @@ export type ImageStorageOptionsConfig = z.infer<
   typeof ImageStorageOptionsSchema
 >
 
+// ==================== Image Generation Options ====================
+export const ImageGenerationOptionsSchema = section('AI image generation', {
+  enable: field.toggle(z.boolean().optional(), 'Enable AI image generation'),
+  provider: field.select(
+    z.enum(['openrouter', 'custom']).optional().default('openrouter'),
+    'Provider',
+    [
+      { label: 'OpenRouter', value: 'openrouter' },
+      { label: 'Custom', value: 'custom' },
+    ],
+    {
+      description:
+        'Endpoint preset — determines where generation requests are sent. "custom" requires Endpoint to be set.',
+    },
+  ),
+  apiKey: field.password(
+    z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => (v === null ? '' : v)),
+    'API Key',
+  ),
+  endpoint: field.plain(
+    z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => (v === null ? '' : v)),
+    'Endpoint',
+    { 'ui:options': { showWhen: { provider: 'custom' } } },
+  ),
+  model: field.plain(
+    z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => (v === null ? '' : v)),
+    'Model',
+    { description: 'Image generation model id' },
+  ),
+  defaultAspectRatio: field.halfGrid(
+    z.string().optional().default('16:9'),
+    'Default aspect ratio',
+  ),
+  defaultQuality: field.select(
+    z.enum(['low', 'standard', 'high']).optional().default('standard'),
+    'Default quality',
+    [
+      { label: 'Low', value: 'low' },
+      { label: 'Standard', value: 'standard' },
+      { label: 'High', value: 'high' },
+    ],
+    { 'ui:options': { halfGrid: true } },
+  ),
+  defaultFormat: field.select(
+    z.enum(['png', 'jpeg', 'webp']).optional().default('png'),
+    'Default format',
+    [
+      { label: 'PNG', value: 'png' },
+      { label: 'JPEG', value: 'jpeg' },
+      { label: 'WebP', value: 'webp' },
+    ],
+    { 'ui:options': { halfGrid: true } },
+  ),
+})
+export class ImageGenerationOptionsDto extends createZodDto(
+  ImageGenerationOptionsSchema,
+) {}
+export type ImageGenerationOptionsConfig = z.infer<
+  typeof ImageGenerationOptionsSchema
+>
+
 // ==================== Comment Upload Options ====================
 export const CommentUploadOptionsSchema = section('Comment image uploads', {
   enable: field.toggle(
@@ -990,6 +1063,7 @@ export const configSchemaMapping = {
   friendLinkOptions: FriendLinkOptionsSchema,
   backupOptions: BackupOptionsSchema,
   imageStorageOptions: ImageStorageOptionsSchema,
+  imageGenerationOptions: ImageGenerationOptionsSchema,
   fileUploadOptions: FileUploadOptionsSchema,
   commentUploadOptions: CommentUploadOptionsSchema,
   baiduSearchOptions: BaiduSearchOptionsSchema,

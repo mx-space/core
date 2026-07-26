@@ -13,6 +13,16 @@ type ResponseEnvelope<T> = {
   message?: string | string[]
 }
 
+export class ApiRequestError extends Error {
+  code?: number | string
+
+  constructor(message: string, code?: number | string) {
+    super(message)
+    this.name = 'ApiRequestError'
+    this.code = code
+  }
+}
+
 export async function postJson<TResponse, TData>(
   path: string,
   data: TData,
@@ -28,12 +38,7 @@ export async function postJson<TResponse, TData>(
 
 type QueryObject = Record<string, boolean | number | string | undefined>
 type QueryValue =
-  | Array<number | string>
-  | QueryObject
-  | boolean
-  | number
-  | string
-  | undefined
+  Array<number | string> | QueryObject | boolean | number | string | undefined
 
 export async function getJson<TResponse>(
   path: string,
@@ -66,8 +71,9 @@ export async function requestJson<TResponse>(
       responseData?.message ||
       response.statusText
 
-    throw new Error(
+    throw new ApiRequestError(
       Array.isArray(message) ? message.join(', ') : message || 'Request failed',
+      responseData?.error?.code ?? responseData?.code,
     )
   }
 
@@ -269,7 +275,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 function toCamelCase(value: string) {
-  return value.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase())
+  return value.replaceAll(/_([a-z])/g, (_, letter: string) =>
+    letter.toUpperCase(),
+  )
 }
 
 function normalizeResponseData<T>(value: T): T {

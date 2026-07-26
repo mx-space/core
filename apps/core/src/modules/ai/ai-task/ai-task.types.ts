@@ -6,6 +6,7 @@ export enum AITaskType {
   SlugBackfill = 'ai:slug:backfill',
   Insights = 'ai:insights',
   InsightsTranslation = 'ai:insights:translation',
+  ImageGeneration = 'ai:image:generation',
 }
 
 export interface SummaryTaskPayload {
@@ -56,6 +57,19 @@ export interface InsightsTranslationTaskPayload {
   refType?: string
 }
 
+export interface ImageGenerationTaskPayload {
+  prompt?: string
+  presetId?: string
+  purpose: 'cover' | 'inline'
+  aspectRatio?: string
+  quality?: string
+  format?: string
+  model?: string
+  providerParams?: Record<string, unknown>
+  refId?: string
+  requestId: string
+}
+
 export type AITaskPayload =
   | SummaryTaskPayload
   | TranslationTaskPayload
@@ -64,6 +78,7 @@ export type AITaskPayload =
   | SlugBackfillTaskPayload
   | InsightsTaskPayload
   | InsightsTranslationTaskPayload
+  | ImageGenerationTaskPayload
 
 export function computeAITaskDedupKey(
   type: AITaskType,
@@ -100,6 +115,13 @@ export function computeAITaskDedupKey(
     case AITaskType.InsightsTranslation: {
       const p = payload as InsightsTranslationTaskPayload
       return `${p.refId}:${p.targetLang}`
+    }
+    case AITaskType.ImageGeneration: {
+      // Deliberately opts out of dedup: generating several images from the
+      // same prompt to pick between them is the normal workflow, so the key
+      // must be unique per request rather than per (semantic) payload.
+      const p = payload as ImageGenerationTaskPayload
+      return `${p.requestId}`
     }
   }
 }

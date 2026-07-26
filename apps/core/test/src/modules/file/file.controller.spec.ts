@@ -2,6 +2,7 @@ import { Readable } from 'node:stream'
 
 import { describe, expect, it, vi } from 'vitest'
 
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
 import { FileController } from '~/modules/file/file.controller'
 import { S3Uploader } from '~/utils/s3.util'
@@ -24,36 +25,29 @@ vi.mock('~/utils/s3.util', () => {
 })
 
 describe('FileController', () => {
-  it('falls back to local storage for image uploads when S3 is disabled', async () => {
-    const writeFile = vi.fn().mockResolvedValue(undefined)
-    const resolveFileUrl = vi
-      .fn()
-      .mockResolvedValue('http://example.com/objects/image/nested/origin.png')
+  it('buffers image uploads and delegates storage to service.uploadBuffer', async () => {
+    const uploadBuffer = vi.fn().mockResolvedValue({
+      url: 'http://example.com/objects/image/nested/origin.png',
+      name: 'origin.png',
+    })
     const getAndValidMultipartField = vi.fn().mockResolvedValue({
       filename: 'origin.png',
-      file: Readable.from(['image-bytes']),
+      file: Readable.from([Buffer.from('image-bytes')]),
     })
-    const createPendingReference = vi.fn().mockResolvedValue(undefined)
     const get = vi.fn().mockImplementation((key: string) => {
       if (key === 'fileUploadOptions') {
-        return Promise.resolve({
-          enableCustomNaming: true,
-          filenameTemplate: '{name}{ext}',
-          pathTemplate: '{type}/nested',
-        })
+        return Promise.resolve({ enableCustomNaming: false })
       }
       if (key === 'imageStorageOptions') {
-        return Promise.resolve({
-          enable: false,
-        })
+        return Promise.resolve({ enable: false })
       }
       return Promise.reject(new Error(`Unexpected config key: ${key}`))
     })
 
     const controller = new FileController(
-      { writeFile, resolveFileUrl } as any,
+      { uploadBuffer } as any,
       { getAndValidMultipartField } as any,
-      { createPendingReference } as any,
+      { createPendingReference: vi.fn() } as any,
       { get } as any,
     )
 
@@ -63,31 +57,31 @@ describe('FileController', () => {
       {},
       expect.objectContaining({ maxFileSize: 20 * 1024 * 1024 }),
     )
-    expect(writeFile).toHaveBeenCalledWith(
-      'image',
-      'nested/origin.png',
-      expect.any(Readable),
-    )
-    expect(resolveFileUrl).toHaveBeenCalledWith('image', 'nested/origin.png')
-    expect(createPendingReference).toHaveBeenCalledWith(
-      'http://example.com/objects/image/nested/origin.png',
-      'nested/origin.png',
-    )
+    expect(uploadBuffer).toHaveBeenCalledWith(expect.any(Buffer), {
+      type: 'image',
+      originalFilename: 'origin.png',
+      contentType: 'image/png',
+    })
+    expect(uploadBuffer.mock.calls[0][0].toString()).toBe('image-bytes')
     expect(result).toEqual({
       url: 'http://example.com/objects/image/nested/origin.png',
       name: 'origin.png',
     })
   })
 
-  it('throws when S3 image storage is enabled but incomplete', async () => {
-    const writeFile = vi.fn()
-    const getAndValidMultipartField = vi.fn()
-    const createPendingReference = vi.fn()
+  it('propagates the storage-not-configured error thrown by service.uploadBuffer', async () => {
+    const uploadBuffer = vi
+      .fn()
+      .mockRejectedValue(
+        createAppException(AppErrorCode.FILE_STORAGE_NOT_CONFIGURED),
+      )
+    const getAndValidMultipartField = vi.fn().mockResolvedValue({
+      filename: 'origin.png',
+      file: Readable.from([Buffer.from('image-bytes')]),
+    })
     const get = vi.fn().mockImplementation((key: string) => {
       if (key === 'fileUploadOptions') {
-        return Promise.resolve({
-          enableCustomNaming: false,
-        })
+        return Promise.resolve({ enableCustomNaming: false })
       }
       if (key === 'imageStorageOptions') {
         return Promise.resolve({
@@ -102,9 +96,9 @@ describe('FileController', () => {
     })
 
     const controller = new FileController(
-      { writeFile, resolveFileUrl: vi.fn() } as any,
+      { uploadBuffer } as any,
       { getAndValidMultipartField } as any,
-      { createPendingReference } as any,
+      { createPendingReference: vi.fn() } as any,
       { get } as any,
     )
 
@@ -112,9 +106,42 @@ describe('FileController', () => {
       controller.upload({ type: 'image' } as any, {} as any),
     ).rejects.toThrow(AppException)
 
-    expect(getAndValidMultipartField).not.toHaveBeenCalled()
-    expect(writeFile).not.toHaveBeenCalled()
-    expect(createPendingReference).not.toHaveBeenCalled()
+    expect(getAndValidMultipartField).toHaveBeenCalled()
+    expect(uploadBuffer).toHaveBeenCalled()
+  })
+
+  it('rejects a truncated local upload without calling service.uploadBuffer', async () => {
+    const uploadBuffer = vi.fn()
+    const truncatedStream = Object.assign(
+      Readable.from([Buffer.from('partial')]),
+      { truncated: true },
+    )
+    const getAndValidMultipartField = vi.fn().mockResolvedValue({
+      filename: 'doc.pdf',
+      file: truncatedStream,
+    })
+    const get = vi.fn().mockImplementation((key: string) => {
+      if (key === 'fileUploadOptions') {
+        return Promise.resolve({ enableCustomNaming: false })
+      }
+      if (key === 'imageStorageOptions') {
+        return Promise.resolve({ enable: false })
+      }
+      return Promise.reject(new Error(`Unexpected config key: ${key}`))
+    })
+
+    const controller = new FileController(
+      { uploadBuffer } as any,
+      { getAndValidMultipartField } as any,
+      { createPendingReference: vi.fn() } as any,
+      { get } as any,
+    )
+
+    await expect(
+      controller.upload({ type: 'file' } as any, {} as any),
+    ).rejects.toThrow(AppException)
+
+    expect(uploadBuffer).not.toHaveBeenCalled()
   })
 
   it('applies the configured video size limit on local storage', async () => {
