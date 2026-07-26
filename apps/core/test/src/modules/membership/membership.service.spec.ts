@@ -55,6 +55,7 @@ const createService = () => {
 
   membershipRepository.findByProviderSubscriptionId.mockResolvedValue(null)
   membershipRepository.findByReaderId.mockResolvedValue(null)
+  membershipRepository.readerExists.mockResolvedValue(true)
   billingWebhookEventRepository.findByProviderAndEventId.mockResolvedValue(null)
   billingWebhookEventRepository.create.mockResolvedValue({
     id: 'event-1' as any,

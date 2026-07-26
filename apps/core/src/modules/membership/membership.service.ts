@@ -150,6 +150,8 @@ export class MembershipService {
     readerId: string,
     input: { plan: MembershipPlan; expiresAt: Date },
   ): Promise<MembershipRow> {
+    await this.assertReaderExists(readerId)
+
     const existing = await this.membershipRepository.findByReaderId(readerId)
     if (existing && isLiveProviderSubscription(existing)) {
       throw createAppException(AppErrorCode.INVALID_PARAMETER, {
@@ -180,6 +182,8 @@ export class MembershipService {
   }
 
   async revokeManual(readerId: string): Promise<MembershipRow> {
+    await this.assertReaderExists(readerId)
+
     const existing = await this.membershipRepository.findByReaderId(readerId)
     if (!existing || existing.provider !== 'manual') {
       throw createAppException(AppErrorCode.INVALID_PARAMETER, {
@@ -191,5 +195,12 @@ export class MembershipService {
       status: 'cancelled',
     })
     return updated!
+  }
+
+  private async assertReaderExists(readerId: string): Promise<void> {
+    const exists = await this.membershipRepository.readerExists(readerId)
+    if (!exists) {
+      throw createAppException(AppErrorCode.READER_NOT_FOUND, { id: readerId })
+    }
   }
 }

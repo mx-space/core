@@ -700,10 +700,10 @@ describe('MembershipController (e2e)', () => {
       })
     })
 
-    it('returns 422 for a malformed readerId path param', async () => {
+    it('returns 404 for an unknown readerId path param', async () => {
       const res = await proxy.app.inject({
         method: 'PUT',
-        url: '/membership/members/not-a-valid-id',
+        url: '/membership/members/not-a-known-reader',
         headers: { 'test-token': '1', 'content-type': 'application/json' },
         payload: {
           plan: 'monthly',
@@ -711,7 +711,10 @@ describe('MembershipController (e2e)', () => {
         },
       })
 
-      expect(res.statusCode).toBe(422)
+      expect(res.statusCode).toBe(404)
+      expect(res.json()).toMatchObject({
+        error: { code: 'READER_NOT_FOUND' },
+      })
     })
 
     it('rejects manual grant/revoke callers without the owner test-token header', async () => {
@@ -740,14 +743,17 @@ describe('MembershipController (e2e)', () => {
       })
     })
 
-    it('returns 422 for a malformed readerId path param', async () => {
+    it('returns 404 for an unknown readerId path param', async () => {
       const res = await proxy.app.inject({
         method: 'DELETE',
-        url: '/membership/members/not-a-valid-id',
+        url: '/membership/members/not-a-known-reader',
         headers: { 'test-token': '1' },
       })
 
-      expect(res.statusCode).toBe(422)
+      expect(res.statusCode).toBe(404)
+      expect(res.json()).toMatchObject({
+        error: { code: 'READER_NOT_FOUND' },
+      })
     })
   })
 })

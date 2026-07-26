@@ -86,6 +86,15 @@ export class MembershipRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
+  async readerExists(readerId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: readers.id })
+      .from(readers)
+      .where(eq(readers.id, readerId))
+      .limit(1)
+    return !!row
+  }
+
   async findByReaderIds(readerIds: string[]): Promise<MembershipRow[]> {
     if (readerIds.length === 0) return []
     const rows = await this.db
