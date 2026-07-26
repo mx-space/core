@@ -59,17 +59,22 @@ export function SelectField<TValue extends SelectValue = string>(
         />
       </BaseSelect.Trigger>
       <BaseSelect.Portal container={container ?? undefined}>
-        <BaseSelect.Positioner ref={zRef} style={{ zIndex }}>
+        <BaseSelect.Positioner
+          alignItemWithTrigger={false}
+          ref={zRef}
+          sideOffset={6}
+          style={{ zIndex }}
+        >
           <BaseSelect.Popup
             className={cn(
-              'outline-hidden shadow-lg w-[var(--anchor-width)] rounded-lg border border-border bg-surface-overlay p-1 text-sm text-fg',
+              'outline-hidden shadow-lg w-[var(--anchor-width)] overflow-hidden rounded-lg border border-border bg-surface-overlay p-1 text-sm text-fg',
               props.popupClassName,
             )}
           >
             <Scroll
-              className="max-h-72"
+              className="max-h-[min(18rem,calc(var(--available-height)-0.5rem))]"
               innerClassName="flex flex-col"
-              viewportClassName="max-h-72"
+              viewportClassName="max-h-[min(18rem,calc(var(--available-height)-0.5rem))]"
             >
               {props.options.map((option) => (
                 <BaseSelect.Item
