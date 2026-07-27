@@ -4,6 +4,28 @@ import swc from 'unplugin-swc'
 import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
+// Node decodes a module's source into a one-byte string only when it is pure
+// ASCII; a single char above 0x7f flips the whole source to UTF-16, and V8
+// keeps that source alive forever for lazy inner-function compilation. Escaping
+// halves the retained source of the main chunk (~26MB -> ~13MB).
+const NON_ASCII = /\P{ASCII}/gu
+
+const escapeNonAsciiPlugin = () => ({
+  name: 'escape-non-ascii',
+  generateBundle(_options: unknown, bundle: Record<string, any>) {
+    for (const file of Object.values(bundle)) {
+      if (file.type !== 'chunk') continue
+      file.code = file.code.replaceAll(NON_ASCII, (match: string) =>
+        Array.from(
+          { length: match.length },
+          (_, index) =>
+            `\\u${match.charCodeAt(index).toString(16).padStart(4, '0')}`,
+        ).join(''),
+      )
+    }
+  },
+})
+
 export default defineConfig(({ command }) => {
   const isBuild = command === 'build'
 
@@ -18,6 +40,7 @@ export default defineConfig(({ command }) => {
       tsconfigPaths({
         projects: [resolve(__dirname, './tsconfig.json')],
       }),
+      ...(isBuild ? [escapeNonAsciiPlugin()] : []),
     ],
     ...(isBuild && {
       ssr: {
@@ -28,7 +51,7 @@ export default defineConfig(({ command }) => {
         outDir: 'out',
         emptyOutDir: true,
         target: 'node22',
-        sourcemap: true,
+        sourcemap: false,
         minify: false,
         ssr: true,
         rolldownOptions: {
@@ -39,6 +62,11 @@ export default defineConfig(({ command }) => {
           },
           output: {
             format: 'esm',
+            minify: {
+              compress: true,
+              mangle: true,
+              codegen: { removeWhitespace: true },
+            },
             entryFileNames: '[name].mjs',
             chunkFileNames: 'chunks/[name]-[hash].mjs',
           },
