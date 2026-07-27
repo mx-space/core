@@ -32,7 +32,12 @@ import { PageService } from '../page/page.service'
 import type { PostService } from '../post/post.service'
 import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
-import type { DeskSummary, RSSProps } from './aggregate.interface'
+import type {
+  DeskSummary,
+  HeatmapDay,
+  OnThisDayEntry,
+  RSSProps,
+} from './aggregate.interface'
 import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.schema'
 
 dayjs.extend(utc)
@@ -349,6 +354,46 @@ export class AggregateService {
         publicAt: note.publicAt.toISOString(),
       })),
     }
+  }
+
+  async getOnThisDay(): Promise<OnThisDayEntry[]> {
+    const now = new Date()
+    const month = now.getMonth() + 1
+    const day = now.getDate()
+    const year = now.getFullYear()
+    const limit = 5
+    const [posts, notes] = await Promise.all([
+      this.postService.repository.findOnThisDay(month, day, year, limit),
+      this.noteService.repository.findOnThisDay(month, day, year, limit),
+    ])
+    const entries = [
+      ...posts.map((row) => ({ ...row, type: 'post' as const })),
+      ...notes.map((row) => ({ ...row, type: 'note' as const })),
+    ]
+    entries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    return entries.slice(0, limit).map((entry) => ({
+      id: String(entry.id),
+      type: entry.type,
+      title: entry.title,
+      created: entry.createdAt.toISOString(),
+      excerpt: (entry.text ?? '').slice(0, 80),
+    }))
+  }
+
+  async getPublishHeatmap(): Promise<HeatmapDay[]> {
+    const since = new Date()
+    since.setDate(since.getDate() - 365)
+    const [postDays, noteDays] = await Promise.all([
+      this.postService.repository.countPublishedByDay(since),
+      this.noteService.repository.countPublishedByDay(since),
+    ])
+    const merged = new Map<string, number>()
+    for (const { date, count } of [...postDays, ...noteDays]) {
+      merged.set(date, (merged.get(date) ?? 0) + count)
+    }
+    return [...merged.entries()]
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => a.date.localeCompare(b.date))
   }
 
   async getAllReadAndLikeCount(type: ReadAndLikeCountDocumentType) {

@@ -559,6 +559,60 @@ export class PostRepository extends BaseRepository {
     return row?.createdAt ?? null
   }
 
+  async findOnThisDay(
+    month: number,
+    day: number,
+    beforeYear: number,
+    limit: number,
+  ): Promise<
+    Array<{
+      id: EntityId
+      title: string | null
+      text: string | null
+      createdAt: Date
+    }>
+  > {
+    const rows = await this.db
+      .select({
+        id: posts.id,
+        title: posts.title,
+        text: posts.text,
+        createdAt: posts.createdAt,
+      })
+      .from(posts)
+      .where(
+        and(
+          eq(posts.isPublished, true),
+          sql`extract(month from ${posts.createdAt})::int = ${month}`,
+          sql`extract(day from ${posts.createdAt})::int = ${day}`,
+          sql`extract(year from ${posts.createdAt})::int < ${beforeYear}`,
+        ),
+      )
+      .orderBy(desc(posts.createdAt))
+      .limit(limit)
+    return rows.map((row) => ({
+      id: toEntityId(row.id) as EntityId,
+      title: row.title,
+      text: row.text,
+      createdAt: row.createdAt,
+    }))
+  }
+
+  async countPublishedByDay(
+    since: Date,
+  ): Promise<Array<{ date: string; count: number }>> {
+    const day = sql<string>`to_char(${posts.createdAt}, 'YYYY-MM-DD')`
+    const rows = await this.db
+      .select({ date: day, count: sql<number>`count(*)::int` })
+      .from(posts)
+      .where(and(eq(posts.isPublished, true), gte(posts.createdAt, since)))
+      .groupBy(day)
+    return rows.map((row) => ({
+      date: row.date,
+      count: Number(row.count ?? 0),
+    }))
+  }
+
   async findTopByReadCount(limit: number): Promise<PostRow[]> {
     const rows = await this.db
       .select()

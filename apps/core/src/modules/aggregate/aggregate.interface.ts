@@ -39,3 +39,16 @@ export interface DeskSummary {
     publicAt: string
   }>
 }
+
+export interface OnThisDayEntry {
+  id: string
+  type: 'post' | 'note'
+  title: string | null
+  created: string
+  excerpt: string
+}
+
+export interface HeatmapDay {
+  date: string
+  count: number
+}

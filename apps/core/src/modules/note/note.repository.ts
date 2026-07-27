@@ -967,6 +967,60 @@ export class NoteRepository extends BaseRepository {
     }))
   }
 
+  async findOnThisDay(
+    month: number,
+    day: number,
+    beforeYear: number,
+    limit: number,
+  ): Promise<
+    Array<{
+      id: EntityId
+      title: string | null
+      text: string | null
+      createdAt: Date
+    }>
+  > {
+    const rows = await this.db
+      .select({
+        id: notes.id,
+        title: notes.title,
+        text: notes.text,
+        createdAt: notes.createdAt,
+      })
+      .from(notes)
+      .where(
+        and(
+          eq(notes.isPublished, true),
+          sql`extract(month from ${notes.createdAt})::int = ${month}`,
+          sql`extract(day from ${notes.createdAt})::int = ${day}`,
+          sql`extract(year from ${notes.createdAt})::int < ${beforeYear}`,
+        ),
+      )
+      .orderBy(desc(notes.createdAt))
+      .limit(limit)
+    return rows.map((row) => ({
+      id: toEntityId(row.id) as EntityId,
+      title: row.title,
+      text: row.text,
+      createdAt: row.createdAt,
+    }))
+  }
+
+  async countPublishedByDay(
+    since: Date,
+  ): Promise<Array<{ date: string; count: number }>> {
+    const day = sql<string>`to_char(${notes.createdAt}, 'YYYY-MM-DD')`
+    const rows = await this.db
+      .select({ date: day, count: sql<number>`count(*)::int` })
+      .from(notes)
+      .where(and(eq(notes.isPublished, true), gte(notes.createdAt, since)))
+      .groupBy(day)
+    return rows.map((row) => ({
+      date: row.date,
+      count: Number(row.count ?? 0),
+    }))
+  }
+
   async findVisibleForSitemap(): Promise<NoteRow[]> {
     const rows = await this.db
       .select(noteMetaColumns)

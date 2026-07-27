@@ -44,8 +44,18 @@ const scheduledNoteId = snowflake.nextId()
 const publishedNoteId = snowflake.nextId()
 const unpublishedFutureNoteId = snowflake.nextId()
 
+const onThisDayPostId = snowflake.nextId()
+const onThisDayNoteId = snowflake.nextId()
+
 const futurePublicAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 const pastPublicAt = new Date(Date.now() - 24 * 60 * 60 * 1000)
+
+const now = new Date()
+const twoYearsAgoToday = new Date(now)
+twoYearsAgoToday.setFullYear(now.getFullYear() - 2)
+const threeYearsAgoToday = new Date(now)
+threeYearsAgoToday.setFullYear(now.getFullYear() - 3)
+const onThisDayPostText = 'a'.repeat(100)
 
 const aggregateModule: ModuleMetadata = {
   controllers: [AggregateController],
@@ -73,13 +83,24 @@ beforeAll(async () => {
     name: 'Desk Category',
     slug: 'desk-category',
   })
-  await drizzleDb.insert(schema.posts).values({
-    id: postId,
-    title: 'Why the Desk Endpoint Matters',
-    slug: 'why-the-desk-endpoint-matters',
-    contentFormat: 'markdown',
-    categoryId,
-  })
+  await drizzleDb.insert(schema.posts).values([
+    {
+      id: postId,
+      title: 'Why the Desk Endpoint Matters',
+      slug: 'why-the-desk-endpoint-matters',
+      contentFormat: 'markdown',
+      categoryId,
+    },
+    {
+      id: onThisDayPostId,
+      title: 'Two Years Ago Today',
+      slug: 'two-years-ago-today',
+      text: onThisDayPostText,
+      contentFormat: 'markdown',
+      categoryId,
+      createdAt: twoYearsAgoToday,
+    },
+  ])
   await drizzleDb.insert(schema.comments).values([
     {
       id: unreadCommentId,
@@ -137,6 +158,14 @@ beforeAll(async () => {
       isPublished: false,
       publicAt: futurePublicAt,
     },
+    {
+      id: onThisDayNoteId,
+      title: 'Three Years Ago Today',
+      text: 'that day note body',
+      contentFormat: 'markdown',
+      isPublished: true,
+      createdAt: threeYearsAgoToday,
+    },
   ])
 
   const commentRepository = new CommentRepository(drizzleDb, snowflake)
@@ -188,7 +217,7 @@ beforeAll(async () => {
   )
 
   const aggregateService = new AggregateService(
-    {} as any,
+    { repository: postRepository } as any,
     noteService,
     {} as any,
     {} as any,
@@ -263,5 +292,68 @@ describe('AggregateController — GET /aggregate/desk (e2e)', () => {
       public_at: futurePublicAt.toISOString(),
     })
     expect(typeof data.scheduled_notes[0].nid).toBe('number')
+  })
+})
+
+describe('AggregateController — GET /aggregate/on-this-day (e2e)', () => {
+  it('rejects anonymous callers with 401', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/aggregate/on-this-day`,
+    })
+
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('returns prior-year entries newest first, excluding this year', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/aggregate/on-this-day`,
+      headers: authPassHeader,
+    })
+
+    expect(res.statusCode).toBe(200)
+    const { data } = res.json()
+
+    expect(data).toHaveLength(2)
+    expect(data[0]).toMatchObject({
+      id: onThisDayPostId,
+      type: 'post',
+      title: 'Two Years Ago Today',
+      excerpt: 'a'.repeat(80),
+    })
+    expect(data[1]).toMatchObject({
+      id: onThisDayNoteId,
+      type: 'note',
+      title: 'Three Years Ago Today',
+      excerpt: 'that day note body',
+    })
+    expect(data.some((entry: any) => entry.id === postId)).toBe(false)
+  })
+})
+
+describe('AggregateController — GET /aggregate/publish-heatmap (e2e)', () => {
+  it('rejects anonymous callers with 401', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/aggregate/publish-heatmap`,
+    })
+
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('counts published posts and notes per day within the trailing year', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/aggregate/publish-heatmap`,
+      headers: authPassHeader,
+    })
+
+    expect(res.statusCode).toBe(200)
+    const { data } = res.json()
+
+    expect(data).toHaveLength(1)
+    expect(data[0].date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(data[0].count).toBe(3)
   })
 })

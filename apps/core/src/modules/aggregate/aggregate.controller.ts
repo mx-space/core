@@ -378,6 +378,18 @@ export class AggregateController {
     return await this.aggregateService.getDesk()
   }
 
+  @Get('/on-this-day')
+  @Auth()
+  async onThisDay() {
+    return await this.aggregateService.getOnThisDay()
+  }
+
+  @Get('/publish-heatmap')
+  @Auth()
+  async publishHeatmap() {
+    return await this.aggregateService.getPublishHeatmap()
+  }
+
   @Get('/count_read_and_like')
   async getAllReadAndLikeCount(@Query() query: ReadAndLikeCountTypeDto) {
     const { type = ReadAndLikeCountDocumentType.All } = query
