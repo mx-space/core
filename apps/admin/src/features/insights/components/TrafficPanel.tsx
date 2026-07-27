@@ -15,7 +15,7 @@ function TrafficGroup(props: {
       </h3>
       <div className="space-y-2">
         {props.items.length === 0 ? (
-          <p className="text-sm text-fg-muted">{t('dashboard.empty')}</p>
+          <p className="text-sm text-fg-muted">{t('insights.empty')}</p>
         ) : (
           props.items.slice(0, 6).map((item) => (
             <div
@@ -42,15 +42,15 @@ export function TrafficPanel(props: {
 }) {
   const { t } = useI18n()
   return (
-    <Panel title={t('dashboard.traffic.title')}>
+    <Panel title={t('insights.traffic.title')}>
       <div className="grid gap-px bg-border sm:grid-cols-2">
         <TrafficGroup
           items={props.data?.browser ?? []}
-          title={t('dashboard.traffic.browser')}
+          title={t('insights.traffic.browser')}
         />
         <TrafficGroup
           items={props.data?.os ?? []}
-          title={t('dashboard.traffic.os')}
+          title={t('insights.traffic.os')}
         />
       </div>
     </Panel>

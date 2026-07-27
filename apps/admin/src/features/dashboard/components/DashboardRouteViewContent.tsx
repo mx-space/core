@@ -1,17 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import { BookOpen, FileText, Pencil, Quote, RefreshCw } from 'lucide-react'
+import { Leaf } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
-import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
-import { getAggregateStat } from '~/api/aggregate'
+import { getAggregateStat, getDesk } from '~/api/aggregate'
+import { getDrafts } from '~/api/drafts'
 import { checkUpdateFromGitHub } from '~/api/github-update'
 import { getOwner } from '~/api/options'
 import { getAppInfo } from '~/api/system'
 import { useI18n } from '~/i18n'
-import { AppPage, PageHeader } from '~/ui/layout/page-layout'
-import { Button } from '~/ui/primitives/button'
-import { Panel } from '~/ui/primitives/panel'
+import { AppPage } from '~/ui/layout/page-layout'
+import { EmptyState } from '~/ui/patterns/EmptyState'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 import { isNewerVersion } from '~/utils/version'
@@ -19,26 +18,27 @@ import { isNewerVersion } from '~/utils/version'
 import {
   aggregateStatRefetchInterval,
   dashboardQueryKeys,
-  defaultStat,
+  deskWritingItemLimit,
   updateStaleTime,
 } from '../constants'
 import { readClosedUpdateTips, writeClosedUpdateTip } from '../utils/dashboard'
-import { ActionCard } from './ActionCard'
-import { DashboardRuntimeFooter } from './DashboardRuntimeFooter'
+import { buildWritingItems } from '../utils/desk'
 import { presentDashboardUpgrade } from './DashboardUpgradeModal'
-import { OwnerLoginStat } from './OwnerLoginStat'
+import { DeskFooter } from './DeskFooter'
+import { DeskGreeting } from './DeskGreeting'
+import { DeskTasksCard } from './DeskTasksCard'
+import { DeskWritingCard } from './DeskWritingCard'
 import { presentUpdateRelease } from './UpdateReleaseModal'
 
 export function DashboardRouteViewContent() {
   const { t } = useI18n()
-  const navigate = useNavigate()
   const notifiedUpdatesRef = useRef(new Set<string>())
+
   const statQuery = useQuery({
     queryFn: getAggregateStat,
     queryKey: dashboardQueryKeys.aggregateStat,
     refetchInterval: aggregateStatRefetchInterval,
   })
-  const stat = statQuery.data ?? defaultStat
   const ownerQuery = useQuery({
     queryFn: getOwner,
     queryKey: dashboardQueryKeys.owner,
@@ -49,6 +49,21 @@ export function DashboardRouteViewContent() {
     queryKey: dashboardQueryKeys.appInfo,
     retry: false,
   })
+  const deskQuery = useQuery({
+    queryFn: getDesk,
+    queryKey: dashboardQueryKeys.desk,
+  })
+  const draftsQuery = useQuery({
+    queryFn: () =>
+      getDrafts({
+        page: 1,
+        size: deskWritingItemLimit,
+        sort_by: 'updatedAt',
+        sort_order: 'desc',
+      }),
+    queryKey: dashboardQueryKeys.deskDrafts,
+  })
+
   const adminVersion = __DEV__ ? 'dev mode' : window.version || 'N/A'
   const systemVersion = appInfoQuery.data?.version || 'N/A'
   const updateQuery = useQuery({
@@ -62,7 +77,15 @@ export function DashboardRouteViewContent() {
     staleTime: updateStaleTime,
   })
 
-  const updatedAt = useMemo(() => new Date(), [statQuery.dataUpdatedAt])
+  const updates = updateQuery.data
+  const adminUpdate =
+    updates && isNewerVersion(adminVersion, updates.dashboard)
+      ? updates.dashboard
+      : null
+  const systemUpdate =
+    updates && isNewerVersion(systemVersion, updates.system)
+      ? updates.system
+      : null
 
   useEffect(() => {
     if (__DEV__) return
@@ -72,148 +95,125 @@ export function DashboardRouteViewContent() {
   }, [appInfoQuery.data?.version])
 
   useEffect(() => {
-    const updates = updateQuery.data
-    if (!updates || __DEV__) return
-
+    if (__DEV__) return
     const closedTips = readClosedUpdateTips()
 
     if (
-      isNewerVersion(adminVersion, updates.dashboard) &&
-      closedTips.dashboard !== updates.dashboard &&
-      !notifiedUpdatesRef.current.has(`dashboard:${updates.dashboard}`)
+      adminUpdate &&
+      closedTips.dashboard !== adminUpdate &&
+      !notifiedUpdatesRef.current.has(`dashboard:${adminUpdate}`)
     ) {
-      notifiedUpdatesRef.current.add(`dashboard:${updates.dashboard}`)
+      notifiedUpdatesRef.current.add(`dashboard:${adminUpdate}`)
       toast.info(
         t('dashboard.update.adminAvailable', {
           current: adminVersion,
-          latest: updates.dashboard,
+          latest: adminUpdate,
         }),
         {
           action: {
             label: t('dashboard.update.update'),
             onClick: () => {
-              writeClosedUpdateTip('dashboard', updates.dashboard)
+              writeClosedUpdateTip('dashboard', adminUpdate)
               presentDashboardUpgrade()
             },
           },
-          duration: 10000,
+          duration: 10_000,
         },
       )
     }
 
     if (
-      isNewerVersion(systemVersion, updates.system) &&
-      closedTips.system !== updates.system &&
-      !notifiedUpdatesRef.current.has(`system:${updates.system}`)
+      systemUpdate &&
+      closedTips.system !== systemUpdate &&
+      !notifiedUpdatesRef.current.has(`system:${systemUpdate}`)
     ) {
-      notifiedUpdatesRef.current.add(`system:${updates.system}`)
+      notifiedUpdatesRef.current.add(`system:${systemUpdate}`)
       toast.info(
         t('dashboard.update.systemAvailable', {
           current: systemVersion,
-          latest: updates.system,
+          latest: systemUpdate,
         }),
         {
           action: {
             label: t('common.view'),
             onClick: () => {
-              writeClosedUpdateTip('system', updates.system)
+              writeClosedUpdateTip('system', systemUpdate)
               presentUpdateRelease({
                 repo: 'mx-server',
                 title: t('dashboard.release.systemTitle'),
-                version: updates.system,
+                version: systemUpdate,
               })
             },
           },
-          duration: 10000,
+          duration: 10_000,
         },
       )
     }
-  }, [adminVersion, systemVersion, updateQuery.data])
+  }, [adminUpdate, adminVersion, systemUpdate, systemVersion])
+
+  const desk = deskQuery.data
+  const writingItems = useMemo(
+    () =>
+      buildWritingItems(
+        draftsQuery.data?.data ?? [],
+        desk?.scheduledNotes ?? [],
+      ),
+    [desk?.scheduledNotes, draftsQuery.data?.data],
+  )
+  const hasTasks =
+    (desk?.unreadComments.count ?? 0) > 0 ||
+    (desk?.linkApplications.count ?? 0) > 0 ||
+    adminUpdate !== null ||
+    systemUpdate !== null
+  const bodyReady = !deskQuery.isPending && !draftsQuery.isPending
 
   return (
     <AppPage>
-      <PageHeader
-        actions={
-          <Button
-            className="text-xs"
-            disabled={statQuery.isFetching}
-            onClick={() => void statQuery.refetch()}
-            type="button"
-            variant="subtle"
-          >
-            <RefreshCw
-              aria-hidden="true"
-              className={cn('size-3.5', statQuery.isFetching && 'animate-spin')}
-            />
-            {t('dashboard.header.refresh')}
-          </Button>
-        }
-        description={t('dashboard.header.subtitle')}
-        title={t('dashboard.header.title')}
-      />
       <Scroll
         className="min-h-0 flex-1 bg-background"
-        innerClassName="flex flex-col p-4"
+        innerClassName="flex min-h-full flex-col gap-6 p-4"
       >
-        <Panel
-          description={t('dashboard.panel.quickActions.updatedAt', {
-            time: updatedAt.toLocaleTimeString(),
-          })}
-          title={t('dashboard.panel.quickActions.title')}
-        >
-          <div className="grid gap-px bg-border-strong sm:grid-cols-2 lg:grid-cols-4">
-            <ActionCard
-              icon={FileText}
-              label={t('dashboard.action.label.posts')}
-              onManage={() => navigate('/posts')}
-              onPrimary={() => navigate('/posts/edit')}
-              primaryLabel={t('dashboard.action.primary.post')}
-              value={stat.posts}
-            />
-            <ActionCard
-              icon={BookOpen}
-              label={t('dashboard.action.label.notes')}
-              onManage={() => navigate('/notes')}
-              onPrimary={() => navigate('/notes/edit')}
-              primaryLabel={t('dashboard.action.primary.note')}
-              value={stat.notes}
-            />
-            <ActionCard
-              icon={Pencil}
-              label={t('dashboard.action.label.recently')}
-              onManage={() => navigate('/recently')}
-              onPrimary={() => navigate('/recently?create=1')}
-              primaryLabel={t('dashboard.action.primary.recently')}
-              value={stat.recently}
-            />
-            <ActionCard
-              icon={Quote}
-              label={t('dashboard.action.label.says')}
-              onManage={() => navigate('/says')}
-              onPrimary={() => navigate('/says')}
-              primaryLabel={t('dashboard.action.primary.say')}
-              value={stat.says}
-            />
-          </div>
-        </Panel>
+        <DeskGreeting ownerName={ownerQuery.data?.name} />
 
-        <OwnerLoginStat
-          lastLoginIp={ownerQuery.data?.lastLoginIp}
-          lastLoginTime={ownerQuery.data?.lastLoginTime}
-        />
+        {bodyReady ? (
+          writingItems.length > 0 || hasTasks ? (
+            <div
+              className={cn(
+                'grid gap-4',
+                writingItems.length > 0 &&
+                  hasTasks &&
+                  'desktop:grid-cols-[5fr_3fr]',
+              )}
+            >
+              {writingItems.length > 0 ? (
+                <DeskWritingCard items={writingItems} />
+              ) : null}
+              {hasTasks ? (
+                <DeskTasksCard
+                  adminUpdate={adminUpdate}
+                  adminVersion={adminVersion}
+                  desk={desk}
+                  systemUpdate={systemUpdate}
+                  systemVersion={systemVersion}
+                />
+              ) : null}
+            </div>
+          ) : (
+            <EmptyState icon={Leaf} title={t('dashboard.desk.zen.title')} />
+          )
+        ) : null}
 
-        <DashboardRuntimeFooter
-          adminLatestVersion={updateQuery.data?.dashboard}
+        <DeskFooter
           adminVersion={adminVersion}
           onCheckUpdates={() => {
             void appInfoQuery.refetch()
             void updateQuery.refetch()
           }}
-          onOpenUpgrade={() => presentDashboardUpgrade()}
-          pageSource={window.pageSource || ''}
+          online={statQuery.data?.online ?? 0}
           refreshing={appInfoQuery.isFetching || updateQuery.isFetching}
-          systemLatestVersion={updateQuery.data?.system}
           systemVersion={systemVersion}
+          todayMaxOnline={statQuery.data?.todayMaxOnline ?? 0}
+          todayVisitors={statQuery.data?.todayOnlineTotal ?? 0}
         />
       </Scroll>
     </AppPage>

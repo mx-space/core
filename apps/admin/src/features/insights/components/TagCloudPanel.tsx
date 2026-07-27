@@ -8,7 +8,7 @@ export function TagCloudPanel(props: {
 }) {
   const { t } = useI18n()
   return (
-    <Panel title={t('dashboard.tagCloud.title')}>
+    <Panel title={t('insights.tagCloud.title')}>
       <div className="flex min-h-40 flex-wrap content-start gap-2 p-4">
         {props.tags.length === 0 ? (
           <EmptyDashboardBlock />

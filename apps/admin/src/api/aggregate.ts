@@ -58,8 +58,44 @@ export interface TrafficSourceData {
   os: Array<{ count: number; name: string }>
 }
 
+export interface DeskCommentPreview {
+  author: string
+  id: string
+  refTitle: string | null
+  text: string
+}
+
+export interface DeskLinkPreview {
+  id: string
+  name: string
+  url: string
+}
+
+export interface DeskScheduledNote {
+  id: string
+  nid: number
+  publicAt: string
+  title: string | null
+}
+
+export interface DeskSummary {
+  linkApplications: {
+    count: number
+    latest: DeskLinkPreview | null
+  }
+  scheduledNotes: DeskScheduledNote[]
+  unreadComments: {
+    count: number
+    latest: DeskCommentPreview | null
+  }
+}
+
 export function getAggregateStat() {
   return getJson<StatCount>('/aggregate/stat')
+}
+
+export function getDesk() {
+  return getJson<DeskSummary>('/aggregate/desk')
 }
 
 export function getCategoryDistribution() {

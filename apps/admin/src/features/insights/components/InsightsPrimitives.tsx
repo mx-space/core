@@ -9,7 +9,7 @@ export function EmptyDashboardBlock() {
   const { t } = useI18n()
   return (
     <div className="flex min-h-32 items-center justify-center text-sm text-fg-muted">
-      {t('dashboard.empty')}
+      {t('insights.empty')}
     </div>
   )
 }

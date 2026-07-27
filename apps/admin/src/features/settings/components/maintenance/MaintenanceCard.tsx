@@ -25,7 +25,7 @@ export function MaintenanceCard(props: {
         type="button"
         variant="subtle"
       >
-        {t('dashboard.maintenance.clear')}
+        {t('settings.maintenance.clear')}
       </Button>
     </div>
   )

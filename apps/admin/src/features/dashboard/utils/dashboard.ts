@@ -1,25 +1,6 @@
 import { closedUpdateTipsStorageKey } from '../constants'
 import type { ClosedUpdateTipKey, ClosedUpdateTips } from '../types/dashboard'
 
-export function formatNumber(value: number | string) {
-  return typeof value === 'number'
-    ? new Intl.NumberFormat('en-US').format(value)
-    : value
-}
-
-export function formatDateTime(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  return new Intl.DateTimeFormat('zh-CN', {
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(date)
-}
-
 export function readClosedUpdateTips(): ClosedUpdateTips {
   try {
     return {
@@ -52,9 +33,4 @@ export function writeClosedUpdateTip(
       [type]: version,
     }),
   )
-}
-
-export function getErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error && error.message) return error.message
-  return fallback
 }

@@ -20,23 +20,34 @@ export function MaintenanceSettings() {
     mutationFn: cleanCache,
     onError: (error: unknown) =>
       toast.error(
-        getErrorMessage(error, t('dashboard.toast.apiCacheClearError')),
+        getErrorMessage(
+          error,
+          t('settings.maintenance.toast.apiCacheClearError'),
+        ),
       ),
-    onSuccess: () => toast.success(t('dashboard.toast.apiCacheCleared')),
+    onSuccess: () =>
+      toast.success(t('settings.maintenance.toast.apiCacheCleared')),
   })
   const cleanRedisMutation = useMutation({
     mutationFn: cleanRedis,
     onError: (error: unknown) =>
       toast.error(
-        getErrorMessage(error, t('dashboard.toast.dataCacheClearError')),
+        getErrorMessage(
+          error,
+          t('settings.maintenance.toast.dataCacheClearError'),
+        ),
       ),
-    onSuccess: () => toast.success(t('dashboard.toast.dataCacheCleared')),
+    onSuccess: () =>
+      toast.success(t('settings.maintenance.toast.dataCacheCleared')),
   })
   const rebuildSearchIndexMutation = useMutation({
     mutationFn: rebuildSearchIndex,
     onError: (error: unknown) =>
       toast.error(
-        getErrorMessage(error, t('dashboard.searchIndex.rebuildError')),
+        getErrorMessage(
+          error,
+          t('settings.maintenance.searchIndex.rebuildError'),
+        ),
       ),
     onSuccess: async (result) => {
       toast.success(formatSearchIndexStats(result))
@@ -60,16 +71,16 @@ export function MaintenanceSettings() {
         <MaintenanceCard
           disabled={cleanCacheMutation.isPending}
           icon={BrushCleaning}
-          label={t('dashboard.maintenance.apiCache.label')}
+          label={t('settings.maintenance.apiCache.label')}
           onClick={() => cleanCacheMutation.mutate()}
-          value={t('dashboard.maintenance.apiCache.value')}
+          value={t('settings.maintenance.apiCache.value')}
         />
         <MaintenanceCard
           disabled={cleanRedisMutation.isPending}
           icon={BrushCleaning}
-          label={t('dashboard.maintenance.dataCache.label')}
+          label={t('settings.maintenance.dataCache.label')}
           onClick={() => cleanRedisMutation.mutate()}
-          value={t('dashboard.maintenance.dataCache.value')}
+          value={t('settings.maintenance.dataCache.value')}
         />
         <SearchIndexRebuildCard
           forceLoading={
@@ -82,9 +93,7 @@ export function MaintenanceSettings() {
           }
           onForceRebuild={() => {
             if (
-              window.confirm(
-                t('dashboard.maintenance.searchIndex.forceConfirm'),
-              )
+              window.confirm(t('settings.maintenance.searchIndex.forceConfirm'))
             ) {
               rebuildSearchIndexMutation.mutate(true)
             }

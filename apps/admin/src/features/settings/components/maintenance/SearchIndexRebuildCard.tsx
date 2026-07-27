@@ -14,13 +14,13 @@ export function SearchIndexRebuildCard(props: {
     <div className="bg-surface-card p-4">
       <Search className="mb-3 size-5 text-fg-subtle" />
       <div className="text-sm text-fg-muted">
-        {t('dashboard.maintenance.searchIndex.label')}
+        {t('settings.maintenance.searchIndex.label')}
       </div>
       <div className="mt-1 text-lg font-semibold text-fg">
-        {t('dashboard.maintenance.searchIndex.value')}
+        {t('settings.maintenance.searchIndex.value')}
       </div>
       <p className="mt-1 line-clamp-2 text-xs text-fg-subtle">
-        {t('dashboard.maintenance.searchIndex.description')}
+        {t('settings.maintenance.searchIndex.description')}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
@@ -32,7 +32,7 @@ export function SearchIndexRebuildCard(props: {
           {props.incrementalLoading ? (
             <RefreshCw aria-hidden="true" className="size-4 animate-spin" />
           ) : null}
-          {t('dashboard.maintenance.searchIndex.incremental')}
+          {t('settings.maintenance.searchIndex.incremental')}
         </Button>
         <Button
           className="border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-950 dark:text-amber-300 dark:hover:bg-amber-950/30"
@@ -44,7 +44,7 @@ export function SearchIndexRebuildCard(props: {
           {props.forceLoading ? (
             <RefreshCw aria-hidden="true" className="size-4 animate-spin" />
           ) : null}
-          {t('dashboard.maintenance.searchIndex.force')}
+          {t('settings.maintenance.searchIndex.force')}
         </Button>
       </div>
     </div>

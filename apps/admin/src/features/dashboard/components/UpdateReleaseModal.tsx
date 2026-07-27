@@ -12,14 +12,13 @@ import { MarkdownRender } from '~/ui/primitives/markdown-render'
 import { Scroll } from '~/ui/primitives/scroll'
 
 import type { ReleaseModalState } from '../types/dashboard'
-import { formatDateTime } from '../utils/dashboard'
 
 interface UpdateReleaseModalProps {
   release: ReleaseModalState
 }
 
 function UpdateReleaseModal(props: UpdateReleaseModalProps) {
-  const { t } = useI18n()
+  const { format, t } = useI18n()
   const releaseQuery = useQuery({
     queryFn: () => getReleaseDetails(props.release.repo, props.release.version),
     queryKey: adminQueryKeys.dashboard.releaseDetail({
@@ -53,7 +52,7 @@ function UpdateReleaseModal(props: UpdateReleaseModalProps) {
                   </Badge>
                   <span>
                     {t('dashboard.release.publishedAt', {
-                      date: formatDateTime(details.publishedAt || ''),
+                      date: format.dateTime(details.publishedAt),
                     })}
                   </span>
                 </div>

@@ -9,7 +9,7 @@ export function TopArticlesPanel(props: {
 }) {
   const { t } = useI18n()
   return (
-    <Panel title={t('dashboard.topArticles.title')}>
+    <Panel title={t('insights.topArticles.title')}>
       <div className="divide-y divide-border">
         {props.articles.length === 0 ? (
           <EmptyDashboardBlock />
@@ -21,7 +21,7 @@ export function TopArticlesPanel(props: {
             >
               <span className="min-w-0 truncate text-fg">{article.title}</span>
               <span className="shrink-0 text-xs tabular-nums text-fg-muted">
-                {t('dashboard.topArticles.stats', {
+                {t('insights.topArticles.stats', {
                   likes: formatNumber(article.likes),
                   reads: formatNumber(article.reads),
                 })}

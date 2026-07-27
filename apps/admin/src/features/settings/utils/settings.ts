@@ -276,7 +276,7 @@ export function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export function formatSearchIndexStats(result: SearchIndexRebuildResult) {
-  return t('dashboard.searchIndex.stats', {
+  return t('settings.maintenance.searchIndex.stats', {
     created: result.created,
     deleted: result.deleted,
     skipped: result.skipped,
