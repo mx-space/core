@@ -331,6 +331,9 @@ export const enUS = {
   'analyze.trend.title': 'Visit trends',
   'analyze.visitor.description': 'Visitor likes and reading-duration activity.',
 
+  'insights.page.description': 'Live visitors, stats, and traffic charts.',
+  'insights.page.title': 'Insights',
+
   'api.error.fetchFile': 'Failed to fetch file content',
   'api.error.githubRepo': 'Failed to fetch GitHub repository info',
   'api.error.githubSnippets': 'Failed to fetch GitHub Snippets repository',
@@ -1710,6 +1713,8 @@ export const enUS = {
   'routes.functionLab.description':
     'Serverless function execution and response diagnostics.',
   'routes.functionLab.title': 'Function Lab',
+  'routes.insights.description': 'Live visitors, stats, and traffic charts.',
+  'routes.insights.title': 'Insights',
   'routes.markdown.description':
     'Markdown import, parsing preview, and archive export.',
   'routes.markdown.title': 'Markdown',

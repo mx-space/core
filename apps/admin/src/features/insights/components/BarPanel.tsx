@@ -1,7 +1,7 @@
 import { Panel } from '~/ui/primitives/panel'
 
-import { formatNumber } from '../utils/dashboard'
-import { EmptyDashboardBlock } from './DashboardPrimitives'
+import { formatNumber } from '../utils/insights'
+import { EmptyDashboardBlock } from './InsightsPrimitives'
 
 export function BarPanel(props: {
   items: Array<{ label: string; value: number }>

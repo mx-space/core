@@ -319,6 +319,9 @@ export const zhCN = {
   'analyze.trend.title': '访问趋势',
   'analyze.visitor.description': '访客点赞与阅读时长活动。',
 
+  'insights.page.description': '实时访客、数据统计与流量图表。',
+  'insights.page.title': '统计',
+
   'api.error.fetchFile': '获取文件内容失败',
   'api.error.githubRepo': '获取 GitHub 仓库信息失败',
   'api.error.githubSnippets': '获取 GitHub Snippets 仓库失败',
@@ -1650,6 +1653,8 @@ export const zhCN = {
   'routes.friends.title': '友链',
   'routes.functionLab.description': 'Serverless 函数执行与响应诊断。',
   'routes.functionLab.title': '函数实验室',
+  'routes.insights.description': '实时访客、数据统计与流量图表。',
+  'routes.insights.title': '统计',
   'routes.markdown.description': 'Markdown 导入、解析预览与归档导出。',
   'routes.markdown.title': 'Markdown',
   'routes.maintenance.description': '后台维护任务、备份与搜索索引。',

@@ -4,18 +4,9 @@ import { adminQueryKeys } from '~/query/keys'
 export const dashboardQueryKeys = {
   aggregateStat: adminQueryKeys.dashboard.aggregateStat(),
   appInfo: adminQueryKeys.dashboard.appInfo(),
-  categoryDistribution: adminQueryKeys.dashboard.categoryDistribution(),
-  commentActivity: adminQueryKeys.dashboard.commentActivity(),
   githubUpdate: adminQueryKeys.dashboard.githubUpdate(),
   owner: adminQueryKeys.dashboard.owner(),
-  publicationTrend: adminQueryKeys.dashboard.publicationTrend(),
-  readLike: adminQueryKeys.dashboard.readLike(),
   releaseDetail: adminQueryKeys.dashboard.releaseDetailRoot,
-  siteLike: adminQueryKeys.dashboard.siteLike(),
-  tagCloud: adminQueryKeys.dashboard.tagCloud(),
-  topArticles: adminQueryKeys.dashboard.topArticles(),
-  trafficSource: adminQueryKeys.dashboard.trafficSource(),
-  wordCount: adminQueryKeys.dashboard.wordCount(),
 }
 
 export const aggregateStatRefetchInterval = 3000

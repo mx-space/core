@@ -1,7 +1,7 @@
 import { useI18n } from '~/i18n'
 import { Panel } from '~/ui/primitives/panel'
 
-import { EmptyDashboardBlock } from './DashboardPrimitives'
+import { EmptyDashboardBlock } from './InsightsPrimitives'
 
 export function TagCloudPanel(props: {
   tags: Array<{ count: number; tag: string }>

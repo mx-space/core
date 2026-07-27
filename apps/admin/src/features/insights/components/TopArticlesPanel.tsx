@@ -1,8 +1,8 @@
 import { useI18n } from '~/i18n'
 import { Panel } from '~/ui/primitives/panel'
 
-import { formatNumber } from '../utils/dashboard'
-import { EmptyDashboardBlock } from './DashboardPrimitives'
+import { formatNumber } from '../utils/insights'
+import { EmptyDashboardBlock } from './InsightsPrimitives'
 
 export function TopArticlesPanel(props: {
   articles: Array<{ id: string; likes: number; reads: number; title: string }>

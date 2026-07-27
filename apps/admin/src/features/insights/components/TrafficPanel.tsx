@@ -1,7 +1,7 @@
 import { useI18n } from '~/i18n'
 import { Panel } from '~/ui/primitives/panel'
 
-import { formatNumber } from '../utils/dashboard'
+import { formatNumber } from '../utils/insights'
 
 function TrafficGroup(props: {
   items: Array<{ count: number; name: string }>
