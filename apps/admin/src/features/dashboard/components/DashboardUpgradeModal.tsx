@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
 import { EventSourcePolyfill } from 'event-source-polyfill'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { API_URL } from '~/constants/env'
