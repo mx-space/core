@@ -1,8 +1,7 @@
 import fs, { mkdir, stat } from 'node:fs/promises'
 import path from 'node:path'
 
-import { parseAsync, transformAsync } from '@babel/core'
-import * as t from '@babel/types'
+import type * as t from '@babel/types'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import {
   Injectable,
@@ -45,7 +44,7 @@ import {
   ServerlessLogRepository,
   ServerlessStorageRepository,
 } from './serverless.repository'
-import { complieTypeScriptBabelOptions } from './serverless.util'
+import { getCompileTypeScriptBabelOptions } from './serverless.util'
 
 type ScopeContext = {
   req: FunctionContextRequest
@@ -379,7 +378,11 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   async compileTypescriptCode(
     code: string,
   ): Promise<string | null | undefined> {
-    const res = await transformAsync(code, complieTypeScriptBabelOptions)
+    const [{ transformAsync }, options] = await Promise.all([
+      import('@babel/core'),
+      getCompileTypeScriptBabelOptions(),
+    ])
+    const res = await transformAsync(code, options)
     if (!res) {
       throw new InternalServerErrorException('convert code error')
     }
@@ -437,18 +440,20 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
 
   async isValidServerlessFunction(raw: string) {
     try {
-      const ast = (await parseAsync(
-        raw,
-        complieTypeScriptBabelOptions,
-      )) as t.File
+      const [{ parseAsync }, { isFunction }, options] = await Promise.all([
+        import('@babel/core'),
+        import('@babel/types'),
+        getCompileTypeScriptBabelOptions(),
+      ])
+      const ast = (await parseAsync(raw, options)) as t.File
 
       const { body } = ast.program as t.Program
 
       const hasEntryFunction = body.some(
         (node: t.Declaration) =>
           (node.type == 'ExportDefaultDeclaration' &&
-            isHandlerFunction(node.declaration)) ||
-          isHandlerFunction(node),
+            isHandlerFunction(node.declaration, isFunction)) ||
+          isHandlerFunction(node, isFunction),
       )
 
       return hasEntryFunction
@@ -548,7 +553,8 @@ function isHandlerFunction(
     | t.ClassDeclaration
     | t.TSDeclareFunction
     | t.Expression,
+  isFunction: typeof t.isFunction,
 ): boolean {
   // @ts-expect-error
-  return t.isFunction(node) && node?.id?.name === 'handler'
+  return isFunction(node) && node?.id?.name === 'handler'
 }
