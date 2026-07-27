@@ -813,7 +813,6 @@ export const enUS = {
   'dashboard.maintenance.searchIndex.value': 'BM25',
   'dashboard.owner.lastLoginIp': 'Last sign-in IP:',
   'dashboard.owner.lastLoginTime': 'Last sign-in time:',
-  'dashboard.panel.maintenance.title': 'System actions',
   'dashboard.panel.quickActions.title': 'Quick actions',
   'dashboard.panel.quickActions.updatedAt': 'Updated at {time}',
   'dashboard.panel.stats.title': 'Statistics',
@@ -2025,6 +2024,9 @@ export const enUS = {
   'settings.group.content.title': 'Content',
   'settings.group.integrations.description': 'GitHub, TMDB, Bangumi, etc.',
   'settings.group.integrations.title': 'Third-party integrations',
+  'settings.group.maintenance.description':
+    'Cache and search index maintenance',
+  'settings.group.maintenance.title': 'Maintenance',
   'settings.group.membership.description': 'Paid membership, payment provider',
   'settings.group.membership.title': 'Membership',
   'settings.group.metaPreset.description': 'Preset templates',

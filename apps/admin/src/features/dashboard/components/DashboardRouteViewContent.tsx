@@ -1,23 +1,14 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  BookOpen,
-  BrushCleaning,
-  FileText,
-  Pencil,
-  Quote,
-  RefreshCw,
-} from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { BookOpen, FileText, Pencil, Quote, RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
-import { cleanCache, cleanRedis, getAggregateStat } from '~/api/aggregate'
+import { getAggregateStat } from '~/api/aggregate'
 import { checkUpdateFromGitHub } from '~/api/github-update'
 import { getOwner } from '~/api/options'
-import { rebuildSearchIndex } from '~/api/search-index'
 import { getAppInfo } from '~/api/system'
 import { useI18n } from '~/i18n'
-import { adminQueryKeys } from '~/query/keys'
 import { AppPage, PageHeader } from '~/ui/layout/page-layout'
 import { Button } from '~/ui/primitives/button'
 import { Panel } from '~/ui/primitives/panel'
@@ -31,24 +22,16 @@ import {
   defaultStat,
   updateStaleTime,
 } from '../constants'
-import {
-  formatSearchIndexStats,
-  getErrorMessage,
-  readClosedUpdateTips,
-  writeClosedUpdateTip,
-} from '../utils/dashboard'
+import { readClosedUpdateTips, writeClosedUpdateTip } from '../utils/dashboard'
 import { ActionCard } from './ActionCard'
-import { MaintenanceCard } from './DashboardPrimitives'
 import { DashboardRuntimeFooter } from './DashboardRuntimeFooter'
 import { presentDashboardUpgrade } from './DashboardUpgradeModal'
 import { OwnerLoginStat } from './OwnerLoginStat'
-import { SearchIndexRebuildCard } from './SearchIndexRebuildCard'
 import { presentUpdateRelease } from './UpdateReleaseModal'
 
 export function DashboardRouteViewContent() {
   const { t } = useI18n()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const notifiedUpdatesRef = useRef(new Set<string>())
   const statQuery = useQuery({
     queryFn: getAggregateStat,
@@ -77,36 +60,6 @@ export function DashboardRouteViewContent() {
     queryKey: dashboardQueryKeys.githubUpdate,
     retry: false,
     staleTime: updateStaleTime,
-  })
-
-  const cleanCacheMutation = useMutation({
-    mutationFn: cleanCache,
-    onError: (error: unknown) =>
-      toast.error(
-        getErrorMessage(error, t('dashboard.toast.apiCacheClearError')),
-      ),
-    onSuccess: () => toast.success(t('dashboard.toast.apiCacheCleared')),
-  })
-  const cleanRedisMutation = useMutation({
-    mutationFn: cleanRedis,
-    onError: (error: unknown) =>
-      toast.error(
-        getErrorMessage(error, t('dashboard.toast.dataCacheClearError')),
-      ),
-    onSuccess: () => toast.success(t('dashboard.toast.dataCacheCleared')),
-  })
-  const rebuildSearchIndexMutation = useMutation({
-    mutationFn: rebuildSearchIndex,
-    onError: (error: unknown) =>
-      toast.error(
-        getErrorMessage(error, t('dashboard.searchIndex.rebuildError')),
-      ),
-    onSuccess: async (result) => {
-      toast.success(formatSearchIndexStats(result))
-      await queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.searchIndex.root,
-      })
-    },
   })
 
   const updatedAt = useMemo(() => new Date(), [statQuery.dataUpdatedAt])
@@ -240,47 +193,6 @@ export function DashboardRouteViewContent() {
               onPrimary={() => navigate('/says')}
               primaryLabel={t('dashboard.action.primary.say')}
               value={stat.says}
-            />
-          </div>
-        </Panel>
-
-        <Panel className="mt-6" title={t('dashboard.panel.maintenance.title')}>
-          <div className="grid gap-px bg-border-strong sm:grid-cols-2 xl:grid-cols-3">
-            <MaintenanceCard
-              disabled={cleanCacheMutation.isPending}
-              icon={BrushCleaning}
-              label={t('dashboard.maintenance.apiCache.label')}
-              onClick={() => cleanCacheMutation.mutate()}
-              value={t('dashboard.maintenance.apiCache.value')}
-            />
-            <MaintenanceCard
-              disabled={cleanRedisMutation.isPending}
-              icon={BrushCleaning}
-              label={t('dashboard.maintenance.dataCache.label')}
-              onClick={() => cleanRedisMutation.mutate()}
-              value={t('dashboard.maintenance.dataCache.value')}
-            />
-            <SearchIndexRebuildCard
-              forceLoading={
-                rebuildSearchIndexMutation.isPending &&
-                rebuildSearchIndexMutation.variables === true
-              }
-              incrementalLoading={
-                rebuildSearchIndexMutation.isPending &&
-                rebuildSearchIndexMutation.variables !== true
-              }
-              onForceRebuild={() => {
-                if (
-                  window.confirm(
-                    t('dashboard.maintenance.searchIndex.forceConfirm'),
-                  )
-                ) {
-                  rebuildSearchIndexMutation.mutate(true)
-                }
-              }}
-              onIncrementalRebuild={() =>
-                rebuildSearchIndexMutation.mutate(false)
-              }
             />
           </div>
         </Panel>

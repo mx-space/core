@@ -1,4 +1,4 @@
-import { ListPlus, Shield, User } from 'lucide-react'
+import { ListPlus, Shield, User, Wrench } from 'lucide-react'
 
 import type { TranslationKey } from '~/i18n/types'
 import type { MetaFieldType, MetaPresetScope } from '~/models/meta-preset'
@@ -103,6 +103,13 @@ export const staticGroupsAfter: SettingsGroupSummary[] = [
     key: 'meta-preset',
     titleKey: 'settings.group.metaPreset.title',
     type: 'meta-preset',
+  },
+  {
+    descriptionKey: 'settings.group.maintenance.description',
+    icon: Wrench,
+    key: 'maintenance',
+    titleKey: 'settings.group.maintenance.title',
+    type: 'maintenance',
   },
 ]
 

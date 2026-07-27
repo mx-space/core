@@ -1,27 +1,10 @@
-import type {
-  ClosedUpdateTipKey,
-  ClosedUpdateTips,
-  SearchIndexRebuildStats,
-} from '../types/dashboard'
-
-import { translate } from '~/i18n/translate'
-
 import { closedUpdateTipsStorageKey } from '../constants'
+import type { ClosedUpdateTipKey, ClosedUpdateTips } from '../types/dashboard'
 
 export function formatNumber(value: number | string) {
   return typeof value === 'number'
     ? new Intl.NumberFormat('en-US').format(value)
     : value
-}
-
-export function formatSearchIndexStats(result: SearchIndexRebuildStats) {
-  return translate('dashboard.searchIndex.stats', {
-    created: result.created,
-    deleted: result.deleted,
-    skipped: result.skipped,
-    total: result.total,
-    updated: result.updated,
-  })
 }
 
 export function formatDateTime(value: string) {

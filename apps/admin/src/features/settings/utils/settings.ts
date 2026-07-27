@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 
 import type { ConfigFormField } from '~/api/options'
+import type { SearchIndexRebuildResult } from '~/api/search-index'
 import { translate as t } from '~/i18n/translate'
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
 import type { CreateMetaPresetDto, MetaPresetField } from '~/models/meta-preset'
@@ -272,6 +273,16 @@ export function mergeModelOptions(
 export function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) return error.message
   return fallback
+}
+
+export function formatSearchIndexStats(result: SearchIndexRebuildResult) {
+  return t('dashboard.searchIndex.stats', {
+    created: result.created,
+    deleted: result.deleted,
+    skipped: result.skipped,
+    total: result.total,
+    updated: result.updated,
+  })
 }
 
 export function emptyMetaPreset(): CreateMetaPresetDto {

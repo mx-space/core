@@ -12,11 +12,3 @@ export interface ClosedUpdateTips {
   dashboard: null | string
   system: null | string
 }
-
-export interface SearchIndexRebuildStats {
-  created: number
-  deleted: number
-  skipped: number
-  total: number
-  updated: number
-}

@@ -62,7 +62,8 @@ export interface SeoI18nOverlay {
   title?: string
 }
 
-export type SettingsGroupType = 'account' | 'meta-preset' | 'system' | 'user'
+export type SettingsGroupType =
+  'account' | 'maintenance' | 'meta-preset' | 'system' | 'user'
 export type OauthProviderType = 'github' | 'google'
 
 export interface OauthOptions {
