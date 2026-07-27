@@ -1,5 +1,3 @@
-export const REFLECTOR = 'Reflector'
-
 export const RESPONSE_PASSTHROUGH_METADATA = '__responsePassthrough__'
 export const RESPONSE_V2_METADATA = '__responseV2__'
 export const BYPASS_CASE_TRANSFORM_METADATA = '__bypassCaseTransform__'

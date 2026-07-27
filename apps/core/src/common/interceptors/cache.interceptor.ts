@@ -3,7 +3,7 @@ import type {
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
-import { Inject, Injectable, Logger, RequestMethod } from '@nestjs/common'
+import { Injectable, Logger, RequestMethod } from '@nestjs/common'
 import { HttpAdapterHost, Reflector } from '@nestjs/core'
 import type { FastifyReply } from 'fastify'
 import { Observable, of, tap } from 'rxjs'
@@ -12,7 +12,6 @@ import { HTTP_CACHE, REDIS } from '~/app.config'
 import { RequestContext } from '~/common/contexts/request.context'
 import { API_CACHE_PREFIX } from '~/constants/cache.constant'
 import * as META from '~/constants/meta.constant'
-import * as SYSTEM from '~/constants/system.constant'
 import { isTest } from '~/global/env.global'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
@@ -24,7 +23,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
   constructor(
     private readonly cacheManager: CacheService,
-    @Inject(SYSTEM.REFLECTOR) private readonly reflector: Reflector,
+    private readonly reflector: Reflector,
     private readonly httpAdapterHost: HttpAdapterHost,
   ) {}
 

@@ -5,7 +5,7 @@ import type {
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
-import { Inject, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { isbot } from 'isbot'
 import { Observable } from 'rxjs'
@@ -13,7 +13,6 @@ import { UAParser } from 'ua-parser-js'
 
 import { RedisKeys } from '~/constants/cache.constant'
 import * as SYSTEM from '~/constants/system.constant'
-import { REFLECTOR } from '~/constants/system.constant'
 import { AnalyzeService } from '~/modules/analyze/analyze.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
@@ -29,7 +28,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
   constructor(
     private readonly analyzeService: AnalyzeService,
     private readonly redisService: RedisService,
-    @Inject(REFLECTOR) private readonly reflector: Reflector,
+    private readonly reflector: Reflector,
   ) {
     this.queue = new TaskQueuePool(1000, async (items) => {
       await this.analyzeService.recordMany(items)
