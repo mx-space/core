@@ -32,7 +32,7 @@ import { PageService } from '../page/page.service'
 import type { PostService } from '../post/post.service'
 import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
-import type { RSSProps } from './aggregate.interface'
+import type { DeskSummary, RSSProps } from './aggregate.interface'
 import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.schema'
 
 dayjs.extend(utc)
@@ -298,6 +298,56 @@ export class AggregateService {
       online,
       todayMaxOnline: todayMaxOnline ?? '0',
       todayOnlineTotal: todayOnlineTotal ?? '0',
+    }
+  }
+
+  async getDesk(): Promise<DeskSummary> {
+    const [
+      unreadCommentCount,
+      unreadCommentRows,
+      linkApplicationCount,
+      linkApplicationPage,
+      scheduledNotes,
+    ] = await Promise.all([
+      this.commentService.countByState(CommentState.Unread),
+      this.commentService.findRecent(1, { state: CommentState.Unread }),
+      this.linkService.countByState(LinkState.Audit),
+      this.linkService.list(1, 1, LinkState.Audit),
+      this.noteService.repository.findScheduled(5),
+    ])
+
+    const [latestUnreadComment] =
+      await this.commentService.attachRef(unreadCommentRows)
+    const latestLinkApplication = linkApplicationPage.data[0]
+
+    return {
+      unreadComments: {
+        count: unreadCommentCount,
+        latest: latestUnreadComment
+          ? {
+              id: String(latestUnreadComment.id),
+              author: latestUnreadComment.author ?? '',
+              text: latestUnreadComment.text,
+              refTitle: latestUnreadComment.ref?.title ?? null,
+            }
+          : null,
+      },
+      linkApplications: {
+        count: linkApplicationCount,
+        latest: latestLinkApplication
+          ? {
+              id: String(latestLinkApplication.id),
+              name: latestLinkApplication.name,
+              url: latestLinkApplication.url,
+            }
+          : null,
+      },
+      scheduledNotes: scheduledNotes.map((note) => ({
+        id: String(note.id),
+        nid: note.nid,
+        title: note.title,
+        publicAt: note.publicAt.toISOString(),
+      })),
     }
   }
 

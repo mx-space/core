@@ -90,3 +90,10 @@ export interface NoteListFilter {
   year?: number
   metaOnly?: boolean
 }
+
+export interface ScheduledNoteRow {
+  id: EntityId
+  nid: number
+  title: string | null
+  publicAt: Date
+}

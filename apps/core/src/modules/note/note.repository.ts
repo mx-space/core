@@ -37,6 +37,7 @@ import type {
   NotePatchInput,
   NoteRow,
   NoteSortOptions,
+  ScheduledNoteRow,
 } from './note.types'
 
 type NoteRowSource = Omit<typeof notes.$inferSelect, 'text' | 'content'> &
@@ -944,6 +945,26 @@ export class NoteRepository extends BaseRepository {
       .where(filters.length ? and(...filters) : undefined)
       .orderBy(orderBy)
     return rows.map((row) => mapWithTopic(row.note, row.topic))
+  }
+
+  async findScheduled(limit: number): Promise<ScheduledNoteRow[]> {
+    const rows = await this.db
+      .select({
+        id: notes.id,
+        nid: notes.nid,
+        title: notes.title,
+        publicAt: notes.publicAt,
+      })
+      .from(notes)
+      .where(and(eq(notes.isPublished, true), gt(notes.publicAt, new Date())))
+      .orderBy(asc(notes.publicAt))
+      .limit(limit)
+    return rows.map((row) => ({
+      id: toEntityId(row.id) as EntityId,
+      nid: row.nid,
+      title: row.title,
+      publicAt: row.publicAt!,
+    }))
   }
 
   async findVisibleForSitemap(): Promise<NoteRow[]> {

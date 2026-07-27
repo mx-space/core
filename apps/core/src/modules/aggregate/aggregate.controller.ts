@@ -372,6 +372,12 @@ export class AggregateController {
     }
   }
 
+  @Get('/desk')
+  @Auth()
+  async desk() {
+    return await this.aggregateService.getDesk()
+  }
+
   @Get('/count_read_and_like')
   async getAllReadAndLikeCount(@Query() query: ReadAndLikeCountTypeDto) {
     const { type = ReadAndLikeCountDocumentType.All } = query
