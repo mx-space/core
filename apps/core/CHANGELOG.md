@@ -1,11 +1,25 @@
-## [13.17.1](https://github.com/mx-space/core/compare/v13.17.0...v13.17.1) (2026-07-26)
+# [13.18.0](https://github.com/mx-space/core/compare/v13.17.1...v13.18.0) (2026-07-27)
 
 
 ### Bug Fixes
 
-* **admin:** keep select popup scroll viewport within the popup box ([2394cc9](https://github.com/mx-space/core/commit/2394cc905845b59a73ce4e87cd2eb489d35b31c2))
+* **membership:** 404 for unknown readerId on manual grant/revoke ([ef800e9](https://github.com/mx-space/core/commit/ef800e94900a4bc89d4b273fd1d1fdaee5b0302e))
 
-## [13.17.0](https://github.com/mx-space/core/compare/v13.16.3...v13.17.0) (2026-07-26)
+
+### Features
+
+* **aggregate:** add GET /aggregate/desk endpoint for admin dashboard ([462dfc8](https://github.com/mx-space/core/commit/462dfc8d6532f8a4da08d3c6912566f2c1bc6fe3))
+* **aggregate:** add on-this-day and publish-heatmap endpoints ([7c605f1](https://github.com/mx-space/core/commit/7c605f1cb957c0bf9c5c141251ef18ee2463c6e1))
+
+
+### Performance Improvements
+
+* **build:** escape non-ASCII in bundle output to halve retained module source ([7180ae6](https://github.com/mx-space/core/commit/7180ae6f2d44d14c7524f6c5b2237aec09afc813))
+* **serverless:** lazy-load Babel toolchain off the boot path ([afca3df](https://github.com/mx-space/core/commit/afca3df1c4da1a41a67d38723deef7afa2a50603))
+
+## [13.17.1](https://github.com/mx-space/core/compare/v13.17.0...v13.17.1) (2026-07-26)
+
+# [13.17.0](https://github.com/mx-space/core/compare/v13.16.3...v13.17.0) (2026-07-26)
 
 
 ### Bug Fixes
