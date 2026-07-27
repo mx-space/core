@@ -90,12 +90,33 @@ export interface DeskSummary {
   }
 }
 
+export interface OnThisDayEntry {
+  created: string
+  excerpt: string
+  id: string
+  title: string | null
+  type: 'note' | 'post'
+}
+
+export interface HeatmapDay {
+  count: number
+  date: string
+}
+
 export function getAggregateStat() {
   return getJson<StatCount>('/aggregate/stat')
 }
 
 export function getDesk() {
   return getJson<DeskSummary>('/aggregate/desk')
+}
+
+export function getOnThisDay() {
+  return getJson<OnThisDayEntry[]>('/aggregate/on-this-day')
+}
+
+export function getPublishHeatmap() {
+  return getJson<HeatmapDay[]>('/aggregate/publish-heatmap')
 }
 
 export function getCategoryDistribution() {

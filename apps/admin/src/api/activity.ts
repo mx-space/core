@@ -1,6 +1,5 @@
 import type { ActivityReadDurationType } from '../models/activity'
 import type { PaginateResult } from '../models/base'
-
 import { getJson } from './http'
 
 export enum ActivityType {
@@ -45,6 +44,36 @@ export interface ReadingRankItem {
     title?: string
   }
   refId: string
+}
+
+export interface RecentActivityComment {
+  author: string
+  avatar?: string
+  createdAt: string
+  id?: string
+  nid?: number
+  slug?: string
+  text: string
+  title?: string
+  type?: 'note' | 'page' | 'post' | 'recently'
+}
+
+export interface RecentActivityLike {
+  createdAt: string
+  id: string
+  nid?: number
+  slug?: string
+  title?: string
+  type?: 'note' | 'post'
+}
+
+export interface RecentActivities {
+  comment: RecentActivityComment[]
+  like: RecentActivityLike[]
+}
+
+export function getRecentActivities() {
+  return getJson<RecentActivities>('/activity/recent')
 }
 
 export function getActivityList(params: {

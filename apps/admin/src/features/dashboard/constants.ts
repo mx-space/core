@@ -6,7 +6,11 @@ export const dashboardQueryKeys = {
   desk: adminQueryKeys.dashboard.desk(),
   deskDrafts: adminQueryKeys.dashboard.deskDrafts(),
   githubUpdate: adminQueryKeys.dashboard.githubUpdate(),
+  onThisDay: adminQueryKeys.dashboard.onThisDay(),
   owner: adminQueryKeys.dashboard.owner(),
+  publishHeatmap: adminQueryKeys.dashboard.publishHeatmap(),
+  readLike: adminQueryKeys.dashboard.readLike(),
+  recentActivities: adminQueryKeys.dashboard.recentActivities(),
   releaseDetail: adminQueryKeys.dashboard.releaseDetailRoot,
 }
 

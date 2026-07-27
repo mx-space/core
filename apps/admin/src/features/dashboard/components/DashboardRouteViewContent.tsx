@@ -3,7 +3,14 @@ import { Leaf } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 
-import { getAggregateStat, getDesk } from '~/api/aggregate'
+import { getRecentActivities } from '~/api/activity'
+import {
+  countReadAndLike,
+  getAggregateStat,
+  getDesk,
+  getOnThisDay,
+  getPublishHeatmap,
+} from '~/api/aggregate'
 import { getDrafts } from '~/api/drafts'
 import { checkUpdateFromGitHub } from '~/api/github-update'
 import { getOwner } from '~/api/options'
@@ -24,9 +31,13 @@ import {
 import { readClosedUpdateTips, writeClosedUpdateTip } from '../utils/dashboard'
 import { buildWritingItems } from '../utils/desk'
 import { presentDashboardUpgrade } from './DashboardUpgradeModal'
+import { buildEchoRows, DeskEchoCard } from './DeskEchoCard'
 import { DeskFooter } from './DeskFooter'
 import { DeskGreeting } from './DeskGreeting'
 import { DeskLoadError } from './DeskLoadError'
+import { DeskOnThisDayCard } from './DeskOnThisDayCard'
+import { DeskRhythmCard } from './DeskRhythmCard'
+import { DeskStatBand } from './DeskStatBand'
 import { DeskTasksCard } from './DeskTasksCard'
 import { DeskWritingCard } from './DeskWritingCard'
 import { presentUpdateRelease } from './UpdateReleaseModal'
@@ -63,6 +74,22 @@ export function DashboardRouteViewContent() {
         sort_order: 'desc',
       }),
     queryKey: dashboardQueryKeys.deskDrafts,
+  })
+  const readLikeQuery = useQuery({
+    queryFn: countReadAndLike,
+    queryKey: dashboardQueryKeys.readLike,
+  })
+  const onThisDayQuery = useQuery({
+    queryFn: getOnThisDay,
+    queryKey: dashboardQueryKeys.onThisDay,
+  })
+  const heatmapQuery = useQuery({
+    queryFn: getPublishHeatmap,
+    queryKey: dashboardQueryKeys.publishHeatmap,
+  })
+  const recentActivitiesQuery = useQuery({
+    queryFn: getRecentActivities,
+    queryKey: dashboardQueryKeys.recentActivities,
   })
 
   const adminVersion = __DEV__ ? 'dev mode' : window.version || 'N/A'
@@ -170,64 +197,98 @@ export function DashboardRouteViewContent() {
   const hasLoadError = deskQuery.isError || draftsQuery.isError
   const showZen = deskQuery.isSuccess && draftsQuery.isSuccess && !hasCards
 
+  const onThisDayEntries = onThisDayQuery.data ?? []
+  const echoRows = useMemo(
+    () =>
+      buildEchoRows(
+        recentActivitiesQuery.data?.comment ?? [],
+        recentActivitiesQuery.data?.like ?? [],
+        t,
+      ),
+    [recentActivitiesQuery.data, t],
+  )
+  const hasLeftColumn = writingItems.length > 0 || onThisDayEntries.length > 0
+  const hasRightColumn = hasTasks || echoRows.length > 0
+
   return (
     <AppPage>
       <Scroll
         className="min-h-0 flex-1 bg-background"
-        innerClassName="flex min-h-full flex-col gap-6 p-4"
+        innerClassName="flex min-h-full flex-col p-4 pt-8 desktop:pt-14"
       >
-        <DeskGreeting ownerName={ownerQuery.data?.name} />
+        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6">
+          <DeskGreeting ownerName={ownerQuery.data?.name} />
 
-        {hasCards ? (
-          <div
-            className={cn(
-              'grid gap-4',
-              writingItems.length > 0 &&
-                hasTasks &&
-                'desktop:grid-cols-[5fr_3fr]',
-            )}
-          >
-            {writingItems.length > 0 ? (
-              <DeskWritingCard items={writingItems} />
-            ) : null}
-            {hasTasks ? (
-              <DeskTasksCard
-                adminUpdate={adminUpdate}
-                adminVersion={adminVersion}
-                desk={desk}
-                systemUpdate={systemUpdate}
-                systemVersion={systemVersion}
-              />
-            ) : null}
-          </div>
-        ) : null}
-
-        {hasLoadError ? (
-          <DeskLoadError
-            onRetry={() => {
-              if (deskQuery.isError) void deskQuery.refetch()
-              if (draftsQuery.isError) void draftsQuery.refetch()
-            }}
-            retrying={deskQuery.isFetching || draftsQuery.isFetching}
+          <DeskStatBand
+            stat={statQuery.data}
+            totalReads={readLikeQuery.data?.totalReads}
           />
-        ) : null}
 
-        {showZen ? (
-          <EmptyState icon={Leaf} title={t('dashboard.desk.zen.title')} />
-        ) : null}
+          {hasLeftColumn || hasRightColumn ? (
+            <div
+              className={cn(
+                'grid gap-4',
+                hasLeftColumn &&
+                  hasRightColumn &&
+                  'desktop:grid-cols-[5fr_3fr]',
+              )}
+            >
+              {hasLeftColumn ? (
+                <div className="flex min-w-0 flex-col gap-4 [&>:last-child]:flex-1">
+                  {writingItems.length > 0 ? (
+                    <DeskWritingCard items={writingItems} />
+                  ) : null}
+                  <DeskOnThisDayCard entries={onThisDayEntries} />
+                </div>
+              ) : null}
+              {hasRightColumn ? (
+                <div className="flex min-w-0 flex-col gap-4 [&>:last-child]:flex-1">
+                  {hasTasks ? (
+                    <DeskTasksCard
+                      adminUpdate={adminUpdate}
+                      adminVersion={adminVersion}
+                      desk={desk}
+                      systemUpdate={systemUpdate}
+                      systemVersion={systemVersion}
+                    />
+                  ) : null}
+                  {echoRows.length > 0 ? (
+                    <DeskEchoCard rows={echoRows} />
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
-        <DeskFooter
-          adminVersion={adminVersion}
-          onCheckUpdates={() => {
-            void appInfoQuery.refetch()
-            void updateQuery.refetch()
-          }}
-          online={statQuery.data?.online ?? 0}
-          refreshing={appInfoQuery.isFetching || updateQuery.isFetching}
-          systemVersion={systemVersion}
-          todayMaxOnline={statQuery.data?.todayMaxOnline ?? 0}
-          todayVisitors={statQuery.data?.todayOnlineTotal ?? 0}
-        />
+          {hasLoadError ? (
+            <DeskLoadError
+              onRetry={() => {
+                if (deskQuery.isError) void deskQuery.refetch()
+                if (draftsQuery.isError) void draftsQuery.refetch()
+              }}
+              retrying={deskQuery.isFetching || draftsQuery.isFetching}
+            />
+          ) : null}
+
+          {showZen ? (
+            <EmptyState icon={Leaf} title={t('dashboard.desk.zen.title')} />
+          ) : null}
+
+          <DeskRhythmCard days={heatmapQuery.data ?? []} />
+
+          <DeskFooter
+            adminVersion={adminVersion}
+            onCheckUpdates={() => {
+              void appInfoQuery.refetch()
+              void updateQuery.refetch()
+            }}
+            online={statQuery.data?.online ?? 0}
+            refreshing={appInfoQuery.isFetching || updateQuery.isFetching}
+            systemVersion={systemVersion}
+            todayMaxOnline={statQuery.data?.todayMaxOnline ?? 0}
+            todayVisitors={statQuery.data?.todayOnlineTotal ?? 0}
+          />
+        </div>
       </Scroll>
     </AppPage>
   )
