@@ -805,6 +805,7 @@ export const enUS = {
   'dashboard.desk.draftType.note': 'Note draft',
   'dashboard.desk.draftType.page': 'Page draft',
   'dashboard.desk.draftType.post': 'Post draft',
+  'dashboard.desk.error.text': 'Some desk data failed to load',
   'dashboard.desk.greeting.afternoon': 'Good afternoon',
   'dashboard.desk.greeting.evening': 'Good evening',
   'dashboard.desk.greeting.morning': 'Good morning',

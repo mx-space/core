@@ -786,6 +786,7 @@ export const zhCN = {
   'dashboard.desk.draftType.note': '手记草稿',
   'dashboard.desk.draftType.page': '页面草稿',
   'dashboard.desk.draftType.post': '文章草稿',
+  'dashboard.desk.error.text': '部分桌面数据加载失败',
   'dashboard.desk.greeting.afternoon': '午安',
   'dashboard.desk.greeting.evening': '晚安',
   'dashboard.desk.greeting.morning': '早安',

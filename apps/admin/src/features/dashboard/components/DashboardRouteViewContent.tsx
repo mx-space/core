@@ -26,6 +26,7 @@ import { buildWritingItems } from '../utils/desk'
 import { presentDashboardUpgrade } from './DashboardUpgradeModal'
 import { DeskFooter } from './DeskFooter'
 import { DeskGreeting } from './DeskGreeting'
+import { DeskLoadError } from './DeskLoadError'
 import { DeskTasksCard } from './DeskTasksCard'
 import { DeskWritingCard } from './DeskWritingCard'
 import { presentUpdateRelease } from './UpdateReleaseModal'
@@ -165,7 +166,9 @@ export function DashboardRouteViewContent() {
     (desk?.linkApplications.count ?? 0) > 0 ||
     adminUpdate !== null ||
     systemUpdate !== null
-  const bodyReady = !deskQuery.isPending && !draftsQuery.isPending
+  const hasCards = writingItems.length > 0 || hasTasks
+  const hasLoadError = deskQuery.isError || draftsQuery.isError
+  const showZen = deskQuery.isSuccess && draftsQuery.isSuccess && !hasCards
 
   return (
     <AppPage>
@@ -175,32 +178,42 @@ export function DashboardRouteViewContent() {
       >
         <DeskGreeting ownerName={ownerQuery.data?.name} />
 
-        {bodyReady ? (
-          writingItems.length > 0 || hasTasks ? (
-            <div
-              className={cn(
-                'grid gap-4',
-                writingItems.length > 0 &&
-                  hasTasks &&
-                  'desktop:grid-cols-[5fr_3fr]',
-              )}
-            >
-              {writingItems.length > 0 ? (
-                <DeskWritingCard items={writingItems} />
-              ) : null}
-              {hasTasks ? (
-                <DeskTasksCard
-                  adminUpdate={adminUpdate}
-                  adminVersion={adminVersion}
-                  desk={desk}
-                  systemUpdate={systemUpdate}
-                  systemVersion={systemVersion}
-                />
-              ) : null}
-            </div>
-          ) : (
-            <EmptyState icon={Leaf} title={t('dashboard.desk.zen.title')} />
-          )
+        {hasCards ? (
+          <div
+            className={cn(
+              'grid gap-4',
+              writingItems.length > 0 &&
+                hasTasks &&
+                'desktop:grid-cols-[5fr_3fr]',
+            )}
+          >
+            {writingItems.length > 0 ? (
+              <DeskWritingCard items={writingItems} />
+            ) : null}
+            {hasTasks ? (
+              <DeskTasksCard
+                adminUpdate={adminUpdate}
+                adminVersion={adminVersion}
+                desk={desk}
+                systemUpdate={systemUpdate}
+                systemVersion={systemVersion}
+              />
+            ) : null}
+          </div>
+        ) : null}
+
+        {hasLoadError ? (
+          <DeskLoadError
+            onRetry={() => {
+              if (deskQuery.isError) void deskQuery.refetch()
+              if (draftsQuery.isError) void draftsQuery.refetch()
+            }}
+            retrying={deskQuery.isFetching || draftsQuery.isFetching}
+          />
+        ) : null}
+
+        {showZen ? (
+          <EmptyState icon={Leaf} title={t('dashboard.desk.zen.title')} />
         ) : null}
 
         <DeskFooter
