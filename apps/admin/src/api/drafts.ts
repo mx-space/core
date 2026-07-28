@@ -31,6 +31,10 @@ export interface CreateDraftData {
   typeSpecificData?: TypeSpecificData
 }
 
+export type UpdateDraftData = Partial<CreateDraftData> & {
+  expectedVersion: number
+}
+
 export function getDrafts(params: GetDraftsParams = {}) {
   return getJson<PaginateResult<DraftModel>>('/drafts', {
     hasRef: params.hasRef === undefined ? undefined : String(params.hasRef),
@@ -66,8 +70,8 @@ export function createDraft(data: CreateDraftData) {
   return postJson<DraftModel, CreateDraftData>('/drafts', data)
 }
 
-export function updateDraft(id: string, data: Partial<CreateDraftData>) {
-  return putJson<DraftModel, Partial<CreateDraftData>>(`/drafts/${id}`, data)
+export function updateDraft(id: string, data: UpdateDraftData) {
+  return putJson<DraftModel, UpdateDraftData>(`/drafts/${id}`, data)
 }
 
 export function deleteDraft(id: string) {

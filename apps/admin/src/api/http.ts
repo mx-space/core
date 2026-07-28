@@ -6,7 +6,11 @@ const requestUuid = createRequestUuid()
 type ResponseEnvelope<T> = {
   code?: number | string
   data?: T
-  error?: { code?: number | string; message?: string | string[] }
+  error?: {
+    code?: number | string
+    details?: Record<string, unknown>
+    message?: string | string[]
+  }
   meta?: {
     pagination?: unknown
   }
@@ -15,11 +19,20 @@ type ResponseEnvelope<T> = {
 
 export class ApiRequestError extends Error {
   code?: number | string
+  details?: Record<string, unknown>
+  status: number
 
-  constructor(message: string, code?: number | string) {
+  constructor(
+    message: string,
+    code?: number | string,
+    status = 0,
+    details?: Record<string, unknown>,
+  ) {
     super(message)
     this.name = 'ApiRequestError'
     this.code = code
+    this.details = details
+    this.status = status
   }
 }
 
@@ -74,6 +87,8 @@ export async function requestJson<TResponse>(
     throw new ApiRequestError(
       Array.isArray(message) ? message.join(', ') : message || 'Request failed',
       responseData?.error?.code ?? responseData?.code,
+      response.status,
+      responseData?.error?.details,
     )
   }
 

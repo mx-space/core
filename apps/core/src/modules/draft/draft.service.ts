@@ -11,6 +11,9 @@ import type { CreateDraftDto, UpdateDraftDto } from './draft.schema'
 import type { DraftHistoryModel, DraftRow } from './draft.types'
 import { DraftHistoryService } from './draft-history.service'
 
+const isUniqueViolation = (error: unknown) =>
+  (error as { code?: string } | null)?.code === '23505'
+
 @Injectable()
 export class DraftService {
   constructor(
@@ -37,16 +40,38 @@ export class DraftService {
         dto.refType as DraftRefType,
         dto.refId,
       )
-      if (existing) return this.update(existing.id, dto)
+      if (existing) {
+        throw createAppException(AppErrorCode.DRAFT_VERSION_CONFLICT, {
+          actualVersion: existing.version,
+          expectedVersion: 0,
+          id: existing.id,
+        })
+      }
     }
 
-    const draft = await this.draftRepository.create({
-      ...dto,
-      refType: dto.refType as DraftRefType,
-      contentFormat: dto.contentFormat ?? ContentFormat.Markdown,
-      typeSpecificData: dto.typeSpecificData,
-      meta: dto.meta,
-    })
+    let draft: DraftRow
+    try {
+      draft = await this.draftRepository.create({
+        ...dto,
+        refType: dto.refType as DraftRefType,
+        contentFormat: dto.contentFormat ?? ContentFormat.Markdown,
+        typeSpecificData: dto.typeSpecificData,
+        meta: dto.meta,
+      })
+    } catch (error) {
+      if (!dto.refId || !isUniqueViolation(error)) throw error
+
+      const existing = await this.draftRepository.findByRef(
+        dto.refType as DraftRefType,
+        dto.refId,
+      )
+      if (!existing) throw error
+      throw createAppException(AppErrorCode.DRAFT_VERSION_CONFLICT, {
+        actualVersion: existing.version,
+        expectedVersion: 0,
+        id: existing.id,
+      })
+    }
 
     if (draft.text) {
       await this.fileReferenceService.updateReferencesForDocument(
@@ -63,6 +88,16 @@ export class DraftService {
     const draft = await this.draftRepository.findById(id)
     if (!draft) throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id })
 
+    if (dto.expectedVersion !== draft.version) {
+      throw createAppException(AppErrorCode.DRAFT_VERSION_CONFLICT, {
+        actualVersion: draft.version,
+        expectedVersion: dto.expectedVersion,
+        id,
+      })
+    }
+
+    const { expectedVersion, ...patch } = dto
+
     const hasContentChange = this.draftHistoryService.hasContentChange(
       {
         title: draft.title,
@@ -71,7 +106,7 @@ export class DraftService {
         contentFormat: draft.contentFormat as ContentFormat,
         typeSpecificData: JSON.stringify(draft.typeSpecificData ?? undefined),
       },
-      dto,
+      patch,
     )
 
     let history = draft.history
@@ -90,17 +125,30 @@ export class DraftService {
       ).history as any
     }
 
-    const updated = await this.draftRepository.update(id, {
-      ...dto,
-      contentFormat: dto.contentFormat,
-      typeSpecificData: dto.typeSpecificData,
-      meta: dto.meta,
-      version: hasContentChange ? draft.version + 1 : draft.version,
-      history,
-    })
-    if (!updated) throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id })
+    const updated = await this.draftRepository.update(
+      id,
+      {
+        ...patch,
+        contentFormat: patch.contentFormat,
+        typeSpecificData: patch.typeSpecificData,
+        meta: patch.meta,
+        version: draft.version + 1,
+        history,
+      },
+      expectedVersion,
+    )
+    if (!updated) {
+      const latest = await this.draftRepository.findById(id)
+      if (!latest)
+        throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id })
+      throw createAppException(AppErrorCode.DRAFT_VERSION_CONFLICT, {
+        actualVersion: latest.version,
+        expectedVersion,
+        id,
+      })
+    }
 
-    if (dto.text !== undefined) {
+    if (patch.text !== undefined) {
       await this.fileReferenceService.updateReferencesForDocument(
         updated,
         updated.id,
@@ -190,8 +238,9 @@ export class DraftService {
   }
 
   async restoreVersion(id: string, version: number): Promise<DraftRow> {
-    const { resolved } = await this.resolveHistoryVersion(id, version)
+    const { draft, resolved } = await this.resolveHistoryVersion(id, version)
     return this.update(id, {
+      expectedVersion: draft.version,
       title: resolved.title,
       text: resolved.text ?? '',
       content: resolved.content,

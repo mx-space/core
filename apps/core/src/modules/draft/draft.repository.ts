@@ -153,6 +153,7 @@ export class DraftRepository extends BaseRepository {
   async update(
     id: EntityId | string,
     patch: DraftPatchInput,
+    expectedVersion?: number,
   ): Promise<DraftRow | null> {
     const idBig = parseEntityId(id)
     const update: Partial<typeof drafts.$inferInsert> = {
@@ -178,7 +179,11 @@ export class DraftRepository extends BaseRepository {
     const [row] = await this.db
       .update(drafts)
       .set(update)
-      .where(eq(drafts.id, idBig))
+      .where(
+        expectedVersion === undefined
+          ? eq(drafts.id, idBig)
+          : and(eq(drafts.id, idBig), eq(drafts.version, expectedVersion)),
+      )
       .returning()
     return row ? mapRow(row) : null
   }

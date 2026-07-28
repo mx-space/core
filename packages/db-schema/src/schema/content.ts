@@ -232,6 +232,10 @@ export const drafts = pgTable(
     publishedVersion: integer('published_version'),
   },
   (table) => [
+    uniqueIndex('drafts_ref_uniq')
+      .on(table.refType, table.refId)
+      .where(sql`${table.refId} is not null`)
+      .concurrently(),
     index('drafts_ref_idx')
       .on(table.refType, table.refId)
       .where(sql`${table.refId} is not null`),

@@ -50,6 +50,7 @@ import {
   updateDraft,
 } from '~/api/drafts'
 import { uploadFile, uploadFileWithProgress } from '~/api/files'
+import { ApiRequestError } from '~/api/http'
 import type { CreateNoteData } from '~/api/notes'
 import { getNoteById } from '~/api/notes'
 import { getOption } from '~/api/options'
@@ -82,10 +83,13 @@ import { topics as topicsCollection } from '~/data/resources/topic'
 import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
 import { CoverGenerationEntry } from '~/features/write/components/cover-generation/CoverGenerationEntry'
+import { DraftConflictBanner } from '~/features/write/components/DraftConflictBanner'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
 import { DraftPreviewBanner } from '~/features/write/components/DraftPreviewBanner'
 import { SkillPicker } from '~/features/write/components/SkillPicker'
 import { MetaPresetSection } from '~/features/write/meta-presets'
+import type { DraftMergeConflict } from '~/features/write/utils/merge-draft-conflict'
+import { mergeDraftConflict } from '~/features/write/utils/merge-draft-conflict'
 import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
@@ -168,6 +172,18 @@ interface WriteFormState {
   title: string
   topicId: string
   weather: string
+}
+
+interface DraftSaveVariables {
+  baseDraft: DraftModel | null
+  data: CreateDraftData
+  draftId: string
+  fingerprint: string
+}
+
+interface ActiveDraftConflict {
+  conflicts: DraftMergeConflict[]
+  remote: DraftModel
 }
 
 const emptyState: WriteFormState = {
@@ -402,8 +418,13 @@ function WritePage(props: { kind: WriteKind }) {
   const formSeededKeyRef = useRef<string | null>(null)
   const draftDirtyRef = useRef(false)
   const lastSavedDraftFingerprintRef = useRef('')
+  const lastSavedDraftRef = useRef<DraftModel | null>(null)
   const latestDraftFingerprintRef = useRef('')
+  const draftAutosaveTimerRef = useRef<number | null>(null)
   const [lastSavedFingerprint, setLastSavedFingerprint] = useState('')
+  const [draftConflict, setDraftConflict] =
+    useState<ActiveDraftConflict | null>(null)
+  const [draftConflictResolving, setDraftConflictResolving] = useState(false)
   const draftRefType = draftRefTypeByKind[props.kind]
 
   useCollectionListQuery(categoriesCollection, {
@@ -543,13 +564,13 @@ function WritePage(props: { kind: WriteKind }) {
       : ''
   const postPublicPath =
     props.kind === 'post' ? buildPostPublicPath(state, activeCategory) : ''
+  const currentDraftData = useMemo(
+    () => toDraftData(props.kind, state, isEditing ? id : undefined),
+    [id, isEditing, props.kind, state],
+  )
+  const latestDraftDataRef = useRef(currentDraftData)
   const draftFingerprint = useMemo(
-    () =>
-      JSON.stringify(
-        toDraftData(props.kind, state, isEditing ? id : undefined, {
-          project: false,
-        }),
-      ),
+    () => getDraftFingerprint(props.kind, state, isEditing ? id : undefined),
     [id, isEditing, props.kind, state],
   )
   const hasDraftAutosaveContent =
@@ -562,8 +583,9 @@ function WritePage(props: { kind: WriteKind }) {
       : !state.text.trim()
 
   useEffect(() => {
+    latestDraftDataRef.current = currentDraftData
     latestDraftFingerprintRef.current = draftFingerprint
-  }, [draftFingerprint])
+  }, [currentDraftData, draftFingerprint])
 
   const hasUnsavedDraftChanges = () =>
     draftDirtyRef.current &&
@@ -626,12 +648,6 @@ function WritePage(props: { kind: WriteKind }) {
     routeDraftId,
   ])
 
-  useEffect(() => {
-    if (refDraftQuery.data && !draftId) {
-      setDraftId(refDraftQuery.data.id)
-    }
-  }, [draftId, refDraftQuery.data])
-
   const recoveryHintDraft = useMemo(() => {
     const draft = refDraftQuery.data
     const published = detailModel
@@ -651,8 +667,19 @@ function WritePage(props: { kind: WriteKind }) {
     }
 
     appliedRouteDraftIdRef.current = draft.id
+    const nextState = fromDraft(props.kind, draft, state)
+    const fingerprint = getDraftFingerprint(
+      props.kind,
+      nextState,
+      draft.refId ?? (isEditing ? id : undefined),
+    )
+    lastSavedDraftRef.current = draft
+    lastSavedDraftFingerprintRef.current = fingerprint
+    latestDraftFingerprintRef.current = fingerprint
+    draftDirtyRef.current = false
+    setLastSavedFingerprint(fingerprint)
     setDraftId(draft.id)
-    setState((previous) => fromDraft(props.kind, draft, previous))
+    setState(nextState)
 
     if (draft.refId && !id) {
       const nextParams = new URLSearchParams(searchParams)
@@ -663,10 +690,12 @@ function WritePage(props: { kind: WriteKind }) {
   }, [
     draftRefType,
     id,
+    isEditing,
     props.kind,
     routeDraftQuery.data,
     searchParams,
     setSearchParams,
+    state,
   ])
 
   const saveMutation = useMutation<WriteModel>({
@@ -694,19 +723,114 @@ function WritePage(props: { kind: WriteKind }) {
       }
     },
   })
-  const draftMutation = useMutation({
-    mutationFn: () => {
-      const data = toDraftData(props.kind, state, isEditing ? id : undefined)
-      return draftId ? updateDraft(draftId, data) : createDraft(data)
+  const buildDraftSaveVariables = (): DraftSaveVariables => ({
+    baseDraft:
+      lastSavedDraftRef.current?.id === draftId
+        ? lastSavedDraftRef.current
+        : null,
+    data: currentDraftData,
+    draftId,
+    fingerprint: latestDraftFingerprintRef.current,
+  })
+  const draftMutation = useMutation<DraftModel, unknown, DraftSaveVariables>({
+    mutationFn: (variables) => {
+      if (!variables.draftId) return createDraft(variables.data)
+      if (!variables.baseDraft) {
+        throw new Error(t('write.toast.draftBaselineMissing'))
+      }
+      return updateDraft(variables.draftId, {
+        ...variables.data,
+        expectedVersion: variables.baseDraft.version,
+      })
     },
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('write.toast.draftSaveFailed'))),
-    onSuccess: async (draft) => {
-      const isFirstDraftSave = !draftId
+    onError: (error, variables) => {
+      if (
+        !(error instanceof ApiRequestError) ||
+        error.code !== 'DRAFT_VERSION_CONFLICT'
+      ) {
+        toast.error(getErrorMessage(error, t('write.toast.draftSaveFailed')))
+        return
+      }
+
+      setDraftConflictResolving(true)
+      void (async () => {
+        try {
+          const errorDraftId =
+            typeof error.details?.id === 'string' ? error.details.id : ''
+          const remoteId = variables.draftId || errorDraftId
+          if (!remoteId) {
+            toast.error(t('write.toast.draftConflictLoadFailed'))
+            return
+          }
+
+          const remote = await getDraftById(remoteId)
+          const local = latestDraftDataRef.current
+          lastSavedDraftRef.current = remote
+          setDraftId(remote.id)
+
+          if (!variables.baseDraft) {
+            setDraftConflict({
+              conflicts: [
+                {
+                  base: null,
+                  kind: 'field',
+                  local,
+                  path: 'draft',
+                  remote,
+                },
+              ],
+              remote,
+            })
+            draftDirtyRef.current = true
+            return
+          }
+
+          const merged = mergeDraftConflict({
+            base: variables.baseDraft,
+            local,
+            remote,
+          })
+          setState((previous) =>
+            fromDraft(props.kind, { ...remote, ...merged.data }, previous),
+          )
+          draftDirtyRef.current = true
+
+          if (merged.conflicts.length > 0) {
+            setDraftConflict({ conflicts: merged.conflicts, remote })
+            toast.error(
+              t('write.toast.draftConflictNeedsReview', {
+                count: merged.conflicts.length,
+              }),
+            )
+          } else {
+            setDraftConflict(null)
+            toast.success(
+              t('write.toast.draftAutoMerged', {
+                count: merged.autoMergedChanges,
+              }),
+            )
+          }
+        } catch (loadError) {
+          toast.error(
+            getErrorMessage(
+              loadError,
+              t('write.toast.draftConflictLoadFailed'),
+            ),
+          )
+        } finally {
+          setDraftConflictResolving(false)
+        }
+      })()
+    },
+    onSuccess: async (draft, variables) => {
+      const isFirstDraftSave = !variables.draftId
+      lastSavedDraftRef.current = draft
       setDraftId(draft.id)
-      draftDirtyRef.current = false
-      lastSavedDraftFingerprintRef.current = latestDraftFingerprintRef.current
-      setLastSavedFingerprint(latestDraftFingerprintRef.current)
+      setDraftConflict(null)
+      lastSavedDraftFingerprintRef.current = variables.fingerprint
+      setLastSavedFingerprint(variables.fingerprint)
+      draftDirtyRef.current =
+        latestDraftFingerprintRef.current !== variables.fingerprint
       if (isFirstDraftSave && searchParams.get('draftId') !== draft.id) {
         const nextParams = new URLSearchParams(searchParams)
         nextParams.set('draftId', draft.id)
@@ -758,6 +882,10 @@ function WritePage(props: { kind: WriteKind }) {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (draftConflict || draftConflictResolving) {
+      toast.error(t('write.toast.draftConflictBlocksPublish'))
+      return
+    }
     if (validationError) {
       toast.error(validationError)
       return
@@ -766,17 +894,33 @@ function WritePage(props: { kind: WriteKind }) {
     saveMutation.mutate()
   }
   useEffect(() => {
+    if (draftConflict || draftConflictResolving) return
     if (!draftDirtyRef.current) return
     if (!hasDraftAutosaveContent) return
     if (draftFingerprint === lastSavedDraftFingerprintRef.current) return
 
     const timer = window.setTimeout(() => {
+      if (draftAutosaveTimerRef.current === timer) {
+        draftAutosaveTimerRef.current = null
+      }
       if (!draftDirtyRef.current || draftMutationRef.current.isPending) return
-      draftMutationRef.current.mutate()
+      draftMutationRef.current.mutate(buildDraftSaveVariables())
     }, 10000)
+    draftAutosaveTimerRef.current = timer
 
-    return () => window.clearTimeout(timer)
-  }, [draftFingerprint, hasDraftAutosaveContent])
+    return () => {
+      window.clearTimeout(timer)
+      if (draftAutosaveTimerRef.current === timer) {
+        draftAutosaveTimerRef.current = null
+      }
+    }
+  }, [
+    draftConflict,
+    draftConflictResolving,
+    draftFingerprint,
+    hasDraftAutosaveContent,
+    lastSavedFingerprint,
+  ])
 
   const updateField = <TKey extends keyof WriteFormState>(
     key: TKey,
@@ -804,9 +948,20 @@ function WritePage(props: { kind: WriteKind }) {
   }
 
   const applyDraft = (draft: DraftModel) => {
-    draftDirtyRef.current = true
+    const nextState = fromDraft(props.kind, draft, state)
+    const fingerprint = getDraftFingerprint(
+      props.kind,
+      nextState,
+      isEditing ? id : undefined,
+    )
+    draftDirtyRef.current = false
+    lastSavedDraftRef.current = draft
+    lastSavedDraftFingerprintRef.current = fingerprint
+    latestDraftFingerprintRef.current = fingerprint
+    setLastSavedFingerprint(fingerprint)
+    setDraftConflict(null)
     setDraftId(draft.id)
-    setState((previous) => fromDraft(props.kind, draft, previous))
+    setState(nextState)
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('draftId', draft.id)
     if (draft.refId) nextParams.set('id', draft.refId)
@@ -828,7 +983,19 @@ function WritePage(props: { kind: WriteKind }) {
   }
 
   const commitDraftPreview = () => {
-    draftDirtyRef.current = true
+    if (previewingDraft) {
+      const fingerprint = getDraftFingerprint(
+        props.kind,
+        state,
+        isEditing ? id : undefined,
+      )
+      draftDirtyRef.current = false
+      lastSavedDraftRef.current = previewingDraft
+      lastSavedDraftFingerprintRef.current = fingerprint
+      latestDraftFingerprintRef.current = fingerprint
+      setLastSavedFingerprint(fingerprint)
+    }
+    setDraftConflict(null)
     previewSnapshotRef.current = null
     setPreviewingDraft(null)
     toast.success(t('write.toast.draftApplied'))
@@ -862,14 +1029,50 @@ function WritePage(props: { kind: WriteKind }) {
     writerGenerateMutation.mutate()
   }
 
+  const useRemoteConflictDraft = () => {
+    if (!draftConflict) return
+    const remote = draftConflict.remote
+    const nextState = fromDraft(props.kind, remote, state)
+    const fingerprint = getDraftFingerprint(
+      props.kind,
+      nextState,
+      isEditing ? id : undefined,
+    )
+
+    lastSavedDraftRef.current = remote
+    lastSavedDraftFingerprintRef.current = fingerprint
+    latestDraftFingerprintRef.current = fingerprint
+    draftDirtyRef.current = false
+    setLastSavedFingerprint(fingerprint)
+    setDraftId(remote.id)
+    setState(nextState)
+    setDraftConflict(null)
+    toast.success(t('write.toast.draftRemoteApplied'))
+  }
+
+  const keepLocalConflictDraft = () => {
+    if (!draftConflict) return
+    draftDirtyRef.current = true
+    setDraftConflict(null)
+    toast.success(t('write.toast.draftLocalKept'))
+  }
+
   const saveDraftNow = () => {
+    if (draftConflict || draftConflictResolving) {
+      toast.error(t('write.toast.draftConflictNeedsResolution'))
+      return
+    }
     if (!hasDraftAutosaveContent) {
       toast.error(t('write.toast.contentEmptyForDraft'))
       return
     }
     if (draftMutation.isPending) return
 
-    draftMutation.mutate()
+    if (draftAutosaveTimerRef.current !== null) {
+      window.clearTimeout(draftAutosaveTimerRef.current)
+      draftAutosaveTimerRef.current = null
+    }
+    draftMutation.mutate(buildDraftSaveVariables())
   }
 
   useEffect(() => {
@@ -893,7 +1096,7 @@ function WritePage(props: { kind: WriteKind }) {
       .catch(() => toast.error(t('write.toast.copyFailed')))
   }
 
-  const latestDraft = draftMutation.data ?? availableDraft
+  const latestDraft = lastSavedDraftRef.current ?? draftMutation.data
   const draftListHintCount =
     !isEditing && !routeDraftId ? (newDraftsQuery.data?.length ?? 0) : 0
   const showDraftListHint = draftListHintCount > 0 && !draftListHintDismissed
@@ -904,9 +1107,10 @@ function WritePage(props: { kind: WriteKind }) {
   const isDirty =
     hasDraftAutosaveContent && draftFingerprint !== lastSavedFingerprint
   const metaStatus = computeMetaStatus({
+    hasConflict: Boolean(draftConflict),
     isDirty,
     isEditing,
-    isPendingDraftSave: draftMutation.isPending,
+    isPendingDraftSave: draftMutation.isPending || draftConflictResolving,
     latestDraft,
     publishedUpdatedAt: detailModel
       ? getPublishedContent(detailModel).updatedAt
@@ -976,8 +1180,8 @@ function WritePage(props: { kind: WriteKind }) {
             </h2>
             <DraftStatusTag
               className="hidden md:inline-flex"
-              draft={draftMutation.data ?? availableDraft}
-              isSaving={draftMutation.isPending}
+              draft={latestDraft}
+              isSaving={draftMutation.isPending || draftConflictResolving}
             />
           </div>
           {props.kind === 'page' ? (
@@ -1012,7 +1216,12 @@ function WritePage(props: { kind: WriteKind }) {
                 <SlidersHorizontal aria-hidden="true" className="size-4" />
               </WriteHeaderIconButton>
               <WriteHeaderIconButton
-                disabled={saveMutation.isPending || detailLoading}
+                disabled={
+                  saveMutation.isPending ||
+                  detailLoading ||
+                  Boolean(draftConflict) ||
+                  draftConflictResolving
+                }
                 title={t('write.header.publish')}
                 type="submit"
                 variant="primary"
@@ -1054,7 +1263,12 @@ function WritePage(props: { kind: WriteKind }) {
                 <SlidersHorizontal aria-hidden="true" className="size-4" />
               </WriteHeaderIconButton>
               <WriteHeaderIconButton
-                disabled={saveMutation.isPending || detailLoading}
+                disabled={
+                  saveMutation.isPending ||
+                  detailLoading ||
+                  Boolean(draftConflict) ||
+                  draftConflictResolving
+                }
                 title={t('write.header.publish')}
                 type="submit"
                 variant="primary"
@@ -1089,8 +1303,18 @@ function WritePage(props: { kind: WriteKind }) {
             >
               <main className="flex min-h-full min-w-0 flex-col bg-background">
                 <div className="mx-auto w-full max-w-5xl shrink-0 px-3 pt-8">
-                  {showDraftListHint ? (
+                  {draftConflict ? (
                     <div className="mb-3 -mt-4">
+                      <DraftConflictBanner
+                        conflictCount={draftConflict.conflicts.length}
+                        onKeepLocal={keepLocalConflictDraft}
+                        onUseRemote={useRemoteConflictDraft}
+                        remoteVersion={draftConflict.remote.version}
+                      />
+                    </div>
+                  ) : null}
+                  {showDraftListHint ? (
+                    <div className={cn('mb-3', !draftConflict && '-mt-4')}>
                       <DraftHintBanner
                         actionLabel={t('write.draftList.hintAction')}
                         message={t('write.draftList.hintMessage', {
@@ -1579,15 +1803,22 @@ function WriteHeaderIconButton(props: {
   )
 }
 
-type MetaStatus = 'new' | 'dirty' | 'saved' | 'published'
+type MetaStatus = 'new' | 'dirty' | 'conflict' | 'saved' | 'published'
 
 function computeMetaStatus(input: {
+  hasConflict: boolean
   isDirty: boolean
   isEditing: boolean
   isPendingDraftSave: boolean
   latestDraft?: DraftModel
   publishedUpdatedAt?: string
 }): { status: MetaStatus; text: string } {
+  if (input.hasConflict) {
+    return {
+      status: 'conflict',
+      text: translate('write.metaStatus.conflict'),
+    }
+  }
   if (input.isPendingDraftSave) {
     return { status: 'dirty', text: translate('write.metaStatus.dirtySaving') }
   }
@@ -1659,11 +1890,13 @@ function EditorMetaStrip(props: {
 }) {
   const { t } = useI18n()
   const dotClass =
-    props.status === 'dirty'
-      ? 'bg-amber-500'
-      : props.status === 'saved' || props.status === 'published'
-        ? 'bg-emerald-500'
-        : 'bg-neutral-300 dark:bg-neutral-600'
+    props.status === 'conflict'
+      ? 'bg-red-500'
+      : props.status === 'dirty'
+        ? 'bg-amber-500'
+        : props.status === 'saved' || props.status === 'published'
+          ? 'bg-emerald-500'
+          : 'bg-neutral-300 dark:bg-neutral-600'
   const formatLabel =
     props.format === 'lexical'
       ? t('write.format.toCodeMirror')
@@ -3485,6 +3718,14 @@ function saveWrite(
   }
 
   return savePage(id, buildPageWriteData(state, draftId))
+}
+
+function getDraftFingerprint(
+  kind: WriteKind,
+  state: WriteFormState,
+  refId?: string,
+) {
+  return JSON.stringify(toDraftData(kind, state, refId, { project: false }))
 }
 
 function toDraftData(

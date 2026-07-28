@@ -22,6 +22,7 @@ describe('requestJson error handling', () => {
         {
           error: {
             code: 'AI_NOT_ENABLED',
+            details: { provider: 'missing' },
             message: 'No AI provider configured',
           },
         },
@@ -33,7 +34,9 @@ describe('requestJson error handling', () => {
 
     expect(error).toBeInstanceOf(ApiRequestError)
     expect((error as ApiRequestError).code).toBe('AI_NOT_ENABLED')
+    expect((error as ApiRequestError).details).toEqual({ provider: 'missing' })
     expect((error as ApiRequestError).message).toBe('No AI provider configured')
+    expect((error as ApiRequestError).status).toBe(400)
   })
 
   it('leaves code undefined when the error envelope has none', async () => {

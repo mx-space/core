@@ -110,6 +110,11 @@ export type AppErrorPayloadMap = {
   // draft
   [AppErrorCode.DRAFT_NOT_FOUND]: WithId
   [AppErrorCode.DRAFT_HISTORY_NOT_FOUND]: undefined
+  [AppErrorCode.DRAFT_VERSION_CONFLICT]: {
+    actualVersion: number
+    expectedVersion: number
+    id: string
+  }
 
   // document / helper
   [AppErrorCode.DOCUMENT_NOT_FOUND]: WithId
