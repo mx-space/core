@@ -66,6 +66,7 @@ describe('lexical content/text pair validation', () => {
       UpdateDraftSchema.parse({
         content: lexicalContent,
         contentFormat: ContentFormat.Lexical,
+        expectedVersion: 1,
       }),
     ).toThrow(/content and text must be submitted together/)
   })
