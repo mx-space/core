@@ -1,14 +1,11 @@
 import type { Image, PaginateResult } from '~/models/base'
 import type { NoteModel } from '~/models/note'
 
+import type { MarkdownToLexicalMigrationDescriptor } from './content-migrations'
 import { deleteJson, getJson, patchJson, postJson, putJson } from './http'
 
 export type NoteSortKey =
-  | 'createdAt'
-  | 'modifiedAt'
-  | 'mood'
-  | 'title'
-  | 'weather'
+  'createdAt' | 'modifiedAt' | 'mood' | 'title' | 'weather'
 export type SortOrder = 'asc' | 'desc'
 
 export interface GetNotesParams {
@@ -37,6 +34,7 @@ export interface CreateNoteData {
   images?: Image[]
   isPublished?: boolean
   location?: null | string
+  migration?: MarkdownToLexicalMigrationDescriptor
   meta?: Record<string, unknown>
   mood?: string
   password?: null | string

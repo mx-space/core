@@ -45,6 +45,9 @@ const createService = () => {
   }
   const eventManager = { emit: vi.fn() }
   const lexicalService = { normalizeContentForStorage: vi.fn() }
+  const contentMigrationCommitService = {
+    commitMarkdownToLexical: vi.fn(),
+  }
   const slugTrackerService = {
     createTracker: vi.fn(),
     findTrackerBySlug: vi.fn(),
@@ -66,6 +69,7 @@ const createService = () => {
     fileReferenceService as any,
     eventManager as any,
     lexicalService as any,
+    contentMigrationCommitService as any,
     slugTrackerService as any,
     aiSlugBackfillService as any,
     enrichmentService as any,

@@ -31,6 +31,7 @@ import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { CompanionModule } from './modules/companion/companion.module'
 import { ConfigsModule } from './modules/configs/configs.module'
+import { ContentMigrationModule } from './modules/content-migration/content-migration.module'
 import { CronTaskModule } from './modules/cron-task/cron-task.module'
 import { DebugModule } from './modules/debug/debug.module'
 import { DependencyModule } from './modules/dependency/dependency.module'
@@ -98,6 +99,7 @@ import { SampleResponseInterceptor } from './shared/sample/sample-response.inter
     CommentModule,
     CompanionModule,
     ConfigsModule,
+    ContentMigrationModule,
     CronTaskModule,
 
     DependencyModule,

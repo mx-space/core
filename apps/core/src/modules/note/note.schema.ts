@@ -10,6 +10,7 @@ import {
   zNonEmptyString,
   zPrefer,
 } from '~/common/zod'
+import { MarkdownToLexicalMigrationDescriptorSchema } from '~/modules/content-migration/content-migration.schema'
 import { createPagerSchema } from '~/shared/dto/pager.dto'
 import {
   validateLexicalCreateContentPair,
@@ -59,6 +60,7 @@ const NoteBaseSchema = WriteBaseSchema.extend({
   images: ImageArraySchema.optional().default([]),
   /** ID of the associated draft; marked as published when this note is published */
   draftId: zEntityId.optional(),
+  migration: MarkdownToLexicalMigrationDescriptorSchema.optional(),
 })
 
 export const NoteSchema = NoteBaseSchema.superRefine(

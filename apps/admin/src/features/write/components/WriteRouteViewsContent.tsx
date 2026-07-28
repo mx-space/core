@@ -1,17 +1,21 @@
 import { projectAgentDiffNodesToFactualState } from '@haklex/rich-ext-ai-agent/static'
-import { createMxLitexmlRegistry, mxLexicalToMarkdown } from '@mx-space/editor'
+import {
+  analyzeMxMarkdown,
+  createMxLitexmlRegistry,
+  mxLexicalToMarkdown,
+} from '@mx-space/editor'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { load } from 'js-yaml'
 import type { SerializedEditorState } from 'lexical'
 import type { LucideIcon } from 'lucide-react'
 import {
   ArrowLeftRight,
+  BadgeAlert,
   BookOpen,
   Bot,
   Braces,
   Bug,
   Check,
-  CircleHelp,
   Clock,
   Copy,
   File as FileIcon,
@@ -22,6 +26,7 @@ import {
   Loader2,
   MapPin,
   Pencil,
+  RefreshCw,
   Search,
   Send,
   SlidersHorizontal,
@@ -41,6 +46,13 @@ import { toast } from 'sonner'
 
 import { AiQueryType, writerGenerate } from '~/api/ai'
 import { getCategories, getTags } from '~/api/categories'
+import {
+  dryRunMarkdownToLexical,
+  type MarkdownMigrationDryRunResponse,
+  type MarkdownMigrationIssue,
+  type MarkdownToLexicalMigrationDescriptor,
+  migrationDescriptorFromDryRun,
+} from '~/api/content-migrations'
 import type { CreateDraftData } from '~/api/drafts'
 import {
   createDraft,
@@ -125,6 +137,7 @@ import { TextArea, TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 import { getDayOfYear } from '~/utils/time'
 import { CodeMirrorEditor, ImageDropZone } from '~/vendor/codemirror'
+import { getEditorView } from '~/vendor/codemirror/editor-store'
 import type {
   RichEditorWithAgentProps,
   RichEditorWithAgentRef,
@@ -184,6 +197,22 @@ interface DraftSaveVariables {
 interface ActiveDraftConflict {
   conflicts: DraftMergeConflict[]
   remote: DraftModel
+}
+
+type FormatActionState =
+  | { type: 'empty-switch' }
+  | { type: 'migration-available' }
+  | { type: 'migration-checking' }
+  | { type: 'migration-blocked'; issueCount: number }
+  | { type: 'migration-staged' }
+  | { type: 'migration-committing' }
+  | { type: 'lexical' }
+
+interface MarkdownMigrationSession {
+  dryRun?: MarkdownMigrationDryRunResponse
+  issues: MarkdownMigrationIssue[]
+  sourceMarkdown: string
+  staged: boolean
 }
 
 const emptyState: WriteFormState = {
@@ -413,6 +442,7 @@ function WritePage(props: { kind: WriteKind }) {
   const previewSnapshotRef = useRef<{
     state: WriteFormState
     draftId: string
+    markdownMigration: MarkdownMigrationSession | null
   } | null>(null)
   const appliedRouteDraftIdRef = useRef<string | null>(null)
   const formSeededKeyRef = useRef<string | null>(null)
@@ -425,6 +455,11 @@ function WritePage(props: { kind: WriteKind }) {
   const [draftConflict, setDraftConflict] =
     useState<ActiveDraftConflict | null>(null)
   const [draftConflictResolving, setDraftConflictResolving] = useState(false)
+  const [markdownMigration, setMarkdownMigration] =
+    useState<MarkdownMigrationSession | null>(null)
+  const [migrationDiagnosticsOpen, setMigrationDiagnosticsOpen] =
+    useState(false)
+  const reconstructedMigrationKeyRef = useRef<string | null>(null)
   const draftRefType = draftRefTypeByKind[props.kind]
 
   useCollectionListQuery(categoriesCollection, {
@@ -577,11 +612,6 @@ function WritePage(props: { kind: WriteKind }) {
     state.title.trim().length > 0 ||
     state.text.trim().length > 0 ||
     state.content.trim().length > 0
-  const canSwitchEditorType =
-    state.contentFormat === 'lexical'
-      ? !hasLexicalContent(state.content)
-      : !state.text.trim()
-
   useEffect(() => {
     latestDraftDataRef.current = currentDraftData
     latestDraftFingerprintRef.current = draftFingerprint
@@ -638,6 +668,9 @@ function WritePage(props: { kind: WriteKind }) {
     if (formSeededKeyRef.current === seedKey) return
     formSeededKeyRef.current = seedKey
 
+    setMarkdownMigration(null)
+    setMigrationDiagnosticsOpen(false)
+    reconstructedMigrationKeyRef.current = null
     setState(fromModel(props.kind, detailModel))
   }, [
     detailModel,
@@ -679,6 +712,8 @@ function WritePage(props: { kind: WriteKind }) {
     draftDirtyRef.current = false
     setLastSavedFingerprint(fingerprint)
     setDraftId(draft.id)
+    setMarkdownMigration(null)
+    reconstructedMigrationKeyRef.current = null
     setState(nextState)
 
     if (draft.refId && !id) {
@@ -698,11 +733,125 @@ function WritePage(props: { kind: WriteKind }) {
     state,
   ])
 
+  const migrationCheckMutation = useMutation<
+    MarkdownMigrationDryRunResponse,
+    unknown,
+    { preserveLexical?: boolean; sourceMarkdown: string }
+  >({
+    mutationFn: ({ sourceMarkdown }) =>
+      dryRunMarkdownToLexical({
+        draftId: draftId || undefined,
+        profile: 'yohaku-v1',
+        refId: id,
+        refType: draftRefType,
+        sourceText: sourceMarkdown,
+      }),
+    onError: (error: unknown) =>
+      toast.error(
+        getErrorMessage(error, t('write.migration.toast.checkFailed')),
+      ),
+    onSuccess: (result, variables) => {
+      const convertible = result.status === 'convertible'
+      setMarkdownMigration({
+        dryRun: result,
+        issues: result.issues,
+        sourceMarkdown: variables.sourceMarkdown,
+        staged: convertible || Boolean(variables.preserveLexical),
+      })
+
+      if (
+        result.status !== 'convertible' ||
+        result.source.status !== 'convertible'
+      ) {
+        setMigrationDiagnosticsOpen(true)
+        return
+      }
+      if (variables.preserveLexical) return
+
+      const source = result.source
+      draftDirtyRef.current = true
+      setPreferredContentFormat('lexical')
+      setState((previous) => ({
+        ...previous,
+        content: JSON.stringify(source.content),
+        contentFormat: 'lexical',
+        text: source.text,
+      }))
+      toast.success(t('write.migration.toast.staged'))
+    },
+  })
+
+  useEffect(() => {
+    if (
+      !isEditing ||
+      publishedContent?.contentFormat !== 'markdown' ||
+      state.contentFormat !== 'lexical' ||
+      markdownMigration ||
+      migrationCheckMutation.isPending
+    ) {
+      return
+    }
+
+    const reconstructionKey = `${props.kind}:${id}:${draftId || routeDraftId}`
+    if (reconstructedMigrationKeyRef.current === reconstructionKey) return
+    reconstructedMigrationKeyRef.current = reconstructionKey
+    migrationCheckMutation.mutate({
+      preserveLexical: true,
+      sourceMarkdown: publishedContent.text,
+    })
+  }, [
+    draftId,
+    id,
+    isEditing,
+    markdownMigration,
+    migrationCheckMutation,
+    props.kind,
+    publishedContent,
+    routeDraftId,
+    state.contentFormat,
+  ])
+
   const saveMutation = useMutation<WriteModel>({
-    mutationFn: () => saveWrite(props.kind, id, state, draftId || undefined),
+    mutationFn: async () => {
+      let migration: MarkdownToLexicalMigrationDescriptor | undefined
+      const requiresMigration =
+        isEditing &&
+        publishedContent?.contentFormat === 'markdown' &&
+        state.contentFormat === 'lexical'
+
+      if (requiresMigration) {
+        const sourceMarkdown =
+          markdownMigration?.sourceMarkdown ?? publishedContent.text
+        const dryRun = await dryRunMarkdownToLexical({
+          draftId: draftId || undefined,
+          profile: 'yohaku-v1',
+          refId: id,
+          refType: draftRefType,
+          sourceText: sourceMarkdown,
+        })
+        setMarkdownMigration({
+          dryRun,
+          issues: dryRun.issues,
+          sourceMarkdown,
+          staged: true,
+        })
+        if (
+          dryRun.status !== 'convertible' ||
+          dryRun.source.status !== 'convertible'
+        ) {
+          setMigrationDiagnosticsOpen(true)
+          throw new Error(t('write.migration.toast.blocked'))
+        }
+        migration = migrationDescriptorFromDryRun(sourceMarkdown, dryRun)
+      }
+
+      return saveWrite(props.kind, id, state, draftId || undefined, migration)
+    },
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('write.toast.saveFailed'))),
     onSuccess: async (result) => {
+      setMarkdownMigration(null)
+      setMigrationDiagnosticsOpen(false)
       draftDirtyRef.current = false
       lastSavedDraftFingerprintRef.current = latestDraftFingerprintRef.current
       setLastSavedFingerprint(latestDraftFingerprintRef.current)
@@ -938,6 +1087,165 @@ function WritePage(props: { kind: WriteKind }) {
     }
   }
 
+  useEffect(() => {
+    if (
+      state.contentFormat === 'markdown' &&
+      markdownMigration &&
+      !markdownMigration.staged &&
+      markdownMigration.sourceMarkdown !== state.text
+    ) {
+      setMarkdownMigration(null)
+    }
+  }, [markdownMigration, state.contentFormat, state.text])
+
+  const stageLocalMarkdownMigration = (sourceMarkdown: string) => {
+    const result = analyzeMxMarkdown(sourceMarkdown, {
+      profile: 'yohaku-v1',
+    })
+    if (result.status === 'blocked') {
+      const issues: MarkdownMigrationIssue[] = result.issues.map((issue) => ({
+        ...issue,
+        member: 'source',
+        memberId: 'new',
+      }))
+      setMarkdownMigration({
+        issues,
+        sourceMarkdown,
+        staged: false,
+      })
+      setMigrationDiagnosticsOpen(true)
+      return
+    }
+
+    draftDirtyRef.current = true
+    setPreferredContentFormat('lexical')
+    setMarkdownMigration({
+      issues: [],
+      sourceMarkdown,
+      staged: true,
+    })
+    setState((previous) => ({
+      ...previous,
+      content: JSON.stringify(result.content),
+      contentFormat: 'lexical',
+      text: result.text,
+    }))
+    toast.success(t('write.migration.toast.staged'))
+  }
+
+  const formatActionState: FormatActionState = (() => {
+    if (migrationCheckMutation.isPending) {
+      return { type: 'migration-checking' }
+    }
+    if (
+      saveMutation.isPending &&
+      state.contentFormat === 'lexical' &&
+      publishedContent?.contentFormat === 'markdown'
+    ) {
+      return { type: 'migration-committing' }
+    }
+    if (state.contentFormat === 'markdown') {
+      if (!state.text.trim()) return { type: 'empty-switch' }
+      if (
+        markdownMigration &&
+        !markdownMigration.staged &&
+        markdownMigration.issues.length > 0
+      ) {
+        return {
+          type: 'migration-blocked',
+          issueCount: markdownMigration.issues.length,
+        }
+      }
+      return { type: 'migration-available' }
+    }
+    if (isEditing && publishedContent?.contentFormat === 'markdown') {
+      if (markdownMigration?.issues.length) {
+        return {
+          type: 'migration-blocked',
+          issueCount: markdownMigration.issues.length,
+        }
+      }
+      return { type: 'migration-staged' }
+    }
+    if (!isEditing && !hasLexicalContent(state.content)) {
+      return { type: 'empty-switch' }
+    }
+    return { type: 'lexical' }
+  })()
+
+  const runMigrationCheck = (preserveLexical = false) => {
+    const sourceMarkdown =
+      preserveLexical && markdownMigration
+        ? markdownMigration.sourceMarkdown
+        : state.text
+    if (!isEditing) {
+      stageLocalMarkdownMigration(sourceMarkdown)
+      return
+    }
+    migrationCheckMutation.mutate({ preserveLexical, sourceMarkdown })
+  }
+
+  const handleFormatAction = () => {
+    switch (formatActionState.type) {
+      case 'empty-switch': {
+        if (
+          isEditing &&
+          publishedContent?.contentFormat === 'markdown' &&
+          state.contentFormat === 'markdown'
+        ) {
+          runMigrationCheck()
+          return
+        }
+        setMarkdownMigration(null)
+        updateContentFormat(
+          state.contentFormat === 'lexical' ? 'markdown' : 'lexical',
+        )
+        return
+      }
+      case 'migration-available': {
+        runMigrationCheck()
+        return
+      }
+      case 'migration-blocked':
+      case 'migration-staged': {
+        setMigrationDiagnosticsOpen(true)
+        return
+      }
+      case 'lexical':
+      case 'migration-checking':
+      case 'migration-committing': {
+        return
+      }
+    }
+  }
+
+  const restoreOriginalMarkdown = () => {
+    if (!markdownMigration?.staged) return
+    draftDirtyRef.current = true
+    setPreferredContentFormat('markdown')
+    setState((previous) => ({
+      ...previous,
+      content: '',
+      contentFormat: 'markdown',
+      isPremium: false,
+      text: markdownMigration.sourceMarkdown,
+    }))
+    setMarkdownMigration(null)
+    setMigrationDiagnosticsOpen(false)
+  }
+
+  const locateMigrationIssue = (issue: MarkdownMigrationIssue) => {
+    if (issue.member !== 'source' || state.contentFormat !== 'markdown') return
+    setMigrationDiagnosticsOpen(false)
+    window.requestAnimationFrame(() => {
+      const view = getEditorView()
+      if (!view) return
+      const anchor = Math.min(issue.range.start.offset, view.state.doc.length)
+      view.dispatch({ selection: { anchor } })
+      view.focus()
+    })
+  }
+
   const getAgentMetaFields = () => getWriteAgentMetaFields(props.kind, state)
 
   const applyAgentMetaUpdates = (updates: Record<string, unknown>) => {
@@ -961,6 +1269,8 @@ function WritePage(props: { kind: WriteKind }) {
     setLastSavedFingerprint(fingerprint)
     setDraftConflict(null)
     setDraftId(draft.id)
+    setMarkdownMigration(null)
+    reconstructedMigrationKeyRef.current = null
     setState(nextState)
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('draftId', draft.id)
@@ -971,9 +1281,11 @@ function WritePage(props: { kind: WriteKind }) {
 
   const enterDraftPreview = (draft: DraftModel) => {
     if (!previewingDraft) {
-      previewSnapshotRef.current = { state, draftId }
+      previewSnapshotRef.current = { state, draftId, markdownMigration }
     }
     setPreviewingDraft(draft)
+    setMarkdownMigration(null)
+    reconstructedMigrationKeyRef.current = null
     setState((previous) => fromDraft(props.kind, draft, previous))
     setDraftId(draft.id)
     const nextParams = new URLSearchParams(searchParams)
@@ -1006,6 +1318,7 @@ function WritePage(props: { kind: WriteKind }) {
     if (snap) {
       setState(snap.state)
       setDraftId(snap.draftId)
+      setMarkdownMigration(snap.markdownMigration)
       const nextParams = new URLSearchParams(searchParams)
       if (snap.draftId) nextParams.set('draftId', snap.draftId)
       else nextParams.delete('draftId')
@@ -1045,6 +1358,8 @@ function WritePage(props: { kind: WriteKind }) {
     draftDirtyRef.current = false
     setLastSavedFingerprint(fingerprint)
     setDraftId(remote.id)
+    setMarkdownMigration(null)
+    reconstructedMigrationKeyRef.current = null
     setState(nextState)
     setDraftConflict(null)
     toast.success(t('write.toast.draftRemoteApplied'))
@@ -1359,16 +1674,10 @@ function WritePage(props: { kind: WriteKind }) {
                   <EditorMetaStrip
                     aiButtonPending={writerGenerateMutation.isPending}
                     aiButtonVisible={aiButtonVisible}
-                    canSwitchFormat={canSwitchEditorType}
+                    formatAction={formatActionState}
                     format={state.contentFormat}
                     onAiGenerate={generateTitleOrSlug}
-                    onToggleFormat={() =>
-                      updateContentFormat(
-                        state.contentFormat === 'lexical'
-                          ? 'markdown'
-                          : 'lexical',
-                      )
-                    }
+                    onFormatAction={handleFormatAction}
                     status={metaStatus.status}
                     statusText={metaStatus.text}
                   />
@@ -1529,7 +1838,151 @@ function WritePage(props: { kind: WriteKind }) {
           open={pageLexicalDebugOpen}
         />
       ) : null}
+      <MarkdownMigrationDialog
+        checking={migrationCheckMutation.isPending}
+        issues={markdownMigration?.issues ?? []}
+        onClose={() => setMigrationDiagnosticsOpen(false)}
+        onIssueClick={locateMigrationIssue}
+        onRecheck={() => {
+          if (state.contentFormat === 'lexical' && markdownMigration) {
+            migrationCheckMutation.mutate({
+              preserveLexical: true,
+              sourceMarkdown: markdownMigration.sourceMarkdown,
+            })
+            return
+          }
+          setMarkdownMigration(null)
+          runMigrationCheck()
+        }}
+        onRestore={
+          markdownMigration?.staged ? restoreOriginalMarkdown : undefined
+        }
+        open={migrationDiagnosticsOpen}
+        staged={Boolean(markdownMigration?.staged)}
+      />
     </form>
+  )
+}
+
+function MarkdownMigrationDialog(props: {
+  checking: boolean
+  issues: MarkdownMigrationIssue[]
+  onClose: () => void
+  onIssueClick: (issue: MarkdownMigrationIssue) => void
+  onRecheck: () => void
+  onRestore?: () => void
+  open: boolean
+  staged: boolean
+}) {
+  const { t } = useI18n()
+  const groups = useMemo(() => {
+    const grouped = new Map<string, MarkdownMigrationIssue[]>()
+    for (const issue of props.issues) {
+      const key =
+        issue.member === 'translation'
+          ? `translation:${issue.lang ?? issue.memberId}`
+          : issue.member
+      grouped.set(key, [...(grouped.get(key) ?? []), issue])
+    }
+    return [...grouped.entries()]
+  }, [props.issues])
+
+  return (
+    <Modal
+      className="max-h-[min(80vh,44rem)] w-[min(92vw,42rem)]"
+      onClose={props.onClose}
+      open={props.open}
+    >
+      <ModalHeader
+        icon={props.issues.length > 0 ? BadgeAlert : ArrowLeftRight}
+        subtitle={
+          props.staged ? t('write.migration.dialog.stagedSubtitle') : undefined
+        }
+        title={t('write.migration.dialog.title')}
+      />
+      <Scroll className="min-h-0 flex-1">
+        <div className="space-y-4 p-4">
+          {props.issues.length === 0 ? (
+            <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300">
+              {t('write.migration.dialog.ready')}
+            </div>
+          ) : (
+            groups.map(([group, issues]) => (
+              <section className="space-y-2" key={group}>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-fg-muted">
+                  {group.startsWith('translation:')
+                    ? t('write.migration.dialog.translationGroup', {
+                        lang: group.slice('translation:'.length),
+                      })
+                    : group === 'draft'
+                      ? t('write.migration.dialog.draftGroup')
+                      : t('write.migration.dialog.sourceGroup')}
+                </h3>
+                <div className="divide-y divide-border overflow-hidden rounded-md border border-border">
+                  {issues.map((issue, index) => {
+                    const canLocate = issue.member === 'source' && !props.staged
+                    return (
+                      <button
+                        className={cn(
+                          'block w-full bg-surface-card p-3 text-left',
+                          canLocate &&
+                            'transition-colors hover:bg-surface-inset',
+                        )}
+                        disabled={!canLocate}
+                        key={`${issue.code}:${issue.range.start.offset}:${index}`}
+                        onClick={() => props.onIssueClick(issue)}
+                        type="button"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-fg">
+                              {issue.feature}
+                            </div>
+                            <p className="mt-1 text-xs leading-relaxed text-fg-muted">
+                              {issue.message}
+                            </p>
+                          </div>
+                          <code className="shrink-0 text-[11px] text-fg-subtle">
+                            {t('write.migration.dialog.line', {
+                              line: issue.range.start.line,
+                            })}
+                          </code>
+                        </div>
+                        <div className="mt-2 text-[11px] text-fg-subtle">
+                          {issue.code}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            ))
+          )}
+        </div>
+      </Scroll>
+      <ModalFooter className="justify-between">
+        <div>
+          {props.onRestore ? (
+            <Button onClick={props.onRestore} type="button" variant="ghost">
+              {t('write.migration.action.restore')}
+            </Button>
+          ) : null}
+        </div>
+        <Button
+          disabled={props.checking}
+          onClick={props.onRecheck}
+          type="button"
+          variant="secondary"
+        >
+          {props.checking ? (
+            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+          ) : (
+            <RefreshCw aria-hidden="true" className="size-4" />
+          )}
+          {t('write.migration.action.recheck')}
+        </Button>
+      </ModalFooter>
+    </Modal>
   )
 }
 
@@ -1881,10 +2334,10 @@ function formatRelativeTime(value: string | null | undefined) {
 function EditorMetaStrip(props: {
   aiButtonPending: boolean
   aiButtonVisible: boolean
-  canSwitchFormat: boolean
   format: ContentFormat
+  formatAction: FormatActionState
   onAiGenerate: () => void
-  onToggleFormat: () => void
+  onFormatAction: () => void
   status: MetaStatus
   statusText: string
 }) {
@@ -1897,10 +2350,47 @@ function EditorMetaStrip(props: {
         : props.status === 'saved' || props.status === 'published'
           ? 'bg-emerald-500'
           : 'bg-neutral-300 dark:bg-neutral-600'
-  const formatLabel =
-    props.format === 'lexical'
-      ? t('write.format.toCodeMirror')
-      : t('write.format.toLexical')
+  const formatLabel = (() => {
+    switch (props.formatAction.type) {
+      case 'empty-switch': {
+        return props.format === 'lexical'
+          ? t('write.format.toCodeMirror')
+          : t('write.format.toLexical')
+      }
+      case 'migration-available': {
+        return t('write.migration.action.convert')
+      }
+      case 'migration-checking': {
+        return t('write.migration.action.checking')
+      }
+      case 'migration-blocked': {
+        return t('write.migration.action.blocked', {
+          count: props.formatAction.issueCount,
+        })
+      }
+      case 'migration-staged': {
+        return t('write.migration.action.staged')
+      }
+      case 'migration-committing': {
+        return t('write.migration.action.committing')
+      }
+      case 'lexical': {
+        return t('write.migration.action.lexical')
+      }
+    }
+  })()
+  const migrationHighlighted = [
+    'migration-available',
+    'migration-blocked',
+    'migration-checking',
+    'migration-committing',
+    'migration-staged',
+  ].includes(props.formatAction.type)
+  const formatActionDisabled = [
+    'lexical',
+    'migration-checking',
+    'migration-committing',
+  ].includes(props.formatAction.type)
 
   return (
     <div className="group mb-3 flex min-h-7 items-center justify-between opacity-60 transition-opacity duration-200 hover:opacity-100">
@@ -1915,37 +2405,31 @@ function EditorMetaStrip(props: {
         <span className="truncate">{props.statusText}</span>
       </div>
       <div className="flex shrink-0 items-center gap-0.5">
-        {props.canSwitchFormat ? (
-          <button
-            aria-label={formatLabel}
-            className="focus-visible:outline-hidden inline-flex h-7 items-center gap-1 rounded-md px-2 text-xs text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
-            onClick={props.onToggleFormat}
-            title={formatLabel}
-            type="button"
-          >
+        <button
+          aria-label={formatLabel}
+          className={cn(
+            'focus-visible:outline-hidden inline-flex h-7 items-center gap-1 rounded-md border px-2 text-xs transition-colors focus-visible:ring-1 disabled:opacity-70',
+            migrationHighlighted
+              ? 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus-visible:ring-amber-400 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/70'
+              : 'border-transparent text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-neutral-400 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-200',
+            props.formatAction.type === 'migration-blocked' &&
+              'border-red-300 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/70',
+          )}
+          disabled={formatActionDisabled}
+          onClick={props.onFormatAction}
+          title={formatLabel}
+          type="button"
+        >
+          {props.formatAction.type === 'migration-checking' ||
+          props.formatAction.type === 'migration-committing' ? (
+            <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
+          ) : props.formatAction.type === 'migration-blocked' ? (
+            <BadgeAlert aria-hidden="true" className="size-3.5" />
+          ) : (
             <ArrowLeftRight aria-hidden="true" className="size-3.5" />
-            <span>{formatLabel}</span>
-          </button>
-        ) : (
-          <Popover>
-            <Popover.Trigger
-              aria-label={t('write.format.switchUnavailable.title')}
-              className="focus-visible:outline-hidden inline-flex size-7 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:ring-1 focus-visible:ring-neutral-400 dark:text-neutral-500 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
-              title={t('write.format.switchUnavailable.title')}
-              type="button"
-            >
-              <CircleHelp aria-hidden="true" className="size-3.5" />
-            </Popover.Trigger>
-            <Popover.Content align="end" className="space-y-1.5 p-3" width="sm">
-              <div className="text-sm font-medium text-fg">
-                {t('write.format.switchUnavailable.title')}
-              </div>
-              <p className="text-xs leading-relaxed text-fg-muted">
-                {t('write.format.switchUnavailable.description')}
-              </p>
-            </Popover.Content>
-          </Popover>
-        )}
+          )}
+          <span>{formatLabel}</span>
+        </button>
         {props.aiButtonVisible ? (
           <button
             aria-label={t('write.pill.aiGenerate')}
@@ -3614,6 +4098,7 @@ function resolveDraftPasswordProtected(
 function buildPostWriteData(
   state: WriteFormState,
   draftId?: string,
+  migration?: MarkdownToLexicalMigrationDescriptor,
 ): CreatePostData {
   const projected = projectWriteState(state)
   return {
@@ -3629,6 +4114,7 @@ function buildPostWriteData(
         : buildWriteImages(projected),
     isPremium: projected.isPremium,
     isPublished: projected.isPublished,
+    migration,
     meta: resolvePaywallMeta(
       projected.meta,
       projected.isPremium,
@@ -3651,6 +4137,7 @@ function buildPostWriteData(
 function buildNoteWriteData(
   state: WriteFormState,
   draftId?: string,
+  migration?: MarkdownToLexicalMigrationDescriptor,
 ): CreateNoteData {
   const projected = projectWriteState(state)
   return {
@@ -3666,6 +4153,7 @@ function buildNoteWriteData(
         : buildWriteImages(projected),
     isPublished: projected.isPublished,
     location: projected.location || null,
+    migration,
     meta: projected.meta,
     mood: projected.mood || undefined,
     password: projected.passwordProtected
@@ -3683,6 +4171,7 @@ function buildNoteWriteData(
 function buildPageWriteData(
   state: WriteFormState,
   draftId?: string,
+  migration?: MarkdownToLexicalMigrationDescriptor,
 ): CreatePageData {
   const projected = projectWriteState(state)
   return {
@@ -3695,6 +4184,7 @@ function buildPageWriteData(
         ? undefined
         : buildWriteImages(projected),
     meta: projected.meta,
+    migration,
     order: projected.order ? Number(projected.order) : undefined,
     slug: projected.slug,
     subtitle: projected.subtitle,
@@ -3708,16 +4198,17 @@ function saveWrite(
   id: string,
   state: WriteFormState,
   draftId?: string,
+  migration?: MarkdownToLexicalMigrationDescriptor,
 ): Promise<WriteModel> {
   if (kind === 'post') {
-    return savePost(id, buildPostWriteData(state, draftId))
+    return savePost(id, buildPostWriteData(state, draftId, migration))
   }
 
   if (kind === 'note') {
-    return saveNote(id, buildNoteWriteData(state, draftId))
+    return saveNote(id, buildNoteWriteData(state, draftId, migration))
   }
 
-  return savePage(id, buildPageWriteData(state, draftId))
+  return savePage(id, buildPageWriteData(state, draftId, migration))
 }
 
 function getDraftFingerprint(

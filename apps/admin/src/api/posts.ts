@@ -1,6 +1,7 @@
 import type { Image, PaginateResult } from '~/models/base'
 import type { PostModel } from '~/models/post'
 
+import type { MarkdownToLexicalMigrationDescriptor } from './content-migrations'
 import { deleteJson, getJson, patchJson, postJson, putJson } from './http'
 
 export type PostSortKey = 'createdAt' | 'modifiedAt' | 'pinAt'
@@ -29,6 +30,7 @@ export interface CreatePostData {
   images?: Image[]
   isPremium?: boolean
   isPublished?: boolean
+  migration?: MarkdownToLexicalMigrationDescriptor
   meta?: Record<string, unknown>
   pin?: null | string
   pinOrder?: null | number

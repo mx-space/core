@@ -3211,6 +3211,29 @@ export const enUS = {
   'write.format.switchUnavailable.title': 'Editor switching is unavailable',
   'write.format.switchUnavailable.description':
     'CodeMirror edits Markdown source, while Lexical stores rich-text structure. Converting an article that already has content can lose formatting, special nodes, or source syntax, so switching is disabled. Choose the editor you need before writing in a new, empty article.',
+  'write.migration.action.blocked': 'Conversion blocked ({{count}})',
+  'write.migration.action.checking': 'Checking conversion',
+  'write.migration.action.committing': 'Committing conversion',
+  'write.migration.action.convert': 'Convert to Lexical',
+  'write.migration.action.lexical': 'Lexical',
+  'write.migration.action.recheck': 'Recheck',
+  'write.migration.action.restore': 'Restore original Markdown',
+  'write.migration.action.staged': 'Lexical · Not yet published',
+  'write.migration.dialog.draftGroup': 'Current draft',
+  'write.migration.dialog.line': 'Line {{line}}',
+  'write.migration.dialog.ready':
+    'The source and all AI translations are convertible. A normal publish will transition them to Lexical in one transaction.',
+  'write.migration.dialog.sourceGroup': 'Source',
+  'write.migration.dialog.stagedSubtitle':
+    'The Lexical content exists only in the editor or draft; the published document is unchanged.',
+  'write.migration.dialog.title': 'Markdown conversion check',
+  'write.migration.dialog.translationGroup': 'AI translation: {{lang}}',
+  'write.migration.toast.blocked':
+    'Migration conditions changed. Resolve the diagnostics and run the check again.',
+  'write.migration.toast.checkFailed':
+    'The Markdown conversion check could not be completed',
+  'write.migration.toast.staged':
+    'Converted to a Lexical draft. The published document and AI translations remain unchanged until publish.',
   'write.header.backToList': 'Back to list',
   'write.header.editPage': 'Edit page',
   'write.header.newPage': 'New page',

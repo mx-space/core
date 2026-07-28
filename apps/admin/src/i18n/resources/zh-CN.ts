@@ -3054,6 +3054,28 @@ export const zhCN = {
   'write.format.switchUnavailable.title': '暂时无法切换编辑器',
   'write.format.switchUnavailable.description':
     'CodeMirror 直接编辑 Markdown 源码，Lexical 则保存富文本结构。正文已有内容时，在两者之间转换可能丢失格式、特殊节点或原始写法，因此当前文章不支持切换。请在新建文章且正文为空时选择所需编辑器，再开始写作。',
+  'write.migration.action.blocked': '转换受阻（{{count}}）',
+  'write.migration.action.checking': '正在检查转换',
+  'write.migration.action.committing': '正在提交转换',
+  'write.migration.action.convert': '转换为 Lexical',
+  'write.migration.action.lexical': 'Lexical',
+  'write.migration.action.recheck': '重新检查',
+  'write.migration.action.restore': '恢复原始 Markdown',
+  'write.migration.action.staged': 'Lexical · 尚未发布',
+  'write.migration.dialog.draftGroup': '当前草稿',
+  'write.migration.dialog.line': '第 {{line}} 行',
+  'write.migration.dialog.ready':
+    '源文档及全部 AI 翻译均可转换。正常发布时，它们将以同一事务切换为 Lexical。',
+  'write.migration.dialog.sourceGroup': '源文档',
+  'write.migration.dialog.stagedSubtitle':
+    '当前 Lexical 内容仅存在于编辑器或草稿中，尚未改变已发布文档。',
+  'write.migration.dialog.title': 'Markdown 转换检查',
+  'write.migration.dialog.translationGroup': 'AI 翻译：{{lang}}',
+  'write.migration.toast.blocked':
+    '转换条件已发生变化，请处理诊断项后重新检查。',
+  'write.migration.toast.checkFailed': '无法完成 Markdown 转换检查',
+  'write.migration.toast.staged':
+    '已转换为 Lexical 草稿；发布前不会修改线上文档或 AI 翻译。',
   'write.header.backToList': '返回列表',
   'write.header.editPage': '修改页面',
   'write.header.newPage': '新建页面',
