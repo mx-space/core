@@ -42,9 +42,11 @@ export const CreateDraftSchema = DraftBaseSchema.superRefine(
 
 export class CreateDraftDto extends createZodDto(CreateDraftSchema) {}
 
-export const UpdateDraftSchema = DraftBaseSchema.partial().superRefine(
-  validateLexicalPartialContentPair,
-)
+export const UpdateDraftSchema = DraftBaseSchema.partial()
+  .extend({
+    expectedVersion: z.number().int().min(1),
+  })
+  .superRefine(validateLexicalPartialContentPair)
 
 export class UpdateDraftDto extends createZodDto(UpdateDraftSchema) {}
 

@@ -3291,6 +3291,11 @@ export const enUS = {
   'write.meta.tab.json': 'Custom JSON',
   'write.meta.tab.preset': 'Preset fields',
   'write.meta.tags.placeholder': 'Type and press Enter to add',
+  'write.conflict.keepLocal': 'Keep current content',
+  'write.conflict.message':
+    'Draft v{version} changed elsewhere. Independent changes were merged, but {count} overlapping change(s) still require review. Autosave is paused.',
+  'write.conflict.useRemote': 'Use server version',
+  'write.metaStatus.conflict': 'Save conflict · autosave paused',
   'write.metaStatus.dirty': 'Unsaved changes{version}',
   'write.metaStatus.dirtySaving': 'Saving draft…',
   'write.metaStatus.draft': 'Draft v{version}{suffix}',
@@ -3471,6 +3476,21 @@ export const enUS = {
   'write.toast.copyFailed': 'Copy failed',
   'write.toast.createOk': 'Created',
   'write.toast.draftApplied': 'Draft applied',
+  'write.toast.draftAutoMerged':
+    'Merged {count} non-conflicting change(s); saving will retry automatically',
+  'write.toast.draftBaselineMissing':
+    'The saved draft baseline is unavailable; reload the draft before saving',
+  'write.toast.draftConflictBlocksPublish':
+    'Resolve the draft conflict before publishing',
+  'write.toast.draftConflictLoadFailed':
+    'Failed to load the latest server draft',
+  'write.toast.draftConflictNeedsResolution':
+    'Choose which content to keep before saving',
+  'write.toast.draftConflictNeedsReview':
+    '{count} overlapping change(s) require review',
+  'write.toast.draftLocalKept':
+    'Current content kept; it will be saved as a new draft version',
+  'write.toast.draftRemoteApplied': 'Server draft applied',
   'write.toast.draftSaved': 'Draft saved',
   'write.toast.draftSaveFailed': 'Failed to save draft',
   'write.toast.draftTypeMismatch':

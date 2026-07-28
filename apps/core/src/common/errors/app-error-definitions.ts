@@ -396,6 +396,15 @@ export const APP_ERROR_DEFINITIONS = {
     status: 404,
     message: 'Draft history not found',
   },
+  [AppErrorCode.DRAFT_VERSION_CONFLICT]: {
+    status: 409,
+    message: 'Draft was updated elsewhere',
+    details: (p) => ({
+      actualVersion: p.actualVersion,
+      expectedVersion: p.expectedVersion,
+      id: p.id,
+    }),
+  },
 
   // document / helper
   [AppErrorCode.DOCUMENT_NOT_FOUND]: {

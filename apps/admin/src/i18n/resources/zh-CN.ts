@@ -3129,6 +3129,11 @@ export const zhCN = {
   'write.meta.tab.json': '自定义 JSON',
   'write.meta.tab.preset': '预设字段',
   'write.meta.tags.placeholder': '输入后按回车添加',
+  'write.conflict.keepLocal': '保留当前内容',
+  'write.conflict.message':
+    '草稿已在其他位置更新至 v{version}。互不冲突的改动已合并，仍有 {count} 项重叠修改需要确认；自动保存已暂停。',
+  'write.conflict.useRemote': '使用服务器版本',
+  'write.metaStatus.conflict': '保存冲突 · 自动保存已暂停',
   'write.metaStatus.dirty': '未保存改动{version}',
   'write.metaStatus.dirtySaving': '保存草稿中…',
   'write.metaStatus.draft': '草稿 v{version}{suffix}',
@@ -3303,6 +3308,16 @@ export const zhCN = {
   'write.toast.copyFailed': '复制失败',
   'write.toast.createOk': '已创建',
   'write.toast.draftApplied': '已套用草稿',
+  'write.toast.draftAutoMerged':
+    '已合并 {count} 项非冲突修改，稍后将自动重试保存',
+  'write.toast.draftBaselineMissing':
+    '缺少已保存的草稿基线，请重新加载草稿后再保存',
+  'write.toast.draftConflictBlocksPublish': '请先处理草稿冲突再发布',
+  'write.toast.draftConflictLoadFailed': '无法加载服务器上的最新草稿',
+  'write.toast.draftConflictNeedsResolution': '请先选择需要保留的内容',
+  'write.toast.draftConflictNeedsReview': '有 {count} 项重叠修改需要确认',
+  'write.toast.draftLocalKept': '已保留当前内容，将保存为新的草稿版本',
+  'write.toast.draftRemoteApplied': '已使用服务器草稿',
   'write.toast.draftSaved': '草稿已保存',
   'write.toast.draftSaveFailed': '保存草稿失败',
   'write.toast.draftTypeMismatch': '草稿类型与当前写作页面不匹配',

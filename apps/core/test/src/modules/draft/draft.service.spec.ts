@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
+import { AppErrorCode } from '~/common/errors/app-error-code'
 import { AppException } from '~/common/errors/exception.types'
 import { DraftRefType } from '~/modules/draft/draft.enum'
 import type {
@@ -52,27 +53,55 @@ const createService = () => {
 }
 
 describe('DraftService', () => {
-  it('updates an existing referenced draft instead of creating a duplicate', async () => {
+  it('rejects a create that races with an existing referenced draft', async () => {
     const { repository, service } = createService()
     const existing = createDraft({ refId: 'post-1' as any })
-    const updated = createDraft({ refId: 'post-1' as any, text: 'new text' })
     repository.findByRef.mockResolvedValue(existing)
-    repository.findById.mockResolvedValue(existing)
-    repository.update.mockResolvedValue(updated)
 
-    const result = await service.create({
-      title: 'Draft',
-      text: 'new text',
-      refType: DraftRefType.Post,
-      refId: 'post-1',
-    } as any)
+    const error = await service
+      .create({
+        title: 'Draft',
+        text: 'new text',
+        refType: DraftRefType.Post,
+        refId: 'post-1',
+      } as any)
+      .catch((reason) => reason)
 
-    expect(result).toBe(updated)
+    expect(error).toBeInstanceOf(AppException)
+    expect(error.code).toBe(AppErrorCode.DRAFT_VERSION_CONFLICT)
+    expect(error.details).toEqual({
+      actualVersion: 1,
+      expectedVersion: 0,
+      id: existing.id,
+    })
     expect(repository.create).not.toHaveBeenCalled()
-    expect(repository.update).toHaveBeenCalledWith(
-      existing.id,
-      expect.objectContaining({ text: 'new text' }),
-    )
+    expect(repository.update).not.toHaveBeenCalled()
+  })
+
+  it('converts a concurrent referenced-draft insert loser into a version conflict', async () => {
+    const { repository, service } = createService()
+    const winner = createDraft({ refId: 'post-1' as any })
+    repository.findByRef
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(winner)
+    repository.create.mockRejectedValue({ code: '23505' })
+
+    const error = await service
+      .create({
+        title: 'Draft',
+        text: 'loser',
+        refType: DraftRefType.Post,
+        refId: 'post-1',
+      } as any)
+      .catch((reason) => reason)
+
+    expect(error).toBeInstanceOf(AppException)
+    expect(error.code).toBe(AppErrorCode.DRAFT_VERSION_CONFLICT)
+    expect(error.details).toEqual({
+      actualVersion: 1,
+      expectedVersion: 0,
+      id: winner.id,
+    })
   })
 
   it('creates markdown drafts and synchronizes file references when text exists', async () => {
@@ -92,7 +121,7 @@ describe('DraftService', () => {
     ).toHaveBeenCalledWith(created, created.id, FileReferenceType.Draft)
   })
 
-  it('increments version and stores history only for content changes', async () => {
+  it('increments the draft revision and stores history for content changes', async () => {
     const { draftHistoryService, repository, service } = createService()
     const draft = createDraft({ history: [] })
     repository.findById.mockResolvedValue(draft)
@@ -102,7 +131,10 @@ describe('DraftService', () => {
       history: [{ version: 1, savedAt: now }],
     })
 
-    await service.update(draft.id, { text: 'new text' } as any)
+    await service.update(draft.id, {
+      expectedVersion: 1,
+      text: 'new text',
+    } as any)
 
     expect(repository.update).toHaveBeenCalledWith(
       draft.id,
@@ -110,7 +142,68 @@ describe('DraftService', () => {
         version: 2,
         history: [{ version: 1, savedAt: now }],
       }),
+      1,
     )
+  })
+
+  it('increments the draft revision for metadata-only updates', async () => {
+    const { draftHistoryService, repository, service } = createService()
+    const draft = createDraft()
+    repository.findById.mockResolvedValue(draft)
+    repository.update.mockResolvedValue(createDraft({ version: 2 }))
+
+    await service.update(draft.id, {
+      expectedVersion: 1,
+      meta: { description: 'updated' },
+    } as any)
+
+    expect(draftHistoryService.pushHistoryEntry).not.toHaveBeenCalled()
+    expect(repository.update).toHaveBeenCalledWith(
+      draft.id,
+      expect.objectContaining({
+        meta: { description: 'updated' },
+        version: 2,
+      }),
+      1,
+    )
+  })
+
+  it('rejects a stale version before writing', async () => {
+    const { repository, service } = createService()
+    repository.findById.mockResolvedValue(createDraft({ version: 3 }))
+
+    const error = await service
+      .update('draft-1', { expectedVersion: 2, text: 'stale' } as any)
+      .catch((reason) => reason)
+
+    expect(error).toBeInstanceOf(AppException)
+    expect(error.code).toBe(AppErrorCode.DRAFT_VERSION_CONFLICT)
+    expect(error.details).toEqual({
+      actualVersion: 3,
+      expectedVersion: 2,
+      id: 'draft-1',
+    })
+    expect(repository.update).not.toHaveBeenCalled()
+  })
+
+  it('rejects the loser when another writer wins the compare-and-swap', async () => {
+    const { repository, service } = createService()
+    repository.findById
+      .mockResolvedValueOnce(createDraft({ version: 1 }))
+      .mockResolvedValueOnce(createDraft({ version: 2, text: 'winner' }))
+    repository.update.mockResolvedValue(null)
+
+    const error = await service
+      .update('draft-1', { expectedVersion: 1, text: 'loser' } as any)
+      .catch((reason) => reason)
+
+    expect(error).toBeInstanceOf(AppException)
+    expect(error.code).toBe(AppErrorCode.DRAFT_VERSION_CONFLICT)
+    expect(error.details).toEqual({
+      actualVersion: 2,
+      expectedVersion: 1,
+      id: 'draft-1',
+    })
   })
 
   it('removes PG draft rows and file references together', async () => {
