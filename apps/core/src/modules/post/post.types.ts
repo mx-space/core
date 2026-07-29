@@ -78,6 +78,7 @@ export interface PostListParams {
   tag?: string
   publishedOnly?: boolean
   year?: number
+  excludeAiWritten?: boolean
   sortBy?: keyof PostRow
   sortOrder?: 1 | -1
   truncateText?: number

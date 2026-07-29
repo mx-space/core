@@ -138,13 +138,23 @@ export class PostController {
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
-    const { size, page, year, sortBy, sortOrder, truncate, categoryIds } = query
+    const {
+      size,
+      page,
+      year,
+      sortBy,
+      sortOrder,
+      truncate,
+      categoryIds,
+      excludeAiWritten,
+    } = query
 
     const res = await this.postService.listPaginated({
       size,
       page,
       year,
       categoryIds,
+      excludeAiWritten,
       publishedOnly: !isAuthenticated,
       sortBy: sortBy as any,
       sortOrder: sortOrder === 'asc' ? 1 : -1,

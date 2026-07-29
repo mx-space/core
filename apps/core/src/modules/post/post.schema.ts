@@ -7,6 +7,7 @@ import {
   zEntityId,
   zLang,
   zNonEmptyString,
+  zOptionalBoolean,
   zPinDate,
   zPrefer,
 } from '~/common/zod'
@@ -106,6 +107,7 @@ export const PostPagerSchema = createPagerSchema([
       z.array(zEntityId),
     )
     .optional(),
+  excludeAiWritten: zOptionalBoolean,
   lang: zLang,
 })
 

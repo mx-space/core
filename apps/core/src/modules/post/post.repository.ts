@@ -135,6 +135,13 @@ export class PostRepository extends BaseRepository {
       const { start, end } = yearRange(params.year)
       filters.push(gte(posts.createdAt, start), lt(posts.createdAt, end))
     }
+    if (params.excludeAiWritten) {
+      // aiGen preset 2 = "fully AI-written" (see web ai-gen.ts); jsonb @> matches
+      // both the scalar form and membership in the disclosure array
+      filters.push(
+        sql`(${posts.meta} -> 'aiGen' is null or not (${posts.meta} -> 'aiGen' @> '2'::jsonb))`,
+      )
+    }
     const whereClause = filters.length > 0 ? and(...filters) : undefined
     const orderBy =
       params.sortBy === 'createdAt'
