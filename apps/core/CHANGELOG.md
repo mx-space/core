@@ -1,3 +1,11 @@
+# [13.19.0](https://github.com/mx-space/core/compare/v13.18.0...v13.19.0) (2026-07-29)
+
+
+### Features
+
+* **draft:** prevent conflicting autosave overwrites ([#2776](https://github.com/mx-space/core/issues/2776)) ([cd00d35](https://github.com/mx-space/core/commit/cd00d35c49066740d0de3c326c65b5505ae4a813))
+* **post:** add excludeAiWritten filter to the post list query ([d1702ec](https://github.com/mx-space/core/commit/d1702ec18cc816e67afe8dddb2c9cd82f12e9ec1))
+
 # [13.18.0](https://github.com/mx-space/core/compare/v13.17.1...v13.18.0) (2026-07-27)
 
 
