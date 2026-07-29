@@ -3203,7 +3203,10 @@ export const zhCN = {
   'write.postFields.pin': '置顶',
   'write.postFields.pinOrder': '置顶顺序',
   'write.postFields.premium': '付费内容（会员解锁）',
+  'write.postFields.premiumNeedsMoreBlocks': '正文至少两段方可设置免费预览。',
   'write.postFields.premiumPreviewBlocks': '免费预览段落数',
+  'write.postFields.premiumPreviewCount': '{value} / {total} 段',
+  'write.postFields.premiumPreviewCutoff': '截至：{text}',
   'write.postFields.premiumRequiresLexical':
     '切换到 Lexical 编辑器后可启用付费内容。',
   'write.postFields.related.addAria': '添加关联文章',

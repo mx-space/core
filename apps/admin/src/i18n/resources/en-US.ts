@@ -3365,7 +3365,11 @@ export const enUS = {
   'write.postFields.pin': 'Pin',
   'write.postFields.pinOrder': 'Pin order',
   'write.postFields.premium': 'Premium (paywalled)',
+  'write.postFields.premiumNeedsMoreBlocks':
+    'Write at least two blocks to configure the free preview.',
   'write.postFields.premiumPreviewBlocks': 'Free preview blocks',
+  'write.postFields.premiumPreviewCount': '{value} / {total} blocks',
+  'write.postFields.premiumPreviewCutoff': 'Ends at {text}',
   'write.postFields.premiumRequiresLexical':
     'Switch to the Lexical editor to enable premium content.',
   'write.postFields.related.addAria': 'Add related post',

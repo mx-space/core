@@ -120,6 +120,7 @@ import { Button } from '~/ui/primitives/button'
 import { DateTimePicker } from '~/ui/primitives/datetime-picker'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
+import { Slider } from '~/ui/primitives/slider'
 import { Switch } from '~/ui/primitives/switch'
 import { TextArea, TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
@@ -2202,13 +2203,10 @@ function PostFields(props: {
           onCheckedChange={(checked) => props.updateField('isPremium', checked)}
         />
         {props.state.isPremium ? (
-          <TextInput
-            controlClassName="h-9 focus:border-neutral-400"
-            inputMode="numeric"
-            label={t('write.postFields.premiumPreviewBlocks')}
-            min={1}
-            onChange={(value) => props.updateField('previewBlocks', value)}
-            value={props.state.previewBlocks}
+          <PremiumPreviewControl
+            content={props.state.content}
+            previewBlocks={props.state.previewBlocks}
+            updateField={props.updateField}
           />
         ) : null}
       </PanelBlock>
@@ -3192,6 +3190,95 @@ function resolvePaywallMeta(
   return isPremium
     ? withPaywallPreviewBlocks(meta, previewBlocks)
     : withoutPaywallPreviewBlocks(meta)
+}
+
+function parseLexicalTopLevelBlocks(content: string): unknown[] {
+  if (!content) return []
+  try {
+    const parsed = JSON.parse(content) as { root?: { children?: unknown[] } }
+    return Array.isArray(parsed.root?.children) ? parsed.root.children : []
+  } catch {
+    return []
+  }
+}
+
+function collectLexicalText(node: unknown): string {
+  if (!isRecord(node)) return ''
+  if (typeof node.text === 'string') return node.text
+  return Array.isArray(node.children)
+    ? node.children.map(collectLexicalText).join('')
+    : ''
+}
+
+const PREMIUM_CUTOFF_TEXT_LENGTH = 30
+
+function PremiumPreviewControl(props: {
+  content: string
+  previewBlocks: string
+  updateField: (key: 'previewBlocks', value: string) => void
+}) {
+  const { t } = useI18n()
+  const { updateField } = props
+  const blocks = useMemo(
+    () => parseLexicalTopLevelBlocks(props.content),
+    [props.content],
+  )
+  const maxPreview = blocks.length - 1
+  const tooShort = maxPreview < 1
+  const stored = Math.max(1, Math.floor(Number(props.previewBlocks)) || 3)
+  const value = Math.min(stored, Math.max(1, maxPreview))
+
+  useEffect(() => {
+    if (!tooShort && stored !== value) {
+      updateField('previewBlocks', String(value))
+    }
+  }, [stored, tooShort, updateField, value])
+
+  const cutoffText = useMemo(() => {
+    if (tooShort) return ''
+    for (let index = value - 1; index >= 0; index -= 1) {
+      const text = collectLexicalText(blocks[index]).trim()
+      if (text) {
+        return text.length > PREMIUM_CUTOFF_TEXT_LENGTH
+          ? `…${text.slice(-PREMIUM_CUTOFF_TEXT_LENGTH)}`
+          : text
+      }
+    }
+    return ''
+  }, [blocks, tooShort, value])
+
+  return (
+    <div className="grid gap-1">
+      <Slider
+        aria-label={t('write.postFields.premiumPreviewBlocks')}
+        disabled={tooShort || maxPreview < 2}
+        label={t('write.postFields.premiumPreviewBlocks')}
+        max={Math.max(2, maxPreview)}
+        min={1}
+        onValueChange={(next) => updateField('previewBlocks', String(next))}
+        value={tooShort ? 1 : value}
+        valueLabel={
+          tooShort
+            ? null
+            : t('write.postFields.premiumPreviewCount', {
+                total: blocks.length,
+                value,
+              })
+        }
+      />
+      {tooShort ? (
+        <p className="text-xs text-fg-muted">
+          {t('write.postFields.premiumNeedsMoreBlocks')}
+        </p>
+      ) : cutoffText ? (
+        <p className="truncate text-xs text-fg-muted">
+          {t('write.postFields.premiumPreviewCutoff', {
+            text: `“${cutoffText}”`,
+          })}
+        </p>
+      ) : null}
+    </div>
+  )
 }
 
 function formatMetaJson(meta: Record<string, unknown>) {
