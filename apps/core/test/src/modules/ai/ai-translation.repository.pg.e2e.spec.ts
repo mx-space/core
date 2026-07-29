@@ -1,25 +1,29 @@
+import { ConflictException } from '@nestjs/common'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import { createIsolatedPgDatabase } from 'test/helper/pg-testcontainer'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { pages } from '~/database/schema'
 import {
   AiTranslationRepository,
   TranslationEntryRepository,
 } from '~/modules/ai/ai-translation/ai-translation.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
+import { ContentFormat } from '~/shared/types/content-format.type'
 
 describe('ai-translation repositories upsert (real PG, ON CONFLICT)', () => {
   let pool: Pool
   let database: Awaited<ReturnType<typeof createIsolatedPgDatabase>>
+  let db: AppDatabase
   let translationRepo: AiTranslationRepository
   let entryRepo: TranslationEntryRepository
 
   beforeAll(async () => {
     database = await createIsolatedPgDatabase()
     pool = new Pool({ connectionString: database.getConnectionUri() })
-    const db = drizzle(pool) as unknown as AppDatabase
+    db = drizzle(pool) as unknown as AppDatabase
     const snowflake = new SnowflakeService()
     translationRepo = new AiTranslationRepository(db, snowflake)
     entryRepo = new TranslationEntryRepository(db, snowflake)
@@ -68,6 +72,41 @@ describe('ai-translation repositories upsert (real PG, ON CONFLICT)', () => {
 
     const all = await translationRepo.listByRefId(refId)
     expect(all).toHaveLength(1)
+  })
+
+  it('rejects a stale Markdown translation after its source becomes Lexical', async () => {
+    const refId = '424242424242424243'
+    await db.insert(pages).values({
+      id: refId as any,
+      title: 'Lexical page',
+      slug: 'lexical-page',
+      text: 'body',
+      content: '{"root":{"children":[]}}',
+      contentFormat: ContentFormat.Lexical,
+      order: 1,
+    })
+
+    await expect(
+      translationRepo.upsert({
+        hash: 'stale-hash',
+        refId,
+        refType: 'page',
+        lang: 'ja',
+        sourceLang: 'zh',
+        title: 'stale',
+        text: 'stale Markdown',
+        subtitle: null,
+        summary: null,
+        tags: [],
+        sourceModifiedAt: null,
+        aiModel: 'm',
+        aiProvider: 'p',
+        contentFormat: ContentFormat.Markdown,
+        content: null,
+        sourceBlockSnapshots: undefined,
+        sourceMetaHashes: undefined,
+      } as any),
+    ).rejects.toBeInstanceOf(ConflictException)
   })
 
   it('inserts then updates a translation_entries row, preserving sourceUpdatedAt when omitted', async () => {

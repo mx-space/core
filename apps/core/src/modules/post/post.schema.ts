@@ -11,6 +11,7 @@ import {
   zPinDate,
   zPrefer,
 } from '~/common/zod'
+import { MarkdownToLexicalMigrationDescriptorSchema } from '~/modules/content-migration/content-migration.schema'
 import { createPagerSchema } from '~/shared/dto/pager.dto'
 import {
   validateLexicalCreateContentPair,
@@ -42,6 +43,7 @@ const PostBaseSchema = WriteBaseSchema.extend({
   isPremium: z.boolean().optional(),
   /** ID of the associated draft; marked as published when this post is published */
   draftId: zEntityId.optional(),
+  migration: MarkdownToLexicalMigrationDescriptorSchema.optional(),
 })
 
 export const PostSchema = PostBaseSchema.superRefine(

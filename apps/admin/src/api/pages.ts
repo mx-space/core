@@ -1,6 +1,7 @@
 import type { Image, PaginateResult } from '~/models/base'
 import type { PageModel } from '~/models/page'
 
+import type { MarkdownToLexicalMigrationDescriptor } from './content-migrations'
 import { deleteJson, getJson, patchJson, postJson, putJson } from './http'
 
 export interface GetPagesParams {
@@ -14,6 +15,7 @@ export interface CreatePageData {
   draftId?: string
   images?: Image[]
   meta?: Record<string, unknown>
+  migration?: MarkdownToLexicalMigrationDescriptor
   order?: number
   slug: string
   subtitle?: string

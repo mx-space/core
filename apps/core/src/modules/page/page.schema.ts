@@ -2,6 +2,7 @@ import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zCoerceInt, zEntityId, zNonEmptyString, zPrefer } from '~/common/zod'
+import { MarkdownToLexicalMigrationDescriptorSchema } from '~/modules/content-migration/content-migration.schema'
 import {
   validateLexicalCreateContentPair,
   validateLexicalPartialContentPair,
@@ -24,6 +25,7 @@ const PageBaseSchema = WriteBaseSchema.extend({
   images: ImageArraySchema.optional(),
   /** ID of the associated draft; marked as published when this page is published */
   draftId: zEntityId.optional(),
+  migration: MarkdownToLexicalMigrationDescriptorSchema.optional(),
 })
 
 export const PageSchema = PageBaseSchema.superRefine(

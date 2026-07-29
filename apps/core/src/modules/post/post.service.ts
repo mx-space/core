@@ -1,4 +1,8 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  OnApplicationBootstrap,
+} from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import { debounce, omit } from 'es-toolkit/compat'
 import slugify from 'slugify'
@@ -12,6 +16,8 @@ import {
   CATEGORY_SERVICE_TOKEN,
   DRAFT_SERVICE_TOKEN,
 } from '~/constants/injection.constant'
+import type { MarkdownToLexicalMigrationDescriptor } from '~/modules/content-migration/content-migration.schema'
+import { ContentMigrationCommitService } from '~/modules/content-migration/content-migration-commit.service'
 import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -49,6 +55,7 @@ export class PostService implements OnApplicationBootstrap {
     private readonly eventManager: EventManagerService,
     private readonly slugTrackerService: SlugTrackerService,
     private readonly lexicalService: LexicalService,
+    private readonly contentMigrationCommitService: ContentMigrationCommitService,
     private readonly enrichmentService: EnrichmentService,
     private readonly moduleRef: ModuleRef,
   ) {}
@@ -335,7 +342,10 @@ export class PostService implements OnApplicationBootstrap {
 
   async updateById(
     id: string,
-    data: Partial<PostModel> & { draftId?: string },
+    data: Partial<PostModel> & {
+      draftId?: string
+      migration?: MarkdownToLexicalMigrationDescriptor
+    },
   ) {
     this.lexicalService.normalizeContentForStorage(data)
 
@@ -344,6 +354,10 @@ export class PostService implements OnApplicationBootstrap {
       throw createAppException(AppErrorCode.POST_NOT_FOUND, { id })
     }
 
+    const { draftId, migration } = data
+    const isMarkdownToLexical =
+      oldDocument.contentFormat === ContentFormat.Markdown &&
+      data.contentFormat === ContentFormat.Lexical
     const effectiveIsPremium =
       data.isPremium !== undefined ? data.isPremium : oldDocument.isPremium
     const effectiveContentFormat =
@@ -356,8 +370,25 @@ export class PostService implements OnApplicationBootstrap {
     ) {
       throw createAppException(AppErrorCode.PREMIUM_REQUIRES_LEXICAL)
     }
+    if (
+      oldDocument.contentFormat === ContentFormat.Lexical &&
+      data.contentFormat === ContentFormat.Markdown
+    ) {
+      throw new BadRequestException(
+        'Published Lexical content cannot be downgraded to Markdown',
+      )
+    }
+    if (isMarkdownToLexical && !migration) {
+      throw new BadRequestException(
+        'Markdown-to-Lexical writes require a migration descriptor',
+      )
+    }
+    if (migration && !isMarkdownToLexical) {
+      throw new BadRequestException(
+        'Migration descriptor is only valid for Markdown-to-Lexical writes',
+      )
+    }
 
-    const { draftId } = data
     const { categoryId } = data
     if (categoryId && String(categoryId) !== String(oldDocument.categoryId)) {
       const category = await this.categoryService.findCategoryById(
@@ -395,7 +426,7 @@ export class PostService implements OnApplicationBootstrap {
       : patch.createdAt
     const pinAt =
       (data as any).pin !== undefined ? (data as any).pin : patch.pinAt
-    const updated = await this.postRepository.update(id, {
+    const repositoryPatch = {
       title: patch.title,
       slug: patch.slug,
       createdAt,
@@ -416,9 +447,46 @@ export class PostService implements OnApplicationBootstrap {
       pinAt,
       pinOrder: patch.pinOrder,
       modifiedAt: data.modifiedAt,
-    })
+    }
 
-    if (draftId) {
+    let updated
+    if (migration) {
+      if (!data.content || data.text === undefined) {
+        throw new BadRequestException(
+          'Lexical migration requires content and text',
+        )
+      }
+      await this.contentMigrationCommitService.commitMarkdownToLexical({
+        refType: DraftRefType.Post,
+        refId: id,
+        descriptor: migration,
+        draftId,
+        patch: repositoryPatch,
+        source: {
+          title: repositoryPatch.title ?? oldDocument.title,
+          text: data.text,
+          content: data.content,
+          contentFormat: ContentFormat.Lexical,
+          summary:
+            repositoryPatch.summary === undefined
+              ? oldDocument.summary
+              : repositoryPatch.summary,
+          tags:
+            repositoryPatch.tags === undefined
+              ? oldDocument.tags
+              : repositoryPatch.tags,
+          meta:
+            repositoryPatch.meta === undefined
+              ? oldDocument.meta
+              : repositoryPatch.meta,
+        },
+      })
+      updated = await this.postRepository.findById(id)
+    } else {
+      updated = await this.postRepository.update(id, repositoryPatch)
+    }
+
+    if (draftId && !migration) {
       await this.draftService.markAsPublished(draftId)
     }
 

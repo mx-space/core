@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
@@ -7,6 +8,7 @@ import {
   CATEGORY_SERVICE_TOKEN,
   DRAFT_SERVICE_TOKEN,
 } from '~/constants/injection.constant'
+import { DraftRefType } from '~/modules/draft/draft.enum'
 import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import type { PostRepository, PostRow } from '~/modules/post/post.repository'
 import { PostService } from '~/modules/post/post.service'
@@ -78,6 +80,9 @@ const createService = () => {
     deleteAllTracker: vi.fn(),
   }
   const lexicalService = { normalizeContentForStorage: vi.fn() }
+  const contentMigrationCommitService = {
+    commitMarkdownToLexical: vi.fn(),
+  }
   const enrichmentService = { scheduleDocPrefetch: vi.fn() }
   const service = new PostService(
     repository as any,
@@ -87,6 +92,7 @@ const createService = () => {
     eventManager as any,
     slugTrackerService as any,
     lexicalService as any,
+    contentMigrationCommitService as any,
     enrichmentService as any,
     moduleRef as any,
   )
@@ -95,6 +101,7 @@ const createService = () => {
   return {
     categoryService,
     commentService,
+    contentMigrationCommitService,
     draftService,
     fileReferenceService,
     repository,
@@ -104,6 +111,80 @@ const createService = () => {
 }
 
 describe('PostService', () => {
+  it('rejects a direct Markdown-to-Lexical update without a migration descriptor', async () => {
+    const { repository, service } = createService()
+    repository.findById.mockResolvedValue(createPost())
+    repository.findBySlug.mockResolvedValue(createPost())
+
+    await expect(
+      service.updateById('post-1', {
+        title: 'Post',
+        slug: 'post',
+        categoryId: 'cat-1' as any,
+        text: 'body',
+        content: '{"root":{"children":[]}}',
+        contentFormat: ContentFormat.Lexical,
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException)
+    expect(repository.update).not.toHaveBeenCalled()
+  })
+
+  it('rejects downgrading a published Lexical document to Markdown', async () => {
+    const { repository, service } = createService()
+    repository.findById.mockResolvedValue(
+      createPost({
+        content: '{"root":{"children":[]}}',
+        contentFormat: ContentFormat.Lexical,
+      }),
+    )
+
+    await expect(
+      service.updateById('post-1', {
+        text: 'body',
+        contentFormat: ContentFormat.Markdown,
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException)
+    expect(repository.update).not.toHaveBeenCalled()
+  })
+
+  it('delegates a staged migration to the atomic commit boundary', async () => {
+    const { contentMigrationCommitService, draftService, repository, service } =
+      createService()
+    repository.findById.mockResolvedValue(createPost())
+    repository.findBySlug.mockResolvedValue(createPost())
+
+    const descriptor = {
+      profile: 'yohaku-v1' as const,
+      converterVersion: '0.1.0',
+      sourceMarkdown: 'body',
+      sourceHash: 'sha256:source',
+      preconditions: [
+        { kind: 'source' as const, id: 'post-1' as any, hash: 'sha256:old' },
+      ],
+    }
+    await service.updateById('post-1', {
+      title: 'Post',
+      slug: 'post',
+      categoryId: 'cat-1' as any,
+      text: 'body',
+      content: '{"root":{"children":[]}}',
+      contentFormat: ContentFormat.Lexical,
+      migration: descriptor,
+    })
+
+    expect(
+      contentMigrationCommitService.commitMarkdownToLexical,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        refType: DraftRefType.Post,
+        refId: 'post-1',
+        descriptor,
+      }),
+    )
+    expect(repository.update).not.toHaveBeenCalled()
+    expect(draftService.markAsPublished).not.toHaveBeenCalled()
+  })
+
   it('creates posts through the PG repository after category and slug validation', async () => {
     const { repository, service } = createService()
     repository.findBySlug.mockResolvedValue(null)

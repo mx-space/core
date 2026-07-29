@@ -1,5 +1,6 @@
 export * from './errors'
 export * from './litexml'
 export * from './markdown'
+export * from './markdown-conversion'
 export * from './nodes'
 export * from './types'

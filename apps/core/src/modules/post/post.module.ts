@@ -4,6 +4,7 @@ import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 
 import { AiModule } from '../ai/ai.module'
 import { CommentModule } from '../comment/comment.module'
+import { ContentMigrationCommitService } from '../content-migration/content-migration-commit.service'
 import { DraftModule } from '../draft/draft.module'
 import { EnrichmentModule } from '../enrichment/enrichment.module'
 import { MembershipModule } from '../membership/membership.module'
@@ -28,6 +29,7 @@ import { PostService } from './post.service'
   providers: [
     PostRepository,
     PostService,
+    ContentMigrationCommitService,
     { provide: POST_SERVICE_TOKEN, useExisting: PostService },
   ],
   exports: [PostService, PostRepository, POST_SERVICE_TOKEN],

@@ -1,16 +1,25 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { ConflictException, Inject, Injectable } from '@nestjs/common'
 import { and, desc, eq, inArray, or, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { aiTranslations, translationEntries } from '~/database/schema'
+import {
+  aiTranslations,
+  notes,
+  pages,
+  posts,
+  translationEntries,
+} from '~/database/schema'
+import { DraftRefType } from '~/modules/draft/draft.enum'
 import {
   BaseRepository,
   type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
+import { acquireContentFormatTransitionLock } from '~/shared/content-format-transition-lock'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
+import { ContentFormat } from '~/shared/types/content-format.type'
 
 import type {
   AiTranslationRow,
@@ -268,25 +277,65 @@ export class AiTranslationRepository extends BaseRepository {
       sourceBlockSnapshots: input.sourceBlockSnapshots,
       sourceMetaHashes: input.sourceMetaHashes,
     }
-    const [row] = await this.db
-      .insert(aiTranslations)
-      .values({
-        id: this.snowflake.nextId(),
-        refId: refBig,
+    return this.db.transaction(async (tx) => {
+      await acquireContentFormatTransitionLock(tx, {
+        refId: String(input.refId),
         refType: input.refType,
-        lang: input.lang,
-        ...updatableColumns,
       })
-      .onConflictDoUpdate({
-        target: [
-          aiTranslations.refId,
-          aiTranslations.refType,
-          aiTranslations.lang,
-        ],
-        set: updatableColumns,
-      })
-      .returning()
-    return mapTranslation(row)
+
+      let sourceFormat: string | undefined
+      if (input.refType === DraftRefType.Post) {
+        const [source] = await tx
+          .select({ contentFormat: posts.contentFormat })
+          .from(posts)
+          .where(eq(posts.id, refBig))
+          .limit(1)
+        sourceFormat = source?.contentFormat
+      } else if (input.refType === DraftRefType.Note) {
+        const [source] = await tx
+          .select({ contentFormat: notes.contentFormat })
+          .from(notes)
+          .where(eq(notes.id, refBig))
+          .limit(1)
+        sourceFormat = source?.contentFormat
+      } else if (input.refType === DraftRefType.Page) {
+        const [source] = await tx
+          .select({ contentFormat: pages.contentFormat })
+          .from(pages)
+          .where(eq(pages.id, refBig))
+          .limit(1)
+        sourceFormat = source?.contentFormat
+      }
+
+      if (
+        sourceFormat === ContentFormat.Lexical &&
+        input.contentFormat !== ContentFormat.Lexical
+      ) {
+        throw new ConflictException(
+          'A Markdown translation cannot be persisted for a Lexical source',
+        )
+      }
+
+      const [row] = await tx
+        .insert(aiTranslations)
+        .values({
+          id: this.snowflake.nextId(),
+          refId: refBig,
+          refType: input.refType,
+          lang: input.lang,
+          ...updatableColumns,
+        })
+        .onConflictDoUpdate({
+          target: [
+            aiTranslations.refId,
+            aiTranslations.refType,
+            aiTranslations.lang,
+          ],
+          set: updatableColumns,
+        })
+        .returning()
+      return mapTranslation(row)
+    })
   }
 
   async updateById(
@@ -508,12 +557,11 @@ export class TranslationEntryRepository extends BaseRepository {
       .from(translationEntries)
       .where(
         or(
-          ...keyPathLookupKeys.map(
-            ({ keyPath, lookupKey }) =>
-              and(
-                eq(translationEntries.keyPath, keyPath),
-                eq(translationEntries.lookupKey, lookupKey),
-              )!,
+          ...keyPathLookupKeys.map(({ keyPath, lookupKey }) =>
+            and(
+              eq(translationEntries.keyPath, keyPath),
+              eq(translationEntries.lookupKey, lookupKey),
+            )!,
           ),
         )!,
       )

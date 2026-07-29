@@ -1176,6 +1176,12 @@ importers:
       '@lexical/headless':
         specifier: 0.48.0
         version: 0.48.0(typescript@6.0.3)
+      '@lexical/markdown':
+        specifier: 0.48.0
+        version: 0.48.0(typescript@6.0.3)
+      '@noble/hashes':
+        specifier: 2.2.0
+        version: 2.2.0
       lexical:
         specifier: 0.48.0
         version: 0.48.0(typescript@6.0.3)

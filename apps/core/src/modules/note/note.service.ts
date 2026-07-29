@@ -1,4 +1,9 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common'
 import { debounce, omit } from 'es-toolkit/compat'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -6,6 +11,8 @@ import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import type { MarkdownToLexicalMigrationDescriptor } from '~/modules/content-migration/content-migration.schema'
+import { ContentMigrationCommitService } from '~/modules/content-migration/content-migration-commit.service'
 import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -45,6 +52,7 @@ export class NoteService {
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
     private readonly lexicalService: LexicalService,
+    private readonly contentMigrationCommitService: ContentMigrationCommitService,
     private readonly slugTrackerService: SlugTrackerService,
     private readonly aiSlugBackfillService: AiSlugBackfillService,
     private readonly enrichmentService: EnrichmentService,
@@ -359,13 +367,37 @@ export class NoteService {
 
   public async updateById(
     id: string,
-    data: Partial<NoteModel> & { draftId?: string },
+    data: Partial<NoteModel> & {
+      draftId?: string
+      migration?: MarkdownToLexicalMigrationDescriptor
+    },
   ) {
     this.lexicalService.normalizeContentForStorage(data)
     const oldDoc = await this.findById(id)
     if (!oldDoc) throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
 
-    const { draftId } = data
+    const { draftId, migration } = data
+    const isMarkdownToLexical =
+      oldDoc.contentFormat === ContentFormat.Markdown &&
+      data.contentFormat === ContentFormat.Lexical
+    if (
+      oldDoc.contentFormat === ContentFormat.Lexical &&
+      data.contentFormat === ContentFormat.Markdown
+    ) {
+      throw new BadRequestException(
+        'Published Lexical content cannot be downgraded to Markdown',
+      )
+    }
+    if (isMarkdownToLexical && !migration) {
+      throw new BadRequestException(
+        'Markdown-to-Lexical writes require a migration descriptor',
+      )
+    }
+    if (migration && !isMarkdownToLexical) {
+      throw new BadRequestException(
+        'Migration descriptor is only valid for Markdown-to-Lexical writes',
+      )
+    }
     const hasSlugInput = Object.prototype.hasOwnProperty.call(data, 'slug')
     const normalizedSlug = hasSlugInput
       ? this.normalizeSlug(data.slug ?? undefined)
@@ -386,7 +418,7 @@ export class NoteService {
 
     const patch = omit(data, [...NOTE_PROTECTED_KEYS, 'slug'] as const)
     const userSuppliedCreatedAt = data.createdAt ?? (data as any).created
-    const updated = await this.noteRepository.update(id, {
+    const repositoryPatch = {
       title: patch.title,
       slug: hasSlugInput ? normalizedSlug : undefined,
       text: patch.text,
@@ -410,7 +442,35 @@ export class NoteService {
         ? getLessThanNow(userSuppliedCreatedAt)
         : undefined,
       modifiedAt: hasContentChanged || hasFieldChanged ? new Date() : undefined,
-    })
+    }
+    let updated
+    if (migration) {
+      if (!data.content || data.text === undefined) {
+        throw new BadRequestException(
+          'Lexical migration requires content and text',
+        )
+      }
+      await this.contentMigrationCommitService.commitMarkdownToLexical({
+        refType: DraftRefType.Note,
+        refId: id,
+        descriptor: migration,
+        draftId,
+        patch: repositoryPatch,
+        source: {
+          title: repositoryPatch.title ?? oldDoc.title,
+          text: data.text,
+          content: data.content,
+          contentFormat: ContentFormat.Lexical,
+          meta:
+            repositoryPatch.meta === undefined
+              ? oldDoc.meta
+              : repositoryPatch.meta,
+        },
+      })
+      updated = await this.noteRepository.findById(id)
+    } else {
+      updated = await this.noteRepository.update(id, repositoryPatch)
+    }
     if (!updated) throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
 
     await this.trackSeoPathChanges(
@@ -422,7 +482,7 @@ export class NoteService {
       id,
     )
 
-    if (draftId) await this.draftService.markAsPublished(draftId)
+    if (draftId && !migration) await this.draftService.markAsPublished(draftId)
 
     scheduleManager.schedule(async () => {
       await this.fileReferenceService.updateReferencesForDocument(

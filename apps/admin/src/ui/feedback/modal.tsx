@@ -112,24 +112,16 @@ export function ModalHeader(props: {
   return (
     <div
       className={cn(
-        'flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-4',
+        'grid shrink-0 grid-cols-[minmax(0,1fr)_auto] gap-x-3 border-b border-border px-4',
+        props.subtitle ? 'min-h-16 content-center py-2.5' : 'h-12 items-center',
         props.className,
       )}
     >
-      <div className="min-w-0">
-        <ModalTitle className="inline-flex min-w-0 items-center gap-2 text-base font-semibold text-fg">
-          {Icon ? (
-            <Icon aria-hidden="true" className="size-4 shrink-0" />
-          ) : null}
-          <span className="truncate">{props.title}</span>
-        </ModalTitle>
-        {props.subtitle ? (
-          <p className="mt-0.5 truncate text-xs text-fg-muted">
-            {props.subtitle}
-          </p>
-        ) : null}
-      </div>
-      <div className="flex shrink-0 items-center gap-1">
+      <ModalTitle className="inline-flex min-w-0 self-center items-center gap-2 text-base font-semibold text-fg">
+        {Icon ? <Icon aria-hidden="true" className="size-4 shrink-0" /> : null}
+        <span className="truncate">{props.title}</span>
+      </ModalTitle>
+      <div className="col-start-2 row-start-1 flex shrink-0 self-center items-center gap-1">
         {props.actions}
         {showClose ? (
           <ModalClose
@@ -140,6 +132,11 @@ export function ModalHeader(props: {
           </ModalClose>
         ) : null}
       </div>
+      {props.subtitle ? (
+        <p className="col-start-1 row-start-2 mt-0.5 min-w-0 truncate text-xs text-fg-muted">
+          {props.subtitle}
+        </p>
+      ) : null}
     </div>
   )
 }
