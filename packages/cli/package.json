@@ -76,7 +76,7 @@
     "@types/semver": "7.7.1",
     "better-auth": "^1.6.23",
     "effect": "3.22.0",
-    "fast-xml-parser": "5.10.0",
+    "fast-xml-parser": "5.10.1",
     "get-east-asian-width": "^1.6.0",
     "lexical": "^0.48.0",
     "minisearch": "^7.2.0",
