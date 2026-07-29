@@ -1,20 +1,21 @@
 ## TL;DR
 
-The post list API can exclude fully-AI-written posts, and draft autosave no longer overwrites conflicting edits.
+Progressive Markdown→Lexical migration for posts, notes, and pages, plus Dependabot security dependency patches.
 
 ## Highlights
 
-The posts list endpoint accepts a new `excludeAiWritten` query flag. When set, posts whose AI disclosure marks them as fully AI-written (`meta.aiGen` preset `2`, matched in both scalar and array form) are filtered out at the SQL level. This powers the new "No AI writing" toggle on the Yohaku post list, letting readers browse only human-written articles; partially assisted posts (AI titles, illustrations, organizing help) are unaffected.
+Admin no longer blocks format switching as soon as a Markdown document has content. Eligible Markdown posts, notes, and pages can convert to Lexical per document: conversion is gated on supported syntax, opens diagnostics when unsupported constructs remain, and only becomes published when you save—so drafts can stage Lexical without forcing a live switch.
 
-Draft autosave is now version-aware: an autosave that would clobber a newer save of the same draft is rejected instead of silently overwriting it, so editing the same draft from two places no longer loses work.
+The server dry-runs conversion (including coupled AI translations), then commits Markdown→Lexical atomically on save for the source document and its translations. Historical Markdown draft snapshots stay as an immutable audit trail; Lexical still owns `content` with a writer-owned Markdown `text` projection.
 
 ## Changes
 
 ### Features
+- Progressive Markdown-to-Lexical migration for posts, notes, and pages, with dry-run eligibility, source-located diagnostics, and atomic save-time commit (including AI translations) ([#2777](https://github.com/mx-space/core/pull/2777))
 
-- Posts list: `excludeAiWritten` query flag filters out fully-AI-written posts ([d1702ec](https://github.com/mx-space/core/commit/d1702ec18cc816e67afe8dddb2c9cd82f12e9ec1))
-- Draft autosave: version-checked updates prevent conflicting overwrites ([#2776](https://github.com/mx-space/core/issues/2776)) ([cd00d35](https://github.com/mx-space/core/commit/cd00d35c49066740d0de3c326c65b5505ae4a813))
+### Other
+- Patched Dependabot-reported direct and transitive dependency vulnerabilities (`@fastify/static`, `js-yaml`, `react-router`, `fast-xml-parser`, and related overrides) ([eb78fe2](https://github.com/mx-space/core/commit/eb78fe28f))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.18.0...v13.19.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.19.0...v13.20.0

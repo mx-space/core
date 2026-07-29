@@ -1,3 +1,10 @@
+# [13.20.0](https://github.com/mx-space/core/compare/v13.19.0...v13.20.0) (2026-07-30)
+
+
+### Features
+
+* **content:** add progressive Markdown to Lexical migration ([#2777](https://github.com/mx-space/core/issues/2777)) ([7e6dd62](https://github.com/mx-space/core/commit/7e6dd6229be3501e03363d306332044c34941c84))
+
 # [13.19.0](https://github.com/mx-space/core/compare/v13.18.0...v13.19.0) (2026-07-29)
 
 
