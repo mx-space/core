@@ -219,48 +219,54 @@ export function SortMenu<TField extends string = string>(
         <OrderIcon aria-hidden="true" className="size-3 text-fg-subtle" />
       </DropdownMenu.Trigger>
       <DropdownMenu.Content align="end" className="w-48">
-        <DropdownMenu.GroupLabel>
-          {t('shared.sortMenu.field')}
-        </DropdownMenu.GroupLabel>
-        {props.options.map((option) => {
-          const active = option.value === props.field
-          return (
-            <DropdownMenu.Item
-              className={cn(active ? 'font-medium text-fg' : 'text-fg-muted')}
-              key={String(option.value)}
-              onClick={() =>
-                props.onChange({ field: option.value, order: props.order })
-              }
-            >
-              <span className="min-w-0 flex-1 truncate">{option.label}</span>
-              {active ? (
-                <span className="text-accent" aria-hidden="true">
-                  ●
-                </span>
-              ) : null}
-            </DropdownMenu.Item>
-          )
-        })}
+        <DropdownMenu.Group>
+          <DropdownMenu.GroupLabel>
+            {t('shared.sortMenu.field')}
+          </DropdownMenu.GroupLabel>
+          {props.options.map((option) => {
+            const active = option.value === props.field
+            return (
+              <DropdownMenu.Item
+                className={cn(active ? 'font-medium text-fg' : 'text-fg-muted')}
+                key={String(option.value)}
+                onClick={() =>
+                  props.onChange({ field: option.value, order: props.order })
+                }
+              >
+                <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                {active ? (
+                  <span className="text-accent" aria-hidden="true">
+                    ●
+                  </span>
+                ) : null}
+              </DropdownMenu.Item>
+            )
+          })}
+        </DropdownMenu.Group>
         <DropdownMenu.Separator />
-        <DropdownMenu.GroupLabel>
-          {t('shared.sortMenu.direction')}
-        </DropdownMenu.GroupLabel>
-        <div className="grid grid-cols-2 gap-1 p-1">
-          <SortOrderButton
-            active={props.order === 'desc'}
-            icon={<ArrowDown aria-hidden="true" className="size-3.5" />}
-            label={t('shared.sortMenu.desc')}
-            onClick={() =>
-              props.onChange({ field: props.field, order: 'desc' })
-            }
-          />
-          <SortOrderButton
-            active={props.order === 'asc'}
-            icon={<ArrowUp aria-hidden="true" className="size-3.5" />}
-            label={t('shared.sortMenu.asc')}
-            onClick={() => props.onChange({ field: props.field, order: 'asc' })}
-          />
-        </div>
+        <DropdownMenu.Group>
+          <DropdownMenu.GroupLabel>
+            {t('shared.sortMenu.direction')}
+          </DropdownMenu.GroupLabel>
+          <div className="grid grid-cols-2 gap-1 p-1">
+            <SortOrderButton
+              active={props.order === 'desc'}
+              icon={<ArrowDown aria-hidden="true" className="size-3.5" />}
+              label={t('shared.sortMenu.desc')}
+              onClick={() =>
+                props.onChange({ field: props.field, order: 'desc' })
+              }
+            />
+            <SortOrderButton
+              active={props.order === 'asc'}
+              icon={<ArrowUp aria-hidden="true" className="size-3.5" />}
+              label={t('shared.sortMenu.asc')}
+              onClick={() =>
+                props.onChange({ field: props.field, order: 'asc' })
+              }
+            />
+          </div>
+        </DropdownMenu.Group>
       </DropdownMenu.Content>
     </DropdownMenu>
   )
