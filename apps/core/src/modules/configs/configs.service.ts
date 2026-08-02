@@ -36,6 +36,26 @@ const aggregateConfigKeys = new Set<keyof IConfig>([
   'url',
 ])
 
+const s3StorageNullDefaults = {
+  endpoint: '',
+  bucket: '',
+  region: 'auto',
+} as const
+
+function normalizeS3StorageOptionNulls<T extends object>(value: T): T {
+  const normalized = { ...value } as Record<string, unknown>
+
+  for (const [key, defaultValue] of Object.entries(
+    s3StorageNullDefaults,
+  )) {
+    if (normalized[key] === null) {
+      normalized[key] = defaultValue
+    }
+  }
+
+  return normalized as T
+}
+
 /*
  * NOTE:
  * 1. Configs live in Redis. `getConfig` is the single entry point; all reads
@@ -326,6 +346,10 @@ export class ConfigsService implements OnModuleInit {
     value = removeEmptyEncryptedFields(value as object, key) as Partial<
       IConfig[T]
     >
+
+    if (key === 'backupOptions' || key === 'imageStorageOptions') {
+      value = normalizeS3StorageOptionNulls(value)
+    }
 
     if (key === 'ai') {
       value = await this.hydrateAiProviderApiKeys(value as any)

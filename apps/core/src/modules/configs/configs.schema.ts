@@ -194,29 +194,45 @@ export const CommentOptionsSchema = section('Comment settings', {
 export class CommentOptionsDto extends createZodDto(CommentOptionsSchema) {}
 export type CommentOptionsConfig = z.infer<typeof CommentOptionsSchema>
 
+// ==================== S3 Storage Options ====================
+const nullableStorageText = () =>
+  z
+    .string()
+    .nullable()
+    .optional()
+    .transform((value) => (value === null ? '' : value))
+
 // ==================== Backup Options ====================
 export const BackupOptionsSchema = section('Backup', {
   enable: field.toggle(z.boolean().optional(), 'Enable automatic backup', {
     description:
       'Fill in the S3 information below to also upload backups to S3',
   }),
-  endpoint: field.plain(z.string().optional(), 'S3 endpoint'),
-  secretId: field.halfGrid(z.string().optional(), 'SecretId'),
-  secretKey: field.passwordHalfGrid(z.string().optional(), 'SecretKey'),
-  bucket: field.halfGrid(z.string().optional(), 'Bucket'),
-  region: field.halfGrid(z.string().optional(), 'Region'),
+  endpoint: field.plain(nullableStorageText(), 'S3 endpoint'),
+  secretId: field.halfGrid(nullableStorageText(), 'SecretId'),
+  secretKey: field.passwordHalfGrid(nullableStorageText(), 'SecretKey'),
+  bucket: field.halfGrid(nullableStorageText(), 'Bucket'),
+  region: field
+    .halfGrid(nullableStorageText(), 'Region')
+    .transform((value) => value || 'auto'),
 })
 export class BackupOptionsDto extends createZodDto(BackupOptionsSchema) {}
 export type BackupOptionsConfig = z.infer<typeof BackupOptionsSchema>
 
 // ==================== Image Storage Options ====================
+
 export const ImageStorageOptionsSchema = section('Image storage', {
   enable: field.toggle(z.boolean().optional(), 'Enable S3 image storage'),
-  endpoint: field.plain(z.string().optional(), 'S3 endpoint'),
-  secretId: field.halfGrid(z.string().optional(), 'Access Key ID'),
-  secretKey: field.passwordHalfGrid(z.string().optional(), 'Secret Access Key'),
-  bucket: field.halfGrid(z.string().optional(), 'Bucket'),
-  region: field.halfGrid(z.string().optional(), 'Region').default('auto'),
+  endpoint: field.plain(nullableStorageText(), 'S3 endpoint'),
+  secretId: field.halfGrid(nullableStorageText(), 'Access Key ID'),
+  secretKey: field.passwordHalfGrid(
+    nullableStorageText(),
+    'Secret Access Key',
+  ),
+  bucket: field.halfGrid(nullableStorageText(), 'Bucket'),
+  region: field
+    .halfGrid(nullableStorageText(), 'Region')
+    .transform((value) => value || 'auto'),
   customDomain: field.plain(
     z.url().optional().or(z.literal('')),
     'Custom domain (CDN)',
