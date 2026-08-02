@@ -2,7 +2,6 @@ import { access, cp, mkdir, rename, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 import { Injectable } from '@nestjs/common'
-import JSZip from 'jszip'
 import pc from 'picocolors'
 
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
@@ -20,6 +19,7 @@ export class UpdateInstallService {
     await mkdir(tempDir, { recursive: true })
 
     try {
+      const JSZip = (await import('jszip')).default
       const zip = new JSZip()
       await zip.loadAsync(buffer)
 

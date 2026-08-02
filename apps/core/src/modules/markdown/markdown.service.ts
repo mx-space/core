@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common'
 import { omit } from 'es-toolkit/compat'
 import { dump } from 'js-yaml'
-import JSZip from 'jszip'
 import { escapeHtml } from 'xss'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -167,6 +166,7 @@ export class MarkdownService {
     documents: MarkdownYAMLProperty[]
     options: { slug?: boolean }
   }) {
+    const JSZip = (await import('jszip')).default
     const zip = new JSZip()
 
     for (const document of documents) {

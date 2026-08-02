@@ -1,9 +1,7 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-import { createTransport } from 'nodemailer'
 import type Mail from 'nodemailer/lib/mailer'
-import { Resend } from 'resend'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { EventBusEvents } from '~/constants/event-bus.constant'
@@ -154,6 +152,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           this.mailConfigSynced = true
           return
         }
+        const { Resend } = await import('resend')
         const resend = new Resend(apiKey)
         this.instance = {
           sendMail: async (options: Mail.Options) => {
@@ -204,6 +203,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           this.mailConfigSynced = true
           return
         }
+        const { createTransport } = await import('nodemailer')
         this.instance = createTransport({
           host: host || '',
           port: Number.parseInt((port as any) || '465'),

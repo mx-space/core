@@ -46,6 +46,16 @@ RUN npm i sharp
 
 COPY --chmod=755 docker-entrypoint.sh .
 
+# V8 code cache for the bundle. Warmed at build time so the cache ships inside
+# the image — a fresh container (rolling deploy) hits it on first boot instead
+# of re-parsing the ~6MB bootstrap chunk. The dummy env vars only satisfy
+# app.config's eager validation during warmup; they are not baked into ENV.
+ENV NODE_COMPILE_CACHE=/app/.compile-cache
+RUN SNOWFLAKE_WORKER_ID=0 \
+    ENCRYPT_KEY=0000000000000000000000000000000000000000000000000000000000000000 \
+    node -e "const fs=require('fs');Object.assign(globalThis,{isDev:false,cwd:process.cwd(),consola:console});const c=fs.readdirSync('./chunks').find(n=>n.startsWith('bootstrap-'));import('./chunks/'+c).then(()=>process.exit(0),e=>{console.warn('[warmup] skipped:',e.message);process.exit(0)})" \
+    && du -sh /app/.compile-cache
+
 ENV TZ=Asia/Shanghai
 ENV MIGRATIONS_DIR=/app/migrations
 # agent-browser CLI picks up these knobs; system chromium replaces the

@@ -59,7 +59,7 @@ export class PageProxyController {
 
       return reply
         .type('text/html')
-        .send(this.service.rewriteAdminEntryAssetPath(injectEnv))
+        .send(await this.service.rewriteAdminEntryAssetPath(injectEnv))
     } catch (error) {
       isDev && console.error(error)
       return reply.code(500).send({

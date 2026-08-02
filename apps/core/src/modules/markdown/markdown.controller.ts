@@ -4,7 +4,6 @@ import { Readable } from 'node:stream'
 import { CacheTTL } from '@nestjs/cache-manager'
 import { Body, Get, Header, Param, Post, Query } from '@nestjs/common'
 import { omit } from 'es-toolkit/compat'
-import JSZip from 'jszip'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -112,6 +111,7 @@ export class MarkdownController {
       id2DataMap[item.id] = item
     }
 
+    const JSZip = (await import('jszip')).default
     const rtzip = new JSZip()
 
     await Promise.all(

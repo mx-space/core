@@ -1,5 +1,3 @@
-import { parseHTML } from 'linkedom'
-
 import type { EnrichmentResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 
@@ -27,11 +25,12 @@ interface MetaBag {
  * fetcher landed on (after redirects); `originalUrl` is what the user
  * actually pasted, used as the cache key surface.
  */
-export function parseOpenGraph(
+export async function parseOpenGraph(
   html: string,
   requestUrl: string,
   originalUrl: string,
-): ParsedMeta {
+): Promise<ParsedMeta> {
+  const { parseHTML } = await import('linkedom')
   const { document } = parseHTML(`<!doctype html>${html}`)
   const bag = collectMeta(document)
 

@@ -10,9 +10,9 @@ function parse(head: string, url = 'https://example.com/article') {
   )
 }
 
-describe('parseOpenGraph — thumbnailImage', () => {
-  it('resolves og:image and records advertised dimensions', () => {
-    const { result } = parse(`
+describe('parseOpenGraph — thumbnailImage', async () => {
+  it('resolves og:image and records advertised dimensions', async () => {
+    const { result } = await parse(`
       <meta property="og:title" content="A Post" />
       <meta property="og:image" content="https://cdn.example.com/og.png" />
       <meta property="og:image:width" content="1200" />
@@ -26,8 +26,8 @@ describe('parseOpenGraph — thumbnailImage', () => {
     })
   })
 
-  it('keeps the thumbnailImage without dimensions when none are advertised', () => {
-    const { result } = parse(`
+  it('keeps the thumbnailImage without dimensions when none are advertised', async () => {
+    const { result } = await parse(`
       <meta property="og:image" content="https://cdn.example.com/og.png" />
     `)
     expect(result.thumbnailImage?.url).toBe('https://cdn.example.com/og.png')
@@ -35,8 +35,8 @@ describe('parseOpenGraph — thumbnailImage', () => {
     expect(result.thumbnailImage?.height).toBeUndefined()
   })
 
-  it('ignores non-numeric / non-positive image dimensions', () => {
-    const { result } = parse(`
+  it('ignores non-numeric / non-positive image dimensions', async () => {
+    const { result } = await parse(`
       <meta property="og:image" content="https://cdn.example.com/og.png" />
       <meta property="og:image:width" content="wide" />
       <meta property="og:image:height" content="0" />
@@ -45,23 +45,23 @@ describe('parseOpenGraph — thumbnailImage', () => {
     expect(result.thumbnailImage?.height).toBeUndefined()
   })
 
-  it('falls back to twitter:image when no og:image is present', () => {
-    const { result } = parse(`
+  it('falls back to twitter:image when no og:image is present', async () => {
+    const { result } = await parse(`
       <meta name="twitter:image" content="https://cdn.example.com/tw.png" />
     `)
     expect(result.thumbnailImage?.url).toBe('https://cdn.example.com/tw.png')
   })
 
-  it('absolutizes a relative thumbnailImage url', () => {
-    const { result } = parse(
+  it('absolutizes a relative thumbnailImage url', async () => {
+    const { result } = await parse(
       `<meta property="og:image" content="/static/og.png" />`,
       'https://example.com/blog/post',
     )
     expect(result.thumbnailImage?.url).toBe('https://example.com/static/og.png')
   })
 
-  it('does NOT use an apple-touch-icon / favicon as the thumbnailImage', () => {
-    const { result } = parse(`
+  it('does NOT use an apple-touch-icon / favicon as the thumbnailImage', async () => {
+    const { result } = await parse(`
       <link rel="apple-touch-icon" href="https://example.com/touch.png" />
       <link rel="icon" href="https://example.com/favicon.ico" />
     `)
@@ -69,9 +69,9 @@ describe('parseOpenGraph — thumbnailImage', () => {
   })
 })
 
-describe('parseOpenGraph — icon links', () => {
-  it('surfaces discovered icons in result.links', () => {
-    const { result } = parse(`
+describe('parseOpenGraph — icon links', async () => {
+  it('surfaces discovered icons in result.links', async () => {
+    const { result } = await parse(`
       <link rel="apple-touch-icon" href="https://example.com/touch.png" />
       <link rel="icon" href="/favicon.ico" />
     `)
@@ -81,8 +81,10 @@ describe('parseOpenGraph — icon links', () => {
     ])
   })
 
-  it('leaves links undefined when the page advertises no icons', () => {
-    const { result } = parse(`<meta property="og:title" content="A Post" />`)
+  it('leaves links undefined when the page advertises no icons', async () => {
+    const { result } = await parse(
+      `<meta property="og:title" content="A Post" />`,
+    )
     expect(result.links).toBeUndefined()
   })
 })

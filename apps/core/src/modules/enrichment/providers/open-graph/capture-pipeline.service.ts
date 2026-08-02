@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import sharp, { type OutputInfo, type Sharp } from 'sharp'
+import type { OutputInfo, Sharp } from 'sharp'
 import { rgbaToThumbHash } from 'thumbhash'
 
 export interface CapturePalette {
@@ -53,6 +53,7 @@ export class CapturePipelineService {
     // pipeline reflects the SOURCE image, not the resized output — so we
     // capture the post-resize dimensions from the webp encode's
     // `resolveWithObject` info instead.
+    const sharp = (await import('sharp')).default
     const sharped = sharp(input).resize(MAX_WIDTH, MAX_HEIGHT, {
       fit: 'inside',
       withoutEnlargement: true,

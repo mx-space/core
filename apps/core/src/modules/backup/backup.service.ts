@@ -8,7 +8,6 @@ import {
   Logger,
 } from '@nestjs/common'
 import { CronExpression } from '@nestjs/schedule'
-import JSZip from 'jszip'
 import { mkdirp } from 'mkdirp'
 
 import { POSTGRES } from '~/app.config'
@@ -98,6 +97,7 @@ export class BackupService {
   private async safeUnzip(zipFilePath: string, destDir: string) {
     const base = resolve(destDir)
     const buffer = await readFile(zipFilePath)
+    const JSZip = (await import('jszip')).default
     const zip = await new JSZip().loadAsync(buffer)
 
     const entries = Object.values(zip.files)

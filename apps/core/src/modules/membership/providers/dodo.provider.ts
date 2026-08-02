@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import DodoPayments from 'dodopayments'
+import type DodoPayments from 'dodopayments'
 import { Webhook } from 'standardwebhooks'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -91,16 +91,17 @@ export class DodoProvider implements PaymentProviderAdapter {
 
   constructor(private readonly configsService: ConfigsService) {}
 
-  private getClient(
+  private async getClient(
     apiKey: string,
     environment: 'test_mode' | 'live_mode',
-  ): DodoPayments {
+  ): Promise<DodoPayments> {
     if (
       !this.client ||
       this.cachedApiKey !== apiKey ||
       this.cachedEnvironment !== environment
     ) {
-      this.client = new DodoPayments({ bearerToken: apiKey, environment })
+      const { default: DodoPaymentsClient } = await import('dodopayments')
+      this.client = new DodoPaymentsClient({ bearerToken: apiKey, environment })
       this.cachedApiKey = apiKey
       this.cachedEnvironment = environment
     }
@@ -126,7 +127,7 @@ export class DodoProvider implements PaymentProviderAdapter {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
     }
 
-    const client = this.getClient(
+    const client = await this.getClient(
       membershipConfig.apiKey,
       membershipConfig.environment,
     )
@@ -156,7 +157,7 @@ export class DodoProvider implements PaymentProviderAdapter {
     const membershipConfig = await this.configsService.get('membership')
     if (!membershipConfig.apiKey) return null
 
-    const client = this.getClient(
+    const client = await this.getClient(
       membershipConfig.apiKey,
       membershipConfig.environment,
     )

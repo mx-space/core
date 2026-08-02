@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { Octokit } from 'octokit'
+import type { Octokit } from 'octokit'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
 
@@ -25,6 +25,7 @@ export class GitHubClient {
   async getOctokit(): Promise<Octokit> {
     const config = await this.configsService.get('thirdPartyServiceIntegration')
     const token = config?.github?.token || undefined
+    const { Octokit } = await import('octokit')
     return new Octokit({ auth: token })
   }
 }

@@ -2,7 +2,6 @@ import path from 'node:path'
 import { URL } from 'node:url'
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
-import { parseHTML } from 'linkedom'
 
 import { API_VERSION } from '~/app.config'
 
@@ -61,10 +60,11 @@ export class PageProxyService {
     )
   }
 
-  rewriteAdminEntryAssetPath(htmlEntry: string) {
+  async rewriteAdminEntryAssetPath(htmlEntry: string) {
     if (!htmlEntry) {
       throw new InternalServerErrorException('htmlEntry is empty')
     }
+    const { parseHTML } = await import('linkedom')
     const { document } = parseHTML(htmlEntry)
     const $scripts = document.querySelectorAll(
       'script[src]',
