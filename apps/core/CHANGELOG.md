@@ -1,3 +1,15 @@
+## [13.20.1](https://github.com/mx-space/core/compare/v13.20.0...v13.20.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* **core:** preserve S3 config and serve nested uploads ([#2780](https://github.com/mx-space/core/issues/2780)) ([c4e669d](https://github.com/mx-space/core/commit/c4e669d53e4d4f44fdc02acdda72b53355273d62))
+
+
+### Performance Improvements
+
+* **core:** cut prod boot time via V8 compile cache and lazy imports ([2afacbb](https://github.com/mx-space/core/commit/2afacbbc0cf043c17e8b5e5110ff75c7d76a07a9))
+
 # [13.20.0](https://github.com/mx-space/core/compare/v13.19.0...v13.20.0) (2026-07-30)
 
 
