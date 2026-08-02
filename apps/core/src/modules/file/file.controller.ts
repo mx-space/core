@@ -39,6 +39,7 @@ import {
   BatchOrphanDeleteDto,
   CommentUploadsListQueryDto,
   FileQueryDto,
+  FileQuerySchema,
   FileUploadDto,
   RenameFileQueryDto,
 } from './file.schema'
@@ -175,7 +176,7 @@ export class FileController {
     return files.sort((a, b) => b.created - a.created)
   }
 
-  @Get('/:type/:name')
+  @Get('/:type/*')
   @Throttle({
     default: {
       limit: 60,
@@ -183,7 +184,18 @@ export class FileController {
     },
   })
   @HTTPDecorators.RawResponse
-  async get(@Param() params: FileQueryDto, @Res() reply: FastifyReply) {
+  async get(
+    @Param('type') routeType: string,
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    const wildcardName = decodeURIComponent(
+      (req.params as Record<string, string>)['*'],
+    )
+    const params = FileQuerySchema.parse({
+      type: routeType,
+      name: wildcardName,
+    })
     const { type, name } = params
     const ext = path.extname(name)
     const mimetype = lookup(ext)

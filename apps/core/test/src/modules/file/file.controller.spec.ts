@@ -25,6 +25,39 @@ vi.mock('~/utils/s3.util', () => {
 })
 
 describe('FileController', () => {
+  it('serves a file whose name contains nested comment-upload directories', async () => {
+    const stream = Readable.from(['image-bytes'])
+    const getFileStream = vi.fn().mockResolvedValue(stream)
+    const reply = {
+      type: vi.fn().mockReturnThis(),
+      header: vi.fn().mockReturnThis(),
+      send: vi.fn().mockReturnThis(),
+    }
+    const controller = new FileController(
+      { getFileStream } as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    )
+
+    await controller.get(
+      'image',
+      {
+        params: {
+          '*': 'comments/reader-id/2026/08/comment-image.jpg',
+        },
+      } as any,
+      reply as any,
+    )
+
+    expect(getFileStream).toHaveBeenCalledWith(
+      'image',
+      'comments/reader-id/2026/08/comment-image.jpg',
+    )
+    expect(reply.type).toHaveBeenCalledWith('image/jpeg')
+    expect(reply.send).toHaveBeenCalledWith(stream)
+  })
+
   it('buffers image uploads and delegates storage to service.uploadBuffer', async () => {
     const uploadBuffer = vi.fn().mockResolvedValue({
       url: 'http://example.com/objects/image/nested/origin.png',

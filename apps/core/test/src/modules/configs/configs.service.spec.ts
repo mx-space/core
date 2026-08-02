@@ -363,7 +363,7 @@ describe('ConfigsService', () => {
     })
   })
 
-  describe('imageGenerationOptions save round-trip (admin form re-submits the whole section)', () => {
+  describe('S3 and image-generation option save round-trips', () => {
     function createService(
       currentConfig: ReturnType<typeof generateDefaultConfig>,
     ) {
@@ -433,6 +433,26 @@ describe('ConfigsService', () => {
           endpoint: null,
         } as any),
       ).rejects.toMatchObject({ code: AppErrorCode.CONFIG_VALIDATION_FAILED })
+    })
+
+    it('accepts legacy null S3 values in backupOptions', async () => {
+      const { service } = createService(generateDefaultConfig())
+
+      const result = await service.patchAndValid('backupOptions', {
+        enable: false,
+        endpoint: null,
+        region: null,
+        bucket: null,
+        secretId: '',
+        secretKey: '',
+      } as any)
+
+      expect(result).toMatchObject({
+        enable: false,
+        endpoint: '',
+        region: 'auto',
+        bucket: '',
+      })
     })
   })
 })
