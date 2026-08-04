@@ -1767,6 +1767,7 @@ function WritePage(props: { kind: WriteKind }) {
           <ContentLayoutSlot active={metaPanelOpen} id="meta">
             {props.kind === 'page' ? (
               <PageSettingsPanel
+                draftId={draftId || routeDraftId || undefined}
                 refId={isEditing ? id : undefined}
                 state={state}
                 updateField={updateField}
@@ -1774,6 +1775,7 @@ function WritePage(props: { kind: WriteKind }) {
             ) : (
               <ContentSettingsPanel
                 availableDraft={availableDraft}
+                draftId={draftId || routeDraftId || undefined}
                 draftMutationData={draftMutation.data}
                 draftMutationPending={draftMutation.isPending}
                 kind={props.kind}
@@ -1989,6 +1991,7 @@ function MarkdownMigrationDialog(props: {
 
 function ContentSettingsPanel(props: {
   availableDraft?: DraftModel
+  draftId?: string
   draftMutationData?: DraftModel
   draftMutationPending: boolean
   kind: Exclude<WriteKind, 'page'>
@@ -2118,6 +2121,7 @@ function ContentSettingsPanel(props: {
         {props.postFields}
         {props.noteFields}
         <MediaAndMetaFields
+          draftId={props.draftId}
           kind={props.kind}
           refId={props.refId}
           state={props.state}
@@ -3232,6 +3236,7 @@ function PageFields(props: {
 }
 
 function MediaAndMetaFields(props: {
+  draftId?: string
   kind: WriteKind
   refId?: string
   state: WriteFormState
@@ -3282,6 +3287,7 @@ function MediaAndMetaFields(props: {
         ) : null}
         <CoverGenerationEntry
           currentCover={cover}
+          draftId={props.draftId}
           onSelectCover={(url) =>
             props.updateField(
               'meta',
@@ -3826,6 +3832,7 @@ function applyParsedPageMarkdown(
 }
 
 function PageSettingsPanel(props: {
+  draftId?: string
   refId?: string
   state: WriteFormState
   updateField: <TKey extends keyof WriteFormState>(
@@ -3841,6 +3848,7 @@ function PageSettingsPanel(props: {
       >
         <PageFields state={props.state} updateField={props.updateField} />
         <MediaAndMetaFields
+          draftId={props.draftId}
           kind="page"
           refId={props.refId}
           state={props.state}

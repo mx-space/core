@@ -5,12 +5,17 @@ export const DraftImagePromptSchema = z
   .object({
     presetId: z.string().min(1),
     refId: z.string().optional(),
+    draftId: z.string().optional(),
     title: z.string().optional(),
     summary: z.string().optional(),
   })
-  .refine((data) => !!data.refId || (!!data.title && !!data.summary), {
-    message: 'Either refId or both title and summary are required',
-  })
+  .refine(
+    (data) =>
+      !!data.refId || !!data.draftId || (!!data.title && !!data.summary),
+    {
+      message: 'Either refId, draftId, or both title and summary are required',
+    },
+  )
 
 export class DraftImagePromptDto extends createZodDto(DraftImagePromptSchema) {}
 
@@ -27,11 +32,21 @@ export const GenerateImageSchema = z
     providerParams: z.record(z.string(), z.unknown()).optional(),
     purpose: z.enum(['cover', 'inline']),
     refId: z.string().optional(),
+    draftId: z.string().optional(),
+    title: z.string().optional(),
+    summary: z.string().optional(),
     requestId: z.string().min(1),
   })
-  .refine((data) => !!data.prompt || (!!data.presetId && !!data.refId), {
-    message: 'Either prompt, or presetId with refId, is required',
-  })
+  .refine(
+    (data) =>
+      !!data.prompt ||
+      (!!data.presetId &&
+        (!!data.refId || !!data.draftId || (!!data.title && !!data.summary))),
+    {
+      message:
+        'Either prompt, or presetId with refId / draftId / title and summary, is required',
+    },
+  )
 
 export class GenerateImageDto extends createZodDto(GenerateImageSchema) {}
 

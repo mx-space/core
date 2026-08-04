@@ -96,11 +96,6 @@ export function CoverGenerationDrawer(props: CoverGenerationDrawerProps) {
                 </button>
               </p>
             ) : null}
-            {props.presetNeedsSavedArticle ? (
-              <p className="text-xs text-fg-subtle">
-                {t('write.coverGeneration.saveFirstHint')}
-              </p>
-            ) : null}
           </div>
         )}
 

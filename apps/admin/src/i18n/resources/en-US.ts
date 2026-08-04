@@ -3478,8 +3478,6 @@ export const enUS = {
   'write.coverGeneration.presetsLoading': 'Loading presets...',
   'write.coverGeneration.promptLabel': 'Prompt',
   'write.coverGeneration.promptPlaceholder': 'Describe the cover image...',
-  'write.coverGeneration.saveFirstHint':
-    'Save the article first to generate directly from a preset, or use "View / Edit Prompt" below.',
   'write.coverGeneration.title': 'AI Cover Generation',
   'write.coverGeneration.toast.draftFailed': 'Failed to draft a prompt',
   'write.coverGeneration.toast.generateFailed': 'Failed to generate image',

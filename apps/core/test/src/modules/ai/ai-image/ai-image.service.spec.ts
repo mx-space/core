@@ -46,7 +46,11 @@ function createContext(
 
 function createService(
   configOverrides: Record<string, unknown> = {},
-  deps: { aiService?: unknown; databaseService?: unknown } = {},
+  deps: {
+    aiService?: unknown
+    databaseService?: unknown
+    draftRepository?: unknown
+  } = {},
 ) {
   const config = {
     enable: true,
@@ -68,6 +72,7 @@ function createService(
   }
   const aiService = deps.aiService ?? { getWriterModel: vi.fn() }
   const databaseService = deps.databaseService ?? { findGlobalById: vi.fn() }
+  const draftRepository = deps.draftRepository ?? { findById: vi.fn() }
 
   let registeredHandler:
     | {
@@ -91,6 +96,7 @@ function createService(
     taskProcessor as any,
     aiService as any,
     databaseService as any,
+    draftRepository as any,
   )
   service.onModuleInit()
 
@@ -100,6 +106,7 @@ function createService(
     taskProcessor,
     aiService,
     databaseService,
+    draftRepository,
     getHandler: () => registeredHandler!,
   }
 }
@@ -350,6 +357,105 @@ describe('AiImageService image generation task handler', () => {
       expect(context.setResult).toHaveBeenCalledWith(
         expect.objectContaining({
           prompt: 'A calm orbital composition, compiled server-side.',
+        }),
+      )
+    })
+
+    it('prefers the live draft over the published article when both ids are given', async () => {
+      const generateStructured = vi.fn().mockResolvedValue({
+        output: { prompt: 'A composition from the draft.' },
+      })
+      const aiService = {
+        getWriterModel: vi.fn().mockResolvedValue({ generateStructured }),
+      }
+      const databaseService = {
+        findGlobalById: vi.fn().mockResolvedValue(articleFixture()),
+      }
+      const draftRepository = {
+        findById: vi.fn().mockResolvedValue({
+          title: 'The draft title',
+          text: 'The draft body',
+        }),
+      }
+      const { getHandler } = createService(
+        {},
+        { aiService, databaseService, draftRepository },
+      )
+      const assistantImages: AssistantImages = {
+        api: 'openrouter-images-api',
+        provider: 'openrouter',
+        model: 'google/gemini-3-flash-image',
+        output: [
+          {
+            type: 'image',
+            data: Buffer.from('fake-png-bytes').toString('base64'),
+            mimeType: 'image/png',
+          },
+        ],
+        stopReason: 'stop',
+        timestamp: Date.now(),
+      }
+      generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+
+      await getHandler().execute(
+        {
+          presetId: SIGNAL_GEOMETRY_PRESET.id,
+          draftId: 'draft-1',
+          refId: 'article-1',
+          purpose: 'cover',
+          requestId: 'req-draft',
+        },
+        createContext(),
+      )
+
+      expect(draftRepository.findById).toHaveBeenCalledWith('draft-1')
+      expect(databaseService.findGlobalById).not.toHaveBeenCalled()
+      expect(JSON.stringify(generateStructured.mock.calls[0])).toContain(
+        'The draft title',
+      )
+    })
+
+    it('compiles a preset prompt from the payload title and summary when the article is not saved yet', async () => {
+      const generateStructured = vi.fn().mockResolvedValue({
+        output: { prompt: 'A composition for an unsaved draft.' },
+      })
+      const aiService = {
+        getWriterModel: vi.fn().mockResolvedValue({ generateStructured }),
+      }
+      const databaseService = { findGlobalById: vi.fn() }
+      const { getHandler } = createService({}, { aiService, databaseService })
+      const assistantImages: AssistantImages = {
+        api: 'openrouter-images-api',
+        provider: 'openrouter',
+        model: 'google/gemini-3-flash-image',
+        output: [
+          {
+            type: 'image',
+            data: Buffer.from('fake-png-bytes').toString('base64'),
+            mimeType: 'image/png',
+          },
+        ],
+        stopReason: 'stop',
+        timestamp: Date.now(),
+      }
+      generateOpenRouterImagesMock.mockResolvedValueOnce(assistantImages)
+      const context = createContext()
+
+      await getHandler().execute(
+        {
+          presetId: SIGNAL_GEOMETRY_PRESET.id,
+          title: 'An unsaved draft',
+          summary: 'What the draft is about',
+          purpose: 'cover',
+          requestId: 'req-unsaved',
+        },
+        context,
+      )
+
+      expect(databaseService.findGlobalById).not.toHaveBeenCalled()
+      expect(context.setResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: 'A composition for an unsaved draft.',
         }),
       )
     })

@@ -11,6 +11,7 @@ import { useCoverGeneration } from './use-cover-generation'
 
 export function CoverGenerationEntry(props: {
   currentCover: string
+  draftId?: string
   onSelectCover: (url: string) => void
   refId?: string
   summary: string
@@ -30,6 +31,7 @@ export function CoverGenerationEntry(props: {
   const generation = useCoverGeneration({
     currentCover: props.currentCover,
     defaultModel: optionsQuery.data?.model,
+    draftId: props.draftId,
     enabled,
     onSelectCover: props.onSelectCover,
     refId: props.refId,

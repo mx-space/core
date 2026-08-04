@@ -20,6 +20,7 @@ export interface ImageDraftPromptResponse {
 }
 
 export interface DraftImagePromptData {
+  draftId?: string
   presetId: string
   refId?: string
   summary?: string
@@ -40,10 +41,13 @@ export type ImageAspectRatio =
 export interface GenerateImageData {
   prompt?: string
   aspectRatio?: ImageAspectRatio
+  draftId?: string
   model?: string
   presetId?: string
   purpose: ImageGeneratePurpose
   refId?: string
+  summary?: string
+  title?: string
   requestId: string
 }
 

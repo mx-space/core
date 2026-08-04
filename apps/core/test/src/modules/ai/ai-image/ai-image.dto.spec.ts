@@ -27,7 +27,17 @@ describe('GenerateImageSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  it('rejects preset mode missing refId', () => {
+  it('accepts preset mode on an unsaved article: presetId + title + summary', () => {
+    const result = GenerateImageSchema.safeParse({
+      ...base,
+      presetId: 'signal-geometry',
+      title: 'an unsaved draft',
+      summary: 'what it is about',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects preset mode missing refId, title and summary', () => {
     const result = GenerateImageSchema.safeParse({
       ...base,
       presetId: 'signal-geometry',

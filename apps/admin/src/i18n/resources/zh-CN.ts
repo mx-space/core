@@ -3311,8 +3311,6 @@ export const zhCN = {
   'write.coverGeneration.presetsLoading': '预设加载中…',
   'write.coverGeneration.promptLabel': '提示词',
   'write.coverGeneration.promptPlaceholder': '描述封面图像…',
-  'write.coverGeneration.saveFirstHint':
-    '先保存文章才能直接用预设生成；也可点击下方「查看/编辑提示词」。',
   'write.coverGeneration.title': 'AI 生成封面',
   'write.coverGeneration.toast.draftFailed': '生成提示词失败',
   'write.coverGeneration.toast.generateFailed': '生成图片失败',

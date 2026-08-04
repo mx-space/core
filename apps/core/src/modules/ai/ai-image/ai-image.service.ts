@@ -10,6 +10,7 @@ import {
 import { throwIfAborted } from '~/utils/abort.util'
 
 import { ConfigsService } from '../../configs/configs.service'
+import { DraftRepository } from '../../draft/draft.repository'
 import { FileService } from '../../file/file.service'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
@@ -17,7 +18,7 @@ import {
   AITaskType,
   type ImageGenerationTaskPayload,
 } from '../ai-task/ai-task.types'
-import { resolveCoverArticle, resolveCoverPreset } from './cover-preset.util'
+import { resolveCoverPreset, resolveCoverSubject } from './cover-preset.util'
 import { ImageRuntimeAdapter } from './image-runtime.adapter'
 import type {
   IImageRuntime,
@@ -34,6 +35,7 @@ export class AiImageService implements OnModuleInit {
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly aiService: AiService,
     private readonly databaseService: DatabaseService,
+    private readonly draftRepository: DraftRepository,
   ) {}
 
   onModuleInit() {
@@ -117,16 +119,19 @@ export class AiImageService implements OnModuleInit {
     payload: ImageGenerationTaskPayload,
     context: TaskExecuteContext,
   ): Promise<string> {
-    if (!payload.presetId || !payload.refId) {
+    if (!payload.presetId) {
       throw createAppException(AppErrorCode.AI_INVALID_PARAMETER, {
-        message: 'presetId and refId are required when prompt is omitted',
+        message: 'presetId is required when prompt is omitted',
       })
     }
 
     const preset = resolveCoverPreset(payload.presetId)
-    const article = await resolveCoverArticle(
-      this.databaseService,
-      payload.refId,
+    const article = await resolveCoverSubject(
+      {
+        databaseService: this.databaseService,
+        draftRepository: this.draftRepository,
+      },
+      payload,
     )
 
     try {

@@ -18,6 +18,7 @@ import { clearImageCatalogCache } from '~/modules/ai/ai-image/image-catalog'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { DraftRepository } from '~/modules/draft/draft.repository'
 import { DatabaseService } from '~/processors/database/database.service'
 import type { TaskExecuteContext } from '~/processors/task-queue'
 import { TaskQueueService } from '~/processors/task-queue'
@@ -72,6 +73,7 @@ function baseImageConfig() {
 
 const aiServiceMock = { getWriterModel: vi.fn() }
 const databaseServiceMock = { findGlobalById: vi.fn() }
+const draftRepositoryMock = { findById: vi.fn() }
 let imageConfig = baseImageConfig()
 const configsServiceMock = {
   get: vi.fn(async (key: string) => {
@@ -109,6 +111,7 @@ function createStandaloneImageService(
     taskProcessor as any,
     aiServiceMock as any,
     databaseServiceMock as any,
+    draftRepositoryMock as any,
   )
   service.onModuleInit()
   return { fileService, getHandler: () => registeredHandler! }
@@ -179,6 +182,7 @@ describe('AiImageController (faux e2e)', () => {
       { provide: AiService, useValue: aiServiceMock },
       { provide: ConfigsService, useValue: configsServiceMock },
       { provide: DatabaseService, useValue: databaseServiceMock },
+      { provide: DraftRepository, useValue: draftRepositoryMock },
       {
         provide: TaskQueueService,
         useFactory: async () =>

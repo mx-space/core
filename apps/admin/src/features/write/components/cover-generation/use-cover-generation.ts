@@ -34,6 +34,7 @@ export interface CoverCandidate {
 interface UseCoverGenerationParams {
   currentCover: string
   defaultModel?: string
+  draftId?: string
   enabled: boolean
   onSelectCover: (url: string) => void
   refId?: string
@@ -92,7 +93,9 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     params.summary.trim() ||
     params.text.trim().slice(0, DRAFT_PROMPT_SUMMARY_FALLBACK_LENGTH)
   const canDraftPrompt =
-    Boolean(params.refId) || Boolean(params.title.trim() && summaryFallback)
+    Boolean(params.refId) ||
+    Boolean(params.draftId) ||
+    Boolean(params.title.trim() && summaryFallback)
 
   const { isPending: isDraftingPrompt, mutate: draftPrompt } = useMutation({
     mutationFn: draftImagePrompt,
@@ -118,11 +121,13 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
   const onViewEditPrompt = () => {
     if (!presetId || !canDraftPrompt) return
     setWriterProviderMissing(false)
-    draftPrompt(
-      params.refId
-        ? { presetId, refId: params.refId }
-        : { presetId, summary: summaryFallback, title: params.title },
-    )
+    draftPrompt({
+      presetId,
+      draftId: params.draftId,
+      refId: params.refId,
+      summary: summaryFallback,
+      title: params.title,
+    })
   }
 
   const onWriteManually = () => {
@@ -186,12 +191,10 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     setPendingTaskId(null)
   }, [taskQuery.data, pendingTaskId, promptText, t])
 
-  const presetNeedsSavedArticle =
-    mode === 'preset' && Boolean(presetId) && !params.refId
   const canGenerate =
     mode === 'manual'
       ? Boolean(promptText.trim())
-      : Boolean(presetId) && Boolean(params.refId)
+      : Boolean(presetId) && canDraftPrompt
 
   return {
     canDraftPrompt,
@@ -218,11 +221,14 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
         return
       }
       generateMutation.mutate({
+        draftId: params.draftId,
         model: selectedModel || undefined,
         presetId,
         purpose: 'cover',
         refId: params.refId,
         requestId: crypto.randomUUID(),
+        summary: summaryFallback,
+        title: params.title,
       })
     },
     onSelectCandidate: params.onSelectCover,
@@ -232,7 +238,6 @@ export function useCoverGeneration(params: UseCoverGenerationParams) {
     open,
     openDrawer: () => setOpen(true),
     presetId,
-    presetNeedsSavedArticle,
     presets,
     presetsLoading: presetsQuery.isLoading,
     promptText,

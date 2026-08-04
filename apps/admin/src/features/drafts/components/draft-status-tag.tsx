@@ -1,8 +1,8 @@
 import { CloudCheck, CloudOff, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import type { DraftModel } from '~/models/draft'
 
 import { useI18n } from '~/i18n'
+import type { DraftModel } from '~/models/draft'
 import { Tag } from '~/ui/primitives/tag'
 
 const RELATIVE_TIME_TICK_MS = 30_000
@@ -11,6 +11,12 @@ export interface DraftStatusTagProps {
   className?: string
   draft: DraftModel | undefined
   isSaving: boolean
+}
+
+function latestOf(now: Date, savedAt: string) {
+  const savedTs = Date.parse(savedAt)
+  if (Number.isNaN(savedTs)) return now
+  return savedTs > now.getTime() ? new Date(savedTs) : now
 }
 
 export function DraftStatusTag(props: DraftStatusTagProps) {
@@ -48,7 +54,7 @@ export function DraftStatusTag(props: DraftStatusTagProps) {
 
   const savedAt = props.draft.updatedAt ?? props.draft.createdAt
   const absolute = format.dateTime(savedAt)
-  const relative = format.relativeTime(savedAt, now)
+  const relative = format.relativeTime(savedAt, latestOf(now, savedAt))
 
   return (
     <Tag

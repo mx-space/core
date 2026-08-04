@@ -180,8 +180,11 @@ describe('useCoverGeneration mode transitions', () => {
     await flush()
 
     expect(draftImagePromptMock.mock.calls[0][0]).toEqual({
+      draftId: undefined,
       presetId: 'signal-geometry',
       refId: 'article-1',
+      summary: 'a summary',
+      title: 'a title',
     })
     expect(latest!.mode).toBe('manual')
     expect(latest!.promptText).toBe('Compiled prompt text')
@@ -304,7 +307,8 @@ describe('useCoverGeneration mode transitions', () => {
     ).toBe(true)
   })
 
-  it('preset mode without a refId disables generate until switched to manual', async () => {
+  it('preset mode without a refId generates from the in-editor title and summary', async () => {
+    generateImageMock.mockResolvedValueOnce({ created: true, taskId: 'task-3' })
     renderProbe(harness, client, baseProps({ refId: undefined }))
     await flush()
     act(() => {
@@ -312,8 +316,60 @@ describe('useCoverGeneration mode transitions', () => {
     })
     await flush()
 
+    expect(latest!.canGenerate).toBe(true)
+    act(() => {
+      latest!.onGenerate()
+    })
+    await flush()
+
+    const payload = generateImageMock.mock.calls[0][0]
+    expect(payload.refId).toBeUndefined()
+    expect(payload.presetId).toBe('signal-geometry')
+    expect(payload.title).toBe('a title')
+    expect(payload.summary).toBe('a summary')
+  })
+
+  it('preset mode sends the draft id so the server reads the live draft', async () => {
+    generateImageMock.mockResolvedValueOnce({ created: true, taskId: 'task-4' })
+    renderProbe(
+      harness,
+      client,
+      baseProps({ draftId: 'draft-9', refId: undefined, title: '' }),
+    )
+    await flush()
+    act(() => {
+      latest!.openDrawer()
+    })
+    await flush()
+
+    expect(latest!.canGenerate).toBe(true)
+    act(() => {
+      latest!.onGenerate()
+    })
+    await flush()
+
+    expect(generateImageMock.mock.calls[0][0].draftId).toBe('draft-9')
+  })
+
+  it('preset mode stays disabled when there is no refId, draft, title, or body', async () => {
+    renderProbe(
+      harness,
+      client,
+      baseProps({
+        draftId: undefined,
+        refId: undefined,
+        summary: '',
+        text: '',
+        title: '',
+      }),
+    )
+    await flush()
+    act(() => {
+      latest!.openDrawer()
+    })
+    await flush()
+
     expect(latest!.canGenerate).toBe(false)
-    expect(latest!.presetNeedsSavedArticle).toBe(true)
   })
 
   it('manual-mode generate sends the edited prompt text', async () => {

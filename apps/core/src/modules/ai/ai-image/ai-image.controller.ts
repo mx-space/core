@@ -5,6 +5,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { DatabaseService } from '~/processors/database/database.service'
 
 import { ConfigsService } from '../../configs/configs.service'
+import { DraftRepository } from '../../draft/draft.repository'
 import { AI_PROMPTS, COVER_STYLE_PRESETS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AiTaskService } from '../ai-task/ai-task.service'
@@ -15,7 +16,7 @@ import {
 } from './ai-image.dto'
 import type { ImageModelView } from './ai-image.views'
 import { AiImageViews } from './ai-image.views'
-import { resolveCoverArticle, resolveCoverPreset } from './cover-preset.util'
+import { resolveCoverPreset, resolveCoverSubject } from './cover-preset.util'
 import { getImageCatalog } from './image-catalog'
 
 @ApiController('ai/image')
@@ -25,6 +26,7 @@ export class AiImageController {
     private readonly aiTaskService: AiTaskService,
     private readonly configsService: ConfigsService,
     private readonly databaseService: DatabaseService,
+    private readonly draftRepository: DraftRepository,
   ) {}
 
   @Post('draft-prompt')
@@ -32,9 +34,13 @@ export class AiImageController {
   @Auth()
   async draftPrompt(@Body() body: DraftImagePromptDto) {
     const preset = resolveCoverPreset(body.presetId)
-    const article = body.refId
-      ? await resolveCoverArticle(this.databaseService, body.refId)
-      : { title: body.title!, summary: body.summary! }
+    const article = await resolveCoverSubject(
+      {
+        databaseService: this.databaseService,
+        draftRepository: this.draftRepository,
+      },
+      body,
+    )
 
     const runtime = await this.aiService.getWriterModel()
     const { output } = await runtime.generateStructured({
@@ -66,6 +72,9 @@ export class AiImageController {
       model: body.model,
       providerParams: body.providerParams,
       refId: body.refId,
+      draftId: body.draftId,
+      title: body.title,
+      summary: body.summary,
       requestId: body.requestId,
     })
 
