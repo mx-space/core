@@ -10,7 +10,9 @@ import {
   getDesk,
   getOnThisDay,
   getPublishHeatmap,
+  getTopArticles,
 } from '~/api/aggregate'
+import { getAnalyzeAggregate } from '~/api/analyze'
 import { getDrafts } from '~/api/drafts'
 import { checkUpdateFromGitHub } from '~/api/github-update'
 import { getOwner } from '~/api/options'
@@ -19,7 +21,6 @@ import { useI18n } from '~/i18n'
 import { AppPage } from '~/ui/layout/page-layout'
 import { EmptyState } from '~/ui/patterns/EmptyState'
 import { Scroll } from '~/ui/primitives/scroll'
-import { cn } from '~/utils/cn'
 import { isNewerVersion } from '~/utils/version'
 
 import {
@@ -39,6 +40,8 @@ import { DeskOnThisDayCard } from './DeskOnThisDayCard'
 import { DeskRhythmCard } from './DeskRhythmCard'
 import { DeskStatBand } from './DeskStatBand'
 import { DeskTasksCard } from './DeskTasksCard'
+import { DeskTopArticlesCard } from './DeskTopArticlesCard'
+import { DeskTrafficCard } from './DeskTrafficCard'
 import { DeskWritingCard } from './DeskWritingCard'
 import { presentUpdateRelease } from './UpdateReleaseModal'
 
@@ -90,6 +93,14 @@ export function DashboardRouteViewContent() {
   const recentActivitiesQuery = useQuery({
     queryFn: getRecentActivities,
     queryKey: dashboardQueryKeys.recentActivities,
+  })
+  const analyzeAggregateQuery = useQuery({
+    queryFn: getAnalyzeAggregate,
+    queryKey: dashboardQueryKeys.analyzeAggregate,
+  })
+  const topArticlesQuery = useQuery({
+    queryFn: getTopArticles,
+    queryKey: dashboardQueryKeys.topArticles,
   })
 
   const adminVersion = __DEV__ ? 'dev mode' : window.version || 'N/A'
@@ -207,58 +218,19 @@ export function DashboardRouteViewContent() {
       ),
     [recentActivitiesQuery.data, t],
   )
-  const hasLeftColumn = writingItems.length > 0 || onThisDayEntries.length > 0
-  const hasRightColumn = hasTasks || echoRows.length > 0
-
   return (
     <AppPage>
       <Scroll
         className="min-h-0 flex-1 bg-background"
         innerClassName="flex min-h-full flex-col p-4 pt-8 desktop:pt-14"
       >
-        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6">
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6">
           <DeskGreeting ownerName={ownerQuery.data?.name} />
 
           <DeskStatBand
             stat={statQuery.data}
             totalReads={readLikeQuery.data?.totalReads}
           />
-
-          {hasLeftColumn || hasRightColumn ? (
-            <div
-              className={cn(
-                'grid gap-4',
-                hasLeftColumn &&
-                  hasRightColumn &&
-                  'desktop:grid-cols-[5fr_3fr]',
-              )}
-            >
-              {hasLeftColumn ? (
-                <div className="flex min-w-0 flex-col gap-4 [&>:last-child]:flex-1">
-                  {writingItems.length > 0 ? (
-                    <DeskWritingCard items={writingItems} />
-                  ) : null}
-                  <DeskOnThisDayCard entries={onThisDayEntries} />
-                </div>
-              ) : null}
-              {hasRightColumn ? (
-                <div className="flex min-w-0 flex-col gap-4 [&>:last-child]:flex-1">
-                  {hasTasks ? (
-                    <DeskTasksCard
-                      adminUpdate={adminUpdate}
-                      adminVersion={adminVersion}
-                      desk={desk}
-                      systemUpdate={systemUpdate}
-                      systemVersion={systemVersion}
-                    />
-                  ) : null}
-                  {echoRows.length > 0 ? (
-                    <DeskEchoCard rows={echoRows} />
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
 
           {hasLoadError ? (
             <DeskLoadError
@@ -270,11 +242,32 @@ export function DashboardRouteViewContent() {
             />
           ) : null}
 
-          {showZen ? (
-            <EmptyState icon={Leaf} title={t('dashboard.desk.zen.title')} />
-          ) : null}
-
-          <DeskRhythmCard days={heatmapQuery.data ?? []} />
+          <div className="grid flex-1 gap-4 desktop:grid-cols-[8fr_4fr]">
+            <div className="flex min-w-0 flex-col gap-4 [&>:last-child]:flex-1">
+              {writingItems.length > 0 ? (
+                <DeskWritingCard items={writingItems} />
+              ) : null}
+              {showZen ? (
+                <EmptyState icon={Leaf} title={t('dashboard.desk.zen.title')} />
+              ) : null}
+              <DeskOnThisDayCard entries={onThisDayEntries} />
+              <DeskRhythmCard days={heatmapQuery.data ?? []} />
+            </div>
+            <div className="flex min-w-0 flex-col gap-4 [&>:last-child]:flex-1">
+              {hasTasks ? (
+                <DeskTasksCard
+                  adminUpdate={adminUpdate}
+                  adminVersion={adminVersion}
+                  desk={desk}
+                  systemUpdate={systemUpdate}
+                  systemVersion={systemVersion}
+                />
+              ) : null}
+              {echoRows.length > 0 ? <DeskEchoCard rows={echoRows} /> : null}
+              <DeskTrafficCard today={analyzeAggregateQuery.data?.today} />
+              <DeskTopArticlesCard articles={topArticlesQuery.data ?? []} />
+            </div>
+          </div>
 
           <DeskFooter
             adminVersion={adminVersion}

@@ -2,6 +2,7 @@ import { adminQueryKeys } from '~/query/keys'
 
 export const dashboardQueryKeys = {
   aggregateStat: adminQueryKeys.dashboard.aggregateStat(),
+  analyzeAggregate: adminQueryKeys.analyze.aggregate(),
   appInfo: adminQueryKeys.dashboard.appInfo(),
   desk: adminQueryKeys.dashboard.desk(),
   deskDrafts: adminQueryKeys.dashboard.deskDrafts(),
@@ -12,6 +13,7 @@ export const dashboardQueryKeys = {
   readLike: adminQueryKeys.dashboard.readLike(),
   recentActivities: adminQueryKeys.dashboard.recentActivities(),
   releaseDetail: adminQueryKeys.dashboard.releaseDetailRoot,
+  topArticles: adminQueryKeys.dashboard.topArticles(),
 }
 
 export const aggregateStatRefetchInterval = 3000

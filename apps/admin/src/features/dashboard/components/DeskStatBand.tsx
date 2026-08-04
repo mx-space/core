@@ -43,10 +43,10 @@ export function DeskStatBand(props: { stat?: StatCount; totalReads?: number }) {
     ]
 
   return (
-    <div className="shadow-sm flex overflow-hidden rounded-lg border border-border bg-surface-card">
+    <div className="shadow-sm grid grid-cols-6 gap-px overflow-hidden rounded-lg border border-border bg-border phone:grid-cols-3">
       {cells.map((cell) => (
         <Link
-          className="focus-visible:outline-hidden min-w-0 flex-1 border-r border-border px-4 py-3 transition-colors last:border-r-0 hover:bg-surface-inset focus-visible:ring-[3px] focus-visible:ring-accent/15"
+          className="focus-visible:outline-hidden min-w-0 bg-surface-card px-4 py-3 transition-colors hover:bg-surface-inset focus-visible:ring-[3px] focus-visible:ring-accent/15"
           key={cell.labelKey}
           to={cell.to}
         >
