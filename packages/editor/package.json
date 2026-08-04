@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/editor",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "description": "Mx-space business editor contracts and projection utilities built on Lexical",
   "license": "MIT",
@@ -39,6 +39,18 @@
       },
       "./package.json": "./package.json"
     }
+  },
+  "bump": {
+    "before": [
+      "git pull --rebase",
+      "pnpm i",
+      "npm run build"
+    ],
+    "after": [
+      "npm publish --access=public"
+    ],
+    "tag": false,
+    "commit_message": "chore(release): bump @mx-space/editor to v${NEW_VERSION}"
   },
   "scripts": {
     "build": "tsdown",
