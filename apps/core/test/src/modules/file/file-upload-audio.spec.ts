@@ -1,3 +1,6 @@
+import { access } from 'node:fs/promises'
+import { Readable } from 'node:stream'
+
 import { describe, expect, it, vi } from 'vitest'
 
 import { FileService } from '~/modules/file/file.service'
@@ -66,5 +69,47 @@ describe('FileService.uploadBuffer audio', () => {
     })
 
     expect(fileReferenceService.createPendingReference).not.toHaveBeenCalled()
+  })
+
+  it('rejects a repeat write of the same object key so the caller can treat it as already stored', async () => {
+    const { service } = createService({ s3Enabled: false })
+    vi.mocked(service.writeFile).mockRestore()
+    const objectKey = `tts/file-exists-${Date.now()}/a.mp3`
+    const upload = () =>
+      service.uploadBuffer(Buffer.from('x'), {
+        type: 'audio',
+        contentType: 'audio/mpeg',
+        objectKey,
+        skipReference: true,
+      })
+
+    await upload()
+
+    await expect(upload()).rejects.toMatchObject({ code: 'FILE_EXISTS' })
+
+    await service.deleteObject('local', objectKey)
+  })
+})
+
+describe('FileService.deleteObject', () => {
+  it('removes a local audio object', async () => {
+    const { service } = createService({ s3Enabled: false })
+    vi.mocked(service.writeFile).mockRestore()
+    const objectKey = `tts/delete-${Date.now()}/a.mp3`
+    await service.writeFile('audio', objectKey, Readable.from(Buffer.from('x')))
+
+    await service.deleteObject('local', objectKey)
+
+    await expect(
+      access(service['resolveFilePath']('audio', objectKey)),
+    ).rejects.toThrow()
+  })
+
+  it('treats a missing local object as already deleted', async () => {
+    const { service } = createService({ s3Enabled: false })
+
+    await expect(
+      service.deleteObject('local', 'tts/absent/a.mp3'),
+    ).resolves.toBeUndefined()
   })
 })
