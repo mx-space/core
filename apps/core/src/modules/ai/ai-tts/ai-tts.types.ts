@@ -87,6 +87,41 @@ export interface UpsertParentInput {
   sourceModifiedAt: Date | null
 }
 
+export interface TtsSourceDocument {
+  contentFormat?: string | null
+  content?: string | null
+  meta?: Record<string, unknown> | null
+  modifiedAt?: Date | null
+}
+
+export interface TtsStoredObject {
+  storageBackend: 's3' | 'local'
+  storageKey: string
+}
+
+export interface TtsVoiceConfig {
+  model: string
+  voice: string
+  speed: number
+}
+
+export interface TtsProviderConfig {
+  provider: string
+  apiKey: string
+  endpoint?: string
+}
+
+export interface TtsLanguageResult {
+  lang: string
+  ttsId: string
+  total: number
+  generated: number
+  reused: number
+  deleted: number
+  charCount: number
+  requeued?: boolean
+}
+
 export interface UpsertBlockInput {
   ttsId: string
   blockId: string

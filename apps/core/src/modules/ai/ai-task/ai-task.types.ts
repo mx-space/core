@@ -7,6 +7,7 @@ export enum AITaskType {
   Insights = 'ai:insights',
   InsightsTranslation = 'ai:insights:translation',
   ImageGeneration = 'ai:image:generation',
+  Tts = 'ai:tts',
 }
 
 export interface SummaryTaskPayload {
@@ -73,6 +74,14 @@ export interface ImageGenerationTaskPayload {
   requestId: string
 }
 
+export interface TtsTaskPayload {
+  refId: string
+  langs?: string[]
+  force?: boolean
+  title?: string
+  refType?: string
+}
+
 export type AITaskPayload =
   | SummaryTaskPayload
   | TranslationTaskPayload
@@ -82,6 +91,7 @@ export type AITaskPayload =
   | InsightsTaskPayload
   | InsightsTranslationTaskPayload
   | ImageGenerationTaskPayload
+  | TtsTaskPayload
 
 export function computeAITaskDedupKey(
   type: AITaskType,
@@ -125,6 +135,11 @@ export function computeAITaskDedupKey(
       // must be unique per request rather than per (semantic) payload.
       const p = payload as ImageGenerationTaskPayload
       return `${p.requestId}`
+    }
+    case AITaskType.Tts: {
+      const p = payload as TtsTaskPayload
+      const langs = (p.langs || []).slice().sort().join(',')
+      return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
     }
   }
 }

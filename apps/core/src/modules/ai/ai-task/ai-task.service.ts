@@ -16,6 +16,7 @@ import {
   type TranslationAllTaskPayload,
   type TranslationBatchTaskPayload,
   type TranslationTaskPayload,
+  type TtsTaskPayload,
 } from './ai-task.types'
 
 @Injectable()
@@ -75,6 +76,13 @@ export class AiTaskService {
     payload: ImageGenerationTaskPayload,
   ): Promise<{ taskId: string; created: boolean }> {
     return this.createTask(AITaskType.ImageGeneration, payload)
+  }
+
+  async createTtsTask(
+    payload: TtsTaskPayload,
+  ): Promise<{ taskId: string; created: boolean }> {
+    await this.fillArticleInfo(payload)
+    return this.createTask(AITaskType.Tts, payload)
   }
 
   private async createTask(

@@ -192,6 +192,36 @@ export class FileService {
     }
   }
 
+  async deleteObject(backend: 's3' | 'local', key: string): Promise<void> {
+    if (backend === 'local') {
+      try {
+        await unlink(this.resolveFilePath('audio', key))
+      } catch (error) {
+        if (error?.code !== 'ENOENT') throw error
+      }
+      return
+    }
+
+    const config = await this.configService.get('imageStorageOptions')
+    if (
+      !config?.endpoint ||
+      !config.secretId ||
+      !config.secretKey ||
+      !config.bucket
+    ) {
+      throw createAppException(AppErrorCode.FILE_STORAGE_NOT_CONFIGURED)
+    }
+
+    const s3Uploader = new S3Uploader({
+      endpoint: config.endpoint,
+      accessKey: config.secretId,
+      secretKey: config.secretKey,
+      bucket: config.bucket,
+      region: config.region || 'auto',
+    })
+    await s3Uploader.deleteObject(key)
+  }
+
   async uploadBuffer(
     buffer: Buffer,
     opts: {
