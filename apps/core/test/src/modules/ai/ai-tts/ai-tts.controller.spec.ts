@@ -66,7 +66,15 @@ describe('AiTtsController', () => {
     const result = await controller.getArticleTts({ id: '1' } as any, {} as any)
 
     expect(result).toMatchObject({ lang: 'zh', voice: 'alloy' })
-    expect(queryService.getPublicNarration).toHaveBeenCalledWith('1', undefined)
+    expect(queryService.getPublicNarration).toHaveBeenCalledWith(
+      '1',
+      undefined,
+      {
+        isOwner: false,
+        password: undefined,
+        readerId: undefined,
+      },
+    )
   })
 
   it('canonicalizes an explicit lang query param before delegating', async () => {
@@ -75,7 +83,33 @@ describe('AiTtsController', () => {
 
     await controller.getArticleTts({ id: '1' } as any, { lang: 'zh-CN' } as any)
 
-    expect(queryService.getPublicNarration).toHaveBeenCalledWith('1', 'zh')
+    expect(queryService.getPublicNarration).toHaveBeenCalledWith('1', 'zh', {
+      isOwner: false,
+      password: undefined,
+      readerId: undefined,
+    })
+  })
+
+  it('forwards owner access, reader identity and the note password to the query service', async () => {
+    const { controller, queryService } = createHarness()
+    queryService.getPublicNarration.mockResolvedValue(null)
+
+    await controller.getArticleTts(
+      { id: '1' } as any,
+      { password: 'letmein' } as any,
+      true,
+      'reader-1',
+    )
+
+    expect(queryService.getPublicNarration).toHaveBeenCalledWith(
+      '1',
+      undefined,
+      {
+        isOwner: true,
+        password: 'letmein',
+        readerId: 'reader-1',
+      },
+    )
   })
 
   it('enqueues a task with the canonical language list', async () => {

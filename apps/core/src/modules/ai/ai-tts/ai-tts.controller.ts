@@ -3,6 +3,8 @@ import { z } from 'zod'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -65,10 +67,13 @@ export class AiTtsController {
   async getArticleTts(
     @Param() params: EntityIdDto,
     @Query() query: GetTtsQueryDto,
+    @HasAdminAccess() isAuthenticated?: boolean,
+    @CurrentReaderId() readerId?: string,
   ) {
     const result = await this.queryService.getPublicNarration(
       params.id,
       query.lang ? parseLanguageCode(query.lang) : undefined,
+      { isOwner: Boolean(isAuthenticated), password: query.password, readerId },
     )
     return result ? AiTtsViews.public.parse(result) : null
   }

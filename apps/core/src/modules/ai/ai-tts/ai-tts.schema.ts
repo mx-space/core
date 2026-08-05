@@ -18,7 +18,10 @@ export const CreateTtsTaskSchema = z.object({
 })
 export class CreateTtsTaskDto extends createZodDto(CreateTtsTaskSchema) {}
 
-export const GetTtsQuerySchema = z.object({ lang: z.string().optional() })
+export const GetTtsQuerySchema = z.object({
+  lang: z.string().optional(),
+  password: z.string().optional(),
+})
 export class GetTtsQueryDto extends createZodDto(GetTtsQuerySchema) {}
 
 export type CreateTtsTaskInput = z.infer<typeof CreateTtsTaskSchema>

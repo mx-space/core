@@ -37,6 +37,25 @@ export class EntitlementService {
     return active
   }
 
+  async isEntitledToPremium(input: {
+    isOwner: boolean
+    readerId?: string
+  }): Promise<boolean> {
+    if (input.isOwner) return true
+    if (!input.readerId) return false
+    return this.isActiveMember(input.readerId)
+  }
+
+  async isPremiumLocked(input: {
+    isPremium?: boolean | null
+    isOwner: boolean
+    readerId?: string
+  }): Promise<boolean> {
+    if (!input.isPremium) return false
+    if (!(await this.isMembershipPurchasable())) return false
+    return !(await this.isEntitledToPremium(input))
+  }
+
   async getAvailability(): Promise<MembershipAvailability> {
     const config = await this.configsService.get('membership')
     return resolveMembershipAvailability(config)

@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 
 import type { ArticleRefMap, TtsMeta } from '~/common/response/meta.types'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { NOTE_SERVICE_TOKEN } from '~/constants/injection.constant'
 import type { PaginationResult } from '~/processors/database/base.repository'
 import { DatabaseService } from '~/processors/database/database.service'
 
-import { isGlobalArticleVisible } from '../ai-article-visibility.util'
+import { EntitlementService } from '../../membership/entitlement.service'
+import type { NoteService } from '../../note/note.service'
+import { isArticleVisibleToViewer } from '../ai-article-visibility.util'
 import { parseLanguageCode } from '../ai-language.util'
 import { readArticleMetaLang } from '../ai-translation/article-content.util'
 import { AiTtsRepository } from './ai-tts.repository'
@@ -16,6 +19,12 @@ export interface TtsSegmentResult {
   chunkIndex: number
   text: string
   url: string
+}
+
+export interface NarrationReader {
+  isOwner?: boolean
+  readerId?: string
+  password?: string
 }
 
 export interface PublicNarrationResult {
@@ -48,13 +57,25 @@ export interface NarrationListItemResult {
   updatedAt: Date | null
 }
 
-function toSegments(blocks: AiTtsBlockRow[]): TtsSegmentResult[] {
-  return blocks.map((block) => ({
-    blockId: block.blockId,
-    chunkIndex: block.chunkIndex,
-    text: block.text,
-    url: block.url,
-  }))
+function toSegments(
+  blocks: AiTtsBlockRow[],
+  blockOrder: string[],
+): TtsSegmentResult[] {
+  const rank = new Map(blockOrder.map((blockId, index) => [blockId, index]))
+  return blocks
+    .map((block) => ({
+      blockId: block.blockId,
+      chunkIndex: block.chunkIndex,
+      text: block.text,
+      url: block.url,
+    }))
+    .sort(
+      (a, b) =>
+        (rank.get(a.blockId) ?? Number.MAX_SAFE_INTEGER) -
+          (rank.get(b.blockId) ?? Number.MAX_SAFE_INTEGER) ||
+        a.blockId.localeCompare(b.blockId) ||
+        a.chunkIndex - b.chunkIndex,
+    )
 }
 
 function toListItem(row: AiTtsRow): NarrationListItemResult {
@@ -73,25 +94,46 @@ export class AiTtsQueryService {
   constructor(
     private readonly repository: AiTtsRepository,
     private readonly databaseService: DatabaseService,
+    private readonly entitlementService: EntitlementService,
+    @Inject(NOTE_SERVICE_TOKEN)
+    private readonly noteService: NoteService,
   ) {}
 
-  private isPremiumLocked(article: {
-    type: CollectionRefTypes
-    document: unknown
-  }): boolean {
-    return (
-      article.type === CollectionRefTypes.Post &&
-      Boolean((article.document as { isPremium?: boolean | null }).isPremium)
-    )
+  private async isVisibleToReader(
+    article: { type: CollectionRefTypes; document: unknown },
+    refId: string,
+    reader: NarrationReader,
+  ): Promise<boolean> {
+    const hasNotePassword =
+      article.type === CollectionRefTypes.Note &&
+      (await this.noteService.checkPasswordToAccess(refId, reader.password))
+
+    return isArticleVisibleToViewer(article, {
+      isOwner: reader.isOwner,
+      hasNotePassword,
+    })
   }
 
   async getPublicNarration(
     refId: string,
     lang?: string,
+    reader: NarrationReader = {},
   ): Promise<PublicNarrationResult | null> {
     const article = await this.databaseService.findGlobalById(refId)
-    if (!article || !isGlobalArticleVisible(article)) return null
-    if (this.isPremiumLocked(article)) return null
+    if (!article) return null
+    if (!(await this.isVisibleToReader(article, refId, reader))) return null
+
+    if (
+      article.type === CollectionRefTypes.Post &&
+      (await this.entitlementService.isPremiumLocked({
+        isPremium: (article.document as { isPremium?: boolean | null })
+          .isPremium,
+        isOwner: Boolean(reader.isOwner),
+        readerId: reader.readerId,
+      }))
+    ) {
+      return null
+    }
 
     const resolvedLang =
       lang ??
@@ -102,7 +144,7 @@ export class AiTtsQueryService {
       )
 
     const parent = await this.repository.findByRefAndLang(refId, resolvedLang)
-    if (!parent) return null
+    if (!parent || parent.blockOrder.length === 0) return null
 
     const blocks = await this.repository.findBlocks(parent.id)
     return {
@@ -110,7 +152,7 @@ export class AiTtsQueryService {
       model: parent.model,
       voice: parent.voice,
       blockOrder: parent.blockOrder,
-      segments: toSegments(blocks),
+      segments: toSegments(blocks, parent.blockOrder),
     }
   }
 
@@ -127,7 +169,10 @@ export class AiTtsQueryService {
         blockOrder: parent.blockOrder,
         charCount: parent.charCount,
         updatedAt: parent.updatedAt,
-        segments: toSegments(await this.repository.findBlocks(parent.id)),
+        segments: toSegments(
+          await this.repository.findBlocks(parent.id),
+          parent.blockOrder,
+        ),
       })),
     )
   }
@@ -155,7 +200,9 @@ export class AiTtsQueryService {
     modifiedAt?: Date | null,
   ): Promise<TtsMeta> {
     const row = await this.repository.findMeta(refId, lang)
-    if (!row) return { available: false }
+    // An empty block_order is the generation pipeline's "not published yet"
+    // sentinel — the parent row exists but the run never finalized.
+    if (!row || row.blockCount === 0) return { available: false }
 
     return {
       available: true,

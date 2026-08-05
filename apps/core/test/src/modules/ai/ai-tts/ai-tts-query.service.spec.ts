@@ -43,17 +43,40 @@ const blockRow = (
   ...overrides,
 })
 
-function createHarness() {
+function createHarness(options: { storedNotePassword?: string } = {}) {
   const repository = createPgRepositoryMock<AiTtsRepository>()
   const databaseService = {
     findGlobalById: vi.fn(),
     getRefArticleMap: vi.fn().mockResolvedValue({}),
   }
+  const entitlementService = {
+    isPremiumLocked: vi.fn(
+      async (input: {
+        isPremium?: boolean | null
+        isOwner: boolean
+        readerId?: string
+      }) => Boolean(input.isPremium) && !input.isOwner && !input.readerId,
+    ),
+  }
+  const noteService = {
+    checkPasswordToAccess: vi.fn(async (_id: string, password?: string) => {
+      if (!options.storedNotePassword) return true
+      return password === options.storedNotePassword
+    }),
+  }
   const service = new AiTtsQueryService(
     repository as any,
     databaseService as any,
+    entitlementService as any,
+    noteService as any,
   )
-  return { repository, databaseService, service }
+  return {
+    repository,
+    databaseService,
+    entitlementService,
+    noteService,
+    service,
+  }
 }
 
 describe('AiTtsQueryService.getPublicNarration', () => {
@@ -76,18 +99,101 @@ describe('AiTtsQueryService.getPublicNarration', () => {
     expect(repository.findByRefAndLang).not.toHaveBeenCalled()
   })
 
-  it('returns null for a password-protected note without touching the repository', async () => {
-    const { databaseService, repository, service } = createHarness()
+  it('returns null for a password-protected note when no password is supplied', async () => {
+    const { databaseService, repository, service } = createHarness({
+      storedNotePassword: 'letmein',
+    })
     databaseService.findGlobalById.mockResolvedValue({
       type: CollectionRefTypes.Note,
-      document: { id: '1', title: 'Secret', isPublished: true, password: 'x' },
+      document: {
+        id: '1',
+        title: 'Secret',
+        isPublished: true,
+        hasPassword: true,
+      },
     })
 
     await expect(service.getPublicNarration('1')).resolves.toBeNull()
     expect(repository.findByRefAndLang).not.toHaveBeenCalled()
   })
 
-  it('returns null for a locked premium post without touching the repository', async () => {
+  it('returns null for a password-protected note when the password is wrong', async () => {
+    const { databaseService, repository, service } = createHarness({
+      storedNotePassword: 'letmein',
+    })
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Note,
+      document: {
+        id: '1',
+        title: 'Secret',
+        isPublished: true,
+        hasPassword: true,
+      },
+    })
+
+    await expect(
+      service.getPublicNarration('1', undefined, { password: 'nope' }),
+    ).resolves.toBeNull()
+    expect(repository.findByRefAndLang).not.toHaveBeenCalled()
+  })
+
+  it('serves a password-protected note to a reader who supplies the password', async () => {
+    const { databaseService, repository, service } = createHarness({
+      storedNotePassword: 'letmein',
+    })
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Note,
+      document: {
+        id: '1',
+        title: 'Secret',
+        isPublished: true,
+        hasPassword: true,
+      },
+    })
+    repository.findByRefAndLang.mockResolvedValue(parentRow())
+    repository.findBlocks.mockResolvedValue([blockRow('blk-a')])
+
+    await expect(
+      service.getPublicNarration('1', undefined, { password: 'letmein' }),
+    ).resolves.not.toBeNull()
+  })
+
+  it('returns null for a future-dated secret note viewed anonymously', async () => {
+    const { databaseService, repository, service } = createHarness()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Note,
+      document: {
+        id: '1',
+        title: 'Scheduled',
+        isPublished: true,
+        publicAt: new Date(Date.now() + 86_400_000),
+      },
+    })
+
+    await expect(service.getPublicNarration('1')).resolves.toBeNull()
+    expect(repository.findByRefAndLang).not.toHaveBeenCalled()
+  })
+
+  it('serves a future-dated secret note to the owner', async () => {
+    const { databaseService, repository, service } = createHarness()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Note,
+      document: {
+        id: '1',
+        title: 'Scheduled',
+        isPublished: true,
+        publicAt: new Date(Date.now() + 86_400_000),
+      },
+    })
+    repository.findByRefAndLang.mockResolvedValue(parentRow())
+    repository.findBlocks.mockResolvedValue([blockRow('blk-a')])
+
+    await expect(
+      service.getPublicNarration('1', undefined, { isOwner: true }),
+    ).resolves.not.toBeNull()
+  })
+
+  it('returns null for a premium post an anonymous reader is not entitled to', async () => {
     const { databaseService, repository, service } = createHarness()
     databaseService.findGlobalById.mockResolvedValue({
       type: CollectionRefTypes.Post,
@@ -101,6 +207,69 @@ describe('AiTtsQueryService.getPublicNarration', () => {
 
     await expect(service.getPublicNarration('1')).resolves.toBeNull()
     expect(repository.findByRefAndLang).not.toHaveBeenCalled()
+  })
+
+  it('serves a premium post to an entitled reader', async () => {
+    const { databaseService, entitlementService, repository, service } =
+      createHarness()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: '1',
+        title: 'Premium',
+        isPublished: true,
+        isPremium: true,
+        meta: { lang: 'zh' },
+      },
+    })
+    repository.findByRefAndLang.mockResolvedValue(parentRow())
+    repository.findBlocks.mockResolvedValue([blockRow('blk-a')])
+
+    await expect(
+      service.getPublicNarration('1', undefined, { readerId: 'reader-1' }),
+    ).resolves.not.toBeNull()
+    expect(entitlementService.isPremiumLocked).toHaveBeenCalledWith({
+      isPremium: true,
+      isOwner: false,
+      readerId: 'reader-1',
+    })
+  })
+
+  it('serves a premium post to the owner', async () => {
+    const { databaseService, repository, service } = createHarness()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: '1',
+        title: 'Premium',
+        isPublished: true,
+        isPremium: true,
+        meta: { lang: 'zh' },
+      },
+    })
+    repository.findByRefAndLang.mockResolvedValue(parentRow())
+    repository.findBlocks.mockResolvedValue([blockRow('blk-a')])
+
+    await expect(
+      service.getPublicNarration('1', undefined, { isOwner: true }),
+    ).resolves.not.toBeNull()
+  })
+
+  it('returns null when the parent exists but block_order was never published', async () => {
+    const { databaseService, repository, service } = createHarness()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: '1',
+        title: 'Post',
+        isPublished: true,
+        meta: { lang: 'zh' },
+      },
+    })
+    repository.findByRefAndLang.mockResolvedValue(parentRow({ blockOrder: [] }))
+
+    await expect(service.getPublicNarration('1')).resolves.toBeNull()
+    expect(repository.findBlocks).not.toHaveBeenCalled()
   })
 
   it('does not lock a premium note (premium only applies to posts)', async () => {
@@ -207,6 +376,37 @@ describe('AiTtsQueryService.getPublicNarration', () => {
         },
       ],
     })
+  })
+
+  it('orders segments by blockOrder even when the rows arrive scrambled', async () => {
+    const { databaseService, repository, service } = createHarness()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: '1',
+        title: 'Post',
+        isPublished: true,
+        meta: { lang: 'zh' },
+      },
+    })
+    repository.findByRefAndLang.mockResolvedValue(
+      parentRow({ blockOrder: ['blk-c', 'blk-a', 'blk-b'] }),
+    )
+    repository.findBlocks.mockResolvedValue([
+      blockRow('blk-a', { chunkIndex: 0 }),
+      blockRow('blk-b', { chunkIndex: 0 }),
+      blockRow('blk-c', { chunkIndex: 1, id: 'row-blk-c-1' }),
+      blockRow('blk-c', { chunkIndex: 0 }),
+    ])
+
+    const result = await service.getPublicNarration('1')
+
+    expect(result!.segments.map((s) => [s.blockId, s.chunkIndex])).toEqual([
+      ['blk-c', 0],
+      ['blk-c', 1],
+      ['blk-a', 0],
+      ['blk-b', 0],
+    ])
   })
 })
 

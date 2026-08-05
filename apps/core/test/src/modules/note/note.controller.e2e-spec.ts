@@ -404,6 +404,81 @@ describe('NoteController', () => {
     })
   })
 
+  describe('meta.tts matches what the public narration endpoint will serve', () => {
+    const ttsMeta = {
+      available: true,
+      lang: 'zh',
+      blockCount: 2,
+      stale: false,
+      updatedAt: new Date('2026-01-02'),
+    }
+
+    it('suppresses meta.tts for an anonymous reader of a future-dated secret note', async () => {
+      const { controller } = createController({
+        noteService: {
+          findByNid: vi.fn().mockResolvedValue(makeNote({ id: 'note-secret' })),
+          checkNoteIsSecret: vi.fn().mockReturnValue(true),
+        },
+        aiTtsQueryService: {
+          getMetaForArticle: vi.fn().mockResolvedValue(ttsMeta),
+        },
+      })
+
+      const response = await controller.getNoteByNid(
+        { nid: 1 } as any,
+        false,
+        {} as any,
+        'fake-ip',
+      )
+
+      expect(response.meta.tts).toEqual({ available: false })
+    })
+
+    it('keeps meta.tts for the owner of a future-dated secret note', async () => {
+      const { controller } = createController({
+        noteService: {
+          findByNid: vi.fn().mockResolvedValue(makeNote({ id: 'note-secret' })),
+          checkNoteIsSecret: vi.fn().mockReturnValue(true),
+        },
+        aiTtsQueryService: {
+          getMetaForArticle: vi.fn().mockResolvedValue(ttsMeta),
+        },
+      })
+
+      const response = await controller.getNoteByNid(
+        { nid: 1 } as any,
+        true,
+        {} as any,
+        'fake-ip',
+      )
+
+      expect(response.meta.tts).toEqual(ttsMeta)
+    })
+
+    it('keeps meta.tts for a reader who cleared the note password gate', async () => {
+      const { controller } = createController({
+        noteService: {
+          findByNid: vi
+            .fn()
+            .mockResolvedValue(makeNote({ id: 'note-locked', password: 'x' })),
+          checkPasswordToAccess: vi.fn().mockResolvedValue(true),
+        },
+        aiTtsQueryService: {
+          getMetaForArticle: vi.fn().mockResolvedValue(ttsMeta),
+        },
+      })
+
+      const response = await controller.getNoteByNid(
+        { nid: 1 } as any,
+        false,
+        { password: 'x' } as any,
+        'fake-ip',
+      )
+
+      expect(response.meta.tts).toEqual(ttsMeta)
+    })
+  })
+
   describe('GET /?lang=en — list translation in place', () => {
     it('emits meta.translation only for translated items', async () => {
       const doc1 = makeNote({ id: 'list-1', title: 'ZH 1', text: 'text 1' })

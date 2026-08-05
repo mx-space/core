@@ -248,11 +248,16 @@ export class NoteController {
         .catch(() => ({ available: false as const })),
     ])
 
+    // A future-dated secret note has its text blanked for anonymous readers, so
+    // narration of it is exactly what the secret withholds.
+    const narrationVisible =
+      isAuthenticated || !this.noteService.checkNoteIsSecret(current)
+
     const metaBuilder = new NoteMetaBuilder()
       .view('detail')
       .interaction({ isLiked: liked })
       .insights({ hasInLocale: hasInsightsInLocale })
-      .tts(ttsMeta)
+      .tts(narrationVisible ? ttsMeta : { available: false })
 
     if (summaryDoc) {
       metaBuilder.summary({

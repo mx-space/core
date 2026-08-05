@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common'
 
 import { DraftModule } from '../draft/draft.module'
+import { MembershipModule } from '../membership/membership.module'
 import { NoteModule } from '../note/note.module'
 import { TopicModule } from '../topic/topic.module'
 import { AiController } from './ai.controller'
@@ -51,6 +52,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiTaskModule,
     TopicModule,
     DraftModule,
+    MembershipModule,
     forwardRef(() => NoteModule),
   ],
   providers: [

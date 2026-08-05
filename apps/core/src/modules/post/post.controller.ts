@@ -95,11 +95,10 @@ export class PostController {
 
     if (!(await this.entitlementService.isMembershipPurchasable())) return null
 
-    const isEntitled =
-      isOwner ||
-      (readerId
-        ? await this.entitlementService.isActiveMember(readerId)
-        : false)
+    const isEntitled = await this.entitlementService.isEntitledToPremium({
+      isOwner,
+      readerId,
+    })
 
     if (isEntitled) {
       return { locked: false }
