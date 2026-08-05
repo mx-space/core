@@ -4,11 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import type { TtsTaskPayload } from '~/modules/ai/ai-task/ai-task.types'
+import { toArticleContent } from '~/modules/ai/ai-translation/article-content.util'
 import type { AiTtsRepository } from '~/modules/ai/ai-tts/ai-tts.repository'
 import { AiTtsService } from '~/modules/ai/ai-tts/ai-tts.service'
 import { computeSpeechFingerprint } from '~/modules/ai/ai-tts/tts-block-plan'
 import type { TaskExecuteContext } from '~/processors/task-queue'
 import { TaskStatus } from '~/processors/task-queue'
+import { computeContentHash } from '~/utils/content.util'
 
 const { generateSpeechMock } = vi.hoisted(() => ({
   generateSpeechMock: vi.fn(),
@@ -50,6 +52,16 @@ const article = (modifiedAt = new Date('2026-01-01')) => ({
     meta: { lang: 'zh-CN' },
     modifiedAt,
   },
+})
+
+const translationRow = (overrides: Record<string, unknown> = {}) => ({
+  contentFormat: 'lexical',
+  content: '{"root":{"children":[]}}',
+  sourceLang: 'zh-CN',
+  hash: computeContentHash(toArticleContent(article().document as never), 'zh'),
+  sourceModifiedAt: new Date('2026-01-01'),
+  createdAt: now,
+  ...overrides,
 })
 
 const blockRow = (
@@ -184,6 +196,13 @@ function createHarness() {
     get: vi.fn(async (key: string) => lockStore.get(key) ?? null),
     del: vi.fn(async (key: string) => (lockStore.delete(key) ? 1 : 0)),
     expire: vi.fn(async () => 1),
+    eval: vi.fn(
+      async (script: string, _keys: number, key: string, token: string) => {
+        if (lockStore.get(key) !== token) return 0
+        if (script.includes('del')) lockStore.delete(key)
+        return 1
+      },
+    ),
   }
   const redisService = { getClient: () => redisClient }
 
@@ -221,6 +240,7 @@ function createHarness() {
     lexicalService,
     translationRepository,
     redis: redisClient,
+    locks: lockStore,
     service,
     execute: (payload: TtsTaskPayload, context: TaskExecuteContext) =>
       registered!.execute(payload, context),
@@ -391,7 +411,36 @@ describe('ai-tts generation task (faux e2e)', () => {
       300,
       'NX',
     )
-    expect(h.redis.del).toHaveBeenCalledWith('ai:tts:lock:1:zh')
+    expect(h.locks.size).toBe(0)
+  })
+
+  it('releases the lock when the language fails', async () => {
+    generateSpeechMock.mockRejectedValue(new Error('provider down'))
+
+    await h.execute({ refId: '1' }, context)
+
+    expect(context.setStatus).toHaveBeenCalledWith(TaskStatus.Failed)
+    expect(h.locks.size).toBe(0)
+  })
+
+  it('settles every in-flight chunk before releasing the lock', async () => {
+    h.ttsConfig.concurrency = 3
+    let resolveSlow: (() => void) | undefined
+    const slow = new Promise<void>((resolve) => {
+      resolveSlow = resolve
+    })
+    generateSpeechMock
+      .mockRejectedValueOnce(new Error('provider down'))
+      .mockImplementationOnce(async () => {
+        await slow
+        return { buffer: Buffer.from('a'), mimeType: 'audio/mpeg' }
+      })
+
+    setTimeout(() => resolveSlow!(), 10)
+    await h.execute({ refId: '1' }, context)
+
+    expect(h.repository.upsertBlock).toHaveBeenCalledTimes(1)
+    expect(h.locks.size).toBe(0)
   })
 
   it('skips the finalize when the article changed mid-run', async () => {
@@ -404,6 +453,20 @@ describe('ai-tts generation task (faux e2e)', () => {
 
     expect(h.repository.upsertBlock).toHaveBeenCalled()
     expect(h.repository.upsertParent).not.toHaveBeenCalled()
+  })
+
+  it('reports a mid-run source change as PartialFailed, never as a clean success', async () => {
+    publishedWith([])
+    h.databaseService.findGlobalById
+      .mockResolvedValueOnce(article(new Date('2026-01-01')))
+      .mockResolvedValueOnce(article(new Date('2026-02-01')))
+
+    await h.execute({ refId: '1' }, context)
+
+    expect(context.setStatus).toHaveBeenCalledWith(TaskStatus.PartialFailed)
+    expect(vi.mocked(context.setResult).mock.calls[0][0]).toMatchObject({
+      perLang: [expect.objectContaining({ requeued: true })],
+    })
   })
 
   it('fails the language when the plan exceeds maxCharsPerRun', async () => {
@@ -422,17 +485,36 @@ describe('ai-tts generation task (faux e2e)', () => {
   })
 
   it('narrates a translated language from its lexical translation row', async () => {
-    h.translationRepository.findByRefAndLang.mockResolvedValue({
-      contentFormat: 'lexical',
-      content: '{"root":{"children":[]}}',
-      sourceLang: 'zh-CN',
-    } as never)
+    h.translationRepository.findByRefAndLang.mockResolvedValue(translationRow())
 
     await h.execute({ refId: '1', langs: ['en'] }, context)
 
     expect(context.setStatus).not.toHaveBeenCalled()
     expect(h.repository.upsertParent).toHaveBeenCalledWith(
       expect.objectContaining({ isTranslation: true, sourceLang: 'zh' }),
+    )
+  })
+
+  it('refuses to narrate a translation whose hash no longer matches the article', async () => {
+    h.translationRepository.findByRefAndLang.mockResolvedValue(
+      translationRow({ hash: 'hash-of-an-older-article' }),
+    )
+
+    await h.execute({ refId: '1', langs: ['en'] }, context)
+
+    expect(generateSpeechMock).not.toHaveBeenCalled()
+    expect(context.setStatus).toHaveBeenCalledWith(TaskStatus.Failed)
+  })
+
+  it('stamps a translated language with the translation vintage, not the article mtime', async () => {
+    h.translationRepository.findByRefAndLang.mockResolvedValue(
+      translationRow({ sourceModifiedAt: new Date('2025-06-01') }),
+    )
+
+    await h.execute({ refId: '1', langs: ['en'] }, context)
+
+    expect(h.repository.upsertParent).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sourceModifiedAt: new Date('2025-06-01') }),
     )
   })
 
@@ -491,5 +573,34 @@ describe('ai-tts generation task (faux e2e)', () => {
 
     expect(generateSpeechMock).toHaveBeenCalledTimes(2)
     expect(generateSpeechMock.mock.calls[0][0].voice).toBe('alloy')
+  })
+
+  it('a force run with a changed voice writes new object keys and displaces the old audio', async () => {
+    await h.execute({ refId: '1' }, context)
+    const alloyKeys = h.repository.upsertBlock.mock.calls.map(
+      ([input]) => input.storageKey,
+    )
+    expect(alloyKeys).toHaveLength(2)
+
+    const revoiced = createHarness()
+    revoiced.ttsConfig.voice = 'nova'
+    revoiced.repository.findByRefAndLang.mockResolvedValue(
+      parentRow({ voice: 'alloy' }),
+    )
+    revoiced.repository.findBlocks.mockResolvedValue([
+      blockRow('blk-a', FP_A, { storageKey: alloyKeys[0] }),
+      blockRow('blk-b', FP_B, { storageKey: alloyKeys[1] }),
+    ])
+
+    await revoiced.execute({ refId: '1', force: true }, createTaskContext())
+
+    const novaKeys = revoiced.repository.upsertBlock.mock.calls.map(
+      ([input]) => input.storageKey,
+    )
+    expect(novaKeys).toHaveLength(2)
+    for (const key of novaKeys) expect(alloyKeys).not.toContain(key)
+    for (const key of alloyKeys) {
+      expect(revoiced.fileService.deleteObject).toHaveBeenCalledWith('s3', key)
+    }
   })
 })

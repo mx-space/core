@@ -10,27 +10,17 @@ import type {
   ArticleDocument,
   GlobalArticle,
 } from './ai-translation.types'
+import { readArticleMetaLang, toArticleContent } from './article-content.util'
 
 export abstract class BaseTranslationService {
   toArticleContent(document: ArticleDocument): ArticleContent {
-    return {
-      title: document.title,
-      text: document.text,
-      subtitle:
-        'subtitle' in document ? (document.subtitle ?? undefined) : undefined,
-      summary:
-        'summary' in document ? (document.summary ?? undefined) : undefined,
-      tags: 'tags' in document ? document.tags : undefined,
-      contentFormat: document.contentFormat,
-      content: document.content,
-    }
+    return toArticleContent(document)
   }
 
   getMetaLang(document: {
     meta?: Record<string, unknown> | null
   }): string | undefined {
-    const lang = document.meta?.lang
-    return typeof lang === 'string' ? lang : undefined
+    return readArticleMetaLang(document)
   }
 
   computeContentHash(document: ArticleContent, sourceLang: string): string {

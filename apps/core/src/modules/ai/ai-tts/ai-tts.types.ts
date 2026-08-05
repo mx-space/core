@@ -88,6 +88,11 @@ export interface UpsertParentInput {
 }
 
 export interface TtsSourceDocument {
+  title: string
+  text: string
+  subtitle?: string | null
+  summary?: string | null
+  tags?: string[]
   contentFormat?: string | null
   content?: string | null
   meta?: Record<string, unknown> | null

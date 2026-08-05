@@ -17,6 +17,7 @@ import { FileService } from '../../file/file.service'
 import { parseLanguageCode } from '../ai-language.util'
 import { AITaskType, type TtsTaskPayload } from '../ai-task/ai-task.types'
 import { AiTranslationRepository } from '../ai-translation/ai-translation.repository'
+import { readArticleMetaLang } from '../ai-translation/article-content.util'
 import { AiTtsRepository } from './ai-tts.repository'
 import type {
   ExistingBlockRow,
@@ -27,16 +28,14 @@ import type {
   TtsStoredObject,
   TtsVoiceConfig,
 } from './ai-tts.types'
-import {
-  computeSpeechFingerprint,
-  extractSpeakableText,
-  planTts,
-  SPEAKABLE_BLOCK_TYPES,
-  splitIntoChunks,
-} from './tts-block-plan'
+import { planChunks, planTts } from './tts-block-plan'
 import { withTtsLangLock } from './tts-lang-lock'
-import { buildTtsObjectKey } from './tts-object-key'
+import {
+  buildTtsObjectKey,
+  computeTtsObjectFingerprint,
+} from './tts-object-key'
 import { TtsRuntimeAdapter } from './tts-runtime.adapter'
+import { resolveTtsSourceContent } from './tts-source-content'
 
 // Caps in-flight synthesis across every TTS task in this process; ten tasks at
 // concurrency 3 would otherwise open sixty provider connections at once.
@@ -60,11 +59,6 @@ interface LanguageRunInput {
   refId: string
   reportProgress: (done: number, total: number) => Promise<void>
   sourceLang: string
-}
-
-function readMetaLang(document: TtsSourceDocument): string | undefined {
-  const lang = document.meta?.lang
-  return typeof lang === 'string' ? lang : undefined
 }
 
 function chunkKey(blockId: string, chunkIndex: number): string {
@@ -114,7 +108,7 @@ export class AiTtsService implements OnModuleInit {
     }
 
     const document = await this.loadDocument(payload.refId)
-    const sourceLang = parseLanguageCode(readMetaLang(document))
+    const sourceLang = parseLanguageCode(readArticleMetaLang(document))
     const targets = payload.langs?.length
       ? [...new Set(payload.langs.map((lang) => parseLanguageCode(lang)))]
       : [sourceLang]
@@ -156,18 +150,26 @@ export class AiTtsService implements OnModuleInit {
       throwIfAborted(context.signal)
 
       try {
-        const result = await withTtsLangLock(redis, payload.refId, lang, () =>
-          this.runLanguage({
-            ...shared,
-            lang,
-            reportProgress: (done, total) =>
-              context.updateProgress(
-                Math.round(((index + done / total) / targets.length) * 100),
-                `Generated ${done}/${total} (${lang})`,
-                done,
-                total,
-              ),
-          }),
+        const result = await withTtsLangLock(
+          redis,
+          payload.refId,
+          lang,
+          () =>
+            this.runLanguage({
+              ...shared,
+              lang,
+              reportProgress: (done, total) =>
+                context.updateProgress(
+                  Math.round(((index + done / total) / targets.length) * 100),
+                  `Generated ${done}/${total} (${lang})`,
+                  done,
+                  total,
+                ),
+            }),
+          (error) =>
+            this.logger.warn(
+              `tts lock renewal failed for ${payload.refId}:${lang}: ${error.message}`,
+            ),
         )
 
         if (!result) {
@@ -198,10 +200,13 @@ export class AiTtsService implements OnModuleInit {
     )
     await context.setResult({ perLang, skipped, failed })
 
+    // A requeued language committed chunks but never published its block_order,
+    // so reporting it green would hide unfinished work from the operator.
+    const requeued = perLang.filter((result) => result.requeued).length
     const attempted = targets.length - skipped.length
     if (failed.length > 0 && failed.length === attempted) {
       context.setStatus(TaskStatus.Failed)
-    } else if (failed.length > 0) {
+    } else if (failed.length > 0 || requeued > 0) {
       context.setStatus(TaskStatus.PartialFailed)
     }
   }
@@ -212,11 +217,28 @@ export class AiTtsService implements OnModuleInit {
     const { context, document, force, lang, refId, sourceLang } = input
 
     const isTranslation = lang !== sourceLang
-    const content = await this.resolveContent(input, isTranslation)
-    const chunks = this.buildChunks(content, input.maxCharsPerChunk)
+    const { content, sourceModifiedAt } = await resolveTtsSourceContent({
+      document,
+      findTranslation: (id, code) =>
+        this.translationRepository.findByRefAndLang(id, code),
+      isTranslation,
+      lang,
+      refId,
+      sourceLang,
+    })
+
+    const { chunks, blocksWithoutId } = planChunks(
+      this.lexicalService.extractRootBlockNodes(content),
+      input.maxCharsPerChunk,
+    )
+    if (blocksWithoutId.length > 0) {
+      this.logger.warn(
+        `speakable blocks without an id at index ${blocksWithoutId.join(', ')}: ref=${refId} lang=${lang}`,
+      )
+    }
 
     const parent = await this.repository.findByRefAndLang(refId, lang)
-    const existing = parent ? await this.loadExistingBlocks(parent.id) : []
+    const existing = parent ? await this.repository.findBlocks(parent.id) : []
     if (!chunks.length && !parent) {
       throw createAppException(AppErrorCode.TTS_SOURCE_NOT_LEXICAL, { lang })
     }
@@ -260,7 +282,7 @@ export class AiTtsService implements OnModuleInit {
         })
       ).id
 
-    const displaced = await this.synthesize(input, {
+    const { displaced, generated } = await this.synthesize(input, {
       existing,
       toGenerate: plan.toGenerate,
       ttsId,
@@ -270,8 +292,8 @@ export class AiTtsService implements OnModuleInit {
     const summary = {
       lang,
       ttsId,
-      total: plan.toGenerate.length,
-      generated: plan.toGenerate.length,
+      total: chunks.length,
+      generated,
       reused: plan.toReuse.length,
       deleted: 0,
       charCount: plan.charCount,
@@ -293,7 +315,7 @@ export class AiTtsService implements OnModuleInit {
       ...parentBase,
       blockOrder: plan.blockOrder,
       charCount: plan.charCount,
-      sourceModifiedAt: document.modifiedAt ?? null,
+      sourceModifiedAt,
     })
     await this.repository.deleteBlocksByIds(
       plan.toDelete.map((row) => row.rowId),
@@ -311,7 +333,7 @@ export class AiTtsService implements OnModuleInit {
       ttsId: string
       voice: TtsVoiceConfig
     },
-  ): Promise<TtsStoredObject[]> {
+  ): Promise<{ displaced: TtsStoredObject[]; generated: number }> {
     const { context, lang, refId } = input
     const { existing, toGenerate, ttsId, voice } = work
 
@@ -327,7 +349,10 @@ export class AiTtsService implements OnModuleInit {
     const total = toGenerate.length
     let done = 0
 
-    await Promise.all(
+    // p-limit cancels nothing on the first rejection, so every limited task has
+    // to settle before the caller releases the language lock — otherwise a
+    // straggler keeps writing rows after another holder has acquired it.
+    const settled = await Promise.allSettled(
       toGenerate.map((chunk) =>
         limit(async () => {
           throwIfAborted(context.signal)
@@ -347,7 +372,7 @@ export class AiTtsService implements OnModuleInit {
             lang,
             blockId: chunk.blockId,
             chunkIndex: chunk.chunkIndex,
-            fingerprint: chunk.fingerprint,
+            fingerprint: computeTtsObjectFingerprint(chunk.fingerprint, voice),
           })
           const uploaded = await this.uploadChunk(buffer, objectKey)
 
@@ -381,7 +406,14 @@ export class AiTtsService implements OnModuleInit {
       ),
     )
 
-    return displaced
+    const rejections = settled
+      .filter((result) => result.status === 'rejected')
+      .map((result) => result.reason as Error)
+    const aborted = rejections.find((error) => error?.name === 'AbortError')
+    if (aborted) throw aborted
+    if (rejections.length > 0) throw rejections[0]
+
+    return { displaced, generated: done }
   }
 
   private async uploadChunk(buffer: Buffer, objectKey: string) {
@@ -407,77 +439,12 @@ export class AiTtsService implements OnModuleInit {
     }
   }
 
-  private buildChunks(content: string, maxChars: number): PlannedChunk[] {
-    const chunks: PlannedChunk[] = []
-    for (const block of this.lexicalService.extractRootBlockNodes(content)) {
-      if (!SPEAKABLE_BLOCK_TYPES.has(block.type)) continue
-      const text = extractSpeakableText(block.node)
-      if (!text) continue
-
-      const blockId = block.id ?? `idx:${block.index}`
-      if (!block.id) {
-        this.logger.warn(`speakable block without id at index ${block.index}`)
-      }
-
-      for (const [chunkIndex, chunkText] of splitIntoChunks(
-        text,
-        maxChars,
-      ).entries()) {
-        chunks.push({
-          blockId,
-          chunkIndex,
-          type: block.type,
-          text: chunkText,
-          fingerprint: computeSpeechFingerprint(block.type, chunkText),
-        })
-      }
-    }
-    return chunks
-  }
-
-  private async resolveContent(
-    input: LanguageRunInput,
-    isTranslation: boolean,
-  ): Promise<string> {
-    const { document, lang, refId, sourceLang } = input
-
-    if (!isTranslation) {
-      if (document.contentFormat !== 'lexical' || !document.content) {
-        throw createAppException(AppErrorCode.TTS_SOURCE_NOT_LEXICAL, { lang })
-      }
-      return document.content
-    }
-
-    const row = await this.translationRepository.findByRefAndLang(refId, lang)
-    if (
-      !row ||
-      row.contentFormat !== 'lexical' ||
-      !row.content ||
-      parseLanguageCode(row.sourceLang) !== sourceLang
-    ) {
-      throw createAppException(AppErrorCode.TTS_SOURCE_NOT_LEXICAL, { lang })
-    }
-    return row.content
-  }
-
   private async loadDocument(refId: string): Promise<TtsSourceDocument> {
     const article = await this.databaseService.findGlobalById(refId)
     if (!article?.document) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
     return article.document as TtsSourceDocument
-  }
-
-  private async loadExistingBlocks(ttsId: string): Promise<ExistingBlockRow[]> {
-    const rows = await this.repository.findBlocks(ttsId)
-    return rows.map((row) => ({
-      id: row.id,
-      blockId: row.blockId,
-      chunkIndex: row.chunkIndex,
-      fingerprint: row.fingerprint,
-      storageBackend: row.storageBackend,
-      storageKey: row.storageKey,
-    }))
   }
 
   private async deleteObjects(objects: TtsStoredObject[]): Promise<void> {

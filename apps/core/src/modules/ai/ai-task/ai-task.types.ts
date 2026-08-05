@@ -1,3 +1,5 @@
+import { parseLanguageCode } from '../ai-language.util'
+
 export enum AITaskType {
   Summary = 'ai:summary',
   Translation = 'ai:translation',
@@ -138,7 +140,14 @@ export function computeAITaskDedupKey(
     }
     case AITaskType.Tts: {
       const p = payload as TtsTaskPayload
-      const langs = (p.langs || []).slice().sort().join(',')
+      // The handler locks on canonical (refId, lang), so the dedup key has to
+      // canonicalize too — otherwise `zh-CN` and `zh` enqueue two tasks and the
+      // one that loses the lock reports success having generated nothing.
+      const langs = [
+        ...new Set((p.langs || []).map((lang) => parseLanguageCode(lang))),
+      ]
+        .sort()
+        .join(',')
       return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
     }
   }

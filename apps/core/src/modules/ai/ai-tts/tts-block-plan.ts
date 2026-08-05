@@ -83,6 +83,45 @@ export function computeSpeechFingerprint(
   return md5(`${type}:${chunkText}`)
 }
 
+export interface RootBlockNode {
+  id: string | null
+  type: string
+  node: any
+  index: number
+}
+
+export function planChunks(
+  blocks: RootBlockNode[],
+  maxChars: number,
+): { chunks: PlannedChunk[]; blocksWithoutId: number[] } {
+  const chunks: PlannedChunk[] = []
+  const blocksWithoutId: number[] = []
+
+  for (const block of blocks) {
+    if (!SPEAKABLE_BLOCK_TYPES.has(block.type)) continue
+    const text = extractSpeakableText(block.node)
+    if (!text) continue
+
+    if (!block.id) blocksWithoutId.push(block.index)
+    const blockId = block.id ?? `idx:${block.index}`
+
+    for (const [chunkIndex, chunkText] of splitIntoChunks(
+      text,
+      maxChars,
+    ).entries()) {
+      chunks.push({
+        blockId,
+        chunkIndex,
+        type: block.type,
+        text: chunkText,
+        fingerprint: computeSpeechFingerprint(block.type, chunkText),
+      })
+    }
+  }
+
+  return { chunks, blocksWithoutId }
+}
+
 function rowKey(blockId: string, chunkIndex: number): string {
   return `${blockId}#${chunkIndex}`
 }
