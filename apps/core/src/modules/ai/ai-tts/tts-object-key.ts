@@ -5,8 +5,9 @@ const SAFE_SEGMENT = /[^\w-]/g
 // The speech fingerprint addresses the *text*, so on its own it would give
 // re-voiced audio the key of the audio it replaces — an in-place overwrite
 // behind a year-long CDN cache. The stored object is addressed by text AND by
-// the voice config that produced it; reuse still keys on the speech
-// fingerprint alone, because a run only adopts new voice config under `force`.
+// the voice config that produced it, and `planTts` reuses a row only when its
+// storageKey equals the key this run would write, so a row left behind at
+// another voice by a crashed `force` run regenerates instead of persisting.
 export function computeTtsObjectFingerprint(
   speechFingerprint: string,
   voice: { model: string; voice: string; speed: number },

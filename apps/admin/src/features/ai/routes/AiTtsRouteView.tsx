@@ -23,6 +23,7 @@ import {
   ResourceError,
 } from '../components/GroupedResourceStates'
 import {
+  buildTtsRegeneratePayload,
   getErrorMessage,
   getTaskMutationMessage,
   summarizeTaskBatch,
@@ -95,7 +96,7 @@ export function AiTtsRouteView() {
 
   const regenerateMutation = useMutation({
     mutationFn: (row: AITtsListRow) =>
-      createTtsTask({ force: true, langs: [row.lang], refId: row.refId }),
+      createTtsTask(buildTtsRegeneratePayload(row)),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('ai.toast.taskCreateFailed'))),
     onSuccess: async (result) => {
@@ -116,14 +117,10 @@ export function AiTtsRouteView() {
     },
   })
 
-  const batchEnqueueMutation = useMutation({
-    // Every row on this page already has narration, so without `force` planTts
-    // would reuse every unchanged chunk and the action would enqueue no work.
+  const batchRegenerateMutation = useMutation({
     mutationFn: async (targets: AITtsListRow[]) =>
       Promise.allSettled(
-        targets.map((row) =>
-          createTtsTask({ force: true, langs: [row.lang], refId: row.refId }),
-        ),
+        targets.map((row) => createTtsTask(buildTtsRegeneratePayload(row))),
       ),
     onSuccess: async (results) => {
       const { deduped, queued, reasons } = summarizeTaskBatch(
@@ -161,6 +158,15 @@ export function AiTtsRouteView() {
     if (ok) deleteMutation.mutate(row.id)
   }
 
+  const confirmAndBatchRegenerate = async () => {
+    const targets = selection.getSelectedTargets()
+    const ok = await confirmDialog({
+      description: t('ai.tts.confirm.batchRegenerateHint'),
+      title: t('ai.tts.confirm.batchRegenerate', { count: targets.length }),
+    })
+    if (ok) batchRegenerateMutation.mutate(targets)
+  }
+
   const visibleIds = rows.map((row) => row.id)
   const allVisibleSelected =
     visibleIds.length > 0 && visibleIds.every((id) => selection.isSelected(id))
@@ -168,12 +174,11 @@ export function AiTtsRouteView() {
 
   const headerActions: HeaderAction[] = [
     {
-      disabled: selection.size === 0 || batchEnqueueMutation.isPending,
+      disabled: selection.size === 0 || batchRegenerateMutation.isPending,
       icon: Sparkles,
       kind: 'button',
-      label: t('ai.tts.action.batchEnqueue'),
-      onClick: () =>
-        batchEnqueueMutation.mutate(selection.getSelectedTargets()),
+      label: t('ai.tts.action.batchRegenerate'),
+      onClick: () => void confirmAndBatchRegenerate(),
       primary: true,
     },
     {

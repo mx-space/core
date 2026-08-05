@@ -235,9 +235,12 @@ export const enUS = {
   'ai.translation.listSectionTitle': 'Translation list',
   'ai.translation.searchPlaceholder': 'Search by article title',
   'ai.translation.title': 'Translation entries',
-  'ai.tts.action.batchEnqueue': 'Enqueue selected',
+  'ai.tts.action.batchRegenerate': 'Regenerate selected',
   'ai.tts.column.actions': 'Actions',
   'ai.tts.column.article': 'Article',
+  'ai.tts.confirm.batchRegenerate': 'Regenerate {count} narrations?',
+  'ai.tts.confirm.batchRegenerateHint':
+    'Every selected narration is re-synthesized from scratch and billed again.',
   'ai.tts.column.blockCount': 'Blocks',
   'ai.tts.column.charCount': 'Characters',
   'ai.tts.column.lang': 'Language',

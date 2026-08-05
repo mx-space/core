@@ -87,6 +87,17 @@ export function getTaskMutationMessage(result: unknown, t: Translator) {
   return null
 }
 
+// Every row the TTS management page can act on already has narration, so
+// without `force` planTts reuses each unchanged chunk and the enqueue is a
+// no-op. Both the row action and the batch build their payload here so they
+// cannot drift apart on that flag again.
+export function buildTtsRegeneratePayload(row: {
+  lang: string
+  refId: string
+}) {
+  return { force: true, langs: [row.lang], refId: row.refId }
+}
+
 // A server-side dedup hit answers `created: false` — it enqueued nothing, so
 // counting it as queued would report work the operator never got.
 export function summarizeTaskBatch(
