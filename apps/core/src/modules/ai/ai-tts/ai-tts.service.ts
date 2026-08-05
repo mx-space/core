@@ -36,10 +36,6 @@ import {
   buildTtsObjectKey,
   computeTtsObjectFingerprint,
 } from './tts-object-key'
-import {
-  runTtsOrphanReconciliation,
-  TTS_ORPHAN_PREFIX,
-} from './tts-orphan-reconciliation'
 import { TtsRuntimeAdapter } from './tts-runtime.adapter'
 import { resolveTtsSourceContent } from './tts-source-content'
 
@@ -428,7 +424,6 @@ export class AiTtsService implements OnModuleInit {
         type: 'audio',
         contentType: AUDIO_CONTENT_TYPE,
         objectKey,
-        skipReference: true,
       })
     } catch (error) {
       // Object keys are content-addressed, so a resumed run rewrites byte-identical
@@ -478,19 +473,5 @@ export class AiTtsService implements OnModuleInit {
   async handleArticleDeleted(refId: string): Promise<void> {
     const removed = await this.repository.deleteByRefId(refId)
     await this.deleteObjects(removed)
-  }
-
-  async reconcileOrphans(): Promise<{ deleted: number }> {
-    return runTtsOrphanReconciliation({
-      listCandidates: () =>
-        this.fileService.listObjectsUnderPrefix('audio', TTS_ORPHAN_PREFIX),
-      findKnownStorageKeys: () => this.repository.findAllStorageKeys(),
-      deleteObject: (backend, key) =>
-        this.fileService.deleteObject(backend, key),
-      onDeleteFailure: (candidate, error) =>
-        this.logger.warn(
-          `failed to delete orphan tts object ${candidate.storageKey}: ${error.message}`,
-        ),
-    })
   }
 }

@@ -13,7 +13,6 @@ function createHarness() {
   const configService = { get: vi.fn(async () => ({})) }
   const fileService = {
     deleteObject: vi.fn(async () => {}),
-    listObjectsUnderPrefix: vi.fn(async () => []),
   }
   const taskProcessor = { registerHandler: vi.fn() }
   const repository = createPgRepositoryMock<AiTtsRepository>()
@@ -72,72 +71,5 @@ describe('AiTtsService.handleArticleDeleted', () => {
     expect(listeners.map((listener) => listener.event)).toEqual(
       expect.arrayContaining(['POST_DELETE', 'NOTE_DELETE', 'PAGE_DELETE']),
     )
-  })
-})
-
-describe('AiTtsService.reconcileOrphans', () => {
-  it('is a no-op when the storage backend cannot be listed', async () => {
-    const { fileService, repository, service } = createHarness()
-    fileService.listObjectsUnderPrefix.mockResolvedValue(null)
-
-    await expect(service.reconcileOrphans()).resolves.toEqual({ deleted: 0 })
-    expect(repository.findAllStorageKeys).not.toHaveBeenCalled()
-  })
-
-  it('deletes objects with no row that are older than the age floor', async () => {
-    const { fileService, repository, service } = createHarness()
-    const now = Date.now()
-    fileService.listObjectsUnderPrefix.mockResolvedValue([
-      {
-        storageBackend: 's3',
-        storageKey: 'tts/1/zh/known.mp3',
-        lastModified: new Date(now - 2 * 60 * 60 * 1000),
-      },
-      {
-        storageBackend: 's3',
-        storageKey: 'tts/1/zh/old-orphan.mp3',
-        lastModified: new Date(now - 2 * 60 * 60 * 1000),
-      },
-      {
-        storageBackend: 'local',
-        storageKey: 'tts/1/zh/fresh-orphan.mp3',
-        lastModified: new Date(now - 30 * 1000),
-      },
-    ] as any)
-    repository.findAllStorageKeys.mockResolvedValue(
-      new Set(['tts/1/zh/known.mp3']),
-    )
-
-    const result = await service.reconcileOrphans()
-
-    expect(result).toEqual({ deleted: 1 })
-    expect(fileService.deleteObject).toHaveBeenCalledTimes(1)
-    expect(fileService.deleteObject).toHaveBeenCalledWith(
-      's3',
-      'tts/1/zh/old-orphan.mp3',
-    )
-  })
-
-  it('logs and continues past a delete failure', async () => {
-    const { fileService, repository, service } = createHarness()
-    const now = Date.now()
-    fileService.listObjectsUnderPrefix.mockResolvedValue([
-      {
-        storageBackend: 's3',
-        storageKey: 'tts/1/zh/a.mp3',
-        lastModified: new Date(now - 2 * 60 * 60 * 1000),
-      },
-      {
-        storageBackend: 's3',
-        storageKey: 'tts/1/zh/b.mp3',
-        lastModified: new Date(now - 2 * 60 * 60 * 1000),
-      },
-    ] as any)
-    repository.findAllStorageKeys.mockResolvedValue(new Set())
-    fileService.deleteObject.mockRejectedValueOnce(new Error('network'))
-
-    const result = await service.reconcileOrphans()
-
-    expect(result).toEqual({ deleted: 1 })
   })
 })

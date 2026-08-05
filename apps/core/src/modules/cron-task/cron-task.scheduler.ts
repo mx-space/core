@@ -76,9 +76,4 @@ export class CronTaskScheduler {
       this.logger.log(`cleanCommentUploads task created: ${result.taskId}`)
     }
   }
-
-  @CronOnce(CronExpression.EVERY_HOUR, { name: 'cleanupTtsOrphans' })
-  scheduleCleanupTtsOrphans() {
-    return this.dispatch('cleanupTtsOrphans', CronTaskType.CleanupTtsOrphans)
-  }
 }

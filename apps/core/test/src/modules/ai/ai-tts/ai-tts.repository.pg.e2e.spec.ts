@@ -323,35 +323,4 @@ describe('ai-tts repository (real PG, ON CONFLICT + cascade)', () => {
     expect(secondPage.pagination.hasPrevPage).toBe(true)
     expect(secondPage.data[0].id).not.toBe(firstPage.data[0].id)
   })
-
-  it('findAllStorageKeys returns every block storage key across every article', async () => {
-    const parent = await repository.upsertParent({
-      refId: '8',
-      lang: 'en',
-      isTranslation: false,
-      sourceLang: null,
-      model: 'm',
-      voice: 'v',
-      speed: 1,
-      format: 'mp3',
-      blockOrder: ['a'],
-      charCount: 1,
-      sourceModifiedAt: null,
-    })
-    await repository.upsertBlock({
-      ttsId: parent.id,
-      blockId: 'a',
-      chunkIndex: 0,
-      fingerprint: 'fp-8',
-      text: 'hi',
-      url: 'https://cdn/8.mp3',
-      storageBackend: 's3',
-      storageKey: 'k/find-all-8',
-    })
-
-    const keys = await repository.findAllStorageKeys()
-
-    expect(keys.has('k/find-all-8')).toBe(true)
-    expect(keys.has('does-not-exist')).toBe(false)
-  })
 })

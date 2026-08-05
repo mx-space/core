@@ -309,12 +309,12 @@ describe('ai-tts generation task (faux e2e)', () => {
     expect(generateSpeechMock.mock.calls[0][0].input).toContain('second')
   })
 
-  it('uploads with skipReference so the orphan sweeper leaves audio alone', async () => {
+  it('uploads without skipReference so the audio rides the file-reference system', async () => {
     await h.execute({ refId: '1' }, context)
 
     expect(h.fileService.uploadBuffer).toHaveBeenCalledTimes(2)
     for (const [, opts] of h.fileService.uploadBuffer.mock.calls) {
-      expect(opts.skipReference).toBe(true)
+      expect(opts.skipReference).toBeUndefined()
       expect(opts.type).toBe('audio')
       expect(opts.objectKey).toMatch(
         /^tts\/1\/zh\/blk-[ab]-0-[\da-f]{12}\.mp3$/,

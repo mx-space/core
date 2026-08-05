@@ -241,13 +241,6 @@ export class AiTtsRepository extends BaseRepository {
     }
   }
 
-  async findAllStorageKeys(): Promise<Set<string>> {
-    const rows = await this.db
-      .select({ storageKey: aiTtsBlocks.storageKey })
-      .from(aiTtsBlocks)
-    return new Set(rows.map((row) => row.storageKey))
-  }
-
   async findMeta(
     refId: EntityId | string,
     lang: string,

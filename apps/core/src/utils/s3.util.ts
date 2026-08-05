@@ -3,27 +3,6 @@ import type { Readable } from 'node:stream'
 
 import { isDev } from '~/global/env.global'
 
-const XML_ENTITIES: Record<string, string> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  apos: "'",
-}
-
-function decodeS3XmlText(value: string): string {
-  return value.replaceAll(
-    /&(amp|lt|gt|quot|apos|#x[\dA-Fa-f]+|#\d+);/g,
-    (entity, code: string) => {
-      if (code in XML_ENTITIES) return XML_ENTITIES[code]
-      if (code.startsWith('#x')) {
-        return String.fromCodePoint(Number.parseInt(code.slice(2), 16))
-      }
-      return String.fromCodePoint(Number.parseInt(code.slice(1), 10))
-    },
-  )
-}
-
 export interface S3UploaderOptions {
   bucket: string
   region: string
@@ -391,15 +370,7 @@ export class S3Uploader {
       encodedObjectKey,
       url.protocol,
     )
-    const { requestHost } = resolved
-    // A bucket-level request (list objects) has no object key, so the
-    // per-object canonical URI's trailing `/key` collapses to the bucket
-    // root; the trailing slash must be trimmed or the signature won't match
-    // the request AWS/R2 actually receives.
-    const canonicalUri =
-      objectKey === ''
-        ? resolved.canonicalUri.replace(/\/+$/, '') || '/'
-        : resolved.canonicalUri
+    const { requestHost, canonicalUri } = resolved
 
     const canonicalQuery = Object.keys(query)
       .sort()
@@ -490,57 +461,6 @@ export class S3Uploader {
         }
       }
     }
-  }
-
-  async listObjects(
-    prefix: string,
-  ): Promise<Array<{ key: string; lastModified: Date }>> {
-    const results: Array<{ key: string; lastModified: Date }> = []
-    let continuationToken: string | undefined
-
-    do {
-      const query: Record<string, string> = {
-        'list-type': '2',
-        'max-keys': '1000',
-        prefix,
-      }
-      if (continuationToken) {
-        query['continuation-token'] = continuationToken
-      }
-
-      const response = await this.signedRequest({
-        method: 'GET',
-        objectKey: '',
-        query,
-      })
-      const body = await response.text()
-      if (!response.ok) {
-        throw new Error(
-          `List objects failed with status code: ${response.status} - ${body}`,
-        )
-      }
-
-      for (const match of body.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
-        const block = match[1]
-        const key = /<Key>([^<]*)<\/Key>/.exec(block)?.[1]
-        const lastModified = /<LastModified>([^<]*)<\/LastModified>/.exec(
-          block,
-        )?.[1]
-        if (!key || !lastModified) continue
-        results.push({
-          key: decodeS3XmlText(key),
-          lastModified: new Date(lastModified),
-        })
-      }
-
-      continuationToken = /<IsTruncated>true<\/IsTruncated>/.test(body)
-        ? /<NextContinuationToken>([^<]*)<\/NextContinuationToken>/.exec(
-            body,
-          )?.[1]
-        : undefined
-    } while (continuationToken)
-
-    return results
   }
 
   async uploadFile(

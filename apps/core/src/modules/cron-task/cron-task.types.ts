@@ -8,7 +8,6 @@ export const CronTaskType = {
   DeleteExpiredJWT: 'cron:delete-expired-jwt',
   RebuildSearchIndex: 'cron:rebuild-search-index',
   CleanCommentUploads: 'cron:clean-comment-uploads',
-  CleanupTtsOrphans: 'cron:cleanup-tts-orphans',
 } as const
 
 export type CronTaskTypeValue = (typeof CronTaskType)[keyof typeof CronTaskType]
@@ -78,12 +77,6 @@ export const CronTaskMetas: Record<
     description: 'Clean up comment image uploads',
     cronExpression: '*/15 * * * *',
     methodName: 'cleanCommentUploads',
-  },
-  [CronTaskType.CleanupTtsOrphans]: {
-    name: 'cleanupTtsOrphans',
-    description: 'Clean up orphaned TTS audio objects',
-    cronExpression: 'EVERY_HOUR',
-    methodName: 'cleanupTtsOrphans',
   },
 }
 

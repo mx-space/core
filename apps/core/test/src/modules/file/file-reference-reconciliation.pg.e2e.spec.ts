@@ -83,7 +83,7 @@ describe('File reference reconciliation (real PG and filesystem)', () => {
 
   beforeEach(async () => {
     await pool.query(
-      'TRUNCATE TABLE file_usages, file_references, posts, snippets, topics, categories, readers RESTART IDENTITY CASCADE',
+      'TRUNCATE TABLE file_usages, file_references, posts, snippets, topics, categories, readers, ai_tts, ai_tts_blocks RESTART IDENTITY CASCADE',
     )
     await rm(root, { force: true, recursive: true })
     await mkdir(root, { recursive: true })
@@ -96,7 +96,7 @@ describe('File reference reconciliation (real PG and filesystem)', () => {
     await rm(root, { force: true, recursive: true })
   })
 
-  const putFile = async (type: 'file' | 'image', name: string) => {
+  const putFile = async (type: 'audio' | 'file' | 'image', name: string) => {
     const target = path.join(root, type, name)
     await mkdir(path.dirname(target), { recursive: true })
     await writeFile(target, `fixture:${name}`)
@@ -356,6 +356,102 @@ describe('File reference reconciliation (real PG and filesystem)', () => {
       usageChanges: 1,
       usages: 1,
     })
+  })
+
+  it('classifies a TTS audio object as referenced while its ai_tts_blocks row exists', async () => {
+    const audioUrl = `${serverUrl}/objects/audio/tts/9001/en/blk-0-abc123456789.mp3`
+    await putFile('audio', 'tts/9001/en/blk-0-abc123456789.mp3')
+
+    await db.insert(schema.aiTts).values({
+      id: '9001',
+      refId: '9001',
+      lang: 'en',
+      model: 'tts-1',
+      voice: 'alloy',
+      speed: 1,
+      format: 'mp3',
+      blockOrder: ['blk-0'],
+      charCount: 5,
+    })
+    await db.insert(schema.aiTtsBlocks).values({
+      id: '9002',
+      ttsId: '9001',
+      blockId: 'blk-0',
+      fingerprint: 'fp-9001',
+      chunkIndex: 0,
+      text: 'hello',
+      url: audioUrl,
+      storageBackend: 'local',
+      storageKey: 'tts/9001/en/blk-0-abc123456789.mp3',
+    })
+
+    await expect(
+      usageRepository.findReferencedUrls([audioUrl]),
+    ).resolves.toEqual(new Set([audioUrl]))
+    await expect(usageRepository.findUsageMatches([audioUrl])).resolves.toEqual(
+      [
+        {
+          fileUrl: audioUrl,
+          sourceField: 'url',
+          sourceId: '9002',
+          sourceType: 'ai_tts',
+        },
+      ],
+    )
+
+    await reconciliation.reconcile({ apply: true })
+
+    const [reference] = await db
+      .select({ status: schema.fileReferences.status })
+      .from(schema.fileReferences)
+      .where(eq(schema.fileReferences.fileUrl, audioUrl))
+    expect(reference?.status).toBe(FileReferenceStatus.Active)
+  })
+
+  it('classifies a TTS audio object as isolated once its ai_tts_blocks row is gone', async () => {
+    const audioUrl = `${serverUrl}/objects/audio/tts/9001/en/blk-0-abc123456789.mp3`
+    await putFile('audio', 'tts/9001/en/blk-0-abc123456789.mp3')
+
+    await db.insert(schema.aiTts).values({
+      id: '9001',
+      refId: '9001',
+      lang: 'en',
+      model: 'tts-1',
+      voice: 'alloy',
+      speed: 1,
+      format: 'mp3',
+      blockOrder: ['blk-0'],
+      charCount: 5,
+    })
+    await db.insert(schema.aiTtsBlocks).values({
+      id: '9002',
+      ttsId: '9001',
+      blockId: 'blk-0',
+      fingerprint: 'fp-9001',
+      chunkIndex: 0,
+      text: 'hello',
+      url: audioUrl,
+      storageBackend: 'local',
+      storageKey: 'tts/9001/en/blk-0-abc123456789.mp3',
+    })
+    await reconciliation.reconcile({ apply: true })
+
+    await db.delete(schema.aiTtsBlocks).where(eq(schema.aiTtsBlocks.id, '9002'))
+
+    await expect(
+      usageRepository.findReferencedUrls([audioUrl]),
+    ).resolves.toEqual(new Set())
+    await expect(usageRepository.findUsageMatches([audioUrl])).resolves.toEqual(
+      [],
+    )
+
+    await reconciliation.reconcile({ apply: true })
+
+    const [reference] = await db
+      .select({ status: schema.fileReferences.status })
+      .from(schema.fileReferences)
+      .where(eq(schema.fileReferences.fileUrl, audioUrl))
+    expect(reference?.status).toBe(FileReferenceStatus.Pending)
   })
 
   it('rolls back usage replacement and status changes when an insert fails', async () => {
