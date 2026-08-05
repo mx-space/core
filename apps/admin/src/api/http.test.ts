@@ -50,3 +50,48 @@ describe('requestJson error handling', () => {
     expect((error as ApiRequestError).code).toBeUndefined()
   })
 })
+
+describe('requestJson meta unwrapping', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('flattens pagination alongside data', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      jsonResponse({
+        data: [{ id: '1' }],
+        meta: { pagination: { page: 1, size: 10, total: 1, totalPages: 1 } },
+      }),
+    )
+
+    const result = await getJson<{
+      data: unknown[]
+      pagination: { total: number }
+    }>('/ai/tts')
+
+    expect(result.data).toEqual([{ id: '1' }])
+    expect(result.pagination.total).toBe(1)
+  })
+
+  it('carries sibling meta fields (e.g. articles) alongside pagination', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      jsonResponse({
+        data: [{ id: '1', ref_id: '9' }],
+        meta: {
+          articles: { '9': { id: '9', title: 'Hello', type: 'Post' } },
+          pagination: { page: 1, size: 10, total: 1, totalPages: 1 },
+        },
+      }),
+    )
+
+    const result = await getJson<{
+      articles: Record<string, { id: string; title: string }>
+      data: unknown[]
+      pagination: { total: number }
+    }>('/ai/tts')
+
+    expect(result.articles).toEqual({
+      '9': { id: '9', title: 'Hello', type: 'Post' },
+    })
+  })
+})

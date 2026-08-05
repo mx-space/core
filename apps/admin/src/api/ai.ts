@@ -441,3 +441,24 @@ export function getTtsByRefId(refId: string) {
 export function deleteTts(id: string) {
   return deleteJson<void>(`/ai/tts/${id}`)
 }
+
+export interface AITtsListRow {
+  blockCount: number
+  charCount: number
+  id: string
+  lang: string
+  refId: string
+  updatedAt?: null | string
+}
+
+export type AITtsArticleMap = Record<string, ArticleInfo>
+
+export interface AITtsListResponse {
+  articles: AITtsArticleMap
+  data: AITtsListRow[]
+  pagination: PaginationInfo
+}
+
+export function getTtsList(params: { page?: number; size?: number }) {
+  return getJson<AITtsListResponse>('/ai/tts', params)
+}

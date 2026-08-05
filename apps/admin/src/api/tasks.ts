@@ -11,6 +11,7 @@ export enum AITaskType {
   Insights = 'ai:insights',
   InsightsTranslation = 'ai:insights:translation',
   ImageGeneration = 'ai:image:generation',
+  Tts = 'ai:tts',
 }
 
 export enum AITaskStatus {

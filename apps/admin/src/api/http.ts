@@ -13,6 +13,7 @@ type ResponseEnvelope<T> = {
   }
   meta?: {
     pagination?: unknown
+    [key: string]: unknown
   }
   message?: string | string[]
 }
@@ -94,9 +95,11 @@ export async function requestJson<TResponse>(
 
   if (responseData && 'data' in responseData) {
     if (responseData.meta?.pagination) {
+      const { pagination, ...restMeta } = responseData.meta
       return {
         data: responseData.data,
-        pagination: responseData.meta.pagination,
+        pagination,
+        ...restMeta,
       } as TResponse
     }
 
