@@ -59,6 +59,13 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED]: undefined
   [AppErrorCode.IMAGE_GENERATION_FAILED]: OptMessage
 
+  // TTS
+  [AppErrorCode.TTS_DISABLED]: undefined
+  [AppErrorCode.TTS_PROVIDER_NOT_CONFIGURED]: undefined
+  [AppErrorCode.TTS_SOURCE_NOT_LEXICAL]: { lang?: string } | undefined
+  [AppErrorCode.TTS_GENERATION_FAILED]: { message?: string } | undefined
+  [AppErrorCode.TTS_BUDGET_EXCEEDED]: { charCount: number; limit: number }
+
   // auth
   [AppErrorCode.AUTH_DEVICE_FLOW_PENDING]: undefined
   [AppErrorCode.AUTH_INVALID_CREDENTIALS]: undefined
