@@ -234,7 +234,9 @@ export class LexicalService {
       : { content, changed: false }
   }
 
-  extractRootBlocks(content: string): LexicalRootBlock[] {
+  extractRootBlockNodes(
+    content: string,
+  ): Array<{ id: string | null; type: string; node: any; index: number }> {
     const editorState = this.parseEditorState(content)
     if (!editorState?.root || !Array.isArray(editorState.root.children)) {
       return []
@@ -242,24 +244,36 @@ export class LexicalService {
 
     return editorState.root.children
       .map((child: any, index: number) => {
-        if (!child || typeof child !== 'object') {
-          return null
-        }
-
-        const text = this.extractBlockText(child)
-        const normalized = this.normalizeText(text)
-        const type = typeof child.type === 'string' ? child.type : 'unknown'
-        const fingerprint = md5(`${type}:${normalized}`)
-
+        if (!child || typeof child !== 'object') return null
         return {
           id: this.readBlockId(child),
+          type: typeof child.type === 'string' ? child.type : 'unknown',
+          node: child,
+          index,
+        }
+      })
+      .filter(Boolean) as Array<{
+      id: string | null
+      type: string
+      node: any
+      index: number
+    }>
+  }
+
+  extractRootBlocks(content: string): LexicalRootBlock[] {
+    return this.extractRootBlockNodes(content).map(
+      ({ id, type, node, index }) => {
+        const text = this.extractBlockText(node)
+        const normalized = this.normalizeText(text)
+        return {
+          id,
           type,
           text,
-          fingerprint,
+          fingerprint: md5(`${type}:${normalized}`),
           index,
         } satisfies LexicalRootBlock
-      })
-      .filter((block): block is LexicalRootBlock => !!block)
+      },
+    )
   }
 
   lexicalToMarkdown(editorState: string): string {
