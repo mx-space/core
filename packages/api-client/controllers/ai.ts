@@ -9,6 +9,7 @@ import type {
   AIInsightsModel,
   AISummaryModel,
   AITranslationModel,
+  AITtsModel,
 } from '../models/ai'
 
 declare module '@mx-space/api-client' {
@@ -246,6 +247,12 @@ export class AIController<ResponseWrapper> implements IController {
         Accept: 'text/event-stream',
         ...fetchOptions?.headers,
       },
+    })
+  }
+
+  async getTts({ articleId, lang }: { articleId: string; lang?: string }) {
+    return this.proxy.tts.article(articleId).get<AITtsModel | null>({
+      params: { lang },
     })
   }
 }

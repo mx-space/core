@@ -99,3 +99,18 @@ export type AIInsightsStreamEvent =
   | { type: 'token'; data: string }
   | { type: 'done'; data: undefined }
   | { type: 'error'; data: string }
+
+export interface AITtsSegmentModel {
+  blockId: string
+  chunkIndex: number
+  text: string
+  url: string
+}
+
+export interface AITtsModel {
+  lang: string
+  model: string
+  voice: string
+  blockOrder: string[]
+  segments: AITtsSegmentModel[]
+}
