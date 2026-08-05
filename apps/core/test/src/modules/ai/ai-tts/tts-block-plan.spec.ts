@@ -88,6 +88,31 @@ describe('computeSpeechFingerprint', () => {
       computeSpeechFingerprint('list', extractSpeakableText(left)),
     ).not.toBe(computeSpeechFingerprint('list', extractSpeakableText(right)))
   })
+
+  it('separates nested list splits that share concatenated text', () => {
+    const nestedList = (a: string, b: string) => ({
+      type: 'list',
+      children: [
+        {
+          type: 'listitem',
+          children: [
+            {
+              type: 'list',
+              children: [
+                { type: 'listitem', children: [textNode(a)] },
+                { type: 'listitem', children: [textNode(b)] },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+    const left = nestedList('ab', 'c')
+    const right = nestedList('a', 'bc')
+    expect(
+      computeSpeechFingerprint('list', extractSpeakableText(left)),
+    ).not.toBe(computeSpeechFingerprint('list', extractSpeakableText(right)))
+  })
 })
 
 describe('splitIntoChunks', () => {
@@ -101,6 +126,13 @@ describe('splitIntoChunks', () => {
 
   it('returns one chunk when the text fits', () => {
     expect(splitIntoChunks('short', 100)).toEqual(['short'])
+  })
+
+  it('rejects a non-positive maxChars up front instead of looping unboundedly', () => {
+    expect(() => splitIntoChunks('a', 0)).toThrow(/maxChars must be a positive/)
+    expect(() => splitIntoChunks('a', -1)).toThrow(
+      /maxChars must be a positive/,
+    )
   })
 })
 

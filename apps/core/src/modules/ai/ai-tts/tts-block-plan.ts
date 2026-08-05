@@ -21,6 +21,12 @@ function collectInlineText(node: any): string {
   if (!node || typeof node !== 'object') return ''
   if (node.type === 'text') return String(node.text ?? '')
   if (node.type === 'linebreak') return ' '
+  if (node.type === 'list' && Array.isArray(node.children)) {
+    return node.children
+      .map((item: any) => collectInlineText(item).trim())
+      .filter(Boolean)
+      .join(SENTENCE_SEPARATOR)
+  }
   if (Array.isArray(node.children)) {
     return node.children.map((child: any) => collectInlineText(child)).join('')
   }
@@ -28,23 +34,18 @@ function collectInlineText(node: any): string {
 }
 
 export function extractSpeakableText(node: any): string {
-  if (!node || typeof node !== 'object') return ''
-
-  const raw =
-    node.type === 'list' && Array.isArray(node.children)
-      ? node.children
-          .map((item: any) => collectInlineText(item).trim())
-          .filter(Boolean)
-          .join(SENTENCE_SEPARATOR)
-      : collectInlineText(node)
-
-  return raw.replaceAll(/\s+/g, ' ').trim()
+  return collectInlineText(node).replaceAll(/\s+/g, ' ').trim()
 }
 
 const SENTENCE_SPLIT_RE =
   /[^!.?。！？]*[。！？]|[^!.?。！？]*[!.?](?:\s|$)|[^!.?。！？]+$/g
 
 export function splitIntoChunks(text: string, maxChars: number): string[] {
+  if (!Number.isFinite(maxChars) || maxChars <= 0) {
+    throw new RangeError(
+      `splitIntoChunks: maxChars must be a positive finite number, got ${maxChars}`,
+    )
+  }
   if (!text) return []
   if (text.length <= maxChars) return [text]
 
