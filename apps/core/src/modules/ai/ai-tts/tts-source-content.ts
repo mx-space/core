@@ -48,11 +48,13 @@ export async function resolveTtsSourceContent(params: {
     throw createAppException(AppErrorCode.TTS_SOURCE_NOT_LEXICAL, { lang })
   }
 
-  // Same hash the translation module compares on, via the same helper, so a
-  // translation left behind by an edited article is never voiced.
+  // Re-derived with `row.sourceLang` because that is the exact string the
+  // writer hashed with and then persisted (ai-translation.service.ts) — the
+  // canonicalized code would never match a row whose sourceLang has a region
+  // subtag, and that language would fail on every run.
   const currentHash = computeContentHash(
     toArticleContent(document as unknown as ArticleDocument),
-    sourceLang,
+    row.sourceLang,
   )
   if (row.hash !== currentHash) {
     throw createAppException(AppErrorCode.TTS_SOURCE_NOT_LEXICAL, { lang })

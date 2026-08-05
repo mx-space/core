@@ -166,9 +166,9 @@ export class AiTtsService implements OnModuleInit {
                   total,
                 ),
             }),
-          (error) =>
+          (error, phase) =>
             this.logger.warn(
-              `tts lock renewal failed for ${payload.refId}:${lang}: ${error.message}`,
+              `tts lock ${phase} failed for ${payload.refId}:${lang}: ${error.message}`,
             ),
         )
 

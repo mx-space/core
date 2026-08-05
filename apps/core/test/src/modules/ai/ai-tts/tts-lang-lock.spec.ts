@@ -77,6 +77,38 @@ describe('withTtsLangLock', () => {
     expect(redis.store.get(ttsLangLockKey('1', 'zh'))).toBe('a-later-holder')
   })
 
+  it('keeps the body result when the release fails', async () => {
+    const onLockError = vi.fn()
+    redis.eval.mockRejectedValueOnce(new Error('redis blip'))
+
+    const result = await withTtsLangLock(
+      redis as never,
+      '1',
+      'zh',
+      async () => 'done',
+      onLockError,
+    )
+
+    expect(result).toBe('done')
+    expect(onLockError).toHaveBeenCalledWith(expect.any(Error), 'release')
+  })
+
+  it('keeps the body error when the release fails', async () => {
+    redis.eval.mockRejectedValueOnce(new Error('redis blip'))
+
+    await expect(
+      withTtsLangLock(
+        redis as never,
+        '1',
+        'zh',
+        async () => {
+          throw new Error('boom')
+        },
+        vi.fn(),
+      ),
+    ).rejects.toThrow('boom')
+  })
+
   it('clears the renewal interval so the process is not held open', async () => {
     vi.useFakeTimers()
     try {
@@ -89,7 +121,7 @@ describe('withTtsLangLock', () => {
 
   it('renews under the token and reports a renewal failure instead of rejecting', async () => {
     vi.useFakeTimers()
-    const onRenewError = vi.fn()
+    const onLockError = vi.fn()
     try {
       const run = withTtsLangLock(
         redis as never,
@@ -100,11 +132,11 @@ describe('withTtsLangLock', () => {
           await vi.advanceTimersByTimeAsync(120_000)
           return 'done'
         },
-        onRenewError,
+        onLockError,
       )
 
       await expect(run).resolves.toBe('done')
-      expect(onRenewError).toHaveBeenCalledWith(expect.any(Error))
+      expect(onLockError).toHaveBeenCalledWith(expect.any(Error), 'renew')
     } finally {
       vi.useRealTimers()
     }

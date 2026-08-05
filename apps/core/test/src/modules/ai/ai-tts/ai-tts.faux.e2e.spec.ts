@@ -54,15 +54,24 @@ const article = (modifiedAt = new Date('2026-01-01')) => ({
   },
 })
 
-const translationRow = (overrides: Record<string, unknown> = {}) => ({
-  contentFormat: 'lexical',
-  content: '{"root":{"children":[]}}',
-  sourceLang: 'zh-CN',
-  hash: computeContentHash(toArticleContent(article().document as never), 'zh'),
-  sourceModifiedAt: new Date('2026-01-01'),
-  createdAt: now,
-  ...overrides,
-})
+// Mirrors how ai-translation.service.ts writes a row: the hash is computed with
+// the very string that is then stored in sourceLang, so the fixture can never
+// express a pairing the writer could not produce.
+const translationRow = (overrides: Record<string, unknown> = {}) => {
+  const sourceLang = (overrides.sourceLang as string) ?? 'zh'
+  return {
+    contentFormat: 'lexical',
+    content: '{"root":{"children":[]}}',
+    sourceLang,
+    hash: computeContentHash(
+      toArticleContent(article().document as never),
+      sourceLang,
+    ),
+    sourceModifiedAt: new Date('2026-01-01'),
+    createdAt: now,
+    ...overrides,
+  }
+}
 
 const blockRow = (
   blockId: string,
@@ -493,6 +502,17 @@ describe('ai-tts generation task (faux e2e)', () => {
     expect(h.repository.upsertParent).toHaveBeenCalledWith(
       expect.objectContaining({ isTranslation: true, sourceLang: 'zh' }),
     )
+  })
+
+  it('narrates a fresh translation whose sourceLang carries a region subtag', async () => {
+    h.translationRepository.findByRefAndLang.mockResolvedValue(
+      translationRow({ sourceLang: 'zh-CN' }),
+    )
+
+    await h.execute({ refId: '1', langs: ['en'] }, context)
+
+    expect(generateSpeechMock).toHaveBeenCalled()
+    expect(context.setStatus).not.toHaveBeenCalled()
   })
 
   it('refuses to narrate a translation whose hash no longer matches the article', async () => {

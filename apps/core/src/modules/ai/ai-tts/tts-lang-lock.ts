@@ -18,7 +18,7 @@ export async function withTtsLangLock<T>(
   refId: string,
   lang: string,
   fn: () => Promise<T>,
-  onRenewError?: (error: Error) => void,
+  onLockError?: (error: Error, phase: 'renew' | 'release') => void,
 ): Promise<T | null> {
   const key = ttsLangLockKey(refId, lang)
   const token = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
@@ -28,13 +28,18 @@ export async function withTtsLangLock<T>(
   const renew = setInterval(() => {
     redis
       .eval(RENEW_SCRIPT, 1, key, token, String(LOCK_TTL_SEC))
-      .catch((error: Error) => onRenewError?.(error))
+      .catch((error: Error) => onLockError?.(error, 'renew'))
   }, LOCK_RENEW_INTERVAL_MS)
 
   try {
     return await fn()
   } finally {
     clearInterval(renew)
-    await redis.eval(RELEASE_SCRIPT, 1, key, token)
+    // A failed release must not replace the body's result or its error: the
+    // lock still expires on its own TTL, but reporting a published language as
+    // failed would be a lie.
+    await redis
+      .eval(RELEASE_SCRIPT, 1, key, token)
+      .catch((error: Error) => onLockError?.(error, 'release'))
   }
 }
