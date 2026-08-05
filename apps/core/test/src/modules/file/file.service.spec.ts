@@ -222,6 +222,8 @@ describe('FileService.uploadBuffer', () => {
     expect(result).toEqual({
       url: 'https://cdn.example.com/f.bin',
       name: 'origin.png',
+      storageBackend: 's3',
+      storageKey: 'blog/image/origin.png',
     })
   })
 
@@ -270,6 +272,8 @@ describe('FileService.uploadBuffer', () => {
     expect(result).toEqual({
       url: 'http://example.com/objects/image/nested/origin.png',
       name: 'origin.png',
+      storageBackend: 'local',
+      storageKey: 'nested/origin.png',
     })
   })
 
@@ -306,6 +310,8 @@ describe('FileService.uploadBuffer', () => {
     expect(result).toEqual({
       url: 'http://example.com/objects/file/abc.bin',
       name: 'abc.bin',
+      storageBackend: 'local',
+      storageKey: 'abc.bin',
     })
   })
 })

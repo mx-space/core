@@ -196,11 +196,24 @@ export class FileService {
     buffer: Buffer,
     opts: {
       type: FileType
-      originalFilename: string
+      originalFilename?: string
       contentType: string
+      objectKey?: string
+      skipReference?: boolean
     },
-  ): Promise<{ url: string; name: string }> {
-    const { type, originalFilename, contentType } = opts
+  ): Promise<{
+    url: string
+    name: string
+    storageBackend: 's3' | 'local'
+    storageKey: string
+  }> {
+    const {
+      type,
+      originalFilename = '',
+      contentType,
+      objectKey: explicitObjectKey,
+      skipReference,
+    } = opts
 
     const uploadConfig = await this.configService.get('fileUploadOptions')
     const imageStorageConfig = await this.configService.get(
@@ -210,7 +223,10 @@ export class FileService {
 
     if (
       s3Enabled &&
-      (type === 'image' || type === 'file' || type === 'video')
+      (type === 'image' ||
+        type === 'file' ||
+        type === 'video' ||
+        type === 'audio')
     ) {
       const config = imageStorageConfig!
       if (
@@ -222,21 +238,28 @@ export class FileService {
         throw createAppException(AppErrorCode.FILE_STORAGE_NOT_CONFIGURED)
       }
 
-      const filename = generateFilename(uploadConfig, {
-        originalFilename,
-        fileType: type,
-      })
-
-      let prefixPath = ''
-      if (config.prefix) {
-        prefixPath = replaceFilenameTemplate(config.prefix, {
+      let objectKey: string
+      let filename: string
+      if (explicitObjectKey) {
+        objectKey = explicitObjectKey
+        filename = path.basename(explicitObjectKey)
+      } else {
+        filename = generateFilename(uploadConfig, {
           originalFilename,
           fileType: type,
         })
-        prefixPath = prefixPath.replace(/\/+$/, '')
-      }
 
-      const objectKey = prefixPath ? `${prefixPath}/${filename}` : filename
+        let prefixPath = ''
+        if (config.prefix) {
+          prefixPath = replaceFilenameTemplate(config.prefix, {
+            originalFilename,
+            fileType: type,
+          })
+          prefixPath = prefixPath.replace(/\/+$/, '')
+        }
+
+        objectKey = prefixPath ? `${prefixPath}/${filename}` : filename
+      }
 
       const s3Uploader = new S3Uploader({
         endpoint: config.endpoint,
@@ -255,41 +278,63 @@ export class FileService {
         contentType,
       )
 
-      await this.fileReferenceService.createPendingReference(
-        s3Url,
-        filename,
-        objectKey,
-      )
+      if (!skipReference) {
+        await this.fileReferenceService.createPendingReference(
+          s3Url,
+          filename,
+          objectKey,
+        )
+      }
 
-      return { url: s3Url, name: filename }
+      return {
+        url: s3Url,
+        name: filename,
+        storageBackend: 's3',
+        storageKey: objectKey,
+      }
     }
-
-    const rawFilename = generateFilename(uploadConfig, {
-      originalFilename,
-      fileType: type,
-    })
-
-    const basePath = generateFilePath(uploadConfig, {
-      originalFilename,
-      fileType: type,
-    })
 
     let relativePath: string
-    if (basePath === type || !basePath) {
-      relativePath = rawFilename
+    if (explicitObjectKey) {
+      relativePath = explicitObjectKey
     } else {
-      const pathWithoutType = basePath.startsWith(`${type}/`)
-        ? basePath.slice(Math.max(0, type.length + 1))
-        : basePath
-      relativePath = path.join(pathWithoutType, rawFilename)
+      const rawFilename = generateFilename(uploadConfig, {
+        originalFilename,
+        fileType: type,
+      })
+
+      const basePath = generateFilePath(uploadConfig, {
+        originalFilename,
+        fileType: type,
+      })
+
+      if (basePath === type || !basePath) {
+        relativePath = rawFilename
+      } else {
+        const pathWithoutType = basePath.startsWith(`${type}/`)
+          ? basePath.slice(Math.max(0, type.length + 1))
+          : basePath
+        relativePath = path.join(pathWithoutType, rawFilename)
+      }
     }
 
-    const fileUrl = await this.writeTrackedOwnerFile(
-      type,
-      relativePath,
-      Readable.from(buffer),
-    )
+    let fileUrl: string
+    if (skipReference) {
+      await this.writeFile(type, relativePath, Readable.from(buffer))
+      fileUrl = await this.resolveFileUrl(type, relativePath)
+    } else {
+      fileUrl = await this.writeTrackedOwnerFile(
+        type,
+        relativePath,
+        Readable.from(buffer),
+      )
+    }
 
-    return { url: fileUrl, name: path.basename(relativePath) }
+    return {
+      url: fileUrl,
+      name: path.basename(relativePath),
+      storageBackend: 'local',
+      storageKey: relativePath,
+    }
   }
 }
