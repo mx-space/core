@@ -153,15 +153,10 @@ export class LinkAvatarService {
 
     const filename = customAlphabet(alphabet)(18) + ext.toLowerCase()
 
-    await this.fileService.writeFile(
+    const internalUrl = await this.fileService.writeTrackedOwnerFile(
       AVATAR_TYPE,
       filename,
       Readable.from(buffer),
-    )
-
-    const internalUrl = await this.fileService.resolveFileUrl(
-      AVATAR_TYPE,
-      filename,
     )
 
     await this.linkRepository.updateAvatar(doc.id, internalUrl)

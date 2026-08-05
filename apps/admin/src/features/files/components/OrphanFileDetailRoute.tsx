@@ -11,6 +11,7 @@ import { relativeTimeFromNow } from '~/utils/time'
 import { filesQueryKey } from '../constants'
 import { adaptOrphanFile } from '../utils/adapters'
 import { formatBytes } from '../utils/format'
+import { isImageByName } from '../utils/isImageMime'
 import { FileDetailEmpty } from './FileDetailEmpty'
 import { FileDetailPane } from './FileDetailPane'
 import { useOrphanFilesRouteContext } from './orphan-files-route-context'
@@ -76,6 +77,7 @@ function buildSections(args: {
   const { item, t } = args
   const raw = item.raw
   const unknown = t('files.detail.value.unknown')
+  const isImage = isImageByName(item.name)
   const ref =
     raw.refType && raw.refId
       ? `${raw.refType}/${raw.refId}`
@@ -130,8 +132,10 @@ function buildSections(args: {
       ),
     },
     {
-      key: 'image',
-      title: t('files.detail.section.image'),
+      key: 'file',
+      title: t(
+        isImage ? 'files.detail.section.image' : 'files.detail.section.file',
+      ),
       body: (
         <MetadataGrid
           entries={[
@@ -160,26 +164,30 @@ function buildSections(args: {
         />
       ),
     },
-    {
-      key: 'appearance',
-      title: t('files.detail.section.appearance'),
-      body: (
-        <MetadataGrid
-          entries={[
-            {
-              key: 'palette',
-              label: t('files.detail.field.palette'),
-              value: <PaletteSwatches palette={raw.palette} />,
-            },
-            {
-              key: 'thumbhash',
-              label: t('files.detail.field.thumbhash'),
-              mono: true,
-              value: raw.thumbhash ?? unknown,
-            },
-          ]}
-        />
-      ),
-    },
+    ...(isImage
+      ? [
+          {
+            key: 'appearance',
+            title: t('files.detail.section.appearance'),
+            body: (
+              <MetadataGrid
+                entries={[
+                  {
+                    key: 'palette',
+                    label: t('files.detail.field.palette'),
+                    value: <PaletteSwatches palette={raw.palette} />,
+                  },
+                  {
+                    key: 'thumbhash',
+                    label: t('files.detail.field.thumbhash'),
+                    mono: true,
+                    value: raw.thumbhash ?? unknown,
+                  },
+                ]}
+              />
+            ),
+          },
+        ]
+      : []),
   ]
 }

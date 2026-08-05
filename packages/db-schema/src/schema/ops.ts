@@ -208,6 +208,29 @@ export const fileReferences = pgTable(
   ],
 )
 
+export const fileUsages = pgTable(
+  'file_usages',
+  {
+    id: pkText(),
+    createdAt: createdAt(),
+    fileReferenceId: refText('file_reference_id')
+      .notNull()
+      .references(() => fileReferences.id, { onDelete: 'cascade' }),
+    sourceType: text('source_type').notNull(),
+    sourceId: text('source_id').notNull(),
+    sourceField: text('source_field').notNull(),
+  },
+  (table) => [
+    uniqueIndex('file_usages_reference_source_uniq').on(
+      table.fileReferenceId,
+      table.sourceType,
+      table.sourceId,
+      table.sourceField,
+    ),
+    index('file_usages_source_idx').on(table.sourceType, table.sourceId),
+  ],
+)
+
 export const pollVotes = pgTable(
   'poll_votes',
   {

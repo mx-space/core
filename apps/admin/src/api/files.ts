@@ -1,7 +1,7 @@
 import { API_URL } from '~/constants/env'
 import { translate } from '~/i18n/translate'
 
-import { deleteJson, getJson, patchJson, requestJson } from './http'
+import { deleteJson, getJson, patchJson, postJson, requestJson } from './http'
 
 export interface FileItem {
   thumbhash?: null | string
@@ -52,6 +52,19 @@ export interface OrphanListResponse {
 export interface CleanupResult {
   deletedCount: number
   totalOrphan: number
+}
+
+export interface FileReferenceReconciliationResult {
+  applied: boolean
+  discoveredLocalFiles: number
+  isolatedFiles: number
+  missingReferences: number
+  referencedFiles: number
+  scannedFiles: number
+  statusToActive: number
+  statusToPending: number
+  usageChanges: number
+  usages: number
 }
 
 export interface CommentUploadFile {
@@ -171,6 +184,13 @@ export function cleanupOrphanFiles(maxAgeMinutes = 60) {
   return requestJson<CleanupResult>(
     `/files/orphans/cleanup?maxAgeMinutes=${maxAgeMinutes}`,
     { method: 'POST' },
+  )
+}
+
+export function reconcileFileReferences(apply = false) {
+  return postJson<FileReferenceReconciliationResult, { apply: boolean }>(
+    '/files/references/reconcile',
+    { apply },
   )
 }
 

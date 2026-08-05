@@ -38,6 +38,7 @@ describe('FileController', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
     )
 
     await controller.get(
@@ -81,6 +82,7 @@ describe('FileController', () => {
       { uploadBuffer } as any,
       { getAndValidMultipartField } as any,
       { createPendingReference: vi.fn() } as any,
+      {} as any,
       { get } as any,
     )
 
@@ -132,6 +134,7 @@ describe('FileController', () => {
       { uploadBuffer } as any,
       { getAndValidMultipartField } as any,
       { createPendingReference: vi.fn() } as any,
+      {} as any,
       { get } as any,
     )
 
@@ -167,6 +170,7 @@ describe('FileController', () => {
       { uploadBuffer } as any,
       { getAndValidMultipartField } as any,
       { createPendingReference: vi.fn() } as any,
+      {} as any,
       { get } as any,
     )
 
@@ -205,6 +209,7 @@ describe('FileController', () => {
       { writeFile, resolveFileUrl } as any,
       { getAndValidMultipartField } as any,
       { createPendingReference: vi.fn() } as any,
+      {} as any,
       { get } as any,
     )
 
@@ -249,6 +254,7 @@ describe('FileController', () => {
       { writeFile, deleteFile, resolveFileUrl: vi.fn() } as any,
       { getAndValidMultipartField } as any,
       { createPendingReference: vi.fn() } as any,
+      {} as any,
       { get } as any,
     )
 
@@ -284,6 +290,7 @@ describe('FileController', () => {
       { writeFile: vi.fn(), resolveFileUrl: vi.fn() } as any,
       { getAndValidMultipartField } as any,
       { createPendingReference } as any,
+      {} as any,
       { get } as any,
     )
 
@@ -304,5 +311,21 @@ describe('FileController', () => {
       url: 'https://cdn.example.com/v.mp4',
       name: expect.stringContaining('.mp4'),
     })
+  })
+
+  it('delegates dry-run and apply reference reconciliation requests', async () => {
+    const reconcile = vi.fn().mockResolvedValue({ applied: false })
+    const controller = new FileController(
+      {} as any,
+      {} as any,
+      {} as any,
+      { reconcile } as any,
+      {} as any,
+    )
+
+    await expect(
+      controller.reconcileFileReferences({ apply: false }),
+    ).resolves.toEqual({ applied: false })
+    expect(reconcile).toHaveBeenCalledWith({ apply: false })
   })
 })

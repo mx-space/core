@@ -117,6 +117,29 @@ describe('FileService.uploadBuffer', () => {
     vi.clearAllMocks()
   })
 
+  it('tracks owner files written by module-specific producers', async () => {
+    const fileReferenceService = createFileReferenceService()
+    const service = new FileService({} as any, fileReferenceService as any)
+    const stream = Readable.from(Buffer.from('avatar'))
+    vi.spyOn(service, 'writeFile').mockResolvedValue(undefined as any)
+    vi.spyOn(service, 'resolveFileUrl').mockResolvedValue(
+      'http://example.com/objects/avatar/friend.png',
+    )
+
+    await expect(
+      service.writeTrackedOwnerFile('avatar', 'friend.png', stream),
+    ).resolves.toBe('http://example.com/objects/avatar/friend.png')
+    expect(service.writeFile).toHaveBeenCalledWith(
+      'avatar',
+      'friend.png',
+      stream,
+    )
+    expect(fileReferenceService.createPendingReference).toHaveBeenCalledWith(
+      'http://example.com/objects/avatar/friend.png',
+      'friend.png',
+    )
+  })
+
   it('throws when S3 storage is enabled but incomplete', async () => {
     const configService = {
       get: vi.fn(async (key: string) => {
@@ -202,7 +225,7 @@ describe('FileService.uploadBuffer', () => {
     })
   })
 
-  it('falls back to local storage and only registers a pending reference for images', async () => {
+  it('falls back to local storage and registers a pending reference', async () => {
     const configService = {
       get: vi.fn(async (key: string) => {
         if (key === 'fileUploadOptions') {
@@ -250,7 +273,7 @@ describe('FileService.uploadBuffer', () => {
     })
   })
 
-  it('does not register a pending reference for non-image types on local storage', async () => {
+  it('registers non-image local uploads for isolated-file tracking', async () => {
     const configService = {
       get: vi.fn(async (key: string) => {
         if (key === 'fileUploadOptions') {
@@ -276,7 +299,10 @@ describe('FileService.uploadBuffer', () => {
       contentType: 'application/octet-stream',
     })
 
-    expect(fileReferenceService.createPendingReference).not.toHaveBeenCalled()
+    expect(fileReferenceService.createPendingReference).toHaveBeenCalledWith(
+      'http://example.com/objects/file/abc.bin',
+      'abc.bin',
+    )
     expect(result).toEqual({
       url: 'http://example.com/objects/file/abc.bin',
       name: 'abc.bin',

@@ -50,6 +50,14 @@ export class BatchOrphanDeleteDto extends createZodDto(
   BatchOrphanDeleteSchema,
 ) {}
 
+export const ReconcileFileReferencesSchema = z.object({
+  apply: z.boolean().optional().default(false),
+})
+
+export class ReconcileFileReferencesDto extends createZodDto(
+  ReconcileFileReferencesSchema,
+) {}
+
 /**
  * Comment uploads list query schema (pagination + filters)
  *
@@ -73,6 +81,9 @@ export type FileQueryInput = z.infer<typeof FileQuerySchema>
 export type FileUploadInput = z.infer<typeof FileUploadSchema>
 export type RenameFileQueryInput = z.infer<typeof RenameFileQuerySchema>
 export type BatchOrphanDeleteInput = z.infer<typeof BatchOrphanDeleteSchema>
+export type ReconcileFileReferencesInput = z.infer<
+  typeof ReconcileFileReferencesSchema
+>
 export type CommentUploadsListQueryInput = z.infer<
   typeof CommentUploadsListQuerySchema
 >

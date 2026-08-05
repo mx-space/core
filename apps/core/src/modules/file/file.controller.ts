@@ -41,11 +41,13 @@ import {
   FileQueryDto,
   FileQuerySchema,
   FileUploadDto,
+  ReconcileFileReferencesDto,
   RenameFileQueryDto,
 } from './file.schema'
 import { FileService } from './file.service'
 import { FileReferenceService } from './file-reference.service'
 import { FileDeletionReason } from './file-reference.types'
+import { FileReferenceReconciliationService } from './file-reference-reconciliation.service'
 
 @ApiController(['objects', 'files'])
 export class FileController {
@@ -53,8 +55,16 @@ export class FileController {
     private readonly service: FileService,
     private readonly uploadService: UploadService,
     private readonly fileReferenceService: FileReferenceService,
+    private readonly fileReferenceReconciliationService: FileReferenceReconciliationService,
     private readonly configsService: ConfigsService,
   ) {}
+
+  @Post('/references/reconcile')
+  @HttpCode(200)
+  @Auth()
+  async reconcileFileReferences(@Body() body: ReconcileFileReferencesDto) {
+    return this.fileReferenceReconciliationService.reconcile(body)
+  }
 
   @Delete('/orphans/batch')
   @Auth()
@@ -317,6 +327,10 @@ export class FileController {
         throw createAppException(AppErrorCode.FILE_TOO_LARGE)
       }
       const fileUrl = await this.service.resolveFileUrl(type, relativePath)
+      await this.fileReferenceService.createPendingReference(
+        fileUrl,
+        relativePath,
+      )
 
       return { url: fileUrl, name: path.basename(relativePath) }
     }

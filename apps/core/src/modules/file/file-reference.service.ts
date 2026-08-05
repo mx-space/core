@@ -1,16 +1,17 @@
 import { unlink } from 'node:fs/promises'
 import path from 'node:path'
 
-import { Injectable, Logger } from '@nestjs/common'
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { paginationOf } from '~/processors/database/base.repository'
 import type { ContentFormat } from '~/shared/types/content-format.type'
-import { extractImagesFromContent } from '~/utils/content.util'
+import { extractFileUrlsFromContent } from '~/utils/content.util'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
 import { S3Uploader } from '~/utils/s3.util'
 
+import type { FileType } from './file.type'
 import { FileReferenceRepository } from './file-reference.repository'
 import {
   FileDeletionReason,
@@ -19,11 +20,19 @@ import {
   FileReferenceType,
   FileUploadedBy,
 } from './file-reference.types'
+import { FileReferenceUsageRepository } from './file-reference-usage.repository'
+import {
+  FILE_STORAGE_ROOT,
+  resolveFileStorageRoot,
+} from './file-storage.constants'
+import { FileUsageRepository } from './file-usage.repository'
 
 interface ContentLike {
   text: string | null
   contentFormat?: ContentFormat | string | null
   content?: string | null
+  images?: unknown[] | null
+  meta?: Record<string, unknown> | string | null
 }
 
 export interface ReaderImageDiff {
@@ -36,6 +45,7 @@ export interface ReaderImageDiff {
 @Injectable()
 export class FileReferenceService {
   private readonly logger = new Logger(FileReferenceService.name)
+  private readonly storageRoot: string
 
   private isEnoent(err: unknown): boolean {
     return (
@@ -46,26 +56,50 @@ export class FileReferenceService {
     )
   }
 
+  private resolveLocalFileType(fileUrl: string): FileType | null {
+    try {
+      const pathname = new URL(fileUrl).pathname
+      const match = pathname.match(
+        /\/objects\/(icon|file|avatar|image|video)\//u,
+      )
+      return (match?.[1] as FileType | undefined) ?? null
+    } catch {
+      return null
+    }
+  }
+
   /**
-   * Delete a local image file. If it already does not exist on disk (ENOENT),
-   * treat the cleanup as successful.
+   * Delete a local uploaded file. If it already does not exist on disk
+   * (ENOENT), treat the cleanup as successful.
    */
-  private async unlinkLocalImage(fileName: string): Promise<void> {
-    const localPath = path.join(STATIC_FILE_DIR, 'image', fileName)
+  private async unlinkLocalFile(file: FileReferenceRow): Promise<boolean> {
+    const type = this.resolveLocalFileType(file.fileUrl)
+    if (!type) return false
+
+    const basePath = path.resolve(this.storageRoot, type)
+    const localPath = path.resolve(basePath, file.fileName)
+    if (!localPath.startsWith(`${basePath}${path.sep}`)) return false
+
     try {
       await unlink(localPath)
     } catch (err) {
       if (this.isEnoent(err)) {
-        return
+        return true
       }
       throw err
     }
+    return true
   }
 
   constructor(
     private readonly fileReferenceRepository: FileReferenceRepository,
     private readonly configsService: ConfigsService,
-  ) {}
+    private readonly fileReferenceUsageRepository: FileReferenceUsageRepository,
+    private readonly fileUsageRepository: FileUsageRepository,
+    @Optional() @Inject(FILE_STORAGE_ROOT) storageRoot?: string,
+  ) {
+    this.storageRoot = storageRoot ?? resolveFileStorageRoot()
+  }
 
   async createPendingReference(
     fileUrl: string,
@@ -110,10 +144,19 @@ export class FileReferenceService {
     refId: string,
     refType: FileReferenceType,
   ) {
-    const imageUrls = extractImagesFromContent(doc)
-    if (imageUrls.length === 0) return
-
-    await this.fileReferenceRepository.activateByUrls(imageUrls, refType, refId)
+    const fileUrls = extractFileUrlsFromContent(doc)
+    if (fileUrls.length > 0) {
+      await this.fileReferenceRepository.activateByUrls(
+        fileUrls,
+        refType,
+        refId,
+      )
+    }
+    await this.fileUsageRepository.replaceSourceUsages({
+      fileUrls,
+      sourceId: refId,
+      sourceType: refType,
+    })
   }
 
   async updateReferencesForDocument(
@@ -121,19 +164,29 @@ export class FileReferenceService {
     refId: string,
     refType: FileReferenceType,
   ) {
-    const imageUrls = extractImagesFromContent(doc)
+    const fileUrls = extractFileUrlsFromContent(doc)
 
     await this.fileReferenceRepository.markDocumentPending(refType, refId)
 
-    if (imageUrls.length > 0) {
-      for (const fileUrl of imageUrls) {
+    if (fileUrls.length > 0) {
+      for (const fileUrl of fileUrls) {
         await this.fileReferenceRepository.activateUrl(fileUrl, refType, refId)
       }
     }
+    await this.fileUsageRepository.replaceSourceUsages({
+      fileUrls,
+      sourceId: refId,
+      sourceType: refType,
+    })
   }
 
   async removeReferencesForDocument(refId: string, refType: FileReferenceType) {
     await this.fileReferenceRepository.markDocumentPending(refType, refId)
+    await this.fileUsageRepository.replaceSourceUsages({
+      fileUrls: [],
+      sourceId: refId,
+      sourceType: refType,
+    })
   }
 
   /**
@@ -346,11 +399,9 @@ export class FileReferenceService {
         } else {
           storageError = 'S3 not configured'
         }
-      } else if (file.fileUrl?.includes('/objects/image/')) {
-        await this.unlinkLocalImage(file.fileName)
-        storageRemoved = true
       } else {
-        storageError = 'unknown storage backend'
+        storageRemoved = await this.unlinkLocalFile(file)
+        if (!storageRemoved) storageError = 'unknown storage backend'
       }
     } catch (err) {
       storageError = err instanceof Error ? err.message : String(err)
@@ -466,14 +517,17 @@ export class FileReferenceService {
   }
 
   /**
-   * Existing cleanup pass for the owner path: scans only pending files where
-   * uploadedBy != Reader.
+   * Cleanup pass for owner uploads. A file is deleted only when no persisted
+   * module contains its URL, regardless of the representative refId/status.
    */
   async cleanupOrphanFiles(maxAgeMinutes = 60) {
     const cutoffTime = new Date(Date.now() - maxAgeMinutes * 60 * 1000)
 
-    const orphanFiles =
-      await this.fileReferenceRepository.findOwnerPendingOlderThan(cutoffTime)
+    const candidates =
+      await this.fileReferenceRepository.findOwnerReferencesOlderThan(
+        cutoffTime,
+      )
+    const orphanFiles = await this.filterIsolatedFiles(candidates)
 
     const s3Uploader = await this.buildS3Uploader()
     let deletedCount = 0
@@ -486,9 +540,7 @@ export class FileReferenceService {
             continue
           }
           await s3Uploader.deleteObject(file.s3ObjectKey)
-        } else if (file.fileUrl.includes('/objects/image/')) {
-          await this.unlinkLocalImage(file.fileName)
-        } else {
+        } else if (!(await this.unlinkLocalFile(file))) {
           continue
         }
         await this.fileReferenceRepository.deleteById(file.id)
@@ -513,11 +565,20 @@ export class FileReferenceService {
   }
 
   async getOrphanFilesCount() {
-    return this.fileReferenceRepository.countPending()
+    const candidates = await this.fileReferenceRepository.findOwnerReferences()
+    return (await this.filterIsolatedFiles(candidates)).length
   }
 
   async listOrphanFiles(page = 1, size = 20) {
-    return this.fileReferenceRepository.listOrphans(page, size)
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const candidates = await this.fileReferenceRepository.findOwnerReferences()
+    const isolatedFiles = await this.filterIsolatedFiles(candidates)
+    const offset = (page - 1) * size
+    return {
+      data: isolatedFiles.slice(offset, offset + size),
+      pagination: paginationOf(isolatedFiles.length, page, size),
+    }
   }
 
   async listReaderUploads(params: {
@@ -548,15 +609,13 @@ export class FileReferenceService {
         await s3Uploader.deleteObject(file.s3ObjectKey)
         return true
       }
-      if (file.fileUrl.includes('/objects/image/')) {
-        await this.unlinkLocalImage(file.fileName)
-        return true
-      }
-      return false
+      return this.unlinkLocalFile(file)
     }
 
     if (options.all) {
-      const orphanFiles = await this.fileReferenceRepository.findPending()
+      const candidates =
+        await this.fileReferenceRepository.findOwnerReferences()
+      const orphanFiles = await this.filterIsolatedFiles(candidates)
 
       let deletedCount = 0
       for (const file of orphanFiles) {
@@ -573,24 +632,41 @@ export class FileReferenceService {
     }
 
     if (options.ids?.length) {
+      const candidates = (
+        await Promise.all(
+          options.ids.map((id) => this.fileReferenceRepository.findById(id)),
+        )
+      ).filter(
+        (ref): ref is FileReferenceRow =>
+          !!ref && ref.uploadedBy !== FileUploadedBy.Reader,
+      )
+      const orphanFiles = await this.filterIsolatedFiles(candidates)
       let deletedCount = 0
-      for (const id of options.ids) {
-        const ref = await this.fileReferenceRepository.findById(id)
-        if (ref && ref.status === FileReferenceStatus.Pending) {
-          try {
-            if (await deleteFile(ref)) {
-              await this.fileReferenceRepository.deleteById(id)
-              deletedCount++
-            }
-          } catch {
-            this.logger.warn(`Failed to delete orphan: ${ref.fileName}`)
+      for (const ref of orphanFiles) {
+        try {
+          if (await deleteFile(ref)) {
+            await this.fileReferenceRepository.deleteById(ref.id)
+            deletedCount++
           }
+        } catch {
+          this.logger.warn(`Failed to delete orphan: ${ref.fileName}`)
         }
       }
       return { deletedCount }
     }
 
     return { deletedCount: 0 }
+  }
+
+  private async filterIsolatedFiles(
+    candidates: FileReferenceRow[],
+  ): Promise<FileReferenceRow[]> {
+    if (candidates.length === 0) return []
+    const referencedUrls =
+      await this.fileReferenceUsageRepository.findReferencedUrls(
+        candidates.map((file) => file.fileUrl),
+      )
+    return candidates.filter((file) => !referencedUrls.has(file.fileUrl))
   }
 
   private async buildS3Uploader(): Promise<S3Uploader | null> {

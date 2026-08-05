@@ -101,6 +101,17 @@ export class FileService {
     })
   }
 
+  async writeTrackedOwnerFile(
+    type: FileType,
+    name: string,
+    data: Readable,
+  ): Promise<string> {
+    await this.writeFile(type, name, data)
+    const fileUrl = await this.resolveFileUrl(type, name)
+    await this.fileReferenceService.createPendingReference(fileUrl, name)
+    return fileUrl
+  }
+
   updateFile(
     type: FileType,
     name: string,
@@ -273,14 +284,11 @@ export class FileService {
       relativePath = path.join(pathWithoutType, rawFilename)
     }
 
-    await this.writeFile(type, relativePath, Readable.from(buffer))
-    const fileUrl = await this.resolveFileUrl(type, relativePath)
-    if (type === 'image') {
-      await this.fileReferenceService.createPendingReference(
-        fileUrl,
-        relativePath,
-      )
-    }
+    const fileUrl = await this.writeTrackedOwnerFile(
+      type,
+      relativePath,
+      Readable.from(buffer),
+    )
 
     return { url: fileUrl, name: path.basename(relativePath) }
   }

@@ -119,6 +119,35 @@ export class FileReferenceRepository extends BaseRepository {
     return mapRow(row)
   }
 
+  async createOwnerPendingMany(
+    files: Array<{ fileName: string; fileUrl: string }>,
+  ): Promise<FileReferenceRow[]> {
+    const created: FileReferenceRow[] = []
+    const uniqueFiles = [
+      ...new Map(files.map((file) => [file.fileUrl, file])).values(),
+    ]
+
+    for (let index = 0; index < uniqueFiles.length; index += 500) {
+      const batch = uniqueFiles.slice(index, index + 500)
+      if (batch.length === 0) continue
+      const rows = await this.db
+        .insert(fileReferences)
+        .values(
+          batch.map((file) => ({
+            id: this.snowflake.nextId(),
+            fileUrl: file.fileUrl,
+            fileName: file.fileName,
+            status: FileReferenceStatus.Pending,
+            uploadedBy: FileUploadedBy.Owner,
+          })),
+        )
+        .returning()
+      created.push(...rows.map(mapRow))
+    }
+
+    return created
+  }
+
   async setStatus(
     id: EntityId | string,
     status: FileReferenceStatus,
@@ -486,6 +515,39 @@ export class FileReferenceRepository extends BaseRepository {
           lt(fileReferences.createdAt, threshold),
         )!,
       )
+    return rows.map(mapRow)
+  }
+
+  async findOwnerReferences(): Promise<FileReferenceRow[]> {
+    const rows = await this.db
+      .select()
+      .from(fileReferences)
+      .where(
+        or(
+          ne(fileReferences.uploadedBy, FileUploadedBy.Reader),
+          sql`${fileReferences.uploadedBy} IS NULL`,
+        )!,
+      )
+      .orderBy(desc(fileReferences.createdAt))
+    return rows.map(mapRow)
+  }
+
+  async findOwnerReferencesOlderThan(
+    threshold: Date,
+  ): Promise<FileReferenceRow[]> {
+    const rows = await this.db
+      .select()
+      .from(fileReferences)
+      .where(
+        and(
+          or(
+            ne(fileReferences.uploadedBy, FileUploadedBy.Reader),
+            sql`${fileReferences.uploadedBy} IS NULL`,
+          )!,
+          lt(fileReferences.createdAt, threshold),
+        )!,
+      )
+      .orderBy(desc(fileReferences.createdAt))
     return rows.map(mapRow)
   }
 

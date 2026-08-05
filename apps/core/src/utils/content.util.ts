@@ -20,7 +20,7 @@ import {
 } from '~/constants/lexical.constant'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
-import { pickImagesFromMarkdown } from './pic.util'
+import { pickFilesFromMarkdown } from './pic.util'
 import { md5 } from './tool.util'
 
 interface ContentDoc {
@@ -29,6 +29,7 @@ interface ContentDoc {
   subtitle?: string | null
   contentFormat?: ContentFormat | string | null
   content?: string | null
+  images?: unknown[] | null
   summary?: string | null
   tags?: string[]
   meta?: Record<string, any> | string | null
@@ -122,56 +123,98 @@ export function extractTextFromContent(
   }
 }
 
-export function extractImagesFromContent(
-  doc: Pick<ContentDoc, 'text' | 'contentFormat' | 'content' | 'meta'>,
+export function extractFileUrlsFromContent(
+  doc: Pick<
+    ContentDoc,
+    'text' | 'contentFormat' | 'content' | 'images' | 'meta'
+  >,
 ): string[] {
-  const coverUrl = extractCoverUrlFromMeta(doc.meta)
+  const documentMetadataUrls = collectFileUrls([
+    doc.images,
+    parseMeta(doc.meta),
+  ])
 
   if (!isLexical(doc)) {
-    return dedupeImageUrls([
-      ...pickImagesFromMarkdown(doc.text ?? ''),
-      coverUrl,
+    return dedupeFileUrls([
+      ...pickFilesFromMarkdown(doc.text ?? ''),
+      ...collectFileUrls(doc.text),
+      ...documentMetadataUrls,
     ])
   }
 
   if (!doc.content) {
-    return dedupeImageUrls([coverUrl])
+    return dedupeFileUrls(documentMetadataUrls)
   }
 
   try {
     const editorState = JSON.parse(doc.content)
-    const images: string[] = []
-    traverseLexicalNodes(editorState.root, (node) => {
-      if (node.type === 'image' && node.src) {
-        images.push(node.src)
-      } else if (node.type === 'gallery' && Array.isArray(node.images)) {
-        for (const img of node.images) {
-          if (img?.src) images.push(img.src)
-        }
-      } else if (node.type === 'link-card' && node.image) {
-        images.push(node.image)
-      }
-    })
-    return dedupeImageUrls([...images, coverUrl])
+    return dedupeFileUrls([
+      ...collectFileUrls(editorState),
+      ...documentMetadataUrls,
+    ])
   } catch {
-    return dedupeImageUrls([coverUrl])
+    return dedupeFileUrls(documentMetadataUrls)
   }
 }
 
-function extractCoverUrlFromMeta(meta: ContentDoc['meta']): string | undefined {
-  if (!meta) return undefined
+/**
+ * Backward-compatible name retained for call sites outside the file module.
+ * The extraction now covers every uploaded file URL, not only images.
+ */
+export const extractImagesFromContent = extractFileUrlsFromContent
 
-  const parsedMeta =
-    typeof meta === 'string'
-      ? (JSON.safeParse(meta) as Record<string, any>)
-      : meta
-
-  const cover = parsedMeta?.cover
-  return typeof cover === 'string' && cover.trim() ? cover.trim() : undefined
+function parseMeta(meta: ContentDoc['meta']): unknown {
+  if (!meta || typeof meta !== 'string') return meta
+  return JSON.safeParse(meta)
 }
 
-function dedupeImageUrls(urls: Array<string | undefined>): string[] {
-  return [...new Set(urls.filter((url): url is string => !!url))]
+function collectFileUrls(value: unknown): string[] {
+  const urls: string[] = []
+  const visited = new WeakSet<object>()
+
+  const visit = (current: unknown) => {
+    if (typeof current === 'string') {
+      urls.push(...extractHttpUrls(current))
+      return
+    }
+    if (!current || typeof current !== 'object') return
+    if (visited.has(current)) return
+    visited.add(current)
+
+    if (Array.isArray(current)) {
+      for (const item of current) visit(item)
+      return
+    }
+
+    for (const nested of Object.values(current)) visit(nested)
+  }
+
+  visit(value)
+  return urls
+}
+
+function extractHttpUrls(value: string): string[] {
+  const trimmed = value.trim()
+  if (!trimmed) return []
+
+  if (!/\s/u.test(trimmed)) {
+    try {
+      const url = new URL(trimmed)
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        return [trimmed]
+      }
+    } catch {
+      // Fall through to extracting URLs embedded in Markdown, JSON, or text.
+    }
+  }
+
+  return [...trimmed.matchAll(/https?:\/\/[^\s<>"'`\\]+/giu)].map(([url]) =>
+    url.replaceAll(/[\]),.;!?]+$/gu, ''),
+  )
+}
+
+function dedupeFileUrls(urls: string[]): string[] {
+  return [...new Set(urls.filter(Boolean))]
 }
 
 export function extractExcalidrawTextForContext(node: any): string {

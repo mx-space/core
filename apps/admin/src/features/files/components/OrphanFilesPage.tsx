@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, RefreshCw, Trash2 } from 'lucide-react'
+import {
+  Loader2,
+  MoreHorizontal,
+  RefreshCw,
+  ScanSearch,
+  Trash2,
+} from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
@@ -8,7 +14,7 @@ import type { OrphanFile } from '~/api/files'
 import {
   batchDeleteOrphanFiles,
   cleanupOrphanFiles,
-  deleteFileByTypeAndName,
+  reconcileFileReferences,
 } from '~/api/files'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
@@ -19,6 +25,7 @@ import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import type { ListAction } from '~/ui/list-actions'
 import { useListKeyboard } from '~/ui/list-actions'
+import { DropdownMenu } from '~/ui/overlay/dropdown-menu'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -36,6 +43,10 @@ import { FileListRow } from './FileListRow'
 import { FileListSkeleton } from './FileListSkeleton'
 import { FilePreviewLightbox } from './FilePreviewLightbox'
 import { OrphanFilesRouteContext } from './orphan-files-route-context'
+import {
+  ReferenceReconcilePreview,
+  runReferenceReconcileFlow,
+} from './ReferenceReconcilePreview'
 import { SearchRow } from './SearchRow'
 
 const FOCUS_SCOPE_ID = 'orphan-files-list'
@@ -53,6 +64,7 @@ export function OrphanFilesPage() {
     null,
   )
   const [selectAllAcross, setSelectAllAcross] = useState(false)
+  const [reconcileFlowActive, setReconcileFlowActive] = useState(false)
   const selectionClearRef = useRef<(() => void) | null>(null)
 
   const adapted = useMemo(
@@ -91,7 +103,7 @@ export function OrphanFilesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (item: OrphanFile) =>
-      deleteFileByTypeAndName('image', item.fileName),
+      batchDeleteOrphanFiles({ ids: [item.id] }),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('files.toast.deleteFailed'))),
     onSuccess: async () => {
@@ -129,6 +141,10 @@ export function OrphanFilesPage() {
     },
   })
 
+  const reconcileMutation = useMutation({
+    mutationFn: (apply: boolean) => reconcileFileReferences(apply),
+  })
+
   const confirmAndDelete = useCallback(
     async (item: FileRowItem<OrphanFile>) => {
       const ok = await confirmDialog({
@@ -145,7 +161,7 @@ export function OrphanFilesPage() {
     () => [
       {
         key: 'open',
-        label: t('files.action.previewImage'),
+        label: t('files.action.open'),
         run: (targets) => openItem(targets[0]),
         shortcut: 'Enter',
         shortcutLabel: '↵',
@@ -207,7 +223,46 @@ export function OrphanFilesPage() {
     cleanupMutation.mutate()
   }
 
+  const reconcileReferences = async () => {
+    if (reconcileFlowActive) return
+    setReconcileFlowActive(true)
+    try {
+      const appliedResult = await runReferenceReconcileFlow({
+        confirm: (previewResult) =>
+          confirmDialog({
+            confirmText: t('files.orphans.reconcileApply'),
+            description: <ReferenceReconcilePreview result={previewResult} />,
+            title: t('files.orphans.reconcileConfirm'),
+          }),
+        onUpToDate: async () => {
+          toast.success(t('files.toast.referencesUpToDate'))
+          setPage(1)
+          await queryClient.invalidateQueries({ queryKey: filesQueryKey })
+        },
+        scan: (apply) => reconcileMutation.mutateAsync(apply),
+      })
+      if (!appliedResult) return
+      toast.success(
+        t('files.toast.referencesReconciled', {
+          active: appliedResult.referencedFiles,
+          isolated: appliedResult.isolatedFiles,
+          usages: appliedResult.usages,
+        }),
+      )
+      setPage(1)
+      await queryClient.invalidateQueries({ queryKey: filesQueryKey })
+    } catch (error) {
+      toast.error(
+        getErrorMessage(error, t('files.toast.referencesReconcileFailed')),
+      )
+    } finally {
+      setReconcileFlowActive(false)
+    }
+  }
+
   const refreshing = orphansQuery.isFetching
+  const maintenanceBusy =
+    reconcileFlowActive || cleanupMutation.isPending || refreshing
   const hasSelection = selectedCount > 0 || selectAllAcross
 
   const ctxValue = useMemo(
@@ -248,27 +303,11 @@ export function OrphanFilesPage() {
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <Button
-                  aria-label={t('files.orphans.cleanup')}
-                  disabled={cleanupMutation.isPending}
-                  onClick={() => void confirmCleanup()}
-                  type="button"
-                  variant="subtle"
-                >
-                  {cleanupMutation.isPending ? (
-                    <Loader2
-                      aria-hidden="true"
-                      className="size-4 animate-spin"
-                    />
-                  ) : (
-                    <Trash2 aria-hidden="true" className="size-4" />
-                  )}
-                  <span>{t('files.orphans.cleanup')}</span>
-                </Button>
-                <Button
                   aria-label={t('files.action.refresh')}
-                  disabled={refreshing}
+                  disabled={maintenanceBusy}
                   iconOnly
                   onClick={() => void orphansQuery.refetch()}
+                  title={t('files.action.refresh')}
                   type="button"
                   variant="subtle"
                 >
@@ -277,6 +316,48 @@ export function OrphanFilesPage() {
                     className={cn('size-4', refreshing && 'animate-spin')}
                   />
                 </Button>
+                <DropdownMenu>
+                  <DropdownMenu.Trigger
+                    aria-label={t('files.orphans.maintenance')}
+                    className="inline-flex size-10 items-center justify-center rounded-md text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg focus-visible:ring-[3px] focus-visible:ring-accent/15 data-[popup-open]:bg-surface-inset"
+                    title={t('files.orphans.maintenance')}
+                    type="button"
+                  >
+                    <MoreHorizontal aria-hidden="true" className="size-4" />
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Content align="end" className="w-56">
+                    <DropdownMenu.Item
+                      disabled={maintenanceBusy}
+                      onClick={() => void reconcileReferences()}
+                    >
+                      {reconcileFlowActive ? (
+                        <Loader2
+                          aria-hidden="true"
+                          className="size-4 animate-spin"
+                        />
+                      ) : (
+                        <ScanSearch aria-hidden="true" className="size-4" />
+                      )}
+                      <span>{t('files.orphans.reconcile')}</span>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Separator />
+                    <DropdownMenu.Item
+                      danger
+                      disabled={maintenanceBusy}
+                      onClick={() => void confirmCleanup()}
+                    >
+                      {cleanupMutation.isPending ? (
+                        <Loader2
+                          aria-hidden="true"
+                          className="size-4 animate-spin"
+                        />
+                      ) : (
+                        <Trash2 aria-hidden="true" className="size-4" />
+                      )}
+                      <span>{t('files.orphans.cleanup')}</span>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Content>
+                </DropdownMenu>
               </div>
             </header>
 
@@ -352,6 +433,26 @@ export function OrphanFilesPage() {
                 <FileListSkeleton />
               ) : filtered.length === 0 ? (
                 <FileListEmpty
+                  action={
+                    searchQuery ? undefined : (
+                      <Button
+                        disabled={maintenanceBusy}
+                        onClick={() => void reconcileReferences()}
+                        type="button"
+                        variant="secondary"
+                      >
+                        {reconcileFlowActive ? (
+                          <Loader2
+                            aria-hidden="true"
+                            className="size-4 animate-spin"
+                          />
+                        ) : (
+                          <ScanSearch aria-hidden="true" className="size-4" />
+                        )}
+                        {t('files.orphans.reconcile')}
+                      </Button>
+                    )
+                  }
                   hint={t('files.orphans.cleanupNote')}
                   label={
                     searchQuery

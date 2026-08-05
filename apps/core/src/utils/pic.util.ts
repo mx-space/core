@@ -24,6 +24,44 @@ export const pickImagesFromMarkdown = (text: string) => {
   return images
 }
 
+/**
+ * Collect file-like destinations from Markdown links and images. The caller
+ * can safely pass external URLs as well: file reference activation still
+ * matches against tracked upload URLs before mutating any records.
+ */
+export const pickFilesFromMarkdown = (text: string): string[] => {
+  const ast = marked.lexer(text)
+  const urls: string[] = []
+  const visited = new WeakSet<object>()
+
+  const visit = (value: unknown) => {
+    if (!value || typeof value !== 'object') return
+    if (visited.has(value)) return
+    visited.add(value)
+
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item)
+      return
+    }
+
+    const token = value as Record<string, unknown>
+    if (
+      (token.type === 'image' || token.type === 'link') &&
+      typeof token.href === 'string' &&
+      token.href.trim()
+    ) {
+      urls.push(token.href.trim())
+    }
+
+    for (const nested of Object.values(token)) {
+      if (nested && typeof nested === 'object') visit(nested)
+    }
+  }
+
+  visit(ast)
+  return [...new Set(urls)]
+}
+
 function componentToHex(c: number) {
   const hex = c.toString(16)
   return hex.length == 1 ? `0${hex}` : hex
