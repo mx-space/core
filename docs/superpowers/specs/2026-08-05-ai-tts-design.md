@@ -29,6 +29,7 @@ public endpoint never triggers generation.
 | Admin entry points | Article editor panel + AI management list page. |
 | Access control | The public endpoint and `meta.tts` apply the same premium/paywall guard as insights and translations. Narration of a locked article is never exposed. |
 | Audio file lifecycle | Owned by `ai_tts_blocks`, **not** by `FileReferenceService`. Audio uploads opt out of the pending-reference mechanism; the block row stores the storage key and the service deletes objects directly. |
+| Object key | Explicit and content-addressed — `{prefix}/tts/{refId}/{lang}/{blockId}-{chunkIndex}-{fingerprint12}.mp3` — bypassing the filename-template config. New content always means a new URL; nothing is ever overwritten in place. |
 | Reuse key | A dedicated speech fingerprint over the exact synthesized text, not `extractRootBlocks`' fingerprint. |
 | Staleness | `ai_tts.source_modified_at` is compared against the article's `modifiedAt`; `meta.tts.stale` tells the client the narration predates the current text. |
 
@@ -337,8 +338,8 @@ already doing that work.
    this language with `TTS_BUDGET_EXCEEDED` before spending anything.
 6. Synthesize `toGenerate` with `p-limit(concurrency)`. Each chunk:
    `throwIfAborted(context.signal)` → `runtime.generateSpeech` →
-   `fileService.uploadBuffer(buffer, { type: 'audio', originalFilename:
-   'tts-{refId}-{lang}-{blockId}-{chunkIndex}.mp3', contentType: 'audio/mpeg' })`
+   `fileService.uploadBuffer(buffer, { type: 'audio', contentType: 'audio/mpeg',
+   objectKey: <the content-addressed key below>, skipReference: true })`
    → **immediately upsert that block row in its own transaction**. Then
    `context.updateProgress(Math.round(100 * done / total), \`Generated ${done}/${total}\`, done, total)`
    — `updateProgress` takes a percentage, as `AiSummaryService` does.
@@ -381,6 +382,48 @@ So `uploadBuffer` takes a `skipReference` option (or gates on
 *is* the reference: it stores `storage_backend` and `storage_key`, and
 `AiTtsService` deletes objects directly — `S3Uploader.deleteObject(storageKey)`
 for `s3`, `fs.unlink` under the audio directory for `local`.
+
+#### Object key scheme
+
+TTS must **not** go through the filename-template machinery. Today
+`uploadBuffer` derives its key from the operator's global `fileUploadOptions`
+(`generateFilename` → a random 18-char nanoid by default, or whatever
+`filenameTemplate` says) plus `imageStorageOptions.prefix`. Two problems:
+
+- Random keys scatter narration audio through the same namespace as user images
+  with nothing tying an object back to its article. Deleting an article's audio
+  then depends entirely on the DB rows being intact; a lost row is a permanently
+  unfindable object.
+- A *deterministic* operator template (say `{name}{ext}`, which our stable
+  `originalFilename` would feed) is worse: regeneration overwrites the object
+  in place at the same URL. Local objects are served with
+  `cache-control: public, max-age=31536000` and S3 sits behind a CDN, so readers
+  would keep hearing the old audio for up to a year.
+
+`uploadBuffer` therefore accepts an optional explicit `objectKey` that bypasses
+`generateFilename` / `generateFilePath` / the config prefix, and TTS always
+passes one:
+
+```
+{s3Prefix}/tts/{refId}/{lang}/{blockId}-{chunkIndex}-{fingerprint12}.mp3
+```
+
+- `{s3Prefix}` is `imageStorageOptions.prefix` when set, so operators keep their
+  bucket layout; the local backend writes the same relative path under
+  `STATIC_FILE_DIR/audio/` and serves it from `/objects/audio/...`.
+- `{fingerprint12}` is the first 12 chars of the chunk's speech fingerprint, so
+  the key is **content-addressed**: changed text ⇒ new key ⇒ new URL, and no
+  cache anywhere can serve stale audio. There is no in-place overwrite path.
+- A retry of the *same* chunk writes the same key with identical bytes, so
+  retries are idempotent rather than leaving duplicates.
+- The `tts/{refId}/` prefix makes an article's audio listable, which is what the
+  orphan-reconciliation pass and article-delete cleanup use as their ground
+  truth when a row has gone missing.
+
+`resolveFilePath` already blocks `..` traversal and `writeFile` already accepts a
+nested relative path, so the local branch needs no new safety work. `FileQuerySchema`
+derives its `type` enum from `FileTypeEnum`, so adding `audio` there is enough for
+`/objects/audio/*` to serve.
 
 Deletion paths that must exist:
 
@@ -570,6 +613,11 @@ faux-suite conventions (stub runtime returning a fixed buffer, stub
   `storage_key`
 - an audio upload creates **no** file-reference row, so `cleanupOrphanFiles`
   leaves it alone
+- the object key ignores `fileUploadOptions.filenameTemplate` entirely: with a
+  deterministic template configured, regenerating a block still produces a new
+  key and the old object is deleted rather than overwritten
+- re-running an identical chunk writes the same key (idempotent), while an edited
+  chunk writes a different one
 - an abort mid-run leaves committed chunks intact and the previous `block_order`
   published; the next run reuses them and pays only for the remainder
 - a source edit detected at finalize skips publication and re-enqueues
