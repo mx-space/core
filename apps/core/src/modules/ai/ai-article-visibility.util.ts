@@ -43,8 +43,8 @@ export function isArticleVisibleToViewer(
     const document = article.document as NoteModel & { hasPassword?: boolean }
     if (viewer.isOwner) return true
     if (document.isPublished === false) return false
-    if (noteIsPasswordProtected(document)) {
-      return Boolean(viewer.hasNotePassword)
+    if (noteIsPasswordProtected(document) && !viewer.hasNotePassword) {
+      return false
     }
     if (isNoteSecret(document)) return false
     return true

@@ -158,6 +158,27 @@ describe('AiTtsQueryService.getPublicNarration', () => {
     ).resolves.not.toBeNull()
   })
 
+  it('returns null for a future-dated note even when the password is correct', async () => {
+    const { databaseService, repository, service } = createHarness({
+      storedNotePassword: 'letmein',
+    })
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Note,
+      document: {
+        id: '1',
+        title: 'Scheduled and locked',
+        isPublished: true,
+        hasPassword: true,
+        publicAt: new Date(Date.now() + 86_400_000),
+      },
+    })
+
+    await expect(
+      service.getPublicNarration('1', undefined, { password: 'letmein' }),
+    ).resolves.toBeNull()
+    expect(repository.findByRefAndLang).not.toHaveBeenCalled()
+  })
+
   it('returns null for a future-dated secret note viewed anonymously', async () => {
     const { databaseService, repository, service } = createHarness()
     databaseService.findGlobalById.mockResolvedValue({
