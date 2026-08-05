@@ -3512,9 +3512,6 @@ export const enUS = {
   'write.ttsGeneration.blockCount': '{count} blocks',
   'write.ttsGeneration.blockCountLabel': 'Blocks',
   'write.ttsGeneration.charCount': '{count} characters',
-  'write.ttsGeneration.deleteAria': 'Delete narration',
-  'write.ttsGeneration.deleteConfirm.title':
-    'Delete the {lang} narration and its audio?',
   'write.ttsGeneration.empty.description':
     'Generate AI narration for this article to preview it here.',
   'write.ttsGeneration.empty.title': 'No narration yet',
@@ -3532,7 +3529,6 @@ export const enUS = {
   'write.ttsGeneration.status.loading': 'Loading narration…',
   'write.ttsGeneration.status.upToDate': 'Up to date',
   'write.ttsGeneration.title': 'AI Narration',
-  'write.ttsGeneration.toast.deleteFailed': 'Failed to delete narration',
   'write.ttsGeneration.toast.generateFailed':
     'Failed to start narration generation',
   'write.ttsGeneration.voiceLabel': 'Voice',

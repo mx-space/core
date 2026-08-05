@@ -3345,9 +3345,6 @@ export const zhCN = {
   'write.ttsGeneration.blockCount': '{count} 个块',
   'write.ttsGeneration.blockCountLabel': '块数',
   'write.ttsGeneration.charCount': '{count} 个字符',
-  'write.ttsGeneration.deleteAria': '删除朗读',
-  'write.ttsGeneration.deleteConfirm.title':
-    '删除「{lang}」的朗读及其音频文件？',
   'write.ttsGeneration.empty.description':
     '为这篇文章生成 AI 朗读后即可在此预览。',
   'write.ttsGeneration.empty.title': '暂无朗读',
@@ -3365,7 +3362,6 @@ export const zhCN = {
   'write.ttsGeneration.status.loading': '朗读加载中…',
   'write.ttsGeneration.status.upToDate': '已是最新',
   'write.ttsGeneration.title': 'AI 朗读',
-  'write.ttsGeneration.toast.deleteFailed': '删除朗读失败',
   'write.ttsGeneration.toast.generateFailed': '朗读生成任务启动失败',
   'write.ttsGeneration.voiceLabel': '音色',
   'write.section.lexicalDebug.copyButton': '复制',

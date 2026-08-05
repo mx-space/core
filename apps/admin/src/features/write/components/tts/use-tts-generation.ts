@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { createTtsTask, deleteTts, getTtsByRefId } from '~/api/ai'
+import { createTtsTask, getTtsByRefId } from '~/api/ai'
 import { AITaskStatus, getTask } from '~/api/tasks'
 import {
   fallbackPollingIntervalMs,
@@ -31,6 +31,18 @@ export function useTtsGeneration(params: UseTtsGenerationParams) {
 
   const refId = params.refId
   const canFetch = params.enabled && Boolean(refId)
+
+  // The write route keeps refId in useSearchParams rather than a route param
+  // that would force a remount, so switching articles reuses this hook
+  // instance — reset every run-scoped state or a stale banner/task would be
+  // attributed to the newly selected article.
+  useEffect(() => {
+    setOpen(false)
+    setActiveLang(null)
+    setPendingTaskId(null)
+    setRunStatus('idle')
+    setRunError(undefined)
+  }, [refId])
 
   const rowsQuery = useQuery({
     enabled: canFetch,
@@ -109,27 +121,11 @@ export function useTtsGeneration(params: UseTtsGenerationParams) {
     createTaskMutation.mutate({ force, refId })
   }
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteTts,
-    onError: (error) => {
-      toast.error(
-        getErrorMessage(error, t('write.ttsGeneration.toast.deleteFailed')),
-      )
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.ai.ttsByRef(refId ?? ''),
-      })
-    },
-  })
-
   return {
     activeLang,
     activeRow,
     closeDrawer: () => setOpen(false),
-    deleteRow: (id: string) => deleteMutation.mutate(id),
     generate: () => runTask(false),
-    isDeleting: deleteMutation.isPending,
     isLoading: rowsQuery.isLoading,
     isRunning,
     open,

@@ -1,7 +1,6 @@
-import { AudioLines, Loader2, RefreshCw, Sparkles, Trash2 } from 'lucide-react'
+import { AudioLines, Loader2, RefreshCw, Sparkles } from 'lucide-react'
 
 import { useI18n } from '~/i18n'
-import { confirmDialog } from '~/ui/feedback/confirm'
 import { Drawer } from '~/ui/feedback/drawer'
 import { EmptyState } from '~/ui/patterns/EmptyState'
 import { Button } from '~/ui/primitives/button'
@@ -15,17 +14,6 @@ type TtsGenerationDrawerProps = ReturnType<typeof useTtsGeneration>
 
 export function TtsGenerationDrawer(props: TtsGenerationDrawerProps) {
   const { t } = useI18n()
-
-  const handleDelete = async () => {
-    const row = props.activeRow
-    if (!row) return
-    const confirmed = await confirmDialog({
-      destructive: true,
-      title: t('write.ttsGeneration.deleteConfirm.title', { lang: row.lang }),
-    })
-    if (!confirmed) return
-    props.deleteRow(row.id)
-  }
 
   return (
     <Drawer
@@ -66,41 +54,25 @@ export function TtsGenerationDrawer(props: TtsGenerationDrawerProps) {
           </p>
         ) : props.activeRow ? (
           <div className="space-y-3">
-            <div className="flex items-start gap-2">
-              <div className="grid flex-1 grid-cols-2 gap-x-3 gap-y-2 rounded-md border border-border bg-surface-inset p-3 text-xs">
-                <ConfigItem
-                  label={t('write.ttsGeneration.modelLabel')}
-                  value={props.activeRow.model}
-                />
-                <ConfigItem
-                  label={t('write.ttsGeneration.voiceLabel')}
-                  value={props.activeRow.voice}
-                />
-                <ConfigItem
-                  label={t('write.ttsGeneration.speedLabel')}
-                  value={String(props.activeRow.speed)}
-                />
-                <ConfigItem
-                  label={t('write.ttsGeneration.blockCountLabel')}
-                  value={t('write.ttsGeneration.blockCount', {
-                    count: props.activeRow.blockOrder.length,
-                  })}
-                />
-              </div>
-              <Button
-                aria-label={t('write.ttsGeneration.deleteAria')}
-                disabled={props.isDeleting || props.isRunning}
-                iconOnly
-                onClick={() => void handleDelete()}
-                type="button"
-                variant="ghost"
-              >
-                {props.isDeleting ? (
-                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-                ) : (
-                  <Trash2 aria-hidden="true" className="size-4" />
-                )}
-              </Button>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-md border border-border bg-surface-inset p-3 text-xs">
+              <ConfigItem
+                label={t('write.ttsGeneration.modelLabel')}
+                value={props.activeRow.model}
+              />
+              <ConfigItem
+                label={t('write.ttsGeneration.voiceLabel')}
+                value={props.activeRow.voice}
+              />
+              <ConfigItem
+                label={t('write.ttsGeneration.speedLabel')}
+                value={String(props.activeRow.speed)}
+              />
+              <ConfigItem
+                label={t('write.ttsGeneration.blockCountLabel')}
+                value={t('write.ttsGeneration.blockCount', {
+                  count: props.activeRow.blockOrder.length,
+                })}
+              />
             </div>
             <p className="text-xs text-fg-subtle">
               {t('write.ttsGeneration.charCount', {
