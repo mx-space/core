@@ -82,6 +82,20 @@ export function useTtsGeneration(params: UseTtsGenerationParams) {
     refetchIntervalInBackground: true,
   })
 
+  // Without this the poll dying (task pruned from the queue, network drop) would
+  // leave pendingTaskId set forever, and with it a permanently disabled panel.
+  useEffect(() => {
+    if (!pendingTaskId || !taskQuery.isError) return
+    const message = getErrorMessage(
+      taskQuery.error,
+      t('write.ttsGeneration.toast.generateFailed'),
+    )
+    setRunStatus('failed')
+    setRunError(message)
+    toast.error(message)
+    setPendingTaskId(null)
+  }, [taskQuery.isError, taskQuery.error, pendingTaskId, t])
+
   useEffect(() => {
     const task = taskQuery.data
     if (!task || !pendingTaskId || task.id !== pendingTaskId) return

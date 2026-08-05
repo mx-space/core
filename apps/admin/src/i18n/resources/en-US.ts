@@ -244,8 +244,12 @@ export const enUS = {
   'ai.tts.column.updatedAt': 'Updated',
   'ai.tts.selectAllLabel': 'Select all narrations',
   'ai.tts.selectRowLabel': 'Select narration',
+  'ai.tts.toast.batchAllExisting':
+    '{count} narrations already have an identical task queued',
   'ai.tts.toast.batchPartial': '{succeeded} queued, {failed} failed',
   'ai.tts.toast.batchQueued': '{count} narrations queued',
+  'ai.tts.toast.batchQueuedPartly':
+    '{count} narrations queued, {deduped} already queued',
   'ai.tts.totalCount': '{count} narrations',
   'ai.writer.fieldSlug': 'Slug',
   'ai.writer.fieldTitle': 'Title',

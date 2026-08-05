@@ -87,6 +87,30 @@ export function getTaskMutationMessage(result: unknown, t: Translator) {
   return null
 }
 
+// A server-side dedup hit answers `created: false` — it enqueued nothing, so
+// counting it as queued would report work the operator never got.
+export function summarizeTaskBatch(
+  results: PromiseSettledResult<{ created: boolean }>[],
+  describeError: (error: unknown) => string,
+) {
+  const reasons: string[] = []
+  let queued = 0
+  let deduped = 0
+
+  for (const result of results) {
+    if (result.status === 'rejected') {
+      const reason = describeError(result.reason)
+      if (!reasons.includes(reason)) reasons.push(reason)
+    } else if (result.value.created) {
+      queued += 1
+    } else {
+      deduped += 1
+    }
+  }
+
+  return { deduped, queued, reasons }
+}
+
 export function isCancelledActionResult(result: unknown): result is {
   cancelled: true
 } {

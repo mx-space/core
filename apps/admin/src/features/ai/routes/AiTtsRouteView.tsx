@@ -22,7 +22,11 @@ import {
   ResourceEmpty,
   ResourceError,
 } from '../components/GroupedResourceStates'
-import { getErrorMessage, getTaskMutationMessage } from '../utils/ai'
+import {
+  getErrorMessage,
+  getTaskMutationMessage,
+  summarizeTaskBatch,
+} from '../utils/ai'
 import { AiTtsTableRow } from './AiTtsTableRow'
 
 const FOCUS_SCOPE_ID = 'ai-tts'
@@ -113,21 +117,36 @@ export function AiTtsRouteView() {
   })
 
   const batchEnqueueMutation = useMutation({
+    // Every row on this page already has narration, so without `force` planTts
+    // would reuse every unchanged chunk and the action would enqueue no work.
     mutationFn: async (targets: AITtsListRow[]) =>
       Promise.allSettled(
         targets.map((row) =>
-          createTtsTask({ langs: [row.lang], refId: row.refId }),
+          createTtsTask({ force: true, langs: [row.lang], refId: row.refId }),
         ),
       ),
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('ai.toast.taskCreateFailed'))),
     onSuccess: async (results) => {
-      const failed = results.filter((r) => r.status === 'rejected').length
-      const succeeded = results.length - failed
-      if (failed > 0) {
-        toast.warning(t('ai.tts.toast.batchPartial', { failed, succeeded }))
+      const { deduped, queued, reasons } = summarizeTaskBatch(
+        results,
+        (error) => getErrorMessage(error, t('ai.toast.taskCreateFailed')),
+      )
+
+      if (reasons.length > 0) {
+        toast.warning(
+          t('ai.tts.toast.batchPartial', {
+            failed: reasons.length,
+            succeeded: queued,
+          }),
+          { description: reasons.join('\n') },
+        )
+      } else if (queued === 0) {
+        toast.info(t('ai.tts.toast.batchAllExisting', { count: deduped }))
+      } else if (deduped > 0) {
+        toast.success(
+          t('ai.tts.toast.batchQueuedPartly', { count: queued, deduped }),
+        )
       } else {
-        toast.success(t('ai.tts.toast.batchQueued', { count: succeeded }))
+        toast.success(t('ai.tts.toast.batchQueued', { count: queued }))
       }
       selection.clear()
       await invalidate()
