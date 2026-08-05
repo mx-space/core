@@ -45,8 +45,10 @@ describe('test ai client', () => {
       'get',
     )
 
-    await expect(
-      client.ai.getTts({ articleId: 'post-1', lang: 'zh' }),
-    ).resolves.not.toThrowError()
+    const response = await client.ai.getTts({ articleId: 'post-1', lang: 'zh' })
+    expect(response).not.toHaveProperty('error')
+    expect(response.lang).toBe('zh')
+    expect(response.model).toBe('tts-1')
+    expect(response.voice).toBe('nova')
   })
 })
