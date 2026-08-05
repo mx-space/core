@@ -4,6 +4,7 @@ import {
   resolveTtsBaseUrl,
   TtsRuntimeAdapter,
 } from '~/modules/ai/ai-tts/tts-runtime.adapter'
+import { createAbortError } from '~/utils/abort.util'
 
 const audio = () =>
   new Response(new Uint8Array([1, 2, 3]), {
@@ -86,6 +87,32 @@ describe('TtsRuntimeAdapter', () => {
 
     await expect(
       adapter.generateSpeech({ input: 'x', voice: 'v', speed: 1 }),
+    ).rejects.toThrow()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('fails fast on an aborted signal without retrying', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    const fetchMock = vi.fn(async () => {
+      throw createAbortError()
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const adapter = new TtsRuntimeAdapter({
+      provider: 'openrouter',
+      apiKey: 'k',
+      model: 'm',
+      retryDelayMs: 0,
+    })
+
+    await expect(
+      adapter.generateSpeech({
+        input: 'x',
+        voice: 'v',
+        speed: 1,
+        signal: controller.signal,
+      }),
     ).rejects.toThrow()
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })

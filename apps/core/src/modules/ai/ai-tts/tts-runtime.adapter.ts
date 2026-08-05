@@ -60,7 +60,13 @@ export class TtsRuntimeAdapter implements ITtsRuntime {
         return await this.requestOnce(opts)
       } catch (error) {
         lastError = error as Error
-        if (!isRetryable(error) || attempt === this.maxAttempts) break
+        // an aborted signal is caller cancellation, not a transient failure — fail fast.
+        if (
+          opts.signal?.aborted ||
+          !isRetryable(error) ||
+          attempt === this.maxAttempts
+        )
+          break
         await sleep(this.retryDelayMs * 2 ** (attempt - 1))
       }
     }
