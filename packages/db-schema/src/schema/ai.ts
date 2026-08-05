@@ -3,8 +3,10 @@ import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import {
   boolean,
   index,
+  integer,
   jsonb,
   pgTable,
+  real,
   text,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
@@ -123,4 +125,60 @@ export const aiAgentConversations = pgTable(
     updatedAt: updatedAt(),
   },
   (table) => [index('ai_agent_conversation_session_idx').on(table.sessionId)],
+)
+
+export const aiTts = pgTable(
+  'ai_tts',
+  {
+    id: pkText(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    refId: refText('ref_id').notNull(),
+    lang: text('lang').notNull(),
+    isTranslation: boolean('is_translation').notNull().default(false),
+    sourceLang: text('source_lang'),
+    model: text('model').notNull(),
+    voice: text('voice').notNull(),
+    speed: real('speed').notNull().default(1),
+    format: text('format').notNull().default('mp3'),
+    blockOrder: jsonb('block_order')
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    charCount: integer('char_count').notNull().default(0),
+    totalDurationMs: integer('total_duration_ms'),
+    sourceModifiedAt: tsCol('source_modified_at'),
+  },
+  (table) => [
+    uniqueIndex('ai_tts_ref_lang_uniq').on(table.refId, table.lang),
+    index('ai_tts_ref_id_idx').on(table.refId),
+  ],
+)
+
+export const aiTtsBlocks = pgTable(
+  'ai_tts_blocks',
+  {
+    id: pkText(),
+    createdAt: createdAt(),
+    ttsId: refText('tts_id')
+      .notNull()
+      .references((): AnyPgColumn => aiTts.id, { onDelete: 'cascade' }),
+    blockId: text('block_id').notNull(),
+    fingerprint: text('fingerprint').notNull(),
+    chunkIndex: integer('chunk_index').notNull().default(0),
+    text: text('text').notNull(),
+    url: text('url').notNull(),
+    storageBackend: text('storage_backend').notNull(),
+    storageKey: text('storage_key').notNull(),
+    byteSize: integer('byte_size'),
+    durationMs: integer('duration_ms'),
+  },
+  (table) => [
+    uniqueIndex('ai_tts_blocks_key_uniq').on(
+      table.ttsId,
+      table.blockId,
+      table.chunkIndex,
+    ),
+    index('ai_tts_blocks_tts_id_idx').on(table.ttsId),
+  ],
 )
