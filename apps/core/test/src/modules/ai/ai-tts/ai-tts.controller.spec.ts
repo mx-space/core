@@ -98,7 +98,7 @@ describe('AiTtsController', () => {
     )
   })
 
-  it('lists narrations wrapped with pagination meta', async () => {
+  it('lists narrations wrapped with pagination and article meta', async () => {
     const { controller, queryService } = createHarness()
     queryService.list.mockResolvedValue({
       data: [
@@ -119,12 +119,16 @@ describe('AiTtsController', () => {
         hasNextPage: false,
         hasPrevPage: false,
       },
+      articles: { '1': { id: '1', title: 'Hello world', type: 'Post' } },
     })
 
     const result = await controller.list({ page: 1, size: 10 } as any)
 
     expect(result.data).toHaveLength(1)
     expect(result.meta.pagination).toMatchObject({ total: 1, page: 1 })
+    expect(result.meta.articles).toEqual({
+      '1': { id: '1', title: 'Hello world', type: 'Post' },
+    })
   })
 
   it('returns narration details for a ref', async () => {

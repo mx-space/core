@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { withMeta } from '~/common/response/envelope.types'
-import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
@@ -48,7 +48,10 @@ export class AiTtsController {
     const result = await this.queryService.list(query)
     return withMeta(
       z.array(AiTtsViews.listItem).parse(result.data),
-      new MetaObjectBuilder().pagination(result.pagination).build(),
+      new PostMetaBuilder()
+        .pagination(result.pagination)
+        .articles(result.articles)
+        .build(),
     )
   }
 

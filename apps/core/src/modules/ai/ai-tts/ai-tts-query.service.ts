@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
-import type { TtsMeta } from '~/common/response/meta.types'
+import type { ArticleRefMap, TtsMeta } from '~/common/response/meta.types'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import type { PaginationResult } from '~/processors/database/base.repository'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -135,11 +135,17 @@ export class AiTtsQueryService {
   async list(query: {
     page?: number
     size?: number
-  }): Promise<PaginationResult<NarrationListItemResult>> {
+  }): Promise<
+    PaginationResult<NarrationListItemResult> & { articles: ArticleRefMap }
+  > {
     const result = await this.repository.listPaginated(query)
+    const data = result.data.map(toListItem)
     return {
-      data: result.data.map(toListItem),
+      data,
       pagination: result.pagination,
+      articles: await this.databaseService.getRefArticleMap(
+        data.map((item) => item.refId),
+      ),
     }
   }
 

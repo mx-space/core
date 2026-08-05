@@ -45,7 +45,10 @@ const blockRow = (
 
 function createHarness() {
   const repository = createPgRepositoryMock<AiTtsRepository>()
-  const databaseService = { findGlobalById: vi.fn() }
+  const databaseService = {
+    findGlobalById: vi.fn(),
+    getRefArticleMap: vi.fn().mockResolvedValue({}),
+  }
   const service = new AiTtsQueryService(
     repository as any,
     databaseService as any,
@@ -272,5 +275,30 @@ describe('AiTtsQueryService.list', () => {
       },
     ])
     expect(result.pagination.total).toBe(1)
+  })
+
+  it('resolves article titles for the rows via the ref article map', async () => {
+    const { databaseService, repository, service } = createHarness()
+    repository.listPaginated.mockResolvedValue({
+      data: [parentRow({ refId: '1' })],
+      pagination: {
+        currentPage: 1,
+        totalPage: 1,
+        total: 1,
+        size: 10,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    })
+    databaseService.getRefArticleMap.mockResolvedValue({
+      '1': { id: '1', title: 'Hello world', type: 'Post' },
+    })
+
+    const result = await service.list({ page: 1, size: 10 })
+
+    expect(databaseService.getRefArticleMap).toHaveBeenCalledWith(['1'])
+    expect(result.articles).toEqual({
+      '1': { id: '1', title: 'Hello world', type: 'Post' },
+    })
   })
 })
