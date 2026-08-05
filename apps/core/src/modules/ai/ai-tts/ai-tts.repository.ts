@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { aiTts, aiTtsBlocks } from '~/database/schema'
@@ -9,11 +9,7 @@ import {
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
-import {
-  type EntityId,
-  parseEntityId,
-  tryParseEntityId,
-} from '~/shared/id/entity-id'
+import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import type {
@@ -181,76 +177,68 @@ export class AiTtsRepository extends BaseRepository {
 
   async deleteById(id: EntityId | string): Promise<AiTtsBlockRow[]> {
     const ttsId = parseEntityId(id)
-    const blocks = await this.db
-      .select()
-      .from(aiTtsBlocks)
-      .where(eq(aiTtsBlocks.ttsId, ttsId))
-    await this.db.delete(aiTts).where(eq(aiTts.id, ttsId))
-    return blocks.map(mapBlock)
+    return this.db.transaction(async (tx) => {
+      const [parentRow] = await tx
+        .select({ id: aiTts.id })
+        .from(aiTts)
+        .where(eq(aiTts.id, ttsId))
+        .limit(1)
+        .for('update')
+      if (!parentRow) return []
+      const blocks = await tx
+        .delete(aiTtsBlocks)
+        .where(eq(aiTtsBlocks.ttsId, ttsId))
+        .returning()
+      await tx.delete(aiTts).where(eq(aiTts.id, ttsId))
+      return blocks.map(mapBlock)
+    })
   }
 
   async deleteByRefId(refId: EntityId | string): Promise<AiTtsBlockRow[]> {
     const refBig = parseEntityId(refId)
-    const parents = await this.db
-      .select({ id: aiTts.id })
-      .from(aiTts)
-      .where(eq(aiTts.refId, refBig))
-    if (!parents.length) return []
-    const blocks = await this.db
-      .select()
-      .from(aiTtsBlocks)
-      .where(
-        inArray(
-          aiTtsBlocks.ttsId,
-          parents.map((p) => p.id),
-        ),
-      )
-    await this.db.delete(aiTts).where(eq(aiTts.refId, refBig))
-    return blocks.map(mapBlock)
+    return this.db.transaction(async (tx) => {
+      const parents = await tx
+        .select({ id: aiTts.id })
+        .from(aiTts)
+        .where(eq(aiTts.refId, refBig))
+        .for('update')
+      if (!parents.length) return []
+      const blocks = await tx
+        .delete(aiTtsBlocks)
+        .where(
+          inArray(
+            aiTtsBlocks.ttsId,
+            parents.map((p) => p.id),
+          ),
+        )
+        .returning()
+      await tx.delete(aiTts).where(eq(aiTts.refId, refBig))
+      return blocks.map(mapBlock)
+    })
   }
 
   async listPaginated(params: {
     page?: number
     size?: number
-    search?: string
   }): Promise<PaginationResult<AiTtsRow>> {
     const page = Math.max(1, params.page ?? 1)
     const size = Math.min(100, Math.max(1, params.size ?? 20))
     const offset = (page - 1) * size
 
-    const search = params.search?.trim()
-    const where = search ? this.buildSearchFilter(search) : undefined
-
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
         .from(aiTts)
-        .where(where)
         .orderBy(desc(aiTts.createdAt))
         .limit(size)
         .offset(offset),
-      this.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(aiTts)
-        .where(where),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(aiTts),
     ])
 
     return {
       data: rows.map(mapParent),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
-  }
-
-  private buildSearchFilter(search: string) {
-    const pattern = `%${search}%`
-    const conditions = [
-      ilike(aiTts.lang, pattern),
-      ilike(aiTts.voice, pattern),
-      ilike(aiTts.model, pattern),
-    ]
-    const parsedRefId = tryParseEntityId(search)
-    if (parsedRefId.ok) conditions.push(eq(aiTts.refId, parsedRefId.value))
-    return or(...conditions)
   }
 
   async findMeta(

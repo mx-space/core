@@ -107,9 +107,20 @@ describe('ai-tts repository (real PG, ON CONFLICT + cascade)', () => {
     expect(await repository.findMeta('999999', 'zh')).toBeNull()
   })
 
-  it('cascades block deletion when the parent is deleted', async () => {
+  it('cascades block deletion when the parent is deleted, returning every removed block', async () => {
+    await repository.upsertBlock({
+      ttsId: parent.id,
+      blockId: 'b',
+      chunkIndex: 0,
+      fingerprint: 'fp-b',
+      text: 'more',
+      url: 'https://cdn/b.mp3',
+      storageBackend: 's3',
+      storageKey: 'k/b',
+    })
+
     const removed = await repository.deleteById(parent.id)
-    expect(removed.map((b) => b.storageKey)).toContain('k/x2')
+    expect(removed.map((b) => b.storageKey).sort()).toEqual(['k/b', 'k/x2'])
     expect(await repository.findBlocks(parent.id)).toEqual([])
     expect(await repository.findByRefAndLang('1', 'zh')).toBeNull()
   })
@@ -259,16 +270,18 @@ describe('ai-tts repository (real PG, ON CONFLICT + cascade)', () => {
     const removed = await repository.deleteByRefId('5')
     expect(removed.map((b) => b.storageKey).sort()).toEqual(['k/en', 'k/ja'])
     expect(await repository.findAllByRef('5')).toEqual([])
+    expect(await repository.findBlocks(en.id)).toEqual([])
+    expect(await repository.findBlocks(ja.id)).toEqual([])
   })
 
-  it('listPaginated paginates rows and filters by search', async () => {
+  it('listPaginated paginates rows by page and size', async () => {
     await repository.upsertParent({
       refId: '6',
       lang: 'en',
       isTranslation: false,
       sourceLang: null,
-      model: 'gpt-tts',
-      voice: 'alloy-unique',
+      model: 'm',
+      voice: 'v',
       speed: 1,
       format: 'mp3',
       blockOrder: [],
@@ -280,8 +293,8 @@ describe('ai-tts repository (real PG, ON CONFLICT + cascade)', () => {
       lang: 'en',
       isTranslation: false,
       sourceLang: null,
-      model: 'gpt-tts',
-      voice: 'nova-unique',
+      model: 'm',
+      voice: 'v',
       speed: 1,
       format: 'mp3',
       blockOrder: [],
@@ -292,14 +305,22 @@ describe('ai-tts repository (real PG, ON CONFLICT + cascade)', () => {
     const all = await repository.listPaginated({ page: 1, size: 100 })
     expect(all.data.length).toBeGreaterThanOrEqual(2)
     expect(all.pagination.currentPage).toBe(1)
+    expect(all.pagination.size).toBe(100)
+    expect(all.pagination.total).toBe(all.data.length)
 
-    const filtered = await repository.listPaginated({
-      search: 'alloy-unique',
-    })
-    expect(filtered.data).toHaveLength(1)
-    expect(filtered.data[0].refId).toBe('6')
+    const totalCount = all.data.length
+    const firstPage = await repository.listPaginated({ page: 1, size: 1 })
+    expect(firstPage.data).toHaveLength(1)
+    expect(firstPage.pagination.size).toBe(1)
+    expect(firstPage.pagination.total).toBe(totalCount)
+    expect(firstPage.pagination.totalPage).toBe(totalCount)
+    expect(firstPage.pagination.hasNextPage).toBe(true)
+    expect(firstPage.pagination.hasPrevPage).toBe(false)
 
-    const byRefId = await repository.listPaginated({ search: '7' })
-    expect(byRefId.data.some((row) => row.refId === '7')).toBe(true)
+    const secondPage = await repository.listPaginated({ page: 2, size: 1 })
+    expect(secondPage.data).toHaveLength(1)
+    expect(secondPage.pagination.currentPage).toBe(2)
+    expect(secondPage.pagination.hasPrevPage).toBe(true)
+    expect(secondPage.data[0].id).not.toBe(firstPage.data[0].id)
   })
 })
