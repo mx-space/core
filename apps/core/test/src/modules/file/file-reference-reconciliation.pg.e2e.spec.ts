@@ -436,6 +436,12 @@ describe('File reference reconciliation (real PG and filesystem)', () => {
     })
     await reconciliation.reconcile({ apply: true })
 
+    const [referencedBefore] = await db
+      .select({ status: schema.fileReferences.status })
+      .from(schema.fileReferences)
+      .where(eq(schema.fileReferences.fileUrl, audioUrl))
+    expect(referencedBefore?.status).toBe(FileReferenceStatus.Active)
+
     await db.delete(schema.aiTtsBlocks).where(eq(schema.aiTtsBlocks.id, '9002'))
 
     await expect(
