@@ -101,6 +101,7 @@ import { DraftConflictBanner } from '~/features/write/components/DraftConflictBa
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
 import { DraftPreviewBanner } from '~/features/write/components/DraftPreviewBanner'
 import { SkillPicker } from '~/features/write/components/SkillPicker'
+import { TtsGenerationEntry } from '~/features/write/components/tts/TtsGenerationEntry'
 import { MetaPresetSection } from '~/features/write/meta-presets'
 import type { DraftMergeConflict } from '~/features/write/utils/merge-draft-conflict'
 import { mergeDraftConflict } from '~/features/write/utils/merge-draft-conflict'
@@ -3368,6 +3369,7 @@ function MediaAndMetaFields(props: {
           text={props.state.text}
           title={props.state.title}
         />
+        <TtsGenerationEntry refId={props.refId} />
         {images.length > 0 ? (
           <div className="space-y-2">
             <div className="text-xs text-neutral-500 dark:text-neutral-400">

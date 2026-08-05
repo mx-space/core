@@ -37,6 +37,8 @@ export const adminQueryKeys = {
       page: number
       size: number
     }) => ['ai', 'translation-entries', params] as const,
+    ttsByRef: (refId: string) => ['ai', 'tts', 'by-ref', refId] as const,
+    ttsOptions: () => ['ai', 'tts', 'options'] as const,
   },
   analyze: {
     activity: (params: { page: number; size: number; type: number }) =>

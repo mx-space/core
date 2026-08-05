@@ -405,3 +405,39 @@ export function updateTranslationEntry(
 export function deleteTranslationEntry(id: string) {
   return deleteJson<void>(`/ai/translations/entries/${id}`)
 }
+
+export interface AITtsSegment {
+  blockId: string
+  chunkIndex: number
+  text: string
+  url: string
+}
+
+export interface AITtsRow {
+  blockOrder: string[]
+  charCount: number
+  id: string
+  isTranslation: boolean
+  lang: string
+  model: string
+  segments: AITtsSegment[]
+  speed: number
+  updatedAt?: null | string
+  voice: string
+}
+
+export function createTtsTask(data: {
+  force?: boolean
+  langs?: string[]
+  refId: string
+}) {
+  return postJson<CreateTaskResponse, typeof data>('/ai/tts/task', data)
+}
+
+export function getTtsByRefId(refId: string) {
+  return getJson<AITtsRow[]>(`/ai/tts/ref/${refId}`)
+}
+
+export function deleteTts(id: string) {
+  return deleteJson<void>(`/ai/tts/${id}`)
+}
