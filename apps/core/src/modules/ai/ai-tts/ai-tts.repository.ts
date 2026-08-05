@@ -88,7 +88,7 @@ export class AiTtsRepository extends BaseRepository {
       .select()
       .from(aiTtsBlocks)
       .where(eq(aiTtsBlocks.ttsId, parseEntityId(ttsId)))
-      .orderBy(aiTtsBlocks.chunkIndex)
+      .orderBy(aiTtsBlocks.blockId, aiTtsBlocks.chunkIndex)
     return rows.map(mapBlock)
   }
 

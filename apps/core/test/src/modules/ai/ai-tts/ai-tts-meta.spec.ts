@@ -10,6 +10,8 @@ function createHarness() {
   const service = new AiTtsQueryService(
     repository as any,
     databaseService as any,
+    { isPremiumLocked: vi.fn(async () => false) } as any,
+    { checkPasswordToAccess: vi.fn(async () => true) } as any,
   )
   return { repository, service }
 }
@@ -55,6 +57,20 @@ describe('AiTtsQueryService.getMetaForArticle', () => {
   it('reports unavailable on a miss', async () => {
     const { repository, service } = createHarness()
     repository.findMeta.mockResolvedValue(null)
+    await expect(
+      service.getMetaForArticle('1', 'zh', new Date()),
+    ).resolves.toEqual({ available: false })
+  })
+
+  it('reports unavailable when the parent exists but block_order was never published', async () => {
+    const { repository, service } = createHarness()
+    repository.findMeta.mockResolvedValue({
+      id: '1',
+      updatedAt: new Date('2026-01-02'),
+      blockCount: 0,
+      sourceModifiedAt: null,
+    })
+
     await expect(
       service.getMetaForArticle('1', 'zh', new Date()),
     ).resolves.toEqual({ available: false })
