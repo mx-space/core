@@ -32,3 +32,70 @@ export interface PlanTtsInput {
   existing: ExistingBlockRow[]
   force: boolean
 }
+
+export interface AiTtsRow {
+  id: string
+  createdAt: Date
+  updatedAt: Date | null
+  refId: string
+  lang: string
+  isTranslation: boolean
+  sourceLang: string | null
+  model: string
+  voice: string
+  speed: number
+  format: string
+  blockOrder: string[]
+  charCount: number
+  totalDurationMs: number | null
+  sourceModifiedAt: Date | null
+}
+
+export interface AiTtsBlockRow {
+  id: string
+  createdAt: Date
+  ttsId: string
+  blockId: string
+  fingerprint: string
+  chunkIndex: number
+  text: string
+  url: string
+  storageBackend: 's3' | 'local'
+  storageKey: string
+  byteSize: number | null
+  durationMs: number | null
+}
+
+export interface AiTtsMeta {
+  id: string
+  updatedAt: Date | null
+  blockCount: number
+  sourceModifiedAt: Date | null
+}
+
+export interface UpsertParentInput {
+  refId: string
+  lang: string
+  isTranslation: boolean
+  sourceLang: string | null
+  model: string
+  voice: string
+  speed: number
+  format: string
+  blockOrder: string[]
+  charCount: number
+  sourceModifiedAt: Date | null
+}
+
+export interface UpsertBlockInput {
+  ttsId: string
+  blockId: string
+  chunkIndex: number
+  fingerprint: string
+  text: string
+  url: string
+  storageBackend: 's3' | 'local'
+  storageKey: string
+  byteSize?: number | null
+  durationMs?: number | null
+}
