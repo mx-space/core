@@ -7,6 +7,7 @@ import { mkdirp } from 'mkdirp'
 import { RedisKeys } from '~/constants/cache.constant'
 import { STATIC_FILE_TRASH_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
+import { AiTtsService } from '~/modules/ai/ai-tts/ai-tts.service'
 import { AnalyzeRepository } from '~/modules/analyze/analyze.repository'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
@@ -37,6 +38,7 @@ export class CronBusinessService {
 
     private readonly searchService: SearchService,
     private readonly fileReferenceService: FileReferenceService,
+    private readonly aiTtsService: AiTtsService,
   ) {
     this.logger = new Logger(CronBusinessService.name)
   }
@@ -222,6 +224,20 @@ export class CronBusinessService {
     const result = await this.fileReferenceService.cleanupCommentUploads()
     this.logger.log(
       `--> Comment image upload cleanup finished pending=${result.pendingDeleted} detached=${result.detachedDeleted}`,
+    )
+    return result
+  }
+
+  /**
+   * Clean up TTS audio objects left behind by a crash between upload and
+   * row commit: anything past the age floor with no matching ai_tts_blocks
+   * row is deleted.
+   */
+  async cleanupTtsOrphans() {
+    this.logger.log('--> Starting TTS orphan reconciliation')
+    const result = await this.aiTtsService.reconcileOrphans()
+    this.logger.log(
+      `--> TTS orphan reconciliation finished deleted=${result.deleted}`,
     )
     return result
   }

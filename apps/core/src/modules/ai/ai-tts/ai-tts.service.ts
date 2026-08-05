@@ -1,7 +1,9 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
 import pLimit from 'p-limit'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
+import { BusinessEvents } from '~/constants/business-event.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { RedisService } from '~/processors/redis/redis.service'
@@ -34,6 +36,10 @@ import {
   buildTtsObjectKey,
   computeTtsObjectFingerprint,
 } from './tts-object-key'
+import {
+  runTtsOrphanReconciliation,
+  TTS_ORPHAN_PREFIX,
+} from './tts-orphan-reconciliation'
 import { TtsRuntimeAdapter } from './tts-runtime.adapter'
 import { resolveTtsSourceContent } from './tts-source-content'
 
@@ -460,5 +466,31 @@ export class AiTtsService implements OnModuleInit {
         )
       }
     }
+  }
+
+  @OnEvent(BusinessEvents.POST_DELETE)
+  @OnEvent(BusinessEvents.NOTE_DELETE)
+  @OnEvent(BusinessEvents.PAGE_DELETE)
+  async handleDeleteArticle(event: { id: string }): Promise<void> {
+    await this.handleArticleDeleted(event.id)
+  }
+
+  async handleArticleDeleted(refId: string): Promise<void> {
+    const removed = await this.repository.deleteByRefId(refId)
+    await this.deleteObjects(removed)
+  }
+
+  async reconcileOrphans(): Promise<{ deleted: number }> {
+    return runTtsOrphanReconciliation({
+      listCandidates: () =>
+        this.fileService.listObjectsUnderPrefix('audio', TTS_ORPHAN_PREFIX),
+      findKnownStorageKeys: () => this.repository.findAllStorageKeys(),
+      deleteObject: (backend, key) =>
+        this.fileService.deleteObject(backend, key),
+      onDeleteFailure: (candidate, error) =>
+        this.logger.warn(
+          `failed to delete orphan tts object ${candidate.storageKey}: ${error.message}`,
+        ),
+    })
   }
 }

@@ -1,10 +1,11 @@
-import { createReadStream, createWriteStream } from 'node:fs'
+import { createReadStream, createWriteStream, type Dirent } from 'node:fs'
 import {
   access,
   copyFile,
   mkdir,
   readdir,
   rename,
+  stat,
   unlink,
 } from 'node:fs/promises'
 import path, { resolve } from 'node:path'
@@ -31,6 +32,12 @@ import { S3Uploader } from '~/utils/s3.util'
 import { ConfigsService } from '../configs/configs.service'
 import type { FileType } from './file.type'
 import { FileReferenceService } from './file-reference.service'
+
+export interface StorageObjectDescriptor {
+  storageBackend: 's3' | 'local'
+  storageKey: string
+  lastModified: Date
+}
 
 @Injectable()
 export class FileService {
@@ -220,6 +227,69 @@ export class FileService {
       region: config.region || 'auto',
     })
     await s3Uploader.deleteObject(key)
+  }
+
+  async listObjectsUnderPrefix(
+    type: FileType,
+    prefix: string,
+  ): Promise<StorageObjectDescriptor[] | null> {
+    const config = await this.configService.get('imageStorageOptions')
+    if (config?.enable) {
+      if (
+        !config.endpoint ||
+        !config.secretId ||
+        !config.secretKey ||
+        !config.bucket
+      ) {
+        return null
+      }
+
+      const s3Uploader = new S3Uploader({
+        endpoint: config.endpoint,
+        accessKey: config.secretId,
+        secretKey: config.secretKey,
+        bucket: config.bucket,
+        region: config.region || 'auto',
+      })
+      const rawPrefix = (config.prefix ?? '').replaceAll(/^\/+|\/+$/g, '')
+      const listPrefix = rawPrefix ? `${rawPrefix}/${prefix}` : prefix
+      const objects = await s3Uploader.listObjects(listPrefix)
+      return objects.map((object) => ({
+        storageBackend: 's3' as const,
+        storageKey: object.key,
+        lastModified: object.lastModified,
+      }))
+    }
+
+    const root = this.resolveFilePath(type, prefix)
+    let entries: Dirent[]
+    try {
+      entries = await readdir(root, { recursive: true, withFileTypes: true })
+    } catch (error) {
+      if (error?.code === 'ENOENT') return []
+      throw error
+    }
+
+    const candidates: StorageObjectDescriptor[] = []
+    for (const entry of entries) {
+      if (!entry.isFile()) continue
+      const entryDir = entry.parentPath ?? root
+      const relativeDir = path.relative(root, entryDir)
+      const relativePath = relativeDir
+        ? path.join(relativeDir, entry.name)
+        : entry.name
+      const storageKey = path
+        .join(prefix, relativePath)
+        .split(path.sep)
+        .join('/')
+      const stats = await stat(path.join(entryDir, entry.name))
+      candidates.push({
+        storageBackend: 'local',
+        storageKey,
+        lastModified: stats.mtime,
+      })
+    }
+    return candidates
   }
 
   async uploadBuffer(
