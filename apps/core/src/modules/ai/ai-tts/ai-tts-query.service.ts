@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
+import type { TtsMeta } from '~/common/response/meta.types'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import type { PaginationResult } from '~/processors/database/base.repository'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -139,6 +140,27 @@ export class AiTtsQueryService {
     return {
       data: result.data.map(toListItem),
       pagination: result.pagination,
+    }
+  }
+
+  async getMetaForArticle(
+    refId: string,
+    lang: string,
+    modifiedAt?: Date | null,
+  ): Promise<TtsMeta> {
+    const row = await this.repository.findMeta(refId, lang)
+    if (!row) return { available: false }
+
+    return {
+      available: true,
+      lang,
+      blockCount: row.blockCount,
+      stale: Boolean(
+        modifiedAt &&
+        row.sourceModifiedAt &&
+        modifiedAt.getTime() > row.sourceModifiedAt.getTime(),
+      ),
+      updatedAt: row.updatedAt,
     }
   }
 }

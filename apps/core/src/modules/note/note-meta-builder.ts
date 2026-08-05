@@ -2,6 +2,7 @@ import type {
   InsightsMeta,
   NoteResponseMeta,
   SummaryMeta,
+  TtsMeta,
 } from '~/common/response/meta.types'
 import { NoteResponseMetaSchema } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
@@ -20,6 +21,11 @@ export class NoteMetaBuilder extends MetaObjectBuilder<
 
   summary(value: SummaryMeta): this {
     ;(this.meta as NoteResponseMeta).summary = value
+    return this
+  }
+
+  tts(value: TtsMeta): this {
+    ;(this.meta as NoteResponseMeta).tts = value
     return this
   }
 }

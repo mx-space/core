@@ -105,6 +105,16 @@ export const InsightsMetaSchema = z
   .object({ hasInLocale: z.boolean() })
   .strict()
 
+export const TtsMetaSchema = z
+  .object({
+    available: z.boolean(),
+    lang: z.string().optional(),
+    blockCount: z.number().optional(),
+    stale: z.boolean().optional(),
+    updatedAt: z.date().nullish(),
+  })
+  .strict()
+
 export const SummaryMetaSchema = z
   .object({
     id: z.string(),
@@ -143,11 +153,13 @@ export const PostResponseMetaSchema = BaseResponseMetaSchema.extend({
   summary: SummaryMetaSchema.optional(),
   skills: z.array(SkillBundleViewSchema).optional(),
   paywall: PaywallMetaSchema.optional(),
+  tts: TtsMetaSchema.optional(),
 })
 
 export const NoteResponseMetaSchema = BaseResponseMetaSchema.extend({
   insights: InsightsMetaSchema.optional(),
   summary: SummaryMetaSchema.optional(),
+  tts: TtsMetaSchema.optional(),
 })
 
 /**
@@ -166,6 +178,7 @@ export type EnrichmentEntry = z.infer<typeof EnrichmentEntrySchema>
 export type RelatedRef = z.infer<typeof RelatedRefSchema>
 export type ArticleRefMap = Record<string, RelatedRef>
 export type InsightsMeta = z.infer<typeof InsightsMetaSchema>
+export type TtsMeta = z.infer<typeof TtsMetaSchema>
 export type SummaryMeta = z.infer<typeof SummaryMetaSchema>
 export type PaywallMeta = z.infer<typeof PaywallMetaSchema>
 export type BaseResponseMeta = z.infer<typeof BaseResponseMetaSchema>

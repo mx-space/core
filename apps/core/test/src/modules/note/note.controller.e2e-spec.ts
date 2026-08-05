@@ -49,6 +49,7 @@ const createController = (
     countingService?: Record<string, unknown>
     aiInsightsService?: Record<string, unknown>
     aiSummaryService?: Record<string, unknown>
+    aiTtsQueryService?: Record<string, unknown>
   } = {},
 ) => {
   const noteService = {
@@ -120,12 +121,18 @@ const createController = (
     ...overrides.aiSummaryService,
   }
 
+  const aiTtsQueryService = {
+    getMetaForArticle: vi.fn().mockResolvedValue({ available: false }),
+    ...overrides.aiTtsQueryService,
+  }
+
   const controller = new NoteController(
     noteService as any,
     countingService as any,
     translationService as any,
     aiSummaryService as any,
     aiInsightsService as any,
+    aiTtsQueryService as any,
     {} as any,
     enrichmentService as any,
     translationEntryService as any,
@@ -137,6 +144,7 @@ const createController = (
     translationService,
     translationEntryService,
     enrichmentService,
+    aiTtsQueryService,
   }
 }
 
