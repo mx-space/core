@@ -31,6 +31,7 @@ import {
   Send,
   SlidersHorizontal,
   Sparkles,
+  Trash2,
   WandSparkles,
   X,
 } from 'lucide-react'
@@ -56,6 +57,7 @@ import {
 import type { CreateDraftData } from '~/api/drafts'
 import {
   createDraft,
+  deleteDraft,
   getDraftById,
   getDraftByRef,
   getNewDrafts,
@@ -1334,6 +1336,43 @@ function WritePage(props: { kind: WriteKind }) {
     setAsidePanel(null)
   }
 
+  const deleteDraftMutation = useMutation({
+    mutationFn: deleteDraft,
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, t('drafts.toast.deleteFailed'))),
+    onSuccess: async (_result, deletedId: string) => {
+      if (lastSavedDraftRef.current?.id === deletedId) {
+        lastSavedDraftRef.current = null
+        lastSavedDraftFingerprintRef.current = ''
+        setLastSavedFingerprint('')
+        draftDirtyRef.current = true
+      }
+      if (draftId === deletedId) {
+        setDraftId('')
+        const nextParams = new URLSearchParams(searchParams)
+        nextParams.delete('draftId')
+        setSearchParams(nextParams, { replace: true })
+      }
+      toast.success(t('drafts.toast.deleted'))
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminQueryKeys.drafts.root }),
+        isEditing ? refDraftQuery.refetch() : newDraftsQuery.refetch(),
+      ])
+    },
+  })
+
+  const confirmAndDeleteDraft = async (draft: DraftModel) => {
+    const confirmed = await confirmDialog({
+      destructive: true,
+      title: t('drafts.detail.confirmDelete', {
+        title: draft.title || t('write.editor.untitled'),
+      }),
+    })
+    if (!confirmed) return
+    if (previewingDraft?.id === draft.id) cancelDraftPreview()
+    deleteDraftMutation.mutate(draft.id)
+  }
+
   const generateTitleOrSlug = () => {
     if (!state.title.trim() && !state.text.trim()) {
       toast.error(t('write.slugGenerate.bothMissing'))
@@ -1757,8 +1796,14 @@ function WritePage(props: { kind: WriteKind }) {
               drafts={[...(newDraftsQuery.data ?? [])].sort(
                 (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt),
               )}
+              deletingDraftId={
+                deleteDraftMutation.isPending
+                  ? (deleteDraftMutation.variables ?? null)
+                  : null
+              }
               draftKindLabel={draftKindText}
               onClose={closeDraftsPanel}
+              onDelete={confirmAndDeleteDraft}
               onPreview={enterDraftPreview}
               previewingDraftId={previewingDraft?.id ?? null}
               recoveryDraftId={recoveryHintDraft?.id ?? null}
@@ -2133,9 +2178,11 @@ function ContentSettingsPanel(props: {
 }
 
 function DraftsAsidePanel(props: {
+  deletingDraftId: string | null
   drafts: DraftModel[]
   draftKindLabel: string
   onClose: () => void
+  onDelete: (draft: DraftModel) => void
   onPreview: (draft: DraftModel) => void
   previewingDraftId: string | null
   recoveryDraftId: string | null
@@ -2166,19 +2213,17 @@ function DraftsAsidePanel(props: {
           {props.drafts.map((draft) => {
             const isPreviewing = draft.id === props.previewingDraftId
             const isRecovery = draft.id === props.recoveryDraftId
+            const isDeleting = draft.id === props.deletingDraftId
             return (
-              <button
-                aria-current={isPreviewing}
+              <div
                 className={cn(
-                  'group relative flex w-full min-w-0 items-center gap-3 rounded-sm px-3 py-2 text-left transition-colors',
-                  'focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15',
+                  'group relative flex w-full min-w-0 items-center rounded-sm transition-colors',
                   isPreviewing
                     ? 'bg-accent-soft text-fg'
                     : 'hover:bg-surface-inset',
+                  isDeleting && 'pointer-events-none opacity-50',
                 )}
                 key={draft.id}
-                onClick={() => props.onPreview(draft)}
-                type="button"
               >
                 <span
                   aria-hidden="true"
@@ -2187,33 +2232,57 @@ function DraftsAsidePanel(props: {
                     isPreviewing ? 'opacity-100' : 'opacity-0',
                   )}
                 />
-                <History
-                  aria-hidden="true"
-                  className="size-4 shrink-0 text-fg-muted"
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-fg">
-                    {draft.title || t('write.editor.untitled')}
-                  </span>
-                  <span className="mt-0.5 block truncate text-xs text-fg-muted">
-                    {t('write.draftList.row.meta', {
-                      version: draft.version,
-                      time: formatRelativeTime(draft.updatedAt),
-                    })}
-                  </span>
-                </span>
-                {isRecovery ? (
-                  <span className="flex shrink-0 items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-                    <span
-                      aria-hidden="true"
-                      className="size-1.5 rounded-full bg-amber-500"
-                    />
-                    <span className="truncate">
-                      {t('write.draftList.newerLabel')}
+                <button
+                  aria-current={isPreviewing}
+                  className="flex min-w-0 flex-1 items-center gap-3 rounded-sm py-2 pl-3 text-left focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15"
+                  onClick={() => props.onPreview(draft)}
+                  type="button"
+                >
+                  <History
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-fg-muted"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-fg">
+                      {draft.title || t('write.editor.untitled')}
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs text-fg-muted">
+                      {t('write.draftList.row.meta', {
+                        version: draft.version,
+                        time: formatRelativeTime(draft.updatedAt),
+                      })}
                     </span>
                   </span>
-                ) : null}
-              </button>
+                  {isRecovery ? (
+                    <span className="flex shrink-0 items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                      <span
+                        aria-hidden="true"
+                        className="size-1.5 rounded-full bg-amber-500"
+                      />
+                      <span className="truncate">
+                        {t('write.draftList.newerLabel')}
+                      </span>
+                    </span>
+                  ) : null}
+                </button>
+                <button
+                  aria-label={t('common.delete')}
+                  className="mr-1.5 ml-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-fg-subtle opacity-0 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:opacity-100 focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/15 group-hover:opacity-100 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                  disabled={isDeleting}
+                  onClick={() => props.onDelete(draft)}
+                  title={t('common.delete')}
+                  type="button"
+                >
+                  {isDeleting ? (
+                    <Loader2
+                      aria-hidden="true"
+                      className="size-3.5 animate-spin"
+                    />
+                  ) : (
+                    <Trash2 aria-hidden="true" className="size-3.5" />
+                  )}
+                </button>
+              </div>
             )
           })}
         </Scroll>
