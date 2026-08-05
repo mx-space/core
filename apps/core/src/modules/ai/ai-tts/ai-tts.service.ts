@@ -474,4 +474,9 @@ export class AiTtsService implements OnModuleInit {
     const removed = await this.repository.deleteByRefId(refId)
     await this.deleteObjects(removed)
   }
+
+  async deleteById(id: string): Promise<void> {
+    const removed = await this.repository.deleteById(id)
+    await this.deleteObjects(removed)
+  }
 }

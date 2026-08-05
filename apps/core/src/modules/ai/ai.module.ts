@@ -38,8 +38,10 @@ import {
   LEXICAL_TRANSLATION_STRATEGY,
   MARKDOWN_TRANSLATION_STRATEGY,
 } from './ai-translation/translation-strategy.interface'
+import { AiTtsController } from './ai-tts/ai-tts.controller'
 import { AiTtsRepository } from './ai-tts/ai-tts.repository'
 import { AiTtsService } from './ai-tts/ai-tts.service'
+import { AiTtsQueryService } from './ai-tts/ai-tts-query.service'
 import { AiSlugBackfillService } from './ai-writer/ai-slug-backfill.service'
 import { AiWriterController } from './ai-writer/ai-writer.controller'
 import { AiWriterService } from './ai-writer/ai-writer.service'
@@ -83,6 +85,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiAgentConversationRepository,
     AiTtsService,
     AiTtsRepository,
+    AiTtsQueryService,
   ],
   controllers: [
     AiController,
@@ -93,6 +96,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiTranslationController,
     TranslationEntryController,
     AiAgentController,
+    AiTtsController,
   ],
   exports: [
     AiService,
@@ -104,6 +108,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiInsightsService,
     TranslationEntryService,
     AiTtsService,
+    AiTtsQueryService,
   ],
 })
 export class AiModule {}
