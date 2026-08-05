@@ -229,7 +229,6 @@ export class FileService {
       originalFilename?: string
       contentType: string
       objectKey?: string
-      skipReference?: boolean
     },
   ): Promise<{
     url: string
@@ -242,7 +241,6 @@ export class FileService {
       originalFilename = '',
       contentType,
       objectKey: explicitObjectKey,
-      skipReference,
     } = opts
 
     const uploadConfig = await this.configService.get('fileUploadOptions')
@@ -308,13 +306,11 @@ export class FileService {
         contentType,
       )
 
-      if (!skipReference) {
-        await this.fileReferenceService.createPendingReference(
-          s3Url,
-          filename,
-          objectKey,
-        )
-      }
+      await this.fileReferenceService.createPendingReference(
+        s3Url,
+        filename,
+        objectKey,
+      )
 
       return {
         url: s3Url,
@@ -348,17 +344,11 @@ export class FileService {
       }
     }
 
-    let fileUrl: string
-    if (skipReference) {
-      await this.writeFile(type, relativePath, Readable.from(buffer))
-      fileUrl = await this.resolveFileUrl(type, relativePath)
-    } else {
-      fileUrl = await this.writeTrackedOwnerFile(
-        type,
-        relativePath,
-        Readable.from(buffer),
-      )
-    }
+    const fileUrl = await this.writeTrackedOwnerFile(
+      type,
+      relativePath,
+      Readable.from(buffer),
+    )
 
     return {
       url: fileUrl,
