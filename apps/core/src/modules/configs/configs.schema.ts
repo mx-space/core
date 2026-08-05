@@ -225,10 +225,7 @@ export const ImageStorageOptionsSchema = section('Image storage', {
   enable: field.toggle(z.boolean().optional(), 'Enable S3 image storage'),
   endpoint: field.plain(nullableStorageText(), 'S3 endpoint'),
   secretId: field.halfGrid(nullableStorageText(), 'Access Key ID'),
-  secretKey: field.passwordHalfGrid(
-    nullableStorageText(),
-    'Secret Access Key',
-  ),
+  secretKey: field.passwordHalfGrid(nullableStorageText(), 'Secret Access Key'),
   bucket: field.halfGrid(nullableStorageText(), 'Bucket'),
   region: field
     .halfGrid(nullableStorageText(), 'Region')
@@ -332,6 +329,56 @@ export class ImageGenerationOptionsDto extends createZodDto(
 export type ImageGenerationOptionsConfig = z.infer<
   typeof ImageGenerationOptionsSchema
 >
+
+// ==================== TTS Options ====================
+export const TtsOptionsSchema = section('AI text to speech', {
+  enable: field.toggle(z.boolean().optional(), 'Enable AI narration'),
+  provider: field.select(
+    z.enum(['openrouter', 'openai', 'custom']).optional().default('openrouter'),
+    'Provider',
+    [
+      { label: 'OpenRouter', value: 'openrouter' },
+      { label: 'OpenAI', value: 'openai' },
+      { label: 'Custom', value: 'custom' },
+    ],
+    {
+      description:
+        'Endpoint preset. "custom" requires Endpoint to be set. The adapter appends /audio/speech.',
+    },
+  ),
+  apiKey: field.password(nullableStorageText(), 'API Key'),
+  endpoint: field.plain(nullableStorageText(), 'Endpoint', {
+    'ui:options': { showWhen: { provider: 'custom' } },
+  }),
+  model: field.plain(nullableStorageText(), 'Model', {
+    description: 'Speech model id, e.g. openai/gpt-4o-mini-tts-2025-12-15',
+  }),
+  voice: field.plain(nullableStorageText(), 'Voice', {
+    description: 'Voice id. Availability depends on the model.',
+  }),
+  speed: field.number(
+    z.coerce.number().min(0.25).max(4).optional().default(1),
+    'Speed',
+    { 'ui:options': { halfGrid: true } },
+  ),
+  maxCharsPerChunk: field.number(
+    z.coerce.number().int().min(200).max(4000).optional().default(1800),
+    'Max characters per request',
+    { 'ui:options': { halfGrid: true } },
+  ),
+  concurrency: field.number(
+    z.coerce.number().int().min(1).max(8).optional().default(3),
+    'Concurrent requests per task',
+    { 'ui:options': { halfGrid: true } },
+  ),
+  maxCharsPerRun: field.number(
+    z.coerce.number().int().min(1000).max(1000000).optional().default(120000),
+    'Max characters per run',
+    { 'ui:options': { halfGrid: true } },
+  ),
+})
+export class TtsOptionsDto extends createZodDto(TtsOptionsSchema) {}
+export type TtsOptionsConfig = z.infer<typeof TtsOptionsSchema>
 
 // ==================== Comment Upload Options ====================
 export const CommentUploadOptionsSchema = section('Comment image uploads', {
@@ -1080,6 +1127,7 @@ export const configSchemaMapping = {
   backupOptions: BackupOptionsSchema,
   imageStorageOptions: ImageStorageOptionsSchema,
   imageGenerationOptions: ImageGenerationOptionsSchema,
+  ttsOptions: TtsOptionsSchema,
   fileUploadOptions: FileUploadOptionsSchema,
   commentUploadOptions: CommentUploadOptionsSchema,
   baiduSearchOptions: BaiduSearchOptionsSchema,

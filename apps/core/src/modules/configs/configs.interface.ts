@@ -21,6 +21,7 @@ import {
   type OAuthSchema,
   type SeoSchema,
   type ThirdPartyServiceIntegrationSchema,
+  type TtsOptionsSchema,
   type UrlSchema,
 } from './configs.schema'
 
@@ -44,6 +45,7 @@ export abstract class IConfig {
   backupOptions: Required<z.infer<typeof BackupOptionsSchema>>
   imageStorageOptions: Required<z.infer<typeof ImageStorageOptionsSchema>>
   imageGenerationOptions: Required<z.infer<typeof ImageGenerationOptionsSchema>>
+  ttsOptions: Required<z.infer<typeof TtsOptionsSchema>>
   fileUploadOptions: Required<z.infer<typeof FileUploadOptionsSchema>>
   commentUploadOptions: Required<z.infer<typeof CommentUploadOptionsSchema>>
   baiduSearchOptions: Required<z.infer<typeof BaiduSearchOptionsSchema>>
