@@ -144,18 +144,24 @@ describe('planTts', () => {
     text: `${blockId}-${chunkIndex}`,
     fingerprint,
   })
+  const objectKeyFor = (input: {
+    blockId: string
+    chunkIndex: number
+    fingerprint: string
+  }) => `alloy/${input.blockId}-${input.chunkIndex}-${input.fingerprint}.mp3`
   const row = (
     id: string,
     blockId: string,
     chunkIndex: number,
     fingerprint: string,
+    storageKey = objectKeyFor({ blockId, chunkIndex, fingerprint }),
   ) => ({
     id,
     blockId,
     chunkIndex,
     fingerprint,
     storageBackend: 's3' as const,
-    storageKey: `k/${id}`,
+    storageKey,
   })
 
   it('reuses a matching fingerprint and regenerates a changed one', () => {
@@ -163,10 +169,27 @@ describe('planTts', () => {
       chunks: [chunk('a', 0, 'fp-a'), chunk('b', 0, 'fp-b2')],
       existing: [row('r1', 'a', 0, 'fp-a'), row('r2', 'b', 0, 'fp-b1')],
       force: false,
+      objectKeyFor,
     })
 
     expect(plan.toReuse).toEqual([{ rowId: 'r1', blockId: 'a', chunkIndex: 0 }])
     expect(plan.toGenerate).toEqual([chunk('b', 0, 'fp-b2')])
+    expect(plan.toDelete).toEqual([])
+  })
+
+  it('regenerates a row whose stored object was written under another voice', () => {
+    const plan = planTts({
+      chunks: [chunk('a', 0, 'fp-a'), chunk('b', 0, 'fp-b')],
+      existing: [
+        row('r1', 'a', 0, 'fp-a', 'nova/a-0-fp-a.mp3'),
+        row('r2', 'b', 0, 'fp-b'),
+      ],
+      force: false,
+      objectKeyFor,
+    })
+
+    expect(plan.toGenerate).toEqual([chunk('a', 0, 'fp-a')])
+    expect(plan.toReuse).toEqual([{ rowId: 'r2', blockId: 'b', chunkIndex: 0 }])
     expect(plan.toDelete).toEqual([])
   })
 
@@ -175,6 +198,7 @@ describe('planTts', () => {
       chunks: [chunk('b', 0, 'fp-b'), chunk('a', 0, 'fp-a')],
       existing: [row('r1', 'a', 0, 'fp-a'), row('r2', 'b', 0, 'fp-b')],
       force: false,
+      objectKeyFor,
     })
 
     expect(plan.toGenerate).toEqual([])
@@ -190,6 +214,7 @@ describe('planTts', () => {
         row('r3', 'gone', 0, 'fp-x'),
       ],
       force: false,
+      objectKeyFor,
     })
 
     expect(plan.toDelete.map((d) => d.rowId).sort()).toEqual(['r2', 'r3'])
@@ -200,6 +225,7 @@ describe('planTts', () => {
       chunks: [chunk('a', 0, 'fp-a')],
       existing: [row('r1', 'a', 0, 'fp-a'), row('r2', 'old', 0, 'fp-o')],
       force: true,
+      objectKeyFor,
     })
 
     expect(plan.toGenerate).toHaveLength(1)
@@ -211,6 +237,7 @@ describe('planTts', () => {
       chunks: [chunk('a', 0, 'fp-a'), chunk('b', 0, 'fp-b')],
       existing: [],
       force: false,
+      objectKeyFor,
     })
 
     expect(plan.charCount).toBe(6)
@@ -221,6 +248,7 @@ describe('planTts', () => {
       chunks: [chunk('a', 0, 'fp-a0'), chunk('a', 1, 'fp-a1')],
       existing: [],
       force: false,
+      objectKeyFor,
     })
 
     expect(plan.blockOrder).toEqual(['a'])

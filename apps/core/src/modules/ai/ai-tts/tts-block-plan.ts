@@ -127,7 +127,7 @@ function rowKey(blockId: string, chunkIndex: number): string {
 }
 
 export function planTts(input: PlanTtsInput): TtsPlan {
-  const { chunks, existing, force } = input
+  const { chunks, existing, force, objectKeyFor } = input
   const existingByKey = new Map<string, ExistingBlockRow>(
     existing.map((row) => [rowKey(row.blockId, row.chunkIndex), row]),
   )
@@ -141,7 +141,12 @@ export function planTts(input: PlanTtsInput): TtsPlan {
     const row = existingByKey.get(key)
     if (row) consumed.add(row.id)
 
-    if (!force && row && row.fingerprint === chunk.fingerprint) {
+    if (
+      !force &&
+      row &&
+      row.fingerprint === chunk.fingerprint &&
+      row.storageKey === objectKeyFor(chunk)
+    ) {
       toReuse.push({
         rowId: row.id,
         blockId: chunk.blockId,

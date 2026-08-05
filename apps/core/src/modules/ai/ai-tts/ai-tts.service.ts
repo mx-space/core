@@ -245,7 +245,21 @@ export class AiTtsService implements OnModuleInit {
       throw createAppException(AppErrorCode.TTS_SOURCE_NOT_LEXICAL, { lang })
     }
 
-    const plan = planTts({ chunks, existing, force })
+    const voice: TtsVoiceConfig =
+      parent && !force
+        ? { model: parent.model, voice: parent.voice, speed: parent.speed }
+        : input.configuredVoice
+    const objectKeyFor = (chunk: PlannedChunk) =>
+      buildTtsObjectKey({
+        prefix: input.objectKeyPrefix,
+        refId,
+        lang,
+        blockId: chunk.blockId,
+        chunkIndex: chunk.chunkIndex,
+        fingerprint: computeTtsObjectFingerprint(chunk.fingerprint, voice),
+      })
+
+    const plan = planTts({ chunks, existing, force, objectKeyFor })
     const spendChars = plan.toGenerate.reduce(
       (sum, chunk) => sum + chunk.text.length,
       0,
@@ -257,10 +271,6 @@ export class AiTtsService implements OnModuleInit {
       })
     }
 
-    const voice: TtsVoiceConfig =
-      parent && !force
-        ? { model: parent.model, voice: parent.voice, speed: parent.speed }
-        : input.configuredVoice
     const parentBase = {
       ...voice,
       refId,
@@ -286,6 +296,7 @@ export class AiTtsService implements OnModuleInit {
 
     const { displaced, generated } = await this.synthesize(input, {
       existing,
+      objectKeyFor,
       toGenerate: plan.toGenerate,
       ttsId,
       voice,
@@ -331,13 +342,14 @@ export class AiTtsService implements OnModuleInit {
     input: LanguageRunInput,
     work: {
       existing: ExistingBlockRow[]
+      objectKeyFor: (chunk: PlannedChunk) => string
       toGenerate: PlannedChunk[]
       ttsId: string
       voice: TtsVoiceConfig
     },
   ): Promise<{ displaced: TtsStoredObject[]; generated: number }> {
-    const { context, lang, refId } = input
-    const { existing, toGenerate, ttsId, voice } = work
+    const { context } = input
+    const { existing, objectKeyFor, toGenerate, ttsId, voice } = work
 
     const previousByKey = new Map(
       existing.map((row) => [chunkKey(row.blockId, row.chunkIndex), row]),
@@ -368,15 +380,7 @@ export class AiTtsService implements OnModuleInit {
             }),
           )
 
-          const objectKey = buildTtsObjectKey({
-            prefix: input.objectKeyPrefix,
-            refId,
-            lang,
-            blockId: chunk.blockId,
-            chunkIndex: chunk.chunkIndex,
-            fingerprint: computeTtsObjectFingerprint(chunk.fingerprint, voice),
-          })
-          const uploaded = await this.uploadChunk(buffer, objectKey)
+          const uploaded = await this.uploadChunk(buffer, objectKeyFor(chunk))
 
           // planTts leaves a regenerated chunk out of toDelete because the upsert
           // replaces its row, so its old object is only reachable from here.

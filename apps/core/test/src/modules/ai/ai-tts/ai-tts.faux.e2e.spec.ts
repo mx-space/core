@@ -8,6 +8,10 @@ import { toArticleContent } from '~/modules/ai/ai-translation/article-content.ut
 import type { AiTtsRepository } from '~/modules/ai/ai-tts/ai-tts.repository'
 import { AiTtsService } from '~/modules/ai/ai-tts/ai-tts.service'
 import { computeSpeechFingerprint } from '~/modules/ai/ai-tts/tts-block-plan'
+import {
+  buildTtsObjectKey,
+  computeTtsObjectFingerprint,
+} from '~/modules/ai/ai-tts/tts-object-key'
 import type { TaskExecuteContext } from '~/processors/task-queue'
 import { TaskStatus } from '~/processors/task-queue'
 import { computeContentHash } from '~/utils/content.util'
@@ -73,6 +77,25 @@ const translationRow = (overrides: Record<string, unknown> = {}) => {
   }
 }
 
+const PUBLISHED_VOICE = {
+  model: 'published-model',
+  voice: 'published-voice',
+  speed: 1,
+}
+
+const objectKeyUnderVoice = (
+  blockId: string,
+  fingerprint: string,
+  voice = PUBLISHED_VOICE,
+) =>
+  buildTtsObjectKey({
+    refId: '1',
+    lang: 'zh',
+    blockId,
+    chunkIndex: 0,
+    fingerprint: computeTtsObjectFingerprint(fingerprint, voice),
+  })
+
 const blockRow = (
   blockId: string,
   fingerprint: string,
@@ -87,7 +110,7 @@ const blockRow = (
   text: 'previously narrated',
   url: `https://cdn.example.com/${blockId}.mp3`,
   storageBackend: 's3' as const,
-  storageKey: `k/${blockId}`,
+  storageKey: objectKeyUnderVoice(blockId, fingerprint),
   byteSize: 1,
   durationMs: null,
   ...overrides,
@@ -101,9 +124,7 @@ const parentRow = (overrides: Record<string, unknown> = {}) => ({
   lang: 'zh',
   isTranslation: false,
   sourceLang: null,
-  model: 'published-model',
-  voice: 'published-voice',
-  speed: 1,
+  ...PUBLISHED_VOICE,
   format: 'mp3',
   blockOrder: ['blk-a', 'blk-b'],
   charCount: 10,
@@ -309,12 +330,11 @@ describe('ai-tts generation task (faux e2e)', () => {
     expect(generateSpeechMock.mock.calls[0][0].input).toContain('second')
   })
 
-  it('uploads without skipReference so the audio rides the file-reference system', async () => {
+  it('uploads audio with an explicit content-addressed object key', async () => {
     await h.execute({ refId: '1' }, context)
 
     expect(h.fileService.uploadBuffer).toHaveBeenCalledTimes(2)
     for (const [, opts] of h.fileService.uploadBuffer.mock.calls) {
-      expect(opts.skipReference).toBeUndefined()
       expect(opts.type).toBe('audio')
       expect(opts.objectKey).toMatch(
         /^tts\/1\/zh\/blk-[ab]-0-[\da-f]{12}\.mp3$/,
@@ -345,7 +365,10 @@ describe('ai-tts generation task (faux e2e)', () => {
     await h.execute({ refId: '1' }, context)
 
     expect(h.repository.upsertBlock).toHaveBeenCalled()
-    expect(h.fileService.deleteObject).toHaveBeenCalledWith('s3', 'k/gone')
+    expect(h.fileService.deleteObject).toHaveBeenCalledWith(
+      's3',
+      objectKeyUnderVoice('gone', 'fp-x'),
+    )
     expect(h.repository.upsertBlock.mock.invocationCallOrder[0]).toBeLessThan(
       h.fileService.deleteObject.mock.invocationCallOrder[0],
     )
@@ -357,7 +380,10 @@ describe('ai-tts generation task (faux e2e)', () => {
     await h.execute({ refId: '1' }, context)
 
     expect(h.repository.deleteBlocksByIds).toHaveBeenCalledWith([])
-    expect(h.fileService.deleteObject).toHaveBeenCalledWith('s3', 'k/blk-a')
+    expect(h.fileService.deleteObject).toHaveBeenCalledWith(
+      's3',
+      objectKeyUnderVoice('blk-a', 'fp-a-old'),
+    )
     expect(h.repository.upsertBlock.mock.invocationCallOrder[0]).toBeLessThan(
       h.fileService.deleteObject.mock.invocationCallOrder[0],
     )
@@ -583,6 +609,31 @@ describe('ai-tts generation task (faux e2e)', () => {
     expect(generateSpeechMock.mock.calls[0][0].voice).toBe('published-voice')
     expect(h.repository.upsertParent).toHaveBeenCalledWith(
       expect.objectContaining({ model: 'published-model' }),
+    )
+  })
+
+  it('regenerates a row whose object was written under another voice by a crashed force run', async () => {
+    publishedWith([
+      blockRow('blk-a', FP_A, {
+        storageKey: objectKeyUnderVoice('blk-a', FP_A, {
+          model: 'published-model',
+          voice: 'nova',
+          speed: 1,
+        }),
+      }),
+      blockRow('blk-b', FP_B),
+    ])
+
+    await h.execute({ refId: '1' }, context)
+
+    expect(generateSpeechMock).toHaveBeenCalledTimes(1)
+    expect(generateSpeechMock.mock.calls[0][0].input).toContain('first')
+    expect(generateSpeechMock.mock.calls[0][0].voice).toBe('published-voice')
+    expect(h.repository.upsertBlock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        blockId: 'blk-a',
+        storageKey: objectKeyUnderVoice('blk-a', FP_A),
+      }),
     )
   })
 

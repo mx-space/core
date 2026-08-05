@@ -31,6 +31,12 @@ export interface PlanTtsInput {
   chunks: PlannedChunk[]
   existing: ExistingBlockRow[]
   force: boolean
+  /**
+   * The object key this run would write for a chunk. It folds in the run's
+   * voice triple, so comparing it against `row.storageKey` is what stops a
+   * `force` run that died partway from leaving mixed-voice audio behind.
+   */
+  objectKeyFor: (chunk: PlannedChunk) => string
 }
 
 export interface AiTtsRow {
