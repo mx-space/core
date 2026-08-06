@@ -1,4 +1,13 @@
-## [13.20.1](https://github.com/mx-space/core/compare/v13.20.0...v13.20.1) (2026-08-03)
+# [13.21.0](https://github.com/mx-space/core/compare/v13.20.1...v13.21.0) (2026-08-06)
+
+
+### Features
+
+* **ai:** agent-conversation translation pipeline on message engine ([#2782](https://github.com/mx-space/core/issues/2782)) ([42f3e45](https://github.com/mx-space/core/commit/42f3e45335a2b650d2a974a929064cc452640a0e))
+* **ai:** generate covers from unsaved drafts ([b80610e](https://github.com/mx-space/core/commit/b80610ee773024bba30951eafbe3624128493056))
+* reconcile isolated file references ([65736d7](https://github.com/mx-space/core/commit/65736d713be4eaf92717002c7e2a29709563dad6))
+
+## [13.20.1](https://github.com/mx-space/core/compare/v13.20.0...v13.20.1) (2026-08-02)
 
 
 ### Bug Fixes
@@ -10,7 +19,7 @@
 
 * **core:** cut prod boot time via V8 compile cache and lazy imports ([2afacbb](https://github.com/mx-space/core/commit/2afacbbc0cf043c17e8b5e5110ff75c7d76a07a9))
 
-# [13.20.0](https://github.com/mx-space/core/compare/v13.19.0...v13.20.0) (2026-07-30)
+# [13.20.0](https://github.com/mx-space/core/compare/v13.19.0...v13.20.0) (2026-07-29)
 
 
 ### Features
