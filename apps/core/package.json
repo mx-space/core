@@ -22,6 +22,8 @@
     "migrate": "vite-node src/migrate.ts",
     "migrate:app": "cross-env NODE_ENV=development vite-node src/app-migrate.ts",
     "lint:migrations": "tsx --tsconfig tsconfig.json scripts/lint-migrations.ts",
+    "openapi:export": "vite-node scripts/export-openapi.ts",
+    "openapi:check": "cross-env OPENAPI_CHECK=1 vite-node scripts/export-openapi.ts",
     "bench:aggregate-projection": "vite-node scripts/bench-aggregate-projection.ts",
     "bench:translation-prompt": "vite-node scripts/bench-translation-prompt.ts",
     "bundle": "vite build",

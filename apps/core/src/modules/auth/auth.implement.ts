@@ -29,6 +29,12 @@ const isBcryptHash = (value?: string | null) =>
   typeof value === 'string' && bcryptRegex.test(value)
 
 export const MXS_CLI_CLIENT_ID = 'mxs-cli'
+export const SPACE_IOS_CLIENT_ID = 'space-ios'
+
+export const DEVICE_AUTHORIZATION_CLIENT_IDS: ReadonlySet<string> = new Set([
+  MXS_CLI_CLIENT_ID,
+  SPACE_IOS_CLIENT_ID,
+])
 
 const deviceUserCodeAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 const generateDeviceUserCode = customAlphabet(deviceUserCodeAlphabet, 8)
@@ -202,7 +208,7 @@ export async function CreateAuth(
         generateUserCode: () => generateDeviceUserCode(),
         verificationUri: deviceVerificationPath,
         onDeviceAuthRequest: async (clientId) => {
-          if (clientId !== MXS_CLI_CLIENT_ID) {
+          if (!DEVICE_AUTHORIZATION_CLIENT_IDS.has(clientId)) {
             throw new APIError('BAD_REQUEST', {
               error: 'invalid_client',
               error_description: `unsupported client_id: ${clientId}`,

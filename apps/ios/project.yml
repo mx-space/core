@@ -1,0 +1,99 @@
+name: Space
+options:
+  bundleIdPrefix: dev.innei
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+
+packages:
+  SpaceCore:
+    path: Packages/SpaceCore
+  SpaceUI:
+    path: Packages/SpaceUI
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+  Space:
+    type: application
+    platform: iOS
+    sources:
+      - path: Space
+        excludes:
+          - Space.entitlements
+    dependencies:
+      - package: SpaceCore
+      - package: SpaceUI
+    info:
+      path: Space/Info.plist
+      properties:
+        CFBundleDisplayName: Space
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSCameraUsageDescription: Space uses the camera to attach photos to notes and uploads.
+        NSPhotoLibraryUsageDescription: Space reads your photo library to upload images to your own server.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.innei.space
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Space/Space.entitlements
+        # Keychain access needs an `application-identifier` entitlement, which
+        # only gets embedded when the bundle is actually signed. Local ad-hoc
+        # signing is enough for the simulator and for CI.
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGNING_REQUIRED: YES
+        CODE_SIGNING_ALLOWED: YES
+
+  SpaceUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: SpaceUITests
+    dependencies:
+      - target: Space
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.innei.space.uitests
+        TEST_TARGET_NAME: Space
+        GENERATE_INFOPLIST_FILE: YES
+        # Keychain access needs an `application-identifier` entitlement, which
+        # only gets embedded when the bundle is actually signed. Local ad-hoc
+        # signing is enough for the simulator and for CI.
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGNING_REQUIRED: YES
+        CODE_SIGNING_ALLOWED: YES
+
+schemes:
+  Space:
+    build:
+      targets:
+        Space: all
+        SpaceUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      # Expanded from a build-setting override, so `make verify` can point the
+      # suite at any instance without editing the scheme.
+      environmentVariables:
+        SPACE_TEST_SERVER: $(SPACE_TEST_SERVER)
+      targets:
+        - SpaceUITests

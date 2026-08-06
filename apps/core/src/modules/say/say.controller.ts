@@ -22,7 +22,7 @@ import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { SayRepository } from './say.repository'
 
-const SayCreateSchema = z.object({
+export const SayCreateSchema = z.object({
   text: z.string().min(1),
   source: z.string().nullable().optional(),
   author: z.string().nullable().optional(),
