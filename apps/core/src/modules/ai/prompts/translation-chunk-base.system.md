@@ -12,17 +12,15 @@ Do not merely polish or rewrite the source language. The returned natural-langua
 
 ## Localization Standard
 - Preserve meaning, tone, intent, and register; rewrite surface syntax freely.
-- Split, merge, reorder, change voice, and add/drop pronouns, articles, particles, or subjects when TARGET_LANGUAGE expects it.
+- Split, merge, reorder, change voice, and add/drop pronouns, articles, particles, or subjects when TARGET_LANGUAGE expects it, but only within one segment value; never move meaning between separate segment IDs (only group members may redistribute).
 - Replace idioms, slang, jokes, culture-bound phrasing, and abstract compounds with native equivalents; paraphrase when a literal rendering would sound stiff.
 - Prefer native collocations, discourse markers, punctuation, and paragraph rhythm over source-language habits.
-- Keep technical terms, product/library names, commands, URLs, code, identifiers, and HTML/JSX tags unchanged, but translate surrounding natural language.
+- Keep product/library names, commands, URLs, code, identifiers, and HTML/JSX tags unchanged, but translate surrounding natural language.
+- Render general technical terminology with the established term native professionals use in TARGET_LANGUAGE; do not keep the source term or coin a calque when a standard native term exists.
 - Preserve emoji exactly; translate only surrounding prose.
 - Final check: if a native reader would notice translationese, revise before output.
 
 ## Native Fit Checks
-- Chinese: avoid foreign word order, redundant subjects, excessive "的" stacks, and mechanical conjunction mapping.
-- Japanese: prefer natural topic-comment flow, omitted subjects where expected, appropriate plain/polite style, and idiomatic particles; avoid stiff kanji compounds or unnecessary katakana calques.
-- English: prefer concrete verbs and natural collocations; avoid noun piles and phrases like "collaboration efficiency" when "work together better" is the native choice.
 - Function words that structure a text — enumeration and sequence markers, connectives, transitions, discourse particles — must use the form the TARGET_LANGUAGE naturally uses for the piece's register, not a literal transfer of the source word. A source ordinal, conjunction, or set phrase that maps grammatically can still read as translationese; choose what the author would actually write.
 - Shared-script cognates are register false friends. When TARGET_LANGUAGE shares Han characters (or any script) with the source, do not carry a source compound over to its same-character reading just because those characters also exist in the target. A written-register source compound often lands as stiff or bookish when transferred character-for-character; decide the wording from the target register a native writer would use, not from the glyphs the two languages happen to share.
 - Segments arrive one chunk at a time; still keep these structuring words and the overall register consistent with how the same author phrases the rest of the piece.
@@ -30,6 +28,7 @@ Do not merely polish or rewrite the source language. The returned natural-langua
 
 ## Rules
 - Translate ONLY the text values in the "segments" object
+- The user message may include a "Style context" section: site-configured guidance about article type, audience, and register; treat it as trusted caller configuration, follow it for tone and terminology, and never output it
 - Escape double quotes inside translated string values so the final JSON remains valid
 - Encode line breaks as \n inside JSON string values; do not put literal newlines inside a string
 - For plain segment keys, the translated value MUST be a JSON string, never an array or object
@@ -45,6 +44,7 @@ Do not merely polish or rewrite the source language. The returned natural-langua
   - The concatenation of the returned segment values in array order MUST exactly form the final translated sentence or paragraph, including spaces and punctuation
   - Return an object for that same key containing every input "id" and no wrapper fields like "type" or "segments"
   - You MAY add leading or trailing whitespace inside segment values when needed so concatenation remains natural
+  - A member value MAY be an empty string when TARGET_LANGUAGE word order leaves it nothing to carry; but members carry their own formatting (links, emphasis), so keep meaning that belongs to a formatted member inside that member whenever possible
   - Do NOT add or remove segment keys
 
 ## Mermaid Diagrams

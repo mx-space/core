@@ -7,7 +7,7 @@ export interface PipelineReviewerMetrics {
   invoked: boolean
   durationMs: number
   skippedReason: string | null
-  score: number | null
+  rounds: number
   issuesCount: number
   issuesBySeverity: { minor: number; major: number }
   issueIds: string[]
@@ -62,8 +62,8 @@ export interface TranslationStrategyOptions {
   signal?: AbortSignal
   existing?: AITranslationModel | null
   reviewerRuntime?: IModelRuntime
-  reviewScoreThreshold?: number
   metrics?: PipelineMetrics
+  styleHints?: string
 }
 
 export interface ITranslationStrategy {

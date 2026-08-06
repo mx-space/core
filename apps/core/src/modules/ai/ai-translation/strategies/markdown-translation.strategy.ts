@@ -26,7 +26,6 @@ import type {
 } from '../translation-strategy.interface'
 import {
   BaseTranslationStrategy,
-  DEFAULT_REVIEW_SCORE_THRESHOLD,
   emptyEditorMetrics,
   emptyReviewerMetrics,
 } from './base-translation-strategy'
@@ -53,8 +52,8 @@ export class MarkdownTranslationStrategy
       onCost,
       signal,
       reviewerRuntime,
-      reviewScoreThreshold,
       metrics,
+      styleHints,
     } = options
 
     const { systemPrompt, prompt, reasoningEffort } =
@@ -64,6 +63,7 @@ export class MarkdownTranslationStrategy
         subtitle: content.subtitle ?? undefined,
         summary: content.summary ?? undefined,
         tags: content.tags,
+        styleHints,
       })
 
     const messages = [
@@ -163,9 +163,9 @@ export class MarkdownTranslationStrategy
           summary: finalSummary,
           tags: finalTags,
         },
-        reviewScoreThreshold ?? DEFAULT_REVIEW_SCORE_THRESHOLD,
         signal,
         metrics,
+        styleHints,
       )
       finalTitle = reviewed.title
       finalText = reviewed.text
@@ -200,9 +200,9 @@ export class MarkdownTranslationStrategy
       summary: string | null
       tags: string[] | null
     },
-    scoreThreshold: number,
     signal?: AbortSignal,
     metrics?: PipelineMetrics,
+    styleHints?: string,
   ): Promise<{
     title: string
     text: string
@@ -238,9 +238,9 @@ export class MarkdownTranslationStrategy
       reviewerService: this.reviewerService,
       fullTranslations,
       allowedIds,
-      scoreThreshold,
       signal,
       metrics,
+      styleHints,
       applyPatches: (rawPatches) => {
         const paragraphPatches: Record<string, string> = {}
         const patchKeysDropped: string[] = []

@@ -7,6 +7,7 @@ import { extractDocumentContext } from '~/utils/content.util'
 import type { IModelRuntime } from '../../runtime'
 import type { ArticleContent } from '../ai-translation.types'
 import type { AITranslationModel } from '../ai-translation.types-model'
+import { runTranslationAgent } from '../engine/translation-agent'
 import {
   buildReusableTranslationOverlay,
   guardMermaidTranslations,
@@ -33,24 +34,17 @@ import type {
   TranslationResult,
   TranslationStrategyOptions,
 } from '../translation-strategy.interface'
+import type { TranslationUnit } from '../translation-unit.types'
+import {
+  unitsToEntries,
+  unitsToMeta,
+  unitsToSourceMap,
+} from '../translation-unit.types'
 import {
   BaseTranslationStrategy,
-  DEFAULT_REVIEW_SCORE_THRESHOLD,
   emptyEditorMetrics,
   emptyReviewerMetrics,
 } from './base-translation-strategy'
-
-interface TranslationUnit {
-  id: string
-  payload:
-    | string
-    | {
-        type: 'text.group'
-        segments: Array<{ id: string; text: string }>
-      }
-  meta: string
-  memberIds?: string[]
-}
 
 interface LexicalSourceBlockSnapshot {
   id: string
@@ -88,13 +82,12 @@ export class LexicalTranslationStrategy
       signal,
       existing,
       reviewerRuntime,
-      reviewScoreThreshold,
       metrics,
+      styleHints,
     } = options
     const isLexical = content.contentFormat === ContentFormat.Lexical
     const existingBlockSnapshots = existing?.sourceBlockSnapshots as
-      | LexicalSourceBlockSnapshot[]
-      | undefined
+      LexicalSourceBlockSnapshot[] | undefined
     const canIncremental =
       isLexical && existing?.content && existingBlockSnapshots?.length
 
@@ -110,10 +103,10 @@ export class LexicalTranslationStrategy
           onToken,
           signal,
           reviewerRuntime,
-          reviewScoreThreshold,
           metrics,
           push,
           onCost,
+          styleHints,
         )
       } catch (error: any) {
         if (error.name === 'AbortError') throw error
@@ -132,10 +125,10 @@ export class LexicalTranslationStrategy
       onToken,
       signal,
       reviewerRuntime,
-      reviewScoreThreshold,
       metrics,
       push,
       onCost,
+      styleHints,
     )
   }
 
@@ -145,9 +138,10 @@ export class LexicalTranslationStrategy
     reviewerRuntime: IModelRuntime,
     allTranslations: Map<string, string>,
     writtenIds: readonly string[],
-    scoreThreshold: number,
+    sources: Record<string, string>,
     signal?: AbortSignal,
     metrics?: PipelineMetrics,
+    styleHints?: string,
   ): Promise<void> {
     if (writtenIds.length === 0) {
       if (metrics) {
@@ -169,10 +163,11 @@ export class LexicalTranslationStrategy
       reviewerRuntime,
       reviewerService: this.reviewerService,
       fullTranslations,
+      sources,
       allowedIds: writtenIds,
-      scoreThreshold,
       signal,
       metrics,
+      styleHints,
       applyPatches: (rawPatches) => {
         const patchKeysApplied: string[] = []
         const patchKeysDropped: string[] = []
@@ -192,6 +187,56 @@ export class LexicalTranslationStrategy
     })
   }
 
+  private async translateViaAgent(
+    targetLang: string,
+    args: {
+      units: TranslationUnit[]
+      documentContext: string
+      styleHints?: string
+    },
+    allTranslations: Map<string, string>,
+    runtime: IModelRuntime,
+    options: {
+      reviewerRuntime?: IModelRuntime
+      signal?: AbortSignal
+      onToken?: (count?: number) => Promise<void>
+      onCost?: (usd: number) => Promise<void>
+      metrics?: PipelineMetrics
+      push?: TranslationStrategyOptions['push']
+    },
+  ): Promise<string> {
+    const { reviewerRuntime, signal, onToken, onCost, metrics, push } = options
+    const seen = new Set<string>()
+    const result = await runTranslationAgent({
+      targetLang,
+      units: args.units,
+      documentContext: args.documentContext,
+      styleHints: args.styleHints,
+      runtime,
+      reviewerRuntime,
+      signal,
+      onToken,
+      onCost,
+      metrics,
+      onSegments: push
+        ? async (segments) => {
+            for (const [segmentId, value] of Object.entries(segments)) {
+              if (seen.has(segmentId)) continue
+              seen.add(segmentId)
+              await push({
+                type: 'partial',
+                data: { lang: targetLang, segmentId, partial: value },
+              })
+            }
+          }
+        : undefined,
+    })
+    for (const [id, text] of result.translations) {
+      allTranslations.set(id, text)
+    }
+    return result.sourceLang
+  }
+
   private async translateFull(
     content: ArticleContent,
     targetLang: string,
@@ -200,10 +245,10 @@ export class LexicalTranslationStrategy
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
     reviewerRuntime?: IModelRuntime,
-    reviewScoreThreshold?: number,
     metrics?: PipelineMetrics,
     push?: TranslationStrategyOptions['push'],
     onCost?: (usd: number) => Promise<void>,
+    styleHints?: string,
   ): Promise<TranslationResult> {
     const parseResult = parseLexicalForTranslation(content.content!)
     const { segments, propertySegments, editorState } = parseResult
@@ -218,38 +263,51 @@ export class LexicalTranslationStrategy
       ? extractDocumentContext(editorState.root?.children ?? [])
       : content.title
 
-    const writerStart = Date.now()
-    const sourceLang = await this.translateAllUnits(
-      targetLang,
-      {
-        documentContext,
-        units: allUnits,
-      },
-      allTranslations,
-      runtime,
-      onToken,
-      signal,
-      push,
-      targetLang,
-      onCost,
-    )
-    if (metrics) metrics.writerMs = Date.now() - writerStart
-
-    if (reviewerRuntime) {
-      const writtenIds = Array.from(allTranslations.keys())
-      await this.runReviewAndEdit(
+    let sourceLang: string
+    if (typeof runtime.streamMessage === 'function') {
+      sourceLang = await this.translateViaAgent(
         targetLang,
-        runtime,
-        reviewerRuntime,
+        { units: allUnits, documentContext, styleHints },
         allTranslations,
-        writtenIds,
-        reviewScoreThreshold ?? DEFAULT_REVIEW_SCORE_THRESHOLD,
-        signal,
-        metrics,
+        runtime,
+        { reviewerRuntime, signal, onToken, onCost, metrics, push },
       )
-    } else if (metrics) {
-      metrics.reviewer = emptyReviewerMetrics('review-disabled')
-      metrics.editor = emptyEditorMetrics('review-disabled')
+    } else {
+      const writerStart = Date.now()
+      sourceLang = await this.translateAllUnits(
+        targetLang,
+        {
+          documentContext,
+          units: allUnits,
+          styleHints,
+        },
+        allTranslations,
+        runtime,
+        onToken,
+        signal,
+        push,
+        targetLang,
+        onCost,
+      )
+      if (metrics) metrics.writerMs = Date.now() - writerStart
+
+      if (reviewerRuntime) {
+        const writtenIds = Array.from(allTranslations.keys())
+        await this.runReviewAndEdit(
+          targetLang,
+          runtime,
+          reviewerRuntime,
+          allTranslations,
+          writtenIds,
+          unitsToSourceMap(allUnits),
+          signal,
+          metrics,
+          styleHints,
+        )
+      } else if (metrics) {
+        metrics.reviewer = emptyReviewerMetrics('review-disabled')
+        metrics.editor = emptyEditorMetrics('review-disabled')
+      }
     }
 
     guardMermaidTranslations(parseResult, allTranslations, (message) =>
@@ -291,10 +349,10 @@ export class LexicalTranslationStrategy
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
     reviewerRuntime?: IModelRuntime,
-    reviewScoreThreshold?: number,
     metrics?: PipelineMetrics,
     push?: TranslationStrategyOptions['push'],
     onCost?: (usd: number) => Promise<void>,
+    styleHints?: string,
   ): Promise<TranslationResult> {
     const currentBlocks = this.lexicalService.extractRootBlocks(
       content.content!,
@@ -345,9 +403,7 @@ export class LexicalTranslationStrategy
 
     const metaUnits: TranslationUnit[] = []
     const oldMetaHashes = existing.sourceMetaHashes as
-      | SourceMetaHashes
-      | null
-      | undefined
+      SourceMetaHashes | null | undefined
 
     if (!isMetaFieldUnchanged(oldMetaHashes, 'title', content.title)) {
       metaUnits.push({
@@ -443,46 +499,59 @@ export class LexicalTranslationStrategy
     const allUnits = [...metaUnits, ...contentUnits]
     const callContext = contentUnits.length ? documentContext : content.title
 
-    const writerStart = Date.now()
-    const sl = await this.translateAllUnits(
-      targetLang,
-      {
-        documentContext: callContext,
-        units: allUnits,
-      },
-      allTranslations,
-      runtime,
-      onToken,
-      signal,
-      push,
-      targetLang,
-      onCost,
-    )
-    if (metrics) metrics.writerMs = Date.now() - writerStart
-    if (sl) sourceLang = sl
-
-    const writtenIds = Array.from(allTranslations.keys()).filter(
-      (id) => !writtenIdsBeforeCall.has(id),
-    )
-
-    if (reviewerRuntime && writtenIds.length > 0) {
-      await this.runReviewAndEdit(
+    if (typeof runtime.streamMessage === 'function') {
+      const sl = await this.translateViaAgent(
         targetLang,
-        runtime,
-        reviewerRuntime,
+        { units: allUnits, documentContext: callContext, styleHints },
         allTranslations,
-        writtenIds,
-        reviewScoreThreshold ?? DEFAULT_REVIEW_SCORE_THRESHOLD,
+        runtime,
+        { reviewerRuntime, signal, onToken, onCost, metrics, push },
+      )
+      if (sl) sourceLang = sl
+    } else {
+      const writerStart = Date.now()
+      const sl = await this.translateAllUnits(
+        targetLang,
+        {
+          documentContext: callContext,
+          units: allUnits,
+          styleHints,
+        },
+        allTranslations,
+        runtime,
+        onToken,
         signal,
-        metrics,
+        push,
+        targetLang,
+        onCost,
       )
-    } else if (metrics) {
-      metrics.reviewer = emptyReviewerMetrics(
-        reviewerRuntime ? 'full-reuse' : 'review-disabled',
+      if (metrics) metrics.writerMs = Date.now() - writerStart
+      if (sl) sourceLang = sl
+
+      const writtenIds = Array.from(allTranslations.keys()).filter(
+        (id) => !writtenIdsBeforeCall.has(id),
       )
-      metrics.editor = emptyEditorMetrics(
-        reviewerRuntime ? 'full-reuse' : 'review-disabled',
-      )
+
+      if (reviewerRuntime && writtenIds.length > 0) {
+        await this.runReviewAndEdit(
+          targetLang,
+          runtime,
+          reviewerRuntime,
+          allTranslations,
+          writtenIds,
+          unitsToSourceMap(allUnits),
+          signal,
+          metrics,
+          styleHints,
+        )
+      } else if (metrics) {
+        metrics.reviewer = emptyReviewerMetrics(
+          reviewerRuntime ? 'full-reuse' : 'review-disabled',
+        )
+        metrics.editor = emptyEditorMetrics(
+          reviewerRuntime ? 'full-reuse' : 'review-disabled',
+        )
+      }
     }
 
     guardMermaidTranslations(parseResult, allTranslations, (message) =>
@@ -670,14 +739,6 @@ export class LexicalTranslationStrategy
     return units
   }
 
-  private unitsToEntries(units: TranslationUnit[]): Record<string, unknown> {
-    return Object.fromEntries(units.map((unit) => [unit.id, unit.payload]))
-  }
-
-  private unitsToMeta(units: TranslationUnit[]): Record<string, string> {
-    return Object.fromEntries(units.map((unit) => [unit.id, unit.meta]))
-  }
-
   private parseGroupedTranslation(
     translated: unknown,
     memberIds: string[],
@@ -744,6 +805,7 @@ export class LexicalTranslationStrategy
     ctx: {
       documentContext: string
       units: TranslationUnit[]
+      styleHints?: string
     },
     output: Map<string, string>,
     runtime: IModelRuntime,
@@ -797,8 +859,9 @@ export class LexicalTranslationStrategy
       targetLang,
       {
         documentContext,
-        textEntries: this.unitsToEntries(units),
-        segmentMeta: this.unitsToMeta(units),
+        textEntries: unitsToEntries(units),
+        segmentMeta: unitsToMeta(units),
+        styleHints: ctx.styleHints,
       },
       runtime,
       onPartial,
@@ -823,8 +886,9 @@ export class LexicalTranslationStrategy
           targetLang,
           {
             documentContext,
-            textEntries: this.unitsToEntries(retryUnits),
-            segmentMeta: this.unitsToMeta(retryUnits),
+            textEntries: unitsToEntries(retryUnits),
+            segmentMeta: unitsToMeta(retryUnits),
+            styleHints: ctx.styleHints,
           },
           runtime,
           onToken,

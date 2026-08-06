@@ -162,7 +162,6 @@ export const generateDefaultConfig: () => IConfig = () => ({
     translationLangConcurrency: 3,
     enableTranslationReview: false,
     translationReviewModel: undefined,
-    translationReviewScoreThreshold: 85,
     insightsModel: undefined,
     insightsTranslationModel: undefined,
     enableInsights: false,

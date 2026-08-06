@@ -75,6 +75,14 @@ function isIdEvent(event: ArticleEventPayload): event is { id: string } {
 
 const TRANSLATION_LANGUAGE_CONCURRENCY = 3
 
+const ARTICLE_TYPE_STYLE_HINTS: Partial<Record<CollectionRefTypes, string>> = {
+  [CollectionRefTypes.Post]: 'ARTICLE_TYPE: blog post',
+  [CollectionRefTypes.Note]:
+    'ARTICLE_TYPE: personal note (casual, diary-style)',
+  [CollectionRefTypes.Page]:
+    'ARTICLE_TYPE: standalone site page (informational)',
+}
+
 @Injectable()
 export class AiTranslationService
   extends BaseTranslationService
@@ -675,6 +683,17 @@ export class AiTranslationService
     return buildSourceMetaHashes(content)
   }
 
+  private composeStyleHints(
+    aiConfig: { translationStyleHints?: string },
+    refType?: CollectionRefTypes,
+  ): string | undefined {
+    const parts = [
+      aiConfig.translationStyleHints?.trim(),
+      refType ? ARTICLE_TYPE_STYLE_HINTS[refType] : undefined,
+    ].filter(Boolean)
+    return parts.length ? parts.join('\n') : undefined
+  }
+
   private async translateContentStream(
     content: ArticleContent,
     targetLang: string,
@@ -683,17 +702,16 @@ export class AiTranslationService
     signal?: AbortSignal,
     existing?: AITranslationModel | null,
     onCost?: (usd: number) => Promise<void>,
+    refType?: CollectionRefTypes,
   ) {
     const { runtime, info } = await this.aiService.getTranslationModelWithInfo()
     const strategy = this.getStrategy(content.contentFormat)
     const aiConfig = await this.configService.get('ai')
 
     let reviewerRuntime: IModelRuntime | undefined
-    let reviewScoreThreshold: number | undefined
     if (aiConfig.enableTranslationReview) {
       try {
         reviewerRuntime = await this.aiService.getTranslationReviewModel()
-        reviewScoreThreshold = aiConfig.translationReviewScoreThreshold
       } catch (error) {
         this.logger.warn(
           `Translation reviewer runtime resolution failed; review disabled for this run: ${error instanceof Error ? error.message : String(error)}`,
@@ -708,7 +726,7 @@ export class AiTranslationService
       signal,
       existing,
       reviewerRuntime,
-      reviewScoreThreshold,
+      styleHints: this.composeStyleHints(aiConfig, refType),
     })
   }
 
@@ -809,6 +827,7 @@ export class AiTranslationService
           signal,
           existing,
           onCost,
+          refType,
         )
         const { sourceLang } = translated
         const hash = this.computeContentHash(content, sourceLang)

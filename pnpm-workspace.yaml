@@ -117,7 +117,8 @@ minimumReleaseAgeExclude:
   - "@innei/react-tweet@3.4.3"
   - react-router@8.0.0
   - '@codemirror/lang-markdown@6.5.1'
-  - '@earendil-works/pi-ai@0.80.7 || 0.82.0'
+  - '@earendil-works/pi-ai@0.80.7 || 0.82.0 || 0.83.0'
+  - '@earendil-works/pi-agent-core@0.83.0'
   - '@rolldown/binding-android-arm64@1.2.0'
   - '@rolldown/binding-darwin-arm64@1.2.0'
   - '@rolldown/binding-darwin-x64@1.2.0'

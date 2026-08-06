@@ -13,7 +13,10 @@ import {
 
 import { AI_PROMPTS } from '../../ai.prompts'
 import type { IModelRuntime } from '../../runtime'
-import type { TranslationReviewerService } from '../reviewer.service'
+import type {
+  ReviewerOutput,
+  TranslationReviewerService,
+} from '../reviewer.service'
 import type {
   PipelineEditorMetrics,
   PipelineMetrics,
@@ -29,7 +32,8 @@ export function firstValidationFailure(
   return `${first.instancePath || '/'}: ${first.message}`
 }
 
-export const DEFAULT_REVIEW_SCORE_THRESHOLD = 85
+export const DEFAULT_REVIEW_MAX_PASSES = 3
+export const REVIEW_WINDOW_SIZE = 60
 
 export function emptyReviewerMetrics(
   skippedReason: string,
@@ -38,7 +42,7 @@ export function emptyReviewerMetrics(
     invoked: false,
     durationMs: 0,
     skippedReason,
-    score: null,
+    rounds: 0,
     issuesCount: 0,
     issuesBySeverity: { minor: 0, major: 0 },
     issueIds: [],
@@ -63,7 +67,6 @@ export function emptyEditorMetrics(
 export function buildReviewerMetrics(
   durationMs: number,
   review: {
-    score: number
     issues: PipelineReviewerMetrics['issues']
   },
 ): PipelineReviewerMetrics {
@@ -71,7 +74,7 @@ export function buildReviewerMetrics(
     invoked: true,
     durationMs,
     skippedReason: null,
-    score: review.score,
+    rounds: 0,
     issuesCount: review.issues.length,
     issuesBySeverity: {
       minor: review.issues.filter((i) => i.severity === 'minor').length,
@@ -400,6 +403,7 @@ export abstract class BaseTranslationStrategy {
       documentContext: string
       textEntries: Record<string, unknown>
       segmentMeta?: Record<string, string>
+      styleHints?: string
     },
     runtime: IModelRuntime,
     onPartial?: (partial: unknown) => void | Promise<void>,
@@ -507,6 +511,7 @@ export abstract class BaseTranslationStrategy {
       documentContext: string
       textEntries: Record<string, unknown>
       segmentMeta?: Record<string, string>
+      styleHints?: string
     },
     runtime: IModelRuntime,
     onToken?: (count?: number) => Promise<void>,
@@ -607,10 +612,12 @@ export abstract class BaseTranslationStrategy {
     reviewerRuntime: IModelRuntime
     reviewerService: TranslationReviewerService
     fullTranslations: Record<string, string>
+    sources?: Record<string, string>
     allowedIds: readonly string[]
-    scoreThreshold: number
     signal?: AbortSignal
     metrics?: PipelineMetrics
+    styleHints?: string
+    maxReviewPasses?: number
     applyPatches: (patches: Record<string, string>) => {
       patchKeysApplied: string[]
       patchKeysDropped: string[]
@@ -623,94 +630,155 @@ export abstract class BaseTranslationStrategy {
       reviewerRuntime,
       reviewerService,
       fullTranslations,
+      sources,
       allowedIds,
-      scoreThreshold,
       signal,
       metrics,
+      styleHints,
       applyPatches,
     } = opts
+    const maxPasses = opts.maxReviewPasses ?? DEFAULT_REVIEW_MAX_PASSES
 
-    const reviewerStart = Date.now()
-    const review = await reviewerService.callReviewer(
-      reviewerRuntime,
-      targetLang,
-      { allowedIds: [...allowedIds], fullTranslations },
-      signal,
-    )
-    const reviewerMs = Date.now() - reviewerStart
+    const current = { ...fullTranslations }
+    const buildSegments = (ids: readonly string[]) =>
+      Object.fromEntries(
+        ids.map((id) => [
+          id,
+          { source: sources?.[id], target: current[id] ?? '' },
+        ]),
+      )
 
-    if (!review) {
-      this.logger.warn('Reviewer returned null; persisting writer output as-is')
-      if (metrics) {
-        metrics.reviewer = {
-          ...emptyReviewerMetrics('reviewer-failed'),
-          invoked: true,
-          durationMs: reviewerMs,
-        }
-        metrics.editor = emptyEditorMetrics('reviewer-failed')
-      }
-      return
+    const windows: string[][] = []
+    for (let i = 0; i < allowedIds.length; i += REVIEW_WINDOW_SIZE) {
+      windows.push(allowedIds.slice(i, i + REVIEW_WINDOW_SIZE))
     }
 
-    if (review.score >= scoreThreshold || review.issues.length === 0) {
-      this.logger.log(
-        `Review pass: score=${review.score} issues=${review.issues.length}; edit skipped`,
-      )
-      if (metrics) {
-        metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
-        metrics.editor = emptyEditorMetrics(
-          review.issues.length === 0 ? 'empty-issues' : 'score-above-threshold',
+    let reviewerMsTotal = 0
+    let editorMsTotal = 0
+    let editorInvoked = false
+    const requestedKeys: string[] = []
+    const appliedKeys: string[] = []
+    const droppedKeys: string[] = []
+    const appliedPatches: Array<{ id: string; before: string; after: string }> =
+      []
+    let lastReview: ReviewerOutput | null = null
+    let rounds = 0
+
+    for (let pass = 1; pass <= maxPasses; pass++) {
+      const reviewerStart = Date.now()
+      const passIssues: ReviewerOutput['issues'] = []
+      let reviewedWindows = 0
+      for (const windowIds of windows) {
+        const review = await reviewerService.callReviewer(
+          reviewerRuntime,
+          targetLang,
+          {
+            allowedIds: windowIds,
+            segments: buildSegments(windowIds),
+            styleHints,
+          },
+          signal,
+        )
+        if (!review) continue
+        reviewedWindows++
+        passIssues.push(...review.issues)
+      }
+      reviewerMsTotal += Date.now() - reviewerStart
+      rounds = pass
+
+      if (reviewedWindows === 0) {
+        this.logger.warn(
+          `Review pass ${pass}: reviewer failed; keeping current translations`,
+        )
+        break
+      }
+      if (reviewedWindows < windows.length) {
+        this.logger.warn(
+          `Review pass ${pass}: ${windows.length - reviewedWindows}/${windows.length} windows failed; continuing with partial issues`,
         )
       }
-      return
-    }
 
-    const editorStart = Date.now()
-    const editor = await this.callEditor(
-      targetLang,
-      { fullTranslations, issues: review.issues },
-      translatorRuntime,
-      signal,
-    )
-    const editorMs = Date.now() - editorStart
+      const review: ReviewerOutput = { issues: passIssues }
+      lastReview = review
 
-    if (!editor) {
-      this.logger.warn('Editor returned null; persisting writer output as-is')
-      if (metrics) {
-        metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
-        metrics.editor = {
-          ...emptyEditorMetrics('editor-failed'),
-          durationMs: editorMs,
-        }
+      if (review.issues.length === 0) {
+        this.logger.log(`Review pass ${pass}: clean`)
+        break
       }
-      return
-    }
 
-    const patchKeysRequested = Object.keys(editor.patches)
-    const { patchKeysApplied, patchKeysDropped, patches } = applyPatches(
-      editor.patches,
-    )
+      if (pass === maxPasses) {
+        this.logger.warn(
+          `Review pass ${pass}: ${review.issues.length} issues remain after final pass`,
+        )
+        break
+      }
 
-    if (patchKeysDropped.length > 0) {
-      this.logger.warn(
-        `Editor produced ${patchKeysDropped.length} out-of-set patches: ${patchKeysDropped.slice(0, 5).join(', ')}`,
+      const editorStart = Date.now()
+      const editor = await this.callEditor(
+        targetLang,
+        { fullTranslations: current, issues: review.issues, styleHints },
+        translatorRuntime,
+        signal,
+      )
+      editorMsTotal += Date.now() - editorStart
+
+      if (!editor || Object.keys(editor.patches).length === 0) {
+        this.logger.warn(`Edit pass ${pass}: no patches; stopping loop`)
+        break
+      }
+
+      editorInvoked = true
+      requestedKeys.push(...Object.keys(editor.patches))
+      const { patchKeysApplied, patchKeysDropped, patches } = applyPatches(
+        editor.patches,
+      )
+      appliedKeys.push(...patchKeysApplied)
+      droppedKeys.push(...patchKeysDropped)
+      appliedPatches.push(...patches)
+      for (const patch of patches) {
+        current[patch.id] = patch.after
+      }
+
+      if (patchKeysDropped.length > 0) {
+        this.logger.warn(
+          `Edit pass ${pass}: ${patchKeysDropped.length} out-of-set patches: ${patchKeysDropped.slice(0, 5).join(', ')}`,
+        )
+      }
+      if (patchKeysApplied.length === 0) {
+        this.logger.warn(`Edit pass ${pass}: nothing applied; stopping loop`)
+        break
+      }
+      this.logger.log(
+        `Edit pass ${pass}: ${patchKeysApplied.length}/${review.issues.length} issues addressed`,
       )
     }
-    this.logger.log(
-      `Edit applied: ${patchKeysApplied.length}/${review.issues.length} issues addressed`,
-    )
 
     if (metrics) {
-      metrics.reviewer = buildReviewerMetrics(reviewerMs, review)
-      metrics.editor = {
-        invoked: true,
-        durationMs: editorMs,
-        skippedReason: null,
-        patchKeysRequested,
-        patchKeysApplied,
-        patchKeysDropped,
-        patches,
-      }
+      metrics.reviewer = lastReview
+        ? { ...buildReviewerMetrics(reviewerMsTotal, lastReview), rounds }
+        : {
+            ...emptyReviewerMetrics('reviewer-failed'),
+            invoked: rounds > 0,
+            durationMs: reviewerMsTotal,
+            rounds,
+          }
+      metrics.editor = editorInvoked
+        ? {
+            invoked: true,
+            durationMs: editorMsTotal,
+            skippedReason: null,
+            patchKeysRequested: requestedKeys,
+            patchKeysApplied: appliedKeys,
+            patchKeysDropped: droppedKeys,
+            patches: appliedPatches,
+          }
+        : emptyEditorMetrics(
+            lastReview
+              ? lastReview.issues.length === 0
+                ? 'empty-issues'
+                : 'editor-skipped'
+              : 'reviewer-failed',
+          )
     }
   }
 
@@ -724,6 +792,7 @@ export abstract class BaseTranslationStrategy {
         problem: string
         hint?: string
       }>
+      styleHints?: string
     },
     runtime: IModelRuntime,
     signal?: AbortSignal,
