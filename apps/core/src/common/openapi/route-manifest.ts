@@ -1,6 +1,12 @@
 import { z } from 'zod'
 
+import {
+  ActivityRangeSchema,
+  ActivityTopReadingsSchema,
+} from '~/modules/activity/activity.schema'
+import { ActivityViews } from '~/modules/activity/activity.views'
 import { AggregateViews } from '~/modules/aggregate/aggregate.views'
+import { AnalyzeViews } from '~/modules/analyze/analyze.views'
 import {
   BatchCommentStateSchema,
   CommentAdminPagerSchema,
@@ -11,8 +17,6 @@ import {
 import { CommentViews } from '~/modules/comment/comment.views'
 import { ResolveQuerySchema } from '~/modules/enrichment/enrichment.schema'
 import { EnrichmentViews } from '~/modules/enrichment/enrichment.views'
-import { FileUploadSchema } from '~/modules/file/file.schema'
-import { FileViews } from '~/modules/file/file.views'
 import { NoteSchema } from '~/modules/note/note.schema'
 import { NoteViews } from '~/modules/note/note.views'
 import { RecentlySchema } from '~/modules/recently/recently.schema'
@@ -70,6 +74,7 @@ const DeviceErrorSchema = z.object({
 })
 
 const HealthResponseSchema = z.object({ ok: z.boolean() })
+const OneTimeTokenResponseSchema = z.object({ token: z.string() })
 
 export const routeManifest: readonly OpenApiRoute[] = [
   {
@@ -109,6 +114,20 @@ export const routeManifest: readonly OpenApiRoute[] = [
     },
     errorResponse: { name: 'DeviceError', schema: DeviceErrorSchema },
   },
+  {
+    operationId: 'generateWebHandoffToken',
+    method: 'get',
+    path: '/auth/one-time-token/generate',
+    tag: 'auth',
+    summary:
+      'Create a single-use token that transfers the mobile session to Web',
+    auth: true,
+    envelope: false,
+    response: {
+      name: 'OneTimeTokenResponse',
+      schema: OneTimeTokenResponseSchema,
+    },
+  },
 
   {
     operationId: 'getDesk',
@@ -127,6 +146,46 @@ export const routeManifest: readonly OpenApiRoute[] = [
     summary: 'Aggregate counters',
     auth: true,
     response: { name: 'Stat', schema: AggregateViews.stat },
+  },
+  {
+    operationId: 'getAnalyzeAggregate',
+    method: 'get',
+    path: '/analyze/aggregate',
+    tag: 'movement',
+    summary: 'PV and UV series for today, week, and month',
+    auth: true,
+    response: { name: 'AnalyzeAggregate', schema: AnalyzeViews.aggregate },
+  },
+  {
+    operationId: 'getTopReadings',
+    method: 'get',
+    path: '/activity/reading/top',
+    tag: 'movement',
+    summary: 'Most-read content in a rolling day window',
+    auth: true,
+    query: ActivityTopReadingsSchema,
+    response: { name: 'ReadingRank', schema: ActivityViews.readingRank },
+    responseIsArray: true,
+  },
+  {
+    operationId: 'getReadingRank',
+    method: 'get',
+    path: '/activity/reading/rank',
+    tag: 'movement',
+    summary: 'Most-read content in an explicit time range',
+    auth: true,
+    query: ActivityRangeSchema,
+    response: { name: 'ReadingRank', schema: ActivityViews.readingRank },
+    responseIsArray: true,
+  },
+  {
+    operationId: 'getRecentActivities',
+    method: 'get',
+    path: '/activity/recent',
+    tag: 'movement',
+    summary: 'Recent likes and comments across published content',
+    auth: false,
+    response: { name: 'RecentActivities', schema: ActivityViews.recent },
   },
 
   {
@@ -276,31 +335,5 @@ export const routeManifest: readonly OpenApiRoute[] = [
     auth: false,
     query: ResolveQuerySchema,
     response: { name: 'EnrichmentResult', schema: EnrichmentViews.result },
-  },
-
-  {
-    operationId: 'uploadObject',
-    successStatus: 201,
-    method: 'post',
-    path: '/objects/upload',
-    tag: 'files',
-    summary: 'Upload a file',
-    auth: true,
-    query: FileUploadSchema,
-    bodyContentType: 'multipart/form-data',
-    body: {
-      name: 'UploadBody',
-      json: {
-        type: 'object',
-        required: ['file'],
-        properties: {
-          file: {
-            type: 'string',
-            contentMediaType: 'application/octet-stream',
-          },
-        },
-      },
-    },
-    response: { name: 'UploadResult', schema: FileViews.uploadResult },
   },
 ] as const

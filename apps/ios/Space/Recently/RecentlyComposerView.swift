@@ -6,16 +6,29 @@ struct RecentlyComposerView: View {
     @Environment(\.dismiss) private var dismiss
 
     let service: RecentlyService
+    let navigationTitle: String
     /// Returns nil on success, or a message to show in place.
-    let onPost: (String) async -> String?
+    let onSave: (String) async -> String?
 
-    @State private var text = ""
+    @State private var text: String
     @State private var preview: MediaCard?
     @State private var previewedURL: String?
     @State private var isResolving = false
     @State private var isPosting = false
     @State private var postFailure: String?
     @State private var previewTask: Task<Void, Never>?
+
+    init(
+        service: RecentlyService,
+        initialText: String = "",
+        navigationTitle: String = "New Recently",
+        onSave: @escaping (String) async -> String?
+    ) {
+        self.service = service
+        self.navigationTitle = navigationTitle
+        self.onSave = onSave
+        _text = State(initialValue: initialText)
+    }
 
     var body: some View {
         NavigationStack {
@@ -42,14 +55,14 @@ struct RecentlyComposerView: View {
                 Spacer()
             }
             .padding(Spacing.regular)
-            .navigationTitle("New entry")
+            .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Post", action: post)
+                    Button("Save", action: post)
                         .disabled(trimmed.isEmpty || isPosting)
                         .accessibilityIdentifier("recently.composer.post")
                 }
@@ -129,7 +142,7 @@ struct RecentlyComposerView: View {
         postFailure = nil
         Task {
             defer { isPosting = false }
-            if let failure = await onPost(trimmed) {
+            if let failure = await onSave(trimmed) {
                 postFailure = failure
             } else {
                 dismiss()

@@ -51,6 +51,21 @@ final class RecentlyStore {
         }
     }
 
+    func save(id: String?, content: String) async -> String? {
+        do {
+            if let id {
+                _ = try await service.update(id: id, content: content)
+            } else {
+                _ = try await service.create(content: content)
+            }
+            await reload()
+            return nil
+        } catch {
+            errorMessage = error.localizedDescription
+            return error.localizedDescription
+        }
+    }
+
     func delete(id: String) async {
         let snapshot = entries
         entries.removeAll { $0.id == id }

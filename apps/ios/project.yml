@@ -45,8 +45,6 @@ targets:
                 UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
-        NSCameraUsageDescription: Space uses the camera to attach photos to notes and uploads.
-        NSPhotoLibraryUsageDescription: Space reads your photo library to upload images to your own server.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.innei.space

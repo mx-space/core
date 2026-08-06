@@ -13,7 +13,12 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { APIError, createAuthMiddleware } from 'better-auth/api'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { toNodeHandler } from 'better-auth/node'
-import { bearer, deviceAuthorization, username } from 'better-auth/plugins'
+import {
+  bearer,
+  deviceAuthorization,
+  oneTimeToken,
+  username,
+} from 'better-auth/plugins'
 import { and, eq } from 'drizzle-orm'
 import { customAlphabet } from 'nanoid'
 import wcmatch from 'wildcard-match'
@@ -197,6 +202,10 @@ export async function CreateAuth(
         },
       } as PasskeyOptions),
       bearer(),
+      oneTimeToken({
+        expiresIn: 1,
+        storeToken: 'hashed',
+      }),
       username({
         usernameValidator: validateMxUsername,
       }),

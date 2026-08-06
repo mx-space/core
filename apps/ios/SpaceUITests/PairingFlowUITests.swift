@@ -7,6 +7,7 @@ import XCTest
 ///
 /// Set `SPACE_TEST_SERVER` to the instance address; the test is skipped when
 /// it is absent so the suite stays green on machines without a server.
+@MainActor
 final class PairingFlowUITests: XCTestCase {
     private var serverAddress: String? {
         ProcessInfo.processInfo.environment["SPACE_TEST_SERVER"]
@@ -33,7 +34,7 @@ final class PairingFlowUITests: XCTestCase {
         XCTAssertEqual(code.label.count, 8, "expected an eight character user code")
 
         // The external approver has up to a minute to notice the pending code.
-        let dashboard = app.otherElements["dashboard.counters"]
+        let dashboard = app.descendants(matching: .any)["dashboard.counters"]
         XCTAssertTrue(
             dashboard.waitForExistence(timeout: 90),
             "pairing never completed — dashboard counters never rendered"
@@ -41,7 +42,53 @@ final class PairingFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Needs attention"].exists)
 
+        capture(app, name: "dashboard")
+
+        try assertMovementSurface(app)
+        try assertCommentsSurface(app)
+
         try assertRecentlySurface(app)
+        try assertWebHandoff(app)
+    }
+
+    private func assertMovementSurface(_ app: XCUIApplication) throws {
+        app.buttons["tab.movement"].tap()
+
+        XCTAssertTrue(
+            app.otherElements["movement.chart"].waitForExistence(timeout: 20),
+            "movement chart never rendered"
+        )
+        XCTAssertTrue(app.staticTexts["Top content"].exists)
+        capture(app, name: "movement")
+    }
+
+    private func assertCommentsSurface(_ app: XCUIApplication) throws {
+        app.buttons["tab.comments"].tap()
+
+        let list = app.collectionViews["comments.list"]
+        XCTAssertTrue(
+            list.waitForExistence(timeout: 20),
+            "comments list never rendered"
+        )
+        let filter = app.segmentedControls["comments.filter"]
+        XCTAssertTrue(filter.exists)
+        let all = filter.buttons.element(boundBy: 3)
+        XCTAssertTrue(all.exists, "All comments filter is missing")
+        all.tap()
+        let firstComment = list.cells.firstMatch
+        XCTAssertTrue(
+            firstComment.waitForExistence(timeout: 20),
+            "All comments filter did not render its rows"
+        )
+        capture(app, name: "comments")
+
+        firstComment.tap()
+        XCTAssertTrue(
+            app.textFields["comments.reply"].waitForExistence(timeout: 20),
+            "comment detail and reply composer never rendered"
+        )
+        capture(app, name: "comment-detail")
+        app.navigationBars.buttons.firstMatch.tap()
     }
 
     /// Composes an entry with a mid-sentence link, proves the composer resolves
@@ -67,10 +114,7 @@ final class PairingFlowUITests: XCTestCase {
             "composer never previewed the enrichment for an inline link"
         )
 
-        let composerShot = XCTAttachment(screenshot: app.screenshot())
-        composerShot.name = "composer"
-        composerShot.lifetime = .keepAlways
-        add(composerShot)
+        capture(app, name: "composer")
 
         // The link cannot be cardified where it sits, so the fix must be offered.
         let fix = app.buttons["recently.composer.isolateLink"]
@@ -91,9 +135,37 @@ final class PairingFlowUITests: XCTestCase {
             "the posted entry rendered without its media card"
         )
 
-        let listShot = XCTAttachment(screenshot: app.screenshot())
-        listShot.name = "recently"
-        listShot.lifetime = .keepAlways
-        add(listShot)
+        capture(app, name: "recently")
+    }
+
+    private func assertWebHandoff(_ app: XCUIApplication) throws {
+        app.buttons["tab.dashboard"].tap()
+
+        let dashboard = app.scrollViews["dashboard.scroll"]
+        let files = app.buttons["dashboard.web.files"]
+        for _ in 0..<3 where !files.isHittable {
+            dashboard.swipeUp()
+        }
+        XCTAssertTrue(files.waitForExistence(timeout: 10), "Files Web entry is missing")
+        files.tap()
+
+        XCTAssertTrue(
+            app.webViews.firstMatch.waitForExistence(timeout: 30),
+            "authenticated Web handoff did not open the admin page"
+        )
+        capture(app, name: "web-handoff")
+        let close = app.buttons["Close"]
+        XCTAssertTrue(
+            close.waitForExistence(timeout: 10),
+            "Safari handoff controller did not expose its close control"
+        )
+        close.tap()
+    }
+
+    private func capture(_ app: XCUIApplication, name: String) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }

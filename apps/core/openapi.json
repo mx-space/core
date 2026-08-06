@@ -25,10 +25,10 @@
       "name": "dashboard"
     },
     {
-      "name": "files"
+      "name": "health"
     },
     {
-      "name": "health"
+      "name": "movement"
     },
     {
       "name": "recently"
@@ -192,6 +192,53 @@
         }
       }
     },
+    "/auth/one-time-token/generate": {
+      "get": {
+        "operationId": "generateWebHandoffToken",
+        "summary": "Create a single-use token that transfers the mobile session to Web",
+        "tags": [
+          "auth"
+        ],
+        "parameters": [],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OneTimeTokenResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/aggregate/desk": {
       "get": {
         "operationId": "getDesk",
@@ -276,6 +323,294 @@
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/Stat"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ResponseMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analyze/aggregate": {
+      "get": {
+        "operationId": "getAnalyzeAggregate",
+        "summary": "PV and UV series for today, week, and month",
+        "tags": [
+          "movement"
+        ],
+        "parameters": [],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AnalyzeAggregate"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ResponseMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/activity/reading/top": {
+      "get": {
+        "operationId": "getTopReadings",
+        "summary": "Most-read content in a rolling day window",
+        "tags": [
+          "movement"
+        ],
+        "parameters": [
+          {
+            "name": "top",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 5,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 14,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ReadingRank"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ResponseMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/activity/reading/rank": {
+      "get": {
+        "operationId": "getReadingRank",
+        "summary": "Most-read content in an explicit time range",
+        "tags": [
+          "movement"
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ReadingRank"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ResponseMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/activity/recent": {
+      "get": {
+        "operationId": "getRecentActivities",
+        "summary": "Recent likes and comments across published content",
+        "tags": [
+          "movement"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/RecentActivities"
                     },
                     "meta": {
                       "$ref": "#/components/schemas/ResponseMeta"
@@ -1326,90 +1661,6 @@
           }
         }
       }
-    },
-    "/objects/upload": {
-      "post": {
-        "operationId": "uploadObject",
-        "summary": "Upload a file",
-        "tags": [
-          "files"
-        ],
-        "parameters": [
-          {
-            "name": "type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "icon",
-                "file",
-                "avatar",
-                "image",
-                "video"
-              ]
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/UploadBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/UploadResult"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/ResponseMeta"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -1572,6 +1823,18 @@
           "access_token",
           "token_type",
           "expires_in"
+        ],
+        "additionalProperties": false
+      },
+      "OneTimeTokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
         ],
         "additionalProperties": false
       },
@@ -1788,6 +2051,280 @@
           "call_time",
           "uv",
           "today_ip_access_count"
+        ],
+        "additionalProperties": {}
+      },
+      "AnalyzeAggregate": {
+        "type": "object",
+        "properties": {
+          "months": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "enum": [
+                    "ip",
+                    "pv"
+                  ]
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "date": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "value",
+                "date"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "count",
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "today": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "enum": [
+                    "ip",
+                    "pv"
+                  ]
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "hour": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "value",
+                "hour"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "today_ips": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "total": {
+            "type": "object",
+            "properties": {
+              "call_time": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "uv": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "call_time",
+              "uv"
+            ],
+            "additionalProperties": false
+          },
+          "weeks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "enum": [
+                    "ip",
+                    "pv"
+                  ]
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "day": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "value",
+                "day"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "months",
+          "paths",
+          "today",
+          "today_ips",
+          "total",
+          "weeks"
+        ],
+        "additionalProperties": false
+      },
+      "ReadingRank": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "ref": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "nid": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "slug": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "ref_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "ref_id"
+        ],
+        "additionalProperties": false
+      },
+      "RecentActivities": {
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "author": {
+                  "type": "string"
+                },
+                "avatar": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "nid": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "author",
+                "created_at",
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "like": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "nid": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "created_at",
+                "id"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "comment",
+          "like"
         ],
         "additionalProperties": {}
       },
@@ -2870,34 +3407,6 @@
           "created_at"
         ],
         "additionalProperties": {}
-      },
-      "UploadBody": {
-        "type": "object",
-        "required": [
-          "file"
-        ],
-        "properties": {
-          "file": {
-            "type": "string",
-            "contentMediaType": "application/octet-stream"
-          }
-        }
-      },
-      "UploadResult": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "url",
-          "name"
-        ],
-        "additionalProperties": false
       }
     },
     "securitySchemes": {

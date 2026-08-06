@@ -142,4 +142,23 @@ import Testing
         try await service.delete(id: "1")
         #expect(transport.remainingCount == 0)
     }
+
+    @Test func updateSendsTheEditedContentToTheSelectedEntry() async throws {
+        let (service, transport) = makeService([
+            .init(
+                status: .ok,
+                json: #"{"data":{"id":"1","content":"edited","type":"text","metadata":null,"ref_type":null,"ref_id":null,"comments_index":0,"allow_comment":true,"up":0,"down":0,"created_at":"2026-08-04T19:06:00Z","modified_at":"2026-08-07T03:00:00Z","enrichments":{}}}"#
+            ),
+        ])
+
+        let entry = try await service.update(id: "1", content: "edited")
+        let body = try #require(transport.requestBodies.first?.data(using: .utf8))
+        let object = try #require(
+            JSONSerialization.jsonObject(with: body) as? [String: String]
+        )
+
+        #expect(entry.content == "edited")
+        #expect(object["content"] == "edited")
+        #expect(transport.requestPaths.first?.contains("/recently/1") == true)
+    }
 }

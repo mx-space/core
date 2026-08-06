@@ -27,10 +27,6 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSCameraUsageDescription</key>
-	<string>Space uses the camera to attach photos to notes and uploads.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Space reads your photo library to upload images to your own server.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

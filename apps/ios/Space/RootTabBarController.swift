@@ -5,6 +5,9 @@ import UIKit
 
 final class RootTabBarController: UITabBarController {
     private let client: SpaceClient
+    private lazy var webCoordinator = WebHandoffCoordinator(
+        service: WebHandoffService(spaceClient: client)
+    )
 
     init(client: SpaceClient) {
         self.client = client
@@ -27,35 +30,82 @@ final class RootTabBarController: UITabBarController {
                 identifier: "tab.dashboard"
             ),
             wrap(
-                RecentlyViewController(service: RecentlyService(spaceClient: client)),
+                makeMovement(),
+                title: "Movement",
+                systemImage: "waveform.path.ecg",
+                identifier: "tab.movement"
+            ),
+            wrap(
+                RecentlyViewController(
+                    service: RecentlyService(spaceClient: client),
+                    openWeb: { [weak self] controller in
+                        self?.webCoordinator.open(.recently, from: controller)
+                    }
+                ),
                 title: "Recently",
                 systemImage: "text.bubble",
                 identifier: "tab.recently"
             ),
             wrap(
-                PlaceholderViewController(title: "Comments"),
+                CommentsViewController(
+                    service: CommentService(spaceClient: client),
+                    openWeb: { [weak self] controller in
+                        self?.webCoordinator.open(.comments, from: controller)
+                    }
+                ),
                 title: "Comments",
                 systemImage: "bubble.left.and.bubble.right",
                 identifier: "tab.comments"
-            ),
-            wrap(
-                PlaceholderViewController(title: "Files"),
-                title: "Files",
-                systemImage: "folder",
-                identifier: "tab.files"
             ),
         ]
     }
 
     private func makeDashboard() -> UIViewController {
         let store = DashboardStore(service: DashboardService(spaceClient: client))
-        let controller = UIHostingController(rootView: DashboardView(store: store))
-        controller.title = "Dashboard"
-        controller.navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Unpair",
-            primaryAction: UIAction { _ in AppContainer.shared.unpair() }
+        let controller = UIHostingController(
+            rootView: DashboardView(
+                store: store,
+                openWeb: { [weak self] target in
+                    guard let self, let presenter = self.selectedViewController else { return }
+                    self.webCoordinator.open(target, from: presenter)
+                },
+                selectTab: { [weak self] index in self?.selectedIndex = index }
+            )
         )
+        controller.title = "Dashboard"
+        controller.navigationItem.rightBarButtonItem = siteMenu(for: controller)
         return controller
+    }
+
+    private func makeMovement() -> UIViewController {
+        let store = MovementStore(service: MovementService(spaceClient: client))
+        let controller = UIHostingController(
+            rootView: MovementView(store: store) { [weak self] in
+                guard let self, let presenter = self.selectedViewController else { return }
+                self.webCoordinator.open(.analytics, from: presenter)
+            }
+        )
+        controller.title = "Movement"
+        controller.navigationItem.rightBarButtonItem = siteMenu(for: controller)
+        return controller
+    }
+
+    private func siteMenu(for presenter: UIViewController) -> UIBarButtonItem {
+        let menu = UIMenu(children: [
+            UIAction(title: "Open Web Admin", image: UIImage(systemName: "safari")) {
+                [weak self, weak presenter] _ in
+                guard let self, let presenter else { return }
+                self.webCoordinator.open(.admin, from: presenter)
+            },
+            UIAction(
+                title: "Unpair",
+                image: UIImage(systemName: "rectangle.portrait.and.arrow.right"),
+                attributes: .destructive
+            ) { _ in AppContainer.shared.unpair() },
+        ])
+        let item = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
+        item.accessibilityLabel = "Site menu"
+        return item
     }
 
     private func wrap(
@@ -73,21 +123,5 @@ final class RootTabBarController: UITabBarController {
         )
         navigation.tabBarItem.accessibilityIdentifier = identifier
         return navigation
-    }
-}
-
-final class PlaceholderViewController: UIViewController {
-    init(title: String) {
-        super.init(nibName: nil, bundle: nil)
-        self.title = title
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        navigationItem.largeTitleDisplayMode = .always
     }
 }

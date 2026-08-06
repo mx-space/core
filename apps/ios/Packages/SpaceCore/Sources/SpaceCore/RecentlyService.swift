@@ -41,6 +41,23 @@ public struct RecentlyService: Sendable {
         }
     }
 
+    public func update(id: String, content: String) async throws -> RecentlyDetail {
+        let input = Operations.UpdateRecently.Input(
+            path: .init(id: id),
+            body: .json(.init(content: content))
+        )
+        switch try await client.updateRecently(input) {
+        case let .ok(response):
+            return try response.body.json.data
+        case let .clientError(status, response):
+            throw SpaceError(envelope: try response.body.json, status: status)
+        case let .serverError(status, response):
+            throw SpaceError(envelope: try response.body.json, status: status)
+        case let .undocumented(statusCode, _):
+            throw SpaceError.undocumented(statusCode)
+        }
+    }
+
     public func delete(id: String) async throws {
         switch try await client.deleteRecently(.init(path: .init(id: id))) {
         case .noContent:

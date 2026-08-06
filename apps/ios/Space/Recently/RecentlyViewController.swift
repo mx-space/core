@@ -8,15 +8,17 @@ final class RecentlyViewController: UIViewController {
 
     private let store: RecentlyStore
     private let service: RecentlyService
+    private let openWeb: (UIViewController) -> Void
 
     private var collectionView: UICollectionView!
     private var dataSource: UICollectionViewDiffableDataSource<Section, String>!
     private let refreshControl = UIRefreshControl()
     private var observation: NSKeyValueObservation?
 
-    init(service: RecentlyService) {
+    init(service: RecentlyService, openWeb: @escaping (UIViewController) -> Void) {
         self.service = service
         self.store = RecentlyStore(service: service)
+        self.openWeb = openWeb
         super.init(nibName: nil, bundle: nil)
         title = "Recently"
     }
@@ -33,6 +35,14 @@ final class RecentlyViewController: UIViewController {
             primaryAction: UIAction { [weak self] _ in self?.presentComposer() }
         )
         navigationItem.rightBarButtonItem?.accessibilityIdentifier = "recently.compose"
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "safari"),
+            primaryAction: UIAction { [weak self] _ in
+                guard let self else { return }
+                self.openWeb(self)
+            }
+        )
+        navigationItem.leftBarButtonItem?.accessibilityLabel = "Open Recently on Web"
 
         configureCollectionView()
         Task { await reload() }
@@ -58,6 +68,7 @@ final class RecentlyViewController: UIViewController {
         )
         collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         collectionView.accessibilityIdentifier = "recently.list"
+        collectionView.delegate = self
         collectionView.refreshControl = refreshControl
         refreshControl.addAction(
             UIAction { [weak self] _ in Task { await self?.reload() } },
@@ -110,12 +121,31 @@ final class RecentlyViewController: UIViewController {
     }
 
     private func presentComposer() {
-        let composer = RecentlyComposerView(service: service) { [weak self] content in
+        presentComposer(entry: nil)
+    }
+
+    private func presentComposer(entry: RecentlyCard?) {
+        let composer = RecentlyComposerView(
+            service: service,
+            initialText: entry?.content ?? "",
+            navigationTitle: entry == nil ? "New Recently" : "Edit Recently"
+        ) { [weak self] content in
             guard let self else { return "Composer lost its list" }
-            let failure = await store.post(content)
+            let failure = await store.save(id: entry?.id, content: content)
             if failure == nil { applySnapshot() }
             return failure
         }
         present(UIHostingController(rootView: composer), animated: true)
+    }
+}
+
+extension RecentlyViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        collectionView.deselectItem(at: indexPath, animated: true)
+        guard
+            let id = dataSource.itemIdentifier(for: indexPath),
+            let entry = store.entries.first(where: { $0.id == id })
+        else { return }
+        presentComposer(entry: entry)
     }
 }
