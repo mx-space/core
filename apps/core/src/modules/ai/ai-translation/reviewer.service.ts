@@ -17,7 +17,6 @@ export interface ReviewerIssue {
 }
 
 export interface ReviewerOutput {
-  score: number
   issues: ReviewerIssue[]
 }
 
@@ -74,7 +73,8 @@ export class TranslationReviewerService {
     targetLang: string,
     payload: {
       allowedIds: string[]
-      fullTranslations: Record<string, string>
+      segments: Record<string, { source?: string; target: string }>
+      styleHints?: string
     },
     signal?: AbortSignal,
   ): Promise<ReviewerOutput | null> {
@@ -162,9 +162,6 @@ export class TranslationReviewerService {
       return true
     })
 
-    return {
-      score: Math.max(0, Math.min(100, Math.round(review.score))),
-      issues: filteredIssues,
-    }
+    return { issues: filteredIssues }
   }
 }

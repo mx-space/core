@@ -52,7 +52,7 @@ describe('ai-language.util', () => {
   describe('getLanguageName', () => {
     it('should return full language name for known codes', () => {
       expect(getLanguageName('en')).toBe('English')
-      expect(getLanguageName('zh')).toBe('Chinese')
+      expect(getLanguageName('zh')).toBe('Simplified Chinese')
       expect(getLanguageName('ja')).toBe('Japanese')
       expect(getLanguageName('ko')).toBe('Korean')
     })

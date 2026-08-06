@@ -1,13 +1,12 @@
 [
   {
     "name": "happy-empty-issues",
-    "value": { "score": 95, "issues": [] },
+    "value": { "issues": [] },
     "expected": true
   },
   {
     "name": "happy-with-issues",
     "value": {
-      "score": 70,
       "issues": [
         {
           "id": "seg-1",
@@ -26,41 +25,30 @@
   },
   {
     "name": "missing-issues",
-    "value": { "score": 80 },
+    "value": {},
     "expected": false
   },
   {
     "name": "bad-severity",
     "value": {
-      "score": 50,
-      "issues": [
-        { "id": "x", "severity": "critical", "problem": "p" }
-      ]
+      "issues": [{ "id": "x", "severity": "critical", "problem": "p" }]
     },
     "expected": false
   },
   {
-    "name": "score-out-of-range",
-    "value": { "score": 150, "issues": [] },
+    "name": "legacy-score-shape",
+    "value": { "score": 88, "issues": [] },
     "expected": false
   },
   {
-    "name": "score-non-integer",
-    "value": { "score": 50.5, "issues": [] },
+    "name": "issues-not-array",
+    "value": { "issues": { "id": "x" } },
     "expected": false
   },
   {
-    "name": "extra-key-on-issue",
+    "name": "issue-missing-problem",
     "value": {
-      "score": 80,
-      "issues": [
-        {
-          "id": "a",
-          "severity": "minor",
-          "problem": "p",
-          "rewrite": "no"
-        }
-      ]
+      "issues": [{ "id": "x", "severity": "minor" }]
     },
     "expected": false
   }

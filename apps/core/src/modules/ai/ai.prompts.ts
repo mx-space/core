@@ -21,12 +21,19 @@ import SLUG_SYSTEM from './prompts/slug.system.md?raw'
 import SUMMARY_TEMPLATE from './prompts/summary.system.md?raw'
 import SUMMARY_STREAM_TEMPLATE from './prompts/summary-stream.system.md?raw'
 import TITLE_AND_SLUG_SYSTEM from './prompts/title-and-slug.system.md?raw'
+import TRANSLATION_AGENT_LOOP from './prompts/translation-agent-loop.partial.md?raw'
 import TRANSLATION_BASE from './prompts/translation-base.system.md?raw'
 import TRANSLATION_CHUNK_BASE from './prompts/translation-chunk-base.system.md?raw'
 import TRANSLATION_CHUNK_JAPANESE_RUBY from './prompts/translation-chunk-japanese-ruby.partial.md?raw'
+import TRANSLATION_CHUNK_LANG_EN from './prompts/translation-chunk-lang-en.partial.md?raw'
+import TRANSLATION_CHUNK_LANG_JA from './prompts/translation-chunk-lang-ja.partial.md?raw'
+import TRANSLATION_CHUNK_LANG_ZH from './prompts/translation-chunk-lang-zh.partial.md?raw'
 import TRANSLATION_EDITOR_SYSTEM from './prompts/translation-editor.system.md?raw'
 import TRANSLATION_INPUT_FORMAT from './prompts/translation-input-format.partial.md?raw'
 import TRANSLATION_JAPANESE_RUBY from './prompts/translation-japanese-ruby.partial.md?raw'
+import TRANSLATION_LANG_EN from './prompts/translation-lang-en.partial.md?raw'
+import TRANSLATION_LANG_JA from './prompts/translation-lang-ja.partial.md?raw'
+import TRANSLATION_LANG_ZH from './prompts/translation-lang-zh.partial.md?raw'
 import TRANSLATION_OUTPUT_FORMAT from './prompts/translation-output-format.partial.md?raw'
 import TRANSLATION_REVIEWER_SYSTEM from './prompts/translation-reviewer.system.md?raw'
 import TRANSLATION_STREAM_REMINDER from './prompts/translation-stream-reminder.partial.md?raw'
@@ -65,10 +72,27 @@ const buildInsightsSystem = (isStream: boolean) =>
     ? `${INSIGHTS_BASE.trimEnd()}${INSIGHTS_STREAM_REMINDER}`
     : INSIGHTS_BASE
 
-const buildTranslationSystem = (isJapanese: boolean, isStream: boolean) => {
+const TRANSLATION_LANG_PARTIALS: Record<string, string> = {
+  zh: TRANSLATION_LANG_ZH,
+  ja: TRANSLATION_LANG_JA,
+  en: TRANSLATION_LANG_EN,
+}
+
+const TRANSLATION_CHUNK_LANG_PARTIALS: Record<string, string> = {
+  zh: TRANSLATION_CHUNK_LANG_ZH,
+  ja: TRANSLATION_CHUNK_LANG_JA,
+  en: TRANSLATION_CHUNK_LANG_EN,
+}
+
+const buildTranslationSystem = (targetLang: string, isStream: boolean) => {
   let system = TRANSLATION_BASE.trimEnd()
 
-  if (isJapanese) {
+  const langPartial = TRANSLATION_LANG_PARTIALS[targetLang]
+  if (langPartial) {
+    system += langPartial.trimEnd()
+  }
+
+  if (targetLang === 'ja') {
     system += TRANSLATION_JAPANESE_RUBY.trimEnd()
   }
 
@@ -90,9 +114,20 @@ const buildTranslationPrompt = (
     subtitle?: string
     summary?: string
     tags?: string[]
+    styleHints?: string
   },
 ) => {
-  let prompt = `TARGET_LANGUAGE: ${targetLanguage}
+  let prompt = `TARGET_LANGUAGE: ${targetLanguage}`
+
+  if (content.styleHints) {
+    prompt += `
+
+<<<STYLE_CONTEXT
+${content.styleHints}
+STYLE_CONTEXT`
+  }
+
+  prompt += `
 
 <<<TITLE
 ${content.title}
@@ -128,12 +163,19 @@ TAGS`
   return prompt
 }
 
-const buildTranslationChunkSystem = (isJapanese: boolean) => {
-  if (!isJapanese) {
-    return TRANSLATION_CHUNK_BASE
+const buildTranslationChunkSystem = (targetLang: string) => {
+  let system = TRANSLATION_CHUNK_BASE.trimEnd()
+
+  const langPartial = TRANSLATION_CHUNK_LANG_PARTIALS[targetLang]
+  if (langPartial) {
+    system += langPartial.trimEnd()
   }
 
-  return `${TRANSLATION_CHUNK_BASE.trimEnd()}${TRANSLATION_CHUNK_JAPANESE_RUBY}`
+  if (targetLang === 'ja') {
+    system += TRANSLATION_CHUNK_JAPANESE_RUBY
+  }
+
+  return system
 }
 
 const buildTranslationChunkPrompt = (
@@ -142,12 +184,20 @@ const buildTranslationChunkPrompt = (
     documentContext: string
     textEntries: Record<string, unknown>
     segmentMeta?: Record<string, string>
+    styleHints?: string
   },
 ) => {
   let prompt = `TARGET_LANGUAGE: ${targetLanguage}
 
 ## Document context (for semantic reference, DO NOT output this)
 ${chunk.documentContext}`
+
+  if (chunk.styleHints) {
+    prompt += `
+
+## Style context (DO NOT output this)
+${chunk.styleHints}`
+  }
 
   if (chunk.segmentMeta && Object.keys(chunk.segmentMeta).length > 0) {
     prompt += `
@@ -164,7 +214,30 @@ ${JSON.stringify(chunk.textEntries)}`
   return prompt
 }
 
-const buildTranslationChunkSchema = (textEntries: Record<string, unknown>) => {
+const stripMarkedBlock = (text: string, marker: string) =>
+  text.replace(
+    new RegExp(`<!-- ${marker}-START -->[\\s\\S]*?<!-- ${marker}-END -->\\n?`),
+    '',
+  )
+
+const stripMarkers = (text: string) =>
+  text.replaceAll(/<!-- [A-Z-]+-(?:START|END) -->\n?/g, '')
+
+const buildTranslationAgentSystem = (
+  targetLang: string,
+  opts: { reviewEnabled: boolean },
+) => {
+  const partial = stripMarkers(
+    opts.reviewEnabled
+      ? stripMarkedBlock(TRANSLATION_AGENT_LOOP, 'NO-REVIEW')
+      : stripMarkedBlock(TRANSLATION_AGENT_LOOP, 'REVIEW-OBLIGATION'),
+  )
+  return buildTranslationChunkSystem(targetLang) + partial
+}
+
+export const buildTranslationChunkSchema = (
+  textEntries: Record<string, unknown>,
+) => {
   const translationShape: Record<string, TSchema> = {}
 
   for (const [key, value] of Object.entries(textEntries)) {
@@ -209,11 +282,6 @@ const buildTranslationChunkSchema = (textEntries: Record<string, unknown>) => {
 
 const REVIEWER_OUTPUT_SCHEMA = Type.Object(
   {
-    score: Type.Integer({
-      minimum: 0,
-      maximum: 100,
-      description: 'Native-feel score for the translation as a whole',
-    }),
     issues: Type.Array(
       Type.Object(
         {
@@ -235,7 +303,7 @@ const REVIEWER_OUTPUT_SCHEMA = Type.Object(
       ),
       {
         description:
-          'List of flagged issues; empty if translation is acceptable',
+          'List of flagged issues; empty means the translation is acceptable as-is',
       },
     ),
   },
@@ -252,20 +320,37 @@ const EDITOR_OUTPUT_SCHEMA = Type.Object(
   { additionalProperties: false },
 )
 
+// Quota inflation measurably hurts final quality: reviewers fill larger
+// budgets with preference-level nitpicks and the editor churn degrades the
+// writer's coherent output. Long documents get coverage via review windows,
+// each with this same fixed budget.
+const REVIEWER_MAX_ISSUES = 12
+
 const buildTranslationReviewerPrompt = (
   targetLanguage: string,
   payload: {
     allowedIds: string[]
-    fullTranslations: Record<string, string>
+    segments: Record<string, { source?: string; target: string }>
+    styleHints?: string
   },
 ) => {
-  return `TARGET_LANGUAGE: ${targetLanguage}
+  let prompt = `TARGET_LANGUAGE: ${targetLanguage}
+MAX_ISSUES: ${REVIEWER_MAX_ISSUES}`
+
+  if (payload.styleHints) {
+    prompt += `
+
+## Style guide
+${payload.styleHints}`
+  }
+
+  return `${prompt}
 
 ## ALLOWED_IDS (issues outside this set MUST be dropped)
 ${JSON.stringify(payload.allowedIds)}
 
-## Full translations (id → translated text)
-${JSON.stringify(payload.fullTranslations)}`
+## Segments (id → { source?, target })
+${JSON.stringify(payload.segments)}`
 }
 
 const buildTranslationEditorPrompt = (
@@ -278,9 +363,19 @@ const buildTranslationEditorPrompt = (
       problem: string
       hint?: string
     }>
+    styleHints?: string
   },
 ) => {
-  return `TARGET_LANGUAGE: ${targetLanguage}
+  let prompt = `TARGET_LANGUAGE: ${targetLanguage}`
+
+  if (payload.styleHints) {
+    prompt += `
+
+## Style context
+${payload.styleHints}`
+  }
+
+  return `${prompt}
 
 ## Current translations (id → text, for context)
 ${JSON.stringify(payload.fullTranslations)}
@@ -617,13 +712,13 @@ COMMENT`,
       subtitle?: string
       summary?: string
       tags?: string[]
+      styleHints?: string
     },
   ) => {
     const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
-    const isJapanese = targetLang === 'ja'
 
     return {
-      systemPrompt: buildTranslationSystem(isJapanese, true),
+      systemPrompt: buildTranslationSystem(targetLang, true),
       prompt: buildTranslationPrompt(targetLanguage, content),
       reasoningEffort: NO_REASONING,
     }
@@ -634,23 +729,29 @@ COMMENT`,
       documentContext: string
       textEntries: Record<string, unknown>
       segmentMeta?: Record<string, string>
+      styleHints?: string
     },
   ) => {
     const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
-    const isJapanese = targetLang === 'ja'
     return {
-      systemPrompt: buildTranslationChunkSystem(isJapanese),
+      systemPrompt: buildTranslationChunkSystem(targetLang),
       prompt: buildTranslationChunkPrompt(targetLanguage, chunk),
       schema: buildTranslationChunkSchema(chunk.textEntries),
       reasoningEffort: NO_REASONING,
     }
   },
 
+  translationAgent: (targetLang: string, opts: { reviewEnabled: boolean }) => ({
+    systemPrompt: buildTranslationAgentSystem(targetLang, opts),
+    reasoningEffort: NO_REASONING,
+  }),
+
   translationReviewer: (
     targetLang: string,
     payload: {
       allowedIds: string[]
-      fullTranslations: Record<string, string>
+      segments: Record<string, { source?: string; target: string }>
+      styleHints?: string
     },
   ) => {
     const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
@@ -672,6 +773,7 @@ COMMENT`,
         problem: string
         hint?: string
       }>
+      styleHints?: string
     },
   ) => {
     const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang

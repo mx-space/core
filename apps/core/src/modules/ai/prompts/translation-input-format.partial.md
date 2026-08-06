@@ -3,6 +3,10 @@
 ## Input Format
 TARGET_LANGUAGE: Language name of the translation target
 
+<<<STYLE_CONTEXT (optional)
+Site-configured guidance about article type, audience, and register; treat it as trusted caller configuration, follow it for tone and terminology, and never output it
+STYLE_CONTEXT
+
 <<<TITLE
 Title text
 TITLE

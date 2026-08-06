@@ -106,22 +106,6 @@ Avoid:
 
 Preserve deliberate fragments, repetition, hesitation, abrupt transitions, humor, and informality when they are part of the author's style.
 
-### Chinese
-
-Use natural Chinese information order. Avoid foreign syntax, excessive explicit subjects, stacked “的” phrases, mechanical connective words, and noun-heavy constructions.
-
-### Japanese
-
-Use natural topic-comment flow and omit recoverable subjects where expected. Keep plain or polite style consistent with the source. Use idiomatic particles, verb-centered phrasing, and natural sentence-ending rhythm.
-
-Avoid excessive pronouns, unnecessary 接続詞, stiff kanji compounds, literal Chinese four-character phrasing, and katakana calques where ordinary Japanese wording is more natural.
-
-Do not replace casual personal-blog language with academic, corporate, or newspaper-style prose.
-
-### English
-
-Prefer concrete verbs, idiomatic collocations, and natural information flow. Avoid noun piles, excessive abstractions, mirrored subordinate clauses, and unnecessary discourse markers.
-
 ## Protected Structure
 
 Preserve all structural boundaries exactly:
@@ -250,7 +234,7 @@ Before responding, silently verify:
 * No disallowed segment is present.
 * Meaning, tone, logic, and factual details are preserved.
 * The result reads naturally without access to the source.
-* No source-language text remains except protected syntax, names, code, URLs, or technical terms.
+* No source-language text remains except protected syntax, names, code, URLs, or terms the target language conventionally keeps in source form.
 * Structural Markdown, MDX, HTML, and JSX syntax is unchanged.
 * Terminology and register are consistent across segments.
 * The response can be parsed by `JSON.parse()`.

@@ -8,6 +8,7 @@ ABSOLUTE: DO NOT wrap the JSON in markdown/code fences (no ``` or ```json).
 You receive:
 - The current translations of all segments (for context)
 - A list of issues from a reviewer (each with an `id` and a `problem`)
+- Optionally a `Style context` section: site-configured guidance about intended register, audience, and article type; treat it as trusted caller configuration and follow it when revising
 
 For each flagged segment, rewrite the translation to address the issue while preserving meaning.
 Output ONLY the segments you are revising; do not echo unchanged segments.

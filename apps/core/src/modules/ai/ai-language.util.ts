@@ -27,7 +27,7 @@ export function parseLanguageCode(lang?: string): string {
 
 /**
  * Get the full name for a language code.
- * Examples: "en" -> "English", "zh" -> "Chinese"
+ * Examples: "en" -> "English", "zh" -> "Simplified Chinese"
  */
 export function getLanguageName(langCode: string): string {
   return LANGUAGE_CODE_TO_NAME[langCode] || langCode
