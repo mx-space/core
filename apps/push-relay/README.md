@@ -43,7 +43,13 @@ unless mx-core encryption is enabled:
 ```dotenv
 MX_ENCRYPT_ENABLE=true
 MX_ENCRYPT_KEY=<stable deployment secret>
+MX_PUSH_RELAY_ORIGINS=https://push.example.com
 ```
+
+`MX_PUSH_RELAY_ORIGINS` is a comma-separated allowlist. mx-core rejects Push
+Relay activation, deactivation, and delivery requests whose origin is not in
+this server-controlled list. Development mode defaults only to loopback Relay
+origins on port `8787`; production has no implicit default.
 
 The key must remain stable across restarts. Losing or rotating it without a
 migration makes existing Push Relay sources unreadable; affected devices must

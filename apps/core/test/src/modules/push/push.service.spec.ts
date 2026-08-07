@@ -4,6 +4,10 @@ import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import type { ConfigsService } from '~/modules/configs/configs.service'
 import type { PushRepository } from '~/modules/push/push.repository'
 import { PushService } from '~/modules/push/push.service'
+import {
+  configuredPushRelayOrigins,
+  resolveAllowedPushRelayOrigin,
+} from '~/modules/push/push-relay-origin'
 import type { EventManagerService } from '~/processors/helper/helper.event.service'
 
 describe('PushService', () => {
@@ -110,5 +114,44 @@ describe('PushService', () => {
       relayUrl: 'https://push.example.com',
       bindingId: null,
     })
+  })
+})
+
+describe('Push Relay origin policy', () => {
+  it('returns the configured origin instead of the request value', () => {
+    const env = {
+      NODE_ENV: 'production',
+      MX_PUSH_RELAY_ORIGINS:
+        'https://push.example.com, https://push-backup.example.com',
+    }
+
+    expect(resolveAllowedPushRelayOrigin('https://push.example.com', env)).toBe(
+      'https://push.example.com',
+    )
+    expect(configuredPushRelayOrigins(env)).toEqual([
+      'https://push.example.com',
+      'https://push-backup.example.com',
+    ])
+  })
+
+  it('rejects unconfigured and insecure production destinations', () => {
+    const env = {
+      NODE_ENV: 'production',
+      MX_PUSH_RELAY_ORIGINS: 'https://push.example.com',
+    }
+
+    expect(() =>
+      resolveAllowedPushRelayOrigin('https://metadata.example.net', env),
+    ).toThrow('Push Relay origin is not allowed')
+    expect(() =>
+      resolveAllowedPushRelayOrigin('http://127.0.0.1:8787', env),
+    ).toThrow('Push Relay origins must use HTTPS in production')
+  })
+
+  it('provides explicit loopback defaults only outside production', () => {
+    expect(configuredPushRelayOrigins({ NODE_ENV: 'production' })).toEqual([])
+    expect(configuredPushRelayOrigins({ NODE_ENV: 'development' })).toContain(
+      'http://localhost:8787',
+    )
   })
 })

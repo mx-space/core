@@ -17,9 +17,8 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { PushRepository } from './push.repository'
 import type { PushActivationRequestDto } from './push.schema'
+import { resolveAllowedPushRelayOrigin } from './push-relay-origin'
 import { PushSecretVault } from './push-secret.vault'
-
-const normalizeRelayOrigin = (value: string) => new URL(value).origin
 
 @Injectable()
 export class PushService implements OnModuleInit, OnModuleDestroy {
@@ -53,7 +52,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
 
   async activate(ownerId: string, input: PushActivationRequestDto) {
     PushSecretVault.assertConfigured()
-    const relayUrl = normalizeRelayOrigin(input.relayUrl)
+    const relayUrl = resolveAllowedPushRelayOrigin(input.relayUrl)
     const existing = await this.repository.findSourceByRelayUrl(relayUrl)
     const sourceOrigin = await this.sourceOrigin()
     const response = await fetch(`${relayUrl}/v1/source-activations/claim`, {
@@ -74,6 +73,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
         source_origin: sourceOrigin,
         source_label: new URL(sourceOrigin).hostname,
       }),
+      redirect: 'error',
       signal: AbortSignal.timeout(10_000),
     })
     if (!response.ok) {
@@ -125,8 +125,9 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
   async deactivate(ownerId: string, bindingId: string) {
     const binding = await this.repository.findActiveBinding(ownerId)
     if (!binding || binding.id !== bindingId) return
+    const relayUrl = resolveAllowedPushRelayOrigin(binding.source.relayUrl)
     const response = await fetch(
-      `${binding.source.relayUrl}/v1/bindings/${encodeURIComponent(binding.remoteBindingId)}`,
+      `${relayUrl}/v1/bindings/${encodeURIComponent(binding.remoteBindingId)}`,
       {
         method: 'DELETE',
         headers: {
@@ -135,6 +136,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
             PushSecretVault.decrypt(binding.source.sourceSecret),
           ),
         },
+        redirect: 'error',
         signal: AbortSignal.timeout(10_000),
       },
     )
@@ -213,7 +215,17 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       rawBody: body,
     })
     try {
-      const response = await fetch(delivery.source.eventEndpoint, {
+      const relayUrl = resolveAllowedPushRelayOrigin(delivery.source.relayUrl)
+      const eventEndpoint = new URL(delivery.source.eventEndpoint)
+      if (
+        eventEndpoint.origin !== relayUrl ||
+        eventEndpoint.pathname !== '/v1/webhooks/mx-core' ||
+        eventEndpoint.search ||
+        eventEndpoint.hash
+      ) {
+        throw new Error('Stored Push Relay event endpoint is not trusted')
+      }
+      const response = await fetch(eventEndpoint, {
         method: 'POST',
         headers: {
           'content-type': 'application/cloudevents+json',
@@ -223,6 +235,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
           [PUSH_SIGNATURE_HEADERS.signature]: signature,
         },
         body,
+        redirect: 'error',
         signal: AbortSignal.timeout(10_000),
       })
       if (response.ok) {
