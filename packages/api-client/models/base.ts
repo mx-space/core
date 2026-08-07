@@ -91,9 +91,12 @@ export interface SkillBundleView {
   assets: SkillAssetView[]
 }
 
-export interface PaywallMeta {
-  locked: boolean
-  previewBlocks?: number
+export interface TtsMeta {
+  available: boolean
+  lang?: string
+  blockCount?: number
+  stale?: boolean
+  updatedAt?: string | null
 }
 
 export interface BaseResponseMeta {
@@ -110,12 +113,12 @@ export interface PostResponseMeta extends BaseResponseMeta {
   articles?: Record<string, RelatedRef>
   summary?: SummaryMeta
   skills?: SkillBundleView[]
-  paywall?: PaywallMeta
+  tts?: TtsMeta
 }
 
 export interface NoteResponseMeta extends BaseResponseMeta {
   insights?: InsightsMeta
-  summary?: SummaryMeta
+  tts?: TtsMeta
 }
 
 /**
