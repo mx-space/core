@@ -24,22 +24,11 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: Install XcodeGen
         run: brew install xcodegen
 
       - name: Verify API contract
-        run: pnpm -C apps/core run openapi:check
+        run: cmp apps/core/openapi.json apps/ios/Packages/SpaceCore/Sources/SpaceCore/openapi.json
 
       - name: Generate Xcode project
         run: xcodegen generate
