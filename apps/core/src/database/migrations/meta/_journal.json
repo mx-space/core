@@ -190,6 +190,13 @@
       "when": 1785929805444,
       "tag": "0026_overconfident_medusa",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1786088795437,
+      "tag": "0027_clean_vindicator",
+      "breakpoints": true
     }
   ]
 }

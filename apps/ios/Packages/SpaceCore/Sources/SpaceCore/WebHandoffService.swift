@@ -4,7 +4,6 @@ public enum WebHandoffTarget: String, CaseIterable, Sendable {
     case admin
     case analytics
     case comments
-    case files
     case notes
     case posts
     case recently

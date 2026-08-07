@@ -16,7 +16,9 @@ struct RecentlyRowView: View {
             // nothing beneath it, so the whole footer goes away.
             if hasReactions { footer }
         }
-        .padding(.vertical, Spacing.tight)
+        .padding(Spacing.regular)
+        .background(.background, in: .rect(cornerRadius: Radius.card))
+        .accessibilityElement(children: .contain)
     }
 
     private var hasReactions: Bool {
@@ -30,6 +32,11 @@ struct RecentlyRowView: View {
                 Text("edited")
                     .foregroundStyle(.tertiary)
             }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
         }
         .font(.caption)
         .foregroundStyle(.secondary)

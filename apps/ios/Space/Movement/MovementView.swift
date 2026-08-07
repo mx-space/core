@@ -10,6 +10,14 @@ struct MovementView: View {
         case month = "30D"
 
         var id: Self { self }
+
+        var days: Int {
+            switch self {
+            case .day: 1
+            case .week: 7
+            case .month: 30
+            }
+        }
     }
 
     @State var store: MovementStore
@@ -18,45 +26,61 @@ struct MovementView: View {
     let openWebAnalytics: () -> Void
 
     var body: some View {
-        ScrollView {
-            switch store.state {
-            case .idle, .loading:
-                ProgressView().padding(.top, Spacing.section)
-            case let .failed(message):
-                ContentUnavailableView(
-                    "Movement unavailable",
-                    systemImage: "chart.xyaxis.line",
-                    description: Text(message)
-                )
-                .padding(.top, Spacing.section)
-            case let .loaded(snapshot):
-                content(snapshot)
-            }
-        }
-        .background(Color(.systemGroupedBackground))
-        .accessibilityIdentifier("movement.scroll")
-        .refreshable { await store.load() }
-        .task { await store.load() }
-    }
-
-    private func content(_ snapshot: MovementSnapshot) -> some View {
-        LazyVStack(alignment: .leading, spacing: Spacing.loose) {
+        VStack(spacing: 0) {
             Picker("Range", selection: $range) {
                 ForEach(Range.allCases) { range in
                     Text(range.rawValue).tag(range)
                 }
             }
             .pickerStyle(.segmented)
+            .padding(.horizontal, Spacing.regular)
+            .padding(.vertical, Spacing.tight)
+            .background(.bar)
 
+            Divider()
+
+            ScrollView {
+                switch store.state {
+                case .idle, .loading:
+                    ProgressView().padding(.top, Spacing.section)
+                case let .failed(message):
+                    ContentUnavailableView(
+                        "Movement unavailable",
+                        systemImage: "chart.xyaxis.line",
+                        description: Text(message)
+                    )
+                    .padding(.top, Spacing.section)
+                case let .loaded(snapshot):
+                    content(snapshot)
+                }
+            }
+            .refreshable { await store.load(days: range.days) }
+        }
+        .background(Color(.systemGroupedBackground))
+        .accessibilityIdentifier("movement.scroll")
+        .task { await store.load(days: range.days) }
+        .onChange(of: range) { _, newRange in
+            Task { await store.load(days: newRange.days) }
+        }
+    }
+
+    private func content(_ snapshot: MovementSnapshot) -> some View {
+        LazyVStack(alignment: .leading, spacing: Spacing.loose) {
             MovementChartCard(snapshot: snapshot, range: range)
             TopReadingCard(items: snapshot.topReadings)
-            RecentMovementCard(recent: snapshot.recent)
+            ActivityFeedCard(recent: snapshot.recent)
 
             Button("View full analytics on Web", systemImage: "safari") {
                 openWebAnalytics()
             }
             .buttonStyle(.bordered)
             .frame(maxWidth: .infinity)
+
+            if let refreshError = store.refreshError {
+                Label(refreshError, systemImage: "exclamationmark.triangle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(Spacing.regular)
     }
@@ -172,74 +196,5 @@ private struct TopReadingCard: View {
         }
         .padding(Spacing.regular)
         .background(.background, in: .rect(cornerRadius: Radius.card))
-    }
-}
-
-private struct MovementEvent: Identifiable {
-    enum Kind { case comment, like }
-
-    let id: String
-    let kind: Kind
-    let title: String
-    let detail: String
-    let date: Date
-}
-
-private struct RecentMovementCard: View {
-    let recent: Components.Schemas.RecentActivities
-
-    private var events: [MovementEvent] {
-        let comments = recent.comment.map {
-            MovementEvent(
-                id: "comment-\($0.id ?? $0.createdAt.timeIntervalSince1970.description)",
-                kind: .comment,
-                title: "\($0.author) commented",
-                detail: $0.title ?? $0.text,
-                date: $0.createdAt
-            )
-        }
-        let likes = recent.like.map {
-            MovementEvent(
-                id: "like-\($0.id)",
-                kind: .like,
-                title: "New like",
-                detail: $0.title ?? "Published content",
-                date: $0.createdAt
-            )
-        }
-        return (comments + likes).sorted { $0.date > $1.date }.prefix(8).map(\.self)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.regular) {
-            Text("Recent movement").font(.headline)
-            if events.isEmpty {
-                Text("No recent activity")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(events) { event in
-                    HStack(alignment: .top, spacing: Spacing.regular) {
-                        Image(systemName: event.kind == .like ? "heart.fill" : "bubble.left.fill")
-                            .foregroundStyle(event.kind == .like ? Color.pink : Color.accentColor)
-                            .frame(width: 24)
-                        VStack(alignment: .leading, spacing: Spacing.hairline) {
-                            Text(event.title).font(.subheadline.weight(.medium))
-                            Text(event.detail)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                        }
-                        Spacer(minLength: 0)
-                        Text(event.date, format: .relative(presentation: .named))
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                    }
-                }
-            }
-        }
-        .padding(Spacing.regular)
-        .background(.background, in: .rect(cornerRadius: Radius.card))
-        .accessibilityIdentifier("movement.recent")
     }
 }

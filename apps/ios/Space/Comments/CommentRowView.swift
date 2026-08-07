@@ -37,5 +37,9 @@ struct CommentRowView: View {
         }
         .padding(.vertical, Spacing.tight)
         .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            "\(comment.state == 0 ? "Unread" : "Read"), "
+                + "\(comment.author ?? "Visitor"), \(comment.text)"
+        )
     }
 }

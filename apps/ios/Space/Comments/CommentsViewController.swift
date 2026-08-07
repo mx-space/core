@@ -3,22 +3,31 @@ import SwiftUI
 import UIKit
 
 final class CommentsViewController: UIViewController {
-    private enum Section { case main }
+    private enum Section: CaseIterable {
+        case today
+        case earlier
+
+        var title: String {
+            switch self {
+            case .today: "Today"
+            case .earlier: "Earlier"
+            }
+        }
+    }
 
     private let store: CommentsStore
     private let openWeb: (UIViewController) -> Void
-    private let filters = CommentFilter.allCases
 
     private var collectionView: UICollectionView!
     private var dataSource: UICollectionViewDiffableDataSource<Section, String>!
     private let refreshControl = UIRefreshControl()
-    private let filterControl = UISegmentedControl(items: CommentFilter.allCases.map(\.rawValue.capitalized))
+    private let filterBar = CommentFilterBar()
 
     init(service: CommentService, openWeb: @escaping (UIViewController) -> Void) {
         self.store = CommentsStore(service: service)
         self.openWeb = openWeb
         super.init(nibName: nil, bundle: nil)
-        title = "Comments"
+        title = "Inbox"
     }
 
     @available(*, unavailable)
@@ -26,16 +35,8 @@ final class CommentsViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .systemGroupedBackground
         navigationItem.largeTitleDisplayMode = .always
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "safari"),
-            primaryAction: UIAction { [weak self] _ in
-                guard let self else { return }
-                self.openWeb(self)
-            }
-        )
-        navigationItem.rightBarButtonItem?.accessibilityLabel = "Open comments on Web"
 
         configureFilter()
         configureCollectionView()
@@ -43,21 +44,23 @@ final class CommentsViewController: UIViewController {
     }
 
     private func configureFilter() {
-        filterControl.selectedSegmentIndex = 0
-        filterControl.addAction(
-            UIAction { [weak self] _ in
-                guard let self else { return }
-                self.store.filter = self.filters[self.filterControl.selectedSegmentIndex]
-                Task { await self.reload() }
-            },
-            for: .valueChanged
-        )
-        filterControl.accessibilityIdentifier = "comments.filter"
-        navigationItem.titleView = filterControl
+        filterBar.onSelection = { [weak self] filter in
+            self?.focus(on: filter)
+        }
+        view.addSubview(filterBar)
+        filterBar.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            filterBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            filterBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            filterBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            filterBar.heightAnchor.constraint(equalToConstant: 52),
+        ])
     }
 
     private func configureCollectionView() {
         var configuration = UICollectionLayoutListConfiguration(appearance: .plain)
+        configuration.backgroundColor = .systemGroupedBackground
+        configuration.headerMode = .supplementary
         configuration.leadingSwipeActionsConfigurationProvider = { [weak self] indexPath in
             guard let self, let id = dataSource.itemIdentifier(for: indexPath) else { return nil }
             let read = UIContextualAction(style: .normal, title: "Read") { _, _, done in
@@ -87,10 +90,9 @@ final class CommentsViewController: UIViewController {
         }
 
         collectionView = UICollectionView(
-            frame: view.bounds,
+            frame: .zero,
             collectionViewLayout: UICollectionViewCompositionalLayout.list(using: configuration)
         )
-        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         collectionView.delegate = self
         collectionView.accessibilityIdentifier = "comments.list"
         collectionView.refreshControl = refreshControl
@@ -99,6 +101,13 @@ final class CommentsViewController: UIViewController {
             for: .valueChanged
         )
         view.addSubview(collectionView)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: filterBar.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
 
         let registration = UICollectionView.CellRegistration<UICollectionViewListCell, Components.Schemas.CommentRow> {
             cell, _, comment in
@@ -106,6 +115,7 @@ final class CommentsViewController: UIViewController {
                 CommentRowView(comment: comment)
             }
             cell.accessories = [.disclosureIndicator()]
+            cell.accessibilityIdentifier = "comments.row"
         }
 
         dataSource = UICollectionViewDiffableDataSource(collectionView: collectionView) {
@@ -115,6 +125,26 @@ final class CommentsViewController: UIViewController {
                 using: registration,
                 for: indexPath,
                 item: comment
+            )
+        }
+
+        let headerRegistration = UICollectionView.SupplementaryRegistration<UICollectionViewListCell>(
+            elementKind: UICollectionView.elementKindSectionHeader
+        ) { [weak self] header, _, indexPath in
+            guard
+                let self,
+                indexPath.section < self.dataSource.snapshot().sectionIdentifiers.count
+            else { return }
+            let section = self.dataSource.snapshot().sectionIdentifiers[indexPath.section]
+            var content = UIListContentConfiguration.header()
+            content.text = section.title
+            header.contentConfiguration = content
+            header.backgroundConfiguration = UIBackgroundConfiguration.clear()
+        }
+        dataSource.supplementaryViewProvider = { collectionView, _, indexPath in
+            collectionView.dequeueConfiguredReusableSupplementary(
+                using: headerRegistration,
+                for: indexPath
             )
         }
     }
@@ -130,17 +160,39 @@ final class CommentsViewController: UIViewController {
 
     private func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, String>()
-        snapshot.appendSections([.main])
-        snapshot.appendItems(store.comments.map(\.id))
+        for section in Section.allCases {
+            let ids = comments(in: section).map(\.id)
+            guard !ids.isEmpty else { continue }
+            snapshot.appendSections([section])
+            snapshot.appendItems(ids, toSection: section)
+        }
         dataSource.apply(snapshot, animatingDifferences: true)
+        updateEmptyState()
     }
 
     private func updateFilterTitles() {
-        guard let counts = store.counts else { return }
-        let values = [counts.unread, counts.awaiting, counts.junk, counts.all]
-        for (index, filter) in filters.enumerated() {
-            filterControl.setTitle("\(filter.rawValue.capitalized) \(values[index])", forSegmentAt: index)
+        filterBar.update(selected: store.filter, counts: store.counts)
+    }
+
+    private func comments(in section: Section) -> [Components.Schemas.CommentRow] {
+        store.comments.filter { comment in
+            let isToday = Calendar.current.isDateInToday(comment.createdAt)
+            return section == .today ? isToday : !isToday
         }
+    }
+
+    private func updateEmptyState() {
+        guard store.comments.isEmpty, !store.isLoading else {
+            collectionView.backgroundView = nil
+            return
+        }
+        var configuration = UIContentUnavailableConfiguration.empty()
+        configuration.image = UIImage(systemName: "tray")
+        configuration.text = "No \(store.filter.rawValue) comments"
+        configuration.secondaryText = store.filter == .unread
+            ? "New comments that need attention will appear here."
+            : "Choose another filter to review more comments."
+        collectionView.backgroundView = UIContentUnavailableView(configuration: configuration)
     }
 
     private func showErrorIfNeeded() {
@@ -148,6 +200,38 @@ final class CommentsViewController: UIViewController {
         let alert = UIAlertController(title: "Comments", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+
+    func focus(on filter: CommentFilter) {
+        store.filter = filter
+        filterBar.update(selected: filter, counts: store.counts)
+        guard isViewLoaded else { return }
+        Task { await reload() }
+    }
+
+    func open(id: String) {
+        let seed = store.comments.first(where: { $0.id == id })
+        showDetail(id: id, seed: seed)
+    }
+
+    private func showDetail(id: String, seed: Components.Schemas.CommentRow?) {
+        let detailStore = seed.map { CommentDetailStore(service: store.service, seed: $0) }
+            ?? CommentDetailStore(service: store.service, id: id)
+        let detail = CommentDetailView(
+            store: detailStore,
+            openWeb: { [weak self] in
+                guard let self else { return }
+                self.openWeb(self)
+            },
+            onDelete: { [weak self] in
+                self?.navigationController?.popViewController(animated: true)
+                Task { await self?.reload() }
+            },
+            onMutation: { [weak self] in
+                Task { await self?.reload() }
+            }
+        )
+        navigationController?.pushViewController(UIHostingController(rootView: detail), animated: true)
     }
 }
 
@@ -159,18 +243,6 @@ extension CommentsViewController: UICollectionViewDelegate {
             let comment = store.comments.first(where: { $0.id == id })
         else { return }
 
-        let detailStore = CommentDetailStore(service: store.service, seed: comment)
-        let detail = CommentDetailView(
-            store: detailStore,
-            openWeb: { [weak self] in
-                guard let self else { return }
-                self.openWeb(self)
-            },
-            onDelete: { [weak self] in
-                self?.navigationController?.popViewController(animated: true)
-                Task { await self?.reload() }
-            }
-        )
-        navigationController?.pushViewController(UIHostingController(rootView: detail), animated: true)
+        showDetail(id: id, seed: comment)
     }
 }

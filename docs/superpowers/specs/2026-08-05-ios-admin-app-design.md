@@ -1,7 +1,7 @@
 # Space —— mx-core iOS 管理端设计
 
 日期：2026-08-05
-状态：已批准，待写实施计划
+状态：已批准，基础 UI 与操作路径已实现
 
 ## 1. 目标与非目标
 
@@ -11,16 +11,17 @@
 
 v1 功能范围：
 
-- 仪表盘（只读概览）
+- Today（站点状态、待办、今日数据与最近动态）
+- Movement（从 Today 进入的流量详情）
 - 评论审核
-- 速记发布（note / say）
-- 文件上传与文件库
+- Recently 查看、发布与编辑
 
 ### 非目标
 
 - 不做 Lexical 富文本编辑器移动化。写作重活留在桌面端 admin。
+- v1 不做文件上传与文件库；文件管理继续留在 Web Admin。
 - 不纳入付费文章与会员域。App 内出现任何购买入口即触发 App Review 3.1.1 争议。
-- v1 不做 APNs 推送。前台实时依 WebSocket；真实推送需一套中继基础设施，另立 spec。
+- 初始 UI v1 不依赖 APNs；评论推送已作为可选扩展实现，并由独立 Push Relay 承担 APNs 凭证与投递边界。
 - 不做多服务器 / 多账号切换。
 
 ### 背景约束
@@ -29,17 +30,17 @@ v1 功能范围：
 
 ## 2. 已定决策
 
-| 项 | 决策 | 理由 |
-|---|---|---|
-| 最低系统 | iOS 26 | 免写兼容分支；Liquid Glass 与 `tabBarMinimizeBehavior` 皆需 26 |
-| 应用名 | Space | —— |
-| 工程位置 | 本 monorepo `apps/ios/` | 契约导出与 Swift 生成同提交内完成，漂移即时可见 |
-| UI 骨架 | UIKit 底座 + SwiftUI 叶子页 | 大列表与键盘协同场景 UIKit 掌控力强 |
-| 模块化 | SPM 本地包分层 | 包边界即测试边界，三域可并行 |
-| 认证 | better-auth device authorization 配对码 | 服务端插件与批准页已就绪；绕开 OAuth 回跳与 AASA 通配域名限制 |
-| 数据层 | SwiftData 本地镜像 | 离线可读、上屏即时、写操作可排队重试 |
-| API 契约 | Zod views → OpenAPI → swift-openapi-generator | 契约长期自动对齐，字段漂移编译期可见 |
-| 审核演示 | 公开 demo 实例 + 审核账号 | App Review 2.1 要求 demo 账号命中真实后端 |
+| 项       | 决策                                          | 理由                                                           |
+| -------- | --------------------------------------------- | -------------------------------------------------------------- |
+| 最低系统 | iOS 26                                        | 免写兼容分支；Liquid Glass 与 `tabBarMinimizeBehavior` 皆需 26 |
+| 应用名   | Space                                         | ——                                                             |
+| 工程位置 | 本 monorepo `apps/ios/`                       | 契约导出与 Swift 生成同提交内完成，漂移即时可见                |
+| UI 骨架  | UIKit 底座 + SwiftUI 叶子页                   | 大列表与键盘协同场景 UIKit 掌控力强                            |
+| 模块化   | SPM 本地包分层                                | 包边界即测试边界，三域可并行                                   |
+| 认证     | better-auth device authorization 配对码       | 服务端插件与批准页已就绪；绕开 OAuth 回跳与 AASA 通配域名限制  |
+| 数据层   | SwiftData 本地镜像                            | 离线可读、上屏即时、写操作可排队重试                           |
+| API 契约 | Zod views → OpenAPI → swift-openapi-generator | 契约长期自动对齐，字段漂移编译期可见                           |
+| 审核演示 | 公开 demo 实例 + 审核账号                     | App Review 2.1 要求 demo 账号命中真实后端                      |
 
 ### 已排除方案及理由
 
@@ -47,7 +48,7 @@ v1 功能范围：
 - **OAuth 社交登录回跳**：同上，且一旦提供第三方登录即触发 Guideline 4.8 的 Sign in with Apple 强制要求。
 - **API Key 直连**：长期明文凭证，无会话过期，不能远程吊销。
 - **SwiftUI 为壳**：与 UIKit 底座取向相悖。且 iOS 26 下 `UITabBarController` 自动获得 Liquid Glass，UIKit 壳并不吃亏。
-- **服务端自填 APNs 凭证**：bundle id 必须匹配 App Store 版本，他人填写无效。
+- **在 mx-core 中填写 APNs 凭证**：bundle id 必须匹配具体 App 构建，将凭证放入各自内容服务器会扩大密钥面；当前方案改为独立 Push Relay。
 
 ## 3. 架构
 
@@ -65,7 +66,7 @@ apps/ios/
    ├─ SpaceUI/               设计 token + Liquid Glass 组件
    ├─ SpaceDashboard/
    ├─ SpaceComments/
-   └─ SpaceCompose/          速记发布 + 文件上传
+   └─ SpaceCompose/          Recently 发布与编辑
 ```
 
 ### 依赖规则
@@ -124,20 +125,21 @@ Wire 层本就是 snake_case（`ResponseInterceptor` 在边界转换），生成
 
 ### 导航
 
-底座 `UITabBarController`，三 tab：仪表盘、评论、文件。速记作悬浮主操作，不占 tab —— 它是动作而非目的地。
+底座 `UITabBarController`，三 tab：Today、Inbox、Content。Content 在 v1 只承载 Recently；Movement 从 Today 的数据卡片进入，不占 tab。Recently 新建使用 `UITabBarController.bottomAccessory` 提供的全局动作，不占 tab —— 它是动作而非目的地。
 
 iOS 26 下 tab bar 自动获得 Liquid Glass，配 `tabBarMinimizeBehavior = .onScrollDown`。
 
 ### 技术分界
 
-| 页面 | 技术 | 理由 |
-|---|---|---|
-| 仪表盘 | SwiftUI | 只读卡片布局，Swift Charts 直接可用 |
-| 评论列表 | UIKit | 大列表、滑动操作、分页、实时插入动画，需 diffable data source 精确控制 |
-| 评论详情与回复 | SwiftUI | 表单为主 |
-| 速记编辑 | UIKit | 键盘协同、附件插入、输入辅助条 |
-| 文件库 | UIKit | 网格 + 多选 + 上传进度 |
-| 设置与上传表单 | SwiftUI | 静态表单 |
+| 页面                    | 技术    | 理由                                                                         |
+| ----------------------- | ------- | ---------------------------------------------------------------------------- |
+| Today                   | SwiftUI | 只读卡片布局，按待办、今日数据、定时内容与最近动态分流                       |
+| Movement                | SwiftUI | 固定时间范围选择器、Swift Charts 与阅读排行                                  |
+| Inbox 评论列表          | UIKit   | 大列表、筛选、滑动操作、分页、实时插入动画，需 diffable data source 精确控制 |
+| 评论详情与回复          | SwiftUI | 表单为主                                                                     |
+| Content / Recently 列表 | UIKit   | 时间分组、diffable data source 与删除确认                                    |
+| Recently 编辑           | SwiftUI | 全屏编辑、链接预览与发布失败原位恢复                                         |
+| 设置                    | SwiftUI | 静态表单                                                                     |
 
 ### Liquid Glass 分寸
 
@@ -171,7 +173,7 @@ UIKit 侧封装 `UIVisualEffectView` + `UIGlassEffect`（`isInteractive`、`corn
 App Review 要求 demo 账号命中真实后端。故单独部署一台 demo 实例：
 
 - cron 每日按快照重置
-- 账号须**可写** —— 审核员要验证发速记与审评论，只读账号必被判功能不全
+- 账号须**可写** —— 审核员要验证发布 Recently 与审核评论，只读账号必被判功能不全
 
 Notes for Review 须写明：服务器地址、账号密码、**配对流程图解**。
 
@@ -197,7 +199,6 @@ Notes for Review 须写明：服务器地址、账号密码、**配对流程图�
 - 无社交登录，不触发 Guideline 4.8 的 Sign in with Apple 强制要求
 - App 内不得出现任何购买或订阅入口
 - Guideline 1.2 UGC：评论域自带删除与标记垃圾，充作举报与屏蔽机制；EULA 补零容忍条款
-- 相机与相册权限用途字符串须具体指明为文件上传所需
 
 ## 9. 测试策略
 
@@ -205,16 +206,59 @@ Notes for Review 须写明：服务器地址、账号密码、**配对流程图�
 - **SwiftData**：内存容器测试 upsert 幂等性与迁移计划
 - **SpaceUI**：快照测试三件玻璃组件在 reduce transparency 开关下的两种形态
 - **Feature 包**：Store 层单测，UI 层不测
-- **端到端**：一条 XCUITest 冒烟，打 demo 实例，走配对 → 仪表盘 → 审评论 → 发速记
+- **端到端**：一条 XCUITest 冒烟，打 demo 实例，走配对 → Today → Movement → 审评论 → 发布 Recently
 
 ## 10. 分期
 
-| 期 | 内容 |
-|---|---|
-| 0 | openapi 导出链 + `apps/ios` 骨架 + `SpaceCore` / `SpaceUI` |
-| 1 | 配对流程 + 仪表盘 |
-| 2 | 评论域（含实时与离线队列） |
-| 3 | 速记发布 + 文件上传 |
-| 4 | 审核准备：demo 实例、隐私清单、截图、Notes for Review |
+| 期  | 内容                                                       |
+| --- | ---------------------------------------------------------- |
+| 0   | openapi 导出链 + `apps/ios` 骨架 + `SpaceCore` / `SpaceUI` |
+| 1   | 配对流程 + Today / Movement                                |
+| 2   | Inbox 评论域（含实时与离线队列）                           |
+| 3   | Content / Recently 查看、发布与编辑                        |
+| 4   | 审核准备：demo 实例、隐私清单、截图、Notes for Review      |
 
-另立 spec：push relay 基础设施。
+## 11. APNs / Push Relay 扩展
+
+推送采用独立、开源、自部署的 Relay，而非让 mx-core 或 App 直接持有
+APNs `.p8`。官方 App 与自定义 App 复用协议，但分别配置 App ID、bundle
+ID、APNs topic、Team ID、Key ID 与密钥。
+
+```mermaid
+flowchart LR
+  subgraph iOS["Space iOS"]
+    APP["Installation credential"]
+  end
+
+  subgraph Core["Self-hosted mx-core"]
+    EVENT["Minimal comment event"]
+    SOURCE["Encrypted source credential"]
+  end
+
+  subgraph Relay["Independent Push Relay"]
+    BIND["Installation and source binding"]
+    APNSKEY["APNs key and trusted topic"]
+  end
+
+  APP -->|"single-use 10 min ticket"| BIND
+  SOURCE -->|"signed CloudEvent"| BIND
+  EVENT --> SOURCE
+  BIND --> APNSKEY
+  APNSKEY --> APNS["Apple Push Notification service"]
+  APNS --> APP
+```
+
+首个事件为 `dev.mx-space.comment.created.v1`，仅携带评论资源 ID 与资源
+类型。它在垃圾分类之后、面向管理员的评论创建事件上产生；作者、正文、
+邮箱、IP 与 User-Agent 均不得进入协议或通知 payload。通知文案固定为
+泛化提示，点击后由已认证会话拉取详情。
+
+激活流程使用一次性十分钟 ticket：App 先向 Relay 注册 installation，
+再将 ticket 交给已登录的 mx-core；mx-core 认领后保存加密 source secret，
+Relay 建立 source 与 installation 的绑定。Relay 仅信任部署清单中的 APNs
+topic，不接受 App 或 mx-core 在请求中覆盖。
+
+若 `SPACE_PUSH_RELAY_URL` 未配置，App 隐藏通知设置。自定义构建者需提供
+自己的 App ID、bundle ID、Apple Team、APNs `.p8` 与 Relay；官方构建可
+将官方身份与 Relay 地址固定为构建设置。Yohaku 等未来 App 可复用协议、
+Relay 实现与 iOS Push SDK，但必须使用独立 app ID、topic、token 与深链。

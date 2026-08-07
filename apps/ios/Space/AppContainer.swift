@@ -10,6 +10,9 @@ final class AppContainer {
     let tokenStore: any TokenStore = KeychainTokenStore()
     let serverStore = ServerStore()
 
+    private var pushManager: PushNotificationManager?
+    private var pendingCommentID: String?
+
     private init() {}
 
     private var pairedEndpoint: ServerEndpoint? {
@@ -19,9 +22,26 @@ final class AppContainer {
 
     func makeRootViewController() -> UIViewController {
         if let endpoint = pairedEndpoint {
-            RootTabBarController(client: makeClient(endpoint))
+            let client = makeClient(endpoint)
+            let manager = PushConfigurationLoader.bundled().map {
+                PushNotificationManager(configuration: $0, client: client)
+            }
+            pushManager = manager
+            let root = RootTabBarController(client: client, pushManager: manager)
+            if let pendingCommentID {
+                self.pendingCommentID = nil
+                Task { @MainActor in
+                    root.loadViewIfNeeded()
+                    root.openComment(pendingCommentID)
+                }
+            }
+            if let manager {
+                Task { await manager.restoreRegistration() }
+            }
+            return root
         } else {
-            makePairingFlow()
+            pushManager = nil
+            return makePairingFlow()
         }
     }
 
@@ -71,10 +91,27 @@ final class AppContainer {
     func clearPairing() {
         try? tokenStore.clear()
         serverStore.clear()
+        pushManager = nil
     }
 
     func unpair() {
         clearPairing()
         swapRoot()
+    }
+
+    func didRegisterForRemoteNotifications(_ deviceToken: Data) {
+        pushManager?.didRegister(deviceToken: deviceToken)
+    }
+
+    func didFailToRegisterForRemoteNotifications(_ error: Error) {
+        pushManager?.didFailRegistration(error)
+    }
+
+    func openComment(_ id: String) {
+        guard let root = keyWindow?.rootViewController as? RootTabBarController else {
+            pendingCommentID = id
+            return
+        }
+        root.openComment(id)
     }
 }

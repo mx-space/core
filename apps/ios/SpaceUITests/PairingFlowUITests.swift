@@ -11,6 +11,8 @@ import XCTest
 final class PairingFlowUITests: XCTestCase {
     private var serverAddress: String? {
         ProcessInfo.processInfo.environment["SPACE_TEST_SERVER"]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .flatMap { $0.isEmpty ? nil : $0 }
     }
 
     func testPairsAndLandsOnDashboard() throws {
@@ -52,7 +54,7 @@ final class PairingFlowUITests: XCTestCase {
     }
 
     private func assertMovementSurface(_ app: XCUIApplication) throws {
-        app.buttons["tab.movement"].tap()
+        app.descendants(matching: .any)["dashboard.counters"].tap()
 
         XCTAssertTrue(
             app.otherElements["movement.chart"].waitForExistence(timeout: 20),
@@ -60,22 +62,21 @@ final class PairingFlowUITests: XCTestCase {
         )
         XCTAssertTrue(app.staticTexts["Top content"].exists)
         capture(app, name: "movement")
+        app.navigationBars.buttons.firstMatch.tap()
     }
 
     private func assertCommentsSurface(_ app: XCUIApplication) throws {
-        app.buttons["tab.comments"].tap()
+        app.buttons["tab.inbox"].tap()
 
         let list = app.collectionViews["comments.list"]
         XCTAssertTrue(
             list.waitForExistence(timeout: 20),
             "comments list never rendered"
         )
-        let filter = app.segmentedControls["comments.filter"]
-        XCTAssertTrue(filter.exists)
-        let all = filter.buttons.element(boundBy: 3)
+        let all = app.buttons["comments.filter.all"]
         XCTAssertTrue(all.exists, "All comments filter is missing")
         all.tap()
-        let firstComment = list.cells.firstMatch
+        let firstComment = list.cells["comments.row"].firstMatch
         XCTAssertTrue(
             firstComment.waitForExistence(timeout: 20),
             "All comments filter did not render its rows"
@@ -95,12 +96,12 @@ final class PairingFlowUITests: XCTestCase {
     /// and previews it, takes the offered fix, and confirms the posted row comes
     /// back carrying the hydrated media card.
     private func assertRecentlySurface(_ app: XCUIApplication) throws {
-        app.buttons["tab.recently"].tap()
+        app.buttons["tab.content"].tap()
 
         let list = app.collectionViews["recently.list"]
         XCTAssertTrue(list.waitForExistence(timeout: 15), "recently list never appeared")
 
-        app.buttons["recently.compose"].tap()
+        app.buttons["global.compose"].tap()
         let editor = app.textViews["recently.composer.text"]
         XCTAssertTrue(editor.waitForExistence(timeout: 10), "composer never opened")
         editor.tap()
@@ -139,15 +140,15 @@ final class PairingFlowUITests: XCTestCase {
     }
 
     private func assertWebHandoff(_ app: XCUIApplication) throws {
-        app.buttons["tab.dashboard"].tap()
+        app.buttons["tab.today"].tap()
 
         let dashboard = app.scrollViews["dashboard.scroll"]
-        let files = app.buttons["dashboard.web.files"]
-        for _ in 0..<3 where !files.isHittable {
+        let webAdmin = app.buttons["dashboard.web.admin"]
+        for _ in 0..<3 where !webAdmin.isHittable {
             dashboard.swipeUp()
         }
-        XCTAssertTrue(files.waitForExistence(timeout: 10), "Files Web entry is missing")
-        files.tap()
+        XCTAssertTrue(webAdmin.waitForExistence(timeout: 10), "Web Admin entry is missing")
+        webAdmin.tap()
 
         XCTAssertTrue(
             app.webViews.firstMatch.waitForExistence(timeout: 30),

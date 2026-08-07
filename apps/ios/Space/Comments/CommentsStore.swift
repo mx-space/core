@@ -19,15 +19,21 @@ final class CommentsStore {
     func reload() async {
         guard !isLoading else { return }
         isLoading = true
-        defer { isLoading = false }
-        do {
-            let snapshot = try await service.load(filter: filter)
-            comments = snapshot.comments
-            counts = snapshot.counts
-            errorMessage = nil
-        } catch {
-            errorMessage = error.localizedDescription
+        while true {
+            let requestedFilter = filter
+            do {
+                let snapshot = try await service.load(filter: requestedFilter)
+                if filter == requestedFilter {
+                    comments = snapshot.comments
+                    counts = snapshot.counts
+                    errorMessage = nil
+                }
+            } catch {
+                if filter == requestedFilter { errorMessage = error.localizedDescription }
+            }
+            if filter == requestedFilter { break }
         }
+        isLoading = false
     }
 
     func setState(id: String, state: Int) async {

@@ -54,6 +54,7 @@ import { PageProxyModule } from './modules/pageproxy/pageproxy.module'
 import { PollModule } from './modules/poll/poll.module'
 import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
+import { PushModule } from './modules/push/push.module'
 import { ReaderModule } from './modules/reader/reader.module'
 import { RecentlyModule } from './modules/recently/recently.module'
 import { RenderEjsModule } from './modules/render/render.module'
@@ -117,6 +118,7 @@ import { SampleResponseInterceptor } from './shared/sample/sample-response.inter
     PollModule,
     PostModule,
     ProjectModule,
+    PushModule,
     RecentlyModule,
     ReaderModule,
     SayModule,

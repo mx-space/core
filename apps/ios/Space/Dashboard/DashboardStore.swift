@@ -12,6 +12,8 @@ final class DashboardStore {
     }
 
     private(set) var state: State = .idle
+    private(set) var isRefreshing = false
+    private(set) var refreshError: String?
 
     private let service: DashboardService
 
@@ -20,12 +22,20 @@ final class DashboardStore {
     }
 
     func load() async {
-        if case .loading = state { return }
-        state = .loading
+        guard !isRefreshing else { return }
+        let hasContent = if case .loaded = state { true } else { false }
+        if !hasContent { state = .loading }
+        isRefreshing = true
+        defer { isRefreshing = false }
         do {
             state = .loaded(try await service.load())
+            refreshError = nil
         } catch {
-            state = .failed(error.localizedDescription)
+            if hasContent {
+                refreshError = error.localizedDescription
+            } else {
+                state = .failed(error.localizedDescription)
+            }
         }
     }
 }

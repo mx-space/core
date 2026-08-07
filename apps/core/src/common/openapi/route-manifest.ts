@@ -19,6 +19,12 @@ import { ResolveQuerySchema } from '~/modules/enrichment/enrichment.schema'
 import { EnrichmentViews } from '~/modules/enrichment/enrichment.views'
 import { NoteSchema } from '~/modules/note/note.schema'
 import { NoteViews } from '~/modules/note/note.views'
+import {
+  PushActivationRequestSchema,
+  PushActivationResponseSchema,
+  PushBindingIdParamSchema,
+  PushStatusResponseSchema,
+} from '~/modules/push/push.schema'
 import { RecentlySchema } from '~/modules/recently/recently.schema'
 import { RecentlyViews } from '~/modules/recently/recently.views'
 import { SayCreateSchema } from '~/modules/say/say.controller'
@@ -127,6 +133,45 @@ export const routeManifest: readonly OpenApiRoute[] = [
       name: 'OneTimeTokenResponse',
       schema: OneTimeTokenResponseSchema,
     },
+  },
+
+  {
+    operationId: 'activatePushNotifications',
+    successStatus: 201,
+    method: 'post',
+    path: '/notifications/push/activate',
+    tag: 'notifications',
+    summary: 'Bind this authenticated owner installation to a Push Relay',
+    auth: true,
+    body: {
+      name: 'PushActivationRequest',
+      schema: PushActivationRequestSchema,
+    },
+    response: {
+      name: 'PushActivationResponse',
+      schema: PushActivationResponseSchema,
+    },
+  },
+  {
+    operationId: 'getPushNotificationStatus',
+    method: 'get',
+    path: '/notifications/push/status',
+    tag: 'notifications',
+    summary: 'Read the current owner push binding status',
+    auth: true,
+    response: {
+      name: 'PushStatus',
+      schema: PushStatusResponseSchema,
+    },
+  },
+  {
+    operationId: 'deactivatePushNotifications',
+    method: 'delete',
+    path: '/notifications/push/:bindingId',
+    tag: 'notifications',
+    summary: 'Revoke one mobile push binding',
+    auth: true,
+    params: PushBindingIdParamSchema,
   },
 
   {

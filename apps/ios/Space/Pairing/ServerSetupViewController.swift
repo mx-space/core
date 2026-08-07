@@ -3,6 +3,8 @@ import SpaceUI
 import UIKit
 
 final class ServerSetupViewController: UIViewController {
+    private let stepLabel = UILabel()
+    private let headingLabel = UILabel()
     private let field = UITextField()
     private let continueButton = UIButton(configuration: .borderedProminent())
     private let statusLabel = UILabel()
@@ -21,9 +23,17 @@ final class ServerSetupViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Connect"
+        title = "Space"
         view.backgroundColor = .systemBackground
         navigationController?.navigationBar.prefersLargeTitles = true
+
+        stepLabel.text = "STEP 1 OF 2"
+        stepLabel.font = .preferredFont(forTextStyle: .caption1)
+        stepLabel.textColor = .secondaryLabel
+
+        headingLabel.text = "Connect to your site"
+        headingLabel.font = .preferredFont(forTextStyle: .title2)
+        headingLabel.adjustsFontForContentSizeCategory = true
 
         field.placeholder = "https://your-site.com"
         field.borderStyle = .roundedRect
@@ -40,11 +50,19 @@ final class ServerSetupViewController: UIViewController {
         statusLabel.numberOfLines = 0
         statusLabel.font = .preferredFont(forTextStyle: .footnote)
         statusLabel.textColor = .secondaryLabel
-        statusLabel.text = "Enter the address of your mx-core instance."
+        statusLabel.text = "Enter the address of your mx-core instance. Public servers must use HTTPS."
 
-        let stack = UIStackView(arrangedSubviews: [field, continueButton, statusLabel, spinner])
+        let stack = UIStackView(arrangedSubviews: [
+            stepLabel,
+            headingLabel,
+            field,
+            continueButton,
+            statusLabel,
+            spinner,
+        ])
         stack.axis = .vertical
         stack.spacing = Spacing.regular
+        stack.setCustomSpacing(Spacing.section, after: headingLabel)
         stack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(stack)
 
@@ -59,7 +77,7 @@ final class ServerSetupViewController: UIViewController {
             ),
             stack.topAnchor.constraint(
                 equalTo: view.safeAreaLayoutGuide.topAnchor,
-                constant: Spacing.section
+                constant: Spacing.loose
             ),
         ])
     }

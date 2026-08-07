@@ -1,0 +1,32 @@
+{
+  "name": "@mx-space/push-relay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Independent APNs relay for self-hosted mx-space applications",
+  "license": "AGPLv3",
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.mjs",
+    "db:migrate": "tsx src/migrate.ts",
+    "db:migrate:prod": "node dist/migrate.mjs",
+    "test": "vitest run",
+    "verify:local": "tsx scripts/verify-local.ts",
+    "verify:core": "tsx scripts/verify-core-activation.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@mx-space/push-protocol": "workspace:*",
+    "pg": "^8.22.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "@types/pg": "^8.20.0",
+    "tsdown": "0.22.8",
+    "tsx": "^4.23.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}

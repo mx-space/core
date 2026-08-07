@@ -3,10 +3,12 @@ import SpaceUI
 import UIKit
 
 final class PairingCodeViewController: UIViewController {
+    private let stepLabel = UILabel()
     private let codeLabel = UILabel()
     private let qrView = UIImageView()
     private let statusLabel = UILabel()
-    private let openButton = UIButton(configuration: .bordered())
+    private let copyButton = UIButton(configuration: .plain())
+    private let openButton = UIButton(configuration: .borderedProminent())
     private let spinner = UIActivityIndicatorView(style: .medium)
 
     private let endpoint: ServerEndpoint
@@ -33,6 +35,11 @@ final class PairingCodeViewController: UIViewController {
         title = "Pair"
         view.backgroundColor = .systemBackground
 
+        stepLabel.text = "STEP 2 OF 2"
+        stepLabel.font = .preferredFont(forTextStyle: .caption1)
+        stepLabel.textColor = .secondaryLabel
+        stepLabel.textAlignment = .center
+
         codeLabel.font = .monospacedSystemFont(ofSize: 40, weight: .semibold)
         codeLabel.textAlignment = .center
         codeLabel.adjustsFontSizeToFitWidth = true
@@ -52,8 +59,12 @@ final class PairingCodeViewController: UIViewController {
         openButton.addTarget(self, action: #selector(openVerification), for: .touchUpInside)
         openButton.isHidden = true
 
+        copyButton.setTitle("Copy code", for: .normal)
+        copyButton.addTarget(self, action: #selector(copyCode), for: .touchUpInside)
+        copyButton.isHidden = true
+
         let stack = UIStackView(arrangedSubviews: [
-            codeLabel, qrView, openButton, statusLabel, spinner,
+            stepLabel, qrView, codeLabel, copyButton, openButton, statusLabel, spinner,
         ])
         stack.axis = .vertical
         stack.spacing = Spacing.loose
@@ -62,7 +73,10 @@ final class PairingCodeViewController: UIViewController {
         view.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            stack.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor,
+                constant: Spacing.loose
+            ),
             stack.leadingAnchor.constraint(
                 equalTo: view.safeAreaLayoutGuide.leadingAnchor,
                 constant: Spacing.loose
@@ -73,6 +87,11 @@ final class PairingCodeViewController: UIViewController {
             ),
             qrView.widthAnchor.constraint(equalToConstant: 220),
             qrView.heightAnchor.constraint(equalToConstant: 220),
+            openButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 220),
+            stack.bottomAnchor.constraint(
+                lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor,
+                constant: -Spacing.loose
+            ),
         ])
 
         spinner.startAnimating()
@@ -102,6 +121,7 @@ final class PairingCodeViewController: UIViewController {
         codeLabel.text = session.userCode
         qrView.image = QRCode.image(for: session.verificationURL.absoluteString, size: 440)
         openButton.isHidden = false
+        copyButton.isHidden = false
         statusLabel.text = """
         Open \(session.verificationURL.host() ?? "the approval page") in a browser, \
         sign in, and approve this code.
@@ -111,6 +131,12 @@ final class PairingCodeViewController: UIViewController {
     @objc private func openVerification() {
         guard let url = session?.verificationURL else { return }
         UIApplication.shared.open(url)
+    }
+
+    @objc private func copyCode() {
+        guard let code = session?.userCode else { return }
+        UIPasteboard.general.string = code
+        copyButton.setTitle("Copied", for: .normal)
     }
 
     private static func describe(_ error: any Error) -> String {

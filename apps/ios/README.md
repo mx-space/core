@@ -21,13 +21,13 @@ editing `project.yml`.
 
 ## Commands
 
-| Command | Effect |
-|---|---|
-| `make project` | regenerate `Space.xcodeproj` from `project.yml` |
-| `make build` | build the app for the simulator |
-| `make test` | SpaceCore on the host, SpaceUI on a simulator |
+| Command         | Effect                                            |
+| --------------- | ------------------------------------------------- |
+| `make project`  | regenerate `Space.xcodeproj` from `project.yml`   |
+| `make build`    | build the app for the simulator                   |
+| `make test`     | SpaceCore on the host, SpaceUI on a simulator     |
 | `make contract` | verify `openapi.json` matches the server manifest |
-| `make verify` | end-to-end pairing run against a live instance |
+| `make verify`   | end-to-end pairing run against a live instance    |
 
 Override the simulator with `make test SIMULATOR="iPhone 17"`.
 
@@ -58,6 +58,35 @@ The app is signed locally (`CODE_SIGN_IDENTITY = "-"`) with
 `Space/Space.entitlements`. This is not cosmetic: the Keychain refuses
 `SecItemAdd` without an `application-identifier` entitlement, and an unsigned
 simulator build has none — pairing silently fails to persist its token.
+
+## Push notifications
+
+Push is an optional build capability. When `SPACE_PUSH_RELAY_URL` is empty, the
+Notifications entry is omitted from the site menu. This keeps an unconfigured
+self-built app functional without exposing a control that cannot succeed.
+
+| Build setting               | Meaning                                               |
+| --------------------------- | ----------------------------------------------------- |
+| `SPACE_PUSH_RELAY_URL`      | HTTPS origin of the independently deployed Push Relay |
+| `SPACE_PUSH_APP_ID`         | Relay manifest key; defaults to `space`               |
+| `SPACE_APNS_ENVIRONMENT`    | `development` for Debug, `production` for Release     |
+| `PRODUCT_BUNDLE_IDENTIFIER` | Must match the APNs topic configured on the relay     |
+
+A custom fork supplies its own bundle identifier, Apple App ID, Team ID, APNs
+Key ID, and `.p8` key. These values are deployment identity, not user-entered
+runtime settings. The official build may set its relay origin and app identity
+as fixed build settings; the open-source source tree intentionally keeps the
+relay origin empty by default.
+
+The app stores only its installation credential in Keychain. mx-core stores a
+different source credential, and the relay alone stores the APNs key and device
+token ciphertext. Notification previews are generic and never contain comment
+text or visitor information.
+
+The `aps-environment` entitlement must be signed by a provisioning profile that
+supports Push Notifications. End-to-end APNs verification therefore requires a
+physical iPhone and matching Apple credentials; the simulator build validates
+the client path but not Apple delivery.
 
 ## API contract
 

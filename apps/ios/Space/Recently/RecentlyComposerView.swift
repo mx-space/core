@@ -4,9 +4,11 @@ import SwiftUI
 
 struct RecentlyComposerView: View {
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var isEditorFocused: Bool
 
     let service: RecentlyService
     let navigationTitle: String
+    private let confirmationTitle: String
     /// Returns nil on success, or a message to show in place.
     let onSave: (String) async -> String?
 
@@ -26,6 +28,7 @@ struct RecentlyComposerView: View {
     ) {
         self.service = service
         self.navigationTitle = navigationTitle
+        self.confirmationTitle = initialText.isEmpty ? "Publish" : "Save"
         self.onSave = onSave
         _text = State(initialValue: initialText)
     }
@@ -34,6 +37,7 @@ struct RecentlyComposerView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: Spacing.regular) {
                 TextEditor(text: $text)
+                    .focused($isEditorFocused)
                     .frame(minHeight: 140)
                     .scrollContentBackground(.hidden)
                     .padding(Spacing.tight)
@@ -62,13 +66,14 @@ struct RecentlyComposerView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: post)
+                    Button(confirmationTitle, action: post)
                         .disabled(trimmed.isEmpty || isPosting)
                         .accessibilityIdentifier("recently.composer.post")
                 }
             }
             .onChange(of: text) { _, newValue in schedulePreview(for: newValue) }
             .onDisappear { previewTask?.cancel() }
+            .task { isEditorFocused = true }
         }
     }
 

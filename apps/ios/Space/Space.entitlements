@@ -8,5 +8,7 @@
 	<array>
 		<string>$(AppIdentifierPrefix)$(CFBundleIdentifier)</string>
 	</array>
+	<key>aps-environment</key>
+	<string>$(SPACE_APNS_ENVIRONMENT)</string>
 </dict>
 </plist>

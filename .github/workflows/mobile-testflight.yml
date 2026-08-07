@@ -1,0 +1,136 @@
+name: Mobile TestFlight
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'apps/ios/**'
+
+concurrency:
+  group: mobile-testflight
+  cancel-in-progress: false
+
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      APPLE_TEAM_ID: KAMM5N88X3
+      SPACE_BUNDLE_ID: dev.innei.space
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Verify API contract
+        run: pnpm -C apps/core run openapi:check
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+        working-directory: apps/ios
+
+      - name: Run SpaceCore tests
+        run: swift test --package-path Packages/SpaceCore
+        working-directory: apps/ios
+
+      - name: Import signing assets
+        env:
+          DIST_CERT_P12: ${{ secrets.IOS_DIST_CERT_P12 }}
+          DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          APP_PROFILE_BASE64: ${{ secrets.IOS_SPACE_APPSTORE_PROFILE }}
+        run: bash scripts/import-ci-signing-assets.sh
+        working-directory: apps/ios
+
+      - name: Archive
+        run: |
+          set -o pipefail
+          command -v xcbeautify > /dev/null || brew install xcbeautify
+          xcodebuild -skipPackagePluginValidation \
+            -project Space.xcodeproj \
+            -scheme Space \
+            -configuration Release \
+            -destination generic/platform=iOS \
+            -archivePath "$RUNNER_TEMP/Space.xcarchive" \
+            archive \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            PROVISIONING_PROFILE_SPECIFIER="$IOS_APP_PROFILE_NAME" \
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
+            | xcbeautify --renderer github-actions
+        working-directory: apps/ios
+
+      - name: Verify distribution resources
+        run: |
+          APP_PATH="$RUNNER_TEMP/Space.xcarchive/Products/Applications/Space.app"
+          test -s "$APP_PATH/Assets.car"
+          test -s "$APP_PATH/PrivacyInfo.xcprivacy"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Info.plist")" = "$SPACE_BUNDLE_ID"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PATH/Info.plist")" = "$GITHUB_RUN_NUMBER"
+
+      - name: Prepare App Store Connect authentication
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: |
+          : "${ASC_KEY_ID:?ASC_KEY_ID is required}"
+          : "${ASC_API_KEY_P8:?ASC_API_KEY_P8 is required}"
+          printf '%s' "$ASC_API_KEY_P8" > "$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+          echo "ASC_KEY_PATH=$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8" >> "$GITHUB_ENV"
+
+      - name: Upload to App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/exportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>$SPACE_BUNDLE_ID</key><string>$IOS_APP_PROFILE_NAME</string>
+            </dict>
+            <key>manageAppVersionAndBuildNumber</key><true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Space.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/exportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+      - name: Clean up signing assets
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/ci.keychain-db" || true
+          rm -f "$RUNNER_TEMP/dist.p12" "$RUNNER_TEMP"/AuthKey_*.p8
+          if [[ "$IOS_APP_PROFILE_UUID" =~ ^[0-9A-Fa-f-]{36}$ ]]; then
+            rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/$IOS_APP_PROFILE_UUID.mobileprovision"
+            rm -f "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/$IOS_APP_PROFILE_UUID.mobileprovision"
+          fi
