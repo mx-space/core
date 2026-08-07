@@ -9,7 +9,7 @@ Translate short text fields (category names, topic names, mood labels, weather l
 
 ## Rules
 - Translate ALL values into the target language
-- Keep technical terms (API, SDK, React, etc.) unchanged
+- Keep product names, acronyms, and code-like tokens (API, SDK, React, etc.) unchanged; render general terminology with the conventional native term
 - Output must be natural and fluent in the target language
 - Use the conventional native term, not a literal calque (e.g. for a mood label "心情还行" -> "Doing okay", not "Mood still acceptable")
 - Each value is typically 1-5 words; keep translations concise

@@ -940,6 +940,15 @@ export const AISchema = section('AI settings', {
       description: 'Whether to allow calling AI to generate translations',
     },
   ),
+  translationStyleHints: field.plain(
+    z.string().optional(),
+    'Translation style hints',
+    {
+      description:
+        'Freeform guidance injected into translation prompts, e.g. DOCUMENT_TYPE / AUDIENCE / REGISTER lines. Leave empty to disable.',
+      'ui:options': { type: 'textarea' },
+    },
+  ),
   enableAutoGenerateTranslation: field.toggle(
     z.boolean().optional(),
     'Auto-generate AI translations',
@@ -982,18 +991,6 @@ export const AISchema = section('AI settings', {
     {
       description:
         'AI model used by the translation reviewer (critique-only). Falls back to the translation model when empty.',
-    },
-  ),
-  translationReviewScoreThreshold: field.number(
-    z.preprocess(
-      (val) =>
-        val === '' || val === null || val === undefined ? val : Number(val),
-      z.number().int().min(0).max(100).optional(),
-    ),
-    'Translation review score threshold',
-    {
-      description:
-        'Reviewer score (0-100) at or above which the editor pass is skipped. Default 85.',
     },
   ),
   insightsModel: field.plain(

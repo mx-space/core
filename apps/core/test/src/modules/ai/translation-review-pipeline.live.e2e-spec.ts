@@ -86,7 +86,7 @@ type CaseReport = {
     invoked: boolean
     durationMs: number
     skippedReason: string | null
-    score: number | null
+    rounds: number
     issuesCount: number
     issuesBySeverity: { minor: number; major: number }
     issueIds: string[]
@@ -103,9 +103,7 @@ type CaseReport = {
     samplePatches: Array<{ id: string; before: string; after: string }>
   } | null
   quality: {
-    rereviewScore: number
     rereviewIssuesCount: number
-    scoreDelta: number
     issuesDelta: number
   } | null
   structure: {
@@ -124,6 +122,14 @@ type CaseReport = {
 
 const reports: CaseReport[] = []
 
+function toTargetSegments(
+  fullTranslations: Record<string, string>,
+): Record<string, { target: string }> {
+  return Object.fromEntries(
+    Object.entries(fullTranslations).map(([id, target]) => [id, { target }]),
+  )
+}
+
 function consumeMetrics(report: CaseReport, metrics: PipelineMetrics): void {
   if (typeof metrics.writerMs === 'number') {
     report.timings.writerMs = metrics.writerMs
@@ -134,7 +140,7 @@ function consumeMetrics(report: CaseReport, metrics: PipelineMetrics): void {
       invoked: metrics.reviewer.invoked,
       durationMs: metrics.reviewer.durationMs,
       skippedReason: metrics.reviewer.skippedReason,
-      score: metrics.reviewer.score,
+      rounds: metrics.reviewer.rounds,
       issuesCount: metrics.reviewer.issuesCount,
       issuesBySeverity: metrics.reviewer.issuesBySeverity,
       issueIds: metrics.reviewer.issueIds,
@@ -174,7 +180,7 @@ async function runLexicalQualityProbe(
     summary: string | null
     tags: string[] | null
   },
-): Promise<{ score: number; issuesCount: number } | null> {
+): Promise<{ issuesCount: number } | null> {
   if (!result.content) return null
   const parsed = parseLexicalForTranslation(result.content)
   const fullTranslations: Record<string, string> = {
@@ -190,10 +196,10 @@ async function runLexicalQualityProbe(
   const probe = await reviewerService.callReviewer(
     reviewerRuntime,
     targetLang,
-    { allowedIds, fullTranslations },
+    { allowedIds, segments: toTargetSegments(fullTranslations) },
   )
   if (!probe) return null
-  return { score: probe.score, issuesCount: probe.issues.length }
+  return { issuesCount: probe.issues.length }
 }
 
 async function runMarkdownQualityProbe(
@@ -207,7 +213,7 @@ async function runMarkdownQualityProbe(
     summary: string | null
     tags: string[] | null
   },
-): Promise<{ score: number; issuesCount: number } | null> {
+): Promise<{ issuesCount: number } | null> {
   const fullTranslations: Record<string, string> = {
     __title__: result.title,
   }
@@ -221,10 +227,10 @@ async function runMarkdownQualityProbe(
   const probe = await reviewerService.callReviewer(
     reviewerRuntime,
     targetLang,
-    { allowedIds, fullTranslations },
+    { allowedIds, segments: toTargetSegments(fullTranslations) },
   )
   if (!probe) return null
-  return { score: probe.score, issuesCount: probe.issues.length }
+  return { issuesCount: probe.issues.length }
 }
 
 function targetLangCharRatio(text: string, lang: string): number {
@@ -364,7 +370,7 @@ function writeReport(): void {
     } else if (r.reviewer.skippedReason) {
       lines.push(`- reviewer: skipped (${r.reviewer.skippedReason})`)
     } else {
-      lines.push(`- reviewer score: ${r.reviewer.score}`)
+      lines.push(`- reviewer rounds: ${r.reviewer.rounds}`)
       lines.push(
         `- issues: ${r.reviewer.issuesCount} (minor: ${r.reviewer.issuesBySeverity.minor}, major: ${r.reviewer.issuesBySeverity.major})`,
       )
@@ -403,9 +409,6 @@ function writeReport(): void {
 
     lines.push(`### 3. Quality after edit`)
     if (r.quality) {
-      lines.push(
-        `- re-review score: ${r.quality.rereviewScore} (Δ ${r.quality.scoreDelta >= 0 ? '+' : ''}${r.quality.scoreDelta})`,
-      )
       lines.push(
         `- re-review issues: ${r.quality.rereviewIssuesCount} (Δ ${r.quality.issuesDelta >= 0 ? '+' : ''}${r.quality.issuesDelta})`,
       )
@@ -491,7 +494,6 @@ describe.skipIf(!LIVE_ENABLED || !TOKEN)(
           { model: TRANSLATOR_MODEL, provider: 'openrouter' },
           {
             reviewerRuntime,
-            reviewScoreThreshold: 95,
             metrics,
           },
         )
@@ -509,15 +511,9 @@ describe.skipIf(!LIVE_ENABLED || !TOKEN)(
             tags: result.tags,
           },
         )
-        if (
-          probe &&
-          metrics.reviewer?.score !== null &&
-          metrics.reviewer?.score !== undefined
-        ) {
+        if (probe && metrics.reviewer) {
           report.quality = {
-            rereviewScore: probe.score,
             rereviewIssuesCount: probe.issuesCount,
-            scoreDelta: probe.score - metrics.reviewer.score,
             issuesDelta: probe.issuesCount - metrics.reviewer.issuesCount,
           }
         }
@@ -597,7 +593,6 @@ describe.skipIf(!LIVE_ENABLED || !TOKEN)(
           { model: TRANSLATOR_MODEL, provider: 'openrouter' },
           {
             reviewerRuntime,
-            reviewScoreThreshold: 95,
             metrics,
           },
         )
@@ -615,15 +610,9 @@ describe.skipIf(!LIVE_ENABLED || !TOKEN)(
             tags: result.tags,
           },
         )
-        if (
-          probe &&
-          metrics.reviewer?.score !== null &&
-          metrics.reviewer?.score !== undefined
-        ) {
+        if (probe && metrics.reviewer) {
           report.quality = {
-            rereviewScore: probe.score,
             rereviewIssuesCount: probe.issuesCount,
-            scoreDelta: probe.score - metrics.reviewer.score,
             issuesDelta: probe.issuesCount - metrics.reviewer.issuesCount,
           }
         }
@@ -706,7 +695,6 @@ describe.skipIf(!LIVE_ENABLED || !TOKEN)(
           { model: TRANSLATOR_MODEL, provider: 'openrouter' },
           {
             reviewerRuntime,
-            reviewScoreThreshold: 95,
             metrics,
           },
         )
@@ -724,15 +712,9 @@ describe.skipIf(!LIVE_ENABLED || !TOKEN)(
             tags: result.tags,
           },
         )
-        if (
-          probe &&
-          metrics.reviewer?.score !== null &&
-          metrics.reviewer?.score !== undefined
-        ) {
+        if (probe && metrics.reviewer) {
           report.quality = {
-            rereviewScore: probe.score,
             rereviewIssuesCount: probe.issuesCount,
-            scoreDelta: probe.score - metrics.reviewer.score,
             issuesDelta: probe.issuesCount - metrics.reviewer.issuesCount,
           }
         }
@@ -804,7 +786,6 @@ describe.skipIf(!LIVE_ENABLED || !TOKEN)(
           { model: TRANSLATOR_MODEL, provider: 'openrouter' },
           {
             reviewerRuntime,
-            reviewScoreThreshold: 0,
             metrics,
           },
         )

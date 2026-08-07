@@ -4,7 +4,13 @@ import { memoryAdapter } from 'better-auth/adapters/memory'
 import { APIError } from 'better-auth/api'
 import { bearer, deviceAuthorization } from 'better-auth/plugins'
 
-const CLIENT_ID = 'mxs-cli'
+import {
+  DEVICE_AUTHORIZATION_CLIENT_IDS,
+  MXS_CLI_CLIENT_ID,
+  SPACE_IOS_CLIENT_ID,
+} from '~/modules/auth/auth.implement'
+
+const CLIENT_ID = MXS_CLI_CLIENT_ID
 
 type DeviceAuth = ReturnType<typeof buildAuth>['auth']
 
@@ -35,7 +41,7 @@ function buildAuth(
         verificationUri,
         schema: {},
         onDeviceAuthRequest: async (clientId) => {
-          if (clientId !== CLIENT_ID) {
+          if (!DEVICE_AUTHORIZATION_CLIENT_IDS.has(clientId)) {
             throw new APIError('BAD_REQUEST', {
               error: 'invalid_client',
               error_description: `unsupported client_id: ${clientId}`,
@@ -67,7 +73,7 @@ async function signUpOwner(auth: DeviceAuth) {
 }
 
 describe('deviceAuthorization plugin (e2e)', () => {
-  test('rejects clients that are not mxs-cli', async () => {
+  test('rejects clients outside the allow-list', async () => {
     const { auth } = buildAuth()
     await expect(
       auth.api.deviceCode({
@@ -76,6 +82,15 @@ describe('deviceAuthorization plugin (e2e)', () => {
     ).rejects.toMatchObject({
       body: { error: 'invalid_client' },
     })
+  })
+
+  test('accepts the Space iOS client', async () => {
+    const { auth } = buildAuth()
+    const res = await auth.api.deviceCode({
+      body: { client_id: SPACE_IOS_CLIENT_ID, scope: 'openid' },
+    })
+    expect(res.device_code).toBeTruthy()
+    expect(res.user_code).toHaveLength(8)
   })
 
   test('issues a device code, verification uri, and polling interval', async () => {

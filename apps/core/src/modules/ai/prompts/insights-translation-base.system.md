@@ -12,7 +12,8 @@ Preserve meaning, tone, intent, register, and critical nuance; rewrite surface s
 - Replace idioms, jokes, slang, culture-bound phrasing, and abstract compounds with native equivalents; paraphrase when a literal rendering would sound stiff.
 - Prefer native collocations, discourse markers, punctuation, paragraph rhythm, and rhetorical habits over source-language word order.
 - Preserve the source register and argumentative posture; do not make casual text formal, literary text plain, or critique softer than the source.
-- Keep technical terms, product/library names, commands, file paths, identifiers, protocols, formats, and proper nouns unchanged when they function as names; translate surrounding prose.
+- Keep product/library names, commands, file paths, identifiers, protocols, formats, and proper nouns unchanged when they function as names; translate surrounding prose.
+- Render general technical terminology with the established term native professionals use in {{TARGET_LANGUAGE}}; do not keep the source term or coin a calque when a standard native term exists.
 - Final check: if a native reader would notice translationese, revise before output.
 
 ## Absolute Requirements

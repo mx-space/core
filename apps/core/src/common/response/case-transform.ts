@@ -7,7 +7,7 @@ const UPPER_LOWER_RE = /([A-Z]+)([A-Z][a-z])/g
 
 // Boundary-aware: `articleURL` → `article_url`, `HTMLContent` → `html_content`,
 // rather than the naïve `_a_r_t_i_c_l_e__u_r_l`.
-const snakeKey = (key: string): string => {
+export const snakeKey = (key: string): string => {
   if (!IDENTIFIER_RE.test(key) || !UPPER_RE.test(key)) return key
   return key
     .replaceAll(UPPER_LOWER_RE, '$1_$2')

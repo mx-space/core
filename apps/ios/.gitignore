@@ -1,0 +1,8 @@
+# Regenerated from project.yml by `xcodegen generate`
+Space.xcodeproj/
+
+.build/
+.swiftpm/
+DerivedData/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/

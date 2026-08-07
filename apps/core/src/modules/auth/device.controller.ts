@@ -36,6 +36,19 @@ export class DeviceVerifyDto extends createZodDto(DeviceVerifyBodySchema) {}
 const deviceBasePath = isDev ? '/device' : `/api/v${API_VERSION}/device`
 const adminLoginPath = '/proxy/qaqdmin/#/login'
 
+const webTargets = {
+  admin: '/dashboard',
+  analytics: '/analyze',
+  comments: '/comments',
+  files: '/files',
+  notes: '/notes',
+  posts: '/posts',
+  recently: '/recently',
+  settings: '/settings',
+} as const
+
+type WebTarget = keyof typeof webTargets
+
 @ApiController('device')
 @SkipThrottle()
 export class DeviceController {
@@ -46,6 +59,42 @@ export class DeviceController {
     @Inject(AuthInstanceInjectKey)
     private readonly authInstance: InjectAuthInstance,
   ) {}
+
+  @Get('web-handoff')
+  @HTTPDecorators.RawResponse
+  async webHandoff(
+    @Query('token') token: string | undefined,
+    @Query('target') target: string | undefined,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!token || !target || !(target in webTargets)) {
+      return reply.status(400).type('text/plain').send('Invalid handoff')
+    }
+
+    const auth = this.authInstance.get()
+    if (!auth) {
+      throw createAppException(AppErrorCode.AUTH_FAILED, {
+        message: 'auth not initialised',
+      })
+    }
+
+    const result = await auth.api.verifyOneTimeToken({
+      body: { token },
+      returnHeaders: true,
+    })
+    const setCookies = result.headers.getSetCookie()
+    if (setCookies.length > 0) reply.header('set-cookie', setCookies)
+
+    reply
+      .header('cache-control', 'no-store')
+      .header('referrer-policy', 'no-referrer')
+      .header('x-content-type-options', 'nosniff')
+
+    const { adminUrl } = await this.configsService.get('url')
+    const destination = new URL(adminUrl)
+    destination.hash = `#${webTargets[target as WebTarget]}`
+    return reply.redirect(destination.toString(), 302)
+  }
 
   @Get('/')
   @HTTPDecorators.RawResponse

@@ -60,7 +60,6 @@ const zodCommentSpam = z
 
 const zodTranslationReviewer = z
   .object({
-    score: z.number().int().min(0).max(100),
     issues: z.array(
       z
         .object({
@@ -226,7 +225,7 @@ describe('ai-prompts schema regression (zod -> typebox parity)', () => {
     const fixtures = loadFixtures('translation-reviewer.json')
     const tb = AI_PROMPTS.translationReviewer('zh', {
       allowedIds: ['x'],
-      fullTranslations: { x: 'y' },
+      segments: { x: { source: 'y', target: 'z' } },
     }).schema
 
     for (const fx of fixtures) {
