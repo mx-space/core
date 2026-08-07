@@ -54,6 +54,10 @@ if [[ ! "$profile_uuid" =~ ^[0-9A-Fa-f-]{36}$ ]]; then
   echo 'The Space provisioning profile has an invalid UUID.' >&2
   exit 1
 fi
+if [[ "$profile_name" != 'Space' ]]; then
+  echo "The Space provisioning profile must be named Space, found $profile_name." >&2
+  exit 1
+fi
 if [[ "$profile_team_id" != "$APPLE_TEAM_ID" ]]; then
   echo "The Space profile belongs to team $profile_team_id, expected $APPLE_TEAM_ID." >&2
   exit 1

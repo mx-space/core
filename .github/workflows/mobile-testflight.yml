@@ -57,10 +57,6 @@ jobs:
             -destination generic/platform=iOS \
             -archivePath "$RUNNER_TEMP/Space.xcarchive" \
             archive \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="$IOS_APP_PROFILE_NAME" \
             CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
             | xcbeautify --renderer github-actions
         working-directory: apps/ios

@@ -71,6 +71,8 @@ targets:
         Release:
           CODE_SIGN_IDENTITY: Apple Distribution
           CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: KAMM5N88X3
+          PROVISIONING_PROFILE_SPECIFIER: Space
           SPACE_APNS_ENVIRONMENT: production
 
   SpaceUITests:
