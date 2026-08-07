@@ -1,5 +1,6 @@
 import { CloudSun, Copy, Smile } from 'lucide-react'
 import { toast } from 'sonner'
+
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
 import type { NoteModel } from '~/models/note'
 import type { ListAction } from '~/ui/list-actions'
@@ -11,6 +12,7 @@ type Translator = (key: TranslationKey, values?: TranslationValues) => string
 
 export interface BuildNoteMenuItemsOptions {
   actions: ReadonlyArray<ListAction<NoteModel>>
+  aiMenuItems?: ContextMenuItem[]
   externalHref: string
   onBookmarkToggle: (next: boolean) => void
   onMoodChange: (next: string | null) => void
@@ -114,6 +116,21 @@ export function buildNoteMenuItems(
         options.onWeatherChange(next)
       },
     },
+  )
+
+  if (options.aiMenuItems?.length) {
+    items.push(
+      { key: 'sep-ai', type: 'divider' },
+      {
+        children: options.aiMenuItems,
+        key: 'ai-submenu',
+        label: t('ai.menu.label'),
+        type: 'submenu',
+      },
+    )
+  }
+
+  items.push(
     { key: 'sep-3', type: 'divider' },
     {
       icon: Copy,

@@ -5,6 +5,7 @@ import {
   ContentEntryListItem,
   ContentListStatusBadge,
 } from '~/features/_shared/components/content-list-item'
+import { useAiQuickActions } from '~/features/ai/hooks/use-ai-quick-actions'
 import { useI18n } from '~/i18n'
 import type { PostModel } from '~/models/post'
 import type { ListAction } from '~/ui/list-actions'
@@ -32,6 +33,7 @@ export function PostRow(props: {
 }) {
   const { t } = useI18n()
   const post = props.post
+  const aiMenuItems = useAiQuickActions(post.id)
   const externalHref = `${WEB_URL}/posts/${post.category?.slug ?? post.categoryId}/${post.slug}`
   const isPublished = post.isPublished ?? false
   const title = post.title || t('posts.row.untitled')
@@ -40,6 +42,7 @@ export function PostRow(props: {
   const menuItems = () =>
     buildPostMenuItems(post, {
       actions: props.actions,
+      aiMenuItems,
       categories: props.categories,
       externalHref,
       onCategoryChange: (categoryId) =>

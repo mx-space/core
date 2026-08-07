@@ -1,6 +1,11 @@
 export const zhCN = {
   'tasks.action.cancel': '取消任务',
   'tasks.action.clearCompleted': '清理已完成',
+  'ai.menu.label': 'AI',
+  'ai.menu.generateSummary': '生成摘要',
+  'ai.menu.generateInsights': '生成精读',
+  'ai.menu.generateTranslation': '生成翻译',
+  'ai.menu.generateTts': '生成朗读',
   'ai.action.create': '创建任务',
   'ai.action.delete': '删除',
   'tasks.action.deleteTask': '删除任务',
