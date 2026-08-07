@@ -1,3 +1,10 @@
+# [13.22.0](https://github.com/mx-space/core/compare/v13.21.0...v13.22.0) (2026-08-07)
+
+
+### Features
+
+* add Space iOS admin app and push delivery ([#2783](https://github.com/mx-space/core/pull/2783)) ([4afcdde](https://github.com/mx-space/core/commit/4afcdde3ed4d2880f622bc3dc918503f5e8e5158))
+
 # [13.21.0](https://github.com/mx-space/core/compare/v13.20.1...v13.21.0) (2026-08-06)
 
 

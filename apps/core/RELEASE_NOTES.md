@@ -1,32 +1,32 @@
 ## TL;DR
 
-AI translation moves to a new agent-powered pipeline, and the admin gains orphan-file reconciliation for cleaner storage.
+Space gains a native iOS administration app and secure push delivery through a separately deployable relay.
 
 ## Highlights
 
-**AI translation, rebuilt as an agent conversation.** The translation pipeline now runs on the message-engine agent loop: the translator writes and patches an in-memory virtual file through tools, a review sub-agent checks each segment window (monolingual first, then bilingual), and the whole run is driven by pi-agent-core. Benchmarked against the old pipeline, the agent path won on both test articles while main-thread prompt cache hits jumped from 7% to 57–86% — translation is not only better, it is also noticeably faster and cheaper. The lexical strategy automatically uses the agent runtime when the model supports it, with the legacy path retained otherwise.
+**Administration from iPhone.** The native Space app now supports device-authorization pairing, dashboard statistics, comment review, quick note and say publishing, and file-library access. Mobile-specific API views provide the data needed by these workflows without requiring the full web administration interface, while the checked-in OpenAPI contract keeps the Swift packages and server routes aligned.
 
-**Orphan-file reconciliation.** The file manager now inventories how every upload is referenced across posts, notes and pages, so files that are no longer referenced by any content can be surfaced and cleaned up. A new admin view walks you through each orphan with a preview before you delete it, and the usage ledger is kept up to date as content changes.
+**Privacy-preserving push delivery.** mx-core can register devices and queue notification events through an independently deployed Push Relay. The relay receives only the minimum comment resource identifier instead of comment text, author details, email addresses, IP addresses, or user-agent data. Delivery credentials are encrypted at rest, and relay requests are limited to explicit server-controlled HTTPS origins.
 
-**Richer editor, straight from the haklex 0.34 toolchain.** Gallery nodes gain aspect, fit and max-item-height controls, the slash menu supports nested items, and uploaded images insert back into the editor they were uploaded from. The code block also opens up: the full shiki language set (235 languages, including Swift) with free-form language input.
+**Repeatable TestFlight delivery.** The repository now includes a GitHub Actions workflow for signed iOS archives and TestFlight uploads. It runs automatically only when mobile-related files change, remains available for manual dispatch, and uses read-only repository permissions. This keeps routine server changes from consuming Apple build capacity while preserving an auditable release path for the mobile application.
 
 ## Changes
 
 ### Features
-- AI translation now runs as an append-only agent conversation: virtual-file patching, sub-agent review windows, per-target-language prompts, and site-level style hints ([#2782](https://github.com/mx-space/core/pull/2782))
-- Generate covers from unsaved drafts, preferring the live editor title and summary over the published record ([b80610e](https://github.com/mx-space/core/commit/b80610ee773024bba30951eafbe3624128493056))
-- File manager: reconcile isolated file references — inventory uploads, find orphans, and preview cleanup in a new admin view ([65736d7](https://github.com/mx-space/core/commit/65736d713be4eaf92717002c7e2a29709563dad6))
-- Editor: gallery nodes gain aspect, fit and max-item-height controls ([07b4bb9](https://github.com/mx-space/core/commit/07b4bb923a3d8b0602b56663c265e5d6e5dca3d9))
-- Editor: slash menu supports nested items ([07b4bb9](https://github.com/mx-space/core/commit/07b4bb923a3d8b0602b56663c265e5d6e5dca3d9))
-- Editor: code block gains the full shiki language set with free-form language input ([1207b23](https://github.com/mx-space/core/commit/1207b23a6958491684e652c90dfdac2ef39468a7))
+
+- Manage a Space instance from the native iOS application, including pairing, dashboard, moderation, publishing, and file workflows ([#2783](https://github.com/mx-space/core/pull/2783))
+- Register mobile installations and deliver privacy-minimized comment notifications through the standalone Push Relay ([#2783](https://github.com/mx-space/core/pull/2783))
+- Export and verify the mobile OpenAPI contract so server and Swift models remain synchronized ([#2783](https://github.com/mx-space/core/pull/2783))
+- Build and upload signed iOS archives through a mobile-scoped or manually dispatched TestFlight workflow ([#2783](https://github.com/mx-space/core/pull/2783))
 
 ### Bug Fixes
-- Editor: uploaded images now insert back into the editor they were uploaded from ([07b4bb9](https://github.com/mx-space/core/commit/07b4bb923a3d8b0602b56663c265e5d6e5dca3d9))
-- Draft: the status tag no longer reports saves in the future ([b80610e](https://github.com/mx-space/core/commit/b80610ee773024bba30951eafbe3624128493056))
 
-### Other
-- Editor toolchain: lexical family lifted to 0.49.0 across direct pins and pnpm overrides ([8cb2f8f](https://github.com/mx-space/core/commit/8cb2f8f14bbe8b342483c01b669c9eb57ca2b3aa))
+- Reject untrusted or malformed Push Relay destinations before activation, deactivation, and event delivery ([#2783](https://github.com/mx-space/core/pull/2783))
+
+## Upgrade Notes
+
+- Existing deployments remain unaffected when push delivery is unused. To enable it, deploy and migrate the standalone Push Relay, enable mx-core encryption with a stable `MX_ENCRYPT_KEY`, and set `MX_PUSH_RELAY_ORIGINS` to the exact trusted HTTPS relay origins. The mx-core `0027_clean_vindicator` migration creates the new push source, binding, and delivery tables during the normal database migration process.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.20.1...v13.21.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.21.0...v13.22.0
