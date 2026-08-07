@@ -1,4 +1,5 @@
 import Foundation
+import OpenAPIRuntime
 
 public struct PairingSession: Sendable, Equatable {
     public let deviceCode: String
@@ -92,37 +93,51 @@ public actor PairingService {
             guard now() < session.expiresAt else { throw PairingError.expired }
             try await sleep(interval)
 
-            let output = try await client.pollDeviceToken(
-                .init(
-                    body: .json(
-                        .init(
-                            grantType: .urn_colon_ietf_colon_params_colon_oauth_colon_grantType_colon_deviceCode,
-                            deviceCode: session.deviceCode,
-                            clientId: PairingService.clientID
+            do {
+                let output = try await client.pollDeviceToken(
+                    .init(
+                        body: .json(
+                            .init(
+                                grantType: .urn_colon_ietf_colon_params_colon_oauth_colon_grantType_colon_deviceCode,
+                                deviceCode: session.deviceCode,
+                                clientId: PairingService.clientID
+                            )
                         )
                     )
                 )
-            )
 
-            switch output {
-            case let .ok(response):
-                try tokenStore.write(try response.body.json.accessToken)
-                return
-            case let .clientError(_, response):
-                let payload = try response.body.json
-                switch payload.error {
-                case .authorizationPending:
-                    continue
-                case .slowDown:
-                    // RFC 8628 §3.5: back off by five seconds and keep polling.
-                    interval += .seconds(5)
-                default:
-                    throw PairingService.mapError(payload)
+                switch output {
+                case let .ok(response):
+                    try tokenStore.write(try response.body.json.accessToken)
+                    return
+                case let .clientError(_, response):
+                    let payload = try response.body.json
+                    switch payload.error {
+                    case .authorizationPending:
+                        continue
+                    case .slowDown:
+                        // RFC 8628 §3.5: back off by five seconds and keep polling.
+                        interval += .seconds(5)
+                    default:
+                        throw PairingService.mapError(payload)
+                    }
+                case let .serverError(statusCode, response):
+                    // A rolling deployment can briefly surface gateway errors.
+                    // They are safe to retry because the device code remains the
+                    // idempotency key for this polling operation.
+                    if [502, 503, 504].contains(statusCode) {
+                        continue
+                    }
+                    throw PairingService.mapError(try response.body.json)
+                case let .undocumented(statusCode, _):
+                    throw PairingError.server("unexpected status \(statusCode)")
                 }
-            case let .serverError(_, response):
-                throw PairingService.mapError(try response.body.json)
-            case let .undocumented(statusCode, _):
-                throw PairingError.server("unexpected status \(statusCode)")
+            } catch {
+                guard PairingService.isRetryableTransportError(error) else { throw error }
+                // The normal polling interval is applied again at the top of
+                // the loop, avoiding a tight retry while keeping the current
+                // pairing session and user code intact.
+                continue
             }
         }
     }
@@ -146,6 +161,25 @@ public actor PairingService {
         case .expiredToken: .expired
         case .invalidClient: .rejectedClient
         default: .server(payload.errorDescription ?? payload.error.rawValue)
+        }
+    }
+
+    private static func isRetryableTransportError(_ error: any Error) -> Bool {
+        let underlying = (error as? OpenAPIRuntime.ClientError)?.underlyingError ?? error
+        let nsError = underlying as NSError
+        guard nsError.domain == NSURLErrorDomain else { return false }
+
+        return switch URLError.Code(rawValue: nsError.code) {
+        case .timedOut,
+             .cannotFindHost,
+             .cannotConnectToHost,
+             .networkConnectionLost,
+             .dnsLookupFailed,
+             .notConnectedToInternet,
+             .resourceUnavailable:
+            true
+        default:
+            false
         }
     }
 }
