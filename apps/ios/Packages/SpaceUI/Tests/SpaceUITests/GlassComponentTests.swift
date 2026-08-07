@@ -29,4 +29,10 @@ import UIKit
     @Test func glassIsDisallowedWhenTransparencyIsReduced() {
         #expect(GlassAvailability.isGlassAllowed == !UIAccessibility.isReduceTransparencyEnabled)
     }
+
+    @Test func primaryButtonKeepsALargeTapTarget() {
+        let button = PrimaryGlassButton(title: "Continue")
+
+        #expect(button.intrinsicContentSize.height >= PrimaryGlassButton.minimumHeight)
+    }
 }

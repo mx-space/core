@@ -6,7 +6,7 @@ final class ServerSetupViewController: UIViewController {
     private let stepLabel = UILabel()
     private let headingLabel = UILabel()
     private let field = UITextField()
-    private let continueButton = UIButton(configuration: .borderedProminent())
+    private let continueButton = PrimaryGlassButton(title: "Continue")
     private let statusLabel = UILabel()
     private let spinner = UIActivityIndicatorView(style: .medium)
 
@@ -44,7 +44,6 @@ final class ServerSetupViewController: UIViewController {
         field.clearButtonMode = .whileEditing
         field.addTarget(self, action: #selector(submit), for: .editingDidEndOnExit)
 
-        continueButton.setTitle("Continue", for: .normal)
         continueButton.addTarget(self, action: #selector(submit), for: .touchUpInside)
 
         statusLabel.numberOfLines = 0

@@ -8,7 +8,7 @@ final class PairingCodeViewController: UIViewController {
     private let qrView = UIImageView()
     private let statusLabel = UILabel()
     private let copyButton = UIButton(configuration: .plain())
-    private let openButton = UIButton(configuration: .borderedProminent())
+    private let openButton = PrimaryGlassButton(title: "Open approval page")
     private let spinner = UIActivityIndicatorView(style: .medium)
 
     private let endpoint: ServerEndpoint
@@ -55,7 +55,6 @@ final class PairingCodeViewController: UIViewController {
         statusLabel.accessibilityIdentifier = "pairing.status"
         statusLabel.text = "Requesting a code…"
 
-        openButton.setTitle("Open approval page", for: .normal)
         openButton.addTarget(self, action: #selector(openVerification), for: .touchUpInside)
         openButton.isHidden = true
 

@@ -1,4 +1,6 @@
 import Foundation
+import HTTPTypes
+import OpenAPIRuntime
 import Testing
 
 @testable import SpaceCore
@@ -133,6 +135,37 @@ import Testing
         #expect(clock.slept == [.seconds(5), .seconds(10)])
     }
 
+    @Test func transientConnectionLossDoesNotAbortApprovalPolling() async throws {
+        let clock = TestClock(now: start)
+        let store = InMemoryTokenStore()
+        let scripted = StubTransport([
+            codeReply,
+            .init(
+                status: .ok,
+                json: #"{"access_token":"tok","token_type":"Bearer","expires_in":10}"#
+            ),
+        ])
+        let transport = FailFirstTokenPollTransport(scripted)
+        let client = Client(
+            serverURL: baseURL.appending(path: "api/v3"),
+            configuration: SpaceClient.configuration,
+            transport: transport
+        )
+        let service = PairingService(
+            client: client,
+            baseURL: baseURL,
+            tokenStore: store,
+            now: { clock.now },
+            sleep: { clock.advance(by: $0) }
+        )
+
+        let session = try await service.requestSession()
+        try await service.waitForApproval(session)
+
+        #expect(try store.read() == "tok")
+        #expect(clock.slept == [.seconds(5), .seconds(5)])
+    }
+
     @Test func deniedApprovalStopsPolling() async throws {
         let store = InMemoryTokenStore()
         let (service, _) = makeService(
@@ -160,6 +193,38 @@ import Testing
         // Nothing was polled — the deadline is checked before each request.
         #expect(transport.remainingCount == 0)
         #expect(transport.requestBodies.count == 1)
+    }
+}
+
+private final class FailFirstTokenPollTransport: ClientTransport, @unchecked Sendable {
+    private let lock = NSLock()
+    private var hasFailed = false
+    private let underlying: StubTransport
+
+    init(_ underlying: StubTransport) {
+        self.underlying = underlying
+    }
+
+    func send(
+        _ request: HTTPRequest,
+        body: HTTPBody?,
+        baseURL: URL,
+        operationID: String
+    ) async throws -> (HTTPResponse, HTTPBody?) {
+        let shouldFail = lock.withLock {
+            guard operationID == Operations.PollDeviceToken.id, !hasFailed else { return false }
+            hasFailed = true
+            return true
+        }
+        if shouldFail {
+            throw URLError(.networkConnectionLost)
+        }
+        return try await underlying.send(
+            request,
+            body: body,
+            baseURL: baseURL,
+            operationID: operationID
+        )
     }
 }
 
