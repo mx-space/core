@@ -1,0 +1,113 @@
+name: Space
+options:
+  bundleIdPrefix: dev.innei
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+
+packages:
+  SpaceCore:
+    path: Packages/SpaceCore
+  SpaceUI:
+    path: Packages/SpaceUI
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+  Space:
+    type: application
+    platform: iOS
+    sources:
+      - path: Space
+        excludes:
+          - Space.entitlements
+    dependencies:
+      - package: SpaceCore
+      - package: SpaceUI
+    info:
+      path: Space/Info.plist
+      properties:
+        CFBundleDisplayName: Space
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        SpacePushRelayURL: $(SPACE_PUSH_RELAY_URL)
+        SpacePushAppID: $(SPACE_PUSH_APP_ID)
+        SpaceAPNsEnvironment: $(SPACE_APNS_ENVIRONMENT)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.innei.space
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Space/Space.entitlements
+        CODE_SIGNING_REQUIRED: YES
+        CODE_SIGNING_ALLOWED: YES
+        SPACE_PUSH_APP_ID: space
+        SPACE_PUSH_RELAY_URL: ""
+      configs:
+        Debug:
+          # Keychain access needs an `application-identifier` entitlement.
+          # Ad-hoc signing is sufficient for local Simulator builds.
+          CODE_SIGN_IDENTITY: "-"
+          CODE_SIGN_STYLE: Manual
+          SPACE_APNS_ENVIRONMENT: development
+        Release:
+          CODE_SIGN_IDENTITY: Apple Distribution
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: KAMM5N88X3
+          PROVISIONING_PROFILE_SPECIFIER: Space
+          SPACE_APNS_ENVIRONMENT: production
+
+  SpaceUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: SpaceUITests
+    dependencies:
+      - target: Space
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.innei.space.uitests
+        TEST_TARGET_NAME: Space
+        GENERATE_INFOPLIST_FILE: YES
+        # Keychain access needs an `application-identifier` entitlement, which
+        # only gets embedded when the bundle is actually signed. Local ad-hoc
+        # signing is enough for the simulator and for CI.
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGNING_REQUIRED: YES
+        CODE_SIGNING_ALLOWED: YES
+
+schemes:
+  Space:
+    build:
+      targets:
+        Space: all
+        SpaceUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      # Expanded from a build-setting override, so `make verify` can point the
+      # suite at any instance without editing the scheme.
+      environmentVariables:
+        SPACE_TEST_SERVER: $(TEST_RUNNER_SPACE_TEST_SERVER)
+      targets:
+        - SpaceUITests
