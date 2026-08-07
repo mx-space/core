@@ -9,6 +9,8 @@ function createHarness() {
   const queryService: any = {
     getPublicNarration: vi.fn(),
     getDetailsByRefId: vi.fn(),
+    getNarrationsByRefId: vi.fn(),
+    getAllNarrationsGrouped: vi.fn(),
     list: vi.fn(),
   }
   const taskService: any = {
@@ -165,27 +167,84 @@ describe('AiTtsController', () => {
     })
   })
 
-  it('returns narration details for a ref', async () => {
+  it('returns narration details for a ref together with the article', async () => {
     const { controller, queryService } = createHarness()
-    queryService.getDetailsByRefId.mockResolvedValue([
-      {
-        id: 'tts-1',
-        lang: 'zh',
-        isTranslation: false,
-        model: 'gpt-4o-mini-tts',
-        voice: 'alloy',
-        speed: 1,
-        blockOrder: ['blk-a'],
-        charCount: 10,
-        updatedAt: null,
-        segments: [],
+    queryService.getNarrationsByRefId.mockResolvedValue({
+      article: {
+        type: 'Post',
+        document: { id: '1', title: 'Hello world' },
       },
-    ])
+      rows: [
+        {
+          id: 'tts-1',
+          refId: '1',
+          lang: 'zh',
+          isTranslation: false,
+          model: 'gpt-4o-mini-tts',
+          voice: 'alloy',
+          speed: 1,
+          blockOrder: ['blk-a'],
+          charCount: 10,
+          updatedAt: null,
+          segments: [],
+        },
+      ],
+    })
 
     const result = await controller.getByRefId({ id: '1' } as any)
 
-    expect(result).toHaveLength(1)
-    expect(queryService.getDetailsByRefId).toHaveBeenCalledWith('1')
+    expect(queryService.getNarrationsByRefId).toHaveBeenCalledWith('1')
+    expect(result.article).toMatchObject({ type: 'Post' })
+    expect(result.rows).toHaveLength(1)
+    expect(result.rows[0]).toMatchObject({ id: 'tts-1', refId: '1' })
+  })
+
+  it('wraps grouped narrations with pagination meta', async () => {
+    const { controller, queryService } = createHarness()
+    queryService.getAllNarrationsGrouped.mockResolvedValue({
+      data: [
+        {
+          article: { id: '1', title: 'Hello world', type: 'Post' },
+          narrations: [
+            {
+              id: 'tts-1',
+              refId: '1',
+              lang: 'zh',
+              isTranslation: false,
+              model: 'gpt-4o-mini-tts',
+              voice: 'alloy',
+              speed: 1,
+              blockOrder: ['blk-a'],
+              charCount: 10,
+              updatedAt: null,
+              segments: [],
+            },
+          ],
+        },
+      ],
+      pagination: {
+        currentPage: 1,
+        totalPage: 1,
+        total: 1,
+        size: 10,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    })
+
+    const result = await controller.listGrouped({ page: 1, size: 10 } as any)
+
+    expect(queryService.getAllNarrationsGrouped).toHaveBeenCalledWith({
+      page: 1,
+      size: 10,
+    })
+    expect(result.data).toHaveLength(1)
+    expect(result.data[0].article).toMatchObject({ id: '1' })
+    expect(result.data[0].narrations[0]).toMatchObject({
+      id: 'tts-1',
+      refId: '1',
+    })
+    expect(result.meta.pagination).toMatchObject({ total: 1, page: 1 })
   })
 
   it('delegates delete to the service', async () => {

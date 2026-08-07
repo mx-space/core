@@ -11,7 +11,9 @@ import type { NoteService } from '../../note/note.service'
 import { isArticleVisibleToViewer } from '../ai-article-visibility.util'
 import { parseLanguageCode } from '../ai-language.util'
 import { readArticleMetaLang } from '../ai-translation/article-content.util'
+import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import { AiTtsRepository } from './ai-tts.repository'
+import type { GetTtsGroupedQueryInput } from './ai-tts.schema'
 import type { AiTtsBlockRow, AiTtsRow } from './ai-tts.types'
 
 export interface TtsSegmentResult {
@@ -37,6 +39,7 @@ export interface PublicNarrationResult {
 
 export interface NarrationDetailResult {
   id: string
+  refId: string
   lang: string
   isTranslation: boolean
   model: string
@@ -156,25 +159,72 @@ export class AiTtsQueryService {
     }
   }
 
-  async getDetailsByRefId(refId: string): Promise<NarrationDetailResult[]> {
-    const parents = await this.repository.findAllByRef(refId)
-    return Promise.all(
-      parents.map(async (parent) => ({
-        id: parent.id,
-        lang: parent.lang,
-        isTranslation: parent.isTranslation,
-        model: parent.model,
-        voice: parent.voice,
-        speed: parent.speed,
-        blockOrder: parent.blockOrder,
-        charCount: parent.charCount,
-        updatedAt: parent.updatedAt,
-        segments: toSegments(
-          await this.repository.findBlocks(parent.id),
-          parent.blockOrder,
-        ),
-      })),
+  private async toDetails(
+    parents: AiTtsRow[],
+  ): Promise<NarrationDetailResult[]> {
+    if (!parents.length) return []
+    const blocks = await this.repository.findBlocksByTtsIds(
+      parents.map((parent) => parent.id),
     )
+    const blocksByTtsId = blocks.reduce<Record<string, AiTtsBlockRow[]>>(
+      (acc, block) => {
+        ;(acc[block.ttsId] ??= []).push(block)
+        return acc
+      },
+      {},
+    )
+    return parents.map((parent) => ({
+      id: parent.id,
+      refId: parent.refId,
+      lang: parent.lang,
+      isTranslation: parent.isTranslation,
+      model: parent.model,
+      voice: parent.voice,
+      speed: parent.speed,
+      blockOrder: parent.blockOrder,
+      charCount: parent.charCount,
+      updatedAt: parent.updatedAt,
+      segments: toSegments(blocksByTtsId[parent.id] ?? [], parent.blockOrder),
+    }))
+  }
+
+  async getDetailsByRefId(refId: string): Promise<NarrationDetailResult[]> {
+    return this.toDetails(await this.repository.findAllByRef(refId))
+  }
+
+  async getNarrationsByRefId(refId: string) {
+    // Unlike summaries, a missing article is not an error here: narration rows
+    // can outlive their article, and the write drawer fetches by ref right
+    // after creation. The admin detail pane tolerates a null article.
+    const article = await this.databaseService.findGlobalById(refId)
+    const rows = await this.getDetailsByRefId(refId)
+    return { article, rows }
+  }
+
+  async getAllNarrationsGrouped(query: GetTtsGroupedQueryInput) {
+    const { data, pagination } =
+      await buildGroupedWithOrphans<NarrationDetailResult>({
+        page: query.page,
+        size: query.size,
+        search: query.search,
+        databaseService: this.databaseService,
+        fetchCandidateArticles: () =>
+          this.databaseService.findAllArticlesForAIText(),
+        fetchRecordsPage: (page, size, refIds) =>
+          this.repository.groupedByRef(page, size, refIds),
+        fetchRecordsDistinctRefIds: (refIds) =>
+          this.repository.findDistinctRefIds(refIds),
+        fetchItemsByRefIds: async (refIds) =>
+          this.toDetails(await this.repository.listByRefIds(refIds)),
+        getItemRefId: (item) => item.refId,
+      })
+    return {
+      data: data.map((row) => ({
+        article: row.article,
+        narrations: row.items,
+      })),
+      pagination,
+    }
   }
 
   async list(query: {

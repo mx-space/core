@@ -6,13 +6,18 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { withMeta } from '~/common/response/envelope.types'
+import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { parseLanguageCode } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
-import { CreateTtsTaskDto, GetTtsQueryDto } from './ai-tts.schema'
+import {
+  CreateTtsTaskDto,
+  GetTtsGroupedQueryDto,
+  GetTtsQueryDto,
+} from './ai-tts.schema'
 import { AiTtsService } from './ai-tts.service'
 import { AiTtsViews } from './ai-tts.views'
 import { AiTtsQueryService } from './ai-tts-query.service'
@@ -40,8 +45,23 @@ export class AiTtsController {
   @Get('/ref/:id')
   @Auth()
   async getByRefId(@Param() params: EntityIdDto) {
-    const rows = await this.queryService.getDetailsByRefId(params.id)
-    return z.array(AiTtsViews.detail).parse(rows)
+    const { article, rows } = await this.queryService.getNarrationsByRefId(
+      params.id,
+    )
+    return { article, rows: z.array(AiTtsViews.detail).parse(rows) }
+  }
+
+  @Get('/grouped')
+  @Auth()
+  async listGrouped(@Query() query: GetTtsGroupedQueryDto) {
+    const result = await this.queryService.getAllNarrationsGrouped(query)
+    return withMeta(
+      result.data.map((group) => ({
+        article: group.article,
+        narrations: z.array(AiTtsViews.detail).parse(group.narrations),
+      })),
+      new MetaObjectBuilder().pagination(result.pagination).build(),
+    )
   }
 
   @Get('/')

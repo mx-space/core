@@ -24,5 +24,15 @@ export const GetTtsQuerySchema = z.object({
 })
 export class GetTtsQueryDto extends createZodDto(GetTtsQuerySchema) {}
 
+export const GetTtsGroupedQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().min(1).max(50).default(20),
+  search: z.string().optional(),
+})
+export class GetTtsGroupedQueryDto extends createZodDto(
+  GetTtsGroupedQuerySchema,
+) {}
+
 export type CreateTtsTaskInput = z.infer<typeof CreateTtsTaskSchema>
 export type GetTtsQueryInput = z.infer<typeof GetTtsQuerySchema>
+export type GetTtsGroupedQueryInput = z.infer<typeof GetTtsGroupedQuerySchema>

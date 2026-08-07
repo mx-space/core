@@ -241,6 +241,100 @@ export class AiTtsRepository extends BaseRepository {
     }
   }
 
+  async listByRefIds(refIds: Array<EntityId | string>): Promise<AiTtsRow[]> {
+    if (!refIds.length) return []
+    const rows = await this.db
+      .select()
+      .from(aiTts)
+      .where(
+        inArray(
+          aiTts.refId,
+          refIds.map((id) => parseEntityId(id)),
+        ),
+      )
+      .orderBy(aiTts.lang)
+    return rows.map(mapParent)
+  }
+
+  async findBlocksByTtsIds(
+    ttsIds: Array<EntityId | string>,
+  ): Promise<AiTtsBlockRow[]> {
+    if (!ttsIds.length) return []
+    const rows = await this.db
+      .select()
+      .from(aiTtsBlocks)
+      .where(
+        inArray(
+          aiTtsBlocks.ttsId,
+          ttsIds.map((id) => parseEntityId(id)),
+        ),
+      )
+      .orderBy(aiTtsBlocks.blockId, aiTtsBlocks.chunkIndex)
+    return rows.map(mapBlock)
+  }
+
+  async findDistinctRefIds(
+    refIds?: Array<EntityId | string>,
+  ): Promise<EntityId[]> {
+    const where = refIds?.length
+      ? inArray(
+          aiTts.refId,
+          refIds.map((id) => parseEntityId(id)),
+        )
+      : undefined
+    const rows = await this.db
+      .selectDistinct({ refId: aiTts.refId })
+      .from(aiTts)
+      .where(where)
+    return rows.map((r) => toEntityId(r.refId) as EntityId)
+  }
+
+  async groupedByRef(
+    page = 1,
+    size = 20,
+    refIds?: Array<EntityId | string>,
+  ): Promise<
+    PaginationResult<{ refId: EntityId; latestCreated: Date; count: number }>
+  > {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const where = refIds?.length
+      ? inArray(
+          aiTts.refId,
+          refIds.map((id) => parseEntityId(id)),
+        )
+      : undefined
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select({
+          refId: aiTts.refId,
+          latestCreated: sql<Date>`max(${aiTts.createdAt})`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(aiTts)
+        .where(where)
+        .groupBy(aiTts.refId)
+        .orderBy(sql`max(${aiTts.createdAt}) desc`)
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({
+          count: sql<number>`count(distinct ${aiTts.refId})::int`,
+        })
+        .from(aiTts)
+        .where(where),
+    ])
+    return {
+      data: rows.map((row) => ({
+        refId: toEntityId(row.refId) as EntityId,
+        latestCreated: row.latestCreated,
+        count: Number(row.count ?? 0),
+      })),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
   async findMeta(
     refId: EntityId | string,
     lang: string,

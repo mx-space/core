@@ -66,71 +66,14 @@ export function editInsightsItem(item: AIInsights, t: Translator) {
   return updateInsights(item.id, { content })
 }
 
-export function getGroupedActionSuccessMessage(result: unknown, t: Translator) {
-  if (isCancelledActionResult(result)) return null
-  return getTaskMutationMessage(result, t) ?? t('ai.toast.saved')
-}
-
-export function getTaskMutationMessage(result: unknown, t: Translator) {
-  if (isCancelledActionResult(result)) return null
-  if (
-    result &&
-    typeof result === 'object' &&
-    'taskId' in result &&
-    'created' in result
-  ) {
-    return (result as { created?: boolean }).created
-      ? t('ai.toast.taskCreated')
-      : t('ai.toast.taskExists')
-  }
-
-  return null
-}
-
 // Every row the TTS management page can act on already has narration, so
 // without `force` planTts reuses each unchanged chunk and the enqueue is a
-// no-op. Both the row action and the batch build their payload here so they
-// cannot drift apart on that flag again.
+// no-op.
 export function buildTtsRegeneratePayload(row: {
   lang: string
   refId: string
 }) {
   return { force: true, langs: [row.lang], refId: row.refId }
-}
-
-// A server-side dedup hit answers `created: false` — it enqueued nothing, so
-// counting it as queued would report work the operator never got.
-export function summarizeTaskBatch(
-  results: PromiseSettledResult<{ created: boolean }>[],
-  describeError: (error: unknown) => string,
-) {
-  const reasons: string[] = []
-  let queued = 0
-  let deduped = 0
-
-  for (const result of results) {
-    if (result.status === 'rejected') {
-      const reason = describeError(result.reason)
-      if (!reasons.includes(reason)) reasons.push(reason)
-    } else if (result.value.created) {
-      queued += 1
-    } else {
-      deduped += 1
-    }
-  }
-
-  return { deduped, queued, reasons }
-}
-
-export function isCancelledActionResult(result: unknown): result is {
-  cancelled: true
-} {
-  return (
-    !!result &&
-    typeof result === 'object' &&
-    'cancelled' in result &&
-    (result as { cancelled?: unknown }).cancelled === true
-  )
 }
 
 export function formatDateString(value?: string) {

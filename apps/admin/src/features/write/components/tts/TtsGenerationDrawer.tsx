@@ -1,5 +1,6 @@
 import { AudioLines, Loader2, RefreshCw, Sparkles } from 'lucide-react'
 
+import { TtsSegmentPlayer } from '~/features/_shared/components/tts/TtsSegmentPlayer'
 import { useI18n } from '~/i18n'
 import { Drawer } from '~/ui/feedback/drawer'
 import { EmptyState } from '~/ui/patterns/EmptyState'
@@ -7,7 +8,6 @@ import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
-import { TtsSegmentList } from './TtsSegmentList'
 import type { useTtsGeneration } from './use-tts-generation'
 
 type TtsGenerationDrawerProps = ReturnType<typeof useTtsGeneration>
@@ -79,7 +79,7 @@ export function TtsGenerationDrawer(props: TtsGenerationDrawerProps) {
                 count: props.activeRow.charCount,
               })}
             </p>
-            <TtsSegmentList segments={props.activeRow.segments} />
+            <TtsSegmentPlayer segments={props.activeRow.segments} />
           </div>
         ) : (
           <EmptyState

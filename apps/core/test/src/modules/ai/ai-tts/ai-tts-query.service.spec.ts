@@ -48,6 +48,10 @@ function createHarness(options: { storedNotePassword?: string } = {}) {
   const databaseService = {
     findGlobalById: vi.fn(),
     getRefArticleMap: vi.fn().mockResolvedValue({}),
+    findAllArticlesForAIText: vi.fn().mockResolvedValue({
+      posts: [],
+      notes: [],
+    }),
   }
   const entitlementService = {
     isPremiumLocked: vi.fn(
@@ -437,7 +441,7 @@ describe('AiTtsQueryService.getDetailsByRefId', () => {
     repository.findAllByRef.mockResolvedValue([])
 
     await expect(service.getDetailsByRefId('1')).resolves.toEqual([])
-    expect(repository.findBlocks).not.toHaveBeenCalled()
+    expect(repository.findBlocksByTtsIds).not.toHaveBeenCalled()
   })
 
   it('loads blocks for every narration language of the ref', async () => {
@@ -446,20 +450,108 @@ describe('AiTtsQueryService.getDetailsByRefId', () => {
       parentRow({ id: 'tts-1', lang: 'zh' }),
       parentRow({ id: 'tts-2', lang: 'en' }),
     ])
-    repository.findBlocks.mockImplementation(async (ttsId: string) =>
-      ttsId === 'tts-1' ? [blockRow('blk-a')] : [blockRow('blk-b')],
-    )
+    repository.findBlocksByTtsIds.mockResolvedValue([
+      blockRow('blk-a', { ttsId: 'tts-1' }),
+      blockRow('blk-b', { ttsId: 'tts-2' }),
+    ])
 
     const result = await service.getDetailsByRefId('1')
 
+    expect(repository.findBlocksByTtsIds).toHaveBeenCalledWith([
+      'tts-1',
+      'tts-2',
+    ])
     expect(result).toHaveLength(2)
-    expect(result[0]).toMatchObject({ id: 'tts-1', lang: 'zh' })
+    expect(result[0]).toMatchObject({ id: 'tts-1', refId: '1', lang: 'zh' })
     expect(result[0].segments).toEqual([
       expect.objectContaining({ blockId: 'blk-a' }),
     ])
     expect(result[1]).toMatchObject({ id: 'tts-2', lang: 'en' })
     expect(result[1].segments).toEqual([
       expect.objectContaining({ blockId: 'blk-b' }),
+    ])
+  })
+})
+
+describe('AiTtsQueryService.getNarrationsByRefId', () => {
+  it('returns the article together with the narration rows', async () => {
+    const { databaseService, repository, service } = createHarness()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: { id: '1', title: 'Hello world' },
+    })
+    repository.findAllByRef.mockResolvedValue([parentRow()])
+    repository.findBlocksByTtsIds.mockResolvedValue([blockRow('blk-a')])
+
+    const result = await service.getNarrationsByRefId('1')
+
+    expect(result.article).toMatchObject({ type: CollectionRefTypes.Post })
+    expect(result.rows).toHaveLength(1)
+    expect(result.rows[0]).toMatchObject({ id: 'tts-1', refId: '1' })
+  })
+
+  it('tolerates a missing article instead of failing', async () => {
+    const { databaseService, repository, service } = createHarness()
+    databaseService.findGlobalById.mockResolvedValue(null)
+    repository.findAllByRef.mockResolvedValue([parentRow()])
+    repository.findBlocksByTtsIds.mockResolvedValue([])
+
+    const result = await service.getNarrationsByRefId('1')
+
+    expect(result.article).toBeNull()
+    expect(result.rows).toHaveLength(1)
+  })
+})
+
+describe('AiTtsQueryService.getAllNarrationsGrouped', () => {
+  it('includes orphan articles with zero narrations in the grouped list', async () => {
+    const { databaseService, repository, service } = createHarness()
+    repository.groupedByRef.mockResolvedValue({
+      data: [{ refId: 'post-1' }],
+      pagination: { total: 1 },
+    } as any)
+    repository.findDistinctRefIds.mockResolvedValue(['post-1'])
+    repository.listByRefIds.mockResolvedValue([
+      parentRow({ id: 'tts-1', refId: 'post-1' }),
+    ])
+    repository.findBlocksByTtsIds.mockResolvedValue([
+      blockRow('blk-a', { ttsId: 'tts-1' }),
+    ])
+    databaseService.findAllArticlesForAIText.mockResolvedValue({
+      posts: [
+        { id: 'post-1', title: 'Has Narration' },
+        { id: 'post-2', title: 'Orphan Post' },
+      ],
+      notes: [],
+    })
+    databaseService.getRefArticleMap.mockResolvedValue({
+      'post-1': {
+        id: 'post-1',
+        title: 'Has Narration',
+        type: CollectionRefTypes.Post,
+      },
+    })
+
+    const result = await service.getAllNarrationsGrouped({ page: 1, size: 10 })
+
+    expect(result.pagination).toMatchObject({ total: 2, currentPage: 1 })
+    expect(result.data).toEqual([
+      {
+        article: {
+          id: 'post-1',
+          title: 'Has Narration',
+          type: CollectionRefTypes.Post,
+        },
+        narrations: [expect.objectContaining({ id: 'tts-1', refId: 'post-1' })],
+      },
+      {
+        article: {
+          id: 'post-2',
+          title: 'Orphan Post',
+          type: CollectionRefTypes.Post,
+        },
+        narrations: [],
+      },
     ])
   })
 })

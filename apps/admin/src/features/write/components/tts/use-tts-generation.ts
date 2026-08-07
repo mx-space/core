@@ -49,7 +49,7 @@ export function useTtsGeneration(params: UseTtsGenerationParams) {
     queryFn: () => getTtsByRefId(refId!),
     queryKey: adminQueryKeys.ai.ttsByRef(refId ?? ''),
   })
-  const rows = rowsQuery.data ?? []
+  const rows = rowsQuery.data?.rows ?? []
 
   useEffect(() => {
     if (activeLang && rows.some((row) => row.lang === activeLang)) return

@@ -420,6 +420,7 @@ export interface AITtsRow {
   isTranslation: boolean
   lang: string
   model: string
+  refId: string
   segments: AITtsSegment[]
   speed: number
   updatedAt?: null | string
@@ -434,31 +435,36 @@ export function createTtsTask(data: {
   return postJson<CreateTaskResponse, typeof data>('/ai/tts/task', data)
 }
 
+export interface TtsByRefResponse {
+  article: {
+    document: { title: string }
+    type: 'Note' | 'Page' | 'Post' | 'Recently'
+  } | null
+  rows: AITtsRow[]
+}
+
 export function getTtsByRefId(refId: string) {
-  return getJson<AITtsRow[]>(`/ai/tts/ref/${refId}`)
+  return getJson<TtsByRefResponse>(`/ai/tts/ref/${refId}`)
 }
 
 export function deleteTts(id: string) {
   return deleteJson<void>(`/ai/tts/${id}`)
 }
 
-export interface AITtsListRow {
-  blockCount: number
-  charCount: number
-  id: string
-  lang: string
-  refId: string
-  updatedAt?: null | string
+export interface GroupedTtsData {
+  article: ArticleInfo
+  narrations: AITtsRow[]
 }
 
-export type AITtsArticleMap = Record<string, ArticleInfo>
-
-export interface AITtsListResponse {
-  articles: AITtsArticleMap
-  data: AITtsListRow[]
+export interface GroupedTtsResponse {
+  data: GroupedTtsData[]
   pagination: PaginationInfo
 }
 
-export function getTtsList(params: { page?: number; size?: number }) {
-  return getJson<AITtsListResponse>('/ai/tts', params)
+export function getTtsGrouped(params?: {
+  page?: number
+  search?: string
+  size?: number
+}) {
+  return getJson<GroupedTtsResponse>('/ai/tts/grouped', params)
 }

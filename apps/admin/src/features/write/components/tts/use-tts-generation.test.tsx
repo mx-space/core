@@ -79,7 +79,7 @@ beforeEach(() => {
   })
   latest = undefined
   createTtsTaskMock.mockReset().mockResolvedValue({ taskId: 'task-1' })
-  getTtsByRefIdMock.mockReset().mockResolvedValue([])
+  getTtsByRefIdMock.mockReset().mockResolvedValue({ article: null, rows: [] })
   getTaskMock.mockReset()
   toastErrorMock.mockReset()
 

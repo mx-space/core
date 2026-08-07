@@ -17,6 +17,7 @@ export const AiTtsViews = {
   }),
   detail: z.object({
     id: z.string(),
+    refId: z.string(),
     lang: z.string(),
     isTranslation: z.boolean(),
     model: z.string(),

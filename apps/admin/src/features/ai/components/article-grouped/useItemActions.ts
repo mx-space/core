@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
-import type { ListAction } from '~/ui/list-actions'
-import type { ContextMenuItem } from '~/ui/overlay/context-menu'
-import type { ArticleGroupedConfig } from './types'
 
 import { useI18n } from '~/i18n'
+import type { ListAction } from '~/ui/list-actions'
+import type { ContextMenuItem } from '~/ui/overlay/context-menu'
+
+import type { ArticleGroupedConfig } from './types'
 
 interface UseItemActionsOptions<TItem> {
   config: ArticleGroupedConfig<TItem>
@@ -22,12 +23,13 @@ export function useItemActions<TItem>(
 ): UseItemActionsAPI<TItem> {
   const { t } = useI18n()
   const { config, onEdit, onDelete, onExtraAction } = options
+  const openLabel = t(config.itemOpenLabelKey ?? 'ai.action.edit')
 
   const keyboardActions = useMemo<ReadonlyArray<ListAction<TItem>>>(
     () => [
       {
         key: 'edit',
-        label: t('ai.action.edit'),
+        label: openLabel,
         shortcut: 'Enter',
         run: (targets) => {
           const target = targets[0]
@@ -45,14 +47,14 @@ export function useItemActions<TItem>(
         },
       },
     ],
-    [t, onEdit, onDelete],
+    [t, openLabel, onEdit, onDelete],
   )
 
   const buildMenu = (item: TItem): ContextMenuItem[] => {
     const base: ContextMenuItem[] = [
       {
         key: 'edit',
-        label: t('ai.action.edit'),
+        label: openLabel,
         onClick: () => onEdit(item),
       },
       {
