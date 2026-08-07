@@ -17,6 +17,7 @@ import { describe, expect, test } from 'vitest'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
+import { AiTtsQueryService } from '~/modules/ai/ai-tts/ai-tts-query.service'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteService } from '~/modules/note/note.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
@@ -156,6 +157,15 @@ const lexicalServiceProvider = {
   },
 }
 
+const aiTtsQueryProvider = {
+  provide: AiTtsQueryService,
+  useValue: {
+    async getMetaForArticle() {
+      return { available: false }
+    },
+  },
+}
+
 const NOTE_LIST_REQUIRED_KEYS = [
   'id',
   'nid',
@@ -196,6 +206,7 @@ describe('NoteController admin contract (e2e)', () => {
       enrichmentProvider,
       aiSummaryProvider,
       aiInsightsProvider,
+      aiTtsQueryProvider,
       lexicalServiceProvider,
     ],
   })

@@ -1,5 +1,6 @@
 import { Check, Copy } from 'lucide-react'
 import { toast } from 'sonner'
+
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
 import type { PostModel } from '~/models/post'
 import type { ListAction } from '~/ui/list-actions'
@@ -14,6 +15,7 @@ type Translator = (key: TranslationKey, values?: TranslationValues) => string
 
 export interface BuildPostMenuItemsOptions {
   actions: ReadonlyArray<ListAction<PostModel>>
+  aiMenuItems?: ContextMenuItem[]
   categories: PostMenuCategoryOption[]
   externalHref: string
   onCategoryChange: (categoryId: string) => void
@@ -101,6 +103,18 @@ export function buildPostMenuItems(
       label: t('posts.menu.category.change'),
       type: 'submenu',
     })
+  }
+
+  if (options.aiMenuItems?.length) {
+    items.push(
+      { key: 'sep-ai', type: 'divider' },
+      {
+        children: options.aiMenuItems,
+        key: 'ai-submenu',
+        label: t('ai.menu.label'),
+        type: 'submenu',
+      },
+    )
   }
 
   items.push(

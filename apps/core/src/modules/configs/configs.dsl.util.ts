@@ -128,7 +128,7 @@ const groupConfigs: GroupConfig[] = [
     title: 'AI',
     description: 'AI summary, writing assistant, image generation',
     icon: 'sparkles',
-    sectionKeys: ['ai', 'imageGenerationOptions'],
+    sectionKeys: ['ai', 'imageGenerationOptions', 'ttsOptions'],
   },
   {
     key: 'integrations',

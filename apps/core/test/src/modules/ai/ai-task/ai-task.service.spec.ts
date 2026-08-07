@@ -55,3 +55,46 @@ describe('AiTaskService.createImageGenerationTask', () => {
     )
   })
 })
+
+describe('AiTaskService.createTtsTask', () => {
+  it('separates a forced run from an incremental one in the dedup key', async () => {
+    const { service, taskQueueService } = createService()
+
+    await service.createTtsTask({ refId: '1', langs: ['zh', 'en'], title: 'T' })
+    await service.createTtsTask({
+      refId: '1',
+      langs: ['en', 'zh'],
+      force: true,
+      title: 'T',
+    })
+
+    expect(taskQueueService.createTask).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        type: AITaskType.Tts,
+        dedupKey: '1:inc:en,zh',
+      }),
+    )
+    expect(taskQueueService.createTask).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ dedupKey: '1:force:en,zh' }),
+    )
+  })
+
+  it('collapses equivalent language codes onto one dedup key', async () => {
+    const { service, taskQueueService } = createService()
+
+    await service.createTtsTask({ refId: '1', langs: ['zh-CN'], title: 'T' })
+    await service.createTtsTask({ refId: '1', langs: ['zh'], title: 'T' })
+    await service.createTtsTask({
+      refId: '1',
+      langs: ['zh', 'zh-CN'],
+      title: 'T',
+    })
+
+    const keys = taskQueueService.createTask.mock.calls.map(
+      ([options]) => options.dedupKey,
+    )
+    expect(keys).toEqual(['1:inc:zh', '1:inc:zh', '1:inc:zh'])
+  })
+})

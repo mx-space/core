@@ -6,6 +6,7 @@ import {
   aiInsights,
   aiSummaries,
   aiTranslations,
+  aiTtsBlocks,
   comments,
   draftHistories,
   drafts,
@@ -188,6 +189,10 @@ export class FileReferenceUsageRepository {
           WHERE item.content ~ candidate.pattern
         )
         OR EXISTS (
+          SELECT 1 FROM ${aiTtsBlocks} AS item
+          WHERE item.url ~ candidate.pattern
+        )
+        OR EXISTS (
           SELECT 1 FROM ${translationEntries} AS item
           WHERE concat_ws(E'\n', item.source_text, item.translated_text) ~ candidate.pattern
         )
@@ -224,6 +229,7 @@ export class FileReferenceUsageRepository {
       translationRows,
       summaryRows,
       insightRows,
+      ttsBlockRows,
       translationEntryRows,
       serverlessStorageRows,
     ] = await Promise.all([
@@ -361,6 +367,9 @@ export class FileReferenceUsageRepository {
         .select({ id: aiInsights.id, content: aiInsights.content })
         .from(aiInsights),
       this.db
+        .select({ id: aiTtsBlocks.id, url: aiTtsBlocks.url })
+        .from(aiTtsBlocks),
+      this.db
         .select({
           id: translationEntries.id,
           sourceText: translationEntries.sourceText,
@@ -407,6 +416,7 @@ export class FileReferenceUsageRepository {
     append('ai_translation', translationRows)
     append('ai_summary', summaryRows)
     append('ai_insight', insightRows)
+    append('ai_tts', ttsBlockRows)
     append('translation_entry', translationEntryRows)
     append('serverless_storage', serverlessStorageRows)
 

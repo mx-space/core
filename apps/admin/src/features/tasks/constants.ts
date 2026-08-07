@@ -29,6 +29,7 @@ export const taskTypeLabelKeys: Record<AITaskType, TranslationKey> = {
   [AITaskType.Insights]: 'tasks.taskType.insights',
   [AITaskType.InsightsTranslation]: 'tasks.taskType.insightsTranslation',
   [AITaskType.ImageGeneration]: 'tasks.taskType.imageGeneration',
+  [AITaskType.Tts]: 'tasks.taskType.tts',
 }
 
 export const taskStatusLabelKeys: Record<AITaskStatus, TranslationKey> = {
@@ -97,6 +98,7 @@ export const typeOptionKeys: Array<{
     labelKey: 'tasks.taskType.imageGeneration',
     value: AITaskType.ImageGeneration,
   },
+  { labelKey: 'tasks.taskType.tts', value: AITaskType.Tts },
 ]
 
 export const scopeOptionKeys: Array<{

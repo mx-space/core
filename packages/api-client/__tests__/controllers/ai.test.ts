@@ -31,4 +31,24 @@ describe('test ai client', () => {
       }),
     ).resolves.not.toThrowError()
   })
+
+  test('getTts requests the article narration', async () => {
+    mockResponse(
+      '/ai/tts/article/post-1?lang=zh',
+      {
+        lang: 'zh',
+        model: 'tts-1',
+        voice: 'nova',
+        blockOrder: ['block-1'],
+        segments: [],
+      },
+      'get',
+    )
+
+    const response = await client.ai.getTts({ articleId: 'post-1', lang: 'zh' })
+    expect(response).not.toHaveProperty('error')
+    expect(response.lang).toBe('zh')
+    expect(response.model).toBe('tts-1')
+    expect(response.voice).toBe('nova')
+  })
 })

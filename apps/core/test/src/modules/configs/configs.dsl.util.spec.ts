@@ -78,6 +78,41 @@ describe('generateFormDSL', () => {
       expect(field?.required).toBeFalsy()
     }
   })
+
+  test('only shows the ttsOptions endpoint field when provider is custom', () => {
+    const dsl = generateFormDSL()
+
+    const ttsSection = dsl.groups
+      .find((group) => group.key === 'ai')
+      ?.sections.find((section) => section.key === 'ttsOptions')
+
+    const endpointField = ttsSection?.fields.find(
+      (field) => field.key === 'endpoint',
+    )
+    expect(endpointField?.ui.showWhen).toEqual({ provider: 'custom' })
+
+    const providerField = ttsSection?.fields.find(
+      (field) => field.key === 'provider',
+    )
+    expect(providerField?.ui.options).toEqual([
+      { label: 'OpenRouter', value: 'openrouter' },
+      { label: 'OpenAI', value: 'openai' },
+      { label: 'Custom', value: 'custom' },
+    ])
+  })
+
+  test('ttsOptions apiKey/endpoint/model/voice stay non-required despite the null-coercing transform', () => {
+    const dsl = generateFormDSL()
+
+    const ttsSection = dsl.groups
+      .find((group) => group.key === 'ai')
+      ?.sections.find((section) => section.key === 'ttsOptions')
+
+    for (const key of ['apiKey', 'endpoint', 'model', 'voice']) {
+      const field = ttsSection?.fields.find((f) => f.key === key)
+      expect(field?.required).toBeFalsy()
+    }
+  })
 })
 
 describe('attachImageModelOptionsToFormDSL', () => {

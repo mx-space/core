@@ -23,6 +23,7 @@ export const POSTGRES_REPOSITORY_TOKENS = {
   aiTranslation: Symbol('AiTranslationRepository'),
   translationEntry: Symbol('TranslationEntryRepository'),
   aiAgentConversation: Symbol('AiAgentConversationRepository'),
+  aiTts: Symbol('AiTtsRepository'),
   activity: Symbol('ActivityRepository'),
   analyze: Symbol('AnalyzeRepository'),
   fileReference: Symbol('FileReferenceRepository'),

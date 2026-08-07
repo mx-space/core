@@ -106,6 +106,10 @@ const createController = (opts: CreateControllerOptions = {}) => {
     getSummaryForPublicMeta: vi.fn(async () => null),
   }
 
+  const aiTtsQueryService = {
+    getMetaForArticle: vi.fn(async () => ({ available: false })),
+  }
+
   const snippetService = {
     findSkillBundlesByIds: vi.fn(async () => []),
   }
@@ -120,6 +124,7 @@ const createController = (opts: CreateControllerOptions = {}) => {
     translationService as any,
     aiInsightsService as any,
     aiSummaryService as any,
+    aiTtsQueryService as any,
     enrichmentService as any,
     translationEntryService as any,
     snippetService as any,
@@ -134,6 +139,7 @@ const createController = (opts: CreateControllerOptions = {}) => {
     translationEntryService,
     snippetService,
     entitlementService,
+    aiTtsQueryService,
   }
 }
 

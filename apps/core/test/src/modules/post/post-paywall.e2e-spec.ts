@@ -11,6 +11,7 @@ import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
+import { AiTtsQueryService } from '~/modules/ai/ai-tts/ai-tts-query.service'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { EnrichmentService } from '~/modules/enrichment/enrichment.service'
@@ -204,6 +205,18 @@ const postModule: ModuleMetadata = {
     {
       provide: AiSummaryService,
       useValue: { getSummaryForPublicMeta: vi.fn(async () => null) },
+    },
+    {
+      provide: AiTtsQueryService,
+      useValue: {
+        getMetaForArticle: vi.fn(async () => ({
+          available: true,
+          lang: 'zh',
+          blockCount: 3,
+          stale: false,
+          updatedAt: new Date('2024-01-02'),
+        })),
+      },
     },
     {
       provide: EnrichmentService,
@@ -451,6 +464,42 @@ describe('Post paywall enforcement (e2e)', () => {
     expect(body.meta.summary.text).toBe(
       'summary generated from the full article',
     )
+  })
+
+  it('reports meta.tts.available:false when locked even though narration exists', async () => {
+    currentPost = { ...premiumPostFixture }
+
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `/posts/${premiumPostFixture.category.slug}/${premiumPostFixture.slug}`,
+      headers: headerFor(nonMemberReaderId),
+    })
+
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.meta.paywall.locked).toBe(true)
+    expect(body.meta.tts).toEqual({ available: false })
+  })
+
+  it('surfaces the real meta.tts for an entitled reader', async () => {
+    currentPost = { ...premiumPostFixture }
+
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `/posts/${premiumPostFixture.category.slug}/${premiumPostFixture.slug}`,
+      headers: headerFor(activeMemberReaderId),
+    })
+
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.meta.paywall.locked).toBe(false)
+    expect(body.meta.tts).toEqual({
+      available: true,
+      lang: 'zh',
+      block_count: 3,
+      stale: false,
+      updated_at: '2024-01-02T00:00:00.000Z',
+    })
   })
 
   it('getById applies the same gate for a non-member reader', async () => {

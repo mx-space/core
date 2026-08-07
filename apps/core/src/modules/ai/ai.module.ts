@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common'
 
 import { DraftModule } from '../draft/draft.module'
+import { MembershipModule } from '../membership/membership.module'
 import { NoteModule } from '../note/note.module'
 import { TopicModule } from '../topic/topic.module'
 import { AiController } from './ai.controller'
@@ -38,6 +39,10 @@ import {
   LEXICAL_TRANSLATION_STRATEGY,
   MARKDOWN_TRANSLATION_STRATEGY,
 } from './ai-translation/translation-strategy.interface'
+import { AiTtsController } from './ai-tts/ai-tts.controller'
+import { AiTtsRepository } from './ai-tts/ai-tts.repository'
+import { AiTtsService } from './ai-tts/ai-tts.service'
+import { AiTtsQueryService } from './ai-tts/ai-tts-query.service'
 import { AiSlugBackfillService } from './ai-writer/ai-slug-backfill.service'
 import { AiWriterController } from './ai-writer/ai-writer.controller'
 import { AiWriterService } from './ai-writer/ai-writer.service'
@@ -47,6 +52,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiTaskModule,
     TopicModule,
     DraftModule,
+    MembershipModule,
     forwardRef(() => NoteModule),
   ],
   providers: [
@@ -79,6 +85,9 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiAgentChatService,
     AiAgentConversationService,
     AiAgentConversationRepository,
+    AiTtsService,
+    AiTtsRepository,
+    AiTtsQueryService,
   ],
   controllers: [
     AiController,
@@ -89,6 +98,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiTranslationController,
     TranslationEntryController,
     AiAgentController,
+    AiTtsController,
   ],
   exports: [
     AiService,
@@ -99,6 +109,8 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiSummaryService,
     AiInsightsService,
     TranslationEntryService,
+    AiTtsService,
+    AiTtsQueryService,
   ],
 })
 export class AiModule {}

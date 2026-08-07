@@ -5,6 +5,7 @@ import {
   ContentEntryListItem,
   ContentListStatusBadge,
 } from '~/features/_shared/components/content-list-item'
+import { useAiQuickActions } from '~/features/ai/hooks/use-ai-quick-actions'
 import { useI18n } from '~/i18n'
 import type { NoteModel } from '~/models/note'
 import type { ListAction } from '~/ui/list-actions'
@@ -26,6 +27,7 @@ export function NoteRow(props: {
 }) {
   const { t } = useI18n()
   const note = props.note
+  const aiMenuItems = useAiQuickActions(note.id)
   const isFuture = note.publicAt && +new Date(note.publicAt) - Date.now() > 0
   const publicHref = `${WEB_URL}${buildNotePublicPath(note)}`
   const title = note.title || t('notes.row.untitled')
@@ -34,6 +36,7 @@ export function NoteRow(props: {
   const menuItems = () =>
     buildNoteMenuItems(note, {
       actions: props.actions,
+      aiMenuItems,
       externalHref: publicHref,
       onBookmarkToggle: (next) =>
         props.onMetadataChange(note.id, { bookmark: next }),

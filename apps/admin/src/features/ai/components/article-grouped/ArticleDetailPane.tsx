@@ -100,14 +100,9 @@ export function ArticleDetailPane<TItem>(props: ArticleDetailPaneProps<TItem>) {
 
         <div className="my-4 h-px bg-surface-inset" />
 
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium text-fg">
-            {t(props.config.detailSectionTitleKey)}
-          </h3>
-          <span className="text-xs text-fg-subtle">
-            {t(props.config.itemCountKey, { count: props.items.length })}
-          </span>
-        </div>
+        <span className="text-xs font-medium text-fg-subtle">
+          {t(props.config.itemCountKey, { count: props.items.length })}
+        </span>
 
         {props.isLoading && props.items.length === 0 ? (
           <div className="flex justify-center py-8">

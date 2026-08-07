@@ -47,6 +47,7 @@ import { EntityIdDto } from '~/shared/dto/id.dto'
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
 import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
+import { AiTtsQueryService } from '../ai/ai-tts/ai-tts-query.service'
 import { EnrichmentService } from '../enrichment/enrichment.service'
 import { SnippetService } from '../snippet/snippet.service'
 import {
@@ -78,6 +79,7 @@ export class PostController {
     private readonly translationService: TranslationService,
     private readonly aiInsightsService: AiInsightsService,
     private readonly aiSummaryService: AiSummaryService,
+    private readonly aiTtsQueryService: AiTtsQueryService,
     private readonly enrichmentService: EnrichmentService,
     private readonly translationEntryService: TranslationEntryService,
     private readonly snippetService: SnippetService,
@@ -93,11 +95,10 @@ export class PostController {
 
     if (!(await this.entitlementService.isMembershipPurchasable())) return null
 
-    const isEntitled =
-      isOwner ||
-      (readerId
-        ? await this.entitlementService.isActiveMember(readerId)
-        : false)
+    const isEntitled = await this.entitlementService.isEntitledToPremium({
+      isOwner,
+      readerId,
+    })
 
     if (isEntitled) {
       return { locked: false }
@@ -406,6 +407,7 @@ export class PostController {
       entryMaps,
       hasInsightsInLocale,
       summaryDoc,
+      ttsMeta,
     ] = await Promise.all([
       this.translationService.translateArticle({
         articleId: postDocument.id,
@@ -427,6 +429,13 @@ export class PostController {
         postDocument.id,
         insightsLang,
       ),
+      this.aiTtsQueryService
+        .getMetaForArticle(
+          postDocument.id,
+          insightsLang,
+          postDocument.modifiedAt,
+        )
+        .catch(() => ({ available: false as const })),
     ])
 
     applyArticleTranslationInPlace(
@@ -473,6 +482,7 @@ export class PostController {
       .interaction({ isLiked: liked })
       .related(translatedRelated)
       .insights({ hasInLocale: hasInsightsInLocale })
+      .tts(paywall?.locked ? { available: false } : ttsMeta)
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
     if (summaryDoc && !paywall?.locked) {

@@ -664,3 +664,127 @@ Suggested order for the plan, each phase independently verifiable:
   instance) surface as generation failures rather than being validated up front.
 - Cache invalidation infrastructure (the 15s/60s anonymous cache window is
   accepted)
+
+---
+
+## Post-implementation deviations
+
+The sections above are the design as approved. Implementation, review and human
+rulings moved four things. The original prose is kept as written so the
+reasoning behind each reversal stays legible; where the two disagree, **this
+section is authoritative**.
+
+### 1. Audio rides the general file-reference system — `skipReference` is gone
+
+*Supersedes §5 (`So uploadBuffer takes a skipReference option ... ai_tts_blocks
+is the reference`) and the "Audio file lifecycle" summary row.*
+
+The design's fear was correct at the time it was written: `createPendingReference`
+plus a 60-minute orphan reap would have deleted narration an hour after it was
+generated. It was fixed upstream rather than around. `file_references` grew a
+usage-source registry, and `ai_tts_blocks.url` is registered in
+`findReferencedUrls` (`file-reference-usage.repository.ts`), so a narration
+object is *referenced* for as long as its row exists and becomes isolated the
+instant the row is deleted — the same lifecycle every other owner-uploaded file
+has.
+
+Human ruling (Task 11): TTS audio is "just another kind of isolated file"; ride
+the upstream orphan system instead of a bespoke sweep. Consequently:
+
+- `uploadBuffer` takes **no** `skipReference` option — it was removed outright
+  once this doc stopped instructing readers to use it. Every audio upload
+  creates a pending reference, exactly like an image.
+- `CronTaskType.CleanupTtsOrphans`, `tts-orphan-reconciliation.ts`,
+  `listObjectsUnderPrefix` and `S3Uploader.listObjects` do not exist. §5's
+  fourth deletion path ("a reconciliation pass for objects orphaned by a crash
+  between upload and commit") is served by the general orphan cleanup cron.
+- The other three deletion paths (run supersession, `DELETE /ai/tts/:id`,
+  article-delete handlers) are implemented as designed.
+
+Known limitation, accepted: the upstream inventory walks local storage only, so
+an S3 object orphaned by a crash between upload and commit is not enumerated.
+This is not a TTS regression — it is how the inventory already worked.
+
+### 2. The object key folds in the voice triple
+
+*Supersedes §5 "Object key scheme" and the "Object key" summary row.*
+
+The spec addressed the object by the speech fingerprint alone. That is a defect:
+a `force` run with a changed voice would compute the *same* key as the audio it
+replaces. The local backend rejects the write as `FILE_EXISTS` and the caller's
+recovery keeps the OLD audio while the row records the NEW voice; S3 overwrites
+in place behind a one-year cache header.
+
+The stored key is therefore addressed by text **and** voice
+(`tts-object-key.ts`):
+
+```
+{s3Prefix}/tts/{refId}/{lang}/{blockId}-{chunkIndex}-{objectFingerprint12}.mp3
+objectFingerprint = md5(`${speechFingerprint}|${model}|${voice}|${speed}`)
+```
+
+The reuse decision keys on the *whole object key*, not the speech fingerprint
+alone (`PlanTtsInput.objectKeyFor`). A row whose `storageKey` is not what this
+run would write is regenerated. That is what makes the parent's "voice locked at
+generation time" invariant crash-safe: a `force` run that dies after rewriting
+some rows leaves the parent still pointing at the old voice, and the next
+incremental run notices the mismatched keys and re-narrates those rows back into
+the parent's voice instead of leaving the article permanently mixed-voice.
+
+§5's claim that "the `tts/{refId}/` prefix ... is what the orphan-reconciliation
+pass and article-delete cleanup use as their ground truth" is false — nothing
+lists objects by prefix any more (see deviation 1). The prefix survives purely
+as human-legible bucket layout.
+
+### 3. Narration is entitlement-aware, not premium-blind
+
+*Supersedes §6's "an unentitled reader gets `null`" paragraph, which the first
+implementation read as a blanket block on `isPremium`.*
+
+`GET /ai/tts/article/:id` takes reader identity —
+`@HasAdminAccess()`, `@CurrentReaderId()` and an optional `?password=` for
+notes — and judges access with the same machinery `PostController.applyPaywall`
+uses:
+
+- **Premium posts.** `EntitlementService.isPremiumLocked({ isPremium, isOwner,
+  readerId })` is the single implementation of the rule, shared with
+  `applyPaywall` through `isEntitledToPremium`. A paying member, the owner, and
+  every reader on a site where membership is not purchasable all hear the
+  narration; only an unentitled reader on a selling site gets `null`. A blanket
+  `isPremium` block was rejected: it turns the feature off for exactly the tier
+  it was gated for.
+- **Notes.** `isArticleVisibleToViewer` replaces the anonymous-only
+  `isGlobalArticleVisible` on this path. A reader who supplies the correct note
+  password hears the narration; the owner additionally sees drafts and
+  future-dated secrets. `NoteService.checkPasswordToAccess` performs the
+  comparison, so there is no second password check.
+- `meta.tts` on post and note detail applies the *same* rule, so the meta never
+  advertises narration the endpoint refuses to serve, and never suppresses
+  narration the endpoint would serve. Note detail additionally reports
+  `available: false` to an anonymous reader of a future-dated secret note, whose
+  text is blanked in the same response.
+
+While implementing this, `isGlobalArticleVisible`'s note-password check was
+found to be reading a field that does not exist on a loaded row:
+`NoteRepository` projects the column to `hasPassword` and drops the secret, so
+`document.password` was always `undefined`. The predicate now accepts either
+field. This tightens summary, insights and translation as well — all four AI
+features shared the gap.
+
+**Caching.** §6's cache paragraph holds, and the mechanism was re-verified.
+`HttpCacheInterceptor` returns before touching Redis whenever the request
+carries any identity (`hasAdminAccess || hasReaderIdentity || isAuthenticated`)
+and the route sets no `force` cache option — and NestJS runs guards before
+interceptors, so `RolesGuard` has already stamped the request by then. An
+entitled reader's narration is therefore never read from, nor written into, the
+shared cache. The anonymous cache key is the full URL including the query
+string, so a note's password-bearing request and its password-less request
+occupy different entries. The TTS routes add no cache decorator of their own.
+
+### 4. `TTS_SOURCE_NOT_LEXICAL` is thrown per language
+
+*Refines §5's "throw only when every requested language fails".*
+
+The error is thrown per language and caught by the per-language loop; the
+**task** still only reaches `Failed` when every attempted language failed. The
+operator gets a per-language reason instead of one opaque failure.

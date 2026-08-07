@@ -5,6 +5,7 @@ import type {
   PostResponseMeta,
   RelatedRef,
   SummaryMeta,
+  TtsMeta,
 } from '~/common/response/meta.types'
 import { PostResponseMetaSchema } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
@@ -44,6 +45,11 @@ export class PostMetaBuilder extends MetaObjectBuilder<
 
   paywall(value: PaywallMeta): this {
     ;(this.meta as PostResponseMeta).paywall = value
+    return this
+  }
+
+  tts(value: TtsMeta): this {
+    ;(this.meta as PostResponseMeta).tts = value
     return this
   }
 }

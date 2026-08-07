@@ -89,6 +89,18 @@ export const generateDefaultConfig: () => IConfig = () => ({
     defaultQuality: 'standard',
     defaultFormat: 'png',
   },
+  ttsOptions: {
+    enable: false,
+    provider: 'openrouter',
+    apiKey: '',
+    endpoint: '',
+    model: '',
+    voice: '',
+    speed: 1,
+    maxCharsPerChunk: 1800,
+    concurrency: 3,
+    maxCharsPerRun: 120000,
+  },
   fileUploadOptions: {
     enableCustomNaming: false,
     filenameTemplate: '{Y}{m}{d}/{md5-16}{ext}',

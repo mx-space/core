@@ -1,3 +1,5 @@
+import { parseLanguageCode } from '../ai-language.util'
+
 export enum AITaskType {
   Summary = 'ai:summary',
   Translation = 'ai:translation',
@@ -7,6 +9,7 @@ export enum AITaskType {
   Insights = 'ai:insights',
   InsightsTranslation = 'ai:insights:translation',
   ImageGeneration = 'ai:image:generation',
+  Tts = 'ai:tts',
 }
 
 export interface SummaryTaskPayload {
@@ -73,6 +76,14 @@ export interface ImageGenerationTaskPayload {
   requestId: string
 }
 
+export interface TtsTaskPayload {
+  refId: string
+  langs?: string[]
+  force?: boolean
+  title?: string
+  refType?: string
+}
+
 export type AITaskPayload =
   | SummaryTaskPayload
   | TranslationTaskPayload
@@ -82,6 +93,7 @@ export type AITaskPayload =
   | InsightsTaskPayload
   | InsightsTranslationTaskPayload
   | ImageGenerationTaskPayload
+  | TtsTaskPayload
 
 export function computeAITaskDedupKey(
   type: AITaskType,
@@ -125,6 +137,18 @@ export function computeAITaskDedupKey(
       // must be unique per request rather than per (semantic) payload.
       const p = payload as ImageGenerationTaskPayload
       return `${p.requestId}`
+    }
+    case AITaskType.Tts: {
+      const p = payload as TtsTaskPayload
+      // The handler locks on canonical (refId, lang), so the dedup key has to
+      // canonicalize too — otherwise `zh-CN` and `zh` enqueue two tasks and the
+      // one that loses the lock reports success having generated nothing.
+      const langs = [
+        ...new Set((p.langs || []).map((lang) => parseLanguageCode(lang))),
+      ]
+        .sort()
+        .join(',')
+      return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
     }
   }
 }

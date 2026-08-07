@@ -49,7 +49,10 @@ describe('S3Uploader.uploadStream', () => {
     async function* generate() {
       let offset = 0
       while (offset < total) {
-        const size = Math.min(chunkSizes[seed++ % chunkSizes.length], total - offset)
+        const size = Math.min(
+          chunkSizes[seed++ % chunkSizes.length],
+          total - offset,
+        )
         yield input.subarray(offset, offset + size)
         offset += size
       }
@@ -92,7 +95,11 @@ describe('S3Uploader.uploadStream', () => {
       },
     )
 
-    await uploader.uploadStream(Readable.from([]), 'files/empty.bin', 'application/octet-stream')
+    await uploader.uploadStream(
+      Readable.from([]),
+      'files/empty.bin',
+      'application/octet-stream',
+    )
 
     expect(partBodies.length).toBe(1)
     expect(partBodies[0].length).toBe(0)

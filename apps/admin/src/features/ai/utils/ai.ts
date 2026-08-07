@@ -66,36 +66,14 @@ export function editInsightsItem(item: AIInsights, t: Translator) {
   return updateInsights(item.id, { content })
 }
 
-export function getGroupedActionSuccessMessage(result: unknown, t: Translator) {
-  if (isCancelledActionResult(result)) return null
-  return getTaskMutationMessage(result, t) ?? t('ai.toast.saved')
-}
-
-export function getTaskMutationMessage(result: unknown, t: Translator) {
-  if (isCancelledActionResult(result)) return null
-  if (
-    result &&
-    typeof result === 'object' &&
-    'taskId' in result &&
-    'created' in result
-  ) {
-    return (result as { created?: boolean }).created
-      ? t('ai.toast.taskCreated')
-      : t('ai.toast.taskExists')
-  }
-
-  return null
-}
-
-export function isCancelledActionResult(result: unknown): result is {
-  cancelled: true
-} {
-  return (
-    !!result &&
-    typeof result === 'object' &&
-    'cancelled' in result &&
-    (result as { cancelled?: unknown }).cancelled === true
-  )
+// Every row the TTS management page can act on already has narration, so
+// without `force` planTts reuses each unchanged chunk and the enqueue is a
+// no-op.
+export function buildTtsRegeneratePayload(row: {
+  lang: string
+  refId: string
+}) {
+  return { force: true, langs: [row.lang], refId: row.refId }
 }
 
 export function formatDateString(value?: string) {

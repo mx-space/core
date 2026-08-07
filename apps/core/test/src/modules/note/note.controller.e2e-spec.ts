@@ -49,6 +49,7 @@ const createController = (
     countingService?: Record<string, unknown>
     aiInsightsService?: Record<string, unknown>
     aiSummaryService?: Record<string, unknown>
+    aiTtsQueryService?: Record<string, unknown>
   } = {},
 ) => {
   const noteService = {
@@ -120,12 +121,18 @@ const createController = (
     ...overrides.aiSummaryService,
   }
 
+  const aiTtsQueryService = {
+    getMetaForArticle: vi.fn().mockResolvedValue({ available: false }),
+    ...overrides.aiTtsQueryService,
+  }
+
   const controller = new NoteController(
     noteService as any,
     countingService as any,
     translationService as any,
     aiSummaryService as any,
     aiInsightsService as any,
+    aiTtsQueryService as any,
     {} as any,
     enrichmentService as any,
     translationEntryService as any,
@@ -137,6 +144,7 @@ const createController = (
     translationService,
     translationEntryService,
     enrichmentService,
+    aiTtsQueryService,
   }
 }
 
@@ -393,6 +401,81 @@ describe('NoteController', () => {
       expect(
         response.meta.translation['note-latest'].article,
       ).not.toHaveProperty('title')
+    })
+  })
+
+  describe('meta.tts matches what the public narration endpoint will serve', () => {
+    const ttsMeta = {
+      available: true,
+      lang: 'zh',
+      blockCount: 2,
+      stale: false,
+      updatedAt: new Date('2026-01-02'),
+    }
+
+    it('suppresses meta.tts for an anonymous reader of a future-dated secret note', async () => {
+      const { controller } = createController({
+        noteService: {
+          findByNid: vi.fn().mockResolvedValue(makeNote({ id: 'note-secret' })),
+          checkNoteIsSecret: vi.fn().mockReturnValue(true),
+        },
+        aiTtsQueryService: {
+          getMetaForArticle: vi.fn().mockResolvedValue(ttsMeta),
+        },
+      })
+
+      const response = await controller.getNoteByNid(
+        { nid: 1 } as any,
+        false,
+        {} as any,
+        'fake-ip',
+      )
+
+      expect(response.meta.tts).toEqual({ available: false })
+    })
+
+    it('keeps meta.tts for the owner of a future-dated secret note', async () => {
+      const { controller } = createController({
+        noteService: {
+          findByNid: vi.fn().mockResolvedValue(makeNote({ id: 'note-secret' })),
+          checkNoteIsSecret: vi.fn().mockReturnValue(true),
+        },
+        aiTtsQueryService: {
+          getMetaForArticle: vi.fn().mockResolvedValue(ttsMeta),
+        },
+      })
+
+      const response = await controller.getNoteByNid(
+        { nid: 1 } as any,
+        true,
+        {} as any,
+        'fake-ip',
+      )
+
+      expect(response.meta.tts).toEqual(ttsMeta)
+    })
+
+    it('keeps meta.tts for a reader who cleared the note password gate', async () => {
+      const { controller } = createController({
+        noteService: {
+          findByNid: vi
+            .fn()
+            .mockResolvedValue(makeNote({ id: 'note-locked', password: 'x' })),
+          checkPasswordToAccess: vi.fn().mockResolvedValue(true),
+        },
+        aiTtsQueryService: {
+          getMetaForArticle: vi.fn().mockResolvedValue(ttsMeta),
+        },
+      })
+
+      const response = await controller.getNoteByNid(
+        { nid: 1 } as any,
+        false,
+        { password: 'x' } as any,
+        'fake-ip',
+      )
+
+      expect(response.meta.tts).toEqual(ttsMeta)
     })
   })
 

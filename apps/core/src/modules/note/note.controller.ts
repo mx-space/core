@@ -42,6 +42,7 @@ import { DEFAULT_SUMMARY_LANG } from '../ai/ai.constants'
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
 import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
+import { AiTtsQueryService } from '../ai/ai-tts/ai-tts-query.service'
 import { EnrichmentService } from '../enrichment/enrichment.service'
 import {
   ListQueryDto,
@@ -84,6 +85,7 @@ export class NoteController {
     private readonly translationService: TranslationService,
     private readonly aiSummaryService: AiSummaryService,
     private readonly aiInsightsService: AiInsightsService,
+    private readonly aiTtsQueryService: AiTtsQueryService,
     private readonly lexicalService: LexicalService,
     private readonly enrichmentService: EnrichmentService,
     private readonly translationEntryService: TranslationEntryService,
@@ -236,17 +238,26 @@ export class NoteController {
     applyArticleTranslationInPlace(current, translationResult)
 
     const insightsLang = parseLanguageCode(lang)
-    const [hasInsightsInLocale, summaryDoc] = await Promise.all([
+    const [hasInsightsInLocale, summaryDoc, ttsMeta] = await Promise.all([
       this.aiInsightsService
         .hasInsightsInLang(current.id!, insightsLang)
         .catch(() => false),
       this.aiSummaryService.getSummaryForPublicMeta(current.id!, insightsLang),
+      this.aiTtsQueryService
+        .getMetaForArticle(current.id!, insightsLang, current.modifiedAt)
+        .catch(() => ({ available: false as const })),
     ])
+
+    // A future-dated secret note has its text blanked for anonymous readers, so
+    // narration of it is exactly what the secret withholds.
+    const narrationVisible =
+      isAuthenticated || !this.noteService.checkNoteIsSecret(current)
 
     const metaBuilder = new NoteMetaBuilder()
       .view('detail')
       .interaction({ isLiked: liked })
       .insights({ hasInLocale: hasInsightsInLocale })
+      .tts(narrationVisible ? ttsMeta : { available: false })
 
     if (summaryDoc) {
       metaBuilder.summary({
@@ -635,9 +646,14 @@ export class NoteController {
     }
 
     const insightsLang = parseLanguageCode(lang)
-    const hasInsightsInLocale = await this.aiInsightsService
-      .hasInsightsInLang(latest.id!, insightsLang)
-      .catch(() => false)
+    const [hasInsightsInLocale, ttsMeta] = await Promise.all([
+      this.aiInsightsService
+        .hasInsightsInLang(latest.id!, insightsLang)
+        .catch(() => false),
+      this.aiTtsQueryService
+        .getMetaForArticle(latest.id!, insightsLang, latest.modifiedAt)
+        .catch(() => ({ available: false as const })),
+    ])
 
     const { enrichments, ...latestData } =
       await this.enrichmentService.attachEnrichments(latest)
@@ -645,6 +661,7 @@ export class NoteController {
     const metaBuilder = new NoteMetaBuilder()
       .view('detail')
       .insights({ hasInLocale: hasInsightsInLocale })
+      .tts(ttsMeta)
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
     const translationMap = new Map([

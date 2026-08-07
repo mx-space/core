@@ -405,3 +405,66 @@ export function updateTranslationEntry(
 export function deleteTranslationEntry(id: string) {
   return deleteJson<void>(`/ai/translations/entries/${id}`)
 }
+
+export interface AITtsSegment {
+  blockId: string
+  chunkIndex: number
+  text: string
+  url: string
+}
+
+export interface AITtsRow {
+  blockOrder: string[]
+  charCount: number
+  id: string
+  isTranslation: boolean
+  lang: string
+  model: string
+  refId: string
+  segments: AITtsSegment[]
+  speed: number
+  updatedAt?: null | string
+  voice: string
+}
+
+export function createTtsTask(data: {
+  force?: boolean
+  langs?: string[]
+  refId: string
+}) {
+  return postJson<CreateTaskResponse, typeof data>('/ai/tts/task', data)
+}
+
+export interface TtsByRefResponse {
+  article: {
+    document: { title: string }
+    type: 'Note' | 'Page' | 'Post' | 'Recently'
+  } | null
+  rows: AITtsRow[]
+}
+
+export function getTtsByRefId(refId: string) {
+  return getJson<TtsByRefResponse>(`/ai/tts/ref/${refId}`)
+}
+
+export function deleteTts(id: string) {
+  return deleteJson<void>(`/ai/tts/${id}`)
+}
+
+export interface GroupedTtsData {
+  article: ArticleInfo
+  narrations: AITtsRow[]
+}
+
+export interface GroupedTtsResponse {
+  data: GroupedTtsData[]
+  pagination: PaginationInfo
+}
+
+export function getTtsGrouped(params?: {
+  page?: number
+  search?: string
+  size?: number
+}) {
+  return getJson<GroupedTtsResponse>('/ai/tts/grouped', params)
+}

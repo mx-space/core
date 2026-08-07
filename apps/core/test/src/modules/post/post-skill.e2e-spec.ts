@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
+import { AiTtsQueryService } from '~/modules/ai/ai-tts/ai-tts-query.service'
 import { EnrichmentService } from '~/modules/enrichment/enrichment.service'
 import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { PostController } from '~/modules/post/post.controller'
@@ -86,6 +87,12 @@ const proxy = createE2EApp({
     {
       provide: AiSummaryService,
       useValue: { getSummaryForPublicMeta: vi.fn(async () => null) },
+    },
+    {
+      provide: AiTtsQueryService,
+      useValue: {
+        getMetaForArticle: vi.fn(async () => ({ available: false })),
+      },
     },
     {
       provide: EnrichmentService,

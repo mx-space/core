@@ -45,9 +45,7 @@ const s3StorageNullDefaults = {
 function normalizeS3StorageOptionNulls<T extends object>(value: T): T {
   const normalized = { ...value } as Record<string, unknown>
 
-  for (const [key, defaultValue] of Object.entries(
-    s3StorageNullDefaults,
-  )) {
+  for (const [key, defaultValue] of Object.entries(s3StorageNullDefaults)) {
     if (normalized[key] === null) {
       normalized[key] = defaultValue
     }
@@ -387,6 +385,14 @@ export class ConfigsService implements OnModuleInit {
       this.validateImageGenerationProvider(nextConfig)
     }
 
+    if (key === 'ttsOptions') {
+      const nextConfig = await this.buildNextConfigForValidation(
+        key,
+        instanceValue,
+      )
+      this.validateTtsProvider(nextConfig)
+    }
+
     encryptObject(instanceValue, key)
 
     switch (key) {
@@ -517,6 +523,16 @@ export class ConfigsService implements OnModuleInit {
       throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
         message:
           'imageGenerationOptions.endpoint: required when provider is "custom"',
+      })
+    }
+  }
+
+  private validateTtsProvider(config: IConfig) {
+    const { ttsOptions } = config
+
+    if (ttsOptions.provider === 'custom' && !ttsOptions.endpoint) {
+      throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+        message: 'ttsOptions.endpoint: required when provider is "custom"',
       })
     }
   }

@@ -222,6 +222,31 @@ export const APP_ERROR_DEFINITIONS = {
     message: (p) => p?.message ?? 'Image generation failed',
   },
 
+  // TTS
+  [AppErrorCode.TTS_DISABLED]: {
+    status: 403,
+    message: 'AI narration is disabled',
+  },
+  [AppErrorCode.TTS_PROVIDER_NOT_CONFIGURED]: {
+    status: 400,
+    message: 'TTS provider is not configured',
+  },
+  [AppErrorCode.TTS_SOURCE_NOT_LEXICAL]: {
+    status: 400,
+    message: 'No requested language has narratable Lexical content',
+    details: (p) => (p?.lang ? { lang: p.lang } : undefined),
+  },
+  [AppErrorCode.TTS_GENERATION_FAILED]: {
+    status: 500,
+    message: (p) => p?.message ?? 'Speech generation failed',
+  },
+  [AppErrorCode.TTS_BUDGET_EXCEEDED]: {
+    status: 400,
+    message: (p) =>
+      `Planned narration of ${p.charCount} characters exceeds the ${p.limit} limit`,
+    details: (p) => ({ charCount: p.charCount, limit: p.limit }),
+  },
+
   // auth
   [AppErrorCode.AUTH_DEVICE_FLOW_PENDING]: {
     status: 202,

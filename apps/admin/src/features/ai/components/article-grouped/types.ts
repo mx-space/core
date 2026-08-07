@@ -1,8 +1,9 @@
+import type { LucideIcon } from 'lucide-react'
+import type { ComponentType } from 'react'
+
 import type { ArticleInfo, PaginationInfo } from '~/api/ai'
 import type { TranslationKey } from '~/i18n/types'
 import type { HeaderAction } from '~/ui/layout/page-layout'
-import type { LucideIcon } from 'lucide-react'
-import type { ComponentType } from 'react'
 
 export interface ArticleGroup<TItem> {
   article: ArticleInfo
@@ -49,6 +50,8 @@ export interface ArticleGroupedConfig<TItem> {
   inlineEmptyKey: TranslationKey
   itemDeleteConfirmKey: TranslationKey
   editTitleKey: TranslationKey
+  /** Label for the primary row-open action; defaults to `ai.action.edit`. */
+  itemOpenLabelKey?: TranslationKey
   kindKey: TranslationKey
 
   groupedQueryKey: string
@@ -69,7 +72,7 @@ export interface ArticleGroupedConfig<TItem> {
       refId: string
       lang?: string
     }) => Promise<{ created: boolean; taskId: string }>
-    taskTypeForQueue: 'Summary' | 'Translation' | 'Insights'
+    taskTypeForQueue: 'Insights' | 'Summary' | 'Translation' | 'Tts'
   }
 
   pageActions?: (ctx: { invalidate: () => Promise<void> }) => HeaderAction[]
