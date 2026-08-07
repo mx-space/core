@@ -16,6 +16,78 @@ final class PairingFlowUITests: XCTestCase {
     }
 
     func testPairsAndLandsOnDashboard() throws {
+        let app = try launchAndPair()
+
+        XCTAssertTrue(app.staticTexts["Needs attention"].exists)
+
+        capture(app, name: "dashboard")
+
+        try assertMovementSurface(app)
+        try assertCommentsSurface(app)
+
+        try assertRecentlySurface(app)
+        try assertWebHandoff(app)
+    }
+
+    func testSearchesTmdbAndPreviewsSelection() throws {
+        let app = try launchAndPair()
+
+        app.buttons["tab.content"].tap()
+        XCTAssertTrue(
+            app.collectionViews["recently.list"].waitForExistence(timeout: 15),
+            "recently list never appeared"
+        )
+
+        app.buttons["global.compose"].tap()
+        let editor = app.textViews["recently.composer.text"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 10), "composer never opened")
+        editor.tap()
+
+        let shortcut = app.buttons["recently.composer.tmdbShortcut"]
+        XCTAssertTrue(shortcut.waitForExistence(timeout: 10), "TMDB shortcut is missing")
+        shortcut.tap()
+        editor.typeText("Arrival")
+
+        let search = app.descendants(matching: .any)["recently.composer.tmdbSearch"]
+        XCTAssertTrue(search.waitForExistence(timeout: 10), "TMDB search surface never appeared")
+
+        let firstResult = app.buttons
+            .matching(NSPredicate(format: "label BEGINSWITH 'Use '"))
+            .firstMatch
+        XCTAssertTrue(
+            firstResult.waitForExistence(timeout: 25),
+            "TMDB search did not return a selectable movie or TV result"
+        )
+        capture(app, name: "tmdb-search-results")
+
+        firstResult.tap()
+
+        let canonicalURL = NSPredicate { evaluated, _ in
+            guard let textView = evaluated as? XCUIElement,
+                  let value = textView.value as? String
+            else { return false }
+            return value.range(
+                of: #"^https://www\.themoviedb\.org/(movie|tv)/\d+$"#,
+                options: .regularExpression
+            ) != nil
+        }
+        expectation(for: canonicalURL, evaluatedWith: editor)
+        waitForExpectations(timeout: 10)
+
+        XCTAssertFalse(
+            editor.stringValue.contains("/tmdb"),
+            "selecting a result should remove the shorthand command"
+        )
+        XCTAssertTrue(
+            app.descendants(matching: .any)["recently.enrichment"]
+                .firstMatch
+                .waitForExistence(timeout: 10),
+            "selected TMDB result did not render as a publish preview"
+        )
+        capture(app, name: "tmdb-selected-preview")
+    }
+
+    private func launchAndPair() throws -> XCUIApplication {
         let server = try XCTUnwrap(
             serverAddress,
             "SPACE_TEST_SERVER is unset — run `make verify` instead of a bare test."
@@ -41,16 +113,7 @@ final class PairingFlowUITests: XCTestCase {
             dashboard.waitForExistence(timeout: 90),
             "pairing never completed — dashboard counters never rendered"
         )
-
-        XCTAssertTrue(app.staticTexts["Needs attention"].exists)
-
-        capture(app, name: "dashboard")
-
-        try assertMovementSurface(app)
-        try assertCommentsSurface(app)
-
-        try assertRecentlySurface(app)
-        try assertWebHandoff(app)
+        return app
     }
 
     private func assertMovementSurface(_ app: XCUIApplication) throws {
@@ -168,5 +231,11 @@ final class PairingFlowUITests: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+}
+
+private extension XCUIElement {
+    var stringValue: String {
+        value as? String ?? ""
     }
 }

@@ -10,6 +10,7 @@ import { EnrichmentRepository } from '~/modules/enrichment/enrichment.repository
 import { EnrichmentService } from '~/modules/enrichment/enrichment.service'
 import { EnrichmentCaptureRepository } from '~/modules/enrichment/enrichment-capture.repository'
 import { CaptureStorageService } from '~/modules/enrichment/providers/open-graph/capture-storage.service'
+import { TmdbProvider } from '~/modules/enrichment/providers/tmdb/tmdb.provider'
 
 const baseRow = {
   id: 'row-1',
@@ -77,6 +78,13 @@ const enrichmentServiceMock = {
   refresh: vi.fn(async () => baseRow.normalized),
   probe: vi.fn(),
   matchUrlToRef: vi.fn(),
+  getProviders: vi.fn(),
+}
+
+const tmdbProviderMock = {
+  name: 'tmdb',
+  displayName: 'TMDB',
+  search: vi.fn(),
 }
 
 const configsServiceMock = {
@@ -108,8 +116,7 @@ const providers = [
   }),
   defineProvider({
     provide: EnrichmentCaptureRepository,
-    useValue:
-      captureRepositoryMock as unknown as EnrichmentCaptureRepository,
+    useValue: captureRepositoryMock as unknown as EnrichmentCaptureRepository,
   }),
   defineProvider({
     provide: CaptureStorageService,
@@ -118,6 +125,10 @@ const providers = [
   defineProvider({
     provide: ConfigsService,
     useValue: configsServiceMock as unknown as ConfigsService,
+  }),
+  defineProvider({
+    provide: TmdbProvider,
+    useValue: tmdbProviderMock as unknown as TmdbProvider,
   }),
 ]
 
@@ -133,9 +144,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     configState.captureEnabled = false
     enrichmentRepositoryMock.findById.mockResolvedValue(baseRow)
     enrichmentRepositoryMock.clearCapture.mockResolvedValue(undefined)
-    captureRepositoryMock.findByEnrichmentId.mockResolvedValue(
-      baseCaptureRow,
-    )
+    captureRepositoryMock.findByEnrichmentId.mockResolvedValue(baseCaptureRow)
     captureRepositoryMock.getQuotaUsage.mockResolvedValue({
       count: 3,
       totalBytes: 4096,
@@ -172,6 +181,15 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
       async (objectKey: string) => `https://cdn.example.test/${objectKey}`,
     )
     enrichmentServiceMock.refresh.mockResolvedValue(baseRow.normalized as any)
+    enrichmentServiceMock.getProviders.mockResolvedValue([
+      {
+        name: 'tmdb',
+        enabled: true,
+        ready: true,
+        missingKeys: [],
+      },
+    ] as any)
+    tmdbProviderMock.search.mockResolvedValue([])
   })
 
   describe('auth gating', () => {
@@ -183,6 +201,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
       { method: 'GET', url: 'enrichment/admin/by-id/row-1' },
       { method: 'GET', url: 'enrichment/admin/captures' },
       { method: 'GET', url: 'enrichment/admin/captures/quota' },
+      { method: 'GET', url: 'enrichment/tmdb/search?query=Arrival' },
       { method: 'DELETE', url: 'enrichment/admin/captures/row-1' },
       {
         method: 'POST',
@@ -208,6 +227,57 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     )
   })
 
+  test('GET tmdb/search returns normalized movie and TV candidates', async () => {
+    tmdbProviderMock.search.mockResolvedValueOnce([
+      {
+        title: 'Arrival',
+        description: 'A linguist meets visitors.',
+        url: 'https://www.themoviedb.org/movie/329865',
+        category: 'media',
+        subtype: 'movie',
+        publishedAt: '2016-11-10',
+        fetchedAt: '2026-08-08T00:00:00.000Z',
+      },
+    ])
+
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/enrichment/tmdb/search?query=Arrival&lang=zh`,
+      headers: authPassHeader,
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(tmdbProviderMock.search).toHaveBeenCalledWith('Arrival', 'zh')
+    expect(res.json().data).toEqual([
+      expect.objectContaining({
+        title: 'Arrival',
+        subtype: 'movie',
+        published_at: '2016-11-10',
+      }),
+    ])
+  })
+
+  test('GET tmdb/search reports an unavailable integration', async () => {
+    enrichmentServiceMock.getProviders.mockResolvedValueOnce([
+      {
+        name: 'tmdb',
+        enabled: true,
+        ready: false,
+        missingKeys: ['apiKey'],
+      },
+    ] as any)
+
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/enrichment/tmdb/search?query=Arrival`,
+      headers: authPassHeader,
+    })
+
+    expect(res.statusCode).toBe(409)
+    expect(res.json().error.code).toBe('ENRICHMENT_PROVIDER_UNAVAILABLE')
+    expect(tmdbProviderMock.search).not.toHaveBeenCalled()
+  })
+
   test('GET admin/by-id/:id returns row with capture', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
@@ -218,9 +288,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     const body = res.json()
     expect(body.data.id).toBe('row-1')
     expect(body.data.capture).toBeTruthy()
-    expect(body.data.capture.object_key).toBe(
-      'enrichment-captures/row-1.webp',
-    )
+    expect(body.data.capture.object_key).toBe('enrichment-captures/row-1.webp')
   })
 
   test('GET admin/by-id/:id 404 when missing', async () => {
@@ -286,9 +354,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     })
     expect(res.statusCode).toBe(204)
     expect(captureStorageMock.delete).toHaveBeenCalledWith('row-1')
-    expect(enrichmentRepositoryMock.clearCapture).toHaveBeenCalledWith(
-      'row-1',
-    )
+    expect(enrichmentRepositoryMock.clearCapture).toHaveBeenCalledWith('row-1')
   })
 
   test('POST admin/captures/:id/recapture 409 when fetchMode != browser', async () => {

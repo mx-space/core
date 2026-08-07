@@ -19,6 +19,10 @@ struct RecentlyComposerView: View {
     @State private var isPosting = false
     @State private var postFailure: String?
     @State private var previewTask: Task<Void, Never>?
+    @State private var tmdbResults: [EnrichmentResult] = []
+    @State private var isSearchingTmdb = false
+    @State private var tmdbFailure: String?
+    @State private var tmdbSearchTask: Task<Void, Never>?
 
     init(
         service: RecentlyService,
@@ -35,30 +39,33 @@ struct RecentlyComposerView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: Spacing.regular) {
-                TextEditor(text: $text)
-                    .focused($isEditorFocused)
-                    .frame(minHeight: 140)
-                    .scrollContentBackground(.hidden)
-                    .padding(Spacing.tight)
-                    .background(
-                        RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
-                            .fill(Color(.secondarySystemBackground))
-                    )
-                    .accessibilityIdentifier("recently.composer.text")
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.regular) {
+                    TextEditor(text: $text)
+                        .focused($isEditorFocused)
+                        .frame(minHeight: 140)
+                        .scrollContentBackground(.hidden)
+                        .padding(Spacing.tight)
+                        .background(
+                            RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
+                                .fill(Color(.secondarySystemBackground))
+                        )
+                        .accessibilityIdentifier("recently.composer.text")
 
-                previewSection
+                    tmdbShortcut
+                    tmdbSearchSection
+                    previewSection
 
-                if let postFailure {
-                    Label(postFailure, systemImage: "exclamationmark.triangle")
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .accessibilityIdentifier("recently.composer.error")
+                    if let postFailure {
+                        Label(postFailure, systemImage: "exclamationmark.triangle")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .accessibilityIdentifier("recently.composer.error")
+                    }
                 }
-
-                Spacer()
+                .padding(Spacing.regular)
             }
-            .padding(Spacing.regular)
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -71,9 +78,75 @@ struct RecentlyComposerView: View {
                         .accessibilityIdentifier("recently.composer.post")
                 }
             }
-            .onChange(of: text) { _, newValue in schedulePreview(for: newValue) }
-            .onDisappear { previewTask?.cancel() }
+            .onChange(of: text) { _, newValue in
+                schedulePreview(for: newValue)
+                scheduleTmdbSearch(for: newValue)
+            }
+            .onDisappear {
+                previewTask?.cancel()
+                tmdbSearchTask?.cancel()
+            }
             .task { isEditorFocused = true }
+        }
+    }
+
+    @ViewBuilder
+    private var tmdbShortcut: some View {
+        if RecentlyService.tmdbSearchQuery(in: text) == nil {
+            Button {
+                text = RecentlyService.appendingTmdbCommand(to: text)
+                isEditorFocused = true
+            } label: {
+                Label("Search TMDB", systemImage: "film.stack")
+            }
+            .buttonStyle(.bordered)
+            .accessibilityIdentifier("recently.composer.tmdbShortcut")
+        }
+    }
+
+    @ViewBuilder
+    private var tmdbSearchSection: some View {
+        if let query = RecentlyService.tmdbSearchQuery(in: text) {
+            VStack(alignment: .leading, spacing: Spacing.tight) {
+                Label("Search TMDB", systemImage: "film.stack")
+                    .font(.subheadline.weight(.semibold))
+
+                if query.isEmpty {
+                    Text("Continue typing a movie or TV title after /tmdb.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if query.count < 2 {
+                    Text("Type at least two characters to search.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if isSearchingTmdb {
+                    HStack(spacing: Spacing.tight) {
+                        ProgressView()
+                        Text("Searching…").font(.caption).foregroundStyle(.secondary)
+                    }
+                } else if let tmdbFailure {
+                    Label(tmdbFailure, systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                } else if tmdbResults.isEmpty {
+                    Text("No matching movies or TV shows.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    LazyVStack(spacing: Spacing.tight) {
+                        ForEach(tmdbResults, id: \.url) { result in
+                            Button {
+                                selectTmdbResult(result)
+                            } label: {
+                                EnrichmentCardView(card: MediaCard(result))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Use \(result.title)")
+                        }
+                    }
+                }
+            }
+            .accessibilityIdentifier("recently.composer.tmdbSearch")
         }
     }
 
@@ -142,6 +215,69 @@ struct RecentlyComposerView: View {
         }
     }
 
+    private func scheduleTmdbSearch(for value: String) {
+        tmdbSearchTask?.cancel()
+        guard let query = RecentlyService.tmdbSearchQuery(in: value) else {
+            tmdbResults = []
+            tmdbFailure = nil
+            isSearchingTmdb = false
+            return
+        }
+        guard query.count >= 2 else {
+            tmdbResults = []
+            tmdbFailure = nil
+            isSearchingTmdb = false
+            return
+        }
+
+        tmdbResults = []
+        tmdbFailure = nil
+        isSearchingTmdb = true
+
+        tmdbSearchTask = Task {
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled else { return }
+            defer {
+                if RecentlyService.tmdbSearchQuery(in: text) == query {
+                    isSearchingTmdb = false
+                }
+            }
+            do {
+                let results = try await service.searchTmdb(
+                    query: query,
+                    lang: tmdbLanguage
+                )
+                guard
+                    !Task.isCancelled,
+                    RecentlyService.tmdbSearchQuery(in: text) == query
+                else { return }
+                tmdbResults = results
+            } catch {
+                guard
+                    !Task.isCancelled,
+                    RecentlyService.tmdbSearchQuery(in: text) == query
+                else { return }
+                tmdbResults = []
+                tmdbFailure = error.localizedDescription
+            }
+        }
+    }
+
+    private var tmdbLanguage: String? {
+        guard let code = Locale.current.language.languageCode?.identifier else { return nil }
+        return ["zh", "ja", "ko", "en"].contains(code) ? code : nil
+    }
+
+    private func selectTmdbResult(_ result: EnrichmentResult) {
+        tmdbSearchTask?.cancel()
+        text = RecentlyService.replacingTmdbCommand(in: text, with: result.url)
+        tmdbResults = []
+        tmdbFailure = nil
+        isSearchingTmdb = false
+        preview = MediaCard(result)
+        previewedURL = result.url
+    }
+
     private func post() {
         isPosting = true
         postFailure = nil
@@ -154,4 +290,5 @@ struct RecentlyComposerView: View {
             }
         }
     }
+
 }

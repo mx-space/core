@@ -27,6 +27,7 @@ import {
   AdminListQueryDto,
   AdminProbeBodyDto,
   ResolveQueryDto,
+  TmdbSearchQueryDto,
 } from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
 import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
@@ -34,6 +35,7 @@ import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
 import { EnrichmentCaptureRepository } from './enrichment-capture.repository'
 import { EnrichmentOriginGuard } from './enrichment-origin.guard'
 import { CaptureStorageService } from './providers/open-graph/capture-storage.service'
+import { TmdbProvider } from './providers/tmdb/tmdb.provider'
 
 const PUBLIC_RESOLVE_THROTTLE = { default: { limit: 30, ttl: 60_000 } }
 const ADMIN_PROBE_THROTTLE = { default: { limit: 30, ttl: 60_000 } }
@@ -49,6 +51,7 @@ export class EnrichmentController {
     private readonly enrichmentRepository: EnrichmentRepository,
     private readonly captureRepository: EnrichmentCaptureRepository,
     private readonly configsService: ConfigsService,
+    private readonly tmdbProvider: TmdbProvider,
   ) {}
 
   @Get('resolve')
@@ -79,6 +82,24 @@ export class EnrichmentController {
       }
       throw error
     }
+  }
+
+  @Get('tmdb/search')
+  @Auth()
+  @Throttle(ADMIN_PROBE_THROTTLE)
+  async searchTmdb(
+    @Query() query: TmdbSearchQueryDto,
+    @Lang() lang: string | undefined,
+  ): Promise<EnrichmentResult[]> {
+    const provider = (await this.enrichmentService.getProviders()).find(
+      ({ name }) => name === this.tmdbProvider.name,
+    )
+    if (!provider?.ready) {
+      throw createAppException(AppErrorCode.ENRICHMENT_PROVIDER_UNAVAILABLE, {
+        provider: this.tmdbProvider.displayName,
+      })
+    }
+    return this.tmdbProvider.search(query.query, lang)
   }
 
   @Get(':provider/*')

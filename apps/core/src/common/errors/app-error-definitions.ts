@@ -438,6 +438,12 @@ export const APP_ERROR_DEFINITIONS = {
     message: 'Enrichment not found',
     details: (p) => (p?.id ? { id: p.id } : undefined),
   },
+  [AppErrorCode.ENRICHMENT_PROVIDER_UNAVAILABLE]: {
+    status: 409,
+    message: (p) =>
+      `${p?.provider ?? 'Requested'} enrichment provider is disabled or not configured`,
+    details: (p) => (p?.provider ? { provider: p.provider } : undefined),
+  },
   [AppErrorCode.ENRICHMENT_SCREENSHOT_DISABLED]: {
     status: 409,
     message: 'Enrichment screenshot is disabled',

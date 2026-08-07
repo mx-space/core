@@ -15,7 +15,10 @@ import {
   ReaderReplyCommentSchema,
 } from '~/modules/comment/comment.schema'
 import { CommentViews } from '~/modules/comment/comment.views'
-import { ResolveQuerySchema } from '~/modules/enrichment/enrichment.schema'
+import {
+  ResolveQuerySchema,
+  TmdbSearchQuerySchema,
+} from '~/modules/enrichment/enrichment.schema'
 import { EnrichmentViews } from '~/modules/enrichment/enrichment.views'
 import { NoteSchema } from '~/modules/note/note.schema'
 import { NoteViews } from '~/modules/note/note.views'
@@ -371,6 +374,17 @@ export const routeManifest: readonly OpenApiRoute[] = [
     params: EntityIdSchema,
   },
 
+  {
+    operationId: 'searchTmdb',
+    method: 'get',
+    path: '/enrichment/tmdb/search',
+    tag: 'recently',
+    summary: 'Search TMDB for a movie or TV link to publish',
+    auth: true,
+    query: TmdbSearchQuerySchema,
+    response: { name: 'EnrichmentResult', schema: EnrichmentViews.result },
+    responseIsArray: true,
+  },
   {
     operationId: 'resolveEnrichment',
     method: 'get',

@@ -127,6 +127,7 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.ENRICHMENT_BROWSER_MODE_REQUIRED]: undefined
   [AppErrorCode.ENRICHMENT_CAPTURE_FAILED]: undefined
   [AppErrorCode.ENRICHMENT_NOT_FOUND]: WithId
+  [AppErrorCode.ENRICHMENT_PROVIDER_UNAVAILABLE]: { provider: string }
   [AppErrorCode.ENRICHMENT_SCREENSHOT_DISABLED]: undefined
 
   // file

@@ -6,6 +6,12 @@ export const ResolveQuerySchema = z.object({
 })
 export class ResolveQueryDto extends createZodDto(ResolveQuerySchema) {}
 
+export const TmdbSearchQuerySchema = z.object({
+  query: z.string().trim().min(2).max(100),
+  lang: z.enum(['zh', 'ja', 'ko', 'en']).optional(),
+})
+export class TmdbSearchQueryDto extends createZodDto(TmdbSearchQuerySchema) {}
+
 export const AdminListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   size: z.coerce.number().int().min(1).max(100).default(20),

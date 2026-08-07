@@ -94,6 +94,57 @@ import Testing
         #expect(try await service.resolve(url: "https://a.example") == nil)
     }
 
+    @Test func searchesTmdbThroughTheGeneratedAuthenticatedContract() async throws {
+        let (service, transport) = makeService([
+            .init(
+                operationID: "searchTmdb",
+                status: .ok,
+                json: #"{"data":[{"title":"Arrival","description":"A linguist meets visitors.","url":"https://www.themoviedb.org/movie/329865","category":"media","subtype":"movie","published_at":"2016-11-10","fetched_at":"2026-08-08T00:00:00Z"}]}"#
+            ),
+        ])
+
+        let results = try await service.searchTmdb(query: "降临", lang: "zh")
+
+        #expect(results.map(\.title) == ["Arrival"])
+        #expect(transport.operationIDs == ["searchTmdb"])
+        let path = try #require(transport.requestPaths.first)
+        let components = try #require(URLComponents(string: "https://mx.example.com\(path)"))
+        #expect(components.queryItems?.first { $0.name == "query" }?.value == "降临")
+        #expect(components.queryItems?.first { $0.name == "lang" }?.value == "zh")
+    }
+
+    @Test(arguments: [
+        ("/tmdb Arrival", "Arrival"),
+        ("Watching this\n\n/tmdb 沙丘", "沙丘"),
+        ("/tmdb", ""),
+        ("/tmdbx Arrival", nil),
+        ("inline /tmdb Arrival", nil),
+    ])
+    func recognizesTmdbCommandsThatOwnTheirLine(_ text: String, _ expected: String?) {
+        #expect(RecentlyService.tmdbSearchQuery(in: text) == expected)
+    }
+
+    @Test(arguments: [
+        ("", "/tmdb "),
+        ("刚刚看完", "刚刚看完\n\n/tmdb "),
+        ("/tmdb Arrival", "/tmdb Arrival"),
+    ])
+    func keyboardShortcutAppendsOneTmdbCommand(_ text: String, _ expected: String) {
+        #expect(RecentlyService.appendingTmdbCommand(to: text) == expected)
+    }
+
+    @Test func selectedTmdbResultBecomesACardifiableParagraph() {
+        let url = "https://www.themoviedb.org/movie/329865"
+        let replaced = RecentlyService.replacingTmdbCommand(
+            in: "刚刚看完\n\n/tmdb Arrival\n\n很喜欢",
+            with: url
+        )
+
+        #expect(replaced == "刚刚看完\n\n\(url)\n\n很喜欢")
+        #expect(RecentlyService.firstCardableURL(in: replaced) == url)
+        #expect(RecentlyService.tmdbSearchQuery(in: replaced) == nil)
+    }
+
     /// Mirrors `UrlExtractorService.extractFromMarkdown`: only a link that owns
     /// its whole *paragraph* becomes a card. A single newline is not a
     /// paragraph break in markdown — verified against a live instance.

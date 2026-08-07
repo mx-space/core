@@ -18,6 +18,27 @@ export interface TMDBMovieApiResponse {
   first_air_date?: string
 }
 
+export interface TMDBSearchApiResponse {
+  page: number
+  results: TMDBSearchResultApiResponse[]
+  total_pages: number
+  total_results: number
+}
+
+export interface TMDBSearchResultApiResponse {
+  id: number
+  media_type: 'movie' | 'tv' | 'person'
+  title?: string
+  name?: string
+  original_title?: string
+  original_name?: string
+  overview: string | null
+  poster_path: string | null
+  vote_average?: number | null
+  release_date?: string
+  first_air_date?: string
+}
+
 // TMDB uses a single type — movies have `title`+`release_date`, TV has `name`+`first_air_date`
 // Both are optional on the union; the provider handles the fallbacks
 

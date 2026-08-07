@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common'
 
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
-import type { TMDBMovieApiResponse } from '../api-response.types'
+import type {
+  TMDBMovieApiResponse,
+  TMDBSearchApiResponse,
+  TMDBSearchResultApiResponse,
+} from '../api-response.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
 import { TmdbClient } from './tmdb.client'
@@ -130,6 +134,74 @@ export class TmdbProvider implements EnrichmentProvider {
       publishedAt: data.release_date || data.first_air_date || undefined,
       fetchedAt: '',
       attributes: attrs,
+    }
+  }
+
+  async search(query: string, locale?: string): Promise<EnrichmentResult[]> {
+    const language = locale ? TMDB_LANG_MAP[locale] : undefined
+    const response = await this.client.fetch<TMDBSearchApiResponse>(
+      '/3/search/multi',
+      {
+        language,
+        query: {
+          include_adult: false,
+          page: 1,
+          query,
+        },
+      },
+    )
+    const fetchedAt = new Date().toISOString()
+
+    return response.results
+      .filter(
+        (
+          item,
+        ): item is TMDBSearchResultApiResponse & {
+          media_type: 'movie' | 'tv'
+        } => item.media_type === 'movie' || item.media_type === 'tv',
+      )
+      .map((item) => this.normalizeSearchResult(item, fetchedAt))
+      .filter((item): item is EnrichmentResult => item !== null)
+      .slice(0, 10)
+  }
+
+  private normalizeSearchResult(
+    item: TMDBSearchResultApiResponse & { media_type: 'movie' | 'tv' },
+    fetchedAt: string,
+  ): EnrichmentResult | null {
+    const title = pickNonBlank(
+      item.title,
+      item.name,
+      item.original_title,
+      item.original_name,
+    )
+    if (!title) return null
+
+    const attributes: NonNullable<EnrichmentResult['attributes']> = []
+    if (item.vote_average != null && item.vote_average > 0) {
+      attributes.push({
+        key: 'rating',
+        value: item.vote_average,
+        label: 'Rating',
+        format: 'rating',
+      })
+    }
+
+    return {
+      title,
+      description: pickNonBlank(item.overview),
+      thumbnailImage: item.poster_path
+        ? {
+            url: `${TMDB_IMAGE_BASE}${item.poster_path}`,
+            alt: title,
+          }
+        : undefined,
+      url: `https://www.themoviedb.org/${item.media_type}/${item.id}`,
+      category: this.category,
+      subtype: item.media_type,
+      publishedAt: item.release_date || item.first_air_date || undefined,
+      fetchedAt,
+      attributes,
     }
   }
 }

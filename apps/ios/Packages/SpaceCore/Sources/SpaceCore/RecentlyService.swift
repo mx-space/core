@@ -88,6 +88,52 @@ public struct RecentlyService: Sendable {
         }
     }
 
+    public func searchTmdb(query: String, lang: String? = nil) async throws -> [EnrichmentResult] {
+        let language = lang.flatMap(
+            Operations.SearchTmdb.Input.Query.LangPayload.init(rawValue:)
+        )
+        let input = Operations.SearchTmdb.Input(
+            query: .init(query: query, lang: language)
+        )
+        switch try await client.searchTmdb(input) {
+        case let .ok(response):
+            return try response.body.json.data
+        case let .clientError(status, response):
+            throw SpaceError(envelope: try response.body.json, status: status)
+        case let .serverError(status, response):
+            throw SpaceError(envelope: try response.body.json, status: status)
+        case let .undocumented(statusCode, _):
+            throw SpaceError.undocumented(statusCode)
+        }
+    }
+
+    /// Returns the query from the last `/tmdb …` command that owns its line.
+    /// An empty string means the command is active but has no query yet.
+    public static func tmdbSearchQuery(in text: String) -> String? {
+        tmdbCommand(in: text)?.query
+    }
+
+    /// Appends a discoverable TMDB command without disturbing existing copy.
+    /// The blank paragraph keeps the eventual selected URL cardifiable.
+    public static func appendingTmdbCommand(to text: String) -> String {
+        guard tmdbCommand(in: text) == nil else { return text }
+        let content = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return content.isEmpty ? "/tmdb " : "\(content)\n\n/tmdb "
+    }
+
+    /// Replaces the active command with a canonical URL and isolates that URL
+    /// as its own Markdown paragraph so mx-core will attach its enrichment.
+    public static func replacingTmdbCommand(in text: String, with url: String) -> String {
+        guard let command = tmdbCommand(in: text) else { return text }
+        let before = String(text[..<command.range.lowerBound])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let after = String(text[command.range.upperBound...])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return [before, url, after]
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n\n")
+    }
+
     /// URLs the server will turn into media cards.
     ///
     /// `UrlExtractorService.extractFromMarkdown` runs the content through
@@ -154,5 +200,32 @@ public struct RecentlyService: Sendable {
             return false
         }
         return (scheme == "http" || scheme == "https") && url.host() != nil
+    }
+
+    private static func tmdbCommand(
+        in text: String
+    ) -> (range: Range<String.Index>, query: String)? {
+        var match: (range: Range<String.Index>, query: String)?
+        var lineStart = text.startIndex
+
+        while lineStart <= text.endIndex {
+            let lineEnd = text[lineStart...].firstIndex(of: "\n") ?? text.endIndex
+            let range = lineStart..<lineEnd
+            let line = text[range].trimmingCharacters(in: .whitespacesAndNewlines)
+            if line.hasPrefix("/tmdb") {
+                let suffix = line.dropFirst("/tmdb".count)
+                if suffix.isEmpty || suffix.first?.isWhitespace == true {
+                    match = (
+                        range,
+                        suffix.trimmingCharacters(in: .whitespacesAndNewlines)
+                    )
+                }
+            }
+
+            guard lineEnd < text.endIndex else { break }
+            lineStart = text.index(after: lineEnd)
+        }
+
+        return match
     }
 }

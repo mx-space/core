@@ -181,4 +181,91 @@ describe('TmdbProvider', () => {
       expect(result.description).toBeUndefined() // empty, no backfill
     })
   })
+
+  describe('search', () => {
+    it('returns only publishable movie and TV candidates', async () => {
+      const client = createClient()
+      vi.mocked(client.fetch).mockResolvedValue({
+        page: 1,
+        total_pages: 1,
+        total_results: 3,
+        results: [
+          {
+            id: 329865,
+            media_type: 'movie',
+            title: 'Arrival',
+            overview: 'A linguist meets visitors.',
+            poster_path: '/arrival.jpg',
+            vote_average: 7.6,
+            release_date: '2016-11-10',
+          },
+          {
+            id: 1396,
+            media_type: 'tv',
+            name: 'Breaking Bad',
+            overview: 'A chemistry teacher changes course.',
+            poster_path: null,
+            vote_average: 8.9,
+            first_air_date: '2008-01-20',
+          },
+          {
+            id: 1,
+            media_type: 'person',
+            name: 'Someone',
+            overview: null,
+            poster_path: null,
+          },
+        ],
+      })
+      const p = new TmdbProvider(client)
+
+      const results = await p.search('arrival', 'zh')
+
+      expect(client.fetch).toHaveBeenCalledWith('/3/search/multi', {
+        language: 'zh-CN',
+        query: {
+          include_adult: false,
+          page: 1,
+          query: 'arrival',
+        },
+      })
+      expect(results).toHaveLength(2)
+      expect(results[0]).toMatchObject({
+        title: 'Arrival',
+        url: 'https://www.themoviedb.org/movie/329865',
+        subtype: 'movie',
+        publishedAt: '2016-11-10',
+        thumbnailImage: {
+          url: 'https://image.tmdb.org/t/p/w500/arrival.jpg',
+        },
+      })
+      expect(results[1]).toMatchObject({
+        title: 'Breaking Bad',
+        url: 'https://www.themoviedb.org/tv/1396',
+        subtype: 'tv',
+        publishedAt: '2008-01-20',
+      })
+    })
+
+    it('drops malformed results without a display title', async () => {
+      const client = createClient()
+      vi.mocked(client.fetch).mockResolvedValue({
+        page: 1,
+        total_pages: 1,
+        total_results: 1,
+        results: [
+          {
+            id: 1,
+            media_type: 'movie',
+            title: '  ',
+            overview: null,
+            poster_path: null,
+          },
+        ],
+      })
+      const p = new TmdbProvider(client)
+
+      expect(await p.search('unknown')).toEqual([])
+    })
+  })
 })
