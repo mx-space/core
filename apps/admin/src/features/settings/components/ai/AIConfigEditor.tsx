@@ -29,6 +29,7 @@ import { formatAIProviderLabel } from '../../utils/settings'
 import { EmptyState, FieldShell, SettingsSection } from '../SettingsPrimitives'
 import { AIModelAssignmentField } from './AIModelAssignmentField'
 import { AIProviderDrawer } from './AIProviderDrawer'
+import { presentAIProviderPresetModal } from './AIProviderPresetModal'
 import { AITextListField } from './AITextListField'
 import { TtsVoiceField } from './TtsVoiceField'
 
@@ -113,8 +114,12 @@ export function AIConfigEditor(props: {
     })
   }
 
-  const addProviderFromPreset = (preset: AIProviderPreset) => {
-    const provider = createProviderFromPreset(preset)
+  const addProviderFromPreset = async (preset: AIProviderPreset) => {
+    const values = preset.templateFields?.length
+      ? await presentAIProviderPresetModal(preset)
+      : {}
+    if (values === undefined) return
+    const provider = createProviderFromPreset(preset, values)
     updateConfig({ providers: [...providers, provider] })
     setEditingId(provider.id)
   }
@@ -171,7 +176,7 @@ export function AIConfigEditor(props: {
                         <DropdownMenu.Item
                           className="items-start py-2"
                           key={preset.id}
-                          onClick={() => addProviderFromPreset(preset)}
+                          onClick={() => void addProviderFromPreset(preset)}
                         >
                           <span className="flex min-w-0 flex-col gap-0.5">
                             <span className="truncate font-medium">

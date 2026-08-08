@@ -3,7 +3,8 @@ import type { LucideIcon } from 'lucide-react'
 import type { ConfigFormGroup } from '~/api/options'
 import type { TranslationKey } from '~/i18n/types'
 
-export type AIProviderType = 'anthropic' | 'generic' | 'openai-compatible'
+export type AIProviderType =
+  'anthropic' | 'generic' | 'google-vertex' | 'openai-compatible'
 export type AIProviderCapability = 'image' | 'speech' | 'text'
 
 export interface AIProviderCapabilities {
@@ -24,6 +25,7 @@ export interface AIProviderConfig {
   maxTokens?: number | null
   modelListUrl?: string
   name: string
+  projectId?: string
   type: AIProviderType
   voiceListUrl?: string
 }

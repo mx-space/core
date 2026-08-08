@@ -4,6 +4,15 @@ import { getDefaultAIModel } from '../utils/settings'
 export type AIProviderPresetCategory =
   'aggregator' | 'cn_official' | 'custom' | 'official'
 
+export interface AIProviderPresetTemplateField {
+  key: 'projectId'
+  required?: boolean
+}
+
+export type AIProviderPresetTemplateValues = Partial<
+  Record<AIProviderPresetTemplateField['key'], string>
+>
+
 export interface AIProviderPreset {
   apiKeyUrl?: string
   appendV1?: boolean
@@ -14,6 +23,7 @@ export interface AIProviderPreset {
   id: string
   modelListUrl?: string
   name: string
+  templateFields?: readonly AIProviderPresetTemplateField[]
   type: AIProviderType
   websiteUrl?: string
 }
@@ -21,6 +31,12 @@ export interface AIProviderPreset {
 const TEXT_ONLY: AIProviderConfig['capabilities'] = {
   image: false,
   speech: false,
+  text: true,
+}
+
+const ALL_CAPABILITIES: AIProviderConfig['capabilities'] = {
+  image: true,
+  speech: true,
   text: true,
 }
 
@@ -65,16 +81,16 @@ export const aiProviderPresets: readonly AIProviderPreset[] = [
   {
     id: 'googleVertex',
     name: 'Google Vertex AI',
-    type: 'openai-compatible',
+    type: 'google-vertex',
     endpoint:
-      'https://aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/global/endpoints/openapi',
-    modelListUrl:
-      'https://aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/global/endpoints/openapi/models',
+      'https://aiplatform.googleapis.com/v1/projects/{{projectId}}/locations/global/endpoints/openapi',
     appendV1: false,
     defaultModel: 'google/gemini-3.6-flash',
     category: 'official',
     websiteUrl: 'https://console.cloud.google.com/vertex-ai',
-    capabilities: TEXT_ONLY,
+    apiKeyUrl: 'https://console.cloud.google.com/apis/credentials',
+    capabilities: ALL_CAPABILITIES,
+    templateFields: [{ key: 'projectId', required: true }],
   },
   {
     id: 'deepseek',
@@ -153,7 +169,9 @@ export const AI_PROVIDER_PRESET_CATEGORY_ORDER: readonly AIProviderPresetCategor
 
 export function createProviderFromPreset(
   preset: AIProviderPreset,
+  values: AIProviderPresetTemplateValues = {},
 ): AIProviderConfig {
+  const projectId = values.projectId?.trim()
   return {
     apiKey: '',
     appendV1: preset.appendV1,
@@ -164,12 +182,37 @@ export function createProviderFromPreset(
     },
     defaultModel: preset.defaultModel,
     enabled: true,
-    endpoint: preset.endpoint?.trim() || undefined,
+    endpoint: interpolatePresetTemplate(preset.endpoint, values),
     id: crypto.randomUUID(),
     modelListUrl: preset.modelListUrl,
     name: preset.id === 'custom' ? '' : preset.name,
+    projectId: projectId || undefined,
     type: preset.type,
   }
+}
+
+export function interpolatePresetTemplate(
+  template: string | undefined,
+  values: AIProviderPresetTemplateValues,
+): string | undefined {
+  const normalized = template?.trim()
+  if (!normalized) return undefined
+
+  let cursor = 0
+  let result = ''
+  while (cursor < normalized.length) {
+    const start = normalized.indexOf('{{', cursor)
+    if (start === -1) return result + normalized.slice(cursor)
+    const end = normalized.indexOf('}}', start + 2)
+    if (end === -1) return result + normalized.slice(cursor)
+
+    const key = normalized.slice(start + 2, end).trim()
+    const value = values[key as keyof AIProviderPresetTemplateValues]?.trim()
+    result += normalized.slice(cursor, start)
+    result += value ? encodeURIComponent(value) : ''
+    cursor = end + 2
+  }
+  return result
 }
 
 export function findAIProviderPreset(

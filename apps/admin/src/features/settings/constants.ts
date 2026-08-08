@@ -64,6 +64,7 @@ export const aiProviderTypeOptions: Array<{
     labelKey: 'settings.ai.providerType.openaiCompatible',
     value: 'openai-compatible',
   },
+  { labelKey: 'settings.ai.providerType.googleVertex', value: 'google-vertex' },
   { labelKey: 'settings.ai.providerType.anthropic', value: 'anthropic' },
   { labelKey: 'settings.ai.providerType.generic', value: 'generic' },
 ]

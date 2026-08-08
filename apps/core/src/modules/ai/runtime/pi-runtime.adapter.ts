@@ -24,6 +24,7 @@ import { isDev } from '~/global/env.global'
 
 import type { AIProviderCapability } from '../ai.types'
 import { AIProviderType } from '../ai.types'
+import { getVertexMediaModels } from '../vertex/vertex-model-catalog'
 import type { IModelRuntime } from './model-runtime.interface'
 import type {
   GenerateStructuredOptions,
@@ -53,6 +54,7 @@ const HOSTNAME_TO_PROVIDER_ID: Record<string, string> = {
   'api.deepseek.com': 'deepseek',
   'api.openai.com': 'openai',
   'api.anthropic.com': 'anthropic',
+  'aiplatform.googleapis.com': 'google-vertex',
 }
 
 function fallbackProviderId(type: AIProviderType): string {
@@ -62,6 +64,9 @@ function fallbackProviderId(type: AIProviderType): string {
     }
     case AIProviderType.OpenAICompatible: {
       return 'openai'
+    }
+    case AIProviderType.GoogleVertex: {
+      return 'google-vertex'
     }
     default: {
       return 'openai-compat'
@@ -282,6 +287,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
   private readonly modelListUrl?: string
   private readonly inferredModelListUrl?: string
   private readonly configuredReasoningEffort?: ReasoningEffort
+  private readonly providerType: AIProviderType
 
   constructor(config: PiRuntimeAdapterConfig) {
     this.providerInfo = {
@@ -290,6 +296,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       model: config.model,
     }
     this.apiKey = config.apiKey
+    this.providerType = config.providerType
     this.modelListUrl = config.modelListUrl?.trim() || undefined
     this.api = providerTypeToApi(config.providerType)
     this.piProviderId = deriveProviderId(config.endpoint, config.providerType)
@@ -311,6 +318,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
     endpoint: string | undefined,
     appendV1: boolean,
   ): string | undefined {
+    if (this.providerType === AIProviderType.GoogleVertex) return undefined
     if (this.api !== 'openai-completions') return undefined
     const trimmed = endpoint?.trim()
     if (!trimmed) return undefined
@@ -349,15 +357,20 @@ export class PiRuntimeAdapter implements IModelRuntime {
           }
         : model
     try {
+      const catalogModelId =
+        this.providerType === AIProviderType.GoogleVertex
+          ? modelId.replace(/^google\//, '')
+          : modelId
       const registered = getBuiltinModel(
         this.piProviderId as never,
-        modelId as never,
+        catalogModelId as never,
       ) as Model<Api> | undefined
       if (registered) {
         if (!baseUrl) return markReasoningOffUnsupported(registered)
 
         return markReasoningOffUnsupported({
           ...registered,
+          id: modelId,
           api: this.api,
           provider: this.piProviderId,
           baseUrl,
@@ -461,6 +474,12 @@ export class PiRuntimeAdapter implements IModelRuntime {
       maxRetries: opts.maxRetries,
       signal: opts.signal,
       ...thinking,
+    }
+    if (this.providerType === AIProviderType.GoogleVertex) {
+      result.headers = {
+        Authorization: null,
+        'x-goog-api-key': this.apiKey,
+      }
     }
     if (opts.toolChoice !== undefined) {
       ;(result as Record<string, unknown>).toolChoice = opts.toolChoice
@@ -766,6 +785,12 @@ export class PiRuntimeAdapter implements IModelRuntime {
   async listModels(
     capability: AIProviderCapability = 'text',
   ): Promise<ModelInfo[]> {
+    if (
+      this.providerType === AIProviderType.GoogleVertex &&
+      capability !== 'text'
+    ) {
+      return getVertexMediaModels(capability)
+    }
     const remoteUrl = this.modelListUrl ?? this.inferredModelListUrl
     if (remoteUrl) {
       try {
@@ -784,7 +809,13 @@ export class PiRuntimeAdapter implements IModelRuntime {
       const models = getBuiltinModels(
         this.piProviderId as never,
       ) as Model<Api>[]
-      return models.map((m) => ({ id: m.id, name: m.name }))
+      return models.map((m) => ({
+        id:
+          this.providerType === AIProviderType.GoogleVertex
+            ? `google/${m.id}`
+            : m.id,
+        name: m.name,
+      }))
     } catch (error) {
       this.logger.warn(
         `pi getBuiltinModels failed for provider ${this.piProviderId}: ${
@@ -801,7 +832,10 @@ export class PiRuntimeAdapter implements IModelRuntime {
   ): Promise<ModelInfo[]> {
     const requestUrl = this.resolveModelListUrl(url, capability)
     const response = await fetch(requestUrl, {
-      headers: { Authorization: `Bearer ${this.apiKey}` },
+      headers:
+        this.providerType === AIProviderType.GoogleVertex
+          ? { 'x-goog-api-key': this.apiKey }
+          : { Authorization: `Bearer ${this.apiKey}` },
     })
     if (!response.ok) {
       throw new Error(

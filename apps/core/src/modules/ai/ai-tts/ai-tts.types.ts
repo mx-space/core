@@ -120,6 +120,8 @@ export interface TtsProviderConfig {
   provider: string
   apiKey: string
   endpoint?: string
+  projectId?: string
+  providerType?: import('../ai.types').AIProviderType
 }
 
 export interface TtsLanguageResult {

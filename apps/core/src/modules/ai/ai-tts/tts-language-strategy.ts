@@ -170,6 +170,17 @@ const MINIMAX_LANGUAGE_BOOSTS: Readonly<Record<string, string>> = {
 export const defaultTtsLanguageStrategyRegistry =
   new TtsLanguageStrategyRegistry()
     .register({
+      id: 'google-vertex-gemini-prompt',
+      version: 1,
+      matches: (context) =>
+        hostnameOf(context.baseUrl) === 'aiplatform.googleapis.com' &&
+        /^gemini-.*tts(?:-|$)/.test(modelName(context.model)),
+      buildRequestParams: () => ({}),
+      audioFormat: 'wav',
+      responseFormat: 'pcm',
+      transformInput: buildGeminiInput,
+    })
+    .register({
       id: 'openrouter-google-gemini-prompt',
       version: 1,
       matches: (context) =>

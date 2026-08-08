@@ -6,6 +6,9 @@ import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
 
 interface AdapterInternals {
   api: 'openai-completions' | 'anthropic-messages'
+  buildStreamOptions: (options: object) => {
+    headers?: Record<string, string | null>
+  }
   piProviderId: string
 }
 
@@ -59,6 +62,28 @@ describe('createModelRuntime — enum coverage', () => {
     expect(runtime).toBeInstanceOf(PiRuntimeAdapter)
     expect(runtime.providerInfo.type).toBe(AIProviderType.Generic)
     expect(inspect(runtime).api).toBe('openai-completions')
+  })
+
+  it('constructs a Vertex text runtime over its OpenAI-compatible endpoint', () => {
+    const runtime = createModelRuntime({
+      id: 'vertex',
+      name: 'Vertex',
+      type: AIProviderType.GoogleVertex,
+      apiKey: 'vertex-key',
+      projectId: 'example-project',
+      endpoint:
+        'https://aiplatform.googleapis.com/v1/projects/example-project/locations/global/endpoints/openapi',
+      defaultModel: 'google/gemini-3.6-flash',
+      enabled: true,
+    })
+    expect(runtime).toBeInstanceOf(PiRuntimeAdapter)
+    expect(runtime.providerInfo.type).toBe(AIProviderType.GoogleVertex)
+    expect(inspect(runtime).api).toBe('openai-completions')
+    expect(inspect(runtime).piProviderId).toBe('google-vertex')
+    expect(inspect(runtime).buildStreamOptions({}).headers).toEqual({
+      Authorization: null,
+      'x-goog-api-key': 'vertex-key',
+    })
   })
 
   it('uses model override when provided', () => {

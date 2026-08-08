@@ -844,6 +844,9 @@ const AIProviderConfigSchema = withMeta(
       description:
         'Required for OpenAI-compatible services, e.g. https://api.deepseek.com',
     }),
+    projectId: field.plain(z.string().optional(), 'Google Cloud project ID', {
+      description: 'Required when the provider type is google-vertex',
+    }),
     modelListUrl: field.plain(z.string().optional(), 'Model list URL', {
       description:
         'Full URL to fetch the model list from (OpenAI format); leave empty to use the built-in registry',

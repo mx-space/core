@@ -23,6 +23,7 @@ export function createModelRuntime(
 
   switch (config.type) {
     case AIProviderType.Anthropic:
+    case AIProviderType.GoogleVertex:
     case AIProviderType.OpenAICompatible:
     case AIProviderType.Generic: {
       return new PiRuntimeAdapter({

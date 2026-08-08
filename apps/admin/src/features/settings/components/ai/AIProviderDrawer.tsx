@@ -13,7 +13,11 @@ import { SelectField } from '~/ui/primitives/select'
 import { Switch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 
-import { findAIProviderPreset } from '../../config/aiProviderPresets'
+import {
+  aiProviderPresets,
+  findAIProviderPreset,
+  interpolatePresetTemplate,
+} from '../../config/aiProviderPresets'
 import { aiProviderTypeOptions } from '../../constants'
 import type {
   AIProviderConfig,
@@ -52,6 +56,7 @@ export function AIProviderDrawer(props: {
   const provider = props.provider
   const textEnabled = provider?.capabilities?.text ?? true
   const matchedPreset = provider ? findAIProviderPreset(provider) : undefined
+  const isGoogleVertex = provider?.type === 'google-vertex'
 
   const showEndpoint = Boolean(provider)
   const piProviderId =
@@ -64,7 +69,18 @@ export function AIProviderDrawer(props: {
     staleTime: REGISTRY_STALE_MS,
   })
 
-  const registryModels = registryQuery.data ?? []
+  const registryModels = useMemo(
+    () =>
+      isGoogleVertex
+        ? (registryQuery.data ?? []).map((model) => ({
+            ...model,
+            id: model.id.startsWith('google/')
+              ? model.id
+              : `google/${model.id}`,
+          }))
+        : (registryQuery.data ?? []),
+    [isGoogleVertex, registryQuery.data],
+  )
   const modelOptions = useMemo(
     () => mergeModelOptions(props.providerModels, registryModels),
     [props.providerModels, registryModels],
@@ -297,19 +313,39 @@ export function AIProviderDrawer(props: {
               ) : null}
             </div>
           ) : null}
+          {isGoogleVertex ? (
+            <TextInput
+              label={t('settings.ai.field.projectId')}
+              onChange={(projectId) => {
+                const preset = aiProviderPresets.find(
+                  (item) => item.id === 'googleVertex',
+                )
+                props.onChange({
+                  projectId,
+                  endpoint:
+                    interpolatePresetTemplate(preset?.endpoint, {
+                      projectId,
+                    }) ?? provider.endpoint,
+                })
+              }}
+              placeholder={t('settings.ai.preset.modal.projectIdPlaceholder')}
+              spellCheck={false}
+              value={provider.projectId ?? ''}
+            />
+          ) : null}
           {showEndpoint ? (
             <TextInput
               label={t('settings.ai.field.endpoint')}
               onChange={(endpoint) => props.onChange({ endpoint })}
               placeholder={
-                provider.type === 'openai-compatible'
+                provider.type === 'openai-compatible' || isGoogleVertex
                   ? t('settings.ai.placeholder.endpointCompatible')
                   : t('settings.ai.placeholder.endpointDefault')
               }
               value={provider.endpoint ?? ''}
             />
           ) : null}
-          {textEnabled && provider.type !== 'anthropic' ? (
+          {textEnabled && provider.type !== 'anthropic' && !isGoogleVertex ? (
             <>
               <TextInput
                 label={t('settings.ai.field.modelListUrl')}
@@ -324,7 +360,7 @@ export function AIProviderDrawer(props: {
               />
             </>
           ) : null}
-          {provider.capabilities?.speech ? (
+          {provider.capabilities?.speech && !isGoogleVertex ? (
             <TextInput
               label={t('settings.ai.field.voiceListUrl')}
               onChange={(voiceListUrl) => props.onChange({ voiceListUrl })}

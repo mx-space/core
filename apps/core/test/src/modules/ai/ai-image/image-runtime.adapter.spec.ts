@@ -1,7 +1,8 @@
 import type { AssistantImages } from '@earendil-works/pi-ai'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppErrorCode } from '~/common/errors'
+import { AIProviderType } from '~/modules/ai/ai.types'
 import { ImageRuntimeAdapter } from '~/modules/ai/ai-image/image-runtime.adapter'
 
 const { generateOpenRouterImagesMock } = vi.hoisted(() => ({
@@ -31,9 +32,112 @@ function createAdapter() {
   })
 }
 
+afterEach(() => vi.unstubAllGlobals())
+
 describe('ImageRuntimeAdapter.generateImage', () => {
   beforeEach(() => {
     generateOpenRouterImagesMock.mockReset()
+  })
+
+  it('uses the recommended Vertex Gemini image API and x-goog-api-key authentication', async () => {
+    const png = Buffer.from('vertex-png')
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  { text: 'Generated image' },
+                  {
+                    inlineData: {
+                      data: png.toString('base64'),
+                      mimeType: 'image/png',
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const adapter = new ImageRuntimeAdapter({
+      provider: 'vertex',
+      providerType: AIProviderType.GoogleVertex,
+      projectId: 'example-project',
+      apiKey: 'vertex-key',
+      model: 'gemini-2.5-flash-image',
+    })
+
+    const result = await adapter.generateImage({
+      prompt: 'a paper crane',
+      aspectRatio: '16:9',
+    })
+
+    expect(result.images[0]).toEqual({ buffer: png, mimeType: 'image/png' })
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe(
+      'https://aiplatform.googleapis.com/v1/projects/example-project/locations/global/publishers/google/models/gemini-2.5-flash-image:generateContent',
+    )
+    expect(init.headers).toMatchObject({
+      'x-goog-api-key': 'vertex-key',
+    })
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      contents: { role: 'user', parts: [{ text: 'a paper crane' }] },
+      generation_config: {
+        image_config: { aspect_ratio: '16:9' },
+        response_modalities: ['TEXT', 'IMAGE'],
+      },
+    })
+    expect(generateOpenRouterImagesMock).not.toHaveBeenCalled()
+  })
+
+  it('routes Vertex Imagen models to the predict protocol adapter', async () => {
+    const png = Buffer.from('imagen-png')
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          predictions: [
+            {
+              bytesBase64Encoded: png.toString('base64'),
+              mimeType: 'image/png',
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const adapter = new ImageRuntimeAdapter({
+      provider: 'vertex',
+      providerType: AIProviderType.GoogleVertex,
+      projectId: 'example-project',
+      apiKey: 'vertex-key',
+      model: 'imagen-4.0-generate-001',
+    })
+
+    const result = await adapter.generateImage({ prompt: 'a paper crane' })
+
+    expect(result.images).toEqual([{ buffer: png, mimeType: 'image/png' }])
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'https://us-central1-aiplatform.googleapis.com/v1/projects/example-project/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict',
+    )
+    expect(generateOpenRouterImagesMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects unsupported provider protocols instead of falling back', () => {
+    expect(
+      () =>
+        new ImageRuntimeAdapter({
+          provider: 'anthropic',
+          providerType: AIProviderType.Anthropic,
+          apiKey: 'key',
+          model: 'image-model',
+        }),
+    ).toThrow('No protocol adapter supports the runtime configuration')
   })
 
   it('returns decoded buffers when the OpenRouter transport reports stopReason: stop', async () => {

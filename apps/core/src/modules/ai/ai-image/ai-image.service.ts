@@ -76,6 +76,8 @@ export class AiImageService implements OnModuleInit {
           apiKey: resolved.provider.apiKey,
           endpoint: resolved.provider.endpoint,
           model,
+          projectId: resolved.provider.projectId,
+          providerType: resolved.provider.type,
         })
 
         await context.appendLog(

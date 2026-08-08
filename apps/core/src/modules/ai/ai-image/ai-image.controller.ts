@@ -8,7 +8,9 @@ import { ConfigsService } from '../../configs/configs.service'
 import { DraftRepository } from '../../draft/draft.repository'
 import { AI_PROMPTS, COVER_STYLE_PRESETS } from '../ai.prompts'
 import { AiService } from '../ai.service'
+import { AIProviderType } from '../ai.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
+import { getVertexMediaModels } from '../vertex/vertex-model-catalog'
 import {
   DraftImagePromptDto,
   type GenerateImageDto,
@@ -103,10 +105,16 @@ export class AiImageController {
     )
     if (!resolved) return []
 
-    const models = await getImageCatalog({
-      endpoint: resolved.provider.endpoint,
-      apiKey: resolved.provider.apiKey,
-    })
+    const models =
+      resolved.provider.type === AIProviderType.GoogleVertex
+        ? getVertexMediaModels('image').map((model) => ({
+            ...model,
+            supportedParameters: {},
+          }))
+        : await getImageCatalog({
+            endpoint: resolved.provider.endpoint,
+            apiKey: resolved.provider.apiKey,
+          })
     return models.map((m) =>
       AiImageViews.model.parse({
         id: m.id,

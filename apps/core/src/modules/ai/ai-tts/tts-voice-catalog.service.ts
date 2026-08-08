@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import type { AIProviderConfig } from '~/modules/ai/ai.types'
+import { AIProviderType } from '~/modules/ai/ai.types'
 import { createModelRuntime } from '~/modules/ai/runtime'
+import { getVertexMediaModels } from '~/modules/ai/vertex/vertex-model-catalog'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 const VOICE_LIST_TIMEOUT_MS = 5000
@@ -85,6 +87,17 @@ export async function discoverTtsVoices(
   model: string,
   supportedVoices: string[] = [],
 ): Promise<TtsVoiceDiscoveryResult> {
+  if (provider.type === AIProviderType.GoogleVertex) {
+    const modelInfo = getVertexMediaModels('speech').find(
+      (item) => item.id.toLowerCase() === model.trim().toLowerCase(),
+    )
+    return resultFromBuiltin(
+      normalizeRemoteVoices(modelInfo?.supportedVoices ?? []).map((voice) => ({
+        ...voice,
+        kind: 'builtin',
+      })),
+    )
+  }
   const builtinVoices = getBuiltinTtsVoices(model)
   const modelVoices = normalizeRemoteVoices(supportedVoices)
   if (!provider.voiceListUrl?.trim()) {

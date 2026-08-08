@@ -123,29 +123,61 @@ export function normalizeAIConfig(value: unknown): AIConfig {
   return {
     ...config,
     version: 2,
-    providers: (config.providers ?? []).map((provider) => ({
-      apiKey: provider.apiKey ?? '',
-      appendV1: provider.appendV1 ?? true,
-      contextWindow: provider.contextWindow ?? undefined,
-      defaultModel: provider.defaultModel ?? '',
-      enabled: Boolean(provider.enabled),
-      endpoint: provider.endpoint ?? '',
-      id: provider.id || crypto.randomUUID(),
-      maxTokens: provider.maxTokens ?? undefined,
-      modelListUrl: provider.modelListUrl ?? '',
-      name: provider.name ?? '',
-      type: coerceAIProviderType(provider.type),
-      capabilities: {
-        text: provider.capabilities?.text ?? true,
-        image: provider.capabilities?.image ?? false,
-        speech: provider.capabilities?.speech ?? false,
-      },
-    })),
+    providers: (config.providers ?? []).map((provider) => {
+      const endpoint = provider.endpoint ?? ''
+      const isLegacyVertex =
+        provider.type === 'openai-compatible' && isVertexEndpoint(endpoint)
+      return {
+        apiKey: provider.apiKey ?? '',
+        appendV1: provider.appendV1 ?? true,
+        contextWindow: provider.contextWindow ?? undefined,
+        defaultModel: provider.defaultModel ?? '',
+        enabled: Boolean(provider.enabled),
+        endpoint,
+        id: provider.id || crypto.randomUUID(),
+        maxTokens: provider.maxTokens ?? undefined,
+        modelListUrl: isLegacyVertex ? '' : (provider.modelListUrl ?? ''),
+        name: provider.name ?? '',
+        projectId: provider.projectId ?? extractVertexProjectId(endpoint) ?? '',
+        type: isLegacyVertex
+          ? ('google-vertex' as const)
+          : coerceAIProviderType(provider.type),
+        capabilities: isLegacyVertex
+          ? { image: true, speech: true, text: true }
+          : {
+              text: provider.capabilities?.text ?? true,
+              image: provider.capabilities?.image ?? false,
+              speech: provider.capabilities?.speech ?? false,
+            },
+      }
+    }),
+  }
+}
+
+function isVertexEndpoint(endpoint: string): boolean {
+  try {
+    const url = new URL(endpoint)
+    return (
+      url.hostname === 'aiplatform.googleapis.com' &&
+      url.pathname.endsWith('/endpoints/openapi')
+    )
+  } catch {
+    return false
+  }
+}
+
+function extractVertexProjectId(endpoint: string): string | undefined {
+  try {
+    const match = new URL(endpoint).pathname.match(/\/projects\/([^/]+)/)
+    return match?.[1] ? decodeURIComponent(match[1]) : undefined
+  } catch {
+    return undefined
   }
 }
 
 export function coerceAIProviderType(value: unknown): AIProviderType {
-  if (value === 'anthropic' || value === 'generic') return value
+  if (value === 'anthropic' || value === 'generic' || value === 'google-vertex')
+    return value
   return 'openai-compatible'
 }
 
@@ -166,6 +198,9 @@ export function getDefaultAIModel(type: AIProviderType) {
     case 'generic': {
       return ''
     }
+    case 'google-vertex': {
+      return 'google/gemini-3.6-flash'
+    }
     case 'openai-compatible': {
       return ''
     }
@@ -183,6 +218,9 @@ export function getAIProviderNamePlaceholder(
     case 'generic': {
       return t('settings.ai.placeholder.nameCompatible')
     }
+    case 'google-vertex': {
+      return 'Google Vertex AI'
+    }
     case 'openai-compatible': {
       return t('settings.ai.placeholder.nameCompatible')
     }
@@ -198,6 +236,9 @@ export function getAIProviderKeyPlaceholder(type: AIProviderType) {
     case 'openai-compatible': {
       return 'sk-...'
     }
+    case 'google-vertex': {
+      return 'AQ.…'
+    }
   }
 }
 
@@ -212,6 +253,9 @@ export function getAIProviderModelPlaceholder(
     case 'generic': {
       return t('settings.ai.placeholder.modelCompatible')
     }
+    case 'google-vertex': {
+      return 'google/gemini-3.6-flash'
+    }
     case 'openai-compatible': {
       return t('settings.ai.placeholder.modelCompatible')
     }
@@ -223,6 +267,7 @@ const PI_PROVIDER_HOSTNAMES: Record<string, string> = {
   'api.deepseek.com': 'deepseek',
   'api.openai.com': 'openai',
   'openrouter.ai': 'openrouter',
+  'aiplatform.googleapis.com': 'google-vertex',
 }
 
 export function resolvePiProviderId(provider: {
@@ -244,6 +289,9 @@ export function resolvePiProviderId(provider: {
     }
     case 'openai-compatible': {
       return 'openai'
+    }
+    case 'google-vertex': {
+      return 'google-vertex'
     }
     case 'generic': {
       return null
