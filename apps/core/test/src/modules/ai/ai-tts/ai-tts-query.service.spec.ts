@@ -1,6 +1,7 @@
 import { createPgRepositoryMock, now } from 'test/helper/pg-repository-mock'
 import { describe, expect, it, vi } from 'vitest'
 
+import { createAiGenerationMetricsMock } from '@/helper/ai-generation-metrics-mock'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import type { AiTtsRepository } from '~/modules/ai/ai-tts/ai-tts.repository'
 import { AiTtsQueryService } from '~/modules/ai/ai-tts/ai-tts-query.service'
@@ -68,16 +69,19 @@ function createHarness(options: { storedNotePassword?: string } = {}) {
       return password === options.storedNotePassword
     }),
   }
+  const generationMetrics = createAiGenerationMetricsMock()
   const service = new AiTtsQueryService(
     repository as any,
     databaseService as any,
     entitlementService as any,
+    generationMetrics as any,
     noteService as any,
   )
   return {
     repository,
     databaseService,
     entitlementService,
+    generationMetrics,
     noteService,
     service,
   }

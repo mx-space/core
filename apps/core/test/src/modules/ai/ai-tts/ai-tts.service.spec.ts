@@ -1,6 +1,7 @@
 import { createPgRepositoryMock } from 'test/helper/pg-repository-mock'
 import { describe, expect, it, vi } from 'vitest'
 
+import { createAiGenerationMetricsMock } from '@/helper/ai-generation-metrics-mock'
 import type { AiTtsRepository } from '~/modules/ai/ai-tts/ai-tts.repository'
 import { AiTtsService } from '~/modules/ai/ai-tts/ai-tts.service'
 
@@ -13,6 +14,7 @@ function createHarness() {
   const lexicalService = { extractRootBlockNodes: vi.fn() }
   const translationRepository = { findByRefAndLang: vi.fn() }
   const redisService = { getClient: vi.fn() }
+  const generationMetrics = createAiGenerationMetricsMock()
 
   const service = new AiTtsService(
     configService as any,
@@ -23,14 +25,16 @@ function createHarness() {
     lexicalService as any,
     translationRepository as any,
     redisService as any,
+    generationMetrics as any,
   )
 
-  return { fileService, repository, service }
+  return { fileService, generationMetrics, repository, service }
 }
 
 describe('AiTtsService.deleteById', () => {
   it('removes the narration row and its stored audio objects', async () => {
-    const { fileService, repository, service } = createHarness()
+    const { fileService, generationMetrics, repository, service } =
+      createHarness()
     repository.deleteById.mockResolvedValue([
       { storageBackend: 's3', storageKey: 'k/a' },
       { storageBackend: 'local', storageKey: 'tts/1/zh/b.mp3' },
@@ -44,23 +48,37 @@ describe('AiTtsService.deleteById', () => {
       'local',
       'tts/1/zh/b.mp3',
     )
+    expect(generationMetrics.deleteByResource).toHaveBeenCalledWith(
+      'tts',
+      'tts-1',
+    )
   })
 
   it('is a no-op when the id does not match any narration', async () => {
-    const { fileService, repository, service } = createHarness()
+    const { fileService, generationMetrics, repository, service } =
+      createHarness()
     repository.deleteById.mockResolvedValue([])
 
     await expect(service.deleteById('missing')).resolves.toBeUndefined()
     expect(fileService.deleteObject).not.toHaveBeenCalled()
+    expect(generationMetrics.deleteByResource).toHaveBeenCalledWith(
+      'tts',
+      'missing',
+    )
   })
 
   it('survives a failing object deletion', async () => {
-    const { fileService, repository, service } = createHarness()
+    const { fileService, generationMetrics, repository, service } =
+      createHarness()
     repository.deleteById.mockResolvedValue([
       { storageBackend: 's3', storageKey: 'k/a' },
     ] as any)
     fileService.deleteObject.mockRejectedValue(new Error('network'))
 
     await expect(service.deleteById('tts-1')).resolves.toBeUndefined()
+    expect(generationMetrics.deleteByResource).toHaveBeenCalledWith(
+      'tts',
+      'tts-1',
+    )
   })
 })
