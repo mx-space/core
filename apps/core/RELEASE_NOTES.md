@@ -1,19 +1,15 @@
 ## TL;DR
 
-AI generation now records per-request metrics — tokens, cost, and latency — across insights, summary, translation, and narration, and the admin gains richer provider configuration.
-
-## Highlights
-
-Every AI operation — insights, summary, translation, and TTS narration — now logs a generation record capturing the model, token counts, estimated cost, and latency into a new persistent ledger (migration 0029, applied automatically). The admin surfaces these metrics in each task's detail drawer with localized labels, so operators can finally see what each AI pass actually cost and how long it took, per article and per task type.
-
-Provider configuration in the admin is more robust: built-in provider presets speed up onboarding, the model-assignment and TTS-voice fields validate against the live catalog, and per-model pricing feeds cost estimates back into the metrics ledger. A new TTS language strategy picks the right voice and script per language automatically. The test suite gains a database-safety helper so it can no longer mutate shared state.
+Fixes Gemini text-to-speech language steering and refreshes core dependencies across five major version upgrades.
 
 ## Changes
 
-### Features
-- AI generation metrics ledger records tokens, cost, and latency across insights, summary, translation, and TTS ([e47f4b7](https://github.com/mx-space/core/commit/e47f4b7d2bc25c96cee3badb45f6c53782b19fe5))
-- Smarter AI provider settings: presets, live-validated model/voice assignment, per-model pricing, and a TTS language strategy ([24530fe](https://github.com/mx-space/core/commit/24530fe47e17bc4e209ef27891cbb32ecf8c3309))
+### Bug Fixes
+- Gemini TTS now respects the requested output language instead of defaulting to the model's detection ([3c6b476](https://github.com/mx-space/core/commit/3c6b476861fa44bfa8c8ef1c8b4174ce2f21fdbc))
+
+### Other
+- Dependency refresh spanning 102 specs, including five major bumps: ioredis 6 (RESP3 by default, with legacy reply mapping preserved), maplibre-gl 6 (ESM-only, dedicated worker URL), motion 13, @antfu/install-pkg 2, and dotenv-expand 1000 ([#2785](https://github.com/mx-space/core/pull/2785)). All upgrades verified via typecheck, admin build, and a Redis pub/sub cross-pod test under RESP3.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.24.0...v13.25.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.25.0...v13.25.1

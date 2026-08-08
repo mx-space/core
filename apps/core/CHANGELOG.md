@@ -1,3 +1,10 @@
++# [13.25.1](https://github.com/mx-space/core/compare/v13.25.0...v13.25.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* support Gemini TTS language steering ([3c6b476](https://github.com/mx-space/core/commit/3c6b476861fa44bfa8c8ef1c8b4174ce2f21fdbc))
+
 # [13.25.0](https://github.com/mx-space/core/compare/v13.24.0...v13.25.0) (2026-08-08)
 
 
