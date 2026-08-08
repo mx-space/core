@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import type { AIProviderConfig } from '~/modules/ai/ai.types'
+import { createModelRuntime } from '~/modules/ai/runtime'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 const VOICE_LIST_TIMEOUT_MS = 5000
@@ -52,17 +53,44 @@ export class TtsVoiceCatalogService {
       throw createAppException(AppErrorCode.TTS_PROVIDER_NOT_CONFIGURED)
     }
 
-    return discoverTtsVoices(resolved.provider, input.model)
+    const fallback = await discoverTtsVoices(resolved.provider, input.model)
+    if (fallback.voices.length > 0 || resolved.provider.voiceListUrl?.trim()) {
+      return fallback
+    }
+
+    try {
+      const runtime = createModelRuntime(resolved.provider, input.model)
+      const models = (await runtime.listModels?.('speech')) ?? []
+      const normalizedModel = input.model.trim().toLowerCase()
+      const modelInfo = models.find(
+        (item) => item.id.trim().toLowerCase() === normalizedModel,
+      )
+      return discoverTtsVoices(
+        resolved.provider,
+        input.model,
+        modelInfo?.supportedVoices,
+      )
+    } catch (error) {
+      return {
+        ...fallback,
+        error:
+          error instanceof Error ? error.message : 'Voice discovery failed',
+      }
+    }
   }
 }
 
 export async function discoverTtsVoices(
   provider: AIProviderConfig,
   model: string,
+  supportedVoices: string[] = [],
 ): Promise<TtsVoiceDiscoveryResult> {
   const builtinVoices = getBuiltinTtsVoices(model)
+  const modelVoices = normalizeRemoteVoices(supportedVoices)
   if (!provider.voiceListUrl?.trim()) {
-    return resultFromBuiltin(builtinVoices)
+    return modelVoices.length > 0
+      ? resultFromRemote(modelVoices)
+      : resultFromBuiltin(builtinVoices)
   }
 
   try {
@@ -78,16 +106,35 @@ export async function discoverTtsVoices(
       }
     }
 
-    return {
-      ...resultFromBuiltin(builtinVoices),
-      error: 'Voice list response did not contain any valid voices',
-    }
+    return withDiscoveryError(
+      modelVoices.length > 0
+        ? resultFromRemote(modelVoices)
+        : resultFromBuiltin(builtinVoices),
+      'Voice list response did not contain any valid voices',
+    )
   } catch (error) {
-    return {
-      ...resultFromBuiltin(builtinVoices),
-      error: error instanceof Error ? error.message : 'Voice discovery failed',
-    }
+    return withDiscoveryError(
+      modelVoices.length > 0
+        ? resultFromRemote(modelVoices)
+        : resultFromBuiltin(builtinVoices),
+      error instanceof Error ? error.message : 'Voice discovery failed',
+    )
   }
+}
+
+function resultFromRemote(voices: TtsVoiceOption[]): TtsVoiceDiscoveryResult {
+  return {
+    manualInputAllowed: true,
+    source: 'remote',
+    voices,
+  }
+}
+
+function withDiscoveryError(
+  result: TtsVoiceDiscoveryResult,
+  error: string,
+): TtsVoiceDiscoveryResult {
+  return { ...result, error }
 }
 
 function resultFromBuiltin(voices: TtsVoiceOption[]): TtsVoiceDiscoveryResult {

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, Loader2, Settings } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { ChevronDown, ExternalLink, Loader2, Settings } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { getModelList, getRegistryModels, testConfig } from '~/api/ai'
@@ -13,12 +13,14 @@ import { SelectField } from '~/ui/primitives/select'
 import { Switch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 
+import { findAIProviderPreset } from '../../config/aiProviderPresets'
 import { aiProviderTypeOptions } from '../../constants'
 import type {
   AIProviderConfig,
   AIProviderModel,
   AIProviderType,
 } from '../../types/settings'
+import { formatAIModelPricing } from '../../utils/aiModelPricing'
 import {
   formatAIProviderLabel,
   getAIProviderKeyPlaceholder,
@@ -49,6 +51,7 @@ export function AIProviderDrawer(props: {
   const [testing, setTesting] = useState(false)
   const provider = props.provider
   const textEnabled = provider?.capabilities?.text ?? true
+  const matchedPreset = provider ? findAIProviderPreset(provider) : undefined
 
   const showEndpoint = Boolean(provider)
   const piProviderId =
@@ -268,6 +271,32 @@ export function AIProviderDrawer(props: {
             type="password"
             value={provider.apiKey}
           />
+          {matchedPreset?.apiKeyUrl || matchedPreset?.websiteUrl ? (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+              {matchedPreset.apiKeyUrl ? (
+                <a
+                  className="inline-flex items-center gap-1 text-accent hover:underline"
+                  href={matchedPreset.apiKeyUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {t('settings.ai.preset.getApiKey')}
+                  <ExternalLink aria-hidden="true" className="size-3" />
+                </a>
+              ) : null}
+              {matchedPreset.websiteUrl ? (
+                <a
+                  className="inline-flex items-center gap-1 text-fg-muted hover:text-fg hover:underline"
+                  href={matchedPreset.websiteUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {t('settings.ai.preset.website')}
+                  <ExternalLink aria-hidden="true" className="size-3" />
+                </a>
+              ) : null}
+            </div>
+          ) : null}
           {showEndpoint ? (
             <TextInput
               label={t('settings.ai.field.endpoint')}
@@ -360,17 +389,39 @@ export function AIProviderDrawer(props: {
 function ModelCombobox(props: {
   disabled?: boolean
   loading?: boolean
-  models: string[]
+  models: AIProviderModel[]
   onChange: (value: string) => void
   placeholder?: string
   value: string
 }) {
+  const { t } = useI18n()
+  const modelIds = useMemo(
+    () => props.models.map((model) => model.id),
+    [props.models],
+  )
+  const modelById = useMemo(
+    () => new Map(props.models.map((model) => [model.id, model])),
+    [props.models],
+  )
+  const filterModel = useCallback(
+    (itemValue: unknown, query: string) => {
+      if (typeof itemValue !== 'string') return false
+      const normalizedQuery = query.trim().toLocaleLowerCase()
+      const model = modelById.get(itemValue)
+      return [itemValue, model?.name].some((value) =>
+        value?.toLocaleLowerCase().includes(normalizedQuery),
+      )
+    },
+    [modelById],
+  )
+
   return (
     <Combobox
-      autoComplete="none"
+      autoComplete="list"
       disabled={props.disabled}
+      filter={filterModel}
       inputValue={props.value}
-      items={props.models}
+      items={modelIds}
       onInputValueChange={(next) => props.onChange(next)}
       onValueChange={(next) => {
         if (typeof next === 'string') props.onChange(next)
@@ -394,11 +445,30 @@ function ModelCombobox(props: {
           viewportClassName="max-h-72"
         >
           <Combobox.List>
-            {(item: string) => (
-              <Combobox.Item key={item} value={item}>
-                {item}
-              </Combobox.Item>
-            )}
+            {(id: string) => {
+              const model = modelById.get(id)
+              const name = model?.name || id
+              const pricing = formatAIModelPricing(model?.pricing, t)
+              return (
+                <Combobox.Item key={id} value={id}>
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className="min-w-0 flex-1 truncate">
+                      <span>{name}</span>
+                      {name !== id ? (
+                        <span className="ml-2 text-xs text-fg-subtle">
+                          {id}
+                        </span>
+                      ) : null}
+                    </span>
+                    {pricing ? (
+                      <span className="shrink-0 text-xs tabular-nums text-fg-muted">
+                        {pricing}
+                      </span>
+                    ) : null}
+                  </span>
+                </Combobox.Item>
+              )
+            }}
           </Combobox.List>
         </Scroll>
       </Combobox.Content>

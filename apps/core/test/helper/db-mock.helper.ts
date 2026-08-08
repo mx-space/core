@@ -1,5 +1,6 @@
 import { Pool } from 'pg'
 
+import { assertSafeTestDatabaseName } from './pg-test-database-safety'
 import { startPgTestContainer, stopPgTestContainer } from './pg-testcontainer'
 
 let pool: Pool | undefined
@@ -18,6 +19,10 @@ const closeDatabase = async () => {
 
 const clearDatabase = async () => {
   if (!pool) return
+  const databaseResult = await pool.query<{ databaseName: string }>(
+    'select current_database() as "databaseName"',
+  )
+  assertSafeTestDatabaseName(databaseResult.rows[0].databaseName)
   // Every vitest worker truncates the same shared PG. TRUNCATE takes its
   // AccessExclusiveLocks in the order the tables are listed, so an unordered
   // pg_tables scan lets two workers lock the same tables in opposite orders

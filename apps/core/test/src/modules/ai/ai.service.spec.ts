@@ -8,12 +8,13 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 
 // Mock the runtime factory
 vi.mock('~/modules/ai/runtime', () => ({
-  createModelRuntime: vi.fn((config, modelOverride) => ({
+  createModelRuntime: vi.fn((config, modelOverride, options) => ({
     providerInfo: {
       id: config.id,
       type: config.type,
       model: modelOverride || config.defaultModel,
     },
+    reasoningEffort: options?.reasoningEffort,
     generateText: vi.fn(),
     generateStructured: vi.fn(),
   })),
@@ -50,7 +51,7 @@ describe('AiService', () => {
         enabled: false,
       },
     ],
-    summaryModel: { providerId: 'main' },
+    summaryModel: { providerId: 'main', reasoningEffort: 'high' as const },
     writerModel: { providerId: 'backup', model: 'gpt-4o-mini' },
     commentReviewModel: { providerId: 'main' },
     enableSummary: true,
@@ -80,6 +81,9 @@ describe('AiService', () => {
       expect(runtime).toBeDefined()
       expect(runtime.providerInfo.id).toBe('main')
       expect(runtime.providerInfo.model).toBe('gpt-4o')
+      expect((runtime as { reasoningEffort?: string }).reasoningEffort).toBe(
+        'high',
+      )
     })
   })
 

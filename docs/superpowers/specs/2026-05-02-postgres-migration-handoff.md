@@ -11,16 +11,16 @@ next operator a concrete plan with file pointers.
 
 ## What is committed (verified)
 
-| Commit | Scope | Status |
-|---|---|---|
-| `bcdaf76a` | Spec §18 Phase 0 decisions pinned. | ✓ done |
-| `14f5bafa` | PR 1: `EntityId`, `SnowflakeGenerator`, `SnowflakeService`, app.config wiring, 21 unit tests. | ✓ done — `pnpm exec vitest run test/src/shared/id` passes 21/21. |
-| `038ffa7d` | PR 2: 43-table drizzle schema, `0000_initial.sql`, `postgres.provider.ts`, repository token map, docker-compose `postgres:16-alpine` service, smoke spec. | ✓ done — `PG_VERIFY_URL=… pnpm exec vitest run test/src/database` passes 4/4 against an ephemeral PG container. |
-| `4a534fbe` | PR 3 batch 1: `BaseRepository`, `CategoryRepository` (+ 7 integration tests), `TopicRepository`, `PageRepository`. | ✓ done. |
-| `973ed84a` | PR 3 batch 2: `PostRepository`, `NoteRepository`, `CommentRepository`, `ReaderRepository`. | ✓ done. |
-| `<batch 3>` | PR 3 batch 3: 17 more repositories (link, project, say, recently, draft, options, activity, analyze, file-reference, subscribe, snippet, slug-tracker, webhook, poll-vote, serverless storage + log, ai-summary, ai-insights, ai-translation, translation-entries). | ✓ done. |
-| `<batch 4>` | PR 3 batch 4 + PR 4 partial: `SearchRepository`, `AiAgentConversationRepository`, `AuthRepository`. | ✓ repositories done; auth.implement.ts adapter swap deferred. |
-| `<PR 6>` | Mongo→PG migration CLI: `scripts/migrate-mongo-to-postgres.ts`, `src/migration/postgres-data-migration/{types,id-map,steps,runner}.ts`. | ✓ done; dry-run + apply modes; emits row count, missing-ref, and warning reports. |
+| Commit      | Scope                                                                                                                                                                                                                                                               | Status                                                                                                          |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `bcdaf76a`  | Spec §18 Phase 0 decisions pinned.                                                                                                                                                                                                                                  | ✓ done                                                                                                          |
+| `14f5bafa`  | PR 1: `EntityId`, `SnowflakeGenerator`, `SnowflakeService`, app.config wiring, 21 unit tests.                                                                                                                                                                       | ✓ done — `pnpm exec vitest run test/src/shared/id` passes 21/21.                                                |
+| `038ffa7d`  | PR 2: 43-table drizzle schema, `0000_initial.sql`, `postgres.provider.ts`, repository token map, docker-compose `postgres:16-alpine` service, smoke spec.                                                                                                           | ✓ done — `PG_VERIFY_URL=… pnpm exec vitest run test/src/database` passes 4/4 against an ephemeral PG container. |
+| `4a534fbe`  | PR 3 batch 1: `BaseRepository`, `CategoryRepository` (+ 7 integration tests), `TopicRepository`, `PageRepository`.                                                                                                                                                  | ✓ done.                                                                                                         |
+| `973ed84a`  | PR 3 batch 2: `PostRepository`, `NoteRepository`, `CommentRepository`, `ReaderRepository`.                                                                                                                                                                          | ✓ done.                                                                                                         |
+| `<batch 3>` | PR 3 batch 3: 17 more repositories (link, project, say, recently, draft, options, activity, analyze, file-reference, subscribe, snippet, slug-tracker, webhook, poll-vote, serverless storage + log, ai-summary, ai-insights, ai-translation, translation-entries). | ✓ done.                                                                                                         |
+| `<batch 4>` | PR 3 batch 4 + PR 4 partial: `SearchRepository`, `AiAgentConversationRepository`, `AuthRepository`.                                                                                                                                                                 | ✓ repositories done; auth.implement.ts adapter swap deferred.                                                   |
+| `<PR 6>`    | Mongo→PG migration CLI: `scripts/migrate-mongo-to-postgres.ts`, `src/migration/postgres-data-migration/{types,id-map,steps,runner}.ts`.                                                                                                                             | ✓ done; dry-run + apply modes; emits row count, missing-ref, and warning reports.                               |
 
 ## Repositories shipped (28 / 28 first-class tables)
 
@@ -108,7 +108,7 @@ These are fixed contracts that downstream work depends on:
   `better-auth@^1.6.9`, `@better-auth/api-key@^1.6.9`, `@better-auth/passkey@^1.6.9`
   (see context7 query result in commit message of `038ffa7d`).
 - Test infra replaces `mongodb-memory-server` with `@testcontainers/postgresql`
-  + `postgres:16-alpine`. Local devs must have Docker.
+  - `postgres:16-alpine`. Local devs must have Docker.
 
 ## Repositories still to write
 
@@ -129,11 +129,14 @@ export PG_HOST=127.0.0.1 PG_USER=mx PG_PASSWORD=mx PG_DATABASE=mx_core SNOWFLAKE
 ### Step 2 — verify schema applies cleanly
 
 ```
-PG_VERIFY_URL="postgres://mx:mx@127.0.0.1:5432/mx_core" \
+docker compose exec postgres createdb -U mx mx_core_verify
+PG_VERIFY_URL="postgres://mx:mx@127.0.0.1:5432/mx_core_verify" \
   pnpm -C apps/core exec vitest run test/src/database test/src/modules/category
 ```
 
-Both suites should pass. The provider applies migrations idempotently via
+Never point `PG_VERIFY_URL` at the development database: the test lifecycle
+truncates every public table after each test file. Both suites should pass. The
+provider applies migrations idempotently via
 `drizzle-orm/node-postgres/migrator`, so re-runs are safe.
 
 ### Step 3 — add the next repository

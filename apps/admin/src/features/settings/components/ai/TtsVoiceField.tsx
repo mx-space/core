@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, Loader2 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 
 import { getTtsVoices, type TtsVoiceOption } from '~/api/ai'
 import { useI18n } from '~/i18n'
@@ -38,6 +38,17 @@ export function TtsVoiceField(props: {
     }),
     [voices],
   )
+  const filterVoice = useCallback(
+    (itemValue: unknown, query: string) => {
+      if (typeof itemValue !== 'string') return false
+      const normalizedQuery = query.trim().toLocaleLowerCase()
+      const voice = voiceCatalog.byId.get(itemValue)
+      return [itemValue, voice?.name].some((value) =>
+        value?.toLocaleLowerCase().includes(normalizedQuery),
+      )
+    },
+    [voiceCatalog],
+  )
   const error =
     voicesQuery.data?.error ||
     (voicesQuery.error instanceof Error ? voicesQuery.error.message : '')
@@ -45,8 +56,9 @@ export function TtsVoiceField(props: {
   return (
     <FieldShell label={t('settings.ai.field.voice')}>
       <Combobox
-        autoComplete="none"
+        autoComplete="list"
         disabled={!ready}
+        filter={filterVoice}
         inputValue={props.value}
         items={voiceCatalog.ids}
         onInputValueChange={(next) => props.onChange(next)}

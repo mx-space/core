@@ -897,6 +897,14 @@ const AIModelAssignmentSchema = withMeta(
       description:
         "Overrides the provider's default model; leave empty to use the provider default",
     }),
+    reasoningEffort: field.plain(
+      z.enum(['none', 'low', 'medium', 'high']).optional(),
+      'Thinking / reasoning effort',
+      {
+        description:
+          'Controls extended thinking for models that support it; default none',
+      },
+    ),
   }),
   { title: 'AI model assignment', 'ui:options': { type: 'hidden' } },
 )
@@ -1045,7 +1053,7 @@ export const AISchema = section('AI settings', {
     'Enable translation review',
     {
       description:
-        'When enabled, translations go through a writer → reviewer → editor pipeline. Reviewer scores native-feel; below threshold triggers a revise pass.',
+        'When enabled, translations go through an agent review loop: the model may request_review and apply issue-driven revisions.',
     },
   ),
   translationReviewModel: field.plain(

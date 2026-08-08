@@ -51,9 +51,13 @@ export interface AIProviderConfig {
   capabilities?: AIProviderCapabilities
 }
 
+export type AIReasoningEffort = 'none' | 'low' | 'medium' | 'high'
+
 export interface AIModelAssignment {
   /** Provider ID to use */
   providerId?: string
   /** Model name override (uses provider's default if not set) */
   model?: string
+  /** Thinking / reasoning effort for models that support it */
+  reasoningEffort?: AIReasoningEffort
 }

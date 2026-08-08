@@ -573,6 +573,49 @@ describe('PiRuntimeAdapter', () => {
       )
     })
 
+    it('filters OpenRouter model discovery by speech output modality', async () => {
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: 'openai/gpt-4o-mini-tts-2025-12-15',
+              name: 'OpenAI: GPT-4o Mini TTS',
+              pricing: { completion: '0', prompt: '0.000015' },
+              supported_voices: ['eve', 'ara', 'EVE', ''],
+            },
+          ],
+        }),
+      } as Response)
+
+      const adapter = new PiRuntimeAdapter({
+        apiKey: 'faux-api-key',
+        endpoint: 'https://openrouter.ai/api/v1',
+        model: MODEL_ID,
+        providerType: AIProviderType.OpenAICompatible,
+        providerId: 'openrouter',
+      })
+
+      await expect(adapter.listModels('speech')).resolves.toEqual([
+        {
+          id: 'openai/gpt-4o-mini-tts-2025-12-15',
+          name: 'OpenAI: GPT-4o Mini TTS',
+          pricing: {
+            completion: '0',
+            prompt: '0.000015',
+            unit: 'character',
+          },
+          supportedVoices: ['eve', 'ara'],
+        },
+      ])
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://openrouter.ai/api/v1/models?output_modalities=speech',
+        expect.objectContaining({
+          headers: { Authorization: 'Bearer faux-api-key' },
+        }),
+      )
+    })
+
     it('falls back to builtin models when inferred list fails', async () => {
       vi.spyOn(globalThis, 'fetch').mockResolvedValue({
         ok: false,

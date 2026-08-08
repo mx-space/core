@@ -132,6 +132,14 @@ export interface TranslationByRefResponse {
 export interface ProviderModel {
   id: string
   name: string
+  pricing?: {
+    completion?: string
+    image?: string
+    prompt?: string
+    request?: string
+    unit: 'character' | 'token'
+  }
+  supportedVoices?: string[]
 }
 
 export interface RegistryModelCosts {
@@ -298,7 +306,11 @@ export function createInsightsTranslationTask(data: {
 }
 
 export function getModels() {
-  return getJson<ProviderModelsResponse[]>('/ai/models')
+  return getModelsByCapability('text')
+}
+
+export function getModelsByCapability(capability: 'image' | 'speech' | 'text') {
+  return getJson<ProviderModelsResponse[]>('/ai/models', { capability })
 }
 
 export function getRegistryModels(providerId: string) {

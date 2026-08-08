@@ -22,6 +22,7 @@ import { Value } from 'typebox/value'
 
 import { isDev } from '~/global/env.global'
 
+import type { AIProviderCapability } from '../ai.types'
 import { AIProviderType } from '../ai.types'
 import type { IModelRuntime } from './model-runtime.interface'
 import type {
@@ -65,6 +66,71 @@ function fallbackProviderId(type: AIProviderType): string {
     default: {
       return 'openai-compat'
     }
+  }
+}
+
+function normalizeModelPricing(
+  value: unknown,
+  capability: AIProviderCapability,
+  isOpenRouter: boolean,
+): ModelInfo['pricing'] | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const record = value as Record<string, unknown>
+  const declaredUnit =
+    record.unit === 'character' || record.unit === 'token'
+      ? record.unit
+      : undefined
+  if (!declaredUnit && !isOpenRouter) return undefined
+  const prompt = normalizePrice(record.prompt)
+  const completion = normalizePrice(record.completion)
+  const request = normalizePrice(record.request)
+  const image = normalizePrice(record.image)
+  if (
+    prompt === undefined &&
+    completion === undefined &&
+    request === undefined &&
+    image === undefined
+  ) {
+    return undefined
+  }
+
+  return {
+    ...(prompt === undefined ? {} : { prompt }),
+    ...(completion === undefined ? {} : { completion }),
+    ...(request === undefined ? {} : { request }),
+    ...(image === undefined ? {} : { image }),
+    unit: declaredUnit ?? (capability === 'speech' ? 'character' : 'token'),
+  }
+}
+
+function normalizePrice(value: unknown): string | undefined {
+  if (typeof value !== 'string' && typeof value !== 'number') return undefined
+  const normalized = String(value).trim()
+  if (!normalized) return undefined
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) && parsed >= 0 ? normalized : undefined
+}
+
+function normalizeSupportedVoices(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  const seen = new Set<string>()
+  const voices: string[] = []
+  for (const item of value) {
+    if (typeof item !== 'string') continue
+    const id = item.trim()
+    const key = id.toLowerCase()
+    if (!id || seen.has(key)) continue
+    seen.add(key)
+    voices.push(id)
+  }
+  return voices
+}
+
+function isOpenRouterUrl(value: string): boolean {
+  try {
+    return new URL(value).hostname.toLowerCase() === 'openrouter.ai'
+  } catch {
+    return false
   }
 }
 
@@ -152,6 +218,7 @@ function mapReasoningEffort(
 interface PiRuntimeAdapterConfig extends RuntimeConfig {
   contextWindow?: number | null
   maxTokens?: number | null
+  reasoningEffort?: ReasoningEffort
 }
 
 export class PiRuntimeAdapter implements IModelRuntime {
@@ -163,6 +230,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
   private readonly apiKey: string
   private readonly modelListUrl?: string
   private readonly inferredModelListUrl?: string
+  private readonly configuredReasoningEffort?: ReasoningEffort
 
   constructor(config: PiRuntimeAdapterConfig) {
     this.providerInfo = {
@@ -178,6 +246,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       config.endpoint,
       config.appendV1 ?? true,
     )
+    this.configuredReasoningEffort = config.reasoningEffort
     this.model = this.resolveModel(
       config.model,
       config.endpoint,
@@ -331,7 +400,9 @@ export class PiRuntimeAdapter implements IModelRuntime {
     reasoningEffort?: ReasoningEffort
     toolChoice?: unknown
   }): ProviderStreamOptions {
-    const thinking = mapReasoningEffort(opts.reasoningEffort, this.api)
+    const reasoningEffort =
+      this.configuredReasoningEffort ?? opts.reasoningEffort
+    const thinking = mapReasoningEffort(reasoningEffort, this.api)
     const result: ProviderStreamOptions = {
       apiKey: this.apiKey,
       temperature: opts.temperature,
@@ -641,11 +712,13 @@ export class PiRuntimeAdapter implements IModelRuntime {
     }
   }
 
-  async listModels(): Promise<ModelInfo[]> {
+  async listModels(
+    capability: AIProviderCapability = 'text',
+  ): Promise<ModelInfo[]> {
     const remoteUrl = this.modelListUrl ?? this.inferredModelListUrl
     if (remoteUrl) {
       try {
-        return await this.fetchModelList(remoteUrl)
+        return await this.fetchModelList(remoteUrl, capability)
       } catch (error) {
         if (this.modelListUrl) throw error
         this.logger.warn(
@@ -653,6 +726,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
             (error as Error).message
           }`,
         )
+        if (capability !== 'text') return []
       }
     }
     try {
@@ -670,8 +744,12 @@ export class PiRuntimeAdapter implements IModelRuntime {
     }
   }
 
-  private async fetchModelList(url: string): Promise<ModelInfo[]> {
-    const response = await fetch(url, {
+  private async fetchModelList(
+    url: string,
+    capability: AIProviderCapability,
+  ): Promise<ModelInfo[]> {
+    const requestUrl = this.resolveModelListUrl(url, capability)
+    const response = await fetch(requestUrl, {
       headers: { Authorization: `Bearer ${this.apiKey}` },
     })
     if (!response.ok) {
@@ -680,18 +758,60 @@ export class PiRuntimeAdapter implements IModelRuntime {
       )
     }
     const payload = (await response.json()) as {
-      data?: Array<{ id?: unknown; created?: unknown }>
+      data?: Array<{
+        id?: unknown
+        name?: unknown
+        created?: unknown
+        pricing?: unknown
+        supported_voices?: unknown
+      }>
     }
     if (!Array.isArray(payload.data)) return []
     return payload.data
       .filter(
-        (item): item is { id: string; created?: unknown } =>
-          typeof item.id === 'string' && item.id.length > 0,
+        (
+          item,
+        ): item is {
+          id: string
+          name?: unknown
+          created?: unknown
+          pricing?: unknown
+          supported_voices?: unknown
+        } => typeof item.id === 'string' && item.id.length > 0,
       )
-      .map((item) => ({
-        id: item.id,
-        name: item.id,
-        created: typeof item.created === 'number' ? item.created : undefined,
-      }))
+      .map((item) => {
+        const pricing = normalizeModelPricing(
+          item.pricing,
+          capability,
+          isOpenRouterUrl(requestUrl),
+        )
+        const supportedVoices = normalizeSupportedVoices(item.supported_voices)
+        return {
+          id: item.id,
+          name:
+            typeof item.name === 'string' && item.name.length > 0
+              ? item.name
+              : item.id,
+          created: typeof item.created === 'number' ? item.created : undefined,
+          ...(pricing ? { pricing } : {}),
+          ...(supportedVoices.length > 0 ? { supportedVoices } : {}),
+        }
+      })
+  }
+
+  private resolveModelListUrl(
+    url: string,
+    capability: AIProviderCapability,
+  ): string {
+    if (capability === 'text') return url
+
+    try {
+      const parsed = new URL(url)
+      if (parsed.hostname.toLowerCase() !== 'openrouter.ai') return url
+      parsed.searchParams.set('output_modalities', capability)
+      return parsed.toString()
+    } catch {
+      return url
+    }
   }
 }

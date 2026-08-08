@@ -8,6 +8,8 @@ import pkg from 'pg'
 
 import { runSchemaMigrationFiles } from '~/processors/database/schema-migrator'
 
+import { assertSafeTestDatabaseUrl } from './pg-test-database-safety'
+
 const { Pool } = pkg
 
 interface PgTestDatabase {
@@ -50,6 +52,7 @@ export async function startPgTestContainer(): Promise<PgTestDatabase> {
 
   const externalConnectionUri = process.env.PG_VERIFY_URL
   if (externalConnectionUri) {
+    assertSafeTestDatabaseUrl(externalConnectionUri)
     if (!externalDatabase) {
       setPostgresEnv(externalConnectionUri)
       externalDatabase = { getConnectionUri: () => externalConnectionUri }

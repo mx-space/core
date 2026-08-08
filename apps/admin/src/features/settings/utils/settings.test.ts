@@ -12,15 +12,46 @@ describe('mergeModelOptions', () => {
   it('keeps fetched models first and de-duplicates case-insensitively', () => {
     expect(
       mergeModelOptions(
-        [{ id: 'gemini-2.5-pro' }, { id: 'gemini-2.5-flash' }],
+        [
+          { id: 'gemini-2.5-pro', name: 'Gemini Pro' },
+          { id: 'gemini-2.5-flash', name: 'Gemini Flash' },
+        ],
         [{ id: 'GEMINI-2.5-PRO' }, { id: 'gpt-4o' }],
       ),
-    ).toEqual(['gemini-2.5-pro', 'gemini-2.5-flash', 'gpt-4o'])
+    ).toEqual([
+      { id: 'gemini-2.5-pro', name: 'Gemini Pro' },
+      { id: 'gemini-2.5-flash', name: 'Gemini Flash' },
+      { id: 'gpt-4o', name: 'gpt-4o' },
+    ])
   })
 
   it('handles missing inputs', () => {
-    expect(mergeModelOptions(undefined, [{ id: 'gpt-4o' }])).toEqual(['gpt-4o'])
+    expect(mergeModelOptions(undefined, [{ id: 'gpt-4o' }])).toEqual([
+      { id: 'gpt-4o', name: 'gpt-4o' },
+    ])
     expect(mergeModelOptions([], undefined)).toEqual([])
+  })
+
+  it('normalizes registry per-million costs for the shared price formatter', () => {
+    expect(
+      mergeModelOptions(undefined, [
+        {
+          costs: { inputPerMillion: 2, outputPerMillion: 6 },
+          id: 'priced-model',
+          name: 'Priced Model',
+        },
+      ]),
+    ).toEqual([
+      {
+        id: 'priced-model',
+        name: 'Priced Model',
+        pricing: {
+          completion: '0.000006',
+          prompt: '0.000002',
+          unit: 'token',
+        },
+      },
+    ])
   })
 })
 

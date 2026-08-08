@@ -98,6 +98,14 @@ export interface ModelInfo {
   id: string
   name: string
   created?: number
+  pricing?: {
+    completion?: string
+    image?: string
+    prompt?: string
+    request?: string
+    unit: 'character' | 'token'
+  }
+  supportedVoices?: string[]
 }
 
 export interface RuntimeConfig {

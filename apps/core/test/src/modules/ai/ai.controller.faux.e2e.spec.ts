@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { withFauxAi } from '@/helper/faux-ai.helper'
 import { AppException } from '~/common/errors/exception.types'
 import { AiController } from '~/modules/ai/ai.controller'
+import type { AIProviderCapabilities } from '~/modules/ai/ai.types'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
 
@@ -26,6 +27,7 @@ interface BuildOpts {
   enabled?: boolean
   aiReview?: boolean
   aiReviewType?: 'binary' | 'score'
+  capabilities?: AIProviderCapabilities
 }
 
 function buildController(opts: BuildOpts = {}) {
@@ -39,6 +41,7 @@ function buildController(opts: BuildOpts = {}) {
         endpoint: `https://${PROVIDER_HOST}/v1`,
         defaultModel: MODEL_ID,
         enabled: opts.enabled !== false,
+        capabilities: opts.capabilities,
       },
     ],
   }
@@ -78,6 +81,26 @@ afterEach(() => {
 })
 
 describe('AiController test endpoints (faux)', () => {
+  describe('GET /ai/models (getAvailableModels)', () => {
+    it('discovers models from providers that support the requested capability', async () => {
+      const listModels = vi
+        .spyOn(PiRuntimeAdapter.prototype, 'listModels')
+        .mockResolvedValue([{ id: 'speech-model', name: 'Speech model' }])
+      const { controller } = buildController({
+        capabilities: { image: false, speech: true, text: false },
+      })
+
+      await expect(controller.getAvailableModels('speech')).resolves.toEqual([
+        expect.objectContaining({
+          models: [{ id: 'speech-model', name: 'Speech model' }],
+          providerId: PROVIDER_ID,
+        }),
+      ])
+      expect(listModels).toHaveBeenCalledWith('speech')
+      await expect(controller.getAvailableModels('text')).resolves.toEqual([])
+    })
+  })
+
   describe('POST /ai/test (testProviderConnection)', () => {
     it('succeeds when adapter generates text via faux', async () => {
       const handle = mountFaux([fauxAssistantMessage('ok')])

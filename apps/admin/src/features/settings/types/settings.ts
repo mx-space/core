@@ -28,9 +28,12 @@ export interface AIProviderConfig {
   voiceListUrl?: string
 }
 
+export type AIReasoningEffort = 'none' | 'low' | 'medium' | 'high'
+
 export interface AIModelAssignment {
   model?: string
   providerId?: string
+  reasoningEffort?: AIReasoningEffort
 }
 
 export interface AIConfig {
@@ -63,7 +66,6 @@ export interface AIConfig {
   summaryTargetLanguages?: string[]
   translationModel?: AIModelAssignment | null
   translationReviewModel?: AIModelAssignment | null
-  translationReviewScoreThreshold?: number
   translationTargetLanguages?: string[]
   tts?: {
     concurrency?: number
@@ -80,6 +82,16 @@ export interface AIConfig {
 export interface AIProviderModel {
   id: string
   name: string
+  pricing?: AIModelPricing
+  supportedVoices?: string[]
+}
+
+export interface AIModelPricing {
+  completion?: string
+  image?: string
+  prompt?: string
+  request?: string
+  unit: 'character' | 'token'
 }
 
 export interface SeoI18nOverlay {

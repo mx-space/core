@@ -1,4 +1,4 @@
-import type { AIProviderConfig } from '../ai.types'
+import type { AIProviderConfig, AIReasoningEffort } from '../ai.types'
 import { AIProviderType } from '../ai.types'
 import type { IModelRuntime } from './model-runtime.interface'
 import { PiRuntimeAdapter } from './pi-runtime.adapter'
@@ -7,6 +7,7 @@ import type { RuntimeConfig } from './types'
 export function createModelRuntime(
   config: AIProviderConfig,
   modelOverride?: string,
+  options?: { reasoningEffort?: AIReasoningEffort },
 ): IModelRuntime {
   const model = modelOverride || config.defaultModel
 
@@ -28,6 +29,7 @@ export function createModelRuntime(
         ...runtimeConfig,
         contextWindow: config.contextWindow ?? undefined,
         maxTokens: config.maxTokens ?? undefined,
+        reasoningEffort: options?.reasoningEffort,
       })
     }
 

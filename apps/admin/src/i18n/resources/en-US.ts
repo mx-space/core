@@ -1927,6 +1927,20 @@ export const enUS = {
   'settings.ai.action.addProvider': 'Add provider',
   'settings.ai.action.fetchModels': 'Fetch models',
   'settings.ai.action.testConnection': 'Test connection',
+  'settings.ai.preset.category.aggregator': 'Aggregators',
+  'settings.ai.preset.category.cnOfficial': 'China providers',
+  'settings.ai.preset.category.custom': 'Custom',
+  'settings.ai.preset.category.official': 'Official',
+  'settings.ai.preset.getApiKey': 'Get API key',
+  'settings.ai.preset.name.anthropic': 'Anthropic',
+  'settings.ai.preset.name.custom': 'Custom',
+  'settings.ai.preset.name.deepseek': 'DeepSeek',
+  'settings.ai.preset.name.moonshot': 'Kimi / Moonshot',
+  'settings.ai.preset.name.openai': 'OpenAI',
+  'settings.ai.preset.name.openrouter': 'OpenRouter',
+  'settings.ai.preset.name.siliconflow': 'SiliconFlow',
+  'settings.ai.preset.name.xai': 'xAI (Grok)',
+  'settings.ai.preset.website': 'Website',
   'settings.ai.assignment.commentReviewDescription':
     'Model used to review comments.',
   'settings.ai.assignment.commentReviewLabel': 'Comment review',
@@ -1939,9 +1953,22 @@ export const enUS = {
   'settings.ai.assignment.imageGenerationLabel': 'Image generation model',
   'settings.ai.assignment.mediaModelPlaceholder':
     'Enter the model ID for this capability',
+  'settings.ai.assignment.modelAriaLabel': '{label} model',
   'settings.ai.assignment.modelPlaceholder': 'Use provider default model',
+  'settings.ai.assignment.openModelList': 'Open model list',
   'settings.ai.assignment.providerAriaLabel': '{label} provider',
   'settings.ai.assignment.providerNone': 'Unassigned',
+  'settings.ai.pricing.charactersPerMillion': '{price} / 1M characters',
+  'settings.ai.pricing.free': 'Free',
+  'settings.ai.pricing.inputPerMillion': 'Input {price} / 1M',
+  'settings.ai.pricing.outputPerMillion': 'Output {price} / 1M',
+  'settings.ai.pricing.perImage': '{price} / image',
+  'settings.ai.pricing.perRequest': '{price} / request',
+  'settings.ai.assignment.reasoningAriaLabel': '{label} thinking / reasoning',
+  'settings.ai.assignment.reasoning.none': 'Thinking: Off',
+  'settings.ai.assignment.reasoning.low': 'Thinking: Low',
+  'settings.ai.assignment.reasoning.medium': 'Thinking: Medium',
+  'settings.ai.assignment.reasoning.high': 'Thinking: High',
   'settings.ai.assignment.summaryDescription':
     'Model used to generate article summaries.',
   'settings.ai.assignment.summaryLabel': 'Summary',
@@ -2060,17 +2087,13 @@ export const enUS = {
   'settings.ai.switch.enableTranslationReview': 'Enable translation review',
   'settings.ai.switch.enableTts': 'Enable AI speech generation',
   'settings.ai.switch.enableTranslationReviewDescription':
-    'Run writer → reviewer → editor pipeline: reviewer scores each translation; revisions trigger when the score drops below the threshold.',
+    'When enabled, the translation agent may request review and apply issue-driven revisions.',
   'settings.ai.switch.insightsMinTextLength':
     'Insights auto-generate minimum text length',
   'settings.ai.switch.insightsTargetLanguages': 'Insights target languages',
   'settings.ai.switch.summaryMinTextLength':
     'Summary auto-generate minimum text length',
   'settings.ai.switch.summaryTargetLanguages': 'Summary target languages',
-  'settings.ai.switch.translationReviewScoreThreshold':
-    'Review score threshold',
-  'settings.ai.switch.translationReviewScoreThresholdDescription':
-    'Translations with a reviewer score (0–100) at or above the threshold pass through. Lower scores trigger editor revision. Default 85.',
   'settings.ai.switch.translationTargetLanguages':
     'Translation target languages',
   'settings.ai.test.invalidLanguageCode':

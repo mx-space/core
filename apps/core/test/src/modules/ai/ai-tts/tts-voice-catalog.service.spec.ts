@@ -126,6 +126,26 @@ describe('discoverTtsVoices', () => {
       voices: [],
     })
   })
+
+  it('normalizes voices exposed by model metadata', async () => {
+    await expect(
+      discoverTtsVoices(provider, 'x-ai/grok-voice-tts-1.0', [
+        'eve',
+        'ara',
+        'rex',
+        'sal',
+        'leo',
+      ]),
+    ).resolves.toEqual({
+      manualInputAllowed: true,
+      source: 'remote',
+      voices: ['eve', 'ara', 'rex', 'sal', 'leo'].map((id) => ({
+        id,
+        kind: 'provider',
+        name: id,
+      })),
+    })
+  })
 })
 
 describe('TtsVoiceCatalogService', () => {
@@ -138,5 +158,52 @@ describe('TtsVoiceCatalogService', () => {
     await expect(
       service.discover({ providerId: 'missing', model: 'tts-model' }),
     ).rejects.toMatchObject({ code: AppErrorCode.TTS_PROVIDER_NOT_CONFIGURED })
+  })
+
+  it('discovers OpenRouter voices from the selected model metadata', async () => {
+    const openRouterProvider: AIProviderConfig = {
+      ...provider,
+      endpoint: 'https://openrouter.ai/api/v1',
+      id: 'openrouter',
+    }
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: 'x-ai/grok-voice-tts-1.0',
+              supported_voices: ['eve', 'ara', 'rex', 'sal', 'leo'],
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const configsService = {
+      resolveAiProviderForCapability: vi.fn().mockResolvedValue({
+        provider: openRouterProvider,
+      }),
+    }
+    const service = new TtsVoiceCatalogService(configsService as any)
+
+    const result = await service.discover({
+      providerId: 'openrouter',
+      model: 'x-ai/grok-voice-tts-1.0',
+    })
+
+    expect(result.voices.map((voice) => voice.id)).toEqual([
+      'eve',
+      'ara',
+      'rex',
+      'sal',
+      'leo',
+    ])
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://openrouter.ai/api/v1/models?output_modalities=speech',
+      expect.objectContaining({
+        headers: { Authorization: 'Bearer secret' },
+      }),
+    )
   })
 })

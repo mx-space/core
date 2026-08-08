@@ -17,6 +17,7 @@ import { aiProviderTypeOptions, typesWithOptions } from '../constants'
 import type {
   AIConfig,
   AIProviderConfig,
+  AIProviderModel,
   AIProviderType,
 } from '../types/settings'
 
@@ -260,18 +261,44 @@ export function matchRegistryModel(
 }
 
 export function mergeModelOptions(
-  fetchedModels: { id: string }[] | undefined,
-  registryModels: { id: string }[] | undefined,
-): string[] {
+  fetchedModels: AIProviderModel[] | undefined,
+  registryModels:
+    | Array<{
+        costs?: { inputPerMillion: number; outputPerMillion: number }
+        id: string
+        name?: string
+      }>
+    | undefined,
+): AIProviderModel[] {
   const seen = new Set<string>()
-  const merged: string[] = []
-  for (const model of [...(fetchedModels ?? []), ...(registryModels ?? [])]) {
+  const merged: AIProviderModel[] = []
+  for (const model of fetchedModels ?? []) {
     const id = model.id.trim()
     if (!id) continue
     const key = id.toLowerCase()
     if (seen.has(key)) continue
     seen.add(key)
-    merged.push(id)
+    merged.push({ ...model, id, name: model.name || id })
+  }
+  for (const model of registryModels ?? []) {
+    const id = model.id.trim()
+    if (!id) continue
+    const key = id.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    merged.push({
+      id,
+      name: model.name || id,
+      ...(model.costs
+        ? {
+            pricing: {
+              completion: String(model.costs.outputPerMillion / 1_000_000),
+              prompt: String(model.costs.inputPerMillion / 1_000_000),
+              unit: 'token' as const,
+            },
+          }
+        : {}),
+    })
   }
   return merged
 }

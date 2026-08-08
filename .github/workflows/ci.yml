@@ -186,11 +186,11 @@ jobs:
         env:
           POSTGRES_USER: mx
           POSTGRES_PASSWORD: mx
-          POSTGRES_DB: mx_core
+          POSTGRES_DB: mx_core_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U mx -d mx_core"
+          --health-cmd "pg_isready -U mx -d mx_core_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -217,11 +217,11 @@ jobs:
           REDIS_BINARY_PATH: /usr/bin/redis-server
           REDISMS_SYSTEM_BINARY: /usr/bin/redis-server
           SNOWFLAKE_WORKER_ID: 1
-          PG_VERIFY_URL: postgres://mx:mx@127.0.0.1:5432/mx_core
-          PG_URL: postgres://mx:mx@127.0.0.1:5432/mx_core
-          PG_CONNECTION_STRING: postgres://mx:mx@127.0.0.1:5432/mx_core
+          PG_VERIFY_URL: postgres://mx:mx@127.0.0.1:5432/mx_core_test
+          PG_URL: postgres://mx:mx@127.0.0.1:5432/mx_core_test
+          PG_CONNECTION_STRING: postgres://mx:mx@127.0.0.1:5432/mx_core_test
           PG_HOST: 127.0.0.1
           PG_PORT: 5432
           PG_USER: mx
           PG_PASSWORD: mx
-          PG_DATABASE: mx_core
+          PG_DATABASE: mx_core_test

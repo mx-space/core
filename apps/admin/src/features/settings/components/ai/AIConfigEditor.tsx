@@ -4,26 +4,62 @@ import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { getModels } from '~/api/ai'
+import { getModelsByCapability } from '~/api/ai'
 import { useI18n } from '~/i18n'
+import type { TranslationKey } from '~/i18n/types'
+import { DropdownMenu } from '~/ui/overlay/dropdown-menu'
 import { Button } from '~/ui/primitives/button'
 import { SelectField } from '~/ui/primitives/select'
 import { Switch, Toggle } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
+import {
+  type AIProviderPreset,
+  type AIProviderPresetCategory,
+  createProviderFromPreset,
+  groupAIProviderPresets,
+} from '../../config/aiProviderPresets'
 import type {
   AIConfig,
   AIProviderConfig,
   AIProviderModel,
-  AIProviderType,
 } from '../../types/settings'
-import { formatAIProviderLabel, getDefaultAIModel } from '../../utils/settings'
+import { formatAIProviderLabel } from '../../utils/settings'
 import { EmptyState, FieldShell, SettingsSection } from '../SettingsPrimitives'
 import { AIModelAssignmentField } from './AIModelAssignmentField'
 import { AIProviderDrawer } from './AIProviderDrawer'
 import { AITextListField } from './AITextListField'
 import { TtsVoiceField } from './TtsVoiceField'
+
+const PRESET_CATEGORY_LABEL_KEYS: Record<
+  AIProviderPresetCategory,
+  TranslationKey
+> = {
+  aggregator: 'settings.ai.preset.category.aggregator',
+  cn_official: 'settings.ai.preset.category.cnOfficial',
+  custom: 'settings.ai.preset.category.custom',
+  official: 'settings.ai.preset.category.official',
+}
+
+const PRESET_NAME_KEYS: Partial<Record<string, TranslationKey>> = {
+  anthropic: 'settings.ai.preset.name.anthropic',
+  custom: 'settings.ai.preset.name.custom',
+  deepseek: 'settings.ai.preset.name.deepseek',
+  moonshot: 'settings.ai.preset.name.moonshot',
+  openai: 'settings.ai.preset.name.openai',
+  openrouter: 'settings.ai.preset.name.openrouter',
+  siliconflow: 'settings.ai.preset.name.siliconflow',
+  xai: 'settings.ai.preset.name.xai',
+}
+
+async function getProviderModels(capability: 'image' | 'speech' | 'text') {
+  const response = await getModelsByCapability(capability)
+  const entries: Array<[string, AIProviderModel[]]> = response.map(
+    (provider) => [provider.providerId, provider.models ?? []],
+  )
+  return Object.fromEntries(entries) as Record<string, AIProviderModel[]>
+}
 
 export function AIConfigEditor(props: {
   modelCacheKey: readonly unknown[]
@@ -32,23 +68,37 @@ export function AIConfigEditor(props: {
 }) {
   const { t } = useI18n()
   const [editingId, setEditingId] = useState<string | null>(null)
-  const hasEnabledProvider = (props.value.providers ?? []).some(
-    (provider) => provider.enabled,
+  const providers = props.value.providers ?? []
+  const hasEnabledTextProvider = providers.some(
+    (provider) => provider.enabled && (provider.capabilities?.text ?? true),
+  )
+  const hasEnabledSpeechProvider = providers.some(
+    (provider) => provider.enabled && provider.capabilities?.speech,
+  )
+  const hasEnabledImageProvider = providers.some(
+    (provider) => provider.enabled && provider.capabilities?.image,
   )
   const modelsQuery = useQuery({
-    enabled: hasEnabledProvider,
-    queryFn: async () => {
-      const response = await getModels()
-      const entries: Array<[string, AIProviderModel[]]> = response.map(
-        (provider) => [provider.providerId, provider.models ?? []],
-      )
-      return Object.fromEntries(entries) as Record<string, AIProviderModel[]>
-    },
+    enabled: hasEnabledTextProvider,
+    queryFn: () => getProviderModels('text'),
     queryKey: props.modelCacheKey,
     staleTime: 24 * 60 * 60 * 1000,
   })
+  const speechModelsQuery = useQuery({
+    enabled: hasEnabledSpeechProvider,
+    queryFn: () => getProviderModels('speech'),
+    queryKey: [...props.modelCacheKey, 'speech'],
+    staleTime: 24 * 60 * 60 * 1000,
+  })
+  const imageModelsQuery = useQuery({
+    enabled: hasEnabledImageProvider,
+    queryFn: () => getProviderModels('image'),
+    queryKey: [...props.modelCacheKey, 'image'],
+    staleTime: 24 * 60 * 60 * 1000,
+  })
   const providerModels = modelsQuery.data ?? {}
-  const providers = props.value.providers ?? []
+  const speechProviderModels = speechModelsQuery.data ?? {}
+  const imageProviderModels = imageModelsQuery.data ?? {}
 
   const updateConfig = (patch: Partial<AIConfig>) =>
     props.onChange({ ...props.value, ...patch })
@@ -61,20 +111,13 @@ export function AIConfigEditor(props: {
     })
   }
 
-  const addProvider = () => {
-    const type: AIProviderType = 'openai-compatible'
-    const provider: AIProviderConfig = {
-      apiKey: '',
-      capabilities: { text: true, image: false, speech: false },
-      defaultModel: getDefaultAIModel(type),
-      enabled: true,
-      id: crypto.randomUUID(),
-      name: '',
-      type,
-    }
+  const addProviderFromPreset = (preset: AIProviderPreset) => {
+    const provider = createProviderFromPreset(preset)
     updateConfig({ providers: [...providers, provider] })
     setEditingId(provider.id)
   }
+
+  const presetGroups = groupAIProviderPresets()
 
   const deleteProvider = (id: string) => {
     const references = [
@@ -105,10 +148,46 @@ export function AIConfigEditor(props: {
       <div className="space-y-10">
         <SettingsSection
           actions={
-            <Button onClick={addProvider} type="button" variant="subtle">
-              <Plus aria-hidden="true" className="size-4" />
-              {t('settings.ai.action.addProvider')}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenu.Trigger
+                className="inline-flex h-8 items-center gap-2 rounded-sm border border-border bg-surface-card px-3 text-sm font-medium text-fg shadow-xs outline-hidden transition-colors hover:bg-surface-inset focus-visible:ring-[3px] focus-visible:ring-accent/15 data-[popup-open]:bg-surface-inset"
+                type="button"
+              >
+                <Plus aria-hidden="true" className="size-4" />
+                {t('settings.ai.action.addProvider')}
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content align="end" className="min-w-56">
+                {presetGroups.map((group, index) => (
+                  <DropdownMenu.Group key={group.category}>
+                    {index > 0 ? <DropdownMenu.Separator /> : null}
+                    <DropdownMenu.GroupLabel>
+                      {t(PRESET_CATEGORY_LABEL_KEYS[group.category])}
+                    </DropdownMenu.GroupLabel>
+                    {group.presets.map((preset) => {
+                      const nameKey = PRESET_NAME_KEYS[preset.id]
+                      return (
+                        <DropdownMenu.Item
+                          className="items-start py-2"
+                          key={preset.id}
+                          onClick={() => addProviderFromPreset(preset)}
+                        >
+                          <span className="flex min-w-0 flex-col gap-0.5">
+                            <span className="truncate font-medium">
+                              {nameKey ? t(nameKey) : preset.name}
+                            </span>
+                            {preset.endpoint ? (
+                              <span className="truncate text-xs text-fg-subtle">
+                                {preset.endpoint}
+                              </span>
+                            ) : null}
+                          </span>
+                        </DropdownMenu.Item>
+                      )
+                    })}
+                  </DropdownMenu.Group>
+                ))}
+              </DropdownMenu.Content>
+            </DropdownMenu>
           }
           description={t('settings.ai.provider.sectionTitleDescription')}
           title={t('settings.ai.provider.sectionTitle')}
@@ -315,32 +394,6 @@ export function AIConfigEditor(props: {
               updateConfig({ enableTranslationReview })
             }
           />
-          <TextInput
-            disabled={
-              !props.value.enableTranslation ||
-              !props.value.enableTranslationReview
-            }
-            inputMode="numeric"
-            label={t('settings.ai.switch.translationReviewScoreThreshold')}
-            min={0}
-            onChange={(value) => {
-              const trimmed = value.trim()
-              if (!trimmed) {
-                updateConfig({ translationReviewScoreThreshold: 85 })
-                return
-              }
-              const parsed = Number(trimmed)
-              if (Number.isNaN(parsed)) return
-              updateConfig({
-                translationReviewScoreThreshold: Math.max(
-                  0,
-                  Math.min(100, parsed),
-                ),
-              })
-            }}
-            type="number"
-            value={String(props.value.translationReviewScoreThreshold ?? 85)}
-          />
           <AITextListField
             disabled={!props.value.enableTranslation}
             label={t('settings.ai.switch.translationTargetLanguages')}
@@ -359,7 +412,7 @@ export function AIConfigEditor(props: {
               modelPlaceholder={t(
                 'settings.ai.assignment.mediaModelPlaceholder',
               )}
-              models={{}}
+              models={imageProviderModels}
               onChange={(model) =>
                 updateConfig({
                   imageGeneration: {
@@ -461,7 +514,7 @@ export function AIConfigEditor(props: {
               modelPlaceholder={t(
                 'settings.ai.assignment.mediaModelPlaceholder',
               )}
-              models={{}}
+              models={speechProviderModels}
               onChange={(model) =>
                 updateConfig({
                   tts: {

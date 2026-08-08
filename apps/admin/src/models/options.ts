@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace MxServerOptions {
   export interface SeoOption {
     title: string
@@ -147,9 +148,12 @@ export namespace MxServerOptions {
     enabled: boolean
   }
 
+  export type AIReasoningEffort = 'none' | 'low' | 'medium' | 'high'
+
   export interface AIModelAssignment {
     providerId?: string
     model?: string
+    reasoningEffort?: AIReasoningEffort
   }
 
   export interface AIOption {

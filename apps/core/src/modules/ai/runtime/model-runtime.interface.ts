@@ -4,6 +4,7 @@ import type {
   TSchema,
 } from '@earendil-works/pi-ai'
 
+import type { AIProviderCapability } from '../ai.types'
 import type {
   GenerateStructuredOptions,
   GenerateStructuredResult,
@@ -35,5 +36,5 @@ export interface IModelRuntime {
 
   streamMessage?: (options: StreamMessageOptions) => AssistantMessageEventStream
 
-  listModels?: () => Promise<ModelInfo[]>
+  listModels?: (capability?: AIProviderCapability) => Promise<ModelInfo[]>
 }

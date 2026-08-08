@@ -11,6 +11,7 @@ import { ConfigsService } from '../configs/configs.service'
 import { AI_PROMPTS } from './ai.prompts'
 import { RegistryModelsQueryDto } from './ai.schema'
 import { AiService } from './ai.service'
+import type { AIProviderCapability } from './ai.types'
 import { AIProviderType } from './ai.types'
 import type { RegistryModelView } from './ai.views'
 import { AiViews } from './ai.views'
@@ -67,8 +68,12 @@ export class AiController {
 
   @Get('/models')
   @Auth()
-  async getAvailableModels(): Promise<ProviderModelsResponse[]> {
+  async getAvailableModels(
+    @Query('capability') capability?: AIProviderCapability,
+  ): Promise<ProviderModelsResponse[]> {
     const aiConfig = await this.configsService.get('ai')
+    const requestedCapability: AIProviderCapability =
+      capability === 'image' || capability === 'speech' ? capability : 'text'
 
     if (!aiConfig.providers?.length) {
       return []
@@ -80,14 +85,19 @@ export class AiController {
       if (
         !provider.enabled ||
         !provider.apiKey ||
-        !(provider.capabilities?.text ?? true)
+        !(requestedCapability === 'text'
+          ? (provider.capabilities?.text ?? true)
+          : provider.capabilities?.[requestedCapability])
       ) {
         continue
       }
 
       try {
         const runtime = createModelRuntime(provider)
-        const models = await this.fetchModelsFromRuntime(runtime)
+        const models = await this.fetchModelsFromRuntime(
+          runtime,
+          requestedCapability,
+        )
         results.push({
           providerId: provider.id,
           providerName: provider.name,
@@ -431,10 +441,11 @@ export class AiController {
 
   private async fetchModelsFromRuntime(
     runtime: IModelRuntime,
+    capability: AIProviderCapability = 'text',
   ): Promise<ModelInfo[]> {
     if (!runtime.listModels) {
       return []
     }
-    return runtime.listModels()
+    return runtime.listModels(capability)
   }
 }

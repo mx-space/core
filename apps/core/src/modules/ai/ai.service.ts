@@ -86,7 +86,9 @@ export class AiService {
     }
 
     return {
-      runtime: createModelRuntime(provider, assignment?.model),
+      runtime: createModelRuntime(provider, assignment?.model, {
+        reasoningEffort: assignment?.reasoningEffort,
+      }),
       provider,
       assignment,
     }
