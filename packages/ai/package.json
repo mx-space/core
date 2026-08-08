@@ -39,10 +39,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "typebox": "1.3.6"
+    "typebox": "1.3.11"
   },
   "devDependencies": {
-    "tsdown": "0.22.8",
+    "tsdown": "0.22.14",
     "typescript": "6.0.3"
   }
 }

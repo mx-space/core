@@ -1,4 +1,5 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
+import './map-worker'
 
 import type {
   MapBlockProps,

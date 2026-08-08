@@ -64,11 +64,11 @@
     "@haklex/rich-litexml": "0.34.0",
     "@lexical/headless": "^0.49.0",
     "@lexical/markdown": "^0.49.0",
-    "@noble/hashes": "2.2.0",
+    "@noble/hashes": "2.3.0",
     "lexical": "^0.49.0"
   },
   "devDependencies": {
-    "tsdown": "0.22.8",
+    "tsdown": "0.22.14",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }

@@ -256,7 +256,7 @@ export class TaskQueueService implements OnModuleDestroy {
     groupId: string,
   ): Promise<SubTaskStats | undefined> {
     const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(groupId))
-    const taskIds = await this.redis.zrange(indexGroup, 0, -1)
+    const taskIds = await this.redis.zrange(indexGroup, '0', '-1')
 
     if (!taskIds.length) {
       return undefined
@@ -333,7 +333,7 @@ export class TaskQueueService implements OnModuleDestroy {
    */
   async recomputeGroupStats(groupId: string): Promise<SubTaskStats> {
     const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(groupId))
-    const taskIds = await this.redis.zrange(indexGroup, 0, -1)
+    const taskIds = await this.redis.zrange(indexGroup, '0', '-1')
     return this.tallyStatuses(taskIds)
   }
 
@@ -474,7 +474,7 @@ export class TaskQueueService implements OnModuleDestroy {
 
   async cancelTasksByGroupId(groupId: string): Promise<number> {
     const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(groupId))
-    const taskIds = await this.redis.zrange(indexGroup, 0, -1)
+    const taskIds = await this.redis.zrange(indexGroup, '0', '-1')
 
     if (!taskIds.length) {
       return 0

@@ -1,4 +1,5 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
+import './map-worker'
 
 import type { MapMerchant, MapPoi } from '@mx-space/editor'
 import { useMutation } from '@tanstack/react-query'
