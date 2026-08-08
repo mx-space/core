@@ -12,6 +12,7 @@ import { isArticleVisibleToViewer } from '../ai-article-visibility.util'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
 import type { GenerationMetricsDto } from '../ai-generation-metrics/ai-generation-metrics.types'
 import { parseLanguageCode } from '../ai-language.util'
+import { AiTranslationRepository } from '../ai-translation/ai-translation.repository'
 import { readArticleMetaLang } from '../ai-translation/article-content.util'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import { AiTtsRepository } from './ai-tts.repository'
@@ -104,6 +105,7 @@ export class AiTtsQueryService {
     private readonly generationMetrics: AiGenerationMetricsService,
     @Inject(NOTE_SERVICE_TOKEN)
     private readonly noteService: NoteService,
+    private readonly translationRepository: AiTranslationRepository,
   ) {}
 
   private async isVisibleToReader(
@@ -259,15 +261,31 @@ export class AiTtsQueryService {
     // sentinel — the parent row exists but the run never finalized.
     if (!row || row.blockCount === 0) return { available: false }
 
+    const articleStale = Boolean(
+      modifiedAt &&
+      row.sourceModifiedAt &&
+      modifiedAt.getTime() > row.sourceModifiedAt.getTime(),
+    )
+
+    // A translation row newer than the narration means the translation was
+    // regenerated (or hand-edited) after the audio was voiced — the article's
+    // own modifiedAt does not move in that case, so the check above misses it.
+    let translationStale = false
+    if (row.updatedAt) {
+      const revision = await this.translationRepository
+        .findRevisionByRefAndLang(refId, lang)
+        .catch(() => null)
+      const revisionAt = revision?.updatedAt ?? revision?.createdAt
+      translationStale = Boolean(
+        revisionAt && revisionAt.getTime() > row.updatedAt.getTime(),
+      )
+    }
+
     return {
       available: true,
       lang,
       blockCount: row.blockCount,
-      stale: Boolean(
-        modifiedAt &&
-        row.sourceModifiedAt &&
-        modifiedAt.getTime() > row.sourceModifiedAt.getTime(),
-      ),
+      stale: articleStale || translationStale,
       updatedAt: row.updatedAt,
     }
   }

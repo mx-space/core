@@ -22,6 +22,7 @@ import { SnowflakeService } from '~/shared/id/snowflake.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 import type {
+  AiTranslationRevision,
   AiTranslationRow,
   TranslationEntryRow,
 } from './ai-translation.types'
@@ -49,6 +50,7 @@ const mapTranslation = (
   sourceBlockSnapshots: row.sourceBlockSnapshots,
   sourceMetaHashes: row.sourceMetaHashes,
   createdAt: row.createdAt,
+  updatedAt: row.updatedAt ?? null,
 })
 
 const mapEntry = (
@@ -107,6 +109,26 @@ export class AiTranslationRepository extends BaseRepository {
       )
       .limit(1)
     return row ? mapTranslation(row) : null
+  }
+
+  async findRevisionByRefAndLang(
+    refId: EntityId | string,
+    lang: string,
+  ): Promise<AiTranslationRevision | null> {
+    const [row] = await this.db
+      .select({
+        createdAt: aiTranslations.createdAt,
+        updatedAt: aiTranslations.updatedAt,
+      })
+      .from(aiTranslations)
+      .where(
+        and(
+          eq(aiTranslations.refId, parseEntityId(refId)),
+          eq(aiTranslations.lang, lang),
+        )!,
+      )
+      .limit(1)
+    return row ?? null
   }
 
   async findById(id: EntityId | string): Promise<AiTranslationRow | null> {
@@ -255,7 +277,10 @@ export class AiTranslationRepository extends BaseRepository {
   }
 
   async upsert(
-    input: Omit<AiTranslationRow, 'id' | 'refId' | 'createdAt'> & {
+    input: Omit<
+      AiTranslationRow,
+      'id' | 'refId' | 'createdAt' | 'updatedAt'
+    > & {
       id?: EntityId | string
       refId: EntityId | string
     },
@@ -276,6 +301,7 @@ export class AiTranslationRepository extends BaseRepository {
       content: input.content,
       sourceBlockSnapshots: input.sourceBlockSnapshots,
       sourceMetaHashes: input.sourceMetaHashes,
+      updatedAt: new Date(),
     }
     return this.db.transaction(async (tx) => {
       await acquireContentFormatTransitionLock(tx, {
@@ -364,6 +390,7 @@ export class AiTranslationRepository extends BaseRepository {
       update.sourceBlockSnapshots = patch.sourceBlockSnapshots
     if (patch.sourceMetaHashes !== undefined)
       update.sourceMetaHashes = patch.sourceMetaHashes
+    update.updatedAt = patch.updatedAt ?? new Date()
     const [row] = await this.db
       .update(aiTranslations)
       .set(update)

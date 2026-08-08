@@ -19,6 +19,7 @@ export const aiTranslations = pgTable(
   {
     id: pkText(),
     createdAt: createdAt(),
+    updatedAt: updatedAt(),
     hash: text('hash').notNull(),
     refId: refText('ref_id').notNull(),
     refType: text('ref_type').notNull(),

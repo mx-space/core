@@ -1,1 +1,223 @@
-{"version":"7","dialect":"postgresql","entries":[{"idx":0,"version":"7","when":1777748001246,"tag":"0000_initial","breakpoints":true},{"idx":1,"version":"7","when":1777827147946,"tag":"0001_even_professor_monster","breakpoints":true},{"idx":2,"version":"7","when":1777888380921,"tag":"0002_add_reader_id_fks","breakpoints":true},{"idx":3,"version":"7","when":1778025826000,"tag":"0003_passkey_transports_text","breakpoints":true},{"idx":4,"version":"7","when":1778026000000,"tag":"0004_heavy_siren","breakpoints":true},{"idx":5,"version":"7","when":1778069140607,"tag":"0005_app_migrations_ledger","breakpoints":true},{"idx":6,"version":"7","when":1778159900719,"tag":"0006_enrichment_locale_column","breakpoints":true},{"idx":7,"version":"7","when":1778159977902,"tag":"0007_enrichment_locale_index_swap","breakpoints":true},{"idx":8,"version":"7","when":1778176563246,"tag":"0008_enrichment_clear_stale_errors","breakpoints":true},{"idx":9,"version":"7","when":1778347379676,"tag":"0009_search_documents_multilang","breakpoints":true},{"idx":10,"version":"7","when":1778433600000,"tag":"0010_notes_nid_identity","breakpoints":true},{"idx":11,"version":"7","when":1778522427325,"tag":"0011_enrichment_screenshots","breakpoints":true},{"idx":12,"version":"7","when":1778950378766,"tag":"0012_blushing_falcon","breakpoints":true},{"idx":13,"version":"7","when":1779035095334,"tag":"0013_device_codes_table","breakpoints":true},{"idx":14,"version":"7","when":1779380000000,"tag":"0014_enrichment_captures","breakpoints":true},{"idx":15,"version":"7","when":1779900207819,"tag":"0015_blurhash_to_thumbhash","breakpoints":true},{"idx":16,"version":"7","when":1779990739617,"tag":"0016_milky_mystique","breakpoints":true},{"idx":17,"version":"7","when":1780099200000,"tag":"0017_ai_provider_type_collapse","breakpoints":true},{"idx":18,"version":"7","when":1780358400000,"tag":"0018_ai_agent_conversations_rewrite","breakpoints":true},{"idx":19,"version":"7","when":1780531200000,"tag":"0019_ai_agent_conversation_title","breakpoints":true},{"idx":20,"version":"7","when":1780704000000,"tag":"0020_comments_owner_reply_and_country","breakpoints":true},{"idx":21,"version":"7","when":1781113042176,"tag":"0021_normalize-ai-lang-keys","breakpoints":true},{"idx":22,"version":"7","when":1781935200000,"tag":"0022_snippet_vfs","breakpoints":true},{"idx":23,"version":"7","when":1784178270027,"tag":"0023_companion_devices_pairings","breakpoints":true},{"idx":24,"version":"7","when":1784371077025,"tag":"0024_membership_billing_tables","breakpoints":true},{"idx":25,"version":"7","when":1785226261918,"tag":"0025_drafts_ref_unique","breakpoints":true},{"idx":26,"version":"7","when":1785929805444,"tag":"0026_overconfident_medusa","breakpoints":true},{"idx":27,"version":"7","when":1786088795437,"tag":"0027_clean_vindicator","breakpoints":true},{"idx":28,"version":"7","when":1786176000000,"tag":"0028_ai_tts","breakpoints":true},{"idx":29,"version":"7","when":1786262400000,"tag":"0029_ai_generation_metrics","breakpoints":true}]}
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1777748001246,
+      "tag": "0000_initial",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777827147946,
+      "tag": "0001_even_professor_monster",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777888380921,
+      "tag": "0002_add_reader_id_fks",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778025826000,
+      "tag": "0003_passkey_transports_text",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778026000000,
+      "tag": "0004_heavy_siren",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778069140607,
+      "tag": "0005_app_migrations_ledger",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778159900719,
+      "tag": "0006_enrichment_locale_column",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778159977902,
+      "tag": "0007_enrichment_locale_index_swap",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778176563246,
+      "tag": "0008_enrichment_clear_stale_errors",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778347379676,
+      "tag": "0009_search_documents_multilang",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778433600000,
+      "tag": "0010_notes_nid_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1778522427325,
+      "tag": "0011_enrichment_screenshots",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1778950378766,
+      "tag": "0012_blushing_falcon",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1779035095334,
+      "tag": "0013_device_codes_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1779380000000,
+      "tag": "0014_enrichment_captures",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1779900207819,
+      "tag": "0015_blurhash_to_thumbhash",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1779990739617,
+      "tag": "0016_milky_mystique",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1780099200000,
+      "tag": "0017_ai_provider_type_collapse",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1780358400000,
+      "tag": "0018_ai_agent_conversations_rewrite",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1780531200000,
+      "tag": "0019_ai_agent_conversation_title",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1780704000000,
+      "tag": "0020_comments_owner_reply_and_country",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1781113042176,
+      "tag": "0021_normalize-ai-lang-keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1781935200000,
+      "tag": "0022_snippet_vfs",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1784178270027,
+      "tag": "0023_companion_devices_pairings",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784371077025,
+      "tag": "0024_membership_billing_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1785226261918,
+      "tag": "0025_drafts_ref_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1785929805444,
+      "tag": "0026_overconfident_medusa",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1786088795437,
+      "tag": "0027_clean_vindicator",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1786176000000,
+      "tag": "0028_ai_tts",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1786262400000,
+      "tag": "0029_ai_generation_metrics",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1786216457912,
+      "tag": "0030_smooth_ultragirl",
+      "breakpoints": true
+    }
+  ]
+}

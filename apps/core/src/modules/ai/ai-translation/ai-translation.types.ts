@@ -54,7 +54,13 @@ export interface AiTranslationRow {
   sourceBlockSnapshots: unknown
   sourceMetaHashes: unknown
   createdAt: Date
+  updatedAt: Date | null
   generationMetrics?: GenerationMetricsDto | null
+}
+
+export interface AiTranslationRevision {
+  createdAt: Date
+  updatedAt: Date | null
 }
 
 export interface TranslationEntryRow {
