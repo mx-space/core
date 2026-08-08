@@ -1,9 +1,21 @@
+# [13.23.0](https://github.com/mx-space/core/compare/v13.22.0...v13.23.0) (2026-08-08)
+
+
+### Bug Fixes
+
+* **migration:** restore monotonic timestamp for 0028_ai_tts ([c3ff266](https://github.com/mx-space/core/commit/c3ff266ba0c0c3a4d73e6b282873f54a8ce6e54f))
+
+
+### Features
+
+* **ai-tts:** per-block AI narration for articles ([#2781](https://github.com/mx-space/core/issues/2781)) ([c4c4648](https://github.com/mx-space/core/commit/c4c4648bfccc34eba13bf02a11d2e843d78d900d))
+
 # [13.22.0](https://github.com/mx-space/core/compare/v13.21.0...v13.22.0) (2026-08-07)
 
 
 ### Features
 
-* add Space iOS admin app and push delivery ([#2783](https://github.com/mx-space/core/pull/2783)) ([4afcdde](https://github.com/mx-space/core/commit/4afcdde3ed4d2880f622bc3dc918503f5e8e5158))
+* add Space iOS admin app and push delivery ([#2783](https://github.com/mx-space/core/issues/2783)) ([4afcdde](https://github.com/mx-space/core/commit/4afcdde3ed4d2880f622bc3dc918503f5e8e5158))
 
 # [13.21.0](https://github.com/mx-space/core/compare/v13.20.1...v13.21.0) (2026-08-06)
 
@@ -670,7 +682,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 
 * **recently:** URL-keyed enrichment map, drop typed entries ([#2726](https://github.com/mx-space/core/issues/2726)) ([91b8a47](https://github.com/mx-space/core/commit/91b8a47469e9b9f96016b7aa3651a2ffa6669719))
 
-# [12.6.0](https://github.com/mx-space/core/compare/v0.7.0...v12.6.0) (2026-05-15)
+# [12.6.0](https://github.com/mx-space/core/compare/v12.5.4...v12.6.0) (2026-05-15)
 
 
 ### Features
@@ -1331,7 +1343,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 * **schema:** enhance partial schemas for notes, pages, and posts with new fields ([f66c9ed](https://github.com/mx-space/core/commit/f66c9ed9cca1091730985813334adccb9462affd))
 * 更新文件上传前缀支持模板占位符，增强灵活性 ([#2584](https://github.com/mx-space/core/issues/2584)) ([2b5354a](https://github.com/mx-space/core/commit/2b5354a6f907947993dda64733e8bbd62c6cc62d))
 
-# [10.2.0](https://github.com/mx-space/core/compare/v10.1.10...v10.2.0) (2026-03-08)
+# [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
 
 
 ### Features

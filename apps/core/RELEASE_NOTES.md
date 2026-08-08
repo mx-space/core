@@ -1,32 +1,27 @@
 ## TL;DR
 
-Space gains a native iOS administration app and secure push delivery through a separately deployable relay.
+Articles can now be narrated block-by-block with AI-generated audio, complete with an admin management surface and entitlement-aware public playback.
 
 ## Highlights
 
-**Administration from iPhone.** The native Space app now supports device-authorization pairing, dashboard statistics, comment review, quick note and say publishing, and file-library access. Mobile-specific API views provide the data needed by these workflows without requiring the full web administration interface, while the checked-in OpenAPI contract keeps the Swift packages and server routes aligned.
+AI Text-to-Speech turns any post, note, or page into a spoken version, synthesized one content block at a time through any OpenAI-compatible speech endpoint. Each block is stored as a content-addressed audio object, so unchanged text is reused across regenerations and only stale segments are re-synthesized — keeping repeat runs fast and cheap. Narration availability is advertised on every article detail response via a `tts` meta flag, so frontends can surface a play control only when audio actually exists.
 
-**Privacy-preserving push delivery.** mx-core can register devices and queue notification events through an independently deployed Push Relay. The relay receives only the minimum comment resource identifier instead of comment text, author details, email addresses, IP addresses, or user-agent data. Delivery credentials are encrypted at rest, and relay requests are limited to explicit server-controlled HTTPS origins.
+Reader access mirrors the existing paywall exactly. The public narration endpoint runs the same membership and password checks as article visibility, so premium content is gated consistently whether a reader is hitting text or audio. Site owners, active members, and entitled readers get playback; everyone else sees narration as unavailable, with no leak through the shared cache.
 
-**Repeatable TestFlight delivery.** The repository now includes a GitHub Actions workflow for signed iOS archives and TestFlight uploads. It runs automatically only when mobile-related files change, remains available for manual dispatch, and uses read-only repository permissions. This keeps routine server changes from consuming Apple build capacity while preserving an auditable release path for the mobile application.
+On the admin side, a generation panel inside the editor and a dedicated fleet management page cover the full lifecycle: enqueue or force-regenerate per article or in bulk, inspect segments on a timeline, resolve titles across the whole list, and delete with storage cleanup. AI quick-action entries are also added to the Note and Post context menus alongside summary, insights, and translation.
 
 ## Changes
 
 ### Features
-
-- Manage a Space instance from the native iOS application, including pairing, dashboard, moderation, publishing, and file workflows ([#2783](https://github.com/mx-space/core/pull/2783))
-- Register mobile installations and deliver privacy-minimized comment notifications through the standalone Push Relay ([#2783](https://github.com/mx-space/core/pull/2783))
-- Export and verify the mobile OpenAPI contract so server and Swift models remain synchronized ([#2783](https://github.com/mx-space/core/pull/2783))
-- Build and upload signed iOS archives through a mobile-scoped or manually dispatched TestFlight workflow ([#2783](https://github.com/mx-space/core/pull/2783))
+- **ai-tts:** per-block AI narration for articles ([#2781](https://github.com/mx-space/core/pull/2781)) — configurable OpenAI-compatible speech provider, content-addressed reuse, public entitlement-aware playback, `tts` article meta, and a full admin generation/management surface.
 
 ### Bug Fixes
-
-- Reject untrusted or malformed Push Relay destinations before activation, deactivation, and event delivery ([#2783](https://github.com/mx-space/core/pull/2783))
+- **migration:** corrected an out-of-order timestamp on the `0028_ai_tts` migration so the boot-time schema-currency check detects drift correctly ([c3ff266](https://github.com/mx-space/core/commit/c3ff266ba0c0c3a4d73e6b282873f54a8ce6e54f))
 
 ## Upgrade Notes
 
-- Existing deployments remain unaffected when push delivery is unused. To enable it, deploy and migrate the standalone Push Relay, enable mx-core encryption with a stable `MX_ENCRYPT_KEY`, and set `MX_PUSH_RELAY_ORIGINS` to the exact trusted HTTPS relay origins. The mx-core `0027_clean_vindicator` migration creates the new push source, binding, and delivery tables during the normal database migration process.
+No manual operator action required. The `0028_ai_tts` migration applies automatically via the normal `migrate.mjs` release step; its timestamp correction only affects the recorded `created_at` on fresh applies and does not change SQL execution order or any migration hash.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.21.0...v13.22.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.22.0...v13.23.0
