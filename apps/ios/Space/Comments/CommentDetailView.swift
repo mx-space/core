@@ -103,28 +103,35 @@ struct CommentDetailView: View {
                     .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: Radius.control))
                 }
 
+            }
+            .padding(Spacing.regular)
+        }
+        .safeAreaInset(edge: .bottom) {
+            VStack(alignment: .leading, spacing: Spacing.tight) {
                 if let error = store.errorMessage {
                     Label(error, systemImage: "exclamationmark.triangle")
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
-            }
-            .padding(Spacing.regular)
-        }
-        .safeAreaInset(edge: .bottom) {
-            HStack(alignment: .bottom, spacing: Spacing.tight) {
-                TextField("Reply as owner", text: $reply, axis: .vertical)
-                    .lineLimit(1...5)
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityIdentifier("comments.reply")
-                Button("Send", systemImage: "arrow.up.circle.fill") {
-                    let text = reply.trimmingCharacters(in: .whitespacesAndNewlines)
-                    Task { if await store.reply(text) { reply = "" } }
+                HStack(alignment: .bottom, spacing: Spacing.tight) {
+                    TextField("Reply as owner", text: $reply, axis: .vertical)
+                        .lineLimit(1...5)
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityIdentifier("comments.reply")
+                    if store.isSending {
+                        ProgressView()
+                            .frame(width: 28, height: 28)
+                    } else {
+                        Button("Send", systemImage: "arrow.up.circle.fill") {
+                            let text = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+                            Task { if await store.reply(text) { reply = "" } }
+                        }
+                        .labelStyle(.iconOnly)
+                        .font(.title2)
+                        .disabled(reply.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .accessibilityIdentifier("comments.send")
+                    }
                 }
-                .labelStyle(.iconOnly)
-                .font(.title2)
-                .disabled(reply.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || store.isSending)
-                .accessibilityIdentifier("comments.send")
             }
             .padding(Spacing.regular)
             .background(.bar)
@@ -136,13 +143,13 @@ struct CommentDetailView: View {
         ToolbarItem(placement: .topBarTrailing) {
             Menu("Comment actions", systemImage: "ellipsis.circle") {
                 Button("Open on Web", systemImage: "safari", action: openWeb)
-                if store.commentState == 0 {
+                if store.commentState == .unread {
                     Button("Mark as Read", systemImage: "envelope.open") {
                         Task {
                             if await store.markRead(true) { onMutation() }
                         }
                     }
-                } else if store.commentState != 2 {
+                } else if store.commentState != .junk {
                     Button("Mark as Unread", systemImage: "envelope.badge") {
                         Task {
                             if await store.markRead(false) { onMutation() }
@@ -161,17 +168,17 @@ struct CommentDetailView: View {
     }
 
     private func statusTitle(_ state: Int) -> String {
-        switch state {
-        case 0: "Unread"
-        case 2: "Junk"
+        switch CommentState(rawValue: state) {
+        case .unread: "Unread"
+        case .junk: "Junk"
         default: "Read"
         }
     }
 
     private func statusColor(_ state: Int) -> Color {
-        switch state {
-        case 0: .accentColor
-        case 2: .red
+        switch CommentState(rawValue: state) {
+        case .unread: .accentColor
+        case .junk: .red
         default: .secondary
         }
     }

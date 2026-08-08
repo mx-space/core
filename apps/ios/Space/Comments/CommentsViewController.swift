@@ -62,24 +62,39 @@ final class CommentsViewController: UIViewController {
         configuration.backgroundColor = .systemGroupedBackground
         configuration.headerMode = .supplementary
         configuration.leadingSwipeActionsConfigurationProvider = { [weak self] indexPath in
-            guard let self, let id = dataSource.itemIdentifier(for: indexPath) else { return nil }
-            let read = UIContextualAction(style: .normal, title: "Read") { _, _, done in
+            guard
+                let self,
+                let id = dataSource.itemIdentifier(for: indexPath),
+                let comment = store.comments.first(where: { $0.id == id })
+            else { return nil }
+            let (title, icon, target): (String, String, CommentState) =
+                switch CommentState(rawValue: comment.state) {
+                case .unread: ("Read", "envelope.open", .read)
+                case .junk: ("Not Junk", "tray.and.arrow.up", .read)
+                default: ("Unread", "envelope.badge", .unread)
+                }
+            let action = UIContextualAction(style: .normal, title: title) { _, _, done in
                 Task { @MainActor in
-                    await self.store.setState(id: id, state: 1)
+                    await self.store.setState(id: id, state: target)
                     self.applySnapshot()
                     self.updateFilterTitles()
                     done(true)
                 }
             }
-            read.backgroundColor = .systemBlue
-            read.image = UIImage(systemName: "envelope.open")
-            return UISwipeActionsConfiguration(actions: [read])
+            action.backgroundColor = .systemBlue
+            action.image = UIImage(systemName: icon)
+            return UISwipeActionsConfiguration(actions: [action])
         }
         configuration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
-            guard let self, let id = dataSource.itemIdentifier(for: indexPath) else { return nil }
+            guard
+                let self,
+                let id = dataSource.itemIdentifier(for: indexPath),
+                let comment = store.comments.first(where: { $0.id == id }),
+                CommentState(rawValue: comment.state) != .junk
+            else { return nil }
             let junk = UIContextualAction(style: .destructive, title: "Junk") { _, _, done in
                 Task { @MainActor in
-                    await self.store.setState(id: id, state: 2)
+                    await self.store.setState(id: id, state: .junk)
                     self.applySnapshot()
                     self.updateFilterTitles()
                     done(true)
@@ -155,7 +170,6 @@ final class CommentsViewController: UIViewController {
         refreshControl.endRefreshing()
         applySnapshot()
         updateFilterTitles()
-        showErrorIfNeeded()
     }
 
     private func applySnapshot() {
@@ -166,6 +180,7 @@ final class CommentsViewController: UIViewController {
             snapshot.appendSections([section])
             snapshot.appendItems(ids, toSection: section)
         }
+        snapshot.reconfigureItems(snapshot.itemIdentifiers)
         dataSource.apply(snapshot, animatingDifferences: true)
         updateEmptyState()
     }
@@ -187,19 +202,26 @@ final class CommentsViewController: UIViewController {
             return
         }
         var configuration = UIContentUnavailableConfiguration.empty()
-        configuration.image = UIImage(systemName: "tray")
-        configuration.text = "No \(store.filter.rawValue) comments"
-        configuration.secondaryText = store.filter == .unread
-            ? "New comments that need attention will appear here."
-            : "Choose another filter to review more comments."
+        if let message = store.errorMessage {
+            configuration.image = UIImage(systemName: "exclamationmark.triangle")
+            configuration.text = "Could not load comments"
+            configuration.secondaryText = message
+            var retry = UIButton.Configuration.plain()
+            retry.title = "Retry"
+            configuration.button = retry
+            configuration.buttonProperties.primaryAction = UIAction { [weak self] _ in
+                Task { await self?.reload() }
+            }
+        } else {
+            configuration.image = UIImage(systemName: "tray")
+            configuration.text = store.filter == .all
+                ? "No comments"
+                : "No \(store.filter.rawValue) comments"
+            configuration.secondaryText = store.filter == .unread
+                ? "New comments that need attention will appear here."
+                : "Choose another filter to review more comments."
+        }
         collectionView.backgroundView = UIContentUnavailableView(configuration: configuration)
-    }
-
-    private func showErrorIfNeeded() {
-        guard let message = store.errorMessage, presentedViewController == nil else { return }
-        let alert = UIAlertController(title: "Comments", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
     }
 
     func focus(on filter: CommentFilter) {

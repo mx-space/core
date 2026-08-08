@@ -17,13 +17,13 @@ struct ActivityFeedCard: View {
     var limit = 8
 
     private var events: [Event] {
-        let comments = recent.comment.map {
+        let comments = recent.comment.enumerated().map { index, item in
             Event(
-                id: "comment-\($0.id ?? $0.createdAt.timeIntervalSince1970.description)",
+                id: "comment-\(item.id ?? String(index))",
                 kind: .comment,
-                title: "\($0.author) commented",
-                detail: $0.title ?? $0.text,
-                date: $0.createdAt
+                title: "\(item.author) commented",
+                detail: item.title ?? item.text,
+                date: item.createdAt
             )
         }
         let likes = recent.like.map {

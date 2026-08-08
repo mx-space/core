@@ -76,13 +76,14 @@ private struct StatusHeader: View {
             Image(systemName: "circle.fill")
                 .font(.caption2)
                 .foregroundStyle(stat.online > 0 ? .green : .secondary)
-            Text(stat.online > 0 ? "Your site is active" : "No visitors online")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            Text(
+                stat.online > 0
+                    ? "^[\(stat.online) visitor](inflect: true) online now"
+                    : "No visitors right now"
+            )
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
             Spacer()
-            Text("\(stat.online) online")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
@@ -207,6 +208,13 @@ private struct ScheduledCard: View {
     let notes: [Components.Schemas.Desk.ScheduledNotesPayloadPayload]
     let openNotes: () -> Void
 
+    private static let isoFractional: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+    private static let iso = ISO8601DateFormatter()
+
     var body: some View {
         Button(action: openNotes) {
             VStack(alignment: .leading, spacing: Spacing.tight) {
@@ -221,7 +229,7 @@ private struct ScheduledCard: View {
                     HStack {
                         Text(note.title ?? "Untitled").lineLimit(1)
                         Spacer()
-                        Text(note.publicAt)
+                        publishDate(note.publicAt)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -231,5 +239,12 @@ private struct ScheduledCard: View {
             .background(.background, in: .rect(cornerRadius: Radius.card))
         }
         .buttonStyle(.plain)
+    }
+
+    private func publishDate(_ raw: String) -> Text {
+        guard let date = Self.isoFractional.date(from: raw) ?? Self.iso.date(from: raw) else {
+            return Text(raw)
+        }
+        return Text(date, format: .relative(presentation: .named))
     }
 }

@@ -3,12 +3,15 @@ import SpaceUI
 import UIKit
 
 final class ServerSetupViewController: UIViewController {
+    private let scrollView = UIScrollView()
     private let stepLabel = UILabel()
     private let headingLabel = UILabel()
     private let field = UITextField()
     private let continueButton = PrimaryGlassButton(title: "Continue")
     private let statusLabel = UILabel()
     private let spinner = UIActivityIndicatorView(style: .medium)
+
+    private static let hint = "Enter the address of your mx-core instance. Public servers must use HTTPS."
 
     private let probe = HealthProbe()
     private let onReady: (ServerEndpoint) -> Void
@@ -48,8 +51,9 @@ final class ServerSetupViewController: UIViewController {
 
         statusLabel.numberOfLines = 0
         statusLabel.font = .preferredFont(forTextStyle: .footnote)
+        statusLabel.adjustsFontForContentSizeCategory = true
         statusLabel.textColor = .secondaryLabel
-        statusLabel.text = "Enter the address of your mx-core instance. Public servers must use HTTPS."
+        statusLabel.text = Self.hint
 
         let stack = UIStackView(arrangedSubviews: [
             stepLabel,
@@ -63,20 +67,37 @@ final class ServerSetupViewController: UIViewController {
         stack.spacing = Spacing.regular
         stack.setCustomSpacing(Spacing.section, after: headingLabel)
         stack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stack)
+
+        scrollView.alwaysBounceVertical = true
+        scrollView.keyboardDismissMode = .onDrag
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+        scrollView.addSubview(stack)
 
         NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            stack.topAnchor.constraint(
+                equalTo: scrollView.contentLayoutGuide.topAnchor,
+                constant: Spacing.loose
+            ),
+            stack.bottomAnchor.constraint(
+                equalTo: scrollView.contentLayoutGuide.bottomAnchor,
+                constant: -Spacing.loose
+            ),
             stack.leadingAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.leadingAnchor,
+                equalTo: scrollView.contentLayoutGuide.leadingAnchor,
                 constant: Spacing.loose
             ),
             stack.trailingAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.trailingAnchor,
+                equalTo: scrollView.contentLayoutGuide.trailingAnchor,
                 constant: -Spacing.loose
             ),
-            stack.topAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.topAnchor,
-                constant: Spacing.loose
+            stack.widthAnchor.constraint(
+                equalTo: scrollView.frameLayoutGuide.widthAnchor,
+                constant: -Spacing.loose * 2
             ),
         ])
     }
@@ -127,9 +148,15 @@ final class ServerSetupViewController: UIViewController {
         continueButton.isEnabled = !busy
         field.isEnabled = !busy
         busy ? spinner.startAnimating() : spinner.stopAnimating()
+        if busy {
+            statusLabel.text = Self.hint
+            statusLabel.textColor = .secondaryLabel
+        }
     }
 
     private func show(_ message: String) {
         statusLabel.text = message
+        statusLabel.textColor = .systemRed
+        UIAccessibility.post(notification: .announcement, argument: message)
     }
 }

@@ -33,7 +33,7 @@ struct RecentlyRowView: View {
                     .foregroundStyle(.tertiary)
             }
             Spacer()
-            Image(systemName: "chevron.right")
+            Image(systemName: "pencil")
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(.tertiary)
                 .accessibilityHidden(true)

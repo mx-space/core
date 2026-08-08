@@ -17,9 +17,9 @@ final class CommentDetailStore {
     private let service: CommentService
     private let id: String
 
-    var commentState: Int? {
+    var commentState: CommentState? {
         guard case let .loaded(comment) = state else { return nil }
-        return comment.state
+        return CommentState(rawValue: comment.state)
     }
 
     init(service: CommentService, seed: Components.Schemas.CommentRow) {
@@ -56,14 +56,14 @@ final class CommentDetailStore {
     }
 
     func markJunk() async -> Bool {
-        await setState(2, reload: false)
+        await setState(.junk, reload: false)
     }
 
     func markRead(_ read: Bool) async -> Bool {
-        await setState(read ? 1 : 0, reload: true)
+        await setState(read ? .read : .unread, reload: true)
     }
 
-    private func setState(_ newState: Int, reload: Bool) async -> Bool {
+    private func setState(_ newState: CommentState, reload: Bool) async -> Bool {
         do {
             try await service.setState(id: id, state: newState)
             if reload { state = .loaded(try await service.detail(id: id)) }

@@ -101,7 +101,7 @@ final class RootTabBarController: UITabBarController {
 
     private func showMovement() {
         guard let navigation = viewControllers?.first as? UINavigationController else { return }
-        if navigation.topViewController?.title == "Movement" { return }
+        if navigation.topViewController is UIHostingController<MovementView> { return }
         navigation.pushViewController(makeMovement(), animated: true)
     }
 
@@ -151,9 +151,7 @@ final class RootTabBarController: UITabBarController {
 
     private func presentGlobalComposer() {
         guard let presenter = selectedViewController else { return }
-        recentlyController.presentComposer(from: presenter) { [weak self] in
-            self?.selectedIndex = 2
-        }
+        recentlyController.presentComposer(from: presenter)
     }
 
     private func siteMenu(for presenter: UIViewController) -> UIBarButtonItem {
@@ -178,7 +176,19 @@ final class RootTabBarController: UITabBarController {
                 title: "Unpair",
                 image: UIImage(systemName: "rectangle.portrait.and.arrow.right"),
                 attributes: .destructive
-            ) { _ in AppContainer.shared.unpair() }
+            ) { [weak presenter] _ in
+                guard let presenter else { return }
+                let alert = UIAlertController(
+                    title: "Unpair from this site?",
+                    message: "Space forgets this server and its credentials. You will need to pair again.",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                alert.addAction(UIAlertAction(title: "Unpair", style: .destructive) { _ in
+                    AppContainer.shared.unpair()
+                })
+                presenter.present(alert, animated: true)
+            }
         )
         let menu = UIMenu(children: actions)
         let item = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)

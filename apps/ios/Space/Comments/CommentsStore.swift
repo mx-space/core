@@ -36,9 +36,15 @@ final class CommentsStore {
         isLoading = false
     }
 
-    func setState(id: String, state: Int) async {
+    func setState(id: String, state: CommentState) async {
         let snapshot = comments
-        comments.removeAll { $0.id == id }
+        if filter == .all, state != .junk {
+            if let index = comments.firstIndex(where: { $0.id == id }) {
+                comments[index].state = state.rawValue
+            }
+        } else {
+            comments.removeAll { $0.id == id }
+        }
         do {
             try await service.setState(id: id, state: state)
             await reload()

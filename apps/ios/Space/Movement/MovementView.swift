@@ -18,6 +18,14 @@ struct MovementView: View {
             case .month: 30
             }
         }
+
+        var title: String {
+            switch self {
+            case .day: "Last 24 hours"
+            case .week: "Last 7 days"
+            case .month: "Last 30 days"
+            }
+        }
     }
 
     @State var store: MovementStore
@@ -66,7 +74,7 @@ struct MovementView: View {
 
     private func content(_ snapshot: MovementSnapshot) -> some View {
         LazyVStack(alignment: .leading, spacing: Spacing.loose) {
-            MovementChartCard(snapshot: snapshot, range: range)
+            MovementChartCard(snapshot: snapshot, range: range, isRefreshing: store.isRefreshing)
             TopReadingCard(items: snapshot.topReadings)
             ActivityFeedCard(recent: snapshot.recent)
 
@@ -95,6 +103,7 @@ private struct MovementPoint: Identifiable {
 private struct MovementChartCard: View {
     let snapshot: MovementSnapshot
     let range: MovementView.Range
+    let isRefreshing: Bool
 
     private var points: [MovementPoint] {
         switch range {
@@ -119,7 +128,15 @@ private struct MovementChartCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.regular) {
-            Text("Pageviews").font(.subheadline).foregroundStyle(.secondary)
+            HStack {
+                Text("Pageviews · \(range.title)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                if isRefreshing {
+                    ProgressView().controlSize(.small)
+                }
+            }
             Text(points.reduce(0) { $0 + $1.value }, format: .number)
                 .font(.largeTitle.weight(.semibold))
                 .monospacedDigit()
@@ -145,9 +162,9 @@ private struct MovementChartCard: View {
             .accessibilityLabel("Pageviews trend")
 
             HStack {
-                metric(todayViews, "Today")
+                metric(todayViews, "Views today")
                 Spacer()
-                metric(snapshot.aggregate.todayIps.count, "Visitors")
+                metric(snapshot.aggregate.todayIps.count, "Visitors today")
                 Spacer()
                 metric(snapshot.aggregate.total.uv, "All-time UV")
             }

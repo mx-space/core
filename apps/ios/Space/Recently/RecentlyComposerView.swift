@@ -9,6 +9,8 @@ struct RecentlyComposerView: View {
     let service: RecentlyService
     let navigationTitle: String
     private let confirmationTitle: String
+    private let initialText: String
+    private let onDirtyChange: ((Bool) -> Void)?
     /// Returns nil on success, or a message to show in place.
     let onSave: (String) async -> String?
 
@@ -18,19 +20,27 @@ struct RecentlyComposerView: View {
     @State private var isResolving = false
     @State private var isPosting = false
     @State private var postFailure: String?
+    @State private var confirmDiscard = false
     @State private var previewTask: Task<Void, Never>?
 
     init(
         service: RecentlyService,
         initialText: String = "",
         navigationTitle: String = "New Recently",
+        onDirtyChange: ((Bool) -> Void)? = nil,
         onSave: @escaping (String) async -> String?
     ) {
         self.service = service
         self.navigationTitle = navigationTitle
         self.confirmationTitle = initialText.isEmpty ? "Publish" : "Save"
+        self.initialText = initialText
+        self.onDirtyChange = onDirtyChange
         self.onSave = onSave
         _text = State(initialValue: initialText)
+    }
+
+    private var isDirty: Bool {
+        text != initialText
     }
 
     var body: some View {
@@ -63,7 +73,13 @@ struct RecentlyComposerView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") {
+                        if isDirty {
+                            confirmDiscard = true
+                        } else {
+                            dismiss()
+                        }
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(confirmationTitle, action: post)
@@ -71,7 +87,18 @@ struct RecentlyComposerView: View {
                         .accessibilityIdentifier("recently.composer.post")
                 }
             }
-            .onChange(of: text) { _, newValue in schedulePreview(for: newValue) }
+            .confirmationDialog(
+                "Discard this draft?",
+                isPresented: $confirmDiscard,
+                titleVisibility: .visible
+            ) {
+                Button("Discard Draft", role: .destructive) { dismiss() }
+                Button("Keep Editing", role: .cancel) {}
+            }
+            .onChange(of: text) { _, newValue in
+                onDirtyChange?(newValue != initialText)
+                schedulePreview(for: newValue)
+            }
             .onDisappear { previewTask?.cancel() }
             .task { isEditorFocused = true }
         }

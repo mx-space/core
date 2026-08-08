@@ -9,6 +9,7 @@ final class PairingCodeViewController: UIViewController {
     private let statusLabel = UILabel()
     private let copyButton = UIButton(configuration: .plain())
     private let openButton = PrimaryGlassButton(title: "Open approval page")
+    private let retryButton = UIButton(configuration: .plain())
     private let spinner = UIActivityIndicatorView(style: .medium)
 
     private let endpoint: ServerEndpoint
@@ -40,7 +41,9 @@ final class PairingCodeViewController: UIViewController {
         stepLabel.textColor = .secondaryLabel
         stepLabel.textAlignment = .center
 
-        codeLabel.font = .monospacedSystemFont(ofSize: 40, weight: .semibold)
+        codeLabel.font = UIFontMetrics(forTextStyle: .largeTitle)
+            .scaledFont(for: .monospacedSystemFont(ofSize: 40, weight: .semibold))
+        codeLabel.adjustsFontForContentSizeCategory = true
         codeLabel.textAlignment = .center
         codeLabel.adjustsFontSizeToFitWidth = true
         codeLabel.accessibilityIdentifier = "pairing.userCode"
@@ -53,7 +56,6 @@ final class PairingCodeViewController: UIViewController {
         statusLabel.font = .preferredFont(forTextStyle: .footnote)
         statusLabel.textColor = .secondaryLabel
         statusLabel.accessibilityIdentifier = "pairing.status"
-        statusLabel.text = "Requesting a code…"
 
         openButton.addTarget(self, action: #selector(openVerification), for: .touchUpInside)
         openButton.isHidden = true
@@ -62,8 +64,13 @@ final class PairingCodeViewController: UIViewController {
         copyButton.addTarget(self, action: #selector(copyCode), for: .touchUpInside)
         copyButton.isHidden = true
 
+        retryButton.setTitle("Request a new code", for: .normal)
+        retryButton.addTarget(self, action: #selector(retry), for: .touchUpInside)
+        retryButton.isHidden = true
+        retryButton.accessibilityIdentifier = "pairing.retry"
+
         let stack = UIStackView(arrangedSubviews: [
-            stepLabel, qrView, codeLabel, copyButton, openButton, statusLabel, spinner,
+            stepLabel, codeLabel, copyButton, openButton, statusLabel, qrView, retryButton, spinner,
         ])
         stack.axis = .vertical
         stack.spacing = Spacing.loose
@@ -84,8 +91,8 @@ final class PairingCodeViewController: UIViewController {
                 equalTo: view.safeAreaLayoutGuide.trailingAnchor,
                 constant: -Spacing.loose
             ),
-            qrView.widthAnchor.constraint(equalToConstant: 220),
-            qrView.heightAnchor.constraint(equalToConstant: 220),
+            qrView.widthAnchor.constraint(equalToConstant: 200),
+            qrView.heightAnchor.constraint(equalToConstant: 200),
             openButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 220),
             stack.bottomAnchor.constraint(
                 lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor,
@@ -93,11 +100,15 @@ final class PairingCodeViewController: UIViewController {
             ),
         ])
 
-        spinner.startAnimating()
-        start()
+        beginPairing()
     }
 
-    private func start() {
+    private func beginPairing() {
+        retryButton.isHidden = true
+        statusLabel.text = "Requesting a code…"
+        statusLabel.textColor = .secondaryLabel
+        spinner.startAnimating()
+        pollTask?.cancel()
         pollTask = Task { @MainActor in
             do {
                 let session = try await pairing.requestSession()
@@ -112,6 +123,9 @@ final class PairingCodeViewController: UIViewController {
             } catch {
                 spinner.stopAnimating()
                 statusLabel.text = Self.describe(error)
+                statusLabel.textColor = .systemRed
+                retryButton.isHidden = false
+                UIAccessibility.post(notification: .announcement, argument: statusLabel.text)
             }
         }
     }
@@ -123,8 +137,12 @@ final class PairingCodeViewController: UIViewController {
         copyButton.isHidden = false
         statusLabel.text = """
         Open \(session.verificationURL.host() ?? "the approval page") in a browser, \
-        sign in, and approve this code.
+        sign in, and approve this code. The QR code opens the same page on another device.
         """
+    }
+
+    @objc private func retry() {
+        beginPairing()
     }
 
     @objc private func openVerification() {
@@ -135,7 +153,12 @@ final class PairingCodeViewController: UIViewController {
     @objc private func copyCode() {
         guard let code = session?.userCode else { return }
         UIPasteboard.general.string = code
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
         copyButton.setTitle("Copied", for: .normal)
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1.5))
+            copyButton.setTitle("Copy code", for: .normal)
+        }
     }
 
     private static func describe(_ error: any Error) -> String {

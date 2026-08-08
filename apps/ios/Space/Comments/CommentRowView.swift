@@ -5,10 +5,14 @@ import SwiftUI
 struct CommentRowView: View {
     let comment: Components.Schemas.CommentRow
 
+    private var isUnread: Bool {
+        CommentState(rawValue: comment.state) == .unread
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: Spacing.regular) {
             Circle()
-                .fill(comment.state == 0 ? Color.accentColor : Color.clear)
+                .fill(isUnread ? Color.accentColor : Color.clear)
                 .frame(width: 7, height: 7)
                 .padding(.top, 7)
                 .accessibilityHidden(true)
@@ -38,7 +42,7 @@ struct CommentRowView: View {
         .padding(.vertical, Spacing.tight)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
-            "\(comment.state == 0 ? "Unread" : "Read"), "
+            "\(isUnread ? "Unread" : "Read"), "
                 + "\(comment.author ?? "Visitor"), \(comment.text)"
         )
     }

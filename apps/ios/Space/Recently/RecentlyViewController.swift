@@ -35,7 +35,7 @@ final class RecentlyViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .systemGroupedBackground
         navigationItem.largeTitleDisplayMode = .always
 
         configureCollectionView()
@@ -115,7 +115,6 @@ final class RecentlyViewController: UIViewController {
         await store.reload()
         refreshControl.endRefreshing()
         applySnapshot()
-        showErrorIfNeeded()
     }
 
     @MainActor
@@ -127,6 +126,7 @@ final class RecentlyViewController: UIViewController {
             snapshot.appendSections([section])
             snapshot.appendItems(ids, toSection: section)
         }
+        snapshot.reconfigureItems(snapshot.itemIdentifiers)
         dataSource.apply(snapshot, animatingDifferences: true)
         updateEmptyState()
     }
@@ -144,18 +144,22 @@ final class RecentlyViewController: UIViewController {
             return
         }
         var configuration = UIContentUnavailableConfiguration.empty()
-        configuration.image = UIImage(systemName: "text.bubble")
-        configuration.text = "No recently entries"
-        configuration.secondaryText = "Use the create button below to publish a short update."
+        if let message = store.errorMessage {
+            configuration.image = UIImage(systemName: "exclamationmark.triangle")
+            configuration.text = "Could not load posts"
+            configuration.secondaryText = message
+            var retry = UIButton.Configuration.plain()
+            retry.title = "Retry"
+            configuration.button = retry
+            configuration.buttonProperties.primaryAction = UIAction { [weak self] _ in
+                Task { await self?.reload() }
+            }
+        } else {
+            configuration.image = UIImage(systemName: "text.bubble")
+            configuration.text = "No posts yet"
+            configuration.secondaryText = "Use the create button below to publish a short update."
+        }
         collectionView.backgroundView = UIContentUnavailableView(configuration: configuration)
-    }
-
-    @MainActor
-    private func showErrorIfNeeded() {
-        guard let message = store.errorMessage else { return }
-        let alert = UIAlertController(title: "Recently", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
     }
 
     func presentComposer(
@@ -163,12 +167,14 @@ final class RecentlyViewController: UIViewController {
         entry: RecentlyCard? = nil,
         onSaved: (() -> Void)? = nil
     ) {
+        weak var host: UIViewController?
         let composer = RecentlyComposerView(
             service: service,
             initialText: entry?.content ?? "",
-            navigationTitle: entry == nil ? "New Recently" : "Edit Recently"
+            navigationTitle: entry == nil ? "New Recently" : "Edit Recently",
+            onDirtyChange: { dirty in host?.isModalInPresentation = dirty }
         ) { [weak self] content in
-            guard let self else { return "Composer lost its list" }
+            guard let self else { return "Could not save. Try again." }
             let failure = await store.save(id: entry?.id, content: content)
             if failure == nil {
                 if isViewLoaded { applySnapshot() }
@@ -177,7 +183,7 @@ final class RecentlyViewController: UIViewController {
             return failure
         }
         let controller = UIHostingController(rootView: composer)
-        controller.modalPresentationStyle = .fullScreen
+        host = controller
         (presenter ?? self).present(controller, animated: true)
     }
 

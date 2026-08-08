@@ -5,6 +5,7 @@ final class CommentFilterBar: UIView {
     private let filters = CommentFilter.allCases
     private let scrollView = UIScrollView()
     private let stack = UIStackView()
+    private let separator = UIView()
     private var buttons: [UIButton] = []
 
     var onSelection: ((CommentFilter) -> Void)?
@@ -20,12 +21,20 @@ final class CommentFilterBar: UIView {
         stack.alignment = .center
         stack.spacing = 8
 
+        separator.backgroundColor = .separator
+
         addSubview(scrollView)
+        addSubview(separator)
         scrollView.addSubview(stack)
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        separator.translatesAutoresizingMaskIntoConstraints = false
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
+            separator.leadingAnchor.constraint(equalTo: leadingAnchor),
+            separator.trailingAnchor.constraint(equalTo: trailingAnchor),
+            separator.bottomAnchor.constraint(equalTo: bottomAnchor),
+            separator.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
             scrollView.topAnchor.constraint(equalTo: topAnchor),
             scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
             scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
