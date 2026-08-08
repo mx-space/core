@@ -7,7 +7,7 @@ import {
   zPaginationPage,
   zPaginationSize,
 } from '~/common/zod'
-import { TaskStatus } from '~/processors/task-queue'
+import { TaskStatus } from '~/processors/task-queue/task-queue.types'
 
 const taskStatusEnum = z.enum([
   TaskStatus.Pending,

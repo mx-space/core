@@ -4,6 +4,9 @@ import path, { resolve } from 'node:path'
 import swc from 'unplugin-swc'
 import tsconfigPath from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
+import zodCompiler from 'zod-compiler/vite'
+
+import { zodCompilerOptions } from './zod-compiler.config'
 
 if (
   existsSync(
@@ -49,6 +52,7 @@ export default defineConfig({
   },
 
   plugins: [
+    zodCompiler(zodCompilerOptions),
     swc.vite(),
 
     tsconfigPath({

@@ -3,6 +3,9 @@ import { resolve } from 'node:path'
 import swc from 'unplugin-swc'
 import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import zodCompiler from 'zod-compiler/vite'
+
+import { zodCompilerOptions } from './zod-compiler.config'
 
 // Node decodes a module's source into a one-byte string only when it is pure
 // ASCII; a single char above 0x7f flips the whole source to UTF-16, and V8
@@ -36,6 +39,7 @@ export default defineConfig(({ command }) => {
       __TEST__: 'false',
     },
     plugins: [
+      zodCompiler(zodCompilerOptions),
       swc.vite(),
       tsconfigPaths({
         projects: [resolve(__dirname, './tsconfig.json')],
