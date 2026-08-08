@@ -13,6 +13,7 @@ export const REDIS_CLIENT_OPTIONS: RedisOptions = {
   connectTimeout: 10000,
   maxRetriesPerRequest: 3,
   enableOfflineQueue: false,
+  replyMapping: 'legacy',
   retryStrategy(times: number) {
     return Math.min(times * 200, 5000)
   },

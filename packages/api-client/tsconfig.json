@@ -13,10 +13,7 @@
     "paths": {
       "~/*": [
         "*"
-      ],
-      "@core/*": [
-        "../../apps/core/src/*"
-      ],
+      ]
     },
     "resolveJsonModule": true,
     "strict": true,

@@ -103,7 +103,7 @@
     "diff-match-patch": "^1.0.5",
     "dodopayments": "^2.45.1",
     "dotenv": "^17.4.2",
-    "dotenv-expand": "^1000.0.0",
+    "dotenv-expand": "^13.0.0",
     "drizzle-orm": "^0.45.2",
     "ejs": "6.0.1",
     "es-toolkit": "^1.50.0",

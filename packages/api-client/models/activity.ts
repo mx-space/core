@@ -1,4 +1,4 @@
-import type { CollectionRefTypes } from '@core/constants/db.constant'
+import type { CollectionRefTypes } from '@mx-space/db-schema'
 
 import type { CategoryModel } from './category'
 

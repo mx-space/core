@@ -1,5 +1,4 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
-import './map-worker'
 
 import type {
   MapBlockProps,
@@ -23,6 +22,7 @@ import {
   setStopsData,
   unionBounds,
 } from './map-layers'
+import { loadMaplibre } from './map-worker'
 
 const LIGHT_STYLE = 'https://tiles.openfreemap.org/styles/positron'
 const DARK_STYLE = 'https://tiles.openfreemap.org/styles/dark'
@@ -117,7 +117,7 @@ export function MapBlock({
     let map: MapLibreMap | null = null
 
     void (async () => {
-      const maplibre = await import('maplibre-gl')
+      const maplibre = await loadMaplibre()
       if (cancelled) return
 
       styleRef.current = {
