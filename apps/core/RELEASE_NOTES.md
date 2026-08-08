@@ -1,15 +1,17 @@
 ## TL;DR
 
-Fixes Gemini text-to-speech language steering and refreshes core dependencies across five major version upgrades.
+Fixes TTS narration staleness detection after re-translation, and compiles Zod validation schemas ahead of time for lower request overhead.
 
 ## Changes
 
 ### Bug Fixes
-- Gemini TTS now respects the requested output language instead of defaulting to the model's detection ([3c6b476](https://github.com/mx-space/core/commit/3c6b476861fa44bfa8c8ef1c8b4174ce2f21fdbc))
+
+- AI narrations voiced from a translated article are now correctly flagged as stale when the translation is regenerated or hand-edited without touching the original article — readers see the "content edited" hint instead of silently hearing outdated audio ([dbcbb21](https://github.com/mx-space/core/commit/dbcbb21d8357fcba52ea109645f65959623c7a80))
 
 ### Other
-- Dependency refresh spanning 102 specs, including five major bumps: ioredis 6 (RESP3 by default, with legacy reply mapping preserved), maplibre-gl 6 (ESM-only, dedicated worker URL), motion 13, @antfu/install-pkg 2, and dotenv-expand 1000 ([#2785](https://github.com/mx-space/core/pull/2785)). All upgrades verified via typecheck, admin build, and a Redis pub/sub cross-pod test under RESP3.
+
+- Request-validation Zod schemas are now compiled at build time instead of per process, reducing validation overhead on every request ([6f40b9a](https://github.com/mx-space/core/commit/6f40b9a77e37902082d3c19079e6b20377de9fe5))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.25.0...v13.25.1
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.25.1...v13.25.2

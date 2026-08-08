@@ -1,4 +1,16 @@
-+# [13.25.1](https://github.com/mx-space/core/compare/v13.25.0...v13.25.1) (2026-08-09)
+## [13.25.2](https://github.com/mx-space/core/compare/v13.25.1...v13.25.2) (2026-08-09)
+
+
+### Bug Fixes
+
+* **ai-tts:** mark narration stale when translation is regenerated without article edit ([dbcbb21](https://github.com/mx-space/core/commit/dbcbb21d8357fcba52ea109645f65959623c7a80))
+
+
+### Performance Improvements
+
+* **core:** compile zod schemas ([6f40b9a](https://github.com/mx-space/core/commit/6f40b9a77e37902082d3c19079e6b20377de9fe5))
+
+## [13.25.1](https://github.com/mx-space/core/compare/v13.25.0...v13.25.1) (2026-08-09)
 
 
 ### Bug Fixes
