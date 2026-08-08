@@ -22,11 +22,24 @@ user agent never enter this service.
     "id": "space",
     "bundleId": "dev.innei.space",
     "teamId": "APPLE_TEAM_ID",
-    "keyId": "APNS_KEY_ID",
-    "privateKeyPath": "/run/secrets/AuthKey_APNS.p8"
+    "keys": {
+      "development": {
+        "keyId": "APNS_SANDBOX_KEY_ID",
+        "privateKeyPath": "/run/secrets/AuthKey_APNS_SANDBOX.p8"
+      },
+      "production": {
+        "keyId": "APNS_PRODUCTION_KEY_ID",
+        "privateKeyPath": "/run/secrets/AuthKey_APNS_PRODUCTION.p8"
+      }
+    }
   }
 ]
 ```
+
+Environment-specific APNs keys are required when Apple issues related
+topic-specific Sandbox and Production keys. The legacy top-level `keyId` and
+`privateKeyPath` fields remain supported for keys that authorize both
+environments.
 
 The APNs key and trusted topic are server configuration. Neither is supplied
 by mx-core or a mobile client. A fork can use its own app ID, bundle ID and

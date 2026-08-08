@@ -3,7 +3,7 @@ import { connect } from 'node:http2'
 
 import type { PushEvent } from '@mx-space/push-protocol'
 
-import type { ApnsAppConfig } from './config.js'
+import type { ApnsAppConfig, ApnsKeyConfig } from './config.js'
 import type { ApnsProvider, ApnsResult } from './types.js'
 
 const base64urlJSON = (value: unknown) =>
@@ -19,12 +19,15 @@ export class Http2ApnsProvider implements ApnsProvider {
   async send(input: Parameters<ApnsProvider['send']>[0]): Promise<ApnsResult> {
     const app = this.apps.get(input.appId)
     if (!app) return { status: 400, apnsId: null, reason: 'UnknownApp' }
+    const key = app.keys[input.environment]
+    if (!key)
+      return { status: 400, apnsId: null, reason: 'MissingEnvironmentKey' }
 
     const host =
       input.environment === 'development'
         ? 'https://api.sandbox.push.apple.com'
         : 'https://api.push.apple.com'
-    const token = this.providerToken(app)
+    const token = this.providerToken(app, input.environment, key)
     const payload = JSON.stringify(buildApnsPayload(input.event))
     if (Buffer.byteLength(payload) > 4096) {
       return { status: 400, apnsId: null, reason: 'PayloadTooLarge' }
@@ -73,20 +76,25 @@ export class Http2ApnsProvider implements ApnsProvider {
     }).finally(() => session.close())
   }
 
-  private providerToken(app: ApnsAppConfig) {
+  private providerToken(
+    app: ApnsAppConfig,
+    environment: 'development' | 'production',
+    key: ApnsKeyConfig,
+  ) {
     const now = Math.floor(Date.now() / 1000)
-    const cached = this.tokenCache.get(app.id)
+    const cacheKey = `${app.id}:${environment}`
+    const cached = this.tokenCache.get(cacheKey)
     if (cached && now - cached.issuedAtSeconds < 50 * 60) return cached.value
 
-    const header = base64urlJSON({ alg: 'ES256', kid: app.keyId })
+    const header = base64urlJSON({ alg: 'ES256', kid: key.keyId })
     const claims = base64urlJSON({ iss: app.teamId, iat: now })
     const signingInput = `${header}.${claims}`
     const signature = sign('sha256', Buffer.from(signingInput), {
-      key: createPrivateKey(app.privateKey),
+      key: createPrivateKey(key.privateKey),
       dsaEncoding: 'ieee-p1363',
     }).toString('base64url')
     const value = `${signingInput}.${signature}`
-    this.tokenCache.set(app.id, { value, issuedAtSeconds: now })
+    this.tokenCache.set(cacheKey, { value, issuedAtSeconds: now })
     return value
   }
 }

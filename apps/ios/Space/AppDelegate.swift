@@ -1,6 +1,10 @@
 import UIKit
 import UserNotifications
 
+private struct NotificationResponseCompletion: @unchecked Sendable {
+    let call: () -> Void
+}
+
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(
@@ -57,17 +61,33 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
 
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
         let payload = response.notification.request.content.userInfo
-        guard
+        let resourceID: String?
+        if
             (payload["schema_version"] as? NSNumber)?.intValue == 1,
-            payload["resource_type"] as? String == "comment",
-            let resourceID = payload["resource_id"] as? String,
-            !resourceID.isEmpty
-        else { return }
-        await MainActor.run {
-            AppContainer.shared.openComment(resourceID)
+            payload["resource_type"] as? String == "comment"
+        {
+            resourceID = switch payload["resource_id"] {
+            case let value as String where !value.isEmpty:
+                value
+            case let value as NSNumber:
+                value.stringValue
+            default:
+                nil
+            }
+        } else {
+            resourceID = nil
+        }
+
+        let completion = NotificationResponseCompletion(call: completionHandler)
+        Task { @MainActor in
+            if let resourceID {
+                AppContainer.shared.openComment(resourceID)
+            }
+            completion.call()
         }
     }
 }

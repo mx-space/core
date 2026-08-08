@@ -2,18 +2,67 @@ import { readFileSync } from 'node:fs'
 
 import { z } from 'zod'
 
-const ApnsAppSchema = z
+import type { ApnsEnvironment } from './types.js'
+
+const ApnsKeySchema = z
   .object({
-    id: z.string().min(1).max(64),
-    bundleId: z.string().min(3),
-    teamId: z.string().min(1),
     keyId: z.string().min(1),
     privateKeyPath: z.string().min(1),
   })
   .strict()
 
-export type ApnsAppConfig = z.infer<typeof ApnsAppSchema> & {
+const ApnsAppSchema = z
+  .object({
+    id: z.string().min(1).max(64),
+    bundleId: z.string().min(3),
+    teamId: z.string().min(1),
+    keyId: z.string().min(1).optional(),
+    privateKeyPath: z.string().min(1).optional(),
+    keys: z
+      .object({
+        development: ApnsKeySchema.optional(),
+        production: ApnsKeySchema.optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict()
+  .superRefine((app, context) => {
+    const hasLegacyKey = app.keyId !== undefined
+    const hasLegacyPath = app.privateKeyPath !== undefined
+    if (hasLegacyKey !== hasLegacyPath) {
+      context.addIssue({
+        code: 'custom',
+        message: 'keyId and privateKeyPath must be configured together',
+      })
+    }
+    if (app.keys && (hasLegacyKey || hasLegacyPath)) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Use either keys or the legacy key fields, not both',
+      })
+    }
+    if (
+      !app.keys?.development &&
+      !app.keys?.production &&
+      !(hasLegacyKey && hasLegacyPath)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'At least one APNs environment key is required',
+      })
+    }
+  })
+
+export type ApnsKeyConfig = z.infer<typeof ApnsKeySchema> & {
   privateKey: string
+}
+
+export type ApnsAppConfig = Pick<
+  z.infer<typeof ApnsAppSchema>,
+  'id' | 'bundleId' | 'teamId'
+> & {
+  keys: Readonly<Partial<Record<ApnsEnvironment, ApnsKeyConfig>>>
 }
 
 export type PushRelayConfig = {
@@ -41,9 +90,28 @@ export const loadConfig = (
   for (const app of apps) {
     if (appMap.has(app.id))
       throw new Error(`Duplicate Push Relay app id: ${app.id}`)
+    const loadKey = (key: z.infer<typeof ApnsKeySchema>): ApnsKeyConfig => ({
+      ...key,
+      privateKey: readFileSync(key.privateKeyPath, 'utf8'),
+    })
+    const keys: Partial<Record<ApnsEnvironment, ApnsKeyConfig>> = {}
+    if (app.keys) {
+      if (app.keys.development)
+        keys.development = loadKey(app.keys.development)
+      if (app.keys.production) keys.production = loadKey(app.keys.production)
+    } else {
+      const legacyKey = loadKey({
+        keyId: app.keyId!,
+        privateKeyPath: app.privateKeyPath!,
+      })
+      keys.development = legacyKey
+      keys.production = legacyKey
+    }
     appMap.set(app.id, {
-      ...app,
-      privateKey: readFileSync(app.privateKeyPath, 'utf8'),
+      id: app.id,
+      bundleId: app.bundleId,
+      teamId: app.teamId,
+      keys,
     })
   }
 

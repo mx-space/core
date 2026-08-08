@@ -1,7 +1,10 @@
 import { COMMENT_CREATED_EVENT, signPushRequest } from '@mx-space/push-protocol'
 import { describe, expect, it, vi } from 'vitest'
 
-import { buildApnsPayload } from '../src/apns-provider.js'
+import {
+  buildApnsPayload,
+  Http2ApnsProvider,
+} from '../src/apns-provider.js'
 import { credentialHash, DataVault } from '../src/crypto.js'
 import { PushRelayService } from '../src/relay-service.js'
 import type { PushRelayStore } from '../src/types.js'
@@ -78,9 +81,13 @@ describe('PushRelayService', () => {
             id: 'space',
             bundleId: 'dev.innei.space',
             teamId: 'TEAM',
-            keyId: 'KEY',
-            privateKeyPath: '/unused',
-            privateKey: 'unused',
+            keys: {
+              development: {
+                keyId: 'KEY',
+                privateKeyPath: '/unused',
+                privateKey: 'unused',
+              },
+            },
           },
         ],
       ]),
@@ -155,6 +162,53 @@ describe('PushRelayService', () => {
       resource_id: '123',
     })
     expect(JSON.stringify(payload)).not.toMatch(/author|email|text|ip/i)
+  })
+
+  it('rejects delivery when the device environment has no matching APNs key', async () => {
+    const provider = new Http2ApnsProvider(
+      new Map([
+        [
+          'space',
+          {
+            id: 'space',
+            bundleId: 'dev.innei.space',
+            teamId: 'TEAM',
+            keys: {
+              production: {
+                keyId: 'PRODUCTION_KEY',
+                privateKeyPath: '/unused',
+                privateKey: 'unused',
+              },
+            },
+          },
+        ],
+      ]),
+    )
+
+    await expect(
+      provider.send({
+        appId: 'space',
+        environment: 'development',
+        deviceToken: 'ab'.repeat(32),
+        event: {
+          specversion: '1.0',
+          id: 'comment.created:environment-mismatch',
+          source: 'urn:mx-core:instance:src-1',
+          type: COMMENT_CREATED_EVENT,
+          subject: 'comment/environment-mismatch',
+          time: '2026-08-09T00:00:00.000Z',
+          datacontenttype: 'application/json',
+          data: {
+            resource_id: 'environment-mismatch',
+            resource_type: 'comment',
+          },
+        },
+      }),
+    ).resolves.toEqual({
+      status: 400,
+      apnsId: null,
+      reason: 'MissingEnvironmentKey',
+    })
   })
 
   it('refuses to update a different installation with valid credentials', async () => {
