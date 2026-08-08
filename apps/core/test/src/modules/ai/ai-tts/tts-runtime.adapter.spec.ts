@@ -76,6 +76,42 @@ describe('TtsRuntimeAdapter', () => {
     })
   })
 
+  it('prompts Gemini in the target language and wraps its PCM as WAV', async () => {
+    const pcm = new Uint8Array([1, 0, 2, 0])
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(pcm, {
+          status: 200,
+          headers: {
+            'content-type': 'audio/pcm;rate=24000;channels=1',
+          },
+        }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const adapter = new TtsRuntimeAdapter({
+      provider: 'openrouter',
+      apiKey: 'k',
+      model: 'google/gemini-3.1-flash-tts-preview',
+    })
+    const result = await adapter.generateSpeech({
+      input: '今日',
+      language: 'ja',
+      voice: 'Kore',
+      speed: 1,
+    })
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      input: expect.stringMatching(/Japanese \(ja-JP\).*Transcript:\n今日/s),
+      response_format: 'pcm',
+    })
+    expect(result.mimeType).toBe('audio/wav')
+    expect(result.buffer.subarray(0, 4).toString()).toBe('RIFF')
+    expect(result.buffer.subarray(8, 12).toString()).toBe('WAVE')
+    expect(result.buffer.subarray(44)).toEqual(Buffer.from(pcm))
+  })
+
   it('retries a 500 and succeeds on the next attempt', async () => {
     const fetchMock = vi
       .fn()

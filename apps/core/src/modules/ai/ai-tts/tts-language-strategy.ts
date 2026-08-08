@@ -7,17 +7,26 @@ export interface TtsLanguageStrategyContext {
 }
 
 export interface TtsLanguageStrategyResolution {
+  audioFormat?: 'wav'
   cacheKey: string
   requestParams: Record<string, unknown>
+  responseFormat?: 'pcm'
   strategyId: string
+  transformInput?: (input: string) => string
 }
 
 export interface TtsLanguageStrategy {
   buildRequestParams: (
     context: TtsLanguageStrategyContext,
   ) => Record<string, unknown>
+  audioFormat?: 'wav'
   id: string
   matches: (context: TtsLanguageStrategyContext) => boolean
+  responseFormat?: 'pcm'
+  transformInput?: (
+    input: string,
+    context: TtsLanguageStrategyContext,
+  ) => string
   version: number
 }
 
@@ -47,9 +56,19 @@ export class TtsLanguageStrategyRegistry {
     }
 
     return {
+      ...(strategy.audioFormat ? { audioFormat: strategy.audioFormat } : {}),
       cacheKey: `${strategy.id}:v${strategy.version}:${normalized.language}`,
       requestParams: strategy.buildRequestParams(normalized),
+      ...(strategy.responseFormat
+        ? { responseFormat: strategy.responseFormat }
+        : {}),
       strategyId: strategy.id,
+      ...(strategy.transformInput
+        ? {
+            transformInput: (input: string) =>
+              strategy.transformInput!(input, normalized),
+          }
+        : {}),
     }
   }
 }
@@ -81,6 +100,22 @@ function isInstructionCapableOpenAiModel(model: string): boolean {
 function buildOpenAiInstructions(language: string): string {
   const name = getLanguageName(language)
   return `Speak the entire input in ${name} (${language}). Use ${name} pronunciations for ambiguous characters and words.`
+}
+
+function buildGeminiInput(
+  input: string,
+  context: TtsLanguageStrategyContext,
+): string {
+  const language = context.language
+  const name =
+    language === 'zh' ? 'Mandarin Chinese' : getLanguageName(language)
+  const locale =
+    {
+      ja: 'ja-JP',
+      zh: 'zh-CN',
+    }[language] ?? language
+
+  return `Language: ${name} (${locale}). Speak only the transcript. Use ${name} pronunciation for every ambiguous character.\n\nTranscript:\n${input}`
 }
 
 const XAI_LANGUAGE_DEFAULTS: Readonly<Record<string, string>> = {
@@ -134,6 +169,18 @@ const MINIMAX_LANGUAGE_BOOSTS: Readonly<Record<string, string>> = {
 
 export const defaultTtsLanguageStrategyRegistry =
   new TtsLanguageStrategyRegistry()
+    .register({
+      id: 'openrouter-google-gemini-prompt',
+      version: 1,
+      matches: (context) =>
+        isOpenRouter(context) &&
+        modelVendor(context.model) === 'google' &&
+        /^gemini-.*tts(?:-|$)/.test(modelName(context.model)),
+      buildRequestParams: () => ({}),
+      audioFormat: 'wav',
+      responseFormat: 'pcm',
+      transformInput: buildGeminiInput,
+    })
     .register({
       id: 'openrouter-xai-language',
       version: 1,

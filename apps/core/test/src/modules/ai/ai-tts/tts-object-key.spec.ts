@@ -30,6 +30,12 @@ describe('buildTtsObjectKey', () => {
     ).not.toBe(buildTtsObjectKey(base))
   })
 
+  it('uses the selected audio container extension', () => {
+    expect(buildTtsObjectKey({ ...base, format: 'wav' })).toBe(
+      'tts/123/zh/blk-a-0-abcdef123456.wav',
+    )
+  })
+
   it('sanitizes path separators out of the block id', () => {
     expect(buildTtsObjectKey({ ...base, blockId: '../escape' })).toBe(
       'tts/123/zh/--escape-0-abcdef123456.mp3',

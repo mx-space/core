@@ -1,6 +1,7 @@
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { sleep } from '~/utils/tool.util'
 
+import { wrapPcmAsWav } from './tts-audio'
 import {
   defaultTtsLanguageStrategyRegistry,
   type TtsLanguageStrategyResolution,
@@ -97,6 +98,7 @@ export class TtsRuntimeAdapter implements ITtsRuntime {
     const languageControl = opts.language
       ? resolveTtsLanguageControl(this.config, opts.language)
       : undefined
+    const input = languageControl?.transformInput?.(opts.input) ?? opts.input
     const response = await fetch(`${this.baseUrl}/audio/speech`, {
       method: 'POST',
       headers: {
@@ -105,11 +107,11 @@ export class TtsRuntimeAdapter implements ITtsRuntime {
       },
       body: JSON.stringify({
         model: this.config.model,
-        input: opts.input,
+        input,
         voice: opts.voice,
         speed: opts.speed,
         // response_format defaults to pcm on OpenRouter; mp3 must be explicit.
-        response_format: 'mp3',
+        response_format: languageControl?.responseFormat ?? 'mp3',
         ...languageControl?.requestParams,
         ...opts.providerParams,
       }),
@@ -126,10 +128,15 @@ export class TtsRuntimeAdapter implements ITtsRuntime {
       throw new HttpStatusError(response.status, await safeText(response))
     }
 
-    return {
-      buffer: Buffer.from(await response.arrayBuffer()),
-      mimeType,
+    const buffer = Buffer.from(await response.arrayBuffer())
+    if (languageControl?.responseFormat === 'pcm') {
+      return {
+        buffer: wrapPcmAsWav(buffer, mimeType),
+        mimeType: 'audio/wav',
+      }
     }
+
+    return { buffer, mimeType }
   }
 }
 

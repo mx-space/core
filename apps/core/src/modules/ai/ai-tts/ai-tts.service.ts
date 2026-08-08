@@ -48,8 +48,7 @@ import { resolveTtsSourceContent } from './tts-source-content'
 const GLOBAL_SPEECH_LIMIT = pLimit(8)
 
 const MAX_LANGS_PER_TASK = 8
-const AUDIO_FORMAT = 'mp3'
-const AUDIO_CONTENT_TYPE = 'audio/mpeg'
+const DEFAULT_AUDIO_FORMAT = 'mp3'
 
 interface LanguageRunInput {
   concurrency: number
@@ -264,6 +263,7 @@ export class AiTtsService implements OnModuleInit {
       { ...input.provider, model: voice.model },
       lang,
     )
+    const audioFormat = languageControl.audioFormat ?? DEFAULT_AUDIO_FORMAT
     const objectKeyFor = (chunk: PlannedChunk) =>
       buildTtsObjectKey({
         prefix: input.objectKeyPrefix,
@@ -271,6 +271,7 @@ export class AiTtsService implements OnModuleInit {
         lang,
         blockId: chunk.blockId,
         chunkIndex: chunk.chunkIndex,
+        format: audioFormat,
         fingerprint: computeTtsObjectFingerprint(
           chunk.fingerprint,
           voice,
@@ -296,7 +297,7 @@ export class AiTtsService implements OnModuleInit {
       lang,
       isTranslation,
       sourceLang: isTranslation ? sourceLang : null,
-      format: AUDIO_FORMAT,
+      format: audioFormat,
     }
 
     // ai_tts_blocks carries an FK to ai_tts, so a first run needs the parent row
@@ -403,7 +404,7 @@ export class AiTtsService implements OnModuleInit {
         limit(async () => {
           throwIfAborted(context.signal)
 
-          const { buffer } = await GLOBAL_SPEECH_LIMIT(() =>
+          const { buffer, mimeType } = await GLOBAL_SPEECH_LIMIT(() =>
             runtime.generateSpeech({
               input: chunk.text,
               language: input.lang,
@@ -413,7 +414,11 @@ export class AiTtsService implements OnModuleInit {
             }),
           )
 
-          const uploaded = await this.uploadChunk(buffer, objectKeyFor(chunk))
+          const uploaded = await this.uploadChunk(
+            buffer,
+            objectKeyFor(chunk),
+            mimeType,
+          )
 
           // planTts leaves a regenerated chunk out of toDelete because the upsert
           // replaces its row, so its old object is only reachable from here.
@@ -455,11 +460,15 @@ export class AiTtsService implements OnModuleInit {
     return { displaced, generated: done }
   }
 
-  private async uploadChunk(buffer: Buffer, objectKey: string) {
+  private async uploadChunk(
+    buffer: Buffer,
+    objectKey: string,
+    contentType: string,
+  ) {
     try {
       return await this.fileService.uploadBuffer(buffer, {
         type: 'audio',
-        contentType: AUDIO_CONTENT_TYPE,
+        contentType,
         objectKey,
       })
     } catch (error) {

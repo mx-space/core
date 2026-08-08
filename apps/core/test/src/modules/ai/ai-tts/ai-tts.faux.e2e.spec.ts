@@ -381,6 +381,24 @@ describe('ai-tts generation task (faux e2e)', () => {
     }
   })
 
+  it('publishes Gemini PCM output as browser-playable WAV', async () => {
+    h.ttsConfig.model = 'google/gemini-3.1-flash-tts-preview'
+    generateSpeechMock.mockResolvedValue({
+      buffer: Buffer.from('wav-bytes'),
+      mimeType: 'audio/wav',
+    })
+
+    await h.execute({ refId: '1' }, context)
+
+    expect(h.repository.upsertParent).toHaveBeenLastCalledWith(
+      expect.objectContaining({ format: 'wav' }),
+    )
+    for (const [, opts] of h.fileService.uploadBuffer.mock.calls) {
+      expect(opts).toMatchObject({ contentType: 'audio/wav' })
+      expect(opts.objectKey).toMatch(/\.wav$/)
+    }
+  })
+
   it('commits each chunk before the next one is generated', async () => {
     h.ttsConfig.concurrency = 1
     const order: string[] = []

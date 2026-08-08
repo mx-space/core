@@ -61,6 +61,30 @@ describe('TtsLanguageStrategyRegistry', () => {
 })
 
 describe('default TTS language strategies', () => {
+  it('steers Gemini through its transcript prompt and selects PCM output', () => {
+    const japanese = defaultTtsLanguageStrategyRegistry.resolve({
+      ...openRouterContext,
+      model: 'google/gemini-3.1-flash-tts-preview',
+    })
+    const chinese = defaultTtsLanguageStrategyRegistry.resolve({
+      ...openRouterContext,
+      language: 'zh',
+      model: 'google/gemini-3.1-flash-tts-preview',
+    })
+
+    expect(japanese).toMatchObject({
+      audioFormat: 'wav',
+      responseFormat: 'pcm',
+      strategyId: 'openrouter-google-gemini-prompt',
+    })
+    expect(japanese.transformInput?.('今日')).toMatch(
+      /Japanese \(ja-JP\).*Transcript:\n今日/s,
+    )
+    expect(chinese.transformInput?.('今日')).toMatch(
+      /Mandarin Chinese \(zh-CN\).*Transcript:\n今日/s,
+    )
+  })
+
   it('passes an explicit language to xAI through OpenRouter', () => {
     const resolved = defaultTtsLanguageStrategyRegistry.resolve({
       ...openRouterContext,
