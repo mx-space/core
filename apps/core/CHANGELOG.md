@@ -1,3 +1,10 @@
+# [13.24.0](https://github.com/mx-space/core/compare/v13.23.0...v13.24.0) (2026-08-08)
+
+
+### Features
+
+* **ai:** unify provider settings and TTS voice discovery ([cbb73df](https://github.com/mx-space/core/commit/cbb73dfe4142adbce24468cc65eb9c59c9fb4820))
+
 # [13.23.0](https://github.com/mx-space/core/compare/v13.22.0...v13.23.0) (2026-08-08)
 
 
