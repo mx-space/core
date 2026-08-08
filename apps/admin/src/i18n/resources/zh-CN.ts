@@ -148,6 +148,7 @@ export const zhCN = {
   'tasks.task.translation.articleCount': '{count} 篇文章',
   'tasks.task.translation.defaultLang': '默认语言',
   'tasks.task.translation.task': '翻译任务',
+  'tasks.task.tts.task': '语音任务',
   'tasks.task.type': '任务类型',
   'tasks.task.worker': 'Worker',
   'tasks.taskStatus.cancelled': '已取消',

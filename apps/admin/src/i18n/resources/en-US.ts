@@ -155,6 +155,7 @@ export const enUS = {
   'tasks.task.translation.articleCount': '{count} articles',
   'tasks.task.translation.defaultLang': 'Default language',
   'tasks.task.translation.task': 'Translation task',
+  'tasks.task.tts.task': 'Text-to-speech task',
   'tasks.task.type': 'Task type',
   'tasks.task.worker': 'Worker',
   'tasks.taskStatus.cancelled': 'Cancelled',
