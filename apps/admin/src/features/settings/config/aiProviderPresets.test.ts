@@ -49,6 +49,45 @@ describe('createProviderFromPreset', () => {
     expect(provider.endpoint).toBeUndefined()
     expect(provider.type).toBe('openai-compatible')
   })
+
+  it.each([
+    {
+      defaultModel: 'gemini-3.6-flash',
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai',
+      id: 'google',
+      modelListUrl:
+        'https://generativelanguage.googleapis.com/v1beta/openai/models',
+      name: 'Google AI (Gemini)',
+    },
+    {
+      defaultModel: 'google/gemini-3.6-flash',
+      endpoint:
+        'https://aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/global/endpoints/openapi',
+      id: 'googleVertex',
+      modelListUrl:
+        'https://aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/global/endpoints/openapi/models',
+      name: 'Google Vertex AI',
+    },
+  ])('creates the $name compatibility provider', (expected) => {
+    vi.stubGlobal('crypto', {
+      randomUUID: () => `${expected.id}-uuid`,
+    })
+
+    const preset = aiProviderPresets.find(({ id }) => id === expected.id)
+    expect(preset).toBeDefined()
+
+    expect(createProviderFromPreset(preset!)).toMatchObject({
+      apiKey: '',
+      appendV1: false,
+      capabilities: { image: false, speech: false, text: true },
+      defaultModel: expected.defaultModel,
+      endpoint: expected.endpoint,
+      id: `${expected.id}-uuid`,
+      modelListUrl: expected.modelListUrl,
+      name: expected.name,
+      type: 'openai-compatible',
+    })
+  })
 })
 
 describe('findAIProviderPreset', () => {

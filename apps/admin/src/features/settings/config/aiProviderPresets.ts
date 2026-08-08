@@ -49,6 +49,34 @@ export const aiProviderPresets: readonly AIProviderPreset[] = [
     capabilities: TEXT_ONLY,
   },
   {
+    id: 'google',
+    name: 'Google AI (Gemini)',
+    type: 'openai-compatible',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    modelListUrl:
+      'https://generativelanguage.googleapis.com/v1beta/openai/models',
+    appendV1: false,
+    defaultModel: 'gemini-3.6-flash',
+    category: 'official',
+    websiteUrl: 'https://ai.google.dev/gemini-api',
+    apiKeyUrl: 'https://aistudio.google.com/app/apikey',
+    capabilities: TEXT_ONLY,
+  },
+  {
+    id: 'googleVertex',
+    name: 'Google Vertex AI',
+    type: 'openai-compatible',
+    endpoint:
+      'https://aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/global/endpoints/openapi',
+    modelListUrl:
+      'https://aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/global/endpoints/openapi/models',
+    appendV1: false,
+    defaultModel: 'google/gemini-3.6-flash',
+    category: 'official',
+    websiteUrl: 'https://console.cloud.google.com/vertex-ai',
+    capabilities: TEXT_ONLY,
+  },
+  {
     id: 'deepseek',
     name: 'DeepSeek',
     type: 'openai-compatible',

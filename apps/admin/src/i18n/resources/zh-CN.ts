@@ -1866,6 +1866,8 @@ export const zhCN = {
   'settings.ai.preset.name.anthropic': 'Anthropic',
   'settings.ai.preset.name.custom': '自定义',
   'settings.ai.preset.name.deepseek': 'DeepSeek',
+  'settings.ai.preset.name.google': 'Google AI (Gemini)',
+  'settings.ai.preset.name.googleVertex': 'Google Vertex AI',
   'settings.ai.preset.name.moonshot': 'Kimi / 月之暗面',
   'settings.ai.preset.name.openai': 'OpenAI',
   'settings.ai.preset.name.openrouter': 'OpenRouter',

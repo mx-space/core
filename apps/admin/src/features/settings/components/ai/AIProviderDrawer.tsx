@@ -199,7 +199,7 @@ export function AIProviderDrawer(props: {
             onCheckedChange={(enabled) => props.onChange({ enabled })}
           />
           <div className="space-y-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-800">
-            <div className="text-sm font-medium">
+            <div className="text-sm font-medium text-fg">
               {t('settings.ai.field.capabilities')}
             </div>
             <Switch

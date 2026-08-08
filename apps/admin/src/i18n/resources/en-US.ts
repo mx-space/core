@@ -1949,6 +1949,8 @@ export const enUS = {
   'settings.ai.preset.name.anthropic': 'Anthropic',
   'settings.ai.preset.name.custom': 'Custom',
   'settings.ai.preset.name.deepseek': 'DeepSeek',
+  'settings.ai.preset.name.google': 'Google AI (Gemini)',
+  'settings.ai.preset.name.googleVertex': 'Google Vertex AI',
   'settings.ai.preset.name.moonshot': 'Kimi / Moonshot',
   'settings.ai.preset.name.openai': 'OpenAI',
   'settings.ai.preset.name.openrouter': 'OpenRouter',

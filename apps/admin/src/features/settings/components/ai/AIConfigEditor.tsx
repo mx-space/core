@@ -46,6 +46,8 @@ const PRESET_NAME_KEYS: Partial<Record<string, TranslationKey>> = {
   anthropic: 'settings.ai.preset.name.anthropic',
   custom: 'settings.ai.preset.name.custom',
   deepseek: 'settings.ai.preset.name.deepseek',
+  google: 'settings.ai.preset.name.google',
+  googleVertex: 'settings.ai.preset.name.googleVertex',
   moonshot: 'settings.ai.preset.name.moonshot',
   openai: 'settings.ai.preset.name.openai',
   openrouter: 'settings.ai.preset.name.openrouter',
