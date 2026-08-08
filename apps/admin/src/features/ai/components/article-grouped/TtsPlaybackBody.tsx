@@ -7,6 +7,7 @@ import { useI18n } from '~/i18n'
 
 import { getErrorMessage } from '../../utils/ai'
 import { useArticleGroupedRouteContext } from './article-grouped-route-context'
+import { GenerationMetricsMeta } from './GenerationMetricsMeta'
 import type { EditDrawerBodyProps } from './types'
 
 export function TtsPlaybackBody(props: EditDrawerBodyProps<AITtsRow>) {
@@ -46,6 +47,8 @@ export function TtsPlaybackBody(props: EditDrawerBodyProps<AITtsRow>) {
         <p className="-mt-3 text-xs text-fg-subtle">
           {item.model} · {item.voice} · {item.speed}x
         </p>
+
+        <GenerationMetricsMeta metrics={item.generationMetrics} />
 
         <TtsSegmentPlayer
           onRegenerate={

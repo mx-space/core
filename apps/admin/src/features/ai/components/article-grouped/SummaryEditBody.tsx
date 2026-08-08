@@ -6,6 +6,7 @@ import { Button } from '~/ui/primitives/button'
 import { CodeMirrorEditor } from '~/vendor/codemirror'
 
 import { formatDateString } from '../../utils/ai'
+import { GenerationMetricsMeta } from './GenerationMetricsMeta'
 import type { EditDrawerBodyProps } from './types'
 
 export function SummaryEditBody(props: EditDrawerBodyProps<AISummary>) {
@@ -20,6 +21,36 @@ export function SummaryEditBody(props: EditDrawerBodyProps<AISummary>) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <MetaList
+          rows={[
+            {
+              label: t('ai.translation.langLabel'),
+              value: props.item.lang.toUpperCase(),
+            },
+            ...(props.item.generationMetrics?.providerId
+              ? [
+                  {
+                    label: t('ai.metrics.provider'),
+                    value: props.item.generationMetrics.providerId,
+                  },
+                ]
+              : []),
+            ...(props.item.generationMetrics?.model
+              ? [
+                  {
+                    label: t('ai.metrics.model'),
+                    value: props.item.generationMetrics.model,
+                  },
+                ]
+              : []),
+            {
+              label: t('ai.task.createdAt'),
+              value: formatDateString(props.item.createdAt),
+            },
+          ]}
+        />
+        <GenerationMetricsMeta metrics={props.item.generationMetrics} />
+
         <section>
           <p className="mb-2 text-sm font-medium text-fg">
             {t('ai.summary.editLabel.content')}
@@ -34,19 +65,6 @@ export function SummaryEditBody(props: EditDrawerBodyProps<AISummary>) {
             />
           </div>
         </section>
-
-        <MetaList
-          rows={[
-            {
-              label: t('ai.translation.langLabel'),
-              value: props.item.lang.toUpperCase(),
-            },
-            {
-              label: t('ai.task.createdAt'),
-              value: formatDateString(props.item.createdAt),
-            },
-          ]}
-        />
       </div>
       <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-3">
         <Button onClick={props.onCancel} type="button" variant="subtle">

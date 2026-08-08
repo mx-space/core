@@ -27,6 +27,24 @@ export const AiTtsViews = {
     charCount: z.number(),
     updatedAt: z.date().nullish(),
     segments: z.array(SegmentSchema),
+    generationMetrics: z
+      .object({
+        inputTokens: z.number().nullable(),
+        outputTokens: z.number().nullable(),
+        cacheReadTokens: z.number().nullable(),
+        cacheWriteTokens: z.number().nullable(),
+        totalTokens: z.number().nullable(),
+        costInputUsd: z.number().nullable(),
+        costOutputUsd: z.number().nullable(),
+        costCacheReadUsd: z.number().nullable(),
+        costCacheWriteUsd: z.number().nullable(),
+        costTotalUsd: z.number().nullable(),
+        providerId: z.string().nullable(),
+        model: z.string().nullable(),
+        createdAt: z.string(),
+      })
+      .nullable()
+      .optional(),
   }),
   listItem: z.object({
     id: z.string(),

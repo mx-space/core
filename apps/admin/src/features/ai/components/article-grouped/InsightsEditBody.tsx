@@ -6,6 +6,7 @@ import { Button } from '~/ui/primitives/button'
 import { CodeMirrorEditor } from '~/vendor/codemirror'
 
 import { formatDateString } from '../../utils/ai'
+import { GenerationMetricsMeta } from './GenerationMetricsMeta'
 import type { EditDrawerBodyProps } from './types'
 
 export function InsightsEditBody(props: EditDrawerBodyProps<AIInsights>) {
@@ -20,21 +21,6 @@ export function InsightsEditBody(props: EditDrawerBodyProps<AIInsights>) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
-        <section>
-          <p className="mb-2 text-sm font-medium text-fg">
-            {t('ai.insights.editLabel.content')}
-          </p>
-          <div className="rounded border border-border">
-            <CodeMirrorEditor
-              autoFocus
-              embedded
-              onChange={setContent}
-              renderMode="plain"
-              text={content}
-            />
-          </div>
-        </section>
-
         <section>
           <p className="mb-2 text-sm font-medium text-fg">
             {t('ai.insights.editLabel.meta')}
@@ -54,7 +40,35 @@ export function InsightsEditBody(props: EditDrawerBodyProps<AIInsights>) {
                 value={props.item.sourceLang?.toUpperCase() ?? '-'}
               />
             ) : null}
+            {props.item.generationMetrics?.providerId ? (
+              <Row
+                label={t('ai.metrics.provider')}
+                value={props.item.generationMetrics.providerId}
+              />
+            ) : null}
+            {props.item.generationMetrics?.model ? (
+              <Row
+                label={t('ai.metrics.model')}
+                value={props.item.generationMetrics.model}
+              />
+            ) : null}
           </dl>
+        </section>
+        <GenerationMetricsMeta metrics={props.item.generationMetrics} />
+
+        <section>
+          <p className="mb-2 text-sm font-medium text-fg">
+            {t('ai.insights.editLabel.content')}
+          </p>
+          <div className="rounded border border-border">
+            <CodeMirrorEditor
+              autoFocus
+              embedded
+              onChange={setContent}
+              renderMode="plain"
+              text={content}
+            />
+          </div>
         </section>
       </div>
       <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-3">

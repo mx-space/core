@@ -246,7 +246,10 @@ export class TranslationService {
           sourceLang: translation.sourceLang,
           targetLang: translation.lang,
           translatedAt: translation.createdAt,
-          model: translation.aiModel ?? undefined,
+          model:
+            translation.generationMetrics?.model ??
+            translation.aiModel ??
+            undefined,
         },
         availableTranslations,
       }
@@ -410,7 +413,10 @@ export class TranslationService {
                       sourceLang: translation.sourceLang,
                       targetLang: translation.lang,
                       translatedAt: translation.createdAt,
-                      model: translation.aiModel ?? undefined,
+                      model:
+                        translation.generationMetrics?.model ??
+                        translation.aiModel ??
+                        undefined,
                     }
                   : undefined,
               },

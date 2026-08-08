@@ -180,22 +180,73 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
 interface PiUsageLike {
   input?: number
   output?: number
+  cacheRead?: number
+  cacheWrite?: number
   totalTokens?: number
-  cost?: { total?: number }
+  cost?: {
+    input?: number
+    output?: number
+    cacheRead?: number
+    cacheWrite?: number
+    total?: number
+  }
 }
 
-type MappedUsage = NonNullable<GenerateTextResult['usage']> & {
-  cost?: number
-}
+type MappedUsage = NonNullable<GenerateTextResult['usage']>
 
 function mapUsage(usage: PiUsageLike | undefined): MappedUsage | undefined {
   if (!usage || typeof usage !== 'object') return undefined
+  const costTotal = usage.cost?.total ?? 0
   return {
     promptTokens: usage.input,
     completionTokens: usage.output,
+    inputTokens: usage.input,
+    outputTokens: usage.output,
+    cacheReadTokens: usage.cacheRead,
+    cacheWriteTokens: usage.cacheWrite,
     totalTokens: usage.totalTokens,
-    cost: usage.cost?.total ?? 0,
+    cost: costTotal,
+    costBreakdown: {
+      input: usage.cost?.input,
+      output: usage.cost?.output,
+      cacheRead: usage.cost?.cacheRead,
+      cacheWrite: usage.cost?.cacheWrite,
+      total: usage.cost?.total,
+    },
   }
+}
+
+export function runtimeUsageToGenerationUsage(usage: MappedUsage | undefined):
+  | {
+      inputTokens?: number
+      outputTokens?: number
+      cacheReadTokens?: number
+      cacheWriteTokens?: number
+      totalTokens?: number
+      cost?: {
+        input?: number
+        output?: number
+        cacheRead?: number
+        cacheWrite?: number
+        total?: number
+      }
+    }
+  | undefined {
+  if (!usage) return undefined
+  return {
+    inputTokens: usage.inputTokens ?? usage.promptTokens,
+    outputTokens: usage.outputTokens ?? usage.completionTokens,
+    cacheReadTokens: usage.cacheReadTokens,
+    cacheWriteTokens: usage.cacheWriteTokens,
+    totalTokens: usage.totalTokens,
+    cost: usage.costBreakdown ?? {
+      total: typeof usage.cost === 'number' ? usage.cost : undefined,
+    },
+  }
+}
+
+export function piUsageToGenerationUsage(usage: PiUsageLike | undefined) {
+  return runtimeUsageToGenerationUsage(mapUsage(usage))
 }
 
 interface ThinkingOptions {

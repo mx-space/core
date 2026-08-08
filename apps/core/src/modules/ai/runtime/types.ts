@@ -31,14 +31,28 @@ export interface TextStreamChunk {
   text: string
 }
 
+export interface RuntimeUsage {
+  promptTokens?: number
+  completionTokens?: number
+  inputTokens?: number
+  outputTokens?: number
+  cacheReadTokens?: number
+  cacheWriteTokens?: number
+  totalTokens?: number
+  /** @deprecated prefer costBreakdown.total — kept for existing call sites */
+  cost?: number
+  costBreakdown?: {
+    input?: number
+    output?: number
+    cacheRead?: number
+    cacheWrite?: number
+    total?: number
+  }
+}
+
 export interface GenerateTextResult {
   text: string
-  usage?: {
-    promptTokens?: number
-    completionTokens?: number
-    totalTokens?: number
-    cost?: number
-  }
+  usage?: RuntimeUsage
 }
 
 export interface GenerateStructuredOptions<T extends TSchema> extends Omit<
@@ -59,12 +73,7 @@ export interface GenerateStructuredOptions<T extends TSchema> extends Omit<
 
 export interface GenerateStructuredResult<T> {
   output: T
-  usage?: {
-    promptTokens?: number
-    completionTokens?: number
-    totalTokens?: number
-    cost?: number
-  }
+  usage?: RuntimeUsage
 }
 
 export interface StructuredStreamChunk<T> {
@@ -72,12 +81,7 @@ export interface StructuredStreamChunk<T> {
   delta?: string
   done?: boolean
   final?: T
-  usage?: {
-    promptTokens?: number
-    completionTokens?: number
-    totalTokens?: number
-    cost?: number
-  }
+  usage?: RuntimeUsage
 }
 
 export interface StreamMessageOptions extends Omit<

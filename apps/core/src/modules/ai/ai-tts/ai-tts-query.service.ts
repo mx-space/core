@@ -9,6 +9,8 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { EntitlementService } from '../../membership/entitlement.service'
 import type { NoteService } from '../../note/note.service'
 import { isArticleVisibleToViewer } from '../ai-article-visibility.util'
+import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
+import type { GenerationMetricsDto } from '../ai-generation-metrics/ai-generation-metrics.types'
 import { parseLanguageCode } from '../ai-language.util'
 import { readArticleMetaLang } from '../ai-translation/article-content.util'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
@@ -49,6 +51,7 @@ export interface NarrationDetailResult {
   charCount: number
   updatedAt: Date | null
   segments: TtsSegmentResult[]
+  generationMetrics?: GenerationMetricsDto | null
 }
 
 export interface NarrationListItemResult {
@@ -98,6 +101,7 @@ export class AiTtsQueryService {
     private readonly repository: AiTtsRepository,
     private readonly databaseService: DatabaseService,
     private readonly entitlementService: EntitlementService,
+    private readonly generationMetrics: AiGenerationMetricsService,
     @Inject(NOTE_SERVICE_TOKEN)
     private readonly noteService: NoteService,
   ) {}
@@ -173,7 +177,7 @@ export class AiTtsQueryService {
       },
       {},
     )
-    return parents.map((parent) => ({
+    const details = parents.map((parent) => ({
       id: parent.id,
       refId: parent.refId,
       lang: parent.lang,
@@ -186,6 +190,7 @@ export class AiTtsQueryService {
       updatedAt: parent.updatedAt,
       segments: toSegments(blocksByTtsId[parent.id] ?? [], parent.blockOrder),
     }))
+    return this.generationMetrics.attachLatest('tts', details)
   }
 
   async getDetailsByRefId(refId: string): Promise<NarrationDetailResult[]> {

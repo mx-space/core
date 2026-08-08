@@ -8,6 +8,7 @@ import { TextInput } from '~/ui/primitives/text-field'
 import { CodeMirrorEditor } from '~/vendor/codemirror'
 
 import { formatDateString } from '../../utils/ai'
+import { GenerationMetricsMeta } from './GenerationMetricsMeta'
 import type { EditDrawerBodyProps } from './types'
 
 const LexicalEmbeddedEditor = lazy(async () => {
@@ -59,9 +60,42 @@ export function TranslationEditBody(props: EditDrawerBodyProps<AITranslation>) {
     void props.onSubmit(next)
   }
 
+  const provider =
+    props.item.generationMetrics?.providerId || props.item.aiProvider || null
+  const model =
+    props.item.generationMetrics?.model || props.item.aiModel || null
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
+        <section>
+          <p className="mb-2 text-sm font-medium text-fg">
+            {t('ai.translation.editLabel.meta')}
+          </p>
+          <dl className="grid grid-cols-2 gap-y-1.5 text-xs">
+            <Row
+              label={t('ai.translation.langLabel')}
+              value={props.item.lang.toUpperCase()}
+            />
+            <Row
+              label={t('ai.translation.column.source')}
+              value={(props.item.sourceLang || '-').toUpperCase()}
+            />
+            {props.item.contentFormat ? (
+              <Row label="Format" value={props.item.contentFormat} />
+            ) : null}
+            {provider ? (
+              <Row label={t('ai.metrics.provider')} value={provider} />
+            ) : null}
+            {model ? <Row label={t('ai.metrics.model')} value={model} /> : null}
+            <Row
+              label={t('ai.task.createdAt')}
+              value={formatDateString(props.item.createdAt)}
+            />
+          </dl>
+        </section>
+        <GenerationMetricsMeta metrics={props.item.generationMetrics} />
+
         <TextInput
           autoFocus
           label={t('ai.translation.editLabel.title')}
@@ -118,35 +152,6 @@ export function TranslationEditBody(props: EditDrawerBodyProps<AITranslation>) {
               />
             </div>
           )}
-        </section>
-
-        <section>
-          <p className="mb-2 text-sm font-medium text-fg">
-            {t('ai.translation.editLabel.meta')}
-          </p>
-          <dl className="grid grid-cols-2 gap-y-1.5 text-xs">
-            <Row
-              label={t('ai.translation.langLabel')}
-              value={props.item.lang.toUpperCase()}
-            />
-            <Row
-              label={t('ai.translation.column.source')}
-              value={(props.item.sourceLang || '-').toUpperCase()}
-            />
-            {props.item.contentFormat ? (
-              <Row label="Format" value={props.item.contentFormat} />
-            ) : null}
-            {props.item.aiProvider ? (
-              <Row label="Provider" value={props.item.aiProvider} />
-            ) : null}
-            {props.item.aiModel ? (
-              <Row label="Model" value={props.item.aiModel} />
-            ) : null}
-            <Row
-              label={t('ai.task.createdAt')}
-              value={formatDateString(props.item.createdAt)}
-            />
-          </dl>
         </section>
       </div>
       <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-3">

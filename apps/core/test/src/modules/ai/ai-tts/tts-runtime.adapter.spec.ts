@@ -54,6 +54,28 @@ describe('TtsRuntimeAdapter', () => {
     })
   })
 
+  it('applies the registered language strategy to the request body', async () => {
+    const fetchMock = vi.fn(async () => audio())
+    vi.stubGlobal('fetch', fetchMock)
+
+    const adapter = new TtsRuntimeAdapter({
+      provider: 'openrouter',
+      apiKey: 'k',
+      model: 'x-ai/grok-voice-tts-1.0',
+    })
+    await adapter.generateSpeech({
+      input: '今日',
+      language: 'ja',
+      voice: 'eve',
+      speed: 1,
+    })
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      provider: { options: { xai: { language: 'ja' } } },
+    })
+  })
+
   it('retries a 500 and succeeds on the next attempt', async () => {
     const fetchMock = vi
       .fn()

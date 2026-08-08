@@ -33,8 +33,25 @@ export interface PaginationInfo {
   totalPage?: number
 }
 
+export interface GenerationMetrics {
+  cacheReadTokens: number | null
+  cacheWriteTokens: number | null
+  costCacheReadUsd: number | null
+  costCacheWriteUsd: number | null
+  costInputUsd: number | null
+  costOutputUsd: number | null
+  costTotalUsd: number | null
+  createdAt: string
+  inputTokens: number | null
+  model: string | null
+  outputTokens: number | null
+  providerId: string | null
+  totalTokens: number | null
+}
+
 export interface AISummary {
   createdAt: string
+  generationMetrics?: GenerationMetrics | null
   hash: string
   id: string
   lang: string
@@ -63,6 +80,7 @@ export interface SummaryByRefResponse {
 export interface AIInsights {
   content: string
   createdAt: string
+  generationMetrics?: GenerationMetrics | null
   hash: string
   id: string
   isTranslation: boolean
@@ -98,6 +116,7 @@ export interface AITranslation {
   content?: string | null
   contentFormat?: AIContentFormat
   createdAt: string
+  generationMetrics?: GenerationMetrics | null
   hash: string
   id: string
   lang: string
@@ -428,6 +447,7 @@ export interface AITtsSegment {
 export interface AITtsRow {
   blockOrder: string[]
   charCount: number
+  generationMetrics?: GenerationMetrics | null
   id: string
   isTranslation: boolean
   lang: string

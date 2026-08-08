@@ -35,6 +35,16 @@ const createService = () => {
   const taskProcessor = { registerHandler: vi.fn() }
   const aiTaskService = { createInsightsTask: vi.fn() }
   const eventEmitter = { emit: vi.fn() }
+  const generationMetrics = {
+    attachLatest: vi.fn(async (_type: string, items: unknown[]) =>
+      items.map((item) => ({
+        ...(item as object),
+        generationMetrics: null,
+      })),
+    ),
+    deleteByResource: vi.fn().mockResolvedValue(undefined),
+    record: vi.fn().mockResolvedValue(undefined),
+  }
   const service = new AiInsightsService(
     repository as any,
     databaseService as any,
@@ -44,8 +54,16 @@ const createService = () => {
     taskProcessor as any,
     aiTaskService as any,
     eventEmitter as any,
+    generationMetrics as any,
   )
-  return { aiTaskService, configService, databaseService, repository, service }
+  return {
+    aiTaskService,
+    configService,
+    databaseService,
+    generationMetrics,
+    repository,
+    service,
+  }
 }
 
 describe('AiInsightsService', () => {
@@ -139,7 +157,7 @@ describe('AiInsightsService', () => {
           title: 'Has Insight',
           type: CollectionRefTypes.Post,
         },
-        insights: [row],
+        insights: [{ ...row, generationMetrics: null }],
       },
       {
         article: {

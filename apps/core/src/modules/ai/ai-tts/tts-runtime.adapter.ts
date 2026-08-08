@@ -1,8 +1,14 @@
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { sleep } from '~/utils/tool.util'
 
+import {
+  defaultTtsLanguageStrategyRegistry,
+  type TtsLanguageStrategyResolution,
+} from './tts-language-strategy'
+
 export interface TtsGenerateOptions {
   input: string
+  language?: string
   voice: string
   speed: number
   providerParams?: Record<string, unknown>
@@ -37,6 +43,17 @@ export function resolveTtsBaseUrl(provider: string, endpoint?: string): string {
     throw createAppException(AppErrorCode.TTS_PROVIDER_NOT_CONFIGURED)
   }
   return preset
+}
+
+export function resolveTtsLanguageControl(
+  config: Pick<TtsRuntimeAdapterConfig, 'endpoint' | 'model' | 'provider'>,
+  language: string,
+): TtsLanguageStrategyResolution {
+  return defaultTtsLanguageStrategyRegistry.resolve({
+    baseUrl: resolveTtsBaseUrl(config.provider, config.endpoint),
+    language,
+    model: config.model,
+  })
 }
 
 export class TtsRuntimeAdapter implements ITtsRuntime {
@@ -77,6 +94,9 @@ export class TtsRuntimeAdapter implements ITtsRuntime {
   }
 
   private async requestOnce(opts: TtsGenerateOptions) {
+    const languageControl = opts.language
+      ? resolveTtsLanguageControl(this.config, opts.language)
+      : undefined
     const response = await fetch(`${this.baseUrl}/audio/speech`, {
       method: 'POST',
       headers: {
@@ -90,6 +110,7 @@ export class TtsRuntimeAdapter implements ITtsRuntime {
         speed: opts.speed,
         // response_format defaults to pcm on OpenRouter; mp3 must be explicit.
         response_format: 'mp3',
+        ...languageControl?.requestParams,
         ...opts.providerParams,
       }),
       signal: opts.signal,

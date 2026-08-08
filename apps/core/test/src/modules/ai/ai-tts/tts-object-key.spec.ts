@@ -65,4 +65,10 @@ describe('computeTtsObjectFingerprint', () => {
       computeTtsObjectFingerprint('fp', voice),
     )
   })
+
+  it('changes when the synthesis profile changes', () => {
+    expect(computeTtsObjectFingerprint('fp', voice, 'auto:v1')).not.toBe(
+      computeTtsObjectFingerprint('fp', voice, 'openrouter-xai-language:v1:ja'),
+    )
+  })
 })

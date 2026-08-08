@@ -21,6 +21,16 @@ const createService = () => {
   const aiInFlightService = {}
   const taskProcessor = { registerHandler: vi.fn() }
   const aiTaskService = { createSummaryTask: vi.fn() }
+  const generationMetrics = {
+    attachLatest: vi.fn(async (_type: string, items: unknown[]) =>
+      items.map((item) => ({
+        ...(item as object),
+        generationMetrics: null,
+      })),
+    ),
+    deleteByResource: vi.fn().mockResolvedValue(undefined),
+    record: vi.fn().mockResolvedValue(undefined),
+  }
   const service = new AiSummaryService(
     repository as any,
     databaseService as any,
@@ -29,8 +39,16 @@ const createService = () => {
     aiInFlightService as any,
     taskProcessor as any,
     aiTaskService as any,
+    generationMetrics as any,
   )
-  return { aiTaskService, configService, databaseService, repository, service }
+  return {
+    aiTaskService,
+    configService,
+    databaseService,
+    generationMetrics,
+    repository,
+    service,
+  }
 }
 
 describe('AiSummaryService', () => {
@@ -72,12 +90,26 @@ describe('AiSummaryService', () => {
   })
 
   it('deletes summaries by article id through the PG repository', async () => {
-    const { repository, service } = createService()
+    const { generationMetrics, repository, service } = createService()
+    repository.listForRef.mockResolvedValue([
+      {
+        id: 'summary-1',
+        refId: 'post-1',
+        lang: 'zh',
+        summary: 'old',
+        hash: 'hash',
+        createdAt: now,
+      },
+    ])
     repository.deleteForRef.mockResolvedValue(1)
 
     await service.deleteSummaryByArticleId('post-1')
 
     expect(repository.deleteForRef).toHaveBeenCalledWith('post-1')
+    expect(generationMetrics.deleteByResource).toHaveBeenCalledWith(
+      'summary',
+      'summary-1',
+    )
   })
 
   it('includes orphan articles with zero summaries in the grouped list', async () => {
@@ -141,8 +173,13 @@ describe('AiSummaryService', () => {
   })
 
   it('creates an initial summary task on update when no summaries exist', async () => {
-    const { aiTaskService, configService, databaseService, repository, service } =
-      createService()
+    const {
+      aiTaskService,
+      configService,
+      databaseService,
+      repository,
+      service,
+    } = createService()
     configService.get.mockResolvedValue({
       enableSummary: true,
       enableAutoGenerateSummaryOnUpdate: true,

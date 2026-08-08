@@ -260,6 +260,10 @@ function createHarness() {
     ),
   }
   const redisService = { getClient: () => redisClient }
+  const generationMetrics = {
+    deleteByResource: vi.fn(async () => {}),
+    record: vi.fn(async () => {}),
+  }
 
   let registered:
     | {
@@ -284,6 +288,7 @@ function createHarness() {
     lexicalService as any,
     translationRepository as any,
     redisService as any,
+    generationMetrics as any,
   )
   service.onModuleInit()
 
@@ -331,6 +336,15 @@ describe('ai-tts generation task (faux e2e)', () => {
     expect(h.repository.upsertParent).toHaveBeenCalledWith(
       expect.objectContaining({ blockOrder: ['blk-a', 'blk-b'] }),
     )
+  })
+
+  it('passes the target language to every speech request', async () => {
+    await h.execute({ refId: '1' }, context)
+
+    expect(generateSpeechMock).toHaveBeenCalledTimes(2)
+    for (const [options] of generateSpeechMock.mock.calls) {
+      expect(options.language).toBe('zh')
+    }
   })
 
   it('creates the parent with an empty block order before generating anything', async () => {

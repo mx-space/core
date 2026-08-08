@@ -27,11 +27,21 @@ import {
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { isGlobalArticleVisible } from '../ai-article-visibility.util'
+import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
+import type { GenerationUsage } from '../ai-generation-metrics/ai-generation-metrics.types'
+import {
+  emptyUsage,
+  mergeUsage,
+} from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
+import {
+  piUsageToGenerationUsage,
+  runtimeUsageToGenerationUsage,
+} from '../runtime/pi-runtime.adapter'
 import { AiInsightsRepository } from './ai-insights.repository'
 import type { GetInsightsGroupedQueryInput } from './ai-insights.schema'
 import type { AiInsightsRow } from './ai-insights.types'
@@ -59,6 +69,7 @@ export class AiInsightsService implements OnModuleInit {
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly aiTaskService: AiTaskService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly generationMetrics: AiGenerationMetricsService,
   ) {}
 
   onModuleInit() {
@@ -78,6 +89,7 @@ export class AiInsightsService implements OnModuleInit {
           payload.refId,
           context.incrementTokens,
           context.incrementCost,
+          context.taskId,
         )
         await context.setResult({ insightsId: result.id, lang: result.lang })
         await context.updateProgress(100, 'Done', 1, 1)
@@ -186,7 +198,9 @@ export class AiInsightsService implements OnModuleInit {
     onCost?: (usd: number) => Promise<void>,
   ): Promise<{
     content: string
-    modelInfo?: { provider: string; model: string }
+    usage: GenerationUsage
+    providerId: string
+    model: string
   }> {
     const runtime = await this.aiService.getInsightsModel()
     const { systemPrompt, prompt, reasoningEffort } = AI_PROMPTS.insightsStream(
@@ -199,8 +213,7 @@ export class AiInsightsService implements OnModuleInit {
     ]
 
     let fullText = ''
-    let totalTokens = 0
-    let totalCost = 0
+    let usage: GenerationUsage = emptyUsage()
     if (runtime.streamMessage) {
       const events = runtime.streamMessage({
         messages,
@@ -222,8 +235,10 @@ export class AiInsightsService implements OnModuleInit {
         ) {
           this.logger.debug(`stream non-text event filtered: ${event.type}`)
         } else if (event.type === 'done') {
-          totalTokens = event.message.usage?.totalTokens ?? 0
-          totalCost = event.message.usage?.cost?.total ?? 0
+          usage = mergeUsage(
+            usage,
+            piUsageToGenerationUsage(event.message.usage),
+          )
         } else if (event.type === 'error') {
           throw new Error(
             event.error.errorMessage || 'AI insights stream error',
@@ -238,15 +253,20 @@ export class AiInsightsService implements OnModuleInit {
         reasoningEffort,
       })
       fullText = result.text
-      totalTokens = result.usage?.totalTokens ?? 0
-      totalCost = result.usage?.cost ?? 0
+      usage = mergeUsage(usage, runtimeUsageToGenerationUsage(result.usage))
       if (push && result.text) await push({ type: 'token', data: result.text })
     }
+    const totalTokens = usage.totalTokens ?? 0
+    const totalCost = usage.cost?.total ?? 0
     if (onToken) await onToken(totalTokens)
     if (onCost && totalCost > 0) await onCost(totalCost)
-    // Strip an accidental top-level code fence if the model wrapped the whole answer.
     const stripped = stripTopLevelCodeFence(fullText)
-    return { content: stripped.trim() }
+    return {
+      content: stripped.trim(),
+      usage,
+      providerId: runtime.providerInfo.id,
+      model: runtime.providerInfo.model,
+    }
   }
 
   private async runInsightsGeneration(
@@ -255,6 +275,7 @@ export class AiInsightsService implements OnModuleInit {
     article: ArticleForInsights,
     onToken?: (count?: number) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
+    taskId?: string,
   ) {
     const text = this.serializeText(article.text)
     const key = this.buildInsightsKey(articleId, lang, text)
@@ -267,7 +288,7 @@ export class AiInsightsService implements OnModuleInit {
       readBlockMs: AI_STREAM_READ_BLOCK_MS,
       idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
       onLeader: async ({ push }) => {
-        const { content } = await this.generateInsightsViaAIStream(
+        const generated = await this.generateInsightsViaAIStream(
           article,
           lang,
           push,
@@ -276,24 +297,31 @@ export class AiInsightsService implements OnModuleInit {
         )
         const contentMd5 = md5(text)
         const sourceLang = lang
-        // Invalidate stale translations before writing the new source row.
         await this.aiInsightsRepository.deleteTranslationsWithDifferentHash(
           articleId,
           contentMd5,
         )
-        // Upsert source row to satisfy the unique (refId, lang) index when
-        // a previous source row exists (e.g. on article text update).
         const doc = this.toInsightsDoc(
           await this.aiInsightsRepository.upsert({
             hash: contentMd5,
             lang,
             refId: articleId,
-            content,
+            content: generated.content,
             isTranslation: false,
             sourceLang,
             sourceInsightsId: null,
           }),
         )!
+        await this.generationMetrics.record({
+          resourceType: 'insights',
+          resourceId: doc.id!,
+          refId: articleId,
+          lang,
+          taskId: taskId ?? null,
+          providerId: generated.providerId,
+          model: generated.model,
+          usage: generated.usage,
+        })
         this.eventEmitter.emit(BusinessEvents.INSIGHTS_GENERATED, {
           refId: articleId,
           sourceLang,
@@ -318,6 +346,7 @@ export class AiInsightsService implements OnModuleInit {
     articleId: string,
     onToken?: (count?: number) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
+    taskId?: string,
   ): Promise<AIInsightsModel> {
     const {
       ai: { enableInsights },
@@ -334,6 +363,7 @@ export class AiInsightsService implements OnModuleInit {
         article,
         onToken,
         onCost,
+        taskId,
       )
       return await result
     } catch (error) {
@@ -428,8 +458,9 @@ export class AiInsightsService implements OnModuleInit {
     const article = await this.databaseService.findGlobalById(refId)
     if (!article)
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, { id: refId })
-    const insights = this.toInsightsDocs(
-      await this.aiInsightsRepository.listForRef(refId),
+    const insights = await this.generationMetrics.attachLatest(
+      'insights',
+      this.toInsightsDocs(await this.aiInsightsRepository.listForRef(refId)),
     )
     return { insights, article }
   }
@@ -437,7 +468,10 @@ export class AiInsightsService implements OnModuleInit {
   async getAllInsights(pager: BasicPagerInput) {
     const { page, size } = pager
     const result = await this.aiInsightsRepository.list(page, size)
-    const docs = this.toInsightsDocs(result.data)
+    const docs = await this.generationMetrics.attachLatest(
+      'insights',
+      this.toInsightsDocs(result.data),
+    )
     return {
       data: docs,
       pagination: result.pagination,
@@ -459,8 +493,11 @@ export class AiInsightsService implements OnModuleInit {
         fetchRecordsDistinctRefIds: (refIds) =>
           this.aiInsightsRepository.findDistinctRefIds(refIds),
         fetchItemsByRefIds: async (refIds) =>
-          this.toInsightsDocs(
-            await this.aiInsightsRepository.listByRefIds(refIds),
+          this.generationMetrics.attachLatest(
+            'insights',
+            this.toInsightsDocs(
+              await this.aiInsightsRepository.listByRefIds(refIds),
+            ),
           ),
         getItemRefId: (item) => item.refId,
       },
@@ -489,10 +526,15 @@ export class AiInsightsService implements OnModuleInit {
 
   async deleteInsightsInDb(id: string) {
     await this.aiInsightsRepository.deleteById(id)
+    await this.generationMetrics.deleteByResource('insights', id)
   }
 
   async deleteInsightsByArticleId(refId: string) {
+    const rows = await this.aiInsightsRepository.listForRef(refId)
     await this.aiInsightsRepository.deleteForRef(refId)
+    for (const row of rows) {
+      await this.generationMetrics.deleteByResource('insights', String(row.id))
+    }
   }
 
   @OnEvent(BusinessEvents.POST_DELETE)

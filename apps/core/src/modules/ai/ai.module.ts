@@ -10,6 +10,8 @@ import { AiAgentController } from './ai-agent/ai-agent.controller'
 import { AiAgentChatService } from './ai-agent/ai-agent-chat.service'
 import { AiAgentConversationRepository } from './ai-agent/ai-agent-conversation.repository'
 import { AiAgentConversationService } from './ai-agent/ai-agent-conversation.service'
+import { AiGenerationMetricsRepository } from './ai-generation-metrics/ai-generation-metrics.repository'
+import { AiGenerationMetricsService } from './ai-generation-metrics/ai-generation-metrics.service'
 import { AiImageController } from './ai-image/ai-image.controller'
 import { AiImageService } from './ai-image/ai-image.service'
 import { AiInFlightService } from './ai-inflight/ai-inflight.service'
@@ -62,6 +64,8 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiInsightsService,
     AiInsightsRepository,
     AiInsightsTranslationService,
+    AiGenerationMetricsRepository,
+    AiGenerationMetricsService,
     AiInFlightService,
     AiService,
     AiImageService,
@@ -113,6 +117,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     TranslationEntryService,
     AiTtsService,
     AiTtsQueryService,
+    AiGenerationMetricsService,
   ],
 })
 export class AiModule {}

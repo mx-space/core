@@ -12,6 +12,22 @@ export interface AIProviderConfigModel {
   type: AIProviderType
 }
 
+export interface AIGenerationMetricsModel {
+  inputTokens: number | null
+  outputTokens: number | null
+  cacheReadTokens: number | null
+  cacheWriteTokens: number | null
+  totalTokens: number | null
+  costInputUsd: number | null
+  costOutputUsd: number | null
+  costCacheReadUsd: number | null
+  costCacheWriteUsd: number | null
+  costTotalUsd: number | null
+  providerId: string | null
+  model: string | null
+  createdAt: string
+}
+
 export interface AISummaryModel {
   id: string
   createdAt: string
@@ -19,6 +35,7 @@ export interface AISummaryModel {
   hash: string
   refId: string
   lang: string | null
+  generationMetrics?: AIGenerationMetricsModel | null
 }
 
 export interface AITranslationModel {
@@ -38,6 +55,7 @@ export interface AITranslationModel {
   aiProvider: string | null
   contentFormat: string | null
   content: string | null
+  generationMetrics?: AIGenerationMetricsModel | null
 }
 
 export interface AIDeepReadingModel {
@@ -88,6 +106,7 @@ export interface AIInsightsModel {
   sourceInsightsId: string | null
   sourceLang: string | null
   modelInfo: Record<string, unknown> | null
+  generationMetrics?: AIGenerationMetricsModel | null
 }
 
 /**

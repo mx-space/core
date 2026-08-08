@@ -32,6 +32,12 @@ import {
   AI_STREAM_RESULT_TTL,
 } from '../ai.constants'
 import { AiService } from '../ai.service'
+import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
+import {
+  emptyUsage,
+  type GenerationUsage,
+  mergeUsage,
+} from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { resolveTargetLanguages } from '../ai-language.util'
@@ -103,6 +109,7 @@ export class AiTranslationService
     private readonly taskQueueService: TaskQueueService,
     private readonly lexicalService: LexicalService,
     private readonly aiTaskService: AiTaskService,
+    private readonly generationMetrics: AiGenerationMetricsService,
     @Inject(LEXICAL_TRANSLATION_STRATEGY)
     private readonly lexicalStrategy: ITranslationStrategy,
     @Inject(MARKDOWN_TRANSLATION_STRATEGY)
@@ -298,6 +305,7 @@ export class AiTranslationService
                   context.signal,
                   langPush,
                   context.incrementCost,
+                  context.taskId,
                 ),
                 abortPromise,
               ])
@@ -737,6 +745,7 @@ export class AiTranslationService
     signal?: AbortSignal,
     push?: (event: AiStreamEvent) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
+    taskId?: string,
   ): Promise<AITranslationModel> {
     const startedAt = Date.now()
     const aiConfig = await this.configService.get('ai')
@@ -761,6 +770,7 @@ export class AiTranslationService
         signal,
         push,
         onCost,
+        taskId,
       )
       const translated = await result
       this.logger.log(
@@ -792,6 +802,7 @@ export class AiTranslationService
     signal?: AbortSignal,
     taskPush?: (event: AiStreamEvent) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
+    taskId?: string,
   ) {
     const content = this.toArticleContent(document)
     const sourceModified = document.modifiedAt ?? undefined
@@ -819,6 +830,12 @@ export class AiTranslationService
             }
           : push
 
+        let usage: GenerationUsage = emptyUsage()
+        const trackCost = async (usd: number) => {
+          usage = mergeUsage(usage, { cost: { total: usd } })
+          if (onCost) await onCost(usd)
+        }
+
         const translated = await this.translateContentStream(
           content,
           targetLang,
@@ -826,7 +843,7 @@ export class AiTranslationService
           onToken,
           signal,
           existing,
-          onCost,
+          trackCost,
           refType,
         )
         const { sourceLang } = translated
@@ -855,6 +872,17 @@ export class AiTranslationService
           content: translated.content ?? null,
           sourceBlockSnapshots: sourceSnapshots,
           sourceMetaHashes,
+        })
+
+        await this.generationMetrics.record({
+          resourceType: 'translation',
+          resourceId: persisted.id,
+          refId: articleId,
+          lang: targetLang,
+          taskId: taskId ?? null,
+          providerId: translated.aiProvider,
+          model: translated.aiModel,
+          usage,
         })
 
         if (existing) {
@@ -1016,7 +1044,13 @@ export class AiTranslationService
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, { id: refId })
     }
 
-    return { translations, article }
+    return {
+      translations: await this.generationMetrics.attachLatest(
+        'translation',
+        translations,
+      ),
+      article,
+    }
   }
 
   async getTranslationById(id: string) {
@@ -1044,8 +1078,11 @@ export class AiTranslationService
           ),
         fetchRecordsDistinctRefIds: (refIds) =>
           this.aiTranslationRepository.findDistinctRefIds(refIds),
-        fetchItemsByRefIds: (refIds) =>
-          this.aiTranslationRepository.listByRefIds(refIds),
+        fetchItemsByRefIds: async (refIds) =>
+          this.generationMetrics.attachLatest(
+            'translation',
+            await this.aiTranslationRepository.listByRefIds(refIds),
+          ),
         getItemRefId: (item) => item.refId,
       })
     return {
@@ -1105,6 +1142,7 @@ export class AiTranslationService
     if (deletedCount === 0) {
       throw createAppException(AppErrorCode.AI_TRANSLATION_NOT_FOUND)
     }
+    await this.generationMetrics.deleteByResource('translation', id)
     if (existing) {
       this.eventManager.emit(
         BusinessEvents.TRANSLATION_DELETE,
@@ -1124,6 +1162,10 @@ export class AiTranslationService
     const existing = await this.aiTranslationRepository.listByRefId(refId)
     await this.aiTranslationRepository.deleteForRefId(refId)
     for (const row of existing) {
+      await this.generationMetrics.deleteByResource(
+        'translation',
+        String(row.id),
+      )
       this.eventManager.emit(
         BusinessEvents.TRANSLATION_DELETE,
         { refId: row.refId, refType: row.refType, lang: row.lang },

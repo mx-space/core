@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import {
   boolean,
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -180,5 +181,38 @@ export const aiTtsBlocks = pgTable(
       table.chunkIndex,
     ),
     index('ai_tts_blocks_tts_id_idx').on(table.ttsId),
+  ],
+)
+
+export const aiGenerationMetrics = pgTable(
+  'ai_generation_metrics',
+  {
+    id: pkText(),
+    createdAt: createdAt(),
+    resourceType: text('resource_type').notNull(),
+    resourceId: refText('resource_id').notNull(),
+    refId: refText('ref_id').notNull(),
+    lang: text('lang'),
+    taskId: text('task_id'),
+    providerId: text('provider_id'),
+    model: text('model'),
+    inputTokens: integer('input_tokens'),
+    outputTokens: integer('output_tokens'),
+    cacheReadTokens: integer('cache_read_tokens'),
+    cacheWriteTokens: integer('cache_write_tokens'),
+    totalTokens: integer('total_tokens'),
+    costInputUsd: doublePrecision('cost_input_usd'),
+    costOutputUsd: doublePrecision('cost_output_usd'),
+    costCacheReadUsd: doublePrecision('cost_cache_read_usd'),
+    costCacheWriteUsd: doublePrecision('cost_cache_write_usd'),
+    costTotalUsd: doublePrecision('cost_total_usd'),
+  },
+  (table) => [
+    index('ai_generation_metrics_resource_idx').on(
+      table.resourceType,
+      table.resourceId,
+      table.createdAt,
+    ),
+    index('ai_generation_metrics_ref_id_idx').on(table.refId, table.createdAt),
   ],
 )

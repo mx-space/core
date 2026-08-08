@@ -4,6 +4,7 @@ import type { EntityId } from '~/shared/id/entity-id'
 import type { NoteModel } from '../../note/note.types'
 import type { PageModel } from '../../page/page.types'
 import type { PostModel } from '../../post/post.types'
+import type { GenerationMetricsDto } from '../ai-generation-metrics/ai-generation-metrics.types'
 import type { TranslationEntryKeyPath } from './translation-entry.types'
 
 export interface ArticleContent {
@@ -22,9 +23,7 @@ export type ArticleDocument = PostModel | NoteModel | PageModel
 export type ArticleEventDocument = ArticleDocument
 
 export type ArticleEventPayload =
-  | ArticleEventDocument
-  | { data: string }
-  | { id: string }
+  ArticleEventDocument | { data: string } | { id: string }
 
 export type GlobalArticle =
   | { document: PostModel; type: CollectionRefTypes.Post }
@@ -55,6 +54,7 @@ export interface AiTranslationRow {
   sourceBlockSnapshots: unknown
   sourceMetaHashes: unknown
   createdAt: Date
+  generationMetrics?: GenerationMetricsDto | null
 }
 
 export interface TranslationEntryRow {

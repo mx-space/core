@@ -19,12 +19,19 @@ import {
 } from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
+import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
+import {
+  emptyUsage,
+  type GenerationUsage,
+  mergeUsage,
+} from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
   type InsightsTranslationTaskPayload,
 } from '../ai-task/ai-task.types'
+import { runtimeUsageToGenerationUsage } from '../runtime/pi-runtime.adapter'
 import { AiInsightsRepository } from './ai-insights.repository'
 import type { AiInsightsRow } from './ai-insights.types'
 import { AIInsightsModel } from './ai-insights.types'
@@ -41,6 +48,7 @@ export class AiInsightsTranslationService implements OnModuleInit {
     private readonly aiInFlightService: AiInFlightService,
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly aiTaskService: AiTaskService,
+    private readonly generationMetrics: AiGenerationMetricsService,
   ) {}
 
   private toInsightsDoc(row: AiInsightsRow | null): AIInsightsModel | null {
@@ -60,7 +68,7 @@ export class AiInsightsTranslationService implements OnModuleInit {
       ) => {
         if (context.isAborted()) return
         await context.updateProgress(0, 'Translating insights', 0, 1)
-        const result = await this.translateInsights(payload)
+        const result = await this.translateInsights(payload, context)
         await context.setResult({ insightsId: result.id, lang: result.lang })
         await context.updateProgress(100, 'Done', 1, 1)
       },
@@ -97,6 +105,7 @@ export class AiInsightsTranslationService implements OnModuleInit {
 
   async translateInsights(
     payload: InsightsTranslationTaskPayload,
+    context?: TaskExecuteContext,
   ): Promise<AIInsightsModel> {
     const source = this.toInsightsDoc(
       await this.aiInsightsRepository.findById(payload.sourceInsightsId),
@@ -131,6 +140,7 @@ export class AiInsightsTranslationService implements OnModuleInit {
             { role: 'user' as const, content: prompt },
           ]
           let raw = ''
+          let usage: GenerationUsage = emptyUsage()
           if (runtime.generateTextStream) {
             for await (const chunk of runtime.generateTextStream({
               messages,
@@ -149,6 +159,7 @@ export class AiInsightsTranslationService implements OnModuleInit {
               reasoningEffort,
             })
             raw = out.text
+            usage = mergeUsage(usage, runtimeUsageToGenerationUsage(out.usage))
             if (push && out.text) await push({ type: 'token', data: out.text })
           }
           const translatedText = stripTopLevelCodeFence(raw).trim()
@@ -156,6 +167,10 @@ export class AiInsightsTranslationService implements OnModuleInit {
             throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
               message: 'Insights translation returned empty content',
             })
+          }
+          const totalCost = usage.cost?.total ?? 0
+          if (context && totalCost > 0) {
+            await context.incrementCost(totalCost)
           }
           const doc = this.toInsightsDoc(
             await this.aiInsightsRepository.upsert({
@@ -168,6 +183,16 @@ export class AiInsightsTranslationService implements OnModuleInit {
               sourceLang: source.sourceLang || source.lang,
             }),
           )!
+          await this.generationMetrics.record({
+            resourceType: 'insights',
+            resourceId: doc.id!,
+            refId: payload.refId,
+            lang: payload.targetLang,
+            taskId: context?.taskId ?? null,
+            providerId: runtime.providerInfo.id,
+            model: runtime.providerInfo.model,
+            usage,
+          })
           return { result: doc, resultId: doc.id! }
         },
         parseResult: async (resultId) => {

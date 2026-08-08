@@ -28,12 +28,22 @@ import {
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { isGlobalArticleVisible } from '../ai-article-visibility.util'
+import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
+import type { GenerationUsage } from '../ai-generation-metrics/ai-generation-metrics.types'
+import {
+  emptyUsage,
+  mergeUsage,
+} from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
+import {
+  piUsageToGenerationUsage,
+  runtimeUsageToGenerationUsage,
+} from '../runtime/pi-runtime.adapter'
 import { AiSummaryRepository } from './ai-summary.repository'
 import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
 import type { AiSummaryRow } from './ai-summary.types'
@@ -51,6 +61,7 @@ export class AiSummaryService implements OnModuleInit {
     private readonly aiInFlightService: AiInFlightService,
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly aiTaskService: AiTaskService,
+    private readonly generationMetrics: AiGenerationMetricsService,
   ) {
     this.logger = new Logger(AiSummaryService.name)
   }
@@ -109,6 +120,7 @@ export class AiSummaryService implements OnModuleInit {
               lang,
               context.incrementTokens,
               context.incrementCost,
+              context.taskId,
             )
             summaries.push({
               summaryId: result.id!,
@@ -268,8 +280,7 @@ export class AiSummaryService implements OnModuleInit {
     ]
 
     let fullText = ''
-    let totalTokens = 0
-    let totalCost = 0
+    let usage: GenerationUsage = emptyUsage()
     if (runtime.streamMessage) {
       const events = runtime.streamMessage({
         messages,
@@ -293,8 +304,10 @@ export class AiSummaryService implements OnModuleInit {
         ) {
           this.logger.debug(`stream non-text event filtered: ${event.type}`)
         } else if (event.type === 'done') {
-          totalTokens = event.message.usage?.totalTokens ?? 0
-          totalCost = event.message.usage?.cost?.total ?? 0
+          usage = mergeUsage(
+            usage,
+            piUsageToGenerationUsage(event.message.usage),
+          )
         } else if (event.type === 'error') {
           throw new Error(event.error.errorMessage || 'AI summary stream error')
         }
@@ -307,8 +320,7 @@ export class AiSummaryService implements OnModuleInit {
         reasoningEffort,
       })
       fullText = result.text
-      totalTokens = result.usage?.totalTokens ?? 0
-      totalCost = result.usage?.cost ?? 0
+      usage = mergeUsage(usage, runtimeUsageToGenerationUsage(result.usage))
       if (push && result.text) {
         await push({ type: 'token', data: result.text })
       }
@@ -319,6 +331,8 @@ export class AiSummaryService implements OnModuleInit {
       throw new Error('Invalid summary JSON response')
     }
 
+    const totalTokens = usage.totalTokens ?? 0
+    const totalCost = usage.cost?.total ?? 0
     if (onToken) {
       await onToken(totalTokens)
     }
@@ -326,7 +340,13 @@ export class AiSummaryService implements OnModuleInit {
       await onCost(totalCost)
     }
 
-    return { summary: parsed.summary, rawText: fullText }
+    return {
+      summary: parsed.summary,
+      rawText: fullText,
+      usage,
+      providerId: runtime.providerInfo.id,
+      model: runtime.providerInfo.model,
+    }
   }
 
   private async runSummaryGeneration(
@@ -335,6 +355,7 @@ export class AiSummaryService implements OnModuleInit {
     document: { text: string },
     onToken?: (count?: number) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
+    taskId?: string,
   ) {
     const text = this.serializeText(document.text)
     const key = this.buildSummaryKey(articleId, lang, text)
@@ -347,7 +368,7 @@ export class AiSummaryService implements OnModuleInit {
       readBlockMs: AI_STREAM_READ_BLOCK_MS,
       idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
       onLeader: async ({ push }) => {
-        const { summary } = await this.generateSummaryViaAIStream(
+        const generated = await this.generateSummaryViaAIStream(
           text,
           lang,
           push,
@@ -360,10 +381,21 @@ export class AiSummaryService implements OnModuleInit {
           await this.aiSummaryRepository.upsert({
             refId: articleId,
             hash: contentMd5,
-            summary,
+            summary: generated.summary,
             lang,
           }),
         )!
+
+        await this.generationMetrics.record({
+          resourceType: 'summary',
+          resourceId: doc.id!,
+          refId: articleId,
+          lang,
+          taskId: taskId ?? null,
+          providerId: generated.providerId,
+          model: generated.model,
+          usage: generated.usage,
+        })
 
         return { result: doc, resultId: doc.id! }
       },
@@ -384,6 +416,7 @@ export class AiSummaryService implements OnModuleInit {
     lang: string,
     onToken?: (count?: number) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
+    taskId?: string,
   ) {
     const {
       ai: { enableSummary },
@@ -402,6 +435,7 @@ export class AiSummaryService implements OnModuleInit {
         document,
         onToken,
         onCost,
+        taskId,
       )
       return await result
     } catch (error) {
@@ -441,8 +475,9 @@ export class AiSummaryService implements OnModuleInit {
     if (!article) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND, { id: refId })
     }
-    const summaries = this.toSummaryDocs(
-      await this.aiSummaryRepository.listForRef(refId),
+    const summaries = await this.generationMetrics.attachLatest(
+      'summary',
+      this.toSummaryDocs(await this.aiSummaryRepository.listForRef(refId)),
     )
 
     return {
@@ -454,7 +489,10 @@ export class AiSummaryService implements OnModuleInit {
   async getAllSummaries(pager: BasicPagerInput) {
     const { page, size } = pager
     const summaries = await this.aiSummaryRepository.list(page, size)
-    const docs = this.toSummaryDocs(summaries.data)
+    const docs = await this.generationMetrics.attachLatest(
+      'summary',
+      this.toSummaryDocs(summaries.data),
+    )
     const data = {
       data: docs,
       pagination: summaries.pagination,
@@ -479,7 +517,12 @@ export class AiSummaryService implements OnModuleInit {
       fetchRecordsDistinctRefIds: (refIds) =>
         this.aiSummaryRepository.findDistinctRefIds(refIds),
       fetchItemsByRefIds: async (refIds) =>
-        this.toSummaryDocs(await this.aiSummaryRepository.listByRefIds(refIds)),
+        this.generationMetrics.attachLatest(
+          'summary',
+          this.toSummaryDocs(
+            await this.aiSummaryRepository.listByRefIds(refIds),
+          ),
+        ),
       getItemRefId: (item) => item.refId,
     })
     return {
@@ -595,11 +638,16 @@ export class AiSummaryService implements OnModuleInit {
   }
 
   async deleteSummaryByArticleId(articleId: string) {
+    const rows = await this.aiSummaryRepository.listForRef(articleId)
     await this.aiSummaryRepository.deleteForRef(articleId)
+    for (const row of rows) {
+      await this.generationMetrics.deleteByResource('summary', String(row.id))
+    }
   }
 
   async deleteSummaryInDb(id: string) {
     await this.aiSummaryRepository.deleteById(id)
+    await this.generationMetrics.deleteByResource('summary', id)
   }
 
   @OnEvent(BusinessEvents.POST_DELETE)
@@ -689,7 +737,9 @@ export class AiSummaryService implements OnModuleInit {
         return
       }
 
-      this.logger.log(`AI auto summary task created (update init): article=${id}`)
+      this.logger.log(
+        `AI auto summary task created (update init): article=${id}`,
+      )
       await this.aiTaskService.createSummaryTask({
         refId: id,
         targetLanguages,

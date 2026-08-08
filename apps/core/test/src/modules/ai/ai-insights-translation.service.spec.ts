@@ -17,6 +17,9 @@ const createService = () => {
   const aiInFlightService = {}
   const taskProcessor = { registerHandler: vi.fn() }
   const aiTaskService = { createInsightsTranslationTask: vi.fn() }
+  const generationMetrics = {
+    record: vi.fn().mockResolvedValue(undefined),
+  }
   const service = new AiInsightsTranslationService(
     repository as any,
     configService as any,
@@ -24,8 +27,15 @@ const createService = () => {
     aiInFlightService as any,
     taskProcessor as any,
     aiTaskService as any,
+    generationMetrics as any,
   )
-  return { aiTaskService, configService, repository, service }
+  return {
+    aiTaskService,
+    configService,
+    generationMetrics,
+    repository,
+    service,
+  }
 }
 
 describe('AiInsightsTranslationService', () => {

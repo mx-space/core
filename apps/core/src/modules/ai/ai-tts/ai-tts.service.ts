@@ -16,6 +16,7 @@ import { throwIfAborted } from '~/utils/abort.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { FileService } from '../../file/file.service'
+import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
 import { parseLanguageCode } from '../ai-language.util'
 import { AITaskType, type TtsTaskPayload } from '../ai-task/ai-task.types'
 import { AiTranslationRepository } from '../ai-translation/ai-translation.repository'
@@ -36,7 +37,10 @@ import {
   buildTtsObjectKey,
   computeTtsObjectFingerprint,
 } from './tts-object-key'
-import { TtsRuntimeAdapter } from './tts-runtime.adapter'
+import {
+  resolveTtsLanguageControl,
+  TtsRuntimeAdapter,
+} from './tts-runtime.adapter'
 import { resolveTtsSourceContent } from './tts-source-content'
 
 // Caps in-flight synthesis across every TTS task in this process; ten tasks at
@@ -84,6 +88,7 @@ export class AiTtsService implements OnModuleInit {
     private readonly lexicalService: LexicalService,
     private readonly translationRepository: AiTranslationRepository,
     private readonly redisService: RedisService,
+    private readonly generationMetrics: AiGenerationMetricsService,
   ) {}
 
   onModuleInit() {
@@ -255,6 +260,10 @@ export class AiTtsService implements OnModuleInit {
       parent && !force
         ? { model: parent.model, voice: parent.voice, speed: parent.speed }
         : input.configuredVoice
+    const languageControl = resolveTtsLanguageControl(
+      { ...input.provider, model: voice.model },
+      lang,
+    )
     const objectKeyFor = (chunk: PlannedChunk) =>
       buildTtsObjectKey({
         prefix: input.objectKeyPrefix,
@@ -262,7 +271,11 @@ export class AiTtsService implements OnModuleInit {
         lang,
         blockId: chunk.blockId,
         chunkIndex: chunk.chunkIndex,
-        fingerprint: computeTtsObjectFingerprint(chunk.fingerprint, voice),
+        fingerprint: computeTtsObjectFingerprint(
+          chunk.fingerprint,
+          voice,
+          languageControl.cacheKey,
+        ),
       })
 
     const plan = planTts({ chunks, existing, force, objectKeyFor })
@@ -341,6 +354,19 @@ export class AiTtsService implements OnModuleInit {
     )
     await this.deleteObjects([...plan.toDelete, ...displaced])
 
+    if (generated > 0) {
+      await this.generationMetrics.record({
+        resourceType: 'tts',
+        resourceId: ttsId,
+        refId,
+        lang,
+        taskId: context.taskId,
+        providerId: input.provider.provider,
+        model: voice.model,
+        usage: null,
+      })
+    }
+
     return { ...summary, deleted: plan.toDelete.length }
   }
 
@@ -380,6 +406,7 @@ export class AiTtsService implements OnModuleInit {
           const { buffer } = await GLOBAL_SPEECH_LIMIT(() =>
             runtime.generateSpeech({
               input: chunk.text,
+              language: input.lang,
               voice: voice.voice,
               speed: voice.speed,
               signal: context.signal,
@@ -481,12 +508,17 @@ export class AiTtsService implements OnModuleInit {
   }
 
   async handleArticleDeleted(refId: string): Promise<void> {
+    const parents = await this.repository.findAllByRef(refId)
     const removed = await this.repository.deleteByRefId(refId)
     await this.deleteObjects(removed)
+    for (const parent of parents) {
+      await this.generationMetrics.deleteByResource('tts', String(parent.id))
+    }
   }
 
   async deleteById(id: string): Promise<void> {
     const removed = await this.repository.deleteById(id)
     await this.deleteObjects(removed)
+    await this.generationMetrics.deleteByResource('tts', id)
   }
 }

@@ -11,9 +11,10 @@ const SAFE_SEGMENT = /[^\w-]/g
 export function computeTtsObjectFingerprint(
   speechFingerprint: string,
   voice: { model: string; voice: string; speed: number },
+  synthesisProfile = 'auto:v1',
 ): string {
   return md5(
-    `${speechFingerprint}|${voice.model}|${voice.voice}|${voice.speed}`,
+    `${speechFingerprint}|${voice.model}|${voice.voice}|${voice.speed}|${synthesisProfile}`,
   )
 }
 
