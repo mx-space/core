@@ -1,80 +1,59 @@
 ---
 name: mx-core-local-auth
-description: How to obtain authenticated session for mx-core local dev server API calls
-user-invocable: false
+description: Create and reuse a short-lived local mx-core owner session when UI or API verification encounters a login gate, redirect, 401, or AUTH_NOT_LOGGED_IN response. Use only against the local development database and remove the temporary session after verification.
 ---
 
-## When to Use
+# Local authentication during verification
 
-When you need to make authenticated API calls to a local mx-core dev server (e.g. triggering AI TTS tasks, managing posts/notes, hitting any `/ai/*` endpoint) and don't have a browser session cookie handy.
+Treat authentication as an on-demand branch of the verification being performed.
 
-## The Problem
+1. Attempt the exact UI or API operation that needs verification.
+2. If it succeeds anonymously, continue without creating authentication state.
+3. If it fails on authentication, create one short-lived owner session directly
+   in the local PostgreSQL `sessions` table.
+4. Reuse that session for the original operation, collect the required evidence,
+   and delete the session immediately afterward.
 
-The mx-core backend uses **better-auth** with cookie-based sessions. The `@Auth()` decorator checks for a session cookie (`better-auth.session_token`) via `authService.getSessionUser(request.raw)`. A raw JWT or Bearer token will NOT work — you'll get `AUTH_NOT_LOGGED_IN`.
+## Create the temporary session
 
-There is also an `x-api-key` header path, but keys must be created via the better-auth API and are stored hashed — inserting a raw key into the `api_keys` table won't work because `verifyApiKey` uses better-auth's internal verification.
+Use the repository's configured local `PG_URL`; do not assume a container name or
+hard-code database credentials. Generate a unique session ID and a high-entropy
+token without a `.` character. Insert a session that expires in at most 15 minutes:
 
-## Solution: Session Cookie via Login
-
-### 1. Get the DB credentials
-
-```bash
-grep "PG_URL" /Users/innei/git/innei-repo/mx-core/.env
-# e.g. PG_URL=postgres://mx:mx@127.0.0.1:5433/mx_core
+```sql
+WITH target AS (
+  SELECT r.id, a.provider_id
+  FROM readers AS r
+  JOIN accounts AS a ON a.user_id = r.id
+  WHERE r.role = 'owner'
+  ORDER BY r.created_at
+  LIMIT 1
+)
+INSERT INTO sessions (id, user_id, token, expires_at, provider)
+SELECT '<session-id>', id, '<session-token>', now() + interval '15 minutes', provider_id
+FROM target;
 ```
 
-### 2. Find the owner's username
+Fail if no owner account was selected or the insert did not create exactly one
+row. Do not create or modify a reader, account, password, or API key.
 
-```bash
-docker exec mx-pg-dev psql -U mx -d mx_core -c "SELECT id, username FROM readers LIMIT 5"
-```
+## Reuse the session
 
-### 3. Reset the password (if you don't know it)
+- For API verification, send the raw token as
+  `Authorization: Bearer <session-token>`. The enabled Better Auth `bearer()`
+  plugin signs it internally and resolves the matching database session.
+- For browser UI verification, sign the token with the local `JWT_SECRET` using
+  HMAC-SHA256 with standard Base64 output, then set
+  `better-auth.session_token=<token>.<signature>` in the same browser context
+  used for evidence. Let the browser cookie API encode the value; when writing a
+  raw `Cookie` header, URL-encode it first. Never print the secret, token, or
+  cookie.
 
-The password hash uses better-auth's `hashPassword`. Hash a known password and update the `accounts` table:
+Retry the exact protected operation rather than adding a separate authentication
+test. Local development routes have no `/api/v1` prefix.
 
-```bash
-cd /Users/innei/git/innei-repo/mx-core/apps/core
-node -e "const { hashPassword } = require('better-auth/crypto'); hashPassword('test123').then(h => console.log(h))"
-# Output: <salt>:<hash>
+## Cleanup and boundaries
 
-docker exec mx-pg-dev psql -U mx -d mx_core -c \
-  "UPDATE accounts SET password = '<hash>' WHERE provider_id = 'credential' RETURNING user_id"
-```
-
-### 4. Login and save cookies
-
-```bash
-curl -s -X POST http://localhost:2333/auth/sign-in/username \
-  -H "Content-Type: application/json" \
-  -d '{"username":"<username>","password":"test123"}' \
-  -c /tmp/cookies.txt
-```
-
-The response includes the user info, and `/tmp/cookies.txt` contains the `better-auth.session_token` cookie.
-
-### 5. Use the cookie for authenticated requests
-
-```bash
-curl -s -X POST http://localhost:2333/ai/tts/task \
-  -H "Content-Type: application/json" \
-  -b /tmp/cookies.txt \
-  -d '{"refId":"<note_id>","langs":["zh"]}'
-```
-
-## Key Details
-
-- **Dev mode has no `/api/v1` prefix**: Routes are at `http://localhost:2333/ai/tts/task`, not `/api/v1/ai/tts/task`.
-- **Auth base path in dev**: `/auth` (not `/api/v1/auth`).
-- **PostgreSQL runs in Docker**: Container `mx-pg-dev`, port `5433`. Use `docker exec mx-pg-dev psql -U mx -d mx_core`.
-- **Table names use camelCase** (not snake_case): `ttsOptions`, not `tts_options`. Column names are also camelCase in some tables but the `options` table uses `name`/`value` columns.
-- **API responses are snake_cased** by the backend interceptor (`transformResponseCase`), but the `@mx-space/api-client` SDK camelCases them back automatically. Raw `curl` will see `block_id`, `block_order`, etc.
-- **Task queue is in Redis**, not PostgreSQL. Check task status with `redis-cli -p 6380 LRANGE "mx:task-queue:<task_id>:logs" 0 -1`.
-
-## TTS-Specific Notes
-
-- TTS config is in the `options` table under `name='ttsOptions'` — contains `provider`, `model`, `voice`, `apiKey`, `enable`, etc.
-- To update the OpenRouter API key: `UPDATE options SET value = jsonb_set(value, '{apiKey}', '"sk-or-v1-..."') WHERE name = 'ttsOptions'`
-- The `openrouter` provider uses `POST https://openrouter.ai/api/v1/audio/speech` with OpenAI-compatible TTS format.
-- Notes/posts content is Lexical JSON in the `content` column. Blocks must have `$.blockId` for TTS to work — blocks without IDs are skipped.
-- When inserting Lexical content via psql, use **dollar quoting** (`$tag$...$tag$`) to avoid JSON quote escaping issues. Shell variable interpolation (`$CONTENT`) in `docker exec -e` does NOT work reliably for JSON with special characters.
+Delete the temporary row by both ID and token in a `finally`-style cleanup, even
+when verification fails. This workflow is forbidden for staging, production,
+shared databases, or any database whose local ownership is uncertain.
