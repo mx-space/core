@@ -116,11 +116,12 @@ export function formatDateTimeInputValue(value: Date) {
 
 export function normalizeAIConfig(value: unknown): AIConfig {
   if (!value || typeof value !== 'object') {
-    return { providers: [] }
+    return { providers: [], version: 2 }
   }
   const config = value as AIConfig
   return {
     ...config,
+    version: 2,
     providers: (config.providers ?? []).map((provider) => ({
       apiKey: provider.apiKey ?? '',
       appendV1: provider.appendV1 ?? true,
@@ -133,6 +134,11 @@ export function normalizeAIConfig(value: unknown): AIConfig {
       modelListUrl: provider.modelListUrl ?? '',
       name: provider.name ?? '',
       type: coerceAIProviderType(provider.type),
+      capabilities: {
+        text: provider.capabilities?.text ?? true,
+        image: provider.capabilities?.image ?? false,
+        speech: provider.capabilities?.speech ?? false,
+      },
     })),
   }
 }

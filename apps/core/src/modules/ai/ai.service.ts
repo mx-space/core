@@ -141,12 +141,18 @@ export class AiService {
     // Use specified provider if found and enabled
     if (providerId) {
       const found = config.providers.find(
-        (p) => p.id === providerId && p.enabled,
+        (p) =>
+          p.id === providerId && p.enabled && (p.capabilities?.text ?? true),
       )
       if (found) return found
+      return null
     }
 
     // Fallback to first enabled provider
-    return config.providers.find((p) => p.enabled) || null
+    return (
+      config.providers.find(
+        (p) => p.enabled && (p.capabilities?.text ?? true),
+      ) || null
+    )
   }
 }

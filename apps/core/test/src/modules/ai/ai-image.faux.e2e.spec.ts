@@ -75,11 +75,40 @@ const aiServiceMock = { getWriterModel: vi.fn() }
 const databaseServiceMock = { findGlobalById: vi.fn() }
 const draftRepositoryMock = { findById: vi.fn() }
 let imageConfig = baseImageConfig()
+function toImageProvider(config: ReturnType<typeof baseImageConfig>) {
+  return {
+    id: 'image-provider',
+    name: 'Image Provider',
+    type: AIProviderType.OpenAICompatible,
+    apiKey: config.apiKey,
+    endpoint: config.endpoint,
+    defaultModel: config.model,
+    enabled: true,
+    capabilities: { text: false, image: true, speech: false },
+  }
+}
+
+function toAiImageConfig(config: ReturnType<typeof baseImageConfig>) {
+  return {
+    imageGeneration: {
+      enable: config.enable,
+      model: { providerId: 'image-provider', model: config.model },
+      defaultAspectRatio: config.defaultAspectRatio,
+      defaultQuality: config.defaultQuality,
+      defaultFormat: config.defaultFormat,
+    },
+  }
+}
+
 const configsServiceMock = {
   get: vi.fn(async (key: string) => {
-    if (key === 'imageGenerationOptions') return imageConfig
+    if (key === 'ai') return toAiImageConfig(imageConfig)
     return {}
   }),
+  resolveAiProviderForCapability: vi.fn(async () => ({
+    provider: toImageProvider(imageConfig),
+    model: imageConfig.model,
+  })),
 }
 
 function createStandaloneImageService(
@@ -104,7 +133,13 @@ function createStandaloneImageService(
       registeredHandler = handler
     }),
   }
-  const localConfigService = { get: vi.fn().mockResolvedValue(config) }
+  const localConfigService = {
+    get: vi.fn().mockResolvedValue(toAiImageConfig(config)),
+    resolveAiProviderForCapability: vi.fn().mockResolvedValue({
+      provider: toImageProvider(config),
+      model: config.model,
+    }),
+  }
   const service = new AiImageService(
     localConfigService as any,
     fileService as any,
@@ -558,7 +593,7 @@ describe('AiImageController (faux e2e)', () => {
         {
           id: 'openai/gpt-image-1',
           name: 'GPT Image 1',
-          provider: 'openrouter',
+          provider: 'image-provider',
           supported_parameters: {
             quality: {
               type: 'enum',

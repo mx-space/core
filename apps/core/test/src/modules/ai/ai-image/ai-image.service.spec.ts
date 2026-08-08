@@ -63,7 +63,35 @@ function createService(
     defaultFormat: 'png',
     ...configOverrides,
   }
-  const configService = { get: vi.fn().mockResolvedValue(config) }
+  const provider = {
+    id: 'image-provider',
+    name: 'Image Provider',
+    type: 'openai-compatible',
+    apiKey: config.apiKey,
+    endpoint: config.endpoint,
+    defaultModel: config.model,
+    enabled: true,
+    capabilities: { text: false, image: true, speech: false },
+  }
+  const configService = {
+    get: vi.fn().mockResolvedValue({
+      imageGeneration: {
+        enable: config.enable,
+        model: { providerId: provider.id, model: config.model },
+        defaultAspectRatio: config.defaultAspectRatio,
+        defaultQuality: config.defaultQuality,
+        defaultFormat: config.defaultFormat,
+      },
+    }),
+    resolveAiProviderForCapability: vi
+      .fn()
+      .mockImplementation(
+        async (_capability: string, assignment?: { model?: string }) =>
+          provider.apiKey
+            ? { provider, model: assignment?.model || undefined }
+            : null,
+      ),
+  }
   const fileService = {
     uploadBuffer: vi.fn().mockResolvedValue({
       url: 'https://cdn.example.com/x.png',

@@ -1936,6 +1936,9 @@ export const enUS = {
   'settings.ai.assignment.insightsTranslationDescription':
     'Model used to translate insights; falls back to the translation model when empty.',
   'settings.ai.assignment.insightsTranslationLabel': 'Insights translation',
+  'settings.ai.assignment.imageGenerationLabel': 'Image generation model',
+  'settings.ai.assignment.mediaModelPlaceholder':
+    'Enter the model ID for this capability',
   'settings.ai.assignment.modelPlaceholder': 'Use provider default model',
   'settings.ai.assignment.providerAriaLabel': '{label} provider',
   'settings.ai.assignment.providerNone': 'Unassigned',
@@ -1948,28 +1951,49 @@ export const enUS = {
   'settings.ai.assignment.translationReviewDescription':
     'Model used to review and revise translations; falls back to the translation model when empty.',
   'settings.ai.assignment.translationReviewLabel': 'Translation review',
+  'settings.ai.assignment.ttsLabel': 'Speech generation model',
   'settings.ai.assignment.writerDescription':
     'Model used to generate titles, slugs, etc.',
   'settings.ai.assignment.writerLabel': 'Writing assistant',
   'settings.ai.confirm.deleteProvider': 'Delete this provider?',
+  'settings.ai.capability.image': 'Image generation',
+  'settings.ai.capability.speech': 'Speech generation',
+  'settings.ai.capability.text': 'Text generation',
   'settings.ai.empty.providers': 'No providers',
   'settings.ai.error.fetchModelsFailed': 'Failed to fetch model list',
+  'settings.ai.error.providerInUse':
+    'This provider is still referenced by an AI feature and cannot be deleted',
   'settings.ai.error.testFailed': 'Connection test failed',
   'settings.ai.field.apiKey': 'API Key',
   'settings.ai.field.appendV1': 'Append /v1 to base URL',
+  'settings.ai.field.capabilities': 'Available capabilities',
+  'settings.ai.field.concurrency': 'Concurrent requests per task',
   'settings.ai.field.contextWindow': 'Context window (tokens)',
+  'settings.ai.field.defaultAspectRatio': 'Default aspect ratio',
+  'settings.ai.field.defaultFormat': 'Default image format',
   'settings.ai.field.defaultModel': 'Default model',
+  'settings.ai.field.defaultQuality': 'Default image quality',
   'settings.ai.field.displayName': 'Display name',
   'settings.ai.field.endpoint': 'Endpoint',
+  'settings.ai.field.maxCharsPerChunk': 'Maximum characters per request',
+  'settings.ai.field.maxCharsPerRun': 'Maximum characters per task',
   'settings.ai.field.maxTokens': 'Max output tokens',
   'settings.ai.field.modelListUrl': 'Model list URL',
   'settings.ai.field.providerType': 'Provider type',
+  'settings.ai.field.speed': 'Speech speed',
+  'settings.ai.field.voice': 'Voice ID',
+  'settings.ai.field.voiceListUrl': 'Voice list URL',
+  'settings.ai.option.qualityHigh': 'High',
+  'settings.ai.option.qualityLow': 'Low',
+  'settings.ai.option.qualityStandard': 'Standard',
   'settings.ai.placeholder.endpointCompatible':
     'Required, e.g. https://api.deepseek.com',
   'settings.ai.placeholder.endpointDefault':
     'Optional, leave empty for default',
   'settings.ai.placeholder.modelListUrl':
     'Optional, e.g. https://generativelanguage.googleapis.com/v1beta/openai/models',
+  'settings.ai.placeholder.voiceListUrl':
+    'Optional full URL returning a voice array',
   'settings.ai.placeholder.modelAnthropic': 'e.g. claude-sonnet-4.5',
   'settings.ai.placeholder.modelCompatible': 'e.g. deepseek-chat',
   'settings.ai.placeholder.modelOpenai': 'e.g. gpt-5-mini',
@@ -1981,16 +2005,32 @@ export const enUS = {
   'settings.ai.provider.modelUnset': 'No model set',
   'settings.ai.provider.sectionTitle': 'AI providers',
   'settings.ai.provider.sectionTitleDescription':
-    'Configure AI providers, keys, endpoint, and default model.',
+    'Configure each AI provider, credential, and endpoint once, then reuse it across capabilities.',
   'settings.ai.provider.editAction': 'Edit',
   'settings.ai.provider.row.empty': 'No model assigned',
   'settings.ai.providerType.anthropic': 'Anthropic',
   'settings.ai.providerType.generic': 'Generic',
   'settings.ai.providerType.openaiCompatible': 'OpenAI compatible',
+  'settings.ai.voiceDiscovery.empty':
+    'No voices discovered. Enter a provider voice ID manually.',
+  'settings.ai.voiceDiscovery.error':
+    'Voice discovery failed: {error}. Manual input remains available.',
+  'settings.ai.voiceDiscovery.found':
+    '{count} voices discovered. Manual input remains available.',
+  'settings.ai.voiceDiscovery.inputPlaceholder':
+    'Select a discovered voice or enter an ID',
+  'settings.ai.voiceDiscovery.manual':
+    'This model does not publish a voice catalog. Enter an ID manually.',
+  'settings.ai.voiceDiscovery.open': 'Open voice list',
+  'settings.ai.voiceDiscovery.selectModel':
+    'Select a speech provider and model first',
   'settings.ai.section.featureToggles': 'Feature toggles',
   'settings.ai.section.insights': 'AI insights',
   'settings.ai.section.insightsDescription':
     'Generate long-form insights from article content; optional translation.',
+  'settings.ai.section.imageGeneration': 'AI image generation',
+  'settings.ai.section.imageGenerationDescription':
+    'Reuse an existing provider connection and configure only the image model and output defaults.',
   'settings.ai.section.modelAssignments': 'Model assignments',
   'settings.ai.section.otherModels': 'Other models',
   'settings.ai.section.otherModelsDescription':
@@ -2001,6 +2041,9 @@ export const enUS = {
   'settings.ai.section.translation': 'AI translation',
   'settings.ai.section.translationDescription':
     'Translate article body to target languages.',
+  'settings.ai.section.tts': 'AI speech generation',
+  'settings.ai.section.ttsDescription':
+    'Reuse an existing provider connection and configure the speech model, voice, and execution limits.',
   'settings.ai.switch.enableAutoInsightsCreate':
     'Auto-generate insights on create',
   'settings.ai.switch.enableAutoInsightsUpdate':
@@ -2011,9 +2054,11 @@ export const enUS = {
   'settings.ai.switch.enableAutoTranslate': 'Auto-generate translations',
   'settings.ai.switch.enableAutoTranslateInsights': 'Auto-translate insights',
   'settings.ai.switch.enableInsights': 'Enable AI insights',
+  'settings.ai.switch.enableImageGeneration': 'Enable AI image generation',
   'settings.ai.switch.enableSummary': 'Enable AI summary',
   'settings.ai.switch.enableTranslation': 'Enable AI translation',
   'settings.ai.switch.enableTranslationReview': 'Enable translation review',
+  'settings.ai.switch.enableTts': 'Enable AI speech generation',
   'settings.ai.switch.enableTranslationReviewDescription':
     'Run writer → reviewer → editor pipeline: reviewer scores each translation; revisions trigger when the score drops below the threshold.',
   'settings.ai.switch.insightsMinTextLength':

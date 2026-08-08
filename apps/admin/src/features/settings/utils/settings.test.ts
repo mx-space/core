@@ -4,6 +4,7 @@ import {
   coerceAIProviderType,
   matchRegistryModel,
   mergeModelOptions,
+  normalizeAIConfig,
   resolvePiProviderId,
 } from './settings'
 
@@ -133,6 +134,38 @@ describe('coerceAIProviderType', () => {
     expect(coerceAIProviderType('something-else')).toBe('openai-compatible')
     expect(coerceAIProviderType(undefined)).toBe('openai-compatible')
     expect(coerceAIProviderType(null)).toBe('openai-compatible')
+  })
+})
+
+describe('normalizeAIConfig', () => {
+  it('upgrades legacy providers with text capability defaults while preserving media routes', () => {
+    const config = normalizeAIConfig({
+      providers: [
+        {
+          apiKey: 'test-key',
+          defaultModel: 'text-model',
+          enabled: true,
+          id: 'shared-provider',
+          name: 'Shared provider',
+          type: 'openai-compatible',
+        },
+      ],
+      imageGeneration: {
+        model: { providerId: 'shared-provider', model: 'image-model' },
+      },
+      tts: {
+        model: { providerId: 'shared-provider', model: 'speech-model' },
+      },
+    })
+
+    expect(config.version).toBe(2)
+    expect(config.providers?.[0]?.capabilities).toEqual({
+      image: false,
+      speech: false,
+      text: true,
+    })
+    expect(config.imageGeneration?.model?.providerId).toBe('shared-provider')
+    expect(config.tts?.model?.providerId).toBe('shared-provider')
   })
 })
 

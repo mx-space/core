@@ -1,12 +1,7 @@
-import { Logger } from '@nestjs/common'
 import { z } from 'zod'
-
-import { getImageCatalog } from '~/modules/ai/ai-image/image-catalog'
 
 import { configSchemaMapping, FullConfigSchema } from './configs.schema'
 import { getMeta, type SchemaMetadata } from './configs.zod-schema.util'
-
-const logger = new Logger('ConfigsDsl')
 
 // ==================== DSL Type Definitions ====================
 
@@ -128,7 +123,7 @@ const groupConfigs: GroupConfig[] = [
     title: 'AI',
     description: 'AI summary, writing assistant, image generation',
     icon: 'sparkles',
-    sectionKeys: ['ai', 'imageGenerationOptions', 'ttsOptions'],
+    sectionKeys: ['ai'],
   },
   {
     key: 'integrations',
@@ -508,42 +503,6 @@ function formatProviderLabel(provider: AIProviderInfo): string {
   if (displayName) return displayName
   if (type) return type
   return id || 'Unknown'
-}
-
-export async function attachImageModelOptionsToFormDSL(
-  dsl: FormDSL,
-  imageConfig: any,
-): Promise<void> {
-  if (!imageConfig) return
-
-  const modelField = findImageModelField(dsl)
-  if (!modelField) return
-
-  try {
-    const models = await getImageCatalog({
-      endpoint: imageConfig.endpoint,
-      apiKey: imageConfig.apiKey,
-    })
-    if (models.length === 0) return
-
-    modelField.ui.component = 'select'
-    modelField.ui.options = models.map((model) => ({
-      label: model.name,
-      value: model.id,
-    }))
-  } catch (error) {
-    logger.warn(
-      `image model catalog fetch failed, keeping the model field as free text: ${(error as Error).message}`,
-    )
-  }
-}
-
-function findImageModelField(dsl: FormDSL): FormField | undefined {
-  const aiGroup = dsl.groups.find((g) => g.key === 'ai')
-  const section = aiGroup?.sections.find(
-    (s) => s.key === 'imageGenerationOptions',
-  )
-  return section?.fields.find((f) => f.key === 'model')
 }
 
 function findProviderIdFields(fields: FormField[]): FormField[] {

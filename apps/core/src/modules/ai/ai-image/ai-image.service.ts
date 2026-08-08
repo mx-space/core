@@ -51,15 +51,20 @@ export class AiImageService implements OnModuleInit {
       ) => {
         throwIfAborted(context.signal)
 
-        const config = await this.configService.get('imageGenerationOptions')
+        const aiConfig = await this.configService.get('ai')
+        const config = aiConfig.imageGeneration
 
-        if (!config.enable) {
+        if (!config?.enable) {
           throw createAppException(AppErrorCode.IMAGE_GENERATION_DISABLED)
         }
 
-        const { apiKey } = config
-        const model = payload.model ?? config.model
-        if (!apiKey || !model) {
+        const resolved =
+          await this.configService.resolveAiProviderForCapability(
+            'image',
+            config.model,
+          )
+        const model = payload.model ?? resolved?.model
+        if (!resolved?.provider.apiKey || !model) {
           throw createAppException(AppErrorCode.IMAGE_PROVIDER_NOT_CONFIGURED)
         }
 
@@ -67,9 +72,9 @@ export class AiImageService implements OnModuleInit {
           payload.prompt ?? (await this.compileCoverPrompt(payload, context))
 
         const runtime: IImageRuntime = new ImageRuntimeAdapter({
-          provider: config.provider,
-          apiKey,
-          endpoint: config.endpoint,
+          provider: resolved.provider.id,
+          apiKey: resolved.provider.apiKey,
+          endpoint: resolved.provider.endpoint,
           model,
         })
 

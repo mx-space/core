@@ -15,12 +15,14 @@ import { parseLanguageCode } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   CreateTtsTaskDto,
+  DiscoverTtsVoicesQueryDto,
   GetTtsGroupedQueryDto,
   GetTtsQueryDto,
 } from './ai-tts.schema'
 import { AiTtsService } from './ai-tts.service'
 import { AiTtsViews } from './ai-tts.views'
 import { AiTtsQueryService } from './ai-tts-query.service'
+import { TtsVoiceCatalogService } from './tts-voice-catalog.service'
 
 @ApiController('ai/tts')
 export class AiTtsController {
@@ -28,7 +30,14 @@ export class AiTtsController {
     private readonly service: AiTtsService,
     private readonly queryService: AiTtsQueryService,
     private readonly taskService: AiTaskService,
+    private readonly voiceCatalogService: TtsVoiceCatalogService,
   ) {}
+
+  @Get('/voices')
+  @Auth()
+  discoverVoices(@Query() query: DiscoverTtsVoicesQueryDto) {
+    return this.voiceCatalogService.discover(query)
+  }
 
   @Post('/task')
   @Auth()

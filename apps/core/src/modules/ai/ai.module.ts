@@ -43,6 +43,7 @@ import { AiTtsController } from './ai-tts/ai-tts.controller'
 import { AiTtsRepository } from './ai-tts/ai-tts.repository'
 import { AiTtsService } from './ai-tts/ai-tts.service'
 import { AiTtsQueryService } from './ai-tts/ai-tts-query.service'
+import { TtsVoiceCatalogService } from './ai-tts/tts-voice-catalog.service'
 import { AiSlugBackfillService } from './ai-writer/ai-slug-backfill.service'
 import { AiWriterController } from './ai-writer/ai-writer.controller'
 import { AiWriterService } from './ai-writer/ai-writer.service'
@@ -88,6 +89,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiTtsService,
     AiTtsRepository,
     AiTtsQueryService,
+    TtsVoiceCatalogService,
   ],
   controllers: [
     AiController,

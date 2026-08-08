@@ -96,16 +96,22 @@ export class AiImageController {
   @Get('models')
   @Auth()
   async getModels(): Promise<ImageModelView[]> {
-    const config = await this.configsService.get('imageGenerationOptions')
+    const aiConfig = await this.configsService.get('ai')
+    const resolved = await this.configsService.resolveAiProviderForCapability(
+      'image',
+      aiConfig.imageGeneration?.model,
+    )
+    if (!resolved) return []
+
     const models = await getImageCatalog({
-      endpoint: config.endpoint,
-      apiKey: config.apiKey,
+      endpoint: resolved.provider.endpoint,
+      apiKey: resolved.provider.apiKey,
     })
     return models.map((m) =>
       AiImageViews.model.parse({
         id: m.id,
         name: m.name,
-        provider: config.provider,
+        provider: resolved.provider.id,
         supportedParameters: m.supportedParameters,
       }),
     )

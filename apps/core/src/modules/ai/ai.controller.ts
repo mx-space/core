@@ -77,7 +77,11 @@ export class AiController {
     const results: ProviderModelsResponse[] = []
 
     for (const provider of aiConfig.providers) {
-      if (!provider.enabled || !provider.apiKey) {
+      if (
+        !provider.enabled ||
+        !provider.apiKey ||
+        !(provider.capabilities?.text ?? true)
+      ) {
         continue
       }
 
@@ -317,6 +321,12 @@ export class AiController {
     }
 
     if (!provider.enabled) {
+      throw createAppException(AppErrorCode.AI_PROVIDER_DISABLED, {
+        providerId,
+      })
+    }
+
+    if (!(provider.capabilities?.text ?? true)) {
       throw createAppException(AppErrorCode.AI_PROVIDER_DISABLED, {
         providerId,
       })

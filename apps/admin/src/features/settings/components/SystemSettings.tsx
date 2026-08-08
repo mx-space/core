@@ -71,7 +71,18 @@ export function SystemSettings(props: {
       toast.success(
         t('settings.common.savedAll', { count: dirtySections.length }),
       )
-      await queryClient.invalidateQueries({ queryKey: settingsQueryKey })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: settingsQueryKey }),
+        queryClient.invalidateQueries({
+          queryKey: adminQueryKeys.ai.imageGenerationOptions(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: adminQueryKeys.ai.ttsOptions(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: adminQueryKeys.ai.ttsVoicesRoot,
+        }),
+      ])
     },
   })
 

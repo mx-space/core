@@ -113,14 +113,12 @@ describe('AiService', () => {
   })
 
   describe('fallback behavior', () => {
-    it('should fallback to first enabled provider when assigned provider not found', async () => {
+    it('rejects an explicit assignment when its provider no longer exists', async () => {
       configsService.get.mockResolvedValueOnce({
         ...mockAiConfig,
         summaryModel: { providerId: 'non-existent' },
       })
-      const runtime = await service.getSummaryModel()
-      expect(runtime).toBeDefined()
-      expect(runtime.providerInfo.id).toBe('main')
+      await expect(service.getSummaryModel()).rejects.toThrow(AppException)
     })
 
     it('should fallback to first enabled provider when no assignment', async () => {

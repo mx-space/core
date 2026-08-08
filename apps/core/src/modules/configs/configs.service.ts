@@ -7,7 +7,12 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import type { AIProviderConfig } from '~/modules/ai/ai.types'
+import {
+  type AIModelAssignment,
+  type AIProviderCapability,
+  type AIProviderConfig,
+  AIProviderType,
+} from '~/modules/ai/ai.types'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import {
   ConfigVersionScopes,
@@ -143,6 +148,8 @@ export class ConfigsService implements OnModuleInit {
     }
 
     const configs = await this.optionsRepository.findAll()
+    const storedAiConfig = configs.find((field) => field.name === 'ai')
+      ?.value as Record<string, any> | undefined
     const mergedConfig = generateDefaultConfig()
     const mergeStoredConfig = <T extends keyof IConfig>(
       name: T,
@@ -182,7 +189,149 @@ export class ConfigsService implements OnModuleInit {
       }
     })
 
+    mergedConfig.ai = this.normalizeAiConfig(
+      storedAiConfig,
+      mergedConfig.ai,
+      mergedConfig.imageGenerationOptions,
+      mergedConfig.ttsOptions,
+    )
+
     await this.setConfig(mergedConfig)
+  }
+
+  private normalizeAiConfig(
+    storedAiConfig: Record<string, any> | undefined,
+    aiConfig: IConfig['ai'],
+    legacyImageConfig: IConfig['imageGenerationOptions'],
+    legacyTtsConfig: IConfig['ttsOptions'],
+  ): IConfig['ai'] {
+    const providers = (aiConfig.providers ?? []).map((provider) => ({
+      ...provider,
+      capabilities: {
+        text: provider.capabilities?.text ?? true,
+        image: provider.capabilities?.image ?? false,
+        speech: provider.capabilities?.speech ?? false,
+      },
+    }))
+
+    if (storedAiConfig?.version === 2) {
+      return { ...aiConfig, version: 2, providers }
+    }
+
+    const imageGeneration = {
+      enable: legacyImageConfig.enable,
+      model: undefined as { providerId: string; model?: string } | undefined,
+      defaultAspectRatio: legacyImageConfig.defaultAspectRatio,
+      defaultQuality: legacyImageConfig.defaultQuality,
+      defaultFormat: legacyImageConfig.defaultFormat,
+    }
+    const tts = {
+      enable: legacyTtsConfig.enable,
+      model: undefined as { providerId: string; model?: string } | undefined,
+      voice: legacyTtsConfig.voice,
+      speed: legacyTtsConfig.speed,
+      maxCharsPerChunk: legacyTtsConfig.maxCharsPerChunk,
+      concurrency: legacyTtsConfig.concurrency,
+      maxCharsPerRun: legacyTtsConfig.maxCharsPerRun,
+    }
+
+    const addLegacyProvider = (input: {
+      apiKey?: string | null
+      capability: 'image' | 'speech'
+      defaultModel?: string | null
+      endpoint?: string | null
+      id: string
+      name: string
+    }): string | undefined => {
+      if (!input.apiKey) return undefined
+
+      const normalizedEndpoint = input.endpoint?.trim().replace(/\/+$/, '')
+      const existing = providers.find(
+        (provider) =>
+          provider.apiKey === input.apiKey &&
+          provider.endpoint?.trim().replace(/\/+$/, '') === normalizedEndpoint,
+      )
+      if (existing) {
+        existing.capabilities = {
+          text: existing.capabilities?.text ?? true,
+          image: existing.capabilities?.image || input.capability === 'image',
+          speech:
+            existing.capabilities?.speech || input.capability === 'speech',
+        }
+        return existing.id
+      }
+
+      let id = input.id
+      let suffix = 2
+      while (providers.some((provider) => provider.id === id)) {
+        id = `${input.id}-${suffix}`
+        suffix += 1
+      }
+
+      providers.push({
+        id,
+        name: input.name,
+        type: AIProviderType.OpenAICompatible,
+        apiKey: input.apiKey,
+        endpoint: normalizedEndpoint,
+        defaultModel: input.defaultModel ?? '',
+        enabled: true,
+        capabilities: {
+          text: false,
+          image: input.capability === 'image',
+          speech: input.capability === 'speech',
+        },
+      })
+      return id
+    }
+
+    const imageProviderId = addLegacyProvider({
+      apiKey: legacyImageConfig.apiKey,
+      capability: 'image',
+      defaultModel: legacyImageConfig.model,
+      endpoint:
+        legacyImageConfig.endpoint ||
+        (legacyImageConfig.provider === 'openrouter'
+          ? 'https://openrouter.ai/api/v1'
+          : undefined),
+      id: '__legacy_image_generation__',
+      name: 'Imported image generation provider',
+    })
+    if (imageProviderId && legacyImageConfig.model) {
+      imageGeneration.model = {
+        providerId: imageProviderId,
+        model: legacyImageConfig.model,
+      }
+    }
+
+    const ttsProviderId = addLegacyProvider({
+      apiKey: legacyTtsConfig.apiKey,
+      capability: 'speech',
+      defaultModel: legacyTtsConfig.model,
+      endpoint:
+        legacyTtsConfig.endpoint ||
+        (legacyTtsConfig.provider === 'openrouter'
+          ? 'https://openrouter.ai/api/v1'
+          : legacyTtsConfig.provider === 'openai'
+            ? 'https://api.openai.com/v1'
+            : undefined),
+      id: '__legacy_tts__',
+      name: 'Imported speech provider',
+    })
+    if (ttsProviderId && legacyTtsConfig.model) {
+      tts.model = {
+        providerId: ttsProviderId,
+        model: legacyTtsConfig.model,
+      }
+    }
+
+    return {
+      ...aiConfig,
+      version: 2,
+      providers,
+      imageGeneration,
+      tts,
+    }
   }
 
   /**
@@ -284,6 +433,9 @@ export class ConfigsService implements OnModuleInit {
     const updatedConfigRow = await this.optionsRepository.upsert(
       key as string,
       mergeWith(cloneDeep(config[key]), data, (old, newer, field) => {
+        if (newer === null) {
+          return null
+        }
         // Arrays are not merged
         if (Array.isArray(old)) {
           return newer
@@ -362,12 +514,22 @@ export class ConfigsService implements OnModuleInit {
     // If this is the comment settings and AI review is being enabled, validate the AI config
     if (key === 'commentOptions' && (value as any).aiReview === true) {
       const aiConfig = await this.get('ai')
-      const hasEnabledProvider = aiConfig.providers?.some((p) => p.enabled)
+      const hasEnabledProvider = aiConfig.providers?.some(
+        (p) => p.enabled && (p.capabilities?.text ?? true),
+      )
       if (!hasEnabledProvider) {
         throw createAppException(AppErrorCode.AI_PROVIDER_DISABLED)
       }
     }
     const instanceValue = this.validWithDto(dto, value) as Partial<IConfig[T]>
+
+    if (key === 'ai') {
+      const nextConfig = await this.buildNextConfigForValidation(
+        key,
+        instanceValue,
+      )
+      this.validateAiFeatureRoutes(nextConfig.ai)
+    }
 
     if (key === 'mailOptions') {
       const nextConfig = await this.buildNextConfigForValidation(
@@ -471,6 +633,9 @@ export class ConfigsService implements OnModuleInit {
       cloneDeep(current[key]),
       data,
       (old, newer) => {
+        if (newer === null) {
+          return null
+        }
         if (Array.isArray(old)) {
           return newer
         }
@@ -537,6 +702,107 @@ export class ConfigsService implements OnModuleInit {
     }
   }
 
+  private validateAiFeatureRoutes(aiConfig: IConfig['ai']) {
+    const providerIds = new Set<string>()
+    for (const provider of aiConfig.providers ?? []) {
+      if (providerIds.has(provider.id)) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `ai.providers: duplicate provider id "${provider.id}"`,
+        })
+      }
+      providerIds.add(provider.id)
+    }
+
+    const textAssignments = [
+      ['summaryModel', aiConfig.summaryModel],
+      ['writerModel', aiConfig.writerModel],
+      ['commentReviewModel', aiConfig.commentReviewModel],
+      ['translationModel', aiConfig.translationModel],
+      ['translationReviewModel', aiConfig.translationReviewModel],
+      ['insightsModel', aiConfig.insightsModel],
+      ['insightsTranslationModel', aiConfig.insightsTranslationModel],
+    ] as const
+    for (const [key, assignment] of textAssignments) {
+      if (!assignment?.providerId) continue
+      const provider = aiConfig.providers?.find(
+        (candidate) => candidate.id === assignment.providerId,
+      )
+      if (!provider) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `ai.${key}.providerId: provider "${assignment.providerId}" does not exist`,
+        })
+      }
+      if (!(provider.capabilities?.text ?? true)) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `ai.providers.${provider.id}.capabilities.text: required by ai.${key}`,
+        })
+      }
+      if (!assignment.model?.trim() && !provider.defaultModel.trim()) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `ai.${key}.model: a model or provider default model is required`,
+        })
+      }
+    }
+
+    const mediaAssignments = [
+      ['imageGeneration', 'image', aiConfig.imageGeneration?.model],
+      ['tts', 'speech', aiConfig.tts?.model],
+    ] as const
+    for (const [feature, capability, assignment] of mediaAssignments) {
+      if (!assignment?.providerId) continue
+      const provider = aiConfig.providers?.find(
+        (candidate) => candidate.id === assignment.providerId,
+      )
+      if (!provider) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `ai.${feature}.model.providerId: provider "${assignment.providerId}" does not exist`,
+        })
+      }
+      if (!provider.capabilities?.[capability]) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `ai.providers.${provider.id}.capabilities.${capability}: required by ai.${feature}`,
+        })
+      }
+    }
+
+    const validateRoute = (
+      feature: 'imageGeneration' | 'tts',
+      capability: 'image' | 'speech',
+    ) => {
+      const config = aiConfig[feature]
+      if (!config?.enable) return
+
+      const providerId = config.model?.providerId
+      const provider = aiConfig.providers?.find(
+        (candidate) => candidate.id === providerId,
+      )
+      if (!providerId || !provider || !provider.enabled) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `ai.${feature}.model.providerId: an enabled provider is required`,
+        })
+      }
+      if (!provider.capabilities?.[capability]) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `ai.providers.${provider.id}.capabilities.${capability}: required by ai.${feature}`,
+        })
+      }
+      if (!config.model?.model?.trim()) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `ai.${feature}.model.model: a model is required`,
+        })
+      }
+    }
+
+    validateRoute('imageGeneration', 'image')
+    validateRoute('tts', 'speech')
+
+    if (aiConfig.tts?.enable && !aiConfig.tts.voice) {
+      throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+        message: 'ai.tts.voice: required when TTS is enabled',
+      })
+    }
+  }
+
   private validWithDto(schema: z.ZodTypeAny, value: unknown): any {
     const result = schema.safeParse(value)
     if (!result.success) {
@@ -563,6 +829,24 @@ export class ConfigsService implements OnModuleInit {
     const cachedProvider = aiConfig.providers?.find((p) => p.id === providerId)
 
     return cachedProvider || null
+  }
+
+  public async resolveAiProviderForCapability(
+    capability: Exclude<AIProviderCapability, 'text'>,
+    assignment?: AIModelAssignment | null,
+  ): Promise<{ model?: string; provider: AIProviderConfig } | null> {
+    if (!assignment?.providerId) return null
+
+    const aiConfig = await this.get('ai')
+    const provider = aiConfig.providers?.find(
+      (candidate) =>
+        candidate.id === assignment.providerId &&
+        candidate.enabled &&
+        candidate.capabilities?.[capability],
+    )
+    if (!provider) return null
+
+    return { model: assignment.model?.trim() || undefined, provider }
   }
 
   private async hydrateAiProviderApiKeys(value: any) {

@@ -170,10 +170,35 @@ function createHarness() {
   const ttsConfig = baseTtsConfig()
   const configService = {
     get: vi.fn(async (key: string) => {
-      if (key === 'ttsOptions') return ttsConfig
+      if (key === 'ai') {
+        return {
+          tts: {
+            enable: ttsConfig.enable,
+            model: { providerId: 'speech-provider', model: ttsConfig.model },
+            voice: ttsConfig.voice,
+            speed: ttsConfig.speed,
+            maxCharsPerChunk: ttsConfig.maxCharsPerChunk,
+            concurrency: ttsConfig.concurrency,
+            maxCharsPerRun: ttsConfig.maxCharsPerRun,
+          },
+        }
+      }
       if (key === 'imageStorageOptions') return { prefix: '' }
       return {}
     }),
+    resolveAiProviderForCapability: vi.fn(async () => ({
+      provider: {
+        id: 'speech-provider',
+        name: 'Speech Provider',
+        type: 'openai-compatible',
+        apiKey: ttsConfig.apiKey,
+        endpoint: ttsConfig.endpoint || 'https://openrouter.ai/api/v1',
+        defaultModel: ttsConfig.model,
+        enabled: true,
+        capabilities: { text: false, image: false, speech: true },
+      },
+      model: ttsConfig.model,
+    })),
   }
 
   const fileService = {

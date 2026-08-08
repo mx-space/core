@@ -33,6 +33,17 @@ export class GetTtsGroupedQueryDto extends createZodDto(
   GetTtsGroupedQuerySchema,
 ) {}
 
+export const DiscoverTtsVoicesQuerySchema = z.object({
+  providerId: z.string().trim().min(1, 'providerId is required'),
+  model: z.string().trim().min(1, 'model is required'),
+})
+export class DiscoverTtsVoicesQueryDto extends createZodDto(
+  DiscoverTtsVoicesQuerySchema,
+) {}
+
 export type CreateTtsTaskInput = z.infer<typeof CreateTtsTaskSchema>
 export type GetTtsQueryInput = z.infer<typeof GetTtsQuerySchema>
 export type GetTtsGroupedQueryInput = z.infer<typeof GetTtsGroupedQuerySchema>
+export type DiscoverTtsVoicesQueryInput = z.infer<
+  typeof DiscoverTtsVoicesQuerySchema
+>

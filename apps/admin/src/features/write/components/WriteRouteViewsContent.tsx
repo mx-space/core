@@ -4507,12 +4507,12 @@ function RichWriteSurface(props: {
   const editorRef = useRef<RichEditorWithAgentRef | null>(null)
   const dynamicCatalogMessages = useDynamicCatalogSystemMessages()
   const imageGenerationOptionsQuery = useQuery({
-    queryFn: () => getOption<{ enable?: boolean }>('imageGenerationOptions'),
+    queryFn: () => getOption<{ imageGeneration?: { enable?: boolean } }>('ai'),
     queryKey: adminQueryKeys.ai.imageGenerationOptions(),
     staleTime: 60_000,
   })
   const imageGenerationEnabled = Boolean(
-    imageGenerationOptionsQuery.data?.enable,
+    imageGenerationOptionsQuery.data?.imageGeneration?.enable,
   )
   const agent = useWriteAgent({
     agentVisible: Boolean(props.agentVisible),

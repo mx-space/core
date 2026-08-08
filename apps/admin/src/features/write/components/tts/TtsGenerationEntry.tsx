@@ -13,11 +13,11 @@ export function TtsGenerationEntry(props: { refId?: string }) {
   const { t } = useI18n()
 
   const optionsQuery = useQuery({
-    queryFn: () => getOption<{ enable?: boolean }>('ttsOptions'),
+    queryFn: () => getOption<{ tts?: { enable?: boolean } }>('ai'),
     queryKey: adminQueryKeys.ai.ttsOptions(),
     staleTime: 60_000,
   })
-  const enabled = Boolean(optionsQuery.data?.enable)
+  const enabled = Boolean(optionsQuery.data?.tts?.enable)
 
   const generation = useTtsGeneration({ enabled, refId: props.refId })
 

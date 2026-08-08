@@ -162,6 +162,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     disablePasswordLogin: false,
   },
   ai: {
+    version: 2,
     providers: [],
     summaryModel: undefined,
     writerModel: undefined,
@@ -182,6 +183,22 @@ export const generateDefaultConfig: () => IConfig = () => ({
     enableAutoTranslateInsights: false,
     insightsTargetLanguages: [],
     insightsMinTextLength: 300,
+    imageGeneration: {
+      enable: false,
+      model: undefined,
+      defaultAspectRatio: '16:9',
+      defaultQuality: 'standard',
+      defaultFormat: 'png',
+    },
+    tts: {
+      enable: false,
+      model: undefined,
+      voice: '',
+      speed: 1,
+      maxCharsPerChunk: 1800,
+      concurrency: 3,
+      maxCharsPerRun: 120000,
+    },
   },
   oauth: {
     providers: [],

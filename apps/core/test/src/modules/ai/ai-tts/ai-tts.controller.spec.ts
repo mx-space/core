@@ -16,11 +16,45 @@ function createHarness() {
   const taskService: any = {
     createTtsTask: vi.fn(async () => ({ taskId: 'task-1', created: true })),
   }
-  const controller = new AiTtsController(service, queryService, taskService)
-  return { controller, service, queryService, taskService }
+  const voiceCatalogService: any = {
+    discover: vi.fn(),
+  }
+  const controller = new AiTtsController(
+    service,
+    queryService,
+    taskService,
+    voiceCatalogService,
+  )
+  return {
+    controller,
+    service,
+    queryService,
+    taskService,
+    voiceCatalogService,
+  }
 }
 
 describe('AiTtsController', () => {
+  it('delegates voice discovery with the selected provider and model', async () => {
+    const { controller, voiceCatalogService } = createHarness()
+    voiceCatalogService.discover.mockResolvedValue({
+      manualInputAllowed: true,
+      source: 'builtin',
+      voices: [{ id: 'alloy', kind: 'builtin', name: 'Alloy' }],
+    })
+
+    await expect(
+      controller.discoverVoices({
+        providerId: 'openai-main',
+        model: 'gpt-4o-mini-tts',
+      }),
+    ).resolves.toMatchObject({ source: 'builtin' })
+    expect(voiceCatalogService.discover).toHaveBeenCalledWith({
+      providerId: 'openai-main',
+      model: 'gpt-4o-mini-tts',
+    })
+  })
+
   it('returns null for an article with no narration', async () => {
     const { controller, queryService } = createHarness()
     queryService.getPublicNarration.mockResolvedValue(null)

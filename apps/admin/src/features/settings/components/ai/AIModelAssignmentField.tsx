@@ -4,23 +4,32 @@ import { TextInput } from '~/ui/primitives/text-field'
 
 import type {
   AIModelAssignment,
+  AIProviderCapability,
   AIProviderConfig,
   AIProviderModel,
 } from '../../types/settings'
 import { formatAIProviderLabel } from '../../utils/settings'
 
 export function AIModelAssignmentField(props: {
+  capability?: AIProviderCapability
   description?: string
   label: string
+  modelPlaceholder?: string
   models: Record<string, AIProviderModel[]>
-  onChange: (value: AIModelAssignment | undefined) => void
+  onChange: (value: AIModelAssignment | null) => void
   providers: AIProviderConfig[]
-  value?: AIModelAssignment
+  value?: AIModelAssignment | null
 }) {
   const { t } = useI18n()
   const modelListId = `assignment-models-${props.label}`
   const providerId = props.value?.providerId ?? ''
   const providerModels = providerId ? (props.models[providerId] ?? []) : []
+  const capability = props.capability ?? 'text'
+  const providers = props.providers.filter((provider) =>
+    capability === 'text'
+      ? (provider.capabilities?.text ?? true)
+      : Boolean(provider.capabilities?.[capability]),
+  )
 
   return (
     <div className="grid items-center gap-2 text-sm md:grid-cols-[12rem_minmax(0,1fr)]">
@@ -41,12 +50,12 @@ export function AIModelAssignmentField(props: {
             props.onChange(
               nextProviderId
                 ? { providerId: nextProviderId, model: undefined }
-                : undefined,
+                : null,
             )
           }
           options={[
             { label: t('settings.ai.assignment.providerNone'), value: '' },
-            ...props.providers.map((provider) => ({
+            ...providers.map((provider) => ({
               label: formatAIProviderLabel(provider),
               value: provider.id,
             })),
@@ -57,9 +66,12 @@ export function AIModelAssignmentField(props: {
           disabled={!providerId}
           list={modelListId}
           onChange={(model) =>
-            props.onChange(providerId ? { providerId, model } : undefined)
+            props.onChange(providerId ? { providerId, model } : null)
           }
-          placeholder={t('settings.ai.assignment.modelPlaceholder')}
+          placeholder={
+            props.modelPlaceholder ??
+            t('settings.ai.assignment.modelPlaceholder')
+          }
           value={props.value?.model ?? ''}
         />
         <datalist id={modelListId}>

@@ -824,6 +824,12 @@ export class AuthSecurityDto extends createZodDto(AuthSecuritySchema) {}
 export type AuthSecurityConfig = z.infer<typeof AuthSecuritySchema>
 
 // ==================== AI Provider Config ====================
+const AIProviderCapabilitiesSchema = z.object({
+  text: z.boolean().optional().default(true),
+  image: z.boolean().optional().default(false),
+  speech: z.boolean().optional().default(false),
+})
+
 const AIProviderConfigSchema = withMeta(
   z.object({
     id: field.plain(z.string().min(1), 'Provider ID', {
@@ -842,13 +848,21 @@ const AIProviderConfigSchema = withMeta(
       description:
         'Full URL to fetch the model list from (OpenAI format); leave empty to use the built-in registry',
     }),
+    voiceListUrl: field.plain(z.string().optional(), 'Voice list URL', {
+      description:
+        'Full URL to fetch speech voices from; accepts an array or an object with a data/voices array',
+    }),
     appendV1: field.toggle(z.boolean().optional(), 'Append /v1 to base URL', {
       description:
         'Append /v1 to the endpoint when missing; defaults to enabled',
     }),
-    defaultModel: field.plain(z.string().min(1), 'Default model', {
-      description: 'E.g. gpt-4o, deepseek-chat, claude-sonnet-4-20250514',
-    }),
+    defaultModel: field.plain(
+      z.string().optional().default(''),
+      'Default model',
+      {
+        description: 'E.g. gpt-4o, deepseek-chat, claude-sonnet-4-20250514',
+      },
+    ),
     enabled: field.toggle(z.boolean(), 'Enabled'),
     contextWindow: field.plain(
       z.number().int().positive().nullish(),
@@ -857,6 +871,18 @@ const AIProviderConfigSchema = withMeta(
     maxTokens: field.plain(
       z.number().int().positive().nullish(),
       'Max output tokens',
+    ),
+    capabilities: field.plain(
+      AIProviderCapabilitiesSchema.optional().default({
+        text: true,
+        image: false,
+        speech: false,
+      }),
+      'Provider capabilities',
+      {
+        description:
+          'Declares which runtime capabilities may reuse this provider connection',
+      },
     ),
   }),
   { title: 'AI provider configuration', 'ui:options': { type: 'hidden' } },
@@ -875,22 +901,59 @@ const AIModelAssignmentSchema = withMeta(
   { title: 'AI model assignment', 'ui:options': { type: 'hidden' } },
 )
 
+const AIImageGenerationFeatureSchema = withMeta(
+  z.object({
+    enable: z.boolean().optional().default(false),
+    model: AIModelAssignmentSchema.nullish(),
+    defaultAspectRatio: z.string().optional().default('16:9'),
+    defaultQuality: z
+      .enum(['low', 'standard', 'high'])
+      .optional()
+      .default('standard'),
+    defaultFormat: z.enum(['png', 'jpeg', 'webp']).optional().default('png'),
+  }),
+  { title: 'AI image generation feature', 'ui:options': { type: 'hidden' } },
+)
+
+const AITtsFeatureSchema = withMeta(
+  z.object({
+    enable: z.boolean().optional().default(false),
+    model: AIModelAssignmentSchema.nullish(),
+    voice: nullableStorageText(),
+    speed: z.coerce.number().min(0.25).max(4).optional().default(1),
+    maxCharsPerChunk: z.coerce
+      .number()
+      .int()
+      .min(200)
+      .max(4000)
+      .optional()
+      .default(1800),
+    concurrency: z.coerce.number().int().min(1).max(8).optional().default(3),
+    maxCharsPerRun: z.coerce
+      .number()
+      .int()
+      .min(1000)
+      .max(1000000)
+      .optional()
+      .default(120000),
+  }),
+  { title: 'AI text to speech feature', 'ui:options': { type: 'hidden' } },
+)
+
 export const AISchema = section('AI settings', {
+  version: z.literal(2).optional().default(2),
   providers: field.array(
     z.array(AIProviderConfigSchema).optional(),
     'AI providers',
     { description: 'Configure multiple AI service providers' },
   ),
-  summaryModel: field.plain(
-    AIModelAssignmentSchema.optional(),
-    'Summary model',
-  ),
+  summaryModel: field.plain(AIModelAssignmentSchema.nullish(), 'Summary model'),
   writerModel: field.plain(
-    AIModelAssignmentSchema.optional(),
+    AIModelAssignmentSchema.nullish(),
     'Writing assistant model',
   ),
   commentReviewModel: field.plain(
-    AIModelAssignmentSchema.optional(),
+    AIModelAssignmentSchema.nullish(),
     'Comment review model',
   ),
   enableSummary: field.toggle(z.boolean().optional(), 'Allow AI summary', {
@@ -930,7 +993,7 @@ export const AISchema = section('AI settings', {
     },
   ),
   translationModel: field.plain(
-    AIModelAssignmentSchema.optional(),
+    AIModelAssignmentSchema.nullish(),
     'Translation model',
   ),
   enableTranslation: field.toggle(
@@ -986,7 +1049,7 @@ export const AISchema = section('AI settings', {
     },
   ),
   translationReviewModel: field.plain(
-    AIModelAssignmentSchema.optional(),
+    AIModelAssignmentSchema.nullish(),
     'Translation reviewer model',
     {
       description:
@@ -994,14 +1057,14 @@ export const AISchema = section('AI settings', {
     },
   ),
   insightsModel: field.plain(
-    AIModelAssignmentSchema.optional(),
+    AIModelAssignmentSchema.nullish(),
     'Insights model',
     {
       description: 'AI model used to generate Insights',
     },
   ),
   insightsTranslationModel: field.plain(
-    AIModelAssignmentSchema.optional(),
+    AIModelAssignmentSchema.nullish(),
     'Insights translation model',
     {
       description:
@@ -1049,6 +1112,8 @@ export const AISchema = section('AI settings', {
         'Skips automatic hooks (OnCreate/OnUpdate) when the body has fewer characters than this; only affects automatic triggers. 0 means no limit. Default 300',
     },
   ),
+  imageGeneration: AIImageGenerationFeatureSchema.optional(),
+  tts: AITtsFeatureSchema.optional(),
 })
 export class AIDto extends createZodDto(AISchema) {}
 export type AIConfig = z.infer<typeof AISchema>

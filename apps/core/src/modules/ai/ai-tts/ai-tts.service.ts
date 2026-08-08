@@ -100,14 +100,20 @@ export class AiTtsService implements OnModuleInit {
   private async runTask(payload: TtsTaskPayload, context: TaskExecuteContext) {
     throwIfAborted(context.signal)
 
-    const config = await this.configService.get('ttsOptions')
-    if (!config.enable) {
+    const aiConfig = await this.configService.get('ai')
+    const config = aiConfig.tts
+    if (!config?.enable) {
       throw createAppException(AppErrorCode.TTS_DISABLED)
     }
-    const { apiKey, model, voice } = config
-    if (!apiKey || !model || !voice) {
+    const resolved = await this.configService.resolveAiProviderForCapability(
+      'speech',
+      config.model,
+    )
+    const { voice } = config
+    if (!resolved?.provider.apiKey || !resolved.model || !voice) {
       throw createAppException(AppErrorCode.TTS_PROVIDER_NOT_CONFIGURED)
     }
+    const { model, provider } = resolved
 
     const document = await this.loadDocument(payload.refId)
     const sourceLang = parseLanguageCode(readArticleMetaLang(document))
@@ -140,9 +146,9 @@ export class AiTtsService implements OnModuleInit {
       maxCharsPerRun: config.maxCharsPerRun,
       objectKeyPrefix: prefix,
       provider: {
-        provider: config.provider,
-        apiKey,
-        endpoint: config.endpoint || undefined,
+        provider: provider.id,
+        apiKey: provider.apiKey,
+        endpoint: provider.endpoint || undefined,
       },
       refId: payload.refId,
       sourceLang,

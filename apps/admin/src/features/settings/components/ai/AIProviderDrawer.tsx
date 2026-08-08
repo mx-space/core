@@ -48,9 +48,11 @@ export function AIProviderDrawer(props: {
   const [fetching, setFetching] = useState(false)
   const [testing, setTesting] = useState(false)
   const provider = props.provider
+  const textEnabled = provider?.capabilities?.text ?? true
 
   const showEndpoint = Boolean(provider)
-  const piProviderId = provider ? resolvePiProviderId(provider) : null
+  const piProviderId =
+    provider && textEnabled ? resolvePiProviderId(provider) : null
 
   const registryQuery = useQuery({
     enabled: Boolean(provider) && piProviderId !== null,
@@ -142,28 +144,38 @@ export function AIProviderDrawer(props: {
       footer={
         provider ? (
           <>
-            <Button
-              disabled={fetching}
-              onClick={() => void refreshModels()}
-              type="button"
-              variant="subtle"
-            >
-              {fetching ? (
-                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-              ) : null}
-              {t('settings.ai.action.fetchModels')}
-            </Button>
-            <Button
-              disabled={testing}
-              onClick={() => void testProvider()}
-              type="button"
-              variant="subtle"
-            >
-              {testing ? (
-                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-              ) : null}
-              {t('settings.ai.action.testConnection')}
-            </Button>
+            {textEnabled ? (
+              <>
+                <Button
+                  disabled={fetching}
+                  onClick={() => void refreshModels()}
+                  type="button"
+                  variant="subtle"
+                >
+                  {fetching ? (
+                    <Loader2
+                      aria-hidden="true"
+                      className="size-4 animate-spin"
+                    />
+                  ) : null}
+                  {t('settings.ai.action.fetchModels')}
+                </Button>
+                <Button
+                  disabled={testing}
+                  onClick={() => void testProvider()}
+                  type="button"
+                  variant="subtle"
+                >
+                  {testing ? (
+                    <Loader2
+                      aria-hidden="true"
+                      className="size-4 animate-spin"
+                    />
+                  ) : null}
+                  {t('settings.ai.action.testConnection')}
+                </Button>
+              </>
+            ) : null}
             <Button onClick={props.onClose} type="button">
               {t('common.close')}
             </Button>
@@ -183,6 +195,50 @@ export function AIProviderDrawer(props: {
             label={t('settings.oauth.switch.enabled')}
             onCheckedChange={(enabled) => props.onChange({ enabled })}
           />
+          <div className="space-y-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-800">
+            <div className="text-sm font-medium">
+              {t('settings.ai.field.capabilities')}
+            </div>
+            <Switch
+              checked={provider.capabilities?.text ?? true}
+              label={t('settings.ai.capability.text')}
+              onCheckedChange={(text) =>
+                props.onChange({
+                  capabilities: {
+                    text,
+                    image: provider.capabilities?.image ?? false,
+                    speech: provider.capabilities?.speech ?? false,
+                  },
+                })
+              }
+            />
+            <Switch
+              checked={provider.capabilities?.image ?? false}
+              label={t('settings.ai.capability.image')}
+              onCheckedChange={(image) =>
+                props.onChange({
+                  capabilities: {
+                    text: provider.capabilities?.text ?? true,
+                    image,
+                    speech: provider.capabilities?.speech ?? false,
+                  },
+                })
+              }
+            />
+            <Switch
+              checked={provider.capabilities?.speech ?? false}
+              label={t('settings.ai.capability.speech')}
+              onCheckedChange={(speech) =>
+                props.onChange({
+                  capabilities: {
+                    text: provider.capabilities?.text ?? true,
+                    image: provider.capabilities?.image ?? false,
+                    speech,
+                  },
+                })
+              }
+            />
+          </div>
           <FieldShell label={t('settings.ai.field.providerType')}>
             <SelectField<AIProviderType>
               aria-label={t('settings.ai.field.providerType')}
@@ -224,7 +280,7 @@ export function AIProviderDrawer(props: {
               value={provider.endpoint ?? ''}
             />
           ) : null}
-          {provider.type !== 'anthropic' ? (
+          {textEnabled && provider.type !== 'anthropic' ? (
             <>
               <TextInput
                 label={t('settings.ai.field.modelListUrl')}
@@ -239,46 +295,60 @@ export function AIProviderDrawer(props: {
               />
             </>
           ) : null}
-          <FieldShell label={t('settings.ai.field.defaultModel')}>
-            <ModelCombobox
-              disabled={modelsDisabled}
-              loading={registryQuery.isFetching}
-              models={modelOptions}
-              onChange={(defaultModel) => props.onChange({ defaultModel })}
-              placeholder={getAIProviderModelPlaceholder(t, provider.type)}
-              value={provider.defaultModel}
+          {provider.capabilities?.speech ? (
+            <TextInput
+              label={t('settings.ai.field.voiceListUrl')}
+              onChange={(voiceListUrl) => props.onChange({ voiceListUrl })}
+              placeholder={t('settings.ai.placeholder.voiceListUrl')}
+              value={provider.voiceListUrl ?? ''}
             />
-          </FieldShell>
-          {showCustomTokenFields ? (
+          ) : null}
+          {textEnabled ? (
             <>
-              <TextInput
-                inputMode="numeric"
-                label={t('settings.ai.field.contextWindow')}
-                onChange={(value) =>
-                  props.onChange({
-                    contextWindow: value.trim() ? Number(value) : undefined,
-                  })
-                }
-                type="number"
-                value={
-                  provider.contextWindow == null
-                    ? ''
-                    : String(provider.contextWindow)
-                }
-              />
-              <TextInput
-                inputMode="numeric"
-                label={t('settings.ai.field.maxTokens')}
-                onChange={(value) =>
-                  props.onChange({
-                    maxTokens: value.trim() ? Number(value) : undefined,
-                  })
-                }
-                type="number"
-                value={
-                  provider.maxTokens == null ? '' : String(provider.maxTokens)
-                }
-              />
+              <FieldShell label={t('settings.ai.field.defaultModel')}>
+                <ModelCombobox
+                  disabled={modelsDisabled}
+                  loading={registryQuery.isFetching}
+                  models={modelOptions}
+                  onChange={(defaultModel) => props.onChange({ defaultModel })}
+                  placeholder={getAIProviderModelPlaceholder(t, provider.type)}
+                  value={provider.defaultModel}
+                />
+              </FieldShell>
+              {showCustomTokenFields ? (
+                <>
+                  <TextInput
+                    inputMode="numeric"
+                    label={t('settings.ai.field.contextWindow')}
+                    onChange={(value) =>
+                      props.onChange({
+                        contextWindow: value.trim() ? Number(value) : undefined,
+                      })
+                    }
+                    type="number"
+                    value={
+                      provider.contextWindow == null
+                        ? ''
+                        : String(provider.contextWindow)
+                    }
+                  />
+                  <TextInput
+                    inputMode="numeric"
+                    label={t('settings.ai.field.maxTokens')}
+                    onChange={(value) =>
+                      props.onChange({
+                        maxTokens: value.trim() ? Number(value) : undefined,
+                      })
+                    }
+                    type="number"
+                    value={
+                      provider.maxTokens == null
+                        ? ''
+                        : String(provider.maxTokens)
+                    }
+                  />
+                </>
+              ) : null}
             </>
           ) : null}
         </div>

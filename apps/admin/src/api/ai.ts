@@ -427,6 +427,27 @@ export interface AITtsRow {
   voice: string
 }
 
+export interface TtsVoiceOption {
+  id: string
+  kind: 'builtin' | 'provider'
+  name: string
+  previewUrl?: string
+}
+
+export interface TtsVoiceDiscoveryResponse {
+  error?: string
+  manualInputAllowed: true
+  source: 'builtin' | 'none' | 'remote'
+  voices: TtsVoiceOption[]
+}
+
+export function getTtsVoices(providerId: string, model: string) {
+  return getJson<TtsVoiceDiscoveryResponse>('/ai/tts/voices', {
+    model,
+    providerId,
+  })
+}
+
 export function createTtsTask(data: {
   force?: boolean
   langs?: string[]

@@ -40,6 +40,9 @@ export const adminQueryKeys = {
     ttsByRef: (refId: string) => ['ai', 'tts', 'by-ref', refId] as const,
     ttsOptions: () => ['ai', 'tts', 'options'] as const,
     ttsRoot: ['ai', 'tts'] as const,
+    ttsVoices: (providerId: string, model: string) =>
+      ['ai', 'tts', 'voices', providerId, model] as const,
+    ttsVoicesRoot: ['ai', 'tts', 'voices'] as const,
   },
   analyze: {
     activity: (params: { page: number; size: number; type: number }) =>

@@ -4,10 +4,18 @@ import type { ConfigFormGroup } from '~/api/options'
 import type { TranslationKey } from '~/i18n/types'
 
 export type AIProviderType = 'anthropic' | 'generic' | 'openai-compatible'
+export type AIProviderCapability = 'image' | 'speech' | 'text'
+
+export interface AIProviderCapabilities {
+  image: boolean
+  speech: boolean
+  text: boolean
+}
 
 export interface AIProviderConfig {
   apiKey: string
   appendV1?: boolean
+  capabilities?: AIProviderCapabilities
   contextWindow?: number | null
   defaultModel: string
   enabled: boolean
@@ -17,6 +25,7 @@ export interface AIProviderConfig {
   modelListUrl?: string
   name: string
   type: AIProviderType
+  voiceListUrl?: string
 }
 
 export interface AIModelAssignment {
@@ -25,7 +34,8 @@ export interface AIModelAssignment {
 }
 
 export interface AIConfig {
-  commentReviewModel?: AIModelAssignment
+  version?: 2
+  commentReviewModel?: AIModelAssignment | null
   enableAutoGenerateInsightsOnCreate?: boolean
   enableAutoGenerateInsightsOnUpdate?: boolean
   enableAutoGenerateSummaryOnCreate?: boolean
@@ -37,18 +47,34 @@ export interface AIConfig {
   enableTranslation?: boolean
   enableTranslationReview?: boolean
   insightsMinTextLength?: number
-  insightsModel?: AIModelAssignment
+  insightsModel?: AIModelAssignment | null
   insightsTargetLanguages?: string[]
-  insightsTranslationModel?: AIModelAssignment
+  insightsTranslationModel?: AIModelAssignment | null
+  imageGeneration?: {
+    defaultAspectRatio?: string
+    defaultFormat?: 'jpeg' | 'png' | 'webp'
+    defaultQuality?: 'high' | 'low' | 'standard'
+    enable?: boolean
+    model?: AIModelAssignment | null
+  }
   providers?: AIProviderConfig[]
   summaryMinTextLength?: number
-  summaryModel?: AIModelAssignment
+  summaryModel?: AIModelAssignment | null
   summaryTargetLanguages?: string[]
-  translationModel?: AIModelAssignment
-  translationReviewModel?: AIModelAssignment
+  translationModel?: AIModelAssignment | null
+  translationReviewModel?: AIModelAssignment | null
   translationReviewScoreThreshold?: number
   translationTargetLanguages?: string[]
-  writerModel?: AIModelAssignment
+  tts?: {
+    concurrency?: number
+    enable?: boolean
+    maxCharsPerChunk?: number
+    maxCharsPerRun?: number
+    model?: AIModelAssignment | null
+    speed?: number
+    voice?: string
+  }
+  writerModel?: AIModelAssignment | null
 }
 
 export interface AIProviderModel {

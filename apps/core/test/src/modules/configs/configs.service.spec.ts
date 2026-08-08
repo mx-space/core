@@ -84,6 +84,167 @@ describe('ConfigsService', () => {
     })
   })
 
+  it('imports legacy image and speech credentials into capability-routed AI providers', async () => {
+    const redisClient = { set: vi.fn().mockResolvedValue('OK') }
+    const redisService = {
+      getClient: vi.fn(() => redisClient),
+      waitForReady: vi.fn().mockResolvedValue(undefined),
+    }
+    const optionsRepository = {
+      findAll: vi.fn().mockResolvedValue([
+        { name: 'ai', value: { providers: [] } },
+        {
+          name: 'imageGenerationOptions',
+          value: {
+            enable: true,
+            provider: 'openrouter',
+            apiKey: 'legacy-image-key',
+            model: 'google/gemini-image',
+          },
+        },
+        {
+          name: 'ttsOptions',
+          value: {
+            enable: true,
+            provider: 'openai',
+            apiKey: 'legacy-speech-key',
+            model: 'gpt-4o-mini-tts',
+            voice: 'alloy',
+          },
+        },
+      ]),
+    }
+    const service = new ConfigsService(
+      optionsRepository as any,
+      redisService as any,
+      {} as any,
+      { emit: vi.fn() } as any,
+    )
+
+    await service.onModuleInit()
+
+    const cachedConfig = JSON.parse(redisClient.set.mock.calls[0][1])
+    const imageProvider = cachedConfig.ai.providers.find(
+      (provider: any) => provider.id === '__legacy_image_generation__',
+    )
+    const speechProvider = cachedConfig.ai.providers.find(
+      (provider: any) => provider.id === '__legacy_tts__',
+    )
+    expect(cachedConfig.ai.version).toBe(2)
+    expect(imageProvider).toMatchObject({
+      apiKey: 'legacy-image-key',
+      capabilities: { text: false, image: true, speech: false },
+      endpoint: 'https://openrouter.ai/api/v1',
+    })
+    expect(speechProvider).toMatchObject({
+      apiKey: 'legacy-speech-key',
+      capabilities: { text: false, image: false, speech: true },
+      endpoint: 'https://api.openai.com/v1',
+    })
+    expect(cachedConfig.ai.imageGeneration.model).toEqual({
+      providerId: imageProvider.id,
+      model: 'google/gemini-image',
+    })
+    expect(cachedConfig.ai.tts.model).toEqual({
+      providerId: speechProvider.id,
+      model: 'gpt-4o-mini-tts',
+    })
+  })
+
+  it('deduplicates legacy media settings that share one provider connection', async () => {
+    const redisClient = { set: vi.fn().mockResolvedValue('OK') }
+    const redisService = {
+      getClient: vi.fn(() => redisClient),
+      waitForReady: vi.fn().mockResolvedValue(undefined),
+    }
+    const optionsRepository = {
+      findAll: vi.fn().mockResolvedValue([
+        { name: 'ai', value: { providers: [] } },
+        {
+          name: 'imageGenerationOptions',
+          value: {
+            provider: 'custom',
+            apiKey: 'shared-key',
+            endpoint: 'https://media.example.com/v1/',
+            model: 'image-model',
+          },
+        },
+        {
+          name: 'ttsOptions',
+          value: {
+            provider: 'custom',
+            apiKey: 'shared-key',
+            endpoint: 'https://media.example.com/v1',
+            model: 'speech-model',
+          },
+        },
+      ]),
+    }
+    const service = new ConfigsService(
+      optionsRepository as any,
+      redisService as any,
+      {} as any,
+      { emit: vi.fn() } as any,
+    )
+
+    await service.onModuleInit()
+
+    const cachedConfig = JSON.parse(redisClient.set.mock.calls[0][1])
+    expect(cachedConfig.ai.providers).toHaveLength(1)
+    expect(cachedConfig.ai.providers[0].capabilities).toEqual({
+      text: false,
+      image: true,
+      speech: true,
+    })
+    expect(cachedConfig.ai.imageGeneration.model.providerId).toBe(
+      cachedConfig.ai.providers[0].id,
+    )
+    expect(cachedConfig.ai.tts.model.providerId).toBe(
+      cachedConfig.ai.providers[0].id,
+    )
+  })
+
+  it('preserves a legacy media credential even when no model was assigned', async () => {
+    const redisClient = { set: vi.fn().mockResolvedValue('OK') }
+    const redisService = {
+      getClient: vi.fn(() => redisClient),
+      waitForReady: vi.fn().mockResolvedValue(undefined),
+    }
+    const optionsRepository = {
+      findAll: vi.fn().mockResolvedValue([
+        { name: 'ai', value: { providers: [] } },
+        {
+          name: 'imageGenerationOptions',
+          value: {
+            provider: 'custom',
+            apiKey: 'credential-without-model',
+            endpoint: 'https://images.example.com/v1',
+            model: '',
+          },
+        },
+      ]),
+    }
+    const service = new ConfigsService(
+      optionsRepository as any,
+      redisService as any,
+      {} as any,
+      { emit: vi.fn() } as any,
+    )
+
+    await service.onModuleInit()
+
+    const cachedConfig = JSON.parse(redisClient.set.mock.calls[0][1])
+    expect(cachedConfig.ai.providers).toEqual([
+      expect.objectContaining({
+        apiKey: 'credential-without-model',
+        defaultModel: '',
+        endpoint: 'https://images.example.com/v1',
+        capabilities: { text: false, image: true, speech: false },
+      }),
+    ])
+    expect(cachedConfig.ai.imageGeneration.model).toBeUndefined()
+  })
+
   it('migrates legacy Dodo credential names into provider-neutral fields', async () => {
     const redisClient = {
       set: vi.fn().mockResolvedValue('OK'),
@@ -437,6 +598,145 @@ describe('ConfigsService', () => {
       })
 
       expect(result.provider).toBe('openrouter')
+    })
+  })
+
+  describe('AI capability route validation', () => {
+    function createService(
+      currentConfig: ReturnType<typeof generateDefaultConfig>,
+    ) {
+      const redisClient = {
+        get: vi.fn().mockResolvedValue(JSON.stringify(currentConfig)),
+        set: vi.fn().mockResolvedValue('OK'),
+      }
+      const redisService = {
+        getClient: vi.fn(() => redisClient),
+        waitForReady: vi.fn().mockResolvedValue(undefined),
+      }
+      const optionsRepository = {
+        findAll: vi.fn().mockResolvedValue([]),
+        upsert: vi.fn(async (name: string, value: unknown) => ({
+          id: '1' as any,
+          name,
+          value,
+        })),
+      }
+      const service = new ConfigsService(
+        optionsRepository as any,
+        redisService as any,
+        {} as any,
+        { emit: vi.fn() } as any,
+      )
+      return { service }
+    }
+
+    it('accepts image and speech routes that reuse one capable provider', async () => {
+      const currentConfig = generateDefaultConfig()
+      currentConfig.ai.providers = [
+        {
+          id: 'openrouter',
+          name: 'OpenRouter',
+          type: AIProviderType.OpenAICompatible,
+          apiKey: 'secret',
+          endpoint: 'https://openrouter.ai/api/v1',
+          defaultModel: 'openai/gpt-5-mini',
+          enabled: true,
+          capabilities: { text: true, image: true, speech: true },
+        },
+      ]
+      const { service } = createService(currentConfig)
+
+      await expect(
+        service.patchAndValid('ai', {
+          ...currentConfig.ai,
+          imageGeneration: {
+            ...currentConfig.ai.imageGeneration,
+            enable: true,
+            model: { providerId: 'openrouter', model: 'google/gemini-image' },
+          },
+          tts: {
+            ...currentConfig.ai.tts,
+            enable: true,
+            model: { providerId: 'openrouter', model: 'openai/gpt-4o-tts' },
+            voice: 'alloy',
+          },
+        }),
+      ).resolves.toBeDefined()
+    })
+
+    it('rejects an enabled media feature when its provider lacks the capability', async () => {
+      const currentConfig = generateDefaultConfig()
+      currentConfig.ai.providers = [
+        {
+          id: 'text-only',
+          name: 'Text only',
+          type: AIProviderType.OpenAICompatible,
+          apiKey: 'secret',
+          defaultModel: 'gpt-5-mini',
+          enabled: true,
+          capabilities: { text: true, image: false, speech: false },
+        },
+      ]
+      const { service } = createService(currentConfig)
+
+      await expect(
+        service.patchAndValid('ai', {
+          ...currentConfig.ai,
+          imageGeneration: {
+            ...currentConfig.ai.imageGeneration,
+            enable: true,
+            model: { providerId: 'text-only', model: 'image-model' },
+          },
+        }),
+      ).rejects.toMatchObject({ code: AppErrorCode.CONFIG_VALIDATION_FAILED })
+    })
+
+    it('clears persisted media routes when an assignment is explicitly null', async () => {
+      const currentConfig = generateDefaultConfig()
+      currentConfig.ai.imageGeneration.model = {
+        providerId: 'shared-provider',
+        model: 'image-model',
+      }
+      currentConfig.ai.tts.model = {
+        providerId: 'shared-provider',
+        model: 'speech-model',
+      }
+      const { service } = createService(currentConfig)
+
+      const result = await service.patchAndValid('ai', {
+        ...currentConfig.ai,
+        imageGeneration: {
+          ...currentConfig.ai.imageGeneration,
+          model: null,
+        },
+        tts: {
+          ...currentConfig.ai.tts,
+          model: null,
+        },
+      })
+
+      expect(result.imageGeneration?.model).toBeNull()
+      expect(result.tts?.model).toBeNull()
+    })
+
+    it('does not treat an image-only provider as valid for comment review', async () => {
+      const currentConfig = generateDefaultConfig()
+      currentConfig.ai.providers = [
+        {
+          id: 'image-only',
+          name: 'Image only',
+          type: AIProviderType.OpenAICompatible,
+          apiKey: 'secret',
+          defaultModel: '',
+          enabled: true,
+          capabilities: { text: false, image: true, speech: false },
+        },
+      ]
+      const { service } = createService(currentConfig)
+
+      await expect(
+        service.patchAndValid('commentOptions', { aiReview: true }),
+      ).rejects.toMatchObject({ code: AppErrorCode.AI_PROVIDER_DISABLED })
     })
   })
 

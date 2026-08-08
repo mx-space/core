@@ -2,10 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { Pencil, Plus, Settings, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 import { getModels } from '~/api/ai'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
+import { SelectField } from '~/ui/primitives/select'
 import { Switch, Toggle } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
@@ -17,10 +19,11 @@ import type {
   AIProviderType,
 } from '../../types/settings'
 import { formatAIProviderLabel, getDefaultAIModel } from '../../utils/settings'
-import { EmptyState, SettingsSection } from '../SettingsPrimitives'
+import { EmptyState, FieldShell, SettingsSection } from '../SettingsPrimitives'
 import { AIModelAssignmentField } from './AIModelAssignmentField'
 import { AIProviderDrawer } from './AIProviderDrawer'
 import { AITextListField } from './AITextListField'
+import { TtsVoiceField } from './TtsVoiceField'
 
 export function AIConfigEditor(props: {
   modelCacheKey: readonly unknown[]
@@ -62,6 +65,7 @@ export function AIConfigEditor(props: {
     const type: AIProviderType = 'openai-compatible'
     const provider: AIProviderConfig = {
       apiKey: '',
+      capabilities: { text: true, image: false, speech: false },
       defaultModel: getDefaultAIModel(type),
       enabled: true,
       id: crypto.randomUUID(),
@@ -73,6 +77,21 @@ export function AIConfigEditor(props: {
   }
 
   const deleteProvider = (id: string) => {
+    const references = [
+      props.value.summaryModel,
+      props.value.writerModel,
+      props.value.commentReviewModel,
+      props.value.translationModel,
+      props.value.translationReviewModel,
+      props.value.insightsModel,
+      props.value.insightsTranslationModel,
+      props.value.imageGeneration?.model,
+      props.value.tts?.model,
+    ]
+    if (references.some((assignment) => assignment?.providerId === id)) {
+      toast.warning(t('settings.ai.error.providerInUse'))
+      return
+    }
     updateConfig({
       providers: providers.filter((provider) => provider.id !== id),
     })
@@ -332,6 +351,205 @@ export function AIConfigEditor(props: {
           />
         </FeatureSection>
 
+        <FeatureSection
+          assignment={
+            <AIModelAssignmentField
+              capability="image"
+              label={t('settings.ai.assignment.imageGenerationLabel')}
+              modelPlaceholder={t(
+                'settings.ai.assignment.mediaModelPlaceholder',
+              )}
+              models={{}}
+              onChange={(model) =>
+                updateConfig({
+                  imageGeneration: {
+                    ...props.value.imageGeneration,
+                    model,
+                  },
+                })
+              }
+              providers={providers}
+              value={props.value.imageGeneration?.model}
+            />
+          }
+          description={t('settings.ai.section.imageGenerationDescription')}
+          enabled={Boolean(props.value.imageGeneration?.enable)}
+          onEnabledChange={(enable) =>
+            updateConfig({
+              imageGeneration: {
+                ...props.value.imageGeneration,
+                enable,
+              },
+            })
+          }
+          title={t('settings.ai.section.imageGeneration')}
+          toggleLabel={t('settings.ai.switch.enableImageGeneration')}
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            <FieldShell label={t('settings.ai.field.defaultAspectRatio')}>
+              <SelectField<string>
+                onValueChange={(defaultAspectRatio) =>
+                  updateConfig({
+                    imageGeneration: {
+                      ...props.value.imageGeneration,
+                      defaultAspectRatio,
+                    },
+                  })
+                }
+                options={[
+                  '1:1',
+                  '3:2',
+                  '2:3',
+                  '4:3',
+                  '3:4',
+                  '16:9',
+                  '9:16',
+                ].map((value) => ({ label: value, value }))}
+                value={
+                  props.value.imageGeneration?.defaultAspectRatio ?? '16:9'
+                }
+              />
+            </FieldShell>
+            <FieldShell label={t('settings.ai.field.defaultQuality')}>
+              <SelectField<'high' | 'low' | 'standard'>
+                onValueChange={(defaultQuality) =>
+                  updateConfig({
+                    imageGeneration: {
+                      ...props.value.imageGeneration,
+                      defaultQuality,
+                    },
+                  })
+                }
+                options={[
+                  { label: t('settings.ai.option.qualityLow'), value: 'low' },
+                  {
+                    label: t('settings.ai.option.qualityStandard'),
+                    value: 'standard',
+                  },
+                  { label: t('settings.ai.option.qualityHigh'), value: 'high' },
+                ]}
+                value={
+                  props.value.imageGeneration?.defaultQuality ?? 'standard'
+                }
+              />
+            </FieldShell>
+            <FieldShell label={t('settings.ai.field.defaultFormat')}>
+              <SelectField<'jpeg' | 'png' | 'webp'>
+                onValueChange={(defaultFormat) =>
+                  updateConfig({
+                    imageGeneration: {
+                      ...props.value.imageGeneration,
+                      defaultFormat,
+                    },
+                  })
+                }
+                options={['png', 'jpeg', 'webp'].map((value) => ({
+                  label: value.toUpperCase(),
+                  value: value as 'jpeg' | 'png' | 'webp',
+                }))}
+                value={props.value.imageGeneration?.defaultFormat ?? 'png'}
+              />
+            </FieldShell>
+          </div>
+        </FeatureSection>
+
+        <FeatureSection
+          assignment={
+            <AIModelAssignmentField
+              capability="speech"
+              label={t('settings.ai.assignment.ttsLabel')}
+              modelPlaceholder={t(
+                'settings.ai.assignment.mediaModelPlaceholder',
+              )}
+              models={{}}
+              onChange={(model) =>
+                updateConfig({
+                  tts: {
+                    ...props.value.tts,
+                    model,
+                  },
+                })
+              }
+              providers={providers}
+              value={props.value.tts?.model}
+            />
+          }
+          description={t('settings.ai.section.ttsDescription')}
+          enabled={Boolean(props.value.tts?.enable)}
+          onEnabledChange={(enable) =>
+            updateConfig({ tts: { ...props.value.tts, enable } })
+          }
+          title={t('settings.ai.section.tts')}
+          toggleLabel={t('settings.ai.switch.enableTts')}
+        >
+          <div className="grid items-start gap-4 md:grid-cols-2">
+            <TtsVoiceField
+              model={props.value.tts?.model?.model}
+              onChange={(voice) =>
+                updateConfig({ tts: { ...props.value.tts, voice } })
+              }
+              providerId={props.value.tts?.model?.providerId}
+              value={props.value.tts?.voice ?? ''}
+            />
+            <TextInput
+              inputMode="decimal"
+              label={t('settings.ai.field.speed')}
+              onChange={(value) =>
+                updateConfig({
+                  tts: {
+                    ...props.value.tts,
+                    speed: value.trim() ? Number(value) : 1,
+                  },
+                })
+              }
+              type="number"
+              value={String(props.value.tts?.speed ?? 1)}
+            />
+            <TextInput
+              inputMode="numeric"
+              label={t('settings.ai.field.maxCharsPerChunk')}
+              onChange={(value) =>
+                updateConfig({
+                  tts: {
+                    ...props.value.tts,
+                    maxCharsPerChunk: value.trim() ? Number(value) : 1800,
+                  },
+                })
+              }
+              type="number"
+              value={String(props.value.tts?.maxCharsPerChunk ?? 1800)}
+            />
+            <TextInput
+              inputMode="numeric"
+              label={t('settings.ai.field.concurrency')}
+              onChange={(value) =>
+                updateConfig({
+                  tts: {
+                    ...props.value.tts,
+                    concurrency: value.trim() ? Number(value) : 3,
+                  },
+                })
+              }
+              type="number"
+              value={String(props.value.tts?.concurrency ?? 3)}
+            />
+            <TextInput
+              inputMode="numeric"
+              label={t('settings.ai.field.maxCharsPerRun')}
+              onChange={(value) =>
+                updateConfig({
+                  tts: {
+                    ...props.value.tts,
+                    maxCharsPerRun: value.trim() ? Number(value) : 120000,
+                  },
+                })
+              }
+              type="number"
+              value={String(props.value.tts?.maxCharsPerRun ?? 120000)}
+            />
+          </div>
+        </FeatureSection>
+
         <SettingsSection
           description={t('settings.ai.section.otherModelsDescription')}
           title={t('settings.ai.section.otherModels')}
@@ -380,6 +598,13 @@ function ProviderRow(props: {
 }) {
   const { t } = useI18n()
   const provider = props.provider
+  const capabilities = [
+    (provider.capabilities?.text ?? true)
+      ? t('settings.ai.capability.text')
+      : null,
+    provider.capabilities?.image ? t('settings.ai.capability.image') : null,
+    provider.capabilities?.speech ? t('settings.ai.capability.speech') : null,
+  ].filter(Boolean)
   return (
     <div className="flex items-center gap-3 py-3">
       <div className={cn('min-w-0 flex-1', !provider.enabled && 'opacity-60')}>
@@ -387,7 +612,7 @@ function ProviderRow(props: {
           {formatAIProviderLabel(provider)}
         </div>
         <div className="mt-1 truncate text-xs text-neutral-500">
-          {provider.defaultModel || t('settings.ai.provider.row.empty')}
+          {capabilities.join(' · ') || t('settings.ai.provider.row.empty')}
         </div>
       </div>
       <Toggle

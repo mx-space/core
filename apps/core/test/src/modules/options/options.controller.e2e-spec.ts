@@ -3,7 +3,6 @@ import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { configProvider } from 'test/mock/modules/config.mock'
 
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
-import { clearImageCatalogCache } from '~/modules/ai/ai-image/image-catalog'
 import { BaseOptionController } from '~/modules/option/controllers/base.option.controller'
 
 describe('OptionController (e2e)', () => {
@@ -12,18 +11,7 @@ describe('OptionController (e2e)', () => {
     providers: [configProvider],
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-    clearImageCatalogCache()
-  })
-
   test('GET /config/form-schema', () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({ data: [] }),
-    } as Response)
-
     return proxy.app
       .inject({
         method: 'GET',
@@ -42,10 +30,16 @@ describe('OptionController (e2e)', () => {
         expect(
           typeof json.data.defaults === 'object' && json.data.defaults,
         ).toBeTruthy()
-        expect(fetchMock).toHaveBeenCalledWith(
-          'https://openrouter.ai/api/v1/images/models',
-          { headers: {}, signal: expect.any(AbortSignal) },
-        )
+        expect(
+          json.data.groups
+            .find((group: { key: string }) => group.key === 'ai')
+            ?.sections.map((section: { key: string }) => section.key),
+        ).toEqual(['ai'])
+        expect(json.data.defaults.ai).toMatchObject({
+          image_generation: { enable: false },
+          tts: { enable: false },
+          version: 2,
+        })
       })
   })
 })
