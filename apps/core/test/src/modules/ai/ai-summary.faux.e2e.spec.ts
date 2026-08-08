@@ -1,6 +1,7 @@
 import { fauxAssistantMessage } from '@earendil-works/pi-ai'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { createAiGenerationMetricsMock } from '@/helper/ai-generation-metrics-mock'
 import { withFauxAi } from '@/helper/faux-ai.helper'
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -87,6 +88,7 @@ function createService(runtime: PiRuntimeAdapter) {
   }
   const taskProcessor = { registerHandler: vi.fn() }
   const aiTaskService = { createSummaryTask: vi.fn() }
+  const generationMetrics = createAiGenerationMetricsMock()
 
   repository.findByHash.mockResolvedValue(null)
   repository.upsert.mockImplementation(async (input: any) => ({
@@ -114,11 +116,13 @@ function createService(runtime: PiRuntimeAdapter) {
     aiInFlightService as any,
     taskProcessor as any,
     aiTaskService as any,
+    generationMetrics as any,
   )
   return {
     service,
     repository,
     inflightEvents,
+    generationMetrics,
     get lastInflight() {
       return lastInflight
     },
@@ -151,7 +155,9 @@ describe('ai-summary faux e2e', () => {
   it('streams happy path with PUBLIC SSE envelope shape + cached-hydrate cleanup', async () => {
     const r = makeRuntime()
     torn.push(r.teardown)
-    const { service, inflightEvents } = createService(r.adapter)
+    const { service, generationMetrics, inflightEvents } = createService(
+      r.adapter,
+    )
 
     const onToken = vi.fn(async () => {})
     const out = await service.generateSummaryByOpenAI('post-1', 'en', onToken)
@@ -159,6 +165,13 @@ describe('ai-summary faux e2e', () => {
     expect(out).toBeDefined()
     // incrementTokens called exactly once
     expect(onToken).toHaveBeenCalledTimes(1)
+    expect(generationMetrics.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        refId: 'post-1',
+        resourceId: 'summary-1',
+        resourceType: 'summary',
+      }),
+    )
 
     const sse = renderSse(inflightEvents)
     // PUBLIC envelope assertions

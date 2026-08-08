@@ -1,6 +1,7 @@
 import { fauxAssistantMessage } from '@earendil-works/pi-ai'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { createAiGenerationMetricsMock } from '@/helper/ai-generation-metrics-mock'
 import { withFauxAi } from '@/helper/faux-ai.helper'
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -83,6 +84,7 @@ function createService(runtime: PiRuntimeAdapter) {
   const taskProcessor = { registerHandler: vi.fn() }
   const aiTaskService = {}
   const eventEmitter = { emit: vi.fn() }
+  const generationMetrics = createAiGenerationMetricsMock()
 
   repository.findByRefAndLang.mockResolvedValue(null)
   repository.deleteTranslationsWithDifferentHash = vi.fn(async () => 0) as any
@@ -118,8 +120,9 @@ function createService(runtime: PiRuntimeAdapter) {
     taskProcessor as any,
     aiTaskService as any,
     eventEmitter as any,
+    generationMetrics as any,
   )
-  return { service, inflightEvents }
+  return { service, generationMetrics, inflightEvents }
 }
 
 function renderSse(events: AiStreamEvent[]): string {
@@ -147,13 +150,22 @@ describe('ai-insights faux e2e', () => {
   it('streams happy path; incrementTokens callback fires once', async () => {
     const r = makeRuntime()
     torn.push(r.teardown)
-    const { service, inflightEvents } = createService(r.adapter)
+    const { service, generationMetrics, inflightEvents } = createService(
+      r.adapter,
+    )
 
     const onToken = vi.fn(async () => {})
     const result = await service.generateInsights('post-1', onToken)
 
     expect(result).toBeDefined()
     expect(onToken).toHaveBeenCalledTimes(1)
+    expect(generationMetrics.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        refId: 'post-1',
+        resourceId: 'insights-1',
+        resourceType: 'insights',
+      }),
+    )
 
     const sse = renderSse(inflightEvents)
     expect(sse.endsWith('event: done\n\n')).toBe(true)

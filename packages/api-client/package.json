@@ -57,13 +57,14 @@
     "smoke:diff": "node scripts/smoke-diff.mjs"
   },
   "devDependencies": {
+    "@mx-space/db-schema": "workspace:*",
     "@types/cors": "2.8.19",
     "@types/express": "5.0.6",
     "abort-controller": "3.0.0",
-    "axios": "^1.18.1",
+    "axios": "^1.19.0",
     "camelcase-keys": "^10.0.2",
     "cors": "2.8.6",
-    "es-toolkit": "1.49.0",
+    "es-toolkit": "1.50.0",
     "express": "5.2.1",
     "form-data": "4.0.6",
     "tsdown": "0.22.8",

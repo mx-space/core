@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { createAiGenerationMetricsMock } from '@/helper/ai-generation-metrics-mock'
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { AppException } from '~/common/errors/exception.types'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -84,6 +85,7 @@ const createService = () => {
   const aiTaskService = {
     createTranslationTask: vi.fn(),
   }
+  const generationMetrics = createAiGenerationMetricsMock()
   const lexicalStrategy = {}
   const markdownStrategy = {}
   const service = new AiTranslationService(
@@ -99,6 +101,7 @@ const createService = () => {
     taskQueueService as any,
     lexicalService as any,
     aiTaskService as any,
+    generationMetrics as any,
     lexicalStrategy as any,
     markdownStrategy as any,
   )
@@ -106,6 +109,7 @@ const createService = () => {
     aiTaskService,
     configService,
     databaseService,
+    generationMetrics,
     lexicalService,
     partialBuilder,
     repository,
@@ -200,7 +204,9 @@ describe('AiTranslationService', () => {
       'post-2',
       'page-1',
     ])
-    expect(result.data[0].translations).toEqual([row()])
+    expect(result.data[0].translations).toEqual([
+      { ...row(), generationMetrics: null },
+    ])
     expect(result.data[1].translations).toEqual([])
     expect(result.data[2].translations).toEqual([])
   })
@@ -212,7 +218,7 @@ describe('AiTranslationService', () => {
 
     await expect(service.getTranslationsByRefId('post-1')).resolves.toEqual({
       article: { id: 'post-1' },
-      translations: [row()],
+      translations: [{ ...row(), generationMetrics: null }],
     })
   })
 

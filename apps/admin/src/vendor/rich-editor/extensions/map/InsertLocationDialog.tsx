@@ -32,6 +32,7 @@ import {
   refetchMerchantForCoords,
   searchPlaces,
 } from './geocode'
+import { loadMaplibre } from './map-worker'
 import type { MapNodePayload } from './MapNode'
 import { formatLatLon, parseLocationInput } from './parse-location'
 
@@ -205,7 +206,7 @@ function InsertLocationDialog(props: InsertLocationDialogProps) {
     let map: MapLibreMap | null = null
 
     void (async () => {
-      const maplibre = await import('maplibre-gl')
+      const maplibre = await loadMaplibre()
       if (cancelled || !container) return
       maplibreRef.current = maplibre
 

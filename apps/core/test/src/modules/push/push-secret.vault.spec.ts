@@ -8,8 +8,9 @@ describe('PushSecretVault', () => {
     expect(encrypted).toMatch(/^\$\$\{push\}\$\$v1\./)
     expect(encrypted).not.toContain('srcsec_private')
     expect(PushSecretVault.decrypt(encrypted)).toBe('srcsec_private')
-    expect(() =>
-      PushSecretVault.decrypt(`${encrypted.slice(0, -1)}x`),
-    ).toThrow()
+    const replacement = encrypted.endsWith('x') ? 'y' : 'x'
+    const tampered = `${encrypted.slice(0, -1)}${replacement}`
+    expect(tampered).not.toBe(encrypted)
+    expect(() => PushSecretVault.decrypt(tampered)).toThrow()
   })
 })
