@@ -1,3 +1,11 @@
+# [13.25.0](https://github.com/mx-space/core/compare/v13.24.0...v13.25.0) (2026-08-08)
+
+
+### Features
+
+* **ai:** implement AI generation metrics ledger ([e47f4b7](https://github.com/mx-space/core/commit/e47f4b7d2bc25c96cee3badb45f6c53782b19fe5))
+* enhance AI provider settings and test safety ([24530fe](https://github.com/mx-space/core/commit/24530fe47e17bc4e209ef27891cbb32ecf8c3309))
+
 # [13.24.0](https://github.com/mx-space/core/compare/v13.23.0...v13.24.0) (2026-08-08)
 
 
