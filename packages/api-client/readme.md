@@ -1,6 +1,6 @@
 # @mx-space/api-client
 
-A framework-agnostic TypeScript/JavaScript SDK for the MX Space server (MServer v3). It wraps common API endpoints with typed request methods and response types for fast frontend and server-side integration.
+A framework-agnostic TypeScript/JavaScript SDK for the MX Space Core server. It wraps common API endpoints with typed request methods and response types for fast frontend and server-side integration.
 
 ---
 
@@ -23,7 +23,7 @@ A framework-agnostic TypeScript/JavaScript SDK for the MX Space server (MServer 
 ## Requirements
 
 - **Node.js** ≥ 22 (see `engines` in `package.json`)
-- **MX Space server**: v12+ (PostgreSQL + Snowflake IDs) for api-client **v4.x**. See the [Version Compatibility & Migration](#version-compatibility--migration) section for older lines.
+- **MX Space server**: v12+ (PostgreSQL + Snowflake IDs) for api-client **v5.x**. See the [Version Compatibility & Migration](#version-compatibility--migration) section for older lines.
 
 ---
 
@@ -145,6 +145,9 @@ Inject one or more controllers so the client exposes them (e.g. `client.post`, `
 | SubscribeController | `subscribe` | Subscriptions            |
 | ServerlessController | `serverless` | Serverless functions   |
 | AckController    | `ack`     | Ack                         |
+| CompanionController | `companion` | Companion (presence/chat) |
+| EnrichmentController | `enrichment` | URL enrichment / screenshot pipeline |
+| MembershipController | `membership` | Membership / subscriptions |
 
 **Example — inject all controllers:**
 
@@ -239,7 +242,8 @@ client.note.proxy.something.other('123456').info.toString(true)
 
 | api-client version | Server version  | Notes |
 |--------------------|-----------------|-------|
-| **v4.x** (current) | ≥ 12            | PostgreSQL + Snowflake IDs. Pairs with the PG cutover. |
+| **v5.x** (current) | ≥ 12            | PostgreSQL + Snowflake IDs. Pairs with the PG cutover. |
+| v4.x               | ≥ 12            | First PostgreSQL-compatible line. |
 | v3.x               | 11 → early 12   | Transitional during the PG cutover. |
 | v2.x               | 10 → 11         | MongoDB + Better Auth. ObjectId IDs. |
 | v1.x               | ≤ 9             | Legacy JWT auth. |

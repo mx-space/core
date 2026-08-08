@@ -33,11 +33,12 @@ MX Space Core is a headless CMS server built with **NestJS**, **PostgreSQL**, an
 | **Real-time** | WebSocket via Socket.IO with Redis adapter for multi-instance broadcast |
 | **Distribution** | RSS/Atom feeds, sitemap, local search, aggregate API |
 | **Auth** | Better Auth sessions, passkeys, OAuth, API keys (`x-api-key` header) |
+| **Mobile & Push** | Native iOS client (Space) with privacy-preserving APNs push via a self-hosted Push Relay |
 | **Deployment** | Docker (multi-arch), PM2, standalone binary |
 
 ## Tech Stack
 
-- **Runtime**: Node.js >= 22 + TypeScript 5.9
+- **Runtime**: Node.js >= 22 + TypeScript 6
 - **Framework**: NestJS 11 + Fastify
 - **Database**: PostgreSQL 16 (Drizzle ORM)
 - **Cache**: Redis (ioredis)
@@ -55,13 +56,20 @@ MX Space Core is a headless CMS server built with **NestJS**, **PostgreSQL**, an
 mx-core/
 ├── apps/
 │   ├── core/                 # Main server application (NestJS + Fastify)
-│   └── admin/                # @mx-admin/admin — React 19 SPA, built locally and served at /proxy/qaqdmin
+│   ├── admin/                # @mx-admin/admin — React 19 SPA, built locally and served at /proxy/qaqdmin
+│   ├── ios/                  # Space — native iOS admin client (UIKit + SwiftUI, XcodeGen)
+│   ├── push-relay/           # @mx-space/push-relay — independent, privacy-preserving APNs relay
+│   └── telemetry/            # Anonymous instance telemetry collector (Cloudflare Worker + D1)
 ├── packages/
 │   ├── api-client/           # @mx-space/api-client — typed SDK for frontend & third-party clients
 │   ├── cli/                  # @mx-space/cli (mxs) — owner-side CLI for content + config (Effect-TS)
 │   ├── db-schema/            # @mx-space/db-schema — shared Drizzle schema + Snowflake utilities (private)
+│   ├── editor/               # @mx-space/editor — Lexical-based editor contracts and projection utilities
+│   ├── ai/                   # @mx-space/ai — shared AI contracts (SSE event unions) for server and clients
+│   ├── push-protocol/        # @mx-space/push-protocol — versioned protocol shared by mx-core and Push Relay
+│   ├── webhook/              # @mx-space/webhook — signature-verified webhook handler SDK
 │   ├── mongo-pg-cli/         # @mx-space/mongo-pg-cli — one-shot v11→v12 (MongoDB→PostgreSQL) data migration
-│   └── webhook/              # @mx-space/webhook — signature-verified webhook handler SDK
+│   └── e2e/                  # End-to-end tests (Vitest + testcontainers)
 ├── docker-compose.yml        # Development stack (PostgreSQL + Redis + mx-migrate)
 ├── dockerfile                # Multi-stage production build
 └── docker-compose.server.yml # Production deployment template
@@ -71,7 +79,7 @@ mx-core/
 
 ```
 src/
-├── modules/          # 45 business modules
+├── modules/          # 50 business modules
 │   ├── ai/           #   AI summary, translation, insights, writer, agent, task queue
 │   ├── auth/         #   Better Auth: session, OAuth, passkey, API key
 │   ├── post/         #   Blog posts
@@ -228,7 +236,10 @@ Every successful JSON response has the shape `{ data, meta? }`; every error has 
 
 ### v11 → v12
 
-v12 migrates the database from MongoDB to PostgreSQL. This is a hard cutover: all data must be migrated through the provided CLI before starting the new version. See [Upgrading to v12](./docs/migrations/v12.md).
+> [!WARNING]
+> v12 migrates the database from MongoDB to PostgreSQL. This is a hard cutover: all data must be migrated through the provided CLI before starting the new version.
+
+See [Upgrading to v12](./docs/migrations/v12.md).
 
 ### v10 → v11
 
@@ -244,15 +255,10 @@ v10 includes a breaking auth system refactor. See [Upgrading to v10](./docs/migr
 |---------|-------------|
 | [Yohaku](https://github.com/Innei/Yohaku) | Next.js frontend |
 | [`apps/admin`](./apps/admin) | `@mx-admin/admin` — React 19 admin dashboard (in-repo, built into the server release) |
+| [`apps/ios`](./apps/ios) | Space — native iOS admin client |
+| [`apps/push-relay`](./apps/push-relay) | Independent APNs Push Relay for self-hosted instances |
 | [@mx-space/api-client](./packages/api-client) | TypeScript API client SDK |
 | [@mx-space/cli](./packages/cli) | `mxs` CLI for posts/notes/pages/config (OIDC device auth) |
 | [@mx-space/mongo-pg-cli](./packages/mongo-pg-cli) | One-shot MongoDB → PostgreSQL migration for v11 → v12 |
 | [@mx-space/webhook](./packages/webhook) | Webhook handler SDK (signature-verified) |
 | [@haklex/rich-headless](https://github.com/innei/haklex) | Lexical editor (server-side) |
-
-## License
-
-- **`apps/`** — [AGPLv3 with Additional Terms](./ADDITIONAL_TERMS.md)
-- **Everything else** — [MIT](./LICENSE)
-
-See [LICENSE](./LICENSE) for full details.

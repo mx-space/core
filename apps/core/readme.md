@@ -83,7 +83,7 @@ Design document: [docs/superpowers/specs/2026-05-05-database-migration-release-p
 
 ### Local Development
 
-`pnpm dev` runs `pnpm migrate` automatically via the `predev` hook — no manual step required. To run it explicitly:
+`pnpm dev` applies pending schema migrations automatically before the server starts (see `src/dev.ts`) — no manual step required. To run it explicitly:
 
 ```bash
 pnpm -C apps/core run migrate          # apply pending migrations
@@ -119,7 +119,7 @@ Before writing a migration, read the Claude skill at `.claude/skills/mx-migratio
 │   ├── schema/                    #   Drizzle table definitions
 │   ├── migrations/                #   Drizzle SQL migrations (release-phase)
 │   └── app-migrations/            #   application-layer one-shot data fixups
-├── modules/                       # 45 business modules (ai, auth, post, note, comment …)
+├── modules/                       # 50 business modules (ai, auth, post, note, comment …)
 ├── processors/                    # infrastructure services
 │   ├── database/                  #   PG connection + repository registry + BaseRepository
 │   ├── redis/                     #   cache / pub-sub / emitter
@@ -178,7 +178,7 @@ pnpm dev
 
 | Component  | Technology                                |
 |------------|-------------------------------------------|
-| Runtime    | Node.js >= 22 + TypeScript 5.9            |
+| Runtime    | Node.js >= 22 + TypeScript 6              |
 | Framework  | NestJS 11 + Fastify                       |
 | Database   | PostgreSQL 16 (Drizzle ORM)               |
 | Cache      | Redis (ioredis)                           |
