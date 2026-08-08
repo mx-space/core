@@ -2,16 +2,18 @@
   <img src="./.github/branding/logo-icon.png" alt="mx-space" width="120" />
 </p>
 
-<h1 align="center">MX Space Core</h1>
+<h1 align="center">Mix Space</h1>
 
 <p align="center">
-  AI-powered CMS Core for personal blogs, creator homepages & content websites.
+  Monorepo for the Mix Space personal-CMS stack — the core server, admin dashboard,
+  native iOS client, privacy-preserving push relay, telemetry, and the shared SDKs
+  that bind them.
 </p>
 
 <p align="center">
   <a href="https://github.com/mx-space/core/releases"><img src="https://img.shields.io/github/v/release/mx-space/core?style=flat-square" alt="Release" /></a>
   <a href="https://github.com/mx-space/core/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/mx-space/core/ci.yml?style=flat-square&label=CI" alt="CI" /></a>
-  <a href="https://github.com/mx-space/core/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3%20%2B%20MIT-blue?style=flat-square" alt="License" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3%20%2B%20MIT-blue?style=flat-square" alt="License" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen?style=flat-square" alt="Node.js" /></a>
   <a href="https://hub.docker.com/r/innei/mx-server"><img src="https://img.shields.io/docker/pulls/innei/mx-server?style=flat-square" alt="Docker Pulls" /></a>
   <a href="https://t.me/+lRRxARqVZC1mYTc9"><img src="https://img.shields.io/badge/Telegram-Join-26A5E4?style=flat-square&logo=telegram&logoColor=white" alt="Telegram" /></a>
@@ -21,244 +23,117 @@
 
 ## Overview
 
-MX Space Core is a headless CMS server built with **NestJS**, **PostgreSQL**, and **Redis**. Beyond standard blog features (posts, pages, notes, comments, categories, feeds, search), it ships with a full AI content workflow — summary generation, multi-language translation, comment moderation, and writing assistance — powered by pluggable LLM providers.
+Mix Space is an AI-powered, headless CMS for personal blogs, creator homepages, and
+content websites. This repository is the **workspace** that builds the entire
+stack — it grew out of the core server and now ships the backend, the admin UI, a
+native mobile client, an independent push relay, and the packages every client
+shares.
 
-### Key Features
+```mermaid
+flowchart LR
+  WEB["Yohaku frontend<br/>(external)"]
+  ADMIN["Admin SPA"]
+  IOS["iOS · Space"]
+  CORE["Core server<br/>NestJS · PostgreSQL · Redis"]
+  RELAY["Push Relay<br/>(APNs boundary)"]
+  TELE["Telemetry<br/>(Cloudflare Worker)"]
 
-| Category | Capabilities |
-|----------|-------------|
-| **Content Management** | Posts, notes, pages, drafts, categories, topics, comments, snippets, projects, friend links, subscriptions |
-| **AI Workflow** | Summary generation, multi-language translation, comment moderation, writing assistance, streaming responses |
-| **LLM Providers** | OpenAI, OpenAI-compatible, Anthropic, OpenRouter |
-| **Real-time** | WebSocket via Socket.IO with Redis adapter for multi-instance broadcast |
-| **Distribution** | RSS/Atom feeds, sitemap, local search, aggregate API |
-| **Auth** | Better Auth sessions, passkeys, OAuth, API keys (`x-api-key` header) |
-| **Mobile & Push** | Native iOS client (Space) with privacy-preserving APNs push via a self-hosted Push Relay |
-| **Deployment** | Docker (multi-arch), PM2, standalone binary |
+  WEB -->|"@mx-space/api-client"| CORE
+  ADMIN -->|"/proxy/qaqdmin"| CORE
+  IOS -->|"OpenAPI client"| CORE
+  CORE -->|"comment id only"| RELAY -->|APNs| IOS
+  CORE -.->|webhook| EXT["external services"]
+  CORE -.->|anonymous| TELE
+```
 
-## Tech Stack
+## Apps
 
-- **Runtime**: Node.js >= 22 + TypeScript 6
-- **Framework**: NestJS 11 + Fastify
-- **Database**: PostgreSQL 16 (Drizzle ORM)
-- **Cache**: Redis (ioredis)
-- **Validation**: Zod 4
-- **WebSocket**: Socket.IO + Redis Emitter
-- **AI**: OpenAI SDK, Anthropic SDK
-- **Editor**: Lexical (via @haklex/rich-headless)
-- **Auth**: better-auth (session, passkey, OAuth, API key)
-- **Admin SPA**: React 19 + Vite + Base UI + Tailwind v4 (`apps/admin`)
-- **Testing**: Vitest + PostgreSQL testcontainers / Redis memory server
+| Path | Package | What it is |
+|------|---------|------------|
+| [`apps/core`](./apps/core) | `@mx-space/core` | The heart of the stack — AI-powered headless CMS server (NestJS + Fastify + PostgreSQL + Redis). |
+| [`apps/admin`](./apps/admin) | `@mx-admin/admin` | React 19 admin dashboard SPA, built into the server and served at `/proxy/qaqdmin`. |
+| [`apps/ios`](./apps/ios) | Space | Native iOS admin client — UIKit shell with SwiftUI leaf screens (XcodeGen). |
+| [`apps/push-relay`](./apps/push-relay) | `@mx-space/push-relay` | Independently deployable, privacy-preserving APNs relay. |
+| [`apps/telemetry`](./apps/telemetry) | `@mx-space/telemetry` | Anonymous instance-telemetry collector (Cloudflare Worker + D1). |
 
-## Monorepo Structure
+## Packages
+
+| Path | Package | What it is |
+|------|---------|------------|
+| [`packages/api-client`](./packages/api-client) | `@mx-space/api-client` | Typed SDK for frontends and third-party clients. |
+| [`packages/cli`](./packages/cli) | `@mx-space/cli` (`mxs`) | Owner-side CLI for content + config (Effect-TS, OIDC device auth). |
+| [`packages/db-schema`](./packages/db-schema) | `@mx-space/db-schema` | Shared Drizzle schema + Snowflake utilities (private). |
+| [`packages/editor`](./packages/editor) | `@mx-space/editor` | Lexical editor contracts and projection utilities. |
+| [`packages/ai`](./packages/ai) | `@mx-space/ai` | Shared AI contracts (SSE event unions) for server and clients. |
+| [`packages/push-protocol`](./packages/push-protocol) | `@mx-space/push-protocol` | Versioned protocol shared by mx-core and Push Relay. |
+| [`packages/webhook`](./packages/webhook) | `@mx-space/webhook` | Signature-verified webhook handler SDK. |
+| [`packages/mongo-pg-cli`](./packages/mongo-pg-cli) | `@mx-space/mongo-pg-cli` | One-shot v11→v12 (MongoDB→PostgreSQL) data migration. |
+| [`packages/e2e`](./packages/e2e) | — | End-to-end test suite (Vitest + testcontainers). |
+
+## Layout
 
 ```
 mx-core/
 ├── apps/
-│   ├── core/                 # Main server application (NestJS + Fastify)
-│   ├── admin/                # @mx-admin/admin — React 19 SPA, built locally and served at /proxy/qaqdmin
-│   ├── ios/                  # Space — native iOS admin client (UIKit + SwiftUI, XcodeGen)
-│   ├── push-relay/           # @mx-space/push-relay — independent, privacy-preserving APNs relay
-│   └── telemetry/            # Anonymous instance telemetry collector (Cloudflare Worker + D1)
-├── packages/
-│   ├── api-client/           # @mx-space/api-client — typed SDK for frontend & third-party clients
-│   ├── cli/                  # @mx-space/cli (mxs) — owner-side CLI for content + config (Effect-TS)
-│   ├── db-schema/            # @mx-space/db-schema — shared Drizzle schema + Snowflake utilities (private)
-│   ├── editor/               # @mx-space/editor — Lexical-based editor contracts and projection utilities
-│   ├── ai/                   # @mx-space/ai — shared AI contracts (SSE event unions) for server and clients
-│   ├── push-protocol/        # @mx-space/push-protocol — versioned protocol shared by mx-core and Push Relay
-│   ├── webhook/              # @mx-space/webhook — signature-verified webhook handler SDK
-│   ├── mongo-pg-cli/         # @mx-space/mongo-pg-cli — one-shot v11→v12 (MongoDB→PostgreSQL) data migration
-│   └── e2e/                  # End-to-end tests (Vitest + testcontainers)
-├── docker-compose.yml        # Development stack (PostgreSQL + Redis + mx-migrate)
-├── dockerfile                # Multi-stage production build
-└── docker-compose.server.yml # Production deployment template
+│   ├── core/        # NestJS server
+│   ├── admin/       # React 19 admin SPA
+│   ├── ios/         # native iOS client (XcodeGen)
+│   ├── push-relay/  # independent APNs relay
+│   └── telemetry/   # telemetry collector (CF Worker)
+├── packages/        # shared SDKs, schema, editor & AI contracts, CLI, tests
+├── docker-compose.yml        # dev stack (PostgreSQL + Redis + mx-migrate)
+├── docker-compose.server.yml # production deployment template
+└── dockerfile                # multi-stage production build
 ```
-
-### Core Architecture (`apps/core/src/`)
-
-```
-src/
-├── modules/          # 50 business modules
-│   ├── ai/           #   AI summary, translation, insights, writer, agent, task queue
-│   ├── auth/         #   Better Auth: session, OAuth, passkey, API key
-│   ├── post/         #   Blog posts
-│   ├── note/         #   Short notes with topic support
-│   ├── comment/      #   Nested comments + AI moderation + reader image upload
-│   ├── configs/      #   Runtime configuration
-│   ├── enrichment/   #   URL extraction, screenshot pipeline
-│   ├── reader/       #   Reader identity / image quotas
-│   ├── webhook/      #   Event dispatch to external services
-│   ├── serverless/   #   User-defined serverless functions
-│   └── ...           #   page, draft, category, topic, feed, search, owner, etc.
-├── processors/       # Infrastructure services
-│   ├── database/     #   PostgreSQL connection + repository registry + BaseRepository
-│   ├── redis/        #   Cache, pub/sub, emitter
-│   ├── gateway/      #   WebSocket (admin, web, shared namespaces)
-│   ├── task-queue/   #   Distributed job queue (Redis + Lua)
-│   └── helper/       #   Email, image, JWT, Lexical, URL builder, etc.
-├── database/         # Drizzle ORM
-│   ├── schema/       #   Table definitions
-│   └── migrations/   #   SQL migration files (release-phase, never run on boot)
-├── common/           # Guards, interceptors, decorators, filters, pipes
-├── constants/        # Business events, cache keys, error codes
-├── transformers/     # Response transformation (snake_case, pagination)
-└── utils/            # Utility modules
-```
-
-> Historical MongoDB → PostgreSQL data migration lives in [`packages/mongo-pg-cli`](./packages/mongo-pg-cli). Forward schema migrations live in `apps/core/src/database/migrations/` and run as a one-shot release-phase step (see the [release-phase migration design](./docs/superpowers/specs/2026-05-05-database-migration-release-phase-design.md)).
 
 ## Quick Start
 
-### Prerequisites
-
-| Dependency | Version |
-|-----------|---------|
-| Node.js | >= 22 |
-| pnpm | Latest (via Corepack) |
-| PostgreSQL | 16+ |
-| Redis | 7.x |
-
-### Local Development
-
 ```bash
-# Enable Corepack for pnpm
 corepack enable
-
-# Install dependencies
 pnpm install
 
 # Start PostgreSQL + Redis (via Docker)
 docker compose up -d postgres redis
 
-# Start dev server (port 2333)
+# Core dev server → http://localhost:2333
 pnpm dev
+
+# Admin SPA dev server → http://localhost:9528 (run alongside core)
+pnpm dev:admin
 ```
 
-The API is available at `http://localhost:2333`. In development mode, routes have no `/api/v2` prefix.
+> Per-app setup, deployment, and operational docs live in each app's own README —
+> start at [`apps/core`](./apps/core) for the server.
 
-### Docker Deployment
+## Commands
 
-The fastest way to get a production instance running:
+Run from the repo root:
 
-```bash
-# Clone and enter the project
-git clone https://github.com/mx-space/core.git && cd core
-
-# Edit environment variables
-cp docker-compose.server.yml docker-compose.prod.yml
-# Edit docker-compose.prod.yml — set JWT_SECRET, ALLOWED_ORIGINS, etc.
-
-# Start all services
-docker compose -f docker-compose.prod.yml up -d
-```
-
-Or use the prebuilt image directly:
-
-```bash
-docker pull innei/mx-server:latest
-```
-
-The image supports `linux/amd64` and `linux/arm64`.
-
-## Available Commands
-
-Run from the repository root:
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development server (watch mode) |
+| Command | Effect |
+|---------|--------|
+| `pnpm dev` | Core dev server (watch mode) |
+| `pnpm dev:admin` | Admin SPA dev server |
 | `pnpm build` | Build the core application |
-| `pnpm bundle` | Create production bundle (tsdown) |
-| `pnpm test` | Run test suite (Vitest) |
-| `pnpm lint` | Run ESLint with auto-fix |
-| `pnpm typecheck` | TypeScript type checking |
-| `pnpm format` | Format code with Prettier |
+| `pnpm bundle` | Production bundle (Vite) |
+| `pnpm test` | Core test suite (Vitest) |
+| `pnpm e2e` | End-to-end suite |
+| `pnpm typecheck` | Core typecheck + controller/validate guards |
+| `pnpm lint` / `pnpm format` | ESLint / Prettier |
 
-### Running Tests
+## Conventions
 
-```bash
-# Run all tests
-pnpm test
-
-# Run a specific test file
-pnpm test -- test/src/modules/user/user.service.spec.ts
-
-# Run tests matching a pattern
-pnpm test -- --testNamePattern="should create user"
-
-# Watch mode
-pnpm -C apps/core run test:watch
-```
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `JWT_SECRET` | Secret for JWT signing | Required |
-| `ALLOWED_ORIGINS` | CORS allowed origins (comma-separated) | — |
-| `PG_URL` | Full PostgreSQL connection string | — |
-| `PG_HOST` | PostgreSQL host | `127.0.0.1` |
-| `PG_PORT` | PostgreSQL port | `5432` |
-| `PG_USER` | PostgreSQL user | `mx` |
-| `PG_PASSWORD` | PostgreSQL password | `mx` |
-| `PG_DATABASE` | PostgreSQL database name | `mx_core` |
-| `PG_MAX_POOL_SIZE` | PostgreSQL connection pool size | `20` |
-| `PG_SSL` | Enable PostgreSQL SSL | `false` |
-| `REDIS_HOST` | Redis host | `localhost` |
-| `REDIS_PORT` | Redis port | `6379` |
-| `REDIS_PASSWORD` | Redis password | — |
-| `SNOWFLAKE_WORKER_ID` | Snowflake ID worker ID (0–1023) | Required |
-| `ENCRYPT_ENABLE` | Enable field encryption | `false` |
-| `ENCRYPT_KEY` | 64-char hex encryption key | — |
-| `THROTTLE_TTL` | Rate limit window (seconds) | `10` |
-| `THROTTLE_LIMIT` | Max requests per window | `100` |
-| `PORT` | Server port | `2333` |
-| `TZ` | Timezone | `Asia/Shanghai` |
-| `DISABLE_CACHE` | Disable Redis caching | `false` |
-
-Configuration can also be provided via CLI arguments or YAML files. See `apps/core/src/app.config.ts` for the full config schema.
-
-## API Response Format
-
-Every successful JSON response has the shape `{ data, meta? }`; every error has the shape `{ error: { code, message, details? } }`.
-
-- A controller returning a bare value `T` → `{ data: T }` (via global `ResponseInterceptor`).
-- Returning `withMeta(value, meta)` (see `~/common/response/envelope.types`) → `{ data, meta }`. Detection is by an internal `Symbol`, so returning a literal `{ data, ... }` is double-wrapped — CI enforces this via `scripts/check-controller-response-envelope.ts`.
-- Returning `undefined` → `204 No Content`.
-- `@HTTPDecorators.RawResponse` — opt out of the envelope/casing pipeline for non-JSON (streams, HTML, RSS, redirects).
-
-**Case conversion** — code is camelCase end-to-end (DTOs, services, Drizzle column TS props). Incoming requests are normalized to camelCase by `RequestCaseNormalizationPipe`; outgoing `data`/`meta` are converted back to snake_case at the wire boundary. The wire format stays **snake_case** (e.g., `createdAt` → `created_at`). Use `@BypassCaseTransform([paths])` to keep free-form JSON subtrees untouched.
-
-**Errors** — throw `AppException` subclasses (`BizException`, `CannotFindException`, etc.) with a stable `SCREAMING_SNAKE` code; `AppExceptionFilter` maps them to the unified error envelope.
-
-## Upgrading
-
-### v11 → v12
-
-> [!WARNING]
-> v12 migrates the database from MongoDB to PostgreSQL. This is a hard cutover: all data must be migrated through the provided CLI before starting the new version.
-
-See [Upgrading to v12](./docs/migrations/v12.md).
-
-### v10 → v11
-
-v11 refactors the Aggregate API: `categories` and `pageMeta` are removed from `GET /aggregate`; a new `GET /aggregate/site` endpoint is added for lightweight site metadata. See [Upgrading to v11](./docs/migrations/v11.md).
-
-### v9 → v10
-
-v10 includes a breaking auth system refactor. See [Upgrading to v10](./docs/migrations/v10.md).
+- **Response envelope** — success: `{ data, meta? }`; error: `{ error: { code, message, details? } }`. Code is camelCase end-to-end; the wire format is snake_case. Full detail in the [core README](./apps/core#api-response-format).
+- **Migrations** — forward SQL migrations run as a one-shot release-phase step, never on boot. Historical MongoDB → PostgreSQL data lives in `packages/mongo-pg-cli`. Upgrade notes: [core README · Upgrading](./apps/core#upgrading).
 
 ## Related Projects
 
 | Project | Description |
 |---------|-------------|
-| [Yohaku](https://github.com/Innei/Yohaku) | Next.js frontend |
-| [`apps/admin`](./apps/admin) | `@mx-admin/admin` — React 19 admin dashboard (in-repo, built into the server release) |
-| [`apps/ios`](./apps/ios) | Space — native iOS admin client |
-| [`apps/push-relay`](./apps/push-relay) | Independent APNs Push Relay for self-hosted instances |
-| [@mx-space/api-client](./packages/api-client) | TypeScript API client SDK |
-| [@mx-space/cli](./packages/cli) | `mxs` CLI for posts/notes/pages/config (OIDC device auth) |
-| [@mx-space/mongo-pg-cli](./packages/mongo-pg-cli) | One-shot MongoDB → PostgreSQL migration for v11 → v12 |
-| [@mx-space/webhook](./packages/webhook) | Webhook handler SDK (signature-verified) |
+| [Yohaku](https://github.com/Innei/Yohaku) | Next.js frontend (recommended) |
+| [Shiro](https://github.com/innei/shiro) | Minimalist frontend |
+| [Kami](https://github.com/mx-space/kami) | Anime-flavored frontend (legacy) |
 | [@haklex/rich-headless](https://github.com/innei/haklex) | Lexical editor (server-side) |
+
+## License
+
+[AGPLv3 + MIT](./LICENSE) — see [`ADDITIONAL_TERMS.md`](./ADDITIONAL_TERMS.md).
