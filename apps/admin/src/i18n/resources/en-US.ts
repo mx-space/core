@@ -2023,6 +2023,7 @@ export const enUS = {
   'settings.ai.field.maxTokens': 'Max output tokens',
   'settings.ai.field.modelListUrl': 'Model list URL',
   'settings.ai.field.providerType': 'Provider type',
+  'settings.ai.field.projectId': 'Google Cloud Project ID',
   'settings.ai.field.speed': 'Speech speed',
   'settings.ai.field.voice': 'Voice ID',
   'settings.ai.field.voiceListUrl': 'Voice list URL',
@@ -2053,7 +2054,18 @@ export const enUS = {
   'settings.ai.provider.row.empty': 'No model assigned',
   'settings.ai.providerType.anthropic': 'Anthropic',
   'settings.ai.providerType.generic': 'Generic',
+  'settings.ai.providerType.googleVertex': 'Google Vertex AI',
   'settings.ai.providerType.openaiCompatible': 'OpenAI compatible',
+  'settings.ai.preset.modal.add': 'Add provider',
+  'settings.ai.preset.modal.description':
+    'Complete the project fields to generate the Vertex endpoint. The API key can be entered in the provider details.',
+  'settings.ai.preset.modal.endpointPreview': 'Generated endpoint',
+  'settings.ai.preset.modal.projectIdHelp':
+    'Use a Google Cloud project with the Vertex AI API enabled.',
+  'settings.ai.preset.modal.projectIdPlaceholder':
+    'e.g. my-google-cloud-project',
+  'settings.ai.preset.modal.requiredField': 'Enter the Google Cloud Project ID',
+  'settings.ai.preset.modal.title': 'Configure Google Vertex AI',
   'settings.ai.voiceDiscovery.empty':
     'No voices discovered. Enter a provider voice ID manually.',
   'settings.ai.voiceDiscovery.error':

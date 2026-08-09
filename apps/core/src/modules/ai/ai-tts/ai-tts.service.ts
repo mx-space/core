@@ -153,6 +153,8 @@ export class AiTtsService implements OnModuleInit {
         provider: provider.id,
         apiKey: provider.apiKey,
         endpoint: provider.endpoint || undefined,
+        projectId: provider.projectId,
+        providerType: provider.type,
       },
       refId: payload.refId,
       sourceLang,

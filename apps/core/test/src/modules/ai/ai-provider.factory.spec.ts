@@ -6,6 +6,9 @@ import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
 
 interface AdapterInternals {
   api: 'openai-completions' | 'anthropic-messages'
+  buildStreamOptions: (options: object) => {
+    headers?: Record<string, string | null>
+  }
   piProviderId: string
 }
 
@@ -27,6 +30,7 @@ describe('createModelRuntime — enum coverage', () => {
     expect(runtime).toBeInstanceOf(PiRuntimeAdapter)
     expect(runtime.providerInfo.type).toBe(AIProviderType.OpenAICompatible)
     expect(runtime.providerInfo.model).toBe('deepseek-chat')
+    expect(runtime.providerInfo.api).toBe('openai-completions')
     expect(inspect(runtime).api).toBe('openai-completions')
   })
 
@@ -43,6 +47,7 @@ describe('createModelRuntime — enum coverage', () => {
     expect(runtime).toBeInstanceOf(PiRuntimeAdapter)
     expect(runtime.providerInfo.type).toBe(AIProviderType.Anthropic)
     expect(runtime.providerInfo.model).toBe('claude-sonnet-4-20250514')
+    expect(runtime.providerInfo.api).toBe('anthropic-messages')
     expect(inspect(runtime).api).toBe('anthropic-messages')
   })
 
@@ -59,6 +64,29 @@ describe('createModelRuntime — enum coverage', () => {
     expect(runtime).toBeInstanceOf(PiRuntimeAdapter)
     expect(runtime.providerInfo.type).toBe(AIProviderType.Generic)
     expect(inspect(runtime).api).toBe('openai-completions')
+  })
+
+  it('constructs a Vertex text runtime over its OpenAI-compatible endpoint', () => {
+    const runtime = createModelRuntime({
+      id: 'vertex',
+      name: 'Vertex',
+      type: AIProviderType.GoogleVertex,
+      apiKey: 'vertex-key',
+      projectId: 'example-project',
+      endpoint:
+        'https://aiplatform.googleapis.com/v1/projects/example-project/locations/global/endpoints/openapi',
+      defaultModel: 'google/gemini-3.6-flash',
+      enabled: true,
+    })
+    expect(runtime).toBeInstanceOf(PiRuntimeAdapter)
+    expect(runtime.providerInfo.type).toBe(AIProviderType.GoogleVertex)
+    expect(runtime.providerInfo.api).toBe('openai-completions')
+    expect(inspect(runtime).api).toBe('openai-completions')
+    expect(inspect(runtime).piProviderId).toBe('google-vertex')
+    expect(inspect(runtime).buildStreamOptions({}).headers).toEqual({
+      Authorization: null,
+      'x-goog-api-key': 'vertex-key',
+    })
   })
 
   it('uses model override when provided', () => {
@@ -87,7 +115,7 @@ describe('createModelRuntime — enum coverage', () => {
         defaultModel: 'model',
         enabled: true,
       }),
-    ).toThrow('Unsupported provider type')
+    ).toThrow('No protocol adapter supports the runtime configuration')
   })
 })
 

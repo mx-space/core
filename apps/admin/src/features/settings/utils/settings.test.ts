@@ -169,6 +169,34 @@ describe('coerceAIProviderType', () => {
 })
 
 describe('normalizeAIConfig', () => {
+  it('upgrades the legacy Vertex preset to the dedicated three-capability provider', () => {
+    const config = normalizeAIConfig({
+      version: 2,
+      providers: [
+        {
+          apiKey: 'vertex-key',
+          capabilities: { image: false, speech: false, text: true },
+          defaultModel: 'google/gemini-3.6-flash',
+          enabled: true,
+          endpoint:
+            'https://aiplatform.googleapis.com/v1/projects/example-project/locations/global/endpoints/openapi',
+          id: 'vertex',
+          modelListUrl:
+            'https://aiplatform.googleapis.com/v1/projects/example-project/locations/global/endpoints/openapi/models',
+          name: 'Google Vertex AI',
+          type: 'openai-compatible',
+        },
+      ],
+    })
+
+    expect(config.providers?.[0]).toMatchObject({
+      capabilities: { image: true, speech: true, text: true },
+      modelListUrl: '',
+      projectId: 'example-project',
+      type: 'google-vertex',
+    })
+  })
+
   it('upgrades legacy providers with text capability defaults while preserving media routes', () => {
     const config = normalizeAIConfig({
       providers: [

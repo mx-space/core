@@ -23,6 +23,24 @@ afterEach(() => {
 })
 
 describe('discoverTtsVoices', () => {
+  it('returns Vertex Gemini voices without a network request', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const result = await discoverTtsVoices(
+      {
+        ...provider,
+        type: AIProviderType.GoogleVertex,
+        projectId: 'example-project',
+      },
+      'gemini-3.1-flash-tts-preview',
+    )
+
+    expect(result.source).toBe('builtin')
+    expect(result.voices.map((voice) => voice.id)).toEqual(
+      expect.arrayContaining(['Kore', 'Puck', 'Zephyr']),
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
   it('returns the built-in OpenAI voice catalog without a network request', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)

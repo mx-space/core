@@ -59,6 +59,27 @@ function normalizeS3StorageOptionNulls<T extends object>(value: T): T {
   return normalized as T
 }
 
+function isGoogleVertexEndpoint(endpoint: string): boolean {
+  try {
+    const url = new URL(endpoint)
+    return (
+      url.hostname === 'aiplatform.googleapis.com' &&
+      url.pathname.endsWith('/endpoints/openapi')
+    )
+  } catch {
+    return false
+  }
+}
+
+function extractGoogleVertexProjectId(endpoint: string): string | undefined {
+  try {
+    const match = new URL(endpoint).pathname.match(/\/projects\/([^/]+)/)
+    return match?.[1] ? decodeURIComponent(match[1]) : undefined
+  } catch {
+    return undefined
+  }
+}
+
 /*
  * NOTE:
  * 1. Configs live in Redis. `getConfig` is the single entry point; all reads
@@ -205,14 +226,29 @@ export class ConfigsService implements OnModuleInit {
     legacyImageConfig: IConfig['imageGenerationOptions'],
     legacyTtsConfig: IConfig['ttsOptions'],
   ): IConfig['ai'] {
-    const providers = (aiConfig.providers ?? []).map((provider) => ({
-      ...provider,
-      capabilities: {
-        text: provider.capabilities?.text ?? true,
-        image: provider.capabilities?.image ?? false,
-        speech: provider.capabilities?.speech ?? false,
-      },
-    }))
+    const providers = (aiConfig.providers ?? []).map((provider) => {
+      const endpoint = provider.endpoint?.trim() ?? ''
+      const isLegacyVertex =
+        provider.type === AIProviderType.OpenAICompatible &&
+        isGoogleVertexEndpoint(endpoint)
+      return {
+        ...provider,
+        ...(isLegacyVertex
+          ? {
+              type: AIProviderType.GoogleVertex,
+              modelListUrl: undefined,
+            }
+          : {}),
+        projectId: provider.projectId ?? extractGoogleVertexProjectId(endpoint),
+        capabilities: isLegacyVertex
+          ? { text: true, image: true, speech: true }
+          : {
+              text: provider.capabilities?.text ?? true,
+              image: provider.capabilities?.image ?? false,
+              speech: provider.capabilities?.speech ?? false,
+            },
+      }
+    })
 
     if (storedAiConfig?.version === 2) {
       return { ...aiConfig, version: 2, providers }
@@ -274,6 +310,7 @@ export class ConfigsService implements OnModuleInit {
         type: AIProviderType.OpenAICompatible,
         apiKey: input.apiKey,
         endpoint: normalizedEndpoint,
+        projectId: undefined,
         defaultModel: input.defaultModel ?? '',
         enabled: true,
         capabilities: {

@@ -2,6 +2,7 @@ export enum AIProviderType {
   OpenAICompatible = 'openai-compatible',
   Anthropic = 'anthropic',
   Generic = 'generic',
+  GoogleVertex = 'google-vertex',
 }
 
 export enum AIFeatureKey {
@@ -33,6 +34,8 @@ export interface AIProviderConfig {
   apiKey: string
   /** Custom endpoint (required for OpenAI-compatible) */
   endpoint?: string
+  /** Google Cloud project used by Vertex AI */
+  projectId?: string
   /** Full URL to fetch the model list from; falls back to the pi registry when empty */
   modelListUrl?: string
   /** Full URL to fetch speech voices from; falls back to the built-in catalog when empty */

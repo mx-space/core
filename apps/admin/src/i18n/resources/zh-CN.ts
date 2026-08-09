@@ -1933,6 +1933,7 @@ export const zhCN = {
   'settings.ai.field.maxTokens': '最大输出 tokens',
   'settings.ai.field.modelListUrl': '模型列表地址',
   'settings.ai.field.providerType': '服务类型',
+  'settings.ai.field.projectId': 'Google Cloud Project ID',
   'settings.ai.field.speed': '语速',
   'settings.ai.field.voice': '音色 ID',
   'settings.ai.field.voiceListUrl': '音色列表地址',
@@ -1961,7 +1962,18 @@ export const zhCN = {
   'settings.ai.provider.row.empty': '未指定模型',
   'settings.ai.providerType.anthropic': 'Anthropic',
   'settings.ai.providerType.generic': '通用兼容服务',
+  'settings.ai.providerType.googleVertex': 'Google Vertex AI',
   'settings.ai.providerType.openaiCompatible': 'OpenAI 兼容服务',
+  'settings.ai.preset.modal.add': '添加服务商',
+  'settings.ai.preset.modal.description':
+    '填写项目字段后，系统将生成 Vertex Endpoint；API Key 可在服务商详情中继续填写。',
+  'settings.ai.preset.modal.endpointPreview': '生成的 Endpoint',
+  'settings.ai.preset.modal.projectIdHelp':
+    '使用已启用 Vertex AI API 的 Google Cloud 项目 ID。',
+  'settings.ai.preset.modal.projectIdPlaceholder':
+    '例如 my-google-cloud-project',
+  'settings.ai.preset.modal.requiredField': '请填写 Google Cloud Project ID',
+  'settings.ai.preset.modal.title': '配置 Google Vertex AI',
   'settings.ai.voiceDiscovery.empty': '未发现音色，可手动输入服务商音色 ID。',
   'settings.ai.voiceDiscovery.error':
     '音色发现失败：{error}。仍可手动输入音色 ID。',
