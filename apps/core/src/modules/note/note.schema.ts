@@ -51,8 +51,8 @@ const NoteBaseSchema = WriteBaseSchema.extend({
       z.date().nullable(),
     )
     .optional(),
-  mood: z.string().optional(),
-  weather: z.string().optional(),
+  mood: z.string().nullable().optional(),
+  weather: z.string().nullable().optional(),
   bookmark: z.boolean().default(false).optional(),
   coordinates: CoordinateSchema.optional().nullable(),
   location: z.string().optional().nullable(),
