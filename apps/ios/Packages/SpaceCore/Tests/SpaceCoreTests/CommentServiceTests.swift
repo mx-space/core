@@ -51,4 +51,35 @@ import Testing
         #expect(object["state"] == 1)
         #expect(transport.requestPaths.first?.contains("comment-1") == true)
     }
+
+    @Test(arguments: [
+        (CommentFilter.all, "tab=all"),
+        (CommentFilter.unread, "tab=unread"),
+        (CommentFilter.awaiting, "tab=awaiting"),
+        (CommentFilter.whispers, "tab=whispers"),
+        (CommentFilter.read, "tab=read"),
+        (CommentFilter.junk, "tab=junk"),
+    ])
+    func everyInboxFilterUsesTheBackendCommentTab(
+        _ filter: CommentFilter,
+        _ query: String
+    ) async throws {
+        let transport = StubTransport([
+            .init(operationID: "listComments", status: .ok, json: #"{"data":[]}"#),
+            .init(
+                operationID: "getCommentTabCounts",
+                status: .ok,
+                json: #"{"data":{"unread":0,"read":0,"junk":0,"whispers":0,"awaiting":0,"all":0}}"#
+            ),
+        ])
+        let client = Client(
+            serverURL: URL(string: "https://mx.example.com/api/v3")!,
+            configuration: SpaceClient.configuration,
+            transport: transport
+        )
+
+        _ = try await CommentService(client: client).load(filter: filter)
+
+        #expect(transport.requestPaths.contains(where: { $0.contains(query) }))
+    }
 }

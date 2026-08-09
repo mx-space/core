@@ -8,6 +8,7 @@ const createController = () => {
     getLatestOne: vi.fn().mockResolvedValue({ id: 'latest' }),
     getAll: vi.fn().mockResolvedValue([]),
     getOffset: vi.fn().mockResolvedValue({ data: [] }),
+    getRefCandidates: vi.fn().mockResolvedValue([]),
     getOne: vi.fn().mockResolvedValue({ id: 'recent-1' }),
     create: vi.fn().mockResolvedValue({ id: 'recent-1' }),
     delete: vi.fn().mockResolvedValue(true),
@@ -43,5 +44,14 @@ describe('RecentlyController', () => {
       attitude: 'like',
       ip: '127.0.0.1',
     })
+  })
+
+  it('passes the authenticated context search to the candidate service', async () => {
+    const { controller, service } = createController()
+
+    await expect(
+      controller.getRefCandidates({ search: 'design', size: 8 } as any),
+    ).resolves.toEqual([])
+    expect(service.getRefCandidates).toHaveBeenCalledWith('design', 8)
   })
 })

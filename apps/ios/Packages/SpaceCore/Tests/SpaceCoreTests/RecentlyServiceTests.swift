@@ -161,4 +161,58 @@ import Testing
         #expect(object["content"] == "edited")
         #expect(transport.requestPaths.first?.contains("/recently/1") == true)
     }
+
+    @Test func editCanClearContextAndPersistTheSelectedLinkSet() async throws {
+        let (service, transport) = makeService([
+            .init(
+                status: .ok,
+                json: #"{"data":{"id":"1","content":"edited","type":"link","metadata":{"selected_enrichment_urls":["https://a.example"]},"ref_type":null,"ref_id":null,"comments_index":0,"allow_comment":true,"up":0,"down":0,"created_at":"2026-08-04T19:06:00Z","modified_at":"2026-08-07T03:00:00Z","enrichments":{}}}"#
+            ),
+        ])
+
+        _ = try await service.update(
+            id: "1",
+            content: "edited",
+            clearContext: true,
+            selectedEnrichmentURLs: ["https://a.example"]
+        )
+        let body = try #require(transport.requestBodies.first?.data(using: .utf8))
+        let object = try #require(
+            JSONSerialization.jsonObject(with: body) as? [String: Any]
+        )
+        let metadata = try #require(object["metadata"] as? [String: Any])
+
+        #expect(object["clearRef"] as? Bool == true)
+        #expect(metadata["selectedEnrichmentUrls"] as? [String] == ["https://a.example"])
+    }
+
+    @Test func loadsTypedInternalContextCandidates() async throws {
+        let (service, transport) = makeService([
+            .init(
+                operationID: "listRecentlyRefCandidates",
+                status: .ok,
+                json: #"{"data":[{"id":"post-1","type":"post","title":"Design notes"}]}"#
+            ),
+        ])
+
+        let candidates = try await service.refCandidates(search: "design", size: 8)
+
+        #expect(candidates == [
+            RecentlyContext(id: "post-1", kind: .post, title: "Design notes"),
+        ])
+        #expect(transport.requestPaths.first?.contains("search=design") == true)
+        #expect(transport.requestPaths.first?.contains("size=8") == true)
+    }
+
+    @Test func responseMetadataRestoresAnExplicitLinkSelection() async throws {
+        let (service, _) = makeService([
+            .init(
+                status: .ok,
+                json: #"{"data":[{"id":"1","content":"https://a.example\n\nhttps://b.example","type":"link","created_at":"2026-08-04T10:00:00Z","metadata":{"selected_enrichment_urls":["https://b.example"]},"enrichments":{}}]}"#
+            ),
+        ])
+
+        let entry = try #require(try await service.list().first)
+        #expect(entry.selectedEnrichmentURLs == ["https://b.example"])
+    }
 }

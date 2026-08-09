@@ -4,30 +4,28 @@ import SwiftUI
 import UIKit
 
 final class RecentlyViewController: UIViewController {
-    private enum Section: CaseIterable {
-        case today
-        case earlier
-
-        var title: String {
-            switch self {
-            case .today: "Today"
-            case .earlier: "Earlier"
-            }
-        }
+    private enum Section {
+        case feed
     }
 
     private let store: RecentlyStore
     private let service: RecentlyService
 
+    private lazy var composerStore = RecentlyComposerStore(
+        service: service,
+        contentStore: store,
+        onSaved: { [weak self] in self?.applySnapshot() }
+    )
+    private var composerController: UIHostingController<RecentlyInlineComposerView>!
     private var collectionView: UICollectionView!
     private var dataSource: UICollectionViewDiffableDataSource<Section, String>!
     private let refreshControl = UIRefreshControl()
 
     init(service: RecentlyService) {
         self.service = service
-        self.store = RecentlyStore(service: service)
+        store = RecentlyStore(service: service)
         super.init(nibName: nil, bundle: nil)
-        title = "Content"
+        title = "Recently"
     }
 
     @available(*, unavailable)
@@ -35,31 +33,47 @@ final class RecentlyViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = SpacePalette.page
         navigationItem.largeTitleDisplayMode = .always
+        view.keyboardLayoutGuide.followsUndockedKeyboard = true
 
+        configureComposer()
         configureCollectionView()
         Task { await reload() }
     }
 
+    private func configureComposer() {
+        let controller = UIHostingController(
+            rootView: RecentlyInlineComposerView(store: composerStore)
+        )
+        controller.sizingOptions = .intrinsicContentSize
+        controller.view.backgroundColor = .clear
+        controller.view.setContentCompressionResistancePriority(.required, for: .vertical)
+
+        addChild(controller)
+        view.addSubview(controller.view)
+        controller.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            controller.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            controller.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            controller.view.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
+        ])
+        controller.didMove(toParent: self)
+        composerController = controller
+    }
+
     private func configureCollectionView() {
         var configuration = UICollectionLayoutListConfiguration(appearance: .plain)
-        configuration.backgroundColor = .systemGroupedBackground
-        configuration.headerMode = .supplementary
-        configuration.showsSeparators = false
-        configuration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
-            guard let self, let id = dataSource.itemIdentifier(for: indexPath) else { return nil }
-            let delete = UIContextualAction(style: .destructive, title: "Delete") { _, _, done in
-                self.confirmDeletion(of: id, completion: done)
-            }
-            return UISwipeActionsConfiguration(actions: [delete])
-        }
+        configuration.backgroundColor = SpacePalette.page
+        configuration.headerMode = .none
+        configuration.showsSeparators = true
 
         collectionView = UICollectionView(
-            frame: view.bounds,
+            frame: .zero,
             collectionViewLayout: UICollectionViewCompositionalLayout.list(using: configuration)
         )
-        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        collectionView.backgroundColor = SpacePalette.page
+        collectionView.keyboardDismissMode = .interactive
         collectionView.accessibilityIdentifier = "recently.list"
         collectionView.delegate = self
         collectionView.refreshControl = refreshControl
@@ -67,15 +81,34 @@ final class RecentlyViewController: UIViewController {
             UIAction { [weak self] _ in Task { await self?.reload() } },
             for: .valueChanged
         )
-        view.addSubview(collectionView)
+        view.insertSubview(collectionView, belowSubview: composerController.view)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: composerController.view.topAnchor),
+        ])
 
-        let registration = UICollectionView.CellRegistration<
-            UICollectionViewListCell, RecentlyCard
-        > { cell, _, entry in
-            cell.contentConfiguration = UIHostingConfiguration { RecentlyRowView(entry: entry) }
-                .margins(.horizontal, Spacing.regular)
-                .margins(.vertical, Spacing.tight)
+        let registration = UICollectionView.CellRegistration<UICollectionViewListCell, RecentlyCard> {
+            [weak self] cell, _, entry in
+            cell.contentConfiguration = UIHostingConfiguration {
+                RecentlyRowView(
+                    entry: entry,
+                    onEdit: { [weak self] in self?.edit(entry) },
+                    onDelete: { [weak self] in self?.confirmDeletion(of: entry.id) }
+                )
+            }
+            .margins(.horizontal, Spacing.regular)
+            .margins(.vertical, 0)
             cell.backgroundConfiguration = UIBackgroundConfiguration.clear()
+            cell.accessibilityIdentifier = "recently.row.\(entry.id)"
+            cell.directionalLayoutMargins = NSDirectionalEdgeInsets(
+                top: 0,
+                leading: Spacing.regular,
+                bottom: 0,
+                trailing: Spacing.regular
+            )
         }
 
         dataSource = UICollectionViewDiffableDataSource(
@@ -86,26 +119,6 @@ final class RecentlyViewController: UIViewController {
                 using: registration,
                 for: indexPath,
                 item: entry
-            )
-        }
-
-        let headerRegistration = UICollectionView.SupplementaryRegistration<UICollectionViewListCell>(
-            elementKind: UICollectionView.elementKindSectionHeader
-        ) { [weak self] header, _, indexPath in
-            guard
-                let self,
-                indexPath.section < self.dataSource.snapshot().sectionIdentifiers.count
-            else { return }
-            let section = self.dataSource.snapshot().sectionIdentifiers[indexPath.section]
-            var content = UIListContentConfiguration.header()
-            content.text = section.title
-            header.contentConfiguration = content
-            header.backgroundConfiguration = UIBackgroundConfiguration.clear()
-        }
-        dataSource.supplementaryViewProvider = { collectionView, _, indexPath in
-            collectionView.dequeueConfiguredReusableSupplementary(
-                using: headerRegistration,
-                for: indexPath
             )
         }
     }
@@ -120,89 +133,71 @@ final class RecentlyViewController: UIViewController {
     @MainActor
     private func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, String>()
-        for section in Section.allCases {
-            let ids = entries(in: section).map(\.id)
-            guard !ids.isEmpty else { continue }
-            snapshot.appendSections([section])
-            snapshot.appendItems(ids, toSection: section)
+        if !store.entries.isEmpty {
+            snapshot.appendSections([.feed])
+            snapshot.appendItems(store.entries.map(\.id), toSection: .feed)
+            snapshot.reconfigureItems(snapshot.itemIdentifiers)
         }
-        snapshot.reconfigureItems(snapshot.itemIdentifiers)
         dataSource.apply(snapshot, animatingDifferences: true)
         updateEmptyState()
     }
 
-    private func entries(in section: Section) -> [RecentlyCard] {
-        store.entries.filter { entry in
-            let isToday = Calendar.current.isDateInToday(entry.createdAt)
-            return section == .today ? isToday : !isToday
-        }
-    }
-
     private func updateEmptyState() {
-        guard store.entries.isEmpty, !store.isLoading else {
+        guard store.entries.isEmpty else {
             collectionView.backgroundView = nil
             return
         }
+
+        if store.isLoading {
+            var configuration = UIContentUnavailableConfiguration.loading()
+            configuration.text = "Loading Recently"
+            collectionView.backgroundView = UIContentUnavailableView(configuration: configuration)
+            return
+        }
+
         var configuration = UIContentUnavailableConfiguration.empty()
         if let message = store.errorMessage {
             configuration.image = UIImage(systemName: "exclamationmark.triangle")
-            configuration.text = "Could not load posts"
+            configuration.text = "Could not load Recently"
             configuration.secondaryText = message
-            var retry = UIButton.Configuration.plain()
+            var retry = UIButton.Configuration.glass()
             retry.title = "Retry"
+            retry.cornerStyle = .capsule
             configuration.button = retry
             configuration.buttonProperties.primaryAction = UIAction { [weak self] _ in
                 Task { await self?.reload() }
             }
         } else {
             configuration.image = UIImage(systemName: "text.bubble")
-            configuration.text = "No posts yet"
-            configuration.secondaryText = "Use the create button below to publish a short update."
+            configuration.text = "No Recently entries yet"
+            configuration.secondaryText = "Publish a short update from the field below."
+            var create = UIButton.Configuration.prominentGlass()
+            create.title = "Write an update"
+            create.cornerStyle = .capsule
+            configuration.button = create
+            configuration.buttonProperties.primaryAction = UIAction { [weak self] _ in
+                self?.composerStore.focusInput()
+            }
         }
         collectionView.backgroundView = UIContentUnavailableView(configuration: configuration)
     }
 
-    func presentComposer(
-        from presenter: UIViewController? = nil,
-        entry: RecentlyCard? = nil,
-        onSaved: (() -> Void)? = nil
-    ) {
-        weak var host: UIViewController?
-        let composer = RecentlyComposerView(
-            service: service,
-            initialText: entry?.content ?? "",
-            navigationTitle: entry == nil ? "New Recently" : "Edit Recently",
-            onDirtyChange: { dirty in host?.isModalInPresentation = dirty }
-        ) { [weak self] content in
-            guard let self else { return "Could not save. Try again." }
-            let failure = await store.save(id: entry?.id, content: content)
-            if failure == nil {
-                if isViewLoaded { applySnapshot() }
-                onSaved?()
-            }
-            return failure
-        }
-        let controller = UIHostingController(rootView: composer)
-        host = controller
-        (presenter ?? self).present(controller, animated: true)
+    private func edit(_ entry: RecentlyCard) {
+        composerStore.beginEditing(entry)
     }
 
-    private func confirmDeletion(of id: String, completion: @escaping (Bool) -> Void) {
+    private func confirmDeletion(of id: String) {
         let alert = UIAlertController(
             title: "Delete this Recently entry?",
             message: "This action cannot be undone.",
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completion(false) })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
-            guard let self else {
-                completion(false)
-                return
-            }
+            guard let self else { return }
             Task { @MainActor in
-                await self.store.delete(id: id)
-                self.applySnapshot()
-                completion(true)
+                await store.delete(id: id)
+                applySnapshot()
             }
         })
         present(alert, animated: true)
@@ -210,15 +205,6 @@ final class RecentlyViewController: UIViewController {
 }
 
 extension RecentlyViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        collectionView.deselectItem(at: indexPath, animated: true)
-        guard
-            let id = dataSource.itemIdentifier(for: indexPath),
-            let entry = store.entries.first(where: { $0.id == id })
-        else { return }
-        presentComposer(entry: entry)
-    }
-
     func collectionView(
         _ collectionView: UICollectionView,
         willDisplay cell: UICollectionViewCell,
@@ -229,5 +215,15 @@ extension RecentlyViewController: UICollectionViewDelegate {
             await store.loadMore()
             applySnapshot()
         }
+    }
+}
+
+extension RecentlyViewController: ScrollToTopHandling {
+    func scrollToTop() {
+        guard collectionView.numberOfSections > 0 else { return }
+        collectionView.setContentOffset(
+            CGPoint(x: 0, y: -collectionView.adjustedContentInset.top),
+            animated: true
+        )
     }
 }

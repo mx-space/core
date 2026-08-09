@@ -25,6 +25,16 @@ extension RecentlyCard {
             .map { MediaCard($0.value) }
     }
 
+    /// Explicit selection is present on entries written by the mobile
+    /// composer. Historical rows have no selection field and retain the
+    /// server's original all-cardable-links behavior.
+    public var selectedEnrichmentURLs: Set<String> {
+        if let selected = metadata?.selectedEnrichmentUrls {
+            return Set(selected)
+        }
+        return Set(RecentlyService.cardableURLs(in: content))
+    }
+
     /// The entry laid out as text runs interleaved with the cards that replace
     /// their links. A link with no hydrated enrichment stays as plain text so
     /// nothing silently disappears.

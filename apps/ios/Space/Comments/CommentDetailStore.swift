@@ -32,12 +32,26 @@ final class CommentDetailStore {
         self.id = id
     }
 
-    func load() async {
+    /// Returns true when opening the detail also transitioned an unread
+    /// comment to read, allowing the list badge to refresh once.
+    func load() async -> Bool {
         do {
-            state = .loaded(try await service.detail(id: id))
+            var comment = try await service.detail(id: id)
+            state = .loaded(comment)
             errorMessage = nil
+            guard CommentState(rawValue: comment.state) == .unread else { return false }
+            do {
+                try await service.setState(id: id, state: CommentState.read)
+                comment.state = CommentState.read.rawValue
+                state = .loaded(comment)
+                return true
+            } catch {
+                errorMessage = error.localizedDescription
+                return false
+            }
         } catch {
             state = .failed(error.localizedDescription)
+            return false
         }
     }
 
@@ -56,17 +70,24 @@ final class CommentDetailStore {
     }
 
     func markJunk() async -> Bool {
-        await setState(.junk, reload: false)
+        await setState(.junk)
+    }
+
+    func restore() async -> Bool {
+        await setState(.read)
     }
 
     func markRead(_ read: Bool) async -> Bool {
-        await setState(read ? .read : .unread, reload: true)
+        await setState(read ? .read : .unread)
     }
 
-    private func setState(_ newState: CommentState, reload: Bool) async -> Bool {
+    private func setState(_ newState: CommentState) async -> Bool {
         do {
             try await service.setState(id: id, state: newState)
-            if reload { state = .loaded(try await service.detail(id: id)) }
+            if case var .loaded(comment) = state {
+                comment.state = newState.rawValue
+                state = .loaded(comment)
+            }
             errorMessage = nil
             return true
         } catch {

@@ -35,6 +35,7 @@ export interface RecentlyCreateModel {
   refType?: RecentlyRefType
   refId?: EntityId | string | null
   ref?: EntityId | string | null
+  clearRef?: boolean
 }
 
 export type RecentlyPatchInput = Partial<RecentlyCreateInput> & {

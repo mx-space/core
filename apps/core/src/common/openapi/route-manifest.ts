@@ -25,7 +25,10 @@ import {
   PushBindingIdParamSchema,
   PushStatusResponseSchema,
 } from '~/modules/push/push.schema'
-import { RecentlySchema } from '~/modules/recently/recently.schema'
+import {
+  RecentlyRefCandidatesQuerySchema,
+  RecentlySchema,
+} from '~/modules/recently/recently.schema'
 import { RecentlyViews } from '~/modules/recently/recently.views'
 import { SayCreateSchema } from '~/modules/say/say.controller'
 import { SayViews } from '~/modules/say/say.views'
@@ -337,6 +340,20 @@ export const routeManifest: readonly OpenApiRoute[] = [
     auth: false,
     query: OffsetSchema,
     response: { name: 'RecentlyCard', schema: RecentlyViews.card },
+    responseIsArray: true,
+  },
+  {
+    operationId: 'listRecentlyRefCandidates',
+    method: 'get',
+    path: '/recently/ref-candidates',
+    tag: 'recently',
+    summary: 'Search internal content that can be attached as Recently context',
+    auth: true,
+    query: RecentlyRefCandidatesQuerySchema,
+    response: {
+      name: 'RecentlyRefCandidate',
+      schema: RecentlyViews.refCandidate,
+    },
     responseIsArray: true,
   },
   {

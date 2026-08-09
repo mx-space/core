@@ -18,9 +18,13 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
 
-import { RecentlyAttitudeDto, RecentlyDto } from './recently.schema'
+import {
+  RecentlyAttitudeDto,
+  RecentlyDto,
+  RecentlyRefCandidatesQueryDto,
+} from './recently.schema'
 import { RecentlyService } from './recently.service'
-import type { RecentlyModel } from './recently.types'
+import type { RecentlyCreateModel } from './recently.types'
 
 @ApiController(['recently', 'shorthand'])
 export class RecentlyController {
@@ -49,6 +53,12 @@ export class RecentlyController {
     return this.recentlyService.getOffset({ before, after, size })
   }
 
+  @Get('/ref-candidates')
+  @Auth()
+  getRefCandidates(@Query() query: RecentlyRefCandidatesQueryDto) {
+    return this.recentlyService.getRefCandidates(query.search ?? '', query.size)
+  }
+
   @Get('/:id')
   getOne(@Param() { id }: EntityIdDto) {
     return this.recentlyService.getOne(id)
@@ -58,7 +68,7 @@ export class RecentlyController {
   @HTTPDecorators.Idempotence()
   @Auth()
   create(@Body() body: RecentlyDto) {
-    return this.recentlyService.create(body as unknown as RecentlyModel)
+    return this.recentlyService.create(body as unknown as RecentlyCreateModel)
   }
 
   @Delete('/:id')
@@ -75,7 +85,7 @@ export class RecentlyController {
   async update(@Param() { id }: EntityIdDto, @Body() body: RecentlyDto) {
     const res = await this.recentlyService.update(
       id,
-      body as unknown as Partial<RecentlyModel>,
+      body as unknown as RecentlyCreateModel,
     )
     if (!res) {
       throw createAppException(AppErrorCode.RECENTLY_NOT_FOUND, { id })

@@ -50,6 +50,11 @@ const ARTICLE_REF_FIELDS = [
   'nid',
 ] as const
 
+// Keep this projection aligned with ActivityViews.readingRank. The generated
+// Swift client rejects undeclared nested keys rather than silently dropping
+// them, so returning a full post category here breaks Movement decoding.
+const READING_REF_FIELDS = ['id', 'nid', 'slug', 'title'] as const
+
 @ApiController('/activity')
 export class ActivityController {
   constructor(
@@ -248,7 +253,7 @@ export class ActivityController {
   ) {
     const data = result.map((item) => ({
       ...item,
-      ref: pick(item.ref, ARTICLE_REF_FIELDS),
+      ref: item.ref ? pick(item.ref, READING_REF_FIELDS) : undefined,
     }))
     if (!lang) return data
 

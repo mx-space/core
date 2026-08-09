@@ -28,8 +28,18 @@ public struct RecentlyService: Sendable {
         }
     }
 
-    public func create(content: String) async throws -> RecentlyDetail {
-        switch try await client.createRecently(.init(body: .json(.init(content: content)))) {
+    public func create(
+        content: String,
+        context: RecentlyContext? = nil,
+        selectedEnrichmentURLs: [String]? = nil
+    ) async throws -> RecentlyDetail {
+        let body = makeBody(
+            content: content,
+            context: context,
+            clearContext: false,
+            selectedEnrichmentURLs: selectedEnrichmentURLs
+        )
+        switch try await client.createRecently(.init(body: .json(body))) {
         case let .created(response):
             return try response.body.json.data
         case let .clientError(status, response):
@@ -41,10 +51,23 @@ public struct RecentlyService: Sendable {
         }
     }
 
-    public func update(id: String, content: String) async throws -> RecentlyDetail {
+    public func update(
+        id: String,
+        content: String,
+        context: RecentlyContext? = nil,
+        clearContext: Bool = false,
+        selectedEnrichmentURLs: [String]? = nil
+    ) async throws -> RecentlyDetail {
         let input = Operations.UpdateRecently.Input(
             path: .init(id: id),
-            body: .json(.init(content: content))
+            body: .json(
+                makeBody(
+                    content: content,
+                    context: context,
+                    clearContext: clearContext,
+                    selectedEnrichmentURLs: selectedEnrichmentURLs
+                )
+            )
         )
         switch try await client.updateRecently(input) {
         case let .ok(response):
@@ -62,6 +85,25 @@ public struct RecentlyService: Sendable {
         switch try await client.deleteRecently(.init(path: .init(id: id))) {
         case .noContent:
             return
+        case let .clientError(status, response):
+            throw SpaceError(envelope: try response.body.json, status: status)
+        case let .serverError(status, response):
+            throw SpaceError(envelope: try response.body.json, status: status)
+        case let .undocumented(statusCode, _):
+            throw SpaceError.undocumented(statusCode)
+        }
+    }
+
+    public func refCandidates(
+        search: String = "",
+        size: Int = 12
+    ) async throws -> [RecentlyContext] {
+        let input = Operations.ListRecentlyRefCandidates.Input(
+            query: .init(search: search.isEmpty ? nil : search, size: size)
+        )
+        switch try await client.listRecentlyRefCandidates(input) {
+        case let .ok(response):
+            return try response.body.json.data.map(RecentlyContext.init)
         case let .clientError(status, response):
             throw SpaceError(envelope: try response.body.json, status: status)
         case let .serverError(status, response):
@@ -140,6 +182,15 @@ public struct RecentlyService: Sendable {
             .joined(separator: "\n\n")
     }
 
+    public static func preparing(
+        content: String,
+        selectedEnrichmentURLs: [String]
+    ) -> String {
+        selectedEnrichmentURLs.reduce(content) { partial, url in
+            isolatingLink(url, in: partial)
+        }
+    }
+
     private static func paragraphs(of text: String) -> [String] {
         text
             .replacingOccurrences(of: "\r\n", with: "\n")
@@ -154,5 +205,28 @@ public struct RecentlyService: Sendable {
             return false
         }
         return (scheme == "http" || scheme == "https") && url.host() != nil
+    }
+
+    private func makeBody(
+        content: String,
+        context: RecentlyContext?,
+        clearContext: Bool,
+        selectedEnrichmentURLs: [String]?
+    ) -> Components.Schemas.RecentlyCreate {
+        let refType = context.flatMap {
+            Components.Schemas.RecentlyCreate.RefTypePayload(rawValue: $0.kind.rawValue)
+        }
+        let metadata = selectedEnrichmentURLs.map {
+            Components.Schemas.RecentlyCreate.MetadataPayload(
+                selectedEnrichmentUrls: Array(Set($0)).sorted()
+            )
+        }
+        return .init(
+            content: content,
+            ref: context?.id,
+            refType: refType,
+            clearRef: clearContext ? true : nil,
+            metadata: metadata
+        )
     }
 }

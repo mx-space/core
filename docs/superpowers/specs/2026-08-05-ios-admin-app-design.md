@@ -1,7 +1,7 @@
 # Space —— mx-core iOS 管理端设计
 
 日期：2026-08-05
-状态：已批准，基础 UI 与操作路径已实现
+状态：已批准，按 2026-08-09 页面审查结论实施中
 
 ## 1. 目标与非目标
 
@@ -125,7 +125,16 @@ Wire 层本就是 snake_case（`ResponseInterceptor` 在边界转换），生成
 
 ### 导航
 
-底座 `UITabBarController`，三 tab：Today、Inbox、Content。Content 在 v1 只承载 Recently；Movement 从 Today 的数据卡片进入，不占 tab。Recently 新建使用 `UITabBarController.bottomAccessory` 提供的全局动作，不占 tab —— 它是动作而非目的地。
+底座 `UITabBarController`，三 tab：Today、Inbox、Content。Content 在 v1
+只承载 Recently；Movement 从 Today 的数据卡片进入，不占 tab。
+
+TabBar **不提供全局新建动作**，亦不使用 `bottomAccessory`。Recently 的
+输入仅属于 Content 页，采用键盘附着的页内 composer。三项图标分别为
+`house`、`tray`、`rectangle.stack`；Inbox badge 只表示 unread 数量，零值
+隐藏，超过 99 显示 `99+`。
+
+重复点击当前 tab 时：若当前 navigation stack 已 push，则回到根页；若已经
+位于根页，则滚动到顶部。切换 tab 不重建页面状态。
 
 iOS 26 下 tab bar 自动获得 Liquid Glass，配 `tabBarMinimizeBehavior = .onScrollDown`。
 
@@ -138,18 +147,114 @@ iOS 26 下 tab bar 自动获得 Liquid Glass，配 `tabBarMinimizeBehavior = .on
 | Inbox 评论列表          | UIKit   | 大列表、筛选、滑动操作、分页、实时插入动画，需 diffable data source 精确控制 |
 | 评论详情与回复          | SwiftUI | 表单为主                                                                     |
 | Content / Recently 列表 | UIKit   | 时间分组、diffable data source 与删除确认                                    |
-| Recently 编辑           | SwiftUI | 全屏编辑、链接预览与发布失败原位恢复                                         |
+| Recently 输入与编辑     | UIKit + SwiftUI | `keyboardLayoutGuide` 管理键盘附着；SwiftUI 渲染元信息卡与输入内容       |
 | 设置                    | SwiftUI | 静态表单                                                                     |
+
+### 视觉系统
+
+产品定位为「克制的原生内容运维工具」，而非高饱和的宇宙主题界面。颜色与 Web
+端保持同一语义：
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| Page | `#FAF9F7` | `#0A0A0C` |
+| Surface | `#FFFFFF` | `#1C1C20` |
+| Inset | `#F5F4F1` | `#101013` |
+| Primary | `#1C1917` | `#FAFAF9` |
+| Muted | `#57534E` | `#A8A29E` |
+| Subtle | `#78716C` | `#78716C` |
+| Accent | `#2563EB` | `#3B82F6` |
+
+语义色为 success `#059669`、warning `#D97706`、danger `#DC2626`、info
+`#0284C7`。间距使用 4 / 8 / 12 / 16 / 24 / 32；页面水平内边距与卡片
+内边距均为 16。控件与 enrichment 圆角为 12，内容卡片为 16。指标数字使用
+monospaced digits，其他文字使用系统 Dynamic Type。
+
+Glass 用于 navigation、tab、键盘 composer、sheet、menu，以及所有可见的独立
+操作按钮。SwiftUI 按钮使用系统 `.glass` / `.glassProminent`，UIKit 按钮使用
+系统 `UIButton.Configuration.glass()` / `.prominentGlass()`；不得另造 filled、
+tinted 或手绘玻璃按钮。整行内容卡与元信息选择卡即使以 `Button` 承载点击语义，
+仍使用不透明 surface，不额外套玻璃胶囊。开启 Reduce Transparency 后由系统自动
+降级，应用自有的玻璃容器亦降级为实色。
+
+### Today 与 Movement
+
+Today 的信息顺序固定为：日期语境、Needs attention、At a glance、Scheduled、
+Activity。仅 Needs attention 与 At a glance 使用卡片；Scheduled 与 Activity
+使用平铺 section。没有待处理事项时显示一行 `All caught up`。At a glance 以
+Visitors 为主指标，Sessions 与 Online 为次指标，点击进入 Movement。在线人数
+仅表达访客数量，不作为服务器健康指示。页面不再提供底部 Web Admin 按钮；
+Web Admin 只存在于站点菜单。
+
+Movement 使用 inline title。区间为 Today / 7D / 30D，选择器位于内容区。
+页面包含选定区间 Pageviews 总量与一张图表、`Unique today`、`All-time UV`，
+以及平铺的 Top content 排名；不重复 Recent Activity。Web analytics 只保留
+navigation toolbar 动作。切换区间时保留旧图并显示小型刷新状态。
+
+### Inbox 与评论详情
+
+Inbox 分类必须与后端 `CommentTab` 完全一致，顺序为：All / Unread / Awaiting /
+Whispers / Read / Junk，默认 Unread。筛选器显示各自独立计数。列表按本地日历
+日分组（Today、Yesterday、实际日期），采用连续 plain list，不为每行套卡片。
+行内容为 unread dot、作者与时间、两行摘要、内容类型与国家/地区。
+
+评论详情 push 后隐藏 TabBar。页面包含作者、时间、位置、状态、全文、父评论
+引用、引用内容、可折叠 Details，以及底部 1–5 行回复框。成功打开 unread 评论
+后自动标记 read；junk 状态隐藏普通回复并提供 restore。菜单提供 Web、read /
+unread、junk / restore、delete；删除必须二次确认。后端没有 replies 数组时，不
+构造虚假的 thread timeline。
+
+### Content / Recently
+
+tab 名保持 Content，根页 large title 为 Recently。内容采用连续 editorial feed：
+正文与原位置 enrichment、footer、行级菜单，以 divider 分隔，不给每条记录套
+外层圆角卡。反应图标使用 thumbs up、thumbs down 与 bubble。
+
+composer 常驻 Content 页并附着在 TabBar 上方；键盘出现后通过
+`keyboardLayoutGuide` 贴在键盘顶部。输入框从一行自动增长至 5–6 行，之后内部
+滚动。发布成功后清空输入并将记录插入顶部；草稿在 tab 切换与键盘收起期间
+保留。编辑既有记录复用同一 composer，并显示 Editing 与取消动作。
+
+元信息 tray 位于输入框上方，并区分两种视觉形态：
+
+- Context：单选的内部 Post / Note / Page / Recently 引用，40–48pt，无 artwork。
+- Links：可多选的 URL enrichment 横向卡片，72–88pt；poster 与 fallback 使用
+  不同内部布局。外壳保持中性，仅 artwork 使用强色。
+
+Context row 在上、Links row 在下；空 row 隐藏，tray 高度上限约 140pt。服务端
+使用现有 `ref/refType` 保存单一内部引用，并在 card response 返回类型化 ref
+摘要；显式选中的 enrichment URL 存入 Recently metadata。历史记录没有该字段
+时继续采用“所有独占段落 URL 均增强”的原行为。
+
+### 配对与站点设置
+
+Connect 与 Pair 是连续两阶段流程，不显示重复的大标题或 `STEP n OF 2`。Connect
+使用轻量 Space 标识、`Connect to your site` 标题、capsule URL 字段、固定尺寸的
+HTTPS 锁图标与标准 prominent Continue；输入框和按钮共享 capsule 轮廓。Return
+可提交，错误原位显示，加载状态位于按钮内。
+
+Pair 以同设备 `Open approval page` 为主动作，代码使用 monospaced font 并可复制；
+QR 置于 `Approve on another device` 次级区。过期后可直接申请新码；成功状态使用
+checkmark 与 crossfade；返回时取消 polling。
+
+每个根页的 `…` 菜单只包含 Open Web Admin 与 Site Settings。Site Settings 为
+push 的标准 Form，包含站点 host 与 `Paired`、可选 Notifications、版本/build，
+以及底部 destructive Unpair。Notifications 仅在 relay 构建配置存在时显示；
+denied 状态提供 Open Settings。Unpair 文案明确只清除本机凭证，不删除服务端
+数据。
 
 ### Liquid Glass 分寸
 
-玻璃只施于浮层与容器边缘：tab bar、导航栏、悬浮操作条、sheet 背板。**内容区不铺玻璃** —— Apple 明确内容层不应用 Liquid Glass，大面积模糊亦伤可读性与性能。
+玻璃只施于浮层、容器边缘和明确的操作控件：tab bar、导航栏、悬浮操作条、
+sheet 背板与系统按钮。**内容区不铺玻璃** —— 普通信息卡、列表行与 enrichment
+卡仍是内容，不因其可点击就转为玻璃表面。
 
-`SpaceUI` 只出三件组件：
+`SpaceUI` 保留以下共享组件：
 
 - `GlassBar` —— 顶栏与底栏背板
 - `GlassActionCluster` —— 以 `UIGlassContainerEffect` 令相邻按钮融合
 - `GlassSheetBackdrop` —— sheet 背板
+- `PrimaryGlassButton` —— 全页流程的系统 `prominentGlass` 主操作封装
 
 UIKit 侧封装 `UIVisualEffectView` + `UIGlassEffect`（`isInteractive`、`cornerConfiguration`）；SwiftUI 侧封装 `.glassEffect(_:in:)` 与 `GlassEffectContainer`。两侧共用同一套 token。
 

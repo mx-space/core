@@ -1,10 +1,12 @@
 import Foundation
 
 public enum CommentFilter: String, CaseIterable, Sendable {
+    case all
     case unread
     case awaiting
+    case whispers
+    case read
     case junk
-    case all
 }
 
 public struct CommentSnapshot: Sendable, Equatable {
@@ -93,10 +95,12 @@ public struct CommentService: Sendable {
 
     private func list(filter: CommentFilter) async throws -> [Components.Schemas.CommentRow] {
         let tab: Operations.ListComments.Input.Query.TabPayload = switch filter {
+        case .all: .all
         case .unread: .unread
         case .awaiting: .awaiting
+        case .whispers: .whispers
+        case .read: .read
         case .junk: .junk
-        case .all: .all
         }
         let input = Operations.ListComments.Input(query: .init(page: 1, size: 50, tab: tab))
         switch try await client.listComments(input) {

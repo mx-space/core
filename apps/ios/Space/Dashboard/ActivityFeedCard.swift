@@ -13,10 +13,11 @@ struct ActivityFeedCard: View {
         let date: Date
     }
 
-    let recent: Components.Schemas.RecentActivities
+    let recent: Components.Schemas.RecentActivities?
     var limit = 8
 
     private var events: [Event] {
+        guard let recent else { return [] }
         let comments = recent.comment.enumerated().map { index, item in
             Event(
                 id: "comment-\(item.id ?? String(index))",
@@ -39,37 +40,41 @@ struct ActivityFeedCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.regular) {
-            Text("Recent activity").font(.headline)
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            Text("Activity").font(.headline)
+
             if events.isEmpty {
                 Text("No recent activity")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color(SpacePalette.muted))
             } else {
-                ForEach(events) { event in
-                    HStack(alignment: .top, spacing: Spacing.regular) {
-                        Image(systemName: event.kind == .like ? "heart.fill" : "bubble.left.fill")
-                            .foregroundStyle(event.kind == .like ? Color.pink : Color.accentColor)
+                ForEach(Array(events.enumerated()), id: \.element.id) { index, event in
+                    if index > 0 { Divider() }
+                    HStack(alignment: .top, spacing: Spacing.medium) {
+                        Image(systemName: event.kind == .like ? "hand.thumbsup.fill" : "bubble.left.fill")
+                            .foregroundStyle(
+                                event.kind == .like
+                                    ? Color(SpacePalette.success)
+                                    : Color(SpacePalette.accent)
+                            )
                             .frame(width: 24)
                             .accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: Spacing.hairline) {
+                        VStack(alignment: .leading, spacing: Spacing.xSmall) {
                             Text(event.title).font(.subheadline.weight(.medium))
                             Text(event.detail)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color(SpacePalette.muted))
                                 .lineLimit(2)
                         }
                         Spacer(minLength: 0)
                         Text(event.date, format: .relative(presentation: .named))
                             .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(Color(SpacePalette.subtle))
                     }
                     .accessibilityElement(children: .combine)
                 }
             }
         }
-        .padding(Spacing.regular)
-        .background(.background, in: .rect(cornerRadius: Radius.card))
         .accessibilityIdentifier("activity.recent")
     }
 }

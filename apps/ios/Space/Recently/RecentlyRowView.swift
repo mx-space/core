@@ -2,44 +2,22 @@ import SpaceCore
 import SpaceUI
 import SwiftUI
 
-/// Layout follows Yohaku's `ThinkingItem`: a timestamp header, the body with
-/// media cards sitting where their link was, then a dashed rule above the
-/// reaction counts.
 struct RecentlyRowView: View {
     let entry: RecentlyCard
+    let onEdit: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.regular) {
-            header
-            body(for: entry.blocks)
-            // Without any reaction the rule would hang under the entry with
-            // nothing beneath it, so the whole footer goes away.
-            if hasReactions { footer }
-        }
-        .padding(Spacing.regular)
-        .background(.background, in: .rect(cornerRadius: Radius.card))
-        .accessibilityElement(children: .contain)
-    }
-
-    private var hasReactions: Bool {
-        (entry.up ?? 0) > 0 || (entry.down ?? 0) > 0 || (entry.commentsIndex ?? 0) > 0
-    }
-
-    private var header: some View {
-        HStack(spacing: Spacing.tight) {
-            Text(entry.createdAt, format: .relative(presentation: .named))
-            if entry.modifiedAt != nil {
-                Text("edited")
-                    .foregroundStyle(.tertiary)
+            if let context = entry.context {
+                RecentlyContextCardView(context: context)
             }
-            Spacer()
-            Image(systemName: "pencil")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.tertiary)
-                .accessibilityHidden(true)
+
+            body(for: entry.blocks)
+            footer
         }
-        .font(.caption)
-        .foregroundStyle(.secondary)
+        .padding(.vertical, Spacing.large)
+        .accessibilityElement(children: .contain)
     }
 
     @ViewBuilder
@@ -50,20 +28,34 @@ struct RecentlyRowView: View {
                 case let .text(text):
                     Text(text)
                         .font(.body)
+                        .foregroundStyle(Color(SpacePalette.primary))
                         .lineSpacing(4)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
                 case let .card(card):
-                    EnrichmentCardView(card: card)
+                    EnrichmentCardView(
+                        card: card,
+                        accessibilityIdentifier: "recently.enrichment.\(entry.id)"
+                    )
                 }
             }
         }
     }
 
     private var footer: some View {
-        HStack(spacing: Spacing.loose) {
+        HStack(spacing: Spacing.medium) {
+            Text(entry.createdAt, format: .relative(presentation: .named))
+                .monospacedDigit()
+            if entry.modifiedAt != nil {
+                Text("Edited")
+                    .foregroundStyle(Color(SpacePalette.subtle))
+            }
+
+            Spacer(minLength: Spacing.small)
+
             if let up = entry.up, up > 0 {
-                Label("\(up)", systemImage: "heart")
+                Label("\(up)", systemImage: "hand.thumbsup")
             }
             if let down = entry.down, down > 0 {
                 Label("\(down)", systemImage: "hand.thumbsdown")
@@ -71,15 +63,15 @@ struct RecentlyRowView: View {
             if let comments = entry.commentsIndex, comments > 0 {
                 Label("\(comments)", systemImage: "bubble.left")
             }
+
+            Menu("Recently actions", systemImage: "ellipsis") {
+                Button("Edit", systemImage: "pencil", action: onEdit)
+                Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
+            }
+            .labelStyle(.iconOnly)
+            .accessibilityIdentifier("recently.actions")
         }
         .font(.caption)
-        .foregroundStyle(.secondary)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, Spacing.tight)
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(Color(.separator))
-                .frame(height: 0.5)
-        }
+        .foregroundStyle(Color(SpacePalette.muted))
     }
 }

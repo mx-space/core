@@ -6,6 +6,8 @@ import UIKit
 final class RootTabBarController: UITabBarController {
     private let client: SpaceClient
     private let pushManager: PushNotificationManager?
+    private let dashboardScrollSignal = ScrollToTopSignal()
+
     private lazy var webCoordinator = WebHandoffCoordinator(
         service: WebHandoffService(spaceClient: client)
     )
@@ -13,6 +15,9 @@ final class RootTabBarController: UITabBarController {
         service: CommentService(spaceClient: client),
         openWeb: { [weak self] controller in
             self?.webCoordinator.open(.comments, from: controller)
+        },
+        onUnreadCountChange: { [weak self] count in
+            self?.setInboxBadge(count)
         }
     )
     private lazy var recentlyController = RecentlyViewController(
@@ -31,30 +36,34 @@ final class RootTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        delegate = self
+        view.tintColor = SpacePalette.accent
+        tabBar.tintColor = SpacePalette.accent
         tabBarMinimizeBehavior = .onScrollDown
 
         viewControllers = [
             wrap(
                 makeDashboard(),
                 title: "Today",
-                systemImage: "sun.max",
+                systemImage: "house",
+                selectedSystemImage: "house.fill",
                 identifier: "tab.today"
             ),
             wrap(
                 configureTopLevel(commentsController),
                 title: "Inbox",
                 systemImage: "tray",
+                selectedSystemImage: "tray.fill",
                 identifier: "tab.inbox"
             ),
             wrap(
                 configureTopLevel(recentlyController),
                 title: "Content",
                 systemImage: "rectangle.stack",
+                selectedSystemImage: "rectangle.stack.fill",
                 identifier: "tab.content"
             ),
         ]
-
-        installCreateAccessory()
     }
 
     private func makeDashboard() -> UIViewController {
@@ -62,9 +71,10 @@ final class RootTabBarController: UITabBarController {
         let controller = UIHostingController(
             rootView: DashboardView(
                 store: store,
+                scrollToTopSignal: dashboardScrollSignal,
                 openWeb: { [weak self] target in
-                    guard let self, let presenter = self.selectedViewController else { return }
-                    self.webCoordinator.open(target, from: presenter)
+                    guard let self, let presenter = selectedViewController else { return }
+                    webCoordinator.open(target, from: presenter)
                 },
                 openMovement: { [weak self] in self?.showMovement() },
                 openInbox: { [weak self] in self?.showUnreadInbox() }
@@ -77,14 +87,7 @@ final class RootTabBarController: UITabBarController {
     private func makeMovement() -> UIViewController {
         let store = MovementStore(service: MovementService(spaceClient: client))
         let controller = UIHostingController(
-            rootView: MovementView(store: store) { [weak self] in
-                guard
-                    let self,
-                    let navigation = self.viewControllers?.first as? UINavigationController,
-                    let presenter = navigation.visibleViewController
-                else { return }
-                self.webCoordinator.open(.analytics, from: presenter)
-            }
+            rootView: MovementView(store: store)
         )
         controller.title = "Movement"
         controller.navigationItem.largeTitleDisplayMode = .never
@@ -92,7 +95,7 @@ final class RootTabBarController: UITabBarController {
             image: UIImage(systemName: "safari"),
             primaryAction: UIAction { [weak self, weak controller] _ in
                 guard let self, let controller else { return }
-                self.webCoordinator.open(.analytics, from: controller)
+                webCoordinator.open(.analytics, from: controller)
             }
         )
         controller.navigationItem.rightBarButtonItem?.accessibilityLabel = "Open analytics on Web"
@@ -124,90 +127,48 @@ final class RootTabBarController: UITabBarController {
         return controller
     }
 
-    private func installCreateAccessory() {
-        let button = UIButton(configuration: .borderedProminent())
-        button.configuration?.image = UIImage(systemName: "plus")
-        button.configuration?.cornerStyle = .capsule
-        button.accessibilityLabel = "New Recently"
-        button.accessibilityIdentifier = "global.compose"
-        button.addAction(
-            UIAction { [weak self] _ in self?.presentGlobalComposer() },
-            for: .touchUpInside
-        )
-
-        let container = UIView()
-        container.addSubview(button)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 52),
-            button.heightAnchor.constraint(equalToConstant: 44),
-            button.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: Spacing.tight),
-            button.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -Spacing.tight),
-            button.topAnchor.constraint(equalTo: container.topAnchor, constant: Spacing.tight),
-            button.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Spacing.tight),
-        ])
-        bottomAccessory = UITabAccessory(contentView: container)
-    }
-
-    private func presentGlobalComposer() {
-        guard let presenter = selectedViewController else { return }
-        recentlyController.presentComposer(from: presenter)
-    }
-
     private func siteMenu(for presenter: UIViewController) -> UIBarButtonItem {
-        var actions: [UIMenuElement] = [
+        let menu = UIMenu(children: [
             UIAction(title: "Open Web Admin", image: UIImage(systemName: "safari")) {
                 [weak self, weak presenter] _ in
                 guard let self, let presenter else { return }
-                self.webCoordinator.open(.admin, from: presenter)
+                webCoordinator.open(.admin, from: presenter)
             },
-        ]
-        if pushManager != nil {
-            actions.append(
-                UIAction(title: "Notifications", image: UIImage(systemName: "bell")) {
-                    [weak self, weak presenter] _ in
-                    guard let self, let presenter else { return }
-                    self.showNotificationSettings(from: presenter)
-                }
-            )
-        }
-        actions.append(
-            UIAction(
-                title: "Unpair",
-                image: UIImage(systemName: "rectangle.portrait.and.arrow.right"),
-                attributes: .destructive
-            ) { [weak presenter] _ in
-                guard let presenter else { return }
-                let alert = UIAlertController(
-                    title: "Unpair from this site?",
-                    message: "Space forgets this server and its credentials. You will need to pair again.",
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                alert.addAction(UIAlertAction(title: "Unpair", style: .destructive) { _ in
-                    AppContainer.shared.unpair()
-                })
-                presenter.present(alert, animated: true)
-            }
-        )
-        let menu = UIMenu(children: actions)
+            UIAction(title: "Site Settings", image: UIImage(systemName: "gearshape")) {
+                [weak self, weak presenter] _ in
+                guard let self, let presenter else { return }
+                showSiteSettings(from: presenter)
+            },
+        ])
         let item = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), menu: menu)
         item.accessibilityLabel = "Site menu"
         return item
     }
 
-    private func showNotificationSettings(from presenter: UIViewController) {
-        guard let pushManager else { return }
+    private func showSiteSettings(from presenter: UIViewController) {
+        let host = client.endpoint.baseURL.host() ?? client.endpoint.baseURL.absoluteString
         let controller = UIHostingController(
-            rootView: NotificationSettingsView(manager: pushManager)
+            rootView: SiteSettingsView(host: host, pushManager: pushManager)
         )
+        controller.hidesBottomBarWhenPushed = true
         presenter.navigationController?.pushViewController(controller, animated: true)
+    }
+
+    private func setInboxBadge(_ count: Int) {
+        guard let controllers = viewControllers, controllers.indices.contains(1) else { return }
+        guard let item = controllers[1].tabBarItem else { return }
+        item.badgeValue = switch count {
+        case ...0: nil
+        case 1...99: String(count)
+        default: "99+"
+        }
     }
 
     private func wrap(
         _ controller: UIViewController,
         title: String,
         systemImage: String,
+        selectedSystemImage: String,
         identifier: String
     ) -> UIViewController {
         let navigation = UINavigationController(rootViewController: controller)
@@ -215,9 +176,28 @@ final class RootTabBarController: UITabBarController {
         navigation.tabBarItem = UITabBarItem(
             title: title,
             image: UIImage(systemName: systemImage),
-            selectedImage: nil
+            selectedImage: UIImage(systemName: selectedSystemImage)
         )
         navigation.tabBarItem.accessibilityIdentifier = identifier
         return navigation
+    }
+}
+
+extension RootTabBarController: UITabBarControllerDelegate {
+    func tabBarController(
+        _ tabBarController: UITabBarController,
+        shouldSelect viewController: UIViewController
+    ) -> Bool {
+        guard selectedViewController === viewController else { return true }
+        guard let navigation = viewController as? UINavigationController else { return true }
+
+        if navigation.viewControllers.count > 1 {
+            navigation.popToRootViewController(animated: true)
+        } else if let scrollable = navigation.topViewController as? ScrollToTopHandling {
+            scrollable.scrollToTop()
+        } else if viewController === viewControllers?.first {
+            dashboardScrollSignal.request()
+        }
+        return true
     }
 }

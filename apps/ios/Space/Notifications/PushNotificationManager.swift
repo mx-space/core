@@ -16,6 +16,7 @@ final class PushNotificationManager {
 
     private(set) var state: State = .idle
     private(set) var bindingID: String?
+    private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
 
     private let configuration: PushConfiguration
     private let relay: PushRelayClient
@@ -24,6 +25,7 @@ final class PushNotificationManager {
 
     var isEnabled: Bool { state == .enabled }
     var isWorking: Bool { state == .enabling || state == .disabling }
+    var isDenied: Bool { authorizationStatus == .denied }
     var errorMessage: String? {
         guard case let .failed(message) = state else { return nil }
         return message
@@ -41,6 +43,8 @@ final class PushNotificationManager {
     }
 
     func refresh() async {
+        authorizationStatus = await UNUserNotificationCenter.current()
+            .notificationSettings().authorizationStatus
         do {
             let status = try await activation.status()
             bindingID = status.bindingID
@@ -56,12 +60,15 @@ final class PushNotificationManager {
         do {
             let center = UNUserNotificationCenter.current()
             let settings = await center.notificationSettings()
+            authorizationStatus = settings.authorizationStatus
             switch settings.authorizationStatus {
             case .notDetermined:
                 guard try await center.requestAuthorization(options: [.alert, .sound]) else {
+                    authorizationStatus = .denied
                     state = .failed("Notifications were not allowed.")
                     return
                 }
+                authorizationStatus = await center.notificationSettings().authorizationStatus
             case .denied:
                 state = .failed("Notifications are disabled in iOS Settings.")
                 return
@@ -79,6 +86,7 @@ final class PushNotificationManager {
 
     func restoreRegistration() async {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
+        authorizationStatus = settings.authorizationStatus
         guard
             settings.authorizationStatus == .authorized ||
             settings.authorizationStatus == .provisional ||
@@ -107,6 +115,11 @@ final class PushNotificationManager {
         } catch {
             state = .failed(error.localizedDescription)
         }
+    }
+
+    func openSystemSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
     }
 
     private func activate(deviceToken: String) async {

@@ -40,9 +40,17 @@ final class RecentlyStore {
 
     /// Returns nil on success, or a message the composer shows in place —
     /// a failed post must never look like a silent no-op.
-    func post(_ content: String) async -> String? {
+    func post(
+        _ content: String,
+        context: RecentlyContext? = nil,
+        selectedEnrichmentURLs: [String]? = nil
+    ) async -> String? {
         do {
-            _ = try await service.create(content: content)
+            _ = try await service.create(
+                content: content,
+                context: context,
+                selectedEnrichmentURLs: selectedEnrichmentURLs
+            )
             await reload()
             return nil
         } catch {
@@ -51,12 +59,27 @@ final class RecentlyStore {
         }
     }
 
-    func save(id: String?, content: String) async -> String? {
+    func save(
+        id: String?,
+        content: String,
+        context: RecentlyContext?,
+        selectedEnrichmentURLs: [String]
+    ) async -> String? {
         do {
             if let id {
-                _ = try await service.update(id: id, content: content)
+                _ = try await service.update(
+                    id: id,
+                    content: content,
+                    context: context,
+                    clearContext: context == nil,
+                    selectedEnrichmentURLs: selectedEnrichmentURLs
+                )
             } else {
-                _ = try await service.create(content: content)
+                _ = try await service.create(
+                    content: content,
+                    context: context,
+                    selectedEnrichmentURLs: selectedEnrichmentURLs
+                )
             }
             await reload()
             return nil

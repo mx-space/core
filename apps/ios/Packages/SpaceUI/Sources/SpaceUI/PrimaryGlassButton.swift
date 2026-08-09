@@ -20,6 +20,7 @@ public final class PrimaryGlassButton: UIButton {
             trailing: Spacing.loose
         )
         self.configuration = configuration
+        tintColor = SpacePalette.accent
         titleLabel?.adjustsFontForContentSizeCategory = true
     }
 

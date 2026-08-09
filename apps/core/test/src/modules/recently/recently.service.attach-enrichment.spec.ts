@@ -120,6 +120,46 @@ describe('RecentlyService.attachEnrichments', () => {
     expect(out[1].enrichments).toEqual({ 'https://example.com/b': b })
   })
 
+  it('hydrates only the URLs explicitly selected by a composer', async () => {
+    const selected: EnrichmentResult = {
+      title: 'Selected',
+      url: 'https://example.com/selected',
+      category: 'website' as any,
+      fetchedAt: '2026-01-01T00:00:00Z',
+    } as EnrichmentResult
+    const hydrate = vi.fn(async () => ({
+      'https://example.com/selected': selected,
+    }))
+    const { service } = makeService({ hydrateUrls: hydrate })
+    const out = await callAttach(service, [
+      makeRow({
+        content:
+          'https://example.com/selected\n\nhttps://example.com/not-selected',
+        metadata: {
+          selectedEnrichmentUrls: ['https://example.com/selected'],
+        },
+      }),
+    ])
+
+    expect(hydrate).toHaveBeenCalledWith(
+      ['https://example.com/selected'],
+      undefined,
+    )
+    expect(out[0].enrichments).toEqual({
+      'https://example.com/selected': selected,
+    })
+  })
+
+  it('treats an explicit empty selection as plain links', async () => {
+    const { service, enrichmentService } = makeService({})
+    const out = await callAttach(service, [
+      makeRow({ metadata: { selectedEnrichmentUrls: [] } }),
+    ])
+
+    expect(enrichmentService.hydrateUrls).not.toHaveBeenCalled()
+    expect(out[0].enrichments).toEqual({})
+  })
+
   it('returns {} per-row when a URL is missing from the map', async () => {
     const hydrate = vi.fn(async () => ({}))
     const { service } = makeService({ hydrateUrls: hydrate })

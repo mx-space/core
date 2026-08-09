@@ -38,12 +38,8 @@ final class CommentsStore {
 
     func setState(id: String, state: CommentState) async {
         let snapshot = comments
-        if filter == .all, state != .junk {
-            if let index = comments.firstIndex(where: { $0.id == id }) {
-                comments[index].state = state.rawValue
-            }
-        } else {
-            comments.removeAll { $0.id == id }
+        if let index = comments.firstIndex(where: { $0.id == id }) {
+            comments[index].state = state.rawValue
         }
         do {
             try await service.setState(id: id, state: state)

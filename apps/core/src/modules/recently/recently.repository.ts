@@ -1,5 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, gt, inArray, lt, type SQL, sql } from 'drizzle-orm'
+import {
+  and,
+  desc,
+  eq,
+  gt,
+  ilike,
+  inArray,
+  lt,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { recentlies } from '~/database/schema'
@@ -179,6 +189,16 @@ export class RecentlyRepository extends BaseRepository {
     const rows = await this.db
       .select()
       .from(recentlies)
+      .orderBy(desc(recentlies.createdAt), desc(recentlies.id))
+      .limit(Math.max(1, size))
+    return rows.map(mapRow)
+  }
+
+  async findByContent(search: string, size: number): Promise<RecentlyRow[]> {
+    const rows = await this.db
+      .select()
+      .from(recentlies)
+      .where(ilike(recentlies.content, `%${search}%`))
       .orderBy(desc(recentlies.createdAt), desc(recentlies.id))
       .limit(Math.max(1, size))
     return rows.map(mapRow)

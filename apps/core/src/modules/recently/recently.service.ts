@@ -17,11 +17,7 @@ import type { EnrichmentResult } from '../enrichment/enrichment.types'
 import { UrlExtractorService } from '../enrichment/url-extractor.service'
 import { RecentlyRepository } from './recently.repository'
 import { RecentlyAttitudeEnum, RecentlyTypeEnum } from './recently.schema'
-import {
-  type RecentlyCreateModel,
-  RecentlyModel,
-  type RecentlyRow,
-} from './recently.types'
+import { type RecentlyCreateModel, type RecentlyRow } from './recently.types'
 
 type EnrichmentMap = Record<string, EnrichmentResult>
 
@@ -188,6 +184,21 @@ export class RecentlyService {
     return latest ?? null
   }
 
+  async getRefCandidates(search: string, size: number) {
+    const candidates = await this.databaseService.findRefCandidates(
+      search,
+      size,
+    )
+    return candidates.map(({ document, type }) => ({
+      id: String(document.id),
+      type,
+      title:
+        type === CollectionRefTypes.Recently
+          ? this.recentlyCandidateTitle(document.content)
+          : document.title,
+    }))
+  }
+
   /**
    * Stamp `commentsIndex` with the live comment count per row. The persistent
    * counter column drifts (it is not incremented on comment create), so all
@@ -229,7 +240,7 @@ export class RecentlyService {
       refId,
       refType: refType as any,
     })
-    await this.warmEnrichments(urls)
+    await this.warmEnrichments(this.enrichmentUrls(withRef, urls))
     const [hydrated] = await this.attachEnrichments([withRef])
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_CREATE, hydrated, {
@@ -255,11 +266,29 @@ export class RecentlyService {
     return isDeleted
   }
 
-  async update(id: string, model: Partial<RecentlyModel>) {
+  async update(id: string, model: RecentlyCreateModel) {
     const contentChanged = model.content !== undefined
     const urls = contentChanged
       ? this.urlExtractor.extractFromMarkdown(model.content ?? '')
       : []
+
+    const hasRefPatch =
+      model.clearRef === true ||
+      Object.hasOwn(model, 'ref') ||
+      Object.hasOwn(model, 'refId')
+    const requestedRefId = model.clearRef ? null : (model.refId ?? model.ref)
+    let refType = model.refType
+    if (hasRefPatch && requestedRefId) {
+      const existingRef = await this.databaseService.findGlobalById(
+        String(requestedRefId),
+      )
+      if (!existingRef || !existingRef.type) {
+        throw createAppException(AppErrorCode.REF_MODEL_NOT_FOUND)
+      }
+      refType = existingRef.type
+    } else if (hasRefPatch && !requestedRefId) {
+      refType = null
+    }
 
     const withRef = await this.recentlyRepository.update(id, {
       content: model.content,
@@ -268,10 +297,15 @@ export class RecentlyService {
           ? RecentlyTypeEnum.Link
           : RecentlyTypeEnum.Text
         : undefined,
+      metadata: model.metadata,
+      refId: hasRefPatch ? requestedRefId : undefined,
+      refType: hasRefPatch ? (refType as any) : undefined,
       modifiedAt: new Date(),
     })
     if (!withRef) return null
-    if (contentChanged) await this.warmEnrichments(urls)
+    if (contentChanged) {
+      await this.warmEnrichments(this.enrichmentUrls(withRef, urls))
+    }
     const [hydrated] = await this.attachEnrichments([withRef])
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_UPDATE, hydrated, {
@@ -382,9 +416,10 @@ export class RecentlyService {
   ): Promise<Array<T & { enrichments: EnrichmentMap }>> {
     if (rows.length === 0) return []
 
-    const urlsByRow = rows.map((row) =>
-      this.urlExtractor.extractFromMarkdown(row.content),
-    )
+    const urlsByRow = rows.map((row) => {
+      const extracted = this.urlExtractor.extractFromMarkdown(row.content)
+      return this.enrichmentUrls(row, extracted)
+    })
     const allUrls = [...new Set(urlsByRow.flat())]
     if (allUrls.length === 0) {
       return rows.map((row) => ({ ...row, enrichments: {} }))
@@ -406,5 +441,26 @@ export class RecentlyService {
       }
       return { ...row, enrichments }
     })
+  }
+
+  private enrichmentUrls(
+    row: Pick<RecentlyRow, 'metadata'>,
+    extracted: readonly string[],
+  ): string[] {
+    const selected = row.metadata?.selectedEnrichmentUrls
+    if (!Array.isArray(selected)) return [...extracted]
+    const selectedSet = new Set(
+      selected.filter((value): value is string => typeof value === 'string'),
+    )
+    return extracted.filter((url) => selectedSet.has(url))
+  }
+
+  private recentlyCandidateTitle(content: string): string {
+    const firstLine = content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find(Boolean)
+    if (!firstLine) return 'Untitled Recently'
+    return firstLine.length > 80 ? `${firstLine.slice(0, 77)}…` : firstLine
   }
 }

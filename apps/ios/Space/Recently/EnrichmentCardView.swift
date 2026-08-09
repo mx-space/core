@@ -6,6 +6,7 @@ import SwiftUI
 /// artwork card, everything else falls back to an Open Graph style card.
 struct EnrichmentCardView: View {
     let card: MediaCard
+    let accessibilityIdentifier: String
 
     var body: some View {
         Group {
@@ -19,7 +20,7 @@ struct EnrichmentCardView: View {
         // One element rather than several fragments: VoiceOver reads the card
         // as a unit, and the identifier lands on a single node.
         .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("recently.enrichment")
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 }
 
@@ -30,7 +31,7 @@ private struct PosterEnrichmentCard: View {
     /// Pinned so a wider poster cannot narrow the copy column, wrap the text to
     /// more lines, and grow the card that sizes the poster — the feedback loop
     /// Yohaku's `CARD_HEIGHT` exists to break.
-    private static let height: CGFloat = 112
+    private static let height: CGFloat = 96
     private static let expandThreshold = 80
 
     private var isExpanded: Bool {
@@ -55,7 +56,7 @@ private struct PosterEnrichmentCard: View {
                 .padding(.vertical, Spacing.tight)
         }
         .frame(height: Self.height)
-        .modifier(CardShell(accent: card.accent))
+        .modifier(CardShell())
     }
 
     private var expandedBody: some View {
@@ -68,7 +69,7 @@ private struct PosterEnrichmentCard: View {
                 )
         }
         .padding(Spacing.regular)
-        .modifier(CardShell(accent: card.accent))
+        .modifier(CardShell())
     }
 
     private var copy: some View {
@@ -134,7 +135,7 @@ private struct FallbackEnrichmentCard: View {
             }
         }
         .padding(Spacing.regular)
-        .modifier(CardShell(accent: card.accent))
+        .modifier(CardShell())
     }
 }
 
@@ -152,24 +153,18 @@ private struct EnrichmentArtwork: View {
     }
 }
 
-/// The shared shell: rounded surface, hairline ring, and a faint wash of the
-/// artwork's dominant colour.
+/// Enrichment colour belongs to artwork only. The shared shell remains a
+/// neutral content surface in both appearance modes.
 private struct CardShell: ViewModifier {
-    let accent: Color
-
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
-                    .fill(Color(.secondarySystemBackground))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
-                            .fill(accent.opacity(0.10))
-                    )
+                    .fill(Color(SpacePalette.inset))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
-                    .strokeBorder(accent.opacity(0.20))
+                    .strokeBorder(Color(.separator).opacity(0.45), lineWidth: 0.5)
             )
             .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
     }
