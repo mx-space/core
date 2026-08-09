@@ -10,7 +10,7 @@ let package = Package(
         .library(name: "SpaceCore", targets: ["SpaceCore"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-openapi-generator", from: "1.10.0"),
+        .package(url: "https://github.com/apple/swift-openapi-generator", from: "1.10.4"),
         .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.8.0"),
         .package(url: "https://github.com/apple/swift-openapi-urlsession", from: "1.1.0"),
     ],
