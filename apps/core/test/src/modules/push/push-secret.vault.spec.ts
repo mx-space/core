@@ -8,8 +8,14 @@ describe('PushSecretVault', () => {
     expect(encrypted).toMatch(/^\$\$\{push\}\$\$v1\./)
     expect(encrypted).not.toContain('srcsec_private')
     expect(PushSecretVault.decrypt(encrypted)).toBe('srcsec_private')
-    const replacement = encrypted.endsWith('x') ? 'y' : 'x'
-    const tampered = `${encrypted.slice(0, -1)}${replacement}`
+    // Flipping the trailing base64url character can land on padding bits that
+    // decode away, leaving the ciphertext bytes — and the GCM tag — unchanged.
+    const ciphertext = Buffer.from(encrypted.split('.').pop()!, 'base64url')
+    ciphertext[0] ^= 0xff
+    const tampered = encrypted.replace(
+      /[^.]+$/,
+      ciphertext.toString('base64url'),
+    )
     expect(tampered).not.toBe(encrypted)
     expect(() => PushSecretVault.decrypt(tampered)).toThrow()
   })
