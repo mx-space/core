@@ -1,8 +1,14 @@
-import type { Message as PiMessage, Tool, TSchema } from '@earendil-works/pi-ai'
+import type {
+  Api,
+  Message as PiMessage,
+  Tool,
+  TSchema,
+} from '@earendil-works/pi-ai'
 
 import type { AIProviderType } from '../ai.types'
 
 export interface RuntimeProviderInfo {
+  api?: Api
   id: string
   type: AIProviderType
   model: string

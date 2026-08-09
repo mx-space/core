@@ -8,7 +8,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { withFauxAi } from '@/helper/faux-ai.helper'
 import { AIProviderType } from '~/modules/ai/ai.types'
-import { AiAgentChatService } from '~/modules/ai/ai-agent/ai-agent-chat.service'
+import {
+  AiAgentChatService,
+  toPiMessages,
+} from '~/modules/ai/ai-agent/ai-agent-chat.service'
 
 const PROVIDER = 'faux-agent'
 const MODEL_ID = 'faux-agent-model'
@@ -79,6 +82,41 @@ afterEach(() => {
 })
 
 describe('ai-agent faux e2e (streamChat)', () => {
+  it.each([
+    [AIProviderType.OpenAICompatible, 'openai-completions'],
+    [AIProviderType.Anthropic, 'anthropic-messages'],
+  ] as const)(
+    'replays assistant history using the selected %s protocol',
+    (type, api) => {
+      const { piMessages } = toPiMessages(
+        [
+          { role: 'assistant', content: 'previous answer' },
+          {
+            role: 'assistant_tool_call',
+            toolCalls: [
+              { id: 'call-1', name: 'lookup', arguments: '{"id":1}' },
+            ],
+          },
+        ],
+        { api, id: 'selected-provider', type, model: 'selected-model' },
+      )
+
+      expect(piMessages).toHaveLength(2)
+      expect(piMessages).toEqual([
+        expect.objectContaining({
+          api,
+          provider: 'selected-provider',
+          model: 'selected-model',
+        }),
+        expect.objectContaining({
+          api,
+          provider: 'selected-provider',
+          model: 'selected-model',
+        }),
+      ])
+    },
+  )
+
   it('text stream: emits text_delta + done', async () => {
     const ctx = setup({ responses: [fauxAssistantMessage('hello world')] })
     torn.push(ctx.teardown)

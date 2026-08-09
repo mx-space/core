@@ -277,6 +277,10 @@ interface PiRuntimeAdapterConfig extends RuntimeConfig {
   reasoningEffort?: ReasoningEffort
 }
 
+export interface PiRuntimeAdapterOptions {
+  api?: Api
+}
+
 export class PiRuntimeAdapter implements IModelRuntime {
   readonly providerInfo: RuntimeProviderInfo
   private readonly logger = new Logger(PiRuntimeAdapter.name)
@@ -289,8 +293,13 @@ export class PiRuntimeAdapter implements IModelRuntime {
   private readonly configuredReasoningEffort?: ReasoningEffort
   private readonly providerType: AIProviderType
 
-  constructor(config: PiRuntimeAdapterConfig) {
+  constructor(
+    config: PiRuntimeAdapterConfig,
+    options: PiRuntimeAdapterOptions = {},
+  ) {
+    this.api = options.api ?? providerTypeToApi(config.providerType)
     this.providerInfo = {
+      api: this.api,
       id: config.providerId,
       type: config.providerType,
       model: config.model,
@@ -298,7 +307,6 @@ export class PiRuntimeAdapter implements IModelRuntime {
     this.apiKey = config.apiKey
     this.providerType = config.providerType
     this.modelListUrl = config.modelListUrl?.trim() || undefined
-    this.api = providerTypeToApi(config.providerType)
     this.piProviderId = deriveProviderId(config.endpoint, config.providerType)
     this.inferredModelListUrl = this.inferModelListUrl(
       config.endpoint,

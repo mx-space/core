@@ -30,6 +30,7 @@ describe('createModelRuntime — enum coverage', () => {
     expect(runtime).toBeInstanceOf(PiRuntimeAdapter)
     expect(runtime.providerInfo.type).toBe(AIProviderType.OpenAICompatible)
     expect(runtime.providerInfo.model).toBe('deepseek-chat')
+    expect(runtime.providerInfo.api).toBe('openai-completions')
     expect(inspect(runtime).api).toBe('openai-completions')
   })
 
@@ -46,6 +47,7 @@ describe('createModelRuntime — enum coverage', () => {
     expect(runtime).toBeInstanceOf(PiRuntimeAdapter)
     expect(runtime.providerInfo.type).toBe(AIProviderType.Anthropic)
     expect(runtime.providerInfo.model).toBe('claude-sonnet-4-20250514')
+    expect(runtime.providerInfo.api).toBe('anthropic-messages')
     expect(inspect(runtime).api).toBe('anthropic-messages')
   })
 
@@ -78,6 +80,7 @@ describe('createModelRuntime — enum coverage', () => {
     })
     expect(runtime).toBeInstanceOf(PiRuntimeAdapter)
     expect(runtime.providerInfo.type).toBe(AIProviderType.GoogleVertex)
+    expect(runtime.providerInfo.api).toBe('openai-completions')
     expect(inspect(runtime).api).toBe('openai-completions')
     expect(inspect(runtime).piProviderId).toBe('google-vertex')
     expect(inspect(runtime).buildStreamOptions({}).headers).toEqual({
@@ -112,7 +115,7 @@ describe('createModelRuntime — enum coverage', () => {
         defaultModel: 'model',
         enabled: true,
       }),
-    ).toThrow('Unsupported provider type')
+    ).toThrow('No protocol adapter supports the runtime configuration')
   })
 })
 
