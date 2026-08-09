@@ -32,7 +32,7 @@ const createLocalUploader = async (
     socket.once('close', () => sockets.delete(socket))
   })
   server.on('clientError', (_error, socket) => socket.destroy())
-  server.listen(0, 'localhost')
+  server.listen(0, '127.0.0.1')
   await once(server, 'listening')
 
   const { port } = server.address() as AddressInfo
@@ -41,7 +41,7 @@ const createLocalUploader = async (
     region: 'local',
     accessKey: 'localhost-access-key',
     secretKey: 'localhost-secret-key',
-    endpoint: `http://localhost:${port}`,
+    endpoint: `http://127.0.0.1:${port}`,
   })
 
   return {
