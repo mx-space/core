@@ -188,6 +188,41 @@ function scanFile(file: string): { risks: Risk[]; warnings: string[] } {
   return scanContent(file, content)
 }
 
+export interface JournalEntry {
+  idx: number
+  when: number
+  tag: string
+}
+
+export function findNonMonotonicJournalEntries(
+  entries: JournalEntry[],
+): string[] {
+  const problems: string[] = []
+  let highest = Number.NEGATIVE_INFINITY
+  for (const entry of entries) {
+    if (entry.when <= highest && highest !== Number.NEGATIVE_INFINITY) {
+      problems.push(
+        `_journal.json ${entry.tag} has when=${entry.when}, not above the highest ` +
+          `preceding when=${highest}. The schema migrator treats a below-waterline ` +
+          `migration as already applied and silently skips its SQL.`,
+      )
+    }
+    highest = Math.max(highest, entry.when)
+  }
+  return problems
+}
+
+function scanJournal(dir: string): string[] {
+  const file = path.join(dir, 'meta', '_journal.json')
+  let parsed: { entries?: JournalEntry[] }
+  try {
+    parsed = JSON.parse(readFileSync(file, 'utf8'))
+  } catch (err) {
+    return [`cannot read ${file}: ${String(err)}`]
+  }
+  return findNonMonotonicJournalEntries(parsed.entries ?? [])
+}
+
 function main() {
   const cwd = process.cwd()
   const dir = path.resolve(cwd, 'src/database/migrations')
@@ -200,7 +235,7 @@ function main() {
   }
 
   const allRisks: Risk[] = []
-  const allWarnings: string[] = []
+  const allWarnings: string[] = scanJournal(dir)
 
   for (const f of files.sort()) {
     const serial = migrationSerial(f)

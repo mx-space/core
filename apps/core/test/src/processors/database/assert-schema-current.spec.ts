@@ -64,6 +64,32 @@ describe('assertSchemaCurrent', () => {
     }
   }, 30_000)
 
+  it('throws SchemaBehindError when a non-final migration is unapplied', async () => {
+    const dbName = `mx_assert_gap_${Date.now()}`
+    await poolMain.query(`CREATE DATABASE ${dbName}`)
+    try {
+      const url = new URL(context.connectionString)
+      url.pathname = `/${dbName}`
+      const fresh = new Pool({ connectionString: url.toString(), max: 1 })
+      try {
+        const db = drizzle(fresh, { casing: 'snake_case' })
+        await runSchemaMigrationFiles(fresh, migrationsFolder)
+
+        await fresh.query(
+          `DELETE FROM drizzle.__drizzle_migrations WHERE created_at = (SELECT min(created_at) FROM drizzle.__drizzle_migrations WHERE created_at > (SELECT min(created_at) FROM drizzle.__drizzle_migrations))`,
+        )
+
+        await expect(
+          assertSchemaCurrent(db, migrationsFolder),
+        ).rejects.toBeInstanceOf(SchemaBehindError)
+      } finally {
+        await fresh.end()
+      }
+    } finally {
+      await poolMain.query(`DROP DATABASE ${dbName}`)
+    }
+  }, 60_000)
+
   it('throws MigrationDriftError when the latest hash differs', async () => {
     // Apply migrations to a fresh db, then tamper with the recorded hash.
     const dbName = `mx_drift_${Date.now()}`

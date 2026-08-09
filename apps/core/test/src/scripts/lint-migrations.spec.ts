@@ -1,9 +1,29 @@
 import {
+  findNonMonotonicJournalEntries,
   parseAllowAnnotations,
   scanContent,
 } from '../../../scripts/lint-migrations'
 
 describe('lint-migrations', () => {
+  it('flags a journal entry whose when is not above every preceding one', () => {
+    const problems = findNonMonotonicJournalEntries([
+      { idx: 0, when: 1000, tag: '0000_a' },
+      { idx: 1, when: 3000, tag: '0001_b' },
+      { idx: 2, when: 2000, tag: '0002_c' },
+    ])
+    expect(problems).toHaveLength(1)
+    expect(problems[0]).toContain('0002_c')
+  })
+
+  it('accepts a strictly increasing journal', () => {
+    expect(
+      findNonMonotonicJournalEntries([
+        { idx: 0, when: 1000, tag: '0000_a' },
+        { idx: 1, when: 2000, tag: '0001_b' },
+      ]),
+    ).toEqual([])
+  })
+
   it('flags ALTER TABLE ... DROP COLUMN', () => {
     const sql = 'ALTER TABLE users DROP COLUMN email;'
     const { risks } = scanContent('test.sql', sql)

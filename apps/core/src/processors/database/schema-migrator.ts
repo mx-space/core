@@ -139,10 +139,13 @@ export async function runSchemaMigrationFiles(
     const appliedAtByHash = new Map(
       result.rows.map((row) => [row.hash, row.created_at]),
     )
-    const waterline =
-      result.rows.length > 0
-        ? Math.max(...result.rows.map((row) => Number(row.created_at)))
-        : null
+    const bundledHashes = new Set(migrations.map((migration) => migration.hash))
+    const legacyTimestamps = result.rows
+      .filter((row) => !bundledHashes.has(row.hash))
+      .map((row) => Number(row.created_at))
+    const waterline = legacyTimestamps.length
+      ? Math.max(...legacyTimestamps)
+      : null
 
     for (const migration of migrations) {
       const appliedAt = appliedAtByHash.get(migration.hash)
@@ -157,8 +160,11 @@ export async function runSchemaMigrationFiles(
       }
 
       // A pre-hash-era (waterline) database may have applied this migration
-      // without recording its hash. Anything at or below the old waterline was
-      // already considered applied — backfill the hash, never re-run the SQL.
+      // without recording its hash. The waterline is therefore drawn only from
+      // ledger rows that match no bundled migration: a row we *can* match by
+      // hash is a modern record, and letting it raise the waterline would
+      // backfill — and so permanently skip the SQL of — any later migration
+      // whose journal `when` happens to be non-monotonic.
       if (waterline !== null && migration.folderMillis <= waterline) {
         await insertMigrationRecord(client, migration)
         continue

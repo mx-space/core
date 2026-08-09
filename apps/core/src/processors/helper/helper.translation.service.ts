@@ -5,6 +5,7 @@ import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation
 import type { TranslationSourceSnapshot } from '~/modules/ai/ai-translation/translation-consistency.types'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import type { TranslationEntryKeyPath } from '~/modules/ai/ai-translation/translation-entry.types'
+import { describeError, errorStack } from '~/utils/error.util'
 import { normalizeLanguageCode } from '~/utils/lang.util'
 
 export interface TranslationMeta {
@@ -258,7 +259,10 @@ export class TranslationService {
         result.contentFormat = translation.contentFormat
       return result
     } catch (error) {
-      this.logger.error(error)
+      this.logger.error(
+        `translateArticle failed: ${describeError(error)}`,
+        errorStack(error),
+      )
       return { ...originalData, isTranslated: false }
     }
   }
@@ -426,7 +430,10 @@ export class TranslationService {
         }),
       )
     } catch (error) {
-      this.logger.error(error)
+      this.logger.error(
+        `translateArticleList failed: ${describeError(error)}`,
+        errorStack(error),
+      )
       return buildUntranslatedMap()
     }
   }
@@ -488,7 +495,10 @@ export class TranslationService {
         lookupKeys,
       )
     } catch (error) {
-      this.logger.error(error)
+      this.logger.error(
+        `getEntityTranslations failed: ${describeError(error)}`,
+        errorStack(error),
+      )
       return new Map()
     }
   }
@@ -507,7 +517,10 @@ export class TranslationService {
         sourceTexts,
       )
     } catch (error) {
-      this.logger.error(error)
+      this.logger.error(
+        `getDictTranslations failed: ${describeError(error)}`,
+        errorStack(error),
+      )
       return new Map()
     }
   }

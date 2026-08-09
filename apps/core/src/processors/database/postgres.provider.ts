@@ -95,11 +95,15 @@ export class MigrationDriftError extends Error {
 }
 
 /**
- * Verify that the database is at or beyond the latest bundled migration.
+ * Verify that every bundled migration has been applied.
  *
  * Throws `SchemaBehindError` if the database is missing migrations and
  * `MigrationDriftError` if a previously-applied migration's hash differs
  * from what the bundle expects.
+ *
+ * The check compares the full set of recorded hashes rather than the newest
+ * `created_at`: journal timestamps are not guaranteed monotonic across merged
+ * branches, so a single watermark lets a migration slip through unapplied.
  *
  * Schema mutation is the responsibility of the dedicated `migrate.mjs`
  * binary (see `apps/core/src/bin/migrate.ts`); the app refuses to start
@@ -125,21 +129,23 @@ export async function assertSchemaCurrent(
 
   const result = await db.execute<{ created_at: string; hash: string }>(sql`
     SELECT created_at, hash FROM drizzle.__drizzle_migrations
-    ORDER BY created_at DESC LIMIT 1
   `)
-  const latest = result.rows[0]
-  if (!latest || Number(latest.created_at) < last.folderMillis) {
-    throw new SchemaBehindError(
-      last.folderMillis,
-      latest?.created_at ?? null,
-      last.hash,
-    )
-  }
-  if (
-    Number(latest.created_at) === last.folderMillis &&
-    latest.hash !== last.hash
-  ) {
-    throw new MigrationDriftError(last.folderMillis, last.hash, latest.hash)
+  const appliedHashes = new Set(result.rows.map((row) => row.hash))
+  const hashByTimestamp = new Map(
+    result.rows.map((row) => [Number(row.created_at), row.hash]),
+  )
+  const newestTimestamp = result.rows.length
+    ? String(Math.max(...result.rows.map((row) => Number(row.created_at))))
+    : null
+
+  for (const file of files) {
+    if (appliedHashes.has(file.hash)) continue
+
+    const recordedHash = hashByTimestamp.get(file.folderMillis)
+    if (recordedHash !== undefined) {
+      throw new MigrationDriftError(file.folderMillis, file.hash, recordedHash)
+    }
+    throw new SchemaBehindError(file.folderMillis, newestTimestamp, file.hash)
   }
 }
 

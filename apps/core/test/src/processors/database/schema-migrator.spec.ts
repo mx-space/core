@@ -120,6 +120,41 @@ describe('runSchemaMigrationFiles', () => {
     }
   }, 60_000)
 
+  it('runs a trailing migration whose journal timestamp is not monotonic', async () => {
+    const context = await createPgTestDatabase('mx_schema_migrator', {
+      migrate: false,
+    })
+    try {
+      const deviceSql =
+        'CREATE TABLE "device_codes" ("id" text PRIMARY KEY NOT NULL);'
+      const postsSql = 'CREATE TABLE "posts" ("id" text PRIMARY KEY NOT NULL);'
+
+      const before = writeMigrationsFolder([
+        { tag: '0000_device_codes', when: 2000, sql: deviceSql },
+        { tag: '0001_posts', when: 3000, sql: postsSql },
+      ])
+      await runSchemaMigrationFiles(context.pool, before)
+
+      const next = writeMigrationsFolder([
+        { tag: '0000_device_codes', when: 2000, sql: deviceSql },
+        { tag: '0001_posts', when: 3000, sql: postsSql },
+        {
+          tag: '0002_posts_updated_at',
+          when: 2500,
+          sql: 'ALTER TABLE "posts" ADD COLUMN "updated_at" timestamp with time zone;',
+        },
+      ])
+      await runSchemaMigrationFiles(context.pool, next)
+
+      const column = await context.pool.query<{ column_name: string }>(
+        `SELECT column_name FROM information_schema.columns WHERE table_name = 'posts' AND column_name = 'updated_at'`,
+      )
+      expect(column.rows[0]?.column_name).toBe('updated_at')
+    } finally {
+      await context.close()
+    }
+  }, 60_000)
+
   it('backfills a below-waterline migration instead of re-running it', async () => {
     const context = await createPgTestDatabase('mx_schema_migrator', {
       migrate: false,

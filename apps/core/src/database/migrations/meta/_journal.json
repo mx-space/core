@@ -218,6 +218,13 @@
       "when": 1786348800000,
       "tag": "0030_smooth_ultragirl",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1786435200000,
+      "tag": "0031_ai_translations_updated_at_repair",
+      "breakpoints": true
     }
   ]
 }
