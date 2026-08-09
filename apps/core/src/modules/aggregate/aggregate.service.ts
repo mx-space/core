@@ -539,6 +539,9 @@ export class AggregateService {
 
   @OnEvent(EventBusEvents.CleanAggregateCache)
   async cleanCache() {
-    await this.redisService.getClient().del(CacheKeys.Aggregate)
+    await Promise.all([
+      this.redisService.getClient().del(CacheKeys.RSS, CacheKeys.RSSXml),
+      this.redisService.deleteKeysByPattern(`${CacheKeys.Aggregate}*`),
+    ])
   }
 }
