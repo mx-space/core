@@ -1,17 +1,14 @@
 ## TL;DR
 
-Fixes TTS narration staleness detection after re-translation, and compiles Zod validation schemas ahead of time for lower request overhead.
+Repairs a schema migrator flaw that let a migration be recorded as applied without running, breaking article translations.
 
 ## Changes
 
-### Bug Fixes
-
-- AI narrations voiced from a translated article are now correctly flagged as stale when the translation is regenerated or hand-edited without touching the original article — readers see the "content edited" hint instead of silently hearing outdated audio ([dbcbb21](https://github.com/mx-space/core/commit/dbcbb21d8357fcba52ea109645f65959623c7a80))
-
-### Other
-
-- Request-validation Zod schemas are now compiled at build time instead of per process, reducing validation overhead on every request ([6f40b9a](https://github.com/mx-space/core/commit/6f40b9a77e37902082d3c19079e6b20377de9fe5))
+- A migration whose journal timestamp is not strictly increasing is no longer mistaken for already-applied history and skipped without executing its SQL ([33d2a43](https://github.com/mx-space/core/commit/33d2a43dd727b9143169f17cc1034d4373bf68e8))
+- Servers upgraded to v13.25.2 automatically regain the missing `ai_translations.updated_at` column on deploy, so post, note, and category listings return translated content again ([33d2a43](https://github.com/mx-space/core/commit/33d2a43dd727b9143169f17cc1034d4373bf68e8))
+- The startup schema guard now verifies every bundled migration by hash rather than trusting the newest recorded timestamp, so an unapplied migration blocks the deploy instead of surfacing later as runtime query failures ([33d2a43](https://github.com/mx-space/core/commit/33d2a43dd727b9143169f17cc1034d4373bf68e8))
+- Failed translation lookups now log the underlying database error instead of only the SQL statement that failed ([33d2a43](https://github.com/mx-space/core/commit/33d2a43dd727b9143169f17cc1034d4373bf68e8))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.25.1...v13.25.2
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.25.2...v13.25.3

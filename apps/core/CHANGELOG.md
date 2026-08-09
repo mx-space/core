@@ -1,3 +1,11 @@
+## [13.25.3](https://github.com/mx-space/core/compare/v13.25.2...v13.25.3) (2026-08-09)
+
+
+### Bug Fixes
+
+* **migration:** restore monotonic journal timestamp for 0030_smooth_ultragirl ([dd74fe8](https://github.com/mx-space/core/commit/dd74fe8fdf6b185c3946fd704f175455e5deae87))
+* **migration:** stop the waterline backfill from skipping trailing migrations ([33d2a43](https://github.com/mx-space/core/commit/33d2a43dd727b9143169f17cc1034d4373bf68e8))
+
 ## [13.25.2](https://github.com/mx-space/core/compare/v13.25.1...v13.25.2) (2026-08-09)
 
 
