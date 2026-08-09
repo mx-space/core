@@ -1,3 +1,10 @@
+## [13.26.0](https://github.com/mx-space/core/compare/v13.25.3...v13.26.0) (2026-08-09)
+
+
+### Features
+
+* **ai:** add Google Vertex provider adapters ([#2794](https://github.com/mx-space/core/issues/2794)) ([2b39a81](https://github.com/mx-space/core/commit/2b39a815d02fd50b64ab5f3f48b2060d8ffb7985))
+
 ## [13.25.3](https://github.com/mx-space/core/compare/v13.25.2...v13.25.3) (2026-08-09)
 
 
@@ -6,7 +13,7 @@
 * **migration:** restore monotonic journal timestamp for 0030_smooth_ultragirl ([dd74fe8](https://github.com/mx-space/core/commit/dd74fe8fdf6b185c3946fd704f175455e5deae87))
 * **migration:** stop the waterline backfill from skipping trailing migrations ([33d2a43](https://github.com/mx-space/core/commit/33d2a43dd727b9143169f17cc1034d4373bf68e8))
 
-## [13.25.2](https://github.com/mx-space/core/compare/v13.25.1...v13.25.2) (2026-08-09)
+## [13.25.2](https://github.com/mx-space/core/compare/v13.25.1...v13.25.2) (2026-08-08)
 
 
 ### Bug Fixes
@@ -18,7 +25,7 @@
 
 * **core:** compile zod schemas ([6f40b9a](https://github.com/mx-space/core/commit/6f40b9a77e37902082d3c19079e6b20377de9fe5))
 
-## [13.25.1](https://github.com/mx-space/core/compare/v13.25.0...v13.25.1) (2026-08-09)
+## [13.25.1](https://github.com/mx-space/core/compare/v13.25.0...v13.25.1) (2026-08-08)
 
 
 ### Bug Fixes
