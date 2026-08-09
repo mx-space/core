@@ -1,9 +1,15 @@
 import {
+  Bell,
   CreditCard,
+  Database,
+  FileText,
+  Globe,
   ListPlus,
-  Mail,
+  Puzzle,
+  Search,
   Settings,
   Shield,
+  Sparkles,
   User,
 } from 'lucide-react'
 
@@ -23,21 +29,23 @@ import type {
 
 type Translator = (key: TranslationKey, values?: TranslationValues) => string
 
+const groupIconMap: Record<string, typeof User> = {
+  bell: Bell,
+  'credit-card': CreditCard,
+  database: Database,
+  'file-text': FileText,
+  globe: Globe,
+  'list-plus': ListPlus,
+  puzzle: Puzzle,
+  search: Search,
+  settings: Settings,
+  shield: Shield,
+  sparkles: Sparkles,
+  user: User,
+}
+
 export function getGroupIcon(icon: string) {
-  const iconMap: Record<string, typeof User> = {
-    bell: Mail,
-    'credit-card': CreditCard,
-    database: Settings,
-    globe: Settings,
-    search: Settings,
-    settings: Settings,
-    shield: Shield,
-    sparkles: Settings,
-    user: User,
-    'file-text': Settings,
-    'list-plus': ListPlus,
-  }
-  return iconMap[icon] ?? Settings
+  return groupIconMap[icon] ?? Settings
 }
 
 export function shouldShowField(
