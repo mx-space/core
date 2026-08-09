@@ -130,6 +130,7 @@ describe('CategoryController', () => {
 
       const result = await controller.getCategories(
         { type: undefined } as any,
+        false,
         'en',
       )
 
@@ -150,6 +151,7 @@ describe('CategoryController', () => {
 
       const result = await controller.getCategories(
         { type: undefined } as any,
+        false,
         'en',
       )
 
@@ -167,6 +169,7 @@ describe('CategoryController', () => {
 
       const result = await controller.getCategories(
         { type: undefined } as any,
+        false,
         'en',
       )
 
@@ -178,7 +181,11 @@ describe('CategoryController', () => {
         categories: [{ id: 'cat-1', name: 'X' }],
       })
 
-      await controller.getCategories({ type: undefined } as any, undefined)
+      await controller.getCategories(
+        { type: undefined } as any,
+        false,
+        undefined,
+      )
 
       expect(
         translationEntryService.getTranslationsBatch,
@@ -212,6 +219,7 @@ describe('CategoryController', () => {
       const result = await controller.getCategoryById(
         { query: 'cat-1' } as any,
         {} as any,
+        false,
         'en',
       )
 
@@ -241,6 +249,7 @@ describe('CategoryController', () => {
       const result = await controller.getCategoryById(
         { query: 'cat-1' } as any,
         {} as any,
+        false,
         'en',
       )
 
@@ -262,6 +271,7 @@ describe('CategoryController', () => {
       const result = await controller.getCategoryById(
         { query: 'cat-1' } as any,
         {} as any,
+        false,
         'en',
       )
 
@@ -280,6 +290,7 @@ describe('CategoryController', () => {
       const result = await controller.getCategoryById(
         { query: 'cat-1' } as any,
         {} as any,
+        false,
         'en',
       )
 
@@ -308,6 +319,7 @@ describe('CategoryController', () => {
       const result = await controller.getCategoryById(
         { query: 'mytag' } as any,
         { tag: true } as any,
+        false,
         'en',
       )
 
@@ -333,6 +345,7 @@ describe('CategoryController', () => {
       const result = await controller.getCategoryById(
         { query: 'mytag' } as any,
         { tag: true } as any,
+        false,
         'en',
       )
 
@@ -355,6 +368,7 @@ describe('CategoryController', () => {
       const result = await controller.getCategoryById(
         { query: 'mytag' } as any,
         { tag: true } as any,
+        false,
         'en',
       )
 
@@ -373,6 +387,7 @@ describe('CategoryController', () => {
       await controller.getCategoryById(
         { query: 'mytag' } as any,
         { tag: true } as any,
+        false,
         undefined,
       )
 
@@ -411,6 +426,7 @@ describe('CategoryController', () => {
 
       const result = await controller.getCategories(
         { ids: ['cat-a', 'cat-b'], joint: false } as any,
+        false,
         'en',
       )
 
@@ -438,6 +454,7 @@ describe('CategoryController', () => {
 
       const result = await controller.getCategories(
         { ids: ['cat-a'], joint: false } as any,
+        false,
         'en',
       )
 
@@ -471,6 +488,7 @@ describe('CategoryController', () => {
 
       const result = await controller.getCategories(
         { ids: ['cat-a', 'cat-b'], joint: false } as any,
+        false,
         'en',
       )
 
@@ -493,7 +511,11 @@ describe('CategoryController', () => {
           posts,
         })
 
-      await controller.getCategories({ ids: ['cat-a'] } as any, undefined)
+      await controller.getCategories(
+        { ids: ['cat-a'] } as any,
+        false,
+        undefined,
+      )
 
       expect(
         translationService.collectArticleTranslations,

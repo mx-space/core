@@ -15,6 +15,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
@@ -57,6 +58,7 @@ export class CategoryController {
   @Get('/')
   async getCategories(
     @Query() query: MultiCategoriesQueryDto,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
     const { ids, joint, type = CategoryType.Category } = query
@@ -77,11 +79,14 @@ export class CategoryController {
 
       const categoriesPromise = joint
         ? null
-        : this.categoryService.repository.findByIds(ids)
+        : this.categoryService.repository.findByIds(ids, {
+            publishedOnly: !isAuthenticated,
+          })
 
       const postsByCategory = await this.postService.listByCategoryIds(ids, {
         includeCategory: false,
         metaOnly: true,
+        publishedOnly: !isAuthenticated,
       })
       for (const id of ids) {
         const rawPosts = postsByCategory.get(id) ?? []
@@ -181,8 +186,12 @@ export class CategoryController {
 
     const result =
       type === CategoryType.Category
-        ? await this.categoryService.findAllCategory()
-        : await this.categoryService.getPostTagsSum()
+        ? await this.categoryService.findAllCategory({
+            publishedOnly: !isAuthenticated,
+          })
+        : await this.categoryService.getPostTagsSum({
+            publishedOnly: !isAuthenticated,
+          })
 
     if (lang && Array.isArray(result) && result.length) {
       const entryMaps = await this.translationEntryService.getTranslationsBatch(
@@ -208,6 +217,7 @@ export class CategoryController {
   async getCategoryById(
     @Param() { query }: SlugOrIdDto,
     @Query() { tag }: MultiQueryTagAndCategoryDto,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
     if (!query) {
@@ -216,7 +226,9 @@ export class CategoryController {
       })
     }
     if (tag === true) {
-      const data = await this.categoryService.findArticleWithTag(query)
+      const data = await this.categoryService.findArticleWithTag(query, {
+        isPublished: isAuthenticated ? undefined : true,
+      })
       const tagMetaBuilder = new MetaObjectBuilder()
       if (lang && data?.length) {
         const articles = data.map((post: any) => ({
@@ -256,10 +268,15 @@ export class CategoryController {
 
     const [postsResult, tagsSum, count] = await Promise.all([
       this.categoryService.findCategoryPost(res.id, {
+        isPublished: isAuthenticated ? undefined : true,
         tags: typeof tag === 'string' ? tag : undefined,
       }),
-      this.categoryService.getCategoryTagsSum(res.id),
-      this.postService.countByCategoryId(res.id),
+      this.categoryService.getCategoryTagsSum(res.id, {
+        publishedOnly: !isAuthenticated,
+      }),
+      this.postService.countByCategoryId(res.id, {
+        publishedOnly: !isAuthenticated,
+      }),
     ])
 
     const children: any[] = postsResult ?? []

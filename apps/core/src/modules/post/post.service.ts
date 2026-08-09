@@ -120,8 +120,11 @@ export class PostService implements OnApplicationBootstrap {
     return this.postRepository.count()
   }
 
-  async countByCategoryId(categoryId: string) {
-    return this.postRepository.countByCategoryId(categoryId)
+  async countByCategoryId(
+    categoryId: string,
+    options: { publishedOnly?: boolean } = {},
+  ) {
+    return this.postRepository.countByCategoryId(categoryId, options)
   }
 
   async listByCategory(
@@ -153,17 +156,24 @@ export class PostService implements OnApplicationBootstrap {
 
   async findByTag(
     tag: string,
-    options: { includeCategory?: boolean; metaOnly?: boolean } = {},
+    options: {
+      includeCategory?: boolean
+      metaOnly?: boolean
+      publishedOnly?: boolean
+    } = {},
   ) {
     return this.postRepository.findByTag(tag, options)
   }
 
-  async aggregateAllTagCounts() {
-    return this.postRepository.aggregateAllTagCounts()
+  async aggregateAllTagCounts(options: { publishedOnly?: boolean } = {}) {
+    return this.postRepository.aggregateAllTagCounts(options)
   }
 
-  async aggregateTagCountsByCategory(categoryId: string) {
-    return this.postRepository.aggregateTagCountsByCategory(categoryId)
+  async aggregateTagCountsByCategory(
+    categoryId: string,
+    options: { publishedOnly?: boolean } = {},
+  ) {
+    return this.postRepository.aggregateTagCountsByCategory(categoryId, options)
   }
 
   async findAdjacent(

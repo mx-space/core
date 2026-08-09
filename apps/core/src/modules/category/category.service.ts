@@ -63,16 +63,19 @@ export class CategoryService implements OnApplicationBootstrap {
     return this.categoryRepository.findBySlug(slug)
   }
 
-  async findAllCategory() {
-    return this.categoryRepository.findAll(CategoryType.Category)
+  async findAllCategory(options: { publishedOnly?: boolean } = {}) {
+    return this.categoryRepository.findAll(CategoryType.Category, options)
   }
 
-  async getPostTagsSum() {
-    return this.postService.aggregateAllTagCounts()
+  async getPostTagsSum(options: { publishedOnly?: boolean } = {}) {
+    return this.postService.aggregateAllTagCounts(options)
   }
 
-  async getCategoryTagsSum(categoryId: string) {
-    return this.postService.aggregateTagCountsByCategory(categoryId)
+  async getCategoryTagsSum(
+    categoryId: string,
+    options: { publishedOnly?: boolean } = {},
+  ) {
+    return this.postService.aggregateTagCountsByCategory(categoryId, options)
   }
 
   async findArticleWithTag(
@@ -82,6 +85,7 @@ export class CategoryService implements OnApplicationBootstrap {
     const posts = await this.postService.findByTag(tag, {
       includeCategory: true,
       metaOnly: true,
+      publishedOnly: condition.isPublished === true,
     })
     const filtered =
       condition.isPublished === undefined
