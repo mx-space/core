@@ -19,7 +19,7 @@ overrides:
   zod: 4.4.3
   lodash-es@<4.18.0: 4.18.1
   nanoid@<3.3.8: 3.3.12
-  nanoid@>=4.0.0 <5.0.9: 5.1.11
+  nanoid@>=4.0.0 <5.0.9: 5.1.16
   tmp@<0.2.6: 0.2.7
   uuid@<11.1.1: 11.1.1
   lucide-react: 1.30.0
@@ -10069,8 +10069,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@5.1.11:
-    resolution: {integrity: sha512-v+KEsUv2ps74PaSKv0gHTxTCgMXOIfBEbaqa6w6ISIGC7ZsvHN4N9oJ8d4cmf0n5oTzQz2SLmThbQWhjd/8eKg==}
+  nanoid@5.1.16:
+    resolution: {integrity: sha512-kVrnsrJqMR8+oLJnGEmSWw9BivK5mt7H3FZatVRjrc5wGqFYuBxX1yG7+A7Gi5AefkX6t/oCkizcQgpu0cY1dQ==}
     engines: {node: ^18 || >=20}
     hasBin: true
 
@@ -14336,7 +14336,7 @@ snapshots:
       '@excalidraw/markdown-to-text': 0.1.2
       '@mermaid-js/parser': 0.6.3
       mermaid: 11.15.0
-      nanoid: 5.1.11
+      nanoid: 5.1.16
 
   '@excalidraw/random-username@1.1.0': {}
 
@@ -22325,7 +22325,7 @@ snapshots:
 
   nanoid@3.3.16: {}
 
-  nanoid@5.1.11: {}
+  nanoid@5.1.16: {}
 
   nanoid@6.0.1: {}
 
