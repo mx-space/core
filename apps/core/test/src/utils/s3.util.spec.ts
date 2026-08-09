@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { S3Uploader } from '~/utils/s3.util'
 
 const PART_SIZE = 8 * 1024 * 1024
-const nativeFetch = globalThis.fetch
 const TRANSPORT_DIAGNOSTIC_NONCE_ENV = 'MX_SPACE_S3_DIAGNOSTIC_NONCE'
 const TRANSPORT_DIAGNOSTIC_BEGIN = 'begin=S3_TRANSPORT_DIAGNOSTIC'
 const TRANSPORT_DIAGNOSTIC_END = 'end=S3_TRANSPORT_DIAGNOSTIC'
@@ -157,6 +156,74 @@ describe('S3Uploader.uploadToS3 transport diagnostics', () => {
 
   it('uses safe fallbacks when fetch rejects without a cause', async () => {
     const error = await rejectUpload(new TypeError('fetch failed'))
+
+    expectTransportDiagnostic(error, {
+      category: 'unknown',
+      code: 'UNKNOWN',
+      name: 'UnknownError',
+      syscall: 'unknown',
+    })
+  })
+
+  it('reads allowlisted fields when fetch rejects with a transport error directly', async () => {
+    const directError = Object.assign(new Error('ignored'), {
+      code: 'UND_ERR_SOCKET',
+      name: 'SocketError',
+      syscall: 'read',
+    })
+
+    const error = await rejectUpload(directError)
+
+    expectTransportDiagnostic(error, {
+      category: 'socket_failure',
+      code: 'UND_ERR_SOCKET',
+      name: 'SocketError',
+      syscall: 'read',
+    })
+  })
+
+  it('finds an allowlisted transport error inside nested aggregate causes', async () => {
+    const nestedError = Object.assign(new Error('nested secret'), {
+      code: 'ECONNRESET',
+      name: 'SocketError',
+      syscall: 'read',
+    })
+    const aggregate = new AggregateError(
+      [new Error('unrelated secret'), nestedError],
+      'aggregate secret',
+    )
+    const middle = new Error('middle secret', { cause: aggregate })
+    const outer = new TypeError('fetch failed', { cause: middle })
+
+    const error = await rejectUpload(outer)
+
+    expectTransportDiagnostic(error, {
+      category: 'socket_failure',
+      code: 'ECONNRESET',
+      name: 'SocketError',
+      syscall: 'read',
+    })
+    for (const fragment of [
+      'nested secret',
+      'unrelated secret',
+      'aggregate secret',
+      'middle secret',
+      'fetch failed',
+    ]) {
+      expect(error?.message).not.toContain(fragment)
+    }
+  })
+
+  it('bounds cyclic cause traversal and ignores unsafe nested getters', async () => {
+    const cyclic: Record<string, unknown> = {}
+    cyclic.cause = cyclic
+    Object.defineProperty(cyclic, 'errors', {
+      get: () => {
+        throw new Error('errors must remain unreadable')
+      },
+    })
+
+    const error = await rejectUpload(cyclic)
 
     expectTransportDiagnostic(error, {
       category: 'unknown',
@@ -331,12 +398,36 @@ describe('S3Uploader.uploadToS3 transport diagnostics', () => {
       ),
     ).rejects.toThrow('Upload failed with status code: 403 - AccessDenied')
   })
+
+  it('leaves content length generation to fetch and out of the signature', async () => {
+    let requestInit: RequestInit | undefined
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_input: RequestInfo | URL, init?: RequestInit) => {
+        requestInit = init
+        return Promise.resolve(new Response(null, { status: 200 }))
+      }),
+    )
+
+    await createUploader().uploadToS3(
+      'private/object.txt',
+      Buffer.from('data'),
+      'text/plain',
+    )
+
+    const requestHeaders = new Headers(requestInit?.headers)
+    expect(requestHeaders.has('Content-Length')).toBe(false)
+    expect(requestHeaders.get('Authorization')).not.toContain('content-length')
+    expect(requestInit?.body).toBeInstanceOf(Uint8Array)
+  })
 })
 
 describe('S3Uploader.uploadToS3 with local Undici transport', () => {
   it('sends a real PUT request successfully', async () => {
     let receivedMethod = ''
     let receivedUrl = ''
+    let receivedContentLength = ''
+    let receivedAuthorization = ''
     let receivedBody = Buffer.alloc(0)
     const local = await createLocalUploader((request, response) => {
       const chunks: Buffer[] = []
@@ -344,6 +435,8 @@ describe('S3Uploader.uploadToS3 with local Undici transport', () => {
       request.on('end', () => {
         receivedMethod = request.method ?? ''
         receivedUrl = request.url ?? ''
+        receivedContentLength = request.headers['content-length'] ?? ''
+        receivedAuthorization = request.headers.authorization ?? ''
         receivedBody = Buffer.concat(chunks)
         response.writeHead(200)
         response.end()
@@ -359,6 +452,10 @@ describe('S3Uploader.uploadToS3 with local Undici transport', () => {
 
       expect(receivedMethod).toBe('PUT')
       expect(receivedUrl).toBe('/localhost-test-bucket/folder/hello.txt')
+      expect(receivedContentLength).toBe(
+        String(Buffer.byteLength('hello localhost')),
+      )
+      expect(receivedAuthorization).not.toContain('content-length')
       expect(receivedBody.toString()).toBe('hello localhost')
     } finally {
       await local.close()
@@ -390,49 +487,6 @@ describe('S3Uploader.uploadToS3 with local Undici transport', () => {
       })
       expect(error?.message).not.toContain(String(local.port))
       expect(error?.message).not.toContain('private/disconnect')
-    } finally {
-      await local.close()
-    }
-  })
-
-  it('reports Undici content-length mismatch without network details', async () => {
-    const local = await createLocalUploader((request, response) => {
-      request.resume()
-      request.on('end', () => {
-        response.writeHead(200)
-        response.end()
-      })
-    })
-    vi.stubGlobal(
-      'fetch',
-      vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
-        const headers = new Headers(init?.headers)
-        const contentLength = Number(headers.get('Content-Length'))
-        headers.set('Content-Length', String(contentLength + 1))
-        return nativeFetch(input, { ...init, headers })
-      }),
-    )
-
-    try {
-      const error = await local.uploader
-        .uploadToS3(
-          'private/mismatch.txt',
-          Buffer.from('mismatch'),
-          'text/plain',
-        )
-        .then(
-          () => undefined,
-          (reason: unknown) => reason as Error,
-        )
-
-      expectTransportDiagnostic(error, {
-        category: 'request_content_length_mismatch',
-        code: 'UND_ERR_REQ_CONTENT_LENGTH_MISMATCH',
-        name: 'RequestContentLengthMismatchError',
-        syscall: 'unknown',
-      })
-      expect(error?.message).not.toContain(String(local.port))
-      expect(error?.message).not.toContain('private/mismatch')
     } finally {
       await local.close()
     }

@@ -139,17 +139,88 @@ const readCauseField = (
   }
 }
 
-const getErrorCause = (error: unknown): Record<string, unknown> | undefined => {
-  if (typeof error !== 'object' || error === null) return undefined
-
+const readNestedCauseField = (
+  cause: Record<string, unknown>,
+  field: 'cause' | 'errors',
+): unknown => {
   try {
-    const cause = (error as { cause?: unknown }).cause
-    return typeof cause === 'object' && cause !== null
-      ? (cause as Record<string, unknown>)
-      : undefined
+    return cause[field]
   } catch {
     return undefined
   }
+}
+
+const getS3TransportCause = (
+  error: unknown,
+): Record<string, unknown> | undefined => {
+  const queue: Array<{ depth: number; value: unknown }> = [
+    { depth: 0, value: error },
+  ]
+  const seen = new WeakSet<object>()
+  const maxDepth = 4
+  const maxNodes = 16
+  let visited = 0
+
+  while (queue.length > 0 && visited < maxNodes) {
+    const current = queue.shift()
+    if (
+      !current ||
+      typeof current.value !== 'object' ||
+      current.value === null ||
+      seen.has(current.value)
+    ) {
+      continue
+    }
+
+    seen.add(current.value)
+    visited++
+    const cause = current.value as Record<string, unknown>
+    const name = toAllowedTransportValue<S3TransportName>(
+      readCauseField(cause, 'name'),
+      S3_TRANSPORT_NAME_ALLOWLIST,
+      'UnknownError',
+    )
+    const code = toAllowedTransportValue<S3TransportCode>(
+      readCauseField(cause, 'code'),
+      S3_TRANSPORT_CODE_ALLOWLIST,
+      'UNKNOWN',
+    )
+    const syscall = toAllowedTransportValue<S3TransportSyscall>(
+      readCauseField(cause, 'syscall'),
+      S3_TRANSPORT_SYSCALL_ALLOWLIST,
+      'unknown',
+    )
+
+    if (
+      name !== 'UnknownError' ||
+      code !== 'UNKNOWN' ||
+      syscall !== 'unknown'
+    ) {
+      return cause
+    }
+
+    if (current.depth >= maxDepth) continue
+
+    queue.push({
+      depth: current.depth + 1,
+      value: readNestedCauseField(cause, 'cause'),
+    })
+
+    const errors = readNestedCauseField(cause, 'errors')
+    if (Array.isArray(errors)) {
+      for (let index = 0; index < errors.length && index < maxNodes; index++) {
+        let nestedError: unknown
+        try {
+          nestedError = errors[index]
+        } catch {
+          continue
+        }
+        queue.push({ depth: current.depth + 1, value: nestedError })
+      }
+    }
+  }
+
+  return undefined
 }
 
 const classifyS3TransportError = (
@@ -169,7 +240,7 @@ const getS3TransportDiagnosticNonce = (): string => {
 }
 
 const createS3TransportError = (error: unknown): Error => {
-  const cause = getErrorCause(error)
+  const cause = getS3TransportCause(error)
   const name = toAllowedTransportValue<S3TransportName>(
     readCauseField(cause, 'name'),
     S3_TRANSPORT_NAME_ALLOWLIST,
@@ -783,12 +854,9 @@ export class S3Uploader {
     const resolved = this.resolveEndpoint(host, encodedObjectKey, url.protocol)
     const { requestHost, canonicalUri } = resolved
 
-    const contentLength = fileData.length.toString()
-
     const headers: Record<string, string> = {
       Host: requestHost,
       'Content-Type': contentType,
-      'Content-Length': contentLength,
       'x-amz-date': xAmzDate,
       'x-amz-content-sha256': hashedPayload,
     }
