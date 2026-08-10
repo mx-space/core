@@ -16,10 +16,20 @@ export class AiInFlightService {
     const prefix = `ai:stream:${key}`
     return {
       lockKey: `${prefix}:lock`,
-      streamKey: `${prefix}:stream`,
+      // Each leader run owns a stream key of its own (`:stream:<runId>`) so a
+      // new run never writes into — nor deletes — a stream that earlier
+      // followers are still draining. Readers resolve the run from lockKey.
+      streamPrefix: `${prefix}:stream`,
       resultKey: `${prefix}:result`,
       errorKey: `${prefix}:error`,
     }
+  }
+
+  private parseLockRunId(lockValue: string | null): string | null {
+    if (!lockValue) return null
+    const separatorIndex = lockValue.indexOf(':')
+    if (separatorIndex === -1) return null
+    return lockValue.slice(separatorIndex + 1) || null
   }
 
   async runWithStream<T>(options: AiInFlightOptions<T>): Promise<{
@@ -28,7 +38,7 @@ export class AiInFlightService {
     result: Promise<T>
   }> {
     const redis = this.redisService.getClient()
-    const { lockKey, streamKey, resultKey, errorKey } = this.buildKeys(
+    const { lockKey, streamPrefix, resultKey, errorKey } = this.buildKeys(
       options.key,
     )
 
@@ -56,16 +66,15 @@ export class AiInFlightService {
           `inflight stale result, clearing cache key=${options.key}`,
         )
         await redis.del(resultKey)
-        await redis.del(streamKey)
         await redis.del(errorKey)
       }
     }
 
-    const instanceId = `${process.pid}-${Date.now()}-${Math.random()
+    const runId = `${process.pid}-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 10)}`
     const lockMode = options.bypassResultCache ? 'force' : 'plain'
-    const lockValue = `${lockMode}:${instanceId}`
+    const lockValue = `${lockMode}:${runId}`
 
     let acquired =
       (await redis.set(lockKey, lockValue, 'EX', options.lockTtlSec, 'NX')) ===
@@ -84,15 +93,12 @@ export class AiInFlightService {
     }
 
     if (acquired) {
+      const streamKey = `${streamPrefix}:${runId}`
       if (options.bypassResultCache) {
         // Safe now: lockKey exists, so a concurrent follower checking
         // resultKey/errorKey/lockKey will see the lock and keep waiting
-        // instead of finding all three empty. streamKey/errorKey must go
-        // too — joining a force leader (or force-vs-force convergence)
-        // reads the stream from '0-0', so a stale `done`/`error` entry
-        // from the previous run would resolve to last run's result.
+        // instead of finding all three empty.
         await redis.del(resultKey)
-        await redis.del(streamKey)
         await redis.del(errorKey)
       }
       if (isDev) {
@@ -129,10 +135,14 @@ export class AiInFlightService {
     if (isDev) {
       this.logger.debug(`inflight follower key=${options.key}`)
     }
+    // No holder means the leader released between our failed lock attempt and
+    // this read; `runId` was never used as a leader, so its stream is empty and
+    // the reader falls through to the resultKey/errorKey/lockKey checks.
+    const holderRunId = this.parseLockRunId(await redis.get(lockKey)) ?? runId
     return {
       role: 'follower',
       events: this.createStreamReader(options, {
-        streamKey,
+        streamKey: `${streamPrefix}:${holderRunId}`,
         resultKey,
         errorKey,
         lockKey,
@@ -178,6 +188,7 @@ export class AiInFlightService {
     keys: { streamKey: string; resultKey: string; errorKey: string },
   ): Promise<T> {
     const redis = this.redisService.getClient()
+    let streamTtlSet = false
     try {
       const { result, resultId } = await options.onLeader({
         push: async (event) => {
@@ -192,6 +203,12 @@ export class AiInFlightService {
             'data',
             JSON.stringify(event.data),
           )
+          // Run-scoped stream keys are never reused, so a leader that dies
+          // mid-run would orphan this key without an early TTL.
+          if (!streamTtlSet) {
+            streamTtlSet = true
+            await redis.expire(keys.streamKey, options.resultTtlSec)
+          }
           if (isDev) {
             const dataSize =
               typeof event.data === 'string'

@@ -289,9 +289,9 @@ describe('AiInFlightService — public SSE envelope', () => {
     // then drive a second service through xread.
     const follower = await buildService()
     const followerReply = createFauxReply()
-    const streamKey = 'ai:stream:parity:1:stream'
+    const streamKey = 'ai:stream:parity:1:stream:seeded-leader'
     const lockKey = 'ai:stream:parity:1:lock'
-    await follower.fakeRedis.set(lockKey, 'leader-token') // ensure follower path
+    await follower.fakeRedis.set(lockKey, 'plain:seeded-leader') // ensure follower path
     for (const c of chunks) {
       await follower.fakeRedis.xadd(
         streamKey,
@@ -403,9 +403,9 @@ describe('AiInFlightService — public SSE envelope', () => {
 
   it('legacy: runs follower flow and replays stream', async () => {
     const { service, fakeRedis } = await buildService()
-    await fakeRedis.set('ai:stream:test:lock', 'locked')
+    await fakeRedis.set('ai:stream:test:lock', 'plain:seeded-leader')
     await fakeRedis.xadd(
-      'ai:stream:test:stream',
+      'ai:stream:test:stream:seeded-leader',
       'MAXLEN',
       '~',
       '100',
@@ -416,7 +416,7 @@ describe('AiInFlightService — public SSE envelope', () => {
       '"hello"',
     )
     await fakeRedis.xadd(
-      'ai:stream:test:stream',
+      'ai:stream:test:stream:seeded-leader',
       'MAXLEN',
       '~',
       '100',
@@ -682,10 +682,11 @@ describe('AiInFlightService — force vs plain lock arbitration', () => {
   it('a plain request losing the lock race is still an immediate follower (behavior unchanged)', async () => {
     const { service, fakeRedis } = await buildService()
     const lockKey = 'ai:stream:plain-loses:1:lock'
+    const resultKey = 'ai:stream:plain-loses:1:result'
     await fakeRedis.set(lockKey, 'plain:other-leader')
     const callLogAtStart = fakeRedis.callLog.length
 
-    const { role } = await service.runWithStream<{ id: string }>({
+    const { role, result } = await service.runWithStream<{ id: string }>({
       key: 'plain-loses:1',
       lockTtlSec: 5,
       resultTtlSec: 60,
@@ -705,6 +706,9 @@ describe('AiInFlightService — force vs plain lock arbitration', () => {
         .slice(callLogAtStart)
         .filter((entry) => entry === `set:${lockKey}`),
     ).toHaveLength(1)
+
+    await fakeRedis.set(resultKey, 'other-leader-result')
+    await expect(result).resolves.toEqual({ id: 'other-leader-result' })
   })
 
   it('force gives up waiting after lockTtlSec and degrades to a follower without throwing', async () => {
@@ -737,73 +741,16 @@ describe('AiInFlightService — force vs plain lock arbitration', () => {
   })
 })
 
-describe('AiInFlightService — force leader clears stale stream state', () => {
-  it('deletes resultKey, streamKey, and errorKey after acquiring the lock', async () => {
+describe('AiInFlightService — run-scoped streams', () => {
+  it('force leader clears the cached result and error without deleting any stream', async () => {
     const { service, fakeRedis } = await buildService()
-    const streamKey = 'ai:stream:stale-frames:1:stream'
-    const errorKey = 'ai:stream:stale-frames:1:error'
-    const resultKey = 'ai:stream:stale-frames:1:result'
-
-    // leftovers from an earlier, unrelated run on the same key
-    await fakeRedis.xadd(
-      streamKey,
-      'MAXLEN',
-      '~',
-      '100',
-      '*',
-      'type',
-      'done',
-      'data',
-      JSON.stringify({ resultId: 'stale-id' }),
-    )
+    const errorKey = 'ai:stream:run-scoped:1:error'
+    const resultKey = 'ai:stream:run-scoped:1:result'
     await fakeRedis.set(errorKey, 'stale error')
     await fakeRedis.set(resultKey, 'stale-result')
 
-    const { role } = await service.runWithStream<{ id: string }>({
-      key: 'stale-frames:1',
-      lockTtlSec: 5,
-      resultTtlSec: 60,
-      streamMaxLen: 100,
-      readBlockMs: 10,
-      idleTimeoutMs: 1000,
-      bypassResultCache: true,
-      onLeader: async () => ({ result: { id: 'fresh' }, resultId: 'fresh' }),
-      parseResult: async (id: string) => ({ id }),
-    })
-
-    expect(role).toBe('leader')
-    expect(fakeRedis.delCalls).toEqual(
-      expect.arrayContaining([resultKey, streamKey, errorKey]),
-    )
-  })
-
-  it("a force follower joining mid-run never sees the previous run's stale done frame or error", async () => {
-    const { service, fakeRedis } = await buildService()
-    const streamKey = 'ai:stream:stale-frames:2:stream'
-    const errorKey = 'ai:stream:stale-frames:2:error'
-    const resultKey = 'ai:stream:stale-frames:2:result'
-
-    await fakeRedis.xadd(
-      streamKey,
-      'MAXLEN',
-      '~',
-      '100',
-      '*',
-      'type',
-      'done',
-      'data',
-      JSON.stringify({ resultId: 'stale-id' }),
-    )
-    await fakeRedis.set(errorKey, 'stale error')
-    await fakeRedis.set(resultKey, 'stale-result')
-
-    let releaseLeader: () => void = () => {}
-    const gate = new Promise<void>((resolve) => {
-      releaseLeader = resolve
-    })
-
-    const leaderRun = await service.runWithStream<{ id: string }>({
-      key: 'stale-frames:2',
+    const { role, result } = await service.runWithStream<{ id: string }>({
+      key: 'run-scoped:1',
       lockTtlSec: 5,
       resultTtlSec: 60,
       streamMaxLen: 100,
@@ -811,28 +758,76 @@ describe('AiInFlightService — force leader clears stale stream state', () => {
       idleTimeoutMs: 1000,
       bypassResultCache: true,
       onLeader: async ({ push }) => {
-        await gate
         await push({ type: 'token', data: 'fresh' })
         return { result: { id: 'fresh' }, resultId: 'fresh' }
       },
       parseResult: async (id: string) => ({ id }),
     })
-    expect(leaderRun.role).toBe('leader')
 
-    // a second force request joins as a follower while the leader still
-    // holds the lock (the gate above hasn't been released yet)
-    const followerRun = await service.runWithStream<{ id: string }>({
-      key: 'stale-frames:2',
+    expect(role).toBe('leader')
+    await expect(result).resolves.toEqual({ id: 'fresh' })
+    expect(fakeRedis.delCalls).toEqual(
+      expect.arrayContaining([resultKey, errorKey]),
+    )
+    const streamPrefix = 'ai:stream:run-scoped:1:stream:'
+    expect(
+      fakeRedis.delCalls.filter((key) => key.startsWith(streamPrefix)),
+    ).toEqual([])
+    expect(fakeRedis.xaddCalls.length).toBeGreaterThan(0)
+    expect(
+      fakeRedis.xaddCalls.every(
+        (call) =>
+          call.key.startsWith(streamPrefix) &&
+          call.key.length > streamPrefix.length,
+      ),
+    ).toBe(true)
+  })
+
+  it("a force follower joining mid-run never sees the previous run's frames", async () => {
+    const { service, fakeRedis } = await buildService()
+    const key = 'run-scoped:2'
+    const baseOptions = {
+      key,
       lockTtlSec: 5,
       resultTtlSec: 60,
       streamMaxLen: 100,
       readBlockMs: 10,
       idleTimeoutMs: 1000,
+      parseResult: async (id: string) => ({ id }),
+    }
+
+    const firstRun = await service.runWithStream<{ id: string }>({
+      ...baseOptions,
+      onLeader: async ({ push }) => {
+        await push({ type: 'token', data: 'stale' })
+        return { result: { id: 'stale' }, resultId: 'stale' }
+      },
+    })
+    await expect(firstRun.result).resolves.toEqual({ id: 'stale' })
+    expect(await fakeRedis.get(`ai:stream:${key}:result`)).toBe('stale')
+
+    let releaseLeader: () => void = () => {}
+    const gate = new Promise<void>((resolve) => {
+      releaseLeader = resolve
+    })
+
+    const leaderRun = await service.runWithStream<{ id: string }>({
+      ...baseOptions,
+      bypassResultCache: true,
+      onLeader: async ({ push }) => {
+        await gate
+        await push({ type: 'token', data: 'fresh' })
+        return { result: { id: 'fresh' }, resultId: 'fresh' }
+      },
+    })
+    expect(leaderRun.role).toBe('leader')
+
+    const followerRun = await service.runWithStream<{ id: string }>({
+      ...baseOptions,
       bypassResultCache: true,
       onLeader: async () => {
         throw new Error('should not run: joins the existing force leader')
       },
-      parseResult: async (id: string) => ({ id }),
     })
     expect(followerRun.role).toBe('follower')
 
@@ -846,12 +841,72 @@ describe('AiInFlightService — force leader clears stale stream state', () => {
 
     releaseLeader()
 
-    const collected = await collectPromise
-    expect(collected).toEqual([
+    await expect(collectPromise).resolves.toEqual([
       { type: 'token', data: 'fresh' },
       { type: 'done', data: { resultId: 'fresh' } },
     ])
     await expect(followerRun.result).resolves.toEqual({ id: 'fresh' })
     await expect(leaderRun.result).resolves.toEqual({ id: 'fresh' })
+  })
+
+  it('a follower of a finished run still reads that run to its done frame after a force leader takes over', async () => {
+    const { service } = await buildService()
+    const key = 'run-scoped:3'
+    const baseOptions = {
+      key,
+      lockTtlSec: 5,
+      resultTtlSec: 60,
+      streamMaxLen: 100,
+      readBlockMs: 10,
+      idleTimeoutMs: 1000,
+      parseResult: async (id: string) => ({ id }),
+    }
+
+    let releasePlainLeader: () => void = () => {}
+    const gate = new Promise<void>((resolve) => {
+      releasePlainLeader = resolve
+    })
+
+    const plainRun = await service.runWithStream<{ id: string }>({
+      ...baseOptions,
+      onLeader: async ({ push }) => {
+        await gate
+        await push({ type: 'token', data: 'old' })
+        return { result: { id: 'old' }, resultId: 'old' }
+      },
+    })
+    expect(plainRun.role).toBe('leader')
+
+    const followerRun = await service.runWithStream<{ id: string }>({
+      ...baseOptions,
+      onLeader: async () => {
+        throw new Error('should not run: the plain leader holds the lock')
+      },
+    })
+    expect(followerRun.role).toBe('follower')
+
+    releasePlainLeader()
+    await expect(plainRun.result).resolves.toEqual({ id: 'old' })
+
+    const forceRun = await service.runWithStream<{ id: string }>({
+      ...baseOptions,
+      bypassResultCache: true,
+      onLeader: async ({ push }) => {
+        await push({ type: 'token', data: 'new' })
+        return { result: { id: 'new' }, resultId: 'new' }
+      },
+    })
+    expect(forceRun.role).toBe('leader')
+    await expect(forceRun.result).resolves.toEqual({ id: 'new' })
+
+    const collected: AiStreamEvent[] = []
+    for await (const event of followerRun.events) {
+      collected.push(event)
+    }
+    expect(collected).toEqual([
+      { type: 'token', data: 'old' },
+      { type: 'done', data: { resultId: 'old' } },
+    ])
+    expect(['old', 'new']).toContain((await followerRun.result).id)
   })
 })
