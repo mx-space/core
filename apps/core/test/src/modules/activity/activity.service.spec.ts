@@ -48,8 +48,11 @@ const premiumPost = {
   createdAt: new Date(),
 }
 
-const createService = (postFindRecent: ReturnType<typeof vi.fn>) => {
-  const noteService = { findRecent: vi.fn(async () => []) }
+const createService = (
+  postFindRecent: ReturnType<typeof vi.fn>,
+  noteFindRecent: ReturnType<typeof vi.fn> = vi.fn(async () => []),
+) => {
+  const noteService = { findRecent: noteFindRecent }
   return new ActivityService(
     {} as any,
     {} as any,
@@ -97,5 +100,70 @@ describe('ActivityService.getLastYearPublication', () => {
     await service.getLastYearPublication()
 
     expect(findRecent).toHaveBeenCalledWith(50, { publishedOnly: true })
+  })
+
+  it('returns only public note metadata and never private note bodies', async () => {
+    const findRecent = vi.fn(async () => [])
+    const noteFindRecent = vi.fn(async () => [
+      {
+        id: 'private-note',
+        nid: 38,
+        title: 'Private note',
+        text: 'private body',
+        content: 'private content',
+        images: [{ src: 'private-image' }],
+        isPublished: false,
+        hasPassword: false,
+        createdAt: new Date(),
+      },
+      {
+        id: 'password-note',
+        nid: 39,
+        title: 'Password note',
+        text: 'password body',
+        content: 'password content',
+        isPublished: true,
+        hasPassword: true,
+        createdAt: new Date(),
+      },
+      {
+        id: 'public-note',
+        nid: 41,
+        title: 'Public note',
+        mood: null,
+        weather: null,
+        bookmark: false,
+        text: 'public body',
+        content: 'public content',
+        images: [],
+        isPublished: true,
+        hasPassword: false,
+        publicAt: null,
+        createdAt: new Date(),
+      },
+    ])
+    const service = createService(findRecent, noteFindRecent)
+
+    const result = await service.getLastYearPublication()
+
+    expect(noteFindRecent).toHaveBeenCalledWith(50, {
+      metaOnly: true,
+      visibleOnly: true,
+    })
+    expect(result.notes).toEqual([
+      {
+        id: 'public-note',
+        nid: 41,
+        title: 'Public note',
+        mood: null,
+        weather: null,
+        bookmark: false,
+        createdAt: expect.any(Date),
+      },
+    ])
+    expect(JSON.stringify(result)).not.toContain('private body')
+    expect(JSON.stringify(result)).not.toContain('private content')
+    expect(JSON.stringify(result)).not.toContain('private-image')
+    expect(JSON.stringify(result)).not.toContain('password body')
   })
 })
