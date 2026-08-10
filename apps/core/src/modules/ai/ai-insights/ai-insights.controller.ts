@@ -66,6 +66,7 @@ export class AiInsightsController {
       refId: body.refId,
       sourceInsightsId: source.id!,
       targetLang: body.targetLang,
+      force: body.force,
     })
   }
 

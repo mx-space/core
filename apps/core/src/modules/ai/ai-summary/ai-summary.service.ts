@@ -37,7 +37,7 @@ import {
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import {
-  normalizeTargetLang,
+  normalizeTargetLangs,
   resolveTargetLanguages,
 } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
@@ -83,16 +83,12 @@ export class AiSummaryService implements OnModuleInit {
         this.checkAborted(context)
 
         const aiConfig = await this.configService.get('ai')
-        const languages = [
-          ...new Set(
-            resolveTargetLanguages(
-              payload.targetLanguages,
-              aiConfig.summaryTargetLanguages,
-            )
-              .map((lang) => normalizeTargetLang(lang))
-              .filter((lang): lang is string => lang !== undefined),
+        const languages = normalizeTargetLangs(
+          resolveTargetLanguages(
+            payload.targetLanguages,
+            aiConfig.summaryTargetLanguages,
           ),
-        ]
+        )
 
         if (!languages.length) {
           await context.appendLog('warn', 'No target languages specified')

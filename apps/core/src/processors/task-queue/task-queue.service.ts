@@ -51,6 +51,26 @@ function isTerminalStatus(status: TaskStatus): boolean {
   return TERMINAL_STATUSES.has(status)
 }
 
+function payloadTargetsRef(
+  rawPayload: string | null | undefined,
+  refId: string,
+): boolean {
+  if (!rawPayload) return false
+  let payload: unknown
+  try {
+    payload = JSON.parse(rawPayload)
+  } catch {
+    return false
+  }
+  if (!payload || typeof payload !== 'object') return false
+  const { refId: taskRefId, refIds } = payload as {
+    refId?: unknown
+    refIds?: unknown
+  }
+  if (taskRefId === refId) return true
+  return Array.isArray(refIds) && refIds.includes(refId)
+}
+
 /**
  * Dual-shape handler for LUA_RECOVER_STALE return values.
  *
@@ -344,8 +364,18 @@ export class TaskQueueService implements OnModuleDestroy {
     page: number
     size: number
     includeSubTasks?: boolean
+    /** Keep only tasks whose payload acts on this ref (`refId`, or `refIds`). */
+    refId?: string
   }): Promise<{ data: Task[]; total: number }> {
-    const { status, type, scope, page, size, includeSubTasks = false } = options
+    const {
+      status,
+      type,
+      scope,
+      page,
+      size,
+      includeSubTasks = false,
+      refId,
+    } = options
 
     const statuses = Array.isArray(status) ? status : status ? [status] : []
     const singleStatus = statuses.length === 1 ? statuses[0] : undefined
@@ -377,22 +407,23 @@ export class TaskQueueService implements OnModuleDestroy {
 
       const pipeline = this.redis.pipeline()
       for (const taskId of taskIds) {
-        pipeline.hmget(
-          this.getKey(TASK_QUEUE_KEYS.task(taskId)),
-          'status',
-          'scope',
-          'groupId',
-        )
+        const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
+        if (refId) {
+          pipeline.hmget(taskKey, 'status', 'scope', 'groupId', 'payload')
+        } else {
+          pipeline.hmget(taskKey, 'status', 'scope', 'groupId')
+        }
       }
       const rows = await pipeline.exec()
 
       for (let i = 0; i < taskIds.length; i++) {
         const row = rows?.[i]
         if (!row || row[0]) continue
-        const [taskStatus, taskScope, groupId] = row[1] as [
+        const [taskStatus, taskScope, groupId, payload] = row[1] as [
           string | null,
           string | null,
           string | null,
+          string | null | undefined,
         ]
         if (!taskStatus) continue
         if (
@@ -404,6 +435,7 @@ export class TaskQueueService implements OnModuleDestroy {
         }
         if (scope && !scopeAlreadyIndexed && taskScope !== scope) continue
         if (!includeSubTasks && groupId) continue
+        if (refId && !payloadTargetsRef(payload, refId)) continue
 
         if (total >= start && pageTaskIds.length < size) {
           pageTaskIds.push(taskIds[i])

@@ -41,7 +41,7 @@ import {
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import {
-  normalizeTargetLang,
+  normalizeTargetLangs,
   resolveTargetLanguages,
 } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
@@ -194,13 +194,7 @@ export class AiTranslationService
       // generates against the normalized language list) — normalize
       // payload.targetLanguages the same way before diffing, or a target like
       // zh-CN never matches a successful zh and gets retried for no reason.
-      const targetLangs = [
-        ...new Set(
-          (payload.targetLanguages || [])
-            .map((lang) => normalizeTargetLang(lang))
-            .filter((lang): lang is string => lang !== undefined),
-        ),
-      ]
+      const targetLangs = normalizeTargetLangs(payload.targetLanguages)
       const successLangs = new Set(
         result?.translations?.map((t) => t.lang) || [],
       )
@@ -249,16 +243,12 @@ export class AiTranslationService
     this.checkAborted(context)
 
     const aiConfig = await this.configService.get('ai')
-    const languages = [
-      ...new Set(
-        resolveTargetLanguages(
-          payload.targetLanguages,
-          aiConfig.translationTargetLanguages,
-        )
-          .map((lang) => normalizeTargetLang(lang))
-          .filter((lang): lang is string => lang !== undefined),
+    const languages = normalizeTargetLangs(
+      resolveTargetLanguages(
+        payload.targetLanguages,
+        aiConfig.translationTargetLanguages,
       ),
-    ]
+    )
 
     if (!languages.length) {
       await context.appendLog('warn', 'No target languages specified')

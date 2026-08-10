@@ -31,6 +31,18 @@ describe('parseLangInput', () => {
     expect(parseLangInput('FIL-PH, jam')).toEqual(['fil-ph', 'jam'])
   })
 
+  it('folds an alias onto the code the server will store, so jp and ja are one language', () => {
+    expect(parseLangInput('jp, ja')).toEqual(['ja'])
+  })
+
+  it('maps a 3-letter ISO code onto its 2-letter form', () => {
+    expect(parseLangInput('eng')).toEqual(['en'])
+  })
+
+  it('folds a script or region variant the server also folds', () => {
+    expect(parseLangInput('zh-Hant, pt-BR, kr')).toEqual(['zh', 'pt', 'ko'])
+  })
+
   it('returns a single value when there is no separator', () => {
     expect(parseLangInput('zh')).toEqual(['zh'])
   })

@@ -12,7 +12,7 @@ import { TaskQueueService, TaskStatus } from '~/processors/task-queue'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
-import { parseLanguageCode } from '../ai-language.util'
+import { normalizeTargetLangs, parseLanguageCode } from '../ai-language.util'
 import { readArticleMetaLang } from '../ai-translation/article-content.util'
 import { AiOverviewRepository } from './ai-overview.repository'
 import type { GetOverviewGroupedQueryInput } from './ai-overview.schema'
@@ -182,6 +182,14 @@ export class AiOverviewService {
       ],
       page: 1,
       size: ACTIVE_TASK_SCAN_SIZE,
+      // Batch and all-article translations finish by enqueueing child
+      // `ai:translation` tasks under a groupId; those children are the ones
+      // actually generating, so excluding them shows the article as idle while
+      // it is mid-generation. `refId` keeps the page cap from being spent on
+      // unrelated tasks — a queue full of another article's failures would
+      // otherwise push this one's live task off the first page.
+      includeSubTasks: true,
+      refId,
     })
 
     const cutoff = Date.now() - FAILURE_RETENTION_MS
@@ -230,12 +238,15 @@ export class AiOverviewService {
     return { total, byResourceType, models }
   }
 
+  // The handlers canonicalize their targets before generating, so a setting of
+  // `zh-CN` lands as a `zh` row. Comparing the raw setting against it would
+  // report a gap no amount of generating can close.
   private async resolveConfiguredLanguages() {
     const aiConfig = await this.configService.get('ai')
     return {
-      summary: aiConfig.summaryTargetLanguages ?? [],
-      insights: aiConfig.insightsTargetLanguages ?? [],
-      translation: aiConfig.translationTargetLanguages ?? [],
+      summary: normalizeTargetLangs(aiConfig.summaryTargetLanguages),
+      insights: normalizeTargetLangs(aiConfig.insightsTargetLanguages),
+      translation: normalizeTargetLangs(aiConfig.translationTargetLanguages),
     }
   }
 

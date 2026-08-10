@@ -311,18 +311,20 @@ export function updateInsights(id: string, data: { content: string }) {
   return patchJson<AIInsights, { content: string }>(`/ai/insights/${id}`, data)
 }
 
-export function createInsightsTask(data: { force?: boolean; refId: string }) {
-  return postJson<CreateTaskResponse, { force?: boolean; refId: string }>(
-    '/ai/insights/task',
-    data,
-  )
+export function createInsightsTask(data: {
+  force?: boolean
+  refId: string
+  targetLanguages?: string[]
+}) {
+  return postJson<CreateTaskResponse, typeof data>('/ai/insights/task', data)
 }
 
 export function createInsightsTranslationTask(data: {
+  force?: boolean
   refId: string
   targetLang: string
 }) {
-  return postJson<CreateTaskResponse, { refId: string; targetLang: string }>(
+  return postJson<CreateTaskResponse, typeof data>(
     '/ai/insights/task/translate',
     data,
   )

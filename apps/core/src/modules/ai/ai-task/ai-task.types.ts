@@ -1,15 +1,7 @@
-import { normalizeTargetLang, parseLanguageCode } from '../ai-language.util'
+import { normalizeTargetLangs, parseLanguageCode } from '../ai-language.util'
 
 function canonicalTargetLangs(langs?: string[]): string {
-  return [
-    ...new Set(
-      (langs || [])
-        .map((lang) => normalizeTargetLang(lang))
-        .filter((lang): lang is string => lang !== undefined),
-    ),
-  ]
-    .sort()
-    .join(',')
+  return normalizeTargetLangs(langs).sort().join(',')
 }
 
 export enum AITaskType {
@@ -63,6 +55,8 @@ export interface SlugBackfillTaskPayload {
 export interface InsightsTaskPayload {
   refId: string
   force?: boolean
+  /** Languages to translate the generated insights into once it exists. */
+  targetLanguages?: string[]
   title?: string
   refType?: string
 }
@@ -71,6 +65,7 @@ export interface InsightsTranslationTaskPayload {
   refId: string
   sourceInsightsId: string
   targetLang: string
+  force?: boolean
   title?: string
   refType?: string
 }
@@ -144,11 +139,12 @@ export function computeAITaskDedupKey(
     }
     case AITaskType.Insights: {
       const p = payload as InsightsTaskPayload
-      return `${p.refId}:${p.force ? 'force' : 'inc'}`
+      const langs = canonicalTargetLangs(p.targetLanguages)
+      return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
     }
     case AITaskType.InsightsTranslation: {
       const p = payload as InsightsTranslationTaskPayload
-      return `${p.refId}:${p.targetLang}`
+      return `${p.refId}:${p.targetLang}:${p.force ? 'force' : 'inc'}`
     }
     case AITaskType.ImageGeneration: {
       // Deliberately opts out of dedup: generating several images from the

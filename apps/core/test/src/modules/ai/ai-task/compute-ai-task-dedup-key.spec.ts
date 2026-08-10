@@ -4,6 +4,7 @@ import {
   AITaskType,
   computeAITaskDedupKey,
   type InsightsTaskPayload,
+  type InsightsTranslationTaskPayload,
   type SummaryTaskPayload,
   type TranslationTaskPayload,
 } from '~/modules/ai/ai-task/ai-task.types'
@@ -50,8 +51,55 @@ describe('computeAITaskDedupKey — force bit', () => {
     })
 
     expect(incKey).not.toBe(forceKey)
-    expect(incKey).toBe('1:inc')
-    expect(forceKey).toBe('1:force')
+    expect(incKey).toBe('1:inc:')
+    expect(forceKey).toBe('1:force:')
+  })
+
+  it('gives InsightsTranslation a different dedup key for force vs incremental, so a forced regeneration is not swallowed by a pending plain task', () => {
+    const base: InsightsTranslationTaskPayload = {
+      refId: '1',
+      sourceInsightsId: '9',
+      targetLang: 'en',
+    }
+
+    const incKey = computeAITaskDedupKey(AITaskType.InsightsTranslation, base)
+    const forceKey = computeAITaskDedupKey(AITaskType.InsightsTranslation, {
+      ...base,
+      force: true,
+    })
+
+    expect(incKey).toBe('1:en:inc')
+    expect(forceKey).toBe('1:en:force')
+  })
+
+  it('keeps a requested insights target language out of the plain key, so two targets queue as two tasks', () => {
+    const base: InsightsTaskPayload = { refId: '1' }
+
+    expect(
+      computeAITaskDedupKey(AITaskType.Insights, {
+        ...base,
+        targetLanguages: ['en'],
+      }),
+    ).not.toBe(
+      computeAITaskDedupKey(AITaskType.Insights, {
+        ...base,
+        targetLanguages: ['ja'],
+      }),
+    )
+  })
+
+  it('canonicalizes a requested insights target language, so jp and ja dedupe together', () => {
+    expect(
+      computeAITaskDedupKey(AITaskType.Insights, {
+        refId: '1',
+        targetLanguages: ['jp'],
+      }),
+    ).toBe(
+      computeAITaskDedupKey(AITaskType.Insights, {
+        refId: '1',
+        targetLanguages: ['ja'],
+      }),
+    )
   })
 })
 

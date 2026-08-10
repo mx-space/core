@@ -96,7 +96,7 @@ export function OverviewDetailPane(props: {
     const key = `${capability}:${lang}`
     setActiveCell(key)
     if (state === 'gap' || state === 'addable' || state === 'failed') {
-      dispatchGeneration(capability, lang, state === 'failed')
+      dispatchGeneration(capability, [lang], state === 'failed')
       return
     }
     const targetId = anchors.get(key)
@@ -107,19 +107,19 @@ export function OverviewDetailPane(props: {
 
   const dispatchGeneration = (
     capability: AiOverviewCapability,
-    lang: string,
+    langs: string[] | undefined,
     force: boolean,
   ) => {
     if (!detail) return
     setPollUntil(Date.now() + DISPATCH_GRACE_MS)
-    actions.generate(capability, lang, detail, force)
+    actions.generate(capability, langs, detail, force)
   }
 
   const addColumn = (lang: string) =>
     setExtraColumns((prev) => (prev.includes(lang) ? prev : [...prev, lang]))
 
   const handleRegenerate = (row: AssetRow) => {
-    dispatchGeneration(row.capability, row.lang, true)
+    dispatchGeneration(row.capability, [row.lang], true)
   }
 
   const handleDelete = async (row: AssetRow) => {
@@ -205,10 +205,13 @@ export function OverviewDetailPane(props: {
               onCellClick={handleCellClick}
             />
             <ActiveTaskList
+              // An empty `langs` is the task saying "use the configured
+              // targets", not "no language" — forwarding it as undefined
+              // reruns the whole set instead of one guessed language.
               onRetry={(task) =>
                 dispatchGeneration(
                   task.capability,
-                  task.langs[0] ?? detail.coverage.sourceLang ?? 'zh',
+                  task.langs.length ? task.langs : undefined,
                   true,
                 )
               }

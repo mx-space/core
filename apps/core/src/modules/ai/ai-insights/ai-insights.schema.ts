@@ -25,6 +25,7 @@ export class UpdateInsightsDto extends createZodDto(UpdateInsightsSchema) {}
 export const CreateInsightsTaskSchema = z.object({
   refId: z.string(),
   force: z.boolean().optional(),
+  targetLanguages: z.array(z.string()).optional(),
 })
 export class CreateInsightsTaskDto extends createZodDto(
   CreateInsightsTaskSchema,
@@ -33,6 +34,7 @@ export class CreateInsightsTaskDto extends createZodDto(
 export const CreateInsightsTranslationTaskSchema = z.object({
   refId: z.string(),
   targetLang: z.string(),
+  force: z.boolean().optional(),
 })
 export class CreateInsightsTranslationTaskDto extends createZodDto(
   CreateInsightsTranslationTaskSchema,

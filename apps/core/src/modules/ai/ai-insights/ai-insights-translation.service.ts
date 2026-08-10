@@ -26,6 +26,7 @@ import {
   mergeUsage,
 } from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
+import { normalizeTargetLangs } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
@@ -86,9 +87,9 @@ export class AiInsightsTranslationService implements OnModuleInit {
     if (!aiConfig?.enableInsights || !aiConfig.enableAutoTranslateInsights) {
       return
     }
-    const targets = (aiConfig.insightsTargetLanguages || []).filter(
-      (lang: string) => lang && lang !== event.sourceLang,
-    )
+    const targets = normalizeTargetLangs(
+      aiConfig.insightsTargetLanguages,
+    ).filter((lang) => lang !== event.sourceLang)
     for (const targetLang of targets) {
       const existing = await this.aiInsightsRepository.findByRefAndLang(
         event.refId,
@@ -131,6 +132,7 @@ export class AiInsightsTranslationService implements OnModuleInit {
         streamMaxLen: AI_STREAM_MAXLEN,
         readBlockMs: AI_STREAM_READ_BLOCK_MS,
         idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
+        bypassResultCache: payload.force,
         onLeader: async ({ push }) => {
           const runtime = await this.aiService.getInsightsTranslationModel()
           const { systemPrompt, prompt, reasoningEffort } =

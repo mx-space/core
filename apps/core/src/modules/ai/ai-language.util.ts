@@ -1,6 +1,20 @@
-import { normalizeLanguageCode, parseAcceptLanguage } from '~/utils/lang.util'
+import { normalizeTargetLang } from '@mx-space/ai'
+
+import { parseAcceptLanguage } from '~/utils/lang.util'
 
 import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from './ai.constants'
+
+export { normalizeTargetLang }
+
+export function normalizeTargetLangs(langs?: string[] | null): string[] {
+  return [
+    ...new Set(
+      (langs ?? [])
+        .map((lang) => normalizeTargetLang(lang))
+        .filter((lang): lang is string => lang !== undefined),
+    ),
+  ]
+}
 
 /**
  * Extract the primary language code from an Accept-Language header or a language code.
@@ -23,19 +37,6 @@ export function parseLanguageCode(lang?: string): string {
   if (base && /^[a-z]{2,3}$/.test(base)) return base
 
   return DEFAULT_SUMMARY_LANG
-}
-
-// Folds a target-language token for dedup: recognized codes/aliases collapse
-// via normalizeLanguageCode, unrecognized ones (a stray "english" typed into
-// the free-input field) pass through as trim+lowercase instead of
-// parseLanguageCode's DEFAULT_SUMMARY_LANG fallback, which would otherwise
-// silently overwrite an unrelated valid-language row. A blank (or
-// whitespace-only) token normalizes to undefined rather than '' — callers
-// filter it out instead of generating a language named "".
-export function normalizeTargetLang(lang: string): string | undefined {
-  const trimmed = lang.trim()
-  if (!trimmed) return undefined
-  return normalizeLanguageCode(trimmed) ?? trimmed.toLowerCase()
 }
 
 /**

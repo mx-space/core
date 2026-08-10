@@ -1,3 +1,5 @@
+import { normalizeTargetLang } from '@mx-space/ai'
+
 import type { AIInsights, AISummary, AITranslation } from '~/api/ai'
 import { updateInsights, updateSummary, updateTranslation } from '~/api/ai'
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
@@ -10,11 +12,11 @@ export function parseLangInput(raw: string): string[] {
   const seen = new Set<string>()
   const result: string[] = []
   for (const segment of raw.split(/[,，]/)) {
-    const normalized = segment.trim().toLowerCase().replaceAll('_', '-')
-    if (!normalized) continue
-    const [primary] = normalized.split('-')
-    const lang = /^[a-z]{2}$/.test(primary) ? primary : normalized
-    if (seen.has(lang)) continue
+    // Fold with the server's own canonicalizer: the chips shown here must name
+    // the languages the backend will actually generate, or a typed `jp` reads
+    // back as a `ja` row the board can never match to its column.
+    const lang = normalizeTargetLang(segment)
+    if (!lang || seen.has(lang)) continue
     seen.add(lang)
     result.push(lang)
   }

@@ -89,6 +89,7 @@ function createService(
   return {
     service,
     repository,
+    configService,
     databaseService,
     generationMetrics,
     taskQueueService,
@@ -266,5 +267,37 @@ describe('AiOverviewService.getArticleOverview', () => {
     databaseService.findGlobalById.mockResolvedValue(null as never)
 
     await expect(service.getArticleOverview('999')).rejects.toThrow()
+  })
+
+  it('canonicalizes the configured target languages, so a zh-CN setting is not a gap an existing zh row can never close', async () => {
+    const { service, configService } = createService({
+      repository: {
+        summaryAssets: vi.fn(async () => [
+          { id: 's1', lang: 'zh', summary: 'x', createdAt: new Date() },
+        ]),
+      } as never,
+    })
+    configService.get.mockResolvedValue({
+      summaryTargetLanguages: ['zh-CN', 'zh'],
+      insightsTargetLanguages: ['jp'],
+      translationTargetLanguages: ['en_US', 'EN'],
+    })
+
+    const detail = await service.getArticleOverview('300')
+
+    expect(detail.coverage.summary.expected).toEqual(['zh'])
+    expect(detail.coverage.summary.langs).toEqual(['zh'])
+    expect(detail.coverage.insights.expected).toEqual(['ja'])
+    expect(detail.coverage.translation.expected).toEqual(['en'])
+  })
+
+  it('looks up active tasks for this article only, sub-tasks included', async () => {
+    const { service, taskQueueService } = createService()
+
+    await service.getArticleOverview('300')
+
+    expect(taskQueueService.getTasks).toHaveBeenCalledWith(
+      expect.objectContaining({ includeSubTasks: true, refId: '300' }),
+    )
   })
 })

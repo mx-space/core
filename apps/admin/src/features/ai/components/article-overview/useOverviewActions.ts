@@ -2,11 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import {
-  createInsightsTask,
-  createInsightsTranslationTask,
-  createSummaryTask,
-  createTranslationTask,
-  createTtsTask,
   deleteInsights,
   deleteSummary,
   deleteTranslation,
@@ -18,6 +13,7 @@ import { adminQueryKeys } from '~/query/keys'
 
 import { useAiGenerateTask } from '../../hooks/use-ai-generate-task'
 import { getErrorMessage } from '../../utils/ai'
+import { buildGenerateTask } from './overview-generate-task'
 
 const deleteByCapability: Record<
   AiOverviewCapability,
@@ -62,14 +58,18 @@ export function useOverviewActions(refId: string) {
   // Regenerating an asset that already exists has to force: without it the
   // task dedupes against the stored hash and returns the very row being
   // replaced.
+  //
+  // `langs` undefined means "whatever the server has configured" — a retry of a
+  // task whose payload carried no languages must stay that way instead of
+  // collapsing to one guessed language.
   const generate = (
     capability: AiOverviewCapability,
-    lang: string,
+    langs: string[] | undefined,
     detail: AiOverviewDetail,
     force = false,
   ) => {
     generateMutation.mutate(
-      () => buildTask(capability, lang, refId, detail, force),
+      () => buildGenerateTask(capability, langs, refId, detail, force),
       { onSuccess: () => void invalidate() },
     )
   }
@@ -79,36 +79,5 @@ export function useOverviewActions(refId: string) {
     remove: (capability: AiOverviewCapability, id: string) =>
       deleteMutation.mutate({ capability, id }),
     isMutating: generateMutation.isPending || deleteMutation.isPending,
-  }
-}
-
-/**
- * Insights translations are a separate endpoint that reads an existing
- * source-language row, so a target language can only be dispatched once a
- * non-translation row exists — otherwise the base task has to run first.
- */
-function buildTask(
-  capability: AiOverviewCapability,
-  lang: string,
-  refId: string,
-  detail: AiOverviewDetail,
-  force: boolean,
-) {
-  switch (capability) {
-    case 'summary': {
-      return createSummaryTask({ force, refId, targetLanguages: [lang] })
-    }
-    case 'insights': {
-      const base = detail.assets.insights.find((row) => !row.isTranslation)
-      if (!base || base.lang === lang)
-        return createInsightsTask({ force, refId })
-      return createInsightsTranslationTask({ refId, targetLang: lang })
-    }
-    case 'translation': {
-      return createTranslationTask({ force, refId, targetLanguages: [lang] })
-    }
-    case 'tts': {
-      return createTtsTask({ force, langs: [lang], refId })
-    }
   }
 }

@@ -35,6 +35,7 @@ import {
 } from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
+import { normalizeTargetLangs } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
@@ -92,6 +93,21 @@ export class AiInsightsService implements OnModuleInit {
           context.taskId,
           payload.force,
         )
+        // A target language requested from the coverage board cannot be
+        // dispatched before a source-language row exists, so the click enqueues
+        // this task instead. Chaining the translation here is what makes that
+        // click reach the language it asked for even when auto-translation is
+        // off or the language is not a configured target.
+        for (const targetLang of normalizeTargetLangs(
+          payload.targetLanguages,
+        ).filter((lang) => lang !== result.lang)) {
+          await this.aiTaskService.createInsightsTranslationTask({
+            refId: payload.refId,
+            sourceInsightsId: result.id!,
+            targetLang,
+            force: payload.force,
+          })
+        }
         await context.setResult({ insightsId: result.id, lang: result.lang })
         await context.updateProgress(100, 'Done', 1, 1)
       },
