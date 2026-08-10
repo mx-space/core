@@ -14,6 +14,7 @@ import { SnowflakeService } from '~/shared/id/snowflake.service'
 import type {
   AiGenerationMetricsRow,
   AiGenerationResourceType,
+  GenerationSumRow,
   RecordGenerationMetricsInput,
 } from './ai-generation-metrics.types'
 import {
@@ -179,6 +180,55 @@ export class AiGenerationMetricsRepository extends BaseRepository {
       )
       .returning({ id: aiGenerationMetrics.id })
     return result.length
+  }
+
+  /**
+   * Per-resource-type totals across every generation ever recorded for the
+   * article — not the latest run. Regenerating a resource inserts another row
+   * against the same `resource_id`, so summing is what makes the figure the
+   * true cumulative spend. `deleteByResource` prunes the rows alongside the
+   * asset, so a deleted asset drops out of the total.
+   *
+   * `sum()` over an integer column comes back as a bigint string from pg;
+   * `Number()` normalises both that and the double-precision cost columns.
+   */
+  async sumByRef(refId: EntityId | string): Promise<GenerationSumRow[]> {
+    const rows = await this.db
+      .select({
+        resourceType: aiGenerationMetrics.resourceType,
+        inputTokens: sql<string>`coalesce(sum(${aiGenerationMetrics.inputTokens}), 0)`,
+        outputTokens: sql<string>`coalesce(sum(${aiGenerationMetrics.outputTokens}), 0)`,
+        cacheReadTokens: sql<string>`coalesce(sum(${aiGenerationMetrics.cacheReadTokens}), 0)`,
+        cacheWriteTokens: sql<string>`coalesce(sum(${aiGenerationMetrics.cacheWriteTokens}), 0)`,
+        totalTokens: sql<string>`coalesce(sum(${aiGenerationMetrics.totalTokens}), 0)`,
+        costTotalUsd: sql<string>`coalesce(sum(${aiGenerationMetrics.costTotalUsd}), 0)`,
+        generationCount: sql<string>`count(*)`,
+      })
+      .from(aiGenerationMetrics)
+      .where(eq(aiGenerationMetrics.refId, parseEntityId(refId)))
+      .groupBy(aiGenerationMetrics.resourceType)
+
+    return rows.map((row) => ({
+      resourceType: row.resourceType as AiGenerationResourceType,
+      inputTokens: Number(row.inputTokens),
+      outputTokens: Number(row.outputTokens),
+      cacheReadTokens: Number(row.cacheReadTokens),
+      cacheWriteTokens: Number(row.cacheWriteTokens),
+      totalTokens: Number(row.totalTokens),
+      costTotalUsd: Number(row.costTotalUsd),
+      generationCount: Number(row.generationCount),
+    }))
+  }
+
+  async findModelsByRef(refId: EntityId | string): Promise<string[]> {
+    const rows = await this.db
+      .selectDistinct({ model: aiGenerationMetrics.model })
+      .from(aiGenerationMetrics)
+      .where(eq(aiGenerationMetrics.refId, parseEntityId(refId)))
+    return rows
+      .map((row) => row.model)
+      .filter((model): model is string => Boolean(model))
+      .sort()
   }
 
   async findLatest(

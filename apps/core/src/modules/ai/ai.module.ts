@@ -19,6 +19,9 @@ import { AiInsightsController } from './ai-insights/ai-insights.controller'
 import { AiInsightsRepository } from './ai-insights/ai-insights.repository'
 import { AiInsightsService } from './ai-insights/ai-insights.service'
 import { AiInsightsTranslationService } from './ai-insights/ai-insights-translation.service'
+import { AiOverviewController } from './ai-overview/ai-overview.controller'
+import { AiOverviewRepository } from './ai-overview/ai-overview.repository'
+import { AiOverviewService } from './ai-overview/ai-overview.service'
 import { AiSummaryController } from './ai-summary/ai-summary.controller'
 import { AiSummaryRepository } from './ai-summary/ai-summary.repository'
 import { AiSummaryService } from './ai-summary/ai-summary.service'
@@ -66,6 +69,8 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiInsightsTranslationService,
     AiGenerationMetricsRepository,
     AiGenerationMetricsService,
+    AiOverviewService,
+    AiOverviewRepository,
     AiInFlightService,
     AiService,
     AiImageService,
@@ -100,6 +105,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiImageController,
     AiSummaryController,
     AiInsightsController,
+    AiOverviewController,
     AiWriterController,
     AiTranslationController,
     TranslationEntryController,

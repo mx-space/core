@@ -8,6 +8,7 @@ import { io } from 'socket.io-client'
 import { toast } from 'sonner'
 
 import type { AITask } from '~/api/tasks'
+import { AITaskStatus } from '~/api/tasks'
 import {
   applyTaskPatch,
   prependTaskToList,
@@ -475,6 +476,15 @@ export function handleTaskUpdate(queryClient: QueryClient, payload: unknown) {
     )
   }
 
+  // A finished AI task changes an article's coverage and cost, so the overview
+  // board would otherwise show stale figures until a manual refresh. Only
+  // active queries refetch, which is the open article plus its list page.
+  if (scope === 'ai' && patch?.status && isTerminalTaskStatus(patch.status)) {
+    void queryClient.invalidateQueries({
+      queryKey: adminQueryKeys.ai.overviewRoot,
+    })
+  }
+
   // Per spec 2 step-25 — keep the parent's child-task list cache live so
   // SubTaskList rows update in real time. 'deleted' / 'stream' phases are
   // handled above; here we cover 'created' (append/replace full snapshot)
@@ -501,6 +511,14 @@ export function handleTaskUpdate(queryClient: QueryClient, payload: unknown) {
       },
     )
   }
+}
+
+function isTerminalTaskStatus(status: AITask['status']): boolean {
+  return (
+    status === AITaskStatus.Completed ||
+    status === AITaskStatus.PartialFailed ||
+    status === AITaskStatus.Failed
+  )
 }
 
 // 'created' prepends would otherwise leak cross-scope rows into filter-keyed

@@ -52,6 +52,17 @@ export interface GenerationMetricsDto {
   createdAt: string
 }
 
+export interface GenerationSumRow {
+  resourceType: AiGenerationResourceType
+  inputTokens: number
+  outputTokens: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
+  totalTokens: number
+  costTotalUsd: number
+  generationCount: number
+}
+
 export interface AiGenerationMetricsRow {
   id: EntityId
   createdAt: Date

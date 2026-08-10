@@ -19,7 +19,7 @@ const redirects: RedirectEntry[] = [
   { from: '/extra-features/markdown', to: '/markdown' },
   { from: '/extra-features/assets/template', to: '/assets/template' },
   { from: '/extra-features/subscribe', to: '/subscribe' },
-  { from: '/ai', to: '/ai/summary' },
+  { from: '/ai', to: '/ai/overview' },
   { from: '/ai/tasks', to: '/tasks' },
   { from: '/ai/tasks/:id', element: LegacyTaskDetailRedirect },
   { from: '/maintenance/cron/history', to: '/tasks?scope=cron' },

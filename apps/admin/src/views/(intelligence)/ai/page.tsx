@@ -9,4 +9,7 @@ export const metadata = defineMetadata({
   order: 1,
 })
 
-export { AiSummaryRouteView as default } from '~/features/ai/routes/AiSummaryRouteView'
+// Never rendered: the `/ai` redirect in `views/redirects.ts` is registered
+// ahead of the shell routes. This page exists so the sidebar has a parent node
+// to hang `/ai/*` under — without it the whole group flattens.
+export { AiOverviewRouteView as default } from '~/features/ai/routes/AiOverviewRouteView'
