@@ -73,6 +73,40 @@ describe('CategoryRepository', () => {
     expect(bOut?.count).toBe(0)
   })
 
+  it('can restrict category counts to published posts', async () => {
+    const category = await repository.create({ name: 'a', slug: 'a' })
+
+    await db.insert(posts).values([
+      {
+        id: snowflake.nextId(),
+        title: 'public',
+        slug: 'public',
+        contentFormat: 'markdown',
+        categoryId: category.id,
+        isPublished: true,
+      },
+      {
+        id: snowflake.nextId(),
+        title: 'private',
+        slug: 'private',
+        contentFormat: 'markdown',
+        categoryId: category.id,
+        isPublished: false,
+      },
+    ])
+
+    const [publicListRow] = await repository.findAll(CategoryType.Category, {
+      publishedOnly: true,
+    })
+    const [publicDetailRow] = await repository.findByIds([category.id], {
+      publishedOnly: true,
+    })
+
+    expect(publicListRow.count).toBe(1)
+    expect(publicDetailRow.count).toBe(1)
+    expect((await repository.findAll(CategoryType.Category))[0].count).toBe(2)
+  })
+
   it('findBySlug looks up by slug and returns null on miss', async () => {
     await repository.create({ name: 'foo', slug: 'foo' })
     const hit = await repository.findBySlug('foo')

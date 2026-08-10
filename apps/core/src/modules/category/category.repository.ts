@@ -38,7 +38,11 @@ export class CategoryRepository extends BaseRepository {
 
   async findAll(
     type: CategoryType = CategoryType.Category,
+    options: { publishedOnly?: boolean } = {},
   ): Promise<CategoryWithCount[]> {
+    const postJoinCondition = options.publishedOnly
+      ? and(eq(posts.categoryId, categories.id), eq(posts.isPublished, true))
+      : eq(posts.categoryId, categories.id)
     const rows = await this.db
       .select({
         id: categories.id,
@@ -49,7 +53,7 @@ export class CategoryRepository extends BaseRepository {
         count: sql<number>`coalesce(count(${posts.id}), 0)::int`,
       })
       .from(categories)
-      .leftJoin(posts, eq(posts.categoryId, categories.id))
+      .leftJoin(posts, postJoinCondition)
       .where(eq(categories.type, type))
       .groupBy(categories.id)
       .orderBy(categories.createdAt)
@@ -69,9 +73,15 @@ export class CategoryRepository extends BaseRepository {
     return row ?? null
   }
 
-  async findByIds(ids: Array<EntityId | string>): Promise<CategoryWithCount[]> {
+  async findByIds(
+    ids: Array<EntityId | string>,
+    options: { publishedOnly?: boolean } = {},
+  ): Promise<CategoryWithCount[]> {
     if (ids.length === 0) return []
     const idBigs = ids.map((id) => parseEntityId(id))
+    const postJoinCondition = options.publishedOnly
+      ? and(eq(posts.categoryId, categories.id), eq(posts.isPublished, true))
+      : eq(posts.categoryId, categories.id)
     const rows = await this.db
       .select({
         id: categories.id,
@@ -79,14 +89,12 @@ export class CategoryRepository extends BaseRepository {
         slug: categories.slug,
         type: categories.type,
         createdAt: categories.createdAt,
-        count: sql<number>`(
-          select coalesce(count(*), 0)::int
-          from ${posts}
-          where ${posts.categoryId} = ${categories.id}
-        )`,
+        count: sql<number>`coalesce(count(${posts.id}), 0)::int`,
       })
       .from(categories)
+      .leftJoin(posts, postJoinCondition)
       .where(inArray(categories.id, idBigs))
+      .groupBy(categories.id)
 
     return rows.map((row) => ({
       id: toEntityId(row.id) as EntityId,
