@@ -92,6 +92,14 @@ export interface ActiveGeneration {
   langs: string[]
   taskId: string
   status: string
+  /** 0-100 where the worker reports it; absent while still queued. */
+  progress: number | null
+  progressMessage: string | null
+  completedItems: number | null
+  totalItems: number | null
+  startedAt: number | null
+  /** Set once the task reached a failed state; null while it is still viable. */
+  error: string | null
 }
 
 export interface AiOverviewDetail {

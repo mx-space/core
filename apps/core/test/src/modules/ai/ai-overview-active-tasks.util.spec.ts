@@ -31,7 +31,7 @@ describe('toActiveGenerations', () => {
       '300',
     )
 
-    expect(result).toEqual([
+    expect(result).toMatchObject([
       {
         capability: 'summary',
         langs: ['en', 'ja'],
@@ -63,7 +63,7 @@ describe('toActiveGenerations', () => {
       '300',
     )
 
-    expect(result).toEqual([
+    expect(result).toMatchObject([
       { capability: 'insights', langs: [], status: 'running', taskId: 'base' },
       {
         capability: 'insights',
@@ -85,7 +85,7 @@ describe('toActiveGenerations', () => {
       '300',
     )
 
-    expect(result).toEqual([
+    expect(result).toMatchObject([
       {
         capability: 'translation',
         langs: ['ko'],
@@ -111,6 +111,48 @@ describe('toActiveGenerations', () => {
     )
 
     expect(result[0]).toMatchObject({ capability: 'tts', langs: ['zh'] })
+  })
+
+  it('carries progress fields through', () => {
+    const result = toActiveGenerations(
+      [
+        {
+          id: 't1',
+          type: AITaskType.Translation,
+          status: 'running',
+          payload: { refId: '300', targetLanguages: ['en'] },
+          progress: 42,
+          progressMessage: 'translating block 3',
+          completedItems: 3,
+          totalItems: 7,
+          startedAt: 1_700_000_000_000,
+        },
+      ],
+      '300',
+    )
+
+    expect(result[0]).toMatchObject({
+      progress: 42,
+      progressMessage: 'translating block 3',
+      completedItems: 3,
+      totalItems: 7,
+      startedAt: 1_700_000_000_000,
+    })
+  })
+
+  it('nulls out progress fields the queue did not report', () => {
+    const result = toActiveGenerations(
+      [task(AITaskType.Tts, { refId: '300', langs: ['zh'] })],
+      '300',
+    )
+
+    expect(result[0]).toMatchObject({
+      progress: null,
+      progressMessage: null,
+      completedItems: null,
+      totalItems: null,
+      startedAt: null,
+    })
   })
 
   it('tolerates a missing payload', () => {

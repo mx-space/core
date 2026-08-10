@@ -74,11 +74,19 @@ export interface CostBucket {
   totalTokens: number
 }
 
+export const ACTIVE_TASK_STATUSES = ['pending', 'running'] as const
+
 export interface ActiveGeneration {
   capability: AiOverviewCapability
+  completedItems: number | null
+  error: string | null
   langs: string[]
+  progress: number | null
+  progressMessage: string | null
+  startedAt: number | null
   status: string
   taskId: string
+  totalItems: number | null
 }
 
 export interface AiOverviewDetail {

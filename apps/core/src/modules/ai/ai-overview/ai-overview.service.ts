@@ -28,6 +28,7 @@ import { toActiveGenerations } from './ai-overview-active-tasks.util'
 import { buildArticleCoverage, countGaps } from './ai-overview-coverage.util'
 
 const ACTIVE_TASK_SCAN_SIZE = 100
+const FAILURE_RETENTION_MS = 10 * 60 * 1000
 
 type MetaBearing = { meta?: Record<string, unknown> | null }
 
@@ -164,14 +165,37 @@ export class AiOverviewService {
     }
   }
 
+  /**
+   * In-flight tasks plus recent failures. A generation that dies on its first
+   * tick — a disabled AI feature, a bad key — otherwise vanishes between two
+   * polls and the board silently reverts to "not generated", leaving no trace
+   * of why. Failures age out so the board does not accuse forever.
+   */
   private async findActiveTasks(refId: string) {
     const { data } = await this.taskQueueService.getTasks({
       scope: 'ai',
-      status: [TaskStatus.Pending, TaskStatus.Running],
+      status: [
+        TaskStatus.Pending,
+        TaskStatus.Running,
+        TaskStatus.Failed,
+        TaskStatus.PartialFailed,
+      ],
       page: 1,
       size: ACTIVE_TASK_SCAN_SIZE,
     })
-    return toActiveGenerations(data, refId)
+
+    const cutoff = Date.now() - FAILURE_RETENTION_MS
+    const relevant = data.filter((task) => {
+      if (
+        task.status !== TaskStatus.Failed &&
+        task.status !== TaskStatus.PartialFailed
+      ) {
+        return true
+      }
+      return (task.completedAt ?? task.createdAt) >= cutoff
+    })
+
+    return toActiveGenerations(relevant, refId)
   }
 
   private async buildCost(refId: string): Promise<AiOverviewCost> {

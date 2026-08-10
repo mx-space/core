@@ -13,16 +13,24 @@ import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 
 import { getRefTypeMeta } from '../article-grouped/refTypeMeta'
+import { ActiveTaskList } from './ActiveTaskList'
+import { AddLanguageControl } from './AddLanguageControl'
 import type { AssetRow } from './asset-rows'
 import { buildAssetRows, firstAnchorIds } from './asset-rows'
 import { AssetSection } from './AssetSection'
 import { CostSummarySection } from './CostSummarySection'
 import type { CellState } from './coverage-cells'
-import { isGenerationPending } from './coverage-cells'
+import {
+  findGenerationFailure,
+  isGenerationPending,
+  isTaskLive,
+} from './coverage-cells'
 import { CoverageMatrix } from './CoverageMatrix'
+import { OverviewSection } from './OverviewSection'
 import { useOverviewActions } from './useOverviewActions'
 
 const HIGHLIGHT_MS = 1200
+const ACTIVE_POLL_MS = 2000
 
 export function OverviewDetailPane(props: {
   refId: string
@@ -34,11 +42,19 @@ export function OverviewDetailPane(props: {
   const [activeCell, setActiveCell] = useState<string | null>(null)
   const [justQueued, setJustQueued] = useState<string[]>([])
   const [extraColumns, setExtraColumns] = useState<string[]>([])
+  const [polling, setPolling] = useState(false)
   const rowNodes = useRef(new Map<string, HTMLLIElement>())
 
+  // Progress only moves server-side; the socket carries per-task phases but
+  // never a refId, so the board follows a running task by re-reading its own
+  // endpoint. The flag is driven from render state rather than from
+  // `refetchInterval`'s query argument, which cannot see a freshly clicked
+  // cell — that blind spot left the optimistic spinner waiting on a poll that
+  // never started.
   const query = useQuery({
     queryFn: () => getArticleOverview(props.refId),
     queryKey: adminQueryKeys.ai.overviewArticle(props.refId),
+    refetchInterval: polling ? ACTIVE_POLL_MS : false,
   })
 
   const detail = query.data
@@ -50,17 +66,27 @@ export function OverviewDetailPane(props: {
   // it the cell snaps back to `+` and invites a duplicate click.
   const activeTasks = useMemo<ActiveGeneration[]>(() => {
     const fromServer = detail?.activeTasks ?? []
-    const optimistic = justQueued.map((key) => {
+    const optimistic = justQueued.map<ActiveGeneration>((key) => {
       const [capability, lang] = key.split(':')
       return {
         capability: capability as AiOverviewCapability,
+        completedItems: null,
+        error: null,
         langs: [lang],
+        progress: null,
+        progressMessage: null,
+        startedAt: null,
         status: 'pending',
         taskId: `optimistic:${key}`,
+        totalItems: null,
       }
     })
     return [...fromServer, ...optimistic]
   }, [detail?.activeTasks, justQueued])
+
+  useEffect(() => {
+    setPolling(activeTasks.some(isTaskLive))
+  }, [activeTasks])
 
   useEffect(() => {
     if (!detail || !justQueued.length) return
@@ -71,6 +97,15 @@ export function OverviewDetailPane(props: {
           detail.activeTasks,
           capability as AiOverviewCapability,
           lang,
+        ) ||
+        // A task that already died must clear the optimistic spinner too, or
+        // the cell would show "running" next to its own failure row forever.
+        Boolean(
+          findGenerationFailure(
+            detail.activeTasks,
+            capability as AiOverviewCapability,
+            lang,
+          ),
         ) ||
         detail.coverage[capability as AiOverviewCapability].langs.includes(lang)
       )
@@ -102,7 +137,7 @@ export function OverviewDetailPane(props: {
     if (!detail) return
     const key = `${capability}:${lang}`
     setActiveCell(key)
-    if (state === 'gap' || state === 'addable') {
+    if (state === 'gap' || state === 'addable' || state === 'failed') {
       setJustQueued((prev) => (prev.includes(key) ? prev : [...prev, key]))
       actions.generate(capability, lang, detail)
       return
@@ -112,6 +147,9 @@ export function OverviewDetailPane(props: {
     setHighlightId(targetId)
     rowNodes.current.get(targetId)?.scrollIntoView({ block: 'nearest' })
   }
+
+  const addColumn = (lang: string) =>
+    setExtraColumns((prev) => (prev.includes(lang) ? prev : [...prev, lang]))
 
   const handleRegenerate = (row: AssetRow) => {
     if (!detail) return
@@ -188,30 +226,41 @@ export function OverviewDetailPane(props: {
             )}
           </div>
 
-          <section className="rounded-md border border-border p-3">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-fg-subtle">
-              {t('ai.overview.matrixTitle')}
-            </p>
+          <OverviewSection
+            action={<AddLanguageControl labelled onAdd={addColumn} />}
+            title={t('ai.overview.matrixTitle')}
+          >
             <CoverageMatrix
               activeKey={activeCell}
               activeTasks={activeTasks}
               coverage={detail.coverage}
               extraColumns={extraColumns}
-              onAddColumn={(lang) =>
-                setExtraColumns((prev) =>
-                  prev.includes(lang) ? prev : [...prev, lang],
-                )
-              }
+              onAddColumn={addColumn}
               onCellClick={handleCellClick}
             />
-          </section>
+            <ActiveTaskList
+              onRetry={(task) =>
+                actions.generate(
+                  task.capability,
+                  task.langs[0] ?? detail.coverage.sourceLang ?? 'zh',
+                  detail,
+                  true,
+                )
+              }
+              tasks={activeTasks}
+            />
+          </OverviewSection>
 
-          <CostSummarySection cost={detail.cost} />
+          {detail.cost.total.generationCount ? (
+            <OverviewSection title={t('ai.overview.costTitle')}>
+              <CostSummarySection cost={detail.cost} />
+            </OverviewSection>
+          ) : null}
 
-          <section>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-fg-subtle">
-              {t('ai.overview.assetsTitle', { count: rows.length })}
-            </p>
+          <OverviewSection
+            bodyClassName="p-0"
+            title={t('ai.overview.assetsTitle', { count: rows.length })}
+          >
             <AssetSection
               highlightId={highlightId}
               onDelete={(row) => void handleDelete(row)}
@@ -223,7 +272,7 @@ export function OverviewDetailPane(props: {
               }}
               rows={rows}
             />
-          </section>
+          </OverviewSection>
         </Scroll>
       )}
     </div>

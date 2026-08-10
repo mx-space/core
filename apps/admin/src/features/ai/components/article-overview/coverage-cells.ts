@@ -5,21 +5,45 @@ import type {
 } from '~/api/ai-overview'
 import { AI_OVERVIEW_CAPABILITIES } from '~/api/ai-overview'
 
-export type CellState = 'addable' | 'gap' | 'has' | 'na' | 'pending' | 'source'
+export type CellState =
+  'addable' | 'failed' | 'gap' | 'has' | 'na' | 'pending' | 'source'
 
 /**
- * A queued task with no languages covers the whole capability — the server
- * could not name them because the request left the target list to config.
+ * A task with no languages covers the whole capability — the server could not
+ * name them because the request left the target list to config.
  */
+function coversCell(
+  task: ActiveGeneration,
+  capability: AiOverviewCapability,
+  lang: string,
+): boolean {
+  return (
+    task.capability === capability &&
+    (task.langs.length === 0 || task.langs.includes(lang))
+  )
+}
+
+export function isTaskLive(task: ActiveGeneration): boolean {
+  return task.status === 'pending' || task.status === 'running'
+}
+
 export function isGenerationPending(
   activeTasks: ActiveGeneration[],
   capability: AiOverviewCapability,
   lang: string,
 ): boolean {
   return activeTasks.some(
-    (task) =>
-      task.capability === capability &&
-      (task.langs.length === 0 || task.langs.includes(lang)),
+    (task) => isTaskLive(task) && coversCell(task, capability, lang),
+  )
+}
+
+export function findGenerationFailure(
+  activeTasks: ActiveGeneration[],
+  capability: AiOverviewCapability,
+  lang: string,
+): ActiveGeneration | undefined {
+  return activeTasks.find(
+    (task) => !isTaskLive(task) && coversCell(task, capability, lang),
   )
 }
 
@@ -58,6 +82,7 @@ export function resolveCell(
   // A running task outranks the gap glyph: leaving the `+` up invites a second
   // click that queues the same work twice.
   if (isGenerationPending(activeTasks, capability, lang)) return 'pending'
+  if (findGenerationFailure(activeTasks, capability, lang)) return 'failed'
   // `expected` only says which languages the config asks for; anything the
   // capability supports can still be generated on demand, so an unexpected
   // language stays clickable rather than dimming into "not applicable".
@@ -66,7 +91,12 @@ export function resolveCell(
 }
 
 export function isCellActionable(state: CellState): boolean {
-  return state === 'has' || state === 'gap' || state === 'addable'
+  return (
+    state === 'has' ||
+    state === 'gap' ||
+    state === 'addable' ||
+    state === 'failed'
+  )
 }
 
 export function capabilityDotState(

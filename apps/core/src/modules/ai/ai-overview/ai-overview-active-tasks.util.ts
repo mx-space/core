@@ -6,12 +6,36 @@ interface ActiveTaskInput {
   type: string
   status: string
   payload?: Record<string, unknown> | null
+  progress?: number
+  progressMessage?: string
+  completedItems?: number
+  totalItems?: number
+  startedAt?: number
+  error?: string
+  logs?: Array<{ level: string; message: string }>
 }
 
 const asStringArray = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.filter((v): v is string => typeof v === 'string')
     : []
+
+const asNumber = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) ? value : null
+
+const FAILED_STATUSES = new Set(['failed', 'partial_failed'])
+
+/**
+ * Workers that fail per-language record the reason in a log line and leave
+ * `error` unset, so a bare `task.error` read reports "failed" with no cause —
+ * which is exactly the silence this surfacing exists to break.
+ */
+function resolveError(task: ActiveTaskInput): string | null {
+  if (!FAILED_STATUSES.has(task.status)) return null
+  if (task.error) return task.error
+  const logged = task.logs?.findLast((log) => log.level === 'error')
+  return logged?.message ?? null
+}
 
 /**
  * Narrow the queue's in-flight AI tasks down to the ones acting on this
@@ -29,7 +53,16 @@ export function toActiveGenerations(
 
   for (const task of tasks) {
     const payload = task.payload ?? {}
-    const base = { taskId: task.id, status: task.status }
+    const base = {
+      taskId: task.id,
+      status: task.status,
+      progress: asNumber(task.progress),
+      progressMessage: task.progressMessage ?? null,
+      completedItems: asNumber(task.completedItems),
+      totalItems: asNumber(task.totalItems),
+      startedAt: asNumber(task.startedAt),
+      error: resolveError(task),
+    }
 
     switch (task.type) {
       case AITaskType.Summary: {

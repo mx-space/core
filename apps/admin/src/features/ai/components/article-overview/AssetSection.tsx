@@ -3,7 +3,6 @@ import { Link } from 'react-router'
 
 import type { AiOverviewCapability } from '~/api/ai-overview'
 import { useI18n } from '~/i18n'
-import { EmptyState } from '~/ui/patterns/EmptyState'
 import { cn } from '~/utils/cn'
 
 import type { AssetRow } from './asset-rows'
@@ -30,22 +29,21 @@ export function AssetSection(props: AssetSectionProps) {
 
   if (!props.rows.length) {
     return (
-      <EmptyState
-        description={t('ai.overview.assetsEmptyDescription')}
-        title={t('ai.overview.assetsEmptyTitle')}
-      />
+      <p className="px-3 py-6 text-center text-xs text-fg-muted">
+        {t('ai.overview.assetsEmptyDescription')}
+      </p>
     )
   }
 
   return (
-    <ul className="divide-y divide-border">
+    <ul className="divide-y divide-border/60">
       {props.rows.map((row) => {
         const meta = CAPABILITY_META[row.capability]
         const CapabilityIcon = meta.icon
         return (
           <li
             className={cn(
-              'flex items-center gap-2 rounded-sm px-2 py-2 transition-colors',
+              'flex items-center gap-2 px-3 py-2 transition-colors',
               props.highlightId === row.id && 'bg-accent-soft',
             )}
             key={row.id}

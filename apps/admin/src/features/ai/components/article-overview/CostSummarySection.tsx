@@ -17,18 +17,12 @@ export function CostSummarySection(props: { cost: AiOverviewDetail['cost'] }) {
   const { t } = useI18n()
   const { total, byResourceType, models } = props.cost
 
-  if (!total.generationCount) return null
-
   const breakdown = AI_OVERVIEW_CAPABILITIES.filter(
     (capability) => byResourceType[capability]?.generationCount,
   )
 
   return (
-    <section className="rounded-md border border-border p-3">
-      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-fg-subtle">
-        {t('ai.overview.costTitle')}
-      </p>
-
+    <>
       <div className="flex flex-wrap gap-x-6 gap-y-2">
         <Stat
           label={t('ai.overview.costTotal')}
@@ -77,7 +71,7 @@ export function CostSummarySection(props: { cost: AiOverviewDetail['cost'] }) {
           {models.join(' · ')}
         </p>
       ) : null}
-    </section>
+    </>
   )
 }
 
