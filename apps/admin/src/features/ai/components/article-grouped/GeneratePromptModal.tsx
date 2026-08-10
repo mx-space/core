@@ -35,7 +35,7 @@ function GeneratePromptModal(props: GeneratePromptModalProps) {
   const [force, setForce] = useState(false)
 
   const langs = parseLangInput(langInput)
-  const tooMany = langs.length > MAX_LANGS
+  const tooMany = props.promptForLang && langs.length > MAX_LANGS
 
   const handleSubmit = (event?: FormEvent) => {
     event?.preventDefault()
