@@ -54,3 +54,33 @@ describe('computeAITaskDedupKey — force bit', () => {
     expect(forceKey).toBe('1:force')
   })
 })
+
+describe('computeAITaskDedupKey — target language normalization', () => {
+  it('gives Summary the same dedup key for zh-CN and zh, since generation now produces the same result', () => {
+    const regional = computeAITaskDedupKey(AITaskType.Summary, {
+      refId: '1',
+      targetLanguages: ['zh-CN'],
+    })
+    const canonical = computeAITaskDedupKey(AITaskType.Summary, {
+      refId: '1',
+      targetLanguages: ['zh'],
+    })
+
+    expect(regional).toBe(canonical)
+    expect(regional).toBe('1:inc:zh')
+  })
+
+  it('gives Translation the same dedup key for zh-CN and zh, since generation now produces the same result', () => {
+    const regional = computeAITaskDedupKey(AITaskType.Translation, {
+      refId: '1',
+      targetLanguages: ['zh-CN'],
+    })
+    const canonical = computeAITaskDedupKey(AITaskType.Translation, {
+      refId: '1',
+      targetLanguages: ['zh'],
+    })
+
+    expect(regional).toBe(canonical)
+    expect(regional).toBe('1:inc:zh')
+  })
+})

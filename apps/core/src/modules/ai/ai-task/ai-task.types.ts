@@ -1,4 +1,16 @@
-import { parseLanguageCode } from '../ai-language.util'
+import { normalizeTargetLang, parseLanguageCode } from '../ai-language.util'
+
+function canonicalTargetLangs(langs?: string[]): string {
+  return [
+    ...new Set(
+      (langs || [])
+        .map((lang) => normalizeTargetLang(lang))
+        .filter((lang): lang is string => lang !== undefined),
+    ),
+  ]
+    .sort()
+    .join(',')
+}
 
 export enum AITaskType {
   Summary = 'ai:summary',
@@ -105,12 +117,14 @@ export function computeAITaskDedupKey(
   switch (type) {
     case AITaskType.Summary: {
       const p = payload as SummaryTaskPayload
-      const langs = (p.targetLanguages || []).slice().sort().join(',')
+      // Canonicalize like the handler does — zh-CN and zh generate the same
+      // result, so they must dedup to the same task instead of running twice.
+      const langs = canonicalTargetLangs(p.targetLanguages)
       return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
     }
     case AITaskType.Translation: {
       const p = payload as TranslationTaskPayload
-      const langs = (p.targetLanguages || []).slice().sort().join(',')
+      const langs = canonicalTargetLangs(p.targetLanguages)
       return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
     }
     case AITaskType.TranslationBatch: {
