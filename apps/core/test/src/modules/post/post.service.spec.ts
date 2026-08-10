@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { AppException } from '~/common/errors/exception.types'
 import { ArticleTypeEnum } from '~/constants/article.constant'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import {
   CATEGORY_SERVICE_TOKEN,
   DRAFT_SERVICE_TOKEN,
@@ -103,6 +105,7 @@ const createService = () => {
     commentService,
     contentMigrationCommitService,
     draftService,
+    eventManager,
     fileReferenceService,
     repository,
     service,
@@ -268,6 +271,7 @@ describe('PostService', () => {
     const {
       commentService,
       draftService,
+      eventManager,
       fileReferenceService,
       repository,
       service,
@@ -285,6 +289,29 @@ describe('PostService', () => {
     expect(
       fileReferenceService.removeReferencesForDocument,
     ).toHaveBeenCalledWith('post-1', FileReferenceType.Post)
+    expect(eventManager.emit).toHaveBeenCalledWith(
+      EventBusEvents.CleanAggregateCache,
+      null,
+      { scope: EventScope.TO_SYSTEM },
+    )
+    expect(eventManager.emit).toHaveBeenCalledWith(
+      BusinessEvents.POST_DELETE,
+      { id: 'post-1' },
+      {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+        nextTick: true,
+      },
+    )
+  })
+
+  it('does not invalidate aggregate caches when post deletion fails', async () => {
+    const { eventManager, repository, service } = createService()
+    repository.findById.mockResolvedValue(createPost())
+    repository.deleteById.mockRejectedValue(new Error('delete failed'))
+
+    await expect(service.deletePost('post-1')).rejects.toThrow('delete failed')
+
+    expect(eventManager.emit).not.toHaveBeenCalled()
   })
 
   it('rejects missing related post ids', async () => {

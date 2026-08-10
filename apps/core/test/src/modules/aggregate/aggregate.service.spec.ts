@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { API_CACHE_PREFIX, CacheKeys } from '~/constants/cache.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 
 const noteRow = {
@@ -252,5 +253,56 @@ describe('AggregateService.buildRssStructure', () => {
     expect(data).toHaveLength(1)
     expect(data[0].text).not.toContain('full premium body')
     expect(JSON.parse(data[0].content!).root.children).toHaveLength(2)
+  })
+})
+
+describe('AggregateService.cleanCache', () => {
+  it('invalidates RSS and aggregate-derived caches without flushing unrelated API caches', async () => {
+    const del = vi.fn(async () => 2)
+    const deleteKeysByPattern = vi.fn(async () => 5)
+    const redisService = {
+      getClient: vi.fn(() => ({ del })),
+      deleteKeysByPattern,
+    }
+
+    const service = new AggregateService(
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      redisService as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    )
+
+    await service.cleanCache()
+
+    expect(del).toHaveBeenCalledOnce()
+    expect(del).toHaveBeenCalledWith(CacheKeys.RSS, CacheKeys.RSSXml)
+    expect(deleteKeysByPattern).toHaveBeenCalledOnce()
+    expect(deleteKeysByPattern).toHaveBeenCalledWith(`${CacheKeys.Aggregate}*`)
+    expect(`${CacheKeys.Aggregate}*`).not.toBe(`${API_CACHE_PREFIX}*`)
+  })
+
+  it('keeps every aggregate-derived cache under the invalidated prefix', () => {
+    const aggregateKeys = [
+      CacheKeys.Aggregate,
+      CacheKeys.AggregateSite,
+      CacheKeys.SiteMap,
+      CacheKeys.SiteMapXml,
+    ]
+
+    for (const key of aggregateKeys) {
+      expect(key.startsWith(CacheKeys.Aggregate)).toBe(true)
+    }
+    expect(CacheKeys.RSS.startsWith(CacheKeys.Aggregate)).toBe(false)
+    expect(CacheKeys.RSSXml.startsWith(CacheKeys.Aggregate)).toBe(false)
   })
 })

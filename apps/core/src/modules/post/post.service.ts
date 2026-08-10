@@ -544,14 +544,19 @@ export class PostService implements OnApplicationBootstrap {
         FileReferenceType.Post,
       ),
     ])
-    await this.eventManager.emit(
-      BusinessEvents.POST_DELETE,
-      { id },
-      {
-        scope: EventScope.TO_SYSTEM_VISITOR,
-        nextTick: true,
-      },
-    )
+    await Promise.all([
+      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+        scope: EventScope.TO_SYSTEM,
+      }),
+      this.eventManager.emit(
+        BusinessEvents.POST_DELETE,
+        { id },
+        {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+          nextTick: true,
+        },
+      ),
+    ])
   }
 
   async getCategoryBySlug(slug: string) {
