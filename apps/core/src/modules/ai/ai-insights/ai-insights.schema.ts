@@ -24,6 +24,7 @@ export class UpdateInsightsDto extends createZodDto(UpdateInsightsSchema) {}
 
 export const CreateInsightsTaskSchema = z.object({
   refId: z.string(),
+  force: z.boolean().optional(),
 })
 export class CreateInsightsTaskDto extends createZodDto(
   CreateInsightsTaskSchema,

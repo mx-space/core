@@ -4,6 +4,7 @@ import { z } from 'zod'
 export const CreateSummaryTaskSchema = z.object({
   refId: z.string(),
   targetLanguages: z.array(z.string()).optional(),
+  force: z.boolean().optional(),
 })
 
 export class CreateSummaryTaskDto extends createZodDto(
@@ -13,6 +14,7 @@ export class CreateSummaryTaskDto extends createZodDto(
 export const CreateTranslationTaskSchema = z.object({
   refId: z.string(),
   targetLanguages: z.array(z.string()).optional(),
+  force: z.boolean().optional(),
 })
 
 export class CreateTranslationTaskDto extends createZodDto(

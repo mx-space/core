@@ -121,6 +121,7 @@ export class AiSummaryService implements OnModuleInit {
               context.incrementTokens,
               context.incrementCost,
               context.taskId,
+              payload.force,
             )
             summaries.push({
               summaryId: result.id!,
@@ -356,6 +357,7 @@ export class AiSummaryService implements OnModuleInit {
     onToken?: (count?: number) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
     taskId?: string,
+    force?: boolean,
   ) {
     const text = this.serializeText(document.text)
     const key = this.buildSummaryKey(articleId, lang, text)
@@ -367,6 +369,7 @@ export class AiSummaryService implements OnModuleInit {
       streamMaxLen: AI_STREAM_MAXLEN,
       readBlockMs: AI_STREAM_READ_BLOCK_MS,
       idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
+      bypassResultCache: force,
       onLeader: async ({ push }) => {
         const generated = await this.generateSummaryViaAIStream(
           text,
@@ -417,6 +420,7 @@ export class AiSummaryService implements OnModuleInit {
     onToken?: (count?: number) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
     taskId?: string,
+    force?: boolean,
   ) {
     const {
       ai: { enableSummary },
@@ -436,6 +440,7 @@ export class AiSummaryService implements OnModuleInit {
         onToken,
         onCost,
         taskId,
+        force,
       )
       return await result
     } catch (error) {

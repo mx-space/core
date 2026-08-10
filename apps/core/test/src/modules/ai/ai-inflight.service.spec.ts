@@ -19,6 +19,7 @@ class FakeRedis {
   store = new Map<string, string>()
   streams = new Map<string, Array<[string, string[]]>>()
   xaddCalls: XAddCall[] = []
+  delCalls: string[] = []
   private streamSeq = 0
 
   async get(key: string) {
@@ -43,6 +44,7 @@ class FakeRedis {
   }
 
   async del(key: string) {
+    this.delCalls.push(key)
     this.store.delete(key)
     return 1
   }
@@ -468,5 +470,53 @@ describe('AiInFlightService — public SSE envelope', () => {
     }
 
     expect(caught).toBeInstanceOf(AppException)
+  })
+
+  it('bypassResultCache: true skips a cached resultKey and deletes it', async () => {
+    const { service, fakeRedis } = await buildService()
+    const resultKey = 'ai:stream:bypass:1:result'
+    await fakeRedis.set(resultKey, 'stale-result')
+
+    const { role, result } = await service.runWithStream<{ id: string }>({
+      key: 'bypass:1',
+      lockTtlSec: 5,
+      resultTtlSec: 60,
+      streamMaxLen: 100,
+      readBlockMs: 10,
+      idleTimeoutMs: 200,
+      bypassResultCache: true,
+      onLeader: async () => ({
+        result: { id: 'fresh-result' },
+        resultId: 'fresh-result',
+      }),
+      parseResult: async (id: string) => ({ id }),
+    })
+
+    expect(role).toBe('leader')
+    expect(fakeRedis.delCalls).toContain(resultKey)
+    await expect(result).resolves.toEqual({ id: 'fresh-result' })
+  })
+
+  it('bypassResultCache: false (default) still reuses a cached resultKey', async () => {
+    const { service, fakeRedis } = await buildService()
+    const resultKey = 'ai:stream:no-bypass:1:result'
+    await fakeRedis.set(resultKey, 'cached-result')
+
+    const { role, result } = await service.runWithStream<{ id: string }>({
+      key: 'no-bypass:1',
+      lockTtlSec: 5,
+      resultTtlSec: 60,
+      streamMaxLen: 100,
+      readBlockMs: 10,
+      idleTimeoutMs: 200,
+      onLeader: async () => {
+        throw new Error('leader should not run on cache hit')
+      },
+      parseResult: async (id: string) => ({ id }),
+    })
+
+    expect(role).toBe('follower')
+    expect(fakeRedis.delCalls).not.toContain(resultKey)
+    await expect(result).resolves.toEqual({ id: 'cached-result' })
   })
 })

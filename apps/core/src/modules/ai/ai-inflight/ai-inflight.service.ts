@@ -32,6 +32,12 @@ export class AiInFlightService {
       options.key,
     )
 
+    if (options.bypassResultCache) {
+      // Delete rather than skip the read: a concurrent plain request must not
+      // observe the about-to-be-stale cached result either.
+      await redis.del(resultKey)
+    }
+
     const existingResultId = await redis.get(resultKey)
     if (existingResultId) {
       if (isDev) {

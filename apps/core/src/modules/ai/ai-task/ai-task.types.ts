@@ -15,6 +15,7 @@ export enum AITaskType {
 export interface SummaryTaskPayload {
   refId: string
   targetLanguages?: string[]
+  force?: boolean
   // Human-readable info
   title?: string
   refType?: string
@@ -23,6 +24,7 @@ export interface SummaryTaskPayload {
 export interface TranslationTaskPayload {
   refId: string
   targetLanguages?: string[]
+  force?: boolean
   // Human-readable info
   title?: string
   refType?: string
@@ -48,6 +50,7 @@ export interface SlugBackfillTaskPayload {
 
 export interface InsightsTaskPayload {
   refId: string
+  force?: boolean
   title?: string
   refType?: string
 }
@@ -102,11 +105,13 @@ export function computeAITaskDedupKey(
   switch (type) {
     case AITaskType.Summary: {
       const p = payload as SummaryTaskPayload
-      return `${p.refId}:${(p.targetLanguages || []).slice().sort().join(',')}`
+      const langs = (p.targetLanguages || []).slice().sort().join(',')
+      return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
     }
     case AITaskType.Translation: {
       const p = payload as TranslationTaskPayload
-      return `${p.refId}:${(p.targetLanguages || []).slice().sort().join(',')}`
+      const langs = (p.targetLanguages || []).slice().sort().join(',')
+      return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
     }
     case AITaskType.TranslationBatch: {
       const p = payload as TranslationBatchTaskPayload
@@ -125,7 +130,7 @@ export function computeAITaskDedupKey(
     }
     case AITaskType.Insights: {
       const p = payload as InsightsTaskPayload
-      return `${p.refId}`
+      return `${p.refId}:${p.force ? 'force' : 'inc'}`
     }
     case AITaskType.InsightsTranslation: {
       const p = payload as InsightsTranslationTaskPayload

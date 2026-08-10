@@ -19,6 +19,7 @@ export interface AiInFlightOptions<T> {
   streamMaxLen: number
   readBlockMs: number
   idleTimeoutMs: number
+  bypassResultCache?: boolean
   onLeader: (ctx: {
     push: (event: AiStreamEvent) => Promise<void>
   }) => Promise<{ result: T; resultId: string }>

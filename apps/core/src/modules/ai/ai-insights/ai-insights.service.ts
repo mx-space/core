@@ -90,6 +90,7 @@ export class AiInsightsService implements OnModuleInit {
           context.incrementTokens,
           context.incrementCost,
           context.taskId,
+          payload.force,
         )
         await context.setResult({ insightsId: result.id, lang: result.lang })
         await context.updateProgress(100, 'Done', 1, 1)
@@ -276,6 +277,7 @@ export class AiInsightsService implements OnModuleInit {
     onToken?: (count?: number) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
     taskId?: string,
+    force?: boolean,
   ) {
     const text = this.serializeText(article.text)
     const key = this.buildInsightsKey(articleId, lang, text)
@@ -287,6 +289,7 @@ export class AiInsightsService implements OnModuleInit {
       streamMaxLen: AI_STREAM_MAXLEN,
       readBlockMs: AI_STREAM_READ_BLOCK_MS,
       idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
+      bypassResultCache: force,
       onLeader: async ({ push }) => {
         const generated = await this.generateInsightsViaAIStream(
           article,
@@ -347,6 +350,7 @@ export class AiInsightsService implements OnModuleInit {
     onToken?: (count?: number) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
     taskId?: string,
+    force?: boolean,
   ): Promise<AIInsightsModel> {
     const {
       ai: { enableInsights },
@@ -364,6 +368,7 @@ export class AiInsightsService implements OnModuleInit {
         onToken,
         onCost,
         taskId,
+        force,
       )
       return await result
     } catch (error) {

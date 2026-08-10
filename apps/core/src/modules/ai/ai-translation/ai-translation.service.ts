@@ -306,6 +306,7 @@ export class AiTranslationService
                   langPush,
                   context.incrementCost,
                   context.taskId,
+                  payload.force,
                 ),
                 abortPromise,
               ])
@@ -746,6 +747,7 @@ export class AiTranslationService
     push?: (event: AiStreamEvent) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
     taskId?: string,
+    force?: boolean,
   ): Promise<AITranslationModel> {
     const startedAt = Date.now()
     const aiConfig = await this.configService.get('ai')
@@ -771,6 +773,7 @@ export class AiTranslationService
         push,
         onCost,
         taskId,
+        force,
       )
       const translated = await result
       this.logger.log(
@@ -803,6 +806,7 @@ export class AiTranslationService
     taskPush?: (event: AiStreamEvent) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
     taskId?: string,
+    force?: boolean,
   ) {
     const content = this.toArticleContent(document)
     const sourceModified = document.modifiedAt ?? undefined
@@ -815,8 +819,11 @@ export class AiTranslationService
       streamMaxLen: AI_STREAM_MAXLEN,
       readBlockMs: AI_STREAM_READ_BLOCK_MS,
       idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
+      bypassResultCache: force,
       onLeader: async ({ push }) => {
-        // Fetch existing translation for incremental path
+        // Still read `existing` unconditionally on force: it backs the
+        // sourceModifiedAt fallback and the create/update event choice below,
+        // even though force skips it as the incremental-reuse input.
         const existing = await this.aiTranslationRepository.findByRef(
           articleId,
           refType,
@@ -842,7 +849,7 @@ export class AiTranslationService
           fanoutPush,
           onToken,
           signal,
-          existing,
+          force ? undefined : existing,
           trackCost,
           refType,
         )
