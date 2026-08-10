@@ -2,6 +2,7 @@ import {
   createInsightsTask,
   createInsightsTranslationTask,
   createSummaryTask,
+  createSummaryTranslationTask,
   createTranslationTask,
   createTtsTask,
 } from '~/api/ai'
@@ -22,6 +23,18 @@ export function buildGenerateTask(
 ) {
   switch (capability) {
     case 'summary': {
+      // A single-language retry on an existing translation goes through the
+      // dedicated translation task, so forcing it does not force the base row
+      // to regenerate too. Everything else lets the base task fan out.
+      const target = langs?.length === 1 ? langs[0] : undefined
+      const base = detail.assets.summary.find((row) => !row.isTranslation)
+      if (base && target && base.lang !== target) {
+        return createSummaryTranslationTask({
+          force,
+          refId,
+          targetLang: target,
+        })
+      }
       return createSummaryTask({ force, refId, targetLanguages: langs })
     }
     case 'insights': {

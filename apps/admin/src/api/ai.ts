@@ -291,6 +291,17 @@ export function createSummaryTask(data: {
   >('/ai/summaries/task', data)
 }
 
+export function createSummaryTranslationTask(data: {
+  force?: boolean
+  refId: string
+  targetLang: string
+}) {
+  return postJson<CreateTaskResponse, typeof data>(
+    '/ai/summaries/task/translate',
+    data,
+  )
+}
+
 export function getInsightsGrouped(params: {
   page: number
   search?: string

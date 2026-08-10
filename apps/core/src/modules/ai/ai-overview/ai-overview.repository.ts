@@ -112,6 +112,8 @@ export class AiOverviewRepository extends BaseRepository {
         id: aiSummaries.id,
         lang: aiSummaries.lang,
         summary: aiSummaries.summary,
+        isTranslation: aiSummaries.isTranslation,
+        sourceLang: aiSummaries.sourceLang,
         createdAt: aiSummaries.createdAt,
       })
       .from(aiSummaries)
@@ -121,6 +123,8 @@ export class AiOverviewRepository extends BaseRepository {
       id: String(toEntityId(row.id)),
       lang: row.lang ?? DEFAULT_SUMMARY_LANG,
       summary: row.summary,
+      isTranslation: row.isTranslation,
+      sourceLang: row.sourceLang,
       createdAt: row.createdAt,
     }))
   }

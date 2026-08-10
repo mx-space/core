@@ -85,8 +85,17 @@ export const aiSummaries = pgTable(
     summary: text('summary').notNull(),
     refId: refText('ref_id').notNull(),
     lang: text('lang'),
+    isTranslation: boolean('is_translation').notNull().default(false),
+    sourceSummaryId: refText('source_summary_id').references(
+      (): AnyPgColumn => aiSummaries.id,
+      { onDelete: 'set null' },
+    ),
+    sourceLang: text('source_lang'),
   },
-  (table) => [index('ai_summaries_ref_id_idx').on(table.refId)],
+  (table) => [
+    index('ai_summaries_ref_id_idx').on(table.refId),
+    uniqueIndex('ai_summaries_ref_lang_uniq').on(table.refId, table.lang),
+  ],
 )
 
 export const aiInsights = pgTable(

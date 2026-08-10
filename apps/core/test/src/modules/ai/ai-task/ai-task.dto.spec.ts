@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { MAX_LANGS_PER_TASK } from '~/modules/ai/ai.constants'
+import { CreateInsightsTaskSchema } from '~/modules/ai/ai-insights/ai-insights.schema'
 import {
   CreateSummaryTaskSchema,
+  CreateSummaryTranslationTaskSchema,
   CreateTranslationTaskSchema,
 } from '~/modules/ai/ai-task/ai-task.dto'
 
@@ -37,6 +39,55 @@ describe('CreateSummaryTaskSchema', () => {
       CreateSummaryTaskSchema.safeParse({
         refId: 'article-1',
         targetLanguages: ['   '],
+      }).success,
+    ).toBe(false)
+  })
+})
+
+describe('CreateSummaryTranslationTaskSchema', () => {
+  it('accepts a single non-blank target language', () => {
+    expect(
+      CreateSummaryTranslationTaskSchema.safeParse({
+        refId: 'article-1',
+        targetLang: 'en',
+      }).success,
+    ).toBe(true)
+  })
+
+  it('rejects a blank target language', () => {
+    expect(
+      CreateSummaryTranslationTaskSchema.safeParse({
+        refId: 'article-1',
+        targetLang: '   ',
+      }).success,
+    ).toBe(false)
+  })
+})
+
+describe('CreateInsightsTaskSchema', () => {
+  it('accepts targetLanguages at the max of 8', () => {
+    expect(
+      CreateInsightsTaskSchema.safeParse({
+        refId: 'article-1',
+        targetLanguages: eightLangs,
+      }).success,
+    ).toBe(true)
+  })
+
+  it('rejects targetLanguages of 9', () => {
+    expect(
+      CreateInsightsTaskSchema.safeParse({
+        refId: 'article-1',
+        targetLanguages: nineLangs,
+      }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a blank or whitespace-only target language', () => {
+    expect(
+      CreateInsightsTaskSchema.safeParse({
+        refId: 'article-1',
+        targetLanguages: [''],
       }).success,
     ).toBe(false)
   })

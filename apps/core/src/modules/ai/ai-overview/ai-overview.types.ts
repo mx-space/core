@@ -35,6 +35,8 @@ export interface SummaryAsset {
   id: string
   lang: string
   summary: string
+  isTranslation: boolean
+  sourceLang: string | null
   createdAt: Date
   generationMetrics?: GenerationMetricsDto | null
 }

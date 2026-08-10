@@ -16,6 +16,16 @@ export class CreateSummaryTaskDto extends createZodDto(
   CreateSummaryTaskSchema,
 ) {}
 
+export const CreateSummaryTranslationTaskSchema = z.object({
+  refId: z.string(),
+  targetLang: z.string().trim().min(1),
+  force: z.boolean().optional(),
+})
+
+export class CreateSummaryTranslationTaskDto extends createZodDto(
+  CreateSummaryTranslationTaskSchema,
+) {}
+
 export const CreateTranslationTaskSchema = z.object({
   refId: z.string(),
   targetLanguages: z

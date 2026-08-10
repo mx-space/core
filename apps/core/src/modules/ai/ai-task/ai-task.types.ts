@@ -6,6 +6,7 @@ function canonicalTargetLangs(langs?: string[]): string {
 
 export enum AITaskType {
   Summary = 'ai:summary',
+  SummaryTranslation = 'ai:summary:translation',
   Translation = 'ai:translation',
   TranslationBatch = 'ai:translation:batch',
   TranslationAll = 'ai:translation:all',
@@ -21,6 +22,15 @@ export interface SummaryTaskPayload {
   targetLanguages?: string[]
   force?: boolean
   // Human-readable info
+  title?: string
+  refType?: string
+}
+
+export interface SummaryTranslationTaskPayload {
+  refId: string
+  sourceSummaryId: string
+  targetLang: string
+  force?: boolean
   title?: string
   refType?: string
 }
@@ -96,6 +106,7 @@ export interface TtsTaskPayload {
 
 export type AITaskPayload =
   | SummaryTaskPayload
+  | SummaryTranslationTaskPayload
   | TranslationTaskPayload
   | TranslationBatchTaskPayload
   | TranslationAllTaskPayload
@@ -141,6 +152,10 @@ export function computeAITaskDedupKey(
       const p = payload as InsightsTaskPayload
       const langs = canonicalTargetLangs(p.targetLanguages)
       return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
+    }
+    case AITaskType.SummaryTranslation: {
+      const p = payload as SummaryTranslationTaskPayload
+      return `${p.refId}:${p.targetLang}:${p.force ? 'force' : 'inc'}`
     }
     case AITaskType.InsightsTranslation: {
       const p = payload as InsightsTranslationTaskPayload

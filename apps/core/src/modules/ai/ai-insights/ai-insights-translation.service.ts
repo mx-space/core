@@ -1,4 +1,4 @@
-import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
+import { Injectable, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -7,58 +7,29 @@ import {
   type TaskExecuteContext,
   TaskQueueProcessor,
 } from '~/processors/task-queue'
-import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
-import {
-  AI_STREAM_IDLE_TIMEOUT_MS,
-  AI_STREAM_LOCK_TTL,
-  AI_STREAM_MAXLEN,
-  AI_STREAM_READ_BLOCK_MS,
-  AI_STREAM_RESULT_TTL,
-} from '../ai.constants'
-import { AI_PROMPTS } from '../ai.prompts'
-import { AiService } from '../ai.service'
-import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
-import {
-  emptyUsage,
-  type GenerationUsage,
-  mergeUsage,
-} from '../ai-generation-metrics/ai-generation-metrics.types'
-import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import { normalizeTargetLangs } from '../ai-language.util'
+import { MultilangGenerationService } from '../ai-multilang/ai-multilang.service'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
   type InsightsTranslationTaskPayload,
 } from '../ai-task/ai-task.types'
-import { runtimeUsageToGenerationUsage } from '../runtime/pi-runtime.adapter'
+import { AiInsightsAdapter } from './ai-insights.adapter'
 import { AiInsightsRepository } from './ai-insights.repository'
-import type { AiInsightsRow } from './ai-insights.types'
 import { AIInsightsModel } from './ai-insights.types'
-import { stripTopLevelCodeFence } from './insights.util'
 
 @Injectable()
 export class AiInsightsTranslationService implements OnModuleInit {
-  private readonly logger = new Logger(AiInsightsTranslationService.name)
-
   constructor(
     private readonly aiInsightsRepository: AiInsightsRepository,
     private readonly configService: ConfigsService,
-    private readonly aiService: AiService,
-    private readonly aiInFlightService: AiInFlightService,
+    private readonly adapter: AiInsightsAdapter,
+    private readonly multilang: MultilangGenerationService,
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly aiTaskService: AiTaskService,
-    private readonly generationMetrics: AiGenerationMetricsService,
   ) {}
-
-  private toInsightsDoc(row: AiInsightsRow | null): AIInsightsModel | null {
-    if (!row) return null
-    return {
-      ...row,
-      createdAt: row.createdAt,
-    } as unknown as AIInsightsModel
-  }
 
   onModuleInit() {
     this.taskProcessor.registerHandler({
@@ -108,109 +79,19 @@ export class AiInsightsTranslationService implements OnModuleInit {
     payload: InsightsTranslationTaskPayload,
     context?: TaskExecuteContext,
   ): Promise<AIInsightsModel> {
-    const source = this.toInsightsDoc(
-      await this.aiInsightsRepository.findById(payload.sourceInsightsId),
-    )
+    const source = await this.adapter.findById(payload.sourceInsightsId)
     if (!source || source.isTranslation) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
         message: 'Source insights not found or already translated',
       })
     }
-    const key = md5(
-      JSON.stringify({
-        feature: 'insights.translation',
-        refId: payload.refId,
-        lang: payload.targetLang,
-        sourceHash: source.hash,
-      }),
-    )
-    const { result } =
-      await this.aiInFlightService.runWithStream<AIInsightsModel>({
-        key,
-        lockTtlSec: AI_STREAM_LOCK_TTL,
-        resultTtlSec: AI_STREAM_RESULT_TTL,
-        streamMaxLen: AI_STREAM_MAXLEN,
-        readBlockMs: AI_STREAM_READ_BLOCK_MS,
-        idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
-        bypassResultCache: payload.force,
-        onLeader: async ({ push }) => {
-          const runtime = await this.aiService.getInsightsTranslationModel()
-          const { systemPrompt, prompt, reasoningEffort } =
-            AI_PROMPTS.insightsTranslation(payload.targetLang, source.content)
-          const messages = [
-            { role: 'system' as const, content: systemPrompt },
-            { role: 'user' as const, content: prompt },
-          ]
-          let raw = ''
-          let usage: GenerationUsage = emptyUsage()
-          if (runtime.generateTextStream) {
-            for await (const chunk of runtime.generateTextStream({
-              messages,
-              temperature: 0.3,
-              maxRetries: 2,
-              reasoningEffort,
-            })) {
-              raw += chunk.text
-              if (push) await push({ type: 'token', data: chunk.text })
-            }
-          } else {
-            const out = await runtime.generateText({
-              messages,
-              temperature: 0.3,
-              maxRetries: 2,
-              reasoningEffort,
-            })
-            raw = out.text
-            usage = mergeUsage(usage, runtimeUsageToGenerationUsage(out.usage))
-            if (push && out.text) await push({ type: 'token', data: out.text })
-          }
-          const translatedText = stripTopLevelCodeFence(raw).trim()
-          if (!translatedText) {
-            throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
-              message: 'Insights translation returned empty content',
-            })
-          }
-          const totalCost = usage.cost?.total ?? 0
-          if (context && totalCost > 0) {
-            await context.incrementCost(totalCost)
-          }
-          const doc = this.toInsightsDoc(
-            await this.aiInsightsRepository.upsert({
-              refId: payload.refId,
-              lang: payload.targetLang,
-              hash: source.hash,
-              content: translatedText,
-              isTranslation: true,
-              sourceInsightsId: source.id,
-              sourceLang: source.sourceLang || source.lang,
-            }),
-          )!
-          await this.generationMetrics.record({
-            resourceType: 'insights',
-            resourceId: doc.id!,
-            refId: payload.refId,
-            lang: payload.targetLang,
-            taskId: context?.taskId ?? null,
-            providerId: runtime.providerInfo.id,
-            model: runtime.providerInfo.model,
-            usage,
-          })
-          return { result: doc, resultId: doc.id! }
-        },
-        parseResult: async (resultId) => {
-          const doc = this.toInsightsDoc(
-            await this.aiInsightsRepository.findById(resultId),
-          )
-          if (!doc)
-            throw createAppException(
-              AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS,
-              {
-                message: 'Translated insights not found',
-              },
-            )
-          return doc
-        },
-      })
-    return result
+    return this.multilang.runTranslation(this.adapter, {
+      refId: payload.refId,
+      base: source,
+      targetLang: payload.targetLang,
+      force: payload.force,
+      taskId: context?.taskId,
+      onCost: context?.incrementCost,
+    })
   }
 }

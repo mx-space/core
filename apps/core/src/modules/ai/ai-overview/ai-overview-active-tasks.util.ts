@@ -74,9 +74,23 @@ export function toActiveGenerations(
         })
         break
       }
+      case AITaskType.SummaryTranslation: {
+        if (payload.refId !== refId) continue
+        result.push({
+          ...base,
+          capability: 'summary',
+          langs:
+            typeof payload.targetLang === 'string' ? [payload.targetLang] : [],
+        })
+        break
+      }
       case AITaskType.Insights: {
         if (payload.refId !== refId) continue
-        result.push({ ...base, capability: 'insights', langs: [] })
+        result.push({
+          ...base,
+          capability: 'insights',
+          langs: asStringArray(payload.targetLanguages),
+        })
         break
       }
       case AITaskType.InsightsTranslation: {

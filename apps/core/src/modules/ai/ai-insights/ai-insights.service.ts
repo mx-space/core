@@ -1,11 +1,9 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter'
-import removeMdCodeblock from 'remove-md-codeblock'
+import { OnEvent } from '@nestjs/event-emitter'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   type TaskExecuteContext,
@@ -13,49 +11,19 @@ import {
 } from '~/processors/task-queue'
 import type { BasicPagerInput } from '~/shared/dto/pager.dto'
 import { createAbortError } from '~/utils/abort.util'
-import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
-import {
-  AI_STREAM_IDLE_TIMEOUT_MS,
-  AI_STREAM_LOCK_TTL,
-  AI_STREAM_MAXLEN,
-  AI_STREAM_READ_BLOCK_MS,
-  AI_STREAM_RESULT_TTL,
-  DEFAULT_SUMMARY_LANG,
-} from '../ai.constants'
-import { AI_PROMPTS } from '../ai.prompts'
-import { AiService } from '../ai.service'
-import { isGlobalArticleVisible } from '../ai-article-visibility.util'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
-import type { GenerationUsage } from '../ai-generation-metrics/ai-generation-metrics.types'
-import {
-  emptyUsage,
-  mergeUsage,
-} from '../ai-generation-metrics/ai-generation-metrics.types'
-import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import { normalizeTargetLangs } from '../ai-language.util'
+import { MultilangGenerationService } from '../ai-multilang/ai-multilang.service'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
-import {
-  piUsageToGenerationUsage,
-  runtimeUsageToGenerationUsage,
-} from '../runtime/pi-runtime.adapter'
+import { AiInsightsAdapter } from './ai-insights.adapter'
 import { AiInsightsRepository } from './ai-insights.repository'
 import type { GetInsightsGroupedQueryInput } from './ai-insights.schema'
 import type { AiInsightsRow } from './ai-insights.types'
 import { AIInsightsModel } from './ai-insights.types'
-import { stripTopLevelCodeFence } from './insights.util'
-
-interface ArticleForInsights {
-  title: string
-  text: string
-  subtitle?: string
-  tags?: string[]
-  lang?: string
-}
 
 @Injectable()
 export class AiInsightsService implements OnModuleInit {
@@ -65,11 +33,10 @@ export class AiInsightsService implements OnModuleInit {
     private readonly aiInsightsRepository: AiInsightsRepository,
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigsService,
-    private readonly aiService: AiService,
-    private readonly aiInFlightService: AiInFlightService,
+    private readonly adapter: AiInsightsAdapter,
+    private readonly multilang: MultilangGenerationService,
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly aiTaskService: AiTaskService,
-    private readonly eventEmitter: EventEmitter2,
     private readonly generationMetrics: AiGenerationMetricsService,
   ) {}
 
@@ -85,31 +52,18 @@ export class AiInsightsService implements OnModuleInit {
         context: TaskExecuteContext,
       ) => {
         this.checkAborted(context)
-        await context.updateProgress(0, 'Generating insights', 0, 1)
-        const result = await this.generateInsights(
-          payload.refId,
-          context.incrementTokens,
-          context.incrementCost,
-          context.taskId,
-          payload.force,
-        )
-        // A target language requested from the coverage board cannot be
-        // dispatched before a source-language row exists, so the click enqueues
-        // this task instead. Chaining the translation here is what makes that
-        // click reach the language it asked for even when auto-translation is
-        // off or the language is not a configured target.
-        for (const targetLang of normalizeTargetLangs(
-          payload.targetLanguages,
-        ).filter((lang) => lang !== result.lang)) {
-          await this.aiTaskService.createInsightsTranslationTask({
-            refId: payload.refId,
-            sourceInsightsId: result.id!,
-            targetLang,
-            force: payload.force,
-          })
-        }
-        await context.setResult({ insightsId: result.id, lang: result.lang })
-        await context.updateProgress(100, 'Done', 1, 1)
+        const { base, sourceLang, translated, failedLangs } =
+          await this.multilang.executeMultilangTask(
+            this.adapter,
+            payload,
+            context,
+          )
+        await context.setResult({
+          insightsId: base.id,
+          lang: sourceLang,
+          translated: translated.map((t) => t.lang),
+          failedLangs,
+        })
       },
     })
     this.logger.log('AI insights task handler registered')
@@ -119,75 +73,12 @@ export class AiInsightsService implements OnModuleInit {
     if (context.isAborted()) throw createAbortError()
   }
 
-  private serializeText(text: string) {
-    return removeMdCodeblock(text)
-  }
-
-  private computeContentHash(text: string): string {
-    return md5(this.serializeText(text))
-  }
-
   private toInsightsDoc(row: AiInsightsRow | null): AIInsightsModel | null {
-    if (!row) return null
-    return {
-      ...row,
-      createdAt: row.createdAt,
-    } as unknown as AIInsightsModel
+    return this.adapter.toInsightsDoc(row)
   }
 
   private toInsightsDocs(rows: AiInsightsRow[]): AIInsightsModel[] {
     return rows.map((row) => this.toInsightsDoc(row)!)
-  }
-
-  private buildInsightsKey(articleId: string, lang: string, text: string) {
-    return md5(
-      JSON.stringify({
-        feature: 'insights',
-        articleId,
-        lang,
-        textHash: md5(text),
-      }),
-    )
-  }
-
-  private async resolveArticleForInsights(
-    articleId: string,
-    options?: { blockPremium?: boolean },
-  ): Promise<{
-    article: ArticleForInsights
-    type: CollectionRefTypes.Post | CollectionRefTypes.Note
-  }> {
-    const article = await this.databaseService.findGlobalById(articleId)
-    if (!article || !article.document) {
-      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
-    }
-    if (
-      article.type === CollectionRefTypes.Recently ||
-      article.type === CollectionRefTypes.Page
-    ) {
-      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
-    }
-    if (!isGlobalArticleVisible(article)) {
-      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
-    }
-    if (
-      options?.blockPremium &&
-      article.type === CollectionRefTypes.Post &&
-      (article.document as { isPremium?: boolean | null }).isPremium
-    ) {
-      throw createAppException(AppErrorCode.POST_HIDDEN_OR_ENCRYPTED)
-    }
-    const doc = article.document as any
-    return {
-      article: {
-        title: doc.title,
-        text: doc.text,
-        subtitle: doc.subtitle,
-        tags: Array.isArray(doc.tags) ? doc.tags : undefined,
-        lang: doc.lang,
-      },
-      type: article.type,
-    }
   }
 
   private async findValidInsights(
@@ -195,170 +86,12 @@ export class AiInsightsService implements OnModuleInit {
     lang: string,
     text: string,
   ): Promise<AIInsightsModel | null> {
-    const contentHash = this.computeContentHash(text)
+    const contentHash = this.multilang.computeContentHash(text)
     const row = await this.aiInsightsRepository.findByRefAndLang(
       articleId,
       lang,
     )
     return row?.hash === contentHash ? this.toInsightsDoc(row) : null
-  }
-
-  private resolveSourceLang(article: ArticleForInsights): string {
-    return article.lang || DEFAULT_SUMMARY_LANG
-  }
-
-  private async generateInsightsViaAIStream(
-    article: ArticleForInsights,
-    lang: string,
-    push?: (event: AiStreamEvent) => Promise<void>,
-    onToken?: (count?: number) => Promise<void>,
-    onCost?: (usd: number) => Promise<void>,
-  ): Promise<{
-    content: string
-    usage: GenerationUsage
-    providerId: string
-    model: string
-  }> {
-    const runtime = await this.aiService.getInsightsModel()
-    const { systemPrompt, prompt, reasoningEffort } = AI_PROMPTS.insightsStream(
-      lang,
-      article,
-    )
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      { role: 'user' as const, content: prompt },
-    ]
-
-    let fullText = ''
-    let usage: GenerationUsage = emptyUsage()
-    if (runtime.streamMessage) {
-      const events = runtime.streamMessage({
-        messages,
-        temperature: 0.6,
-        maxRetries: 2,
-        reasoningEffort,
-      })
-      for await (const event of events) {
-        if (event.type === 'text_delta') {
-          const delta = event.delta
-          if (typeof delta !== 'string' || delta.length === 0) continue
-          fullText += delta
-          if (push) await push({ type: 'token', data: delta })
-        } else if (
-          event.type === 'thinking_delta' ||
-          event.type === 'toolcall_start' ||
-          event.type === 'toolcall_delta' ||
-          event.type === 'toolcall_end'
-        ) {
-          this.logger.debug(`stream non-text event filtered: ${event.type}`)
-        } else if (event.type === 'done') {
-          usage = mergeUsage(
-            usage,
-            piUsageToGenerationUsage(event.message.usage),
-          )
-        } else if (event.type === 'error') {
-          throw new Error(
-            event.error.errorMessage || 'AI insights stream error',
-          )
-        }
-      }
-    } else {
-      const result = await runtime.generateText({
-        messages,
-        temperature: 0.6,
-        maxRetries: 2,
-        reasoningEffort,
-      })
-      fullText = result.text
-      usage = mergeUsage(usage, runtimeUsageToGenerationUsage(result.usage))
-      if (push && result.text) await push({ type: 'token', data: result.text })
-    }
-    const totalTokens = usage.totalTokens ?? 0
-    const totalCost = usage.cost?.total ?? 0
-    if (onToken) await onToken(totalTokens)
-    if (onCost && totalCost > 0) await onCost(totalCost)
-    const stripped = stripTopLevelCodeFence(fullText)
-    return {
-      content: stripped.trim(),
-      usage,
-      providerId: runtime.providerInfo.id,
-      model: runtime.providerInfo.model,
-    }
-  }
-
-  private async runInsightsGeneration(
-    articleId: string,
-    lang: string,
-    article: ArticleForInsights,
-    onToken?: (count?: number) => Promise<void>,
-    onCost?: (usd: number) => Promise<void>,
-    taskId?: string,
-    force?: boolean,
-  ) {
-    const text = this.serializeText(article.text)
-    const key = this.buildInsightsKey(articleId, lang, text)
-
-    return this.aiInFlightService.runWithStream<AIInsightsModel>({
-      key,
-      lockTtlSec: AI_STREAM_LOCK_TTL,
-      resultTtlSec: AI_STREAM_RESULT_TTL,
-      streamMaxLen: AI_STREAM_MAXLEN,
-      readBlockMs: AI_STREAM_READ_BLOCK_MS,
-      idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
-      bypassResultCache: force,
-      onLeader: async ({ push }) => {
-        const generated = await this.generateInsightsViaAIStream(
-          article,
-          lang,
-          push,
-          onToken,
-          onCost,
-        )
-        const contentMd5 = md5(text)
-        const sourceLang = lang
-        await this.aiInsightsRepository.deleteTranslationsWithDifferentHash(
-          articleId,
-          contentMd5,
-        )
-        const doc = this.toInsightsDoc(
-          await this.aiInsightsRepository.upsert({
-            hash: contentMd5,
-            lang,
-            refId: articleId,
-            content: generated.content,
-            isTranslation: false,
-            sourceLang,
-            sourceInsightsId: null,
-          }),
-        )!
-        await this.generationMetrics.record({
-          resourceType: 'insights',
-          resourceId: doc.id!,
-          refId: articleId,
-          lang,
-          taskId: taskId ?? null,
-          providerId: generated.providerId,
-          model: generated.model,
-          usage: generated.usage,
-        })
-        this.eventEmitter.emit(BusinessEvents.INSIGHTS_GENERATED, {
-          refId: articleId,
-          sourceLang,
-          insightsId: doc.id,
-          sourceHash: contentMd5,
-        })
-        return { result: doc, resultId: doc.id! }
-      },
-      parseResult: async (resultId) => {
-        const doc = this.toInsightsDoc(
-          await this.aiInsightsRepository.findById(resultId),
-        )
-        if (!doc) {
-          throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
-        }
-        return doc
-      },
-    })
   }
 
   async generateInsights(
@@ -368,24 +101,20 @@ export class AiInsightsService implements OnModuleInit {
     taskId?: string,
     force?: boolean,
   ): Promise<AIInsightsModel> {
-    const {
-      ai: { enableInsights },
-    } = await this.configService.waitForConfigReady()
-    if (!enableInsights) {
-      throw createAppException(AppErrorCode.AI_NOT_ENABLED)
-    }
-    const { article } = await this.resolveArticleForInsights(articleId)
-    const lang = this.resolveSourceLang(article)
+    await this.adapter.assertEnabled()
+    const { article, sourceLang } =
+      await this.adapter.resolveArticleDetailed(articleId)
     try {
-      const { result } = await this.runInsightsGeneration(
-        articleId,
-        lang,
+      const { result } = await this.multilang.runBaseGeneration(this.adapter, {
+        refId: articleId,
+        lang: sourceLang,
         article,
+        text: article.text,
         onToken,
         onCost,
         taskId,
         force,
-      )
+      })
       return await result
     } catch (error) {
       if (error instanceof AppException) throw error
@@ -420,26 +149,33 @@ export class AiInsightsService implements OnModuleInit {
     if (!aiConfig?.enableInsights) {
       throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
-    const { article } = await this.resolveArticleForInsights(articleId, {
-      blockPremium: true,
-    })
-    const lang = options.lang || this.resolveSourceLang(article)
+    const { article, sourceLang } = await this.adapter.resolveArticleDetailed(
+      articleId,
+      { blockPremium: true },
+    )
+    const lang = options.lang || sourceLang
     const existing = await this.findValidInsights(articleId, lang, article.text)
     if (existing) {
       this.logger.debug(`Insights cache hit: article=${articleId} lang=${lang}`)
       return this.wrapAsImmediateStream(existing)
     }
-    return this.runInsightsGeneration(articleId, lang, article)
+    return this.multilang.runBaseGeneration(this.adapter, {
+      refId: articleId,
+      lang,
+      article,
+      text: article.text,
+    })
   }
 
   async getOrGenerateInsightsForArticle(
     articleId: string,
     options: { lang: string; onlyDb?: boolean },
   ): Promise<AIInsightsModel | null> {
-    const { article } = await this.resolveArticleForInsights(articleId, {
-      blockPremium: true,
-    })
-    const lang = options.lang || this.resolveSourceLang(article)
+    const { article, sourceLang } = await this.adapter.resolveArticleDetailed(
+      articleId,
+      { blockPremium: true },
+    )
+    const lang = options.lang || sourceLang
     const existing = await this.findValidInsights(articleId, lang, article.text)
     if (existing) return existing
     if (options.onlyDb) return null
@@ -453,9 +189,8 @@ export class AiInsightsService implements OnModuleInit {
   async findSourceInsightsForArticle(
     refId: string,
   ): Promise<AIInsightsModel | null> {
-    return this.toInsightsDoc(
-      await this.aiInsightsRepository.findSourceForRef(refId),
-    )
+    const { sourceLang } = await this.adapter.resolveArticleDetailed(refId)
+    return this.adapter.findBase(refId, sourceLang)
   }
 
   /**
@@ -579,7 +314,7 @@ export class AiInsightsService implements OnModuleInit {
     const minLen = aiConfig.insightsMinTextLength ?? 0
     if (minLen > 0) {
       try {
-        const { article } = await this.resolveArticleForInsights(event.id)
+        const { article } = await this.adapter.resolveArticleDetailed(event.id)
         if ((article.text?.length ?? 0) < minLen) {
           this.logger.debug(
             `AI auto insights skipped (text below threshold ${minLen}): article=${event.id}`,
@@ -605,10 +340,12 @@ export class AiInsightsService implements OnModuleInit {
     ) {
       return
     }
-    let article: ArticleForInsights
+    let article: { text: string }
+    let sourceLang: string
     try {
-      const resolved = await this.resolveArticleForInsights(event.id)
+      const resolved = await this.adapter.resolveArticleDetailed(event.id)
       article = resolved.article
+      sourceLang = resolved.sourceLang
     } catch {
       return
     }
@@ -619,8 +356,8 @@ export class AiInsightsService implements OnModuleInit {
       )
       return
     }
-    const newHash = this.computeContentHash(article.text)
-    const existing = await this.aiInsightsRepository.findSourceForRef(event.id)
+    const newHash = this.multilang.computeContentHash(article.text)
+    const existing = await this.adapter.findBase(event.id, sourceLang)
     if (!existing) {
       this.logger.log(
         `AI auto insights task created (update init): article=${event.id}`,

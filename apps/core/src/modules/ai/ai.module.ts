@@ -15,13 +15,16 @@ import { AiGenerationMetricsService } from './ai-generation-metrics/ai-generatio
 import { AiImageController } from './ai-image/ai-image.controller'
 import { AiImageService } from './ai-image/ai-image.service'
 import { AiInFlightService } from './ai-inflight/ai-inflight.service'
+import { AiInsightsAdapter } from './ai-insights/ai-insights.adapter'
 import { AiInsightsController } from './ai-insights/ai-insights.controller'
 import { AiInsightsRepository } from './ai-insights/ai-insights.repository'
 import { AiInsightsService } from './ai-insights/ai-insights.service'
 import { AiInsightsTranslationService } from './ai-insights/ai-insights-translation.service'
+import { MultilangGenerationService } from './ai-multilang/ai-multilang.service'
 import { AiOverviewController } from './ai-overview/ai-overview.controller'
 import { AiOverviewRepository } from './ai-overview/ai-overview.repository'
 import { AiOverviewService } from './ai-overview/ai-overview.service'
+import { AiSummaryAdapter } from './ai-summary/ai-summary.adapter'
 import { AiSummaryController } from './ai-summary/ai-summary.controller'
 import { AiSummaryRepository } from './ai-summary/ai-summary.repository'
 import { AiSummaryService } from './ai-summary/ai-summary.service'
@@ -62,10 +65,13 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     forwardRef(() => NoteModule),
   ],
   providers: [
+    MultilangGenerationService,
     AiSummaryService,
     AiSummaryRepository,
+    AiSummaryAdapter,
     AiInsightsService,
     AiInsightsRepository,
+    AiInsightsAdapter,
     AiInsightsTranslationService,
     AiGenerationMetricsRepository,
     AiGenerationMetricsService,

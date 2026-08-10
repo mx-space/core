@@ -8,6 +8,7 @@ vi.mock('~/api/ai', () => ({
   createInsightsTask: vi.fn(),
   createInsightsTranslationTask: vi.fn(),
   createSummaryTask: vi.fn(),
+  createSummaryTranslationTask: vi.fn(),
   createTranslationTask: vi.fn(),
   createTtsTask: vi.fn(),
 }))
@@ -16,9 +17,10 @@ const api = await import('~/api/ai')
 
 const detailWith = (
   insights: Array<{ lang: string; isTranslation: boolean }>,
+  summary: Array<{ lang: string; isTranslation: boolean }> = [],
 ) =>
   ({
-    assets: { insights },
+    assets: { insights, summary },
   }) as unknown as AiOverviewDetail
 
 beforeEach(() => {
@@ -34,6 +36,32 @@ describe('buildGenerateTask', () => {
       refId: '42',
       targetLanguages: ['en', 'ja'],
     })
+  })
+
+  it('dispatches a single-language summary retry as a translation task when a base row exists', () => {
+    const detail = detailWith([], [{ lang: 'zh', isTranslation: false }])
+
+    buildGenerateTask('summary', ['en'], '42', detail, true)
+
+    expect(api.createSummaryTranslationTask).toHaveBeenCalledWith({
+      force: true,
+      refId: '42',
+      targetLang: 'en',
+    })
+    expect(api.createSummaryTask).not.toHaveBeenCalled()
+  })
+
+  it('regenerates the summary base when the requested language is its own', () => {
+    const detail = detailWith([], [{ lang: 'zh', isTranslation: false }])
+
+    buildGenerateTask('summary', ['zh'], '42', detail, true)
+
+    expect(api.createSummaryTask).toHaveBeenCalledWith({
+      force: true,
+      refId: '42',
+      targetLanguages: ['zh'],
+    })
+    expect(api.createSummaryTranslationTask).not.toHaveBeenCalled()
   })
 
   it('sends no language list when the task ran on the configured targets', () => {

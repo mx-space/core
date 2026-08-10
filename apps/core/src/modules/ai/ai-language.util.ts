@@ -53,3 +53,12 @@ export function resolveTargetLanguages(
 ): string[] {
   return explicit?.length ? explicit : (configured ?? [])
 }
+
+export function resolveArticleSourceLang(document: {
+  meta?: Record<string, unknown> | null
+}): string {
+  const raw = document.meta?.lang
+  return typeof raw === 'string' && raw.trim()
+    ? parseLanguageCode(raw)
+    : DEFAULT_SUMMARY_LANG
+}

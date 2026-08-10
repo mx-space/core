@@ -3,8 +3,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { AppException } from '~/common/errors/exception.types'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { AiInsightsAdapter } from '~/modules/ai/ai-insights/ai-insights.adapter'
 import type { AiInsightsRepository } from '~/modules/ai/ai-insights/ai-insights.repository'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
+import { MultilangGenerationService } from '~/modules/ai/ai-multilang/ai-multilang.service'
 
 const row = {
   id: 'insights-1',
@@ -29,9 +31,25 @@ const createService = () => {
       .fn()
       .mockResolvedValue({ posts: [], notes: [] }),
   }
-  const configService = { get: vi.fn() }
-  const aiService = {}
-  const aiInFlightService = {}
+  const configService = {
+    get: vi.fn(),
+    waitForConfigReady: vi
+      .fn()
+      .mockResolvedValue({ ai: { enableInsights: true } }),
+  }
+  const aiService = {
+    getInsightsModel: vi.fn(),
+    getInsightsTranslationModel: vi.fn(),
+  }
+  const aiInFlightService = {
+    runWithStream: vi.fn(async (opts: any) => {
+      const { result } = await opts.onLeader({ push: async () => {} })
+      return {
+        events: (async function* () {})(),
+        result: Promise.resolve(result),
+      }
+    }),
+  }
   const taskProcessor = { registerHandler: vi.fn() }
   const aiTaskService = {
     createInsightsTask: vi.fn(),
@@ -48,21 +66,35 @@ const createService = () => {
     deleteByResource: vi.fn().mockResolvedValue(undefined),
     record: vi.fn().mockResolvedValue(undefined),
   }
-  const service = new AiInsightsService(
+  const adapter = new AiInsightsAdapter(
     repository as any,
     databaseService as any,
     configService as any,
     aiService as any,
+    eventEmitter as any,
+  )
+  const multilang = new MultilangGenerationService(
     aiInFlightService as any,
+    generationMetrics as any,
+    configService as any,
+  )
+  const service = new AiInsightsService(
+    repository as any,
+    databaseService as any,
+    configService as any,
+    adapter,
+    multilang,
     taskProcessor as any,
     aiTaskService as any,
-    eventEmitter as any,
     generationMetrics as any,
   )
   return {
+    aiInFlightService,
+    aiService,
     aiTaskService,
     configService,
     databaseService,
+    eventEmitter,
     generationMetrics,
     repository,
     service,
@@ -76,15 +108,17 @@ function runInsightsTask(
 ) {
   harness.service.onModuleInit()
   const handler = harness.taskProcessor.registerHandler.mock.calls[0][0]
-  return handler.execute(payload, {
+  const ctx = {
     isAborted: () => false,
     updateProgress: vi.fn(),
     setResult: vi.fn(),
+    setStatus: vi.fn(),
     appendLog: vi.fn(),
     incrementTokens: vi.fn(),
     incrementCost: vi.fn(),
     taskId: 'task-1',
-  })
+  }
+  return handler.execute(payload, ctx).then(() => ctx)
 }
 
 describe('AiInsightsService', () => {
@@ -298,71 +332,118 @@ describe('AiInsightsService', () => {
       refId: 'post-1',
     })
   })
-})
 
-describe('AiInsightsService.buildInsightsKey (in-flight key)', () => {
-  const buildKey = (service: AiInsightsService) =>
-    (service as any).buildInsightsKey('post-1', 'zh', 'same text')
+  it('looks up the base row by the resolved source language', async () => {
+    const { databaseService, repository, service } = createService()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'English Post',
+        text: 'English text',
+        isPublished: true,
+        meta: { lang: 'en-US' },
+      },
+    })
+    repository.findSourceForRef.mockResolvedValue(null)
 
-  // force no longer folds into the key hash: a force request must land on
-  // the same in-flight lock as a plain one instead of spawning a second
-  // writer (see AiInFlightService.waitForForceLock).
-  it('gives repeated requests for the same content the same in-flight key', () => {
-    const { service } = createService()
+    await service.findSourceInsightsForArticle('post-1')
 
-    expect(buildKey(service)).toBe(buildKey(service))
+    expect(repository.findSourceForRef).toHaveBeenCalledWith('post-1', 'en')
   })
 })
 
 describe('AiInsightsService — insights task target languages', () => {
-  it('chains a translation task per requested target once the base row exists', async () => {
+  const setup = () => {
     const harness = createService()
-    vi.spyOn(harness.service as any, 'generateInsights').mockResolvedValue({
-      id: 'insights-1',
-      lang: 'zh',
+    harness.configService.get.mockResolvedValue({
+      enableInsights: true,
+      translationLangConcurrency: 2,
     })
+    harness.databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'Published Post',
+        text: 'Long enough text',
+        isPublished: true,
+      },
+    })
+    harness.aiService.getInsightsModel.mockResolvedValue({
+      generateText: vi.fn(async () => ({ text: 'base insight', usage: {} })),
+      providerInfo: { id: 'test-provider', model: 'test-model' },
+    })
+    harness.aiService.getInsightsTranslationModel.mockResolvedValue({
+      generateText: vi.fn(async () => ({
+        text: 'translated insight',
+        usage: {},
+      })),
+      providerInfo: { id: 'test-provider', model: 'test-model' },
+    })
+    harness.repository.findSourceForRef.mockResolvedValue(null)
+    harness.repository.findByRefAndLang.mockResolvedValue(null)
+    harness.repository.deleteTranslationsWithDifferentHash.mockResolvedValue(0)
+    harness.repository.upsert.mockImplementation(async (input: any) => ({
+      ...row,
+      ...input,
+      id: input.isTranslation ? `insights-${input.lang}` : 'insights-1',
+    }))
+    return harness
+  }
 
-    await runInsightsTask(harness, {
+  it('translates each requested target inline after the base row exists', async () => {
+    const harness = setup()
+
+    const ctx = await runInsightsTask(harness, {
       refId: 'post-1',
       targetLanguages: ['en', 'jp'],
     })
 
+    const upserts = harness.repository.upsert.mock.calls.map(
+      ([input]: any[]) => input,
+    )
+    expect(upserts[0]).toMatchObject({ lang: 'zh', isTranslation: false })
+    expect(upserts).toContainEqual(
+      expect.objectContaining({
+        lang: 'ja',
+        isTranslation: true,
+        sourceInsightsId: 'insights-1',
+        content: 'translated insight',
+      }),
+    )
+    expect(upserts).toContainEqual(
+      expect.objectContaining({ lang: 'en', isTranslation: true }),
+    )
     expect(
       harness.aiTaskService.createInsightsTranslationTask,
-    ).toHaveBeenCalledTimes(2)
-    expect(
-      harness.aiTaskService.createInsightsTranslationTask,
-    ).toHaveBeenCalledWith({
-      refId: 'post-1',
-      sourceInsightsId: 'insights-1',
-      targetLang: 'ja',
-      force: undefined,
-    })
+    ).not.toHaveBeenCalled()
+    expect(ctx.setResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        insightsId: 'insights-1',
+        lang: 'zh',
+        translated: expect.arrayContaining(['en', 'ja']),
+      }),
+    )
   })
 
   it('never translates the base row into its own language', async () => {
-    const harness = createService()
-    vi.spyOn(harness.service as any, 'generateInsights').mockResolvedValue({
-      id: 'insights-1',
-      lang: 'zh',
-    })
+    const harness = setup()
 
     await runInsightsTask(harness, {
       refId: 'post-1',
       targetLanguages: ['zh-CN'],
     })
 
-    expect(
-      harness.aiTaskService.createInsightsTranslationTask,
-    ).not.toHaveBeenCalled()
+    const upserts = harness.repository.upsert.mock.calls.map(
+      ([input]: any[]) => input,
+    )
+    expect(upserts).toHaveLength(1)
+    expect(upserts[0]).toMatchObject({ lang: 'zh', isTranslation: false })
+    expect(harness.aiService.getInsightsTranslationModel).not.toHaveBeenCalled()
   })
 
-  it('carries force into the chained translation, so a regenerate is forced end to end', async () => {
-    const harness = createService()
-    vi.spyOn(harness.service as any, 'generateInsights').mockResolvedValue({
-      id: 'insights-1',
-      lang: 'zh',
-    })
+  it('carries force into the inline translation, so a regenerate is forced end to end', async () => {
+    const harness = setup()
 
     await runInsightsTask(harness, {
       refId: 'post-1',
@@ -370,8 +451,12 @@ describe('AiInsightsService — insights task target languages', () => {
       targetLanguages: ['en'],
     })
 
-    expect(
-      harness.aiTaskService.createInsightsTranslationTask,
-    ).toHaveBeenCalledWith(expect.objectContaining({ force: true }))
+    const streamCalls = harness.aiInFlightService.runWithStream.mock.calls.map(
+      ([opts]: any[]) => opts,
+    )
+    expect(streamCalls).toHaveLength(2)
+    for (const opts of streamCalls) {
+      expect(opts.bypassResultCache).toBe(true)
+    }
   })
 })

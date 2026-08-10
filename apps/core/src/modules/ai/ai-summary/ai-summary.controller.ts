@@ -13,9 +13,13 @@ import type { FastifyReply } from 'fastify'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { CreateSummaryTaskDto } from '~/modules/ai/ai-task/ai-task.dto'
+import {
+  CreateSummaryTaskDto,
+  CreateSummaryTranslationTaskDto,
+} from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
 import { EntityIdDto } from '~/shared/dto/id.dto'
@@ -43,6 +47,29 @@ export class AiSummaryController {
   @Auth()
   createSummaryTask(@Body() body: CreateSummaryTaskDto) {
     return this.taskService.createSummaryTask(body)
+  }
+
+  @Post('/task/translate')
+  @Auth()
+  async createSummaryTranslationTask(
+    @Body() body: CreateSummaryTranslationTaskDto,
+  ) {
+    const source = await this.service.findBaseSummaryForArticle(body.refId)
+    if (!source) {
+      return { taskId: null, created: false, reason: 'source-missing' }
+    }
+    const sourceLang = source.sourceLang || source.lang
+    if (body.targetLang === sourceLang) {
+      throw createAppException(AppErrorCode.AI_INVALID_PARAMETER, {
+        message: 'targetLang must differ from source lang',
+      })
+    }
+    return this.taskService.createSummaryTranslationTask({
+      refId: body.refId,
+      sourceSummaryId: source.id!,
+      targetLang: body.targetLang,
+      force: body.force,
+    })
   }
 
   @Get('/ref/:id')

@@ -225,6 +225,13 @@
       "when": 1786435200000,
       "tag": "0031_ai_translations_updated_at_repair",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1786521600000,
+      "tag": "0032_ai_summaries_multilang",
+      "breakpoints": true
     }
   ]
 }

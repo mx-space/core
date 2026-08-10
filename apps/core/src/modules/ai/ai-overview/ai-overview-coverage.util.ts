@@ -39,8 +39,8 @@ function capability(
 }
 
 export function buildArticleCoverage(input: CoverageInput): ArticleCoverage {
-  // `resolveArticleForSummary` and the insights equivalent both throw on a
-  // page, so those two genuinely cannot run for one. TTS has no such guard —
+  // The summary and insights adapters' `resolveArticleDetailed` both throw on
+  // a page, so those two genuinely cannot run for one. TTS has no such guard —
   // its `loadDocument` takes any document — and translation covers pages by
   // design.
   const summarisable = input.type !== CollectionRefTypes.Page

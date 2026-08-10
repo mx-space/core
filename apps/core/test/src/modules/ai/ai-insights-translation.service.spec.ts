@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock } from '@/helper/pg-repository-mock'
+import { AiInsightsAdapter } from '~/modules/ai/ai-insights/ai-insights.adapter'
 import type { AiInsightsRepository } from '~/modules/ai/ai-insights/ai-insights.repository'
 import { AiInsightsTranslationService } from '~/modules/ai/ai-insights/ai-insights-translation.service'
+import { MultilangGenerationService } from '~/modules/ai/ai-multilang/ai-multilang.service'
 
 const createService = () => {
   const repository = createPgRepositoryMock<AiInsightsRepository>()
@@ -12,10 +14,19 @@ const createService = () => {
       enableAutoTranslateInsights: true,
       insightsTargetLanguages: ['en', 'ja', 'zh'],
     }),
+    waitForConfigReady: vi
+      .fn()
+      .mockResolvedValue({ ai: { enableInsights: true } }),
   }
-  const aiService = {}
+  const aiService = {
+    getInsightsModel: vi.fn(),
+    getInsightsTranslationModel: vi.fn(),
+  }
+  const databaseService = { findGlobalById: vi.fn() }
+  const eventEmitter = { emit: vi.fn() }
   const aiInFlightService = {
     runWithStream: vi.fn(async () => ({
+      events: (async function* () {})(),
       result: Promise.resolve({ id: 'translated-1' }),
     })),
   }
@@ -24,14 +35,25 @@ const createService = () => {
   const generationMetrics = {
     record: vi.fn().mockResolvedValue(undefined),
   }
+  const adapter = new AiInsightsAdapter(
+    repository as any,
+    databaseService as any,
+    configService as any,
+    aiService as any,
+    eventEmitter as any,
+  )
+  const multilang = new MultilangGenerationService(
+    aiInFlightService as any,
+    generationMetrics as any,
+    configService as any,
+  )
   const service = new AiInsightsTranslationService(
     repository as any,
     configService as any,
-    aiService as any,
-    aiInFlightService as any,
+    adapter,
+    multilang,
     taskProcessor as any,
     aiTaskService as any,
-    generationMetrics as any,
   )
   return {
     aiInFlightService,
@@ -133,6 +155,7 @@ describe('AiInsightsTranslationService.translateInsights — force', () => {
   it('reuses the cached result for an ordinary request', async () => {
     const { aiInFlightService, repository, service } = createService()
     repository.findById.mockResolvedValue(source as any)
+    repository.findByRefAndLang.mockResolvedValue(null)
 
     await service.translateInsights({
       refId: 'post-1',
@@ -143,5 +166,27 @@ describe('AiInsightsTranslationService.translateInsights — force', () => {
     expect(aiInFlightService.runWithStream).toHaveBeenCalledWith(
       expect.objectContaining({ bypassResultCache: undefined }),
     )
+  })
+
+  it('returns the existing translation without re-running when its hash matches the base', async () => {
+    const { aiInFlightService, repository, service } = createService()
+    repository.findById.mockResolvedValue(source as any)
+    repository.findByRefAndLang.mockResolvedValue({
+      id: 'translated-en',
+      lang: 'en',
+      hash: 'hash-1',
+      content: 'existing',
+      isTranslation: true,
+      sourceLang: 'zh',
+    } as any)
+
+    const result = await service.translateInsights({
+      refId: 'post-1',
+      sourceInsightsId: 'insights-1',
+      targetLang: 'en',
+    })
+
+    expect(result).toMatchObject({ id: 'translated-en' })
+    expect(aiInFlightService.runWithStream).not.toHaveBeenCalled()
   })
 })

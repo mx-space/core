@@ -53,7 +53,12 @@ describe('toActiveGenerations', () => {
   it('maps the base insights task and its translation variant onto insights', () => {
     const result = toActiveGenerations(
       [
-        task(AITaskType.Insights, { refId: '300' }, 'base'),
+        task(
+          AITaskType.Insights,
+          { refId: '300', targetLanguages: ['en', 'ja'] },
+          'base',
+        ),
+        task(AITaskType.Insights, { refId: '300' }, 'bare'),
         task(
           AITaskType.InsightsTranslation,
           { refId: '300', targetLang: 'en' },
@@ -64,12 +69,40 @@ describe('toActiveGenerations', () => {
     )
 
     expect(result).toMatchObject([
-      { capability: 'insights', langs: [], status: 'running', taskId: 'base' },
+      {
+        capability: 'insights',
+        langs: ['en', 'ja'],
+        status: 'running',
+        taskId: 'base',
+      },
+      { capability: 'insights', langs: [], status: 'running', taskId: 'bare' },
       {
         capability: 'insights',
         langs: ['en'],
         status: 'running',
         taskId: 'trans',
+      },
+    ])
+  })
+
+  it('maps a summary translation task onto summary with its single target', () => {
+    const result = toActiveGenerations(
+      [
+        task(
+          AITaskType.SummaryTranslation,
+          { refId: '300', targetLang: 'ja' },
+          'strans',
+        ),
+      ],
+      '300',
+    )
+
+    expect(result).toMatchObject([
+      {
+        capability: 'summary',
+        langs: ['ja'],
+        status: 'running',
+        taskId: 'strans',
       },
     ])
   })

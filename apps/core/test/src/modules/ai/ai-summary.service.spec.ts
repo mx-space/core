@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { AppException } from '~/common/errors/exception.types'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { MultilangGenerationService } from '~/modules/ai/ai-multilang/ai-multilang.service'
+import { AiSummaryAdapter } from '~/modules/ai/ai-summary/ai-summary.adapter'
 import type { AiSummaryRepository } from '~/modules/ai/ai-summary/ai-summary.repository'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { AITaskType } from '~/modules/ai/ai-task/ai-task.types'
@@ -17,9 +19,25 @@ const createService = () => {
       .fn()
       .mockResolvedValue({ posts: [], notes: [] }),
   }
-  const configService = { get: vi.fn() }
-  const aiService = {}
-  const aiInFlightService = {}
+  const configService = {
+    get: vi.fn(),
+    waitForConfigReady: vi
+      .fn()
+      .mockResolvedValue({ ai: { enableSummary: true } }),
+  }
+  const aiService = {
+    getSummaryModel: vi.fn(),
+  }
+  const aiInFlightService = {
+    runWithStream: vi.fn(async (opts: any) => {
+      const { result } = await opts.onLeader({ push: async () => {} })
+      return {
+        events: (async function* () {})(),
+        result: Promise.resolve(result),
+      }
+    }),
+  }
+  const eventEmitter = { emit: vi.fn() }
   const taskProcessor = { registerHandler: vi.fn() }
   const aiTaskService = { createSummaryTask: vi.fn() }
   const generationMetrics = {
@@ -32,25 +50,84 @@ const createService = () => {
     deleteByResource: vi.fn().mockResolvedValue(undefined),
     record: vi.fn().mockResolvedValue(undefined),
   }
-  const service = new AiSummaryService(
+  const adapter = new AiSummaryAdapter(
     repository as any,
     databaseService as any,
     configService as any,
     aiService as any,
+    eventEmitter as any,
+  )
+  const multilang = new MultilangGenerationService(
     aiInFlightService as any,
+    generationMetrics as any,
+    configService as any,
+  )
+  const service = new AiSummaryService(
+    repository as any,
+    databaseService as any,
+    configService as any,
+    adapter,
+    multilang,
     taskProcessor as any,
     aiTaskService as any,
     generationMetrics as any,
   )
   return {
+    aiInFlightService,
+    aiService,
     aiTaskService,
     configService,
     databaseService,
+    eventEmitter,
     generationMetrics,
     repository,
     service,
     taskProcessor,
   }
+}
+
+const visibleArticle = {
+  type: CollectionRefTypes.Post,
+  document: {
+    id: 'post-1',
+    title: 'Published Post',
+    text: 'Long enough text',
+    isPublished: true,
+  },
+}
+
+const summaryRuntime = () => ({
+  generateText: vi.fn(async ({ messages }: any) => {
+    const isTranslation = String(messages[0].content).includes('translator')
+    return {
+      text: isTranslation ? 'translated summary' : '{"summary":"a summary"}',
+      usage: {},
+    }
+  }),
+  providerInfo: { id: 'test-provider', model: 'test-model' },
+})
+
+function runSummaryTask(
+  harness: ReturnType<typeof createService>,
+  payload: Record<string, unknown>,
+  context?: Record<string, unknown>,
+) {
+  harness.service.onModuleInit()
+  const handler = harness.taskProcessor.registerHandler.mock.calls
+    .map(([registered]) => registered)
+    .find((registered: any) => registered.type === AITaskType.Summary) as any
+  const ctx = {
+    taskId: 'task-1',
+    isAborted: () => false,
+    appendLog: vi.fn(),
+    updateProgress: vi.fn(),
+    setResult: vi.fn(),
+    setStatus: vi.fn(),
+    incrementTokens: vi.fn(),
+    incrementCost: vi.fn(),
+    ...context,
+  }
+  return handler.execute(payload, ctx as any).then(() => ctx)
 }
 
 describe('AiSummaryService', () => {
@@ -188,15 +265,7 @@ describe('AiSummaryService', () => {
       summaryTargetLanguages: ['en', 'ja'],
       summaryMinTextLength: 0,
     })
-    databaseService.findGlobalById.mockResolvedValue({
-      type: CollectionRefTypes.Post,
-      document: {
-        id: 'post-1',
-        title: 'Published Post',
-        text: 'Long enough text',
-        isPublished: true,
-      },
-    })
+    databaseService.findGlobalById.mockResolvedValue(visibleArticle)
     repository.listForRef.mockResolvedValue([])
 
     await service.handleUpdateArticle({ id: 'post-1' })
@@ -206,54 +275,149 @@ describe('AiSummaryService', () => {
       targetLanguages: ['en', 'ja'],
     })
   })
+})
 
-  it('normalizes target languages before generating, without merging a free-typed token into an unrelated code', async () => {
-    const { service, taskProcessor, configService } = createService()
-    configService.get.mockResolvedValue({ summaryTargetLanguages: [] })
+describe('AiSummaryService — summary task pipeline', () => {
+  const setup = () => {
+    const harness = createService()
+    harness.configService.get.mockResolvedValue({
+      enableSummary: true,
+      summaryTargetLanguages: [],
+      translationLangConcurrency: 2,
+    })
+    harness.databaseService.findGlobalById.mockResolvedValue(visibleArticle)
+    harness.aiService.getSummaryModel.mockResolvedValue(summaryRuntime())
+    harness.repository.findBaseForRef.mockResolvedValue(null)
+    harness.repository.findByRefAndLang.mockResolvedValue(null)
+    harness.repository.deleteTranslationsWithDifferentHash.mockResolvedValue(0)
+    harness.repository.upsert.mockImplementation(async (input: any) => ({
+      id: input.isTranslation ? `summary-${input.lang}` : 'summary-base',
+      refId: input.refId,
+      lang: input.lang,
+      summary: input.summary,
+      hash: input.hash,
+      isTranslation: input.isTranslation ?? false,
+      sourceSummaryId: input.sourceSummaryId ?? null,
+      sourceLang: input.sourceLang ?? null,
+      createdAt: now,
+    }))
+    return harness
+  }
 
-    service.onModuleInit()
-    const handler = taskProcessor.registerHandler.mock.calls
-      .map(([registered]) => registered)
-      .find((registered: any) => registered.type === AITaskType.Summary) as any
+  it('generates the source-language base first, then translates the other targets from it', async () => {
+    const harness = setup()
 
-    const context = {
-      taskId: 'task-1',
-      isAborted: () => false,
-      appendLog: vi.fn(),
-      updateProgress: vi.fn(),
-      setResult: vi.fn(),
-      setStatus: vi.fn(),
-      incrementTokens: vi.fn(),
-      incrementCost: vi.fn(),
-    }
+    const ctx = await runSummaryTask(harness, {
+      refId: 'post-1',
+      targetLanguages: ['en', 'zh'],
+    })
 
-    // 'english' is not recognized by normalizeLanguageCode, so it must stay
-    // its own target instead of collapsing into DEFAULT_SUMMARY_LANG ('zh')
-    // and overwriting the zh row.
-    await handler.execute(
-      { refId: 'post-1', targetLanguages: ['english', 'zh'] },
-      context as any,
+    const upserts = harness.repository.upsert.mock.calls.map(
+      ([input]: any[]) => input,
     )
+    expect(upserts[0]).toMatchObject({
+      lang: 'zh',
+      isTranslation: false,
+      sourceLang: 'zh',
+    })
+    expect(upserts).toContainEqual(
+      expect.objectContaining({
+        lang: 'en',
+        isTranslation: true,
+        sourceSummaryId: 'summary-base',
+        summary: 'translated summary',
+      }),
+    )
+    expect(ctx.setResult).toHaveBeenCalledWith({
+      summaries: [
+        expect.objectContaining({ summaryId: 'summary-base', lang: 'zh' }),
+        expect.objectContaining({ summaryId: 'summary-en', lang: 'en' }),
+      ],
+      failedLangs: [],
+    })
+  })
 
-    expect(context.updateProgress.mock.calls[0]).toEqual([
+  it('keeps an unrecognized token as its own target instead of collapsing it into zh', async () => {
+    const harness = setup()
+
+    const ctx = await runSummaryTask(harness, {
+      refId: 'post-1',
+      targetLanguages: ['english', 'zh'],
+    })
+
+    expect(ctx.updateProgress.mock.calls[0]).toEqual([
       0,
-      'Starting summary generation',
+      'Generating summary (zh)',
       0,
       2,
     ])
+    const upserts = harness.repository.upsert.mock.calls.map(
+      ([input]: any[]) => input,
+    )
+    expect(upserts).toContainEqual(
+      expect.objectContaining({ lang: 'english', isTranslation: true }),
+    )
   })
-})
 
-describe('AiSummaryService.buildSummaryKey (in-flight key)', () => {
-  const buildKey = (service: AiSummaryService) =>
-    (service as any).buildSummaryKey('post-1', 'zh', 'same text')
+  it('reuses a fresh base row instead of regenerating it', async () => {
+    const harness = setup()
+    const contentHash = (harness.service as any).multilang.computeContentHash(
+      visibleArticle.document.text,
+    )
+    harness.repository.findBaseForRef.mockResolvedValue({
+      id: 'summary-base',
+      refId: 'post-1',
+      lang: 'zh',
+      summary: 'a summary',
+      hash: contentHash,
+      isTranslation: false,
+      sourceSummaryId: null,
+      sourceLang: 'zh',
+      createdAt: now,
+    })
 
-  // force no longer folds into the key hash: a force request must land on
-  // the same in-flight lock as a plain one instead of spawning a second
-  // writer (see AiInFlightService.waitForForceLock).
-  it('gives repeated requests for the same content the same in-flight key', () => {
-    const { service } = createService()
+    await runSummaryTask(harness, {
+      refId: 'post-1',
+      targetLanguages: ['en'],
+    })
 
-    expect(buildKey(service)).toBe(buildKey(service))
+    const upserts = harness.repository.upsert.mock.calls.map(
+      ([input]: any[]) => input,
+    )
+    expect(upserts).toHaveLength(1)
+    expect(upserts[0]).toMatchObject({ lang: 'en', isTranslation: true })
+  })
+
+  it('marks the task partially failed when a translation fails but the base succeeded', async () => {
+    const harness = setup()
+    const runtime = {
+      generateText: vi.fn(async ({ messages }: any) => {
+        if (String(messages[0].content).includes('translator')) {
+          throw new Error('translation blew up')
+        }
+        return { text: '{"summary":"a summary"}', usage: {} }
+      }),
+      providerInfo: { id: 'test-provider', model: 'test-model' },
+    }
+    harness.aiService.getSummaryModel.mockResolvedValue(runtime)
+
+    const ctx = await runSummaryTask(harness, {
+      refId: 'post-1',
+      targetLanguages: ['en'],
+    })
+
+    expect(ctx.setStatus).toHaveBeenCalledWith('partial_failed')
+    expect(ctx.setResult).toHaveBeenCalledWith(
+      expect.objectContaining({ failedLangs: ['en'] }),
+    )
+  })
+
+  it('registers a summary-translation task handler', () => {
+    const harness = createService()
+    harness.service.onModuleInit()
+    const types = harness.taskProcessor.registerHandler.mock.calls.map(
+      ([registered]: any[]) => registered.type,
+    )
+    expect(types).toContain(AITaskType.SummaryTranslation)
   })
 })

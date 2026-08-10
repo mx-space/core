@@ -42,6 +42,8 @@ interface AssetBase {
 }
 
 export interface SummaryAsset extends AssetBase {
+  isTranslation: boolean
+  sourceLang: string | null
   summary: string
 }
 

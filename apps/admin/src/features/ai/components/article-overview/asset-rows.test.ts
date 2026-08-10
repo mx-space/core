@@ -38,7 +38,16 @@ describe('buildAssetRows', () => {
   it('orders rows summary, insights, translation, tts', () => {
     const rows = buildAssetRows(
       detail({
-        summary: [{ createdAt: 'a', id: 's1', lang: 'zh', summary: 'sum' }],
+        summary: [
+          {
+            createdAt: 'a',
+            id: 's1',
+            isTranslation: false,
+            lang: 'zh',
+            sourceLang: 'zh',
+            summary: 'sum',
+          },
+        ],
         insights: [
           {
             content: 'line',

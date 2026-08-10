@@ -55,6 +55,23 @@ describe('computeAITaskDedupKey — force bit', () => {
     expect(forceKey).toBe('1:force:')
   })
 
+  it('gives SummaryTranslation a per-language key with force folded in, mirroring InsightsTranslation', () => {
+    const base = {
+      refId: '1',
+      sourceSummaryId: '9',
+      targetLang: 'en',
+    }
+
+    const incKey = computeAITaskDedupKey(AITaskType.SummaryTranslation, base)
+    const forceKey = computeAITaskDedupKey(AITaskType.SummaryTranslation, {
+      ...base,
+      force: true,
+    })
+
+    expect(incKey).toBe('1:en:inc')
+    expect(forceKey).toBe('1:en:force')
+  })
+
   it('gives InsightsTranslation a different dedup key for force vs incremental, so a forced regeneration is not swallowed by a pending plain task', () => {
     const base: InsightsTranslationTaskPayload = {
       refId: '1',
