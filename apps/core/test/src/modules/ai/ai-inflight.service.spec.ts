@@ -20,6 +20,7 @@ class FakeRedis {
   streams = new Map<string, Array<[string, string[]]>>()
   xaddCalls: XAddCall[] = []
   delCalls: string[] = []
+  callLog: string[] = []
   private streamSeq = 0
 
   async get(key: string) {
@@ -27,6 +28,7 @@ class FakeRedis {
   }
 
   async set(key: string, value: string, ...args: any[]) {
+    this.callLog.push(`set:${key}`)
     const hasNx = args.includes('NX')
     if (hasNx && this.store.has(key)) {
       return null
@@ -44,6 +46,7 @@ class FakeRedis {
   }
 
   async del(key: string) {
+    this.callLog.push(`del:${key}`)
     this.delCalls.push(key)
     this.store.delete(key)
     return 1
@@ -518,5 +521,61 @@ describe('AiInFlightService — public SSE envelope', () => {
     expect(role).toBe('follower')
     expect(fakeRedis.delCalls).not.toContain(resultKey)
     await expect(result).resolves.toEqual({ id: 'cached-result' })
+  })
+
+  it('bypassResultCache: true — deletes resultKey only after acquiring the lock', async () => {
+    const { service, fakeRedis } = await buildService()
+    const resultKey = 'ai:stream:bypass-order:1:result'
+    const lockKey = 'ai:stream:bypass-order:1:lock'
+    await fakeRedis.set(resultKey, 'stale-result')
+
+    const { role, result } = await service.runWithStream<{ id: string }>({
+      key: 'bypass-order:1',
+      lockTtlSec: 5,
+      resultTtlSec: 60,
+      streamMaxLen: 100,
+      readBlockMs: 10,
+      idleTimeoutMs: 200,
+      bypassResultCache: true,
+      onLeader: async () => ({
+        result: { id: 'fresh-result' },
+        resultId: 'fresh-result',
+      }),
+      parseResult: async (id: string) => ({ id }),
+    })
+
+    expect(role).toBe('leader')
+    const lockIndex = fakeRedis.callLog.indexOf(`set:${lockKey}`)
+    const delIndex = fakeRedis.callLog.indexOf(`del:${resultKey}`)
+    expect(lockIndex).toBeGreaterThanOrEqual(0)
+    expect(delIndex).toBeGreaterThan(lockIndex)
+    await expect(result).resolves.toEqual({ id: 'fresh-result' })
+  })
+
+  it('bypassResultCache: true — does not delete resultKey when this request loses the leader race', async () => {
+    const { service, fakeRedis } = await buildService()
+    const resultKey = 'ai:stream:bypass-follower:1:result'
+    const lockKey = 'ai:stream:bypass-follower:1:lock'
+    // another leader already holds the lock and has an in-flight (not-yet-stale) result
+    await fakeRedis.set(lockKey, 'other-leader')
+    await fakeRedis.set(resultKey, 'in-flight-by-other-leader')
+
+    const { role, result } = await service.runWithStream<{ id: string }>({
+      key: 'bypass-follower:1',
+      lockTtlSec: 5,
+      resultTtlSec: 60,
+      streamMaxLen: 100,
+      readBlockMs: 10,
+      idleTimeoutMs: 200,
+      bypassResultCache: true,
+      onLeader: async () => {
+        throw new Error('should not run: lock already held by another leader')
+      },
+      parseResult: async (id: string) => ({ id }),
+    })
+
+    expect(role).toBe('follower')
+    expect(fakeRedis.delCalls).not.toContain(resultKey)
+    await expect(result).resolves.toEqual({ id: 'in-flight-by-other-leader' })
   })
 })

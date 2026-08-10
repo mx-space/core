@@ -16,6 +16,7 @@ import { throwIfAborted } from '~/utils/abort.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { FileService } from '../../file/file.service'
+import { MAX_LANGS_PER_TASK } from '../ai.constants'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
 import { parseLanguageCode } from '../ai-language.util'
 import { AITaskType, type TtsTaskPayload } from '../ai-task/ai-task.types'
@@ -47,7 +48,6 @@ import { resolveTtsSourceContent } from './tts-source-content'
 // concurrency 3 would otherwise open sixty provider connections at once.
 const GLOBAL_SPEECH_LIMIT = pLimit(8)
 
-const MAX_LANGS_PER_TASK = 8
 const DEFAULT_AUDIO_FORMAT = 'mp3'
 
 interface LanguageRunInput {

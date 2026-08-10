@@ -15,6 +15,9 @@ export const AI_STREAM_IDLE_TIMEOUT_MS = 120_000
 /** Maximum word count for AI-generated summaries */
 export const AI_SUMMARY_MAX_WORDS = 150
 
+/** Maximum target languages accepted in a single AI generation task */
+export const MAX_LANGS_PER_TASK = 8
+
 /** Maximum character length for fallback slug generation */
 export const AI_FALLBACK_SLUG_MAX_LENGTH = 50
 

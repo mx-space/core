@@ -32,13 +32,14 @@ export class AiInFlightService {
       options.key,
     )
 
-    if (options.bypassResultCache) {
-      // Delete rather than skip the read: a concurrent plain request must not
-      // observe the about-to-be-stale cached result either.
-      await redis.del(resultKey)
-    }
-
-    const existingResultId = await redis.get(resultKey)
+    // bypassResultCache never reads the cached resultKey, but the delete is
+    // deferred until this instance actually holds lockKey (see below) — deleting
+    // it here would open a window where a concurrent plain request (e.g. an
+    // unrelated follower polling the same key) sees resultKey, errorKey, and
+    // lockKey all empty and throws.
+    const existingResultId = options.bypassResultCache
+      ? null
+      : await redis.get(resultKey)
     if (existingResultId) {
       if (isDev) {
         this.logger.debug(`inflight result hit key=${options.key}`)
@@ -72,6 +73,12 @@ export class AiInFlightService {
     )
 
     if (lockResult === 'OK') {
+      if (options.bypassResultCache) {
+        // Safe now: lockKey exists, so a concurrent follower checking
+        // resultKey/errorKey/lockKey will see the lock and keep waiting
+        // instead of finding all three empty.
+        await redis.del(resultKey)
+      }
       if (isDev) {
         this.logger.debug(`inflight leader key=${options.key}`)
       }
