@@ -29,9 +29,13 @@ export function parseLanguageCode(lang?: string): string {
 // via normalizeLanguageCode, unrecognized ones (a stray "english" typed into
 // the free-input field) pass through as trim+lowercase instead of
 // parseLanguageCode's DEFAULT_SUMMARY_LANG fallback, which would otherwise
-// silently overwrite an unrelated valid-language row.
-export function normalizeTargetLang(lang: string): string {
-  return normalizeLanguageCode(lang) ?? lang.trim().toLowerCase()
+// silently overwrite an unrelated valid-language row. A blank (or
+// whitespace-only) token normalizes to undefined rather than '' — callers
+// filter it out instead of generating a language named "".
+export function normalizeTargetLang(lang: string): string | undefined {
+  const trimmed = lang.trim()
+  if (!trimmed) return undefined
+  return normalizeLanguageCode(trimmed) ?? trimmed.toLowerCase()
 }
 
 /**

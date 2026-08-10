@@ -88,7 +88,9 @@ export class AiSummaryService implements OnModuleInit {
             resolveTargetLanguages(
               payload.targetLanguages,
               aiConfig.summaryTargetLanguages,
-            ).map((lang) => normalizeTargetLang(lang)),
+            )
+              .map((lang) => normalizeTargetLang(lang))
+              .filter((lang): lang is string => lang !== undefined),
           ),
         ]
 

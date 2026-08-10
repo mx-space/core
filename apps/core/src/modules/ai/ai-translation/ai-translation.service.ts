@@ -196,9 +196,9 @@ export class AiTranslationService
       // zh-CN never matches a successful zh and gets retried for no reason.
       const targetLangs = [
         ...new Set(
-          (payload.targetLanguages || []).map((lang) =>
-            normalizeTargetLang(lang),
-          ),
+          (payload.targetLanguages || [])
+            .map((lang) => normalizeTargetLang(lang))
+            .filter((lang): lang is string => lang !== undefined),
         ),
       ]
       const successLangs = new Set(
@@ -254,7 +254,9 @@ export class AiTranslationService
         resolveTargetLanguages(
           payload.targetLanguages,
           aiConfig.translationTargetLanguages,
-        ).map((lang) => normalizeTargetLang(lang)),
+        )
+          .map((lang) => normalizeTargetLang(lang))
+          .filter((lang): lang is string => lang !== undefined),
       ),
     ]
 

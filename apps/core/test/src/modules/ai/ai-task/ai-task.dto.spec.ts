@@ -25,6 +25,21 @@ describe('CreateSummaryTaskSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+
+  it('rejects a blank or whitespace-only target language', () => {
+    expect(
+      CreateSummaryTaskSchema.safeParse({
+        refId: 'article-1',
+        targetLanguages: [''],
+      }).success,
+    ).toBe(false)
+    expect(
+      CreateSummaryTaskSchema.safeParse({
+        refId: 'article-1',
+        targetLanguages: ['   '],
+      }).success,
+    ).toBe(false)
+  })
 })
 
 describe('CreateTranslationTaskSchema', () => {
@@ -46,5 +61,20 @@ describe('CreateTranslationTaskSchema', () => {
 
   it('shares the max with MAX_LANGS_PER_TASK', () => {
     expect(eightLangs.length).toBe(MAX_LANGS_PER_TASK)
+  })
+
+  it('rejects a blank or whitespace-only target language', () => {
+    expect(
+      CreateTranslationTaskSchema.safeParse({
+        refId: 'article-1',
+        targetLanguages: [''],
+      }).success,
+    ).toBe(false)
+    expect(
+      CreateTranslationTaskSchema.safeParse({
+        refId: 'article-1',
+        targetLanguages: ['   '],
+      }).success,
+    ).toBe(false)
   })
 })

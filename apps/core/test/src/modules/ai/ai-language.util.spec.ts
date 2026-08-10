@@ -81,6 +81,11 @@ describe('ai-language.util', () => {
       expect(normalizeTargetLang('jam')).toBe('jam')
       expect(normalizeTargetLang('FIL-PH')).toBe('fil-ph')
     })
+
+    it('returns undefined for a blank or whitespace-only token instead of an empty-string language', () => {
+      expect(normalizeTargetLang('')).toBeUndefined()
+      expect(normalizeTargetLang('   ')).toBeUndefined()
+    })
   })
 
   describe('resolveTargetLanguages', () => {
