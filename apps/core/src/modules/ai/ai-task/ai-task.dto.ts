@@ -1,18 +1,38 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
+import { MAX_LANGS_PER_TASK } from '../ai.constants'
+
 export const CreateSummaryTaskSchema = z.object({
   refId: z.string(),
-  targetLanguages: z.array(z.string()).optional(),
+  targetLanguages: z
+    .array(z.string().trim().min(1))
+    .max(MAX_LANGS_PER_TASK)
+    .optional(),
+  force: z.boolean().optional(),
 })
 
 export class CreateSummaryTaskDto extends createZodDto(
   CreateSummaryTaskSchema,
 ) {}
 
+export const CreateSummaryTranslationTaskSchema = z.object({
+  refId: z.string(),
+  targetLang: z.string().trim().min(1),
+  force: z.boolean().optional(),
+})
+
+export class CreateSummaryTranslationTaskDto extends createZodDto(
+  CreateSummaryTranslationTaskSchema,
+) {}
+
 export const CreateTranslationTaskSchema = z.object({
   refId: z.string(),
-  targetLanguages: z.array(z.string()).optional(),
+  targetLanguages: z
+    .array(z.string().trim().min(1))
+    .max(MAX_LANGS_PER_TASK)
+    .optional(),
+  force: z.boolean().optional(),
 })
 
 export class CreateTranslationTaskDto extends createZodDto(

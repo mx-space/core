@@ -13,6 +13,7 @@ import {
   type InsightsTranslationTaskPayload,
   type SlugBackfillTaskPayload,
   type SummaryTaskPayload,
+  type SummaryTranslationTaskPayload,
   type TranslationAllTaskPayload,
   type TranslationBatchTaskPayload,
   type TranslationTaskPayload,
@@ -31,6 +32,13 @@ export class AiTaskService {
   ): Promise<{ taskId: string; created: boolean }> {
     await this.fillArticleInfo(payload)
     return this.createTask(AITaskType.Summary, payload)
+  }
+
+  async createSummaryTranslationTask(
+    payload: SummaryTranslationTaskPayload,
+  ): Promise<{ taskId: string; created: boolean }> {
+    await this.fillArticleInfo(payload)
+    return this.createTask(AITaskType.SummaryTranslation, payload)
   }
 
   async createTranslationTask(

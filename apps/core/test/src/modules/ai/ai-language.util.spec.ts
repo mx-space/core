@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   getLanguageName,
+  normalizeTargetLang,
   parseLanguageCode,
   resolveTargetLanguages,
 } from '~/modules/ai/ai-language.util'
@@ -60,6 +61,30 @@ describe('ai-language.util', () => {
     it('should return code itself for unknown codes', () => {
       expect(getLanguageName('unknown')).toBe('unknown')
       expect(getLanguageName('xyz')).toBe('xyz')
+    })
+  })
+
+  describe('normalizeTargetLang', () => {
+    it('folds a recognized region-suffixed code to its base', () => {
+      expect(normalizeTargetLang('zh-CN')).toBe('zh')
+      expect(normalizeTargetLang('en_US')).toBe('en')
+    })
+
+    it('passes an unrecognized token through as trim + lowercase, unlike parseLanguageCode', () => {
+      // parseLanguageCode('english') would collapse to DEFAULT_SUMMARY_LANG
+      // ('zh'), silently colliding with an actual zh row — this must not.
+      expect(normalizeTargetLang('english')).toBe('english')
+      expect(normalizeTargetLang(' Spanish ')).toBe('spanish')
+    })
+
+    it('passes an unrecognized 3-letter code through unchanged', () => {
+      expect(normalizeTargetLang('jam')).toBe('jam')
+      expect(normalizeTargetLang('FIL-PH')).toBe('fil-ph')
+    })
+
+    it('returns undefined for a blank or whitespace-only token instead of an empty-string language', () => {
+      expect(normalizeTargetLang('')).toBeUndefined()
+      expect(normalizeTargetLang('   ')).toBeUndefined()
     })
   })
 

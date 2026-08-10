@@ -20,6 +20,7 @@ import { renderPromptTemplate } from './prompts/render'
 import SLUG_SYSTEM from './prompts/slug.system.md?raw'
 import SUMMARY_TEMPLATE from './prompts/summary.system.md?raw'
 import SUMMARY_STREAM_TEMPLATE from './prompts/summary-stream.system.md?raw'
+import SUMMARY_TRANSLATION_TEMPLATE from './prompts/summary-translation.system.md?raw'
 import TITLE_AND_SLUG_SYSTEM from './prompts/title-and-slug.system.md?raw'
 import TRANSLATION_AGENT_LOOP from './prompts/translation-agent-loop.partial.md?raw'
 import TRANSLATION_BASE from './prompts/translation-base.system.md?raw'
@@ -46,6 +47,13 @@ const SUMMARY_SYSTEM = renderPromptTemplate(SUMMARY_TEMPLATE, {
 const SUMMARY_STREAM_SYSTEM = renderPromptTemplate(SUMMARY_STREAM_TEMPLATE, {
   MAX_WORDS: AI_SUMMARY_MAX_WORDS,
 })
+
+const SUMMARY_TRANSLATION_SYSTEM = renderPromptTemplate(
+  SUMMARY_TRANSLATION_TEMPLATE,
+  {
+    MAX_WORDS: AI_SUMMARY_MAX_WORDS,
+  },
+)
 
 const INSIGHTS_GENRES = [
   'architecture',
@@ -554,6 +562,19 @@ CONTENT`,
 <<<CONTENT
 ${text}
 CONTENT`,
+      reasoningEffort: NO_REASONING,
+    }
+  },
+
+  summaryTranslation: (targetLang: string, sourceSummary: string) => {
+    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
+    return {
+      systemPrompt: SUMMARY_TRANSLATION_SYSTEM,
+      prompt: `TARGET_LANGUAGE: ${targetLanguage}
+
+<<<SOURCE_SUMMARY
+${sourceSummary}
+SOURCE_SUMMARY`,
       reasoningEffort: NO_REASONING,
     }
   },

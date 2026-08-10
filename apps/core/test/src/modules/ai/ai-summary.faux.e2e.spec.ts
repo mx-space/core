@@ -7,6 +7,8 @@ import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import type { AiStreamEvent } from '~/modules/ai/ai-inflight/ai-inflight.types'
+import { MultilangGenerationService } from '~/modules/ai/ai-multilang/ai-multilang.service'
+import { AiSummaryAdapter } from '~/modules/ai/ai-summary/ai-summary.adapter'
 import type { AiSummaryRepository } from '~/modules/ai/ai-summary/ai-summary.repository'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
@@ -108,12 +110,25 @@ function createService(runtime: PiRuntimeAdapter) {
     createdAt: now,
   })
 
-  const service = new AiSummaryService(
+  const eventEmitter = { emit: vi.fn() }
+  const adapter = new AiSummaryAdapter(
     repository as any,
     databaseService as any,
     configService as any,
     aiService as any,
+    eventEmitter as any,
+  )
+  const multilang = new MultilangGenerationService(
     aiInFlightService as any,
+    generationMetrics as any,
+    configService as any,
+  )
+  const service = new AiSummaryService(
+    repository as any,
+    databaseService as any,
+    configService as any,
+    adapter,
+    multilang,
     taskProcessor as any,
     aiTaskService as any,
     generationMetrics as any,

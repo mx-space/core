@@ -3,6 +3,8 @@ import { z } from 'zod'
 
 import { zCoerceBoolean } from '~/common/zod'
 
+import { MAX_LANGS_PER_TASK } from '../ai.constants'
+
 export const BaseLangQuerySchema = z.object({
   lang: z.string().optional(),
 })
@@ -24,6 +26,11 @@ export class UpdateInsightsDto extends createZodDto(UpdateInsightsSchema) {}
 
 export const CreateInsightsTaskSchema = z.object({
   refId: z.string(),
+  force: z.boolean().optional(),
+  targetLanguages: z
+    .array(z.string().trim().min(1))
+    .max(MAX_LANGS_PER_TASK)
+    .optional(),
 })
 export class CreateInsightsTaskDto extends createZodDto(
   CreateInsightsTaskSchema,
@@ -32,6 +39,7 @@ export class CreateInsightsTaskDto extends createZodDto(
 export const CreateInsightsTranslationTaskSchema = z.object({
   refId: z.string(),
   targetLang: z.string(),
+  force: z.boolean().optional(),
 })
 export class CreateInsightsTranslationTaskDto extends createZodDto(
   CreateInsightsTranslationTaskSchema,

@@ -1,6 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
 import { AudioLines, FileText, Languages, Sparkles } from 'lucide-react'
-import { toast } from 'sonner'
 
 import {
   createInsightsTask,
@@ -13,35 +11,41 @@ import { useI18n } from '~/i18n'
 import type { ContextMenuItem } from '~/ui/overlay/context-menu'
 
 import { presentGeneratePrompt } from '../components/article-grouped/GeneratePromptModal'
-import { getErrorMessage } from '../utils/ai'
+import { useAiDefaultLangs } from './use-ai-default-langs'
+import { useAiGenerateTask } from './use-ai-generate-task'
 
 export function useAiQuickActions(refId: string) {
   const { t } = useI18n()
 
-  const mutation = useMutation({
-    mutationFn: async (fn: () => Promise<CreateTaskResponse>) => fn(),
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('ai.toast.taskCreateFailed'))),
-    onSuccess: (result) => {
-      toast.success(
-        result.created ? t('ai.toast.taskCreated') : t('ai.toast.taskExists'),
-      )
-    },
-  })
+  const mutation = useAiGenerateTask()
+  const summaryDefaultLangs = useAiDefaultLangs('summaryTargetLanguages')
+  const translationDefaultLangs = useAiDefaultLangs(
+    'translationTargetLanguages',
+  )
 
-  const runWithLangPrompt = async (
+  const runWithGeneratePrompt = async (
     title: string,
-    taskFn: (lang: string) => Promise<CreateTaskResponse>,
+    taskFn: (
+      langs: string[] | undefined,
+      force: boolean,
+    ) => Promise<CreateTaskResponse>,
+    options?: {
+      defaultLangs?: string[]
+      inlineEmpty?: string
+      promptForLang?: boolean
+    },
   ) => {
     const result = await presentGeneratePrompt({
-      langLabel: t('ai.translation.langLabel'),
-      promptForLang: true,
+      defaultLangs: options?.defaultLangs,
+      inlineEmpty: options?.inlineEmpty,
+      langLabel: t('ai.generate.langsLabel'),
+      promptForLang: options?.promptForLang ?? true,
       title,
     })
     if (!result) return
-    const lang = result.lang?.trim().toLowerCase() ?? 'zh'
-    if (!lang) return
-    mutation.mutate(() => taskFn(lang))
+    mutation.mutate(() =>
+      taskFn(result.langs.length ? result.langs : undefined, result.force),
+    )
   }
 
   const items: ContextMenuItem[] = [
@@ -50,23 +54,39 @@ export function useAiQuickActions(refId: string) {
       key: 'ai-summary',
       label: t('ai.menu.generateSummary'),
       onClick: () =>
-        void runWithLangPrompt(t('ai.menu.generateSummary'), (lang) =>
-          createSummaryTask({ refId, lang }),
+        void runWithGeneratePrompt(
+          t('ai.menu.generateSummary'),
+          (langs, force) =>
+            createSummaryTask({ force, refId, targetLanguages: langs }),
+          { defaultLangs: summaryDefaultLangs },
         ),
     },
     {
       icon: Sparkles,
       key: 'ai-insights',
       label: t('ai.menu.generateInsights'),
-      onClick: () => mutation.mutate(() => createInsightsTask({ refId })),
+      onClick: () =>
+        void runWithGeneratePrompt(
+          t('ai.menu.generateInsights'),
+          (_langs, force) => createInsightsTask({ force, refId }),
+          {
+            inlineEmpty: t('ai.articleGrouped.inlineEmpty', {
+              kind: t('ai.insights.kind'),
+            }),
+            promptForLang: false,
+          },
+        ),
     },
     {
       icon: Languages,
       key: 'ai-translation',
       label: t('ai.menu.generateTranslation'),
       onClick: () =>
-        void runWithLangPrompt(t('ai.menu.generateTranslation'), (lang) =>
-          createTranslationTask({ refId, targetLanguages: [lang] }),
+        void runWithGeneratePrompt(
+          t('ai.menu.generateTranslation'),
+          (langs, force) =>
+            createTranslationTask({ force, refId, targetLanguages: langs }),
+          { defaultLangs: translationDefaultLangs },
         ),
     },
     {
@@ -74,8 +94,8 @@ export function useAiQuickActions(refId: string) {
       key: 'ai-tts',
       label: t('ai.menu.generateTts'),
       onClick: () =>
-        void runWithLangPrompt(t('ai.menu.generateTts'), (lang) =>
-          createTtsTask({ refId, langs: [lang] }),
+        void runWithGeneratePrompt(t('ai.menu.generateTts'), (langs, force) =>
+          createTtsTask({ force, langs, refId }),
         ),
     },
   ]

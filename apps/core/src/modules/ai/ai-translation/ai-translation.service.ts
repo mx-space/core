@@ -40,7 +40,10 @@ import {
 } from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import { resolveTargetLanguages } from '../ai-language.util'
+import {
+  normalizeTargetLangs,
+  resolveTargetLanguages,
+} from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
@@ -187,7 +190,11 @@ export class AiTranslationService
       const result = task.result as {
         translations?: Array<{ lang: string }>
       }
-      const targetLangs = payload.targetLanguages || []
+      // result.translations[].lang is already normalized (executeTranslationTask
+      // generates against the normalized language list) — normalize
+      // payload.targetLanguages the same way before diffing, or a target like
+      // zh-CN never matches a successful zh and gets retried for no reason.
+      const targetLangs = normalizeTargetLangs(payload.targetLanguages)
       const successLangs = new Set(
         result?.translations?.map((t) => t.lang) || [],
       )
@@ -197,6 +204,7 @@ export class AiTranslationService
         const retryPayload: TranslationTaskPayload = {
           refId: payload.refId,
           targetLanguages: failedLangs,
+          force: payload.force,
           title: payload.title,
           refType: payload.refType,
         }
@@ -235,9 +243,11 @@ export class AiTranslationService
     this.checkAborted(context)
 
     const aiConfig = await this.configService.get('ai')
-    const languages = resolveTargetLanguages(
-      payload.targetLanguages,
-      aiConfig.translationTargetLanguages,
+    const languages = normalizeTargetLangs(
+      resolveTargetLanguages(
+        payload.targetLanguages,
+        aiConfig.translationTargetLanguages,
+      ),
     )
 
     if (!languages.length) {
@@ -306,6 +316,7 @@ export class AiTranslationService
                   langPush,
                   context.incrementCost,
                   context.taskId,
+                  payload.force,
                 ),
                 abortPromise,
               ])
@@ -746,6 +757,7 @@ export class AiTranslationService
     push?: (event: AiStreamEvent) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
     taskId?: string,
+    force?: boolean,
   ): Promise<AITranslationModel> {
     const startedAt = Date.now()
     const aiConfig = await this.configService.get('ai')
@@ -771,6 +783,7 @@ export class AiTranslationService
         push,
         onCost,
         taskId,
+        force,
       )
       const translated = await result
       this.logger.log(
@@ -803,6 +816,7 @@ export class AiTranslationService
     taskPush?: (event: AiStreamEvent) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
     taskId?: string,
+    force?: boolean,
   ) {
     const content = this.toArticleContent(document)
     const sourceModified = document.modifiedAt ?? undefined
@@ -815,8 +829,11 @@ export class AiTranslationService
       streamMaxLen: AI_STREAM_MAXLEN,
       readBlockMs: AI_STREAM_READ_BLOCK_MS,
       idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
+      bypassResultCache: force,
       onLeader: async ({ push }) => {
-        // Fetch existing translation for incremental path
+        // Still read `existing` unconditionally on force: it backs the
+        // sourceModifiedAt fallback and the create/update event choice below,
+        // even though force skips it as the incremental-reuse input.
         const existing = await this.aiTranslationRepository.findByRef(
           articleId,
           refType,
@@ -842,7 +859,7 @@ export class AiTranslationService
           fanoutPush,
           onToken,
           signal,
-          existing,
+          force ? undefined : existing,
           trackCost,
           refType,
         )

@@ -16,10 +16,20 @@ export class AiInFlightService {
     const prefix = `ai:stream:${key}`
     return {
       lockKey: `${prefix}:lock`,
-      streamKey: `${prefix}:stream`,
+      // Each leader run owns a stream key of its own (`:stream:<runId>`) so a
+      // new run never writes into — nor deletes — a stream that earlier
+      // followers are still draining. Readers resolve the run from lockKey.
+      streamPrefix: `${prefix}:stream`,
       resultKey: `${prefix}:result`,
       errorKey: `${prefix}:error`,
     }
+  }
+
+  private parseLockRunId(lockValue: string | null): string | null {
+    if (!lockValue) return null
+    const separatorIndex = lockValue.indexOf(':')
+    if (separatorIndex === -1) return null
+    return lockValue.slice(separatorIndex + 1) || null
   }
 
   async runWithStream<T>(options: AiInFlightOptions<T>): Promise<{
@@ -28,11 +38,18 @@ export class AiInFlightService {
     result: Promise<T>
   }> {
     const redis = this.redisService.getClient()
-    const { lockKey, streamKey, resultKey, errorKey } = this.buildKeys(
+    const { lockKey, streamPrefix, resultKey, errorKey } = this.buildKeys(
       options.key,
     )
 
-    const existingResultId = await redis.get(resultKey)
+    // bypassResultCache never reads the cached resultKey, but the delete is
+    // deferred until this instance actually holds lockKey (see below) — deleting
+    // it here would open a window where a concurrent plain request (e.g. an
+    // unrelated follower polling the same key) sees resultKey, errorKey, and
+    // lockKey all empty and throws.
+    const existingResultId = options.bypassResultCache
+      ? null
+      : await redis.get(resultKey)
     if (existingResultId) {
       if (isDev) {
         this.logger.debug(`inflight result hit key=${options.key}`)
@@ -49,23 +66,41 @@ export class AiInFlightService {
           `inflight stale result, clearing cache key=${options.key}`,
         )
         await redis.del(resultKey)
-        await redis.del(streamKey)
         await redis.del(errorKey)
       }
     }
 
-    const instanceId = `${process.pid}-${Date.now()}-${Math.random()
+    const runId = `${process.pid}-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 10)}`
-    const lockResult = await redis.set(
-      lockKey,
-      instanceId,
-      'EX',
-      options.lockTtlSec,
-      'NX',
-    )
+    const lockMode = options.bypassResultCache ? 'force' : 'plain'
+    const lockValue = `${lockMode}:${runId}`
 
-    if (lockResult === 'OK') {
+    let acquired =
+      (await redis.set(lockKey, lockValue, 'EX', options.lockTtlSec, 'NX')) ===
+      'OK'
+
+    // A force request that loses the race waits out a plain leader instead
+    // of spawning a second writer, but joins another force immediately —
+    // two force runs converging on one leader is the desired outcome.
+    if (!acquired && options.bypassResultCache) {
+      acquired = await this.waitForForceLock(
+        redis,
+        lockKey,
+        lockValue,
+        options.lockTtlSec,
+      )
+    }
+
+    if (acquired) {
+      const streamKey = `${streamPrefix}:${runId}`
+      if (options.bypassResultCache) {
+        // Safe now: lockKey exists, so a concurrent follower checking
+        // resultKey/errorKey/lockKey will see the lock and keep waiting
+        // instead of finding all three empty.
+        await redis.del(resultKey)
+        await redis.del(errorKey)
+      }
       if (isDev) {
         this.logger.debug(`inflight leader key=${options.key}`)
       }
@@ -100,10 +135,14 @@ export class AiInFlightService {
     if (isDev) {
       this.logger.debug(`inflight follower key=${options.key}`)
     }
+    // No holder means the leader released between our failed lock attempt and
+    // this read; `runId` was never used as a leader, so its stream is empty and
+    // the reader falls through to the resultKey/errorKey/lockKey checks.
+    const holderRunId = this.parseLockRunId(await redis.get(lockKey)) ?? runId
     return {
       role: 'follower',
       events: this.createStreamReader(options, {
-        streamKey,
+        streamKey: `${streamPrefix}:${holderRunId}`,
         resultKey,
         errorKey,
         lockKey,
@@ -112,11 +151,44 @@ export class AiInFlightService {
     }
   }
 
+  private async waitForForceLock(
+    redis: ReturnType<RedisService['getClient']>,
+    lockKey: string,
+    lockValue: string,
+    lockTtlSec: number,
+  ): Promise<boolean> {
+    const holder = await redis.get(lockKey)
+    if (holder?.startsWith('force:')) {
+      return false
+    }
+
+    const deadline = Date.now() + lockTtlSec * 1000
+    while (Date.now() < deadline) {
+      await sleep(200)
+      if (
+        (await redis.set(lockKey, lockValue, 'EX', lockTtlSec, 'NX')) === 'OK'
+      ) {
+        return true
+      }
+
+      // The holder can change while we wait — if another force took over
+      // (e.g. it raced in via the plain leader's release), join it now
+      // instead of blocking out the rest of the timeout.
+      const currentHolder = await redis.get(lockKey)
+      if (currentHolder?.startsWith('force:')) {
+        return false
+      }
+    }
+
+    return false
+  }
+
   private async executeLeader<T>(
     options: AiInFlightOptions<T>,
     keys: { streamKey: string; resultKey: string; errorKey: string },
   ): Promise<T> {
     const redis = this.redisService.getClient()
+    let streamTtlSet = false
     try {
       const { result, resultId } = await options.onLeader({
         push: async (event) => {
@@ -131,6 +203,12 @@ export class AiInFlightService {
             'data',
             JSON.stringify(event.data),
           )
+          // Run-scoped stream keys are never reused, so a leader that dies
+          // mid-run would orphan this key without an early TTL.
+          if (!streamTtlSet) {
+            streamTtlSet = true
+            await redis.expire(keys.streamKey, options.resultTtlSec)
+          }
           if (isDev) {
             const dataSize =
               typeof event.data === 'string'

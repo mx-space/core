@@ -88,6 +88,11 @@ Two distinct SSE protocols live side-by-side; both are byte-pinned.
 - `AiInFlightService` uses a Redis lock per `(feature, hash)` key. Leader
   produces token/done/error frames into a Redis Stream; followers attach via
   `XREAD BLOCK` and replay frames byte-identical to the leader's output.
+- Every leader run owns its own stream key `ai:stream:<key>:stream:<runId>`;
+  the lock value is `<plain|force>:<runId>`, so a follower resolves the stream
+  from the lock it lost to. A forced regeneration therefore starts a fresh
+  stream instead of deleting one that earlier followers are still draining —
+  never delete a stream key, let its TTL retire it.
 - Stream entries are `type` + `data` fields where `data` is JSON-encoded.
   Error frames use `JSON.stringify({ message })`. Done frames carry
   `{ resultId }`. Token frames carry the raw string.

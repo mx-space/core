@@ -1,7 +1,12 @@
-import { parseLanguageCode } from '../ai-language.util'
+import { normalizeTargetLangs, parseLanguageCode } from '../ai-language.util'
+
+function canonicalTargetLangs(langs?: string[]): string {
+  return normalizeTargetLangs(langs).sort().join(',')
+}
 
 export enum AITaskType {
   Summary = 'ai:summary',
+  SummaryTranslation = 'ai:summary:translation',
   Translation = 'ai:translation',
   TranslationBatch = 'ai:translation:batch',
   TranslationAll = 'ai:translation:all',
@@ -15,7 +20,17 @@ export enum AITaskType {
 export interface SummaryTaskPayload {
   refId: string
   targetLanguages?: string[]
+  force?: boolean
   // Human-readable info
+  title?: string
+  refType?: string
+}
+
+export interface SummaryTranslationTaskPayload {
+  refId: string
+  sourceSummaryId: string
+  targetLang: string
+  force?: boolean
   title?: string
   refType?: string
 }
@@ -23,6 +38,7 @@ export interface SummaryTaskPayload {
 export interface TranslationTaskPayload {
   refId: string
   targetLanguages?: string[]
+  force?: boolean
   // Human-readable info
   title?: string
   refType?: string
@@ -48,6 +64,9 @@ export interface SlugBackfillTaskPayload {
 
 export interface InsightsTaskPayload {
   refId: string
+  force?: boolean
+  /** Languages to translate the generated insights into once it exists. */
+  targetLanguages?: string[]
   title?: string
   refType?: string
 }
@@ -56,6 +75,7 @@ export interface InsightsTranslationTaskPayload {
   refId: string
   sourceInsightsId: string
   targetLang: string
+  force?: boolean
   title?: string
   refType?: string
 }
@@ -86,6 +106,7 @@ export interface TtsTaskPayload {
 
 export type AITaskPayload =
   | SummaryTaskPayload
+  | SummaryTranslationTaskPayload
   | TranslationTaskPayload
   | TranslationBatchTaskPayload
   | TranslationAllTaskPayload
@@ -102,11 +123,15 @@ export function computeAITaskDedupKey(
   switch (type) {
     case AITaskType.Summary: {
       const p = payload as SummaryTaskPayload
-      return `${p.refId}:${(p.targetLanguages || []).slice().sort().join(',')}`
+      // Canonicalize like the handler does — zh-CN and zh generate the same
+      // result, so they must dedup to the same task instead of running twice.
+      const langs = canonicalTargetLangs(p.targetLanguages)
+      return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
     }
     case AITaskType.Translation: {
       const p = payload as TranslationTaskPayload
-      return `${p.refId}:${(p.targetLanguages || []).slice().sort().join(',')}`
+      const langs = canonicalTargetLangs(p.targetLanguages)
+      return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
     }
     case AITaskType.TranslationBatch: {
       const p = payload as TranslationBatchTaskPayload
@@ -125,11 +150,16 @@ export function computeAITaskDedupKey(
     }
     case AITaskType.Insights: {
       const p = payload as InsightsTaskPayload
-      return `${p.refId}`
+      const langs = canonicalTargetLangs(p.targetLanguages)
+      return `${p.refId}:${p.force ? 'force' : 'inc'}:${langs}`
+    }
+    case AITaskType.SummaryTranslation: {
+      const p = payload as SummaryTranslationTaskPayload
+      return `${p.refId}:${p.targetLang}:${p.force ? 'force' : 'inc'}`
     }
     case AITaskType.InsightsTranslation: {
       const p = payload as InsightsTranslationTaskPayload
-      return `${p.refId}:${p.targetLang}`
+      return `${p.refId}:${p.targetLang}:${p.force ? 'force' : 'inc'}`
     }
     case AITaskType.ImageGeneration: {
       // Deliberately opts out of dedup: generating several images from the

@@ -4,6 +4,7 @@ import { AiGenerationMetricsRepository } from './ai-generation-metrics.repositor
 import type {
   AiGenerationResourceType,
   GenerationMetricsDto,
+  GenerationSumRow,
   GenerationUsage,
   RecordGenerationMetricsInput,
 } from './ai-generation-metrics.types'
@@ -62,6 +63,14 @@ export class AiGenerationMetricsService {
     resourceId: string,
   ): Promise<void> {
     await this.repository.deleteByResource(resourceType, resourceId)
+  }
+
+  async sumByRef(refId: string): Promise<GenerationSumRow[]> {
+    return this.repository.sumByRef(refId)
+  }
+
+  async findModelsByRef(refId: string): Promise<string[]> {
+    return this.repository.findModelsByRef(refId)
   }
 
   async findLatestModel(

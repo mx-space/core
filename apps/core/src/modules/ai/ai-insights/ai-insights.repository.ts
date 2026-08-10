@@ -88,16 +88,17 @@ export class AiInsightsRepository extends BaseRepository {
 
   async findSourceForRef(
     refId: EntityId | string,
+    lang?: string,
   ): Promise<AiInsightsRow | null> {
+    const conds = [
+      eq(aiInsights.refId, parseEntityId(refId)),
+      eq(aiInsights.isTranslation, false),
+    ]
+    if (lang) conds.push(eq(aiInsights.lang, lang))
     const [row] = await this.db
       .select()
       .from(aiInsights)
-      .where(
-        and(
-          eq(aiInsights.refId, parseEntityId(refId)),
-          eq(aiInsights.isTranslation, false),
-        )!,
-      )
+      .where(and(...conds)!)
       .orderBy(desc(aiInsights.createdAt))
       .limit(1)
     return row ? mapRow(row) : null

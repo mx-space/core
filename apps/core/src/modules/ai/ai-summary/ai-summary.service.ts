@@ -1,49 +1,31 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-import removeMdCodeblock from 'remove-md-codeblock'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   type TaskExecuteContext,
   TaskQueueProcessor,
-  TaskStatus,
 } from '~/processors/task-queue'
 import type { BasicPagerInput } from '~/shared/dto/pager.dto'
 import { createAbortError } from '~/utils/abort.util'
-import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
-import {
-  AI_STREAM_IDLE_TIMEOUT_MS,
-  AI_STREAM_LOCK_TTL,
-  AI_STREAM_MAXLEN,
-  AI_STREAM_READ_BLOCK_MS,
-  AI_STREAM_RESULT_TTL,
-  DEFAULT_SUMMARY_LANG,
-} from '../ai.constants'
-import { AI_PROMPTS } from '../ai.prompts'
-import { AiService } from '../ai.service'
-import { isGlobalArticleVisible } from '../ai-article-visibility.util'
+import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
-import type { GenerationUsage } from '../ai-generation-metrics/ai-generation-metrics.types'
-import {
-  emptyUsage,
-  mergeUsage,
-} from '../ai-generation-metrics/ai-generation-metrics.types'
-import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { resolveTargetLanguages } from '../ai-language.util'
+import { MultilangGenerationService } from '../ai-multilang/ai-multilang.service'
 import { AiTaskService } from '../ai-task/ai-task.service'
-import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
-import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import {
-  piUsageToGenerationUsage,
-  runtimeUsageToGenerationUsage,
-} from '../runtime/pi-runtime.adapter'
+  AITaskType,
+  type SummaryTaskPayload,
+  type SummaryTranslationTaskPayload,
+} from '../ai-task/ai-task.types'
+import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
+import { AiSummaryAdapter } from './ai-summary.adapter'
 import { AiSummaryRepository } from './ai-summary.repository'
 import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
 import type { AiSummaryRow } from './ai-summary.types'
@@ -56,9 +38,8 @@ export class AiSummaryService implements OnModuleInit {
     private readonly aiSummaryRepository: AiSummaryRepository,
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigsService,
-
-    private readonly aiService: AiService,
-    private readonly aiInFlightService: AiInFlightService,
+    private readonly adapter: AiSummaryAdapter,
+    private readonly multilang: MultilangGenerationService,
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly aiTaskService: AiTaskService,
     private readonly generationMetrics: AiGenerationMetricsService,
@@ -78,84 +59,63 @@ export class AiSummaryService implements OnModuleInit {
         context: TaskExecuteContext,
       ) => {
         this.checkAborted(context)
-
         const aiConfig = await this.configService.get('ai')
-        const languages = resolveTargetLanguages(
+        const targetLanguages = resolveTargetLanguages(
           payload.targetLanguages,
           aiConfig.summaryTargetLanguages,
         )
-
-        if (!languages.length) {
-          await context.appendLog('warn', 'No target languages specified')
-          return
-        }
-
-        await context.updateProgress(
-          0,
-          'Starting summary generation',
-          0,
-          languages.length,
+        const { base, translated, failedLangs } =
+          await this.multilang.executeMultilangTask(
+            this.adapter,
+            { ...payload, targetLanguages },
+            context,
+          )
+        const summaries = [base, ...translated.map((t) => t.doc)].map(
+          (doc) => ({
+            summaryId: doc.id!,
+            lang: doc.lang!,
+            summary: doc.summary,
+          }),
         )
+        await context.setResult({ summaries, failedLangs })
+      },
+    })
 
-        const summaries: Array<{
-          summaryId: string
-          lang: string
-          summary: string
-        }> = []
-
-        let failedCount = 0
-
-        for (let i = 0; i < languages.length; i++) {
-          this.checkAborted(context)
-
-          const lang = languages[i]
-          await context.appendLog(
-            'info',
-            `Generating summary in ${lang} (${i + 1}/${languages.length})`,
-          )
-
-          try {
-            const result = await this.generateSummaryByOpenAI(
-              payload.refId,
-              lang,
-              context.incrementTokens,
-              context.incrementCost,
-              context.taskId,
-            )
-            summaries.push({
-              summaryId: result.id!,
-              lang: result.lang!,
-              summary: result.summary,
-            })
-          } catch (error) {
-            if (error.name === 'AbortError') throw error
-            failedCount++
-            await context.appendLog(
-              'error',
-              `Failed to generate summary in ${lang}: ${error.message}`,
-            )
-          }
-
-          const progress = Math.round(((i + 1) / languages.length) * 100)
-          await context.updateProgress(
-            progress,
-            `Generated ${i + 1}/${languages.length}`,
-            i + 1,
-            languages.length,
-          )
-        }
-
-        await context.setResult({ summaries })
-
-        if (failedCount === languages.length) {
-          context.setStatus(TaskStatus.Failed)
-        } else if (failedCount > 0) {
-          context.setStatus(TaskStatus.PartialFailed)
-        }
+    this.taskProcessor.registerHandler({
+      type: AITaskType.SummaryTranslation,
+      execute: async (
+        payload: SummaryTranslationTaskPayload,
+        context: TaskExecuteContext,
+      ) => {
+        if (context.isAborted()) return
+        await context.updateProgress(0, 'Translating summary', 0, 1)
+        const result = await this.translateSummary(payload, context)
+        await context.setResult({ summaryId: result.id, lang: result.lang })
+        await context.updateProgress(100, 'Done', 1, 1)
       },
     })
 
     this.logger.log('AI summary task handler registered')
+  }
+
+  async translateSummary(
+    payload: SummaryTranslationTaskPayload,
+    context?: TaskExecuteContext,
+  ): Promise<AISummaryModel> {
+    const source = await this.adapter.findById(payload.sourceSummaryId)
+    if (!source || source.isTranslation) {
+      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS, {
+        message: 'Source summary not found or already translated',
+      })
+    }
+    return this.multilang.runTranslation(this.adapter, {
+      refId: payload.refId,
+      base: source,
+      targetLang: payload.targetLang,
+      force: payload.force,
+      taskId: context?.taskId,
+      onCost: context?.incrementCost,
+    })
   }
 
   private checkAborted(context: TaskExecuteContext) {
@@ -164,89 +124,26 @@ export class AiSummaryService implements OnModuleInit {
     }
   }
 
-  private serializeText(text: string) {
-    return removeMdCodeblock(text)
-  }
-
-  private buildSummaryKey(articleId: string, lang: string, text: string) {
-    return md5(
-      JSON.stringify({
-        feature: 'summary',
-        articleId,
-        lang,
-        textHash: md5(text),
-      }),
-    )
-  }
-
-  /**
-   * Compute a content hash used to detect whether the content has changed.
-   */
-  private computeContentHash(text: string): string {
-    return md5(this.serializeText(text))
-  }
-
   private toSummaryDoc(row: AiSummaryRow | null): AISummaryModel | null {
-    if (!row) return null
-    return {
-      ...row,
-      createdAt: row.createdAt,
-    } as unknown as AISummaryModel
+    return this.adapter.toSummaryDoc(row)
   }
 
   private toSummaryDocs(rows: AiSummaryRow[]): AISummaryModel[] {
     return rows.map((row) => this.toSummaryDoc(row)!)
   }
 
-  /**
-   * Fetch and validate an article for summary-related operations.
-   */
-  private async resolveArticleForSummary(articleId: string): Promise<{
-    document: { text: string; title: string }
-    type: CollectionRefTypes.Post | CollectionRefTypes.Note
-  }> {
-    const article = await this.databaseService.findGlobalById(articleId)
-    if (!article || !article.document) {
-      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
-    }
-
-    if (
-      article.type === CollectionRefTypes.Recently ||
-      article.type === CollectionRefTypes.Page
-    ) {
-      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
-    }
-
-    // Never expose summaries for draft / password-protected / future-dated
-    // content. Public endpoints and background tasks both flow through here.
-    if (!isGlobalArticleVisible(article)) {
-      throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
-    }
-
-    return {
-      document: article.document,
-      type: article.type,
-    }
-  }
-
-  /**
-   * Check whether a valid summary with a matching hash already exists in the database.
-   */
   private async findValidSummary(
     articleId: string,
     lang: string,
     text: string,
   ): Promise<AISummaryModel | null> {
-    const contentHash = this.computeContentHash(text)
+    const contentHash = this.multilang.computeContentHash(text)
 
     return this.toSummaryDoc(
       await this.aiSummaryRepository.findByHash(articleId, contentHash, lang),
     )
   }
 
-  /**
-   * Wrap an existing summary in the stream format so it can be returned immediately.
-   */
   private wrapAsImmediateStream(summary: AISummaryModel): {
     events: AsyncIterable<AiStreamEvent>
     result: Promise<AISummaryModel>
@@ -261,195 +158,49 @@ export class AiSummaryService implements OnModuleInit {
     }
   }
 
-  private async generateSummaryViaAIStream(
-    text: string,
-    lang: string,
-    push?: (event: AiStreamEvent) => Promise<void>,
-    onToken?: (count?: number) => Promise<void>,
-    onCost?: (usd: number) => Promise<void>,
-  ) {
-    const runtime = await this.aiService.getSummaryModel()
-    const { systemPrompt, prompt, reasoningEffort } = AI_PROMPTS.summaryStream(
-      lang,
-      text,
-    )
-
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      { role: 'user' as const, content: prompt },
-    ]
-
-    let fullText = ''
-    let usage: GenerationUsage = emptyUsage()
-    if (runtime.streamMessage) {
-      const events = runtime.streamMessage({
-        messages,
-        temperature: 0.5,
-        maxRetries: 2,
-        reasoningEffort,
-      })
-      for await (const event of events) {
-        if (event.type === 'text_delta') {
-          const delta = event.delta
-          if (typeof delta !== 'string' || delta.length === 0) continue
-          fullText += delta
-          if (push) {
-            await push({ type: 'token', data: delta })
-          }
-        } else if (
-          event.type === 'thinking_delta' ||
-          event.type === 'toolcall_start' ||
-          event.type === 'toolcall_delta' ||
-          event.type === 'toolcall_end'
-        ) {
-          this.logger.debug(`stream non-text event filtered: ${event.type}`)
-        } else if (event.type === 'done') {
-          usage = mergeUsage(
-            usage,
-            piUsageToGenerationUsage(event.message.usage),
-          )
-        } else if (event.type === 'error') {
-          throw new Error(event.error.errorMessage || 'AI summary stream error')
-        }
-      }
-    } else {
-      const result = await runtime.generateText({
-        messages,
-        temperature: 0.5,
-        maxRetries: 2,
-        reasoningEffort,
-      })
-      fullText = result.text
-      usage = mergeUsage(usage, runtimeUsageToGenerationUsage(result.usage))
-      if (push && result.text) {
-        await push({ type: 'token', data: result.text })
-      }
-    }
-
-    const parsed = JSON.parse(fullText) as { summary?: string }
-    if (!parsed?.summary || typeof parsed.summary !== 'string') {
-      throw new Error('Invalid summary JSON response')
-    }
-
-    const totalTokens = usage.totalTokens ?? 0
-    const totalCost = usage.cost?.total ?? 0
-    if (onToken) {
-      await onToken(totalTokens)
-    }
-    if (onCost && totalCost > 0) {
-      await onCost(totalCost)
-    }
-
-    return {
-      summary: parsed.summary,
-      rawText: fullText,
-      usage,
-      providerId: runtime.providerInfo.id,
-      model: runtime.providerInfo.model,
-    }
-  }
-
-  private async runSummaryGeneration(
-    articleId: string,
-    lang: string,
-    document: { text: string },
-    onToken?: (count?: number) => Promise<void>,
-    onCost?: (usd: number) => Promise<void>,
-    taskId?: string,
-  ) {
-    const text = this.serializeText(document.text)
-    const key = this.buildSummaryKey(articleId, lang, text)
-
-    return this.aiInFlightService.runWithStream<AISummaryModel>({
-      key,
-      lockTtlSec: AI_STREAM_LOCK_TTL,
-      resultTtlSec: AI_STREAM_RESULT_TTL,
-      streamMaxLen: AI_STREAM_MAXLEN,
-      readBlockMs: AI_STREAM_READ_BLOCK_MS,
-      idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
-      onLeader: async ({ push }) => {
-        const generated = await this.generateSummaryViaAIStream(
-          text,
-          lang,
-          push,
-          onToken,
-          onCost,
-        )
-        const contentMd5 = md5(text)
-
-        const doc = this.toSummaryDoc(
-          await this.aiSummaryRepository.upsert({
-            refId: articleId,
-            hash: contentMd5,
-            summary: generated.summary,
-            lang,
-          }),
-        )!
-
-        await this.generationMetrics.record({
-          resourceType: 'summary',
-          resourceId: doc.id!,
-          refId: articleId,
-          lang,
-          taskId: taskId ?? null,
-          providerId: generated.providerId,
-          model: generated.model,
-          usage: generated.usage,
-        })
-
-        return { result: doc, resultId: doc.id! }
-      },
-      parseResult: async (resultId) => {
-        const doc = this.toSummaryDoc(
-          await this.aiSummaryRepository.findById(resultId),
-        )
-        if (!doc) {
-          throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
-        }
-        return doc
-      },
-    })
-  }
-
   async generateSummaryByOpenAI(
     articleId: string,
     lang: string,
     onToken?: (count?: number) => Promise<void>,
     onCost?: (usd: number) => Promise<void>,
     taskId?: string,
+    force?: boolean,
   ) {
-    const {
-      ai: { enableSummary },
-    } = await this.configService.waitForConfigReady()
+    await this.adapter.assertEnabled()
 
-    if (!enableSummary) {
-      throw createAppException(AppErrorCode.AI_NOT_ENABLED)
-    }
-
-    const { document } = await this.resolveArticleForSummary(articleId)
+    const { article } = await this.adapter.resolveArticleDetailed(articleId)
 
     try {
-      const { result } = await this.runSummaryGeneration(
-        articleId,
+      const { result } = await this.multilang.runBaseGeneration(this.adapter, {
+        refId: articleId,
         lang,
-        document,
+        article,
+        text: article.text,
         onToken,
         onCost,
         taskId,
-      )
+        force,
+      })
       return await result
     } catch (error) {
       if (error instanceof AppException) {
         throw error
       }
       this.logger.error(
-        `OpenAI failed while processing article ${articleId}: ${error.message}`,
+        `AI summary failed while processing article ${articleId}: ${error.message}`,
         error.stack,
       )
       throw createAppException(AppErrorCode.AI_SERVICE_ERROR, {
         message: error.message,
       })
     }
+  }
+
+  async findBaseSummaryForArticle(
+    refId: string,
+  ): Promise<AISummaryModel | null> {
+    const { sourceLang } = await this.adapter.resolveArticleDetailed(refId)
+    return this.adapter.findBase(refId, sourceLang)
   }
 
   async batchGetSummariesByRefIds(
@@ -549,8 +300,8 @@ export class AiSummaryService implements OnModuleInit {
     )
   }
   async getSummaryByArticleId(articleId: string, lang = DEFAULT_SUMMARY_LANG) {
-    const { document } = await this.resolveArticleForSummary(articleId)
-    return this.findValidSummary(articleId, lang, document.text)
+    const { article } = await this.adapter.resolveArticleDetailed(articleId)
+    return this.findValidSummary(articleId, lang, article.text)
   }
 
   async getSummaryForPublicMeta(
@@ -593,12 +344,12 @@ export class AiSummaryService implements OnModuleInit {
     }
 
     const { lang } = options
-    const { document } = await this.resolveArticleForSummary(articleId)
+    const { article } = await this.adapter.resolveArticleDetailed(articleId)
 
     const existingSummary = await this.findValidSummary(
       articleId,
       lang,
-      document.text,
+      article.text,
     )
 
     if (existingSummary) {
@@ -606,7 +357,12 @@ export class AiSummaryService implements OnModuleInit {
       return this.wrapAsImmediateStream(existingSummary)
     }
 
-    return this.runSummaryGeneration(articleId, lang, document)
+    return this.multilang.runBaseGeneration(this.adapter, {
+      refId: articleId,
+      lang,
+      article,
+      text: article.text,
+    })
   }
 
   async getOrGenerateSummaryForArticle(
@@ -678,8 +434,8 @@ export class AiSummaryService implements OnModuleInit {
     const minLen = aiConfig.summaryMinTextLength ?? 0
     if (minLen > 0) {
       try {
-        const { document } = await this.resolveArticleForSummary(event.id)
-        if ((document.text?.length ?? 0) < minLen) {
+        const { article } = await this.adapter.resolveArticleDetailed(event.id)
+        if ((article.text?.length ?? 0) < minLen) {
           this.logger.debug(
             `AI auto summary skipped (text below threshold ${minLen}): article=${event.id}`,
           )
@@ -709,16 +465,16 @@ export class AiSummaryService implements OnModuleInit {
     }
 
     const id = event.id
-    let document: { text: string; title: string }
+    let article: { text: string; title: string }
     try {
-      const resolved = await this.resolveArticleForSummary(id)
-      document = resolved.document
+      const resolved = await this.adapter.resolveArticleDetailed(id)
+      article = resolved.article
     } catch {
       return
     }
 
     const minLen = aiConfig.summaryMinTextLength ?? 0
-    if (minLen > 0 && (document.text?.length ?? 0) < minLen) {
+    if (minLen > 0 && (article.text?.length ?? 0) < minLen) {
       this.logger.debug(
         `AI auto summary skipped (text below threshold ${minLen}): article=${id}`,
       )
@@ -747,7 +503,7 @@ export class AiSummaryService implements OnModuleInit {
       return
     }
 
-    const newHash = this.computeContentHash(document.text)
+    const newHash = this.multilang.computeContentHash(article.text)
     const outdatedLanguages = existingSummaries
       .filter((s) => s.hash !== newHash)
       .map((s) => s.lang)

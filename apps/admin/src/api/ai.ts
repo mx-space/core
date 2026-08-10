@@ -280,9 +280,24 @@ export function updateSummary(id: string, data: { summary: string }) {
   return patchJson<AISummary, { summary: string }>(`/ai/summaries/${id}`, data)
 }
 
-export function createSummaryTask(data: { lang?: string; refId: string }) {
-  return postJson<CreateTaskResponse, { lang?: string; refId: string }>(
-    '/ai/summaries/task',
+export function createSummaryTask(data: {
+  force?: boolean
+  refId: string
+  targetLanguages?: string[]
+}) {
+  return postJson<
+    CreateTaskResponse,
+    { force?: boolean; refId: string; targetLanguages?: string[] }
+  >('/ai/summaries/task', data)
+}
+
+export function createSummaryTranslationTask(data: {
+  force?: boolean
+  refId: string
+  targetLang: string
+}) {
+  return postJson<CreateTaskResponse, typeof data>(
+    '/ai/summaries/task/translate',
     data,
   )
 }
@@ -307,18 +322,20 @@ export function updateInsights(id: string, data: { content: string }) {
   return patchJson<AIInsights, { content: string }>(`/ai/insights/${id}`, data)
 }
 
-export function createInsightsTask(data: { refId: string }) {
-  return postJson<CreateTaskResponse, { refId: string }>(
-    '/ai/insights/task',
-    data,
-  )
+export function createInsightsTask(data: {
+  force?: boolean
+  refId: string
+  targetLanguages?: string[]
+}) {
+  return postJson<CreateTaskResponse, typeof data>('/ai/insights/task', data)
 }
 
 export function createInsightsTranslationTask(data: {
+  force?: boolean
   refId: string
   targetLang: string
 }) {
-  return postJson<CreateTaskResponse, { refId: string; targetLang: string }>(
+  return postJson<CreateTaskResponse, typeof data>(
     '/ai/insights/task/translate',
     data,
   )
@@ -378,12 +395,13 @@ export function updateTranslation(
 }
 
 export function createTranslationTask(data: {
+  force?: boolean
   refId: string
   targetLanguages?: string[]
 }) {
   return postJson<
     CreateTaskResponse,
-    { refId: string; targetLanguages?: string[] }
+    { force?: boolean; refId: string; targetLanguages?: string[] }
   >('/ai/translations/task', data)
 }
 

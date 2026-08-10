@@ -1,6 +1,20 @@
+import { normalizeTargetLang } from '@mx-space/ai'
+
 import { parseAcceptLanguage } from '~/utils/lang.util'
 
 import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from './ai.constants'
+
+export { normalizeTargetLang }
+
+export function normalizeTargetLangs(langs?: string[] | null): string[] {
+  return [
+    ...new Set(
+      (langs ?? [])
+        .map((lang) => normalizeTargetLang(lang))
+        .filter((lang): lang is string => lang !== undefined),
+    ),
+  ]
+}
 
 /**
  * Extract the primary language code from an Accept-Language header or a language code.
@@ -38,4 +52,13 @@ export function resolveTargetLanguages(
   configured?: string[],
 ): string[] {
   return explicit?.length ? explicit : (configured ?? [])
+}
+
+export function resolveArticleSourceLang(document: {
+  meta?: Record<string, unknown> | null
+}): string {
+  const raw = document.meta?.lang
+  return typeof raw === 'string' && raw.trim()
+    ? parseLanguageCode(raw)
+    : DEFAULT_SUMMARY_LANG
 }

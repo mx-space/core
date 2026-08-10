@@ -1,8 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useMemo } from 'react'
-import type { AISummary } from '~/api/ai'
-import type { ArticleGroupedConfig } from '../components/article-grouped/types'
 
+import type { AISummary } from '~/api/ai'
 import {
   createSummaryTask,
   deleteSummary,
@@ -13,6 +12,7 @@ import {
 
 import { ArticleGroupedRouteView } from '../components/article-grouped/ArticleGroupedRouteView'
 import { SummaryEditBody } from '../components/article-grouped/SummaryEditBody'
+import type { ArticleGroupedConfig } from '../components/article-grouped/types'
 
 export function AiSummaryRouteView() {
   const config = useMemo<ArticleGroupedConfig<AISummary>>(
@@ -54,7 +54,13 @@ export function AiSummaryRouteView() {
         labelKey: 'ai.summary.generateLabel',
         icon: Plus,
         promptForLang: true,
-        runTask: ({ refId, lang }) => createSummaryTask({ refId, lang }),
+        defaultLangsOptionKey: 'summaryTargetLanguages',
+        runTask: ({ refId, langs, force }) =>
+          createSummaryTask({
+            force,
+            refId,
+            targetLanguages: langs?.length ? langs : undefined,
+          }),
         taskTypeForQueue: 'Summary',
       },
 
