@@ -1,6 +1,32 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildTtsRegeneratePayload } from './ai'
+import { buildTtsRegeneratePayload, parseLangInput } from './ai'
+
+describe('parseLangInput', () => {
+  it('splits on full-width and half-width commas, trims, lowercases, dedupes, and drops empty segments', () => {
+    expect(parseLangInput('zh, EN，ja , , zh')).toEqual(['zh', 'en', 'ja'])
+  })
+
+  it('preserves first-occurrence order when deduping', () => {
+    expect(parseLangInput('ja, zh, en, ja, zh')).toEqual(['ja', 'zh', 'en'])
+  })
+
+  it('returns an empty array for whitespace-only input', () => {
+    expect(parseLangInput('  ')).toEqual([])
+  })
+
+  it('returns an empty array for empty input', () => {
+    expect(parseLangInput('')).toEqual([])
+  })
+
+  it('folds mixed case to lowercase', () => {
+    expect(parseLangInput('ZH-cn, En-US')).toEqual(['zh-cn', 'en-us'])
+  })
+
+  it('returns a single value when there is no separator', () => {
+    expect(parseLangInput('zh')).toEqual(['zh'])
+  })
+})
 
 describe('buildTtsRegeneratePayload', () => {
   it('forces regeneration and scopes the task to the row language', () => {

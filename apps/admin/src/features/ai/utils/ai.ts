@@ -6,6 +6,18 @@ export { getErrorMessage } from '~/features/tasks/utils/tasks'
 
 type Translator = (key: TranslationKey, values?: TranslationValues) => string
 
+export function parseLangInput(raw: string): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const segment of raw.split(/[,，]/)) {
+    const lang = segment.trim().toLowerCase()
+    if (!lang || seen.has(lang)) continue
+    seen.add(lang)
+    result.push(lang)
+  }
+  return result
+}
+
 export function editSummaryItem(item: AISummary, t: Translator) {
   const summary = window.prompt(t('ai.edit.summaryPrompt'), item.summary)
   if (summary === null) return Promise.resolve({ cancelled: true })

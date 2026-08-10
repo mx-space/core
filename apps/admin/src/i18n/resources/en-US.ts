@@ -68,6 +68,14 @@ export const enUS = {
   'ai.filter.langPlaceholder': 'Language',
   'ai.filter.searchPlaceholder': 'Search by title',
   'tasks.filter.typeAria': 'Task type filter',
+  'ai.generate.forceHint':
+    'Ignores cache and incremental reuse; regenerates from scratch',
+  'ai.generate.forceLabel': 'Force regenerate',
+  'ai.generate.langsCount': '{count} total',
+  'ai.generate.langsHint':
+    'Comma-separated; leave empty to use the target languages from AI settings',
+  'ai.generate.langsLabel': 'Target languages',
+  'ai.generate.langsTooMany': 'At most {max} languages per run',
   'ai.grouped.itemCount': '{count} items',
   'ai.grouped.recordCount': '{count} records in total',
   'ai.insights.detailSectionTitle': 'Insights detail',
