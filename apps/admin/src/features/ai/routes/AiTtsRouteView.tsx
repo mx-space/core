@@ -57,8 +57,12 @@ export function AiTtsRouteView() {
         labelKey: 'ai.tts.generateLabel',
         icon: Plus,
         promptForLang: true,
-        runTask: ({ refId, lang }) =>
-          createTtsTask({ refId, langs: lang ? [lang] : undefined }),
+        runTask: ({ refId, langs, force }) =>
+          createTtsTask({
+            force,
+            langs: langs?.length ? langs : undefined,
+            refId,
+          }),
         taskTypeForQueue: 'Tts',
       },
 

@@ -68,10 +68,12 @@ export function AiTranslationRouteView() {
         labelKey: 'ai.translation.generateLabel',
         icon: Plus,
         promptForLang: true,
-        runTask: ({ refId, lang }) =>
+        defaultLangsOptionKey: 'translationTargetLanguages',
+        runTask: ({ refId, langs, force }) =>
           createTranslationTask({
+            force,
             refId,
-            targetLanguages: lang ? [lang] : undefined,
+            targetLanguages: langs?.length ? langs : undefined,
           }),
         taskTypeForQueue: 'Translation',
       },
@@ -106,6 +108,7 @@ export function AiTranslationRouteView() {
           icon: Languages,
           run: () =>
             createTranslationTask({
+              force: true,
               refId: item.refId,
               targetLanguages: [item.lang],
             }),

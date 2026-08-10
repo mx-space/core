@@ -1,8 +1,7 @@
 import { Languages, Plus, Sparkles } from 'lucide-react'
 import { useMemo } from 'react'
-import type { AIInsights } from '~/api/ai'
-import type { ArticleGroupedConfig } from '../components/article-grouped/types'
 
+import type { AIInsights } from '~/api/ai'
 import {
   createInsightsTask,
   createInsightsTranslationTask,
@@ -14,6 +13,7 @@ import {
 
 import { ArticleGroupedRouteView } from '../components/article-grouped/ArticleGroupedRouteView'
 import { InsightsEditBody } from '../components/article-grouped/InsightsEditBody'
+import type { ArticleGroupedConfig } from '../components/article-grouped/types'
 
 export function AiInsightsRouteView() {
   const config = useMemo<ArticleGroupedConfig<AIInsights>>(
@@ -55,7 +55,7 @@ export function AiInsightsRouteView() {
         labelKey: 'ai.insights.generateLabel',
         icon: Sparkles,
         promptForLang: false,
-        runTask: ({ refId }) => createInsightsTask({ refId }),
+        runTask: ({ refId, force }) => createInsightsTask({ force, refId }),
         taskTypeForQueue: 'Insights',
       },
 
@@ -96,7 +96,8 @@ export function AiInsightsRouteView() {
             id: 'regenerate',
             labelKey: 'ai.action.regenerate',
             icon: Plus,
-            run: (target) => createInsightsTask({ refId: target.refId }),
+            run: (target) =>
+              createInsightsTask({ force: true, refId: target.refId }),
           })
         }
         return list

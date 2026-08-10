@@ -19,6 +19,8 @@ export const adminQueryKeys = {
     loggedStatus: () => ['auth', 'check-logged'] as const,
   },
   ai: {
+    defaultLangs: (optionKey: string) =>
+      ['ai', 'default-langs', optionKey] as const,
     grouped: (params: { group: string; search: string }) =>
       ['ai', params.group, 'grouped', params.search] as const,
     groupedByRef: (params: { group: string; id: string }) =>
@@ -29,6 +31,12 @@ export const adminQueryKeys = {
     imageModels: () => ['ai', 'image', 'models'] as const,
     imagePresets: () => ['ai', 'image', 'presets'] as const,
     models: (context: string) => ['ai', 'models', context] as const,
+    overviewArticle: (refId: string) =>
+      ['ai', 'overview', 'article', refId] as const,
+    overviewList: (params: { search: string; type: string }) =>
+      ['ai', 'overview', 'grouped', params] as const,
+    overviewListRoot: ['ai', 'overview', 'grouped'] as const,
+    overviewRoot: ['ai', 'overview'] as const,
     root: ['ai'] as const,
     translationEntriesRoot: ['ai', 'translation-entries'] as const,
     translationEntries: (params: {

@@ -68,9 +68,12 @@ export interface ArticleGroupedConfig<TItem> {
     labelKey: TranslationKey
     icon: LucideIcon
     promptForLang?: boolean
+    defaultLangsOptionKey?:
+      'summaryTargetLanguages' | 'translationTargetLanguages'
     runTask: (input: {
       refId: string
-      lang?: string
+      langs?: string[]
+      force?: boolean
     }) => Promise<{ created: boolean; taskId: string }>
     taskTypeForQueue: 'Insights' | 'Summary' | 'Translation' | 'Tts'
   }

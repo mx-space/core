@@ -10,6 +10,7 @@ import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { ContentLayout, ContentLayoutSlot } from '~/ui/layout/content-layout'
 
+import { useAiDefaultLangs } from '../../hooks/use-ai-default-langs'
 import { getErrorMessage } from '../../utils/ai'
 import { useArticleGroupedRouteContext } from './article-grouped-route-context'
 import { ArticleDetailEmptyState } from './ArticleDetailEmptyState'
@@ -26,6 +27,7 @@ export function ArticleGroupedDetailRoute<TItem>() {
   const queryClient = useQueryClient()
   const ctx = useArticleGroupedRouteContext<TItem>()
   const { config } = ctx
+  const defaultLangs = useAiDefaultLangs(config.generate.defaultLangsOptionKey)
 
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
 
@@ -94,7 +96,7 @@ export function ArticleGroupedDetailRoute<TItem>() {
   })
 
   const generateMutation = useMutation({
-    mutationFn: (input: { refId: string; lang?: string }) =>
+    mutationFn: (input: { refId: string; langs?: string[]; force?: boolean }) =>
       config.generate.runTask(input),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('ai.toast.taskCreateFailed'))),
@@ -130,13 +132,18 @@ export function ArticleGroupedDetailRoute<TItem>() {
   const handleGenerate = async () => {
     if (!id) return
     const result = await presentGeneratePrompt({
+      defaultLangs,
       inlineEmpty: t(config.inlineEmptyKey, { kind: t(config.kindKey) }),
-      langLabel: t('ai.translation.langLabel'),
+      langLabel: t('ai.generate.langsLabel'),
       promptForLang: Boolean(config.generate.promptForLang),
       title: t(config.generate.labelKey),
     })
     if (!result) return
-    await generateMutation.mutateAsync({ refId: id, lang: result.lang })
+    await generateMutation.mutateAsync({
+      force: result.force,
+      langs: result.langs,
+      refId: id,
+    })
   }
 
   const { keyboardActions, buildMenu } = useItemActions<TItem>({
