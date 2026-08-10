@@ -123,13 +123,19 @@ export class AiInsightsService implements OnModuleInit {
     return rows.map((row) => this.toInsightsDoc(row)!)
   }
 
-  private buildInsightsKey(articleId: string, lang: string, text: string) {
+  private buildInsightsKey(
+    articleId: string,
+    lang: string,
+    text: string,
+    force?: boolean,
+  ) {
     return md5(
       JSON.stringify({
         feature: 'insights',
         articleId,
         lang,
         textHash: md5(text),
+        force: Boolean(force),
       }),
     )
   }
@@ -280,7 +286,7 @@ export class AiInsightsService implements OnModuleInit {
     force?: boolean,
   ) {
     const text = this.serializeText(article.text)
-    const key = this.buildInsightsKey(articleId, lang, text)
+    const key = this.buildInsightsKey(articleId, lang, text, force)
 
     return this.aiInFlightService.runWithStream<AIInsightsModel>({
       key,

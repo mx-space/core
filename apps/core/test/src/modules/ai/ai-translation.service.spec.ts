@@ -735,3 +735,28 @@ describe('AiTranslationService — force regeneration', () => {
     })
   })
 })
+
+describe('AiTranslationService.buildTranslationKey (in-flight key)', () => {
+  const buildKey = (service: AiTranslationService, force?: boolean) => {
+    const content = (service as any).toArticleContent(articleDocument())
+    return (service as any).buildTranslationKey('post-1', 'en', content, force)
+  }
+
+  it('gives force and plain requests different in-flight keys for the same content', () => {
+    const { service } = createService()
+
+    expect(buildKey(service, true)).not.toBe(buildKey(service, false))
+  })
+
+  it('gives repeated force requests the same in-flight key', () => {
+    const { service } = createService()
+
+    expect(buildKey(service, true)).toBe(buildKey(service, true))
+  })
+
+  it('treats an omitted force the same as an explicit false', () => {
+    const { service } = createService()
+
+    expect(buildKey(service, undefined)).toBe(buildKey(service, false))
+  })
+})

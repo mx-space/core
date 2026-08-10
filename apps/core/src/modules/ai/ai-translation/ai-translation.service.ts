@@ -656,6 +656,7 @@ export class AiTranslationService
     articleId: string,
     targetLang: string,
     content: ArticleContent,
+    force?: boolean,
   ): string {
     return md5(
       JSON.stringify({
@@ -669,6 +670,7 @@ export class AiTranslationService
         subtitle: content.subtitle ?? null,
         summary: content.summary ?? null,
         tags: content.tags ?? null,
+        force: Boolean(force),
       }),
     )
   }
@@ -811,7 +813,7 @@ export class AiTranslationService
   ) {
     const content = this.toArticleContent(document)
     const sourceModified = document.modifiedAt ?? undefined
-    const key = this.buildTranslationKey(articleId, targetLang, content)
+    const key = this.buildTranslationKey(articleId, targetLang, content, force)
 
     return this.aiInFlightService.runWithStream<AITranslationModel>({
       key,

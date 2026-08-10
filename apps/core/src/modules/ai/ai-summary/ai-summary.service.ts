@@ -169,13 +169,19 @@ export class AiSummaryService implements OnModuleInit {
     return removeMdCodeblock(text)
   }
 
-  private buildSummaryKey(articleId: string, lang: string, text: string) {
+  private buildSummaryKey(
+    articleId: string,
+    lang: string,
+    text: string,
+    force?: boolean,
+  ) {
     return md5(
       JSON.stringify({
         feature: 'summary',
         articleId,
         lang,
         textHash: md5(text),
+        force: Boolean(force),
       }),
     )
   }
@@ -360,7 +366,7 @@ export class AiSummaryService implements OnModuleInit {
     force?: boolean,
   ) {
     const text = this.serializeText(document.text)
-    const key = this.buildSummaryKey(articleId, lang, text)
+    const key = this.buildSummaryKey(articleId, lang, text, force)
 
     return this.aiInFlightService.runWithStream<AISummaryModel>({
       key,
