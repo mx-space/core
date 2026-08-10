@@ -107,6 +107,19 @@ describe('buildGenerateTask', () => {
     })
   })
 
+  it('sends a multi-language insights retry to the base task even when a base row exists', () => {
+    const detail = detailWith([{ lang: 'zh', isTranslation: false }])
+
+    buildGenerateTask('insights', ['en', 'ja'], '42', detail, true)
+
+    expect(api.createInsightsTask).toHaveBeenCalledWith({
+      force: true,
+      refId: '42',
+      targetLanguages: ['en', 'ja'],
+    })
+    expect(api.createInsightsTranslationTask).not.toHaveBeenCalled()
+  })
+
   it('regenerates the base row when the requested language is its own', () => {
     const detail = detailWith([{ lang: 'zh', isTranslation: false }])
 
@@ -115,6 +128,7 @@ describe('buildGenerateTask', () => {
     expect(api.createInsightsTask).toHaveBeenCalledWith({
       force: true,
       refId: '42',
+      targetLanguages: ['zh'],
     })
   })
 
@@ -126,6 +140,7 @@ describe('buildGenerateTask', () => {
     expect(api.createInsightsTask).toHaveBeenCalledWith({
       force: true,
       refId: '42',
+      targetLanguages: undefined,
     })
   })
 })
