@@ -64,15 +64,26 @@ export class AiInFlightService {
     const instanceId = `${process.pid}-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 10)}`
-    const lockResult = await redis.set(
-      lockKey,
-      instanceId,
-      'EX',
-      options.lockTtlSec,
-      'NX',
-    )
+    const lockMode = options.bypassResultCache ? 'force' : 'plain'
+    const lockValue = `${lockMode}:${instanceId}`
 
-    if (lockResult === 'OK') {
+    let acquired =
+      (await redis.set(lockKey, lockValue, 'EX', options.lockTtlSec, 'NX')) ===
+      'OK'
+
+    // A force request that loses the race waits out a plain leader instead
+    // of spawning a second writer, but joins another force immediately —
+    // two force runs converging on one leader is the desired outcome.
+    if (!acquired && options.bypassResultCache) {
+      acquired = await this.waitForForceLock(
+        redis,
+        lockKey,
+        lockValue,
+        options.lockTtlSec,
+      )
+    }
+
+    if (acquired) {
       if (options.bypassResultCache) {
         // Safe now: lockKey exists, so a concurrent follower checking
         // resultKey/errorKey/lockKey will see the lock and keep waiting
@@ -123,6 +134,30 @@ export class AiInFlightService {
       }),
       result: this.waitForResult(options, { resultKey, errorKey, lockKey }),
     }
+  }
+
+  private async waitForForceLock(
+    redis: ReturnType<RedisService['getClient']>,
+    lockKey: string,
+    lockValue: string,
+    lockTtlSec: number,
+  ): Promise<boolean> {
+    const holder = await redis.get(lockKey)
+    if (holder?.startsWith('force:')) {
+      return false
+    }
+
+    const deadline = Date.now() + lockTtlSec * 1000
+    while (Date.now() < deadline) {
+      await sleep(200)
+      if (
+        (await redis.set(lockKey, lockValue, 'EX', lockTtlSec, 'NX')) === 'OK'
+      ) {
+        return true
+      }
+    }
+
+    return false
   }
 
   private async executeLeader<T>(

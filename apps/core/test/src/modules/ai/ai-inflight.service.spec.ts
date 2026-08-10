@@ -556,8 +556,9 @@ describe('AiInFlightService — public SSE envelope', () => {
     const { service, fakeRedis } = await buildService()
     const resultKey = 'ai:stream:bypass-follower:1:result'
     const lockKey = 'ai:stream:bypass-follower:1:lock'
-    // another leader already holds the lock and has an in-flight (not-yet-stale) result
-    await fakeRedis.set(lockKey, 'other-leader')
+    // another force leader already holds the lock and has an in-flight
+    // (not-yet-stale) result — joining it as a follower is immediate.
+    await fakeRedis.set(lockKey, 'force:other-leader')
     await fakeRedis.set(resultKey, 'in-flight-by-other-leader')
 
     const { role, result } = await service.runWithStream<{ id: string }>({
@@ -577,5 +578,125 @@ describe('AiInFlightService — public SSE envelope', () => {
     expect(role).toBe('follower')
     expect(fakeRedis.delCalls).not.toContain(resultKey)
     await expect(result).resolves.toEqual({ id: 'in-flight-by-other-leader' })
+  })
+})
+
+describe('AiInFlightService — force vs plain lock arbitration', () => {
+  it('force losing to a plain leader waits, then leads once the plain leader releases the lock, deleting resultKey', async () => {
+    const { service, fakeRedis } = await buildService()
+    const lockKey = 'ai:stream:wait-plain:1:lock'
+    const resultKey = 'ai:stream:wait-plain:1:result'
+    await fakeRedis.set(lockKey, 'plain:existing-leader')
+    await fakeRedis.set(resultKey, 'stale-result')
+
+    setTimeout(() => {
+      fakeRedis.del(lockKey)
+    }, 250)
+
+    const { role, result } = await service.runWithStream<{ id: string }>({
+      key: 'wait-plain:1',
+      lockTtlSec: 2,
+      resultTtlSec: 60,
+      streamMaxLen: 100,
+      readBlockMs: 10,
+      idleTimeoutMs: 1000,
+      bypassResultCache: true,
+      onLeader: async () => ({ result: { id: 'fresh' }, resultId: 'fresh' }),
+      parseResult: async (id: string) => ({ id }),
+    })
+
+    expect(role).toBe('leader')
+    expect(fakeRedis.delCalls).toContain(resultKey)
+    await expect(result).resolves.toEqual({ id: 'fresh' })
+  })
+
+  it('force losing to another force joins immediately as a follower, without polling or deleting resultKey', async () => {
+    const { service, fakeRedis } = await buildService()
+    const lockKey = 'ai:stream:wait-force:1:lock'
+    const resultKey = 'ai:stream:wait-force:1:result'
+    await fakeRedis.set(lockKey, 'force:other-leader')
+    await fakeRedis.set(resultKey, 'in-flight-by-other-force')
+    const callLogAtStart = fakeRedis.callLog.length
+
+    const { role, result } = await service.runWithStream<{ id: string }>({
+      key: 'wait-force:1',
+      lockTtlSec: 5,
+      resultTtlSec: 60,
+      streamMaxLen: 100,
+      readBlockMs: 10,
+      idleTimeoutMs: 1000,
+      bypassResultCache: true,
+      onLeader: async () => {
+        throw new Error('should not run: another force already leads')
+      },
+      parseResult: async (id: string) => ({ id }),
+    })
+
+    expect(role).toBe('follower')
+    // a single NX attempt on lockKey — no retry polling for a force-held lock
+    expect(
+      fakeRedis.callLog
+        .slice(callLogAtStart)
+        .filter((entry) => entry === `set:${lockKey}`),
+    ).toHaveLength(1)
+    expect(fakeRedis.delCalls).not.toContain(resultKey)
+    await expect(result).resolves.toEqual({ id: 'in-flight-by-other-force' })
+  })
+
+  it('a plain request losing the lock race is still an immediate follower (behavior unchanged)', async () => {
+    const { service, fakeRedis } = await buildService()
+    const lockKey = 'ai:stream:plain-loses:1:lock'
+    await fakeRedis.set(lockKey, 'plain:other-leader')
+    const callLogAtStart = fakeRedis.callLog.length
+
+    const { role } = await service.runWithStream<{ id: string }>({
+      key: 'plain-loses:1',
+      lockTtlSec: 5,
+      resultTtlSec: 60,
+      streamMaxLen: 100,
+      readBlockMs: 10,
+      idleTimeoutMs: 1000,
+      onLeader: async () => {
+        throw new Error('should not run: lock already held')
+      },
+      parseResult: async (id: string) => ({ id }),
+    })
+
+    expect(role).toBe('follower')
+    // no bypassResultCache — no retry branch is entered at all
+    expect(
+      fakeRedis.callLog
+        .slice(callLogAtStart)
+        .filter((entry) => entry === `set:${lockKey}`),
+    ).toHaveLength(1)
+  })
+
+  it('force gives up waiting after lockTtlSec and degrades to a follower without throwing', async () => {
+    const { service, fakeRedis } = await buildService()
+    const lockKey = 'ai:stream:wait-timeout:1:lock'
+    const resultKey = 'ai:stream:wait-timeout:1:result'
+    await fakeRedis.set(lockKey, 'plain:stuck-leader')
+
+    const { role, result } = await service.runWithStream<{ id: string }>({
+      key: 'wait-timeout:1',
+      lockTtlSec: 0.3,
+      resultTtlSec: 60,
+      streamMaxLen: 100,
+      readBlockMs: 10,
+      idleTimeoutMs: 1000,
+      bypassResultCache: true,
+      onLeader: async () => {
+        throw new Error('should not run: lock is never released')
+      },
+      parseResult: async (id: string) => ({ id }),
+    })
+
+    expect(role).toBe('follower')
+    expect(fakeRedis.delCalls).not.toContain(resultKey)
+
+    // resultKey is checked before lockKey in the follower's poll loop, so
+    // publishing it resolves `result` without needing to free the stuck lock.
+    await fakeRedis.set(resultKey, 'someone-elses-result')
+    await expect(result).resolves.toEqual({ id: 'someone-elses-result' })
   })
 })

@@ -207,24 +207,15 @@ describe('AiSummaryService', () => {
 })
 
 describe('AiSummaryService.buildSummaryKey (in-flight key)', () => {
-  const buildKey = (service: AiSummaryService, force?: boolean) =>
-    (service as any).buildSummaryKey('post-1', 'zh', 'same text', force)
+  const buildKey = (service: AiSummaryService) =>
+    (service as any).buildSummaryKey('post-1', 'zh', 'same text')
 
-  it('gives force and plain requests different in-flight keys for the same content', () => {
+  // force no longer folds into the key hash: a force request must land on
+  // the same in-flight lock as a plain one instead of spawning a second
+  // writer (see AiInFlightService.waitForForceLock).
+  it('gives repeated requests for the same content the same in-flight key', () => {
     const { service } = createService()
 
-    expect(buildKey(service, true)).not.toBe(buildKey(service, false))
-  })
-
-  it('gives repeated force requests the same in-flight key', () => {
-    const { service } = createService()
-
-    expect(buildKey(service, true)).toBe(buildKey(service, true))
-  })
-
-  it('treats an omitted force the same as an explicit false', () => {
-    const { service } = createService()
-
-    expect(buildKey(service, undefined)).toBe(buildKey(service, false))
+    expect(buildKey(service)).toBe(buildKey(service))
   })
 })

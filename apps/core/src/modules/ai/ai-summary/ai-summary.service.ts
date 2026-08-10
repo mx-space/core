@@ -36,7 +36,7 @@ import {
 } from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import { resolveTargetLanguages } from '../ai-language.util'
+import { parseLanguageCode, resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
@@ -80,10 +80,14 @@ export class AiSummaryService implements OnModuleInit {
         this.checkAborted(context)
 
         const aiConfig = await this.configService.get('ai')
-        const languages = resolveTargetLanguages(
-          payload.targetLanguages,
-          aiConfig.summaryTargetLanguages,
-        )
+        const languages = [
+          ...new Set(
+            resolveTargetLanguages(
+              payload.targetLanguages,
+              aiConfig.summaryTargetLanguages,
+            ).map((lang) => parseLanguageCode(lang)),
+          ),
+        ]
 
         if (!languages.length) {
           await context.appendLog('warn', 'No target languages specified')
@@ -169,19 +173,13 @@ export class AiSummaryService implements OnModuleInit {
     return removeMdCodeblock(text)
   }
 
-  private buildSummaryKey(
-    articleId: string,
-    lang: string,
-    text: string,
-    force?: boolean,
-  ) {
+  private buildSummaryKey(articleId: string, lang: string, text: string) {
     return md5(
       JSON.stringify({
         feature: 'summary',
         articleId,
         lang,
         textHash: md5(text),
-        force: Boolean(force),
       }),
     )
   }
@@ -366,7 +364,7 @@ export class AiSummaryService implements OnModuleInit {
     force?: boolean,
   ) {
     const text = this.serializeText(document.text)
-    const key = this.buildSummaryKey(articleId, lang, text, force)
+    const key = this.buildSummaryKey(articleId, lang, text)
 
     return this.aiInFlightService.runWithStream<AISummaryModel>({
       key,

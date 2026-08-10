@@ -40,7 +40,7 @@ import {
 } from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import { resolveTargetLanguages } from '../ai-language.util'
+import { parseLanguageCode, resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
@@ -236,10 +236,14 @@ export class AiTranslationService
     this.checkAborted(context)
 
     const aiConfig = await this.configService.get('ai')
-    const languages = resolveTargetLanguages(
-      payload.targetLanguages,
-      aiConfig.translationTargetLanguages,
-    )
+    const languages = [
+      ...new Set(
+        resolveTargetLanguages(
+          payload.targetLanguages,
+          aiConfig.translationTargetLanguages,
+        ).map((lang) => parseLanguageCode(lang)),
+      ),
+    ]
 
     if (!languages.length) {
       await context.appendLog('warn', 'No target languages specified')
@@ -656,7 +660,6 @@ export class AiTranslationService
     articleId: string,
     targetLang: string,
     content: ArticleContent,
-    force?: boolean,
   ): string {
     return md5(
       JSON.stringify({
@@ -670,7 +673,6 @@ export class AiTranslationService
         subtitle: content.subtitle ?? null,
         summary: content.summary ?? null,
         tags: content.tags ?? null,
-        force: Boolean(force),
       }),
     )
   }
@@ -813,7 +815,7 @@ export class AiTranslationService
   ) {
     const content = this.toArticleContent(document)
     const sourceModified = document.modifiedAt ?? undefined
-    const key = this.buildTranslationKey(articleId, targetLang, content, force)
+    const key = this.buildTranslationKey(articleId, targetLang, content)
 
     return this.aiInFlightService.runWithStream<AITranslationModel>({
       key,

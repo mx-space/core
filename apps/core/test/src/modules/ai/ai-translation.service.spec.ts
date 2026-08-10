@@ -737,26 +737,17 @@ describe('AiTranslationService — force regeneration', () => {
 })
 
 describe('AiTranslationService.buildTranslationKey (in-flight key)', () => {
-  const buildKey = (service: AiTranslationService, force?: boolean) => {
+  const buildKey = (service: AiTranslationService) => {
     const content = (service as any).toArticleContent(articleDocument())
-    return (service as any).buildTranslationKey('post-1', 'en', content, force)
+    return (service as any).buildTranslationKey('post-1', 'en', content)
   }
 
-  it('gives force and plain requests different in-flight keys for the same content', () => {
+  // force no longer folds into the key hash: a force request must land on
+  // the same in-flight lock as a plain one instead of spawning a second
+  // writer (see AiInFlightService.waitForForceLock).
+  it('gives repeated requests for the same content the same in-flight key', () => {
     const { service } = createService()
 
-    expect(buildKey(service, true)).not.toBe(buildKey(service, false))
-  })
-
-  it('gives repeated force requests the same in-flight key', () => {
-    const { service } = createService()
-
-    expect(buildKey(service, true)).toBe(buildKey(service, true))
-  })
-
-  it('treats an omitted force the same as an explicit false', () => {
-    const { service } = createService()
-
-    expect(buildKey(service, undefined)).toBe(buildKey(service, false))
+    expect(buildKey(service)).toBe(buildKey(service))
   })
 })
