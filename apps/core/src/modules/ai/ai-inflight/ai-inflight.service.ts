@@ -155,6 +155,14 @@ export class AiInFlightService {
       ) {
         return true
       }
+
+      // The holder can change while we wait — if another force took over
+      // (e.g. it raced in via the plain leader's release), join it now
+      // instead of blocking out the rest of the timeout.
+      const currentHolder = await redis.get(lockKey)
+      if (currentHolder?.startsWith('force:')) {
+        return false
+      }
     }
 
     return false

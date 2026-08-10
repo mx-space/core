@@ -610,6 +610,38 @@ describe('AiInFlightService — force vs plain lock arbitration', () => {
     await expect(result).resolves.toEqual({ id: 'fresh' })
   })
 
+  it('force waiting on a plain leader joins as a follower if another force takes over the lock mid-wait', async () => {
+    const { service, fakeRedis } = await buildService()
+    const lockKey = 'ai:stream:wait-plain-then-force:1:lock'
+    const resultKey = 'ai:stream:wait-plain-then-force:1:result'
+    await fakeRedis.set(lockKey, 'plain:existing-leader')
+
+    // the plain leader releases, and a different force request races in
+    // and wins the lock via the ordinary leader path before our next retry
+    setTimeout(() => {
+      fakeRedis.set(lockKey, 'force:another-leader')
+      fakeRedis.set(resultKey, 'joined-other-force-result')
+    }, 250)
+
+    const { role, result } = await service.runWithStream<{ id: string }>({
+      key: 'wait-plain-then-force:1',
+      lockTtlSec: 2,
+      resultTtlSec: 60,
+      streamMaxLen: 100,
+      readBlockMs: 10,
+      idleTimeoutMs: 1000,
+      bypassResultCache: true,
+      onLeader: async () => {
+        throw new Error('should not run: another force took the lock')
+      },
+      parseResult: async (id: string) => ({ id }),
+    })
+
+    expect(role).toBe('follower')
+    expect(fakeRedis.delCalls).not.toContain(resultKey)
+    await expect(result).resolves.toEqual({ id: 'joined-other-force-result' })
+  })
+
   it('force losing to another force joins immediately as a follower, without polling or deleting resultKey', async () => {
     const { service, fakeRedis } = await buildService()
     const lockKey = 'ai:stream:wait-force:1:lock'
