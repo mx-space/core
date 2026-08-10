@@ -19,8 +19,16 @@ describe('parseLangInput', () => {
     expect(parseLangInput('')).toEqual([])
   })
 
-  it('folds mixed case to lowercase', () => {
-    expect(parseLangInput('ZH-cn, En-US')).toEqual(['zh-cn', 'en-us'])
+  it('folds a region suffix into its 2-letter primary tag, so zh-CN and zh dedupe together', () => {
+    expect(parseLangInput('zh-CN, zh')).toEqual(['zh'])
+  })
+
+  it('treats underscore as a hyphen when folding a region suffix', () => {
+    expect(parseLangInput('en_US, EN')).toEqual(['en'])
+  })
+
+  it('leaves a 3-letter primary tag (and any suffix) untouched', () => {
+    expect(parseLangInput('FIL-PH, jam')).toEqual(['fil-ph', 'jam'])
   })
 
   it('returns a single value when there is no separator', () => {

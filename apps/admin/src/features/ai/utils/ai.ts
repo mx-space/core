@@ -10,8 +10,11 @@ export function parseLangInput(raw: string): string[] {
   const seen = new Set<string>()
   const result: string[] = []
   for (const segment of raw.split(/[,，]/)) {
-    const lang = segment.trim().toLowerCase()
-    if (!lang || seen.has(lang)) continue
+    const normalized = segment.trim().toLowerCase().replaceAll('_', '-')
+    if (!normalized) continue
+    const [primary] = normalized.split('-')
+    const lang = /^[a-z]{2}$/.test(primary) ? primary : normalized
+    if (seen.has(lang)) continue
     seen.add(lang)
     result.push(lang)
   }
