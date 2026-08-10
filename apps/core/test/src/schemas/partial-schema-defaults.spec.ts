@@ -57,4 +57,15 @@ describe('Partial schemas should not apply defaults for missing fields', () => {
     const result = PartialNoteSchema.parse({ title: '' })
     expect(result.title).toBe('Untitled')
   })
+
+  it('PartialNoteSchema - nullable metadata can be explicitly cleared', () => {
+    const result = PartialNoteSchema.parse({ mood: null, weather: null })
+    expect(result).toMatchObject({ mood: null, weather: null })
+  })
+
+  it('PartialNoteSchema - omitted nullable metadata stays omitted', () => {
+    const result = PartialNoteSchema.parse({ title: 'without metadata' })
+    expect(result).not.toHaveProperty('mood')
+    expect(result).not.toHaveProperty('weather')
+  })
 })
