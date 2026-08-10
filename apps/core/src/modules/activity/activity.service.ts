@@ -547,7 +547,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const $gte = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
     const [allPosts, allNotes] = await Promise.all([
       this.postService.findRecent(50, { publishedOnly: true }),
-      this.noteService.findRecent(50),
+      this.noteService.findRecent(50, { metaOnly: true, visibleOnly: true }),
     ])
     const posts = allPosts
       .filter((row) => row.createdAt >= $gte)
@@ -556,14 +556,26 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         text: getPublicText(post),
         content: getPublicContent(post),
       }))
+    const now = new Date()
     const notes = allNotes
-      .filter((row) => row.createdAt >= $gte)
-      .map((note) => {
-        if (note.hasPassword || !note.isPublished) {
-          note.title = 'Private note'
-        }
-        return omit(note, 'isPublished')
-      })
+      .filter(
+        (row) =>
+          row.createdAt >= $gte &&
+          row.isPublished &&
+          !row.hasPassword &&
+          (row.publicAt === null || row.publicAt <= now),
+      )
+      .map((note) =>
+        pick(note, [
+          'id',
+          'nid',
+          'title',
+          'mood',
+          'weather',
+          'bookmark',
+          'createdAt',
+        ]),
+      )
     return { posts, notes }
   }
 }
