@@ -1,4 +1,4 @@
-import { parseAcceptLanguage } from '~/utils/lang.util'
+import { normalizeLanguageCode, parseAcceptLanguage } from '~/utils/lang.util'
 
 import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from './ai.constants'
 
@@ -23,6 +23,15 @@ export function parseLanguageCode(lang?: string): string {
   if (base && /^[a-z]{2,3}$/.test(base)) return base
 
   return DEFAULT_SUMMARY_LANG
+}
+
+// Folds a target-language token for dedup: recognized codes/aliases collapse
+// via normalizeLanguageCode, unrecognized ones (a stray "english" typed into
+// the free-input field) pass through as trim+lowercase instead of
+// parseLanguageCode's DEFAULT_SUMMARY_LANG fallback, which would otherwise
+// silently overwrite an unrelated valid-language row.
+export function normalizeTargetLang(lang: string): string {
+  return normalizeLanguageCode(lang) ?? lang.trim().toLowerCase()
 }
 
 /**

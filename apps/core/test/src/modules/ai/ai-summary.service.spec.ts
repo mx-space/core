@@ -5,6 +5,7 @@ import { AppException } from '~/common/errors/exception.types'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import type { AiSummaryRepository } from '~/modules/ai/ai-summary/ai-summary.repository'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
+import { AITaskType } from '~/modules/ai/ai-task/ai-task.types'
 
 const createService = () => {
   const repository = createPgRepositoryMock<AiSummaryRepository>()
@@ -48,6 +49,7 @@ const createService = () => {
     generationMetrics,
     repository,
     service,
+    taskProcessor,
   }
 }
 
@@ -203,6 +205,42 @@ describe('AiSummaryService', () => {
       refId: 'post-1',
       targetLanguages: ['en', 'ja'],
     })
+  })
+
+  it('normalizes target languages before generating, without merging a free-typed token into an unrelated code', async () => {
+    const { service, taskProcessor, configService } = createService()
+    configService.get.mockResolvedValue({ summaryTargetLanguages: [] })
+
+    service.onModuleInit()
+    const handler = taskProcessor.registerHandler.mock.calls
+      .map(([registered]) => registered)
+      .find((registered: any) => registered.type === AITaskType.Summary) as any
+
+    const context = {
+      taskId: 'task-1',
+      isAborted: () => false,
+      appendLog: vi.fn(),
+      updateProgress: vi.fn(),
+      setResult: vi.fn(),
+      setStatus: vi.fn(),
+      incrementTokens: vi.fn(),
+      incrementCost: vi.fn(),
+    }
+
+    // 'english' is not recognized by normalizeLanguageCode, so it must stay
+    // its own target instead of collapsing into DEFAULT_SUMMARY_LANG ('zh')
+    // and overwriting the zh row.
+    await handler.execute(
+      { refId: 'post-1', targetLanguages: ['english', 'zh'] },
+      context as any,
+    )
+
+    expect(context.updateProgress.mock.calls[0]).toEqual([
+      0,
+      'Starting summary generation',
+      0,
+      2,
+    ])
   })
 })
 

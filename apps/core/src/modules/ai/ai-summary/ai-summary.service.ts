@@ -36,7 +36,10 @@ import {
 } from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import { parseLanguageCode, resolveTargetLanguages } from '../ai-language.util'
+import {
+  normalizeTargetLang,
+  resolveTargetLanguages,
+} from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
@@ -85,7 +88,7 @@ export class AiSummaryService implements OnModuleInit {
             resolveTargetLanguages(
               payload.targetLanguages,
               aiConfig.summaryTargetLanguages,
-            ).map((lang) => parseLanguageCode(lang)),
+            ).map((lang) => normalizeTargetLang(lang)),
           ),
         ]
 

@@ -40,7 +40,10 @@ import {
 } from '../ai-generation-metrics/ai-generation-metrics.types'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import { parseLanguageCode, resolveTargetLanguages } from '../ai-language.util'
+import {
+  normalizeTargetLang,
+  resolveTargetLanguages,
+} from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
@@ -187,7 +190,17 @@ export class AiTranslationService
       const result = task.result as {
         translations?: Array<{ lang: string }>
       }
-      const targetLangs = payload.targetLanguages || []
+      // result.translations[].lang is already normalized (executeTranslationTask
+      // generates against the normalized language list) — normalize
+      // payload.targetLanguages the same way before diffing, or a target like
+      // zh-CN never matches a successful zh and gets retried for no reason.
+      const targetLangs = [
+        ...new Set(
+          (payload.targetLanguages || []).map((lang) =>
+            normalizeTargetLang(lang),
+          ),
+        ),
+      ]
       const successLangs = new Set(
         result?.translations?.map((t) => t.lang) || [],
       )
@@ -241,7 +254,7 @@ export class AiTranslationService
         resolveTargetLanguages(
           payload.targetLanguages,
           aiConfig.translationTargetLanguages,
-        ).map((lang) => parseLanguageCode(lang)),
+        ).map((lang) => normalizeTargetLang(lang)),
       ),
     ]
 

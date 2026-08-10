@@ -177,6 +177,46 @@ describe('AiTranslationService', () => {
     )
   })
 
+  it('folds a region-suffixed target language into its base before generating', async () => {
+    const { configService, service, taskProcessor } = createService()
+    configService.get.mockResolvedValue({
+      enableTranslation: true,
+      translationTargetLanguages: [],
+    })
+
+    service.onModuleInit()
+    const handler = taskProcessor.registerHandler.mock.calls
+      .map(([registered]) => registered)
+      .find(
+        (registered: any) => registered.type === AITaskType.Translation,
+      ) as any
+
+    const context = {
+      taskId: 'task-1',
+      isAborted: () => false,
+      signal: new AbortController().signal,
+      appendLog: vi.fn(),
+      updateProgress: vi.fn(),
+      setResult: vi.fn(),
+      setStatus: vi.fn(),
+      incrementTokens: vi.fn(),
+      incrementCost: vi.fn(),
+      streamPusher: vi.fn(),
+    }
+
+    await handler.execute(
+      { refId: 'post-1', targetLanguages: ['zh-CN', 'zh'] },
+      context as any,
+    )
+
+    expect(context.updateProgress).toHaveBeenCalledWith(
+      0,
+      'Starting translation',
+      0,
+      1,
+    )
+  })
+
   it('includes orphan articles with zero translations in the grouped list', async () => {
     const { databaseService, repository, service } = createService()
     repository.groupByRefIdPaginated.mockResolvedValue({
@@ -732,6 +772,37 @@ describe('AiTranslationService — force regeneration', () => {
       refId: 'post-1',
       targetLanguages: ['ja'],
       force: true,
+    })
+  })
+
+  it('normalizes payload target languages before diffing, so zh-CN matches a successful zh', () => {
+    const { service, taskProcessor } = createService()
+    service.onModuleInit()
+    const handler = taskProcessor.registerHandler.mock.calls
+      .map(([registered]) => registered)
+      .find(
+        (registered: any) => registered.type === AITaskType.Translation,
+      ) as any
+
+    const task = {
+      status: TaskStatus.PartialFailed,
+      groupId: 'group-1',
+      payload: {
+        refId: 'post-1',
+        targetLanguages: ['zh-CN', 'en'],
+        title: 'T',
+        refType: CollectionRefTypes.Post,
+      },
+      // executeTranslationTask generates against the normalized language
+      // list, so a successful zh-CN run is recorded as lang: 'zh'
+      result: { translations: [{ lang: 'zh' }] },
+    }
+
+    const retryOptions = handler.buildRetryTask(task)
+
+    expect(retryOptions.payload).toMatchObject({
+      refId: 'post-1',
+      targetLanguages: ['en'],
     })
   })
 })
