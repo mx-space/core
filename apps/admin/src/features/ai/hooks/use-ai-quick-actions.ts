@@ -23,7 +23,7 @@ export function useAiQuickActions(refId: string) {
     'translationTargetLanguages',
   )
 
-  const runWithLangPrompt = async (
+  const runWithGeneratePrompt = async (
     title: string,
     taskFn: (
       langs: string[] | undefined,
@@ -54,7 +54,7 @@ export function useAiQuickActions(refId: string) {
       key: 'ai-summary',
       label: t('ai.menu.generateSummary'),
       onClick: () =>
-        void runWithLangPrompt(
+        void runWithGeneratePrompt(
           t('ai.menu.generateSummary'),
           (langs, force) =>
             createSummaryTask({ force, refId, targetLanguages: langs }),
@@ -66,7 +66,7 @@ export function useAiQuickActions(refId: string) {
       key: 'ai-insights',
       label: t('ai.menu.generateInsights'),
       onClick: () =>
-        void runWithLangPrompt(
+        void runWithGeneratePrompt(
           t('ai.menu.generateInsights'),
           (_langs, force) => createInsightsTask({ force, refId }),
           {
@@ -82,7 +82,7 @@ export function useAiQuickActions(refId: string) {
       key: 'ai-translation',
       label: t('ai.menu.generateTranslation'),
       onClick: () =>
-        void runWithLangPrompt(
+        void runWithGeneratePrompt(
           t('ai.menu.generateTranslation'),
           (langs, force) =>
             createTranslationTask({ force, refId, targetLanguages: langs }),
@@ -94,7 +94,7 @@ export function useAiQuickActions(refId: string) {
       key: 'ai-tts',
       label: t('ai.menu.generateTts'),
       onClick: () =>
-        void runWithLangPrompt(t('ai.menu.generateTts'), (langs, force) =>
+        void runWithGeneratePrompt(t('ai.menu.generateTts'), (langs, force) =>
           createTtsTask({ force, langs, refId }),
         ),
     },
