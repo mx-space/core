@@ -197,6 +197,7 @@ export class AiTranslationService
         const retryPayload: TranslationTaskPayload = {
           refId: payload.refId,
           targetLanguages: failedLangs,
+          force: payload.force,
           title: payload.title,
           refType: payload.refType,
         }

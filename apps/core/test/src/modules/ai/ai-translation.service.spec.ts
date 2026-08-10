@@ -14,6 +14,7 @@ import type {
 import { UpdateTranslationSchema } from '~/modules/ai/ai-translation/ai-translation.schema'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import type { ITranslationStrategy } from '~/modules/ai/ai-translation/translation-strategy.interface'
+import { TaskStatus } from '~/processors/task-queue'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 const row = (overrides: Partial<AiTranslationRow> = {}): AiTranslationRow => ({
@@ -701,5 +702,36 @@ describe('AiTranslationService — force regeneration', () => {
     expect(aiInFlightService.runWithStream).toHaveBeenCalledWith(
       expect.objectContaining({ bypassResultCache: undefined }),
     )
+  })
+
+  it('carries force forward into the PartialFailed retry payload', () => {
+    const { service, taskProcessor } = createService()
+    service.onModuleInit()
+    const handler = taskProcessor.registerHandler.mock.calls
+      .map(([registered]) => registered)
+      .find(
+        (registered: any) => registered.type === AITaskType.Translation,
+      ) as any
+
+    const task = {
+      status: TaskStatus.PartialFailed,
+      groupId: 'group-1',
+      payload: {
+        refId: 'post-1',
+        targetLanguages: ['en', 'ja'],
+        force: true,
+        title: 'T',
+        refType: CollectionRefTypes.Post,
+      },
+      result: { translations: [{ lang: 'en' }] },
+    }
+
+    const retryOptions = handler.buildRetryTask(task)
+
+    expect(retryOptions.payload).toMatchObject({
+      refId: 'post-1',
+      targetLanguages: ['ja'],
+      force: true,
+    })
   })
 })
