@@ -1,4 +1,19 @@
-## [13.26.0](https://github.com/mx-space/core/compare/v13.25.3...v13.26.0) (2026-08-09)
+# [13.27.0](https://github.com/mx-space/core/compare/v13.26.0...v13.27.0) (2026-08-10)
+
+
+### Bug Fixes
+
+* **category:** prevent unpublished post metadata disclosure ([#2801](https://github.com/mx-space/core/issues/2801)) ([2c8122f](https://github.com/mx-space/core/commit/2c8122f4a58ff821578eb9b923795a663c7ced65))
+* **core:** invalidate RSS caches after content changes ([#2802](https://github.com/mx-space/core/issues/2802)) ([0362e99](https://github.com/mx-space/core/commit/0362e99f3c24ca4d699d440a319c7d7e56ddfe9a))
+* **note:** allow clearing mood and weather ([#2800](https://github.com/mx-space/core/issues/2800)) ([a742ad8](https://github.com/mx-space/core/commit/a742ad8becac5f5816bde52a2a84a9b7247d1ab4))
+
+
+### Features
+
+* **ai:** multi-language + force regeneration in generate modal, and per-article AI overview board ([#2804](https://github.com/mx-space/core/issues/2804)) ([d8343e5](https://github.com/mx-space/core/commit/d8343e560a71eb126d1b20f7b0892077d8aa2f9b))
+* **ios:** redesign Space mobile workflows ([bec9d0a](https://github.com/mx-space/core/commit/bec9d0ab8fa220ee756f94a254c8b5ffd5318458))
+
+# [13.26.0](https://github.com/mx-space/core/compare/v13.25.3...v13.26.0) (2026-08-09)
 
 
 ### Features
