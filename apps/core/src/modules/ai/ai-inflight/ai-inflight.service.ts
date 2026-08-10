@@ -87,8 +87,13 @@ export class AiInFlightService {
       if (options.bypassResultCache) {
         // Safe now: lockKey exists, so a concurrent follower checking
         // resultKey/errorKey/lockKey will see the lock and keep waiting
-        // instead of finding all three empty.
+        // instead of finding all three empty. streamKey/errorKey must go
+        // too — joining a force leader (or force-vs-force convergence)
+        // reads the stream from '0-0', so a stale `done`/`error` entry
+        // from the previous run would resolve to last run's result.
         await redis.del(resultKey)
+        await redis.del(streamKey)
+        await redis.del(errorKey)
       }
       if (isDev) {
         this.logger.debug(`inflight leader key=${options.key}`)
