@@ -20,17 +20,26 @@ import { buildAssetRows, firstAnchorIds } from './asset-rows'
 import { AssetSection } from './AssetSection'
 import { CostSummarySection } from './CostSummarySection'
 import type { CellState } from './coverage-cells'
-import {
-  findGenerationFailure,
-  isGenerationPending,
-  isTaskLive,
-} from './coverage-cells'
+import { isTaskLive } from './coverage-cells'
 import { CoverageMatrix } from './CoverageMatrix'
 import { OverviewSection } from './OverviewSection'
 import { useOverviewActions } from './useOverviewActions'
 
 const HIGHLIGHT_MS = 1200
 const ACTIVE_POLL_MS = 2000
+/**
+ * A dispatched task takes a beat to appear in the queue's indexes, so polling
+ * has to outlive the dispatch itself — otherwise the one poll that fires finds
+ * nothing running, stops, and the board never learns how the task ended.
+ */
+const DISPATCH_GRACE_MS = 20_000
+
+function shouldPoll(
+  activeTasks: ActiveGeneration[] | undefined,
+  pollUntil: number,
+): boolean {
+  return Boolean(activeTasks?.some(isTaskLive)) || Date.now() < pollUntil
+}
 
 export function OverviewDetailPane(props: {
   refId: string
@@ -40,85 +49,34 @@ export function OverviewDetailPane(props: {
   const actions = useOverviewActions(props.refId)
   const [highlightId, setHighlightId] = useState<string | null>(null)
   const [activeCell, setActiveCell] = useState<string | null>(null)
-  const [justQueued, setJustQueued] = useState<string[]>([])
   const [extraColumns, setExtraColumns] = useState<string[]>([])
-  const [polling, setPolling] = useState(false)
+  const [pollUntil, setPollUntil] = useState(0)
   const rowNodes = useRef(new Map<string, HTMLLIElement>())
 
-  // Progress only moves server-side; the socket carries per-task phases but
-  // never a refId, so the board follows a running task by re-reading its own
-  // endpoint. The flag is driven from render state rather than from
-  // `refetchInterval`'s query argument, which cannot see a freshly clicked
-  // cell — that blind spot left the optimistic spinner waiting on a poll that
-  // never started.
   const query = useQuery({
     queryFn: () => getArticleOverview(props.refId),
     queryKey: adminQueryKeys.ai.overviewArticle(props.refId),
-    refetchInterval: polling ? ACTIVE_POLL_MS : false,
+    refetchInterval: (q) =>
+      shouldPoll(q.state.data?.activeTasks, pollUntil) ? ACTIVE_POLL_MS : false,
+    // Without this the interval is suspended whenever the window loses focus,
+    // so switching away mid-generation freezes the board on whatever state it
+    // last saw — a spinner that never resolves.
+    refetchIntervalInBackground: true,
   })
 
   const detail = query.data
   const rows = useMemo(() => (detail ? buildAssetRows(detail) : []), [detail])
   const anchors = useMemo(() => firstAnchorIds(rows), [rows])
-
-  // The queue takes a moment to report a task, so a freshly clicked cell holds
-  // its own spinner until the server's own `activeTasks` covers it — without
-  // it the cell snaps back to `+` and invites a duplicate click.
-  const activeTasks = useMemo<ActiveGeneration[]>(() => {
-    const fromServer = detail?.activeTasks ?? []
-    const optimistic = justQueued.map<ActiveGeneration>((key) => {
-      const [capability, lang] = key.split(':')
-      return {
-        capability: capability as AiOverviewCapability,
-        completedItems: null,
-        error: null,
-        langs: [lang],
-        progress: null,
-        progressMessage: null,
-        startedAt: null,
-        status: 'pending',
-        taskId: `optimistic:${key}`,
-        totalItems: null,
-      }
-    })
-    return [...fromServer, ...optimistic]
-  }, [detail?.activeTasks, justQueued])
+  // The server is the single source of truth for what is running: it reports
+  // live tasks and recent failures alike. An earlier optimistic entry tried to
+  // bridge the gap before the queue registers a task and could outlive every
+  // condition meant to retire it, leaving a spinner that never stopped.
+  const activeTasks = detail?.activeTasks ?? []
 
   useEffect(() => {
-    setPolling(activeTasks.some(isTaskLive))
-  }, [activeTasks])
-
-  useEffect(() => {
-    if (!detail || !justQueued.length) return
-    const settled = justQueued.filter((key) => {
-      const [capability, lang] = key.split(':')
-      return (
-        isGenerationPending(
-          detail.activeTasks,
-          capability as AiOverviewCapability,
-          lang,
-        ) ||
-        // A task that already died must clear the optimistic spinner too, or
-        // the cell would show "running" next to its own failure row forever.
-        Boolean(
-          findGenerationFailure(
-            detail.activeTasks,
-            capability as AiOverviewCapability,
-            lang,
-          ),
-        ) ||
-        detail.coverage[capability as AiOverviewCapability].langs.includes(lang)
-      )
-    })
-    if (settled.length) {
-      setJustQueued((prev) => prev.filter((key) => !settled.includes(key)))
-    }
-  }, [detail, justQueued])
-
-  useEffect(() => {
+    setPollUntil(0)
     setHighlightId(null)
     setActiveCell(null)
-    setJustQueued([])
     setExtraColumns([])
     rowNodes.current.clear()
   }, [props.refId])
@@ -138,8 +96,7 @@ export function OverviewDetailPane(props: {
     const key = `${capability}:${lang}`
     setActiveCell(key)
     if (state === 'gap' || state === 'addable' || state === 'failed') {
-      setJustQueued((prev) => (prev.includes(key) ? prev : [...prev, key]))
-      actions.generate(capability, lang, detail)
+      dispatchGeneration(capability, lang, state === 'failed')
       return
     }
     const targetId = anchors.get(key)
@@ -148,12 +105,21 @@ export function OverviewDetailPane(props: {
     rowNodes.current.get(targetId)?.scrollIntoView({ block: 'nearest' })
   }
 
+  const dispatchGeneration = (
+    capability: AiOverviewCapability,
+    lang: string,
+    force: boolean,
+  ) => {
+    if (!detail) return
+    setPollUntil(Date.now() + DISPATCH_GRACE_MS)
+    actions.generate(capability, lang, detail, force)
+  }
+
   const addColumn = (lang: string) =>
     setExtraColumns((prev) => (prev.includes(lang) ? prev : [...prev, lang]))
 
   const handleRegenerate = (row: AssetRow) => {
-    if (!detail) return
-    actions.generate(row.capability, row.lang, detail, true)
+    dispatchGeneration(row.capability, row.lang, true)
   }
 
   const handleDelete = async (row: AssetRow) => {
@@ -240,10 +206,9 @@ export function OverviewDetailPane(props: {
             />
             <ActiveTaskList
               onRetry={(task) =>
-                actions.generate(
+                dispatchGeneration(
                   task.capability,
                   task.langs[0] ?? detail.coverage.sourceLang ?? 'zh',
-                  detail,
                   true,
                 )
               }
