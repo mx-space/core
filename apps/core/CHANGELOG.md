@@ -1,3 +1,15 @@
+# [13.29.0](https://github.com/mx-space/core/compare/v13.28.0...v13.29.0) (2026-08-11)
+
+
+### Bug Fixes
+
+* **membership:** accept every subscription webhook event and split the ambiguous error code ([9f1b6a4](https://github.com/mx-space/core/commit/9f1b6a4235f677d4e77f437e2f6eba34d5c2b246))
+
+
+### Features
+
+* **auth:** trust the yohaku:// scheme via the better-auth expo plugin ([ff52b84](https://github.com/mx-space/core/commit/ff52b84940107f7622aedfd595759d74608b4ab5))
+
 # [13.28.0](https://github.com/mx-space/core/compare/v13.27.0...v13.28.0) (2026-08-11)
 
 
