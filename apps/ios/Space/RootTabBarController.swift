@@ -39,7 +39,6 @@ final class RootTabBarController: UITabBarController {
         delegate = self
         view.tintColor = SpacePalette.accent
         tabBar.tintColor = SpacePalette.accent
-        tabBarMinimizeBehavior = .onScrollDown
 
         viewControllers = [
             wrap(

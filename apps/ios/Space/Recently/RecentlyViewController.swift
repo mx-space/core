@@ -1,3 +1,4 @@
+import SafariServices
 import SpaceCore
 import SpaceUI
 import SwiftUI
@@ -118,7 +119,8 @@ final class RecentlyViewController: UIViewController {
                 RecentlyRowView(
                     entry: entry,
                     onEdit: { [weak self] in self?.edit(entry) },
-                    onDelete: { [weak self] in self?.confirmDeletion(of: entry.id) }
+                    onDelete: { [weak self] in self?.confirmDeletion(of: entry.id) },
+                    openCardURL: { [weak self] url in self?.openCardURL(url) }
                 )
             }
             .margins(.horizontal, Spacing.regular)
@@ -206,6 +208,12 @@ final class RecentlyViewController: UIViewController {
 
     private func edit(_ entry: RecentlyCard) {
         composerStore.beginEditing(entry)
+    }
+
+    private func openCardURL(_ url: URL) {
+        let browser = SFSafariViewController(url: url)
+        browser.dismissButtonStyle = .close
+        present(browser, animated: true)
     }
 
     private func confirmDeletion(of id: String) {

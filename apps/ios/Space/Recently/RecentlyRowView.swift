@@ -6,6 +6,7 @@ struct RecentlyRowView: View {
     let entry: RecentlyCard
     let onEdit: () -> Void
     let onDelete: () -> Void
+    var openCardURL: ((URL) -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.regular) {
@@ -36,7 +37,8 @@ struct RecentlyRowView: View {
                 case let .card(card):
                     EnrichmentCardView(
                         card: card,
-                        accessibilityIdentifier: "recently.enrichment.\(entry.id)"
+                        accessibilityIdentifier: "recently.enrichment.\(entry.id)",
+                        openURL: openCardURL
                     )
                 }
             }

@@ -7,6 +7,7 @@ import SwiftUI
 struct EnrichmentCardView: View {
     let card: MediaCard
     let accessibilityIdentifier: String
+    var openURL: ((URL) -> Void)? = nil
 
     var body: some View {
         Group {
@@ -21,6 +22,16 @@ struct EnrichmentCardView: View {
         // as a unit, and the identifier lands on a single node.
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(accessibilityIdentifier)
+        .accessibilityAddTraits(isOpenable ? [.isButton] : [])
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard let url = card.url else { return }
+            openURL?(url)
+        }
+    }
+
+    private var isOpenable: Bool {
+        openURL != nil && card.url != nil
     }
 }
 
