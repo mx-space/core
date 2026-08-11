@@ -40,6 +40,7 @@ export enum BusinessEvents {
   INSIGHTS_UPDATE = 'INSIGHTS_UPDATE',
   INSIGHTS_DELETE = 'INSIGHTS_DELETE',
   INSIGHTS_GENERATED = 'INSIGHTS_GENERATED',
+  SUMMARY_GENERATED = 'SUMMARY_GENERATED',
   CONTENT_REFRESH = 'CONTENT_REFRESH',
   IMAGE_REFRESH = 'IMAGE_REFRESH',
   IMAGE_FETCH = 'IMAGE_FETCH',
@@ -304,6 +305,7 @@ export interface PostRow {
   }
   copyright: boolean
   isPublished: boolean
+  isPremium: boolean
   readCount: number
   likeCount: number
   pinAt: Date | null
@@ -336,6 +338,45 @@ export type NormalizedPost = Omit<PostModel, 'category'> & {
   category: CategoryModel
 }
 
+export interface EnrichmentImagePalette {
+  dominant: string
+  swatches?: string[]
+}
+
+export interface EnrichmentImage {
+  url: string
+  width?: number
+  height?: number
+  alt?: string
+  thumbhash?: string
+  palette?: EnrichmentImagePalette
+}
+
+export interface EnrichmentAttribute {
+  key: string
+  value: string | number | boolean
+  label?: string
+  format?: 'number' | 'rating' | 'date' | 'percent' | 'text' | 'duration'
+}
+
+export interface EnrichmentResult<TRaw = unknown> {
+  id?: string
+  title: string
+  description?: string
+  thumbnailImage?: EnrichmentImage
+  previewImage?: EnrichmentImage
+  url: string
+  category: string
+  subtype?: string
+  publishedAt?: string
+  fetchedAt: string
+  attributes?: EnrichmentAttribute[]
+  color?: string
+  links?: Array<{ rel: string; url: string; label?: string }>
+  captureImage?: EnrichmentImage
+  raw?: TRaw
+}
+
 export type RecentlyRefType = `${CollectionRefTypes}` | null
 
 export interface RecentlyRow {
@@ -359,6 +400,11 @@ export type RefType = {
 }
 
 export type RecentlyModel = RecentlyRow
+
+export type RecentlyWithEnrichment = RecentlyRow & {
+  enrichments?: Record<string, EnrichmentResult>
+  ref?: any
+}
 
 export interface SayModel {
   id: string

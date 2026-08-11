@@ -119,9 +119,23 @@ const sources: SourceEntry[] = [
     },
   },
   {
+    file: 'modules/enrichment/enrichment.types.ts',
+    interfaces: [
+      'EnrichmentImagePalette',
+      'EnrichmentImage',
+      'EnrichmentAttribute',
+      'EnrichmentResult',
+    ],
+  },
+  {
     file: 'modules/recently/recently.types.ts',
     interfaces: ['RecentlyRow'],
-    typeAliases: ['RecentlyModel', 'RefType', 'RecentlyRefType'],
+    typeAliases: [
+      'RecentlyModel',
+      'RefType',
+      'RecentlyRefType',
+      'RecentlyWithEnrichment',
+    ],
   },
   {
     file: 'modules/say/say.types.ts',
@@ -258,6 +272,12 @@ function extractInterface(
 ): string {
   const name = node.name.text
 
+  const typeParams = node.typeParameters?.length
+    ? `<${node.typeParameters
+        .map((p) => transformTypeText(p.getText(sourceFile)))
+        .join(', ')}>`
+    : ''
+
   let heritage = ''
   if (node.heritageClauses) {
     for (const clause of node.heritageClauses) {
@@ -286,7 +306,7 @@ function extractInterface(
   }
 
   const exportName = symbolRemap[name] || name
-  return `export interface ${exportName}${heritage} {\n${properties.join('\n')}\n}`
+  return `export interface ${exportName}${typeParams}${heritage} {\n${properties.join('\n')}\n}`
 }
 
 /** Extract a type alias declaration. */

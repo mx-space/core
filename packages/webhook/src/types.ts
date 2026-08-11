@@ -9,7 +9,7 @@ import type {
   PageModel,
   PublicLiveDeskStateV2,
   ReaderModel,
-  RecentlyModel,
+  RecentlyWithEnrichment,
   SayModel,
 } from './models.generated'
 
@@ -48,8 +48,8 @@ export interface EventPayloadMapping {
   [BusinessEvents.SAY_UPDATE]: SayModel
   [BusinessEvents.SAY_DELETE]: PayloadOnlyId
 
-  [BusinessEvents.RECENTLY_CREATE]: RecentlyModel
-  [BusinessEvents.RECENTLY_UPDATE]: RecentlyModel
+  [BusinessEvents.RECENTLY_CREATE]: RecentlyWithEnrichment
+  [BusinessEvents.RECENTLY_UPDATE]: RecentlyWithEnrichment
 
   [BusinessEvents.AGGREGATE_UPDATE]: AggregateUpdatePayload
 
@@ -101,8 +101,8 @@ export type GenericEvent =
   | { type: BusinessEvents.SAY_CREATE; payload: SayModel }
   | { type: BusinessEvents.SAY_UPDATE; payload: SayModel }
   | { type: BusinessEvents.SAY_DELETE; payload: PayloadOnlyId }
-  | { type: BusinessEvents.RECENTLY_CREATE; payload: RecentlyModel }
-  | { type: BusinessEvents.RECENTLY_UPDATE; payload: RecentlyModel }
+  | { type: BusinessEvents.RECENTLY_CREATE; payload: RecentlyWithEnrichment }
+  | { type: BusinessEvents.RECENTLY_UPDATE; payload: RecentlyWithEnrichment }
   | { type: BusinessEvents.AGGREGATE_UPDATE; payload: AggregateUpdatePayload }
   | { type: BusinessEvents.ACTIVITY_LIKE; payload: IActivityLike }
   | { type: BusinessEvents.LINK_APPLY; payload: LinkModel }
