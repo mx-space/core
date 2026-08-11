@@ -60,7 +60,7 @@ export function normalizeSnippetRawForSave(
   switch (type) {
     case SnippetType.JSON: {
       try {
-        return JSON.stringify(JSON.parse(raw))
+        return JSON.stringify(JSON.parse(raw), null, 2)
       } catch {
         throw new Error(t('snippets.error.jsonInvalid'))
       }
